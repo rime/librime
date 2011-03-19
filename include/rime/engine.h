@@ -13,16 +13,14 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 
-namespace rime
-{
+namespace rime {
 
 class Schema;
 class Context;
 class Kevent;
 class Processor;
 
-class Engine
-{
+class Engine {
  public:
   Engine();  // TODO(gongchen): arguments to argue
   ~Engine();

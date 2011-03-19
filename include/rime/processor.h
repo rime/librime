@@ -9,15 +9,13 @@
 #ifndef RIME_PROCESSOR_H_
 #define RIME_PROCESSOR_H_
 
-#include "component.h"
+#include <rime/component.h>
 
-namespace rime
-{
+namespace rime {
 
 class Kevent;
 
-class Processor : Component
-{
+class Processor : Component {
  public:
   virtual bool ProcessKeyEvent(const Kevent& /*kevent*/)
   {
