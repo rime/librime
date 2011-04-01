@@ -1,0 +1,4 @@
+aux_source_directory(. LIBRIME_SRC)
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+add_library(rime STATIC ${LIBRIME_SRC})
+set_target_properties(rime PROPERTIES VERSION ${LIBRIME_VERSION} SOVERSION ${LIBRIME_SOVERSION})
