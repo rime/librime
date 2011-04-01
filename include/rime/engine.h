@@ -9,9 +9,8 @@
 #ifndef RIME_ENGINE_H_
 #define RIME_ENGINE_H_
 
+#include <rime/common.h>
 #include <vector>
-#include <boost/scoped_ptr.hpp>
-#include <boost/shared_ptr.hpp>
 
 namespace rime {
 
@@ -28,9 +27,9 @@ class Engine {
   set_schema(Schema *schema);
 
  private:
-  boost::scoped_ptr<Schema> schema_;
-  boost::scoped_ptr<Context> context_;
-  std::vector<boost::shared_ptr<Processor> > processors_;
+  scoped_ptr<Schema> schema_;
+  scoped_ptr<Context> context_;
+  std::vector<shared_ptr<Processor> > processors_;
 };
 
 }  // namespace rime

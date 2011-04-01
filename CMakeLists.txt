@@ -14,6 +14,7 @@ add_subdirectory(src)
 
 find_package(GTEST)
 if(GTEST_FOUND)
+  enable_testing()
   include_directories(${GTEST_INCLUDE_DIR})
   add_subdirectory(test)
 else(GTEST_FOUND)
