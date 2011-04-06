@@ -6,9 +6,8 @@
 // 
 // 2011-4-6 Zou xu <zouivex@gmail.com>
 //
-
-#include "config.h"
 #include <fstream>
+#include "config.h"
 
 namespace rime {
 
@@ -21,7 +20,7 @@ void Config::LoadFromFile(const std::string& file_name) {
 void Config::SaveToFile(const std::string& file_name) {
 }
 
-std::string Config::GetValue(const std::string& key_path) {
+const std::string Config::GetValue(const std::string& key_path) {
   return "";
 }
 

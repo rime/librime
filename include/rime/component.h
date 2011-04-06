@@ -9,8 +9,8 @@
 #ifndef RIME_COMPONENT_H_
 #define RIME_COMPONENT_H_
 
-#include <rime/common.h>
 #include <string>
+#include <rime/common.h>
 
 namespace rime {
 
@@ -28,10 +28,11 @@ class Component {
 
 class ComponentClass {
  public:
-  //ComponentClass() {}
-  //virtual ~ComponentClass() {}
+  ComponentClass() {}
+  virtual ~ComponentClass() {}
+
   bool Register();
-  virtual shared_ptr<Component> CreateInstance(Engine *engine) = 0;
+  virtual Component* CreateInstance(Engine *engine) = 0;
   virtual const std::string name() const = 0;
 };
 

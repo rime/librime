@@ -9,8 +9,8 @@
 #ifndef RIME_ENGINE_H_
 #define RIME_ENGINE_H_
 
-#include <rime/common.h>
 #include <vector>
+#include <rime/common.h>
 
 namespace rime {
 

@@ -6,10 +6,10 @@
 // 
 // 2011-03-14 GONG Chen <chen.sst@gmail.com>
 //
-#include <rime/common.h>
-#include <rime/component.h>
 #include <map>
 #include <string>
+#include <rime/common.h>
+#include <rime/component.h>
 
 namespace rime {
 
@@ -38,10 +38,11 @@ shared_ptr<Component> Component::Create(const std::string &klass_name,
                                         Engine* engine) {
   ComponentRegistry &registry = ComponentRegistry::GetInstance();
   ComponentRegistry::const_iterator it = registry.find(klass_name);
+  Component *component = NULL;
   if (it != registry.end()) {
-    return it->second->CreateInstance(engine);
+    component = it->second->CreateInstance(engine);
   }
-  return shared_ptr<Component>();
+  return shared_ptr<Component>(component);
 }
 
 }  // namespace rime
