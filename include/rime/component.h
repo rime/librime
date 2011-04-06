@@ -28,6 +28,8 @@ class Component {
 
 class ComponentClass {
  public:
+  //ComponentClass() {}
+  //virtual ~ComponentClass() {}
   bool Register();
   virtual shared_ptr<Component> CreateInstance(Engine *engine) = 0;
   virtual const std::string name() const = 0;

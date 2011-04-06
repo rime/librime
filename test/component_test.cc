@@ -16,7 +16,7 @@ public:
 };
 
 TEST(RimeComponentTest, ComponentCreation) {
-  shared_ptr<HelloClass> hello_klass(new HelloClass);
+  HelloClass* hello_klass(new HelloClass);
   EXPECT_STREQ("hello", hello_klass->name().c_str());
   hello_klass->Register();
   shared_ptr<Hello> hello = dynamic_pointer_cast<Hello>(Component::Create("hello", NULL));
