@@ -27,6 +27,9 @@ endif(GTEST_FOUND)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
+include_directories($ENV{CMAKE_INCLUDE_PATH})
+link_directories($ENV{CMAKE_LIBRARY_PATH})
+
 add_subdirectory(src)
 add_subdirectory(test)
 
