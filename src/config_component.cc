@@ -7,7 +7,7 @@
 // 2011-4-6 Zou xu <zouivex@gmail.com>
 //
 
-#include <rime/ConfigComponent.h>
+#include "config_component.h"
 #include <fstream>
 
 namespace rime {
