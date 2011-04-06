@@ -3,10 +3,12 @@
 // 
 // 2011-4-6 Zou xu <zouivex@gmail.com>
 //
+#include "../src/config_component.h"
+
 #include <rime/common.h>
 #include <rime/component.h>
 #include <gtest/gtest.h>
-#include <rime/ConfigComponent.h>
+
 
 using namespace rime;
 
