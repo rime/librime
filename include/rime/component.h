@@ -14,26 +14,74 @@
 
 namespace rime {
 
-class Engine;
+// desired usage
+/*
+// define an interface to a family of interchangeable objects
+// a nested Component class will be generated
+class Config : public Class_<Config, const std::string&> {
+ public:
+  virtual const std::wstring GetValue(const std::string &key) = 0;
+};
+
+// define an implementation
+class YamlConfig : public Config {
+ public:
+  YamlConfig(const std::string &file_name) {}
+  // ...
+};
+
+class YamlConfigComponent : public Component_<YamlConfig> {
+ public:
+  YamlConfigComponent(const std::string &conf_dir) {}
+  // ...
+};
+
+void SampleUsage() {
+  // register components
+  Component::Register("global_config",
+      new YamlConfigComponent("/appdata/rime/conf.d/"));
+  Component::Register("user_config",
+      new YamlConfigComponent("/user/.rime/conf.d/"));
+
+  // find a component of a known klass
+  Config::Component *uc = Config::Find("user_config");
+
+  // call klass specific creators,
+  // such as Config::Component::Create(std::string), 
+  // Processor::Component::Create(Engine*) ...
+  shared_ptr<Config> user_settings = uc->Create("settings.yaml");
+  shared_ptr<Config> schema_settings = uc->Create("luna_pinyin.schema.yaml");
+}
+*/
 
 class Component {
  public:
   Component() {}
   virtual ~Component() {}
-  // returns new component instance of given type or an empty ptr on error
-  static shared_ptr<Component> Create(const std::string &klass_name,
-                                      Engine *engine);
+  static void Register(const std::string& name, Component *component);
+  static Component* ByName(const std::string& name);
 };
 
+template <class K, class Arg>
+struct Class_ {
+  typedef Arg Initializer;
 
-class ComponentClass {
+  class Component : public rime::Component {
+   public:
+    virtual K* Create(const Initializer& arg) = 0;
+  };
+
+  static Component* Find(const std::string& name) {
+    return dynamic_cast<Component*>(Component::ByName(name));
+  }
+};
+
+template <class T>
+struct Component_ : public T::Component {
  public:
-  ComponentClass() {}
-  virtual ~ComponentClass() {}
-
-  bool Register();
-  virtual Component* CreateInstance(Engine *engine) = 0;
-  virtual const std::string name() const = 0;
+  T* Create(const typename T::Initializer& arg) {
+    return new T(arg);
+  }
 };
 
 }  // namespace rime

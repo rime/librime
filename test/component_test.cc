@@ -12,31 +12,37 @@
 
 using namespace rime;
 
-class Hello : public Component {
+// define an interface to a family of interchangeable objects
+// a nested Component class will be generated
+class Greeting : public Class_<Greeting, const std::string&> {
+ public:
+  virtual const std::string Salut() = 0;
 };
 
-class HelloClass : public ComponentClass {
+// define an implementation
+class Hello : public Greeting {
  public:
-  virtual Component* CreateInstance(Engine *engine) { return new Hello; }
-  virtual const std::string name() const { return "hello"; }
+  Hello(const std::string &title) : title_(title) {}
+  const std::string Salut() {
+    return "hello, " + title_ + ".";
+  }
+ private:
+  std::string title_;
 };
+
+class HelloComponent : public Component_<Hello> {};
 
 TEST(RimeComponentTest, ComponentCreation) {
-  // create hello component class
-  HelloClass* hello_klass(new HelloClass);
-  EXPECT_STREQ("hello", hello_klass->name().c_str());
-  // register the component class
-  hello_klass->Register();
-  // CAVEAT: no delete since the class object is owned by the registry
+  Component::Register("hello", new HelloComponent());
+  Greeting::Component* greeting_component = Greeting::Find("hello");
+  EXPECT_TRUE(greeting_component);
 
-  // create a hello component instance
-  shared_ptr<Hello> hello = dynamic_pointer_cast<Hello>(
-      Component::Create("hello", NULL));
-  EXPECT_TRUE(hello);
+  scoped_ptr<Greeting> hello(greeting_component->Create("fred"));
+  EXPECT_STREQ("hello, fred.", hello->Salut().c_str());
 }
 
 TEST(RimeComponentTest, UnknownComponentCreation) {
   // unregistered component class
-  EXPECT_FALSE(Component::Create("unknown", NULL));
+  EXPECT_FALSE(Component::ByName("unknown"));
 }
 

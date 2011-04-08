@@ -4,7 +4,8 @@
 // Copyleft 2011 RIME Developers
 // License: GPLv3
 // 
-// 2011-4-6 Zou xu <zouivex@gmail.com>
+// 2011-04-06 Zou xu <zouivex@gmail.com>
+// 2011-04-08 GONG Chen <chen.sst@gmail.com>
 //
 
 #include <gtest/gtest.h>
@@ -12,16 +13,15 @@
 #include <rime/component.h>
 #include "../src/config.h"
 
-
 using namespace rime;
 
 TEST(RimeConfigTest, ConfigCreation) {
   // registration
-  ConfigClass* config_klass(new ConfigClass);
-  EXPECT_STREQ("config", config_klass->name().c_str());
-  config_klass->Register();
+  Component::Register("config", new YamlConfigComponent("."));
+  // finding component
+  Config::Component *cc = Config::Find("config");
+  EXPECT_TRUE(cc);
   // creation
-  shared_ptr<Config> config = dynamic_pointer_cast<Config>(
-      Component::Create("config", NULL));
+  scoped_ptr<Config> config(cc->Create("test.yaml"));
   EXPECT_TRUE(config);
 }

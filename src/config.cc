@@ -11,17 +11,23 @@
 
 namespace rime {
 
-void Config::LoadFromFile(const std::string& file_name) {
+void YamlConfig::LoadFromFile(const std::string& file_name) {
   std::ifstream fin(file_name.c_str());
   YAML::Parser parser(fin);
   parser.GetNextDocument(doc_);
 }
 
-void Config::SaveToFile(const std::string& file_name) {
+void YamlConfig::SaveToFile(const std::string& file_name) {
 }
 
-const std::string Config::GetValue(const std::string& key_path) {
+const std::string YamlConfig::GetValue(const std::string& key) {
+  // TODO(zouxu):
   return "";
+}
+
+YamlConfig* YamlConfigComponent::Create(const std::string &file_name) {
+  // TODO: use boost::filesystem's path join function
+  return new YamlConfig(conf_dir_ + file_name);
 }
 
 }  // namespace rime

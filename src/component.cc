@@ -14,7 +14,7 @@
 namespace rime {
 
 class ComponentRegistry
-    : public std::map<std::string, shared_ptr<ComponentClass> > {
+    : public std::map<std::string, shared_ptr<Component> > {
  public:
   static ComponentRegistry& GetInstance() { return registry_; }
 
@@ -25,24 +25,18 @@ class ComponentRegistry
 
 ComponentRegistry ComponentRegistry::registry_;
 
-bool ComponentClass::Register() {
+void Component::Register(const std::string &name, Component *component) {
   ComponentRegistry &registry = ComponentRegistry::GetInstance();
-  if (registry.find(name()) == registry.end()) {
-    registry[name()] = shared_ptr<ComponentClass>(this);
-    return true;
-  }
-  return false;
+  registry[name] = shared_ptr<Component>(component);
 }
 
-shared_ptr<Component> Component::Create(const std::string &klass_name, 
-                                        Engine* engine) {
+Component* Component::ByName(const std::string &name) {
   ComponentRegistry &registry = ComponentRegistry::GetInstance();
-  ComponentRegistry::const_iterator it = registry.find(klass_name);
-  Component *component = NULL;
+  ComponentRegistry::const_iterator it = registry.find(name);
   if (it != registry.end()) {
-    component = it->second->CreateInstance(engine);
+    return it->second.get();
   }
-  return shared_ptr<Component>(component);
+  return NULL;
 }
 
 }  // namespace rime
