@@ -16,7 +16,7 @@
 
 namespace rime {  
 
-class Config : public Class_<Config, const std::string&> {
+class Config : public Class_<Config, std::string> {
  public:
   virtual const std::string GetValue(const std::string &key) = 0;
 };

@@ -14,7 +14,7 @@ using namespace rime;
 
 // define an interface to a family of interchangeable objects
 // a nested Component class will be generated
-class Greeting : public Class_<Greeting, const std::string&> {
+class Greeting : public Class_<Greeting, std::string> {
  public:
   virtual const std::string Salut() = 0;
 };
