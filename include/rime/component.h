@@ -14,43 +14,38 @@
 
 namespace rime {
 
-// desired usage
 /*
+// sample usage:
+//
 // define an interface to a family of interchangeable objects
 // a nested Component class will be generated
-class Config : public Class_<Config, const std::string&> {
+class Greeting : public Class_<Greeting, std::string> {
  public:
-  virtual const std::wstring GetValue(const std::string &key) = 0;
+  virtual const std::string Salute() = 0;
 };
 
-// define an implementation
-class YamlConfig : public Config {
+// define an implementation of klass Greeting
+class Hello : public Greeting {
  public:
-  YamlConfig(const std::string &file_name) {}
-  // ...
+  Hello(const std::string &name) {}
+  // TODO: implement Salute()...
 };
 
-class YamlConfigComponent : public Component_<YamlConfig> {
- public:
-  YamlConfigComponent(const std::string &conf_dir) {}
-  // ...
-};
+// the component implementation is simple and stupid
+class HelloComponent : public Component_<Hello> {};
 
 void SampleUsage() {
-  // register components
-  Component::Register("global_config",
-      new YamlConfigComponent("/appdata/rime/conf.d/"));
-  Component::Register("user_config",
-      new YamlConfigComponent("/user/.rime/conf.d/"));
+  // register a component
+  Component::Register("my_greeting_way", new HelloComponent);
 
-  // find a component of a known klass
-  Config::Component *uc = Config::Find("user_config");
+  // find a component for a known klass
+  Greeting::Component *gc = Greeting::Find("my_greeting_way");
 
-  // call klass specific creators,
-  // such as Config::Component::Create(std::string), 
-  // Processor::Component::Create(Engine*) ...
-  shared_ptr<Config> user_settings = uc->Create("settings.yaml");
-  shared_ptr<Config> schema_settings = uc->Create("luna_pinyin.schema.yaml");
+  // creating and using klass instances
+  shared_ptr<Greeting> g1(gc->Create("fred"));
+  cout << g1->Salute() << endl;
+  shared_ptr<Greeting> g2(gc->Create("michael"));
+  cout << g2->Salute() << endl;
 }
 */
 
@@ -83,6 +78,9 @@ struct Component_ : public T::Component {
     return new T(arg);
   }
 };
+
+// register components here!
+void RegisterComponents(); 
 
 }  // namespace rime
 

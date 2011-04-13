@@ -9,17 +9,17 @@
 //
 
 #include <gtest/gtest.h>
-#include <rime/common.h>
 #include <rime/component.h>
-#include "../src/config.h"
+#include <rime/config.h>
+#include "../src/yaml_config.h"
 
 using namespace rime;
 
 TEST(RimeConfigTest, ConfigCreation) {
   // registration
-  Component::Register("config", new YamlConfigComponent("."));
+  Component::Register("test_config", new YamlConfigComponent("."));
   // finding component
-  Config::Component *cc = Config::Find("config");
+  Config::Component *cc = Config::Find("test_config");
   EXPECT_TRUE(cc);
   // creation
   scoped_ptr<Config> config(cc->Create("test.yaml"));

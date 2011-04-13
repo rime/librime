@@ -12,33 +12,46 @@
 
 using namespace rime;
 
-// define an interface to a family of interchangeable objects
-// a nested Component class will be generated
+typedef std::pair<std::string, std::string> GreetingInfo;
+
 class Greeting : public Class_<Greeting, std::string> {
  public:
-  virtual const std::string Salut() = 0;
+  virtual const std::string Salute() = 0;
 };
 
-// define an implementation
 class Hello : public Greeting {
  public:
-  Hello(const std::string &title) : title_(title) {}
-  const std::string Salut() {
-    return "hello, " + title_ + ".";
+  Hello(const GreetingInfo &info) : message_(info.first), name_(info.second) {}
+  const std::string Salute() {
+    return message_ + ", " + name_ + "!";
   }
  private:
-  std::string title_;
+  std::string message_;
+  std::string name_;
 };
 
-class HelloComponent : public Component_<Hello> {};
+// a customized component that has state
+class HelloComponent : public Hello::Component {
+ public:
+  HelloComponent(const std::string &message) : message_(message) {}
+  // define a custom creator to provide an additional argument for Hello ctor
+  Hello* Create(const std::string &name) {
+    return new Hello(std::make_pair(message_, name));
+  }
+ private:
+  const std::string message_;
+};
+
 
 TEST(RimeComponentTest, ComponentCreation) {
-  Component::Register("hello", new HelloComponent());
-  Greeting::Component* greeting_component = Greeting::Find("hello");
-  EXPECT_TRUE(greeting_component);
-
-  scoped_ptr<Greeting> hello(greeting_component->Create("fred"));
-  EXPECT_STREQ("hello, fred.", hello->Salut().c_str());
+  Component::Register("hello", new HelloComponent("hello"));
+  Component::Register("goodbye", new HelloComponent("goodbye"));
+  Greeting::Component* gc = Greeting::Find("hello");
+  EXPECT_TRUE(gc);
+  scoped_ptr<Greeting> hello(gc->Create("fred"));
+  scoped_ptr<Greeting> goodbye(Greeting::Find("goodbye")->Create("michael"));
+  EXPECT_STREQ("hello, fred!", hello->Salute().c_str());
+  EXPECT_STREQ("goodbye, michael!", goodbye->Salute().c_str());
 }
 
 TEST(RimeComponentTest, UnknownComponentCreation) {
