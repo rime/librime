@@ -65,6 +65,7 @@ ConfigMap* YamlConfig::GetMap(const std::string& key) {
 YamlConfig* YamlConfigComponent::Create(const std::string &file_name) {
   boost::filesystem::path p(conf_dir_);
   p /= file_name;
+  EZLOGGER("yaml config path:", p.string());
   return new YamlConfig(p.string());
 }
 

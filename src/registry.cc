@@ -10,13 +10,14 @@
 //
 
 // TODO: include implementations of built-in components
+#include <rime/common.h>
 #include "yaml_config.h"
 
 namespace rime {
 
 void RegisterComponents()
 {
-  // TODO: register built-in components
+  EZLOGGER("register built-in components");
   Component::Register("config", new YamlConfigComponent("config_path"));
 }
 

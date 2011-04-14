@@ -26,6 +26,7 @@ class ComponentRegistry
 ComponentRegistry ComponentRegistry::registry_;
 
 void Component::Register(const std::string &name, Component *component) {
+  EZLOGGER("registering component:", name);
   ComponentRegistry &registry = ComponentRegistry::GetInstance();
   registry[name] = shared_ptr<Component>(component);
 }
