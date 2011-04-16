@@ -10,6 +10,8 @@
 #include <boost/filesystem.hpp>
 #include <yaml-cpp/yaml.h>
 #include "yaml_config.h"
+#include <boost/algorithm/string.hpp>
+#include <vector>
 
 namespace rime {
 
@@ -29,27 +31,52 @@ void YamlConfig::SaveToFile(const std::string& file_name) {
 
 bool YamlConfig::IsNull(const std::string &key) {
   // TODO(zouxu):
-  return true;  // undefined or null
+  EZLOGGER("IsNull(", key, ")");
+  const YAML::Node* p = Traverse(key);
+  if(p)
+    return true;
+  else
+    return false;
 }
 
 bool YamlConfig::GetBool(const std::string& key, bool *value) {
   // TODO(zouxu):
-  return false;
+  EZLOGGER(key);
+  const YAML::Node* p = Traverse(key);
+  if(!p)
+    return false;
+  *value = p->to<bool>();
+  return true;
 }
 
 bool YamlConfig::GetInt(const std::string& key, int *value) {
   // TODO(zouxu):
-  return false;
+  EZLOGGER(key);
+  const YAML::Node* p = Traverse(key);
+  if(!p)
+    return false;
+  *value = p->to<int>();
+  return true;
 }
 
 bool YamlConfig::GetDouble(const std::string& key, double *value) {
   // TODO(zouxu):
-  return false;
+  EZLOGGER(key);
+  const YAML::Node* p = Traverse(key);
+  if(!p)
+    return false;
+  *value = p->to<double>();
+  return true;
 }
 
 bool YamlConfig::GetString(const std::string& key, std::string *value) {
   // TODO(zouxu):
-  return false;
+  EZLOGGER(key);
+  const YAML::Node* p = Traverse(key);
+  if(!p)
+    return false;
+  *value = p->to<std::string>();
+  return true;
 }
 
 ConfigList* YamlConfig::GetList(const std::string& key) {
@@ -69,4 +96,21 @@ YamlConfig* YamlConfigComponent::Create(const std::string &file_name) {
   return new YamlConfig(p.string());
 }
 
+const YAML::Node* YamlConfig::Traverse(const std::string& key){
+  std::vector<std::string> keys;
+  boost::split(keys, key, boost::is_any_of("/"));
+
+  std::vector<std::string>::iterator it = keys.begin();
+  std::vector<std::string>::iterator ite = keys.end();
+
+  const YAML::Node* pNode = &doc_; 
+
+  for(; it != ite; ++it){
+    EZLOGGER("keyNode:", *it);
+    pNode = pNode->FindValue(*it);
+    if(!pNode)
+      return NULL;
+  }
+  return pNode;
+}
 }  // namespace rime

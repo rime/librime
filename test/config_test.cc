@@ -15,13 +15,70 @@
 
 using namespace rime;
 
+Config::Component *cc;
+Config* config;
+
 TEST(RimeConfigTest, ConfigCreation) {
   // registration
   Component::Register("test_config", new YamlConfigComponent("."));
   // finding component
-  Config::Component *cc = Config::Find("test_config");
-  EXPECT_TRUE(cc);
+  cc = Config::Find("test_config");
   // creation
-  scoped_ptr<Config> config(cc->Create("test.yaml"));
+  config = cc->Create("test.yaml");
   EXPECT_TRUE(config);
+}
+
+TEST(RimeConfigTest, Config_IsNull) {
+  bool bNull = config->IsNull("root/bool");
+  EXPECT_TRUE(bNull);
+
+  bNull = config->IsNull("toor/loob");
+  EXPECT_FALSE(bNull);
+}
+
+TEST(RimeConfigTest, Config_GetBool) {
+  bool bRet, bValue;
+  bRet = config->GetBool("root/bool", &bValue);
+  EXPECT_TRUE(bRet);
+  EXPECT_FALSE(bValue);
+
+  bRet = config->GetBool("root2/high/bool", &bValue);
+  EXPECT_TRUE(bRet);
+  EXPECT_TRUE(bValue);
+}
+
+TEST(RimeConfigTest, Config_GetInt) {
+  bool bRet;
+  int value;
+  bRet = config->GetInt("root/int", &value);
+  EXPECT_TRUE(bRet);
+  EXPECT_TRUE(value == 1234);
+
+  bRet = config->GetInt("root2/mid/int", &value);
+  EXPECT_TRUE(bRet);
+  EXPECT_TRUE(value == 28);
+}
+
+TEST(RimeConfigTest, Config_GetDouble) {
+  bool bRet;
+  double value;
+  bRet = config->GetDouble("root/double", &value);
+  EXPECT_TRUE(bRet);
+  EXPECT_TRUE(value==3.1415926);
+
+  bRet = config->GetDouble("root2/low/double", &value);
+  EXPECT_TRUE(bRet);
+  EXPECT_TRUE(value==10.111);
+}
+
+TEST(RimeConfigTest, Config_GetString) {
+  bool bRet;
+  std::string value;
+  bRet = config->GetString("root/string", &value);
+  EXPECT_TRUE(bRet);
+  EXPECT_TRUE(value=="IOU");
+
+  bRet = config->GetString("root2/low/string", &value);
+  EXPECT_TRUE(bRet);
+  EXPECT_TRUE(value=="ABC");
 }

@@ -37,6 +37,7 @@ class YamlConfig : public Config {
 
  private:
   YAML::Node doc_;
+  const YAML::Node* Traverse(const std::string &key);
 };
 
 class YamlConfigComponent : public Component_<YamlConfig> {
