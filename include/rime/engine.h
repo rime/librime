@@ -16,14 +16,14 @@ namespace rime {
 
 class Schema;
 class Context;
-class Kevent;
+class KeyEvent;
 class Processor;
 
 class Engine {
  public:
   Engine();  // TODO(gongchen): arguments to argue
   ~Engine();
-  bool ProcessKeyEvent(const Kevent &kevent);
+  bool ProcessKeyEvent(const KeyEvent &key_event);
   set_schema(Schema *schema);
 
  private:

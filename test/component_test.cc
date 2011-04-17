@@ -14,7 +14,7 @@ using namespace rime;
 
 typedef std::pair<std::string, std::string> GreetingInfo;
 
-class Greeting : public Class_<Greeting, std::string> {
+class Greeting : public Class_<Greeting, const std::string&> {
  public:
   virtual const std::string Salute() = 0;
 };

@@ -64,7 +64,7 @@ class ConfigMap : public ConfigItem {
 };
 
 // config component interface
-class Config : public Class_<Config, std::string> {
+class Config : public Class_<Config, const std::string&> {
  public:
   virtual bool IsNull(const std::string &key) = 0;
   virtual bool GetBool(const std::string &key, bool *value) = 0;

@@ -19,7 +19,7 @@ namespace rime {
 //
 // define an interface to a family of interchangeable objects
 // a nested Component class will be generated
-class Greeting : public Class_<Greeting, std::string> {
+class Greeting : public Class_<Greeting, const std::string&> {
  public:
   virtual const std::string Salute() = 0;
 };
@@ -63,7 +63,7 @@ struct Class_ {
 
   class Component : public rime::Component {
    public:
-    virtual K* Create(const Initializer& arg) = 0;
+    virtual K* Create(Initializer arg) = 0;
   };
 
   static Component* Find(const std::string& name) {
@@ -74,7 +74,7 @@ struct Class_ {
 template <class T>
 struct Component_ : public T::Component {
  public:
-  T* Create(const typename T::Initializer& arg) {
+  T* Create(typename T::Initializer arg) {
     return new T(arg);
   }
 };
