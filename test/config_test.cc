@@ -5,7 +5,6 @@
 // License: GPLv3
 // 
 // 2011-04-06 Zou xu <zouivex@gmail.com>
-// 2011-04-08 GONG Chen <chen.sst@gmail.com>
 //
 
 #include <gtest/gtest.h>
@@ -15,70 +14,87 @@
 
 using namespace rime;
 
-Config::Component *cc;
-Config* config;
+class RimeConfigTest : public ::testing::Test {
+ protected:
+  RimeConfigTest() : component_(NULL), config_(NULL) {}
 
-TEST(RimeConfigTest, ConfigCreation) {
+  virtual void SetUp() {
+    component_ = new YamlConfigComponent(".");
+    config_ = component_->Create("test.yaml");
+  }
+
+  virtual void TearDown() {
+    if (config_)
+      delete config_;
+    if (component_)
+      delete component_;
+  }
+
+  Config::Component *component_;
+  Config *config_;
+};
+
+TEST_F(RimeConfigTest, ConfigCreation) {
   // registration
   Component::Register("test_config", new YamlConfigComponent("."));
   // finding component
-  cc = Config::Find("test_config");
+  Config::Component *cc = Config::Find("test_config");
   // creation
-  config = cc->Create("test.yaml");
+  scoped_ptr<Config> config(cc->Create("test.yaml"));
   EXPECT_TRUE(config);
 }
 
-TEST(RimeConfigTest, Config_IsNull) {
-  bool bNull = config->IsNull("root/bool");
-  EXPECT_TRUE(bNull);
+TEST_F(RimeConfigTest, Config_IsNull) {
+  bool is_null = config_->IsNull("root/bool");
+  EXPECT_TRUE(is_null);
 
-  bNull = config->IsNull("toor/loob");
-  EXPECT_FALSE(bNull);
+  is_null = config_->IsNull("toor/loob");
+  EXPECT_FALSE(is_null);
 }
 
-TEST(RimeConfigTest, Config_GetBool) {
-  bool bRet, bValue;
-  bRet = config->GetBool("root/bool", &bValue);
-  EXPECT_TRUE(bRet);
-  EXPECT_FALSE(bValue);
+TEST_F(RimeConfigTest, Config_GetBool) {
+  bool ret, value;
+  ret = config_->GetBool("root/bool", &value);
+  EXPECT_TRUE(ret);
+  EXPECT_FALSE(value);
 
-  bRet = config->GetBool("root2/high/bool", &bValue);
-  EXPECT_TRUE(bRet);
-  EXPECT_TRUE(bValue);
+  ret = config_->GetBool("root2/high/bool", &value);
+  EXPECT_TRUE(ret);
+  EXPECT_TRUE(value);
 }
 
-TEST(RimeConfigTest, Config_GetInt) {
-  bool bRet;
+TEST_F(RimeConfigTest, Config_GetInt) {
+  bool ret;
   int value;
-  bRet = config->GetInt("root/int", &value);
-  EXPECT_TRUE(bRet);
-  EXPECT_TRUE(value == 1234);
+  ret = config_->GetInt("root/int", &value);
+  EXPECT_TRUE(ret);
+  EXPECT_EQ(value, 1234);
 
-  bRet = config->GetInt("root2/mid/int", &value);
-  EXPECT_TRUE(bRet);
-  EXPECT_TRUE(value == 28);
+  ret = config_->GetInt("root2/mid/int", &value);
+  EXPECT_TRUE(ret);
+  EXPECT_EQ(value, 28);
 }
 
-TEST(RimeConfigTest, Config_GetDouble) {
-  bool bRet;
+TEST_F(RimeConfigTest, Config_GetDouble) {
+  bool ret;
   double value;
-  bRet = config->GetDouble("root/double", &value);
-  EXPECT_TRUE(bRet);
-  EXPECT_TRUE(value==3.1415926);
+  ret = config_->GetDouble("root/double", &value);
+  EXPECT_TRUE(ret);
+  EXPECT_EQ(value, 3.1415926);
 
-  bRet = config->GetDouble("root2/low/double", &value);
-  EXPECT_TRUE(bRet);
-  EXPECT_TRUE(value==10.111);
+  ret = config_->GetDouble("root2/low/double", &value);
+  EXPECT_TRUE(ret);
+  EXPECT_EQ(value, 10.111);
 }
 
-TEST(RimeConfigTest, Config_GetString) {
-  bool bRet;
+TEST_F(RimeConfigTest, Config_GetString) {
+  bool ret;
   std::string value;
-  bRet = config->GetString("root/string", &value);
-  EXPECT_TRUE(bRet);
-  EXPECT_TRUE(value=="IOU");
+  ret = config_->GetString("root/string", &value);
+  EXPECT_TRUE(ret);
+  EXPECT_EQ(value, "IOU");
 
-  bRet = config->GetString("root2/low/string", &value);
-  EXPECT_TRUE(bRet);
-  EXPECT_TRUE(value=="ABC");
+  ret = config_->GetString("root2/low/string", &value);
+  EXPECT_TRUE(ret);
+  EXPECT_EQ(value, "ABC");
 }

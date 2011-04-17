@@ -24,8 +24,8 @@ class YamlConfig : public Config {
     LoadFromFile(file_name);
   }
 
-  void LoadFromFile(const std::string& file_name);
-  void SaveToFile(const std::string& file_name);
+  bool LoadFromFile(const std::string& file_name);
+  bool SaveToFile(const std::string& file_name);
 
   virtual bool IsNull(const std::string &key);
   virtual bool GetBool(const std::string &key, bool *value);

@@ -7,15 +7,15 @@
 // 2011-4-6 Zou xu <zouivex@gmail.com>
 //
 #include <fstream>
+#include <vector>
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <yaml-cpp/yaml.h>
 #include "yaml_config.h"
-#include <boost/algorithm/string.hpp>
-#include <vector>
 
 namespace rime {
 
-void YamlConfig::LoadFromFile(const std::string& file_name) {
+bool YamlConfig::LoadFromFile(const std::string& file_name) {
   std::ifstream fin(file_name.c_str());
   YAML::Parser parser(fin);
   parser.GetNextDocument(doc_);
@@ -23,15 +23,17 @@ void YamlConfig::LoadFromFile(const std::string& file_name) {
   // note that the config file can be modified.
   // what's the best chance to traverse the tree, and
   // how to represent read/modified data?
+  return true;
 }
 
-void YamlConfig::SaveToFile(const std::string& file_name) {
+bool YamlConfig::SaveToFile(const std::string& file_name) {
   // TODO(zouxu):
+  return false;
 }
 
 bool YamlConfig::IsNull(const std::string &key) {
   // TODO(zouxu):
-  EZLOGGER("IsNull(", key, ")");
+  EZLOGGERVAR(key);
   const YAML::Node* p = Traverse(key);
   if(p)
     return true;
@@ -41,7 +43,7 @@ bool YamlConfig::IsNull(const std::string &key) {
 
 bool YamlConfig::GetBool(const std::string& key, bool *value) {
   // TODO(zouxu):
-  EZLOGGER(key);
+  EZLOGGERVAR(key);
   const YAML::Node* p = Traverse(key);
   if(!p)
     return false;
@@ -51,7 +53,7 @@ bool YamlConfig::GetBool(const std::string& key, bool *value) {
 
 bool YamlConfig::GetInt(const std::string& key, int *value) {
   // TODO(zouxu):
-  EZLOGGER(key);
+  EZLOGGERVAR(key);
   const YAML::Node* p = Traverse(key);
   if(!p)
     return false;
@@ -61,7 +63,7 @@ bool YamlConfig::GetInt(const std::string& key, int *value) {
 
 bool YamlConfig::GetDouble(const std::string& key, double *value) {
   // TODO(zouxu):
-  EZLOGGER(key);
+  EZLOGGERVAR(key);
   const YAML::Node* p = Traverse(key);
   if(!p)
     return false;
@@ -71,7 +73,7 @@ bool YamlConfig::GetDouble(const std::string& key, double *value) {
 
 bool YamlConfig::GetString(const std::string& key, std::string *value) {
   // TODO(zouxu):
-  EZLOGGER(key);
+  EZLOGGERVAR(key);
   const YAML::Node* p = Traverse(key);
   if(!p)
     return false;
@@ -92,11 +94,11 @@ ConfigMap* YamlConfig::GetMap(const std::string& key) {
 YamlConfig* YamlConfigComponent::Create(const std::string &file_name) {
   boost::filesystem::path p(conf_dir_);
   p /= file_name;
-  EZLOGGER("yaml config path:", p.string());
+  EZLOGGERPRINT("yaml config path: %s", p.string().c_str());
   return new YamlConfig(p.string());
 }
 
-const YAML::Node* YamlConfig::Traverse(const std::string& key){
+const YAML::Node* YamlConfig::Traverse(const std::string &key) {
   std::vector<std::string> keys;
   boost::split(keys, key, boost::is_any_of("/"));
 
@@ -105,12 +107,13 @@ const YAML::Node* YamlConfig::Traverse(const std::string& key){
 
   const YAML::Node* pNode = &doc_; 
 
-  for(; it != ite; ++it){
-    EZLOGGER("keyNode:", *it);
+  for(; it != ite; ++it) {
+    EZLOGGERPRINT("key node: %s", it->c_str());
     pNode = pNode->FindValue(*it);
     if(!pNode)
       return NULL;
   }
   return pNode;
 }
+
 }  // namespace rime

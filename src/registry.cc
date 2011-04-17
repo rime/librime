@@ -17,7 +17,7 @@ namespace rime {
 
 void RegisterComponents()
 {
-  EZLOGGER("register built-in components");
+  EZLOGGERPRINT("registering built-in components");
   Component::Register("config", new YamlConfigComponent("config_path"));
 }
 
