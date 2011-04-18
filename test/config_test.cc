@@ -68,11 +68,11 @@ TEST_F(RimeConfigTest, Config_GetInt) {
   int value;
   ret = config_->GetInt("root/int", &value);
   EXPECT_TRUE(ret);
-  EXPECT_EQ(value, 1234);
+  EXPECT_EQ(1234, value);
 
   ret = config_->GetInt("root2/mid/int", &value);
   EXPECT_TRUE(ret);
-  EXPECT_EQ(value, 28);
+  EXPECT_EQ(28, value);
 }
 
 TEST_F(RimeConfigTest, Config_GetDouble) {
@@ -80,11 +80,11 @@ TEST_F(RimeConfigTest, Config_GetDouble) {
   double value;
   ret = config_->GetDouble("root/double", &value);
   EXPECT_TRUE(ret);
-  EXPECT_EQ(value, 3.1415926);
+  EXPECT_EQ(3.1415926, value);
 
   ret = config_->GetDouble("root2/low/double", &value);
   EXPECT_TRUE(ret);
-  EXPECT_EQ(value, 10.111);
+  EXPECT_EQ(10.111, value);
 }
 
 TEST_F(RimeConfigTest, Config_GetString) {
@@ -92,9 +92,9 @@ TEST_F(RimeConfigTest, Config_GetString) {
   std::string value;
   ret = config_->GetString("root/string", &value);
   EXPECT_TRUE(ret);
-  EXPECT_EQ(value, "IOU");
+  EXPECT_EQ("IOU", value);
 
   ret = config_->GetString("root2/low/string", &value);
   EXPECT_TRUE(ret);
-  EXPECT_EQ(value, "ABC");
+  EXPECT_EQ("ABC", value);
 }
