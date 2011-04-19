@@ -9,7 +9,7 @@
 #include <gtest/gtest.h>
 #include <rime/key_table.h>
 
-TEST(RimeKeyTableTest, KeycodeConvertion) {
+TEST(RimeKeyTableTest, KeycodeLookup) {
   EXPECT_EQ(RIME_CONTROL_MASK, GetModifierByName("Control"));
   EXPECT_EQ(0, GetModifierByName("abracadabra"));
   EXPECT_EQ(0, GetModifierByName("control"));
@@ -18,7 +18,7 @@ TEST(RimeKeyTableTest, KeycodeConvertion) {
   EXPECT_STREQ("Control", GetModifierName(RIME_CONTROL_MASK | RIME_RELEASE_MASK));
 }
 
-TEST(RimeKeyTableTest, ModifierConvertion) {
+TEST(RimeKeyTableTest, ModifierLookup) {
   EXPECT_EQ(XK_A, GetKeycodeByName("A"));
   EXPECT_EQ(XK_z, GetKeycodeByName("z"));
   EXPECT_EQ(XK_0, GetKeycodeByName("0"));
@@ -27,6 +27,6 @@ TEST(RimeKeyTableTest, ModifierConvertion) {
   EXPECT_EQ(XK_VoidSymbol, GetKeycodeByName("Control+c"));
   EXPECT_STREQ("a", GetKeyName(XK_a));
   EXPECT_STREQ("space", GetKeyName(XK_space));
-  EXPECT_STREQ("0xfffe", GetKeyName(0xfffe));
-  EXPECT_STREQ("0xfffffe", GetKeyName(0xfffffe));
+  EXPECT_EQ(NULL, GetKeyName(0xfffe));
+  EXPECT_EQ(NULL, GetKeyName(0xfffffe));
 }

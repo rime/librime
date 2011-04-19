@@ -51,7 +51,6 @@ const char* GetModifierName(int modifier);
 int GetKeycodeByName(const char *name);
 
 // 由键值取得键名
-// 不认得此键，则返回四位或六位十六进制数形式的文字
-// 形如 "0x12ab", "0xfffffe"
+// 不认得此键，则返回 NULL
 const char* GetKeyName(int keycode);
 

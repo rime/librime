@@ -2,6 +2,7 @@
 // encoding: utf-8
 
 #include <stddef.h>
+#include <string.h>
 #include <X11/keysym.h>
 
 static const char *modifier_name[] = {
@@ -3960,26 +3961,44 @@ static const key_entry keys_by_name[] = {
   { 0x0001be, 1449 }
 };
 
-int GetModifierByName(const char *name)
-{
-  // TODO(gongchen):
+int GetModifierByName(const char *name) {
+  const int n = sizeof(modifier_name) / sizeof(const char*);
+  if (!name)
+    return 0;
+  for (int i = 0; i < n; ++i) {
+    if (modifier_name[i] && !strcmp(name, modifier_name[i])) {
+      return (1 << i);
+    }
+  }
   return 0;
 }
 
-const char* GetModifierName(int modifier)
-{
-  // TODO(gongchen):
+const char* GetModifierName(int modifier) {
+  const int n = sizeof(modifier_name) / sizeof(const char*);
+  for (int i = 0; i < n && modifier != 0; ++i) {
+    if ((modifier & 1) != 0) {
+      return modifier_name[i];
+    }
+    modifier >>= 1;
+  }
   return NULL;
 }
 
-int GetKeycodeByName(const char *name)
-{
-  // TODO(gongchen):
+int GetKeycodeByName(const char *name) {
+  for (const key_entry *p = keys_by_keyval; p->keyval != XK_VoidSymbol; ++p) {
+    if (!strcmp(name, key_names + p->offset)) {
+      return p->keyval;
+    }
+  }
   return XK_VoidSymbol;
 }
 
-const char* GetKeyName(int keycode)
-{
-  // TODO(gongchen):
+const char* GetKeyName(int keycode) {
+  const int n = sizeof(keys_by_name) / sizeof(const key_entry);
+  for (int i = 0; i < n; ++i) {
+    if (keycode == keys_by_name[i].keyval) {
+      return key_names + keys_by_name[i].offset;
+    }
+  }
   return NULL;
 }
