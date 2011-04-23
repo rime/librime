@@ -8,6 +8,7 @@ typedef enum {
   RIME_LOCK_MASK     = 1 << 1,
   RIME_CONTROL_MASK  = 1 << 2,
   RIME_MOD1_MASK     = 1 << 3,
+  RIME_ALT_MASK      = RIME_MOD1_MASK,
   RIME_MOD2_MASK     = 1 << 4,
   RIME_MOD3_MASK     = 1 << 5,
   RIME_MOD4_MASK     = 1 << 6,
