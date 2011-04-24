@@ -10,6 +10,7 @@
 #define RIME_ENGINE_H_
 
 #include <vector>
+#include <boost/signals.hpp>
 #include <rime/common.h>
 
 namespace rime {
@@ -22,20 +23,26 @@ class Dictionary;
 
 class Engine {
  public:
-  Engine();  // TODO(gongchen): arguments to argue
+  typedef boost::signal<void (const std::string &commit_text)> CommitSink;
+
+  Engine();
   ~Engine();
 
   bool ProcessKeyEvent(const KeyEvent &key_event);
-  void set_schema(Schema *schema);
+  void Commit();
+  bool IsComposing() const;
 
+  void set_schema(Schema *schema);
   Schema* schema() const { return schema_.get(); }
   Context* context() const { return context_.get(); }
+  CommitSink& sink() { return sink_; }
 
  private:
   scoped_ptr<Schema> schema_;
   scoped_ptr<Context> context_;
   std::vector<shared_ptr<Processor> > processors_;
   std::vector<shared_ptr<Dictionary> > dictionaries_;
+  CommitSink sink_;
 };
 
 }  // namespace rime

@@ -9,6 +9,7 @@
 #ifndef RIME_KEY_EVENT_H_
 #define RIME_KEY_EVENT_H_
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include <rime/common.h>
@@ -63,6 +64,16 @@ class KeySequence : public std::vector<KeyEvent> {
   // 解析按鍵序列描述文字
   bool Parse(const std::string &repr);
 };
+
+inline std::ostream& operator<< (std::ostream& out, const KeyEvent &key_event) {
+  out << key_event.repr();
+  return out;
+}
+
+inline std::ostream& operator<< (std::ostream& out, const KeySequence &key_seq) {
+  out << key_seq.repr();
+  return out;
+}
 
 }  // namespace rime
 

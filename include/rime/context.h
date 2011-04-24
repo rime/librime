@@ -13,13 +13,15 @@
 
 namespace rime {
 
-// TODO:
 class Context {
  public:
   Context() {}
   ~Context() {}
 
-  void set_input(const std::string &value);
+  // TODO: notification on input change
+  void PushInput(char ch) { input_.push_back(ch); }
+  void Clear() { input_.clear(); }
+  void set_input(const std::string &value) { input_ = value; }
   const std::string& input() const { return input_; }
 
  private:
