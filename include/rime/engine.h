@@ -26,7 +26,7 @@ class Engine {
   ~Engine();
 
   bool ProcessKeyEvent(const KeyEvent &key_event);
-  set_schema(Schema *schema);
+  void set_schema(Schema *schema);
 
   Schema* schema() const { return schema_.get(); }
   Context* context() const { return context_.get(); }

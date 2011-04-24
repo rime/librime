@@ -9,19 +9,32 @@
 #include <iostream>
 #include <rime/common.h>
 #include <rime/component.h>
+#include <rime/engine.h>
+#include <rime/key_event.h>
 
-void RimeWith(const std::string &line) {
-  // TODO: echo
-  std::cout << line << std::endl;
-}
+class Verse {
+ public:
+  void RimeWith(const std::string &line) {
+    rime::KeySequence ks;
+    if (!ks.Parse(line)) {
+      EZLOGGERPRINT("error parsing input: %s", line.c_str());
+    }
+    // TODO:
+    std::cout << ks.repr() << std::endl;
+  }
+
+ private:
+  rime::scoped_ptr<rime::Engine> engine_;
+};
 
 int main(int argc, char *argv[]) {
   rime::RegisterComponents();
-  // process input
+  Verse verse;
   std::string line;
+  // process input
   while (std::cin) {
     std::getline(std::cin, line);
-    RimeWith(line);
+    verse.RimeWith(line);
   }
   return 0;
 }
