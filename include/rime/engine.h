@@ -18,18 +18,24 @@ class Schema;
 class Context;
 class KeyEvent;
 class Processor;
+class Dictionary;
 
 class Engine {
  public:
   Engine();  // TODO(gongchen): arguments to argue
   ~Engine();
+
   bool ProcessKeyEvent(const KeyEvent &key_event);
   set_schema(Schema *schema);
+
+  Schema* schema() const { return schema_.get(); }
+  Context* context() const { return context_.get(); }
 
  private:
   scoped_ptr<Schema> schema_;
   scoped_ptr<Context> context_;
   std::vector<shared_ptr<Processor> > processors_;
+  std::vector<shared_ptr<Dictionary> > dictionaries_;
 };
 
 }  // namespace rime
