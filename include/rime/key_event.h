@@ -29,10 +29,10 @@ class KeyEvent {
   int modifier() const { return modifier_; }
   void modifier(int value) { modifier_ = value; }
 
-  bool shift() const { return (modifier_ & RIME_SHIFT_MASK) != 0; }
-  bool ctrl() const { return (modifier_ & RIME_CONTROL_MASK) != 0; }
-  bool alt() const { return (modifier_ & RIME_ALT_MASK) != 0; }
-  bool release() const { return (modifier_ & RIME_RELEASE_MASK) != 0; }
+  bool shift() const { return (modifier_ & kShiftMask) != 0; }
+  bool ctrl() const { return (modifier_ & kControlMask) != 0; }
+  bool alt() const { return (modifier_ & kAltMask) != 0; }
+  bool release() const { return (modifier_ & kReleaseMask) != 0; }
   // 按鍵表示為形如「狀態+鍵名」的文字
   // 若無鍵名，則以四位或六位十六进制数形式的文字來標識
   // 形如 "0x12ab", "0xfffffe"

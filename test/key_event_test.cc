@@ -6,6 +6,7 @@
 // 
 // 2011-04-07 GONG Chen <chen.sst@gmail.com>
 //
+#include <sstream>
 #include <gtest/gtest.h>
 #include <rime/key_event.h>
 
@@ -31,7 +32,7 @@ TEST(RimeKeyEventTest, BadKeyName) {
 }
 
 TEST(RimeKeyEventTest, ModifiedKeyEvent) {
-  KeyEvent ke(XK_A, RIME_SHIFT_MASK | RIME_CONTROL_MASK | RIME_RELEASE_MASK);
+  KeyEvent ke(XK_A, kShiftMask | kControlMask | kReleaseMask);
   EXPECT_TRUE(ke.shift());
   EXPECT_FALSE(ke.alt());
   EXPECT_TRUE(ke.ctrl());
@@ -39,9 +40,9 @@ TEST(RimeKeyEventTest, ModifiedKeyEvent) {
 }
 
 TEST(RimeKeyEventTest, ModifiedKeyEventRepresentation) {
-  KeyEvent ctrl_a(XK_a, RIME_CONTROL_MASK);
+  KeyEvent ctrl_a(XK_a, kControlMask);
   EXPECT_STREQ("Control+a", ctrl_a.repr().c_str());
-  KeyEvent less_keyup(XK_less, RIME_SHIFT_MASK | RIME_RELEASE_MASK);
+  KeyEvent less_keyup(XK_less, kShiftMask | kReleaseMask);
   EXPECT_STREQ("Shift+Release+less", less_keyup.repr().c_str());
 }
 
@@ -68,6 +69,13 @@ TEST(RimeKeyEventTest, Equality) {
   KeyEvent ke2("plus");
   EXPECT_TRUE(ke0 == ke1);
   EXPECT_TRUE(ke1 == ke2);
+}
+
+TEST(RimeKeyEventTest, Serialization) {
+  KeyEvent ke(XK_comma, kControlMask);
+  std::ostringstream out;
+  out << ke;
+  EXPECT_STREQ("Control+comma", out.str().c_str());
 }
 
 TEST(RimeKeySequenceTest, PlainString) {
@@ -110,11 +118,18 @@ TEST(RimeKeySequenceTest, KeySequenceWithModifiedKeys) {
   EXPECT_FALSE(ks[11].release());
 }
 
-TEST(RimeKeySequenceTest, Stringify) {
+TEST(RimeKeySequenceTest, Stringification) {
   KeySequence ks;
   ASSERT_TRUE(ks.Parse("z y,x."));
   ks.push_back(KeyEvent("{"));
   ks.push_back(KeyEvent("}"));
   EXPECT_STREQ("z{space}y{comma}x{period}{braceleft}{braceright}",
                ks.repr().c_str());
+}
+
+TEST(RimeKeySequenceTest, Serialization) {
+  KeySequence ks("abc, defg.");
+  std::ostringstream out;
+  out << ks;
+  EXPECT_STREQ("abc{comma}{space}defg{period}", out.str().c_str());
 }

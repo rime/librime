@@ -9,13 +9,15 @@
 #include <gtest/gtest.h>
 #include <rime/key_table.h>
 
+using namespace rime;
+
 TEST(RimeKeyTableTest, KeycodeLookup) {
-  EXPECT_EQ(RIME_CONTROL_MASK, GetModifierByName("Control"));
+  EXPECT_EQ(kControlMask, GetModifierByName("Control"));
   EXPECT_EQ(0, GetModifierByName("abracadabra"));
   EXPECT_EQ(0, GetModifierByName("control"));
-  EXPECT_STREQ("Control", GetModifierName(RIME_CONTROL_MASK));
-  EXPECT_STREQ("Release", GetModifierName(RIME_RELEASE_MASK));
-  EXPECT_STREQ("Control", GetModifierName(RIME_CONTROL_MASK | RIME_RELEASE_MASK));
+  EXPECT_STREQ("Control", GetModifierName(kControlMask));
+  EXPECT_STREQ("Release", GetModifierName(kReleaseMask));
+  EXPECT_STREQ("Control", GetModifierName(kControlMask | kReleaseMask));
 }
 
 TEST(RimeKeyTableTest, ModifierLookup) {

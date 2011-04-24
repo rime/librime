@@ -3961,6 +3961,8 @@ static const key_entry keys_by_name[] = {
   { 0x0001be, 1449 }
 };
 
+namespace rime {
+
 int GetModifierByName(const char *name) {
   const int n = sizeof(modifier_name) / sizeof(const char*);
   if (!name)
@@ -4002,3 +4004,5 @@ const char* GetKeyName(int keycode) {
   }
   return NULL;
 }
+
+}  // namespace rime

@@ -9,6 +9,7 @@
 #ifndef RIME_ENGINE_H_
 #define RIME_ENGINE_H_
 
+#include <string>
 #include <vector>
 #include <boost/signals.hpp>
 #include <rime/common.h>
@@ -29,8 +30,8 @@ class Engine {
   ~Engine();
 
   bool ProcessKeyEvent(const KeyEvent &key_event);
-  void Commit();
-  bool IsComposing() const;
+
+  void OnCommit(Context *ctx, const std::string &commit_text);
 
   void set_schema(Schema *schema);
   Schema* schema() const { return schema_.get(); }

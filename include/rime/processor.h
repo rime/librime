@@ -13,14 +13,21 @@
 
 namespace rime {
 
-class Kevent;
+class Engine;
+class KeyEvent;
 
-class Processor : Component {
+class Processor : public Class_<Processor, Engine*> {
  public:
-  virtual bool ProcessKeyEvent(const Kevent& /*kevent*/)
-  {
+ public:
+  explicit Processor(Engine *engine) : engine_(engine) {}
+  virtual ~Processor() {}
+
+  virtual bool ProcessKeyEvent(const KeyEvent &/*key_event*/) {
     return false;
   }
+
+ protected:
+  Engine *engine_;
 };
 
 }  // namespace rime

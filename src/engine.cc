@@ -7,44 +7,53 @@
 // 2011-04-24 GONG Chen <chen.sst@gmail.com>
 //
 #include <cctype>
+#include <string>
+#include <boost/bind.hpp>
+#include <boost/foreach.hpp>
 #include <rime/context.h>
 #include <rime/engine.h>
-#include <rime/schema.h>
 #include <rime/key_event.h>
+#include <rime/processor.h>
+#include <rime/schema.h>
 
 namespace rime {
 
 Engine::Engine() : schema_(new Schema), context_(new Context) {
   EZLOGGERFUNCTRACKER;
+  // TODO: load a list of components from schema config
+  std::string processor_name("trivial_processor");
+  Processor::Component *pc = Processor::Find(processor_name);
+  if (!pc) {
+    EZLOGGERPRINT("error creating processor: '%s'", processor_name.c_str());
+  }
+  else {
+    shared_ptr<Processor> p(pc->Create(this));
+    processors_.push_back(p);
+  }
+  // receive notifications on commits
+  context_->commit_notifier().connect(
+      boost::bind(&Engine::OnCommit, this, _1, _2));
 }
 
 Engine::~Engine() {
   EZLOGGERFUNCTRACKER;
+  processors_.clear();
+  dictionaries_.clear();
 }
 
 bool Engine::ProcessKeyEvent(const KeyEvent &key_event) {
   EZLOGGERVAR(key_event);
-  // TODO(gongchen): logic should be defined in processors
-  int ch = key_event.keycode();
-  if (ch == XK_Return && IsComposing()) {
-    Commit();
-    return true;
-  }
-  if (std::isprint(ch)) {
-    context_->PushInput(key_event.keycode());
-    return true;
+  BOOST_FOREACH(shared_ptr<Processor> &p, processors_) {
+    if (p->ProcessKeyEvent(key_event)) {
+      return true;
+    }
   }
   return false;
 }
 
-void Engine::Commit() {
-  // TODO(gongchen): echoing...
-  sink_(context_->input());
-  context_->Clear();
-}
-
-bool Engine::IsComposing() const {
-  return !context_->input().empty();
+void Engine::OnCommit(Context *ctx, const std::string &commit_text) {
+  sink_(commit_text);
+  ctx->Clear();
 }
 
 }  // namespace rime

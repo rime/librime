@@ -12,6 +12,7 @@
 #include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/component.h>
+#include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/key_event.h>
 
@@ -39,13 +40,16 @@ class Verse {
     BOOST_FOREACH(const rime::KeyEvent &ke, keys) {
       engine_->ProcessKeyEvent(ke);
     }
-    if (!interactive_ && engine_->IsComposing()) {
-      engine_->Commit();
+    if (!interactive_) {
+      rime::Context *ctx = engine_->context();
+      if (ctx && ctx->IsComposing()) {
+        ctx->Commit();
+      }
     }
   }
 
-  bool interactive() const { return interactive_; }
   void set_interactive(bool interactive) { interactive_ = interactive; }
+  bool interactive() const { return interactive_; }
 
  private:
   bool interactive_;

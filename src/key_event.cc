@@ -9,6 +9,7 @@
 #include <string>
 #include <sstream>
 #include <rime/key_event.h>
+#include <rime/key_table.h>
 
 namespace rime {
 
@@ -21,7 +22,7 @@ const std::string KeyEvent::repr() const {
   // stringify modifiers
   std::ostringstream modifiers;
   if (modifier_) {
-    int k = modifier_ & RIME_MODIFIER_MASK;
+    int k = modifier_ & kModifierMask;
     const char *modifier_name = NULL;
     for (int i = 0; k; ++i, k >>= 1) {
       if (!(k & 1))

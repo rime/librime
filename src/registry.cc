@@ -11,6 +11,7 @@
 
 // TODO: include implementations of built-in components
 #include <rime/common.h>
+#include "trivial_processor.h"
 #include "yaml_config.h"
 
 namespace rime {
@@ -18,7 +19,13 @@ namespace rime {
 void RegisterComponents()
 {
   EZLOGGERPRINT("registering built-in components");
-  Component::Register("config", new YamlConfigComponent("config_path"));
+
+  Component::Register("config", new YamlConfigComponent("."));
+
+  // processors
+  Component::Register("trivial_processor", new TrivialProcessorComponent);
+
+  // dictionaries
 }
 
 }  // namespace rime
