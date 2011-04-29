@@ -10,6 +10,5 @@
 
 namespace rime {
 
-// TODO:
 
 }  // namespace rime

@@ -19,10 +19,6 @@ bool YamlConfig::LoadFromFile(const std::string& file_name) {
   std::ifstream fin(file_name.c_str());
   YAML::Parser parser(fin);
   parser.GetNextDocument(doc_);
-  // TODO(zouxu):
-  // note that the config file can be modified.
-  // what's the best chance to traverse the tree, and
-  // how to represent read/modified data?
   return true;
 }
 
@@ -32,17 +28,12 @@ bool YamlConfig::SaveToFile(const std::string& file_name) {
 }
 
 bool YamlConfig::IsNull(const std::string &key) {
-  // TODO(zouxu):
   EZLOGGERVAR(key);
   const YAML::Node* p = Traverse(key);
-  if(p)
-    return true;
-  else
-    return false;
+  return !p;
 }
 
 bool YamlConfig::GetBool(const std::string& key, bool *value) {
-  // TODO(zouxu):
   EZLOGGERVAR(key);
   const YAML::Node* p = Traverse(key);
   if(!p)
@@ -52,7 +43,6 @@ bool YamlConfig::GetBool(const std::string& key, bool *value) {
 }
 
 bool YamlConfig::GetInt(const std::string& key, int *value) {
-  // TODO(zouxu):
   EZLOGGERVAR(key);
   const YAML::Node* p = Traverse(key);
   if(!p)
@@ -62,7 +52,6 @@ bool YamlConfig::GetInt(const std::string& key, int *value) {
 }
 
 bool YamlConfig::GetDouble(const std::string& key, double *value) {
-  // TODO(zouxu):
   EZLOGGERVAR(key);
   const YAML::Node* p = Traverse(key);
   if(!p)
@@ -72,7 +61,6 @@ bool YamlConfig::GetDouble(const std::string& key, double *value) {
 }
 
 bool YamlConfig::GetString(const std::string& key, std::string *value) {
-  // TODO(zouxu):
   EZLOGGERVAR(key);
   const YAML::Node* p = Traverse(key);
   if(!p)
@@ -82,11 +70,15 @@ bool YamlConfig::GetString(const std::string& key, std::string *value) {
 }
 
 ConfigList* YamlConfig::GetList(const std::string& key) {
+  EZLOGGERVAR(key);
+  const YAML::Node* p = Traverse(key);
   // TODO(zouxu):
   return NULL;
 }
 
 ConfigMap* YamlConfig::GetMap(const std::string& key) {
+  EZLOGGERVAR(key);
+  const YAML::Node* p = Traverse(key);
   // TODO(zouxu):
   return NULL;
 }

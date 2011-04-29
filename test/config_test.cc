@@ -34,7 +34,7 @@ class RimeConfigTest : public ::testing::Test {
   Config *config_;
 };
 
-TEST_F(RimeConfigTest, ConfigCreation) {
+TEST(RimeConfigComponentTest, RealCreationWorkflow) {
   // registration
   Component::Register("test_config", new YamlConfigComponent("."));
   // finding component
@@ -44,21 +44,110 @@ TEST_F(RimeConfigTest, ConfigCreation) {
   EXPECT_TRUE(config);
 }
 
-TEST_F(RimeConfigTest, Config_IsNull) {
-  bool is_null = config_->IsNull("root/bool");
-  EXPECT_TRUE(is_null);
+TEST(RimeConfigItemTest, NullItem) {
+  ConfigItem item;
+  EXPECT_EQ(ConfigItem::kNull, item.type());
+}
 
-  is_null = config_->IsNull("toor/loob");
+TEST(RimeConfigItemTest, BooleanSchalar) {
+  ConfigValue config_value(true);
+  EXPECT_EQ(ConfigItem::kScalar, config_value.type());
+  bool value = false;
+  EXPECT_TRUE(config_value.get<bool>(&value));
+  EXPECT_EQ(true, value);
+}
+
+TEST(RimeConfigItemTest, IntSchalar) {
+  ConfigValue config_value(123);
+  EXPECT_EQ(ConfigItem::kScalar, config_value.type());
+  int value = 0;
+  EXPECT_TRUE(config_value.get<int>(&value));
+  EXPECT_EQ(123, value);
+}
+
+TEST(RimeConfigItemTest, DoubleSchalar) {
+  ConfigValue config_value(3.1415926);
+  EXPECT_EQ(ConfigItem::kScalar, config_value.type());
+  double value = 0;
+  EXPECT_TRUE(config_value.get<double>(&value));
+  EXPECT_EQ(3.1415926, value);
+}
+
+TEST(RimeConfigItemTest, StringSchalar) {
+  ConfigValue config_value("zyxwvu");
+  EXPECT_EQ(ConfigItem::kScalar, config_value.type());
+  std::string value;
+  EXPECT_TRUE(config_value.get(&value));
+  EXPECT_STREQ("zyxwvu", value.c_str());
+  config_value.set("abcdefg");
+  EXPECT_TRUE(config_value.get(&value));
+  EXPECT_STREQ("abcdefg", value.c_str());
+}
+
+TEST(RimeConfigItemTest, ConfigList) {
+  ConfigList a;
+  a.push_back(shared_ptr<ConfigItem>(new ConfigItem));
+  a.push_back(ConfigValue::Create(false));
+  a.push_back(ConfigValue::Create(123));
+  a.push_back(ConfigValue::Create(3.14));
+  a.push_back(ConfigValue::Create("zyx"));
+  a.push_back(ConfigList::Create());
+  ASSERT_EQ(6, a.size());
+  EXPECT_EQ(ConfigItem::kNull, a[0]->type());
+  EXPECT_EQ(ConfigItem::kScalar, a[1]->type());
+  EXPECT_EQ(ConfigItem::kList, a[5]->type());
+  {
+    bool value = true;
+    EXPECT_FALSE(a[0]->get<bool>(&value));
+    EXPECT_FALSE(a[2]->get<bool>(&value));
+    EXPECT_FALSE(a[3]->get<bool>(&value));
+    EXPECT_FALSE(a[4]->get<bool>(&value));
+    EXPECT_FALSE(a[5]->get<bool>(&value));
+    EXPECT_TRUE(a[1]->get<bool>(&value));
+    EXPECT_FALSE(value);
+  }
+  {
+    int value;
+    EXPECT_TRUE(a[2]->get<int>(&value));
+    EXPECT_EQ(123, value);
+  }
+  {
+    double value;
+    EXPECT_TRUE(a[3]->get<double>(&value));
+    EXPECT_EQ(3.14, value);
+  }
+  {
+    std::string value;
+    EXPECT_TRUE(a[4]->get(&value));
+    EXPECT_STREQ("zyx", value.c_str());
+  }
+  {
+    ConfigList *nested = NULL;
+    nested = a[5]->As<ConfigList>();
+    ASSERT_TRUE(nested);
+    EXPECT_EQ(0, nested->size());
+  }
+}
+
+TEST(RimeConfigItemTest, ConfigMap) {
+  // TODO:
+}
+
+TEST_F(RimeConfigTest, Config_IsNull) {
+  bool is_null = config_->IsNull("terrans/tank");
   EXPECT_FALSE(is_null);
+
+  is_null = config_->IsNull("protoss/tank");
+  EXPECT_TRUE(is_null);
 }
 
 TEST_F(RimeConfigTest, Config_GetBool) {
   bool ret, value;
-  ret = config_->GetBool("root/bool", &value);
+  ret = config_->GetBool("terrans/tank/seiged", &value);
   EXPECT_TRUE(ret);
   EXPECT_FALSE(value);
 
-  ret = config_->GetBool("root2/high/bool", &value);
+  ret = config_->GetBool("zerg/lurker/burrowed", &value);
   EXPECT_TRUE(ret);
   EXPECT_TRUE(value);
 }
@@ -66,23 +155,23 @@ TEST_F(RimeConfigTest, Config_GetBool) {
 TEST_F(RimeConfigTest, Config_GetInt) {
   bool ret;
   int value;
-  ret = config_->GetInt("root/int", &value);
-  EXPECT_TRUE(ret);
-  EXPECT_EQ(1234, value);
-
-  ret = config_->GetInt("root2/mid/int", &value);
+  ret = config_->GetInt("terrans/supply/produced", &value);
   EXPECT_TRUE(ret);
   EXPECT_EQ(28, value);
+
+  ret = config_->GetInt("zerg/zergling/lost", &value);
+  EXPECT_TRUE(ret);
+  EXPECT_EQ(1234, value);
 }
 
 TEST_F(RimeConfigTest, Config_GetDouble) {
   bool ret;
   double value;
-  ret = config_->GetDouble("root/double", &value);
+  ret = config_->GetDouble("terrans/math/pi", &value);
   EXPECT_TRUE(ret);
   EXPECT_EQ(3.1415926, value);
 
-  ret = config_->GetDouble("root2/low/double", &value);
+  ret = config_->GetDouble("protoss/battery/energy", &value);
   EXPECT_TRUE(ret);
   EXPECT_EQ(10.111, value);
 }
@@ -90,11 +179,28 @@ TEST_F(RimeConfigTest, Config_GetDouble) {
 TEST_F(RimeConfigTest, Config_GetString) {
   bool ret;
   std::string value;
-  ret = config_->GetString("root/string", &value);
+  ret = config_->GetString("protoss/residence", &value);
   EXPECT_TRUE(ret);
-  EXPECT_EQ("IOU", value);
+  EXPECT_EQ("Aiur", value);
 
-  ret = config_->GetString("root2/low/string", &value);
+  ret = config_->GetString("zerg/queen", &value);
   EXPECT_TRUE(ret);
-  EXPECT_EQ("ABC", value);
+  EXPECT_EQ("Kerrigan", value);
 }
+
+TEST_F(RimeConfigTest, Config_GetList) {
+  ConfigList *p;
+  p = config_->GetList("protoss/air_force");
+  ASSERT_TRUE(p);
+
+  // TODO:
+}
+
+TEST_F(RimeConfigTest, Config_GetMap) {
+  ConfigMap *p;
+  p = config_->GetMap("terrans/tank/cost");
+  ASSERT_TRUE(p);
+
+  // TODO:
+}
+
