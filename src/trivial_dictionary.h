@@ -10,13 +10,15 @@
 #ifndef TRIVIAL_DICTIONARY_H_
 #define TRIVIAL_DICTIONARY_H_
 
+#include <rime/basic_dictionary.h>
+
 namespace rime {
   
-class TrivialDictionary {
+class TrivialDictionary : public BasicDictionary {
   public:
-    
+    virtual ~TrivialDictionary(){};
+    virtual void Lookup(const Engine *engine, DictionaryResult& dict_result); 
   private:
-    //Vocabulary *vacabulary_ptr_;
     
 };
 
