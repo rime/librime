@@ -20,7 +20,7 @@ bool YamlConfig::LoadFromFile(const std::string& file_name) {
   YAML::Parser parser(fin);
   YAML::Node doc;
   parser.GetNextDocument(doc);
-  tree_ = Convert(doc);
+  tree_ = Convert(&doc);
   return tree_;
 }
 
@@ -32,7 +32,7 @@ bool YamlConfig::SaveToFile(const std::string& file_name) {
 bool YamlConfig::IsNull(const std::string &key) {
   EZLOGGERVAR(key);
   ConfigItemPtr p(Traverse(key));
-  return !p || kNull == p->type();
+  return !p || ConfigItem::kNull == p->type();
 }
 
 bool YamlConfig::GetBool(const std::string& key, bool *value) {
@@ -73,7 +73,7 @@ shared_ptr<ConfigList> YamlConfig::GetList(const std::string& key) {
   return dynamic_pointer_cast<ConfigList>(p);
 }
 
-ConfigMap* YamlConfig::GetMap(const std::string& key) {
+shared_ptr<ConfigMap> YamlConfig::GetMap(const std::string& key) {
   EZLOGGERVAR(key);
   ConfigItemPtr p(Traverse(key));
   return dynamic_pointer_cast<ConfigMap>(p);
@@ -86,22 +86,29 @@ YamlConfig* YamlConfigComponent::Create(const std::string &file_name) {
   return new YamlConfig(p.string());
 }
 
-const YAML::Node* YamlConfig::Traverse(const std::string &key) {
+const ConfigItemPtr YamlConfig::Convert(const YAML::Node *node) {
+  // TODO:
+  return ConfigItemPtr();
+}
+
+const ConfigItemPtr YamlConfig::Traverse(const std::string &key) {
   std::vector<std::string> keys;
   boost::split(keys, key, boost::is_any_of("/"));
 
+  ConfigItemPtr p(tree_); 
   std::vector<std::string>::iterator it = keys.begin();
-  std::vector<std::string>::iterator ite = keys.end();
-
-  const YAML::Node* pNode = &doc_; 
-
-  for(; it != ite; ++it) {
+  std::vector<std::string>::iterator end = keys.end();
+  for (; it != end; ++it) {
     EZLOGGERPRINT("key node: %s", it->c_str());
-    pNode = pNode->FindValue(*it);
-    if(!pNode)
-      return NULL;
+    shared_ptr<ConfigMap> map_ptr(dynamic_pointer_cast<ConfigMap>(p));
+    if(!map_ptr)
+      return ConfigItemPtr();
+    ConfigMap::const_iterator entry = map_ptr->find(*it);
+    if (entry == map_ptr->end())
+      return ConfigItemPtr();
+    p = entry->second;
   }
-  return pNode;
+  return p;
 }
 
 }  // namespace rime

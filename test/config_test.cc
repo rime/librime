@@ -189,7 +189,7 @@ TEST_F(RimeConfigTest, Config_GetString) {
 }
 
 TEST_F(RimeConfigTest, Config_GetList) {
-  ConfigList *p;
+  shared_ptr<ConfigList> p;
   p = config_->GetList("protoss/air_force");
   ASSERT_TRUE(p);
 
@@ -197,7 +197,7 @@ TEST_F(RimeConfigTest, Config_GetList) {
 }
 
 TEST_F(RimeConfigTest, Config_GetMap) {
-  ConfigMap *p;
+  shared_ptr<ConfigMap> p;
   p = config_->GetMap("terrans/tank/cost");
   ASSERT_TRUE(p);
 

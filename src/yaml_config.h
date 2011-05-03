@@ -36,8 +36,8 @@ class YamlConfig : public Config {
   virtual shared_ptr<ConfigMap> GetMap(const std::string &key);
 
  private:
-  const ConfigNodePtr Convert(const YAML::Node *node);
-  const ConfigNodePtr Traverse(const std::string &key);
+  const ConfigItemPtr Convert(const YAML::Node *node);
+  const ConfigItemPtr Traverse(const std::string &key);
 
   ConfigItemPtr tree_;
 };

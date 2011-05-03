@@ -99,13 +99,17 @@ class ConfigMap : public ConfigItem,
 // config component interface
 class Config : public Class_<Config, const std::string&> {
  public:
+  Config() {}
+  virtual ~Config() {}
+
   virtual bool IsNull(const std::string &key) = 0;
   virtual bool GetBool(const std::string &key, bool *value) = 0;
   virtual bool GetInt(const std::string &key, int *value) = 0;
   virtual bool GetDouble(const std::string &key, double *value) = 0;
   virtual bool GetString(const std::string &key, std::string *value) = 0;
-  virtual shared_ptr<ConfigList> GetList(const std::string &key);
-  virtual shared_ptr<ConfigMap> GetMap(const std::string &key);
+  virtual shared_ptr<ConfigList> GetList(const std::string &key) = 0;
+  virtual shared_ptr<ConfigMap> GetMap(const std::string &key) = 0;
+
   // TODO: setters
 };
 
