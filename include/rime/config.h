@@ -28,8 +28,8 @@ class ConfigItem {
   virtual ~ConfigItem() {}
 
   // casting into container node
-  template <class T>
-  T* As() { return dynamic_cast<T*>(this); }
+  //template <class T>
+  //T* As() { return dynamic_cast<T*>(this); }
 
   // schalar value accessors 
   template <class T>
@@ -59,6 +59,8 @@ class ConfigItem {
   boost::any value_;
 };
 
+typedef shared_ptr<ConfigItem> ConfigItemPtr;
+
 class ConfigValue : public ConfigItem {
  public:
   // construct scalar with ... empty value
@@ -70,27 +72,27 @@ class ConfigValue : public ConfigItem {
   ConfigValue(const char *value) : ConfigItem(kScalar, std::string(value)) {}
   // creator that returns config item handle
   template <class T>
-  static const shared_ptr<ConfigItem> Create(const T& value) {
-    return shared_ptr<ConfigItem>(new ConfigValue(value));
+  static const ConfigItemPtr Create(const T& value) {
+    return ConfigItemPtr(new ConfigValue(value));
   }
 };
 
 class ConfigList : public ConfigItem,
-                   public std::vector<shared_ptr<ConfigItem> > {
+                   public std::vector<ConfigItemPtr> {
  public:
   ConfigList() : ConfigItem(kList) {}
-  static const shared_ptr<ConfigItem> Create() {
-    return shared_ptr<ConfigItem>(new ConfigList());
+  static const ConfigItemPtr Create() {
+    return ConfigItemPtr(new ConfigList());
   }
 };
 
 // there is a limitation: keys have to be strings
 class ConfigMap : public ConfigItem,
-                  public std::map<std::string, shared_ptr<ConfigItem> > {
+                  public std::map<std::string, ConfigItemPtr> {
  public:
   ConfigMap() : ConfigItem(kMap) {}
-  static const shared_ptr<ConfigItem> Create() {
-    return shared_ptr<ConfigItem>(new ConfigMap());
+  static const ConfigItemPtr Create() {
+    return ConfigItemPtr(new ConfigMap());
   }
 };
 
@@ -102,8 +104,8 @@ class Config : public Class_<Config, const std::string&> {
   virtual bool GetInt(const std::string &key, int *value) = 0;
   virtual bool GetDouble(const std::string &key, double *value) = 0;
   virtual bool GetString(const std::string &key, std::string *value) = 0;
-  virtual ConfigList* GetList(const std::string &key) = 0;
-  virtual ConfigMap* GetMap(const std::string &key) = 0;
+  virtual shared_ptr<ConfigList> GetList(const std::string &key);
+  virtual shared_ptr<ConfigMap> GetMap(const std::string &key);
   // TODO: setters
 };
 

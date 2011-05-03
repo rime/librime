@@ -53,7 +53,10 @@ class Component {
  public:
   Component() {}
   virtual ~Component() {}
+  // accessing the component registry
   static void Register(const std::string& name, Component *component);
+  static void Unregister(const std::string& name);
+  static void ClearRegistry();
   static Component* ByName(const std::string& name);
 };
 

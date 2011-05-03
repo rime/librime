@@ -19,6 +19,7 @@ class Schema {
  public:
   Schema() {}
   ~Schema() {}
+  explicit Schema(const std::string &schema_id);
 
   Config* config() const { return config_.get(); }
   void set_config(Config *config) { config_.reset(config); }

@@ -31,6 +31,17 @@ void Component::Register(const std::string &name, Component *component) {
   registry[name] = shared_ptr<Component>(component);
 }
 
+void Component::Unregister(const std::string &name) {
+  EZLOGGERPRINT("unregistering component: %s", name.c_str());
+  ComponentRegistry &registry = ComponentRegistry::GetInstance();
+  registry.erase(name);
+}
+
+void Component::ClearRegistry() {
+  ComponentRegistry &registry = ComponentRegistry::GetInstance();
+  registry.clear();
+}
+
 Component* Component::ByName(const std::string &name) {
   ComponentRegistry &registry = ComponentRegistry::GetInstance();
   ComponentRegistry::const_iterator it = registry.find(name);

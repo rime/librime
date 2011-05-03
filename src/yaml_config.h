@@ -32,12 +32,14 @@ class YamlConfig : public Config {
   virtual bool GetInt(const std::string &key, int *value);
   virtual bool GetDouble(const std::string &key, double *value);
   virtual bool GetString(const std::string &key, std::string *value);
-  virtual ConfigList* GetList(const std::string &key);
-  virtual ConfigMap* GetMap(const std::string &key);
+  virtual shared_ptr<ConfigList> GetList(const std::string &key);
+  virtual shared_ptr<ConfigMap> GetMap(const std::string &key);
 
  private:
-  YAML::Node doc_;
-  const YAML::Node* Traverse(const std::string &key);
+  const ConfigNodePtr Convert(const YAML::Node *node);
+  const ConfigNodePtr Traverse(const std::string &key);
+
+  ConfigItemPtr tree_;
 };
 
 class YamlConfigComponent : public Component_<YamlConfig> {

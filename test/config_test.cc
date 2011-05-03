@@ -86,7 +86,7 @@ TEST(RimeConfigItemTest, StringSchalar) {
 
 TEST(RimeConfigItemTest, ConfigList) {
   ConfigList a;
-  a.push_back(shared_ptr<ConfigItem>(new ConfigItem));
+  a.push_back(ConfigItemPtr(new ConfigItem));
   a.push_back(ConfigValue::Create(false));
   a.push_back(ConfigValue::Create(123));
   a.push_back(ConfigValue::Create(3.14));
@@ -122,8 +122,8 @@ TEST(RimeConfigItemTest, ConfigList) {
     EXPECT_STREQ("zyx", value.c_str());
   }
   {
-    ConfigList *nested = NULL;
-    nested = a[5]->As<ConfigList>();
+    shared_ptr<ConfigList> nested;
+    nested = dynamic_pointer_cast<ConfigList>(a[5]);
     ASSERT_TRUE(nested);
     EXPECT_EQ(0, nested->size());
   }

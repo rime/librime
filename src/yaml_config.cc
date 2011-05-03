@@ -18,8 +18,10 @@ namespace rime {
 bool YamlConfig::LoadFromFile(const std::string& file_name) {
   std::ifstream fin(file_name.c_str());
   YAML::Parser parser(fin);
-  parser.GetNextDocument(doc_);
-  return true;
+  YAML::Node doc;
+  parser.GetNextDocument(doc);
+  tree_ = Convert(doc);
+  return tree_;
 }
 
 bool YamlConfig::SaveToFile(const std::string& file_name) {
@@ -29,58 +31,52 @@ bool YamlConfig::SaveToFile(const std::string& file_name) {
 
 bool YamlConfig::IsNull(const std::string &key) {
   EZLOGGERVAR(key);
-  const YAML::Node* p = Traverse(key);
-  return !p;
+  ConfigItemPtr p(Traverse(key));
+  return !p || kNull == p->type();
 }
 
 bool YamlConfig::GetBool(const std::string& key, bool *value) {
   EZLOGGERVAR(key);
-  const YAML::Node* p = Traverse(key);
+  ConfigItemPtr p(Traverse(key));
   if(!p)
     return false;
-  *value = p->to<bool>();
-  return true;
+  return p->get<bool>(value);
 }
 
 bool YamlConfig::GetInt(const std::string& key, int *value) {
   EZLOGGERVAR(key);
-  const YAML::Node* p = Traverse(key);
+  ConfigItemPtr p(Traverse(key));
   if(!p)
     return false;
-  *value = p->to<int>();
-  return true;
+  return p->get<int>(value);
 }
 
 bool YamlConfig::GetDouble(const std::string& key, double *value) {
   EZLOGGERVAR(key);
-  const YAML::Node* p = Traverse(key);
+  ConfigItemPtr p(Traverse(key));
   if(!p)
     return false;
-  *value = p->to<double>();
-  return true;
+  return p->get<double>(value);
 }
 
 bool YamlConfig::GetString(const std::string& key, std::string *value) {
   EZLOGGERVAR(key);
-  const YAML::Node* p = Traverse(key);
+  ConfigItemPtr p(Traverse(key));
   if(!p)
     return false;
-  *value = p->to<std::string>();
-  return true;
+  return p->get<std::string>(value);
 }
 
-ConfigList* YamlConfig::GetList(const std::string& key) {
+shared_ptr<ConfigList> YamlConfig::GetList(const std::string& key) {
   EZLOGGERVAR(key);
-  const YAML::Node* p = Traverse(key);
-  // TODO(zouxu):
-  return NULL;
+  ConfigItemPtr p(Traverse(key));
+  return dynamic_pointer_cast<ConfigList>(p);
 }
 
 ConfigMap* YamlConfig::GetMap(const std::string& key) {
   EZLOGGERVAR(key);
-  const YAML::Node* p = Traverse(key);
-  // TODO(zouxu):
-  return NULL;
+  ConfigItemPtr p(Traverse(key));
+  return dynamic_pointer_cast<ConfigMap>(p);
 }
 
 YamlConfig* YamlConfigComponent::Create(const std::string &file_name) {
