@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <boost/any.hpp>
+#include <boost/lexical_cast.hpp>
 #include <rime/common.h>
 #include <rime/component.h>
 
@@ -40,6 +41,19 @@ class ConfigItem {
     if (cast_value) {
       *value = *cast_value;
       return true;
+    }
+    else {
+      try {
+        std::string text_value = boost::any_cast<std::string>(value_);
+        *value = boost::lexical_cast<T>(text_value);
+        return true;
+      }
+      catch (boost::bad_any_cast &e) {
+        EZLOGGERPRINT("any_cast error: %s", e.what());
+      }
+      catch (boost::bad_lexical_cast &e) {
+        EZLOGGERPRINT("lexical_cast error: %s", e.what());
+      }
     }
     return false;
   }
