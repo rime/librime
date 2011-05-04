@@ -8,6 +8,7 @@
 //
 #include <fstream>
 #include <vector>
+#include <map>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <yaml-cpp/yaml.h>
@@ -88,7 +89,39 @@ YamlConfig* YamlConfigComponent::Create(const std::string &file_name) {
 
 const ConfigItemPtr YamlConfig::Convert(const YAML::Node *node) {
   // TODO:
-  return ConfigItemPtr();
+  ConfigItemPtr p;
+  RecursiveConvert(*node, p);
+  return p;
+}
+
+void YamlConfig::RecursiveConvert(const YAML::Node &node, ConfigItemPtr& tree_ptr){
+  YAML::NodeType::value type = node.Type();
+  if(type == YAML::NodeType::Scalar){
+    tree_ptr = ConfigValue::Create(node.to<std::string>());
+  }
+  else if(type == YAML::NodeType::Sequence){
+    ConfigList* list_ptr = new ConfigList();
+    for (unsigned int i = 0; i < node.size(); i++) {
+      const YAML::Node & subnode = node[i];
+      ConfigItemPtr config_ptr;
+      RecursiveConvert(subnode, config_ptr);
+      list_ptr->push_back(config_ptr);
+    }
+    tree_ptr = ConfigItemPtr(list_ptr);
+  }
+  else if(type == YAML::NodeType::Map){
+    ConfigMap* map_ptr = new ConfigMap();
+    for (YAML::Iterator i = node.begin(); i != node.end(); ++i) {
+      const YAML::Node & key   = i.first();
+      const YAML::Node & value = i.second();
+      ConfigItemPtr config_ptr;
+      RecursiveConvert(value, config_ptr);
+      (*map_ptr)[key.to<std::string>()] = config_ptr;
+    }
+    tree_ptr = ConfigItemPtr(map_ptr);
+  }
+  else{
+  }
 }
 
 const ConfigItemPtr YamlConfig::Traverse(const std::string &key) {

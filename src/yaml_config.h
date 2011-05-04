@@ -38,7 +38,7 @@ class YamlConfig : public Config {
  private:
   const ConfigItemPtr Convert(const YAML::Node *node);
   const ConfigItemPtr Traverse(const std::string &key);
-
+  void RecursiveConvert(const YAML::Node &node, ConfigItemPtr& tree_ptr);
   ConfigItemPtr tree_;
 };
 
