@@ -30,10 +30,10 @@ class ConfigItemData {
 
 class ConfigData {
  public:
-  const ConfigItemPtr Convert(const YAML::Node *node);
-  const ConfigItemPtr Traverse(const std::string &key);
-
+  const YAML::Node* Traverse(const std::string &key);
   YAML::Node& doc() { return doc_; }
+
+  static const ConfigItemPtr Convert(const YAML::Node *node);
 
  private:
   YAML::Node doc_;
@@ -134,51 +134,55 @@ bool Config::SaveToFile(const std::string& file_name) {
 
 bool Config::IsNull(const std::string &key) {
   EZLOGGERVAR(key);
-  ConfigItemPtr p(data_->Traverse(key));
-  return !p || ConfigItem::kNull == p->type();
+  const YAML::Node *p = data_->Traverse(key);
+  return !p || p->Type() == YAML::NodeType::Null;
 }
 
 bool Config::GetBool(const std::string& key, bool *value) {
   EZLOGGERVAR(key);
-  ConfigItemPtr p(data_->Traverse(key));
-  if (!p)
+  const YAML::Node *p = data_->Traverse(key);
+  if (!p || p->Type() != YAML::NodeType::Scalar)
     return false;
-  return p->get<bool>(value);
+  *value = p->to<bool>();
+  return true;
 }
 
 bool Config::GetInt(const std::string& key, int *value) {
   EZLOGGERVAR(key);
-  ConfigItemPtr p(data_->Traverse(key));
-  if (!p)
+  const YAML::Node *p = data_->Traverse(key);
+  if (!p || p->Type() != YAML::NodeType::Scalar)
     return false;
-  return p->get<int>(value);
+  *value = p->to<int>();
+  return true;
 }
 
 bool Config::GetDouble(const std::string& key, double *value) {
   EZLOGGERVAR(key);
-  ConfigItemPtr p(data_->Traverse(key));
-  if (!p)
+  const YAML::Node *p = data_->Traverse(key);
+  if (!p || p->Type() != YAML::NodeType::Scalar)
     return false;
-  return p->get<double>(value);
+  *value = p->to<double>();
+  return true;
 }
 
 bool Config::GetString(const std::string& key, std::string *value) {
   EZLOGGERVAR(key);
-  ConfigItemPtr p(data_->Traverse(key));
-  if (!p)
+  const YAML::Node *p = data_->Traverse(key);
+  if (!p || p->Type() != YAML::NodeType::Scalar)
     return false;
-  return p->get<std::string>(value);
+  *value = p->to<std::string>();
+  return true;
 }
 
 shared_ptr<ConfigList> Config::GetList(const std::string& key) {
   EZLOGGERVAR(key);
-  ConfigItemPtr p(data_->Traverse(key));
+  ConfigItemPtr p(ConfigData::Convert(data_->Traverse(key)));
   return dynamic_pointer_cast<ConfigList>(p);
 }
 
 shared_ptr<ConfigMap> Config::GetMap(const std::string& key) {
   EZLOGGERVAR(key);
-  ConfigItemPtr p(data_->Traverse(key));
+  ConfigItemPtr p(ConfigData::Convert(data_->Traverse(key)));
   return dynamic_pointer_cast<ConfigMap>(p);
 }
 
@@ -213,7 +217,7 @@ const ConfigItemPtr ConfigData::Convert(const YAML::Node *node) {
   return ConfigItemPtr();
 }
 
-const ConfigItemPtr ConfigData::Traverse(const std::string &key) {
+const YAML::Node* ConfigData::Traverse(const std::string &key) {
   EZLOGGERPRINT("traverse: %s", key.c_str());
   std::vector<std::string> keys;
   boost::split(keys, key, boost::is_any_of("/"));
@@ -224,10 +228,10 @@ const ConfigItemPtr ConfigData::Traverse(const std::string &key) {
   for (; it != end; ++it) {
     EZLOGGERPRINT("key node: %s", it->c_str());
     if (!p)
-      return ConfigItemPtr();
+      return NULL;
     p = p->FindValue(*it);
   }
-  return Convert(p);
+  return p;
 }
 
 }  // namespace rime
