@@ -48,22 +48,50 @@ ConfigItem::~ConfigItem() {
   }
 }
 
-template <class T>
-bool ConfigItem::get(T *value) const {
+bool ConfigItem::GetBool(bool *value) const {
   if(!data_ || !data_->node())
     return false;
-  *value = data_->node()->to<T>();
+  *value = data_->node()->to<bool>();
   return true;
 }
 
-template <class T>
-void ConfigItem::set(const T &value) {
+bool ConfigItem::GetInt(int *value) const {
+  if(!data_ || !data_->node())
+    return false;
+  *value = data_->node()->to<int>();
+  return true;
+}
+
+bool ConfigItem::GetDouble(double *value) const {
+  if(!data_ || !data_->node())
+    return false;
+  *value = data_->node()->to<double>();
+  return true;
+}
+
+bool ConfigItem::GetString(std::string *value) const {
+  if(!data_ || !data_->node())
+    return false;
+  *value = data_->node()->to<std::string>();
+  return true;
+}
+
+void ConfigItem::SetBool(bool value) {
   // TODO: 
 }
 
-void ConfigItem::set(const char *value) {
+void ConfigItem::SetInt(int value) {
   // TODO: 
 }
+
+void ConfigItem::SetDouble(double value) {
+  // TODO: 
+}
+
+void ConfigItem::SetString(const std::string &value) {
+  // TODO: 
+}
+
 
 // ConfigList members
 

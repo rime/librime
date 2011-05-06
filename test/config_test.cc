@@ -199,15 +199,40 @@ TEST_F(RimeConfigTest, Config_GetList) {
   shared_ptr<ConfigList> p;
   p = config_->GetList("protoss/air_force");
   ASSERT_TRUE(p);
-
-  // TODO:
+  ASSERT_EQ(4, p->size());
+  ConfigItemPtr element;
+  std::string value;
+  element = p->GetAt(0);
+  ASSERT_TRUE(element);
+  ASSERT_TRUE(element->GetString(&value));
+  EXPECT_EQ("scout", value.c_str());
+  element = p->GetAt(3);
+  ASSERT_TRUE(element);
+  ASSERT_TRUE(element->GetString(&value));
+  EXPECT_EQ("arbiter", value.c_str());
 }
 
 TEST_F(RimeConfigTest, Config_GetMap) {
   shared_ptr<ConfigMap> p;
   p = config_->GetMap("terrans/tank/cost");
   ASSERT_TRUE(p);
-
-  // TODO:
+  EXPECT_FALSE(p->HasKey("rime"));
+  ASSERT_TRUE(p->HasKey("time"));
+  ConfigItemPtr item;
+  std::string time;
+  int mineral = 0;
+  int gas = 0;
+  item = p->Get("time");
+  ASSERT_TRUE(item);
+  ASSERT_TRUE(item->GetString(&time));
+  EXPECT_EQ("30 seconds", time.c_str());
+  item = p->Get("mineral");
+  ASSERT_TRUE(item);
+  ASSERT_TRUE(item->GetInt(&mineral));
+  EXPECT_EQ(150, mineral);
+  item = p->Get("gas");
+  ASSERT_TRUE(item);
+  ASSERT_TRUE(item->GetInt(&gas));
+  EXPECT_EQ(100, gas);
 }
 

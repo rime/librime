@@ -32,12 +32,14 @@ class ConfigItem {
   virtual ~ConfigItem();
 
   // schalar value accessors 
-  template <class T>
-  bool get(T *value) const;
-  template <class T>
-  void set(const T &value);
-  // set value to a raw string
-  void set(const char *value);
+  bool GetBool(bool *value) const;
+  bool GetInt(int *value) const;
+  bool GetDouble(double *value) const;
+  bool GetString(std::string *value) const;
+  void SetBool(bool value);
+  void SetInt(int value);
+  void SetDouble(double value);
+  void SetString(const std::string &value);
 
   ValueType type() const { return type_; }
 
@@ -108,4 +110,4 @@ class ConfigComponent : public Component_<Config> {
 
 }  // namespace rime
 
-#endif
+#endif  // RIME_CONFIG_H_
