@@ -4,51 +4,32 @@
 // Copyleft 2011 RIME Developers
 // License: GPLv3
 // 
-// 2011-03-14 GONG Chen <chen.sst@gmail.com>
+// register components
 //
-#include <map>
-#include <string>
-#include <rime/common.h>
-#include <rime/component.h>
+// 2011-04-13 GONG Chen <chen.sst@gmail.com>
+//
+
+// TODO: include implementations of built-in components
+#include <rime/registry.h>
+#include <rime/config.h>
+#include "trivial_processor.h"
 
 namespace rime {
 
-class ComponentRegistry
-    : public std::map<std::string, shared_ptr<Component> > {
- public:
-  static ComponentRegistry& GetInstance() { return registry_; }
+void RegisterRimeComponents()
+{
+  EZLOGGERPRINT("registering built-in components");
 
- private:
-  ComponentRegistry() {}
-  static ComponentRegistry registry_;
-};
+  Registry &r = Registry::instance();
+  r.Register("config", new ConfigComponent("."));
 
-ComponentRegistry ComponentRegistry::registry_;
+  // processors
+  r.Register("trivial_processor", new TrivialProcessorComponent);
 
-void Component::Register(const std::string &name, Component *component) {
-  EZLOGGERPRINT("registering component: %s", name.c_str());
-  ComponentRegistry &registry = ComponentRegistry::GetInstance();
-  registry[name] = shared_ptr<Component>(component);
-}
+  // segmentors
 
-void Component::Unregister(const std::string &name) {
-  EZLOGGERPRINT("unregistering component: %s", name.c_str());
-  ComponentRegistry &registry = ComponentRegistry::GetInstance();
-  registry.erase(name);
-}
+  // dictionaries
 
-void Component::ClearRegistry() {
-  ComponentRegistry &registry = ComponentRegistry::GetInstance();
-  registry.clear();
-}
-
-Component* Component::ByName(const std::string &name) {
-  ComponentRegistry &registry = ComponentRegistry::GetInstance();
-  ComponentRegistry::const_iterator it = registry.find(name);
-  if (it != registry.end()) {
-    return it->second.get();
-  }
-  return NULL;
 }
 
 }  // namespace rime

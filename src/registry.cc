@@ -4,28 +4,45 @@
 // Copyleft 2011 RIME Developers
 // License: GPLv3
 // 
-// register components
+// 2011-03-14 GONG Chen <chen.sst@gmail.com>
 //
-// 2011-04-13 GONG Chen <chen.sst@gmail.com>
-//
-
-// TODO: include implementations of built-in components
 #include <rime/common.h>
-#include <rime/config.h>
-#include "trivial_processor.h"
+#include <rime/component.h>
+#include <rime/registry.h>
 
 namespace rime {
 
-void RegisterComponents()
-{
-  EZLOGGERPRINT("registering built-in components");
+Registry Registry::instance_;
 
-  Component::Register("config", new ConfigComponent("."));
+void Registry::Register(const std::string &name, ComponentBase *component) {
+  EZLOGGERPRINT("registering component: %s", name.c_str());
+  map_[name] = component;
+}
 
-  // processors
-  Component::Register("trivial_processor", new TrivialProcessorComponent);
+void Registry::Unregister(const std::string &name) {
+  EZLOGGERPRINT("unregistering component: %s", name.c_str());
+  ComponentMap::iterator it = map_.find(name);
+  if (it == map_.end())
+    return;
+  delete it->second;
+  map_.erase(it);
+}
 
-  // dictionaries
+void Registry::Clear() {
+  ComponentMap::iterator it = map_.begin();
+  while (it != map_.end()) {
+    delete it->second;
+    map_.erase(it++);
+  }
+  assert(map_.empty());
+}
+
+ComponentBase* Registry::Find(const std::string &name) {
+  ComponentMap::const_iterator it = map_.find(name);
+  if (it != map_.end()) {
+    return it->second;
+  }
+  return NULL;
 }
 
 }  // namespace rime

@@ -21,8 +21,8 @@ namespace rime {
 Engine::Engine() : schema_(new Schema), context_(new Context) {
   EZLOGGERFUNCTRACKER;
   // TODO: load a list of components from schema config
-  std::string processor_name("trivial_processor");
-  Processor::Component *pc = Processor::Find(processor_name);
+  const std::string processor_name("trivial_processor");
+  Processor::Component *pc = Processor::Require(processor_name);
   if (!pc) {
     EZLOGGERPRINT("error creating processor: '%s'", processor_name.c_str());
   }

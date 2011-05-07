@@ -12,50 +12,57 @@
 
 using namespace rime;
 
-typedef std::pair<std::string, std::string> GreetingInfo;
-
-class Greeting : public Class_<Greeting, const std::string&> {
+class Greeting : public Class<Greeting, const std::string&> {
  public:
-  virtual const std::string Salute() = 0;
+  virtual const std::string Say() = 0;
 };
+
+typedef std::pair<std::string, std::string> HelloMessage;
 
 class Hello : public Greeting {
  public:
-  Hello(const GreetingInfo &info) : message_(info.first), name_(info.second) {}
-  const std::string Salute() {
-    return message_ + ", " + name_ + "!";
+  Hello(const HelloMessage &msg) : word_(msg.first), name_(msg.second) {
+  }
+  const std::string Say() {
+    return word_ + ", " + name_ + "!";
   }
  private:
-  std::string message_;
+  std::string word_;
   std::string name_;
 };
 
-// a customized component that has state
+// customize a hello component with parameters
 class HelloComponent : public Hello::Component {
  public:
-  HelloComponent(const std::string &message) : message_(message) {}
-  // define a custom creator to provide an additional argument for Hello ctor
+  HelloComponent(const std::string &word) : word_(word) {}
+  // define a custom creator to provide an additional argument
   Hello* Create(const std::string &name) {
-    return new Hello(std::make_pair(message_, name));
+    return new Hello(std::make_pair(word_, name));
   }
  private:
-  const std::string message_;
+  const std::string word_;
 };
 
 
-TEST(RimeComponentTest, ComponentCreation) {
-  Component::Register("hello", new HelloComponent("hello"));
-  Component::Register("goodbye", new HelloComponent("goodbye"));
-  Greeting::Component* gc = Greeting::Find("hello");
-  EXPECT_TRUE(gc);
-  scoped_ptr<Greeting> hello(gc->Create("fred"));
-  scoped_ptr<Greeting> goodbye(Greeting::Find("goodbye")->Create("michael"));
-  EXPECT_STREQ("hello, fred!", hello->Salute().c_str());
-  EXPECT_STREQ("goodbye, michael!", goodbye->Salute().c_str());
+TEST(RimeComponentTest, UsingComponent) {
+  Registry &r = Registry::instance();
+  r.Register("hello", new HelloComponent("hello"));
+  r.Register("morning", new HelloComponent("good morning"));
+
+  Greeting::Component* h = Greeting::Require("hello");
+  EXPECT_TRUE(h);
+  Greeting::Component* gm = Greeting::Require("morning");
+  EXPECT_TRUE(gm);
+
+  scoped_ptr<Greeting> g(gm->Create("michael"));
+  EXPECT_STREQ("good morning, michael!", g->Say().c_str());
+
+  r.Unregister("hello");
+  r.Unregister("morning");
 }
 
-TEST(RimeComponentTest, UnknownComponentCreation) {
+TEST(RimeComponentTest, UnknownComponent) {
   // unregistered component class
-  EXPECT_FALSE(Component::ByName("unknown"));
+  EXPECT_FALSE(Registry::instance().Find("unknown"));
 }
 

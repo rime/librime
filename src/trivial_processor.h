@@ -22,7 +22,7 @@ class TrivialProcessor : public Processor {
   virtual bool ProcessKeyEvent(const KeyEvent &key_event);
 };
 
-class TrivialProcessorComponent : public Component_<TrivialProcessor> {
+class TrivialProcessorComponent : public Component<TrivialProcessor> {
 };
 
 }  // namespace rime

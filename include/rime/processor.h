@@ -16,7 +16,7 @@ namespace rime {
 class Engine;
 class KeyEvent;
 
-class Processor : public Class_<Processor, Engine*> {
+class Processor : public Class<Processor, Engine*> {
  public:
  public:
   explicit Processor(Engine *engine) : engine_(engine) {}

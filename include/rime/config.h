@@ -75,7 +75,7 @@ class ConfigMap : public ConfigItem {
 class ConfigData;
 
 // config component
-class Config : public Class_<Config, const std::string&> {
+class Config : public Class<Config, const std::string&> {
  public:
   Config();
   virtual ~Config();
@@ -98,7 +98,7 @@ class Config : public Class_<Config, const std::string&> {
   scoped_ptr<ConfigData> data_;
  };
  
-class ConfigComponent : public Component_<Config> {
+class ConfigComponent : public Config::Component {
  public:
   ConfigComponent(const std::string &conf_dir) : conf_dir_(conf_dir) {}
   Config* Create(const std::string &file_name);

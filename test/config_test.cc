@@ -35,14 +35,15 @@ class RimeConfigTest : public ::testing::Test {
 
 TEST(RimeConfigComponentTest, RealCreationWorkflow) {
   // registration
-  Component::Register("test_config", new ConfigComponent("."));
+  Registry &r = Registry::instance();
+  r.Register("test_config", new ConfigComponent("."));
   // finding component
-  Config::Component *cc = Config::Find("test_config");
+  Config::Component *cc = Config::Require("test_config");
   ASSERT_TRUE(cc);
   // creation
   scoped_ptr<Config> config(cc->Create("test.yaml"));
   EXPECT_TRUE(config);
-  Component::Unregister("test_config");
+  r.Unregister("test_config");
 }
 
 TEST(RimeConfigItemTest, NullItem) {

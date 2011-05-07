@@ -59,7 +59,7 @@ class Verse {
 
 int main(int argc, char *argv[]) {
   // initialize la Rime
-  rime::RegisterComponents();
+  rime::RegisterRimeComponents();
 
   Verse verse;
   // "-i" turns on interactive mode (no commit at the end of line)
