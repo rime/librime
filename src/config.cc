@@ -96,8 +96,17 @@ void ConfigItem::SetString(const std::string &value) {
 // ConfigList members
 
 ConfigItemPtr ConfigList::GetAt(size_t i) {
-  // TODO: 
-  return ConfigItemPtr();
+  const YAML::Node* node = data_->node();
+  if(node->Type() == YAML::NodeType::Sequence)
+  {
+    const YAML::Node* p = node->FindValue(i);
+    ConfigItemPtr ptr(ConfigData::Convert(p));
+    return ptr;
+  }
+  else
+  {
+    return ConfigItemPtr();
+  }  
 }
 
 void ConfigList::SetAt(size_t i, const ConfigItemPtr element) {
@@ -113,20 +122,41 @@ void ConfigList::Clear() {
 }
 
 size_t ConfigList::size() const {
-  // TODO: 
-  return 0;
+  const YAML::Node* node = data_->node();
+  if(node->Type() == YAML::NodeType::Sequence)
+    return node->size();
+  else
+  {
+    return 0;
+  }
 }
 
 // ConfigMap members
 
 bool ConfigMap::HasKey(const std::string &key) const {
-  // TODO:
-  return false;
+  const YAML::Node* node = data_->node();
+  if(node->Type() == YAML::NodeType::Map)
+  {
+    const YAML::Node* p = node->FindValue(key.c_str());
+    return p;
+  }
+  else
+  {
+    return false;
+  }
 }
 
 ConfigItemPtr ConfigMap::Get(const std::string &key) {
-  // TODO:
-  return ConfigItemPtr();
+  const YAML::Node* node = data_->node();
+  if(node->Type() == YAML::NodeType::Map)
+  {
+    const YAML::Node* p = node->FindValue(key.c_str());
+    return ConfigItemPtr(ConfigData::Convert(p));
+  }
+  else
+  {
+    return ConfigItemPtr();
+  }
 }
   
 void ConfigMap::Set(const std::string &key, const ConfigItemPtr element) {
@@ -237,6 +267,7 @@ const ConfigItemPtr ConfigData::Convert(const YAML::Node *node) {
                                         new ConfigItemData(node)));
   }
   if (type == YAML::NodeType::Sequence) {
+    EZLOGGERPRINT("Sequence size: %d", node->size());
     return ConfigItemPtr(new ConfigList(new ConfigItemData(node)));
   }
   if (type == YAML::NodeType::Map) {

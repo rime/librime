@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 #include <rime/component.h>
 #include <rime/config.h>
+#include <yaml-cpp/yaml.h>
 
 using namespace rime;
 
@@ -206,11 +207,13 @@ TEST_F(RimeConfigTest, Config_GetList) {
   element = p->GetAt(0);
   ASSERT_TRUE(element);
   ASSERT_TRUE(element->GetString(&value));
-  EXPECT_EQ("scout", value.c_str());
+  //std::cout<<value<<std::endl;
+  EXPECT_EQ("scout", value);
   element = p->GetAt(3);
   ASSERT_TRUE(element);
   ASSERT_TRUE(element->GetString(&value));
-  EXPECT_EQ("arbiter", value.c_str());
+  EXPECT_EQ("arbiter", value);
+  
 }
 
 TEST_F(RimeConfigTest, Config_GetMap) {
@@ -226,7 +229,7 @@ TEST_F(RimeConfigTest, Config_GetMap) {
   item = p->Get("time");
   ASSERT_TRUE(item);
   ASSERT_TRUE(item->GetString(&time));
-  EXPECT_EQ("30 seconds", time.c_str());
+  EXPECT_EQ("30 seconds", time);
   item = p->Get("mineral");
   ASSERT_TRUE(item);
   ASSERT_TRUE(item->GetInt(&mineral));
