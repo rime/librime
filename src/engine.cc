@@ -11,6 +11,7 @@
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <rime/context.h>
+#include <rime/dictionary.h>
 #include <rime/engine.h>
 #include <rime/key_event.h>
 #include <rime/processor.h>
@@ -22,7 +23,7 @@ Engine::Engine() : schema_(new Schema), context_(new Context) {
   EZLOGGERFUNCTRACKER;
   // receive notifications on commits
   context_->commit_notifier().connect(
-      boost::bind(&Engine::OnCommit, this, _1, _2));
+      boost::bind(&Engine::OnCommit, this, _1));
 }
 
 Engine::~Engine() {
@@ -41,9 +42,9 @@ bool Engine::ProcessKeyEvent(const KeyEvent &key_event) {
   return false;
 }
 
-void Engine::OnCommit(Context *ctx, const std::string &commit_text) {
+void Engine::OnCommit(Context *ctx) {
+  const std::string commit_text = ctx->GetCommitText();
   sink_(commit_text);
-  ctx->Clear();
 }
 
 void Engine::set_schema(Schema *schema) {
@@ -55,19 +56,40 @@ void Engine::InitializeComponents() {
   if (!schema_)
     return;
   Config *config = schema_->config();
+  // create processors/composers
   shared_ptr<ConfigList> processor_list(config->GetList("engine/processors"));
-  size_t n = processor_list->size();
-  for (size_t i = 0; i < n; ++i) {
-    std::string klass;
-    if (!processor_list->GetAt(i)->GetString(&klass))
-      continue;
-    Processor::Component *pc = Processor::Require(klass);
-    if (!pc) {
-      EZLOGGERPRINT("error creating processor: '%s'", klass.c_str());
+  if (processor_list) {
+    size_t n = processor_list->size();
+    for (size_t i = 0; i < n; ++i) {
+      std::string klass;
+      if (!processor_list->GetAt(i)->GetString(&klass))
+        continue;
+      Processor::Component *c = Processor::Require(klass);
+      if (!c) {
+        EZLOGGERPRINT("error creating processor: '%s'", klass.c_str());
+      }
+      else {
+        shared_ptr<Processor> p(c->Create(this));
+        processors_.push_back(p);
+      }
     }
-    else {
-      shared_ptr<Processor> p(pc->Create(this));
-      processors_.push_back(p);
+  }
+  // create dictionaries
+  shared_ptr<ConfigList> dictionary_list(config->GetList("engine/dictionaries"));
+  if (dictionary_list) {
+    size_t n = dictionary_list->size();
+    for (size_t i = 0; i < n; ++i) {
+      std::string klass;
+      if (!dictionary_list->GetAt(i)->GetString(&klass))
+        continue;
+      Dictionary::Component *c = Dictionary::Require(klass);
+      if (!c) {
+        EZLOGGERPRINT("error creating dictionary: '%s'", klass.c_str());
+      }
+      else {
+        shared_ptr<Dictionary> d(c->Create(schema()));
+        dictionaries_.push_back(d);
+      }
     }
   }
 }

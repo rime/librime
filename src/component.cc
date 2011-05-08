@@ -13,6 +13,7 @@
 #include <rime/registry.h>
 #include <rime/config.h>
 #include "trivial_processor.h"
+#include "trivial_dictionary.h"
 
 namespace rime {
 
@@ -25,11 +26,10 @@ void RegisterRimeComponents()
   r.Register("schema_config", new ConfigComponent("%s.schema.yaml"));
 
   // processors
-  r.Register("trivial_processor", new TrivialProcessorComponent);
-
-  // segmentors
+  r.Register("trivial_processor", new Component<TrivialProcessor>);
 
   // dictionaries
+  r.Register("trivial_dictionary", new Component<TrivialDictionary>);
 
 }
 

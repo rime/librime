@@ -266,7 +266,7 @@ const ConfigItemPtr ConfigData::Convert(const YAML::Node *node) {
                                         new ConfigItemData(node)));
   }
   if (type == YAML::NodeType::Sequence) {
-    EZLOGGERPRINT("Sequence size: %d", node->size());
+    EZDBGONLYLOGGERPRINT("sequence size: %d", node->size());
     return ConfigItemPtr(new ConfigList(new ConfigItemData(node)));
   }
   if (type == YAML::NodeType::Map) {
@@ -276,7 +276,7 @@ const ConfigItemPtr ConfigData::Convert(const YAML::Node *node) {
 }
 
 const YAML::Node* ConfigData::Traverse(const std::string &key) {
-  EZLOGGERPRINT("traverse: %s", key.c_str());
+  EZDBGONLYLOGGERPRINT("traverse: %s", key.c_str());
   std::vector<std::string> keys;
   boost::split(keys, key, boost::is_any_of("/"));
   // find the YAML::Node, and wrap it!
@@ -284,7 +284,7 @@ const YAML::Node* ConfigData::Traverse(const std::string &key) {
   std::vector<std::string>::iterator it = keys.begin();
   std::vector<std::string>::iterator end = keys.end();
   for (; it != end; ++it) {
-    EZLOGGERPRINT("key node: %s", it->c_str());
+    EZDBGONLYLOGGERPRINT("key node: %s", it->c_str());
     if (!p)
       return NULL;
     p = p->FindValue(*it);

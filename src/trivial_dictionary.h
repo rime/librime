@@ -6,24 +6,24 @@
 //
 // 2011-04-26 Wensong He <snowhws@gmail.com>
 //
-
 #ifndef TRIVIAL_DICTIONARY_H_
 #define TRIVIAL_DICTIONARY_H_
 
-#include <rime/basic_dictionary.h>
+#include <rime/dictionary.h>
 
 namespace rime {
   
-class TrivialDictionary : public BasicDictionary {
-  public:
-    virtual ~TrivialDictionary(){};
-    virtual void Lookup(const Engine *engine, DictionaryResult& dict_result); 
-  private:
-    
+class TrivialDictionary : public Dictionary {
+ public:
+  TrivialDictionary(const Schema *schema) : Dictionary(schema) {}
+  virtual ~TrivialDictionary() {}
+  virtual void Lookup(Context *context, DictionaryResult *dict_result);
+ private:
+  
 };
 
-} //  namespace rime
+}  // namespace rime
 
-#endif  //  TRIVIAL_DICTIONARY_H_
+#endif  // TRIVIAL_DICTIONARY_H_
 
 

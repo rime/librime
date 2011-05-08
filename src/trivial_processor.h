@@ -22,9 +22,6 @@ class TrivialProcessor : public Processor {
   virtual bool ProcessKeyEvent(const KeyEvent &key_event);
 };
 
-class TrivialProcessorComponent : public Component<TrivialProcessor> {
-};
-
 }  // namespace rime
 
 #endif  // RIME_TRIVIAL_PROCESSOR_H_

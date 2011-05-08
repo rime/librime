@@ -7,12 +7,15 @@
 // 2011-05-02 Wensong He <snowhws@gmail.com>
 //
 
+#include <rime/context.h>
 #include "trivial_dictionary.h"
 
-namespace rime{
+namespace rime {
 
-void TrivialDictionary::Lookup(const Engine *engine, DictionaryResult& dict_result){
-  dict_result.set_result(engine->context()->input());
+void TrivialDictionary::Lookup(Context *context,
+                               DictionaryResult *dict_result) {
+  // TODO:
+  dict_result->set_result(context->input());
 }
 
 }  // namespace rime

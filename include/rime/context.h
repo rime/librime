@@ -17,46 +17,27 @@ namespace rime {
 
 class Context {
  public:
-  typedef boost::signal<void (Context *ctx,
-                              const std::string &commit_text)> CommitNotifier;
+  typedef boost::signal<void (Context *ctx)> Notifier;
 
   Context() {}
   ~Context() {}
 
-  void Commit() {
-    // TODO: echo...
-    commit_notifier_(this, input());
-  }
-  bool IsComposing() const {
-    return !input_.empty();
-  }
-  // TODO: notification on input change
-  void PushInput(char ch) {
-    input_.push_back(ch);
-  }
-  // TODO: notification on input change
-  void PopInput() {
-    if (!input_.empty())
-      input_.resize(input_.size() - 1);
-  }
-  // TODO: notification on input change
-  void Clear() {
-    input_.clear();
-  }
-  // TODO: notification on input change
-  void set_input(const std::string &value) {
-    input_ = value;
-  }
-  const std::string& input() const {
-    return input_;
-  }
-  CommitNotifier& commit_notifier() {
-    return commit_notifier_;
-  }
+  void Commit();
+  const std::string GetCommitText() const;
+  bool IsComposing() const;
+  void PushInput(char ch);
+  void PopInput();
+  void Clear();
+  void set_input(const std::string &value);
+  const std::string& input() const { return input_; }
+
+  Notifier& commit_notifier() { return commit_notifier_; }
+  Notifier& input_change_notifier() { return input_change_notifier_; }
 
  private:
   std::string input_;
-  CommitNotifier commit_notifier_;
+  Notifier commit_notifier_;
+  Notifier input_change_notifier_;
 };
 
 }  // namespace rime

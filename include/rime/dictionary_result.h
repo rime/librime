@@ -16,23 +16,20 @@
 namespace rime {
   
 class DictionaryResult {
-  public:
-    void set_result(const std::string &value){
-      result_=value;
-    }
+ public:
+  void set_result(const std::string &value) {
+    result_ = value;
+  }
 
-    const std::string& Result() const {
-      return result_;
-    };
+  const std::string& result() const {
+    return result_;
+  };
 
-  private:
-    // For testing
-    std::string result_;
+ private:
+  // For testing
+  std::string result_;
 };
 
-} //  namespace rime
+} // namespace rime
 
 #endif  // DICTIONARY_RESULT_H_
-
-
-
