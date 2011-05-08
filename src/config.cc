@@ -10,7 +10,7 @@
 #include <vector>
 #include <map>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 #include <yaml-cpp/yaml.h>
 #include <rime/config.h>
 
@@ -246,11 +246,10 @@ shared_ptr<ConfigMap> Config::GetMap(const std::string& key) {
 
 // ConfigComponent members
 
-Config* ConfigComponent::Create(const std::string &file_name) {
-  boost::filesystem::path p(conf_dir_);
-  p /= file_name;
-  EZLOGGERPRINT("yaml config path: %s", p.string().c_str());
-  return new Config(p.string());
+Config* ConfigComponent::Create(const std::string &config_id) {
+  std::string path(boost::str(boost::format(pattern_) % config_id));
+  EZLOGGERPRINT("config file path: %s", path.c_str());
+  return new Config(path);
 }
 
 // ConfigData members

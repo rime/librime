@@ -39,6 +39,8 @@ class Engine {
   CommitSink& sink() { return sink_; }
 
  private:
+  void InitializeComponents();
+
   scoped_ptr<Schema> schema_;
   scoped_ptr<Context> context_;
   std::vector<shared_ptr<Processor> > processors_;

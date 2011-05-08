@@ -20,16 +20,6 @@ namespace rime {
 
 Engine::Engine() : schema_(new Schema), context_(new Context) {
   EZLOGGERFUNCTRACKER;
-  // TODO: load a list of components from schema config
-  const std::string processor_name("trivial_processor");
-  Processor::Component *pc = Processor::Require(processor_name);
-  if (!pc) {
-    EZLOGGERPRINT("error creating processor: '%s'", processor_name.c_str());
-  }
-  else {
-    shared_ptr<Processor> p(pc->Create(this));
-    processors_.push_back(p);
-  }
   // receive notifications on commits
   context_->commit_notifier().connect(
       boost::bind(&Engine::OnCommit, this, _1, _2));
@@ -54,6 +44,32 @@ bool Engine::ProcessKeyEvent(const KeyEvent &key_event) {
 void Engine::OnCommit(Context *ctx, const std::string &commit_text) {
   sink_(commit_text);
   ctx->Clear();
+}
+
+void Engine::set_schema(Schema *schema) {
+  schema_.reset(schema);
+  InitializeComponents();
+}
+
+void Engine::InitializeComponents() {
+  if (!schema_)
+    return;
+  Config *config = schema_->config();
+  shared_ptr<ConfigList> processor_list(config->GetList("engine/processors"));
+  size_t n = processor_list->size();
+  for (size_t i = 0; i < n; ++i) {
+    std::string klass;
+    if (!processor_list->GetAt(i)->GetString(&klass))
+      continue;
+    Processor::Component *pc = Processor::Require(klass);
+    if (!pc) {
+      EZLOGGERPRINT("error creating processor: '%s'", klass.c_str());
+    }
+    else {
+      shared_ptr<Processor> p(pc->Create(this));
+      processors_.push_back(p);
+    }
+  }
 }
 
 }  // namespace rime

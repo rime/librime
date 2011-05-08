@@ -9,6 +9,7 @@
 #ifndef RIME_SCHEMA_H_
 #define RIME_SCHEMA_H_
 
+#include <string>
 #include <rime/common.h>
 #include <rime/config.h>
 
@@ -17,14 +18,16 @@ namespace rime {
 // TODO:
 class Schema {
  public:
-  Schema() {}
-  ~Schema() {}
+  Schema();
   explicit Schema(const std::string &schema_id);
+  Schema(const std::string &schema_id, Config *config)
+      : schema_id_(schema_id), config_(config) {}
 
   Config* config() const { return config_.get(); }
   void set_config(Config *config) { config_.reset(config); }
 
  private:
+  std::string schema_id_;
   scoped_ptr<Config> config_;
 };
 

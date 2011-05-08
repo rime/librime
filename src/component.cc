@@ -21,7 +21,8 @@ void RegisterRimeComponents()
   EZLOGGERPRINT("registering built-in components");
 
   Registry &r = Registry::instance();
-  r.Register("config", new ConfigComponent("."));
+  r.Register("config", new ConfigComponent("%s.yaml"));
+  r.Register("schema_config", new ConfigComponent("%s.schema.yaml"));
 
   // processors
   r.Register("trivial_processor", new TrivialProcessorComponent);

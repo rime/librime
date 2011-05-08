@@ -100,12 +100,12 @@ class Config : public Class<Config, const std::string&> {
  
 class ConfigComponent : public Config::Component {
  public:
-  ConfigComponent(const std::string &conf_dir) : conf_dir_(conf_dir) {}
-  Config* Create(const std::string &file_name);
-  const std::string& conf_dir() const { return conf_dir_; }
+  ConfigComponent(const std::string &pattern) : pattern_(pattern) {}
+  Config* Create(const std::string &config_id);
+  const std::string& pattern() const { return pattern_; }
 
  private:
-  std::string conf_dir_;
+  std::string pattern_;
 };
 
 }  // namespace rime

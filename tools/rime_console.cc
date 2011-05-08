@@ -11,17 +11,22 @@
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <rime/common.h>
-#include <rime/component.h>
+#include <rime/config.h>
 #include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/key_event.h>
+#include <rime/schema.h>
 
-class Verse {
+class RimeConsole {
  public:
-  Verse() : interactive_(false), engine_(new rime::Engine) {
-    conn_ = engine_->sink().connect(boost::bind(&Verse::OnCommit, this, _1));
+  RimeConsole() : interactive_(false), engine_(new rime::Engine) {
+    rime::Config *config = 
+        rime::Config::Require("config")->Create("rime_console");
+    engine_->set_schema(new rime::Schema("rime_console", config));
+    conn_ = engine_->sink().connect(
+        boost::bind(&RimeConsole::OnCommit, this, _1));
   }
-  ~Verse() {
+  ~RimeConsole() {
     conn_.disconnect();
   }
 
@@ -30,7 +35,7 @@ class Verse {
     std::cout << commit_text << std::endl;
   }
 
-  void RimeWith(const std::string &line) {
+  void ProcessLine(const std::string &line) {
     EZLOGGERVAR(line);
     rime::KeySequence keys;
     if (!keys.Parse(line)) {
@@ -57,20 +62,21 @@ class Verse {
   boost::signals::connection conn_;
 };
 
+// program entry
 int main(int argc, char *argv[]) {
   // initialize la Rime
   rime::RegisterRimeComponents();
 
-  Verse verse;
+  RimeConsole console;
   // "-i" turns on interactive mode (no commit at the end of line)
   bool interactive = argc > 1 && !strcmp(argv[1], "-i");
-  verse.set_interactive(interactive);
+  console.set_interactive(interactive);
 
   // process input
   std::string line;
   while (std::cin) {
     std::getline(std::cin, line);
-    verse.RimeWith(line);
+    console.ProcessLine(line);
   }
   return 0;
 }
