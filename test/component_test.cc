@@ -46,23 +46,23 @@ class HelloComponent : public Hello::Component {
 
 TEST(RimeComponentTest, UsingComponent) {
   Registry &r = Registry::instance();
-  r.Register("hello", new HelloComponent("hello"));
-  r.Register("morning", new HelloComponent("good morning"));
+  r.Register("test_hello", new HelloComponent("hello"));
+  r.Register("test_morning", new HelloComponent("good morning"));
 
-  Greeting::Component* h = Greeting::Require("hello");
+  Greeting::Component* h = Greeting::Require("test_hello");
   EXPECT_TRUE(h);
-  Greeting::Component* gm = Greeting::Require("morning");
+  Greeting::Component* gm = Greeting::Require("test_morning");
   EXPECT_TRUE(gm);
 
   scoped_ptr<Greeting> g(gm->Create("michael"));
   EXPECT_STREQ("good morning, michael!", g->Say().c_str());
 
-  r.Unregister("hello");
-  r.Unregister("morning");
+  r.Unregister("test_hello");
+  r.Unregister("test_morning");
 }
 
 TEST(RimeComponentTest, UnknownComponent) {
   // unregistered component class
-  EXPECT_FALSE(Registry::instance().Find("unknown"));
+  EXPECT_FALSE(Registry::instance().Find("test_unknown"));
 }
 
