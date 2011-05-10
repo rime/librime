@@ -12,6 +12,7 @@
 
 #include <rime/component.h>
 #include <rime/dictionary_result.h>
+#include <rime/schema.h>
 
 namespace rime {
 
@@ -20,6 +21,7 @@ class Schema;
 
 class Dictionary : public Class<Dictionary, const Schema*> {
  public:
+  Dictionary(){};
   Dictionary(const Schema *schema) : schema_(schema) {}
   virtual ~Dictionary() {}
 
