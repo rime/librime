@@ -31,8 +31,6 @@ class Engine {
 
   bool ProcessKeyEvent(const KeyEvent &key_event);
 
-  void OnCommit(Context *ctx);
-
   void set_schema(Schema *schema);
   Schema* schema() const { return schema_.get(); }
   Context* context() const { return context_.get(); }
@@ -40,6 +38,8 @@ class Engine {
 
  private:
   void InitializeComponents();
+  void OnInputChange(Context *ctx);
+  void OnCommit(Context *ctx);
 
   scoped_ptr<Schema> schema_;
   scoped_ptr<Context> context_;

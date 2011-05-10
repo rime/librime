@@ -21,7 +21,9 @@ namespace rime {
 
 Engine::Engine() : schema_(new Schema), context_(new Context) {
   EZLOGGERFUNCTRACKER;
-  // receive notifications on commits
+  // receive context notifications
+  context_->input_change_notifier().connect(
+      boost::bind(&Engine::OnInputChange, this, _1));     
   context_->commit_notifier().connect(
       boost::bind(&Engine::OnCommit, this, _1));
 }
@@ -42,6 +44,16 @@ bool Engine::ProcessKeyEvent(const KeyEvent &key_event) {
   return false;
 }
 
+void Engine::OnInputChange(Context *ctx) {
+  // TODO: call segmentors...
+  // segmentors decide what the input is;
+  // each part of the input is tagged with type ids,
+  // and then, looked up in dicts based on the segmentation result:
+  // for each new segment, call Lookup() in dictionaries that handles
+  // the particular type it belongs.
+  // the context is then updated with translations of the segments.
+}
+
 void Engine::OnCommit(Context *ctx) {
   const std::string commit_text = ctx->GetCommitText();
   sink_(commit_text);
@@ -57,7 +69,8 @@ void Engine::InitializeComponents() {
     return;
   Config *config = schema_->config();
   // create processors/composers
-  shared_ptr<ConfigList> processor_list(config->GetList("engine/processors"));
+  shared_ptr<ConfigList> processor_list(
+      config->GetList("engine/processors"));
   if (processor_list) {
     size_t n = processor_list->size();
     for (size_t i = 0; i < n; ++i) {
@@ -75,7 +88,8 @@ void Engine::InitializeComponents() {
     }
   }
   // create dictionaries
-  shared_ptr<ConfigList> dictionary_list(config->GetList("engine/dictionaries"));
+  shared_ptr<ConfigList> dictionary_list(
+      config->GetList("engine/dictionaries"));
   if (dictionary_list) {
     size_t n = dictionary_list->size();
     for (size_t i = 0; i < n; ++i) {
