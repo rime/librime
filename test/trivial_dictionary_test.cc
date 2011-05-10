@@ -21,5 +21,8 @@ TEST(TrivialDictionaryTest, Lookup) {
   trivial_dict->Lookup(context,dict_result);
   std::string result=dict_result->result();
   EXPECT_EQ("test",result);
+  delete context;
+  delete dict_result;
+  delete trivial_dict;
 }
 
