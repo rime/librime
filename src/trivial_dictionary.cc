@@ -8,6 +8,8 @@
 //
 
 #include <rime/context.h>
+#include <rime/trivial_segmentor.h>
+#include <rime/trivial_vocabulary.h>
 #include "trivial_dictionary.h"
 
 namespace rime {
@@ -16,8 +18,13 @@ void TrivialDictionary::Lookup(Context *context,
                                DictionaryResult *dict_result) {
   // TODO:
   // segmentor
-
-  // vocabulary
+  TrivialSegmentor *trivial_segmentor=new TrivialSegmentor();
+  // TrivialSegmentorResult *seg_result=new TrivialSegmentorResult();
+  // trivial_segmentor->segment(context->input(),seg_result);
+   
+  TrivialVocabulary *trivial_vocabulary=new TrivialVocabulary();
+  // trivial_vocabulary->FindWord(seg_result);
+  //
   dict_result->set_result(context->input());
 }
 
