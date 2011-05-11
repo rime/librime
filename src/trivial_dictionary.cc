@@ -15,6 +15,9 @@ namespace rime {
 void TrivialDictionary::Lookup(Context *context,
                                DictionaryResult *dict_result) {
   // TODO:
+  // segmentor
+
+  // vocabulary
   dict_result->set_result(context->input());
 }
 
