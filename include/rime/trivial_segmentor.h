@@ -13,6 +13,9 @@
 #include <rime/segment.h>
 
 namespace rime {
+class TrivialSegmentorResult {
+  //****
+}
 
 class TrivialSegmentor : public Segmentor {
  public:
