@@ -19,7 +19,7 @@ class TrivialProcessor : public Processor {
  public:
   TrivialProcessor(Engine *engine) : Processor(engine) {}
   virtual ~TrivialProcessor() {}
-  virtual bool ProcessKeyEvent(const KeyEvent &key_event);
+  virtual Result ProcessKeyEvent(const KeyEvent &key_event);
 };
 
 }  // namespace rime

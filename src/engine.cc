@@ -37,9 +37,9 @@ Engine::~Engine() {
 bool Engine::ProcessKeyEvent(const KeyEvent &key_event) {
   EZLOGGERVAR(key_event);
   BOOST_FOREACH(shared_ptr<Processor> &p, processors_) {
-    if (p->ProcessKeyEvent(key_event)) {
-      return true;
-    }
+    Processor::Result ret = p->ProcessKeyEvent(key_event);
+    if (ret == Processor::kRejected) return false;
+    if (ret == Processor::kAccepted) return true;
   }
   return false;
 }

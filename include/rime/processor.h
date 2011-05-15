@@ -18,12 +18,16 @@ class KeyEvent;
 
 class Processor : public Class<Processor, Engine*> {
  public:
- public:
+  enum Result {
+    kRejected,  // do the OS default processing
+    kAccepted,  // consume it
+    kNoop,      // leave it to other processors
+  };
   explicit Processor(Engine *engine) : engine_(engine) {}
   virtual ~Processor() {}
 
-  virtual bool ProcessKeyEvent(const KeyEvent &/*key_event*/) {
-    return false;
+  virtual Result ProcessKeyEvent(const KeyEvent &/*key_event*/) {
+    return kNoop;
   }
 
  protected:

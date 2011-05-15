@@ -20,23 +20,24 @@ namespace rime {
 
 // treat printable characters as input
 // commit with Return key
-bool TrivialProcessor::ProcessKeyEvent(const KeyEvent &key_event) {
+Processor::Result TrivialProcessor::ProcessKeyEvent(
+    const KeyEvent &key_event) {
   Context *ctx = engine_->context();
   int ch = key_event.keycode();
   if (ch == XK_Return && ctx->IsComposing()) {
     ctx->Commit();
-    return true;
+    return kAccepted;
   }
   if (ch == XK_BackSpace && ctx->IsComposing()) {
     ctx->PopInput();
-    return true;
+    return kAccepted;
   }
   if (std::isprint(ch)) {
     ctx->PushInput(key_event.keycode());
-    return true;
+    return kAccepted;
   }
   // not handled
-  return false;
+  return kNoop;
 }
 
 }  // namespace rime
