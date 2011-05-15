@@ -16,6 +16,7 @@
 #include <rime/key_event.h>
 #include <rime/processor.h>
 #include <rime/schema.h>
+#include <rime/segmentor.h>
 
 namespace rime {
 
@@ -31,6 +32,7 @@ Engine::Engine() : schema_(new Schema), context_(new Context) {
 Engine::~Engine() {
   EZLOGGERFUNCTRACKER;
   processors_.clear();
+  segmentors_.clear();
   dictionaries_.clear();
 }
 
@@ -68,7 +70,7 @@ void Engine::InitializeComponents() {
   if (!schema_)
     return;
   Config *config = schema_->config();
-  // create processors/composers
+  // create processors
   shared_ptr<ConfigList> processor_list(
       config->GetList("engine/processors"));
   if (processor_list) {
@@ -87,6 +89,25 @@ void Engine::InitializeComponents() {
       }
     }
   }
+  // create segmentors
+  shared_ptr<ConfigList> segmentor_list(
+      config->GetList("engine/segmentors"));
+  if (segmentor_list) {
+    size_t n = segmentor_list->size();
+    for (size_t i = 0; i < n; ++i) {
+      std::string klass;
+      if (!segmentor_list->GetAt(i)->GetString(&klass))
+        continue;
+      Segmentor::Component *c = Segmentor::Require(klass);
+      if (!c) {
+        EZLOGGERPRINT("error creating segmentor: '%s'", klass.c_str());
+      }
+      else {
+        shared_ptr<Segmentor> s(c->Create(this));
+        segmentors_.push_back(s);
+      }
+    }
+  }
   // create dictionaries
   shared_ptr<ConfigList> dictionary_list(
       config->GetList("engine/dictionaries"));
@@ -101,7 +122,7 @@ void Engine::InitializeComponents() {
         EZLOGGERPRINT("error creating dictionary: '%s'", klass.c_str());
       }
       else {
-        shared_ptr<Dictionary> d(c->Create(schema()));
+        shared_ptr<Dictionary> d(c->Create(this));
         dictionaries_.push_back(d);
       }
     }

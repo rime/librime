@@ -16,17 +16,17 @@
 namespace rime {
 
 class Context;
-class Schema;
+class Engine;
 
-class Dictionary : public Class<Dictionary, const Schema*> {
+class Dictionary : public Class<Dictionary, Engine*> {
  public:
-  Dictionary(const Schema *schema) : schema_(schema) {}
+  Dictionary(Engine *engine) : engine_(engine) {}
   virtual ~Dictionary() {}
 
   virtual void Lookup(Context *context, DictionaryResult *dict_result) = 0;
 
  protected:
-  const Schema *schema_;
+  Engine *engine_;
 };
 
 }  // namespace rime

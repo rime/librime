@@ -15,7 +15,7 @@ namespace rime {
   
 class TrivialDictionary : public Dictionary {
  public:
-  TrivialDictionary(const Schema *schema) : Dictionary(schema) {}
+  TrivialDictionary(Engine *engine) : Dictionary(engine) {}
   virtual ~TrivialDictionary() {}
   virtual void Lookup(Context *context, DictionaryResult *dict_result);
  private:

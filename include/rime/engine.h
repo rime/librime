@@ -20,6 +20,7 @@ class Schema;
 class Context;
 class KeyEvent;
 class Processor;
+class Segmentor;
 class Dictionary;
 
 class Engine {
@@ -44,6 +45,7 @@ class Engine {
   scoped_ptr<Schema> schema_;
   scoped_ptr<Context> context_;
   std::vector<shared_ptr<Processor> > processors_;
+  std::vector<shared_ptr<Segmentor> > segmentors_;
   std::vector<shared_ptr<Dictionary> > dictionaries_;
   CommitSink sink_;
 };
