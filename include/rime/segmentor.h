@@ -15,11 +15,34 @@ namespace rime {
 
 class Engine;
 
+struct Segment {
+  int start;
+  int end;
+  std::vector<std::string> tags;
+};
+
+class Segmentation {
+ public:
+  Segmentation(const std::string &input);
+
+  bool Add(const Segment &segment);
+
+  const std::string& input() const { return input_; }
+  int cursor() const { return cursor_; }
+  const std::vector<Segment> segments() const { return segments_; }
+
+ private:
+  const std::string &input_;
+  int cursor_;
+  std::vector<Segment> segments_;
+};
+
 class Segmentor : public Class<Segmentor, Engine*> {
  public:
   explicit Segmentor(Engine *engine) : engine_(engine) {}
   virtual ~Segmentor() {}
 
+  virtual bool Proceed(Segmentation *segmentation) = 0;
 
  protected:
   Engine *engine_;
