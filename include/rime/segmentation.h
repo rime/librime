@@ -9,6 +9,7 @@
 #ifndef RIME_SEGMENTATION_H_
 #define RIME_SEGMENTATION_H_
 
+#include <set>
 #include <string>
 #include <vector>
 
@@ -17,7 +18,7 @@ namespace rime {
 struct Segment {
   int start;
   int end;
-  std::vector<std::string> tags;
+  std::set<std::string> tags;
 };
 
 class Segmentation {
