@@ -16,6 +16,7 @@
 #include <rime/key_event.h>
 #include <rime/processor.h>
 #include <rime/schema.h>
+#include <rime/segmentation.h>
 #include <rime/segmentor.h>
 
 namespace rime {
@@ -54,6 +55,16 @@ void Engine::OnInputChange(Context *ctx) {
   // for each new segment, call Lookup() in dictionaries that handles
   // the particular type it belongs.
   // the context is then updated with translations of the segments.
+  Segmentation segmentation(ctx->input());
+  int start_pos = 0;
+  while (!segmentation.HasFinished()) {
+    BOOST_FOREACH(shared_ptr<Segmentor> &s, segmentors_) {
+      if (!s->Proceed(&segmentation))
+        break;
+    }
+    if (!segmentation.Forward())
+      break;
+  }
 }
 
 void Engine::OnCommit(Context *ctx) {
