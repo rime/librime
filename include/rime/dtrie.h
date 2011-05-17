@@ -10,13 +10,25 @@
 #ifndef RIME_DTRIE_H_
 #define RIME_DTRIE_H_
 
+#include <rime/common.h>
 #include <darts.h>
 
 namespace rime {
 
 //
-class dtrie {
-
+class TrieMap {
+public:
+  TrieMap() : dtrie_(new Darts::DoubleArray){};
+  
+  void Load(const std::string &file);
+  void Save(const std::string &file);
+  void Build(const std::vector<std::string> &keys, const std::vector<int> &values);
+  bool HasKey(const std::string &key);
+  bool GetValue(const std::string &key, int *value);
+  std::size_t size()const;
+  
+private:
+  scoped_ptr<Darts::DoubleArray> dtrie_;
 };
 
 }  // namespace rime
