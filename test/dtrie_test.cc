@@ -10,36 +10,9 @@
 #include <rime/dtrie.h>
 #include <string>
 #include <vector>
-#include <set>
+#include <map>
 
 using namespace rime;
-
-void generate_valid_keys(std::size_t num_keys,
-    std::set<std::string> *valid_keys) {
-  std::vector<char> key;
-  while (valid_keys->size() < num_keys) {
-    key.resize(1 + (std::rand() % 8));
-    for (std::size_t i = 0; i < key.size(); ++i) {
-      key[i] = 'A' + (std::rand() % 26);
-    }
-    valid_keys->insert(std::string(&key[0], key.size()));
-  }
-}
-
-void generate_invalid_keys(std::size_t num_keys,
-    const std::set<std::string> &valid_keys,
-    std::set<std::string> *invalid_keys) {
-  std::vector<char> key;
-  while (invalid_keys->size() < num_keys) {
-    key.resize(1 + (std::rand() % 8));
-    for (std::size_t i = 0; i < key.size(); ++i) {
-      key[i] = 'A' + (std::rand() % 26);
-    }
-    std::string generated_key(&key[0], key.size());
-    if (valid_keys.find(generated_key) == valid_keys.end())
-      invalid_keys->insert(std::string(&key[0], key.size()));
-  }
-}
 
 class RimeDoubleArrayTrieMapTest : public ::testing::Test {
  protected:
@@ -47,21 +20,24 @@ class RimeDoubleArrayTrieMapTest : public ::testing::Test {
 
   virtual void SetUp() {
     trie_map = new TrieMap;
-    std::size_t NUM_VALID_KEYS = 1 << 6;
-    std::size_t NUM_INVALID_KEYS = 1 << 7;
-
-    std::set<std::string> valid_keys;
-    generate_valid_keys(NUM_VALID_KEYS, &valid_keys);
-
-    std::set<std::string> invalid_keys;
-    generate_invalid_keys(NUM_INVALID_KEYS, valid_keys, &invalid_keys);
     
-    std::vector<int> values(valid_keys.size());
-    std::vector<std::string> keys(valid_keys.size());
-    int k = 0;
-    for(std::set<std::string>::iterator i = valid_keys.begin(); i != valid_keys.end(); ++i, ++k){
-      values[k] = std::rand();
-      keys[k] = *i;
+    std::map<std::string, int> kvmap;
+    kvmap["google"] = 1;
+    kvmap["good"] = 2;
+    kvmap["microsoft"] = 3;
+    kvmap["macrosoft"] = 4;
+    kvmap["adobe"] = 5;
+    kvmap["yahoo"] = 6;
+    kvmap["baidu"] = 7;
+    
+    //keys should be sorted.
+    std::vector<std::string> keys(kvmap.size());
+    std::vector<int> values(kvmap.size());
+    
+    int j = 0;
+    for(std::map<std::string, int>::iterator i = kvmap.begin(); i != kvmap.end(); ++i, ++j){
+      keys[j] = i->first;
+      values[j] = i->second;
     }
     
     trie_map->Build(keys, values);
@@ -83,8 +59,28 @@ TEST_F(RimeDoubleArrayTrieMapTest, save_load) {
 
 TEST_F(RimeDoubleArrayTrieMapTest, HasKey) {
   //todo
+  EXPECT_TRUE(trie_map->HasKey("google"));
+  EXPECT_FALSE(trie_map->HasKey("googlesoft"));
+  
+  EXPECT_TRUE(trie_map->HasKey("microsoft"));
+  EXPECT_FALSE(trie_map->HasKey("peoplesoft"));
 }
 
 TEST_F(RimeDoubleArrayTrieMapTest, GetValue) {
   //todo
+  int value = -1;
+  EXPECT_TRUE(trie_map->GetValue("google", &value));
+  EXPECT_EQ(value, 1);
+  //std::cout<<value<<std::endl;
+  value = -1;
+  EXPECT_FALSE(trie_map->GetValue("googlesoft", &value));
+  EXPECT_EQ(value, -1);
+  
+  value = -1;
+  EXPECT_TRUE(trie_map->GetValue("adobe", &value));
+  EXPECT_EQ(value, 5);
+  
+  value = -1;
+  EXPECT_TRUE(trie_map->GetValue("baidu", &value));
+  EXPECT_EQ(value, 7);
 }
