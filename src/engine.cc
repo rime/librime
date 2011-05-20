@@ -48,20 +48,15 @@ bool Engine::ProcessKeyEvent(const KeyEvent &key_event) {
 }
 
 void Engine::OnInputChange(Context *ctx) {
-  // TODO: call segmentors...
-  // segmentors decide what the input is;
-  // each part of the input is tagged with type ids,
-  // and then, looked up in dicts based on the segmentation result:
-  // for each new segment, call Lookup() in dictionaries that handles
-  // the particular type it belongs.
-  // the context is then updated with translations of the segments.
   Segmentation segmentation(ctx->input());
   int start_pos = 0;
   while (!segmentation.HasFinished()) {
+    // recognize a segment by calling the segmentors in turn
     BOOST_FOREACH(shared_ptr<Segmentor> &s, segmentors_) {
       if (!s->Proceed(&segmentation))
         break;
     }
+    // move on to the next segment
     if (!segmentation.Forward())
       break;
   }

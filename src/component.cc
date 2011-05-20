@@ -12,6 +12,7 @@
 // TODO: include implementations of built-in components
 #include <rime/registry.h>
 #include <rime/config.h>
+#include "abc_segmentor.h"
 #include "trivial_processor.h"
 #include "trivial_dictionary.h"
 
@@ -28,6 +29,9 @@ void RegisterRimeComponents()
   // processors
   r.Register("trivial_processor", new Component<TrivialProcessor>);
 
+  // segmentors
+  r.Register("abc_segmentor", new Component<AbcSegmentor>);
+  
   // dictionaries
   r.Register("trivial_dictionary", new Component<TrivialDictionary>);
 
