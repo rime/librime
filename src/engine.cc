@@ -17,6 +17,7 @@
 #include <rime/schema.h>
 #include <rime/segmentation.h>
 #include <rime/segmentor.h>
+#include <rime/translation.h>
 #include <rime/translator.h>
 
 namespace rime {
@@ -49,6 +50,7 @@ bool Engine::ProcessKeyEvent(const KeyEvent &key_event) {
 
 void Engine::OnInputChange(Context *ctx) {
   CalculateSegmentation(ctx);
+  TranslateSegments(ctx);
 }
 
 void Engine::CalculateSegmentation(Context *ctx) {
@@ -65,6 +67,22 @@ void Engine::CalculateSegmentation(Context *ctx) {
       break;
   }
   ctx->set_segmentation(segmentation);
+}
+
+void Engine::TranslateSegments(Context *ctx) {
+  if (!ctx || !ctx->segmentation())
+    return;
+  BOOST_FOREACH(const Segment &segment, ctx->segmentation()->segments()) {
+    const std::string input = ctx->input().substr(segment.start, segment.end);
+    std::vector<shared_ptr<Translation> > translations;
+    BOOST_FOREACH(shared_ptr<Translator> translator, translators_) {
+      shared_ptr<Translation> translation(translator->Query(input, segment));
+      if (!translation)
+        continue;
+      translations.push_back(translation);
+    }
+    // TODO: merge translations
+  }
 }
 
 void Engine::OnCommit(Context *ctx) {

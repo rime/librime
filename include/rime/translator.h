@@ -10,20 +10,23 @@
 #ifndef RIME_TRANSLATOR_H_
 #define RIME_TRANSLATOR_H_
 
+#include <rime/common.h>
 #include <rime/component.h>
-#include <rime/translation.h>
 
 namespace rime {
 
 class Context;
 class Engine;
+class Segment;
+class Translation;
 
 class Translator : public Class<Translator, Engine*> {
  public:
   Translator(Engine *engine) : engine_(engine) {}
   virtual ~Translator() {}
 
-  virtual void Query(Context *context, Translation *translation) = 0;
+  virtual Translation* Query(const std::string &input,
+                             const Segment &segment) = 0;
 
  protected:
   Engine *engine_;

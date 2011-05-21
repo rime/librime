@@ -17,10 +17,12 @@ namespace rime {
   
 class Translation {
  public:
+  Translation();
+  virtual ~Translation();
+  
   void set_result(const std::string &value) {
     result_ = value;
   }
-
   const std::string& result() const {
     return result_;
   };

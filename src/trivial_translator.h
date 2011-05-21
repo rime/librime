@@ -17,7 +17,8 @@ class TrivialTranslator : public Translator {
  public:
   TrivialTranslator(Engine *engine) : Translator(engine) {}
   virtual ~TrivialTranslator() {}
-  virtual void Query(Context *context, Translation *translation);
+  virtual Translation* Query(const std::string &input,
+                             const Segment &segment);
  private:
   
 };

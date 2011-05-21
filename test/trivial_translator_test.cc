@@ -7,7 +7,9 @@
 // 2011-05-02 Wensong He <snowhws@gmail.com>
 //
 #include <gtest/gtest.h>
-#include <rime/context.h>
+#include <rime/common.h>
+#include <rime/segmentation.h>
+#include <rime/translation.h>
 #include <rime/translator.h>
 
 using namespace rime;
@@ -18,17 +20,17 @@ TEST(TrivialTranslatorTest, Query) {
       Translator::Require("trivial_translator");
   ASSERT_TRUE(component);
   // make sure the dict object has been created
-  Translator *translator = component->Create(NULL);
+  scoped_ptr<Translator> translator(component->Create(NULL));
   ASSERT_TRUE(translator);
   // lookup test
-  Context *context = new Context();
-  context->set_input("test");
-  Translation *translation = new Translation();
-  translator->Query(context, translation);
+  const std::string test_input("test");
+  Segment segment;
+  segment.start = 0;
+  segment.end = test_input.length();
+  segment.tags.insert("abc");
+  scoped_ptr<Translation> translation(translator->Query(test_input, segment));
+  ASSERT_TRUE(translation);
   std::string result = translation->result();
-  EXPECT_EQ("test", result);
-  delete context;
-  delete translation;
-  delete translator;
+  EXPECT_EQ(test_input, result);
 }
 

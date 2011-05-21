@@ -8,14 +8,22 @@
 //
 
 #include <rime/context.h>
+#include <rime/segmentation.h>
+#include <rime/translation.h>
 #include "trivial_translator.h"
 
 namespace rime {
 
-void TrivialTranslator::Query(Context *context,
-                              Translation *translation) {
-  // TODO:
-  translation->set_result(context->input());
+Translation* TrivialTranslator::Query(const std::string &input,
+                                      const Segment &segment) {
+  EZLOGGERPRINT("input = %s, [%d, %d)",
+                input.c_str(), segment.start, segment.end);
+  Translation *translation = new Translation;
+  if (!translation)
+    return NULL;
+  
+  translation->set_result(input);
+  return translation;
 }
 
 }  // namespace rime
