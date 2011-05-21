@@ -14,7 +14,7 @@
 #include <rime/config.h>
 #include "abc_segmentor.h"
 #include "trivial_processor.h"
-#include "trivial_dictionary.h"
+#include "trivial_translator.h"
 
 namespace rime {
 
@@ -32,8 +32,8 @@ void RegisterRimeComponents()
   // segmentors
   r.Register("abc_segmentor", new Component<AbcSegmentor>);
   
-  // dictionaries
-  r.Register("trivial_dictionary", new Component<TrivialDictionary>);
+  // translators
+  r.Register("trivial_translator", new Component<TrivialTranslator>);
 
 }
 

@@ -7,8 +7,15 @@
 // 2011-05-08 GONG Chen <chen.sst@gmail.com>
 //
 #include <rime/context.h>
+#include <rime/segmentation.h>
 
 namespace rime {
+
+Context::Context() {
+}
+
+Context::~Context() {
+}
 
 void Context::Commit() {
   commit_notifier_(this);
@@ -44,6 +51,14 @@ void Context::Clear() {
 void Context::set_input(const std::string &value) {
   input_ = value;
   input_change_notifier_(this);
+}
+
+void Context::set_segmentation(Segmentation *segmentation) {
+  segmentation_.reset(segmentation);
+}
+
+const Segmentation* Context::segmentation() const {
+  return segmentation_.get();
 }
 
 }  // namespace rime

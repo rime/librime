@@ -7,15 +7,15 @@
 // 2011-05-02 Wensong He <snowhws@gmail.com>
 //
 
-#ifndef DICTIONARY_RESULT_H_
-#define DICTIONARY_RESULT_H_
+#ifndef RIME_TRANSLATION_H_
+#define RIME_TRANSLATION_H_
 
 #include <string>
 #include <rime/context.h>
 
 namespace rime {
   
-class DictionaryResult {
+class Translation {
  public:
   void set_result(const std::string &value) {
     result_ = value;
@@ -32,4 +32,4 @@ class DictionaryResult {
 
 } // namespace rime
 
-#endif  // DICTIONARY_RESULT_H_
+#endif  // RIME_TRANSLATION_H_

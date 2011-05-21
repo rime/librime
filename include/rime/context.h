@@ -15,12 +15,14 @@
 
 namespace rime {
 
+class Segmentation;
+  
 class Context {
  public:
   typedef boost::signal<void (Context *ctx)> Notifier;
 
-  Context() {}
-  ~Context() {}
+  Context();
+  ~Context();
 
   void Commit();
   const std::string GetCommitText() const;
@@ -30,12 +32,15 @@ class Context {
   void Clear();
   void set_input(const std::string &value);
   const std::string& input() const { return input_; }
-
+  void set_segmentation(Segmentation *segmentation);
+  const Segmentation *segmentation() const;
+  
   Notifier& commit_notifier() { return commit_notifier_; }
   Notifier& input_change_notifier() { return input_change_notifier_; }
 
  private:
   std::string input_;
+  scoped_ptr<Segmentation> segmentation_;
   Notifier commit_notifier_;
   Notifier input_change_notifier_;
 };

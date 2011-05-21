@@ -8,27 +8,27 @@
 //
 #include <gtest/gtest.h>
 #include <rime/context.h>
-#include <rime/dictionary.h>
+#include <rime/translator.h>
 
 using namespace rime;
 
-TEST(TrivialDictionaryTest, Lookup) {
+TEST(TrivialTranslatorTest, Query) {
   // make sure the component has been registered
-  Dictionary::Component *component =
-      Dictionary::Require("trivial_dictionary");
+  Translator::Component *component =
+      Translator::Require("trivial_translator");
   ASSERT_TRUE(component);
   // make sure the dict object has been created
-  Dictionary *trivial_dict = component->Create(NULL);
-  ASSERT_TRUE(trivial_dict);
+  Translator *translator = component->Create(NULL);
+  ASSERT_TRUE(translator);
   // lookup test
   Context *context = new Context();
   context->set_input("test");
-  DictionaryResult *dict_result = new DictionaryResult();
-  trivial_dict->Lookup(context, dict_result);
-  std::string result = dict_result->result();
+  Translation *translation = new Translation();
+  translator->Query(context, translation);
+  std::string result = translation->result();
   EXPECT_EQ("test", result);
   delete context;
-  delete dict_result;
-  delete trivial_dict;
+  delete translation;
+  delete translator;
 }
 

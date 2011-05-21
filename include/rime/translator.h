@@ -7,23 +7,23 @@
 // 2011-05-02 Wensong He <snowhws@gmail.com>
 //
 
-#ifndef DICTIONARY_H_
-#define DICTIONARY_H_
+#ifndef RIME_TRANSLATOR_H_
+#define RIME_TRANSLATOR_H_
 
 #include <rime/component.h>
-#include <rime/dictionary_result.h>
+#include <rime/translation.h>
 
 namespace rime {
 
 class Context;
 class Engine;
 
-class Dictionary : public Class<Dictionary, Engine*> {
+class Translator : public Class<Translator, Engine*> {
  public:
-  Dictionary(Engine *engine) : engine_(engine) {}
-  virtual ~Dictionary() {}
+  Translator(Engine *engine) : engine_(engine) {}
+  virtual ~Translator() {}
 
-  virtual void Lookup(Context *context, DictionaryResult *dict_result) = 0;
+  virtual void Query(Context *context, Translation *translation) = 0;
 
  protected:
   Engine *engine_;
@@ -31,6 +31,6 @@ class Dictionary : public Class<Dictionary, Engine*> {
 
 }  // namespace rime
 
-#endif  // DICTIONARY_H_
+#endif  // RIME_TRANSLATOR_H_
 
 

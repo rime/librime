@@ -21,7 +21,7 @@ class Context;
 class KeyEvent;
 class Processor;
 class Segmentor;
-class Dictionary;
+class Translator;
 
 class Engine {
  public:
@@ -39,6 +39,7 @@ class Engine {
 
  private:
   void InitializeComponents();
+  void CalculateSegmentation(Context *ctx);
   void OnInputChange(Context *ctx);
   void OnCommit(Context *ctx);
 
@@ -46,7 +47,7 @@ class Engine {
   scoped_ptr<Context> context_;
   std::vector<shared_ptr<Processor> > processors_;
   std::vector<shared_ptr<Segmentor> > segmentors_;
-  std::vector<shared_ptr<Dictionary> > dictionaries_;
+  std::vector<shared_ptr<Translator> > translators_;
   CommitSink sink_;
 };
 

@@ -11,13 +11,13 @@
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <rime/context.h>
-#include <rime/dictionary.h>
 #include <rime/engine.h>
 #include <rime/key_event.h>
 #include <rime/processor.h>
 #include <rime/schema.h>
 #include <rime/segmentation.h>
 #include <rime/segmentor.h>
+#include <rime/translator.h>
 
 namespace rime {
 
@@ -34,7 +34,7 @@ Engine::~Engine() {
   EZLOGGERFUNCTRACKER;
   processors_.clear();
   segmentors_.clear();
-  dictionaries_.clear();
+  translators_.clear();
 }
 
 bool Engine::ProcessKeyEvent(const KeyEvent &key_event) {
@@ -48,18 +48,23 @@ bool Engine::ProcessKeyEvent(const KeyEvent &key_event) {
 }
 
 void Engine::OnInputChange(Context *ctx) {
-  Segmentation segmentation(ctx->input());
+  CalculateSegmentation(ctx);
+}
+
+void Engine::CalculateSegmentation(Context *ctx) {
+  Segmentation *segmentation = new Segmentation(ctx->input());
   int start_pos = 0;
-  while (!segmentation.HasFinished()) {
+  while (!segmentation->HasFinished()) {
     // recognize a segment by calling the segmentors in turn
     BOOST_FOREACH(shared_ptr<Segmentor> &s, segmentors_) {
-      if (!s->Proceed(&segmentation))
+      if (!s->Proceed(segmentation))
         break;
     }
     // move on to the next segment
-    if (!segmentation.Forward())
+    if (!segmentation->Forward())
       break;
   }
+  ctx->set_segmentation(segmentation);
 }
 
 void Engine::OnCommit(Context *ctx) {
@@ -114,22 +119,22 @@ void Engine::InitializeComponents() {
       }
     }
   }
-  // create dictionaries
-  shared_ptr<ConfigList> dictionary_list(
-      config->GetList("engine/dictionaries"));
-  if (dictionary_list) {
-    size_t n = dictionary_list->size();
+  // create translators
+  shared_ptr<ConfigList> translator_list(
+      config->GetList("engine/translators"));
+  if (translator_list) {
+    size_t n = translator_list->size();
     for (size_t i = 0; i < n; ++i) {
       std::string klass;
-      if (!dictionary_list->GetAt(i)->GetString(&klass))
+      if (!translator_list->GetAt(i)->GetString(&klass))
         continue;
-      Dictionary::Component *c = Dictionary::Require(klass);
+      Translator::Component *c = Translator::Require(klass);
       if (!c) {
-        EZLOGGERPRINT("error creating dictionary: '%s'", klass.c_str());
+        EZLOGGERPRINT("error creating translator: '%s'", klass.c_str());
       }
       else {
-        shared_ptr<Dictionary> d(c->Create(this));
-        dictionaries_.push_back(d);
+        shared_ptr<Translator> d(c->Create(this));
+        translators_.push_back(d);
       }
     }
   }

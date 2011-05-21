@@ -9,6 +9,7 @@
 #ifndef RIME_ABC_SEGMENTOR_H_
 #define RIME_ABC_SEGMENTOR_H_
 
+#include <string>
 #include <rime/segmentor.h>
 
 namespace rime {
@@ -18,6 +19,9 @@ class AbcSegmentor : public Segmentor {
   explicit AbcSegmentor(Engine *engine);
 
   virtual bool Proceed(Segmentation *segmentation);
+  
+ private:
+  std::string alphabet_;
 };
 
 }  // namespace rime

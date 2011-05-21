@@ -8,14 +8,14 @@
 //
 
 #include <rime/context.h>
-#include "trivial_dictionary.h"
+#include "trivial_translator.h"
 
 namespace rime {
 
-void TrivialDictionary::Lookup(Context *context,
-                               DictionaryResult *dict_result) {
+void TrivialTranslator::Query(Context *context,
+                              Translation *translation) {
   // TODO:
-  dict_result->set_result(context->input());
+  translation->set_result(context->input());
 }
 
 }  // namespace rime
