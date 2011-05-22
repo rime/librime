@@ -24,11 +24,14 @@ class TrivialTranslation : public Translation {
   }
 
   virtual shared_ptr<Candidate> Next() {
-    shared_ptr<Candidate> value = candidate_;
-    candidate_.reset();
-    return value;
+    if (exhausted())
+      return shared_ptr<Candidate>();
+    set_exhausted(true);
+    return candidate_;
   }
   virtual shared_ptr<const Candidate> Peek() const {
+    if (exhausted())
+      return shared_ptr<const Candidate>();
     return candidate_;
   }
 
@@ -40,12 +43,8 @@ Translation* TrivialTranslator::Query(const std::string &input,
                                       const Segment &segment) {
   EZLOGGERPRINT("input = %s, [%d, %d)",
                 input.c_str(), segment.start, segment.end);
-  shared_ptr<Candidate> candidate(new Candidate("abc",
-                                                input,
-                                                "",
-                                                segment.start,
-                                                segment.end,
-                                                0));
+  shared_ptr<Candidate> candidate(
+      new Candidate("abc", input, "", segment.start, segment.end, 0));
   Translation *translation = new TrivialTranslation(candidate);
   return translation;
 }

@@ -19,7 +19,7 @@ class Candidate;
 
 class Translation {
  public:
-  Translation() {}
+  Translation() : exhausted_(false) {}
   virtual ~Translation() {}
 
   // A translation may contain multiple results, looks
@@ -28,9 +28,17 @@ class Translation {
 
   virtual shared_ptr<const Candidate> Peek() const = 0;
 
-  // should it provide the next candidate or
-  // should it give the chance to other translations?
-  virtual bool Precedes(const Translation *other) const { return true; }
+  // should it provide the next candidate (negative value) or
+  // should it give the chance to other translations (positive)?
+  virtual int Compare(const Translation &other) const;
+
+  bool exhausted() const { return exhausted_; }
+
+ protected:
+  void set_exhausted(bool exhausted) { exhausted_ = exhausted; }
+
+ private:
+  bool exhausted_;
 };
 
 } // namespace rime
