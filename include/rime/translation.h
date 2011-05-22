@@ -11,25 +11,26 @@
 #define RIME_TRANSLATION_H_
 
 #include <string>
-#include <rime/context.h>
+#include <rime/common.h>
 
 namespace rime {
-  
+
+class Candidate;
+
 class Translation {
  public:
-  Translation();
-  virtual ~Translation();
-  
-  void set_result(const std::string &value) {
-    result_ = value;
-  }
-  const std::string& result() const {
-    return result_;
-  };
+  Translation() {}
+  virtual ~Translation() {}
 
- private:
-  // For testing
-  std::string result_;
+  // A translation may contain multiple results, looks
+  // something like a generator of candidates.
+  virtual shared_ptr<Candidate> Next() = 0;
+
+  virtual shared_ptr<const Candidate> Peek() const = 0;
+
+  // should it provide the next candidate or
+  // should it give the chance to other translations?
+  virtual bool Precedes(const Translation *other) const { return true; }
 };
 
 } // namespace rime

@@ -12,10 +12,12 @@
 
 namespace rime {
 
+/*
 Translation::Translation() {
 }
 
 Translation::~Translation() {
 }
+*/
 
 }  // namespace rime

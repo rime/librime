@@ -7,6 +7,7 @@
 // 2011-05-02 Wensong He <snowhws@gmail.com>
 //
 #include <gtest/gtest.h>
+#include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/segmentation.h>
 #include <rime/translation.h>
@@ -30,7 +31,11 @@ TEST(TrivialTranslatorTest, Query) {
   segment.tags.insert("abc");
   scoped_ptr<Translation> translation(translator->Query(test_input, segment));
   ASSERT_TRUE(translation);
-  std::string result = translation->result();
-  EXPECT_EQ(test_input, result);
+  shared_ptr<Candidate> candidate = translation->Next();
+  ASSERT_TRUE(candidate);
+  EXPECT_EQ("abc", candidate->type());
+  EXPECT_EQ(test_input, candidate->text());
+  EXPECT_EQ(segment.start, candidate->start());
+  EXPECT_EQ(segment.end, candidate->end());
 }
 
