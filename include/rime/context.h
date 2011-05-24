@@ -16,7 +16,21 @@
 namespace rime {
 
 class Segmentation;
-  
+
+class Menu;
+
+struct Selection {
+  enum Manner {
+    kOpen,
+    kGuessed,
+    kSelected,
+    kConfirmed,
+  };
+  Manner manner;
+  int number;
+  shared_ptr<Menu> menu;
+};
+
 class Context {
  public:
   typedef boost::signal<void (Context *ctx)> Notifier;
@@ -32,15 +46,23 @@ class Context {
   void Clear();
   void set_input(const std::string &value);
   const std::string& input() const { return input_; }
+
+  void set_selector(int pos);
+  const int selector() const { return selector_; }
+  void set_cursor(int pos);
+  const int cursor() const { return cursor_; }
   void set_segmentation(Segmentation *segmentation);
-  const Segmentation *segmentation() const;
+  const Segmentation* segmentation() const;
   
   Notifier& commit_notifier() { return commit_notifier_; }
   Notifier& input_change_notifier() { return input_change_notifier_; }
 
  private:
   std::string input_;
+  int selector_;
+  int cursor_;
   scoped_ptr<Segmentation> segmentation_;
+  
   Notifier commit_notifier_;
   Notifier input_change_notifier_;
 };

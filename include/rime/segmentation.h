@@ -30,7 +30,8 @@ class Segmentation {
   bool HasFinished() const;
 
   const std::string& input() const { return input_; }
-  const std::vector<Segment> segments() const { return segments_; }
+  std::vector<Segment>& segments() { return segments_; }
+  const std::vector<Segment>& segments() const { return segments_; }
   int cursor() const { return cursor_; }
   
  private:

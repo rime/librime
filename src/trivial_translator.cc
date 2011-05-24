@@ -41,6 +41,8 @@ class TrivialTranslation : public Translation {
 
 Translation* TrivialTranslator::Query(const std::string &input,
                                       const Segment &segment) {
+  if (segment.tags.find("abc") == segment.tags.end())
+    return NULL;
   EZLOGGERPRINT("input = %s, [%d, %d)",
                 input.c_str(), segment.start, segment.end);
   shared_ptr<Candidate> candidate(
