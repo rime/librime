@@ -26,7 +26,7 @@ class Translation {
   // something like a generator of candidates.
   virtual shared_ptr<Candidate> Next() = 0;
 
-  virtual shared_ptr<const Candidate> Peek() const = 0;
+  virtual shared_ptr<Candidate> Peek() const = 0;
 
   // should it provide the next candidate (negative value) or
   // should it give the chance to other translations (positive)?

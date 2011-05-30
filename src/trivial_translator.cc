@@ -29,9 +29,9 @@ class TrivialTranslation : public Translation {
     set_exhausted(true);
     return candidate_;
   }
-  virtual shared_ptr<const Candidate> Peek() const {
+  virtual shared_ptr<Candidate> Peek() const {
     if (exhausted())
-      return shared_ptr<const Candidate>();
+      return shared_ptr<Candidate>();
     return candidate_;
   }
 
