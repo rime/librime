@@ -68,7 +68,18 @@ TEST(RimeMenuTest, RecipeAlphaBeta) {
   shared_ptr<Translation> beta(new TranslationBeta());
   menu.AddTranslation(alpha);
   menu.AddTranslation(beta);
-  // TODO:
-  //menu.Prepare(5);
-  //menu.GetCurrentPage();
+  menu.Prepare(5);
+  scoped_ptr<Page> page(menu.CreatePage(5, 0));
+  ASSERT_TRUE(page);
+  EXPECT_EQ(5, page->page_size);
+  EXPECT_EQ(0, page->page_no);
+  EXPECT_TRUE(page->is_last);
+  ASSERT_EQ(4, page->candidates.size());
+  EXPECT_EQ("alpha", page->candidates[0]->type());
+  EXPECT_EQ("Alpha", page->candidates[0]->text());
+  EXPECT_EQ("beta", page->candidates[1]->type());
+  EXPECT_EQ("Beta-1", page->candidates[1]->text());
+  EXPECT_EQ("Beta-3", page->candidates[3]->text());
+  scoped_ptr<Page> no_more_page(menu.CreatePage(5, 1));
+  EXPECT_FALSE(no_more_page);
 }

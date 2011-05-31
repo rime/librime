@@ -14,15 +14,25 @@
 
 namespace rime {
 
+class Candidate;
 class Translation;
-  
+
+struct Page {
+  int page_size;
+  int page_no;
+  bool is_last;
+  std::vector<shared_ptr<Candidate> > candidates;
+};
+
 class Menu {
  public:
   Menu() {}
   ~Menu() {}
 
   void AddTranslation(shared_ptr<Translation> translation);
-
+  void Prepare(int candidate_count);
+  Page* CreatePage(int page_size, int page_no);
+  
  private:
   std::vector<shared_ptr<Translation> > translations_;
 };

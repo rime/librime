@@ -15,4 +15,14 @@ void Menu::AddTranslation(shared_ptr<Translation> translation) {
   translations_.push_back(translation);
 }
 
+void Menu::Prepare(int candidate_count) {
+  // TODO:
+
+}
+
+Page* Menu::CreatePage(int page_size, int page_no) {
+  // TODO:
+  return NULL;
+}
+
 }  // namespace rime
