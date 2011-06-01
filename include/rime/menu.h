@@ -35,6 +35,7 @@ class Menu {
   
  private:
   std::vector<shared_ptr<Translation> > translations_;
+  std::vector<shared_ptr<Candidate> > candidates_;
 };
 
 }  // namespace rime
