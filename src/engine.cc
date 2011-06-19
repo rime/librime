@@ -13,6 +13,7 @@
 #include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/key_event.h>
+#include <rime/menu.h>
 #include <rime/processor.h>
 #include <rime/schema.h>
 #include <rime/segmentation.h>
@@ -74,14 +75,14 @@ void Engine::TranslateSegments(Context *ctx) {
     return;
   BOOST_FOREACH(const Segment &segment, ctx->segmentation()->segments()) {
     const std::string input = ctx->input().substr(segment.start, segment.end);
-    std::vector<shared_ptr<Translation> > translations;
+    shared_ptr<Menu> menu(new Menu);
     BOOST_FOREACH(shared_ptr<Translator> translator, translators_) {
       shared_ptr<Translation> translation(translator->Query(input, segment));
       if (!translation)
         continue;
-      translations.push_back(translation);
+      menu->AddTranslation(translation);
     }
-    // TODO: merge translations
+    // TODO: add menu to current composition
   }
 }
 
