@@ -10,6 +10,8 @@
 #include <string>
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
+#include <rime/common.h>
+#include <rime/composition.h>
 #include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/key_event.h>
@@ -50,31 +52,42 @@ bool Engine::ProcessKeyEvent(const KeyEvent &key_event) {
 }
 
 void Engine::OnInputChange(Context *ctx) {
+  const std::string &input(ctx->input());
+  EZLOGGERVAR(input);
   CalculateSegmentation(ctx);
   TranslateSegments(ctx);
 }
 
 void Engine::CalculateSegmentation(Context *ctx) {
+  EZLOGGERFUNCTRACKER;
   Segmentation *segmentation = new Segmentation(ctx->input());
-  int start_pos = 0;
   while (!segmentation->HasFinished()) {
+    int start_pos = segmentation->GetCurrentPosition();
     // recognize a segment by calling the segmentors in turn
     BOOST_FOREACH(shared_ptr<Segmentor> &s, segmentors_) {
       if (!s->Proceed(segmentation))
         break;
     }
-    // move on to the next segment
-    if (!segmentation->Forward())
+    // move onto the next segment
+    segmentation->Forward();
+    EZLOGGERVAR(*segmentation);
+    // no advancement
+    if (start_pos == segmentation->GetCurrentPosition())
       break;
   }
   ctx->set_segmentation(segmentation);
 }
 
 void Engine::TranslateSegments(Context *ctx) {
+  EZLOGGERFUNCTRACKER;
   if (!ctx || !ctx->segmentation())
     return;
+  // TODO: keep user confirmed segments
+  ctx->composition()->clear();
   BOOST_FOREACH(const Segment &segment, ctx->segmentation()->segments()) {
-    const std::string input = ctx->input().substr(segment.start, segment.end);
+    int len = segment.end - segment.start;
+    const std::string input = ctx->input().substr(segment.start, len);
+    EZLOGGERPRINT("translating segment '%s'", input.c_str());
     shared_ptr<Menu> menu(new Menu);
     BOOST_FOREACH(shared_ptr<Translator> translator, translators_) {
       shared_ptr<Translation> translation(translator->Query(input, segment));
@@ -82,12 +95,20 @@ void Engine::TranslateSegments(Context *ctx) {
         continue;
       menu->AddTranslation(translation);
     }
-    // TODO: add menu to current composition
+    // TODO:
+    const int page_size = 5;
+    menu->Prepare(page_size);
+    Selection selection;
+    selection.manner = Selection::kGuessed;
+    selection.index = 0;
+    selection.menu = menu;
+    ctx->composition()->push_back(selection);
   }
 }
 
 void Engine::OnCommit(Context *ctx) {
   const std::string commit_text = ctx->GetCommitText();
+  EZLOGGERVAR(commit_text);
   sink_(commit_text);
 }
 

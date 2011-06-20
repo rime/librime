@@ -8,6 +8,7 @@
 //
 #include <algorithm>
 #include <iterator>
+#include <boost/foreach.hpp>
 #include <rime/segmentation.h>
 
 namespace rime {
@@ -26,7 +27,7 @@ bool Segmentation::Add(const Segment &segment) {
     return false;
   }
 
-  if (segments_.size() == cursor_) {
+  if (cursor_ == segments_.size()) {
     // we have a first candidate in this round
     segments_.push_back(segment);
     return true;
@@ -61,8 +62,29 @@ bool Segmentation::Forward() {
 }
 
 bool Segmentation::HasFinished() const {
-  return !segments_.empty() &&
-         segments_.back().end == input_.length();
+  return (segments_.empty() ? 0 : segments_.back().end) == input_.length();
+}
+
+int Segmentation::GetCurrentPosition() const {
+  if (cursor_ == 0)
+    return 0;
+  return segments_[cursor_ - 1].end;
+}
+
+int Segmentation::GetCurrentSegmentLength() const {
+  if (cursor_ == segments_.size())
+    return 0;
+  return segments_[cursor_].end - segments_[cursor_].start;
+}
+
+std::ostream& operator<< (std::ostream& out, 
+                          const Segmentation &segmentation) {
+  out << "<" << segmentation.input();
+  BOOST_FOREACH(const Segment &segment, segmentation.segments()) {
+    out << "|" << segment.start << "," << segment.end;
+  }
+  out << ">";
+  return out;
 }
 
 }  // namespace rime

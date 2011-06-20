@@ -18,14 +18,15 @@ AbcSegmentor::AbcSegmentor(Engine *engine) : Segmentor(engine) {
 
 bool AbcSegmentor::Proceed(Segmentation *segmentation) {
   const std::string &input = segmentation->input();
-  int k = segmentation->cursor();
+  int k = segmentation->GetCurrentPosition();
   for (; k < input.length(); ++k) {
     if (alphabet_.find(input[k]) == std::string::npos)
       break;
   }
-  if (k > segmentation->cursor()) {
+  int j = segmentation->GetCurrentPosition();
+  if (k > j) {
     Segment segment;
-    segment.start = segmentation->cursor();
+    segment.start = j;
     segment.end = k;
     segment.tags.insert("abc");
     segmentation->Add(segment);

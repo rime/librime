@@ -9,6 +9,8 @@
 #ifndef RIME_TRIVIAL_TRANSLATOR_H_
 #define RIME_TRIVIAL_TRANSLATOR_H_
 
+#include <rime/common.h>
+#include <rime/translation.h>
 #include <rime/translator.h>
 
 namespace rime {
@@ -26,5 +28,3 @@ class TrivialTranslator : public Translator {
 }  // namespace rime
 
 #endif  // RIME_TRIVIAL_TRANSLATOR_H_
-
-

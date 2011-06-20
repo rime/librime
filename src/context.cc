@@ -7,11 +7,12 @@
 // 2011-05-08 GONG Chen <chen.sst@gmail.com>
 //
 #include <rime/context.h>
+#include <rime/composition.h>
 #include <rime/segmentation.h>
 
 namespace rime {
 
-Context::Context() {
+Context::Context() : composition_(new Composition) {
 }
 
 Context::~Context() {
@@ -23,8 +24,7 @@ void Context::Commit() {
 }
 
 const std::string Context::GetCommitText() const {
-  // TODO: echo...
-  return input();
+  return composition_->GetText();
 }
 
 bool Context::IsComposing() const {
@@ -59,6 +59,14 @@ void Context::set_segmentation(Segmentation *segmentation) {
 
 const Segmentation* Context::segmentation() const {
   return segmentation_.get();
+}
+
+Composition* Context::composition() {
+  return composition_.get();
+}
+
+const Composition* Context::composition() const {
+  return composition_.get();
 }
 
 }  // namespace rime

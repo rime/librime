@@ -13,6 +13,8 @@
 #include <rime/registry.h>
 #include <rime/config.h>
 #include "abc_segmentor.h"
+#include "echo_translator.h"
+#include "fallback_segmentor.h"
 #include "trivial_processor.h"
 #include "trivial_translator.h"
 
@@ -31,8 +33,10 @@ void RegisterRimeComponents()
 
   // segmentors
   r.Register("abc_segmentor", new Component<AbcSegmentor>);
+  r.Register("fallback_segmentor", new Component<FallbackSegmentor>);
   
   // translators
+  r.Register("echo_translator", new Component<EchoTranslator>);
   r.Register("trivial_translator", new Component<TrivialTranslator>);
 
 }

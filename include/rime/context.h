@@ -15,21 +15,8 @@
 
 namespace rime {
 
-class Segmentation;
-
-class Menu;
-
-struct Selection {
-  enum Manner {
-    kOpen,
-    kGuessed,
-    kSelected,
-    kConfirmed,
-  };
-  Manner manner;
-  int number;
-  shared_ptr<Menu> menu;
-};
+class Composition;
+class Segmentation; 
 
 class Context {
  public:
@@ -53,6 +40,8 @@ class Context {
   const int cursor() const { return cursor_; }
   void set_segmentation(Segmentation *segmentation);
   const Segmentation* segmentation() const;
+  Composition* composition();
+  const Composition* composition() const;
   
   Notifier& commit_notifier() { return commit_notifier_; }
   Notifier& input_change_notifier() { return input_change_notifier_; }
@@ -62,6 +51,7 @@ class Context {
   int selector_;
   int cursor_;
   scoped_ptr<Segmentation> segmentation_;
+  scoped_ptr<Composition> composition_;
   
   Notifier commit_notifier_;
   Notifier input_change_notifier_;

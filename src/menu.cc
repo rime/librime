@@ -16,10 +16,10 @@ void Menu::AddTranslation(shared_ptr<Translation> translation) {
   translations_.push_back(translation);
 }
 
-void Menu::Prepare(int candidate_count) {
+int Menu::Prepare(int candidate_count) {
   int count = candidates_.size();
   if (count >= candidate_count)
-    return;
+    return count;
   while (count < candidate_count && !translations_.empty()) {
     std::vector<shared_ptr<Translation> >::iterator winner(translations_.begin());
     while (winner != translations_.end()) {
@@ -36,6 +36,7 @@ void Menu::Prepare(int candidate_count) {
       translations_.erase(winner);
     }
   }
+  return candidates_.size();
 }
 
 Page* Menu::CreatePage(int page_size, int page_no) {
@@ -53,6 +54,12 @@ Page* Menu::CreatePage(int page_size, int page_no) {
   std::copy(candidates_.begin() + start_pos, candidates_.begin() + end_pos,
             std::back_inserter(page->candidates));
   return page;
+}
+
+shared_ptr<Candidate> Menu::GetCandidateAt(int index) {
+  if (index >= candidates_.size())
+    return shared_ptr<Candidate>();
+  return candidates_[index];
 }
 
 }  // namespace rime

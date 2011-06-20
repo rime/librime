@@ -28,17 +28,22 @@ class Segmentation {
   bool Add(const Segment &segment);
   bool Forward();
   bool HasFinished() const;
+  int GetCurrentPosition() const;
+  int GetCurrentSegmentLength() const;
 
   const std::string& input() const { return input_; }
   std::vector<Segment>& segments() { return segments_; }
   const std::vector<Segment>& segments() const { return segments_; }
-  int cursor() const { return cursor_; }
+  
   
  private:
   const std::string input_;
   std::vector<Segment> segments_;
   int cursor_;
 };
+
+std::ostream& operator<< (std::ostream& out, 
+                          const Segmentation &segmentation);
 
 }  // namespace rime
 

@@ -30,8 +30,9 @@ class Menu {
   ~Menu() {}
 
   void AddTranslation(shared_ptr<Translation> translation);
-  void Prepare(int candidate_count);
+  int Prepare(int candidate_count);
   Page* CreatePage(int page_size, int page_no);
+  shared_ptr<Candidate> GetCandidateAt(int index);
   
  private:
   std::vector<shared_ptr<Translation> > translations_;

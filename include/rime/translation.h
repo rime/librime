@@ -41,6 +41,30 @@ class Translation {
   bool exhausted_;
 };
 
+class UniqueTranslation : public Translation {
+ public:
+  UniqueTranslation(shared_ptr<Candidate> candidate)
+      : candidate_(candidate) {
+  }
+  virtual ~UniqueTranslation() {
+  }
+
+  virtual shared_ptr<Candidate> Next() {
+    if (exhausted())
+      return shared_ptr<Candidate>();
+    set_exhausted(true);
+    return candidate_;
+  }
+  virtual shared_ptr<Candidate> Peek() const {
+    if (exhausted())
+      return shared_ptr<Candidate>();
+    return candidate_;
+  }
+
+ private:
+  shared_ptr<Candidate> candidate_;
+};
+
 } // namespace rime
 
 #endif  // RIME_TRANSLATION_H_
