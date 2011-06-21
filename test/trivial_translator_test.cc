@@ -24,7 +24,7 @@ TEST(TrivialTranslatorTest, Query) {
   scoped_ptr<Translator> translator(component->Create(NULL));
   ASSERT_TRUE(translator);
   // lookup test
-  const std::string test_input("test");
+  const std::string test_input("wozhishuoabc");
   Segment segment;
   segment.start = 0;
   segment.end = test_input.length();
@@ -35,7 +35,7 @@ TEST(TrivialTranslatorTest, Query) {
   shared_ptr<Candidate> candidate = translation->Next();
   ASSERT_TRUE(candidate);
   EXPECT_EQ("abc", candidate->type());
-  EXPECT_EQ(test_input, candidate->text());
+  EXPECT_EQ("我只說abc", candidate->text());
   EXPECT_EQ(segment.start, candidate->start());
   EXPECT_EQ(segment.end, candidate->end());
 } 
