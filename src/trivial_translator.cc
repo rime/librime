@@ -15,23 +15,20 @@ namespace rime {
 
 TrivialTranslator::TrivialTranslator(Engine *engine)
     : Translator(engine) {
-  dictionary_["dao"] = "到";
-  dictionary_["jin"] = "今";
-  dictionary_["jiu"] = "就";
-  dictionary_["luo"] = "洛";
-  dictionary_["ming"] = "鳴";
-  dictionary_["nan"] = "難";
-  dictionary_["sheng"] = "生";
-  dictionary_["shi"] = "世";
-  dictionary_["shuo"] = "說";
-  dictionary_["wen"] = "問";
-  dictionary_["wo"] = "我";
-  dictionary_["yang"] = "陽";
-  dictionary_["yao"] = "要";
-  dictionary_["yuan"] = "冤";
-  dictionary_["zai"] = "在";
-  dictionary_["zhan"] = "斬";
-  dictionary_["zhi"] = "只";
+  dictionary_["yi"] = "一";
+  dictionary_["er"] = "二";
+  dictionary_["san"] = "三";
+  dictionary_["si"] = "四";
+  dictionary_["wu"] = "五";
+  dictionary_["liu"] = "六";
+  dictionary_["qi"] = "七";
+  dictionary_["ba"] = "八";
+  dictionary_["jiu"] = "九";
+  dictionary_["ling"] = "〇";
+  dictionary_["shi"] = "十";
+  dictionary_["bai"] = "百";
+  dictionary_["qian"] = "千";
+  dictionary_["wan"] = "萬";
 }
 
 Translation* TrivialTranslator::Query(const std::string &input,
