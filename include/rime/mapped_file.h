@@ -11,12 +11,13 @@
 
 #include <boost/interprocess/managed_mapped_file.hpp>
 #include <boost/utility.hpp>
+#include <rime/common.h>
 
 namespace rime {
 
 class MappedFile : boost::noncopyable {
  public:
-  explicit MappedFile(const std::string &name);
+  explicit MappedFile(const std::string &file_name);
   virtual ~MappedFile();
   
   bool Create(size_t size);
@@ -29,10 +30,11 @@ class MappedFile : boost::noncopyable {
   bool Grow(size_t size);
   bool ShrinkToFit();
 
+  // seems hard to provide a complete set of object creators for various types.
+  // so, let's make this class the base of your particular mapped file.
   
-  
- private:
-  std::string name_;
+ protected:
+  std::string file_name_;
   scoped_ptr<boost::interprocess::managed_mapped_file> file_;
 };
 
