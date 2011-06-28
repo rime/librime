@@ -21,24 +21,17 @@ void TrieMap::Save(const std::string &file){
   dtrie_->save(file.c_str());
 }
 
-//Peculiar logic means to comform to the build signature.
-//Call the method to build a static trie.
-void TrieMap::Build(const std::vector<std::string> &keys, const std::vector<int> &values){
+//keys vector shoulb in in order
+void TrieMap::Build(const std::vector<std::string> &keys){
   std::size_t key_size = keys.size();
-  std::size_t value_size = values.size();
-  assert(key_size == value_size);
-  
-  std::vector<std::size_t> lengths(key_size);
   std::vector<const char *> char_keys(key_size);
   
   std::size_t key_id = 0;
   for (std::vector<std::string>::const_iterator it = keys.begin();
       it != keys.end(); ++it, ++key_id) {
     char_keys[key_id] = it->c_str();
-    lengths[key_id] = it->length();
-  }
-  
-  dtrie_->build(key_size, &char_keys[0], &lengths[0], &values[0]);
+  }  
+  dtrie_->build(key_size, &char_keys[0]);
 }
 
 bool TrieMap::HasKey(const std::string &key){
@@ -56,6 +49,22 @@ bool TrieMap::GetValue(const std::string &key, int *value){
     
   *value = result.value;
   return true;
+}
+
+//Giving a key, search all the keys in the tree which share a common prefix with that key.
+void TrieMap::CommonPrefixSearch(const std::string &key, size_t limit, std::vector<int> *result){
+  Darts::DoubleArray::result_pair_type result_pair[limit];
+  size_t results = dtrie_->commonPrefixSearch(key.c_str(), result_pair, limit, key.length());
+  results = std::min(results, limit);
+  for(size_t i = 0; i < results; ++i){
+    result->push_back(result_pair[i].value);
+  }
+}
+
+void TrieMap::ExpandSearch(const std::string &key, std::vector<std::string> *result, size_t limit){
+  if( limit == 0)
+    return;
+  
 }
 
 std::size_t TrieMap::size()const{

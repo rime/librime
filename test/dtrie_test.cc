@@ -10,7 +10,7 @@
 #include <rime/dtrie.h>
 #include <string>
 #include <vector>
-#include <map>
+#include <set>
 
 using namespace rime;
 
@@ -20,27 +20,25 @@ class RimeDoubleArrayTrieMapTest : public ::testing::Test {
 
   virtual void SetUp() {
     trie_map = new TrieMap;
-    
-    std::map<std::string, int> kvmap;
-    kvmap["google"] = 1;
-    kvmap["good"] = 2;
-    kvmap["microsoft"] = 3;
-    kvmap["macrosoft"] = 4;
-    kvmap["adobe"] = 5;
-    kvmap["yahoo"] = 6;
-    kvmap["baidu"] = 7;
+    std::set<std::string> keyset;
+    keyset.insert("google");
+    keyset.insert("good");
+    keyset.insert("goodbye");
+    keyset.insert("microsoft");
+    keyset.insert("macrosoft");
+    keyset.insert("adobe");
+    keyset.insert("yahoo");
+    keyset.insert("baidu");
     
     //keys should be sorted.
-    std::vector<std::string> keys(kvmap.size());
-    std::vector<int> values(kvmap.size());
+    std::vector<std::string> keys(keyset.size());
     
     int j = 0;
-    for(std::map<std::string, int>::iterator i = kvmap.begin(); i != kvmap.end(); ++i, ++j){
-      keys[j] = i->first;
-      values[j] = i->second;
+    for(std::set<std::string>::iterator i = keyset.begin(); i != keyset.end(); ++i, ++j){
+      keys[j] = i->c_str();
     }
     
-    trie_map->Build(keys, values);
+    trie_map->Build(keys);
   }
 
   virtual void TearDown() {
@@ -58,7 +56,6 @@ TEST_F(RimeDoubleArrayTrieMapTest, save_load) {
 }
 
 TEST_F(RimeDoubleArrayTrieMapTest, HasKey) {
-  //todo
   EXPECT_TRUE(trie_map->HasKey("google"));
   EXPECT_FALSE(trie_map->HasKey("googlesoft"));
   
@@ -67,20 +64,20 @@ TEST_F(RimeDoubleArrayTrieMapTest, HasKey) {
 }
 
 TEST_F(RimeDoubleArrayTrieMapTest, GetValue) {
-  //todo
   int value = -1;
-  EXPECT_TRUE(trie_map->GetValue("google", &value));
-  EXPECT_EQ(value, 1);
-  //std::cout<<value<<std::endl;
-  value = -1;
-  EXPECT_FALSE(trie_map->GetValue("googlesoft", &value));
-  EXPECT_EQ(value, -1);
-  
-  value = -1;
   EXPECT_TRUE(trie_map->GetValue("adobe", &value));
-  EXPECT_EQ(value, 5);
+  EXPECT_EQ(value, 0);
   
   value = -1;
   EXPECT_TRUE(trie_map->GetValue("baidu", &value));
-  EXPECT_EQ(value, 7);
+  EXPECT_EQ(value, 1);
+}
+
+TEST_F(RimeDoubleArrayTrieMapTest, CommonPrefixMatch) {
+  std::vector<int> result;
+  std::vector<std::string> keys;
+  
+  trie_map->CommonPrefixSearch("goodbye", 10, &result);
+  //result is good and goodbye
+  EXPECT_EQ(result.size(), 2);
 }

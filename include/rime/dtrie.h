@@ -22,9 +22,11 @@ public:
   
   void Load(const std::string &file);
   void Save(const std::string &file);
-  void Build(const std::vector<std::string> &keys, const std::vector<int> &values);
+  void Build(const std::vector<std::string> &keys);
   bool HasKey(const std::string &key);
   bool GetValue(const std::string &key, int *value);
+  void CommonPrefixSearch(const std::string &key, size_t limit, std::vector<int> *result);
+  void ExpandSearch(const std::string &key, std::vector<std::string> *result, const size_t limit);
   std::size_t size()const;
   
 private:
