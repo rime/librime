@@ -7,7 +7,7 @@
 // 2011-5-16 Zou xu <zouivex@gmail.com>
 //
 
-#include <rime/dtrie.h>
+#include <rime/prism.h>
 #include <queue>
 
 namespace rime{
