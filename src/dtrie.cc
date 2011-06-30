@@ -12,18 +12,18 @@
 
 namespace rime{
 
-void TrieMap::Load(const std::string &file){
+void Prism::Load(const std::string &file){
   EZLOGGERPRINT("Load file: %s", file.c_str());
   dtrie_->open(file.c_str());
 }
 
-void TrieMap::Save(const std::string &file){
+void Prism::Save(const std::string &file){
   EZLOGGERPRINT("Save file: %s", file.c_str());
   dtrie_->save(file.c_str());
 }
 
 //keys vector shoulb in in order
-void TrieMap::Build(const std::vector<std::string> &keys){
+void Prism::Build(const std::vector<std::string> &keys){
   std::size_t key_size = keys.size();
   std::vector<const char *> char_keys(key_size);
   
@@ -35,13 +35,13 @@ void TrieMap::Build(const std::vector<std::string> &keys){
   dtrie_->build(key_size, &char_keys[0]);
 }
 
-bool TrieMap::HasKey(const std::string &key){
+bool Prism::HasKey(const std::string &key){
   Darts::DoubleArray::value_type value;
   dtrie_->exactMatchSearch(key.c_str(), value);
   return value != -1;
 }
 
-bool TrieMap::GetValue(const std::string &key, int *value){
+bool Prism::GetValue(const std::string &key, int *value){
   Darts::DoubleArray::result_pair_type result;
   dtrie_->exactMatchSearch(key.c_str(), result);
   
@@ -53,7 +53,7 @@ bool TrieMap::GetValue(const std::string &key, int *value){
 }
 
 //Giving a key, search all the keys in the tree which share a common prefix with that key.
-void TrieMap::CommonPrefixSearch(const std::string &key, size_t limit, std::vector<int> *result){
+void Prism::CommonPrefixSearch(const std::string &key, size_t limit, std::vector<int> *result){
   Darts::DoubleArray::result_pair_type result_pair[limit];
   size_t results = dtrie_->commonPrefixSearch(key.c_str(), result_pair, limit, key.length());
   results = std::min(results, limit);
@@ -62,7 +62,7 @@ void TrieMap::CommonPrefixSearch(const std::string &key, size_t limit, std::vect
   }
 }
 
-void TrieMap::ExpandSearch(const std::string &key, std::vector<int> *result, size_t limit){
+void Prism::ExpandSearch(const std::string &key, std::vector<int> *result, size_t limit){
   if( limit == 0)
     return;
   size_t node_pos = 0;
@@ -98,7 +98,7 @@ void TrieMap::ExpandSearch(const std::string &key, std::vector<int> *result, siz
   }
 }
 
-std::size_t TrieMap::size()const{
+std::size_t Prism::size()const{
   return dtrie_->size();
 }
 

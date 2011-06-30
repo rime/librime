@@ -21,10 +21,10 @@ void print(int i){
 
 class RimeDoubleArrayTrieMapTest : public ::testing::Test {
  protected:
-  RimeDoubleArrayTrieMapTest() : trie_map(NULL) {}
+  RimeDoubleArrayTrieMapTest() : prism(NULL) {}
 
   virtual void SetUp() {
-    trie_map = new TrieMap;
+    prism = new Prism;
     std::set<std::string> keyset;
     keyset.insert("google");
     keyset.insert("good");
@@ -43,54 +43,54 @@ class RimeDoubleArrayTrieMapTest : public ::testing::Test {
       keys[j] = i->c_str();
     }
     
-    trie_map->Build(keys);
+    prism->Build(keys);
   }
 
   virtual void TearDown() {
-    delete trie_map;
+    delete prism;
   }
   
-  TrieMap * trie_map;
+  Prism * prism;
 };
 
 TEST_F(RimeDoubleArrayTrieMapTest, save_load) {
-  trie_map->Save("t.dic");
-  TrieMap tmap;
+  prism->Save("t.dic");
+  Prism tmap;
   tmap.Load("t.dic");
-  EXPECT_EQ(trie_map->size(), tmap.size());
+  EXPECT_EQ(prism->size(), tmap.size());
 }
 
 TEST_F(RimeDoubleArrayTrieMapTest, HasKey) {
-  EXPECT_TRUE(trie_map->HasKey("google"));
-  EXPECT_FALSE(trie_map->HasKey("googlesoft"));
+  EXPECT_TRUE(prism->HasKey("google"));
+  EXPECT_FALSE(prism->HasKey("googlesoft"));
   
-  EXPECT_TRUE(trie_map->HasKey("microsoft"));
-  EXPECT_FALSE(trie_map->HasKey("peoplesoft"));
+  EXPECT_TRUE(prism->HasKey("microsoft"));
+  EXPECT_FALSE(prism->HasKey("peoplesoft"));
 }
 
 TEST_F(RimeDoubleArrayTrieMapTest, GetValue) {
   int value = -1;
-  EXPECT_TRUE(trie_map->GetValue("adobe", &value));
+  EXPECT_TRUE(prism->GetValue("adobe", &value));
   EXPECT_EQ(value, 0);
   
   value = -1;
-  EXPECT_TRUE(trie_map->GetValue("baidu", &value));
+  EXPECT_TRUE(prism->GetValue("baidu", &value));
   EXPECT_EQ(value, 1);
 }
 
 TEST_F(RimeDoubleArrayTrieMapTest, CommonPrefixMatch) {
   std::vector<int> result;
   
-  trie_map->CommonPrefixSearch("goodbye", 10, &result);
-  //result is good and goodbye
+  prism->CommonPrefixSearch("goodbye", 10, &result);
+  //result is good and goodbye.
   EXPECT_EQ(result.size(), 2);
 }
 
 TEST_F(RimeDoubleArrayTrieMapTest, ExpandSearch) {
   std::vector<int> result;
   
-  trie_map->ExpandSearch("goo", &result, 10);
-  //result is good and goodbye
+  prism->ExpandSearch("goo", &result, 10);
+  //result is good, google and goodbye.
   std::for_each(result.begin(), result.end(), print);
   EXPECT_EQ(result.size(), 3);
 }

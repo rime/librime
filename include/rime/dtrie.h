@@ -16,9 +16,9 @@
 namespace rime {
 
 //
-class TrieMap {
+class Prism {
 public:
-  TrieMap() : dtrie_(new Darts::DoubleArray){};
+  Prism() : dtrie_(new Darts::DoubleArray){};
   
   void Load(const std::string &file);
   void Save(const std::string &file);
