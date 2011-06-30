@@ -7,8 +7,8 @@
 // 2011-5-16 Zou xu <zouivex@gmail.com>
 //
 
-#ifndef RIME_DTRIE_H_
-#define RIME_DTRIE_H_
+#ifndef RIME_PRISM_H_
+#define RIME_PRISM_H_
 
 #include <rime/common.h>
 #include <darts.h>
@@ -18,26 +18,19 @@ namespace rime {
 //
 class Prism {
 public:
-  Prism() : dtrie_(new Darts::DoubleArray){};
+  Prism() : trie_(new Darts::DoubleArray){};
   
   void Load(const std::string &file);
   void Save(const std::string &file);
   void Build(const std::vector<std::string> &keys);
   bool HasKey(const std::string &key);
   bool GetValue(const std::string &key, int *value);
-  void CommonPrefixSearch(const std::string &key, size_t limit, std::vector<int> *result);
-  void ExpandSearch(const std::string &key, std::vector<int> *result, const size_t limit);
-  std::size_t size()const;
+  void CommonPrefixSearch(const std::string &key, std::vector<int> *result, size_t limit);
+  void ExpandSearch(const std::string &key, std::vector<int> *result, size_t limit);
+  size_t size()const;
   
 private:
-  scoped_ptr<Darts::DoubleArray> dtrie_;
-};
-
-struct node_t {
-  std::string key;
-  size_t node_pos;
-  node_t(const std::string& k, size_t pos) : key(k), node_pos(pos){
-  }
+  scoped_ptr<Darts::DoubleArray> trie_;
 };
 
 }  // namespace rime

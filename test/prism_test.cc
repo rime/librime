@@ -15,10 +15,6 @@
 
 using namespace rime;
 
-void print(int i){
-  std::cout<<i<<std::endl;
-}
-
 class RimeDoubleArrayTrieMapTest : public ::testing::Test {
  protected:
   RimeDoubleArrayTrieMapTest() : prism(NULL) {}
@@ -26,14 +22,14 @@ class RimeDoubleArrayTrieMapTest : public ::testing::Test {
   virtual void SetUp() {
     prism = new Prism;
     std::set<std::string> keyset;
-    keyset.insert("google");
-    keyset.insert("good");
-    keyset.insert("goodbye");
+    keyset.insert("google");     // 4
+    keyset.insert("good");       // 2
+    keyset.insert("goodbye");    // 3
     keyset.insert("microsoft");
     keyset.insert("macrosoft");
-    keyset.insert("adobe");
+    keyset.insert("adobe");      // 0 == id
     keyset.insert("yahoo");
-    keyset.insert("baidu");
+    keyset.insert("baidu");      // 1
     
     //keys should be sorted.
     std::vector<std::string> keys(keyset.size());
@@ -81,16 +77,20 @@ TEST_F(RimeDoubleArrayTrieMapTest, GetValue) {
 TEST_F(RimeDoubleArrayTrieMapTest, CommonPrefixMatch) {
   std::vector<int> result;
   
-  prism->CommonPrefixSearch("goodbye", 10, &result);
+  prism->CommonPrefixSearch("goodbye", &result, 10);
   //result is good and goodbye.
-  EXPECT_EQ(result.size(), 2);
+  ASSERT_EQ(result.size(), 2);
+  EXPECT_EQ(result[0], 2);  // good
+  EXPECT_EQ(result[1], 3);  // goodbye
 }
 
 TEST_F(RimeDoubleArrayTrieMapTest, ExpandSearch) {
   std::vector<int> result;
   
   prism->ExpandSearch("goo", &result, 10);
-  //result is good, google and goodbye.
-  std::for_each(result.begin(), result.end(), print);
-  EXPECT_EQ(result.size(), 3);
+  //result is good, google and goodbye (ordered by length asc).
+  ASSERT_EQ(result.size(), 3);
+  EXPECT_EQ(result[0], 2);  // good
+  EXPECT_EQ(result[1], 4);  // google
+  EXPECT_EQ(result[2], 3);  // goodbye
 }
