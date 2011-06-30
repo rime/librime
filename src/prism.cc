@@ -8,6 +8,7 @@
 //
 
 #include <rime/prism.h>
+#include <cstring>
 #include <queue>
 
 namespace {
@@ -23,14 +24,52 @@ struct node_t {
 
 namespace rime {
 
-void Prism::Load(const std::string &file){
-  EZLOGGERPRINT("Load file: %s", file.c_str());
-  trie_->open(file.c_str());
+bool Prism::Load(){
+  EZLOGGERPRINT("Load file: %s", file_name().c_str());
+  //trie_->open(file_name().c_str());
+
+  if (IsOpen())
+    Close();
+  
+  if (!OpenReadOnly()) {
+    EZLOGGERPRINT("Error opening prism file '%s'.", file_name().c_str());
+    return false;
+  }
+  std::pair<char *, size_t> image = file()->find<char>("DoubleArray");
+  if (!image.second) {
+    EZLOGGERPRINT("Double array image not found.");
+    return false;
+  }
+  size_t array_size = image.second / trie_->unit_size();
+  EZLOGGERPRINT("Found double array image of size %u.", array_size);
+  trie_->set_array(image.first, array_size);
 }
 
-void Prism::Save(const std::string &file){
-  EZLOGGERPRINT("Save file: %s", file.c_str());
-  trie_->save(file.c_str());
+bool Prism::Save(){
+  EZLOGGERPRINT("Save file: %s", file_name().c_str());
+  //trie_->save(file_name().c_str());
+
+  // save the array to managed mapped file
+  size_t image_size = trie_->total_size();
+  if (!image_size) {
+    EZLOGGERPRINT("Error: the trie has not been constructed!");
+    return false;
+  }
+  const size_t kReservedSize = 4 * 1024;
+  if (!Create(image_size + kReservedSize)) {
+    EZLOGGERPRINT("Error creating prism file '%s'.", file_name().c_str());
+    return false;
+  }
+  char *image = file()->construct<char>("DoubleArray", std::nothrow)[image_size]();
+  if (!image) {
+    EZLOGGERPRINT("Error creating double array image.");
+    return false;
+  }
+  std::memcpy(image, trie_->array(), image_size);
+
+  // TODO: we should write some metadata to identify the format and version
+  
+  return Flush();
 }
 
 // keys should be in order

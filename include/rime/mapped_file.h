@@ -16,29 +16,31 @@
 namespace rime {
 
 class MappedFile : boost::noncopyable {
- public:
+ protected:
   explicit MappedFile(const std::string &file_name);
   virtual ~MappedFile();
   
   bool Create(size_t size);
   bool OpenOrCreate(size_t size);
   bool OpenReadOnly();
-  void Close();
-  bool IsOpen() const;
-
+  bool Flush();
   // should be called when the file is not mapped.
   bool Grow(size_t size);
   bool ShrinkToFit();
+
+ public:
+  bool IsOpen() const;
+  void Close();
   bool Remove();
+
+  const std::string& file_name() const { return file_name_; }
 
   // seems hard to provide a complete set of object creators for various types.
   // so, let's make this class the base of your particular mapped file.
-  
+  // and then use file()->construct...  
  protected:
   typedef shared_ptr<boost::interprocess::managed_mapped_file> ManagedMappedFilePtr;
-  
   ManagedMappedFilePtr file() { return file_; }
-  const std::string& file_name() const { return file_name_; }
   
  private:
   std::string file_name_;

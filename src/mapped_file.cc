@@ -55,6 +55,12 @@ bool MappedFile::IsOpen() const {
   return file_;
 }
 
+bool MappedFile::Flush() {
+  if (!file_)
+    return false;
+  return file_->flush();
+}
+
 bool MappedFile::Grow(size_t size) {
   if (IsOpen())
     return false;

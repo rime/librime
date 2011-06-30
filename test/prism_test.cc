@@ -15,12 +15,12 @@
 
 using namespace rime;
 
-class RimeDoubleArrayTrieMapTest : public ::testing::Test {
+class RimePrismTest : public ::testing::Test {
  protected:
-  RimeDoubleArrayTrieMapTest() : prism(NULL) {}
+  RimePrismTest() : prism_(NULL) {}
 
   virtual void SetUp() {
-    prism = new Prism;
+    prism_ = new Prism("prism_test.bin");
     std::set<std::string> keyset;
     keyset.insert("google");     // 4
     keyset.insert("good");       // 2
@@ -31,7 +31,7 @@ class RimeDoubleArrayTrieMapTest : public ::testing::Test {
     keyset.insert("yahoo");
     keyset.insert("baidu");      // 1
     
-    //keys should be sorted.
+    // Keys should be sorted.
     std::vector<std::string> keys(keyset.size());
     
     int j = 0;
@@ -39,55 +39,58 @@ class RimeDoubleArrayTrieMapTest : public ::testing::Test {
       keys[j] = i->c_str();
     }
     
-    prism->Build(keys);
+    prism_->Build(keys);
   }
 
   virtual void TearDown() {
-    delete prism;
+    delete prism_;
   }
   
-  Prism * prism;
+  Prism *prism_;
 };
 
-TEST_F(RimeDoubleArrayTrieMapTest, save_load) {
-  prism->Save("t.dic");
-  Prism tmap;
-  tmap.Load("t.dic");
-  EXPECT_EQ(prism->size(), tmap.size());
-}
+TEST_F(RimePrismTest, SaveAndLoad) {
+  prism_->Remove();
+  prism_->Save();
 
-TEST_F(RimeDoubleArrayTrieMapTest, HasKey) {
-  EXPECT_TRUE(prism->HasKey("google"));
-  EXPECT_FALSE(prism->HasKey("googlesoft"));
+  Prism test(prism_->file_name());
+  test.Load();
   
-  EXPECT_TRUE(prism->HasKey("microsoft"));
-  EXPECT_FALSE(prism->HasKey("peoplesoft"));
+  EXPECT_EQ(prism_->size(), test.size());
 }
 
-TEST_F(RimeDoubleArrayTrieMapTest, GetValue) {
+TEST_F(RimePrismTest, HasKey) {
+  EXPECT_TRUE(prism_->HasKey("google"));
+  EXPECT_FALSE(prism_->HasKey("googlesoft"));
+  
+  EXPECT_TRUE(prism_->HasKey("microsoft"));
+  EXPECT_FALSE(prism_->HasKey("peoplesoft"));
+}
+
+TEST_F(RimePrismTest, GetValue) {
   int value = -1;
-  EXPECT_TRUE(prism->GetValue("adobe", &value));
+  EXPECT_TRUE(prism_->GetValue("adobe", &value));
   EXPECT_EQ(value, 0);
   
   value = -1;
-  EXPECT_TRUE(prism->GetValue("baidu", &value));
+  EXPECT_TRUE(prism_->GetValue("baidu", &value));
   EXPECT_EQ(value, 1);
 }
 
-TEST_F(RimeDoubleArrayTrieMapTest, CommonPrefixMatch) {
+TEST_F(RimePrismTest, CommonPrefixMatch) {
   std::vector<int> result;
   
-  prism->CommonPrefixSearch("goodbye", &result, 10);
+  prism_->CommonPrefixSearch("goodbye", &result, 10);
   //result is good and goodbye.
   ASSERT_EQ(result.size(), 2);
   EXPECT_EQ(result[0], 2);  // good
   EXPECT_EQ(result[1], 3);  // goodbye
 }
 
-TEST_F(RimeDoubleArrayTrieMapTest, ExpandSearch) {
+TEST_F(RimePrismTest, ExpandSearch) {
   std::vector<int> result;
   
-  prism->ExpandSearch("goo", &result, 10);
+  prism_->ExpandSearch("goo", &result, 10);
   //result is good, google and goodbye (ordered by length asc).
   ASSERT_EQ(result.size(), 3);
   EXPECT_EQ(result[0], 2);  // good
