@@ -26,11 +26,18 @@ public:
   bool HasKey(const std::string &key);
   bool GetValue(const std::string &key, int *value);
   void CommonPrefixSearch(const std::string &key, size_t limit, std::vector<int> *result);
-  void ExpandSearch(const std::string &key, std::vector<std::string> *result, const size_t limit);
+  void ExpandSearch(const std::string &key, std::vector<int> *result, const size_t limit);
   std::size_t size()const;
   
 private:
   scoped_ptr<Darts::DoubleArray> dtrie_;
+};
+
+struct node_t {
+  std::string key;
+  size_t node_pos;
+  node_t(const std::string& k, size_t pos) : key(k), node_pos(pos){
+  }
 };
 
 }  // namespace rime

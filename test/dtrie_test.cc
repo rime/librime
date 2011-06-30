@@ -11,8 +11,13 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <algorithm>
 
 using namespace rime;
+
+void print(int i){
+  std::cout<<i<<std::endl;
+}
 
 class RimeDoubleArrayTrieMapTest : public ::testing::Test {
  protected:
@@ -75,9 +80,17 @@ TEST_F(RimeDoubleArrayTrieMapTest, GetValue) {
 
 TEST_F(RimeDoubleArrayTrieMapTest, CommonPrefixMatch) {
   std::vector<int> result;
-  std::vector<std::string> keys;
   
   trie_map->CommonPrefixSearch("goodbye", 10, &result);
   //result is good and goodbye
   EXPECT_EQ(result.size(), 2);
+}
+
+TEST_F(RimeDoubleArrayTrieMapTest, ExpandSearch) {
+  std::vector<int> result;
+  
+  trie_map->ExpandSearch("goo", &result, 10);
+  //result is good and goodbye
+  std::for_each(result.begin(), result.end(), print);
+  EXPECT_EQ(result.size(), 3);
 }

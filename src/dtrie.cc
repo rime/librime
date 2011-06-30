@@ -8,6 +8,7 @@
 //
 
 #include <rime/dtrie.h>
+#include <queue>
 
 namespace rime{
 
@@ -61,10 +62,40 @@ void TrieMap::CommonPrefixSearch(const std::string &key, size_t limit, std::vect
   }
 }
 
-void TrieMap::ExpandSearch(const std::string &key, std::vector<std::string> *result, size_t limit){
+void TrieMap::ExpandSearch(const std::string &key, std::vector<int> *result, size_t limit){
   if( limit == 0)
     return;
-  
+  size_t node_pos = 0;
+  size_t key_pos = 0;
+  int ret = dtrie_->traverse(key.c_str(), node_pos, key_pos);
+  //key is not a valid path
+  if(ret == -2)
+    return;
+  size_t count = 0;  
+  std::queue<rime::node_t> q;
+  q.push(rime::node_t(key, node_pos));
+  while(!q.empty()){
+    rime::node_t node = q.front();
+    q.pop();
+    for(char ch = 'a'; ch <= 'z'; ++ch){
+      std::string k = node.key + ch;
+      size_t k_pos = node.key.length();
+      size_t n_pos = node.node_pos;
+      ret = dtrie_->traverse(k.c_str(), n_pos, k_pos);
+      if(ret <= -2){
+        ;//ignore
+      }
+      else if(ret == -1){
+        q.push(rime::node_t(k, n_pos));
+      }
+      else{
+        q.push(rime::node_t(k, n_pos));
+        result->push_back(ret);
+        if(++count > limit)
+          return;
+      }
+    }
+  }
 }
 
 std::size_t TrieMap::size()const{
