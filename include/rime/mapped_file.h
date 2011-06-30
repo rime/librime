@@ -29,13 +29,20 @@ class MappedFile : boost::noncopyable {
   // should be called when the file is not mapped.
   bool Grow(size_t size);
   bool ShrinkToFit();
+  bool Remove();
 
   // seems hard to provide a complete set of object creators for various types.
   // so, let's make this class the base of your particular mapped file.
   
  protected:
+  typedef shared_ptr<boost::interprocess::managed_mapped_file> ManagedMappedFilePtr;
+  
+  ManagedMappedFilePtr file() { return file_; }
+  const std::string& file_name() const { return file_name_; }
+  
+ private:
   std::string file_name_;
-  scoped_ptr<boost::interprocess::managed_mapped_file> file_;
+  ManagedMappedFilePtr file_;
 };
 
 }  // namespace rime
