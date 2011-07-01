@@ -9,6 +9,8 @@
 #ifndef RIME_MAPPED_FILE_H_
 #define RIME_MAPPED_FILE_H_
 
+#include <boost/interprocess/allocators/allocator.hpp>
+#include <boost/interprocess/containers/string.hpp>
 #include <boost/interprocess/managed_mapped_file.hpp>
 #include <boost/utility.hpp>
 #include <rime/common.h>
@@ -39,7 +41,14 @@ class MappedFile : boost::noncopyable {
   // so, let's make this class the base of your particular mapped file.
   // and then use file()->construct...  
  protected:
+  typedef boost::interprocess::managed_mapped_file::segment_manager SegmentManager;
+  typedef boost::interprocess::allocator<char, SegmentManager> CharAllocator;
+  typedef boost::interprocess::basic_string<
+      char, std::char_traits<char>, CharAllocator> String;
+  typedef boost::interprocess::allocator<String, SegmentManager> StringAllocator;
+  
   typedef shared_ptr<boost::interprocess::managed_mapped_file> ManagedMappedFilePtr;
+  
   ManagedMappedFilePtr file() { return file_; }
   
  private:

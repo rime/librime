@@ -55,7 +55,7 @@ bool Prism::Save(){
     EZLOGGERPRINT("Error: the trie has not been constructed!");
     return false;
   }
-  const size_t kReservedSize = 4 * 1024;
+  const size_t kReservedSize = 1024;
   if (!Create(image_size + kReservedSize)) {
     EZLOGGERPRINT("Error creating prism file '%s'.", file_name().c_str());
     return false;
@@ -67,9 +67,19 @@ bool Prism::Save(){
   }
   std::memcpy(image, trie_->array(), image_size);
 
-  // TODO: we should write some metadata to identify the format and version
-  
-  return Flush();
+  // write metadata to identify the format and version
+  {
+    const char kFormat[] = "Rime::Prism/0.9";
+    CharAllocator char_allocator(file()->get_segment_manager());
+    String *format = file()->construct<String>("Format")(kFormat, char_allocator);
+    if (!format) {
+      EZLOGGERPRINT("Error writing metadata into file '%s'.", file_name().c_str());
+      return false;
+    }
+  }
+
+  Close();
+  return ShrinkToFit();
 }
 
 // keys should be in order
