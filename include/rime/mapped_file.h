@@ -31,6 +31,16 @@ class MappedFile : boost::noncopyable {
   bool ShrinkToFit();
 
  public:
+  typedef boost::interprocess::managed_mapped_file::segment_manager SegmentManager;
+  
+  typedef boost::interprocess::allocator<void, SegmentManager> VoidAllocator;
+  typedef boost::interprocess::allocator<char, SegmentManager> CharAllocator;
+  typedef boost::interprocess::basic_string<
+      char, std::char_traits<char>, CharAllocator> String;
+  typedef boost::interprocess::allocator<String, SegmentManager> StringAllocator;
+  
+  typedef shared_ptr<boost::interprocess::managed_mapped_file> ManagedMappedFilePtr;
+  
   bool IsOpen() const;
   void Close();
   bool Remove();
@@ -40,15 +50,8 @@ class MappedFile : boost::noncopyable {
   // seems hard to provide a complete set of object creators for various types.
   // so, let's make this class the base of your particular mapped file.
   // and then use file()->construct...  
- protected:
-  typedef boost::interprocess::managed_mapped_file::segment_manager SegmentManager;
-  typedef boost::interprocess::allocator<char, SegmentManager> CharAllocator;
-  typedef boost::interprocess::basic_string<
-      char, std::char_traits<char>, CharAllocator> String;
-  typedef boost::interprocess::allocator<String, SegmentManager> StringAllocator;
-  
-  typedef shared_ptr<boost::interprocess::managed_mapped_file> ManagedMappedFilePtr;
-  
+
+ protected:  
   ManagedMappedFilePtr file() { return file_; }
   
  private:
