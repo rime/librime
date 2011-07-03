@@ -63,17 +63,19 @@ bool MappedFile::Flush() {
 
 bool MappedFile::Grow(size_t size) {
   if (IsOpen())
-    return false;
+    Close();
   return managed_mapped_file::grow(file_name_.c_str(), size);
 }
 
 bool MappedFile::ShrinkToFit() {
   if (IsOpen())
-    return false;
+    Close();
   return managed_mapped_file::shrink_to_fit(file_name_.c_str());
 }
 
 bool MappedFile::Remove() {
+  if (IsOpen())
+    Close();
   return file_mapping::remove(file_name_.c_str());
 }
 

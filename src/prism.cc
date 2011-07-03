@@ -20,6 +20,15 @@ struct node_t {
   }
 };
 
+struct Metadata {
+  static const int kFormatMaxLength = 32;
+  char format[kFormatMaxLength];
+  int num_syllables;
+  int num_spellings;
+};
+
+const char kPrismFormat[] = "Rime::Prism/0.9";
+
 }  // namespace
 
 namespace rime {
@@ -43,6 +52,7 @@ bool Prism::Load(){
   size_t array_size = image.second / trie_->unit_size();
   EZLOGGERPRINT("Found double array image of size %u.", array_size);
   trie_->set_array(image.first, array_size);
+  return true;
 }
 
 bool Prism::Save(){
@@ -60,23 +70,25 @@ bool Prism::Save(){
     EZLOGGERPRINT("Error creating prism file '%s'.", file_name().c_str());
     return false;
   }
+
+  {
+    Metadata *metadata = file()->construct<Metadata>("Metadata")();
+    if (!metadata) {
+      EZLOGGERPRINT("Error writing metadata into file '%s'.", file_name().c_str());
+      return false;
+    }
+    std::strncpy(metadata->format, kPrismFormat, Metadata::kFormatMaxLength);
+    // TODO:
+    metadata->num_syllables = trie_->size();
+    metadata->num_spellings = trie_->size();
+  }
+
   char *image = file()->construct<char>("DoubleArray", std::nothrow)[image_size]();
   if (!image) {
     EZLOGGERPRINT("Error creating double array image.");
     return false;
   }
   std::memcpy(image, trie_->array(), image_size);
-
-  // write metadata to identify the format and version
-  {
-    const char kFormat[] = "Rime::Prism/0.9";
-    CharAllocator char_allocator(file()->get_segment_manager());
-    String *format = file()->construct<String>("Format")(kFormat, char_allocator);
-    if (!format) {
-      EZLOGGERPRINT("Error writing metadata into file '%s'.", file_name().c_str());
-      return false;
-    }
-  }
 
   Close();
   return ShrinkToFit();

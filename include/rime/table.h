@@ -10,26 +10,43 @@
 #ifndef RIME_TABLE_H_
 #define RIME_TABLE_H_
 
+#include <map>
+#include <string>
+#include <vector>
 #include <boost/interprocess/containers/vector.hpp>
 #include <rime/common.h>
 #include <rime/mapped_file.h>
 
 namespace rime {
-
-class TableEntry {
-  MappedFile::String text_;
-  double weight_;
-
+    
+class Code : public std::vector<int> {
  public:
-  TableEntry(const MappedFile::VoidAllocator &allocator)
-      : text_(allocator), weight_(0.0) {}
-  TableEntry(const char *text,
-             double weight,
-             const MappedFile::VoidAllocator &allocator)
-      : text_(text, allocator), weight_(weight) {}
+  static const size_t kIndexCodeMaxLength = 3;
+  
+  bool operator< (const Code &other) const;
+  bool operator== (const Code &other) const;
+};
 
-  const MappedFile::String &text() const { return text_; }
-  double weight() const { return weight_; }
+struct EntryDefinition { 
+  std::string text;
+  double weight;
+  Code code;
+  bool operator< (const EntryDefinition& other) const;
+};
+
+typedef std::map<Code, std::vector<EntryDefinition> > Vocabulary;
+
+struct TableEntry {
+  MappedFile::String text;
+  double weight;
+
+  TableEntry(const MappedFile::VoidAllocator &allocator)
+      : text(allocator), weight(0.0) {}
+  TableEntry(const char *_text,
+             double _weight,
+             const MappedFile::VoidAllocator &allocator)
+      : text(_text, allocator), weight(_weight) {}
+
 };
 
 typedef boost::interprocess::allocator<TableEntry,
@@ -41,7 +58,9 @@ typedef boost::interprocess::vector<TableEntry,
 
 struct TableIndexNode {
   boost::interprocess::offset_ptr<void> next_level;
-  TableEntryVector entries;
+  boost::interprocess::offset_ptr<TableEntryVector> entries;
+  TableIndexNode()
+      : next_level(NULL), entries(NULL) {}
 };
 
 typedef boost::interprocess::allocator<TableIndexNode,
@@ -50,7 +69,7 @@ typedef boost::interprocess::allocator<TableIndexNode,
 typedef boost::interprocess::vector<TableIndexNode, TableIndexNodeAllocator>
         TableIndex;
 //typedef boost::interprocess::flat_map<int, TableIndexNode, TableIndexNodeAllocator>
-//        TableIndexL2;
+//        TableIndexLv2;
 // ...
 
 class Table : public MappedFile {
@@ -60,7 +79,7 @@ class Table : public MappedFile {
   
   bool Load();
   bool Save();
-  void Build(/* arguments to argue */);
+  bool Build(const Vocabulary &vocabulary, size_t num_syllables, size_t num_entries);
   const TableEntryVector* GetEntries(int syllable_id);
   
  private:
