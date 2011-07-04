@@ -6,10 +6,9 @@
 // 
 // 2011-5-16 Zou xu <zouivex@gmail.com>
 //
-
-#include <rime/prism.h>
 #include <cstring>
 #include <queue>
+#include <rime/impl/prism.h>
 
 namespace {
 

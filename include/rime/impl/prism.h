@@ -10,9 +10,9 @@
 #ifndef RIME_PRISM_H_
 #define RIME_PRISM_H_
 
-#include <rime/common.h>
-#include <rime/mapped_file.h>
 #include <darts.h>
+#include <rime/common.h>
+#include <rime/impl/mapped_file.h>
 
 namespace rime {
 

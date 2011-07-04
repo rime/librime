@@ -9,7 +9,7 @@
 
 #include <rime/candidate.h>
 #include <rime/segmentation.h>
-#include "trivial_translator.h"
+#include <rime/impl/trivial_translator.h>
 
 namespace rime {
 

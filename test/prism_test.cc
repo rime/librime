@@ -7,7 +7,7 @@
 // 2011-05-17 Zou xu <zouivex@gmail.com>
 //
 #include <gtest/gtest.h>
-#include <rime/prism.h>
+#include <rime/impl/prism.h>
 #include <string>
 #include <vector>
 #include <set>

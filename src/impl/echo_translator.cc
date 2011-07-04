@@ -11,7 +11,7 @@
 #include <rime/common.h>
 #include <rime/segmentation.h>
 #include <rime/translation.h>
-#include "echo_translator.h"
+#include <rime/impl/echo_translator.h>
 
 namespace rime {
 

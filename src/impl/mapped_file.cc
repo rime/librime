@@ -10,7 +10,7 @@
 //
 #include <boost/interprocess/file_mapping.hpp>
 #include <boost/interprocess/managed_mapped_file.hpp>
-#include <rime/mapped_file.h>
+#include <rime/impl/mapped_file.h>
 
 using boost::interprocess::file_mapping;
 using boost::interprocess::managed_mapped_file;

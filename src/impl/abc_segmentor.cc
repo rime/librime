@@ -7,7 +7,7 @@
 // 2011-05-15 GONG Chen <chen.sst@gmail.com>
 //
 #include <rime/segmentation.h>
-#include "abc_segmentor.h"
+#include <rime/impl/abc_segmentor.h>
 
 namespace rime {
 

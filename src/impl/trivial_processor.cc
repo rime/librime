@@ -14,7 +14,7 @@
 #include <rime/engine.h>
 #include <rime/key_event.h>
 #include <rime/key_table.h>
-#include "trivial_processor.h"
+#include <rime/impl/trivial_processor.h>
 
 namespace rime {
 

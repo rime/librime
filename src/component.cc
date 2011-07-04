@@ -12,11 +12,11 @@
 // TODO: include implementations of built-in components
 #include <rime/registry.h>
 #include <rime/config.h>
-#include "abc_segmentor.h"
-#include "echo_translator.h"
-#include "fallback_segmentor.h"
-#include "trivial_processor.h"
-#include "trivial_translator.h"
+#include <rime/impl/abc_segmentor.h>
+#include <rime/impl/echo_translator.h>
+#include <rime/impl/fallback_segmentor.h>
+#include <rime/impl/trivial_processor.h>
+#include <rime/impl/trivial_translator.h>
 
 namespace rime {
 

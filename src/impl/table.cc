@@ -7,9 +7,8 @@
 // 2011-07-02 GONG Chen <chen.sst@gmail.com>
 //
 #include <cstring>
-#include <algorithm>
 #include <boost/foreach.hpp>
-#include <rime/table.h>
+#include <rime/impl/table.h>
 
 namespace {
 
@@ -39,7 +38,11 @@ bool Code::operator< (const Code &other) const {
 bool Code::operator== (const Code &other) const {
   if (size() != other.size())
     return false;
-  return std::equal(begin(), end(), other.begin());
+  for (size_t i = 0; i < size(); ++i) {
+    if (at(i) != other.at(i))
+      return false;
+  }
+  return true;
 }
 
 bool EntryDefinition::operator< (const EntryDefinition& other) const {

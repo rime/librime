@@ -8,7 +8,7 @@
 //
 #include <rime/common.h>
 #include <rime/segmentation.h>
-#include "fallback_segmentor.h"
+#include <rime/impl/fallback_segmentor.h>
 
 namespace rime {
 

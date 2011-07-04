@@ -7,7 +7,7 @@
 // 2011-07-03 GONG Chen <chen.sst@gmail.com>
 //
 #include <gtest/gtest.h>
-#include <rime/table.h>
+#include <rime/impl/table.h>
 
 TEST(RimeTableTest, Lv1) {
   const char file_name[] = "table_test.bin";
