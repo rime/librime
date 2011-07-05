@@ -46,7 +46,13 @@ struct TableEntry {
              double _weight,
              const MappedFile::VoidAllocator &allocator)
       : text(_text, allocator), weight(_weight) {}
-
+  // required by move operation
+  TableEntry(const TableEntry &entry)
+      : text(boost::interprocess::move(entry.text)), weight(entry.weight) {}
+  TableEntry& operator=(const TableEntry &entry) {
+    text = boost::interprocess::move(entry.text);
+    weight = entry.weight;
+  }
 };
 
 typedef boost::interprocess::allocator<TableEntry,
