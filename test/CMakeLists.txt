@@ -11,6 +11,8 @@ add_dependencies(rime_test rime)
 
 file(COPY ${PROJECT_SOURCE_DIR}/data/test.yaml 
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
+file(COPY ${PROJECT_SOURCE_DIR}/data/samples/luna_pinyin.dict.yaml 
+     DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 
 set(RIME_TEST_EXECUTABLE ${EXECUTABLE_OUTPUT_PATH}/rime_test${EXT})
 add_custom_command(TARGET rime_test
