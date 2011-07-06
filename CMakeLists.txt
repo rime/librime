@@ -1,5 +1,46 @@
+project(rime)
+cmake_minimum_required(VERSION 2.8)
+
 set(LIBRIME_VERSION 0.1)
 set(LIBRIME_SOVERSION 0)
+
+if(WIN32)
+  set(EXT ".exe")
+endif(WIN32)
+
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
+#set(Boost_USE_STATIC_LIBS ON)
+#set(Boost_USE_MULTITHREADED ON)
+#set(Boost_USE_STATIC_RUNTIME ON)
+find_package(Boost 1.40.0 REQUIRED COMPONENTS signals)
+if(Boost_FOUND)
+  include_directories(${Boost_INCLUDE_DIRS})
+  link_directories(${Boost_LIBRARY_DIRS})
+endif(Boost_FOUND)
+
+find_package(Threads)
+find_package(GTest REQUIRED)
+if(GTEST_FOUND)
+  include_directories(${GTEST_INCLUDE_DIRS})
+endif(GTEST_FOUND)
+
+find_package(YamlCpp REQUIRED)
+if(YamlCpp_FOUND)
+  include_directories(${YamlCpp_INCLUDE_DIR})
+endif(YamlCpp_FOUND)
+
+find_path(X11Keysym X11/keysym.h)
+if(X11Keysym)
+  message(STATUS "Found X11/keysym.h at ${X11Keysym}")
+  include_directories(${X11Keysym})
+else(X11Keysym)
+  message(FATAL_ERROR "X11/keysym.h not found.")
+endif(X11Keysym)
+
+include_directories(${PROJECT_SOURCE_DIR}/include) 
+include_directories(${PROJECT_SOURCE_DIR}/thirdparty/include) 
+link_directories(${PROJECT_SOURCE_DIR}/thirdparty/lib) 
 
 add_subdirectory(src)
 add_subdirectory(tools)
