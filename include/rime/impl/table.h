@@ -34,7 +34,8 @@ struct EntryDefinition {
   bool operator< (const EntryDefinition& other) const;
 };
 
-typedef std::map<Code, std::vector<EntryDefinition> > Vocabulary;
+typedef std::vector<EntryDefinition> EntryDefinitionList;
+typedef std::map<Code, EntryDefinitionList> Vocabulary;
 
 struct TableEntry {
   MappedFile::String text;

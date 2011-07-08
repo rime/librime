@@ -94,7 +94,7 @@ bool Prism::Save(){
 }
 
 // keys should be in order
-void Prism::Build(const std::vector<std::string> &keys){
+bool Prism::Build(const std::vector<std::string> &keys){
   size_t key_size = keys.size();
   std::vector<const char *> char_keys(key_size);
   
@@ -103,7 +103,7 @@ void Prism::Build(const std::vector<std::string> &keys){
       it != keys.end(); ++it, ++key_id) {
     char_keys[key_id] = it->c_str();
   }  
-  trie_->build(key_size, &char_keys[0]);
+  return 0 == trie_->build(key_size, &char_keys[0]);
 }
 
 bool Prism::HasKey(const std::string &key){

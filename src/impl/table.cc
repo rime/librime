@@ -119,7 +119,6 @@ bool Table::Build(const Vocabulary &vocabulary, size_t num_syllables, size_t num
     if (code.size() > 1)
       break;
     int syllable_id = code[0];
-    EZLOGGERPRINT("syllable_id = %d", syllable_id);
     TableIndexNode &node(index_->at(syllable_id));
     TableEntryVector *entries = NULL;
     if (node.entries) {

@@ -23,7 +23,7 @@ class Prism : public MappedFile {
   
   bool Load();
   bool Save();
-  void Build(const std::vector<std::string> &keys);
+  bool Build(const std::vector<std::string> &keys);
   bool HasKey(const std::string &key);
   bool GetValue(const std::string &key, int *value);
   void CommonPrefixSearch(const std::string &key, std::vector<int> *result, size_t limit);
