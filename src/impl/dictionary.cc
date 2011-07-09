@@ -7,11 +7,10 @@
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
-#include <deque>
+#include <list>
 #include <set>
-#include <string>
-#include <vector>
 #include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/foreach.hpp>
 #include <yaml-cpp/yaml.h>
@@ -20,21 +19,57 @@
 #include <rime/impl/prism.h>
 #include <rime/impl/table.h>
 
-namespace {
-
-typedef std::vector<std::string> RawCodeSequence;
-
-struct RawDictEntry {
-  std::string text;
-  RawCodeSequence codes;
-  double weight;
-};
-
-typedef std::deque<rime::shared_ptr<RawDictEntry> > RawDictData;
-
-}  // namespace
-
 namespace rime {
+
+const std::string CodeSequence::ToString() const {
+  return boost::join(*this, " ");
+}
+
+void CodeSequence::FromString(const std::string &code) {
+  boost::split(*dynamic_cast<std::vector<std::string> *>(this),
+               code,
+               boost::algorithm::is_space(),
+               boost::algorithm::token_compress_on);
+}
+
+DictEntryIterator::DictEntryIterator() {
+}
+
+DictEntryIterator::operator bool() const {
+  return !chunks_.empty();
+}
+
+shared_ptr<DictEntry> DictEntryIterator::operator->() {
+  if (chunks_.empty()) {
+    return shared_ptr<DictEntry>();
+  }
+  if (!entry_) {
+    const std::pair<CodeSequence, TableEntryIterator> &p(chunks_.front());
+    entry_.reset(new DictEntry);
+    entry_->codes = p.first;
+    entry_->text = p.second->text.c_str();
+    entry_->weight = p.second->weight;
+  }
+  return entry_;
+}
+
+DictEntryIterator& DictEntryIterator::operator++() {
+  if (!chunks_.empty()) {
+    if (++chunks_.front().second == TableEntryIterator()) {
+      chunks_.pop_front();
+    }
+  }
+  entry_.reset();
+  return *this;
+}
+
+void DictEntryIterator::AddChunk(const CodeSequence &codes,
+                                 const TableEntryIterator &table_entry_iter) {
+  EZLOGGERPRINT("chunk: %s|%s, ...",
+                codes.ToString().c_str(),
+                table_entry_iter->text.c_str());
+  chunks_.push_back(std::make_pair(codes, table_entry_iter));
+}
 
 Dictionary::Dictionary(const std::string &name)
     : name_(name), loaded_(false) {
@@ -45,6 +80,26 @@ Dictionary::~Dictionary() {
   if (loaded_) {
     Unload();
   }
+}
+
+DictEntryIterator Dictionary::Lookup(const std::string &code) {
+  EZLOGGERVAR(code);
+  DictEntryIterator result;
+  if (!loaded_)
+    return result;
+  std::vector<int> keys;
+  prism_->CommonPrefixSearch(code, &keys);
+  EZLOGGERPRINT("found %u keys thru the prism.", keys.size());
+  CodeSequence codes;
+  codes.resize(1);
+  BOOST_FOREACH(int &syllable_id, keys) {
+    codes[0] = table_->GetSyllable(syllable_id);
+    const TableEntryVector *vec = table_->GetEntries(syllable_id);
+    if (vec) {
+      result.AddChunk(codes, vec->begin());
+    }
+  }
+  return result;
 }
 
 bool Dictionary::Compile(const std::string &source_file) {
@@ -77,8 +132,9 @@ bool Dictionary::Compile(const std::string &source_file) {
       entries->Type() != YAML::NodeType::Sequence) {
     return false;
   }
+  Syllabary syllabary;
   int entry_count = 0;
-  std::set<std::string> syllabary;
+  typedef std::list<rime::shared_ptr<DictEntry> > RawDictData;
   RawDictData data;
   for (YAML::Iterator it = entries->begin(); it != entries->end(); ++it) {
     if (it->Type() != YAML::NodeType::Sequence) {
@@ -98,17 +154,15 @@ bool Dictionary::Compile(const std::string &source_file) {
     if (it->size() > 2) {
       (*it)[2] >> weight;
     }
-    RawCodeSequence syllables;
-    boost::split(syllables, code,
-                 boost::algorithm::is_space(),
-                 boost::algorithm::token_compress_on);
+    CodeSequence syllables;
+    syllables.FromString(code);
     BOOST_FOREACH(const std::string &s, syllables) {
       if (syllabary.find(s) == syllabary.end())
         syllabary.insert(s);
     }
-    shared_ptr<RawDictEntry> entry(new RawDictEntry);
-    entry->text.swap(word);
+    shared_ptr<DictEntry> entry(new DictEntry);
     entry->codes.swap(syllables);
+    entry->text.swap(word);
     entry->weight = weight;
     data.push_back(entry);
     ++entry_count;
@@ -116,45 +170,52 @@ bool Dictionary::Compile(const std::string &source_file) {
   EZLOGGERVAR(entry_count);
   EZLOGGERVAR(syllabary.size());
   // build prism
-  std::vector<std::string> keys(syllabary.size());
-  std::copy(syllabary.begin(), syllabary.end(), keys.begin());
-  prism_.reset(new Prism(name_ + ".prism.bin"));
-  prism_->Remove();
-  if (!prism_->Build(keys) ||
-      !prism_->Save()) {
-    return false;
+  {
+    prism_.reset(new Prism(name_ + ".prism.bin"));
+    prism_->Remove();
+    if (!prism_->Build(syllabary) ||
+        !prism_->Save()) {
+      return false;
+    }
   }
   // build table
-  std::map<std::string, int> syllable_to_id;
-  int syllable_id = 0;
-  BOOST_FOREACH(const std::string &s, syllabary) {
-    syllable_to_id[s] = syllable_id++;
-  }
-  Vocabulary vocabulary;
-  BOOST_FOREACH(const shared_ptr<RawDictEntry> &e, data) {
-    EntryDefinition d;
-    d.text.swap(e->text);
-    d.weight = e->weight;
-    for (RawCodeSequence::const_iterator it = e->codes.begin();
-         it != e->codes.end(); ++it) {
-      d.code.push_back(syllable_to_id[*it]);
+  {
+    std::map<std::string, int> syllable_to_id;
+    int syllable_id = 0;
+    BOOST_FOREACH(const std::string &s, syllabary) {
+      syllable_to_id[s] = syllable_id++;
     }
-    Code index_code;
-    for (size_t i = 0; i < d.code.size() && i < Code::kIndexCodeMaxLength; ++i) {
-      index_code.push_back(d.code[i]);
+    Vocabulary vocabulary;
+    BOOST_FOREACH(const shared_ptr<DictEntry> &e, data) {
+      Code code;
+      Code index_code;
+      size_t k = 0;
+      for (CodeSequence::const_iterator it = e->codes.begin();
+           it != e->codes.end(); ++it) {
+        int syllable_id = syllable_to_id[*it];
+        code.push_back(syllable_id);
+        if (k++ < Code::kIndexCodeMaxLength) {
+          index_code.push_back(syllable_id);
+        }
+      }
+      EntryDefinitionList &ls(vocabulary[index_code]);
+      ls.resize(ls.size() + 1);
+      EntryDefinition &d(ls.back());
+      d.text.swap(e->text);
+      d.weight = e->weight;
+      d.code.swap(code);
     }
-    vocabulary[index_code].push_back(d);
+    // sort each group of homophones
+    BOOST_FOREACH(Vocabulary::value_type &v, vocabulary) {
+      std::stable_sort(v.second.begin(), v.second.end());
+    }
+    table_.reset(new Table(name_ + ".table.bin"));
+    table_->Remove();
+    if (!table_->Build(syllabary, vocabulary, data.size()) ||
+        !table_->Save()) {
+      return false;
+    }  
   }
-  // sort each group of homophones
-  BOOST_FOREACH(Vocabulary::value_type &v, vocabulary) {
-    std::stable_sort(v.second.begin(), v.second.end());
-  }
-  table_.reset(new Table(name_ + ".table.bin"));
-  table_->Remove();
-  if (!table_->Build(vocabulary, syllabary.size(), data.size()) ||
-      !table_->Save()) {
-    return false;
-  }  
   return true;
 }
 

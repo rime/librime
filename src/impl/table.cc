@@ -59,10 +59,19 @@ bool Table::Load() {
     Close();
   
   if (!OpenReadOnly()) {
-    EZLOGGERPRINT("Error opening table file '%s'.", file_name().c_str());
+    EZLOGGERPRINT("Error opening table file '%s'.",
+                  file_name().c_str());
     return false;
   }
-  std::pair<TableIndex *, size_t> index = file()->find<TableIndex>("TableIndex");
+  std::pair<TableSyllabary*, size_t> syllabary =
+      file()->find<TableSyllabary>("Syllabary");
+  if (!syllabary.second) {
+    EZLOGGERPRINT("Syllabary not found.");
+    return false;
+  }
+  syllabary_ = syllabary.first;
+  std::pair<TableIndex*, size_t> index =
+      file()->find<TableIndex>("TableIndex");
   if (!index.second) {
     EZLOGGERPRINT("Table index not found.");
     return false;
@@ -83,13 +92,13 @@ bool Table::Save() {
   return ShrinkToFit();
 }
 
-bool Table::Build(const Vocabulary &vocabulary, size_t num_syllables, size_t num_entries) {
-  size_t file_size = 128 * num_entries;
+bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size_t num_entries) {
+  size_t num_syllables = syllabary.size();
+  size_t file_size = 32 * num_syllables + 128 * num_entries;
   if (!Create(file_size)) {
     EZLOGGERPRINT("Error creating table file '%s'.", file_name().c_str());
     return false;
   }
-
   {
     Metadata *metadata = file()->construct<Metadata>("Metadata")();
     if (!metadata) {
@@ -102,11 +111,22 @@ bool Table::Build(const Vocabulary &vocabulary, size_t num_syllables, size_t num
   }
 
   VoidAllocator void_allocator(file()->get_segment_manager());
+  if (!syllabary_) {
+    syllabary_ = file()->construct<TableSyllabary>("Syllabary", std::nothrow)(void_allocator);
+    if (!syllabary_) {
+      EZLOGGERPRINT("Error creating syllabary.");
+      return false;
+    }
+    syllabary_->reserve(num_syllables);
+    BOOST_FOREACH(const std::string &syllable, syllabary) {
+      String str(syllable.c_str(), void_allocator);
+      syllabary_->push_back(boost::interprocess::move(str));
+    }
+  }
   if (!index_) {
     index_ = file()->construct<TableIndex>("TableIndex", std::nothrow)(void_allocator);
     if (!index_) {
       EZLOGGERPRINT("Error creating table index.");
-      index_ = NULL;
       return false;
     }
     index_->resize(num_syllables);
@@ -152,6 +172,14 @@ bool Table::Build(const Vocabulary &vocabulary, size_t num_syllables, size_t num
   }
 
   return true;
+}
+
+const char* Table::GetSyllable(int syllable_id) {
+  if (!syllabary_ ||
+      syllable_id < 0 ||
+      syllable_id >= syllabary_->size())
+    return NULL;
+  return (*syllabary_)[syllable_id].c_str();
 }
 
 const TableEntryVector* Table::GetEntries(int syllable_id) {

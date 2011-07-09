@@ -11,6 +11,7 @@
 #define RIME_TABLE_H_
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include <boost/interprocess/containers/vector.hpp>
@@ -18,7 +19,11 @@
 #include <rime/impl/mapped_file.h>
 
 namespace rime {
-    
+
+// defininitions
+
+typedef std::set<std::string> Syllabary;
+
 class Code : public std::vector<int> {
  public:
   static const size_t kIndexCodeMaxLength = 3;
@@ -36,6 +41,12 @@ struct EntryDefinition {
 
 typedef std::vector<EntryDefinition> EntryDefinitionList;
 typedef std::map<Code, EntryDefinitionList> Vocabulary;
+
+// table file
+
+typedef boost::interprocess::vector<MappedFile::String,
+                                    MappedFile::StringAllocator>
+        TableSyllabary;
 
 struct TableEntry {
   MappedFile::String text;
@@ -62,6 +73,7 @@ typedef boost::interprocess::allocator<TableEntry,
 typedef boost::interprocess::vector<TableEntry,
                                     TableEntryAllocator>
         TableEntryVector;
+typedef TableEntryVector::const_iterator TableEntryIterator;
 
 struct TableIndexNode {
   boost::interprocess::offset_ptr<void> next_level;
@@ -82,15 +94,17 @@ typedef boost::interprocess::vector<TableIndexNode, TableIndexNodeAllocator>
 class Table : public MappedFile {
  public:
   Table(const std::string &file_name)
-      : MappedFile(file_name), index_(NULL) {}
+      : MappedFile(file_name), index_(NULL), syllabary_(NULL) {}
   
   bool Load();
   bool Save();
-  bool Build(const Vocabulary &vocabulary, size_t num_syllables, size_t num_entries);
+  bool Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size_t num_entries);
+  const char* GetSyllable(int syllable_id);
   const TableEntryVector* GetEntries(int syllable_id);
   
  private:
   TableIndex *index_;
+  TableSyllabary *syllabary_;
 };
 
 }  // namespace rime

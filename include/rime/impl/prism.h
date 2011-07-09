@@ -10,6 +10,9 @@
 #ifndef RIME_PRISM_H_
 #define RIME_PRISM_H_
 
+#include <set>
+#include <string>
+#include <vector>
 #include <darts.h>
 #include <rime/common.h>
 #include <rime/impl/mapped_file.h>
@@ -23,10 +26,10 @@ class Prism : public MappedFile {
   
   bool Load();
   bool Save();
-  bool Build(const std::vector<std::string> &keys);
+  bool Build(const std::set<std::string> &keys);
   bool HasKey(const std::string &key);
   bool GetValue(const std::string &key, int *value);
-  void CommonPrefixSearch(const std::string &key, std::vector<int> *result, size_t limit);
+  void CommonPrefixSearch(const std::string &key, std::vector<int> *result);
   void ExpandSearch(const std::string &key, std::vector<int> *result, size_t limit);
   size_t size()const;
   

@@ -8,6 +8,7 @@
 //
 #include <cstring>
 #include <queue>
+#include <boost/scoped_array.hpp>
 #include <rime/impl/prism.h>
 
 namespace {
@@ -93,13 +94,12 @@ bool Prism::Save(){
   return ShrinkToFit();
 }
 
-// keys should be in order
-bool Prism::Build(const std::vector<std::string> &keys){
+bool Prism::Build(const std::set<std::string> &keys){
   size_t key_size = keys.size();
   std::vector<const char *> char_keys(key_size);
   
   size_t key_id = 0;
-  for (std::vector<std::string>::const_iterator it = keys.begin();
+  for (std::set<std::string>::const_iterator it = keys.begin();
       it != keys.end(); ++it, ++key_id) {
     char_keys[key_id] = it->c_str();
   }  
@@ -124,10 +124,11 @@ bool Prism::GetValue(const std::string &key, int *value){
 }
 
 // Given a key, search all the keys in the tree which share a common prefix with that key.
-void Prism::CommonPrefixSearch(const std::string &key, std::vector<int> *result, size_t limit){
-  Darts::DoubleArray::result_pair_type result_pair[limit];
-  size_t results = trie_->commonPrefixSearch(key.c_str(), result_pair, limit, key.length());
-  results = std::min(results, limit);
+void Prism::CommonPrefixSearch(const std::string &key, std::vector<int> *result){
+  size_t len = key.length();
+  boost::scoped_array<Darts::DoubleArray::result_pair_type> result_pair(
+      new Darts::DoubleArray::result_pair_type[len]);
+  size_t results = trie_->commonPrefixSearch(key.c_str(), result_pair.get(), len, len);
   for(size_t i = 0; i < results; ++i){
     result->push_back(result_pair[i].value);
   }

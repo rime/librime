@@ -9,13 +9,40 @@
 #ifndef RIME_DICTIONARY_H_
 #define RIME_DICTIONRAY_H_
 
+#include <list>
 #include <string>
+#include <vector>
 #include <rime/common.h>
+#include <rime/impl/prism.h>
+#include <rime/impl/table.h>
 
 namespace rime {
 
-class Prism;
-class Table;
+class CodeSequence : public std::vector<std::string> {
+ public:
+  const std::string ToString() const;
+  void FromString(const std::string &code);
+};
+
+struct DictEntry {
+  CodeSequence codes;
+  std::string text;
+  double weight;
+};
+
+typedef std::list<std::pair<CodeSequence, TableEntryIterator> > DictEntryCollector;
+
+class DictEntryIterator {
+ public:
+  DictEntryIterator();
+  operator bool() const;
+  shared_ptr<DictEntry> operator->();
+  DictEntryIterator& operator++();
+  void AddChunk(const CodeSequence &codes, const TableEntryIterator &table_entry_iter);
+ private:
+  DictEntryCollector chunks_;
+  shared_ptr<DictEntry> entry_;
+};
 
 class Dictionary {
  public:
@@ -26,8 +53,10 @@ class Dictionary {
   bool Load();
   bool Unload();
   
-  void* Lookup(const std::string &code);
+  DictEntryIterator Lookup(const std::string &code);
 
+  bool loaded() const { return loaded_; }
+  
  private:
   std::string name_;
   bool loaded_;

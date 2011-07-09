@@ -31,15 +31,7 @@ class RimePrismTest : public ::testing::Test {
     keyset.insert("yahoo");
     keyset.insert("baidu");      // 1
     
-    // Keys should be sorted.
-    std::vector<std::string> keys(keyset.size());
-    
-    int j = 0;
-    for(std::set<std::string>::iterator i = keyset.begin(); i != keyset.end(); ++i, ++j){
-      keys[j] = i->c_str();
-    }
-    
-    prism_->Build(keys);
+    prism_->Build(keyset);
   }
 
   virtual void TearDown() {
@@ -80,7 +72,7 @@ TEST_F(RimePrismTest, GetValue) {
 TEST_F(RimePrismTest, CommonPrefixMatch) {
   std::vector<int> result;
   
-  prism_->CommonPrefixSearch("goodbye", &result, 10);
+  prism_->CommonPrefixSearch("goodbye", &result);
   //result is good and goodbye.
   ASSERT_EQ(result.size(), 2);
   EXPECT_EQ(result[0], 2);  // good
