@@ -18,35 +18,28 @@ TEST(RimeTableTest, Lv1) {
 
   rime::Syllabary syll;
   rime::Vocabulary voc;
-  rime::Code c;
-  rime::EntryDefinition d;
-  syll.insert("0ling");
-  // no entries for '0ling', however
-  syll.insert("1yi");
-  c.push_back(1);
-  d.code = c;
-  d.text = "1yi";
+  rime::DictEntry d;
+  syll.insert("0");
+  // no entries for '0', however
+  syll.insert("1");
+  d.code.push_back(1);
+  d.text = "yi";
   d.weight = 1.0;
-  voc[c].push_back(d);
-  syll.insert("2er");
-  syll.insert("2lia");
-  syll.insert("2liang");
-  c.back() = 2;
-  d.code = c;
-  d.text = "2er";
-  voc[c].push_back(d);
-  d.text = "2lia";
-  voc[c].push_back(d);
-  d.text = "2liang";
-  voc[c].push_back(d);
-  syll.insert("3sa");
-  syll.insert("3san");
-  c.back() = 3;
-  d.code = c;
-  d.text = "3sa";
-  voc[c].push_back(d);
-  d.text = "3san";
-  voc[c].push_back(d);
+  voc[d.code].push_back(d);
+  syll.insert("2");
+  d.code.back() = 2;
+  d.text = "er";
+  voc[d.code].push_back(d);
+  d.text = "liang";
+  voc[d.code].push_back(d);
+  d.text = "lia";
+  voc[d.code].push_back(d);
+  syll.insert("3");
+  d.code.back() = 3;
+  d.text = "san";
+  voc[d.code].push_back(d);
+  d.text = "sa";
+  voc[d.code].push_back(d);
   
   ASSERT_TRUE(table->Build(syll, voc, 6));
   ASSERT_TRUE(table->Save());
@@ -56,26 +49,26 @@ TEST(RimeTableTest, Lv1) {
   ASSERT_TRUE(table);
   ASSERT_TRUE(table->Load());
 
-  EXPECT_STREQ("0ling", table->GetSyllable(0));
-  EXPECT_STREQ("3san", table->GetSyllable(6));
+  EXPECT_STREQ("0", table->GetSyllableById(0));
+  EXPECT_STREQ("3", table->GetSyllableById(3));
   
-  const rime::TableEntryVector *vec = NULL;
+  const rime::table::EntryVector *vec = NULL;
   vec = table->GetEntries(1);
   ASSERT_TRUE(vec);
   ASSERT_EQ(1, vec->size());
-  EXPECT_EQ("1yi", (*vec)[0].text);
+  EXPECT_EQ("yi", (*vec)[0].text);
   EXPECT_EQ(1.0, (*vec)[0].weight);
   
   vec = table->GetEntries(2);
   ASSERT_TRUE(vec);
   ASSERT_EQ(3, vec->size());
-  EXPECT_EQ("2er", (*vec)[0].text);
-  EXPECT_EQ("2lia", (*vec)[1].text);
-  EXPECT_EQ("2liang", (*vec)[2].text);
+  EXPECT_EQ("er", (*vec)[0].text);
+  EXPECT_EQ("liang", (*vec)[1].text);
+  EXPECT_EQ("lia", (*vec)[2].text);
   
   vec = table->GetEntries(3);
   ASSERT_TRUE(vec);
   ASSERT_EQ(2, vec->size());
-  EXPECT_EQ("3sa", (*vec)[0].text);
-  EXPECT_EQ("3san", (*vec)[1].text);
+  EXPECT_EQ("san", (*vec)[0].text);
+  EXPECT_EQ("sa", (*vec)[1].text);
 }

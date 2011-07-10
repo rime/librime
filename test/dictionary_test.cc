@@ -42,6 +42,8 @@ TEST_F(RimeDictionaryTest, Lookup) {
   rime::DictEntryIterator it = dict_.Lookup("zhong");
   ASSERT_TRUE(it);
   EXPECT_EQ("中", it->text);
-  ASSERT_EQ(1, it->codes.size());
-  EXPECT_EQ("zhong", it->codes.ToString());
+  ASSERT_EQ(1, it->code.size());
+  rime::RawCode raw_code;
+  ASSERT_TRUE(dict_.Decode(it->code, &raw_code));
+  EXPECT_EQ("zhong", raw_code.ToString());
 }

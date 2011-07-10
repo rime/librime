@@ -25,33 +25,6 @@ const char kTableFormat[] = "Rime::Table/0.9";
 
 namespace rime {
 
-bool Code::operator< (const Code &other) const {
-  if (size() != other.size())
-    return size() < other.size();
-  for (size_t i = 0; i < size(); ++i) {
-    if (at(i) != other.at(i))
-      return at(i) < other.at(i);
-  }
-  return false;
-}
-
-bool Code::operator== (const Code &other) const {
-  if (size() != other.size())
-    return false;
-  for (size_t i = 0; i < size(); ++i) {
-    if (at(i) != other.at(i))
-      return false;
-  }
-  return true;
-}
-
-bool EntryDefinition::operator< (const EntryDefinition& other) const {
-  // Sort different entries sharing the same code by weight desc.
-  if (weight != other.weight)
-    return weight > other.weight;
-  return text < other.text;
-}
-
 bool Table::Load() {
   EZLOGGERPRINT("Load file: %s", file_name().c_str());
 
@@ -63,15 +36,15 @@ bool Table::Load() {
                   file_name().c_str());
     return false;
   }
-  std::pair<TableSyllabary*, size_t> syllabary =
-      file()->find<TableSyllabary>("Syllabary");
+  std::pair<table::Syllabary*, size_t> syllabary =
+      file()->find<table::Syllabary>("Syllabary");
   if (!syllabary.second) {
     EZLOGGERPRINT("Syllabary not found.");
     return false;
   }
   syllabary_ = syllabary.first;
-  std::pair<TableIndex*, size_t> index =
-      file()->find<TableIndex>("TableIndex");
+  std::pair<table::Index*, size_t> index =
+      file()->find<table::Index>("Index");
   if (!index.second) {
     EZLOGGERPRINT("Table index not found.");
     return false;
@@ -112,7 +85,7 @@ bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size
 
   VoidAllocator void_allocator(file()->get_segment_manager());
   if (!syllabary_) {
-    syllabary_ = file()->construct<TableSyllabary>("Syllabary", std::nothrow)(void_allocator);
+    syllabary_ = file()->construct<table::Syllabary>("Syllabary", std::nothrow)(void_allocator);
     if (!syllabary_) {
       EZLOGGERPRINT("Error creating syllabary.");
       return false;
@@ -124,7 +97,7 @@ bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size
     }
   }
   if (!index_) {
-    index_ = file()->construct<TableIndex>("TableIndex", std::nothrow)(void_allocator);
+    index_ = file()->construct<table::Index>("Index", std::nothrow)(void_allocator);
     if (!index_) {
       EZLOGGERPRINT("Error creating table index.");
       return false;
@@ -134,30 +107,30 @@ bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size
   
   for (Vocabulary::const_iterator v = vocabulary.begin(); v != vocabulary.end(); ++v) {
     const Code &code(v->first);
-    const std::vector<EntryDefinition> &definitions(v->second);
+    const DictEntryList &ls(v->second);
     // For now only Level 1 index is supported...
     if (code.size() > 1)
       break;
     int syllable_id = code[0];
-    TableIndexNode &node(index_->at(syllable_id));
-    TableEntryVector *entries = NULL;
+    table::IndexNode &node(index_->at(syllable_id));
+    table::EntryVector *entries = NULL;
     if (node.entries) {
       // Already there?!
       entries = node.entries.get();
     }
     else {
-      entries = file()->construct<TableEntryVector>(boost::interprocess::anonymous_instance)(
+      entries = file()->construct<table::EntryVector>(boost::interprocess::anonymous_instance)(
           void_allocator);
       if (!entries) {
         EZLOGGERPRINT("Error creating table entries; file size: %u, free memory: %u.",
                       file()->get_size(), file()->get_free_memory());
         return false;
       }
-      entries->reserve(entries->size() + definitions.size());
+      entries->reserve(entries->size() + ls.size());
       node.entries = entries;
     }
-    for (std::vector<EntryDefinition>::const_iterator d = definitions.begin(); d != definitions.end(); ++d) {
-      TableEntry *entry = file()->construct<TableEntry>(boost::interprocess::anonymous_instance)(
+    for (std::vector<DictEntry>::const_iterator d = ls.begin(); d != ls.end(); ++d) {
+      table::Entry *entry = file()->construct<table::Entry>(boost::interprocess::anonymous_instance)(
           d->text.c_str(),
           d->weight,
           void_allocator);
@@ -174,7 +147,7 @@ bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size
   return true;
 }
 
-const char* Table::GetSyllable(int syllable_id) {
+const char* Table::GetSyllableById(int syllable_id) {
   if (!syllabary_ ||
       syllable_id < 0 ||
       syllable_id >= syllabary_->size())
@@ -182,12 +155,12 @@ const char* Table::GetSyllable(int syllable_id) {
   return (*syllabary_)[syllable_id].c_str();
 }
 
-const TableEntryVector* Table::GetEntries(int syllable_id) {
+const table::EntryVector* Table::GetEntries(int syllable_id) {
   if (!index_)
     return NULL;
   if (syllable_id >= index_->size())
     return NULL;
-  TableEntryVector *vec = index_->at(syllable_id).entries.get();
+  table::EntryVector *vec = index_->at(syllable_id).entries.get();
   if (!vec)
     return NULL;
   return vec;

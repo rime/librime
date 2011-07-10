@@ -15,22 +15,17 @@
 #include <rime/common.h>
 #include <rime/impl/prism.h>
 #include <rime/impl/table.h>
+#include <rime/impl/vocabulary.h>
 
 namespace rime {
 
-class CodeSequence : public std::vector<std::string> {
+class RawCode : public std::vector<std::string> {
  public:
   const std::string ToString() const;
-  void FromString(const std::string &code);
+  void FromString(const std::string &str_code);
 };
 
-struct DictEntry {
-  CodeSequence codes;
-  std::string text;
-  double weight;
-};
-
-typedef std::list<std::pair<CodeSequence, TableEntryIterator> > DictEntryCollector;
+typedef std::list<std::pair<Code, table::EntryIterator> > DictEntryCollector;
 
 class DictEntryIterator {
  public:
@@ -38,7 +33,7 @@ class DictEntryIterator {
   operator bool() const;
   shared_ptr<DictEntry> operator->();
   DictEntryIterator& operator++();
-  void AddChunk(const CodeSequence &codes, const TableEntryIterator &table_entry_iter);
+  void AddChunk(const Code &code, const table::EntryIterator &table_entry_iter);
  private:
   DictEntryCollector chunks_;
   shared_ptr<DictEntry> entry_;
@@ -53,7 +48,8 @@ class Dictionary {
   bool Load();
   bool Unload();
   
-  DictEntryIterator Lookup(const std::string &code);
+  DictEntryIterator Lookup(const std::string &str_code);
+  bool Decode(const Code &code, RawCode *result);
 
   bool loaded() const { return loaded_; }
   

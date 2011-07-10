@@ -17,79 +17,60 @@
 #include <boost/interprocess/containers/vector.hpp>
 #include <rime/common.h>
 #include <rime/impl/mapped_file.h>
+#include <rime/impl/vocabulary.h>
 
 namespace rime {
 
-// defininitions
-
-typedef std::set<std::string> Syllabary;
-
-class Code : public std::vector<int> {
- public:
-  static const size_t kIndexCodeMaxLength = 3;
-  
-  bool operator< (const Code &other) const;
-  bool operator== (const Code &other) const;
-};
-
-struct EntryDefinition { 
-  std::string text;
-  double weight;
-  Code code;
-  bool operator< (const EntryDefinition& other) const;
-};
-
-typedef std::vector<EntryDefinition> EntryDefinitionList;
-typedef std::map<Code, EntryDefinitionList> Vocabulary;
-
-// table file
+namespace table {
 
 typedef boost::interprocess::vector<MappedFile::String,
                                     MappedFile::StringAllocator>
-        TableSyllabary;
+        Syllabary;
 
-struct TableEntry {
+struct Entry {
   MappedFile::String text;
   double weight;
 
-  TableEntry(const MappedFile::VoidAllocator &allocator)
+  Entry(const MappedFile::VoidAllocator &allocator)
       : text(allocator), weight(0.0) {}
-  TableEntry(const char *_text,
-             double _weight,
-             const MappedFile::VoidAllocator &allocator)
+  Entry(const char *_text,
+        double _weight,
+        const MappedFile::VoidAllocator &allocator)
       : text(_text, allocator), weight(_weight) {}
   // required by move operation
-  TableEntry(const TableEntry &entry)
+  Entry(const Entry &entry)
       : text(boost::interprocess::move(entry.text)), weight(entry.weight) {}
-  TableEntry& operator=(const TableEntry &entry) {
+  Entry& operator=(const Entry &entry) {
     text = boost::interprocess::move(entry.text);
     weight = entry.weight;
   }
 };
 
-typedef boost::interprocess::allocator<TableEntry,
+typedef boost::interprocess::allocator<Entry,
                                        MappedFile::SegmentManager>
-        TableEntryAllocator;
-typedef boost::interprocess::vector<TableEntry,
-                                    TableEntryAllocator>
-        TableEntryVector;
-typedef TableEntryVector::const_iterator TableEntryIterator;
+        EntryAllocator;
+typedef boost::interprocess::vector<Entry,
+                                    EntryAllocator>
+        EntryVector;
+typedef EntryVector::const_iterator EntryIterator;
 
-struct TableIndexNode {
+struct IndexNode {
   boost::interprocess::offset_ptr<void> next_level;
-  boost::interprocess::offset_ptr<TableEntryVector> entries;
-  TableIndexNode()
+  boost::interprocess::offset_ptr<EntryVector> entries;
+  IndexNode()
       : next_level(NULL), entries(NULL) {}
 };
 
-typedef boost::interprocess::allocator<TableIndexNode,
+typedef boost::interprocess::allocator<IndexNode,
                                        MappedFile::SegmentManager>
-        TableIndexNodeAllocator;
-typedef boost::interprocess::vector<TableIndexNode, TableIndexNodeAllocator>
-        TableIndex;
-//typedef boost::interprocess::flat_map<int, TableIndexNode, TableIndexNodeAllocator>
-//        TableIndexLv2;
+        IndexNodeAllocator;
+typedef boost::interprocess::vector<IndexNode, IndexNodeAllocator>
+        Index;
+//typedef boost::interprocess::flat_map<int, IndexNode, IndexNodeAllocator>
+//        IndexLv2;
 // ...
+
+}  // namespace table
 
 class Table : public MappedFile {
  public:
@@ -99,12 +80,12 @@ class Table : public MappedFile {
   bool Load();
   bool Save();
   bool Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size_t num_entries);
-  const char* GetSyllable(int syllable_id);
-  const TableEntryVector* GetEntries(int syllable_id);
+  const char* GetSyllableById(int syllable_id);
+  const table::EntryVector* GetEntries(int syllable_id);
   
  private:
-  TableIndex *index_;
-  TableSyllabary *syllabary_;
+  table::Index *index_;
+  table::Syllabary *syllabary_;
 };
 
 }  // namespace rime

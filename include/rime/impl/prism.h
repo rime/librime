@@ -16,6 +16,7 @@
 #include <darts.h>
 #include <rime/common.h>
 #include <rime/impl/mapped_file.h>
+#include <rime/impl/vocabulary.h>
 
 namespace rime {
 
@@ -26,7 +27,7 @@ class Prism : public MappedFile {
   
   bool Load();
   bool Save();
-  bool Build(const std::set<std::string> &keys);
+  bool Build(const Syllabary &keyset);
   bool HasKey(const std::string &key);
   bool GetValue(const std::string &key, int *value);
   void CommonPrefixSearch(const std::string &key, std::vector<int> *result);

@@ -94,13 +94,13 @@ bool Prism::Save(){
   return ShrinkToFit();
 }
 
-bool Prism::Build(const std::set<std::string> &keys){
-  size_t key_size = keys.size();
+bool Prism::Build(const Syllabary &keyset){
+  size_t key_size = keyset.size();
   std::vector<const char *> char_keys(key_size);
   
   size_t key_id = 0;
-  for (std::set<std::string>::const_iterator it = keys.begin();
-      it != keys.end(); ++it, ++key_id) {
+  for (Syllabary::const_iterator it = keyset.begin();
+       it != keyset.end(); ++it, ++key_id) {
     char_keys[key_id] = it->c_str();
   }  
   return 0 == trie_->build(key_size, &char_keys[0]);
