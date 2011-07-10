@@ -17,14 +17,13 @@ using namespace rime;
 
 class TranslationAlpha : public Translation {
  public:
-  shared_ptr<Candidate> Next() {
+  bool Next() {
     if (exhausted())
-      return shared_ptr<Candidate>();
+      return false;
     set_exhausted(true);
-    return shared_ptr<Candidate>(
-        new Candidate("alpha", "Alpha", "", 0, 5, 0));
+    return true;
   }
-  shared_ptr<Candidate> Peek() const {
+  shared_ptr<Candidate> Peek() {
     if (exhausted())
       return shared_ptr<Candidate>();
     return shared_ptr<Candidate>(
@@ -43,15 +42,15 @@ class TranslationBeta : public Translation {
         new Candidate("beta", "Beta-3", "", 0, 4, 0)));
   }
   
-  shared_ptr<Candidate> Next() {
+  bool Next() {
     if (exhausted())
-      return shared_ptr<Candidate>();
-    if (cursor_ + 1 >= candies_.size())
+      return false;
+    if (++cursor_ >= candies_.size())
       set_exhausted(true);
-    return candies_[cursor_++];
+    return true;
   }
   
-  shared_ptr<Candidate> Peek() const {
+  shared_ptr<Candidate> Peek() {
     if (exhausted())
       return shared_ptr<Candidate>();
     return candies_[cursor_];

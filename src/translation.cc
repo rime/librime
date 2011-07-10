@@ -11,11 +11,13 @@
 
 namespace rime {
 
-int Translation::Compare(const Translation &other) const {
+int Translation::Compare(Translation &other) {
   if (exhausted()) return 1;
   if (other.exhausted()) return -1;
   shared_ptr<const Candidate> ours = Peek();
   shared_ptr<const Candidate> theirs = other.Peek();
+  if (!ours) return 1;
+  if (!theirs) return -1;
   int k = 0;
   // the one nearer to the beginning of segment comes first
   k = ours->start() - theirs->start();

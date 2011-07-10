@@ -16,6 +16,7 @@
 #include <rime/engine.h>
 #include <rime/key_event.h>
 #include <rime/schema.h>
+#include <rime/impl/dictionary.h>
 
 class RimeConsole {
  public:
@@ -66,7 +67,14 @@ class RimeConsole {
 int main(int argc, char *argv[]) {
   // initialize la Rime
   rime::RegisterRimeComponents();
-
+  // preparing dictionary
+  {
+    rime::Dictionary dict("luna_pinyin");
+    if (!dict.Exists()) {
+      dict.Compile(dict.name() + ".dict.yaml");
+    }
+  }
+  
   RimeConsole console;
   // "-i" turns on interactive mode (no commit at the end of line)
   bool interactive = argc > 1 && !strcmp(argv[1], "-i");

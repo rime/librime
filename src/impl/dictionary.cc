@@ -12,6 +12,7 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/foreach.hpp>
+#include <boost/filesystem.hpp>
 #include <yaml-cpp/yaml.h>
 #include <rime/common.h>
 #include <rime/impl/dictionary.h>
@@ -29,6 +30,23 @@ typedef std::list<rime::shared_ptr<RawDictEntry> > RawDictEntryList;
 }  // namespace
 
 namespace rime {
+
+struct Chunk {
+  Code code;
+  const table::EntryVector *entries;
+  size_t cursor;
+
+  Chunk() : entries(NULL), cursor(0) {}
+  Chunk(const Code &c, const table::EntryVector *e)
+      : code(c), entries(e), cursor(0) {}
+};
+    
+class DictEntryCollector : public std::list<Chunk> {
+ public:
+  DictEntryCollector() {}
+  ~DictEntryCollector() {}
+};
+
 
 const std::string RawCode::ToString() const {
   return boost::join(*this, " ");
@@ -81,47 +99,59 @@ bool DictEntry::operator< (const DictEntry& other) const {
   return text < other.text;
 }
 
-DictEntryIterator::DictEntryIterator() {
+DictEntryIterator::DictEntryIterator()
+    : collector_(new DictEntryCollector), entry_() {
 }
 
-DictEntryIterator::operator bool() const {
-  return !chunks_.empty();
+DictEntryIterator::DictEntryIterator(const DictEntryIterator &other)
+    : collector_(other.collector_), entry_(other.entry_) {
 }
 
-shared_ptr<DictEntry> DictEntryIterator::operator->() {
-  if (chunks_.empty()) {
+bool DictEntryIterator::exhausted() const {
+  return collector_->empty();
+}
+
+shared_ptr<DictEntry> DictEntryIterator::Peek() {
+  if (collector_->empty()) {
+    EZLOGGERPRINT("Oops!");
     return shared_ptr<DictEntry>();
   }
   if (!entry_) {
-    const std::pair<Code, table::EntryIterator> &p(chunks_.front());
+    const Chunk &chunk(collector_->front());
     entry_.reset(new DictEntry);
-    entry_->code = p.first;
-    entry_->text = p.second->text.c_str();
-    entry_->weight = p.second->weight;
+    const table::Entry &e(chunk.entries->at(chunk.cursor));
+    EZLOGGERPRINT("Creating temporary dict entry '%s'.", e.text.c_str());
+    entry_->code = chunk.code;
+    entry_->text = e.text.c_str();
+    entry_->weight = e.weight;
   }
   return entry_;
 }
 
-DictEntryIterator& DictEntryIterator::operator++() {
-  if (!chunks_.empty()) {
-    if (++chunks_.front().second == table::EntryIterator()) {
-      chunks_.pop_front();
-    }
+bool DictEntryIterator::Next() {
+  if (collector_->empty()) {
+    return false;
+  }
+  Chunk &chunk(collector_->front());
+  if (++chunk.cursor >= chunk.entries->size()) {
+    collector_->pop_front();
   }
   entry_.reset();
-  return *this;
+  return true;
 }
 
 void DictEntryIterator::AddChunk(const Code &code,
-                                 const table::EntryIterator &table_entry_iter) {
-  EZLOGGERPRINT("chunk: %s, ...",
-                table_entry_iter->text.c_str());
-  chunks_.push_back(std::make_pair(code, table_entry_iter));
+                                 const table::EntryVector *table_entries) {
+  if (!table_entries)
+    return;
+  EZLOGGERPRINT("Add chunk of size %d.", table_entries->size());
+  collector_->push_back(Chunk(code, table_entries));
 }
 
 Dictionary::Dictionary(const std::string &name)
     : name_(name), loaded_(false) {
-
+  prism_.reset(new Prism(name_ + ".prism.bin"));
+  table_.reset(new Table(name_ + ".table.bin"));
 }
 
 Dictionary::~Dictionary() {
@@ -140,11 +170,32 @@ DictEntryIterator Dictionary::Lookup(const std::string &str_code) {
   EZLOGGERPRINT("found %u keys thru the prism.", keys.size());
   Code code;
   code.resize(1);
+  BOOST_REVERSE_FOREACH(int &syllable_id, keys) {
+    code[0] = syllable_id;
+    const table::EntryVector *vec = table_->GetEntries(syllable_id);
+    if (vec) {
+      result.AddChunk(code, vec);
+    }
+  }
+  return result;
+}
+
+DictEntryIterator Dictionary::PredictiveLookup(const std::string &str_code) {
+  EZLOGGERVAR(str_code);
+  DictEntryIterator result;
+  if (!loaded_)
+    return result;
+  const int kExpandSearchLimit = 20;
+  std::vector<int> keys;
+  prism_->ExpandSearch(str_code, &keys, kExpandSearchLimit);
+  EZLOGGERPRINT("found %u keys thru the prism.", keys.size());
+  Code code;
+  code.resize(1);
   BOOST_FOREACH(int &syllable_id, keys) {
     code[0] = syllable_id;
     const table::EntryVector *vec = table_->GetEntries(syllable_id);
     if (vec) {
-      result.AddChunk(code, vec->begin());
+      result.AddChunk(code, vec);
     }
   }
   return result;
@@ -217,7 +268,6 @@ bool Dictionary::Compile(const std::string &source_file) {
   EZLOGGERVAR(syllabary.size());
   // build prism
   {
-    prism_.reset(new Prism(name_ + ".prism.bin"));
     prism_->Remove();
     if (!prism_->Build(syllabary) ||
         !prism_->Save()) {
@@ -250,7 +300,6 @@ bool Dictionary::Compile(const std::string &source_file) {
     BOOST_FOREACH(Vocabulary::value_type &v, vocabulary) {
       std::stable_sort(v.second.begin(), v.second.end());
     }
-    table_.reset(new Table(name_ + ".table.bin"));
     table_->Remove();
     if (!table_->Build(syllabary, vocabulary, entry_count) ||
         !table_->Save()) {
@@ -271,6 +320,11 @@ bool Dictionary::Decode(const Code &code, RawCode *result) {
     result->push_back(s);
   }
   return true;
+}
+
+bool Dictionary::Exists() const {
+  return boost::filesystem::exists(prism_->file_name()) &&
+         boost::filesystem::exists(table_->file_name());
 }
 
 bool Dictionary::Load() {

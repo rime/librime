@@ -24,13 +24,13 @@ class Translation {
 
   // A translation may contain multiple results, looks
   // something like a generator of candidates.
-  virtual shared_ptr<Candidate> Next() = 0;
+  virtual bool Next() = 0;
 
-  virtual shared_ptr<Candidate> Peek() const = 0;
+  virtual shared_ptr<Candidate> Peek() = 0;
 
   // should it provide the next candidate (negative value) or
   // should it give the chance to other translations (positive)?
-  virtual int Compare(const Translation &other) const;
+  virtual int Compare(Translation &other);
 
   bool exhausted() const { return exhausted_; }
 
@@ -49,13 +49,13 @@ class UniqueTranslation : public Translation {
   virtual ~UniqueTranslation() {
   }
 
-  virtual shared_ptr<Candidate> Next() {
+  virtual bool Next() {
     if (exhausted())
-      return shared_ptr<Candidate>();
+      return false;
     set_exhausted(true);
-    return candidate_;
+    return true;
   }
-  virtual shared_ptr<Candidate> Peek() const {
+  virtual shared_ptr<Candidate> Peek() {
     if (exhausted())
       return shared_ptr<Candidate>();
     return candidate_;

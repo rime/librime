@@ -19,6 +19,9 @@ struct Segment {
   int start;
   int end;
   std::set<std::string> tags;
+  bool HasTag(const std::string &tag) const {
+    return tags.find(tag) != tags.end();
+  }
 };
 
 class Segmentation {

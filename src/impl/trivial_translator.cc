@@ -33,7 +33,7 @@ TrivialTranslator::TrivialTranslator(Engine *engine)
 
 Translation* TrivialTranslator::Query(const std::string &input,
                                       const Segment &segment) {
-  if (segment.tags.find("abc") == segment.tags.end())
+  if (!segment.HasTag("abc"))
     return NULL;
   EZLOGGERPRINT("input = '%s', [%d, %d)",
                 input.c_str(), segment.start, segment.end);

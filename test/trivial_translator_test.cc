@@ -32,10 +32,11 @@ TEST(TrivialTranslatorTest, Query) {
   scoped_ptr<Translation> translation(translator->Query(test_input, segment));
   ASSERT_TRUE(translation);
   ASSERT_FALSE(translation->exhausted());
-  shared_ptr<Candidate> candidate = translation->Next();
+  shared_ptr<Candidate> candidate = translation->Peek();
   ASSERT_TRUE(candidate);
   EXPECT_EQ("abc", candidate->type());
   EXPECT_EQ("一千二百三十四abc", candidate->text());
   EXPECT_EQ(segment.start, candidate->start());
   EXPECT_EQ(segment.end, candidate->end());
+  EXPECT_TRUE(translation->Next());
 } 

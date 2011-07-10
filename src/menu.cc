@@ -17,23 +17,27 @@ void Menu::AddTranslation(shared_ptr<Translation> translation) {
 }
 
 int Menu::Prepare(int candidate_count) {
+  EZLOGGERFUNCTRACKER;
   int count = candidates_.size();
   if (count >= candidate_count)
     return count;
   while (count < candidate_count && !translations_.empty()) {
-    std::vector<shared_ptr<Translation> >::iterator winner(translations_.begin());
-    while (winner != translations_.end()) {
-      std::vector<shared_ptr<Translation> >::iterator next(winner + 1);
-      if (next == translations_.end() || (*winner)->Compare(**next) <= 0)
+    size_t k = 0;
+    for (; k + 1 < translations_.size(); ++k) {
+      if (translations_[k]->Compare(*translations_[k + 1]) <= 0) {
         break;
-      ++winner;
+      }
     }
-    if (winner == translations_.end())
+    if (k >= translations_.size()) {
       break;
-    candidates_.push_back((*winner)->Next());
+    }
+
+    candidates_.push_back(translations_[k]->Peek());
+    translations_[k]->Next();
     ++count;
-    if ((*winner)->exhausted()) {
-      translations_.erase(winner);
+    if (translations_[k]->exhausted()) {
+      EZLOGGERPRINT("Translation #%d exhausted.", k);
+      translations_.erase(translations_.begin() + k);
     }
   }
   return candidates_.size();

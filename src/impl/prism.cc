@@ -139,11 +139,16 @@ void Prism::ExpandSearch(const std::string &key, std::vector<int> *result, size_
     return;
   size_t node_pos = 0;
   size_t key_pos = 0;
+  size_t count = 0;  
   int ret = trie_->traverse(key.c_str(), node_pos, key_pos);
   //key is not a valid path
   if(ret == -2)
     return;
-  size_t count = 0;  
+  if(ret != -1) {
+    result->push_back(ret);
+    if (++count > limit)
+      return;
+  }
   std::queue<node_t> q;
   q.push(node_t(key, node_pos));
   while(!q.empty()){

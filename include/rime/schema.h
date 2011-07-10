@@ -23,6 +23,8 @@ class Schema {
   Schema(const std::string &schema_id, Config *config)
       : schema_id_(schema_id), config_(config) {}
 
+  const std::string& schema_id() const { return schema_id_; }
+  
   Config* config() const { return config_.get(); }
   void set_config(Config *config) { config_.reset(config); }
 

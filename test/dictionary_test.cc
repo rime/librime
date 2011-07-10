@@ -13,10 +13,10 @@ class RimeDictionaryTest : public ::testing::Test {
  public:
   virtual void SetUp() {
     EZLOGGERFUNCTRACKER;
-    if (!built_) {
-      built_ = dict_.Compile("luna_pinyin.dict.yaml");
+    if (!dict_.Exists()) {
+      dict_.Compile("luna_pinyin.dict.yaml");
     }
-    if (built_) {
+    if (dict_.Exists()) {
       dict_.Load();
     }
   }
@@ -27,11 +27,9 @@ class RimeDictionaryTest : public ::testing::Test {
   }
  protected:
   static rime::Dictionary dict_;
-  static bool built_;
 };
 
 rime::Dictionary RimeDictionaryTest::dict_("dictionary_test");
-bool RimeDictionaryTest::built_ = false;
 
 TEST_F(RimeDictionaryTest, Ready) {
   EXPECT_TRUE(dict_.loaded());
@@ -40,10 +38,21 @@ TEST_F(RimeDictionaryTest, Ready) {
 TEST_F(RimeDictionaryTest, Lookup) {
   ASSERT_TRUE(dict_.loaded());
   rime::DictEntryIterator it = dict_.Lookup("zhong");
-  ASSERT_TRUE(it);
-  EXPECT_EQ("中", it->text);
-  ASSERT_EQ(1, it->code.size());
+  ASSERT_FALSE(it.exhausted());
+  EXPECT_EQ("中", it.Peek()->text);
+  ASSERT_EQ(1, it.Peek()->code.size());
   rime::RawCode raw_code;
-  ASSERT_TRUE(dict_.Decode(it->code, &raw_code));
+  ASSERT_TRUE(dict_.Decode(it.Peek()->code, &raw_code));
   EXPECT_EQ("zhong", raw_code.ToString());
+}
+
+TEST_F(RimeDictionaryTest, PredictiveLookup) {
+  ASSERT_TRUE(dict_.loaded());
+  rime::DictEntryIterator it = dict_.PredictiveLookup("z");
+  ASSERT_FALSE(it.exhausted());
+  EXPECT_EQ("咋", it.Peek()->text);
+  ASSERT_EQ(1, it.Peek()->code.size());
+  rime::RawCode raw_code;
+  ASSERT_TRUE(dict_.Decode(it.Peek()->code, &raw_code));
+  EXPECT_EQ("za", raw_code.ToString());
 }

@@ -6,6 +6,7 @@
 // 
 // 2011-05-15 GONG Chen <chen.sst@gmail.com>
 //
+#include <rime/common.h>
 #include <rime/segmentation.h>
 #include <rime/impl/abc_segmentor.h>
 
@@ -18,6 +19,7 @@ AbcSegmentor::AbcSegmentor(Engine *engine) : Segmentor(engine) {
 
 bool AbcSegmentor::Proceed(Segmentation *segmentation) {
   const std::string &input = segmentation->input();
+  EZLOGGERVAR(input);
   int k = segmentation->GetCurrentPosition();
   for (; k < input.length(); ++k) {
     if (alphabet_.find(input[k]) == std::string::npos)

@@ -10,3 +10,5 @@ add_dependencies(rime_console rime)
 
 file(COPY ${PROJECT_SOURCE_DIR}/data/rime_console.yaml 
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
+file(COPY ${PROJECT_SOURCE_DIR}/data/samples/luna_pinyin.dict.yaml 
+     DESTINATION ${EXECUTABLE_OUTPUT_PATH})

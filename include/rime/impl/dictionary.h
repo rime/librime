@@ -25,17 +25,20 @@ class RawCode : public std::vector<std::string> {
   void FromString(const std::string &str_code);
 };
 
-typedef std::list<std::pair<Code, table::EntryIterator> > DictEntryCollector;
+class DictEntryCollector;
 
 class DictEntryIterator {
  public:
   DictEntryIterator();
-  operator bool() const;
-  shared_ptr<DictEntry> operator->();
-  DictEntryIterator& operator++();
-  void AddChunk(const Code &code, const table::EntryIterator &table_entry_iter);
- private:
-  DictEntryCollector chunks_;
+  DictEntryIterator(const DictEntryIterator &other);
+
+  void AddChunk(const Code &code, const table::EntryVector *table_entries);
+  shared_ptr<DictEntry> Peek();
+  bool Next();
+  bool exhausted() const;
+
+private:
+  shared_ptr<DictEntryCollector> collector_;
   shared_ptr<DictEntry> entry_;
 };
 
@@ -44,13 +47,16 @@ class Dictionary {
   Dictionary(const std::string &name);
   virtual ~Dictionary();
 
+  bool Exists() const;
   bool Compile(const std::string &source_file);
   bool Load();
   bool Unload();
   
   DictEntryIterator Lookup(const std::string &str_code);
+  DictEntryIterator PredictiveLookup(const std::string &str_code);
   bool Decode(const Code &code, RawCode *result);
 
+  const std::string& name() const { return name_; }
   bool loaded() const { return loaded_; }
   
  private:

@@ -17,8 +17,6 @@ namespace rime {
 
 Translation* EchoTranslator::Query(const std::string &input,
                                    const Segment &segment) {
-  //if (segment.tags.find("raw") == segment.tags.end())
-  //  return NULL;
   EZLOGGERPRINT("input = '%s', [%d, %d)",
                 input.c_str(), segment.start, segment.end);
   shared_ptr<Candidate> candidate(

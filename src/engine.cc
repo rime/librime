@@ -87,7 +87,7 @@ void Engine::TranslateSegments(Context *ctx) {
   BOOST_FOREACH(const Segment &segment, ctx->segmentation()->segments()) {
     int len = segment.end - segment.start;
     const std::string input = ctx->input().substr(segment.start, len);
-    EZLOGGERPRINT("translating segment '%s'", input.c_str());
+    EZLOGGERPRINT("Translating segment '%s'", input.c_str());
     shared_ptr<Menu> menu(new Menu);
     BOOST_FOREACH(shared_ptr<Translator> translator, translators_) {
       shared_ptr<Translation> translation(translator->Query(input, segment));
