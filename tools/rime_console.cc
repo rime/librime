@@ -10,16 +10,21 @@
 #include <iostream>
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
+#include <rime/candidate.h>
 #include <rime/common.h>
+#include <rime/composition.h>
 #include <rime/config.h>
 #include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/key_event.h>
+#include <rime/menu.h>
 #include <rime/schema.h>
 #include <rime/impl/dictionary.h>
 
 class RimeConsole {
  public:
+  static const int kPageSize = 9;
+  
   RimeConsole() : interactive_(false), engine_(new rime::Engine) {
     rime::Config *config = 
         rime::Config::Require("config")->Create("rime_console");
@@ -32,10 +37,46 @@ class RimeConsole {
   }
 
   void OnCommit(const std::string &commit_text) {
-    EZLOGGERVAR(commit_text);
-    std::cout << commit_text << std::endl;
+    if (interactive_) {
+      std::cout << "commit : [" << commit_text << "]" << std::endl;
+    }
+    else {
+      std::cout << commit_text << std::endl;
+    }
   }
 
+  void PrintComposition(const rime::Context *ctx) {
+    if (!ctx || !ctx->IsComposing())
+      return;
+    std::cout << "input  : [" << ctx->input() << "]" << std::endl;
+    const rime::Composition *comp = ctx->composition();
+    if (!comp || comp->empty())
+      return;
+    int i = 0;
+    std::cout << "comp.  : [";
+    BOOST_FOREACH(const rime::Selection &sel, *comp) {
+      if (i++ > 0)
+        std::cout << "|";
+      rime::shared_ptr<const rime::Candidate> cand = 
+          sel.menu->GetCandidateAt(sel.index);
+      std::cout << cand->text();
+    }
+    std::cout << "]" << std::endl;
+    const rime::Selection &current(comp->back());
+    int page_no = current.index / kPageSize;
+    rime::scoped_ptr<rime::Page> page(
+        current.menu->CreatePage(kPageSize, page_no));
+    std::cout << "page_no: " << page_no
+              << ", index: " << current.index << std::endl;
+    i = 0;
+    BOOST_FOREACH(const rime::shared_ptr<rime::Candidate> &cand,
+                  page->candidates) {
+      std::cout << "cand. " << ++i <<  ": [";
+      std::cout << cand->text();
+      std::cout << "]" << std::endl;
+    }
+  }
+  
   void ProcessLine(const std::string &line) {
     EZLOGGERVAR(line);
     rime::KeySequence keys;
@@ -46,8 +87,11 @@ class RimeConsole {
     BOOST_FOREACH(const rime::KeyEvent &ke, keys) {
       engine_->ProcessKeyEvent(ke);
     }
-    if (!interactive_) {
-      rime::Context *ctx = engine_->context();
+    rime::Context *ctx = engine_->context();
+    if (interactive_) {
+      PrintComposition(ctx);
+    }
+    else {
       if (ctx && ctx->IsComposing()) {
         ctx->Commit();
       }
