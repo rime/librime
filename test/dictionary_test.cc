@@ -11,8 +11,8 @@
 
 class RimeDictionaryTest : public ::testing::Test {
  public:
-  RimeDictionaryTest() : dict_("dictionary_test"), built_(false) {}
   virtual void SetUp() {
+    EZLOGGERFUNCTRACKER;
     if (!built_) {
       built_ = dict_.Compile("luna_pinyin.dict.yaml");
     }
@@ -21,19 +21,24 @@ class RimeDictionaryTest : public ::testing::Test {
     }
   }
   virtual void TearDown() {
+    EZLOGGERFUNCTRACKER;
     if (dict_.loaded())
       dict_.Unload();
   }
  protected:
-  rime::Dictionary dict_;
-  bool built_;
+  static rime::Dictionary dict_;
+  static bool built_;
 };
+
+rime::Dictionary RimeDictionaryTest::dict_("dictionary_test");
+bool RimeDictionaryTest::built_ = false;
 
 TEST_F(RimeDictionaryTest, Ready) {
   EXPECT_TRUE(dict_.loaded());
 }
 
 TEST_F(RimeDictionaryTest, Lookup) {
+  ASSERT_TRUE(dict_.loaded());
   rime::DictEntryIterator it = dict_.Lookup("zhong");
   ASSERT_TRUE(it);
   EXPECT_EQ("中", it->text);

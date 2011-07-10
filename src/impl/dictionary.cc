@@ -220,9 +220,11 @@ bool Dictionary::Compile(const std::string &source_file) {
 }
 
 bool Dictionary::Load() {
+  EZLOGGERFUNCTRACKER;
   if (!prism_->Load() || !table_->Load()) {
-    prism_.reset();
-    table_.reset();
+    EZLOGGERPRINT("Error loading dictionary '%s'.", name_.c_str());
+    prism_->Close();
+    table_->Close();
     loaded_ = false;
   }
   else {
@@ -232,8 +234,8 @@ bool Dictionary::Load() {
 }
 
 bool Dictionary::Unload() {
-  prism_.reset();
-  table_.reset();
+  prism_->Close();
+  table_->Close();
   loaded_ = false;
   return true;
 }
