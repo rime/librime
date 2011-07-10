@@ -67,7 +67,8 @@ TEST(RimeMenuTest, RecipeAlphaBeta) {
   shared_ptr<Translation> beta(new TranslationBeta());
   menu.AddTranslation(alpha);
   menu.AddTranslation(beta);
-  menu.Prepare(5);
+  // explicit call to Menu::Prepare() is not necessary
+  menu.Prepare(2);
   scoped_ptr<Page> page(menu.CreatePage(5, 0));
   ASSERT_TRUE(page);
   EXPECT_EQ(5, page->page_size);

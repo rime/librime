@@ -1,3 +1,4 @@
+
 // vim: set sts=2 sw=2 et:
 // encoding: utf-8
 //
@@ -45,10 +46,15 @@ int Menu::Prepare(int candidate_count) {
 
 Page* Menu::CreatePage(int page_size, int page_no) {
   int start_pos = page_size * page_no;
-  if (start_pos >= candidates_.size())
-    return NULL;
-  int end_pos = std::min(start_pos + page_size,
-                         static_cast<int>(candidates_.size()));
+  int end_pos = start_pos + page_size;
+  if (end_pos > candidates_.size()) {
+    if (translations_.empty())
+      end_pos = candidates_.size();
+    else
+      end_pos = Prepare(end_pos);
+    if (start_pos >= end_pos)
+      return NULL;
+  }
   Page *page = new Page;
   if (!page)
     return NULL;
