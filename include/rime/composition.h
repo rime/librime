@@ -10,30 +10,14 @@
 #define RIME_COMPOSITION_H_
 
 #include <string>
-#include <vector>
-#include <rime/common.h>
+#include <rime/segmentation.h>
 
 namespace rime {
 
-class Menu;
-
-struct Selection {
-  enum Manner {
-    kGuess,
-    kSelected,
-    kConfirmed,
-  };
-  Manner manner;
-  int index;
-  shared_ptr<Menu> menu;
-};
-
-class Composition : public std::vector<Selection> {
+class Composition : public Segmentation {
  public:
   Composition();
-
   const std::string GetText() const;
-
 };
 
 }  // namespace rime

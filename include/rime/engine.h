@@ -16,9 +16,10 @@
 
 namespace rime {
 
-class Schema;
-class Context;
 class KeyEvent;
+class Schema;
+class Composition;
+class Context;
 class Processor;
 class Segmentor;
 class Translator;
@@ -39,8 +40,9 @@ class Engine {
 
  private:
   void InitializeComponents();
-  void CalculateSegmentation(Context *ctx);
-  void TranslateSegments(Context *ctx);
+  void Compose(Context *ctx);
+  void CalculateSegmentation(Composition *comp);
+  void TranslateSegments(Composition *comp);
   void OnInputChange(Context *ctx);
   void OnCommit(Context *ctx);
 

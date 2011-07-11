@@ -21,11 +21,12 @@ TEST(AbcSegmentorTest, NoMatch) {
   Engine engine;
   scoped_ptr<Segmentor> segmentor(component->Create(&engine));
   ASSERT_TRUE(segmentor);
-  Segmentation segmentation("3.1415926");
+  Segmentation segmentation;
+  segmentation.Reset("3.1415926");
   bool goon = segmentor->Proceed(&segmentation);
   EXPECT_TRUE(goon);
   EXPECT_FALSE(segmentation.HasFinished());
-  ASSERT_EQ(0, segmentation.segments().size());
+  ASSERT_EQ(0, segmentation.size());
 }
 
 TEST(AbcSegmentorTest, FullMatch) {
@@ -34,14 +35,15 @@ TEST(AbcSegmentorTest, FullMatch) {
   Engine engine;
   scoped_ptr<Segmentor> segmentor(component->Create(&engine));
   ASSERT_TRUE(segmentor);
-  Segmentation segmentation("zyxwvutsrqponmlkjihgfedcba");
+  Segmentation segmentation;
+  segmentation.Reset("zyxwvutsrqponmlkjihgfedcba");
   bool goon = segmentor->Proceed(&segmentation);
   EXPECT_TRUE(goon);
   EXPECT_TRUE(segmentation.HasFinished());
-  ASSERT_EQ(1, segmentation.segments().size());
-  EXPECT_EQ(0, segmentation.segments()[0].start);
-  EXPECT_EQ(26, segmentation.segments()[0].end);
-  EXPECT_GE(1, segmentation.segments()[0].tags.size());
+  ASSERT_EQ(1, segmentation.size());
+  EXPECT_EQ(0, segmentation[0].start);
+  EXPECT_EQ(26, segmentation[0].end);
+  EXPECT_GE(1, segmentation[0].tags.size());
 }
 
 TEST(AbcSegmentorTest, PrefixMatch) {
@@ -50,12 +52,13 @@ TEST(AbcSegmentorTest, PrefixMatch) {
   Engine engine;
   scoped_ptr<Segmentor> segmentor(component->Create(&engine));
   ASSERT_TRUE(segmentor);
-  Segmentation segmentation("abcdefg.1415926");
+  Segmentation segmentation;
+  segmentation.Reset("abcdefg.1415926");
   bool goon = segmentor->Proceed(&segmentation);
   EXPECT_TRUE(goon);
   EXPECT_FALSE(segmentation.HasFinished());
-  ASSERT_EQ(1, segmentation.segments().size());
-  EXPECT_EQ(0, segmentation.segments()[0].start);
-  EXPECT_EQ(7, segmentation.segments()[0].end);
-  EXPECT_GE(1, segmentation.segments()[0].tags.size());
+  ASSERT_EQ(1, segmentation.size());
+  EXPECT_EQ(0, segmentation[0].start);
+  EXPECT_EQ(7, segmentation[0].end);
+  EXPECT_GE(1, segmentation[0].tags.size());
 }

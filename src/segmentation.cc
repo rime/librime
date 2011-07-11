@@ -9,17 +9,52 @@
 #include <algorithm>
 #include <iterator>
 #include <boost/foreach.hpp>
+#include <rime/menu.h>
 #include <rime/segmentation.h>
 
 namespace rime {
 
-Segmentation::Segmentation(const std::string &input)
-    : input_(input), cursor_(0) {}
+const shared_ptr<Candidate> Segment::GetSelectedCandidate() const {
+  if (!menu) {
+    return shared_ptr<Candidate>();
+  }
+  return menu->GetCandidateAt(selected_index);
+}
 
-bool Segmentation::Add(const Segment &segment) {
+Segmentation::Segmentation()
+    : input_(), cursor_(0) {}
+
+void Segmentation::Reset(const std::string &input) {
+  // mark redo segmentation, while keeping user confirmed segments
+  size_t diff_pos = 0;
+  while (diff_pos < input_.length() &&
+         diff_pos < input.length() &&
+         input_[diff_pos] == input[diff_pos])
+    ++diff_pos;
+
+  // discard segments that have changed
+  while (cursor_ > 0 && at(cursor_ - 1).end > diff_pos)
+    --cursor_;
+  resize(cursor_);
+  
+  // then investigate the last segment if not having been confirmed
+  if (cursor_ > 0 && at(cursor_ - 1).status <= Segment::kGuess)
+    --cursor_;
+  
+  input_ = input;
+}
+
+void Segmentation::Reset(int cursor_pos) {
+  if (cursor_pos > cursor_)
+    return;
+  cursor_ = cursor_pos;
+  resize(cursor_pos);
+}
+
+bool Segmentation::AddSegment(const Segment &segment) {
   int start = 0;
   if (cursor_ > 0) {
-    start = segments_[cursor_ - 1].end;
+    start = at(cursor_ - 1).end;
   }
   if (segment.start != start) {
     // rule one: in one round, we examine only those segs
@@ -27,13 +62,13 @@ bool Segmentation::Add(const Segment &segment) {
     return false;
   }
 
-  if (cursor_ == segments_.size()) {
+  if (cursor_ == size()) {
     // we have a first candidate in this round
-    segments_.push_back(segment);
+    push_back(segment);
     return true;
   }
 
-  Segment &last = segments_.back();
+  Segment &last = back();
   if (last.end > segment.end) {
     // rule two: always keep the longer candidate...
   }
@@ -54,7 +89,7 @@ bool Segmentation::Add(const Segment &segment) {
 
 // finalize a round
 bool Segmentation::Forward() {
-  if (cursor_ >= segments_.size()) {
+  if (cursor_ >= size()) {
     return false;
   }
   ++cursor_;
@@ -62,25 +97,25 @@ bool Segmentation::Forward() {
 }
 
 bool Segmentation::HasFinished() const {
-  return (segments_.empty() ? 0 : segments_.back().end) == input_.length();
+  return (empty() ? 0 : back().end) == input_.length();
 }
 
 int Segmentation::GetCurrentPosition() const {
   if (cursor_ == 0)
     return 0;
-  return segments_[cursor_ - 1].end;
+  return at(cursor_ - 1).end;
 }
 
 int Segmentation::GetCurrentSegmentLength() const {
-  if (cursor_ == segments_.size())
+  if (cursor_ == size())
     return 0;
-  return segments_[cursor_].end - segments_[cursor_].start;
+  return at(cursor_).end - at(cursor_).start;
 }
 
 std::ostream& operator<< (std::ostream& out, 
                           const Segmentation &segmentation) {
   out << "<" << segmentation.input();
-  BOOST_FOREACH(const Segment &segment, segmentation.segments()) {
+  BOOST_FOREACH(const Segment &segment, segmentation) {
     out << "|" << segment.start << "," << segment.end;
   }
   out << ">";

@@ -53,27 +53,25 @@ void Context::Clear() {
 void Context::ConfirmCurrentSelection() {
   if (composition_->empty())
     return;
-  Selection &sel(composition_->back());
-  shared_ptr<Candidate> cand(sel.menu->GetCandidateAt(sel.index));
+  Segment &seg(composition_->back());
+  shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
   if (cand) {
-    sel.manner = Selection::kConfirmed;
-    EZLOGGERPRINT("Confirmed: %s, index = %d.",
-                  cand->text().c_str(), sel.index);
+    seg.status = Segment::kConfirmed;
+    EZLOGGERPRINT("Confirmed: %s, selected_index = %d.",
+                  cand->text().c_str(), seg.selected_index);
     // TODO: notification
   }
+}
+
+void Context::set_composition(Composition *comp) {
+  if (composition_.get() != comp)
+    composition_.reset(comp);
+  // TODO: notification
 }
 
 void Context::set_input(const std::string &value) {
   input_ = value;
   input_change_notifier_(this);
-}
-
-void Context::set_segmentation(Segmentation *segmentation) {
-  segmentation_.reset(segmentation);
-}
-
-const Segmentation* Context::segmentation() const {
-  return segmentation_.get();
 }
 
 Composition* Context::composition() {

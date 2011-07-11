@@ -52,41 +52,48 @@ bool Engine::ProcessKeyEvent(const KeyEvent &key_event) {
 }
 
 void Engine::OnInputChange(Context *ctx) {
+  if (!ctx)
+    return;
   const std::string &input(ctx->input());
   EZLOGGERVAR(input);
-  CalculateSegmentation(ctx);
-  TranslateSegments(ctx);
+  Compose(ctx);
 }
 
-void Engine::CalculateSegmentation(Context *ctx) {
+void Engine::Compose(Context *ctx) {
+  if (!ctx)
+    return;
+  Composition *comp = ctx->composition();
+  comp->Reset(ctx->input());
+  CalculateSegmentation(comp);
+  TranslateSegments(comp);
+  ctx->set_composition(comp);
+}
+
+void Engine::CalculateSegmentation(Composition *comp) {
   EZLOGGERFUNCTRACKER;
-  Segmentation *segmentation = new Segmentation(ctx->input());
-  while (!segmentation->HasFinished()) {
-    int start_pos = segmentation->GetCurrentPosition();
+  while (!comp->HasFinished()) {
+    int start_pos = comp->GetCurrentPosition();
     // recognize a segment by calling the segmentors in turn
-    BOOST_FOREACH(shared_ptr<Segmentor> &s, segmentors_) {
-      if (!s->Proceed(segmentation))
+    BOOST_FOREACH(shared_ptr<Segmentor> &segmentor, segmentors_) {
+      if (!segmentor->Proceed(comp))
         break;
     }
     // move onto the next segment
-    segmentation->Forward();
-    EZLOGGERVAR(*segmentation);
+    comp->Forward();
+    EZLOGGERVAR(*comp);
     // no advancement
-    if (start_pos == segmentation->GetCurrentPosition())
+    if (start_pos == comp->GetCurrentPosition())
       break;
   }
-  ctx->set_segmentation(segmentation);
 }
 
-void Engine::TranslateSegments(Context *ctx) {
+void Engine::TranslateSegments(Composition *comp) {
   EZLOGGERFUNCTRACKER;
-  if (!ctx || !ctx->segmentation())
-    return;
-  // TODO: keep user confirmed segments
-  ctx->composition()->clear();
-  BOOST_FOREACH(const Segment &segment, ctx->segmentation()->segments()) {
+  BOOST_FOREACH(Segment &segment, *comp) {
+    if (segment.status != Segment::kVoid)
+      continue;
     int len = segment.end - segment.start;
-    const std::string input = ctx->input().substr(segment.start, len);
+    const std::string input(comp->input().substr(segment.start, len));
     EZLOGGERPRINT("Translating segment '%s'", input.c_str());
     shared_ptr<Menu> menu(new Menu);
     BOOST_FOREACH(shared_ptr<Translator> translator, translators_) {
@@ -99,11 +106,9 @@ void Engine::TranslateSegments(Context *ctx) {
       }
       menu->AddTranslation(translation);
     }
-    Selection selection;
-    selection.manner = Selection::kGuess;
-    selection.index = 0;
-    selection.menu = menu;
-    ctx->composition()->push_back(selection);
+    segment.status = Segment::kGuess;
+    segment.menu = menu;
+    segment.selected_index = 0;
   }
 }
 

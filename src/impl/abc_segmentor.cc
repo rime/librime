@@ -29,12 +29,12 @@ bool AbcSegmentor::Proceed(Segmentation *segmentation) {
       break;
   }
   int j = segmentation->GetCurrentPosition();
-  if (k > j) {
+  if (j < k) {
     Segment segment;
     segment.start = j;
     segment.end = k;
     segment.tags.insert("abc");
-    segmentation->Add(segment);
+    segmentation->AddSegment(segment);
   }
   // continue this round
   return true;

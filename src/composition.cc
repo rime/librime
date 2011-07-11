@@ -18,10 +18,9 @@ Composition::Composition() {
 
 const std::string Composition::GetText() const {
   std::string result;
-  BOOST_FOREACH(const Selection &selection, *this) {
-    shared_ptr<Candidate> candidate = 
-        selection.menu->GetCandidateAt(selection.index);
-    result += candidate->text();
+  BOOST_FOREACH(const Segment &seg, *this) {
+    const shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
+    result += cand->text();
   }
   return result;
 }

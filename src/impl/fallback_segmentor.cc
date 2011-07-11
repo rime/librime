@@ -26,10 +26,12 @@ bool FallbackSegmentor::Proceed(Segmentation *segmentation) {
     return false;
   
   if (k > 0) {
-    Segment &last = segmentation->segments().back();
+    Segment &last = segmentation->back();
     // append one character to the last raw segment
     if (last.tags.find("raw") != last.tags.end()) {
       last.end = k + 1;
+      // mark redo translation (in case it's been previously translated)
+      last.status = Segment::kVoid;
       return false;
     }
   }
@@ -39,7 +41,7 @@ bool FallbackSegmentor::Proceed(Segmentation *segmentation) {
     segment.start = k;
     segment.end = k + 1;
     segment.tags.insert("raw");
-    segmentation->Add(segment);
+    segmentation->AddSegment(segment);
   }
   // fallback segmentor should be the last being called, so end this round
   return false;

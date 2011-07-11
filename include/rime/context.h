@@ -41,8 +41,8 @@ class Context {
   const int selector() const { return selector_; }
   void set_cursor(int pos);
   const int cursor() const { return cursor_; }
-  void set_segmentation(Segmentation *segmentation);
-  const Segmentation* segmentation() const;
+
+  void set_composition(Composition *comp);
   Composition* composition();
   const Composition* composition() const;
   
@@ -53,7 +53,6 @@ class Context {
   std::string input_;
   int selector_;
   int cursor_;
-  scoped_ptr<Segmentation> segmentation_;
   scoped_ptr<Composition> composition_;
   
   Notifier commit_notifier_;

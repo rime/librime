@@ -12,36 +12,59 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <rime/common.h>
 
 namespace rime {
 
+class Candidate;
+class Menu;
+  
 struct Segment {
+  enum Status {
+    kVoid,
+    kGuess,
+    kSelected,
+    kConfirmed,
+  };
+  Status status;
   int start;
   int end;
   std::set<std::string> tags;
+  shared_ptr<Menu> menu;
+  int selected_index;
+
+  Segment()
+  : status(kVoid), start(0), end(0),
+    selected_index(0) {}
+  
+  Segment(int start_pos, int end_pos)
+  : status(kVoid), start(start_pos), end(end_pos),
+    selected_index(0) {}
+  
   bool HasTag(const std::string &tag) const {
     return tags.find(tag) != tags.end();
   }
+
+  const shared_ptr<Candidate> GetSelectedCandidate() const;
 };
 
-class Segmentation {
+class Segmentation : public std::vector<Segment> {
  public:
-  Segmentation(const std::string &input);
-
-  bool Add(const Segment &segment);
+  Segmentation();
+  virtual ~Segmentation() {}
+  void Reset(const std::string &input);
+  void Reset(int cursor_pos);
+  bool AddSegment(const Segment &segment);
+  
   bool Forward();
   bool HasFinished() const;
   int GetCurrentPosition() const;
   int GetCurrentSegmentLength() const;
 
   const std::string& input() const { return input_; }
-  std::vector<Segment>& segments() { return segments_; }
-  const std::vector<Segment>& segments() const { return segments_; }
   
-  
- private:
-  const std::string input_;
-  std::vector<Segment> segments_;
+ protected:
+  std::string input_;
   int cursor_;
 };
 
