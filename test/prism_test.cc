@@ -70,22 +70,27 @@ TEST_F(RimePrismTest, GetValue) {
 }
 
 TEST_F(RimePrismTest, CommonPrefixMatch) {
-  std::vector<int> result;
+  std::vector<Prism::Match> result;
   
   prism_->CommonPrefixSearch("goodbye", &result);
   //result is good and goodbye.
   ASSERT_EQ(result.size(), 2);
-  EXPECT_EQ(result[0], 2);  // good
-  EXPECT_EQ(result[1], 3);  // goodbye
+  EXPECT_EQ(result[0].value, 2);  // good
+  EXPECT_EQ(result[0].length, 4);  // good
+  EXPECT_EQ(result[1].value, 3);  // goodbye
+  EXPECT_EQ(result[1].length, 7);  // goodbye
 }
 
 TEST_F(RimePrismTest, ExpandSearch) {
-  std::vector<int> result;
+  std::vector<Prism::Match> result;
   
   prism_->ExpandSearch("goo", &result, 10);
   //result is good, google and goodbye (ordered by length asc).
   ASSERT_EQ(result.size(), 3);
-  EXPECT_EQ(result[0], 2);  // good
-  EXPECT_EQ(result[1], 4);  // google
-  EXPECT_EQ(result[2], 3);  // goodbye
+  EXPECT_EQ(result[0].value, 2);  // good
+  EXPECT_EQ(result[0].length, 4);  // good
+  EXPECT_EQ(result[1].value, 4);  // google
+  EXPECT_EQ(result[1].length, 6);  // google
+  EXPECT_EQ(result[2].value, 3);  // goodbye
+  EXPECT_EQ(result[2].length, 7);  // goodbye
 }

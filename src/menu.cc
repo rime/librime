@@ -15,6 +15,7 @@ namespace rime {
 
 void Menu::AddTranslation(shared_ptr<Translation> translation) {
   translations_.push_back(translation);
+  EZLOGGERVAR(translations_.size());
 }
 
 int Menu::Prepare(int candidate_count) {
@@ -24,20 +25,29 @@ int Menu::Prepare(int candidate_count) {
     return count;
   while (count < candidate_count && !translations_.empty()) {
     size_t k = 0;
-    for (; k + 1 < translations_.size(); ++k) {
-      if (translations_[k]->Compare(*translations_[k + 1]) <= 0) {
+    for (; k < translations_.size(); ++k) {
+      shared_ptr<Translation> next;
+      if (k + 1 < translations_.size())
+        next = translations_[k + 1];
+      if (translations_[k]->Compare(next, candidates_) <= 0) {
         break;
       }
     }
     if (k >= translations_.size()) {
+      EZLOGGERPRINT("Failed to elect a winner translation.");
       break;
     }
-
-    candidates_.push_back(translations_[k]->Peek());
-    translations_[k]->Next();
-    ++count;
     if (translations_[k]->exhausted()) {
-      EZLOGGERPRINT("Translation #%d exhausted.", k);
+      EZLOGGERPRINT("Warning: elected translation #%d has been exhausted!", k);
+      translations_.erase(translations_.begin() + k);
+      continue;
+    }
+    shared_ptr<Candidate> cand(translations_[k]->Peek());
+    candidates_.push_back(cand);
+    ++count;
+    translations_[k]->Next();
+    if (translations_[k]->exhausted()) {
+      EZLOGGERPRINT("Translation #%d has been exhausted.", k);
       translations_.erase(translations_.begin() + k);
     }
   }
@@ -67,8 +77,10 @@ Page* Menu::CreatePage(int page_size, int page_no) {
 }
 
 shared_ptr<Candidate> Menu::GetCandidateAt(int index) {
-  if (index >= candidates_.size())
+  if (index >= candidates_.size() &&
+      index >= Prepare(index + 1)) {
     return shared_ptr<Candidate>();
+  }
   return candidates_[index];
 }
 

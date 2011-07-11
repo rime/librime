@@ -10,11 +10,14 @@
 #include <rime/segmentation.h>
 #include <rime/impl/abc_segmentor.h>
 
+static const char kRimeAlphabet[] = "zyxwvutsrqponmlkjihgfedcba";
+
 namespace rime {
 
-AbcSegmentor::AbcSegmentor(Engine *engine) : Segmentor(engine) {
+AbcSegmentor::AbcSegmentor(Engine *engine)
+    : Segmentor(engine), alphabet_(kRimeAlphabet) {
   // TODO: read schema settings
-  alphabet_ = "zyxwvutsrqponmlkjihgfedcba";
+
 }
 
 bool AbcSegmentor::Proceed(Segmentation *segmentation) {

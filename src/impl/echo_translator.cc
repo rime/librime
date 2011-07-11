@@ -15,13 +15,27 @@
 
 namespace rime {
 
+class EchoTranslation : public UniqueTranslation {
+ public:
+  EchoTranslation(const shared_ptr<Candidate> &candidate)
+      : UniqueTranslation(candidate) {
+  }
+  virtual int Compare(shared_ptr<Translation> other,
+                      const CandidateList &candidates) {
+    if (!candidates.empty()) {
+      set_exhausted(true);
+    }
+    return UniqueTranslation::Compare(other, candidates);
+  }
+};
+
 Translation* EchoTranslator::Query(const std::string &input,
                                    const Segment &segment) {
   EZLOGGERPRINT("input = '%s', [%d, %d)",
                 input.c_str(), segment.start, segment.end);
   shared_ptr<Candidate> candidate(
       new Candidate("raw", input, "", segment.start, segment.end, 0));
-  Translation *translation = new UniqueTranslation(candidate);
+  Translation *translation = new EchoTranslation(candidate);
   return translation;
 }
 

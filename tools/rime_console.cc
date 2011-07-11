@@ -46,6 +46,7 @@ class RimeConsole {
   }
 
   void PrintComposition(const rime::Context *ctx) {
+    EZLOGGERFUNCTRACKER;
     if (!ctx || !ctx->IsComposing())
       return;
     std::cout << "input  : [" << ctx->input() << "]" << std::endl;

@@ -10,18 +10,18 @@
 #define RIME_MENU_H_
 
 #include <vector>
+#include <rime/candidate.h>
 #include <rime/common.h>
 
 namespace rime {
 
-class Candidate;
 class Translation;
 
 struct Page {
   int page_size;
   int page_no;
   bool is_last;
-  std::vector<shared_ptr<Candidate> > candidates;
+  CandidateList candidates;
 };
 
 class Menu {
@@ -36,7 +36,7 @@ class Menu {
   
  private:
   std::vector<shared_ptr<Translation> > translations_;
-  std::vector<shared_ptr<Candidate> > candidates_;
+  CandidateList candidates_;
 };
 
 }  // namespace rime

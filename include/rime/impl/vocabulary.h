@@ -34,6 +34,9 @@ struct DictEntry {
   Code code;
   std::string text;
   double weight;
+  size_t consumed_input_length;
+  
+  DictEntry() : weight(0.0), consumed_input_length(0) {}
   bool operator< (const DictEntry& other) const;
 };
 

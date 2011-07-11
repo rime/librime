@@ -6,8 +6,10 @@
 // 
 // 2011-05-08 GONG Chen <chen.sst@gmail.com>
 //
+#include <rime/candidate.h>
 #include <rime/context.h>
 #include <rime/composition.h>
+#include <rime/menu.h>
 #include <rime/segmentation.h>
 
 namespace rime {
@@ -46,6 +48,19 @@ void Context::PopInput() {
 void Context::Clear() {
   input_.clear();
   input_change_notifier_(this);
+}
+
+void Context::ConfirmCurrentSelection() {
+  if (composition_->empty())
+    return;
+  Selection &sel(composition_->back());
+  shared_ptr<Candidate> cand(sel.menu->GetCandidateAt(sel.index));
+  if (cand) {
+    sel.manner = Selection::kConfirmed;
+    EZLOGGERPRINT("Confirmed: %s, index = %d.",
+                  cand->text().c_str(), sel.index);
+    // TODO: notification
+  }
 }
 
 void Context::set_input(const std::string &value) {

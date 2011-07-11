@@ -32,7 +32,9 @@ class DictEntryIterator {
   DictEntryIterator();
   DictEntryIterator(const DictEntryIterator &other);
 
-  void AddChunk(const Code &code, const table::EntryVector *table_entries);
+  void AddChunk(const Code &code,
+                const table::EntryVector *table_entries,
+                size_t consumed_input_length);
   shared_ptr<DictEntry> Peek();
   bool Next();
   bool exhausted() const;

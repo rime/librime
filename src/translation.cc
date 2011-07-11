@@ -11,11 +11,12 @@
 
 namespace rime {
 
-int Translation::Compare(Translation &other) {
+int Translation::Compare(shared_ptr<Translation> other,
+                         const CandidateList &candidates) {
   if (exhausted()) return 1;
-  if (other.exhausted()) return -1;
+  if (!other || other->exhausted()) return -1;
   shared_ptr<const Candidate> ours = Peek();
-  shared_ptr<const Candidate> theirs = other.Peek();
+  shared_ptr<const Candidate> theirs = other->Peek();
   if (!ours) return 1;
   if (!theirs) return -1;
   int k = 0;

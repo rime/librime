@@ -22,6 +22,8 @@ namespace rime {
 
 class Prism : public MappedFile {
  public:
+  typedef Darts::DoubleArray::result_pair_type Match;
+  
   Prism(const std::string &file_name)
       : MappedFile(file_name), trie_(new Darts::DoubleArray) {}
   
@@ -30,8 +32,8 @@ class Prism : public MappedFile {
   bool Build(const Syllabary &keyset);
   bool HasKey(const std::string &key);
   bool GetValue(const std::string &key, int *value);
-  void CommonPrefixSearch(const std::string &key, std::vector<int> *result);
-  void ExpandSearch(const std::string &key, std::vector<int> *result, size_t limit);
+  void CommonPrefixSearch(const std::string &key, std::vector<Match> *result);
+  void ExpandSearch(const std::string &key, std::vector<Match> *result, size_t limit);
   size_t size()const;
   
  private:

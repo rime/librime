@@ -11,11 +11,10 @@
 #define RIME_TRANSLATION_H_
 
 #include <string>
+#include <rime/candidate.h>
 #include <rime/common.h>
 
 namespace rime {
-
-class Candidate;
 
 class Translation {
  public:
@@ -28,9 +27,10 @@ class Translation {
 
   virtual shared_ptr<Candidate> Peek() = 0;
 
-  // should it provide the next candidate (negative value) or
+  // should it provide the next candidate (negative value, zero) or
   // should it give the chance to other translations (positive)?
-  virtual int Compare(Translation &other);
+  virtual int Compare(shared_ptr<Translation> other,
+                      const CandidateList &candidates);
 
   bool exhausted() const { return exhausted_; }
 
@@ -43,7 +43,7 @@ class Translation {
 
 class UniqueTranslation : public Translation {
  public:
-  UniqueTranslation(shared_ptr<Candidate> candidate)
+  UniqueTranslation(const shared_ptr<Candidate> &candidate)
       : candidate_(candidate) {
   }
   virtual ~UniqueTranslation() {
@@ -55,13 +55,14 @@ class UniqueTranslation : public Translation {
     set_exhausted(true);
     return true;
   }
+  
   virtual shared_ptr<Candidate> Peek() {
     if (exhausted())
       return shared_ptr<Candidate>();
     return candidate_;
   }
 
- private:
+ protected:
   shared_ptr<Candidate> candidate_;
 };
 

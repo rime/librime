@@ -93,13 +93,14 @@ void Engine::TranslateSegments(Context *ctx) {
       shared_ptr<Translation> translation(translator->Query(input, segment));
       if (!translation)
         continue;
+      if (translation->exhausted()) {
+        EZLOGGERPRINT("Oops, got a futile translation.");
+        continue;
+      }
       menu->AddTranslation(translation);
     }
-    // TODO:
-    const int page_size = 5;
-    menu->Prepare(page_size);
     Selection selection;
-    selection.manner = Selection::kGuessed;
+    selection.manner = Selection::kGuess;
     selection.index = 0;
     selection.menu = menu;
     ctx->composition()->push_back(selection);

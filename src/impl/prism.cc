@@ -124,29 +124,34 @@ bool Prism::GetValue(const std::string &key, int *value){
 }
 
 // Given a key, search all the keys in the tree which share a common prefix with that key.
-void Prism::CommonPrefixSearch(const std::string &key, std::vector<int> *result){
+void Prism::CommonPrefixSearch(const std::string &key, std::vector<Match> *result){
+  if (!result)
+    return;
   size_t len = key.length();
-  boost::scoped_array<Darts::DoubleArray::result_pair_type> result_pair(
-      new Darts::DoubleArray::result_pair_type[len]);
-  size_t results = trie_->commonPrefixSearch(key.c_str(), result_pair.get(), len, len);
-  for(size_t i = 0; i < results; ++i){
-    result->push_back(result_pair[i].value);
-  }
+  result->resize(len);
+  size_t num_results = trie_->commonPrefixSearch(key.c_str(), &result->front(), len, len);
+  result->resize(num_results);
 }
 
-void Prism::ExpandSearch(const std::string &key, std::vector<int> *result, size_t limit){
-  if (limit == 0)
+void Prism::ExpandSearch(const std::string &key, std::vector<Match> *result, size_t limit){
+  if (!result)
     return;
+  result->clear();
+  size_t count = 0;
   size_t node_pos = 0;
   size_t key_pos = 0;
-  size_t count = 0;  
   int ret = trie_->traverse(key.c_str(), node_pos, key_pos);
   //key is not a valid path
   if(ret == -2)
     return;
   if(ret != -1) {
-    result->push_back(ret);
-    if (++count > limit)
+    {
+      Match match;
+      match.value = ret;
+      match.length = key_pos;
+      result->push_back(match);
+    }
+    if (limit && ++count >= limit)
       return;
   }
   std::queue<node_t> q;
@@ -154,6 +159,7 @@ void Prism::ExpandSearch(const std::string &key, std::vector<int> *result, size_
   while(!q.empty()){
     node_t node = q.front();
     q.pop();
+    // TODO: configurable alphabet
     for(char ch = 'a'; ch <= 'z'; ++ch){
       std::string k = node.key + ch;
       size_t k_pos = node.key.length();
@@ -167,8 +173,13 @@ void Prism::ExpandSearch(const std::string &key, std::vector<int> *result, size_
       }
       else{
         q.push(node_t(k, n_pos));
-        result->push_back(ret);
-        if(++count > limit)
+        {
+          Match match;
+          match.value = ret;
+          match.length = k_pos;
+          result->push_back(match);
+        }
+        if(limit && ++count > limit)
           return;
       }
     }

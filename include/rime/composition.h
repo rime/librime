@@ -19,8 +19,7 @@ class Menu;
 
 struct Selection {
   enum Manner {
-    kOpen,
-    kGuessed,
+    kGuess,
     kSelected,
     kConfirmed,
   };

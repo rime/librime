@@ -10,6 +10,7 @@
 #define RIME_CANDIDATE_H_
 
 #include <string>
+#include <vector>
 #include <rime/common.h>
 
 namespace rime {
@@ -47,6 +48,8 @@ class Candidate {
   int end_;
   int order_;
 };
+
+typedef std::vector<shared_ptr<Candidate> > CandidateList;
 
 }  // namespace rime
 

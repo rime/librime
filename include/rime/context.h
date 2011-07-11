@@ -31,6 +31,9 @@ class Context {
   void PushInput(char ch);
   void PopInput();
   void Clear();
+
+  void ConfirmCurrentSelection();
+  
   void set_input(const std::string &value);
   const std::string& input() const { return input_; }
 

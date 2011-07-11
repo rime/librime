@@ -20,19 +20,14 @@ namespace rime {
 class TableLookupResult : public Translation {
  public:
   TableLookupResult(const DictEntryIterator& iter,
-                    int start, int end)
-      : iter_(iter), start_(start), end_(end) {
+                    int start)
+      : iter_(iter), start_(start) {
     set_exhausted(iter.exhausted());
   }
 
   virtual bool Next() {
     if (exhausted())
       return false;
-    shared_ptr<Candidate> cand(new Candidate(
-        "zh",
-        iter_.Peek()->text,
-        "",
-        start_, end_, 0));
     iter_.Next();
     set_exhausted(iter_.exhausted());
     return true;
@@ -41,18 +36,20 @@ class TableLookupResult : public Translation {
   virtual shared_ptr<Candidate> Peek() {
     if (exhausted())
       return shared_ptr<Candidate>();
-      shared_ptr<Candidate> cand(new Candidate(
+    const shared_ptr<DictEntry> &e(iter_.Peek());
+    shared_ptr<Candidate> cand(new Candidate(
         "zh",
-        iter_.Peek()->text,
+        e->text,
         "",
-        start_, end_, 0));
-      return cand;
+        start_,
+        start_ + e->consumed_input_length,
+        0));
+    return cand;
   }
 
  private:
   DictEntryIterator iter_;
   int start_;
-  int end_;
 };
 
 TableTranslator::TableTranslator(Engine *engine)
@@ -82,9 +79,10 @@ Translation* TableTranslator::Query(const std::string &input,
   EZLOGGERPRINT("input = '%s', [%d, %d)",
                 input.c_str(), segment.start, segment.end);
 
+  Translation *translation = NULL;
   DictEntryIterator iter = dict_->PredictiveLookup(input);
-  Translation *translation = new TableLookupResult(
-      iter, segment.start, segment.end);
+  if (!iter.exhausted())
+      translation = new TableLookupResult(iter, segment.start);
   return translation;
 }
 

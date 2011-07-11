@@ -35,10 +35,11 @@ struct Chunk {
   Code code;
   const table::EntryVector *entries;
   size_t cursor;
+  size_t consumed_input_length;
 
-  Chunk() : entries(NULL), cursor(0) {}
-  Chunk(const Code &c, const table::EntryVector *e)
-      : code(c), entries(e), cursor(0) {}
+  Chunk() : entries(NULL), cursor(0), consumed_input_length(0) {}
+  Chunk(const Code &c, const table::EntryVector *e, size_t len)
+      : code(c), entries(e), cursor(0), consumed_input_length(len) {}
 };
     
 class DictEntryCollector : public std::list<Chunk> {
@@ -124,6 +125,7 @@ shared_ptr<DictEntry> DictEntryIterator::Peek() {
     entry_->code = chunk.code;
     entry_->text = e.text.c_str();
     entry_->weight = e.weight;
+    entry_->consumed_input_length = chunk.consumed_input_length;
   }
   return entry_;
 }
@@ -141,11 +143,13 @@ bool DictEntryIterator::Next() {
 }
 
 void DictEntryIterator::AddChunk(const Code &code,
-                                 const table::EntryVector *table_entries) {
+                                 const table::EntryVector *table_entries,
+                                 size_t consumed_input_length) {
   if (!table_entries)
     return;
-  EZLOGGERPRINT("Add chunk of size %d.", table_entries->size());
-  collector_->push_back(Chunk(code, table_entries));
+  EZLOGGERPRINT("Add chunk: %d entries, len = %d.",
+                table_entries->size(), consumed_input_length);
+  collector_->push_back(Chunk(code, table_entries, consumed_input_length));
 }
 
 Dictionary::Dictionary(const std::string &name)
@@ -165,16 +169,17 @@ DictEntryIterator Dictionary::Lookup(const std::string &str_code) {
   DictEntryIterator result;
   if (!loaded_)
     return result;
-  std::vector<int> keys;
+  std::vector<Prism::Match> keys;
   prism_->CommonPrefixSearch(str_code, &keys);
-  EZLOGGERPRINT("found %u keys thru the prism.", keys.size());
+  EZLOGGERPRINT("found %u matching keys thru the prism.", keys.size());
   Code code;
   code.resize(1);
-  BOOST_REVERSE_FOREACH(int &syllable_id, keys) {
+  BOOST_REVERSE_FOREACH(Prism::Match &match, keys) {
+    int syllable_id = match.value;
     code[0] = syllable_id;
     const table::EntryVector *vec = table_->GetEntries(syllable_id);
     if (vec) {
-      result.AddChunk(code, vec);
+      result.AddChunk(code, vec, match.length);
     }
   }
   return result;
@@ -185,17 +190,18 @@ DictEntryIterator Dictionary::PredictiveLookup(const std::string &str_code) {
   DictEntryIterator result;
   if (!loaded_)
     return result;
-  const int kExpandSearchLimit = 20;
-  std::vector<int> keys;
+  const size_t kExpandSearchLimit = 0;  // unlimited!
+  std::vector<Prism::Match> keys;
   prism_->ExpandSearch(str_code, &keys, kExpandSearchLimit);
-  EZLOGGERPRINT("found %u keys thru the prism.", keys.size());
+  EZLOGGERPRINT("found %u matching keys thru the prism.", keys.size());
   Code code;
   code.resize(1);
-  BOOST_FOREACH(int &syllable_id, keys) {
+  BOOST_FOREACH(Prism::Match &match, keys) {
+    int syllable_id = match.value;
     code[0] = syllable_id;
     const table::EntryVector *vec = table_->GetEntries(syllable_id);
     if (vec) {
-      result.AddChunk(code, vec);
+      result.AddChunk(code, vec, str_code.length());
     }
   }
   return result;

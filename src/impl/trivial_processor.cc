@@ -4,8 +4,6 @@
 // Copyleft 2011 RIME Developers
 // License: GPLv3
 // 
-// register components
-//
 // 2011-04-24 GONG Chen <chen.sst@gmail.com>
 //
 
@@ -24,6 +22,15 @@ Processor::Result TrivialProcessor::ProcessKeyEvent(
     const KeyEvent &key_event) {
   Context *ctx = engine_->context();
   int ch = key_event.keycode();
+  if (ch == XK_space) {
+    if (ctx->IsComposing()) {
+      ctx->ConfirmCurrentSelection();
+      return kAccepted;
+    }
+    else {
+      return kNoop;
+    }
+  }
   if (ch == XK_Return && ctx->IsComposing()) {
     ctx->Commit();
     return kAccepted;
