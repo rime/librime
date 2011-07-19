@@ -116,7 +116,6 @@ bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size
     }
     size_t i = 0;
     for (std::vector<DictEntry>::const_iterator d = entries.begin(); d != entries.end(); ++d, ++i) {
-      EZLOGGERPRINT("Writing entry #%u '%s'.", i, d->text.c_str());
       table::Entry &e(node.entries.at[i]);
       if (!CopyString(d->text, &e.text)) {
         EZLOGGERPRINT("Error creating table entry '%s'; file size: %u.",

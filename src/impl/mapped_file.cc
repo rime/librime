@@ -15,7 +15,9 @@
 #include <rime/impl/mapped_file.h>
 
 #ifdef BOOST_RESIZE_FILE
+
 #define RESIZE_FILE boost::filesystem::resize_file
+
 #else
 
 #ifdef _WIN32
@@ -178,7 +180,6 @@ String* MappedFile::CreateString(const std::string &str) {
 }
 
 bool MappedFile::CopyString(const std::string &src, String *dest) {
-  EZLOGGERVAR(src);
   if (!dest)
     return false;
   size_t size = src.length() + 1;
