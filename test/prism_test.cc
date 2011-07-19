@@ -48,7 +48,7 @@ TEST_F(RimePrismTest, SaveAndLoad) {
   Prism test(prism_->file_name());
   test.Load();
   
-  EXPECT_EQ(prism_->size(), test.size());
+  EXPECT_EQ(prism_->array_size(), test.array_size());
 }
 
 TEST_F(RimePrismTest, HasKey) {

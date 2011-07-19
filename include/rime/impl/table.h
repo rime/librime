@@ -10,6 +10,7 @@
 #ifndef RIME_TABLE_H_
 #define RIME_TABLE_H_
 
+#include <cstring>
 #include <map>
 #include <set>
 #include <string>
@@ -23,69 +24,76 @@ namespace rime {
 
 namespace table {
 
-typedef boost::interprocess::vector<MappedFile::String,
-                                    MappedFile::StringAllocator>
-        Syllabary;
+typedef Array<String> Syllabary;
+
+typedef int32_t SyllableId;
 
 struct Entry {
-  MappedFile::String text;
-  double weight;
-
-  Entry(const MappedFile::VoidAllocator &allocator)
-      : text(allocator), weight(0.0) {}
-  Entry(const char *_text,
-        double _weight,
-        const MappedFile::VoidAllocator &allocator)
-      : text(_text, allocator), weight(_weight) {}
-  // required by move operation
-  Entry(const Entry &entry)
-      : text(boost::interprocess::move(entry.text)), weight(entry.weight) {}
-  Entry& operator=(const Entry &entry) {
-    text = boost::interprocess::move(entry.text);
-    weight = entry.weight;
-  }
+  String text;
+  float weight;
 };
 
-typedef boost::interprocess::allocator<Entry,
-                                       MappedFile::SegmentManager>
-        EntryAllocator;
-typedef boost::interprocess::vector<Entry,
-                                    EntryAllocator>
-        EntryVector;
-typedef EntryVector::const_iterator EntryIterator;
+struct IndexLv2;
+struct IndexLv3;
 
 struct IndexNode {
-  boost::interprocess::offset_ptr<void> next_level;
-  boost::interprocess::offset_ptr<EntryVector> entries;
-  IndexNode()
-      : next_level(NULL), entries(NULL) {}
+  List<Entry> entries;
+  OffsetPtr<IndexLv2> next_level;
 };
 
-typedef boost::interprocess::allocator<IndexNode,
-                                       MappedFile::SegmentManager>
-        IndexNodeAllocator;
-typedef boost::interprocess::vector<IndexNode, IndexNodeAllocator>
-        Index;
-//typedef boost::interprocess::flat_map<int, IndexNode, IndexNodeAllocator>
-//        IndexLv2;
-// ...
+typedef Array<IndexNode> Index;
+
+struct IndexNodeLv2 {
+  SyllableId key;
+  List<Entry> entries;
+  OffsetPtr<IndexLv3> next_level;
+};
+
+struct IndexLv2 : Array<IndexNodeLv2> {};
+
+typedef Array<SyllableId> Code;
+
+struct CodeMapping {
+  OffsetPtr<Entry> entry;
+  Code code;
+};
+
+struct IndexNodeLv3 {
+  SyllableId key;
+  List<Entry> entries;
+  List<CodeMapping> code_map;
+};
+
+struct IndexLv3 : Array<IndexNodeLv3> {};
+
+struct Metadata {
+  static const int kFormatMaxLength = 32;
+  char format[kFormatMaxLength];
+  int num_syllables;
+  int num_entries;
+  OffsetPtr<Syllabary> syllabary;
+  OffsetPtr<Index> index;
+};
 
 }  // namespace table
 
 class Table : public MappedFile {
  public:
+  typedef std::pair<table::Entry*, size_t> Cluster;
+  
   Table(const std::string &file_name)
-      : MappedFile(file_name), index_(NULL), syllabary_(NULL) {}
+      : MappedFile(file_name), index_(NULL), syllabary_(NULL), metadata_(NULL) {}
   
   bool Load();
   bool Save();
   bool Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size_t num_entries);
   const char* GetSyllableById(int syllable_id);
-  const table::EntryVector* GetEntries(int syllable_id);
+  const Cluster GetEntries(int syllable_id);
   
  private:
-  table::Index *index_;
+  table::Metadata *metadata_;
   table::Syllabary *syllabary_;
+  table::Index *index_;
 };
 
 }  // namespace rime

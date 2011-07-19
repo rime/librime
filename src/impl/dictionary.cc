@@ -33,13 +33,15 @@ namespace rime {
 
 struct Chunk {
   Code code;
-  const table::EntryVector *entries;
+  const table::Entry *entries;
+  size_t size;
   size_t cursor;
   size_t consumed_input_length;
 
-  Chunk() : entries(NULL), cursor(0), consumed_input_length(0) {}
-  Chunk(const Code &c, const table::EntryVector *e, size_t len)
-      : code(c), entries(e), cursor(0), consumed_input_length(len) {}
+  Chunk() : entries(NULL), size(0), cursor(0), consumed_input_length(0) {}
+  Chunk(const Code &c, const Table::Cluster &s, size_t len)
+      : code(c), entries(s.first), size(s.second),
+        cursor(0), consumed_input_length(len) {}
 };
     
 class DictEntryCollector : public std::list<Chunk> {
@@ -120,7 +122,7 @@ shared_ptr<DictEntry> DictEntryIterator::Peek() {
   if (!entry_) {
     const Chunk &chunk(collector_->front());
     entry_.reset(new DictEntry);
-    const table::Entry &e(chunk.entries->at(chunk.cursor));
+    const table::Entry &e(chunk.entries[chunk.cursor]);
     EZLOGGERPRINT("Creating temporary dict entry '%s'.", e.text.c_str());
     entry_->code = chunk.code;
     entry_->text = e.text.c_str();
@@ -135,7 +137,7 @@ bool DictEntryIterator::Next() {
     return false;
   }
   Chunk &chunk(collector_->front());
-  if (++chunk.cursor >= chunk.entries->size()) {
+  if (++chunk.cursor >= chunk.size) {
     collector_->pop_front();
   }
   entry_.reset();
@@ -143,13 +145,11 @@ bool DictEntryIterator::Next() {
 }
 
 void DictEntryIterator::AddChunk(const Code &code,
-                                 const table::EntryVector *table_entries,
+                                 const Table::Cluster &cluster,
                                  size_t consumed_input_length) {
-  if (!table_entries)
-    return;
   EZLOGGERPRINT("Add chunk: %d entries, len = %d.",
-                table_entries->size(), consumed_input_length);
-  collector_->push_back(Chunk(code, table_entries, consumed_input_length));
+                cluster.second, consumed_input_length);
+  collector_->push_back(Chunk(code, cluster, consumed_input_length));
 }
 
 Dictionary::Dictionary(const std::string &name)
@@ -177,9 +177,9 @@ DictEntryIterator Dictionary::Lookup(const std::string &str_code) {
   BOOST_REVERSE_FOREACH(Prism::Match &match, keys) {
     int syllable_id = match.value;
     code[0] = syllable_id;
-    const table::EntryVector *vec = table_->GetEntries(syllable_id);
-    if (vec) {
-      result.AddChunk(code, vec, match.length);
+    const Table::Cluster cluster(table_->GetEntries(syllable_id));
+    if (cluster.first) {
+      result.AddChunk(code, cluster, match.length);
     }
   }
   return result;
@@ -199,9 +199,9 @@ DictEntryIterator Dictionary::PredictiveLookup(const std::string &str_code) {
   BOOST_FOREACH(Prism::Match &match, keys) {
     int syllable_id = match.value;
     code[0] = syllable_id;
-    const table::EntryVector *vec = table_->GetEntries(syllable_id);
-    if (vec) {
-      result.AddChunk(code, vec, str_code.length());
+    const Table::Cluster cluster(table_->GetEntries(syllable_id));
+    if (cluster.first) {
+      result.AddChunk(code, cluster, str_code.length());
     }
   }
   return result;

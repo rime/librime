@@ -10,20 +10,10 @@
 #include <boost/foreach.hpp>
 #include <rime/impl/table.h>
 
-namespace {
-
-struct Metadata {
-  static const int kFormatMaxLength = 32;
-  char format[kFormatMaxLength];
-  int num_syllables;
-  int num_entries;
-};
-
-const char kTableFormat[] = "Rime::Table/0.9";
-
-}  // namespace
 
 namespace rime {
+
+const char kTableFormat[] = "Rime::Table/0.9";
 
 bool Table::Load() {
   EZLOGGERPRINT("Load file: %s", file_name().c_str());
@@ -36,20 +26,22 @@ bool Table::Load() {
                   file_name().c_str());
     return false;
   }
-  std::pair<table::Syllabary*, size_t> syllabary =
-      file()->find<table::Syllabary>("Syllabary");
-  if (!syllabary.second) {
+
+  metadata_ = Find<table::Metadata>(0);
+  if (!metadata_) {
+    EZLOGGERPRINT("Metadata not found.");
+    return false;
+  }
+  syllabary_ = metadata_->syllabary.get();
+  if (!syllabary_) {
     EZLOGGERPRINT("Syllabary not found.");
     return false;
   }
-  syllabary_ = syllabary.first;
-  std::pair<table::Index*, size_t> index =
-      file()->find<table::Index>("Index");
-  if (!index.second) {
+  index_ = metadata_->index.get();
+  if (!index_) {
     EZLOGGERPRINT("Table index not found.");
     return false;
   }
-  index_ = index.first;
   return true;
 }
 
@@ -61,86 +53,77 @@ bool Table::Save() {
     return false;
   }
 
-  Close();
   return ShrinkToFit();
 }
 
 bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size_t num_entries) {
   size_t num_syllables = syllabary.size();
-  size_t file_size = 32 * num_syllables + 128 * num_entries;
-  if (!Create(file_size)) {
+  size_t estimated_file_size = 32 * num_syllables + 128 * num_entries;
+  EZLOGGERVAR(num_syllables);
+  EZLOGGERVAR(num_entries);
+  EZLOGGERVAR(estimated_file_size);
+  if (!Create(estimated_file_size)) {
     EZLOGGERPRINT("Error creating table file '%s'.", file_name().c_str());
     return false;
   }
-  {
-    Metadata *metadata = file()->construct<Metadata>("Metadata")();
-    if (!metadata) {
-      EZLOGGERPRINT("Error writing metadata into file '%s'.", file_name().c_str());
-      return false;
-    }
-    std::strncpy(metadata->format, kTableFormat, Metadata::kFormatMaxLength);
-    metadata->num_syllables = num_syllables;
-    metadata->num_entries = num_entries;
-  }
 
-  VoidAllocator void_allocator(file()->get_segment_manager());
+  EZLOGGERPRINT("Creating metadata.");
+  metadata_ = Allocate<table::Metadata>();
+  if (!metadata_) {
+    EZLOGGERPRINT("Error creating metadata in file '%s'.", file_name().c_str());
+    return false;
+  }
+  std::strncpy(metadata_->format, kTableFormat, table::Metadata::kFormatMaxLength);
+  metadata_->num_syllables = num_syllables;
+  metadata_->num_entries = num_entries;
+
+  EZLOGGERPRINT("Creating syllabary.");
+  syllabary_ = CreateArray<String>(num_syllables);
   if (!syllabary_) {
-    syllabary_ = file()->construct<table::Syllabary>("Syllabary", std::nothrow)(void_allocator);
-    if (!syllabary_) {
-      EZLOGGERPRINT("Error creating syllabary.");
-      return false;
-    }
-    syllabary_->reserve(num_syllables);
+    EZLOGGERPRINT("Error creating syllabary.");
+    return false;
+  }
+  else {
+    size_t i = 0;
     BOOST_FOREACH(const std::string &syllable, syllabary) {
-      String str(syllable.c_str(), void_allocator);
-      syllabary_->push_back(boost::interprocess::move(str));
+      CopyString(syllable, &syllabary_->at[i++]);
     }
   }
+  metadata_->syllabary = syllabary_;
+
+  EZLOGGERPRINT("Creating table index.");
+  index_ = CreateArray<table::IndexNode>(num_syllables);
   if (!index_) {
-    index_ = file()->construct<table::Index>("Index", std::nothrow)(void_allocator);
-    if (!index_) {
-      EZLOGGERPRINT("Error creating table index.");
-      return false;
-    }
-    index_->resize(num_syllables);
+    EZLOGGERPRINT("Error creating table index.");
+    return false;
   }
+  metadata_->index = index_;
   
   for (Vocabulary::const_iterator v = vocabulary.begin(); v != vocabulary.end(); ++v) {
     const Code &code(v->first);
-    const DictEntryList &ls(v->second);
-    // For now only Level 1 index is supported...
+    const DictEntryList &entries(v->second);
+    // TODO: for now only Level 1 index is supported...
     if (code.size() > 1)
       break;
     int syllable_id = code[0];
-    table::IndexNode &node(index_->at(syllable_id));
-    table::EntryVector *entries = NULL;
-    if (node.entries) {
-      // Already there?!
-      entries = node.entries.get();
+    EZLOGGERVAR(syllable_id);
+    table::IndexNode &node(index_->at[syllable_id]);
+    node.entries.size = entries.size();
+    node.entries.at = Allocate<table::Entry>(entries.size());
+    if (!node.entries.at) {
+      EZLOGGERPRINT("Error creating table entries; file size: %u.", file_size());
+      return false;
     }
-    else {
-      entries = file()->construct<table::EntryVector>(boost::interprocess::anonymous_instance)(
-          void_allocator);
-      if (!entries) {
-        EZLOGGERPRINT("Error creating table entries; file size: %u, free memory: %u.",
-                      file()->get_size(), file()->get_free_memory());
+    size_t i = 0;
+    for (std::vector<DictEntry>::const_iterator d = entries.begin(); d != entries.end(); ++d, ++i) {
+      EZLOGGERPRINT("Writing entry #%u '%s'.", i, d->text.c_str());
+      table::Entry &e(node.entries.at[i]);
+      if (!CopyString(d->text, &e.text)) {
+        EZLOGGERPRINT("Error creating table entry '%s'; file size: %u.",
+                      d->text.c_str(), file_size());
         return false;
       }
-      entries->reserve(entries->size() + ls.size());
-      node.entries = entries;
-    }
-    for (std::vector<DictEntry>::const_iterator d = ls.begin(); d != ls.end(); ++d) {
-      table::Entry *entry = file()->construct<table::Entry>(boost::interprocess::anonymous_instance)(
-          d->text.c_str(),
-          d->weight,
-          void_allocator);
-      if (!entry) {
-        EZLOGGERPRINT("Error creating table entry '%s'; file size: %u, free memory: %u.",
-                      d->text.c_str(), file()->get_size(), file()->get_free_memory());
-        return false;
-      }
-      entries->push_back(boost::interprocess::move(*entry));
-      file()->destroy_ptr(entry);
+      e.weight = static_cast<float>(d->weight);
     }
   }
 
@@ -150,20 +133,16 @@ bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size
 const char* Table::GetSyllableById(int syllable_id) {
   if (!syllabary_ ||
       syllable_id < 0 ||
-      syllable_id >= syllabary_->size())
+      syllable_id >= syllabary_->size)
     return NULL;
-  return (*syllabary_)[syllable_id].c_str();
+  return syllabary_->at[syllable_id].c_str();
 }
 
-const table::EntryVector* Table::GetEntries(int syllable_id) {
-  if (!index_)
-    return NULL;
-  if (syllable_id >= index_->size())
-    return NULL;
-  table::EntryVector *vec = index_->at(syllable_id).entries.get();
-  if (!vec)
-    return NULL;
-  return vec;
+const Table::Cluster Table::GetEntries(int syllable_id) {
+  if (!index_ || syllable_id < 0 || syllable_id >= index_->size)
+    return Table::Cluster();
+  List<table::Entry> &entries(index_->at[syllable_id].entries);
+  return std::make_pair(entries.at.get(), entries.size);
 }
 
 }  // namespace rime

@@ -20,12 +20,25 @@
 
 namespace rime {
 
+namespace prism {
+
+struct Metadata {
+  static const int kFormatMaxLength = 32;
+  char format[kFormatMaxLength];
+  uint32_t num_syllables;
+  uint32_t num_spellings;
+  uint32_t double_array_size;
+  OffsetPtr<char> double_array;
+};
+
+}
+  
 class Prism : public MappedFile {
  public:
   typedef Darts::DoubleArray::result_pair_type Match;
   
   Prism(const std::string &file_name)
-      : MappedFile(file_name), trie_(new Darts::DoubleArray) {}
+      : MappedFile(file_name), trie_(new Darts::DoubleArray), num_syllables_(0) {}
   
   bool Load();
   bool Save();
@@ -34,10 +47,12 @@ class Prism : public MappedFile {
   bool GetValue(const std::string &key, int *value);
   void CommonPrefixSearch(const std::string &key, std::vector<Match> *result);
   void ExpandSearch(const std::string &key, std::vector<Match> *result, size_t limit);
-  size_t size()const;
+  
+  size_t array_size() const;
   
  private:
   scoped_ptr<Darts::DoubleArray> trie_;
+  size_t num_syllables_;
 };
 
 }  // namespace rime

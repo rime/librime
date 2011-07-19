@@ -52,23 +52,25 @@ TEST(RimeTableTest, Lv1) {
   EXPECT_STREQ("0", table->GetSyllableById(0));
   EXPECT_STREQ("3", table->GetSyllableById(3));
   
-  const rime::table::EntryVector *vec = NULL;
-  vec = table->GetEntries(1);
-  ASSERT_TRUE(vec);
-  ASSERT_EQ(1, vec->size());
-  EXPECT_EQ("yi", (*vec)[0].text);
-  EXPECT_EQ(1.0, (*vec)[0].weight);
+  rime::Table::Cluster cluster = table->GetEntries(1);
+  rime::table::Entry *e = cluster.first;
+  ASSERT_TRUE(e);
+  ASSERT_EQ(1, cluster.second);
+  EXPECT_STREQ("yi", e[0].text.c_str());
+  EXPECT_EQ(1.0, e[0].weight);
   
-  vec = table->GetEntries(2);
-  ASSERT_TRUE(vec);
-  ASSERT_EQ(3, vec->size());
-  EXPECT_EQ("er", (*vec)[0].text);
-  EXPECT_EQ("liang", (*vec)[1].text);
-  EXPECT_EQ("lia", (*vec)[2].text);
+  cluster = table->GetEntries(2);
+  e = cluster.first;
+  ASSERT_TRUE(e);
+  ASSERT_EQ(3, cluster.second);
+  EXPECT_STREQ("er", e[0].text.c_str());
+  EXPECT_STREQ("liang", e[1].text.c_str());
+  EXPECT_STREQ("lia", e[2].text.c_str());
   
-  vec = table->GetEntries(3);
-  ASSERT_TRUE(vec);
-  ASSERT_EQ(2, vec->size());
-  EXPECT_EQ("san", (*vec)[0].text);
-  EXPECT_EQ("sa", (*vec)[1].text);
+  cluster = table->GetEntries(3);
+  e = cluster.first;
+  ASSERT_TRUE(e);
+  ASSERT_EQ(2, cluster.second);
+  EXPECT_STREQ("san", e[0].text.c_str());
+  EXPECT_STREQ("sa", e[1].text.c_str());
 }

@@ -20,13 +20,6 @@ struct node_t {
   }
 };
 
-struct Metadata {
-  static const int kFormatMaxLength = 32;
-  char format[kFormatMaxLength];
-  int num_syllables;
-  int num_spellings;
-};
-
 const char kPrismFormat[] = "Rime::Prism/0.9";
 
 }  // namespace
@@ -44,14 +37,22 @@ bool Prism::Load(){
     EZLOGGERPRINT("Error opening prism file '%s'.", file_name().c_str());
     return false;
   }
-  std::pair<char *, size_t> image = file()->find<char>("DoubleArray");
-  if (!image.second) {
+  
+  prism::Metadata *metadata = Find<prism::Metadata>(0);
+  if (!metadata) {
+    EZLOGGERPRINT("Metadata not found.");
+    return false;
+  }
+  num_syllables_ = metadata->num_syllables;  
+  char *array = metadata->double_array.get();
+  if (!array) {
     EZLOGGERPRINT("Double array image not found.");
     return false;
   }
-  size_t array_size = image.second / trie_->unit_size();
+  size_t array_size = metadata->double_array_size;
   EZLOGGERPRINT("Found double array image of size %u.", array_size);
-  trie_->set_array(image.first, array_size);
+  trie_->set_array(array, array_size);
+  
   return true;
 }
 
@@ -59,7 +60,7 @@ bool Prism::Save(){
   EZLOGGERPRINT("Save file: %s", file_name().c_str());
   //trie_->save(file_name().c_str());
 
-  // save the array to managed mapped file
+  size_t array_size = trie_->size();
   size_t image_size = trie_->total_size();
   if (!image_size) {
     EZLOGGERPRINT("Error: the trie has not been constructed!");
@@ -71,33 +72,32 @@ bool Prism::Save(){
     return false;
   }
 
-  {
-    Metadata *metadata = file()->construct<Metadata>("Metadata")();
-    if (!metadata) {
-      EZLOGGERPRINT("Error writing metadata into file '%s'.", file_name().c_str());
-      return false;
-    }
-    std::strncpy(metadata->format, kPrismFormat, Metadata::kFormatMaxLength);
-    // TODO:
-    metadata->num_syllables = trie_->size();
-    metadata->num_spellings = trie_->size();
+  prism::Metadata *metadata = Allocate<prism::Metadata>();
+  if (!metadata) {
+    EZLOGGERPRINT("Error creating metadata in file '%s'.", file_name().c_str());
+    return false;
   }
+  std::strncpy(metadata->format, kPrismFormat, prism::Metadata::kFormatMaxLength);
+  // TODO: num of spellings may be diffrent from num of syllables
+  metadata->num_syllables = num_syllables_;
+  metadata->num_spellings = num_syllables_;
 
-  char *image = file()->construct<char>("DoubleArray", std::nothrow)[image_size]();
-  if (!image) {
+  char *array = Allocate<char>(image_size);
+  if (!array) {
     EZLOGGERPRINT("Error creating double array image.");
     return false;
   }
-  std::memcpy(image, trie_->array(), image_size);
+  std::memcpy(array, trie_->array(), image_size);
+  metadata->double_array = array;
+  metadata->double_array_size = array_size;
 
-  Close();
   return ShrinkToFit();
 }
 
 bool Prism::Build(const Syllabary &keyset){
   size_t key_size = keyset.size();
+  num_syllables_ = key_size;
   std::vector<const char *> char_keys(key_size);
-  
   size_t key_id = 0;
   for (Syllabary::const_iterator it = keyset.begin();
        it != keyset.end(); ++it, ++key_id) {
@@ -186,7 +186,7 @@ void Prism::ExpandSearch(const std::string &key, std::vector<Match> *result, siz
   }
 }
 
-size_t Prism::size()const{
+size_t Prism::array_size()const{
   return trie_->size();
 }
 
