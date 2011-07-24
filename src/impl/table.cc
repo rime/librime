@@ -92,40 +92,84 @@ bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size
   metadata_->syllabary = syllabary_;
 
   EZLOGGERPRINT("Creating table index.");
-  index_ = CreateArray<table::IndexNode>(num_syllables);
+  index_ = BuildIndex(vocabulary, num_syllables);
   if (!index_) {
     EZLOGGERPRINT("Error creating table index.");
     return false;
   }
   metadata_->index = index_;
   
-  for (Vocabulary::const_iterator v = vocabulary.begin(); v != vocabulary.end(); ++v) {
-    const Code &code(v->first);
-    const DictEntryList &entries(v->second);
-    // TODO: for now only Level 1 index is supported...
-    if (code.size() > 1)
-      break;
-    int syllable_id = code[0];
+  return true;
+}
+
+table::Index* Table::BuildIndex(const Vocabulary &vocabulary, size_t num_syllables) {
+  table::Index *index = CreateArray<table::IndexNode>(num_syllables);
+  if (!index) {
+    return NULL;
+  }
+  BOOST_FOREACH(const Vocabulary::value_type &v, vocabulary) {
+    int syllable_id = v.first;
     EZLOGGERVAR(syllable_id);
-    table::IndexNode &node(index_->at[syllable_id]);
-    node.entries.size = entries.size();
-    node.entries.at = Allocate<table::Entry>(entries.size());
-    if (!node.entries.at) {
-      EZLOGGERPRINT("Error creating table entries; file size: %u.", file_size());
-      return false;
+    table::IndexNode &lv1_node(index->at[syllable_id]);
+    const DictEntryList &entries(v.second.entries);
+    if (!BuildEntries(entries, &lv1_node.entries)) {
+        return NULL;
     }
-    size_t i = 0;
-    for (std::vector<DictEntry>::const_iterator d = entries.begin(); d != entries.end(); ++d, ++i) {
-      table::Entry &e(node.entries.at[i]);
-      if (!CopyString(d->text, &e.text)) {
-        EZLOGGERPRINT("Error creating table entry '%s'; file size: %u.",
-                      d->text.c_str(), file_size());
-        return false;
+    if (v.second.next_level) {
+      Code code;
+      code.push_back(syllable_id);
+      table::IndexLv2 *index_lv2 = BuildIndexLv2(code, *v.second.next_level);
+      if (!index_lv2) {
+        return NULL;
       }
-      e.weight = static_cast<float>(d->weight);
+      lv1_node.next_level = index_lv2;
     }
   }
+  return index;
+}
 
+table::IndexLv2* Table::BuildIndexLv2(const Code &prefix, const Vocabulary &vocabulary) {
+  table::IndexLv2 *index = reinterpret_cast<table::IndexLv2*>(
+      CreateArray<table::IndexNodeLv2>(vocabulary.size()));
+  if (!index) {
+    return NULL;
+  }
+  size_t count = 0;
+  BOOST_FOREACH(const Vocabulary::value_type &v, vocabulary) {
+    int syllable_id = v.first;
+    EZLOGGERVAR(syllable_id);
+    table::IndexNodeLv2 &lv2_node(index->at[count++]);
+    lv2_node.key = syllable_id;
+    const DictEntryList &entries(v.second.entries);
+    if (!BuildEntries(entries, &lv2_node.entries)) {
+        return NULL;
+    }
+    if (v.second.next_level) {
+      // TODO: build lv3 index...
+    }
+  }
+  return index;
+}
+
+bool Table::BuildEntries(const DictEntryList &src, List<table::Entry> *dest) {
+  if (!dest)
+    return false;
+  dest->size = src.size();
+  dest->at = Allocate<table::Entry>(src.size());
+  if (!dest->at) {
+    EZLOGGERPRINT("Error creating table entries; file size: %u.", file_size());
+    return false;
+  }
+  size_t i = 0;
+  for (std::vector<DictEntry>::const_iterator d = src.begin(); d != src.end(); ++d, ++i) {
+    table::Entry &e(dest->at[i]);
+    if (!CopyString(d->text, &e.text)) {
+      EZLOGGERPRINT("Error creating table entry '%s'; file size: %u.",
+                    d->text.c_str(), file_size());
+      return false;
+    }
+    e.weight = static_cast<float>(d->weight);
+  }
   return true;
 }
 

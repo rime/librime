@@ -25,21 +25,21 @@ TEST(RimeTableTest, Lv1) {
   d.code.push_back(1);
   d.text = "yi";
   d.weight = 1.0;
-  voc[d.code].push_back(d);
+  voc[1].entries.push_back(d);
   syll.insert("2");
   d.code.back() = 2;
   d.text = "er";
-  voc[d.code].push_back(d);
+  voc[2].entries.push_back(d);
   d.text = "liang";
-  voc[d.code].push_back(d);
+  voc[2].entries.push_back(d);
   d.text = "lia";
-  voc[d.code].push_back(d);
+  voc[2].entries.push_back(d);
   syll.insert("3");
   d.code.back() = 3;
   d.text = "san";
-  voc[d.code].push_back(d);
+  voc[3].entries.push_back(d);
   d.text = "sa";
-  voc[d.code].push_back(d);
+  voc[3].entries.push_back(d);
   
   ASSERT_TRUE(table->Build(syll, voc, 6));
   ASSERT_TRUE(table->Save());

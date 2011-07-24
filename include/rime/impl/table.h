@@ -91,6 +91,10 @@ class Table : public MappedFile {
   const Cluster GetEntries(int syllable_id);
   
  private:
+  table::Index* BuildIndex(const Vocabulary &vocabulary, size_t num_syllables);
+  table::IndexLv2* BuildIndexLv2(const Code &prefix, const Vocabulary &vocabulary);
+  bool BuildEntries(const DictEntryList &src, List<table::Entry> *dest);
+  
   table::Metadata *metadata_;
   table::Syllabary *syllabary_;
   table::Index *index_;

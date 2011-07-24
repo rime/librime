@@ -41,7 +41,19 @@ struct DictEntry {
 };
 
 typedef std::vector<DictEntry> DictEntryList;
-typedef std::map<Code, DictEntryList> Vocabulary;
+
+class Vocabulary;
+
+struct VocabularyPage {
+  DictEntryList entries;
+  shared_ptr<Vocabulary> next_level;
+};
+
+class Vocabulary : public std::map<int, VocabularyPage> {
+ public:
+  DictEntryList* LocateEntries(const Code &code);
+  void SortHomophones();
+};
 
 }  // namespace rime
 

@@ -6,7 +6,6 @@
 // 
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
-#include <algorithm>
 #include <list>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -27,23 +26,23 @@ struct RawDictEntry {
 
 typedef std::list<rime::shared_ptr<RawDictEntry> > RawDictEntryList;
 
-}  // namespace
-
-namespace rime {
-
 struct Chunk {
-  Code code;
-  const table::Entry *entries;
+  rime::Code code;
+  const rime::table::Entry *entries;
   size_t size;
   size_t cursor;
   size_t consumed_input_length;
 
   Chunk() : entries(NULL), size(0), cursor(0), consumed_input_length(0) {}
-  Chunk(const Code &c, const Table::Cluster &s, size_t len)
+  Chunk(const rime::Code &c, const rime::Table::Cluster &s, size_t len)
       : code(c), entries(s.first), size(s.second),
         cursor(0), consumed_input_length(len) {}
 };
     
+}  // namespace
+
+namespace rime {
+
 class DictEntryCollector : public std::list<Chunk> {
  public:
   DictEntryCollector() {}
@@ -60,39 +59,6 @@ void RawCode::FromString(const std::string &code) {
                code,
                boost::algorithm::is_space(),
                boost::algorithm::token_compress_on);
-}
-
-bool Code::operator< (const Code &other) const {
-  if (size() != other.size())
-    return size() < other.size();
-  for (size_t i = 0; i < size(); ++i) {
-    if (at(i) != other.at(i))
-      return at(i) < other.at(i);
-  }
-  return false;
-}
-
-bool Code::operator== (const Code &other) const {
-  if (size() != other.size())
-    return false;
-  for (size_t i = 0; i < size(); ++i) {
-    if (at(i) != other.at(i))
-      return false;
-  }
-  return true;
-}
-
-void Code::CreateIndex(Code *index_code) {
-  if (!index_code)
-    return;
-  size_t index_code_size = Code::kIndexCodeMaxLength;
-  if (size() <= index_code_size) {
-    index_code_size = size();
-  }
-  index_code->resize(index_code_size);
-  std::copy(begin(),
-            begin() + index_code_size,
-            index_code->begin());
 }
 
 bool DictEntry::operator< (const DictEntry& other) const {
@@ -295,17 +261,18 @@ bool Dictionary::Compile(const std::string &source_file) {
       }
       Code index_code;
       code.CreateIndex(&index_code);
-      DictEntryList &ls(vocabulary[index_code]);
-      ls.resize(ls.size() + 1);
-      DictEntry &d(ls.back());
+      DictEntryList *ls = vocabulary.LocateEntries(index_code);
+      if (!ls) {
+        EZLOGGERPRINT("Error locating entries in vocabulary.");
+        continue;
+      }
+      ls->resize(ls->size() + 1);
+      DictEntry &d(ls->back());
       d.code.swap(code);
       d.text.swap(e->text);
       d.weight = e->weight;
     }
-    // sort each group of homophones
-    BOOST_FOREACH(Vocabulary::value_type &v, vocabulary) {
-      std::stable_sort(v.second.begin(), v.second.end());
-    }
+    vocabulary.SortHomophones();
     table_->Remove();
     if (!table_->Build(syllabary, vocabulary, entry_count) ||
         !table_->Save()) {
