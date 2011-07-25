@@ -51,7 +51,7 @@ struct IndexNodeLv2 {
 
 struct IndexLv2 : Array<IndexNodeLv2> {};
 
-typedef Array<SyllableId> Code;
+typedef List<SyllableId> Code;
 
 struct CodeMapping {
   OffsetPtr<Entry> entry;
@@ -77,6 +77,22 @@ struct Metadata {
 
 }  // namespace table
 
+class TableVisitor {
+ public:
+  TableVisitor(const List<table::Entry> *entries = NULL,
+               const List<table::CodeMapping> *code_map = NULL);
+  bool exhausted() const;
+  size_t remaining() const;
+  const table::Entry* entry() const;
+  const table::Code* extra_code() const;
+  bool Next();
+ private:
+  const List<table::Entry> *entries_;
+  const List<table::CodeMapping> *code_map_;
+  size_t cursor_;
+  size_t code_index_;
+};
+
 class Table : public MappedFile {
  public:
   typedef std::pair<table::Entry*, size_t> Cluster;
@@ -89,10 +105,13 @@ class Table : public MappedFile {
   bool Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size_t num_entries);
   const char* GetSyllableById(int syllable_id);
   const Cluster GetEntries(int syllable_id);
+  const TableVisitor Query(const Code &code);
   
  private:
   table::Index* BuildIndex(const Vocabulary &vocabulary, size_t num_syllables);
   table::IndexLv2* BuildIndexLv2(const Code &prefix, const Vocabulary &vocabulary);
+  table::IndexLv3* BuildIndexLv3(const Code &prefix, const Vocabulary &vocabulary);
+  bool BuildCodeMap(const DictEntryList &entries, table::IndexNodeLv3 *lv3_node);
   bool BuildEntries(const DictEntryList &src, List<table::Entry> *dest);
   
   table::Metadata *metadata_;

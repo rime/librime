@@ -9,7 +9,7 @@
 #include <gtest/gtest.h>
 #include <rime/impl/table.h>
 
-TEST(RimeTableTest, Lv1) {
+TEST(RimeTableTest, IntegrityTest) {
   const char file_name[] = "table_test.bin";
   rime::scoped_ptr<rime::Table> table;
   table.reset(new rime::Table(file_name));
@@ -40,8 +40,19 @@ TEST(RimeTableTest, Lv1) {
   voc[3].entries.push_back(d);
   d.text = "sa";
   voc[3].entries.push_back(d);
+  syll.insert("4");
+  rime::Vocabulary *lv2 = new rime::Vocabulary;
+  voc[1].next_level.reset(lv2);
+  rime::Vocabulary *lv3 = new rime::Vocabulary;
+  (*lv2)[2].next_level.reset(lv3);
+  d.code.back() = 1;
+  d.code.push_back(2);
+  d.code.push_back(3);
+  d.code.push_back(4);
+  d.text = "yi-er-san-si";
+  (*lv3)[3].entries.push_back(d);
   
-  ASSERT_TRUE(table->Build(syll, voc, 6));
+  ASSERT_TRUE(table->Build(syll, voc, 7));
   ASSERT_TRUE(table->Save());
   table.reset();
 
@@ -51,6 +62,7 @@ TEST(RimeTableTest, Lv1) {
 
   EXPECT_STREQ("0", table->GetSyllableById(0));
   EXPECT_STREQ("3", table->GetSyllableById(3));
+  EXPECT_STREQ("4", table->GetSyllableById(4));
   
   rime::Table::Cluster cluster = table->GetEntries(1);
   rime::table::Entry *e = cluster.first;
@@ -73,4 +85,18 @@ TEST(RimeTableTest, Lv1) {
   ASSERT_EQ(2, cluster.second);
   EXPECT_STREQ("san", e[0].text.c_str());
   EXPECT_STREQ("sa", e[1].text.c_str());
+
+  rime::Code code;
+  code.push_back(1);
+  code.push_back(2);
+  code.push_back(3);
+  rime::TableVisitor v(table->Query(code));
+  ASSERT_FALSE(v.exhausted());
+  ASSERT_EQ(1, v.remaining());
+  ASSERT_TRUE(v.entry());
+  EXPECT_STREQ("yi-er-san-si", v.entry()->text.c_str());
+  ASSERT_TRUE(v.extra_code());
+  ASSERT_EQ(1, v.extra_code()->size);
+  EXPECT_EQ(4, *v.extra_code()->at);
+  EXPECT_FALSE(v.Next());
 }

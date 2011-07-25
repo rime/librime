@@ -7,6 +7,9 @@
 // 2011-07-02 GONG Chen <chen.sst@gmail.com>
 //
 #include <cstring>
+#include <algorithm>
+#include <vector>
+#include <utility>
 #include <boost/foreach.hpp>
 #include <rime/impl/table.h>
 
@@ -14,6 +17,46 @@
 namespace rime {
 
 const char kTableFormat[] = "Rime::Table/0.9";
+
+TableVisitor::TableVisitor(const List<table::Entry> *entries,
+                           const List<table::CodeMapping> *code_map)
+    : entries_(entries), code_map_(code_map),
+      cursor_(0), code_index_(0) {
+}
+
+bool TableVisitor::exhausted() const {
+  return !entries_ || cursor_ >= entries_->size;
+}
+
+size_t TableVisitor::remaining() const {
+  if (exhausted())
+    return 0;
+  return entries_->size - cursor_;
+}
+
+const table::Entry* TableVisitor::entry() const {
+  if (exhausted())
+    return NULL;
+  return &entries_->at[cursor_];
+}
+
+const table::Code* TableVisitor::extra_code() const {
+  if (!code_map_ || code_index_ >= code_map_->size)
+    return NULL;
+  const table::CodeMapping &mapping(code_map_->at[code_index_]);
+  if (mapping.entry.get() != entry())
+    return NULL;
+  return &mapping.code;
+}
+
+bool TableVisitor::Next() {
+  if (exhausted())
+    return false;
+  if (code_map_ && code_index_ < code_map_->size &&
+      code_map_->at[code_index_].entry.get() == entry())
+    ++code_index_;
+  return ++cursor_ < entries_->size;
+}
 
 bool Table::Load() {
   EZLOGGERPRINT("Load file: %s", file_name().c_str());
@@ -109,7 +152,7 @@ table::Index* Table::BuildIndex(const Vocabulary &vocabulary, size_t num_syllabl
   }
   BOOST_FOREACH(const Vocabulary::value_type &v, vocabulary) {
     int syllable_id = v.first;
-    EZLOGGERVAR(syllable_id);
+    EZDBGONLYLOGGERVAR(syllable_id);
     table::IndexNode &lv1_node(index->at[syllable_id]);
     const DictEntryList &entries(v.second.entries);
     if (!BuildEntries(entries, &lv1_node.entries)) {
@@ -137,7 +180,7 @@ table::IndexLv2* Table::BuildIndexLv2(const Code &prefix, const Vocabulary &voca
   size_t count = 0;
   BOOST_FOREACH(const Vocabulary::value_type &v, vocabulary) {
     int syllable_id = v.first;
-    EZLOGGERVAR(syllable_id);
+    EZDBGONLYLOGGERVAR(syllable_id);
     table::IndexNodeLv2 &lv2_node(index->at[count++]);
     lv2_node.key = syllable_id;
     const DictEntryList &entries(v.second.entries);
@@ -145,10 +188,74 @@ table::IndexLv2* Table::BuildIndexLv2(const Code &prefix, const Vocabulary &voca
         return NULL;
     }
     if (v.second.next_level) {
-      // TODO: build lv3 index...
+      Code code(prefix);
+      code.push_back(syllable_id);
+      table::IndexLv3 *index_lv3 = BuildIndexLv3(code, *v.second.next_level);
+      if (!index_lv3) {
+        return NULL;
+      }
+      lv2_node.next_level = index_lv3;
     }
   }
   return index;
+}
+
+table::IndexLv3* Table::BuildIndexLv3(const Code &prefix, const Vocabulary &vocabulary) {
+  table::IndexLv3 *index = reinterpret_cast<table::IndexLv3*>(
+      CreateArray<table::IndexNodeLv3>(vocabulary.size()));
+  if (!index) {
+    return NULL;
+  }
+  size_t count = 0;
+  BOOST_FOREACH(const Vocabulary::value_type &v, vocabulary) {
+    int syllable_id = v.first;
+    EZDBGONLYLOGGERVAR(syllable_id);
+    table::IndexNodeLv3 &lv3_node(index->at[count++]);
+    lv3_node.key = syllable_id;
+    const DictEntryList &entries(v.second.entries);
+    if (!BuildEntries(entries, &lv3_node.entries)) {
+      return NULL;
+    }
+    if (!BuildCodeMap(entries, &lv3_node)) {
+      return NULL;
+    }
+  }
+  return index;
+}
+
+bool Table::BuildCodeMap(const DictEntryList &entries, table::IndexNodeLv3 *lv3_node) {
+    std::vector<std::pair<const table::Entry*, const Code*> > code_map;
+    size_t i = 0;
+    BOOST_FOREACH(const DictEntryList::value_type &e, entries) {
+      table::Entry *table_entry = &lv3_node->entries.at[i++];
+      if (e.code.size() <= Code::kIndexCodeMaxLength)
+        continue;
+      code_map.push_back(std::make_pair(table_entry, &e.code));
+    }
+    if (!code_map.empty()) {
+      lv3_node->code_map.size = code_map.size();
+      lv3_node->code_map.at = Allocate<table::CodeMapping>(code_map.size());
+      if (!lv3_node->code_map.at) {
+        EZLOGGERPRINT("Error creating code mapping; file size: %u.", file_size());
+        return false;
+      }
+      for (size_t i = 0; i < code_map.size(); ++i) {
+        std::pair<const table::Entry*, const Code*> &src(code_map[i]);
+        table::CodeMapping &dest(lv3_node->code_map.at[i]);
+        dest.entry = src.first;
+        size_t extra_code_length = src.second->size() - Code::kIndexCodeMaxLength;
+        dest.code.size = extra_code_length;
+        dest.code.at = Allocate<table::SyllableId>(extra_code_length);
+        if (!dest.code.at) {
+          EZLOGGERPRINT("Error creating code sequence; file size: %u.", file_size());
+          return false;
+        }
+        std::copy(src.second->begin() + Code::kIndexCodeMaxLength,
+                  src.second->end(),
+                  dest.code.at.get());
+      }
+    }
+    return true;
 }
 
 bool Table::BuildEntries(const DictEntryList &src, List<table::Entry> *dest) {
@@ -187,5 +294,52 @@ const Table::Cluster Table::GetEntries(int syllable_id) {
   List<table::Entry> &entries(index_->at[syllable_id].entries);
   return std::make_pair(entries.at.get(), entries.size);
 }
+
+const TableVisitor Table::Query(const Code &code) {
+  if (!index_ || code.empty())
+    return TableVisitor();
+  table::IndexNode *lv1_node = &index_->at[code[0]];
+  if (code.size() == 1) {
+    return TableVisitor(&lv1_node->entries);
+  }
+  if (!lv1_node->next_level) {
+    return TableVisitor();
+  }
+  table::IndexLv2 *lv2_index = lv1_node->next_level.get();
+  table::IndexNodeLv2 *lv2_node = &lv2_index->at[0];
+  {
+    bool found = false;
+    for (size_t i = 0; i < lv2_index->size; ++i) {
+      if (code[1] == lv2_node->key) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      return TableVisitor();
+    }
+  }
+  if (code.size() == 2) {
+    return TableVisitor(&lv2_node->entries);
+  }
+  if (!lv2_node->next_level) {
+    return TableVisitor();
+  }
+  table::IndexLv3 *lv3_index = lv2_node->next_level.get();
+  table::IndexNodeLv3 *lv3_node = &lv3_index->at[0];
+  {
+    bool found = false;
+    for (size_t i = 0; i < lv3_index->size; ++i) {
+      if (code[2] == lv3_node->key) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      return TableVisitor();
+    }
+  }
+  return TableVisitor(&lv3_node->entries, &lv3_node->code_map);
+}  
 
 }  // namespace rime

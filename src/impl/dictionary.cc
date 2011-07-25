@@ -113,8 +113,8 @@ bool DictEntryIterator::Next() {
 void DictEntryIterator::AddChunk(const Code &code,
                                  const Table::Cluster &cluster,
                                  size_t consumed_input_length) {
-  EZLOGGERPRINT("Add chunk: %d entries, len = %d.",
-                cluster.second, consumed_input_length);
+  EZDBGONLYLOGGERPRINT("Add chunk: %d entries, len = %d.",
+                       cluster.second, consumed_input_length);
   collector_->push_back(Chunk(code, cluster, consumed_input_length));
 }
 
