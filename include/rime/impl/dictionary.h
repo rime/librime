@@ -33,7 +33,7 @@ class DictEntryIterator {
   DictEntryIterator(const DictEntryIterator &other);
 
   void AddChunk(const Code &code,
-                const Table::Cluster &cluster,
+                const TableVisitor &visitor,
                 size_t consumed_input_length);
   shared_ptr<DictEntry> Peek();
   bool Next();

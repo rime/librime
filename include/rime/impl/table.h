@@ -95,8 +95,6 @@ class TableVisitor {
 
 class Table : public MappedFile {
  public:
-  typedef std::pair<table::Entry*, size_t> Cluster;
-  
   Table(const std::string &file_name)
       : MappedFile(file_name), index_(NULL), syllabary_(NULL), metadata_(NULL) {}
   
@@ -104,7 +102,7 @@ class Table : public MappedFile {
   bool Save();
   bool Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size_t num_entries);
   const char* GetSyllableById(int syllable_id);
-  const Cluster GetEntries(int syllable_id);
+  const TableVisitor QueryWords(int syllable_id);
   const TableVisitor Query(const Code &code);
   
  private:

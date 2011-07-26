@@ -34,8 +34,8 @@ struct Chunk {
   size_t consumed_input_length;
 
   Chunk() : entries(NULL), size(0), cursor(0), consumed_input_length(0) {}
-  Chunk(const rime::Code &c, const rime::Table::Cluster &s, size_t len)
-      : code(c), entries(s.first), size(s.second),
+  Chunk(const rime::Code &c, const rime::TableVisitor &v, size_t len)
+      : code(c), entries(v.entry()), size(v.remaining()),
         cursor(0), consumed_input_length(len) {}
 };
     
@@ -111,11 +111,11 @@ bool DictEntryIterator::Next() {
 }
 
 void DictEntryIterator::AddChunk(const Code &code,
-                                 const Table::Cluster &cluster,
+                                 const TableVisitor &visitor,
                                  size_t consumed_input_length) {
   EZDBGONLYLOGGERPRINT("Add chunk: %d entries, len = %d.",
-                       cluster.second, consumed_input_length);
-  collector_->push_back(Chunk(code, cluster, consumed_input_length));
+                       visitor.remaining(), consumed_input_length);
+  collector_->push_back(Chunk(code, visitor, consumed_input_length));
 }
 
 Dictionary::Dictionary(const std::string &name)
@@ -143,9 +143,9 @@ DictEntryIterator Dictionary::Lookup(const std::string &str_code) {
   BOOST_REVERSE_FOREACH(Prism::Match &match, keys) {
     int syllable_id = match.value;
     code[0] = syllable_id;
-    const Table::Cluster cluster(table_->GetEntries(syllable_id));
-    if (cluster.first) {
-      result.AddChunk(code, cluster, match.length);
+    const TableVisitor words(table_->QueryWords(syllable_id));
+    if (!words.exhausted()) {
+      result.AddChunk(code, words, match.length);
     }
   }
   return result;
@@ -165,9 +165,9 @@ DictEntryIterator Dictionary::PredictiveLookup(const std::string &str_code) {
   BOOST_FOREACH(Prism::Match &match, keys) {
     int syllable_id = match.value;
     code[0] = syllable_id;
-    const Table::Cluster cluster(table_->GetEntries(syllable_id));
-    if (cluster.first) {
-      result.AddChunk(code, cluster, str_code.length());
+    const TableVisitor words(table_->QueryWords(syllable_id));
+    if (!words.exhausted()) {
+      result.AddChunk(code, words, str_code.length());
     }
   }
   return result;

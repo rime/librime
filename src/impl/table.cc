@@ -288,11 +288,11 @@ const char* Table::GetSyllableById(int syllable_id) {
   return syllabary_->at[syllable_id].c_str();
 }
 
-const Table::Cluster Table::GetEntries(int syllable_id) {
+const TableVisitor Table::QueryWords(int syllable_id) {
   if (!index_ || syllable_id < 0 || syllable_id >= index_->size)
-    return Table::Cluster();
+    return TableVisitor();
   List<table::Entry> &entries(index_->at[syllable_id].entries);
-  return std::make_pair(entries.at.get(), entries.size);
+  return TableVisitor(&entries);
 }
 
 const TableVisitor Table::Query(const Code &code) {

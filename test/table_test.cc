@@ -64,33 +64,33 @@ TEST(RimeTableTest, IntegrityTest) {
   EXPECT_STREQ("3", table->GetSyllableById(3));
   EXPECT_STREQ("4", table->GetSyllableById(4));
   
-  rime::Table::Cluster cluster = table->GetEntries(1);
-  rime::table::Entry *e = cluster.first;
-  ASSERT_TRUE(e);
-  ASSERT_EQ(1, cluster.second);
-  EXPECT_STREQ("yi", e[0].text.c_str());
-  EXPECT_EQ(1.0, e[0].weight);
+  rime::TableVisitor v = table->QueryWords(1);
+  ASSERT_FALSE(v.exhausted());
+  ASSERT_EQ(1, v.remaining());
+  ASSERT_TRUE(v.entry());
+  EXPECT_STREQ("yi", v.entry()->text.c_str());
+  EXPECT_EQ(1.0, v.entry()->weight);
+  EXPECT_FALSE(v.Next());
   
-  cluster = table->GetEntries(2);
-  e = cluster.first;
-  ASSERT_TRUE(e);
-  ASSERT_EQ(3, cluster.second);
-  EXPECT_STREQ("er", e[0].text.c_str());
-  EXPECT_STREQ("liang", e[1].text.c_str());
-  EXPECT_STREQ("lia", e[2].text.c_str());
+  v = table->QueryWords(2);
+  ASSERT_EQ(3, v.remaining());
+  EXPECT_STREQ("er", v.entry()->text.c_str());
+  v.Next();
+  EXPECT_STREQ("liang", v.entry()->text.c_str());
+  v.Next();
+  EXPECT_STREQ("lia", v.entry()->text.c_str());
   
-  cluster = table->GetEntries(3);
-  e = cluster.first;
-  ASSERT_TRUE(e);
-  ASSERT_EQ(2, cluster.second);
-  EXPECT_STREQ("san", e[0].text.c_str());
-  EXPECT_STREQ("sa", e[1].text.c_str());
+  v = table->QueryWords(3);
+  ASSERT_EQ(2, v.remaining());
+  EXPECT_STREQ("san", v.entry()->text.c_str());
+  v.Next();
+  EXPECT_STREQ("sa", v.entry()->text.c_str());
 
   rime::Code code;
   code.push_back(1);
   code.push_back(2);
   code.push_back(3);
-  rime::TableVisitor v(table->Query(code));
+  v = table->Query(code);
   ASSERT_FALSE(v.exhausted());
   ASSERT_EQ(1, v.remaining());
   ASSERT_TRUE(v.entry());
