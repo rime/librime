@@ -1,0 +1,84 @@
+# Rime settings (sample)
+# vim: set sw=2 sts=2 et:
+# encoding: utf-8
+
+# about the software
+rime_info:
+  version: "0.1"
+  installation_id: generated_guid
+  installation_time: 2010-01-01 
+  rime_tick: 999  # number of commits
+
+switcher:
+  hotkey: Control+backquote
+  schema_list:
+  - id: pinyin
+    last_access: timestamp
+  - id: zhuyin
+    last_access: timestamp
+
+menu:
+  page_size: 5
+
+punct_dict:
+  mappings:
+    "," : [ ，, "," ]
+    "." : [ 。, ".", ．, · ]
+    "<" : [ 《, 〈, "<", «, ‹ ]
+    ">" : [ 》, 〉, ">", », › ]
+    "/" : [ 、, "/", ／, ⧸, ÷ ]
+    "?" : [ ？, "?" ]
+    ";" : [ ；, ";" ]
+    ":" : [ ：, ":" ]
+    "'" : [ alternate, "‘", "’" ]
+    "\"" : [ alternate, "“", "”" ]
+    "\\" : [ "\\", 、, ＼, ⧹ ]
+    "|" : [ "|", ｜ ]
+    "`" : [ "`", ｀ ]
+    "~" : [ "~", ～ ]
+    "!" : [ ！, "!" ]
+    "@" : [ "@", ＠, ☯ ]
+    "#" : [ "#", ＃, ⌘, ⌨ ]
+    "%" : [ "%", ％, ° ]
+    "$" : [ "$", ￥ ]
+    "^" : [ ……, …, "^" ]
+    "&" : [ "&", ＆ ]
+    "*" : [ "*", ×, ＊, ※, ❂ ]
+    "(" : [ （, "(" ]
+    ")" : [ ）, ")" ]
+    "-" : [ "-", － ]
+    "_" : [ ——, "_" ]
+    "+" : [ "+", ＋ ]
+    "=" : [ "=", ＝ ]
+    "[" : [ 「, 【, 〔, ［, "[" ]
+    "]" : [ 」, 】, 〕, ］, "]" ]
+    "{" : [ 『, 〗, ｛, "{" ]
+    "}" : [ 』, 〖, ｝, "}" ]
+
+editor:
+  shortcuts:
+    Up:
+      - Control+p
+      - minus
+    Down:
+      - "Control+n"
+      - equal
+    Left:
+      - Control+b
+    Right:
+      - Control+f
+    Page_Up:
+      - Control+r
+      - bracketleft
+      - comma
+    Page_Down:
+      - Control+v
+      - bracketright
+      - period
+    Home:
+      - Control+a
+    End:
+      - Control+e
+      - Tab
+    Escape:
+      - Control+g
