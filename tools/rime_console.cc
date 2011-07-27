@@ -60,7 +60,8 @@ class RimeConsole {
         std::cout << "|";
       rime::shared_ptr<const rime::Candidate> cand = 
           seg.GetSelectedCandidate();
-      std::cout << cand->text();
+      if (cand)
+        std::cout << cand->text();
     }
     std::cout << "]" << std::endl;
     const rime::Segment &current(comp->back());

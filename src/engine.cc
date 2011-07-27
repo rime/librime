@@ -32,6 +32,8 @@ Engine::Engine() : schema_(new Schema), context_(new Context) {
       boost::bind(&Engine::OnInputChange, this, _1));     
   context_->commit_notifier().connect(
       boost::bind(&Engine::OnCommit, this, _1));
+  context_->select_notifier().connect(
+      boost::bind(&Engine::OnSelect, this, _1));
 }
 
 Engine::~Engine() {
@@ -116,6 +118,20 @@ void Engine::OnCommit(Context *ctx) {
   const std::string commit_text = ctx->GetCommitText();
   EZLOGGERVAR(commit_text);
   sink_(commit_text);
+}
+
+void Engine::OnSelect(Context *ctx) {
+  Segment &seg(ctx->composition()->back());
+  shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
+  if (cand) {
+    // TODO: if confirmed part of the segment...
+    // create a new segment for the rest part;
+    // else, composition has finished,
+    // strategy one: commit directly;
+    // strategy two: start an empty segment
+    // at the end of the composition.
+    ctx->composition()->AddSegment(Segment(seg.end, seg.end));
+  }
 }
 
 void Engine::set_schema(Schema *schema) {

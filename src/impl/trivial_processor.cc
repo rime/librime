@@ -24,8 +24,13 @@ Processor::Result TrivialProcessor::ProcessKeyEvent(
   int ch = key_event.keycode();
   if (ch == XK_space) {
     if (ctx->IsComposing()) {
-      ctx->ConfirmCurrentSelection();
-      return kAccepted;
+      if (ctx->ConfirmCurrentSelection()) {
+        return kAccepted;
+      }
+      else {
+        ctx->PushInput(' ');
+        return kAccepted;
+      } 
     }
     else {
       return kNoop;

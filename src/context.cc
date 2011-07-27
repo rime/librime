@@ -50,16 +50,20 @@ void Context::Clear() {
   input_change_notifier_(this);
 }
 
-void Context::ConfirmCurrentSelection() {
+bool Context::ConfirmCurrentSelection() {
   if (composition_->empty())
-    return;
+    return false;
   Segment &seg(composition_->back());
   shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
   if (cand) {
     seg.status = Segment::kConfirmed;
     EZLOGGERPRINT("Confirmed: %s, selected_index = %d.",
                   cand->text().c_str(), seg.selected_index);
-    // TODO: notification
+    select_notifier_(this);
+    return true;
+  }
+  else {
+    return false;
   }
 }
 

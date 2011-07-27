@@ -32,7 +32,8 @@ class Context {
   void PopInput();
   void Clear();
 
-  void ConfirmCurrentSelection();
+  // return false if there's no candidate for current segment
+  bool ConfirmCurrentSelection();
   
   void set_input(const std::string &value);
   const std::string& input() const { return input_; }
@@ -48,6 +49,7 @@ class Context {
   
   Notifier& commit_notifier() { return commit_notifier_; }
   Notifier& input_change_notifier() { return input_change_notifier_; }
+  Notifier& select_notifier() { return select_notifier_; }
 
  private:
   std::string input_;
@@ -57,6 +59,7 @@ class Context {
   
   Notifier commit_notifier_;
   Notifier input_change_notifier_;
+  Notifier select_notifier_;
 };
 
 }  // namespace rime

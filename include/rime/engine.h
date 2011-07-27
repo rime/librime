@@ -45,6 +45,7 @@ class Engine {
   void TranslateSegments(Composition *comp);
   void OnInputChange(Context *ctx);
   void OnCommit(Context *ctx);
+  void OnSelect(Context *ctx);
 
   scoped_ptr<Schema> schema_;
   scoped_ptr<Context> context_;
