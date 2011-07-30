@@ -65,6 +65,8 @@ class RimeConsole {
     }
     std::cout << "]" << std::endl;
     const rime::Segment &current(comp->back());
+    if (!current.menu)
+      return;
     int page_no = current.selected_index / kPageSize;
     rime::scoped_ptr<rime::Page> page(
         current.menu->CreatePage(kPageSize, page_no));
