@@ -15,7 +15,6 @@
 #include <set>
 #include <string>
 #include <vector>
-#include <boost/interprocess/containers/vector.hpp>
 #include <rime/common.h>
 #include <rime/impl/mapped_file.h>
 #include <rime/impl/vocabulary.h>
