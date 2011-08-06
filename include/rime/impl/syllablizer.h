@@ -14,6 +14,8 @@
 
 namespace rime {
 
+class Prism;
+  
 typedef int SyllableId;
 
 enum SpellingType { kNormalSpelling, kAbbreviation };
