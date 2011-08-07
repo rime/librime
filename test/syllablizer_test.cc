@@ -68,6 +68,22 @@ TEST_F(RimeSyllablizerTest, CaseAlpha) {
   EXPECT_EQ(1.0, sp[0].credibility);
 }
 
+TEST_F(RimeSyllablizerTest, CaseFailure) {
+  rime::Syllablizer s;
+  rime::SyllableGraph g;
+  const std::string input("ang");
+  s.BuildSyllableGraph(input, *prism_, &g);
+  EXPECT_EQ(input.length(), g.input_length);
+  EXPECT_EQ(input.length() - 1, g.interpreted_length);
+  EXPECT_EQ(2, g.vertices.size());
+  ASSERT_TRUE(g.vertices.end() == g.vertices.find(1));
+  ASSERT_FALSE(g.vertices.end() == g.vertices.find(2));
+  EXPECT_EQ(rime::kNormalSpelling, g.vertices[2]);
+  rime::SpellingMap &sp(g.edges[0][2]);
+  EXPECT_EQ(1, sp.size());
+  ASSERT_FALSE(sp.end() == sp.find(syllable_id_["an"]));
+}
+
 TEST_F(RimeSyllablizerTest, CaseChangan) {
   rime::Syllablizer s;
   rime::SyllableGraph g;
@@ -99,4 +115,40 @@ TEST_F(RimeSyllablizerTest, CaseChangan) {
   EXPECT_EQ(1, e5.size());
   ASSERT_FALSE(e5.end() == e5.find(7));
   EXPECT_FALSE(e5[7].end() == e5[7].find(syllable_id_["an"]));
+}
+
+TEST_F(RimeSyllablizerTest, CaseTuan) {
+  rime::Syllablizer s;
+  rime::SyllableGraph g;
+  const std::string input("tuan");
+  s.BuildSyllableGraph(input, *prism_, &g);
+  EXPECT_EQ(input.length(), g.input_length);
+  EXPECT_EQ(input.length(), g.interpreted_length);
+  EXPECT_EQ(3, g.vertices.size());
+  // both tu'an and tuan
+  ASSERT_FALSE(g.vertices.end() == g.vertices.find(2));
+  ASSERT_FALSE(g.vertices.end() == g.vertices.find(4));
+  EXPECT_EQ(rime::kNormalSpelling, g.vertices[2]);
+  EXPECT_EQ(rime::kNormalSpelling, g.vertices[4]);
+  rime::EndVertexMap &e0(g.edges[0]);
+  EXPECT_EQ(2, e0.size());
+  ASSERT_FALSE(e0.end() == e0.find(2));
+  ASSERT_FALSE(e0.end() == e0.find(4));
+  EXPECT_FALSE(e0[2].end() == e0[2].find(syllable_id_["tu"]));
+  EXPECT_FALSE(e0[4].end() == e0[4].find(syllable_id_["tuan"]));
+  // an$
+  rime::EndVertexMap &e2(g.edges[2]);
+  EXPECT_EQ(1, e2.size());
+  ASSERT_FALSE(e2.end() == e2.find(4));
+  EXPECT_FALSE(e2[4].end() == e2[4].find(syllable_id_["an"]));
+}
+
+TEST_F(RimeSyllablizerTest, CaseChainingAmbiguity) {
+  rime::Syllablizer s;
+  rime::SyllableGraph g;
+  const std::string input("anana");
+  s.BuildSyllableGraph(input, *prism_, &g);
+  EXPECT_EQ(input.length(), g.input_length);
+  EXPECT_EQ(input.length(), g.interpreted_length);
+  EXPECT_EQ(input.length() + 1, g.vertices.size());
 }
