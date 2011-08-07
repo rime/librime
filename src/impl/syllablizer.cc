@@ -23,7 +23,7 @@ int Syllablizer::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
   if (input.empty())
     return 0;
 
-  int farthest_reach = 0;
+  int farthest = 0;
   VertexQueue queue;
   queue.push(Vertex(0, kNormalSpelling));  // start
 
@@ -39,7 +39,7 @@ int Syllablizer::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
     else if (vertex.second < it->second)  // favor normal spelling
       it->second = vertex.second;
 
-    // see where can we go by advancing a syllable
+    // see where we can go by advancing a syllable
     std::vector<Prism::Match> matches;
     prism.CommonPrefixSearch(input.substr(current_pos), &matches);
     if (!matches.empty()) {
@@ -47,8 +47,8 @@ int Syllablizer::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
       BOOST_FOREACH(const Prism::Match &m, matches) {
         if (m.length == 0) continue;
         int end_pos = current_pos + m.length;
-        if (end_pos > farthest_reach)
-          farthest_reach = end_pos;
+        if (end_pos > farthest)
+          farthest = end_pos;
         SpellingMap &spellings(end_vertices[end_pos]);
         // TODO:
         // since SpellingAlgebra is not available yet,
@@ -62,12 +62,50 @@ int Syllablizer::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
     }
   }
 
-  // TODO:
+  // remove stale vertices and edges
+  std::set<int> good;
+  good.insert(farthest);
+  SpellingType last_type = graph->vertices[farthest];
+  for (int i = farthest - 1; i >= 0; --i) {
+    if (graph->vertices.find(i) == graph->vertices.end())
+      continue;
+    // remove stale edges
+    for (EndVertexMap::iterator j = graph->edges[i].begin();
+         j != graph->edges[i].end(); ) {
+      if (good.find(j->first) == good.end()) {
+        // not connected
+        graph->edges[i].erase(j++);
+        continue;
+      }
+      for (SpellingMap::iterator k = j->second.begin();
+           k != j->second.end(); ) {
+        if (k->second.type > last_type)
+          j->second.erase(k++);
+        else
+          ++k;
+      }
+      if (j->second.empty())
+        graph->edges[i].erase(j++);
+      else
+        ++j;
+    }
+    if (graph->vertices[i] > last_type || graph->edges[i].empty()) {
+      // remove stale vertex
+      graph->vertices.erase(i);
+      graph->edges.erase(i);
+      continue;
+    }
+    // keep the valid vetex
+    good.insert(i);
+    if (graph->vertices[i] < last_type) {
+      last_type = graph->vertices[i];
+    }
+  }
   
   graph->input_length = input.length();
-  graph->interpreted_length = farthest_reach;
+  graph->interpreted_length = farthest;
   
-  return farthest_reach;
+  return farthest;
 }
 
 }  // namespace rime
