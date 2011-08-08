@@ -21,7 +21,7 @@
 
 namespace rime {
 
-void RegisterRimeComponents()
+void RegisterComponents()
 {
   EZLOGGERPRINT("registering built-in components");
 

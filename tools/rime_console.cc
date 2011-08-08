@@ -114,7 +114,7 @@ class RimeConsole {
 // program entry
 int main(int argc, char *argv[]) {
   // initialize la Rime
-  rime::RegisterRimeComponents();
+  rime::RegisterComponents();
   // preparing dictionary
   {
     rime::Dictionary dict("luna_pinyin");

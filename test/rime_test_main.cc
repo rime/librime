@@ -3,6 +3,6 @@
 
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
-  rime::RegisterRimeComponents();
+  rime::RegisterComponents();
   return RUN_ALL_TESTS();
 }

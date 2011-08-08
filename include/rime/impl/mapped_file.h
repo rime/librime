@@ -9,8 +9,8 @@
 #ifndef RIME_MAPPED_FILE_H_
 #define RIME_MAPPED_FILE_H_
 
+#include <stdint.h>
 #include <cstring>
-#include <boost/cstdint.hpp>
 #include <boost/utility.hpp>
 #include <rime/common.h>
 
