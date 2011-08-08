@@ -60,6 +60,8 @@ class Dictionary {
 
   const std::string& name() const { return name_; }
   bool loaded() const { return loaded_; }
+  // limited operations
+  Prism* prism() { return prism_.get(); }
   
  private:
   std::string name_;
