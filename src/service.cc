@@ -12,11 +12,13 @@
 
 namespace rime {
 
-Session::Session() : engine_(new Engine) {
+Session::Session() : engine_(new Engine),
+                     last_active_time_(time(NULL)) {
   engine_->set_schema(new Schema);
 }
 
 bool Session::ProcessKeyEvent(const KeyEvent &key_event) {
+  last_active_time_ = time(NULL);
   return engine_->ProcessKeyEvent(key_event);
 }
 
@@ -57,7 +59,21 @@ bool Service::DestroySession(SessionId session_id) {
 }
 
 void Service::CleanupStaleSessions() {
-  // TODO:
+  const time_t now = time(NULL);
+  int count = 0;
+  for (SessionMap::iterator it = sessions_.begin();
+       it != sessions_.end(); ) {
+    if (it->second &&
+        it->second->last_active_time() < now - Session::kLifeSpan) {
+      sessions_.erase(it++);
+      ++count;
+    }
+    else
+      ++it;
+  }
+  if (count > 0) {
+    EZLOGGERPRINT("Recycled %d stale sessions.");
+  }
 }
 
 void Service::CleanupAllSessions() {

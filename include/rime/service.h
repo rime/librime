@@ -10,6 +10,7 @@
 #define RIME_SERVICE_H_
 
 #include <stdint.h>
+#include <time.h>
 #include <rime/common.h>
 
 namespace rime {
@@ -23,11 +24,15 @@ class KeyEvent;
 
 class Session {
  public:
+  static const int kLifeSpan = 5 * 60;  // seconds
+  
   Session();
   bool ProcessKeyEvent(const KeyEvent &key_event);
-
+  const time_t last_active_time() const { return last_active_time_; }
+  
  private:
   scoped_ptr<Engine> engine_;
+  time_t last_active_time_;
 };
 
 class Service {
