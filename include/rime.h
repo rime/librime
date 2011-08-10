@@ -11,13 +11,17 @@
 
 #include <stdint.h>
 
-#ifdef RIME_EXPORTS
+#ifdef _WIN32
+#ifdef rime_EXPORTS
 /* DLL export */
 #define RIME_API extern "C" __declspec(dllexport)
-#else
+#else  /* rime_EXPORTS */
 /* DLL import */
 #define RIME_API extern "C" __declspec(dllimport)
-#endif
+#endif  /* rime_EXPORTS */
+#else  /* _WIN32 */
+#define RIME_API
+#endif  /* _WIN32 */
 
 typedef uintptr_t RimeSessionId;
 
@@ -25,11 +29,11 @@ RIME_API void RimeInitialize();
 RIME_API void RimeFinalize();
 // session management
 RIME_API RimeSessionId RimeCreateSession();
-RIME_API bool RimeDestroySession(RimeSessionId session);
+RIME_API bool RimeDestroySession(RimeSessionId session_id);
 RIME_API void RimeCleanupStaleSessions();
 RIME_API void RimeCleanupAllSessions();
 // using sessions
-RIME_API bool RimeProcessKey(RimeSessionId session, int keycode, int mask);
+RIME_API bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask);
 // TODO: 
 //RIME_API ... 
 
