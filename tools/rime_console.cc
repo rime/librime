@@ -53,17 +53,7 @@ class RimeConsole {
     const rime::Composition *comp = ctx->composition();
     if (!comp || comp->empty())
       return;
-    int i = 0;
-    std::cout << "comp.  : [";
-    BOOST_FOREACH(const rime::Segment &seg, *comp) {
-      if (i++ > 0)
-        std::cout << "|";
-      rime::shared_ptr<const rime::Candidate> cand = 
-          seg.GetSelectedCandidate();
-      if (cand)
-        std::cout << cand->text();
-    }
-    std::cout << "]" << std::endl;
+    std::cout << "comp.  : [" << comp->GetDebugText() << "]" << std::endl;
     const rime::Segment &current(comp->back());
     if (!current.menu)
       return;
@@ -72,7 +62,7 @@ class RimeConsole {
         current.menu->CreatePage(kPageSize, page_no));
     std::cout << "page_no: " << page_no
               << ", index: " << current.selected_index << std::endl;
-    i = 0;
+    int i = 0;
     BOOST_FOREACH(const rime::shared_ptr<rime::Candidate> &cand,
                   page->candidates) {
       std::cout << "cand. " << ++i <<  ": [";

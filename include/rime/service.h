@@ -19,6 +19,7 @@ typedef uintptr_t SessionId;
 
 static const SessionId kInvalidSessionId = 0;
 
+class Context;
 class Engine;
 class KeyEvent;
 
@@ -28,6 +29,7 @@ class Session {
   
   Session();
   bool ProcessKeyEvent(const KeyEvent &key_event);
+  Context* context() const;
   const time_t last_active_time() const { return last_active_time_; }
   
  private:

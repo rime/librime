@@ -14,10 +14,19 @@
 
 namespace rime {
 
+struct Preedit {
+  std::string text;
+  int cursor_pos;
+  int sel_start;
+  int sel_end;
+};
+
 class Composition : public Segmentation {
  public:
   Composition();
-  const std::string GetText() const;
+  void GetPreedit(Preedit *preedit) const;
+  const std::string GetCommitText() const;
+  const std::string GetDebugText() const;
 };
 
 }  // namespace rime

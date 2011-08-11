@@ -26,7 +26,7 @@ void Context::Commit() {
 }
 
 const std::string Context::GetCommitText() const {
-  return composition_->GetText();
+  return composition_->GetCommitText();
 }
 
 bool Context::IsComposing() const {

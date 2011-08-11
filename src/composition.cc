@@ -16,11 +16,54 @@ namespace rime {
 Composition::Composition() {
 }
 
-const std::string Composition::GetText() const {
+void Composition::GetPreedit(Preedit *preedit) const {
+  if (!preedit)
+    return;
+  preedit->text.clear();
+  preedit->cursor_pos = 0;
+  preedit->sel_start = preedit->sel_end = 0;
+  if (empty())
+    return;
+  size_t text_len = 0;
+  size_t start = 0;
+  size_t end = 0;
+  for (size_t i = 0; i < size(); ++i) {
+    start = end;
+    const shared_ptr<Candidate> cand(at(i).GetSelectedCandidate());
+    if (!cand)
+      continue;
+    end = cand->end();
+    if (i < size() - 1) {
+      preedit->text += cand->text();
+      text_len = preedit->text.length();
+    }
+  }
+  if (input_.length() > start)
+    preedit->text += input_.substr(start);
+  preedit->sel_start = text_len;
+  preedit->sel_end = text_len + (end - start);
+  preedit->cursor_pos = text_len + (back().end - start);
+}
+
+const std::string Composition::GetCommitText() const {
   std::string result;
   BOOST_FOREACH(const Segment &seg, *this) {
     const shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
-    result += cand->text();
+    if (cand)
+      result += cand->text();
+  }
+  return result;
+}
+
+const std::string Composition::GetDebugText() const {
+  std::string result;
+  int i = 0;
+  BOOST_FOREACH(const Segment &seg, *this) {
+    if (i++ > 0)
+      result += "|";
+    const shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
+    if (cand)
+      result += cand->text();
   }
   return result;
 }

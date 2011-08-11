@@ -22,6 +22,10 @@ bool Session::ProcessKeyEvent(const KeyEvent &key_event) {
   return engine_->ProcessKeyEvent(key_event);
 }
 
+Context* Session::context() const {
+  return engine_ ? engine_->context() : NULL;
+}
+
 Service::Service() {
 }
 

@@ -27,14 +27,42 @@ typedef uintptr_t RimeSessionId;
 
 RIME_API void RimeInitialize();
 RIME_API void RimeFinalize();
+
 // session management
+
 RIME_API RimeSessionId RimeCreateSession();
 RIME_API bool RimeDestroySession(RimeSessionId session_id);
 RIME_API void RimeCleanupStaleSessions();
 RIME_API void RimeCleanupAllSessions();
+
 // using sessions
+
 RIME_API bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask);
-// TODO: 
-//RIME_API ... 
+
+struct RimeComposition {
+  void *ref_;
+  char *preedit;
+  int cursor_pos;
+  int sel_start;
+  int sel_end;
+};
+
+const int kMaxNumCandidates = 10;
+
+struct RimeMenu {
+  void *ref_;
+  int page_size;
+  int page_no;
+  bool is_last_page;
+  int highlighted_candidate_index;
+  int num_candidates;
+  char *candidates[kMaxNumCandidates];
+};
+
+RIME_API RimeComposition* RimeCreateComposition(RimeSessionId session_id);
+RIME_API bool RimeDestroyComposition(RimeComposition *composition);
+
+RIME_API RimeMenu* RimeCreateMenu(RimeComposition *composition);
+RIME_API bool RimeDestroyMenu(RimeMenu *menu);
 
 #endif  // RIME_H_
