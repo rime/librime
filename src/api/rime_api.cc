@@ -7,12 +7,14 @@
 // 2011-08-09 GONG Chen <chen.sst@gmail.com>
 //
 #include <cstring>
+#include <boost/foreach.hpp>
 #include <rime.h>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/composition.h>
 #include <rime/context.h>
 #include <rime/key_event.h>
+#include <rime/menu.h>
 #include <rime/registry.h>
 #include <rime/service.h>
 
@@ -54,49 +56,46 @@ RIME_API bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask) {
   return session->ProcessKeyEvent(rime::KeyEvent(keycode, mask));
 }
 
-RIME_API RimeComposition* RimeCreateComposition(RimeSessionId session_id) {
+RIME_API bool RimeGetContext(RimeSessionId session_id, RimeContext *context) {
+  if (!context)
+    return false;
+  std::memset(context, 0, sizeof(RimeContext));
   rime::shared_ptr<rime::Session> session(g_service.GetSession(session_id));
   if (!session)
-    return NULL;
+    return false;
   rime::Context *ctx = session->context();
   if (!ctx)
-    return NULL;
+    return false;
   rime::Composition *comp = ctx->composition();
-  if (!comp || comp->empty())
-    return NULL;
-  RimeComposition *result = new RimeComposition;
-  if (!result)
-    return NULL;
-  std::memset(result, 0, sizeof(RimeComposition));
-  result->ref_ = reinterpret_cast<void *>(comp);
-  rime::Preedit preedit;
-  comp->GetPreedit(&preedit);
-  result->preedit = new char[preedit.text.length() + 1];
-  if (result->preedit)
-    std::strcpy(result->preedit, preedit.text.c_str());
-  result->cursor_pos = preedit.cursor_pos;
-  result->sel_start = preedit.sel_start;
-  result->sel_end = preedit.sel_end;
-  return result;
-}
-
-RIME_API bool RimeDestroyComposition(RimeComposition *composition) {
-  if (!composition)
-    return false;
-  if (composition->preedit)
-    delete[] composition->preedit;
-  delete composition;
+  if (comp && !comp->empty()) {
+    rime::Preedit preedit;
+    comp->GetPreedit(&preedit);
+    std::strncpy(context->composition.preedit, preedit.text.c_str(),
+                 kRimeMaxPreeditLength);
+    context->composition.cursor_pos = preedit.cursor_pos;
+    context->composition.sel_start = preedit.sel_start;
+    context->composition.sel_end = preedit.sel_end;
+    if (comp->back().menu) {
+      // TODO: read schema settings or defaults
+      int page_size = 5;
+      int selected_index = comp->back().selected_index;
+      int page_no = selected_index / page_size;
+      rime::scoped_ptr<rime::Page> page(
+          comp->back().menu->CreatePage(page_size, page_no));
+      context->menu.page_size = page_size;
+      context->menu.page_no = page_no;
+      context->menu.is_last_page = page->is_last_page;
+      context->menu.highlighted_candidate_index = selected_index % page_size;
+      int i = 0;
+      BOOST_FOREACH(const rime::shared_ptr<rime::Candidate> &cand,
+                    page->candidates) {
+        std::strncpy(context->menu.candidates[i], cand->text().c_str(),
+                     kRimeMaxCandidateLength);
+        if (++i >= kRimeMaxNumCandidates) break;
+      }
+      context->menu.num_candidates = i;
+    }
+  }
+  // TODO: status
   return true;
-}
-
-RIME_API RimeMenu* RimeCreateMenu(RimeComposition *composition) {
-  // TODO:
-  return NULL;
-}
-
-RIME_API bool RimeDestroyMenu(RimeMenu *menu) {
-  if (!menu)
-    return false;
-  // TODO:
-  return false;
 }

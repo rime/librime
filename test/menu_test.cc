@@ -73,7 +73,7 @@ TEST(RimeMenuTest, RecipeAlphaBeta) {
   ASSERT_TRUE(page);
   EXPECT_EQ(5, page->page_size);
   EXPECT_EQ(0, page->page_no);
-  EXPECT_TRUE(page->is_last);
+  EXPECT_TRUE(page->is_last_page);
   ASSERT_EQ(4, page->candidates.size());
   EXPECT_EQ("alpha", page->candidates[0]->type());
   EXPECT_EQ("Alpha", page->candidates[0]->text());

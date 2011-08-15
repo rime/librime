@@ -70,7 +70,7 @@ Page* Menu::CreatePage(int page_size, int page_no) {
     return NULL;
   page->page_size = page_size;
   page->page_no = page_no;
-  page->is_last = (translations_.empty()) && (end_pos == candidates_.size());
+  page->is_last_page = (translations_.empty()) && (end_pos == candidates_.size());
   std::copy(candidates_.begin() + start_pos, candidates_.begin() + end_pos,
             std::back_inserter(page->candidates));
   return page;

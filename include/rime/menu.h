@@ -20,7 +20,7 @@ class Translation;
 struct Page {
   int page_size;
   int page_no;
-  bool is_last;
+  bool is_last_page;
   CandidateList candidates;
 };
 

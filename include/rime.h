@@ -39,30 +39,37 @@ RIME_API void RimeCleanupAllSessions();
 
 RIME_API bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask);
 
+const int kRimeMaxPreeditLength = 255;
+const int kRimeMaxCandidateLength = 255;
+const int kRimeMaxNumCandidates = 10;
+
 struct RimeComposition {
-  void *ref_;
-  char *preedit;
+  bool is_composing;
   int cursor_pos;
   int sel_start;
   int sel_end;
+  char preedit[kRimeMaxPreeditLength + 1];
 };
 
-const int kMaxNumCandidates = 10;
-
 struct RimeMenu {
-  void *ref_;
   int page_size;
   int page_no;
   bool is_last_page;
   int highlighted_candidate_index;
   int num_candidates;
-  char *candidates[kMaxNumCandidates];
+  char candidates[kRimeMaxNumCandidates][kRimeMaxCandidateLength + 1];
 };
 
-RIME_API RimeComposition* RimeCreateComposition(RimeSessionId session_id);
-RIME_API bool RimeDestroyComposition(RimeComposition *composition);
+struct RimeStatus {
+  // TODO:
+};
 
-RIME_API RimeMenu* RimeCreateMenu(RimeComposition *composition);
-RIME_API bool RimeDestroyMenu(RimeMenu *menu);
+struct RimeContext {
+  RimeComposition composition;
+  RimeMenu menu;
+  RimeStatus status;
+};
+
+RIME_API bool RimeGetContext(RimeSessionId session_id, RimeContext* context);
 
 #endif  // RIME_H_
