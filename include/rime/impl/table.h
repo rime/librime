@@ -27,43 +27,36 @@ typedef Array<String> Syllabary;
 
 typedef int32_t SyllableId;
 
+typedef List<SyllableId> Code;
+
 struct Entry {
   String text;
   float weight;
 };
 
-struct IndexLv2;
-struct IndexLv3;
-
-struct IndexNode {
+struct HeadIndexNode {
   List<Entry> entries;
-  OffsetPtr<IndexLv2> next_level;
+  OffsetPtr<> next_level;
 };
 
-typedef Array<IndexNode> Index;
+typedef Array<HeadIndexNode> HeadIndex;
 
-struct IndexNodeLv2 {
+struct TrunkIndexNode {
   SyllableId key;
   List<Entry> entries;
-  OffsetPtr<IndexLv3> next_level;
+  OffsetPtr<> next_level;
 };
 
-struct IndexLv2 : Array<IndexNodeLv2> {};
+typedef Array<TrunkIndexNode> TrunkIndex;
 
-typedef List<SyllableId> Code;
-
-struct CodeMapping {
-  OffsetPtr<Entry> entry;
-  Code code;
+struct TailIndexNode {
+  Code extra_code;
+  Entry entry;
 };
 
-struct IndexNodeLv3 {
-  SyllableId key;
-  List<Entry> entries;
-  List<CodeMapping> code_map;
-};
+typedef Array<TailIndexNode> TailIndex;
 
-struct IndexLv3 : Array<IndexNodeLv3> {};
+typedef HeadIndex Index;
 
 struct Metadata {
   static const int kFormatMaxLength = 32;
@@ -78,8 +71,9 @@ struct Metadata {
 
 class TableVisitor {
  public:
-  TableVisitor(const List<table::Entry> *entries = NULL,
-               const List<table::CodeMapping> *code_map = NULL);
+  TableVisitor();
+  TableVisitor(const List<table::Entry> *entries);
+  TableVisitor(const table::TailIndex *code_map);
   bool exhausted() const;
   size_t remaining() const;
   const table::Entry* entry() const;
@@ -87,9 +81,8 @@ class TableVisitor {
   bool Next();
  private:
   const List<table::Entry> *entries_;
-  const List<table::CodeMapping> *code_map_;
+  const table::TailIndex *code_map_;
   size_t cursor_;
-  size_t code_index_;
 };
 
 class Table : public MappedFile {
@@ -102,14 +95,13 @@ class Table : public MappedFile {
   bool Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size_t num_entries);
   const char* GetSyllableById(int syllable_id);
   const TableVisitor QueryWords(int syllable_id);
-  const TableVisitor Query(const Code &code);
-  
+  const TableVisitor QueryPhrases(const Code &code);
  private:
-  table::Index* BuildIndex(const Vocabulary &vocabulary, size_t num_syllables);
-  table::IndexLv2* BuildIndexLv2(const Code &prefix, const Vocabulary &vocabulary);
-  table::IndexLv3* BuildIndexLv3(const Code &prefix, const Vocabulary &vocabulary);
-  bool BuildCodeMap(const DictEntryList &entries, table::IndexNodeLv3 *lv3_node);
-  bool BuildEntries(const DictEntryList &src, List<table::Entry> *dest);
+  table::HeadIndex* BuildHeadIndex(const Vocabulary &vocabulary, size_t num_syllables);
+  table::TrunkIndex* BuildTrunkIndex(const Code &prefix, const Vocabulary &vocabulary);
+  table::TailIndex* BuildTailIndex(const Code &prefix, const Vocabulary &vocabulary);
+  bool BuildEntryList(const DictEntryList &src, List<table::Entry> *dest);
+  bool BuildEntry(const DictEntry &dict_entry, table::Entry *entry);
   
   table::Metadata *metadata_;
   table::Syllabary *syllabary_;

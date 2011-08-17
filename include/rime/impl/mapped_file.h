@@ -19,7 +19,7 @@ namespace rime {
 // basic data structure
 
 // Limitation: cannot point to itself (zero is used to represent NULL pointer)
-template <class T, class Offset = int32_t>
+template <class T = char, class Offset = int32_t>
 class OffsetPtr {
  public:
   OffsetPtr() : offset_(0) {}

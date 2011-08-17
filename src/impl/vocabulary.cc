@@ -46,13 +46,15 @@ void Code::CreateIndex(Code *index_code) {
 }
 
 DictEntryList* Vocabulary::LocateEntries(const Code &code) {
-  DictEntryList *ret = NULL;
   Vocabulary *v = this;
   size_t n = code.size();
   for (size_t i = 0; i < n; ++i) {
-    VocabularyPage &page((*v)[code[i]]);
-    if (i == n - 1) {
-      ret = &page.entries;
+    int key = -1;
+    if (i < Code::kIndexCodeMaxLength)
+      key = code[i];
+    VocabularyPage &page((*v)[key]);
+    if (i == n - 1 || i == Code::kIndexCodeMaxLength) {
+      return &page.entries;
     }
     else {
       if (!page.next_level) {
@@ -61,7 +63,7 @@ DictEntryList* Vocabulary::LocateEntries(const Code &code) {
       v = page.next_level.get();
     }
   }
-  return ret;
+  return NULL;
 }
 
 void Vocabulary::SortHomophones() {

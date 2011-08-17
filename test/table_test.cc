@@ -45,12 +45,14 @@ TEST(RimeTableTest, IntegrityTest) {
   voc[1].next_level.reset(lv2);
   rime::Vocabulary *lv3 = new rime::Vocabulary;
   (*lv2)[2].next_level.reset(lv3);
+  rime::Vocabulary *lv4 = new rime::Vocabulary;
+  (*lv3)[3].next_level.reset(lv4);
   d.code.back() = 1;
   d.code.push_back(2);
   d.code.push_back(3);
   d.code.push_back(4);
   d.text = "yi-er-san-si";
-  (*lv3)[3].entries.push_back(d);
+  (*lv4)[-1].entries.push_back(d);
   
   ASSERT_TRUE(table->Build(syll, voc, 7));
   ASSERT_TRUE(table->Save());
@@ -90,7 +92,8 @@ TEST(RimeTableTest, IntegrityTest) {
   code.push_back(1);
   code.push_back(2);
   code.push_back(3);
-  v = table->Query(code);
+  code.push_back(4);
+  v = table->QueryPhrases(code);
   ASSERT_FALSE(v.exhausted());
   ASSERT_EQ(1, v.remaining());
   ASSERT_TRUE(v.entry());

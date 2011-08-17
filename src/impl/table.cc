@@ -18,44 +18,50 @@ namespace rime {
 
 const char kTableFormat[] = "Rime::Table/0.9";
 
-TableVisitor::TableVisitor(const List<table::Entry> *entries,
-                           const List<table::CodeMapping> *code_map)
-    : entries_(entries), code_map_(code_map),
-      cursor_(0), code_index_(0) {
+TableVisitor::TableVisitor()
+    : entries_(NULL), code_map_(NULL), cursor_(0) {
+}
+
+TableVisitor::TableVisitor(const List<table::Entry> *entries)
+    : entries_(entries), code_map_(NULL), cursor_(0) {
+}
+
+TableVisitor::TableVisitor(const table::TailIndex *code_map)
+    : entries_(NULL), code_map_(code_map), cursor_(0) {
 }
 
 bool TableVisitor::exhausted() const {
-  return !entries_ || cursor_ >= entries_->size;
+  if (entries_) return cursor_ >= entries_->size;
+  if (code_map_) return cursor_ >= code_map_->size;
+  return true;
 }
 
 size_t TableVisitor::remaining() const {
-  if (exhausted())
-    return 0;
-  return entries_->size - cursor_;
+  if (entries_) return entries_->size - cursor_;
+  if (code_map_) return code_map_->size - cursor_;
+  return 0;
 }
 
 const table::Entry* TableVisitor::entry() const {
   if (exhausted())
     return NULL;
-  return &entries_->at[cursor_];
+  if (entries_)
+    return &entries_->at[cursor_];
+  else
+    return &code_map_->at[cursor_].entry;
 }
 
 const table::Code* TableVisitor::extra_code() const {
-  if (!code_map_ || code_index_ >= code_map_->size)
+  if (!code_map_ || cursor_ >= code_map_->size)
     return NULL;
-  const table::CodeMapping &mapping(code_map_->at[code_index_]);
-  if (mapping.entry.get() != entry())
-    return NULL;
-  return &mapping.code;
+  return &code_map_->at[cursor_].extra_code;
 }
 
 bool TableVisitor::Next() {
   if (exhausted())
     return false;
-  if (code_map_ && code_index_ < code_map_->size &&
-      code_map_->at[code_index_].entry.get() == entry())
-    ++code_index_;
-  return ++cursor_ < entries_->size;
+  ++cursor_;
+  return !exhausted();
 }
 
 bool Table::Load() {
@@ -135,7 +141,7 @@ bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size
   metadata_->syllabary = syllabary_;
 
   EZLOGGERPRINT("Creating table index.");
-  index_ = BuildIndex(vocabulary, num_syllables);
+  index_ = BuildHeadIndex(vocabulary, num_syllables);
   if (!index_) {
     EZLOGGERPRINT("Error creating table index.");
     return false;
@@ -145,35 +151,34 @@ bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size
   return true;
 }
 
-table::Index* Table::BuildIndex(const Vocabulary &vocabulary, size_t num_syllables) {
-  table::Index *index = CreateArray<table::IndexNode>(num_syllables);
+table::HeadIndex* Table::BuildHeadIndex(const Vocabulary &vocabulary, size_t num_syllables) {
+  table::HeadIndex *index = CreateArray<table::HeadIndexNode>(num_syllables);
   if (!index) {
     return NULL;
   }
   BOOST_FOREACH(const Vocabulary::value_type &v, vocabulary) {
     int syllable_id = v.first;
     EZDBGONLYLOGGERVAR(syllable_id);
-    table::IndexNode &lv1_node(index->at[syllable_id]);
+    table::HeadIndexNode &node(index->at[syllable_id]);
     const DictEntryList &entries(v.second.entries);
-    if (!BuildEntries(entries, &lv1_node.entries)) {
+    if (!BuildEntryList(entries, &node.entries)) {
         return NULL;
     }
     if (v.second.next_level) {
       Code code;
       code.push_back(syllable_id);
-      table::IndexLv2 *index_lv2 = BuildIndexLv2(code, *v.second.next_level);
-      if (!index_lv2) {
+      table::TrunkIndex *next_level_index = BuildTrunkIndex(code, *v.second.next_level);
+      if (!next_level_index) {
         return NULL;
       }
-      lv1_node.next_level = index_lv2;
+      node.next_level = reinterpret_cast<char*>(next_level_index);
     }
   }
   return index;
 }
 
-table::IndexLv2* Table::BuildIndexLv2(const Code &prefix, const Vocabulary &vocabulary) {
-  table::IndexLv2 *index = reinterpret_cast<table::IndexLv2*>(
-      CreateArray<table::IndexNodeLv2>(vocabulary.size()));
+table::TrunkIndex* Table::BuildTrunkIndex(const Code &prefix, const Vocabulary &vocabulary) {
+  table::TrunkIndex *index = CreateArray<table::TrunkIndexNode>(vocabulary.size());
   if (!index) {
     return NULL;
   }
@@ -181,84 +186,66 @@ table::IndexLv2* Table::BuildIndexLv2(const Code &prefix, const Vocabulary &voca
   BOOST_FOREACH(const Vocabulary::value_type &v, vocabulary) {
     int syllable_id = v.first;
     EZDBGONLYLOGGERVAR(syllable_id);
-    table::IndexNodeLv2 &lv2_node(index->at[count++]);
-    lv2_node.key = syllable_id;
+    table::TrunkIndexNode &node(index->at[count++]);
+    node.key = syllable_id;
     const DictEntryList &entries(v.second.entries);
-    if (!BuildEntries(entries, &lv2_node.entries)) {
+    if (!BuildEntryList(entries, &node.entries)) {
         return NULL;
     }
     if (v.second.next_level) {
       Code code(prefix);
       code.push_back(syllable_id);
-      table::IndexLv3 *index_lv3 = BuildIndexLv3(code, *v.second.next_level);
-      if (!index_lv3) {
-        return NULL;
+      if (code.size() < Code::kIndexCodeMaxLength) {
+        table::TrunkIndex *next_level_index = BuildTrunkIndex(code, *v.second.next_level);
+        if (!next_level_index) {
+          return NULL;
+        }
+        node.next_level = reinterpret_cast<char*>(next_level_index);
       }
-      lv2_node.next_level = index_lv3;
+      else {
+        table::TailIndex *tail_index = BuildTailIndex(code, *v.second.next_level);
+        if (!tail_index) {
+          return NULL;
+        }
+        node.next_level = reinterpret_cast<char*>(tail_index);
+      }
     }
   }
   return index;
 }
 
-table::IndexLv3* Table::BuildIndexLv3(const Code &prefix, const Vocabulary &vocabulary) {
-  table::IndexLv3 *index = reinterpret_cast<table::IndexLv3*>(
-      CreateArray<table::IndexNodeLv3>(vocabulary.size()));
+table::TailIndex* Table::BuildTailIndex(const Code &prefix, const Vocabulary &vocabulary) {
+  if (vocabulary.empty()) {
+    return NULL;
+  }
+  table::TailIndex *index = CreateArray<table::TailIndexNode>(vocabulary.size());
   if (!index) {
     return NULL;
   }
   size_t count = 0;
-  BOOST_FOREACH(const Vocabulary::value_type &v, vocabulary) {
-    int syllable_id = v.first;
-    EZDBGONLYLOGGERVAR(syllable_id);
-    table::IndexNodeLv3 &lv3_node(index->at[count++]);
-    lv3_node.key = syllable_id;
-    const DictEntryList &entries(v.second.entries);
-    if (!BuildEntries(entries, &lv3_node.entries)) {
-      return NULL;
+  const VocabularyPage &page(vocabulary.begin()->second);
+  BOOST_FOREACH(const DictEntryList::value_type &src, page.entries) {
+    EZDBGONLYLOGGERVAR(count);
+    EZDBGONLYLOGGERVAR(src.text);
+    table::TailIndexNode &dest(index->at[count++]);
+    size_t extra_code_length = src.code.size() - Code::kIndexCodeMaxLength;
+    EZDBGONLYLOGGERVAR(extra_code_length);
+    dest.extra_code.size = extra_code_length;
+    EZLOGGERPRINT("OK");
+    dest.extra_code.at = Allocate<table::SyllableId>(extra_code_length);
+    if (!dest.extra_code.at) {
+      EZLOGGERPRINT("Error creating code sequence; file size: %u.", file_size());
+      return false;
     }
-    if (!BuildCodeMap(entries, &lv3_node)) {
-      return NULL;
-    }
+    std::copy(src.code.begin() + Code::kIndexCodeMaxLength,
+              src.code.end(),
+              dest.extra_code.at.get());
+    BuildEntry(src, &dest.entry);
   }
   return index;
 }
 
-bool Table::BuildCodeMap(const DictEntryList &entries, table::IndexNodeLv3 *lv3_node) {
-    std::vector<std::pair<const table::Entry*, const Code*> > code_map;
-    size_t i = 0;
-    BOOST_FOREACH(const DictEntryList::value_type &e, entries) {
-      table::Entry *table_entry = &lv3_node->entries.at[i++];
-      if (e.code.size() <= Code::kIndexCodeMaxLength)
-        continue;
-      code_map.push_back(std::make_pair(table_entry, &e.code));
-    }
-    if (!code_map.empty()) {
-      lv3_node->code_map.size = code_map.size();
-      lv3_node->code_map.at = Allocate<table::CodeMapping>(code_map.size());
-      if (!lv3_node->code_map.at) {
-        EZLOGGERPRINT("Error creating code mapping; file size: %u.", file_size());
-        return false;
-      }
-      for (size_t i = 0; i < code_map.size(); ++i) {
-        std::pair<const table::Entry*, const Code*> &src(code_map[i]);
-        table::CodeMapping &dest(lv3_node->code_map.at[i]);
-        dest.entry = src.first;
-        size_t extra_code_length = src.second->size() - Code::kIndexCodeMaxLength;
-        dest.code.size = extra_code_length;
-        dest.code.at = Allocate<table::SyllableId>(extra_code_length);
-        if (!dest.code.at) {
-          EZLOGGERPRINT("Error creating code sequence; file size: %u.", file_size());
-          return false;
-        }
-        std::copy(src.second->begin() + Code::kIndexCodeMaxLength,
-                  src.second->end(),
-                  dest.code.at.get());
-      }
-    }
-    return true;
-}
-
-bool Table::BuildEntries(const DictEntryList &src, List<table::Entry> *dest) {
+bool Table::BuildEntryList(const DictEntryList &src, List<table::Entry> *dest) {
   if (!dest)
     return false;
   dest->size = src.size();
@@ -269,14 +256,21 @@ bool Table::BuildEntries(const DictEntryList &src, List<table::Entry> *dest) {
   }
   size_t i = 0;
   for (std::vector<DictEntry>::const_iterator d = src.begin(); d != src.end(); ++d, ++i) {
-    table::Entry &e(dest->at[i]);
-    if (!CopyString(d->text, &e.text)) {
-      EZLOGGERPRINT("Error creating table entry '%s'; file size: %u.",
-                    d->text.c_str(), file_size());
+    if (!BuildEntry(*d, &dest->at[i]))
       return false;
-    }
-    e.weight = static_cast<float>(d->weight);
   }
+  return true;
+}
+
+bool Table::BuildEntry(const DictEntry &dict_entry, table::Entry *entry) {
+  if (!entry)
+    return false;
+  if (!CopyString(dict_entry.text, &entry->text)) {
+    EZLOGGERPRINT("Error creating table entry '%s'; file size: %u.",
+                  dict_entry.text.c_str(), file_size());
+    return false;
+  }
+  entry->weight = static_cast<float>(dict_entry.weight);
   return true;
 }
 
@@ -295,18 +289,19 @@ const TableVisitor Table::QueryWords(int syllable_id) {
   return TableVisitor(&entries);
 }
 
-const TableVisitor Table::Query(const Code &code) {
+const TableVisitor Table::QueryPhrases(const Code &code) {
   if (!index_ || code.empty())
     return TableVisitor();
-  table::IndexNode *lv1_node = &index_->at[code[0]];
+  table::HeadIndexNode *lv1_node = &index_->at[code[0]];
   if (code.size() == 1) {
     return TableVisitor(&lv1_node->entries);
   }
   if (!lv1_node->next_level) {
     return TableVisitor();
   }
-  table::IndexLv2 *lv2_index = lv1_node->next_level.get();
-  table::IndexNodeLv2 *lv2_node = &lv2_index->at[0];
+  table::TrunkIndex *lv2_index = reinterpret_cast<table::TrunkIndex*>(
+      lv1_node->next_level.get());
+  table::TrunkIndexNode *lv2_node = &lv2_index->at[0];
   {
     bool found = false;
     for (size_t i = 0; i < lv2_index->size; ++i) {
@@ -325,8 +320,9 @@ const TableVisitor Table::Query(const Code &code) {
   if (!lv2_node->next_level) {
     return TableVisitor();
   }
-  table::IndexLv3 *lv3_index = lv2_node->next_level.get();
-  table::IndexNodeLv3 *lv3_node = &lv3_index->at[0];
+  table::TrunkIndex *lv3_index = reinterpret_cast<table::TrunkIndex*>(
+      lv2_node->next_level.get());
+  table::TrunkIndexNode *lv3_node = &lv3_index->at[0];
   {
     bool found = false;
     for (size_t i = 0; i < lv3_index->size; ++i) {
@@ -339,7 +335,15 @@ const TableVisitor Table::Query(const Code &code) {
       return TableVisitor();
     }
   }
-  return TableVisitor(&lv3_node->entries, &lv3_node->code_map);
+  if (code.size() == 3) {
+    return TableVisitor(&lv3_node->entries);
+  }
+  if (!lv3_node->next_level) {
+    return TableVisitor();
+  }
+  table::TailIndex *lv4_index = reinterpret_cast<table::TailIndex*>(
+      lv3_node->next_level.get());
+  return TableVisitor(lv4_index);
 }  
 
 }  // namespace rime

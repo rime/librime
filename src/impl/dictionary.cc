@@ -259,9 +259,7 @@ bool Dictionary::Compile(const std::string &source_file) {
       BOOST_FOREACH(const std::string &s, e->raw_code) {
         code.push_back(syllable_to_id[s]);
       }
-      Code index_code;
-      code.CreateIndex(&index_code);
-      DictEntryList *ls = vocabulary.LocateEntries(index_code);
+      DictEntryList *ls = vocabulary.LocateEntries(code);
       if (!ls) {
         EZLOGGERPRINT("Error locating entries in vocabulary.");
         continue;
