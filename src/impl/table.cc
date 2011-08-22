@@ -13,7 +13,6 @@
 #include <boost/foreach.hpp>
 #include <rime/impl/table.h>
 
-
 namespace rime {
 
 const char kTableFormat[] = "Rime::Table/0.9";
@@ -289,6 +288,20 @@ const TableVisitor Table::QueryWords(int syllable_id) {
   return TableVisitor(&entries);
 }
 
+inline static bool node_less(const table::TrunkIndexNode &a,
+                             const table::TrunkIndexNode &b) {
+  return a.key < b.key;
+}
+
+static table::TrunkIndexNode* find_node(table::TrunkIndexNode* first,
+                                        table::TrunkIndexNode* last,
+                                        const table::SyllableId& key) {
+  table::TrunkIndexNode target;
+  target.key = key;
+  table::TrunkIndexNode* it = std::lower_bound(first, last, target, node_less);
+  return it == last || key < it->key ? last : it;
+}
+
 const TableVisitor Table::QueryPhrases(const Code &code) {
   if (!index_ || code.empty())
     return TableVisitor();
@@ -301,18 +314,10 @@ const TableVisitor Table::QueryPhrases(const Code &code) {
   }
   table::TrunkIndex *lv2_index = reinterpret_cast<table::TrunkIndex*>(
       lv1_node->next_level.get());
-  table::TrunkIndexNode *lv2_node = &lv2_index->at[0];
-  {
-    bool found = false;
-    for (size_t i = 0; i < lv2_index->size; ++i) {
-      if (code[1] == lv2_node->key) {
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      return TableVisitor();
-    }
+  table::TrunkIndexNode *lv2_node =
+      find_node(lv2_index->begin(), lv2_index->end(), code[1]);
+  if (lv2_node == lv2_index->end()) {
+    return TableVisitor();
   }
   if (code.size() == 2) {
     return TableVisitor(&lv2_node->entries);
@@ -322,18 +327,10 @@ const TableVisitor Table::QueryPhrases(const Code &code) {
   }
   table::TrunkIndex *lv3_index = reinterpret_cast<table::TrunkIndex*>(
       lv2_node->next_level.get());
-  table::TrunkIndexNode *lv3_node = &lv3_index->at[0];
-  {
-    bool found = false;
-    for (size_t i = 0; i < lv3_index->size; ++i) {
-      if (code[2] == lv3_node->key) {
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      return TableVisitor();
-    }
+  table::TrunkIndexNode *lv3_node =
+      find_node(lv2_index->begin(), lv2_index->end(), code[2]);
+  if (lv3_node == lv3_index->end()) {
+    return TableVisitor();
   }
   if (code.size() == 3) {
     return TableVisitor(&lv3_node->entries);

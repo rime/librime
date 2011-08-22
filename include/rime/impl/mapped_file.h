@@ -64,12 +64,20 @@ template <class T, class Size = uint32_t>
 struct Array {
   Size size;
   T at[1];
+  T* begin() { return &at[0]; }
+  T* end() { return &at[0] + size; }
+  const T* begin() const { return &at[0]; }
+  const T* end() const { return &at[0] + size; }
 };
 
 template <class T, class Size = uint32_t>
 struct List {
   Size size;
   OffsetPtr<T> at;
+  T* begin() { return &at[0]; }
+  T* end() { return &at[0] + size; }
+  const T* begin() const { return &at[0]; }
+  const T* end() const { return &at[0] + size; }
 };
 
 // MappedFile class definition
