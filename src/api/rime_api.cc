@@ -71,7 +71,7 @@ RIME_API bool RimeGetContext(RimeSessionId session_id, RimeContext *context) {
     rime::Preedit preedit;
     comp->GetPreedit(&preedit);
     std::strncpy(context->composition.preedit, preedit.text.c_str(),
-                 kRimeMaxPreeditLength);
+                 kRimeTextMaxLength);
     context->composition.cursor_pos = preedit.cursor_pos;
     context->composition.sel_start = preedit.sel_start;
     context->composition.sel_end = preedit.sel_end;
@@ -90,12 +90,33 @@ RIME_API bool RimeGetContext(RimeSessionId session_id, RimeContext *context) {
       BOOST_FOREACH(const rime::shared_ptr<rime::Candidate> &cand,
                     page->candidates) {
         std::strncpy(context->menu.candidates[i], cand->text().c_str(),
-                     kRimeMaxCandidateLength);
+                     kRimeTextMaxLength);
         if (++i >= kRimeMaxNumCandidates) break;
       }
       context->menu.num_candidates = i;
     }
   }
-  // TODO: status
   return true;
+}
+
+RIME_API bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit) {
+  if (!commit)
+    return false;
+  std::memset(commit, 0, sizeof(RimeCommit));
+  rime::shared_ptr<rime::Session> session(g_service.GetSession(session_id));
+  if (!session)
+    return false;
+  // TODO:
+  return false;
+}
+
+RIME_API bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
+  if (!status)
+    return false;
+  std::memset(status, 0, sizeof(RimeStatus));
+  rime::shared_ptr<rime::Session> session(g_service.GetSession(session_id));
+  if (!session)
+    return false;
+  // TODO:
+  return false;
 }

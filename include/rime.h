@@ -39,8 +39,8 @@ RIME_API void RimeCleanupAllSessions();
 
 RIME_API bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask);
 
-const int kRimeMaxPreeditLength = 255;
-const int kRimeMaxCandidateLength = 255;
+const int kRimeTextMaxLength = 255;
+const int kRimeSchemaMaxLength = 127;
 const int kRimeMaxNumCandidates = 10;
 
 struct RimeComposition {
@@ -48,7 +48,7 @@ struct RimeComposition {
   int cursor_pos;
   int sel_start;
   int sel_end;
-  char preedit[kRimeMaxPreeditLength + 1];
+  char preedit[kRimeTextMaxLength + 1];
 };
 
 struct RimeMenu {
@@ -57,19 +57,28 @@ struct RimeMenu {
   bool is_last_page;
   int highlighted_candidate_index;
   int num_candidates;
-  char candidates[kRimeMaxNumCandidates][kRimeMaxCandidateLength + 1];
-};
-
-struct RimeStatus {
-  // TODO:
+  char candidates[kRimeMaxNumCandidates][kRimeTextMaxLength + 1];
 };
 
 struct RimeContext {
   RimeComposition composition;
   RimeMenu menu;
-  RimeStatus status;
+};
+
+struct RimeCommit {
+  char text[kRimeTextMaxLength + 1];
+};
+
+struct RimeStatus {
+  char schema_id[kRimeSchemaMaxLength + 1];
+  char schema_name[kRimeSchemaMaxLength + 1];
+  bool is_disabled;
+  bool is_ascii_mode;
+  bool is_simplified;
 };
 
 RIME_API bool RimeGetContext(RimeSessionId session_id, RimeContext* context);
+RIME_API bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit);
+RIME_API bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status);
 
 #endif  // RIME_H_
