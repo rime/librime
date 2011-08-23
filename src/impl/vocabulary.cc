@@ -45,6 +45,13 @@ void Code::CreateIndex(Code *index_code) {
             index_code->begin());
 }
 
+bool DictEntry::operator< (const DictEntry& other) const {
+  // Sort different entries sharing the same code by weight desc.
+  if (weight != other.weight)
+    return weight > other.weight;
+  return text < other.text;
+}
+
 DictEntryList* Vocabulary::LocateEntries(const Code &code) {
   Vocabulary *v = this;
   size_t n = code.size();

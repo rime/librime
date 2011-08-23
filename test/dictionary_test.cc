@@ -35,24 +35,24 @@ TEST_F(RimeDictionaryTest, Ready) {
   EXPECT_TRUE(dict_.loaded());
 }
 
-TEST_F(RimeDictionaryTest, Lookup) {
+TEST_F(RimeDictionaryTest, LookupWords) {
   ASSERT_TRUE(dict_.loaded());
-  rime::DictEntryIterator it = dict_.Lookup("zhong");
+  rime::DictEntryIterator it = dict_.LookupWords("zhong", false);
   ASSERT_FALSE(it.exhausted());
   EXPECT_EQ("中", it.Peek()->text);
   ASSERT_EQ(1, it.Peek()->code.size());
-  rime::RawCode raw_code;
+  rime::dictionary::RawCode raw_code;
   ASSERT_TRUE(dict_.Decode(it.Peek()->code, &raw_code));
   EXPECT_EQ("zhong", raw_code.ToString());
 }
 
 TEST_F(RimeDictionaryTest, PredictiveLookup) {
   ASSERT_TRUE(dict_.loaded());
-  rime::DictEntryIterator it = dict_.PredictiveLookup("z");
+  rime::DictEntryIterator it = dict_.LookupWords("z", true);
   ASSERT_FALSE(it.exhausted());
   EXPECT_EQ("咋", it.Peek()->text);
   ASSERT_EQ(1, it.Peek()->code.size());
-  rime::RawCode raw_code;
+  rime::dictionary::RawCode raw_code;
   ASSERT_TRUE(dict_.Decode(it.Peek()->code, &raw_code));
   EXPECT_EQ("za", raw_code.ToString());
 }

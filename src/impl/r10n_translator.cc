@@ -18,10 +18,11 @@
 
 namespace rime {
 
-class R10nLookupResult : public Translation {
+/*
+class R10nTranslation : public Translation {
  public:
-  R10nLookupResult(const DictEntryIterator& iter,
-                    int start)
+  R10nTranslation(const DictEntryIterator& iter,
+                  int start)
       : iter_(iter), start_(start) {
     set_exhausted(iter.exhausted());
   }
@@ -52,6 +53,7 @@ class R10nLookupResult : public Translation {
   DictEntryIterator iter_;
   int start_;
 };
+*/
 
 R10nTranslator::R10nTranslator(Engine *engine)
     : Translator(engine) {
@@ -87,7 +89,7 @@ Translation* R10nTranslator::Query(const std::string &input,
                                                 &syllable_graph);
   
   Translation *translation = NULL;
-  // DictEntryIterator iter = dict_->Lookup(input);
+  // DictEntryIterator iter = dict_->Lookup(syllable_graph, 0);
   // if (!iter.exhausted())
   //     translation = new R10nLookupResult(iter, segment.start);
   return translation;

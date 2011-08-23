@@ -96,6 +96,8 @@ class Table : public MappedFile {
   const char* GetSyllableById(int syllable_id);
   const TableVisitor QueryWords(int syllable_id);
   const TableVisitor QueryPhrases(const Code &code);
+  //bool Query(const SyllableGraph &sg, int start_pos, std::vector<TableVisitor> *result);
+
  private:
   table::HeadIndex* BuildHeadIndex(const Vocabulary &vocabulary, size_t num_syllables);
   table::TrunkIndex* BuildTrunkIndex(const Code &prefix, const Vocabulary &vocabulary);

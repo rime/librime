@@ -15,40 +15,11 @@
 #include <yaml-cpp/yaml.h>
 #include <rime/common.h>
 #include <rime/impl/dictionary.h>
-
-namespace {
-
-struct RawDictEntry {
-  rime::RawCode raw_code;
-  std::string text;
-  double weight;
-};
-
-typedef std::list<rime::shared_ptr<RawDictEntry> > RawDictEntryList;
-
-struct Chunk {
-  rime::Code code;
-  const rime::table::Entry *entries;
-  size_t size;
-  size_t cursor;
-  size_t consumed_input_length;
-
-  Chunk() : entries(NULL), size(0), cursor(0), consumed_input_length(0) {}
-  Chunk(const rime::Code &c, const rime::TableVisitor &v, size_t len)
-      : code(c), entries(v.entry()), size(v.remaining()),
-        cursor(0), consumed_input_length(len) {}
-};
-    
-}  // namespace
+#include <rime/impl/syllablizer.h>
 
 namespace rime {
 
-class DictEntryCollector : public std::list<Chunk> {
- public:
-  DictEntryCollector() {}
-  ~DictEntryCollector() {}
-};
-
+namespace dictionary {
 
 const std::string RawCode::ToString() const {
   return boost::join(*this, " ");
@@ -61,61 +32,47 @@ void RawCode::FromString(const std::string &code) {
                boost::algorithm::token_compress_on);
 }
 
-bool DictEntry::operator< (const DictEntry& other) const {
-  // Sort different entries sharing the same code by weight desc.
-  if (weight != other.weight)
-    return weight > other.weight;
-  return text < other.text;
-}
+}  // namespace dictionary
 
 DictEntryIterator::DictEntryIterator()
-    : collector_(new DictEntryCollector), entry_() {
+    : Base(), entry_() {
 }
 
 DictEntryIterator::DictEntryIterator(const DictEntryIterator &other)
-    : collector_(other.collector_), entry_(other.entry_) {
+    : Base(other), entry_(other.entry_) {
 }
 
 bool DictEntryIterator::exhausted() const {
-  return collector_->empty();
+  return empty();
 }
 
 shared_ptr<DictEntry> DictEntryIterator::Peek() {
-  if (collector_->empty()) {
+  if (empty()) {
     EZLOGGERPRINT("Oops!");
     return shared_ptr<DictEntry>();
   }
   if (!entry_) {
-    const Chunk &chunk(collector_->front());
+    const dictionary::Chunk &chunk(front());
     entry_.reset(new DictEntry);
     const table::Entry &e(chunk.entries[chunk.cursor]);
     EZLOGGERPRINT("Creating temporary dict entry '%s'.", e.text.c_str());
     entry_->code = chunk.code;
     entry_->text = e.text.c_str();
     entry_->weight = e.weight;
-    entry_->consumed_input_length = chunk.consumed_input_length;
   }
   return entry_;
 }
 
 bool DictEntryIterator::Next() {
-  if (collector_->empty()) {
+  if (empty()) {
     return false;
   }
-  Chunk &chunk(collector_->front());
+  dictionary::Chunk &chunk(front());
   if (++chunk.cursor >= chunk.size) {
-    collector_->pop_front();
+    pop_front();
   }
   entry_.reset();
   return true;
-}
-
-void DictEntryIterator::AddChunk(const Code &code,
-                                 const TableVisitor &visitor,
-                                 size_t consumed_input_length) {
-  EZDBGONLYLOGGERPRINT("Add chunk: %d entries, len = %d.",
-                       visitor.remaining(), consumed_input_length);
-  collector_->push_back(Chunk(code, visitor, consumed_input_length));
 }
 
 Dictionary::Dictionary(const std::string &name)
@@ -130,36 +87,30 @@ Dictionary::~Dictionary() {
   }
 }
 
-DictEntryIterator Dictionary::Lookup(const std::string &str_code) {
-  EZLOGGERVAR(str_code);
-  DictEntryIterator result;
+shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_graph, int start_pos) {
   if (!loaded_)
-    return result;
-  std::vector<Prism::Match> keys;
-  prism_->CommonPrefixSearch(str_code, &keys);
-  EZLOGGERPRINT("found %u matching keys thru the prism.", keys.size());
-  Code code;
-  code.resize(1);
-  BOOST_REVERSE_FOREACH(Prism::Match &match, keys) {
-    int syllable_id = match.value;
-    code[0] = syllable_id;
-    const TableVisitor words(table_->QueryWords(syllable_id));
-    if (!words.exhausted()) {
-      result.AddChunk(code, words, match.length);
-    }
-  }
-  return result;
+    return shared_ptr<DictEntryCollector>();
+  //std::vector<TableVisitor> visitors;
+  //bool ok = table_->Query(syllable_graph, start_pos, &visitors);
+  // TODO:
+  shared_ptr<DictEntryCollector> result(new DictEntryCollector);
+  return result; 
 }
 
-DictEntryIterator Dictionary::PredictiveLookup(const std::string &str_code) {
+DictEntryIterator Dictionary::LookupWords(const std::string &str_code, bool predictive) {
   EZLOGGERVAR(str_code);
-  DictEntryIterator result;
   if (!loaded_)
-    return result;
-  const size_t kExpandSearchLimit = 0;  // unlimited!
+    return DictEntryIterator();
   std::vector<Prism::Match> keys;
-  prism_->ExpandSearch(str_code, &keys, kExpandSearchLimit);
+  if (predictive) {
+    const size_t kExpandSearchLimit = 0;  // unlimited!
+    prism_->ExpandSearch(str_code, &keys, kExpandSearchLimit);
+  }
+  else {
+    prism_->CommonPrefixSearch(str_code, &keys);
+  }
   EZLOGGERPRINT("found %u matching keys thru the prism.", keys.size());
+  DictEntryIterator result;
   Code code;
   code.resize(1);
   BOOST_FOREACH(Prism::Match &match, keys) {
@@ -167,7 +118,7 @@ DictEntryIterator Dictionary::PredictiveLookup(const std::string &str_code) {
     code[0] = syllable_id;
     const TableVisitor words(table_->QueryWords(syllable_id));
     if (!words.exhausted()) {
-      result.AddChunk(code, words, str_code.length());
+        result.push_back(dictionary::Chunk(code, words));
     }
   }
   return result;
@@ -204,7 +155,7 @@ bool Dictionary::Compile(const std::string &source_file) {
     return false;
   }
   
-  RawDictEntryList raw_entries;
+  dictionary::RawDictEntryList raw_entries;
   int entry_count = 0;
   Syllabary syllabary;
   for (YAML::Iterator it = entries->begin(); it != entries->end(); ++it) {
@@ -225,7 +176,7 @@ bool Dictionary::Compile(const std::string &source_file) {
     if (it->size() > 2) {
       (*it)[2] >> weight;
     }
-    shared_ptr<RawDictEntry> e(new RawDictEntry);
+    shared_ptr<dictionary::RawDictEntry> e(new dictionary::RawDictEntry);
     e->raw_code.FromString(str_code);
     BOOST_FOREACH(const std::string &s, e->raw_code) {
       if (syllabary.find(s) == syllabary.end())
@@ -254,7 +205,7 @@ bool Dictionary::Compile(const std::string &source_file) {
       syllable_to_id[s] = syllable_id++;
     }
     Vocabulary vocabulary;
-    BOOST_FOREACH(const shared_ptr<RawDictEntry> &e, raw_entries) {
+    BOOST_FOREACH(const shared_ptr<dictionary::RawDictEntry> &e, raw_entries) {
       Code code;
       BOOST_FOREACH(const std::string &s, e->raw_code) {
         code.push_back(syllable_to_id[s]);
@@ -280,7 +231,7 @@ bool Dictionary::Compile(const std::string &source_file) {
   return true;
 }
 
-bool Dictionary::Decode(const Code &code, RawCode *result) {
+bool Dictionary::Decode(const Code &code, dictionary::RawCode *result) {
   if (!result || !table_)
     return false;
   result->clear();

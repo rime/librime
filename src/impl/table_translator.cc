@@ -17,11 +17,14 @@
 
 namespace rime {
 
-class TableLookupResult : public Translation {
+class TableTranslation : public Translation {
  public:
-  TableLookupResult(const DictEntryIterator& iter,
-                    int start)
-      : iter_(iter), start_(start) {
+  TableTranslation(const DictEntryIterator& iter,
+                   int start,
+                   int consumed_input_length)
+      : iter_(iter),
+        start_(start),
+        end_(start + consumed_input_length) {
     set_exhausted(iter.exhausted());
   }
 
@@ -42,7 +45,7 @@ class TableLookupResult : public Translation {
         e->text,
         "",
         start_,
-        start_ + e->consumed_input_length,
+        end_,
         0));
     return cand;
   }
@@ -50,6 +53,7 @@ class TableLookupResult : public Translation {
  private:
   DictEntryIterator iter_;
   int start_;
+  int end_;
 };
 
 TableTranslator::TableTranslator(Engine *engine)
@@ -80,9 +84,11 @@ Translation* TableTranslator::Query(const std::string &input,
                 input.c_str(), segment.start, segment.end);
 
   Translation *translation = NULL;
-  DictEntryIterator iter = dict_->PredictiveLookup(input);
-  if (!iter.exhausted())
-      translation = new TableLookupResult(iter, segment.start);
+  DictEntryIterator iter = dict_->LookupWords(input, true);
+  if (iter.exhausted())
+    translation = new TableTranslation(iter,
+                                       segment.start,
+                                       input.length());
   return translation;
 }
 
