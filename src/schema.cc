@@ -6,16 +6,22 @@
 // 
 // 2011-05-08 GONG Chen <chen.sst@gmail.com>
 //
+#include <boost/algorithm/string.hpp>
 #include <rime/schema.h>
 
 namespace rime {
 
-Schema::Schema() : schema_id_("default") {
+Schema::Schema() : schema_id_(".default") {
   config_.reset(Config::Require("config")->Create("default"));
 }
 
 Schema::Schema(const std::string &schema_id) : schema_id_(schema_id) {
-  config_.reset(Config::Require("schema_config")->Create(schema_id));
+  if (boost::starts_with(schema_id_, L".")) {
+    config_.reset(Config::Require("config")->Create(schema_id.substr(1)));
+  }
+  else {
+    config_.reset(Config::Require("schema_config")->Create(schema_id));
+  }
 }
 
 }  // namespace rime

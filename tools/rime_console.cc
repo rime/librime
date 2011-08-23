@@ -13,7 +13,6 @@
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/composition.h>
-#include <rime/config.h>
 #include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/key_event.h>
@@ -26,9 +25,7 @@ class RimeConsole {
   static const int kPageSize = 9;
   
   RimeConsole() : interactive_(false), engine_(new rime::Engine) {
-    rime::Config *config = 
-        rime::Config::Require("config")->Create("rime_console");
-    engine_->set_schema(new rime::Schema("rime_console", config));
+    engine_->set_schema(new rime::Schema(".rime_console"));
     conn_ = engine_->sink().connect(
         boost::bind(&RimeConsole::OnCommit, this, _1));
   }
@@ -101,17 +98,30 @@ class RimeConsole {
   boost::signals::connection conn_;
 };
 
+bool PrepareDictionary() {
+  rime::Schema schema(".rime_console");
+  std::string dict_name;
+  if (!schema.config()->GetString("table_translator/dictionary", &dict_name)) {
+    EZLOGGERPRINT("Error: dictionary not specified in schema '%s'.",
+                  schema.schema_id().c_str());
+    return false;
+  }
+  rime::Dictionary dict(dict_name);
+  if (!dict.Exists()) {
+    std::cerr << "Preparing dictionary " << dict_name << "..." << std::endl;
+    dict.Compile(dict.name() + ".dict.yaml");
+    std::cerr << "Ready to work with dictionary " << dict_name << "." << std::endl;
+  }
+  return true;
+}
+
 // program entry
 int main(int argc, char *argv[]) {
   // initialize la Rime
   rime::RegisterComponents();
-  // preparing dictionary
-  {
-    rime::Dictionary dict("luna_pinyin");
-    if (!dict.Exists()) {
-      dict.Compile(dict.name() + ".dict.yaml");
-    }
-  }
+
+  if (!PrepareDictionary())
+    return 1;
   
   RimeConsole console;
   // "-i" turns on interactive mode (no commit at the end of line)
