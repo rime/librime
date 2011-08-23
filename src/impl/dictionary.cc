@@ -107,7 +107,10 @@ DictEntryIterator Dictionary::LookupWords(const std::string &str_code, bool pred
     prism_->ExpandSearch(str_code, &keys, kExpandSearchLimit);
   }
   else {
-    prism_->CommonPrefixSearch(str_code, &keys);
+    Prism::Match match = {0, 0};
+    if (prism_->GetValue(str_code, &match.value)) {
+      keys.push_back(match);
+    }
   }
   EZLOGGERPRINT("found %u matching keys thru the prism.", keys.size());
   DictEntryIterator result;

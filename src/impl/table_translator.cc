@@ -85,7 +85,7 @@ Translation* TableTranslator::Query(const std::string &input,
 
   Translation *translation = NULL;
   DictEntryIterator iter = dict_->LookupWords(input, true);
-  if (iter.exhausted())
+  if (!iter.exhausted())
     translation = new TableTranslation(iter,
                                        segment.start,
                                        input.length());
