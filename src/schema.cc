@@ -13,6 +13,8 @@ namespace rime {
 
 Schema::Schema() : schema_id_(".default") {
   config_.reset(Config::Require("config")->Create("default"));
+  if (!config_ || !config_->GetString("schema/name", &schema_name_))
+    schema_name_ = schema_id_;
 }
 
 Schema::Schema(const std::string &schema_id) : schema_id_(schema_id) {
@@ -22,6 +24,8 @@ Schema::Schema(const std::string &schema_id) : schema_id_(schema_id) {
   else {
     config_.reset(Config::Require("schema_config")->Create(schema_id));
   }
+  if (!config_ || !config_->GetString("schema/name", &schema_name_))
+    schema_name_ = schema_id_;
 }
 
 }  // namespace rime

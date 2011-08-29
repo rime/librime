@@ -6,6 +6,7 @@
 //
 // 2011-08-08 GONG Chen <chen.sst@gmail.com>
 //
+#include <boost/bind.hpp>
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/service.h>
@@ -15,6 +16,8 @@ namespace rime {
 Session::Session() : engine_(new Engine),
                      last_active_time_(time(NULL)) {
   engine_->set_schema(new Schema);
+  engine_->sink().connect(
+      boost::bind(&Session::OnCommit, this, _1));
 }
 
 bool Session::ProcessKeyEvent(const KeyEvent &key_event) {
@@ -22,8 +25,20 @@ bool Session::ProcessKeyEvent(const KeyEvent &key_event) {
   return engine_->ProcessKeyEvent(key_event);
 }
 
+void Session::ResetCommitText() {
+  commit_text_.clear();
+}
+
+void Session::OnCommit(const std::string &commit_text) {
+  commit_text_ += commit_text;
+}
+
 Context* Session::context() const {
   return engine_ ? engine_->context() : NULL;
+}
+
+Schema* Session::schema() const {
+  return engine_ ? engine_->schema() : NULL;
 }
 
 Service::Service() {

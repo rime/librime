@@ -16,6 +16,7 @@
 #include <rime/key_event.h>
 #include <rime/menu.h>
 #include <rime/registry.h>
+#include <rime/schema.h>
 #include <rime/service.h>
 
 static rime::Service g_service;
@@ -106,7 +107,11 @@ RIME_API bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit) {
   rime::shared_ptr<rime::Session> session(g_service.GetSession(session_id));
   if (!session)
     return false;
-  // TODO:
+  if (!session->commit_text().empty()) {
+    std::strncpy(commit->text, session->commit_text().c_str(), kRimeTextMaxLength);
+    session->ResetCommitText();
+    return true;
+  }
   return false;
 }
 
@@ -117,6 +122,10 @@ RIME_API bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
   rime::shared_ptr<rime::Session> session(g_service.GetSession(session_id));
   if (!session)
     return false;
+  rime::Schema *schema = session->schema();
+  if (!schema)
+    return false;
+  std::strncpy(status->schema_id, schema->schema_id().c_str(), kRimeSchemaMaxLength);
+  std::strncpy(status->schema_name, schema->schema_name().c_str(), kRimeSchemaMaxLength);
   // TODO:
-  return false;
 }

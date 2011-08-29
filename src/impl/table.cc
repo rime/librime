@@ -230,7 +230,6 @@ table::TailIndex* Table::BuildTailIndex(const Code &prefix, const Vocabulary &vo
     size_t extra_code_length = src.code.size() - Code::kIndexCodeMaxLength;
     EZDBGONLYLOGGERVAR(extra_code_length);
     dest.extra_code.size = extra_code_length;
-    EZLOGGERPRINT("OK");
     dest.extra_code.at = Allocate<table::SyllableId>(extra_code_length);
     if (!dest.extra_code.at) {
       EZLOGGERPRINT("Error creating code sequence; file size: %u.", file_size());

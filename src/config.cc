@@ -285,7 +285,7 @@ const YAML::Node* ConfigData::Traverse(const std::string &key) {
   std::vector<std::string>::iterator end = keys.end();
   for (; it != end; ++it) {
     EZDBGONLYLOGGERPRINT("key node: %s", it->c_str());
-    if (!p)
+    if (!p || YAML::NodeType::Null == p->Type())
       return NULL;
     p = p->FindValue(*it);
   }

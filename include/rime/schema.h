@@ -24,13 +24,15 @@ class Schema {
       : schema_id_(schema_id), config_(config) {}
 
   const std::string& schema_id() const { return schema_id_; }
+  const std::string& schema_name() const { return schema_name_; }
   
   Config* config() const { return config_.get(); }
   void set_config(Config *config) { config_.reset(config); }
 
  private:
   std::string schema_id_;
-  scoped_ptr<Config> config_;
+  std::string schema_name_; 
+ scoped_ptr<Config> config_;
 };
 
 }  // namespace rime

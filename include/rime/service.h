@@ -22,6 +22,7 @@ static const SessionId kInvalidSessionId = 0;
 class Context;
 class Engine;
 class KeyEvent;
+class Schema;
 
 class Session {
  public:
@@ -29,12 +30,19 @@ class Session {
   
   Session();
   bool ProcessKeyEvent(const KeyEvent &key_event);
+  void ResetCommitText();
+
   Context* context() const;
+  Schema* schema() const;
   const time_t last_active_time() const { return last_active_time_; }
+  const std::string& commit_text() const { return commit_text_; }
   
  private:
+  void OnCommit(const std::string &commit_text);
+
   scoped_ptr<Engine> engine_;
   time_t last_active_time_;
+  std::string commit_text_;
 };
 
 class Service {
