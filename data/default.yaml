@@ -1,0 +1,21 @@
+# Rime default settings
+# vim: set sw=2 sts=2 et:
+# encoding: utf-8
+
+schema:
+  schema_id: default
+  name: Rime
+
+engine:
+  processors:
+    - trivial_processor
+  segmentors:
+    - abc_segmentor
+    - fallback_segmentor
+  translators:
+    - table_translator
+    - trivial_translator
+    - echo_translator
+
+table_translator:
+  dictionary: luna_pinyin

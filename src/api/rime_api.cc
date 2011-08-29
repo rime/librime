@@ -69,6 +69,7 @@ RIME_API bool RimeGetContext(RimeSessionId session_id, RimeContext *context) {
     return false;
   rime::Composition *comp = ctx->composition();
   if (comp && !comp->empty()) {
+    context->composition.is_composing = true;
     rime::Preedit preedit;
     comp->GetPreedit(&preedit);
     std::strncpy(context->composition.preedit, preedit.text.c_str(),
@@ -108,7 +109,8 @@ RIME_API bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit) {
   if (!session)
     return false;
   if (!session->commit_text().empty()) {
-    std::strncpy(commit->text, session->commit_text().c_str(), kRimeTextMaxLength);
+    std::strncpy(commit->text, session->commit_text().c_str(),
+                 kRimeTextMaxLength);
     session->ResetCommitText();
     return true;
   }
@@ -125,7 +127,12 @@ RIME_API bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
   rime::Schema *schema = session->schema();
   if (!schema)
     return false;
-  std::strncpy(status->schema_id, schema->schema_id().c_str(), kRimeSchemaMaxLength);
-  std::strncpy(status->schema_name, schema->schema_name().c_str(), kRimeSchemaMaxLength);
+  std::strncpy(status->schema_id, schema->schema_id().c_str(),
+               kRimeSchemaMaxLength);
+  std::strncpy(status->schema_name, schema->schema_name().c_str(),
+               kRimeSchemaMaxLength);
   // TODO:
+  status->is_disabled = false;
+  status->is_ascii_mode = false;
+  status->is_simplified = false;
 }

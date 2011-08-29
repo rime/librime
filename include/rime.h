@@ -41,7 +41,7 @@ RIME_API bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask);
 
 const int kRimeTextMaxLength = 255;
 const int kRimeSchemaMaxLength = 127;
-const int kRimeMaxNumCandidates = 10;
+const int kRimeMaxNumCandidates = 9;
 
 struct RimeComposition {
   bool is_composing;
