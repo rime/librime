@@ -44,6 +44,10 @@ Processor::Result TrivialProcessor::ProcessKeyEvent(
     ctx->PopInput();
     return kAccepted;
   }
+  if (ch == XK_Escape && ctx->IsComposing()) {
+    ctx->Clear();
+    return kAccepted;
+  }
   if (std::isprint(ch)) {
     ctx->PushInput(key_event.keycode());
     return kAccepted;

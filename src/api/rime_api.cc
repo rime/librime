@@ -136,3 +136,19 @@ RIME_API bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
   status->is_ascii_mode = false;
   status->is_simplified = false;
 }
+
+RIME_API bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence) {
+    EZLOGGERVAR(key_sequence);
+    rime::shared_ptr<rime::Session> session(g_service.GetSession(session_id));
+    if (!session)
+      return false;
+    rime::KeySequence keys;
+    if (!keys.Parse(key_sequence)) {
+      EZLOGGERPRINT("error parsing input: '%s'", key_sequence);
+      return false;
+    }
+    BOOST_FOREACH(const rime::KeyEvent &ke, keys) {
+      session->ProcessKeyEvent(ke);
+    }
+    return true;
+}

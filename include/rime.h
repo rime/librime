@@ -81,4 +81,8 @@ RIME_API bool RimeGetContext(RimeSessionId session_id, RimeContext* context);
 RIME_API bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit);
 RIME_API bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status);
 
+// for testing
+
+RIME_API bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence);
+
 #endif  // RIME_H_

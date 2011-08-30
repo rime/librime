@@ -94,10 +94,21 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  bool processed = RimeProcessKey(session_id, 'a', 0);
-  printf("processed: %d\n", processed);
-
-  Print(session_id);
+  char line[kRimeTextMaxLength + 1];
+  while (fgets(line, kRimeTextMaxLength, stdin) != NULL) {
+    for (char *p = line; *p; ++p) {
+      if (*p == '\r' || *p == '\n') {
+        *p = '\0';
+        break;
+      }
+    }
+    if (!RimeSimulateKeySequence(session_id, line)) {
+      fprintf(stderr, "Error processing key sequence: %s\n", line);
+    }
+    else {
+      Print(session_id);
+    }
+  }
 
   RimeDestroySession(session_id);
   
