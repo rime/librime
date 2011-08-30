@@ -9,26 +9,24 @@
 #include <gtest/gtest.h>
 #include <rime/key_table.h>
 
-using namespace rime;
-
 TEST(RimeKeyTableTest, KeycodeLookup) {
-  EXPECT_EQ(kControlMask, GetModifierByName("Control"));
-  EXPECT_EQ(0, GetModifierByName("abracadabra"));
-  EXPECT_EQ(0, GetModifierByName("control"));
-  EXPECT_STREQ("Control", GetModifierName(kControlMask));
-  EXPECT_STREQ("Release", GetModifierName(kReleaseMask));
-  EXPECT_STREQ("Control", GetModifierName(kControlMask | kReleaseMask));
+  EXPECT_EQ(kControlMask, RimeGetModifierByName("Control"));
+  EXPECT_EQ(0, RimeGetModifierByName("abracadabra"));
+  EXPECT_EQ(0, RimeGetModifierByName("control"));
+  EXPECT_STREQ("Control", RimeGetModifierName(kControlMask));
+  EXPECT_STREQ("Release", RimeGetModifierName(kReleaseMask));
+  EXPECT_STREQ("Control", RimeGetModifierName(kControlMask | kReleaseMask));
 }
 
 TEST(RimeKeyTableTest, ModifierLookup) {
-  EXPECT_EQ(XK_A, GetKeycodeByName("A"));
-  EXPECT_EQ(XK_z, GetKeycodeByName("z"));
-  EXPECT_EQ(XK_0, GetKeycodeByName("0"));
-  EXPECT_EQ(XK_grave, GetKeycodeByName("grave"));
-  EXPECT_EQ(XK_VoidSymbol, GetKeycodeByName("abracadabra"));
-  EXPECT_EQ(XK_VoidSymbol, GetKeycodeByName("Control+c"));
-  EXPECT_STREQ("a", GetKeyName(XK_a));
-  EXPECT_STREQ("space", GetKeyName(XK_space));
-  EXPECT_STREQ(NULL, GetKeyName(0xfffe));
-  EXPECT_STREQ(NULL, GetKeyName(0xfffffe));
+  EXPECT_EQ(XK_A, RimeGetKeycodeByName("A"));
+  EXPECT_EQ(XK_z, RimeGetKeycodeByName("z"));
+  EXPECT_EQ(XK_0, RimeGetKeycodeByName("0"));
+  EXPECT_EQ(XK_grave, RimeGetKeycodeByName("grave"));
+  EXPECT_EQ(XK_VoidSymbol, RimeGetKeycodeByName("abracadabra"));
+  EXPECT_EQ(XK_VoidSymbol, RimeGetKeycodeByName("Control+c"));
+  EXPECT_STREQ("a", RimeGetKeyName(XK_a));
+  EXPECT_STREQ("space", RimeGetKeyName(XK_space));
+  EXPECT_STREQ(NULL, RimeGetKeyName(0xfffe));
+  EXPECT_STREQ(NULL, RimeGetKeyName(0xfffffe));
 }

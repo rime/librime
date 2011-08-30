@@ -27,14 +27,14 @@ const std::string KeyEvent::repr() const {
     for (int i = 0; k; ++i, k >>= 1) {
       if (!(k & 1))
         continue;
-      modifier_name = GetModifierName(k << i);
+      modifier_name = RimeGetModifierName(k << i);
       if (modifier_name) {
         modifiers << modifier_name << '+';
       }
     }
   }
   // first lookup predefined key name
-  const char *name = GetKeyName(keycode_);
+  const char *name = RimeGetKeyName(keycode_);
   if (name)
     return modifiers.str() + name;
   // no name :-| return its hex value
@@ -66,7 +66,7 @@ bool KeyEvent::Parse(const std::string &repr) {
     int mask = 0;
     while ((found = repr.find('+', start)) != std::string::npos) {
       token = repr.substr(start, found - start);
-      mask = GetModifierByName(token.c_str());
+      mask = RimeGetModifierByName(token.c_str());
       if (mask) {
         modifier_ |= mask;
       }
@@ -77,7 +77,7 @@ bool KeyEvent::Parse(const std::string &repr) {
       start = found + 1;
     }
     token = repr.substr(start);
-    keycode_ = GetKeycodeByName(token.c_str());
+    keycode_ = RimeGetKeycodeByName(token.c_str());
     if (keycode_ == XK_VoidSymbol) {
       EZLOGGERPRINT("parse error: unrecognized key '%s'", token.c_str());
       return false;

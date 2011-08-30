@@ -3961,9 +3961,7 @@ static const key_entry keys_by_name[] = {
   { 0x0001be, 1449 }
 };
 
-namespace rime {
-
-int GetModifierByName(const char *name) {
+int RimeGetModifierByName(const char *name) {
   const int n = sizeof(modifier_name) / sizeof(const char*);
   if (!name)
     return 0;
@@ -3975,7 +3973,7 @@ int GetModifierByName(const char *name) {
   return 0;
 }
 
-const char* GetModifierName(int modifier) {
+const char* RimeGetModifierName(int modifier) {
   const int n = sizeof(modifier_name) / sizeof(const char*);
   for (int i = 0; i < n && modifier != 0; ++i) {
     if ((modifier & 1) != 0) {
@@ -3986,7 +3984,7 @@ const char* GetModifierName(int modifier) {
   return NULL;
 }
 
-int GetKeycodeByName(const char *name) {
+int RimeGetKeycodeByName(const char *name) {
   for (const key_entry *p = keys_by_keyval; p->keyval != XK_VoidSymbol; ++p) {
     if (!strcmp(name, key_names + p->offset)) {
       return p->keyval;
@@ -3995,7 +3993,7 @@ int GetKeycodeByName(const char *name) {
   return XK_VoidSymbol;
 }
 
-const char* GetKeyName(int keycode) {
+const char* RimeGetKeyName(int keycode) {
   const int n = sizeof(keys_by_name) / sizeof(const key_entry);
   for (int i = 0; i < n; ++i) {
     if (keycode == keys_by_name[i].keyval) {
@@ -4004,5 +4002,3 @@ const char* GetKeyName(int keycode) {
   }
   return NULL;
 }
-
-}  // namespace rime

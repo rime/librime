@@ -11,8 +11,6 @@
 
 #include <X11/keysym.h>
 
-namespace rime {
-
 typedef enum {
   kShiftMask    = 1 << 0,
   kLockMask     = 1 << 1,
@@ -45,26 +43,24 @@ typedef enum {
   kReleaseMask  = 1 << 30,
 
   kModifierMask = 0x5f001fff
-} RimeModifierType;
+} RimeModifier;
 
 // 给定modifier文字，返回马赛克值
-// 例如 GetModifierByName("Alt") == (1 << 3)
+// 例如 RimeGetModifierByName("Alt") == (1 << 3)
 // 如果不认得所给的键名，返回 0
-int GetModifierByName(const char *name);
+int RimeGetModifierByName(const char *name);
 
 // 给一个数值，取得最低的非0位所对应的modifier文字
-// 例如 GetModifierName(12) == "Control"
+// 例如 RimeGetModifierName(12) == "Control"
 // 取不到则返回 NULL
-const char* GetModifierName(int modifier);
+const char* RimeGetModifierName(int modifier);
 
 // 由键名取得键值
 // 查无此键则返回 XK_VoidSymbol
-int GetKeycodeByName(const char *name);
+int RimeGetKeycodeByName(const char *name);
 
 // 由键值取得键名
 // 不认得此键，则返回 NULL
-const char* GetKeyName(int keycode);
-
-}  // namespace rime
+const char* RimeGetKeyName(int keycode);
 
 #endif  // RIME_KEY_TABLE_H_
