@@ -6,8 +6,8 @@
 //
 // 2011-08-08 GONG Chen <chen.sst@gmail.com>
 */
-#ifndef RIME_H_
-#define RIME_H_
+#ifndef RIME_API_H_
+#define RIME_API_H_
 
 #include <stdint.h>
 
@@ -85,4 +85,4 @@ RIME_API bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status);
 
 RIME_API bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence);
 
-#endif  // RIME_H_
+#endif  // RIME_API_H_

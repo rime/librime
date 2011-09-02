@@ -39,7 +39,7 @@ TEST(RimeConfigComponentTest, RealCreationWorkflow) {
   r.Register("test_config", new ConfigComponent("%s.yaml"));
   // finding component
   Config::Component *cc = Config::Require("test_config");
-  ASSERT_TRUE(cc);
+  ASSERT_TRUE(cc != NULL);
   // creation
   scoped_ptr<Config> config(cc->Create("test"));
   EXPECT_TRUE(config);

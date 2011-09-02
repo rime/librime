@@ -4,10 +4,6 @@ cmake_minimum_required(VERSION 2.8)
 set(LIBRIME_VERSION 0.1)
 set(LIBRIME_SOVERSION 0)
 
-if(WIN32)
-  set(EXT ".exe")
-endif(WIN32)
-
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 set(Boost_USE_STATIC_LIBS ON)
@@ -41,6 +37,11 @@ endif(X11Keysym)
 include_directories(${PROJECT_SOURCE_DIR}/include) 
 include_directories(${PROJECT_SOURCE_DIR}/thirdparty/include) 
 link_directories(${PROJECT_SOURCE_DIR}/thirdparty/lib) 
+if(WIN32)
+  include_directories(${PROJECT_SOURCE_DIR}/thirdparty/include/windows)
+  add_definitions("/wd4996")
+  set(EXT ".exe")
+endif(WIN32)
 
 add_subdirectory(src)
 add_subdirectory(tools)

@@ -8,7 +8,7 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include <rime.h>
+#include <rime_api.h>
 
 int min(int x, int y) {
   return x > y ? y : x;

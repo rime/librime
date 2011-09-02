@@ -145,7 +145,7 @@ T* MappedFile::Allocate(size_t count) {
   size_t file_size = capacity();
   if (used_space + required_space > file_size) {
     // not enough space; grow the file
-    size_t new_size = std::max(used_space + required_space, file_size * 2);
+    size_t new_size = (std::max)(used_space + required_space, file_size * 2);
     if(!Resize(new_size) || !OpenReadWrite())
       return NULL;
     // note that size_ has been reset after the file was closed for resizing

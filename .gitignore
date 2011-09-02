@@ -1,4 +1,5 @@
 build/
+msbuild/
 thirdparty/include/gtest/
 thirdparty/include/yaml-cpp/
 thirdparty/lib/*

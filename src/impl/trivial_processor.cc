@@ -6,7 +6,7 @@
 // 
 // 2011-04-24 GONG Chen <chen.sst@gmail.com>
 //
-
+#include <cctype>
 #include <rime/common.h>
 #include <rime/context.h>
 #include <rime/engine.h>

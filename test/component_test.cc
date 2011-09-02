@@ -50,9 +50,9 @@ TEST(RimeComponentTest, UsingComponent) {
   r.Register("test_morning", new HelloComponent("good morning"));
 
   Greeting::Component* h = Greeting::Require("test_hello");
-  EXPECT_TRUE(h);
+  EXPECT_TRUE(h != NULL);
   Greeting::Component* gm = Greeting::Require("test_morning");
-  EXPECT_TRUE(gm);
+  EXPECT_TRUE(gm != NULL);
 
   scoped_ptr<Greeting> g(gm->Create("michael"));
   EXPECT_STREQ("good morning, michael!", g->Say().c_str());

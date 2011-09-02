@@ -138,7 +138,7 @@ bool ConfigMap::HasKey(const std::string &key) const {
   if(node->Type() == YAML::NodeType::Map)
   {
     const YAML::Node* p = node->FindValue(key);
-    return p;
+    return p != NULL;
   }
   else
   {

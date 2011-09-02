@@ -17,7 +17,7 @@ namespace rime {
 
 class Context;
 class Engine;
-class Segment;
+struct Segment;
 class Translation;
 
 class Translator : public Class<Translator, Engine*> {

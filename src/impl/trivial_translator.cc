@@ -1,4 +1,4 @@
-// vim: set sts=2 sw=2 et:
+﻿// vim: set sts=2 sw=2 et:
 // encoding: utf-8
 //
 // Copyleft 2011 RIME Developers
@@ -51,7 +51,7 @@ const std::string TrivialTranslator::Translate(const std::string &input) {
   size_t input_len = input.length();
   for (size_t i = 0; i < input_len; ) {
     int translated = 0;
-    size_t len = std::max(kMaxPinyinLength, input_len - i);
+    size_t len = (std::max)(kMaxPinyinLength, input_len - i);
     for ( ; len >= kMinPinyinLength; --len) {
       TrivialDictionary::const_iterator it = 
           dictionary_.find(input.substr(i, len));

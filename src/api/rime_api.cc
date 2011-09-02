@@ -8,7 +8,6 @@
 //
 #include <cstring>
 #include <boost/foreach.hpp>
-#include <rime.h>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/composition.h>
@@ -18,6 +17,7 @@
 #include <rime/registry.h>
 #include <rime/schema.h>
 #include <rime/service.h>
+#include <rime_api.h>
 
 static rime::Service g_service;
 
@@ -135,6 +135,7 @@ RIME_API bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
   status->is_disabled = false;
   status->is_ascii_mode = false;
   status->is_simplified = false;
+  return true;
 }
 
 RIME_API bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence) {
