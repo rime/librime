@@ -69,7 +69,7 @@ TEST(RimeTableTest, IntegrityTest) {
   rime::TableVisitor v = table->QueryWords(1);
   ASSERT_FALSE(v.exhausted());
   ASSERT_EQ(1, v.remaining());
-  ASSERT_TRUE(v.entry());
+  ASSERT_TRUE(v.entry() != NULL);
   EXPECT_STREQ("yi", v.entry()->text.c_str());
   EXPECT_EQ(1.0, v.entry()->weight);
   EXPECT_FALSE(v.Next());
@@ -96,9 +96,9 @@ TEST(RimeTableTest, IntegrityTest) {
   v = table->QueryPhrases(code);
   ASSERT_FALSE(v.exhausted());
   ASSERT_EQ(1, v.remaining());
-  ASSERT_TRUE(v.entry());
+  ASSERT_TRUE(v.entry() != NULL);
   EXPECT_STREQ("yi-er-san-si", v.entry()->text.c_str());
-  ASSERT_TRUE(v.extra_code());
+  ASSERT_TRUE(v.extra_code() != NULL);
   ASSERT_EQ(1, v.extra_code()->size);
   EXPECT_EQ(4, *v.extra_code()->at);
   EXPECT_FALSE(v.Next());
