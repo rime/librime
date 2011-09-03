@@ -36,6 +36,10 @@ RIME_API RimeSessionId RimeCreateSession() {
   return g_service.CreateSession();
 }
 
+RIME_API bool RimeFindSession(RimeSessionId session_id) {
+  return bool(g_service.GetSession(session_id));
+}
+
 RIME_API bool RimeDestroySession(RimeSessionId session_id) {
   return g_service.DestroySession(session_id);
 }

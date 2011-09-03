@@ -30,6 +30,7 @@ class Session {
   
   Session();
   bool ProcessKeyEvent(const KeyEvent &key_event);
+  void Activate();
   void ResetCommitText();
 
   Context* context() const;

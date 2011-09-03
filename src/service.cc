@@ -14,15 +14,18 @@
 namespace rime {
 
 Session::Session() : engine_(new Engine),
-                     last_active_time_(time(NULL)) {
+                     last_active_time_(0) {
   engine_->set_schema(new Schema);
   engine_->sink().connect(
       boost::bind(&Session::OnCommit, this, _1));
 }
 
 bool Session::ProcessKeyEvent(const KeyEvent &key_event) {
-  last_active_time_ = time(NULL);
   return engine_->ProcessKeyEvent(key_event);
+}
+
+void Session::Activate() {
+  last_active_time_ = time(NULL);
 }
 
 void Session::ResetCommitText() {
@@ -52,6 +55,7 @@ SessionId Service::CreateSession() {
   SessionId id = kInvalidSessionId;
   try {
     shared_ptr<Session> session(new Session);
+    session->Activate();
     id = reinterpret_cast<uintptr_t>(session.get());
     sessions_[id] = session;
   }
@@ -63,10 +67,13 @@ SessionId Service::CreateSession() {
 
 shared_ptr<Session> Service::GetSession(SessionId session_id) {
   SessionMap::iterator it = sessions_.find(session_id);
-  if (it == sessions_.end())
+  if (it == sessions_.end()) {
     return shared_ptr<Session>();
-  else
+  }
+  else {
+    it->second->Activate();
     return it->second;
+  }
 }
 
 bool Service::DestroySession(SessionId session_id) {

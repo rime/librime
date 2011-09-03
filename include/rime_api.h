@@ -11,14 +11,17 @@
 
 #include <stdint.h>
 
-#ifdef _WIN32
-#ifdef rime_EXPORTS
+#if defined(_WIN32)
+#if defined(RIME_EXPORTS)
 /* DLL export */
 #define RIME_API extern "C" __declspec(dllexport)
-#else  /* rime_EXPORTS */
+#elif defined(RIME_IMPORTS)
 /* DLL import */
 #define RIME_API extern "C" __declspec(dllimport)
-#endif  /* rime_EXPORTS */
+#else
+/* static library */
+#define RIME_API
+#endif
 #else  /* _WIN32 */
 #define RIME_API
 #endif  /* _WIN32 */
@@ -31,6 +34,7 @@ RIME_API void RimeFinalize();
 // session management
 
 RIME_API RimeSessionId RimeCreateSession();
+RIME_API bool RimeFindSession(RimeSessionId session_id);
 RIME_API bool RimeDestroySession(RimeSessionId session_id);
 RIME_API void RimeCleanupStaleSessions();
 RIME_API void RimeCleanupAllSessions();
