@@ -20,6 +20,8 @@ namespace rime {
 // commit with Return key
 Processor::Result TrivialProcessor::ProcessKeyEvent(
     const KeyEvent &key_event) {
+  if (key_event.release())
+    return kRejected;
   Context *ctx = engine_->context();
   int ch = key_event.keycode();
   if (ch == XK_space) {
@@ -48,7 +50,8 @@ Processor::Result TrivialProcessor::ProcessKeyEvent(
     ctx->Clear();
     return kAccepted;
   }
-  if (std::isprint(ch)) {
+  if (ch > 20 && ch < 128) {
+    EZLOGGERPRINT("Add to input: '%c', %d, '%s'", ch, key_event.keycode(), key_event.repr().c_str());
     ctx->PushInput(key_event.keycode());
     return kAccepted;
   }
