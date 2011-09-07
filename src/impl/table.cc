@@ -8,6 +8,7 @@
 //
 #include <cstring>
 #include <algorithm>
+#include <queue>
 #include <vector>
 #include <utility>
 #include <boost/foreach.hpp>
@@ -376,6 +377,7 @@ const TableAccessor Table::QueryPhrases(const Code &code) {
   return visitor.Access(0);
 }  
 
+// TODO: the result should keep a reference to the end vertex for each table accessor
 bool Table::Query(const SyllableGraph &syll_graph, int start_pos,
                   std::vector<TableAccessor> *result) {
   if (!result ||
@@ -385,17 +387,36 @@ bool Table::Query(const SyllableGraph &syll_graph, int start_pos,
   EdgeMap::const_iterator edges = syll_graph.edges.find(start_pos);
   if (edges == syll_graph.edges.end())
     return false;
-  BOOST_FOREACH(const EndVertexMap::value_type &edge, edges->second) {
-    int end_vertex_pos = edge.first;
-    const SpellingMap &spellings(edge.second);
-    BOOST_FOREACH(const SpellingMap::value_type &spelling, spellings) {
-      SyllableId syll_id = spelling.first;
-      // TODO: 
-      //TableVisitor visitor;
-      //visitor.Walk(syll_id);
+  std::queue<TableVisitor> q;
+  q.push(TableVisitor(index_));
+  while (!q.empty()) {
+    TableVisitor visitor = q.front();
+    q.pop();
+    if (visitor.level() == Code::kIndexCodeMaxLength - 1) {
+      TableAccessor accessor(visitor.Access(0));
+      if (!accessor.exhausted()) {
+        result->push_back(accessor);
+      }
+      continue;
+    }
+    BOOST_FOREACH(const EndVertexMap::value_type &edge, edges->second) {
+      int end_vertex_pos = edge.first;
+      const SpellingMap &spellings(edge.second);
+      BOOST_FOREACH(const SpellingMap::value_type &spelling, spellings) {
+        SyllableId syll_id = spelling.first;
+        TableAccessor accessor(visitor.Access(syll_id));
+        if (!accessor.exhausted()) {
+          result->push_back(accessor);
+        }
+        if (end_vertex_pos < syll_graph.interpreted_length &&
+            visitor.Walk(syll_id)) {
+          q.push(visitor);
+          visitor.Backdate();
+        }
+      }
     }
   }
-  return false;
+  return !result->empty();
 }
 
 }  // namespace rime
