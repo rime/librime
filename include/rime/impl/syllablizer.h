@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-7-12 Zou xu <zouivex@gmail.com>
 //
 
@@ -15,19 +15,19 @@
 namespace rime {
 
 class Prism;
-  
+
 typedef int SyllableId;
 
 enum SpellingType { kNormalSpelling, kAbbreviation };
 
-struct SpellingMappingProperty {
+struct SpellingProperties {
   SpellingType type;
   double credibility;
   std::string tips;
-  SpellingMappingProperty() : type(kNormalSpelling), credibility(1.0) {}
+  SpellingProperties() : type(kNormalSpelling), credibility(1.0) {}
 };
 
-typedef std::map<SyllableId, SpellingMappingProperty> SpellingMap;
+typedef std::map<SyllableId, SpellingProperties> SpellingMap;
 typedef std::map<int, SpellingType> VertexMap;
 typedef std::map<int, SpellingMap> EndVertexMap;
 typedef std::map<int, EndVertexMap> EdgeMap;

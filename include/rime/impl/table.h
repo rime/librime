@@ -17,6 +17,7 @@
 #include <vector>
 #include <rime/common.h>
 #include <rime/impl/mapped_file.h>
+#include <rime/impl/syllablizer.h>
 #include <rime/impl/vocabulary.h>
 
 namespace rime {
@@ -69,20 +70,43 @@ struct Metadata {
 
 }  // namespace table
 
-class TableVisitor {
+class TableAccessor {
  public:
-  TableVisitor();
-  TableVisitor(const List<table::Entry> *entries);
-  TableVisitor(const table::TailIndex *code_map);
+  TableAccessor();
+  TableAccessor(const List<table::Entry> *entries);
+  TableAccessor(const table::TailIndex *code_map);
+
+  bool Next();
+  
   bool exhausted() const;
   size_t remaining() const;
   const table::Entry* entry() const;
   const table::Code* extra_code() const;
-  bool Next();
+  
  private:
   const List<table::Entry> *entries_;
   const table::TailIndex *code_map_;
   size_t cursor_;
+};
+  
+class TableVisitor {
+ public:
+  TableVisitor(table::Index *index);
+
+  const TableAccessor Access(int syllable_id) const;
+  
+  bool Walk(int syllable_id);  // down to next level
+  bool Backdate();  // up one level
+  void Reset();  // back to root
+  
+  int level() const { return level_; }
+
+ private:
+  table::HeadIndex *lv1_index_;
+  table::TrunkIndex *lv2_index_;
+  table::TrunkIndex *lv3_index_;
+  table::TailIndex *lv4_index_;
+  int level_;
 };
 
 class Table : public MappedFile {
@@ -94,9 +118,9 @@ class Table : public MappedFile {
   bool Save();
   bool Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size_t num_entries);
   const char* GetSyllableById(int syllable_id);
-  const TableVisitor QueryWords(int syllable_id);
-  const TableVisitor QueryPhrases(const Code &code);
-  //bool Query(const SyllableGraph &sg, int start_pos, std::vector<TableVisitor> *result);
+  const TableAccessor QueryWords(int syllable_id);
+  const TableAccessor QueryPhrases(const Code &code);
+  bool Query(const SyllableGraph &syll_graph, int start_pos, std::vector<TableAccessor> *result);
 
  private:
   table::HeadIndex* BuildHeadIndex(const Vocabulary &vocabulary, size_t num_syllables);

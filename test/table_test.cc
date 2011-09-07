@@ -66,7 +66,7 @@ TEST(RimeTableTest, IntegrityTest) {
   EXPECT_STREQ("3", table->GetSyllableById(3));
   EXPECT_STREQ("4", table->GetSyllableById(4));
   
-  rime::TableVisitor v = table->QueryWords(1);
+  rime::TableAccessor v = table->QueryWords(1);
   ASSERT_FALSE(v.exhausted());
   ASSERT_EQ(1, v.remaining());
   ASSERT_TRUE(v.entry() != NULL);

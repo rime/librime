@@ -17,31 +17,45 @@ namespace rime {
 
 const char kTableFormat[] = "Rime::Table/0.9";
 
-TableVisitor::TableVisitor()
+inline static bool node_less(const table::TrunkIndexNode &a,
+                             const table::TrunkIndexNode &b) {
+  return a.key < b.key;
+}
+
+static table::TrunkIndexNode* find_node(table::TrunkIndexNode* first,
+                                        table::TrunkIndexNode* last,
+                                        const table::SyllableId& key) {
+  table::TrunkIndexNode target;
+  target.key = key;
+  table::TrunkIndexNode* it = std::lower_bound(first, last, target, node_less);
+  return it == last || key < it->key ? last : it;
+}
+
+TableAccessor::TableAccessor()
     : entries_(NULL), code_map_(NULL), cursor_(0) {
 }
 
-TableVisitor::TableVisitor(const List<table::Entry> *entries)
+TableAccessor::TableAccessor(const List<table::Entry> *entries)
     : entries_(entries), code_map_(NULL), cursor_(0) {
 }
 
-TableVisitor::TableVisitor(const table::TailIndex *code_map)
+TableAccessor::TableAccessor(const table::TailIndex *code_map)
     : entries_(NULL), code_map_(code_map), cursor_(0) {
 }
 
-bool TableVisitor::exhausted() const {
+bool TableAccessor::exhausted() const {
   if (entries_) return cursor_ >= entries_->size;
   if (code_map_) return cursor_ >= code_map_->size;
   return true;
 }
 
-size_t TableVisitor::remaining() const {
+size_t TableAccessor::remaining() const {
   if (entries_) return entries_->size - cursor_;
   if (code_map_) return code_map_->size - cursor_;
   return 0;
 }
 
-const table::Entry* TableVisitor::entry() const {
+const table::Entry* TableAccessor::entry() const {
   if (exhausted())
     return NULL;
   if (entries_)
@@ -50,17 +64,85 @@ const table::Entry* TableVisitor::entry() const {
     return &code_map_->at[cursor_].entry;
 }
 
-const table::Code* TableVisitor::extra_code() const {
+const table::Code* TableAccessor::extra_code() const {
   if (!code_map_ || cursor_ >= code_map_->size)
     return NULL;
   return &code_map_->at[cursor_].extra_code;
 }
 
-bool TableVisitor::Next() {
+bool TableAccessor::Next() {
   if (exhausted())
     return false;
   ++cursor_;
   return !exhausted();
+}
+
+TableVisitor::TableVisitor(table::Index *index)
+    : lv1_index_(index),
+      lv2_index_(NULL), lv3_index_(NULL), lv4_index_(NULL),
+      level_(0) {
+}
+
+const TableAccessor TableVisitor::Access(int syllable_id) const {
+  if (level_ == 0) {
+    if (!lv1_index_ || syllable_id < 0 || syllable_id >= lv1_index_->size)
+      return TableAccessor();
+    table::HeadIndexNode *node = &lv1_index_->at[syllable_id];
+    return TableAccessor(&node->entries);
+  }
+  else if (level_ == 1 || level_ == 2) {
+    table::TrunkIndex *index = (level_ == 1) ? lv2_index_ : lv3_index_;
+    if (!index) return TableAccessor();
+    table::TrunkIndexNode *node = find_node(index->begin(), index->end(), syllable_id);
+    if (node == index->end()) return TableAccessor();
+    return TableAccessor(&node->entries);
+  }
+  else if (level_ == 3) {
+    if (!lv4_index_) return TableAccessor();
+    return TableAccessor(lv4_index_);
+  }
+  return TableAccessor();
+}
+
+bool TableVisitor::Walk(int syllable_id) {
+  if (level_ == 0) {
+    if (!lv1_index_ || syllable_id < 0 || syllable_id >= lv1_index_->size)
+      return false;
+    table::HeadIndexNode *node = &lv1_index_->at[syllable_id];
+    if (!node->next_level) return false;
+    lv2_index_ = reinterpret_cast<table::TrunkIndex*>(node->next_level.get());
+    ++level_;
+    return true;
+  }
+  else if (level_ == 1) {
+    if (!lv2_index_) return false;
+    table::TrunkIndexNode *node = find_node(lv2_index_->begin(), lv2_index_->end(), syllable_id);
+    if (node == lv2_index_->end()) return false;
+    if (!node->next_level) return false;
+    lv3_index_ = reinterpret_cast<table::TrunkIndex*>(node->next_level.get());
+    ++level_;
+    return true;
+  }
+  else if (level_ == 2) {
+    if (!lv3_index_) return false;
+    table::TrunkIndexNode *node = find_node(lv3_index_->begin(), lv3_index_->end(), syllable_id);
+    if (node == lv3_index_->end()) return false;
+    if (!node->next_level) return false;
+    lv4_index_ = reinterpret_cast<table::TailIndex*>(node->next_level.get());
+    ++level_;
+    return true;
+  }
+  return false;
+}
+
+bool TableVisitor::Backdate() {
+  if (level_ == 0) return false;
+  --level_;
+  return true;
+}
+
+void TableVisitor::Reset() {
+  level_ = 0;
 }
 
 bool Table::Load() {
@@ -280,66 +362,40 @@ const char* Table::GetSyllableById(int syllable_id) {
   return syllabary_->at[syllable_id].c_str();
 }
 
-const TableVisitor Table::QueryWords(int syllable_id) {
-  if (!index_ || syllable_id < 0 || syllable_id >= index_->size)
-    return TableVisitor();
-  List<table::Entry> &entries(index_->at[syllable_id].entries);
-  return TableVisitor(&entries);
+const TableAccessor Table::QueryWords(int syllable_id) {
+  TableVisitor visitor(index_);
+  return visitor.Access(syllable_id);
 }
 
-inline static bool node_less(const table::TrunkIndexNode &a,
-                             const table::TrunkIndexNode &b) {
-  return a.key < b.key;
-}
-
-static table::TrunkIndexNode* find_node(table::TrunkIndexNode* first,
-                                        table::TrunkIndexNode* last,
-                                        const table::SyllableId& key) {
-  table::TrunkIndexNode target;
-  target.key = key;
-  table::TrunkIndexNode* it = std::lower_bound(first, last, target, node_less);
-  return it == last || key < it->key ? last : it;
-}
-
-const TableVisitor Table::QueryPhrases(const Code &code) {
-  if (!index_ || code.empty())
-    return TableVisitor();
-  table::HeadIndexNode *lv1_node = &index_->at[code[0]];
-  if (code.size() == 1) {
-    return TableVisitor(&lv1_node->entries);
+const TableAccessor Table::QueryPhrases(const Code &code) {
+  TableVisitor visitor(index_);
+  for (int i = 0; i < Code::kIndexCodeMaxLength; ++i) {
+    if (code.size() == i + 1) return visitor.Access(code[i]);
+    if (!visitor.Walk(code[i])) return TableAccessor();
   }
-  if (!lv1_node->next_level) {
-    return TableVisitor();
-  }
-  table::TrunkIndex *lv2_index = reinterpret_cast<table::TrunkIndex*>(
-      lv1_node->next_level.get());
-  table::TrunkIndexNode *lv2_node =
-      find_node(lv2_index->begin(), lv2_index->end(), code[1]);
-  if (lv2_node == lv2_index->end()) {
-    return TableVisitor();
-  }
-  if (code.size() == 2) {
-    return TableVisitor(&lv2_node->entries);
-  }
-  if (!lv2_node->next_level) {
-    return TableVisitor();
-  }
-  table::TrunkIndex *lv3_index = reinterpret_cast<table::TrunkIndex*>(
-      lv2_node->next_level.get());
-  table::TrunkIndexNode *lv3_node =
-      find_node(lv2_index->begin(), lv2_index->end(), code[2]);
-  if (lv3_node == lv3_index->end()) {
-    return TableVisitor();
-  }
-  if (code.size() == 3) {
-    return TableVisitor(&lv3_node->entries);
-  }
-  if (!lv3_node->next_level) {
-    return TableVisitor();
-  }
-  table::TailIndex *lv4_index = reinterpret_cast<table::TailIndex*>(
-      lv3_node->next_level.get());
-  return TableVisitor(lv4_index);
+  return visitor.Access(0);
 }  
+
+bool Table::Query(const SyllableGraph &syll_graph, int start_pos,
+                  std::vector<TableAccessor> *result) {
+  if (!result ||
+      !index_ ||
+      start_pos >= syll_graph.interpreted_length)
+    return false;
+  EdgeMap::const_iterator edges = syll_graph.edges.find(start_pos);
+  if (edges == syll_graph.edges.end())
+    return false;
+  BOOST_FOREACH(const EndVertexMap::value_type &edge, edges->second) {
+    int end_vertex_pos = edge.first;
+    const SpellingMap &spellings(edge.second);
+    BOOST_FOREACH(const SpellingMap::value_type &spelling, spellings) {
+      SyllableId syll_id = spelling.first;
+      // TODO: 
+      //TableVisitor visitor;
+      //visitor.Walk(syll_id);
+    }
+  }
+  return false;
+}
 
 }  // namespace rime

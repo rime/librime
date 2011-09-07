@@ -55,7 +55,7 @@ int Syllablizer::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
         // we assume spelling resembles exactly the syllable itself.
         SyllableId syllable_id = m.value;
         // add a syllable with default properties to the edge's spelling-to-syllable map
-        spellings.insert(SpellingMap::value_type(syllable_id, SpellingMappingProperty()));
+        spellings.insert(SpellingMap::value_type(syllable_id, SpellingProperties()));
         // again, we only have normal spellings for now
         queue.push(Vertex(end_pos, kNormalSpelling));
       }

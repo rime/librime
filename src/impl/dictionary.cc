@@ -90,8 +90,8 @@ Dictionary::~Dictionary() {
 shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_graph, int start_pos) {
   if (!loaded_)
     return shared_ptr<DictEntryCollector>();
-  //std::vector<TableVisitor> visitors;
-  //bool ok = table_->Query(syllable_graph, start_pos, &visitors);
+  //std::vector<TableAccessor> accessors;
+  //bool ok = table_->Query(syllable_graph, start_pos, &accessors);
   // TODO:
   shared_ptr<DictEntryCollector> result(new DictEntryCollector);
   return result; 
@@ -119,7 +119,7 @@ DictEntryIterator Dictionary::LookupWords(const std::string &str_code, bool pred
   BOOST_FOREACH(Prism::Match &match, keys) {
     int syllable_id = match.value;
     code[0] = syllable_id;
-    const TableVisitor words(table_->QueryWords(syllable_id));
+    const TableAccessor words(table_->QueryWords(syllable_id));
     if (!words.exhausted()) {
         result.push_back(dictionary::Chunk(code, words));
     }

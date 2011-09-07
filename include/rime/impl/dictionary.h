@@ -44,8 +44,8 @@ struct Chunk {
   Chunk() : entries(NULL), size(0), cursor(0) {}
   Chunk(const Code &c, const table::Entry *e)
       : code(c), entries(e), size(1), cursor(0) {}
-  Chunk(const Code &c, const TableVisitor &v)
-      : code(c), entries(v.entry()), size(v.remaining()), cursor(0) {}
+  Chunk(const Code &c, const TableAccessor &a)
+      : code(c), entries(a.entry()), size(a.remaining()), cursor(0) {}
 };
 
 }  // namespace dictionary
@@ -57,8 +57,6 @@ class DictEntryIterator : public std::list<dictionary::Chunk> {
   DictEntryIterator();
   DictEntryIterator(const DictEntryIterator &other);
 
-  void AddChunk(const Code &code,
-                const TableVisitor &visitor);
   shared_ptr<DictEntry> Peek();
   bool Next();
   bool exhausted() const;
