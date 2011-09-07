@@ -369,6 +369,7 @@ const TableAccessor Table::QueryWords(int syllable_id) {
 }
 
 const TableAccessor Table::QueryPhrases(const Code &code) {
+  if (code.empty()) return TableAccessor();
   TableVisitor visitor(index_);
   for (int i = 0; i < Code::kIndexCodeMaxLength; ++i) {
     if (code.size() == i + 1) return visitor.Access(code[i]);
@@ -377,25 +378,27 @@ const TableAccessor Table::QueryPhrases(const Code &code) {
   return visitor.Access(0);
 }  
 
-// TODO: the result should keep a reference to the end vertex for each table accessor
 bool Table::Query(const SyllableGraph &syll_graph, int start_pos,
-                  std::vector<TableAccessor> *result) {
+                  TableQueryResult *result) {
   if (!result ||
       !index_ ||
       start_pos >= syll_graph.interpreted_length)
     return false;
-  EdgeMap::const_iterator edges = syll_graph.edges.find(start_pos);
-  if (edges == syll_graph.edges.end())
-    return false;
-  std::queue<TableVisitor> q;
-  q.push(TableVisitor(index_));
+  result->clear();
+  std::queue<std::pair<int, TableVisitor> > q;
+  q.push(std::make_pair(start_pos, TableVisitor(index_)));
   while (!q.empty()) {
-    TableVisitor visitor = q.front();
+    int current_pos = q.front().first;
+    TableVisitor visitor = q.front().second;
     q.pop();
-    if (visitor.level() == Code::kIndexCodeMaxLength - 1) {
+    EdgeMap::const_iterator edges = syll_graph.edges.find(current_pos);
+    if (edges == syll_graph.edges.end()) {
+      continue;
+    }
+    if (visitor.level() == Code::kIndexCodeMaxLength) {
       TableAccessor accessor(visitor.Access(0));
       if (!accessor.exhausted()) {
-        result->push_back(accessor);
+        (*result)[current_pos].push_back(accessor);
       }
       continue;
     }
@@ -406,11 +409,11 @@ bool Table::Query(const SyllableGraph &syll_graph, int start_pos,
         SyllableId syll_id = spelling.first;
         TableAccessor accessor(visitor.Access(syll_id));
         if (!accessor.exhausted()) {
-          result->push_back(accessor);
+          (*result)[end_vertex_pos].push_back(accessor);
         }
         if (end_vertex_pos < syll_graph.interpreted_length &&
             visitor.Walk(syll_id)) {
-          q.push(visitor);
+          q.push(std::make_pair(end_vertex_pos, visitor));
           visitor.Backdate();
         }
       }

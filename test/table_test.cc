@@ -7,17 +7,13 @@
 // 2011-07-03 GONG Chen <chen.sst@gmail.com>
 //
 #include <gtest/gtest.h>
+#include <rime/impl/syllablizer.h>
 #include <rime/impl/table.h>
 
-TEST(RimeTableTest, IntegrityTest) {
-  const char file_name[] = "table_test.bin";
-  rime::scoped_ptr<rime::Table> table;
-  table.reset(new rime::Table(file_name));
-  ASSERT_TRUE(table);
-  table->Remove();
+static const char file_name[] = "table_test.bin";
 
-  rime::Syllabary syll;
-  rime::Vocabulary voc;
+static void prepare_sample_vocabulary(rime::Syllabary &syll,
+                                      rime::Vocabulary &voc) {
   rime::DictEntry d;
   syll.insert("0");
   // no entries for '0', however
@@ -53,7 +49,17 @@ TEST(RimeTableTest, IntegrityTest) {
   d.code.push_back(4);
   d.text = "yi-er-san-si";
   (*lv4)[-1].entries.push_back(d);
-  
+}  
+
+TEST(RimeTableTest, IntegrityTest) {
+  rime::scoped_ptr<rime::Table> table;
+  table.reset(new rime::Table(file_name));
+  ASSERT_TRUE(table);
+  table->Remove();
+
+  rime::Syllabary syll;
+  rime::Vocabulary voc;
+  prepare_sample_vocabulary(syll, voc);
   ASSERT_TRUE(table->Build(syll, voc, 7));
   ASSERT_TRUE(table->Save());
   table.reset();
@@ -62,6 +68,19 @@ TEST(RimeTableTest, IntegrityTest) {
   ASSERT_TRUE(table);
   ASSERT_TRUE(table->Load());
 
+}
+
+TEST(RimeTableTest, SimpleQuery) {
+  rime::scoped_ptr<rime::Table> table;
+  table.reset(new rime::Table(file_name));
+  if (!table->Load()) {
+    rime::Syllabary syll;
+    rime::Vocabulary voc;
+    prepare_sample_vocabulary(syll, voc);
+    ASSERT_TRUE(table->Build(syll, voc, 7));
+    ASSERT_TRUE(table->Save());
+  }
+  
   EXPECT_STREQ("0", table->GetSyllableById(0));
   EXPECT_STREQ("3", table->GetSyllableById(3));
   EXPECT_STREQ("4", table->GetSyllableById(4));
@@ -102,4 +121,43 @@ TEST(RimeTableTest, IntegrityTest) {
   ASSERT_EQ(1, v.extra_code()->size);
   EXPECT_EQ(4, *v.extra_code()->at);
   EXPECT_FALSE(v.Next());
+}
+
+TEST(RimeTableTest, QueryWithSyllableGraph) {
+  rime::scoped_ptr<rime::Table> table;
+  table.reset(new rime::Table(file_name));
+  if (!table->Load()) {
+    rime::Syllabary syll;
+    rime::Vocabulary voc;
+    prepare_sample_vocabulary(syll, voc);
+    ASSERT_TRUE(table->Build(syll, voc, 7));
+    ASSERT_TRUE(table->Save());
+  }
+
+  const std::string input("yiersansi");
+  rime::SyllableGraph g;
+  g.input_length = input.length();
+  g.interpreted_length = g.input_length;
+  g.vertices[0] = rime::kNormalSpelling;
+  g.vertices[2] = rime::kNormalSpelling;
+  g.vertices[4] = rime::kNormalSpelling;
+  g.vertices[7] = rime::kNormalSpelling;
+  g.vertices[9] = rime::kNormalSpelling;
+  g.edges[0][2][1].type = rime::kNormalSpelling;
+  g.edges[2][4][2].type = rime::kNormalSpelling;
+  g.edges[4][7][3].type = rime::kNormalSpelling;
+  g.edges[7][9][4].type = rime::kNormalSpelling;
+  rime::TableQueryResult result;
+  ASSERT_TRUE(table->Query(g, 0, &result));
+  EXPECT_EQ(2, result.size());
+  ASSERT_TRUE(result.find(2) != result.end());
+  ASSERT_EQ(1, result[2].size());
+  EXPECT_STREQ("yi", result[2].front().entry()->text.c_str());
+  ASSERT_TRUE(result.find(7) != result.end());
+  ASSERT_EQ(1, result[7].size());
+  EXPECT_STREQ("yi-er-san-si", result[7].front().entry()->text.c_str());
+  EXPECT_EQ(1, result[7].front().extra_code()->size);
+  EXPECT_EQ(4, result[7].front().extra_code()->at[0]);
+  ASSERT_TRUE(result.find(6) == result.end());
+  ASSERT_TRUE(result.find(7) != result.end());
 }

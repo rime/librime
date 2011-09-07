@@ -109,6 +109,8 @@ class TableVisitor {
   int level_;
 };
 
+typedef std::map<int, std::vector<TableAccessor> > TableQueryResult;
+
 class Table : public MappedFile {
  public:
   Table(const std::string &file_name)
@@ -120,7 +122,7 @@ class Table : public MappedFile {
   const char* GetSyllableById(int syllable_id);
   const TableAccessor QueryWords(int syllable_id);
   const TableAccessor QueryPhrases(const Code &code);
-  bool Query(const SyllableGraph &syll_graph, int start_pos, std::vector<TableAccessor> *result);
+  bool Query(const SyllableGraph &syll_graph, int start_pos, TableQueryResult *result);
 
  private:
   table::HeadIndex* BuildHeadIndex(const Vocabulary &vocabulary, size_t num_syllables);

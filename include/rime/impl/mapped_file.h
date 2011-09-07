@@ -35,8 +35,8 @@ class OffsetPtr {
     offset_ = (char*)ptr - (char*)(&offset_);
     return *this;
   }
-  operator T* () const {
-    return get();
+  operator bool() const {
+    return !!offset_;
   }
   T& operator* () const {
     return *get();
