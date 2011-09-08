@@ -44,8 +44,8 @@ struct Chunk {
   Chunk() : entries(NULL), size(0), cursor(0) {}
   Chunk(const Code &c, const table::Entry *e)
       : code(c), entries(e), size(1), cursor(0) {}
-  Chunk(const Code &c, const TableAccessor &a)
-      : code(c), entries(a.entry()), size(a.remaining()), cursor(0) {}
+  Chunk(const TableAccessor &a)
+      : code(a.index_code()), entries(a.entry()), size(a.remaining()), cursor(0) {}
 };
 
 }  // namespace dictionary

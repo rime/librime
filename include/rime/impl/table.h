@@ -73,8 +73,8 @@ struct Metadata {
 class TableAccessor {
  public:
   TableAccessor();
-  TableAccessor(const List<table::Entry> *entries);
-  TableAccessor(const table::TailIndex *code_map);
+  TableAccessor(const Code &index_code, const List<table::Entry> *entries);
+  TableAccessor(const Code &index_code, const table::TailIndex *code_map);
 
   bool Next();
   
@@ -82,8 +82,10 @@ class TableAccessor {
   size_t remaining() const;
   const table::Entry* entry() const;
   const table::Code* extra_code() const;
+  const Code& index_code() const { return index_code_; }
   
  private:
+  Code index_code_;
   const List<table::Entry> *entries_;
   const table::TailIndex *code_map_;
   size_t cursor_;
@@ -107,6 +109,7 @@ class TableVisitor {
   table::TrunkIndex *lv3_index_;
   table::TailIndex *lv4_index_;
   int level_;
+  Code index_code_;
 };
 
 typedef std::map<int, std::vector<TableAccessor> > TableQueryResult;

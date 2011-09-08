@@ -33,15 +33,15 @@ static table::TrunkIndexNode* find_node(table::TrunkIndexNode* first,
 }
 
 TableAccessor::TableAccessor()
-    : entries_(NULL), code_map_(NULL), cursor_(0) {
+    : index_code_(), entries_(NULL), code_map_(NULL), cursor_(0) {
 }
 
-TableAccessor::TableAccessor(const List<table::Entry> *entries)
-    : entries_(entries), code_map_(NULL), cursor_(0) {
+TableAccessor::TableAccessor(const Code &index_code, const List<table::Entry> *entries)
+    : index_code_(index_code), entries_(entries), code_map_(NULL), cursor_(0) {
 }
 
-TableAccessor::TableAccessor(const table::TailIndex *code_map)
-    : entries_(NULL), code_map_(code_map), cursor_(0) {
+TableAccessor::TableAccessor(const Code &index_code, const table::TailIndex *code_map)
+    : index_code_(index_code), entries_(NULL), code_map_(code_map), cursor_(0) {
 }
 
 bool TableAccessor::exhausted() const {
@@ -89,18 +89,22 @@ const TableAccessor TableVisitor::Access(int syllable_id) const {
     if (!lv1_index_ || syllable_id < 0 || syllable_id >= lv1_index_->size)
       return TableAccessor();
     table::HeadIndexNode *node = &lv1_index_->at[syllable_id];
-    return TableAccessor(&node->entries);
+    Code code(index_code_);
+    code.push_back(syllable_id);
+    return TableAccessor(code, &node->entries);
   }
   else if (level_ == 1 || level_ == 2) {
     table::TrunkIndex *index = (level_ == 1) ? lv2_index_ : lv3_index_;
     if (!index) return TableAccessor();
     table::TrunkIndexNode *node = find_node(index->begin(), index->end(), syllable_id);
     if (node == index->end()) return TableAccessor();
-    return TableAccessor(&node->entries);
+    Code code(index_code_);
+    code.push_back(syllable_id);
+    return TableAccessor(code, &node->entries);
   }
   else if (level_ == 3) {
     if (!lv4_index_) return TableAccessor();
-    return TableAccessor(lv4_index_);
+    return TableAccessor(index_code_, lv4_index_);
   }
   return TableAccessor();
 }
@@ -113,6 +117,7 @@ bool TableVisitor::Walk(int syllable_id) {
     if (!node->next_level) return false;
     lv2_index_ = reinterpret_cast<table::TrunkIndex*>(node->next_level.get());
     ++level_;
+    index_code_.push_back(syllable_id);
     return true;
   }
   else if (level_ == 1) {
@@ -122,6 +127,7 @@ bool TableVisitor::Walk(int syllable_id) {
     if (!node->next_level) return false;
     lv3_index_ = reinterpret_cast<table::TrunkIndex*>(node->next_level.get());
     ++level_;
+    index_code_.push_back(syllable_id);
     return true;
   }
   else if (level_ == 2) {
@@ -131,6 +137,7 @@ bool TableVisitor::Walk(int syllable_id) {
     if (!node->next_level) return false;
     lv4_index_ = reinterpret_cast<table::TailIndex*>(node->next_level.get());
     ++level_;
+    index_code_.push_back(syllable_id);
     return true;
   }
   return false;
@@ -139,11 +146,14 @@ bool TableVisitor::Walk(int syllable_id) {
 bool TableVisitor::Backdate() {
   if (level_ == 0) return false;
   --level_;
+  if (index_code_.size() > level_)
+    index_code_.pop_back();
   return true;
 }
 
 void TableVisitor::Reset() {
   level_ = 0;
+  index_code_.clear();
 }
 
 bool Table::Load() {

@@ -90,11 +90,24 @@ Dictionary::~Dictionary() {
 shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_graph, int start_pos) {
   if (!loaded_)
     return shared_ptr<DictEntryCollector>();
-  //std::vector<TableAccessor> accessors;
-  //bool ok = table_->Query(syllable_graph, start_pos, &accessors);
-  // TODO:
-  shared_ptr<DictEntryCollector> result(new DictEntryCollector);
-  return result; 
+  TableQueryResult result;
+  if (!table_->Query(syllable_graph, start_pos, &result)) {
+    return shared_ptr<DictEntryCollector>();
+  }
+  shared_ptr<DictEntryCollector> collector(new DictEntryCollector);
+  // copy result
+  BOOST_FOREACH(const TableQueryResult::value_type &v, result) {
+    int end_pos = v.first;
+    BOOST_FOREACH(const TableAccessor &a, v.second) {
+      if (a.extra_code()) {
+        // TODO:
+      }
+      else {
+        (*collector)[end_pos].push_back(dictionary::Chunk(a));
+      }
+    }
+  }
+  return collector; 
 }
 
 DictEntryIterator Dictionary::LookupWords(const std::string &str_code, bool predictive) {
@@ -114,14 +127,11 @@ DictEntryIterator Dictionary::LookupWords(const std::string &str_code, bool pred
   }
   EZLOGGERPRINT("found %u matching keys thru the prism.", keys.size());
   DictEntryIterator result;
-  Code code;
-  code.resize(1);
   BOOST_FOREACH(Prism::Match &match, keys) {
     int syllable_id = match.value;
-    code[0] = syllable_id;
-    const TableAccessor words(table_->QueryWords(syllable_id));
-    if (!words.exhausted()) {
-        result.push_back(dictionary::Chunk(code, words));
+    const TableAccessor a(table_->QueryWords(syllable_id));
+    if (!a.exhausted()) {
+        result.push_back(dictionary::Chunk(a));
     }
   }
   return result;
