@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-07-03 GONG Chen <chen.sst@gmail.com>
 //
 #include <gtest/gtest.h>
@@ -11,6 +11,7 @@
 #include <rime/impl/table.h>
 
 static const char file_name[] = "table_test.bin";
+static const int total_num_entries = 8;
 
 static void prepare_sample_vocabulary(rime::Syllabary &syll,
                                       rime::Vocabulary &voc) {
@@ -46,10 +47,12 @@ static void prepare_sample_vocabulary(rime::Syllabary &syll,
   d.code.back() = 1;
   d.code.push_back(2);
   d.code.push_back(3);
+  d.text = "yi-er-san";
+  (*lv3)[3].entries.push_back(d);
   d.code.push_back(4);
   d.text = "yi-er-san-si";
   (*lv4)[-1].entries.push_back(d);
-}  
+}
 
 TEST(RimeTableTest, IntegrityTest) {
   rime::scoped_ptr<rime::Table> table;
@@ -60,7 +63,7 @@ TEST(RimeTableTest, IntegrityTest) {
   rime::Syllabary syll;
   rime::Vocabulary voc;
   prepare_sample_vocabulary(syll, voc);
-  ASSERT_TRUE(table->Build(syll, voc, 7));
+  ASSERT_TRUE(table->Build(syll, voc, total_num_entries));
   ASSERT_TRUE(table->Save());
   table.reset();
 
@@ -77,14 +80,14 @@ TEST(RimeTableTest, SimpleQuery) {
     rime::Syllabary syll;
     rime::Vocabulary voc;
     prepare_sample_vocabulary(syll, voc);
-    ASSERT_TRUE(table->Build(syll, voc, 7));
+    ASSERT_TRUE(table->Build(syll, voc, total_num_entries));
     ASSERT_TRUE(table->Save());
   }
-  
+
   EXPECT_STREQ("0", table->GetSyllableById(0));
   EXPECT_STREQ("3", table->GetSyllableById(3));
   EXPECT_STREQ("4", table->GetSyllableById(4));
-  
+
   rime::TableAccessor v = table->QueryWords(1);
   ASSERT_FALSE(v.exhausted());
   ASSERT_EQ(1, v.remaining());
@@ -92,7 +95,7 @@ TEST(RimeTableTest, SimpleQuery) {
   EXPECT_STREQ("yi", v.entry()->text.c_str());
   EXPECT_EQ(1.0, v.entry()->weight);
   EXPECT_FALSE(v.Next());
-  
+
   v = table->QueryWords(2);
   ASSERT_EQ(3, v.remaining());
   EXPECT_STREQ("er", v.entry()->text.c_str());
@@ -100,7 +103,7 @@ TEST(RimeTableTest, SimpleQuery) {
   EXPECT_STREQ("liang", v.entry()->text.c_str());
   v.Next();
   EXPECT_STREQ("lia", v.entry()->text.c_str());
-  
+
   v = table->QueryWords(3);
   ASSERT_EQ(2, v.remaining());
   EXPECT_STREQ("san", v.entry()->text.c_str());
@@ -111,6 +114,14 @@ TEST(RimeTableTest, SimpleQuery) {
   code.push_back(1);
   code.push_back(2);
   code.push_back(3);
+  v = table->QueryPhrases(code);
+  ASSERT_FALSE(v.exhausted());
+  ASSERT_EQ(1, v.remaining());
+  ASSERT_TRUE(v.entry() != NULL);
+  EXPECT_STREQ("yi-er-san", v.entry()->text.c_str());
+  ASSERT_TRUE(v.extra_code() == NULL);
+  EXPECT_FALSE(v.Next());
+
   code.push_back(4);
   v = table->QueryPhrases(code);
   ASSERT_FALSE(v.exhausted());
@@ -130,7 +141,7 @@ TEST(RimeTableTest, QueryWithSyllableGraph) {
     rime::Syllabary syll;
     rime::Vocabulary voc;
     prepare_sample_vocabulary(syll, voc);
-    ASSERT_TRUE(table->Build(syll, voc, 7));
+    ASSERT_TRUE(table->Build(syll, voc, total_num_entries));
     ASSERT_TRUE(table->Save());
   }
 
@@ -154,10 +165,22 @@ TEST(RimeTableTest, QueryWithSyllableGraph) {
   ASSERT_EQ(1, result[2].size());
   EXPECT_STREQ("yi", result[2].front().entry()->text.c_str());
   ASSERT_TRUE(result.find(7) != result.end());
-  ASSERT_EQ(1, result[7].size());
-  EXPECT_STREQ("yi-er-san-si", result[7].front().entry()->text.c_str());
-  EXPECT_EQ(1, result[7].front().extra_code()->size);
-  EXPECT_EQ(4, result[7].front().extra_code()->at[0]);
+  ASSERT_EQ(2, result[7].size());
+  EXPECT_STREQ("yi-er-san", result[7].front().entry()->text.c_str());
+  EXPECT_STREQ("yi-er-san-si", result[7].back().entry()->text.c_str());
+  EXPECT_EQ(1, result[7].back().extra_code()->size);
+  EXPECT_EQ(4, result[7].back().extra_code()->at[0]);
   ASSERT_TRUE(result.find(6) == result.end());
   ASSERT_TRUE(result.find(7) != result.end());
+
+  ASSERT_TRUE(table->Query(g, 2, &result));
+  EXPECT_EQ(1, result.size());
+  ASSERT_TRUE(result.find(4) != result.end());
+  ASSERT_EQ(1, result[4].size());
+  EXPECT_STREQ("er", result[4].front().entry()->text.c_str());
+  EXPECT_TRUE(result[4].front().Next());
+  EXPECT_STREQ("liang", result[4].front().entry()->text.c_str());
+  EXPECT_TRUE(result[4].front().Next());
+  EXPECT_STREQ("lia", result[4].front().entry()->text.c_str());
+  EXPECT_FALSE(result[4].front().Next());
 }

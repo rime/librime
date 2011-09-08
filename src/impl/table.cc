@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-07-02 GONG Chen <chen.sst@gmail.com>
 //
 #include <cstring>
@@ -161,7 +161,7 @@ bool Table::Load() {
 
   if (IsOpen())
     Close();
-  
+
   if (!OpenReadOnly()) {
     EZLOGGERPRINT("Error opening table file '%s'.",
                   file_name().c_str());
@@ -239,7 +239,7 @@ bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size
     return false;
   }
   metadata_->index = index_;
-  
+
   return true;
 }
 
@@ -385,8 +385,8 @@ const TableAccessor Table::QueryPhrases(const Code &code) {
     if (code.size() == i + 1) return visitor.Access(code[i]);
     if (!visitor.Walk(code[i])) return TableAccessor();
   }
-  return visitor.Access(0);
-}  
+  return visitor.Access(-1);
+}
 
 bool Table::Query(const SyllableGraph &syll_graph, int start_pos,
                   TableQueryResult *result) {
@@ -406,7 +406,7 @@ bool Table::Query(const SyllableGraph &syll_graph, int start_pos,
       continue;
     }
     if (visitor.level() == Code::kIndexCodeMaxLength) {
-      TableAccessor accessor(visitor.Access(0));
+      TableAccessor accessor(visitor.Access(-1));
       if (!accessor.exhausted()) {
         (*result)[current_pos].push_back(accessor);
       }

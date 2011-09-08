@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
 #include <list>
@@ -72,7 +72,7 @@ bool DictEntryIterator::Next() {
     pop_front();
   }
   entry_.reset();
-  return true;
+  return !empty();
 }
 
 Dictionary::Dictionary(const std::string &name)
@@ -107,7 +107,7 @@ shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_
       }
     }
   }
-  return collector; 
+  return collector;
 }
 
 DictEntryIterator Dictionary::LookupWords(const std::string &str_code, bool predictive) {
@@ -167,7 +167,7 @@ bool Dictionary::Compile(const std::string &source_file) {
       entries->Type() != YAML::NodeType::Sequence) {
     return false;
   }
-  
+
   dictionary::RawDictEntryList raw_entries;
   int entry_count = 0;
   Syllabary syllabary;
@@ -239,7 +239,7 @@ bool Dictionary::Compile(const std::string &source_file) {
     if (!table_->Build(syllabary, vocabulary, entry_count) ||
         !table_->Save()) {
       return false;
-    }  
+    }
   }
   return true;
 }
