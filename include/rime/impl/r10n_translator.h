@@ -16,7 +16,7 @@
 namespace rime {
 
 class Dictionary;
-  
+
 class R10nTranslator : public Translator {
  public:
   R10nTranslator(Engine *engine);

@@ -12,7 +12,7 @@
 #include <rime/translator.h>
 
 namespace rime {
-  
+
 class EchoTranslator : public Translator {
  public:
   EchoTranslator(Engine *engine) : Translator(engine) {}

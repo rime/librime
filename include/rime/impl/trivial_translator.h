@@ -16,7 +16,7 @@
 #include <rime/translator.h>
 
 namespace rime {
-  
+
 class TrivialTranslator : public Translator {
  public:
   TrivialTranslator(Engine *engine);

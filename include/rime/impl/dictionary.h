@@ -79,7 +79,7 @@ class Dictionary {
   bool Compile(const std::string &source_file);
   bool Load();
   bool Unload();
-  
+
   shared_ptr<DictEntryCollector> Lookup(const SyllableGraph &syllable_graph, int start_pos);
   DictEntryIterator LookupWords(const std::string &str_code, bool predictive);
   bool Decode(const Code &code, dictionary::RawCode *result);
@@ -88,7 +88,7 @@ class Dictionary {
   bool loaded() const { return loaded_; }
   // limited operations
   Prism* prism() { return prism_.get(); }
-  
+
  private:
   std::string name_;
   bool loaded_;

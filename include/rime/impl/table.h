@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-07-01 GONG Chen <chen.sst@gmail.com>
 //
 
@@ -77,30 +77,30 @@ class TableAccessor {
   TableAccessor(const Code &index_code, const table::TailIndex *code_map);
 
   bool Next();
-  
+
   bool exhausted() const;
   size_t remaining() const;
   const table::Entry* entry() const;
   const table::Code* extra_code() const;
   const Code& index_code() const { return index_code_; }
-  
+
  private:
   Code index_code_;
   const List<table::Entry> *entries_;
   const table::TailIndex *code_map_;
   size_t cursor_;
 };
-  
+
 class TableVisitor {
  public:
   TableVisitor(table::Index *index);
 
   const TableAccessor Access(int syllable_id) const;
-  
+
   bool Walk(int syllable_id);  // down to next level
   bool Backdate();  // up one level
   void Reset();  // back to root
-  
+
   int level() const { return level_; }
 
  private:
@@ -118,7 +118,7 @@ class Table : public MappedFile {
  public:
   Table(const std::string &file_name)
       : MappedFile(file_name), index_(NULL), syllabary_(NULL), metadata_(NULL) {}
-  
+
   bool Load();
   bool Save();
   bool Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size_t num_entries);
@@ -133,7 +133,7 @@ class Table : public MappedFile {
   table::TailIndex* BuildTailIndex(const Code &prefix, const Vocabulary &vocabulary);
   bool BuildEntryList(const DictEntryList &src, List<table::Entry> *dest);
   bool BuildEntry(const DictEntry &dict_entry, table::Entry *entry);
-  
+
   table::Metadata *metadata_;
   table::Syllabary *syllabary_;
   table::Index *index_;

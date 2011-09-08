@@ -55,7 +55,7 @@ class UniqueTranslation : public Translation {
     set_exhausted(true);
     return true;
   }
-  
+
   virtual shared_ptr<Candidate> Peek() {
     if (exhausted())
       return shared_ptr<Candidate>();

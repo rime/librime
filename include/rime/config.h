@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-4-6 Zou xu <zouivex@gmail.com>
 //
 #ifndef RIME_CONFIG_H_
@@ -13,7 +13,7 @@
 #include <rime/common.h>
 #include <rime/component.h>
 
-namespace rime {  
+namespace rime {
 
 class ConfigItemData;
 
@@ -31,7 +31,7 @@ class ConfigItem {
       : type_(type), data_(data) {}
   virtual ~ConfigItem();
 
-  // schalar value accessors 
+  // schalar value accessors
   bool GetBool(bool *value) const;
   bool GetInt(int *value) const;
   bool GetDouble(double *value) const;
@@ -80,10 +80,10 @@ class Config : public Class<Config, const std::string&> {
   Config();
   virtual ~Config();
   Config(const std::string &file_name);
- 
+
   bool LoadFromFile(const std::string& file_name);
   bool SaveToFile(const std::string& file_name);
- 
+
   bool IsNull(const std::string &key);
   bool GetBool(const std::string &key, bool *value);
   bool GetInt(const std::string &key, int *value);
@@ -97,7 +97,7 @@ class Config : public Class<Config, const std::string&> {
  private:
   scoped_ptr<ConfigData> data_;
  };
- 
+
 class ConfigComponent : public Config::Component {
  public:
   ConfigComponent(const std::string &pattern) : pattern_(pattern) {}

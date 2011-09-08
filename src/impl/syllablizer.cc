@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-7-12 Zou xu <zouivex@gmail.com>
 //
 #include <functional>
@@ -101,10 +101,10 @@ int Syllablizer::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
       last_type = graph->vertices[i];
     }
   }
-  
+
   graph->input_length = input.length();
   graph->interpreted_length = farthest;
-  
+
   return farthest;
 }
 

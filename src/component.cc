@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // register components
 //
 // 2011-04-13 GONG Chen <chen.sst@gmail.com>
@@ -35,7 +35,7 @@ void RegisterComponents()
   // segmentors
   r.Register("abc_segmentor", new Component<AbcSegmentor>);
   r.Register("fallback_segmentor", new Component<FallbackSegmentor>);
-  
+
   // translators
   r.Register("echo_translator", new Component<EchoTranslator>);
   r.Register("trivial_translator", new Component<TrivialTranslator>);

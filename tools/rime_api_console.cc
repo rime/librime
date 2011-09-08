@@ -3,7 +3,7 @@
  *
  * Copyleft 2011 RIME Developers
  * License: GPLv3
- * 
+ *
  * 2011-08-29 GONG Chen <chen.sst@gmail.com>
  */
 #include <stdio.h>
@@ -79,7 +79,7 @@ void Print(RimeSessionId session_id) {
 
   if (RimeGetStatus(session_id, &status))
     PrintStatus(&status);
-  
+
   if (RimeGetContext(session_id, &context))
     PrintContext(&context);
 }
@@ -111,8 +111,8 @@ int main(int argc, char *argv[]) {
   }
 
   RimeDestroySession(session_id);
-  
+
   RimeFinalize();
-  
+
   return 0;
 }

@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-5-16 Zou xu <zouivex@gmail.com>
 //
 
@@ -32,14 +32,14 @@ struct Metadata {
 };
 
 }
-  
+
 class Prism : public MappedFile {
  public:
   typedef Darts::DoubleArray::result_pair_type Match;
-  
+
   Prism(const std::string &file_name)
       : MappedFile(file_name), trie_(new Darts::DoubleArray), num_syllables_(0) {}
-  
+
   bool Load();
   bool Save();
   bool Build(const Syllabary &keyset);
@@ -47,9 +47,9 @@ class Prism : public MappedFile {
   bool GetValue(const std::string &key, int *value);
   void CommonPrefixSearch(const std::string &key, std::vector<Match> *result);
   void ExpandSearch(const std::string &key, std::vector<Match> *result, size_t limit);
-  
+
   size_t array_size() const;
-  
+
  private:
   scoped_ptr<Darts::DoubleArray> trie_;
   size_t num_syllables_;

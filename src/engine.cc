@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-04-24 GONG Chen <chen.sst@gmail.com>
 //
 #include <cctype>
@@ -29,7 +29,7 @@ Engine::Engine() : schema_(new Schema), context_(new Context) {
   EZLOGGERFUNCTRACKER;
   // receive context notifications
   context_->input_change_notifier().connect(
-      boost::bind(&Engine::OnInputChange, this, _1));     
+      boost::bind(&Engine::OnInputChange, this, _1));
   context_->commit_notifier().connect(
       boost::bind(&Engine::OnCommit, this, _1));
   context_->select_notifier().connect(

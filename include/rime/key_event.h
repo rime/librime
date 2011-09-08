@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-04-17 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_KEY_EVENT_H_
@@ -23,7 +23,7 @@ class KeyEvent {
   KeyEvent(int keycode, int modifier)
       : keycode_(keycode), modifier_(modifier) {}
   KeyEvent(const std::string &repr);
-  
+
   int keycode() const { return keycode_; }
   void keycode(int value) { keycode_ = value; }
   int modifier() const { return modifier_; }

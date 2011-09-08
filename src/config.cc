@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-4-6 Zou xu <zouivex@gmail.com>
 //
 #include <fstream>
@@ -77,19 +77,19 @@ bool ConfigItem::GetString(std::string *value) const {
 }
 
 void ConfigItem::SetBool(bool value) {
-  // TODO: 
+  // TODO:
 }
 
 void ConfigItem::SetInt(int value) {
-  // TODO: 
+  // TODO:
 }
 
 void ConfigItem::SetDouble(double value) {
-  // TODO: 
+  // TODO:
 }
 
 void ConfigItem::SetString(const std::string &value) {
-  // TODO: 
+  // TODO:
 }
 
 
@@ -106,19 +106,19 @@ ConfigItemPtr ConfigList::GetAt(size_t i) {
   else
   {
     return ConfigItemPtr();
-  }  
+  }
 }
 
 void ConfigList::SetAt(size_t i, const ConfigItemPtr element) {
-  // TODO: 
+  // TODO:
 }
 
 void ConfigList::Append(const ConfigItemPtr element) {
-  // TODO: 
+  // TODO:
 }
 
 void ConfigList::Clear() {
-  // TODO: 
+  // TODO:
 }
 
 size_t ConfigList::size() const {
@@ -158,7 +158,7 @@ ConfigItemPtr ConfigMap::Get(const std::string &key) {
     return ConfigItemPtr();
   }
 }
-  
+
 void ConfigMap::Set(const std::string &key, const ConfigItemPtr element) {
   // TODO:
 }

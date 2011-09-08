@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-5-16 Zou xu <zouivex@gmail.com>
 //
 #include <cstring>
@@ -32,18 +32,18 @@ bool Prism::Load(){
 
   if (IsOpen())
     Close();
-  
+
   if (!OpenReadOnly()) {
     EZLOGGERPRINT("Error opening prism file '%s'.", file_name().c_str());
     return false;
   }
-  
+
   prism::Metadata *metadata = Find<prism::Metadata>(0);
   if (!metadata) {
     EZLOGGERPRINT("Metadata not found.");
     return false;
   }
-  num_syllables_ = metadata->num_syllables;  
+  num_syllables_ = metadata->num_syllables;
   char *array = metadata->double_array.get();
   if (!array) {
     EZLOGGERPRINT("Double array image not found.");
@@ -52,7 +52,7 @@ bool Prism::Load(){
   size_t array_size = metadata->double_array_size;
   EZLOGGERPRINT("Found double array image of size %u.", array_size);
   trie_->set_array(array, array_size);
-  
+
   return true;
 }
 
@@ -102,7 +102,7 @@ bool Prism::Build(const Syllabary &keyset){
   for (Syllabary::const_iterator it = keyset.begin();
        it != keyset.end(); ++it, ++key_id) {
     char_keys[key_id] = it->c_str();
-  }  
+  }
   return 0 == trie_->build(key_size, &char_keys[0]);
 }
 
@@ -115,10 +115,10 @@ bool Prism::HasKey(const std::string &key){
 bool Prism::GetValue(const std::string &key, int *value){
   Darts::DoubleArray::result_pair_type result;
   trie_->exactMatchSearch(key.c_str(), result);
-  
+
   if(result.value == -1)
     return false;
-    
+
   *value = result.value;
   return true;
 }

@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
 
@@ -23,18 +23,18 @@ typedef std::set<std::string> Syllabary;
 class Code : public std::vector<int> {
  public:
   static const size_t kIndexCodeMaxLength = 3;
-  
+
   bool operator< (const Code &other) const;
   bool operator== (const Code &other) const;
-  
+
   void CreateIndex(Code* index_code);
 };
 
-struct DictEntry { 
+struct DictEntry {
   Code code;
   std::string text;
   double weight;
-  
+
   DictEntry() : weight(0.0) {}
   bool operator< (const DictEntry& other) const;
 };

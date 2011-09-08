@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-05-29 GONG Chen <chen.sst@gmail.com>
 //
 
@@ -41,7 +41,7 @@ class TranslationBeta : public Translation {
     candies_.push_back(shared_ptr<Candidate>(
         new Candidate("beta", "Beta-3", "", 0, 4, 0)));
   }
-  
+
   bool Next() {
     if (exhausted())
       return false;
@@ -49,13 +49,13 @@ class TranslationBeta : public Translation {
       set_exhausted(true);
     return true;
   }
-  
+
   shared_ptr<Candidate> Peek() {
     if (exhausted())
       return shared_ptr<Candidate>();
     return candies_[cursor_];
   }
-  
+
  private:
   std::vector<shared_ptr<Candidate> > candies_;
   int cursor_;

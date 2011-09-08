@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-04-07 GONG Chen <chen.sst@gmail.com>
 //
 #include <gtest/gtest.h>

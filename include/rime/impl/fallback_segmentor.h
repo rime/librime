@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-06-20 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_FALLBACK_SEGMENTOR_H_
@@ -19,9 +19,9 @@ class FallbackSegmentor : public Segmentor {
   explicit FallbackSegmentor(Engine *engine);
 
   virtual bool Proceed(Segmentation *segmentation);
-  
+
  private:
-  
+
 };
 
 }  // namespace rime

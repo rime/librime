@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-04-17 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_KEY_TABLE_H_

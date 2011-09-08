@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
 #include <rime/candidate.h>
@@ -87,7 +87,7 @@ Translation* R10nTranslator::Query(const std::string &input,
   int consumed = syllablizer.BuildSyllableGraph(input,
                                                 *dict_->prism(),
                                                 &syllable_graph);
-  
+
   Translation *translation = NULL;
   // DictEntryIterator iter = dict_->Lookup(syllable_graph, 0);
   // if (!iter.exhausted())

@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-04-24 GONG Chen <chen.sst@gmail.com>
 //
 #include <cctype>
@@ -32,7 +32,7 @@ Processor::Result TrivialProcessor::ProcessKeyEvent(
       else {
         ctx->PushInput(' ');
         return kAccepted;
-      } 
+      }
     }
     else {
       return kNoop;

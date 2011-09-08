@@ -16,7 +16,7 @@
 namespace rime {
 
 class Dictionary;
-  
+
 class TableTranslator : public Translator {
  public:
   TableTranslator(Engine *engine);

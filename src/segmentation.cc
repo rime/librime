@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-05-15 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
@@ -36,11 +36,11 @@ void Segmentation::Reset(const std::string &input) {
   while (cursor_ > 0 && at(cursor_ - 1).end > diff_pos)
     --cursor_;
   resize(cursor_);
-  
+
   // then investigate the last segment if not having been confirmed
   if (cursor_ > 0 && at(cursor_ - 1).status <= Segment::kGuess)
     --cursor_;
-  
+
   input_ = input;
 }
 
@@ -112,7 +112,7 @@ int Segmentation::GetCurrentSegmentLength() const {
   return at(cursor_).end - at(cursor_).start;
 }
 
-std::ostream& operator<< (std::ostream& out, 
+std::ostream& operator<< (std::ostream& out,
                           const Segmentation &segmentation) {
   out << "<" << segmentation.input();
   BOOST_FOREACH(const Segment &segment, segmentation) {

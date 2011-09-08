@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-07-24 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>

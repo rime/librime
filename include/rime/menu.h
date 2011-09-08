@@ -33,7 +33,7 @@ class Menu {
   int Prepare(int candidate_count);
   Page* CreatePage(int page_size, int page_no);
   shared_ptr<Candidate> GetCandidateAt(int index);
-  
+
  private:
   std::vector<shared_ptr<Translation> > translations_;
   CandidateList candidates_;

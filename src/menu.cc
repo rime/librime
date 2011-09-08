@@ -4,7 +4,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-05-29 GONG Chen <chen.sst@gmail.com>
 //
 #include <iterator>

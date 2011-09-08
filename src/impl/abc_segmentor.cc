@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-05-15 GONG Chen <chen.sst@gmail.com>
 //
 #include <rime/common.h>
@@ -38,6 +38,6 @@ bool AbcSegmentor::Proceed(Segmentation *segmentation) {
   }
   // continue this round
   return true;
-}  
-    
+}
+
 }  // namespace rime

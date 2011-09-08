@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-04-24 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_CONTEXT_H_
@@ -16,7 +16,7 @@
 namespace rime {
 
 class Composition;
-class Segmentation; 
+class Segmentation;
 
 class Context {
  public:
@@ -34,7 +34,7 @@ class Context {
 
   // return false if there's no candidate for current segment
   bool ConfirmCurrentSelection();
-  
+
   void set_input(const std::string &value);
   const std::string& input() const { return input_; }
 
@@ -46,7 +46,7 @@ class Context {
   void set_composition(Composition *comp);
   Composition* composition();
   const Composition* composition() const;
-  
+
   Notifier& commit_notifier() { return commit_notifier_; }
   Notifier& input_change_notifier() { return input_change_notifier_; }
   Notifier& select_notifier() { return select_notifier_; }
@@ -56,7 +56,7 @@ class Context {
   int selector_;
   int cursor_;
   scoped_ptr<Composition> composition_;
-  
+
   Notifier commit_notifier_;
   Notifier input_change_notifier_;
   Notifier select_notifier_;

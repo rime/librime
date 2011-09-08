@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-05-22 GONG Chen <chen.sst@gmail.com>
 //
 
@@ -27,6 +27,6 @@ Candidate::Candidate(const std::string type,
 }
 
 Candidate::~Candidate() {
-}  
+}
 
 }  // namespace rime

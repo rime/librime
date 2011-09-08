@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-05-15 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_SEGMENTOR_H_

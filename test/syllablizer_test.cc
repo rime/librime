@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
@@ -34,7 +34,7 @@ class RimeSyllablizerTest : public ::testing::Test {
     for (int i = 0; i < syllables.size(); ++i) {
       syllable_id_[syllables[i]] = i;
     }
-    
+
     prism_ = new rime::Prism("syllablizer_test.bin");
     std::set<std::string> keyset;
     std::copy(syllables.begin(), syllables.end(), std::inserter(keyset, keyset.begin()));

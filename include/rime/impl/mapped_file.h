@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-06-27 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_MAPPED_FILE_H_
@@ -52,10 +52,10 @@ class OffsetPtr {
  private:
   Offset offset_;
 };
-  
+
 struct String {
   OffsetPtr<char> data;
-  
+
   const char *c_str() const;
   size_t length() const;
 };
@@ -83,12 +83,12 @@ struct List {
 // MappedFile class definition
 
 class MappedFileImpl;
-  
+
 class MappedFile : boost::noncopyable {
  protected:
   explicit MappedFile(const std::string &file_name);
   virtual ~MappedFile();
-  
+
   bool Create(size_t capacity);
   bool OpenReadOnly();
   bool OpenReadWrite();
@@ -110,7 +110,7 @@ class MappedFile : boost::noncopyable {
 
   size_t capacity() const;
   char * address() const;
-  
+
 public:
   bool IsOpen() const;
   void Close();
@@ -164,7 +164,7 @@ T* MappedFile::Find(size_t offset) {
     return NULL;
   return reinterpret_cast<T*>(address() + offset);
 }
-  
+
 template <class T>
 Array<T>* MappedFile::CreateArray(size_t array_size) {
   size_t num_bytes = sizeof(Array<T>) + sizeof(T) * (array_size - 1);

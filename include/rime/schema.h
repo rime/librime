@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-04-24 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_SCHEMA_H_
@@ -25,13 +25,13 @@ class Schema {
 
   const std::string& schema_id() const { return schema_id_; }
   const std::string& schema_name() const { return schema_name_; }
-  
+
   Config* config() const { return config_.get(); }
   void set_config(Config *config) { config_.reset(config); }
 
  private:
   std::string schema_id_;
-  std::string schema_name_; 
+  std::string schema_name_;
  scoped_ptr<Config> config_;
 };
 

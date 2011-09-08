@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-04-06 Zou xu <zouivex@gmail.com>
 //
 
@@ -121,7 +121,7 @@ TEST_F(RimeConfigTest, Config_GetList) {
   ASSERT_TRUE(element);
   ASSERT_TRUE(element->GetString(&value));
   EXPECT_EQ("arbiter", value);
-  
+
 }
 
 TEST_F(RimeConfigTest, Config_GetMap) {

@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-05-17 Zou xu <zouivex@gmail.com>
 //
 #include <gtest/gtest.h>
@@ -30,14 +30,14 @@ class RimePrismTest : public ::testing::Test {
     keyset.insert("adobe");      // 0 == id
     keyset.insert("yahoo");
     keyset.insert("baidu");      // 1
-    
+
     prism_->Build(keyset);
   }
 
   virtual void TearDown() {
     delete prism_;
   }
-  
+
   Prism *prism_;
 };
 
@@ -47,14 +47,14 @@ TEST_F(RimePrismTest, SaveAndLoad) {
 
   Prism test(prism_->file_name());
   test.Load();
-  
+
   EXPECT_EQ(prism_->array_size(), test.array_size());
 }
 
 TEST_F(RimePrismTest, HasKey) {
   EXPECT_TRUE(prism_->HasKey("google"));
   EXPECT_FALSE(prism_->HasKey("googlesoft"));
-  
+
   EXPECT_TRUE(prism_->HasKey("microsoft"));
   EXPECT_FALSE(prism_->HasKey("peoplesoft"));
 }
@@ -63,7 +63,7 @@ TEST_F(RimePrismTest, GetValue) {
   int value = -1;
   EXPECT_TRUE(prism_->GetValue("adobe", &value));
   EXPECT_EQ(value, 0);
-  
+
   value = -1;
   EXPECT_TRUE(prism_->GetValue("baidu", &value));
   EXPECT_EQ(value, 1);
@@ -71,7 +71,7 @@ TEST_F(RimePrismTest, GetValue) {
 
 TEST_F(RimePrismTest, CommonPrefixMatch) {
   std::vector<Prism::Match> result;
-  
+
   prism_->CommonPrefixSearch("goodbye", &result);
   //result is good and goodbye.
   ASSERT_EQ(result.size(), 2);
@@ -83,7 +83,7 @@ TEST_F(RimePrismTest, CommonPrefixMatch) {
 
 TEST_F(RimePrismTest, ExpandSearch) {
   std::vector<Prism::Match> result;
-  
+
   prism_->ExpandSearch("goo", &result, 10);
   //result is good, google and goodbye (ordered by length asc).
   ASSERT_EQ(result.size(), 3);

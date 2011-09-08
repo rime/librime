@@ -1,9 +1,9 @@
-// vim: set sts=2 sw=2 et:
+﻿// vim: set sts=2 sw=2 et:
 // encoding: utf-8
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-05-02 Wensong He <snowhws@gmail.com>
 //
 #include <gtest/gtest.h>
@@ -35,8 +35,10 @@ TEST(TrivialTranslatorTest, Query) {
   shared_ptr<Candidate> candidate = translation->Peek();
   ASSERT_TRUE(candidate);
   EXPECT_EQ("abc", candidate->type());
-  EXPECT_EQ("一千二百三十四abc", candidate->text());
+  // 一千二百三十四abc
+  EXPECT_EQ("\xe4\xb8\x80\xe5\x8d\x83\xe4\xba\x8c\xe7\x99\xbe\xe4\xb8\x89\xe5\x8d\x81\xe5\x9b\x9b""abc",
+            candidate->text());
   EXPECT_EQ(segment.start, candidate->start());
   EXPECT_EQ(segment.end, candidate->end());
   EXPECT_TRUE(translation->Next());
-} 
+}

@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-06-20 GONG Chen <chen.sst@gmail.com>
 //
 #include <rime/common.h>
@@ -24,7 +24,7 @@ bool FallbackSegmentor::Proceed(Segmentation *segmentation) {
   int k = segmentation->GetCurrentPosition();
   if (k == input.length())
     return false;
-  
+
   if (k > 0) {
     Segment &last = segmentation->back();
     // append one character to the last raw segment
@@ -45,6 +45,6 @@ bool FallbackSegmentor::Proceed(Segmentation *segmentation) {
   }
   // fallback segmentor should be the last being called, so end this round
   return false;
-}  
-    
+}
+
 }  // namespace rime

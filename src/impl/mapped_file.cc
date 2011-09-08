@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // register components
 //
 // 2011-06-30 GONG Chen <chen.sst@gmail.com>
@@ -50,7 +50,7 @@ class MappedFileImpl {
   };
 
   MappedFileImpl(const std::string &file_name, OpenMode mode) {
-    boost::interprocess::mode_t file_mapping_mode = 
+    boost::interprocess::mode_t file_mapping_mode =
         (mode == kOpenReadOnly) ? boost::interprocess::read_only
                                 : boost::interprocess::read_write;
     file_.reset(new boost::interprocess::file_mapping(file_name.c_str(), file_mapping_mode));
@@ -69,11 +69,11 @@ class MappedFileImpl {
   size_t get_size() const {
     return region_->get_size();
   }
-    
+
  private:
   scoped_ptr<boost::interprocess::file_mapping> file_;
   scoped_ptr<boost::interprocess::mapped_region> region_;
-  
+
 };
 
 MappedFile::MappedFile(const std::string &file_name)
@@ -87,7 +87,7 @@ MappedFile::~MappedFile() {
     file_.reset();
   }
 }
-  
+
 bool MappedFile::Create(size_t capacity) {
   if (boost::filesystem::exists(file_name_)) {
     EZLOGGERPRINT("Overwriting file '%s'.", file_name_.c_str());

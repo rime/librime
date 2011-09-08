@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-04-24 GONG Chen <chen.sst@gmail.com>
 //
 #include <cstring>
@@ -23,7 +23,7 @@
 class RimeConsole {
  public:
   static const int kPageSize = 9;
-  
+
   RimeConsole() : interactive_(false), engine_(new rime::Engine) {
     engine_->set_schema(new rime::Schema(".rime_console"));
     conn_ = engine_->sink().connect(
@@ -67,7 +67,7 @@ class RimeConsole {
       std::cout << "]" << std::endl;
     }
   }
-  
+
   void ProcessLine(const std::string &line) {
     EZLOGGERVAR(line);
     rime::KeySequence keys;
@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
 
   if (!PrepareDictionary())
     return 1;
-  
+
   RimeConsole console;
   // "-i" turns on interactive mode (no commit at the end of line)
   bool interactive = argc > 1 && !strcmp(argv[1], "-i");

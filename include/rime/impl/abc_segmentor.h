@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-05-20 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_ABC_SEGMENTOR_H_
@@ -19,7 +19,7 @@ class AbcSegmentor : public Segmentor {
   explicit AbcSegmentor(Engine *engine);
 
   virtual bool Proceed(Segmentation *segmentation);
-  
+
  private:
   std::string alphabet_;
 };

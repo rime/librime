@@ -3,7 +3,7 @@
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
-// 
+//
 // 2011-04-24 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_TRIVIAL_PROCESSOR_H_
@@ -13,7 +13,7 @@
 #include <rime/component.h>
 #include <rime/processor.h>
 
-namespace rime {  
+namespace rime {
 
 class TrivialProcessor : public Processor {
  public:
