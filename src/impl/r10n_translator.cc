@@ -32,18 +32,22 @@ class R10nTranslation : public Translation {
     DictEntryIterator &iter(collector_->rbegin()->second);
     if (!iter.Next()) {
       int consumed_input_length = collector_->rbegin()->first;
+      EZLOGGERVAR(consumed_input_length);
       collector_->erase(consumed_input_length);
+      EZLOGGERVAR(collector_->size());
       set_exhausted(!collector_ || collector_->empty());
     }
-    return true;
+    return exhausted();
   }
 
   virtual shared_ptr<Candidate> Peek() {
     if (exhausted())
       return shared_ptr<Candidate>();
     int consumed_input_length = collector_->rbegin()->first;
+    EZLOGGERVAR(consumed_input_length);
     DictEntryIterator &iter(collector_->rbegin()->second);
     const shared_ptr<DictEntry> &e(iter.Peek());
+    EZLOGGERVAR(e->text);
     shared_ptr<Candidate> cand(new Candidate(
         "zh",
         e->text,
