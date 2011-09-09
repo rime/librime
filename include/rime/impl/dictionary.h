@@ -77,6 +77,7 @@ class Dictionary {
 
   bool Exists() const;
   bool Compile(const std::string &source_file);
+  bool Remove();
   bool Load();
   bool Unload();
 

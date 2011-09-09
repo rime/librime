@@ -12,24 +12,24 @@
 class RimeDictionaryTest : public ::testing::Test {
  public:
   virtual void SetUp() {
-    EZLOGGERFUNCTRACKER;
-    if (!dict_.Exists()) {
-      dict_.Compile("luna_pinyin.dict.yaml");
+    if (!rebuilt_) {
+      dict_.Remove();
+      dict_.Compile("dictionary_test.dict.yaml");
+      rebuilt_ = true;
     }
-    if (dict_.Exists()) {
-      dict_.Load();
-    }
+    dict_.Load();
   }
   virtual void TearDown() {
-    EZLOGGERFUNCTRACKER;
     if (dict_.loaded())
       dict_.Unload();
   }
  protected:
   static rime::Dictionary dict_;
+  static bool rebuilt_;
 };
 
 rime::Dictionary RimeDictionaryTest::dict_("dictionary_test");
+bool RimeDictionaryTest::rebuilt_ = false;
 
 TEST_F(RimeDictionaryTest, Ready) {
   EXPECT_TRUE(dict_.loaded());

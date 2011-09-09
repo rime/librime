@@ -9,7 +9,7 @@ add_dependencies(rime_test rime-static)
 
 file(COPY ${PROJECT_SOURCE_DIR}/data/test.yaml 
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
-file(COPY ${PROJECT_SOURCE_DIR}/data/samples/luna_pinyin.dict.yaml 
+file(COPY ${PROJECT_SOURCE_DIR}/data/dictionary_test.dict.yaml 
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 
 set(RIME_TEST_EXECUTABLE ${EXECUTABLE_OUTPUT_PATH}/rime_test${EXT})

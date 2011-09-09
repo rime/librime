@@ -10,11 +10,37 @@
 #include <rime/impl/syllablizer.h>
 #include <rime/impl/table.h>
 
-static const char file_name[] = "table_test.bin";
-static const int total_num_entries = 8;
 
-static void prepare_sample_vocabulary(rime::Syllabary &syll,
-                                      rime::Vocabulary &voc) {
+class RimeTableTest : public ::testing::Test {
+ public:
+  virtual void SetUp() {
+    if (!table_) {
+      table_.reset(new rime::Table(file_name));
+      table_->Remove();
+      rime::Syllabary syll;
+      rime::Vocabulary voc;
+      PrepareSampleVocabulary(syll, voc);
+      ASSERT_TRUE(table_->Build(syll, voc, total_num_entries));
+      ASSERT_TRUE(table_->Save());
+    }
+  }
+  virtual void TearDown() {
+  }
+ protected:
+  static const int total_num_entries = 8;
+  static const char file_name[];
+
+  static void PrepareSampleVocabulary(rime::Syllabary &syll,
+                                      rime::Vocabulary &voc);
+  static rime::scoped_ptr<rime::Table> table_;
+};
+
+const char RimeTableTest::file_name[] = "table_test.bin";
+
+rime::scoped_ptr<rime::Table> RimeTableTest::table_;
+
+void RimeTableTest::PrepareSampleVocabulary(rime::Syllabary &syll,
+                                            rime::Vocabulary &voc) {
   rime::DictEntry d;
   syll.insert("0");
   // no entries for '0', however
@@ -54,41 +80,18 @@ static void prepare_sample_vocabulary(rime::Syllabary &syll,
   (*lv4)[-1].entries.push_back(d);
 }
 
-TEST(RimeTableTest, IntegrityTest) {
-  rime::scoped_ptr<rime::Table> table;
-  table.reset(new rime::Table(file_name));
-  ASSERT_TRUE(table);
-  table->Remove();
-
-  rime::Syllabary syll;
-  rime::Vocabulary voc;
-  prepare_sample_vocabulary(syll, voc);
-  ASSERT_TRUE(table->Build(syll, voc, total_num_entries));
-  ASSERT_TRUE(table->Save());
-  table.reset();
-
-  table.reset(new rime::Table(file_name));
-  ASSERT_TRUE(table);
-  ASSERT_TRUE(table->Load());
-
+TEST_F(RimeTableTest, IntegrityTest) {
+  table_.reset(new rime::Table(file_name));
+  ASSERT_TRUE(table_);
+  ASSERT_TRUE(table_->Load());
 }
 
-TEST(RimeTableTest, SimpleQuery) {
-  rime::scoped_ptr<rime::Table> table;
-  table.reset(new rime::Table(file_name));
-  if (!table->Load()) {
-    rime::Syllabary syll;
-    rime::Vocabulary voc;
-    prepare_sample_vocabulary(syll, voc);
-    ASSERT_TRUE(table->Build(syll, voc, total_num_entries));
-    ASSERT_TRUE(table->Save());
-  }
+TEST_F(RimeTableTest, SimpleQuery) {
+  EXPECT_STREQ("0", table_->GetSyllableById(0));
+  EXPECT_STREQ("3", table_->GetSyllableById(3));
+  EXPECT_STREQ("4", table_->GetSyllableById(4));
 
-  EXPECT_STREQ("0", table->GetSyllableById(0));
-  EXPECT_STREQ("3", table->GetSyllableById(3));
-  EXPECT_STREQ("4", table->GetSyllableById(4));
-
-  rime::TableAccessor v = table->QueryWords(1);
+  rime::TableAccessor v = table_->QueryWords(1);
   ASSERT_FALSE(v.exhausted());
   ASSERT_EQ(1, v.remaining());
   ASSERT_TRUE(v.entry() != NULL);
@@ -96,7 +99,7 @@ TEST(RimeTableTest, SimpleQuery) {
   EXPECT_EQ(1.0, v.entry()->weight);
   EXPECT_FALSE(v.Next());
 
-  v = table->QueryWords(2);
+  v = table_->QueryWords(2);
   ASSERT_EQ(3, v.remaining());
   EXPECT_STREQ("er", v.entry()->text.c_str());
   v.Next();
@@ -104,7 +107,7 @@ TEST(RimeTableTest, SimpleQuery) {
   v.Next();
   EXPECT_STREQ("lia", v.entry()->text.c_str());
 
-  v = table->QueryWords(3);
+  v = table_->QueryWords(3);
   ASSERT_EQ(2, v.remaining());
   EXPECT_STREQ("san", v.entry()->text.c_str());
   v.Next();
@@ -114,7 +117,7 @@ TEST(RimeTableTest, SimpleQuery) {
   code.push_back(1);
   code.push_back(2);
   code.push_back(3);
-  v = table->QueryPhrases(code);
+  v = table_->QueryPhrases(code);
   ASSERT_FALSE(v.exhausted());
   ASSERT_EQ(1, v.remaining());
   ASSERT_TRUE(v.entry() != NULL);
@@ -123,7 +126,7 @@ TEST(RimeTableTest, SimpleQuery) {
   EXPECT_FALSE(v.Next());
 
   code.push_back(4);
-  v = table->QueryPhrases(code);
+  v = table_->QueryPhrases(code);
   ASSERT_FALSE(v.exhausted());
   ASSERT_EQ(1, v.remaining());
   ASSERT_TRUE(v.entry() != NULL);
@@ -134,17 +137,7 @@ TEST(RimeTableTest, SimpleQuery) {
   EXPECT_FALSE(v.Next());
 }
 
-TEST(RimeTableTest, QueryWithSyllableGraph) {
-  rime::scoped_ptr<rime::Table> table;
-  table.reset(new rime::Table(file_name));
-  if (!table->Load()) {
-    rime::Syllabary syll;
-    rime::Vocabulary voc;
-    prepare_sample_vocabulary(syll, voc);
-    ASSERT_TRUE(table->Build(syll, voc, total_num_entries));
-    ASSERT_TRUE(table->Save());
-  }
-
+TEST_F(RimeTableTest, QueryWithSyllableGraph) {
   const std::string input("yiersansi");
   rime::SyllableGraph g;
   g.input_length = input.length();
@@ -158,8 +151,9 @@ TEST(RimeTableTest, QueryWithSyllableGraph) {
   g.edges[2][4][2].type = rime::kNormalSpelling;
   g.edges[4][7][3].type = rime::kNormalSpelling;
   g.edges[7][9][4].type = rime::kNormalSpelling;
+
   rime::TableQueryResult result;
-  ASSERT_TRUE(table->Query(g, 0, &result));
+  ASSERT_TRUE(table_->Query(g, 0, &result));
   EXPECT_EQ(2, result.size());
   ASSERT_TRUE(result.find(2) != result.end());
   ASSERT_EQ(1, result[2].size());
@@ -173,7 +167,7 @@ TEST(RimeTableTest, QueryWithSyllableGraph) {
   ASSERT_TRUE(result.find(6) == result.end());
   ASSERT_TRUE(result.find(7) != result.end());
 
-  ASSERT_TRUE(table->Query(g, 2, &result));
+  ASSERT_TRUE(table_->Query(g, 2, &result));
   EXPECT_EQ(1, result.size());
   ASSERT_TRUE(result.find(4) != result.end());
   ASSERT_EQ(1, result[4].size());

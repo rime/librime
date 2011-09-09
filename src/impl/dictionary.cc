@@ -262,6 +262,13 @@ bool Dictionary::Exists() const {
          boost::filesystem::exists(table_->file_name());
 }
 
+bool Dictionary::Remove() {
+  if (loaded()) return false;
+  prism_->Remove();
+  table_->Remove();
+  return true;
+}
+
 bool Dictionary::Load() {
   EZLOGGERFUNCTRACKER;
   if (!prism_->Load() || !table_->Load()) {
