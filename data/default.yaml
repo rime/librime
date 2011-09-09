@@ -13,8 +13,9 @@ engine:
     - abc_segmentor
     - fallback_segmentor
   translators:
-    - table_translator
+    - r10n_translator
+    - trivial_translator
     - echo_translator
 
-table_translator:
+translator:
   dictionary: luna_pinyin

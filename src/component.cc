@@ -18,6 +18,7 @@
 #include <rime/impl/trivial_processor.h>
 #include <rime/impl/trivial_translator.h>
 #include <rime/impl/table_translator.h>
+#include <rime/impl/r10n_translator.h>
 
 namespace rime {
 
@@ -40,6 +41,7 @@ void RegisterComponents()
   r.Register("echo_translator", new Component<EchoTranslator>);
   r.Register("trivial_translator", new Component<TrivialTranslator>);
   r.Register("table_translator", new Component<TableTranslator>);
+  r.Register("r10n_translator", new Component<R10nTranslator>);
 
 }
 

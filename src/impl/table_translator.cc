@@ -62,7 +62,7 @@ TableTranslator::TableTranslator(Engine *engine)
     return;
   Config *config = engine->schema()->config();
   std::string dict_name;
-  if (!config->GetString("table_translator/dictionary", &dict_name)) {
+  if (!config->GetString("translator/dictionary", &dict_name)) {
     EZLOGGERPRINT("Error: dictionary not specified in schema '%s'.",
                   engine->schema()->schema_id().c_str());
     return;

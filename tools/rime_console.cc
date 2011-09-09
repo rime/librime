@@ -101,7 +101,7 @@ class RimeConsole {
 bool PrepareDictionary() {
   rime::Schema schema(".rime_console");
   std::string dict_name;
-  if (!schema.config()->GetString("table_translator/dictionary", &dict_name)) {
+  if (!schema.config()->GetString("translator/dictionary", &dict_name)) {
     EZLOGGERPRINT("Error: dictionary not specified in schema '%s'.",
                   schema.schema_id().c_str());
     return false;

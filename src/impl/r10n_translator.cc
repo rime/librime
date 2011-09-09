@@ -18,42 +18,46 @@
 
 namespace rime {
 
-/*
 class R10nTranslation : public Translation {
  public:
-  R10nTranslation(const DictEntryIterator& iter,
+  R10nTranslation(shared_ptr<DictEntryCollector>& collector,
                   int start)
-      : iter_(iter), start_(start) {
-    set_exhausted(iter.exhausted());
+      : collector_(collector), start_(start) {
+    set_exhausted(!collector_ || collector_->empty());
   }
 
   virtual bool Next() {
     if (exhausted())
       return false;
-    iter_.Next();
-    set_exhausted(iter_.exhausted());
+    DictEntryIterator &iter(collector_->rbegin()->second);
+    if (!iter.Next()) {
+      int consumed_input_length = collector_->rbegin()->first;
+      collector_->erase(consumed_input_length);
+      set_exhausted(!collector_ || collector_->empty());
+    }
     return true;
   }
 
   virtual shared_ptr<Candidate> Peek() {
     if (exhausted())
       return shared_ptr<Candidate>();
-    const shared_ptr<DictEntry> &e(iter_.Peek());
+    int consumed_input_length = collector_->rbegin()->first;
+    DictEntryIterator &iter(collector_->rbegin()->second);
+    const shared_ptr<DictEntry> &e(iter.Peek());
     shared_ptr<Candidate> cand(new Candidate(
         "zh",
         e->text,
         "",
         start_,
-        start_ + e->consumed_input_length,
+        start_ + consumed_input_length,
         0));
     return cand;
   }
 
  private:
-  DictEntryIterator iter_;
+  shared_ptr<DictEntryCollector> collector_;
   int start_;
 };
-*/
 
 R10nTranslator::R10nTranslator(Engine *engine)
     : Translator(engine) {
@@ -61,7 +65,7 @@ R10nTranslator::R10nTranslator(Engine *engine)
     return;
   Config *config = engine->schema()->config();
   std::string dict_name;
-  if (!config->GetString("r10n_translator/dictionary", &dict_name)) {
+  if (!config->GetString("translator/dictionary", &dict_name)) {
     EZLOGGERPRINT("Error: dictionary not specified in schema '%s'.",
                   engine->schema()->schema_id().c_str());
     return;
@@ -89,9 +93,10 @@ Translation* R10nTranslator::Query(const std::string &input,
                                                 &syllable_graph);
 
   Translation *translation = NULL;
-  // DictEntryIterator iter = dict_->Lookup(syllable_graph, 0);
-  // if (!iter.exhausted())
-  //     translation = new R10nLookupResult(iter, segment.start);
+  shared_ptr<DictEntryCollector> collector =
+      dict_->Lookup(syllable_graph, 0);
+  if (collector)
+    translation = new R10nTranslation(collector, segment.start);
   return translation;
 }
 

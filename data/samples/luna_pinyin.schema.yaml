@@ -19,10 +19,10 @@ engine:
     - abc_segmentor
     - fallback_segmentor
   translators:
-    - table_translator
+    - r10n_translator
     - echo_translator
 
-r10n_composer:
+processor:
   alphabet: "abcdefghijklmnopqrstuvwxyz"
   delimiter: "'"
   auto_commit: y  # 段落确认完毕立即上屏不需按Return确认
@@ -38,7 +38,7 @@ editor:
     - [ xlit, "abcdefg", "日月金木水火土" ]  # 显示形码键名用
     - [ xform, "dang1", "da-ng" ]  # 注意：在整個輸入串內做全局替換！
 
-table_translator:
+translator:
   dictionary: luna_pinyin
   spelling_algebra:
     - [ xlit,     "ABCDEFG",        "abcdefg" ]            # 字符轉寫    
