@@ -47,14 +47,12 @@ int match_extra_code(const table::Code *extra_code, int depth,
   BOOST_FOREACH(const EndVertexMap::value_type &edge, edges->second) {
     int end_vertex_pos = edge.first;
     const SpellingMap &spellings(edge.second);
-    BOOST_FOREACH(const SpellingMap::value_type &spelling, spellings) {
-      SyllableId syll_id = spelling.first;
-      if (syll_id != current_syll_id) continue;
-      int match = match_extra_code(extra_code, depth + 1,
-                                   syll_graph, end_vertex_pos);
-      if (!match) continue;
-      if (match > best_match) best_match = match;
-    }
+    if (spellings.find(current_syll_id) == spellings.end())
+      continue;
+    int match_end_pos = match_extra_code(extra_code, depth + 1,
+                                         syll_graph, end_vertex_pos);
+    if (!match_end_pos) continue;
+    if (match_end_pos > best_match) best_match = match_end_pos;
   }
   return best_match;
 }
