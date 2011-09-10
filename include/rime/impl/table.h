@@ -83,6 +83,7 @@ class TableAccessor {
   const table::Entry* entry() const;
   const table::Code* extra_code() const;
   const Code& index_code() const { return index_code_; }
+  const Code code() const;
 
  private:
   Code index_code_;

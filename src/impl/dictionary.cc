@@ -32,6 +32,33 @@ void RawCode::FromString(const std::string &code) {
                boost::algorithm::token_compress_on);
 }
 
+int match_extra_code(const table::Code *extra_code, int depth,
+                     const SyllableGraph &syll_graph, int current_pos) {
+  if (!extra_code || depth >= extra_code->size)
+    return current_pos;  // success
+  if (current_pos >= syll_graph.interpreted_length)
+    return 0;  // failure (possibly success for completion in the future)
+  EdgeMap::const_iterator edges = syll_graph.edges.find(current_pos);
+  if (edges == syll_graph.edges.end()) {
+    return 0;
+  }
+  table::SyllableId current_syll_id = extra_code->at[depth];
+  int best_match = 0;
+  BOOST_FOREACH(const EndVertexMap::value_type &edge, edges->second) {
+    int end_vertex_pos = edge.first;
+    const SpellingMap &spellings(edge.second);
+    BOOST_FOREACH(const SpellingMap::value_type &spelling, spellings) {
+      SyllableId syll_id = spelling.first;
+      if (syll_id != current_syll_id) continue;
+      int match = match_extra_code(extra_code, depth + 1,
+                                   syll_graph, end_vertex_pos);
+      if (!match) continue;
+      if (match > best_match) best_match = match;
+    }
+  }
+  return best_match;
+}
+
 }  // namespace dictionary
 
 DictEntryIterator::DictEntryIterator()
@@ -96,11 +123,17 @@ shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_
   }
   shared_ptr<DictEntryCollector> collector(new DictEntryCollector);
   // copy result
-  BOOST_FOREACH(const TableQueryResult::value_type &v, result) {
+  BOOST_FOREACH(TableQueryResult::value_type &v, result) {
     int end_pos = v.first;
-    BOOST_FOREACH(const TableAccessor &a, v.second) {
+    BOOST_FOREACH(TableAccessor &a, v.second) {
       if (a.extra_code()) {
-        // TODO:
+        do {
+          int actual_end_pos = dictionary::match_extra_code(a.extra_code(), 0,
+                                                            syllable_graph, end_pos);
+          if (actual_end_pos == 0) continue;
+          (*collector)[actual_end_pos].push_back(dictionary::Chunk(a.code(), a.entry()));
+        }
+        while (a.Next());
       }
       else {
         (*collector)[end_pos].push_back(dictionary::Chunk(a));

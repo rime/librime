@@ -71,6 +71,20 @@ const table::Code* TableAccessor::extra_code() const {
   return &code_map_->at[cursor_].extra_code;
 }
 
+const Code TableAccessor::code() const {
+  const table::Code *extra = extra_code();
+  if (!extra) {
+    return index_code();
+  }
+  else {
+    Code code(index_code());
+    for (const table::SyllableId *p = extra->begin(); p != extra->end(); ++p) {
+      code.push_back(*p);
+    }
+    return code;
+  }
+}
+
 bool TableAccessor::Next() {
   if (exhausted())
     return false;
@@ -307,15 +321,16 @@ table::TrunkIndex* Table::BuildTrunkIndex(const Code &prefix, const Vocabulary &
 }
 
 table::TailIndex* Table::BuildTailIndex(const Code &prefix, const Vocabulary &vocabulary) {
-  if (vocabulary.empty()) {
+  if (vocabulary.find(-1) == vocabulary.end()) {
     return NULL;
   }
-  table::TailIndex *index = CreateArray<table::TailIndexNode>(vocabulary.size());
+  const VocabularyPage &page(vocabulary.find(-1)->second);
+  EZDBGONLYLOGGERVAR(page.entries.size());
+  table::TailIndex *index = CreateArray<table::TailIndexNode>(page.entries.size());
   if (!index) {
     return NULL;
   }
   size_t count = 0;
-  const VocabularyPage &page(vocabulary.begin()->second);
   BOOST_FOREACH(const DictEntryList::value_type &src, page.entries) {
     EZDBGONLYLOGGERVAR(count);
     EZDBGONLYLOGGERVAR(src.text);
@@ -330,7 +345,7 @@ table::TailIndex* Table::BuildTailIndex(const Code &prefix, const Vocabulary &vo
     }
     std::copy(src.code.begin() + Code::kIndexCodeMaxLength,
               src.code.end(),
-              dest.extra_code.at.get());
+              dest.extra_code.begin());
     BuildEntry(src, &dest.entry);
   }
   return index;

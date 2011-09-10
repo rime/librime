@@ -78,6 +78,11 @@ void RimeTableTest::PrepareSampleVocabulary(rime::Syllabary &syll,
   d.code.push_back(4);
   d.text = "yi-er-san-si";
   (*lv4)[-1].entries.push_back(d);
+  d.code.resize(3);
+  d.code.push_back(2);
+  d.code.push_back(1);
+  d.text = "yi-er-san-er-yi";
+  (*lv4)[-1].entries.push_back(d);
 }
 
 TEST_F(RimeTableTest, IntegrityTest) {
@@ -127,14 +132,20 @@ TEST_F(RimeTableTest, SimpleQuery) {
 
   code.push_back(4);
   v = table_->QueryPhrases(code);
-  ASSERT_FALSE(v.exhausted());
-  ASSERT_EQ(1, v.remaining());
+  EXPECT_FALSE(v.exhausted());
+  EXPECT_EQ(2, v.remaining());
   ASSERT_TRUE(v.entry() != NULL);
   EXPECT_STREQ("yi-er-san-si", v.entry()->text.c_str());
   ASSERT_TRUE(v.extra_code() != NULL);
   ASSERT_EQ(1, v.extra_code()->size);
   EXPECT_EQ(4, *v.extra_code()->at);
-  EXPECT_FALSE(v.Next());
+  EXPECT_TRUE(v.Next());
+  ASSERT_TRUE(v.entry() != NULL);
+  EXPECT_STREQ("yi-er-san-er-yi", v.entry()->text.c_str());
+  ASSERT_TRUE(v.extra_code() != NULL);
+  ASSERT_EQ(2, v.extra_code()->size);
+  EXPECT_EQ(2, v.extra_code()->at[0]);
+  EXPECT_EQ(1, v.extra_code()->at[1]);
 }
 
 TEST_F(RimeTableTest, QueryWithSyllableGraph) {
@@ -162,7 +173,7 @@ TEST_F(RimeTableTest, QueryWithSyllableGraph) {
   ASSERT_EQ(2, result[7].size());
   EXPECT_STREQ("yi-er-san", result[7].front().entry()->text.c_str());
   EXPECT_STREQ("yi-er-san-si", result[7].back().entry()->text.c_str());
-  EXPECT_EQ(1, result[7].back().extra_code()->size);
+  ASSERT_EQ(1, result[7].back().extra_code()->size);
   EXPECT_EQ(4, result[7].back().extra_code()->at[0]);
   ASSERT_TRUE(result.find(6) == result.end());
   ASSERT_TRUE(result.find(7) != result.end());
