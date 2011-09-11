@@ -24,7 +24,7 @@ TEST(TrivialTranslatorTest, Query) {
   scoped_ptr<Translator> translator(component->Create(NULL));
   ASSERT_TRUE(translator);
   // lookup test
-  const std::string test_input("yiqianerbaisanshisiabc");
+  const std::string test_input("yiqianerbaisanshisi");
   Segment segment;
   segment.start = 0;
   segment.end = test_input.length();
@@ -35,8 +35,8 @@ TEST(TrivialTranslatorTest, Query) {
   shared_ptr<Candidate> candidate = translation->Peek();
   ASSERT_TRUE(candidate);
   EXPECT_EQ("abc", candidate->type());
-  // 一千二百三十四abc
-  EXPECT_EQ("\xe4\xb8\x80\xe5\x8d\x83\xe4\xba\x8c\xe7\x99\xbe\xe4\xb8\x89\xe5\x8d\x81\xe5\x9b\x9b""abc",
+  // 一千二百三十四
+  EXPECT_EQ("\xe4\xb8\x80\xe5\x8d\x83\xe4\xba\x8c\xe7\x99\xbe\xe4\xb8\x89\xe5\x8d\x81\xe5\x9b\x9b",
             candidate->text());
   EXPECT_EQ(segment.start, candidate->start());
   EXPECT_EQ(segment.end, candidate->end());

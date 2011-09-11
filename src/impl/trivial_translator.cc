@@ -38,6 +38,8 @@ Translation* TrivialTranslator::Query(const std::string &input,
   EZLOGGERPRINT("input = '%s', [%d, %d)",
                 input.c_str(), segment.start, segment.end);
   std::string output(Translate(input));
+  if (output.empty())
+    return NULL;
   shared_ptr<Candidate> candidate(
       new Candidate("abc", output, ":-)", segment.start, segment.end, 0));
   Translation *translation = new UniqueTranslation(candidate);
@@ -65,8 +67,7 @@ const std::string TrivialTranslator::Translate(const std::string &input) {
       i += translated;
     }
     else {
-      result += input[i];
-      ++i;
+      return std::string();
     }
   }
   return result;
