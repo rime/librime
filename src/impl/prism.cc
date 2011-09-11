@@ -125,7 +125,7 @@ bool Prism::GetValue(const std::string &key, int *value){
 
 // Given a key, search all the keys in the tree which share a common prefix with that key.
 void Prism::CommonPrefixSearch(const std::string &key, std::vector<Match> *result){
-  if (!result)
+  if (!result || key.empty())
     return;
   size_t len = key.length();
   result->resize(len);
