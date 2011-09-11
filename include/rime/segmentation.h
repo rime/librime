@@ -45,6 +45,7 @@ struct Segment {
     return tags.find(tag) != tags.end();
   }
 
+  const shared_ptr<Candidate> GetCandidateAt(int index) const;
   const shared_ptr<Candidate> GetSelectedCandidate() const;
 };
 

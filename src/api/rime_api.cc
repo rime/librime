@@ -82,8 +82,10 @@ RIME_API bool RimeGetContext(RimeSessionId session_id, RimeContext *context) {
     context->composition.sel_start = preedit.sel_start;
     context->composition.sel_end = preedit.sel_end;
     if (comp->back().menu) {
-      // TODO: read schema settings or defaults
       int page_size = 5;
+      rime::Schema *schema = session->schema();
+      if (schema)
+        page_size = schema->page_size();
       int selected_index = comp->back().selected_index;
       int page_no = selected_index / page_size;
       rime::scoped_ptr<rime::Page> page(

@@ -28,4 +28,12 @@ Schema::Schema(const std::string &schema_id) : schema_id_(schema_id) {
     schema_name_ = schema_id_;
 }
 
+int Schema::page_size() const {
+  int page_size = 5;  // default
+  if (config_) {
+    config_->GetInt("menu/page_size", &page_size);
+  }
+  return page_size;
+}
+
 }  // namespace rime

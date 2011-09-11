@@ -32,6 +32,8 @@ class Context {
   void PopInput();
   void Clear();
 
+  // return false if there is no candidate at index
+  bool Select(int index);
   // return false if there's no candidate for current segment
   bool ConfirmCurrentSelection();
 

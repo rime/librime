@@ -14,11 +14,15 @@
 
 namespace rime {
 
-const shared_ptr<Candidate> Segment::GetSelectedCandidate() const {
-  if (!menu) {
+const shared_ptr<Candidate> Segment::GetCandidateAt(int index) const {
+  if (!menu) 
     return shared_ptr<Candidate>();
-  }
-  return menu->GetCandidateAt(selected_index);
+  else
+    return menu->GetCandidateAt(index);
+}
+
+const shared_ptr<Candidate> Segment::GetSelectedCandidate() const {
+  return GetCandidateAt(selected_index);
 }
 
 Segmentation::Segmentation()

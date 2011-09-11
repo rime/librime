@@ -15,7 +15,6 @@
 
 namespace rime {
 
-// TODO:
 class Schema {
  public:
   Schema();
@@ -28,6 +27,8 @@ class Schema {
 
   Config* config() const { return config_.get(); }
   void set_config(Config *config) { config_.reset(config); }
+
+  int page_size() const;
 
  private:
   std::string schema_id_;

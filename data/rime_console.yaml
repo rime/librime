@@ -8,6 +8,7 @@ schema:
 
 engine:
   processors:
+    - selector
     - trivial_processor
   segmentors:
     - abc_segmentor
@@ -19,3 +20,6 @@ engine:
 
 translator:
   dictionary: luna_pinyin
+
+menu:
+  page_size: 10

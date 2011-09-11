@@ -50,6 +50,22 @@ void Context::Clear() {
   input_change_notifier_(this);
 }
 
+bool Context::Select(int index) {
+  if (composition_->empty())
+    return false;
+  Segment &seg(composition_->back());
+  shared_ptr<Candidate> cand(seg.GetCandidateAt(index));
+  if (cand) {
+    seg.selected_index = index;
+    seg.status = Segment::kSelected;
+    EZLOGGERPRINT("Selected: %s, index = %d.",
+                  cand->text().c_str(), index);
+    select_notifier_(this);
+    return true;
+  }
+  return false;
+}
+
 bool Context::ConfirmCurrentSelection() {
   if (composition_->empty())
     return false;
@@ -62,9 +78,7 @@ bool Context::ConfirmCurrentSelection() {
     select_notifier_(this);
     return true;
   }
-  else {
-    return false;
-  }
+  return false;
 }
 
 void Context::set_composition(Composition *comp) {

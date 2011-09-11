@@ -8,6 +8,7 @@ schema:
 
 engine:
   processors:
+    - selector
     - trivial_processor
   segmentors:
     - abc_segmentor

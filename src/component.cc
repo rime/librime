@@ -15,10 +15,11 @@
 #include <rime/impl/abc_segmentor.h>
 #include <rime/impl/echo_translator.h>
 #include <rime/impl/fallback_segmentor.h>
+#include <rime/impl/r10n_translator.h>
+#include <rime/impl/selector.h>
+#include <rime/impl/table_translator.h>
 #include <rime/impl/trivial_processor.h>
 #include <rime/impl/trivial_translator.h>
-#include <rime/impl/table_translator.h>
-#include <rime/impl/r10n_translator.h>
 
 namespace rime {
 
@@ -32,6 +33,7 @@ void RegisterComponents()
 
   // processors
   r.Register("trivial_processor", new Component<TrivialProcessor>);
+  r.Register("selector", new Component<Selector>);
 
   // segmentors
   r.Register("abc_segmentor", new Component<AbcSegmentor>);

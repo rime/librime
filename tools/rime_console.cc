@@ -22,8 +22,6 @@
 
 class RimeConsole {
  public:
-  static const int kPageSize = 9;
-
   RimeConsole() : interactive_(false), engine_(new rime::Engine) {
     engine_->set_schema(new rime::Schema(".rime_console"));
     conn_ = engine_->sink().connect(
@@ -54,9 +52,10 @@ class RimeConsole {
     const rime::Segment &current(comp->back());
     if (!current.menu)
       return;
-    int page_no = current.selected_index / kPageSize;
+    int page_size = engine_->schema()->page_size();
+    int page_no = current.selected_index / page_size;
     rime::scoped_ptr<rime::Page> page(
-        current.menu->CreatePage(kPageSize, page_no));
+        current.menu->CreatePage(page_size, page_no));
     std::cout << "page_no: " << page_no
               << ", index: " << current.selected_index << std::endl;
     int i = 0;
