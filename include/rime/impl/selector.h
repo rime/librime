@@ -20,6 +20,11 @@ class Selector : public Processor {
   Selector(Engine *engine) : Processor(engine) {}
   virtual ~Selector() {}
   virtual Result ProcessKeyEvent(const KeyEvent &key_event);
+
+ private:
+  bool PageUp(Context *ctx);
+  bool PageDown(Context *ctx);
+  bool SelectCandidateAt(Context *ctx, int index);
 };
 
 }  // namespace rime

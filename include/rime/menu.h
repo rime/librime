@@ -34,6 +34,10 @@ class Menu {
   Page* CreatePage(int page_size, int page_no);
   shared_ptr<Candidate> GetCandidateAt(int index);
 
+  // CAVEAT: returns the number of candidates currently obtained,
+  // rather than the total number of available candidates.
+  int candidate_count() const { return candidates_.size(); }
+
  private:
   std::vector<shared_ptr<Translation> > translations_;
   CandidateList candidates_;

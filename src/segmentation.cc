@@ -15,7 +15,7 @@
 namespace rime {
 
 const shared_ptr<Candidate> Segment::GetCandidateAt(int index) const {
-  if (!menu) 
+  if (!menu || index < 0) 
     return shared_ptr<Candidate>();
   else
     return menu->GetCandidateAt(index);

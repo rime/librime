@@ -77,7 +77,8 @@ Page* Menu::CreatePage(int page_size, int page_no) {
 }
 
 shared_ptr<Candidate> Menu::GetCandidateAt(int index) {
-  if (index >= candidates_.size() &&
+  if (index < 0 ||
+      index >= candidates_.size() &&
       index >= Prepare(index + 1)) {
     return shared_ptr<Candidate>();
   }

@@ -56,7 +56,7 @@ void Context::Clear() {
 }
 
 bool Context::Select(int index) {
-  if (composition_->empty())
+  if (composition_->empty() || index < 0)
     return false;
   Segment &seg(composition_->back());
   shared_ptr<Candidate> cand(seg.GetCandidateAt(index));
