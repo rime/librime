@@ -90,18 +90,20 @@ RIME_API bool RimeGetContext(RimeSessionId session_id, RimeContext *context) {
       int page_no = selected_index / page_size;
       rime::scoped_ptr<rime::Page> page(
           comp->back().menu->CreatePage(page_size, page_no));
-      context->menu.page_size = page_size;
-      context->menu.page_no = page_no;
-      context->menu.is_last_page = page->is_last_page;
-      context->menu.highlighted_candidate_index = selected_index % page_size;
-      int i = 0;
-      BOOST_FOREACH(const rime::shared_ptr<rime::Candidate> &cand,
-                    page->candidates) {
-        std::strncpy(context->menu.candidates[i], cand->text().c_str(),
-                     kRimeTextMaxLength);
-        if (++i >= kRimeMaxNumCandidates) break;
+      if (page) {
+        context->menu.page_size = page_size;
+        context->menu.page_no = page_no;
+        context->menu.is_last_page = page->is_last_page;
+        context->menu.highlighted_candidate_index = selected_index % page_size;
+        int i = 0;
+        BOOST_FOREACH(const rime::shared_ptr<rime::Candidate> &cand,
+                      page->candidates) {
+          std::strncpy(context->menu.candidates[i], cand->text().c_str(),
+                       kRimeTextMaxLength);
+          if (++i >= kRimeMaxNumCandidates) break;
+        }
+        context->menu.num_candidates = i;
       }
-      context->menu.num_candidates = i;
     }
   }
   return true;

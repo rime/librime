@@ -16,7 +16,6 @@ engine:
   translators:
     - r10n_translator
     - trivial_translator
-    - echo_translator
 
 translator:
   dictionary: luna_pinyin
