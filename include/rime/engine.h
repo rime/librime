@@ -40,10 +40,10 @@ class Engine {
 
  private:
   void InitializeComponents();
+  void OnContextUpdate(Context *ctx);
   void Compose(Context *ctx);
   void CalculateSegmentation(Composition *comp);
   void TranslateSegments(Composition *comp);
-  void OnInputChange(Context *ctx);
   void OnCommit(Context *ctx);
   void OnSelect(Context *ctx);
 

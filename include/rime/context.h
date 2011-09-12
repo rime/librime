@@ -51,8 +51,8 @@ class Context {
   const Composition* composition() const;
 
   Notifier& commit_notifier() { return commit_notifier_; }
-  Notifier& input_change_notifier() { return input_change_notifier_; }
   Notifier& select_notifier() { return select_notifier_; }
+  Notifier& update_notifier() { return update_notifier_; }
 
  private:
   std::string input_;
@@ -61,8 +61,8 @@ class Context {
   scoped_ptr<Composition> composition_;
 
   Notifier commit_notifier_;
-  Notifier input_change_notifier_;
   Notifier select_notifier_;
+  Notifier update_notifier_;
 };
 
 }  // namespace rime

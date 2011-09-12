@@ -28,12 +28,12 @@ namespace rime {
 Engine::Engine() : schema_(new Schema), context_(new Context) {
   EZLOGGERFUNCTRACKER;
   // receive context notifications
-  context_->input_change_notifier().connect(
-      boost::bind(&Engine::OnInputChange, this, _1));
   context_->commit_notifier().connect(
       boost::bind(&Engine::OnCommit, this, _1));
   context_->select_notifier().connect(
       boost::bind(&Engine::OnSelect, this, _1));
+  context_->update_notifier().connect(
+      boost::bind(&Engine::OnContextUpdate, this, _1));
 }
 
 Engine::~Engine() {
@@ -53,7 +53,7 @@ bool Engine::ProcessKeyEvent(const KeyEvent &key_event) {
   return false;
 }
 
-void Engine::OnInputChange(Context *ctx) {
+void Engine::OnContextUpdate(Context *ctx) {
   if (!ctx)
     return;
   const std::string &input(ctx->input());
@@ -75,6 +75,7 @@ void Engine::CalculateSegmentation(Composition *comp) {
   EZLOGGERFUNCTRACKER;
   while (!comp->HasFinished()) {
     int start_pos = comp->GetCurrentPosition();
+    EZLOGGERVAR(start_pos);
     // recognize a segment by calling the segmentors in turn
     BOOST_FOREACH(shared_ptr<Segmentor> &segmentor, segmentors_) {
       if (!segmentor->Proceed(comp))
@@ -91,6 +92,10 @@ void Engine::CalculateSegmentation(Composition *comp) {
 
 void Engine::TranslateSegments(Composition *comp) {
   EZLOGGERFUNCTRACKER;
+  // open last segment for translation
+  if (!comp->empty()) {
+    comp->back().status = Segment::kVoid;
+  }
   BOOST_FOREACH(Segment &segment, *comp) {
     if (segment.status != Segment::kVoid)
       continue;
@@ -123,14 +128,26 @@ void Engine::OnCommit(Context *ctx) {
 void Engine::OnSelect(Context *ctx) {
   Segment &seg(ctx->composition()->back());
   shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
-  if (cand) {
-    // TODO: if confirmed part of the segment...
-    // create a new segment for the rest part;
-    // else, composition has finished,
+  if (!cand) return;
+  if (cand->end() < seg.end) {
+    // having selected a partially matched candidate, split it into 2 segments
+    seg.end = cand->end();
+  }
+  if (seg.end == ctx->input().length()) {
+    // composition has finished,
     // strategy one: commit directly;
     // strategy two: start an empty segment
     // at the end of the composition.
     ctx->composition()->AddSegment(Segment(seg.end, seg.end));
+  }
+  else {
+    if (seg.end >= ctx->cursor()) {
+      // finished converting current segment
+      // move cursor to the end of input
+      // TODO: not implemented
+      //ctx->set_cursor(ctx->input().length());
+    }
+    Compose(ctx);
   }
 }
 

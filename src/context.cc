@@ -38,7 +38,7 @@ bool Context::IsComposing() const {
 
 bool Context::PushInput(char ch) {
   input_.push_back(ch);
-  input_change_notifier_(this);
+  update_notifier_(this);
   return true;
 }
 
@@ -46,13 +46,13 @@ bool Context::PopInput() {
   if (input_.empty())
     return false;
   input_.resize(input_.size() - 1);
-  input_change_notifier_(this);
+  update_notifier_(this);
   return true;
 }
 
 void Context::Clear() {
   input_.clear();
-  input_change_notifier_(this);
+  update_notifier_(this);
 }
 
 bool Context::Select(int index) {
@@ -92,9 +92,12 @@ bool Context::ReopenPreviousSegment() {
     Segment &seg(composition_->back());
     empty = (seg.start == seg.end);
   }
-  if (empty)
+  if (empty) {
     composition_->pop_back();
-  return empty;
+    update_notifier_(this);
+    return true;
+  }
+  return false;
 }
 
 void Context::set_composition(Composition *comp) {
@@ -105,7 +108,7 @@ void Context::set_composition(Composition *comp) {
 
 void Context::set_input(const std::string &value) {
   input_ = value;
-  input_change_notifier_(this);
+  update_notifier_(this);
 }
 
 Composition* Context::composition() {
