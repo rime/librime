@@ -25,17 +25,18 @@ class Context {
   Context();
   ~Context();
 
-  void Commit();
+  bool Commit();
   const std::string GetCommitText() const;
   bool IsComposing() const;
-  void PushInput(char ch);
-  void PopInput();
+  bool PushInput(char ch);
+  bool PopInput();
   void Clear();
 
   // return false if there is no candidate at index
   bool Select(int index);
   // return false if there's no candidate for current segment
   bool ConfirmCurrentSelection();
+  bool ReopenPreviousSegment();
 
   void set_input(const std::string &value);
   const std::string& input() const { return input_; }

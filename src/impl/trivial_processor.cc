@@ -26,13 +26,8 @@ Processor::Result TrivialProcessor::ProcessKeyEvent(
   int ch = key_event.keycode();
   if (ch == XK_space) {
     if (ctx->IsComposing()) {
-      if (ctx->ConfirmCurrentSelection()) {
-        return kAccepted;
-      }
-      else {
-        ctx->PushInput(' ');
-        return kAccepted;
-      }
+      ctx->ConfirmCurrentSelection() || ctx->Commit();
+      return kAccepted;
     }
     else {
       return kNoop;
@@ -43,7 +38,7 @@ Processor::Result TrivialProcessor::ProcessKeyEvent(
     return kAccepted;
   }
   if (ch == XK_BackSpace && ctx->IsComposing()) {
-    ctx->PopInput();
+    ctx->ReopenPreviousSegment() || ctx->PopInput();
     return kAccepted;
   }
   if (ch == XK_Escape && ctx->IsComposing()) {

@@ -20,9 +20,12 @@ Context::Context() : composition_(new Composition) {
 Context::~Context() {
 }
 
-void Context::Commit() {
+bool Context::Commit() {
+  if (composition_->empty())
+    return false;
   commit_notifier_(this);
   Clear();
+  return true;
 }
 
 const std::string Context::GetCommitText() const {
@@ -33,16 +36,18 @@ bool Context::IsComposing() const {
   return !input_.empty();
 }
 
-void Context::PushInput(char ch) {
+bool Context::PushInput(char ch) {
   input_.push_back(ch);
   input_change_notifier_(this);
+  return true;
 }
 
-void Context::PopInput() {
+bool Context::PopInput() {
   if (input_.empty())
-    return;
+    return false;
   input_.resize(input_.size() - 1);
   input_change_notifier_(this);
+  return true;
 }
 
 void Context::Clear() {
@@ -79,6 +84,17 @@ bool Context::ConfirmCurrentSelection() {
     return true;
   }
   return false;
+}
+
+bool Context::ReopenPreviousSegment() {
+  bool empty = false;
+  if (!composition_->empty()) {
+    Segment &seg(composition_->back());
+    empty = (seg.start == seg.end);
+  }
+  if (empty)
+    composition_->pop_back();
+  return empty;
 }
 
 void Context::set_composition(Composition *comp) {
