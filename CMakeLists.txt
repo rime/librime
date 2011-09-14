@@ -1,3 +1,4 @@
+set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_flag_overrides.cmake)
 project(rime)
 cmake_minimum_required(VERSION 2.8)
 
