@@ -1,3 +1,6 @@
+set(CMAKE_USER_MAKE_RULES_OVERRIDE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/c_flag_overrides.cmake)
+set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_flag_overrides.cmake)
+
 project(rime)
 cmake_minimum_required(VERSION 2.8)
 
@@ -12,7 +15,9 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
-#set(Boost_USE_STATIC_RUNTIME ON)
+if(MSVC)
+  set(Boost_USE_STATIC_RUNTIME ON)
+endif(MSVC)
 find_package(Boost 1.40.0 REQUIRED COMPONENTS filesystem signals system)
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
