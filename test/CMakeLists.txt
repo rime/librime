@@ -12,10 +12,10 @@ file(COPY ${PROJECT_SOURCE_DIR}/data/test.yaml
 file(COPY ${PROJECT_SOURCE_DIR}/data/dictionary_test.dict.yaml 
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 
-if(NOT MSVC)
+if(NOT MSVC AND NOT XCODE_VERSION)
 set(RIME_TEST_EXECUTABLE ${EXECUTABLE_OUTPUT_PATH}/rime_test${EXT})
 add_custom_command(TARGET rime_test
                    POST_BUILD
                    COMMAND ${RIME_TEST_EXECUTABLE}
                    WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
-endif(NOT MSVC)
+endif(NOT MSVC AND NOT XCODE_VERSION)
