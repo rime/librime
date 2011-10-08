@@ -98,6 +98,9 @@ bool Context::ReopenPreviousSegment() {
   }
   if (empty) {
     composition_->pop_back();
+    if (!composition_->empty()) {
+      composition_->back().status = Segment::kVoid;
+    }
     update_notifier_(this);
     return true;
   }

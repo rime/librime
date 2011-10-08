@@ -74,30 +74,32 @@ void Engine::Compose(Context *ctx) {
 void Engine::CalculateSegmentation(Composition *comp) {
   EZLOGGERFUNCTRACKER;
   while (!comp->HasFinished()) {
-    int start_pos = comp->GetCurrentPosition();
+    int start_pos = comp->GetCurrentStartPosition();
+    int end_pos = comp->GetCurrentEndPosition();
     EZLOGGERVAR(start_pos);
+    EZLOGGERVAR(end_pos);
     // recognize a segment by calling the segmentors in turn
     BOOST_FOREACH(shared_ptr<Segmentor> &segmentor, segmentors_) {
       if (!segmentor->Proceed(comp))
         break;
     }
-    // move onto the next segment
-    comp->Forward();
     EZLOGGERVAR(*comp);
     // no advancement
-    if (start_pos == comp->GetCurrentPosition())
+    if (start_pos == comp->GetCurrentEndPosition())
       break;
+    // move onto the next segment... or 
+    // start an empty segment at the end of a confirmed composition.
+    if (!comp->HasFinished() ||
+        comp->back().status >= Segment::kSelected)
+      comp->Forward();
   }
+
 }
 
 void Engine::TranslateSegments(Composition *comp) {
   EZLOGGERFUNCTRACKER;
-  // open last segment for translation
-  if (!comp->empty()) {
-    comp->back().status = Segment::kVoid;
-  }
   BOOST_FOREACH(Segment &segment, *comp) {
-    if (segment.status != Segment::kVoid)
+    if (segment.status >= Segment::kSelected)
       continue;
     int len = segment.end - segment.start;
     const std::string input(comp->input().substr(segment.start, len));
@@ -135,10 +137,9 @@ void Engine::OnSelect(Context *ctx) {
   }
   if (seg.end == ctx->input().length()) {
     // composition has finished,
-    // strategy one: commit directly;
-    // strategy two: start an empty segment
-    // at the end of the composition.
-    ctx->composition()->AddSegment(Segment(seg.end, seg.end));
+    // strategy one: TODO: commit directly;
+    // strategy two: continue composing with an empty segment.
+    ctx->composition()->Forward();
   }
   else {
     if (seg.end >= ctx->cursor()) {
@@ -147,6 +148,7 @@ void Engine::OnSelect(Context *ctx) {
       // TODO: not implemented
       //ctx->set_cursor(ctx->input().length());
     }
+    ctx->composition()->Forward();
     Compose(ctx);
   }
 }

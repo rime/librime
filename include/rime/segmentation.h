@@ -54,19 +54,19 @@ class Segmentation : public std::vector<Segment> {
   Segmentation();
   virtual ~Segmentation() {}
   void Reset(const std::string &input);
-  void Reset(int cursor_pos);
+  void Reset(int num_segments);
   bool AddSegment(const Segment &segment);
 
   bool Forward();
   bool HasFinished() const;
-  int GetCurrentPosition() const;
+  int GetCurrentStartPosition() const;
+  int GetCurrentEndPosition() const;
   int GetCurrentSegmentLength() const;
 
   const std::string& input() const { return input_; }
 
  protected:
   std::string input_;
-  int cursor_;
 };
 
 std::ostream& operator<< (std::ostream& out,

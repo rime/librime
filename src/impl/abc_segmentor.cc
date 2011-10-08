@@ -23,7 +23,7 @@ AbcSegmentor::AbcSegmentor(Engine *engine)
 bool AbcSegmentor::Proceed(Segmentation *segmentation) {
   const std::string &input = segmentation->input();
   EZLOGGERVAR(input);
-  int j = segmentation->GetCurrentPosition();
+  int j = segmentation->GetCurrentStartPosition();
   int k = j;
   for (; k < input.length(); ++k) {
     if (alphabet_.find(input[k]) == std::string::npos)

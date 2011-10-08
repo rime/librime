@@ -21,7 +21,7 @@ bool FallbackSegmentor::Proceed(Segmentation *segmentation) {
     return false;
 
   const std::string &input = segmentation->input();
-  int k = segmentation->GetCurrentPosition();
+  int k = segmentation->GetCurrentStartPosition();
   if (k == input.length())
     return false;
 

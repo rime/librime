@@ -25,63 +25,59 @@ const shared_ptr<Candidate> Segment::GetSelectedCandidate() const {
   return GetCandidateAt(selected_index);
 }
 
-Segmentation::Segmentation()
-    : input_(), cursor_(0) {}
+Segmentation::Segmentation() {
+}
 
-void Segmentation::Reset(const std::string &input) {
+void Segmentation::Reset(const std::string &new_input) {
+  EZLOGGERVAR(size());
   // mark redo segmentation, while keeping user confirmed segments
   size_t diff_pos = 0;
   while (diff_pos < input_.length() &&
-         diff_pos < input.length() &&
-         input_[diff_pos] == input[diff_pos])
+         diff_pos < new_input.length() &&
+         input_[diff_pos] == new_input[diff_pos])
     ++diff_pos;
+  EZLOGGERVAR(diff_pos);
 
-  // discard segments that have changed
-  while (cursor_ > 0 && at(cursor_ - 1).end > diff_pos)
-    --cursor_;
-  resize(cursor_);
-
-  // then investigate the last segment if not having been confirmed
-  if (cursor_ > 0 && at(cursor_ - 1).status <= Segment::kGuess)
-    --cursor_;
-
-  input_ = input;
+  // dispose segments that have changed
+  int disposed = 0;
+  while (!empty() && back().end > diff_pos) {
+    pop_back();
+    ++disposed;
+  }
+  if (disposed > 0) Forward();
+  
+  input_ = new_input;
 }
 
-void Segmentation::Reset(int cursor_pos) {
-  if (cursor_pos > cursor_)
+void Segmentation::Reset(int num_segments) {
+  if (num_segments >= size())
     return;
-  cursor_ = cursor_pos;
-  resize(cursor_pos);
+  resize(num_segments);
 }
 
 bool Segmentation::AddSegment(const Segment &segment) {
-  int start = 0;
-  if (cursor_ > 0) {
-    start = at(cursor_ - 1).end;
-  }
+  int start = GetCurrentStartPosition();
   if (segment.start != start) {
     // rule one: in one round, we examine only those segs
     // that are left-aligned to a same position
     return false;
   }
 
-  if (cursor_ == size()) {
-    // we have a first candidate in this round
+  if (empty()) {
     push_back(segment);
     return true;
   }
 
   Segment &last = back();
   if (last.end > segment.end) {
-    // rule two: always keep the longer candidate...
+    // rule two: always prefer the longer segment...
   }
   else if (last.end < segment.end) {
-    // ...and throw away the shorter seg
+    // ...and overwrite the shorter one
     last = segment;
   }
   else {
-    // rule three: for equal segments, merge their tags
+    // rule three: with segments equal in length, merge their tags
     std::set<std::string> result;
     std::set_union(last.tags.begin(), last.tags.end(),
                    segment.tags.begin(), segment.tags.end(),
@@ -93,10 +89,10 @@ bool Segmentation::AddSegment(const Segment &segment) {
 
 // finalize a round
 bool Segmentation::Forward() {
-  if (cursor_ >= size()) {
+  if (empty() || back().start == back().end)
     return false;
-  }
-  ++cursor_;
+  // initialize an empty segment for the next round
+  push_back(Segment(back().end, back().end));
   return true;
 }
 
@@ -104,16 +100,16 @@ bool Segmentation::HasFinished() const {
   return (empty() ? 0 : back().end) == input_.length();
 }
 
-int Segmentation::GetCurrentPosition() const {
-  if (cursor_ == 0)
-    return 0;
-  return at(cursor_ - 1).end;
+int Segmentation::GetCurrentStartPosition() const {
+  return empty() ? 0 : back().start;
+}
+
+int Segmentation::GetCurrentEndPosition() const {
+  return empty() ? 0 : back().end;
 }
 
 int Segmentation::GetCurrentSegmentLength() const {
-  if (cursor_ == size())
-    return 0;
-  return at(cursor_).end - at(cursor_).start;
+  return empty() ? 0 : (back().end - back().start);
 }
 
 std::ostream& operator<< (std::ostream& out,

@@ -34,8 +34,11 @@ namespace axter
 			}
 			char FileNameFormat[999] = {0};
 			// the riming log style ~~
-			sprintf(FileNameFormat, "[s_%i] [%s] %-24s(%5.5i) %16s():  ", 
-				levels_format_usage_data.m_severity_level, get_current_time_str().c_str(), FileNameOnly.c_str(), LineNo, FunctionName);
+			sprintf(FileNameFormat,
+                                /*"[s_%i] */ "[%s] %-20s(%5.5i) %16s():  ", 
+				/*levels_format_usage_data.m_severity_level, */
+                                get_current_time_str().c_str(),
+                                FileNameOnly.c_str(), LineNo, FunctionName);
 			return FileNameFormat;
 		}
 	private:
