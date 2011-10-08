@@ -15,7 +15,10 @@
 
 namespace rime {
 
+struct DictEntry;
+class DictEntryCollector;
 class Dictionary;
+class SyllableGraph;
 
 class R10nTranslator : public Translator {
  public:
@@ -24,6 +27,9 @@ class R10nTranslator : public Translator {
 
   virtual Translation* Query(const std::string &input,
                              const Segment &segment);
+  
+ protected:
+  shared_ptr<DictEntry> SimplisticSentenceMaking(const SyllableGraph& syllable_graph);
 
  private:
   scoped_ptr<Dictionary> dict_;
