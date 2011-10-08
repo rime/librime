@@ -23,20 +23,21 @@ Processor::Result Selector::ProcessKeyEvent(
   if (key_event.release())
     return kNoop;
   Context *ctx = engine_->context();
-  if (!ctx->IsComposing())
+  if (!ctx->composition() || ctx->composition()->empty())
+    return kNoop;
+  Segment &current_segment(ctx->composition()->back());
+  if (!current_segment.menu || current_segment.HasTag("raw"))
     return kNoop;
   int ch = key_event.keycode();
-  if (ctx->HasMenu()) {
-    if (ch == XK_Prior || ch == XK_KP_Prior || 
-        ch == XK_comma || ch == XK_bracketleft || ch == XK_minus) {
-      PageUp(ctx);
-      return kAccepted;
-    }
-    if (ch == XK_Next || ch == XK_KP_Next ||
-        ch == XK_period || ch == XK_bracketright || ch == XK_equal) {
-      PageDown(ctx);
-      return kAccepted;
-    }
+  if (ch == XK_Prior || ch == XK_KP_Prior || 
+      ch == XK_comma || ch == XK_bracketleft || ch == XK_minus) {
+    PageUp(ctx);
+    return kAccepted;
+  }
+  if (ch == XK_Next || ch == XK_KP_Next ||
+      ch == XK_period || ch == XK_bracketright || ch == XK_equal) {
+    PageDown(ctx);
+    return kAccepted;
   }
   int index = -1;
   if (ch >= XK_0 && ch <= XK_9)

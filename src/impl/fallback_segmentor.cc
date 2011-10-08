@@ -17,30 +17,39 @@ FallbackSegmentor::FallbackSegmentor(Engine *engine) : Segmentor(engine) {
 
 bool FallbackSegmentor::Proceed(Segmentation *segmentation) {
   int len = segmentation->GetCurrentSegmentLength();
+  EZLOGGERVAR(len);
   if (len > 0)
     return false;
 
   const std::string &input = segmentation->input();
   int k = segmentation->GetCurrentStartPosition();
+  EZLOGGERVAR(k);
   if (k == input.length())
     return false;
 
-  if (k > 0) {
-    Segment &last = segmentation->back();
+  EZLOGGERVAR(*segmentation);
+  if (!segmentation->empty() &&
+      segmentation->back().start == segmentation->back().end)
+    segmentation->pop_back();
+  
+  if (!segmentation->empty()) {
+    Segment &last(segmentation->back());
     // append one character to the last raw segment
-    if (last.tags.find("raw") != last.tags.end()) {
+    if (last.HasTag("raw")) {
       last.end = k + 1;
+      EZLOGGERPRINT("extend previous raw segment to [%d, %d)", last.start, last.end);
       // mark redo translation (in case it's been previously translated)
       last.status = Segment::kVoid;
       return false;
     }
   }
-  // add a raw segment
   {
     Segment segment;
     segment.start = k;
     segment.end = k + 1;
+    EZLOGGERPRINT("add a raw segment [%d, %d)", segment.start, segment.end);
     segment.tags.insert("raw");
+    segmentation->Forward();
     segmentation->AddSegment(segment);
   }
   // fallback segmentor should be the last being called, so end this round

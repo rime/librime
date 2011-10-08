@@ -36,10 +36,6 @@ bool Context::IsComposing() const {
   return !input_.empty();
 }
 
-bool Context::HasMenu() const {
-  return !composition_->empty() && composition_->back().menu;
-}
-
 bool Context::PushInput(char ch) {
   input_.push_back(ch);
   update_notifier_(this);

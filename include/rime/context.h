@@ -29,7 +29,6 @@ class Context {
   const std::string GetCommitText() const;
 
   bool IsComposing() const;
-  bool HasMenu() const;
   
   bool PushInput(char ch);
   bool PopInput();
