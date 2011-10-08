@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <rime/component.h>
+#include <rime/common.h>
 
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);

@@ -14,6 +14,7 @@
 #include <boost/filesystem.hpp>
 #include <yaml-cpp/yaml.h>
 #include <rime/common.h>
+#include <rime/config.h>
 #include <rime/impl/dictionary.h>
 #include <rime/impl/syllablizer.h>
 
@@ -102,8 +103,11 @@ bool DictEntryIterator::Next() {
 
 Dictionary::Dictionary(const std::string &name)
     : name_(name), loaded_(false) {
-  prism_.reset(new Prism(name_ + ".prism.bin"));
-  table_.reset(new Table(name_ + ".table.bin"));
+  // TODO:
+  boost::filesystem::path path(ConfigComponent::shared_data_dir());
+  path /= name_;
+  prism_.reset(new Prism(path.string() + ".prism.bin"));
+  table_.reset(new Table(path.string() + ".table.bin"));
 }
 
 Dictionary::~Dictionary() {

@@ -28,7 +28,12 @@
 
 typedef uintptr_t RimeSessionId;
 
-RIME_API void RimeInitialize();
+struct RimeTraits {
+  const char* shared_data_dir;
+  const char* user_data_dir;
+};
+
+RIME_API void RimeInitialize(RimeTraits *traits);
 RIME_API void RimeFinalize();
 
 // session management

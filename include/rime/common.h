@@ -9,9 +9,10 @@
 #ifndef RIME_COMMON_H_
 #define RIME_COMMON_H_
 
+#include <cstdlib>
+#include <string>
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
-#include <ezlogger/ezlogger_headers.hpp>
 
 namespace rime {
 
@@ -19,6 +20,15 @@ using boost::shared_ptr;
 using boost::scoped_ptr;
 using boost::dynamic_pointer_cast;
 
+void RegisterComponents();
+
+const std::string GetLogFilePath();
+
 }  // namespace rime
+
+// setup ezlogger
+#define EZLOGGER_OUTPUT_FILENAME rime::GetLogFilePath()
+
+#include <ezlogger/ezlogger_headers.hpp>
 
 #endif  // RIME_COMMON_H_

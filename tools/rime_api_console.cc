@@ -86,7 +86,7 @@ void Print(RimeSessionId session_id) {
 
 int main(int argc, char *argv[]) {
 
-  RimeInitialize();
+  RimeInitialize(NULL);
 
   RimeSessionId session_id = RimeCreateSession();
   if (!session_id) {

@@ -246,6 +246,9 @@ shared_ptr<ConfigMap> Config::GetMap(const std::string& key) {
 
 // ConfigComponent members
 
+std::string ConfigComponent::shared_data_dir_(".");
+std::string ConfigComponent::user_data_dir_(".");
+
 Config* ConfigComponent::Create(const std::string &config_id) {
   std::string path(boost::str(boost::format(pattern_) % config_id));
   EZLOGGERPRINT("config file path: %s", path.c_str());

@@ -15,8 +15,6 @@
 
 namespace rime {
 
-void RegisterComponents();
-
 class ComponentBase {
  public:
   ComponentBase() {}

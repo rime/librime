@@ -102,10 +102,19 @@ class ConfigComponent : public Config::Component {
  public:
   ConfigComponent(const std::string &pattern) : pattern_(pattern) {}
   Config* Create(const std::string &config_id);
+  
   const std::string& pattern() const { return pattern_; }
+
+  static void set_shared_data_dir(const std::string &dir) { shared_data_dir_ = dir; }
+  static void set_user_data_dir(const std::string &dir) { user_data_dir_ = dir; }
+  static const std::string& shared_data_dir() { return shared_data_dir_; }
+  static const std::string& user_data_dir() { return user_data_dir_; }
 
  private:
   std::string pattern_;
+  
+  static std::string shared_data_dir_;
+  static std::string user_data_dir_;
 };
 
 }  // namespace rime

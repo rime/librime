@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include <time.h>
+#include <map>
 #include <rime/common.h>
 
 namespace rime {
@@ -48,7 +49,6 @@ class Session {
 
 class Service {
  public:
-  Service();
   ~Service();
 
   SessionId CreateSession();
@@ -57,7 +57,12 @@ class Service {
   void CleanupStaleSessions();
   void CleanupAllSessions();
 
+  static Service& instance() { return instance_; }
+  
  private:
+  Service();
+  static Service instance_;
+
   typedef std::map<SessionId, shared_ptr<Session> > SessionMap;
   SessionMap sessions_;
 };
