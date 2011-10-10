@@ -20,7 +20,7 @@ namespace rime {
 // commit with Return key
 Processor::Result TrivialProcessor::ProcessKeyEvent(
     const KeyEvent &key_event) {
-  if (key_event.release())
+  if (key_event.release() || key_event.ctrl() || key_event.alt())
     return kRejected;
   Context *ctx = engine_->context();
   int ch = key_event.keycode();
