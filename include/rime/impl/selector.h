@@ -24,6 +24,8 @@ class Selector : public Processor {
  private:
   bool PageUp(Context *ctx);
   bool PageDown(Context *ctx);
+  bool CursorUp(Context *ctx);
+  bool CursorDown(Context *ctx);
   bool SelectCandidateAt(Context *ctx, int index);
 };
 

@@ -39,6 +39,14 @@ Processor::Result Selector::ProcessKeyEvent(
     PageDown(ctx);
     return kAccepted;
   }
+  if (ch == XK_Up || ch == XK_KP_Up) {
+    CursorUp(ctx);
+    return kAccepted;
+  }
+  if (ch == XK_Down || ch == XK_KP_Down) {
+    CursorDown(ctx);
+    return kAccepted;
+  }
   int index = -1;
   if (ch >= XK_0 && ch <= XK_9)
     index = ((ch - XK_0) + 9) % 10;
@@ -78,6 +86,30 @@ bool Selector::PageDown(Context *ctx) {
   comp->back().selected_index = index;
   return true;
   
+}
+
+bool Selector::CursorUp(Context *ctx) {
+  Composition *comp = ctx->composition();
+  if (comp->empty())
+    return false;
+  int index = comp->back().selected_index;
+  if (index <= 0)
+    return false;
+  comp->back().selected_index = index - 1;
+  return true;
+}
+
+bool Selector::CursorDown(Context *ctx) {
+  Composition *comp = ctx->composition();
+  if (comp->empty() || !comp->back().menu)
+    return false;
+  int page_size = engine_->schema()->page_size();
+  int index = comp->back().selected_index + 1;
+  int candidate_count = comp->back().menu->Prepare(index + 1);
+  if (candidate_count <= index)
+    return false;
+  comp->back().selected_index = index;
+  return true;
 }
 
 bool Selector::SelectCandidateAt(Context *ctx, int index) {
