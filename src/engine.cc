@@ -136,7 +136,8 @@ void Engine::OnSelect(Context *ctx) {
     seg.end = cand->end();
   }
   if (seg.end == ctx->input().length()) {
-    // composition has finished,
+    // composition has finished
+    seg.status = Segment::kConfirmed;
     // strategy one: TODO: commit directly;
     // strategy two: continue composing with an empty segment.
     ctx->composition()->Forward();

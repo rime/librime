@@ -77,7 +77,7 @@ bool Context::ConfirmCurrentSelection() {
   Segment &seg(composition_->back());
   shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
   if (cand) {
-    seg.status = Segment::kConfirmed;
+    seg.status = Segment::kSelected;
     EZLOGGERPRINT("Confirmed: %s, selected_index = %d.",
                   cand->text().c_str(), seg.selected_index);
     select_notifier_(this);
@@ -87,12 +87,12 @@ bool Context::ConfirmCurrentSelection() {
 }
 
 bool Context::ReopenPreviousSegment() {
-  bool empty = false;
-  if (!composition_->empty()) {
-    Segment &seg(composition_->back());
-    empty = (seg.start == seg.end);
-  }
-  if (empty) {
+  size_t n = composition_->size();
+  if (n < 2) return false;
+  Segment &last(composition_->at(n - 1));
+  Segment &last_but_one(composition_->at(n - 2));
+  if (last.start == last.end ||
+      last_but_one.status == Segment::kSelected) {
     composition_->pop_back();
     if (!composition_->empty()) {
       composition_->back().status = Segment::kVoid;
