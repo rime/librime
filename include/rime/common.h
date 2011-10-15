@@ -28,7 +28,7 @@ const std::string GetLogFilePath();
 
 // setup ezlogger
 #define EZLOGGER_OUTPUT_FILENAME rime::GetLogFilePath()
-
+#define EZLOGGER_REPLACE_EXISTING_LOGFILE_
 #include <ezlogger/ezlogger_headers.hpp>
 
 #endif  // RIME_COMMON_H_

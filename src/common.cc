@@ -28,7 +28,7 @@ namespace rime {
 const std::string GetLogFilePath() {
   boost::filesystem::path dir(ConfigComponent::user_data_dir());
   boost::filesystem::create_directories(dir);
-  return (dir / "log.txt").string();
+  return (dir / "rime.log").string();
 }
 
 void RegisterComponents() {
