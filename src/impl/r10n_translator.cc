@@ -76,7 +76,7 @@ class R10nTranslation : public Translation {
       shared_ptr<Candidate> cand(new Candidate(
           "zh",
           e->text,
-          "",
+          e->prompt,
           start_,
           start_ + consumed_input_length,
           0));

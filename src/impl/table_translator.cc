@@ -43,7 +43,7 @@ class TableTranslation : public Translation {
     shared_ptr<Candidate> cand(new Candidate(
         "zh",
         e->text,
-        "",
+        e->prompt,
         start_,
         end_,
         0));

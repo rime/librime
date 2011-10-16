@@ -84,6 +84,9 @@ shared_ptr<DictEntry> DictEntryIterator::Peek() {
     EZLOGGERPRINT("Creating temporary dict entry '%s'.", e.text.c_str());
     entry_->code = chunk.code;
     entry_->text = e.text.c_str();
+    if (!chunk.remaining_code.empty()) {
+      entry_->prompt = "~" + chunk.remaining_code;
+    }
     entry_->weight = e.weight;
   }
   return entry_;
@@ -161,12 +164,21 @@ DictEntryIterator Dictionary::LookupWords(const std::string &str_code, bool pred
     }
   }
   EZLOGGERPRINT("found %u matching keys thru the prism.", keys.size());
+  size_t code_length(str_code.length());
   DictEntryIterator result;
   BOOST_FOREACH(Prism::Match &match, keys) {
     int syllable_id = match.value;
+    std::string remaining_code;
+    if (match.length > code_length) {
+      const char *syllable = table_->GetSyllableById(syllable_id);
+      size_t syllable_code_length = syllable ? strlen(syllable) : 0;
+      if (syllable_code_length > code_length)
+        remaining_code = syllable + code_length;
+    }
     const TableAccessor a(table_->QueryWords(syllable_id));
     if (!a.exhausted()) {
-        result.push_back(dictionary::Chunk(a));
+      EZLOGGERVAR(remaining_code);
+      result.push_back(dictionary::Chunk(a, remaining_code));
     }
   }
   return result;
@@ -185,14 +197,19 @@ bool Dictionary::Compile(const std::string &source_file) {
   }
   std::string dict_name;
   std::string dict_version;
+  std::string sort_order;
   {
     const YAML::Node *name_node = doc.FindValue("name");
     const YAML::Node *version_node = doc.FindValue("version");
+    const YAML::Node *sort_order_node = doc.FindValue("sort");
     if (!name_node || !version_node) {
       return false;
     }
     *name_node >> dict_name;
     *version_node >> dict_version;
+    if (sort_order_node) {
+      *sort_order_node >> sort_order;
+    }
   }
   EZLOGGERVAR(dict_name);
   EZLOGGERVAR(dict_version);
@@ -269,7 +286,9 @@ bool Dictionary::Compile(const std::string &source_file) {
       d.text.swap(e->text);
       d.weight = e->weight;
     }
-    vocabulary.SortHomophones();
+    if (sort_order != "original") {
+      vocabulary.SortHomophones();
+    }
     table_->Remove();
     if (!table_->Build(syllabary, vocabulary, entry_count) ||
         !table_->Save()) {
