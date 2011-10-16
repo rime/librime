@@ -102,6 +102,7 @@ void Engine::TranslateSegments(Composition *comp) {
     if (segment.status >= Segment::kSelected)
       continue;
     int len = segment.end - segment.start;
+    if (len <= 0) continue;
     const std::string input(comp->input().substr(segment.start, len));
     EZLOGGERPRINT("Translating segment '%s'", input.c_str());
     shared_ptr<Menu> menu(new Menu);
