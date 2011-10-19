@@ -6,12 +6,12 @@
 //
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
+#include <fstream>
 #include <list>
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/join.hpp>
-#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/lexical_cast.hpp>
 #include <yaml-cpp/yaml.h>
 #include <rime/common.h>
 #include <rime/config.h>
@@ -190,9 +190,13 @@ bool Dictionary::Compile(const std::string &source_file) {
   {
     std::ifstream fin(source_file.c_str());
     YAML::Parser parser(fin);
-    parser.GetNextDocument(doc);
+    if (!parser.GetNextDocument(doc)) {
+      EZLOGGERPRINT("Error parsing yaml doc in '%s'.", source_file.c_str());
+      return false;
+    }
   }
   if (doc.Type() != YAML::NodeType::Map) {
+    EZLOGGERPRINT("Error: invalid yaml doc in '%s'.", source_file.c_str());
     return false;
   }
   std::string dict_name;
@@ -203,6 +207,7 @@ bool Dictionary::Compile(const std::string &source_file) {
     const YAML::Node *version_node = doc.FindValue("version");
     const YAML::Node *sort_order_node = doc.FindValue("sort");
     if (!name_node || !version_node) {
+      EZLOGGERPRINT("Error: incomplete dict info in '%s'.", source_file.c_str());
       return false;
     }
     *name_node >> dict_name;
@@ -214,43 +219,56 @@ bool Dictionary::Compile(const std::string &source_file) {
   EZLOGGERVAR(dict_name);
   EZLOGGERVAR(dict_version);
   // read entries
-  const YAML::Node *entries = doc.FindValue("entries");
-  if (!entries ||
-      entries->Type() != YAML::NodeType::Sequence) {
-    return false;
-  }
-
   dictionary::RawDictEntryList raw_entries;
   int entry_count = 0;
   Syllabary syllabary;
-  for (YAML::Iterator it = entries->begin(); it != entries->end(); ++it) {
-    if (it->Type() != YAML::NodeType::Sequence) {
-      EZLOGGERPRINT("Invalid entry %d.", entry_count);
-      continue;
+  {
+    std::ifstream fin(source_file.c_str());
+    std::string line;
+    bool in_yaml_doc = true;
+    while (getline(fin, line)) {
+      boost::algorithm::trim_right(line);
+      // skip yaml doc
+      if (in_yaml_doc) {
+        if (line == "...") in_yaml_doc = false;
+        continue;
+      }
+      // skip empty lines and comments
+      if (line.empty() || line[0] == '#') continue;
+      // read a dict entry
+      std::string word;
+      std::string str_code;
+      double weight = 1.0;
+      std::vector<std::string> row;
+      boost::algorithm::split(row, line,
+                              boost::algorithm::is_any_of("\t"));
+      if (row.size() < 2 ||
+          row[0].empty() || row[1].empty()) {
+        EZLOGGERPRINT("Invalid entry %d.", entry_count);
+        continue;
+      }
+      word = row[0];
+      str_code = row[1];
+      if (row.size() > 2) {
+        try {
+          weight = boost::lexical_cast<double>(row[2]);
+        }
+        catch (...) {
+          weight = 1.0;
+        }
+      }
+
+      shared_ptr<dictionary::RawDictEntry> e(new dictionary::RawDictEntry);
+      e->raw_code.FromString(str_code);
+      BOOST_FOREACH(const std::string &s, e->raw_code) {
+        if (syllabary.find(s) == syllabary.end())
+          syllabary.insert(s);
+      }
+      e->text.swap(word);
+      e->weight = weight;
+      raw_entries.push_back(e);
+      ++entry_count;
     }
-    // read a dict entry
-    std::string word;
-    std::string str_code;
-    double weight = 1.0;
-    if (it->size() < 2) {
-      EZLOGGERPRINT("Invalid entry %d.", entry_count);
-      continue;
-    }
-    (*it)[0] >> word;
-    (*it)[1] >> str_code;
-    if (it->size() > 2) {
-      (*it)[2] >> weight;
-    }
-    shared_ptr<dictionary::RawDictEntry> e(new dictionary::RawDictEntry);
-    e->raw_code.FromString(str_code);
-    BOOST_FOREACH(const std::string &s, e->raw_code) {
-      if (syllabary.find(s) == syllabary.end())
-        syllabary.insert(s);
-    }
-    e->text.swap(word);
-    e->weight = weight;
-    raw_entries.push_back(e);
-    ++entry_count;
   }
   EZLOGGERVAR(entry_count);
   EZLOGGERVAR(syllabary.size());
