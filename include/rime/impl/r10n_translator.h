@@ -18,7 +18,7 @@ namespace rime {
 struct DictEntry;
 class DictEntryCollector;
 class Dictionary;
-class SyllableGraph;
+struct SyllableGraph;
 
 class R10nTranslator : public Translator {
  public:

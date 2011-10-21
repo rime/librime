@@ -9,6 +9,7 @@
 #ifndef RIME_CONFIG_H_
 #define RIME_CONFIG_H_
 
+#include <map>
 #include <string>
 #include <rime/common.h>
 #include <rime/component.h>
@@ -74,11 +75,22 @@ class ConfigMap : public ConfigItem {
 
 class ConfigData;
 
-// config component
+class ConfigDataManager : public std::map<std::string, weak_ptr<ConfigData> > {
+ public:
+  shared_ptr<ConfigData> GetConfigData(const std::string &config_file_path);
+  bool ReloadConfigData(const std::string &config_file_path);
+};
+
+// Config class
+
 class Config : public Class<Config, const std::string&> {
  public:
+  // CAVEAT: Config instances created without argument will NOT
+  // be managed by ConfigComponent
   Config();
   virtual ~Config();
+  // instances of Config with identical file_name share a copy of config data
+  // that could be reloaded by ConfigComponent once notified changes to the file
   Config(const std::string &file_name);
 
   bool LoadFromFile(const std::string& file_name);
@@ -95,26 +107,31 @@ class Config : public Class<Config, const std::string&> {
   // TODO: setters
 
  private:
-  scoped_ptr<ConfigData> data_;
+  shared_ptr<ConfigData> data_;
  };
+
+// ConfigComponent class
 
 class ConfigComponent : public Config::Component {
  public:
+  
   ConfigComponent(const std::string &pattern) : pattern_(pattern) {}
   Config* Create(const std::string &config_id);
-  
+  const std::string GetConfigFilePath(const std::string &config_id);
   const std::string& pattern() const { return pattern_; }
 
   static void set_shared_data_dir(const std::string &dir) { shared_data_dir_ = dir; }
   static void set_user_data_dir(const std::string &dir) { user_data_dir_ = dir; }
   static const std::string& shared_data_dir() { return shared_data_dir_; }
   static const std::string& user_data_dir() { return user_data_dir_; }
+  static ConfigDataManager& config_data_manager() { return config_data_manager_; }
 
  private:
   std::string pattern_;
   
   static std::string shared_data_dir_;
   static std::string user_data_dir_;
+  static ConfigDataManager config_data_manager_;
 };
 
 }  // namespace rime

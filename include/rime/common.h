@@ -13,11 +13,13 @@
 #include <string>
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 
 namespace rime {
 
-using boost::shared_ptr;
 using boost::scoped_ptr;
+using boost::shared_ptr;
+using boost::weak_ptr;
 using boost::dynamic_pointer_cast;
 
 void RegisterComponents();

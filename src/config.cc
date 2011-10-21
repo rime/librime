@@ -30,8 +30,9 @@ class ConfigItemData {
 
 class ConfigData {
  public:
+  bool LoadFromFile(const std::string& file_name);
+  bool SaveToFile(const std::string& file_name);
   const YAML::Node* Traverse(const std::string &key);
-  YAML::Node& doc() { return doc_; }
 
   static const ConfigItemPtr Convert(const YAML::Node *node);
 
@@ -175,19 +176,16 @@ Config::Config() : data_(new ConfigData) {
 Config::~Config() {
 }
 
-Config::Config(const std::string &file_name) : data_(new ConfigData) {
-  LoadFromFile(file_name);
+Config::Config(const std::string &file_name) {
+  data_ = ConfigComponent::config_data_manager().GetConfigData(file_name);
 }
 
 bool Config::LoadFromFile(const std::string& file_name) {
-  std::ifstream fin(file_name.c_str());
-  YAML::Parser parser(fin);
-  return parser.GetNextDocument(data_->doc());
+  return data_->LoadFromFile(file_name);
 }
 
 bool Config::SaveToFile(const std::string& file_name) {
-  // TODO(zouxu):
-  return false;
+  return data_->SaveToFile(file_name);
 }
 
 bool Config::IsNull(const std::string &key) {
@@ -248,14 +246,61 @@ shared_ptr<ConfigMap> Config::GetMap(const std::string& key) {
 
 std::string ConfigComponent::shared_data_dir_(".");
 std::string ConfigComponent::user_data_dir_(".");
+ConfigDataManager ConfigComponent::config_data_manager_;
+
+const std::string ConfigComponent::GetConfigFilePath(const std::string &config_id) {
+  return boost::str(boost::format(pattern_) % config_id);
+}
 
 Config* ConfigComponent::Create(const std::string &config_id) {
-  std::string path(boost::str(boost::format(pattern_) % config_id));
+  const std::string path(GetConfigFilePath(config_id));
   EZLOGGERPRINT("config file path: %s", path.c_str());
   return new Config(path);
 }
 
+// ConfigDataManager memebers
+
+shared_ptr<ConfigData> ConfigDataManager::GetConfigData(const std::string &config_file_path) {
+  shared_ptr<ConfigData> sp;
+  // keep a weak reference of the shared config data in the manager
+  weak_ptr<ConfigData> &wp((*this)[config_file_path]);
+  if (wp.expired()) {  // create a new copy
+    sp.reset(new ConfigData);
+    sp->LoadFromFile(config_file_path);
+    wp = sp;
+  }
+  else {  // obtain a shared copy
+    sp = wp.lock();
+  }
+  return sp;
+}
+
+bool ConfigDataManager::ReloadConfigData(const std::string &config_file_path) {
+  iterator it = find(config_file_path);
+  if (it == end()) {  // never loaded
+    return false;
+  }
+  shared_ptr<ConfigData> sp = it->second.lock();
+  if (!sp)  {  // already been freed
+    erase(it);
+    return false;
+  }
+  sp->LoadFromFile(config_file_path);
+}
+
 // ConfigData members
+
+bool ConfigData::LoadFromFile(const std::string& file_name) {
+  // TODO(zouxu): clear local modifications
+  std::ifstream fin(file_name.c_str());
+  YAML::Parser parser(fin);
+  return parser.GetNextDocument(doc_);
+}
+
+bool ConfigData::SaveToFile(const std::string& file_name) {
+  // TODO(zouxu):
+  return false;
+}
 
 const ConfigItemPtr ConfigData::Convert(const YAML::Node *node) {
   if (!node)
