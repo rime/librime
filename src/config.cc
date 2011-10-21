@@ -262,14 +262,14 @@ Config* ConfigComponent::Create(const std::string &config_id) {
 
 shared_ptr<ConfigData> ConfigDataManager::GetConfigData(const std::string &config_file_path) {
   shared_ptr<ConfigData> sp;
-  // keep a weak reference of the shared config data in the manager
+  // keep a weak reference to the shared config data in the manager
   weak_ptr<ConfigData> &wp((*this)[config_file_path]);
-  if (wp.expired()) {  // create a new copy
+  if (wp.expired()) {  // create a new copy and load it
     sp.reset(new ConfigData);
     sp->LoadFromFile(config_file_path);
     wp = sp;
   }
-  else {  // obtain a shared copy
+  else {  // obtain the shared copy
     sp = wp.lock();
   }
   return sp;
