@@ -186,7 +186,7 @@ void Prism::ExpandSearch(const std::string &key, std::vector<Match> *result, siz
           match.length = k_pos;
           result->push_back(match);
         }
-        if(limit && ++count > limit)
+        if(limit && ++count >= limit)
           return;
       }
     }

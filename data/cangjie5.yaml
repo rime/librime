@@ -1,0 +1,22 @@
+# Rime schema settings
+# vim: set sw=2 sts=2 et:
+# encoding: utf-8
+
+schema:
+  schema_id: cangjie5
+  name: 倉頡五
+
+engine:
+  processors:
+    - selector
+    - trivial_processor
+  segmentors:
+    - abc_segmentor
+    - fallback_segmentor
+  translators:
+    - echo_translator
+    - table_translator
+    - trivial_translator
+
+translator:
+  dictionary: cangjie5

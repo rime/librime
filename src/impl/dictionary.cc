@@ -163,7 +163,7 @@ DictEntryIterator Dictionary::LookupWords(const std::string &str_code, bool pred
     return DictEntryIterator();
   std::vector<Prism::Match> keys;
   if (predictive) {
-    const size_t kExpandSearchLimit = 0;  // unlimited!
+    const size_t kExpandSearchLimit = 512;
     prism_->ExpandSearch(str_code, &keys, kExpandSearchLimit);
   }
   else {
@@ -186,7 +186,7 @@ DictEntryIterator Dictionary::LookupWords(const std::string &str_code, bool pred
     }
     const TableAccessor a(table_->QueryWords(syllable_id));
     if (!a.exhausted()) {
-      EZLOGGERVAR(remaining_code);
+      EZDBGONLYLOGGERVAR(remaining_code);
       result.push_back(dictionary::Chunk(a, remaining_code));
     }
   }
