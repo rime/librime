@@ -62,8 +62,9 @@ typedef HeadIndex Index;
 struct Metadata {
   static const int kFormatMaxLength = 32;
   char format[kFormatMaxLength];
-  int num_syllables;
-  int num_entries;
+  uint32_t dict_file_checksum;
+  uint32_t num_syllables;
+  uint32_t num_entries;
   OffsetPtr<Syllabary> syllabary;
   OffsetPtr<Index> index;
 };
@@ -122,11 +123,15 @@ class Table : public MappedFile {
 
   bool Load();
   bool Save();
-  bool Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size_t num_entries);
+  bool Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size_t num_entries,
+             uint32_t dict_file_checksum = 0);
+  
+  bool GetSyllabary(Syllabary *syllabary);
   const char* GetSyllableById(int syllable_id);
   const TableAccessor QueryWords(int syllable_id);
   const TableAccessor QueryPhrases(const Code &code);
   bool Query(const SyllableGraph &syll_graph, int start_pos, TableQueryResult *result);
+  uint32_t dict_file_checksum() const;
 
  private:
   table::HeadIndex* BuildHeadIndex(const Vocabulary &vocabulary, size_t num_syllables);

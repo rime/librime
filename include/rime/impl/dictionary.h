@@ -77,11 +77,11 @@ struct SyllableGraph;
 
 class Dictionary {
  public:
-  Dictionary(const std::string &name);
+  Dictionary(const std::string &table_name, const std::string &prism_name);
   virtual ~Dictionary();
 
   bool Exists() const;
-  bool Compile(const std::string &source_file);
+  bool Compile(const std::string &dict_file, const std::string &schema_file);
   bool Remove();
   bool Load();
   bool Unload();
@@ -96,6 +96,10 @@ class Dictionary {
   Prism* prism() { return prism_.get(); }
 
  private:
+  bool BuildTable(const std::string &dict_file, uint32_t checksum);
+  bool BuildPrism(const std::string &schema_file,
+                  uint32_t dict_file_checksum, uint32_t schema_file_checksum);
+  
   std::string name_;
   bool loaded_;
   scoped_ptr<Prism> prism_;

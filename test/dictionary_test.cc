@@ -7,64 +7,68 @@
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
 #include <gtest/gtest.h>
+#include <rime/common.h>
 #include <rime/impl/dictionary.h>
 
 class RimeDictionaryTest : public ::testing::Test {
  public:
   virtual void SetUp() {
+    if (!dict_) {
+      dict_.reset(new rime::Dictionary("dictionary_test", "dictionary_test"));
+    }
     if (!rebuilt_) {
-      dict_.Remove();
-      dict_.Compile("dictionary_test.dict.yaml");
+      dict_->Remove();
+      dict_->Compile("dictionary_test.yaml", "dictionary_test.yaml");
       rebuilt_ = true;
     }
-    dict_.Load();
+    dict_->Load();
   }
   virtual void TearDown() {
-    if (dict_.loaded())
-      dict_.Unload();
+    if (dict_ && dict_->loaded())
+      dict_->Unload();
   }
  protected:
-  static rime::Dictionary dict_;
+  static rime::shared_ptr<rime::Dictionary> dict_;
   static bool rebuilt_;
 };
 
-rime::Dictionary RimeDictionaryTest::dict_("dictionary_test");
+rime::shared_ptr<rime::Dictionary> RimeDictionaryTest::dict_;
 bool RimeDictionaryTest::rebuilt_ = false;
 
 TEST_F(RimeDictionaryTest, Ready) {
-  EXPECT_TRUE(dict_.loaded());
+  EXPECT_TRUE(dict_->loaded());
 }
 
 TEST_F(RimeDictionaryTest, SimpleLookup) {
-  ASSERT_TRUE(dict_.loaded());
-  rime::DictEntryIterator it = dict_.LookupWords("zhong", false);
+  ASSERT_TRUE(dict_->loaded());
+  rime::DictEntryIterator it = dict_->LookupWords("zhong", false);
   ASSERT_FALSE(it.exhausted());
   EXPECT_EQ("\xe4\xb8\xad", it.Peek()->text);  // 中
   ASSERT_EQ(1, it.Peek()->code.size());
   rime::dictionary::RawCode raw_code;
-  ASSERT_TRUE(dict_.Decode(it.Peek()->code, &raw_code));
+  ASSERT_TRUE(dict_->Decode(it.Peek()->code, &raw_code));
   EXPECT_EQ("zhong", raw_code.ToString());
 }
 
 TEST_F(RimeDictionaryTest, PredictiveLookup) {
-  ASSERT_TRUE(dict_.loaded());
-  rime::DictEntryIterator it = dict_.LookupWords("z", true);
+  ASSERT_TRUE(dict_->loaded());
+  rime::DictEntryIterator it = dict_->LookupWords("z", true);
   ASSERT_FALSE(it.exhausted());
   EXPECT_EQ("\xe5\x92\x8b", it.Peek()->text);  // 咋
   ASSERT_EQ(1, it.Peek()->code.size());
   rime::dictionary::RawCode raw_code;
-  ASSERT_TRUE(dict_.Decode(it.Peek()->code, &raw_code));
+  ASSERT_TRUE(dict_->Decode(it.Peek()->code, &raw_code));
   EXPECT_EQ("za", raw_code.ToString());
 }
 
 TEST_F(RimeDictionaryTest, R10nLookup) {
-  ASSERT_TRUE(dict_.loaded());
+  ASSERT_TRUE(dict_->loaded());
   rime::SyllableGraph g;
   rime::Syllablizer s;
   std::string input("shurufa");
-  ASSERT_TRUE(s.BuildSyllableGraph(input, *dict_.prism(), &g));
+  ASSERT_TRUE(s.BuildSyllableGraph(input, *dict_->prism(), &g) > 0);
   EXPECT_EQ(g.interpreted_length, g.input_length);
-  rime::shared_ptr<rime::DictEntryCollector> c(dict_.Lookup(g, 0));
+  rime::shared_ptr<rime::DictEntryCollector> c(dict_->Lookup(g, 0));
   ASSERT_TRUE(c);
 
   ASSERT_TRUE(c->find(3) != c->end());

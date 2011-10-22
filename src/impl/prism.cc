@@ -43,6 +43,8 @@ bool Prism::Load(){
     EZLOGGERPRINT("Metadata not found.");
     return false;
   }
+  dict_file_checksum_ = metadata->dict_file_checksum;
+  schema_file_checksum_ = metadata->schema_file_checksum;
   num_syllables_ = metadata->num_syllables;
   char *array = metadata->double_array.get();
   if (!array) {
@@ -58,7 +60,6 @@ bool Prism::Load(){
 
 bool Prism::Save(){
   EZLOGGERPRINT("Save file: %s", file_name().c_str());
-  //trie_->save(file_name().c_str());
 
   size_t array_size = trie_->size();
   size_t image_size = trie_->total_size();
@@ -78,6 +79,8 @@ bool Prism::Save(){
     return false;
   }
   std::strncpy(metadata->format, kPrismFormat, prism::Metadata::kFormatMaxLength);
+  metadata->dict_file_checksum = dict_file_checksum_;
+  metadata->schema_file_checksum = schema_file_checksum_;
   // TODO: num of spellings may be diffrent from num of syllables
   metadata->num_syllables = num_syllables_;
   metadata->num_spellings = num_syllables_;
@@ -94,7 +97,11 @@ bool Prism::Save(){
   return ShrinkToFit();
 }
 
-bool Prism::Build(const Syllabary &keyset){
+bool Prism::Build(const Syllabary &keyset,
+                  uint32_t dict_file_checksum,
+                  uint32_t schema_file_checksum){
+  dict_file_checksum_ = dict_file_checksum;
+  schema_file_checksum_ = schema_file_checksum;
   size_t key_size = keyset.size();
   num_syllables_ = key_size;
   std::vector<const char *> char_keys(key_size);

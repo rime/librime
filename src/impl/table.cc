@@ -211,7 +211,12 @@ bool Table::Save() {
   return ShrinkToFit();
 }
 
-bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size_t num_entries) {
+uint32_t Table::dict_file_checksum() const {
+  return metadata_ ? metadata_->dict_file_checksum : 0;
+}
+
+bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size_t num_entries,
+                  uint32_t dict_file_checksum) {
   size_t num_syllables = syllabary.size();
   size_t estimated_file_size = 32 * num_syllables + 128 * num_entries;
   EZLOGGERVAR(num_syllables);
@@ -228,6 +233,7 @@ bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size
     EZLOGGERPRINT("Error creating metadata in file '%s'.", file_name().c_str());
     return false;
   }
+  metadata_->dict_file_checksum = dict_file_checksum;
   std::strncpy(metadata_->format, kTableFormat, table::Metadata::kFormatMaxLength);
   metadata_->num_syllables = num_syllables;
   metadata_->num_entries = num_entries;
@@ -380,6 +386,14 @@ bool Table::BuildEntry(const DictEntry &dict_entry, table::Entry *entry) {
   return true;
 }
 
+bool Table::GetSyllabary(Syllabary *result) {
+  if (!result || !syllabary_)
+    return false;
+  for (size_t i = 0; i < syllabary_->size; ++i) {
+    result->insert(syllabary_->at[i].c_str());
+  }
+  return true;
+}
 const char* Table::GetSyllableById(int syllable_id) {
   if (!syllabary_ ||
       syllable_id < 0 ||

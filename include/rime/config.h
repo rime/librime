@@ -91,7 +91,7 @@ class Config : public Class<Config, const std::string&> {
   virtual ~Config();
   // instances of Config with identical file_name share a copy of config data
   // that could be reloaded by ConfigComponent once notified changes to the file
-  Config(const std::string &file_name);
+  explicit Config(const std::string &file_name);
 
   bool LoadFromFile(const std::string& file_name);
   bool SaveToFile(const std::string& file_name);

@@ -61,13 +61,19 @@ TableTranslator::TableTranslator(Engine *engine)
   if (!engine)
     return;
   Config *config = engine->schema()->config();
+  const std::string &schema_id(engine->schema()->schema_id());
   std::string dict_name;
   if (!config->GetString("translator/dictionary", &dict_name)) {
     EZLOGGERPRINT("Error: dictionary not specified in schema '%s'.",
-                  engine->schema()->schema_id().c_str());
+                  schema_id.c_str());
     return;
   }
-  dict_.reset(new Dictionary(dict_name));
+  std::string prism_name;
+  if (!config->GetString("translator/prism", &prism_name)) {
+    // usually same with dictionary name; different for alternative spelling
+    prism_name = dict_name;
+  }
+  dict_.reset(new Dictionary(dict_name, prism_name));
   dict_->Load();
 }
 

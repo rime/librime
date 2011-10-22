@@ -9,6 +9,7 @@
 #include <fstream>
 #include <list>
 #include <boost/algorithm/string.hpp>
+#include <boost/crc.hpp>
 #include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
@@ -58,6 +59,15 @@ int match_extra_code(const table::Code *extra_code, int depth,
   return best_match;
 }
 
+uint32_t checksum(const std::string &file_name) {
+  std::ifstream fin(file_name.c_str());
+  std::string file_content((std::istreambuf_iterator<char>(fin)),
+                           std::istreambuf_iterator<char>());
+  boost::crc_32_type crc_32;
+  crc_32.process_bytes(file_content.data(), file_content.length());
+  return crc_32.checksum();
+}
+
 }  // namespace dictionary
 
 DictEntryIterator::DictEntryIterator()
@@ -104,13 +114,11 @@ bool DictEntryIterator::Next() {
   return !empty();
 }
 
-Dictionary::Dictionary(const std::string &name)
-    : name_(name), loaded_(false) {
-  // TODO:
+Dictionary::Dictionary(const std::string &table_name, const std::string &prism_name)
+    : name_(table_name + "/" + prism_name), loaded_(false) {
   boost::filesystem::path path(ConfigComponent::shared_data_dir());
-  path /= name_;
-  prism_.reset(new Prism(path.string() + ".prism.bin"));
-  table_.reset(new Table(path.string() + ".table.bin"));
+  table_.reset(new Table((path / table_name).string() + ".table.bin"));
+  prism_.reset(new Prism((path / prism_name).string() + ".prism.bin"));
 }
 
 Dictionary::~Dictionary() {
@@ -184,19 +192,47 @@ DictEntryIterator Dictionary::LookupWords(const std::string &str_code, bool pred
   return result;
 }
 
-bool Dictionary::Compile(const std::string &source_file) {
+bool Dictionary::Compile(const std::string &dict_file, const std::string &schema_file) {
   EZLOGGERFUNCTRACKER;
+  uint32_t dict_file_checksum = dict_file.empty() ? 0 : dictionary::checksum(dict_file);
+  uint32_t schema_file_checksum = schema_file.empty() ? 0 : dictionary::checksum(schema_file);
+  EZLOGGERVAR(dict_file_checksum);
+  EZLOGGERVAR(schema_file_checksum);
+  bool rebuild_table = true;
+  bool rebuild_prism = true;
+  if (boost::filesystem::exists(table_->file_name()) && table_->Load()) {
+    if (table_->dict_file_checksum() == dict_file_checksum) {
+      rebuild_table = false;
+    }
+    table_->Close();
+  }
+  if (boost::filesystem::exists(prism_->file_name()) && prism_->Load()) {
+    if (prism_->dict_file_checksum() == dict_file_checksum &&
+        prism_->schema_file_checksum() == schema_file_checksum) {
+      rebuild_prism = false;
+    }
+    prism_->Close();
+  }
+  if (rebuild_table && !BuildTable(dict_file, dict_file_checksum))
+    return false;
+  if (rebuild_prism && ! BuildPrism(schema_file, dict_file_checksum, schema_file_checksum))
+    return false;
+  // done!
+  return true;
+}
+
+bool Dictionary::BuildTable(const std::string &dict_file, uint32_t checksum) {
   YAML::Node doc;
   {
-    std::ifstream fin(source_file.c_str());
+    std::ifstream fin(dict_file.c_str());
     YAML::Parser parser(fin);
     if (!parser.GetNextDocument(doc)) {
-      EZLOGGERPRINT("Error parsing yaml doc in '%s'.", source_file.c_str());
+      EZLOGGERPRINT("Error parsing yaml doc in '%s'.", dict_file.c_str());
       return false;
     }
   }
   if (doc.Type() != YAML::NodeType::Map) {
-    EZLOGGERPRINT("Error: invalid yaml doc in '%s'.", source_file.c_str());
+    EZLOGGERPRINT("Error: invalid yaml doc in '%s'.", dict_file.c_str());
     return false;
   }
   std::string dict_name;
@@ -207,7 +243,7 @@ bool Dictionary::Compile(const std::string &source_file) {
     const YAML::Node *version_node = doc.FindValue("version");
     const YAML::Node *sort_order_node = doc.FindValue("sort");
     if (!name_node || !version_node) {
-      EZLOGGERPRINT("Error: incomplete dict info in '%s'.", source_file.c_str());
+      EZLOGGERPRINT("Error: incomplete dict info in '%s'.", dict_file.c_str());
       return false;
     }
     *name_node >> dict_name;
@@ -223,7 +259,7 @@ bool Dictionary::Compile(const std::string &source_file) {
   int entry_count = 0;
   Syllabary syllabary;
   {
-    std::ifstream fin(source_file.c_str());
+    std::ifstream fin(dict_file.c_str());
     std::string line;
     bool in_yaml_doc = true;
     while (getline(fin, line)) {
@@ -272,14 +308,6 @@ bool Dictionary::Compile(const std::string &source_file) {
   }
   EZLOGGERVAR(entry_count);
   EZLOGGERVAR(syllabary.size());
-  // build prism
-  {
-    prism_->Remove();
-    if (!prism_->Build(syllabary) ||
-        !prism_->Save()) {
-      return false;
-    }
-  }
   // build table
   {
     std::map<std::string, int> syllable_to_id;
@@ -308,8 +336,29 @@ bool Dictionary::Compile(const std::string &source_file) {
       vocabulary.SortHomophones();
     }
     table_->Remove();
-    if (!table_->Build(syllabary, vocabulary, entry_count) ||
+    if (!table_->Build(syllabary, vocabulary, entry_count, checksum) ||
         !table_->Save()) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool Dictionary::BuildPrism(const std::string &schema_file,
+                            uint32_t dict_file_checksum, uint32_t schema_file_checksum) {
+  // get syllabary from table
+  Syllabary syllabary;
+  if (!table_->Load() || !table_->GetSyllabary(&syllabary) || syllabary.empty())
+    return false;
+  // TODO: spelling algebra
+  if (!schema_file.empty()) {
+    
+  }
+  // build prism
+  {
+    prism_->Remove();
+    if (!prism_->Build(syllabary, dict_file_checksum, schema_file_checksum) ||
+        !prism_->Save()) {
       return false;
     }
   }

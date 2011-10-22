@@ -105,10 +105,16 @@ bool PrepareDictionary() {
                   schema.schema_id().c_str());
     return false;
   }
-  rime::Dictionary dict(dict_name);
-  if (!dict.Exists()) {
+  std::string prism_name;
+  if (!schema.config()->GetString("translator/prism", &prism_name)) {
+    // usually same with dictionary name; different for alternative spelling
+    prism_name = dict_name;
+  }
+  rime::Dictionary dict(dict_name, prism_name);
+  //if (!dict.Exists())
+  {
     std::cerr << "Preparing dictionary " << dict_name << "..." << std::endl;
-    dict.Compile(dict.name() + ".dict.yaml");
+    dict.Compile(dict_name + ".dict.yaml", "rime_console.yaml");
     std::cerr << "Ready to work with dictionary " << dict_name << "." << std::endl;
   }
   return true;
