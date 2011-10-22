@@ -177,7 +177,7 @@ Config::~Config() {
 }
 
 Config::Config(const std::string &file_name) {
-  data_ = ConfigComponent::config_data_manager().GetConfigData(file_name);
+  data_ = ConfigDataManager::instance().GetConfigData(file_name);
 }
 
 bool Config::LoadFromFile(const std::string& file_name) {
@@ -244,10 +244,6 @@ shared_ptr<ConfigMap> Config::GetMap(const std::string& key) {
 
 // ConfigComponent members
 
-std::string ConfigComponent::shared_data_dir_(".");
-std::string ConfigComponent::user_data_dir_(".");
-ConfigDataManager ConfigComponent::config_data_manager_;
-
 const std::string ConfigComponent::GetConfigFilePath(const std::string &config_id) {
   return boost::str(boost::format(pattern_) % config_id);
 }
@@ -259,6 +255,8 @@ Config* ConfigComponent::Create(const std::string &config_id) {
 }
 
 // ConfigDataManager memebers
+
+scoped_ptr<ConfigDataManager> ConfigDataManager::instance_;
 
 shared_ptr<ConfigData> ConfigDataManager::GetConfigData(const std::string &config_file_path) {
   shared_ptr<ConfigData> sp;

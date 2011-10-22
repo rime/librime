@@ -13,7 +13,7 @@
 
 namespace rime {
 
-Service Service::instance_;
+scoped_ptr<Service> Service::instance_;
 
 Session::Session() : engine_(new Engine),
                      last_active_time_(0) {

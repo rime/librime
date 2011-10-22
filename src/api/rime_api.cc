@@ -20,8 +20,8 @@
 
 RIME_API void RimeInitialize(RimeTraits *traits) {
   if (traits) {
-    rime::ConfigComponent::set_shared_data_dir(traits->shared_data_dir);
-    rime::ConfigComponent::set_user_data_dir(traits->user_data_dir);
+    rime::ConfigDataManager::instance().set_shared_data_dir(traits->shared_data_dir);
+    rime::ConfigDataManager::instance().set_user_data_dir(traits->user_data_dir);
   }
   rime::RegisterComponents();
 }

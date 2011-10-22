@@ -26,7 +26,7 @@
 namespace rime {
 
 const std::string GetLogFilePath() {
-  boost::filesystem::path dir(ConfigComponent::user_data_dir());
+  boost::filesystem::path dir(ConfigDataManager::instance().user_data_dir());
   boost::filesystem::create_directories(dir);
   return (dir / "rime.log").string();
 }
@@ -36,8 +36,8 @@ void RegisterComponents() {
 
   Registry &r = Registry::instance();
   
-  boost::filesystem::path shared_data_dir(ConfigComponent::shared_data_dir());
-  boost::filesystem::path user_data_dir(ConfigComponent::user_data_dir());
+  boost::filesystem::path shared_data_dir(ConfigDataManager::instance().shared_data_dir());
+  boost::filesystem::path user_data_dir(ConfigDataManager::instance().user_data_dir());
   boost::filesystem::path config_path = shared_data_dir / "%s.yaml";
   boost::filesystem::path schema_path = user_data_dir / "%s.schema.yaml";
   r.Register("config", new ConfigComponent(config_path.string()));

@@ -75,10 +75,30 @@ class ConfigMap : public ConfigItem {
 
 class ConfigData;
 
+// ConfigDataManager class
+
 class ConfigDataManager : public std::map<std::string, weak_ptr<ConfigData> > {
  public:
   shared_ptr<ConfigData> GetConfigData(const std::string &config_file_path);
   bool ReloadConfigData(const std::string &config_file_path);
+  
+  void set_shared_data_dir(const std::string &dir) { shared_data_dir_ = dir; }
+  void set_user_data_dir(const std::string &dir) { user_data_dir_ = dir; }
+  const std::string& shared_data_dir() { return shared_data_dir_; }
+  const std::string& user_data_dir() { return user_data_dir_; }
+
+  static ConfigDataManager& instance() {
+    if (!instance_) instance_.reset(new ConfigDataManager);
+    return *instance_;
+  }
+
+ private:
+  ConfigDataManager() : shared_data_dir_("."), user_data_dir_(".") {}
+  
+  std::string shared_data_dir_;
+  std::string user_data_dir_;
+
+  static scoped_ptr<ConfigDataManager> instance_;
 };
 
 // Config class
@@ -120,18 +140,8 @@ class ConfigComponent : public Config::Component {
   const std::string GetConfigFilePath(const std::string &config_id);
   const std::string& pattern() const { return pattern_; }
 
-  static void set_shared_data_dir(const std::string &dir) { shared_data_dir_ = dir; }
-  static void set_user_data_dir(const std::string &dir) { user_data_dir_ = dir; }
-  static const std::string& shared_data_dir() { return shared_data_dir_; }
-  static const std::string& user_data_dir() { return user_data_dir_; }
-  static ConfigDataManager& config_data_manager() { return config_data_manager_; }
-
  private:
   std::string pattern_;
-  
-  static std::string shared_data_dir_;
-  static std::string user_data_dir_;
-  static ConfigDataManager config_data_manager_;
 };
 
 }  // namespace rime

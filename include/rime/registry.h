@@ -11,6 +11,7 @@
 
 #include <map>
 #include <string>
+#include <rime/common.h>
 
 namespace rime {
 
@@ -25,11 +26,15 @@ class Registry {
   void Unregister(const std::string& name);
   void Clear();
 
-  static Registry& instance() { return instance_; }
+  static Registry& instance() {
+    if (!instance_) instance_.reset(new Registry);
+    return *instance_;
+  }
 
  private:
   Registry() {}
-  static Registry instance_;
+  static scoped_ptr<Registry> instance_;
+  
   ComponentMap map_;
 };
 

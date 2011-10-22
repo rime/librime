@@ -57,11 +57,14 @@ class Service {
   void CleanupStaleSessions();
   void CleanupAllSessions();
 
-  static Service& instance() { return instance_; }
+  static Service& instance() {
+    if (!instance_) instance_.reset(new Service);
+    return *instance_;
+  }
   
  private:
   Service();
-  static Service instance_;
+  static scoped_ptr<Service> instance_;
 
   typedef std::map<SessionId, shared_ptr<Session> > SessionMap;
   SessionMap sessions_;

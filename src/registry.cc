@@ -12,7 +12,7 @@
 
 namespace rime {
 
-Registry Registry::instance_;
+scoped_ptr<Registry> Registry::instance_;
 
 void Registry::Register(const std::string &name, ComponentBase *component) {
   EZLOGGERPRINT("registering component: %s", name.c_str());
