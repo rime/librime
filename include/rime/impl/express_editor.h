@@ -17,7 +17,7 @@ namespace rime {
 
 class ExpressEditor : public Processor {
  public:
-  ExpressEditor(Engine *engine) : Processor(engine) {}
+  ExpressEditor(Engine *engine);
   virtual ~ExpressEditor() {}
   virtual Result ProcessKeyEvent(const KeyEvent &key_event);
 };

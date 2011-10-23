@@ -38,6 +38,9 @@ class Engine {
   Context* context() const { return context_.get(); }
   CommitSink& sink() { return sink_; }
 
+  void set_auto_commit(bool value) { auto_commit_ = value; }
+  bool auto_commit() const { return auto_commit_; }
+
  private:
   void InitializeComponents();
   void OnContextUpdate(Context *ctx);
@@ -53,6 +56,8 @@ class Engine {
   std::vector<shared_ptr<Segmentor> > segmentors_;
   std::vector<shared_ptr<Translator> > translators_;
   CommitSink sink_;
+
+  bool auto_commit_;
 };
 
 }  // namespace rime

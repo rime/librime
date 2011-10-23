@@ -17,6 +17,10 @@
 
 namespace rime {
 
+ExpressEditor::ExpressEditor(Engine *engine) : Processor(engine) {
+  engine->set_auto_commit(true);
+}
+
 // treat printable characters as input
 // commit with Return key
 Processor::Result ExpressEditor::ProcessKeyEvent(
@@ -27,9 +31,7 @@ Processor::Result ExpressEditor::ProcessKeyEvent(
   int ch = key_event.keycode();
   if (ch == XK_space) {
     if (ctx->IsComposing()) {
-      ctx->ConfirmCurrentSelection();
-      if (ctx->composition()->HasFinishedComposition())
-        ctx->Commit();
+      ctx->ConfirmCurrentSelection() || ctx->Commit();
       return kAccepted;
     }
     else {
@@ -37,7 +39,9 @@ Processor::Result ExpressEditor::ProcessKeyEvent(
     }
   }
   if (ch == XK_Return && ctx->IsComposing()) {
-    ctx->Commit();
+    // commit raw input string
+    engine_->sink()(ctx->input());
+    ctx->Clear();
     return kAccepted;
   }
   if (ch == XK_BackSpace && ctx->IsComposing()) {

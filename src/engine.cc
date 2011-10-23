@@ -25,7 +25,8 @@
 
 namespace rime {
 
-Engine::Engine() : schema_(new Schema), context_(new Context) {
+Engine::Engine() : schema_(new Schema), context_(new Context),
+                   auto_commit_(false) {
   EZLOGGERFUNCTRACKER;
   // receive context notifications
   context_->commit_notifier().connect(
@@ -139,9 +140,12 @@ void Engine::OnSelect(Context *ctx) {
   if (seg.end == ctx->input().length()) {
     // composition has finished
     seg.status = Segment::kConfirmed;
-    // strategy one: TODO: commit directly;
-    // strategy two: continue composing with an empty segment.
-    ctx->composition()->Forward();
+    // strategy one: commit directly;
+    // strategy two: continue composing with another empty segment.
+    if (auto_commit_)
+      ctx->Commit();
+    else
+      ctx->composition()->Forward();
   }
   else {
     if (seg.end >= ctx->cursor()) {
