@@ -37,9 +37,8 @@ void RegisterComponents() {
 
   Registry &r = Registry::instance();
   
-  boost::filesystem::path shared_data_dir(ConfigDataManager::instance().shared_data_dir());
   boost::filesystem::path user_data_dir(ConfigDataManager::instance().user_data_dir());
-  boost::filesystem::path config_path = shared_data_dir / "%s.yaml";
+  boost::filesystem::path config_path = user_data_dir / "%s.yaml";
   boost::filesystem::path schema_path = user_data_dir / "%s.schema.yaml";
   r.Register("config", new ConfigComponent(config_path.string()));
   r.Register("schema_config", new ConfigComponent(schema_path.string()));
