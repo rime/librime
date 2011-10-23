@@ -24,6 +24,7 @@ struct Preedit {
 class Composition : public Segmentation {
  public:
   Composition();
+  bool HasFinishedComposition() const;
   void GetPreedit(Preedit *preedit) const;
   const std::string GetCommitText() const;
   const std::string GetDebugText() const;

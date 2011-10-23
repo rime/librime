@@ -4,10 +4,10 @@
 // Copyleft 2011 RIME Developers
 // License: GPLv3
 //
-// 2011-04-24 GONG Chen <chen.sst@gmail.com>
+// 2011-10-23 GONG Chen <chen.sst@gmail.com>
 //
-#ifndef RIME_TRIVIAL_PROCESSOR_H_
-#define RIME_TRIVIAL_PROCESSOR_H_
+#ifndef RIME_EXPRESS_EDITOR_H_
+#define RIME_EXPRESS_EDITOR_H_
 
 #include <rime/common.h>
 #include <rime/component.h>
@@ -15,13 +15,13 @@
 
 namespace rime {
 
-class TrivialProcessor : public Processor {
+class ExpressEditor : public Processor {
  public:
-  TrivialProcessor(Engine *engine) : Processor(engine) {}
-  virtual ~TrivialProcessor() {}
+  ExpressEditor(Engine *engine) : Processor(engine) {}
+  virtual ~ExpressEditor() {}
   virtual Result ProcessKeyEvent(const KeyEvent &key_event);
 };
 
 }  // namespace rime
 
-#endif  // RIME_TRIVIAL_PROCESSOR_H_
+#endif  // RIME_EXPRESS_EDITOR_H_

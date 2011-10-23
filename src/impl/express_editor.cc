@@ -4,21 +4,22 @@
 // Copyleft 2011 RIME Developers
 // License: GPLv3
 //
-// 2011-04-24 GONG Chen <chen.sst@gmail.com>
+// 2011-10-23 GONG Chen <chen.sst@gmail.com>
 //
 #include <cctype>
 #include <rime/common.h>
+#include <rime/composition.h>
 #include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/key_event.h>
 #include <rime/key_table.h>
-#include <rime/impl/trivial_processor.h>
+#include <rime/impl/express_editor.h>
 
 namespace rime {
 
 // treat printable characters as input
 // commit with Return key
-Processor::Result TrivialProcessor::ProcessKeyEvent(
+Processor::Result ExpressEditor::ProcessKeyEvent(
     const KeyEvent &key_event) {
   if (key_event.release() || key_event.ctrl() || key_event.alt())
     return kRejected;
@@ -26,7 +27,9 @@ Processor::Result TrivialProcessor::ProcessKeyEvent(
   int ch = key_event.keycode();
   if (ch == XK_space) {
     if (ctx->IsComposing()) {
-      ctx->ConfirmCurrentSelection() || ctx->Commit();
+      ctx->ConfirmCurrentSelection();
+      if (ctx->composition()->HasFinishedComposition())
+        ctx->Commit();
       return kAccepted;
     }
     else {

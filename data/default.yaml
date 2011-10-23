@@ -9,7 +9,7 @@ schema:
 engine:
   processors:
     - selector
-    - trivial_processor
+    - express_editor
   segmentors:
     - abc_segmentor
     - fallback_segmentor

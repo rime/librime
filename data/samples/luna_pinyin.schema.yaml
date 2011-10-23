@@ -8,13 +8,13 @@ schema:
   version: "0.1"
   author:
     - android open-source project
-    - 佛振 <chen.sst@gmail.com>
+    - revised by 佛振 <chen.sst@gmail.com>
   description: |
     derived from android open-source project.
 
 engine:
   processors: 
-    - trivial_processor
+    - express_editor
   segmentors:
     - abc_segmentor
     - fallback_segmentor
@@ -22,12 +22,9 @@ engine:
     - r10n_translator
     - echo_translator
 
-processor:
+editor:
   alphabet: "abcdefghijklmnopqrstuvwxyz"
   delimiter: "'"
-  auto_commit: y  # 段落确认完毕立即上屏不需按Return确认
-
-editor:
   modal: n
   inline: n
   prompt_cursor_style: ">"

@@ -16,6 +16,14 @@ namespace rime {
 Composition::Composition() {
 }
 
+bool Composition::HasFinishedComposition() const {
+  if (empty()) return false;
+  size_t k = size() - 1;
+  if (k > 0 && at(k).start == at(k).end)
+    --k;
+  return at(k).status >= Segment::kSelected;
+}
+
 void Composition::GetPreedit(Preedit *preedit) const {
   if (!preedit)
     return;
