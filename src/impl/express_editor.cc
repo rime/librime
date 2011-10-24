@@ -45,7 +45,9 @@ Processor::Result ExpressEditor::ProcessKeyEvent(
     return kAccepted;
   }
   if (ch == XK_BackSpace && ctx->IsComposing()) {
-    ctx->ReopenPreviousSegment() || ctx->PopInput();
+    // different behavior in regard to previous operation type
+    ctx->ReopenPreviousSelection() ||
+        ctx->PopInput() && ctx->ReopenPreviousSegment();
     return kAccepted;
   }
   if (ch == XK_Escape && ctx->IsComposing()) {
@@ -55,6 +57,7 @@ Processor::Result ExpressEditor::ProcessKeyEvent(
   if (ch > 20 && ch < 128) {
     EZLOGGERPRINT("Add to input: '%c', %d, '%s'", ch, key_event.keycode(), key_event.repr().c_str());
     ctx->PushInput(key_event.keycode());
+    ctx->ConfirmPreviousSelection();
     return kAccepted;
   }
   // not handled

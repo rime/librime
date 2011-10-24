@@ -38,7 +38,10 @@ class Context {
   bool Select(int index);
   // return false if there's no candidate for current segment
   bool ConfirmCurrentSelection();
+  
+  bool ConfirmPreviousSelection();
   bool ReopenPreviousSegment();
+  bool ReopenPreviousSelection();
 
   void set_input(const std::string &value);
   const std::string& input() const { return input_; }

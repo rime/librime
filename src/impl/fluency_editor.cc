@@ -38,7 +38,9 @@ Processor::Result FluencyEditor::ProcessKeyEvent(
     return kAccepted;
   }
   if (ch == XK_BackSpace && ctx->IsComposing()) {
-    ctx->ReopenPreviousSegment() || ctx->PopInput();
+    ctx->ReopenPreviousSegment() ||
+        ctx->ReopenPreviousSelection() ||
+        ctx->PopInput();
     return kAccepted;
   }
   if (ch == XK_Escape && ctx->IsComposing()) {

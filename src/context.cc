@@ -86,19 +86,44 @@ bool Context::ConfirmCurrentSelection() {
   return false;
 }
 
+bool Context::ConfirmPreviousSelection() {
+  for (Composition::reverse_iterator it = composition_->rbegin();
+       it != composition_->rend(); ++it) {
+    if (it->status > Segment::kSelected) return false;
+    if (it->status == Segment::kSelected) {
+      it->status = Segment::kConfirmed;
+      return true;
+    }
+  }
+  return false;
+}
+
 bool Context::ReopenPreviousSegment() {
-  size_t n = composition_->size();
-  if (n < 2) return false;
-  Segment &last(composition_->at(n - 1));
-  Segment &last_but_one(composition_->at(n - 2));
-  if (last.start == last.end ||
-      last_but_one.status == Segment::kSelected) {
+  if (composition_->empty())
+    return false;
+  Segment &last(composition_->back());
+  if (last.start == last.end) {
     composition_->pop_back();
     if (!composition_->empty()) {
       composition_->back().status = Segment::kVoid;
     }
     update_notifier_(this);
     return true;
+  }
+  return false;
+}
+
+bool Context::ReopenPreviousSelection() {
+  for (Composition::reverse_iterator it = composition_->rbegin();
+       it != composition_->rend(); ++it) {
+    if (it->status > Segment::kSelected) return false;
+    if (it->status == Segment::kSelected) {
+      it->status = Segment::kVoid;
+      while (it != composition_->rbegin())
+        composition_->pop_back();
+      update_notifier_(this);
+      return true;
+    }
   }
   return false;
 }
