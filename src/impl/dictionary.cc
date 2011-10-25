@@ -16,6 +16,7 @@
 #include <yaml-cpp/yaml.h>
 #include <rime/common.h>
 #include <rime/config.h>
+#include <rime/schema.h>
 #include <rime/impl/dictionary.h>
 #include <rime/impl/syllablizer.h>
 
@@ -114,11 +115,18 @@ bool DictEntryIterator::Next() {
   return !empty();
 }
 
-Dictionary::Dictionary(const std::string &table_name, const std::string &prism_name)
-    : name_(table_name + "/" + prism_name), loaded_(false) {
-  boost::filesystem::path path(ConfigDataManager::instance().user_data_dir());
-  table_.reset(new Table((path / table_name).string() + ".table.bin"));
-  prism_.reset(new Prism((path / prism_name).string() + ".prism.bin"));
+// Dictionary members
+
+//Dictionary::Dictionary(const std::string &table_name, const std::string &prism_name)
+//    : name_(table_name), loaded_(false) {
+//  boost::filesystem::path path(ConfigDataManager::instance().user_data_dir());
+//  table_.reset(new Table((path / table_name).string() + ".table.bin"));
+//  prism_.reset(new Prism((path / prism_name).string() + ".prism.bin"));
+//}
+
+Dictionary::Dictionary(const std::string &name,
+                       const shared_ptr<Table> &table, const shared_ptr<Prism> &prism)
+    : name_(name), loaded_(false), table_(table), prism_(prism) {
 }
 
 Dictionary::~Dictionary() {
@@ -409,6 +417,41 @@ bool Dictionary::Unload() {
   table_->Close();
   loaded_ = false;
   return true;
+}
+
+// DictionaryComponent members
+
+DictionaryComponent::DictionaryComponent() {
+}
+
+Dictionary* DictionaryComponent::Create(Schema *schema) {
+  if (!schema) return NULL;
+  Config *config = schema->config();
+  const std::string &schema_id(schema->schema_id());
+  std::string dict_name;
+  if (!config->GetString("translator/dictionary", &dict_name)) {
+    EZLOGGERPRINT("Error: dictionary not specified in schema '%s'.",
+                  schema_id.c_str());
+    return NULL;
+  }
+  std::string prism_name;
+  if (!config->GetString("translator/prism", &prism_name)) {
+    // usually same with dictionary name; different for alternative spelling
+    prism_name = dict_name;
+  }
+  // obtain prism and table objects
+  boost::filesystem::path path(ConfigDataManager::instance().user_data_dir());
+  shared_ptr<Table> table(table_map_[dict_name].lock());
+  if (!table) {
+    table.reset(new Table((path / dict_name).string() + ".table.bin"));
+    table_map_[dict_name] = table;
+  }
+  shared_ptr<Prism> prism(prism_map_[prism_name].lock());
+  if (!prism) {
+    prism.reset(new Prism((path / prism_name).string() + ".prism.bin"));
+    prism_map_[prism_name] = prism;
+  }
+  return new Dictionary(dict_name, table, prism);
 }
 
 }  // namespace rime

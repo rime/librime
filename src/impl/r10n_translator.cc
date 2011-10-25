@@ -93,22 +93,10 @@ class R10nTranslation : public Translation {
 
 R10nTranslator::R10nTranslator(Engine *engine)
     : Translator(engine) {
-  if (!engine)
-    return;
-  Config *config = engine->schema()->config();
-  const std::string &schema_id(engine->schema()->schema_id());
-  std::string dict_name;
-  if (!config->GetString("translator/dictionary", &dict_name)) {
-    EZLOGGERPRINT("Error: dictionary not specified in schema '%s'.",
-                  schema_id.c_str());
-    return;
-  }
-  std::string prism_name;
-  if (!config->GetString("translator/prism", &prism_name)) {
-    // usually same with dictionary name; different for alternative spelling
-    prism_name = dict_name;
-  }
-  dict_.reset(new Dictionary(dict_name, prism_name));
+  if (!engine) return;
+  Dictionary::Component *component = Dictionary::Require("dictionary");
+  if (!component) return;
+  dict_.reset(component->Create(engine->schema()));
   dict_->Load();
 }
 

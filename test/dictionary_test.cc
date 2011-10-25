@@ -14,7 +14,10 @@ class RimeDictionaryTest : public ::testing::Test {
  public:
   virtual void SetUp() {
     if (!dict_) {
-      dict_.reset(new rime::Dictionary("dictionary_test", "dictionary_test"));
+      dict_.reset(new rime::Dictionary(
+          "dictionary_test",
+          rime::shared_ptr<rime::Table>(new rime::Table("dictionary_test.table.bin")),
+          rime::shared_ptr<rime::Prism>(new rime::Prism("dictionary_test.prism.bin"))));
     }
     if (!rebuilt_) {
       dict_->Remove();

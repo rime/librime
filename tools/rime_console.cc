@@ -99,23 +99,15 @@ class RimeConsole {
 
 bool PrepareDictionary() {
   rime::Schema schema(".rime_console");
-  std::string dict_name;
-  if (!schema.config()->GetString("translator/dictionary", &dict_name)) {
-    EZLOGGERPRINT("Error: dictionary not specified in schema '%s'.",
-                  schema.schema_id().c_str());
-    return false;
-  }
-  std::string prism_name;
-  if (!schema.config()->GetString("translator/prism", &prism_name)) {
-    // usually same with dictionary name; different for alternative spelling
-    prism_name = dict_name;
-  }
-  rime::Dictionary dict(dict_name, prism_name);
-  //if (!dict.Exists())
+  rime::Dictionary::Component *component = rime::Dictionary::Require("dictionary");
+  if (!component) return false;
+  rime::Dictionary *dict = component->Create(&schema);
+  if (!dict) return false;
+  //if (!dict->Exists())
   {
-    std::cerr << "Preparing dictionary " << dict_name << "..." << std::endl;
-    dict.Compile(dict_name + ".dict.yaml", "rime_console.yaml");
-    std::cerr << "Ready to work with dictionary " << dict_name << "." << std::endl;
+    std::cerr << "Preparing dictionary " << dict->name() << "..." << std::endl;
+    dict->Compile(dict->name() + ".dict.yaml", "rime_console.yaml");
+    std::cerr << "Ready to work with dictionary " << dict->name() << "." << std::endl;
   }
   return true;
 }

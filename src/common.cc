@@ -15,6 +15,7 @@
 // TODO: include headers for built-in components
 #include <rime/config.h>
 #include <rime/impl/abc_segmentor.h>
+#include <rime/impl/dictionary.h>
 #include <rime/impl/echo_translator.h>
 #include <rime/impl/express_editor.h>
 #include <rime/impl/fluency_editor.h>
@@ -42,6 +43,8 @@ void RegisterComponents() {
   boost::filesystem::path schema_path = user_data_dir / "%s.schema.yaml";
   r.Register("config", new ConfigComponent(config_path.string()));
   r.Register("schema_config", new ConfigComponent(schema_path.string()));
+  
+  r.Register("dictionary", new DictionaryComponent);
 
   // processors
   r.Register("express_editor", new Component<ExpressEditor>);

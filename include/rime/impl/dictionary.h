@@ -10,9 +10,11 @@
 #define RIME_DICTIONRAY_H_
 
 #include <list>
+#include <map>
 #include <string>
 #include <vector>
 #include <rime/common.h>
+#include <rime/component.h>
 #include <rime/impl/prism.h>
 #include <rime/impl/table.h>
 #include <rime/impl/vocabulary.h>
@@ -73,11 +75,14 @@ private:
 class DictEntryCollector : public std::map<int, DictEntryIterator> {
 };
 
+class Schema;
 struct SyllableGraph;
 
-class Dictionary {
+class Dictionary : public Class<Dictionary, Schema*> {
  public:
-  Dictionary(const std::string &table_name, const std::string &prism_name);
+  Dictionary(const std::string &name,
+             const shared_ptr<Table> &table,
+             const shared_ptr<Prism> &prism);
   virtual ~Dictionary();
 
   bool Exists() const;
@@ -102,8 +107,17 @@ class Dictionary {
   
   std::string name_;
   bool loaded_;
-  scoped_ptr<Prism> prism_;
-  scoped_ptr<Table> table_;
+  shared_ptr<Prism> prism_;
+  shared_ptr<Table> table_;
+};
+
+class DictionaryComponent : public Dictionary::Component {
+ public:
+  DictionaryComponent();
+  Dictionary* Create(Schema *schema);
+ private:
+  std::map<std::string, weak_ptr<Prism> > prism_map_;
+  std::map<std::string, weak_ptr<Table> > table_map_;
 };
 
 }  // namespace rime
