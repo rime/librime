@@ -47,6 +47,10 @@ int Syllablizer::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
       BOOST_FOREACH(const Prism::Match &m, matches) {
         if (m.length == 0) continue;
         int end_pos = current_pos + m.length;
+        // consume trailing delimiters
+        while (end_pos < input.length() &&
+               delimiters_.find(input[end_pos]) != std::string::npos)
+          ++end_pos;
         if (end_pos > farthest)
           farthest = end_pos;
         SpellingMap &spellings(end_vertices[end_pos]);

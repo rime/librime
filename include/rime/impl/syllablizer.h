@@ -42,7 +42,13 @@ struct SyllableGraph {
 
 class Syllablizer {
  public:
+  Syllablizer() {}
+  explicit Syllablizer(const std::string &delimiters) : delimiters_(delimiters) {}
+  
   int BuildSyllableGraph(const std::string &input, Prism &prism, SyllableGraph *graph);
+
+ protected:
+  std::string delimiters_;
 };
 
 }  // namespace rime

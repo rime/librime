@@ -8,6 +8,7 @@ schema:
 
 engine:
   processors:
+    - speller
     - selector
     - express_editor
   segmentors:

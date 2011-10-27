@@ -22,6 +22,7 @@
 #include <rime/impl/fallback_segmentor.h>
 #include <rime/impl/r10n_translator.h>
 #include <rime/impl/selector.h>
+#include <rime/impl/speller.h>
 #include <rime/impl/table_translator.h>
 #include <rime/impl/trivial_translator.h>
 
@@ -50,6 +51,7 @@ void RegisterComponents() {
   r.Register("express_editor", new Component<ExpressEditor>);
   r.Register("fluency_editor", new Component<FluencyEditor>);
   r.Register("selector", new Component<Selector>);
+  r.Register("speller", new Component<Speller>);
 
   // segmentors
   r.Register("abc_segmentor", new Component<AbcSegmentor>);

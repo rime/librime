@@ -94,6 +94,11 @@ class R10nTranslation : public Translation {
 R10nTranslator::R10nTranslator(Engine *engine)
     : Translator(engine) {
   if (!engine) return;
+
+  Config *config = engine->schema()->config();
+  if (config)
+    config->GetString("speller/delimiter", &delimiters_);
+  
   Dictionary::Component *component = Dictionary::Require("dictionary");
   if (!component) return;
   dict_.reset(component->Create(engine->schema()));
@@ -112,7 +117,7 @@ Translation* R10nTranslator::Query(const std::string &input,
   EZLOGGERPRINT("input = '%s', [%d, %d)",
                 input.c_str(), segment.start, segment.end);
 
-  Syllablizer syllablizer;
+  Syllablizer syllablizer(delimiters_);
   SyllableGraph syllable_graph;
   int consumed = syllablizer.BuildSyllableGraph(input,
                                                 *dict_->prism(),

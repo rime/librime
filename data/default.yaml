@@ -8,6 +8,7 @@ schema:
 
 engine:
   processors:
+    - speller
     - selector
     - express_editor
   segmentors:
@@ -17,6 +18,10 @@ engine:
     - echo_translator
     - r10n_translator
     - trivial_translator
+
+speller:
+  alphabet: zyxwvutsrqponmlkjihgfedcba
+  delimiter: "'"
 
 translator:
   dictionary: luna_pinyin

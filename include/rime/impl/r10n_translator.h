@@ -31,8 +31,8 @@ class R10nTranslator : public Translator {
  protected:
   shared_ptr<DictEntry> SimplisticSentenceMaking(const SyllableGraph& syllable_graph);
 
- private:
   scoped_ptr<Dictionary> dict_;
+  std::string delimiters_;
 };
 
 }  // namespace rime

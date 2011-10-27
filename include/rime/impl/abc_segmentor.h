@@ -20,8 +20,9 @@ class AbcSegmentor : public Segmentor {
 
   virtual bool Proceed(Segmentation *segmentation);
 
- private:
+ protected:
   std::string alphabet_;
+  std::string delimiter_;
 };
 
 }  // namespace rime
