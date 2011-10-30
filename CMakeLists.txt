@@ -35,6 +35,11 @@ if(YamlCpp_FOUND)
   include_directories(${YamlCpp_INCLUDE_DIR})
 endif(YamlCpp_FOUND)
 
+find_package(KyotoCabinet REQUIRED)
+if(KyotoCabinet_FOUND)
+  include_directories(${KyotoCabinet_INCLUDE_DIR})
+endif(KyotoCabinet_FOUND)
+
 find_path(X11Keysym X11/keysym.h)
 if(X11Keysym)
   message(STATUS "Found X11/keysym.h at ${X11Keysym}")

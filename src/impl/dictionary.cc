@@ -117,13 +117,6 @@ bool DictEntryIterator::Next() {
 
 // Dictionary members
 
-//Dictionary::Dictionary(const std::string &table_name, const std::string &prism_name)
-//    : name_(table_name), loaded_(false) {
-//  boost::filesystem::path path(ConfigDataManager::instance().user_data_dir());
-//  table_.reset(new Table((path / table_name).string() + ".table.bin"));
-//  prism_.reset(new Prism((path / prism_name).string() + ".prism.bin"));
-//}
-
 Dictionary::Dictionary(const std::string &name,
                        const shared_ptr<Table> &table, const shared_ptr<Prism> &prism)
     : name_(name), loaded_(false), table_(table), prism_(prism) {

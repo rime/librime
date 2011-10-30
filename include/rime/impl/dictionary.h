@@ -97,8 +97,8 @@ class Dictionary : public Class<Dictionary, Schema*> {
 
   const std::string& name() const { return name_; }
   bool loaded() const { return loaded_; }
-  // limited operations
-  Prism* prism() { return prism_.get(); }
+
+  shared_ptr<Prism> prism() { return prism_; }
 
  private:
   bool BuildTable(const std::string &dict_file, uint32_t checksum);

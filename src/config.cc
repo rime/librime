@@ -284,6 +284,7 @@ bool ConfigDataManager::ReloadConfigData(const std::string &config_file_path) {
     return false;
   }
   sp->LoadFromFile(config_file_path);
+  return true;
 }
 
 // ConfigData members
