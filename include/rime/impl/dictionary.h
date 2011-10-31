@@ -89,15 +89,13 @@ class Dictionary : public Class<Dictionary, Schema*> {
   bool Compile(const std::string &dict_file, const std::string &schema_file);
   bool Remove();
   bool Load();
-  bool Unload();
 
   shared_ptr<DictEntryCollector> Lookup(const SyllableGraph &syllable_graph, int start_pos);
   DictEntryIterator LookupWords(const std::string &str_code, bool predictive);
   bool Decode(const Code &code, dictionary::RawCode *result);
 
   const std::string& name() const { return name_; }
-  bool loaded() const { return loaded_; }
-
+  bool loaded() const;
   shared_ptr<Prism> prism() { return prism_; }
 
  private:
@@ -106,7 +104,6 @@ class Dictionary : public Class<Dictionary, Schema*> {
                   uint32_t dict_file_checksum, uint32_t schema_file_checksum);
   
   std::string name_;
-  bool loaded_;
   shared_ptr<Prism> prism_;
   shared_ptr<Table> table_;
 };

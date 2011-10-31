@@ -112,9 +112,6 @@ Translation* R10nTranslator::Query(const std::string &input,
                                       const Segment &segment) {
   if (!dict_ || !dict_->loaded())
     return NULL;
-  shared_ptr<Prism> prism(dict_->prism());
-  if (!prism) return NULL;
-  
   if (!segment.HasTag("abc"))
     return NULL;
   EZLOGGERPRINT("input = '%s', [%d, %d)",
@@ -123,9 +120,8 @@ Translation* R10nTranslator::Query(const std::string &input,
   Syllablizer syllablizer(delimiters_);
   SyllableGraph syllable_graph;
   int consumed = syllablizer.BuildSyllableGraph(input,
-                                                *prism,
+                                                *dict_->prism(),
                                                 &syllable_graph);
-  prism.reset();
 
   shared_ptr<DictEntryCollector> collector(dict_->Lookup(syllable_graph, 0));
   if (!collector) return NULL;

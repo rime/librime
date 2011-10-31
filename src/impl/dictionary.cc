@@ -119,17 +119,15 @@ bool DictEntryIterator::Next() {
 
 Dictionary::Dictionary(const std::string &name,
                        const shared_ptr<Table> &table, const shared_ptr<Prism> &prism)
-    : name_(name), loaded_(false), table_(table), prism_(prism) {
+    : name_(name), table_(table), prism_(prism) {
 }
 
 Dictionary::~Dictionary() {
-  if (loaded_) {
-    Unload();
-  }
+  // should not close shared table and prism objects
 }
 
 shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_graph, int start_pos) {
-  if (!loaded_)
+  if (!loaded())
     return shared_ptr<DictEntryCollector>();
   TableQueryResult result;
   if (!table_->Query(syllable_graph, start_pos, &result)) {
@@ -159,7 +157,7 @@ shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_
 
 DictEntryIterator Dictionary::LookupWords(const std::string &str_code, bool predictive) {
   EZLOGGERVAR(str_code);
-  if (!loaded_)
+  if (!loaded())
     return DictEntryIterator();
   std::vector<Prism::Match> keys;
   if (predictive) {
@@ -393,23 +391,19 @@ bool Dictionary::Remove() {
 
 bool Dictionary::Load() {
   EZLOGGERFUNCTRACKER;
-  if (!prism_->Load() || !table_->Load()) {
-    EZLOGGERPRINT("Error loading dictionary '%s'.", name_.c_str());
-    prism_->Close();
-    table_->Close();
-    loaded_ = false;
+  if (!table_ || !table_->IsOpen() && !table_->Load()) {
+    EZLOGGERPRINT("Error loading table for dictionary '%s'.", name_.c_str());
+    return false;
   }
-  else {
-    loaded_ = true;
+  if (!prism_ || !prism_->IsOpen() && !prism_->Load()) {
+    EZLOGGERPRINT("Error loading prism for dictionary '%s'.", name_.c_str());
+    return false;
   }
-  return loaded_;
+  return true;
 }
 
-bool Dictionary::Unload() {
-  prism_->Close();
-  table_->Close();
-  loaded_ = false;
-  return true;
+bool Dictionary::loaded() const {
+  return table_ && table_->IsOpen() && prism_ && prism_->IsOpen();
 }
 
 // DictionaryComponent members

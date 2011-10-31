@@ -27,8 +27,7 @@ class RimeDictionaryTest : public ::testing::Test {
     dict_->Load();
   }
   virtual void TearDown() {
-    if (dict_ && dict_->loaded())
-      dict_->Unload();
+    dict_.reset();
   }
  protected:
   static rime::shared_ptr<rime::Dictionary> dict_;
