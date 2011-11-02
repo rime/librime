@@ -55,6 +55,8 @@ struct Chunk {
         size(a.remaining()), cursor(0), remaining_code(r) {}
 };
 
+bool compare_chunk_by_leading_element(const Chunk &a, const Chunk &b);
+
 }  // namespace dictionary
 
 class DictEntryIterator : public std::list<dictionary::Chunk> {

@@ -35,6 +35,12 @@ void RawCode::FromString(const std::string &code) {
                boost::algorithm::token_compress_on);
 }
 
+bool compare_chunk_by_leading_element(const Chunk &a, const Chunk &b) {
+  if (!a.entries || !a.size) return false;
+  if (!b.entries || !b.size) return true;
+  return a.entries[0].weight > b.entries[0].weight;  // by weight desc
+}
+
 int match_extra_code(const table::Code *extra_code, int depth,
                      const SyllableGraph &syll_graph, int current_pos) {
   if (!extra_code || depth >= extra_code->size)
@@ -151,6 +157,10 @@ shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_
         (*collector)[end_pos].push_back(dictionary::Chunk(a));
       }
     }
+  }
+  // sort each group of equal code length
+  BOOST_FOREACH(DictEntryCollector::value_type &v, *collector) {
+    v.second.sort(dictionary::compare_chunk_by_leading_element);
   }
   return collector;
 }
