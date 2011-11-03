@@ -16,7 +16,7 @@
 namespace rime {
 
 struct DictEntry;
-class DictEntryCollector;
+struct DictEntryCollector;
 class Dictionary;
 struct SyllableGraph;
 

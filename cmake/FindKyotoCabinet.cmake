@@ -1,4 +1,4 @@
-find_path(KyotoCabinet_INCLUDE_PATH kyotocabinet/kccommon.h)
+find_path(KyotoCabinet_INCLUDE_PATH kccommon.h)
 find_library(KyotoCabinet_LIBRARY kyotocabinet)
 if(KyotoCabinet_INCLUDE_PATH AND KyotoCabinet_LIBRARY)
   set(KyotoCabinet_FOUND TRUE)

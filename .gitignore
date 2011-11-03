@@ -1,5 +1,5 @@
 build/
-msbuild/
+vcbuild/
 xbuild/
 thirdparty/include/gtest/
 thirdparty/include/yaml-cpp/

@@ -25,6 +25,7 @@
 #include <rime/impl/speller.h>
 #include <rime/impl/table_translator.h>
 #include <rime/impl/trivial_translator.h>
+#include <rime/impl/user_dictionary.h>
 
 namespace rime {
 
@@ -46,6 +47,7 @@ void RegisterComponents() {
   r.Register("schema_config", new ConfigComponent(schema_path.string()));
   
   r.Register("dictionary", new DictionaryComponent);
+  r.Register("user_dictionary", new UserDictionaryComponent);
 
   // processors
   r.Register("express_editor", new Component<ExpressEditor>);

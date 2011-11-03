@@ -36,11 +36,15 @@ rem set CMAKE_GENERATOR="MinGW Makefiles"
 rem set CMAKE_GENERATOR="Eclipse CDT4 - MinGW Makefiles"
 set CMAKE_GENERATOR="Visual Studio 9 2008"
 
-set BUILD_DIR=%RIME_ROOT%\msbuild
+set BUILD_DIR=%RIME_ROOT%\vcbuild
 if not exist %BUILD_DIR% mkdir %BUILD_DIR%
 
 cd %BUILD_DIR%
 cmake -G %CMAKE_GENERATOR% %RIME_ROOT%
+if %ERRORLEVEL% NEQ 0 goto ERROR
+
+echo try building the solution...
+devenv rime.sln /Build Release /Out build.log
 if %ERRORLEVEL% NEQ 0 goto ERROR
 
 echo.

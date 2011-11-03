@@ -35,8 +35,9 @@ struct DictEntry {
   std::string text;
   std::string prompt;
   double weight;
+  int commit_count;
 
-  DictEntry() : weight(0.0) {}
+  DictEntry() : weight(0.0), commit_count(0) {}
   bool operator< (const DictEntry& other) const;
 };
 

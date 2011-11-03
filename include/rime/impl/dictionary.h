@@ -74,7 +74,7 @@ private:
   shared_ptr<DictEntry> entry_;
 };
 
-class DictEntryCollector : public std::map<int, DictEntryIterator> {
+struct DictEntryCollector : std::map<int, DictEntryIterator> {
 };
 
 class Schema;
@@ -98,6 +98,8 @@ class Dictionary : public Class<Dictionary, Schema*> {
 
   const std::string& name() const { return name_; }
   bool loaded() const;
+  
+  shared_ptr<Table> table() { return table_; }
   shared_ptr<Prism> prism() { return prism_; }
 
  private:
