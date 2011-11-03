@@ -89,7 +89,7 @@ bool UserDictionary::Initialize() {
 bool UserDictionary::FetchTickCount() {
   std::string value;
   try {
-    if (!db_->Fetch("\0x1/tick", &value))
+    if (!db_->Fetch("\0x01/tick", &value))
       return false;
     tick_ = boost::lexical_cast<TickCount>(value);
     return true;
