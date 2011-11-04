@@ -18,6 +18,19 @@
 
 namespace rime {
 
+// UserDbAccessor memebers
+
+bool UserDbAccessor::Yield(std::string *key, std::string *value) {
+  if (!cursor_ || !key || !value)
+    return false;
+  return cursor_->get(key, value, true) && boost::starts_with(*key, key_);
+}
+
+bool UserDbAccessor::exhausted() {
+  std::string key;
+  return cursor_->get_key(&key, false) && boost::starts_with(key, key_);
+}
+
 // UserDb members
 
 UserDb::UserDb(const std::string &name)
@@ -36,15 +49,15 @@ UserDbAccessor UserDb::Query(const std::string &key, bool prefix_search) {
   if (!loaded())
     return UserDbAccessor();
 
-  // TODO:
-  return UserDbAccessor();
+  kyotocabinet::DB::Cursor *cursor = db_->cursor();
+  cursor->jump(key);
+  return UserDbAccessor(key, cursor);
 }
 
 bool UserDb::Fetch(const std::string &key, std::string *value) {
   if (!value || !loaded())
     return false;
-  // TODO:
-  return false;
+  return db_->get(key, value);
 }
 
 bool UserDb::Update(const std::string &key, const std::string &value) {

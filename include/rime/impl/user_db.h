@@ -17,8 +17,24 @@
 
 namespace rime {
 
-// TODO:
 class UserDbAccessor {
+ public:
+  UserDbAccessor() : key_(), cursor_(NULL) {}
+  explicit UserDbAccessor(const std::string &key,
+                          kyotocabinet::DB::Cursor *cursor)
+      : key_(key), cursor_(cursor) {}
+  ~UserDbAccessor() {
+    if (cursor_) {
+      delete cursor_;
+      cursor_ = NULL;
+    }
+  }
+  bool Yield(std::string *key, std::string *value);
+  bool exhausted();
+
+ private:
+  std::string key_;
+  kyotocabinet::DB::Cursor *cursor_;
 };
 
 class UserDb {

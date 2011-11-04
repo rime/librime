@@ -14,6 +14,7 @@
 #include <rime/config.h>
 #include <rime/schema.h>
 #include <rime/impl/syllablizer.h>
+#include <rime/impl/table.h>
 #include <rime/impl/user_db.h>
 #include <rime/impl/user_dictionary.h>
 
@@ -36,7 +37,7 @@ void UserDictionary::Attach(const shared_ptr<Table> &table, const shared_ptr<Pri
 bool UserDictionary::Load() {
   if (!db_ || !db_->Open())
     return false;
-  if (!GetTickCount() && !Initialize())
+  if (!FetchTickCount() && !Initialize())
     return false;
   return true;
 }
@@ -56,7 +57,7 @@ shared_ptr<UserDictEntryCollector> UserDictionary::Lookup(const SyllableGraph &s
 
 bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
   std::string code_str(TranslateCodeToString(entry.code));
-  std::string key(code_str + " " + entry.text);
+  std::string key(code_str + entry.text);
   double weight = entry.weight;
   int commit_count = entry.commit_count;
   if (commit > 0) {
@@ -101,8 +102,17 @@ bool UserDictionary::FetchTickCount() {
 }
 
 const std::string UserDictionary::TranslateCodeToString(const Code &code) {
-  // TODO:
-  return "TODO";
+  if (!table_)
+    return std::string();
+  std::string result;
+  BOOST_FOREACH(const int &syllable_id, code) {
+    const char *spelling = table_->GetSyllableById(syllable_id);
+    if (!spelling)
+      return std::string();
+    result += spelling;
+    result += ' ';
+  }
+  return result;
 }
 
 // UserDictionaryComponent members
