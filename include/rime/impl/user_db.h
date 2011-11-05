@@ -47,10 +47,10 @@ class UserDb {
   bool Open();
   bool Close();
 
-  UserDbAccessor Query(const std::string &key, bool prefix_match);
+  const UserDbAccessor Query(const std::string &key);
   bool Fetch(const std::string &key, std::string *value);
   bool Update(const std::string &key, const std::string &value);
-  bool Erase(const std::string &key, const std::string &value);
+  bool Erase(const std::string &key);
 
   const std::string& name() const { return name_; }
   const std::string& file_name() const { return file_name_; }

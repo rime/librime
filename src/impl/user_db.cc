@@ -28,7 +28,7 @@ bool UserDbAccessor::Yield(std::string *key, std::string *value) {
 
 bool UserDbAccessor::exhausted() {
   std::string key;
-  return cursor_->get_key(&key, false) && boost::starts_with(key, key_);
+  return !cursor_->get_key(&key, false) || !boost::starts_with(key, key_);
 }
 
 // UserDb members
@@ -45,7 +45,7 @@ UserDb::~UserDb() {
     Close();
 }
 
-UserDbAccessor UserDb::Query(const std::string &key, bool prefix_search) {
+const UserDbAccessor UserDb::Query(const std::string &key) {
   if (!loaded())
     return UserDbAccessor();
 
@@ -61,13 +61,13 @@ bool UserDb::Fetch(const std::string &key, std::string *value) {
 }
 
 bool UserDb::Update(const std::string &key, const std::string &value) {
-  // TODO:
-  return false;
+  if (!loaded()) return false;
+  return db_->set(key, value);
 }
 
-bool UserDb::Erase(const std::string &key, const std::string &value) {
-  // TODO:
-  return false;
+bool UserDb::Erase(const std::string &key) {
+  if (!loaded()) return false;
+  return db_->remove(key);
 }
 
 bool UserDb::Exists() const {
