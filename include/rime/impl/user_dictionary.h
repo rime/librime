@@ -28,6 +28,7 @@ class Table;
 class Prism;
 class UserDb;
 struct SyllableGraph;
+struct DfsState;
 
 class UserDictionary : public Class<UserDictionary, Schema*> {
  public:
@@ -38,7 +39,7 @@ class UserDictionary : public Class<UserDictionary, Schema*> {
   bool Load();
   bool loaded() const;
 
-  shared_ptr<UserDictEntryCollector> Lookup(const SyllableGraph &syllable_graph, int start_pos);
+  shared_ptr<UserDictEntryCollector> Lookup(const SyllableGraph &syllable_graph, size_t start_pos);
   bool UpdateEntry(const DictEntry &entry, int commit);
   bool UpdateTickCount(TickCount increment);
 
@@ -48,7 +49,10 @@ class UserDictionary : public Class<UserDictionary, Schema*> {
  protected:
   bool Initialize();
   bool FetchTickCount();
-  const std::string TranslateCodeToString(const Code &code);
+  bool TranslateCodeToString(const Code &code, std::string *result);
+  bool DfsLookup(const SyllableGraph &syll_graph, size_t current_pos,
+                 const std::string &current_prefix,
+                 DfsState *state);
 
  private:
   std::string name_;

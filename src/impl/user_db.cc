@@ -20,15 +20,33 @@ namespace rime {
 
 // UserDbAccessor memebers
 
-bool UserDbAccessor::Yield(std::string *key, std::string *value) {
+UserDbAccessor::UserDbAccessor(kyotocabinet::DB::Cursor *cursor,
+                               const std::string &prefix)
+    : cursor_(cursor), prefix_(prefix) {
+  if (!prefix.empty())
+    Forward(prefix);
+}
+
+UserDbAccessor::~UserDbAccessor() {
+  if (cursor_) {
+    delete cursor_;
+    cursor_ = NULL;
+  }
+}
+
+bool UserDbAccessor::Forward(const std::string &key) {
+  return cursor_ && cursor_->jump(key);
+}
+
+bool UserDbAccessor::GetNextRecord(std::string *key, std::string *value) {
   if (!cursor_ || !key || !value)
     return false;
-  return cursor_->get(key, value, true) && boost::starts_with(*key, key_);
+  return cursor_->get(key, value, true) && boost::starts_with(*key, prefix_);
 }
 
 bool UserDbAccessor::exhausted() {
   std::string key;
-  return !cursor_->get_key(&key, false) || !boost::starts_with(key, key_);
+  return !cursor_->get_key(&key, false) || !boost::starts_with(key, prefix_);
 }
 
 // UserDb members
@@ -48,10 +66,8 @@ UserDb::~UserDb() {
 const UserDbAccessor UserDb::Query(const std::string &key) {
   if (!loaded())
     return UserDbAccessor();
-
   kyotocabinet::DB::Cursor *cursor = db_->cursor();
-  cursor->jump(key);
-  return UserDbAccessor(key, cursor);
+  return UserDbAccessor(cursor, key);
 }
 
 bool UserDb::Fetch(const std::string &key, std::string *value) {

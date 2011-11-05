@@ -11,30 +11,35 @@
 #ifndef RIME_USER_DB_H_
 #define RIME_USER_DB_H_
 
-#include <string>
+#if defined(_MSC_VER)
+#pragma warning(disable: 4244)
+#pragma warning(disable: 4351)
+#endif
 #include <kchashdb.h>
+#if defined(_MSC_VER)
+#pragma warning(default: 4351)
+#pragma warning(default: 4244)
+#endif
+
+#include <string>
 #include <rime/common.h>
 
 namespace rime {
 
 class UserDbAccessor {
  public:
-  UserDbAccessor() : key_(), cursor_(NULL) {}
-  explicit UserDbAccessor(const std::string &key,
-                          kyotocabinet::DB::Cursor *cursor)
-      : key_(key), cursor_(cursor) {}
-  ~UserDbAccessor() {
-    if (cursor_) {
-      delete cursor_;
-      cursor_ = NULL;
-    }
-  }
-  bool Yield(std::string *key, std::string *value);
+  UserDbAccessor() : cursor_(NULL), prefix_() {}
+  explicit UserDbAccessor(kyotocabinet::DB::Cursor *cursor,
+                          const std::string &prefix);
+  ~UserDbAccessor();
+  
+  bool Forward(const std::string &key);
+  bool GetNextRecord(std::string *key, std::string *value);
   bool exhausted();
 
  private:
-  std::string key_;
   kyotocabinet::DB::Cursor *cursor_;
+  std::string prefix_;
 };
 
 class UserDb {

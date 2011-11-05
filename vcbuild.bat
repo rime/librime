@@ -43,6 +43,7 @@ cd %BUILD_DIR%
 cmake -G %CMAKE_GENERATOR% %RIME_ROOT%
 if %ERRORLEVEL% NEQ 0 goto ERROR
 
+echo.
 echo try building the solution...
 devenv rime.sln /Build Release /Out build.log
 if %ERRORLEVEL% NEQ 0 goto ERROR

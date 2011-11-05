@@ -46,22 +46,114 @@ bool UserDictionary::loaded() const {
   return db_ && db_->loaded();
 }
 
-shared_ptr<UserDictEntryCollector> UserDictionary::Lookup(const SyllableGraph &syllable_graph, int start_pos) {
-  if (!table_ || !prism_ || !loaded())
+struct DfsState {
+  Code code;
+  shared_ptr<UserDictEntryCollector> collector;
+  shared_ptr<UserDbAccessor> accessor;
+  std::string key;
+  std::string value;
+  bool IsExactMatch(const std::string &prefix) {
+    size_t prefix_len = prefix.length();
+    return key.length() > prefix_len && key[prefix_len] == '\t';
+  }
+  bool IsPrefixMatch(const std::string &prefix) {
+    return boost::starts_with(key, prefix);
+  }
+  void SaveEntry(int pos);
+  bool NextEntry() {
+    if (!accessor->GetNextRecord(&key, &value)) {
+      key.clear();
+      value.clear();
+      return false;  // reached the end
+    }
+    return true;
+  }
+  bool ForwardScan(const std::string &prefix) {
+    if (!accessor->Forward(prefix))
+      return false;
+    return NextEntry();
+  }
+};
+
+void DfsState::SaveEntry() {
+  DictEntry e;
+  size_t seperator_pos = key.find('\t');
+  if (seperator_pos == std::string::npos)
+    return;
+  e.text = key.substr(seperator_pos + 1);
+  // TODO: Magicalc
+  e.weight = 1.0;
+  e.commit_count = 1;
+  e.code = code;
+  (*collector)[pos].push_back(e);
+}
+
+bool UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_pos,
+                               const std::string &current_prefix,
+                               DfsState *state) {
+  EdgeMap::const_iterator edges = syll_graph.edges.find(current_pos);
+  if (edges == syll_graph.edges.end()) {
+    return true;  // continue DFS lookup
+  }
+  std::string prefix;
+  BOOST_FOREACH(const EndVertexMap::value_type &edge, edges->second) {
+    int end_vertex_pos = edge.first;
+    const SpellingMap &spellings(edge.second);
+    BOOST_FOREACH(const SpellingMap::value_type &spelling, spellings) {
+      SyllableId syll_id = spelling.first;
+      state->code.push_back(syll_id);
+      if (!TranslateCodeToString(state->code, &prefix))
+        continue;
+      if (prefix > state->key) {  // 'a b c |d ' > 'a b c \tabracadabra'
+        if (!state->ForwardScan(prefix)) {
+          return false;  // terminate DFS lookup
+        }
+      }
+      while (state->IsExactMatch(prefix)) {  // 'b |e ' vs. 'b e \tBe'
+        state->SaveEntry(end_vertex_pos);
+        if (!state->NextEntry())
+          return false;
+      }
+      if (state->IsPrefixMatch(prefix)) {  // 'b |e ' vs. 'b e f \tBefore'
+        if (!DfsLookup(syll_graph, end_vertex_pos, prefix, state))
+          return false;
+      }
+      state->code.pop_back();
+      if (!state->IsPrefixMatch(current_prefix)) {  // 'b |' vs. 'g o \tGo'
+        return true;  // pruning: done with the current prefix code
+      }
+      // 'b |e ' vs. 'b y \tBy'
+    }
+  }
+  return true;  // finished traversing the syllable graph
+}
+
+shared_ptr<UserDictEntryCollector> UserDictionary::Lookup(const SyllableGraph &syll_graph, size_t start_pos) {
+  if (!table_ || !prism_ || !loaded() ||
+      start_pos >= syll_graph.interpreted_length)
     return shared_ptr<UserDictEntryCollector>();
 
-  shared_ptr<UserDictEntryCollector> collector(new UserDictEntryCollector);
-  // TODO:
-  return collector;
+  DfsState state;
+  state.collector.reset(new UserDictEntryCollector);
+  state.accessor.reset(new UserDbAccessor(db_->Query("")));
+  state.accessor->Forward(" ");  // skip metadata
+  std::string prefix;
+  DfsLookup(syll_graph, start_pos, prefix, &state);
+  if (state.collector->empty())
+      return shared_ptr<UserDictEntryCollector>();
+  else
+      return state.collector;
 }
 
 bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
-  std::string code_str(TranslateCodeToString(entry.code));
-  std::string key(code_str + entry.text);
+  std::string code_str;
+  if (!TranslateCodeToString(entry.code, &code_str))
+    return false;
+  std::string key(code_str + '\t' + entry.text);
   double weight = entry.weight;
   int commit_count = entry.commit_count;
   if (commit > 0) {
-    // TODO:
+    // TODO: Magicalc
     weight += commit;
     commit_count += commit;
   }
@@ -83,7 +175,7 @@ bool UserDictionary::UpdateTickCount(TickCount increment) {
 }
 
 bool UserDictionary::Initialize() {
-  // TODO:
+  // TODO: something else?
   return db_->Update("\0x01/tick", "0");
 }
 
@@ -101,18 +193,19 @@ bool UserDictionary::FetchTickCount() {
   }
 }
 
-const std::string UserDictionary::TranslateCodeToString(const Code &code) {
-  if (!table_)
-    return std::string();
-  std::string result;
+bool UserDictionary::TranslateCodeToString(const Code &code, std::string* result) {
+  if (!table_ || !result) return false;
+  result->clear();
   BOOST_FOREACH(const int &syllable_id, code) {
     const char *spelling = table_->GetSyllableById(syllable_id);
-    if (!spelling)
-      return std::string();
-    result += spelling;
-    result += ' ';
+    if (!spelling) {
+      result->clear();
+      return false;
+    }
+    *result += spelling;
+    *result += ' ';
   }
-  return result;
+  return true;
 }
 
 // UserDictionaryComponent members
