@@ -75,7 +75,7 @@ struct DfsState {
   }
 };
 
-void DfsState::SaveEntry() {
+void DfsState::SaveEntry(int pos) {
   DictEntry e;
   size_t seperator_pos = key.find('\t');
   if (seperator_pos == std::string::npos)
