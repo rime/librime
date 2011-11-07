@@ -424,10 +424,6 @@ DictionaryComponent::DictionaryComponent() {
 Dictionary* DictionaryComponent::Create(Schema *schema) {
   if (!schema) return NULL;
   Config *config = schema->config();
-  bool enable_user_dict = true;
-  config->GetBool("translator/enable_user_dict", &enable_user_dict);
-  if (!enable_user_dict)
-    return NULL;
   std::string dict_name;
   if (!config->GetString("translator/dictionary", &dict_name)) {
     EZLOGGERPRINT("Error: dictionary not specified in schema '%s'.",
