@@ -18,6 +18,7 @@ namespace rime {
 struct DictEntry;
 struct DictEntryCollector;
 class Dictionary;
+class UserDictionary;
 struct SyllableGraph;
 
 class R10nTranslator : public Translator {
@@ -32,6 +33,7 @@ class R10nTranslator : public Translator {
   shared_ptr<DictEntry> SimplisticSentenceMaking(const SyllableGraph& syllable_graph);
 
   scoped_ptr<Dictionary> dict_;
+  scoped_ptr<UserDictionary> user_dict_;
   std::string delimiters_;
 };
 

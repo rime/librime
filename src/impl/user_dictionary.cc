@@ -6,6 +6,7 @@
 //
 // 2011-10-30 GONG Chen <chen.sst@gmail.com>
 //
+#include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
@@ -140,9 +141,12 @@ shared_ptr<UserDictEntryCollector> UserDictionary::Lookup(const SyllableGraph &s
   std::string prefix;
   DfsLookup(syll_graph, start_pos, prefix, &state);
   if (state.collector->empty())
-      return shared_ptr<UserDictEntryCollector>();
-  else
-      return state.collector;
+    return shared_ptr<UserDictEntryCollector>();
+  // sort each group of homophones by weight ASC (to retrieve with pop_back())
+  BOOST_FOREACH(UserDictEntryCollector::value_type &v, *state.collector) {
+    std::sort(v.second.begin(), v.second.end());
+  }
+  return state.collector;
 }
 
 bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
