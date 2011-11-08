@@ -35,8 +35,6 @@ struct RawDictEntry {
   double weight;
 };
 
-typedef std::list<rime::shared_ptr<RawDictEntry> > RawDictEntryList;
-
 struct Chunk {
   Code code;
   const table::Entry *entries;

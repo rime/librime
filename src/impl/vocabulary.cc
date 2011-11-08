@@ -76,7 +76,7 @@ DictEntryList* Vocabulary::LocateEntries(const Code &code) {
 void Vocabulary::SortHomophones() {
   BOOST_FOREACH(Vocabulary::value_type &v, *this) {
     VocabularyPage &page(v.second);
-     std::stable_sort(page.entries.begin(), page.entries.end());
+    std::sort(page.entries.begin(), page.entries.end());
     if (page.next_level)
       page.next_level->SortHomophones();
   }

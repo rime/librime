@@ -264,7 +264,7 @@ bool Dictionary::BuildTable(const std::string &dict_file, uint32_t checksum) {
   EZLOGGERVAR(dict_name);
   EZLOGGERVAR(dict_version);
   // read entries
-  dictionary::RawDictEntryList raw_entries;
+  std::vector<dictionary::RawDictEntry> raw_entries;
   int entry_count = 0;
   Syllabary syllabary;
   {
@@ -303,14 +303,14 @@ bool Dictionary::BuildTable(const std::string &dict_file, uint32_t checksum) {
         }
       }
 
-      shared_ptr<dictionary::RawDictEntry> e(new dictionary::RawDictEntry);
-      e->raw_code.FromString(str_code);
-      BOOST_FOREACH(const std::string &s, e->raw_code) {
+      dictionary::RawDictEntry e;
+      e.raw_code.FromString(str_code);
+      BOOST_FOREACH(const std::string &s, e.raw_code) {
         if (syllabary.find(s) == syllabary.end())
           syllabary.insert(s);
       }
-      e->text.swap(word);
-      e->weight = weight;
+      e.text.swap(word);
+      e.weight = weight;
       raw_entries.push_back(e);
       ++entry_count;
     }
@@ -325,9 +325,9 @@ bool Dictionary::BuildTable(const std::string &dict_file, uint32_t checksum) {
       syllable_to_id[s] = syllable_id++;
     }
     Vocabulary vocabulary;
-    BOOST_FOREACH(const shared_ptr<dictionary::RawDictEntry> &e, raw_entries) {
+    BOOST_FOREACH(dictionary::RawDictEntry &e, raw_entries) {
       Code code;
-      BOOST_FOREACH(const std::string &s, e->raw_code) {
+      BOOST_FOREACH(const std::string &s, e.raw_code) {
         code.push_back(syllable_to_id[s]);
       }
       DictEntryList *ls = vocabulary.LocateEntries(code);
@@ -335,11 +335,11 @@ bool Dictionary::BuildTable(const std::string &dict_file, uint32_t checksum) {
         EZLOGGERPRINT("Error locating entries in vocabulary.");
         continue;
       }
-      ls->resize(ls->size() + 1);
-      DictEntry &d(ls->back());
+      DictEntry d;
       d.code.swap(code);
-      d.text.swap(e->text);
-      d.weight = e->weight;
+      d.text.swap(e.text);
+      d.weight = e.weight;
+      ls->push_back(d);
     }
     if (sort_order != "original") {
       vocabulary.SortHomophones();

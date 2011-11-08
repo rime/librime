@@ -367,7 +367,7 @@ bool Table::BuildEntryList(const DictEntryList &src, List<table::Entry> *dest) {
     return false;
   }
   size_t i = 0;
-  for (std::vector<DictEntry>::const_iterator d = src.begin(); d != src.end(); ++d, ++i) {
+  for (DictEntryList::const_iterator d = src.begin(); d != src.end(); ++d, ++i) {
     if (!BuildEntry(*d, &dest->at[i]))
       return false;
   }
