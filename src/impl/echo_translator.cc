@@ -35,7 +35,7 @@ Translation* EchoTranslator::Query(const std::string &input,
   EZLOGGERPRINT("input = '%s', [%d, %d)",
                 input.c_str(), segment.start, segment.end);
   shared_ptr<Candidate> candidate(
-      new Candidate("raw", input, "", segment.start, segment.end, 0));
+      new SimpleCandidate("raw", segment.start, segment.end, input));
   Translation *translation = new EchoTranslation(candidate);
   return translation;
 }

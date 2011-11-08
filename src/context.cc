@@ -64,7 +64,7 @@ bool Context::Select(int index) {
     seg.selected_index = index;
     seg.status = Segment::kSelected;
     EZLOGGERPRINT("Selected: %s, index = %d.",
-                  cand->text().c_str(), index);
+                  cand->text(), index);
     select_notifier_(this);
     return true;
   }
@@ -79,7 +79,7 @@ bool Context::ConfirmCurrentSelection() {
   if (cand) {
     seg.status = Segment::kSelected;
     EZLOGGERPRINT("Confirmed: %s, selected_index = %d.",
-                  cand->text().c_str(), seg.selected_index);
+                  cand->text(), seg.selected_index);
     select_notifier_(this);
     return true;
   }

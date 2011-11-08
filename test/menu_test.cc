@@ -27,7 +27,7 @@ class TranslationAlpha : public Translation {
     if (exhausted())
       return shared_ptr<Candidate>();
     return shared_ptr<Candidate>(
-        new Candidate("alpha", "Alpha", "", 0, 5, 0));
+        new SimpleCandidate("alpha", 0, 5, "Alpha"));
   }
 };
 
@@ -35,11 +35,11 @@ class TranslationBeta : public Translation {
  public:
   TranslationBeta() : cursor_(0) {
     candies_.push_back(shared_ptr<Candidate>(
-        new Candidate("beta", "Beta-1", "", 0, 4, 0)));
+        new SimpleCandidate("beta", 0, 4, "Beta-1")));
     candies_.push_back(shared_ptr<Candidate>(
-        new Candidate("beta", "Beta-2", "", 0, 4, 0)));
+        new SimpleCandidate("beta", 0, 4, "Beta-2")));
     candies_.push_back(shared_ptr<Candidate>(
-        new Candidate("beta", "Beta-3", "", 0, 4, 0)));
+        new SimpleCandidate("beta", 0, 4, "Beta-3")));
   }
 
   bool Next() {
@@ -76,10 +76,10 @@ TEST(RimeMenuTest, RecipeAlphaBeta) {
   EXPECT_TRUE(page->is_last_page);
   ASSERT_EQ(4, page->candidates.size());
   EXPECT_EQ("alpha", page->candidates[0]->type());
-  EXPECT_EQ("Alpha", page->candidates[0]->text());
+  EXPECT_STREQ("Alpha", page->candidates[0]->text());
   EXPECT_EQ("beta", page->candidates[1]->type());
-  EXPECT_EQ("Beta-1", page->candidates[1]->text());
-  EXPECT_EQ("Beta-3", page->candidates[3]->text());
+  EXPECT_STREQ("Beta-1", page->candidates[1]->text());
+  EXPECT_STREQ("Beta-3", page->candidates[3]->text());
   scoped_ptr<Page> no_more_page(menu.CreatePage(5, 1));
   EXPECT_FALSE(no_more_page);
 }

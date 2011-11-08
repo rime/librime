@@ -45,7 +45,8 @@ if %ERRORLEVEL% NEQ 0 goto ERROR
 
 echo.
 echo try building the solution...
-devenv rime.sln /Build Release /Out build.log
+if exist vcbuild.log del vcbuild.log
+devenv rime.sln /Build Release /Out vcbuild.log
 if %ERRORLEVEL% NEQ 0 goto ERROR
 
 echo.

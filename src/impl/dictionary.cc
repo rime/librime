@@ -102,7 +102,7 @@ shared_ptr<DictEntry> DictEntryIterator::Peek() {
     entry_->code = chunk.code;
     entry_->text = e.text.c_str();
     if (!chunk.remaining_code.empty()) {
-      entry_->prompt = "~" + chunk.remaining_code;
+      entry_->comment = "~" + chunk.remaining_code;
     }
     entry_->weight = e.weight;
   }

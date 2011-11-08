@@ -68,13 +68,12 @@ class R10nTranslation : public Translation {
       DictEntryList &entries(user_phrase_iter_->second);
       const DictEntry &e(entries.back());
       EZLOGGERVAR(e.text);
-      shared_ptr<Candidate> cand(new Candidate(
+      shared_ptr<Candidate> cand(new SimpleCandidate(
           "zh",
-          e.text,
-          e.prompt,
           start_,
           start_ + consumed_input_length,
-          0));
+          e.text,
+          e.comment));
       return cand;
     }
     if (phrase_ && phrase_iter_ != phrase_->rend()) {
@@ -83,13 +82,12 @@ class R10nTranslation : public Translation {
       DictEntryIterator &iter(phrase_iter_->second);
       const shared_ptr<DictEntry> &e(iter.Peek());
       EZLOGGERVAR(e->text);
-      shared_ptr<Candidate> cand(new Candidate(
+      shared_ptr<Candidate> cand(new SimpleCandidate(
           "zh",
-          e->text,
-          e->prompt,
           start_,
           start_ + consumed_input_length,
-          0));
+          e->text,
+          e->comment));
       return cand;
     }
     return shared_ptr<Candidate>();

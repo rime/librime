@@ -33,7 +33,7 @@ class Code : public std::vector<int> {
 struct DictEntry {
   Code code;
   std::string text;
-  std::string prompt;
+  std::string comment;
   double weight;
   int commit_count;
 

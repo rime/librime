@@ -17,36 +17,58 @@ namespace rime {
 
 class Candidate {
  public:
-  Candidate();
+  Candidate() : type_(), start_(0), end_(0) {}
   Candidate(const std::string type,
-            const std::string text,
-            const std::string prompt,
             int start,
-            int end,
-            int order);
-  virtual ~Candidate();
+            int end) : type_(type), start_(start), end_(end) {}
+  virtual ~Candidate() {}
 
+  // recognized by translators in learning phase
   const std::string& type() const { return type_; }
-  const std::string& text() const { return text_; }
-  const std::string& prompt() const { return prompt_; }
+  // [start, end) mark a range in the input that the candidate correspond to
   int start() const { return start_; }
   int end() const { return end_; }
-  int order() const { return order_; }
+  
+  // candidate text to commit
+  virtual const char* text() const = 0;
+  // (optional)
+  virtual const char* comment() const { return NULL; }
+  // text shown in the preedit area, replacing input string (optional)
+  virtual const char* preedit() const { return NULL; }
 
   void set_type(const std::string &type) { type_ = type; }
-  void set_text(const std::string &text) { text_ = text; }
-  void set_prompt(const std::string &prompt) { prompt_ = prompt; }
   void set_start(int start) { start_ = start; }
   void set_end(int end) { end_ = end; }
-  void set_order(int order) { order_ = order; }
 
  private:
   std::string type_;
-  std::string text_;
-  std::string prompt_;
   int start_;
   int end_;
-  int order_;
+};
+
+class SimpleCandidate : public Candidate {
+ public:
+  SimpleCandidate() : Candidate() {}
+  SimpleCandidate(const std::string type,
+                  int start,
+                  int end,
+                  const std::string text,
+                  const std::string comment = std::string(),
+                  const std::string preedit = std::string())
+      : Candidate(type, start, end), text_(text) {}
+
+  const char* text() const { return text_.c_str(); }
+  const char* comment() const { return comment_.c_str(); }
+  const char* preedit() const { return preedit_.c_str(); }
+
+  void set_text(const std::string &text) { text_ = text; }
+  void set_comment(const std::string &comment) { comment_ = comment; }
+  void set_preedit(const std::string &preedit) { preedit_ = preedit; }
+
+ private:
+  std::string text_;
+  std::string comment_;
+  std::string preedit_;
 };
 
 typedef std::vector<shared_ptr<Candidate> > CandidateList;

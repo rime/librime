@@ -41,7 +41,8 @@ Translation* TrivialTranslator::Query(const std::string &input,
   if (output.empty())
     return NULL;
   shared_ptr<Candidate> candidate(
-      new Candidate("abc", output, ":-)", segment.start, segment.end, 0));
+      new SimpleCandidate("abc", segment.start, segment.end, output, ":-)"));
+
   Translation *translation = new UniqueTranslation(candidate);
   return translation;
 }

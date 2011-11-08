@@ -40,13 +40,12 @@ class TableTranslation : public Translation {
     if (exhausted())
       return shared_ptr<Candidate>();
     const shared_ptr<DictEntry> &e(iter_.Peek());
-    shared_ptr<Candidate> cand(new Candidate(
+    shared_ptr<Candidate> cand(new SimpleCandidate(
         "zh",
-        e->text,
-        e->prompt,
         start_,
         end_,
-        0));
+        e->text,
+        e->comment));
     return cand;
   }
 
