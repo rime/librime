@@ -77,15 +77,15 @@ struct DfsState {
 };
 
 void DfsState::SaveEntry(int pos) {
-  DictEntry e;
   size_t seperator_pos = key.find('\t');
   if (seperator_pos == std::string::npos)
     return;
-  e.text = key.substr(seperator_pos + 1);
+  shared_ptr<DictEntry> e(new DictEntry);
+  e->text = key.substr(seperator_pos + 1);
   // TODO: Magicalc
-  e.weight = 1.0;
-  e.commit_count = 1;
-  e.code = code;
+  e->weight = 1.0;
+  e->commit_count = 1;
+  e->code = code;
   (*collector)[pos].push_back(e);
 }
 
@@ -142,9 +142,9 @@ shared_ptr<UserDictEntryCollector> UserDictionary::Lookup(const SyllableGraph &s
   DfsLookup(syll_graph, start_pos, prefix, &state);
   if (state.collector->empty())
     return shared_ptr<UserDictEntryCollector>();
-  // sort each group of homophones by weight ASC (to retrieve with pop_back())
+  // sort each group of homophones by weight ASC (to later retrieve with pop_back())
   BOOST_FOREACH(UserDictEntryCollector::value_type &v, *state.collector) {
-    std::sort(v.second.begin(), v.second.end());
+    v.second.Sort();
   }
   return state.collector;
 }

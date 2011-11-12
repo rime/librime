@@ -52,6 +52,15 @@ bool DictEntry::operator< (const DictEntry& other) const {
   return text < other.text;
 }
 
+template <class T>
+inline bool dereference_less(const T &a, const T &b) {
+  return *a < *b;
+}
+  
+void DictEntryList::Sort() {
+  std::sort(begin(), end(), dereference_less<DictEntryList::value_type>);
+}
+
 DictEntryList* Vocabulary::LocateEntries(const Code &code) {
   Vocabulary *v = this;
   size_t n = code.size();
@@ -76,7 +85,7 @@ DictEntryList* Vocabulary::LocateEntries(const Code &code) {
 void Vocabulary::SortHomophones() {
   BOOST_FOREACH(Vocabulary::value_type &v, *this) {
     VocabularyPage &page(v.second);
-    std::sort(page.entries.begin(), page.entries.end());
+    page.entries.Sort();
     if (page.next_level)
       page.next_level->SortHomophones();
   }

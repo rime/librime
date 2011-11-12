@@ -41,7 +41,10 @@ struct DictEntry {
   bool operator< (const DictEntry& other) const;
 };
 
-typedef std::vector<DictEntry> DictEntryList;
+class DictEntryList : public std::vector<shared_ptr<DictEntry> > {
+ public:
+  void Sort();
+};
 
 class Vocabulary;
 

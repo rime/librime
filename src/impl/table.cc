@@ -339,9 +339,9 @@ table::TailIndex* Table::BuildTailIndex(const Code &prefix, const Vocabulary &vo
   size_t count = 0;
   BOOST_FOREACH(const DictEntryList::value_type &src, page.entries) {
     EZDBGONLYLOGGERVAR(count);
-    EZDBGONLYLOGGERVAR(src.text);
+    EZDBGONLYLOGGERVAR(src->text);
     table::TailIndexNode &dest(index->at[count++]);
-    size_t extra_code_length = src.code.size() - Code::kIndexCodeMaxLength;
+    size_t extra_code_length = src->code.size() - Code::kIndexCodeMaxLength;
     EZDBGONLYLOGGERVAR(extra_code_length);
     dest.extra_code.size = extra_code_length;
     dest.extra_code.at = Allocate<table::SyllableId>(extra_code_length);
@@ -349,10 +349,10 @@ table::TailIndex* Table::BuildTailIndex(const Code &prefix, const Vocabulary &vo
       EZLOGGERPRINT("Error creating code sequence; file size: %u.", file_size());
       return false;
     }
-    std::copy(src.code.begin() + Code::kIndexCodeMaxLength,
-              src.code.end(),
+    std::copy(src->code.begin() + Code::kIndexCodeMaxLength,
+              src->code.end(),
               dest.extra_code.begin());
-    BuildEntry(src, &dest.entry);
+    BuildEntry(*src, &dest.entry);
   }
   return index;
 }
@@ -368,7 +368,7 @@ bool Table::BuildEntryList(const DictEntryList &src, List<table::Entry> *dest) {
   }
   size_t i = 0;
   for (DictEntryList::const_iterator d = src.begin(); d != src.end(); ++d, ++i) {
-    if (!BuildEntry(*d, &dest->at[i]))
+    if (!BuildEntry(**d, &dest->at[i]))
       return false;
   }
   return true;

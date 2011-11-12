@@ -24,88 +24,57 @@
 
 namespace rime {
 
+class R10nTranslation;
+
+class R10nCandidate : public Candidate {
+ public:
+  R10nCandidate(int start, int end, const shared_ptr<DictEntry> &entry, const R10nTranslation *translation)
+      : Candidate("zh", start, end), entry_(entry), translation_(translation) {}
+  virtual const char* text() const {
+    return entry_->text.c_str();
+  }
+  virtual const char* comment() const {
+    return entry_->comment.c_str();
+  }
+  virtual const char* preedit() const {
+    // TODO:
+    return NULL;
+  }
+ protected:
+  const shared_ptr<DictEntry> entry_;
+  const R10nTranslation *translation_;
+};
+
 class R10nTranslation : public Translation {
  public:
-  R10nTranslation(shared_ptr<DictEntryCollector>& phrase,
-                  shared_ptr<UserDictEntryCollector>& user_phrase,
-                  int start,
-                  int total_length)
-      : phrase_(phrase), user_phrase_(user_phrase),
-        start_(start), total_length_(total_length) {
-    if (phrase_) phrase_iter_ = phrase_->rbegin();
-    if (user_phrase_) user_phrase_iter_ = user_phrase_->rbegin();
-    CheckEmpty();
+  R10nTranslation(const std::string &input, int start, const std::string &delimiters)
+      : input_(input), start_(start), delimiters_(delimiters) {
+    set_exhausted(true);
   }
 
-  virtual bool Next() {
-    if (exhausted())
-      return false;
-    if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
-      DictEntryList &entries(user_phrase_iter_->second);
-      entries.pop_back();
-      if (entries.empty()) {
-        ++user_phrase_iter_;
-        CheckEmpty();
-      }
-      return exhausted();
-    }
-    if (phrase_ && phrase_iter_ != phrase_->rend()) {
-      DictEntryIterator &iter(phrase_iter_->second);
-      if (!iter.Next()) {
-        ++phrase_iter_;
-        CheckEmpty();
-      }
-    }
-    return exhausted();
-  }
+  bool Evaluate(Dictionary *dict, UserDictionary *user_dict);
+  
+  virtual bool Next();
+  virtual shared_ptr<Candidate> Peek();
 
-  virtual shared_ptr<Candidate> Peek() {
-    if (exhausted())
-      return shared_ptr<Candidate>();
-    if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
-      int consumed_input_length = user_phrase_iter_->first;
-      EZLOGGERVAR(consumed_input_length);
-      DictEntryList &entries(user_phrase_iter_->second);
-      const DictEntry &e(entries.back());
-      EZLOGGERVAR(e.text);
-      shared_ptr<Candidate> cand(new SimpleCandidate(
-          "zh",
-          start_,
-          start_ + consumed_input_length,
-          e.text,
-          e.comment));
-      return cand;
-    }
-    if (phrase_ && phrase_iter_ != phrase_->rend()) {
-      int consumed_input_length = phrase_iter_->first;
-      EZLOGGERVAR(consumed_input_length);
-      DictEntryIterator &iter(phrase_iter_->second);
-      const shared_ptr<DictEntry> &e(iter.Peek());
-      EZLOGGERVAR(e->text);
-      shared_ptr<Candidate> cand(new SimpleCandidate(
-          "zh",
-          start_,
-          start_ + consumed_input_length,
-          e->text,
-          e->comment));
-      return cand;
-    }
-    return shared_ptr<Candidate>();
-  }
+ protected:
+  void CheckEmpty();
+  shared_ptr<DictEntry> SimplisticSentenceMaking(Dictionary *dict,
+                                                 UserDictionary *user_dict);
 
- private:
-  void CheckEmpty() {
-    set_exhausted((!phrase_ || phrase_iter_ == phrase_->rend()) &&
-                  (!user_phrase_ || user_phrase_iter_ == user_phrase_->rend()));
-  }
-        
+  const std::string input_;
+  int start_;
+  const std::string delimiters_;
+  
+  SyllableGraph syllable_graph_;
   shared_ptr<DictEntryCollector> phrase_;
   shared_ptr<UserDictEntryCollector> user_phrase_;
+  
   DictEntryCollector::reverse_iterator phrase_iter_;
   UserDictEntryCollector::reverse_iterator user_phrase_iter_;
-  int start_;
-  int total_length_;
 };
+
+// R10nTranslator implementation
 
 R10nTranslator::R10nTranslator(Engine *engine)
     : Translator(engine) {
@@ -133,8 +102,7 @@ R10nTranslator::R10nTranslator(Engine *engine)
 R10nTranslator::~R10nTranslator() {
 }
 
-Translation* R10nTranslator::Query(const std::string &input,
-                                      const Segment &segment) {
+Translation* R10nTranslator::Query(const std::string &input, const Segment &segment) {
   if (!dict_ || !dict_->loaded())
     return NULL;
   if (!segment.HasTag("abc"))
@@ -142,53 +110,126 @@ Translation* R10nTranslator::Query(const std::string &input,
   EZLOGGERPRINT("input = '%s', [%d, %d)",
                 input.c_str(), segment.start, segment.end);
 
-  Syllablizer syllablizer(delimiters_);
-  SyllableGraph syllable_graph;
-  int consumed = syllablizer.BuildSyllableGraph(input,
-                                                *dict_->prism(),
-                                                &syllable_graph);
-
-  shared_ptr<DictEntryCollector> phrase(dict_->Lookup(syllable_graph, 0));
-  shared_ptr<UserDictEntryCollector> user_phrase(user_dict_->Lookup(syllable_graph, 0));
-  if (!phrase && !user_phrase)
+  R10nTranslation* result(new R10nTranslation(input, segment.start, delimiters_));
+  if (result && result->Evaluate(dict_.get(), user_dict_.get()))
+    return result;
+  else
     return NULL;
-  // make sentences when there is no exact-matching phrase candidate
-  int translated_len = 0;
-  if (phrase && !phrase->empty())
-    translated_len = (std::max)(translated_len, phrase->rbegin()->first);
-  if (user_phrase && !user_phrase->empty())
-    translated_len = (std::max)(translated_len, user_phrase->rbegin()->first);
-  if (translated_len < consumed &&
-      syllable_graph.edges.size() > 1) {  // at least 2 syllables required
-    shared_ptr<DictEntry> sentence = SimplisticSentenceMaking(syllable_graph);
-    if (sentence) {
-      if (!user_phrase) user_phrase.reset(new UserDictEntryCollector);
-      (*user_phrase)[consumed].push_back(*sentence);
-    }
-  }
-  return new R10nTranslation(phrase, user_phrase, segment.start, consumed);
 }
 
-shared_ptr<DictEntry> R10nTranslator::SimplisticSentenceMaking(const SyllableGraph& syllable_graph) {
+// R10nTranslation implementation
+
+bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
+  Syllablizer syllablizer(delimiters_);
+  int consumed = syllablizer.BuildSyllableGraph(input_,
+                                                *dict->prism(),
+                                                &syllable_graph_);
+
+  phrase_ = dict->Lookup(syllable_graph_, 0);
+  user_phrase_ = user_dict->Lookup(syllable_graph_, 0);
+  if (!phrase_ && !user_phrase_)
+    return false;
+  // make sentences when there is no exact-matching phrase candidate
+  int translated_len = 0;
+  if (phrase_ && !phrase_->empty())
+    translated_len = (std::max)(translated_len, phrase_->rbegin()->first);
+  if (user_phrase_ && !user_phrase_->empty())
+    translated_len = (std::max)(translated_len, user_phrase_->rbegin()->first);
+  if (translated_len < consumed &&
+      syllable_graph_.edges.size() > 1) {  // at least 2 syllables required
+    shared_ptr<DictEntry> sentence = SimplisticSentenceMaking(dict, user_dict);
+    if (sentence) {
+      if (!user_phrase_) user_phrase_.reset(new UserDictEntryCollector);
+      (*user_phrase_)[consumed].push_back(sentence);
+    }
+  }
+
+  if (phrase_) phrase_iter_ = phrase_->rbegin();
+  if (user_phrase_) user_phrase_iter_ = user_phrase_->rbegin();
+  CheckEmpty();
+  return !exhausted();
+}
+
+bool R10nTranslation::Next() {
+  if (exhausted())
+    return false;
+  if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
+    DictEntryList &entries(user_phrase_iter_->second);
+    entries.pop_back();
+    if (entries.empty()) {
+      ++user_phrase_iter_;
+      CheckEmpty();
+    }
+    return exhausted();
+  }
+  if (phrase_ && phrase_iter_ != phrase_->rend()) {
+    DictEntryIterator &iter(phrase_iter_->second);
+    if (!iter.Next()) {
+      ++phrase_iter_;
+      CheckEmpty();
+    }
+  }
+  return exhausted();
+}
+
+shared_ptr<Candidate> R10nTranslation::Peek() {
+  if (exhausted())
+    return shared_ptr<Candidate>();
+  if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
+    int consumed_input_length = user_phrase_iter_->first;
+    EZLOGGERVAR(consumed_input_length);
+    DictEntryList &entries(user_phrase_iter_->second);
+    const shared_ptr<DictEntry> &e(entries.back());
+    EZLOGGERVAR(e->text);
+    shared_ptr<Candidate> cand(new R10nCandidate(
+        start_,
+        start_ + consumed_input_length,
+        e,
+        this));
+    return cand;
+  }
+  if (phrase_ && phrase_iter_ != phrase_->rend()) {
+    int consumed_input_length = phrase_iter_->first;
+    EZLOGGERVAR(consumed_input_length);
+    DictEntryIterator &iter(phrase_iter_->second);
+    const shared_ptr<DictEntry> &e(iter.Peek());
+    EZLOGGERVAR(e->text);
+    shared_ptr<Candidate> cand(new R10nCandidate(
+        start_,
+        start_ + consumed_input_length,
+        e,
+        this));
+    return cand;
+  }
+  return shared_ptr<Candidate>();
+}
+
+void R10nTranslation::CheckEmpty() {
+  set_exhausted((!phrase_ || phrase_iter_ == phrase_->rend()) &&
+                (!user_phrase_ || user_phrase_iter_ == user_phrase_->rend()));
+}
+
+shared_ptr<DictEntry> R10nTranslation::SimplisticSentenceMaking(Dictionary *dict,
+                                                                UserDictionary *user_dict) {
   typedef std::map<int, UserDictEntryCollector> WordGraph;
   const int kMaxNumOfSentenceMakingHomophones = 1;  // 20; if we have bigram model...
   const double kEpsilon = 1e-30;
   const double kPenalty = 1e-8;
-  int total_length = syllable_graph.interpreted_length;
+  int total_length = syllable_graph_.interpreted_length;
   WordGraph graph;
-  BOOST_FOREACH(const EdgeMap::value_type &s, syllable_graph.edges) {
-    shared_ptr<UserDictEntryCollector> user_phrase = user_dict_->Lookup(syllable_graph, s.first);
+  BOOST_FOREACH(const EdgeMap::value_type &s, syllable_graph_.edges) {
+    shared_ptr<UserDictEntryCollector> user_phrase = user_dict->Lookup(syllable_graph_, s.first);
     UserDictEntryCollector &u(graph[s.first]);
     if (user_phrase)
       u.swap(*user_phrase);
-    shared_ptr<DictEntryCollector> phrase = dict_->Lookup(syllable_graph, s.first);
+    shared_ptr<DictEntryCollector> phrase = dict->Lookup(syllable_graph_, s.first);
     if (phrase) {
       // merge lookup results
       BOOST_FOREACH(DictEntryCollector::value_type &t, *phrase) {
         DictEntryList &entries(u[t.first]);
         if (entries.empty()) {
           shared_ptr<DictEntry> e(t.second.Peek());
-          entries.push_back(*e);
+          entries.push_back(e);
         }
       }
     }
@@ -209,11 +250,11 @@ shared_ptr<DictEntry> R10nTranslator::SimplisticSentenceMaking(const SyllableGra
       EZLOGGERVAR(end_pos);
       DictEntryList &entries(x.second);
       for (int count = 0; count < kMaxNumOfSentenceMakingHomophones && !entries.empty(); ++count) {
-        DictEntry &e(entries.back());
+        const shared_ptr<DictEntry> &e(entries.back());
         shared_ptr<DictEntry> new_sentence(new DictEntry(*sentence[start_pos]));
-        new_sentence->code.insert(new_sentence->code.end(), e.code.begin(), e.code.end());
-        new_sentence->text.append(e.text);
-        new_sentence->weight *= (std::max)(e.weight, kEpsilon) * kPenalty;
+        new_sentence->code.insert(new_sentence->code.end(), e->code.begin(), e->code.end());
+        new_sentence->text.append(e->text);
+        new_sentence->weight *= (std::max)(e->weight, kEpsilon) * kPenalty;
         if (sentence.find(end_pos) == sentence.end() ||
             sentence[end_pos]->weight < new_sentence->weight) {
           EZLOGGERPRINT("updated sentence[%d] with '%s', %g",

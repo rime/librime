@@ -325,9 +325,9 @@ bool Dictionary::BuildTable(const std::string &dict_file, uint32_t checksum) {
       syllable_to_id[s] = syllable_id++;
     }
     Vocabulary vocabulary;
-    BOOST_FOREACH(dictionary::RawDictEntry &e, raw_entries) {
+    BOOST_FOREACH(dictionary::RawDictEntry &r, raw_entries) {
       Code code;
-      BOOST_FOREACH(const std::string &s, e.raw_code) {
+      BOOST_FOREACH(const std::string &s, r.raw_code) {
         code.push_back(syllable_to_id[s]);
       }
       DictEntryList *ls = vocabulary.LocateEntries(code);
@@ -335,11 +335,11 @@ bool Dictionary::BuildTable(const std::string &dict_file, uint32_t checksum) {
         EZLOGGERPRINT("Error locating entries in vocabulary.");
         continue;
       }
-      DictEntry d;
-      d.code.swap(code);
-      d.text.swap(e.text);
-      d.weight = e.weight;
-      ls->push_back(d);
+      shared_ptr<DictEntry> e(new DictEntry);
+      e->code.swap(code);
+      e->text.swap(r.text);
+      e->weight = r.weight;
+      ls->push_back(e);
     }
     if (sort_order != "original") {
       vocabulary.SortHomophones();

@@ -30,8 +30,6 @@ class R10nTranslator : public Translator {
                              const Segment &segment);
   
  protected:
-  shared_ptr<DictEntry> SimplisticSentenceMaking(const SyllableGraph& syllable_graph);
-
   scoped_ptr<Dictionary> dict_;
   scoped_ptr<UserDictionary> user_dict_;
   std::string delimiters_;
