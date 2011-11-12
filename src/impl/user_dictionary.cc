@@ -54,8 +54,7 @@ struct DfsState {
   std::string key;
   std::string value;
   bool IsExactMatch(const std::string &prefix) {
-    size_t prefix_len = prefix.length();
-    return key.length() > prefix_len && key[prefix_len] == '\t';
+    return boost::starts_with(key, prefix + '\t');
   }
   bool IsPrefixMatch(const std::string &prefix) {
     return boost::starts_with(key, prefix);
@@ -86,6 +85,7 @@ void DfsState::SaveEntry(int pos) {
   e->weight = 1.0;
   e->commit_count = 1;
   e->code = code;
+  EZLOGGERPRINT("pos = %d, text = '%s', code_len = %d", pos, e->text.c_str(), e->code.size());
   (*collector)[pos].push_back(e);
 }
 
@@ -111,6 +111,7 @@ bool UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
         }
       }
       while (state->IsExactMatch(prefix)) {  // 'b |e ' vs. 'b e \tBe'
+        EZLOGGERVAR(prefix);
         state->SaveEntry(end_vertex_pos);
         if (!state->NextEntry())
           return false;
@@ -154,6 +155,7 @@ bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
   if (!TranslateCodeToString(entry.code, &code_str))
     return false;
   std::string key(code_str + '\t' + entry.text);
+  // TODO: fetch current values
   double weight = entry.weight;
   int commit_count = entry.commit_count;
   if (commit > 0) {
@@ -165,6 +167,8 @@ bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
     commit_count = (std::min)(-1, -commit_count);
   }
   std::string value(boost::str(boost::format("c=%1% w=%2% t=%3%") % commit_count % weight % tick_));
+  EZLOGGERVAR(key);
+  EZLOGGERVAR(value);
   return db_->Update(key, value);
 }
 
@@ -203,6 +207,7 @@ bool UserDictionary::TranslateCodeToString(const Code &code, std::string* result
   BOOST_FOREACH(const int &syllable_id, code) {
     const char *spelling = table_->GetSyllableById(syllable_id);
     if (!spelling) {
+      EZLOGGERPRINT("Error translating syllable_id '%d' to string.", syllable_id);
       result->clear();
       return false;
     }

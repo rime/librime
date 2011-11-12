@@ -10,9 +10,12 @@
 // 2011-10-06 GONG Chen <chen.sst@gmail.com>  implemented simplistic sentence-making
 //
 #include <algorithm>
+#include <boost/bind.hpp>
 #include <boost/foreach.hpp>
+#include <rime/composition.h>
 #include <rime/candidate.h>
 #include <rime/config.h>
+#include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/segmentation.h>
@@ -39,6 +42,9 @@ class R10nCandidate : public Candidate {
   virtual const char* preedit() const {
     // TODO:
     return NULL;
+  }
+  const Code& code() const {
+    return entry_->code;
   }
  protected:
   const shared_ptr<DictEntry> entry_;
@@ -74,6 +80,9 @@ class R10nTranslation : public Translation {
   UserDictEntryCollector::reverse_iterator user_phrase_iter_;
 };
 
+class SelectSequence : public std::vector<shared_ptr<R10nCandidate> > {
+};
+
 // R10nTranslator implementation
 
 R10nTranslator::R10nTranslator(Engine *engine)
@@ -94,12 +103,19 @@ R10nTranslator::R10nTranslator(Engine *engine)
   UserDictionary::Component *user_dictionary = UserDictionary::Require("user_dictionary");
   if (user_dictionary) {
     user_dict_.reset(user_dictionary->Create(engine->schema()));
-    if (user_dict_)
+    if (user_dict_) {
       user_dict_->Load();
+      if (dict_)
+        user_dict_->Attach(dict_->table(), dict_->prism());
+    }
   }
+
+  connection_ = engine->context()->commit_notifier().connect(
+      boost::bind(&R10nTranslator::OnCommit, this, _1));
 }
 
 R10nTranslator::~R10nTranslator() {
+  connection_.disconnect();
 }
 
 Translation* R10nTranslator::Query(const std::string &input, const Segment &segment) {
@@ -115,6 +131,25 @@ Translation* R10nTranslator::Query(const std::string &input, const Segment &segm
     return result;
   else
     return NULL;
+}
+
+void R10nTranslator::OnCommit(Context *ctx) {
+  DictEntry commit_entry;
+  BOOST_FOREACH(Composition::value_type &seg, *ctx->composition()) {
+    const shared_ptr<R10nCandidate> cand =
+        dynamic_pointer_cast<R10nCandidate>(seg.GetSelectedCandidate());
+    if (cand) {
+      commit_entry.text += cand->text();
+      commit_entry.code.insert(commit_entry.code.end(),
+                               cand->code().begin(), cand->code().end());
+    }
+    if ((!cand || seg.status >= Segment::kConfirmed) && !commit_entry.text.empty()) {
+      EZLOGGERVAR(commit_entry.text);
+      user_dict_->UpdateEntry(commit_entry, 1);
+      commit_entry.text.clear();
+      commit_entry.code.clear();
+    }
+  }
 }
 
 // R10nTranslation implementation

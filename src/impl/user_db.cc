@@ -56,6 +56,10 @@ UserDb::UserDb(const std::string &name)
   boost::filesystem::path path(ConfigDataManager::instance().user_data_dir());
   file_name_ = (path / name).string() + ".userdb.kct";
   db_.reset(new kyotocabinet::TreeDB);
+  db_->tune_options(kyotocabinet::TreeDB::TLINEAR | kyotocabinet::TreeDB::TCOMPRESS);
+  db_->tune_buckets(10LL * 1000);
+  db_->tune_defrag(8);
+  db_->tune_page(32768);
 }
 
 UserDb::~UserDb() {
@@ -78,6 +82,7 @@ bool UserDb::Fetch(const std::string &key, std::string *value) {
 
 bool UserDb::Update(const std::string &key, const std::string &value) {
   if (!loaded()) return false;
+  EZLOGGER(key, value);
   return db_->set(key, value);
 }
 

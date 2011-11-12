@@ -9,6 +9,7 @@
 #ifndef RIME_R10N_TRANSLATOR_H_
 #define RIME_R10N_TRANSLATOR_H_
 
+#include <boost/signals/connection.hpp>
 #include <rime/common.h>
 #include <rime/translation.h>
 #include <rime/translator.h>
@@ -30,9 +31,12 @@ class R10nTranslator : public Translator {
                              const Segment &segment);
   
  protected:
+  void OnCommit(Context *ctx);
+  
   scoped_ptr<Dictionary> dict_;
   scoped_ptr<UserDictionary> user_dict_;
   std::string delimiters_;
+  boost::signals::connection connection_;
 };
 
 }  // namespace rime
