@@ -106,6 +106,35 @@ int Syllablizer::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
     }
   }
 
+  if (enable_completion_ && farthest < input.length()) {
+    const size_t kExpandSearchLimit = 512;
+    std::vector<Prism::Match> keys;
+    prism.ExpandSearch(input.substr(farthest), &keys, kExpandSearchLimit);
+    if (!keys.empty()) {
+      int current_pos = farthest;
+      int end_pos = current_pos;
+      int code_length = input.length() - farthest;
+      EndVertexMap &end_vertices(graph->edges[current_pos]);
+      BOOST_FOREACH(const Prism::Match &m, keys) {
+        if (m.length < code_length) continue;
+        end_pos = input.length();
+        SpellingMap &spellings(end_vertices[end_pos]);
+        // TODO:
+        // since SpellingAlgebra is not available yet,
+        // we assume spelling resembles exactly the syllable itself.
+        SyllableId syllable_id = m.value;
+        // add a syllable with default properties to the edge's spelling-to-syllable map
+        SpellingProperties prop;
+        prop.type = kCompletion;
+        prop.credibility = 0.5;
+        spellings.insert(SpellingMap::value_type(syllable_id, prop));
+        // again, we only have normal spellings for now
+        queue.push(Vertex(end_pos, kCompletion));
+      }
+      farthest = end_pos;
+    }
+  }
+
   graph->input_length = input.length();
   graph->interpreted_length = farthest;
 

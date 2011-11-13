@@ -156,7 +156,7 @@ void R10nTranslator::OnCommit(Context *ctx) {
 // R10nTranslation implementation
 
 bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
-  Syllablizer syllablizer(delimiters_);
+  Syllablizer syllablizer(delimiters_, true);
   int consumed = syllablizer.BuildSyllableGraph(input_,
                                                 *dict->prism(),
                                                 &syllable_graph_);

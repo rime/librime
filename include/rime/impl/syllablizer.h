@@ -18,7 +18,7 @@ class Prism;
 
 typedef int SyllableId;
 
-enum SpellingType { kNormalSpelling, kAbbreviation };
+enum SpellingType { kNormalSpelling, kAbbreviation, kCompletion };
 
 struct SpellingProperties {
   SpellingType type;
@@ -42,13 +42,15 @@ struct SyllableGraph {
 
 class Syllablizer {
  public:
-  Syllablizer() {}
-  explicit Syllablizer(const std::string &delimiters) : delimiters_(delimiters) {}
+  Syllablizer() : enable_completion_(false) {}
+  explicit Syllablizer(const std::string &delimiters, bool enable_completion = false)
+      : delimiters_(delimiters), enable_completion_(enable_completion) {}
   
   int BuildSyllableGraph(const std::string &input, Prism &prism, SyllableGraph *graph);
 
  protected:
   std::string delimiters_;
+  bool enable_completion_;
 };
 
 }  // namespace rime
