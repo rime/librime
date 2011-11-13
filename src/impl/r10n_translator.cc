@@ -78,6 +78,7 @@ class R10nTranslation : public Translation {
   
   DictEntryCollector::reverse_iterator phrase_iter_;
   UserDictEntryCollector::reverse_iterator user_phrase_iter_;
+  std::set<std::string> candidate_set_;
 };
 
 class SelectSequence : public std::vector<shared_ptr<R10nCandidate> > {
@@ -188,31 +189,35 @@ bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
 bool R10nTranslation::Next() {
   if (exhausted())
     return false;
-  int user_phrase_code_length = 0;
-  if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
-    user_phrase_code_length = user_phrase_iter_->first;
-  }
-  int phrase_code_length = 0;
-  if (phrase_ && phrase_iter_ != phrase_->rend()) {
-    phrase_code_length = phrase_iter_->first;
-  }
-  if (user_phrase_code_length > 0 &&
-      user_phrase_code_length > phrase_code_length) {
-    DictEntryList &entries(user_phrase_iter_->second);
-    entries.pop_back();
-    if (entries.empty()) {
-      ++user_phrase_iter_;
-      CheckEmpty();
+  do {
+    int user_phrase_code_length = 0;
+    if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
+      user_phrase_code_length = user_phrase_iter_->first;
     }
-    return exhausted();
-  }
-  if (phrase_code_length > 0) {
-    DictEntryIterator &iter(phrase_iter_->second);
-    if (!iter.Next()) {
-      ++phrase_iter_;
-      CheckEmpty();
+    int phrase_code_length = 0;
+    if (phrase_ && phrase_iter_ != phrase_->rend()) {
+      phrase_code_length = phrase_iter_->first;
     }
+    if (user_phrase_code_length > 0 &&
+        user_phrase_code_length > phrase_code_length) {
+      DictEntryList &entries(user_phrase_iter_->second);
+      candidate_set_.insert(entries.back()->text);
+      entries.pop_back();
+      if (entries.empty()) {
+        ++user_phrase_iter_;
+      }
+    }
+    else if (phrase_code_length > 0) {
+      DictEntryIterator &iter(phrase_iter_->second);
+      candidate_set_.insert(iter.Peek()->text);
+      if (!iter.Next()) {
+        ++phrase_iter_;
+      }
+    }
+    CheckEmpty();
   }
+  while (!exhausted() && /* skip duplicate candidates */
+         candidate_set_.find(Peek()->text()) != candidate_set_.end());
   return exhausted();
 }
 
