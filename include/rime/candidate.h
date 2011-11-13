@@ -52,10 +52,11 @@ class SimpleCandidate : public Candidate {
   SimpleCandidate(const std::string type,
                   int start,
                   int end,
-                  const std::string text,
-                  const std::string comment = std::string(),
-                  const std::string preedit = std::string())
-      : Candidate(type, start, end), text_(text) {}
+                  const std::string &text,
+                  const std::string &comment = std::string(),
+                  const std::string &preedit = std::string())
+      : Candidate(type, start, end),
+      text_(text), comment_(comment), preedit_(preedit) {}
 
   const char* text() const { return text_.c_str(); }
   const char* comment() const { return comment_.c_str(); }

@@ -63,7 +63,10 @@ class RimeConsole {
                   page->candidates) {
       std::cout << "cand. " << ++i <<  ": [";
       std::cout << cand->text();
-      std::cout << "]" << std::endl;
+      std::cout << "]";
+      if (cand->comment())
+        std::cout << ' ' << cand->comment();
+      std::cout << std::endl;
     }
   }
 

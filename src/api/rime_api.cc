@@ -103,13 +103,13 @@ RIME_API bool RimeGetContext(RimeSessionId session_id, RimeContext *context) {
         int i = 0;
         BOOST_FOREACH(const rime::shared_ptr<rime::Candidate> &cand,
                       page->candidates) {
-          // TODO:
-          char *dest = context->menu.candidates[i];
-          std::strncpy(dest, cand->text(), kRimeTextMaxLength);
-          if (cand->comment()) {
-            std::strncat(dest, "  ", kRimeTextMaxLength - strlen(dest));
-            std::strncat(dest, cand->comment(), kRimeTextMaxLength - strlen(dest));
+          std::string candidate(cand->text());
+          if (cand->comment() && strlen(cand->comment()) > 0) {
+            candidate += "  ";
+            candidate += cand->comment();
           }
+          char *dest = context->menu.candidates[i];
+          std::strncpy(dest, candidate.c_str(), kRimeTextMaxLength);
           if (++i >= kRimeMaxNumCandidates) break;
         }
         context->menu.num_candidates = i;
