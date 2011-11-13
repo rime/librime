@@ -188,7 +188,16 @@ bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
 bool R10nTranslation::Next() {
   if (exhausted())
     return false;
+  int user_phrase_code_length = 0;
   if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
+    user_phrase_code_length = user_phrase_iter_->first;
+  }
+  int phrase_code_length = 0;
+  if (phrase_ && phrase_iter_ != phrase_->rend()) {
+    phrase_code_length = phrase_iter_->first;
+  }
+  if (user_phrase_code_length > 0 &&
+      user_phrase_code_length > phrase_code_length) {
     DictEntryList &entries(user_phrase_iter_->second);
     entries.pop_back();
     if (entries.empty()) {
@@ -197,7 +206,7 @@ bool R10nTranslation::Next() {
     }
     return exhausted();
   }
-  if (phrase_ && phrase_iter_ != phrase_->rend()) {
+  if (phrase_code_length > 0) {
     DictEntryIterator &iter(phrase_iter_->second);
     if (!iter.Next()) {
       ++phrase_iter_;
@@ -210,28 +219,35 @@ bool R10nTranslation::Next() {
 shared_ptr<Candidate> R10nTranslation::Peek() {
   if (exhausted())
     return shared_ptr<Candidate>();
+  int user_phrase_code_length = 0;
   if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
-    int consumed_input_length = user_phrase_iter_->first;
-    EZLOGGERVAR(consumed_input_length);
+    user_phrase_code_length = user_phrase_iter_->first;
+  }
+  EZLOGGERVAR(user_phrase_code_length);
+  int phrase_code_length = 0;
+  if (phrase_ && phrase_iter_ != phrase_->rend()) {
+    phrase_code_length = phrase_iter_->first;
+  }
+  EZLOGGERVAR(phrase_code_length);
+  if (user_phrase_code_length > 0 &&
+      user_phrase_code_length > phrase_code_length) {
     DictEntryList &entries(user_phrase_iter_->second);
     const shared_ptr<DictEntry> &e(entries.back());
     EZLOGGERVAR(e->text);
     shared_ptr<Candidate> cand(new R10nCandidate(
         start_,
-        start_ + consumed_input_length,
+        start_ + user_phrase_code_length,
         e,
         this));
     return cand;
   }
-  if (phrase_ && phrase_iter_ != phrase_->rend()) {
-    int consumed_input_length = phrase_iter_->first;
-    EZLOGGERVAR(consumed_input_length);
+  if (phrase_code_length > 0) {
     DictEntryIterator &iter(phrase_iter_->second);
     const shared_ptr<DictEntry> &e(iter.Peek());
     EZLOGGERVAR(e->text);
     shared_ptr<Candidate> cand(new R10nCandidate(
         start_,
-        start_ + consumed_input_length,
+        start_ + phrase_code_length,
         e,
         this));
     return cand;
