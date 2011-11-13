@@ -3,7 +3,6 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/test)
 add_executable(rime_test ${RIME_TEST_SRC})
 target_link_libraries(rime_test
                       rime-static
-                      ${CMAKE_THREAD_LIBS_INIT}
                       ${GTEST_LIBRARIES})
 add_dependencies(rime_test rime-static)
 
