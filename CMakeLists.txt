@@ -35,6 +35,7 @@ if(YamlCpp_FOUND)
   include_directories(${YamlCpp_INCLUDE_DIR})
 endif(YamlCpp_FOUND)
 
+find_package(ZLIB)
 find_package(KyotoCabinet REQUIRED)
 if(KyotoCabinet_FOUND)
   include_directories(${KyotoCabinet_INCLUDE_DIR})

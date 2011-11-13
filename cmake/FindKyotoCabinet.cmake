@@ -1,5 +1,5 @@
 find_path(KyotoCabinet_INCLUDE_PATH kccommon.h)
-find_library(KyotoCabinet_LIBRARY kyotocabinet)
+find_library(KyotoCabinet_LIBRARY NAMES kyotocabinet.lib libkyotocabinet.a kyotocabinet)
 if(KyotoCabinet_INCLUDE_PATH AND KyotoCabinet_LIBRARY)
   set(KyotoCabinet_FOUND TRUE)
 endif(KyotoCabinet_INCLUDE_PATH AND KyotoCabinet_LIBRARY)

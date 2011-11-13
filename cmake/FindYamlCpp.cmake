@@ -1,7 +1,5 @@
 find_path(YamlCpp_INCLUDE_PATH yaml-cpp/yaml.h)
-find_library(YamlCpp_LIBRARY yaml-cpp)
-find_library(YamlCpp_LIBRARY libyaml-cppmd)
-find_library(YamlCpp_LIBRARY libyaml-cppmt)
+find_library(YamlCpp_LIBRARY NAMES libyaml-cppmt.lib libyaml-cpp.a yaml-cpp)
 if(YamlCpp_INCLUDE_PATH AND YamlCpp_LIBRARY)
   set(YamlCpp_FOUND TRUE)
 endif(YamlCpp_INCLUDE_PATH AND YamlCpp_LIBRARY)
