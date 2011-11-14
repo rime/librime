@@ -37,12 +37,12 @@ RIME_API RimeSessionId RimeCreateSession() {
   return rime::Service::instance().CreateSession();
 }
 
-RIME_API Boolean RimeFindSession(RimeSessionId session_id) {
-  return Boolean(rime::Service::instance().GetSession(session_id) != 0);
+RIME_API Bool RimeFindSession(RimeSessionId session_id) {
+  return Bool(rime::Service::instance().GetSession(session_id) != 0);
 }
 
-RIME_API Boolean RimeDestroySession(RimeSessionId session_id) {
-  return Boolean(rime::Service::instance().DestroySession(session_id));
+RIME_API Bool RimeDestroySession(RimeSessionId session_id) {
+  return Bool(rime::Service::instance().DestroySession(session_id));
 }
 
 RIME_API void RimeCleanupStaleSessions() {
@@ -55,14 +55,14 @@ RIME_API void RimeCleanupAllSessions() {
 
 // using sessions
 
-RIME_API Boolean RimeProcessKey(RimeSessionId session_id, int keycode, int mask) {
+RIME_API Bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask) {
   rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
-  return Boolean(session->ProcessKeyEvent(rime::KeyEvent(keycode, mask)));
+  return Bool(session->ProcessKeyEvent(rime::KeyEvent(keycode, mask)));
 }
 
-RIME_API Boolean RimeGetContext(RimeSessionId session_id, RimeContext *context) {
+RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext *context) {
   if (!context)
     return False;
   std::memset(context, 0, sizeof(RimeContext));
@@ -94,7 +94,7 @@ RIME_API Boolean RimeGetContext(RimeSessionId session_id, RimeContext *context) 
       if (page) {
         context->menu.page_size = page_size;
         context->menu.page_no = page_no;
-        context->menu.is_last_page = Boolean(page->is_last_page);
+        context->menu.is_last_page = Bool(page->is_last_page);
         context->menu.highlighted_candidate_index = selected_index % page_size;
         int i = 0;
         BOOST_FOREACH(const rime::shared_ptr<rime::Candidate> &cand,
@@ -115,7 +115,7 @@ RIME_API Boolean RimeGetContext(RimeSessionId session_id, RimeContext *context) 
   return True;
 }
 
-RIME_API Boolean RimeGetCommit(RimeSessionId session_id, RimeCommit* commit) {
+RIME_API Bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit) {
   if (!commit)
     return False;
   std::memset(commit, 0, sizeof(RimeCommit));
@@ -131,7 +131,7 @@ RIME_API Boolean RimeGetCommit(RimeSessionId session_id, RimeCommit* commit) {
   return False;
 }
 
-RIME_API Boolean RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
+RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
   if (!status)
     return False;
   std::memset(status, 0, sizeof(RimeStatus));
@@ -152,7 +152,7 @@ RIME_API Boolean RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
   return True;
 }
 
-RIME_API Boolean RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence) {
+RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence) {
     EZLOGGERVAR(key_sequence);
     rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
     if (!session)
