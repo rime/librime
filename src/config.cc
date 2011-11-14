@@ -11,33 +11,166 @@
 #include <map>
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 #include <yaml-cpp/yaml.h>
 #include <rime/config.h>
 
 namespace rime {
 
 // private classes
+namespace Types{
+  enum { Null = 0, Scalar, Sequence, Map };
+};
+
+struct ConfigTreeNode {
+  int type;
+  std::vector<shared_ptr<ConfigTreeNode> > seq_children;
+  std::map<std::string, shared_ptr<ConfigTreeNode> > map_children;
+  std::string value;
+
+  shared_ptr<ConfigTreeNode> FindValue( const std::string & key);
+  shared_ptr<ConfigTreeNode> Clone();
+};
+
+shared_ptr<ConfigTreeNode> ConfigTreeNode::FindValue( const std::string & key){
+  std::map<std::string, shared_ptr<ConfigTreeNode> >::iterator i = map_children.find(key);
+  if(i != map_children.end())
+    return i->second;
+  else
+    return shared_ptr<ConfigTreeNode>();
+}
+
+////
+//shared_ptr<ConfigTreeNode> ConfigTreeNode::Clone(){
+//
+//}
+
+class ConfigTree {
+public:
+  ConfigTree(){};
+  ~ConfigTree(){};
+  void CopyTree(const YAML::Node *node);
+  std::string EmitTree();
+  shared_ptr<ConfigTreeNode> root(){ return root_; };
+
+private:
+  YAML::Emitter emitter;
+  shared_ptr<ConfigTreeNode> root_;
+  void EmitSubTree(shared_ptr<ConfigTreeNode> node);
+  void CopySubTree(const YAML::Node *node, shared_ptr<ConfigTreeNode> to);
+};
+
+void ConfigTree::CopySubTree(const YAML::Node *node, shared_ptr<ConfigTreeNode> to){
+  if (!node || YAML::NodeType::Null == node->Type())
+    return;
+
+  if(YAML::NodeType::Scalar == node->Type()){
+    to->type = Types::Scalar;
+    to->value = node->to<std::string>();
+  }
+  else if(YAML::NodeType::Sequence == node->Type()){
+    std::vector<shared_ptr<ConfigTreeNode> > seq_children;
+    YAML::Iterator it = node->begin();
+    YAML::Iterator end = node->end();
+    size_t index = 0;
+    to->type = Types::Sequence;
+
+    for( ; it != end; ++it){
+      shared_ptr<ConfigTreeNode> p(new ConfigTreeNode());
+
+      CopySubTree(&(*it), p);
+      seq_children.push_back(p);
+    }
+    
+    to->seq_children = seq_children;
+  }
+  else if(YAML::NodeType::Map == node->Type()){
+    std::map<std::string, shared_ptr<ConfigTreeNode> > map_children;
+    YAML::Iterator it = node->begin();
+    YAML::Iterator end = node->end();
+
+    to->type = Types::Map;
+
+    for( ; it != end; ++it){
+      shared_ptr<ConfigTreeNode> p(new ConfigTreeNode());
+      std::string key = it.first().to<std::string>();
+      const YAML::Node *yaml_node = &(it.second());
+
+      CopySubTree(yaml_node, p);
+      map_children[key] = p;
+    }
+
+    to->map_children = map_children;
+  }
+}
+
+void ConfigTree::CopyTree(const YAML::Node *node){
+  if(!root_){
+    root_.reset(new ConfigTreeNode());
+  }
+  
+  CopySubTree(node, root_);
+}
+
+void ConfigTree::EmitSubTree(shared_ptr<ConfigTreeNode> node){
+  if (!node)
+  {
+    return;
+  }
+
+  if(node->type == Types::Scalar){
+    emitter << node->value;
+  }
+  else if(node->type == Types::Sequence){
+    std::vector<shared_ptr<ConfigTreeNode> >::iterator it = node->seq_children.begin();
+    std::vector<shared_ptr<ConfigTreeNode> >::iterator end = node->seq_children.end();
+    emitter << YAML::BeginSeq;
+    for( ; it != end; ++it){
+      EmitSubTree(*it);
+    }
+    emitter << YAML::EndSeq;
+  }
+  else if(node->type == Types::Map){
+    std::map<std::string, shared_ptr<ConfigTreeNode> >::iterator it = node->map_children.begin();
+    std::map<std::string, shared_ptr<ConfigTreeNode> >::iterator end = node->map_children.end();
+    emitter << YAML::BeginMap;
+    for( ; it != end; ++it){
+      emitter << YAML::Key << it->first;
+      emitter << YAML::Value;
+      EmitSubTree(it->second);
+    }
+    emitter << YAML::EndMap;
+  }
+}
+
+std::string ConfigTree::EmitTree(){
+  EmitSubTree(root_);
+  return emitter.c_str();
+}
 
 // TODO:
 class ConfigItemData {
  public:
-  ConfigItemData() : node_(NULL) {}
-  ConfigItemData(const YAML::Node *node) : node_(node) {}
-  const YAML::Node* node() const { return node_; }
+  ConfigItemData() {}
+  ConfigItemData(shared_ptr<ConfigTreeNode> node) : node_(node) {}
+  shared_ptr<ConfigTreeNode> node() const { return node_; }
  private:
-  const YAML::Node *node_;
+  shared_ptr<ConfigTreeNode> node_;
 };
 
 class ConfigData {
  public:
+  ConfigData():config_tree(new ConfigTree()){};
+  ~ConfigData(){ delete config_tree; };
   bool LoadFromFile(const std::string& file_name);
   bool SaveToFile(const std::string& file_name);
-  const YAML::Node* Traverse(const std::string &key);
+  shared_ptr<ConfigTreeNode> Traverse(const std::string &key);
 
-  static const ConfigItemPtr Convert(const YAML::Node *node);
+  static const ConfigItemPtr Convert(shared_ptr<ConfigTreeNode> node);
 
  private:
   YAML::Node doc_;
+  ConfigTree *config_tree;
 };
 
 // ConfigItem members
@@ -52,55 +185,67 @@ ConfigItem::~ConfigItem() {
 bool ConfigItem::GetBool(bool *value) const {
   if(!data_ || !data_->node())
     return false;
-  *value = data_->node()->to<bool>();
+  *value = boost::lexical_cast<bool> (data_->node()->value);
   return true;
 }
 
 bool ConfigItem::GetInt(int *value) const {
   if(!data_ || !data_->node())
     return false;
-  *value = data_->node()->to<int>();
+  *value = boost::lexical_cast<int> (data_->node()->value);
   return true;
 }
 
 bool ConfigItem::GetDouble(double *value) const {
   if(!data_ || !data_->node())
     return false;
-  *value = data_->node()->to<double>();
+  *value = boost::lexical_cast<double> (data_->node()->value);
   return true;
 }
 
 bool ConfigItem::GetString(std::string *value) const {
   if(!data_ || !data_->node())
     return false;
-  *value = data_->node()->to<std::string>();
+  *value = data_->node()->value;
   return true;
 }
 
-void ConfigItem::SetBool(bool value) {
-  // TODO:
+bool ConfigItem::SetBool(bool value) {
+  if(!data_ || !data_->node())
+    return false;
+  data_->node()->value = value? "true" : "false";
+  return true;
 }
 
-void ConfigItem::SetInt(int value) {
-  // TODO:
+bool ConfigItem::SetInt(int value) {
+  if(!data_ || !data_->node())
+    return false;
+  data_->node()->value = boost::lexical_cast<std::string>(value);
+  return true;
 }
 
-void ConfigItem::SetDouble(double value) {
-  // TODO:
+bool ConfigItem::SetDouble(double value) {
+  if(!data_ || !data_->node())
+    return false;
+  data_->node()->value = boost::lexical_cast<std::string>(value);
+  return true;
 }
 
-void ConfigItem::SetString(const std::string &value) {
-  // TODO:
+bool ConfigItem::SetString(const std::string &value) {
+  if(!data_ || !data_->node())
+    return false;
+  data_->node()->value = value;
+  return true;
 }
 
 
 // ConfigList members
 
 ConfigItemPtr ConfigList::GetAt(size_t i) {
-  const YAML::Node* node = data_->node();
-  if(node->Type() == YAML::NodeType::Sequence)
+  shared_ptr<ConfigTreeNode> node = data_->node();
+  if(node->type == Types::Sequence)
   {
-    const YAML::Node* p = node->FindValue(i);
+    shared_ptr<ConfigTreeNode> p = node->seq_children[i];
     ConfigItemPtr ptr(ConfigData::Convert(p));
     return ptr;
   }
@@ -110,22 +255,31 @@ ConfigItemPtr ConfigList::GetAt(size_t i) {
   }
 }
 
-void ConfigList::SetAt(size_t i, const ConfigItemPtr element) {
-  // TODO:
+bool ConfigList::SetAt(size_t i, const ConfigItemPtr element) {
+  if(!data_ || !data_->node())
+    return false;
+  data_->node()->seq_children[i] = element->data()->node();
+  return true;
 }
 
-void ConfigList::Append(const ConfigItemPtr element) {
-  // TODO:
+bool ConfigList::Append(const ConfigItemPtr element) {
+  if(!data_ || !data_->node())
+    return false;
+  data_->node()->seq_children.push_back(element->data()->node());
+  return true;
 }
 
-void ConfigList::Clear() {
-  // TODO:
+bool ConfigList::Clear() {
+  if(!data_ || !data_->node())
+    return false;
+  data_->node()->seq_children.clear();
+  return true;
 }
 
 size_t ConfigList::size() const {
-  const YAML::Node* node = data_->node();
-  if(node->Type() == YAML::NodeType::Sequence)
-    return node->size();
+  shared_ptr<ConfigTreeNode> node = data_->node();
+  if(node->type == Types::Sequence)
+    return node->seq_children.size();
   else
   {
     return 0;
@@ -135,10 +289,10 @@ size_t ConfigList::size() const {
 // ConfigMap members
 
 bool ConfigMap::HasKey(const std::string &key) const {
-  const YAML::Node* node = data_->node();
-  if(node->Type() == YAML::NodeType::Map)
+  shared_ptr<ConfigTreeNode> node = data_->node();
+  if(node->type == Types::Map)
   {
-    const YAML::Node* p = node->FindValue(key);
+    shared_ptr<ConfigTreeNode> p = node->FindValue(key);
     return p != NULL;
   }
   else
@@ -148,10 +302,10 @@ bool ConfigMap::HasKey(const std::string &key) const {
 }
 
 ConfigItemPtr ConfigMap::Get(const std::string &key) {
-  const YAML::Node* node = data_->node();
-  if(node->Type() == YAML::NodeType::Map)
+  shared_ptr<ConfigTreeNode> node = data_->node();
+  if(node->type == Types::Map)
   {
-    const YAML::Node* p = node->FindValue(key.c_str());
+    shared_ptr<ConfigTreeNode> p = node->FindValue(key);
     return ConfigItemPtr(ConfigData::Convert(p));
   }
   else
@@ -160,12 +314,18 @@ ConfigItemPtr ConfigMap::Get(const std::string &key) {
   }
 }
 
-void ConfigMap::Set(const std::string &key, const ConfigItemPtr element) {
-  // TODO:
+bool ConfigMap::Set(const std::string &key, const ConfigItemPtr element) {
+  if(!data_ || !data_->node())
+    return false;
+  data_->node()->map_children[key] = element->data()->node();
+  return true;
 }
 
-void ConfigMap::Clear() {
-  // TODO:
+bool ConfigMap::Clear() {
+  if(!data_ || !data_->node())
+    return false;
+  data_->node()->map_children.clear();
+  return true;
 }
 
 // Config members
@@ -190,43 +350,52 @@ bool Config::SaveToFile(const std::string& file_name) {
 
 bool Config::IsNull(const std::string &key) {
   EZLOGGERVAR(key);
-  const YAML::Node *p = data_->Traverse(key);
-  return !p || p->Type() == YAML::NodeType::Null;
+  shared_ptr<ConfigTreeNode> p = data_->Traverse(key);
+  return !p ||p->type == Types::Null;
 }
 
 bool Config::GetBool(const std::string& key, bool *value) {
   EZLOGGERVAR(key);
-  const YAML::Node *p = data_->Traverse(key);
-  if (!p || p->Type() != YAML::NodeType::Scalar)
+  shared_ptr<ConfigTreeNode> p = data_->Traverse(key);
+  if (!p ||p->type != Types::Scalar)
     return false;
-  *value = p->to<bool>();
+  std::string bstr = p->value;
+  boost::to_lower(bstr);
+
+  if("true" == bstr)
+    *value = true;
+  else if("false" == bstr)
+    *value = false;
+  else
+    return false;
+
   return true;
 }
 
 bool Config::GetInt(const std::string& key, int *value) {
   EZLOGGERVAR(key);
-  const YAML::Node *p = data_->Traverse(key);
-  if (!p || p->Type() != YAML::NodeType::Scalar)
+  shared_ptr<ConfigTreeNode> p = data_->Traverse(key);
+  if (!p ||p->type != Types::Scalar)
     return false;
-  *value = p->to<int>();
+  *value = boost::lexical_cast<int> (p->value);
   return true;
 }
 
 bool Config::GetDouble(const std::string& key, double *value) {
   EZLOGGERVAR(key);
-  const YAML::Node *p = data_->Traverse(key);
-  if (!p || p->Type() != YAML::NodeType::Scalar)
+  shared_ptr<ConfigTreeNode> p = data_->Traverse(key);
+  if (!p ||p->type != Types::Scalar)
     return false;
-  *value = p->to<double>();
+  *value = boost::lexical_cast<double> (p->value);
   return true;
 }
 
 bool Config::GetString(const std::string& key, std::string *value) {
   EZLOGGERVAR(key);
-  const YAML::Node *p = data_->Traverse(key);
-  if (!p || p->Type() != YAML::NodeType::Scalar)
+  shared_ptr<ConfigTreeNode> p = data_->Traverse(key);
+  if (!p ||p->type != Types::Scalar)
     return false;
-  *value = p->to<std::string>();
+  *value = p->value;
   return true;
 }
 
@@ -290,50 +459,59 @@ bool ConfigDataManager::ReloadConfigData(const std::string &config_file_path) {
 // ConfigData members
 
 bool ConfigData::LoadFromFile(const std::string& file_name) {
-  // TODO(zouxu): clear local modifications
   std::ifstream fin(file_name.c_str());
   YAML::Parser parser(fin);
-  return parser.GetNextDocument(doc_);
+  bool result = parser.GetNextDocument(doc_);
+
+  //Clear the previous tree
+  if(config_tree)
+    delete config_tree;
+  config_tree = new ConfigTree();
+  //Load from YAML
+  config_tree->CopyTree(&doc_);
+
+  return result;
 }
 
 bool ConfigData::SaveToFile(const std::string& file_name) {
-  // TODO(zouxu):
-  return false;
+  std::ofstream out(file_name);  
+  out << config_tree->EmitTree();
+  return true;
 }
 
-const ConfigItemPtr ConfigData::Convert(const YAML::Node *node) {
+const ConfigItemPtr ConfigData::Convert(shared_ptr<ConfigTreeNode> node) {
   if (!node)
     return ConfigItemPtr();
   // no need to recursively convert YAML::Node structure,
   // just wrap the node itself...
   // we can wrap its children nodes when they are retrived via getters
-  YAML::NodeType::value type = node->Type();
-  if (type == YAML::NodeType::Scalar) {
+  int type = node->type;
+  if (type == Types::Scalar) {
     return ConfigItemPtr(new ConfigItem(ConfigItem::kScalar,
                                         new ConfigItemData(node)));
   }
-  if (type == YAML::NodeType::Sequence) {
-    EZDBGONLYLOGGERPRINT("sequence size: %d", node->size());
+  if (type == Types::Sequence) {
+    EZDBGONLYLOGGERPRINT("sequence size: %d", node->seq_children.size());
     return ConfigItemPtr(new ConfigList(new ConfigItemData(node)));
   }
-  if (type == YAML::NodeType::Map) {
+  if (type == Types::Map) {
     return ConfigItemPtr(new ConfigMap(new ConfigItemData(node)));
   }
   return ConfigItemPtr();
 }
 
-const YAML::Node* ConfigData::Traverse(const std::string &key) {
+shared_ptr<ConfigTreeNode> ConfigData::Traverse(const std::string &key) {
   EZDBGONLYLOGGERPRINT("traverse: %s", key.c_str());
   std::vector<std::string> keys;
   boost::split(keys, key, boost::is_any_of("/"));
   // find the YAML::Node, and wrap it!
-  const YAML::Node *p = &doc_;
+  shared_ptr<ConfigTreeNode> p = config_tree->root();
   std::vector<std::string>::iterator it = keys.begin();
   std::vector<std::string>::iterator end = keys.end();
   for (; it != end; ++it) {
     EZDBGONLYLOGGERPRINT("key node: %s", it->c_str());
-    if (!p || YAML::NodeType::Null == p->Type())
-      return NULL;
+    if (!p || Types::Null ==p->type)
+      return shared_ptr<ConfigTreeNode>();
     p = p->FindValue(*it);
   }
   return p;

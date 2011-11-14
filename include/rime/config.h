@@ -37,12 +37,13 @@ class ConfigItem {
   bool GetInt(int *value) const;
   bool GetDouble(double *value) const;
   bool GetString(std::string *value) const;
-  void SetBool(bool value);
-  void SetInt(int value);
-  void SetDouble(double value);
-  void SetString(const std::string &value);
+  bool SetBool(bool value);
+  bool SetInt(int value);
+  bool SetDouble(double value);
+  bool SetString(const std::string &value);
 
   ValueType type() const { return type_; }
+  ConfigItemData *data() const { return data_; }
 
  protected:
   ValueType type_;
@@ -56,9 +57,9 @@ class ConfigList : public ConfigItem {
   ConfigList() : ConfigItem(kList) {}
   ConfigList(ConfigItemData *data) : ConfigItem(kList, data) {}
   ConfigItemPtr GetAt(size_t i);
-  void SetAt(size_t i, const ConfigItemPtr element);
-  void Append(const ConfigItemPtr element);
-  void Clear();
+  bool SetAt(size_t i, const ConfigItemPtr element);
+  bool Append(const ConfigItemPtr element);
+  bool Clear();
   size_t size() const;
 };
 
@@ -69,8 +70,8 @@ class ConfigMap : public ConfigItem {
   ConfigMap(ConfigItemData *data) : ConfigItem(kMap, data) {}
   bool HasKey(const std::string &key) const;
   ConfigItemPtr Get(const std::string &key);
-  void Set(const std::string &key, const ConfigItemPtr element);
-  void Clear();
+  bool Set(const std::string &key, const ConfigItemPtr element);
+  bool Clear();
 };
 
 class ConfigData;
