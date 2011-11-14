@@ -61,7 +61,7 @@ class RimeConsole {
     int i = 0;
     BOOST_FOREACH(const rime::shared_ptr<rime::Candidate> &cand,
                   page->candidates) {
-      std::cout << "cand. " << ++i <<  ": [";
+      std::cout << "cand. " << (++i % 10) <<  ": [";
       std::cout << cand->text();
       std::cout << "]";
       if (cand->comment())

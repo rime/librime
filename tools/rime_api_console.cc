@@ -94,8 +94,8 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  char line[kRimeTextMaxLength + 1];
-  while (fgets(line, kRimeTextMaxLength, stdin) != NULL) {
+  char line[RIME_TEXT_MAX_LENGTH + 1];
+  while (fgets(line, RIME_TEXT_MAX_LENGTH, stdin) != NULL) {
     for (char *p = line; *p; ++p) {
       if (*p == '\r' || *p == '\n') {
         *p = '\0';
