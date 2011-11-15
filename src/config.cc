@@ -276,7 +276,12 @@ bool Config::Set(const std::string &key, const ConfigItemPtr &item) {
       return true;
     }
     else {
-      p = As<ConfigMap>(p)->Get(keys[i]);
+      ConfigItemPtr next(As<ConfigMap>(p)->Get(keys[i]));
+      if (!next) {
+        next = ConfigItemPtr(new ConfigMap);
+        As<ConfigMap>(p)->Set(keys[i], next);
+      }
+      p = next;
     }
   }
   return false;

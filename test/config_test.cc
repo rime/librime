@@ -153,8 +153,16 @@ TEST(RimeConfigWriterTest, Greetings) {
   ASSERT_TRUE(config);
   // creating contents
   config->Set("/", ConfigItemPtr(new ConfigMap));
-  ConfigItemPtr greetings(new ConfigValue("Greetings, Terrans!"));
-  config->Set("greetings", greetings);
+  ConfigItemPtr terran_greetings(new ConfigValue("Greetings, Terrans!"));
+  ConfigItemPtr zerg_greetings(new ConfigValue("Zergsss are coming!"));
+  ConfigItemPtr zergs_coming(new ConfigValue(true));
+  ConfigItemPtr zergs_population(new ConfigValue(1000000));
+  EXPECT_TRUE(config->Set("greetings", terran_greetings));
+  EXPECT_TRUE(config->Set("zergs/overmind/greetings", zerg_greetings));
+  EXPECT_TRUE(config->Set("zergs/going", zergs_coming));
+  EXPECT_TRUE(config->Set("zergs/statistics/population", zergs_population));
+  // will not create subkeys over an existing value node
+  EXPECT_FALSE(config->Set("zergs/going/home", zerg_greetings));
   // saving
   EXPECT_TRUE(config->SaveToFile("config_writer_test.yaml"));
   // verify
@@ -164,4 +172,13 @@ TEST(RimeConfigWriterTest, Greetings) {
   std::string the_greetings;
   EXPECT_TRUE(verifier->GetString("greetings", &the_greetings));
   EXPECT_EQ("Greetings, Terrans!", the_greetings);
+  EXPECT_TRUE(verifier->GetString("zergs/overmind/greetings", &the_greetings));
+  EXPECT_EQ("Zergsss are coming!", the_greetings);
+  bool coming = false;
+  EXPECT_TRUE(verifier->GetBool("zergs/going", &coming));
+  EXPECT_TRUE(coming);
+  int population = 0;
+  EXPECT_TRUE(verifier->GetInt("zergs/statistics/population", &population));
+  EXPECT_EQ(1000000, population);
+  EXPECT_FALSE(verifier->GetString("zergs/going/home", &the_greetings));
 }
