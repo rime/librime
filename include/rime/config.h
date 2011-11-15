@@ -16,7 +16,7 @@
 
 namespace rime {
 
-class ConfigItemData;
+struct ConfigItemData;
 
 // config item base class
 class ConfigItem {
@@ -24,12 +24,9 @@ class ConfigItem {
   enum ValueType { kNull, kScalar, kList, kMap };
 
   // construct a null item
-  ConfigItem()
-      : type_(kNull), data_(NULL) {}
-  ConfigItem(ValueType type)
-      : type_(type), data_(NULL) {}
-  ConfigItem(ValueType type, ConfigItemData *data)
-      : type_(type), data_(data) {}
+  ConfigItem();
+  ConfigItem(ValueType type);
+  ConfigItem(ValueType type, ConfigItemData *data);
   virtual ~ConfigItem();
 
   // schalar value accessors
@@ -43,11 +40,11 @@ class ConfigItem {
   bool SetString(const std::string &value);
 
   ValueType type() const { return type_; }
-  ConfigItemData *data() const { return data_; }
+  ConfigItemData* data() const { return data_.get(); }
 
  protected:
   ValueType type_;
-  ConfigItemData *data_;
+  scoped_ptr<ConfigItemData> data_;
 };
 
 typedef shared_ptr<ConfigItem> ConfigItemPtr;
@@ -56,20 +53,20 @@ class ConfigList : public ConfigItem {
  public:
   ConfigList() : ConfigItem(kList) {}
   ConfigList(ConfigItemData *data) : ConfigItem(kList, data) {}
-  ConfigItemPtr GetAt(size_t i);
+  ConfigItemPtr GetAt(size_t i) const;
   bool SetAt(size_t i, const ConfigItemPtr element);
   bool Append(const ConfigItemPtr element);
   bool Clear();
   size_t size() const;
 };
 
-// there is a limitation: keys have to be strings
+// limitation: map keys have to be strings, preferably alphanumeric
 class ConfigMap : public ConfigItem {
  public:
   ConfigMap() : ConfigItem(kMap) {}
   ConfigMap(ConfigItemData *data) : ConfigItem(kMap, data) {}
   bool HasKey(const std::string &key) const;
-  ConfigItemPtr Get(const std::string &key);
+  ConfigItemPtr Get(const std::string &key) const;
   bool Set(const std::string &key, const ConfigItemPtr element);
   bool Clear();
 };
@@ -117,6 +114,7 @@ class Config : public Class<Config, const std::string&> {
   bool LoadFromFile(const std::string& file_name);
   bool SaveToFile(const std::string& file_name);
 
+  // access a tree node of a particular type with "path/to/key"
   bool IsNull(const std::string &key);
   bool GetBool(const std::string &key, bool *value);
   bool GetInt(const std::string &key, int *value);
