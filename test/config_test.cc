@@ -107,17 +107,17 @@ TEST_F(RimeConfigTest, Config_GetString) {
 }
 
 TEST_F(RimeConfigTest, Config_GetList) {
-  shared_ptr<ConfigList> p;
+  ConfigListPtr p;
   p = config_->GetList("protoss/air_force");
   ASSERT_TRUE(p);
   ASSERT_EQ(4, p->size());
-  ConfigItemPtr element;
+  ConfigValuePtr element;
   std::string value;
-  element = p->GetAt(0);
+  element = p->GetValueAt(0);
   ASSERT_TRUE(element);
   ASSERT_TRUE(element->GetString(&value));
   EXPECT_EQ("scout", value);
-  element = p->GetAt(3);
+  element = p->GetValueAt(3);
   ASSERT_TRUE(element);
   ASSERT_TRUE(element->GetString(&value));
   EXPECT_EQ("arbiter", value);
@@ -125,26 +125,43 @@ TEST_F(RimeConfigTest, Config_GetList) {
 }
 
 TEST_F(RimeConfigTest, Config_GetMap) {
-  shared_ptr<ConfigMap> p;
+  ConfigMapPtr p;
   p = config_->GetMap("terrans/tank/cost");
   ASSERT_TRUE(p);
   EXPECT_FALSE(p->HasKey("rime"));
   ASSERT_TRUE(p->HasKey("time"));
-  ConfigItemPtr item;
+  ConfigValuePtr item;
   std::string time;
   int mineral = 0;
   int gas = 0;
-  item = p->Get("time");
+  item = p->GetValue("time");
   ASSERT_TRUE(item);
   ASSERT_TRUE(item->GetString(&time));
   EXPECT_EQ("30 seconds", time);
-  item = p->Get("mineral");
+  item = p->GetValue("mineral");
   ASSERT_TRUE(item);
   ASSERT_TRUE(item->GetInt(&mineral));
   EXPECT_EQ(150, mineral);
-  item = p->Get("gas");
+  item = p->GetValue("gas");
   ASSERT_TRUE(item);
   ASSERT_TRUE(item->GetInt(&gas));
   EXPECT_EQ(100, gas);
 }
 
+TEST(RimeConfigWriterTest, Greetings) {
+  scoped_ptr<Config> config(new Config);
+  ASSERT_TRUE(config);
+  // creating contents
+  config->Set("/", ConfigItemPtr(new ConfigMap));
+  ConfigItemPtr greetings(new ConfigValue("Greetings, Terrans!"));
+  config->Set("greetings", greetings);
+  // saving
+  EXPECT_TRUE(config->SaveToFile("config_writer_test.yaml"));
+  // verify
+  scoped_ptr<Config> verifier(new Config);
+  ASSERT_TRUE(verifier);
+  ASSERT_TRUE(verifier->LoadFromFile("config_writer_test.yaml"));
+  std::string the_greetings;
+  EXPECT_TRUE(verifier->GetString("greetings", &the_greetings));
+  EXPECT_EQ("Greetings, Terrans!", the_greetings);
+}

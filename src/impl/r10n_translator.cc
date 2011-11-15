@@ -137,8 +137,7 @@ Translation* R10nTranslator::Query(const std::string &input, const Segment &segm
 void R10nTranslator::OnCommit(Context *ctx) {
   DictEntry commit_entry;
   BOOST_FOREACH(Composition::value_type &seg, *ctx->composition()) {
-    const shared_ptr<R10nCandidate> cand =
-        dynamic_pointer_cast<R10nCandidate>(seg.GetSelectedCandidate());
+    const shared_ptr<R10nCandidate> cand = As<R10nCandidate>(seg.GetSelectedCandidate());
     if (cand) {
       commit_entry.text += cand->text();
       commit_entry.code.insert(commit_entry.code.end(),

@@ -169,17 +169,15 @@ void Engine::InitializeComponents() {
     return;
   Config *config = schema_->config();
   // create processors
-  shared_ptr<ConfigList> processor_list(
-      config->GetList("engine/processors"));
+  shared_ptr<ConfigList> processor_list(config->GetList("engine/processors"));
   if (processor_list) {
     size_t n = processor_list->size();
     for (size_t i = 0; i < n; ++i) {
-      std::string klass;
-      if (!processor_list->GetAt(i)->GetString(&klass))
-        continue;
-      Processor::Component *c = Processor::Require(klass);
+      shared_ptr<ConfigValue> klass = As<ConfigValue>(processor_list->GetAt(i));
+      if (klass) continue;
+      Processor::Component *c = Processor::Require(klass->str());
       if (!c) {
-        EZLOGGERPRINT("error creating processor: '%s'", klass.c_str());
+        EZLOGGERPRINT("error creating processor: '%s'", klass->str().c_str());
       }
       else {
         shared_ptr<Processor> p(c->Create(this));
@@ -188,17 +186,15 @@ void Engine::InitializeComponents() {
     }
   }
   // create segmentors
-  shared_ptr<ConfigList> segmentor_list(
-      config->GetList("engine/segmentors"));
+  shared_ptr<ConfigList> segmentor_list(config->GetList("engine/segmentors"));
   if (segmentor_list) {
     size_t n = segmentor_list->size();
     for (size_t i = 0; i < n; ++i) {
-      std::string klass;
-      if (!segmentor_list->GetAt(i)->GetString(&klass))
-        continue;
-      Segmentor::Component *c = Segmentor::Require(klass);
+      shared_ptr<ConfigValue> klass = As<ConfigValue>(segmentor_list->GetAt(i));
+      if (klass) continue;
+      Segmentor::Component *c = Segmentor::Require(klass->str());
       if (!c) {
-        EZLOGGERPRINT("error creating segmentor: '%s'", klass.c_str());
+        EZLOGGERPRINT("error creating segmentor: '%s'", klass->str().c_str());
       }
       else {
         shared_ptr<Segmentor> s(c->Create(this));
@@ -207,17 +203,15 @@ void Engine::InitializeComponents() {
     }
   }
   // create translators
-  shared_ptr<ConfigList> translator_list(
-      config->GetList("engine/translators"));
+  shared_ptr<ConfigList> translator_list(config->GetList("engine/translators"));
   if (translator_list) {
     size_t n = translator_list->size();
     for (size_t i = 0; i < n; ++i) {
-      std::string klass;
-      if (!translator_list->GetAt(i)->GetString(&klass))
-        continue;
-      Translator::Component *c = Translator::Require(klass);
+      shared_ptr<ConfigValue> klass = As<ConfigValue>(translator_list->GetAt(i));
+      if (klass) continue;
+      Translator::Component *c = Translator::Require(klass->str());
       if (!c) {
-        EZLOGGERPRINT("error creating translator: '%s'", klass.c_str());
+        EZLOGGERPRINT("error creating translator: '%s'", klass->str().c_str());
       }
       else {
         shared_ptr<Translator> d(c->Create(this));

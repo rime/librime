@@ -16,19 +16,34 @@
 
 namespace rime {
 
-struct ConfigItemData;
-
 // config item base class
 class ConfigItem {
  public:
   enum ValueType { kNull, kScalar, kList, kMap };
 
   // construct a null item
-  ConfigItem();
-  ConfigItem(ValueType type);
-  ConfigItem(ValueType type, ConfigItemData *data);
-  virtual ~ConfigItem();
+  ConfigItem() : type_(kNull) {}
+  virtual ~ConfigItem() {}
 
+  ValueType type() const { return type_; }
+
+ protected:
+  ConfigItem(ValueType type) : type_(type) {}
+  
+  ValueType type_;
+};
+
+typedef shared_ptr<ConfigItem> ConfigItemPtr;
+
+class ConfigValue : public ConfigItem {
+ public:
+  ConfigValue() : ConfigItem(kScalar) {}
+  ConfigValue(bool value);
+  ConfigValue(int value);
+  ConfigValue(double value);
+  ConfigValue(const char *value);
+  ConfigValue(const std::string &value);
+  
   // schalar value accessors
   bool GetBool(bool *value) const;
   bool GetInt(int *value) const;
@@ -38,40 +53,60 @@ class ConfigItem {
   bool SetInt(int value);
   bool SetDouble(double value);
   bool SetString(const std::string &value);
-
-  ValueType type() const { return type_; }
-  ConfigItemData* data() const { return data_.get(); }
-
+  
+  const std::string& str() const { return value_; }
+  
  protected:
-  ValueType type_;
-  scoped_ptr<ConfigItemData> data_;
+  std::string value_;
 };
 
-typedef shared_ptr<ConfigItem> ConfigItemPtr;
+typedef shared_ptr<ConfigValue> ConfigValuePtr;
 
 class ConfigList : public ConfigItem {
  public:
+  typedef std::vector<ConfigItemPtr> Sequence;
+  typedef Sequence::iterator Iterator;
+  
   ConfigList() : ConfigItem(kList) {}
-  ConfigList(ConfigItemData *data) : ConfigItem(kList, data) {}
   ConfigItemPtr GetAt(size_t i) const;
-  bool SetAt(size_t i, const ConfigItemPtr element);
-  bool Append(const ConfigItemPtr element);
+  ConfigValuePtr GetValueAt(size_t i) const;
+  bool SetAt(size_t i, const ConfigItemPtr &element);
+  bool Append(const ConfigItemPtr &element);
   bool Clear();
   size_t size() const;
+
+  Iterator begin();
+  Iterator end();
+
+ protected:
+  Sequence seq_;
 };
+
+typedef shared_ptr<ConfigList> ConfigListPtr;
 
 // limitation: map keys have to be strings, preferably alphanumeric
 class ConfigMap : public ConfigItem {
  public:
+  typedef std::map<std::string, ConfigItemPtr> Map;
+  typedef Map::iterator Iterator;
+  
   ConfigMap() : ConfigItem(kMap) {}
-  ConfigMap(ConfigItemData *data) : ConfigItem(kMap, data) {}
   bool HasKey(const std::string &key) const;
   ConfigItemPtr Get(const std::string &key) const;
-  bool Set(const std::string &key, const ConfigItemPtr element);
+  ConfigValuePtr GetValue(const std::string &key) const;
+  bool Set(const std::string &key, const ConfigItemPtr &element);
   bool Clear();
+
+  Iterator begin();
+  Iterator end();
+
+ protected:
+  Map map_;
 };
 
-class ConfigData;
+typedef shared_ptr<ConfigMap> ConfigMapPtr;
+
+struct ConfigData;
 
 // ConfigDataManager class
 
@@ -120,10 +155,13 @@ class Config : public Class<Config, const std::string&> {
   bool GetInt(const std::string &key, int *value);
   bool GetDouble(const std::string &key, double *value);
   bool GetString(const std::string &key, std::string *value);
-  shared_ptr<ConfigList> GetList(const std::string &key);
-  shared_ptr<ConfigMap> GetMap(const std::string &key);
 
-  // TODO: setters
+  ConfigValuePtr GetValue(const std::string &key);
+  ConfigListPtr GetList(const std::string &key);
+  ConfigMapPtr GetMap(const std::string &key);
+
+  // setter for adding new items to the tree
+  bool Set(const std::string &key, const ConfigItemPtr &item);
 
  private:
   shared_ptr<ConfigData> data_;

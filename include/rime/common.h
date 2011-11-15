@@ -20,7 +20,11 @@ namespace rime {
 using boost::scoped_ptr;
 using boost::shared_ptr;
 using boost::weak_ptr;
-using boost::dynamic_pointer_cast;
+
+template <class A, class B>
+shared_ptr<A> As(const B &ptr) {
+  return boost::dynamic_pointer_cast<A>(ptr);
+}
 
 void RegisterComponents();
 

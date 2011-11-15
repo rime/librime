@@ -17,55 +17,52 @@
 
 namespace rime {
 
-// private classes
-
-struct ConfigItemData {
-  typedef std::vector<ConfigItemPtr> Sequence;
-  typedef std::map<std::string, ConfigItemPtr> Map;
-  Sequence seq_children;
-  Map map_children;
-  std::string value;
-};
-
-class ConfigData {
- public:
+struct ConfigData {
+  ConfigItemPtr root;
+  
   bool LoadFromFile(const std::string& file_name);
   bool SaveToFile(const std::string& file_name);
   ConfigItemPtr Traverse(const std::string &key);
+
   static ConfigItemPtr ConvertFromYaml(const YAML::Node &yaml_node);
   static void EmitYaml(const ConfigItemPtr &node, YAML::Emitter *emitter);
- private:
-  ConfigItemPtr root_;
 };
 
-// ConfigItem members
+// ConfigValue members
 
-ConfigItem::ConfigItem()
-    : type_(kNull), data_(new ConfigItemData) {
+ConfigValue::ConfigValue(bool value)
+    : ConfigItem(kScalar) {
+  SetBool(value);
 }
 
-ConfigItem::ConfigItem(ValueType type)
-    : type_(type), data_(new ConfigItemData) {
+ConfigValue::ConfigValue(int value)
+    : ConfigItem(kScalar) {
+  SetInt(value);
 }
 
-ConfigItem::ConfigItem(ValueType type, ConfigItemData *data)
-    : type_(type), data_(data) {
+ConfigValue::ConfigValue(double value)
+    : ConfigItem(kScalar) {
+  SetDouble(value);
 }
 
-ConfigItem::~ConfigItem() {
+ConfigValue::ConfigValue(const char *value)
+    : ConfigItem(kScalar), value_(value) {
 }
 
-bool ConfigItem::GetBool(bool *value) const {
-  if(type_ != ConfigItem::kScalar ||
-     !data_ || data_->value.empty())
+ConfigValue::ConfigValue(const std::string &value)
+    : ConfigItem(kScalar), value_(value) {
+}
+
+bool ConfigValue::GetBool(bool *value) const {
+  if (!value || value_.empty())
     return false;
-  std::string bstr = data_->value;
+  std::string bstr = value_;
   boost::to_lower(bstr);
-  if("true" == bstr || "yes" == bstr || "y" == bstr) {
+  if ("true" == bstr) {
     *value = true;
     return true;
   }
-  else if("false" == bstr || "no" == bstr || "n" == bstr) {
+  else if ("false" == bstr) {
     *value = false;
     return true;
   }
@@ -73,94 +70,96 @@ bool ConfigItem::GetBool(bool *value) const {
     return false;
 }
 
-bool ConfigItem::GetInt(int *value) const {
-  if(type_ != ConfigItem::kScalar ||
-     !data_ || data_->value.empty())
+bool ConfigValue::GetInt(int *value) const {
+  if (!value || value_.empty())
     return false;
-  *value = boost::lexical_cast<int>(data_->value);
+  try {
+    *value = boost::lexical_cast<int>(value_);
+  }
+  catch (...) {
+    return false;
+  }
   return true;
 }
 
-bool ConfigItem::GetDouble(double *value) const {
-  if(type_ != ConfigItem::kScalar ||
-     !data_ || data_->value.empty())
+bool ConfigValue::GetDouble(double *value) const {
+  if (!value || value_.empty())
     return false;
-  *value = boost::lexical_cast<double>(data_->value);
+  try {
+    *value = boost::lexical_cast<double>(value_);
+  }
+  catch (...) {
+    return false;
+  }
   return true;
 }
 
-bool ConfigItem::GetString(std::string *value) const {
-  if(type_ != ConfigItem::kScalar || !data_)
-    return false;
-  *value = data_->value;
+bool ConfigValue::GetString(std::string *value) const {
+  if (!value) return false;
+  *value = value_;
   return true;
 }
 
-bool ConfigItem::SetBool(bool value) {
-  if(type_ > ConfigItem::kScalar || !data_)
-    return false;
-  data_->value = value ? "true" : "false";
+bool ConfigValue::SetBool(bool value) {
+  value_ = value ? "true" : "false";
   return true;
 }
 
-bool ConfigItem::SetInt(int value) {
-  if(type_ > ConfigItem::kScalar || !data_)
-    return false;
-  data_->value = boost::lexical_cast<std::string>(value);
+bool ConfigValue::SetInt(int value) {
+  value_ = boost::lexical_cast<std::string>(value);
   return true;
 }
 
-bool ConfigItem::SetDouble(double value) {
-  if(type_ > ConfigItem::kScalar || !data_)
-    return false;
-  data_->value = boost::lexical_cast<std::string>(value);
+bool ConfigValue::SetDouble(double value) {
+  value_ = boost::lexical_cast<std::string>(value);
   return true;
 }
 
-bool ConfigItem::SetString(const std::string &value) {
-  if(type_ > ConfigItem::kScalar || !data_)
-    return false;
-  data_->value = value;
+bool ConfigValue::SetString(const std::string &value) {
+  value_ = value;
   return true;
 }
 
 // ConfigList members
 
 ConfigItemPtr ConfigList::GetAt(size_t i) const {
-  if (type_ != ConfigItem::kList
-      || !data_ || i >= data_->seq_children.size())
+  if (i >= seq_.size())
     return ConfigItemPtr();
   else
-    return data_->seq_children[i];
+    return seq_[i];
 }
 
-bool ConfigList::SetAt(size_t i, const ConfigItemPtr element) {
-  if (type_ != ConfigItem::kList ||
-      !data_ || i >= data_->seq_children.size())
+ConfigValuePtr ConfigList::GetValueAt(size_t i) const {
+  return As<ConfigValue>(GetAt(i));
+}
+
+bool ConfigList::SetAt(size_t i, const ConfigItemPtr &element) {
+  if (i >= seq_.size())
     return false;
-  data_->seq_children[i] = element;
+  seq_[i] = element;
   return true;
 }
 
-bool ConfigList::Append(const ConfigItemPtr element) {
-  if (type_ != ConfigItem::kList || !data_)
-    return false;
-  data_->seq_children.push_back(element);
+bool ConfigList::Append(const ConfigItemPtr &element) {
+  seq_.push_back(element);
   return true;
 }
 
 bool ConfigList::Clear() {
-  if (type_ != ConfigItem::kList || !data_)
-    return false;
-  data_->seq_children.clear();
+  seq_.clear();
   return true;
 }
 
 size_t ConfigList::size() const {
-  if(type_ != ConfigItem::kList)
-    return 0;
-  else
-    return data_->seq_children.size();
+  return seq_.size();
+}
+
+ConfigList::Iterator ConfigList::begin() {
+  return seq_.begin();
+}
+
+ConfigList::Iterator ConfigList::end() {
+  return seq_.end();
 }
 
 // ConfigMap members
@@ -170,27 +169,33 @@ bool ConfigMap::HasKey(const std::string &key) const {
 }
 
 ConfigItemPtr ConfigMap::Get(const std::string &key) const {
-  if (type_ != ConfigItem::kMap || !data_)
-    return ConfigItemPtr();
-  ConfigItemData::Map::const_iterator it = data_->map_children.find(key);
-  if (it == data_->map_children.end())
+  Map::const_iterator it = map_.find(key);
+  if (it == map_.end())
     return ConfigItemPtr();
   else
     return it->second;
 }
 
-bool ConfigMap::Set(const std::string &key, const ConfigItemPtr element) {
-  if (type_ != ConfigItem::kMap || !data_)
-    return false;
-  data_->map_children[key] = element;
+ConfigValuePtr ConfigMap::GetValue(const std::string &key) const {
+  return As<ConfigValue>(Get(key));
+}
+
+bool ConfigMap::Set(const std::string &key, const ConfigItemPtr &element) {
+  map_[key] = element;
   return true;
 }
 
 bool ConfigMap::Clear() {
-  if (type_ != ConfigItem::kMap || !data_)
-    return false;
-  data_->map_children.clear();
+  map_.clear();
   return true;
+}
+
+ConfigMap::Iterator ConfigMap::begin() {
+  return map_.begin();
+}
+
+ConfigMap::Iterator ConfigMap::end() {
+  return map_.end();
 }
 
 // Config members
@@ -221,38 +226,62 @@ bool Config::IsNull(const std::string &key) {
 
 bool Config::GetBool(const std::string& key, bool *value) {
   EZLOGGERVAR(key);
-  ConfigItemPtr p = data_->Traverse(key);
+  ConfigValuePtr p = As<ConfigValue>(data_->Traverse(key));
   return p && p->GetBool(value);
 }
 
 bool Config::GetInt(const std::string& key, int *value) {
   EZLOGGERVAR(key);
-  ConfigItemPtr p = data_->Traverse(key);
+  ConfigValuePtr p = As<ConfigValue>(data_->Traverse(key));
   return p && p->GetInt(value);
 }
 
 bool Config::GetDouble(const std::string& key, double *value) {
   EZLOGGERVAR(key);
-  ConfigItemPtr p = data_->Traverse(key);
+  ConfigValuePtr p = As<ConfigValue>(data_->Traverse(key));
   return p && p->GetDouble(value);
 }
 
 bool Config::GetString(const std::string& key, std::string *value) {
   EZLOGGERVAR(key);
-  ConfigItemPtr p = data_->Traverse(key);
+  ConfigValuePtr p = As<ConfigValue>(data_->Traverse(key));
   return p && p->GetString(value);
 }
 
-shared_ptr<ConfigList> Config::GetList(const std::string& key) {
+ConfigListPtr Config::GetList(const std::string& key) {
   EZLOGGERVAR(key);
-  return dynamic_pointer_cast<ConfigList>(data_->Traverse(key));
+  return As<ConfigList>(data_->Traverse(key));
 }
 
-shared_ptr<ConfigMap> Config::GetMap(const std::string& key) {
+ConfigMapPtr Config::GetMap(const std::string& key) {
   EZLOGGERVAR(key);
-  return dynamic_pointer_cast<ConfigMap>(data_->Traverse(key));
+  return As<ConfigMap>(data_->Traverse(key));
 }
 
+bool Config::Set(const std::string &key, const ConfigItemPtr &item) {
+  EZLOGGERVAR(key);
+  if (key.empty() || key == "/") {
+    data_->root = item;
+    return true;
+  }
+  ConfigItemPtr p(data_->root);
+  std::vector<std::string> keys;
+  boost::split(keys, key, boost::is_any_of("/"));
+  size_t k = keys.size() - 1;
+  for (size_t i = 0; i <= k; ++i) {
+    if (!p || p->type() != ConfigItem::kMap)
+      return false;
+    if (i == k) {
+      As<ConfigMap>(p)->Set(keys[i], item);
+      return true;
+    }
+    else {
+      p = As<ConfigMap>(p)->Get(keys[i]);
+    }
+  }
+  return false;
+}
+                 
 // ConfigComponent members
 
 const std::string ConfigComponent::GetConfigFilePath(const std::string &config_id) {
@@ -306,14 +335,14 @@ bool ConfigData::LoadFromFile(const std::string& file_name) {
   YAML::Node doc;
   if (!parser.GetNextDocument(doc))
     return false;
-  root_ = ConvertFromYaml(doc);
+  root = ConvertFromYaml(doc);
   return true;
 }
 
 bool ConfigData::SaveToFile(const std::string& file_name) {
   std::ofstream out(file_name.c_str());
   YAML::Emitter emitter;
-  EmitYaml(root_, &emitter);
+  EmitYaml(root, &emitter);
   out << emitter.c_str();
   return true;
 }
@@ -323,14 +352,13 @@ ConfigItemPtr ConfigData::Traverse(const std::string &key) {
   std::vector<std::string> keys;
   boost::split(keys, key, boost::is_any_of("/"));
   // find the YAML::Node, and wrap it!
-  ConfigItemPtr p = root_;
+  ConfigItemPtr p = root;
   std::vector<std::string>::iterator it = keys.begin();
   std::vector<std::string>::iterator end = keys.end();
   for (; it != end; ++it) {
-    EZDBGONLYLOGGERPRINT("key node: %s", it->c_str());
     if (!p || p->type() != ConfigItem::kMap)
       return ConfigItemPtr();
-    p = dynamic_pointer_cast<ConfigMap>(p)->Get(*it);
+    p = As<ConfigMap>(p)->Get(*it);
   }
   return p;
 }
@@ -340,28 +368,26 @@ ConfigItemPtr ConfigData::ConvertFromYaml(const YAML::Node &node) {
     return ConfigItemPtr();
   }
   if (YAML::NodeType::Scalar == node.Type()) {
-    ConfigItemData *data = new ConfigItemData;
-    data->value = node.to<std::string>();
-    return ConfigItemPtr(new ConfigItem(ConfigItem::kScalar, data));
+    return ConfigItemPtr(new ConfigValue(node.to<std::string>()));
   }
   if (YAML::NodeType::Sequence == node.Type()) {
-    ConfigItemData *data = new ConfigItemData;
+    ConfigListPtr config_list(new ConfigList);
     YAML::Iterator it = node.begin();
     YAML::Iterator end = node.end();
     for ( ; it != end; ++it) {
-      data->seq_children.push_back(ConvertFromYaml(*it));
+      config_list->Append(ConvertFromYaml(*it));
     }
-    return ConfigItemPtr(new ConfigList(data));
+    return config_list;
   }
   else if (YAML::NodeType::Map == node.Type()) {
-    ConfigItemData *data = new ConfigItemData;
+    ConfigMapPtr config_map(new ConfigMap);
     YAML::Iterator it = node.begin();
     YAML::Iterator end = node.end();
     for ( ; it != end; ++it) {
       std::string key = it.first().to<std::string>();
-      data->map_children[key] = ConvertFromYaml(it.second());
+      config_map->Set(key, ConvertFromYaml(it.second()));
     }
-    return ConfigItemPtr(new ConfigMap(data));
+    return config_map;
   }
   return ConfigItemPtr();
 }
@@ -369,11 +395,13 @@ ConfigItemPtr ConfigData::ConvertFromYaml(const YAML::Node &node) {
 void ConfigData::EmitYaml(const ConfigItemPtr &node, YAML::Emitter *emitter) {
   if (!node || !emitter) return;
   if (node->type() == ConfigItem::kScalar) {
-    *emitter << node->data()->value;
+    ConfigValuePtr config_value(As<ConfigValue>(node));
+    *emitter << config_value->str();
   }
   else if (node->type() == ConfigItem::kList) {
-    ConfigItemData::Sequence::const_iterator it = node->data()->seq_children.begin();
-    ConfigItemData::Sequence::const_iterator end = node->data()->seq_children.end();
+    ConfigListPtr config_list(As<ConfigList>(node));
+    ConfigList::Iterator it = config_list->begin();
+    ConfigList::Iterator end = config_list->end();
     *emitter << YAML::BeginSeq;
     for ( ; it != end; ++it) {
       EmitYaml(*it, emitter);
@@ -381,8 +409,9 @@ void ConfigData::EmitYaml(const ConfigItemPtr &node, YAML::Emitter *emitter) {
     *emitter << YAML::EndSeq;
   }
   else if (node->type() == ConfigItem::kMap) {
-    ConfigItemData::Map::const_iterator it = node->data()->map_children.begin();
-    ConfigItemData::Map::const_iterator end = node->data()->map_children.end();
+    ConfigMapPtr config_map(As<ConfigMap>(node));
+    ConfigMap::Iterator it = config_map->begin();
+    ConfigMap::Iterator end = config_map->end();
     *emitter << YAML::BeginMap;
     for ( ; it != end; ++it) {
       *emitter << YAML::Key << it->first;
