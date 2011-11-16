@@ -17,7 +17,6 @@ scoped_ptr<Service> Service::instance_;
 
 Session::Session() : engine_(new Engine),
                      last_active_time_(0) {
-  engine_->set_schema(new Schema);
   engine_->sink().connect(
       boost::bind(&Session::OnCommit, this, _1));
 }

@@ -35,6 +35,8 @@ Engine::Engine() : schema_(new Schema), context_(new Context),
       boost::bind(&Engine::OnSelect, this, _1));
   context_->update_notifier().connect(
       boost::bind(&Engine::OnContextUpdate, this, _1));
+
+  InitializeComponents();
 }
 
 Engine::~Engine() {
@@ -174,7 +176,7 @@ void Engine::InitializeComponents() {
     size_t n = processor_list->size();
     for (size_t i = 0; i < n; ++i) {
       shared_ptr<ConfigValue> klass = As<ConfigValue>(processor_list->GetAt(i));
-      if (klass) continue;
+      if (!klass) continue;
       Processor::Component *c = Processor::Require(klass->str());
       if (!c) {
         EZLOGGERPRINT("error creating processor: '%s'", klass->str().c_str());
@@ -191,7 +193,7 @@ void Engine::InitializeComponents() {
     size_t n = segmentor_list->size();
     for (size_t i = 0; i < n; ++i) {
       shared_ptr<ConfigValue> klass = As<ConfigValue>(segmentor_list->GetAt(i));
-      if (klass) continue;
+      if (!klass) continue;
       Segmentor::Component *c = Segmentor::Require(klass->str());
       if (!c) {
         EZLOGGERPRINT("error creating segmentor: '%s'", klass->str().c_str());
@@ -208,7 +210,7 @@ void Engine::InitializeComponents() {
     size_t n = translator_list->size();
     for (size_t i = 0; i < n; ++i) {
       shared_ptr<ConfigValue> klass = As<ConfigValue>(translator_list->GetAt(i));
-      if (klass) continue;
+      if (!klass) continue;
       Translator::Component *c = Translator::Require(klass->str());
       if (!c) {
         EZLOGGERPRINT("error creating translator: '%s'", klass->str().c_str());
