@@ -115,6 +115,11 @@ bool ConfigValue::SetDouble(double value) {
   return true;
 }
 
+bool ConfigValue::SetString(const char *value) {
+  value_ = value;
+  return true;
+}
+
 bool ConfigValue::SetString(const std::string &value) {
   value_ = value;
   return true;
@@ -248,6 +253,11 @@ bool Config::GetString(const std::string& key, std::string *value) {
   return p && p->GetString(value);
 }
 
+ConfigValuePtr Config::GetValue(const std::string& key) {
+  EZLOGGERVAR(key);
+  return As<ConfigValue>(data_->Traverse(key));
+}
+
 ConfigListPtr Config::GetList(const std::string& key) {
   EZLOGGERVAR(key);
   return As<ConfigList>(data_->Traverse(key));
@@ -258,7 +268,27 @@ ConfigMapPtr Config::GetMap(const std::string& key) {
   return As<ConfigMap>(data_->Traverse(key));
 }
 
-bool Config::Set(const std::string &key, const ConfigItemPtr &item) {
+bool Config::SetBool(const std::string &key, bool value) {
+  return SetItem(key, ConfigItemPtr(new ConfigValue(value)));
+}
+
+bool Config::SetInt(const std::string &key, int value) {
+  return SetItem(key, ConfigItemPtr(new ConfigValue(value)));
+}
+
+bool Config::SetDouble(const std::string &key, double value) {
+  return SetItem(key, ConfigItemPtr(new ConfigValue(value)));
+}
+
+bool Config::SetString(const std::string &key, const char *value) {
+  return SetItem(key, ConfigItemPtr(new ConfigValue(value)));
+}
+
+bool Config::SetString(const std::string &key, const std::string &value) {
+  return SetItem(key, ConfigItemPtr(new ConfigValue(value)));
+}
+
+bool Config::SetItem(const std::string &key, const ConfigItemPtr &item) {
   EZLOGGERVAR(key);
   if (key.empty() || key == "/") {
     data_->root = item;
@@ -419,6 +449,8 @@ void ConfigData::EmitYaml(const ConfigItemPtr &node, YAML::Emitter *emitter) {
     ConfigMap::Iterator end = config_map->end();
     *emitter << YAML::BeginMap;
     for ( ; it != end; ++it) {
+      if (!it->second || it->second->type() == ConfigItem::kNull)
+        continue;
       *emitter << YAML::Key << it->first;
       *emitter << YAML::Value;
       EmitYaml(it->second, emitter);

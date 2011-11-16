@@ -52,6 +52,7 @@ class ConfigValue : public ConfigItem {
   bool SetBool(bool value);
   bool SetInt(int value);
   bool SetDouble(double value);
+  bool SetString(const char *value);
   bool SetString(const std::string &value);
   
   const std::string& str() const { return value_; }
@@ -160,8 +161,14 @@ class Config : public Class<Config, const std::string&> {
   ConfigListPtr GetList(const std::string &key);
   ConfigMapPtr GetMap(const std::string &key);
 
-  // setter for adding new items to the tree
-  bool Set(const std::string &key, const ConfigItemPtr &item);
+  // setters
+  bool SetBool(const std::string &key, bool value);
+  bool SetInt(const std::string &key, int value);
+  bool SetDouble(const std::string &key, double value);
+  bool SetString(const std::string &key, const char *value);
+  bool SetString(const std::string &key, const std::string &value);
+  // setter for adding / replacing items to the tree
+  bool SetItem(const std::string &key, const ConfigItemPtr &item);
 
  private:
   shared_ptr<ConfigData> data_;

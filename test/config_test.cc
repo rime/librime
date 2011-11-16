@@ -152,33 +152,50 @@ TEST(RimeConfigWriterTest, Greetings) {
   scoped_ptr<Config> config(new Config);
   ASSERT_TRUE(config);
   // creating contents
-  config->Set("/", ConfigItemPtr(new ConfigMap));
+  EXPECT_TRUE(config->SetItem("/", ConfigItemPtr(new ConfigMap)));
   ConfigItemPtr terran_greetings(new ConfigValue("Greetings, Terrans!"));
   ConfigItemPtr zerg_greetings(new ConfigValue("Zergsss are coming!"));
   ConfigItemPtr zergs_coming(new ConfigValue(true));
   ConfigItemPtr zergs_population(new ConfigValue(1000000));
-  EXPECT_TRUE(config->Set("greetings", terran_greetings));
-  EXPECT_TRUE(config->Set("zergs/overmind/greetings", zerg_greetings));
-  EXPECT_TRUE(config->Set("zergs/going", zergs_coming));
-  EXPECT_TRUE(config->Set("zergs/statistics/population", zergs_population));
+  EXPECT_TRUE(config->SetItem("greetings", terran_greetings));
+  EXPECT_TRUE(config->SetItem("zergs/overmind/greetings", zerg_greetings));
+  EXPECT_TRUE(config->SetItem("zergs/going", zergs_coming));
+  EXPECT_TRUE(config->SetItem("zergs/statistics/population", zergs_population));
   // will not create subkeys over an existing value node
-  EXPECT_FALSE(config->Set("zergs/going/home", zerg_greetings));
+  EXPECT_FALSE(config->SetItem("zergs/going/home", zerg_greetings));
   // saving
   EXPECT_TRUE(config->SaveToFile("config_writer_test.yaml"));
   // verify
-  scoped_ptr<Config> verifier(new Config);
-  ASSERT_TRUE(verifier);
-  ASSERT_TRUE(verifier->LoadFromFile("config_writer_test.yaml"));
+  scoped_ptr<Config> config2(new Config);
+  ASSERT_TRUE(config2);
+  EXPECT_TRUE(config2->LoadFromFile("config_writer_test.yaml"));
   std::string the_greetings;
-  EXPECT_TRUE(verifier->GetString("greetings", &the_greetings));
+  EXPECT_TRUE(config2->GetString("greetings", &the_greetings));
   EXPECT_EQ("Greetings, Terrans!", the_greetings);
-  EXPECT_TRUE(verifier->GetString("zergs/overmind/greetings", &the_greetings));
+  EXPECT_TRUE(config2->GetString("zergs/overmind/greetings", &the_greetings));
   EXPECT_EQ("Zergsss are coming!", the_greetings);
   bool coming = false;
-  EXPECT_TRUE(verifier->GetBool("zergs/going", &coming));
+  EXPECT_TRUE(config2->GetBool("zergs/going", &coming));
   EXPECT_TRUE(coming);
   int population = 0;
-  EXPECT_TRUE(verifier->GetInt("zergs/statistics/population", &population));
+  EXPECT_TRUE(config2->GetInt("zergs/statistics/population", &population));
   EXPECT_EQ(1000000, population);
-  EXPECT_FALSE(verifier->GetString("zergs/going/home", &the_greetings));
+  EXPECT_FALSE(config2->GetString("zergs/going/home", &the_greetings));
+  // modifying tree
+  EXPECT_TRUE(config2->SetInt("zergs/statistics/population", population / 2));
+  EXPECT_TRUE(config2->SetString("protoss/residence", "Aiur"));
+  EXPECT_TRUE(config2->SetItem("zergs/overmind", ConfigItemPtr()));
+  EXPECT_TRUE(config2->SaveToFile("config_rewriter_test.yaml"));
+  // verify
+  scoped_ptr<Config> config3(new Config);
+  ASSERT_TRUE(config3);
+  EXPECT_TRUE(config3->LoadFromFile("config_rewriter_test.yaml"));
+  EXPECT_TRUE(config3->GetInt("zergs/statistics/population", &population));
+  EXPECT_EQ(500000, population);
+  std::string value;
+  EXPECT_TRUE(config3->GetString("protoss/residence", &value));
+  EXPECT_EQ("Aiur", value);
+  // deleted
+  EXPECT_FALSE(config3->GetString("zergs/overmind/greetings", &value));
+  EXPECT_FALSE(config3->GetMap("zergs/overmind"));
 }
