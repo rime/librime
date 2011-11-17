@@ -186,6 +186,7 @@ bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
 }
 
 bool R10nTranslation::Next() {
+  EZLOGGERFUNCTRACKER;
   if (exhausted())
     return false;
   do {
@@ -198,8 +199,9 @@ bool R10nTranslation::Next() {
       phrase_code_length = phrase_iter_->first;
     }
     if (user_phrase_code_length > 0 &&
-        user_phrase_code_length > phrase_code_length) {
+        user_phrase_code_length >= phrase_code_length) {
       DictEntryList &entries(user_phrase_iter_->second);
+      EZLOGGERVAR(entries.back()->text);
       candidate_set_.insert(entries.back()->text);
       entries.pop_back();
       if (entries.empty()) {
@@ -227,16 +229,15 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
   if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
     user_phrase_code_length = user_phrase_iter_->first;
   }
-  EZLOGGERVAR(user_phrase_code_length);
   int phrase_code_length = 0;
   if (phrase_ && phrase_iter_ != phrase_->rend()) {
     phrase_code_length = phrase_iter_->first;
   }
-  EZLOGGERVAR(phrase_code_length);
   if (user_phrase_code_length > 0 &&
-      user_phrase_code_length > phrase_code_length) {
+      user_phrase_code_length >= phrase_code_length) {
     DictEntryList &entries(user_phrase_iter_->second);
     const shared_ptr<DictEntry> &e(entries.back());
+    EZLOGGERVAR(user_phrase_code_length);
     EZLOGGERVAR(e->text);
     shared_ptr<Candidate> cand(new R10nCandidate(
         start_,
@@ -248,6 +249,7 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
   if (phrase_code_length > 0) {
     DictEntryIterator &iter(phrase_iter_->second);
     const shared_ptr<DictEntry> &e(iter.Peek());
+    EZLOGGERVAR(phrase_code_length);
     EZLOGGERVAR(e->text);
     shared_ptr<Candidate> cand(new R10nCandidate(
         start_,
