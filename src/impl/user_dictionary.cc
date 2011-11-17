@@ -190,7 +190,7 @@ shared_ptr<UserDictEntryCollector> UserDictionary::Lookup(const SyllableGraph &s
   DfsLookup(syll_graph, start_pos, prefix, &state);
   if (state.collector->empty())
     return shared_ptr<UserDictEntryCollector>();
-  // sort each group of homophones by weight ASC (to later retrieve with pop_back())
+  // sort each group of homophones by weight
   BOOST_FOREACH(UserDictEntryCollector::value_type &v, *state.collector) {
     v.second.Sort();
   }

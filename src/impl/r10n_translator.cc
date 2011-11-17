@@ -54,7 +54,8 @@ class R10nCandidate : public Candidate {
 class R10nTranslation : public Translation {
  public:
   R10nTranslation(const std::string &input, int start, const std::string &delimiters)
-      : input_(input), start_(start), delimiters_(delimiters) {
+      : input_(input), start_(start), delimiters_(delimiters),
+        user_phrase_index_(0) {
     set_exhausted(true);
   }
 
@@ -78,6 +79,7 @@ class R10nTranslation : public Translation {
   
   DictEntryCollector::reverse_iterator phrase_iter_;
   UserDictEntryCollector::reverse_iterator user_phrase_iter_;
+  size_t user_phrase_index_;
   std::set<std::string> candidate_set_;
 };
 
@@ -200,10 +202,10 @@ bool R10nTranslation::Next() {
     if (user_phrase_code_length > 0 &&
         user_phrase_code_length >= phrase_code_length) {
       DictEntryList &entries(user_phrase_iter_->second);
-      candidate_set_.insert(entries.back()->text);
-      entries.pop_back();
-      if (entries.empty()) {
+      candidate_set_.insert(entries[user_phrase_index_]->text);
+      if (++user_phrase_index_ >= entries.size()) {
         ++user_phrase_iter_;
+        user_phrase_index_ = 0;
       }
     }
     else if (phrase_code_length > 0) {
@@ -234,7 +236,7 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
   if (user_phrase_code_length > 0 &&
       user_phrase_code_length >= phrase_code_length) {
     DictEntryList &entries(user_phrase_iter_->second);
-    const shared_ptr<DictEntry> &e(entries.back());
+    const shared_ptr<DictEntry> &e(entries[user_phrase_index_]);
     EZDBGONLYLOGGERVAR(user_phrase_code_length);
     EZDBGONLYLOGGERVAR(e->text);
     shared_ptr<Candidate> cand(new R10nCandidate(
