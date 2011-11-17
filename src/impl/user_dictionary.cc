@@ -54,6 +54,7 @@ static bool unpack_user_dict_value(const std::string &value,
 }
 
 struct DfsState {
+  size_t depth_limit;
   TickCount present_tick;
   Code code;
   shared_ptr<UserDictEntryCollector> collector;
@@ -97,7 +98,7 @@ void DfsState::SaveEntry(int pos) {
   dee = algo::formula_d(0, (double)present_tick, dee, (double)last_tick);
   e->commit_count = commit_count;
   // TODO: argument s not defined...
-  e->weight = algo::formula_p(0, (double)commit_count / present_tick, present_tick, dee);
+  e->weight = algo::formula_p(0, (double)commit_count / present_tick, (double)present_tick, dee);
   e->code = code;
   EZLOGGERPRINT("pos = %d, text = '%s', code_len = %d, present_tick = %llu, weight = %f, commit_count = %d",
                 pos, e->text.c_str(), e->code.size(), present_tick, e->weight, e->commit_count);
@@ -157,7 +158,8 @@ bool UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
         if (!state->NextEntry())
           return false;
       }
-      if (state->IsPrefixMatch(prefix)) {  // 'b |e ' vs. 'b e f \tBefore'
+      if ((!state->depth_limit || state->code.size() < state->depth_limit)
+          && state->IsPrefixMatch(prefix)) {  // 'b |e ' vs. 'b e f \tBefore'
         if (!DfsLookup(syll_graph, end_vertex_pos, prefix, state))
           return false;
       }
@@ -171,12 +173,15 @@ bool UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
   return true;  // finished traversing the syllable graph
 }
 
-shared_ptr<UserDictEntryCollector> UserDictionary::Lookup(const SyllableGraph &syll_graph, size_t start_pos) {
+shared_ptr<UserDictEntryCollector> UserDictionary::Lookup(const SyllableGraph &syll_graph,
+                                                          size_t start_pos,
+                                                          size_t depth_limit) {
   if (!table_ || !prism_ || !loaded() ||
       start_pos >= syll_graph.interpreted_length)
     return shared_ptr<UserDictEntryCollector>();
-  FetchTickCount();
   DfsState state;
+  state.depth_limit = depth_limit;
+  FetchTickCount();
   state.present_tick = tick_ + 1;
   state.collector.reset(new UserDictEntryCollector);
   state.accessor.reset(new UserDbAccessor(db_->Query("")));

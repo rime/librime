@@ -39,7 +39,9 @@ class UserDictionary : public Class<UserDictionary, Schema*> {
   bool Load();
   bool loaded() const;
 
-  shared_ptr<UserDictEntryCollector> Lookup(const SyllableGraph &syllable_graph, size_t start_pos);
+  shared_ptr<UserDictEntryCollector> Lookup(const SyllableGraph &syllable_graph,
+                                            size_t start_pos,
+                                            size_t depth_limit = 0);
   bool UpdateEntry(const DictEntry &entry, int commit);
   bool UpdateTickCount(TickCount increment);
 

@@ -267,13 +267,15 @@ void R10nTranslation::CheckEmpty() {
 shared_ptr<DictEntry> R10nTranslation::SimplisticSentenceMaking(Dictionary *dict,
                                                                 UserDictionary *user_dict) {
   typedef std::map<int, UserDictEntryCollector> WordGraph;
-  const int kMaxNumOfSentenceMakingHomophones = 1;  // 20; if we have bigram model...
+  const int kMaxSentenceMakingHomophones = 1;  // 20; if we have bigram model...
+  const int kMaxSyllablesInSentenceMakingUserPhrases = 5;
   const double kEpsilon = 1e-30;
   const double kPenalty = 1e-8;
   int total_length = syllable_graph_.interpreted_length;
   WordGraph graph;
   BOOST_FOREACH(const EdgeMap::value_type &s, syllable_graph_.edges) {
-    shared_ptr<UserDictEntryCollector> user_phrase = user_dict->Lookup(syllable_graph_, s.first);
+    shared_ptr<UserDictEntryCollector> user_phrase =
+        user_dict->Lookup(syllable_graph_, s.first, kMaxSyllablesInSentenceMakingUserPhrases);
     UserDictEntryCollector &u(graph[s.first]);
     if (user_phrase)
       u.swap(*user_phrase);
@@ -304,7 +306,7 @@ shared_ptr<DictEntry> R10nTranslation::SimplisticSentenceMaking(Dictionary *dict
         continue;
       EZDBGONLYLOGGERVAR(end_pos);
       DictEntryList &entries(x.second);
-      for (int count = 0; count < kMaxNumOfSentenceMakingHomophones && !entries.empty(); ++count) {
+      for (int count = 0; count < kMaxSentenceMakingHomophones && !entries.empty(); ++count) {
         const shared_ptr<DictEntry> &e(entries.back());
         shared_ptr<DictEntry> new_sentence(new DictEntry(*sentence[start_pos]));
         new_sentence->code.insert(new_sentence->code.end(), e->code.begin(), e->code.end());
