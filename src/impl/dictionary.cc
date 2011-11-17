@@ -98,13 +98,14 @@ shared_ptr<DictEntry> DictEntryIterator::Peek() {
     const dictionary::Chunk &chunk(front());
     entry_.reset(new DictEntry);
     const table::Entry &e(chunk.entries[chunk.cursor]);
-    EZLOGGERPRINT("Creating temporary dict entry '%s'.", e.text.c_str());
+    EZDBGONLYLOGGERPRINT("Creating temporary dict entry '%s'.", e.text.c_str());
     entry_->code = chunk.code;
     entry_->text = e.text.c_str();
     if (!chunk.remaining_code.empty()) {
       entry_->comment = "~" + chunk.remaining_code;
     }
-    entry_->weight = e.weight;
+    const double kS = 10000;
+    entry_->weight = e.weight / kS;
   }
   return entry_;
 }

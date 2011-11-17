@@ -24,7 +24,7 @@ namespace rime {
 
 static bool unpack_user_dict_value(const std::string &value,
                                    int *commit_count,
-                                   double *weight,
+                                   double *dee,
                                    TickCount *tick) {
   std::vector<std::string> kv;
   boost::split(kv, value, boost::is_any_of(" "));
@@ -38,8 +38,8 @@ static bool unpack_user_dict_value(const std::string &value,
       if (k == "c") {
         *commit_count = boost::lexical_cast<int>(v);
       }
-      else if (k == "w") {
-        *weight = boost::lexical_cast<double>(v);
+      else if (k == "d") {
+        *dee = boost::lexical_cast<double>(v);
       }
       else if (k == "t") {
         *tick = boost::lexical_cast<TickCount>(v);
@@ -90,12 +90,14 @@ void DfsState::SaveEntry(int pos) {
   shared_ptr<DictEntry> e(new DictEntry);
   e->text = key.substr(seperator_pos + 1);
   int commit_count = 0;
-  double last_weight = 0.0;
+  double dee = 0.0;
   TickCount last_tick = 0;
-  if (!unpack_user_dict_value(value, &commit_count, &last_weight, &last_tick))
+  if (!unpack_user_dict_value(value, &commit_count, &dee, &last_tick))
     return;
+  dee = algo::formula_d(0, (double)present_tick, dee, (double)last_tick);
   e->commit_count = commit_count;
-  e->weight = algo::formula_d(0, (double)present_tick, last_weight, (double)last_tick);
+  // TODO: argument s not defined...
+  e->weight = algo::formula_p(0, (double)commit_count / present_tick, present_tick, dee);
   e->code = code;
   EZLOGGERPRINT("pos = %d, text = '%s', code_len = %d, present_tick = %llu, weight = %f, commit_count = %d",
                 pos, e->text.c_str(), e->code.size(), present_tick, e->weight, e->commit_count);
@@ -199,10 +201,10 @@ bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
   std::string key(code_str + '\t' + entry.text);
   std::string value;
   int commit_count = 0;
-  double weight = 0.0;
+  double dee = 0.0;
   TickCount last_tick = 0;
   if (db_->Fetch(key, &value)) {
-    unpack_user_dict_value(value, &commit_count, &weight, &last_tick);
+    unpack_user_dict_value(value, &commit_count, &dee, &last_tick);
   }
   if (commit > 0) {
     commit_count += commit;
@@ -211,10 +213,9 @@ bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
     commit_count = (std::min)(-1, -commit_count);
   }
   UpdateTickCount(1);
-  weight = algo::formula_d(commit, (double)tick_, weight, (double)last_tick);
-  value = boost::str(boost::format("c=%1% w=%2% t=%3%") % 
-                     commit_count % weight % tick_);
-  EZLOGGERPRINT("Updating entry: %s = '%s'", key.c_str(), value.c_str());
+  dee = algo::formula_d(commit, (double)tick_, dee, (double)last_tick);
+  value = boost::str(boost::format("c=%1% d=%2% t=%3%") % 
+                     commit_count % dee % tick_);
   return db_->Update(key, value);
 }
 

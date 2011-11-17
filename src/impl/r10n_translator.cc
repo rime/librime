@@ -186,7 +186,6 @@ bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
 }
 
 bool R10nTranslation::Next() {
-  EZLOGGERFUNCTRACKER;
   if (exhausted())
     return false;
   do {
@@ -201,7 +200,6 @@ bool R10nTranslation::Next() {
     if (user_phrase_code_length > 0 &&
         user_phrase_code_length >= phrase_code_length) {
       DictEntryList &entries(user_phrase_iter_->second);
-      EZLOGGERVAR(entries.back()->text);
       candidate_set_.insert(entries.back()->text);
       entries.pop_back();
       if (entries.empty()) {
@@ -237,8 +235,8 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
       user_phrase_code_length >= phrase_code_length) {
     DictEntryList &entries(user_phrase_iter_->second);
     const shared_ptr<DictEntry> &e(entries.back());
-    EZLOGGERVAR(user_phrase_code_length);
-    EZLOGGERVAR(e->text);
+    EZDBGONLYLOGGERVAR(user_phrase_code_length);
+    EZDBGONLYLOGGERVAR(e->text);
     shared_ptr<Candidate> cand(new R10nCandidate(
         start_,
         start_ + user_phrase_code_length,
@@ -249,8 +247,8 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
   if (phrase_code_length > 0) {
     DictEntryIterator &iter(phrase_iter_->second);
     const shared_ptr<DictEntry> &e(iter.Peek());
-    EZLOGGERVAR(phrase_code_length);
-    EZLOGGERVAR(e->text);
+    EZDBGONLYLOGGERVAR(phrase_code_length);
+    EZDBGONLYLOGGERVAR(e->text);
     shared_ptr<Candidate> cand(new R10nCandidate(
         start_,
         start_ + phrase_code_length,
@@ -297,14 +295,14 @@ shared_ptr<DictEntry> R10nTranslation::SimplisticSentenceMaking(Dictionary *dict
   // dynamic programming
   BOOST_FOREACH(WordGraph::value_type &w, graph) {
     int start_pos = w.first;
-    EZLOGGERVAR(start_pos);
+    EZDBGONLYLOGGERVAR(start_pos);
     if (sentence.find(start_pos) == sentence.end())
       continue;
     BOOST_FOREACH(UserDictEntryCollector::value_type &x, w.second) {
       int end_pos = x.first;
       if (start_pos == 0 && end_pos == total_length)  // exclude single words from the result
         continue;
-      EZLOGGERVAR(end_pos);
+      EZDBGONLYLOGGERVAR(end_pos);
       DictEntryList &entries(x.second);
       for (int count = 0; count < kMaxNumOfSentenceMakingHomophones && !entries.empty(); ++count) {
         const shared_ptr<DictEntry> &e(entries.back());

@@ -29,7 +29,7 @@ AbcSegmentor::AbcSegmentor(Engine *engine)
 
 bool AbcSegmentor::Proceed(Segmentation *segmentation) {
   const std::string &input = segmentation->input();
-  EZLOGGERVAR(input);
+  EZDBGONLYLOGGERVAR(input);
   int j = segmentation->GetCurrentStartPosition();
   int k = j;
   for (; k < input.length(); ++k) {
@@ -37,8 +37,7 @@ bool AbcSegmentor::Proceed(Segmentation *segmentation) {
         (k == j || delimiter_.find(input[k]) == std::string::npos))
       break;
   }
-  EZLOGGERVAR(j);
-  EZLOGGERVAR(k);
+  EZDBGONLYLOGGER(j, k);
   if (j < k) {
     Segment segment;
     segment.start = j;
