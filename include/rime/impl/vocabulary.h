@@ -34,6 +34,7 @@ struct DictEntry {
   Code code;
   std::string text;
   std::string comment;
+  std::string preedit;
   double weight;
   int commit_count;
 

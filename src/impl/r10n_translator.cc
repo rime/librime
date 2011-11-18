@@ -27,29 +27,48 @@
 
 namespace rime {
 
-class R10nTranslation;
+namespace {
 
-class R10nCandidate : public Candidate {
- public:
-  R10nCandidate(int start, int end, const shared_ptr<DictEntry> &entry, const R10nTranslation *translation)
-      : Candidate("zh", start, end), entry_(entry), translation_(translation) {}
-  virtual const char* text() const {
-    return entry_->text.c_str();
-  }
-  virtual const char* comment() const {
-    return entry_->comment.c_str();
-  }
-  virtual const char* preedit() const {
-    // TODO:
-    return NULL;
-  }
-  const Code& code() const {
-    return entry_->code;
-  }
- protected:
-  const shared_ptr<DictEntry> entry_;
-  const R10nTranslation *translation_;
+struct DelimitSyllableState {
+  const std::string *input;
+  const std::string *delimiters;
+  const SyllableGraph *graph;
+  const Code *code;
+  int end_pos;
+  std::string output;
 };
+
+bool DelimitSyllablesDfs(DelimitSyllableState *state, int current_pos, int depth) {
+  if (depth == state->code->size()) {
+    return current_pos == state->end_pos;
+  }
+  SyllableId syllable_id = state->code->at(depth);
+  EdgeMap::const_iterator z = state->graph->edges.find(current_pos);
+  if (z == state->graph->edges.end())
+    return false;
+  BOOST_REVERSE_FOREACH(const EndVertexMap::value_type &y, z->second) {  // favor longer spelling
+    int end_vertex_pos = y.first;
+    if (end_vertex_pos > state->end_pos)
+      continue;
+    SpellingMap::const_iterator x = y.second.find(syllable_id);
+    if (x != y.second.end()) {
+      int len = state->output.length();
+      if (depth > 0 && len > 0 &&
+          state->delimiters->find(state->output[len - 1]) == std::string::npos) {
+        state->output += state->delimiters->at(0);
+      }
+      state->output += state->input->substr(current_pos, end_vertex_pos - current_pos);
+      if (DelimitSyllablesDfs(state, end_vertex_pos, depth + 1))
+        return true;
+      state->output.resize(len);
+    }
+  }
+  return false;
+}
+
+}  // anonymous namespace
+
+class R10nCandidate;
 
 class R10nTranslation : public Translation {
  public:
@@ -60,6 +79,7 @@ class R10nTranslation : public Translation {
   }
 
   bool Evaluate(Dictionary *dict, UserDictionary *user_dict);
+  const std::string GetPreeditString(const R10nCandidate &cand) const;
   
   virtual bool Next();
   virtual shared_ptr<Candidate> Peek();
@@ -83,6 +103,32 @@ class R10nTranslation : public Translation {
   std::set<std::string> candidate_set_;
 };
 
+class R10nCandidate : public Candidate {
+ public:
+  R10nCandidate(int start, int end,
+                const shared_ptr<DictEntry> &entry,
+                const R10nTranslation *translation)
+      : Candidate("zh", start, end), entry_(entry), translation_(translation) {}
+  virtual const char* text() const {
+    return entry_->text.c_str();
+  }
+  virtual const char* comment() const {
+    return entry_->comment.c_str();
+  }
+  virtual const char* preedit() const {
+    if (translation_ && entry_->preedit.empty()) {
+      entry_->preedit = translation_->GetPreeditString(*this);
+    }
+    return entry_->preedit.c_str();
+  }
+  const Code& code() const {
+    return entry_->code;
+  }
+ protected:
+  const shared_ptr<DictEntry> entry_;
+  const R10nTranslation *translation_;
+};
+
 class SelectSequence : public std::vector<shared_ptr<R10nCandidate> > {
 };
 
@@ -95,6 +141,8 @@ R10nTranslator::R10nTranslator(Engine *engine)
   Config *config = engine->schema()->config();
   if (config)
     config->GetString("speller/delimiter", &delimiters_);
+  if (delimiters_.empty())
+    delimiters_ = " ";
   
   Dictionary::Component *dictionary = Dictionary::Require("dictionary");
   if (dictionary) {
@@ -185,6 +233,20 @@ bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
   if (user_phrase_) user_phrase_iter_ = user_phrase_->rbegin();
   CheckEmpty();
   return !exhausted();
+}
+
+const std::string R10nTranslation::GetPreeditString(const R10nCandidate &cand) const {
+  DelimitSyllableState state;
+  state.input = &input_;
+  state.delimiters = &delimiters_;
+  state.graph = &syllable_graph_;
+  state.code = &cand.code();
+  state.end_pos = cand.end() - start_;
+  bool success = DelimitSyllablesDfs(&state, cand.start() - start_, 0);
+  if (success)
+    return state.output;
+  else
+    return std::string();
 }
 
 bool R10nTranslation::Next() {
