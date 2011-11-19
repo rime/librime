@@ -68,7 +68,7 @@ struct DfsState {
   bool IsPrefixMatch(const std::string &prefix) {
     return boost::starts_with(key, prefix);
   }
-  void SaveEntry(int pos);
+  void SaveEntry(size_t pos);
   bool NextEntry() {
     if (!accessor->GetNextRecord(&key, &value)) {
       key.clear();
@@ -84,7 +84,7 @@ struct DfsState {
   }
 };
 
-void DfsState::SaveEntry(int pos) {
+void DfsState::SaveEntry(size_t pos) {
   size_t seperator_pos = key.find('\t');
   if (seperator_pos == std::string::npos)
     return;
@@ -140,7 +140,7 @@ bool UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
   }
   std::string prefix;
   BOOST_FOREACH(const EndVertexMap::value_type &edge, edges->second) {
-    int end_vertex_pos = edge.first;
+    size_t end_vertex_pos = edge.first;
     const SpellingMap &spellings(edge.second);
     BOOST_FOREACH(const SpellingMap::value_type &spelling, spellings) {
       SyllableId syll_id = spelling.first;

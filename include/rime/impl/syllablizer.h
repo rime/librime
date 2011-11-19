@@ -28,9 +28,9 @@ struct SpellingProperties {
 };
 
 typedef std::map<SyllableId, SpellingProperties> SpellingMap;
-typedef std::map<int, SpellingType> VertexMap;
-typedef std::map<int, SpellingMap> EndVertexMap;
-typedef std::map<int, EndVertexMap> EdgeMap;
+typedef std::map<size_t, SpellingType> VertexMap;
+typedef std::map<size_t, SpellingMap> EndVertexMap;
+typedef std::map<size_t, EndVertexMap> EdgeMap;
 
 struct SyllableGraph {
   size_t input_length;

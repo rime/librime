@@ -103,14 +103,14 @@ class TableVisitor {
   bool Backdate();  // up one level
   void Reset();  // back to root
 
-  int level() const { return level_; }
+  size_t level() const { return level_; }
 
  private:
   table::HeadIndex *lv1_index_;
   table::TrunkIndex *lv2_index_;
   table::TrunkIndex *lv3_index_;
   table::TailIndex *lv4_index_;
-  int level_;
+  size_t level_;
   Code index_code_;
 };
 
@@ -130,7 +130,7 @@ class Table : public MappedFile {
   const char* GetSyllableById(int syllable_id);
   const TableAccessor QueryWords(int syllable_id);
   const TableAccessor QueryPhrases(const Code &code);
-  bool Query(const SyllableGraph &syll_graph, int start_pos, TableQueryResult *result);
+  bool Query(const SyllableGraph &syll_graph, size_t start_pos, TableQueryResult *result);
   uint32_t dict_file_checksum() const;
 
  private:

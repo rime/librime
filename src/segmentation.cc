@@ -14,8 +14,8 @@
 
 namespace rime {
 
-const shared_ptr<Candidate> Segment::GetCandidateAt(int index) const {
-  if (!menu || index < 0) 
+const shared_ptr<Candidate> Segment::GetCandidateAt(size_t index) const {
+  if (!menu) 
     return shared_ptr<Candidate>();
   else
     return menu->GetCandidateAt(index);
@@ -49,7 +49,7 @@ void Segmentation::Reset(const std::string &new_input) {
   input_ = new_input;
 }
 
-void Segmentation::Reset(int num_segments) {
+void Segmentation::Reset(size_t num_segments) {
   if (num_segments >= size())
     return;
   resize(num_segments);
@@ -100,15 +100,15 @@ bool Segmentation::HasFinished() const {
   return (empty() ? 0 : back().end) == input_.length();
 }
 
-int Segmentation::GetCurrentStartPosition() const {
+size_t Segmentation::GetCurrentStartPosition() const {
   return empty() ? 0 : back().start;
 }
 
-int Segmentation::GetCurrentEndPosition() const {
+size_t Segmentation::GetCurrentEndPosition() const {
   return empty() ? 0 : back().end;
 }
 
-int Segmentation::GetCurrentSegmentLength() const {
+size_t Segmentation::GetCurrentSegmentLength() const {
   return empty() ? 0 : (back().end - back().start);
 }
 

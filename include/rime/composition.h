@@ -16,9 +16,9 @@ namespace rime {
 
 struct Preedit {
   std::string text;
-  int cursor_pos;
-  int sel_start;
-  int sel_end;
+  size_t cursor_pos;
+  size_t sel_start;
+  size_t sel_end;
 };
 
 class Composition : public Segmentation {

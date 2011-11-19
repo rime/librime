@@ -55,8 +55,8 @@ void Context::Clear() {
   update_notifier_(this);
 }
 
-bool Context::Select(int index) {
-  if (composition_->empty() || index < 0)
+bool Context::Select(size_t index) {
+  if (composition_->empty())
     return false;
   Segment &seg(composition_->back());
   shared_ptr<Candidate> cand(seg.GetCandidateAt(index));

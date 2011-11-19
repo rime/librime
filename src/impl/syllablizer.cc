@@ -16,21 +16,21 @@
 
 namespace rime {
 
-typedef std::pair<int, SpellingType> Vertex;
+typedef std::pair<size_t, SpellingType> Vertex;
 typedef std::priority_queue<Vertex, std::vector<Vertex>, std::greater<Vertex> > VertexQueue;
 
 int Syllablizer::BuildSyllableGraph(const std::string &input, Prism &prism, SyllableGraph *graph) {
   if (input.empty())
     return 0;
 
-  int farthest = 0;
+  size_t farthest = 0;
   VertexQueue queue;
   queue.push(Vertex(0, kNormalSpelling));  // start
 
   while (!queue.empty()) {
     Vertex vertex(queue.top());
     queue.pop();
-    int current_pos = vertex.first;
+    size_t current_pos = vertex.first;
 
     // record a visit to the vertex
     VertexMap::iterator it = graph->vertices.find(current_pos);
@@ -46,7 +46,7 @@ int Syllablizer::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
       EndVertexMap &end_vertices(graph->edges[current_pos]);
       BOOST_FOREACH(const Prism::Match &m, matches) {
         if (m.length == 0) continue;
-        int end_pos = current_pos + m.length;
+        size_t end_pos = current_pos + m.length;
         // consume trailing delimiters
         while (end_pos < input.length() &&
                delimiters_.find(input[end_pos]) != std::string::npos)
@@ -111,9 +111,9 @@ int Syllablizer::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
     std::vector<Prism::Match> keys;
     prism.ExpandSearch(input.substr(farthest), &keys, kExpandSearchLimit);
     if (!keys.empty()) {
-      int current_pos = farthest;
-      int end_pos = current_pos;
-      int code_length = input.length() - farthest;
+      size_t current_pos = farthest;
+      size_t end_pos = current_pos;
+      size_t code_length = input.length() - farthest;
       EndVertexMap &end_vertices(graph->edges[current_pos]);
       BOOST_FOREACH(const Prism::Match &m, keys) {
         if (m.length < code_length) continue;

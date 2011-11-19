@@ -77,8 +77,8 @@ void Engine::Compose(Context *ctx) {
 void Engine::CalculateSegmentation(Composition *comp) {
   EZLOGGERFUNCTRACKER;
   while (!comp->HasFinished()) {
-    int start_pos = comp->GetCurrentStartPosition();
-    int end_pos = comp->GetCurrentEndPosition();
+    size_t start_pos = comp->GetCurrentStartPosition();
+    size_t end_pos = comp->GetCurrentEndPosition();
     EZLOGGERVAR(start_pos);
     EZLOGGERVAR(end_pos);
     // recognize a segment by calling the segmentors in turn
@@ -104,7 +104,7 @@ void Engine::TranslateSegments(Composition *comp) {
   BOOST_FOREACH(Segment &segment, *comp) {
     if (segment.status >= Segment::kSelected)
       continue;
-    int len = segment.end - segment.start;
+    size_t len = segment.end - segment.start;
     if (len <= 0) continue;
     const std::string input(comp->input().substr(segment.start, len));
     EZLOGGERPRINT("Translating segment '%s'", input.c_str());

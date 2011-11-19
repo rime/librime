@@ -41,8 +41,8 @@ bool compare_chunk_by_head_element(const Chunk &a, const Chunk &b) {
   return a.entries[a.cursor].weight > b.entries[b.cursor].weight;  // by weight desc
 }
 
-int match_extra_code(const table::Code *extra_code, int depth,
-                     const SyllableGraph &syll_graph, int current_pos) {
+size_t match_extra_code(const table::Code *extra_code, size_t depth,
+                        const SyllableGraph &syll_graph, size_t current_pos) {
   if (!extra_code || depth >= extra_code->size)
     return current_pos;  // success
   if (current_pos >= syll_graph.interpreted_length)
@@ -52,14 +52,14 @@ int match_extra_code(const table::Code *extra_code, int depth,
     return 0;
   }
   table::SyllableId current_syll_id = extra_code->at[depth];
-  int best_match = 0;
+  size_t best_match = 0;
   BOOST_FOREACH(const EndVertexMap::value_type &edge, edges->second) {
-    int end_vertex_pos = edge.first;
+    size_t end_vertex_pos = edge.first;
     const SpellingMap &spellings(edge.second);
     if (spellings.find(current_syll_id) == spellings.end())
       continue;
-    int match_end_pos = match_extra_code(extra_code, depth + 1,
-                                         syll_graph, end_vertex_pos);
+    size_t match_end_pos = match_extra_code(extra_code, depth + 1,
+                                            syll_graph, end_vertex_pos);
     if (!match_end_pos) continue;
     if (match_end_pos > best_match) best_match = match_end_pos;
   }
@@ -138,7 +138,8 @@ Dictionary::~Dictionary() {
   // should not close shared table and prism objects
 }
 
-shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_graph, int start_pos) {
+shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_graph,
+                                                  size_t start_pos) {
   if (!loaded())
     return shared_ptr<DictEntryCollector>();
   TableQueryResult result;
@@ -148,12 +149,12 @@ shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_
   shared_ptr<DictEntryCollector> collector(new DictEntryCollector);
   // copy result
   BOOST_FOREACH(TableQueryResult::value_type &v, result) {
-    int end_pos = v.first;
+    size_t end_pos = v.first;
     BOOST_FOREACH(TableAccessor &a, v.second) {
       if (a.extra_code()) {
         do {
-          int actual_end_pos = dictionary::match_extra_code(a.extra_code(), 0,
-                                                            syllable_graph, end_pos);
+          size_t actual_end_pos = dictionary::match_extra_code(a.extra_code(), 0,
+                                                               syllable_graph, end_pos);
           if (actual_end_pos == 0) continue;
           (*collector)[actual_end_pos].push_back(dictionary::Chunk(a.code(), a.entry()));
         }
@@ -271,7 +272,7 @@ bool Dictionary::BuildTable(const std::string &dict_file, uint32_t checksum) {
   EZLOGGERVAR(dict_version);
   // read entries
   std::vector<dictionary::RawDictEntry> raw_entries;
-  int entry_count = 0;
+  size_t num_entries = 0;
   Syllabary syllabary;
   {
     std::ifstream fin(dict_file.c_str());
@@ -295,7 +296,7 @@ bool Dictionary::BuildTable(const std::string &dict_file, uint32_t checksum) {
                               boost::algorithm::is_any_of("\t"));
       if (row.size() < 2 ||
           row[0].empty() || row[1].empty()) {
-        EZLOGGERPRINT("Invalid entry %d.", entry_count);
+        EZLOGGERPRINT("Invalid entry %d.", num_entries);
         continue;
       }
       word = row[0];
@@ -318,10 +319,10 @@ bool Dictionary::BuildTable(const std::string &dict_file, uint32_t checksum) {
       e.text.swap(word);
       e.weight = weight;
       raw_entries.push_back(e);
-      ++entry_count;
+      ++num_entries;
     }
   }
-  EZLOGGERVAR(entry_count);
+  EZLOGGERVAR(num_entries);
   EZLOGGERVAR(syllabary.size());
   // build table
   {
@@ -351,7 +352,7 @@ bool Dictionary::BuildTable(const std::string &dict_file, uint32_t checksum) {
       vocabulary.SortHomophones();
     }
     table_->Remove();
-    if (!table_->Build(syllabary, vocabulary, entry_count, checksum) ||
+    if (!table_->Build(syllabary, vocabulary, num_entries, checksum) ||
         !table_->Save()) {
       return false;
     }

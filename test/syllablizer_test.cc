@@ -31,7 +31,7 @@ class RimeSyllablizerTest : public ::testing::Test {
     syllables.push_back("tu");     // 9
     syllables.push_back("tuan");   // 10
     std::sort(syllables.begin(), syllables.end());
-    for (int i = 0; i < syllables.size(); ++i) {
+    for (size_t i = 0; i < syllables.size(); ++i) {
       syllable_id_[syllables[i]] = i;
     }
 

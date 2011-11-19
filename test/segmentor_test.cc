@@ -43,7 +43,7 @@ TEST(AbcSegmentorTest, FullMatch) {
   ASSERT_EQ(1, segmentation.size());
   EXPECT_EQ(0, segmentation[0].start);
   EXPECT_EQ(26, segmentation[0].end);
-  EXPECT_GE(1, segmentation[0].tags.size());
+  EXPECT_GE(1U, segmentation[0].tags.size());
 }
 
 TEST(AbcSegmentorTest, PrefixMatch) {
@@ -60,5 +60,5 @@ TEST(AbcSegmentorTest, PrefixMatch) {
   ASSERT_EQ(1, segmentation.size());
   EXPECT_EQ(0, segmentation[0].start);
   EXPECT_EQ(7, segmentation[0].end);
-  EXPECT_GE(1, segmentation[0].tags.size());
+  EXPECT_GE(1U, segmentation[0].tags.size());
 }

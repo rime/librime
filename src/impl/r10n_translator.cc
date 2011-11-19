@@ -34,11 +34,11 @@ struct DelimitSyllableState {
   const std::string *delimiters;
   const SyllableGraph *graph;
   const Code *code;
-  int end_pos;
+  size_t end_pos;
   std::string output;
 };
 
-bool DelimitSyllablesDfs(DelimitSyllableState *state, int current_pos, int depth) {
+bool DelimitSyllablesDfs(DelimitSyllableState *state, size_t current_pos, size_t depth) {
   if (depth == state->code->size()) {
     return current_pos == state->end_pos;
   }
@@ -47,12 +47,12 @@ bool DelimitSyllablesDfs(DelimitSyllableState *state, int current_pos, int depth
   if (z == state->graph->edges.end())
     return false;
   BOOST_REVERSE_FOREACH(const EndVertexMap::value_type &y, z->second) {  // favor longer spelling
-    int end_vertex_pos = y.first;
+    size_t end_vertex_pos = y.first;
     if (end_vertex_pos > state->end_pos)
       continue;
     SpellingMap::const_iterator x = y.second.find(syllable_id);
     if (x != y.second.end()) {
-      int len = state->output.length();
+      size_t len = state->output.length();
       if (depth > 0 && len > 0 &&
           state->delimiters->find(state->output[len - 1]) == std::string::npos) {
         state->output += state->delimiters->at(0);
@@ -72,7 +72,7 @@ class R10nCandidate;
 
 class R10nTranslation : public Translation {
  public:
-  R10nTranslation(const std::string &input, int start, const std::string &delimiters)
+  R10nTranslation(const std::string &input, size_t start, const std::string &delimiters)
       : input_(input), start_(start), delimiters_(delimiters),
         user_phrase_index_(0) {
     set_exhausted(true);
@@ -90,7 +90,7 @@ class R10nTranslation : public Translation {
                                                  UserDictionary *user_dict);
 
   const std::string input_;
-  int start_;
+  size_t start_;
   const std::string delimiters_;
   
   SyllableGraph syllable_graph_;
@@ -105,7 +105,7 @@ class R10nTranslation : public Translation {
 
 class R10nCandidate : public Candidate {
  public:
-  R10nCandidate(int start, int end,
+  R10nCandidate(size_t start, size_t end,
                 const shared_ptr<DictEntry> &entry,
                 const R10nTranslation *translation)
       : Candidate("zh", start, end), entry_(entry), translation_(translation) {}
@@ -206,16 +206,16 @@ void R10nTranslator::OnCommit(Context *ctx) {
 
 bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
   Syllablizer syllablizer(delimiters_, true);
-  int consumed = syllablizer.BuildSyllableGraph(input_,
-                                                *dict->prism(),
-                                                &syllable_graph_);
+  size_t consumed = syllablizer.BuildSyllableGraph(input_,
+                                                   *dict->prism(),
+                                                   &syllable_graph_);
 
   phrase_ = dict->Lookup(syllable_graph_, 0);
   user_phrase_ = user_dict->Lookup(syllable_graph_, 0);
   if (!phrase_ && !user_phrase_)
     return false;
   // make sentences when there is no exact-matching phrase candidate
-  int translated_len = 0;
+  size_t translated_len = 0;
   if (phrase_ && !phrase_->empty())
     translated_len = (std::max)(translated_len, phrase_->rbegin()->first);
   if (user_phrase_ && !user_phrase_->empty())
@@ -287,11 +287,11 @@ bool R10nTranslation::Next() {
 shared_ptr<Candidate> R10nTranslation::Peek() {
   if (exhausted())
     return shared_ptr<Candidate>();
-  int user_phrase_code_length = 0;
+  size_t user_phrase_code_length = 0;
   if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
     user_phrase_code_length = user_phrase_iter_->first;
   }
-  int phrase_code_length = 0;
+  size_t phrase_code_length = 0;
   if (phrase_ && phrase_iter_ != phrase_->rend()) {
     phrase_code_length = phrase_iter_->first;
   }
@@ -335,7 +335,7 @@ shared_ptr<DictEntry> R10nTranslation::SimplisticSentenceMaking(Dictionary *dict
   const int kMaxSyllablesInSentenceMakingUserPhrases = 5;
   const double kEpsilon = 1e-30;
   const double kPenalty = 1e-8;
-  int total_length = syllable_graph_.interpreted_length;
+  size_t total_length = syllable_graph_.interpreted_length;
   WordGraph graph;
   BOOST_FOREACH(const EdgeMap::value_type &s, syllable_graph_.edges) {
     shared_ptr<UserDictEntryCollector> user_phrase =
@@ -360,12 +360,12 @@ shared_ptr<DictEntry> R10nTranslation::SimplisticSentenceMaking(Dictionary *dict
   sentence[0]->weight = 1.0;
   // dynamic programming
   BOOST_FOREACH(WordGraph::value_type &w, graph) {
-    int start_pos = w.first;
+    size_t start_pos = w.first;
     EZDBGONLYLOGGERVAR(start_pos);
     if (sentence.find(start_pos) == sentence.end())
       continue;
     BOOST_FOREACH(UserDictEntryCollector::value_type &x, w.second) {
-      int end_pos = x.first;
+      size_t end_pos = x.first;
       if (start_pos == 0 && end_pos == total_length)  // exclude single words from the result
         continue;
       EZDBGONLYLOGGERVAR(end_pos);

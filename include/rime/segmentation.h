@@ -27,11 +27,11 @@ struct Segment {
     kConfirmed,
   };
   Status status;
-  int start;
-  int end;
+  size_t start;
+  size_t end;
   std::set<std::string> tags;
   shared_ptr<Menu> menu;
-  int selected_index;
+  size_t selected_index;
 
   Segment()
   : status(kVoid), start(0), end(0),
@@ -45,7 +45,7 @@ struct Segment {
     return tags.find(tag) != tags.end();
   }
 
-  const shared_ptr<Candidate> GetCandidateAt(int index) const;
+  const shared_ptr<Candidate> GetCandidateAt(size_t index) const;
   const shared_ptr<Candidate> GetSelectedCandidate() const;
 };
 
@@ -54,14 +54,14 @@ class Segmentation : public std::vector<Segment> {
   Segmentation();
   virtual ~Segmentation() {}
   void Reset(const std::string &input);
-  void Reset(int num_segments);
+  void Reset(size_t num_segments);
   bool AddSegment(const Segment &segment);
 
   bool Forward();
   bool HasFinished() const;
-  int GetCurrentStartPosition() const;
-  int GetCurrentEndPosition() const;
-  int GetCurrentSegmentLength() const;
+  size_t GetCurrentStartPosition() const;
+  size_t GetCurrentEndPosition() const;
+  size_t GetCurrentSegmentLength() const;
 
   const std::string& input() const { return input_; }
 

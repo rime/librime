@@ -18,9 +18,9 @@ void Menu::AddTranslation(shared_ptr<Translation> translation) {
   EZLOGGERVAR(translations_.size());
 }
 
-int Menu::Prepare(int candidate_count) {
+size_t Menu::Prepare(size_t candidate_count) {
   EZLOGGERFUNCTRACKER;
-  int count = candidates_.size();
+  size_t count = candidates_.size();
   if (count >= candidate_count)
     return count;
   while (count < candidate_count && !translations_.empty()) {
@@ -55,9 +55,9 @@ int Menu::Prepare(int candidate_count) {
   return candidates_.size();
 }
 
-Page* Menu::CreatePage(int page_size, int page_no) {
-  int start_pos = page_size * page_no;
-  int end_pos = start_pos + page_size;
+Page* Menu::CreatePage(size_t page_size, size_t page_no) {
+  size_t start_pos = page_size * page_no;
+  size_t end_pos = start_pos + page_size;
   if (end_pos > candidates_.size()) {
     if (translations_.empty())
       end_pos = candidates_.size();
@@ -77,9 +77,8 @@ Page* Menu::CreatePage(int page_size, int page_no) {
   return page;
 }
 
-shared_ptr<Candidate> Menu::GetCandidateAt(int index) {
-  if (index < 0 ||
-      index >= candidates_.size() &&
+shared_ptr<Candidate> Menu::GetCandidateAt(size_t index) {
+  if (index >= candidates_.size() &&
       index >= Prepare(index + 1)) {
     return shared_ptr<Candidate>();
   }

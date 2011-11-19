@@ -72,7 +72,7 @@ private:
   shared_ptr<DictEntry> entry_;
 };
 
-struct DictEntryCollector : std::map<int, DictEntryIterator> {
+struct DictEntryCollector : std::map<size_t, DictEntryIterator> {
 };
 
 class Schema;
@@ -90,7 +90,7 @@ class Dictionary : public Class<Dictionary, Schema*> {
   bool Remove();
   bool Load();
 
-  shared_ptr<DictEntryCollector> Lookup(const SyllableGraph &syllable_graph, int start_pos);
+  shared_ptr<DictEntryCollector> Lookup(const SyllableGraph &syllable_graph, size_t start_pos);
   DictEntryIterator LookupWords(const std::string &str_code, bool predictive);
   bool Decode(const Code &code, dictionary::RawCode *result);
 

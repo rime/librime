@@ -35,7 +35,7 @@ class Context {
   void Clear();
 
   // return false if there is no candidate at index
-  bool Select(int index);
+  bool Select(size_t index);
   // return false if there's no candidate for current segment
   bool ConfirmCurrentSelection();
   
@@ -46,10 +46,8 @@ class Context {
   void set_input(const std::string &value);
   const std::string& input() const { return input_; }
 
-  void set_selector(int pos);
-  const int selector() const { return selector_; }
-  void set_cursor(int pos);
-  const int cursor() const { return cursor_; }
+  void set_cursor(size_t pos);
+  const size_t cursor() const { return cursor_; }
 
   void set_composition(Composition *comp);
   Composition* composition();
@@ -61,8 +59,7 @@ class Context {
 
  private:
   std::string input_;
-  int selector_;
-  int cursor_;
+  size_t cursor_;
   scoped_ptr<Composition> composition_;
 
   Notifier commit_notifier_;

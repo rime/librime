@@ -20,7 +20,7 @@ namespace rime {
 
 typedef uint64_t TickCount;
   
-struct UserDictEntryCollector : std::map<int, DictEntryList> {
+struct UserDictEntryCollector : std::map<size_t, DictEntryList> {
 };
 
 class Schema;

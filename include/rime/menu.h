@@ -30,13 +30,13 @@ class Menu {
   ~Menu() {}
 
   void AddTranslation(shared_ptr<Translation> translation);
-  int Prepare(int candidate_count);
-  Page* CreatePage(int page_size, int page_no);
-  shared_ptr<Candidate> GetCandidateAt(int index);
+  size_t Prepare(size_t candidate_count);
+  Page* CreatePage(size_t page_size, size_t page_no);
+  shared_ptr<Candidate> GetCandidateAt(size_t index);
 
   // CAVEAT: returns the number of candidates currently obtained,
   // rather than the total number of available candidates.
-  int candidate_count() const { return candidates_.size(); }
+  size_t candidate_count() const { return candidates_.size(); }
 
  private:
   std::vector<shared_ptr<Translation> > translations_;

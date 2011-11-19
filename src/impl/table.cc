@@ -100,7 +100,7 @@ TableVisitor::TableVisitor(table::Index *index)
 
 const TableAccessor TableVisitor::Access(int syllable_id) const {
   if (level_ == 0) {
-    if (!lv1_index_ || syllable_id < 0 || syllable_id >= lv1_index_->size)
+    if (!lv1_index_ || syllable_id < 0 || syllable_id >= static_cast<int>(lv1_index_->size))
       return TableAccessor();
     table::HeadIndexNode *node = &lv1_index_->at[syllable_id];
     Code code(index_code_);
@@ -125,7 +125,7 @@ const TableAccessor TableVisitor::Access(int syllable_id) const {
 
 bool TableVisitor::Walk(int syllable_id) {
   if (level_ == 0) {
-    if (!lv1_index_ || syllable_id < 0 || syllable_id >= lv1_index_->size)
+    if (!lv1_index_ || syllable_id < 0 || syllable_id >= static_cast<int>(lv1_index_->size))
       return false;
     table::HeadIndexNode *node = &lv1_index_->at[syllable_id];
     if (!node->next_level) return false;
@@ -397,7 +397,7 @@ bool Table::GetSyllabary(Syllabary *result) {
 const char* Table::GetSyllableById(int syllable_id) {
   if (!syllabary_ ||
       syllable_id < 0 ||
-      syllable_id >= syllabary_->size)
+      syllable_id >= static_cast<int>(syllabary_->size))
     return NULL;
   return syllabary_->at[syllable_id].c_str();
 }
@@ -417,14 +417,14 @@ const TableAccessor Table::QueryPhrases(const Code &code) {
   return visitor.Access(-1);
 }
 
-bool Table::Query(const SyllableGraph &syll_graph, int start_pos,
+bool Table::Query(const SyllableGraph &syll_graph, size_t start_pos,
                   TableQueryResult *result) {
   if (!result ||
       !index_ ||
       start_pos >= syll_graph.interpreted_length)
     return false;
   result->clear();
-  std::queue<std::pair<int, TableVisitor> > q;
+  std::queue<std::pair<size_t, TableVisitor> > q;
   q.push(std::make_pair(start_pos, TableVisitor(index_)));
   while (!q.empty()) {
     int current_pos = q.front().first;
@@ -442,7 +442,7 @@ bool Table::Query(const SyllableGraph &syll_graph, int start_pos,
       continue;
     }
     BOOST_FOREACH(const EndVertexMap::value_type &edge, edges->second) {
-      int end_vertex_pos = edge.first;
+      size_t end_vertex_pos = edge.first;
       const SpellingMap &spellings(edge.second);
       BOOST_FOREACH(const SpellingMap::value_type &spelling, spellings) {
         SyllableId syll_id = spelling.first;
