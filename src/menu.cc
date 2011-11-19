@@ -43,7 +43,7 @@ int Menu::Prepare(int candidate_count) {
       continue;
     }
     shared_ptr<Candidate> cand(translations_[k]->Peek());
-    EZLOGGERPRINT("Append candidate to menu: '%s'.", cand->text());
+    EZLOGGERPRINT("Append candidate to menu: '%s'.", cand->text().c_str());
     candidates_.push_back(cand);
     ++count;
     translations_[k]->Next();
