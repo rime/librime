@@ -63,8 +63,8 @@ bool Context::Select(size_t index) {
   if (cand) {
     seg.selected_index = index;
     seg.status = Segment::kSelected;
-    EZLOGGERPRINT("Selected: %s, index = %d.",
-                  cand->text(), index);
+    EZLOGGERPRINT("Selected: '%s', index = %d.",
+                  cand->text().c_str(), index);
     select_notifier_(this);
     return true;
   }
@@ -78,8 +78,8 @@ bool Context::ConfirmCurrentSelection() {
   shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
   if (cand) {
     seg.status = Segment::kSelected;
-    EZLOGGERPRINT("Confirmed: %s, selected_index = %d.",
-                  cand->text(), seg.selected_index);
+    EZLOGGERPRINT("Confirmed: '%s', selected_index = %d.",
+                  cand->text().c_str(), seg.selected_index);
     select_notifier_(this);
     return true;
   }
