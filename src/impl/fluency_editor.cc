@@ -47,7 +47,7 @@ Processor::Result FluencyEditor::ProcessKeyEvent(
     ctx->Clear();
     return kAccepted;
   }
-  if (ch > 20 && ch < 128) {
+  if (ch > 0x20 && ch < 0x80) {
     EZLOGGERPRINT("Add to input: '%c', %d, '%s'", ch, key_event.keycode(), key_event.repr().c_str());
     ctx->PushInput(key_event.keycode());
     return kAccepted;
