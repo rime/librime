@@ -64,8 +64,8 @@ class RimeConsole {
       std::cout << "cand. " << (++i % 10) <<  ": [";
       std::cout << cand->text();
       std::cout << "]";
-      if (cand->comment())
-        std::cout << ' ' << cand->comment();
+      if (!cand->comment().empty())
+        std::cout << "  " << cand->comment();
       std::cout << std::endl;
     }
   }

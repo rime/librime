@@ -30,11 +30,11 @@ class Candidate {
   int end() const { return end_; }
   
   // candidate text to commit
-  virtual const char* text() const = 0;
+  virtual const std::string& text() const = 0;
   // (optional)
-  virtual const char* comment() const { return NULL; }
+  virtual const std::string comment() const { return std::string(); }
   // text shown in the preedit area, replacing input string (optional)
-  virtual const char* preedit() const { return NULL; }
+  virtual const std::string preedit() const { return std::string(); }
 
   void set_type(const std::string &type) { type_ = type; }
   void set_start(int start) { start_ = start; }
@@ -58,9 +58,9 @@ class SimpleCandidate : public Candidate {
       : Candidate(type, start, end),
       text_(text), comment_(comment), preedit_(preedit) {}
 
-  const char* text() const { return text_.c_str(); }
-  const char* comment() const { return comment_.c_str(); }
-  const char* preedit() const { return preedit_.c_str(); }
+  const std::string& text() const { return text_; }
+  const std::string comment() const { return comment_; }
+  const std::string preedit() const { return preedit_; }
 
   void set_text(const std::string &text) { text_ = text; }
   void set_comment(const std::string &comment) { comment_ = comment; }

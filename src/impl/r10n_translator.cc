@@ -109,17 +109,17 @@ class R10nCandidate : public Candidate {
                 const shared_ptr<DictEntry> &entry,
                 const R10nTranslation *translation)
       : Candidate("zh", start, end), entry_(entry), translation_(translation) {}
-  virtual const char* text() const {
-    return entry_->text.c_str();
+  virtual const std::string& text() const {
+    return entry_->text;
   }
-  virtual const char* comment() const {
-    return entry_->comment.c_str();
+  virtual const std::string comment() const {
+    return entry_->comment;
   }
-  virtual const char* preedit() const {
+  virtual const std::string preedit() const {
     if (translation_ && entry_->preedit.empty()) {
       entry_->preedit = translation_->GetPreeditString(*this);
     }
-    return entry_->preedit.c_str();
+    return entry_->preedit;
   }
   const Code& code() const {
     return entry_->code;

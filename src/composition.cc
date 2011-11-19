@@ -47,8 +47,8 @@ void Composition::GetPreedit(Preedit *preedit) const {
     }
     else { // highlighting
       preedit->sel_start = text_len;
-      const char *custom_preedit = cand->preedit();
-      if (custom_preedit && strlen(custom_preedit) > 0)
+      const std::string &custom_preedit = cand->preedit();
+      if (!custom_preedit.empty())
         preedit->text += custom_preedit;
       else
         preedit->text += input_.substr(start, end - start);

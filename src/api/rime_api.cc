@@ -100,9 +100,8 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext *context) {
         BOOST_FOREACH(const rime::shared_ptr<rime::Candidate> &cand,
                       page->candidates) {
           std::string candidate(cand->text());
-          if (cand->comment() && strlen(cand->comment()) > 0) {
-            candidate += "  ";
-            candidate += cand->comment();
+          if (!cand->comment().empty()) {
+            candidate += "  " + cand->comment();
           }
           char *dest = context->menu.candidates[i];
           std::strncpy(dest, candidate.c_str(), RIME_TEXT_MAX_LENGTH);

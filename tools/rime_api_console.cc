@@ -52,9 +52,9 @@ void PrintMenu(RimeMenu *menu) {
     bool highlighted = i == menu->highlighted_candidate_index;
     printf("%d. %c%s%c\n",
            i + 1,
-           highlighted ? '<' : ' ',
+           highlighted ? '[' : ' ',
            menu->candidates[i],
-           highlighted ? '>' : ' ');
+           highlighted ? ']' : ' ');
   }
 }
 

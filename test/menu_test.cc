@@ -58,7 +58,7 @@ class TranslationBeta : public Translation {
 
  private:
   std::vector<shared_ptr<Candidate> > candies_;
-  int cursor_;
+  size_t cursor_;
 };
 
 TEST(RimeMenuTest, RecipeAlphaBeta) {
@@ -76,10 +76,10 @@ TEST(RimeMenuTest, RecipeAlphaBeta) {
   EXPECT_TRUE(page->is_last_page);
   ASSERT_EQ(4, page->candidates.size());
   EXPECT_EQ("alpha", page->candidates[0]->type());
-  EXPECT_STREQ("Alpha", page->candidates[0]->text());
+  EXPECT_EQ("Alpha", page->candidates[0]->text());
   EXPECT_EQ("beta", page->candidates[1]->type());
-  EXPECT_STREQ("Beta-1", page->candidates[1]->text());
-  EXPECT_STREQ("Beta-3", page->candidates[3]->text());
+  EXPECT_EQ("Beta-1", page->candidates[1]->text());
+  EXPECT_EQ("Beta-3", page->candidates[3]->text());
   scoped_ptr<Page> no_more_page(menu.CreatePage(5, 1));
   EXPECT_FALSE(no_more_page);
 }
