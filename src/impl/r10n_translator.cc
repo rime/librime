@@ -108,7 +108,12 @@ class R10nCandidate : public Candidate {
   R10nCandidate(size_t start, size_t end,
                 const shared_ptr<DictEntry> &entry,
                 const R10nTranslation *translation)
-      : Candidate("zh", start, end), entry_(entry), translation_(translation) {}
+      : Candidate("zh", start, end),
+        entry_(entry) {
+    if (translation && entry_->preedit.empty()) {
+      entry_->preedit = translation->GetPreeditString(*this);
+    }
+  }
   virtual const std::string& text() const {
     return entry_->text;
   }
@@ -116,9 +121,6 @@ class R10nCandidate : public Candidate {
     return entry_->comment;
   }
   virtual const std::string preedit() const {
-    if (translation_ && entry_->preedit.empty()) {
-      entry_->preedit = translation_->GetPreeditString(*this);
-    }
     return entry_->preedit;
   }
   const Code& code() const {
@@ -126,7 +128,6 @@ class R10nCandidate : public Candidate {
   }
  protected:
   const shared_ptr<DictEntry> entry_;
-  const R10nTranslation *translation_;
 };
 
 class SelectSequence : public std::vector<shared_ptr<R10nCandidate> > {
