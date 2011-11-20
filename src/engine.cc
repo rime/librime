@@ -68,7 +68,9 @@ void Engine::Compose(Context *ctx) {
   if (!ctx)
     return;
   Composition *comp = ctx->composition();
-  comp->Reset(ctx->input());
+  std::string active_input(ctx->input().substr(0, ctx->caret_pos()));
+  EZLOGGERVAR(active_input);
+  comp->Reset(active_input);
   CalculateSegmentation(comp);
   TranslateSegments(comp);
   ctx->set_composition(comp);
@@ -76,7 +78,7 @@ void Engine::Compose(Context *ctx) {
 
 void Engine::CalculateSegmentation(Composition *comp) {
   EZLOGGERFUNCTRACKER;
-  while (!comp->HasFinished()) {
+  while (!comp->HasFinishedSegmentation()) {
     size_t start_pos = comp->GetCurrentStartPosition();
     size_t end_pos = comp->GetCurrentEndPosition();
     EZLOGGERVAR(start_pos);
@@ -92,11 +94,10 @@ void Engine::CalculateSegmentation(Composition *comp) {
       break;
     // move onto the next segment... or 
     // start an empty segment at the end of a confirmed composition.
-    if (!comp->HasFinished() ||
+    if (!comp->HasFinishedSegmentation() ||
         comp->back().status >= Segment::kSelected)
       comp->Forward();
   }
-
 }
 
 void Engine::TranslateSegments(Composition *comp) {
@@ -150,14 +151,15 @@ void Engine::OnSelect(Context *ctx) {
       ctx->composition()->Forward();
   }
   else {
-    if (seg.end >= ctx->cursor()) {
-      // finished converting current segment
-      // move cursor to the end of input
-      // TODO: not implemented
-      //ctx->set_cursor(ctx->input().length());
-    }
     ctx->composition()->Forward();
-    Compose(ctx);
+    if (seg.end >= ctx->caret_pos()) {
+      // finished converting current segment
+      // move caret to the end of input
+      ctx->set_caret_pos(ctx->input().length());
+    }
+    else {
+      Compose(ctx);
+    }
   }
 }
 

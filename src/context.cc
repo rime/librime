@@ -32,20 +32,50 @@ const std::string Context::GetCommitText() const {
   return composition_->GetCommitText();
 }
 
+void Context::GetPreedit(Preedit *preedit) const {
+  composition_->GetPreedit(preedit);
+  preedit->caret_pos = preedit->text.length();
+  // TODO: use schema settings
+  const std::string caret("\xe2\x80\xba");
+  preedit->text.append(caret);
+  if (caret_pos_ < input_.length())
+    preedit->text.append(input_.substr(caret_pos_));
+}
+
 bool Context::IsComposing() const {
   return !input_.empty();
 }
 
+bool Context::HasMenu() const {
+  return !composition_->empty() && composition_->back().menu;
+}
+
 bool Context::PushInput(char ch) {
-  input_.push_back(ch);
+  if (caret_pos_ >= input_.length()) {
+    input_.push_back(ch);
+    caret_pos_ = input_.length();
+  }
+  else {
+    input_.insert(caret_pos_, 1, ch);
+    ++caret_pos_;
+  }
   update_notifier_(this);
   return true;
 }
 
 bool Context::PopInput() {
-  if (input_.empty())
+  if (caret_pos_ == 0)
     return false;
-  input_.resize(input_.size() - 1);
+  --caret_pos_;
+  input_.erase(caret_pos_, 1);
+  update_notifier_(this);
+  return true;
+}
+
+bool Context::DeleteInput() {
+  if (caret_pos_ >= input_.length())
+    return false;
+  input_.erase(caret_pos_, 1);
   update_notifier_(this);
   return true;
 }
@@ -128,6 +158,14 @@ bool Context::ReopenPreviousSelection() {
   return false;
 }
 
+void Context::set_caret_pos(size_t caret_pos) {
+  if (caret_pos > input_.length())
+    caret_pos_ = input_.length();
+  else
+    caret_pos_ = caret_pos;
+  update_notifier_(this);
+}
+
 void Context::set_composition(Composition *comp) {
   if (composition_.get() != comp)
     composition_.reset(comp);
@@ -136,6 +174,7 @@ void Context::set_composition(Composition *comp) {
 
 void Context::set_input(const std::string &value) {
   input_ = value;
+  caret_pos_ = input_.length();
   update_notifier_(this);
 }
 

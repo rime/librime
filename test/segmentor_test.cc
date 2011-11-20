@@ -25,7 +25,7 @@ TEST(AbcSegmentorTest, NoMatch) {
   segmentation.Reset("3.1415926");
   bool goon = segmentor->Proceed(&segmentation);
   EXPECT_TRUE(goon);
-  EXPECT_FALSE(segmentation.HasFinished());
+  EXPECT_FALSE(segmentation.HasFinishedSegmentation());
   ASSERT_EQ(0, segmentation.size());
 }
 
@@ -39,7 +39,7 @@ TEST(AbcSegmentorTest, FullMatch) {
   segmentation.Reset("zyxwvutsrqponmlkjihgfedcba");
   bool goon = segmentor->Proceed(&segmentation);
   EXPECT_TRUE(goon);
-  EXPECT_TRUE(segmentation.HasFinished());
+  EXPECT_TRUE(segmentation.HasFinishedSegmentation());
   ASSERT_EQ(1, segmentation.size());
   EXPECT_EQ(0, segmentation[0].start);
   EXPECT_EQ(26, segmentation[0].end);
@@ -56,7 +56,7 @@ TEST(AbcSegmentorTest, PrefixMatch) {
   segmentation.Reset("abcdefg.1415926");
   bool goon = segmentor->Proceed(&segmentation);
   EXPECT_TRUE(goon);
-  EXPECT_FALSE(segmentation.HasFinished());
+  EXPECT_FALSE(segmentation.HasFinishedSegmentation());
   ASSERT_EQ(1, segmentation.size());
   EXPECT_EQ(0, segmentation[0].start);
   EXPECT_EQ(7, segmentation[0].end);

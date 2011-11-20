@@ -12,7 +12,7 @@
 #include <rime/common.h>
 #include <rime/registry.h>
 
-// TODO: include headers for built-in components
+// built-in components
 #include <rime/config.h>
 #include <rime/impl/abc_segmentor.h>
 #include <rime/impl/dictionary.h>
@@ -20,6 +20,7 @@
 #include <rime/impl/express_editor.h>
 #include <rime/impl/fluency_editor.h>
 #include <rime/impl/fallback_segmentor.h>
+#include <rime/impl/locator.h>
 #include <rime/impl/r10n_translator.h>
 #include <rime/impl/selector.h>
 #include <rime/impl/speller.h>
@@ -52,6 +53,7 @@ void RegisterComponents() {
   // processors
   r.Register("express_editor", new Component<ExpressEditor>);
   r.Register("fluency_editor", new Component<FluencyEditor>);
+  r.Register("locator", new Component<Locator>);
   r.Register("selector", new Component<Selector>);
   r.Register("speller", new Component<Speller>);
 

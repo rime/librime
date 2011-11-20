@@ -33,19 +33,25 @@ Processor::Result FluencyEditor::ProcessKeyEvent(
       return kNoop;
     }
   }
-  if (ch == XK_Return && ctx->IsComposing()) {
-    ctx->Commit();
-    return kAccepted;
-  }
-  if (ch == XK_BackSpace && ctx->IsComposing()) {
-    ctx->ReopenPreviousSegment() ||
-        ctx->ReopenPreviousSelection() ||
-        ctx->PopInput();
-    return kAccepted;
-  }
-  if (ch == XK_Escape && ctx->IsComposing()) {
-    ctx->Clear();
-    return kAccepted;
+  if (ctx->IsComposing()) {
+    if (ch == XK_Return) {
+      ctx->Commit();
+      return kAccepted;
+    }
+    if (ch == XK_BackSpace) {
+      ctx->ReopenPreviousSegment() ||
+          ctx->ReopenPreviousSelection() ||
+          ctx->PopInput();
+      return kAccepted;
+    }
+    if (ch == XK_Delete || ch == XK_KP_Delete) {
+      ctx->DeleteInput();
+      return kAccepted;
+    }
+    if (ch == XK_Escape) {
+      ctx->Clear();
+      return kAccepted;
+    }
   }
   if (ch > 0x20 && ch < 0x80) {
     EZLOGGERPRINT("Add to input: '%c', %d, '%s'", ch, key_event.keycode(), key_event.repr().c_str());

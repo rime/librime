@@ -16,7 +16,7 @@ namespace rime {
 
 struct Preedit {
   std::string text;
-  size_t cursor_pos;
+  size_t caret_pos;
   size_t sel_start;
   size_t sel_end;
 };

@@ -36,7 +36,7 @@ void PrintComposition(RimeComposition *composition) {
       if (i == start) putchar('[');
       else if (i == end) putchar(']');
     }
-    if (i == cursor) putchar('|');
+    //if (i == cursor) putchar('|');
     if (i < len) putchar(preedit[i]);
   }
   printf("\n");

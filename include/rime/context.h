@@ -17,6 +17,7 @@ namespace rime {
 
 class Composition;
 class Segmentation;
+struct Preedit;
 
 class Context {
  public:
@@ -27,11 +28,13 @@ class Context {
 
   bool Commit();
   const std::string GetCommitText() const;
-
+  void GetPreedit(Preedit *preedit) const;
   bool IsComposing() const;
+  bool HasMenu() const;
   
   bool PushInput(char ch);
   bool PopInput();
+  bool DeleteInput();
   void Clear();
 
   // return false if there is no candidate at index
@@ -46,8 +49,8 @@ class Context {
   void set_input(const std::string &value);
   const std::string& input() const { return input_; }
 
-  void set_cursor(size_t pos);
-  const size_t cursor() const { return cursor_; }
+  void set_caret_pos(size_t caret_pos);
+  const size_t caret_pos() const { return caret_pos_; }
 
   void set_composition(Composition *comp);
   Composition* composition();
@@ -59,7 +62,7 @@ class Context {
 
  private:
   std::string input_;
-  size_t cursor_;
+  size_t caret_pos_;
   scoped_ptr<Composition> composition_;
 
   Notifier commit_notifier_;

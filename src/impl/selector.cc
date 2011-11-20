@@ -18,8 +18,7 @@
 
 namespace rime {
 
-Processor::Result Selector::ProcessKeyEvent(
-    const KeyEvent &key_event) {
+Processor::Result Selector::ProcessKeyEvent(const KeyEvent &key_event) {
   if (key_event.release())
     return kNoop;
   Context *ctx = engine_->context();

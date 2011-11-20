@@ -96,8 +96,8 @@ bool Segmentation::Forward() {
   return true;
 }
 
-bool Segmentation::HasFinished() const {
-  return (empty() ? 0 : back().end) == input_.length();
+bool Segmentation::HasFinishedSegmentation() const {
+  return (empty() ? 0 : back().end) >= input_.length();
 }
 
 size_t Segmentation::GetCurrentStartPosition() const {

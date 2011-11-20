@@ -66,31 +66,32 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext *context) {
   if (!context)
     return False;
   std::memset(context, 0, sizeof(RimeContext));
-  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  rime::shared_ptr<rime::Session> session(
+      rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
   rime::Context *ctx = session->context();
   if (!ctx)
     return False;
-  rime::Composition *comp = ctx->composition();
-  if (comp && !comp->empty()) {
+  if (ctx->IsComposing()) {
     context->composition.is_composing = True;
     rime::Preedit preedit;
-    comp->GetPreedit(&preedit);
-    std::strncpy(context->composition.preedit, preedit.text.c_str(),
-                 RIME_TEXT_MAX_LENGTH);
-    context->composition.cursor_pos = preedit.cursor_pos;
+    ctx->GetPreedit(&preedit);
+    std::strncpy(context->composition.preedit,
+                 preedit.text.c_str(), RIME_TEXT_MAX_LENGTH);
+    context->composition.cursor_pos = preedit.caret_pos;
     context->composition.sel_start = preedit.sel_start;
     context->composition.sel_end = preedit.sel_end;
-    if (comp->back().menu) {
+    if (ctx->HasMenu()) {
+      rime::Segment &seg(ctx->composition()->back());
       int page_size = 5;
       rime::Schema *schema = session->schema();
       if (schema)
         page_size = schema->page_size();
-      int selected_index = comp->back().selected_index;
+      int selected_index = seg.selected_index;
       int page_no = selected_index / page_size;
       rime::scoped_ptr<rime::Page> page(
-          comp->back().menu->CreatePage(page_size, page_no));
+          seg.menu->CreatePage(page_size, page_no));
       if (page) {
         context->menu.page_size = page_size;
         context->menu.page_no = page_no;

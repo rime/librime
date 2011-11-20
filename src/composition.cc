@@ -28,7 +28,6 @@ void Composition::GetPreedit(Preedit *preedit) const {
   if (!preedit)
     return;
   preedit->text.clear();
-  preedit->cursor_pos = 0;
   preedit->sel_start = preedit->sel_end = 0;
   if (empty())
     return;
@@ -59,13 +58,6 @@ void Composition::GetPreedit(Preedit *preedit) const {
   if (input_.length() > end) {
     preedit->text += input_.substr(end);
   }
-  preedit->cursor_pos = text_len + (back().end - end);
-  // TODO: use schema settings
-  const std::string caret("\xe2\x80\xba");
-  if (preedit->cursor_pos < preedit->text.length())
-    preedit->text.insert(preedit->cursor_pos, caret);
-  else
-    preedit->text.append(caret);
 }
 
 const std::string Composition::GetCommitText() const {
