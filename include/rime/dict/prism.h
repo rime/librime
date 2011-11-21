@@ -15,8 +15,8 @@
 #include <vector>
 #include <darts.h>
 #include <rime/common.h>
-#include <rime/impl/mapped_file.h>
-#include <rime/impl/vocabulary.h>
+#include <rime/dict/mapped_file.h>
+#include <rime/dict/vocabulary.h>
 
 namespace rime {
 

@@ -17,8 +17,8 @@
 #include <rime/common.h>
 #include <rime/config.h>
 #include <rime/schema.h>
-#include <rime/impl/dictionary.h>
-#include <rime/impl/syllablizer.h>
+#include <rime/dict/dictionary.h>
+#include <rime/dict/syllablizer.h>
 
 namespace rime {
 

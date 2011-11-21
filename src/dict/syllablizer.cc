@@ -11,8 +11,8 @@
 #include <utility>
 #include <vector>
 #include <boost/foreach.hpp>
-#include <rime/impl/prism.h>
-#include <rime/impl/syllablizer.h>
+#include <rime/dict/prism.h>
+#include <rime/dict/syllablizer.h>
 
 namespace rime {
 

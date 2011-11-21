@@ -12,7 +12,7 @@
 #include <rime/schema.h>
 #include <rime/segmentation.h>
 #include <rime/translation.h>
-#include <rime/impl/dictionary.h>
+#include <rime/dict/dictionary.h>
 #include <rime/impl/table_translator.h>
 
 namespace rime {

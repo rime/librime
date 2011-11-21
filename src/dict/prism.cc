@@ -9,7 +9,7 @@
 #include <cstring>
 #include <queue>
 #include <boost/scoped_array.hpp>
-#include <rime/impl/prism.h>
+#include <rime/dict/prism.h>
 
 namespace {
 

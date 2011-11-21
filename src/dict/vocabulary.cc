@@ -8,7 +8,7 @@
 //
 #include <algorithm>
 #include <boost/foreach.hpp>
-#include <rime/impl/vocabulary.h>
+#include <rime/dict/vocabulary.h>
 
 namespace rime {
 

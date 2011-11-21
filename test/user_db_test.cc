@@ -7,8 +7,8 @@
 // 2011-07-03 GONG Chen <chen.sst@gmail.com>
 //
 #include <gtest/gtest.h>
-#include <rime/impl/syllablizer.h>
-#include <rime/impl/user_db.h>
+#include <rime/dict/syllablizer.h>
+#include <rime/dict/user_db.h>
 
 TEST(RimeUserDbTest, AccessRecordByKey) {
   rime::UserDb db("user_db_test");

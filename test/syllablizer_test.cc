@@ -12,8 +12,8 @@
 #include <utility>
 #include <vector>
 #include <gtest/gtest.h>
-#include <rime/impl/prism.h>
-#include <rime/impl/syllablizer.h>
+#include <rime/dict/prism.h>
+#include <rime/dict/syllablizer.h>
 
 class RimeSyllablizerTest : public ::testing::Test {
  public:

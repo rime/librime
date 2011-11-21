@@ -12,7 +12,8 @@
 #include <vector>
 #include <utility>
 #include <boost/foreach.hpp>
-#include <rime/impl/table.h>
+#include <rime/dict/syllablizer.h>
+#include <rime/dict/table.h>
 
 namespace rime {
 

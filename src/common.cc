@@ -14,8 +14,9 @@
 
 // built-in components
 #include <rime/config.h>
+#include <rime/dict/dictionary.h>
+#include <rime/dict/user_dictionary.h>
 #include <rime/impl/abc_segmentor.h>
-#include <rime/impl/dictionary.h>
 #include <rime/impl/echo_translator.h>
 #include <rime/impl/express_editor.h>
 #include <rime/impl/fluency_editor.h>
@@ -26,7 +27,6 @@
 #include <rime/impl/speller.h>
 #include <rime/impl/table_translator.h>
 #include <rime/impl/trivial_translator.h>
-#include <rime/impl/user_dictionary.h>
 
 namespace rime {
 

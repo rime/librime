@@ -13,8 +13,8 @@
 #include <rime/common.h>
 #include <rime/config.h>
 #include <rime/schema.h>
-#include <rime/impl/user_db.h>
-#include <rime/impl/syllablizer.h>
+#include <rime/dict/user_db.h>
+#include <rime/dict/syllablizer.h>
 
 namespace rime {
 

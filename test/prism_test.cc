@@ -6,12 +6,12 @@
 //
 // 2011-05-17 Zou xu <zouivex@gmail.com>
 //
-#include <gtest/gtest.h>
-#include <rime/impl/prism.h>
+#include <algorithm>
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
-#include <algorithm>
+#include <gtest/gtest.h>
+#include <rime/dict/prism.h>
 
 using namespace rime;
 

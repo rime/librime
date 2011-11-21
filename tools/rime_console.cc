@@ -18,7 +18,7 @@
 #include <rime/key_event.h>
 #include <rime/menu.h>
 #include <rime/schema.h>
-#include <rime/impl/dictionary.h>
+#include <rime/dict/dictionary.h>
 
 class RimeConsole {
  public:

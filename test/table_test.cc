@@ -7,8 +7,8 @@
 // 2011-07-03 GONG Chen <chen.sst@gmail.com>
 //
 #include <gtest/gtest.h>
-#include <rime/impl/syllablizer.h>
-#include <rime/impl/table.h>
+#include <rime/dict/syllablizer.h>
+#include <rime/dict/table.h>
 
 
 class RimeTableTest : public ::testing::Test {

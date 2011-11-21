@@ -15,9 +15,9 @@
 #include <vector>
 #include <rime/common.h>
 #include <rime/component.h>
-#include <rime/impl/prism.h>
-#include <rime/impl/table.h>
-#include <rime/impl/vocabulary.h>
+#include <rime/dict/prism.h>
+#include <rime/dict/table.h>
+#include <rime/dict/vocabulary.h>
 
 namespace rime {
 

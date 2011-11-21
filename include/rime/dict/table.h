@@ -16,9 +16,8 @@
 #include <string>
 #include <vector>
 #include <rime/common.h>
-#include <rime/impl/mapped_file.h>
-#include <rime/impl/syllablizer.h>
-#include <rime/impl/vocabulary.h>
+#include <rime/dict/mapped_file.h>
+#include <rime/dict/vocabulary.h>
 
 namespace rime {
 
@@ -115,6 +114,8 @@ class TableVisitor {
 };
 
 typedef std::map<int, std::vector<TableAccessor> > TableQueryResult;
+
+struct SyllableGraph;
 
 class Table : public MappedFile {
  public:

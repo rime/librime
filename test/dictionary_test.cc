@@ -8,7 +8,8 @@
 //
 #include <gtest/gtest.h>
 #include <rime/common.h>
-#include <rime/impl/dictionary.h>
+#include <rime/dict/syllablizer.h>
+#include <rime/dict/dictionary.h>
 
 class RimeDictionaryTest : public ::testing::Test {
  public:

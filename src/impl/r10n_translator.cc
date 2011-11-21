@@ -20,10 +20,10 @@
 #include <rime/schema.h>
 #include <rime/segmentation.h>
 #include <rime/translation.h>
-#include <rime/impl/dictionary.h>
+#include <rime/dict/dictionary.h>
+#include <rime/dict/syllablizer.h>
+#include <rime/dict/user_dictionary.h>
 #include <rime/impl/r10n_translator.h>
-#include <rime/impl/syllablizer.h>
-#include <rime/impl/user_dictionary.h>
 
 namespace rime {
 

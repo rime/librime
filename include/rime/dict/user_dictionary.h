@@ -14,7 +14,7 @@
 #include <string>
 #include <rime/common.h>
 #include <rime/component.h>
-#include <rime/impl/vocabulary.h>
+#include <rime/dict/vocabulary.h>
 
 namespace rime {
 
