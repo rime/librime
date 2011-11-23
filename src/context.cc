@@ -14,7 +14,7 @@
 
 namespace rime {
 
-Context::Context() : composition_(new Composition) {
+Context::Context() : input_(), caret_pos_(0), composition_(new Composition) {
 }
 
 Context::~Context() {
@@ -82,6 +82,8 @@ bool Context::DeleteInput() {
 
 void Context::Clear() {
   input_.clear();
+  caret_pos_ = 0;
+  composition_->clear();
   update_notifier_(this);
 }
 
@@ -117,6 +119,7 @@ bool Context::ConfirmCurrentSelection() {
 }
 
 bool Context::ConfirmPreviousSelection() {
+  EZLOGGERFUNCTRACKER;
   for (Composition::reverse_iterator it = composition_->rbegin();
        it != composition_->rend(); ++it) {
     if (it->status > Segment::kSelected) return false;
@@ -129,12 +132,14 @@ bool Context::ConfirmPreviousSelection() {
 }
 
 bool Context::ReopenPreviousSegment() {
+  EZLOGGERFUNCTRACKER;
   if (composition_->empty())
     return false;
   Segment &last(composition_->back());
   if (last.start == last.end) {
     composition_->pop_back();
-    if (!composition_->empty()) {
+    if (!composition_->empty() &&
+      composition_->back().status >= Segment::kSelected) {
       composition_->back().status = Segment::kVoid;
     }
     update_notifier_(this);
@@ -144,6 +149,7 @@ bool Context::ReopenPreviousSegment() {
 }
 
 bool Context::ReopenPreviousSelection() {
+  EZLOGGERFUNCTRACKER;
   for (Composition::reverse_iterator it = composition_->rbegin();
        it != composition_->rend(); ++it) {
     if (it->status > Segment::kSelected) return false;

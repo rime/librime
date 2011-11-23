@@ -66,6 +66,38 @@ class UniqueTranslation : public Translation {
   shared_ptr<Candidate> candidate_;
 };
 
+class FifoTranslation : public Translation {
+ public:
+  FifoTranslation() : cursor_(0) {}
+
+  bool Next() {
+    if (exhausted())
+      return false;
+    if (++cursor_ >= candies_.size())
+      set_exhausted(true);
+    return true;
+  }
+
+  shared_ptr<Candidate> Peek() {
+    if (exhausted())
+      return shared_ptr<Candidate>();
+    return candies_[cursor_];
+  }
+
+  void Append(const shared_ptr<Candidate> &candy) {
+    candies_.push_back(candy);
+    set_exhausted(false);
+  }
+
+  size_t size() const {
+    return candies_.size() - cursor_;
+  }
+
+ private:
+  std::vector<shared_ptr<Candidate> > candies_;
+  size_t cursor_;
+};
+
 } // namespace rime
 
 #endif  // RIME_TRANSLATION_H_

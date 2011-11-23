@@ -41,6 +41,13 @@ struct Segment {
   : status(kVoid), start(start_pos), end(end_pos),
     selected_index(0) {}
 
+  void Clear() {
+    status = kVoid;
+    tags.clear();
+    menu.reset();
+    selected_index = 0;
+  }
+
   bool HasTag(const std::string &tag) const {
     return tags.find(tag) != tags.end();
   }

@@ -9,14 +9,17 @@ schema:
 engine:
   processors:
     - speller
-    - locator
+    - punctuator
+    - navigator
     - selector
     - express_editor
   segmentors:
     - abc_segmentor
+    - punct_segmentor
     - fallback_segmentor
   translators:
     - echo_translator
+    - punct_translator
     - r10n_translator
     - trivial_translator
 
@@ -26,3 +29,38 @@ speller:
 
 translator:
   dictionary: luna_pinyin
+
+punctuator:
+  mapping:
+    "," : [ ，, "," ]
+    "." : [ 。, ".", ． ]
+    "<" : [ 《, 〈, «, ‹, "<" ]
+    ">" : [ 》, 〉, », ›, ">" ]
+    "/" : [ "/", ／, ⧸, ÷ ]
+    "?" : [ ？, "?" ]
+    ";" : [ ；, ";" ]
+    ":" : [ ：, ":" ]
+    "'" : { pair: [ "‘", "’" ] }
+    "\"" : { pair: [ "“", "”" ] }
+    "\\" : [ 、, "\\", ＼, ⧹ ]
+    "|" : [ ｜, "|" ]
+    "`" : [ ｀, "`" ]
+    "~" : [ ～, "~" ]
+    "!" : [ ！, "!" ]
+    "@" : [ "@", ＠, ☯ ]
+    "#" : [ ＃, "#", ⌘, ⌨ ]
+    "%" : [ ％, "%", ° ]
+    "$" : [ ￥, "$" ]
+    "^" : [ ……, …, "^" ]
+    "&" : [ ＆, "&" ]
+    "*" : [ ·, "*", ×, ＊, ※, ❂ ]
+    "(" : [ （, "(" ]
+    ")" : [ ）, ")" ]
+    "-" : [ －, "-" ]
+    "_" : [ ——, "_" ]
+    "+" : [ ＋, "+" ]
+    "=" : [ ＝, "=" ]
+    "[" : [ 「, 【, 〔, ［, "[" ]
+    "]" : [ 」, 】, 〕, ］, "]" ]
+    "{" : [ 『, 〗, ｛, "{" ]
+    "}" : [ 』, 〖, ｝, "}" ]

@@ -4,7 +4,7 @@
 // Copyleft 2011 RIME Developers
 // License: GPLv3
 //
-// 2011-09-11 GONG Chen <chen.sst@gmail.com>
+// 2011-11-20 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/foreach.hpp>
 #include <rime/common.h>
@@ -13,11 +13,11 @@
 #include <rime/engine.h>
 #include <rime/key_event.h>
 #include <rime/key_table.h>
-#include <rime/impl/locator.h>
+#include <rime/impl/navigator.h>
 
 namespace rime {
 
-Processor::Result Locator::ProcessKeyEvent(const KeyEvent &key_event) {
+Processor::Result Navigator::ProcessKeyEvent(const KeyEvent &key_event) {
   if (key_event.release())
     return kNoop;
   Context *ctx = engine_->context();
@@ -44,7 +44,7 @@ Processor::Result Locator::ProcessKeyEvent(const KeyEvent &key_event) {
   return kNoop;
 }
 
-bool Locator::Left(Context *ctx) {
+bool Navigator::Left(Context *ctx) {
   EZLOGGERFUNCTRACKER;
   size_t caret_pos = ctx->caret_pos();
   if (caret_pos == 0)
@@ -53,7 +53,7 @@ bool Locator::Left(Context *ctx) {
   return true;
 }
 
-bool Locator::Right(Context *ctx) {
+bool Navigator::Right(Context *ctx) {
   EZLOGGERFUNCTRACKER;
   size_t caret_pos = ctx->caret_pos();
   if (caret_pos >= ctx->input().length())
@@ -62,7 +62,7 @@ bool Locator::Right(Context *ctx) {
   return true;
 }
 
-bool Locator::Home(Context *ctx) {
+bool Navigator::Home(Context *ctx) {
   EZLOGGERFUNCTRACKER;
   size_t caret_pos = ctx->caret_pos();
   Composition *comp = ctx->composition();
@@ -83,7 +83,7 @@ bool Locator::Home(Context *ctx) {
   return true;
 }
 
-bool Locator::End(Context *ctx) {
+bool Navigator::End(Context *ctx) {
   EZLOGGERFUNCTRACKER;
   ctx->set_caret_pos(ctx->input().length());
   return true;

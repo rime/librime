@@ -9,7 +9,8 @@ schema:
 engine:
   processors:
     - speller
-    - locator
+    - punctuator
+    - navigator
     - selector
     - express_editor
   segmentors:

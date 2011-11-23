@@ -4,10 +4,10 @@
 // Copyleft 2011 RIME Developers
 // License: GPLv3
 //
-// 2011-09-11 GONG Chen <chen.sst@gmail.com>
+// 2011-11-20 GONG Chen <chen.sst@gmail.com>
 //
-#ifndef RIME_LOCATOR_H_
-#define RIME_LOCATOR_H_
+#ifndef RIME_NAVIGATOR_H_
+#define RIME_NAVIGATOR_H_
 
 #include <rime/common.h>
 #include <rime/component.h>
@@ -15,10 +15,10 @@
 
 namespace rime {
 
-class Locator : public Processor {
+class Navigator : public Processor {
  public:
-  Locator(Engine *engine) : Processor(engine) {}
-  virtual ~Locator() {}
+  Navigator(Engine *engine) : Processor(engine) {}
+  virtual ~Navigator() {}
   virtual Result ProcessKeyEvent(const KeyEvent &key_event);
 
  private:
@@ -30,4 +30,4 @@ class Locator : public Processor {
 
 }  // namespace rime
 
-#endif  // RIME_LOCATOR_H_
+#endif  // RIME_NAVIGATOR_H_

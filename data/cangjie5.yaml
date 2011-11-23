@@ -9,15 +9,22 @@ schema:
 engine:
   processors:
     - speller
+    - punctuator
+    - navigator
     - selector
     - express_editor
   segmentors:
     - abc_segmentor
+    - punct_segmentor
     - fallback_segmentor
   translators:
     - echo_translator
+    - punct_translator
     - table_translator
     - trivial_translator
 
 translator:
   dictionary: cangjie5
+
+punctuator:
+  import_preset: default

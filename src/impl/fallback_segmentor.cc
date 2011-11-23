@@ -39,7 +39,8 @@ bool FallbackSegmentor::Proceed(Segmentation *segmentation) {
       last.end = k + 1;
       EZLOGGERPRINT("extend previous raw segment to [%d, %d)", last.start, last.end);
       // mark redo translation (in case it's been previously translated)
-      last.status = Segment::kVoid;
+      last.Clear();
+      last.tags.insert("raw");
       return false;
     }
   }

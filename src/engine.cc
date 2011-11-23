@@ -103,10 +103,10 @@ void Engine::CalculateSegmentation(Composition *comp) {
 void Engine::TranslateSegments(Composition *comp) {
   EZLOGGERFUNCTRACKER;
   BOOST_FOREACH(Segment &segment, *comp) {
-    if (segment.status >= Segment::kSelected)
+    if (segment.status >= Segment::kGuess)
       continue;
     size_t len = segment.end - segment.start;
-    if (len <= 0) continue;
+    if (len == 0) continue;
     const std::string input(comp->input().substr(segment.start, len));
     EZLOGGERPRINT("Translating segment '%s'", input.c_str());
     shared_ptr<Menu> menu(new Menu);
@@ -171,6 +171,9 @@ void Engine::set_schema(Schema *schema) {
 void Engine::InitializeComponents() {
   if (!schema_)
     return;
+  processors_.clear();
+  segmentors_.clear();
+  translators_.clear();
   Config *config = schema_->config();
   // create processors
   shared_ptr<ConfigList> processor_list(config->GetList("engine/processors"));
