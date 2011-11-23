@@ -133,11 +133,7 @@ bool Context::ConfirmPreviousSelection() {
 
 bool Context::ReopenPreviousSegment() {
   EZLOGGERFUNCTRACKER;
-  if (composition_->empty())
-    return false;
-  Segment &last(composition_->back());
-  if (last.start == last.end) {
-    composition_->pop_back();
+  if (composition_->Trim()) {
     if (!composition_->empty() &&
       composition_->back().status >= Segment::kSelected) {
       composition_->back().status = Segment::kVoid;

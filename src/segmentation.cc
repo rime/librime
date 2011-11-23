@@ -96,6 +96,15 @@ bool Segmentation::Forward() {
   return true;
 }
 
+// remove empty trailing segment
+bool Segmentation::Trim() {
+  if (!empty() && back().start == back().end) {
+    pop_back();
+    return true;
+  }
+  return false;
+}
+
 bool Segmentation::HasFinishedSegmentation() const {
   return (empty() ? 0 : back().end) >= input_.length();
 }

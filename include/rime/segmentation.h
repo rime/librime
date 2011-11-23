@@ -65,6 +65,7 @@ class Segmentation : public std::vector<Segment> {
   bool AddSegment(const Segment &segment);
 
   bool Forward();
+  bool Trim();
   bool HasFinishedSegmentation() const;
   size_t GetCurrentStartPosition() const;
   size_t GetCurrentEndPosition() const;

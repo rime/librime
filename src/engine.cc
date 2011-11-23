@@ -92,12 +92,14 @@ void Engine::CalculateSegmentation(Composition *comp) {
     // no advancement
     if (start_pos == comp->GetCurrentEndPosition())
       break;
-    // move onto the next segment... or 
-    // start an empty segment at the end of a confirmed composition.
-    if (!comp->HasFinishedSegmentation() ||
-        comp->back().status >= Segment::kSelected)
+    // move onto the next segment...
+    if (!comp->HasFinishedSegmentation())
       comp->Forward();
   }
+  // start an empty segment only at the end of a confirmed composition.
+  comp->Trim();
+  if (!comp->empty() && comp->back().status >= Segment::kSelected)
+    comp->Forward();
 }
 
 void Engine::TranslateSegments(Composition *comp) {
