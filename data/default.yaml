@@ -63,5 +63,20 @@ punctuator:
     "=" : [ ＝, "=" ]
     "[" : [ 「, 【, 〔, ［ ]
     "]" : [ 」, 】, 〕, ］ ]
-    "{" : [ 『, 〗, ｛ ]
-    "}" : [ 』, 〖, ｝ ]
+    "{" : [ 『, 〖, ｛ ]
+    "}" : [ 』, 〗, ｝ ]
+
+key_binder:
+  bindings:
+    - { when: composing, accept: Control+p, send: Up }
+    - { when: composing, accept: Control+n, send: Down }
+    - { when: composing, accept: Control+b, send: Left }
+    - { when: composing, accept: Control+f, send: Right }
+    - { when: composing, accept: Control+a, send: Home }
+    - { when: composing, accept: Control+e, send: End }
+    - { when: composing, accept: Control+g, send: Escape }
+    - { when: composing, accept: Tab, send: Page_Down }
+    - { when: paging, accept: minus, send: Page_Up }
+    - { when: composing, accept: equal, send: Page_Down }
+    - { when: paging, accept: comma, send: Page_Up }
+    - { when: composing, accept: period, send: Page_Down }
