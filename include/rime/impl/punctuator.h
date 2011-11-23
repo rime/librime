@@ -33,10 +33,12 @@ class Punctuator : public Processor {
   virtual Result ProcessKeyEvent(const KeyEvent &key_event);
 
  protected:
-  bool AlternatePunct(const std::string &key,
-                      const ConfigItemPtr &definition);
+  bool ConfirmUniquePunct(const ConfigItemPtr &definition);
+  bool AlternatePunct(const std::string &key, const ConfigItemPtr &definition);
+  bool PairPunct(const std::string &key, const ConfigItemPtr &definition);
 
   PunctConfig config_;
+  int oddness_;
 };
 
 class PunctSegmentor : public Segmentor {
