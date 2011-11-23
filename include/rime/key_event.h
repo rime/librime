@@ -41,7 +41,7 @@ class KeyEvent {
   // 解析文字表示的按鍵
   bool Parse(const std::string &repr);
 
-  bool operator== (const KeyEvent &other) {
+  bool operator== (const KeyEvent &other) const {
     return keycode_ == other.keycode_ && modifier_ == other.modifier_;
   }
 

@@ -8,6 +8,7 @@ schema:
 
 engine:
   processors:
+    - key_binder
     - speller
     - punctuator
     - navigator
@@ -27,4 +28,7 @@ translator:
   dictionary: cangjie5
 
 punctuator:
+  import_preset: default
+
+key_binder:
   import_preset: default

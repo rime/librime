@@ -28,13 +28,11 @@ Processor::Result Selector::ProcessKeyEvent(const KeyEvent &key_event) {
   if (!current_segment.menu || current_segment.HasTag("raw"))
     return kNoop;
   int ch = key_event.keycode();
-  if (ch == XK_Prior || ch == XK_KP_Prior || 
-      ch == XK_comma || ch == XK_bracketleft || ch == XK_minus) {
+  if (ch == XK_Prior || ch == XK_KP_Prior) {
     PageUp(ctx);
     return kAccepted;
   }
-  if (ch == XK_Next || ch == XK_KP_Next ||
-      ch == XK_period || ch == XK_bracketright || ch == XK_equal) {
+  if (ch == XK_Next || ch == XK_KP_Next) {
     PageDown(ctx);
     return kAccepted;
   }
@@ -67,6 +65,7 @@ bool Selector::PageUp(Context *ctx) {
   int selected_index = comp->back().selected_index;
   int index = selected_index < page_size ? 0 : selected_index - page_size;
   comp->back().selected_index = index;
+  comp->back().tags.insert("paging");
   return true;
 }
 
@@ -83,6 +82,7 @@ bool Selector::PageDown(Context *ctx) {
   if (index >= candidate_count)
     index = candidate_count - 1;
   comp->back().selected_index = index;
+  comp->back().tags.insert("paging");
   return true;
   
 }
@@ -95,6 +95,7 @@ bool Selector::CursorUp(Context *ctx) {
   if (index <= 0)
     return false;
   comp->back().selected_index = index - 1;
+  comp->back().tags.insert("paging");
   return true;
 }
 
@@ -108,6 +109,7 @@ bool Selector::CursorDown(Context *ctx) {
   if (candidate_count <= index)
     return false;
   comp->back().selected_index = index;
+  comp->back().tags.insert("paging");
   return true;
 }
 
@@ -116,6 +118,8 @@ bool Selector::SelectCandidateAt(Context *ctx, int index) {
   if (comp->empty())
     return false;
   int page_size = engine_->schema()->page_size();
+  if (index >= page_size)
+    return false;
   int selected_index = comp->back().selected_index;
   int page_start = (selected_index / page_size) * page_size;
   return ctx->Select(page_start + index);

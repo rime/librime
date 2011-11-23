@@ -8,6 +8,7 @@ schema:
 
 engine:
   processors:
+    - key_binder
     - speller
     - punctuator
     - navigator
@@ -68,6 +69,7 @@ punctuator:
 
 key_binder:
   bindings:
+    # Emacs style
     - { when: composing, accept: Control+p, send: Up }
     - { when: composing, accept: Control+n, send: Down }
     - { when: composing, accept: Control+b, send: Left }
@@ -75,6 +77,11 @@ key_binder:
     - { when: composing, accept: Control+a, send: Home }
     - { when: composing, accept: Control+e, send: End }
     - { when: composing, accept: Control+g, send: Escape }
+    - { when: composing, accept: Alt+v, send: Page_Up }
+    - { when: composing, accept: Control+v, send: Page_Down }
+    # commonly used paging keys
+    - { when: composing, accept: ISO_Left_Tab, send: Page_Up }
+    - { when: composing, accept: Shift+Tab, send: Page_Up }
     - { when: composing, accept: Tab, send: Page_Down }
     - { when: paging, accept: minus, send: Page_Up }
     - { when: composing, accept: equal, send: Page_Down }

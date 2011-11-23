@@ -22,6 +22,7 @@
 #include <rime/impl/fluency_editor.h>
 #include <rime/impl/fallback_segmentor.h>
 #include <rime/impl/navigator.h>
+#include <rime/impl/key_binder.h>
 #include <rime/impl/punctuator.h>
 #include <rime/impl/r10n_translator.h>
 #include <rime/impl/selector.h>
@@ -56,6 +57,7 @@ void RegisterComponents() {
   r.Register("fluency_editor", new Component<FluencyEditor>);
   r.Register("navigator", new Component<Navigator>);
   r.Register("punctuator", new Component<Punctuator>);
+  r.Register("key_binder", new Component<KeyBinder>);
   r.Register("selector", new Component<Selector>);
   r.Register("speller", new Component<Speller>);
 

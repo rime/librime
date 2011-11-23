@@ -15,10 +15,16 @@
 
 namespace rime {
 
+class KeyBindings;
+
 class KeyBinder : public Processor {
  public:
-  KeyBinder(Engine *engine) : Processor(engine) {}
+  KeyBinder(Engine *engine);
   virtual Result ProcessKeyEvent(const KeyEvent &key_event);
+
+ protected:
+  scoped_ptr<KeyBindings> key_bindings_;
+  bool redirecting_;
 };
 
 }  // namespace rime
