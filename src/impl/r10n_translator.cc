@@ -371,8 +371,8 @@ shared_ptr<DictEntry> R10nTranslation::SimplisticSentenceMaking(Dictionary *dict
         continue;
       EZDBGONLYLOGGERVAR(end_pos);
       DictEntryList &entries(x.second);
-      for (int count = 0; count < kMaxSentenceMakingHomophones && !entries.empty(); ++count) {
-        const shared_ptr<DictEntry> &e(entries.back());
+      for (size_t i = 0; i < kMaxSentenceMakingHomophones && i < entries.size(); ++i) {
+        const shared_ptr<DictEntry> &e(entries[i]);
         shared_ptr<DictEntry> new_sentence(new DictEntry(*sentence[start_pos]));
         new_sentence->code.insert(new_sentence->code.end(), e->code.begin(), e->code.end());
         new_sentence->text.append(e->text);
@@ -383,7 +383,6 @@ shared_ptr<DictEntry> R10nTranslation::SimplisticSentenceMaking(Dictionary *dict
                         end_pos, new_sentence->text.c_str(), new_sentence->weight);
           sentence[end_pos] = new_sentence;
         }
-        entries.pop_back();
       }
     }
   }
