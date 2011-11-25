@@ -55,7 +55,7 @@ Punctuator::Punctuator(Engine *engine) : Processor(engine), oddness_(0) {
 }
 
 Processor::Result Punctuator::ProcessKeyEvent(const KeyEvent &key_event) {
-  if (key_event.release())
+  if (key_event.release() || key_event.ctrl() || key_event.alt())
     return kNoop;
   int ch = key_event.keycode();
   if (ch < 0x20 || ch > 0x7f)
