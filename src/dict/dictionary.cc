@@ -104,8 +104,8 @@ shared_ptr<DictEntry> DictEntryIterator::Peek() {
     if (!chunk.remaining_code.empty()) {
       entry_->comment = "~" + chunk.remaining_code;
     }
-    const double kS = 10000;
-    entry_->weight = e.weight / kS;
+    const double kS = 100000.0;
+    entry_->weight = (e.weight + 1) / kS;
   }
   return entry_;
 }
