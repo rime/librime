@@ -19,6 +19,7 @@
 #include <rime/menu.h>
 #include <rime/schema.h>
 #include <rime/dict/dictionary.h>
+#include <rime/dict/dict_compiler.h>
 
 class RimeConsole {
  public:
@@ -106,10 +107,10 @@ bool PrepareDictionary() {
   if (!component) return false;
   rime::Dictionary *dict = component->Create(&schema);
   if (!dict) return false;
-  //if (!dict->Exists())
   {
     std::cerr << "Preparing dictionary " << dict->name() << "..." << std::endl;
-    dict->Compile(dict->name() + ".dict.yaml", "rime_console.yaml");
+    rime::DictCompiler dict_compiler(dict);
+    dict_compiler.Compile(dict->name() + ".dict.yaml", "rime_console.yaml");
     std::cerr << "Ready to work with dictionary " << dict->name() << "." << std::endl;
   }
   return true;

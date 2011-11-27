@@ -10,6 +10,7 @@
 #include <rime/common.h>
 #include <rime/dict/syllablizer.h>
 #include <rime/dict/dictionary.h>
+#include <rime/dict/dict_compiler.h>
 
 class RimeDictionaryTest : public ::testing::Test {
  public:
@@ -22,7 +23,8 @@ class RimeDictionaryTest : public ::testing::Test {
     }
     if (!rebuilt_) {
       dict_->Remove();
-      dict_->Compile("dictionary_test.yaml", "dictionary_test.yaml");
+      rime::DictCompiler dict_compiler(dict_.get());
+      dict_compiler.Compile("dictionary_test.yaml", "dictionary_test.yaml");
       rebuilt_ = true;
     }
     dict_->Load();

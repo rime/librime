@@ -86,7 +86,6 @@ class Dictionary : public Class<Dictionary, Schema*> {
   virtual ~Dictionary();
 
   bool Exists() const;
-  bool Compile(const std::string &dict_file, const std::string &schema_file);
   bool Remove();
   bool Load();
 
@@ -101,10 +100,6 @@ class Dictionary : public Class<Dictionary, Schema*> {
   shared_ptr<Prism> prism() { return prism_; }
 
  private:
-  bool BuildTable(const std::string &dict_file, uint32_t checksum);
-  bool BuildPrism(const std::string &schema_file,
-                  uint32_t dict_file_checksum, uint32_t schema_file_checksum);
-  
   std::string name_;
   shared_ptr<Prism> prism_;
   shared_ptr<Table> table_;
