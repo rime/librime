@@ -24,7 +24,6 @@
 class RimeConsole {
  public:
   RimeConsole() : interactive_(false), engine_(new rime::Engine) {
-    engine_->set_schema(new rime::Schema(".rime_console"));
     conn_ = engine_->sink().connect(
         boost::bind(&RimeConsole::OnCommit, this, _1));
   }
@@ -102,7 +101,7 @@ class RimeConsole {
 };
 
 bool PrepareDictionary() {
-  rime::Schema schema(".rime_console");
+  rime::Schema schema(".default");
   rime::Dictionary::Component *component = rime::Dictionary::Require("dictionary");
   if (!component) return false;
   rime::Dictionary *dict = component->Create(&schema);
@@ -110,7 +109,7 @@ bool PrepareDictionary() {
   {
     std::cerr << "Preparing dictionary " << dict->name() << "..." << std::endl;
     rime::DictCompiler dict_compiler(dict);
-    dict_compiler.Compile(dict->name() + ".dict.yaml", "rime_console.yaml");
+    dict_compiler.Compile(dict->name() + ".dict.yaml", "default.yaml");
     std::cerr << "Ready to work with dictionary " << dict->name() << "." << std::endl;
   }
   return true;

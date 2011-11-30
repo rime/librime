@@ -12,7 +12,7 @@ add_dependencies(rime_api_console rime-static)
 
 file(COPY ${PROJECT_SOURCE_DIR}/data/default.yaml 
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
-file(COPY ${PROJECT_SOURCE_DIR}/data/rime_console.yaml 
+file(COPY ${PROJECT_SOURCE_DIR}/data/essay.kct
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 file(COPY ${PROJECT_SOURCE_DIR}/data/samples/luna_pinyin.dict.yaml 
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})

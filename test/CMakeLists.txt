@@ -6,7 +6,7 @@ target_link_libraries(rime_test
                       ${GTEST_LIBRARIES})
 add_dependencies(rime_test rime-static)
 
-file(COPY ${PROJECT_SOURCE_DIR}/data/test.yaml 
+file(COPY ${PROJECT_SOURCE_DIR}/data/config_test.yaml 
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 file(COPY ${PROJECT_SOURCE_DIR}/data/dictionary_test.yaml 
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})

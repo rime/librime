@@ -4,7 +4,10 @@
 
 schema:
   schema_id: default
-  name: Rime
+  name: Rime 默認配置（朙月拼音）
+  version: "0.9"
+  author:
+    - 佛振 <chen.sst@gmail.com>
 
 engine:
   processors:

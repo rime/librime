@@ -19,7 +19,7 @@ class RimeConfigTest : public ::testing::Test {
 
   virtual void SetUp() {
     component_ = new ConfigComponent("%s.yaml");
-    config_ = component_->Create("test");
+    config_ = component_->Create("config_test");
   }
 
   virtual void TearDown() {
@@ -41,7 +41,7 @@ TEST(RimeConfigComponentTest, RealCreationWorkflow) {
   Config::Component *cc = Config::Require("test_config");
   ASSERT_TRUE(cc != NULL);
   // creation
-  scoped_ptr<Config> config(cc->Create("test"));
+  scoped_ptr<Config> config(cc->Create("config_test"));
   EXPECT_TRUE(config);
   r.Unregister("test_config");
 }
