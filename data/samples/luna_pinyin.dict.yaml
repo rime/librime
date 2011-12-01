@@ -26,7 +26,7 @@
 
 ---
 name: luna_pinyin
-version: "0.1"
+version: "0.9"
 sort: by_weight
 use_preset_vocabulary: true
 ...
@@ -1127,8 +1127,8 @@ use_preset_vocabulary: true
 亙	geng
 亙	hu
 亚	ya
-些	suo
-些	xie
+些	suo	0%
+些	xie	100%
 些什麼	xie shen me
 亜	ya
 亝	ji
@@ -1137,8 +1137,8 @@ use_preset_vocabulary: true
 亝	zi
 亞	ya
 亞太地區	ya tai di qu
-亟	ji	91.11%
-亟	qi	8.89%
+亟	ji	95.11%
+亟	qi	4.89%
 亟待	ji dai
 亟待解決	ji dai jie jue
 亟需	ji xu
@@ -1251,8 +1251,8 @@ use_preset_vocabulary: true
 仉	zhang
 今	jin
 今朝	jin zhao
-介	ga
-介	jie
+介	ga	0%
+介	jie	100%
 仌	bing
 仌	ning
 仍	reng
@@ -1272,8 +1272,8 @@ use_preset_vocabulary: true
 仔細看	zi xi kan
 仔細閱讀	zi xi yue du
 仕	shi
-他	ta
-他	tuo
+他	ta	100%
+他	tuo	0%
 他倆	ta lia
 他們倆	ta men lia
 仗	zhang
@@ -1483,9 +1483,9 @@ use_preset_vocabulary: true
 佗	tuo
 佘	she
 佘	yu
-余	tu
-余	xu
-余	yu
+余	tu	0%
+余	xu	0%
+余	yu	100%
 佚	yi
 佛	bi
 佛	fo	97.74%
@@ -3191,8 +3191,8 @@ use_preset_vocabulary: true
 可行	ke xing
 可行性	ke xing xing
 可調	ke tiao
-台	tai
-台	yi
+台	tai	100%
+台	yi	0%
 叱	chi
 史	shi
 右	you
@@ -3965,8 +3965,8 @@ use_preset_vocabulary: true
 嗪	qin
 嗫	nie
 嗬	he
-嗯	eng
 嗯	en
+嗯	eng
 嗯啊	en a
 嗯嗯	en en
 嗰	ge
@@ -5315,8 +5315,8 @@ use_preset_vocabulary: true
 奶	nai
 奷	qian
 奸	jian
-她	ta
-她	yi
+她	ta	100%
+她	yi	0%
 奺	jiu
 奻	nan
 奼	cha
@@ -6187,15 +6187,15 @@ use_preset_vocabulary: true
 封	feng
 専	zhuan
 尃	fu
-射	she
-射	shi
-射	ye
-射	yi
+射	she	100%
+射	shi	0%
+射	ye	0%
+射	yi	0%
 尅	ke
-将	jiang
-将	qiang
-將	jiang
-將	qiang
+将	jiang	100%
+将	qiang	0%
+將	jiang	100%
+將	qiang	0%
 專	zhuan
 專長	zhuan chang
 尉	wei	96.39%
@@ -8348,7 +8348,6 @@ use_preset_vocabulary: true
 成熟度	cheng shu du
 成熟期	cheng shu qi
 成行	cheng xing
-成都	cheng dou
 成都	cheng du
 成都人	cheng du ren
 成都市	cheng du shi
@@ -9997,8 +9996,8 @@ use_preset_vocabulary: true
 暅	yuan
 暆	yi
 暇	xia
-暈	yin
-暈	yun
+暈	yin	0%
+暈	yun	100%
 暉	hui
 暊	fu
 暋	min
@@ -10013,8 +10012,8 @@ use_preset_vocabulary: true
 暓	mao
 暔	nan
 暕	jian
-暖	nuan
-暖	xuan
+暖	nuan	100%
+暖	xuan	0%
 暖和	nuan he
 暖和	nuan huo
 暗	an
@@ -12298,7 +12297,6 @@ use_preset_vocabulary: true
 洩	xie
 洩	yi
 洪	hong
-洪都拉斯	hong du la si
 洫	xu
 洬	su
 洭	kuang
@@ -12364,8 +12362,8 @@ use_preset_vocabulary: true
 浗	qiu
 浘	wei
 浙	zhe
-浚	xun	20%
 浚	jun	80%
+浚	xun	20%
 浛	han
 浜	bang
 浜	bin
@@ -17929,9 +17927,10 @@ use_preset_vocabulary: true
 縿	can
 縿	shan
 繀	sui
-繁	fan	99.86%
 繁	bo	0.14%
+繁	fan	99.86%
 繁	po	0.14%
+繁塔	bo ta
 繁殖	fan zhi
 繁盛	fan sheng
 繁重	fan zhong
@@ -19392,8 +19391,8 @@ use_preset_vocabulary: true
 芵	jue
 芶	gou
 芷	zhi
-芸	yi
-芸	yun
+芸	yi	0%
+芸	yun	100%
 芹	qin
 芺	ao
 芺	yao
@@ -24375,8 +24374,8 @@ use_preset_vocabulary: true
 郻	qiao
 郼	wei
 郼	yi
-都	dou	98.64%
-都	du	1.36%
+都	dou	94.64%
+都	du	5.36%
 都城	du cheng
 都市	du shi
 都市報	du shi bao
@@ -28965,10 +28964,10 @@ use_preset_vocabulary: true
 齇	zha
 齈	nong
 齉	nang
-齊	ji
-齊	qi
-齊	zhai
-齊	zi
+齊	ji	0%
+齊	qi	100%
+齊	zhai	0%
+齊	zi	0%
 齋	zhai
 齌	ji
 齌	qi
@@ -28977,10 +28976,10 @@ use_preset_vocabulary: true
 齎	ji
 齏	ji
 齏	jiu
-齐	ji
-齐	qi
-齐	zhai
-齐	zi
+齐	ji	0%
+齐	qi	100%
+齐	zhai	0%
+齐	zi	0%
 齑	ji
 齒	chi
 齓	chen
