@@ -34,7 +34,8 @@ echo.
 rem TODO: select a cmake generator
 rem set CMAKE_GENERATOR="MinGW Makefiles"
 rem set CMAKE_GENERATOR="Eclipse CDT4 - MinGW Makefiles"
-set CMAKE_GENERATOR="Visual Studio 9 2008"
+rem set CMAKE_GENERATOR="Visual Studio 9 2008"
+set CMAKE_GENERATOR="Visual Studio 10"
 
 set BUILD_DIR=%RIME_ROOT%\vcbuild
 if not exist %BUILD_DIR% mkdir %BUILD_DIR%
