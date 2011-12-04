@@ -839,8 +839,8 @@ use_preset_vocabulary: true
 万	mo	0.02%
 万	wan	99.98%
 丈	zhang
-三	sa
-三	san
+三	sa	0%
+三	san	100%
 三人行	san ren xing
 三地	san di
 三番	san fan
@@ -909,9 +909,9 @@ use_preset_vocabulary: true
 丑	chou
 丒	chou
 专	zhuan
-且	ju
-且	qie	99.96%
-且	qu	0.07%
+且	ju	0%
+且	qie	100%
+且	qu	0%
 丕	pei
 丕	pi
 世	shi
@@ -993,18 +993,18 @@ use_preset_vocabulary: true
 乁	yi
 乂	ai
 乂	yi
-乃	ai
-乃	nai
+乃	ai	0%
+乃	nai	100%
 乄	wu
 久	jiu
 乆	jiu
-乇	chi
-乇	mao
+乇	chi	0%
+乇	mao	0%
 乇	tuo	29.47%
 乇	zhe	70.53%
 么	ma	0.04%
-么	me	99.93%
-么	yao
+么	me	98.93%
+么	yao	1%
 义	yi
 乊	xx
 之	zhi
@@ -1023,16 +1023,16 @@ use_preset_vocabulary: true
 乑	zhong
 乒	ping
 乓	pang
-乔	jiao
-乔	qiao
+乔	jiao	0%
+乔	qiao	100%
 乕	hu
 乖	guai
 乗	cheng
 乗	sheng
 乘	cheng	99.46%
 乘	sheng	0.54%
-乙	yi
-乙	zhe
+乙	yi	100%
+乙	zhe	0%
 乚	ya
 乚	yin
 乛	zhe
@@ -1081,8 +1081,8 @@ use_preset_vocabulary: true
 亀	gui
 亀	jun
 亀	qiu
-亁	gan
-亁	qian
+亁	gan	90%
+亁	qian	10%
 亂	lan	0%
 亂	luan	100%
 亂彈	luan tan
@@ -1100,10 +1100,10 @@ use_preset_vocabulary: true
 争	zheng
 事	shi
 二	er
-亍	chu
-亍	yu
-于	xu
-于	yu
+亍	chu	100%
+亍	yu	0%
+于	xu	0%
+于	yu	100%
 亏	kui
 亏	xu
 亏	yu
@@ -1144,8 +1144,8 @@ use_preset_vocabulary: true
 亟需	ji xu
 亡	wang	99.46%
 亡	wu	0.54%
-亢	gang
-亢	kang
+亢	gang	0%
+亢	kang	100%
 亣	da
 亣	dai
 亣	tai
@@ -1158,20 +1158,20 @@ use_preset_vocabulary: true
 亥	hai
 亦	yi
 产	chan
-亨	heng
-亨	peng
+亨	heng	100%
+亨	peng	0%
 亩	mu
 亪	xx
 享	xiang
 享樂	xiang le
-京	jing
-京	yuan
+京	jing	100%
+京	yuan	0%
 京都	jing du
 亭	ting
 亮	liang
 亯	xiang
-亰	jing
-亰	yuan
+亰	jing	100%
+亰	yuan	0%
 亱	ye
 亲	qin	99.82%
 亲	qing	0.18%
@@ -1195,7 +1195,7 @@ use_preset_vocabulary: true
 亾	wang
 亾	wu
 亿	yi
-什	she	15.8%
+什	she	0%
 什	shen	84.2%
 什	shi	15.8%
 什葉派	shi ye pai
@@ -1237,8 +1237,8 @@ use_preset_vocabulary: true
 仂	li
 仃	ding
 仄	ze
-仅	fu
-仅	jin
+仅	fu	0%
+仅	jin	100%
 仆	fu
 仆	pu
 仇	chou	83.84%
@@ -1256,8 +1256,8 @@ use_preset_vocabulary: true
 仌	bing
 仌	ning
 仍	reng
-从	cong
-从	zong
+从	cong	100%
+从	zong	0%
 仏	bi
 仏	fo
 仏	fu
@@ -1300,8 +1300,8 @@ use_preset_vocabulary: true
 仦	miao
 仧	chang
 仧	zhang
-仨	sa
-仨	san
+仨	sa	100%
+仨	san	0%
 仩	shang
 仪	yi
 仫	mu
@@ -1331,8 +1331,8 @@ use_preset_vocabulary: true
 任重道遠	ren zhong dao yuan
 仼	kuang
 仼	wang
-份	bin
-份	fen
+份	bin	0%
+份	fen	100%
 仾	di
 仿	fang
 伀	zhong
@@ -1355,8 +1355,8 @@ use_preset_vocabulary: true
 伎倆	ji liang
 伏	fu
 伐	fa
-休	xiu
-休	xu
+休	xiu	100%
+休	xu	0%
 休閒娛樂	xiu xian yu le
 伒	jin
 伒	xin
@@ -1368,7 +1368,7 @@ use_preset_vocabulary: true
 众	zhong
 优	you
 伙	huo
-会	gui
+会	gui	0%
 会	hui	99.98%
 会	kuai	0.02%
 伛	kou
@@ -1466,8 +1466,8 @@ use_preset_vocabulary: true
 佐	zuo
 佑	you
 佒	yang
-体	ben
-体	ti
+体	ben	0%
+体	ti	100%
 佔	zhan
 佔便宜	zhan pian yi
 佔地	zhan di
@@ -1481,13 +1481,13 @@ use_preset_vocabulary: true
 佖	bi
 佗	ta
 佗	tuo
-佘	she
-佘	yu
+佘	she	100%
+佘	yu	0%
 余	tu	0%
 余	xu	0%
 余	yu	100%
 佚	yi
-佛	bi
+佛	bi	0%
 佛	fo	97.74%
 佛	fu	2.26%
 作	zuo
@@ -1513,15 +1513,15 @@ use_preset_vocabulary: true
 佫	ge
 佫	he
 佫	ke
-佬	lao
-佬	liao
+佬	lao	100%
+佬	liao	0%
 佭	xiang
 佮	ge
 佮	he
 佯	yang
-佰	bai
-佰	bo
-佰	mo
+佰	bai	100%
+佰	bo	0%
+佰	mo	0%
 佱	fa
 佲	ming
 佳	jia
@@ -1588,8 +1588,8 @@ use_preset_vocabulary: true
 依法行政	yi fa xing zheng
 侞	ru
 侟	jian
-侠	jia
-侠	xia
+侠	jia	0%
+侠	xia	100%
 価	ga
 価	jia
 侢	dai
@@ -1642,8 +1642,8 @@ use_preset_vocabulary: true
 俇	wang
 俈	ku
 俉	wu
-俊	jun
-俊	zun
+俊	jun	100%
+俊	zun	0%
 俋	yi
 俌	fu
 俍	lang
@@ -1668,14 +1668,14 @@ use_preset_vocabulary: true
 俜	ping
 保	bao
 保重	bao zhong
-俞	shu	1%
-俞	yu	99%
+俞	shu	0%
+俞	yu	100%
 俟	qi	7.04%
 俟	si	92.96%
-俠	jia
-俠	xia
-信	shen
-信	xin
+俠	jia	0%
+俠	xia	100%
+信	shen	0%
+信	xin	100%
 信得過	xin de guo
 信息披露	xin xi pi lu
 信樂團	xin yue tuan
@@ -1708,8 +1708,8 @@ use_preset_vocabulary: true
 俷	fei
 俸	feng
 俹	ya
-俺	an
-俺	yan
+俺	an	100%
+俺	yan	0%
 俻	bei
 俼	yu
 俼	zhu
@@ -1773,8 +1773,8 @@ use_preset_vocabulary: true
 倪	ni
 倫	lun
 倬	zhuo
-倭	wei
-倭	wo
+倭	wei	0%
+倭	wo	100%
 倮	luo
 倯	song
 倰	leng
@@ -1828,8 +1828,8 @@ use_preset_vocabulary: true
 偒	tang
 偓	wo
 偔	e
-偕	jie
-偕	xie
+偕	jie	0%
+偕	xie	100%
 偖	che
 偖	she
 偗	sheng
@@ -1909,8 +1909,8 @@ use_preset_vocabulary: true
 傋	gou
 傋	jiang
 傌	ma
-傍	bang
-傍	pang
+傍	bang	100%
+傍	pang	0%
 傎	dian
 傏	tang
 傐	hao
@@ -1971,8 +1971,8 @@ use_preset_vocabulary: true
 傻	sha
 傼	han
 傽	zhang
-傾	keng
-傾	qing
+傾	keng	0%
+傾	qing	100%
 傿	yan
 僀	di
 僁	xi
@@ -2024,8 +2024,8 @@ use_preset_vocabulary: true
 僥	yao	44.1%
 僥倖	jiao xing
 僦	jiu
-僧	seng
-僧	zeng
+僧	seng	100%
+僧	zeng	0%
 僨	fen
 僩	xian
 僪	jue
@@ -2051,8 +2051,8 @@ use_preset_vocabulary: true
 價	shu	0%
 價格便宜	jia ge pian yi
 僺	qiao
-僻	bei
-僻	pi
+僻	bei	0%
+僻	pi	100%
 僼	feng
 僽	chou
 僽	zhou
@@ -2136,9 +2136,8 @@ use_preset_vocabulary: true
 儼	yan
 儽	lei
 儾	nang
-儿	er
-儿	r
-儿	ren
+儿	er	100%
+儿	ren	0%
 兀	wu
 允	yun
 兂	zan
@@ -2156,14 +2155,14 @@ use_preset_vocabulary: true
 光	guang
 光大銀行	guang da yin hang
 光柵	guang shan
-兊	dui
-兊	yue
+兊	dui	100%
+兊	yue	0%
 克	ke
 克羅地亞	ke luo di ya
-兌	dui
-兌	yue
-免	mian
-免	wen
+兌	dui	100%
+兌	yue	0%
+免	mian	100%
+免	wen	0%
 免不了	mian bu liao
 免得	mian de
 兎	tu
@@ -2171,11 +2170,10 @@ use_preset_vocabulary: true
 兏	zhang
 児	er
 児	ni
-兑	dui
-兑	yue
-兒	er
-兒	ni
-兒	r
+兑	dui	100%
+兑	yue	0%
+兒	er	100%
+兒	ni	0%
 兓	jin
 兔	tu
 兕	si
@@ -2197,12 +2195,12 @@ use_preset_vocabulary: true
 兣	li
 兤	guang
 兤	kuang
-入	ri
-入	ru
+入	ri	0%
+入	ru	100%
 兦	wang
 兦	wu
-內	na
-內	nei
+內	na	0%
+內	nei	100%
 內分泌	nei fen mi
 內參	nei can
 內地	nei di
@@ -2217,8 +2215,8 @@ use_preset_vocabulary: true
 兩	liang
 兩地	liang di
 兩行	liang hang
-兪	shu
-兪	yu
+兪	shu	0%
+兪	yu	100%
 八	ba
 八角	ba jiao
 公	gong
@@ -2233,8 +2231,8 @@ use_preset_vocabulary: true
 兰	lan
 共	gong
 兲	tian
-关	guan
-关	xiao
+关	guan	100%
+关	xiao	0%
 兴	xing
 兵	bing
 其	ji	0.05%
@@ -2255,19 +2253,19 @@ use_preset_vocabulary: true
 冂	jiong
 冃	mao
 冄	ran
-内	na
-内	nei
+内	na	0%
+内	nei	100%
 円	yuan
 冇	mao
 冇	mou
-冈	gang
-冈	wang
+冈	gang	100%
+冈	wang	0%
 冉	ran
-冊	ce
-冊	chai
+冊	ce	100%
+冊	chai	0%
 冋	hui
-册	ce
-册	chai
+册	ce	100%
+册	chai	0%
 再	zai
 再行	zai xing
 冎	gua
@@ -2301,15 +2299,15 @@ use_preset_vocabulary: true
 冥	ming
 冦	kou
 冨	fu
-冪	mi
-冪	mu
+冪	mi	100%
+冪	mu	0%
 冫	bing
 冬	dong
 冭	tai
-冯	feng
-冯	ping
-冰	bing
-冰	ning
+冯	feng	100%
+冯	ping	0%
+冰	bing	100%
+冰	ning	0%
 冰天雪地	bing tian xue di
 冱	hu
 冲	chong
@@ -2325,8 +2323,8 @@ use_preset_vocabulary: true
 冹	fu
 冺	min
 冻	dong
-冼	sheng
-冼	xian
+冼	sheng	0%
+冼	xian	100%
 冽	lie
 冾	qia
 冾	xia
@@ -2395,12 +2393,12 @@ use_preset_vocabulary: true
 凵	qu
 凶	xiong
 凷	kuai
-凸	die
-凸	gu
-凸	tu
-凹	ao
-凹	wa
-凹	yao
+凸	die	0%
+凸	gu	1%
+凸	tu	99%
+凹	ao	90%
+凹	wa	10%
+凹	yao	0%
 出	chu
 出不了	chu bu liao
 出人頭地	chu ren tou di
@@ -2479,8 +2477,8 @@ use_preset_vocabulary: true
 刪	shan
 别	bie
 刭	jing
-刮	gua
-刮	ka
+刮	gua	100%
+刮	ka	0%
 刯	geng
 到	dao
 到不了	dao bu liao
@@ -2537,8 +2535,9 @@ use_preset_vocabulary: true
 剓	li
 剔	ti
 剕	fei
-剖	po
-剖	pou
+剖	pao	100%
+剖	po	0%
+剖	pou	100%
 剗	chan
 剘	qi
 剙	chuang
@@ -2560,8 +2559,8 @@ use_preset_vocabulary: true
 剤	ji
 剥	bao	2.33%
 剥	bo	97.67%
-剧	ji
-剧	ju
+剧	ji	0%
+剧	ju	100%
 剨	huo
 剩	sheng
 剪	jian
@@ -2571,8 +2570,8 @@ use_preset_vocabulary: true
 剭	wu
 剮	gua
 剮	guo
-副	fu
-副	pi
+副	fu	100%
+副	pi	0%
 剰	sheng
 割	ge
 剳	da
@@ -2600,8 +2599,8 @@ use_preset_vocabulary: true
 劄	zha
 劅	zhuo
 劆	lian
-劇	ji
-劇	ju
+劇	ji	0%
+劇	ju	100%
 劈	pi
 劉	liu
 劊	gui
@@ -2742,8 +2741,8 @@ use_preset_vocabulary: true
 勰	xie
 勱	mai
 勲	xun
-勳	xiong
-勳	xun
+勳	xiong	0%
+勳	xun	100%
 勴	lv
 勵	li
 勶	che
@@ -2788,8 +2787,8 @@ use_preset_vocabulary: true
 匕	bi
 化	hua
 化纖	hua xian
-北	bei
-北	bo
+北	bei	100%
+北	bo	0%
 北京地區	bei jing di qu
 北京銀行	bei jing yin hang
 北朝鮮	bei chao xian
@@ -2807,8 +2806,8 @@ use_preset_vocabulary: true
 匡	kuang
 匢	hu
 匢	wu
-匣	he
-匣	xia
+匣	he	0%
+匣	xia	100%
 匥	fan
 匦	gui
 匧	qie
@@ -2820,14 +2819,14 @@ use_preset_vocabulary: true
 匫	wu
 匬	yu
 匭	gui
-匮	gui
-匮	kui
+匮	gui	1%
+匮	kui	99%
 匯	hui
 匯率	hui lv
 匯豐銀行	hui feng yin hang
 匰	dan
-匱	gui
-匱	kui
+匱	gui	1%
+匱	kui	99%
 匲	lian
 匳	lian
 匴	suan
@@ -2836,16 +2835,16 @@ use_preset_vocabulary: true
 匷	qu
 匸	xi
 匹	pi
-区	gou
+区	gou	0%
 区	ou	0.09%
 区	qu	99.91%
 医	yi
 匼	an
 匽	yan
-匾	bian
-匾	pian
+匾	bian	100%
+匾	pian	0%
 匿	ni
-區	gou
+區	gou	0%
 區	ou	0.09%
 區	qu	99.91%
 區長	qu zhang
@@ -2859,11 +2858,11 @@ use_preset_vocabulary: true
 卆	zu
 升	sheng
 升學率	sheng xue lv
-午	huo
-午	wu
+午	huo	0%
+午	wu	100%
 午覺	wu jiao
-卉	ben
-卉	hui
+卉	ben	0%
+卉	hui	100%
 半	ban
 半角	ban jiao
 卋	shi
@@ -2886,8 +2885,8 @@ use_preset_vocabulary: true
 单	dan	99.52%
 单	shan	0.38%
 卖	mai
-南	na
-南	nan
+南	na	0%
+南	nan	100%
 南北朝	nan bei chao
 南朝	nan chao
 南水北調	nan shui bei diao
@@ -2918,8 +2917,8 @@ use_preset_vocabulary: true
 卡	qia	0.22%
 卢	lu
 卣	you
-卤	lu
-卤	xi
+卤	lu	100%
+卤	xi	0%
 卦	gua
 卧	wo
 卨	chi
@@ -2939,15 +2938,15 @@ use_preset_vocabulary: true
 卲	shao
 即	ji
 却	que
-卵	lan
-卵	luan
-卵	luo
-卵	ruan
+卵	lan	0%
+卵	luan	100%
+卵	luo	0%
+卵	ruan	0%
 卶	chi
-卷	juan
-卷	quan
-卸	xie
-卸	yu
+卷	juan	100%
+卷	quan	0%
+卸	xie	100%
+卸	yu	0%
 卹	xu
 卺	cheng
 卺	jin
@@ -2972,8 +2971,8 @@ use_preset_vocabulary: true
 厈	an
 厈	han
 厈	yan
-厉	lai
-厉	li
+厉	lai	0%
+厉	li	100%
 厊	ya
 压	ya
 厌	yan
@@ -2991,8 +2990,8 @@ use_preset_vocabulary: true
 厖	mang
 厖	pang
 厗	ti
-厘	chan
-厘	li
+厘	chan	0%
+厘	li	100%
 厙	ku
 厙	she
 厚	hou
@@ -3031,8 +3030,8 @@ use_preset_vocabulary: true
 厰	chang
 厱	lan
 厱	qian
-厲	lai
-厲	li
+厲	lai	0%
+厲	li	100%
 厳	yan
 厴	yan
 厶	si
@@ -3051,10 +3050,10 @@ use_preset_vocabulary: true
 厾	du
 县	xian	99.88%
 叀	zhuan
-叁	can
-叁	cen
-叁	san
-叁	shen
+叁	can	0%
+叁	cen	0%
+叁	san	100%
+叁	shen	0%
 参	can	90.45%
 参	cen	0.01%
 参	san	0.01%
@@ -3143,8 +3142,8 @@ use_preset_vocabulary: true
 叝	gao
 叞	wei
 叟	sou
-叠	da
-叠	die
+叠	da	1%
+叠	die	99%
 叡	rui
 叢	cong
 口	kou
@@ -3200,9 +3199,9 @@ use_preset_vocabulary: true
 右下角	you xia jiao
 叴	qiu
 叴	rou
-叵	ju
-叵	po
-叵	pou
+叵	ju	0%
+叵	po	100%
+叵	pou	0%
 叶	xie	0.05%
 叶	ye	99.95%
 号	hao
@@ -3210,21 +3209,21 @@ use_preset_vocabulary: true
 司司長	si si zhang
 司法行政	si fa xing zheng
 司長	si zhang
-叹	tan
-叹	you
+叹	tan	100%
+叹	you	0%
 叻	le
 叻	li
 叼	diao
-叽	ji
-叽	jiao
+叽	ji	100%
+叽	jiao	0%
 叿	hong
 吀	xiang
 吀	yang
 吁	xu	40.45%
 吁	yu	59.55%
 吂	mang
-吃	chi
-吃	ji
+吃	chi	100%
+吃	ji	0%
 吃不了	chi bu liao
 吃什麼	chi shen me
 吃喝玩樂	chi he wan le
@@ -3286,14 +3285,14 @@ use_preset_vocabulary: true
 否	fou	100%
 否	pi	0%
 吧	ba
-吨	dun
-吨	tun
+吨	dun	100%
+吨	tun	0%
 吩	fen
 吪	e
-含	han
-含	hen
-听	ting
-听	yin
+含	han	100%
+含	hen	0%
+听	ting	100%
+听	yin	0%
 吭	hang	27.07%
 吭	kang	0%
 吭	keng	72.93%
@@ -3324,17 +3323,17 @@ use_preset_vocabulary: true
 吹得	chui de
 吺	dou
 吻	wen
-吼	hou
-吼	kong
+吼	hou	100%
+吼	kong	0%
 吽	hong
 吽	hou
 吽	ou
-吾	wu
-吾	yu
-吿	gao
-吿	gu
-呀	xia
-呀	ya
+吾	wu	100%
+吾	yu	0%
+吿	gao	100%
+吿	gu	0%
+呀	xia	0%
+呀	ya	100%
 呁	jun
 呁	yun
 呂	lv
@@ -3347,8 +3346,8 @@ use_preset_vocabulary: true
 呇	ta
 呈	cheng
 呉	wu
-告	gao
-告	gu
+告	gao	100%
+告	gu	0%
 呋	die
 呋	fu
 呌	jiao
@@ -3400,7 +3399,7 @@ use_preset_vocabulary: true
 呮	qi
 呯	ping
 呰	zi
-呱	gu	50%
+呱	gu	5%
 呱	gua 100%
 呱	wa  0%
 呱呱	gua gua
@@ -3460,15 +3459,15 @@ use_preset_vocabulary: true
 和	huo	0.02%
 和誰	he shui
 咍	hai
-咎	gao
-咎	jiu
+咎	gao	0%
+咎	jiu	100%
 咏	yong
 咐	fu
 咑	da
 咒	zhou
 咓	wa
-咔	ka
-咔	long
+咔	ka	100%
+咔	long	0%
 咔嚓	ka cha
 咕	gu
 咖	ga	50%
@@ -3506,19 +3505,19 @@ use_preset_vocabulary: true
 咪	mi
 咫	chi
 咫	zhi
-咬	jiao
-咬	yao
+咬	jiao	0%
+咬	yao	100%
 咭	ji
 咮	zhou
 咯	ge	2.04%
-咯	ka
+咯	ka	0%
 咯	lo	94.72%
 咯	luo	3.22%
 咯咯	ge ge
 咰	shuai
 咰	xun
-咱	za
-咱	zan
+咱	za	1%
+咱	zan	99%
 咱們	za men
 咱們	zan men
 咲	xiao
@@ -3559,8 +3558,8 @@ use_preset_vocabulary: true
 哆	duo
 哇	wa
 哇塞	wa sai
-哈	ha
-哈	ka
+哈	ha	100%
+哈	ka	0%
 哉	zai
 哊	yu
 哋	di
@@ -3609,8 +3608,8 @@ use_preset_vocabulary: true
 哪吒	ne zha
 哫	zu
 哬	he
-哭	kao
-哭	ku
+哭	kao	0%
+哭	ku	100%
 哭得	ku de
 哭笑不得	ku xiao bu de
 哮	xiao
@@ -3650,8 +3649,8 @@ use_preset_vocabulary: true
 唄	bei	96.29%
 唅	han
 唆	suo
-唇	chun
-唇	zhen
+唇	chun	100%
+唇	zhen	0%
 唈	e
 唈	yi
 唉	ai
@@ -3665,8 +3664,8 @@ use_preset_vocabulary: true
 唐	tang
 唐伯虎	tang bo hu
 唐朝	tang chao
-唑	shi
-唑	zuo
+唑	shi	0%
+唑	zuo	100%
 唒	miu
 唒	qiu
 唒	you
@@ -3713,8 +3712,8 @@ use_preset_vocabulary: true
 唶	xi
 唶	ze
 唷	yo
-唸	dian
-唸	nian
+唸	dian	0%
+唸	nian	100%
 唹	yu
 唺	xian
 唻	lai
@@ -3747,8 +3746,8 @@ use_preset_vocabulary: true
 啈	xing
 啉	lan
 啉	lin
-啊	a
-啊	o
+啊	a	100%
+啊	o	0%
 啋	cai
 啋	xiao
 啌	qiang
@@ -3774,8 +3773,8 @@ use_preset_vocabulary: true
 啛	cui
 啜	chuo
 啝	he
-啞	e
-啞	ya
+啞	e	0%
+啞	ya	100%
 啟	qi
 啠	zhe
 啡	fei
@@ -3787,8 +3786,8 @@ use_preset_vocabulary: true
 啧	ze
 啨	qing
 啨	ying
-啪	pa
-啪	pai
+啪	pa	100%
+啪	pai	0%
 啫	zhe
 啬	se
 啭	zhuan
@@ -3802,9 +3801,9 @@ use_preset_vocabulary: true
 啷	lang
 啸	xiao
 啺	tang
-啻	chi
-啻	di
-啻	ti
+啻	chi	100%
+啻	di	0%
+啻	ti	0%
 啼	ti
 啽	an
 啾	jiu
@@ -3842,14 +3841,14 @@ use_preset_vocabulary: true
 喓	yao
 喔	o	35.47%
 喔	wo	64.53%
-喔	wu
+喔	wu	0%
 喔喔	wo wo
 喕	mian
 喖	hu
 喗	yun
 喘	chuan
-喙	hui
-喙	yuan
+喙	hui	100%
+喙	yuan	0%
 喚	huan
 喛	huan
 喜	xi
@@ -3857,8 +3856,8 @@ use_preset_vocabulary: true
 喜樂	xi le
 喜歡什麼	xi huan shen me
 喜聞樂見	xi wen le jian
-喝	he
-喝	ye
+喝	he	100%
+喝	ye	0%
 喝咖啡	he ka fei
 喝得	he de
 喞	ji
@@ -3877,8 +3876,8 @@ use_preset_vocabulary: true
 喩	yu
 喪	sang
 喫	chi
-喬	jiao
-喬	qiao
+喬	jiao	0%
+喬	qiao	100%
 喭	yan
 單	chan	0.1%
 單	dan	99.52%
@@ -3890,9 +3889,9 @@ use_preset_vocabulary: true
 喯	fen
 喯	pen
 喱	li
-喲	yao
-喲	yo
-喲	you
+喲	yao	0%
+喲	yo	100%
+喲	you	0%
 喳	cha	3.49%
 喳	zha	96.51%
 喴	wei
@@ -3931,8 +3930,8 @@ use_preset_vocabulary: true
 嗏	cha
 嗐	hai
 嗐	xia
-嗑	he
-嗑	ke
+嗑	he	0%
+嗑	ke	100%
 嗒	ta
 嗓	sang
 嗔	chen
@@ -3970,8 +3969,8 @@ use_preset_vocabulary: true
 嗯啊	en a
 嗯嗯	en en
 嗰	ge
-嗲	dia
-嗲	die
+嗲	dia	100%
+嗲	die	0%
 嗳	ai
 嗵	tong
 嗶	bi
@@ -3997,8 +3996,9 @@ use_preset_vocabulary: true
 嘃	chong
 嘄	jiao
 嘄	nie
-嘅	kai
-嘅	xi
+嘅	ge	100%
+嘅	kai	0%
+嘅	xi	0%
 嘆	tan
 嘇	can
 嘇	san
@@ -4018,8 +4018,8 @@ use_preset_vocabulary: true
 嘑	hu
 嘒	hui
 嘓	guo
-嘔	ou
-嘔	xu
+嘔	ou	100%
+嘔	xu	0%
 嘕	xian
 嘕	yan
 嘖	ze
@@ -4030,9 +4030,9 @@ use_preset_vocabulary: true
 嘜	ma
 嘜	mo
 嘝	hu
-嘞	le
-嘞	lei
-嘞	liao
+嘞	le	70%
+嘞	lei	30%
+嘞	liao	0%
 嘟	du
 嘢	ye
 嘣	beng
@@ -4083,8 +4083,8 @@ use_preset_vocabulary: true
 嘿	mo	0%
 噀	sun
 噀	xun
-噁	e
-噁	wu
+噁	e	100%
+噁	wu	0%
 噂	zun
 噃	fan
 噄	chi
@@ -4127,9 +4127,9 @@ use_preset_vocabulary: true
 噟	ying
 噠	da
 噡	zhan
-噢	o
-噢	ou
-噢	yu
+噢	o	99%
+噢	ou	1%
+噢	yu	0%
 噣	zhou
 噣	zhuo
 噤	jin
@@ -4156,8 +4156,8 @@ use_preset_vocabulary: true
 噲	hui
 噲	kuai
 噳	yu
-噴	fen
-噴	pen
+噴	fen	0%
+噴	pen	100%
 噵	dao
 噶	ga
 噶	ge
@@ -4303,8 +4303,8 @@ use_preset_vocabulary: true
 囧	jiong
 囨	pian
 囩	yun
-囪	chuang
-囪	cong
+囪	chuang	0%
+囪	cong	100%
 囫	hu
 囬	hui
 园	yuan
@@ -4313,8 +4313,8 @@ use_preset_vocabulary: true
 囯	guo
 困	kun
 困難重重	kun nan chong chong
-囱	chuang
-囱	cong
+囱	chuang	0%
+囱	cong	100%
 囲	tong
 囲	wei
 図	tu
@@ -4358,8 +4358,8 @@ use_preset_vocabulary: true
 圍	wei
 圍剿	wei jiao
 圎	yuan
-圏	juan
-圏	quan
+圏	juan	5%
+圏	quan	95%
 圐	ku
 圑	fu
 園	yuan
@@ -4397,9 +4397,9 @@ use_preset_vocabulary: true
 圠	ya
 圡	tu
 圢	ting
-圣	guai
-圣	ku
-圣	sheng
+圣	guai	0%
+圣	ku	0%
+圣	sheng	100%
 圤	pu
 圥	lu
 圧	ya
@@ -4503,8 +4503,8 @@ use_preset_vocabulary: true
 地點	di dian
 圱	qian
 圲	qian
-圳	chou
-圳	zhen
+圳	chou	0%
+圳	zhen	100%
 圳	zun
 圴	shao
 圴	zhuo
@@ -4529,8 +4529,8 @@ use_preset_vocabulary: true
 坅	qin
 坆	fen
 坆	mei
-均	jun
-均	yun
+均	jun	100%
+均	yun	0%
 坈	rong
 坉	dun
 坉	tun
@@ -4539,10 +4539,10 @@ use_preset_vocabulary: true
 坌	ben
 坍	tan
 坎	kan
-坏	bei
-坏	huai
-坏	pei
-坏	pi
+坏	bei	0%
+坏	huai	100%
+坏	pei	0%
+坏	pi	0%
 坐	zuo
 坑	keng
 坒	bi
@@ -4639,14 +4639,14 @@ use_preset_vocabulary: true
 垠	yin
 垡	fa
 垢	gou
-垣	huan
-垣	yuan
+垣	huan	0%
+垣	yuan	100%
 垤	die
 垤	zhi
 垥	qia
 垥	xie
-垦	ken
-垦	yin
+垦	ken	100%
+垦	yin	0%
 垧	jiong
 垧	shang
 垨	shou
@@ -4757,8 +4757,8 @@ use_preset_vocabulary: true
 執行董事	zhi xing dong shi
 執行過程	zhi xing guo cheng
 埸	yi
-培	pei
-培	pou
+培	pei	100%
+培	pou	0%
 培訓基地	pei xun ji di
 基	ji
 基地	ji di
@@ -4811,8 +4811,8 @@ use_preset_vocabulary: true
 堢	bao
 堢	pu
 堣	yu
-堤	di
-堤	ti
+堤	di	100%
+堤	ti	0%
 堥	mao
 堥	mou
 堦	jie
@@ -4999,8 +4999,8 @@ use_preset_vocabulary: true
 墬	di
 墬	zui
 墭	sheng
-墮	duo
-墮	hui
+墮	duo	100%
+墮	hui	0%
 墯	duo
 墰	tan
 墱	deng
@@ -5039,9 +5039,9 @@ use_preset_vocabulary: true
 壏	jian
 壏	lan
 壐	xi
-壑	he
-壑	huo
-壑	rui
+壑	he	100%
+壑	huo	0%
+壑	rui	0%
 壒	ai
 壒	kai
 壓	ya
@@ -5050,15 +5050,15 @@ use_preset_vocabulary: true
 壕	hao
 壖	ru
 壖	ruan
-壘	lei
-壘	lv
+壘	lei	100%
+壘	lv	0%
 壙	kuang
 壚	lu
 壛	yan
 壜	tan
 壝	wei
-壞	guai
-壞	huai
+壞	guai	0%
+壞	huai	100%
 壟	long
 壟斷行業	long duan hang ye
 壠	long
@@ -5108,11 +5108,11 @@ use_preset_vocabulary: true
 夊	sui
 夋	jun
 夌	ling
-复	fou
-复	fu
+复	fou	0%
+复	fu	100%
 夎	zuo
-夏	jia
-夏	xia
+夏	jia	0%
+夏	xia	100%
 夐	xiong
 夐	xuan
 夒	nao
@@ -5193,8 +5193,8 @@ use_preset_vocabulary: true
 天行	tian xing
 天長地久	tian chang di jiu
 天馬行空	tian ma xing kong
-太	tai
-太	tui
+太	tai	100%
+太	tui	0%
 太行	tai hang
 太行山	tai hang shan
 太重	tai zhong
@@ -5202,14 +5202,14 @@ use_preset_vocabulary: true
 夫	fu
 夬	guai
 夬	jue
-夭	ao
-夭	yao
+夭	ao	0%
+夭	yao	100%
 央	yang
 央行	yang hang
 夯	ben	2.88%
 夯	hang	97.12%
-夯	li
-夯	nu
+夯	li	0%
+夯	nu	0%
 夰	gao
 失	shi
 失地	shi di
@@ -5286,11 +5286,11 @@ use_preset_vocabulary: true
 奢	she
 奣	weng
 奤	po
-奥	ao
-奥	yu
+奥	ao	100%
+奥	yu	0%
 奦	wu
-奧	ao
-奧	yu
+奧	ao	100%
+奧	yu	0%
 奧地利	ao di li
 奨	jiang
 奩	lian
@@ -5306,8 +5306,8 @@ use_preset_vocabulary: true
 奰	bi
 奱	lian
 奲	che
-女	nv
-女	ru
+女	nv	100%
+女	ru	0%
 女主角	nv zhu jue
 女生宿舍	nv sheng su she
 奴	nu
@@ -5337,8 +5337,8 @@ use_preset_vocabulary: true
 如	ru
 如何進行	ru he jin xing
 如魚得水	ru yu de shui
-妃	fei
-妃	pei
+妃	fei	100%
+妃	pei	0%
 妄	wang
 妅	gang
 妅	gong
@@ -5395,8 +5395,8 @@ use_preset_vocabulary: true
 妱	zhao
 妲	da
 妲	dan
-妳	nai
-妳	ni
+妳	nai	0%
+妳	ni	100%
 妴	wan
 妴	yuan
 妵	tou
@@ -5427,8 +5427,8 @@ use_preset_vocabulary: true
 姊	zi
 始	shi
 姌	ran
-姍	shan
-姍	xian
+姍	shan	100%
+姍	xian	0%
 姎	yang
 姏	gan
 姏	han
@@ -5442,8 +5442,8 @@ use_preset_vocabulary: true
 委員長	wei yuan zhang
 姕	zi
 姖	ju
-姗	shan
-姗	xian
+姗	shan	100%
+姗	xian	0%
 姘	pin
 姙	ren
 姚	yao
@@ -5530,8 +5530,8 @@ use_preset_vocabulary: true
 娖	zu
 娗	ding
 娗	ting
-娘	nia
-娘	niang
+娘	nia	0%
+娘	niang	100%
 娙	keng
 娙	xing
 娚	nao
@@ -5557,8 +5557,8 @@ use_preset_vocabulary: true
 娠	zhen
 娡	zhi
 娢	han
-娣	di
-娣	ti
+娣	di	100%
+娣	ti	0%
 娤	zhuang
 娥	e
 娦	bin
@@ -5653,8 +5653,8 @@ use_preset_vocabulary: true
 婥	chuo
 婥	zhuo
 婦	fu
-婧	jing
-婧	qian
+婧	jing	100%
+婧	qian	0%
 婨	lun
 婩	an
 婩	yan
@@ -5892,8 +5892,8 @@ use_preset_vocabulary: true
 嬧	jin
 嬨	ci
 嬩	yu
-嬪	bin
-嬪	pin
+嬪	bin	0%
+嬪	pin	100%
 嬫	rong
 嬬	ru
 嬬	xu
@@ -5973,10 +5973,10 @@ use_preset_vocabulary: true
 孩	hai
 孪	luan
 孪	lvan
-孫	sun
-孫	xun
-孬	huai
-孬	nao
+孫	sun	100%
+孫	xun	0%
+孬	huai	0%
+孬	nao	100%
 孭	mie
 孮	cong
 孯	qian
@@ -5989,8 +5989,8 @@ use_preset_vocabulary: true
 孵	fu
 孶	zi
 孷	li
-學	xiao
-學	xue
+學	xiao	0%
+學	xue	100%
 學什麼	xue shen me
 學得	xue de
 學生家長	xue sheng jia zhang
@@ -6012,12 +6012,12 @@ use_preset_vocabulary: true
 宁	ning
 宁	zhu
 宂	rong
-它	ta
-它	tuo
+它	ta	100%
+它	tuo	0%
 宄	gui
 宄	jiu
-宅	zhai
-宅	zhe
+宅	zhai	100%
+宅	zhe	0%
 宅基地	zhai ji di
 宆	qiong
 宇	yu
@@ -6043,15 +6043,15 @@ use_preset_vocabulary: true
 宓	fu
 宓	mi
 宔	zhu
-宕	dang
-宕	yan
+宕	dang	100%
+宕	yan	0%
 宖	hong
 宗	zong
 官	guan
 宙	zhou
 定	ding
-宛	wan
-宛	yuan
+宛	wan	99%
+宛	yuan	1%
 宜	yi
 宝	bao
 实	shi
@@ -6076,8 +6076,8 @@ use_preset_vocabulary: true
 宱	zha
 宲	bao
 宲	shi
-害	hai
-害	he
+害	hai	100%
+害	he	0%
 害得	hai de
 宴	yan
 宵	xiao
@@ -6299,26 +6299,26 @@ use_preset_vocabulary: true
 屁	pi
 层	ceng
 屄	bi
-居	ji
-居	ju
+居	ji	0%
+居	ju	100%
 居住地	ju zhu di
-屆	jie
-屆	qu
+屆	jie	100%
+屆	qu	0%
 屇	tian
-屈	jue
-屈	qu
+屈	jue	0%
+屈	qu	100%
 屉	ti
-届	jie
-届	qu
+届	jie	100%
+届	qu	0%
 屋	wu
 屌	diao
 屍	shi
-屎	shi
-屎	xi
+屎	shi	100%
+屎	xi	0%
 屏	bing	0.76%
 屏	ping	99.24%
 屐	ji
-屑	xiao
+屑	xiao	0%
 屑	xie
 屑	xue
 屒	zhen
@@ -6339,14 +6339,14 @@ use_preset_vocabulary: true
 属	zhu	0.07%
 屟	die
 屟	xie
-屠	chu
-屠	tu
+屠	chu	0%
+屠	tu	100%
 屡	lv
 屢	lv
 屣	xi
 層	ceng
-履	li
-履	lv
+履	li	0%
+履	lv	100%
 履行	lv xing
 履行職責	lv xing zhi ze
 屦	ju
@@ -6361,7 +6361,7 @@ use_preset_vocabulary: true
 屬地	shu di
 屭	xi
 屮	che
-屯	chun
+屯	chun	0%
 屯	tun	99.71%
 屯	zhun	0.29%
 屰	ni
@@ -6851,8 +6851,8 @@ use_preset_vocabulary: true
 巽	sun
 巽	xun
 巾	jin
-巿	fu
-巿	shi
+巿	fu	100%
+巿	shi	0%
 帀	za
 币	bi
 币	yin
@@ -6904,8 +6904,8 @@ use_preset_vocabulary: true
 帣	diao
 帣	juan
 帤	ru
-帥	shuai
-帥	shuo
+帥	shuai	100%
+帥	shuo	0%
 带	dai
 帧	zheng
 帨	shui
@@ -6968,8 +6968,8 @@ use_preset_vocabulary: true
 幓	sen
 幓	shen
 幔	man
-幕	mo
-幕	mu
+幕	mo	0%
+幕	mu	100%
 幖	biao
 幗	guo
 幘	ze
@@ -6981,8 +6981,8 @@ use_preset_vocabulary: true
 幝	chan
 幞	fu
 幞	pu
-幟	chi
-幟	zhi
+幟	chi	0%
+幟	zhi	100%
 幠	fu
 幠	hu
 幠	wu
@@ -7090,8 +7090,8 @@ use_preset_vocabulary: true
 庩	tu
 庪	gui
 庪	ji
-庫	ku
-庫	she
+庫	ku	100%
+庫	she	0%
 庬	mang
 庬	pang
 庭	ting
@@ -7117,9 +7117,9 @@ use_preset_vocabulary: true
 庾	yu
 庿	miao
 廀	sou
-廁	ce
-廁	ci
-廁	si
+廁	ce	100%
+廁	ci	0%
+廁	si	0%
 廂	xiang
 廃	fei
 廄	ji
@@ -7250,8 +7250,8 @@ use_preset_vocabulary: true
 弝	ba
 弞	shen
 弞	yin
-弟	di
-弟	ti
+弟	di	100%
+弟	ti	0%
 张	zhang
 弡	jue
 弢	tao
@@ -7429,7 +7429,7 @@ use_preset_vocabulary: true
 従	zong
 徕	lai
 徖	cong
-得	dai
+得	dai	0%
 得	de	84.57%
 得	dei	15.43%
 得	di	0%
@@ -7483,20 +7483,20 @@ use_preset_vocabulary: true
 得體	de ti
 徘	pai
 徘徊	pai huai
-徙	tu
-徙	xi
+徙	tu	0%
+徙	xi	100%
 徛	ji
 徛	qi
 徜	chang
 徜	tang
 徝	zhi
-從	cong
-從	zong
+從	cong	100%
+從	zong	0%
 從頭到尾	cong tou dao wei
 徟	zhou
 徠	lai
-御	ya
-御	yu
+御	ya	0%
+御	yu	100%
 徢	xie
 徣	jie
 徤	jian
@@ -7506,8 +7506,8 @@ use_preset_vocabulary: true
 徧	bian
 徧	pian
 徨	huang
-復	fou
-復	fu
+復	fou	0%
+復	fu	100%
 復仇	fu chou
 復辟	fu bi
 循	xun
@@ -7526,8 +7526,8 @@ use_preset_vocabulary: true
 徳	de
 徴	zheng
 徴	zhi
-徵	zheng
-徵	zhi
+徵	zheng	99%
+徵	zhi	1%
 徵地	zheng di
 徵得	zheng de
 徶	bie
@@ -7654,8 +7654,8 @@ use_preset_vocabulary: true
 怌	pei
 怌	pi
 怍	zuo
-怎	ze
-怎	zen
+怎	ze	1%
+怎	zen	99%
 怎麼着	zen me zhao
 怎麼着	zen me zhe
 怏	yang
@@ -7665,8 +7665,8 @@ use_preset_vocabulary: true
 怑	ban
 怒	nu
 怓	nao
-怔	leng
-怔	zheng
+怔	leng	0%
+怔	zheng	100%
 怕	pa
 怕什麼	pa shen me
 怖	bu
@@ -7682,8 +7682,8 @@ use_preset_vocabulary: true
 怛	tan
 怜	lian
 怜	ling
-思	sai
-思	si
+思	sai	0%
+思	si	100%
 怞	you
 怞	zhou
 怟	di
@@ -7727,8 +7727,9 @@ use_preset_vocabulary: true
 怽	mi
 怿	yi
 恀	chi
-恁	nin
-恁	ren
+恁	nen	100%
+恁	nin	0%
+恁	ren	100%
 恂	xun
 恃	shi
 恄	ji
@@ -7780,16 +7781,16 @@ use_preset_vocabulary: true
 恨不得	hen bu de
 恩	en
 恩仇	en chou
-恪	ke
-恪	que
+恪	ke	100%
+恪	que	0%
 恫	dong
 恫	tong
 恬	tian
 恭	gong
 恮	quan
 息	xi
-恰	qia
-恰	xia
+恰	qia	100%
+恰	xia	0%
 恰似	qia si
 恱	yue
 恲	peng
@@ -7836,8 +7837,8 @@ use_preset_vocabulary: true
 悓	xian
 悔	hui
 悕	xi
-悖	bei
-悖	bo
+悖	bei	100%
+悖	bo	0%
 悗	man
 悘	yi
 悙	heng
@@ -7882,8 +7883,8 @@ use_preset_vocabulary: true
 悹	guan
 悺	guan
 悻	xing
-悼	dao
-悼	diao
+悼	dao	100%
+悼	diao	0%
 悽	qi
 悾	kong
 悿	tian
@@ -8025,8 +8026,8 @@ use_preset_vocabulary: true
 愝	yan
 愞	nuo
 愞	ru
-感	gan
-感	han
+感	gan	100%
+感	han	0%
 感覺	gan jue
 感覺不到	gan jue bu dao
 感覺真好	gan jue zhen hao
@@ -8083,8 +8084,8 @@ use_preset_vocabulary: true
 慊	qian	72.73%
 慊	qie	27.27%
 態	tai
-慌	heng
-慌	huang
+慌	heng	0%
+慌	huang	100%
 慍	yun
 慎	shen
 慎重	shen zhong
@@ -8203,8 +8204,8 @@ use_preset_vocabulary: true
 憥	lao
 憦	lao
 憧	chong
-憨	gan
-憨	han
+憨	gan	0%
+憨	han	100%
 憩	qi
 憩	xi
 憪	xian
@@ -8354,8 +8355,8 @@ use_preset_vocabulary: true
 成長	cheng zhang
 成長性	cheng zhang xing
 成長過程	cheng zhang guo cheng
-我	e
-我	wo
+我	e	0%
+我	wo	100%
 我倆	wo lia
 我們倆	wo men lia
 我是誰	wo shi shui
@@ -8372,8 +8373,8 @@ use_preset_vocabulary: true
 战	zhan
 戙	dong
 戙	tong
-戚	cu
-戚	qi
+戚	cu	0%
+戚	qi	100%
 戛	ga
 戛	jia
 戜	die
@@ -8431,8 +8432,8 @@ use_preset_vocabulary: true
 戾	lei
 戾	li
 戾	lie
-房	fang
-房	pang
+房	fang	100%
+房	pang	0%
 房地	fang di
 房地產	fang di chan
 房地產商	fang di chan shang
@@ -8517,8 +8518,8 @@ use_preset_vocabulary: true
 扱	xi
 扲	jin
 扲	qian
-扳	ban
-扳	pan
+扳	ban	100%
+扳	pan	0%
 扴	jia
 扴	jie
 扵	wu
@@ -8550,8 +8551,8 @@ use_preset_vocabulary: true
 抇	kou
 抈	yue
 抉	jue
-把	ba
-把	bai
+把	ba	100%
+把	bai	0%
 抋	qin
 抌	chen
 抌	zhen
@@ -8562,9 +8563,9 @@ use_preset_vocabulary: true
 抐	ne
 抑	yi
 抒	shu
-抓	chua
-抓	zhao
-抓	zhua
+抓	chua	0%
+抓	zhao	0%
+抓	zhua	100%
 抓得	zhua de
 抔	pou
 投	tou
@@ -8616,8 +8617,8 @@ use_preset_vocabulary: true
 抳	ni
 抴	ye
 抴	yi
-抵	di
-抵	zhi
+抵	di	100%
+抵	zhi	0%
 抶	chi
 抷	pei
 抷	pi
@@ -8643,8 +8644,8 @@ use_preset_vocabulary: true
 抿	min
 拀	zhu
 拁	jia
-拂	bi
-拂	fu
+拂	bi	0%
+拂	fu	100%
 拄	zhu
 担	dan
 拆	chai	97.23%
@@ -8656,10 +8657,10 @@ use_preset_vocabulary: true
 拉長	la chang
 拊	fu
 拋	pao
-拌	ban
-拌	pan
-拍	pai
-拍	po
+拌	ban	100%
+拌	pan	0%
+拍	pai	100%
+拍	po	0%
 拍得	pai de
 拍賣行	pai mai hang
 拎	lin
@@ -8673,7 +8674,7 @@ use_preset_vocabulary: true
 拒	ju
 拓	ta	1.19%
 拓	tuo	98.81%
-拓	zhi
+拓	zhi	0%
 拔	ba
 拕	tuo
 拖	tuo
@@ -8681,16 +8682,16 @@ use_preset_vocabulary: true
 拖沓	tuo ta
 拗	ao	60.12%
 拗	niu	39.88%
-拗	yao
-拗	yu
+拗	yao	0%
+拗	yu	0%
 拘	ju
 拙	zhuo
 拚	fen	0%
 拚	pan	11.86%
 拚	pin	88.14%
-招	qiao
-招	shao
-招	zhao
+招	qiao	0%
+招	shao	0%
+招	zhao	100%
 招商銀行	zhao shang yin hang
 招行	zhao hang
 拜	bai
@@ -8735,8 +8736,8 @@ use_preset_vocabulary: true
 拼	pin
 拽	ye	0.18%
 拽	zhuai	99.82%
-拾	she
-拾	shi
+拾	she	0.1%
+拾	shi	99.9%
 拿	na
 拿什麼	na shen me
 拿得	na de
@@ -8760,13 +8761,13 @@ use_preset_vocabulary: true
 挌	ge
 挍	jiao
 挍	xiao
-挎	ku
-挎	kua
+挎	ku	0%
+挎	kua	100%
 挏	dong
 挐	na
 挐	ru
-挑	tao
-挑	tiao
+挑	tao	0%
+挑	tiao	100%
 挒	lie
 挓	zha
 挓	zhai
@@ -8844,7 +8845,7 @@ use_preset_vocabulary: true
 捉	zhuo
 捉迷藏	zhuo mi cang
 捊	pou
-捋	le
+捋	le	0%
 捋	luo	6.67%
 捋	lv	93.33%
 捌	ba
@@ -8916,8 +8917,8 @@ use_preset_vocabulary: true
 捾	xia
 捿	qi
 捿	xi
-掀	xian
-掀	xin
+掀	xian	100%
+掀	xin	0%
 掁	cheng
 掂	dian
 掃	sao
@@ -9035,8 +9036,8 @@ use_preset_vocabulary: true
 揓	shi
 揔	zong
 揕	zhen
-揖	ji
-揖	yi
+揖	ji	0%
+揖	yi	100%
 揗	shun
 揘	heng
 揘	huang
@@ -9065,8 +9066,8 @@ use_preset_vocabulary: true
 揨	cheng
 揩	ka
 揩	kai
-揪	jiu
-揪	qiu
+揪	jiu	100%
+揪	qiu	0%
 揫	jiu
 揫	qiu
 揬	tu
@@ -9167,8 +9168,8 @@ use_preset_vocabulary: true
 搳	xia
 搴	qian
 搵	wen
-搶	chuang
-搶	qiang
+搶	chuang	0%
+搶	qiang	100%
 搷	chen
 搷	tian
 搸	zhen
@@ -9180,8 +9181,8 @@ use_preset_vocabulary: true
 搻	nuo
 搻	ruo
 搼	quan
-搽	ca
-搽	cha
+搽	ca	0%
+搽	cha	100%
 搾	zha
 搿	bai
 搿	ge
@@ -9220,8 +9221,8 @@ use_preset_vocabulary: true
 摖	qi
 摗	song
 摗	sou
-摘	zhai
-摘	zhe
+摘	zhai	100%
+摘	zhe	0%
 摘得	zhai de
 摙	lian
 摚	tang
@@ -9259,8 +9260,8 @@ use_preset_vocabulary: true
 摱	man
 摲	jian
 摲	shan
-摳	kou
-摳	qu
+摳	kou	100%
+摳	qu	0%
 摴	shu
 摵	se
 摵	suo
@@ -9268,13 +9269,13 @@ use_preset_vocabulary: true
 摶	tuan
 摷	chao
 摷	jiao
-摸	mao
-摸	mo
+摸	mao	0%
+摸	mo	100%
 摹	mo
 摺	zhe
-摻	can
-摻	chan
-摻	shan
+摻	can	0%
+摻	chan	100%
+摻	shan	0%
 摼	keng
 摼	qian
 摽	biao
@@ -9307,11 +9308,11 @@ use_preset_vocabulary: true
 撐	cheng
 撑	cheng
 撒	sa
-撓	nao
-撓	rao
+撓	nao	100%
+撓	rao	0%
 撔	heng
-撕	si
-撕	xi
+撕	si	100%
+撕	xi	0%
 撖	gan
 撖	qian
 撗	huang
@@ -9335,8 +9336,8 @@ use_preset_vocabulary: true
 撡	shan
 撢	dan
 撢	tan
-撣	dan
-撣	shan
+撣	dan	95%
+撣	shan	5%
 撤	che
 撥	bo
 撦	che
@@ -9346,8 +9347,8 @@ use_preset_vocabulary: true
 撨	xiao
 撩	liao
 撪	ben
-撫	fu
-撫	wu
+撫	fu	100%
+撫	wu	0%
 撬	qiao
 播	bo
 撮	cuo	99.9%
@@ -9393,8 +9394,8 @@ use_preset_vocabulary: true
 擋	dang
 擌	suo
 操	cao
-擎	jing
-擎	qing
+擎	jing	0%
+擎	qing	100%
 擏	jing
 擏	qing
 擐	huan
@@ -9687,9 +9688,9 @@ use_preset_vocabulary: true
 料	liao
 斚	jia
 斛	hu
-斜	xia
-斜	xie
-斜	ye
+斜	xia	0%
+斜	xie	100%
+斜	ye	0%
 斝	jia
 斞	yu
 斟	zhen
@@ -9760,8 +9761,8 @@ use_preset_vocabulary: true
 旊	fang
 旋	xuan
 旋渦	xuan wo
-旌	jing
-旌	ling
+旌	jing	100%
+旌	ling	0%
 旍	jing
 旍	ling
 旎	ni
@@ -9791,8 +9792,8 @@ use_preset_vocabulary: true
 既得利益	ji de li yi
 旣	ji
 旤	huo
-日	mi
-日	ri
+日	mi	0%
+日	ri	100%
 旦	dan
 旧	jiu
 旨	zhi
@@ -9851,8 +9852,8 @@ use_preset_vocabulary: true
 昒	wen
 昒	wu
 易	yi
-昔	cuo
-昔	xi
+昔	cuo	0%
+昔	xi	100%
 昕	xin
 昖	yan
 昗	ze
@@ -9906,8 +9907,8 @@ use_preset_vocabulary: true
 昽	long
 显	xian
 晀	tiao
-晁	chao
-晁	zhao
+晁	chao	100%
+晁	zhao	0%
 時	shi
 時曾	shi ceng
 時長	shi chang
@@ -9967,8 +9968,8 @@ use_preset_vocabulary: true
 晭	zhou
 普	pu
 普及率	pu ji lv
-景	jing
-景	ying
+景	jing	100%
+景	ying	0%
 晰	xi
 晱	shan
 晲	yi
@@ -10113,8 +10114,8 @@ use_preset_vocabulary: true
 曙	shu
 曚	meng
 曛	xun
-曜	yao
-曜	yue
+曜	yao	100%
+曜	yue	0%
 曝	bao	80.43%
 曝	pu	19.57%
 曝出	bao chu
@@ -10144,8 +10145,8 @@ use_preset_vocabulary: true
 曲調	qu diao
 曳	ye
 曳	yi
-更	geng
-更	jing
+更	geng	99.9%
+更	jing	0.1%
 更重	geng zhong
 更重要	geng zhong yao
 更長	geng chang
@@ -10157,8 +10158,8 @@ use_preset_vocabulary: true
 曷	he
 書	shu
 曹	cao
-曼	man
-曼	wan
+曼	man	100%
+曼	wan	0%
 曽	ceng
 曾	ceng	59.66%
 曾	zeng	40.34%
@@ -10213,8 +10214,8 @@ use_preset_vocabulary: true
 朆	fen
 朇	bi
 朇	pi
-月	rou
-月	yue
+月	rou	0%
+月	yue	100%
 有	you
 有什	you shen
 有仇	you chou
@@ -10303,13 +10304,13 @@ use_preset_vocabulary: true
 本地連接	ben di lian jie
 本行	ben hang
 札	zha
-朮	shu
-朮	zhu
+朮	shu	0%
+朮	zhu	100%
 术	shu	99.74%
-术	zhu
+术	zhu	0.26%
 朰	xx
-朱	shu
-朱	zhu
+朱	shu	0%
+朱	zhu	100%
 朲	ren
 朳	ba
 朴	piao	50%
@@ -10393,8 +10394,8 @@ use_preset_vocabulary: true
 東部地區	dong bu di qu
 杲	gao
 杲	guo
-杳	miao
-杳	yao
+杳	miao	0%
+杳	yao	100%
 杴	qian
 杴	xian
 杵	chu
@@ -10411,8 +10412,8 @@ use_preset_vocabulary: true
 杽	chou
 松	song
 松柏	song bai
-板	ban
-板	pan
+板	ban	100%
+板	pan	0%
 枀	song
 极	ji
 枂	wo
@@ -10448,8 +10449,8 @@ use_preset_vocabulary: true
 枚	mei
 枛	zhao
 果	guo
-枝	qi
-枝	zhi
+枝	qi	0%
+枝	zhi	100%
 枞	cong
 枟	yun
 枢	qu
@@ -10463,8 +10464,8 @@ use_preset_vocabulary: true
 枭	xiao
 枮	xian
 枮	zhan
-枯	gu
-枯	ku
+枯	gu	0%
+枯	ku	100%
 枰	ping
 枱	tai
 枲	xi
@@ -10525,8 +10526,8 @@ use_preset_vocabulary: true
 柘	zhe
 柙	jia
 柙	xia
-柚	you
-柚	zhu
+柚	you	100%
+柚	zhu	0%
 柛	shen
 柜	gui	99.3%
 柜	ju	0.7%
@@ -10563,8 +10564,8 @@ use_preset_vocabulary: true
 柱	zhu
 柲	bi
 柳	liu
-柴	chai
-柴	zhai
+柴	chai	100%
+柴	zhai	0%
 柵	shan
 柵	zha
 柵欄	zha lan
@@ -10765,8 +10766,8 @@ use_preset_vocabulary: true
 梛	nuo
 梜	jia
 梜	jie
-條	di
-條	tiao
+條	di	0%
+條	tiao	100%
 梞	ji
 梟	xiao
 梠	lv
@@ -10820,8 +10821,8 @@ use_preset_vocabulary: true
 棉	mian
 棊	ji
 棊	qi
-棋	ji
-棋	qi
+棋	ji	0%
+棋	qi	100%
 棌	cai
 棍	gun
 棎	chan
@@ -10836,8 +10837,8 @@ use_preset_vocabulary: true
 棕	zong
 棖	cheng
 棗	zao
-棘	ji
-棘	la
+棘	ji	100%
+棘	la	0%
 棙	li
 棚	peng
 棛	yu
@@ -10911,8 +10912,8 @@ use_preset_vocabulary: true
 椐	ju
 椑	bei
 椑	pi
-椒	jiao
-椒	shu
+椒	jiao	100%
+椒	shu	0%
 椓	zhuo
 椔	zi
 椕	bin
@@ -11005,8 +11006,8 @@ use_preset_vocabulary: true
 楫	ji
 楬	jie
 楬	qia
-業	nie
-業	ye
+業	nie	0%
+業	ye	100%
 業績增長	ye ji zeng zhang
 楮	chu
 楯	dun
@@ -11035,8 +11036,8 @@ use_preset_vocabulary: true
 楽	yao
 楽	yue
 榀	pin
-概	gai
-概	kai
+概	gai	100%
+概	kai	0%
 概率	gai lv
 榃	lin
 榃	tan
@@ -11118,8 +11119,8 @@ use_preset_vocabulary: true
 槊	shuo
 構	gou
 槌	chui
-槍	cheng
-槍	qiang
+槍	cheng	0%
+槍	qiang	100%
 槎	cha
 槏	jian
 槏	qian
@@ -11223,8 +11224,8 @@ use_preset_vocabulary: true
 樈	jing
 樈	qing
 樉	shuang
-樊	fan
-樊	pan
+樊	fan	100%
+樊	pan	0%
 樋	tong
 樌	guan
 樍	ji
@@ -11267,8 +11268,8 @@ use_preset_vocabulary: true
 模樣	mu yang
 樢	mu
 樢	niao
-樣	xiang
-樣	yang
+樣	xiang	0%
+樣	yang	100%
 樤	di
 樤	tiao
 樥	peng
@@ -11331,8 +11332,8 @@ use_preset_vocabulary: true
 橖	tang
 橗	meng
 橘	ju
-橙	chen
-橙	cheng
+橙	chen	0%
+橙	cheng	100%
 橚	su
 橚	xiao
 橛	jue
@@ -11557,8 +11558,8 @@ use_preset_vocabulary: true
 欝	yu
 欞	ling
 欠	qian
-次	ci
-次	zi
+次	ci	100%
+次	zi	0%
 欢	huan
 欣	xin
 欤	yu
@@ -11683,13 +11684,13 @@ use_preset_vocabulary: true
 歵	ze
 歶	yu
 歷	li
-歸	gui
-歸	kui
+歸	gui	100%
+歸	kui	0%
 歸宿	gui su
 歸屬地	gui shu di
 歸還	gui huan
-歹	dai
-歹	e
+歹	dai	100%
+歹	e	0%
 歺	dai
 歺	e
 死	si
@@ -11778,15 +11779,15 @@ use_preset_vocabulary: true
 殸	qing
 殸	sheng
 殹	yi
-殺	sha
-殺	shai
+殺	sha	100%
+殺	shai	0%
 殺得	sha de
 殻	ke
 殻	qiao
 殻	que
 殼	ke	97.56%
 殼	qiao	2.44%
-殼	que
+殼	que	2.44%
 殼牌	qiao pai
 殽	yao
 殾	xun
@@ -11798,8 +11799,8 @@ use_preset_vocabulary: true
 毃	que
 毄	ji
 毅	yi
-毆	ou
-毆	qu
+毆	ou	100%
+毆	qu	0%
 毇	hui
 毈	duan
 毉	yi
@@ -11815,8 +11816,8 @@ use_preset_vocabulary: true
 毑	jie
 毒	du
 毓	yu
-比	bi
-比	pi
+比	bi	100%
+比	pi	0%
 比得上	bi de shang
 比率	bi lv
 比誰	bi shui
@@ -11880,8 +11881,8 @@ use_preset_vocabulary: true
 氅	chang
 氆	pu
 氇	lu
-氈	tan
-氈	zhan
+氈	tan	0%
+氈	zhan	100%
 氉	sao
 氉	zao
 氊	tan
@@ -11994,16 +11995,16 @@ use_preset_vocabulary: true
 汚	wa
 汚	wu
 汚	yu
-汛	fan
-汛	xun
+汛	fan	0%
+汛	xun	100%
 汜	si
 汝	ru
-汞	gong
-汞	hong
+汞	gong	100%
+汞	hong	0%
 江	jiang
 池	chi
-污	wu
-污	yu
+污	wu	100%
+污	yu	0%
 汤	shang	0.06%
 汤	tang	99.94%
 汥	zhi
@@ -12033,8 +12034,8 @@ use_preset_vocabulary: true
 汵	cen
 汵	gan
 汵	han
-汶	men
-汶	wen
+汶	men	0%
+汶	wen	100%
 汷	zhong
 汸	fang
 汸	pang
@@ -12048,14 +12049,14 @@ use_preset_vocabulary: true
 汾	fen
 汿	xu
 沀	xu
-沁	qin
-沁	shen
-沂	jin
-沂	qi
-沂	yi
-沂	yin
-沃	wo
-沃	wu
+沁	qin	100%
+沁	shen	0%
+沂	jin	0%
+沂	qi	0%
+沂	yi	100%
+沂	yin	0%
+沃	wo	100%
+沃	wu	0%
 沄	yun
 沅	yuan
 沆	hang
@@ -12065,7 +12066,6 @@ use_preset_vocabulary: true
 沈	chen	0.01%
 沈	shen	99.99%
 沉	chen
-沉	shen
 沉沒	chen mo
 沉溺	chen ni
 沉着	chen zhuo
@@ -12076,9 +12076,9 @@ use_preset_vocabulary: true
 沍	hu
 沎	hua
 沎	huo
-沏	qi
-沏	qie
-沏	qu
+沏	qi	100%
+沏	qie	0%
+沏	qu	0%
 沐	mu
 沐浴露	mu yu lu
 沑	niu
@@ -12145,8 +12145,8 @@ use_preset_vocabulary: true
 沸	fu
 油	you
 沺	tian
-治	chi
-治	zhi
+治	chi	0%
+治	zhi	100%
 沼	zhao
 沽	gu
 沾	zhan
@@ -12168,8 +12168,9 @@ use_preset_vocabulary: true
 泊	po	12.6%
 泊位	bo wei
 泋	hui
-泌	bi
-泌	mi
+泌	bi	0%
+泌	mi	100%
+泌陽	bi yang
 泍	ben
 泎	jiao
 泎	zhuo
@@ -12189,8 +12190,8 @@ use_preset_vocabulary: true
 泙	peng
 泙	ping
 泚	ci
-泛	fan
-泛	feng
+泛	fan	100%
+泛	feng	0%
 泛珠三角	fan zhu san jiao
 泜	chi
 泜	zhi
@@ -12202,8 +12203,8 @@ use_preset_vocabulary: true
 泠	leng
 泠	ling
 泡	pao
-波	bo
-波	po
+波	bo	99%
+波	po	1%
 波長	bo chang
 泣	qi
 泤	si
@@ -12279,8 +12280,8 @@ use_preset_vocabulary: true
 洛	luo
 洜	luo
 洝	an
-洞	dong
-洞	tong
+洞	dong	100%
+洞	tong	0%
 洟	yi
 洠	mou
 洡	lei
@@ -12323,8 +12324,8 @@ use_preset_vocabulary: true
 活得	huo de
 洼	gui
 洼	wa
-洽	qia
-洽	xia
+洽	qia	100%
+洽	xia	0%
 派	pai
 洿	wu
 浀	qu
@@ -12388,8 +12389,8 @@ use_preset_vocabulary: true
 浫	han
 浬	li
 浭	geng
-浮	fou
-浮	fu
+浮	fou	0%
+浮	fu	100%
 浯	wu
 浰	li
 浱	chun
@@ -12561,9 +12562,9 @@ use_preset_vocabulary: true
 淴	hu
 淵	yuan
 淶	lai
-混	gun
-混	hun
-混	kun
+混	gun	0%
+混	hun	100%
+混	kun	0%
 混得	hun de
 淸	qing
 淹	yan
@@ -12612,8 +12613,8 @@ use_preset_vocabulary: true
 渝	yu
 渞	qiu
 渟	ting
-渠	ju
-渠	qu
+渠	ju	0%
+渠	qu	100%
 渡	du
 渢	feng
 渣	zha
@@ -12639,9 +12640,9 @@ use_preset_vocabulary: true
 渱	hong
 渲	xuan
 渳	mi
-渴	he
-渴	jie
-渴	ke
+渴	he	0%
+渴	jie	0%
+渴	ke	100%
 渵	mao
 渶	ying
 渷	yan
@@ -12652,8 +12653,8 @@ use_preset_vocabulary: true
 渻	xing
 渼	mei
 渽	zai
-渾	gun
-渾	hun
+渾	gun	0%
+渾	hun	100%
 渿	nai
 湀	gui
 湀	kui
@@ -12691,8 +12692,8 @@ use_preset_vocabulary: true
 湘	xiang
 湙	yi
 湚	yin
-湛	dan
-湛	zhan
+湛	dan	0%
+湛	zhan	100%
 湜	shi
 湝	gai
 湝	jie
@@ -12785,8 +12786,8 @@ use_preset_vocabulary: true
 溧	li
 溨	cai
 溩	wu
-溪	qi
-溪	xi
+溪	qi	0%
+溪	xi	100%
 溫	wen
 溬	qiang
 溭	ze
@@ -12832,16 +12833,16 @@ use_preset_vocabulary: true
 滊	qi
 滊	xi
 滋	zi
-滌	di
-滌	tiao
+滌	di	100%
+滌	tiao	0%
 滌綸	di lun
 滍	zhi
 滎	xing	46.15%
 滎	ying	53.85%
 滏	fu
 滐	jie
-滑	gu
-滑	hua
+滑	gu	0%
+滑	hua	100%
 滑行	hua xing
 滒	ge
 滒	he
@@ -12902,8 +12903,8 @@ use_preset_vocabulary: true
 漄	ya
 漅	chao
 漅	jiao
-漆	qi
-漆	qu
+漆	qi	99%
+漆	qu	1%
 漇	xi
 漈	ji
 漉	lu
@@ -12920,8 +12921,8 @@ use_preset_vocabulary: true
 漓	li
 演	yan
 演得	yan de
-漕	cao
-漕	zao
+漕	cao	100%
+漕	zao	0%
 漖	jiao
 漗	cong
 漘	chun
@@ -13122,8 +13123,8 @@ use_preset_vocabulary: true
 澰	lian
 澱	dian
 澲	ye
-澳	ao
-澳	yu
+澳	ao	100%
+澳	yu	0%
 澴	huan
 澵	qin
 澵	zhen
@@ -13167,8 +13168,8 @@ use_preset_vocabulary: true
 濒	bin
 濓	lian
 濔	mi
-濕	shi
-濕	xi
+濕	shi	100%
+濕	xi	0%
 濖	shu
 濗	mi
 濘	neng
@@ -13206,8 +13207,8 @@ use_preset_vocabulary: true
 濯	zhao
 濯	zhuo
 濰	wei
-濱	bin
-濱	pin
+濱	bin	100%
+濱	pin	0%
 濲	gu
 濳	qian
 濴	rong
@@ -13365,8 +13366,8 @@ use_preset_vocabulary: true
 灵	ling
 灶	zao
 灷	zhuan
-灸	jiu
-灸	zhi
+灸	jiu	100%
+灸	zhi	0%
 灹	zha
 灺	duo
 灺	ta
@@ -13410,8 +13411,8 @@ use_preset_vocabulary: true
 炖	zhun
 炗	guang
 炘	xin
-炙	jiu
-炙	zhi
+炙	jiu	0%
+炙	zhi	100%
 炚	geng
 炚	guang
 炚	huo
@@ -13441,8 +13442,8 @@ use_preset_vocabulary: true
 炩	ling
 炪	chu
 炪	zhuo
-炫	xian
-炫	xuan
+炫	xian	0%
+炫	xuan	100%
 炬	ju
 炭	tan
 炮	bao	0.08%
@@ -13496,9 +13497,8 @@ use_preset_vocabulary: true
 烗	gai
 烗	kai
 烘	hong
-烙	lao	92.5%
-烙	luo	7.5%
-烙印	lao yin
+烙	lao
+烙	luo
 烚	qia
 烚	xia
 烛	chong
@@ -13582,8 +13582,8 @@ use_preset_vocabulary: true
 焖	men
 焗	ju
 焘	dao	6.25%
-焙	bei
-焙	pei
+焙	bei	100%
+焙	pei	0%
 焚	fen
 焛	lin
 焜	kun
@@ -13592,8 +13592,8 @@ use_preset_vocabulary: true
 焞	tun
 焟	xi
 焠	cui
-無	mo
-無	wu
+無	mo	0%
+無	wu	100%
 無地自容	wu di zi rong
 焢	hong
 焢	kong
@@ -13730,8 +13730,8 @@ use_preset_vocabulary: true
 熔	rong
 熗	qiang
 熘	liu
-熙	xi
-熙	yi
+熙	xi	100%
+熙	yi	0%
 熚	bi
 熛	biao
 熜	cong
@@ -13780,8 +13780,8 @@ use_preset_vocabulary: true
 熲	jiong
 熲	ying
 熳	man
-熵	di
-熵	shang
+熵	di	0%
+熵	shang	100%
 熶	cuan
 熷	zeng
 熸	jian
@@ -13792,8 +13792,8 @@ use_preset_vocabulary: true
 熼	yi
 熽	su
 熽	xiao
-熾	chi
-熾	zhi
+熾	chi	100%
+熾	zhi	0%
 熿	huang
 燀	chan
 燁	hua
@@ -13882,8 +13882,8 @@ use_preset_vocabulary: true
 爄	li
 爄	lie
 爅	mo
-爆	bao
-爆	bo
+爆	bao	100%
+爆	bo	0%
 爇	re
 爇	ruo
 爈	lv
@@ -13945,13 +13945,13 @@ use_preset_vocabulary: true
 爲誰	wei shui
 爲重	wei zhong
 爴	jue
-爵	jue
-爵	que
+爵	jue	100%
+爵	que	0%
 爵士樂	jue shi yue
 父	fu
 爷	ye
-爸	ba
-爸	bei
+爸	ba	100%
+爸	bei	0%
 爹	die
 爺	ye
 爻	xiao
@@ -14007,8 +14007,8 @@ use_preset_vocabulary: true
 牟利	mou li
 牠	ta
 牠	tuo
-牡	mou
-牡	mu
+牡	mou	0%
+牡	mu	100%
 牢	lao
 牣	ren
 牤	mang
@@ -14016,8 +14016,8 @@ use_preset_vocabulary: true
 牦	mao
 牧	mu
 牨	chen
-物	wu
-物	zhi
+物	wu	100%
+物	zhi	0%
 牪	yan
 牫	ge
 牬	bei
@@ -14349,8 +14349,8 @@ use_preset_vocabulary: true
 獯	xun
 獰	ning
 獱	bian
-獲	huai
-獲	huo
+獲	huai	0%
+獲	huo	100%
 獲得	huo de
 獲得成功	huo de cheng gong
 獲得更多	huo de geng duo
@@ -14374,8 +14374,8 @@ use_preset_vocabulary: true
 玁	yan
 玂	qi
 玃	jue
-玄	xian
-玄	xuan
+玄	xian	0%
+玄	xuan	100%
 玄奘	xuan zang
 玅	miao
 玅	xuan
@@ -14396,8 +14396,8 @@ use_preset_vocabulary: true
 玉	yu
 玊	su
 玊	xiu
-王	wang
-王	yu
+王	wang	100%
+王	yu	0%
 王朝	wang chao
 玌	ba
 玍	ga
@@ -14484,8 +14484,8 @@ use_preset_vocabulary: true
 珍藏	zhen cang
 珍重	zhen zhong
 珎	zhen
-珏	jue
-珏	yu
+珏	jue	100%
+珏	yu	0%
 珐	fa
 珑	long
 珒	jin
@@ -14648,8 +14648,8 @@ use_preset_vocabulary: true
 瑒	yang
 瑓	lian
 瑔	quan
-瑕	jia
-瑕	xia
+瑕	jia	0%
+瑕	xia	100%
 瑖	duan
 瑗	yuan
 瑘	ye
@@ -14923,8 +14923,8 @@ use_preset_vocabulary: true
 甩	shuai
 甪	lu
 甫	fu
-甬	tong
-甬	yong
+甬	tong	0%
+甬	yong	100%
 甭	beng
 甮	beng
 甮	fong
@@ -14975,14 +14975,14 @@ use_preset_vocabulary: true
 畐	fu
 畑	tian
 畓	xx
-畔	ban
-畔	pan
+畔	ban	0%
+畔	pan	100%
 畕	jiang
 畖	wa
 畗	fu
 畘	nan
-留	da
-留	liu
+留	da	0%
+留	liu	100%
 留得	liu de
 畚	ben
 畚	bo
@@ -14996,8 +14996,8 @@ use_preset_vocabulary: true
 畜生	chu sheng
 畜產品	xu chan pin
 畜禽	chu qin
-畝	mou
-畝	mu
+畝	mou	0%
+畝	mu	100%
 畞	mou
 畞	mu
 畟	ce
@@ -15017,7 +15017,7 @@ use_preset_vocabulary: true
 畨	po
 番	fan	89.71%
 番	pan	10.29%
-番	po
+番	po	0%
 番禺	pan yu
 番禺區	pan yu qu
 番茄	fan qie
@@ -15082,8 +15082,8 @@ use_preset_vocabulary: true
 疌	nie
 疎	shu
 疎	su
-疏	shu
-疏	su
+疏	shu	100%
+疏	su	0%
 疐	ti
 疐	zhi
 疑	yi
@@ -15136,8 +15136,8 @@ use_preset_vocabulary: true
 疹	zhen
 疺	fa
 疻	zhi
-疼	teng
-疼	tong
+疼	teng	100%
+疼	tong	0%
 疼得	teng de
 疽	ju
 疽	qu
@@ -15375,13 +15375,13 @@ use_preset_vocabulary: true
 發行量	fa xing liang
 發覺	fa jue
 發達地區	fa da di qu
-白	bai
-白	bo
+白	bai	100%
+白	bo	0%
 白蘭地	bai lan di
 白蘿蔔	bai luo bo
 白露	bai lu
-百	bai
-百	bo
+百	bai	100%
+百	bo	0%
 百事可樂	bai shi ke le
 百盛	bai sheng
 癿	qie
@@ -15416,8 +15416,8 @@ use_preset_vocabulary: true
 皓	hao
 皔	han
 皕	bi
-皖	huan
-皖	wan
+皖	huan	0%
+皖	wan	100%
 皗	chou
 皘	qian
 皙	xi
@@ -15493,8 +15493,8 @@ use_preset_vocabulary: true
 监	jian
 盒	he
 盓	yu
-盔	hui
-盔	kui
+盔	hui	0%
+盔	kui	100%
 盕	fan
 盖	gai	99.91%
 盖	ge	0.09%
@@ -15525,8 +15525,8 @@ use_preset_vocabulary: true
 盜	dao
 盝	lu
 盞	zhan
-盟	meng
-盟	ming
+盟	meng	100%
+盟	ming	0%
 盠	li
 盡	jin
 盢	xu
@@ -15537,8 +15537,8 @@ use_preset_vocabulary: true
 盧	lu
 盨	xu
 盩	zhou
-盪	dang
-盪	tang
+盪	dang	100%
+盪	tang	0%
 盫	an
 盫	kan
 盬	gu
@@ -15548,8 +15548,8 @@ use_preset_vocabulary: true
 目地	mu de
 目的	mu di
 目的性	mu di xing
-盯	cheng
-盯	ding
+盯	cheng	0%
+盯	ding	100%
 盰	gan
 盱	xu
 盲	mang
@@ -15579,8 +15579,8 @@ use_preset_vocabulary: true
 盻	xi
 盼	pan
 盽	feng
-盾	dun
-盾	shun
+盾	dun	100%
+盾	shun	0%
 盿	min
 眀	ming
 省	sheng	99.88%
@@ -15641,10 +15641,10 @@ use_preset_vocabulary: true
 眥	zi
 眦	zi
 眧	chao
-眨	fa
-眨	zha
-眩	xian
-眩	xuan
+眨	fa	0%
+眨	zha	100%
+眩	xian	0%
+眩	xuan	100%
 眪	bing
 眫	mi
 眭	kui
@@ -15854,12 +15854,12 @@ use_preset_vocabulary: true
 瞺	hui
 瞺	kuai
 瞻	zhan
-瞼	jian
-瞼	lian
+瞼	jian	100%
+瞼	lian	0%
 瞽	gu
 瞾	zhao
-瞿	ju
-瞿	qu
+瞿	ju	0%
+瞿	qu	100%
 矀	wei
 矁	chou
 矁	qiu
@@ -15956,8 +15956,8 @@ use_preset_vocabulary: true
 砊	kang
 砊	keng
 砋	zhi
-砌	qi
-砌	qie
+砌	qi	100%
+砌	qie	0%
 砍	kan
 砎	jie
 砏	bin
@@ -16001,8 +16001,8 @@ use_preset_vocabulary: true
 砭	bian
 砮	nu
 砯	ping
-砰	peng
-砰	ping
+砰	peng	100%
+砰	ping	0%
 砱	ling
 砲	pao
 砳	le
@@ -16071,8 +16071,8 @@ use_preset_vocabulary: true
 硫	liu
 硬	ying
 硭	mang
-确	jiao
-确	que
+确	jiao	0%
+确	que	100%
 硯	yan
 硰	cuo
 硰	sha
@@ -16090,8 +16090,8 @@ use_preset_vocabulary: true
 硾	zhui
 硿	kong
 碀	ceng
-碁	ji
-碁	qi
+碁	ji	0%
+碁	qi	100%
 碂	cong
 碂	zong
 碃	qing
@@ -16111,8 +16111,8 @@ use_preset_vocabulary: true
 碋	he
 碌	lu
 碍	ai
-碎	cui
-碎	sui
+碎	cui	0%
+碎	sui	100%
 碏	cu
 碏	cuo
 碏	que
@@ -16144,8 +16144,8 @@ use_preset_vocabulary: true
 碦	ke
 碧	bi
 碨	wei
-碩	shi
-碩	shuo
+碩	shi	0%
+碩	shuo	100%
 碪	kan
 碪	zhen
 碫	duan
@@ -16240,8 +16240,8 @@ use_preset_vocabulary: true
 磳	zeng
 磴	deng
 磶	xi
-磷	lin
-磷	ling
+磷	lin	100%
+磷	ling	0%
 磸	ding
 磹	dian
 磺	huang
@@ -16298,8 +16298,8 @@ use_preset_vocabulary: true
 礣	mie
 礤	ca
 礥	xian
-礦	gong
-礦	kuang
+礦	gong	0%
+礦	kuang	100%
 礧	lei
 礨	lei
 礩	zhi
@@ -16319,8 +16319,8 @@ use_preset_vocabulary: true
 礷	jian
 礸	zan
 礹	yan
-示	qi
-示	shi
+示	qi	0%
+示	shi	100%
 示範基地	shi fan ji di
 礼	li
 礽	reng
@@ -16337,8 +16337,8 @@ use_preset_vocabulary: true
 祄	xie
 祅	yao
 祆	xian
-祇	qi
-祇	zhi
+祇	qi	100%
+祇	zhi	0%
 祈	qi
 祉	zhi
 祊	beng
@@ -16364,8 +16364,8 @@ use_preset_vocabulary: true
 祘	suan
 祙	mei
 祚	zuo
-祛	qu
-祛	que
+祛	qu	100%
+祛	que	0%
 祜	gu
 祜	hu
 祝	zhu
@@ -16391,8 +16391,10 @@ use_preset_vocabulary: true
 祫	jia
 祫	xia
 祬	zhi
-祭	ji
-祭	zhai
+祭	ji	100%
+祭	zhai	0%
+祭	zha	0%
+祭城	zha cheng
 祮	gao
 祯	zhen
 祰	gao
@@ -16530,8 +16532,8 @@ use_preset_vocabulary: true
 秡	ba
 秢	ling
 秣	mo
-秤	cheng
-秤	ping
+秤	cheng	100%
+秤	ping	0%
 秥	nian
 秦	qin
 秦朝	qin chao
@@ -16682,8 +16684,8 @@ use_preset_vocabulary: true
 穟	sui
 穠	nong
 穡	se
-穢	hui
-穢	wei
+穢	hui	100%
+穢	wei	0%
 穤	nuo
 穥	yu
 穦	bin
@@ -16693,8 +16695,8 @@ use_preset_vocabulary: true
 穩重	wen zhong
 穪	chen
 穪	cheng
-穫	hu
-穫	huo
+穫	hu	0%
+穫	huo	100%
 穬	gong
 穬	guang
 穭	lv
@@ -16733,8 +16735,8 @@ use_preset_vocabulary: true
 突然覺得	tu ran jue de
 窂	lao
 窃	qie
-窄	ze
-窄	zhai
+窄	ze	0%
+窄	zhai	100%
 窅	yao
 窆	bian
 窆	fa
@@ -16759,11 +16761,11 @@ use_preset_vocabulary: true
 窔	jiao
 窔	yao
 窕	tiao
-窖	gao
-窖	jiao
+窖	gao	0%
+窖	jiao	100%
 窗	chuang
-窘	jiong
-窘	jun
+窘	jiong	100%
+窘	jun	0%
 窙	xiao
 窚	cheng
 窛	kou
@@ -16771,8 +16773,8 @@ use_preset_vocabulary: true
 窝	wo
 窞	dan
 窞	xian
-窟	jiao
-窟	ku
+窟	jiao	0%
+窟	ku	100%
 窠	ke
 窡	zhuo
 窢	huo
@@ -16865,8 +16867,8 @@ use_preset_vocabulary: true
 竷	kan
 竸	jing
 竹	zhu
-竺	du
-竺	zhu
+竺	du	0%
+竺	zhu	100%
 竻	le
 竼	peng
 竽	yu
@@ -17032,8 +17034,8 @@ use_preset_vocabulary: true
 箋	jian
 箌	dao
 箌	zhao
-箍	gu
-箍	ku
+箍	gu	100%
+箍	ku	0%
 箎	chi
 箎	hu
 箏	zheng
@@ -17287,8 +17289,8 @@ use_preset_vocabulary: true
 籬	li
 籭	si
 籭	xi
-籮	luo
-籮	shi
+籮	luo	100%
+籮	shi	0%
 籯	ying
 籰	yue
 籱	zhao
@@ -17356,9 +17358,9 @@ use_preset_vocabulary: true
 粢	zi
 粣	ce
 粤	yue
-粥	yu
-粥	zhou
-粥	zhu
+粥	yu	0%
+粥	zhou	100%
+粥	zhu	0%
 粦	lin
 粧	zhuang
 粨	bai
@@ -17381,8 +17383,8 @@ use_preset_vocabulary: true
 粻	chang
 粻	zhang
 粼	lin
-粽	zhong
-粽	zong
+粽	zhong	0%
+粽	zong	100%
 精	jing
 精闢	jing pi
 粿	gui
@@ -17493,8 +17495,8 @@ use_preset_vocabulary: true
 紒	ji
 紒	jie
 紓	shu
-純	chun
-純	zhun
+純	chun	100%
+純	zhun	0%
 純樸	chun pu
 紕	pi
 紖	kuang
@@ -17737,16 +17739,16 @@ use_preset_vocabulary: true
 綮	qi
 綮	qing
 綯	tao
-綰	guan
-綰	wan
+綰	guan	0%
+綰	wan	100%
 綱	gang
 網	wang
 網上銀行	wang shang yin hang
 網站地址	wang zhan di zhi
 網賺	wang zhuan
 綳	beng
-綴	chuo
-綴	zhui
+綴	chuo	0%
+綴	zhui	100%
 綵	cai
 綶	guo
 綷	cui
@@ -17754,12 +17756,12 @@ use_preset_vocabulary: true
 綸	lun	94.02%
 綹	liu
 綺	qi
-綻	ding
-綻	zhan
+綻	ding	0%
+綻	zhan	100%
 綼	bei
 綼	bi
-綽	chao	50%
-綽	chuo	50%
+綽	chao	5%
+綽	chuo	95%
 綽綽有餘	chuo chuo you yu
 綽號	chuo hao
 綾	ling
@@ -18017,8 +18019,8 @@ use_preset_vocabulary: true
 繿	lan
 纀	pu
 纁	xun
-纂	cuan
-纂	zuan
+纂	cuan	0%
+纂	zuan	100%
 纄	peng
 纅	li
 纅	yao
@@ -18255,10 +18257,10 @@ use_preset_vocabulary: true
 罞	meng
 罟	gu
 罠	min
-罡	gang
-罡	zheng
-罢	ba
-罢	pi
+罡	gang	100%
+罡	zheng	0%
+罢	ba	100%
+罢	pi	0%
 罣	gua
 罤	kun
 罤	ti
@@ -18285,8 +18287,8 @@ use_preset_vocabulary: true
 罵	ma
 罵得	ma de
 罶	liu
-罷	ba
-罷	pi
+罷	ba	100%
+罷	pi	0%
 罸	fa
 罹	li
 罺	chao
@@ -18308,8 +18310,8 @@ use_preset_vocabulary: true
 羇	ji
 羈	ji
 羉	luan
-羊	xiang
-羊	yang
+羊	xiang	0%
+羊	yang	100%
 羋	mi
 羋	mie
 羌	qiang
@@ -18373,8 +18375,8 @@ use_preset_vocabulary: true
 羶	shan
 羷	lian
 羸	lei
-羹	geng
-羹	lang
+羹	geng	100%
+羹	lang	0%
 羺	nou
 羻	qiang
 羻	qing
@@ -18428,7 +18430,7 @@ use_preset_vocabulary: true
 翞	jing
 翟	di	2.92%
 翟	zhai	97.08%
-翟	zhe
+翟	zhe	0%
 翠	cui
 翡	fei
 翢	tao
@@ -18469,8 +18471,8 @@ use_preset_vocabulary: true
 翾	xuan
 翿	dao
 翿	tao
-耀	yao
-耀	yue
+耀	yao	100%
+耀	yue	0%
 老	lao
 老伯	lao bo
 老地方	lao di fang
@@ -18503,8 +18505,8 @@ use_preset_vocabulary: true
 耒	lei
 耓	ting
 耔	zi
-耕	geng
-耕	jing
+耕	geng	100%
+耕	jing	0%
 耕地	geng di
 耖	chao
 耗	hao
@@ -18625,8 +18627,8 @@ use_preset_vocabulary: true
 聳	song
 聴	ting
 聵	kui
-聶	nie
-聶	she
+聶	nie	100%
+聶	she	0%
 職	zhi
 聸	dan
 聹	ning
@@ -18648,8 +18650,8 @@ use_preset_vocabulary: true
 肆	si
 肇	zhao
 肈	zhao
-肉	rou
-肉	ru
+肉	rou	100%
+肉	ru	0%
 肊	yi
 肋	le
 肋	lei
@@ -18700,8 +18702,8 @@ use_preset_vocabulary: true
 肮	ang
 肮	hang
 肮	kang
-肯	ken
-肯	keng
+肯	ken	100%
+肯	keng	0%
 肰	ran
 肱	gong
 肱	hong
@@ -18717,8 +18719,8 @@ use_preset_vocabulary: true
 肷	xu
 肸	xi
 肹	xi
-肺	fei
-肺	pei
+肺	fei	100%
+肺	pei	0%
 肼	jing
 肽	tai
 肾	shen
@@ -19049,10 +19051,10 @@ use_preset_vocabulary: true
 膽	dan
 膾	hui
 膾	kuai
-膿	neng
-膿	nong
-臀	dian
-臀	tun
+膿	neng	0%
+膿	nong	100%
+臀	dian	0%
+臀	tun	100%
 臁	lian
 臂	bei	2.53%
 臂	bi	97.47%
@@ -19158,9 +19160,9 @@ use_preset_vocabulary: true
 臾	yong
 臾	yu
 臿	cha
-舀	kuai
-舀	wai
-舀	yao
+舀	kuai	0%
+舀	wai	0%
+舀	yao	100%
 舁	yu
 舂	chong
 舃	xi
@@ -19218,9 +19220,9 @@ use_preset_vocabulary: true
 航	hang
 航行	hang xing
 舫	fang
-般	ban
-般	bo
-般	pan
+般	ban	100%
+般	bo	0%
+般	pan	0%
 般地	ban de
 舭	bi
 舯	zhong
@@ -19267,8 +19269,8 @@ use_preset_vocabulary: true
 艕	bang
 艖	cha
 艗	yi
-艘	sao
-艘	sou
+艘	sao	0%
+艘	sou	100%
 艙	cang
 艚	cao
 艛	lou
@@ -19374,8 +19376,8 @@ use_preset_vocabulary: true
 芫	yuan	48.72%
 芬	fen
 芭	ba
-芮	bing
-芮	rui
+芮	bing	0%
+芮	rui	100%
 芯	xin
 芰	ji
 芰	zhi
@@ -19419,8 +19421,8 @@ use_preset_vocabulary: true
 苎	zhu
 苏	su
 苐	di
-苑	yu
-苑	yuan
+苑	yu	0%
+苑	yuan	100%
 苒	ran
 苓	ling
 苔	tai
@@ -19430,10 +19432,10 @@ use_preset_vocabulary: true
 苘	qing
 苙	li
 苚	yong
-苛	he
-苛	ke
-苜	mo
-苜	mu
+苛	he	0%
+苛	ke	100%
+苜	mo	0%
+苜	mu	100%
 苝	pei
 苞	bao
 苟	gou
@@ -19443,8 +19445,8 @@ use_preset_vocabulary: true
 苣	ju
 苤	pi
 苤	pie
-若	re
-若	ruo
+若	re	0.1%
+若	ruo	99.9%
 苦	ku
 苧	zhu
 苨	ni
@@ -19477,14 +19479,16 @@ use_preset_vocabulary: true
 茀	fu
 茁	zhuo
 茁壯成長	zhuo zhuang cheng zhang
-茂	mao
-茂	mou
+茂	mao	100%
+茂	mou	0%
 茂盛	mao sheng
 范	fan
 茄	jia	53.97%
 茄	qie	46.03%
 茄子	qie zi
 茅	mao
+茅廁	mao ci
+茅廁	mao si
 茆	mao
 茇	ba
 茈	chai
@@ -19529,24 +19533,24 @@ use_preset_vocabulary: true
 茩	gou
 茪	guang
 茫	mang
-茬	cha
-茬	chi
-茬	zi
+茬	cha	100%
+茬	chi	0%
+茬	zi	0%
 茭	jiao
 茮	jiao
 茮	niao
 茯	fu
 茰	yu
 茱	zhu
-茲	ci	6.74%
-茲	zi	93.26%
+茲	ci	0%
+茲	zi	100%
 茳	jiang
 茴	hui
 茵	yin
 茶	cha
 茷	fa
-茸	er
-茸	rong
+茸	er	0%
+茸	rong	100%
 茹	ru
 茺	chong
 茻	mang
@@ -19623,8 +19627,8 @@ use_preset_vocabulary: true
 荹	bu
 荺	yun
 荻	di
-荼	shu
-荼	tu
+荼	shu	0%
+荼	tu	100%
 荽	sui
 荾	sui
 荿	cheng
@@ -19647,8 +19651,8 @@ use_preset_vocabulary: true
 莌	duo
 莌	tuo
 莍	qiu
-莎	sha	50%
-莎	suo	50%
+莎	sha	99%
+莎	suo	1%
 莎士比亞	sha shi bi ya
 莎拉	sha la
 莎莎	sha sha
@@ -19690,8 +19694,8 @@ use_preset_vocabulary: true
 莩	fu	50%
 莩	piao	50%
 莪	e
-莫	mo
-莫	mu
+莫	mo	100%
+莫	mu	0%
 莫扎特	mo zha te
 莬	mian
 莭	jie
@@ -19720,8 +19724,8 @@ use_preset_vocabulary: true
 菃	ju
 菃	qu
 菄	dong
-菅	guan
-菅	jian
+菅	guan	0%
+菅	jian	100%
 菆	zou
 菇	gu
 菈	la
@@ -19812,8 +19816,8 @@ use_preset_vocabulary: true
 萊	lai
 萋	qi
 萋	xi
-萌	meng
-萌	ming
+萌	meng	100%
+萌	ming	0%
 萍	ping
 萎	wei
 萏	dan
@@ -19886,7 +19890,6 @@ use_preset_vocabulary: true
 葆	bao
 葇	rou
 葈	xi
-葉	she
 葉	ye
 葉一茜	ye yi qian
 葊	an
@@ -19948,11 +19951,11 @@ use_preset_vocabulary: true
 葴	jian
 葴	xian
 葴	zhen
-葵	gui
-葵	kui
+葵	gui	0%
+葵	kui	100%
 葶	ting
-葷	hun
-葷	xun
+葷	hun	100%
+葷	xun	0%
 葸	si
 葸	xi
 葹	shi
@@ -20036,8 +20039,8 @@ use_preset_vocabulary: true
 蒼	cang
 蒽	en
 蒾	mi
-蒿	gao
-蒿	hao
+蒿	gao	0%
+蒿	hao	100%
 蓀	sun
 蓁	qin
 蓁	zhen
@@ -20154,8 +20157,8 @@ use_preset_vocabulary: true
 蔞	lou
 蔟	cu
 蔠	zhong
-蔡	cai
-蔡	sa
+蔡	cai	100%
+蔡	sa	0%
 蔢	bo
 蔢	po
 蔣	jiang
@@ -20169,10 +20172,10 @@ use_preset_vocabulary: true
 蔩	yan
 蔩	yin
 蔪	jian
-蔫	nian
-蔫	yan
-蔬	shu
-蔬	su
+蔫	nian	100%
+蔫	yan	0%
+蔬	shu	100%
+蔬	su	0%
 蔭	yin
 蔮	gui
 蔮	guo
@@ -20210,8 +20213,8 @@ use_preset_vocabulary: true
 蕈	jun
 蕈	xin
 蕈	xun
-蕉	jiao
-蕉	qiao
+蕉	jiao	100%
+蕉	qiao	0%
 蕊	rui
 蕋	rui
 蕌	lei
@@ -20291,8 +20294,8 @@ use_preset_vocabulary: true
 薉	hui
 薉	sui
 薉	wei
-薊	ji
-薊	su
+薊	ji	100%
+薊	su	0%
 薋	ci
 薋	zi
 薌	xiang
@@ -20383,8 +20386,8 @@ use_preset_vocabulary: true
 藋	di
 藋	diao
 藌	mi
-藍	la
-藍	lan
+藍	la	0%
+藍	lan	100%
 藍調	lan diao
 藎	jin
 藏	cang	77.99%
@@ -20427,8 +20430,8 @@ use_preset_vocabulary: true
 藢	zhi
 藣	bei
 藤	teng
-藥	yao
-藥	yue
+藥	yao	100%
+藥	yue	0%
 藦	mo
 藧	huan
 藨	biao
@@ -20475,8 +20478,8 @@ use_preset_vocabulary: true
 蘊含	yun han
 蘊涵	yun han
 蘊藏	yun cang
-蘋	pin
-蘋	ping
+蘋	pin	1%
+蘋	ping	99%
 蘌	yu
 蘍	xun
 蘎	ji
@@ -20524,8 +20527,8 @@ use_preset_vocabulary: true
 蘴	feng
 蘵	zhi
 蘶	wei
-蘸	jiao
-蘸	zhan
+蘸	jiao	0%
+蘸	zhan	100%
 蘹	huai
 蘺	li
 蘻	ji
@@ -20569,8 +20572,8 @@ use_preset_vocabulary: true
 虙	fu
 虚	xu
 虛	xu
-虜	lu
-虜	luo
+虜	lu	100%
+虜	luo	0%
 虝	hu
 虞	yu
 號	hao
@@ -20591,8 +20594,8 @@ use_preset_vocabulary: true
 虨	bin
 虩	xi
 虪	shu
-虫	chong
-虫	hui
+虫	chong	100%
+虫	hui	0%
 虬	jiu
 虬	qiu
 虭	diao
@@ -20713,8 +20716,8 @@ use_preset_vocabulary: true
 蛄	gu
 蛅	ran
 蛅	zhan
-蛆	ju
-蛆	qu
+蛆	ju	0%
+蛆	qu	100%
 蛇	she	99.95%
 蛇	yi	0.05%
 蛈	tie
@@ -20785,15 +20788,15 @@ use_preset_vocabulary: true
 蛻	tui
 蛼	che
 蛽	bei
-蛾	e
-蛾	yi
+蛾	e	100%
+蛾	yi	0%
 蛿	han
 蛿	xian
 蜀	shu
 蜁	xuan
 蜂	feng
-蜃	chen
-蜃	shen
+蜃	chen	0%
+蜃	shen	100%
 蜄	chen
 蜄	zhen
 蜅	fu
@@ -21163,8 +21166,8 @@ use_preset_vocabulary: true
 蠯	pi
 蠰	rang
 蠰	shang
-蠱	chong
-蠱	gu
+蠱	chong	0%
+蠱	gu	100%
 蠲	chu
 蠲	juan
 蠳	ying
@@ -21299,8 +21302,8 @@ use_preset_vocabulary: true
 街	jie
 街角	jie jiao
 衘	xian
-衙	ya
-衙	yu
+衙	ya	100%
+衙	yu	0%
 衚	hu
 衛	wei
 衜	dao
@@ -21342,8 +21345,8 @@ use_preset_vocabulary: true
 衷	zhong
 衸	jie
 衸	xie
-衹	qi
-衹	zhi
+衹	qi	0%
+衹	zhi	100%
 衺	xia
 衺	xie
 衺	xu
@@ -21356,8 +21359,8 @@ use_preset_vocabulary: true
 衿	jin
 袀	jun
 袁	yuan
-袂	jue
-袂	mei
+袂	jue	0%
+袂	mei	100%
 袃	chai
 袄	ao
 袅	niao
@@ -21410,8 +21413,8 @@ use_preset_vocabulary: true
 袩	chan
 袪	qu
 袪	que
-被	bei
-被	pi
+被	bei	100%
+被	pi	0%
 被執行人	bei zhi xing ren
 袬	gun
 袬	yu
@@ -21465,8 +21468,8 @@ use_preset_vocabulary: true
 裖	zhen
 裗	liu
 裘	qiu
-裙	jun
-裙	qun
+裙	jun	0%
+裙	qun	100%
 裚	ji
 裚	zhe
 裛	ye
@@ -21505,8 +21508,8 @@ use_preset_vocabulary: true
 裰	zhui
 裱	biao
 裲	liang
-裳	chang	4.42%
-裳	shang	95.58%
+裳	chang	5.42%
+裳	shang	94.58%
 裴	fei
 裴	pei
 裵	fei
@@ -21550,8 +21553,8 @@ use_preset_vocabulary: true
 褎	xiu
 褎	you
 褏	xiu
-褐	ge
-褐	he
+褐	ge	0%
+褐	he	100%
 褑	yuan
 褒	bao
 褓	bao
@@ -21598,9 +21601,9 @@ use_preset_vocabulary: true
 褳	lian
 褴	lan
 褵	li
-褶	die
-褶	xi
-褶	zhe
+褶	die	0%
+褶	xi	0%
+褶	zhe	100%
 褷	shi
 褷	xi
 褸	lv
@@ -21781,8 +21784,8 @@ use_preset_vocabulary: true
 覴	deng
 覵	qian
 覶	luo
-覷	qu
-覷	xu
+覷	qu	100%
+覷	xu	0%
 覹	wei
 覺	jiao	21.83%
 覺	jue	78.17%
@@ -21822,7 +21825,7 @@ use_preset_vocabulary: true
 觑	qu
 角	jiao	80.82%
 角	jue	19.18%
-角	lu
+角	lu	0%
 角度	jiao du
 角度看	jiao du kan
 角球	jiao qiu
@@ -21900,8 +21903,8 @@ use_preset_vocabulary: true
 觾	yan
 觿	juan
 觿	xi
-言	yan
-言	yin
+言	yan	100%
+言	yin	0%
 言行	yan xing
 訂	ding
 訃	bu
@@ -21973,8 +21976,8 @@ use_preset_vocabulary: true
 訳	yi
 訴	su
 訵	chi
-訶	ge
-訶	he
+訶	ge	0%
+訶	he	100%
 訷	shen
 訸	he
 訹	shu
@@ -22093,9 +22096,9 @@ use_preset_vocabulary: true
 誏	rang
 誐	e
 誑	kuang
-誒	eh
+誒	eh	50%
 誒	ei	50%
-誒	xi
+誒	xi	0%
 誓	shi
 誔	ting
 誕	dan
@@ -22249,8 +22252,8 @@ use_preset_vocabulary: true
 諈	chui
 諉	wei
 諊	ju
-請	jing
-請	qing
+請	jing	100%
+請	qing	0%
 請參考	qing can kao
 請參閱	qing can yue
 請自行	qing zi xing
@@ -22292,8 +22295,8 @@ use_preset_vocabulary: true
 諤	e
 諥	zhong
 諦	di
-諧	jie
-諧	xie
+諧	jie	0%
+諧	xie	100%
 諨	fu
 諩	pu
 諪	ting
@@ -22304,8 +22307,8 @@ use_preset_vocabulary: true
 諯	chuan
 諰	si
 諰	xi
-諱	hui
-諱	wei
+諱	hui	100%
+諱	wei	0%
 諲	yan
 諲	yin
 諳	an
@@ -22346,8 +22349,8 @@ use_preset_vocabulary: true
 謋	jie
 謌	ge
 謍	ying
-謎	mei
-謎	mi
+謎	mei	0%
+謎	mi	100%
 謏	sou
 謏	xiao
 謐	bi
@@ -22365,8 +22368,8 @@ use_preset_vocabulary: true
 謗	bang
 謘	chi
 謙	qian
-謚	shi
-謚	yi
+謚	shi	100%
+謚	yi	0%
 講	jiang
 講得	jiang de
 謜	yuan
@@ -22712,9 +22715,9 @@ use_preset_vocabulary: true
 谿	xi
 豀	qi
 豀	xi
-豁	he
-豁	hua
-豁	huo
+豁	he	0%
+豁	hua	0%
+豁	huo	100%
 豂	liao
 豃	gan
 豃	han
@@ -22725,8 +22728,8 @@ use_preset_vocabulary: true
 豆角	dou jiao
 豇	gang
 豇	jiang
-豈	kai
-豈	qi
+豈	kai	0%
+豈	qi	100%
 豉	chi
 豉	shi
 豊	feng
@@ -22869,8 +22872,8 @@ use_preset_vocabulary: true
 貪	tan
 貫	guan
 貫徹執行	guan che zhi xing
-責	ze
-責	zhai
+責	ze	100%
+責	zhai	0%
 貭	zhi
 貮	er
 貯	chu
@@ -22888,21 +22891,21 @@ use_preset_vocabulary: true
 買什麼	mai shen me
 買得	mai de
 買得起	mai de qi
-貸	dai
-貸	te
+貸	dai	100%
+貸	te	0%
 貸款利率	dai kuan li lv
 貹	sheng
 貺	kuang
-費	bi
-費	fei
+費	bi	0%
+費	fei	100%
 費勁	fei jin
 費率	fei lv
 貼	tie
 貽	yi
 貾	chi
 貾	di
-貿	mao
-貿	mou
+貿	mao	100%
+貿	mou	0%
 賀	he
 賁	ben	94.83%
 賁	bi	5.17%
@@ -22920,8 +22923,8 @@ use_preset_vocabulary: true
 賈	gu	0.27%
 賈	jia	99.73%
 賉	xu
-賊	ze
-賊	zei
+賊	ze	0%
+賊	zei	100%
 賋	jiao
 賌	gai
 賍	zang
@@ -22938,8 +22941,8 @@ use_preset_vocabulary: true
 賙	zhou
 賚	lai
 賛	zan
-賜	ci
-賜	si
+賜	ci	100%
+賜	si	0%
 賝	chen
 賞	shang
 賟	tian
@@ -23007,8 +23010,8 @@ use_preset_vocabulary: true
 贊	zan
 贋	yan
 贋	ying
-贍	shan
-贍	zhan
+贍	shan	100%
+贍	zhan	0%
 贎	wan
 贏	ying
 贏得	ying de
@@ -23023,8 +23026,8 @@ use_preset_vocabulary: true
 贗	ying
 贙	xuan
 贚	long
-贛	gan
-贛	gong
+贛	gan	100%
+贛	gong	0%
 贜	zang
 贝	bei
 贞	zhen
@@ -23105,8 +23108,8 @@ use_preset_vocabulary: true
 赩	chi
 赩	xi
 赩	yan
-赫	chi
-赫	he
+赫	chi	0%
+赫	he	100%
 赬	cheng
 赬	zhen
 赭	zhe
@@ -23184,14 +23187,14 @@ use_preset_vocabulary: true
 趠	chuo
 趡	cui
 趢	lu
-趣	cu
-趣	qu
+趣	cu	0%
+趣	qu	100%
 趤	dang
 趥	qiu
 趦	zi
 趧	ti
-趨	cu
-趨	qu
+趨	cu	0%
+趨	qu	100%
 趩	chi
 趪	huang
 趫	qiao
@@ -23204,8 +23207,8 @@ use_preset_vocabulary: true
 趯	yue
 趱	zan
 趲	zan
-足	ju
-足	zu
+足	ju	0%
+足	zu	100%
 趴	pa
 趵	bao
 趶	ku
@@ -23385,8 +23388,8 @@ use_preset_vocabulary: true
 踮	dian
 踯	zhi
 踰	yu
-踱	du
-踱	duo
+踱	du	0%
+踱	duo	100%
 踲	dun
 踲	tun
 踳	chuan
@@ -23397,9 +23400,9 @@ use_preset_vocabulary: true
 踷	zha
 踸	chen
 踸	shen
-踹	chuai
-踹	chuan
-踹	shuan
+踹	chuai	100%
+踹	chuan	0%
+踹	shuan	0%
 踺	jian
 踻	gua
 踻	tuo
@@ -23537,8 +23540,8 @@ use_preset_vocabulary: true
 躨	kui
 躩	jue
 躪	lin
-身	juan
-身	shen
+身	juan	0%
+身	shen	100%
 身着	shen zhuo
 身體力行	shen ti li xing
 躬	gong
@@ -23643,8 +23646,8 @@ use_preset_vocabulary: true
 輁	qiong
 輂	gong
 輂	ju
-較	jiao
-較	jue
+較	jiao	100%
+較	jue	0%
 較勁	jiao jin
 較重	jiao zhong
 較長	jiao chang
@@ -23745,8 +23748,8 @@ use_preset_vocabulary: true
 轊	wei
 轋	hun
 轋	lian
-轍	che
-轍	zhe
+轍	che	0%
+轍	zhe	100%
 轎	jiao
 轏	chan
 轏	zhan
@@ -23946,15 +23949,15 @@ use_preset_vocabulary: true
 迵	tong
 迶	you
 迷	mi
-迸	beng
-迸	bing
+迸	beng	100%
+迸	bing	0%
 迹	ji
 迺	nai
 迻	yi
 迼	ji
 迼	jie
-追	dui
-追	zhui
+追	dui	0%
+追	zhui	100%
 追尾	zhui wei
 迾	lie
 迿	xun
@@ -24017,12 +24020,12 @@ use_preset_vocabulary: true
 逞	cheng
 速	su
 速率	su lv
-造	cao
-造	zao
+造	cao	0%
+造	zao	100%
 逡	jun
 逡	qun
-逢	feng
-逢	peng
+逢	feng	100%
+逢	peng	0%
 連	lian
 連長	lian zhang
 逤	sha
@@ -24037,8 +24040,8 @@ use_preset_vocabulary: true
 逬	bing
 逭	guan
 逭	huan
-逮	dai
-逮	di
+逮	dai	100%
+逮	di	0%
 逯	lu
 逰	you
 週	zhou
@@ -24099,8 +24102,8 @@ use_preset_vocabulary: true
 運行機制	yun xing ji zhi
 運行速度	yun xing su du
 遌	wu
-遍	bian
-遍	pian
+遍	bian	100%
+遍	pian	0%
 遍地	bian di
 遍地開花	bian di kai hua
 過	guo
@@ -24117,8 +24120,8 @@ use_preset_vocabulary: true
 道	dao
 道行	dao heng
 道長	dao zhang
-達	da
-達	ta
+達	da	100%
+達	ta	0%
 違	wei
 違法所得	wei fa suo de
 違法行爲	wei fa xing wei
@@ -24158,8 +24161,8 @@ use_preset_vocabulary: true
 遰	di
 遰	zhi
 遱	lou
-遲	chi
-遲	zhi
+遲	chi	100%
+遲	zhi	0%
 遳	cuo
 遴	lin
 遵	zun
@@ -24175,8 +24178,8 @@ use_preset_vocabulary: true
 遼	liao
 遽	ju
 遾	shi
-避	bei
-避	bi
+避	bei	0%
+避	bi	100%
 邀	yao
 邁	mai
 邂	xie
@@ -24361,8 +24364,8 @@ use_preset_vocabulary: true
 郱	ping
 郲	lai
 郳	ni
-郴	bin
-郴	chen
+郴	bin	0%
+郴	chen	100%
 郵	you
 郵件地址	you jian di zhi
 郵箱地址	you xiang di zhi
@@ -24563,8 +24566,8 @@ use_preset_vocabulary: true
 醈	tan
 醉	zui
 醊	chuo
-醋	cu
-醋	zuo
+醋	cu	100%
+醋	zuo	0%
 醌	kun
 醍	shi
 醍	ti
@@ -25194,8 +25197,8 @@ use_preset_vocabulary: true
 錟	yan
 錠	ding
 錡	qi
-錢	jian
-錢	qian
+錢	jian	0%
+錢	qian	100%
 錣	chuo
 錣	zhui
 錣	zhuo
@@ -25204,8 +25207,8 @@ use_preset_vocabulary: true
 錥	yu
 錦	jin
 錧	guan
-錨	mao
-錨	miao
+錨	mao	100%
+錨	miao	0%
 錩	chang
 錪	dian
 錪	tian
@@ -25214,8 +25217,8 @@ use_preset_vocabulary: true
 錭	diao
 錭	tao
 錮	gu
-錯	cu
-錯	cuo
+錯	cu	0%
+錯	cuo	100%
 錯綜複雜	cuo zong fu za
 錯覺	cuo jue
 錰	shu
@@ -25262,9 +25265,9 @@ use_preset_vocabulary: true
 鍖	zhen
 鍗	di
 鍗	ti
-鍘	ce
-鍘	ze
-鍘	zha
+鍘	ce	0%
+鍘	ze	0%
+鍘	zha	100%
 鍙	hong
 鍚	yang
 鍛	duan
@@ -25989,8 +25992,8 @@ use_preset_vocabulary: true
 閏	run
 閐	san
 閑	xian
-閒	jian
-閒	xian
+閒	jian	0%
+閒	xian	100%
 間	jian
 閔	min
 閔行	min hang
@@ -26008,10 +26011,10 @@ use_preset_vocabulary: true
 閟	bi
 閡	he
 関	guan
-閣	gao
-閣	ge
-閤	ge
-閤	he
+閣	gao	0%
+閣	ge	100%
+閤	ge	0%
+閤	he	100%
 閥	fa
 閦	chu
 閧	hong
@@ -26071,8 +26074,8 @@ use_preset_vocabulary: true
 闔	gai
 闔	he
 闕	que
-闖	chen
-闖	chuang
+闖	chen	0%
+闖	chuang	100%
 闗	guan
 闘	dou
 闙	qi
@@ -26212,8 +26215,8 @@ use_preset_vocabulary: true
 陉	xing
 陊	duo
 陋	lou
-陌	bai
-陌	mo
+陌	bai	0%
+陌	mo	100%
 降	jiang	99.06%
 降	xiang	0.94%
 陎	shu
@@ -26235,17 +26238,17 @@ use_preset_vocabulary: true
 陙	chun
 陚	fu
 陛	bi
-陜	shan
-陜	xia
-陝	shan
-陝	xia
+陜	shan	100%
+陜	xia	0%
+陝	shan	100%
+陝	xia	0%
 陞	sheng
 陟	bu
 陟	zhi
 陠	bu
 陠	pu
-陡	dou
-陡	tu
+陡	dou	100%
+陡	tu	0%
 院	yuan
 院副院長	yuan fu yuan zhang
 院長	yuan zhang
@@ -26263,12 +26266,12 @@ use_preset_vocabulary: true
 陭	yi
 陮	dui
 陯	lun
-陰	an
-陰	yin
+陰	an	0%
+陰	yin	100%
 陱	ju
 陲	chui
-陳	chen
-陳	zhen
+陳	chen	100%
+陳	zhen	0%
 陴	pi
 陵	ling
 陶	tao	99.94%
@@ -26327,11 +26330,11 @@ use_preset_vocabulary: true
 隒	qian
 隒	yan
 隓	hui
-隔	ge
-隔	jie
-隕	sun
-隕	yuan
-隕	yun
+隔	ge	100%
+隔	jie	0%
+隕	sun	0%
+隕	yuan	0%
+隕	yun	100%
 隖	wu
 隗	wei
 隘	ai
@@ -26382,8 +26385,8 @@ use_preset_vocabulary: true
 隺	hu
 隺	que
 隻	zhi
-隼	sun
-隼	zhun
+隼	sun	100%
+隼	zhun	0%
 隽	juan	33.73%
 隽	jun	66.27%
 难	nan
@@ -26440,8 +26443,8 @@ use_preset_vocabulary: true
 離	li
 離地	li di
 離得	li de
-難	nan
-難	nuo
+難	nan	100%
+難	nuo	0%
 難得	nan de
 難得一見	nan de yi jian
 雤	xue
@@ -26468,8 +26471,8 @@ use_preset_vocabulary: true
 雴	chi
 雵	ang
 雵	yang
-零	lian
-零	ling
+零	lian	0%
+零	ling	100%
 雷	lei
 雸	an
 雸	gan
@@ -26487,10 +26490,10 @@ use_preset_vocabulary: true
 雽	yu
 雾	wu
 雿	zhao
-需	nuo
-需	ru
-需	ruan
-需	xu
+需	nuo	0%
+需	ru	0%
+需	ruan	0%
+需	xu	100%
 需要什麼	xu yao shen me
 霁	ji
 霂	mu
@@ -26571,11 +26574,11 @@ use_preset_vocabulary: true
 霹	pi
 霺	wei
 霼	xi
-霽	ji
-霽	qi
-霽	zhai
-霾	li
-霾	mai
+霽	ji	100%
+霽	qi	0%
+霽	zhai	0%
+霾	li	0%
+霾	mai	100%
 霿	meng
 靀	meng
 靁	lei
@@ -26591,10 +26594,10 @@ use_preset_vocabulary: true
 靊	feng
 靋	li
 靐	bing
-靑	jing
-靑	qing
-青	jing
-青	qing
+靑	jing	0%
+靑	qing	100%
+青	jing	0%
+青	qing	100%
 青藏	qing zang
 青藏鐵路	qing zang tie lu
 青藏高原	qing zang gao yuan
@@ -26679,8 +26682,8 @@ use_preset_vocabulary: true
 鞈	jia
 鞉	tao
 鞊	ji
-鞋	hai
-鞋	xie
+鞋	hai	0%
+鞋	xie	100%
 鞌	an
 鞍	an
 鞎	hen
@@ -26831,8 +26834,8 @@ use_preset_vocabulary: true
 韾	yin
 響	xiang
 頀	hu
-頁	xie
-頁	ye
+頁	xie	0%
+頁	ye	100%
 頁尾	ye wei
 頂	ding
 頃	qing
@@ -26847,8 +26850,8 @@ use_preset_vocabulary: true
 頉	yi
 頊	xu
 頋	e
-頌	rong
-頌	song
+頌	rong	0%
+頌	song	100%
 頍	kui
 頎	qi
 頏	hang
@@ -27347,8 +27350,8 @@ use_preset_vocabulary: true
 馬尾	ma wei
 馬良行	ma liang xing
 馭	yu
-馮	feng
-馮	ping
+馮	feng	100%
+馮	ping	0%
 馯	gan
 馯	han
 馰	di
@@ -27357,8 +27360,8 @@ use_preset_vocabulary: true
 馲	tuo
 馲	zhe
 馳	chi
-馴	shun
-馴	xun
+馴	shun	0%
+馴	xun	100%
 馵	zhu
 馶	zhi
 馷	pei
@@ -27429,8 +27432,8 @@ use_preset_vocabulary: true
 駪	xian
 駫	jiong
 駬	er
-駭	hai
-駭	xie
+駭	hai	100%
+駭	xie	0%
 駮	bo
 駯	zhu
 駰	yin
@@ -28030,8 +28033,8 @@ use_preset_vocabulary: true
 鯥	lu
 鯦	jiu
 鯧	chang
-鯨	jing
-鯨	qing
+鯨	jing	100%
+鯨	qing	0%
 鯩	lun
 鯪	ling
 鯫	zou
@@ -28415,8 +28418,8 @@ use_preset_vocabulary: true
 鵯	bei
 鵰	diao
 鵱	lu
-鵲	qiao
-鵲	que
+鵲	qiao	0%
+鵲	que	100%
 鵳	jian
 鵴	ju
 鵵	tu
@@ -28491,8 +28494,8 @@ use_preset_vocabulary: true
 鶱	xuan
 鶲	weng
 鶳	shi
-鶴	hao
-鶴	he
+鶴	hao	0%
+鶴	he	100%
 鶵	chu
 鶶	tang
 鶷	ge
@@ -28755,10 +28758,10 @@ use_preset_vocabulary: true
 麢	ling
 麣	yan
 麤	cu
-麥	mai
-麥	mo
-麦	mai
-麦	mo
+麥	mai	100%
+麥	mo	0%
+麦	mai	100%
+麦	mo	0%
 麧	ge
 麧	hu
 麧	qi
@@ -28814,13 +28817,13 @@ use_preset_vocabulary: true
 黎	li
 黏	nian
 黐	chi
-黑	he
-黑	hei
+黑	he	0%
+黑	hei	100%
 黒	he
 黒	hei
 黓	yi
-黔	qian
-黔	qin
+黔	qian	100%
+黔	qin	0%
 黕	dan
 黕	zhen
 黖	ji
@@ -28860,8 +28863,8 @@ use_preset_vocabulary: true
 黱	dai
 黲	can
 黳	yi
-黴	hui
-黴	mei
+黴	hui	0%
+黴	mei	100%
 黵	dan
 黶	yan
 黷	du
