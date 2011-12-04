@@ -14,6 +14,7 @@
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
+#include <rime/deployer.h>
 #include <rime/engine.h>
 #include <rime/key_event.h>
 #include <rime/menu.h>
@@ -104,11 +105,11 @@ bool PrepareDictionary() {
   rime::Schema schema(".default");
   rime::Dictionary::Component *component = rime::Dictionary::Require("dictionary");
   if (!component) return false;
-  rime::Dictionary *dict = component->Create(&schema);
+  rime::scoped_ptr<rime::Dictionary> dict(component->Create(&schema));
   if (!dict) return false;
   {
     std::cerr << "Preparing dictionary " << dict->name() << "..." << std::endl;
-    rime::DictCompiler dict_compiler(dict);
+    rime::DictCompiler dict_compiler(dict.get());
     dict_compiler.Compile(dict->name() + ".dict.yaml", "default.yaml");
     std::cerr << "Ready to work with dictionary " << dict->name() << "." << std::endl;
   }
@@ -120,8 +121,18 @@ int main(int argc, char *argv[]) {
   // initialize la Rime
   rime::RegisterComponents();
 
-  if (!PrepareDictionary())
+  rime::Deployer deployer;
+  if (!deployer.InitializeInstallation()) {
+    std::cerr << "failed to initialize installation." << std::endl;
     return 1;
+  }
+
+  std::cerr << "preparing dictionary...";
+  if (!deployer.InstallSchema("default.yaml")) {
+    std::cerr << "failure!" << std::endl;
+    return 1;
+  }
+  std::cerr << "ready." << std::endl;
 
   RimeConsole console;
   // "-i" turns on interactive mode (no commit at the end of line)

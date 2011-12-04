@@ -10,8 +10,8 @@
 #include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <rime/common.h>
-#include <rime/config.h>
 #include <rime/schema.h>
+#include <rime/service.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/syllablizer.h>
 
@@ -243,11 +243,13 @@ DictionaryComponent::DictionaryComponent() {
 
 Dictionary* DictionaryComponent::Create(Schema *schema) {
   if (!schema) return NULL;
-  Config *config = schema->config();
+  return CreateDictionaryFromConfig(schema->config());
+}
+
+Dictionary* DictionaryComponent::CreateDictionaryFromConfig(Config *config) {
   std::string dict_name;
   if (!config->GetString("translator/dictionary", &dict_name)) {
-    EZLOGGERPRINT("Error: dictionary not specified in schema '%s'.",
-                  schema->schema_id().c_str());
+    EZLOGGERPRINT("Error: dictionary not specified.");
     return NULL;
   }
   std::string prism_name;
@@ -256,7 +258,7 @@ Dictionary* DictionaryComponent::Create(Schema *schema) {
     prism_name = dict_name;
   }
   // obtain prism and table objects
-  boost::filesystem::path path(ConfigDataManager::instance().user_data_dir());
+  boost::filesystem::path path(Service::instance().deployer().user_data_dir);
   shared_ptr<Table> table(table_map_[dict_name].lock());
   if (!table) {
     table.reset(new Table((path / dict_name).string() + ".table.bin"));

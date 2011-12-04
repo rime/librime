@@ -10,9 +10,10 @@
 #include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
+#include <rime_version.h>
 #include <rime/common.h>
-#include <rime/config.h>
 #include <rime/schema.h>
+#include <rime/service.h>
 #include <rime/dict/user_db.h>
 #include <rime/dict/syllablizer.h>
 
@@ -53,7 +54,7 @@ bool UserDbAccessor::exhausted() {
 
 UserDb::UserDb(const std::string &name)
     : name_(name), loaded_(false) {
-  boost::filesystem::path path(ConfigDataManager::instance().user_data_dir());
+  boost::filesystem::path path(Service::instance().deployer().user_data_dir);
   file_name_ = (path / name).string() + ".userdb.kct";
   db_.reset(new kyotocabinet::TreeDB);
   db_->tune_options(kyotocabinet::TreeDB::TLINEAR | kyotocabinet::TreeDB::TCOMPRESS);
@@ -120,10 +121,9 @@ bool UserDb::Close() {
 }
 
 bool UserDb::CreateMetadata() {
-  // TODO: get version from installation info
-  std::string rime_version("1.0");
-  // TODO: get uuid from user profile
-  std::string user_id("default_user");
+  Deployer &deployer(Service::instance().deployer());
+  std::string rime_version(RIME_VERSION);
+  std::string user_id(deployer.user_id);
   // '0x01' is the meta character
   return db_->set("\0x01/db_name", name_) &&
          db_->set("\0x01/rime_version", rime_version) &&

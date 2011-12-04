@@ -75,6 +75,7 @@ private:
 struct DictEntryCollector : std::map<size_t, DictEntryIterator> {
 };
 
+class Config;
 class Schema;
 struct SyllableGraph;
 
@@ -109,6 +110,7 @@ class DictionaryComponent : public Dictionary::Component {
  public:
   DictionaryComponent();
   Dictionary* Create(Schema *schema);
+  Dictionary* CreateDictionaryFromConfig(Config *config);
  private:
   std::map<std::string, weak_ptr<Prism> > prism_map_;
   std::map<std::string, weak_ptr<Table> > table_map_;

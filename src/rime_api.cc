@@ -11,6 +11,7 @@
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
+#include <rime/deployer.h>
 #include <rime/key_event.h>
 #include <rime/menu.h>
 #include <rime/registry.h>
@@ -19,10 +20,18 @@
 #include <rime_api.h>
 
 RIME_API void RimeInitialize(RimeTraits *traits) {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
   if (traits) {
-    rime::ConfigDataManager::instance().set_shared_data_dir(traits->shared_data_dir);
-    rime::ConfigDataManager::instance().set_user_data_dir(traits->user_data_dir);
+    deployer.shared_data_dir = traits->shared_data_dir;
+    deployer.user_data_dir = traits->user_data_dir;
+    if (traits->distribution_name)
+      deployer.distribution_name = traits->distribution_name;
+    if (traits->distribution_code_name)
+      deployer.distribution_code_name = traits->distribution_code_name;
+    if (traits->distribution_version)
+      deployer.distribution_version = traits->distribution_version;
   }
+  deployer.InitializeInstallation();
   rime::RegisterComponents();
 }
 

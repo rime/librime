@@ -13,6 +13,7 @@
 #include <time.h>
 #include <map>
 #include <rime/common.h>
+#include <rime/deployer.h>
 
 namespace rime {
 
@@ -57,6 +58,8 @@ class Service {
   void CleanupStaleSessions();
   void CleanupAllSessions();
 
+  Deployer& deployer() { return deployer_; }
+
   static Service& instance() {
     if (!instance_) instance_.reset(new Service);
     return *instance_;
@@ -68,6 +71,7 @@ class Service {
 
   typedef std::map<SessionId, shared_ptr<Session> > SessionMap;
   SessionMap sessions_;
+  Deployer deployer_;
 };
 
 }  // namespace rime

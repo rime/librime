@@ -116,21 +116,13 @@ class ConfigDataManager : public std::map<std::string, weak_ptr<ConfigData> > {
   shared_ptr<ConfigData> GetConfigData(const std::string &config_file_path);
   bool ReloadConfigData(const std::string &config_file_path);
   
-  void set_shared_data_dir(const std::string &dir) { shared_data_dir_ = dir; }
-  void set_user_data_dir(const std::string &dir) { user_data_dir_ = dir; }
-  const std::string& shared_data_dir() { return shared_data_dir_; }
-  const std::string& user_data_dir() { return user_data_dir_; }
-
   static ConfigDataManager& instance() {
     if (!instance_) instance_.reset(new ConfigDataManager);
     return *instance_;
   }
 
  private:
-  ConfigDataManager() : shared_data_dir_("."), user_data_dir_(".") {}
-  
-  std::string shared_data_dir_;
-  std::string user_data_dir_;
+  ConfigDataManager() {}
 
   static scoped_ptr<ConfigDataManager> instance_;
 };

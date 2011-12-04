@@ -294,6 +294,9 @@ bool Config::SetItem(const std::string &key, const ConfigItemPtr &item) {
     data_->root = item;
     return true;
   }
+  if (!data_->root) {
+    data_->root = ConfigItemPtr(new ConfigMap);
+  }
   ConfigItemPtr p(data_->root);
   std::vector<std::string> keys;
   boost::split(keys, key, boost::is_any_of("/"));

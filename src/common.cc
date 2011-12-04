@@ -11,6 +11,7 @@
 #include <boost/filesystem.hpp>
 #include <rime/common.h>
 #include <rime/registry.h>
+#include <rime/service.h>
 
 // built-in components
 #include <rime/config.h>
@@ -33,7 +34,7 @@
 namespace rime {
 
 const std::string GetLogFilePath() {
-  boost::filesystem::path dir(ConfigDataManager::instance().user_data_dir());
+  boost::filesystem::path dir(Service::instance().deployer().user_data_dir);
   boost::filesystem::create_directories(dir);
   return (dir / "rime.log").string();
 }
@@ -43,7 +44,7 @@ void RegisterComponents() {
 
   Registry &r = Registry::instance();
   
-  boost::filesystem::path user_data_dir(ConfigDataManager::instance().user_data_dir());
+  boost::filesystem::path user_data_dir(Service::instance().deployer().user_data_dir);
   boost::filesystem::path config_path = user_data_dir / "%s.yaml";
   boost::filesystem::path schema_path = user_data_dir / "%s.schema.yaml";
   r.Register("config", new ConfigComponent(config_path.string()));

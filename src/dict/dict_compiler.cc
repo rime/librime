@@ -23,7 +23,7 @@
 #pragma warning(default: 4244)
 #endif
 #include <yaml-cpp/yaml.h>
-#include <rime/config.h>
+#include <rime/service.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
 #include <rime/dict/prism.h>
@@ -61,7 +61,7 @@ class PresetVocabulary {
 };
 
 PresetVocabulary* PresetVocabulary::Create() {
-  boost::filesystem::path path(ConfigDataManager::instance().shared_data_dir());
+  boost::filesystem::path path(Service::instance().deployer().shared_data_dir);
   path /= "essay.kct";
   kyotocabinet::TreeDB *db = new kyotocabinet::TreeDB;
   if (!db) return NULL;

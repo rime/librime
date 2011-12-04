@@ -4,7 +4,7 @@ set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_fla
 project(rime)
 cmake_minimum_required(VERSION 2.8)
 
-set(LIBRIME_VERSION 0.1)
+set(LIBRIME_VERSION 0.9)
 set(LIBRIME_SOVERSION 0)
 
 if(WIN32)
