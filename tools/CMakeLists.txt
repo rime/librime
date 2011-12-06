@@ -16,3 +16,5 @@ file(COPY ${PROJECT_SOURCE_DIR}/data/essay.kct
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 file(COPY ${PROJECT_SOURCE_DIR}/data/samples/luna_pinyin.dict.yaml 
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
+file(COPY ${PROJECT_SOURCE_DIR}/data/samples/luna_pinyin.schema.yaml
+     DESTINATION ${EXECUTABLE_OUTPUT_PATH})

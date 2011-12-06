@@ -1,0 +1,59 @@
+# Rime schema
+# vim: set sw=2 sts=2 et:
+# encoding: utf-8
+
+schema:
+  schema_id: luna_pinyin
+  name: 朙月拼音
+  version: "0.9"
+  author:
+    - 佛振 <chen.sst@gmail.com>
+  description: |
+    Thanks to the following works:
+      * CC-CEDICT
+      * Android open source project
+      * Chewing - 新酷音
+      * 三拼簡繁詞庫
+      * opencc - 開放中文轉換
+
+switches:
+  - name: ascii_mode
+    initial: 0
+    states: [ 中文, 西文 ]
+  - name: half_shape
+    initial: 0
+    states: [ 全角符號, 半角符號 ]
+  - name: simplification
+    initial: 0
+    states: [ 傳統漢字, 簡化漢字 ]
+
+engine:
+  processors:
+    - key_binder
+    - speller
+    - punctuator
+    - navigator
+    - selector
+    - express_editor
+  segmentors:
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - echo_translator
+    - punct_translator
+    - r10n_translator
+    - trivial_translator
+
+speller:
+  alphabet: zyxwvutsrqponmlkjihgfedcba
+  delimiter: "'"
+
+translator:
+  dictionary: luna_pinyin
+
+punctuator:
+  import_preset: default
+
+key_binder:
+  import_preset: default
