@@ -10,10 +10,6 @@
 #include <string.h>
 #include <rime_api.h>
 
-int min(int x, int y) {
-  return x > y ? y : x;
-}
-
 void PrintStatus(RimeStatus *status) {
   printf("schema: %s / %s\n",
          status->schema_id, status->schema_name);
@@ -27,17 +23,18 @@ void PrintStatus(RimeStatus *status) {
 void PrintComposition(RimeComposition *composition) {
   const char *preedit = composition->preedit;
   if (!preedit) return;
-  int len = strlen(preedit);
-  int start = min(len, composition->sel_start);
-  int end = min(len, composition->sel_end);
-  int cursor = min(len, composition->cursor_pos);
-  for (int i = 0; i <= len; ++i) {
+  size_t len = strlen(preedit);
+  size_t start = composition->sel_start;
+  size_t end = composition->sel_end;
+  //size_t cursor = composition->cursor_pos;
+  for (size_t i = 0; i <= len; ++i) {
     if (start < end) {
       if (i == start) putchar('[');
       else if (i == end) putchar(']');
     }
     //if (i == cursor) putchar('|');
-    if (i < len) putchar(preedit[i]);
+    if (i < len)
+        putchar(preedit[i]);
   }
   printf("\n");
 }
