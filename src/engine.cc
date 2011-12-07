@@ -25,8 +25,9 @@
 
 namespace rime {
 
-Engine::Engine() : schema_(new Schema), context_(new Context),
-                   auto_commit_(false) {
+Engine::Engine(Schema *schema) : schema_(schema ? schema : new Schema),
+                                 context_(new Context),
+                                 auto_commit_(false) {
   EZLOGGERFUNCTRACKER;
   // receive context notifications
   context_->commit_notifier().connect(

@@ -28,7 +28,7 @@ class Engine {
  public:
   typedef boost::signal<void (const std::string &commit_text)> CommitSink;
 
-  Engine();
+  Engine(Schema *schema = NULL);
   ~Engine();
 
   bool ProcessKeyEvent(const KeyEvent &key_event);

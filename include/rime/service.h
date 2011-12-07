@@ -25,6 +25,7 @@ class Context;
 class Engine;
 class KeyEvent;
 class Schema;
+class Switcher;
 
 class Session {
  public:
@@ -43,6 +44,7 @@ class Session {
  private:
   void OnCommit(const std::string &commit_text);
 
+  scoped_ptr<Switcher> switcher_;
   scoped_ptr<Engine> engine_;
   time_t last_active_time_;
   std::string commit_text_;

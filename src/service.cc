@@ -10,19 +10,21 @@
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/service.h>
+#include <rime/switcher.h>
 
 namespace rime {
 
 scoped_ptr<Service> Service::instance_;
 
-Session::Session() : engine_(new Engine),
-                     last_active_time_(0) {
-  engine_->sink().connect(
-      boost::bind(&Session::OnCommit, this, _1));
+Session::Session() : last_active_time_(0) {
+  switcher_.reset(new Switcher);
+  engine_.reset(new Engine(switcher_->CreateSchema()));
+  engine_->sink().connect(boost::bind(&Session::OnCommit, this, _1));
 }
 
 bool Session::ProcessKeyEvent(const KeyEvent &key_event) {
-  return engine_->ProcessKeyEvent(key_event);
+  return switcher_->ProcessKeyEvent(key_event) ||
+      engine_->ProcessKeyEvent(key_event);
 }
 
 void Session::Activate() {
@@ -38,6 +40,9 @@ void Session::OnCommit(const std::string &commit_text) {
 }
 
 Context* Session::context() const {
+  if (switcher_->active()) {
+    return switcher_->context();
+  }
   return engine_ ? engine_->context() : NULL;
 }
 
