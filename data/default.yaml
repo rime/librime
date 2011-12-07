@@ -4,6 +4,7 @@
 
 schema_list:
   - schema: luna_pinyin
+  - schema: cangjie5
 
 punctuator:
   mapping:

@@ -19,12 +19,14 @@
 #include <rime/key_event.h>
 #include <rime/menu.h>
 #include <rime/schema.h>
+#include <rime/switcher.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
 
 class RimeConsole {
  public:
-  RimeConsole() : interactive_(false), engine_(new rime::Engine) {
+  RimeConsole(rime::Schema *schema) : interactive_(false),
+                                      engine_(new rime::Engine(schema)) {
     conn_ = engine_->sink().connect(
         boost::bind(&RimeConsole::OnCommit, this, _1));
   }
@@ -101,21 +103,6 @@ class RimeConsole {
   boost::signals::connection conn_;
 };
 
-bool PrepareDictionary() {
-  rime::Schema schema(".default");
-  rime::Dictionary::Component *component = rime::Dictionary::Require("dictionary");
-  if (!component) return false;
-  rime::scoped_ptr<rime::Dictionary> dict(component->Create(&schema));
-  if (!dict) return false;
-  {
-    std::cerr << "Preparing dictionary " << dict->name() << "..." << std::endl;
-    rime::DictCompiler dict_compiler(dict.get());
-    dict_compiler.Compile(dict->name() + ".dict.yaml", "default.yaml");
-    std::cerr << "Ready to work with dictionary " << dict->name() << "." << std::endl;
-  }
-  return true;
-}
-
 // program entry
 int main(int argc, char *argv[]) {
   // initialize la Rime
@@ -127,14 +114,19 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  std::cerr << "preparing dictionary...";
-  if (!deployer.InstallSchema("default.yaml")) {
-    std::cerr << "failure!" << std::endl;
-    return 1;
+  rime::Switcher switcher;
+  rime::Schema *schema = switcher.CreateSchema();
+  if (schema) {
+    std::cerr << "preparing dictionary for schema '" << schema->schema_id() << "'...";
+    if (!deployer.InstallSchema(schema->schema_id() + ".schema.yaml")) {
+      std::cerr << "failure!" << std::endl;
+      delete schema;
+      return 1;
+    }
+    std::cerr << "ready." << std::endl;
   }
-  std::cerr << "ready." << std::endl;
 
-  RimeConsole console;
+  RimeConsole console(schema);
   // "-i" turns on interactive mode (no commit at the end of line)
   bool interactive = argc > 1 && !strcmp(argv[1], "-i");
   console.set_interactive(interactive);
