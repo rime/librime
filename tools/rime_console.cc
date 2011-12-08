@@ -26,7 +26,7 @@
 class RimeConsole {
  public:
   RimeConsole(rime::Schema *schema) : interactive_(false),
-                                      engine_(new rime::Engine(schema)) {
+                                      engine_(rime::Engine::Create(schema)) {
     conn_ = engine_->sink().connect(
         boost::bind(&RimeConsole::OnCommit, this, _1));
   }

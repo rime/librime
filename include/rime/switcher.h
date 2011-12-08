@@ -9,20 +9,21 @@
 #ifndef RIME_SWITCHER_H_
 #define RIME_SWITCHER_H_
 
+#include <vector>
 #include <rime/common.h>
-#include <rime/config.h>
+#include <rime/engine.h>
+#include <rime/key_event.h>
 
 namespace rime {
 
-class KeyEvent;
-class Schema;
-class Context;
+class Processor;
 
-class Switcher {
+class Switcher : public Engine {
  public:
   Switcher();
   ~Switcher();
   
+  void Attach(Engine *engine);
   bool ProcessKeyEvent(const KeyEvent &key_event);
   Schema* CreateSchema();
 
@@ -30,10 +31,16 @@ class Switcher {
   bool active() const { return active_; }
   
  protected:
+  void InitializeSubProcessors();
+  void LoadSettings();
+  void Activate();
+  void Deactivate();
   void OnSelect(Context *ctx);
-  
-  scoped_ptr<Schema> schema_;
-  scoped_ptr<Context> context_;
+
+  std::string caption_;
+  std::vector<KeyEvent> hotkeys_;
+  std::vector<shared_ptr<Processor> > processors_;
+  Engine *target_engine_;
   bool active_;
 };
 

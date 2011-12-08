@@ -6,6 +6,12 @@ schema_list:
   - schema: luna_pinyin
   - schema: cangjie5
 
+switcher:
+  caption: 方案選單
+  hotkeys:
+    - Control+grave
+    - F1
+
 punctuator:
   mapping:
     " " : "　"

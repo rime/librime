@@ -1,3 +1,4 @@
+
 // vim: set sts=2 sw=2 et:
 // encoding: utf-8
 //
@@ -18,7 +19,8 @@ scoped_ptr<Service> Service::instance_;
 
 Session::Session() : last_active_time_(0) {
   switcher_.reset(new Switcher);
-  engine_.reset(new Engine(switcher_->CreateSchema()));
+  engine_.reset(Engine::Create(switcher_->CreateSchema()));
+  switcher_->Attach(engine_.get());
   engine_->sink().connect(boost::bind(&Session::OnCommit, this, _1));
 }
 

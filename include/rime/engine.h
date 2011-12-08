@@ -9,8 +9,8 @@
 #ifndef RIME_ENGINE_H_
 #define RIME_ENGINE_H_
 
+#include <map>
 #include <string>
-#include <vector>
 #include <boost/signals.hpp>
 #include <rime/common.h>
 
@@ -18,46 +18,31 @@ namespace rime {
 
 class KeyEvent;
 class Schema;
-class Composition;
 class Context;
-class Processor;
-class Segmentor;
-class Translator;
 
 class Engine {
  public:
   typedef boost::signal<void (const std::string &commit_text)> CommitSink;
 
-  Engine(Schema *schema = NULL);
-  ~Engine();
+  virtual ~Engine();
+  virtual bool ProcessKeyEvent(const KeyEvent &key_event) = 0;
+  virtual void set_schema(Schema *schema) {}
 
-  bool ProcessKeyEvent(const KeyEvent &key_event);
-
-  void set_schema(Schema *schema);
   Schema* schema() const { return schema_.get(); }
   Context* context() const { return context_.get(); }
   CommitSink& sink() { return sink_; }
+  void set_option(const std::string &name, bool value);
+  bool get_option(const std::string &name) const;
 
-  void set_auto_commit(bool value) { auto_commit_ = value; }
-  bool auto_commit() const { return auto_commit_; }
-
- private:
-  void InitializeComponents();
-  void OnContextUpdate(Context *ctx);
-  void Compose(Context *ctx);
-  void CalculateSegmentation(Composition *comp);
-  void TranslateSegments(Composition *comp);
-  void OnCommit(Context *ctx);
-  void OnSelect(Context *ctx);
-
+  static Engine* Create(Schema *schema = NULL);
+  
+ protected:
+  Engine(Schema *schema);
+  
   scoped_ptr<Schema> schema_;
   scoped_ptr<Context> context_;
-  std::vector<shared_ptr<Processor> > processors_;
-  std::vector<shared_ptr<Segmentor> > segmentors_;
-  std::vector<shared_ptr<Translator> > translators_;
   CommitSink sink_;
-
-  bool auto_commit_;
+  std::map<std::string, bool> options_;
 };
 
 }  // namespace rime

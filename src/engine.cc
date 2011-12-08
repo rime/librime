@@ -8,6 +8,7 @@
 //
 #include <cctype>
 #include <string>
+#include <vector>
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <rime/common.h>
@@ -25,29 +26,73 @@
 
 namespace rime {
 
-Engine::Engine(Schema *schema) : schema_(schema ? schema : new Schema),
-                                 context_(new Context),
-                                 auto_commit_(false) {
+class ConcreteEngine : public Engine {
+ public:
+  ConcreteEngine(Schema *schema);
+  virtual ~ConcreteEngine();
+  virtual bool ProcessKeyEvent(const KeyEvent &key_event);
+  virtual void set_schema(Schema *schema);
+  
+ protected:
+  void InitializeComponents();
+  void OnContextUpdate(Context *ctx);
+  void Compose(Context *ctx);
+  void CalculateSegmentation(Composition *comp);
+  void TranslateSegments(Composition *comp);
+  void OnCommit(Context *ctx);
+  void OnSelect(Context *ctx);
+  
+  std::vector<shared_ptr<Processor> > processors_;
+  std::vector<shared_ptr<Segmentor> > segmentors_;
+  std::vector<shared_ptr<Translator> > translators_;
+};
+
+Engine* Engine::Create(Schema *schema) {
+  return new ConcreteEngine(schema ? schema : new Schema);
+}
+
+Engine::Engine(Schema *schema) : schema_(schema),
+                                 context_(new Context) {
+}
+
+Engine::~Engine() {
+  context_.reset();
+  schema_.reset();
+}
+
+void Engine::set_option(const std::string &name, bool value) {
+  options_[name] = value;
+}
+
+bool Engine::get_option(const std::string &name) const {
+  std::map<std::string, bool>::const_iterator it = options_.find(name);
+  if (it != options_.end())
+    return it->second;
+  else
+    return false;
+}
+
+ConcreteEngine::ConcreteEngine(Schema *schema) : Engine(schema) {
   EZLOGGERFUNCTRACKER;
   // receive context notifications
   context_->commit_notifier().connect(
-      boost::bind(&Engine::OnCommit, this, _1));
+      boost::bind(&ConcreteEngine::OnCommit, this, _1));
   context_->select_notifier().connect(
-      boost::bind(&Engine::OnSelect, this, _1));
+      boost::bind(&ConcreteEngine::OnSelect, this, _1));
   context_->update_notifier().connect(
-      boost::bind(&Engine::OnContextUpdate, this, _1));
+      boost::bind(&ConcreteEngine::OnContextUpdate, this, _1));
 
   InitializeComponents();
 }
 
-Engine::~Engine() {
+ConcreteEngine::~ConcreteEngine() {
   EZLOGGERFUNCTRACKER;
   processors_.clear();
   segmentors_.clear();
   translators_.clear();
 }
 
-bool Engine::ProcessKeyEvent(const KeyEvent &key_event) {
+bool ConcreteEngine::ProcessKeyEvent(const KeyEvent &key_event) {
   EZLOGGERVAR(key_event);
   BOOST_FOREACH(shared_ptr<Processor> &p, processors_) {
     Processor::Result ret = p->ProcessKeyEvent(key_event);
@@ -57,7 +102,7 @@ bool Engine::ProcessKeyEvent(const KeyEvent &key_event) {
   return false;
 }
 
-void Engine::OnContextUpdate(Context *ctx) {
+void ConcreteEngine::OnContextUpdate(Context *ctx) {
   if (!ctx)
     return;
   const std::string &input(ctx->input());
@@ -65,7 +110,7 @@ void Engine::OnContextUpdate(Context *ctx) {
   Compose(ctx);
 }
 
-void Engine::Compose(Context *ctx) {
+void ConcreteEngine::Compose(Context *ctx) {
   if (!ctx)
     return;
   Composition *comp = ctx->composition();
@@ -77,7 +122,7 @@ void Engine::Compose(Context *ctx) {
   ctx->set_composition(comp);
 }
 
-void Engine::CalculateSegmentation(Composition *comp) {
+void ConcreteEngine::CalculateSegmentation(Composition *comp) {
   EZLOGGERFUNCTRACKER;
   while (!comp->HasFinishedSegmentation()) {
     size_t start_pos = comp->GetCurrentStartPosition();
@@ -103,7 +148,7 @@ void Engine::CalculateSegmentation(Composition *comp) {
     comp->Forward();
 }
 
-void Engine::TranslateSegments(Composition *comp) {
+void ConcreteEngine::TranslateSegments(Composition *comp) {
   EZLOGGERFUNCTRACKER;
   BOOST_FOREACH(Segment &segment, *comp) {
     if (segment.status >= Segment::kGuess)
@@ -129,13 +174,13 @@ void Engine::TranslateSegments(Composition *comp) {
   }
 }
 
-void Engine::OnCommit(Context *ctx) {
+void ConcreteEngine::OnCommit(Context *ctx) {
   const std::string commit_text = ctx->GetCommitText();
   EZLOGGERVAR(commit_text);
   sink_(commit_text);
 }
 
-void Engine::OnSelect(Context *ctx) {
+void ConcreteEngine::OnSelect(Context *ctx) {
   Segment &seg(ctx->composition()->back());
   shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
   if (!cand) return;
@@ -148,7 +193,7 @@ void Engine::OnSelect(Context *ctx) {
     seg.status = Segment::kConfirmed;
     // strategy one: commit directly;
     // strategy two: continue composing with another empty segment.
-    if (auto_commit_)
+    if (get_option("auto_commit"))
       ctx->Commit();
     else
       ctx->composition()->Forward();
@@ -166,12 +211,13 @@ void Engine::OnSelect(Context *ctx) {
   }
 }
 
-void Engine::set_schema(Schema *schema) {
+void ConcreteEngine::set_schema(Schema *schema) {
   schema_.reset(schema);
+  context_->Clear();
   InitializeComponents();
 }
 
-void Engine::InitializeComponents() {
+void ConcreteEngine::InitializeComponents() {
   if (!schema_)
     return;
   processors_.clear();

@@ -18,8 +18,8 @@ using namespace rime;
 TEST(AbcSegmentorTest, NoMatch) {
   Segmentor::Component *component = Segmentor::Require("abc_segmentor");
   ASSERT_TRUE(component != NULL);
-  Engine engine;
-  scoped_ptr<Segmentor> segmentor(component->Create(&engine));
+  scoped_ptr<Engine> engine(Engine::Create());
+  scoped_ptr<Segmentor> segmentor(component->Create(engine.get()));
   ASSERT_TRUE(segmentor);
   Segmentation segmentation;
   segmentation.Reset("3.1415926");
@@ -32,8 +32,8 @@ TEST(AbcSegmentorTest, NoMatch) {
 TEST(AbcSegmentorTest, FullMatch) {
   Segmentor::Component *component = Segmentor::Require("abc_segmentor");
   ASSERT_TRUE(component != NULL);
-  Engine engine;
-  scoped_ptr<Segmentor> segmentor(component->Create(&engine));
+  scoped_ptr<Engine> engine(Engine::Create());
+  scoped_ptr<Segmentor> segmentor(component->Create(engine.get()));
   ASSERT_TRUE(segmentor);
   Segmentation segmentation;
   segmentation.Reset("zyxwvutsrqponmlkjihgfedcba");
@@ -49,8 +49,8 @@ TEST(AbcSegmentorTest, FullMatch) {
 TEST(AbcSegmentorTest, PrefixMatch) {
   Segmentor::Component *component = Segmentor::Require("abc_segmentor");
   ASSERT_TRUE(component != NULL);
-  Engine engine;
-  scoped_ptr<Segmentor> segmentor(component->Create(&engine));
+  scoped_ptr<Engine> engine(Engine::Create());
+  scoped_ptr<Segmentor> segmentor(component->Create(engine.get()));
   ASSERT_TRUE(segmentor);
   Segmentation segmentation;
   segmentation.Reset("abcdefg.1415926");
