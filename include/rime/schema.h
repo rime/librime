@@ -33,7 +33,7 @@ class Schema {
  private:
   std::string schema_id_;
   std::string schema_name_;
- scoped_ptr<Config> config_;
+  scoped_ptr<Config> config_;
 };
 
 }  // namespace rime

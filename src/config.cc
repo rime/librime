@@ -6,10 +6,12 @@
 //
 // 2011-4-6 Zou xu <zouivex@gmail.com>
 //
+#include <cstdlib>
 #include <fstream>
 #include <vector>
 #include <map>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <yaml-cpp/yaml.h>
@@ -73,6 +75,16 @@ bool ConfigValue::GetBool(bool *value) const {
 bool ConfigValue::GetInt(int *value) const {
   if (!value || value_.empty())
     return false;
+  // try to parse hex number
+  if (boost::starts_with(value_, "0x")) {
+    char *p = NULL;
+    unsigned int hex = std::strtoul(value_.c_str(), &p, 16); 
+    if (*p == '\0') {
+      *value = static_cast<int>(hex);
+      return true;
+    }
+  }
+  // decimal
   try {
     *value = boost::lexical_cast<int>(value_);
   }
@@ -368,6 +380,8 @@ bool ConfigDataManager::ReloadConfigData(const std::string &config_file_path) {
 // ConfigData members
 
 bool ConfigData::LoadFromFile(const std::string& file_name) {
+  if (!boost::filesystem::exists(file_name))
+    return false;
   std::ifstream fin(file_name.c_str());
   YAML::Parser parser(fin);
   YAML::Node doc;

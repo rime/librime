@@ -80,6 +80,10 @@ typedef struct {
   Bool is_simplified;
 } RimeStatus;
 
+typedef struct {
+  void *ptr;
+} RimeConfig;
+
 // library entry and exit
 
 RIME_API void RimeInitialize(RimeTraits *traits);
@@ -100,6 +104,16 @@ RIME_API Bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask);
 RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context);
 RIME_API Bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit);
 RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status);
+
+// configuration
+
+RIME_API Bool RimeConfigOpen(const char *config_id, RimeConfig* config);
+RIME_API Bool RimeConfigClose(RimeConfig *config);
+RIME_API Bool RimeConfigGetBool(RimeConfig *config, const char *key, Bool *value);
+RIME_API Bool RimeConfigGetInt(RimeConfig *config, const char *key, int *value);
+RIME_API Bool RimeConfigGetDouble(RimeConfig *config, const char *key, double *value);
+RIME_API Bool RimeConfigGetString(RimeConfig *config, const char *key,
+                                  char *value, size_t buffer_size);
 
 // for testing
 

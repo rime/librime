@@ -8,7 +8,7 @@ terrans:
       gas: 100
       time: 30 seconds
   supply:
-    produced: 28
+    produced: 0x1c
   math:
     pi: 3.1415926
   

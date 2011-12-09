@@ -161,6 +161,57 @@ RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
   return True;
 }
 
+RIME_API Bool RimeConfigOpen(const char *config_id, RimeConfig* config) {
+  if (!config || !config) return False;
+  rime::Config *c = rime::Config::Require("config")->Create(config_id);
+  if (!c) return False;
+  config->ptr = (void*)c;
+  return True;
+}
+
+RIME_API Bool RimeConfigClose(RimeConfig *config) {
+  if (!config || !config->ptr) return False;
+  rime::Config *c = reinterpret_cast<rime::Config*>(config->ptr);
+  delete c;
+  config->ptr = NULL;
+  return True;
+}
+
+RIME_API Bool RimeConfigGetBool(RimeConfig *config, const char *key, Bool *value) {
+  if (!config || !key || !value) return False;
+  rime::Config *c = reinterpret_cast<rime::Config*>(config->ptr);
+  bool bool_value = false;
+  if (c->GetBool(key, &bool_value)) {
+    *value = Bool(bool_value);
+    return True;
+  }
+  return False;
+}
+
+RIME_API Bool RimeConfigGetInt(RimeConfig *config, const char *key, int *value) {
+  if (!config || !key || !value) return False;
+  rime::Config *c = reinterpret_cast<rime::Config*>(config->ptr);
+  return Bool(c->GetInt(key, value));
+}
+
+RIME_API Bool RimeConfigGetDouble(RimeConfig *config, const char *key, double *value) {
+  if (!config || !key || !value) return False;
+  rime::Config *c = reinterpret_cast<rime::Config*>(config->ptr);
+  return Bool(c->GetDouble(key, value));
+}
+
+RIME_API Bool RimeConfigGetString(RimeConfig *config, const char *key,
+                                  char *value, size_t buffer_size) {
+  if (!config || !key || !value) return False;
+  rime::Config *c = reinterpret_cast<rime::Config*>(config->ptr);
+  std::string str_value;
+  if (c->GetString(key, &str_value)) {
+    std::strncpy(value, str_value.c_str(), buffer_size);
+    return True;
+  }
+  return False;
+}
+
 RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence) {
     EZLOGGERVAR(key_sequence);
     rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));

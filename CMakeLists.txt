@@ -54,7 +54,7 @@ include_directories(${PROJECT_SOURCE_DIR}/thirdparty/include)
 link_directories(${PROJECT_SOURCE_DIR}/thirdparty/lib) 
 if(MSVC)
   include_directories(${PROJECT_SOURCE_DIR}/thirdparty/include/msvc)
-  add_definitions("/wd4996")
+  add_definitions("/wd4244 /wd4996")
 endif(MSVC)
 
 add_subdirectory(src)
