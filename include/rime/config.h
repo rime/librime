@@ -107,7 +107,7 @@ class ConfigMap : public ConfigItem {
 
 typedef shared_ptr<ConfigMap> ConfigMapPtr;
 
-struct ConfigData;
+class ConfigData;
 
 // ConfigDataManager class
 

@@ -85,8 +85,12 @@ bool Navigator::Home(Context *ctx) {
 
 bool Navigator::End(Context *ctx) {
   EZLOGGERFUNCTRACKER;
-  ctx->set_caret_pos(ctx->input().length());
-  return true;
+  size_t end_pos = ctx->input().length();
+  if (ctx->caret_pos() != end_pos) {
+    ctx->set_caret_pos(end_pos);
+    return true;
+  }
+  return false;
 }
 
 }  // namespace rime

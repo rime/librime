@@ -44,6 +44,14 @@ Processor::Result Selector::ProcessKeyEvent(const KeyEvent &key_event) {
     CursorDown(ctx);
     return kAccepted;
   }
+  if (ch == XK_Home || ch == XK_KP_Home) {
+    if (Home(ctx))
+      return kAccepted;
+  }
+  if (ch == XK_End || ch == XK_KP_End) {
+    if (End(ctx))
+      return kAccepted;
+  }
   int index = -1;
   if (ch >= XK_0 && ch <= XK_9)
     index = ((ch - XK_0) + 9) % 10;
@@ -112,6 +120,27 @@ bool Selector::CursorDown(Context *ctx) {
   comp->back().tags.insert("paging");
   return true;
 }
+
+bool Selector::Home(Context *ctx) {
+  if (ctx->composition()->empty())
+    return false;
+  Segment &seg(ctx->composition()->back());
+  if (seg.selected_index > 0) {
+    seg.selected_index = 0;
+    return true;
+  }
+  return false;
+}
+
+bool Selector::End(Context *ctx) {
+  if (ctx->caret_pos() < ctx->input().length()) {
+    // navigator should handle this
+    return false;
+  }
+  // this is cool:
+  return Home(ctx);
+}
+
 
 bool Selector::SelectCandidateAt(Context *ctx, int index) {
   Composition *comp = ctx->composition();

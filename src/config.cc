@@ -19,15 +19,26 @@
 
 namespace rime {
 
-struct ConfigData {
-  ConfigItemPtr root;
+class ConfigData {
+ public:
+  ConfigData() : modified_(false) {}
+  ~ConfigData();
   
   bool LoadFromFile(const std::string& file_name);
   bool SaveToFile(const std::string& file_name);
   ConfigItemPtr Traverse(const std::string &key);
+  
+  bool modified() const { return modified_; }
+  void set_modified() { modified_ = true; }
 
+  ConfigItemPtr root;
+
+ protected:
   static ConfigItemPtr ConvertFromYaml(const YAML::Node &yaml_node);
   static void EmitYaml(const ConfigItemPtr &node, YAML::Emitter *emitter);
+
+  std::string file_name_;
+  bool modified_;
 };
 
 // ConfigValue members
@@ -304,6 +315,7 @@ bool Config::SetItem(const std::string &key, const ConfigItemPtr &item) {
   EZLOGGERVAR(key);
   if (key.empty() || key == "/") {
     data_->root = item;
+    data_->set_modified();
     return true;
   }
   if (!data_->root) {
@@ -318,6 +330,7 @@ bool Config::SetItem(const std::string &key, const ConfigItemPtr &item) {
       return false;
     if (i == k) {
       As<ConfigMap>(p)->Set(keys[i], item);
+      data_->set_modified();
       return true;
     }
     else {
@@ -379,9 +392,20 @@ bool ConfigDataManager::ReloadConfigData(const std::string &config_file_path) {
 
 // ConfigData members
 
+ConfigData::~ConfigData() {
+  if (modified_ && !file_name_.empty())
+    SaveToFile(file_name_);
+}
+
 bool ConfigData::LoadFromFile(const std::string& file_name) {
-  if (!boost::filesystem::exists(file_name))
+  // update status
+  file_name_ = file_name;
+  modified_ = false;
+  if (!boost::filesystem::exists(file_name)) {
+    root.reset();
     return false;
+  }
+  // load tree
   std::ifstream fin(file_name.c_str());
   YAML::Parser parser(fin);
   YAML::Node doc;
@@ -392,6 +416,10 @@ bool ConfigData::LoadFromFile(const std::string& file_name) {
 }
 
 bool ConfigData::SaveToFile(const std::string& file_name) {
+  // update status
+  file_name_ = file_name;
+  modified_ = false;
+  // dump tree
   std::ofstream out(file_name.c_str());
   YAML::Emitter emitter;
   EmitYaml(root, &emitter);

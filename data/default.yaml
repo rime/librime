@@ -57,6 +57,7 @@ key_binder:
     - { when: composing, accept: Control+f, send: Right }
     - { when: composing, accept: Control+a, send: Home }
     - { when: composing, accept: Control+e, send: End }
+    - { when: composing, accept: Control+d, send: Delete }
     - { when: composing, accept: Control+g, send: Escape }
     - { when: composing, accept: Alt+v, send: Page_Up }
     - { when: composing, accept: Control+v, send: Page_Down }

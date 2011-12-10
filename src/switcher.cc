@@ -26,13 +26,15 @@ class SwitcherOption : public Candidate {
  public:
   SwitcherOption(Schema *schema, const std::string &caption)
       : Candidate("schema", 0, caption.length()),
-        schema_(schema) {}
+        schema_name_(schema->schema_name()),
+        schema_id_(schema->schema_id()) {}
   
-  const std::string& text() const { return schema_->schema_name(); }
-  const std::string& schema_id() const { return schema_->schema_id(); }
+  const std::string& text() const { return schema_name_; }
+  const std::string& schema_id() const { return schema_id_; }
   
  protected:
-  scoped_ptr<Schema> schema_;
+  std::string schema_name_;
+  std::string schema_id_;
 };
 
 Switcher::Switcher() : Engine(new Schema),
@@ -42,7 +44,8 @@ Switcher::Switcher() : Engine(new Schema),
   // receive context notifications
   context_->select_notifier().connect(
       boost::bind(&Switcher::OnSelect, this, _1));
-  
+
+  user_config_.reset(Config::Require("config")->Create("user"));
   InitializeSubProcessors();
   LoadSettings();
 }
@@ -90,11 +93,28 @@ Schema* Switcher::CreateSchema() {
   if (!config) return NULL;
   ConfigListPtr schema_list = config->GetList("schema_list");
   if (!schema_list) return NULL;
-  ConfigMapPtr item = As<ConfigMap>(schema_list->GetAt(0));
-  if (!item) return NULL;
-  ConfigValuePtr schema_id = item->GetValue("schema");
-  if (!schema_id) return NULL;
-  return new Schema(schema_id->str());
+  std::string previous;
+  if (user_config_) {
+    user_config_->GetString("var/previously_selected_schema", &previous);
+  }
+  std::string recent;
+  for (size_t i = 0; i < schema_list->size(); ++i) {
+    ConfigMapPtr item = As<ConfigMap>(schema_list->GetAt(i));
+    if (!item) continue;
+    ConfigValuePtr schema_property = item->GetValue("schema");
+    if (!schema_property) continue;
+    const std::string &schema_id(schema_property->str());
+    if (previous.empty() || previous == schema_id) {
+      recent = schema_id;
+      break;
+    }
+    if (recent.empty())
+      recent = schema_id;
+  }
+  if (recent.empty())
+    return NULL;
+  else
+    return new Schema(recent);
 }
 
 void Switcher::OnSelect(Context *ctx) {
@@ -105,8 +125,13 @@ void Switcher::OnSelect(Context *ctx) {
   if (!option) return;
   if (target_engine_) {
     const std::string &schema_id(option->schema_id());
-    if (target_engine_->schema()->schema_id() != schema_id) {
+    const std::string &current_schema_id(target_engine_->schema()->schema_id());
+    if (schema_id != current_schema_id) {
       target_engine_->set_schema(new Schema(schema_id));
+    }
+    // save history
+    if (user_config_) {
+      user_config_->SetString("var/previously_selected_schema", schema_id);
     }
   }
   Deactivate();
@@ -118,17 +143,28 @@ void Switcher::Activate() {
   if (!config) return;
   ConfigListPtr schema_list = config->GetList("schema_list");
   if (!schema_list) return;
-  // load schema list
+
   shared_ptr<FifoTranslation> switcher_options(new FifoTranslation);
+  Schema *current_schema = NULL;
+  // current schema comes first
+  if (target_engine_ && target_engine_->schema()) {
+    current_schema = target_engine_->schema();
+    switcher_options->Append(
+        shared_ptr<Candidate>(new SwitcherOption(current_schema, caption_)));
+    // TODO: add custom switches
+  }
+  // load schema list
   for (size_t i = 0; i < schema_list->size(); ++i) {
     ConfigMapPtr item = As<ConfigMap>(schema_list->GetAt(i));
     if (!item) continue;
-    ConfigValuePtr schema_id = item->GetValue("schema");
-    if (!schema_id) continue;
-    Schema *schema = new Schema(schema_id->str());
-    if (!schema) continue;
+    ConfigValuePtr schema_property = item->GetValue("schema");
+    if (!schema_property) continue;
+    const std::string &schema_id(schema_property->str());
+    if (current_schema && schema_id == current_schema->schema_id())
+      continue;
+    scoped_ptr<Schema> schema(new Schema(schema_id));
     switcher_options->Append(
-        shared_ptr<Candidate>(new SwitcherOption(schema, caption_)));
+        shared_ptr<Candidate>(new SwitcherOption(schema.get(), caption_)));
   }
   // assign menu to switcher's context
   Composition *comp = context_->composition();

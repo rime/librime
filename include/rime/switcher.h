@@ -16,6 +16,7 @@
 
 namespace rime {
 
+class Config;
 class Processor;
 
 class Switcher : public Engine {
@@ -37,6 +38,7 @@ class Switcher : public Engine {
   void Deactivate();
   void OnSelect(Context *ctx);
 
+  scoped_ptr<Config> user_config_;
   std::string caption_;
   std::vector<KeyEvent> hotkeys_;
   std::vector<shared_ptr<Processor> > processors_;
