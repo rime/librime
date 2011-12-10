@@ -22,20 +22,53 @@
 
 namespace rime {
 
+static const char *kRightArrow = " \xe2\x86\x92 ";
+
 class SwitcherOption : public Candidate {
  public:
   SwitcherOption(Schema *schema, const std::string &caption)
       : Candidate("schema", 0, caption.length()),
-        schema_name_(schema->schema_name()),
-        schema_id_(schema->schema_id()) {}
+        text_(schema->schema_name()),
+        comment_(),
+        value_(schema->schema_id()) {}
+  SwitcherOption(const std::string &current_state_label,
+                 const std::string &next_state_label,
+                 const std::string &option_name,
+                 bool current_state,
+                 const std::string &caption)
+      : Candidate(current_state ? "switch_off" : "switch_on", 0, caption.length()),
+        text_(current_state_label + kRightArrow + next_state_label),
+        value_(option_name) {}
+
+  void Apply(Engine *target_engine, Config *user_config);
   
-  const std::string& text() const { return schema_name_; }
-  const std::string& schema_id() const { return schema_id_; }
+  const std::string& text() const { return text_; }
+  const std::string comment() const { return comment_; }
   
  protected:
-  std::string schema_name_;
-  std::string schema_id_;
+  std::string text_;
+  std::string comment_;
+  std::string value_;
 };
+
+void SwitcherOption::Apply(Engine *target_engine, Config *user_config) {
+  if (type() == "schema") {
+    const std::string &current_schema_id(target_engine->schema()->schema_id());
+    if (value_ != current_schema_id) {
+      target_engine->set_schema(new Schema(value_));
+    }
+    // save history
+    if (user_config) {
+      user_config->SetString("var/previously_selected_schema", value_);
+    }
+  }
+  else if (type() == "switch_off") {
+    target_engine->set_option(value_, false);
+  }
+  else if (type() == "switch_on") {
+    target_engine->set_option(value_, true);
+  }
+}
 
 Switcher::Switcher() : Engine(new Schema),
                        target_engine_(NULL),
@@ -56,6 +89,24 @@ Switcher::~Switcher() {
 
 void Switcher::Attach(Engine *engine) {
   target_engine_ = engine;
+  // initialize custom switches
+  Schema *schema = engine->schema();
+  if (!schema) return;
+  Config *custom = schema->config();
+  if (!custom) return;
+  ConfigListPtr switches = custom->GetList("switches");
+  if (switches) {
+    for (size_t i = 0; i < switches->size(); ++i) {
+      ConfigMapPtr item = As<ConfigMap>(switches->GetAt(i));
+      if (!item) continue;
+      ConfigValuePtr name_property = item->GetValue("name");
+      if (!name_property) continue;
+      ConfigValuePtr initial_property = item->GetValue("initial");
+      int value = 0;
+      initial_property->GetInt(&value);
+      engine->set_option(name_property->str(), (value != 0));
+    }
+  }
 }
 
 bool Switcher::ProcessKeyEvent(const KeyEvent &key_event) {
@@ -124,15 +175,7 @@ void Switcher::OnSelect(Context *ctx) {
       As<SwitcherOption>(seg.GetSelectedCandidate());
   if (!option) return;
   if (target_engine_) {
-    const std::string &schema_id(option->schema_id());
-    const std::string &current_schema_id(target_engine_->schema()->schema_id());
-    if (schema_id != current_schema_id) {
-      target_engine_->set_schema(new Schema(schema_id));
-    }
-    // save history
-    if (user_config_) {
-      user_config_->SetString("var/previously_selected_schema", schema_id);
-    }
+    option->Apply(target_engine_, user_config_.get());
   }
   Deactivate();
 }
@@ -151,7 +194,28 @@ void Switcher::Activate() {
     current_schema = target_engine_->schema();
     switcher_options->Append(
         shared_ptr<Candidate>(new SwitcherOption(current_schema, caption_)));
-    // TODO: add custom switches
+    // add custom switches
+    Config *custom = current_schema->config();
+    if (custom) {
+      ConfigListPtr switches = custom->GetList("switches");
+      if (switches) {
+        for (size_t i = 0; i < switches->size(); ++i) {
+          ConfigMapPtr item = As<ConfigMap>(switches->GetAt(i));
+          if (!item) continue;
+          ConfigValuePtr name_property = item->GetValue("name");
+          if (!name_property) continue;
+          ConfigListPtr states = As<ConfigList>(item->Get("states"));
+          if (!states || states->size() != 2) continue;
+          bool current_state = target_engine_->get_option(name_property->str());
+          switcher_options->Append(
+              shared_ptr<Candidate>(new SwitcherOption(states->GetValueAt(current_state)->str(),
+                                                       states->GetValueAt(1 - current_state)->str(),
+                                                       name_property->str(),
+                                                       current_state,
+                                                       caption_)));
+        }
+      }
+    }
   }
   // load schema list
   for (size_t i = 0; i < schema_list->size(); ++i) {

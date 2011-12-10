@@ -22,10 +22,10 @@ switches:
     states: [ 中文, 西文 ]
   - name: half_shape
     initial: 0
-    states: [ 全角符號, 半角符號 ]
+    states: [ 全角, 半角 ]
   - name: simplification
     initial: 0
-    states: [ 傳統漢字, 簡化漢字 ]
+    states: [ 漢字, 汉字 ]
 
 engine:
   processors:
