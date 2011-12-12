@@ -10,6 +10,7 @@
 #include <vector>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/scoped_array.hpp>
 #include <opencc.h>
 #include <rime/candidate.h>
 #include <rime/common.h>
@@ -53,17 +54,15 @@ bool Opencc::Convert(const shared_ptr<Candidate> &original,
                      CandidateList *result) {
   if (od_ == (opencc_t) -1)
     return false;
-  static const int MAX_LEN = 100;
-  static uint32_t inbuf[MAX_LEN];
-  static uint32_t outbuf[MAX_LEN];
-  static char out_utf8[MAX_LEN * 6];
   const std::string &text(original->text());
-  uint32_t *end = utf8::unchecked::utf8to32(text.c_str(), text.c_str() + text.length(), inbuf);
+  boost::scoped_array<uint32_t> inbuf(new uint32_t[text.length() + 1]);
+  uint32_t *end = utf8::unchecked::utf8to32(text.c_str(), text.c_str() + text.length(), inbuf.get());
   *end = L'\0';
-  uint32_t *inptr = inbuf;
-  size_t inlen = end - inptr;
-  uint32_t *outptr = outbuf;
-  size_t outlen = MAX_LEN;
+  size_t inlen = end - inbuf.get();
+  uint32_t *inptr = inbuf.get();
+  size_t outlen = inlen * 5;
+  boost::scoped_array<uint32_t> outbuf(new uint32_t[outlen + 1]);
+  uint32_t *outptr = outbuf.get();
   bool single_char = false;
   if (inlen == 1) {
     single_char = true;
@@ -73,14 +72,15 @@ bool Opencc::Convert(const shared_ptr<Candidate> &original,
     opencc_set_conversion_mode(od_, OPENCC_CONVERSION_FAST);
   }
   size_t converted = opencc_convert(od_, &inptr, &inlen, &outptr, &outlen);
-  *outptr = L'\0';
   if (!converted) {
     EZLOGGERPRINT("Error simplifying '%s'.", text.c_str());
     return false;
   }
-  char *utf8_end = utf8::unchecked::utf32to8(outbuf, outptr, out_utf8);
+  *outptr = L'\0';
+  boost::scoped_array<char> out_utf8(new char[(outptr - outbuf.get()) * 6 + 1]);
+  char *utf8_end = utf8::unchecked::utf32to8(outbuf.get(), outptr, out_utf8.get());
   *utf8_end = '\0';
-  std::string simplified(out_utf8);
+  std::string simplified(out_utf8.get());
   if (simplified == text) {
     return false;
   }
