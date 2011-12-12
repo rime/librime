@@ -130,9 +130,6 @@ class R10nCandidate : public Candidate {
   const shared_ptr<DictEntry> entry_;
 };
 
-class SelectSequence : public std::vector<shared_ptr<R10nCandidate> > {
-};
-
 // R10nTranslator implementation
 
 R10nTranslator::R10nTranslator(Engine *engine)
@@ -188,13 +185,18 @@ Translation* R10nTranslator::Query(const std::string &input, const Segment &segm
 void R10nTranslator::OnCommit(Context *ctx) {
   DictEntry commit_entry;
   BOOST_FOREACH(Composition::value_type &seg, *ctx->composition()) {
-    const shared_ptr<R10nCandidate> cand = As<R10nCandidate>(seg.GetSelectedCandidate());
-    if (cand) {
-      commit_entry.text += cand->text();
+    shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
+    shared_ptr<UnifiedCandidate> unified = As<UnifiedCandidate>(cand);
+    if (unified) cand = unified->items().front();
+    shared_ptr<ShadowCandidate> shadow = As<ShadowCandidate>(cand);
+    if (shadow) cand = shadow->item();
+    shared_ptr<R10nCandidate> r10n_cand = As<R10nCandidate>(cand);
+    if (r10n_cand) {
+      commit_entry.text += r10n_cand->text();
       commit_entry.code.insert(commit_entry.code.end(),
-                               cand->code().begin(), cand->code().end());
+                               r10n_cand->code().begin(), r10n_cand->code().end());
     }
-    if ((!cand || seg.status >= Segment::kConfirmed) && !commit_entry.text.empty()) {
+    if ((!r10n_cand || seg.status >= Segment::kConfirmed) && !commit_entry.text.empty()) {
       EZLOGGERVAR(commit_entry.text);
       user_dict_->UpdateEntry(commit_entry, 1);
       commit_entry.text.clear();
