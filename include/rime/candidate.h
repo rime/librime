@@ -78,28 +78,64 @@ class SimpleCandidate : public Candidate {
 
 class ShadowCandidate : public Candidate {
  public:
-  ShadowCandidate(const shared_ptr<Candidate> &original,
+  ShadowCandidate(const shared_ptr<Candidate> &item,
                   const std::string &type,
                   const std::string &text = std::string(),
                   const std::string &comment = std::string())
-      : Candidate(type, original->start(), original->end()),
+      : Candidate(type, item->start(), item->end()),
         text_(text), comment_(comment),
-        original_(original) {}
+        item_(item) {}
 
   const std::string& text() const {
-    return text_.empty() ? original_->text() : text_;
+    return text_.empty() ? item_->text() : text_;
   }
   const std::string comment() const {
-    return comment_.empty() ? original_->comment() : comment_;
+    return comment_.empty() ? item_->comment() : comment_;
   }
   const std::string preedit() const {
-    return original_->preedit();
+    return item_->preedit();
   }
+
+  const shared_ptr<Candidate> item() const { return item_; }
 
  protected:
   std::string text_;
   std::string comment_;
-  shared_ptr<Candidate> original_;
+  shared_ptr<Candidate> item_;
+};        
+
+class UnifiedCandidate : public Candidate {
+ public:
+  UnifiedCandidate(const shared_ptr<Candidate> &item,
+                   const std::string &type,
+                   const std::string &text = std::string(),
+                   const std::string &comment = std::string())
+      : Candidate(type, item->start(), item->end()),
+        text_(text), comment_(comment) {
+    Append(item);
+  }
+
+  const std::string& text() const {
+    return text_.empty() && !items_.empty() ?
+        items_.front()->text() : text_;
+  }
+  const std::string comment() const {
+    return comment_.empty() && !items_.empty() ?
+        items_.front()->comment() : comment_;
+  }
+  const std::string preedit() const {
+    return !items_.empty() ? items_.front()->preedit() : std::string();
+  }
+
+  void Append(const shared_ptr<Candidate> &item) {
+    items_.push_back(item);
+  }
+  const CandidateList& items() const { return items_; }
+
+ protected:
+  std::string text_;
+  std::string comment_;
+  CandidateList items_;
 };        
 
 }  // namespace rime

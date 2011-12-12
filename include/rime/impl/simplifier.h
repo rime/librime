@@ -4,7 +4,7 @@
 // Copyleft 2011 RIME Developers
 // License: GPLv3
 //
-// 2011-05-20 GONG Chen <chen.sst@gmail.com>
+// 2011-12-12 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_SIMPLIFIER_H_
 #define RIME_SIMPLIFIER_H_
@@ -24,7 +24,13 @@ class Simplifier : public Filter {
                        CandidateList *candidates);
 
  protected:
+  typedef enum { kTipNone, kTipChar, kTipAll } TipLevel;
+
+  bool Convert(const shared_ptr<Candidate> &original,
+               CandidateList *result);
+  
   scoped_ptr<Opencc> opencc_;
+  TipLevel tip_level_;
 };
 
 }  // namespace rime

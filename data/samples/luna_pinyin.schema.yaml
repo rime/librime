@@ -46,6 +46,7 @@ engine:
     - trivial_translator
   filters:
     - simplifier
+    - unifier
 
 speller:
   alphabet: zyxwvutsrqponmlkjihgfedcba

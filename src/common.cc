@@ -31,6 +31,7 @@
 #include <rime/impl/speller.h>
 #include <rime/impl/table_translator.h>
 #include <rime/impl/trivial_translator.h>
+#include <rime/impl/unifier.h>
 
 namespace rime {
 
@@ -77,6 +78,7 @@ void RegisterComponents() {
 
   // filters
   r.Register("simplifier", new Component<Simplifier>);
+  r.Register("unifier", new Component<Unifier>);
 }
 
 }  // namespace rime
