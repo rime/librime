@@ -27,6 +27,7 @@
 #include <rime/impl/punctuator.h>
 #include <rime/impl/r10n_translator.h>
 #include <rime/impl/selector.h>
+#include <rime/impl/simplifier.h>
 #include <rime/impl/speller.h>
 #include <rime/impl/table_translator.h>
 #include <rime/impl/trivial_translator.h>
@@ -73,6 +74,9 @@ void RegisterComponents() {
   r.Register("trivial_translator", new Component<TrivialTranslator>);
   r.Register("table_translator", new Component<TableTranslator>);
   r.Register("r10n_translator", new Component<R10nTranslator>);
+
+  // filters
+  r.Register("simplifier", new Component<Simplifier>);
 }
 
 }  // namespace rime

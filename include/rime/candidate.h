@@ -46,6 +46,10 @@ class Candidate {
   size_t end_;
 };
 
+typedef std::vector<shared_ptr<Candidate> > CandidateList;
+
+// useful implimentations
+
 class SimpleCandidate : public Candidate {
  public:
   SimpleCandidate() : Candidate() {}
@@ -66,13 +70,37 @@ class SimpleCandidate : public Candidate {
   void set_comment(const std::string &comment) { comment_ = comment; }
   void set_preedit(const std::string &preedit) { preedit_ = preedit; }
 
- private:
+ protected:
   std::string text_;
   std::string comment_;
   std::string preedit_;
 };
 
-typedef std::vector<shared_ptr<Candidate> > CandidateList;
+class ShadowCandidate : public Candidate {
+ public:
+  ShadowCandidate(const shared_ptr<Candidate> &original,
+                  const std::string &type,
+                  const std::string &text = std::string(),
+                  const std::string &comment = std::string())
+      : Candidate(type, original->start(), original->end()),
+        text_(text), comment_(comment),
+        original_(original) {}
+
+  const std::string& text() const {
+    return text_.empty() ? original_->text() : text_;
+  }
+  const std::string comment() const {
+    return comment_.empty() ? original_->comment() : comment_;
+  }
+  const std::string preedit() const {
+    return original_->preedit();
+  }
+
+ protected:
+  std::string text_;
+  std::string comment_;
+  shared_ptr<Candidate> original_;
+};        
 
 }  // namespace rime
 

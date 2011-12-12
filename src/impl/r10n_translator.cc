@@ -21,7 +21,7 @@
 #include <rime/segmentation.h>
 #include <rime/translation.h>
 #include <rime/dict/dictionary.h>
-#include <rime/dict/syllablizer.h>
+#include <rime/dict/syllabifier.h>
 #include <rime/dict/user_dictionary.h>
 #include <rime/impl/r10n_translator.h>
 
@@ -206,8 +206,8 @@ void R10nTranslator::OnCommit(Context *ctx) {
 // R10nTranslation implementation
 
 bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
-  Syllablizer syllablizer(delimiters_, true);
-  size_t consumed = syllablizer.BuildSyllableGraph(input_,
+  Syllabifier syllabifier(delimiters_, true);
+  size_t consumed = syllabifier.BuildSyllableGraph(input_,
                                                    *dict->prism(),
                                                    &syllable_graph_);
 

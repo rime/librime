@@ -12,14 +12,14 @@
 #include <vector>
 #include <boost/foreach.hpp>
 #include <rime/dict/prism.h>
-#include <rime/dict/syllablizer.h>
+#include <rime/dict/syllabifier.h>
 
 namespace rime {
 
 typedef std::pair<size_t, SpellingType> Vertex;
 typedef std::priority_queue<Vertex, std::vector<Vertex>, std::greater<Vertex> > VertexQueue;
 
-int Syllablizer::BuildSyllableGraph(const std::string &input, Prism &prism, SyllableGraph *graph) {
+int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, SyllableGraph *graph) {
   if (input.empty())
     return 0;
 

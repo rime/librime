@@ -44,6 +44,8 @@ engine:
     - punct_translator
     - r10n_translator
     - trivial_translator
+  filters:
+    - simplifier
 
 speller:
   alphabet: zyxwvutsrqponmlkjihgfedcba

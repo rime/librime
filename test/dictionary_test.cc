@@ -8,7 +8,7 @@
 //
 #include <gtest/gtest.h>
 #include <rime/common.h>
-#include <rime/dict/syllablizer.h>
+#include <rime/dict/syllabifier.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
 
@@ -69,7 +69,7 @@ TEST_F(RimeDictionaryTest, PredictiveLookup) {
 TEST_F(RimeDictionaryTest, R10nLookup) {
   ASSERT_TRUE(dict_->loaded());
   rime::SyllableGraph g;
-  rime::Syllablizer s;
+  rime::Syllabifier s;
   std::string input("shurufa");
   ASSERT_TRUE(s.BuildSyllableGraph(input, *dict_->prism(), &g) > 0);
   EXPECT_EQ(g.interpreted_length, g.input_length);

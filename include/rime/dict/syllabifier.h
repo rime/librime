@@ -7,8 +7,8 @@
 // 2011-7-12 Zou xu <zouivex@gmail.com>
 //
 
-#ifndef RIME_SYLLABLIZER_H_
-#define RIME_SYLLABLIZER_H_
+#ifndef RIME_SYLLABIFIER_H_
+#define RIME_SYLLABIFIER_H_
 
 #include <map>
 
@@ -40,10 +40,10 @@ struct SyllableGraph {
   SyllableGraph() : input_length(0), interpreted_length(0) {}
 };
 
-class Syllablizer {
+class Syllabifier {
  public:
-  Syllablizer() : enable_completion_(false) {}
-  explicit Syllablizer(const std::string &delimiters, bool enable_completion = false)
+  Syllabifier() : enable_completion_(false) {}
+  explicit Syllabifier(const std::string &delimiters, bool enable_completion = false)
       : delimiters_(delimiters), enable_completion_(enable_completion) {}
   
   int BuildSyllableGraph(const std::string &input, Prism &prism, SyllableGraph *graph);
@@ -55,4 +55,4 @@ class Syllablizer {
 
 }  // namespace rime
 
-#endif  // RIME_SYLLABLIZER_H_
+#endif  // RIME_SYLLABIFIER_H_

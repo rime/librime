@@ -41,6 +41,11 @@ if(KyotoCabinet_FOUND)
   include_directories(${KyotoCabinet_INCLUDE_DIR})
 endif(KyotoCabinet_FOUND)
 
+find_package(Opencc REQUIRED)
+if(Opencc_FOUND)
+  include_directories(${Opencc_INCLUDE_DIR})
+endif(Opencc_FOUND)
+
 find_path(X11Keysym X11/keysym.h)
 if(X11Keysym)
   message(STATUS "Found X11/keysym.h at ${X11Keysym}")

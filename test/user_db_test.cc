@@ -7,7 +7,7 @@
 // 2011-07-03 GONG Chen <chen.sst@gmail.com>
 //
 #include <gtest/gtest.h>
-#include <rime/dict/syllablizer.h>
+#include <rime/dict/syllabifier.h>
 #include <rime/dict/user_db.h>
 
 TEST(RimeUserDbTest, AccessRecordByKey) {

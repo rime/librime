@@ -15,6 +15,7 @@
 #include <rime/composition.h>
 #include <rime/context.h>
 #include <rime/engine.h>
+#include <rime/filter.h>
 #include <rime/key_event.h>
 #include <rime/menu.h>
 #include <rime/processor.h>
@@ -39,12 +40,14 @@ class ConcreteEngine : public Engine {
   void Compose(Context *ctx);
   void CalculateSegmentation(Composition *comp);
   void TranslateSegments(Composition *comp);
+  void FilterCandidates(CandidateList *recruited, CandidateList *candidates);
   void OnCommit(Context *ctx);
   void OnSelect(Context *ctx);
   
   std::vector<shared_ptr<Processor> > processors_;
   std::vector<shared_ptr<Segmentor> > segmentors_;
   std::vector<shared_ptr<Translator> > translators_;
+  std::vector<shared_ptr<Filter> > filters_;
 };
 
 Engine* Engine::Create(Schema *schema) {
@@ -150,6 +153,8 @@ void ConcreteEngine::CalculateSegmentation(Composition *comp) {
 
 void ConcreteEngine::TranslateSegments(Composition *comp) {
   EZLOGGERFUNCTRACKER;
+  Menu::CandidateFilter filter(boost::bind(&ConcreteEngine::FilterCandidates,
+                                           this, _1, _2));
   BOOST_FOREACH(Segment &segment, *comp) {
     if (segment.status >= Segment::kGuess)
       continue;
@@ -157,7 +162,7 @@ void ConcreteEngine::TranslateSegments(Composition *comp) {
     if (len == 0) continue;
     const std::string input(comp->input().substr(segment.start, len));
     EZLOGGERPRINT("Translating segment '%s'", input.c_str());
-    shared_ptr<Menu> menu(new Menu);
+    shared_ptr<Menu> menu(new Menu(filter));
     BOOST_FOREACH(shared_ptr<Translator> translator, translators_) {
       shared_ptr<Translation> translation(translator->Query(input, segment));
       if (!translation)
@@ -171,6 +176,16 @@ void ConcreteEngine::TranslateSegments(Composition *comp) {
     segment.status = Segment::kGuess;
     segment.menu = menu;
     segment.selected_index = 0;
+  }
+}
+
+void ConcreteEngine::FilterCandidates(CandidateList *recruited,
+                                      CandidateList *candidates) {
+  if (filters_.empty()) return;
+  EZLOGGERPRINT("Applying filters.");
+  BOOST_FOREACH(shared_ptr<Filter> filter, filters_) {
+    if (!filter->Proceed(recruited, candidates))
+      break;
   }
 }
 
@@ -272,6 +287,23 @@ void ConcreteEngine::InitializeComponents() {
       else {
         shared_ptr<Translator> d(c->Create(this));
         translators_.push_back(d);
+      }
+    }
+  }
+  // create filters
+  shared_ptr<ConfigList> filter_list(config->GetList("engine/filters"));
+  if (filter_list) {
+    size_t n = filter_list->size();
+    for (size_t i = 0; i < n; ++i) {
+      shared_ptr<ConfigValue> klass = As<ConfigValue>(filter_list->GetAt(i));
+      if (!klass) continue;
+      Filter::Component *c = Filter::Require(klass->str());
+      if (!c) {
+        EZLOGGERPRINT("error creating filter: '%s'", klass->str().c_str());
+      }
+      else {
+        shared_ptr<Filter> d(c->Create(this));
+        filters_.push_back(d);
       }
     }
   }

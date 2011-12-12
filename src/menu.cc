@@ -7,6 +7,7 @@
 //
 // 2011-05-29 GONG Chen <chen.sst@gmail.com>
 //
+#include <algorithm>
 #include <iterator>
 #include <rime/menu.h>
 #include <rime/translation.h>
@@ -42,17 +43,27 @@ size_t Menu::Prepare(size_t candidate_count) {
       translations_.erase(translations_.begin() + k);
       continue;
     }
-    shared_ptr<Candidate> cand(translations_[k]->Peek());
-    EZLOGGERPRINT("Append candidate to menu: '%s'.", cand->text().c_str());
-    candidates_.push_back(cand);
-    ++count;
+    CandidateList next_candidates;
+    next_candidates.push_back(translations_[k]->Peek());
+    if (filter_) {
+      filter_(&candidates_, &next_candidates);
+    }
+    if (next_candidates.empty()) {
+      EZLOGGERPRINT("Filter returns empty candidate list.");
+    }
+    else {
+      EZLOGGERPRINT("Recruiting %d candidates.", next_candidates.size());
+      std::copy(next_candidates.begin(), next_candidates.end(),
+                std::back_inserter(candidates_));
+    }
+    count = candidates_.size();
     translations_[k]->Next();
     if (translations_[k]->exhausted()) {
       EZLOGGERPRINT("Translation #%d has been exhausted.", k);
       translations_.erase(translations_.begin() + k);
     }
   }
-  return candidates_.size();
+  return count;
 }
 
 Page* Menu::CreatePage(size_t page_size, size_t page_no) {
@@ -65,6 +76,7 @@ Page* Menu::CreatePage(size_t page_size, size_t page_no) {
       end_pos = Prepare(end_pos);
     if (start_pos >= end_pos)
       return NULL;
+    end_pos = (std::min)(start_pos + page_size, end_pos);
   }
   Page *page = new Page;
   if (!page)
@@ -72,7 +84,8 @@ Page* Menu::CreatePage(size_t page_size, size_t page_no) {
   page->page_size = page_size;
   page->page_no = page_no;
   page->is_last_page = (translations_.empty()) && (end_pos == candidates_.size());
-  std::copy(candidates_.begin() + start_pos, candidates_.begin() + end_pos,
+  std::copy(candidates_.begin() + start_pos,
+            candidates_.begin() + end_pos,
             std::back_inserter(page->candidates));
   return page;
 }

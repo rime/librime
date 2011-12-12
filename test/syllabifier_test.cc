@@ -13,9 +13,9 @@
 #include <vector>
 #include <gtest/gtest.h>
 #include <rime/dict/prism.h>
-#include <rime/dict/syllablizer.h>
+#include <rime/dict/syllabifier.h>
 
-class RimeSyllablizerTest : public ::testing::Test {
+class RimeSyllabifierTest : public ::testing::Test {
  public:
   virtual void SetUp() {
     std::vector<std::string> syllables;
@@ -35,7 +35,7 @@ class RimeSyllablizerTest : public ::testing::Test {
       syllable_id_[syllables[i]] = i;
     }
 
-    prism_ = new rime::Prism("syllablizer_test.bin");
+    prism_ = new rime::Prism("syllabifier_test.bin");
     std::set<std::string> keyset;
     std::copy(syllables.begin(), syllables.end(), std::inserter(keyset, keyset.begin()));
     prism_->Build(keyset);
@@ -51,8 +51,8 @@ class RimeSyllablizerTest : public ::testing::Test {
   rime::Prism *prism_;
 };
 
-TEST_F(RimeSyllablizerTest, CaseAlpha) {
-  rime::Syllablizer s;
+TEST_F(RimeSyllabifierTest, CaseAlpha) {
+  rime::Syllabifier s;
   rime::SyllableGraph g;
   const std::string input("a");
   s.BuildSyllableGraph(input, *prism_, &g);
@@ -68,8 +68,8 @@ TEST_F(RimeSyllablizerTest, CaseAlpha) {
   EXPECT_EQ(1.0, sp[0].credibility);
 }
 
-TEST_F(RimeSyllablizerTest, CaseFailure) {
-  rime::Syllablizer s;
+TEST_F(RimeSyllabifierTest, CaseFailure) {
+  rime::Syllabifier s;
   rime::SyllableGraph g;
   const std::string input("ang");
   s.BuildSyllableGraph(input, *prism_, &g);
@@ -84,8 +84,8 @@ TEST_F(RimeSyllablizerTest, CaseFailure) {
   ASSERT_FALSE(sp.end() == sp.find(syllable_id_["an"]));
 }
 
-TEST_F(RimeSyllablizerTest, CaseChangan) {
-  rime::Syllablizer s;
+TEST_F(RimeSyllabifierTest, CaseChangan) {
+  rime::Syllabifier s;
   rime::SyllableGraph g;
   const std::string input("changan");
   s.BuildSyllableGraph(input, *prism_, &g);
@@ -117,8 +117,8 @@ TEST_F(RimeSyllablizerTest, CaseChangan) {
   EXPECT_FALSE(e5[7].end() == e5[7].find(syllable_id_["an"]));
 }
 
-TEST_F(RimeSyllablizerTest, CaseTuan) {
-  rime::Syllablizer s;
+TEST_F(RimeSyllabifierTest, CaseTuan) {
+  rime::Syllabifier s;
   rime::SyllableGraph g;
   const std::string input("tuan");
   s.BuildSyllableGraph(input, *prism_, &g);
@@ -143,8 +143,8 @@ TEST_F(RimeSyllablizerTest, CaseTuan) {
   EXPECT_FALSE(e2[4].end() == e2[4].find(syllable_id_["an"]));
 }
 
-TEST_F(RimeSyllablizerTest, CaseChainingAmbiguity) {
-  rime::Syllablizer s;
+TEST_F(RimeSyllabifierTest, CaseChainingAmbiguity) {
+  rime::Syllabifier s;
   rime::SyllableGraph g;
   const std::string input("anana");
   s.BuildSyllableGraph(input, *prism_, &g);

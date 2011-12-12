@@ -10,6 +10,7 @@
 #define RIME_MENU_H_
 
 #include <vector>
+#include <boost/function.hpp>
 #include <rime/candidate.h>
 #include <rime/common.h>
 
@@ -26,7 +27,12 @@ struct Page {
 
 class Menu {
  public:
+  typedef boost::function<void (CandidateList *recruited,
+                                CandidateList *candidates)>
+  CandidateFilter;
+
   Menu() {}
+  Menu(const CandidateFilter &filter) : filter_(filter) {}
   ~Menu() {}
 
   void AddTranslation(shared_ptr<Translation> translation);
@@ -41,6 +47,7 @@ class Menu {
  private:
   std::vector<shared_ptr<Translation> > translations_;
   CandidateList candidates_;
+  CandidateFilter filter_;
 };
 
 }  // namespace rime
