@@ -85,6 +85,13 @@ int main(int argc, char *argv[]) {
 
   RimeInitialize(NULL);
 
+  fprintf(stderr, "initializing...");
+  if (!RimeDeployInitialize(NULL)) {
+    fprintf(stderr, "failure!\n");
+    return 1;
+  }
+  fprintf(stderr, "ready.\n");
+
   RimeSessionId session_id = RimeCreateSession();
   if (!session_id) {
     fprintf(stderr, "Error creating rime session.\n");

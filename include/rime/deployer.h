@@ -28,6 +28,9 @@ struct Deployer {
   
   bool InitializeInstallation();
   bool InstallSchema(const std::string &schema_file);
+  bool UpdateDistributedConfigFile(const std::string &file_name,
+                                   const std::string &version_key);
+  bool PrepareSchemas();
 };
 
 }  // namespace rime

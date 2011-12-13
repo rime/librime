@@ -113,18 +113,15 @@ int main(int argc, char *argv[]) {
     std::cerr << "failed to initialize installation." << std::endl;
     return 1;
   }
+  std::cerr << "initializing...";
+  if (!deployer.PrepareSchemas()) {
+    std::cerr << "failure!" << std::endl;
+    return 1;
+  }
+  std::cerr << "ready." << std::endl;
 
   rime::Switcher switcher;
   rime::Schema *schema = switcher.CreateSchema();
-  if (schema) {
-    std::cerr << "preparing dictionary for schema '" << schema->schema_id() << "'...";
-    if (!deployer.InstallSchema(schema->schema_id() + ".schema.yaml")) {
-      std::cerr << "failure!" << std::endl;
-      delete schema;
-      return 1;
-    }
-    std::cerr << "ready." << std::endl;
-  }
 
   RimeConsole console(schema);
   // "-i" turns on interactive mode (no commit at the end of line)

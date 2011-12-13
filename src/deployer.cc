@@ -22,13 +22,67 @@ namespace fs = boost::filesystem;
 
 namespace rime {
 
+static int CompareVersionString(const std::string &x, const std::string &y) {
+  std::vector<std::string> xx, yy;
+  boost::split(xx, x, boost::is_any_of("."));
+  boost::split(yy, y, boost::is_any_of("."));
+  size_t i = 0;
+  for (; i < xx.size() && i < yy.size(); ++i) {
+    int dx = atoi(xx[i].c_str());
+    int dy = atoi(yy[i].c_str());
+    if (dx != dy) return dx - dy;
+    int c = xx[i].compare(yy[i]);
+    if (c != 0) return c;
+  }
+  if (i < xx.size()) return 1;
+  if (i < yy.size()) return -1;
+  return 0;
+}
+
+static bool UpdateConfigFile(const fs::path &source_path,
+                             const fs::path &dest_path,
+                             const std::string &version_key) {
+  if (fs::equivalent(source_path, dest_path)) {
+    return true;
+  }
+  std::string source_version;
+  std::string dest_version;
+  rime::Config source_config;
+  rime::Config dest_config;
+  if (source_config.LoadFromFile(source_path.string())) {
+    source_config.GetString(version_key, &source_version);
+  }
+  else {
+    EZLOGGERPRINT("Error loading config from '%s'.",
+                  source_path.string().c_str());
+    return false;
+  }
+  if (dest_config.LoadFromFile(dest_path.string())) {
+    dest_config.GetString(version_key, &dest_version);
+  }
+  if (CompareVersionString(source_version, dest_version) <= 0) {
+    EZLOGGERPRINT("config file '%s' is up-to-date.",
+                  dest_path.string().c_str());
+    return false;
+  }
+  EZLOGGERPRINT("updating config file '%s'.", dest_path.string().c_str());
+  try {
+    fs::copy_file(source_path, dest_path, fs::copy_option::overwrite_if_exists);
+  }
+  catch (...) {
+    EZLOGGERPRINT("Error copying config file '%s' to user directory.",
+                  source_path.string().c_str());
+    return false;
+  }
+  return true;
+}
+
 bool Deployer::InitializeInstallation() {
   EZLOGGERPRINT("initializing Rime installation.");
   fs::path shared_data_path(shared_data_dir);
   fs::path user_data_path(user_data_dir);
   fs::path installation_info(user_data_path / "installation.yaml");
   rime::Config config;
-  bool existing_installation = false;
   std::string installation_id;
   std::string last_distribution_code_name;
   std::string last_distribution_version;
@@ -104,14 +158,9 @@ bool Deployer::InstallSchema(const std::string &schema_file) {
   }
   fs::path user_data_path(user_data_dir);
   fs::path destination_path(user_data_path / (schema_id + ".schema.yaml"));
-  if (!fs::exists(destination_path) || !fs::equivalent(source_path, destination_path)) {
-    try {
-      fs::copy_file(source_path, destination_path, fs::copy_option::overwrite_if_exists);
-    }
-    catch (...) {
-      EZLOGGERPRINT("Error copying schema '%s' to Rime user directory.", schema_file.c_str());
-      return false;
-    }
+  if (!UpdateConfigFile(source_path, destination_path, "schema/version")) {
+    EZLOGGERPRINT("Info: schema '%s' does not need an update.", schema_id.c_str());
+    return false;
   }
   std::string dict_name;
   if (!config.GetString("translator/dictionary", &dict_name)) {
@@ -132,7 +181,62 @@ bool Deployer::InstallSchema(const std::string &schema_file) {
   EZLOGGERPRINT("preparing dictionary '%s'...", dict_name.c_str());
   DictCompiler dict_compiler(dict.get());
   dict_compiler.Compile(dict_path.string(), schema_file);
-  EZLOGGERPRINT("successfully compiled dictionary '%s'.", dict_name.c_str());
+  EZLOGGERPRINT("dictionary '%s' is ready.", dict_name.c_str());
+  return true;
+}
+
+bool Deployer::UpdateDistributedConfigFile(const std::string &file_name,
+                                           const std::string &version_key) {
+  fs::path shared_data_path(shared_data_dir);
+  fs::path user_data_path(user_data_dir);
+  fs::path shared_config_path(shared_data_path / file_name);
+  fs::path config_path(user_data_path / file_name);
+  if (fs::exists(shared_config_path)) {
+    return UpdateConfigFile(shared_config_path, config_path, version_key);
+  }
+  else {
+    EZLOGGERPRINT("Warning: '%s' is missing.", file_name.c_str());
+    return false;
+  }
+}
+
+bool Deployer::PrepareSchemas() {
+  fs::path shared_data_path(shared_data_dir);
+  fs::path user_data_path(user_data_dir);
+  fs::path default_config_path(user_data_path / "default.yaml");
+  EZLOGGERPRINT("preparing schemas.");
+  UpdateDistributedConfigFile("default.yaml", "config_version");
+  Config config;
+  if (!config.LoadFromFile(default_config_path.string())) {
+    EZLOGGERPRINT("Error loading default config from '%s'.",
+                  default_config_path.string().c_str());
+    return false;
+  }
+  // install schemas
+  ConfigListPtr schema_list = config.GetList("schema_list");
+  if (!schema_list) {
+    EZLOGGERPRINT("Warning: schema list not defined.");
+    return false;
+  }
+  size_t success = 0, failure = 0;
+  ConfigList::Iterator it = schema_list->begin();
+  for (; it != schema_list->end(); ++it) {
+    ConfigMapPtr item = As<ConfigMap>(*it);
+    if (!item) continue;
+    ConfigValuePtr schema_property = item->GetValue("schema");
+    if (!schema_property) continue;
+    const std::string &schema_id(schema_property->str());
+    fs::path schema_path = shared_data_path / (schema_id + ".schema.yaml");
+    if (!fs::exists(schema_path)) {
+      schema_path = user_data_path / (schema_id + ".schema.yaml");
+    }      
+    if (InstallSchema(schema_path.string()))
+      ++success;
+    else
+      ++failure;
+  }
+  EZLOGGERPRINT("finished preparing schemas: %d success, %d failure.",
+                success, failure);
   return true;
 }
 

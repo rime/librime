@@ -19,18 +19,22 @@
 #include <rime/service.h>
 #include <rime_api.h>
 
+
+static void apply_traits(RimeTraits *traits, rime::Deployer *deployer) {
+  if (!traits) return;
+  deployer->shared_data_dir = traits->shared_data_dir;
+  deployer->user_data_dir = traits->user_data_dir;
+  if (traits->distribution_name)
+    deployer->distribution_name = traits->distribution_name;
+  if (traits->distribution_code_name)
+    deployer->distribution_code_name = traits->distribution_code_name;
+  if (traits->distribution_version)
+    deployer->distribution_version = traits->distribution_version;
+}
+
 RIME_API void RimeInitialize(RimeTraits *traits) {
   rime::Deployer &deployer(rime::Service::instance().deployer());
-  if (traits) {
-    deployer.shared_data_dir = traits->shared_data_dir;
-    deployer.user_data_dir = traits->user_data_dir;
-    if (traits->distribution_name)
-      deployer.distribution_name = traits->distribution_name;
-    if (traits->distribution_code_name)
-      deployer.distribution_code_name = traits->distribution_code_name;
-    if (traits->distribution_version)
-      deployer.distribution_version = traits->distribution_version;
-  }
+  apply_traits(traits, &deployer);
   deployer.InitializeInstallation();
   rime::RegisterComponents();
 }
@@ -38,6 +42,26 @@ RIME_API void RimeInitialize(RimeTraits *traits) {
 RIME_API void RimeFinalize() {
   rime::Service::instance().CleanupAllSessions();
   rime::Registry::instance().Clear();
+}
+
+// deployment
+
+RIME_API Bool RimeDeployInitialize(RimeTraits *traits) {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  apply_traits(traits, &deployer);
+  return Bool(deployer.InitializeInstallation() &&
+              deployer.PrepareSchemas());
+}
+
+RIME_API Bool RimeDeploySchema(const char *schema_file) {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return Bool(deployer.InstallSchema(schema_file));
+}
+
+RIME_API Bool RimeDeployConfigFile(const char *file_name,
+                                   const char *version_key) {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return Bool(deployer.UpdateDistributedConfigFile(file_name, version_key));
 }
 
 // session management
