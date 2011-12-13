@@ -89,24 +89,6 @@ Switcher::~Switcher() {
 
 void Switcher::Attach(Engine *engine) {
   target_engine_ = engine;
-  // initialize custom switches
-  Schema *schema = engine->schema();
-  if (!schema) return;
-  Config *custom = schema->config();
-  if (!custom) return;
-  ConfigListPtr switches = custom->GetList("switches");
-  if (switches) {
-    for (size_t i = 0; i < switches->size(); ++i) {
-      ConfigMapPtr item = As<ConfigMap>(switches->GetAt(i));
-      if (!item) continue;
-      ConfigValuePtr name_property = item->GetValue("name");
-      if (!name_property) continue;
-      ConfigValuePtr initial_property = item->GetValue("initial");
-      int value = 0;
-      initial_property->GetInt(&value);
-      engine->set_option(name_property->str(), (value != 0));
-    }
-  }
 }
 
 bool Switcher::ProcessKeyEvent(const KeyEvent &key_event) {

@@ -6,6 +6,15 @@ schema:
   schema_id: cangjie5
   name: 倉頡五
 
+switches:
+  - name: ascii_mode
+    reset: 0
+    states: [ 中文, 西文 ]
+  - name: half_shape
+    states: [ 全角, 半角 ]
+  - name: simplification
+    states: [ 漢字, 汉字 ]
+
 engine:
   processors:
     - key_binder

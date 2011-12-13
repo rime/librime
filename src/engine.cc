@@ -36,6 +36,7 @@ class ConcreteEngine : public Engine {
   
  protected:
   void InitializeComponents();
+  void InitializeOptions();
   void OnContextUpdate(Context *ctx);
   void Compose(Context *ctx);
   void CalculateSegmentation(Composition *comp);
@@ -86,6 +87,7 @@ ConcreteEngine::ConcreteEngine(Schema *schema) : Engine(schema) {
       boost::bind(&ConcreteEngine::OnContextUpdate, this, _1));
 
   InitializeComponents();
+  InitializeOptions();
 }
 
 ConcreteEngine::~ConcreteEngine() {
@@ -230,6 +232,7 @@ void ConcreteEngine::set_schema(Schema *schema) {
   schema_.reset(schema);
   context_->Clear();
   InitializeComponents();
+  InitializeOptions();
 }
 
 void ConcreteEngine::InitializeComponents() {
@@ -238,7 +241,9 @@ void ConcreteEngine::InitializeComponents() {
   processors_.clear();
   segmentors_.clear();
   translators_.clear();
+  filters_.clear();
   Config *config = schema_->config();
+  if (!config) return;
   // create processors
   shared_ptr<ConfigList> processor_list(config->GetList("engine/processors"));
   if (processor_list) {
@@ -305,6 +310,28 @@ void ConcreteEngine::InitializeComponents() {
         shared_ptr<Filter> d(c->Create(this));
         filters_.push_back(d);
       }
+    }
+  }
+}
+
+void ConcreteEngine::InitializeOptions() {
+  if (!schema_)
+    return;
+  // reset custom switches
+  Config *config = schema_->config();
+  if (!config) return;
+  ConfigListPtr switches = config->GetList("switches");
+  if (switches) {
+    for (size_t i = 0; i < switches->size(); ++i) {
+      ConfigMapPtr item = As<ConfigMap>(switches->GetAt(i));
+      if (!item) continue;
+      ConfigValuePtr name_property = item->GetValue("name");
+      if (!name_property) continue;
+      ConfigValuePtr reset_property = item->GetValue("reset");
+      if (!reset_property) continue;
+      int value = 0;
+      reset_property->GetInt(&value);
+      set_option(name_property->str(), (value != 0));
     }
   }
 }

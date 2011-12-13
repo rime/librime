@@ -15,7 +15,7 @@
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/dict/user_db.h>
-#include <rime/dict/syllablizer.h>
+#include <rime/dict/syllabifier.h>
 
 namespace rime {
 
