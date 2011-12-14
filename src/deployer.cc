@@ -159,7 +159,10 @@ bool Deployer::InstallSchema(const std::string &schema_file) {
   fs::path user_data_path(user_data_dir);
   fs::path destination_path(user_data_path / (schema_id + ".schema.yaml"));
   if (!UpdateConfigFile(source_path, destination_path, "schema/version")) {
-    EZLOGGERPRINT("Info: schema '%s' does not need an update.", schema_id.c_str());
+    EZLOGGERPRINT("checking dictionary update for local copy of schema '%s'.", schema_id.c_str());
+  }
+  if (!config.LoadFromFile(destination_path.string())) {
+    EZLOGGERPRINT("Error loading schema file '%s'.", destination_path.string().c_str());
     return false;
   }
   std::string dict_name;
@@ -180,7 +183,7 @@ bool Deployer::InstallSchema(const std::string &schema_file) {
   }
   EZLOGGERPRINT("preparing dictionary '%s'...", dict_name.c_str());
   DictCompiler dict_compiler(dict.get());
-  dict_compiler.Compile(dict_path.string(), schema_file);
+  dict_compiler.Compile(dict_path.string(), destination_path.string());
   EZLOGGERPRINT("dictionary '%s' is ready.", dict_name.c_str());
   return true;
 }

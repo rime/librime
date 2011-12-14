@@ -5,7 +5,7 @@
 schema:
   schema_id: luna_pinyin
   name: 朙月拼音
-  version: "0.9"
+  version: "0.9.1"
   author:
     - 佛振 <chen.sst@gmail.com>
   description: |
