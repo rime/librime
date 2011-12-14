@@ -1,4 +1,4 @@
-find_path(Opencc_INCLUDE_PATH opencc.h)
+find_path(Opencc_INCLUDE_PATH opencc/opencc.h)
 find_library(Opencc_LIBRARY NAMES opencc)
 if(Opencc_INCLUDE_PATH AND Opencc_LIBRARY)
   set(Opencc_FOUND TRUE)

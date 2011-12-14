@@ -11,7 +11,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/scoped_array.hpp>
-#include <opencc.h>
+#include <opencc/opencc.h>
 #include <stdint.h>
 #include <utf8.h>
 #include <rime/candidate.h>
