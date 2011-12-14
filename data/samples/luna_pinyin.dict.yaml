@@ -26,7 +26,7 @@
 
 ---
 name: luna_pinyin
-version: "0.9"
+version: "0.9.1"
 sort: by_weight
 use_preset_vocabulary: true
 ...
@@ -3058,6 +3058,10 @@ use_preset_vocabulary: true
 参	cen	0.01%
 参	san	0.01%
 参	shen	8.49%
+參	can	90.45%
+參	cen	0.01%
+參	san	0.01%
+參	shen	8.49%
 參保	can bao
 參加	can jia
 參加工作	can jia gong zuo
