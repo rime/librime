@@ -5,7 +5,7 @@
 schema:
   schema_id: luna_pinyin
   name: 朙月拼音
-  version: "0.9.1"
+  version: "0.9.2"
   author:
     - 佛振 <chen.sst@gmail.com>
   description: |
@@ -20,8 +20,8 @@ switches:
   - name: ascii_mode
     reset: 0
     states: [ 中文, 西文 ]
-  - name: half_shape
-    states: [ 全角, 半角 ]
+  - name: full_shape
+    states: [ 半角, 全角 ]
   - name: simplification
     states: [ 漢字, 汉字 ]
 

@@ -2,7 +2,7 @@
 # vim: set sw=2 sts=2 et:
 # encoding: utf-8
 
-config_version: "0.9"
+config_version: "0.9.2"
 
 schema_list:
   - schema: luna_pinyin
@@ -12,41 +12,74 @@ switcher:
   caption: 方案選單
   hotkeys:
     - Control+grave
-    - F1
+    - F4
 
 punctuator:
-  mapping:
-    " " : "　"
-    "," : ，
-    "." : 。
+  full_shape:
+    " " : { commit: "　" }
+    "," : { commit: ， }
+    "." : { commit: 。 }
     "<" : [ 《, 〈, «, ‹ ]
     ">" : [ 》, 〉, », › ]
-    "/" : [ ／, "/", ⧸, ÷ ]
-    "?" : ？
-    ";" : ；
+    "/" : [ ／, "/", ÷ ]
+    "?" : { commit: ？ }
+    ";" : { commit: ； }
     ":" : ：
     "'" : { pair: [ "‘", "’" ] }
     "\"" : { pair: [ "“", "”" ] }
-    "\\" : [ 、, "\\", ＼, ⧹ ]
-    "|" : [ ｜, "|" ]
+    "\\" : [ 、, ＼, "\\" ]
+    "|" : [ ·, ｜, "|" ]
     "`" : [ ｀, "`" ]
     "~" : [ ～, "~" ]
-    "!" : ！
-    "@" : [ ·, ＠, "@", ☯ ]
-    "#" : [ ＃, "#", ⌘, ⌨ ]
-    "%" : [ ％, "%", ° ]
-    "$" : [ ￥, "$" ]
-    "^" : [ ……, …, "^" ]
+    "!" : { commit: ！ }
+    "@" : [ ＠, "@", ☯ ]
+    "#" : [ ＃, "#", ⌘ ]
+    "%" : [ ％, "%", "°", "℃" ]
+    "$" : [ ￥, "$", "€", "£", "¥", "¢", "¤" ]
+    "^" : { commit: …… }
     "&" : [ ＆, "&" ]
-    "*" : [ ＊, "*", ×, ※, ❂ ]
-    "(" : [ （, "(" ]
-    ")" : [ ）, ")" ]
+    "*" : [ ＊, "*", ·, ×, ※, ❂ ]
+    "(" : （
+    ")" : ）
     "-" : [ －, "-" ]
-    "_" : [ ——, "_" ]
+    "_" : ——
     "+" : [ ＋, "+" ]
     "=" : [ ＝, "=" ]
     "[" : [ 「, 【, 〔, ［ ]
     "]" : [ 」, 】, 〕, ］ ]
+    "{" : [ 『, 〖, ｛ ]
+    "}" : [ 』, 〗, ｝ ]
+  half_shape:
+    "," : { commit: ， }
+    "." : { commit: 。 }
+    "<" : [ 《, 〈, «, ‹ ]
+    ">" : [ 》, 〉, », › ]
+    "/" : [ "/", ／, ÷ ]
+    "?" : { commit: ？ }
+    ";" : { commit: ； }
+    ":" : ：
+    "'" : { pair: [ "‘", "’" ] }
+    "\"" : { pair: [ "“", "”" ] }
+    "\\" : [ 、, "\\", ＼ ]
+    "|" : [ ·, "|", ｜, "§", "¦" ]
+    "`" : "`"
+    "~" : "~"
+    "!" : { commit: ！ }
+    "@" : [ "@", ＠, ☯ ]
+    "#" : [ "#", ＃, ⌘ ]
+    "%" : [ "%", ％, "°", "℃" ]
+    "$" : [ ￥, "$", "€", "£", "¥", "¢", "¤" ]
+    "^" : { commit: …… }
+    "&" : [ "&", ＆ ]
+    "*" : [ "*", ＊, ·, ×, ※, ❂ ]
+    "(" : （
+    ")" : ）
+    "-" : [ "-", － ]
+    "_" : ——
+    "+" : [ "+", ＋ ]
+    "=" : [ "=", ＝ ]
+    "[" : [ 「, 【, 〔, ［ ]
+    "]" : [ 」, 】, 〕,  ］ ]
     "{" : [ 『, 〖, ｛ ]
     "}" : [ 』, 〗, ｝ ]
 
@@ -68,6 +101,6 @@ key_binder:
     - { when: composing, accept: Shift+Tab, send: Page_Up }
     - { when: composing, accept: Tab, send: Page_Down }
     - { when: paging, accept: minus, send: Page_Up }
-    - { when: composing, accept: equal, send: Page_Down }
+    - { when: has_menu, accept: equal, send: Page_Down }
     - { when: paging, accept: comma, send: Page_Up }
-    - { when: composing, accept: period, send: Page_Down }
+    - { when: has_menu, accept: period, send: Page_Down }

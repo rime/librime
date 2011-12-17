@@ -20,9 +20,12 @@
 
 namespace rime {
 
-void PunctConfig::LoadConfig(Schema *schema) {
-  if (!schema) return;
-  Config *config = schema->config();
+void PunctConfig::LoadConfig(Engine *engine) {
+  std::string shape(engine->get_option("full_shape") ? "full_shape"
+                                                     : "half_shape");
+  if (shape_ == shape) return;
+  shape_ = shape;
+  Config *config = engine->schema()->config();
   std::string preset;
   if (config->GetString("punctuator/import_preset", &preset)) {
     scoped_ptr<Config> preset_config(Config::Require("config")->Create(preset));
@@ -30,12 +33,12 @@ void PunctConfig::LoadConfig(Schema *schema) {
       EZLOGGERPRINT("Error importing preset punctuation '%s'.", preset.c_str());
       return;
     }
-    preset_mapping_ = preset_config->GetMap("punctuator/mapping");
+    preset_mapping_ = preset_config->GetMap("punctuator/" + shape);
     if (!preset_mapping_) {
       EZLOGGERPRINT("Warning: missing preset punctuation mapping.");
     }
   }
-  mapping_ = config->GetMap("punctuator/mapping");
+  mapping_ = config->GetMap("punctuator/" + shape);
   if (!mapping_ && !preset_mapping_) {
     EZLOGGERPRINT("Warning: missing punctuation mapping.");
   }
@@ -51,19 +54,18 @@ const ConfigItemPtr PunctConfig::GetPunctDefinition(const std::string key) {
 }
 
 Punctuator::Punctuator(Engine *engine) : Processor(engine), oddness_(0) {
-  config_.LoadConfig(engine->schema());
+  config_.LoadConfig(engine);
 }
 
 Processor::Result Punctuator::ProcessKeyEvent(const KeyEvent &key_event) {
   if (key_event.release() || key_event.ctrl() || key_event.alt())
-    return kNoop;
-  if (engine_->get_option("half_shape"))
     return kNoop;
   int ch = key_event.keycode();
   if (ch < 0x20 || ch > 0x7f)
     return kNoop;
   if (ch == XK_space && engine_->context()->IsComposing())
     return kNoop;
+  config_.LoadConfig(engine_);
   std::string punct_key(1, ch);
   ConfigItemPtr punct_definition(config_.GetPunctDefinition(punct_key));
   if (!punct_definition)
@@ -72,7 +74,8 @@ Processor::Result Punctuator::ProcessKeyEvent(const KeyEvent &key_event) {
   if (!AlternatePunct(punct_key, punct_definition)) {
     engine_->context()->PushInput(ch) &&
         (ConfirmUniquePunct(punct_definition) ||
-         PairPunct(punct_key, punct_definition));
+         AutoCommitPunct(punct_definition) ||
+         PairPunct(punct_definition));
   }
   return kAccepted;
 }
@@ -88,7 +91,7 @@ bool Punctuator::AlternatePunct(const std::string &key,
   Segment &segment(comp->back());
   if (segment.status > Segment::kVoid && segment.HasTag("punct") &&
       key == ctx->input().substr(segment.start, segment.end - segment.start)) {
-    if (!segment.menu || segment.menu->Prepare(segment.selected_index + 1) == 0) {
+    if (!segment.menu || segment.menu->Prepare(segment.selected_index + 2) == 0) {
       EZLOGGERPRINT("Error: missing candidate for punctuation '%s'.", key.c_str());
       return false;
     }
@@ -108,8 +111,18 @@ bool Punctuator::ConfirmUniquePunct(const ConfigItemPtr &definition) {
   return true;
 }
 
-bool Punctuator::PairPunct(const std::string &key, const ConfigItemPtr &definition) {
-  if (!As<ConfigMap>(definition))
+bool Punctuator::AutoCommitPunct(const ConfigItemPtr &definition) {
+  ConfigMapPtr map(As<ConfigMap>(definition));
+  if (!map || !map->HasKey("commit"))
+    return false;
+  Context *ctx = engine_->context();
+  ctx->Commit();
+  return true;
+}
+
+bool Punctuator::PairPunct(const ConfigItemPtr &definition) {
+  ConfigMapPtr map(As<ConfigMap>(definition));
+  if (!map || !map->HasKey("pair"))
     return false;
   Context *ctx = engine_->context();
   Composition *comp = ctx->composition();
@@ -118,25 +131,23 @@ bool Punctuator::PairPunct(const std::string &key, const ConfigItemPtr &definiti
   Segment &segment(comp->back());
   if (segment.status > Segment::kVoid && segment.HasTag("punct")) {
     if (!segment.menu || segment.menu->Prepare(2) < 2) {
-      EZLOGGERPRINT("Error: missing candidate for punctuation '%s'.", key.c_str());
+      EZLOGGERPRINT("Error: missing candidate for pared punctuation.");
       return false;
     }
-    EZLOGGERPRINT("Info: alternating paired punctuation '%s'.", key.c_str());
+    EZLOGGERPRINT("Info: alternating paired punctuation.");
     (segment.selected_index += oddness_) %= 2;
-    segment.status = Segment::kGuess;
     oddness_ = 1 - oddness_;
+    ctx->ConfirmCurrentSelection();
     return true;
   }
   return false;
 }
 
 PunctSegmentor::PunctSegmentor(Engine *engine) : Segmentor(engine) {
-  config_.LoadConfig(engine->schema());
+  config_.LoadConfig(engine);
 }
 
 bool PunctSegmentor::Proceed(Segmentation *segmentation) {
-  if (engine_->get_option("half_shape"))
-    return true;
   const std::string &input = segmentation->input();
   int k = segmentation->GetCurrentStartPosition();
   if (k == input.length())
@@ -144,6 +155,7 @@ bool PunctSegmentor::Proceed(Segmentation *segmentation) {
   char ch = input[k];
   if (ch < 0x20 || ch > 0x7f)
     return true;
+  config_.LoadConfig(engine_);
   std::string punct_key(1, ch);
   ConfigItemPtr punct_definition(config_.GetPunctDefinition(punct_key));
   if (!punct_definition)
@@ -160,7 +172,7 @@ bool PunctSegmentor::Proceed(Segmentation *segmentation) {
 }
 
 PunctTranslator::PunctTranslator(Engine *engine) : Translator(engine) {
-  config_.LoadConfig(engine->schema());
+  config_.LoadConfig(engine);
 }
 
 shared_ptr<Candidate> CreatePunctCandidate(const std::string &punct, const Segment &segment) {
@@ -173,6 +185,7 @@ shared_ptr<Candidate> CreatePunctCandidate(const std::string &punct, const Segme
 Translation* PunctTranslator::Query(const std::string &input, const Segment &segment) {
   if (!segment.HasTag("punct"))
     return NULL;
+  config_.LoadConfig(engine_);
   ConfigItemPtr definition(config_.GetPunctDefinition(input));
   if (!definition)
     return NULL;
@@ -180,6 +193,8 @@ Translation* PunctTranslator::Query(const std::string &input, const Segment &seg
   Translation *translation = TranslateUniquePunct(input, segment, As<ConfigValue>(definition));
   if (!translation)
     translation = TranslateAlternatingPunct(input, segment, As<ConfigList>(definition));
+  if (!translation)
+    translation = TranslateAutoCommitPunct(input, segment, As<ConfigMap>(definition));
   if (!translation)
     translation = TranslatePairedPunct(input, segment, As<ConfigMap>(definition));
   return translation;
@@ -215,15 +230,24 @@ Translation* PunctTranslator::TranslateAlternatingPunct(const std::string &key,
   return translation;
 }
 
-Translation* PunctTranslator::TranslatePairedPunct(const std::string &key,
-                                                   const Segment &segment,
-                                                   const ConfigMapPtr &definition) {
-  if (!definition)
+Translation* PunctTranslator::TranslateAutoCommitPunct(const std::string &key,
+                                                       const Segment &segment,
+                                                       const ConfigMapPtr &definition) {
+  if (!definition || !definition->HasKey("commit"))
     return NULL;
-  if (!definition->HasKey("pair")) {
+  ConfigValuePtr value = definition->GetValue("commit");
+  if (!value) {
     EZLOGGERPRINT("Warning: unrecognized punct definition for '%s'.", key.c_str());
     return NULL;
   }
+  return new UniqueTranslation(CreatePunctCandidate(value->str(), segment));
+}
+
+Translation* PunctTranslator::TranslatePairedPunct(const std::string &key,
+                                                   const Segment &segment,
+                                                   const ConfigMapPtr &definition) {
+  if (!definition || !definition->HasKey("pair"))
+    return NULL;
   ConfigListPtr list = As<ConfigList>(definition->Get("pair"));
   if (!list || list->size() != 2) {
     EZLOGGERPRINT("Warning: unrecognized pair definition for '%s'.", key.c_str());

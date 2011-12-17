@@ -88,6 +88,9 @@ void MeasureConditions(Context *ctx, Conditions *conditions) {
   if (ctx->IsComposing()) {
     conditions->insert("composing");
   }
+  if (ctx->HasMenu()) {
+    conditions->insert("has_menu");
+  }
   Composition *comp = ctx->composition();
   if (!comp->empty() && comp->back().HasTag("paging")) {
     conditions->insert("paging");

@@ -20,11 +20,12 @@ namespace rime {
 
 class PunctConfig {
  public:
-  void LoadConfig(Schema *schema);
+  void LoadConfig(Engine *engine);
   const ConfigItemPtr GetPunctDefinition(const std::string key);
  protected:
   ConfigMapPtr mapping_;
   ConfigMapPtr preset_mapping_;
+  std::string shape_;
 };
 
 class Punctuator : public Processor {
@@ -35,7 +36,8 @@ class Punctuator : public Processor {
  protected:
   bool ConfirmUniquePunct(const ConfigItemPtr &definition);
   bool AlternatePunct(const std::string &key, const ConfigItemPtr &definition);
-  bool PairPunct(const std::string &key, const ConfigItemPtr &definition);
+  bool AutoCommitPunct(const ConfigItemPtr &definition);
+  bool PairPunct(const ConfigItemPtr &definition);
 
   PunctConfig config_;
   int oddness_;
@@ -62,6 +64,9 @@ class PunctTranslator : public Translator {
   Translation* TranslateAlternatingPunct(const std::string &key,
                                          const Segment &segment,
                                          const ConfigListPtr &definition);
+  Translation* TranslateAutoCommitPunct(const std::string &key,
+                                        const Segment &segment,
+                                        const ConfigMapPtr &definition);
   Translation* TranslatePairedPunct(const std::string &key,
                                     const Segment &segment,
                                     const ConfigMapPtr &definition);
