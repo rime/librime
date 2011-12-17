@@ -72,8 +72,10 @@ class R10nCandidate;
 
 class R10nTranslation : public Translation {
  public:
-  R10nTranslation(const std::string &input, size_t start, const std::string &delimiters)
-      : input_(input), start_(start), delimiters_(delimiters),
+  R10nTranslation(const std::string &input, size_t start,
+                  R10nTranslator *translator)
+      : input_(input), start_(start),
+        translator_(translator),
         user_phrase_index_(0) {
     set_exhausted(true);
   }
@@ -91,7 +93,7 @@ class R10nTranslation : public Translation {
 
   const std::string input_;
   size_t start_;
-  const std::string delimiters_;
+  R10nTranslator *translator_;
   
   SyllableGraph syllable_graph_;
   shared_ptr<DictEntryCollector> phrase_;
@@ -133,14 +135,18 @@ class R10nCandidate : public Candidate {
 // R10nTranslator implementation
 
 R10nTranslator::R10nTranslator(Engine *engine)
-    : Translator(engine) {
+    : Translator(engine),
+      enable_completion_(true) {
   if (!engine) return;
 
   Config *config = engine->schema()->config();
-  if (config)
+  if (config) {
     config->GetString("speller/delimiter", &delimiters_);
-  if (delimiters_.empty())
+    config->GetBool("translator/enable_completion", &enable_completion_);
+  }
+  if (delimiters_.empty()) {
     delimiters_ = " ";
+  }
   
   Dictionary::Component *dictionary = Dictionary::Require("dictionary");
   if (dictionary) {
@@ -175,7 +181,8 @@ Translation* R10nTranslator::Query(const std::string &input, const Segment &segm
   EZLOGGERPRINT("input = '%s', [%d, %d)",
                 input.c_str(), segment.start, segment.end);
 
-  R10nTranslation* result(new R10nTranslation(input, segment.start, delimiters_));
+  // the translator should survive translations it creates
+  R10nTranslation* result(new R10nTranslation(input, segment.start, this));
   if (result && result->Evaluate(dict_.get(), user_dict_.get()))
     return result;
   else
@@ -196,7 +203,8 @@ void R10nTranslator::OnCommit(Context *ctx) {
       commit_entry.code.insert(commit_entry.code.end(),
                                r10n_cand->code().begin(), r10n_cand->code().end());
     }
-    if ((!r10n_cand || seg.status >= Segment::kConfirmed) && !commit_entry.text.empty()) {
+    if ((!r10n_cand || seg.status >= Segment::kConfirmed) &&
+        !commit_entry.text.empty()) {
       EZLOGGERVAR(commit_entry.text);
       user_dict_->UpdateEntry(commit_entry, 1);
       commit_entry.text.clear();
@@ -208,7 +216,8 @@ void R10nTranslator::OnCommit(Context *ctx) {
 // R10nTranslation implementation
 
 bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
-  Syllabifier syllabifier(delimiters_, true);
+  Syllabifier syllabifier(translator_->delimiters(),
+                          translator_->enable_completion());
   size_t consumed = syllabifier.BuildSyllableGraph(input_,
                                                    *dict->prism(),
                                                    &syllable_graph_);
@@ -241,7 +250,7 @@ bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
 const std::string R10nTranslation::GetPreeditString(const R10nCandidate &cand) const {
   DelimitSyllableState state;
   state.input = &input_;
-  state.delimiters = &delimiters_;
+  state.delimiters = &translator_->delimiters();
   state.graph = &syllable_graph_;
   state.code = &cand.code();
   state.end_pos = cand.end() - start_;

@@ -46,7 +46,8 @@ TEST_F(RimeDictionaryTest, Ready) {
 
 TEST_F(RimeDictionaryTest, SimpleLookup) {
   ASSERT_TRUE(dict_->loaded());
-  rime::DictEntryIterator it = dict_->LookupWords("zhong", false);
+  rime::DictEntryIterator it;
+  dict_->LookupWords(&it, "zhong", false);
   ASSERT_FALSE(it.exhausted());
   EXPECT_EQ("\xe4\xb8\xad", it.Peek()->text);  // 中
   ASSERT_EQ(1, it.Peek()->code.size());
@@ -57,7 +58,8 @@ TEST_F(RimeDictionaryTest, SimpleLookup) {
 
 TEST_F(RimeDictionaryTest, PredictiveLookup) {
   ASSERT_TRUE(dict_->loaded());
-  rime::DictEntryIterator it = dict_->LookupWords("z", true);
+  rime::DictEntryIterator it;
+  dict_->LookupWords(&it, "z", true);
   ASSERT_FALSE(it.exhausted());
   EXPECT_EQ("\xe5\x92\x8b", it.Peek()->text);  // 咋
   ASSERT_EQ(1, it.Peek()->code.size());

@@ -29,6 +29,10 @@ class R10nTranslator : public Translator {
 
   virtual Translation* Query(const std::string &input,
                              const Segment &segment);
+
+  // options
+  const std::string& delimiters() const { return delimiters_; }
+  bool enable_completion() const { return enable_completion_; }
   
  protected:
   void OnCommit(Context *ctx);
@@ -36,6 +40,7 @@ class R10nTranslator : public Translator {
   scoped_ptr<Dictionary> dict_;
   scoped_ptr<UserDictionary> user_dict_;
   std::string delimiters_;
+  bool enable_completion_;
   boost::signals::connection connection_;
 };
 

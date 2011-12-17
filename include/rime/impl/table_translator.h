@@ -27,6 +27,7 @@ class TableTranslator : public Translator {
 
  private:
   scoped_ptr<Dictionary> dict_;
+  bool enable_completion_;
 };
 
 }  // namespace rime

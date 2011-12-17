@@ -57,19 +57,25 @@ bool compare_chunk_by_leading_element(const Chunk &a, const Chunk &b);
 
 }  // namespace dictionary
 
-class DictEntryIterator : public std::list<dictionary::Chunk> {
+class DictEntryIterator : protected std::list<dictionary::Chunk> {
  public:
   typedef std::list<dictionary::Chunk> Base;
 
   DictEntryIterator();
   DictEntryIterator(const DictEntryIterator &other);
+  DictEntryIterator& operator= (DictEntryIterator &other);
 
+  void AddChunk(const dictionary::Chunk &chunk);
+  void Sort();
   shared_ptr<DictEntry> Peek();
   bool Next();
+  bool Skip(size_t num_entries);
   bool exhausted() const;
+  size_t entry_count() const { return entry_count_; }
 
 private:
   shared_ptr<DictEntry> entry_;
+  size_t entry_count_;
 };
 
 struct DictEntryCollector : std::map<size_t, DictEntryIterator> {
@@ -90,8 +96,15 @@ class Dictionary : public Class<Dictionary, Schema*> {
   bool Remove();
   bool Load();
 
-  shared_ptr<DictEntryCollector> Lookup(const SyllableGraph &syllable_graph, size_t start_pos);
-  DictEntryIterator LookupWords(const std::string &str_code, bool predictive);
+  shared_ptr<DictEntryCollector> Lookup(const SyllableGraph &syllable_graph,
+                                        size_t start_pos);
+  // if predictive is true, do an expand search with limit,
+  // otherwise do an exact match.
+  // return num of matching keys.
+  size_t LookupWords(DictEntryIterator *result,
+                     const std::string &str_code,
+                     bool predictive, size_t limit = 0);
+  // translate syllable id sequence to string code
   bool Decode(const Code &code, dictionary::RawCode *result);
 
   const std::string& name() const { return name_; }

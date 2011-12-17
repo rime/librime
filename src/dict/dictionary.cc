@@ -64,15 +64,32 @@ size_t match_extra_code(const table::Code *extra_code, size_t depth,
 }  // namespace dictionary
 
 DictEntryIterator::DictEntryIterator()
-    : Base(), entry_() {
+    : Base(), entry_(), entry_count_(0) {
 }
 
 DictEntryIterator::DictEntryIterator(const DictEntryIterator &other)
-    : Base(other), entry_(other.entry_) {
+    : Base(other), entry_(other.entry_), entry_count_(other.entry_count_) {
+}
+
+DictEntryIterator& DictEntryIterator::operator= (DictEntryIterator &other) {
+  EZLOGGERPRINT("swapping iterator contents.");
+  swap(other);
+  entry_ = other.entry_;
+  entry_count_ = other.entry_count_;
+  return *this;
 }
 
 bool DictEntryIterator::exhausted() const {
   return empty();
+}
+
+void DictEntryIterator::AddChunk(const dictionary::Chunk &chunk) {
+  push_back(chunk);
+  entry_count_ += chunk.size;
+}
+
+void DictEntryIterator::Sort() {
+  sort(dictionary::compare_chunk_by_head_element);
 }
 
 shared_ptr<DictEntry> DictEntryIterator::Peek() {
@@ -105,12 +122,26 @@ bool DictEntryIterator::Next() {
     pop_front();
   }
   else {
-    // reorder chunks since front() has a new head element
-    sort(dictionary::compare_chunk_by_head_element);
+    // reorder chunks since front() has got a new head element
+    Sort();
   }
   // unload retired entry
   entry_.reset();
   return !empty();
+}
+
+bool DictEntryIterator::Skip(size_t num_entries) {
+  while (num_entries > 0) {
+    if (empty()) return false;
+    dictionary::Chunk &chunk(front());
+    if (chunk.cursor + num_entries < chunk.size) {
+      chunk.cursor += num_entries;
+      return true;
+    }
+    num_entries -= (chunk.size - chunk.cursor);
+    pop_front();
+  }
+  return true;
 }
 
 // Dictionary members
@@ -142,30 +173,32 @@ shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_
           size_t actual_end_pos = dictionary::match_extra_code(a.extra_code(), 0,
                                                                syllable_graph, end_pos);
           if (actual_end_pos == 0) continue;
-          (*collector)[actual_end_pos].push_back(dictionary::Chunk(a.code(), a.entry()));
+          (*collector)[actual_end_pos].AddChunk(dictionary::Chunk(a.code(), a.entry()));
         }
         while (a.Next());
       }
       else {
-        (*collector)[end_pos].push_back(dictionary::Chunk(a));
+        (*collector)[end_pos].AddChunk(dictionary::Chunk(a));
       }
     }
   }
   // sort each group of equal code length
   BOOST_FOREACH(DictEntryCollector::value_type &v, *collector) {
-    v.second.sort(dictionary::compare_chunk_by_head_element);
+    v.second.Sort();
   }
   return collector;
 }
 
-DictEntryIterator Dictionary::LookupWords(const std::string &str_code, bool predictive) {
+size_t Dictionary::LookupWords(DictEntryIterator *result,
+                               const std::string &str_code,
+                               bool predictive,
+                               size_t expand_search_limit) {
   EZLOGGERVAR(str_code);
   if (!loaded())
-    return DictEntryIterator();
+    return 0;
   std::vector<Prism::Match> keys;
   if (predictive) {
-    const size_t kExpandSearchLimit = 512;
-    prism_->ExpandSearch(str_code, &keys, kExpandSearchLimit);
+    prism_->ExpandSearch(str_code, &keys, expand_search_limit);
   }
   else {
     Prism::Match match = {0, 0};
@@ -175,7 +208,6 @@ DictEntryIterator Dictionary::LookupWords(const std::string &str_code, bool pred
   }
   EZLOGGERPRINT("found %u matching keys thru the prism.", keys.size());
   size_t code_length(str_code.length());
-  DictEntryIterator result;
   BOOST_FOREACH(Prism::Match &match, keys) {
     int syllable_id = match.value;
     std::string remaining_code;
@@ -188,10 +220,10 @@ DictEntryIterator Dictionary::LookupWords(const std::string &str_code, bool pred
     const TableAccessor a(table_->QueryWords(syllable_id));
     if (!a.exhausted()) {
       EZDBGONLYLOGGERVAR(remaining_code);
-      result.push_back(dictionary::Chunk(a, remaining_code));
+      result->AddChunk(dictionary::Chunk(a, remaining_code));
     }
   }
-  return result;
+  return keys.size();
 }
 
 bool Dictionary::Decode(const Code &code, dictionary::RawCode *result) {

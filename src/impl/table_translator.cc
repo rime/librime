@@ -19,12 +19,12 @@ namespace rime {
 
 class TableTranslation : public Translation {
  public:
-  TableTranslation(const DictEntryIterator& iter,
-                   int start,
-                   int consumed_input_length)
-      : iter_(iter),
-        start_(start),
-        end_(start + consumed_input_length) {
+  TableTranslation(int start, int end)
+      : start_(start), end_(end) {
+    set_exhausted(true);
+  }
+  TableTranslation(const DictEntryIterator& iter, int start, int end)
+      : iter_(iter), start_(start), end_(end) {
     set_exhausted(iter.exhausted());
   }
 
@@ -49,15 +49,64 @@ class TableTranslation : public Translation {
     return cand;
   }
 
- private:
+ protected:
   DictEntryIterator iter_;
-  int start_;
-  int end_;
+  size_t start_;
+  size_t end_;
+};
+
+class LazyTableTranslation : public TableTranslation {
+ public:
+  static const size_t kInitialSearchLimit = 10;
+  static const size_t kExpandingFactor = 10;
+  
+  LazyTableTranslation(Dictionary *dict, const std::string &input,
+                       int start, int end)
+      : TableTranslation(start, end),
+        dict_(dict), input_(input), limit_(kInitialSearchLimit) {
+    dict->LookupWords(&iter_, input, true, kInitialSearchLimit);
+    set_exhausted(iter_.exhausted());
+  }
+  
+  virtual bool Next() {
+    if (exhausted())
+      return false;
+    iter_.Next();
+    if (limit_ > 0 && iter_.exhausted()) {
+      limit_ *= kExpandingFactor;
+      size_t previous_entry_count = iter_.entry_count();
+      EZLOGGERPRINT("fetching more entries: limit = %d, count = %d.",
+                    limit_, previous_entry_count);
+      DictEntryIterator more;
+      if (dict_->LookupWords(&more, input_, true, limit_) < limit_) {
+        EZLOGGERPRINT("all entries obtained.");
+        limit_ = 0;  // no more try
+      }
+      if (more.entry_count() > previous_entry_count) {
+        more.Skip(previous_entry_count);
+        iter_ = more;
+      }
+    }
+    set_exhausted(iter_.exhausted());
+    return true;
+  }
+
+ private:
+  Dictionary *dict_;
+  std::string input_;
+  size_t limit_;
 };
 
 TableTranslator::TableTranslator(Engine *engine)
-    : Translator(engine) {
+    : Translator(engine),
+      enable_completion_(true) {
   if (!engine) return;
+  
+  Config *config = engine->schema()->config();
+  if (config) {
+    config->GetBool("translator/enable_completion", &enable_completion_);
+  }
+
   Dictionary::Component *component = Dictionary::Require("dictionary");
   if (!component) return;
   dict_.reset(component->Create(engine->schema()));
@@ -77,11 +126,19 @@ Translation* TableTranslator::Query(const std::string &input,
                 input.c_str(), segment.start, segment.end);
 
   Translation *translation = NULL;
-  DictEntryIterator iter = dict_->LookupWords(input, true);
-  if (!iter.exhausted())
-    translation = new TableTranslation(iter,
-                                       segment.start,
-                                       input.length());
+  if (enable_completion_) {
+    translation = new LazyTableTranslation(dict_.get(), input,
+                                           segment.start,
+                                           segment.start + input.length());
+  }
+  else {
+    DictEntryIterator iter;
+    dict_->LookupWords(&iter, input, false, 0);
+    if (!iter.exhausted())
+      translation = new TableTranslation(iter,
+                                         segment.start,
+                                         segment.start + input.length());
+  }
   return translation;
 }
 
