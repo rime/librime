@@ -37,19 +37,22 @@ class ConcreteEngine : public Engine {
  protected:
   void InitializeComponents();
   void InitializeOptions();
-  void OnContextUpdate(Context *ctx);
   void Compose(Context *ctx);
   void CalculateSegmentation(Composition *comp);
   void TranslateSegments(Composition *comp);
   void FilterCandidates(CandidateList *recruited, CandidateList *candidates);
   void OnCommit(Context *ctx);
   void OnSelect(Context *ctx);
+  void OnContextUpdate(Context *ctx);
+  void OnOptionUpdate(Context *ctx, const std::string &option);
   
   std::vector<shared_ptr<Processor> > processors_;
   std::vector<shared_ptr<Segmentor> > segmentors_;
   std::vector<shared_ptr<Translator> > translators_;
   std::vector<shared_ptr<Filter> > filters_;
 };
+
+// implementations
 
 Engine* Engine::Create(Schema *schema) {
   return new ConcreteEngine(schema ? schema : new Schema);
@@ -64,18 +67,6 @@ Engine::~Engine() {
   schema_.reset();
 }
 
-void Engine::set_option(const std::string &name, bool value) {
-  options_[name] = value;
-}
-
-bool Engine::get_option(const std::string &name) const {
-  std::map<std::string, bool>::const_iterator it = options_.find(name);
-  if (it != options_.end())
-    return it->second;
-  else
-    return false;
-}
-
 ConcreteEngine::ConcreteEngine(Schema *schema) : Engine(schema) {
   EZLOGGERFUNCTRACKER;
   // receive context notifications
@@ -85,7 +76,8 @@ ConcreteEngine::ConcreteEngine(Schema *schema) : Engine(schema) {
       boost::bind(&ConcreteEngine::OnSelect, this, _1));
   context_->update_notifier().connect(
       boost::bind(&ConcreteEngine::OnContextUpdate, this, _1));
-
+  context_->option_update_notifier().connect(
+      boost::bind(&ConcreteEngine::OnOptionUpdate, this, _1, _2));
   InitializeComponents();
   InitializeOptions();
 }
@@ -108,16 +100,21 @@ bool ConcreteEngine::ProcessKeyEvent(const KeyEvent &key_event) {
 }
 
 void ConcreteEngine::OnContextUpdate(Context *ctx) {
-  if (!ctx)
-    return;
+  if (!ctx) return;
   const std::string &input(ctx->input());
   EZLOGGERVAR(input);
   Compose(ctx);
 }
 
+void ConcreteEngine::OnOptionUpdate(Context *ctx, const std::string &option) {
+  if (!ctx) return;
+  EZLOGGERVAR(option);
+  if (ctx->IsComposing())
+    ctx->RefreshNonConfirmedComposition();
+}
+
 void ConcreteEngine::Compose(Context *ctx) {
-  if (!ctx)
-    return;
+  if (!ctx) return;
   Composition *comp = ctx->composition();
   std::string active_input(ctx->input().substr(0, ctx->caret_pos()));
   EZLOGGERVAR(active_input);
@@ -210,7 +207,7 @@ void ConcreteEngine::OnSelect(Context *ctx) {
     seg.status = Segment::kConfirmed;
     // strategy one: commit directly;
     // strategy two: continue composing with another empty segment.
-    if (get_option("auto_commit"))
+    if (ctx->get_option("auto_commit"))
       ctx->Commit();
     else
       ctx->composition()->Forward();
@@ -236,8 +233,7 @@ void ConcreteEngine::set_schema(Schema *schema) {
 }
 
 void ConcreteEngine::InitializeComponents() {
-  if (!schema_)
-    return;
+  if (!schema_) return;
   processors_.clear();
   segmentors_.clear();
   translators_.clear();
@@ -315,8 +311,7 @@ void ConcreteEngine::InitializeComponents() {
 }
 
 void ConcreteEngine::InitializeOptions() {
-  if (!schema_)
-    return;
+  if (!schema_) return;
   // reset custom switches
   Config *config = schema_->config();
   if (!config) return;
@@ -331,7 +326,7 @@ void ConcreteEngine::InitializeOptions() {
       if (!reset_property) continue;
       int value = 0;
       reset_property->GetInt(&value);
-      set_option(name_property->str(), (value != 0));
+      context_->set_option(name_property->str(), (value != 0));
     }
   }
 }

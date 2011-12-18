@@ -26,17 +26,16 @@ static const char *kRightArrow = " \xe2\x86\x92 ";
 
 class SwitcherOption : public Candidate {
  public:
-  SwitcherOption(Schema *schema, const std::string &caption)
-      : Candidate("schema", 0, caption.length()),
+  SwitcherOption(Schema *schema)
+      : Candidate("schema", 0, 0),
         text_(schema->schema_name()),
         comment_(),
         value_(schema->schema_id()) {}
   SwitcherOption(const std::string &current_state_label,
                  const std::string &next_state_label,
                  const std::string &option_name,
-                 bool current_state,
-                 const std::string &caption)
-      : Candidate(current_state ? "switch_off" : "switch_on", 0, caption.length()),
+                 bool current_state)
+      : Candidate(current_state ? "switch_off" : "switch_on", 0, 0),
         text_(current_state_label + kRightArrow + next_state_label),
         value_(option_name) {}
 
@@ -63,10 +62,10 @@ void SwitcherOption::Apply(Engine *target_engine, Config *user_config) {
     }
   }
   else if (type() == "switch_off") {
-    target_engine->set_option(value_, false);
+    target_engine->context()->set_option(value_, false);
   }
   else if (type() == "switch_on") {
-    target_engine->set_option(value_, true);
+    target_engine->context()->set_option(value_, true);
   }
 }
 
@@ -175,12 +174,13 @@ void Switcher::Activate() {
   if (target_engine_ && target_engine_->schema()) {
     current_schema = target_engine_->schema();
     switcher_options->Append(
-        shared_ptr<Candidate>(new SwitcherOption(current_schema, caption_)));
+        shared_ptr<Candidate>(new SwitcherOption(current_schema)));
     // add custom switches
     Config *custom = current_schema->config();
     if (custom) {
       ConfigListPtr switches = custom->GetList("switches");
       if (switches) {
+        Context *context = target_engine_->context();
         for (size_t i = 0; i < switches->size(); ++i) {
           ConfigMapPtr item = As<ConfigMap>(switches->GetAt(i));
           if (!item) continue;
@@ -188,13 +188,12 @@ void Switcher::Activate() {
           if (!name_property) continue;
           ConfigListPtr states = As<ConfigList>(item->Get("states"));
           if (!states || states->size() != 2) continue;
-          bool current_state = target_engine_->get_option(name_property->str());
+          bool current_state = context->get_option(name_property->str());
           switcher_options->Append(
               shared_ptr<Candidate>(new SwitcherOption(states->GetValueAt(current_state)->str(),
                                                        states->GetValueAt(1 - current_state)->str(),
                                                        name_property->str(),
-                                                       current_state,
-                                                       caption_)));
+                                                       current_state)));
         }
       }
     }
@@ -210,15 +209,14 @@ void Switcher::Activate() {
       continue;
     scoped_ptr<Schema> schema(new Schema(schema_id));
     switcher_options->Append(
-        shared_ptr<Candidate>(new SwitcherOption(schema.get(), caption_)));
+        shared_ptr<Candidate>(new SwitcherOption(schema.get())));
   }
   // assign menu to switcher's context
   Composition *comp = context_->composition();
-  if (!context_->IsComposing()) {
-    // set caption
-    context_->set_input(caption_);
-    comp->Reset(caption_);
-    Segment seg(0, caption_.length());
+  if (comp->empty()) {
+    context_->set_prompt(caption_);
+    context_->set_input(" ");
+    Segment seg(0, 0);
     comp->AddSegment(seg);
   }
   shared_ptr<Menu> menu(new Menu);

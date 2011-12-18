@@ -21,8 +21,8 @@
 namespace rime {
 
 void PunctConfig::LoadConfig(Engine *engine) {
-  std::string shape(engine->get_option("full_shape") ? "full_shape"
-                                                     : "half_shape");
+  bool full_shape = engine->context()->get_option("full_shape");
+  std::string shape(full_shape ? "full_shape" : "half_shape");
   if (shape_ == shape) return;
   shape_ = shape;
   Config *config = engine->schema()->config();

@@ -42,9 +42,9 @@ Processor::Result AsciiComposer::ProcessKeyEvent(const KeyEvent &key_event) {
   }
   // other keys
   shift_key_pressed_ = false;
-  bool ascii_mode = engine_->get_option("ascii_mode");
+  Context *ctx = engine_->context();
+  bool ascii_mode = ctx->get_option("ascii_mode");
   if (ascii_mode) {
-    Context *ctx = engine_->context();
     if (!ctx->IsComposing()) {
       return kRejected;  // direct commit
     }
@@ -57,19 +57,17 @@ Processor::Result AsciiComposer::ProcessKeyEvent(const KeyEvent &key_event) {
 }
 
 void AsciiComposer::ToggleAsciiMode(int key_code) {
-  bool ascii_mode = !engine_->get_option("ascii_mode");
-  engine_->set_option("ascii_mode", ascii_mode);
   Context *ctx = engine_->context();
+  bool ascii_mode = !ctx->get_option("ascii_mode");
   if (ctx->IsComposing()) {
     EZLOGGERPRINT("converting current composition to %s mode.",
                   ascii_mode ? "ascii" : "non-ascii");
     if (key_code == XK_Shift_R) {
       ctx->ConfirmCurrentSelection();
     }
-    else {
-      ctx->RefreshNonConfirmedComposition();
-    }
   }
+  // refresh non-confirmed composition with new mode
+  ctx->set_option("ascii_mode", ascii_mode);
 }
 
 }  // namespace rime

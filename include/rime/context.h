@@ -22,6 +22,8 @@ struct Preedit;
 class Context {
  public:
   typedef boost::signal<void (Context *ctx)> Notifier;
+  typedef boost::signal<void (Context *ctx, const std::string& option)>
+  OptionUpdateNotifier;
 
   Context();
   ~Context();
@@ -47,6 +49,10 @@ class Context {
   bool ReopenPreviousSelection();
   bool RefreshNonConfirmedComposition();
 
+  void set_prompt(const std::string &value) { prompt_ = value; }
+  void clear_prompt() { prompt_.clear(); }
+  const std::string& prompt() const { return prompt_; }
+
   void set_input(const std::string &value);
   const std::string& input() const { return input_; }
 
@@ -57,18 +63,27 @@ class Context {
   Composition* composition();
   const Composition* composition() const;
 
+  void set_option(const std::string &name, bool value);
+  bool get_option(const std::string &name) const;
+  
   Notifier& commit_notifier() { return commit_notifier_; }
   Notifier& select_notifier() { return select_notifier_; }
   Notifier& update_notifier() { return update_notifier_; }
+  OptionUpdateNotifier& option_update_notifier() {
+    return option_update_notifier_;
+  }
 
  private:
+  std::string prompt_;
   std::string input_;
   size_t caret_pos_;
   scoped_ptr<Composition> composition_;
+  std::map<std::string, bool> options_;
 
   Notifier commit_notifier_;
   Notifier select_notifier_;
   Notifier update_notifier_;
+  OptionUpdateNotifier option_update_notifier_;
 };
 
 }  // namespace rime

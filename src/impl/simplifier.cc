@@ -17,6 +17,7 @@
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/config.h>
+#include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/service.h>
@@ -105,7 +106,7 @@ Simplifier::~Simplifier() {
 bool Simplifier::Proceed(CandidateList *recruited,
                          CandidateList *candidates) {
   if (!opencc_ ||
-      !engine_->get_option("simplification"))
+      !engine_->context()->get_option("simplification"))
     return true;
   if (!candidates || candidates->empty())
     return false;

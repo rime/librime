@@ -15,7 +15,9 @@ void PrintStatus(RimeStatus *status) {
          status->schema_id, status->schema_name);
   printf("status: ");
   if (status->is_disabled) printf("disabled ");
+  if (status->is_composing) printf("composing ");
   if (status->is_ascii_mode) printf("ascii ");
+  if (status->is_full_shape) printf("full_shape ");
   if (status->is_simplified) printf("simplified ");
   printf("\n");
 }
@@ -56,7 +58,7 @@ void PrintMenu(RimeMenu *menu) {
 }
 
 void PrintContext(RimeContext *context) {
-  if (context->composition.is_composing) {
+  if (context->composition.length > 0) {
     PrintComposition(&context->composition);
     PrintMenu(&context->menu);
   }

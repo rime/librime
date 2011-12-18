@@ -9,7 +9,6 @@
 #ifndef RIME_ENGINE_H_
 #define RIME_ENGINE_H_
 
-#include <map>
 #include <string>
 #include <boost/signals.hpp>
 #include <rime/common.h>
@@ -31,8 +30,6 @@ class Engine {
   Schema* schema() const { return schema_.get(); }
   Context* context() const { return context_.get(); }
   CommitSink& sink() { return sink_; }
-  void set_option(const std::string &name, bool value);
-  bool get_option(const std::string &name) const;
 
   static Engine* Create(Schema *schema = NULL);
   
@@ -42,7 +39,6 @@ class Engine {
   scoped_ptr<Schema> schema_;
   scoped_ptr<Context> context_;
   CommitSink sink_;
-  std::map<std::string, bool> options_;
 };
 
 }  // namespace rime

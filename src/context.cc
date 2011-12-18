@@ -33,13 +33,23 @@ const std::string Context::GetCommitText() const {
 }
 
 void Context::GetPreedit(Preedit *preedit) const {
+  if (!prompt_.empty()) {
+    preedit->text = prompt_;
+    preedit->caret_pos = prompt_.length();
+    preedit->sel_start = 0;
+    preedit->sel_end = prompt_.length();
+    return;
+  }
   composition_->GetPreedit(preedit);
   preedit->caret_pos = preedit->text.length();
-  // TODO: use schema settings
-  const std::string caret("\xe2\x80\xba");
-  preedit->text.append(caret);
-  if (caret_pos_ < input_.length())
-    preedit->text.append(input_.substr(caret_pos_));
+  if (IsComposing()) {
+    // TODO: use schema settings
+    const std::string caret("\xe2\x80\xba");
+    preedit->text.append(caret);
+    if (caret_pos_ < input_.length()) {
+      preedit->text.append(input_.substr(caret_pos_));
+    }
+  }
 }
 
 bool Context::IsComposing() const {
@@ -81,6 +91,7 @@ bool Context::DeleteInput() {
 }
 
 void Context::Clear() {
+  prompt_.clear();
   input_.clear();
   caret_pos_ = 0;
   composition_->clear();
@@ -202,6 +213,19 @@ Composition* Context::composition() {
 
 const Composition* Context::composition() const {
   return composition_.get();
+}
+
+void Context::set_option(const std::string &name, bool value) {
+  options_[name] = value;
+  option_update_notifier_(this, name);
+}
+
+bool Context::get_option(const std::string &name) const {
+  std::map<std::string, bool>::const_iterator it = options_.find(name);
+  if (it != options_.end())
+    return it->second;
+  else
+    return false;
 }
 
 }  // namespace rime

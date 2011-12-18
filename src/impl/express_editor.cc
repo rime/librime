@@ -18,7 +18,7 @@
 namespace rime {
 
 ExpressEditor::ExpressEditor(Engine *engine) : Processor(engine) {
-  engine->set_option("auto_commit", true);
+  engine->context()->set_option("auto_commit", true);
 }
 
 // treat printable characters as input

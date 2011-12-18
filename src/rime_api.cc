@@ -107,42 +107,42 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext *context) {
   if (!ctx)
     return False;
   if (ctx->IsComposing()) {
-    context->composition.is_composing = True;
     rime::Preedit preedit;
     ctx->GetPreedit(&preedit);
+    context->composition.length = preedit.text.length();
     std::strncpy(context->composition.preedit,
                  preedit.text.c_str(), RIME_TEXT_MAX_LENGTH);
     context->composition.cursor_pos = preedit.caret_pos;
     context->composition.sel_start = preedit.sel_start;
     context->composition.sel_end = preedit.sel_end;
-    if (ctx->HasMenu()) {
-      rime::Segment &seg(ctx->composition()->back());
-      int page_size = 5;
-      rime::Schema *schema = session->schema();
-      if (schema)
-        page_size = schema->page_size();
-      int selected_index = seg.selected_index;
-      int page_no = selected_index / page_size;
-      rime::scoped_ptr<rime::Page> page(
-          seg.menu->CreatePage(page_size, page_no));
-      if (page) {
-        context->menu.page_size = page_size;
-        context->menu.page_no = page_no;
-        context->menu.is_last_page = Bool(page->is_last_page);
-        context->menu.highlighted_candidate_index = selected_index % page_size;
-        int i = 0;
-        BOOST_FOREACH(const rime::shared_ptr<rime::Candidate> &cand,
-                      page->candidates) {
-          std::string candidate(cand->text());
-          if (!cand->comment().empty()) {
-            candidate += "  " + cand->comment();
-          }
-          char *dest = context->menu.candidates[i];
-          std::strncpy(dest, candidate.c_str(), RIME_TEXT_MAX_LENGTH);
-          if (++i >= RIME_MAX_NUM_CANDIDATES) break;
+  }
+  if (ctx->HasMenu()) {
+    rime::Segment &seg(ctx->composition()->back());
+    int page_size = 5;
+    rime::Schema *schema = session->schema();
+    if (schema)
+      page_size = schema->page_size();
+    int selected_index = seg.selected_index;
+    int page_no = selected_index / page_size;
+    rime::scoped_ptr<rime::Page> page(
+        seg.menu->CreatePage(page_size, page_no));
+    if (page) {
+      context->menu.page_size = page_size;
+      context->menu.page_no = page_no;
+      context->menu.is_last_page = Bool(page->is_last_page);
+      context->menu.highlighted_candidate_index = selected_index % page_size;
+      int i = 0;
+      BOOST_FOREACH(const rime::shared_ptr<rime::Candidate> &cand,
+                    page->candidates) {
+        std::string candidate(cand->text());
+        if (!cand->comment().empty()) {
+          candidate += "  " + cand->comment();
         }
-        context->menu.num_candidates = i;
+        char *dest = context->menu.candidates[i];
+        std::strncpy(dest, candidate.c_str(), RIME_TEXT_MAX_LENGTH);
+        if (++i >= RIME_MAX_NUM_CANDIDATES) break;
       }
+      context->menu.num_candidates = i;
     }
   }
   return True;
@@ -172,7 +172,8 @@ RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
   if (!session)
     return False;
   rime::Schema *schema = session->schema();
-  if (!schema)
+  rime::Context *ctx = session->context();
+  if (!schema || !ctx)
     return False;
   std::strncpy(status->schema_id, schema->schema_id().c_str(),
                RIME_SCHEMA_MAX_LENGTH);
@@ -180,8 +181,10 @@ RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
                RIME_SCHEMA_MAX_LENGTH);
   // TODO:
   status->is_disabled = False;
-  status->is_ascii_mode = False;
-  status->is_simplified = False;
+  status->is_composing = Bool(ctx->IsComposing());
+  status->is_ascii_mode = Bool(ctx->get_option("ascii_mode"));
+  status->is_full_shape = Bool(ctx->get_option("full_shape"));
+  status->is_simplified = Bool(ctx->get_option("simplification"));
   return True;
 }
 

@@ -8,6 +8,7 @@
 //
 #include <rime/common.h>
 #include <rime/config.h>
+#include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/segmentation.h>
@@ -19,7 +20,7 @@ AsciiSegmentor::AsciiSegmentor(Engine *engine) : Segmentor(engine) {
 }
 
 bool AsciiSegmentor::Proceed(Segmentation *segmentation) {
-  if (!engine_->get_option("ascii_mode"))
+  if (!engine_->context()->get_option("ascii_mode"))
     return true;
   const std::string &input = segmentation->input();
   EZDBGONLYLOGGERVAR(input);

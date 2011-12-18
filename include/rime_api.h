@@ -47,7 +47,7 @@ typedef struct {
 } RimeTraits;
 
 typedef struct {
-  Bool is_composing;
+  int length;
   int cursor_pos;
   int sel_start;
   int sel_end;
@@ -76,7 +76,9 @@ typedef struct {
   char schema_id[RIME_SCHEMA_MAX_LENGTH + 1];
   char schema_name[RIME_SCHEMA_MAX_LENGTH + 1];
   Bool is_disabled;
+  Bool is_composing;
   Bool is_ascii_mode;
+  Bool is_full_shape;
   Bool is_simplified;
 } RimeStatus;
 
