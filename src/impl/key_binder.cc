@@ -84,11 +84,12 @@ KeyBinder::KeyBinder(Engine *engine) : Processor(engine),
 
 typedef std::set<std::string> Conditions;
 
-void MeasureConditions(Context *ctx, Conditions *conditions) {
+static void measure_conditions(Engine *engine, Conditions *conditions) {
+  Context *ctx = engine->context();
   if (ctx->IsComposing()) {
     conditions->insert("composing");
   }
-  if (ctx->HasMenu()) {
+  if (ctx->HasMenu() && !engine->get_option("ascii_mode")) {
     conditions->insert("has_menu");
   }
   Composition *comp = ctx->composition();
@@ -105,7 +106,7 @@ Processor::Result KeyBinder::ProcessKeyEvent(const KeyEvent &key_event) {
   BOOST_FOREACH(const KeyBinding &binding, *key_bindings_) {
     if (key_event == binding.pattern) {
       if (first_match) {
-        MeasureConditions(engine_->context(), &conditions);
+        measure_conditions(engine_, &conditions);
         first_match = false;
       }
       if (conditions.find(binding.whence) != conditions.end()) {

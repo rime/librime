@@ -45,6 +45,7 @@ class Context {
   bool ConfirmPreviousSelection();
   bool ReopenPreviousSegment();
   bool ReopenPreviousSelection();
+  bool RefreshNonConfirmedComposition();
 
   void set_input(const std::string &value);
   const std::string& input() const { return input_; }

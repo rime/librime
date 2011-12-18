@@ -160,6 +160,22 @@ bool Context::ReopenPreviousSelection() {
   return false;
 }
 
+bool Context::RefreshNonConfirmedComposition() {
+  EZLOGGERFUNCTRACKER;
+  bool redo = false;
+  while (!composition_->empty() &&
+         composition_->back().status < Segment::kSelected) {
+    composition_->pop_back();
+    redo = true;
+  }
+  if (redo) {
+    composition_->Forward();
+    EZLOGGERVAR(composition_->GetDebugText());
+    update_notifier_(this);
+  }
+  return redo;
+}
+
 void Context::set_caret_pos(size_t caret_pos) {
   if (caret_pos > input_.length())
     caret_pos_ = input_.length();

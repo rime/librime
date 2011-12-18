@@ -18,6 +18,8 @@
 #include <rime/dict/dictionary.h>
 #include <rime/dict/user_dictionary.h>
 #include <rime/impl/abc_segmentor.h>
+#include <rime/impl/ascii_composer.h>
+#include <rime/impl/ascii_segmentor.h>
 #include <rime/impl/echo_translator.h>
 #include <rime/impl/express_editor.h>
 #include <rime/impl/fluency_editor.h>
@@ -56,6 +58,7 @@ void RegisterComponents() {
   r.Register("user_dictionary", new UserDictionaryComponent);
 
   // processors
+  r.Register("ascii_composer", new Component<AsciiComposer>);
   r.Register("express_editor", new Component<ExpressEditor>);
   r.Register("fluency_editor", new Component<FluencyEditor>);
   r.Register("navigator", new Component<Navigator>);
@@ -66,6 +69,7 @@ void RegisterComponents() {
 
   // segmentors
   r.Register("abc_segmentor", new Component<AbcSegmentor>);
+  r.Register("ascii_segmentor", new Component<AsciiSegmentor>);
   r.Register("punct_segmentor", new Component<PunctSegmentor>);
   r.Register("fallback_segmentor", new Component<FallbackSegmentor>);
 
