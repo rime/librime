@@ -60,6 +60,13 @@ static bool UpdateConfigFile(const fs::path &source_path,
   if (dest_config.LoadFromFile(dest_path.string())) {
     dest_config.GetString(version_key, &dest_version);
   }
+  if (!dest_version.empty() && isalpha(dest_version[0])) {
+    std::string backup_file(dest_path.string() + ".bak");
+    EZLOGGERPRINT("a customized config file is saved as '%s'.",
+                  backup_file.c_str());
+    fs::rename(dest_path, backup_file);
+    dest_version.clear();
+  }
   if (CompareVersionString(source_version, dest_version) <= 0) {
     EZLOGGERPRINT("config file '%s' is up-to-date.",
                   dest_path.string().c_str());
