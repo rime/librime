@@ -30,7 +30,7 @@ namespace rime {
 
 class Opencc {
  public:
-  Opencc();
+  Opencc(const std::string &config_path);
   ~Opencc();
   bool ConvertText(const std::string &text, std::string *simplified, bool *is_single_char);
   
@@ -38,10 +38,9 @@ class Opencc {
   opencc_t od_;
 };
 
-Opencc::Opencc() {
-  boost::filesystem::path shared_data_dir(Service::instance().deployer().shared_data_dir);
-  boost::filesystem::path config_path = shared_data_dir / "opencc" / "zht2zhs.ini";
-  od_ = opencc_open(config_path.string().c_str());
+Opencc::Opencc(const std::string &config_path) {
+  EZLOGGERVAR(config_path);
+  od_ = opencc_open(config_path.c_str());
   if (od_ == (opencc_t) -1) {
     EZLOGGERPRINT("Error opening opencc.");
   }
@@ -88,16 +87,35 @@ bool Opencc::ConvertText(const std::string &text, std::string *simplified, bool 
 // Simplifier
 
 Simplifier::Simplifier(Engine *engine) : Filter(engine),
-                                         opencc_(new Opencc),
                                          tip_level_(kTipNone) {
+  std::string opencc_config;
   Config *config = engine->schema()->config();
-  if (!config) return;
-  std::string tip;
-  if (config->GetString("simplifier/tip", &tip)) {
-    tip_level_ =
-        (tip == "all") ? kTipAll :
-        (tip == "char") ? kTipChar : kTipNone;
+  if (config) {
+    std::string tip;
+    if (config->GetString("simplifier/tip", &tip)) {
+      tip_level_ =
+          (tip == "all") ? kTipAll :
+          (tip == "char") ? kTipChar : kTipNone;
+    }
+    config->GetString("simplifier/opencc_config", &opencc_config);
   }
+  if (opencc_config.empty()) {
+    opencc_config = "zht2zhs.ini";  // default
+  }
+  boost::filesystem::path opencc_config_path = opencc_config;
+  if (opencc_config_path.is_relative()) {
+    boost::filesystem::path user_config_path(Service::instance().deployer().user_data_dir);
+    boost::filesystem::path shared_config_path(Service::instance().deployer().shared_data_dir);
+    (user_config_path /= "opencc") /= opencc_config;
+    (shared_config_path /= "opencc") /= opencc_config;
+    if (boost::filesystem::exists(user_config_path)) {
+      opencc_config_path = user_config_path;
+    }
+    else if (boost::filesystem::exists(shared_config_path)) {
+      opencc_config_path = shared_config_path;
+    }
+  }
+  opencc_.reset(new Opencc(opencc_config_path.string()));
 }
 
 Simplifier::~Simplifier() {
