@@ -6,6 +6,7 @@
 //
 // 2011-12-18 GONG Chen <chen.sst@gmail.com>
 //
+#include <boost/bind.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/config.h>
@@ -60,14 +61,29 @@ void AsciiComposer::ToggleAsciiMode(int key_code) {
   Context *ctx = engine_->context();
   bool ascii_mode = !ctx->get_option("ascii_mode");
   if (ctx->IsComposing()) {
-    EZLOGGERPRINT("converting current composition to %s mode.",
-                  ascii_mode ? "ascii" : "non-ascii");
-    if (key_code == XK_Shift_R) {
+    connection_.disconnect();
+    if (key_code == XK_Shift_L) {
+      EZLOGGERPRINT("converting current composition to %s mode.",
+                    ascii_mode ? "ascii" : "non-ascii");
+      if (ascii_mode) {
+        connection_ = ctx->update_notifier().connect(
+            boost::bind(&AsciiComposer::OnContextUpdate, this, _1));
+      }
+    }
+    else if (key_code == XK_Shift_R) {
       ctx->ConfirmCurrentSelection();
     }
   }
   // refresh non-confirmed composition with new mode
   ctx->set_option("ascii_mode", ascii_mode);
+}
+
+void AsciiComposer::OnContextUpdate(Context *ctx) {
+  if (!ctx->IsComposing()) {
+    connection_.disconnect();
+    // quit temporary ascii mode
+    ctx->set_option("ascii_mode", false);
+  }
 }
 
 }  // namespace rime

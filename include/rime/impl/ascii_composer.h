@@ -9,6 +9,7 @@
 #ifndef RIME_ASCII_COMPOSER_H_
 #define RIME_ASCII_COMPOSER_H_
 
+#include <boost/signals.hpp>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/processor.h>
@@ -23,8 +24,10 @@ class AsciiComposer : public Processor {
   
  protected:
   void ToggleAsciiMode(int key_code);
+  void OnContextUpdate(Context *ctx);
 
   bool shift_key_pressed_;
+  boost::signals::connection connection_;
 };
 
 }  // namespace rime
