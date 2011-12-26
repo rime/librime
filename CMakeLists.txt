@@ -32,18 +32,18 @@ endif(GTEST_FOUND)
 
 find_package(YamlCpp REQUIRED)
 if(YamlCpp_FOUND)
-  include_directories(${YamlCpp_INCLUDE_DIR})
+  include_directories(${YamlCpp_INCLUDE_PATH})
 endif(YamlCpp_FOUND)
 
 find_package(ZLIB)
 find_package(KyotoCabinet REQUIRED)
 if(KyotoCabinet_FOUND)
-  include_directories(${KyotoCabinet_INCLUDE_DIR})
+  include_directories(${KyotoCabinet_INCLUDE_PATH})
 endif(KyotoCabinet_FOUND)
 
 find_package(Opencc REQUIRED)
 if(Opencc_FOUND)
-  include_directories(${Opencc_INCLUDE_DIR})
+  include_directories(${Opencc_INCLUDE_PATH})
 endif(Opencc_FOUND)
 
 find_path(X11Keysym X11/keysym.h)
