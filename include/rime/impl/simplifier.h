@@ -31,6 +31,7 @@ class Simplifier : public Filter {
   
   scoped_ptr<Opencc> opencc_;
   TipLevel tip_level_;
+  std::string option_name_;
 };
 
 }  // namespace rime

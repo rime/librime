@@ -87,7 +87,8 @@ bool Opencc::ConvertText(const std::string &text, std::string *simplified, bool 
 // Simplifier
 
 Simplifier::Simplifier(Engine *engine) : Filter(engine),
-                                         tip_level_(kTipNone) {
+                                         tip_level_(kTipNone),
+                                         option_name_() {
   std::string opencc_config;
   Config *config = engine->schema()->config();
   if (config) {
@@ -97,7 +98,11 @@ Simplifier::Simplifier(Engine *engine) : Filter(engine),
           (tip == "all") ? kTipAll :
           (tip == "char") ? kTipChar : kTipNone;
     }
+    config->GetString("simplifier/option_name", &option_name_);
     config->GetString("simplifier/opencc_config", &opencc_config);
+  }
+  if (option_name_.empty()) {
+    option_name_ = "simplification";
   }
   if (opencc_config.empty()) {
     opencc_config = "zht2zhs.ini";  // default
@@ -124,7 +129,7 @@ Simplifier::~Simplifier() {
 bool Simplifier::Proceed(CandidateList *recruited,
                          CandidateList *candidates) {
   if (!opencc_ ||
-      !engine_->context()->get_option("simplification"))
+      !engine_->context()->get_option(option_name_))
     return true;
   if (!candidates || candidates->empty())
     return false;
