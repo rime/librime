@@ -129,12 +129,12 @@ bool KeyBinder::ReinterpretPagingKey(const KeyEvent &key_event) {
   int ch = (key_event.modifier() == 0) ? key_event.keycode() : 0;
   // reinterpret period (as page down) if succeeded by alphabetic keys
   if (last_key_ == '.' && ch >= 'a' && ch <= 'z') {
-    Conditions conditions;
-    measure_conditions(engine_->context(), &conditions);
-    if (conditions.find("paging") != conditions.end()) {
+    Context *ctx = engine_->context();
+    const std::string &input(ctx->input());
+    if (!input.empty() && input[input.length() - 1] != '.') {
       EZLOGGERPRINT("reinterpreted key: '%c', successor: '%c'",
                     last_key_, ch);
-      engine_->context()->PushInput(last_key_);
+      ctx->PushInput(last_key_);
       ret = true;
     }
   }
