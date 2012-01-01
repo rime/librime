@@ -104,3 +104,9 @@ key_binder:
     - { when: has_menu, accept: equal, send: Page_Down }
     - { when: paging, accept: comma, send: Page_Up }
     - { when: has_menu, accept: period, send: Page_Down }
+
+recognizer:
+  patterns:
+    number: "[-+]?[0-9][.0-9]*[%]?"
+    url: "^(www[.]|https?:|ftp:|mailto:).*$|^[a-z]+[.].+$"
+    email: "^[a-z][-_.0-9a-z]*@.*$"

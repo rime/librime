@@ -5,7 +5,7 @@
 schema:
   schema_id: luna_pinyin
   name: 朙月拼音
-  version: "0.9.2"
+  version: "0.9.3"
   author:
     - 佛振 <chen.sst@gmail.com>
   description: |
@@ -27,8 +27,9 @@ switches:
 
 engine:
   processors:
-    - key_binder
     - ascii_composer
+    - recognizer
+    - key_binder
     - speller
     - punctuator
     - selector
@@ -36,6 +37,7 @@ engine:
     - express_editor
   segmentors:
     - ascii_segmentor
+    - matcher
     - abc_segmentor
     - punct_segmentor
     - fallback_segmentor
@@ -43,7 +45,6 @@ engine:
     - echo_translator
     - punct_translator
     - r10n_translator
-    - trivial_translator
   filters:
     - simplifier
     - unifier
@@ -59,4 +60,7 @@ punctuator:
   import_preset: default
 
 key_binder:
+  import_preset: default
+
+recognizer:
   import_preset: default

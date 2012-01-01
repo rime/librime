@@ -78,13 +78,18 @@ void KeyBindings::LoadBindings(const ConfigListPtr &bindings) {
 
 KeyBinder::KeyBinder(Engine *engine) : Processor(engine),
                                        key_bindings_(new KeyBindings),
-                                       redirecting_(false) {
+                                       redirecting_(false),
+                                       last_key_(0) {
   key_bindings_->LoadConfig(engine->schema());
 }
 
 typedef std::set<std::string> Conditions;
 
 static void measure_conditions(Context *ctx, Conditions *conditions) {
+  // prevent duplicated evaluation
+  if (!conditions->empty()) return;
+  conditions->insert("non_empty");
+  
   if (ctx->IsComposing()) {
     conditions->insert("composing");
   }
@@ -100,14 +105,12 @@ static void measure_conditions(Context *ctx, Conditions *conditions) {
 Processor::Result KeyBinder::ProcessKeyEvent(const KeyEvent &key_event) {
   if (redirecting_ || !key_bindings_ || key_bindings_->empty())
     return kNoop;
+  if (ReinterpretPagingKey(key_event))
+    return kNoop;
   Conditions conditions;
-  bool first_match = true;
   BOOST_FOREACH(const KeyBinding &binding, *key_bindings_) {
     if (key_event == binding.pattern) {
-      if (first_match) {
-        measure_conditions(engine_->context(), &conditions);
-        first_match = false;
-      }
+      measure_conditions(engine_->context(), &conditions);
       if (conditions.find(binding.whence) != conditions.end()) {
         redirecting_ = true;
         engine_->ProcessKeyEvent(binding.target);
@@ -118,6 +121,25 @@ Processor::Result KeyBinder::ProcessKeyEvent(const KeyEvent &key_event) {
   }
   // not handled
   return kNoop;
+}
+
+bool KeyBinder::ReinterpretPagingKey(const KeyEvent &key_event) {
+  if (key_event.release()) return false;
+  bool ret = false;
+  int ch = (key_event.modifier() == 0) ? key_event.keycode() : 0;
+  // reinterpret period (as page down) if succeeded by alphabetic keys
+  if (last_key_ == '.' && ch >= 'a' && ch <= 'z') {
+    Conditions conditions;
+    measure_conditions(engine_->context(), &conditions);
+    if (conditions.find("paging") != conditions.end()) {
+      EZLOGGERPRINT("reinterpreted key: '%c', successor: '%c'",
+                    last_key_, ch);
+      engine_->context()->PushInput(last_key_);
+      ret = true;
+    }
+  }
+  last_key_ = ch;
+  return ret;
 }
 
 }  // namespace rime

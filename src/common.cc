@@ -24,10 +24,12 @@
 #include <rime/impl/express_editor.h>
 #include <rime/impl/fluency_editor.h>
 #include <rime/impl/fallback_segmentor.h>
+#include <rime/impl/matcher.h>
 #include <rime/impl/navigator.h>
 #include <rime/impl/key_binder.h>
 #include <rime/impl/punctuator.h>
 #include <rime/impl/r10n_translator.h>
+#include <rime/impl/recognizer.h>
 #include <rime/impl/selector.h>
 #include <rime/impl/simplifier.h>
 #include <rime/impl/speller.h>
@@ -61,15 +63,17 @@ void RegisterComponents() {
   r.Register("ascii_composer", new Component<AsciiComposer>);
   r.Register("express_editor", new Component<ExpressEditor>);
   r.Register("fluency_editor", new Component<FluencyEditor>);
+  r.Register("key_binder", new Component<KeyBinder>);
   r.Register("navigator", new Component<Navigator>);
   r.Register("punctuator", new Component<Punctuator>);
-  r.Register("key_binder", new Component<KeyBinder>);
+  r.Register("recognizer", new Component<Recognizer>);
   r.Register("selector", new Component<Selector>);
   r.Register("speller", new Component<Speller>);
 
   // segmentors
   r.Register("abc_segmentor", new Component<AbcSegmentor>);
   r.Register("ascii_segmentor", new Component<AsciiSegmentor>);
+  r.Register("matcher", new Component<Matcher>);
   r.Register("punct_segmentor", new Component<PunctSegmentor>);
   r.Register("fallback_segmentor", new Component<FallbackSegmentor>);
 
