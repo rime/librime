@@ -40,9 +40,8 @@ Processor::Result ExpressEditor::ProcessKeyEvent(
   }
   if (ctx->IsComposing()) {
     if (ch == XK_Return) {
-      // commit raw input string
-      engine_->sink()(ctx->input());
-      ctx->Clear();
+      ctx->ClearNonConfirmedComposition();
+      ctx->Commit();
       return kAccepted;
     }
     if (ch == XK_BackSpace) {

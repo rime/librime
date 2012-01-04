@@ -183,7 +183,7 @@ bool Deployer::InstallSchema(const std::string &schema_file) {
     return false;
   }
   DictionaryComponent component;
-  scoped_ptr<Dictionary> dict(component.CreateDictionaryFromConfig(&config));
+  scoped_ptr<Dictionary> dict(component.CreateDictionaryFromConfig(&config, "translator"));
   if (!dict) {
     EZLOGGERPRINT("Error creating dictionary '%s'.", dict_name.c_str());
     return false;

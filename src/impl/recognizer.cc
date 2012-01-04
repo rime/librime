@@ -18,6 +18,16 @@
 
 namespace rime {
 
+static void load_patterns(RecognizerPatterns *patterns, ConfigMapPtr map) {
+  if (!patterns || !map) return;
+  ConfigMap::Iterator it = map->begin();
+  for (; it != map->end(); ++it) {
+    ConfigValuePtr value = As<ConfigValue>(it->second);
+    if (!value) continue;
+    (*patterns)[it->first] = value->str();
+  }
+}
+
 void RecognizerPatterns::LoadConfig(Config *config) {
   ConfigMapPtr pattern_map;
   std::string preset;
@@ -28,17 +38,41 @@ void RecognizerPatterns::LoadConfig(Config *config) {
       return;
     }
     pattern_map = preset_config->GetMap("recognizer/patterns");
+    load_patterns(this, pattern_map);
   }
-  else {
-    pattern_map = config->GetMap("recognizer/patterns");
+  pattern_map = config->GetMap("recognizer/patterns");
+  load_patterns(this, pattern_map);
+}
+
+RecognizerMatch RecognizerPatterns::GetMatch(
+    const std::string &input, Segmentation *segmentation) const {
+  size_t j = segmentation->GetCurrentEndPosition();
+  size_t k = segmentation->GetConfirmedPosition();
+  std::string active_input(input.substr(k));
+  EZLOGGER(k, active_input);
+  bool found = false;
+  BOOST_FOREACH(const RecognizerPatterns::value_type &v, *this) {
+    boost::smatch m;
+    if (boost::regex_search(active_input, m, v.second)) {
+      size_t start = k + m.position();
+      size_t end = start + m.length();
+      if (end != input.length()) continue;
+      if (start == j) {
+        EZLOGGERPRINT("input[%d,%d] '%s' matches pattern: %s",
+                      start, end, m.str().c_str(), v.first.c_str());
+        return RecognizerMatch(v.first, start, end);
+      }
+      BOOST_FOREACH(const Segment &seg, *segmentation) {
+        if (start < seg.start) break;
+        if (start == seg.start) {
+          EZLOGGERPRINT("input[%d,%d] '%s' matches pattern: %s",
+                        start, end, m.str().c_str(), v.first.c_str());
+          return RecognizerMatch(v.first, start, end);
+        }
+      }
+    }
   }
-  if (!pattern_map) return;
-  ConfigMap::Iterator it = pattern_map->begin();
-  for (; it != pattern_map->end(); ++it) {
-    ConfigValuePtr value = As<ConfigValue>(it->second);
-    if (!value) continue;
-    (*this)[it->first] = value->str();
-  }
+  return RecognizerMatch();
 }
 
 Recognizer::Recognizer(Engine *engine) : Processor(engine) {
@@ -52,18 +86,16 @@ Processor::Result Recognizer::ProcessKeyEvent(const KeyEvent &key_event) {
       key_event.ctrl() || key_event.alt() || key_event.release()) {
     return kNoop;
   }
-  Context *ctx = engine_->context();
-  std::string input(ctx->input());
   int ch = key_event.keycode();
   if (ch > 0x20 && ch < 0x80) {
     // pattern matching against the input string plus the incoming character
+    Context *ctx = engine_->context();
+    std::string input(ctx->input());
     input += ch;
-    BOOST_FOREACH(const RecognizerPatterns::value_type &v, patterns_) {
-      if (boost::regex_match(input, v.second)) {
-        EZLOGGERPRINT("recognized pattern: %s", v.first.c_str());
-        ctx->PushInput(ch);
-        return kAccepted;
-      }
+    RecognizerMatch m = patterns_.GetMatch(input, ctx->composition());
+    if (m.found()) {
+      ctx->PushInput(ch);
+      return kAccepted;
     }
   }
   return kNoop;

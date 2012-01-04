@@ -7,7 +7,7 @@
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_DICTIONARY_H_
-#define RIME_DICTIONRAY_H_
+#define RIME_DICTIONARY_H_
 
 #include <list>
 #include <map>
@@ -123,7 +123,11 @@ class DictionaryComponent : public Dictionary::Component {
  public:
   DictionaryComponent();
   Dictionary* Create(Schema *schema);
-  Dictionary* CreateDictionaryFromConfig(Config *config);
+  Dictionary* CreateDictionaryFromConfig(Config *config,
+                                         const std::string &customer);
+  Dictionary* CreateDictionaryWithName(const std::string &dict_name,
+                                       const std::string &prism_name);
+
  private:
   std::map<std::string, weak_ptr<Prism> > prism_map_;
   std::map<std::string, weak_ptr<Table> > table_map_;

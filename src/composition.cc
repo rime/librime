@@ -62,10 +62,16 @@ void Composition::GetPreedit(Preedit *preedit) const {
 
 const std::string Composition::GetCommitText() const {
   std::string result;
+  size_t end = 0;
   BOOST_FOREACH(const Segment &seg, *this) {
     const shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
-    if (cand)
+    if (cand) {
       result += cand->text();
+      end = cand->end();
+    }
+  }
+  if (input_.length() > end) {
+    result += input_.substr(end);
   }
   return result;
 }

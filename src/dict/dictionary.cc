@@ -275,20 +275,26 @@ DictionaryComponent::DictionaryComponent() {
 
 Dictionary* DictionaryComponent::Create(Schema *schema) {
   if (!schema) return NULL;
-  return CreateDictionaryFromConfig(schema->config());
+  return CreateDictionaryFromConfig(schema->config(), "translator");
 }
 
-Dictionary* DictionaryComponent::CreateDictionaryFromConfig(Config *config) {
+Dictionary* DictionaryComponent::CreateDictionaryFromConfig(
+    Config *config, const std::string &customer) {
   std::string dict_name;
-  if (!config->GetString("translator/dictionary", &dict_name)) {
-    EZLOGGERPRINT("Error: dictionary not specified.");
+  if (!config->GetString(customer + "/dictionary", &dict_name)) {
+    EZLOGGERPRINT("Error: dictionary not specified for %s.", customer.c_str());
     return NULL;
   }
   std::string prism_name;
-  if (!config->GetString("translator/prism", &prism_name)) {
+  if (!config->GetString(customer + "/prism", &prism_name)) {
     // usually same with dictionary name; different for alternative spelling
     prism_name = dict_name;
   }
+  return CreateDictionaryWithName(dict_name, prism_name);
+}
+
+Dictionary* DictionaryComponent::CreateDictionaryWithName(
+    const std::string &dict_name, const std::string &prism_name) {
   // obtain prism and table objects
   boost::filesystem::path path(Service::instance().deployer().user_data_dir);
   shared_ptr<Table> table(table_map_[dict_name].lock());

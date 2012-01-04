@@ -181,7 +181,7 @@ void ConcreteEngine::TranslateSegments(Composition *comp) {
 void ConcreteEngine::FilterCandidates(CandidateList *recruited,
                                       CandidateList *candidates) {
   if (filters_.empty()) return;
-  EZLOGGERPRINT("Applying filters.");
+  EZDBGONLYLOGGERPRINT("Applying filters.");
   BOOST_FOREACH(shared_ptr<Filter> filter, filters_) {
     if (!filter->Proceed(recruited, candidates))
       break;

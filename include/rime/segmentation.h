@@ -70,6 +70,7 @@ class Segmentation : public std::vector<Segment> {
   size_t GetCurrentStartPosition() const;
   size_t GetCurrentEndPosition() const;
   size_t GetCurrentSegmentLength() const;
+  size_t GetConfirmedPosition() const;
 
   const std::string& input() const { return input_; }
 

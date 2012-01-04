@@ -9,13 +9,26 @@
 #ifndef RIME_TABLE_TRANSLATOR_H_
 #define RIME_TABLE_TRANSLATOR_H_
 
+#include <string>
 #include <rime/common.h>
 #include <rime/translation.h>
 #include <rime/translator.h>
+#include <rime/dict/dictionary.h>
 
 namespace rime {
 
-class Dictionary;
+class TableTranslation : public Translation {
+ public:
+  TableTranslation(size_t start, size_t end);
+  TableTranslation(const DictEntryIterator& iter, size_t start, size_t end);
+  virtual bool Next();
+  virtual shared_ptr<Candidate> Peek();
+  
+ protected:
+  DictEntryIterator iter_;
+  size_t start_;
+  size_t end_;
+};
 
 class TableTranslator : public Translator {
  public:
@@ -25,7 +38,7 @@ class TableTranslator : public Translator {
   virtual Translation* Query(const std::string &input,
                              const Segment &segment);
 
- private:
+ protected:
   scoped_ptr<Dictionary> dict_;
   bool enable_completion_;
 };

@@ -21,7 +21,7 @@ Context::~Context() {
 }
 
 bool Context::Commit() {
-  if (composition_->empty())
+  if (!IsComposing())
     return false;
   commit_notifier_(this);
   Clear();
@@ -171,20 +171,27 @@ bool Context::ReopenPreviousSelection() {
   return false;
 }
 
-bool Context::RefreshNonConfirmedComposition() {
-  EZLOGGERFUNCTRACKER;
-  bool redo = false;
+bool Context::ClearNonConfirmedComposition() {
+  bool reverted = false;
   while (!composition_->empty() &&
          composition_->back().status < Segment::kSelected) {
     composition_->pop_back();
-    redo = true;
+    reverted = true;
   }
-  if (redo) {
+  if (reverted) {
     composition_->Forward();
     EZLOGGERVAR(composition_->GetDebugText());
-    update_notifier_(this);
   }
-  return redo;
+  return reverted;
+}
+
+bool Context::RefreshNonConfirmedComposition() {
+  EZLOGGERFUNCTRACKER;
+  if (ClearNonConfirmedComposition()) {
+    update_notifier_(this);
+    return true;
+  }
+  return false;
 }
 
 void Context::set_caret_pos(size_t caret_pos) {

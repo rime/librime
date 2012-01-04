@@ -18,10 +18,24 @@
 namespace rime {
 
 class Config;
+class Segmentation;
+
+struct RecognizerMatch {
+  std::string tag;
+  size_t start, end;
+
+  RecognizerMatch() : tag(), start(0), end(0) {}
+  RecognizerMatch(const std::string &_tag, size_t _start, size_t _end)
+      : tag(_tag), start(_start), end(_end) {}
+  
+  bool found() const { return start < end; }
+};
 
 class RecognizerPatterns : public std::map<std::string, boost::regex> {
  public:
   void LoadConfig(Config *config);
+  RecognizerMatch GetMatch(const std::string &input,
+                           Segmentation *segmentation) const;
 };
 
 class Recognizer : public Processor {

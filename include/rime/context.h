@@ -47,6 +47,7 @@ class Context {
   bool ConfirmPreviousSelection();
   bool ReopenPreviousSegment();
   bool ReopenPreviousSelection();
+  bool ClearNonConfirmedComposition();
   bool RefreshNonConfirmedComposition();
 
   void set_prompt(const std::string &value) { prompt_ = value; }

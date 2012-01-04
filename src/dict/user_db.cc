@@ -108,8 +108,13 @@ bool UserDb::Open() {
   EZLOGGERFUNCTRACKER;
   if (loaded()) return false;
   loaded_ = db_->open(file_name());
-  if (loaded_ && db_->count() == 0)
-    CreateMetadata();
+  if (loaded_) {
+    if (db_->count() == 0)
+      CreateMetadata();
+  }
+  else {
+    EZLOGGERPRINT("Error opening userdb '%s'.", name_.c_str());
+  }
   return loaded_;
 }
 

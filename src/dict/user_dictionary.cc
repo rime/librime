@@ -46,7 +46,7 @@ static bool unpack_user_dict_value(const std::string &value,
       }
     }
     catch (...) {
-      EZLOGGERPRINT("key-value parsing failure: '%s'.", k_eq_v.c_str());
+      EZLOGGERPRINT("Error: key-value parsing failed: '%s'.", k_eq_v.c_str());
       return false;
     }
   }
@@ -100,8 +100,8 @@ void DfsState::SaveEntry(size_t pos) {
   // TODO: argument s not defined...
   e->weight = algo::formula_p(0, (double)commit_count / present_tick, (double)present_tick, dee);
   e->code = code;
-  EZLOGGERPRINT("pos = %d, text = '%s', code_len = %d, present_tick = %llu, weight = %f, commit_count = %d",
-                pos, e->text.c_str(), e->code.size(), present_tick, e->weight, e->commit_count);
+  EZDBGONLYLOGGERPRINT("pos = %d, text = '%s', code_len = %d, present_tick = %llu, weight = %f, commit_count = %d",
+                       pos, e->text.c_str(), e->code.size(), present_tick, e->weight, e->commit_count);
   (*collector)[pos].push_back(e);
 }
 
@@ -153,7 +153,7 @@ bool UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
         }
       }
       while (state->IsExactMatch(prefix)) {  // 'b |e ' vs. 'b e \tBe'
-        EZLOGGERVAR(prefix);
+        EZDBGONLYLOGGERVAR(prefix);
         state->SaveEntry(end_vertex_pos);
         if (!state->NextEntry())
           return false;

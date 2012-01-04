@@ -9,7 +9,7 @@ schema_list:
   - schema: cangjie5
 
 switcher:
-  caption: 方案選單
+  caption: 〔方案選單〕
   hotkeys:
     - Control+grave
     - F4
@@ -107,6 +107,6 @@ key_binder:
 
 recognizer:
   patterns:
-    number: "[-+]?[0-9][.0-9]*[%]?"
+    number: "^[-+]?[0-9][.0-9]*[%]?$"
     url: "^(www[.]|https?:|ftp:|mailto:).*$|^[a-z]+[.].+$"
     email: "^[a-z][-_.0-9a-z]*@.*$"

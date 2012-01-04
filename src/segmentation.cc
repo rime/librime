@@ -121,6 +121,15 @@ size_t Segmentation::GetCurrentSegmentLength() const {
   return empty() ? 0 : (back().end - back().start);
 }
 
+size_t Segmentation::GetConfirmedPosition() const {
+  size_t k = 0;
+  BOOST_FOREACH(const Segment &seg, *this) {
+    if (seg.status >= Segment::kSelected)
+      k = seg.end;
+  }
+  return k;
+}
+
 std::ostream& operator<< (std::ostream& out,
                           const Segmentation &segmentation) {
   out << "<" << segmentation.input();
