@@ -16,6 +16,7 @@
 // built-in components
 #include <rime/config.h>
 #include <rime/dict/dictionary.h>
+#include <rime/dict/reverse_lookup_dictionary.h>
 #include <rime/dict/user_dictionary.h>
 #include <rime/impl/abc_segmentor.h>
 #include <rime/impl/ascii_composer.h>
@@ -58,6 +59,7 @@ void RegisterComponents() {
   r.Register("schema_config", new ConfigComponent(schema_path.string()));
   
   r.Register("dictionary", new DictionaryComponent);
+  r.Register("reverse_lookup_dictionary", new ReverseLookupDictionaryComponent);
   r.Register("user_dictionary", new UserDictionaryComponent);
 
   // processors

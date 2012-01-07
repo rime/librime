@@ -14,31 +14,44 @@
 #include <rime/segmentation.h>
 #include <rime/translation.h>
 #include <rime/dict/dictionary.h>
+#include <rime/dict/reverse_lookup_dictionary.h>
 #include <rime/impl/table_translator.h>
 #include <rime/impl/reverse_lookup_translator.h>
+
+static const char *quote_left = "\xef\xbc\x88";
+static const char *quote_right = "\xef\xbc\x89";
+static const char *separator = "\xef\xbc\x8c";
 
 namespace rime {
 
 class ReverseLookupTranslation : public TableTranslation {
  public:
   ReverseLookupTranslation(const DictEntryIterator &iter,
-                           size_t start, size_t end)
-      : TableTranslation(iter, start, end) {}
-
+                           size_t start, size_t end,
+                           ReverseLookupDictionary *dict)
+      : TableTranslation(iter, start, end), dict_(dict) {}
   virtual shared_ptr<Candidate> Peek();
+ protected:
+  ReverseLookupDictionary *dict_;
 };
 
 shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
   if (exhausted())
     return shared_ptr<Candidate>();
   const shared_ptr<DictEntry> &e(iter_.Peek());
-  // TODO: get comment from reverse lookup dictionary
+  std::string tips;
+  if (dict_) {
+    dict_->ReverseLookup(e->text, &tips);
+    if (!tips.empty()) {
+      boost::algorithm::replace_all(tips, " ", separator);
+    }
+  }
   shared_ptr<Candidate> cand(new SimpleCandidate(
       "reverse_lookup",
       start_,
       end_,
       e->text,
-      e->comment));
+      !tips.empty() ? (quote_left + tips + quote_right) : e->comment));
   return cand;
 }
 
@@ -53,7 +66,16 @@ ReverseLookupTranslator::ReverseLookupTranslator(Engine *engine)
       Dictionary::Require("dictionary"));
   if (!component) return;
   dict_.reset(component->CreateDictionaryFromConfig(config, "reverse_lookup"));
-  dict_->Load();
+  if (dict_) 
+    dict_->Load();
+  else
+    return;
+  ReverseLookupDictionary::Component *rev_component =
+      ReverseLookupDictionary::Require("reverse_lookup_dictionary");
+  if (!rev_component) return;
+  rev_dict_.reset(rev_component->Create(engine->schema()));
+  if (rev_dict_)
+    rev_dict_->Load();
 }
 
 Translation* ReverseLookupTranslator::Query(const std::string &input,
@@ -76,7 +98,8 @@ Translation* ReverseLookupTranslator::Query(const std::string &input,
   if (!iter.exhausted()) {
     translation = new ReverseLookupTranslation(iter,
                                                segment.start,
-                                               segment.end);
+                                               segment.end,
+                                               rev_dict_.get());
   }
   else {
     shared_ptr<Candidate> cand(new SimpleCandidate("raw",

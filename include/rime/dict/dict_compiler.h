@@ -17,6 +17,7 @@ namespace rime {
 class Dictionary;
 class Prism;
 class Table;
+class TreeDb;
 
 class DictCompiler {
  public:
@@ -28,7 +29,9 @@ class DictCompiler {
   bool BuildTable(const std::string &dict_file, uint32_t checksum);
   bool BuildPrism(const std::string &schema_file,
                   uint32_t dict_file_checksum, uint32_t schema_file_checksum);
+  bool BuildReverseLookupDict(TreeDb *db, uint32_t dict_file_checksum);
 
+  std::string dict_name_;
   shared_ptr<Prism> prism_;
   shared_ptr<Table> table_;
 };

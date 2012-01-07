@@ -227,7 +227,7 @@ bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
 bool UserDictionary::UpdateTickCount(TickCount increment) {
   tick_ += increment;
   try {
-    return db_->Update("\0x01/tick", boost::lexical_cast<std::string>(tick_));
+    return db_->Update("\x01/tick", boost::lexical_cast<std::string>(tick_));
   }
   catch (...) {
     return false;
@@ -235,14 +235,15 @@ bool UserDictionary::UpdateTickCount(TickCount increment) {
 }
 
 bool UserDictionary::Initialize() {
-  // TODO: something else?
-  return db_->Update("\0x01/tick", "0");
+  return db_->Update("\x01/tick", "0");
 }
 
 bool UserDictionary::FetchTickCount() {
   std::string value;
   try {
-    if (!db_->Fetch("\0x01/tick", &value))
+    // an earlier version mistakenly wrote tick count into an empty key
+    if (!db_->Fetch("\x01/tick", &value) &&
+        !db_->Fetch("", &value))
       return false;
     tick_ = boost::lexical_cast<TickCount>(value);
     return true;
@@ -288,12 +289,12 @@ UserDictionary* UserDictionaryComponent::Create(Schema *schema) {
     return NULL;
   }
   // obtain userdb object
-  shared_ptr<UserDb> user_db(user_db_pool_[dict_name].lock());
-  if (!user_db) {
-    user_db.reset(new UserDb(dict_name));
-    user_db_pool_[dict_name] = user_db;
+  shared_ptr<UserDb> db(db_pool_[dict_name].lock());
+  if (!db) {
+    db.reset(new UserDb(dict_name));
+    db_pool_[dict_name] = db;
   }
-  return new UserDictionary(user_db);
+  return new UserDictionary(db);
 }
 
 }  // namespace rime

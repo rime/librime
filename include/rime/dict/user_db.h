@@ -26,12 +26,12 @@
 
 namespace rime {
 
-class UserDbAccessor {
+class TreeDbAccessor {
  public:
-  UserDbAccessor() : cursor_(NULL), prefix_() {}
-  explicit UserDbAccessor(kyotocabinet::DB::Cursor *cursor,
+  TreeDbAccessor() : cursor_(NULL), prefix_() {}
+  explicit TreeDbAccessor(kyotocabinet::DB::Cursor *cursor,
                           const std::string &prefix);
-  ~UserDbAccessor();
+  ~TreeDbAccessor();
   
   bool Forward(const std::string &key);
   bool GetNextRecord(std::string *key, std::string *value);
@@ -42,17 +42,17 @@ class UserDbAccessor {
   std::string prefix_;
 };
 
-class UserDb {
+class TreeDb {
  public:
-  UserDb(const std::string &name);
-  virtual ~UserDb();
+  TreeDb(const std::string &name);
+  virtual ~TreeDb();
 
   bool Exists() const;
   bool Remove();
   bool Open();
   bool Close();
 
-  const UserDbAccessor Query(const std::string &key);
+  const TreeDbAccessor Query(const std::string &key);
   bool Fetch(const std::string &key, std::string *value);
   bool Update(const std::string &key, const std::string &value);
   bool Erase(const std::string &key);
@@ -62,12 +62,22 @@ class UserDb {
   bool loaded() const { return loaded_; }
 
  protected:
-  bool CreateMetadata();
+  virtual bool CreateMetadata();
+  void Initialize();
   
   std::string name_;
   std::string file_name_;
   bool loaded_;
   scoped_ptr<kyotocabinet::TreeDB> db_;
+};
+
+typedef TreeDbAccessor UserDbAccessor;
+
+class UserDb : public TreeDb {
+ public:
+  UserDb(const std::string &name);
+ protected:
+  virtual bool CreateMetadata();
 };
 
 }  // namespace rime

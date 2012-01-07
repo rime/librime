@@ -19,43 +19,46 @@
 
 namespace rime {
 
-// UserDbAccessor memebers
+// TreeDbAccessor memebers
 
-UserDbAccessor::UserDbAccessor(kyotocabinet::DB::Cursor *cursor,
+TreeDbAccessor::TreeDbAccessor(kyotocabinet::DB::Cursor *cursor,
                                const std::string &prefix)
     : cursor_(cursor), prefix_(prefix) {
   if (!prefix.empty())
     Forward(prefix);
 }
 
-UserDbAccessor::~UserDbAccessor() {
+TreeDbAccessor::~TreeDbAccessor() {
   if (cursor_) {
     delete cursor_;
     cursor_ = NULL;
   }
 }
 
-bool UserDbAccessor::Forward(const std::string &key) {
+bool TreeDbAccessor::Forward(const std::string &key) {
   return cursor_ && cursor_->jump(key);
 }
 
-bool UserDbAccessor::GetNextRecord(std::string *key, std::string *value) {
+bool TreeDbAccessor::GetNextRecord(std::string *key, std::string *value) {
   if (!cursor_ || !key || !value)
     return false;
   return cursor_->get(key, value, true) && boost::starts_with(*key, prefix_);
 }
 
-bool UserDbAccessor::exhausted() {
+bool TreeDbAccessor::exhausted() {
   std::string key;
   return !cursor_->get_key(&key, false) || !boost::starts_with(key, prefix_);
 }
 
-// UserDb members
+// TreeDb members
 
-UserDb::UserDb(const std::string &name)
-    : name_(name), loaded_(false) {
+TreeDb::TreeDb(const std::string &name) : name_(name), loaded_(false) {
   boost::filesystem::path path(Service::instance().deployer().user_data_dir);
-  file_name_ = (path / name).string() + ".userdb.kct";
+  file_name_ = (path / name).string() + ".kct";
+  Initialize();
+}
+
+void TreeDb::Initialize() {
   db_.reset(new kyotocabinet::TreeDB);
   db_->tune_options(kyotocabinet::TreeDB::TLINEAR | kyotocabinet::TreeDB::TCOMPRESS);
   db_->tune_buckets(10LL * 1000);
@@ -63,76 +66,88 @@ UserDb::UserDb(const std::string &name)
   db_->tune_page(32768);
 }
 
-UserDb::~UserDb() {
+TreeDb::~TreeDb() {
   if (loaded())
     Close();
 }
 
-const UserDbAccessor UserDb::Query(const std::string &key) {
+const TreeDbAccessor TreeDb::Query(const std::string &key) {
   if (!loaded())
-    return UserDbAccessor();
+    return TreeDbAccessor();
   kyotocabinet::DB::Cursor *cursor = db_->cursor();
-  return UserDbAccessor(cursor, key);
+  return TreeDbAccessor(cursor, key);
 }
 
-bool UserDb::Fetch(const std::string &key, std::string *value) {
+bool TreeDb::Fetch(const std::string &key, std::string *value) {
   if (!value || !loaded())
     return false;
   return db_->get(key, value);
 }
 
-bool UserDb::Update(const std::string &key, const std::string &value) {
+bool TreeDb::Update(const std::string &key, const std::string &value) {
   if (!loaded()) return false;
-  EZLOGGER(key, value);
+  EZDBGONLYLOGGER(key, value);
   return db_->set(key, value);
 }
 
-bool UserDb::Erase(const std::string &key) {
+bool TreeDb::Erase(const std::string &key) {
   if (!loaded()) return false;
   return db_->remove(key);
 }
 
-bool UserDb::Exists() const {
+bool TreeDb::Exists() const {
   return boost::filesystem::exists(file_name());
 }
 
-bool UserDb::Remove() {
+bool TreeDb::Remove() {
   if (loaded()) {
-    EZLOGGERPRINT("Error: attempt to remove open userdb '%s'.", name_.c_str());
+    EZLOGGERPRINT("Error: attempt to remove opened db '%s'.", name_.c_str());
     return false;
   }
   return boost::filesystem::remove(file_name());
 }
 
-bool UserDb::Open() {
-  EZLOGGERFUNCTRACKER;
+bool TreeDb::Open() {
   if (loaded()) return false;
   loaded_ = db_->open(file_name());
   if (loaded_) {
-    if (db_->count() == 0)
+    std::string db_name;
+    if (!Fetch("\x01/db_name", &db_name))
       CreateMetadata();
   }
   else {
-    EZLOGGERPRINT("Error opening userdb '%s'.", name_.c_str());
+    EZLOGGERPRINT("Error opening db '%s'.", name_.c_str());
   }
   return loaded_;
 }
 
-bool UserDb::Close() {
+bool TreeDb::Close() {
   if (!loaded()) return false;
   db_->close();
   loaded_ = false;
   return true;
 }
 
+bool TreeDb::CreateMetadata() {
+  EZLOGGERPRINT("Creating metadata for db '%s'.", name_.c_str());
+  std::string rime_version(RIME_VERSION);
+  // '\x01' is the meta character
+  return db_->set("\x01/db_name", name_) &&
+         db_->set("\x01/rime_version", rime_version);
+}
+
+// UserDb members
+
+UserDb::UserDb(const std::string &name) : TreeDb(name + ".userdb") {
+}
+
 bool UserDb::CreateMetadata() {
   Deployer &deployer(Service::instance().deployer());
-  std::string rime_version(RIME_VERSION);
   std::string user_id(deployer.user_id);
-  // '0x01' is the meta character
-  return db_->set("\0x01/db_name", name_) &&
-         db_->set("\0x01/rime_version", rime_version) &&
-         db_->set("\0x01/user_id", user_id);
+  // '\x01' is the meta character
+  return TreeDb::CreateMetadata() &&
+      db_->set("\x01/db_type", "userdb") &&
+      db_->set("\x01/user_id", user_id);
 }
 
 }  // namespace rime

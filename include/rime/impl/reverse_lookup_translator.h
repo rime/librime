@@ -16,6 +16,7 @@
 namespace rime {
 
 class Dictionary;
+class ReverseLookupDictionary;
 
 class ReverseLookupTranslator : public Translator {
  public:
@@ -25,6 +26,7 @@ class ReverseLookupTranslator : public Translator {
                              const Segment &segment);
  protected:
   scoped_ptr<Dictionary> dict_;
+  scoped_ptr<ReverseLookupDictionary> rev_dict_;
   std::string prefix_;
   std::string tips_;
 };

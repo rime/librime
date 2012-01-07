@@ -7,7 +7,9 @@
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
 #include <fstream>
+#include <map>
 #include <queue>
+#include <set>
 #include <boost/algorithm/string.hpp>
 #include <boost/crc.hpp>
 #include <boost/foreach.hpp>
@@ -28,6 +30,7 @@
 #include <rime/dict/dict_compiler.h>
 #include <rime/dict/prism.h>
 #include <rime/dict/table.h>
+#include <rime/dict/user_db.h>
 
 namespace rime {
 
@@ -263,7 +266,8 @@ bool EntryCollector::Encode(const std::string &phrase, const std::string &weight
 // DictCompiler
 
 DictCompiler::DictCompiler(Dictionary *dictionary)
-    : prism_(dictionary->prism()), table_(dictionary->table()) {
+    : dict_name_(dictionary->name()),
+      prism_(dictionary->prism()), table_(dictionary->table()) {
 }
 
 bool DictCompiler::Compile(const std::string &dict_file, const std::string &schema_file) {
@@ -274,6 +278,7 @@ bool DictCompiler::Compile(const std::string &dict_file, const std::string &sche
   EZLOGGERVAR(schema_file_checksum);
   bool rebuild_table = true;
   bool rebuild_prism = true;
+  bool rebuild_rev_lookup_dict = true;
   if (boost::filesystem::exists(table_->file_name()) && table_->Load()) {
     if (table_->dict_file_checksum() == dict_file_checksum) {
       rebuild_table = false;
@@ -287,9 +292,20 @@ bool DictCompiler::Compile(const std::string &dict_file, const std::string &sche
     }
     prism_->Close();
   }
+  TreeDb db(dict_name_ + ".reverse");
+  if (db.Exists() && db.Open()) {
+    std::string checksum;
+    if (db.Fetch("\x01/dict_file_checksum", &checksum) &&
+        boost::lexical_cast<uint32_t>(checksum) == dict_file_checksum) {
+      rebuild_rev_lookup_dict = false;
+    }
+    db.Close();
+  }
   if (rebuild_table && !BuildTable(dict_file, dict_file_checksum))
     return false;
-  if (rebuild_prism && ! BuildPrism(schema_file, dict_file_checksum, schema_file_checksum))
+  if (rebuild_prism && !BuildPrism(schema_file, dict_file_checksum, schema_file_checksum))
+    return false;
+  if (rebuild_rev_lookup_dict && !BuildReverseLookupDict(&db, dict_file_checksum))
     return false;
   // done!
   return true;
@@ -384,7 +400,6 @@ bool DictCompiler::BuildPrism(const std::string &schema_file,
     return false;
   // TODO: spelling algebra
   if (!schema_file.empty()) {
-    
   }
   // build prism
   {
@@ -394,6 +409,38 @@ bool DictCompiler::BuildPrism(const std::string &schema_file,
       return false;
     }
   }
+  return true;
+}
+
+bool DictCompiler::BuildReverseLookupDict(TreeDb *db, uint32_t dict_file_checksum) {
+  if (db->Exists())
+    db->Remove();
+  if (!db->Open())
+    return false;
+  db->Update("\x01/dict_file_checksum",
+             boost::lexical_cast<std::string>(dict_file_checksum));
+  // load syllable - word mapping from table
+  Syllabary syllabary;
+  if (!table_->Load() || !table_->GetSyllabary(&syllabary) || syllabary.empty())
+    return false;
+  typedef std::map<std::string, std::set<std::string> > ReverseLookupTable;
+  ReverseLookupTable rev_table;
+  int num_syllables = static_cast<int>(syllabary.size());
+  for (int syllable_id = 0; syllable_id < num_syllables; ++syllable_id) {
+    std::string syllable(table_->GetSyllableById(syllable_id));
+    TableAccessor a(table_->QueryWords(syllable_id));
+    while (!a.exhausted()) {
+      std::string word(a.entry()->text.c_str());
+      rev_table[word].insert(syllable);
+      a.Next();
+    }
+  }
+  // save reverse lookup dict
+  BOOST_FOREACH(const ReverseLookupTable::value_type &v, rev_table) {
+    std::string code_list(boost::algorithm::join(v.second, " "));
+    db->Update(v.first, code_list);
+  }
+  db->Close();
   return true;
 }
 
