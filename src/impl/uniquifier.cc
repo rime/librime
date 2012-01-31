@@ -9,17 +9,17 @@
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/engine.h>
-#include <rime/impl/unifier.h>
+#include <rime/impl/uniquifier.h>
 
 namespace rime {
 
-// Unifier
+// Uniquifier
 
-Unifier::Unifier(Engine *engine) : Filter(engine) {
+Uniquifier::Uniquifier(Engine *engine) : Filter(engine) {
 }
 
-bool Unifier::Proceed(CandidateList *recruited,
-                      CandidateList *candidates) {
+bool Uniquifier::Proceed(CandidateList *recruited,
+                         CandidateList *candidates) {
   if (!candidates || candidates->empty())
     return false;
   CandidateList::iterator i = candidates->begin();
@@ -27,9 +27,9 @@ bool Unifier::Proceed(CandidateList *recruited,
     CandidateList::iterator j = recruited->begin();
     for (; j != recruited->end(); ++j) {
       if ((*i)->text() == (*j)->text()) {
-        shared_ptr<UnifiedCandidate> c = As<UnifiedCandidate>(*j);
+        shared_ptr<UniquifiedCandidate> c = As<UniquifiedCandidate>(*j);
         if (!c) {
-          c.reset(new UnifiedCandidate(*j, "unified"));
+          c.reset(new UniquifiedCandidate(*j, "uniquified"));
           *j = c;
         }
         c->Append(*i);

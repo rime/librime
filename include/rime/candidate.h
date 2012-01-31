@@ -104,12 +104,12 @@ class ShadowCandidate : public Candidate {
   shared_ptr<Candidate> item_;
 };        
 
-class UnifiedCandidate : public Candidate {
+class UniquifiedCandidate : public Candidate {
  public:
-  UnifiedCandidate(const shared_ptr<Candidate> &item,
-                   const std::string &type,
-                   const std::string &text = std::string(),
-                   const std::string &comment = std::string())
+  UniquifiedCandidate(const shared_ptr<Candidate> &item,
+                      const std::string &type,
+                      const std::string &text = std::string(),
+                      const std::string &comment = std::string())
       : Candidate(type, item->start(), item->end()),
         text_(text), comment_(comment) {
     Append(item);

@@ -193,8 +193,8 @@ void R10nTranslator::OnCommit(Context *ctx) {
   DictEntry commit_entry;
   BOOST_FOREACH(Composition::value_type &seg, *ctx->composition()) {
     shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
-    shared_ptr<UnifiedCandidate> unified = As<UnifiedCandidate>(cand);
-    if (unified) cand = unified->items().front();
+    shared_ptr<UniquifiedCandidate> uniquified = As<UniquifiedCandidate>(cand);
+    if (uniquified) cand = uniquified->items().front();
     shared_ptr<ShadowCandidate> shadow = As<ShadowCandidate>(cand);
     if (shadow) cand = shadow->item();
     shared_ptr<R10nCandidate> r10n_cand = As<R10nCandidate>(cand);

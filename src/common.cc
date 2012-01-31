@@ -37,7 +37,7 @@
 #include <rime/impl/reverse_lookup_translator.h>
 #include <rime/impl/table_translator.h>
 #include <rime/impl/trivial_translator.h>
-#include <rime/impl/unifier.h>
+#include <rime/impl/uniquifier.h>
 
 namespace rime {
 
@@ -90,7 +90,8 @@ void RegisterComponents() {
 
   // filters
   r.Register("simplifier", new Component<Simplifier>);
-  r.Register("unifier", new Component<Unifier>);
+  r.Register("uniquifier", new Component<Uniquifier>);
+  r.Register("unifier", new Component<Uniquifier>);  // compatibility
 }
 
 }  // namespace rime

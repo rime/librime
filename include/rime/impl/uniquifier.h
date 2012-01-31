@@ -13,9 +13,9 @@
 
 namespace rime {
 
-class Unifier : public Filter {
+class Uniquifier : public Filter {
  public:
-  explicit Unifier(Engine *engine);
+  explicit Uniquifier(Engine *engine);
 
   virtual bool Proceed(CandidateList *recruited,
                        CandidateList *candidates);
