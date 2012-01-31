@@ -61,6 +61,8 @@ reverse_lookup:
   dictionary: cangjie5
   prefix: "`"
   tips: 〔倉頡〕
+  preedit_format:
+    - "xlit|abcdefghijklmnopqrstuvwxyz|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符|"
 
 punctuator:
   import_preset: default

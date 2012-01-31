@@ -27,9 +27,11 @@ namespace rime {
 class ReverseLookupTranslation : public TableTranslation {
  public:
   ReverseLookupTranslation(const DictEntryIterator &iter,
+                           const std::string &input,
                            size_t start, size_t end,
+                           const std::string &preedit,
                            ReverseLookupDictionary *dict)
-      : TableTranslation(iter, start, end), dict_(dict) {}
+      : TableTranslation(iter, input, start, end, preedit), dict_(dict) {}
   virtual shared_ptr<Candidate> Peek();
  protected:
   ReverseLookupDictionary *dict_;
@@ -51,7 +53,8 @@ shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
       start_,
       end_,
       e->text,
-      !tips.empty() ? (quote_left + tips + quote_right) : e->comment));
+      !tips.empty() ? (quote_left + tips + quote_right) : e->comment,
+      preedit_));
   return cand;
 }
 
@@ -62,6 +65,8 @@ ReverseLookupTranslator::ReverseLookupTranslator(Engine *engine)
   if (!config) return;
   config->GetString("reverse_lookup/prefix", &prefix_);
   config->GetString("reverse_lookup/tips", &tips_);
+  formatter_.Load(config->GetList("reverse_lookup/preedit_format"));
+  
   DictionaryComponent *component = dynamic_cast<DictionaryComponent*>(
       Dictionary::Require("dictionary"));
   if (!component) return;
@@ -90,15 +95,20 @@ Translation* ReverseLookupTranslator::Query(const std::string &input,
   size_t start = 0;
   if (boost::starts_with(input, prefix_))
     start = prefix_.length();
+  std::string code(input.substr(start));
   
   Translation *translation = NULL;
   DictEntryIterator iter;
   if (start < input.length())
-    dict_->LookupWords(&iter, input.substr(start), false);
+    dict_->LookupWords(&iter, code, false);
   if (!iter.exhausted()) {
+    std::string preedit(input);
+    formatter_.Apply(&preedit);
     translation = new ReverseLookupTranslation(iter,
+                                               code,
                                                segment.start,
                                                segment.end,
+                                               preedit,
                                                rev_dict_.get());
   }
   else {

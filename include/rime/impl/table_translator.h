@@ -11,23 +11,30 @@
 
 #include <string>
 #include <rime/common.h>
+#include <rime/config.h>
 #include <rime/translation.h>
 #include <rime/translator.h>
+#include <rime/algo/algebra.h>
 #include <rime/dict/dictionary.h>
 
 namespace rime {
 
 class TableTranslation : public Translation {
  public:
-  TableTranslation(size_t start, size_t end);
-  TableTranslation(const DictEntryIterator& iter, size_t start, size_t end);
+  TableTranslation(const std::string& input, size_t start, size_t end,
+                   const std::string& preedit);
+  TableTranslation(const DictEntryIterator& iter,
+                   const std::string& input, size_t start, size_t end,
+                   const std::string& preedit);
   virtual bool Next();
   virtual shared_ptr<Candidate> Peek();
   
  protected:
   DictEntryIterator iter_;
+  std::string input_;
   size_t start_;
   size_t end_;
+  std::string preedit_;
 };
 
 class TableTranslator : public Translator {
@@ -41,6 +48,7 @@ class TableTranslator : public Translator {
  protected:
   scoped_ptr<Dictionary> dict_;
   bool enable_completion_;
+  Projection formatter_;
 };
 
 }  // namespace rime

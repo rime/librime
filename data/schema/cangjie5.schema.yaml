@@ -5,7 +5,7 @@
 schema:
   schema_id: cangjie5
   name: 倉頡五代
-  version: "0.9.3"
+  version: "0.9.5"
 
 switches:
   - name: ascii_mode
@@ -36,8 +36,14 @@ engine:
     - table_translator
     - reverse_lookup_translator
 
+speller:
+  alphabet: zyxwvutsrqponmlkjihgfedcba
+  delimiter: ";'"
+
 translator:
   dictionary: cangjie5
+  preedit_format:
+    - "xlit|abcdefghijklmnopqrstuvwxyz;'|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符··|"
 
 reverse_lookup:
   dictionary: luna_pinyin
@@ -53,4 +59,6 @@ key_binder:
 recognizer:
   import_preset: default
   patterns:
+    uppercase: "[A-Z][-'A-Za-z]*$"
+    cplusplus: "C[+#]+$"
     reverse_lookup: "`[a-z]*$"

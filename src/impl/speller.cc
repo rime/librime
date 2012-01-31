@@ -38,11 +38,12 @@ Processor::Result Speller::ProcessKeyEvent(
   int ch = key_event.keycode();
   Context *ctx = engine_->context();
   if (ctx->IsComposing()) {
-    if (initials_.find(ch) == std::string::npos)
+    if (alphabet_.find(ch) == std::string::npos &&
+        delimiter_.find(ch) == std::string::npos)
       return kNoop;
   }
   else {
-    if (alphabet_.find(ch) == std::string::npos)
+    if (initials_.find(ch) == std::string::npos)
       return kNoop;
   }
   EZLOGGERPRINT("Add to input: '%c', %d, '%s'", ch, key_event.keycode(), key_event.repr().c_str());

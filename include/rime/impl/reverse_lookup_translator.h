@@ -12,6 +12,7 @@
 #include <string>
 #include <rime/common.h>
 #include <rime/translation.h>
+#include <rime/algo/algebra.h>
 
 namespace rime {
 
@@ -29,6 +30,7 @@ class ReverseLookupTranslator : public Translator {
   scoped_ptr<ReverseLookupDictionary> rev_dict_;
   std::string prefix_;
   std::string tips_;
+  Projection formatter_;
 };
 
 }  // namespace rime

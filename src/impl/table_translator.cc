@@ -22,24 +22,29 @@ class LazyTableTranslation : public TableTranslation {
   static const size_t kInitialSearchLimit = 10;
   static const size_t kExpandingFactor = 10;
   
-  LazyTableTranslation(Dictionary *dict, const std::string &input,
-                       size_t start, size_t end);
+  LazyTableTranslation(const std::string &input,
+                       size_t start, size_t end,
+                       const std::string &preedit,
+                       Dictionary *dict);
   virtual bool Next();
   
  private:
   Dictionary *dict_;
-  std::string input_;
   size_t limit_;
 };
 
-TableTranslation::TableTranslation(size_t start, size_t end)
-    : start_(start), end_(end) {
+TableTranslation::TableTranslation(const std::string &input,
+                                   size_t start, size_t end,
+                                   const std::string &preedit)
+    : input_(input), start_(start), end_(end), preedit_(preedit) {
   set_exhausted(true);
 }
 
 TableTranslation::TableTranslation(const DictEntryIterator& iter,
-                                   size_t start, size_t end)
-    : iter_(iter), start_(start), end_(end) {
+                                   const std::string &input,
+                                   size_t start, size_t end,
+                                   const std::string &preedit)
+    : iter_(iter), input_(input), start_(start), end_(end), preedit_(preedit) {
   set_exhausted(iter_.exhausted());
 }
 
@@ -60,15 +65,17 @@ shared_ptr<Candidate> TableTranslation::Peek() {
       start_,
       end_,
       e->text,
-      e->comment));
+      e->comment,
+      preedit_));
   return cand;
 }
 
-LazyTableTranslation::LazyTableTranslation(Dictionary *dict,
-                                           const std::string &input,
-                                           size_t start, size_t end)
-    : TableTranslation(start, end),
-      dict_(dict), input_(input), limit_(kInitialSearchLimit) {
+LazyTableTranslation::LazyTableTranslation(const std::string &input,
+                                           size_t start, size_t end,
+                                           const std::string &preedit,
+                                           Dictionary *dict)
+    : TableTranslation(input, start, end, preedit),
+      dict_(dict), limit_(kInitialSearchLimit) {
   dict->LookupWords(&iter_, input, true, kInitialSearchLimit);
   set_exhausted(iter_.exhausted());
 }
@@ -104,6 +111,7 @@ TableTranslator::TableTranslator(Engine *engine)
   Config *config = engine->schema()->config();
   if (config) {
     config->GetBool("translator/enable_completion", &enable_completion_);
+    formatter_.Load(config->GetList("translator/preedit_format"));
   }
 
   Dictionary::Component *component = Dictionary::Require("dictionary");
@@ -124,19 +132,26 @@ Translation* TableTranslator::Query(const std::string &input,
   EZLOGGERPRINT("input = '%s', [%d, %d)",
                 input.c_str(), segment.start, segment.end);
 
+  std::string preedit(input);
+  formatter_.Apply(&preedit);
+  
   Translation *translation = NULL;
   if (enable_completion_) {
-    translation = new LazyTableTranslation(dict_.get(), input,
+    translation = new LazyTableTranslation(input,
                                            segment.start,
-                                           segment.start + input.length());
+                                           segment.start + input.length(),
+                                           preedit,
+                                           dict_.get());
   }
   else {
     DictEntryIterator iter;
     dict_->LookupWords(&iter, input, false);
     if (!iter.exhausted())
       translation = new TableTranslation(iter,
+                                         input,
                                          segment.start,
-                                         segment.start + input.length());
+                                         segment.start + input.length(),
+                                         preedit);
   }
   return translation;
 }
