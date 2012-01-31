@@ -22,7 +22,12 @@ struct node_t {
   }
 };
 
+const char kPrismFormatPrefix[] = "Rime::Prism/";
+const size_t kPrismFormatPrefixLen = sizeof(kPrismFormatPrefix) - 1;
+
 const char kPrismFormat[] = "Rime::Prism/1.0";
+
+const char kDefaultAlphabet[] = "abcdefghijklmnopqrstuvwxyz";
 
 }  // namespace
 
@@ -82,6 +87,12 @@ bool Prism::Load() {
     EZLOGGERPRINT("Metadata not found.");
     return false;
   }
+  if (strncmp(metadata_->format, kPrismFormatPrefix, kPrismFormatPrefixLen)) {
+    EZLOGGERPRINT("Invalid metadata.");
+    return false;
+  }
+  format_ = atof(&metadata_->format[kPrismFormatPrefixLen]);
+  
   char *array = metadata_->double_array.get();
   if (!array) {
     EZLOGGERPRINT("Double array image not found.");
@@ -92,7 +103,7 @@ bool Prism::Load() {
   trie_->set_array(array, array_size);
 
   spelling_map_ = NULL;
-  if (strcmp(metadata_->format, "Rime::Prism/1.0") >= 0) {
+  if (format_ >= 0.99) {
     spelling_map_ = metadata_->spelling_map.get();
   }
   return true;
@@ -157,6 +168,18 @@ bool Prism::Build(const Syllabary &syllabary,
   metadata->num_syllables = num_syllables;
   metadata->num_spellings = num_spellings;
   metadata_ = metadata;
+  // alphabet
+  {
+    std::set<char> alphabet;
+    for (size_t i = 0; i < num_spellings; ++i)
+      for (const char *p = keys[i]; *p; ++p)
+        alphabet.insert(*p);
+    char *p = metadata->alphabet;
+    std::set<char>::const_iterator c = alphabet.begin();
+    for (; c != alphabet.end(); ++p, ++c)
+      *p = *c;
+    *p = '\0';
+  }
   // saving double-array image
   char *array = Allocate<char>(image_size);
   if (!array) {
@@ -262,9 +285,9 @@ void Prism::ExpandSearch(const std::string &key, std::vector<Match> *result, siz
   while(!q.empty()) {
     node_t node = q.front();
     q.pop();
-    // TODO: configurable alphabet
-    for (char ch = 'a'; ch <= 'z'; ++ch) {
-      std::string k = node.key + ch;
+    const char *c = (format_ > 0.99) ? metadata_->alphabet : kDefaultAlphabet;
+    for (; *c; ++c) {
+      std::string k = node.key + *c;
       size_t k_pos = node.key.length();
       size_t n_pos = node.node_pos;
       ret = trie_->traverse(k.c_str(), n_pos, k_pos);

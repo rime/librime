@@ -46,6 +46,7 @@ struct Metadata {
   uint32_t double_array_size;
   OffsetPtr<char> double_array;
   OffsetPtr<SpellingMap> spelling_map;
+  char alphabet[256];
 };
 
 }  // namespace prism
@@ -72,7 +73,7 @@ class Prism : public MappedFile {
 
   Prism(const std::string &file_name)
       : MappedFile(file_name), trie_(new Darts::DoubleArray),
-        metadata_(NULL), spelling_map_(NULL) {}
+        metadata_(NULL), spelling_map_(NULL), format_(0.0) {}
 
   bool Load();
   bool Save();
@@ -96,6 +97,7 @@ class Prism : public MappedFile {
   scoped_ptr<Darts::DoubleArray> trie_;
   prism::Metadata* metadata_;
   prism::SpellingMap* spelling_map_;
+  double format_;
 };
 
 }  // namespace rime
