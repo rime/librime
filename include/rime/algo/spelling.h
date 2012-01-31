@@ -28,6 +28,8 @@ struct Spelling {
   SpellingProperties properties;
   Spelling() {}
   Spelling(const std::string& _str) : str(_str), properties() {}
+  bool operator== (const Spelling& other) { return str == other.str; }
+  bool operator< (const Spelling& other) { return str < other.str; }
 };
 
 }  // namespace rime

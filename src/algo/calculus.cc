@@ -66,11 +66,11 @@ Calculation* Transliteration::Parse(const std::vector<std::string>& args) {
   return NULL;
 }
 
-bool Transliteration::Apply(const Spelling& input, Spelling* output) {
-  if (input.str.empty() || !output)
+bool Transliteration::Apply(Spelling* spelling) {
+  if (!spelling || spelling->str.empty())
     return false;
   bool modified = false;
-  const char* p = input.str.c_str();
+  const char* p = spelling->str.c_str();
   const int buffer_len = 256;
   char buffer[buffer_len] = "";
   char* q = buffer;
@@ -88,8 +88,7 @@ bool Transliteration::Apply(const Spelling& input, Spelling* output) {
   }
   if (modified) {
     *q = '\0';
-    output->str.assign(buffer);
-    output->properties = input.properties;
+    spelling->str.assign(buffer);
   }
   return modified;
 }
@@ -109,14 +108,14 @@ Calculation* Transformation::Parse(const std::vector<std::string>& args) {
   return x;
 }
 
-bool Transformation::Apply(const Spelling& input, Spelling* output) {
-  if (input.str.empty() || !output)
+bool Transformation::Apply(Spelling* spelling) {
+  if (!spelling || spelling->str.empty())
     return false;
-  std::string result(boost::regex_replace(input.str, pattern_, replacement_));
-  if (result == input.str)
+  std::string result(boost::regex_replace(spelling->str,
+                                          pattern_, replacement_));
+  if (result == spelling->str)
     return false;
-  output->str.swap(result);
-  output->properties = input.properties;
+  spelling->str.swap(result);
   return true;
 }
 
@@ -133,12 +132,12 @@ Calculation* Erasion::Parse(const std::vector<std::string>& args) {
   return x;
 }
 
-bool Erasion::Apply(const Spelling& input, Spelling* output) {
-  if (input.str.empty() || !output)
+bool Erasion::Apply(Spelling* spelling) {
+  if (!spelling || spelling->str.empty())
     return false;
-  if (!boost::regex_match(input.str, pattern_))
+  if (!boost::regex_match(spelling->str, pattern_))
     return false;
-  output->str.clear();
+  spelling->str.clear();
   return true;
 }
 
@@ -172,11 +171,11 @@ Calculation* Abbreviation::Parse(const std::vector<std::string>& args) {
   return x;
 }
 
-bool Abbreviation::Apply(const Spelling& input, Spelling* output) {
-  bool result = Transformation::Apply(input, output);
+bool Abbreviation::Apply(Spelling* spelling) {
+  bool result = Transformation::Apply(spelling);
   if (result) {
-    output->properties.type = kAbbreviation;
-    output->properties.credibility *= 0.5;
+    spelling->properties.type = kAbbreviation;
+    spelling->properties.credibility *= 0.5;
   }
   return result;
 }

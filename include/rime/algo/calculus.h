@@ -25,7 +25,7 @@ class Calculation {
 
   Calculation() {}
   virtual ~Calculation() {}
-  virtual bool Apply(const Spelling& input, Spelling* output) = 0;
+  virtual bool Apply(Spelling* spelling) = 0;
   virtual bool addition() { return true; }
   virtual bool deletion() { return true; }
 };
@@ -44,7 +44,7 @@ class Calculus {
 class Transliteration : public Calculation {
  public:
   static Factory Parse;
-  bool Apply(const Spelling& input, Spelling* output);
+  bool Apply(Spelling* spelling);
   
  protected:
   std::map<uint32_t, uint32_t> char_map_;
@@ -54,7 +54,7 @@ class Transliteration : public Calculation {
 class Transformation : public Calculation {
  public:
   static Factory Parse;
-  bool Apply(const Spelling& input, Spelling* output);
+  bool Apply(Spelling* spelling);
   
  protected:
   boost::regex pattern_;
@@ -65,7 +65,7 @@ class Transformation : public Calculation {
 class Erasion : public Calculation {
  public:
   static Factory Parse;
-  bool Apply(const Spelling& input, Spelling* output);
+  bool Apply(Spelling* spelling);
   bool addition() { return false; }
 
  protected:
@@ -83,7 +83,7 @@ class Derivation : public Transformation {
 class Abbreviation : public Derivation {
  public:
   static Factory Parse;
-  bool Apply(const Spelling& input, Spelling* output);
+  bool Apply(Spelling* spelling);
 };
 
 }  // namespace rime
