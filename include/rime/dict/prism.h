@@ -4,7 +4,8 @@
 // Copyleft 2011 RIME Developers
 // License: GPLv3
 //
-// 2011-5-16 Zou xu <zouivex@gmail.com>
+// 2011-05-16 Zou Xu <zouivex@gmail.com>
+// 2012-01-26 GONG Chen <chen.sst@gmail.com>  spelling algebra support
 //
 
 #ifndef RIME_PRISM_H_
@@ -22,6 +23,18 @@ namespace rime {
 
 namespace prism {
 
+typedef int32_t SyllableId;
+
+struct SpellingDescriptor {
+  SyllableId syllable_id;
+  int32_t type;
+  double credibility;
+  String tips;
+};
+
+typedef List<SpellingDescriptor> SpellingMapItem;
+typedef Array<SpellingMapItem> SpellingMap;
+
 struct Metadata {
   static const int kFormatMaxLength = 32;
   char format[kFormatMaxLength];
@@ -31,21 +44,25 @@ struct Metadata {
   uint32_t num_spellings;
   uint32_t double_array_size;
   OffsetPtr<char> double_array;
+  OffsetPtr<SpellingMap> spelling_map;
 };
 
-}
+}  // namespace prism
+
+class Script;
 
 class Prism : public MappedFile {
  public:
   typedef Darts::DoubleArray::result_pair_type Match;
 
   Prism(const std::string &file_name)
-      : MappedFile(file_name), trie_(new Darts::DoubleArray), num_syllables_(0),
-      dict_file_checksum_(0), schema_file_checksum_(0) {}
+      : MappedFile(file_name), trie_(new Darts::DoubleArray),
+        metadata_(NULL), spelling_map_(NULL) {}
 
   bool Load();
   bool Save();
-  bool Build(const Syllabary &keyset,
+  bool Build(const Syllabary &syllabary,
+             const Script *script = NULL,
              uint32_t dict_file_checksum = 0,
              uint32_t schema_file_checksum = 0);
   
@@ -56,14 +73,13 @@ class Prism : public MappedFile {
 
   size_t array_size() const;
 
-  uint32_t dict_file_checksum() const { return dict_file_checksum_; }
-  uint32_t schema_file_checksum() const { return schema_file_checksum_; }
+  uint32_t dict_file_checksum() const;
+  uint32_t schema_file_checksum() const;
 
  private:
   scoped_ptr<Darts::DoubleArray> trie_;
-  size_t num_syllables_;
-  uint32_t dict_file_checksum_;
-  uint32_t schema_file_checksum_;
+  prism::Metadata* metadata_;
+  prism::SpellingMap* spelling_map_;
 };
 
 }  // namespace rime

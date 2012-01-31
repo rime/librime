@@ -17,7 +17,7 @@
 
 namespace rime {
 
-const char kTableFormat[] = "Rime::Table/0.9";
+const char kTableFormat[] = "Rime::Table/1.0";
 
 inline static bool node_less(const table::TrunkIndexNode &a,
                              const table::TrunkIndexNode &b) {

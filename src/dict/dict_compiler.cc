@@ -404,7 +404,7 @@ bool DictCompiler::BuildPrism(const std::string &schema_file,
   // build prism
   {
     prism_->Remove();
-    if (!prism_->Build(syllabary, dict_file_checksum, schema_file_checksum) ||
+    if (!prism_->Build(syllabary, NULL, dict_file_checksum, schema_file_checksum) ||
         !prism_->Save()) {
       return false;
     }

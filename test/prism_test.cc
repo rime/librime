@@ -21,6 +21,8 @@ class RimePrismTest : public ::testing::Test {
 
   virtual void SetUp() {
     prism_ = new Prism("prism_test.bin");
+    prism_->Remove();
+    
     std::set<std::string> keyset;
     keyset.insert("google");     // 4
     keyset.insert("good");       // 2
@@ -42,11 +44,10 @@ class RimePrismTest : public ::testing::Test {
 };
 
 TEST_F(RimePrismTest, SaveAndLoad) {
-  prism_->Remove();
-  prism_->Save();
+  EXPECT_TRUE(prism_->Save());
 
   Prism test(prism_->file_name());
-  test.Load();
+  EXPECT_TRUE(test.Load());
 
   EXPECT_EQ(prism_->array_size(), test.array_size());
 }
