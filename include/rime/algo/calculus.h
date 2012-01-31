@@ -67,6 +67,9 @@ class Erasion : public Calculation {
   static Factory Parse;
   bool Apply(const Spelling& input, Spelling* output);
   bool addition() { return false; }
+
+ protected:
+  boost::regex pattern_;
 };
 
 // derive/x/X/

@@ -11,8 +11,8 @@
 #include <rime/algo/calculus.h>
 
 const char* kTransliteration = "xlit abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
 const char* kTransformation = "xform/^([zcs])h(.*)$/$1$2/";
+const char* kErasion = "erase/^[czs]h[aoe]ng?$/";
 
 TEST(RimeCalculusTest, Transliteration) {
   rime::Calculus calc;
@@ -32,6 +32,21 @@ TEST(RimeCalculusTest, Transformation) {
   rime::Spelling so;
   EXPECT_TRUE(c->Apply(si, &so));
   EXPECT_EQ("sang", so.str);
+  // non-matching case
+  si.str = "bang";
+  so.str.clear();
+  EXPECT_FALSE(c->Apply(si, &so));
+}
+
+TEST(RimeCalculusTest, Erasion) {
+  rime::Calculus calc;
+  rime::scoped_ptr<rime::Calculation> c(calc.Parse(kErasion));
+  ASSERT_TRUE(c);
+  EXPECT_FALSE(c->addition());
+  EXPECT_TRUE(c->deletion());
+  rime::Spelling si("shang");
+  rime::Spelling so;
+  EXPECT_TRUE(c->Apply(si, &so));
   // non-matching case
   si.str = "bang";
   so.str.clear();

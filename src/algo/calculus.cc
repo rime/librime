@@ -15,6 +15,7 @@ namespace rime {
 Calculus::Calculus() {
   Register("xlit", &Transliteration::Parse);
   Register("xform", &Transformation::Parse);
+  Register("erase", &Erasion::Parse);
 }
 
 void Calculus::Register(const std::string& token,
@@ -113,6 +114,25 @@ bool Transformation::Apply(const Spelling& input, Spelling* output) {
     return false;
   output->str.swap(result);
   return true;
+}
+
+// Erasion
+
+Calculation* Erasion::Parse(const std::vector<std::string>& args) {
+  if (args.size() < 2)
+    return NULL;
+  const std::string& pattern(args[1]);
+  if (pattern.empty())
+    return NULL;
+  Erasion* x = new Erasion;
+  x->pattern_.assign(pattern);
+  return x;
+}
+
+bool Erasion::Apply(const Spelling& input, Spelling* output) {
+  if (input.str.empty())
+    return false;
+  return boost::regex_match(input.str, pattern_);
 }
 
 }  // namespace rime
