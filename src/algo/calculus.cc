@@ -7,7 +7,6 @@
 // 2012-01-17 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #include <utf8.h>
 #include <rime/algo/calculus.h>
 
@@ -15,6 +14,7 @@ namespace rime {
 
 Calculus::Calculus() {
   Register("xlit", &Transliteration::Parse);
+  Register("xform", &Transformation::Parse);
 }
 
 void Calculus::Register(const std::string& token,
@@ -39,6 +39,8 @@ Calculation* Calculus::Parse(const std::string& definition) {
   return result;
 }
 
+// Transliteration
+
 Calculation* Transliteration::Parse(const std::vector<std::string>& args) {
   if (args.size() < 3)
     return NULL;
@@ -54,9 +56,9 @@ Calculation* Transliteration::Parse(const std::vector<std::string>& args) {
     char_map[cl] = cr;
   }
   if (cl == 0 && cr == 0) {
-    Transliteration* result = new Transliteration;
-    result->char_map_.swap(char_map);
-    return result;
+    Transliteration* x = new Transliteration;
+    x->char_map_.swap(char_map);
+    return x;
   }
   return NULL;
 }
@@ -86,6 +88,31 @@ bool Transliteration::Apply(const Spelling& input, Spelling* output) {
     output->str.assign(buffer);
   }
   return modified;
+}
+
+// Transformation
+
+Calculation* Transformation::Parse(const std::vector<std::string>& args) {
+  if (args.size() < 3)
+    return NULL;
+  const std::string& left(args[1]);
+  const std::string& right(args[2]);
+  if (left.empty() || right.empty())
+    return NULL;
+  Transformation* x = new Transformation;
+  x->pattern_.assign(left);
+  x->replacement_.assign(right);
+  return x;
+}
+
+bool Transformation::Apply(const Spelling& input, Spelling* output) {
+  if (input.str.empty() || !output)
+    return false;
+  std::string result(boost::regex_replace(input.str, pattern_, replacement_));
+  if (result == input.str)
+    return false;
+  output->str.swap(result);
+  return true;
 }
 
 }  // namespace rime

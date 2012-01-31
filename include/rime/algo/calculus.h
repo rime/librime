@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 #include <stdint.h>
+#include <boost/regex.hpp>
 #include "spelling.h"
 
 namespace rime {
@@ -54,6 +55,10 @@ class Transformation : public Calculation {
  public:
   static Factory Parse;
   bool Apply(const Spelling& input, Spelling* output);
+  
+ protected:
+  boost::regex pattern_;
+  std::string replacement_;
 };
 
 // erase/x/

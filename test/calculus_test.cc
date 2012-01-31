@@ -12,7 +12,9 @@
 
 const char* kTransliteration = "xlit abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-TEST(RimedCalculusTest, Transliteration) {
+const char* kTransformation = "xform/^([zcs])h(.*)$/$1$2/";
+
+TEST(RimeCalculusTest, Transliteration) {
   rime::Calculus calc;
   rime::scoped_ptr<rime::Calculation> c(calc.Parse(kTransliteration));
   ASSERT_TRUE(c);
@@ -22,3 +24,16 @@ TEST(RimedCalculusTest, Transliteration) {
   EXPECT_EQ("ABRACADABRA", so.str);
 }
 
+TEST(RimeCalculusTest, Transformation) {
+  rime::Calculus calc;
+  rime::scoped_ptr<rime::Calculation> c(calc.Parse(kTransformation));
+  ASSERT_TRUE(c);
+  rime::Spelling si("shang");
+  rime::Spelling so;
+  EXPECT_TRUE(c->Apply(si, &so));
+  EXPECT_EQ("sang", so.str);
+  // non-matching case
+  si.str = "bang";
+  so.str.clear();
+  EXPECT_FALSE(c->Apply(si, &so));
+}
