@@ -26,6 +26,7 @@
 #endif
 #include <yaml-cpp/yaml.h>
 #include <rime/service.h>
+#include <rime/algo/algebra.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
 #include <rime/dict/prism.h>
@@ -398,13 +399,26 @@ bool DictCompiler::BuildPrism(const std::string &schema_file,
   Syllabary syllabary;
   if (!table_->Load() || !table_->GetSyllabary(&syllabary) || syllabary.empty())
     return false;
-  // TODO: spelling algebra
+  // apply spelling algebra
+  Script script;
   if (!schema_file.empty()) {
+    Projection p;
+    Config config(schema_file);
+    ConfigListPtr algebra = config.GetList("speller/algebra");
+    if (algebra && p.Load(algebra)) {
+      BOOST_FOREACH(Syllabary::value_type const& x, syllabary) {
+        script.AddSyllable(x);
+      }
+      if (!p.Apply(&script)) {
+        script.clear();
+      }
+    }
   }
   // build prism
   {
     prism_->Remove();
-    if (!prism_->Build(syllabary, NULL, dict_file_checksum, schema_file_checksum) ||
+    if (!prism_->Build(syllabary, script.empty() ? NULL : &script,
+                       dict_file_checksum, schema_file_checksum) ||
         !prism_->Save()) {
       return false;
     }

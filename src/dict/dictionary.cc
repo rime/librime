@@ -209,18 +209,24 @@ size_t Dictionary::LookupWords(DictEntryIterator *result,
   EZLOGGERPRINT("found %u matching keys thru the prism.", keys.size());
   size_t code_length(str_code.length());
   BOOST_FOREACH(Prism::Match &match, keys) {
-    int syllable_id = match.value;
-    std::string remaining_code;
-    if (match.length > code_length) {
-      const char *syllable = table_->GetSyllableById(syllable_id);
-      size_t syllable_code_length = syllable ? strlen(syllable) : 0;
-      if (syllable_code_length > code_length)
-        remaining_code = syllable + code_length;
-    }
-    const TableAccessor a(table_->QueryWords(syllable_id));
-    if (!a.exhausted()) {
-      EZDBGONLYLOGGERVAR(remaining_code);
-      result->AddChunk(dictionary::Chunk(a, remaining_code));
+    SpellingAccessor accessor(prism_->QuerySpelling(match.value));
+    while (!accessor.exhausted()) {
+      int syllable_id = accessor.syllable_id();
+      SpellingType type = accessor.properties().type;
+      accessor.Next();
+      if (type > kNormalSpelling) continue;
+      std::string remaining_code;
+      if (match.length > code_length) {
+        const char *syllable = table_->GetSyllableById(syllable_id);
+        size_t syllable_code_length = syllable ? strlen(syllable) : 0;
+        if (syllable_code_length > code_length)
+          remaining_code = syllable + code_length;
+      }
+      const TableAccessor a(table_->QueryWords(syllable_id));
+      if (!a.exhausted()) {
+        EZDBGONLYLOGGERVAR(remaining_code);
+        result->AddChunk(dictionary::Chunk(a, remaining_code));
+      }
     }
   }
   return keys.size();

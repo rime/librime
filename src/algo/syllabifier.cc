@@ -35,9 +35,9 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
     // record a visit to the vertex
     VertexMap::iterator it = graph->vertices.find(current_pos);
     if (it == graph->vertices.end())
-      graph->vertices.insert(vertex);
-    else if (vertex.second < it->second)  // favor normal spelling
-      it->second = vertex.second;
+      graph->vertices.insert(vertex);  // preferred spelling type comes first
+    else
+      continue;  // discard worse spelling types
 
     // see where we can go by advancing a syllable
     std::vector<Prism::Match> matches;
@@ -54,14 +54,25 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
         if (end_pos > farthest)
           farthest = end_pos;
         SpellingMap &spellings(end_vertices[end_pos]);
-        // TODO:
-        // since SpellingAlgebra is not available yet,
-        // we assume spelling resembles exactly the syllable itself.
-        SyllableId syllable_id = m.value;
-        // add a syllable with default properties to the edge's spelling-to-syllable map
-        spellings.insert(SpellingMap::value_type(syllable_id, SpellingProperties()));
-        // again, we only have normal spellings for now
-        queue.push(Vertex(end_pos, kNormalSpelling));
+        SpellingType end_vertex_type = kInvalidSpelling;
+        // when spelling algebra is enabled, a spelling evaluates to a set of syllables;
+        // otherwise, it resembles exactly the syllable itself.
+        SpellingAccessor accessor(prism.QuerySpelling(m.value));
+        while (!accessor.exhausted()) {
+          SyllableId syllable_id(accessor.syllable_id());
+          SpellingProperties props(accessor.properties());
+          // add a syllable with properties to the edge's spelling-to-syllable map
+          spellings.insert(SpellingMap::value_type(syllable_id, props));
+          if (props.type < end_vertex_type) {
+            end_vertex_type = props.type;
+          }
+          accessor.Next();
+        }
+        // render the vertex type
+        if (end_vertex_type < vertex.second) {
+          end_vertex_type = vertex.second;
+        }
+        queue.push(Vertex(end_pos, end_vertex_type));
       }
     }
   }
@@ -119,16 +130,19 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
         if (m.length < code_length) continue;
         end_pos = input.length();
         SpellingMap &spellings(end_vertices[end_pos]);
-        // TODO:
-        // since SpellingAlgebra is not available yet,
-        // we assume spelling resembles exactly the syllable itself.
-        SyllableId syllable_id = m.value;
-        // add a syllable with default properties to the edge's spelling-to-syllable map
-        SpellingProperties prop;
-        prop.type = kCompletion;
-        prop.credibility = 0.5;
-        spellings.insert(SpellingMap::value_type(syllable_id, prop));
-        // again, we only have normal spellings for now
+        // when spelling algebra is enabled, a spelling evaluates to a set of syllables;
+        // otherwise, it resembles exactly the syllable itself.
+        SpellingAccessor accessor(prism.QuerySpelling(m.value));
+        while (!accessor.exhausted()) {
+          SyllableId syllable_id(accessor.syllable_id());
+          SpellingProperties props(accessor.properties());
+          if (props.type > kNormalSpelling) continue;
+          props.type = kCompletion;
+          props.credibility *= 0.5;
+          // add a syllable with properties to the edge's spelling-to-syllable map
+          spellings.insert(SpellingMap::value_type(syllable_id, props));
+          accessor.Next();
+        }
         queue.push(Vertex(end_pos, kCompletion));
       }
       farthest = end_pos;

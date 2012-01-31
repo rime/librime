@@ -28,6 +28,44 @@ const char kPrismFormat[] = "Rime::Prism/1.0";
 
 namespace rime {
 
+SpellingAccessor::SpellingAccessor(prism::SpellingMap* spelling_map, int spelling_id)
+    : spelling_id_(spelling_id), iter_(NULL), end_(NULL) {
+  if (spelling_map && spelling_id < spelling_map->size) {
+    iter_ = spelling_map->at[spelling_id].begin();
+    end_ = spelling_map->at[spelling_id].end();
+  }
+}
+
+bool SpellingAccessor::Next() {
+  if (exhausted())
+    return false;
+  if (!iter_ || ++iter_ >= end_)
+      spelling_id_ = -1;
+  return exhausted();
+}
+
+bool SpellingAccessor::exhausted() const {
+  return spelling_id_ == -1;
+}
+
+int SpellingAccessor::syllable_id() const {
+  if (iter_ && iter_ < end_)
+    return iter_->syllable_id;
+  else
+    return spelling_id_;
+}
+
+const SpellingProperties SpellingAccessor::properties() const {
+  SpellingProperties props;
+  if (iter_ && iter_ < end_) {
+    props.type = static_cast<SpellingType>(iter_->type);
+    props.credibility = iter_->credibility;
+    if (iter_->tips.c_str())
+      props.tips = iter_->tips.c_str();
+  }
+  return props;
+}
+
 bool Prism::Load() {
   EZLOGGERPRINT("Load file: %s", file_name().c_str());
 
@@ -53,9 +91,10 @@ bool Prism::Load() {
   EZLOGGERPRINT("Found double array image of size %u.", array_size);
   trie_->set_array(array, array_size);
 
-  // TODO:
   spelling_map_ = NULL;
-
+  if (strcmp(metadata_->format, "Rime::Prism/1.0") >= 0) {
+    spelling_map_ = metadata_->spelling_map.get();
+  }
   return true;
 }
 
@@ -248,6 +287,10 @@ void Prism::ExpandSearch(const std::string &key, std::vector<Match> *result, siz
       }
     }
   }
+}
+
+const SpellingAccessor Prism::QuerySpelling(int spelling_id) {
+  return SpellingAccessor(spelling_map_, spelling_id);
 }
 
 size_t Prism::array_size() const {

@@ -14,7 +14,8 @@
 
 namespace rime {
 
-enum SpellingType { kNormalSpelling, kAbbreviation, kCompletion };
+enum SpellingType { kNormalSpelling, kAbbreviation, kCompletion,
+                    kInvalidSpelling };
 
 struct SpellingProperties {
   SpellingType type;

@@ -16,6 +16,7 @@
 #include <vector>
 #include <darts.h>
 #include <rime/common.h>
+#include <rime/algo/spelling.h>
 #include <rime/dict/mapped_file.h>
 #include <rime/dict/vocabulary.h>
 
@@ -49,6 +50,20 @@ struct Metadata {
 
 }  // namespace prism
 
+class SpellingAccessor {
+ public:
+  SpellingAccessor(prism::SpellingMap* spelling_map, int spelling_id);
+  bool Next();
+  bool exhausted() const;
+  int syllable_id() const;
+  const SpellingProperties properties() const;
+  
+ protected:
+  int spelling_id_;
+  prism::SpellingDescriptor* iter_;
+  prism::SpellingDescriptor* end_;
+};
+
 class Script;
 
 class Prism : public MappedFile {
@@ -70,6 +85,7 @@ class Prism : public MappedFile {
   bool GetValue(const std::string &key, int *value);
   void CommonPrefixSearch(const std::string &key, std::vector<Match> *result);
   void ExpandSearch(const std::string &key, std::vector<Match> *result, size_t limit);
+  const SpellingAccessor QuerySpelling(int spelling_id);
 
   size_t array_size() const;
 
