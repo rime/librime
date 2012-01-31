@@ -11,21 +11,14 @@
 #define RIME_SYLLABIFIER_H_
 
 #include <map>
+#include <string>
+#include "spelling.h"
 
 namespace rime {
 
 class Prism;
 
 typedef int SyllableId;
-
-enum SpellingType { kNormalSpelling, kAbbreviation, kCompletion };
-
-struct SpellingProperties {
-  SpellingType type;
-  double credibility;
-  std::string tips;
-  SpellingProperties() : type(kNormalSpelling), credibility(1.0) {}
-};
 
 typedef std::map<SyllableId, SpellingProperties> SpellingMap;
 typedef std::map<size_t, SpellingType> VertexMap;
