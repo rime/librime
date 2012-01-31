@@ -79,15 +79,13 @@ class R10nTranslation : public Translation {
         user_phrase_index_(0) {
     set_exhausted(true);
   }
-
   bool Evaluate(Dictionary *dict, UserDictionary *user_dict);
-  const std::string GetPreeditString(const R10nCandidate &cand) const;
-  
   virtual bool Next();
   virtual shared_ptr<Candidate> Peek();
 
  protected:
   void CheckEmpty();
+  const std::string GetPreeditString(const R10nCandidate &cand) const;
   shared_ptr<DictEntry> SimplisticSentenceMaking(Dictionary *dict,
                                                  UserDictionary *user_dict);
 
@@ -108,13 +106,9 @@ class R10nTranslation : public Translation {
 class R10nCandidate : public Candidate {
  public:
   R10nCandidate(size_t start, size_t end,
-                const shared_ptr<DictEntry> &entry,
-                const R10nTranslation *translation)
+                const shared_ptr<DictEntry> &entry)
       : Candidate("zh", start, end),
         entry_(entry) {
-    if (translation && entry_->preedit.empty()) {
-      entry_->preedit = translation->GetPreeditString(*this);
-    }
   }
   virtual const std::string& text() const {
     return entry_->text;
@@ -124,6 +118,9 @@ class R10nCandidate : public Candidate {
   }
   virtual const std::string preedit() const {
     return entry_->preedit;
+  }
+  void set_preedit(const std::string &preedit) {
+    entry_->preedit = preedit;
   }
   const Code& code() const {
     return entry_->code;
@@ -143,6 +140,7 @@ R10nTranslator::R10nTranslator(Engine *engine)
   if (config) {
     config->GetString("speller/delimiter", &delimiters_);
     config->GetBool("translator/enable_completion", &enable_completion_);
+    formatter_.Load(config->GetList("translator/preedit_format"));
   }
   if (delimiters_.empty()) {
     delimiters_ = " ";
@@ -187,6 +185,12 @@ Translation* R10nTranslator::Query(const std::string &input, const Segment &segm
     return result;
   else
     return NULL;
+}
+
+const std::string R10nTranslator::FormatPreedit(const std::string& preedit) {
+  std::string result(preedit);
+  formatter_.Apply(&result);
+  return result;
 }
 
 void R10nTranslator::OnCommit(Context *ctx) {
@@ -255,10 +259,12 @@ const std::string R10nTranslation::GetPreeditString(const R10nCandidate &cand) c
   state.code = &cand.code();
   state.end_pos = cand.end() - start_;
   bool success = DelimitSyllablesDfs(&state, cand.start() - start_, 0);
-  if (success)
-    return state.output;
-  else
+  if (success) {
+    return translator_->FormatPreedit(state.output);
+  }
+  else {
     return std::string();
+  }
 }
 
 bool R10nTranslation::Next() {
@@ -307,32 +313,30 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
   if (phrase_ && phrase_iter_ != phrase_->rend()) {
     phrase_code_length = phrase_iter_->first;
   }
+  shared_ptr<R10nCandidate> cand;
   if (user_phrase_code_length > 0 &&
       user_phrase_code_length >= phrase_code_length) {
     DictEntryList &entries(user_phrase_iter_->second);
     const shared_ptr<DictEntry> &e(entries[user_phrase_index_]);
     EZDBGONLYLOGGERVAR(user_phrase_code_length);
     EZDBGONLYLOGGERVAR(e->text);
-    shared_ptr<Candidate> cand(new R10nCandidate(
-        start_,
-        start_ + user_phrase_code_length,
-        e,
-        this));
-    return cand;
+    cand.reset(new R10nCandidate(start_,
+                                 start_ + user_phrase_code_length,
+                                 e));
   }
-  if (phrase_code_length > 0) {
+  else if (phrase_code_length > 0) {
     DictEntryIterator &iter(phrase_iter_->second);
     const shared_ptr<DictEntry> &e(iter.Peek());
     EZDBGONLYLOGGERVAR(phrase_code_length);
     EZDBGONLYLOGGERVAR(e->text);
-    shared_ptr<Candidate> cand(new R10nCandidate(
-        start_,
-        start_ + phrase_code_length,
-        e,
-        this));
-    return cand;
+    cand.reset(new R10nCandidate(start_,
+                                 start_ + phrase_code_length,
+                                 e));
   }
-  return shared_ptr<Candidate>();
+  if (cand && cand->preedit().empty()) {
+    cand->set_preedit(GetPreeditString(*cand));
+  }
+  return cand;
 }
 
 void R10nTranslation::CheckEmpty() {

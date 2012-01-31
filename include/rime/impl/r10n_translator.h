@@ -13,6 +13,7 @@
 #include <rime/common.h>
 #include <rime/translation.h>
 #include <rime/translator.h>
+#include <rime/algo/algebra.h>
 
 namespace rime {
 
@@ -29,6 +30,7 @@ class R10nTranslator : public Translator {
 
   virtual Translation* Query(const std::string &input,
                              const Segment &segment);
+  const std::string FormatPreedit(const std::string &preedit);
 
   // options
   const std::string& delimiters() const { return delimiters_; }
@@ -41,6 +43,7 @@ class R10nTranslator : public Translator {
   scoped_ptr<UserDictionary> user_dict_;
   std::string delimiters_;
   bool enable_completion_;
+  Projection formatter_;
   boost::signals::connection connection_;
 };
 
