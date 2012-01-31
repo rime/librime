@@ -12,7 +12,7 @@
 #include <vector>
 #include <utility>
 #include <boost/foreach.hpp>
-#include <rime/dict/syllabifier.h>
+#include <rime/algo/syllabifier.h>
 #include <rime/dict/table.h>
 
 namespace rime {

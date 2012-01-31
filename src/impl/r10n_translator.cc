@@ -21,7 +21,7 @@
 #include <rime/segmentation.h>
 #include <rime/translation.h>
 #include <rime/dict/dictionary.h>
-#include <rime/dict/syllabifier.h>
+#include <rime/algo/syllabifier.h>
 #include <rime/dict/user_dictionary.h>
 #include <rime/impl/r10n_translator.h>
 

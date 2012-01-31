@@ -13,7 +13,7 @@
 #include <vector>
 #include <gtest/gtest.h>
 #include <rime/dict/prism.h>
-#include <rime/dict/syllabifier.h>
+#include <rime/algo/syllabifier.h>
 
 class RimeSyllabifierTest : public ::testing::Test {
  public:

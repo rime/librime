@@ -14,8 +14,8 @@
 #include <rime/common.h>
 #include <rime/config.h>
 #include <rime/schema.h>
-#include <rime/dict/algo.h>
-#include <rime/dict/syllabifier.h>
+#include <rime/algo/dynamics.h>
+#include <rime/algo/syllabifier.h>
 #include <rime/dict/table.h>
 #include <rime/dict/user_db.h>
 #include <rime/dict/user_dictionary.h>

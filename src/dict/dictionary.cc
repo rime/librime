@@ -13,7 +13,7 @@
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/dict/dictionary.h>
-#include <rime/dict/syllabifier.h>
+#include <rime/algo/syllabifier.h>
 
 namespace rime {
 
