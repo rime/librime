@@ -16,6 +16,8 @@ Calculus::Calculus() {
   Register("xlit", &Transliteration::Parse);
   Register("xform", &Transformation::Parse);
   Register("erase", &Erasion::Parse);
+  Register("derive", &Derivation::Parse);
+  Register("abbrev", &Abbreviation::Parse);
 }
 
 void Calculus::Register(const std::string& token,
@@ -87,6 +89,7 @@ bool Transliteration::Apply(const Spelling& input, Spelling* output) {
   if (modified) {
     *q = '\0';
     output->str.assign(buffer);
+    output->properties = input.properties;
   }
   return modified;
 }
@@ -113,6 +116,7 @@ bool Transformation::Apply(const Spelling& input, Spelling* output) {
   if (result == input.str)
     return false;
   output->str.swap(result);
+  output->properties = input.properties;
   return true;
 }
 
@@ -130,9 +134,51 @@ Calculation* Erasion::Parse(const std::vector<std::string>& args) {
 }
 
 bool Erasion::Apply(const Spelling& input, Spelling* output) {
-  if (input.str.empty())
+  if (input.str.empty() || !output)
     return false;
-  return boost::regex_match(input.str, pattern_);
+  if (!boost::regex_match(input.str, pattern_))
+    return false;
+  output->str.clear();
+  return true;
+}
+
+// Derivation
+
+Calculation* Derivation::Parse(const std::vector<std::string>& args) {
+  if (args.size() < 3)
+    return NULL;
+  const std::string& left(args[1]);
+  const std::string& right(args[2]);
+  if (left.empty() || right.empty())
+    return NULL;
+  Derivation* x = new Derivation;
+  x->pattern_.assign(left);
+  x->replacement_.assign(right);
+  return x;
+}
+
+// Abbreviation
+
+Calculation* Abbreviation::Parse(const std::vector<std::string>& args) {
+  if (args.size() < 3)
+    return NULL;
+  const std::string& left(args[1]);
+  const std::string& right(args[2]);
+  if (left.empty() || right.empty())
+    return NULL;
+  Abbreviation* x = new Abbreviation;
+  x->pattern_.assign(left);
+  x->replacement_.assign(right);
+  return x;
+}
+
+bool Abbreviation::Apply(const Spelling& input, Spelling* output) {
+  bool result = Transformation::Apply(input, output);
+  if (result) {
+    output->properties.type = kAbbreviation;
+    output->properties.credibility *= 0.5;
+  }
+  return result;
 }
 
 }  // namespace rime
