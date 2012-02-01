@@ -329,7 +329,7 @@ bool DictCompiler::BuildTable(const std::string &dict_file, uint32_t checksum) {
   std::string dict_name;
   std::string dict_version;
   std::string sort_order;
-  bool use_preset_vocabulary;
+  bool use_preset_vocabulary = false;
   {
     const YAML::Node *name_node = doc.FindValue("name");
     const YAML::Node *version_node = doc.FindValue("version");

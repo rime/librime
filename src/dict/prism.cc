@@ -35,7 +35,7 @@ namespace rime {
 
 SpellingAccessor::SpellingAccessor(prism::SpellingMap* spelling_map, int spelling_id)
     : spelling_id_(spelling_id), iter_(NULL), end_(NULL) {
-  if (spelling_map && spelling_id < spelling_map->size) {
+  if (spelling_map && spelling_id < static_cast<int>(spelling_map->size)) {
     iter_ = spelling_map->at[spelling_id].begin();
     end_ = spelling_map->at[spelling_id].end();
   }
