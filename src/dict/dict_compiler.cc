@@ -293,7 +293,12 @@ bool DictCompiler::Compile(const std::string &dict_file, const std::string &sche
     }
     prism_->Close();
   }
-  TreeDb db(dict_name_ + ".reverse");
+  TreeDb deprecated_db(dict_name_ + ".reverse.kct");
+  if (deprecated_db.Exists()) {
+    deprecated_db.Remove();
+    EZLOGGERPRINT("removed deprecated db '%s'.", deprecated_db.name());
+  }
+  TreeDb db(dict_name_ + ".reverse.bin");
   if (db.Exists() && db.Open()) {
     std::string checksum;
     if (db.Fetch("\x01/dict_file_checksum", &checksum) &&

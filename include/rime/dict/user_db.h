@@ -50,6 +50,7 @@ class TreeDb {
   bool Exists() const;
   bool Remove();
   bool Open();
+  bool OpenReadOnly();
   bool Close();
 
   const TreeDbAccessor Query(const std::string &key);

@@ -54,7 +54,7 @@ bool TreeDbAccessor::exhausted() {
 
 TreeDb::TreeDb(const std::string &name) : name_(name), loaded_(false) {
   boost::filesystem::path path(Service::instance().deployer().user_data_dir);
-  file_name_ = (path / name).string() + ".kct";
+  file_name_ = (path / name).string();
   Initialize();
 }
 
@@ -121,6 +121,15 @@ bool TreeDb::Open() {
   return loaded_;
 }
 
+bool TreeDb::OpenReadOnly() {
+  if (loaded()) return false;
+  loaded_ = db_->open(file_name(), kyotocabinet::TreeDB::OREADER);
+  if (!loaded_) {
+    EZLOGGERPRINT("Error opening db '%s' read-only.", name_.c_str());
+  }
+  return loaded_;
+}
+
 bool TreeDb::Close() {
   if (!loaded()) return false;
   db_->close();
@@ -138,7 +147,7 @@ bool TreeDb::CreateMetadata() {
 
 // UserDb members
 
-UserDb::UserDb(const std::string &name) : TreeDb(name + ".userdb") {
+UserDb::UserDb(const std::string &name) : TreeDb(name + ".userdb.kct") {
 }
 
 bool UserDb::CreateMetadata() {
