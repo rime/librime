@@ -100,7 +100,7 @@ Calculation* Transformation::Parse(const std::vector<std::string>& args) {
     return NULL;
   const std::string& left(args[1]);
   const std::string& right(args[2]);
-  if (left.empty() || right.empty())
+  if (left.empty())
     return NULL;
   Transformation* x = new Transformation;
   x->pattern_.assign(left);
@@ -148,7 +148,7 @@ Calculation* Derivation::Parse(const std::vector<std::string>& args) {
     return NULL;
   const std::string& left(args[1]);
   const std::string& right(args[2]);
-  if (left.empty() || right.empty())
+  if (left.empty())
     return NULL;
   Derivation* x = new Derivation;
   x->pattern_.assign(left);
@@ -163,7 +163,7 @@ Calculation* Abbreviation::Parse(const std::vector<std::string>& args) {
     return NULL;
   const std::string& left(args[1]);
   const std::string& right(args[2]);
-  if (left.empty() || right.empty())
+  if (left.empty())
     return NULL;
   Abbreviation* x = new Abbreviation;
   x->pattern_.assign(left);
