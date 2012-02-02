@@ -296,7 +296,7 @@ bool DictCompiler::Compile(const std::string &dict_file, const std::string &sche
   TreeDb deprecated_db(dict_name_ + ".reverse.kct");
   if (deprecated_db.Exists()) {
     deprecated_db.Remove();
-    EZLOGGERPRINT("removed deprecated db '%s'.", deprecated_db.name());
+    EZLOGGERPRINT("removed deprecated db '%s'.", deprecated_db.name().c_str());
   }
   TreeDb db(dict_name_ + ".reverse.bin");
   if (db.Exists() && db.Open()) {
