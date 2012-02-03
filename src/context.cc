@@ -32,6 +32,10 @@ const std::string Context::GetCommitText() const {
   return composition_->GetCommitText();
 }
 
+const std::string Context::GetScriptText() const {
+  return composition_->GetScriptText();
+}
+
 void Context::GetPreedit(Preedit *preedit) const {
   if (!prompt_.empty()) {
     preedit->text = prompt_;

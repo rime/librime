@@ -82,6 +82,11 @@ struct DfsState {
       return false;
     return NextEntry();
   }
+  bool Backdate(const std::string &prefix) {
+    if (!accessor->Backward(prefix))
+      return false;
+    return NextEntry();
+  }
 };
 
 void DfsState::SaveEntry(size_t pos) {
@@ -169,6 +174,7 @@ bool UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
       }
       // 'b |e ' vs. 'b y \tBy'
     }
+    state->Backdate(current_prefix);
   }
   return true;  // finished traversing the syllable graph
 }

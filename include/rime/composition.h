@@ -27,6 +27,7 @@ class Composition : public Segmentation {
   bool HasFinishedComposition() const;
   void GetPreedit(Preedit *preedit) const;
   const std::string GetCommitText() const;
+  const std::string GetScriptText() const;
   const std::string GetDebugText() const;
 };
 

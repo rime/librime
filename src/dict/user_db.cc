@@ -39,6 +39,10 @@ bool TreeDbAccessor::Forward(const std::string &key) {
   return cursor_ && cursor_->jump(key);
 }
 
+bool TreeDbAccessor::Backward(const std::string &key) {
+  return cursor_ && cursor_->jump_back(key);
+}
+
 bool TreeDbAccessor::GetNextRecord(std::string *key, std::string *value) {
   if (!cursor_ || !key || !value)
     return false;

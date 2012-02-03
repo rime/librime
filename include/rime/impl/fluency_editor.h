@@ -17,7 +17,7 @@ namespace rime {
 
 class FluencyEditor : public Processor {
  public:
-  FluencyEditor(Engine *engine) : Processor(engine) {}
+  FluencyEditor(Engine *engine);
   virtual ~FluencyEditor() {}
   virtual Result ProcessKeyEvent(const KeyEvent &key_event);
 };

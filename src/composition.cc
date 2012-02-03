@@ -46,7 +46,7 @@ void Composition::GetPreedit(Preedit *preedit) const {
     }
     else { // highlighting
       preedit->sel_start = text_len;
-      const std::string &custom_preedit = cand->preedit();
+      const std::string &custom_preedit(cand->preedit());
       if (!custom_preedit.empty())
         preedit->text += custom_preedit;
       else
@@ -67,6 +67,28 @@ const std::string Composition::GetCommitText() const {
     const shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
     if (cand) {
       result += cand->text();
+      end = cand->end();
+    }
+  }
+  if (input_.length() > end) {
+    result += input_.substr(end);
+  }
+  return result;
+}
+
+const std::string Composition::GetScriptText() const {
+  std::string result;
+  size_t start = 0;
+  size_t end = 0;
+  BOOST_FOREACH(const Segment &seg, *this) {
+    start = end;
+    const shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
+    if (cand) {
+      const std::string &custom_preedit(cand->preedit());
+      if (!custom_preedit.empty())
+        result += custom_preedit;
+      else
+        result += input_.substr(start, end - start);
       end = cand->end();
     }
   }

@@ -34,6 +34,7 @@ class TreeDbAccessor {
   ~TreeDbAccessor();
   
   bool Forward(const std::string &key);
+  bool Backward(const std::string &key);
   bool GetNextRecord(std::string *key, std::string *value);
   bool exhausted();
 

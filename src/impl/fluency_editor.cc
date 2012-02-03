@@ -16,6 +16,10 @@
 
 namespace rime {
 
+FluencyEditor::FluencyEditor(Engine *engine) : Processor(engine) {
+  engine->context()->set_option("auto_commit", false);
+}
+
 // treat printable characters as input
 // commit with Return key
 Processor::Result FluencyEditor::ProcessKeyEvent(
@@ -35,7 +39,13 @@ Processor::Result FluencyEditor::ProcessKeyEvent(
   }
   if (ctx->IsComposing()) {
     if (ch == XK_Return) {
-      ctx->Commit();
+      if (key_event.shift()) {
+        engine_->sink()(ctx->GetScriptText());
+        ctx->Clear();
+      }
+      else {
+        ctx->Commit();
+      }
       return kAccepted;
     }
     if (ch == XK_BackSpace) {

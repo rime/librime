@@ -33,7 +33,8 @@ Speller::Speller(Engine *engine) : Processor(engine),
 
 Processor::Result Speller::ProcessKeyEvent(
     const KeyEvent &key_event) {
-  if (key_event.release() || key_event.ctrl() || key_event.alt())
+  if (key_event.release() || key_event.ctrl() || key_event.alt() ||
+      key_event.keycode() == XK_space)
     return kNoop;
   int ch = key_event.keycode();
   Context *ctx = engine_->context();
