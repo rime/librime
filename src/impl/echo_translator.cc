@@ -32,8 +32,8 @@ class EchoTranslation : public UniqueTranslation {
 
 Translation* EchoTranslator::Query(const std::string &input,
                                    const Segment &segment) {
-  EZLOGGERPRINT("input = '%s', [%d, %d)",
-                input.c_str(), segment.start, segment.end);
+  EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
+                       input.c_str(), segment.start, segment.end);
   shared_ptr<Candidate> candidate(
       new SimpleCandidate("raw", segment.start, segment.end, input));
   Translation *translation = new EchoTranslation(candidate);

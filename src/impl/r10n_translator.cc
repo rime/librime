@@ -176,8 +176,8 @@ Translation* R10nTranslator::Query(const std::string &input, const Segment &segm
     return NULL;
   if (!segment.HasTag("abc"))
     return NULL;
-  EZLOGGERPRINT("input = '%s', [%d, %d)",
-                input.c_str(), segment.start, segment.end);
+  EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
+                       input.c_str(), segment.start, segment.end);
 
   // the translator should survive translations it creates
   R10nTranslation* result(new R10nTranslation(input, segment.start, this));
@@ -209,7 +209,7 @@ void R10nTranslator::OnCommit(Context *ctx) {
     }
     if ((!r10n_cand || seg.status >= Segment::kConfirmed) &&
         !commit_entry.text.empty()) {
-      EZLOGGERVAR(commit_entry.text);
+      EZDBGONLYLOGGERVAR(commit_entry.text);
       user_dict_->UpdateEntry(commit_entry, 1);
       commit_entry.text.clear();
       commit_entry.code.clear();
@@ -394,8 +394,8 @@ shared_ptr<DictEntry> R10nTranslation::SimplisticSentenceMaking(Dictionary *dict
         new_sentence->weight *= (std::max)(e->weight, kEpsilon) * kPenalty;
         if (sentence.find(end_pos) == sentence.end() ||
             sentence[end_pos]->weight < new_sentence->weight) {
-          EZLOGGERPRINT("updated sentence[%d] with '%s', %g",
-                        end_pos, new_sentence->text.c_str(), new_sentence->weight);
+          EZDBGONLYLOGGERPRINT("updated sentence[%d] with '%s', %g",
+                               end_pos, new_sentence->text.c_str(), new_sentence->weight);
           sentence[end_pos] = new_sentence;
         }
       }

@@ -89,8 +89,8 @@ Translation* ReverseLookupTranslator::Query(const std::string &input,
     return NULL;
   if (!segment.HasTag("reverse_lookup"))
     return NULL;
-  EZLOGGERPRINT("input = '%s', [%d, %d)",
-                input.c_str(), segment.start, segment.end);
+  EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
+                       input.c_str(), segment.start, segment.end);
 
   size_t start = 0;
   if (boost::starts_with(input, prefix_))

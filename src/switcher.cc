@@ -72,7 +72,7 @@ void SwitcherOption::Apply(Engine *target_engine, Config *user_config) {
 Switcher::Switcher() : Engine(new Schema),
                        target_engine_(NULL),
                        active_(false) {
-  EZLOGGERFUNCTRACKER;
+  EZDBGONLYLOGGERFUNCTRACKER;
   // receive context notifications
   context_->select_notifier().connect(
       boost::bind(&Switcher::OnSelect, this, _1));
@@ -83,7 +83,7 @@ Switcher::Switcher() : Engine(new Schema),
 }
 
 Switcher::~Switcher() {
-  EZLOGGERFUNCTRACKER;
+  EZDBGONLYLOGGERFUNCTRACKER;
 }
 
 void Switcher::Attach(Engine *engine) {
@@ -91,7 +91,7 @@ void Switcher::Attach(Engine *engine) {
 }
 
 bool Switcher::ProcessKeyEvent(const KeyEvent &key_event) {
-  EZLOGGERVAR(key_event);
+  EZDBGONLYLOGGERVAR(key_event);
   BOOST_FOREACH(const KeyEvent &hotkey, hotkeys_) {
     if (key_event == hotkey) {
       if (!active_ && target_engine_)
@@ -232,7 +232,7 @@ void Switcher::Deactivate() {
 }
 
 void Switcher::LoadSettings() {
-  EZLOGGERFUNCTRACKER;
+  EZDBGONLYLOGGERFUNCTRACKER;
   Config *config = schema_->config();
   if (!config) return;
   if (!config->GetString("switcher/caption", &caption_) || caption_.empty()) {
@@ -248,7 +248,7 @@ void Switcher::LoadSettings() {
 }
 
 void Switcher::InitializeSubProcessors() {
-  EZLOGGERFUNCTRACKER;
+  EZDBGONLYLOGGERFUNCTRACKER;
   processors_.clear();
   {
     Processor::Component *c = Processor::Require("key_binder");

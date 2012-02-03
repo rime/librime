@@ -110,8 +110,8 @@ bool Context::Select(size_t index) {
   if (cand) {
     seg.selected_index = index;
     seg.status = Segment::kSelected;
-    EZLOGGERPRINT("Selected: '%s', index = %d.",
-                  cand->text().c_str(), index);
+    EZDBGONLYLOGGERPRINT("Selected: '%s', index = %d.",
+                         cand->text().c_str(), index);
     select_notifier_(this);
     return true;
   }
@@ -125,8 +125,8 @@ bool Context::ConfirmCurrentSelection() {
   shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
   if (cand) {
     seg.status = Segment::kSelected;
-    EZLOGGERPRINT("Confirmed: '%s', selected_index = %d.",
-                  cand->text().c_str(), seg.selected_index);
+    EZDBGONLYLOGGERPRINT("Confirmed: '%s', selected_index = %d.",
+                         cand->text().c_str(), seg.selected_index);
     select_notifier_(this);
     return true;
   }
@@ -134,7 +134,7 @@ bool Context::ConfirmCurrentSelection() {
 }
 
 bool Context::ConfirmPreviousSelection() {
-  EZLOGGERFUNCTRACKER;
+  EZDBGONLYLOGGERFUNCTRACKER;
   for (Composition::reverse_iterator it = composition_->rbegin();
        it != composition_->rend(); ++it) {
     if (it->status > Segment::kSelected) return false;
@@ -147,7 +147,7 @@ bool Context::ConfirmPreviousSelection() {
 }
 
 bool Context::ReopenPreviousSegment() {
-  EZLOGGERFUNCTRACKER;
+  EZDBGONLYLOGGERFUNCTRACKER;
   if (composition_->Trim()) {
     if (!composition_->empty() &&
       composition_->back().status >= Segment::kSelected) {
@@ -160,7 +160,7 @@ bool Context::ReopenPreviousSegment() {
 }
 
 bool Context::ReopenPreviousSelection() {
-  EZLOGGERFUNCTRACKER;
+  EZDBGONLYLOGGERFUNCTRACKER;
   for (Composition::reverse_iterator it = composition_->rbegin();
        it != composition_->rend(); ++it) {
     if (it->status > Segment::kSelected) return false;
@@ -184,13 +184,13 @@ bool Context::ClearNonConfirmedComposition() {
   }
   if (reverted) {
     composition_->Forward();
-    EZLOGGERVAR(composition_->GetDebugText());
+    EZDBGONLYLOGGERVAR(composition_->GetDebugText());
   }
   return reverted;
 }
 
 bool Context::RefreshNonConfirmedComposition() {
-  EZLOGGERFUNCTRACKER;
+  EZDBGONLYLOGGERFUNCTRACKER;
   if (ClearNonConfirmedComposition()) {
     update_notifier_(this);
     return true;

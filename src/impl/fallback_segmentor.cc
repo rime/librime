@@ -17,17 +17,17 @@ FallbackSegmentor::FallbackSegmentor(Engine *engine) : Segmentor(engine) {
 
 bool FallbackSegmentor::Proceed(Segmentation *segmentation) {
   int len = segmentation->GetCurrentSegmentLength();
-  EZLOGGERVAR(len);
+  EZDBGONLYLOGGERVAR(len);
   if (len > 0)
     return false;
 
   const std::string &input = segmentation->input();
   int k = segmentation->GetCurrentStartPosition();
-  EZLOGGERVAR(k);
+  EZDBGONLYLOGGERVAR(k);
   if (k == input.length())
     return false;
 
-  EZLOGGERVAR(*segmentation);
+  EZDBGONLYLOGGERVAR(*segmentation);
   if (!segmentation->empty() &&
       segmentation->back().start == segmentation->back().end)
     segmentation->pop_back();

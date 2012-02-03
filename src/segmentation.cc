@@ -29,14 +29,14 @@ Segmentation::Segmentation() {
 }
 
 void Segmentation::Reset(const std::string &new_input) {
-  EZLOGGERVAR(size());
+  EZDBGONLYLOGGERVAR(size());
   // mark redo segmentation, while keeping user confirmed segments
   size_t diff_pos = 0;
   while (diff_pos < input_.length() &&
          diff_pos < new_input.length() &&
          input_[diff_pos] == new_input[diff_pos])
     ++diff_pos;
-  EZLOGGERVAR(diff_pos);
+  EZDBGONLYLOGGERVAR(diff_pos);
 
   // dispose segments that have changed
   int disposed = 0;

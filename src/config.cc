@@ -247,47 +247,47 @@ bool Config::SaveToFile(const std::string& file_name) {
 }
 
 bool Config::IsNull(const std::string &key) {
-  EZLOGGERVAR(key);
+  EZDBGONLYLOGGERVAR(key);
   ConfigItemPtr p = data_->Traverse(key);
   return !p || p->type() == ConfigItem::kNull;
 }
 
 bool Config::GetBool(const std::string& key, bool *value) {
-  EZLOGGERVAR(key);
+  EZDBGONLYLOGGERVAR(key);
   ConfigValuePtr p = As<ConfigValue>(data_->Traverse(key));
   return p && p->GetBool(value);
 }
 
 bool Config::GetInt(const std::string& key, int *value) {
-  EZLOGGERVAR(key);
+  EZDBGONLYLOGGERVAR(key);
   ConfigValuePtr p = As<ConfigValue>(data_->Traverse(key));
   return p && p->GetInt(value);
 }
 
 bool Config::GetDouble(const std::string& key, double *value) {
-  EZLOGGERVAR(key);
+  EZDBGONLYLOGGERVAR(key);
   ConfigValuePtr p = As<ConfigValue>(data_->Traverse(key));
   return p && p->GetDouble(value);
 }
 
 bool Config::GetString(const std::string& key, std::string *value) {
-  EZLOGGERVAR(key);
+  EZDBGONLYLOGGERVAR(key);
   ConfigValuePtr p = As<ConfigValue>(data_->Traverse(key));
   return p && p->GetString(value);
 }
 
 ConfigValuePtr Config::GetValue(const std::string& key) {
-  EZLOGGERVAR(key);
+  EZDBGONLYLOGGERVAR(key);
   return As<ConfigValue>(data_->Traverse(key));
 }
 
 ConfigListPtr Config::GetList(const std::string& key) {
-  EZLOGGERVAR(key);
+  EZDBGONLYLOGGERVAR(key);
   return As<ConfigList>(data_->Traverse(key));
 }
 
 ConfigMapPtr Config::GetMap(const std::string& key) {
-  EZLOGGERVAR(key);
+  EZDBGONLYLOGGERVAR(key);
   return As<ConfigMap>(data_->Traverse(key));
 }
 

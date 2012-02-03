@@ -90,7 +90,7 @@ ConcreteEngine::~ConcreteEngine() {
 }
 
 bool ConcreteEngine::ProcessKeyEvent(const KeyEvent &key_event) {
-  EZLOGGERVAR(key_event);
+  EZDBGONLYLOGGERVAR(key_event);
   BOOST_FOREACH(shared_ptr<Processor> &p, processors_) {
     Processor::Result ret = p->ProcessKeyEvent(key_event);
     if (ret == Processor::kRejected) return false;
@@ -102,7 +102,7 @@ bool ConcreteEngine::ProcessKeyEvent(const KeyEvent &key_event) {
 void ConcreteEngine::OnContextUpdate(Context *ctx) {
   if (!ctx) return;
   const std::string &input(ctx->input());
-  EZLOGGERVAR(input);
+  EZDBGONLYLOGGERVAR(input);
   Compose(ctx);
 }
 
@@ -117,7 +117,7 @@ void ConcreteEngine::Compose(Context *ctx) {
   if (!ctx) return;
   Composition *comp = ctx->composition();
   std::string active_input(ctx->input().substr(0, ctx->caret_pos()));
-  EZLOGGERVAR(active_input);
+  EZDBGONLYLOGGERVAR(active_input);
   comp->Reset(active_input);
   CalculateSegmentation(comp);
   TranslateSegments(comp);
@@ -125,18 +125,18 @@ void ConcreteEngine::Compose(Context *ctx) {
 }
 
 void ConcreteEngine::CalculateSegmentation(Composition *comp) {
-  EZLOGGERFUNCTRACKER;
+  EZDBGONLYLOGGERFUNCTRACKER;
   while (!comp->HasFinishedSegmentation()) {
     size_t start_pos = comp->GetCurrentStartPosition();
     size_t end_pos = comp->GetCurrentEndPosition();
-    EZLOGGERVAR(start_pos);
-    EZLOGGERVAR(end_pos);
+    EZDBGONLYLOGGERVAR(start_pos);
+    EZDBGONLYLOGGERVAR(end_pos);
     // recognize a segment by calling the segmentors in turn
     BOOST_FOREACH(shared_ptr<Segmentor> &segmentor, segmentors_) {
       if (!segmentor->Proceed(comp))
         break;
     }
-    EZLOGGERVAR(*comp);
+    EZDBGONLYLOGGERVAR(*comp);
     // no advancement
     if (start_pos == comp->GetCurrentEndPosition())
       break;
@@ -151,7 +151,7 @@ void ConcreteEngine::CalculateSegmentation(Composition *comp) {
 }
 
 void ConcreteEngine::TranslateSegments(Composition *comp) {
-  EZLOGGERFUNCTRACKER;
+  EZDBGONLYLOGGERFUNCTRACKER;
   Menu::CandidateFilter filter(boost::bind(&ConcreteEngine::FilterCandidates,
                                            this, _1, _2));
   BOOST_FOREACH(Segment &segment, *comp) {
@@ -160,7 +160,7 @@ void ConcreteEngine::TranslateSegments(Composition *comp) {
     size_t len = segment.end - segment.start;
     if (len == 0) continue;
     const std::string input(comp->input().substr(segment.start, len));
-    EZLOGGERPRINT("Translating segment '%s'", input.c_str());
+    EZDBGONLYLOGGERPRINT("Translating segment '%s'", input.c_str());
     shared_ptr<Menu> menu(new Menu(filter));
     BOOST_FOREACH(shared_ptr<Translator> translator, translators_) {
       shared_ptr<Translation> translation(translator->Query(input, segment));
@@ -190,7 +190,7 @@ void ConcreteEngine::FilterCandidates(CandidateList *recruited,
 
 void ConcreteEngine::OnCommit(Context *ctx) {
   const std::string commit_text = ctx->GetCommitText();
-  EZLOGGERVAR(commit_text);
+  EZDBGONLYLOGGERVAR(commit_text);
   sink_(commit_text);
 }
 

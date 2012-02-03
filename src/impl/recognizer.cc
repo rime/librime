@@ -49,7 +49,7 @@ RecognizerMatch RecognizerPatterns::GetMatch(
   size_t j = segmentation->GetCurrentEndPosition();
   size_t k = segmentation->GetConfirmedPosition();
   std::string active_input(input.substr(k));
-  EZLOGGER(k, active_input);
+  EZDBGONLYLOGGER(k, active_input);
   bool found = false;
   BOOST_FOREACH(const RecognizerPatterns::value_type &v, *this) {
     boost::smatch m;

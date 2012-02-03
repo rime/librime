@@ -129,8 +129,8 @@ Translation* TableTranslator::Query(const std::string &input,
     return NULL;
   if (!segment.HasTag("abc"))
     return NULL;
-  EZLOGGERPRINT("input = '%s', [%d, %d)",
-                input.c_str(), segment.start, segment.end);
+  EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
+                       input.c_str(), segment.start, segment.end);
 
   std::string preedit(input);
   formatter_.Apply(&preedit);

@@ -47,9 +47,11 @@ Processor::Result Speller::ProcessKeyEvent(
     if (initials_.find(ch) == std::string::npos)
       return kNoop;
   }
-  EZLOGGERPRINT("Add to input: '%c', %d, '%s'", ch, key_event.keycode(), key_event.repr().c_str());
+  EZDBGONLYLOGGERPRINT("Add to input: '%c', %d, '%s'",
+                       ch, key_event.keycode(), key_event.repr().c_str());
   ctx->PushInput(key_event.keycode());
-  ctx->ConfirmPreviousSelection();  // so that next BackSpace does not revert previous selection
+  ctx->ConfirmPreviousSelection();
+  // so that next BackSpace does not revert previous selection
   return kAccepted;
 }
 

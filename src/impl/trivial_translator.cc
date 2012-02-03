@@ -35,8 +35,8 @@ Translation* TrivialTranslator::Query(const std::string &input,
                                       const Segment &segment) {
   if (!segment.HasTag("abc"))
     return NULL;
-  EZLOGGERPRINT("input = '%s', [%d, %d)",
-                input.c_str(), segment.start, segment.end);
+  EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
+                       input.c_str(), segment.start, segment.end);
   std::string output(Translate(input));
   if (output.empty())
     return NULL;

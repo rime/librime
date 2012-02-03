@@ -16,11 +16,11 @@ namespace rime {
 
 void Menu::AddTranslation(shared_ptr<Translation> translation) {
   translations_.push_back(translation);
-  EZLOGGERVAR(translations_.size());
+  EZDBGONLYLOGGERVAR(translations_.size());
 }
 
 size_t Menu::Prepare(size_t candidate_count) {
-  EZLOGGERFUNCTRACKER;
+  EZDBGONLYLOGGERFUNCTRACKER;
   size_t count = candidates_.size();
   if (count >= candidate_count)
     return count;
@@ -52,14 +52,14 @@ size_t Menu::Prepare(size_t candidate_count) {
       EZLOGGERPRINT("Filter returns empty candidate list.");
     }
     else {
-      EZLOGGERPRINT("Recruiting %d candidates.", next_candidates.size());
+      EZDBGONLYLOGGERPRINT("Recruiting %d candidates.", next_candidates.size());
       std::copy(next_candidates.begin(), next_candidates.end(),
                 std::back_inserter(candidates_));
     }
     count = candidates_.size();
     translations_[k]->Next();
     if (translations_[k]->exhausted()) {
-      EZLOGGERPRINT("Translation #%d has been exhausted.", k);
+      EZDBGONLYLOGGERPRINT("Translation #%d has been exhausted.", k);
       translations_.erase(translations_.begin() + k);
     }
   }

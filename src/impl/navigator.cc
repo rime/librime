@@ -45,7 +45,7 @@ Processor::Result Navigator::ProcessKeyEvent(const KeyEvent &key_event) {
 }
 
 bool Navigator::Left(Context *ctx) {
-  EZLOGGERFUNCTRACKER;
+  EZDBGONLYLOGGERFUNCTRACKER;
   size_t caret_pos = ctx->caret_pos();
   if (caret_pos == 0)
     return End(ctx);
@@ -54,7 +54,7 @@ bool Navigator::Left(Context *ctx) {
 }
 
 bool Navigator::Right(Context *ctx) {
-  EZLOGGERFUNCTRACKER;
+  EZDBGONLYLOGGERFUNCTRACKER;
   size_t caret_pos = ctx->caret_pos();
   if (caret_pos >= ctx->input().length())
     return Home(ctx);
@@ -63,7 +63,7 @@ bool Navigator::Right(Context *ctx) {
 }
 
 bool Navigator::Home(Context *ctx) {
-  EZLOGGERFUNCTRACKER;
+  EZDBGONLYLOGGERFUNCTRACKER;
   size_t caret_pos = ctx->caret_pos();
   Composition *comp = ctx->composition();
   if (!comp->empty()) {
@@ -84,7 +84,7 @@ bool Navigator::Home(Context *ctx) {
 }
 
 bool Navigator::End(Context *ctx) {
-  EZLOGGERFUNCTRACKER;
+  EZDBGONLYLOGGERFUNCTRACKER;
   size_t end_pos = ctx->input().length();
   if (ctx->caret_pos() != end_pos) {
     ctx->set_caret_pos(end_pos);

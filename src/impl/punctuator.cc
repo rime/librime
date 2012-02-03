@@ -70,7 +70,7 @@ Processor::Result Punctuator::ProcessKeyEvent(const KeyEvent &key_event) {
   ConfigItemPtr punct_definition(config_.GetPunctDefinition(punct_key));
   if (!punct_definition)
     return kNoop;
-  EZLOGGERVAR(punct_key);
+  EZDBGONLYLOGGERVAR(punct_key);
   if (!AlternatePunct(punct_key, punct_definition)) {
     engine_->context()->PushInput(ch) &&
         (ConfirmUniquePunct(punct_definition) ||
@@ -164,7 +164,8 @@ bool PunctSegmentor::Proceed(Segmentation *segmentation) {
     Segment segment;
     segment.start = k;
     segment.end = k + 1;
-    EZLOGGERPRINT("add a punctuation segment [%d, %d)", segment.start, segment.end);
+    EZDBGONLYLOGGERPRINT("add a punctuation segment [%d, %d)",
+                         segment.start, segment.end);
     segment.tags.insert("punct");
     segmentation->AddSegment(segment);
   }
