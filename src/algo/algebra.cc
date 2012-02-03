@@ -54,14 +54,35 @@ bool Projection::Load(ConfigListPtr settings) {
   if (!settings) return false;
   calculation_.clear();
   Calculus calc;
+  bool success = true;
   for (size_t i = 0; i < settings->size(); ++i) {
     ConfigValuePtr v(settings->GetValueAt(i));
-    if (!v) return false;
-    shared_ptr<Calculation> x(calc.Parse(v->str()));
-    if (!x) return false;
+    if (!v) {
+      EZLOGGERPRINT("Error loading formula #%d.", i + 1);
+      success = false;
+      break;
+    }
+    const std::string &formula(v->str());
+    shared_ptr<Calculation> x;
+    try {
+      x.reset(calc.Parse(formula));
+    }
+    catch (boost::regex_error& e) {
+      EZLOGGERPRINT("Error parsing formula '%s': %s",
+                    formula.c_str(), e.what());
+    }
+    if (!x) {
+      EZLOGGERPRINT("Error loading spelling algebra definition #%d: '%s'.",
+                    i + 1, formula.c_str());
+      success = false;
+      break;
+    }
     calculation_.push_back(x);
   }
-  return true;
+  if (!success) {
+    calculation_.clear();
+  }
+  return success;
 }
 
 bool Projection::Apply(std::string* value) {
@@ -70,8 +91,14 @@ bool Projection::Apply(std::string* value) {
   bool modified = false;
   Spelling s(*value);
   BOOST_FOREACH(shared_ptr<Calculation>& x, calculation_) {
-    if (x->Apply(&s))
-      modified = true;
+    try {
+      if (x->Apply(&s))
+        modified = true;
+    }
+    catch (std::runtime_error& e) {
+      EZLOGGERPRINT("Error applying calculation: %s", e.what());
+      return false;
+    }
   }
   if (modified)
     value->assign(s.str);
@@ -89,7 +116,15 @@ bool Projection::Apply(Script* value) {
     Script temp;
     BOOST_FOREACH(const Script::value_type& v, *value) {
       Spelling s(v.first);
-      if (x->Apply(&s)) {
+      bool applied = false;
+      try {
+        applied = x->Apply(&s);
+      }
+      catch (std::runtime_error& e) {
+        EZLOGGERPRINT("Error applying calculation: %s", e.what());
+        return false;
+      }
+      if (applied) {
         modified = true;
         if (!x->deletion()) {
           temp.Merge(v.first, SpellingProperties(), v.second);
