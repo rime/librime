@@ -95,6 +95,15 @@ bool TreeDb::Erase(const std::string &key) {
   return db_->remove(key);
 }
 
+bool TreeDb::Backup() {
+  EZLOGGERPRINT("backup db '%s'.", name_.c_str());
+  bool success = db_->dump_snapshot(file_name() + ".snapshot");
+  if (!success) {
+    EZLOGGERPRINT("Error: failed to backup db '%s'.", name_.c_str());
+  }
+  return success;
+}
+
 bool TreeDb::Exists() const {
   return boost::filesystem::exists(file_name());
 }
@@ -133,6 +142,7 @@ bool TreeDb::OpenReadOnly() {
 bool TreeDb::Close() {
   if (!loaded()) return false;
   db_->close();
+  EZLOGGERPRINT("closed db '%s'.", name_.c_str());
   loaded_ = false;
   return true;
 }

@@ -45,7 +45,7 @@ cmake -G %CMAKE_GENERATOR% %RIME_ROOT%
 if %ERRORLEVEL% NEQ 0 goto ERROR
 
 echo.
-echo try building the solution...
+echo building librime...
 if exist vcbuild.log del vcbuild.log
 devenv rime.sln /Build Release /Out vcbuild.log
 if %ERRORLEVEL% NEQ 0 goto ERROR
