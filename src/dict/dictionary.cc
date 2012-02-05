@@ -193,7 +193,7 @@ size_t Dictionary::LookupWords(DictEntryIterator *result,
                                const std::string &str_code,
                                bool predictive,
                                size_t expand_search_limit) {
-  EZLOGGERVAR(str_code);
+  EZDBGONLYLOGGERVAR(str_code);
   if (!loaded())
     return 0;
   std::vector<Prism::Match> keys;
@@ -206,7 +206,7 @@ size_t Dictionary::LookupWords(DictEntryIterator *result,
       keys.push_back(match);
     }
   }
-  EZLOGGERPRINT("found %u matching keys thru the prism.", keys.size());
+  EZDBGONLYLOGGERPRINT("found %u matching keys thru the prism.", keys.size());
   size_t code_length(str_code.length());
   BOOST_FOREACH(Prism::Match &match, keys) {
     SpellingAccessor accessor(prism_->QuerySpelling(match.value));

@@ -61,6 +61,7 @@ Service::~Service() {
 
 SessionId Service::CreateSession() {
   SessionId id = kInvalidSessionId;
+  if (disabled()) return id;
   try {
     shared_ptr<Session> session(new Session);
     session->Activate();
@@ -74,14 +75,14 @@ SessionId Service::CreateSession() {
 }
 
 shared_ptr<Session> Service::GetSession(SessionId session_id) {
+  shared_ptr<Session> session;
+  if (disabled()) return session;
   SessionMap::iterator it = sessions_.find(session_id);
-  if (it == sessions_.end()) {
-    return shared_ptr<Session>();
+  if (it != sessions_.end()) {
+    session = it->second;
+    session->Activate();
   }
-  else {
-    it->second->Activate();
-    return it->second;
-  }
+  return session;
 }
 
 bool Service::DestroySession(SessionId session_id) {

@@ -7,6 +7,8 @@
 // 2011-12-01 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
+#include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -210,12 +212,12 @@ bool Deployer::UpdateDistributedConfigFile(const std::string &file_name,
   }
 }
 
-bool Deployer::PrepareSchemas() {
+bool Deployer::PrepareWorkspace() {
   fs::path shared_data_path(shared_data_dir);
   fs::path user_data_path(user_data_dir);
   fs::path default_config_path(user_data_path / "default.yaml");
-  EZLOGGERPRINT("preparing schemas.");
   UpdateDistributedConfigFile("default.yaml", "config_version");
+  EZLOGGERPRINT("installing schemas.");
   Config config;
   if (!config.LoadFromFile(default_config_path.string())) {
     EZLOGGERPRINT("Error loading default config from '%s'.",
@@ -245,9 +247,33 @@ bool Deployer::PrepareSchemas() {
     else
       ++failure;
   }
-  EZLOGGERPRINT("finished preparing schemas: %d success, %d failure.",
+  EZLOGGERPRINT("finished installing schemas: %d success, %d failure.",
                 success, failure);
   return true;
+}
+
+bool Deployer::StartMaintenance(bool thorough_check) {
+  if (IsMaintenancing()) {
+    EZLOGGERPRINT("Warning: a maintenance thread is already running.");
+    return false;
+  }
+  if (UpdateDistributedConfigFile("default.yaml", "config_version") ||
+      thorough_check) {
+    EZLOGGERPRINT("starting maintenance thread...");
+    maintenance_thread.swap(boost::thread(
+        boost::bind(&Deployer::PrepareWorkspace, this)));
+  }
+  return maintenance_thread.joinable();
+}
+
+bool Deployer::IsMaintenancing() {
+  if (!maintenance_thread.joinable())
+    return false;
+  return !maintenance_thread.timed_join(boost::posix_time::milliseconds(0));
+}
+
+void Deployer::JoinMaintenanceThread() {
+  maintenance_thread.join();
 }
 
 }  // namespace rime

@@ -10,6 +10,7 @@
 #define RIME_DEPLOYER_H_
 
 #include <string>
+#include <boost/thread.hpp>
 
 namespace rime {
 
@@ -22,6 +23,8 @@ struct Deployer {
   std::string distribution_code_name;
   std::string distribution_version;
 
+  boost::thread maintenance_thread;
+
   Deployer() : shared_data_dir("."),
                user_data_dir("."),
                user_id("unknown") {}
@@ -30,7 +33,10 @@ struct Deployer {
   bool InstallSchema(const std::string &schema_file);
   bool UpdateDistributedConfigFile(const std::string &file_name,
                                    const std::string &version_key);
-  bool PrepareSchemas();
+  bool PrepareWorkspace();
+  bool StartMaintenance(bool thorough_check = true);
+  void JoinMaintenanceThread();
+  bool IsMaintenancing();
 };
 
 }  // namespace rime

@@ -37,20 +37,33 @@ RIME_API void RimeInitialize(RimeTraits *traits) {
   apply_traits(traits, &deployer);
   deployer.InitializeInstallation();
   rime::RegisterComponents();
+  bool thorough_check = false;
+  deployer.StartMaintenance(thorough_check);
 }
 
 RIME_API void RimeFinalize() {
+  RimeJoinMaintenanceThread();
   rime::Service::instance().CleanupAllSessions();
   rime::Registry::instance().Clear();
 }
 
+RIME_API Bool RimeIsMaintenancing() {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return Bool(deployer.IsMaintenancing());
+}
+
+RIME_API void RimeJoinMaintenanceThread() {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  deployer.JoinMaintenanceThread();
+}
+
 // deployment
 
-RIME_API Bool RimeDeployInitialize(RimeTraits *traits) {
+RIME_API Bool RimeDeployWorkspace(RimeTraits *traits) {
   rime::Deployer &deployer(rime::Service::instance().deployer());
   apply_traits(traits, &deployer);
   return Bool(deployer.InitializeInstallation() &&
-              deployer.PrepareSchemas());
+              deployer.PrepareWorkspace());
 }
 
 RIME_API Bool RimeDeploySchema(const char *schema_file) {

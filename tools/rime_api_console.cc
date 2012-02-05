@@ -85,13 +85,9 @@ void Print(RimeSessionId session_id) {
 
 int main(int argc, char *argv[]) {
 
-  RimeInitialize(NULL);
-
   fprintf(stderr, "initializing...");
-  if (!RimeDeployInitialize(NULL)) {
-    fprintf(stderr, "failure!\n");
-    return 1;
-  }
+  RimeInitialize(NULL);
+  RimeJoinMaintenanceThread();
   fprintf(stderr, "ready.\n");
 
   RimeSessionId session_id = RimeCreateSession();

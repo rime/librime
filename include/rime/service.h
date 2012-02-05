@@ -61,6 +61,7 @@ class Service {
   void CleanupAllSessions();
 
   Deployer& deployer() { return deployer_; }
+  bool disabled() { return deployer_.IsMaintenancing(); }
 
   static Service& instance() {
     if (!instance_) instance_.reset(new Service);

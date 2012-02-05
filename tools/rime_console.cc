@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   std::cerr << "initializing...";
-  if (!deployer.PrepareSchemas()) {
+  if (!deployer.PrepareWorkspace()) {
     std::cerr << "failure!" << std::endl;
     return 1;
   }
