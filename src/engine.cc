@@ -101,8 +101,7 @@ bool ConcreteEngine::ProcessKeyEvent(const KeyEvent &key_event) {
 
 void ConcreteEngine::OnContextUpdate(Context *ctx) {
   if (!ctx) return;
-  const std::string &input(ctx->input());
-  EZDBGONLYLOGGERVAR(input);
+  EZDBGONLYLOGGERVAR(ctx->input());
   Compose(ctx);
 }
 

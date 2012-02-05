@@ -141,9 +141,9 @@ class Table : public MappedFile {
   bool BuildEntryList(const DictEntryList &src, List<table::Entry> *dest);
   bool BuildEntry(const DictEntry &dict_entry, table::Entry *entry);
 
-  table::Metadata *metadata_;
-  table::Syllabary *syllabary_;
   table::Index *index_;
+  table::Syllabary *syllabary_;
+  table::Metadata *metadata_;
 };
 
 }  // namespace rime

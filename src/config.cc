@@ -353,7 +353,7 @@ const std::string ConfigComponent::GetConfigFilePath(const std::string &config_i
 
 Config* ConfigComponent::Create(const std::string &config_id) {
   const std::string path(GetConfigFilePath(config_id));
-  EZLOGGERPRINT("config file path: %s", path.c_str());
+  EZDBGONLYLOGGERPRINT("config file path: %s", path.c_str());
   return new Config(path);
 }
 
@@ -402,10 +402,12 @@ bool ConfigData::LoadFromFile(const std::string& file_name) {
   file_name_ = file_name;
   modified_ = false;
   if (!boost::filesystem::exists(file_name)) {
+    EZLOGGERPRINT("Warning: nonexistent config file '%s'.",
+                  file_name.c_str());
     root.reset();
     return false;
   }
-  // load tree
+  EZLOGGERPRINT("loading config file '%s'.", file_name.c_str());
   std::ifstream fin(file_name.c_str());
   YAML::Parser parser(fin);
   YAML::Node doc;

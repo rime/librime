@@ -50,7 +50,6 @@ RecognizerMatch RecognizerPatterns::GetMatch(
   size_t k = segmentation->GetConfirmedPosition();
   std::string active_input(input.substr(k));
   EZDBGONLYLOGGER(k, active_input);
-  bool found = false;
   BOOST_FOREACH(const RecognizerPatterns::value_type &v, *this) {
     boost::smatch m;
     if (boost::regex_search(active_input, m, v.second)) {

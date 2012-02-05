@@ -58,10 +58,10 @@ class UserDictionary : public Class<UserDictionary, Schema*> {
 
  private:
   std::string name_;
-  TickCount tick_;
   shared_ptr<UserDb> db_;
   shared_ptr<Table> table_;
   shared_ptr<Prism> prism_;
+  TickCount tick_;
 };
 
 class UserDictionaryComponent : public UserDictionary::Component {
