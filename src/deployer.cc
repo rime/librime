@@ -260,8 +260,8 @@ bool Deployer::StartMaintenance(bool thorough_check) {
   if (UpdateDistributedConfigFile("default.yaml", "config_version") ||
       thorough_check) {
     EZLOGGERPRINT("starting maintenance thread...");
-    maintenance_thread.swap(boost::thread(
-        boost::bind(&Deployer::PrepareWorkspace, this)));
+    boost::thread t(boost::bind(&Deployer::PrepareWorkspace, this));
+    maintenance_thread.swap(t);
   }
   return maintenance_thread.joinable();
 }
