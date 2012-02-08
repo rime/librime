@@ -30,8 +30,10 @@ class ReverseLookupTranslation : public TableTranslation {
                            const std::string &input,
                            size_t start, size_t end,
                            const std::string &preedit,
+                           Projection *comment_formatter,
                            ReverseLookupDictionary *dict)
-      : TableTranslation(iter, input, start, end, preedit), dict_(dict) {}
+      : TableTranslation(iter, input, start, end, preedit, comment_formatter),
+        dict_(dict) {}
   virtual shared_ptr<Candidate> Peek();
  protected:
   ReverseLookupDictionary *dict_;
@@ -44,6 +46,9 @@ shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
   std::string tips;
   if (dict_) {
     dict_->ReverseLookup(e->text, &tips);
+    if (comment_formatter_) {
+      comment_formatter_->Apply(&tips);
+    }
     if (!tips.empty()) {
       boost::algorithm::replace_all(tips, " ", separator);
     }
@@ -65,7 +70,8 @@ ReverseLookupTranslator::ReverseLookupTranslator(Engine *engine)
   if (!config) return;
   config->GetString("reverse_lookup/prefix", &prefix_);
   config->GetString("reverse_lookup/tips", &tips_);
-  formatter_.Load(config->GetList("reverse_lookup/preedit_format"));
+  preedit_formatter_.Load(config->GetList("reverse_lookup/preedit_format"));
+  comment_formatter_.Load(config->GetList("reverse_lookup/comment_format"));
   
   DictionaryComponent *component = dynamic_cast<DictionaryComponent*>(
       Dictionary::Require("dictionary"));
@@ -103,12 +109,13 @@ Translation* ReverseLookupTranslator::Query(const std::string &input,
     dict_->LookupWords(&iter, code, false);
   if (!iter.exhausted()) {
     std::string preedit(input);
-    formatter_.Apply(&preedit);
+    preedit_formatter_.Apply(&preedit);
     translation = new ReverseLookupTranslation(iter,
                                                code,
                                                segment.start,
                                                segment.end,
                                                preedit,
+                                               &comment_formatter_,
                                                rev_dict_.get());
   }
   else {

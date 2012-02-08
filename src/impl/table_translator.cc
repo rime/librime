@@ -25,6 +25,7 @@ class LazyTableTranslation : public TableTranslation {
   LazyTableTranslation(const std::string &input,
                        size_t start, size_t end,
                        const std::string &preedit,
+                       Projection *comment_formatter,
                        Dictionary *dict);
   virtual bool Next();
   
@@ -35,16 +36,20 @@ class LazyTableTranslation : public TableTranslation {
 
 TableTranslation::TableTranslation(const std::string &input,
                                    size_t start, size_t end,
-                                   const std::string &preedit)
-    : input_(input), start_(start), end_(end), preedit_(preedit) {
+                                   const std::string &preedit,
+                                   Projection *comment_formatter)
+    : input_(input), start_(start), end_(end),
+      preedit_(preedit), comment_formatter_(comment_formatter) {
   set_exhausted(true);
 }
 
 TableTranslation::TableTranslation(const DictEntryIterator& iter,
                                    const std::string &input,
                                    size_t start, size_t end,
-                                   const std::string &preedit)
-    : iter_(iter), input_(input), start_(start), end_(end), preedit_(preedit) {
+                                   const std::string &preedit,
+                                   Projection *comment_formatter)
+    : iter_(iter), input_(input), start_(start), end_(end),
+      preedit_(preedit), comment_formatter_(comment_formatter) {
   set_exhausted(iter_.exhausted());
 }
 
@@ -60,12 +65,16 @@ shared_ptr<Candidate> TableTranslation::Peek() {
   if (exhausted())
     return shared_ptr<Candidate>();
   const shared_ptr<DictEntry> &e(iter_.Peek());
+  std::string comment(e->comment);
+  if (comment_formatter_) {
+    comment_formatter_->Apply(&comment);
+  }
   shared_ptr<Candidate> cand(new SimpleCandidate(
       "zh",
       start_,
       end_,
       e->text,
-      e->comment,
+      comment,
       preedit_));
   return cand;
 }
@@ -73,8 +82,9 @@ shared_ptr<Candidate> TableTranslation::Peek() {
 LazyTableTranslation::LazyTableTranslation(const std::string &input,
                                            size_t start, size_t end,
                                            const std::string &preedit,
+                                           Projection *comment_formatter,
                                            Dictionary *dict)
-    : TableTranslation(input, start, end, preedit),
+    : TableTranslation(input, start, end, preedit, comment_formatter),
       dict_(dict), limit_(kInitialSearchLimit) {
   dict->LookupWords(&iter_, input, true, kInitialSearchLimit);
   set_exhausted(iter_.exhausted());
@@ -111,7 +121,8 @@ TableTranslator::TableTranslator(Engine *engine)
   Config *config = engine->schema()->config();
   if (config) {
     config->GetBool("translator/enable_completion", &enable_completion_);
-    formatter_.Load(config->GetList("translator/preedit_format"));
+    preedit_formatter_.Load(config->GetList("translator/preedit_format"));
+    comment_formatter_.Load(config->GetList("translator/comment_format"));
   }
 
   Dictionary::Component *component = Dictionary::Require("dictionary");
@@ -133,7 +144,7 @@ Translation* TableTranslator::Query(const std::string &input,
                        input.c_str(), segment.start, segment.end);
 
   std::string preedit(input);
-  formatter_.Apply(&preedit);
+  preedit_formatter_.Apply(&preedit);
   
   Translation *translation = NULL;
   if (enable_completion_) {
@@ -141,6 +152,7 @@ Translation* TableTranslator::Query(const std::string &input,
                                            segment.start,
                                            segment.start + input.length(),
                                            preedit,
+                                           &comment_formatter_,
                                            dict_.get());
   }
   else {
@@ -151,7 +163,8 @@ Translation* TableTranslator::Query(const std::string &input,
                                          input,
                                          segment.start,
                                          segment.start + input.length(),
-                                         preedit);
+                                         preedit,
+                                         &comment_formatter_);
   }
   return translation;
 }

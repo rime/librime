@@ -22,10 +22,12 @@ namespace rime {
 class TableTranslation : public Translation {
  public:
   TableTranslation(const std::string& input, size_t start, size_t end,
-                   const std::string& preedit);
+                   const std::string& preedit,
+                   Projection* comment_formatter);
   TableTranslation(const DictEntryIterator& iter,
                    const std::string& input, size_t start, size_t end,
-                   const std::string& preedit);
+                   const std::string& preedit,
+                   Projection* comment_formatter);
   virtual bool Next();
   virtual shared_ptr<Candidate> Peek();
   
@@ -35,6 +37,7 @@ class TableTranslation : public Translation {
   size_t start_;
   size_t end_;
   std::string preedit_;
+  Projection *comment_formatter_;
 };
 
 class TableTranslator : public Translator {
@@ -48,7 +51,8 @@ class TableTranslator : public Translator {
  protected:
   scoped_ptr<Dictionary> dict_;
   bool enable_completion_;
-  Projection formatter_;
+  Projection preedit_formatter_;
+  Projection comment_formatter_;
 };
 
 }  // namespace rime

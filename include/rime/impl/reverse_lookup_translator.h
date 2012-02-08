@@ -30,7 +30,8 @@ class ReverseLookupTranslator : public Translator {
   scoped_ptr<ReverseLookupDictionary> rev_dict_;
   std::string prefix_;
   std::string tips_;
-  Projection formatter_;
+  Projection preedit_formatter_;
+  Projection comment_formatter_;
 };
 
 }  // namespace rime

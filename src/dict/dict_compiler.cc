@@ -299,7 +299,7 @@ bool DictCompiler::Compile(const std::string &dict_file, const std::string &sche
     EZLOGGERPRINT("removed deprecated db '%s'.", deprecated_db.name().c_str());
   }
   TreeDb db(dict_name_ + ".reverse.bin");
-  if (db.Exists() && db.Open()) {
+  if (db.Exists() && db.OpenReadOnly()) {
     std::string checksum;
     if (db.Fetch("\x01/dict_file_checksum", &checksum) &&
         boost::lexical_cast<uint32_t>(checksum) == dict_file_checksum) {
@@ -318,6 +318,7 @@ bool DictCompiler::Compile(const std::string &dict_file, const std::string &sche
 }
 
 bool DictCompiler::BuildTable(const std::string &dict_file, uint32_t checksum) {
+  EZLOGGERPRINT("building table...");
   YAML::Node doc;
   {
     std::ifstream fin(dict_file.c_str());
@@ -400,6 +401,7 @@ bool DictCompiler::BuildTable(const std::string &dict_file, uint32_t checksum) {
 
 bool DictCompiler::BuildPrism(const std::string &schema_file,
                               uint32_t dict_file_checksum, uint32_t schema_file_checksum) {
+  EZLOGGERPRINT("building prism...");
   // get syllabary from table
   Syllabary syllabary;
   if (!table_->Load() || !table_->GetSyllabary(&syllabary) || syllabary.empty())
@@ -432,12 +434,11 @@ bool DictCompiler::BuildPrism(const std::string &schema_file,
 }
 
 bool DictCompiler::BuildReverseLookupDict(TreeDb *db, uint32_t dict_file_checksum) {
+  EZLOGGERPRINT("building reverse lookup db...");
   if (db->Exists())
     db->Remove();
   if (!db->Open())
     return false;
-  db->Update("\x01/dict_file_checksum",
-             boost::lexical_cast<std::string>(dict_file_checksum));
   // load syllable - word mapping from table
   Syllabary syllabary;
   if (!table_->Load() || !table_->GetSyllabary(&syllabary) || syllabary.empty())
@@ -459,6 +460,8 @@ bool DictCompiler::BuildReverseLookupDict(TreeDb *db, uint32_t dict_file_checksu
     std::string code_list(boost::algorithm::join(v.second, " "));
     db->Update(v.first, code_list);
   }
+  db->Update("\x01/dict_file_checksum",
+             boost::lexical_cast<std::string>(dict_file_checksum));
   db->Close();
   return true;
 }
