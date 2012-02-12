@@ -30,6 +30,7 @@ shared_ptr<DeploymentTask> Deployer::NextTask() {
 }
 
 bool Deployer::Run() {
+  EZLOGGERPRINT("running deployment tasks:");
   shared_ptr<DeploymentTask> task;
   int success = 0;
   int failure = 0;
@@ -40,7 +41,8 @@ bool Deployer::Run() {
       ++failure;
     boost::this_thread::interruption_point();
   }
-  EZLOGGERPRINT("%d tasks run: %d success, %d failure.");
+  EZLOGGERPRINT("%d tasks ran: %d success, %d failure.",
+                success + failure, success, failure);
   return failure == 0;
 }
 

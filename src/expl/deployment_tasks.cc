@@ -16,76 +16,15 @@
 #include <rime/config.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
+#include <rime/expl/customizer.h>
 #include <rime/expl/deployment_tasks.h>
 
 namespace fs = boost::filesystem;
 
-static int CompareVersionString(const std::string &x, const std::string &y) {
-  std::vector<std::string> xx, yy;
-  boost::split(xx, x, boost::is_any_of("."));
-  boost::split(yy, y, boost::is_any_of("."));
-  size_t i = 0;
-  for (; i < xx.size() && i < yy.size(); ++i) {
-    int dx = atoi(xx[i].c_str());
-    int dy = atoi(yy[i].c_str());
-    if (dx != dy) return dx - dy;
-    int c = xx[i].compare(yy[i]);
-    if (c != 0) return c;
-  }
-  if (i < xx.size()) return 1;
-  if (i < yy.size()) return -1;
-  return 0;
-}
-
-static bool RedistConfigFile(const fs::path &source_path,
-                             const fs::path &dest_path,
-                             const std::string &version_key) {
-  if (fs::equivalent(source_path, dest_path)) {
-    return false;
-  }
-  std::string source_version;
-  std::string dest_version;
-  rime::Config source_config;
-  rime::Config dest_config;
-  if (source_config.LoadFromFile(source_path.string())) {
-    source_config.GetString(version_key, &source_version);
-  }
-  else {
-    EZLOGGERPRINT("Error loading config from '%s'.",
-                  source_path.string().c_str());
-    return false;
-  }
-  if (dest_config.LoadFromFile(dest_path.string())) {
-    dest_config.GetString(version_key, &dest_version);
-  }
-  if (!dest_version.empty() && isalpha(dest_version[0])) {
-    std::string backup_file(dest_path.string() + ".bak");
-    EZLOGGERPRINT("a customized config file is saved as '%s'.",
-                  backup_file.c_str());
-    fs::rename(dest_path, backup_file);
-    dest_version.clear();
-  }
-  if (CompareVersionString(source_version, dest_version) <= 0) {
-    EZLOGGERPRINT("config file '%s' is up-to-date.",
-                  dest_path.string().c_str());
-    return false;
-  }
-  EZLOGGERPRINT("updating config file '%s'.", dest_path.string().c_str());
-  try {
-    fs::copy_file(source_path, dest_path, fs::copy_option::overwrite_if_exists);
-  }
-  catch (...) {
-    EZLOGGERPRINT("Error copying config file '%s' to user directory.",
-                  source_path.string().c_str());
-    return false;
-  }
-  return true;
-}
-
 namespace rime {
 
 bool InstallationUpdate::Run(Deployer* deployer) {
-  EZLOGGERPRINT("updating Rime installation.");
+  EZLOGGERPRINT("updating rime installation.");
   fs::path shared_data_path(deployer->shared_data_dir);
   fs::path user_data_path(deployer->user_data_dir);
   fs::path installation_info(user_data_path / "installation.yaml");
@@ -157,6 +96,7 @@ bool InstallationUpdate::Run(Deployer* deployer) {
 }
 
 bool WorkspaceUpdate::Run(Deployer* deployer) {
+  EZLOGGERPRINT("updating workspace.");
   fs::path shared_data_path(deployer->shared_data_dir);
   fs::path user_data_path(deployer->user_data_dir);
   fs::path default_config_path(user_data_path / "default.yaml");
@@ -223,7 +163,8 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   fs::path shared_data_path(deployer->shared_data_dir);
   fs::path user_data_path(deployer->user_data_dir);
   fs::path destination_path(user_data_path / (schema_id + ".schema.yaml"));
-  if (RedistConfigFile(source_path, destination_path, "schema/version")) {
+  Customizer customizer(source_path, destination_path, "schema/version");
+  if (customizer.UpdateConfigFile()) {
     EZLOGGERPRINT("schema '%s' is updated.", schema_id.c_str());
   }
   
@@ -264,13 +205,15 @@ bool SchemaUpdate::Run(Deployer* deployer) {
 bool ConfigFileUpdate::Run(Deployer* deployer) {
   fs::path shared_data_path(deployer->shared_data_dir);
   fs::path user_data_path(deployer->user_data_dir);
-  fs::path shared_config_path(shared_data_path / file_name_);
-  fs::path config_path(user_data_path / file_name_);
-  if (!fs::exists(shared_config_path)) {
-    EZLOGGERPRINT("Warning: '%s' is missing.", file_name_.c_str());
-    return false;
+  fs::path source_config_path(shared_data_path / file_name_);
+  fs::path dest_config_path(user_data_path / file_name_);
+  if (!fs::exists(source_config_path)) {
+    EZLOGGERPRINT("Warning: '%s' is missing from shared data directory.",
+                  file_name_.c_str());
+    source_config_path = dest_config_path;
   }
-  return RedistConfigFile(shared_config_path, config_path, version_key_);
+  Customizer customizer(source_config_path, dest_config_path, version_key_);
+  return customizer.UpdateConfigFile();
 }
 
 }  // namespace rime

@@ -36,6 +36,7 @@ class ConfigData {
  protected:
   static ConfigItemPtr ConvertFromYaml(const YAML::Node &yaml_node);
   static void EmitYaml(const ConfigItemPtr &node, YAML::Emitter *emitter);
+  static void EmitScalar(const std::string &str_value, YAML::Emitter *emitter);
 
   std::string file_name_;
   bool modified_;
@@ -401,19 +402,28 @@ bool ConfigData::LoadFromFile(const std::string& file_name) {
   // update status
   file_name_ = file_name;
   modified_ = false;
+  root.reset();
   if (!boost::filesystem::exists(file_name)) {
     EZLOGGERPRINT("Warning: nonexistent config file '%s'.",
                   file_name.c_str());
-    root.reset();
     return false;
   }
   EZLOGGERPRINT("loading config file '%s'.", file_name.c_str());
-  std::ifstream fin(file_name.c_str());
-  YAML::Parser parser(fin);
-  YAML::Node doc;
-  if (!parser.GetNextDocument(doc))
+  try {
+    YAML::Node doc;
+    std::ifstream fin(file_name.c_str());
+    YAML::Parser parser(fin);
+    if (!parser.GetNextDocument(doc)) {
+      EZLOGGERPRINT("Warning: document not found in config file '%s'.",
+                    file_name.c_str());
+      return false;
+    }
+    root = ConvertFromYaml(doc);
+  }
+  catch (YAML::Exception& e) {
+    EZLOGGERPRINT("Error parsing YAML: %s", e.what());
     return false;
-  root = ConvertFromYaml(doc);
+  }
   return true;
 }
 
@@ -474,11 +484,21 @@ ConfigItemPtr ConfigData::ConvertFromYaml(const YAML::Node &node) {
   return ConfigItemPtr();
 }
 
+void ConfigData::EmitScalar(const std::string &str_value,
+                            YAML::Emitter *emitter) {
+  if (!boost::algorithm::all(str_value,
+                             boost::algorithm::is_alnum() ||
+                             boost::algorithm::is_any_of("_."))) {
+    *emitter << YAML::DoubleQuoted;
+  }
+  *emitter << str_value;
+}
+
 void ConfigData::EmitYaml(const ConfigItemPtr &node, YAML::Emitter *emitter) {
   if (!node || !emitter) return;
   if (node->type() == ConfigItem::kScalar) {
     ConfigValuePtr config_value(As<ConfigValue>(node));
-    *emitter << config_value->str();
+    EmitScalar(config_value->str(), emitter);
   }
   else if (node->type() == ConfigItem::kList) {
     ConfigListPtr config_list(As<ConfigList>(node));
@@ -498,7 +518,8 @@ void ConfigData::EmitYaml(const ConfigItemPtr &node, YAML::Emitter *emitter) {
     for ( ; it != end; ++it) {
       if (!it->second || it->second->type() == ConfigItem::kNull)
         continue;
-      *emitter << YAML::Key << it->first;
+      *emitter << YAML::Key;
+      EmitScalar(it->first, emitter);
       *emitter << YAML::Value;
       EmitYaml(it->second, emitter);
     }

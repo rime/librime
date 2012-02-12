@@ -49,6 +49,7 @@ RIME_API void RimeInitialize(RimeTraits *traits) {
     updated = default_config_update.Run(&deployer);
   }
   if (updated) {
+    EZLOGGERPRINT("changes detected; starting maintenance.");
     rime::shared_ptr<rime::DeploymentTask> task(new rime::WorkspaceUpdate);
     deployer.ScheduleTask(task);
     deployer.StartMaintenance();
