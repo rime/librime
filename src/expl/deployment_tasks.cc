@@ -140,7 +140,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   }
   EZLOGGERPRINT("finished updating schemas: %d success, %d failure.",
                 success, failure);
-  return failure != 0;
+  return failure == 0;
 }
 
 bool SchemaUpdate::Run(Deployer* deployer) {
