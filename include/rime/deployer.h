@@ -10,33 +10,48 @@
 #define RIME_DEPLOYER_H_
 
 #include <string>
+#include <queue>
 #include <boost/thread.hpp>
+#include <rime/common.h>
 
 namespace rime {
 
-struct Deployer {
+class Deployer;
+
+class DeploymentTask {
+ public:
+  DeploymentTask() {}
+  virtual ~DeploymentTask() {}
+  
+  virtual bool Run(Deployer* deployer) = 0;
+};
+
+class Deployer {
+ public:
+  // read-only access after library initialization {
   std::string shared_data_dir;
   std::string user_data_dir;
   std::string user_id;
-  
   std::string distribution_name;
   std::string distribution_code_name;
   std::string distribution_version;
-
-  boost::thread maintenance_thread;
+  // }
 
   Deployer() : shared_data_dir("."),
                user_data_dir("."),
                user_id("unknown") {}
-  
-  bool InitializeInstallation();
-  bool InstallSchema(const std::string &schema_file);
-  bool UpdateDistributedConfigFile(const std::string &file_name,
-                                   const std::string &version_key);
-  bool PrepareWorkspace();
-  bool StartMaintenance(bool thorough_check = true);
-  void JoinMaintenanceThread();
+
+  void ScheduleTask(const shared_ptr<DeploymentTask>& task);
+  shared_ptr<DeploymentTask> NextTask();
+  bool Run();
+  bool StartMaintenance();
   bool IsMaintenancing();
+  void JoinMaintenanceThread();
+
+ private:
+  std::queue<shared_ptr<DeploymentTask> > pending_tasks_;
+  boost::mutex mutex_;
+  boost::thread maintenance_thread_;
 };
 
 }  // namespace rime

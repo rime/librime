@@ -22,6 +22,7 @@
 #include <rime/switcher.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
+#include <rime/expl/deployment_tasks.h>
 
 class RimeConsole {
  public:
@@ -109,12 +110,14 @@ int main(int argc, char *argv[]) {
   rime::RegisterComponents();
 
   rime::Deployer deployer;
-  if (!deployer.InitializeInstallation()) {
+  rime::InstallationUpdate installation;
+  if (!installation.Run(&deployer)) {
     std::cerr << "failed to initialize installation." << std::endl;
     return 1;
   }
   std::cerr << "initializing...";
-  if (!deployer.PrepareWorkspace()) {
+  rime::WorkspaceUpdate workspace_update;
+  if (!workspace_update.Run(&deployer)) {
     std::cerr << "failure!" << std::endl;
     return 1;
   }

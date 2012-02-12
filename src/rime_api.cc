@@ -17,6 +17,7 @@
 #include <rime/registry.h>
 #include <rime/schema.h>
 #include <rime/service.h>
+#include <rime/expl/deployment_tasks.h>
 #include <rime_api.h>
 
 
@@ -35,10 +36,23 @@ static void apply_traits(RimeTraits *traits, rime::Deployer *deployer) {
 RIME_API void RimeInitialize(RimeTraits *traits) {
   rime::Deployer &deployer(rime::Service::instance().deployer());
   apply_traits(traits, &deployer);
-  deployer.InitializeInstallation();
+  {
+    rime::InstallationUpdate installation;
+    installation.Run(&deployer);
+  }
   rime::RegisterComponents();
-  bool thorough_check = false;
-  deployer.StartMaintenance(thorough_check);
+  
+  bool updated = false;
+  {
+    rime::ConfigFileUpdate default_config_update("default.yaml",
+                                                 "config_version");
+    updated = default_config_update.Run(&deployer);
+  }
+  if (updated) {
+    rime::shared_ptr<rime::DeploymentTask> task(new rime::WorkspaceUpdate);
+    deployer.ScheduleTask(task);
+    deployer.StartMaintenance();
+  }
 }
 
 RIME_API void RimeFinalize() {
@@ -62,19 +76,22 @@ RIME_API void RimeJoinMaintenanceThread() {
 RIME_API Bool RimeDeployWorkspace(RimeTraits *traits) {
   rime::Deployer &deployer(rime::Service::instance().deployer());
   apply_traits(traits, &deployer);
-  return Bool(deployer.InitializeInstallation() &&
-              deployer.PrepareWorkspace());
+  rime::InstallationUpdate installation;
+  rime::WorkspaceUpdate update;
+  return Bool(installation.Run(&deployer) && update.Run(&deployer));
 }
 
 RIME_API Bool RimeDeploySchema(const char *schema_file) {
   rime::Deployer &deployer(rime::Service::instance().deployer());
-  return Bool(deployer.InstallSchema(schema_file));
+  rime::SchemaUpdate update(schema_file);
+  return Bool(update.Run(&deployer));
 }
 
 RIME_API Bool RimeDeployConfigFile(const char *file_name,
                                    const char *version_key) {
   rime::Deployer &deployer(rime::Service::instance().deployer());
-  return Bool(deployer.UpdateDistributedConfigFile(file_name, version_key));
+  rime::ConfigFileUpdate update(file_name, version_key);
+  return Bool(update.Run(&deployer));
 }
 
 // session management
