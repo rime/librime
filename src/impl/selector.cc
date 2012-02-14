@@ -111,7 +111,6 @@ bool Selector::CursorDown(Context *ctx) {
   Composition *comp = ctx->composition();
   if (comp->empty() || !comp->back().menu)
     return false;
-  int page_size = engine_->schema()->page_size();
   int index = comp->back().selected_index + 1;
   int candidate_count = comp->back().menu->Prepare(index + 1);
   if (candidate_count <= index)
