@@ -42,6 +42,8 @@ class Syllabifier {
   int BuildSyllableGraph(const std::string &input, Prism &prism, SyllableGraph *graph);
 
  protected:
+  void CheckOverlappedSpellings(SyllableGraph *graph, size_t start, size_t end);
+  
   std::string delimiters_;
   bool enable_completion_;
 };

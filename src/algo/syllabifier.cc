@@ -92,17 +92,28 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
         graph->edges[i].erase(j++);
         continue;
       }
+      // remove disqualified syllables (eg. matching abbreviated spellings)
+      // when there is a path of more favored type (eg. normal spellings only)
+      SpellingType edge_type = kInvalidSpelling;
       for (SpellingMap::iterator k = j->second.begin();
            k != j->second.end(); ) {
-        if (k->second.type > last_type)
+        if (k->second.type > last_type) {
           j->second.erase(k++);
-        else
+        }
+        else {
+          if (k->second.type < edge_type)
+            edge_type = k->second.type;
           ++k;
+        }
       }
-      if (j->second.empty())
+      if (j->second.empty()) {
         graph->edges[i].erase(j++);
-      else
+      }
+      else {
+        if (edge_type == kNormalSpelling)
+          CheckOverlappedSpellings(graph, i, j->first);
         ++j;
+      }
     }
     if (graph->vertices[i] > last_type || graph->edges[i].empty()) {
       // remove stale vertex
@@ -150,6 +161,30 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
   graph->interpreted_length = farthest;
 
   return farthest;
+}
+
+void Syllabifier::CheckOverlappedSpellings(SyllableGraph *graph, size_t start, size_t end) {
+  // TODO: more cases to handle...
+  if (!graph || graph->edges.find(start) == graph->edges.end())
+    return;
+  // if "Z" = "YX", mark the vertex between Y and X an ambiguous syllable joint
+  EndVertexMap& y_end_vertices(graph->edges[start]);
+  // enumerate Ys
+  BOOST_FOREACH(const EndVertexMap::value_type& y, y_end_vertices) {
+    size_t joint = y.first;
+    if (joint >= end) break;
+    // test X
+    if (graph->edges.find(joint) == graph->edges.end())
+      continue;
+    EndVertexMap& x_end_vertices(graph->edges[joint]);
+    BOOST_FOREACH(const EndVertexMap::value_type& x, x_end_vertices) {
+      if (x.first < end) continue;
+      if (x.first == end) {
+        graph->vertices[joint] = kAmbiguousSpelling;
+      }
+      break;
+    }
+  }
 }
 
 }  // namespace rime

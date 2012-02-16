@@ -354,6 +354,10 @@ shared_ptr<DictEntry> R10nTranslation::SimplisticSentenceMaking(Dictionary *dict
   size_t total_length = syllable_graph_.interpreted_length;
   WordGraph graph;
   BOOST_FOREACH(const EdgeMap::value_type &s, syllable_graph_.edges) {
+    // avoid starting a word from an ambiguous joint
+    // bad cases include pinyin syllabification "niju'ede"
+    if (syllable_graph_.vertices[s.first] >= kAmbiguousSpelling)
+      continue;
     shared_ptr<UserDictEntryCollector> user_phrase =
         user_dict->Lookup(syllable_graph_, s.first, kMaxSyllablesInSentenceMakingUserPhrases);
     UserDictEntryCollector &u(graph[s.first]);
