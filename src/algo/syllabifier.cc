@@ -55,17 +55,12 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
           farthest = end_pos;
         SpellingMap &spellings(end_vertices[end_pos]);
         SpellingType end_vertex_type = kInvalidSpelling;
-        // for the same end vertex, favor longer spellings (possibly shorter path)
-        double distance_factor = 1.0;
-        if (graph->vertices.find(end_pos) != graph->vertices.end())
-          distance_factor = 0.5;
         // when spelling algebra is enabled, a spelling evaluates to a set of syllables;
         // otherwise, it resembles exactly the syllable itself.
         SpellingAccessor accessor(prism.QuerySpelling(m.value));
         while (!accessor.exhausted()) {
           SyllableId syllable_id(accessor.syllable_id());
           SpellingProperties props(accessor.properties());
-          props.credibility *= distance_factor;
           // add a syllable with properties to the edge's spelling-to-syllable map
           spellings.insert(SpellingMap::value_type(syllable_id, props));
           if (props.type < end_vertex_type) {
@@ -117,9 +112,6 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
     }
     // keep the valid vetex
     good.insert(i);
-    if (graph->vertices[i] < last_type) {
-      last_type = graph->vertices[i];
-    }
   }
 
   if (enable_completion_ && farthest < input.length()) {
