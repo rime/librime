@@ -18,3 +18,7 @@ file(COPY ${PROJECT_SOURCE_DIR}/data/schema/luna_pinyin.dict.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 file(COPY ${PROJECT_SOURCE_DIR}/data/schema/luna_pinyin.schema.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
+file(COPY ${PROJECT_SOURCE_DIR}/data/schema/cangjie5.dict.yaml
+     DESTINATION ${EXECUTABLE_OUTPUT_PATH})
+file(COPY ${PROJECT_SOURCE_DIR}/data/schema/cangjie5.schema.yaml
+     DESTINATION ${EXECUTABLE_OUTPUT_PATH})
