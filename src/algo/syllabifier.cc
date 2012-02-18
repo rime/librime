@@ -4,7 +4,8 @@
 // Copyleft 2011 RIME Developers
 // License: GPLv3
 //
-// 2011-7-12 Zou xu <zouivex@gmail.com>
+// 2011-07-12 Zou Xu <zouivex@gmail.com>
+// 2012-02-11 GONG Chen <chen.sst@gmail.com>
 //
 #include <functional>
 #include <queue>

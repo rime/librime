@@ -41,16 +41,17 @@ struct Chunk {
   size_t size;
   size_t cursor;
   std::string remaining_code;  // for predictive queries
+  double credibility;
 
-  Chunk() : entries(NULL), size(0), cursor(0) {}
-  Chunk(const Code &c, const table::Entry *e)
-      : code(c), entries(e), size(1), cursor(0) {}
-  Chunk(const TableAccessor &a)
+  Chunk() : entries(NULL), size(0), cursor(0), credibility(1.0) {}
+  Chunk(const Code &c, const table::Entry *e, double cr = 1.0)
+      : code(c), entries(e), size(1), cursor(0), credibility(cr) {}
+  Chunk(const TableAccessor &a, double cr = 1.0)
       : code(a.index_code()), entries(a.entry()),
-        size(a.remaining()), cursor(0) {}
-  Chunk(const TableAccessor &a, const std::string &r)
+        size(a.remaining()), cursor(0), credibility(cr) {}
+  Chunk(const TableAccessor &a, const std::string &r, double cr = 1.0)
       : code(a.index_code()), entries(a.entry()),
-        size(a.remaining()), cursor(0), remaining_code(r) {}
+        size(a.remaining()), cursor(0), remaining_code(r), credibility(cr) {}
 };
 
 bool compare_chunk_by_leading_element(const Chunk &a, const Chunk &b);
@@ -97,7 +98,8 @@ class Dictionary : public Class<Dictionary, Schema*> {
   bool Load();
 
   shared_ptr<DictEntryCollector> Lookup(const SyllableGraph &syllable_graph,
-                                        size_t start_pos);
+                                        size_t start_pos,
+                                        double initial_credibility = 1.0);
   // if predictive is true, do an expand search with limit,
   // otherwise do an exact match.
   // return num of matching keys.
@@ -115,8 +117,8 @@ class Dictionary : public Class<Dictionary, Schema*> {
 
  private:
   std::string name_;
-  shared_ptr<Prism> prism_;
   shared_ptr<Table> table_;
+  shared_ptr<Prism> prism_;
 };
 
 class DictionaryComponent : public Dictionary::Component {

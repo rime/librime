@@ -33,7 +33,8 @@ void RawCode::FromString(const std::string &code) {
 bool compare_chunk_by_head_element(const Chunk &a, const Chunk &b) {
   if (!a.entries || a.cursor >= a.size) return false;
   if (!b.entries || b.cursor >= b.size) return true;
-  return a.entries[a.cursor].weight > b.entries[b.cursor].weight;  // by weight desc
+  return a.credibility * a.entries[a.cursor].weight >
+         b.credibility * b.entries[b.cursor].weight;  // by weight desc
 }
 
 size_t match_extra_code(const table::Code *extra_code, size_t depth,
@@ -108,7 +109,7 @@ shared_ptr<DictEntry> DictEntryIterator::Peek() {
       entry_->comment = "~" + chunk.remaining_code;
     }
     const double kS = 100000.0;
-    entry_->weight = (e.weight + 1) / kS;
+    entry_->weight = (e.weight + 1) / kS * chunk.credibility;
   }
   return entry_;
 }
@@ -147,7 +148,8 @@ bool DictEntryIterator::Skip(size_t num_entries) {
 // Dictionary members
 
 Dictionary::Dictionary(const std::string &name,
-                       const shared_ptr<Table> &table, const shared_ptr<Prism> &prism)
+                       const shared_ptr<Table> &table,
+                       const shared_ptr<Prism> &prism)
     : name_(name), table_(table), prism_(prism) {
 }
 
@@ -156,7 +158,8 @@ Dictionary::~Dictionary() {
 }
 
 shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_graph,
-                                                  size_t start_pos) {
+                                                  size_t start_pos,
+                                                  double initial_credibility) {
   if (!loaded())
     return shared_ptr<DictEntryCollector>();
   TableQueryResult result;
@@ -168,17 +171,19 @@ shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_
   BOOST_FOREACH(TableQueryResult::value_type &v, result) {
     size_t end_pos = v.first;
     BOOST_FOREACH(TableAccessor &a, v.second) {
+      double cr = initial_credibility * a.credibility();
       if (a.extra_code()) {
         do {
-          size_t actual_end_pos = dictionary::match_extra_code(a.extra_code(), 0,
-                                                               syllable_graph, end_pos);
+          size_t actual_end_pos = dictionary::match_extra_code(
+              a.extra_code(), 0, syllable_graph, end_pos);
           if (actual_end_pos == 0) continue;
-          (*collector)[actual_end_pos].AddChunk(dictionary::Chunk(a.code(), a.entry()));
+          (*collector)[actual_end_pos].AddChunk(
+              dictionary::Chunk(a.code(), a.entry(), cr));
         }
         while (a.Next());
       }
       else {
-        (*collector)[end_pos].AddChunk(dictionary::Chunk(a));
+        (*collector)[end_pos].AddChunk(dictionary::Chunk(a, cr));
       }
     }
   }

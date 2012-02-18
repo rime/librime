@@ -34,15 +34,22 @@ static table::TrunkIndexNode* find_node(table::TrunkIndexNode* first,
 }
 
 TableAccessor::TableAccessor()
-    : index_code_(), entries_(NULL), code_map_(NULL), cursor_(0) {
+    : index_code_(), entries_(NULL), code_map_(NULL), cursor_(0),
+      credibility_(1.0) {
 }
 
-TableAccessor::TableAccessor(const Code &index_code, const List<table::Entry> *entries)
-    : index_code_(index_code), entries_(entries), code_map_(NULL), cursor_(0) {
+TableAccessor::TableAccessor(const Code &index_code,
+                             const List<table::Entry> *entries,
+                             double credibility)
+    : index_code_(index_code), entries_(entries), code_map_(NULL), cursor_(0),
+      credibility_(credibility) {
 }
 
-TableAccessor::TableAccessor(const Code &index_code, const table::TailIndex *code_map)
-    : index_code_(index_code), entries_(NULL), code_map_(code_map), cursor_(0) {
+TableAccessor::TableAccessor(const Code &index_code,
+                             const table::TailIndex *code_map,
+                             double credibility)
+    : index_code_(index_code), entries_(NULL), code_map_(code_map), cursor_(0),
+      credibility_(credibility) {
 }
 
 bool TableAccessor::exhausted() const {
@@ -97,78 +104,91 @@ TableVisitor::TableVisitor(table::Index *index)
     : lv1_index_(index),
       lv2_index_(NULL), lv3_index_(NULL), lv4_index_(NULL),
       level_(0) {
+  Reset();
 }
 
-const TableAccessor TableVisitor::Access(int syllable_id) const {
+const TableAccessor TableVisitor::Access(int syllable_id,
+                                         double credibility) const {
+  credibility *= credibility_.back();
   if (level_ == 0) {
-    if (!lv1_index_ || syllable_id < 0 || syllable_id >= static_cast<int>(lv1_index_->size))
+    if (!lv1_index_ ||
+        syllable_id < 0 ||
+        syllable_id >= static_cast<int>(lv1_index_->size))
       return TableAccessor();
     table::HeadIndexNode *node = &lv1_index_->at[syllable_id];
     Code code(index_code_);
     code.push_back(syllable_id);
-    return TableAccessor(code, &node->entries);
+    return TableAccessor(code, &node->entries, credibility);
   }
   else if (level_ == 1 || level_ == 2) {
     table::TrunkIndex *index = (level_ == 1) ? lv2_index_ : lv3_index_;
     if (!index) return TableAccessor();
-    table::TrunkIndexNode *node = find_node(index->begin(), index->end(), syllable_id);
+    table::TrunkIndexNode *node = find_node(index->begin(), index->end(),
+                                            syllable_id);
     if (node == index->end()) return TableAccessor();
     Code code(index_code_);
     code.push_back(syllable_id);
-    return TableAccessor(code, &node->entries);
+    return TableAccessor(code, &node->entries, credibility);
   }
   else if (level_ == 3) {
     if (!lv4_index_) return TableAccessor();
-    return TableAccessor(index_code_, lv4_index_);
+    return TableAccessor(index_code_, lv4_index_, credibility);
   }
   return TableAccessor();
 }
 
-bool TableVisitor::Walk(int syllable_id) {
+bool TableVisitor::Walk(int syllable_id, double credibility) {
   if (level_ == 0) {
-    if (!lv1_index_ || syllable_id < 0 || syllable_id >= static_cast<int>(lv1_index_->size))
+    if (!lv1_index_ ||
+        syllable_id < 0 ||
+        syllable_id >= static_cast<int>(lv1_index_->size))
       return false;
     table::HeadIndexNode *node = &lv1_index_->at[syllable_id];
     if (!node->next_level) return false;
     lv2_index_ = reinterpret_cast<table::TrunkIndex*>(node->next_level.get());
-    ++level_;
-    index_code_.push_back(syllable_id);
-    return true;
   }
   else if (level_ == 1) {
     if (!lv2_index_) return false;
-    table::TrunkIndexNode *node = find_node(lv2_index_->begin(), lv2_index_->end(), syllable_id);
+    table::TrunkIndexNode *node = find_node(lv2_index_->begin(),
+                                            lv2_index_->end(),
+                                            syllable_id);
     if (node == lv2_index_->end()) return false;
     if (!node->next_level) return false;
     lv3_index_ = reinterpret_cast<table::TrunkIndex*>(node->next_level.get());
-    ++level_;
-    index_code_.push_back(syllable_id);
-    return true;
   }
   else if (level_ == 2) {
     if (!lv3_index_) return false;
-    table::TrunkIndexNode *node = find_node(lv3_index_->begin(), lv3_index_->end(), syllable_id);
+    table::TrunkIndexNode *node = find_node(lv3_index_->begin(),
+                                            lv3_index_->end(),
+                                            syllable_id);
     if (node == lv3_index_->end()) return false;
     if (!node->next_level) return false;
     lv4_index_ = reinterpret_cast<table::TailIndex*>(node->next_level.get());
-    ++level_;
-    index_code_.push_back(syllable_id);
-    return true;
   }
-  return false;
+  else {
+    return false;
+  }
+  ++level_;
+  index_code_.push_back(syllable_id);
+  credibility_.push_back(credibility_.back() * credibility);
+  return true;
 }
 
 bool TableVisitor::Backdate() {
   if (level_ == 0) return false;
   --level_;
-  if (index_code_.size() > level_)
+  if (index_code_.size() > level_) {
     index_code_.pop_back();
+    credibility_.pop_back();
+  }
   return true;
 }
 
 void TableVisitor::Reset() {
   level_ = 0;
   index_code_.clear();
+  credibility_.clear();
+  credibility_.push_back(1.0);
 }
 
 bool Table::Load() {
@@ -411,7 +431,7 @@ const TableAccessor Table::QueryWords(int syllable_id) {
 const TableAccessor Table::QueryPhrases(const Code &code) {
   if (code.empty()) return TableAccessor();
   TableVisitor visitor(index_);
-  for (int i = 0; i < Code::kIndexCodeMaxLength; ++i) {
+  for (size_t i = 0; i < Code::kIndexCodeMaxLength; ++i) {
     if (code.size() == i + 1) return visitor.Access(code[i]);
     if (!visitor.Walk(code[i])) return TableAccessor();
   }
@@ -447,12 +467,13 @@ bool Table::Query(const SyllableGraph &syll_graph, size_t start_pos,
       const SpellingMap &spellings(edge.second);
       BOOST_FOREACH(const SpellingMap::value_type &spelling, spellings) {
         SyllableId syll_id = spelling.first;
+        double credibility = spelling.second.credibility;
         TableAccessor accessor(visitor.Access(syll_id));
         if (!accessor.exhausted()) {
           (*result)[end_vertex_pos].push_back(accessor);
         }
         if (end_vertex_pos < syll_graph.interpreted_length &&
-            visitor.Walk(syll_id)) {
+            visitor.Walk(syll_id, credibility)) {
           q.push(std::make_pair(end_vertex_pos, visitor));
           visitor.Backdate();
         }

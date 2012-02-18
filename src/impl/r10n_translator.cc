@@ -354,20 +354,23 @@ void R10nTranslation::CheckEmpty() {
 shared_ptr<DictEntry> R10nTranslation::MakeSentence(
     Dictionary *dict, UserDictionary *user_dict) {
   const int kMaxSyllablesForUserPhraseQuery = 5;
+  const double kPenaltyForAmbiguousSyllable = 1e-30;
+  double credibility = 1.0;
   WordGraph graph;
   BOOST_FOREACH(const EdgeMap::value_type &s, syllable_graph_.edges) {
-    // avoid starting a word from an ambiguous joint
+    // discourage starting a word from an ambiguous joint
     // bad cases include pinyin syllabification "niju'ede"
     if (syllable_graph_.vertices[s.first] >= kAmbiguousSpelling)
-      continue;
-    shared_ptr<UserDictEntryCollector> user_phrase =
-        user_dict->Lookup(syllable_graph_, s.first,
-                          kMaxSyllablesForUserPhraseQuery);
+      credibility = kPenaltyForAmbiguousSyllable;
+    shared_ptr<UserDictEntryCollector> user_phrase = user_dict->Lookup(
+        syllable_graph_, s.first,
+        kMaxSyllablesForUserPhraseQuery,
+        credibility);
     UserDictEntryCollector &u(graph[s.first]);
     if (user_phrase)
       u.swap(*user_phrase);
     shared_ptr<DictEntryCollector> phrase =
-        dict->Lookup(syllable_graph_, s.first);
+        dict->Lookup(syllable_graph_, s.first, credibility);
     if (phrase) {
       // merge lookup results
       BOOST_FOREACH(DictEntryCollector::value_type &t, *phrase) {

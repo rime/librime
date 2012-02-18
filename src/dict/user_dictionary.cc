@@ -57,6 +57,7 @@ struct DfsState {
   size_t depth_limit;
   TickCount present_tick;
   Code code;
+  std::vector<double> credibility;
   shared_ptr<UserDictEntryCollector> collector;
   shared_ptr<UserDbAccessor> accessor;
   std::string key;
@@ -103,7 +104,10 @@ void DfsState::SaveEntry(size_t pos) {
   dee = algo::formula_d(0, (double)present_tick, dee, (double)last_tick);
   e->commit_count = commit_count;
   // TODO: argument s not defined...
-  e->weight = algo::formula_p(0, (double)commit_count / present_tick, (double)present_tick, dee);
+  e->weight = algo::formula_p(0,
+                              (double)commit_count / present_tick,
+                              (double)present_tick,
+                              dee) * credibility.back();
   e->code = code;
   EZDBGONLYLOGGERPRINT("pos = %d, text = '%s', code_len = %d, present_tick = %llu, weight = %f, commit_count = %d",
                        pos, e->text.c_str(), e->code.size(), present_tick, e->weight, e->commit_count);
@@ -150,6 +154,8 @@ bool UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
     BOOST_FOREACH(const SpellingMap::value_type &spelling, spellings) {
       SyllableId syll_id = spelling.first;
       state->code.push_back(syll_id);
+      state->credibility.push_back(
+          state->credibility.back() * spelling.second.credibility);
       if (!TranslateCodeToString(state->code, &prefix))
         continue;
       if (prefix > state->key) {  // 'a b c |d ' > 'a b c \tabracadabra'
@@ -169,6 +175,7 @@ bool UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
           return false;
       }
       state->code.pop_back();
+      state->credibility.pop_back();
       if (!state->IsPrefixMatch(current_prefix)) {  // 'b |' vs. 'g o \tGo'
         return true;  // pruning: done with the current prefix code
       }
@@ -181,7 +188,8 @@ bool UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
 
 shared_ptr<UserDictEntryCollector> UserDictionary::Lookup(const SyllableGraph &syll_graph,
                                                           size_t start_pos,
-                                                          size_t depth_limit) {
+                                                          size_t depth_limit,
+                                                          double initial_credibility) {
   if (!table_ || !prism_ || !loaded() ||
       start_pos >= syll_graph.interpreted_length)
     return shared_ptr<UserDictEntryCollector>();
@@ -189,6 +197,7 @@ shared_ptr<UserDictEntryCollector> UserDictionary::Lookup(const SyllableGraph &s
   state.depth_limit = depth_limit;
   FetchTickCount();
   state.present_tick = tick_ + 1;
+  state.credibility.push_back(initial_credibility);
   state.collector.reset(new UserDictEntryCollector);
   state.accessor.reset(new UserDbAccessor(db_->Query("")));
   state.accessor->Forward(" ");  // skip metadata

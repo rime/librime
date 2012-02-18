@@ -73,8 +73,10 @@ struct Metadata {
 class TableAccessor {
  public:
   TableAccessor();
-  TableAccessor(const Code &index_code, const List<table::Entry> *entries);
-  TableAccessor(const Code &index_code, const table::TailIndex *code_map);
+  TableAccessor(const Code &index_code, const List<table::Entry> *entries,
+                double credibility = 1.0);
+  TableAccessor(const Code &index_code, const table::TailIndex *code_map,
+                double credibility = 1.0);
 
   bool Next();
 
@@ -84,24 +86,30 @@ class TableAccessor {
   const table::Code* extra_code() const;
   const Code& index_code() const { return index_code_; }
   const Code code() const;
+  double credibility() const { return credibility_; }
 
  private:
   Code index_code_;
   const List<table::Entry> *entries_;
   const table::TailIndex *code_map_;
   size_t cursor_;
+  double credibility_;
 };
 
 class TableVisitor {
  public:
   TableVisitor(table::Index *index);
 
-  const TableAccessor Access(int syllable_id) const;
+  const TableAccessor Access(int syllable_id,
+                             double credibility = 1.0) const;
 
-  bool Walk(int syllable_id);  // down to next level
-  bool Backdate();  // up one level
-  void Reset();  // back to root
-
+  // down to next level
+  bool Walk(int syllable_id, double credibility = 1.0);
+  // up one level
+  bool Backdate();
+  // back to root
+  void Reset();
+  
   size_t level() const { return level_; }
 
  private:
@@ -111,6 +119,7 @@ class TableVisitor {
   table::TailIndex *lv4_index_;
   size_t level_;
   Code index_code_;
+  std::vector<double> credibility_;
 };
 
 typedef std::map<int, std::vector<TableAccessor> > TableQueryResult;
@@ -120,18 +129,25 @@ struct SyllableGraph;
 class Table : public MappedFile {
  public:
   Table(const std::string &file_name)
-      : MappedFile(file_name), index_(NULL), syllabary_(NULL), metadata_(NULL) {}
+      : MappedFile(file_name),
+        index_(NULL),
+        syllabary_(NULL),
+        metadata_(NULL) {}
 
   bool Load();
   bool Save();
-  bool Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size_t num_entries,
+  bool Build(const Syllabary &syllabary,
+             const Vocabulary &vocabulary,
+             size_t num_entries,
              uint32_t dict_file_checksum = 0);
   
   bool GetSyllabary(Syllabary *syllabary);
   const char* GetSyllableById(int syllable_id);
   const TableAccessor QueryWords(int syllable_id);
   const TableAccessor QueryPhrases(const Code &code);
-  bool Query(const SyllableGraph &syll_graph, size_t start_pos, TableQueryResult *result);
+  bool Query(const SyllableGraph &syll_graph,
+             size_t start_pos,
+             TableQueryResult *result);
   uint32_t dict_file_checksum() const;
 
  private:
