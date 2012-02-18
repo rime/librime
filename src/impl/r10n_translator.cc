@@ -7,7 +7,6 @@
 // Romanization translator
 //
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
-// 2011-10-06 GONG Chen <chen.sst@gmail.com>  implemented simplistic sentence-making
 //
 #include <algorithm>
 #include <boost/bind.hpp>
@@ -21,8 +20,8 @@
 #include <rime/segmentation.h>
 #include <rime/translation.h>
 #include <rime/dict/dictionary.h>
+#include <rime/algo/poet.h>
 #include <rime/algo/syllabifier.h>
-#include <rime/dict/user_dictionary.h>
 #include <rime/impl/r10n_translator.h>
 
 namespace rime {
@@ -38,7 +37,8 @@ struct DelimitSyllableState {
   std::string output;
 };
 
-bool DelimitSyllablesDfs(DelimitSyllableState *state, size_t current_pos, size_t depth) {
+bool DelimitSyllablesDfs(DelimitSyllableState *state,
+                         size_t current_pos, size_t depth) {
   if (depth == state->code->size()) {
     return current_pos == state->end_pos;
   }
@@ -46,7 +46,8 @@ bool DelimitSyllablesDfs(DelimitSyllableState *state, size_t current_pos, size_t
   EdgeMap::const_iterator z = state->graph->edges.find(current_pos);
   if (z == state->graph->edges.end())
     return false;
-  BOOST_REVERSE_FOREACH(const EndVertexMap::value_type &y, z->second) {  // favor longer spelling
+  // favor longer spellings
+  BOOST_REVERSE_FOREACH(const EndVertexMap::value_type &y, z->second) {
     size_t end_vertex_pos = y.first;
     if (end_vertex_pos > state->end_pos)
       continue;
@@ -54,10 +55,12 @@ bool DelimitSyllablesDfs(DelimitSyllableState *state, size_t current_pos, size_t
     if (x != y.second.end()) {
       size_t len = state->output.length();
       if (depth > 0 && len > 0 &&
-          state->delimiters->find(state->output[len - 1]) == std::string::npos) {
+          state->delimiters->find(
+              state->output[len - 1]) == std::string::npos) {
         state->output += state->delimiters->at(0);
       }
-      state->output += state->input->substr(current_pos, end_vertex_pos - current_pos);
+      state->output += state->input->substr(current_pos,
+                                            end_vertex_pos - current_pos);
       if (DelimitSyllablesDfs(state, end_vertex_pos, depth + 1))
         return true;
       state->output.resize(len);
@@ -86,8 +89,8 @@ class R10nTranslation : public Translation {
  protected:
   void CheckEmpty();
   const std::string GetPreeditString(const R10nCandidate &cand) const;
-  shared_ptr<DictEntry> SimplisticSentenceMaking(Dictionary *dict,
-                                                 UserDictionary *user_dict);
+  shared_ptr<DictEntry> MakeSentence(Dictionary *dict,
+                                     UserDictionary *user_dict);
 
   const std::string input_;
   size_t start_;
@@ -153,7 +156,8 @@ R10nTranslator::R10nTranslator(Engine *engine)
       dict_->Load();
   }
 
-  UserDictionary::Component *user_dictionary = UserDictionary::Require("user_dictionary");
+  UserDictionary::Component *user_dictionary =
+      UserDictionary::Require("user_dictionary");
   if (user_dictionary) {
     user_dict_.reset(user_dictionary->Create(engine->schema()));
     if (user_dict_) {
@@ -171,7 +175,8 @@ R10nTranslator::~R10nTranslator() {
   connection_.disconnect();
 }
 
-Translation* R10nTranslator::Query(const std::string &input, const Segment &segment) {
+Translation* R10nTranslator::Query(const std::string &input,
+                                   const Segment &segment) {
   if (!dict_ || !dict_->loaded())
     return NULL;
   if (!segment.HasTag("abc"))
@@ -205,7 +210,8 @@ void R10nTranslator::OnCommit(Context *ctx) {
     if (r10n_cand) {
       commit_entry.text += r10n_cand->text();
       commit_entry.code.insert(commit_entry.code.end(),
-                               r10n_cand->code().begin(), r10n_cand->code().end());
+                               r10n_cand->code().begin(),
+                               r10n_cand->code().end());
     }
     if ((!r10n_cand || seg.status >= Segment::kConfirmed) &&
         !commit_entry.text.empty()) {
@@ -238,7 +244,7 @@ bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
     translated_len = (std::max)(translated_len, user_phrase_->rbegin()->first);
   if (translated_len < consumed &&
       syllable_graph_.edges.size() > 1) {  // at least 2 syllables required
-    shared_ptr<DictEntry> sentence = SimplisticSentenceMaking(dict, user_dict);
+    shared_ptr<DictEntry> sentence = MakeSentence(dict, user_dict);
     if (sentence) {
       if (!user_phrase_) user_phrase_.reset(new UserDictEntryCollector);
       (*user_phrase_)[consumed].push_back(sentence);
@@ -251,7 +257,8 @@ bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
   return !exhausted();
 }
 
-const std::string R10nTranslation::GetPreeditString(const R10nCandidate &cand) const {
+const std::string R10nTranslation::GetPreeditString(
+    const R10nCandidate &cand) const {
   DelimitSyllableState state;
   state.input = &input_;
   state.delimiters = &translator_->delimiters();
@@ -344,14 +351,9 @@ void R10nTranslation::CheckEmpty() {
                 (!user_phrase_ || user_phrase_iter_ == user_phrase_->rend()));
 }
 
-shared_ptr<DictEntry> R10nTranslation::SimplisticSentenceMaking(Dictionary *dict,
-                                                                UserDictionary *user_dict) {
-  typedef std::map<int, UserDictEntryCollector> WordGraph;
-  const int kMaxSentenceMakingHomophones = 1;  // 20; if we have bigram model...
-  const int kMaxSyllablesInSentenceMakingUserPhrases = 5;
-  const double kEpsilon = 1e-30;
-  const double kPenalty = 1e-8;
-  size_t total_length = syllable_graph_.interpreted_length;
+shared_ptr<DictEntry> R10nTranslation::MakeSentence(
+    Dictionary *dict, UserDictionary *user_dict) {
+  const int kMaxSyllablesForUserPhraseQuery = 5;
   WordGraph graph;
   BOOST_FOREACH(const EdgeMap::value_type &s, syllable_graph_.edges) {
     // avoid starting a word from an ambiguous joint
@@ -359,11 +361,13 @@ shared_ptr<DictEntry> R10nTranslation::SimplisticSentenceMaking(Dictionary *dict
     if (syllable_graph_.vertices[s.first] >= kAmbiguousSpelling)
       continue;
     shared_ptr<UserDictEntryCollector> user_phrase =
-        user_dict->Lookup(syllable_graph_, s.first, kMaxSyllablesInSentenceMakingUserPhrases);
+        user_dict->Lookup(syllable_graph_, s.first,
+                          kMaxSyllablesForUserPhraseQuery);
     UserDictEntryCollector &u(graph[s.first]);
     if (user_phrase)
       u.swap(*user_phrase);
-    shared_ptr<DictEntryCollector> phrase = dict->Lookup(syllable_graph_, s.first);
+    shared_ptr<DictEntryCollector> phrase =
+        dict->Lookup(syllable_graph_, s.first);
     if (phrase) {
       // merge lookup results
       BOOST_FOREACH(DictEntryCollector::value_type &t, *phrase) {
@@ -375,40 +379,8 @@ shared_ptr<DictEntry> R10nTranslation::SimplisticSentenceMaking(Dictionary *dict
       }
     }
   }
-  std::map<int, shared_ptr<DictEntry> > sentence;
-  sentence[0].reset(new DictEntry);
-  sentence[0]->weight = 1.0;
-  // dynamic programming
-  BOOST_FOREACH(WordGraph::value_type &w, graph) {
-    size_t start_pos = w.first;
-    EZDBGONLYLOGGERVAR(start_pos);
-    if (sentence.find(start_pos) == sentence.end())
-      continue;
-    BOOST_FOREACH(UserDictEntryCollector::value_type &x, w.second) {
-      size_t end_pos = x.first;
-      if (start_pos == 0 && end_pos == total_length)  // exclude single words from the result
-        continue;
-      EZDBGONLYLOGGERVAR(end_pos);
-      DictEntryList &entries(x.second);
-      for (size_t i = 0; i < kMaxSentenceMakingHomophones && i < entries.size(); ++i) {
-        const shared_ptr<DictEntry> &e(entries[i]);
-        shared_ptr<DictEntry> new_sentence(new DictEntry(*sentence[start_pos]));
-        new_sentence->code.insert(new_sentence->code.end(), e->code.begin(), e->code.end());
-        new_sentence->text.append(e->text);
-        new_sentence->weight *= (std::max)(e->weight, kEpsilon) * kPenalty;
-        if (sentence.find(end_pos) == sentence.end() ||
-            sentence[end_pos]->weight < new_sentence->weight) {
-          EZDBGONLYLOGGERPRINT("updated sentence[%d] with '%s', %g",
-                               end_pos, new_sentence->text.c_str(), new_sentence->weight);
-          sentence[end_pos] = new_sentence;
-        }
-      }
-    }
-  }
-  if (sentence.find(total_length) == sentence.end())
-    return shared_ptr<DictEntry>();
-  else
-    return sentence[total_length];
+  Poet poet;
+  return poet.MakeSentence(graph, syllable_graph_.interpreted_length);
 }
 
 }  // namespace rime
