@@ -79,13 +79,17 @@ struct DfsState {
     return true;
   }
   bool ForwardScan(const std::string &prefix) {
-    if (!accessor->Forward(prefix))
+    if (!accessor->Forward(prefix)) {
       return false;
+    }
     return NextEntry();
   }
   bool Backdate(const std::string &prefix) {
-    if (!accessor->Backward(prefix.empty() ? " " : prefix))
+    EZDBGONLYLOGGERVAR(prefix);
+    if (!accessor->Backward(prefix.empty() ? " " : prefix)) {
+      EZLOGGERPRINT("Warning: backdating failed for '%s'.", prefix.c_str());
       return false;
+    }
     return NextEntry();
   }
 };
@@ -140,6 +144,8 @@ bool UserDictionary::loaded() const {
   return db_ && db_->loaded();
 }
 
+// 'true': returning with a clean state;
+// 'false': needing extra clean-up from the caller.
 bool UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_pos,
                                const std::string &current_prefix,
                                DfsState *state) {
@@ -147,9 +153,11 @@ bool UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
   if (edges == syll_graph.edges.end()) {
     return true;  // continue DFS lookup
   }
+  EZDBGONLYLOGGERPRINT("%d edges start from %d.", edges->second.size(), edges->first);
   std::string prefix;
   BOOST_FOREACH(const EndVertexMap::value_type &edge, edges->second) {
     size_t end_vertex_pos = edge.first;
+    EZDBGONLYLOGGERPRINT("prefix: '%s' edge: [%d, %d)", current_prefix.c_str(), current_pos, end_vertex_pos);
     const SpellingMap &spellings(edge.second);
     BOOST_FOREACH(const SpellingMap::value_type &spelling, spellings) {
       SyllableId syll_id = spelling.first;
@@ -159,20 +167,24 @@ bool UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
       if (!TranslateCodeToString(state->code, &prefix))
         continue;
       if (prefix > state->key) {  // 'a b c |d ' > 'a b c \tabracadabra'
+        EZDBGONLYLOGGERPRINT("forward scanning for '%s'.", prefix.c_str());
         if (!state->ForwardScan(prefix)) {
           return false;  // terminate DFS lookup
         }
       }
       while (state->IsExactMatch(prefix)) {  // 'b |e ' vs. 'b e \tBe'
-        EZDBGONLYLOGGERVAR(prefix);
+        EZDBGONLYLOGGERPRINT("match found for '%s'.", prefix.c_str());
         state->SaveEntry(end_vertex_pos);
         if (!state->NextEntry())
           return false;
       }
       if ((!state->depth_limit || state->code.size() < state->depth_limit)
           && state->IsPrefixMatch(prefix)) {  // 'b |e ' vs. 'b e f \tBefore'
-        if (!DfsLookup(syll_graph, end_vertex_pos, prefix, state))
-          return false;
+        if (!DfsLookup(syll_graph, end_vertex_pos, prefix, state)) {
+          // cleanup for the returned call
+          state->code.pop_back();
+          state->credibility.pop_back();
+        }
       }
       state->code.pop_back();
       state->credibility.pop_back();
