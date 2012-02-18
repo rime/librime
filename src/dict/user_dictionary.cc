@@ -84,7 +84,7 @@ struct DfsState {
     return NextEntry();
   }
   bool Backdate(const std::string &prefix) {
-    if (!accessor->Backward(prefix))
+    if (!accessor->Backward(prefix.empty() ? " " : prefix))
       return false;
     return NextEntry();
   }
