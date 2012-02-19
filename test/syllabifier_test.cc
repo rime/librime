@@ -128,7 +128,7 @@ TEST_F(RimeSyllabifierTest, CaseTuan) {
   // both tu'an and tuan
   ASSERT_FALSE(g.vertices.end() == g.vertices.find(2));
   ASSERT_FALSE(g.vertices.end() == g.vertices.find(4));
-  EXPECT_EQ(rime::kNormalSpelling, g.vertices[2]);
+  EXPECT_EQ(rime::kAmbiguousSpelling, g.vertices[2]);
   EXPECT_EQ(rime::kNormalSpelling, g.vertices[4]);
   rime::EndVertexMap &e0(g.edges[0]);
   EXPECT_EQ(2, e0.size());
