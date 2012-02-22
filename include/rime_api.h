@@ -36,7 +36,14 @@ extern "C" {
 
 typedef uintptr_t RimeSessionId;
 
-typedef enum { False, True } Bool;
+typedef int Bool;
+
+#ifndef False
+#define False 0
+#endif
+#ifndef True
+#define True 1
+#endif
 
 typedef struct {
   const char* shared_data_dir;
@@ -91,12 +98,14 @@ typedef struct {
 RIME_API void RimeInitialize(RimeTraits *traits);
 RIME_API void RimeFinalize();
 
+RIME_API Bool RimeStartMaintenanceOnWorkspaceChange();
 RIME_API Bool RimeIsMaintenancing();
 RIME_API void RimeJoinMaintenanceThread();
 
 // deployment
 
-RIME_API Bool RimeDeployWorkspace(RimeTraits *traits);
+RIME_API void RimeDeployerInitialize(RimeTraits *traits);
+RIME_API Bool RimeDeployWorkspace();
 RIME_API Bool RimeDeploySchema(const char *schema_file);
 RIME_API Bool RimeDeployConfigFile(const char *file_name, const char *version_key);
 

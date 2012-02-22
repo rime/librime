@@ -21,45 +21,32 @@
 #include <rime_api.h>
 
 
-static void apply_traits(RimeTraits *traits, rime::Deployer *deployer) {
-  if (!traits) return;
-  deployer->shared_data_dir = traits->shared_data_dir;
-  deployer->user_data_dir = traits->user_data_dir;
-  if (traits->distribution_name)
-    deployer->distribution_name = traits->distribution_name;
-  if (traits->distribution_code_name)
-    deployer->distribution_code_name = traits->distribution_code_name;
-  if (traits->distribution_version)
-    deployer->distribution_version = traits->distribution_version;
-}
-
 RIME_API void RimeInitialize(RimeTraits *traits) {
-  rime::Deployer &deployer(rime::Service::instance().deployer());
-  apply_traits(traits, &deployer);
-  {
-    rime::InstallationUpdate installation;
-    installation.Run(&deployer);
-  }
+  RimeDeployerInitialize(traits);
   rime::RegisterComponents();
-  
-  bool updated = false;
-  {
-    rime::ConfigFileUpdate default_config_update("default.yaml",
-                                                 "config_version");
-    updated = default_config_update.Run(&deployer);
-  }
-  if (updated) {
-    EZLOGGERPRINT("changes detected; starting maintenance.");
-    rime::shared_ptr<rime::DeploymentTask> task(new rime::WorkspaceUpdate);
-    deployer.ScheduleTask(task);
-    deployer.StartMaintenance();
-  }
 }
 
 RIME_API void RimeFinalize() {
   RimeJoinMaintenanceThread();
   rime::Service::instance().CleanupAllSessions();
   rime::Registry::instance().Clear();
+}
+
+RIME_API Bool RimeStartMaintenanceOnWorkspaceChange() {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  rime::InstallationUpdate installation;
+  installation.Run(&deployer);
+  rime::ConfigFileUpdate default_config_update("default.yaml",
+                                               "config_version");
+  bool updated = default_config_update.Run(&deployer);
+  if (updated) {
+    EZLOGGERPRINT("changes detected; starting maintenance.");
+    rime::shared_ptr<rime::DeploymentTask> task(new rime::WorkspaceUpdate);
+    deployer.ScheduleTask(task);
+    deployer.StartMaintenance();
+    return True;
+  }
+  return False;
 }
 
 RIME_API Bool RimeIsMaintenancing() {
@@ -74,9 +61,20 @@ RIME_API void RimeJoinMaintenanceThread() {
 
 // deployment
 
-RIME_API Bool RimeDeployWorkspace(RimeTraits *traits) {
+RIME_API void RimeDeployerInitialize(RimeTraits *traits) {
   rime::Deployer &deployer(rime::Service::instance().deployer());
-  apply_traits(traits, &deployer);
+  deployer.shared_data_dir = traits->shared_data_dir;
+  deployer.user_data_dir = traits->user_data_dir;
+  if (traits->distribution_name)
+    deployer.distribution_name = traits->distribution_name;
+  if (traits->distribution_code_name)
+    deployer.distribution_code_name = traits->distribution_code_name;
+  if (traits->distribution_version)
+    deployer.distribution_version = traits->distribution_version;
+}
+
+RIME_API Bool RimeDeployWorkspace() {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
   rime::InstallationUpdate installation;
   rime::WorkspaceUpdate update;
   return Bool(installation.Run(&deployer) && update.Run(&deployer));

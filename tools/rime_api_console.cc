@@ -87,7 +87,8 @@ int main(int argc, char *argv[]) {
 
   fprintf(stderr, "initializing...");
   RimeInitialize(NULL);
-  RimeJoinMaintenanceThread();
+  if (RimeStartMaintenanceOnWorkspaceChange())
+    RimeJoinMaintenanceThread();
   fprintf(stderr, "ready.\n");
 
   RimeSessionId session_id = RimeCreateSession();
