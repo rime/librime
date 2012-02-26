@@ -11,94 +11,45 @@
 #include <boost/foreach.hpp>
 #include <rime/config.h>
 #include <rime/deployer.h>
-#include <rime/expl/signature.h>
 #include <rime/expl/switcher_settings.h>
 
 namespace fs = boost::filesystem;
 
 namespace rime {
 
-SwitcherSettings::SwitcherSettings()
-    : modified_(false) {
+SwitcherSettings::SwitcherSettings(Deployer* deployer)
+    : CustomSettings(deployer, "default", "Rime::SwitcherSettings") {
 }
 
-bool SwitcherSettings::Load(Deployer* deployer) {
-  fs::path user_data_path(deployer->user_data_dir);
-  fs::path shared_data_path(deployer->shared_data_dir);
-  fs::path config_path(user_data_path / "default.yaml");
-  Config config;
-  if (!config.LoadFromFile(config_path.string())) {
-    config_path = shared_data_path / "default.yaml";
-    if (!config.LoadFromFile(config_path.string())) {
-      EZLOGGERPRINT("Warning: cannot find 'default.yaml'.");
-      return false;
-    }
-  }
-  selection_.clear();
-  GetSelectedSchemasFromConfig(&config);
+bool SwitcherSettings::Load() {
+  if (!CustomSettings::Load())
+    return false;
+  fs::path user_data_path(deployer_->user_data_dir);
+  fs::path shared_data_path(deployer_->shared_data_dir);
   available_.clear();
+  selection_.clear();
+  hotkeys_.clear();
   GetAvailableSchemasFromDirectory(shared_data_path);
   GetAvailableSchemasFromDirectory(user_data_path);
-  hotkeys_.clear();
-  GetHotkeysFromConfig(&config);
-  modified_ = false;
+  GetSelectedSchemasFromConfig();
+  GetHotkeysFromConfig();
   return true;
 }
 
-bool SwitcherSettings::Save(Deployer* deployer) {
-  if (!modified_) return false;
-  fs::path user_data_path(deployer->user_data_dir);
-  fs::path shared_data_path(deployer->shared_data_dir);
-  std::string custom_file((user_data_path / "default.custom.yaml").string());
-  Config config;
-  config.LoadFromFile(custom_file);
+bool SwitcherSettings::Select(const Selection& selection) {
+  selection_ = selection;
   ConfigListPtr schema_list(new ConfigList);
   BOOST_FOREACH(const std::string& schema_id, selection_) {
     ConfigMapPtr item(new ConfigMap);
     item->Set("schema", ConfigValuePtr(new ConfigValue(schema_id)));
     schema_list->Append(item);
   }
-  ConfigMapPtr patch = config.GetMap("patch");
-  if (!patch) {
-    patch.reset(new ConfigMap);
-  }
-  patch->Set("schema_list", schema_list);
-  // the branch 'patch' should be set as a whole, for
-  // sometimes its sub-key may contain slashes which disables direct access.
-  config.SetItem("patch", patch);
-  Signature signature("Rime::SwitcherSettings");
-  signature.Sign(&config, deployer);
-  config.SaveToFile(custom_file);
-  modified_ = false;
-  return true;
-}
-
-bool SwitcherSettings::Select(const Selection& selection) {
-  selection_ = selection;
-  modified_ = true;
-  return true;
+  return Customize("schema_list", schema_list);
 }
 
 bool SwitcherSettings::SetHotkeys(const std::string& hotkeys) {
   // TODO: not implemented; validation required
   return false;
-}
-
-void SwitcherSettings::GetSelectedSchemasFromConfig(Config* config) {
-  ConfigListPtr schema_list = config->GetList("schema_list");
-  if (!schema_list) {
-    EZLOGGERPRINT("Warning: schema list not defined.");
-    return;
-  }
-  ConfigList::Iterator it = schema_list->begin();
-  for (; it != schema_list->end(); ++it) {
-    ConfigMapPtr item = As<ConfigMap>(*it);
-    if (!item) continue;
-    ConfigValuePtr schema_property = item->GetValue("schema");
-    if (!schema_property) continue;
-    const std::string &schema_id(schema_property->str());
-    selection_.push_back(schema_id);
-  }
 }
 
 void SwitcherSettings::GetAvailableSchemasFromDirectory(const fs::path& dir) {
@@ -147,8 +98,25 @@ void SwitcherSettings::GetAvailableSchemasFromDirectory(const fs::path& dir) {
   }
 }
 
-void SwitcherSettings::GetHotkeysFromConfig(Config* config) {
-  ConfigListPtr hotkeys = config->GetList("switcher/hotkeys");
+void SwitcherSettings::GetSelectedSchemasFromConfig() {
+  ConfigListPtr schema_list = config_.GetList("schema_list");
+  if (!schema_list) {
+    EZLOGGERPRINT("Warning: schema list not defined.");
+    return;
+  }
+  ConfigList::Iterator it = schema_list->begin();
+  for (; it != schema_list->end(); ++it) {
+    ConfigMapPtr item = As<ConfigMap>(*it);
+    if (!item) continue;
+    ConfigValuePtr schema_property = item->GetValue("schema");
+    if (!schema_property) continue;
+    const std::string &schema_id(schema_property->str());
+    selection_.push_back(schema_id);
+  }
+}
+
+void SwitcherSettings::GetHotkeysFromConfig() {
+  ConfigListPtr hotkeys = config_.GetList("switcher/hotkeys");
   if (!hotkeys) {
     EZLOGGERPRINT("Warning: hotkeys not defined.");
     return;

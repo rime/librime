@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include <boost/filesystem.hpp>
+#include "custom_settings.h"
 
 namespace rime {
 
@@ -24,32 +25,26 @@ struct SchemaInfo {
   std::string file_path;
 };
 
-class Config;
-class Deployer;
-
-class SwitcherSettings {
+class SwitcherSettings : public CustomSettings {
  public:
   typedef std::vector<SchemaInfo> SchemaList;
-  // schema_ids
+  // a list of schema_ids
   typedef std::vector<std::string> Selection;
   
-  SwitcherSettings();
-  bool Load(Deployer* deployer);
-  bool Save(Deployer* deployer);
+  explicit SwitcherSettings(Deployer* deployer);
+  bool Load();
   bool Select(const Selection& selection);
   bool SetHotkeys(const std::string& hotkeys);
   
-  bool modified() const { return modified_; }
   const SchemaList& available() const { return available_; }
   const Selection& selection() const { return selection_; }
   const std::string& hotkeys() const { return hotkeys_; }
 
  private:
-  void GetSelectedSchemasFromConfig(Config* config);
   void GetAvailableSchemasFromDirectory(const boost::filesystem::path& dir);
-  void GetHotkeysFromConfig(Config* config);
+  void GetSelectedSchemasFromConfig();
+  void GetHotkeysFromConfig();
 
-  bool modified_;
   SchemaList available_;
   Selection selection_;
   std::string hotkeys_;
