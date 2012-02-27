@@ -228,8 +228,6 @@ bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
   std::string code_str;
   if (!TranslateCodeToString(entry.code, &code_str))
     return false;
-  if (commit == 0)
-    return true;
   std::string key(code_str + '\t' + entry.text);
   std::string value;
   int commit_count = 0;
@@ -240,12 +238,17 @@ bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
   }
   if (commit > 0) {
     commit_count += commit;
+    UpdateTickCount(1);
+    dee = algo::formula_d(commit, (double)tick_, dee, (double)last_tick);
+  }
+  else if (commit == 0) {
+    const double k = 0.1;
+    dee = algo::formula_d(k, (double)tick_, dee, (double)last_tick);
   }
   else if (commit < 0) {  // mark as deleted
     commit_count = (std::min)(-1, -commit_count);
+    dee = algo::formula_d(0.0, (double)tick_, dee, (double)last_tick);
   }
-  UpdateTickCount(1);
-  dee = algo::formula_d(commit, (double)tick_, dee, (double)last_tick);
   value = boost::str(boost::format("c=%1% d=%2% t=%3%") % 
                      commit_count % dee % tick_);
   return db_->Update(key, value);

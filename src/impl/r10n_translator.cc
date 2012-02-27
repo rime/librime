@@ -72,6 +72,7 @@ bool DelimitSyllablesDfs(DelimitSyllableState *state,
 }  // anonymous namespace
 
 class R10nCandidate;
+class R10nSentence;
 
 class R10nTranslation : public Translation {
  public:
@@ -88,9 +89,10 @@ class R10nTranslation : public Translation {
 
  protected:
   void CheckEmpty();
-  const std::string GetPreeditString(const R10nCandidate &cand) const;
-  shared_ptr<DictEntry> MakeSentence(Dictionary *dict,
-                                     UserDictionary *user_dict);
+  template <class CandidateT>
+  const std::string GetPreeditString(const CandidateT &cand) const;
+  const shared_ptr<R10nSentence> MakeSentence(Dictionary *dict,
+                                              UserDictionary *user_dict);
 
   const std::string input_;
   size_t start_;
@@ -99,6 +101,7 @@ class R10nTranslation : public Translation {
   SyllableGraph syllable_graph_;
   shared_ptr<DictEntryCollector> phrase_;
   shared_ptr<UserDictEntryCollector> user_phrase_;
+  shared_ptr<R10nSentence> sentence_;
   
   DictEntryCollector::reverse_iterator phrase_iter_;
   UserDictEntryCollector::reverse_iterator user_phrase_iter_;
@@ -113,23 +116,49 @@ class R10nCandidate : public Candidate {
       : Candidate("zh", start, end),
         entry_(entry) {
   }
-  virtual const std::string& text() const {
-    return entry_->text;
-  }
-  virtual const std::string comment() const {
-    return entry_->comment;
-  }
-  virtual const std::string preedit() const {
-    return entry_->preedit;
-  }
+  const std::string& text() const { return entry_->text; }
+  const std::string comment() const { return entry_->comment; }
+  const std::string preedit() const { return entry_->preedit; }
   void set_preedit(const std::string &preedit) {
     entry_->preedit = preedit;
   }
-  const Code& code() const {
-    return entry_->code;
-  }
+  const Code& code() const { return entry_->code; }
+  const DictEntry& entry() const { return *entry_; }
  protected:
   const shared_ptr<DictEntry> entry_;
+};
+
+class R10nSentence : public Candidate {
+ public:
+  R10nSentence() : Candidate("sentence", 0, 0) {
+    entry_.weight = 1.0;
+  }
+  void Extend(const DictEntry& entry, size_t end_pos) {
+    const double kEpsilon = 1e-30;
+    const double kPenalty = 1e-8;
+    entry_.code.insert(entry_.code.end(),
+                       entry.code.begin(), entry.code.end());
+    entry_.text.append(entry.text);
+    entry_.weight *= (std::max)(entry.weight, kEpsilon) * kPenalty;
+    components_.push_back(entry);
+    set_end(end_pos);
+  }
+  void Offset(size_t offset) {
+    set_start(start() + offset);
+    set_end(end() + offset);
+  }
+  const std::string& text() const { return entry_.text; }
+  const std::string preedit() const { return entry_.preedit; }
+  void set_preedit(const std::string &preedit) {
+    entry_.preedit = preedit;
+  }
+  const Code& code() const { return entry_.code; }
+  double weight() const { return entry_.weight; }
+  const std::vector<DictEntry>& components() const { return components_; }
+  
+ protected:
+  DictEntry entry_;
+  std::vector<DictEntry> components_;
 };
 
 // R10nTranslator implementation
@@ -202,18 +231,33 @@ void R10nTranslator::OnCommit(Context *ctx) {
   DictEntry commit_entry;
   BOOST_FOREACH(Composition::value_type &seg, *ctx->composition()) {
     shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
+    bool unrecognized = false;
     shared_ptr<UniquifiedCandidate> uniquified = As<UniquifiedCandidate>(cand);
     if (uniquified) cand = uniquified->items().front();
     shared_ptr<ShadowCandidate> shadow = As<ShadowCandidate>(cand);
     if (shadow) cand = shadow->item();
     shared_ptr<R10nCandidate> r10n_cand = As<R10nCandidate>(cand);
+    shared_ptr<R10nSentence> sentence = As<R10nSentence>(cand);
     if (r10n_cand) {
       commit_entry.text += r10n_cand->text();
       commit_entry.code.insert(commit_entry.code.end(),
                                r10n_cand->code().begin(),
                                r10n_cand->code().end());
+      user_dict_->UpdateEntry(r10n_cand->entry(), 0);
     }
-    if ((!r10n_cand || seg.status >= Segment::kConfirmed) &&
+    else if (sentence) {
+      commit_entry.text += sentence->text();
+      commit_entry.code.insert(commit_entry.code.end(),
+                               sentence->code().begin(),
+                               sentence->code().end());
+      BOOST_FOREACH(const DictEntry& e, sentence->components()) {
+        user_dict_->UpdateEntry(e, 0);
+      }
+    }
+    else {
+      unrecognized = true;
+    }
+    if ((unrecognized || seg.status >= Segment::kConfirmed) &&
         !commit_entry.text.empty()) {
       EZDBGONLYLOGGERVAR(commit_entry.text);
       user_dict_->UpdateEntry(commit_entry, 1);
@@ -244,11 +288,7 @@ bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
     translated_len = (std::max)(translated_len, user_phrase_->rbegin()->first);
   if (translated_len < consumed &&
       syllable_graph_.edges.size() > 1) {  // at least 2 syllables required
-    shared_ptr<DictEntry> sentence = MakeSentence(dict, user_dict);
-    if (sentence) {
-      if (!user_phrase_) user_phrase_.reset(new UserDictEntryCollector);
-      (*user_phrase_)[consumed].push_back(sentence);
-    }
+    sentence_ = MakeSentence(dict, user_dict);
   }
 
   if (phrase_) phrase_iter_ = phrase_->rbegin();
@@ -257,8 +297,9 @@ bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
   return !exhausted();
 }
 
+template <class CandidateT>
 const std::string R10nTranslation::GetPreeditString(
-    const R10nCandidate &cand) const {
+    const CandidateT &cand) const {
   DelimitSyllableState state;
   state.input = &input_;
   state.delimiters = &translator_->delimiters();
@@ -277,6 +318,12 @@ const std::string R10nTranslation::GetPreeditString(
 bool R10nTranslation::Next() {
   if (exhausted())
     return false;
+  if (sentence_) {
+    candidate_set_.insert(sentence_->text());
+    sentence_.reset();
+    CheckEmpty();
+    return exhausted();
+  }
   do {
     int user_phrase_code_length = 0;
     if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
@@ -312,6 +359,12 @@ bool R10nTranslation::Next() {
 shared_ptr<Candidate> R10nTranslation::Peek() {
   if (exhausted())
     return shared_ptr<Candidate>();
+  if (sentence_) {
+    if (sentence_->preedit().empty()) {
+      sentence_->set_preedit(GetPreeditString(*sentence_));
+    }
+    return sentence_;
+  }
   size_t user_phrase_code_length = 0;
   if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
     user_phrase_code_length = user_phrase_iter_->first;
@@ -351,7 +404,7 @@ void R10nTranslation::CheckEmpty() {
                 (!user_phrase_ || user_phrase_iter_ == user_phrase_->rend()));
 }
 
-shared_ptr<DictEntry> R10nTranslation::MakeSentence(
+const shared_ptr<R10nSentence> R10nTranslation::MakeSentence(
     Dictionary *dict, UserDictionary *user_dict) {
   const int kMaxSyllablesForUserPhraseQuery = 5;
   const double kPenaltyForAmbiguousSyllable = 1e-30;
@@ -382,8 +435,13 @@ shared_ptr<DictEntry> R10nTranslation::MakeSentence(
       }
     }
   }
-  Poet poet;
-  return poet.MakeSentence(graph, syllable_graph_.interpreted_length);
+  Poet<R10nSentence> poet;
+  shared_ptr<R10nSentence> sentence =
+      poet.MakeSentence(graph, syllable_graph_.interpreted_length);
+  if (sentence) {
+    sentence->Offset(start_);
+  }
+  return sentence;
 }
 
 }  // namespace rime
