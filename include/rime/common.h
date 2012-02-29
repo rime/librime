@@ -39,6 +39,8 @@ const std::string GetLogFilePath();
 #ifndef EZLOGGER_REPLACE_EXISTING_LOGFILE_
 #define EZLOGGER_REPLACE_EXISTING_LOGFILE_
 #endif
+// DEBUG
+//#define EZLOGGER_IMPLEMENT_DEBUGLOGGING
 #include <ezlogger/ezlogger_headers.hpp>
 
 #endif  // RIME_COMMON_H_
