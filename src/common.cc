@@ -36,7 +36,7 @@
 #include <rime/impl/speller.h>
 #include <rime/impl/reverse_lookup_translator.h>
 #include <rime/impl/table_translator.h>
-#include <rime/impl/trivial_translator.h>
+//#include <rime/impl/trivial_translator.h>
 #include <rime/impl/uniquifier.h>
 
 namespace rime {
@@ -83,7 +83,7 @@ void RegisterComponents() {
   // translators
   r.Register("echo_translator", new Component<EchoTranslator>);
   r.Register("punct_translator", new Component<PunctTranslator>);
-  r.Register("trivial_translator", new Component<TrivialTranslator>);
+  //r.Register("trivial_translator", new Component<TrivialTranslator>);
   r.Register("table_translator", new Component<TableTranslator>);
   r.Register("r10n_translator", new Component<R10nTranslator>);
   r.Register("reverse_lookup_translator", new Component<ReverseLookupTranslator>);
@@ -91,7 +91,7 @@ void RegisterComponents() {
   // filters
   r.Register("simplifier", new Component<Simplifier>);
   r.Register("uniquifier", new Component<Uniquifier>);
-  r.Register("unifier", new Component<Uniquifier>);  // compatibility
+  r.Register("unifier", new Component<Uniquifier>);  // for compatibility
 }
 
 }  // namespace rime
