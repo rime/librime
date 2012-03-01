@@ -49,6 +49,9 @@ Context* Session::context() const {
 }
 
 Schema* Session::schema() const {
+  if (switcher_->active()) {
+    return switcher_->schema();
+  }
   return engine_ ? engine_->schema() : NULL;
 }
 

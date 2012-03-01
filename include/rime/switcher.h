@@ -28,7 +28,6 @@ class Switcher : public Engine {
   bool ProcessKeyEvent(const KeyEvent &key_event);
   Schema* CreateSchema();
 
-  Context* context() const { return context_.get(); }
   bool active() const { return active_; }
   
  protected:

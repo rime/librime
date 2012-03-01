@@ -36,4 +36,13 @@ int Schema::page_size() const {
   return page_size;
 }
 
+const std::string Schema::alternative_select_keys() const {
+  std::string select_keys;
+  if (config_) {
+    config_->GetString("menu/alternative_select_keys", &select_keys);
+  }
+  return select_keys;
+}
+
+
 }  // namespace rime

@@ -18,6 +18,13 @@
 
 namespace rime {
 
+Selector::Selector(Engine *engine) : Processor(engine) {
+  Config *config = engine->schema()->config();
+  if (config) {
+    config->GetString("menu/alternative_select_keys", &select_keys_);
+  }
+}
+
 Processor::Result Selector::ProcessKeyEvent(const KeyEvent &key_event) {
   if (key_event.release())
     return kNoop;
@@ -57,6 +64,12 @@ Processor::Result Selector::ProcessKeyEvent(const KeyEvent &key_event) {
     index = ((ch - XK_0) + 9) % 10;
   else if (ch >= XK_KP_0 && ch <= XK_KP_9)
     index = ((ch - XK_KP_0) + 9) % 10;
+  else if (!select_keys_.empty()) {
+    size_t pos = select_keys_.find(ch);
+    if (pos != std::string::npos) {
+      index = static_cast<int>(pos);
+    }
+  }
   if (index >= 0) {
     SelectCandidateAt(ctx, index);
     return kAccepted;

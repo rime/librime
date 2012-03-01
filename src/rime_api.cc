@@ -172,6 +172,13 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext *context) {
         if (++i >= RIME_MAX_NUM_CANDIDATES) break;
       }
       context->menu.num_candidates = i;
+      if (schema) {
+        std::string select_keys(schema->alternative_select_keys());
+        if (!select_keys.empty()) {
+          std::strncpy(context->menu.select_keys, select_keys.c_str(),
+                       RIME_MAX_NUM_CANDIDATES);
+        }
+      }
     }
   }
   return True;

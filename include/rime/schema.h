@@ -29,6 +29,7 @@ class Schema {
   void set_config(Config *config) { config_.reset(config); }
 
   int page_size() const;
+  const std::string alternative_select_keys() const;
 
  private:
   std::string schema_id_;

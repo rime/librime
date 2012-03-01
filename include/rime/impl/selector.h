@@ -17,11 +17,11 @@ namespace rime {
 
 class Selector : public Processor {
  public:
-  Selector(Engine *engine) : Processor(engine) {}
+  Selector(Engine *engine);
   virtual ~Selector() {}
   virtual Result ProcessKeyEvent(const KeyEvent &key_event);
 
- private:
+ protected:
   bool PageUp(Context *ctx);
   bool PageDown(Context *ctx);
   bool CursorUp(Context *ctx);
@@ -29,6 +29,8 @@ class Selector : public Processor {
   bool Home(Context *ctx);
   bool End(Context *ctx);
   bool SelectCandidateAt(Context *ctx, int index);
+
+  std::string select_keys_;
 };
 
 }  // namespace rime

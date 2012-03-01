@@ -68,6 +68,7 @@ typedef struct {
   int highlighted_candidate_index;
   int num_candidates;
   char candidates[RIME_MAX_NUM_CANDIDATES][RIME_TEXT_MAX_LENGTH + 1];
+  char select_keys[RIME_MAX_NUM_CANDIDATES + 1];
 } RimeMenu;
 
 typedef struct {
