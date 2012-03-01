@@ -59,7 +59,6 @@ bool TreeDbAccessor::exhausted() {
 TreeDb::TreeDb(const std::string &name) : name_(name), loaded_(false) {
   boost::filesystem::path path(Service::instance().deployer().user_data_dir);
   file_name_ = (path / name).string();
-  Initialize();
 }
 
 void TreeDb::Initialize() {
@@ -100,6 +99,7 @@ bool TreeDb::Erase(const std::string &key) {
 }
 
 bool TreeDb::Backup() {
+  if (!loaded()) return false;
   EZLOGGERPRINT("backup db '%s'.", name_.c_str());
   bool success = db_->dump_snapshot(file_name() + ".snapshot");
   if (!success) {
@@ -122,6 +122,7 @@ bool TreeDb::Remove() {
 
 bool TreeDb::Open() {
   if (loaded()) return false;
+  Initialize();
   loaded_ = db_->open(file_name());
   if (loaded_) {
     std::string db_name;
@@ -136,6 +137,7 @@ bool TreeDb::Open() {
 
 bool TreeDb::OpenReadOnly() {
   if (loaded()) return false;
+  Initialize();
   loaded_ = db_->open(file_name(), kyotocabinet::TreeDB::OREADER);
   if (!loaded_) {
     EZLOGGERPRINT("Error opening db '%s' read-only.", name_.c_str());
