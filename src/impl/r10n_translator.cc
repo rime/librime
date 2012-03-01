@@ -134,7 +134,7 @@ class R10nSentence : public Candidate {
     entry_.weight = 1.0;
   }
   void Extend(const DictEntry& entry, size_t end_pos) {
-    const double kEpsilon = 1e-30;
+    const double kEpsilon = 1e-800;
     const double kPenalty = 1e-8;
     entry_.code.insert(entry_.code.end(),
                        entry.code.begin(), entry.code.end());
@@ -142,6 +142,8 @@ class R10nSentence : public Candidate {
     entry_.weight *= (std::max)(entry.weight, kEpsilon) * kPenalty;
     components_.push_back(entry);
     set_end(end_pos);
+    EZDBGONLYLOGGERPRINT("%d) %s : %g", end_pos,
+                         entry_.text.c_str(), entry_.weight);
   }
   void Offset(size_t offset) {
     set_start(start() + offset);
@@ -407,12 +409,12 @@ void R10nTranslation::CheckEmpty() {
 const shared_ptr<R10nSentence> R10nTranslation::MakeSentence(
     Dictionary *dict, UserDictionary *user_dict) {
   const int kMaxSyllablesForUserPhraseQuery = 5;
-  const double kPenaltyForAmbiguousSyllable = 1e-30;
-  double credibility = 1.0;
+  const double kPenaltyForAmbiguousSyllable = 1e-10;
   WordGraph graph;
   BOOST_FOREACH(const EdgeMap::value_type &s, syllable_graph_.edges) {
     // discourage starting a word from an ambiguous joint
     // bad cases include pinyin syllabification "niju'ede"
+    double credibility = 1.0;
     if (syllable_graph_.vertices[s.first] >= kAmbiguousSpelling)
       credibility = kPenaltyForAmbiguousSyllable;
     shared_ptr<UserDictEntryCollector> user_phrase = user_dict->Lookup(
