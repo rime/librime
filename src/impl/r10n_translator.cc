@@ -134,7 +134,7 @@ class R10nSentence : public Candidate {
     entry_.weight = 1.0;
   }
   void Extend(const DictEntry& entry, size_t end_pos) {
-    const double kEpsilon = 1e-800;
+    const double kEpsilon = 1e-200;
     const double kPenalty = 1e-8;
     entry_.code.insert(entry_.code.end(),
                        entry.code.begin(), entry.code.end());
