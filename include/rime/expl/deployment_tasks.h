@@ -50,6 +50,18 @@ class ConfigFileUpdate : public DeploymentTask {
   std::string version_key_;
 };
 
+// for installer
+class PrebuildAllSchemas : public DeploymentTask {
+ public:
+  bool Run(Deployer* deployer);
+};
+
+// create symlinks to prebuilt dictionaries in user directory
+class SymlinkingPrebuiltDictionaries : public DeploymentTask {
+ public:
+  bool Run(Deployer* deployer);
+};
+
 }  // namespace rime
 
 #endif  // RIME_DEPLOYMENT_TASKS_H_

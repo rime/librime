@@ -62,6 +62,7 @@ RIME_API void RimeJoinMaintenanceThread() {
 // deployment
 
 RIME_API void RimeDeployerInitialize(RimeTraits *traits) {
+  if (!traits) return;
   rime::Deployer &deployer(rime::Service::instance().deployer());
   deployer.shared_data_dir = traits->shared_data_dir;
   deployer.user_data_dir = traits->user_data_dir;
@@ -71,6 +72,12 @@ RIME_API void RimeDeployerInitialize(RimeTraits *traits) {
     deployer.distribution_code_name = traits->distribution_code_name;
   if (traits->distribution_version)
     deployer.distribution_version = traits->distribution_version;
+}
+
+RIME_API Bool RimePrebuildAllSchemas() {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  rime::PrebuildAllSchemas prebuild;
+  return Bool(prebuild.Run(&deployer));
 }
 
 RIME_API Bool RimeDeployWorkspace() {

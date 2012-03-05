@@ -97,15 +97,17 @@ bool InstallationUpdate::Run(Deployer* deployer) {
 
 bool WorkspaceUpdate::Run(Deployer* deployer) {
   EZLOGGERPRINT("updating workspace.");
-  fs::path shared_data_path(deployer->shared_data_dir);
-  fs::path user_data_path(deployer->user_data_dir);
-  fs::path default_config_path(user_data_path / "default.yaml");
   {
     scoped_ptr<DeploymentTask> t;
     t.reset(new ConfigFileUpdate("default.yaml", "config_version"));
     t->Run(deployer);
+    t.reset(new SymlinkingPrebuiltDictionaries);
+    t->Run(deployer);
   }
 
+  fs::path shared_data_path(deployer->shared_data_dir);
+  fs::path user_data_path(deployer->user_data_dir);
+  fs::path default_config_path(user_data_path / "default.yaml");
   Config config;
   if (!config.LoadFromFile(default_config_path.string())) {
     EZLOGGERPRINT("Error loading default config from '%s'.",
@@ -214,6 +216,55 @@ bool ConfigFileUpdate::Run(Deployer* deployer) {
   }
   Customizer customizer(source_config_path, dest_config_path, version_key_);
   return customizer.UpdateConfigFile();
+}
+
+bool PrebuildAllSchemas::Run(Deployer* deployer) {
+  fs::path shared_data_path(deployer->shared_data_dir);
+  fs::path user_data_path(deployer->user_data_dir);
+  if (!fs::exists(shared_data_path) || !fs::is_directory(shared_data_path))
+    return false;
+  fs::directory_iterator iter(shared_data_path);
+  fs::directory_iterator end;
+  bool success = true;
+  for (; iter != end; ++iter) {
+    fs::path entry(iter->path());
+    if (boost::ends_with(entry.string(), ".schema.yaml")) {
+      scoped_ptr<DeploymentTask> t(new SchemaUpdate(entry.string()));
+      if (!t->Run(deployer))
+        success = false;
+    }
+  }
+  return success;
+}
+
+bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
+  fs::path shared_data_path(deployer->shared_data_dir);
+  fs::path user_data_path(deployer->user_data_dir);
+  if (!fs::exists(shared_data_path) || !fs::is_directory(shared_data_path) ||
+      !fs::exists(user_data_path) || !fs::is_directory(user_data_path) ||
+      fs::equivalent(shared_data_path, user_data_path))
+    return false;
+  bool success = false;
+  fs::directory_iterator iter(shared_data_path);
+  fs::directory_iterator end;
+  for (; iter != end; ++iter) {
+    fs::path entry(iter->path());
+    fs::path link(user_data_path / entry.filename());
+    try {
+      if (fs::is_regular_file(entry) &&
+          entry.extension().string() == ".bin" &&
+          !fs::exists(link)) {
+        EZLOGGERPRINT("symlinking '%s'.",
+                      entry.filename().string().c_str());
+        fs::create_symlink(entry, link);
+      }
+    }
+    catch (const fs::filesystem_error& ex) {
+      EZLOGGERPRINT("Error: %s", ex.what());
+      success = false;
+    }
+  }
+  return success;
 }
 
 }  // namespace rime
