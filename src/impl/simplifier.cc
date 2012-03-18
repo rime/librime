@@ -87,9 +87,8 @@ bool Opencc::ConvertText(const std::string &text, std::string *simplified, bool 
 // Simplifier
 
 Simplifier::Simplifier(Engine *engine) : Filter(engine),
-                                         tip_level_(kTipNone),
-                                         option_name_() {
-  std::string opencc_config;
+                                         initialized_(false),
+                                         tip_level_(kTipNone) {
   Config *config = engine->schema()->config();
   if (config) {
     std::string tip;
@@ -99,20 +98,27 @@ Simplifier::Simplifier(Engine *engine) : Filter(engine),
           (tip == "char") ? kTipChar : kTipNone;
     }
     config->GetString("simplifier/option_name", &option_name_);
-    config->GetString("simplifier/opencc_config", &opencc_config);
+    config->GetString("simplifier/opencc_config", &opencc_config_);
   }
   if (option_name_.empty()) {
-    option_name_ = "simplification";
+    option_name_ = "simplification";  // default switcher option
   }
-  if (opencc_config.empty()) {
-    opencc_config = "zht2zhs.ini";  // default
+  if (opencc_config_.empty()) {
+    opencc_config_ = "zht2zhs.ini";  // default opencc config file
   }
-  boost::filesystem::path opencc_config_path = opencc_config;
+}
+
+Simplifier::~Simplifier() {
+}
+
+void Simplifier::Initialize() {
+  initialized_ = true;  // no retry
+  boost::filesystem::path opencc_config_path = opencc_config_;
   if (opencc_config_path.is_relative()) {
     boost::filesystem::path user_config_path(Service::instance().deployer().user_data_dir);
     boost::filesystem::path shared_config_path(Service::instance().deployer().shared_data_dir);
-    (user_config_path /= "opencc") /= opencc_config;
-    (shared_config_path /= "opencc") /= opencc_config;
+    (user_config_path /= "opencc") /= opencc_config_path;
+    (shared_config_path /= "opencc") /= opencc_config_path;
     if (boost::filesystem::exists(user_config_path)) {
       opencc_config_path = user_config_path;
     }
@@ -123,16 +129,13 @@ Simplifier::Simplifier(Engine *engine) : Filter(engine),
   opencc_.reset(new Opencc(opencc_config_path.string()));
 }
 
-Simplifier::~Simplifier() {
-}
-
 bool Simplifier::Proceed(CandidateList *recruited,
                          CandidateList *candidates) {
-  if (!opencc_ ||
-      !engine_->context()->get_option(option_name_))
+  if (!engine_->context()->get_option(option_name_))  // off
     return true;
-  if (!candidates || candidates->empty())
-    return false;
+  if (!initialized_) Initialize();
+  if (!opencc_ || !candidates || candidates->empty())
+    return true;
   CandidateList result;
   for (CandidateList::iterator it = candidates->begin();
        it != candidates->end(); ++it) {
@@ -147,7 +150,7 @@ bool Simplifier::Convert(const shared_ptr<Candidate> &original,
                          CandidateList *result) {
   std::string simplified;
   bool is_single_char = false;
-  if (!opencc_->ConvertText(original->text(), &simplified, &is_single_char) || 
+  if (!opencc_->ConvertText(original->text(), &simplified, &is_single_char) ||
       simplified == original->text()) {
     return false;
   }

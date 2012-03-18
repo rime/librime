@@ -26,12 +26,15 @@ class Simplifier : public Filter {
  protected:
   typedef enum { kTipNone, kTipChar, kTipAll } TipLevel;
 
+  void Initialize();
   bool Convert(const shared_ptr<Candidate> &original,
                CandidateList *result);
   
+  bool initialized_;
   scoped_ptr<Opencc> opencc_;
   TipLevel tip_level_;
   std::string option_name_;
+  std::string opencc_config_;
 };
 
 }  // namespace rime

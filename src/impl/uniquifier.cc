@@ -21,7 +21,7 @@ Uniquifier::Uniquifier(Engine *engine) : Filter(engine) {
 bool Uniquifier::Proceed(CandidateList *recruited,
                          CandidateList *candidates) {
   if (!candidates || candidates->empty())
-    return false;
+    return true;
   CandidateList::iterator i = candidates->begin();
   while (i != candidates->end()) {
     CandidateList::iterator j = recruited->begin();
