@@ -26,6 +26,9 @@ class ReverseLookupTranslator : public Translator {
   virtual Translation* Query(const std::string &input,
                              const Segment &segment);
  protected:
+  void Initialize();
+  
+  bool initialized_;
   scoped_ptr<Dictionary> dict_;
   scoped_ptr<ReverseLookupDictionary> rev_dict_;
   std::string prefix_;

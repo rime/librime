@@ -64,9 +64,13 @@ shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
 }
 
 ReverseLookupTranslator::ReverseLookupTranslator(Engine *engine)
-    : Translator(engine) {
-  if (!engine) return;
-  Config *config = engine->schema()->config();
+    : Translator(engine), initialized_(false) {
+}
+
+void ReverseLookupTranslator::Initialize() {
+  initialized_ = true;  // no retry
+  if (!engine_) return;
+  Config *config = engine_->schema()->config();
   if (!config) return;
   config->GetString("reverse_lookup/prefix", &prefix_);
   config->GetString("reverse_lookup/tips", &tips_);
@@ -84,16 +88,17 @@ ReverseLookupTranslator::ReverseLookupTranslator(Engine *engine)
   ReverseLookupDictionary::Component *rev_component =
       ReverseLookupDictionary::Require("reverse_lookup_dictionary");
   if (!rev_component) return;
-  rev_dict_.reset(rev_component->Create(engine->schema()));
+  rev_dict_.reset(rev_component->Create(engine_->schema()));
   if (rev_dict_)
     rev_dict_->Load();
 }
 
 Translation* ReverseLookupTranslator::Query(const std::string &input,
                                             const Segment &segment) {
-  if (!dict_ || !dict_->loaded())
-    return NULL;
   if (!segment.HasTag("reverse_lookup"))
+    return NULL;
+  if (!initialized_) Initialize();  // load reverse dict at first use
+  if (!dict_ || !dict_->loaded())
     return NULL;
   EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
                        input.c_str(), segment.start, segment.end);

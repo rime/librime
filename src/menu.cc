@@ -35,11 +35,11 @@ size_t Menu::Prepare(size_t candidate_count) {
       }
     }
     if (k >= translations_.size()) {
-      EZLOGGERPRINT("Failed to elect a winner translation.");
+      EZDBGONLYLOGGERPRINT("Failed to select a winner translation.");
       break;
     }
     if (translations_[k]->exhausted()) {
-      EZLOGGERPRINT("Warning: elected translation #%d has been exhausted!", k);
+      EZLOGGERPRINT("Warning: selected translation #%d has been exhausted!", k);
       translations_.erase(translations_.begin() + k);
       continue;
     }
