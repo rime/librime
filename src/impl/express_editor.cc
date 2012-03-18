@@ -61,7 +61,8 @@ Processor::Result ExpressEditor::ProcessKeyEvent(
       return kAccepted;
     }
     if (ch == XK_Escape) {
-      ctx->Clear();
+      if (!ctx->ClearPreviousSegment())
+        ctx->Clear();
       return kAccepted;
     }
   }

@@ -47,6 +47,7 @@ class Context {
   
   bool ConfirmPreviousSelection();
   bool ReopenPreviousSegment();
+  bool ClearPreviousSegment();
   bool ReopenPreviousSelection();
   bool ClearNonConfirmedComposition();
   bool RefreshNonConfirmedComposition();

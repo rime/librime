@@ -23,6 +23,7 @@ class AbcSegmentor : public Segmentor {
  protected:
   std::string alphabet_;
   std::string delimiter_;
+  int max_code_length_;
 };
 
 }  // namespace rime

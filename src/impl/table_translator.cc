@@ -6,6 +6,7 @@
 //
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
+#include <boost/algorithm/string.hpp>
 #include <rime/candidate.h>
 #include <rime/config.h>
 #include <rime/engine.h>
@@ -100,7 +101,7 @@ bool LazyTableTranslation::Next() {
     EZLOGGERPRINT("fetching more entries: limit = %d, count = %d.",
                   limit_, previous_entry_count);
     DictEntryIterator more;
-    if (dict_->LookupWords(&more, input_, true, limit_) < limit_) {
+    if (dict_ && dict_->LookupWords(&more, input_, true, limit_) < limit_) {
       EZLOGGERPRINT("all entries obtained.");
       limit_ = 0;  // no more try
     }
@@ -120,9 +121,13 @@ TableTranslator::TableTranslator(Engine *engine)
   
   Config *config = engine->schema()->config();
   if (config) {
+    config->GetString("speller/delimiter", &delimiters_);
     config->GetBool("translator/enable_completion", &enable_completion_);
     preedit_formatter_.Load(config->GetList("translator/preedit_format"));
     comment_formatter_.Load(config->GetList("translator/comment_format"));
+  }
+  if (delimiters_.empty()) {
+    delimiters_ = " ";
   }
 
   Dictionary::Component *component = Dictionary::Require("dictionary");
@@ -145,10 +150,13 @@ Translation* TableTranslator::Query(const std::string &input,
 
   std::string preedit(input);
   preedit_formatter_.Apply(&preedit);
+
+  std::string code(input);
+  boost::trim_right_if(code, boost::is_any_of(delimiters_));
   
   Translation *translation = NULL;
   if (enable_completion_) {
-    translation = new LazyTableTranslation(input,
+    translation = new LazyTableTranslation(code,
                                            segment.start,
                                            segment.start + input.length(),
                                            preedit,
@@ -157,10 +165,10 @@ Translation* TableTranslator::Query(const std::string &input,
   }
   else {
     DictEntryIterator iter;
-    dict_->LookupWords(&iter, input, false);
+    dict_->LookupWords(&iter, code, false);
     if (!iter.exhausted())
       translation = new TableTranslation(iter,
-                                         input,
+                                         code,
                                          segment.start,
                                          segment.start + input.length(),
                                          preedit,

@@ -48,9 +48,13 @@ class TableTranslator : public Translator {
   virtual Translation* Query(const std::string &input,
                              const Segment &segment);
 
+  Dictionary* dict() { return dict_.get(); }
+  Projection& comment_formatter() { return comment_formatter_; }
+  
  protected:
-  scoped_ptr<Dictionary> dict_;
   bool enable_completion_;
+  std::string delimiters_;
+  scoped_ptr<Dictionary> dict_;
   Projection preedit_formatter_;
   Projection comment_formatter_;
 };

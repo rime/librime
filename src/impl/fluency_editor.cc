@@ -59,7 +59,8 @@ Processor::Result FluencyEditor::ProcessKeyEvent(
       return kAccepted;
     }
     if (ch == XK_Escape) {
-      ctx->Clear();
+      if (!ctx->ClearPreviousSegment())
+        ctx->Clear();
       return kAccepted;
     }
   }
@@ -67,6 +68,7 @@ Processor::Result FluencyEditor::ProcessKeyEvent(
     EZDBGONLYLOGGERPRINT("Add to input: '%c', %d, '%s'",
                          ch, key_event.keycode(), key_event.repr().c_str());
     ctx->PushInput(key_event.keycode());
+    ctx->ConfirmPreviousSelection();
     return kAccepted;
   }
   // not handled

@@ -159,6 +159,17 @@ bool Context::ReopenPreviousSegment() {
   return false;
 }
 
+bool Context::ClearPreviousSegment() {
+  EZDBGONLYLOGGERFUNCTRACKER;
+  if (composition_->empty())
+    return false;
+  size_t where = composition_->back().start;
+  if (where >= input_.length())
+    return false;
+  set_input(input_.substr(0, where));
+  return true;
+}
+
 bool Context::ReopenPreviousSelection() {
   EZDBGONLYLOGGERFUNCTRACKER;
   for (Composition::reverse_iterator it = composition_->rbegin();
