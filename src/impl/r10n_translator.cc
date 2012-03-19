@@ -231,6 +231,7 @@ const std::string R10nTranslator::FormatPreedit(const std::string& preedit) {
 
 void R10nTranslator::OnCommit(Context *ctx) {
   DictEntry commit_entry;
+  std::vector<const DictEntry*> elements;
   BOOST_FOREACH(Composition::value_type &seg, *ctx->composition()) {
     shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
     bool unrecognized = false;
@@ -245,7 +246,7 @@ void R10nTranslator::OnCommit(Context *ctx) {
       commit_entry.code.insert(commit_entry.code.end(),
                                r10n_cand->code().begin(),
                                r10n_cand->code().end());
-      user_dict_->UpdateEntry(r10n_cand->entry(), 0);
+      elements.push_back(&r10n_cand->entry());
     }
     else if (sentence) {
       commit_entry.text += sentence->text();
@@ -253,7 +254,7 @@ void R10nTranslator::OnCommit(Context *ctx) {
                                sentence->code().begin(),
                                sentence->code().end());
       BOOST_FOREACH(const DictEntry& e, sentence->components()) {
-        user_dict_->UpdateEntry(e, 0);
+        elements.push_back(&e);
       }
     }
     else {
@@ -262,6 +263,21 @@ void R10nTranslator::OnCommit(Context *ctx) {
     if ((unrecognized || seg.status >= Segment::kConfirmed) &&
         !commit_entry.text.empty()) {
       EZDBGONLYLOGGERVAR(commit_entry.text);
+      bool update_elements = false;
+      if (elements.size() > 1) {
+        BOOST_FOREACH(const DictEntry* e, elements) {
+          if (e->code.size() > 1) {
+            update_elements = true;
+            break;
+          }
+        }
+      }
+      if (update_elements) {
+        BOOST_FOREACH(const DictEntry* e, elements) {
+          user_dict_->UpdateEntry(*e, 0);
+        }
+      }
+      elements.clear();
       user_dict_->UpdateEntry(commit_entry, 1);
       commit_entry.text.clear();
       commit_entry.code.clear();
