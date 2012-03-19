@@ -9,6 +9,7 @@
 #ifndef RIME_SWITCHER_H_
 #define RIME_SWITCHER_H_
 
+#include <set>
 #include <vector>
 #include <rime/common.h>
 #include <rime/engine.h>
@@ -40,6 +41,7 @@ class Switcher : public Engine {
   scoped_ptr<Config> user_config_;
   std::string caption_;
   std::vector<KeyEvent> hotkeys_;
+  std::set<std::string> save_options_;
   std::vector<shared_ptr<Processor> > processors_;
   Engine *target_engine_;
   bool active_;

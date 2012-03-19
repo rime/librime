@@ -30,14 +30,17 @@ class SwitcherOption : public Candidate {
       : Candidate("schema", 0, 0),
         text_(schema->schema_name()),
         comment_(),
-        value_(schema->schema_id()) {}
+        value_(schema->schema_id()),
+        auto_save_(true) {}
   SwitcherOption(const std::string &current_state_label,
                  const std::string &next_state_label,
                  const std::string &option_name,
-                 bool current_state)
+                 bool current_state,
+                 bool auto_save)
       : Candidate(current_state ? "switch_off" : "switch_on", 0, 0),
         text_(current_state_label + kRightArrow + next_state_label),
-        value_(option_name) {}
+        value_(option_name),
+        auto_save_(auto_save) {}
 
   void Apply(Engine *target_engine, Config *user_config);
   
@@ -48,6 +51,7 @@ class SwitcherOption : public Candidate {
   std::string text_;
   std::string comment_;
   std::string value_;
+  bool auto_save_;
 };
 
 void SwitcherOption::Apply(Engine *target_engine, Config *user_config) {
@@ -56,16 +60,18 @@ void SwitcherOption::Apply(Engine *target_engine, Config *user_config) {
     if (value_ != current_schema_id) {
       target_engine->set_schema(new Schema(value_));
     }
-    // save history
-    if (user_config) {
+    if (auto_save_ && user_config) {
       user_config->SetString("var/previously_selected_schema", value_);
     }
+    return;
   }
-  else if (type() == "switch_off") {
-    target_engine->context()->set_option(value_, false);
-  }
-  else if (type() == "switch_on") {
-    target_engine->context()->set_option(value_, true);
+  if (type() == "switch_off" || type() == "switch_on") {
+    bool option_is_on = (type() == "switch_on");
+    target_engine->context()->set_option(value_, option_is_on);
+    if (auto_save_ && user_config) {
+      user_config->SetBool("var/option/" + value_, option_is_on);
+    }
+    return;
   }
 }
 
@@ -88,6 +94,15 @@ Switcher::~Switcher() {
 
 void Switcher::Attach(Engine *engine) {
   target_engine_ = engine;
+  // restore saved options
+  if (user_config_) {
+    BOOST_FOREACH(const std::string& option_name, save_options_) {
+      bool value = false;
+      if (user_config_->GetBool("var/option/" + option_name, &value)) {
+        engine->context()->set_option(option_name, value);
+      }
+    }
+  }
 }
 
 bool Switcher::ProcessKeyEvent(const KeyEvent &key_event) {
@@ -189,11 +204,13 @@ void Switcher::Activate() {
           ConfigListPtr states = As<ConfigList>(item->Get("states"));
           if (!states || states->size() != 2) continue;
           bool current_state = context->get_option(name_property->str());
+          bool auto_save = (save_options_.find(name_property->str()) != save_options_.end());
           switcher_options->Append(
               shared_ptr<Candidate>(new SwitcherOption(states->GetValueAt(current_state)->str(),
                                                        states->GetValueAt(1 - current_state)->str(),
                                                        name_property->str(),
-                                                       current_state)));
+                                                       current_state,
+                                                       auto_save)));
         }
       }
     }
@@ -240,10 +257,19 @@ void Switcher::LoadSettings() {
   }
   ConfigListPtr hotkeys = config->GetList("switcher/hotkeys");
   if (!hotkeys) return;
+  hotkeys_.clear();
   for (size_t i = 0; i < hotkeys->size(); ++i) {
     ConfigValuePtr value = hotkeys->GetValueAt(i);
     if (!value) continue;
     hotkeys_.push_back(KeyEvent(value->str()));
+  }
+  ConfigListPtr options = config->GetList("switcher/save_options");
+  if (!options) return;
+  save_options_.clear();
+  for (ConfigList::Iterator it = options->begin(); it != options->end(); ++it) {
+    ConfigValuePtr option_name = As<ConfigValue>(*it);
+    if (!option_name) continue;
+    save_options_.insert(option_name->str());
   }
 }
 
