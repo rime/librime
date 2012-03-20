@@ -25,6 +25,7 @@ class Speller : public Processor {
   std::string alphabet_;
   std::string delimiter_;
   std::string initials_;
+  int max_code_length_;
 };
 
 }  // namespace rime
