@@ -1,8 +1,7 @@
 build/
 vcbuild/
 xbuild/
-thirdparty/include/gtest/
-thirdparty/include/yaml-cpp/
+thirdparty/include/*
 thirdparty/lib/*
 env.bat
 *~
