@@ -66,7 +66,7 @@ Processor::Result ExpressEditor::ProcessKeyEvent(
       return kAccepted;
     }
   }
-  if (ch > 0x20 && ch < 0x80) {
+  if (ch > 0x20 && ch < 0x7f) {
     EZDBGONLYLOGGERPRINT("Add to input: '%c', %d, '%s'",
                          ch, key_event.keycode(), key_event.repr().c_str());
     ctx->PushInput(key_event.keycode());

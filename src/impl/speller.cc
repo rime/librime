@@ -40,6 +40,8 @@ Processor::Result Speller::ProcessKeyEvent(
       key_event.keycode() == XK_space)
     return kNoop;
   int ch = key_event.keycode();
+  if (ch <= 0x20 || ch >= 0x7f)  // not a valid key for spelling
+    return kNoop;
   Context *ctx = engine_->context();
   if (ctx->IsComposing()) {
     bool is_letter = alphabet_.find(ch) != std::string::npos;
