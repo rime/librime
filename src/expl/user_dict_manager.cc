@@ -164,10 +164,15 @@ int UserDictManager::Export(const std::string& dict_name,
     return -1;
   std::ofstream fout(text_file);
   std::string key, value;
+  std::vector<std::string> row;
   int num_entries = 0;
   UserDbAccessor a(db.Query(""));
   while (a.GetNextRecord(&key, &value)) {
     if (boost::starts_with(key, "\x01/"))  // skip metadata
+      continue;
+    boost::algorithm::split(row, key,
+                            boost::algorithm::is_any_of("\t"));
+    if (row.size() != 2)
       continue;
     int c = 0;
     double d = 0.0;
@@ -175,7 +180,7 @@ int UserDictManager::Export(const std::string& dict_name,
     UserDictionary::UnpackValues(value, &c, &d, &t);
     if (c < 0)  // deleted entry
       continue;
-    fout << key << "\t" << c << std::endl;
+    fout << row[1] << "\t" << row[0] << "\t" << c << std::endl;
     ++num_entries;
   }
   fout.close();
@@ -207,7 +212,7 @@ int UserDictManager::Import(const std::string& dict_name,
       EZLOGGERPRINT("Warning: invalid entry at #%d.", num_entries);
       continue;
     }
-    key = row[0] + "\t" + row[1];
+    key = row[1] + "\t" + row[0];
     int commits = 0;
     if (row.size() >= 3 && !row[2].empty()) {
       try {
