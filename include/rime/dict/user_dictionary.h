@@ -49,6 +49,9 @@ class UserDictionary : public Class<UserDictionary, Schema*> {
   const std::string& name() const { return name_; }
   const TickCount tick() const { return tick_; }
 
+  static bool UnpackValues(const std::string &value,
+                           int *commit_count, double *dee, TickCount *tick);
+
  protected:
   bool Initialize();
   bool FetchTickCount();

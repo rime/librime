@@ -22,37 +22,6 @@
 
 namespace rime {
 
-static bool unpack_user_dict_value(const std::string &value,
-                                   int *commit_count,
-                                   double *dee,
-                                   TickCount *tick) {
-  std::vector<std::string> kv;
-  boost::split(kv, value, boost::is_any_of(" "));
-  BOOST_FOREACH(const std::string &k_eq_v, kv) {
-    size_t eq = k_eq_v.find('=');
-    if (eq == std::string::npos)
-      continue;
-    const std::string k(k_eq_v.substr(0, eq));
-    const std::string v(k_eq_v.substr(eq + 1));
-    try {
-      if (k == "c") {
-        *commit_count = boost::lexical_cast<int>(v);
-      }
-      else if (k == "d") {
-        *dee = boost::lexical_cast<double>(v);
-      }
-      else if (k == "t") {
-        *tick = boost::lexical_cast<TickCount>(v);
-      }
-    }
-    catch (...) {
-      EZLOGGERPRINT("Error: key-value parsing failed: '%s'.", k_eq_v.c_str());
-      return false;
-    }
-  }
-  return true;
-}
-
 struct DfsState {
   size_t depth_limit;
   TickCount present_tick;
@@ -86,7 +55,9 @@ struct DfsState {
   }
   bool Backdate(const std::string &prefix) {
     EZDBGONLYLOGGERVAR(prefix);
-    if (!accessor->Backward(prefix.empty() ? " " : prefix)) {
+    if (prefix.empty() ?
+        !accessor->Reset() :
+        !accessor->Forward(prefix)) {
       EZLOGGERPRINT("Warning: backdating failed for '%s'.", prefix.c_str());
       return false;
     }
@@ -103,7 +74,7 @@ void DfsState::SaveEntry(size_t pos) {
   int commit_count = 0;
   double dee = 0.0;
   TickCount last_tick = 0;
-  if (!unpack_user_dict_value(value, &commit_count, &dee, &last_tick))
+  if (!UserDictionary::UnpackValues(value, &commit_count, &dee, &last_tick))
     return;
   dee = algo::formula_d(0, (double)present_tick, dee, (double)last_tick);
   e->commit_count = commit_count;
@@ -234,7 +205,7 @@ bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
   double dee = 0.0;
   TickCount last_tick = 0;
   if (db_->Fetch(key, &value)) {
-    unpack_user_dict_value(value, &commit_count, &dee, &last_tick);
+    UnpackValues(value, &commit_count, &dee, &last_tick);
   }
   if (commit > 0) {
     commit_count += commit;
@@ -299,6 +270,37 @@ bool UserDictionary::TranslateCodeToString(const Code &code, std::string* result
     }
     *result += spelling;
     *result += ' ';
+  }
+  return true;
+}
+
+bool UserDictionary::UnpackValues(const std::string &value,
+                                  int *commit_count,
+                                  double *dee,
+                                  TickCount *tick) {
+  std::vector<std::string> kv;
+  boost::split(kv, value, boost::is_any_of(" "));
+  BOOST_FOREACH(const std::string &k_eq_v, kv) {
+    size_t eq = k_eq_v.find('=');
+    if (eq == std::string::npos)
+      continue;
+    const std::string k(k_eq_v.substr(0, eq));
+    const std::string v(k_eq_v.substr(eq + 1));
+    try {
+      if (k == "c") {
+        *commit_count = boost::lexical_cast<int>(v);
+      }
+      else if (k == "d") {
+        *dee = boost::lexical_cast<double>(v);
+      }
+      else if (k == "t") {
+        *tick = boost::lexical_cast<TickCount>(v);
+      }
+    }
+    catch (...) {
+      EZLOGGERPRINT("Error: key-value parsing failed: '%s'.", k_eq_v.c_str());
+      return false;
+    }
   }
   return true;
 }

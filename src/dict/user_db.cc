@@ -24,6 +24,7 @@ namespace rime {
 TreeDbAccessor::TreeDbAccessor(kyotocabinet::DB::Cursor *cursor,
                                const std::string &prefix)
     : cursor_(cursor), prefix_(prefix) {
+  Reset();
   if (!prefix.empty())
     Forward(prefix);
 }
@@ -33,6 +34,10 @@ TreeDbAccessor::~TreeDbAccessor() {
     delete cursor_;
     cursor_ = NULL;
   }
+}
+
+bool TreeDbAccessor::Reset() {
+  return cursor_ && cursor_->jump();
 }
 
 bool TreeDbAccessor::Forward(const std::string &key) {
@@ -104,6 +109,16 @@ bool TreeDb::Backup() {
   bool success = db_->dump_snapshot(file_name() + ".snapshot");
   if (!success) {
     EZLOGGERPRINT("Error: failed to backup db '%s'.", name_.c_str());
+  }
+  return success;
+}
+
+bool TreeDb::Restore(const std::string& snapshot_file) {
+  if (!loaded()) return false;
+  bool success = db_->load_snapshot(snapshot_file);
+  if (!success) {
+    EZLOGGERPRINT("Error: failed to restore db from '%s'.",
+                  snapshot_file.c_str());
   }
   return success;
 }

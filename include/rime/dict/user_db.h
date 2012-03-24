@@ -32,7 +32,8 @@ class TreeDbAccessor {
   explicit TreeDbAccessor(kyotocabinet::DB::Cursor *cursor,
                           const std::string &prefix);
   ~TreeDbAccessor();
-  
+
+  bool Reset();
   bool Forward(const std::string &key);
   bool Backward(const std::string &key);
   bool GetNextRecord(std::string *key, std::string *value);
@@ -59,6 +60,7 @@ class TreeDb {
   bool Update(const std::string &key, const std::string &value);
   bool Erase(const std::string &key);
   bool Backup();
+  bool Restore(const std::string& snapshot_file);
 
   const std::string& name() const { return name_; }
   const std::string& file_name() const { return file_name_; }
