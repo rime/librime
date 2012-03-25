@@ -162,7 +162,7 @@ int UserDictManager::Export(const std::string& dict_name,
   } BOOST_SCOPE_EXIT_END
   if (!IsUserDb(db))
     return -1;
-  std::ofstream fout(text_file);
+  std::ofstream fout(text_file.c_str());
   std::string key, value;
   std::vector<std::string> row;
   int num_entries = 0;
@@ -198,7 +198,7 @@ int UserDictManager::Import(const std::string& dict_name,
   } BOOST_SCOPE_EXIT_END
   if (!IsUserDb(db))
     return -1;
-  std::ifstream fin(text_file);
+  std::ifstream fin(text_file.c_str());
   std::string line, key, value;
   int num_entries = 0;
   while (getline(fin, line)) {
