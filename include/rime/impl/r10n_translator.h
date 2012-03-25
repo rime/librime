@@ -9,6 +9,9 @@
 #ifndef RIME_R10N_TRANSLATOR_H_
 #define RIME_R10N_TRANSLATOR_H_
 
+#include <vector>
+#include <string>
+#include <boost/regex.hpp>
 #include <boost/signals/connection.hpp>
 #include <rime/common.h>
 #include <rime/translation.h>
@@ -22,6 +25,11 @@ struct DictEntryCollector;
 class Dictionary;
 class UserDictionary;
 struct SyllableGraph;
+
+class Patterns : public std::vector<boost::regex> {
+ public:
+  bool Load(ConfigListPtr patterns);
+};
 
 class R10nTranslator : public Translator {
  public:
@@ -44,6 +52,7 @@ class R10nTranslator : public Translator {
   std::string delimiters_;
   bool enable_completion_;
   Projection formatter_;
+  Patterns user_dict_disabling_patterns_;
   boost::signals::connection connection_;
 };
 

@@ -163,6 +163,19 @@ class R10nSentence : public Candidate {
   std::vector<DictEntry> components_;
 };
 
+// Patterns
+
+bool Patterns::Load(ConfigListPtr patterns) {
+  clear();
+  if (!patterns) return false;
+  for (ConfigList::Iterator it = patterns->begin(); it != patterns->end(); ++it) {
+    ConfigValuePtr value = As<ConfigValue>(*it);
+    if (!value) continue;
+    push_back(boost::regex(value->str()));
+  }
+  return true;
+}
+
 // R10nTranslator implementation
 
 R10nTranslator::R10nTranslator(Engine *engine)
@@ -175,6 +188,8 @@ R10nTranslator::R10nTranslator(Engine *engine)
     config->GetString("speller/delimiter", &delimiters_);
     config->GetBool("translator/enable_completion", &enable_completion_);
     formatter_.Load(config->GetList("translator/preedit_format"));
+    user_dict_disabling_patterns_.Load(
+        config->GetList("translator/disable_user_dict_for_patterns"));
   }
   if (delimiters_.empty()) {
     delimiters_ = " ";
@@ -215,9 +230,19 @@ Translation* R10nTranslator::Query(const std::string &input,
   EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
                        input.c_str(), segment.start, segment.end);
 
+  bool enable_user_dict = true;
+  if (!user_dict_disabling_patterns_.empty()) {
+    BOOST_FOREACH(const boost::regex& pattern, user_dict_disabling_patterns_) {
+      if (boost::regex_match(input, pattern)) {
+        enable_user_dict = false;
+        break;
+      }
+    }
+  }
   // the translator should survive translations it creates
   R10nTranslation* result(new R10nTranslation(input, segment.start, this));
-  if (result && result->Evaluate(dict_.get(), user_dict_.get()))
+  if (result && result->Evaluate(dict_.get(),
+                                 enable_user_dict ? user_dict_.get() : NULL))
     return result;
   else
     return NULL;
