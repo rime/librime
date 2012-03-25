@@ -230,6 +230,7 @@ const std::string R10nTranslator::FormatPreedit(const std::string& preedit) {
 }
 
 void R10nTranslator::OnCommit(Context *ctx) {
+  if (!user_dict_) return;
   DictEntry commit_entry;
   std::vector<const DictEntry*> elements;
   BOOST_FOREACH(Composition::value_type &seg, *ctx->composition()) {
@@ -295,7 +296,9 @@ bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
                                                    &syllable_graph_);
 
   phrase_ = dict->Lookup(syllable_graph_, 0);
-  user_phrase_ = user_dict->Lookup(syllable_graph_, 0);
+  if (user_dict) {
+    user_phrase_ = user_dict->Lookup(syllable_graph_, 0);
+  }
   if (!phrase_ && !user_phrase_)
     return false;
   // make sentences when there is no exact-matching phrase candidate
@@ -433,10 +436,12 @@ const shared_ptr<R10nSentence> R10nTranslation::MakeSentence(
     double credibility = 1.0;
     if (syllable_graph_.vertices[s.first] >= kAmbiguousSpelling)
       credibility = kPenaltyForAmbiguousSyllable;
-    shared_ptr<UserDictEntryCollector> user_phrase = user_dict->Lookup(
-        syllable_graph_, s.first,
-        kMaxSyllablesForUserPhraseQuery,
-        credibility);
+    shared_ptr<UserDictEntryCollector> user_phrase;
+    if (user_dict) {
+      user_phrase = user_dict->Lookup(syllable_graph_, s.first,
+                                      kMaxSyllablesForUserPhraseQuery,
+                                      credibility);
+    }
     UserDictEntryCollector &u(graph[s.first]);
     if (user_phrase)
       u.swap(*user_phrase);
