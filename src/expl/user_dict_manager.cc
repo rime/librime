@@ -36,6 +36,12 @@ static const std::string GetDbName(UserDb& db) {
   return name;
 }
 
+static const std::string GetUserId(UserDb& db) {
+  std::string user_id("unknown");
+  db.Fetch("\x01/user_id", &user_id);
+  return user_id;
+}
+
 static TickCount GetTickCount(UserDb& db) {
   std::string tick;
   if (db.Fetch("\x01/tick", &tick)) {
@@ -109,6 +115,9 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
   EZLOGGERPRINT("merging '%s' into userdb '%s'...",
                 snapshot_file.c_str(),
                 db_name.c_str());
+  std::string user_id = GetUserId(dest);
+  if (user_id == "unknown")
+    user_id = GetUserId(temp);
   TickCount tick_left = GetTickCount(dest);
   TickCount tick_right = GetTickCount(temp);
   tick_left = (std::max)(tick_left, tick_right);
@@ -142,6 +151,7 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
   if (num_entries > 0) {
     try {
       dest.Update("\x01/tick", boost::lexical_cast<std::string>(tick_left));
+      dest.Update("\x01/user_id", user_id);
     }
     catch (...) {
       EZLOGGERPRINT("Warning: failed to update tick count.");
@@ -164,6 +174,11 @@ int UserDictManager::Export(const std::string& dict_name,
   if (!IsUserDb(db))
     return -1;
   std::ofstream fout(text_file.c_str());
+  fout << "# Rime user dictionary export" << std::endl
+       << "# db_name: " << GetDbName(db) << std::endl
+       << "# user_id: " << GetUserId(db) << std::endl
+       << "# commits: " << GetTickCount(db) << std::endl
+       << std::endl;
   std::string key, value;
   std::vector<std::string> row;
   int num_entries = 0;
@@ -173,8 +188,10 @@ int UserDictManager::Export(const std::string& dict_name,
       continue;
     boost::algorithm::split(row, key,
                             boost::algorithm::is_any_of("\t"));
-    if (row.size() != 2)
+    if (row.size() != 2 ||
+        row[0].empty() || row[1].empty())
       continue;
+    boost::algorithm::trim(row[0]);
     int c = 0;
     double d = 0.0;
     TickCount t = 0;
@@ -209,9 +226,18 @@ int UserDictManager::Import(const std::string& dict_name,
     std::vector<std::string> row;
     boost::algorithm::split(row, line,
                             boost::algorithm::is_any_of("\t"));
-    if (row.size() < 2 || row[0].empty() || row[1].empty()) {
+    if (row.size() < 2 ||
+        row[0].empty() || row[1].empty()) {
       EZLOGGERPRINT("Warning: invalid entry at #%d.", num_entries);
       continue;
+    }
+    boost::algorithm::trim(row[1]);
+    if (!row[1].empty()) {
+      std::vector<std::string> syllables;
+      boost::algorithm::split(syllables, row[1],
+                              boost::algorithm::is_any_of(" "),
+                              boost::algorithm::token_compress_on);
+      row[1] = boost::algorithm::join(syllables, " ");
     }
     key = row[1] + "\t" + row[0];
     int commits = 0;
