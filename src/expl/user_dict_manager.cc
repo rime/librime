@@ -123,14 +123,14 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
     TickCount t = 0;
     UserDictionary::UnpackValues(right, &c, &d, &t);
     if (t < tick_right)
-      d = algo::formula_d(0, (double)t, d, (double)tick_right);
+      d = algo::formula_d(0, (double)tick_right, d, (double)t);
     if (dest.Fetch(key, &left)) {
       int c0 = 0;
       double d0 = 0.0;
       TickCount t0 = 0;
       UserDictionary::UnpackValues(left, &c0, &d0, &t0);
       if (t0 < tick_left)
-        d0 = algo::formula_d(0, (double)t0, d0, (double)tick_left);
+        d0 = algo::formula_d(0, (double)tick_left, d0, (double)t0);
       c = (std::max)(c, c0);
       d = (std::max)(d, d0);
     }
