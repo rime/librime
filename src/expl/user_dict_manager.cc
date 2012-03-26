@@ -111,6 +111,7 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
                 db_name.c_str());
   TickCount tick_left = GetTickCount(dest);
   TickCount tick_right = GetTickCount(temp);
+  tick_left = (std::max)(tick_left, tick_right);
   TreeDbAccessor a(temp.Query(""));
   std::string key, left, right;
   int num_entries = 0;
