@@ -28,7 +28,7 @@ class Translation {
   virtual shared_ptr<Candidate> Peek() = 0;
 
   // should it provide the next candidate (negative value, zero) or
-  // should it give the chance to other translations (positive)?
+  // should it give up the chance for other translations (positive)?
   virtual int Compare(shared_ptr<Translation> other,
                       const CandidateList &candidates);
 

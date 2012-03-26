@@ -25,7 +25,7 @@ class Candidate {
 
   // recognized by translators in learning phase
   const std::string& type() const { return type_; }
-  // [start, end) mark a range in the input that the candidate correspond to
+  // [start, end) mark a range in the input that the candidate corresponds to
   size_t start() const { return start_; }
   size_t end() const { return end_; }
   
