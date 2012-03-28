@@ -109,10 +109,13 @@ bool Switcher::ProcessKeyEvent(const KeyEvent &key_event) {
   EZDBGONLYLOGGERVAR(key_event);
   BOOST_FOREACH(const KeyEvent &hotkey, hotkeys_) {
     if (key_event == hotkey) {
-      if (!active_ && target_engine_)
+      if (!active_ && target_engine_) {
         Activate();
-      else if (active_)
-        Deactivate(); 
+      }
+      else if (active_ && key_event.keycode() != XK_Down) {
+        // move cursor down to the next item
+        ProcessKeyEvent(KeyEvent(XK_Down, 0));
+      }
       return true;
     }
   }
