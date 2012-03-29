@@ -9,6 +9,7 @@
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
+#include <boost/algorithm/string/join.hpp>
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <rime/composition.h>
@@ -23,6 +24,9 @@
 #include <rime/algo/poet.h>
 #include <rime/algo/syllabifier.h>
 #include <rime/impl/r10n_translator.h>
+
+static const char *quote_left = "\xef\xbc\x88";
+static const char *quote_right = "\xef\xbc\x89";
 
 namespace rime {
 
@@ -91,6 +95,8 @@ class R10nTranslation : public Translation {
   void CheckEmpty();
   template <class CandidateT>
   const std::string GetPreeditString(const CandidateT &cand) const;
+  template <class CandidateT>
+  const std::string GetOriginalSpelling(const CandidateT &cand) const;
   const shared_ptr<R10nSentence> MakeSentence(Dictionary *dict,
                                               UserDictionary *user_dict);
 
@@ -119,6 +125,9 @@ class R10nCandidate : public Candidate {
   const std::string& text() const { return entry_->text; }
   const std::string comment() const { return entry_->comment; }
   const std::string preedit() const { return entry_->preedit; }
+  void set_comment(const std::string &comment) {
+    entry_->comment = comment;
+  }
   void set_preedit(const std::string &preedit) {
     entry_->preedit = preedit;
   }
@@ -150,7 +159,11 @@ class R10nSentence : public Candidate {
     set_end(end() + offset);
   }
   const std::string& text() const { return entry_.text; }
+  const std::string comment() const { return entry_.comment; }
   const std::string preedit() const { return entry_.preedit; }
+  void set_comment(const std::string &comment) {
+    entry_.comment = comment;
+  }
   void set_preedit(const std::string &preedit) {
     entry_.preedit = preedit;
   }
@@ -180,14 +193,17 @@ bool Patterns::Load(ConfigListPtr patterns) {
 
 R10nTranslator::R10nTranslator(Engine *engine)
     : Translator(engine),
-      enable_completion_(true) {
+      enable_completion_(true),
+      spelling_hints_(0) {
   if (!engine) return;
 
   Config *config = engine->schema()->config();
   if (config) {
     config->GetString("speller/delimiter", &delimiters_);
     config->GetBool("translator/enable_completion", &enable_completion_);
-    formatter_.Load(config->GetList("translator/preedit_format"));
+    config->GetInt("translator/spelling_hints", &spelling_hints_);
+    preedit_formatter_.Load(config->GetList("translator/preedit_format"));
+    comment_formatter_.Load(config->GetList("translator/comment_format"));
     user_dict_disabling_patterns_.Load(
         config->GetList("translator/disable_user_dict_for_patterns"));
   }
@@ -250,7 +266,18 @@ Translation* R10nTranslator::Query(const std::string &input,
 
 const std::string R10nTranslator::FormatPreedit(const std::string& preedit) {
   std::string result(preedit);
-  formatter_.Apply(&result);
+  preedit_formatter_.Apply(&result);
+  return result;
+}
+
+const std::string R10nTranslator::Spell(const Code &code) {
+  std::string result;
+  dictionary::RawCode syllables;
+  if (!dict_ || !dict_->Decode(code, &syllables) || syllables.empty())
+    return result;
+  result =  boost::algorithm::join(syllables,
+                                   std::string(1, delimiters_.at(0)));
+  comment_formatter_.Apply(&result);
   return result;
 }
 
@@ -361,6 +388,16 @@ const std::string R10nTranslation::GetPreeditString(
   }
 }
 
+template <class CandidateT>
+const std::string R10nTranslation::GetOriginalSpelling(
+    const CandidateT& cand) const {
+  if (translator_ &&
+      static_cast<int>(cand.code().size()) <= translator_->spelling_hints()) {
+    return translator_->Spell(cand.code());
+  }
+  return std::string();
+}
+
 bool R10nTranslation::Next() {
   if (exhausted())
     return false;
@@ -409,6 +446,13 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
     if (sentence_->preedit().empty()) {
       sentence_->set_preedit(GetPreeditString(*sentence_));
     }
+    if (sentence_->comment().empty()) {
+      const std::string spelling(GetOriginalSpelling(*sentence_));
+      if (!spelling.empty() &&
+          spelling != sentence_->preedit()) {
+        sentence_->set_comment(quote_left + spelling + quote_right);
+      }
+    }
     return sentence_;
   }
   size_t user_phrase_code_length = 0;
@@ -441,6 +485,13 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
   }
   if (cand && cand->preedit().empty()) {
     cand->set_preedit(GetPreeditString(*cand));
+  }
+  if (cand->comment().empty()) {
+    const std::string spelling(GetOriginalSpelling(*cand));
+    if (!spelling.empty() &&
+        spelling != cand->preedit()) {
+      cand->set_comment(quote_left + spelling + quote_right);
+    }
   }
   return cand;
 }

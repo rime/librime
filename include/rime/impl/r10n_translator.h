@@ -20,6 +20,7 @@
 
 namespace rime {
 
+class Code;
 struct DictEntry;
 struct DictEntryCollector;
 class Dictionary;
@@ -39,19 +40,25 @@ class R10nTranslator : public Translator {
   virtual Translation* Query(const std::string &input,
                              const Segment &segment);
   const std::string FormatPreedit(const std::string &preedit);
+  const std::string Spell(const Code &code);
 
   // options
   const std::string& delimiters() const { return delimiters_; }
   bool enable_completion() const { return enable_completion_; }
+  int spelling_hints() const { return spelling_hints_; }
   
  protected:
   void OnCommit(Context *ctx);
   
   scoped_ptr<Dictionary> dict_;
   scoped_ptr<UserDictionary> user_dict_;
+  
   std::string delimiters_;
   bool enable_completion_;
-  Projection formatter_;
+  int spelling_hints_;
+  
+  Projection preedit_formatter_;
+  Projection comment_formatter_;
   Patterns user_dict_disabling_patterns_;
   boost::signals::connection connection_;
 };
