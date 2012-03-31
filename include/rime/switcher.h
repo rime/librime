@@ -36,6 +36,7 @@ class Switcher : public Engine {
   void LoadSettings();
   void Activate();
   void Deactivate();
+  void HighlightNextSchema();
   void OnSelect(Context *ctx);
 
   scoped_ptr<Config> user_config_;
