@@ -99,6 +99,7 @@ typedef struct {
 RIME_API void RimeInitialize(RimeTraits *traits);
 RIME_API void RimeFinalize();
 
+RIME_API Bool RimeStartMaintenance(Bool full_check);
 RIME_API Bool RimeStartMaintenanceOnWorkspaceChange();
 RIME_API Bool RimeIsMaintenancing();
 RIME_API void RimeJoinMaintenanceThread();
@@ -136,6 +137,7 @@ RIME_API Bool RimeConfigGetInt(RimeConfig *config, const char *key, int *value);
 RIME_API Bool RimeConfigGetDouble(RimeConfig *config, const char *key, double *value);
 RIME_API Bool RimeConfigGetString(RimeConfig *config, const char *key,
                                   char *value, size_t buffer_size);
+RIME_API Bool RimeConfigUpdateSignature(RimeConfig *config, const char* signer);
 
 // for testing
 

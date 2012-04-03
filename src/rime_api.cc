@@ -18,6 +18,7 @@
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/expl/deployment_tasks.h>
+#include <rime/expl/signature.h>
 #include <rime_api.h>
 
 
@@ -32,21 +33,29 @@ RIME_API void RimeFinalize() {
   rime::Registry::instance().Clear();
 }
 
-RIME_API Bool RimeStartMaintenanceOnWorkspaceChange() {
+RIME_API Bool RimeStartMaintenance(Bool full_check) {
   rime::Deployer &deployer(rime::Service::instance().deployer());
   rime::InstallationUpdate installation;
   installation.Run(&deployer);
-  rime::ConfigFileUpdate default_config_update("default.yaml",
-                                               "config_version");
-  bool updated = default_config_update.Run(&deployer);
-  if (updated) {
-    EZLOGGERPRINT("changes detected; starting maintenance.");
-    rime::shared_ptr<rime::DeploymentTask> task(new rime::WorkspaceUpdate);
-    deployer.ScheduleTask(task);
-    deployer.StartMaintenance();
-    return True;
+  if (!full_check) {
+    rime::ConfigFileUpdate default_config_update("default.yaml",
+                                                 "config_version");
+    bool updated = default_config_update.Run(&deployer);
+    if (!updated) {
+      return False;
+    }
+    else {
+      EZLOGGERPRINT("changes detected; starting maintenance.");
+    }
   }
-  return False;
+  rime::shared_ptr<rime::DeploymentTask> task(new rime::WorkspaceUpdate);
+  deployer.ScheduleTask(task);
+  deployer.StartMaintenance();
+  return True;
+}
+
+RIME_API Bool RimeStartMaintenanceOnWorkspaceChange() {
+  return RimeStartMaintenance(False);
 }
 
 RIME_API Bool RimeIsMaintenancing() {
@@ -107,7 +116,7 @@ RIME_API RimeSessionId RimeCreateSession() {
 }
 
 RIME_API Bool RimeFindSession(RimeSessionId session_id) {
-  return Bool(rime::Service::instance().GetSession(session_id) != 0);
+  return Bool(session_id && rime::Service::instance().GetSession(session_id));
 }
 
 RIME_API Bool RimeDestroySession(RimeSessionId session_id) {
@@ -280,6 +289,14 @@ RIME_API Bool RimeConfigGetString(RimeConfig *config, const char *key,
     return True;
   }
   return False;
+}
+
+RIME_API Bool RimeConfigUpdateSignature(RimeConfig *config, const char* signer) {
+  if (!config || !signer) return False;
+  rime::Config *c = reinterpret_cast<rime::Config*>(config->ptr);
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  rime::Signature sig(signer);
+  return Bool(sig.Sign(c, &deployer));
 }
 
 RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence) {
