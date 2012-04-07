@@ -68,7 +68,7 @@ void Service::StartService() {
 
 void Service::StopService() {
   started_ = false;
-  CleanupStaleSessions();
+  CleanupAllSessions();
 }
 
 SessionId Service::CreateSession() {
