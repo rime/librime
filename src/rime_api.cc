@@ -25,11 +25,12 @@
 RIME_API void RimeInitialize(RimeTraits *traits) {
   RimeDeployerInitialize(traits);
   rime::RegisterComponents();
+  rime::Service::instance().StartService();
 }
 
 RIME_API void RimeFinalize() {
   RimeJoinMaintenanceThread();
-  rime::Service::instance().CleanupAllSessions();
+  rime::Service::instance().StopService();
   rime::Registry::instance().Clear();
 }
 
@@ -242,7 +243,9 @@ RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
 
 RIME_API Bool RimeConfigOpen(const char *config_id, RimeConfig* config) {
   if (!config || !config) return False;
-  rime::Config *c = rime::Config::Require("config")->Create(config_id);
+  rime::Config::Component* cc = rime::Config::Require("config");
+  if (!cc) return False;
+  rime::Config* c = cc->Create(config_id);
   if (!c) return False;
   config->ptr = (void*)c;
   return True;

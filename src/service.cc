@@ -55,11 +55,20 @@ Schema* Session::schema() const {
   return engine_ ? engine_->schema() : NULL;
 }
 
-Service::Service() {
+Service::Service() : started_(false) {
 }
 
 Service::~Service() {
-  CleanupAllSessions();
+  StopService();
+}
+
+void Service::StartService() {
+  started_ = true;
+}
+
+void Service::StopService() {
+  started_ = false;
+  CleanupStaleSessions();
 }
 
 SessionId Service::CreateSession() {

@@ -54,6 +54,9 @@ class Service {
  public:
   ~Service();
 
+  void StartService();
+  void StopService();
+
   SessionId CreateSession();
   shared_ptr<Session> GetSession(SessionId session_id);
   bool DestroySession(SessionId session_id);
@@ -61,7 +64,7 @@ class Service {
   void CleanupAllSessions();
 
   Deployer& deployer() { return deployer_; }
-  bool disabled() { return deployer_.IsMaintenancing(); }
+  bool disabled() { return !started_ || deployer_.IsMaintenancing(); }
 
   static Service& instance() {
     if (!instance_) instance_.reset(new Service);
@@ -75,6 +78,7 @@ class Service {
   typedef std::map<SessionId, shared_ptr<Session> > SessionMap;
   SessionMap sessions_;
   Deployer deployer_;
+  bool started_;
 };
 
 }  // namespace rime
