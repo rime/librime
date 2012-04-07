@@ -50,16 +50,18 @@ Processor::Result Speller::ProcessKeyEvent(
       return kNoop;
     if (is_letter &&             // a letter may cause auto-commit
         max_code_length_ > 0 &&  // at a fixed code length
-        !ctx->composition()->empty()) {
+        ctx->HasMenu()) {
       const Segment& seg(ctx->composition()->back());
       const shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
-      int code_length = static_cast<int>(cand->end() - cand->start());
-      if (code_length == max_code_length_ &&       // exceeds max code length
-          cand->end() == ctx->input().length() &&  // reaches the end of input
-          cand->type() == "zh" &&                  // not raw ascii string
-          ctx->input().find_first_of(              // no delimiters
-              delimiter_, cand->start()) == std::string::npos) {
-        ctx->Commit();
+      if (cand) {
+	int code_length = static_cast<int>(cand->end() - cand->start());
+	if (code_length == max_code_length_ &&       // exceeds max code length
+	    cand->end() == ctx->input().length() &&  // reaches end of input
+	    cand->type() == "zh" &&                  // not raw ascii string
+	    ctx->input().find_first_of(              // no delimiters
+                delimiter_, cand->start()) == std::string::npos) {
+	  ctx->ConfirmCurrentSelection();
+	}
       }
     }
   }
