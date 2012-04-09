@@ -54,14 +54,14 @@ Processor::Result Speller::ProcessKeyEvent(
       const Segment& seg(ctx->composition()->back());
       const shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
       if (cand) {
-	int code_length = static_cast<int>(cand->end() - cand->start());
-	if (code_length == max_code_length_ &&       // exceeds max code length
-	    cand->end() == ctx->input().length() &&  // reaches end of input
-	    cand->type() == "zh" &&                  // not raw ascii string
-	    ctx->input().find_first_of(              // no delimiters
+        int code_length = static_cast<int>(cand->end() - cand->start());
+        if (code_length == max_code_length_ &&       // exceeds max code length
+            cand->end() == ctx->input().length() &&  // reaches end of input
+            cand->type() == "zh" &&                  // not raw ascii string
+            ctx->input().find_first_of(              // no delimiters
                 delimiter_, cand->start()) == std::string::npos) {
-	  ctx->ConfirmCurrentSelection();
-	}
+          ctx->ConfirmCurrentSelection();
+        }
       }
     }
   }
