@@ -13,6 +13,7 @@
 #include <rime/schema.h>
 #include <rime/segmentation.h>
 #include <rime/translation.h>
+#include <rime/algo/syllabifier.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 #include <rime/impl/table_translator.h>
@@ -110,8 +111,22 @@ Translation* ReverseLookupTranslator::Query(const std::string &input,
   
   Translation *translation = NULL;
   DictEntryIterator iter;
-  if (start < input.length())
-    dict_->LookupWords(&iter, code, false);
+  if (start < input.length()) {
+    //dict_->LookupWords(&iter, code, false);
+    // 2012-04-08 gongchen: fetch multi-syllable words from rev-lookup table
+    SyllableGraph graph;
+    Syllabifier syllabifier;
+    size_t consumed = syllabifier.BuildSyllableGraph(code,
+                                                     *dict_->prism(),
+                                                     &graph);
+    if (consumed == code.length()) {
+      shared_ptr<DictEntryCollector> collector = dict_->Lookup(graph, 0);
+      if (collector && !collector->empty() &&
+          collector->rbegin()->first == consumed) {
+        iter = collector->rbegin()->second;
+      }
+    }
+  }
   if (!iter.exhausted()) {
     std::string preedit(input);
     preedit_formatter_.Apply(&preedit);
