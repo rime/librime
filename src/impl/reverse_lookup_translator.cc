@@ -65,7 +65,7 @@ shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
 }
 
 ReverseLookupTranslator::ReverseLookupTranslator(Engine *engine)
-    : Translator(engine), initialized_(false) {
+    : Translator(engine), initialized_(false), enable_completion_(false) {
 }
 
 void ReverseLookupTranslator::Initialize() {
@@ -73,6 +73,7 @@ void ReverseLookupTranslator::Initialize() {
   if (!engine_) return;
   Config *config = engine_->schema()->config();
   if (!config) return;
+  config->GetBool("reverse_lookup/enable_completion", &enable_completion_);
   config->GetString("reverse_lookup/prefix", &prefix_);
   config->GetString("reverse_lookup/tips", &tips_);
   preedit_formatter_.Load(config->GetList("reverse_lookup/preedit_format"));
@@ -112,18 +113,22 @@ Translation* ReverseLookupTranslator::Query(const std::string &input,
   Translation *translation = NULL;
   DictEntryIterator iter;
   if (start < input.length()) {
-    //dict_->LookupWords(&iter, code, false);
-    // 2012-04-08 gongchen: fetch multi-syllable words from rev-lookup table
-    SyllableGraph graph;
-    Syllabifier syllabifier;
-    size_t consumed = syllabifier.BuildSyllableGraph(code,
-                                                     *dict_->prism(),
-                                                     &graph);
-    if (consumed == code.length()) {
-      shared_ptr<DictEntryCollector> collector = dict_->Lookup(graph, 0);
-      if (collector && !collector->empty() &&
-          collector->rbegin()->first == consumed) {
-        iter = collector->rbegin()->second;
+    if (enable_completion_) {
+      dict_->LookupWords(&iter, code, true, 100);
+    }
+    else {
+      // 2012-04-08 gongchen: fetch multi-syllable words from rev-lookup table
+      SyllableGraph graph;
+      Syllabifier syllabifier("", true);
+      size_t consumed = syllabifier.BuildSyllableGraph(code,
+                                                       *dict_->prism(),
+                                                       &graph);
+      if (consumed == code.length()) {
+        shared_ptr<DictEntryCollector> collector = dict_->Lookup(graph, 0);
+        if (collector && !collector->empty() &&
+            collector->rbegin()->first == consumed) {
+          iter = collector->rbegin()->second;
+        }
       }
     }
   }
