@@ -33,6 +33,8 @@ void RawCode::FromString(const std::string &code) {
 bool compare_chunk_by_head_element(const Chunk &a, const Chunk &b) {
   if (!a.entries || a.cursor >= a.size) return false;
   if (!b.entries || b.cursor >= b.size) return true;
+  if (a.remaining_code.length() != b.remaining_code.length())
+    return a.remaining_code.length() < b.remaining_code.length();
   return a.credibility * a.entries[a.cursor].weight >
          b.credibility * b.entries[b.cursor].weight;  // by weight desc
 }
