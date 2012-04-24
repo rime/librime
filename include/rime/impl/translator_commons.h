@@ -15,14 +15,21 @@
 #include <rime/common.h>
 #include <rime/config.h>
 #include <rime/candidate.h>
+#include <rime/translation.h>
+#include <rime/algo/algebra.h>
+#include <rime/dict/dictionary.h>
 #include <rime/dict/vocabulary.h>
 
 namespace rime {
+
+//
 
 class Patterns : public std::vector<boost::regex> {
  public:
   bool Load(ConfigListPtr patterns);
 };
+
+//
 
 class ZhCandidate : public Candidate {
  public:
@@ -45,6 +52,8 @@ class ZhCandidate : public Candidate {
  protected:
   const shared_ptr<DictEntry> entry_;
 };
+
+//
 
 class Sentence : public Candidate {
  public:
@@ -70,6 +79,29 @@ class Sentence : public Candidate {
  protected:
   DictEntry entry_;
   std::vector<DictEntry> components_;
+};
+
+//
+
+class TableTranslation : public Translation {
+ public:
+  TableTranslation(const std::string& input, size_t start, size_t end,
+                   const std::string& preedit,
+                   Projection* comment_formatter);
+  TableTranslation(const DictEntryIterator& iter,
+                   const std::string& input, size_t start, size_t end,
+                   const std::string& preedit,
+                   Projection* comment_formatter);
+  virtual bool Next();
+  virtual shared_ptr<Candidate> Peek();
+  
+ protected:
+  DictEntryIterator iter_;
+  std::string input_;
+  size_t start_;
+  size_t end_;
+  std::string preedit_;
+  Projection *comment_formatter_;
 };
 
 }  // namespace rime

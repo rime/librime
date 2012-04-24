@@ -44,4 +44,51 @@ void Sentence::Offset(size_t offset) {
   set_end(end() + offset);
 }
 
+// TableTranslation
+
+TableTranslation::TableTranslation(const std::string &input,
+                                   size_t start, size_t end,
+                                   const std::string &preedit,
+                                   Projection *comment_formatter)
+    : input_(input), start_(start), end_(end),
+      preedit_(preedit), comment_formatter_(comment_formatter) {
+  set_exhausted(true);
+}
+
+TableTranslation::TableTranslation(const DictEntryIterator& iter,
+                                   const std::string &input,
+                                   size_t start, size_t end,
+                                   const std::string &preedit,
+                                   Projection *comment_formatter)
+    : iter_(iter), input_(input), start_(start), end_(end),
+      preedit_(preedit), comment_formatter_(comment_formatter) {
+  set_exhausted(iter_.exhausted());
+}
+
+bool TableTranslation::Next() {
+  if (exhausted())
+    return false;
+  iter_.Next();
+  set_exhausted(iter_.exhausted());
+  return true;
+}
+
+shared_ptr<Candidate> TableTranslation::Peek() {
+  if (exhausted())
+    return shared_ptr<Candidate>();
+  const shared_ptr<DictEntry> &e(iter_.Peek());
+  std::string comment(e->comment);
+  if (comment_formatter_) {
+    comment_formatter_->Apply(&comment);
+  }
+  shared_ptr<Candidate> cand(new SimpleCandidate(
+      "zh",
+      start_,
+      end_,
+      e->text,
+      comment,
+      preedit_));
+  return cand;
+}
+
 }  // namespace rime
