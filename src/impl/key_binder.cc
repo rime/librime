@@ -88,7 +88,7 @@ typedef std::set<std::string> Conditions;
 static void measure_conditions(Context *ctx, Conditions *conditions) {
   // prevent duplicated evaluation
   if (!conditions->empty()) return;
-  conditions->insert("non_empty");
+  conditions->insert("always");
   
   if (ctx->IsComposing()) {
     conditions->insert("composing");
