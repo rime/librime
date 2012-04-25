@@ -6,7 +6,7 @@ aux_source_directory(dict LIBRIME_DICT_SRC)
 aux_source_directory(impl LIBRIME_IMPL_SRC)
 aux_source_directory(expl LIBRIME_EXPL_SRC)
 
-if (ENABLE_STATIC)
+if (BUILD_STATIC)
 
 add_library(rime STATIC ${LIBRIME_SRC} ${LIBRIME_ALGO_SRC} ${LIBRIME_DICT_SRC} ${LIBRIME_IMPL_SRC} ${LIBRIME_EXPL_SRC})
 target_link_libraries(rime
@@ -14,7 +14,7 @@ target_link_libraries(rime
   ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 set_target_properties(rime PROPERTIES OUTPUT_NAME "rime" PREFIX "lib")
 
-else (ENABLE_STATIC)
+else (BUILD_STATIC)
 
 add_library(rime SHARED ${LIBRIME_SRC} ${LIBRIME_ALGO_SRC} ${LIBRIME_DICT_SRC} ${LIBRIME_IMPL_SRC} ${LIBRIME_EXPL_SRC})
 target_link_libraries(rime
@@ -24,4 +24,4 @@ set_target_properties(rime PROPERTIES DEFINE_SYMBOL "RIME_EXPORTS")
 set_target_properties(rime PROPERTIES VERSION ${LIBRIME_VERSION} SOVERSION ${LIBRIME_SOVERSION})
 install(TARGETS rime DESTINATION ${LIB_INSTALL_DIR})
 
-endif (ENABLE_STATIC)
+endif (BUILD_STATIC)

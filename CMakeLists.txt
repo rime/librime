@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 2.8)
 set(LIBRIME_VERSION 0.9)
 set(LIBRIME_SOVERSION 0)
 
-option(ENABLE_STATIC "Build static version of Rime" OFF)
+option(BUILD_STATIC "Build static version of Rime" ON)
 
 if(WIN32)
   set(EXT ".exe")
@@ -15,10 +15,10 @@ endif(WIN32)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-set(Boost_USE_STATIC_LIBS ${ENABLE_STATIC})
-set(KyotoCabinet_STATIC ${ENABLE_STATIC})
-set(Opencc_STATIC ${ENABLE_STATIC})
-set(YamlCpp_STATIC ${ENABLE_STATIC})
+set(Boost_USE_STATIC_LIBS ${BUILD_STATIC})
+set(KyotoCabinet_STATIC ${BUILD_STATIC})
+set(Opencc_STATIC ${BUILD_STATIC})
+set(YamlCpp_STATIC ${BUILD_STATIC})
 
 set(Boost_USE_MULTITHREADED ON)
 if(MSVC)
@@ -73,7 +73,7 @@ if(NOT DEFINED LIB_INSTALL_DIR)
 endif()
 
 
-if (NOT ENABLE_STATIC)
+if (NOT BUILD_STATIC)
   # uninstall target
   configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
@@ -89,7 +89,7 @@ if (NOT ENABLE_STATIC)
   install(FILES include/rime_api.h DESTINATION include)
   install(FILES ${PROJECT_BINARY_DIR}/rime.pc DESTINATION ${LIB_INSTALL_DIR}/pkgconfig)
   install(FILES cmake/RimeConfig.cmake DESTINATION share/cmake/rime)
-endif (NOT ENABLE_STATIC)
+endif (NOT BUILD_STATIC)
 
 add_subdirectory(src)
 add_subdirectory(tools)
