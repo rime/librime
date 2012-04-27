@@ -1,6 +1,6 @@
 # - Locate the rime library
 # This module defines
-#  Rime_FOUND found libfcitx
+#  Rime_FOUND found librime
 #  Rime_LIBRARY rime library path
 #  Rime_INCLUDE_DIRS, where to find headers
 
@@ -8,10 +8,7 @@
 # Copyright 2012 Xuetian Weng
 #
 # Distributed under the GPLv3 License
-# see accompanying file COPYRIGHT for details
 #==============================================================================
-# (To distribute this file outside of Fcitx, substitute the full
-#  License text for the above reference.)
 
 # use pkg-config to get the directories and then use these values
 # in the FIND_PATH() and FIND_LIBRARY() calls
