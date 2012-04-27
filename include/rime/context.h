@@ -12,6 +12,7 @@
 #include <string>
 #include <boost/signals.hpp>
 #include <rime/common.h>
+#include <rime/commit_history.h>
 
 namespace rime {
 
@@ -65,6 +66,8 @@ class Context {
   void set_composition(Composition *comp);
   Composition* composition();
   const Composition* composition() const;
+  CommitHistory& commit_history() { return commit_history_; }
+  const CommitHistory& commit_history() const { return commit_history_; }
 
   void set_option(const std::string &name, bool value);
   bool get_option(const std::string &name) const;
@@ -81,6 +84,7 @@ class Context {
   std::string input_;
   size_t caret_pos_;
   scoped_ptr<Composition> composition_;
+  CommitHistory commit_history_;
   std::map<std::string, bool> options_;
 
   Notifier commit_notifier_;

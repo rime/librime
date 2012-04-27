@@ -23,7 +23,11 @@ Context::~Context() {
 bool Context::Commit() {
   if (!IsComposing())
     return false;
+  // notify the engine and interesting components
   commit_notifier_(this);
+  // record commit history
+  commit_history_.Push(*composition_, input_);
+  // start over
   Clear();
   return true;
 }

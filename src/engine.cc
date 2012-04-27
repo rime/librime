@@ -93,9 +93,11 @@ bool ConcreteEngine::ProcessKeyEvent(const KeyEvent &key_event) {
   EZDBGONLYLOGGERVAR(key_event);
   BOOST_FOREACH(shared_ptr<Processor> &p, processors_) {
     Processor::Result ret = p->ProcessKeyEvent(key_event);
-    if (ret == Processor::kRejected) return false;
+    if (ret == Processor::kRejected) break;
     if (ret == Processor::kAccepted) return true;
   }
+  // record unhandled keys, eg. spaces, numbers, bksp's.
+  context_->commit_history().Push(key_event);
   return false;
 }
 
