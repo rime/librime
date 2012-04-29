@@ -7,6 +7,7 @@
 // 2011-11-21 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/foreach.hpp>
+#include <rime/commit_history.h>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -65,6 +66,15 @@ Processor::Result Punctuator::ProcessKeyEvent(const KeyEvent &key_event) {
     return kNoop;
   if (ch == XK_space && engine_->context()->IsComposing())
     return kNoop;
+  if (ch == '.') {  // 3.14
+    const CommitHistory& history(engine_->context()->commit_history());
+    if (!history.empty()) {
+      const CommitRecord& cr(history.back());
+      if (cr.type == "thru" && cr.text.length() == 1 && isdigit(cr.text[0])) {
+        return kRejected;
+      }
+    }
+  }
   config_.LoadConfig(engine_);
   std::string punct_key(1, ch);
   ConfigItemPtr punct_definition(config_.GetPunctDefinition(punct_key));

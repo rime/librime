@@ -19,7 +19,7 @@ struct CommitRecord {
   std::string text;
   CommitRecord(const std::string& a_type, const std::string& a_text)
       : type(a_type), text(a_text) {}
-  CommitRecord(int keycode) : type("raw"), text(1, keycode) {}
+  CommitRecord(int keycode) : type("thru"), text(1, keycode) {}
 };
 
 class KeyEvent;
