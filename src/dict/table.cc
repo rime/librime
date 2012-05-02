@@ -368,7 +368,7 @@ table::TailIndex* Table::BuildTailIndex(const Code &prefix, const Vocabulary &vo
     dest.extra_code.at = Allocate<table::SyllableId>(extra_code_length);
     if (!dest.extra_code.at) {
       EZLOGGERPRINT("Error creating code sequence; file size: %u.", file_size());
-      return false;
+      return NULL;
     }
     std::copy(src->code.begin() + Code::kIndexCodeMaxLength,
               src->code.end(),
