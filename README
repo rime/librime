@@ -1,36 +1,36 @@
 # README
 
-RIME: Rime Input Method Engine, an input method designed for the Chinese language family
+RIME: Rime Input Method Engine
 
 Features:
 
-- customizable input schemas powered by a generalized algorithm base
-- major functionalities found in modern input method stereotypes
-- introduction of avant-guarde (sometimes PQliar :) design
-- open-source && tweakability++
-- cross-platform; linux/ibus, windows, (yet to come...)
+ - lightweight, customizable and extensible framework
+ - supporting various input schemata including glyph-based input methods, 
+   romanization-based input methods as well as those for Chinese dialects
+ - syllabification algorithm adaptive to any scripting system
+ - intelligent composition of phrases or sentences
+ - accurate traditional Chinese output
+ - building on top of open-source technology
+ - cross-platform core library in C++
+ - OS-specific wrappers working consistently for Windows, Linux and Mac OS
+
+Install: |
+  make
+  sudo make install
 
 Sub-projects:
 
 - ibus-rime : Linux/ibus client
 - weasel    : Windows client
-- squirrel  : planning Mac OS X client
+- squirrel  : Mac OS X client
 
 Related works:
 
-- combopy   : an innovative chord-typing practice
 - brise     : rime schema repository
 - essay     : vocabulary and language model
-- plume     : web-based input method
-- zhung-r10n: a romanization scheme for Zhungyuan Mandarin phonology
-
-The rime alphabet: |
-    zed wy ex,
-    double-u vee u,
-    tee ess ar,
-    cue pee o,
-    en em el kay jay i aitch,
-    gee ef e dee cee bee a.
+- plume     : web input
+- combo-py  : an innovative chord-typing practice
+- zhung-r10n: a romanization scheme for Zhungyuan Mandarin
 
 Epilogue: |
 
@@ -38,7 +38,5 @@ Epilogue: |
 
     For lastest news, visit rime project home page:
     http://code.google.com/p/rimeime/
-
-    Questions go to <rime-devel@googlegroups.com>
 
     Thanks.
