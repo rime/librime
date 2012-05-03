@@ -66,7 +66,7 @@ Processor::Result Punctuator::ProcessKeyEvent(const KeyEvent &key_event) {
     return kNoop;
   if (ch == XK_space && engine_->context()->IsComposing())
     return kNoop;
-  if (ch == '.') {  // 3.14
+  if (ch == '.' || ch == ':') {  // 3.14, 12:30
     const CommitHistory& history(engine_->context()->commit_history());
     if (!history.empty()) {
       const CommitRecord& cr(history.back());
