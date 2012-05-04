@@ -41,7 +41,7 @@ set BUILD_DIR=%RIME_ROOT%\vcbuild
 if not exist %BUILD_DIR% mkdir %BUILD_DIR%
 
 cd %BUILD_DIR%
-cmake -G %CMAKE_GENERATOR% %RIME_ROOT%
+cmake -G %CMAKE_GENERATOR% -DBUILD_STATIC=ON %RIME_ROOT%
 if %ERRORLEVEL% NEQ 0 goto ERROR
 
 echo.

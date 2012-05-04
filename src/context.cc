@@ -122,6 +122,20 @@ bool Context::Select(size_t index) {
   return false;
 }
 
+bool Context::DeleteCurrentSelection() {
+  if (composition_->empty())
+    return false;
+  Segment &seg(composition_->back());
+  shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
+  if (cand) {
+    EZDBGONLYLOGGERPRINT("Deleting: '%s', selected_index = %d.",
+                         cand->text().c_str(), seg.selected_index);
+    delete_notifier_(this);
+    return true;  // CAVEAT: this doesn't mean anything is deleted for sure
+  }
+  return false;
+}
+
 bool Context::ConfirmCurrentSelection() {
   if (composition_->empty())
     return false;

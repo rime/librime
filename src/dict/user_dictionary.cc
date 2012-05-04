@@ -76,6 +76,8 @@ void DfsState::SaveEntry(size_t pos) {
   TickCount last_tick = 0;
   if (!UserDictionary::UnpackValues(value, &commit_count, &dee, &last_tick))
     return;
+  if (commit_count < 0)  // deleted entry
+    return;
   dee = algo::formula_d(0, (double)present_tick, dee, (double)last_tick);
   e->commit_count = commit_count;
   // TODO: argument s not defined...

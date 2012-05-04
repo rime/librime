@@ -45,6 +45,7 @@ class Context {
   bool Select(size_t index);
   // return false if there's no candidate for current segment
   bool ConfirmCurrentSelection();
+  bool DeleteCurrentSelection();
   
   bool ConfirmPreviousSelection();
   bool ReopenPreviousSegment();
@@ -75,6 +76,7 @@ class Context {
   Notifier& commit_notifier() { return commit_notifier_; }
   Notifier& select_notifier() { return select_notifier_; }
   Notifier& update_notifier() { return update_notifier_; }
+  Notifier& delete_notifier() {return delete_notifier_;}
   OptionUpdateNotifier& option_update_notifier() {
     return option_update_notifier_;
   }
@@ -90,6 +92,7 @@ class Context {
   Notifier commit_notifier_;
   Notifier select_notifier_;
   Notifier update_notifier_;
+  Notifier delete_notifier_;
   OptionUpdateNotifier option_update_notifier_;
 };
 

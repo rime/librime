@@ -43,6 +43,7 @@ class R10nTranslator : public Translator {
   
  protected:
   void OnCommit(Context *ctx);
+  void OnDeleteEntry(Context *ctx);
   
   scoped_ptr<Dictionary> dict_;
   scoped_ptr<UserDictionary> user_dict_;
@@ -54,7 +55,9 @@ class R10nTranslator : public Translator {
   Projection preedit_formatter_;
   Projection comment_formatter_;
   Patterns user_dict_disabling_patterns_;
-  boost::signals::connection connection_;
+  
+  boost::signals::connection commit_connection_;
+  boost::signals::connection delete_connection_;
 };
 
 }  // namespace rime

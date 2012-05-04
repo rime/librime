@@ -157,12 +157,15 @@ R10nTranslator::R10nTranslator(Engine *engine)
     }
   }
 
-  connection_ = engine->context()->commit_notifier().connect(
+  commit_connection_ = engine->context()->commit_notifier().connect(
       boost::bind(&R10nTranslator::OnCommit, this, _1));
+  delete_connection_ = engine->context()->delete_notifier().connect(
+      boost::bind(&R10nTranslator::OnDeleteEntry, this, _1));
 }
 
 R10nTranslator::~R10nTranslator() {
-  connection_.disconnect();
+  commit_connection_.disconnect();
+  delete_connection_.disconnect();
 }
 
 Translation* R10nTranslator::Query(const std::string &input,
@@ -263,6 +266,27 @@ void R10nTranslator::OnCommit(Context *ctx) {
       commit_entry.text.clear();
       commit_entry.code.clear();
     }
+  }
+}
+
+void R10nTranslator::OnDeleteEntry(Context *ctx) {
+  if (!user_dict_ ||
+      !ctx ||
+      ctx->composition()->empty())
+    return;
+  Segment &seg(ctx->composition()->back());
+  shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
+  if (!cand)
+    return;
+  shared_ptr<UniquifiedCandidate> uniquified = As<UniquifiedCandidate>(cand);
+  if (uniquified) cand = uniquified->items().front();
+  shared_ptr<ShadowCandidate> shadow = As<ShadowCandidate>(cand);
+  if (shadow) cand = shadow->item();
+  shared_ptr<R10nCandidate> r10n_cand = As<R10nCandidate>(cand);
+  if (r10n_cand) {
+    const DictEntry& entry(r10n_cand->entry());
+    EZLOGGERPRINT("Deleting entry: '%s'.", entry.text.c_str());
+    user_dict_->UpdateEntry(entry, -1);
   }
 }
 
