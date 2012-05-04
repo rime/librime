@@ -16,8 +16,9 @@
 #include <rime/algo/syllabifier.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
-#include <rime/impl/table_translator.h>
 #include <rime/impl/reverse_lookup_translator.h>
+#include <rime/impl/translator_commons.h>
+
 
 static const char *quote_left = "\xef\xbc\x88";
 static const char *quote_right = "\xef\xbc\x89";

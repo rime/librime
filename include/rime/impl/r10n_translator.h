@@ -9,14 +9,13 @@
 #ifndef RIME_R10N_TRANSLATOR_H_
 #define RIME_R10N_TRANSLATOR_H_
 
-#include <vector>
 #include <string>
-#include <boost/regex.hpp>
 #include <boost/signals/connection.hpp>
 #include <rime/common.h>
 #include <rime/translation.h>
 #include <rime/translator.h>
 #include <rime/algo/algebra.h>
+#include <rime/impl/translator_commons.h>
 
 namespace rime {
 
@@ -26,11 +25,6 @@ struct DictEntryCollector;
 class Dictionary;
 class UserDictionary;
 struct SyllableGraph;
-
-class Patterns : public std::vector<boost::regex> {
- public:
-  bool Load(ConfigListPtr patterns);
-};
 
 class R10nTranslator : public Translator {
  public:
