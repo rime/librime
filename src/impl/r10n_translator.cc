@@ -285,8 +285,10 @@ void R10nTranslator::OnDeleteEntry(Context *ctx) {
   shared_ptr<R10nCandidate> r10n_cand = As<R10nCandidate>(cand);
   if (r10n_cand) {
     const DictEntry& entry(r10n_cand->entry());
-    EZLOGGERPRINT("Deleting entry: '%s'.", entry.text.c_str());
-    user_dict_->UpdateEntry(entry, -1);
+    if (entry.code.size() >= 2) {
+      EZLOGGERPRINT("Deleting entry: '%s'.", entry.text.c_str());
+      user_dict_->UpdateEntry(entry, -1);
+    }
   }
 }
 
