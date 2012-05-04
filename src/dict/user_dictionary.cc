@@ -210,6 +210,8 @@ bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
     UnpackValues(value, &commit_count, &dee, &last_tick);
   }
   if (commit > 0) {
+    if (commit_count < 0)
+      commit_count = -commit_count;  // revive a deleted item
     commit_count += commit;
     UpdateTickCount(1);
     dee = algo::formula_d(commit, (double)tick_, dee, (double)last_tick);

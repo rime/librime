@@ -55,7 +55,12 @@ Processor::Result FluencyEditor::ProcessKeyEvent(
       return kAccepted;
     }
     if (ch == XK_Delete || ch == XK_KP_Delete) {
-      ctx->DeleteInput();
+      if (key_event.shift()) {
+        ctx->DeleteCurrentSelection();
+      }
+      else {
+        ctx->DeleteInput();
+      }
       return kAccepted;
     }
     if (ch == XK_Escape) {

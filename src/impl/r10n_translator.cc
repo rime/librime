@@ -287,7 +287,8 @@ void R10nTranslator::OnDeleteEntry(Context *ctx) {
     const DictEntry& entry(r10n_cand->entry());
     if (entry.code.size() >= 2) {
       EZLOGGERPRINT("Deleting entry: '%s'.", entry.text.c_str());
-      user_dict_->UpdateEntry(entry, -1);
+      user_dict_->UpdateEntry(entry, -1);  // mark as deleted in user dict
+      ctx->RefreshNonConfirmedComposition();
     }
   }
 }
