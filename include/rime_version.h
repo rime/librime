@@ -9,6 +9,6 @@
 #ifndef RIME_VERSION_H_
 #define RIME_VERSION_H_
 
-#define RIME_VERSION "0.9"
+#define RIME_VERSION "0.9.1"
 
 #endif  // RIME_VERSION_H_

@@ -3,7 +3,7 @@ all: librime
 
 librime:
 	mkdir -p build
-	(cd build; cmake -DBUILD_STATIC=OFF ..)
+	(cd build; cmake -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_STATIC=OFF ..)
 	make -C build
 
 install:

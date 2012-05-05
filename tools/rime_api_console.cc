@@ -49,11 +49,12 @@ void PrintMenu(RimeMenu *menu) {
          menu->page_size);
   for (int i = 0; i < menu->num_candidates; ++i) {
     bool highlighted = i == menu->highlighted_candidate_index;
-    printf("%d. %c%s%c\n",
+    printf("%d. %c%s%c%s\n",
            i + 1,
            highlighted ? '[' : ' ',
-           menu->candidates[i],
-           highlighted ? ']' : ' ');
+           menu->candidates[i].text,
+           highlighted ? ']' : ' ',
+           menu->candidates[i].comment ? menu->candidates[i].comment : "");
   }
 }
 
@@ -68,19 +69,26 @@ void PrintContext(RimeContext *context) {
 }
 
 void Print(RimeSessionId session_id) {
-  RimeCommit commit;
-  RimeStatus status;
-  RimeContext context;
+  RimeCommit commit = {0};
+  RimeStatus status = {0};
+  RimeContext context = {0};
+  RIME_STRUCT_INIT(RimeStatus, status);
+  RIME_STRUCT_INIT(RimeContext, context);
 
   if (RimeGetCommit(session_id, &commit)) {
     printf("commit: %s\n", commit.text);
+    RimeFreeCommit(&commit);
   }
 
-  if (RimeGetStatus(session_id, &status))
+  if (RimeGetStatus(session_id, &status)) {
     PrintStatus(&status);
+    RimeFreeStatus(&status);
+  }
 
-  if (RimeGetContext(session_id, &context))
+  if (RimeGetContext(session_id, &context)) {
     PrintContext(&context);
+    RimeFreeContext(&context);
+  }
 }
 
 int main(int argc, char *argv[]) {
@@ -97,8 +105,9 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  char line[RIME_TEXT_MAX_LENGTH + 1];
-  while (fgets(line, RIME_TEXT_MAX_LENGTH, stdin) != NULL) {
+  const int kMaxLength = 99;
+  char line[kMaxLength + 1] = {0};
+  while (fgets(line, kMaxLength, stdin) != NULL) {
     for (char *p = line; *p; ++p) {
       if (*p == '\r' || *p == '\n') {
         *p = '\0';

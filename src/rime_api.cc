@@ -132,7 +132,7 @@ RIME_API void RimeCleanupAllSessions() {
   rime::Service::instance().CleanupAllSessions();
 }
 
-// using sessions
+// input
 
 RIME_API Bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask) {
   rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
@@ -141,10 +141,12 @@ RIME_API Bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask) {
   return Bool(session->ProcessKeyEvent(rime::KeyEvent(keycode, mask)));
 }
 
-RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext *context) {
-  if (!context)
+// output
+
+RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
+  if (!context || context->data_size <= 0)
     return False;
-  std::memset(context, 0, sizeof(RimeContext));
+  std::memset((char*)context + sizeof(context->data_size), 0, context->data_size);
   rime::shared_ptr<rime::Session> session(
       rime::Service::instance().GetSession(session_id));
   if (!session)
@@ -156,8 +158,8 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext *context) {
     rime::Preedit preedit;
     ctx->GetPreedit(&preedit);
     context->composition.length = preedit.text.length();
-    std::strncpy(context->composition.preedit,
-                 preedit.text.c_str(), RIME_TEXT_MAX_LENGTH);
+    context->composition.preedit = new char[preedit.text.length() + 1];
+    std::strcpy(context->composition.preedit, preedit.text.c_str());
     context->composition.cursor_pos = preedit.caret_pos;
     context->composition.sel_start = preedit.sel_start;
     context->composition.sel_end = preedit.sel_end;
@@ -180,12 +182,14 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext *context) {
       int i = 0;
       BOOST_FOREACH(const rime::shared_ptr<rime::Candidate> &cand,
                     page->candidates) {
-        std::string candidate(cand->text());
-        if (!cand->comment().empty()) {
-          candidate += "  " + cand->comment();
+        RimeCandidate* dest = &context->menu.candidates[i];
+        dest->text = new char[cand->text().length() + 1];
+        std::strcpy(dest->text, cand->text().c_str());
+        const std::string comment(cand->comment());
+        if (!comment.empty()) {
+          dest->comment = new char[comment.length() + 1];
+          std::strcpy(dest->comment, comment.c_str());
         }
-        char *dest = context->menu.candidates[i];
-        std::strncpy(dest, candidate.c_str(), RIME_TEXT_MAX_LENGTH);
         if (++i >= RIME_MAX_NUM_CANDIDATES) break;
       }
       context->menu.num_candidates = i;
@@ -201,6 +205,18 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext *context) {
   return True;
 }
 
+RIME_API Bool RimeFreeContext(RimeContext* context) {
+  if (!context || context->data_size <= 0)
+    return False;
+  delete[] context->composition.preedit;
+  for (int i = 0; i < context->menu.num_candidates; ++i) {
+    delete[] context->menu.candidates[i].text;
+    delete[] context->menu.candidates[i].comment;
+  }
+  std::memset((char*)context + sizeof(context->data_size), 0, context->data_size);
+  return True;
+}
+
 RIME_API Bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit) {
   if (!commit)
     return False;
@@ -208,19 +224,28 @@ RIME_API Bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit) {
   rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
-  if (!session->commit_text().empty()) {
-    std::strncpy(commit->text, session->commit_text().c_str(),
-                 RIME_TEXT_MAX_LENGTH);
+  const std::string& commit_text(session->commit_text());
+  if (!commit_text.empty()) {
+    commit->text = new char[commit_text.length() + 1];
+    std::strcpy(commit->text, commit_text.c_str());
     session->ResetCommitText();
     return True;
   }
   return False;
 }
 
-RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
-  if (!status)
+RIME_API Bool RimeFreeCommit(RimeCommit* commit) {
+  if (!commit)
     return False;
-  std::memset(status, 0, sizeof(RimeStatus));
+  delete[] commit->text;
+  std::memset(commit, 0, sizeof(RimeCommit));
+  return True;
+}
+
+RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
+  if (!status || status->data_size <= 0)
+    return False;
+  std::memset((char*)status + sizeof(status->data_size), 0, status->data_size);
   rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
@@ -228,16 +253,24 @@ RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
   rime::Context *ctx = session->context();
   if (!schema || !ctx)
     return False;
-  std::strncpy(status->schema_id, schema->schema_id().c_str(),
-               RIME_SCHEMA_MAX_LENGTH);
-  std::strncpy(status->schema_name, schema->schema_name().c_str(),
-               RIME_SCHEMA_MAX_LENGTH);
-  // TODO:
-  status->is_disabled = False;
+  status->schema_id = new char[schema->schema_id().length() + 1];
+  std::strcpy(status->schema_id, schema->schema_id().c_str());
+  status->schema_name = new char[schema->schema_name().length() + 1];
+  std::strcpy(status->schema_name, schema->schema_name().c_str());
+  status->is_disabled = rime::Service::instance().disabled();
   status->is_composing = Bool(ctx->IsComposing());
   status->is_ascii_mode = Bool(ctx->get_option("ascii_mode"));
   status->is_full_shape = Bool(ctx->get_option("full_shape"));
   status->is_simplified = Bool(ctx->get_option("simplification"));
+  return True;
+}
+
+RIME_API Bool RimeFreeStatus(RimeStatus* status) {
+  if (!status || status->data_size <= 0)
+    return False;
+  delete[] status->schema_id;
+  delete[] status->schema_name;
+  std::memset((char*)status + sizeof(status->data_size), 0, status->data_size);
   return True;
 }
 

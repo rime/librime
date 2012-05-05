@@ -30,10 +30,6 @@ extern "C" {
 #define RIME_API
 #endif  /* _WIN32 */
 
-#define RIME_TEXT_MAX_LENGTH 255
-#define RIME_SCHEMA_MAX_LENGTH 127
-#define RIME_MAX_NUM_CANDIDATES 10
-
 typedef uintptr_t RimeSessionId;
 
 typedef int Bool;
@@ -44,6 +40,10 @@ typedef int Bool;
 #ifndef True
 #define True 1
 #endif
+
+#define RIME_MAX_NUM_CANDIDATES 10
+
+#define RIME_STRUCT_INIT(Type, var) ((var).data_size = sizeof(Type) - sizeof(int))
 
 typedef struct {
   const char* shared_data_dir;
@@ -58,8 +58,14 @@ typedef struct {
   int cursor_pos;
   int sel_start;
   int sel_end;
-  char preedit[RIME_TEXT_MAX_LENGTH + 1];
+  char* preedit;
 } RimeComposition;
+
+typedef struct {
+  char* text;
+  char* comment;
+  void* reserved;
+} RimeCandidate;
 
 typedef struct {
   int page_size;
@@ -67,22 +73,26 @@ typedef struct {
   Bool is_last_page;
   int highlighted_candidate_index;
   int num_candidates;
-  char candidates[RIME_MAX_NUM_CANDIDATES][RIME_TEXT_MAX_LENGTH + 1];
+  RimeCandidate candidates[RIME_MAX_NUM_CANDIDATES];
   char select_keys[RIME_MAX_NUM_CANDIDATES + 1];
 } RimeMenu;
 
 typedef struct {
+  char* text;
+} RimeCommit;
+
+// should be initialized by calling RIME_STRUCT_INIT(Type, var);
+typedef struct {
+  int data_size;
   RimeComposition composition;
   RimeMenu menu;
 } RimeContext;
 
+// should be initialized by calling RIME_STRUCT_INIT(Type, var);
 typedef struct {
-  char text[RIME_TEXT_MAX_LENGTH + 1];
-} RimeCommit;
-
-typedef struct {
-  char schema_id[RIME_SCHEMA_MAX_LENGTH + 1];
-  char schema_name[RIME_SCHEMA_MAX_LENGTH + 1];
+  int data_size;
+  char* schema_id;
+  char* schema_name;
   Bool is_disabled;
   Bool is_composing;
   Bool is_ascii_mode;
@@ -91,10 +101,10 @@ typedef struct {
 } RimeStatus;
 
 typedef struct {
-  void *ptr;
+  void* ptr;
 } RimeConfig;
 
-// library entry and exit
+// entry and exit
 
 RIME_API void RimeInitialize(RimeTraits *traits);
 RIME_API void RimeFinalize();
@@ -120,13 +130,18 @@ RIME_API Bool RimeDestroySession(RimeSessionId session_id);
 RIME_API void RimeCleanupStaleSessions();
 RIME_API void RimeCleanupAllSessions();
 
-// using sessions
+// input
 
 RIME_API Bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask);
 
-RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context);
+// output
+  
 RIME_API Bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit);
+RIME_API Bool RimeFreeCommit(RimeCommit* commit);
+RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context);
+RIME_API Bool RimeFreeContext(RimeContext* context);
 RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status);
+RIME_API Bool RimeFreeStatus(RimeStatus* status);
 
 // configuration
 
@@ -139,7 +154,7 @@ RIME_API Bool RimeConfigGetString(RimeConfig *config, const char *key,
                                   char *value, size_t buffer_size);
 RIME_API Bool RimeConfigUpdateSignature(RimeConfig *config, const char* signer);
 
-// for testing
+// testing
 
 RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence);
 
