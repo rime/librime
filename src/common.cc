@@ -22,8 +22,7 @@
 #include <rime/impl/ascii_composer.h>
 #include <rime/impl/ascii_segmentor.h>
 #include <rime/impl/echo_translator.h>
-#include <rime/impl/express_editor.h>
-#include <rime/impl/fluency_editor.h>
+#include <rime/impl/editor.h>
 #include <rime/impl/fallback_segmentor.h>
 #include <rime/impl/matcher.h>
 #include <rime/impl/navigator.h>
