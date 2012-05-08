@@ -6,11 +6,13 @@
 //
 // 2011-10-30 GONG Chen <chen.sst@gmail.com>
 //
+#include <map>
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/scope_exit.hpp>
 #include <rime/common.h>
 #include <rime/config.h>
 #include <rime/schema.h>
@@ -117,58 +119,74 @@ bool UserDictionary::loaded() const {
   return db_ && db_->loaded();
 }
 
-// 'true': returning with a clean state;
-// 'false': needing extra clean-up from the caller.
-bool UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_pos,
+// this is a one-pass scan for the user db which supports sequential access in alphabetical order (of syllables).
+// each call to DfsLookup() searches matching phrases at a given start position: current_pos.
+// there may be multiple edges that starts at current_pos, and ends at different positions after current_pos.
+// on each edge, there may be multiple syllables the spelling on the edge maps to.
+// in order to enable forward scaning and to avoid backdating, our strategy is:
+// sort all those syllables from edges that starts at current_pos, so that the syllables are in the same
+// alphabetical order with the user db's.
+// and this is the code:
+void UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_pos,
                                const std::string &current_prefix,
                                DfsState *state) {
   EdgeMap::const_iterator edges = syll_graph.edges.find(current_pos);
   if (edges == syll_graph.edges.end()) {
-    return true;  // continue DFS lookup
+    return;
   }
   EZDBGONLYLOGGERPRINT("%d edges start from %d.", edges->second.size(), edges->first);
-  std::string prefix;
+  struct SpellingProperties {
+    size_t end_pos;
+    double credibility;
+  };
+  // sort spellings by SyllableId which has been assigned to syllables in alphabetical order
+  typedef std::map<SyllableId, SpellingProperties> SpellingPropertiesMap;
+  SpellingPropertiesMap syll_map;
   BOOST_FOREACH(const EndVertexMap::value_type &edge, edges->second) {
     size_t end_vertex_pos = edge.first;
-    EZDBGONLYLOGGERPRINT("prefix: '%s' edge: [%d, %d)", current_prefix.c_str(), current_pos, end_vertex_pos);
     const SpellingMap &spellings(edge.second);
     BOOST_FOREACH(const SpellingMap::value_type &spelling, spellings) {
       SyllableId syll_id = spelling.first;
-      state->code.push_back(syll_id);
-      state->credibility.push_back(
-          state->credibility.back() * spelling.second.credibility);
-      if (!TranslateCodeToString(state->code, &prefix))
-        continue;
-      if (prefix > state->key) {  // 'a b c |d ' > 'a b c \tabracadabra'
-        EZDBGONLYLOGGERPRINT("forward scanning for '%s'.", prefix.c_str());
-        if (!state->ForwardScan(prefix)) {
-          return false;  // terminate DFS lookup
-        }
+      // favor the longest spelling for the same syllable and discard other possibilities
+      if (end_vertex_pos > syll_map[syll_id].end_pos) {
+        syll_map[syll_id].end_pos = end_vertex_pos;
+        syll_map[syll_id].credibility = spelling.second.credibility;
       }
-      while (state->IsExactMatch(prefix)) {  // 'b |e ' vs. 'b e \tBe'
-        EZDBGONLYLOGGERPRINT("match found for '%s'.", prefix.c_str());
-        state->SaveEntry(end_vertex_pos);
-        if (!state->NextEntry())
-          return false;
-      }
-      if ((!state->depth_limit || state->code.size() < state->depth_limit)
-          && state->IsPrefixMatch(prefix)) {  // 'b |e ' vs. 'b e f \tBefore'
-        if (!DfsLookup(syll_graph, end_vertex_pos, prefix, state)) {
-          // cleanup for the returned call
-          state->code.pop_back();
-          state->credibility.pop_back();
-        }
-      }
+    }
+  }
+  std::string prefix;
+  BOOST_FOREACH(const SpellingPropertiesMap::value_type& spelling, syll_map) {
+    EZDBGONLYLOGGERPRINT("prefix: '%s', syll_id: %d, edge: [%d, %d)",
+                         current_prefix.c_str(), spelling.first,
+                         current_pos, spelling.second.end_pos);
+    state->code.push_back(spelling.first);
+    state->credibility.push_back(state->credibility.back() * spelling.second.credibility);
+    BOOST_SCOPE_EXIT( (&state) ) {
       state->code.pop_back();
       state->credibility.pop_back();
-      if (!state->IsPrefixMatch(current_prefix)) {  // 'b |' vs. 'g o \tGo'
-        return true;  // pruning: done with the current prefix code
-      }
-      // 'b |e ' vs. 'b y \tBy'
+    } BOOST_SCOPE_EXIT_END
+    if (!TranslateCodeToString(state->code, &prefix))
+      continue;
+    if (prefix > state->key) {  // 'a b c |d ' > 'a b c \tabracadabra'
+      EZDBGONLYLOGGERPRINT("forward scanning for '%s'.", prefix.c_str());
+      if (!state->ForwardScan(prefix))  // reached the end of db
+        return;
     }
-    state->Backdate(current_prefix);
+    while (state->IsExactMatch(prefix)) {  // 'b |e ' vs. 'b e \tBe'
+      EZDBGONLYLOGGERPRINT("match found for '%s'.", prefix.c_str());
+      state->SaveEntry(spelling.second.end_pos);
+      if (!state->NextEntry())  // reached the end of db
+        return;
+    }
+    // the caller can limit the number of syllables to look up
+    if ((!state->depth_limit || state->code.size() < state->depth_limit)
+        && state->IsPrefixMatch(prefix)) {  // 'b |e ' vs. 'b e f \tBefore'
+      DfsLookup(syll_graph, spelling.second.end_pos, prefix, state);
+    }
+    if (!state->IsPrefixMatch(current_prefix))  // 'b |' vs. 'g o \tGo'
+      return;
+    // 'b |e ' vs. 'b y \tBy'
   }
-  return true;  // finished traversing the syllable graph
 }
 
 shared_ptr<UserDictEntryCollector> UserDictionary::Lookup(const SyllableGraph &syll_graph,

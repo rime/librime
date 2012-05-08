@@ -56,7 +56,7 @@ class UserDictionary : public Class<UserDictionary, Schema*> {
   bool Initialize();
   bool FetchTickCount();
   bool TranslateCodeToString(const Code &code, std::string *result);
-  bool DfsLookup(const SyllableGraph &syll_graph, size_t current_pos,
+  void DfsLookup(const SyllableGraph &syll_graph, size_t current_pos,
                  const std::string &current_prefix,
                  DfsState *state);
 
