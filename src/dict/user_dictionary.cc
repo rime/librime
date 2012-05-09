@@ -127,6 +127,18 @@ bool UserDictionary::loaded() const {
 // sort all those syllables from edges that starts at current_pos, so that the syllables are in the same
 // alphabetical order with the user db's.
 // and this is the code:
+
+namespace {
+
+struct SpellingProperties {
+  size_t end_pos;
+  double credibility;
+};
+
+typedef std::map<SyllableId, SpellingProperties> SpellingPropertiesMap;
+
+}  // namespace
+
 void UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_pos,
                                const std::string &current_prefix,
                                DfsState *state) {
@@ -135,12 +147,7 @@ void UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
     return;
   }
   EZDBGONLYLOGGERPRINT("%d edges start from %d.", edges->second.size(), edges->first);
-  struct SpellingProperties {
-    size_t end_pos;
-    double credibility;
-  };
   // sort spellings by SyllableId which has been assigned to syllables in alphabetical order
-  typedef std::map<SyllableId, SpellingProperties> SpellingPropertiesMap;
   SpellingPropertiesMap syll_map;
   BOOST_FOREACH(const EndVertexMap::value_type &edge, edges->second) {
     size_t end_vertex_pos = edge.first;
