@@ -8,9 +8,9 @@ Features:
  - supporting various input schemata including glyph-based input methods, 
    romanization-based input methods as well as those for Chinese dialects
  - syllabification algorithm adaptive to any scripting system
- - intelligent composition of phrases or sentences
+ - intelligent composition of phrases and sentences
  - accurate traditional Chinese output
- - building on top of open-source technology
+ - built on top of open-source technology
  - cross-platform core library in C++
  - OS-specific wrappers working consistently for Windows, Linux and Mac OS
 
@@ -27,7 +27,7 @@ Sub-projects:
 Related works:
 
 - brise     : rime schema repository
-- essay     : vocabulary and language model
+- essay     : vocabulary and language model for rime
 - plume     : web input
 - combo-py  : an innovative chord-typing practice
 - zhung-r10n: a romanization scheme for Zhungyuan Mandarin
