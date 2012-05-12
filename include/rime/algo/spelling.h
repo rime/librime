@@ -19,9 +19,10 @@ enum SpellingType { kNormalSpelling, kAbbreviation, kCompletion,
 
 struct SpellingProperties {
   SpellingType type;
+  size_t end_pos;
   double credibility;
   std::string tips;
-  SpellingProperties() : type(kNormalSpelling), credibility(1.0) {}
+  SpellingProperties() : type(kNormalSpelling), end_pos(0), credibility(1.0) {}
 };
 
 struct Spelling {

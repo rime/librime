@@ -126,48 +126,28 @@ bool UserDictionary::loaded() const {
 // in order to enable forward scaning and to avoid backdating, our strategy is:
 // sort all those syllables from edges that starts at current_pos, so that the syllables are in the same
 // alphabetical order with the user db's.
-// and this is the code:
-
-namespace {
-
-struct SpellingProperties {
-  size_t end_pos;
-  double credibility;
-};
-
-typedef std::map<SyllableId, SpellingProperties> SpellingPropertiesMap;
-
-}  // namespace
+// this having been done by transposing the syllable graph into SyllableGraph::index.
+// however, in the case of 'shsh' which could be the abbreviation of either 'sh(a) sh(i)' or 'sh(a) s(hi) h(ou)',
+// we now have to give up the latter path in order to avoid backdating.
 
 void UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_pos,
                                const std::string &current_prefix,
                                DfsState *state) {
-  EdgeMap::const_iterator edges = syll_graph.edges.find(current_pos);
-  if (edges == syll_graph.edges.end()) {
+  SpellingIndices::const_iterator index = syll_graph.indices.find(current_pos);
+  if (index == syll_graph.indices.end()) {
     return;
   }
-  EZDBGONLYLOGGERPRINT("%d edges start from %d.", edges->second.size(), edges->first);
-  // sort spellings by SyllableId which has been assigned to syllables in alphabetical order
-  SpellingPropertiesMap syll_map;
-  BOOST_FOREACH(const EndVertexMap::value_type &edge, edges->second) {
-    size_t end_vertex_pos = edge.first;
-    const SpellingMap &spellings(edge.second);
-    BOOST_FOREACH(const SpellingMap::value_type &spelling, spellings) {
-      SyllableId syll_id = spelling.first;
-      // favor the longest spelling for the same syllable and discard other possibilities
-      if (end_vertex_pos > syll_map[syll_id].end_pos) {
-        syll_map[syll_id].end_pos = end_vertex_pos;
-        syll_map[syll_id].credibility = spelling.second.credibility;
-      }
-    }
-  }
+  EZDBGONLYLOGGERPRINT("dfs lookup starts from %d.", current_pos);
   std::string prefix;
-  BOOST_FOREACH(const SpellingPropertiesMap::value_type& spelling, syll_map) {
-    EZDBGONLYLOGGERPRINT("prefix: '%s', syll_id: %d, edge: [%d, %d)",
+  BOOST_FOREACH(const SpellingIndex::value_type& spelling, index->second) {
+    if (spelling.second.empty()) continue;
+    const SpellingProperties* props = spelling.second[0];
+    size_t end_pos = props->end_pos;
+    EZDBGONLYLOGGERPRINT("prefix: '%s', syll_id: %d, edge: [%d, %d) of %d",
                          current_prefix.c_str(), spelling.first,
-                         current_pos, spelling.second.end_pos);
+                         current_pos, end_pos, spelling.second.size());
     state->code.push_back(spelling.first);
-    state->credibility.push_back(state->credibility.back() * spelling.second.credibility);
+    state->credibility.push_back(state->credibility.back() * props->credibility);
     BOOST_SCOPE_EXIT( (&state) ) {
       state->code.pop_back();
       state->credibility.pop_back();
@@ -181,14 +161,14 @@ void UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
     }
     while (state->IsExactMatch(prefix)) {  // 'b |e ' vs. 'b e \tBe'
       EZDBGONLYLOGGERPRINT("match found for '%s'.", prefix.c_str());
-      state->SaveEntry(spelling.second.end_pos);
+      state->SaveEntry(end_pos);
       if (!state->NextEntry())  // reached the end of db
         return;
     }
     // the caller can limit the number of syllables to look up
     if ((!state->depth_limit || state->code.size() < state->depth_limit)
         && state->IsPrefixMatch(prefix)) {  // 'b |e ' vs. 'b e f \tBefore'
-      DfsLookup(syll_graph, spelling.second.end_pos, prefix, state);
+      DfsLookup(syll_graph, end_pos, prefix, state);
     }
     if (!state->IsPrefixMatch(current_prefix))  // 'b |' vs. 'g o \tGo'
       return;

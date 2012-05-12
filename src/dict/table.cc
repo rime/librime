@@ -451,8 +451,8 @@ bool Table::Query(const SyllableGraph &syll_graph, size_t start_pos,
     int current_pos = q.front().first;
     TableVisitor visitor = q.front().second;
     q.pop();
-    EdgeMap::const_iterator edges = syll_graph.edges.find(current_pos);
-    if (edges == syll_graph.edges.end()) {
+    SpellingIndices::const_iterator index = syll_graph.indices.find(current_pos);
+    if (index == syll_graph.indices.end()) {
       continue;
     }
     if (visitor.level() == Code::kIndexCodeMaxLength) {
@@ -462,19 +462,17 @@ bool Table::Query(const SyllableGraph &syll_graph, size_t start_pos,
       }
       continue;
     }
-    BOOST_FOREACH(const EndVertexMap::value_type &edge, edges->second) {
-      size_t end_vertex_pos = edge.first;
-      const SpellingMap &spellings(edge.second);
-      BOOST_FOREACH(const SpellingMap::value_type &spelling, spellings) {
-        SyllableId syll_id = spelling.first;
-        double credibility = spelling.second.credibility;
-        TableAccessor accessor(visitor.Access(syll_id));
+    BOOST_FOREACH(const SpellingIndex::value_type& spellings, index->second) {
+      SyllableId syll_id = spellings.first;
+      TableAccessor accessor(visitor.Access(syll_id));
+      BOOST_FOREACH(const SpellingProperties* props, spellings.second) {
+        size_t end_pos = props->end_pos;
         if (!accessor.exhausted()) {
-          (*result)[end_vertex_pos].push_back(accessor);
+          (*result)[end_pos].push_back(accessor);
         }
-        if (end_vertex_pos < syll_graph.interpreted_length &&
-            visitor.Walk(syll_id, credibility)) {
-          q.push(std::make_pair(end_vertex_pos, visitor));
+        if (end_pos < syll_graph.interpreted_length &&
+          visitor.Walk(syll_id, props->credibility)) {
+          q.push(std::make_pair(end_pos, visitor));
           visitor.Backdate();
         }
       }

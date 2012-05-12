@@ -45,19 +45,17 @@ size_t match_extra_code(const table::Code *extra_code, size_t depth,
     return current_pos;  // success
   if (current_pos >= syll_graph.interpreted_length)
     return 0;  // failure (possibly success for completion in the future)
-  EdgeMap::const_iterator edges = syll_graph.edges.find(current_pos);
-  if (edges == syll_graph.edges.end()) {
+  SpellingIndices::const_iterator index = syll_graph.indices.find(current_pos);
+  if (index == syll_graph.indices.end())
     return 0;
-  }
   table::SyllableId current_syll_id = extra_code->at[depth];
+  SpellingIndex::const_iterator spellings = index->second.find(current_syll_id);
+  if (spellings == index->second.end())
+    return 0;
   size_t best_match = 0;
-  BOOST_FOREACH(const EndVertexMap::value_type &edge, edges->second) {
-    size_t end_vertex_pos = edge.first;
-    const SpellingMap &spellings(edge.second);
-    if (spellings.find(current_syll_id) == spellings.end())
-      continue;
+  BOOST_FOREACH(const SpellingProperties* props, spellings->second) {
     size_t match_end_pos = match_extra_code(extra_code, depth + 1,
-                                            syll_graph, end_vertex_pos);
+                                            syll_graph, props->end_pos);
     if (!match_end_pos) continue;
     if (match_end_pos > best_match) best_match = match_end_pos;
   }

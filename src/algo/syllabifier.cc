@@ -62,6 +62,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
         while (!accessor.exhausted()) {
           SyllableId syllable_id(accessor.syllable_id());
           SpellingProperties props(accessor.properties());
+          props.end_pos = end_pos;
           // add a syllable with properties to the edge's spelling-to-syllable map
           spellings.insert(SpellingMap::value_type(syllable_id, props));
           if (props.type < end_vertex_type) {
@@ -69,7 +70,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
           }
           accessor.Next();
         }
-        // render the vertex type
+        // update the vertex type
         if (end_vertex_type < vertex.second) {
           end_vertex_type = vertex.second;
         }
@@ -149,6 +150,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
           if (props.type > kNormalSpelling) continue;
           props.type = kCompletion;
           props.credibility *= 0.5;
+          props.end_pos = end_pos;
           // add a syllable with properties to the edge's spelling-to-syllable map
           spellings.insert(SpellingMap::value_type(syllable_id, props));
           accessor.Next();
@@ -164,6 +166,8 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
   graph->interpreted_length = farthest;
   EZDBGONLYLOGGERVAR(graph->input_length);
   EZDBGONLYLOGGERVAR(graph->interpreted_length);
+
+  Transpose(graph);
 
   return farthest;
 }
@@ -189,6 +193,18 @@ void Syllabifier::CheckOverlappedSpellings(SyllableGraph *graph, size_t start, s
         EZDBGONLYLOGGERPRINT("ambiguous syllable joint at position %d.", joint);
       }
       break;
+    }
+  }
+}
+
+void Syllabifier::Transpose(SyllableGraph* graph) {
+  BOOST_FOREACH(const EdgeMap::value_type& start, graph->edges) {
+    SpellingIndex& index(graph->indices[start.first]);
+    BOOST_REVERSE_FOREACH(const EndVertexMap::value_type& end, start.second) {
+      BOOST_FOREACH(const SpellingMap::value_type& spelling, end.second) {
+        SyllableId syll_id = spelling.first;
+        index[syll_id].push_back(&spelling.second);
+      }
     }
   }
 }
