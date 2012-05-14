@@ -141,7 +141,7 @@ bool Punctuator::PairPunct(const ConfigItemPtr &definition) {
   Segment &segment(comp->back());
   if (segment.status > Segment::kVoid && segment.HasTag("punct")) {
     if (!segment.menu || segment.menu->Prepare(2) < 2) {
-      EZLOGGERPRINT("Error: missing candidate for pared punctuation.");
+      EZLOGGERPRINT("Error: missing candidate for paired punctuation.");
       return false;
     }
     EZLOGGERPRINT("Info: alternating paired punctuation.");

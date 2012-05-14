@@ -89,7 +89,8 @@ TableTranslator::TableTranslator(Engine *engine)
   Dictionary::Component *component = Dictionary::Require("dictionary");
   if (!component) return;
   dict_.reset(component->Create(engine->schema()));
-  dict_->Load();
+  if (dict_)
+    dict_->Load();
 }
 
 TableTranslator::~TableTranslator() {
