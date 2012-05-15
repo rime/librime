@@ -55,13 +55,13 @@ shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
       boost::algorithm::replace_all(tips, " ", separator);
     }
   }
-  shared_ptr<Candidate> cand(new SimpleCandidate(
+  shared_ptr<Candidate> cand = make_shared<SimpleCandidate>(
       "reverse_lookup",
       start_,
       end_,
       e->text,
       !tips.empty() ? (quote_left + tips + quote_right) : e->comment,
-      preedit_));
+      preedit_);
   return cand;
 }
 
@@ -111,7 +111,6 @@ Translation* ReverseLookupTranslator::Query(const std::string &input,
     start = prefix_.length();
   std::string code(input.substr(start));
   
-  Translation *translation = NULL;
   DictEntryIterator iter;
   if (start < input.length()) {
     if (enable_completion_) {
@@ -136,21 +135,23 @@ Translation* ReverseLookupTranslator::Query(const std::string &input,
   if (!iter.exhausted()) {
     std::string preedit(input);
     preedit_formatter_.Apply(&preedit);
-    translation = new ReverseLookupTranslation(iter,
-                                               code,
-                                               segment.start,
-                                               segment.end,
-                                               preedit,
-                                               &comment_formatter_,
-                                               rev_dict_.get());
+    return new ReverseLookupTranslation(iter,
+                                        code,
+                                        segment.start,
+                                        segment.end,
+                                        preedit,
+                                        &comment_formatter_,
+                                        rev_dict_.get());
   }
   else {
-    shared_ptr<Candidate> cand(new SimpleCandidate("raw",
-                                                   segment.start, segment.end,
-                                                   input, tips_));
+    shared_ptr<Candidate> cand =
+        make_shared<SimpleCandidate>("raw",
+                                     segment.start,
+                                     segment.end,
+                                     input,
+                                     tips_);
     return new UniqueTranslation(cand);
   }
-  return translation;
 }
 
 }  // namespace rime

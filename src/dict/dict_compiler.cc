@@ -60,24 +60,23 @@ class PresetVocabulary {
  protected:
   PresetVocabulary(kyotocabinet::TreeDB *db) : db_(db), cursor_(db->cursor()) {}
   
-  scoped_ptr<kyotocabinet::TreeDB> db_;
+  unique_ptr<kyotocabinet::TreeDB> db_;
   kyotocabinet::DB::Cursor *cursor_;
 };
 
 PresetVocabulary* PresetVocabulary::Create() {
   boost::filesystem::path path(Service::instance().deployer().shared_data_dir);
   path /= "essay.kct";
-  kyotocabinet::TreeDB *db = new kyotocabinet::TreeDB;
+  unique_ptr<kyotocabinet::TreeDB> db(new kyotocabinet::TreeDB);
   if (!db) return NULL;
   //db->tune_options(kyotocabinet::TreeDB::TLINEAR | kyotocabinet::TreeDB::TCOMPRESS);
   //db->tune_buckets(30LL * 1000);
   db->tune_defrag(8);
   db->tune_page(32768);
   if (!db->open(path.string(), kyotocabinet::TreeDB::OREADER)) {
-    delete db;
     return NULL;
   }
-  return new PresetVocabulary(db);
+  return new PresetVocabulary(db.release());
 }
 
 bool PresetVocabulary::GetWeightForEntry(const std::string &key, double *weight) {
@@ -106,7 +105,7 @@ bool PresetVocabulary::GetNextEntry(std::string *key, std::string *value) {
 // EntryCollector
 
 struct EntryCollector {
-  scoped_ptr<PresetVocabulary> preset_vocabulary;
+  unique_ptr<PresetVocabulary> preset_vocabulary;
   Syllabary syllabary;
   std::vector<dictionary::RawDictEntry> entries;
   size_t num_entries;
@@ -381,7 +380,7 @@ bool DictCompiler::BuildTable(const std::string &dict_file, uint32_t checksum) {
         EZLOGGERPRINT("Error locating entries in vocabulary.");
         continue;
       }
-      shared_ptr<DictEntry> e(new DictEntry);
+      shared_ptr<DictEntry> e = make_shared<DictEntry>();
       e->code.swap(code);
       e->text.swap(r.text);
       e->weight = r.weight;

@@ -42,7 +42,7 @@ ReverseLookupDictionary* ReverseLookupDictionaryComponent::Create(Schema *schema
   }
   shared_ptr<TreeDb> db(db_pool_[dict_name].lock());
   if (!db) {
-    db.reset(new TreeDb(dict_name + ".reverse.bin"));
+    db = make_shared<TreeDb>(dict_name + ".reverse.bin");
     db_pool_[dict_name] = db;
   }
   return new ReverseLookupDictionary(db);

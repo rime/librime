@@ -74,7 +74,7 @@ DictEntryList* Vocabulary::LocateEntries(const Code &code) {
     }
     else {
       if (!page.next_level) {
-        page.next_level.reset(new Vocabulary);
+        page.next_level = make_shared<Vocabulary>();
       }
       v = page.next_level.get();
     }

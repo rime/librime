@@ -17,10 +17,10 @@ using namespace rime;
 
 class RimePrismTest : public ::testing::Test {
  protected:
-  RimePrismTest() : prism_(NULL) {}
+  RimePrismTest() {}
 
   virtual void SetUp() {
-    prism_ = new Prism("prism_test.bin");
+    prism_.reset(new Prism("prism_test.bin"));
     prism_->Remove();
     
     std::set<std::string> keyset;
@@ -37,10 +37,9 @@ class RimePrismTest : public ::testing::Test {
   }
 
   virtual void TearDown() {
-    delete prism_;
   }
 
-  Prism *prism_;
+  unique_ptr<Prism> prism_;
 };
 
 TEST_F(RimePrismTest, SaveAndLoad) {

@@ -111,31 +111,31 @@ Translation* TableTranslator::Query(const std::string &input,
   std::string code(input);
   boost::trim_right_if(code, boost::is_any_of(delimiters_));
   
-  Translation *translation = NULL;
+  unique_ptr<Translation> translation;
   if (enable_completion_) {
-    translation = new LazyTableTranslation(code,
-                                           segment.start,
-                                           segment.start + input.length(),
-                                           preedit,
-                                           &comment_formatter_,
-                                           dict_.get());
+    translation.reset(new LazyTableTranslation(code,
+                                               segment.start,
+                                               segment.start + input.length(),
+                                               preedit,
+                                               &comment_formatter_,
+                                               dict_.get()));
   }
   else {
     DictEntryIterator iter;
     dict_->LookupWords(&iter, code, false);
     if (!iter.exhausted())
-      translation = new TableTranslation(iter,
-                                         code,
-                                         segment.start,
-                                         segment.start + input.length(),
-                                         preedit,
-                                         &comment_formatter_);
+      translation.reset(new TableTranslation(iter,
+                                             code,
+                                             segment.start,
+                                             segment.start + input.length(),
+                                             preedit,
+                                             &comment_formatter_));
   }
   // TODO: insert cached phrases
   if (!translation || translation->exhausted()) {
     // TODO: MakeSentence();
   }
-  return translation;
+  return translation.release();
 }
 
 }  // namespace rime

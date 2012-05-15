@@ -29,7 +29,7 @@ void PunctConfig::LoadConfig(Engine *engine) {
   Config *config = engine->schema()->config();
   std::string preset;
   if (config->GetString("punctuator/import_preset", &preset)) {
-    scoped_ptr<Config> preset_config(Config::Require("config")->Create(preset));
+    unique_ptr<Config> preset_config(Config::Require("config")->Create(preset));
     if (!preset_config) {
       EZLOGGERPRINT("Error importing preset punctuation '%s'.", preset.c_str());
       return;
@@ -189,8 +189,8 @@ PunctTranslator::PunctTranslator(Engine *engine) : Translator(engine) {
 shared_ptr<Candidate> CreatePunctCandidate(const std::string &punct, const Segment &segment) {
   bool is_ascii = (punct.length() == 1 && punct[0] >= 0x20 && punct[0] <= 0x7f);
   const char half_shape[] = "\xe3\x80\x94\xe5\x8d\x8a\xe8\xa7\x92\xe3\x80\x95";  // 〔半角〕
-  return shared_ptr<Candidate>(new SimpleCandidate(
-      "punct", segment.start, segment.end, punct, (is_ascii ? half_shape : ""), punct));
+  return make_shared<SimpleCandidate>(
+      "punct", segment.start, segment.end, punct, (is_ascii ? half_shape : ""), punct);
 }
 
 Translation* PunctTranslator::Query(const std::string &input, const Segment &segment) {
@@ -224,7 +224,7 @@ Translation* PunctTranslator::TranslateAlternatingPunct(const std::string &key,
                                                         const ConfigListPtr &definition) {
   if (!definition)
     return NULL;
-  FifoTranslation *translation = new FifoTranslation;
+  unique_ptr<FifoTranslation> translation(new FifoTranslation);
   for (size_t i = 0; i < definition->size(); ++i) {
     ConfigValuePtr value = definition->GetValueAt(i);
     if (!value) {
@@ -235,10 +235,9 @@ Translation* PunctTranslator::TranslateAlternatingPunct(const std::string &key,
   }
   if (!translation->size()) {
     EZLOGGERPRINT("Warning: empty candidate list for alternating punct '%s'.", key.c_str());
-    delete translation;
     return NULL;
   }
-  return translation;
+  return translation.release();
 }
 
 Translation* PunctTranslator::TranslateAutoCommitPunct(const std::string &key,
@@ -264,7 +263,7 @@ Translation* PunctTranslator::TranslatePairedPunct(const std::string &key,
     EZLOGGERPRINT("Warning: unrecognized pair definition for '%s'.", key.c_str());
     return NULL;
   }
-  FifoTranslation *translation = new FifoTranslation;
+  unique_ptr<FifoTranslation> translation(new FifoTranslation);
   for (size_t i = 0; i < list->size(); ++i) {
     ConfigValuePtr value = list->GetValueAt(i);
     if (!value) {
@@ -275,10 +274,9 @@ Translation* PunctTranslator::TranslatePairedPunct(const std::string &key,
   }
   if (translation->size() != 2) {
     EZLOGGERPRINT("Warning: invalid num of candidate for paired punct '%s'.", key.c_str());
-    delete translation;
     return NULL;
   }
-  return translation;
+  return translation.release();
 }
 
 }  // namespace rime

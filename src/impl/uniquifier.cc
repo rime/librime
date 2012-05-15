@@ -29,7 +29,7 @@ bool Uniquifier::Proceed(CandidateList *recruited,
       if ((*i)->text() == (*j)->text()) {
         shared_ptr<UniquifiedCandidate> c = As<UniquifiedCandidate>(*j);
         if (!c) {
-          c.reset(new UniquifiedCandidate(*j, "uniquified"));
+          c = make_shared<UniquifiedCandidate>(*j, "uniquified");
           *j = c;
         }
         c->Append(*i);

@@ -31,7 +31,7 @@ class Simplifier : public Filter {
                CandidateList *result);
   
   bool initialized_;
-  scoped_ptr<Opencc> opencc_;
+  unique_ptr<Opencc> opencc_;
   TipLevel tip_level_;
   std::string option_name_;
   std::string opencc_config_;

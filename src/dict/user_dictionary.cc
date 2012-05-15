@@ -71,7 +71,7 @@ void DfsState::SaveEntry(size_t pos) {
   size_t seperator_pos = key.find('\t');
   if (seperator_pos == std::string::npos)
     return;
-  shared_ptr<DictEntry> e(new DictEntry);
+  shared_ptr<DictEntry> e = make_shared<DictEntry>();
   e->text = key.substr(seperator_pos + 1);
   int commit_count = 0;
   double dee = 0.0;
@@ -188,8 +188,8 @@ shared_ptr<UserDictEntryCollector> UserDictionary::Lookup(const SyllableGraph &s
   FetchTickCount();
   state.present_tick = tick_ + 1;
   state.credibility.push_back(initial_credibility);
-  state.collector.reset(new UserDictEntryCollector);
-  state.accessor.reset(new UserDbAccessor(db_->Query("")));
+  state.collector = make_shared<UserDictEntryCollector>();
+  state.accessor = make_shared<UserDbAccessor>(db_->Query(""));
   state.accessor->Forward(" ");  // skip metadata
   std::string prefix;
   DfsLookup(syll_graph, start_pos, prefix, &state);
@@ -335,7 +335,7 @@ UserDictionary* UserDictionaryComponent::Create(Schema *schema) {
   // obtain userdb object
   shared_ptr<UserDb> db(db_pool_[dict_name].lock());
   if (!db) {
-    db.reset(new UserDb(dict_name));
+    db = make_shared<UserDb>(dict_name);
     db_pool_[dict_name] = db;
   }
   return new UserDictionary(db);

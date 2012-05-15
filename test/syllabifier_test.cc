@@ -35,20 +35,18 @@ class RimeSyllabifierTest : public ::testing::Test {
       syllable_id_[syllables[i]] = i;
     }
 
-    prism_ = new rime::Prism("syllabifier_test.bin");
+    prism_.reset(new rime::Prism("syllabifier_test.bin"));
     std::set<std::string> keyset;
     std::copy(syllables.begin(), syllables.end(), std::inserter(keyset, keyset.begin()));
     prism_->Build(keyset);
   }
 
   virtual void TearDown() {
-    if (prism_)
-      delete prism_;
   }
 
  protected:
   std::map<std::string, int> syllable_id_;
-  rime::Prism *prism_;
+  std::unique_ptr<rime::Prism> prism_;
 };
 
 TEST_F(RimeSyllabifierTest, CaseAlpha) {

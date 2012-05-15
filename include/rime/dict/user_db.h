@@ -28,7 +28,7 @@ namespace rime {
 
 class TreeDbAccessor {
  public:
-  TreeDbAccessor() : cursor_(NULL), prefix_() {}
+  TreeDbAccessor() {}
   explicit TreeDbAccessor(kyotocabinet::DB::Cursor *cursor,
                           const std::string &prefix);
   ~TreeDbAccessor();
@@ -40,7 +40,7 @@ class TreeDbAccessor {
   bool exhausted();
 
  private:
-  kyotocabinet::DB::Cursor *cursor_;
+  shared_ptr<kyotocabinet::DB::Cursor> cursor_;
   std::string prefix_;
 };
 
@@ -73,7 +73,7 @@ class TreeDb {
   std::string name_;
   std::string file_name_;
   bool loaded_;
-  scoped_ptr<kyotocabinet::TreeDB> db_;
+  unique_ptr<kyotocabinet::TreeDB> db_;
 };
 
 typedef TreeDbAccessor UserDbAccessor;

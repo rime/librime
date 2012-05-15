@@ -18,7 +18,7 @@ static const char* kAbbreviation = "abbrev/^([zcs]h).*$/$1/";
 
 TEST(RimeCalculusTest, Transliteration) {
   rime::Calculus calc;
-  rime::scoped_ptr<rime::Calculation> c(calc.Parse(kTransliteration));
+  std::unique_ptr<rime::Calculation> c(calc.Parse(kTransliteration));
   ASSERT_TRUE(c);
   rime::Spelling s("abracadabra");
   EXPECT_TRUE(c->Apply(&s));
@@ -27,7 +27,7 @@ TEST(RimeCalculusTest, Transliteration) {
 
 TEST(RimeCalculusTest, Transformation) {
   rime::Calculus calc;
-  rime::scoped_ptr<rime::Calculation> c(calc.Parse(kTransformation));
+  std::unique_ptr<rime::Calculation> c(calc.Parse(kTransformation));
   ASSERT_TRUE(c);
   rime::Spelling s("shang");
   EXPECT_TRUE(c->Apply(&s));
@@ -39,7 +39,7 @@ TEST(RimeCalculusTest, Transformation) {
 
 TEST(RimeCalculusTest, Erasion) {
   rime::Calculus calc;
-  rime::scoped_ptr<rime::Calculation> c(calc.Parse(kErasion));
+  std::unique_ptr<rime::Calculation> c(calc.Parse(kErasion));
   ASSERT_TRUE(c);
   EXPECT_FALSE(c->addition());
   EXPECT_TRUE(c->deletion());
@@ -53,7 +53,7 @@ TEST(RimeCalculusTest, Erasion) {
 
 TEST(RimeCalculusTest, Derivation) {
   rime::Calculus calc;
-  rime::scoped_ptr<rime::Calculation> c(calc.Parse(kDerivation));
+  std::unique_ptr<rime::Calculation> c(calc.Parse(kDerivation));
   ASSERT_TRUE(c);
   EXPECT_TRUE(c->addition());
   EXPECT_FALSE(c->deletion());
@@ -67,7 +67,7 @@ TEST(RimeCalculusTest, Derivation) {
 
 TEST(RimeCalculusTest, Abbreviation) {
   rime::Calculus calc;
-  rime::scoped_ptr<rime::Calculation> c(calc.Parse(kAbbreviation));
+  std::unique_ptr<rime::Calculation> c(calc.Parse(kAbbreviation));
   ASSERT_TRUE(c);
   EXPECT_TRUE(c->addition());
   EXPECT_FALSE(c->deletion());

@@ -229,7 +229,7 @@ ConfigMap::Iterator ConfigMap::end() {
 
 // Config members
 
-Config::Config() : data_(new ConfigData) {
+Config::Config() : data_(make_shared<ConfigData>()) {
 }
 
 Config::~Config() {
@@ -293,23 +293,23 @@ ConfigMapPtr Config::GetMap(const std::string& key) {
 }
 
 bool Config::SetBool(const std::string &key, bool value) {
-  return SetItem(key, ConfigItemPtr(new ConfigValue(value)));
+  return SetItem(key, make_shared<ConfigValue>(value));
 }
 
 bool Config::SetInt(const std::string &key, int value) {
-  return SetItem(key, ConfigItemPtr(new ConfigValue(value)));
+  return SetItem(key, make_shared<ConfigValue>(value));
 }
 
 bool Config::SetDouble(const std::string &key, double value) {
-  return SetItem(key, ConfigItemPtr(new ConfigValue(value)));
+  return SetItem(key, make_shared<ConfigValue>(value));
 }
 
 bool Config::SetString(const std::string &key, const char *value) {
-  return SetItem(key, ConfigItemPtr(new ConfigValue(value)));
+  return SetItem(key, make_shared<ConfigValue>(value));
 }
 
 bool Config::SetString(const std::string &key, const std::string &value) {
-  return SetItem(key, ConfigItemPtr(new ConfigValue(value)));
+  return SetItem(key, make_shared<ConfigValue>(value));
 }
 
 bool Config::SetItem(const std::string &key, const ConfigItemPtr &item) {
@@ -320,7 +320,7 @@ bool Config::SetItem(const std::string &key, const ConfigItemPtr &item) {
     return true;
   }
   if (!data_->root) {
-    data_->root = ConfigItemPtr(new ConfigMap);
+    data_->root = make_shared<ConfigMap>();
   }
   ConfigItemPtr p(data_->root);
   std::vector<std::string> keys;
@@ -337,7 +337,7 @@ bool Config::SetItem(const std::string &key, const ConfigItemPtr &item) {
     else {
       ConfigItemPtr next(As<ConfigMap>(p)->Get(keys[i]));
       if (!next) {
-        next = ConfigItemPtr(new ConfigMap);
+        next = make_shared<ConfigMap>();
         As<ConfigMap>(p)->Set(keys[i], next);
       }
       p = next;
@@ -360,14 +360,14 @@ Config* ConfigComponent::Create(const std::string &config_id) {
 
 // ConfigDataManager memebers
 
-scoped_ptr<ConfigDataManager> ConfigDataManager::instance_;
+unique_ptr<ConfigDataManager> ConfigDataManager::instance_;
 
 shared_ptr<ConfigData> ConfigDataManager::GetConfigData(const std::string &config_file_path) {
   shared_ptr<ConfigData> sp;
   // keep a weak reference to the shared config data in the manager
   weak_ptr<ConfigData> &wp((*this)[config_file_path]);
   if (wp.expired()) {  // create a new copy and load it
-    sp.reset(new ConfigData);
+    sp = make_shared<ConfigData>();
     sp->LoadFromFile(config_file_path);
     wp = sp;
   }
@@ -460,10 +460,10 @@ ConfigItemPtr ConfigData::ConvertFromYaml(const YAML::Node &node) {
     return ConfigItemPtr();
   }
   if (YAML::NodeType::Scalar == node.Type()) {
-    return ConfigItemPtr(new ConfigValue(node.to<std::string>()));
+    return make_shared<ConfigValue>(node.to<std::string>());
   }
   if (YAML::NodeType::Sequence == node.Type()) {
-    ConfigListPtr config_list(new ConfigList);
+    ConfigListPtr config_list = make_shared<ConfigList>();
     YAML::Iterator it = node.begin();
     YAML::Iterator end = node.end();
     for ( ; it != end; ++it) {
@@ -472,7 +472,7 @@ ConfigItemPtr ConfigData::ConvertFromYaml(const YAML::Node &node) {
     return config_list;
   }
   else if (YAML::NodeType::Map == node.Type()) {
-    ConfigMapPtr config_map(new ConfigMap);
+    ConfigMapPtr config_map = make_shared<ConfigMap>();
     YAML::Iterator it = node.begin();
     YAML::Iterator end = node.end();
     for ( ; it != end; ++it) {

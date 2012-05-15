@@ -100,7 +100,7 @@ shared_ptr<DictEntry> DictEntryIterator::Peek() {
   }
   if (!entry_) {
     const dictionary::Chunk &chunk(front());
-    entry_.reset(new DictEntry);
+    entry_ = make_shared<DictEntry>();
     const table::Entry &e(chunk.entries[chunk.cursor]);
     EZDBGONLYLOGGERPRINT("Creating temporary dict entry '%s'.", e.text.c_str());
     entry_->code = chunk.code;
@@ -166,7 +166,7 @@ shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_
   if (!table_->Query(syllable_graph, start_pos, &result)) {
     return shared_ptr<DictEntryCollector>();
   }
-  shared_ptr<DictEntryCollector> collector(new DictEntryCollector);
+  shared_ptr<DictEntryCollector> collector = make_shared<DictEntryCollector>();
   // copy result
   BOOST_FOREACH(TableQueryResult::value_type &v, result) {
     size_t end_pos = v.first;
@@ -310,12 +310,12 @@ Dictionary* DictionaryComponent::CreateDictionaryWithName(
   boost::filesystem::path path(Service::instance().deployer().user_data_dir);
   shared_ptr<Table> table(table_map_[dict_name].lock());
   if (!table) {
-    table.reset(new Table((path / dict_name).string() + ".table.bin"));
+    table = make_shared<Table>((path / dict_name).string() + ".table.bin");
     table_map_[dict_name] = table;
   }
   shared_ptr<Prism> prism(prism_map_[prism_name].lock());
   if (!prism) {
-    prism.reset(new Prism((path / prism_name).string() + ".prism.bin"));
+    prism = make_shared<Prism>((path / prism_name).string() + ".prism.bin");
     prism_map_[prism_name] = prism;
   }
   return new Dictionary(dict_name, table, prism);

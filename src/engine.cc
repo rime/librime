@@ -162,7 +162,7 @@ void ConcreteEngine::TranslateSegments(Composition *comp) {
     if (len == 0) continue;
     const std::string input(comp->input().substr(segment.start, len));
     EZDBGONLYLOGGERPRINT("Translating segment '%s'", input.c_str());
-    shared_ptr<Menu> menu(new Menu(filter));
+    shared_ptr<Menu> menu = std::make_shared<Menu>(filter);
     BOOST_FOREACH(shared_ptr<Translator> translator, translators_) {
       shared_ptr<Translation> translation(translator->Query(input, segment));
       if (!translation)

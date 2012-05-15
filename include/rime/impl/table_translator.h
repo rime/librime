@@ -33,7 +33,7 @@ class TableTranslator : public Translator {
  protected:
   bool enable_completion_;
   std::string delimiters_;
-  scoped_ptr<Dictionary> dict_;
+  unique_ptr<Dictionary> dict_;
   Projection preedit_formatter_;
   Projection comment_formatter_;
 };

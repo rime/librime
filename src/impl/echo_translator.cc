@@ -34,8 +34,8 @@ Translation* EchoTranslator::Query(const std::string &input,
                                    const Segment &segment) {
   EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
                        input.c_str(), segment.start, segment.end);
-  shared_ptr<Candidate> candidate(
-      new SimpleCandidate("raw", segment.start, segment.end, input));
+  shared_ptr<Candidate> candidate =
+      make_shared<SimpleCandidate>("raw", segment.start, segment.end, input);
   Translation *translation = new EchoTranslation(candidate);
   return translation;
 }

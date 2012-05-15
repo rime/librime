@@ -187,10 +187,10 @@ Translation* R10nTranslator::Query(const std::string &input,
     }
   }
   // the translator should survive translations it creates
-  R10nTranslation* result(new R10nTranslation(input, segment.start, this));
-  if (result && result->Evaluate(dict_.get(),
-                                 enable_user_dict ? user_dict_.get() : NULL))
-    return result;
+  unique_ptr<R10nTranslation> result(new R10nTranslation(input, segment.start, this));
+  if (result &&
+      result->Evaluate(dict_.get(), enable_user_dict ? user_dict_.get() : NULL))
+    return result.release();
   else
     return NULL;
 }
@@ -425,18 +425,18 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
     const shared_ptr<DictEntry> &e(entries[user_phrase_index_]);
     EZDBGONLYLOGGERVAR(user_phrase_code_length);
     EZDBGONLYLOGGERVAR(e->text);
-    cand.reset(new R10nCandidate(start_,
-                                 start_ + user_phrase_code_length,
-                                 e));
+    cand = make_shared<R10nCandidate>(start_,
+                                      start_ + user_phrase_code_length,
+                                      e);
   }
   else if (phrase_code_length > 0) {
     DictEntryIterator &iter(phrase_iter_->second);
     const shared_ptr<DictEntry> &e(iter.Peek());
     EZDBGONLYLOGGERVAR(phrase_code_length);
     EZDBGONLYLOGGERVAR(e->text);
-    cand.reset(new R10nCandidate(start_,
-                                 start_ + phrase_code_length,
-                                 e));
+    cand = make_shared<R10nCandidate>(start_,
+                                      start_ + phrase_code_length,
+                                      e);
   }
   if (cand && cand->preedit().empty()) {
     cand->set_preedit(GetPreeditString(*cand));

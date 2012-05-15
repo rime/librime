@@ -41,7 +41,7 @@ void KeyBindings::LoadConfig(Schema *schema) {
     LoadBindings(bindings);
   std::string preset;
   if (config->GetString("key_binder/import_preset", &preset)) {
-    scoped_ptr<Config> preset_config(Config::Require("config")->Create(preset));
+    unique_ptr<Config> preset_config(Config::Require("config")->Create(preset));
     if (!preset_config) {
       EZLOGGERPRINT("Error importing preset key bindings '%s'.", preset.c_str());
       return;

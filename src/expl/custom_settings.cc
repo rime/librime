@@ -68,7 +68,7 @@ bool CustomSettings::Customize(const std::string& key,
                                const ConfigItemPtr& item) {
   ConfigMapPtr patch = custom_config_.GetMap("patch");
   if (!patch) {
-    patch.reset(new ConfigMap);
+    patch = make_shared<ConfigMap>();
   }
   patch->Set(key, item);
   // the branch 'patch' should be set as a whole in order to be saved, for

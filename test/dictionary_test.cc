@@ -18,8 +18,8 @@ class RimeDictionaryTest : public ::testing::Test {
     if (!dict_) {
       dict_.reset(new rime::Dictionary(
           "dictionary_test",
-          rime::shared_ptr<rime::Table>(new rime::Table("dictionary_test.table.bin")),
-          rime::shared_ptr<rime::Prism>(new rime::Prism("dictionary_test.prism.bin"))));
+          std::make_shared<rime::Table>("dictionary_test.table.bin"),
+          std::make_shared<rime::Prism>("dictionary_test.prism.bin")));
     }
     if (!rebuilt_) {
       dict_->Remove();
@@ -33,11 +33,11 @@ class RimeDictionaryTest : public ::testing::Test {
     dict_.reset();
   }
  protected:
-  static rime::shared_ptr<rime::Dictionary> dict_;
+  static std::unique_ptr<rime::Dictionary> dict_;
   static bool rebuilt_;
 };
 
-rime::shared_ptr<rime::Dictionary> RimeDictionaryTest::dict_;
+std::unique_ptr<rime::Dictionary> RimeDictionaryTest::dict_;
 bool RimeDictionaryTest::rebuilt_ = false;
 
 TEST_F(RimeDictionaryTest, Ready) {
@@ -75,13 +75,13 @@ TEST_F(RimeDictionaryTest, R10nLookup) {
   std::string input("shurufa");
   ASSERT_TRUE(s.BuildSyllableGraph(input, *dict_->prism(), &g) > 0);
   EXPECT_EQ(g.interpreted_length, g.input_length);
-  rime::shared_ptr<rime::DictEntryCollector> c(dict_->Lookup(g, 0));
+  std::shared_ptr<rime::DictEntryCollector> c(dict_->Lookup(g, 0));
   ASSERT_TRUE(c);
 
   ASSERT_TRUE(c->find(3) != c->end());
   rime::DictEntryIterator d3((*c)[3]);
   EXPECT_FALSE(d3.exhausted());
-  rime::shared_ptr<const rime::DictEntry> e1(d3.Peek());
+  std::shared_ptr<const rime::DictEntry> e1(d3.Peek());
   ASSERT_TRUE(e1);
   EXPECT_EQ(1, e1->code.size());
   EXPECT_EQ(3, e1->text.length());
@@ -90,14 +90,14 @@ TEST_F(RimeDictionaryTest, R10nLookup) {
   ASSERT_TRUE(c->find(5) != c->end());
   rime::DictEntryIterator d5((*c)[5]);
   EXPECT_FALSE(d5.exhausted());
-  rime::shared_ptr<const rime::DictEntry> e2(d5.Peek());
+  std::shared_ptr<const rime::DictEntry> e2(d5.Peek());
   ASSERT_TRUE(e2);
   EXPECT_EQ(2, e2->code.size());
 
   ASSERT_TRUE(c->find(7) != c->end());
   rime::DictEntryIterator d7((*c)[7]);
   EXPECT_FALSE(d7.exhausted());
-  rime::shared_ptr<const rime::DictEntry> e3(d7.Peek());
+  std::shared_ptr<const rime::DictEntry> e3(d7.Peek());
   ASSERT_TRUE(e3);
   EXPECT_EQ(3, e3->code.size());
   EXPECT_EQ(9, e3->text.length());

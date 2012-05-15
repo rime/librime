@@ -78,7 +78,7 @@ Page* Menu::CreatePage(size_t page_size, size_t page_no) {
       return NULL;
     end_pos = (std::min)(start_pos + page_size, end_pos);
   }
-  Page *page = new Page;
+  unique_ptr<Page> page(new Page);
   if (!page)
     return NULL;
   page->page_size = page_size;
@@ -87,7 +87,7 @@ Page* Menu::CreatePage(size_t page_size, size_t page_no) {
   std::copy(candidates_.begin() + start_pos,
             candidates_.begin() + end_pos,
             std::back_inserter(page->candidates));
-  return page;
+  return page.release();
 }
 
 shared_ptr<Candidate> Menu::GetCandidateAt(size_t index) {

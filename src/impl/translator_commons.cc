@@ -81,14 +81,13 @@ shared_ptr<Candidate> TableTranslation::Peek() {
   if (comment_formatter_) {
     comment_formatter_->Apply(&comment);
   }
-  shared_ptr<Candidate> cand(new SimpleCandidate(
+  return make_shared<SimpleCandidate>(
       "zh",
       start_,
       end_,
       e->text,
       comment,
-      preedit_));
-  return cand;
+      preedit_);
 }
 
 }  // namespace rime

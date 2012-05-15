@@ -44,8 +44,8 @@ class Session {
  private:
   void OnCommit(const std::string &commit_text);
 
-  scoped_ptr<Switcher> switcher_;
-  scoped_ptr<Engine> engine_;
+  unique_ptr<Switcher> switcher_;
+  unique_ptr<Engine> engine_;
   time_t last_active_time_;
   std::string commit_text_;
 };
@@ -73,7 +73,7 @@ class Service {
   
  private:
   Service();
-  static scoped_ptr<Service> instance_;
+  static unique_ptr<Service> instance_;
 
   typedef std::map<SessionId, shared_ptr<Session> > SessionMap;
   SessionMap sessions_;

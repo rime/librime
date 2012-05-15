@@ -12,7 +12,7 @@
 
 namespace rime {
 
-scoped_ptr<Registry> Registry::instance_;
+unique_ptr<Registry> Registry::instance_;
 
 void Registry::Register(const std::string &name, ComponentBase *component) {
   EZLOGGERPRINT("registering component: %s", name.c_str());
@@ -34,7 +34,6 @@ void Registry::Clear() {
     delete it->second;
     map_.erase(it++);
   }
-  assert(map_.empty());
 }
 
 ComponentBase* Registry::Find(const std::string &name) {

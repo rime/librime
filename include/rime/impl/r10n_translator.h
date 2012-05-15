@@ -45,8 +45,8 @@ class R10nTranslator : public Translator {
   void OnCommit(Context *ctx);
   void OnDeleteEntry(Context *ctx);
   
-  scoped_ptr<Dictionary> dict_;
-  scoped_ptr<UserDictionary> user_dict_;
+  unique_ptr<Dictionary> dict_;
+  unique_ptr<UserDictionary> user_dict_;
   
   std::string delimiters_;
   bool enable_completion_;

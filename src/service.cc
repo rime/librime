@@ -15,7 +15,7 @@
 
 namespace rime {
 
-scoped_ptr<Service> Service::instance_;
+unique_ptr<Service> Service::instance_;
 
 Session::Session() : last_active_time_(0) {
   switcher_.reset(new Switcher);
@@ -75,7 +75,7 @@ SessionId Service::CreateSession() {
   SessionId id = kInvalidSessionId;
   if (disabled()) return id;
   try {
-    shared_ptr<Session> session(new Session);
+    shared_ptr<Session> session = make_shared<Session>();
     session->Activate();
     id = reinterpret_cast<uintptr_t>(session.get());
     sessions_[id] = session;

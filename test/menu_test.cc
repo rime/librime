@@ -26,20 +26,16 @@ class TranslationAlpha : public Translation {
   shared_ptr<Candidate> Peek() {
     if (exhausted())
       return shared_ptr<Candidate>();
-    return shared_ptr<Candidate>(
-        new SimpleCandidate("alpha", 0, 5, "Alpha"));
+    return make_shared<SimpleCandidate>("alpha", 0, 5, "Alpha");
   }
 };
 
 class TranslationBeta : public Translation {
  public:
   TranslationBeta() : cursor_(0) {
-    candies_.push_back(shared_ptr<Candidate>(
-        new SimpleCandidate("beta", 0, 4, "Beta-1")));
-    candies_.push_back(shared_ptr<Candidate>(
-        new SimpleCandidate("beta", 0, 4, "Beta-2")));
-    candies_.push_back(shared_ptr<Candidate>(
-        new SimpleCandidate("beta", 0, 4, "Beta-3")));
+    candies_.push_back(make_shared<SimpleCandidate>("beta", 0, 4, "Beta-1"));
+    candies_.push_back(make_shared<SimpleCandidate>("beta", 0, 4, "Beta-2"));
+    candies_.push_back(make_shared<SimpleCandidate>("beta", 0, 4, "Beta-3"));
   }
 
   bool Next() {
@@ -63,13 +59,13 @@ class TranslationBeta : public Translation {
 
 TEST(RimeMenuTest, RecipeAlphaBeta) {
   Menu menu;
-  shared_ptr<Translation> alpha(new TranslationAlpha());
-  shared_ptr<Translation> beta(new TranslationBeta());
+  shared_ptr<Translation> alpha = make_shared<TranslationAlpha>();
+  shared_ptr<Translation> beta = make_shared<TranslationBeta>();
   menu.AddTranslation(alpha);
   menu.AddTranslation(beta);
   // explicit call to Menu::Prepare() is not necessary
   menu.Prepare(2);
-  scoped_ptr<Page> page(menu.CreatePage(5, 0));
+  unique_ptr<Page> page(menu.CreatePage(5, 0));
   ASSERT_TRUE(page);
   EXPECT_EQ(5, page->page_size);
   EXPECT_EQ(0, page->page_no);
@@ -80,6 +76,6 @@ TEST(RimeMenuTest, RecipeAlphaBeta) {
   EXPECT_EQ("beta", page->candidates[1]->type());
   EXPECT_EQ("Beta-1", page->candidates[1]->text());
   EXPECT_EQ("Beta-3", page->candidates[3]->text());
-  scoped_ptr<Page> no_more_page(menu.CreatePage(5, 1));
+  unique_ptr<Page> no_more_page(menu.CreatePage(5, 1));
   EXPECT_FALSE(no_more_page);
 }

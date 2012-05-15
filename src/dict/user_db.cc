@@ -30,10 +30,7 @@ TreeDbAccessor::TreeDbAccessor(kyotocabinet::DB::Cursor *cursor,
 }
 
 TreeDbAccessor::~TreeDbAccessor() {
-  if (cursor_) {
-    delete cursor_;
-    cursor_ = NULL;
-  }
+  cursor_.reset();
 }
 
 bool TreeDbAccessor::Reset() {
@@ -82,7 +79,7 @@ TreeDb::~TreeDb() {
 const TreeDbAccessor TreeDb::Query(const std::string &key) {
   if (!loaded())
     return TreeDbAccessor();
-  kyotocabinet::DB::Cursor *cursor = db_->cursor();
+  kyotocabinet::DB::Cursor *cursor = db_->cursor();  // should be freed by us
   return TreeDbAccessor(cursor, key);
 }
 

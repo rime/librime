@@ -38,10 +38,10 @@ bool SwitcherSettings::Load() {
 
 bool SwitcherSettings::Select(const Selection& selection) {
   selection_ = selection;
-  ConfigListPtr schema_list(new ConfigList);
+  ConfigListPtr schema_list = make_shared<ConfigList>();
   BOOST_FOREACH(const std::string& schema_id, selection_) {
-    ConfigMapPtr item(new ConfigMap);
-    item->Set("schema", ConfigValuePtr(new ConfigValue(schema_id)));
+    ConfigMapPtr item = make_shared<ConfigMap>();
+    item->Set("schema", make_shared<ConfigValue>(schema_id));
     schema_list->Append(item);
   }
   return Customize("schema_list", schema_list);

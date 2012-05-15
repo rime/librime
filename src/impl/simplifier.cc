@@ -166,11 +166,11 @@ bool Simplifier::Convert(const shared_ptr<Candidate> &original,
         if (tip_level_ >= kTipChar) {
           tip = quote_left + original->text() + quote_right;
         }
-        result->push_back(shared_ptr<Candidate>(new ShadowCandidate(
+        result->push_back(make_shared<ShadowCandidate>(
             original,
             "zh_simplified",
             forms[i],
-            tip)));
+            tip));
       }
     }
   }
@@ -179,11 +179,11 @@ bool Simplifier::Convert(const shared_ptr<Candidate> &original,
     if (tip_level_ == kTipAll) {
       tip = quote_left + original->text() + quote_right;
     }
-    result->push_back(shared_ptr<Candidate>(new ShadowCandidate(
+    result->push_back(make_shared<ShadowCandidate>(
         original,
         "zh_simplified",
         simplified,
-        tip)));
+        tip));
   }
   return true;
 }
