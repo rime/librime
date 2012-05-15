@@ -189,7 +189,7 @@ shared_ptr<UserDictEntryCollector> UserDictionary::Lookup(const SyllableGraph &s
   state.present_tick = tick_ + 1;
   state.credibility.push_back(initial_credibility);
   state.collector = make_shared<UserDictEntryCollector>();
-  state.accessor = make_shared<UserDbAccessor>(db_->Query(""));
+  state.accessor = db_->Query("");
   state.accessor->Forward(" ");  // skip metadata
   std::string prefix;
   DfsLookup(syll_graph, start_pos, prefix, &state);

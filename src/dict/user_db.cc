@@ -76,11 +76,11 @@ TreeDb::~TreeDb() {
     Close();
 }
 
-const TreeDbAccessor TreeDb::Query(const std::string &key) {
+const shared_ptr<TreeDbAccessor> TreeDb::Query(const std::string &key) {
   if (!loaded())
-    return TreeDbAccessor();
+    return shared_ptr<TreeDbAccessor>();
   kyotocabinet::DB::Cursor *cursor = db_->cursor();  // should be freed by us
-  return TreeDbAccessor(cursor, key);
+  return make_shared<TreeDbAccessor>(cursor, key);
 }
 
 bool TreeDb::Fetch(const std::string &key, std::string *value) {

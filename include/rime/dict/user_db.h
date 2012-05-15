@@ -40,7 +40,7 @@ class TreeDbAccessor {
   bool exhausted();
 
  private:
-  shared_ptr<kyotocabinet::DB::Cursor> cursor_;
+  unique_ptr<kyotocabinet::DB::Cursor> cursor_;
   std::string prefix_;
 };
 
@@ -55,7 +55,7 @@ class TreeDb {
   bool OpenReadOnly();
   bool Close();
 
-  const TreeDbAccessor Query(const std::string &key);
+  const shared_ptr<TreeDbAccessor> Query(const std::string &key);
   bool Fetch(const std::string &key, std::string *value);
   bool Update(const std::string &key, const std::string &value);
   bool Erase(const std::string &key);

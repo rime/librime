@@ -121,10 +121,10 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
   TickCount tick_left = GetTickCount(dest);
   TickCount tick_right = GetTickCount(temp);
   tick_left = (std::max)(tick_left, tick_right);
-  TreeDbAccessor a(temp.Query(""));
+  shared_ptr<TreeDbAccessor> a = temp.Query("");
   std::string key, left, right;
   int num_entries = 0;
-  while (a.GetNextRecord(&key, &right)) {
+  while (a->GetNextRecord(&key, &right)) {
     if (boost::starts_with(key, "\x01/"))  // skip metadata
       continue;
     int c = 0;
@@ -182,8 +182,8 @@ int UserDictManager::Export(const std::string& dict_name,
   std::string key, value;
   std::vector<std::string> row;
   int num_entries = 0;
-  UserDbAccessor a(db.Query(""));
-  while (a.GetNextRecord(&key, &value)) {
+  shared_ptr<UserDbAccessor> a = db.Query("");
+  while (a->GetNextRecord(&key, &value)) {
     if (boost::starts_with(key, "\x01/"))  // skip metadata
       continue;
     boost::algorithm::split(row, key,
