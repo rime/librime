@@ -122,7 +122,7 @@ public:
  private:
   std::string file_name_;
   size_t size_;
-  unique_ptr<MappedFileImpl> file_;
+  scoped_ptr<MappedFileImpl> file_;
 };
 
 // member function definitions

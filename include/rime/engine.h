@@ -36,8 +36,8 @@ class Engine {
  protected:
   Engine(Schema *schema);
   
-  unique_ptr<Schema> schema_;
-  unique_ptr<Context> context_;
+  scoped_ptr<Schema> schema_;
+  scoped_ptr<Context> context_;
   CommitSink sink_;
 };
 

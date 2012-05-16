@@ -96,13 +96,13 @@ void ReverseLookupTranslator::Initialize() {
     rev_dict_->Load();
 }
 
-Translation* ReverseLookupTranslator::Query(const std::string &input,
-                                            const Segment &segment) {
+shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
+                                                       const Segment &segment) {
   if (!segment.HasTag("reverse_lookup"))
-    return NULL;
+    return shared_ptr<Translation>();
   if (!initialized_) Initialize();  // load reverse dict at first use
   if (!dict_ || !dict_->loaded())
-    return NULL;
+    return shared_ptr<Translation>();
   EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
                        input.c_str(), segment.start, segment.end);
 
@@ -135,22 +135,21 @@ Translation* ReverseLookupTranslator::Query(const std::string &input,
   if (!iter.exhausted()) {
     std::string preedit(input);
     preedit_formatter_.Apply(&preedit);
-    return new ReverseLookupTranslation(iter,
-                                        code,
-                                        segment.start,
-                                        segment.end,
-                                        preedit,
-                                        &comment_formatter_,
-                                        rev_dict_.get());
+    return make_shared<ReverseLookupTranslation>(iter,
+                                                 code,
+                                                 segment.start,
+                                                 segment.end,
+                                                 preedit,
+                                                 &comment_formatter_,
+                                                 rev_dict_.get());
   }
   else {
-    shared_ptr<Candidate> cand =
-        make_shared<SimpleCandidate>("raw",
-                                     segment.start,
-                                     segment.end,
-                                     input,
-                                     tips_);
-    return new UniqueTranslation(cand);
+    shared_ptr<Candidate> cand = make_shared<SimpleCandidate>("raw",
+                                                              segment.start,
+                                                              segment.end,
+                                                              input,
+                                                              tips_);
+    return make_shared<UniqueTranslation>(cand);
   }
 }
 

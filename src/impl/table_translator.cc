@@ -96,12 +96,12 @@ TableTranslator::TableTranslator(Engine *engine)
 TableTranslator::~TableTranslator() {
 }
 
-Translation* TableTranslator::Query(const std::string &input,
-                                      const Segment &segment) {
+shared_ptr<Translation> TableTranslator::Query(const std::string &input,
+                                               const Segment &segment) {
   if (!dict_ || !dict_->loaded())
-    return NULL;
+    return shared_ptr<Translation>();
   if (!segment.HasTag("abc"))
-    return NULL;
+    return shared_ptr<Translation>();
   EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
                        input.c_str(), segment.start, segment.end);
 
@@ -111,31 +111,32 @@ Translation* TableTranslator::Query(const std::string &input,
   std::string code(input);
   boost::trim_right_if(code, boost::is_any_of(delimiters_));
   
-  unique_ptr<Translation> translation;
+  shared_ptr<Translation> translation;
   if (enable_completion_) {
-    translation.reset(new LazyTableTranslation(code,
-                                               segment.start,
-                                               segment.start + input.length(),
-                                               preedit,
-                                               &comment_formatter_,
-                                               dict_.get()));
+    translation = make_shared<LazyTableTranslation>(code,
+                                                    segment.start,
+                                                    segment.start + input.length(),
+                                                    preedit,
+                                                    &comment_formatter_,
+                                                    dict_.get());
   }
   else {
     DictEntryIterator iter;
     dict_->LookupWords(&iter, code, false);
     if (!iter.exhausted())
-      translation.reset(new TableTranslation(iter,
-                                             code,
-                                             segment.start,
-                                             segment.start + input.length(),
-                                             preedit,
-                                             &comment_formatter_));
+      translation = make_shared<TableTranslation>(iter,
+                                                  code,
+                                                  segment.start,
+                                                  segment.start + input.length(),
+                                                  preedit,
+                                                  &comment_formatter_);
   }
   // TODO: insert cached phrases
   if (!translation || translation->exhausted()) {
+    translation.reset();
     // TODO: MakeSentence();
   }
-  return translation.release();
+  return translation;
 }
 
 }  // namespace rime

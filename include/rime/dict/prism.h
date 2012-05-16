@@ -94,7 +94,7 @@ class Prism : public MappedFile {
   uint32_t schema_file_checksum() const;
 
  private:
-  unique_ptr<Darts::DoubleArray> trie_;
+  scoped_ptr<Darts::DoubleArray> trie_;
   prism::Metadata* metadata_;
   prism::SpellingMap* spelling_map_;
   double format_;

@@ -29,7 +29,7 @@ void PunctConfig::LoadConfig(Engine *engine) {
   Config *config = engine->schema()->config();
   std::string preset;
   if (config->GetString("punctuator/import_preset", &preset)) {
-    unique_ptr<Config> preset_config(Config::Require("config")->Create(preset));
+    scoped_ptr<Config> preset_config(Config::Require("config")->Create(preset));
     if (!preset_config) {
       EZLOGGERPRINT("Error importing preset punctuation '%s'.", preset.c_str());
       return;
@@ -193,15 +193,15 @@ shared_ptr<Candidate> CreatePunctCandidate(const std::string &punct, const Segme
       "punct", segment.start, segment.end, punct, (is_ascii ? half_shape : ""), punct);
 }
 
-Translation* PunctTranslator::Query(const std::string &input, const Segment &segment) {
+shared_ptr<Translation> PunctTranslator::Query(const std::string &input, const Segment &segment) {
   if (!segment.HasTag("punct"))
-    return NULL;
+    return shared_ptr<Translation>();
   config_.LoadConfig(engine_);
   ConfigItemPtr definition(config_.GetPunctDefinition(input));
   if (!definition)
-    return NULL;
+    return shared_ptr<Translation>();
   EZLOGGERPRINT("Info: populating punctuation candidates for '%s'.", input.c_str());
-  Translation *translation = TranslateUniquePunct(input, segment, As<ConfigValue>(definition));
+  shared_ptr<Translation> translation = TranslateUniquePunct(input, segment, As<ConfigValue>(definition));
   if (!translation)
     translation = TranslateAlternatingPunct(input, segment, As<ConfigList>(definition));
   if (!translation)
@@ -211,20 +211,20 @@ Translation* PunctTranslator::Query(const std::string &input, const Segment &seg
   return translation;
 }
 
-Translation* PunctTranslator::TranslateUniquePunct(const std::string &key,
-                                                   const Segment &segment,
-                                                   const ConfigValuePtr &definition) {
+shared_ptr<Translation> PunctTranslator::TranslateUniquePunct(const std::string &key,
+                                                              const Segment &segment,
+                                                              const ConfigValuePtr &definition) {
   if (!definition)
-    return NULL;
-  return new UniqueTranslation(CreatePunctCandidate(definition->str(), segment));
+    return shared_ptr<Translation>();
+  return make_shared<UniqueTranslation>(CreatePunctCandidate(definition->str(), segment));
 }
 
-Translation* PunctTranslator::TranslateAlternatingPunct(const std::string &key,
-                                                        const Segment &segment,
-                                                        const ConfigListPtr &definition) {
+shared_ptr<Translation> PunctTranslator::TranslateAlternatingPunct(const std::string &key,
+                                                                   const Segment &segment,
+                                                                   const ConfigListPtr &definition) {
   if (!definition)
-    return NULL;
-  unique_ptr<FifoTranslation> translation(new FifoTranslation);
+    return shared_ptr<Translation>();
+  shared_ptr<FifoTranslation> translation(new FifoTranslation);
   for (size_t i = 0; i < definition->size(); ++i) {
     ConfigValuePtr value = definition->GetValueAt(i);
     if (!value) {
@@ -235,35 +235,35 @@ Translation* PunctTranslator::TranslateAlternatingPunct(const std::string &key,
   }
   if (!translation->size()) {
     EZLOGGERPRINT("Warning: empty candidate list for alternating punct '%s'.", key.c_str());
-    return NULL;
+    translation.reset();
   }
-  return translation.release();
+  return translation;
 }
 
-Translation* PunctTranslator::TranslateAutoCommitPunct(const std::string &key,
-                                                       const Segment &segment,
-                                                       const ConfigMapPtr &definition) {
+shared_ptr<Translation> PunctTranslator::TranslateAutoCommitPunct(const std::string &key,
+                                                                  const Segment &segment,
+                                                                  const ConfigMapPtr &definition) {
   if (!definition || !definition->HasKey("commit"))
-    return NULL;
+    return shared_ptr<Translation>();
   ConfigValuePtr value = definition->GetValue("commit");
   if (!value) {
     EZLOGGERPRINT("Warning: unrecognized punct definition for '%s'.", key.c_str());
-    return NULL;
+    return shared_ptr<Translation>();
   }
-  return new UniqueTranslation(CreatePunctCandidate(value->str(), segment));
+  return make_shared<UniqueTranslation>(CreatePunctCandidate(value->str(), segment));
 }
 
-Translation* PunctTranslator::TranslatePairedPunct(const std::string &key,
-                                                   const Segment &segment,
-                                                   const ConfigMapPtr &definition) {
+shared_ptr<Translation> PunctTranslator::TranslatePairedPunct(const std::string &key,
+                                                              const Segment &segment,
+                                                              const ConfigMapPtr &definition) {
   if (!definition || !definition->HasKey("pair"))
-    return NULL;
+    return shared_ptr<Translation>();
   ConfigListPtr list = As<ConfigList>(definition->Get("pair"));
   if (!list || list->size() != 2) {
     EZLOGGERPRINT("Warning: unrecognized pair definition for '%s'.", key.c_str());
-    return NULL;
+    return shared_ptr<Translation>();
   }
-  unique_ptr<FifoTranslation> translation(new FifoTranslation);
+  shared_ptr<FifoTranslation> translation(new FifoTranslation);
   for (size_t i = 0; i < list->size(); ++i) {
     ConfigValuePtr value = list->GetValueAt(i);
     if (!value) {
@@ -274,9 +274,9 @@ Translation* PunctTranslator::TranslatePairedPunct(const std::string &key,
   }
   if (translation->size() != 2) {
     EZLOGGERPRINT("Warning: invalid num of candidate for paired punct '%s'.", key.c_str());
-    return NULL;
+    translation.reset();
   }
-  return translation.release();
+  return translation;
 }
 
 }  // namespace rime

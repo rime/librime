@@ -102,7 +102,7 @@ void AsciiComposer::LoadConfig(Schema* schema) {
   Config *config = schema->config();
   ConfigMapPtr  bindings = config->GetMap("ascii_composer/switch_key");
   if (!bindings) {
-    unique_ptr<Config> preset_config(
+    scoped_ptr<Config> preset_config(
         Config::Require("config")->Create("default"));
     if (!preset_config) {
       EZLOGGERPRINT("Error importing preset ascii bindings.");

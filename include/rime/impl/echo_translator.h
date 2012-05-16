@@ -17,8 +17,8 @@ class EchoTranslator : public Translator {
  public:
   EchoTranslator(Engine *engine) : Translator(engine) {}
   virtual ~EchoTranslator() {}
-  virtual Translation* Query(const std::string &input,
-                             const Segment &segment);
+  virtual shared_ptr<Translation> Query(const std::string &input,
+                                        const Segment &segment);
 };
 
 }  // namespace rime

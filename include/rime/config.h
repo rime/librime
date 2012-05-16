@@ -124,7 +124,7 @@ class ConfigDataManager : public std::map<std::string, weak_ptr<ConfigData> > {
  private:
   ConfigDataManager() {}
 
-  static unique_ptr<ConfigDataManager> instance_;
+  static scoped_ptr<ConfigDataManager> instance_;
 };
 
 // Config class

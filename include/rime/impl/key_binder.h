@@ -25,7 +25,7 @@ class KeyBinder : public Processor {
  protected:
   bool ReinterpretPagingKey(const KeyEvent &key_event);
   
-  unique_ptr<KeyBindings> key_bindings_;
+  scoped_ptr<KeyBindings> key_bindings_;
   bool redirecting_;
   int last_key_;
 };

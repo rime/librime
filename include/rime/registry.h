@@ -33,7 +33,7 @@ class Registry {
 
  private:
   Registry() {}
-  static unique_ptr<Registry> instance_;
+  static scoped_ptr<Registry> instance_;
   
   ComponentMap map_;
 };

@@ -71,8 +71,8 @@ class MappedFileImpl {
   }
 
  private:
-  unique_ptr<boost::interprocess::file_mapping> file_;
-  unique_ptr<boost::interprocess::mapped_region> region_;
+  scoped_ptr<boost::interprocess::file_mapping> file_;
+  scoped_ptr<boost::interprocess::mapped_region> region_;
 
 };
 

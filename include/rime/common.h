@@ -11,18 +11,18 @@
 
 #include <cstdlib>
 #include <string>
-#include <memory>
+#include <boost/smart_ptr.hpp>
 
 namespace rime {
 
-using std::unique_ptr;
-using std::shared_ptr;
-using std::weak_ptr;
-using std::make_shared;
+using boost::scoped_ptr;
+using boost::shared_ptr;
+using boost::weak_ptr;
+using boost::make_shared;
 
 template <class A, class B>
 shared_ptr<A> As(const B &ptr) {
-  return std::dynamic_pointer_cast<A>(ptr);
+  return boost::dynamic_pointer_cast<A>(ptr);
 }
 
 void RegisterComponents();

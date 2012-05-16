@@ -58,16 +58,17 @@ class PresetVocabulary {
   bool GetNextEntry(std::string *key, std::string *value);
 
  protected:
-  PresetVocabulary(kyotocabinet::TreeDB *db) : db_(db), cursor_(db->cursor()) {}
+  PresetVocabulary(const shared_ptr<kyotocabinet::TreeDB>& db)
+      : db_(db), cursor_(db->cursor()) {}
   
-  unique_ptr<kyotocabinet::TreeDB> db_;
-  kyotocabinet::DB::Cursor *cursor_;
+  shared_ptr<kyotocabinet::TreeDB> db_;
+  scoped_ptr<kyotocabinet::DB::Cursor> cursor_;
 };
 
 PresetVocabulary* PresetVocabulary::Create() {
   boost::filesystem::path path(Service::instance().deployer().shared_data_dir);
   path /= "essay.kct";
-  unique_ptr<kyotocabinet::TreeDB> db(new kyotocabinet::TreeDB);
+  shared_ptr<kyotocabinet::TreeDB> db(new kyotocabinet::TreeDB);
   if (!db) return NULL;
   //db->tune_options(kyotocabinet::TreeDB::TLINEAR | kyotocabinet::TreeDB::TCOMPRESS);
   //db->tune_buckets(30LL * 1000);
@@ -76,7 +77,7 @@ PresetVocabulary* PresetVocabulary::Create() {
   if (!db->open(path.string(), kyotocabinet::TreeDB::OREADER)) {
     return NULL;
   }
-  return new PresetVocabulary(db.release());
+  return new PresetVocabulary(db);
 }
 
 bool PresetVocabulary::GetWeightForEntry(const std::string &key, double *weight) {
@@ -105,7 +106,7 @@ bool PresetVocabulary::GetNextEntry(std::string *key, std::string *value) {
 // EntryCollector
 
 struct EntryCollector {
-  unique_ptr<PresetVocabulary> preset_vocabulary;
+  scoped_ptr<PresetVocabulary> preset_vocabulary;
   Syllabary syllabary;
   std::vector<dictionary::RawDictEntry> entries;
   size_t num_entries;

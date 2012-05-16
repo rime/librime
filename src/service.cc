@@ -15,7 +15,7 @@
 
 namespace rime {
 
-unique_ptr<Service> Service::instance_;
+scoped_ptr<Service> Service::instance_;
 
 Session::Session() : last_active_time_(0) {
   switcher_.reset(new Switcher);

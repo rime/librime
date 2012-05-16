@@ -31,8 +31,8 @@ class R10nTranslator : public Translator {
   R10nTranslator(Engine *engine);
   virtual ~R10nTranslator();
 
-  virtual Translation* Query(const std::string &input,
-                             const Segment &segment);
+  virtual shared_ptr<Translation> Query(const std::string &input,
+                                        const Segment &segment);
   const std::string FormatPreedit(const std::string &preedit);
   const std::string Spell(const Code &code);
 
@@ -45,8 +45,8 @@ class R10nTranslator : public Translator {
   void OnCommit(Context *ctx);
   void OnDeleteEntry(Context *ctx);
   
-  unique_ptr<Dictionary> dict_;
-  unique_ptr<UserDictionary> user_dict_;
+  scoped_ptr<Dictionary> dict_;
+  scoped_ptr<UserDictionary> user_dict_;
   
   std::string delimiters_;
   bool enable_completion_;

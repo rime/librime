@@ -40,7 +40,7 @@ class TreeDbAccessor {
   bool exhausted();
 
  private:
-  unique_ptr<kyotocabinet::DB::Cursor> cursor_;
+  scoped_ptr<kyotocabinet::DB::Cursor> cursor_;
   std::string prefix_;
 };
 
@@ -73,7 +73,7 @@ class TreeDb {
   std::string name_;
   std::string file_name_;
   bool loaded_;
-  unique_ptr<kyotocabinet::TreeDB> db_;
+  scoped_ptr<kyotocabinet::TreeDB> db_;
 };
 
 typedef TreeDbAccessor UserDbAccessor;

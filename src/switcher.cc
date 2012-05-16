@@ -249,7 +249,7 @@ void Switcher::Activate() {
     const std::string &schema_id(schema_property->str());
     if (current_schema && schema_id == current_schema->schema_id())
       continue;
-    unique_ptr<Schema> schema(new Schema(schema_id));
+    scoped_ptr<Schema> schema(new Schema(schema_id));
     // the switcher option doesn't own the schema object
     switcher_options->Append(make_shared<SwitcherOption>(schema.get()));
   }

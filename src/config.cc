@@ -360,7 +360,7 @@ Config* ConfigComponent::Create(const std::string &config_id) {
 
 // ConfigDataManager memebers
 
-unique_ptr<ConfigDataManager> ConfigDataManager::instance_;
+scoped_ptr<ConfigDataManager> ConfigDataManager::instance_;
 
 shared_ptr<ConfigData> ConfigDataManager::GetConfigData(const std::string &config_file_path) {
   shared_ptr<ConfigData> sp;

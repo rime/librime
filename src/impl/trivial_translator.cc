@@ -31,19 +31,18 @@ TrivialTranslator::TrivialTranslator(Engine *engine)
   dictionary_["wan"] = "\xe8\x90\xac";  // 萬
 }
 
-Translation* TrivialTranslator::Query(const std::string &input,
-                                      const Segment &segment) {
+shared_ptr<Translation> TrivialTranslator::Query(const std::string &input,
+                                                 const Segment &segment) {
   if (!segment.HasTag("abc"))
-    return NULL;
+    return shared_ptr<Translation>();
   EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
                        input.c_str(), segment.start, segment.end);
   std::string output(Translate(input));
   if (output.empty())
-    return NULL;
+    return shared_ptr<Translation>();
   shared_ptr<Candidate> candidate = make_shared<SimpleCandidate>(
       "abc", segment.start, segment.end, output, ":-)");
-  Translation *translation = new UniqueTranslation(candidate);
-  return translation;
+  return make_shared<UniqueTranslation>(candidate);
 }
 
 const std::string TrivialTranslator::Translate(const std::string &input) {

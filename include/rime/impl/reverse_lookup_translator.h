@@ -23,14 +23,14 @@ class ReverseLookupTranslator : public Translator {
  public:
   ReverseLookupTranslator(Engine *engine);
 
-  virtual Translation* Query(const std::string &input,
-                             const Segment &segment);
+  virtual shared_ptr<Translation> Query(const std::string &input,
+                                        const Segment &segment);
  protected:
   void Initialize();
   
   bool initialized_;
-  unique_ptr<Dictionary> dict_;
-  unique_ptr<ReverseLookupDictionary> rev_dict_;
+  scoped_ptr<Dictionary> dict_;
+  scoped_ptr<ReverseLookupDictionary> rev_dict_;
   bool enable_completion_;
   std::string prefix_;
   std::string tips_;

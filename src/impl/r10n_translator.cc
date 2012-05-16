@@ -168,12 +168,12 @@ R10nTranslator::~R10nTranslator() {
   delete_connection_.disconnect();
 }
 
-Translation* R10nTranslator::Query(const std::string &input,
-                                   const Segment &segment) {
+shared_ptr<Translation> R10nTranslator::Query(const std::string &input,
+                                              const Segment &segment) {
   if (!dict_ || !dict_->loaded())
-    return NULL;
+    return shared_ptr<Translation>();
   if (!segment.HasTag("abc"))
-    return NULL;
+    return shared_ptr<Translation>();
   EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
                        input.c_str(), segment.start, segment.end);
 
@@ -187,12 +187,14 @@ Translation* R10nTranslator::Query(const std::string &input,
     }
   }
   // the translator should survive translations it creates
-  unique_ptr<R10nTranslation> result(new R10nTranslation(input, segment.start, this));
-  if (result &&
-      result->Evaluate(dict_.get(), enable_user_dict ? user_dict_.get() : NULL))
-    return result.release();
-  else
-    return NULL;
+  shared_ptr<R10nTranslation> result =
+      make_shared<R10nTranslation>(input, segment.start, this);
+  if (!result ||
+      !result->Evaluate(dict_.get(),
+                        enable_user_dict ? user_dict_.get() : NULL)) {
+    result.reset();
+  }
+  return result;
 }
 
 const std::string R10nTranslator::FormatPreedit(const std::string& preedit) {

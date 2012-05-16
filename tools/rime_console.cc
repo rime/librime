@@ -58,12 +58,12 @@ class RimeConsole {
       return;
     int page_size = engine_->schema()->page_size();
     int page_no = current.selected_index / page_size;
-    std::unique_ptr<rime::Page> page(
+    boost::scoped_ptr<rime::Page> page(
         current.menu->CreatePage(page_size, page_no));
     std::cout << "page_no: " << page_no
               << ", index: " << current.selected_index << std::endl;
     int i = 0;
-    BOOST_FOREACH(const std::shared_ptr<rime::Candidate> &cand,
+    BOOST_FOREACH(const boost::shared_ptr<rime::Candidate> &cand,
                   page->candidates) {
       std::cout << "cand. " << (++i % 10) <<  ": [";
       std::cout << cand->text();
@@ -100,7 +100,7 @@ class RimeConsole {
 
  private:
   bool interactive_;
-  std::unique_ptr<rime::Engine> engine_;
+  boost::scoped_ptr<rime::Engine> engine_;
   boost::signals::connection conn_;
 };
 

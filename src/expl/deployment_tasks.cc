@@ -98,7 +98,7 @@ bool InstallationUpdate::Run(Deployer* deployer) {
 bool WorkspaceUpdate::Run(Deployer* deployer) {
   EZLOGGERPRINT("updating workspace.");
   {
-    unique_ptr<DeploymentTask> t;
+    scoped_ptr<DeploymentTask> t;
     t.reset(new ConfigFileUpdate("default.yaml", "config_version"));
     t->Run(deployer);
     t.reset(new SymlinkingPrebuiltDictionaries);
@@ -134,7 +134,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     if (!fs::exists(schema_path)) {
       schema_path = user_data_path / (schema_id + ".schema.yaml");
     }
-    unique_ptr<DeploymentTask> t(new SchemaUpdate(schema_path.string()));
+    scoped_ptr<DeploymentTask> t(new SchemaUpdate(schema_path.string()));
     if (t->Run(deployer))
       ++success;
     else
@@ -191,7 +191,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     }
   }
   DictionaryComponent component;
-  unique_ptr<Dictionary> dict;
+  scoped_ptr<Dictionary> dict;
   dict.reset(component.CreateDictionaryFromConfig(&config, "translator"));
   if (!dict) {
     EZLOGGERPRINT("Error creating dictionary '%s'.", dict_name.c_str());
@@ -229,7 +229,7 @@ bool PrebuildAllSchemas::Run(Deployer* deployer) {
   for (; iter != end; ++iter) {
     fs::path entry(iter->path());
     if (boost::ends_with(entry.string(), ".schema.yaml")) {
-      unique_ptr<DeploymentTask> t(new SchemaUpdate(entry.string()));
+      scoped_ptr<DeploymentTask> t(new SchemaUpdate(entry.string()));
       if (!t->Run(deployer))
         success = false;
     }
