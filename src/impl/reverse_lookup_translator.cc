@@ -55,7 +55,7 @@ shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
       boost::algorithm::replace_all(tips, " ", separator);
     }
   }
-  shared_ptr<Candidate> cand = make_shared<SimpleCandidate>(
+  shared_ptr<Candidate> cand = boost::make_shared<SimpleCandidate>(
       "reverse_lookup",
       start_,
       end_,
@@ -135,20 +135,21 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
   if (!iter.exhausted()) {
     std::string preedit(input);
     preedit_formatter_.Apply(&preedit);
-    return make_shared<ReverseLookupTranslation>(iter,
-                                                 code,
-                                                 segment.start,
-                                                 segment.end,
-                                                 preedit,
-                                                 &comment_formatter_,
-                                                 rev_dict_.get());
+    return boost::make_shared<ReverseLookupTranslation>(iter,
+                                                        code,
+                                                        segment.start,
+                                                        segment.end,
+                                                        preedit,
+                                                        &comment_formatter_,
+                                                        rev_dict_.get());
   }
   else {
-    shared_ptr<Candidate> cand = make_shared<SimpleCandidate>("raw",
-                                                              segment.start,
-                                                              segment.end,
-                                                              input,
-                                                              tips_);
+    shared_ptr<Candidate> cand =
+        boost::make_shared<SimpleCandidate>("raw",
+                                            segment.start,
+                                            segment.end,
+                                            input,
+                                            tips_);
     return make_shared<UniqueTranslation>(cand);
   }
 }

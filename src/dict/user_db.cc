@@ -80,7 +80,7 @@ const shared_ptr<TreeDbAccessor> TreeDb::Query(const std::string &key) {
   if (!loaded())
     return shared_ptr<TreeDbAccessor>();
   kyotocabinet::DB::Cursor *cursor = db_->cursor();  // should be freed by us
-  return make_shared<TreeDbAccessor>(cursor, key);
+  return boost::make_shared<TreeDbAccessor>(cursor, key);
 }
 
 bool TreeDb::Fetch(const std::string &key, std::string *value) {

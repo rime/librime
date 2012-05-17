@@ -189,8 +189,12 @@ PunctTranslator::PunctTranslator(Engine *engine) : Translator(engine) {
 shared_ptr<Candidate> CreatePunctCandidate(const std::string &punct, const Segment &segment) {
   bool is_ascii = (punct.length() == 1 && punct[0] >= 0x20 && punct[0] <= 0x7f);
   const char half_shape[] = "\xe3\x80\x94\xe5\x8d\x8a\xe8\xa7\x92\xe3\x80\x95";  // 〔半角〕
-  return make_shared<SimpleCandidate>(
-      "punct", segment.start, segment.end, punct, (is_ascii ? half_shape : ""), punct);
+  return boost::make_shared<SimpleCandidate>("punct",
+                                             segment.start,
+                                             segment.end,
+                                             punct,
+                                             (is_ascii ? half_shape : ""),
+                                             punct);
 }
 
 shared_ptr<Translation> PunctTranslator::Query(const std::string &input, const Segment &segment) {

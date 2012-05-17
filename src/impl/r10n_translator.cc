@@ -188,7 +188,7 @@ shared_ptr<Translation> R10nTranslator::Query(const std::string &input,
   }
   // the translator should survive translations it creates
   shared_ptr<R10nTranslation> result =
-      make_shared<R10nTranslation>(input, segment.start, this);
+      boost::make_shared<R10nTranslation>(input, segment.start, this);
   if (!result ||
       !result->Evaluate(dict_.get(),
                         enable_user_dict ? user_dict_.get() : NULL)) {

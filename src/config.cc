@@ -309,7 +309,7 @@ bool Config::SetString(const std::string &key, const char *value) {
 }
 
 bool Config::SetString(const std::string &key, const std::string &value) {
-  return SetItem(key, make_shared<ConfigValue>(value));
+  return SetItem(key, boost::make_shared<ConfigValue>(value));
 }
 
 bool Config::SetItem(const std::string &key, const ConfigItemPtr &item) {
@@ -460,7 +460,7 @@ ConfigItemPtr ConfigData::ConvertFromYaml(const YAML::Node &node) {
     return ConfigItemPtr();
   }
   if (YAML::NodeType::Scalar == node.Type()) {
-    return make_shared<ConfigValue>(node.to<std::string>());
+    return boost::make_shared<ConfigValue>(node.to<std::string>());
   }
   if (YAML::NodeType::Sequence == node.Type()) {
     ConfigListPtr config_list = make_shared<ConfigList>();

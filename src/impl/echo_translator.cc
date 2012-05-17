@@ -35,7 +35,10 @@ shared_ptr<Translation> EchoTranslator::Query(const std::string &input,
   EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
                        input.c_str(), segment.start, segment.end);
   shared_ptr<Candidate> candidate =
-      make_shared<SimpleCandidate>("raw", segment.start, segment.end, input);
+      boost::make_shared<SimpleCandidate>("raw",
+                                          segment.start,
+                                          segment.end,
+                                          input);
   return make_shared<EchoTranslation>(candidate);
 }
 

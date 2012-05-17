@@ -335,7 +335,7 @@ UserDictionary* UserDictionaryComponent::Create(Schema *schema) {
   // obtain userdb object
   shared_ptr<UserDb> db(db_pool_[dict_name].lock());
   if (!db) {
-    db = make_shared<UserDb>(dict_name);
+    db = boost::make_shared<UserDb>(dict_name);
     db_pool_[dict_name] = db;
   }
   return new UserDictionary(db);

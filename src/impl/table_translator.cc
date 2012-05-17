@@ -113,23 +113,25 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
   
   shared_ptr<Translation> translation;
   if (enable_completion_) {
-    translation = make_shared<LazyTableTranslation>(code,
-                                                    segment.start,
-                                                    segment.start + input.length(),
-                                                    preedit,
-                                                    &comment_formatter_,
-                                                    dict_.get());
+    translation = boost::make_shared<LazyTableTranslation>(
+        code,
+        segment.start,
+        segment.start + input.length(),
+        preedit,
+        &comment_formatter_,
+        dict_.get());
   }
   else {
     DictEntryIterator iter;
     dict_->LookupWords(&iter, code, false);
     if (!iter.exhausted())
-      translation = make_shared<TableTranslation>(iter,
-                                                  code,
-                                                  segment.start,
-                                                  segment.start + input.length(),
-                                                  preedit,
-                                                  &comment_formatter_);
+      translation = boost::make_shared<TableTranslation>(
+          iter,
+          code,
+          segment.start,
+          segment.start + input.length(),
+          preedit,
+          &comment_formatter_);
   }
   // TODO: insert cached phrases
   if (!translation || translation->exhausted()) {

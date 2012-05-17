@@ -231,11 +231,12 @@ void Switcher::Activate() {
           bool current_state = context->get_option(name_property->str());
           bool auto_save = (save_options_.find(name_property->str()) != save_options_.end());
           switcher_options->Append(
-              make_shared<SwitcherOption>(states->GetValueAt(current_state)->str(),
-                                          states->GetValueAt(1 - current_state)->str(),
-                                          name_property->str(),
-                                          current_state,
-                                          auto_save));
+              boost::make_shared<SwitcherOption>(
+                  states->GetValueAt(current_state)->str(),
+                  states->GetValueAt(1 - current_state)->str(),
+                  name_property->str(),
+                  current_state,
+                  auto_save));
         }
       }
     }

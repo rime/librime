@@ -81,7 +81,7 @@ shared_ptr<Candidate> TableTranslation::Peek() {
   if (comment_formatter_) {
     comment_formatter_->Apply(&comment);
   }
-  return make_shared<SimpleCandidate>(
+  return boost::make_shared<SimpleCandidate>(
       "zh",
       start_,
       end_,
