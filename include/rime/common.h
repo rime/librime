@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <string>
 #include <boost/smart_ptr.hpp>
+#include <boost/make_shared.hpp>
 
 namespace rime {
 
