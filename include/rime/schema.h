@@ -28,13 +28,18 @@ class Schema {
   Config* config() const { return config_.get(); }
   void set_config(Config *config) { config_.reset(config); }
 
-  int page_size() const;
-  const std::string alternative_select_keys() const;
+  int page_size() const { return page_size_; }
+  const std::string& alternative_select_keys() const { return select_keys_; }
 
  private:
+  void FetchUsefulConfigItems();
+  
   std::string schema_id_;
   std::string schema_name_;
   scoped_ptr<Config> config_;
+  // frequently used config items
+  int page_size_;
+  std::string select_keys_;
 };
 
 }  // namespace rime

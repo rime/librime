@@ -11,38 +11,40 @@
 
 namespace rime {
 
-Schema::Schema() : schema_id_(".default") {
+Schema::Schema() : schema_id_(".default"),
+                   page_size_(5) {
   config_.reset(Config::Require("config")->Create("default"));
-  if (!config_ || !config_->GetString("schema/name", &schema_name_))
-    schema_name_ = schema_id_;
+  FetchUsefulConfigItems();
 }
 
-Schema::Schema(const std::string &schema_id) : schema_id_(schema_id) {
+Schema::Schema(const std::string &schema_id) : schema_id_(schema_id),
+                                               page_size_(5) {
   if (boost::starts_with(schema_id_, L".")) {
     config_.reset(Config::Require("config")->Create(schema_id.substr(1)));
   }
   else {
     config_.reset(Config::Require("schema_config")->Create(schema_id));
   }
-  if (!config_ || !config_->GetString("schema/name", &schema_name_))
+  FetchUsefulConfigItems();
+}
+
+void Schema::FetchUsefulConfigItems() {
+  if (!config_) {
+    schema_name_ = schema_id_ + "?";
+    return;
+  }
+  if (!config_->GetString("schema/name", &schema_name_)) {
     schema_name_ = schema_id_;
-}
-
-int Schema::page_size() const {
-  int page_size = 5;  // default
-  if (config_) {
-    config_->GetInt("menu/page_size", &page_size);
   }
-  return page_size;
-}
-
-const std::string Schema::alternative_select_keys() const {
-  std::string select_keys;
-  if (config_) {
-    config_->GetString("menu/alternative_select_keys", &select_keys);
+  if (!config_->GetInt("menu/page_size", &page_size_) &&
+      schema_id_ != ".default") {
+    // not defined in schema, use default setting
+    scoped_ptr<Config> default_config(
+        Config::Require("config")->Create("default"));
+    if (default_config)
+      default_config->GetInt("menu/page_size", &page_size_);
   }
-  return select_keys;
+  config_->GetString("menu/alternative_select_keys", &select_keys_);
 }
-
 
 }  // namespace rime
