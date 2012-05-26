@@ -140,6 +140,14 @@ RIME_API Bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask) {
   return Bool(session->ProcessKeyEvent(rime::KeyEvent(keycode, mask)));
 }
 
+RIME_API Bool RimeCommitComposition(RimeSessionId session_id) {
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  session->CommitComposition();
+  return Bool(!session->commit_text().empty());
+}
+
 // output
 
 RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {

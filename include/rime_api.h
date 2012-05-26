@@ -133,6 +133,8 @@ RIME_API void RimeCleanupAllSessions();
 // input
 
 RIME_API Bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask);
+// return True if there is unread commit text
+RIME_API Bool RimeCommitComposition(RimeSessionId session_id);
 
 // output
   

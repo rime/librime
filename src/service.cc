@@ -8,6 +8,7 @@
 // 2011-08-08 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/bind.hpp>
+#include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/service.h>
@@ -35,6 +36,12 @@ void Session::Activate() {
 
 void Session::ResetCommitText() {
   commit_text_.clear();
+}
+
+void Session::CommitComposition() {
+  if (engine_) {
+    engine_->context()->Commit();
+  }
 }
 
 void Session::OnCommit(const std::string &commit_text) {
