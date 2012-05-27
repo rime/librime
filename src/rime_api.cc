@@ -144,8 +144,14 @@ RIME_API Bool RimeCommitComposition(RimeSessionId session_id) {
   boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
-  session->CommitComposition();
-  return Bool(!session->commit_text().empty());
+  return Bool(session->CommitComposition());
+}
+
+RIME_API void RimeClearComposition(RimeSessionId session_id) {
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  if (!session)
+    return;
+  session->ClearComposition();
 }
 
 // output

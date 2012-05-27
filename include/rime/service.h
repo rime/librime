@@ -35,7 +35,8 @@ class Session {
   bool ProcessKeyEvent(const KeyEvent &key_event);
   void Activate();
   void ResetCommitText();
-  void CommitComposition();
+  bool CommitComposition();
+  void ClearComposition();
 
   Context* context() const;
   Schema* schema() const;

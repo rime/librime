@@ -38,10 +38,17 @@ void Session::ResetCommitText() {
   commit_text_.clear();
 }
 
-void Session::CommitComposition() {
-  if (engine_) {
-    engine_->context()->Commit();
-  }
+bool Session::CommitComposition() {
+  if (!engine_)
+    return false;
+  engine_->context()->Commit();
+  return !commit_text_.empty();
+}
+
+void Session::ClearComposition() {
+  if (!engine_)
+    return;
+  engine_->context()->Clear();
 }
 
 void Session::OnCommit(const std::string &commit_text) {
