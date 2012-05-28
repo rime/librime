@@ -175,6 +175,13 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
     context->composition.cursor_pos = preedit.caret_pos;
     context->composition.sel_start = preedit.sel_start;
     context->composition.sel_end = preedit.sel_end;
+    if (RIME_STRUCT_HAS_MEMBER(*context, context->commit_text_preview)) {
+      const std::string commit_text(ctx->GetCommitText());
+      if (!commit_text.empty()) {
+        context->commit_text_preview = new char[commit_text.length() + 1];
+        std::strcpy(context->commit_text_preview, commit_text.c_str());
+      }
+    }
   }
   if (ctx->HasMenu()) {
     rime::Segment &seg(ctx->composition()->back());
@@ -222,6 +229,9 @@ RIME_API Bool RimeFreeContext(RimeContext* context) {
   for (int i = 0; i < context->menu.num_candidates; ++i) {
     delete[] context->menu.candidates[i].text;
     delete[] context->menu.candidates[i].comment;
+  }
+  if (RIME_STRUCT_HAS_MEMBER(*context, context->commit_text_preview)) {
+    delete[] context->commit_text_preview;
   }
   std::memset((char*)context + sizeof(context->data_size), 0, context->data_size);
   return True;
