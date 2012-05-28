@@ -33,6 +33,8 @@ bool Context::Commit() {
 }
 
 const std::string Context::GetCommitText() const {
+  if (get_option("dumb"))
+    return std::string();
   return composition_->GetCommitText();
 }
 

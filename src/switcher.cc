@@ -79,6 +79,8 @@ Switcher::Switcher() : Engine(new Schema),
                        target_engine_(NULL),
                        active_(false) {
   EZDBGONLYLOGGERFUNCTRACKER;
+  context_->set_option("dumb", true);  // not going to commit anything
+  
   // receive context notifications
   context_->select_notifier().connect(
       boost::bind(&Switcher::OnSelect, this, _1));
