@@ -143,15 +143,16 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
                                                         &comment_formatter_,
                                                         rev_dict_.get());
   }
-  else {
-    shared_ptr<Candidate> cand =
-        boost::make_shared<SimpleCandidate>("raw",
-                                            segment.start,
-                                            segment.end,
-                                            input,
-                                            tips_);
-    return make_shared<UniqueTranslation>(cand);
-  }
+  // else {
+  //   shared_ptr<Candidate> cand =
+  //       boost::make_shared<SimpleCandidate>("raw",
+  //                                           segment.start,
+  //                                           segment.end,
+  //                                           input,
+  //                                           tips_);
+  //   return make_shared<UniqueTranslation>(cand);
+  // }
+  return shared_ptr<Translation>();
 }
 
 }  // namespace rime
