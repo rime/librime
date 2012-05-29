@@ -54,10 +54,6 @@ class Context {
   bool ClearNonConfirmedComposition();
   bool RefreshNonConfirmedComposition();
 
-  // void set_prompt(const std::string &value) { prompt_ = value; }
-  // void clear_prompt() { prompt_.clear(); }
-  // const std::string& prompt() const { return prompt_; }
-
   void set_input(const std::string &value);
   const std::string& input() const { return input_; }
 
@@ -82,7 +78,6 @@ class Context {
   }
 
  private:
-  // std::string prompt_;
   std::string input_;
   size_t caret_pos_;
   scoped_ptr<Composition> composition_;

@@ -43,13 +43,6 @@ const std::string Context::GetScriptText() const {
 }
 
 void Context::GetPreedit(Preedit *preedit) const {
-  // if (!prompt_.empty()) {
-  //   preedit->text = prompt_;
-  //   preedit->caret_pos = prompt_.length();
-  //   preedit->sel_start = 0;
-  //   preedit->sel_end = prompt_.length();
-  //   return;
-  // }
   composition_->GetPreedit(preedit);
   preedit->caret_pos = preedit->text.length();
   if (IsComposing()) {
@@ -101,7 +94,6 @@ bool Context::DeleteInput() {
 }
 
 void Context::Clear() {
-  //prompt_.clear();
   input_.clear();
   caret_pos_ = 0;
   composition_->clear();

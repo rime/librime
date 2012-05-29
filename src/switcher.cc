@@ -259,7 +259,6 @@ void Switcher::Activate() {
   // assign menu to switcher's context
   Composition *comp = context_->composition();
   if (comp->empty()) {
-    //context_->set_prompt(caption_);
     context_->set_input(" ");
     Segment seg(0, 0);
     seg.prompt = caption_;
