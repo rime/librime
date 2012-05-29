@@ -32,6 +32,7 @@ struct Segment {
   std::set<std::string> tags;
   shared_ptr<Menu> menu;
   size_t selected_index;
+  std::string prompt;
 
   Segment()
   : status(kVoid), start(0), end(0),

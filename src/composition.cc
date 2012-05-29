@@ -37,24 +37,31 @@ void Composition::GetPreedit(Preedit *preedit) const {
   for (size_t i = 0; i < size(); ++i) {
     start = end;
     const shared_ptr<Candidate> cand(at(i).GetSelectedCandidate());
-    if (!cand) {
-      end = at(i).end;
-      preedit->text += input_.substr(start, end - start);
-      text_len = preedit->text.length();
-      continue;
-    }
-    end = cand->end();
-    if (i < size() - 1) {
-      preedit->text += cand->text();
-      text_len = preedit->text.length();
-    }
-    else { // highlighting
-      preedit->sel_start = text_len;
-      const std::string &custom_preedit(cand->preedit());
-      if (!custom_preedit.empty())
-        preedit->text += custom_preedit;
-      else
+    if (i < size() - 1) {  // converted
+      if (cand) {
+        end = cand->end();
+        preedit->text += cand->text();
+        text_len = preedit->text.length();
+      }
+      else {  // raw input
+        end = at(i).end;
         preedit->text += input_.substr(start, end - start);
+        text_len = preedit->text.length();
+      }
+    }
+    else {  // highlighted
+      preedit->sel_start = text_len;
+      if (cand && !cand->preedit().empty()) {
+        end = cand->end();
+        preedit->text += cand->preedit();
+      }
+      else {
+        end = at(i).end;
+        preedit->text += input_.substr(start, end - start);
+      }
+      if (!at(i).prompt.empty()) {  // show prompt
+        preedit->text += at(i).prompt;
+      }
       text_len = preedit->text.length();
       preedit->sel_end = text_len;
     }
