@@ -32,7 +32,8 @@ TrivialTranslator::TrivialTranslator(Engine *engine)
 }
 
 shared_ptr<Translation> TrivialTranslator::Query(const std::string &input,
-                                                 const Segment &segment) {
+                                                 const Segment &segment,
+                                                 std::string* prompt) {
   if (!segment.HasTag("abc"))
     return shared_ptr<Translation>();
   EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",

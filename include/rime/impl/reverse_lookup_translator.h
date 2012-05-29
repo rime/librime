@@ -24,7 +24,9 @@ class ReverseLookupTranslator : public Translator {
   ReverseLookupTranslator(Engine *engine);
 
   virtual shared_ptr<Translation> Query(const std::string &input,
-                                        const Segment &segment);
+                                        const Segment &segment,
+                                        std::string* prompt);
+  
  protected:
   void Initialize();
   

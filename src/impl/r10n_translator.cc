@@ -169,7 +169,8 @@ R10nTranslator::~R10nTranslator() {
 }
 
 shared_ptr<Translation> R10nTranslator::Query(const std::string &input,
-                                              const Segment &segment) {
+                                              const Segment &segment,
+                                              std::string* prompt) {
   if (!dict_ || !dict_->loaded())
     return shared_ptr<Translation>();
   if (!segment.HasTag("abc"))

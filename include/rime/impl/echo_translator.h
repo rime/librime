@@ -18,7 +18,8 @@ class EchoTranslator : public Translator {
   EchoTranslator(Engine *engine) : Translator(engine) {}
   virtual ~EchoTranslator() {}
   virtual shared_ptr<Translation> Query(const std::string &input,
-                                        const Segment &segment);
+                                        const Segment &segment,
+                                        std::string* prompt);
 };
 
 }  // namespace rime

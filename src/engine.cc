@@ -164,7 +164,8 @@ void ConcreteEngine::TranslateSegments(Composition *comp) {
     EZDBGONLYLOGGERPRINT("Translating segment '%s'", input.c_str());
     shared_ptr<Menu> menu = boost::make_shared<Menu>(filter);
     BOOST_FOREACH(shared_ptr<Translator>& translator, translators_) {
-      shared_ptr<Translation> translation(translator->Query(input, segment));
+      shared_ptr<Translation> translation =
+          translator->Query(input, segment, &segment.prompt);
       if (!translation)
         continue;
       if (translation->exhausted()) {

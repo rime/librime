@@ -56,7 +56,8 @@ class PunctTranslator : public Translator {
  public:
   PunctTranslator(Engine *engine);
   virtual shared_ptr<Translation> Query(const std::string &input,
-                                        const Segment &segment);
+                                        const Segment &segment,
+                                        std::string* prompt);
 
  protected:
   shared_ptr<Translation> TranslateUniquePunct(const std::string &key,

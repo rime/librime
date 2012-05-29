@@ -197,7 +197,9 @@ shared_ptr<Candidate> CreatePunctCandidate(const std::string &punct, const Segme
                                              punct);
 }
 
-shared_ptr<Translation> PunctTranslator::Query(const std::string &input, const Segment &segment) {
+shared_ptr<Translation> PunctTranslator::Query(const std::string &input,
+                                               const Segment &segment,
+                                               std::string* prompt) {
   if (!segment.HasTag("punct"))
     return shared_ptr<Translation>();
   config_.LoadConfig(engine_);
@@ -212,6 +214,10 @@ shared_ptr<Translation> PunctTranslator::Query(const std::string &input, const S
     translation = TranslateAutoCommitPunct(input, segment, As<ConfigMap>(definition));
   if (!translation)
     translation = TranslatePairedPunct(input, segment, As<ConfigMap>(definition));
+  //if (prompt && translation) {
+  //  const char tips[] = "\xe3\x80\x94\xe7\xac\xa6\xe8\x99\x9f\xe3\x80\x95";  // 〔符號〕
+  //  *prompt = tips;
+  //}
   return translation;
 }
 

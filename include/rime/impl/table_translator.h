@@ -25,7 +25,8 @@ class TableTranslator : public Translator {
   virtual ~TableTranslator();
 
   virtual shared_ptr<Translation> Query(const std::string &input,
-                                        const Segment &segment);
+                                        const Segment &segment,
+                                        std::string* prompt);
 
   Dictionary* dict() { return dict_.get(); }
   Projection& comment_formatter() { return comment_formatter_; }

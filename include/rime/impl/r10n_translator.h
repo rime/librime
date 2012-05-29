@@ -32,7 +32,8 @@ class R10nTranslator : public Translator {
   virtual ~R10nTranslator();
 
   virtual shared_ptr<Translation> Query(const std::string &input,
-                                        const Segment &segment);
+                                        const Segment &segment,
+                                        std::string* prompt);
   const std::string FormatPreedit(const std::string &preedit);
   const std::string Spell(const Code &code);
 

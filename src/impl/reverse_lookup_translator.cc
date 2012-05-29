@@ -97,7 +97,8 @@ void ReverseLookupTranslator::Initialize() {
 }
 
 shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
-                                                       const Segment &segment) {
+                                                       const Segment &segment,
+                                                       std::string* prompt) {
   if (!segment.HasTag("reverse_lookup"))
     return shared_ptr<Translation>();
   if (!initialized_) Initialize();  // load reverse dict at first use
@@ -106,6 +107,10 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
   EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
                        input.c_str(), segment.start, segment.end);
 
+  if (prompt) {
+    *prompt = tips_;
+  }
+  
   size_t start = 0;
   if (boost::starts_with(input, prefix_))
     start = prefix_.length();
@@ -143,15 +148,6 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
                                                         &comment_formatter_,
                                                         rev_dict_.get());
   }
-  // else {
-  //   shared_ptr<Candidate> cand =
-  //       boost::make_shared<SimpleCandidate>("raw",
-  //                                           segment.start,
-  //                                           segment.end,
-  //                                           input,
-  //                                           tips_);
-  //   return make_shared<UniqueTranslation>(cand);
-  // }
   return shared_ptr<Translation>();
 }
 

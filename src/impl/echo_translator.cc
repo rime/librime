@@ -30,8 +30,9 @@ class EchoTranslation : public UniqueTranslation {
   }
 };
 
-shared_ptr<Translation> EchoTranslator::Query(const std::string &input,
-                                              const Segment &segment) {
+shared_ptr<Translation> EchoTranslator::Query(const std::string& input,
+                                              const Segment& segment,
+                                              std::string* prompt) {
   // EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
   //                      input.c_str(), segment.start, segment.end);
   // shared_ptr<Candidate> candidate =
