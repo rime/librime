@@ -99,7 +99,7 @@ const std::string Composition::GetScriptText() const {
     const shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
     start = end;
     end = cand ? cand->end() : seg.end;
-    if (!cand->preedit().empty())
+    if (cand && !cand->preedit().empty())
       result += cand->preedit();
     else
       result += input_.substr(start, end - start);
