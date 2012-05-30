@@ -199,8 +199,7 @@ void ConcreteEngine::OnCommit(Context *ctx) {
 void ConcreteEngine::OnSelect(Context *ctx) {
   Segment &seg(ctx->composition()->back());
   shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
-  if (!cand) return;
-  if (cand->end() < seg.end) {
+  if (cand && cand->end() < seg.end) {
     // having selected a partially matched candidate, split it into 2 segments
     seg.end = cand->end();
   }

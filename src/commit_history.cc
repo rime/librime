@@ -55,6 +55,11 @@ void CommitHistory::Push(const Composition& composition,
       }
       end = cand->end();
     }
+    else {
+      // no translation for the segment
+      Push(CommitRecord("raw", input.substr(seg.start, seg.end - seg.start)));
+      end = seg.end;
+    }
   }
   if (input.length() > end) {
     Push(CommitRecord("raw", input.substr(end)));

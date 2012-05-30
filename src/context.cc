@@ -134,15 +134,17 @@ bool Context::ConfirmCurrentSelection() {
   if (composition_->empty())
     return false;
   Segment &seg(composition_->back());
+  seg.status = Segment::kSelected;
   shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
   if (cand) {
-    seg.status = Segment::kSelected;
     EZDBGONLYLOGGERPRINT("Confirmed: '%s', selected_index = %d.",
                          cand->text().c_str(), seg.selected_index);
-    select_notifier_(this);
-    return true;
   }
-  return false;
+  else {
+    // confirmed raw input
+  }
+  select_notifier_(this);
+  return true;
 }
 
 bool Context::ConfirmPreviousSelection() {
