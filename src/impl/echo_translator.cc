@@ -32,17 +32,14 @@ class EchoTranslation : public UniqueTranslation {
 
 shared_ptr<Translation> EchoTranslator::Query(const std::string &input,
                                               const Segment &segment) {
-  // EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
-  //                      input.c_str(), segment.start, segment.end);
-  // shared_ptr<Candidate> candidate =
-  //     boost::make_shared<SimpleCandidate>("raw",
-  //                                         segment.start,
-  //                                         segment.end,
-  //                                         input);
-  // return make_shared<EchoTranslation>(candidate);
-
-  // no more useful... since raw segments are now composed automaticly
-  return shared_ptr<Translation>();
+  EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
+                       input.c_str(), segment.start, segment.end);
+  shared_ptr<Candidate> candidate =
+      boost::make_shared<SimpleCandidate>("raw",
+                                          segment.start,
+                                          segment.end,
+                                          input);
+  return make_shared<EchoTranslation>(candidate);
 }
 
 }  // namespace rime
