@@ -28,6 +28,9 @@ class TableTranslator : public Translator {
                                         const Segment &segment,
                                         std::string* prompt);
 
+  shared_ptr<Translation> MakeSentence(const std::string &input,
+                                       size_t start);
+
   Dictionary* dict() { return dict_.get(); }
   Projection& comment_formatter() { return comment_formatter_; }
   

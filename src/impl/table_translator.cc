@@ -7,6 +7,7 @@
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 #include <rime/candidate.h>
 #include <rime/config.h>
 #include <rime/engine.h>
@@ -136,10 +137,117 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
   }
   // TODO: insert cached phrases
   if (!translation || translation->exhausted()) {
-    translation.reset();
-    // TODO: MakeSentence();
+    translation = MakeSentence(input, segment.start);
   }
   return translation;
+}
+
+class SentenceTranslation : public Translation {
+ public:
+  SentenceTranslation(shared_ptr<Sentence> sentence,
+                      DictEntryCollector collector,
+                      const std::string& input,
+                      size_t start,
+                      Projection* preedit_formatter)
+      : input_(input), start_(start),
+        preedit_formatter_(preedit_formatter) {
+    sentence_.swap(sentence);
+    collector_.swap(collector);
+    if (sentence_) {
+      sentence_->Offset(start);
+      if (preedit_formatter_) {
+        std::string preedit(input);
+        preedit_formatter_->Apply(&preedit);
+        sentence_->set_preedit(preedit);
+      }
+    }
+    set_exhausted(!sentence_ && collector_.empty());
+  }
+
+  bool Next() {
+    if (sentence_) {
+      sentence_.reset();
+    }
+    else if (!collector_.empty()) {
+      DictEntryCollector::reverse_iterator r(collector_.rbegin());
+      if (!r->second.Next()) {
+        collector_.erase(r->first);
+      }
+    }
+    set_exhausted(!sentence_ && collector_.empty());
+    return !exhausted();
+  }
+  
+  shared_ptr<Candidate> Peek() {
+    if (sentence_) {
+      return sentence_;
+    }
+    if (collector_.empty()) {
+      return shared_ptr<Candidate>();
+    }
+    DictEntryCollector::reverse_iterator r(collector_.rbegin());
+    shared_ptr<DictEntry> entry(r->second.Peek());
+    shared_ptr<ZhCandidate> result = boost::make_shared<ZhCandidate>(
+        start_,
+        start_ + r->first,
+        entry);
+    if (preedit_formatter_) {
+      std::string preedit(input_.substr(0, r->first));
+      preedit_formatter_->Apply(&preedit);
+      result->set_preedit(preedit);
+    }
+    return result;
+  }
+  
+ protected:
+  shared_ptr<Sentence> sentence_;
+  DictEntryCollector collector_;
+  std::string input_;
+  size_t start_;
+  Projection* preedit_formatter_;
+};
+
+shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
+                                                      size_t start) {
+  DictEntryCollector collector;
+  std::map<int, shared_ptr<Sentence> > sentences;
+  sentences[0] = make_shared<Sentence>();
+  for (size_t start_pos = 0; start_pos < input.length(); ++start_pos) {
+    if (sentences.find(start_pos) == sentences.end())
+      continue;
+    std::vector<Prism::Match> matches;
+    dict_->prism()->CommonPrefixSearch(input.substr(start_pos), &matches);
+    if (matches.empty()) continue;
+    BOOST_REVERSE_FOREACH(const Prism::Match &m, matches) {
+      if (m.length == 0) continue;
+      DictEntryIterator iter;
+      dict_->LookupWords(&iter, input.substr(start_pos, m.length), false);
+      if (iter.exhausted()) continue;
+      size_t end_pos = start_pos + m.length;
+      // consume trailing delimiters
+      while (end_pos < input.length() &&
+             delimiters_.find(input[end_pos]) != std::string::npos)
+        ++end_pos;
+      shared_ptr<Sentence> new_sentence =
+          make_shared<Sentence>(*sentences[start_pos]);
+      new_sentence->Extend(*iter.Peek(), end_pos);
+      if (sentences.find(end_pos) == sentences.end() ||
+          sentences[end_pos]->weight() <= new_sentence->weight()) {
+        sentences[end_pos] = new_sentence;
+      }
+      if (start_pos == 0) {
+        collector[end_pos] = iter;
+      }
+    }
+  }
+  if (sentences.find(input.length()) == sentences.end())
+    return shared_ptr<Translation>();
+  else
+    return boost::make_shared<SentenceTranslation>(sentences[input.length()],
+                                                   collector,
+                                                   input,
+                                                   start,
+                                                   &preedit_formatter_);
 }
 
 }  // namespace rime
