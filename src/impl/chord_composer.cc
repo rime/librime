@@ -28,24 +28,21 @@ ChordComposer::ChordComposer(Engine *engine) : Processor(engine) {
 }
 
 Processor::Result ChordComposer::ProcessKeyEvent(const KeyEvent &key_event) {
+  bool composing = !chord_.empty();
   if (key_event.shift() || key_event.ctrl() || key_event.alt()) {
-    pressed_.clear();
-    chord_.clear();
-    return kNoop;
+    ClearChord();
+    return composing ? kAccepted : kNoop;
   }
   bool is_key_up = key_event.release();
   int ch = key_event.keycode();
   if (alphabet_.find(ch) == std::string::npos) {
-    pressed_.clear();
-    chord_.clear();
-    return kNoop;
+    ClearChord();
+    return composing ? kAccepted : kNoop;
   }
+  // in alphabet
   if (is_key_up) {
-    if (pressed_.erase(ch) != 0) {
-      if (pressed_.empty()) {
-        FinishChord();
-      }
-      return kAccepted;
+    if (pressed_.erase(ch) != 0 && pressed_.empty()) {
+      FinishChord();
     }
   }
   else {  // key down
@@ -53,9 +50,8 @@ Processor::Result ChordComposer::ProcessKeyEvent(const KeyEvent &key_event) {
     bool updated = chord_.insert(ch).second;
     if (updated)
       UpdateChord();
-    return kAccepted;
   }
-  return kNoop;
+  return kAccepted;
 }
 
 const std::string ChordComposer::SerializeChord() const {
@@ -73,13 +69,13 @@ void ChordComposer::UpdateChord() {
   Context* ctx = engine_->context();
   Composition* comp = ctx->composition();
   bool chord_exists = !comp->empty() && comp->back().HasTag("chord");
-  std::string code(SerializeChord());
-  if (code.empty()) {
+  if (chord_.empty()) {
     if (chord_exists) {
       ctx->ClearPreviousSegment();
     }
   }
   else {
+    std::string code(SerializeChord());
     if (!chord_exists) {
       comp->Forward();
       ctx->PushInput(kZeroWidthSpace);
@@ -92,9 +88,16 @@ void ChordComposer::UpdateChord() {
 void ChordComposer::FinishChord() {
   if (!engine_) return;
   std::string code(SerializeChord());
-  chord_.clear();
-  UpdateChord();  // clear prompt
-  engine_->context()->PushInput(code);
+  ClearChord();
+  if (!code.empty()) {
+    engine_->context()->PushInput(code);
+  }
+}
+
+void ChordComposer::ClearChord() {
+    pressed_.clear();
+    chord_.clear();
+    UpdateChord();
 }
 
 }  // namespace rime

@@ -26,7 +26,7 @@ class ChordComposer : public Processor {
   const std::string SerializeChord() const;
   void UpdateChord();
   void FinishChord();
-
+  void ClearChord();
   
   std::string alphabet_;
 
