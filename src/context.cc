@@ -76,6 +76,19 @@ bool Context::PushInput(char ch) {
   return true;
 }
 
+bool Context::PushInput(const std::string& str) {
+  if (caret_pos_ >= input_.length()) {
+    input_ += str;
+    caret_pos_ = input_.length();
+  }
+  else {
+    input_.insert(caret_pos_, str);
+    caret_pos_ += str.length();
+  }
+  update_notifier_(this);
+  return true;
+}
+
 bool Context::PopInput() {
   if (caret_pos_ == 0)
     return false;

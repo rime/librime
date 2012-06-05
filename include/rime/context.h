@@ -37,6 +37,7 @@ class Context {
   bool HasMenu() const;
   
   bool PushInput(char ch);
+  bool PushInput(const std::string& str);
   bool PopInput();
   bool DeleteInput();
   void Clear();
