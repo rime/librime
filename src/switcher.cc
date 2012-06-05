@@ -20,9 +20,9 @@
 #include <rime/switcher.h>
 #include <rime/translation.h>
 
-namespace rime {
+static const char* kRightArrow = " \xe2\x86\x92 ";
 
-static const char *kRightArrow = " \xe2\x86\x92 ";
+namespace rime {
 
 class SwitcherOption : public Candidate {
  public:
