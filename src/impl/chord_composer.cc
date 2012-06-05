@@ -69,17 +69,26 @@ void ChordComposer::UpdateChord() {
   Context* ctx = engine_->context();
   Composition* comp = ctx->composition();
   bool chord_exists = !comp->empty() && comp->back().HasTag("chord");
+  bool chord_prompt = !comp->empty() && comp->back().HasTag("chord_prompt");
   if (chord_.empty()) {
     if (chord_exists) {
       ctx->ClearPreviousSegment();
     }
+    else if (chord_prompt) {
+      comp->back().prompt.clear();
+    }
   }
   else {
     std::string code(SerializeChord());
-    if (!chord_exists) {
-      comp->Forward();
-      ctx->PushInput(kZeroWidthSpace);
-      comp->back().tags.insert("chord");
+    if (!chord_exists && !chord_prompt) {
+      if (comp->empty()) {
+        comp->Forward();
+        ctx->PushInput(kZeroWidthSpace);
+        comp->back().tags.insert("chord");
+      }
+      else {
+        comp->back().tags.insert("chord_prompt");
+      }
     }
     comp->back().prompt = code;
   }
