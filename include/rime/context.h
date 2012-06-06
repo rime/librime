@@ -37,8 +37,9 @@ class Context {
   bool HasMenu() const;
   
   bool PushInput(char ch);
-  bool PopInput();
-  bool DeleteInput();
+  bool PushInput(const std::string& str);
+  bool PopInput(size_t len = 1);
+  bool DeleteInput(size_t len = 1);
   void Clear();
 
   // return false if there is no candidate at index

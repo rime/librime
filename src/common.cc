@@ -21,6 +21,7 @@
 #include <rime/impl/abc_segmentor.h>
 #include <rime/impl/ascii_composer.h>
 #include <rime/impl/ascii_segmentor.h>
+#include <rime/impl/chord_composer.h>
 #include <rime/impl/echo_translator.h>
 #include <rime/impl/editor.h>
 #include <rime/impl/fallback_segmentor.h>
@@ -63,6 +64,7 @@ void RegisterComponents() {
 
   // processors
   r.Register("ascii_composer", new Component<AsciiComposer>);
+  r.Register("chord_composer", new Component<ChordComposer>);
   r.Register("express_editor", new Component<ExpressEditor>);
   r.Register("fluency_editor", new Component<FluencyEditor>);
   r.Register("key_binder", new Component<KeyBinder>);
