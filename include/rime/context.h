@@ -38,8 +38,8 @@ class Context {
   
   bool PushInput(char ch);
   bool PushInput(const std::string& str);
-  bool PopInput();
-  bool DeleteInput();
+  bool PopInput(size_t len = 1);
+  bool DeleteInput(size_t len = 1);
   void Clear();
 
   // return false if there is no candidate at index

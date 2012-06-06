@@ -89,19 +89,19 @@ bool Context::PushInput(const std::string& str) {
   return true;
 }
 
-bool Context::PopInput() {
-  if (caret_pos_ == 0)
+bool Context::PopInput(size_t len) {
+  if (caret_pos_ < len)
     return false;
-  --caret_pos_;
-  input_.erase(caret_pos_, 1);
+  caret_pos_ -= len;
+  input_.erase(caret_pos_, len);
   update_notifier_(this);
   return true;
 }
 
-bool Context::DeleteInput() {
-  if (caret_pos_ >= input_.length())
+bool Context::DeleteInput(size_t len) {
+  if (caret_pos_ + len > input_.length())
     return false;
-  input_.erase(caret_pos_, 1);
+  input_.erase(caret_pos_, len);
   update_notifier_(this);
   return true;
 }

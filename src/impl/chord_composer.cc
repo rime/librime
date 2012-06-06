@@ -85,7 +85,7 @@ void ChordComposer::UpdateChord() {
   bool chord_prompt = !comp->empty() && comp->back().HasTag("chord_prompt");
   if (chord_.empty()) {
     if (chord_exists) {
-      ctx->ClearPreviousSegment();
+      ctx->PopInput(ctx->caret_pos() - comp->back().start);
     }
     else if (chord_prompt) {
       comp->back().prompt.clear();
