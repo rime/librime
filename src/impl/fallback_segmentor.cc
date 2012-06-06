@@ -37,7 +37,8 @@ bool FallbackSegmentor::Proceed(Segmentation *segmentation) {
     // append one character to the last raw segment
     if (last.HasTag("raw")) {
       last.end = k + 1;
-      EZLOGGERPRINT("extend previous raw segment to [%d, %d)", last.start, last.end);
+      EZDBGONLYLOGGERPRINT("extend previous raw segment to [%d, %d)",
+                           last.start, last.end);
       // mark redo translation (in case it's been previously translated)
       last.Clear();
       last.tags.insert("raw");
@@ -48,7 +49,8 @@ bool FallbackSegmentor::Proceed(Segmentation *segmentation) {
     Segment segment;
     segment.start = k;
     segment.end = k + 1;
-    EZLOGGERPRINT("add a raw segment [%d, %d)", segment.start, segment.end);
+    EZDBGONLYLOGGERPRINT("add a raw segment [%d, %d)",
+                         segment.start, segment.end);
     segment.tags.insert("raw");
     segmentation->Forward();
     segmentation->AddSegment(segment);
