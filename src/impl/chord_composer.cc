@@ -6,6 +6,7 @@
 //
 // 2012-06-05 GONG Chen <chen.sst@gmail.com>
 //
+#include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/config.h>
@@ -24,7 +25,8 @@ ChordComposer::ChordComposer(Engine *engine) : Processor(engine),
                                                pass_thru_(false) {
   Config *config = engine->schema()->config();
   if (config) {
-    config->GetString("speller/alphabet", &alphabet_);
+    config->GetString("chord_composer/alphabet", &alphabet_);
+    algebra_.Load(config->GetList("chord_composer/algebra"));
   }
 }
 
@@ -57,13 +59,13 @@ Processor::Result ChordComposer::ProcessKeyEvent(const KeyEvent &key_event) {
   return kAccepted;
 }
 
-const std::string ChordComposer::SerializeChord() const {
+const std::string ChordComposer::SerializeChord() {
   std::string code;
-  for (std::string::const_iterator it = alphabet_.begin();
-       it != alphabet_.end(); ++it) {
-    if (chord_.find(*it) != chord_.end())
-      code.push_back(*it);
+  BOOST_FOREACH(char ch, alphabet_) {
+    if (chord_.find(ch) != chord_.end())
+      code.push_back(ch);
   }
+  algebra_.Apply(&code);
   return code;
 }
 
@@ -102,13 +104,14 @@ void ChordComposer::FinishChord() {
   if (!engine_) return;
   std::string code(SerializeChord());
   ClearChord();
-  if (code == " ") {
+  
+  KeySequence sequence;
+  if (sequence.Parse(code)) {
     pass_thru_ = true;
-    engine_->ProcessKeyEvent(KeyEvent(XK_space, 0));
+    BOOST_FOREACH(const KeyEvent& ke, sequence) {
+      engine_->ProcessKeyEvent(ke);
+    }
     pass_thru_ = false;
-  }
-  else if (!code.empty()) {
-    engine_->context()->PushInput(code);
   }
 }
 

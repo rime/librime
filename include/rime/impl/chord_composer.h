@@ -13,6 +13,7 @@
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/processor.h>
+#include <rime/algo/algebra.h>
 
 namespace rime {
 
@@ -23,12 +24,13 @@ class ChordComposer : public Processor {
   virtual Result ProcessKeyEvent(const KeyEvent &key_event);
   
  protected:
-  const std::string SerializeChord() const;
+  const std::string SerializeChord();
   void UpdateChord();
   void FinishChord();
   void ClearChord();
   
   std::string alphabet_;
+  Projection algebra_;
 
   std::set<char> pressed_;
   std::set<char> chord_;
