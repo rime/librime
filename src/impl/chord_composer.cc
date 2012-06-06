@@ -119,7 +119,10 @@ void ChordComposer::FinishChord() {
   if (sequence.Parse(code)) {
     pass_thru_ = true;
     BOOST_FOREACH(const KeyEvent& ke, sequence) {
-      engine_->ProcessKeyEvent(ke);
+      if (!engine_->ProcessKeyEvent(ke)) {
+        // direct commit
+        engine_->sink()(std::string(1, ke.keycode()));
+      }
     }
     pass_thru_ = false;
   }
