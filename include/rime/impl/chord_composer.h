@@ -28,9 +28,13 @@ class ChordComposer : public Processor {
   void UpdateChord();
   void FinishChord();
   void ClearChord();
+  bool DeleteLastSyllable();
   
   std::string alphabet_;
+  std::string delimiter_;
   Projection algebra_;
+  Projection output_format_;
+  Projection prompt_format_;
 
   std::set<char> pressed_;
   std::set<char> chord_;

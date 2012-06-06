@@ -16,7 +16,8 @@
 #include <rime/schema.h>
 #include <rime/impl/chord_composer.h>
 
-static const char* kZeroWidthSpace = "\xe2\x80\x8b";
+// U+FEFF works better with MacType
+static const char* kZeroWidthSpace = "\xef\xbb\xbf";  //"\xe2\x80\x8b";
 
 namespace rime {
 
@@ -26,7 +27,10 @@ ChordComposer::ChordComposer(Engine *engine) : Processor(engine),
   Config *config = engine->schema()->config();
   if (config) {
     config->GetString("chord_composer/alphabet", &alphabet_);
+    config->GetString("speller/delimiter", &delimiter_);
     algebra_.Load(config->GetList("chord_composer/algebra"));
+    output_format_.Load(config->GetList("chord_composer/output_format"));
+    prompt_format_.Load(config->GetList("chord_composer/prompt_format"));
   }
 }
 
@@ -40,6 +44,10 @@ Processor::Result ChordComposer::ProcessKeyEvent(const KeyEvent &key_event) {
   }
   bool is_key_up = key_event.release();
   int ch = key_event.keycode();
+  if (!composing && ch == XK_BackSpace && !is_key_up) {
+    if (DeleteLastSyllable())
+      return kAccepted;
+  }
   if (alphabet_.find(ch) == std::string::npos) {
     ClearChord();
     return composing ? kAccepted : kNoop;
@@ -86,6 +94,7 @@ void ChordComposer::UpdateChord() {
   }
   else {
     std::string code(SerializeChord());
+    prompt_format_.Apply(&code);
     if (!chord_exists && !chord_prompt) {
       if (comp->empty()) {
         comp->Forward();
@@ -103,6 +112,7 @@ void ChordComposer::UpdateChord() {
 void ChordComposer::FinishChord() {
   if (!engine_) return;
   std::string code(SerializeChord());
+  output_format_.Apply(&code);
   ClearChord();
   
   KeySequence sequence;
@@ -119,6 +129,25 @@ void ChordComposer::ClearChord() {
     pressed_.clear();
     chord_.clear();
     UpdateChord();
+}
+
+bool ChordComposer::DeleteLastSyllable() {
+  if (!engine_)
+    return false;
+  Context* ctx = engine_->context();
+  Composition* comp = ctx->composition();
+  const std::string input(ctx->input());
+  size_t start = comp->empty() ? 0 : comp->back().start;
+  size_t caret_pos = ctx->caret_pos();
+  if (input.empty() || caret_pos <= start)
+    return false;
+  for (size_t deleted = 0; caret_pos > start; --caret_pos, ++deleted) {
+    if (deleted > 0 &&
+        delimiter_.find(input[caret_pos - 1]) != std::string::npos)
+      break;
+    ctx->PopInput();
+  }
+  return true;
 }
 
 }  // namespace rime
