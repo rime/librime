@@ -139,17 +139,18 @@ bool ChordComposer::DeleteLastSyllable() {
     return false;
   Context* ctx = engine_->context();
   Composition* comp = ctx->composition();
-  const std::string input(ctx->input());
+  const std::string& input(ctx->input());
   size_t start = comp->empty() ? 0 : comp->back().start;
   size_t caret_pos = ctx->caret_pos();
   if (input.empty() || caret_pos <= start)
     return false;
-  for (size_t deleted = 0; caret_pos > start; --caret_pos, ++deleted) {
+  size_t deleted = 0;
+  for (; caret_pos > start; --caret_pos, ++deleted) {
     if (deleted > 0 &&
         delimiter_.find(input[caret_pos - 1]) != std::string::npos)
       break;
-    ctx->PopInput();
   }
+  ctx->PopInput(deleted);
   return true;
 }
 
