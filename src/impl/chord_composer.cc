@@ -20,7 +20,8 @@ static const char* kZeroWidthSpace = "\xe2\x80\x8b";
 namespace rime {
 
 
-ChordComposer::ChordComposer(Engine *engine) : Processor(engine) {
+ChordComposer::ChordComposer(Engine *engine) : Processor(engine),
+                                               pass_thru_(false) {
   Config *config = engine->schema()->config();
   if (config) {
     config->GetString("speller/alphabet", &alphabet_);
@@ -28,6 +29,8 @@ ChordComposer::ChordComposer(Engine *engine) : Processor(engine) {
 }
 
 Processor::Result ChordComposer::ProcessKeyEvent(const KeyEvent &key_event) {
+  if (pass_thru_)
+    return kNoop;
   bool composing = !chord_.empty();
   if (key_event.shift() || key_event.ctrl() || key_event.alt()) {
     ClearChord();
@@ -76,6 +79,7 @@ void ChordComposer::UpdateChord() {
     }
     else if (chord_prompt) {
       comp->back().prompt.clear();
+      comp->back().tags.erase("chord_prompt");
     }
   }
   else {
@@ -98,7 +102,12 @@ void ChordComposer::FinishChord() {
   if (!engine_) return;
   std::string code(SerializeChord());
   ClearChord();
-  if (!code.empty()) {
+  if (code == " ") {
+    pass_thru_ = true;
+    engine_->ProcessKeyEvent(KeyEvent(XK_space, 0));
+    pass_thru_ = false;
+  }
+  else if (!code.empty()) {
     engine_->context()->PushInput(code);
   }
 }
