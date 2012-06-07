@@ -147,6 +147,10 @@ bool Context::ConfirmCurrentSelection() {
   if (composition_->empty())
     return false;
   Segment &seg(composition_->back());
+  if (seg.end == seg.start) {
+    // fluency editor will confirm the whole sentence
+    return false;
+  }
   seg.status = Segment::kSelected;
   shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
   if (cand) {
@@ -154,7 +158,7 @@ bool Context::ConfirmCurrentSelection() {
                          cand->text().c_str(), seg.selected_index);
   }
   else {
-    // confirmed raw input
+    // confirm raw input
   }
   select_notifier_(this);
   return true;
