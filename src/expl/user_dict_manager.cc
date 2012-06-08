@@ -239,7 +239,7 @@ int UserDictManager::Import(const std::string& dict_name,
                               boost::algorithm::token_compress_on);
       row[1] = boost::algorithm::join(syllables, " ");
     }
-    key = row[1] + "\t" + row[0];
+    key = row[1] + " \t" + row[0];
     int commits = 0;
     if (row.size() >= 3 && !row[2].empty()) {
       try {
