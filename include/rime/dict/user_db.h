@@ -60,6 +60,7 @@ class TreeDb {
   bool Update(const std::string &key, const std::string &value);
   bool Erase(const std::string &key);
   bool Backup();
+  bool RecoverFromSnapshot();
   bool Restore(const std::string& snapshot_file);
 
   const std::string& name() const { return name_; }
