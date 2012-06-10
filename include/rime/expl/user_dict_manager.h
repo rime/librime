@@ -18,10 +18,10 @@ namespace rime {
 class Deployer;
 class UserDb;
 
+typedef std::vector<std::string> UserDictList;
+
 class UserDictManager {
  public:
-  typedef std::vector<std::string> UserDictList;
-  
   UserDictManager(Deployer* deployer);
 
   void GetUserDictList(UserDictList* user_dict_list);
@@ -29,6 +29,7 @@ class UserDictManager {
   // CAVEAT: the user dict should be closed before the following operations
   bool Backup(const std::string& dict_name);
   bool Restore(const std::string& snapshot_file);
+  bool UpgradeUserDict(const std::string& dict_name);
   // returns num of exported entires, -1 denotes failure
   int Export(const std::string& dict_name, const std::string& text_file);
   // returns num of imported entires, -1 denotes failure

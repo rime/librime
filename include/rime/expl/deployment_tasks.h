@@ -62,6 +62,12 @@ class SymlinkingPrebuiltDictionaries : public DeploymentTask {
   bool Run(Deployer* deployer);
 };
 
+// upgrade user dictionaries
+class UserDictUpgration : public DeploymentTask {
+ public:
+  bool Run(Deployer* deployer);
+};
+
 }  // namespace rime
 
 #endif  // RIME_DEPLOYMENT_TASKS_H_

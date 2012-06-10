@@ -16,6 +16,9 @@
 
 namespace rime {
 
+int CompareVersionString(const std::string& x,
+                         const std::string& y);
+
 class Deployer;
 
 class DeploymentTask {

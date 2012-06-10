@@ -26,9 +26,6 @@ class Customizer {
   bool UpdateConfigFile();
 
  protected:
-  static int CompareVersionString(const std::string& x,
-                                  const std::string& y);
-  
   boost::filesystem::path source_path_;
   boost::filesystem::path dest_path_;
   std::string version_key_;

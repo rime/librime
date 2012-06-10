@@ -26,26 +26,7 @@ static uint32_t checksum(const std::string &file_name) {
 
 namespace rime {
 
-int Customizer::CompareVersionString(const std::string &x,
-                                     const std::string &y) {
-  if (x.empty() && y.empty()) return 0;
-  if (x.empty()) return -1;
-  if (y.empty()) return 1;
-  std::vector<std::string> xx, yy;
-  boost::split(xx, x, boost::is_any_of("."));
-  boost::split(yy, y, boost::is_any_of("."));
-  size_t i = 0;
-  for (; i < xx.size() && i < yy.size(); ++i) {
-    int dx = atoi(xx[i].c_str());
-    int dy = atoi(yy[i].c_str());
-    if (dx != dy) return dx - dy;
-    int c = xx[i].compare(yy[i]);
-    if (c != 0) return c;
-  }
-  if (i < xx.size()) return 1;
-  if (i < yy.size()) return -1;
-  return 0;
-}
+int CompareVersionString(const std::string& x, const std::string& y);
 
 // update strategy:
 //

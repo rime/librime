@@ -18,6 +18,7 @@
 #include <rime/dict/dict_compiler.h>
 #include <rime/expl/customizer.h>
 #include <rime/expl/deployment_tasks.h>
+#include <rime/expl/user_dict_manager.h>
 
 namespace fs = boost::filesystem;
 
@@ -245,8 +246,27 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
       fs::equivalent(shared_data_path, user_data_path))
     return false;
   bool success = false;
-  fs::directory_iterator iter(shared_data_path);
+  // test existing link
+  fs::directory_iterator test(user_data_path);
   fs::directory_iterator end;
+  for (; test != end; ++test) {
+    fs::path entry(test->path());
+    if (fs::is_symlink(entry) && entry.extension().string() == ".bin") {
+      try {
+        if (!fs::exists(entry)) {
+          EZLOGGERPRINT("removing dangling symlink: %s",
+                        entry.filename().string().c_str());
+          fs::remove(entry);
+        }
+      }
+      catch (const fs::filesystem_error& ex) {
+        EZLOGGERPRINT("Error: %s", ex.what());
+        success = false;
+      }
+    }
+  }
+  // create link
+  fs::directory_iterator iter(shared_data_path);
   for (; iter != end; ++iter) {
     fs::path entry(iter->path());
     fs::path link(user_data_path / entry.filename());
@@ -265,6 +285,19 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
     }
   }
   return success;
+}
+
+bool UserDictUpgration::Run(Deployer* deployer) {
+  UserDictManager manager(deployer);
+  UserDictList dicts;
+  manager.GetUserDictList(&dicts);
+  bool ok = true;
+  UserDictList::const_iterator it = dicts.begin();
+  for (; it != dicts.end(); ++it) {
+    if (!manager.UpgradeUserDict(*it))
+      ok = false;
+  }
+  return ok;
 }
 
 }  // namespace rime

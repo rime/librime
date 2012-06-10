@@ -115,6 +115,9 @@ bool TreeDb::RecoverFromSnapshot() {
   if (!boost::filesystem::exists(snapshot_file))
     return false;
   EZLOGGERPRINT("snapshot file exists, trying to recover db '%s'.", name_.c_str());
+  if (loaded()) {
+    Close();
+  }
   if (Exists()) {
     boost::system::error_code ec;
     boost::filesystem::rename(file_name(), file_name() + ".old", ec);

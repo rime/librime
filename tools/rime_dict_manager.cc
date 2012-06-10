@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     return 0;
   }
   if (argc == 2 && (option == "-l" || option == "--list")) {
-    rime::UserDictManager::UserDictList list;
+    rime::UserDictList list;
     mgr.GetUserDictList(&list);
     if (list.empty()) {
       std::cerr << "no user dictionary is found." << std::endl;
