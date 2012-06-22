@@ -107,14 +107,14 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
   EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
                        input.c_str(), segment.start, segment.end);
 
-  if (prompt) {
-    *prompt = tips_;
-  }
-  
   size_t start = 0;
-  if (boost::starts_with(input, prefix_))
+  if (!prefix_.empty() && boost::starts_with(input, prefix_))
     start = prefix_.length();
   std::string code(input.substr(start));
+  
+  if (start > 0 && prompt) {
+    *prompt = tips_;
+  }
   
   DictEntryIterator iter;
   if (start < input.length()) {

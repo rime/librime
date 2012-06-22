@@ -6,6 +6,7 @@
 //
 // 2011-05-15 GONG Chen <chen.sst@gmail.com>
 //
+#include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/config.h>
 #include <rime/engine.h>
@@ -24,6 +25,14 @@ AbcSegmentor::AbcSegmentor(Engine *engine)
   if (config) {
     config->GetString("speller/alphabet", &alphabet_);
     config->GetString("speller/delimiter", &delimiter_);
+    ConfigListPtr extra_tags = config->GetList("abc_segmentor/extra_tags");
+    if (extra_tags) {
+      for (size_t i = 0; i < extra_tags->size(); ++i) {
+        ConfigValuePtr value = As<ConfigValue>(extra_tags->GetAt(i));
+        if (value)
+          extra_tags_.insert(value->str());
+      }
+    }
   }
 }
 
@@ -45,6 +54,9 @@ bool AbcSegmentor::Proceed(Segmentation *segmentation) {
     segment.start = j;
     segment.end = k;
     segment.tags.insert("abc");
+    BOOST_FOREACH(const std::string& tag, extra_tags_) {
+      segment.tags.insert(tag);
+    }
     segmentation->AddSegment(segment);
   }
   // continue this round
