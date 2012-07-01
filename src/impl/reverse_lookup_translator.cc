@@ -37,6 +37,8 @@ class ReverseLookupTranslation : public TableTranslation {
       : TableTranslation(iter, input, start, end, preedit, comment_formatter),
         dict_(dict) {}
   virtual shared_ptr<Candidate> Peek();
+  virtual int Compare(shared_ptr<Translation> other,
+                      const CandidateList &candidates);
  protected:
   ReverseLookupDictionary *dict_;
 };
@@ -63,6 +65,18 @@ shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
       !tips.empty() ? (quote_left + tips + quote_right) : e->comment,
       preedit_);
   return cand;
+}
+
+int ReverseLookupTranslation::Compare(shared_ptr<Translation> other,
+                                      const CandidateList &candidates) {
+  if (!other || other->exhausted()) return -1;
+  if (exhausted()) return 1;
+  shared_ptr<const Candidate> theirs = other->Peek();
+  if (!theirs)
+    return -1;
+  if (theirs->type() == "completion" || theirs->type() == "sentence")
+    return -1;
+  return 1;
 }
 
 ReverseLookupTranslator::ReverseLookupTranslator(Engine *engine)

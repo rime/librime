@@ -82,7 +82,7 @@ shared_ptr<Candidate> TableTranslation::Peek() {
     comment_formatter_->Apply(&comment);
   }
   return boost::make_shared<SimpleCandidate>(
-      "zh",
+      e->remaining_code_length == 0 ? "zh" : "completion",
       start_,
       end_,
       e->text,

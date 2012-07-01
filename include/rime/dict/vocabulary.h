@@ -37,8 +37,9 @@ struct DictEntry {
   std::string preedit;
   double weight;
   int commit_count;
+  int remaining_code_length;
 
-  DictEntry() : weight(0.0), commit_count(0) {}
+  DictEntry() : weight(0.0), commit_count(0), remaining_code_length(0) {}
   bool operator< (const DictEntry& other) const;
 };
 
