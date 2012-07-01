@@ -10,6 +10,7 @@
 #include <boost/foreach.hpp>
 #include <rime/candidate.h>
 #include <rime/config.h>
+#include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/segmentation.h>
@@ -73,13 +74,16 @@ bool LazyTableTranslation::Next() {
 
 TableTranslator::TableTranslator(Engine *engine)
     : Translator(engine),
-      enable_completion_(true) {
+      enable_completion_(true),
+      enable_charset_filter_(false) {
   if (!engine) return;
   
   Config *config = engine->schema()->config();
   if (config) {
     config->GetString("speller/delimiter", &delimiters_);
     config->GetBool("translator/enable_completion", &enable_completion_);
+    config->GetBool("translator/enable_charset_filter",
+                    &enable_charset_filter_);
     preedit_formatter_.Load(config->GetList("translator/preedit_format"));
     comment_formatter_.Load(config->GetList("translator/comment_format"));
   }
@@ -135,7 +139,14 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
           preedit,
           &comment_formatter_);
   }
-  // TODO: insert cached phrases
+
+  if (translation) {
+    bool filter_by_charset = enable_charset_filter_ &&
+        !engine_->context()->get_option("extended_charset");
+    if (filter_by_charset) {
+      translation = make_shared<CharsetFilter>(translation);
+    }
+  }
   if (!translation || translation->exhausted()) {
     translation = MakeSentence(input, segment.start);
   }
@@ -209,6 +220,8 @@ class SentenceTranslation : public Translation {
 
 shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
                                                       size_t start) {
+  bool filter_by_charset = enable_charset_filter_ &&
+      !engine_->context()->get_option("extended_charset");
   DictEntryCollector collector;
   std::map<int, shared_ptr<Sentence> > sentences;
   sentences[0] = make_shared<Sentence>();
@@ -230,24 +243,39 @@ shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
         ++end_pos;
       shared_ptr<Sentence> new_sentence =
           make_shared<Sentence>(*sentences[start_pos]);
-      new_sentence->Extend(*iter.Peek(), end_pos);
+      // extend the sentence with the first suitable entry
+      shared_ptr<DictEntry> entry = iter.Peek();
+      if (filter_by_charset) {
+        while (!CharsetFilter::Passed(entry->text) &&
+               iter.Next()) {
+          entry = iter.Peek();
+        }
+        if (iter.exhausted()) continue;
+      }
+      new_sentence->Extend(*entry, end_pos);
+      // compare and update sentences
       if (sentences.find(end_pos) == sentences.end() ||
           sentences[end_pos]->weight() <= new_sentence->weight()) {
         sentences[end_pos] = new_sentence;
       }
+      // also provide words for manual composition
       if (start_pos == 0) {
         collector[end_pos] = iter;
       }
     }
   }
-  if (sentences.find(input.length()) == sentences.end())
-    return shared_ptr<Translation>();
-  else
-    return boost::make_shared<SentenceTranslation>(sentences[input.length()],
-                                                   collector,
-                                                   input,
-                                                   start,
-                                                   &preedit_formatter_);
+  shared_ptr<Translation> result;
+  if (sentences.find(input.length()) != sentences.end()) {
+    result = boost::make_shared<SentenceTranslation>(sentences[input.length()],
+                                                     collector,
+                                                     input,
+                                                     start,
+                                                     &preedit_formatter_);
+    if (result && filter_by_charset) {
+      result = make_shared<CharsetFilter>(result);
+    }
+  }
+  return result;
 }
 
 }  // namespace rime

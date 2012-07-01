@@ -35,8 +35,9 @@ class TableTranslator : public Translator {
   Projection& comment_formatter() { return comment_formatter_; }
   
  protected:
-  bool enable_completion_;
   std::string delimiters_;
+  bool enable_completion_;
+  bool enable_charset_filter_;
   scoped_ptr<Dictionary> dict_;
   Projection preedit_formatter_;
   Projection comment_formatter_;

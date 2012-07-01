@@ -92,7 +92,6 @@ void RegisterComponents() {
   // filters
   r.Register("simplifier", new Component<Simplifier>);
   r.Register("uniquifier", new Component<Uniquifier>);
-  r.Register("unifier", new Component<Uniquifier>);  // for compatibility
 }
 
 }  // namespace rime

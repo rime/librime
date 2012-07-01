@@ -104,6 +104,20 @@ class TableTranslation : public Translation {
   Projection *comment_formatter_;
 };
 
+class CharsetFilter : public Translation {
+ public:
+  CharsetFilter(shared_ptr<Translation> translation_);
+  virtual bool Next();
+  virtual shared_ptr<Candidate> Peek();
+
+  static bool Passed(const std::string& text);
+  
+ protected:
+  bool LocateNextCandidate();
+  
+  shared_ptr<Translation> translation_;
+};
+
 }  // namespace rime
 
 #endif  // RIME_TRANSLATOR_COMMONS_H_
