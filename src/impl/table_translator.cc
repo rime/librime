@@ -56,11 +56,11 @@ bool LazyTableTranslation::Next() {
   if (limit_ > 0 && iter_.exhausted()) {
     limit_ *= kExpandingFactor;
     size_t previous_entry_count = iter_.entry_count();
-    EZLOGGERPRINT("fetching more entries: limit = %d, count = %d.",
-                  limit_, previous_entry_count);
+    EZDBGONLYLOGGERPRINT("fetching more entries: limit = %d, count = %d.",
+                         limit_, previous_entry_count);
     DictEntryIterator more;
     if (dict_ && dict_->LookupWords(&more, input_, true, limit_) < limit_) {
-      EZLOGGERPRINT("all entries obtained.");
+      EZDBGONLYLOGGERPRINT("all entries obtained.");
       limit_ = 0;  // no more try
     }
     if (more.entry_count() > previous_entry_count) {

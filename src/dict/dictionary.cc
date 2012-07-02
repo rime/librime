@@ -73,7 +73,7 @@ DictEntryIterator::DictEntryIterator(const DictEntryIterator &other)
 }
 
 DictEntryIterator& DictEntryIterator::operator= (DictEntryIterator &other) {
-  EZLOGGERPRINT("swapping iterator contents.");
+  EZDBGONLYLOGGERPRINT("swapping iterator contents.");
   swap(other);
   entry_ = other.entry_;
   entry_count_ = other.entry_count_;

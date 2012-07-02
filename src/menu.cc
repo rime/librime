@@ -49,7 +49,7 @@ size_t Menu::Prepare(size_t candidate_count) {
       filter_(&candidates_, &next_candidates);
     }
     if (next_candidates.empty()) {
-      EZLOGGERPRINT("Filter returns empty candidate list.");
+      EZDBGONLYLOGGERPRINT("Filter returns empty candidate list.");
     }
     else {
       EZDBGONLYLOGGERPRINT("Recruiting %d candidates.", next_candidates.size());
