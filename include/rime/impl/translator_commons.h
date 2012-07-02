@@ -74,11 +74,15 @@ class Sentence : public Candidate {
   }
   const Code& code() const { return entry_.code; }
   double weight() const { return entry_.weight; }
-  const std::vector<DictEntry>& components() const { return components_; }
+  const std::vector<DictEntry>& components() const
+  { return components_; }
+  const std::vector<size_t>& syllable_lengths() const
+  { return syllable_lengths_; }
   
  protected:
   DictEntry entry_;
   std::vector<DictEntry> components_;
+  std::vector<size_t> syllable_lengths_;
 };
 
 //

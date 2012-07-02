@@ -158,20 +158,14 @@ class SentenceTranslation : public Translation {
   SentenceTranslation(shared_ptr<Sentence> sentence,
                       DictEntryCollector collector,
                       const std::string& input,
+                      const std::string& delimiters,
                       size_t start,
                       Projection* preedit_formatter)
       : input_(input), start_(start),
         preedit_formatter_(preedit_formatter) {
     sentence_.swap(sentence);
     collector_.swap(collector);
-    if (sentence_) {
-      sentence_->Offset(start);
-      if (preedit_formatter_) {
-        std::string preedit(input);
-        preedit_formatter_->Apply(&preedit);
-        sentence_->set_preedit(preedit);
-      }
-    }
+    PrepareSentence(delimiters);
     set_exhausted(!sentence_ && collector_.empty());
   }
 
@@ -211,12 +205,34 @@ class SentenceTranslation : public Translation {
   }
   
  protected:
+  void PrepareSentence(const std::string& delimiters);
+  
   shared_ptr<Sentence> sentence_;
   DictEntryCollector collector_;
   std::string input_;
   size_t start_;
   Projection* preedit_formatter_;
 };
+
+void SentenceTranslation::PrepareSentence(const std::string& delimiters) {
+  if (!sentence_) return;
+  sentence_->Offset(start_);
+  std::string preedit(input_);
+  // split syllables
+  size_t pos = 0;
+  BOOST_FOREACH(int len, sentence_->syllable_lengths()) {
+    if (pos > 0 &&
+        delimiters.find(input_[pos - 1]) == std::string::npos) {
+      preedit.insert(pos, 1, ' ');
+      ++pos;
+    }
+    pos += len;
+  }
+  if (preedit_formatter_) {
+    preedit_formatter_->Apply(&preedit);
+  }
+  sentence_->set_preedit(preedit);
+}
 
 shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
                                                       size_t start) {
@@ -269,6 +285,7 @@ shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
     result = boost::make_shared<SentenceTranslation>(sentences[input.length()],
                                                      collector,
                                                      input,
+                                                     delimiters_,
                                                      start,
                                                      &preedit_formatter_);
     if (result && filter_by_charset) {

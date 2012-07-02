@@ -35,6 +35,7 @@ void Sentence::Extend(const DictEntry& entry, size_t end_pos) {
   entry_.text.append(entry.text);
   entry_.weight *= (std::max)(entry.weight, kEpsilon) * kPenalty;
   components_.push_back(entry);
+  syllable_lengths_.push_back(end_pos - end());
   set_end(end_pos);
   EZDBGONLYLOGGERPRINT("%d) %s : %g", end_pos,
                        entry_.text.c_str(), entry_.weight);
