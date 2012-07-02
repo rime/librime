@@ -19,6 +19,8 @@
 #include <rime/impl/table_translator.h>
 #include <rime/impl/translator_commons.h>
 
+static const char* kUnityTableEncoder = " \xe2\x98\xaf ";
+
 namespace rime {
 
 class LazyTableTranslation : public TableTranslation {
@@ -232,6 +234,7 @@ void SentenceTranslation::PrepareSentence(const std::string& delimiters) {
     preedit_formatter_->Apply(&preedit);
   }
   sentence_->set_preedit(preedit);
+  sentence_->set_comment(kUnityTableEncoder);
 }
 
 shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
