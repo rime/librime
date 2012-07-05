@@ -1,6 +1,9 @@
 build/
 vcbuild/
 xbuild/
+data/preset
+data/supplement
+data/extra
 thirdparty/include/*
 thirdparty/lib/*
 env.bat

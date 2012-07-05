@@ -1,5 +1,8 @@
-all: librime
+all: brise librime
 	@echo ':)'
+
+brise:
+	if [ -e ../brise ]; then cp -R ../brise/* data/; fi
 
 librime:
 	mkdir -p build
@@ -8,3 +11,6 @@ librime:
 
 install:
 	make -C build install
+
+uninstall:
+	make -C build uninstall

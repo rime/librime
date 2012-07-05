@@ -26,7 +26,7 @@
 
 ---
 name: luna_pinyin
-version: "0.9.5"
+version: "0.12.20120618"
 sort: by_weight
 use_preset_vocabulary: true
 ...
@@ -838,6 +838,7 @@ use_preset_vocabulary: true
 丆	xx
 万	mo	0.02%
 万	wan	99.98%
+万俟	mo qi
 丈	zhang
 三	sa	0%
 三	san	100%
@@ -2913,8 +2914,10 @@ use_preset_vocabulary: true
 卟	ji
 占	zhan
 占卜	zhan bu
-卡	ka	99.78%
-卡	qia	0.22%
+卡	ka	95%
+卡	qia	5%
+卡子	qia zi
+卡住	qia zhu
 卢	lu
 卣	you
 卤	lu	100%
@@ -3162,6 +3165,7 @@ use_preset_vocabulary: true
 古都	gu du
 句	gou	0%
 句	ju	100%
+句讀	ju dou
 另	ling
 另行	ling xing
 叧	guo
@@ -3603,6 +3607,7 @@ use_preset_vocabulary: true
 哦喲	o yo
 哧	chi
 哨	shao
+哨卡	shao qia
 哩	li
 哪	na	98.99%
 哪	ne	0.88%
@@ -6204,6 +6209,7 @@ use_preset_vocabulary: true
 專長	zhuan chang
 尉	wei	96.39%
 尉	yu	3.61%
+尉遲	yu chi
 尊	zun
 尊重	zun zhong
 尊重網上	zun zhong wang shang
@@ -9060,8 +9066,9 @@ use_preset_vocabulary: true
 揠	ya
 握	wo
 揢	ke
-揣	chuai
-揣	chuan
+揣	chuai	100%
+揣	chuan	0%
+揣度	chuai duo
 揤	ji
 揤	jie
 揥	ti
@@ -14886,8 +14893,7 @@ use_preset_vocabulary: true
 甘	gan
 甘露	gan lu
 甙	dai
-甚	she	15.8%
-甚	shen	84.2%
+甚	shen
 甛	tian
 甜	tian
 甝	gan
@@ -15366,6 +15372,7 @@ use_preset_vocabulary: true
 登陸	deng lu
 登陸器	deng lu qi
 發	fa
+發人深省	fa ren shen xing
 發源地	fa yuan di
 發生什麼	fa sheng shen me
 發生率	fa sheng lv
@@ -15591,6 +15598,7 @@ use_preset_vocabulary: true
 省	xing	0.12%
 省得	sheng de
 省長	sheng zhang
+省親	xing qin
 眂	shi
 眃	yun
 眄	mian
@@ -19228,6 +19236,7 @@ use_preset_vocabulary: true
 般	bo	0%
 般	pan	0%
 般地	ban de
+般若	bo re
 舭	bi
 舯	zhong
 舰	jian
@@ -21614,7 +21623,6 @@ use_preset_vocabulary: true
 褹	nie
 褹	yi
 褺	die
-褻	bao
 褻	xie
 褼	qian
 褼	xian
@@ -23363,9 +23371,9 @@ use_preset_vocabulary: true
 踚	lun
 踛	lu
 踜	leng
-踝	guo
-踝	hua
-踝	huai
+踝	guo	0%
+踝	hua	0%
+踝	huai	100%
 踞	ju
 踟	chi
 踠	wan
@@ -26086,6 +26094,7 @@ use_preset_vocabulary: true
 闚	kui
 闛	tang
 關	guan
+關卡	guan qia
 闝	piao
 闞	han	2.27%
 闞	kan	97.73%
@@ -27739,6 +27748,7 @@ use_preset_vocabulary: true
 髬	pi
 髭	zi
 髮	fa
+髮卡	fa qia
 髯	ran
 髰	ti
 髱	pao

@@ -1,20 +1,17 @@
-# Rime schema
+# Rime schema settings
 # vim: set sw=2 sts=2 et:
 # encoding: utf-8
 
 schema:
-  schema_id: luna_pinyin
-  name: 朙月拼音
-  version: "0.9.5"
+  schema_id: cangjie5
+  name: 倉頡五代
+  version: "0.13"
   author:
-    - 佛振 <chen.sst@gmail.com>
+    - 發明人 朱邦復先生
   description: |
-    Thanks to the following works:
-      * CC-CEDICT
-      * Android open source project
-      * Chewing - 新酷音
-      * 三拼簡繁詞庫
-      * opencc - 開放中文轉換
+    第五代倉頡輸入法
+    碼表源自倉頡之友發佈的《五倉世紀版》
+    www.chinesecj.com
 
 switches:
   - name: ascii_mode
@@ -24,6 +21,8 @@ switches:
     states: [ 半角, 全角 ]
   - name: simplification
     states: [ 漢字, 汉字 ]
+  - name: extended_charset
+    states: [ 通用, 增廣 ]
 
 engine:
   processors:
@@ -42,39 +41,37 @@ engine:
     - punct_segmentor
     - fallback_segmentor
   translators:
-    - echo_translator
     - punct_translator
-    - r10n_translator
     - reverse_lookup_translator
+    - table_translator
   filters:
     - simplifier
     - uniquifier
 
 speller:
   alphabet: zyxwvutsrqponmlkjihgfedcba
-  delimiter: "'"
-  algebra:
-    - "xform/^xx$/uu/"
-    - "abbrev/^([a-z]).+$/$1/"
-    - "abbrev/^([zcs]h).+$/$1/"
-    - "derive/^([nl])ve$/$1ue/"
-    - "derive/ui$/uei/"
-    - "derive/iu$/iou/"
-    - "derive/([aeiou])ng$/$1gn/"
-    - "derive/ong$/on/"
-    - "derive/ao$/oa/"
-    - "derive/([iu])a(o|ng?)$/a$1$2/"
+  delimiter: " ;'"
+  #max_code_length: 5
 
 translator:
-  dictionary: luna_pinyin
+  dictionary: cangjie5
+  enable_charset_filter: true
   preedit_format:
-   - "xform/([nl])v/$1ü/"
+    - "xlit|abcdefghijklmnopqrstuvwxyz;'|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符・・|"
+  comment_format:
+    - "xlit|abcdefghijklmnopqrstuvwxyz~|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符～|"
+
+abc_segmentor:
+  extra_tags:
+    - reverse_lookup
 
 reverse_lookup:
-  dictionary: cangjie5
+  dictionary: luna_pinyin
   prefix: "`"
-  tips: 〔倉頡〕
+  tips: 〔拼音〕
   preedit_format:
+    - xform/([nljqxy])v/$1ü/
+  comment_format:
     - "xlit|abcdefghijklmnopqrstuvwxyz|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符|"
 
 punctuator:
@@ -86,6 +83,4 @@ key_binder:
 recognizer:
   import_preset: default
   patterns:
-    uppercase: "[A-Z][-'A-Za-z]*$"
-    cplusplus: "C[+#]+$"
     reverse_lookup: "`[a-z]*$"

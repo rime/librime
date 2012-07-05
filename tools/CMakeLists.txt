@@ -19,11 +19,11 @@ file(COPY ${PROJECT_SOURCE_DIR}/data/default.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 file(COPY ${PROJECT_SOURCE_DIR}/data/essay.kct
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
-file(COPY ${PROJECT_SOURCE_DIR}/data/schema/luna_pinyin.dict.yaml 
+file(COPY ${PROJECT_SOURCE_DIR}/data/preset/luna_pinyin.dict.yaml 
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
-file(COPY ${PROJECT_SOURCE_DIR}/data/schema/luna_pinyin.schema.yaml
+file(COPY ${PROJECT_SOURCE_DIR}/data/preset/luna_pinyin.schema.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
-file(COPY ${PROJECT_SOURCE_DIR}/data/schema/cangjie5.dict.yaml
+file(COPY ${PROJECT_SOURCE_DIR}/data/preset/cangjie5.dict.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
-file(COPY ${PROJECT_SOURCE_DIR}/data/schema/cangjie5.schema.yaml
+file(COPY ${PROJECT_SOURCE_DIR}/data/preset/cangjie5.schema.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
