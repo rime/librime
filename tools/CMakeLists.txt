@@ -15,6 +15,11 @@ add_executable(rime_dict_manager ${RIME_DICT_MANAGER_SRC})
 target_link_libraries(rime_dict_manager rime)
 add_dependencies(rime_dict_manager rime)
 
+set(RIME_DEPLOYER_SRC "rime_deployer.cc")
+add_executable(rime_deployer ${RIME_DEPLOYER_SRC})
+target_link_libraries(rime_deployer rime)
+add_dependencies(rime_deployer rime)
+
 file(COPY ${PROJECT_SOURCE_DIR}/data/default.yaml 
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 file(COPY ${PROJECT_SOURCE_DIR}/data/essay.kct
