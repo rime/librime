@@ -9,22 +9,32 @@
 #include <iostream>
 #include <string>
 #include <rime/deployer.h>
+#include <rime/service.h>
 #include <rime/expl/deployment_tasks.h>
 
 int main(int argc, char *argv[]) {
-  rime::Deployer deployer;
   std::string option;
-  //std::string arg1, arg2;
+  std::string arg1, arg2;
   if (argc >= 2) option = argv[1];
-  //if (argc >= 3) arg1 = argv[2];
-  //if (argc >= 4) arg2 = argv[3];
+  if (argc >= 3) arg1 = argv[2];
+  if (argc >= 4) arg2 = argv[3];
   if (argc == 1) {
     std::cout << "options:" << std::endl
-              << "\t--build" << std::endl
+              << "\t--build [dest_dir [source_dir]]" << std::endl
         ;
     return 0;
   }
-  if (argc == 2 && option == "--build") {
+  rime::Deployer& deployer(rime::Service::instance().deployer());
+  if (argc >= 2 && argc <= 4 && option == "--build") {
+    if (!arg1.empty()) {
+      deployer.user_data_dir = arg1;
+      if (!arg2.empty()) {
+        deployer.shared_data_dir = arg2;
+      }
+      else {
+        deployer.shared_data_dir = arg1;
+      }
+    }
     rime::WorkspaceUpdate update;
     return update.Run(&deployer) ? 0 : 1;
   }

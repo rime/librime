@@ -10,11 +10,10 @@
 #include <string>
 #include <boost/foreach.hpp>
 #include <rime/deployer.h>
+#include <rime/service.h>
 #include <rime/expl/user_dict_manager.h>
 
 int main(int argc, char *argv[]) {
-  rime::Deployer deployer;
-  rime::UserDictManager mgr(&deployer);
   std::string option;
   std::string arg1, arg2;
   if (argc >= 2) option = argv[1];
@@ -30,6 +29,8 @@ int main(int argc, char *argv[]) {
         ;
     return 0;
   }
+  rime::Deployer& deployer(rime::Service::instance().deployer());
+  rime::UserDictManager mgr(&deployer);
   if (argc == 2 && (option == "-l" || option == "--list")) {
     rime::UserDictList list;
     mgr.GetUserDictList(&list);
