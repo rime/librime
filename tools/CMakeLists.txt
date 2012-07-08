@@ -20,6 +20,9 @@ add_executable(rime_deployer ${RIME_DEPLOYER_SRC})
 target_link_libraries(rime_deployer rime)
 add_dependencies(rime_deployer rime)
 
+install(TARGETS rime_dict_manager DESTINATION ${BIN_INSTALL_DIR})
+install(TARGETS rime_deployer DESTINATION ${BIN_INSTALL_DIR})
+
 file(COPY ${PROJECT_SOURCE_DIR}/data/default.yaml 
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 file(COPY ${PROJECT_SOURCE_DIR}/data/essay.kct
