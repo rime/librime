@@ -1,10 +1,16 @@
+if(BUILD_STATIC)
+  set(RIME_LIBRARY rime-static)
+else(BUILD_STATIC)
+  set(RIME_LIBRARY rime)
+endif(BUILD_STATIC)
+
 aux_source_directory(. RIME_TEST_SRC)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/test)
 add_executable(rime_test ${RIME_TEST_SRC})
 target_link_libraries(rime_test
-                      rime
+                      ${RIME_LIBRARY}
                       ${GTEST_LIBRARIES})
-add_dependencies(rime_test rime)
+add_dependencies(rime_test ${RIME_LIBRARY})
 
 file(COPY ${PROJECT_SOURCE_DIR}/data/test/config_test.yaml 
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
