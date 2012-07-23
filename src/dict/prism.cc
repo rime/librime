@@ -72,34 +72,34 @@ const SpellingProperties SpellingAccessor::properties() const {
 }
 
 bool Prism::Load() {
-  EZLOGGERPRINT("Load file: %s", file_name().c_str());
+  LOG(INFO) << "loading prism file: " << file_name();
 
   if (IsOpen())
     Close();
 
   if (!OpenReadOnly()) {
-    EZLOGGERPRINT("Error opening prism file '%s'.", file_name().c_str());
+    LOG(ERROR) << "error opening prism file '" << file_name() << "'.";
     return false;
   }
 
   metadata_ = Find<prism::Metadata>(0);
   if (!metadata_) {
-    EZLOGGERPRINT("Metadata not found.");
+    LOG(ERROR) << "metadata not found.";
     return false;
   }
   if (strncmp(metadata_->format, kPrismFormatPrefix, kPrismFormatPrefixLen)) {
-    EZLOGGERPRINT("Invalid metadata.");
+    LOG(ERROR) << "invalid metadata.";
     return false;
   }
   format_ = atof(&metadata_->format[kPrismFormatPrefixLen]);
   
   char *array = metadata_->double_array.get();
   if (!array) {
-    EZLOGGERPRINT("Double array image not found.");
+    LOG(ERROR) << "double array image not found.";
     return false;
   }
   size_t array_size = metadata_->double_array_size;
-  EZLOGGERPRINT("Found double array image of size %u.", array_size);
+  LOG(INFO) << "found double array image of size " << array_size << ".";
   trie_->set_array(array, array_size);
 
   spelling_map_ = NULL;
@@ -110,9 +110,9 @@ bool Prism::Load() {
 }
 
 bool Prism::Save() {
-  EZLOGGERPRINT("Save file: %s", file_name().c_str());
+  LOG(INFO) << "saving prism file: " << file_name();
   if (!trie_->total_size()) {
-    EZLOGGERPRINT("Error: the trie has not been constructed!");
+    LOG(ERROR) << "the trie has not been constructed!";
     return false;
   }
   return ShrinkToFit();
@@ -142,7 +142,7 @@ bool Prism::Build(const Syllabary &syllabary,
     }
   }
   if (0 != trie_->build(num_spellings, &keys[0])) {
-    EZLOGGERPRINT("Error building double-array trie.");
+    LOG(ERROR) << "Error building double-array trie.";
     return false;
   }
   // creating prism file
@@ -153,13 +153,13 @@ bool Prism::Build(const Syllabary &syllabary,
       map_size * (4 + sizeof(prism::SpellingDescriptor) + kDescriptorExtraSize);
   const size_t kReservedSize = 1024;
   if (!Create(image_size + estimated_map_size + kReservedSize)) {
-    EZLOGGERPRINT("Error creating prism file '%s'.", file_name().c_str());
+    LOG(ERROR) << "Error creating prism file '" << file_name() << "'.";
     return false;
   }
   // creating metadata
   prism::Metadata *metadata = Allocate<prism::Metadata>();
   if (!metadata) {
-    EZLOGGERPRINT("Error creating metadata in file '%s'.", file_name().c_str());
+    LOG(ERROR) << "Error creating metadata in file '" << file_name() << "'.";
     return false;
   }
   std::strncpy(metadata->format, kPrismFormat, prism::Metadata::kFormatMaxLength);
@@ -183,7 +183,7 @@ bool Prism::Build(const Syllabary &syllabary,
   // saving double-array image
   char *array = Allocate<char>(image_size);
   if (!array) {
-    EZLOGGERPRINT("Error creating double-array image.");
+    LOG(ERROR) << "Error creating double-array image.";
     return false;
   }
   std::memcpy(array, trie_->array(), image_size);
@@ -199,7 +199,7 @@ bool Prism::Build(const Syllabary &syllabary,
     }
     prism::SpellingMap* spelling_map = CreateArray<prism::SpellingMapItem>(num_spellings);
     if (!spelling_map) {
-      EZLOGGERPRINT("Error creating spelling map.");
+      LOG(ERROR) << "Error creating spelling map.";
       return false;
     }
     Script::const_iterator i;
@@ -210,7 +210,7 @@ bool Prism::Build(const Syllabary &syllabary,
       item->size = list_size;
       item->at = Allocate<prism::SpellingDescriptor>(list_size);
       if (!item->at) {
-        EZLOGGERPRINT("Error creating spelling descriptors.");
+        LOG(ERROR) << "Error creating spelling descriptors.";
         return false;
       }
       std::vector<Spelling>::const_iterator j;
@@ -221,7 +221,7 @@ bool Prism::Build(const Syllabary &syllabary,
         desc->type = static_cast<int32_t>(j->properties.type);
         desc->credibility = j->properties.credibility;
         if (!CopyString(j->properties.tips, &desc->tips)) {
-          EZLOGGERPRINT("Error creating spelling properties.");
+          LOG(ERROR) << "Error creating spelling properties.";
           return false;
         }
       }

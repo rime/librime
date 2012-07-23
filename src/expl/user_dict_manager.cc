@@ -65,8 +65,7 @@ void UserDictManager::GetUserDictList(UserDictList* user_dict_list) {
   if (!user_dict_list) return;
   user_dict_list->clear();
   if (!fs::exists(path_) || !fs::is_directory(path_)) {
-    EZLOGGERPRINT("Info: directory '%s' does not exist.",
-                  path_.string().c_str());
+    LOG(INFO) << "directory '" << path_.string() << "' does not exist.";
     return;
   }
   fs::directory_iterator it(path_);
@@ -112,9 +111,8 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
   {
     dest.Close();
   } BOOST_SCOPE_EXIT_END
-  EZLOGGERPRINT("merging '%s' into userdb '%s'...",
-                snapshot_file.c_str(),
-                db_name.c_str());
+  LOG(INFO) << "merging '" << snapshot_file
+            << "' into userdb '" << db_name << "'...";
   std::string user_id = GetUserId(dest);
   if (user_id == "unknown")
     user_id = GetUserId(temp);
@@ -160,11 +158,11 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
       dest.Update("\x01/user_id", user_id);
     }
     catch (...) {
-      EZLOGGERPRINT("Warning: failed to update tick count.");
+      LOG(WARNING) << "failed to update tick count.";
     }
   }
-  EZLOGGERPRINT("total %d entries imported, tick = %d.",
-                num_entries, tick_left);
+  LOG(INFO) << "total " << num_entries << " entries imported, tick = "
+            << tick_left;
   return true;
 }
 
@@ -234,7 +232,7 @@ int UserDictManager::Import(const std::string& dict_name,
                             boost::algorithm::is_any_of("\t"));
     if (row.size() < 2 ||
         row[0].empty() || row[1].empty()) {
-      EZLOGGERPRINT("Warning: invalid entry at #%d.", num_entries);
+      LOG(WARNING) << "invalid entry at #" << num_entries << ".";
       continue;
     }
     boost::algorithm::trim(row[1]);
@@ -282,7 +280,7 @@ bool UserDictManager::UpgradeUserDict(const std::string& dict_name) {
   db.Fetch("\x01/rime_version", &db_creator_version);
   if (CompareVersionString(db_creator_version, "0.9.1") <= 0) {
     // fix invalid keys created by a buggy version of Import()
-    EZLOGGERPRINT("upgrading user dict '%s'.", dict_name.c_str());
+    LOG(INFO) << "upgrading user dict '" << dict_name << "'.";
     std::string snapshot_file(db.file_name() + ".snapshot");
     return db.Backup() &&
         db.Close() &&

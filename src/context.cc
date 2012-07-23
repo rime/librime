@@ -121,8 +121,7 @@ bool Context::Select(size_t index) {
   if (cand) {
     seg.selected_index = index;
     seg.status = Segment::kSelected;
-    EZDBGONLYLOGGERPRINT("Selected: '%s', index = %d.",
-                         cand->text().c_str(), index);
+    DLOG(INFO) << "Selected: '" << cand->text() << "', index = " << index;
     select_notifier_(this);
     return true;
   }
@@ -135,8 +134,8 @@ bool Context::DeleteCurrentSelection() {
   Segment &seg(composition_->back());
   shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
   if (cand) {
-    EZDBGONLYLOGGERPRINT("Deleting: '%s', selected_index = %d.",
-                         cand->text().c_str(), seg.selected_index);
+    DLOG(INFO) << "Deleting: '" << cand->text()
+               << "', selected_index = " << seg.selected_index;
     delete_notifier_(this);
     return true;  // CAVEAT: this doesn't mean anything is deleted for sure
   }
@@ -150,8 +149,8 @@ bool Context::ConfirmCurrentSelection() {
   seg.status = Segment::kSelected;
   shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
   if (cand) {
-    EZDBGONLYLOGGERPRINT("Confirmed: '%s', selected_index = %d.",
-                         cand->text().c_str(), seg.selected_index);
+    DLOG(INFO) << "Confirmed: '" << cand->text()
+               << "', selected_index = " << seg.selected_index;
   }
   else {
     if (seg.end == seg.start) {
@@ -165,7 +164,6 @@ bool Context::ConfirmCurrentSelection() {
 }
 
 bool Context::ConfirmPreviousSelection() {
-  EZDBGONLYLOGGERFUNCTRACKER;
   for (Composition::reverse_iterator it = composition_->rbegin();
        it != composition_->rend(); ++it) {
     if (it->status > Segment::kSelected) return false;
@@ -178,7 +176,6 @@ bool Context::ConfirmPreviousSelection() {
 }
 
 bool Context::ReopenPreviousSegment() {
-  EZDBGONLYLOGGERFUNCTRACKER;
   if (composition_->Trim()) {
     if (!composition_->empty() &&
       composition_->back().status >= Segment::kSelected) {
@@ -191,7 +188,6 @@ bool Context::ReopenPreviousSegment() {
 }
 
 bool Context::ClearPreviousSegment() {
-  EZDBGONLYLOGGERFUNCTRACKER;
   if (composition_->empty())
     return false;
   size_t where = composition_->back().start;
@@ -202,7 +198,6 @@ bool Context::ClearPreviousSegment() {
 }
 
 bool Context::ReopenPreviousSelection() {
-  EZDBGONLYLOGGERFUNCTRACKER;
   for (Composition::reverse_iterator it = composition_->rbegin();
        it != composition_->rend(); ++it) {
     if (it->status > Segment::kSelected) return false;
@@ -226,13 +221,12 @@ bool Context::ClearNonConfirmedComposition() {
   }
   if (reverted) {
     composition_->Forward();
-    EZDBGONLYLOGGERVAR(composition_->GetDebugText());
+    DLOG(INFO) << "composition: " << composition_->GetDebugText();
   }
   return reverted;
 }
 
 bool Context::RefreshNonConfirmedComposition() {
-  EZDBGONLYLOGGERFUNCTRACKER;
   if (ClearNonConfirmedComposition()) {
     update_notifier_(this);
     return true;

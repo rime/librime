@@ -65,8 +65,8 @@ bool Customizer::UpdateConfigFile() {
       source_config.GetString(version_key_, &source_version);
     }
     else {
-      EZLOGGERPRINT("Error loading config from '%s'.",
-                    source_path_.string().c_str());
+      LOG(ERROR) << "Error loading config from '"
+                 << source_path_.string() << "'.";
       return false;
     }
     if (CompareVersionString(source_version, dest_version) > 0) {
@@ -96,11 +96,10 @@ bool Customizer::UpdateConfigFile() {
   }
 
   if (!need_update) {
-    EZLOGGERPRINT("config file '%s' is up-to-date.",
-                  dest_path_.string().c_str());
+    LOG(INFO) << "config file '" << dest_path_.string() << "' is up-to-date.";
     return false;
   }
-  EZLOGGERPRINT("updating config file '%s'.", dest_path_.string().c_str());
+  LOG(INFO) << "updating config file '" << dest_path_.string() << "'.";
 
   if (redistribute ||
       !applied_customization.empty()) {
@@ -109,33 +108,31 @@ bool Customizer::UpdateConfigFile() {
                     fs::copy_option::overwrite_if_exists);
     }
     catch (...) {
-      EZLOGGERPRINT("Error copying config file '%s' to user directory.",
-                    source_path_.string().c_str());
+      LOG(ERROR) << "Error copying config file '"
+                 << source_path_.string() << "' to user directory.";
       return false;
     }
   }
   if (!customization.empty()) {
-    EZLOGGERPRINT("applying customization from '%s'.",
-                  custom_path.string().c_str());
+    LOG(INFO) << "applying customization file: " << custom_path.string();
     if (!dest_config.LoadFromFile(dest_path_.string())) {
-      EZLOGGERPRINT("Error reloading destination config file.");
+      LOG(ERROR) << "Error reloading destination config file.";
       return false;
     }
     // applying patch
     Config custom_config;
     if (!custom_config.LoadFromFile(custom_path.string())) {
-      EZLOGGERPRINT("Error loading customization file.");
+      LOG(ERROR) << "Error loading customization file.";
       return false;
     }
     ConfigMapPtr patch = custom_config.GetMap("patch");
     if (!patch) {
-      EZLOGGERPRINT("Warning: 'patch' not found in customization file.");
+      LOG(WARNING) << "'patch' not found in customization file.";
     }
     else {
       for (ConfigMap::Iterator it = patch->begin(); it != patch->end(); ++it) {
         if (!dest_config.SetItem(it->first, it->second)) {
-          EZLOGGERPRINT("Error applying customization item: '%s'.",
-                        it->first.c_str());
+          LOG(ERROR) << "Error applying customization: '" << it->first << "'.";
           return false;
         }
       }
@@ -146,7 +143,7 @@ bool Customizer::UpdateConfigFile() {
                           dest_version + ".custom." + customization);
     dest_config.SetString("customization", customization);
     if (!dest_config.SaveToFile(dest_path_.string())) {
-      EZLOGGERPRINT("Error saving destination config file.");
+      LOG(ERROR) << "Error saving destination config file.";
       return false;
     }
   }

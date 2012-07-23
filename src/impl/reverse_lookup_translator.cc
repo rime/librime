@@ -118,8 +118,8 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
   if (!initialized_) Initialize();  // load reverse dict at first use
   if (!dict_ || !dict_->loaded())
     return shared_ptr<Translation>();
-  EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
-                       input.c_str(), segment.start, segment.end);
+  DLOG(INFO) << "input = '" << input
+             << "', [" << segment.start << ", " << segment.end << ")";
 
   size_t start = 0;
   if (!prefix_.empty() && boost::starts_with(input, prefix_))

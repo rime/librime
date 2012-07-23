@@ -23,7 +23,6 @@ bool AsciiSegmentor::Proceed(Segmentation *segmentation) {
   if (!engine_->context()->get_option("ascii_mode"))
     return true;
   const std::string &input = segmentation->input();
-  EZDBGONLYLOGGERVAR(input);
   size_t j = segmentation->GetCurrentStartPosition();
   if (j < input.length()) {
     Segment segment;

@@ -42,8 +42,7 @@ static void load_bindings(const ConfigMapPtr &src,
       continue;
     KeyEvent ke;
     if (!ke.Parse(it->first) || ke.modifier() != 0) {
-      EZLOGGERPRINT("Warning: invalid ascii mode switch key: %s.",
-                    it->first.c_str());
+      LOG(WARNING) << "invalid ascii mode switch key: " << it->first;
       continue;
     }
     // save binding
@@ -105,12 +104,12 @@ void AsciiComposer::LoadConfig(Schema* schema) {
     scoped_ptr<Config> preset_config(
         Config::Require("config")->Create("default"));
     if (!preset_config) {
-      EZLOGGERPRINT("Error importing preset ascii bindings.");
+      LOG(ERROR) << "Error importing preset ascii bindings.";
       return;
     }
     bindings = preset_config->GetMap("ascii_composer/switch_key");
     if (!bindings) {
-      EZLOGGERPRINT("Warning: missing preset ascii bindings.");
+      LOG(WARNING) << "missing preset ascii bindings.";
       return;
     }
   }
@@ -122,15 +121,15 @@ void AsciiComposer::ToggleAsciiMode(int key_code) {
   if (it == bindings_.end())
     return;
   AsciiModeSwitchStyle style = it->second;
-  EZDBGONLYLOGGERVAR(style);
+  DLOG(INFO) << "ascii mode switch style: " << style;
   Context *ctx = engine_->context();
   bool ascii_mode = !ctx->get_option("ascii_mode");
   if (ctx->IsComposing()) {
     connection_.disconnect();
     // temporary ascii mode in desired manner
     if (style == kAsciiModeSwitchInline) {
-      EZLOGGERPRINT("converting current composition to %s mode.",
-                    ascii_mode ? "ascii" : "non-ascii");
+      LOG(INFO) << "converting current composition to "
+                << (ascii_mode ? "ascii" : "non-ascii") << " mode.";
       if (ascii_mode) {
         connection_ = ctx->update_notifier().connect(
             boost::bind(&AsciiComposer::OnContextUpdate, this, _1));

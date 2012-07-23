@@ -68,7 +68,7 @@ Engine::~Engine() {
 }
 
 ConcreteEngine::ConcreteEngine(Schema *schema) : Engine(schema) {
-  EZLOGGERFUNCTRACKER;
+  LOG(INFO) << "starting engine.";
   // receive context notifications
   context_->commit_notifier().connect(
       boost::bind(&ConcreteEngine::OnCommit, this, _1));
@@ -83,14 +83,14 @@ ConcreteEngine::ConcreteEngine(Schema *schema) : Engine(schema) {
 }
 
 ConcreteEngine::~ConcreteEngine() {
-  EZLOGGERFUNCTRACKER;
+  LOG(INFO) << "engine disposed.";
   processors_.clear();
   segmentors_.clear();
   translators_.clear();
 }
 
 bool ConcreteEngine::ProcessKeyEvent(const KeyEvent &key_event) {
-  EZDBGONLYLOGGERVAR(key_event);
+  DLOG(INFO) << "process key event: " << key_event;
   BOOST_FOREACH(shared_ptr<Processor> &p, processors_) {
     Processor::Result ret = p->ProcessKeyEvent(key_event);
     if (ret == Processor::kRejected) break;
@@ -103,13 +103,13 @@ bool ConcreteEngine::ProcessKeyEvent(const KeyEvent &key_event) {
 
 void ConcreteEngine::OnContextUpdate(Context *ctx) {
   if (!ctx) return;
-  EZDBGONLYLOGGERVAR(ctx->input());
+  DLOG(INFO) << ctx->input();
   Compose(ctx);
 }
 
 void ConcreteEngine::OnOptionUpdate(Context *ctx, const std::string &option) {
   if (!ctx) return;
-  EZLOGGERVAR(option);
+  LOG(INFO) << "updated option: " << option;
   if (ctx->IsComposing())
     ctx->RefreshNonConfirmedComposition();
 }
@@ -118,7 +118,7 @@ void ConcreteEngine::Compose(Context *ctx) {
   if (!ctx) return;
   Composition *comp = ctx->composition();
   std::string active_input(ctx->input().substr(0, ctx->caret_pos()));
-  EZDBGONLYLOGGERVAR(active_input);
+  DLOG(INFO) << "active input: " << active_input;
   comp->Reset(active_input);
   CalculateSegmentation(comp);
   TranslateSegments(comp);
@@ -126,18 +126,17 @@ void ConcreteEngine::Compose(Context *ctx) {
 }
 
 void ConcreteEngine::CalculateSegmentation(Composition *comp) {
-  EZDBGONLYLOGGERFUNCTRACKER;
   while (!comp->HasFinishedSegmentation()) {
     size_t start_pos = comp->GetCurrentStartPosition();
     size_t end_pos = comp->GetCurrentEndPosition();
-    EZDBGONLYLOGGERVAR(start_pos);
-    EZDBGONLYLOGGERVAR(end_pos);
+    DLOG(INFO) << "start pos: " << start_pos;
+    DLOG(INFO) << "end pos: " << end_pos;
     // recognize a segment by calling the segmentors in turn
     BOOST_FOREACH(shared_ptr<Segmentor> &segmentor, segmentors_) {
       if (!segmentor->Proceed(comp))
         break;
     }
-    EZDBGONLYLOGGERVAR(*comp);
+    DLOG(INFO) << "segmentation: " << *comp;
     // no advancement
     if (start_pos == comp->GetCurrentEndPosition())
       break;
@@ -152,7 +151,6 @@ void ConcreteEngine::CalculateSegmentation(Composition *comp) {
 }
 
 void ConcreteEngine::TranslateSegments(Composition *comp) {
-  EZDBGONLYLOGGERFUNCTRACKER;
   Menu::CandidateFilter filter(boost::bind(&ConcreteEngine::FilterCandidates,
                                            this, _1, _2));
   BOOST_FOREACH(Segment &segment, *comp) {
@@ -161,7 +159,7 @@ void ConcreteEngine::TranslateSegments(Composition *comp) {
     size_t len = segment.end - segment.start;
     if (len == 0) continue;
     const std::string input(comp->input().substr(segment.start, len));
-    EZDBGONLYLOGGERPRINT("Translating segment '%s'", input.c_str());
+    DLOG(INFO) << "translating segment: " << input;
     shared_ptr<Menu> menu = boost::make_shared<Menu>(filter);
     BOOST_FOREACH(shared_ptr<Translator>& translator, translators_) {
       shared_ptr<Translation> translation =
@@ -169,7 +167,7 @@ void ConcreteEngine::TranslateSegments(Composition *comp) {
       if (!translation)
         continue;
       if (translation->exhausted()) {
-        EZLOGGERPRINT("Oops, got a futile translation.");
+        LOG(INFO) << "Oops, got a futile translation.";
         continue;
       }
       menu->AddTranslation(translation);
@@ -183,7 +181,7 @@ void ConcreteEngine::TranslateSegments(Composition *comp) {
 void ConcreteEngine::FilterCandidates(CandidateList *recruited,
                                       CandidateList *candidates) {
   if (filters_.empty()) return;
-  EZDBGONLYLOGGERPRINT("Applying filters.");
+  DLOG(INFO) << "applying filters.";
   BOOST_FOREACH(shared_ptr<Filter> filter, filters_) {
     if (!filter->Proceed(recruited, candidates))
       break;
@@ -192,7 +190,7 @@ void ConcreteEngine::FilterCandidates(CandidateList *recruited,
 
 void ConcreteEngine::OnCommit(Context *ctx) {
   const std::string commit_text = ctx->GetCommitText();
-  EZDBGONLYLOGGERVAR(commit_text);
+  DLOG(INFO) << "committing: " << commit_text;
   sink_(commit_text);
 }
 
@@ -250,7 +248,7 @@ void ConcreteEngine::InitializeComponents() {
       if (!klass) continue;
       Processor::Component *c = Processor::Require(klass->str());
       if (!c) {
-        EZLOGGERPRINT("error creating processor: '%s'", klass->str().c_str());
+        LOG(ERROR) << "error creating processor: '" << klass->str() << "'";
       }
       else {
         shared_ptr<Processor> p(c->Create(this));
@@ -267,7 +265,7 @@ void ConcreteEngine::InitializeComponents() {
       if (!klass) continue;
       Segmentor::Component *c = Segmentor::Require(klass->str());
       if (!c) {
-        EZLOGGERPRINT("error creating segmentor: '%s'", klass->str().c_str());
+        LOG(ERROR) << "error creating segmentor: '" << klass->str() << "'";
       }
       else {
         shared_ptr<Segmentor> s(c->Create(this));
@@ -284,7 +282,7 @@ void ConcreteEngine::InitializeComponents() {
       if (!klass) continue;
       Translator::Component *c = Translator::Require(klass->str());
       if (!c) {
-        EZLOGGERPRINT("error creating translator: '%s'", klass->str().c_str());
+        LOG(ERROR) << "error creating translator: '" << klass->str() << "'";
       }
       else {
         shared_ptr<Translator> d(c->Create(this));
@@ -301,7 +299,7 @@ void ConcreteEngine::InitializeComponents() {
       if (!klass) continue;
       Filter::Component *c = Filter::Require(klass->str());
       if (!c) {
-        EZLOGGERPRINT("error creating filter: '%s'", klass->str().c_str());
+        LOG(ERROR) << "error creating filter: '" << klass->str() << "'";
       }
       else {
         shared_ptr<Filter> d(c->Create(this));

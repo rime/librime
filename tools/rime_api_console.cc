@@ -8,6 +8,7 @@
  */
 #include <stdio.h>
 #include <string.h>
+#include <glog/logging.h>
 #include <rime_api.h>
 
 void PrintStatus(RimeStatus *status) {
@@ -92,6 +93,7 @@ void Print(RimeSessionId session_id) {
 }
 
 int main(int argc, char *argv[]) {
+  google::InitGoogleLogging(argv[0]);
 
   fprintf(stderr, "initializing...");
   RimeInitialize(NULL);

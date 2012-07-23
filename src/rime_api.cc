@@ -46,7 +46,7 @@ RIME_API Bool RimeStartMaintenance(Bool full_check) {
       return False;
     }
     else {
-      EZLOGGERPRINT("changes detected; starting maintenance.");
+      LOG(INFO) << "changes detected; starting maintenance.";
     }
   }
   deployer.ScheduleTask(boost::make_shared<rime::WorkspaceUpdate>());
@@ -360,13 +360,13 @@ RIME_API Bool RimeConfigUpdateSignature(RimeConfig *config, const char* signer) 
 }
 
 RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence) {
-    EZLOGGERVAR(key_sequence);
+    LOG(INFO) << "simulate key sequence: " << key_sequence;
     boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
     if (!session)
       return False;
     rime::KeySequence keys;
     if (!keys.Parse(key_sequence)) {
-      EZLOGGERPRINT("error parsing input: '%s'", key_sequence);
+      LOG(ERROR) << "error parsing input: '" << key_sequence << "'";
       return False;
     }
     BOOST_FOREACH(const rime::KeyEvent &ke, keys) {

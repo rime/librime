@@ -78,7 +78,6 @@ void SwitcherOption::Apply(Engine *target_engine, Config *user_config) {
 Switcher::Switcher() : Engine(new Schema),
                        target_engine_(NULL),
                        active_(false) {
-  EZDBGONLYLOGGERFUNCTRACKER;
   context_->set_option("dumb", true);  // not going to commit anything
   
   // receive context notifications
@@ -91,7 +90,6 @@ Switcher::Switcher() : Engine(new Schema),
 }
 
 Switcher::~Switcher() {
-  EZDBGONLYLOGGERFUNCTRACKER;
 }
 
 void Switcher::Attach(Engine *engine) {
@@ -108,7 +106,6 @@ void Switcher::Attach(Engine *engine) {
 }
 
 bool Switcher::ProcessKeyEvent(const KeyEvent &key_event) {
-  EZDBGONLYLOGGERVAR(key_event);
   BOOST_FOREACH(const KeyEvent &hotkey, hotkeys_) {
     if (key_event == hotkey) {
       if (!active_ && target_engine_) {
@@ -193,7 +190,7 @@ Schema* Switcher::CreateSchema() {
 }
 
 void Switcher::OnSelect(Context *ctx) {
-  EZLOGGERFUNCTRACKER;
+  LOG(INFO) << "a switcher option is selected.";
   Segment &seg(ctx->composition()->back());
   shared_ptr<SwitcherOption> option =
       As<SwitcherOption>(seg.GetSelectedCandidate());
@@ -205,7 +202,7 @@ void Switcher::OnSelect(Context *ctx) {
 }
 
 void Switcher::Activate() {
-  EZLOGGERFUNCTRACKER;
+  LOG(INFO) << "switcher is activated.";
   Config *config = schema_->config();
   if (!config) return;
   ConfigListPtr schema_list = config->GetList("schema_list");
@@ -277,7 +274,6 @@ void Switcher::Deactivate() {
 }
 
 void Switcher::LoadSettings() {
-  EZDBGONLYLOGGERFUNCTRACKER;
   Config *config = schema_->config();
   if (!config) return;
   if (!config->GetString("switcher/caption", &caption_) || caption_.empty()) {
@@ -302,12 +298,11 @@ void Switcher::LoadSettings() {
 }
 
 void Switcher::InitializeSubProcessors() {
-  EZDBGONLYLOGGERFUNCTRACKER;
   processors_.clear();
   {
     Processor::Component *c = Processor::Require("key_binder");
     if (!c) {
-      EZLOGGERPRINT("Warning: key_binder not available.");
+      LOG(WARNING) << "key_binder not available.";
     }
     else {
       shared_ptr<Processor> p(c->Create(this));
@@ -317,7 +312,7 @@ void Switcher::InitializeSubProcessors() {
   {
     Processor::Component *c = Processor::Require("selector");
     if (!c) {
-      EZLOGGERPRINT("Warning: selector not available.");
+      LOG(WARNING) << "selector not available.";
     }
     else {
       shared_ptr<Processor> p(c->Create(this));

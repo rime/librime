@@ -65,8 +65,8 @@ Processor::Result Editor::ProcessKeyEvent(const KeyEvent &key_event) {
     }
   }
   if (ch > 0x20 && ch < 0x7f) {
-    EZDBGONLYLOGGERPRINT("Input char: '%c', %d, '%s'",
-                         ch, ch, key_event.repr().c_str());
+    DLOG(INFO) << "input char: '" << (char)ch << "', " << ch
+               << ", '" << key_event.repr() << "'";
     return OnChar(ctx, ch);
   }
   // not handled

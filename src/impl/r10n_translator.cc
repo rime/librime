@@ -175,8 +175,8 @@ shared_ptr<Translation> R10nTranslator::Query(const std::string &input,
     return shared_ptr<Translation>();
   if (!segment.HasTag("abc"))
     return shared_ptr<Translation>();
-  EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
-                       input.c_str(), segment.start, segment.end);
+  DLOG(INFO) << "input = '" << input
+             << "', [" << segment.start << ", " << segment.end << ")";
 
   bool enable_user_dict = true;
   if (!user_dict_disabling_patterns_.empty()) {
@@ -249,7 +249,7 @@ void R10nTranslator::OnCommit(Context *ctx) {
     }
     if ((unrecognized || seg.status >= Segment::kConfirmed) &&
         !commit_entry.text.empty()) {
-      EZDBGONLYLOGGERVAR(commit_entry.text);
+      DLOG(INFO) << "study commit entry: " << commit_entry.text;
       bool update_elements = false;
       if (elements.size() > 1) {
         BOOST_FOREACH(const DictEntry* e, elements) {
@@ -289,7 +289,7 @@ void R10nTranslator::OnDeleteEntry(Context *ctx) {
   if (r10n_cand) {
     const DictEntry& entry(r10n_cand->entry());
     if (entry.code.size() >= 2) {
-      EZLOGGERPRINT("Deleting entry: '%s'.", entry.text.c_str());
+      LOG(INFO) << "deleting entry: '" << entry.text << "'.";
       user_dict_->UpdateEntry(entry, -1);  // mark as deleted in user dict
       ctx->RefreshNonConfirmedComposition();
     }
@@ -426,8 +426,8 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
       user_phrase_code_length >= phrase_code_length) {
     DictEntryList &entries(user_phrase_iter_->second);
     const shared_ptr<DictEntry> &e(entries[user_phrase_index_]);
-    EZDBGONLYLOGGERVAR(user_phrase_code_length);
-    EZDBGONLYLOGGERVAR(e->text);
+    DLOG(INFO) << "user phrase '" << e->text
+               << "', code length: " << user_phrase_code_length;
     cand = make_shared<R10nCandidate>(start_,
                                       start_ + user_phrase_code_length,
                                       e);
@@ -435,8 +435,8 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
   else if (phrase_code_length > 0) {
     DictEntryIterator &iter(phrase_iter_->second);
     const shared_ptr<DictEntry> &e(iter.Peek());
-    EZDBGONLYLOGGERVAR(phrase_code_length);
-    EZDBGONLYLOGGERVAR(e->text);
+    DLOG(INFO) << "phrase '" << e->text
+               << "', code length: " << user_phrase_code_length;
     cand = make_shared<R10nCandidate>(start_,
                                       start_ + phrase_code_length,
                                       e);

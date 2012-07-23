@@ -58,7 +58,7 @@ bool Projection::Load(ConfigListPtr settings) {
   for (size_t i = 0; i < settings->size(); ++i) {
     ConfigValuePtr v(settings->GetValueAt(i));
     if (!v) {
-      EZLOGGERPRINT("Error loading formula #%d.", i + 1);
+      LOG(ERROR) << "Error loading formula #" << (i + 1) << ".";
       success = false;
       break;
     }
@@ -68,12 +68,11 @@ bool Projection::Load(ConfigListPtr settings) {
       x.reset(calc.Parse(formula));
     }
     catch (boost::regex_error& e) {
-      EZLOGGERPRINT("Error parsing formula '%s': %s",
-                    formula.c_str(), e.what());
+      LOG(ERROR) << "Error parsing formula '" << formula << "': " << e.what();
     }
     if (!x) {
-      EZLOGGERPRINT("Error loading spelling algebra definition #%d: '%s'.",
-                    i + 1, formula.c_str());
+      LOG(ERROR) << "Error loading spelling algebra definition #" << (i + 1)
+                 << ": '" << formula << "'.";
       success = false;
       break;
     }
@@ -96,7 +95,7 @@ bool Projection::Apply(std::string* value) {
         modified = true;
     }
     catch (std::runtime_error& e) {
-      EZLOGGERPRINT("Error applying calculation: %s", e.what());
+      LOG(ERROR) << "Error applying calculation: " << e.what();
       return false;
     }
   }
@@ -112,7 +111,7 @@ bool Projection::Apply(Script* value) {
   int round = 0;
   BOOST_FOREACH(shared_ptr<Calculation>& x, calculation_) {
     ++round;
-    EZDBGONLYLOGGERPRINT("Round #%d", round);
+    DLOG(INFO) << "round #" << round;
     Script temp;
     BOOST_FOREACH(const Script::value_type& v, *value) {
       Spelling s(v.first);
@@ -121,7 +120,7 @@ bool Projection::Apply(Script* value) {
         applied = x->Apply(&s);
       }
       catch (std::runtime_error& e) {
-        EZLOGGERPRINT("Error applying calculation: %s", e.what());
+        LOG(ERROR) << "Error applying calculation: " << e.what();
         return false;
       }
       if (applied) {

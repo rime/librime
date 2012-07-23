@@ -41,14 +41,8 @@
 
 namespace rime {
 
-const std::string GetLogFilePath() {
-  boost::filesystem::path dir(Service::instance().deployer().user_data_dir);
-  boost::filesystem::create_directories(dir);
-  return (dir / "rime.log").string();
-}
-
 void RegisterComponents() {
-  EZLOGGERPRINT("registering built-in components");
+  LOG(INFO) << "registering built-in components";
 
   Registry &r = Registry::instance();
   

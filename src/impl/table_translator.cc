@@ -58,11 +58,11 @@ bool LazyTableTranslation::Next() {
   if (limit_ > 0 && iter_.exhausted()) {
     limit_ *= kExpandingFactor;
     size_t previous_entry_count = iter_.entry_count();
-    EZDBGONLYLOGGERPRINT("fetching more entries: limit = %d, count = %d.",
-                         limit_, previous_entry_count);
+    DLOG(INFO) << "fetching more entries: limit = " << limit_
+               << ", count = " << previous_entry_count;
     DictEntryIterator more;
     if (dict_ && dict_->LookupWords(&more, input_, true, limit_) < limit_) {
-      EZDBGONLYLOGGERPRINT("all entries obtained.");
+      DLOG(INFO) << "all entries obtained.";
       limit_ = 0;  // no more try
     }
     if (more.entry_count() > previous_entry_count) {
@@ -110,8 +110,8 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
     return shared_ptr<Translation>();
   if (!segment.HasTag("abc"))
     return shared_ptr<Translation>();
-  EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
-                       input.c_str(), segment.start, segment.end);
+  DLOG(INFO) << "input = '" << input
+             << "', [" << segment.start << ", " << segment.end << ")";
 
   std::string preedit(input);
   preedit_formatter_.Apply(&preedit);

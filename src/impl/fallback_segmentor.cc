@@ -17,17 +17,17 @@ FallbackSegmentor::FallbackSegmentor(Engine *engine) : Segmentor(engine) {
 
 bool FallbackSegmentor::Proceed(Segmentation *segmentation) {
   int len = segmentation->GetCurrentSegmentLength();
-  EZDBGONLYLOGGERVAR(len);
+  DLOG(INFO) << "current segment length: " << len;
   if (len > 0)
     return false;
 
   const std::string &input = segmentation->input();
   int k = segmentation->GetCurrentStartPosition();
-  EZDBGONLYLOGGERVAR(k);
+  DLOG(INFO) << "current start pos: " << k;
   if (k == input.length())
     return false;
 
-  EZDBGONLYLOGGERVAR(*segmentation);
+  DLOG(INFO) << "segmentation: " << *segmentation;
   if (!segmentation->empty() &&
       segmentation->back().start == segmentation->back().end)
     segmentation->pop_back();
@@ -37,8 +37,8 @@ bool FallbackSegmentor::Proceed(Segmentation *segmentation) {
     // append one character to the last raw segment
     if (last.HasTag("raw")) {
       last.end = k + 1;
-      EZDBGONLYLOGGERPRINT("extend previous raw segment to [%d, %d)",
-                           last.start, last.end);
+      DLOG(INFO) << "extend previous raw segment to ["
+                 << last.start << ", " << last.end << ")";
       // mark redo translation (in case it's been previously translated)
       last.Clear();
       last.tags.insert("raw");
@@ -49,8 +49,8 @@ bool FallbackSegmentor::Proceed(Segmentation *segmentation) {
     Segment segment;
     segment.start = k;
     segment.end = k + 1;
-    EZDBGONLYLOGGERPRINT("add a raw segment [%d, %d)",
-                         segment.start, segment.end);
+    DLOG(INFO) << "add a raw segment ["
+               << segment.start << ", " << segment.end << ")";
     segment.tags.insert("raw");
     segmentation->Forward();
     segmentation->AddSegment(segment);

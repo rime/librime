@@ -192,40 +192,39 @@ void TableVisitor::Reset() {
 }
 
 bool Table::Load() {
-  EZLOGGERPRINT("Load file: %s", file_name().c_str());
+  LOG(INFO) << "loading table file: " << file_name();
 
   if (IsOpen())
     Close();
 
   if (!OpenReadOnly()) {
-    EZLOGGERPRINT("Error opening table file '%s'.",
-                  file_name().c_str());
+    LOG(ERROR) << "Error opening table file '" << file_name() << "'.";
     return false;
   }
 
   metadata_ = Find<table::Metadata>(0);
   if (!metadata_) {
-    EZLOGGERPRINT("Metadata not found.");
+    LOG(ERROR) << "metadata not found.";
     return false;
   }
   syllabary_ = metadata_->syllabary.get();
   if (!syllabary_) {
-    EZLOGGERPRINT("Syllabary not found.");
+    LOG(ERROR) << "syllabary not found.";
     return false;
   }
   index_ = metadata_->index.get();
   if (!index_) {
-    EZLOGGERPRINT("Table index not found.");
+    LOG(ERROR) << "table index not found.";
     return false;
   }
   return true;
 }
 
 bool Table::Save() {
-  EZLOGGERPRINT("Save file: %s", file_name().c_str());
+  LOG(INFO) << "saving table file: " << file_name();
 
   if (!index_) {
-    EZLOGGERPRINT("Error: the table has not been constructed!");
+    LOG(ERROR) << "the table has not been constructed!";
     return false;
   }
 
@@ -240,18 +239,19 @@ bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size
                   uint32_t dict_file_checksum) {
   size_t num_syllables = syllabary.size();
   size_t estimated_file_size = 32 * num_syllables + 128 * num_entries;
-  EZLOGGERVAR(num_syllables);
-  EZLOGGERVAR(num_entries);
-  EZLOGGERVAR(estimated_file_size);
+  LOG(INFO) << "building table.";
+  LOG(INFO) << "num syllables: " << num_syllables;
+  LOG(INFO) << "num entries: " << num_entries;
+  LOG(INFO) << "estimated file size: " << estimated_file_size;
   if (!Create(estimated_file_size)) {
-    EZLOGGERPRINT("Error creating table file '%s'.", file_name().c_str());
+    LOG(ERROR) << "Error creating table file '" << file_name() << "'.";
     return false;
   }
 
-  EZLOGGERPRINT("Creating metadata.");
+  LOG(INFO) << "creating metadata.";
   metadata_ = Allocate<table::Metadata>();
   if (!metadata_) {
-    EZLOGGERPRINT("Error creating metadata in file '%s'.", file_name().c_str());
+    LOG(ERROR) << "Error creating metadata in file '" << file_name() << "'.";
     return false;
   }
   metadata_->dict_file_checksum = dict_file_checksum;
@@ -259,10 +259,10 @@ bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size
   metadata_->num_syllables = num_syllables;
   metadata_->num_entries = num_entries;
 
-  EZLOGGERPRINT("Creating syllabary.");
+  LOG(INFO) << "creating syllabary.";
   syllabary_ = CreateArray<String>(num_syllables);
   if (!syllabary_) {
-    EZLOGGERPRINT("Error creating syllabary.");
+    LOG(ERROR) << "Error creating syllabary.";
     return false;
   }
   else {
@@ -273,10 +273,10 @@ bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size
   }
   metadata_->syllabary = syllabary_;
 
-  EZLOGGERPRINT("Creating table index.");
+  LOG(INFO) << "creating table index.";
   index_ = BuildHeadIndex(vocabulary, num_syllables);
   if (!index_) {
-    EZLOGGERPRINT("Error creating table index.");
+    LOG(ERROR) << "Error creating table index.";
     return false;
   }
   metadata_->index = index_;
@@ -291,7 +291,6 @@ table::HeadIndex* Table::BuildHeadIndex(const Vocabulary &vocabulary, size_t num
   }
   BOOST_FOREACH(const Vocabulary::value_type &v, vocabulary) {
     int syllable_id = v.first;
-    EZDBGONLYLOGGERVAR(syllable_id);
     table::HeadIndexNode &node(index->at[syllable_id]);
     const DictEntryList &entries(v.second.entries);
     if (!BuildEntryList(entries, &node.entries)) {
@@ -318,7 +317,6 @@ table::TrunkIndex* Table::BuildTrunkIndex(const Code &prefix, const Vocabulary &
   size_t count = 0;
   BOOST_FOREACH(const Vocabulary::value_type &v, vocabulary) {
     int syllable_id = v.first;
-    EZDBGONLYLOGGERVAR(syllable_id);
     table::TrunkIndexNode &node(index->at[count++]);
     node.key = syllable_id;
     const DictEntryList &entries(v.second.entries);
@@ -352,22 +350,22 @@ table::TailIndex* Table::BuildTailIndex(const Code &prefix, const Vocabulary &vo
     return NULL;
   }
   const VocabularyPage &page(vocabulary.find(-1)->second);
-  EZDBGONLYLOGGERVAR(page.entries.size());
+  DLOG(INFO) << "page size: " << page.entries.size();
   table::TailIndex *index = CreateArray<table::TailIndexNode>(page.entries.size());
   if (!index) {
     return NULL;
   }
   size_t count = 0;
   BOOST_FOREACH(const DictEntryList::value_type &src, page.entries) {
-    EZDBGONLYLOGGERVAR(count);
-    EZDBGONLYLOGGERVAR(src->text);
+    DLOG(INFO) << "count: " << count;
+    DLOG(INFO) << "entry: " << src->text;
     table::TailIndexNode &dest(index->at[count++]);
     size_t extra_code_length = src->code.size() - Code::kIndexCodeMaxLength;
-    EZDBGONLYLOGGERVAR(extra_code_length);
+    DLOG(INFO) << "extra code length: " << extra_code_length;
     dest.extra_code.size = extra_code_length;
     dest.extra_code.at = Allocate<table::SyllableId>(extra_code_length);
     if (!dest.extra_code.at) {
-      EZLOGGERPRINT("Error creating code sequence; file size: %u.", file_size());
+      LOG(ERROR) << "Error creating code sequence; file size: " << file_size();
       return NULL;
     }
     std::copy(src->code.begin() + Code::kIndexCodeMaxLength,
@@ -384,7 +382,7 @@ bool Table::BuildEntryList(const DictEntryList &src, List<table::Entry> *dest) {
   dest->size = src.size();
   dest->at = Allocate<table::Entry>(src.size());
   if (!dest->at) {
-    EZLOGGERPRINT("Error creating table entries; file size: %u.", file_size());
+    LOG(ERROR) << "Error creating table entries; file size: " << file_size();
     return false;
   }
   size_t i = 0;
@@ -399,8 +397,7 @@ bool Table::BuildEntry(const DictEntry &dict_entry, table::Entry *entry) {
   if (!entry)
     return false;
   if (!CopyString(dict_entry.text, &entry->text)) {
-    EZLOGGERPRINT("Error creating table entry '%s'; file size: %u.",
-                  dict_entry.text.c_str(), file_size());
+    LOG(ERROR) << "Error creating table entry '" << dict_entry.text << "'; file size: " << file_size();
     return false;
   }
   entry->weight = static_cast<float>(dict_entry.weight);

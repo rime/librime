@@ -36,8 +36,8 @@ shared_ptr<Translation> TrivialTranslator::Query(const std::string &input,
                                                  std::string* prompt) {
   if (!segment.HasTag("abc"))
     return shared_ptr<Translation>();
-  EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
-                       input.c_str(), segment.start, segment.end);
+  DLOG(INFO) << "input = '" << input
+             << "', [" << segment.start << ", " << segment.end << ")";
   std::string output(Translate(input));
   if (output.empty())
     return shared_ptr<Translation>();

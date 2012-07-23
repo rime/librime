@@ -51,7 +51,7 @@ shared_ptr<DeploymentTask> Deployer::NextTask() {
 }
 
 bool Deployer::Run() {
-  EZLOGGERPRINT("running deployment tasks:");
+  LOG(INFO) << "running deployment tasks:";
   shared_ptr<DeploymentTask> task;
   int success = 0;
   int failure = 0;
@@ -62,21 +62,21 @@ bool Deployer::Run() {
       ++failure;
     boost::this_thread::interruption_point();
   }
-  EZLOGGERPRINT("%d tasks ran: %d success, %d failure.",
-                success + failure, success, failure);
+  LOG(INFO) << success + failure << " tasks ran: "
+            << success << " success, " << failure << " failure.";
   return failure == 0;
 }
 
 bool Deployer::StartMaintenance() {
   if (IsMaintenancing()) {
-    EZLOGGERPRINT("Warning: a maintenance thread is already running.");
+    LOG(WARNING) << "a maintenance thread is already running.";
     return false;
   }
   if (pending_tasks_.empty()) {
     return false;
   }
-  EZLOGGERPRINT("starting maintenance thread for %d tasks.",
-                pending_tasks_.size());
+  LOG(INFO) << "starting maintenance thread for "
+            << pending_tasks_.size() << " tasks.";
   boost::thread t(boost::bind(&Deployer::Run, this));
   maintenance_thread_.swap(t);
   return maintenance_thread_.joinable();

@@ -172,7 +172,7 @@ void EntryCollector::Collect(const std::string &dict_file) {
     boost::algorithm::split(row, line,
                             boost::algorithm::is_any_of("\t"));
     if (row.size() == 0 || row[0].empty()) {
-      EZLOGGERPRINT("Missing entry text at #%d.", num_entries);
+      LOG(WARNING) << "Missing entry text at #" << num_entries << ".";
       continue;
     }
     std::string &word(row[0]);
@@ -190,20 +190,20 @@ void EntryCollector::Collect(const std::string &dict_file) {
       encode_queue.push(std::make_pair(word, weight_str));
     }
   }
-  EZLOGGERPRINT("Pass 1: %d entries collected.", num_entries);
-  EZLOGGERVAR(syllabary.size());
-  EZLOGGERVAR(encode_queue.size());
+  LOG(INFO) << "Pass 1: " << num_entries << " entries collected.";
+  LOG(INFO) << "num unique syllables: " << syllabary.size();
+  LOG(INFO) << "num of entries to encode: " << encode_queue.size();
   dictionary::RawCode code;
   while (!encode_queue.empty()) {
     const std::string &phrase(encode_queue.front().first);
     const std::string &weight_str(encode_queue.front().second);
     code.clear();
     if (!Encode(phrase, weight_str, 0, &code)) {
-      EZLOGGERPRINT("Encode failure: '%s'.", phrase.c_str());
+      LOG(ERROR) << "Encode failure: '" << phrase << "'.";
     }
     encode_queue.pop();
   }
-  EZLOGGERPRINT("Pass 2: %d entries collected.", num_entries);
+  LOG(INFO) << "Pass 2: " << num_entries << " entries collected.";
   if (preset_vocabulary) {
     preset_vocabulary->Reset();
     std::string phrase, weight_str;
@@ -212,11 +212,11 @@ void EntryCollector::Collect(const std::string &dict_file) {
         continue;
       code.clear();
       if (!Encode(phrase, weight_str, 0, &code)) {
-        EZLOGGERPRINT("Encode failure: '%s'.", phrase.c_str());
+        LOG(ERROR) << "Encode failure: '" << phrase << "'.";
       }
     }
   }
-  EZLOGGERPRINT("Pass 3: %d entries collected.", num_entries);
+  LOG(INFO) << "Pass 3: " << num_entries << " entries collected.";
 }
 
 void EntryCollector::CreateEntry(const std::string &word,
@@ -235,7 +235,7 @@ void EntryCollector::CreateEntry(const std::string &word,
       percentage = boost::lexical_cast<double>(weight_str.substr(0, weight_str.length() - 1));
     }
     catch (...) {
-      EZLOGGERPRINT("Warning: invalid entry definition at #%d.", num_entries);
+      LOG(WARNING) << "invalid entry definition at #" << num_entries << ".";
       percentage = 100.0;
     }
     e.weight *= percentage / 100.0;
@@ -245,7 +245,7 @@ void EntryCollector::CreateEntry(const std::string &word,
       e.weight = boost::lexical_cast<double>(weight_str);
     }
     catch (...) {
-      EZLOGGERPRINT("Warning: invalid entry definition at #%d.", num_entries);
+      LOG(WARNING) << "invalid entry definition at #" << num_entries << ".";
       e.weight = 0.0;
     }
   }
@@ -258,8 +258,7 @@ void EntryCollector::CreateEntry(const std::string &word,
   // learn new word
   if (e.raw_code.size() == 1) {
     if (words[e.text].find(code_str) != words[e.text].end()) {
-      EZLOGGERPRINT("Warning: duplicate word definition '%s' : [%s].",
-                    e.text.c_str(), code_str.c_str());
+      LOG(WARNING) << "duplicate word definition '" << e.text << "': [" << code_str << "].";
     }
     words[e.text][code_str] += e.weight;
     total_weight_for_word[e.text] += e.weight;
@@ -301,11 +300,11 @@ DictCompiler::DictCompiler(Dictionary *dictionary)
 }
 
 bool DictCompiler::Compile(const std::string &dict_file, const std::string &schema_file) {
-  EZLOGGERFUNCTRACKER;
+  LOG(INFO) << "compiling:";
   uint32_t dict_file_checksum = dict_file.empty() ? 0 : dictionary::checksum(dict_file);
   uint32_t schema_file_checksum = schema_file.empty() ? 0 : dictionary::checksum(schema_file);
-  EZLOGGERVAR(dict_file_checksum);
-  EZLOGGERVAR(schema_file_checksum);
+  LOG(INFO) << dict_file << " (" << dict_file_checksum << ")";
+  LOG(INFO) << schema_file << " (" << schema_file_checksum << ")";
   bool rebuild_table = true;
   bool rebuild_prism = true;
   bool rebuild_rev_lookup_dict = true;
@@ -325,7 +324,7 @@ bool DictCompiler::Compile(const std::string &dict_file, const std::string &sche
   TreeDb deprecated_db(dict_name_ + ".reverse.kct");
   if (deprecated_db.Exists()) {
     deprecated_db.Remove();
-    EZLOGGERPRINT("removed deprecated db '%s'.", deprecated_db.name().c_str());
+    LOG(INFO) << "removed deprecated db '" << deprecated_db.name() << "'.";
   }
   TreeDb db(dict_name_ + ".reverse.bin");
   if (db.Exists() && db.OpenReadOnly()) {
@@ -347,18 +346,18 @@ bool DictCompiler::Compile(const std::string &dict_file, const std::string &sche
 }
 
 bool DictCompiler::BuildTable(const std::string &dict_file, uint32_t checksum) {
-  EZLOGGERPRINT("building table...");
+  LOG(INFO) << "building table...";
   YAML::Node doc;
   {
     std::ifstream fin(dict_file.c_str());
     YAML::Parser parser(fin);
     if (!parser.GetNextDocument(doc)) {
-      EZLOGGERPRINT("Error parsing yaml doc in '%s'.", dict_file.c_str());
+      LOG(ERROR) << "Error parsing yaml doc in '" << dict_file << "'.";
       return false;
     }
   }
   if (doc.Type() != YAML::NodeType::Map) {
-    EZLOGGERPRINT("Error: invalid yaml doc in '%s'.", dict_file.c_str());
+    LOG(ERROR) << "invalid yaml doc in '" << dict_file << "'.";
     return false;
   }
   std::string dict_name;
@@ -375,7 +374,7 @@ bool DictCompiler::BuildTable(const std::string &dict_file, uint32_t checksum) {
     const YAML::Node *max_phrase_length_node = doc.FindValue("max_phrase_length");
     const YAML::Node *min_phrase_weight_node = doc.FindValue("min_phrase_weight");
     if (!name_node || !version_node) {
-      EZLOGGERPRINT("Error: incomplete dict info in '%s'.", dict_file.c_str());
+      LOG(ERROR) << "incomplete dict info in '" << dict_file << "'.";
       return false;
     }
     *name_node >> dict_name;
@@ -391,8 +390,8 @@ bool DictCompiler::BuildTable(const std::string &dict_file, uint32_t checksum) {
         *min_phrase_weight_node >> min_phrase_weight;
     }
   }
-  EZLOGGERVAR(dict_name);
-  EZLOGGERVAR(dict_version);
+  LOG(INFO) << "dict name: " << dict_name;
+  LOG(INFO) << "dict version: " << dict_version;
   
   EntryCollector collector;
   collector.num_entries = 0;
@@ -419,7 +418,7 @@ bool DictCompiler::BuildTable(const std::string &dict_file, uint32_t checksum) {
       }
       DictEntryList *ls = vocabulary.LocateEntries(code);
       if (!ls) {
-        EZLOGGERPRINT("Error locating entries in vocabulary.");
+        LOG(ERROR) << "Error locating entries in vocabulary.";
         continue;
       }
       shared_ptr<DictEntry> e = make_shared<DictEntry>();
@@ -442,7 +441,7 @@ bool DictCompiler::BuildTable(const std::string &dict_file, uint32_t checksum) {
 
 bool DictCompiler::BuildPrism(const std::string &schema_file,
                               uint32_t dict_file_checksum, uint32_t schema_file_checksum) {
-  EZLOGGERPRINT("building prism...");
+  LOG(INFO) << "building prism...";
   // get syllabary from table
   Syllabary syllabary;
   if (!table_->Load() || !table_->GetSyllabary(&syllabary) || syllabary.empty())
@@ -475,7 +474,7 @@ bool DictCompiler::BuildPrism(const std::string &schema_file,
 }
 
 bool DictCompiler::BuildReverseLookupDict(TreeDb *db, uint32_t dict_file_checksum) {
-  EZLOGGERPRINT("building reverse lookup db...");
+  LOG(INFO) << "building reverse lookup db...";
   if (db->Exists())
     db->Remove();
   if (!db->Open())

@@ -54,7 +54,7 @@ bool SwitcherSettings::SetHotkeys(const std::string& hotkeys) {
 
 void SwitcherSettings::GetAvailableSchemasFromDirectory(const fs::path& dir) {
   if (!fs::exists(dir) || !fs::is_directory(dir)) {
-    EZLOGGERPRINT("Info: directory '%s' does not exist.", dir.string().c_str());
+    LOG(INFO) << "directory '" << dir.string() << "' does not exist.";
     return;
   }
   fs::directory_iterator it(dir);
@@ -101,7 +101,7 @@ void SwitcherSettings::GetAvailableSchemasFromDirectory(const fs::path& dir) {
 void SwitcherSettings::GetSelectedSchemasFromConfig() {
   ConfigListPtr schema_list = config_.GetList("schema_list");
   if (!schema_list) {
-    EZLOGGERPRINT("Warning: schema list not defined.");
+    LOG(WARNING) << "schema list not defined.";
     return;
   }
   ConfigList::Iterator it = schema_list->begin();
@@ -118,7 +118,7 @@ void SwitcherSettings::GetSelectedSchemasFromConfig() {
 void SwitcherSettings::GetHotkeysFromConfig() {
   ConfigListPtr hotkeys = config_.GetList("switcher/hotkeys");
   if (!hotkeys) {
-    EZLOGGERPRINT("Warning: hotkeys not defined.");
+    LOG(WARNING) << "hotkeys not defined.";
     return;
   }
   ConfigList::Iterator it = hotkeys->begin();

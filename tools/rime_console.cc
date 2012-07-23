@@ -45,7 +45,6 @@ class RimeConsole {
   }
 
   void PrintComposition(const rime::Context *ctx) {
-    EZLOGGERFUNCTRACKER;
     if (!ctx || !ctx->IsComposing())
       return;
     std::cout << "input  : [" << ctx->input() << "]" << std::endl;
@@ -75,10 +74,9 @@ class RimeConsole {
   }
 
   void ProcessLine(const std::string &line) {
-    EZLOGGERVAR(line);
     rime::KeySequence keys;
     if (!keys.Parse(line)) {
-      EZLOGGERPRINT("error parsing input: '%s'", line.c_str());
+      LOG(ERROR) << "error parsing input: '" << line << "'";
       return;
     }
     BOOST_FOREACH(const rime::KeyEvent &ke, keys) {
@@ -106,6 +104,8 @@ class RimeConsole {
 
 // program entry
 int main(int argc, char *argv[]) {
+  google::InitGoogleLogging(argv[0]);
+
   // initialize la Rime
   rime::RegisterComponents();
 

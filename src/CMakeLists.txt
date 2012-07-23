@@ -8,7 +8,7 @@ aux_source_directory(expl LIBRIME_EXPL_SRC)
 
 add_library(rime-static STATIC ${LIBRIME_SRC} ${LIBRIME_ALGO_SRC} ${LIBRIME_DICT_SRC} ${LIBRIME_IMPL_SRC} ${LIBRIME_EXPL_SRC})
 target_link_libraries(rime-static
-  ${Boost_LIBRARIES} ${YamlCpp_LIBRARY} ${KyotoCabinet_LIBRARY} ${Opencc_LIBRARY}
+  ${Boost_LIBRARIES} ${Glog_LIBRARY} ${YamlCpp_LIBRARY} ${KyotoCabinet_LIBRARY} ${Opencc_LIBRARY}
   ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 set_target_properties(rime-static PROPERTIES OUTPUT_NAME "rime" PREFIX "lib")
 

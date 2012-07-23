@@ -75,7 +75,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
           end_vertex_type = vertex.second;
         }
         queue.push(Vertex(end_pos, end_vertex_type));
-        EZDBGONLYLOGGERPRINT("added to syllable graph, edge: [%d, %d)", current_pos, end_pos);
+        DLOG(INFO) << "added to syllable graph, edge: [" << current_pos << ", " << end_pos << ")";
       }
     }
   }
@@ -156,7 +156,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
           accessor.Next();
         }
         queue.push(Vertex(end_pos, kCompletion));
-        EZDBGONLYLOGGERPRINT("added to syllable graph, compl. edge: [%d, %d)", current_pos, end_pos);
+        DLOG(INFO) << "added to syllable graph, compl. edge: [" << current_pos << ", " << end_pos << ")";
       }
       farthest = end_pos;
     }
@@ -164,8 +164,8 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
 
   graph->input_length = input.length();
   graph->interpreted_length = farthest;
-  EZDBGONLYLOGGERVAR(graph->input_length);
-  EZDBGONLYLOGGERVAR(graph->interpreted_length);
+  DLOG(INFO) << "input length: " << graph->input_length;
+  DLOG(INFO) << "syllabified length: " << graph->interpreted_length;
 
   Transpose(graph);
 
@@ -190,7 +190,7 @@ void Syllabifier::CheckOverlappedSpellings(SyllableGraph *graph, size_t start, s
       if (x.first < end) continue;
       if (x.first == end) {
         graph->vertices[joint] = kAmbiguousSpelling;
-        EZDBGONLYLOGGERPRINT("ambiguous syllable joint at position %d.", joint);
+        DLOG(INFO) << "ambiguous syllable joint at position " << joint << ".";
       }
       break;
     }

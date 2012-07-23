@@ -16,11 +16,11 @@ namespace rime {
 
 void Menu::AddTranslation(shared_ptr<Translation> translation) {
   translations_.push_back(translation);
-  EZDBGONLYLOGGERVAR(translations_.size());
+  DLOG(INFO) << translations_.size() << " translations added.";
 }
 
 size_t Menu::Prepare(size_t candidate_count) {
-  EZDBGONLYLOGGERFUNCTRACKER;
+  DLOG(INFO) << "preparing " << candidate_count << " candidates.";
   size_t count = candidates_.size();
   if (count >= candidate_count)
     return count;
@@ -35,11 +35,11 @@ size_t Menu::Prepare(size_t candidate_count) {
       }
     }
     if (k >= translations_.size()) {
-      EZDBGONLYLOGGERPRINT("Failed to select a winner translation.");
+      DLOG(WARNING) << "failed to select a winner translation.";
       break;
     }
     if (translations_[k]->exhausted()) {
-      EZLOGGERPRINT("Warning: selected translation #%d has been exhausted!", k);
+      LOG(WARNING) << "selected translation #" << k << " has been exhausted!";
       translations_.erase(translations_.begin() + k);
       continue;
     }
@@ -49,17 +49,17 @@ size_t Menu::Prepare(size_t candidate_count) {
       filter_(&candidates_, &next_candidates);
     }
     if (next_candidates.empty()) {
-      EZDBGONLYLOGGERPRINT("Filter returns empty candidate list.");
+      DLOG(INFO) << "filter returns empty candidate list.";
     }
     else {
-      EZDBGONLYLOGGERPRINT("Recruiting %d candidates.", next_candidates.size());
+      DLOG(INFO) << "recruiting " << next_candidates.size() << " candidates.";
       std::copy(next_candidates.begin(), next_candidates.end(),
                 std::back_inserter(candidates_));
     }
     count = candidates_.size();
     translations_[k]->Next();
     if (translations_[k]->exhausted()) {
-      EZDBGONLYLOGGERPRINT("Translation #%d has been exhausted.", k);
+      DLOG(INFO) << "translation #" << k << " has been exhausted.";
       translations_.erase(translations_.begin() + k);
     }
   }

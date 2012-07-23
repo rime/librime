@@ -39,10 +39,10 @@ class Opencc {
 };
 
 Opencc::Opencc(const std::string &config_path) {
-  EZLOGGERVAR(config_path);
+  LOG(INFO) << "initilizing opencc: " << config_path;
   od_ = opencc_open(config_path.c_str());
   if (od_ == (opencc_t) -1) {
-    EZLOGGERPRINT("Error opening opencc.");
+    LOG(ERROR) << "Error opening opencc.";
   }
 }
 
@@ -73,7 +73,7 @@ bool Opencc::ConvertText(const std::string &text, std::string *simplified, bool 
   }
   size_t converted = opencc_convert(od_, &inptr, &inlen, &outptr, &outlen);
   if (!converted) {
-    EZLOGGERPRINT("Error simplifying '%s'.", text.c_str());
+    LOG(ERROR) << "Error simplifying '" << text << "'.";
     return false;
   }
   *outptr = L'\0';

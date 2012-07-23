@@ -90,11 +90,11 @@ MappedFile::~MappedFile() {
 
 bool MappedFile::Create(size_t capacity) {
   if (boost::filesystem::exists(file_name_)) {
-    EZLOGGERPRINT("Overwriting file '%s'.", file_name_.c_str());
+    LOG(INFO) << "overwriting file '" << file_name_ << "'.";
     Resize(capacity);
   }
   else {
-    EZLOGGERPRINT("Creating file '%s'.", file_name_.c_str());
+    LOG(INFO) << "creating file '" << file_name_ << "'.";
     std::filebuf fbuf;
     fbuf.open(file_name_.c_str(),
               std::ios_base::in | std::ios_base::out |
@@ -105,7 +105,7 @@ bool MappedFile::Create(size_t capacity) {
     }
     fbuf.close();
   }
-  EZLOGGERPRINT("Opening file for read/write access.");
+  LOG(INFO) << "opening file for read/write access.";
   file_.reset(new MappedFileImpl(file_name_, MappedFileImpl::kOpenReadWrite));
   size_ = 0;
   return file_;
@@ -113,7 +113,7 @@ bool MappedFile::Create(size_t capacity) {
 
 bool MappedFile::OpenReadOnly() {
   if (!boost::filesystem::exists(file_name_)) {
-    EZLOGGERPRINT("Error: attempt to open non-existent file '%s'.", file_name_.c_str());
+    LOG(ERROR) << "attempt to open non-existent file '" << file_name_ << "'.";
     return false;
   }
   file_.reset(new MappedFileImpl(file_name_, MappedFileImpl::kOpenReadOnly));
@@ -123,7 +123,7 @@ bool MappedFile::OpenReadOnly() {
 
 bool MappedFile::OpenReadWrite() {
   if (!boost::filesystem::exists(file_name_)) {
-    EZLOGGERPRINT("Error: attempt to open non-existent file '%s'.", file_name_.c_str());
+    LOG(ERROR) << "attempt to open non-existent file '" << file_name_ << "'.";
     return false;
   }
   file_.reset(new MappedFileImpl(file_name_, MappedFileImpl::kOpenReadWrite));
@@ -159,7 +159,7 @@ bool MappedFile::Remove() {
 }
 
 bool MappedFile::Resize(size_t capacity) {
-  EZLOGGERVAR(capacity);
+  LOG(INFO) << "resize file: " << capacity;
   if (IsOpen())
     Close();
   try {

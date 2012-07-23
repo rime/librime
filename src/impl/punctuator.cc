@@ -31,17 +31,17 @@ void PunctConfig::LoadConfig(Engine *engine) {
   if (config->GetString("punctuator/import_preset", &preset)) {
     scoped_ptr<Config> preset_config(Config::Require("config")->Create(preset));
     if (!preset_config) {
-      EZLOGGERPRINT("Error importing preset punctuation '%s'.", preset.c_str());
+      LOG(ERROR) << "Error importing preset punctuation '" << preset << "'.";
       return;
     }
     preset_mapping_ = preset_config->GetMap("punctuator/" + shape);
     if (!preset_mapping_) {
-      EZLOGGERPRINT("Warning: missing preset punctuation mapping.");
+      LOG(WARNING) << "missing preset punctuation mapping.";
     }
   }
   mapping_ = config->GetMap("punctuator/" + shape);
   if (!mapping_ && !preset_mapping_) {
-    EZLOGGERPRINT("Warning: missing punctuation mapping.");
+    LOG(WARNING) << "missing punctuation mapping.";
   }
 }
 
@@ -80,7 +80,7 @@ Processor::Result Punctuator::ProcessKeyEvent(const KeyEvent &key_event) {
   ConfigItemPtr punct_definition(config_.GetPunctDefinition(punct_key));
   if (!punct_definition)
     return kNoop;
-  EZDBGONLYLOGGERVAR(punct_key);
+  DLOG(INFO) << "punct key: " << punct_key;
   if (!AlternatePunct(punct_key, punct_definition)) {
     engine_->context()->PushInput(ch) &&
         (ConfirmUniquePunct(punct_definition) ||
@@ -102,10 +102,10 @@ bool Punctuator::AlternatePunct(const std::string &key,
   if (segment.status > Segment::kVoid && segment.HasTag("punct") &&
       key == ctx->input().substr(segment.start, segment.end - segment.start)) {
     if (!segment.menu || segment.menu->Prepare(segment.selected_index + 2) == 0) {
-      EZLOGGERPRINT("Error: missing candidate for punctuation '%s'.", key.c_str());
+      LOG(ERROR) << "missing candidate for punctuation '" << key << "'.";
       return false;
     }
-    EZLOGGERPRINT("Info: alternating punctuation '%s'.", key.c_str());
+    DLOG(INFO) << "alternating punctuation '" << key << "'.";
     (segment.selected_index += 1) %= segment.menu->candidate_count();
     segment.status = Segment::kGuess;
     return true;
@@ -141,10 +141,10 @@ bool Punctuator::PairPunct(const ConfigItemPtr &definition) {
   Segment &segment(comp->back());
   if (segment.status > Segment::kVoid && segment.HasTag("punct")) {
     if (!segment.menu || segment.menu->Prepare(2) < 2) {
-      EZLOGGERPRINT("Error: missing candidate for paired punctuation.");
+      LOG(ERROR) << "missing candidate for paired punctuation.";
       return false;
     }
-    EZLOGGERPRINT("Info: alternating paired punctuation.");
+    DLOG(INFO) << "alternating paired punctuation.";
     (segment.selected_index += oddness_) %= 2;
     oddness_ = 1 - oddness_;
     ctx->ConfirmCurrentSelection();
@@ -174,8 +174,8 @@ bool PunctSegmentor::Proceed(Segmentation *segmentation) {
     Segment segment;
     segment.start = k;
     segment.end = k + 1;
-    EZDBGONLYLOGGERPRINT("add a punctuation segment [%d, %d)",
-                         segment.start, segment.end);
+    DLOG(INFO) << "add a punctuation segment ["
+               << segment.start << ", " << segment.end << ")";
     segment.tags.insert("punct");
     segmentation->AddSegment(segment);
   }
@@ -206,7 +206,7 @@ shared_ptr<Translation> PunctTranslator::Query(const std::string &input,
   ConfigItemPtr definition(config_.GetPunctDefinition(input));
   if (!definition)
     return shared_ptr<Translation>();
-  EZLOGGERPRINT("Info: populating punctuation candidates for '%s'.", input.c_str());
+  DLOG(INFO) << "populating punctuation candidates for '" << input << "'.";
   shared_ptr<Translation> translation = TranslateUniquePunct(input, segment, As<ConfigValue>(definition));
   if (!translation)
     translation = TranslateAlternatingPunct(input, segment, As<ConfigList>(definition));
@@ -238,13 +238,13 @@ shared_ptr<Translation> PunctTranslator::TranslateAlternatingPunct(const std::st
   for (size_t i = 0; i < definition->size(); ++i) {
     ConfigValuePtr value = definition->GetValueAt(i);
     if (!value) {
-      EZLOGGERPRINT("Warning: invalid alternating punct at index %d for '%s'.", i, key.c_str());
+      LOG(WARNING) << "invalid alternating punct at index " << i << " for '" << key << "'.";
       continue;
     }
     translation->Append(CreatePunctCandidate(value->str(), segment));
   }
   if (!translation->size()) {
-    EZLOGGERPRINT("Warning: empty candidate list for alternating punct '%s'.", key.c_str());
+    LOG(WARNING) << "empty candidate list for alternating punct '" << key << "'.";
     translation.reset();
   }
   return translation;
@@ -257,7 +257,7 @@ shared_ptr<Translation> PunctTranslator::TranslateAutoCommitPunct(const std::str
     return shared_ptr<Translation>();
   ConfigValuePtr value = definition->GetValue("commit");
   if (!value) {
-    EZLOGGERPRINT("Warning: unrecognized punct definition for '%s'.", key.c_str());
+    LOG(WARNING) << "unrecognized punct definition for '" << key << "'.";
     return shared_ptr<Translation>();
   }
   return make_shared<UniqueTranslation>(CreatePunctCandidate(value->str(), segment));
@@ -270,20 +270,20 @@ shared_ptr<Translation> PunctTranslator::TranslatePairedPunct(const std::string 
     return shared_ptr<Translation>();
   ConfigListPtr list = As<ConfigList>(definition->Get("pair"));
   if (!list || list->size() != 2) {
-    EZLOGGERPRINT("Warning: unrecognized pair definition for '%s'.", key.c_str());
+    LOG(WARNING) << "unrecognized pair definition for '" << key << "'.";
     return shared_ptr<Translation>();
   }
   shared_ptr<FifoTranslation> translation(new FifoTranslation);
   for (size_t i = 0; i < list->size(); ++i) {
     ConfigValuePtr value = list->GetValueAt(i);
     if (!value) {
-      EZLOGGERPRINT("Warning: invalid paired punct at index %d for '%s'.", i, key.c_str());
+      LOG(WARNING) << "invalid paired punct at index " << i << " for '" << key << "'.";
       continue;
     }
     translation->Append(CreatePunctCandidate(value->str(), segment));
   }
   if (translation->size() != 2) {
-    EZLOGGERPRINT("Warning: invalid num of candidate for paired punct '%s'.", key.c_str());
+    LOG(WARNING) << "invalid num of candidate for paired punct '" << key << "'.";
     translation.reset();
   }
   return translation;

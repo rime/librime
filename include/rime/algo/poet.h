@@ -35,14 +35,14 @@ class Poet {
     // dynamic programming
     BOOST_FOREACH(const WordGraph::value_type& w, graph) {
       size_t start_pos = w.first;
-      EZDBGONLYLOGGERVAR(start_pos);
+      DLOG(INFO) << "start pos: " << start_pos;
       if (sentences.find(start_pos) == sentences.end())
         continue;
       BOOST_FOREACH(const UserDictEntryCollector::value_type& x, w.second) {
         size_t end_pos = x.first;
         if (start_pos == 0 && end_pos == total_length)
           continue;  // exclude single words from the result
-        EZDBGONLYLOGGERVAR(end_pos);
+        DLOG(INFO) << "end pos: " << end_pos;
         const DictEntryList &entries(x.second);
         for (size_t i = 0; i < kMaxHomophonesInMind && i < entries.size(); ++i) {
           const shared_ptr<DictEntry> &e(entries[i]);
@@ -50,10 +50,8 @@ class Poet {
           new_sentence->Extend(*e, end_pos);
           if (sentences.find(end_pos) == sentences.end() ||
               sentences[end_pos]->weight() < new_sentence->weight()) {
-            EZDBGONLYLOGGERPRINT("updated sentences[%d] with '%s', %g",
-                                 end_pos,
-                                 new_sentence->text().c_str(),
-                                 new_sentence->weight());
+            DLOG(INFO) << "updated sentences " << end_pos << ") with '"
+                       << new_sentence->text() << "', " << new_sentence->weight();
             sentences[end_pos] = new_sentence;
           }
         }

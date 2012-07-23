@@ -34,7 +34,7 @@ void RecognizerPatterns::LoadConfig(Config *config) {
   if (config->GetString("recognizer/import_preset", &preset)) {
     scoped_ptr<Config> preset_config(Config::Require("config")->Create(preset));
     if (!preset_config) {
-      EZLOGGERPRINT("Error importing preset patterns '%s'.", preset.c_str());
+      LOG(ERROR) << "Error importing preset patterns '" << preset << "'.";
       return;
     }
     pattern_map = preset_config->GetMap("recognizer/patterns");
@@ -49,7 +49,7 @@ RecognizerMatch RecognizerPatterns::GetMatch(
   size_t j = segmentation->GetCurrentEndPosition();
   size_t k = segmentation->GetConfirmedPosition();
   std::string active_input(input.substr(k));
-  EZDBGONLYLOGGER(k, active_input);
+  DLOG(INFO) << "matching active input '" << active_input << "' at pos " << k;
   BOOST_FOREACH(const RecognizerPatterns::value_type &v, *this) {
     boost::smatch m;
     if (boost::regex_search(active_input, m, v.second)) {
@@ -57,15 +57,15 @@ RecognizerMatch RecognizerPatterns::GetMatch(
       size_t end = start + m.length();
       if (end != input.length()) continue;
       if (start == j) {
-        EZLOGGERPRINT("input[%d,%d] '%s' matches pattern: %s",
-                      start, end, m.str().c_str(), v.first.c_str());
+        LOG(INFO) << "input [" << start << ", " << end << ") '"
+                  << m.str() << "' matches pattern: " << v.first;
         return RecognizerMatch(v.first, start, end);
       }
       BOOST_FOREACH(const Segment &seg, *segmentation) {
         if (start < seg.start) break;
         if (start == seg.start) {
-          EZLOGGERPRINT("input[%d,%d] '%s' matches pattern: %s",
-                        start, end, m.str().c_str(), v.first.c_str());
+          LOG(INFO) << "input [" << start << ", " << end << ") '"
+                    << m.str() << "' matches pattern: " << v.first;
           return RecognizerMatch(v.first, start, end);
         }
       }

@@ -31,7 +31,7 @@ bool CustomSettings::Load() {
   if (!config_.LoadFromFile(config_path.string())) {
     config_path = shared_data_path / (config_id_ + ".yaml");
     if (!config_.LoadFromFile(config_path.string())) {
-      EZLOGGERPRINT("Warning: cannot find '%s.yaml'.", config_id_.c_str());
+      LOG(WARNING) << "cannot find '" << config_id_ << ".yaml'.";
       return false;
     }
   }

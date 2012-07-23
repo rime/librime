@@ -27,7 +27,8 @@ bool Matcher::Proceed(Segmentation *segmentation) {
   if (patterns_.empty()) return true;
   RecognizerMatch m = patterns_.GetMatch(segmentation->input(), segmentation);
   if (m.found()) {
-    EZDBGONLYLOGGER(m.tag, m.start, m.end);
+    DLOG(INFO) << "match: " << m.tag
+               << " [" << m.start << ", " << m.end << ")";
     while (segmentation->GetCurrentStartPosition() > m.start)
       segmentation->pop_back();
     Segment segment;

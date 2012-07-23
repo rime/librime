@@ -33,8 +33,8 @@ class EchoTranslation : public UniqueTranslation {
 shared_ptr<Translation> EchoTranslator::Query(const std::string& input,
                                               const Segment& segment,
                                               std::string* prompt) {
-  EZDBGONLYLOGGERPRINT("input = '%s', [%d, %d)",
-                       input.c_str(), segment.start, segment.end);
+  DLOG(INFO) << "input = '" << input
+             << "', [" << segment.start << ", " << segment.end << ")";
   shared_ptr<Candidate> candidate =
       boost::make_shared<SimpleCandidate>("raw",
                                           segment.start,

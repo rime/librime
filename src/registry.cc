@@ -15,12 +15,12 @@ namespace rime {
 scoped_ptr<Registry> Registry::instance_;
 
 void Registry::Register(const std::string &name, ComponentBase *component) {
-  EZLOGGERPRINT("registering component: %s", name.c_str());
+  LOG(INFO) << "registering component: " << name;
   map_[name] = component;
 }
 
 void Registry::Unregister(const std::string &name) {
-  EZLOGGERPRINT("unregistering component: %s", name.c_str());
+  LOG(INFO) << "unregistering component: " << name;
   ComponentMap::iterator it = map_.find(name);
   if (it == map_.end())
     return;

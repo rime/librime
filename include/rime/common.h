@@ -14,6 +14,8 @@
 #include <boost/smart_ptr.hpp>
 #include <boost/make_shared.hpp>
 
+#include <glog/logging.h>
+
 namespace rime {
 
 using boost::scoped_ptr;
@@ -28,19 +30,6 @@ shared_ptr<A> As(const B &ptr) {
 
 void RegisterComponents();
 
-const std::string GetLogFilePath();
-
 }  // namespace rime
-
-// setup ezlogger
-#ifndef EZLOGGER_OUTPUT_FILENAME
-#define EZLOGGER_OUTPUT_FILENAME rime::GetLogFilePath()
-#endif
-#ifndef EZLOGGER_REPLACE_EXISTING_LOGFILE_
-#define EZLOGGER_REPLACE_EXISTING_LOGFILE_
-#endif
-// DEBUG
-//#define EZLOGGER_IMPLEMENT_DEBUGLOGGING
-#include <ezlogger/ezlogger_headers.hpp>
 
 #endif  // RIME_COMMON_H_

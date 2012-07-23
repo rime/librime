@@ -56,11 +56,11 @@ struct DfsState {
     return NextEntry();
   }
   bool Backdate(const std::string &prefix) {
-    EZDBGONLYLOGGERVAR(prefix);
+    DLOG(INFO) << "backdate; prefix: " << prefix;
     if (prefix.empty() ?
         !accessor->Reset() :
         !accessor->Forward(prefix)) {
-      EZLOGGERPRINT("Warning: backdating failed for '%s'.", prefix.c_str());
+      LOG(WARNING) << "backdating failed for '" << prefix << "'.";
       return false;
     }
     return NextEntry();
@@ -88,8 +88,11 @@ void DfsState::SaveEntry(size_t pos) {
                               (double)present_tick,
                               dee) * credibility.back();
   e->code = code;
-  EZDBGONLYLOGGERPRINT("pos = %d, text = '%s', code_len = %d, present_tick = %llu, weight = %f, commit_count = %d",
-                       pos, e->text.c_str(), e->code.size(), present_tick, e->weight, e->commit_count);
+  DLOG(INFO) << "pos = " << pos << ", text = '" << e->text
+             << "', code_len = " << e->code.size()
+             << ", present_tick = " << present_tick
+             << ", weight = " << e->weight
+             << ", commit_count = " << e->commit_count;
   (*collector)[pos].push_back(e);
 }
 
@@ -137,15 +140,14 @@ void UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
   if (index == syll_graph.indices.end()) {
     return;
   }
-  EZDBGONLYLOGGERPRINT("dfs lookup starts from %d.", current_pos);
+  DLOG(INFO) << "dfs lookup starts from " << current_pos;
   std::string prefix;
   BOOST_FOREACH(const SpellingIndex::value_type& spelling, index->second) {
     if (spelling.second.empty()) continue;
     const SpellingProperties* props = spelling.second[0];
     size_t end_pos = props->end_pos;
-    EZDBGONLYLOGGERPRINT("prefix: '%s', syll_id: %d, edge: [%d, %d) of %d",
-                         current_prefix.c_str(), spelling.first,
-                         current_pos, end_pos, spelling.second.size());
+    DLOG(INFO) << "prefix: '" << current_prefix << "', syll_id: " << spelling.first
+               << ", edge: [" << current_pos << ", " << end_pos << ") of " << spelling.second.size();
     state->code.push_back(spelling.first);
     state->credibility.push_back(state->credibility.back() * props->credibility);
     BOOST_SCOPE_EXIT( (&state) ) {
@@ -155,12 +157,12 @@ void UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
     if (!TranslateCodeToString(state->code, &prefix))
       continue;
     if (prefix > state->key) {  // 'a b c |d ' > 'a b c \tabracadabra'
-      EZDBGONLYLOGGERPRINT("forward scanning for '%s'.", prefix.c_str());
+      DLOG(INFO) << "forward scanning for '" << prefix << "'.";
       if (!state->ForwardScan(prefix))  // reached the end of db
         return;
     }
     while (state->IsExactMatch(prefix)) {  // 'b |e ' vs. 'b e \tBe'
-      EZDBGONLYLOGGERPRINT("match found for '%s'.", prefix.c_str());
+      DLOG(INFO) << "match found for '" << prefix << "'.";
       state->SaveEntry(end_pos);
       if (!state->NextEntry())  // reached the end of db
         return;
@@ -273,7 +275,7 @@ bool UserDictionary::TranslateCodeToString(const Code &code, std::string* result
   BOOST_FOREACH(const int &syllable_id, code) {
     const char *spelling = table_->GetSyllableById(syllable_id);
     if (!spelling) {
-      EZLOGGERPRINT("Error translating syllable_id '%d' to string.", syllable_id);
+      LOG(ERROR) << "Error translating syllable_id '" << syllable_id << "'.";
       result->clear();
       return false;
     }
@@ -307,7 +309,7 @@ bool UserDictionary::UnpackValues(const std::string &value,
       }
     }
     catch (...) {
-      EZLOGGERPRINT("Error: key-value parsing failed: '%s'.", k_eq_v.c_str());
+      LOG(ERROR) << "failed in parsing key-value from userdict entry '" << k_eq_v << "'.";
       return false;
     }
   }
@@ -328,8 +330,7 @@ UserDictionary* UserDictionaryComponent::Create(Schema *schema) {
     return NULL;
   std::string dict_name;
   if (!config->GetString("translator/dictionary", &dict_name)) {
-    EZLOGGERPRINT("Error: dictionary not specified in schema '%s'.",
-                  schema->schema_id().c_str());
+    LOG(ERROR) << "dictionary not specified in schema '" << schema->schema_id() << "'.";
     return NULL;
   }
   // obtain userdb object

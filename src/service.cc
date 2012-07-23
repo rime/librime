@@ -95,7 +95,7 @@ SessionId Service::CreateSession() {
     sessions_[id] = session;
   }
   catch (...) {
-    EZLOGGERPRINT("Error creating session.");
+    LOG(ERROR) << "Error creating session.";
   }
   return id;
 }
@@ -133,7 +133,7 @@ void Service::CleanupStaleSessions() {
       ++it;
   }
   if (count > 0) {
-    EZLOGGERPRINT("Recycled %d stale sessions.");
+    LOG(INFO) << "Recycled " << count << " stale sessions.";
   }
 }
 

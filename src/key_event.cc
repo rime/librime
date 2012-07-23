@@ -71,7 +71,7 @@ bool KeyEvent::Parse(const std::string &repr) {
         modifier_ |= mask;
       }
       else {
-        EZLOGGERPRINT("parse error: unrecognized modifier '%s'", token.c_str());
+        LOG(ERROR) << "parse error: unrecognized modifier '" << token << "'";
         return false;
       }
       start = found + 1;
@@ -79,7 +79,7 @@ bool KeyEvent::Parse(const std::string &repr) {
     token = repr.substr(start);
     keycode_ = RimeGetKeycodeByName(token.c_str());
     if (keycode_ == XK_VoidSymbol) {
-      EZLOGGERPRINT("parse error: unrecognized key '%s'", token.c_str());
+      LOG(ERROR) << "parse error: unrecognized key '" << token << "'";
       return false;
     }
   }
@@ -117,7 +117,7 @@ bool KeySequence::Parse(const std::string &repr) {
       start = i + 1;
       size_t j = repr.find('}', start);
       if (j == std::string::npos) {
-        EZLOGGERPRINT("parse error: unparalleled brace in '%s'", repr.c_str());
+        LOG(ERROR) << "parse error: unparalleled brace in '" << repr << "'";
         return false;
       }
       len = j - start;
@@ -128,7 +128,7 @@ bool KeySequence::Parse(const std::string &repr) {
       len = 1;
     }
     if (!ke.Parse(repr.substr(start, len))) {
-      EZLOGGERPRINT("parse error: unrecognized key sequence");
+      LOG(ERROR) << "parse error: unrecognized key sequence";
       return false;
     }
     push_back(ke);

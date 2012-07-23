@@ -248,47 +248,47 @@ bool Config::SaveToFile(const std::string& file_name) {
 }
 
 bool Config::IsNull(const std::string &key) {
-  EZDBGONLYLOGGERVAR(key);
+  DLOG(INFO) << "read: " << key;
   ConfigItemPtr p = data_->Traverse(key);
   return !p || p->type() == ConfigItem::kNull;
 }
 
 bool Config::GetBool(const std::string& key, bool *value) {
-  EZDBGONLYLOGGERVAR(key);
+  DLOG(INFO) << "read: " << key;
   ConfigValuePtr p = As<ConfigValue>(data_->Traverse(key));
   return p && p->GetBool(value);
 }
 
 bool Config::GetInt(const std::string& key, int *value) {
-  EZDBGONLYLOGGERVAR(key);
+  DLOG(INFO) << "read: " << key;
   ConfigValuePtr p = As<ConfigValue>(data_->Traverse(key));
   return p && p->GetInt(value);
 }
 
 bool Config::GetDouble(const std::string& key, double *value) {
-  EZDBGONLYLOGGERVAR(key);
+  DLOG(INFO) << "read: " << key;
   ConfigValuePtr p = As<ConfigValue>(data_->Traverse(key));
   return p && p->GetDouble(value);
 }
 
 bool Config::GetString(const std::string& key, std::string *value) {
-  EZDBGONLYLOGGERVAR(key);
+  DLOG(INFO) << "read: " << key;
   ConfigValuePtr p = As<ConfigValue>(data_->Traverse(key));
   return p && p->GetString(value);
 }
 
 ConfigValuePtr Config::GetValue(const std::string& key) {
-  EZDBGONLYLOGGERVAR(key);
+  DLOG(INFO) << "read: " << key;
   return As<ConfigValue>(data_->Traverse(key));
 }
 
 ConfigListPtr Config::GetList(const std::string& key) {
-  EZDBGONLYLOGGERVAR(key);
+  DLOG(INFO) << "read: " << key;
   return As<ConfigList>(data_->Traverse(key));
 }
 
 ConfigMapPtr Config::GetMap(const std::string& key) {
-  EZDBGONLYLOGGERVAR(key);
+  DLOG(INFO) << "read: " << key;
   return As<ConfigMap>(data_->Traverse(key));
 }
 
@@ -313,7 +313,7 @@ bool Config::SetString(const std::string &key, const std::string &value) {
 }
 
 bool Config::SetItem(const std::string &key, const ConfigItemPtr &item) {
-  EZLOGGERVAR(key);
+  LOG(INFO) << "write: " << key;
   if (key.empty() || key == "/") {
     data_->root = item;
     data_->set_modified();
@@ -354,7 +354,7 @@ const std::string ConfigComponent::GetConfigFilePath(const std::string &config_i
 
 Config* ConfigComponent::Create(const std::string &config_id) {
   const std::string path(GetConfigFilePath(config_id));
-  EZDBGONLYLOGGERPRINT("config file path: %s", path.c_str());
+  DLOG(INFO) << "config file path: " << path;
   return new Config(path);
 }
 
@@ -404,24 +404,22 @@ bool ConfigData::LoadFromFile(const std::string& file_name) {
   modified_ = false;
   root.reset();
   if (!boost::filesystem::exists(file_name)) {
-    EZLOGGERPRINT("Warning: nonexistent config file '%s'.",
-                  file_name.c_str());
+    LOG(WARNING) << "nonexistent config file '" << file_name << "'.";
     return false;
   }
-  EZLOGGERPRINT("loading config file '%s'.", file_name.c_str());
+  LOG(INFO) << "loading config file '" << file_name << "'.";
   try {
     YAML::Node doc;
     std::ifstream fin(file_name.c_str());
     YAML::Parser parser(fin);
     if (!parser.GetNextDocument(doc)) {
-      EZLOGGERPRINT("Warning: document not found in config file '%s'.",
-                    file_name.c_str());
+      LOG(WARNING) << "document not found in config file '" << file_name << "'.";
       return false;
     }
     root = ConvertFromYaml(doc);
   }
   catch (YAML::Exception& e) {
-    EZLOGGERPRINT("Error parsing YAML: %s", e.what());
+    LOG(ERROR) << "Error parsing YAML: " << e.what();
     return false;
   }
   return true;
@@ -440,7 +438,7 @@ bool ConfigData::SaveToFile(const std::string& file_name) {
 }
 
 ConfigItemPtr ConfigData::Traverse(const std::string &key) {
-  EZDBGONLYLOGGERPRINT("traverse: %s", key.c_str());
+  DLOG(INFO) << "traverse: " << key;
   std::vector<std::string> keys;
   boost::split(keys, key, boost::is_any_of("/"));
   // find the YAML::Node, and wrap it!

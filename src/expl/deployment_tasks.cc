@@ -25,7 +25,7 @@ namespace fs = boost::filesystem;
 namespace rime {
 
 bool InstallationUpdate::Run(Deployer* deployer) {
-  EZLOGGERPRINT("updating rime installation.");
+  LOG(INFO) << "updating rime installation info.";
   fs::path shared_data_path(deployer->shared_data_dir);
   fs::path user_data_path(deployer->user_data_dir);
   fs::path installation_info(user_data_path / "installation.yaml");
@@ -36,21 +36,19 @@ bool InstallationUpdate::Run(Deployer* deployer) {
   std::string last_rime_version;
   if (config.LoadFromFile(installation_info.string())) {
     if (config.GetString("installation_id", &installation_id)) {
-      EZLOGGERPRINT("installation info exists. installation id: %s",
-                    installation_id.c_str());
+      LOG(INFO) << "installation info exists. installation id: "
+                << installation_id;
       // for now:
       deployer->user_id = installation_id;
     }
     if (config.GetString("distribution_code_name", &last_distro_code_name)) {
-      EZLOGGERPRINT("previous distribution: %s",
-                    last_distro_code_name.c_str());
+      LOG(INFO) << "previous distribution: " << last_distro_code_name;
     }
     if (config.GetString("distribution_version", &last_distro_version)) {
-      EZLOGGERPRINT("previous distribution version: %s",
-                    last_distro_version.c_str());
+      LOG(INFO) << "previous distribution version: " << last_distro_version;
     }
     if (config.GetString("rime_version", &last_rime_version)) {
-      EZLOGGERPRINT("previous Rime version: %s", last_rime_version.c_str());
+      LOG(INFO) << "previous Rime version: " << last_rime_version;
     }
   }
   if (!installation_id.empty() &&
@@ -59,14 +57,14 @@ bool InstallationUpdate::Run(Deployer* deployer) {
       last_rime_version == RIME_VERSION) {
     return true;
   }
-  EZLOGGERPRINT("creating installation.");
+  LOG(INFO) << "creating installation info.";
   time_t now = time(NULL);
   std::string time_str(ctime(&now));
   boost::trim(time_str);
   if (installation_id.empty()) {
     installation_id =
         boost::uuids::to_string(boost::uuids::random_generator()());
-    EZLOGGERPRINT("generated installation id: %s", installation_id.c_str());
+    LOG(INFO) << "generated installation id: " << installation_id;
     // for now:
     deployer->user_id = installation_id;
     config.SetString("installation_id", installation_id);
@@ -77,27 +75,26 @@ bool InstallationUpdate::Run(Deployer* deployer) {
   }
   if (!deployer->distribution_name.empty()) {
     config.SetString("distribution_name", deployer->distribution_name);
-    EZLOGGERPRINT("distribution: %s", deployer->distribution_name.c_str());
+    LOG(INFO) << "distribution: " << deployer->distribution_name;
   }
   if (!deployer->distribution_code_name.empty()) {
     config.SetString("distribution_code_name",
                      deployer->distribution_code_name);
-    EZLOGGERPRINT("distribution code name: %s",
-                  deployer->distribution_code_name.c_str());
+    LOG(INFO) << "distribution code name: "
+              << deployer->distribution_code_name;
   }
   if (!deployer->distribution_version.empty()) {
     config.SetString("distribution_version",
                      deployer->distribution_version);
-    EZLOGGERPRINT("distribution version: %s",
-                  deployer->distribution_version.c_str());
+    LOG(INFO) << "distribution version: " << deployer->distribution_version;
   }
   config.SetString("rime_version", RIME_VERSION);
-  EZLOGGERPRINT("rime version: %s", RIME_VERSION);
+  LOG(INFO) << "Rime version: " << RIME_VERSION;
   return config.SaveToFile(installation_info.string());
 }
 
 bool WorkspaceUpdate::Run(Deployer* deployer) {
-  EZLOGGERPRINT("updating workspace.");
+  LOG(INFO) << "updating workspace.";
   {
     scoped_ptr<DeploymentTask> t;
     t.reset(new ConfigFileUpdate("default.yaml", "config_version"));
@@ -111,17 +108,17 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   fs::path default_config_path(user_data_path / "default.yaml");
   Config config;
   if (!config.LoadFromFile(default_config_path.string())) {
-    EZLOGGERPRINT("Error loading default config from '%s'.",
-                  default_config_path.string().c_str());
+    LOG(ERROR) << "Error loading default config from '"
+               << default_config_path.string() << "'.";
     return false;
   }
   ConfigListPtr schema_list = config.GetList("schema_list");
   if (!schema_list) {
-    EZLOGGERPRINT("Warning: schema list not defined.");
+    LOG(WARNING) << "schema list not defined.";
     return false;
   }
 
-  EZLOGGERPRINT("updating schemas.");
+  LOG(INFO) << "updating schemas.";
   int success = 0;
   int failure = 0;
   ConfigList::Iterator it = schema_list->begin();
@@ -141,16 +138,16 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     else
       ++failure;
   }
-  EZLOGGERPRINT("finished updating schemas: %d success, %d failure.",
-                success, failure);
+  LOG(INFO) << "finished updating schemas: "
+            << success << " success, " << failure << " failure.";
   return failure == 0;
 }
 
 bool SchemaUpdate::Run(Deployer* deployer) {
   fs::path source_path(schema_file_);
   if (!fs::exists(source_path)) {
-    EZLOGGERPRINT("Error updating schema: nonexistent file '%s'.",
-                  schema_file_.c_str());
+    LOG(ERROR) << "Error updating schema: nonexistent file '"
+               << schema_file_ << "'.";
     return false;
   }
   Config config;
@@ -158,8 +155,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   if (!config.LoadFromFile(schema_file_) ||
       !config.GetString("schema/schema_id", &schema_id) ||
       schema_id.empty()) {
-    EZLOGGERPRINT("Error: invalid schema definition in '%s'.",
-                  schema_file_.c_str());
+    LOG(ERROR) << "invalid schema definition in '" << schema_file_ << "'.";
     return false;
   }
   
@@ -168,12 +164,12 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   fs::path destination_path(user_data_path / (schema_id + ".schema.yaml"));
   Customizer customizer(source_path, destination_path, "schema/version");
   if (customizer.UpdateConfigFile()) {
-    EZLOGGERPRINT("schema '%s' is updated.", schema_id.c_str());
+    LOG(INFO) << "schema '" << schema_id << "' is updated.";
   }
   
   if (!config.LoadFromFile(destination_path.string())) {
-    EZLOGGERPRINT("Error loading schema file '%s'.",
-                  destination_path.string().c_str());
+    LOG(ERROR) << "Error loading schema file '"
+               << destination_path.string() << "'.";
     return false;
   }
   std::string dict_name;
@@ -186,8 +182,8 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   if (!fs::exists(dict_path)) {
     dict_path = shared_data_path / dict_file_name;
     if (!fs::exists(dict_path)) {
-      EZLOGGERPRINT("Error: source file for dictionary '%s' does not exist.",
-                    dict_name.c_str());
+      LOG(ERROR) << "source file for dictionary '"
+                 << dict_name << "' does not exist.";
       return false;
     }
   }
@@ -195,13 +191,13 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   scoped_ptr<Dictionary> dict;
   dict.reset(component.CreateDictionaryFromConfig(&config, "translator"));
   if (!dict) {
-    EZLOGGERPRINT("Error creating dictionary '%s'.", dict_name.c_str());
+    LOG(ERROR) << "Error creating dictionary '" << dict_name << "'.";
     return false;
   }
-  EZLOGGERPRINT("preparing dictionary '%s'.", dict_name.c_str());
+  LOG(INFO) << "preparing dictionary '" << dict_name << "'.";
   DictCompiler dict_compiler(dict.get());
   dict_compiler.Compile(dict_path.string(), destination_path.string());
-  EZLOGGERPRINT("dictionary '%s' is ready.", dict_name.c_str());
+  LOG(INFO) << "dictionary '" << dict_name << "' is ready.";
   return true;
 }
 
@@ -211,8 +207,8 @@ bool ConfigFileUpdate::Run(Deployer* deployer) {
   fs::path source_config_path(shared_data_path / file_name_);
   fs::path dest_config_path(user_data_path / file_name_);
   if (!fs::exists(source_config_path)) {
-    EZLOGGERPRINT("Warning: '%s' is missing from shared data directory.",
-                  file_name_.c_str());
+    LOG(WARNING) << "'" << file_name_
+                 << "' is missing from shared data directory.";
     source_config_path = dest_config_path;
   }
   Customizer customizer(source_config_path, dest_config_path, version_key_);
@@ -254,13 +250,13 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
     if (fs::is_symlink(entry) && entry.extension().string() == ".bin") {
       try {
         if (!fs::exists(entry)) {
-          EZLOGGERPRINT("removing dangling symlink: %s",
-                        entry.filename().string().c_str());
+          LOG(INFO) << "removing dangling symlink: "
+                    << entry.filename().string();
           fs::remove(entry);
         }
       }
       catch (const fs::filesystem_error& ex) {
-        EZLOGGERPRINT("Error: %s", ex.what());
+        LOG(ERROR) << ex.what();
         success = false;
       }
     }
@@ -274,13 +270,12 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
       if (fs::is_regular_file(entry) &&
           entry.extension().string() == ".bin" &&
           !fs::exists(link)) {
-        EZLOGGERPRINT("symlinking '%s'.",
-                      entry.filename().string().c_str());
+        LOG(INFO) << "symlinking '" << entry.filename().string() << "'.";
         fs::create_symlink(entry, link);
       }
     }
     catch (const fs::filesystem_error& ex) {
-      EZLOGGERPRINT("Error: %s", ex.what());
+      LOG(ERROR) << ex.what();
       success = false;
     }
   }

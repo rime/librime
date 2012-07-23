@@ -43,14 +43,14 @@ void KeyBindings::LoadConfig(Schema *schema) {
   if (config->GetString("key_binder/import_preset", &preset)) {
     scoped_ptr<Config> preset_config(Config::Require("config")->Create(preset));
     if (!preset_config) {
-      EZLOGGERPRINT("Error importing preset key bindings '%s'.", preset.c_str());
+      LOG(ERROR) << "Error importing preset key bindings '" << preset << "'.";
       return;
     }
     bindings = preset_config->GetList("key_binder/bindings");
     if (bindings)
       LoadBindings(bindings);
     else
-      EZLOGGERPRINT("Warning: missing preset key bindings.");
+      LOG(WARNING) << "missing preset key bindings.";
   }
 }
 
@@ -69,7 +69,7 @@ void KeyBindings::LoadBindings(const ConfigListPtr &bindings) {
     binding.whence = whence->str();
     if (!binding.pattern.Parse(pattern->str()) ||
         !binding.target.Parse(target->str())) {
-      EZLOGGERPRINT("Warning: invalid key binding #%d.", i);
+      LOG(WARNING) << "invalid key binding #" << i << ".";
       continue;
     }
     push_back(binding);
@@ -132,8 +132,8 @@ bool KeyBinder::ReinterpretPagingKey(const KeyEvent &key_event) {
     Context *ctx = engine_->context();
     const std::string &input(ctx->input());
     if (!input.empty() && input[input.length() - 1] != '.') {
-      EZLOGGERPRINT("reinterpreted key: '%c', successor: '%c'",
-                    last_key_, ch);
+      LOG(INFO) << "reinterpreted key: '" << last_key_
+                << "', successor: '" << (char)ch << "'";
       ctx->PushInput(last_key_);
       ret = true;
     }

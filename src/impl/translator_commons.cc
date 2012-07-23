@@ -37,8 +37,8 @@ void Sentence::Extend(const DictEntry& entry, size_t end_pos) {
   components_.push_back(entry);
   syllable_lengths_.push_back(end_pos - end());
   set_end(end_pos);
-  EZDBGONLYLOGGERPRINT("%d) %s : %g", end_pos,
-                       entry_.text.c_str(), entry_.weight);
+  DLOG(INFO) << "extend sentence " << end_pos << ") "
+             << entry_.text << " : " << entry_.weight;
 }
 
 void Sentence::Offset(size_t offset) {

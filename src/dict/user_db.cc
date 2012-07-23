@@ -91,21 +91,22 @@ bool TreeDb::Fetch(const std::string &key, std::string *value) {
 
 bool TreeDb::Update(const std::string &key, const std::string &value) {
   if (!loaded()) return false;
-  EZDBGONLYLOGGER(key, value);
+  DLOG(INFO) << "update db entry: " << key << " => " << value;
   return db_->set(key, value);
 }
 
 bool TreeDb::Erase(const std::string &key) {
   if (!loaded()) return false;
+  DLOG(INFO) << "erase db entry: " << key;
   return db_->remove(key);
 }
 
 bool TreeDb::Backup() {
   if (!loaded()) return false;
-  EZLOGGERPRINT("backing up db '%s'.", name_.c_str());
+  LOG(INFO) << "backing up db '" << name_ << "'.";
   bool success = db_->dump_snapshot(file_name() + ".snapshot");
   if (!success) {
-    EZLOGGERPRINT("Error: failed to backup db '%s'.", name_.c_str());
+    LOG(ERROR) << "failed to backup db '" << name_ << "'.";
   }
   return success;
 }
@@ -114,7 +115,7 @@ bool TreeDb::RecoverFromSnapshot() {
   std::string snapshot_file(file_name() + ".snapshot");
   if (!boost::filesystem::exists(snapshot_file))
     return false;
-  EZLOGGERPRINT("snapshot file exists, trying to recover db '%s'.", name_.c_str());
+  LOG(INFO) << "snapshot file exists, trying to recover db '" << name_ << "'.";
   if (loaded()) {
     Close();
   }
@@ -122,7 +123,7 @@ bool TreeDb::RecoverFromSnapshot() {
     boost::system::error_code ec;
     boost::filesystem::rename(file_name(), file_name() + ".old", ec);
     if (ec && !Remove()) {
-      EZLOGGERPRINT("Error removing db file '%s'.", file_name().c_str());
+      LOG(ERROR) << "Error removing db file '" << file_name() << "'.";
       return false;
     }
   }
@@ -133,8 +134,7 @@ bool TreeDb::Restore(const std::string& snapshot_file) {
   if (!loaded()) return false;
   bool success = db_->load_snapshot(snapshot_file);
   if (!success) {
-    EZLOGGERPRINT("Error: failed to restore db from '%s'.",
-                  snapshot_file.c_str());
+    LOG(ERROR) << "failed to restore db from '" << snapshot_file << "'.";
   }
   return success;
 }
@@ -145,7 +145,7 @@ bool TreeDb::Exists() const {
 
 bool TreeDb::Remove() {
   if (loaded()) {
-    EZLOGGERPRINT("Error: attempt to remove opened db '%s'.", name_.c_str());
+    LOG(ERROR) << "attempt to remove opened db '" << name_ << "'.";
     return false;
   }
   return boost::filesystem::remove(file_name());
@@ -161,9 +161,9 @@ bool TreeDb::Open() {
       CreateMetadata();
   }
   else {
-    EZLOGGERPRINT("Error opening db '%s'.", name_.c_str());
+    LOG(ERROR) << "Error opening db '" << name_ << "'.";
     if (RecoverFromSnapshot()) {
-      EZLOGGERPRINT("successfully recovered db '%s' from snapshot.", name_.c_str());
+      LOG(INFO) << "successfully recovered db '" << name_ << "' from snapshot.";
     }
   }
   return loaded_;
@@ -174,7 +174,7 @@ bool TreeDb::OpenReadOnly() {
   Initialize();
   loaded_ = db_->open(file_name(), kyotocabinet::TreeDB::OREADER);
   if (!loaded_) {
-    EZLOGGERPRINT("Error opening db '%s' read-only.", name_.c_str());
+    LOG(ERROR) << "Error opening db '" << name_ << "' read-only.";
   }
   return loaded_;
 }
@@ -182,13 +182,13 @@ bool TreeDb::OpenReadOnly() {
 bool TreeDb::Close() {
   if (!loaded()) return false;
   db_->close();
-  EZLOGGERPRINT("closed db '%s'.", name_.c_str());
+  LOG(INFO) << "closed db '" << name_ << "'.";
   loaded_ = false;
   return true;
 }
 
 bool TreeDb::CreateMetadata() {
-  EZLOGGERPRINT("Creating metadata for db '%s'.", name_.c_str());
+  LOG(INFO) << "creating metadata for db '" << name_ << "'.";
   std::string rime_version(RIME_VERSION);
   // '\x01' is the meta character
   return db_->set("\x01/db_name", name_) &&

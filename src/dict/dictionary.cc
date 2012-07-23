@@ -73,7 +73,7 @@ DictEntryIterator::DictEntryIterator(const DictEntryIterator &other)
 }
 
 DictEntryIterator& DictEntryIterator::operator= (DictEntryIterator &other) {
-  EZDBGONLYLOGGERPRINT("swapping iterator contents.");
+  DLOG(INFO) << "swapping iterator contents.";
   swap(other);
   entry_ = other.entry_;
   entry_count_ = other.entry_count_;
@@ -95,14 +95,14 @@ void DictEntryIterator::Sort() {
 
 shared_ptr<DictEntry> DictEntryIterator::Peek() {
   if (empty()) {
-    EZLOGGERPRINT("Oops!");
+    LOG(WARNING) << "oops! no more dict entries.";
     return shared_ptr<DictEntry>();
   }
   if (!entry_) {
     const dictionary::Chunk &chunk(front());
     entry_ = make_shared<DictEntry>();
     const table::Entry &e(chunk.entries[chunk.cursor]);
-    EZDBGONLYLOGGERPRINT("Creating temporary dict entry '%s'.", e.text.c_str());
+    DLOG(INFO) << "creating temporary dict entry '" << e.text.c_str() << "'.";
     entry_->code = chunk.code;
     entry_->text = e.text.c_str();
     const double kS = 100000.0;
@@ -199,7 +199,7 @@ size_t Dictionary::LookupWords(DictEntryIterator *result,
                                const std::string &str_code,
                                bool predictive,
                                size_t expand_search_limit) {
-  EZDBGONLYLOGGERVAR(str_code);
+  DLOG(INFO) << "lookup: " << str_code;
   if (!loaded())
     return 0;
   std::vector<Prism::Match> keys;
@@ -212,7 +212,7 @@ size_t Dictionary::LookupWords(DictEntryIterator *result,
       keys.push_back(match);
     }
   }
-  EZDBGONLYLOGGERPRINT("found %u matching keys thru the prism.", keys.size());
+  DLOG(INFO) << "found " << keys.size() << " matching keys thru the prism.";
   size_t code_length(str_code.length());
   BOOST_FOREACH(Prism::Match &match, keys) {
     SpellingAccessor accessor(prism_->QuerySpelling(match.value));
@@ -230,7 +230,7 @@ size_t Dictionary::LookupWords(DictEntryIterator *result,
       }
       const TableAccessor a(table_->QueryWords(syllable_id));
       if (!a.exhausted()) {
-        EZDBGONLYLOGGERVAR(remaining_code);
+        DLOG(INFO) << "remaining code: " << remaining_code;
         result->AddChunk(dictionary::Chunk(a, remaining_code));
       }
     }
@@ -264,13 +264,13 @@ bool Dictionary::Remove() {
 }
 
 bool Dictionary::Load() {
-  EZLOGGERFUNCTRACKER;
+  LOG(INFO) << "loading dictionary '" << name_ << "'.";
   if (!table_ || !table_->IsOpen() && !table_->Load()) {
-    EZLOGGERPRINT("Error loading table for dictionary '%s'.", name_.c_str());
+    LOG(ERROR) << "Error loading table for dictionary '" << name_ << "'.";
     return false;
   }
   if (!prism_ || !prism_->IsOpen() && !prism_->Load()) {
-    EZLOGGERPRINT("Error loading prism for dictionary '%s'.", name_.c_str());
+    LOG(ERROR) << "Error loading prism for dictionary '" << name_ << "'.";
     return false;
   }
   return true;
@@ -294,7 +294,7 @@ Dictionary* DictionaryComponent::CreateDictionaryFromConfig(
     Config *config, const std::string &customer) {
   std::string dict_name;
   if (!config->GetString(customer + "/dictionary", &dict_name)) {
-    EZLOGGERPRINT("Error: dictionary not specified for %s.", customer.c_str());
+    LOG(ERROR) << "dictionary not specified for " << customer << ".";
     return NULL;
   }
   std::string prism_name;

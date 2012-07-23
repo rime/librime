@@ -13,6 +13,8 @@
 #include <rime/expl/deployment_tasks.h>
 
 int main(int argc, char *argv[]) {
+  google::InitGoogleLogging(argv[0]);
+
   std::string option;
   std::string arg1, arg2;
   if (argc >= 2) option = argv[1];
