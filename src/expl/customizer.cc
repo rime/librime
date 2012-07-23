@@ -7,6 +7,7 @@
 // 2011-12-12 GONG Chen <chen.sst@gmail.com>
 //
 #include <stdint.h>
+#include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/crc.hpp>
 #include <boost/lexical_cast.hpp>
