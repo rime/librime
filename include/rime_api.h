@@ -112,6 +112,12 @@ typedef struct {
 
 // entry and exit
 
+// call this function before accessing any other API.
+// pass a C-string constant in the format "rime.x"
+// where 'x' is the name of your application.
+// the prefix "rime." ensures old log files are automatically cleaned.
+RIME_API void RimeSetupLogging(const char* app_name);
+
 RIME_API void RimeInitialize(RimeTraits *traits);
 RIME_API void RimeFinalize();
 

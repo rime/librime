@@ -13,7 +13,6 @@
 #include <string>
 #include <boost/smart_ptr.hpp>
 #include <boost/make_shared.hpp>
-
 #include <glog/logging.h>
 
 namespace rime {
@@ -28,6 +27,7 @@ shared_ptr<A> As(const B &ptr) {
   return boost::dynamic_pointer_cast<A>(ptr);
 }
 
+void SetupLogging(const char* app_name);
 void RegisterComponents();
 
 }  // namespace rime

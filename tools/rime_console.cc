@@ -104,7 +104,7 @@ class RimeConsole {
 
 // program entry
 int main(int argc, char *argv[]) {
-  google::InitGoogleLogging(argv[0]);
+  rime::SetupLogging("rime.console");
 
   // initialize la Rime
   rime::RegisterComponents();

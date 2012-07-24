@@ -14,7 +14,7 @@
 #include <rime/expl/user_dict_manager.h>
 
 int main(int argc, char *argv[]) {
-  google::InitGoogleLogging(argv[0]);
+  rime::SetupLogging("rime.tools");
 
   std::string option;
   std::string arg1, arg2;

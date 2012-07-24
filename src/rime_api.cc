@@ -22,6 +22,10 @@
 #include <rime_api.h>
 
 
+RIME_API void RimeSetupLogging(const char* app_name) {
+  rime::SetupLogging(app_name);
+}
+
 RIME_API void RimeInitialize(RimeTraits *traits) {
   RimeDeployerInitialize(traits);
   rime::RegisterComponents();

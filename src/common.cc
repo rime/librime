@@ -41,6 +41,10 @@
 
 namespace rime {
 
+void SetupLogging(const char* app_name) {
+  google::InitGoogleLogging(app_name);
+}
+
 void RegisterComponents() {
   LOG(INFO) << "registering built-in components";
 
