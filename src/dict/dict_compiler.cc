@@ -212,7 +212,7 @@ void EntryCollector::Collect(const std::string &dict_file) {
         continue;
       code.clear();
       if (!Encode(phrase, weight_str, 0, &code)) {
-        LOG(ERROR) << "Encode failure: '" << phrase << "'.";
+        LOG(WARNING) << "Encode failure: '" << phrase << "'.";
       }
     }
   }
