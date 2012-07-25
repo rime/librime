@@ -295,4 +295,46 @@ bool UserDictUpgration::Run(Deployer* deployer) {
   return ok;
 }
 
+bool CleanOldLogFiles::Run(Deployer* deployer) {
+  char ymd[12] = {0};
+  time_t now = time(NULL);
+  strftime(ymd, sizeof(ymd), ".%Y%m%d", localtime(&now));
+  std::string today(ymd);
+  DLOG(INFO) << "today: " << today;
+
+  std::vector<std::string> dirs;
+  google::GetExistingTempDirectories(&dirs);
+  DLOG(INFO) << "scanning " << dirs.size() << " temp directory for log files.";
+
+  bool success = true;
+  int removed = 0;
+  std::vector<std::string>::const_iterator i = dirs.begin();
+  for (; i != dirs.end(); ++i) {
+    DLOG(INFO) << "temp directory: " << *i;
+    fs::directory_iterator j(*i);
+    fs::directory_iterator end;
+    for (; j != end; ++j) {
+      fs::path entry(j->path());
+      std::string file_name(entry.filename().string());
+      try {
+        if (fs::is_regular_file(entry) &&
+            boost::starts_with(file_name, "rime.") &&
+            !boost::contains(file_name, today)) {
+          DLOG(INFO) << "removing log file '" << file_name << "'.";
+          fs::remove(entry);
+          ++removed;
+        }
+      }
+      catch (const fs::filesystem_error& ex) {
+        LOG(ERROR) << ex.what();
+        success = false;
+      }
+    }
+  }
+  if (removed != 0) {
+    LOG(INFO) << "cleaned " << removed << " log files.";
+  }
+  return success;
+}
+
 }  // namespace rime

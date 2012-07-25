@@ -40,6 +40,8 @@ RIME_API void RimeFinalize() {
 
 RIME_API Bool RimeStartMaintenance(Bool full_check) {
   rime::Deployer &deployer(rime::Service::instance().deployer());
+  rime::CleanOldLogFiles cleaning;
+  cleaning.Run(&deployer);
   rime::InstallationUpdate installation;
   installation.Run(&deployer);
   if (!full_check) {

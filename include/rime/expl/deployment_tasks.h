@@ -68,6 +68,11 @@ class UserDictUpgration : public DeploymentTask {
   bool Run(Deployer* deployer);
 };
 
+class CleanOldLogFiles : public DeploymentTask {
+ public:
+  bool Run(Deployer* deployer);
+};
+
 }  // namespace rime
 
 #endif  // RIME_DEPLOYMENT_TASKS_H_
