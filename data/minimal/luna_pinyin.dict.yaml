@@ -26,7 +26,7 @@
 
 ---
 name: luna_pinyin
-version: "0.12.20120618"
+version: "0.12.20120711"
 sort: by_weight
 use_preset_vocabulary: true
 ...
@@ -535,6 +535,7 @@ use_preset_vocabulary: true
 䇯	rong
 䇹	jun
 䇼	yi
+䈎	ye
 䈑	gua
 䈣	zheng
 䉀	shu

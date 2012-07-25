@@ -4,7 +4,7 @@
 
 ---
 name: "cangjie5"
-version: "0.11"
+version: "0.12"
 sort: original
 use_preset_vocabulary: true
 max_phrase_length: 1
@@ -13282,8 +13282,8 @@ max_phrase_length: 1
 矱	oktoe
 繁	okvif
 矲	okwlp
-个	ol
 仲	ol
+个	ol
 佒	olbk
 脩	olhb
 條	olhd
@@ -15995,8 +15995,8 @@ max_phrase_length: 1
 跒	rmmnr
 噁	rmmp
 囇	rmmp
-跖	rmmr
 唔	rmmr
+跖	rmmr
 踾	rmmrw
 趼	rmmt
 蹶	rmmto
@@ -17796,8 +17796,8 @@ max_phrase_length: 1
 萣	tjmo
 鞆	tjmob
 菪	tjmr
-靰	tjmu
 莞	tjmu
+靰	tjmu
 韁	tjmwm
 鞔	tjnau
 韂	tjncr
@@ -18440,9 +18440,9 @@ max_phrase_length: 1
 勘	tvks
 荍	tvlk
 莊	tvmg
-药	tvmi
 蔣	tvmi
 薅	tvmi
+药	tvmi
 荮	tvmi
 荭	tvmm
 蕴	tvmt
@@ -22496,7 +22496,7 @@ max_phrase_length: 1
 侇	xokn
 慜	xokp
 佑	xokr
-仲	xol
+个	xol
 鯈	xolhf
 鯈	xolof
 倏	xolok
@@ -22673,7 +22673,7 @@ max_phrase_length: 1
 蹝	xrmho
 唖	xrmlm
 囇	xrmmp
-唔	xrmmr
+跖	xrmmr
 踭	xrmns
 蹑	xrmsj
 踯	xrmtk
@@ -22801,7 +22801,7 @@ max_phrase_length: 1
 苿	xtjd
 薲	xtjmc
 苧	xtjmn
-莞	xtjmu
+靰	xtjmu
 茡	xtjnd
 鄿	xtjnl
 藌	xtjpi
@@ -22866,7 +22866,7 @@ max_phrase_length: 1
 蒓	xtvfu
 孳	xtvid
 茲	xtvii
-蔣	xtvmi
+薅	xtvmi
 葘	xtvmw
 蒃	xtvno
 曲	xtw

@@ -2,13 +2,11 @@
 # vim: set sw=2 sts=2 et:
 # encoding: utf-8
 
-config_version: "0.12"
+config_version: "0.13.minimal"
 
 schema_list:
   - schema: luna_pinyin
   - schema: cangjie5
-  - schema: luna_pinyin_fluency
-  - schema: luna_pinyin_simp
 
 switcher:
   caption: 〔方案選單〕
@@ -64,7 +62,7 @@ punctuator:
     "." : { commit: 。 }
     "<" : [ 《, 〈, «, ‹ ]
     ">" : [ 》, 〉, », › ]
-    "/" : [ "/", ／, ÷ ]
+    "/" : [ 、, "/", ／, ÷ ]
     "?" : { commit: ？ }
     ";" : { commit: ； }
     ":" : ：
@@ -73,7 +71,7 @@ punctuator:
     "\\" : [ 、, "\\", ＼ ]
     "|" : [ ・, "|", ｜, "§", "¦" ]
     "`" : "`"
-    "~" : "~"
+    "~" : [ "~", 〜, ～, 〰 ]
     "!" : { commit: ！ }
     "@" : "@"
     "#" : "#"

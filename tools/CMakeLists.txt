@@ -29,15 +29,15 @@ add_dependencies(rime_deployer ${RIME_LIBRARY})
 install(TARGETS rime_dict_manager DESTINATION ${BIN_INSTALL_DIR})
 install(TARGETS rime_deployer DESTINATION ${BIN_INSTALL_DIR})
 
-file(COPY ${PROJECT_SOURCE_DIR}/data/default.yaml 
+file(COPY ${PROJECT_SOURCE_DIR}/data/minimal/default.yaml 
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
-file(COPY ${PROJECT_SOURCE_DIR}/data/essay.kct
+file(COPY ${PROJECT_SOURCE_DIR}/data/minimal/essay.kct
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
-file(COPY ${PROJECT_SOURCE_DIR}/data/preset/luna_pinyin.dict.yaml 
+file(COPY ${PROJECT_SOURCE_DIR}/data/minimal/luna_pinyin.dict.yaml 
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
-file(COPY ${PROJECT_SOURCE_DIR}/data/preset/luna_pinyin.schema.yaml
+file(COPY ${PROJECT_SOURCE_DIR}/data/minimal/luna_pinyin.schema.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
-file(COPY ${PROJECT_SOURCE_DIR}/data/preset/cangjie5.dict.yaml
+file(COPY ${PROJECT_SOURCE_DIR}/data/minimal/cangjie5.dict.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
-file(COPY ${PROJECT_SOURCE_DIR}/data/preset/cangjie5.schema.yaml
+file(COPY ${PROJECT_SOURCE_DIR}/data/minimal/cangjie5.schema.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
