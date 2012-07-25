@@ -8,6 +8,7 @@
 //
 #include <string>
 #include <sstream>
+#include <boost/format.hpp>
 #include <rime/key_event.h>
 #include <rime/key_table.h>
 
@@ -38,12 +39,12 @@ const std::string KeyEvent::repr() const {
   if (name)
     return modifiers.str() + name;
   // no name :-| return its hex value
-  char value[9] = {0};
+  std::string value;
   if (keycode_ <= 0xffff) {
-    sprintf(value, "0x%4x", keycode_);
+    value = boost::str(boost::format("0x%4x") % keycode_);
   }
   else if (keycode_ <= 0xffffff) {
-    sprintf(value, "0x%6x", keycode_);
+    value = boost::str(boost::format("0x%6x") % keycode_);
   }
   else {
     return "(unknown)";  // invalid keycode
