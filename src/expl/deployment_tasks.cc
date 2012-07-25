@@ -318,6 +318,7 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
       std::string file_name(entry.filename().string());
       try {
         if (fs::is_regular_file(entry) &&
+            !fs::is_symlink(entry) &&
             boost::starts_with(file_name, "rime.") &&
             !boost::contains(file_name, today)) {
           DLOG(INFO) << "removing log file '" << file_name << "'.";
