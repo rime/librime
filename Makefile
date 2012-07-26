@@ -15,7 +15,6 @@ librime:
 install-precompiled-data:
 	@echo 'precompiling Rime schemas, patience...'
 	$(bindir)/rime_deployer --build $(sharedir)/rime-data
-	if [ -e $(sharedir)/rime-data/rime.log ]; then rm $(sharedir)/rime-data/rime.log; fi
 
 uninstall-precompiled-data:
 	rm $(sharedir)/rime-data/*.bin || true

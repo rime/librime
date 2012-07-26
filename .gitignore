@@ -1,6 +1,7 @@
 build/
 vcbuild/
 xbuild/
+data/*.*
 data/preset
 data/supplement
 data/extra
