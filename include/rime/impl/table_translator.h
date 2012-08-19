@@ -14,10 +14,12 @@
 #include <rime/config.h>
 #include <rime/translator.h>
 #include <rime/algo/algebra.h>
+#include <rime/impl/translator_commons.h>
 
 namespace rime {
 
 class Dictionary;
+class UserDictionary;
 
 class TableTranslator : public Translator {
  public:
@@ -39,8 +41,10 @@ class TableTranslator : public Translator {
   bool enable_completion_;
   bool enable_charset_filter_;
   scoped_ptr<Dictionary> dict_;
+  scoped_ptr<UserDictionary> user_dict_;
   Projection preedit_formatter_;
   Projection comment_formatter_;
+  Patterns user_dict_disabling_patterns_;
 };
 
 }  // namespace rime

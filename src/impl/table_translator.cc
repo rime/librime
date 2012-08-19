@@ -16,6 +16,7 @@
 #include <rime/segmentation.h>
 #include <rime/translation.h>
 #include <rime/dict/dictionary.h>
+#include <rime/dict/user_dictionary.h>
 #include <rime/impl/table_translator.h>
 #include <rime/impl/translator_commons.h>
 
@@ -32,11 +33,13 @@ class LazyTableTranslation : public TableTranslation {
                        size_t start, size_t end,
                        const std::string &preedit,
                        Projection *comment_formatter,
-                       Dictionary *dict);
+                       Dictionary *dict,
+                       UserDictionary *user_dict);
   virtual bool Next();
   
  private:
   Dictionary *dict_;
+  UserDictionary *user_dict_;
   size_t limit_;
 };
 
@@ -44,9 +47,10 @@ LazyTableTranslation::LazyTableTranslation(const std::string &input,
                                            size_t start, size_t end,
                                            const std::string &preedit,
                                            Projection *comment_formatter,
-                                           Dictionary *dict)
+                                           Dictionary *dict,
+                                           UserDictionary *user_dict)
     : TableTranslation(input, start, end, preedit, comment_formatter),
-      dict_(dict), limit_(kInitialSearchLimit) {
+      dict_(dict), user_dict_(user_dict), limit_(kInitialSearchLimit) {
   dict->LookupWords(&iter_, input, true, kInitialSearchLimit);
   set_exhausted(iter_.exhausted());
 }
@@ -88,6 +92,8 @@ TableTranslator::TableTranslator(Engine *engine)
                     &enable_charset_filter_);
     preedit_formatter_.Load(config->GetList("translator/preedit_format"));
     comment_formatter_.Load(config->GetList("translator/comment_format"));
+    user_dict_disabling_patterns_.Load(
+        config->GetList("translator/disable_user_dict_for_patterns"));
   }
   if (delimiters_.empty()) {
     delimiters_ = " ";
@@ -113,6 +119,16 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
 
+  bool enable_user_dict = true;
+  if (!user_dict_disabling_patterns_.empty()) {
+    BOOST_FOREACH(const boost::regex& pattern, user_dict_disabling_patterns_) {
+      if (boost::regex_match(input, pattern)) {
+        enable_user_dict = false;
+        break;
+      }
+    }
+  }
+
   std::string preedit(input);
   preedit_formatter_.Apply(&preedit);
 
@@ -127,7 +143,8 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
         segment.start + input.length(),
         preedit,
         &comment_formatter_,
-        dict_.get());
+        dict_.get(),
+        enable_user_dict ? user_dict_.get() : NULL);
   }
   else {
     DictEntryIterator iter;

@@ -19,7 +19,13 @@
 namespace rime {
 
 typedef uint64_t TickCount;
-  
+
+enum MatchOption {
+  kExactMatch = 0,
+  kCommonPrefixMatch = 1,
+  kExpandSearch = 2,
+};
+
 struct UserDictEntryCollector : std::map<size_t, DictEntryList> {
 };
 
@@ -43,6 +49,8 @@ class UserDictionary : public Class<UserDictionary, Schema*> {
                                             size_t start_pos,
                                             size_t depth_limit = 0,
                                             double initial_credibility = 1.0);
+  shared_ptr<DictEntryList> LookupWords(const std::string &input,
+                                        MatchOption match_option);
   bool UpdateEntry(const DictEntry &entry, int commit);
   bool UpdateTickCount(TickCount increment);
 
