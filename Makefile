@@ -1,32 +1,22 @@
 sharedir = $(DESTDIR)/usr/share
 bindir = $(DESTDIR)/usr/bin
 
-all: brise librime
+all: librime
 	@echo ':)'
 
-brise:
-	if [ -e ../brise ]; then cp -R ../brise/* data/; fi
+install: install-librime
+	@echo ':)'
+
+uninstall: uninstall-librime
+	@echo ':)'
 
 librime:
 	mkdir -p build
-	(cd build; cmake -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_STATIC=OFF ..)
+	(cd build; cmake -DCMAKE_INSTALL_PREFIX=/usr ..)
 	make -C build
-
-install-precompiled-data:
-	@echo 'precompiling Rime schemas, patience...'
-	$(bindir)/rime_deployer --build $(sharedir)/rime-data
-
-uninstall-precompiled-data:
-	rm $(sharedir)/rime-data/*.bin || true
 
 install-librime:
 	make -C build install
 
 uninstall-librime:
 	make -C build uninstall
-
-install: install-librime install-precompiled-data
-	@echo ':)'
-
-uninstall: uninstall-precompiled-data uninstall-librime
-	@echo ':)'
