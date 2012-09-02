@@ -75,15 +75,12 @@ bool DelimitSyllablesDfs(DelimitSyllableState *state,
 
 }  // anonymous namespace
 
-typedef Phrase R10nCandidate;
-typedef Sentence R10nSentence;
-
 class R10nTranslation : public Translation {
  public:
-  R10nTranslation(const std::string &input, size_t start,
-                  R10nTranslator *translator)
-      : input_(input), start_(start),
-        translator_(translator),
+  R10nTranslation(R10nTranslator *translator,
+                  const std::string &input, size_t start)
+      : translator_(translator),
+        input_(input), start_(start),
         user_phrase_index_(0) {
     set_exhausted(true);
   }
@@ -97,17 +94,17 @@ class R10nTranslation : public Translation {
   const std::string GetPreeditString(const CandidateT &cand) const;
   template <class CandidateT>
   const std::string GetOriginalSpelling(const CandidateT &cand) const;
-  const shared_ptr<R10nSentence> MakeSentence(Dictionary *dict,
-                                              UserDictionary *user_dict);
+  const shared_ptr<Sentence> MakeSentence(Dictionary *dict,
+                                          UserDictionary *user_dict);
 
+  R10nTranslator *translator_;
   const std::string input_;
   size_t start_;
-  R10nTranslator *translator_;
   
   SyllableGraph syllable_graph_;
   shared_ptr<DictEntryCollector> phrase_;
   shared_ptr<UserDictEntryCollector> user_phrase_;
-  shared_ptr<R10nSentence> sentence_;
+  shared_ptr<Sentence> sentence_;
   
   DictEntryCollector::reverse_iterator phrase_iter_;
   UserDictEntryCollector::reverse_iterator user_phrase_iter_;
@@ -120,21 +117,12 @@ class R10nTranslation : public Translation {
 R10nTranslator::R10nTranslator(Engine *engine)
     : Translator(engine),
       Memory(engine),
-      enable_completion_(true),
+      TranslatorOptions(engine),
       spelling_hints_(0) {
   if (!engine) return;
   Config *config = engine->schema()->config();
   if (config) {
-    config->GetString("speller/delimiter", &delimiters_);
-    config->GetBool("translator/enable_completion", &enable_completion_);
     config->GetInt("translator/spelling_hints", &spelling_hints_);
-    preedit_formatter_.Load(config->GetList("translator/preedit_format"));
-    comment_formatter_.Load(config->GetList("translator/comment_format"));
-    user_dict_disabling_patterns_.Load(
-        config->GetList("translator/disable_user_dict_for_patterns"));
-  }
-  if (delimiters_.empty()) {
-    delimiters_ = " ";
   }
 }
 
@@ -162,7 +150,7 @@ shared_ptr<Translation> R10nTranslator::Query(const std::string &input,
   }
   // the translator should survive translations it creates
   shared_ptr<R10nTranslation> result =
-      boost::make_shared<R10nTranslation>(input, segment.start, this);
+      boost::make_shared<R10nTranslation>(this, input, segment.start);
   if (!result ||
       !result->Evaluate(dict_.get(),
                         enable_user_dict ? user_dict_.get() : NULL)) {
@@ -333,25 +321,29 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
   if (phrase_ && phrase_iter_ != phrase_->rend()) {
     phrase_code_length = phrase_iter_->first;
   }
-  shared_ptr<R10nCandidate> cand;
+  shared_ptr<Phrase> cand;
   if (user_phrase_code_length > 0 &&
       user_phrase_code_length >= phrase_code_length) {
     DictEntryList &entries(user_phrase_iter_->second);
     const shared_ptr<DictEntry> &e(entries[user_phrase_index_]);
     DLOG(INFO) << "user phrase '" << e->text
                << "', code length: " << user_phrase_code_length;
-    cand = make_shared<R10nCandidate>(start_,
-                                      start_ + user_phrase_code_length,
-                                      e);
+    cand = make_shared<Phrase>(translator_->language(),
+                               "phrase",
+                               start_,
+                               start_ + user_phrase_code_length,
+                               e);
   }
   else if (phrase_code_length > 0) {
     DictEntryIterator &iter(phrase_iter_->second);
     const shared_ptr<DictEntry> &e(iter.Peek());
     DLOG(INFO) << "phrase '" << e->text
                << "', code length: " << user_phrase_code_length;
-    cand = make_shared<R10nCandidate>(start_,
-                                      start_ + phrase_code_length,
-                                      e);
+    cand = make_shared<Phrase>(translator_->language(),
+                               "phrase",
+                               start_,
+                               start_ + phrase_code_length,
+                               e);
   }
   if (cand && cand->preedit().empty()) {
     cand->set_preedit(GetPreeditString(*cand));
@@ -371,7 +363,7 @@ void R10nTranslation::CheckEmpty() {
                 (!user_phrase_ || user_phrase_iter_ == user_phrase_->rend()));
 }
 
-const shared_ptr<R10nSentence> R10nTranslation::MakeSentence(
+const shared_ptr<Sentence> R10nTranslation::MakeSentence(
     Dictionary *dict, UserDictionary *user_dict) {
   const int kMaxSyllablesForUserPhraseQuery = 5;
   const double kPenaltyForAmbiguousSyllable = 1e-10;
@@ -404,8 +396,8 @@ const shared_ptr<R10nSentence> R10nTranslation::MakeSentence(
       }
     }
   }
-  Poet<R10nSentence> poet;
-  shared_ptr<R10nSentence> sentence =
+  Poet<Sentence> poet(translator_->language());
+  shared_ptr<Sentence> sentence =
       poet.MakeSentence(graph, syllable_graph_.interpreted_length);
   if (sentence) {
     sentence->Offset(start_);

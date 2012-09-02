@@ -18,6 +18,7 @@
 #include <rime/dict/reverse_lookup_dictionary.h>
 #include <rime/impl/reverse_lookup_translator.h>
 #include <rime/impl/translator_commons.h>
+#include <rime/impl/table_translator.h>
 
 
 static const char *quote_left = "\xef\xbc\x88";
@@ -28,19 +29,20 @@ namespace rime {
 
 class ReverseLookupTranslation : public TableTranslation {
  public:
-  ReverseLookupTranslation(const DictEntryIterator &iter,
+  ReverseLookupTranslation(ReverseLookupDictionary* dict,
+                           TranslatorOptions* options,
                            const std::string &input,
                            size_t start, size_t end,
-                           const std::string &preedit,
-                           Projection *comment_formatter,
-                           ReverseLookupDictionary *dict)
-      : TableTranslation(iter, input, start, end, preedit, comment_formatter),
-        dict_(dict) {}
+                           const DictEntryIterator &iter)
+      : TableTranslation(options, NULL, input, start, end, iter),
+        dict_(dict), options_(options) {
+  }
   virtual shared_ptr<Candidate> Peek();
   virtual int Compare(shared_ptr<Translation> other,
                       const CandidateList &candidates);
  protected:
-  ReverseLookupDictionary *dict_;
+  ReverseLookupDictionary* dict_;
+  TranslatorOptions* options_;
 };
 
 shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
@@ -50,8 +52,8 @@ shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
   std::string tips;
   if (dict_) {
     dict_->ReverseLookup(e->text, &tips);
-    if (comment_formatter_) {
-      comment_formatter_->Apply(&tips);
+    if (options_) {
+      options_->comment_formatter().Apply(&tips);
     }
     if (!tips.empty()) {
       boost::algorithm::replace_all(tips, " ", separator);
@@ -80,22 +82,20 @@ int ReverseLookupTranslation::Compare(shared_ptr<Translation> other,
 }
 
 ReverseLookupTranslator::ReverseLookupTranslator(Engine *engine)
-    : Translator(engine), initialized_(false), enable_completion_(false) {
+    : Translator(engine), initialized_(false) {
 }
 
 void ReverseLookupTranslator::Initialize() {
   initialized_ = true;  // no retry
   if (!engine_) return;
+  options_.reset(new TranslatorOptions(engine_, "reverse_lookup"));
   Config *config = engine_->schema()->config();
   if (!config) return;
-  config->GetBool("reverse_lookup/enable_completion", &enable_completion_);
   config->GetString("reverse_lookup/prefix", &prefix_);
   config->GetString("reverse_lookup/tips", &tips_);
-  preedit_formatter_.Load(config->GetList("reverse_lookup/preedit_format"));
-  comment_formatter_.Load(config->GetList("reverse_lookup/comment_format"));
   
-  DictionaryComponent *component = dynamic_cast<DictionaryComponent*>(
-      Dictionary::Require("dictionary"));
+  DictionaryComponent *component =
+      dynamic_cast<DictionaryComponent*>(Dictionary::Require("dictionary"));
   if (!component) return;
   dict_.reset(component->CreateDictionaryFromConfig(config, "reverse_lookup"));
   if (dict_) 
@@ -132,7 +132,7 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
   
   DictEntryIterator iter;
   if (start < input.length()) {
-    if (enable_completion_) {
+    if (options_ && options_->enable_completion()) {
       dict_->LookupWords(&iter, code, true, 100);
     }
     else {
@@ -152,15 +152,12 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
     }
   }
   if (!iter.exhausted()) {
-    std::string preedit(input);
-    preedit_formatter_.Apply(&preedit);
-    return boost::make_shared<ReverseLookupTranslation>(iter,
+    return boost::make_shared<ReverseLookupTranslation>(rev_dict_.get(),
+                                                        options_.get(),
                                                         code,
                                                         segment.start,
                                                         segment.end,
-                                                        preedit,
-                                                        &comment_formatter_,
-                                                        rev_dict_.get());
+                                                        iter);
   }
   return shared_ptr<Translation>();
 }

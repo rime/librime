@@ -25,7 +25,9 @@ class Dictionary;
 class UserDictionary;
 struct SyllableGraph;
 
-class R10nTranslator : public Translator, Memory {
+class R10nTranslator : public Translator,
+                       public Memory,
+                       public TranslatorOptions {
  public:
   R10nTranslator(Engine *engine);
   virtual ~R10nTranslator();
@@ -40,18 +42,10 @@ class R10nTranslator : public Translator, Memory {
   const std::string Spell(const Code &code);
 
   // options
-  const std::string& delimiters() const { return delimiters_; }
-  bool enable_completion() const { return enable_completion_; }
   int spelling_hints() const { return spelling_hints_; }
   
  protected:
-  std::string delimiters_;
-  bool enable_completion_;
   int spelling_hints_;
-  
-  Projection preedit_formatter_;
-  Projection comment_formatter_;
-  Patterns user_dict_disabling_patterns_;
 };
 
 }  // namespace rime

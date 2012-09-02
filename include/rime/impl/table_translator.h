@@ -12,8 +12,10 @@
 #include <string>
 #include <rime/common.h>
 #include <rime/config.h>
+#include <rime/translation.h>
 #include <rime/translator.h>
 #include <rime/algo/algebra.h>
+#include <rime/dict/dictionary.h>
 #include <rime/impl/translator_commons.h>
 
 namespace rime {
@@ -21,7 +23,9 @@ namespace rime {
 class Dictionary;
 class UserDictionary;
 
-class TableTranslator : public Translator, Memory {
+class TableTranslator : public Translator,
+                        public Memory,
+                        public TranslatorOptions {
  public:
   TableTranslator(Engine *engine);
   virtual ~TableTranslator();
@@ -36,17 +40,28 @@ class TableTranslator : public Translator, Memory {
   shared_ptr<Translation> MakeSentence(const std::string &input,
                                        size_t start);
 
-  Dictionary* dict() { return dict_.get(); }
-  Projection& comment_formatter() { return comment_formatter_; }
+ protected:
+  bool enable_charset_filter_;
+};
+
+class TableTranslation : public Translation {
+ public:
+  TableTranslation(TranslatorOptions* options, Language* language,
+                   const std::string& input, size_t start, size_t end);
+  TableTranslation(TranslatorOptions* options, Language* language,
+                   const std::string& input, size_t start, size_t end,
+                   const DictEntryIterator& iter);
+  virtual bool Next();
+  virtual shared_ptr<Candidate> Peek();
   
  protected:
-  std::string delimiters_;
-  bool enable_completion_;
-  bool enable_charset_filter_;
-  
-  Projection preedit_formatter_;
-  Projection comment_formatter_;
-  Patterns user_dict_disabling_patterns_;
+  DictEntryIterator iter_;
+  TranslatorOptions* options_;
+  Language* language_;
+  std::string input_;
+  size_t start_;
+  size_t end_;
+  std::string preedit_;
 };
 
 }  // namespace rime

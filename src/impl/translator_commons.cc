@@ -13,6 +13,8 @@
 #include <rime/context.h>
 #include <rime/composition.h>
 #include <rime/engine.h>
+#include <rime/schema.h>
+#include <rime/dict/dictionary.h>
 #include <rime/dict/user_dictionary.h>
 #include <rime/impl/translator_commons.h>
 
@@ -50,52 +52,6 @@ void Sentence::Extend(const DictEntry& entry, size_t end_pos) {
 void Sentence::Offset(size_t offset) {
   set_start(start() + offset);
   set_end(end() + offset);
-}
-
-// TableTranslation
-
-TableTranslation::TableTranslation(const std::string &input,
-                                   size_t start, size_t end,
-                                   const std::string &preedit,
-                                   Projection *comment_formatter)
-    : input_(input), start_(start), end_(end),
-      preedit_(preedit), comment_formatter_(comment_formatter) {
-  set_exhausted(true);
-}
-
-TableTranslation::TableTranslation(const DictEntryIterator& iter,
-                                   const std::string &input,
-                                   size_t start, size_t end,
-                                   const std::string &preedit,
-                                   Projection *comment_formatter)
-    : iter_(iter), input_(input), start_(start), end_(end),
-      preedit_(preedit), comment_formatter_(comment_formatter) {
-  set_exhausted(iter_.exhausted());
-}
-
-bool TableTranslation::Next() {
-  if (exhausted())
-    return false;
-  iter_.Next();
-  set_exhausted(iter_.exhausted());
-  return true;
-}
-
-shared_ptr<Candidate> TableTranslation::Peek() {
-  if (exhausted())
-    return shared_ptr<Candidate>();
-  const shared_ptr<DictEntry> &e(iter_.Peek());
-  std::string comment(e->comment);
-  if (comment_formatter_) {
-    comment_formatter_->Apply(&comment);
-  }
-  return boost::make_shared<SimpleCandidate>(
-      e->remaining_code_length == 0 ? "zh" : "completion",
-      start_,
-      end_,
-      e->text,
-      comment,
-      preedit_);
 }
 
 // CharsetFilter
@@ -183,21 +139,21 @@ void Memory::OnCommit(Context* ctx) {
   std::vector<const DictEntry*> elements;
   BOOST_FOREACH(Composition::value_type &seg, *ctx->composition()) {
     shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
-    bool unrecognized = false;
     shared_ptr<UniquifiedCandidate> uniquified = As<UniquifiedCandidate>(cand);
     if (uniquified) cand = uniquified->items().front();
     shared_ptr<ShadowCandidate> shadow = As<ShadowCandidate>(cand);
     if (shadow) cand = shadow->item();
     shared_ptr<Phrase> phrase = As<Phrase>(cand);
     shared_ptr<Sentence> sentence = As<Sentence>(cand);
-    if (phrase) {
+    bool unrecognized = false;
+    if (phrase && phrase->language() == language()) {
       commit_entry.text += phrase->text();
       commit_entry.code.insert(commit_entry.code.end(),
                                phrase->code().begin(),
                                phrase->code().end());
       elements.push_back(&phrase->entry());
     }
-    else if (sentence) {
+    else if (sentence && sentence->language() == language()) {
       commit_entry.text += sentence->text();
       commit_entry.code.insert(commit_entry.code.end(),
                                sentence->code().begin(),
@@ -227,18 +183,37 @@ void Memory::OnDeleteEntry(Context* ctx) {
     return;
   Segment &seg(ctx->composition()->back());
   shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
-  if (!cand)
-    return;
+  if (!cand) return;
   shared_ptr<UniquifiedCandidate> uniquified = As<UniquifiedCandidate>(cand);
   if (uniquified) cand = uniquified->items().front();
   shared_ptr<ShadowCandidate> shadow = As<ShadowCandidate>(cand);
   if (shadow) cand = shadow->item();
   shared_ptr<Phrase> phrase = As<Phrase>(cand);
-  if (phrase) {
+  if (phrase && phrase->language() == language()) {
     const DictEntry& entry(phrase->entry());
     LOG(INFO) << "deleting entry: '" << entry.text << "'.";
     user_dict_->UpdateEntry(entry, -1);  // mark as deleted in user dict
     ctx->RefreshNonConfirmedComposition();
+  }
+}
+
+// TranslatorOptions
+
+TranslatorOptions::TranslatorOptions(Engine* engine,
+                                     const std::string& prefix)
+    : enable_completion_(prefix == "translator") {
+  if (!engine) return;
+  Config *config = engine->schema()->config();
+  if (config) {
+    config->GetString("speller/delimiter", &delimiters_);
+    config->GetBool(prefix + "/enable_completion", &enable_completion_);
+    preedit_formatter_.Load(config->GetList(prefix + "/preedit_format"));
+    comment_formatter_.Load(config->GetList(prefix + "/comment_format"));
+    user_dict_disabling_patterns_.Load(
+        config->GetList(prefix + "/disable_user_dict_for_patterns"));
+  }
+  if (delimiters_.empty()) {
+    delimiters_ = " ";
   }
 }
 

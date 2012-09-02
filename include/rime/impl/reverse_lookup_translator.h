@@ -18,6 +18,7 @@ namespace rime {
 
 class Dictionary;
 class ReverseLookupDictionary;
+class TranslatorOptions;
 
 class ReverseLookupTranslator : public Translator {
  public:
@@ -33,11 +34,9 @@ class ReverseLookupTranslator : public Translator {
   bool initialized_;
   scoped_ptr<Dictionary> dict_;
   scoped_ptr<ReverseLookupDictionary> rev_dict_;
-  bool enable_completion_;
+  scoped_ptr<TranslatorOptions> options_;
   std::string prefix_;
   std::string tips_;
-  Projection preedit_formatter_;
-  Projection comment_formatter_;
 };
 
 }  // namespace rime

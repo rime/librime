@@ -57,7 +57,7 @@ Processor::Result Speller::ProcessKeyEvent(
         int code_length = static_cast<int>(cand->end() - cand->start());
         if (code_length == max_code_length_ &&       // exceeds max code length
             cand->end() == ctx->input().length() &&  // reaches end of input
-            cand->type() == "zh" &&                  // not raw ascii string
+            cand->type() == "table" &&               // is table entry
             ctx->input().find_first_of(              // no delimiters
                 delimiter_, cand->start()) == std::string::npos) {
           ctx->ConfirmCurrentSelection();

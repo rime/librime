@@ -18,9 +18,8 @@ namespace rime {
 class Candidate {
  public:
   Candidate() : type_(), start_(0), end_(0) {}
-  Candidate(const std::string type,
-            size_t start,
-            size_t end) : type_(type), start_(start), end_(end) {}
+  Candidate(const std::string type, size_t start, size_t end)
+      : type_(type), start_(start), end_(end) {}
   virtual ~Candidate() {}
 
   // recognized by translators in learning phase

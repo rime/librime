@@ -24,14 +24,20 @@ namespace rime {
 
 typedef std::map<int, UserDictEntryCollector> WordGraph;
 
+class Language;
+
 template<class Sentence>
 class Poet {
+  Language* language_;
+
  public:
+  Poet(Language* language) : language_(language) {}
+  
   shared_ptr<Sentence> MakeSentence(const WordGraph& graph,
                                     size_t total_length) {
     const int kMaxHomophonesInMind = 1;
     std::map<int, shared_ptr<Sentence> > sentences;
-    sentences[0] = make_shared<Sentence>();
+    sentences[0] = make_shared<Sentence>(language_);
     // dynamic programming
     BOOST_FOREACH(const WordGraph::value_type& w, graph) {
       size_t start_pos = w.first;
