@@ -6,8 +6,13 @@
 //
 // 2012-04-22 GONG Chen <chen.sst@gmail.com>
 //
+#include <boost/bind.hpp>
 #include <utf8.h>
 #include <rime/config.h>
+#include <rime/context.h>
+#include <rime/composition.h>
+#include <rime/engine.h>
+#include <rime/dict/user_dictionary.h>
 #include <rime/impl/translator_commons.h>
 
 namespace rime {
@@ -92,6 +97,8 @@ shared_ptr<Candidate> TableTranslation::Peek() {
       preedit_);
 }
 
+// CharsetFilter
+
 CharsetFilter::CharsetFilter(shared_ptr<Translation> translation)
     : translation_(translation) {
   LocateNextCandidate();
@@ -133,6 +140,62 @@ bool CharsetFilter::Passed(const std::string& text) {
       return false;
   }
   return true;
+}
+
+// Memory
+
+Memory::Memory(Engine* engine) {
+  if (!engine) return;
+
+  Dictionary::Component *dictionary = Dictionary::Require("dictionary");
+  if (dictionary) {
+    dict_.reset(dictionary->Create(engine->schema()));
+    if (dict_)
+      dict_->Load();
+  }
+  
+  UserDictionary::Component *user_dictionary =
+      UserDictionary::Require("user_dictionary");
+  if (user_dictionary) {
+    user_dict_.reset(user_dictionary->Create(engine->schema()));
+    if (user_dict_) {
+      user_dict_->Load();
+      if (dict_)
+        user_dict_->Attach(dict_->table(), dict_->prism());
+    }
+  }
+
+  commit_connection_ = engine->context()->commit_notifier().connect(
+      boost::bind(&Memory::OnCommit, this, _1));
+  delete_connection_ = engine->context()->delete_notifier().connect(
+      boost::bind(&Memory::OnDeleteEntry, this, _1));
+}
+
+Memory::~Memory() {
+  commit_connection_.disconnect();
+  delete_connection_.disconnect();
+}
+
+void Memory::OnDeleteEntry(Context *ctx) {
+  if (!user_dict_ ||
+      !ctx ||
+      ctx->composition()->empty())
+    return;
+  Segment &seg(ctx->composition()->back());
+  shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
+  if (!cand)
+    return;
+  shared_ptr<UniquifiedCandidate> uniquified = As<UniquifiedCandidate>(cand);
+  if (uniquified) cand = uniquified->items().front();
+  shared_ptr<ShadowCandidate> shadow = As<ShadowCandidate>(cand);
+  if (shadow) cand = shadow->item();
+  shared_ptr<ZhCandidate> zh = As<ZhCandidate>(cand);
+  if (zh) {
+    const DictEntry& entry(zh->entry());
+    LOG(INFO) << "deleting entry: '" << entry.text << "'.";
+    user_dict_->UpdateEntry(entry, -1);  // mark as deleted in user dict
+    ctx->RefreshNonConfirmedComposition();
+  }
 }
 
 }  // namespace rime

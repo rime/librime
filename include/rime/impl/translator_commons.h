@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 #include <boost/regex.hpp>
+#include <boost/signals/connection.hpp>
 #include <rime/common.h>
 #include <rime/config.h>
 #include <rime/candidate.h>
@@ -120,6 +121,29 @@ class CharsetFilter : public Translation {
   bool LocateNextCandidate();
   
   shared_ptr<Translation> translation_;
+};
+
+//
+
+class Context;
+class Engine;
+class Dictionary;
+class UserDictionary;
+
+class Memory {
+ public:
+  Memory(Engine* engine);
+  virtual ~Memory();
+  
+ protected:
+  virtual void OnCommit(Context* ctx) = 0;
+  virtual void OnDeleteEntry(Context* ctx);
+  
+  scoped_ptr<Dictionary> dict_;
+  scoped_ptr<UserDictionary> user_dict_;
+  
+  boost::signals::connection commit_connection_;
+  boost::signals::connection delete_connection_;
 };
 
 }  // namespace rime

@@ -10,7 +10,6 @@
 //
 #include <algorithm>
 #include <boost/algorithm/string/join.hpp>
-#include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <rime/composition.h>
 #include <rime/candidate.h>
@@ -18,7 +17,6 @@
 #include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/schema.h>
-#include <rime/segmentation.h>
 #include <rime/translation.h>
 #include <rime/dict/dictionary.h>
 #include <rime/algo/poet.h>
@@ -121,10 +119,10 @@ class R10nTranslation : public Translation {
 
 R10nTranslator::R10nTranslator(Engine *engine)
     : Translator(engine),
+      Memory(engine),
       enable_completion_(true),
       spelling_hints_(0) {
   if (!engine) return;
-
   Config *config = engine->schema()->config();
   if (config) {
     config->GetString("speller/delimiter", &delimiters_);
@@ -138,34 +136,9 @@ R10nTranslator::R10nTranslator(Engine *engine)
   if (delimiters_.empty()) {
     delimiters_ = " ";
   }
-  
-  Dictionary::Component *dictionary = Dictionary::Require("dictionary");
-  if (dictionary) {
-    dict_.reset(dictionary->Create(engine->schema()));
-    if (dict_)
-      dict_->Load();
-  }
-
-  UserDictionary::Component *user_dictionary =
-      UserDictionary::Require("user_dictionary");
-  if (user_dictionary) {
-    user_dict_.reset(user_dictionary->Create(engine->schema()));
-    if (user_dict_) {
-      user_dict_->Load();
-      if (dict_)
-        user_dict_->Attach(dict_->table(), dict_->prism());
-    }
-  }
-
-  commit_connection_ = engine->context()->commit_notifier().connect(
-      boost::bind(&R10nTranslator::OnCommit, this, _1));
-  delete_connection_ = engine->context()->delete_notifier().connect(
-      boost::bind(&R10nTranslator::OnDeleteEntry, this, _1));
 }
 
 R10nTranslator::~R10nTranslator() {
-  commit_connection_.disconnect();
-  delete_connection_.disconnect();
 }
 
 shared_ptr<Translation> R10nTranslator::Query(const std::string &input,
@@ -268,30 +241,6 @@ void R10nTranslator::OnCommit(Context *ctx) {
       user_dict_->UpdateEntry(commit_entry, 1);
       commit_entry.text.clear();
       commit_entry.code.clear();
-    }
-  }
-}
-
-void R10nTranslator::OnDeleteEntry(Context *ctx) {
-  if (!user_dict_ ||
-      !ctx ||
-      ctx->composition()->empty())
-    return;
-  Segment &seg(ctx->composition()->back());
-  shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
-  if (!cand)
-    return;
-  shared_ptr<UniquifiedCandidate> uniquified = As<UniquifiedCandidate>(cand);
-  if (uniquified) cand = uniquified->items().front();
-  shared_ptr<ShadowCandidate> shadow = As<ShadowCandidate>(cand);
-  if (shadow) cand = shadow->item();
-  shared_ptr<R10nCandidate> r10n_cand = As<R10nCandidate>(cand);
-  if (r10n_cand) {
-    const DictEntry& entry(r10n_cand->entry());
-    if (entry.code.size() >= 2) {
-      LOG(INFO) << "deleting entry: '" << entry.text << "'.";
-      user_dict_->UpdateEntry(entry, -1);  // mark as deleted in user dict
-      ctx->RefreshNonConfirmedComposition();
     }
   }
 }

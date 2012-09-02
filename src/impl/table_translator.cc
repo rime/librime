@@ -9,11 +9,11 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #include <rime/candidate.h>
+#include <rime/composition.h>
 #include <rime/config.h>
 #include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/schema.h>
-#include <rime/segmentation.h>
 #include <rime/translation.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/user_dictionary.h>
@@ -80,10 +80,10 @@ bool LazyTableTranslation::Next() {
 
 TableTranslator::TableTranslator(Engine *engine)
     : Translator(engine),
+      Memory(engine),
       enable_completion_(true),
       enable_charset_filter_(false) {
   if (!engine) return;
-  
   Config *config = engine->schema()->config();
   if (config) {
     config->GetString("speller/delimiter", &delimiters_);
@@ -98,12 +98,6 @@ TableTranslator::TableTranslator(Engine *engine)
   if (delimiters_.empty()) {
     delimiters_ = " ";
   }
-
-  Dictionary::Component *component = Dictionary::Require("dictionary");
-  if (!component) return;
-  dict_.reset(component->Create(engine->schema()));
-  if (dict_)
-    dict_->Load();
 }
 
 TableTranslator::~TableTranslator() {
@@ -170,6 +164,11 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
     translation = MakeSentence(input, segment.start);
   }
   return translation;
+}
+
+void TableTranslator::OnCommit(Context *ctx) {
+  if (!user_dict_) return;
+  // TODO
 }
 
 class SentenceTranslation : public Translation {

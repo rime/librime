@@ -21,7 +21,7 @@ namespace rime {
 class Dictionary;
 class UserDictionary;
 
-class TableTranslator : public Translator {
+class TableTranslator : public Translator, Memory {
  public:
   TableTranslator(Engine *engine);
   virtual ~TableTranslator();
@@ -37,11 +37,12 @@ class TableTranslator : public Translator {
   Projection& comment_formatter() { return comment_formatter_; }
   
  protected:
+  void OnCommit(Context *ctx);
+  
   std::string delimiters_;
   bool enable_completion_;
   bool enable_charset_filter_;
-  scoped_ptr<Dictionary> dict_;
-  scoped_ptr<UserDictionary> user_dict_;
+  
   Projection preedit_formatter_;
   Projection comment_formatter_;
   Patterns user_dict_disabling_patterns_;

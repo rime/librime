@@ -10,7 +10,6 @@
 #define RIME_R10N_TRANSLATOR_H_
 
 #include <string>
-#include <boost/signals/connection.hpp>
 #include <rime/common.h>
 #include <rime/translation.h>
 #include <rime/translator.h>
@@ -26,7 +25,7 @@ class Dictionary;
 class UserDictionary;
 struct SyllableGraph;
 
-class R10nTranslator : public Translator {
+class R10nTranslator : public Translator, Memory {
  public:
   R10nTranslator(Engine *engine);
   virtual ~R10nTranslator();
@@ -44,10 +43,6 @@ class R10nTranslator : public Translator {
   
  protected:
   void OnCommit(Context *ctx);
-  void OnDeleteEntry(Context *ctx);
-  
-  scoped_ptr<Dictionary> dict_;
-  scoped_ptr<UserDictionary> user_dict_;
   
   std::string delimiters_;
   bool enable_completion_;
@@ -56,9 +51,6 @@ class R10nTranslator : public Translator {
   Projection preedit_formatter_;
   Projection comment_formatter_;
   Patterns user_dict_disabling_patterns_;
-  
-  boost::signals::connection commit_connection_;
-  boost::signals::connection delete_connection_;
 };
 
 }  // namespace rime
