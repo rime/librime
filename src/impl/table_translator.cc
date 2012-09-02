@@ -166,9 +166,13 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
   return translation;
 }
 
-void TableTranslator::OnCommit(Context *ctx) {
-  if (!user_dict_) return;
+bool TableTranslator::Memorize(const DictEntry& commit_entry,
+                               const std::vector<const DictEntry*>& elements) {
+  BOOST_FOREACH(const DictEntry* e, elements) {
+    user_dict_->UpdateEntry(*e, 1);
+  }
   // TODO
+  return true;
 }
 
 class SentenceTranslation : public Translation {
@@ -210,7 +214,7 @@ class SentenceTranslation : public Translation {
     }
     DictEntryCollector::reverse_iterator r(collector_.rbegin());
     shared_ptr<DictEntry> entry(r->second.Peek());
-    shared_ptr<ZhCandidate> result = boost::make_shared<ZhCandidate>(
+    shared_ptr<Phrase> result = boost::make_shared<Phrase>(
         start_,
         start_ + r->first,
         entry);

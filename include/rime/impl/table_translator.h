@@ -29,6 +29,9 @@ class TableTranslator : public Translator, Memory {
   virtual shared_ptr<Translation> Query(const std::string &input,
                                         const Segment &segment,
                                         std::string* prompt);
+  virtual bool Memorize(const DictEntry& commit_entry,
+                        const std::vector<const DictEntry*>& elements);
+  
 
   shared_ptr<Translation> MakeSentence(const std::string &input,
                                        size_t start);
@@ -37,8 +40,6 @@ class TableTranslator : public Translator, Memory {
   Projection& comment_formatter() { return comment_formatter_; }
   
  protected:
-  void OnCommit(Context *ctx);
-  
   std::string delimiters_;
   bool enable_completion_;
   bool enable_charset_filter_;

@@ -75,7 +75,7 @@ bool DelimitSyllablesDfs(DelimitSyllableState *state,
 
 }  // anonymous namespace
 
-typedef ZhCandidate R10nCandidate;
+typedef Phrase R10nCandidate;
 typedef Sentence R10nSentence;
 
 class R10nTranslation : public Translation {
@@ -188,61 +188,24 @@ const std::string R10nTranslator::Spell(const Code &code) {
   return result;
 }
 
-void R10nTranslator::OnCommit(Context *ctx) {
-  if (!user_dict_) return;
-  DictEntry commit_entry;
-  std::vector<const DictEntry*> elements;
-  BOOST_FOREACH(Composition::value_type &seg, *ctx->composition()) {
-    shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
-    bool unrecognized = false;
-    shared_ptr<UniquifiedCandidate> uniquified = As<UniquifiedCandidate>(cand);
-    if (uniquified) cand = uniquified->items().front();
-    shared_ptr<ShadowCandidate> shadow = As<ShadowCandidate>(cand);
-    if (shadow) cand = shadow->item();
-    shared_ptr<R10nCandidate> r10n_cand = As<R10nCandidate>(cand);
-    shared_ptr<R10nSentence> sentence = As<R10nSentence>(cand);
-    if (r10n_cand) {
-      commit_entry.text += r10n_cand->text();
-      commit_entry.code.insert(commit_entry.code.end(),
-                               r10n_cand->code().begin(),
-                               r10n_cand->code().end());
-      elements.push_back(&r10n_cand->entry());
-    }
-    else if (sentence) {
-      commit_entry.text += sentence->text();
-      commit_entry.code.insert(commit_entry.code.end(),
-                               sentence->code().begin(),
-                               sentence->code().end());
-      BOOST_FOREACH(const DictEntry& e, sentence->components()) {
-        elements.push_back(&e);
+bool R10nTranslator::Memorize(const DictEntry& commit_entry,
+                              const std::vector<const DictEntry*>& elements) {
+  bool update_elements = false;
+  if (elements.size() > 1) {
+    BOOST_FOREACH(const DictEntry* e, elements) {
+      if (e->code.size() > 1) {
+        update_elements = true;
+        break;
       }
-    }
-    else {
-      unrecognized = true;
-    }
-    if ((unrecognized || seg.status >= Segment::kConfirmed) &&
-        !commit_entry.text.empty()) {
-      DLOG(INFO) << "study commit entry: " << commit_entry.text;
-      bool update_elements = false;
-      if (elements.size() > 1) {
-        BOOST_FOREACH(const DictEntry* e, elements) {
-          if (e->code.size() > 1) {
-            update_elements = true;
-            break;
-          }
-        }
-      }
-      if (update_elements) {
-        BOOST_FOREACH(const DictEntry* e, elements) {
-          user_dict_->UpdateEntry(*e, 0);
-        }
-      }
-      elements.clear();
-      user_dict_->UpdateEntry(commit_entry, 1);
-      commit_entry.text.clear();
-      commit_entry.code.clear();
     }
   }
+  if (update_elements) {
+    BOOST_FOREACH(const DictEntry* e, elements) {
+      user_dict_->UpdateEntry(*e, 0);
+    }
+  }
+  user_dict_->UpdateEntry(commit_entry, 1);
+  return true;
 }
 
 // R10nTranslation implementation

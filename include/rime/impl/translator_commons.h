@@ -32,9 +32,9 @@ class Patterns : public std::vector<boost::regex> {
 
 //
 
-class ZhCandidate : public Candidate {
+class Phrase : public Candidate {
  public:
-  ZhCandidate(size_t start, size_t end,
+  Phrase(size_t start, size_t end,
               const shared_ptr<DictEntry> &entry)
       : Candidate("zh", start, end),
         entry_(entry) {
@@ -109,6 +109,8 @@ class TableTranslation : public Translation {
   Projection *comment_formatter_;
 };
 
+//
+
 class CharsetFilter : public Translation {
  public:
   CharsetFilter(shared_ptr<Translation> translation_);
@@ -129,14 +131,18 @@ class Context;
 class Engine;
 class Dictionary;
 class UserDictionary;
+struct DictEntry;
 
 class Memory {
  public:
   Memory(Engine* engine);
   virtual ~Memory();
   
+  virtual bool Memorize(const DictEntry& commit_entry,
+                        const std::vector<const DictEntry*>& elements) = 0;
+  
  protected:
-  virtual void OnCommit(Context* ctx) = 0;
+  virtual void OnCommit(Context* ctx);
   virtual void OnDeleteEntry(Context* ctx);
   
   scoped_ptr<Dictionary> dict_;

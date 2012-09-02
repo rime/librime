@@ -33,6 +33,9 @@ class R10nTranslator : public Translator, Memory {
   virtual shared_ptr<Translation> Query(const std::string &input,
                                         const Segment &segment,
                                         std::string* prompt);
+  virtual bool Memorize(const DictEntry& commit_entry,
+                        const std::vector<const DictEntry*>& elements);
+  
   const std::string FormatPreedit(const std::string &preedit);
   const std::string Spell(const Code &code);
 
@@ -42,8 +45,6 @@ class R10nTranslator : public Translator, Memory {
   int spelling_hints() const { return spelling_hints_; }
   
  protected:
-  void OnCommit(Context *ctx);
-  
   std::string delimiters_;
   bool enable_completion_;
   int spelling_hints_;

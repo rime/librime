@@ -7,6 +7,7 @@
 // 2012-04-22 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/bind.hpp>
+#include <boost/foreach.hpp>
 #include <utf8.h>
 #include <rime/config.h>
 #include <rime/context.h>
@@ -176,7 +177,50 @@ Memory::~Memory() {
   delete_connection_.disconnect();
 }
 
-void Memory::OnDeleteEntry(Context *ctx) {
+void Memory::OnCommit(Context* ctx) {
+  if (!user_dict_) return;
+  DictEntry commit_entry;
+  std::vector<const DictEntry*> elements;
+  BOOST_FOREACH(Composition::value_type &seg, *ctx->composition()) {
+    shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
+    bool unrecognized = false;
+    shared_ptr<UniquifiedCandidate> uniquified = As<UniquifiedCandidate>(cand);
+    if (uniquified) cand = uniquified->items().front();
+    shared_ptr<ShadowCandidate> shadow = As<ShadowCandidate>(cand);
+    if (shadow) cand = shadow->item();
+    shared_ptr<Phrase> phrase = As<Phrase>(cand);
+    shared_ptr<Sentence> sentence = As<Sentence>(cand);
+    if (phrase) {
+      commit_entry.text += phrase->text();
+      commit_entry.code.insert(commit_entry.code.end(),
+                               phrase->code().begin(),
+                               phrase->code().end());
+      elements.push_back(&phrase->entry());
+    }
+    else if (sentence) {
+      commit_entry.text += sentence->text();
+      commit_entry.code.insert(commit_entry.code.end(),
+                               sentence->code().begin(),
+                               sentence->code().end());
+      BOOST_FOREACH(const DictEntry& e, sentence->components()) {
+        elements.push_back(&e);
+      }
+    }
+    else {
+      unrecognized = true;
+    }
+    if ((unrecognized || seg.status >= Segment::kConfirmed) &&
+        !commit_entry.text.empty()) {
+      DLOG(INFO) << "memorize commit entry: " << commit_entry.text;
+      Memorize(commit_entry, elements);
+      elements.clear();
+      commit_entry.text.clear();
+      commit_entry.code.clear();
+    }
+  }
+}
+
+void Memory::OnDeleteEntry(Context* ctx) {
   if (!user_dict_ ||
       !ctx ||
       ctx->composition()->empty())
@@ -189,9 +233,9 @@ void Memory::OnDeleteEntry(Context *ctx) {
   if (uniquified) cand = uniquified->items().front();
   shared_ptr<ShadowCandidate> shadow = As<ShadowCandidate>(cand);
   if (shadow) cand = shadow->item();
-  shared_ptr<ZhCandidate> zh = As<ZhCandidate>(cand);
-  if (zh) {
-    const DictEntry& entry(zh->entry());
+  shared_ptr<Phrase> phrase = As<Phrase>(cand);
+  if (phrase) {
+    const DictEntry& entry(phrase->entry());
     LOG(INFO) << "deleting entry: '" << entry.text << "'.";
     user_dict_->UpdateEntry(entry, -1);  // mark as deleted in user dict
     ctx->RefreshNonConfirmedComposition();
