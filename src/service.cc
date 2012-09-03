@@ -94,6 +94,18 @@ SessionId Service::CreateSession() {
     id = reinterpret_cast<uintptr_t>(session.get());
     sessions_[id] = session;
   }
+  catch (const std::exception& ex) {
+    LOG(ERROR) << "Error creating session: " << ex.what();
+  }
+  catch (const std::string& ex) {
+    LOG(ERROR) << "Error creating session: " << ex;
+  }
+  catch (const char* ex) {
+    LOG(ERROR) << "Error creating session: " << ex;
+  }
+  catch (int ex) {
+    LOG(ERROR) << "Error creating session: " << ex;
+  }
   catch (...) {
     LOG(ERROR) << "Error creating session.";
   }
