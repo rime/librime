@@ -18,8 +18,8 @@ if(Rime_INCLUDE_DIR AND Rime_LIBRARIES)
     set(Rime_FIND_QUIETLY TRUE)
 endif(Rime_INCLUDE_DIR AND Rime_LIBRARIES)
 
-include(FindPkgConfig)
-PKG_CHECK_MODULES(PC_Rime fcitx)
+#include(FindPkgConfig)
+#PKG_CHECK_MODULES(PC_Rime fcitx)
 
 find_path(Rime_MAIN_INCLUDE_DIR
           NAMES rime_api.h
