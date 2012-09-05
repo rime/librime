@@ -43,6 +43,11 @@ struct DictEntry {
   bool operator< (const DictEntry& other) const;
 };
 
+// represent an entry with user defined code
+struct CustomEntry : DictEntry {
+  std::string custom_code;
+};
+
 class DictEntryList : public std::vector<shared_ptr<DictEntry> > {
  public:
   void Sort();

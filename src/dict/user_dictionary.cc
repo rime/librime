@@ -68,32 +68,13 @@ struct DfsState {
 };
 
 void DfsState::SaveEntry(size_t pos) {
-  size_t seperator_pos = key.find('\t');
-  if (seperator_pos == std::string::npos)
-    return;
-  shared_ptr<DictEntry> e = make_shared<DictEntry>();
-  e->text = key.substr(seperator_pos + 1);
-  int commit_count = 0;
-  double dee = 0.0;
-  TickCount last_tick = 0;
-  if (!UserDictionary::UnpackValues(value, &commit_count, &dee, &last_tick))
-    return;
-  if (commit_count < 0)  // deleted entry
-    return;
-  dee = algo::formula_d(0, (double)present_tick, dee, (double)last_tick);
-  e->commit_count = commit_count;
-  // TODO: argument s not defined...
-  e->weight = algo::formula_p(0,
-                              (double)commit_count / present_tick,
-                              (double)present_tick,
-                              dee) * credibility.back();
-  e->code = code;
-  DLOG(INFO) << "pos = " << pos << ", text = '" << e->text
-             << "', code_len = " << e->code.size()
-             << ", present_tick = " << present_tick
-             << ", weight = " << e->weight
-             << ", commit_count = " << e->commit_count;
-  (*collector)[pos].push_back(e);
+  shared_ptr<DictEntry> e =
+      UserDictionary::CreateDictEntry<DictEntry>(key, value, present_tick, credibility.back());
+  if (e) {
+    e->code = code;
+    DLOG(INFO) << "add entry at pos " << pos;
+    (*collector)[pos].push_back(e);
+  }
 }
 
 // UserDictionary members
@@ -202,6 +183,34 @@ shared_ptr<UserDictEntryCollector> UserDictionary::Lookup(const SyllableGraph &s
     v.second.Sort();
   }
   return state.collector;
+}
+
+shared_ptr<DictEntryList> UserDictionary::LookupWords(const std::string &input,
+                                                      bool expand_search) {
+  shared_ptr<DictEntryList> result;
+  TickCount present_tick = tick_ + 1;
+  size_t len = input.length();
+  std::string key;
+  std::string value;
+  std::string full_code;
+  shared_ptr<UserDbAccessor> a = db_->Query(input);
+  while (a && a->GetNextRecord(&key, &value)) {
+    bool is_exact_match = (len < key.length() && key[len] == ' ');
+    if (!is_exact_match && !expand_search)
+      break;
+    shared_ptr<CustomEntry> e =
+        CreateDictEntry<CustomEntry>(key, value, present_tick, 1.0, &full_code);
+    if (!e)
+      continue;
+    if (full_code.length() > len) {
+      e->remaining_code_length = full_code.length() - len;
+    }
+    e->custom_code = full_code;
+    if (!result)
+      result = make_shared<DictEntryList>();
+    result->push_back(e);
+  }
+  return result;
 }
 
 bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
@@ -314,6 +323,46 @@ bool UserDictionary::UnpackValues(const std::string &value,
     }
   }
   return true;
+}
+
+template <class EntryType>
+shared_ptr<EntryType> UserDictionary::CreateDictEntry(const std::string& key,
+                                                      const std::string& value,
+                                                      TickCount present_tick,
+                                                      double credibility,
+                                                      std::string* full_code) {
+  //BOOST_MPL_ASSERT(( boost::is_base_of(DictEntry, EntryType) ));
+  shared_ptr<EntryType> e;  
+  size_t separator_pos = key.find('\t');
+  if (separator_pos == std::string::npos)
+    return e;
+  int commit_count = 0;
+  double dee = 0.0;
+  TickCount last_tick = 0;
+  if (!UnpackValues(value, &commit_count, &dee, &last_tick))
+    return e;
+  if (commit_count < 0)  // deleted entry
+    return e;
+  dee = algo::formula_d(0, (double)present_tick, dee, (double)last_tick);
+  // create!
+  e = make_shared<EntryType>();
+  e->text = key.substr(separator_pos + 1);
+  e->commit_count = commit_count;
+  // TODO: argument s not defined...
+  e->weight = algo::formula_p(0,
+                              (double)commit_count / present_tick,
+                              (double)present_tick,
+                              dee) * credibility;
+  if (full_code) {
+    *full_code = key.substr(0, separator_pos);
+    boost::trim_right(*full_code);
+  }
+  DLOG(INFO) << "text = '" << e->text
+             << "', code_len = " << e->code.size()
+             << ", weight = " << e->weight
+             << ", commit_count = " << e->commit_count
+             << ", present_tick = " << present_tick;
+  return e;
 }
 
 // UserDictionaryComponent members

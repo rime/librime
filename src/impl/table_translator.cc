@@ -171,9 +171,6 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
     }
   }
 
-  std::string preedit(input);
-  preedit_formatter_.Apply(&preedit);
-
   std::string code(input);
   boost::trim_right_if(code, boost::is_any_of(delimiters_));
   
