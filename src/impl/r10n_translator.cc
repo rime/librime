@@ -96,7 +96,10 @@ class R10nTranslation : public Translation {
   const std::string GetOriginalSpelling(const CandidateT &cand) const;
   const shared_ptr<Sentence> MakeSentence(Dictionary *dict,
                                           UserDictionary *user_dict);
-
+  bool HasCandidate(const std::string& text) const {
+    return candidate_set_.find(text) != candidate_set_.end();
+  }
+  
   R10nTranslator *translator_;
   const std::string input_;
   size_t start_;
@@ -293,7 +296,7 @@ bool R10nTranslation::Next() {
     CheckEmpty();
   }
   while (!exhausted() && /* skip duplicate candidates */
-         candidate_set_.find(Peek()->text()) != candidate_set_.end());
+         HasCandidate(Peek()->text()));
   return exhausted();
 }
 

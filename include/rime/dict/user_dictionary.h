@@ -7,7 +7,7 @@
 // 2011-10-30 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_USER_DICTIONARY_H_
-#define RIME_USER_DICTIONRAY_H_
+#define RIME_USER_DICTIONARY_H_
 
 #include <stdint.h>
 #include <map>
@@ -21,6 +21,23 @@ namespace rime {
 typedef uint64_t TickCount;
 
 struct UserDictEntryCollector : std::map<size_t, DictEntryList> {
+};
+
+class UserDictEntryIterator {
+ public:
+  UserDictEntryIterator() : entries_(), index_(0) {}
+  
+  void Add(const shared_ptr<DictEntry>& entry);
+  void SortN(size_t count);
+  shared_ptr<DictEntry> Peek();
+  bool Next();
+  bool exhausted() const {
+    return !entries_ || index_ >= entries_->size();
+  }
+  
+ protected:
+  shared_ptr<DictEntryList> entries_;
+  size_t index_;
 };
 
 class Schema;
@@ -43,8 +60,8 @@ class UserDictionary : public Class<UserDictionary, Schema*> {
                                             size_t start_pos,
                                             size_t depth_limit = 0,
                                             double initial_credibility = 1.0);
-  shared_ptr<DictEntryList> LookupWords(const std::string &input,
-                                        bool expand_search = false);
+  const UserDictEntryIterator LookupWords(const std::string &input,
+                                          bool predictive);
   bool UpdateEntry(const DictEntry &entry, int commit);
   bool UpdateTickCount(TickCount increment);
 
@@ -86,4 +103,4 @@ class UserDictionaryComponent : public UserDictionary::Component {
 
 }  // namespace rime
 
-#endif  // RIME_USER_DICTIONRAY_H_
+#endif  // RIME_USER_DICTIONARY_H_

@@ -51,6 +51,7 @@ struct CustomEntry : DictEntry {
 class DictEntryList : public std::vector<shared_ptr<DictEntry> > {
  public:
   void Sort();
+  void SortN(size_t count);
 };
 
 class Vocabulary;

@@ -41,26 +41,43 @@ TableTranslation::TableTranslation(TranslatorOptions* options,
                                    Language* language,
                                    const std::string &input,
                                    size_t start, size_t end,
-                                   const DictEntryIterator& iter)
-    : iter_(iter), options_(options), language_(language),
-      input_(input), start_(start), end_(end), preedit_(input) {
+                                   const DictEntryIterator& iter,
+                                   const UserDictEntryIterator& uter)
+    : options_(options), language_(language),
+      input_(input), start_(start), end_(end), preedit_(input),
+      iter_(iter), uter_(uter) {
   if (options_)
     options_->preedit_formatter().Apply(&preedit_);
-  set_exhausted(iter_.exhausted());
+  CheckEmpty();
 }
 
 bool TableTranslation::Next() {
   if (exhausted())
     return false;
-  iter_.Next();
-  set_exhausted(iter_.exhausted());
-  return true;
+  do {
+    bool prefer_user_phrase = PreferUserPhrase();
+    candidate_set_.insert(PreferedEntry(prefer_user_phrase)->text);
+    if (prefer_user_phrase) {
+      uter_.Next();
+      if (uter_.exhausted())
+        FetchMoreUserPhrases();
+    }
+    else {
+      iter_.Next();
+      if (iter_.exhausted())
+        FetchMoreTableEntries();
+    }
+    CheckEmpty();
+  }
+  while (!exhausted() && /* skip duplicate candidates */
+         HasCandidate(PreferedEntry(PreferUserPhrase())->text));
+  return !exhausted();
 }
 
 shared_ptr<Candidate> TableTranslation::Peek() {
   if (exhausted())
     return shared_ptr<Candidate>();
-  const shared_ptr<DictEntry> &e(iter_.Peek());
+  const shared_ptr<DictEntry> &e = PreferedEntry(PreferUserPhrase());
   std::string comment(e->comment);
   if (options_) {
     options_->comment_formatter().Apply(&comment);
@@ -76,6 +93,25 @@ shared_ptr<Candidate> TableTranslation::Peek() {
   return phrase;
 }
 
+bool TableTranslation::CheckEmpty() {
+  bool is_empty = iter_.exhausted() && uter_.exhausted();
+  set_exhausted(is_empty);
+  return is_empty;
+}
+
+bool TableTranslation::PreferUserPhrase() {
+  if (uter_.exhausted())
+    return false;
+  if (iter_.exhausted())
+    return true;
+  if (iter_.Peek()->remaining_code_length == 0 &&
+      uter_.Peek()->remaining_code_length != 0)
+    return false;
+  else
+    return true;
+}
+
+
 class LazyTableTranslation : public TableTranslation {
  public:
   static const size_t kInitialSearchLimit = 10;
@@ -85,15 +121,17 @@ class LazyTableTranslation : public TableTranslation {
                        const std::string &input,
                        size_t start, size_t end,
                        bool enable_user_dict);
-  virtual bool Next();
+  virtual bool FetchMoreTableEntries();
   
  private:
   Dictionary* dict_;
-  bool enable_user_dict_;
+  UserDictionary* user_dict_;
   size_t limit_;
 };
 
 // LazyTableTranslation
+
+// TODO: more lazy
 
 LazyTableTranslation::LazyTableTranslation(TableTranslator* translator,
                                            const std::string &input,
@@ -103,33 +141,32 @@ LazyTableTranslation::LazyTableTranslation(TableTranslator* translator,
                        translator->language(),
                        input, start, end),
       dict_(translator->dict()),
-      enable_user_dict_(enable_user_dict),
+      user_dict_(enable_user_dict ? translator->user_dict() : NULL),
       limit_(kInitialSearchLimit) {
-  if (dict_)
-    dict_->LookupWords(&iter_, input, true, kInitialSearchLimit);
-  set_exhausted(iter_.exhausted());
+  if (user_dict_)
+    uter_ = user_dict_->LookupWords(input, true);
+  FetchMoreTableEntries();
+  CheckEmpty();
 }
 
-bool LazyTableTranslation::Next() {
-  if (exhausted())
+bool LazyTableTranslation::FetchMoreTableEntries() {
+  if (!dict_ || limit_ == 0)
     return false;
-  iter_.Next();
-  if (dict_ && limit_ > 0 && iter_.exhausted()) {
-    limit_ *= kExpandingFactor;
-    size_t previous_entry_count = iter_.entry_count();
-    DLOG(INFO) << "fetching more entries: limit = " << limit_
-               << ", count = " << previous_entry_count;
-    DictEntryIterator more;
-    if (dict_->LookupWords(&more, input_, true, limit_) < limit_) {
-      DLOG(INFO) << "all entries obtained.";
-      limit_ = 0;  // no more try
-    }
-    if (more.entry_count() > previous_entry_count) {
-      more.Skip(previous_entry_count);
-      iter_ = more;
-    }
+  size_t previous_entry_count = iter_.entry_count();
+  DLOG(INFO) << "fetching more table entries: limit = " << limit_
+             << ", count = " << previous_entry_count;
+  DictEntryIterator more;
+  if (dict_->LookupWords(&more, input_, true, limit_) < limit_) {
+    DLOG(INFO) << "all entries obtained.";
+    limit_ = 0;  // no more try
   }
-  set_exhausted(iter_.exhausted());
+  else {
+    limit_ *= kExpandingFactor;
+  }
+  if (more.entry_count() > previous_entry_count) {
+    more.Skip(previous_entry_count);
+    iter_ = more;
+  }
   return true;
 }
 
@@ -186,14 +223,19 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
   else {
     DictEntryIterator iter;
     dict_->LookupWords(&iter, code, false);
-    if (!iter.exhausted())
+    UserDictEntryIterator uter;
+    if (user_dict_ && enable_user_dict) {
+      uter = user_dict_->LookupWords(code, false);
+    }
+    if (!iter.exhausted() || !uter.exhausted())
       translation = boost::make_shared<TableTranslation>(
           this,
           language(),
           code,
           segment.start,
           segment.start + input.length(),
-          iter);
+          iter,
+          uter);
   }
 
   if (translation) {

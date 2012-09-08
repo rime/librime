@@ -61,6 +61,11 @@ void DictEntryList::Sort() {
   std::sort(begin(), end(), dereference_less<DictEntryList::value_type>);
 }
 
+void DictEntryList::SortN(size_t count) {
+  iterator nth(count > size() ? end() : begin() + count);
+  std::sort(begin(), nth, dereference_less<DictEntryList::value_type>);
+}
+
 DictEntryList* Vocabulary::LocateEntries(const Code &code) {
   Vocabulary *v = this;
   size_t n = code.size();

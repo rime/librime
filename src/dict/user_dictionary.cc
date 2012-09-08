@@ -40,7 +40,7 @@ struct DfsState {
   bool IsPrefixMatch(const std::string &prefix) {
     return boost::starts_with(key, prefix);
   }
-  void SaveEntry(size_t pos);
+  void RecruitEntry(size_t pos);
   bool NextEntry() {
     if (!accessor->GetNextRecord(&key, &value)) {
       key.clear();
@@ -67,7 +67,7 @@ struct DfsState {
   }
 };
 
-void DfsState::SaveEntry(size_t pos) {
+void DfsState::RecruitEntry(size_t pos) {
   shared_ptr<DictEntry> e =
       UserDictionary::CreateDictEntry<DictEntry>(key, value, present_tick, credibility.back());
   if (e) {
@@ -75,6 +75,33 @@ void DfsState::SaveEntry(size_t pos) {
     DLOG(INFO) << "add entry at pos " << pos;
     (*collector)[pos].push_back(e);
   }
+}
+
+// UserDictEntryIterator members
+
+void UserDictEntryIterator::Add(const shared_ptr<DictEntry>& entry) {
+  if (!entries_) {
+    entries_ = make_shared<DictEntryList>();
+  }
+  entries_->push_back(entry);
+}
+
+void UserDictEntryIterator::SortN(size_t count) {
+  if (entries_)
+    entries_->SortN(count);
+}
+
+shared_ptr<DictEntry> UserDictEntryIterator::Peek() {
+  if (exhausted())
+    return shared_ptr<DictEntry>();
+  return (*entries_)[index_];
+}
+
+bool UserDictEntryIterator::Next() {
+  if (exhausted())
+    return false;
+  ++index_;
+  return exhausted();
 }
 
 // UserDictionary members
@@ -144,7 +171,7 @@ void UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
     }
     while (state->IsExactMatch(prefix)) {  // 'b |e ' vs. 'b e \tBe'
       DLOG(INFO) << "match found for '" << prefix << "'.";
-      state->SaveEntry(end_pos);
+      state->RecruitEntry(end_pos);
       if (!state->NextEntry())  // reached the end of db
         return;
     }
@@ -185,30 +212,35 @@ shared_ptr<UserDictEntryCollector> UserDictionary::Lookup(const SyllableGraph &s
   return state.collector;
 }
 
-shared_ptr<DictEntryList> UserDictionary::LookupWords(const std::string &input,
-                                                      bool expand_search) {
-  shared_ptr<DictEntryList> result;
+const UserDictEntryIterator UserDictionary::LookupWords(const std::string &input,
+                                                        bool predictive) {
+  UserDictEntryIterator result;
   TickCount present_tick = tick_ + 1;
   size_t len = input.length();
+  size_t exact_match_count = 0;
   std::string key;
   std::string value;
   std::string full_code;
   shared_ptr<UserDbAccessor> a = db_->Query(input);
   while (a && a->GetNextRecord(&key, &value)) {
     bool is_exact_match = (len < key.length() && key[len] == ' ');
-    if (!is_exact_match && !expand_search)
+    if (!is_exact_match && !predictive)
       break;
     shared_ptr<CustomEntry> e =
         CreateDictEntry<CustomEntry>(key, value, present_tick, 1.0, &full_code);
     if (!e)
       continue;
     if (full_code.length() > len) {
+      e->comment = "~" + full_code.substr(len);
       e->remaining_code_length = full_code.length() - len;
     }
     e->custom_code = full_code;
-    if (!result)
-      result = make_shared<DictEntryList>();
-    result->push_back(e);
+    result.Add(e);
+    if (is_exact_match)
+      ++exact_match_count;
+  }
+  if (exact_match_count > 0) {
+    result.SortN(exact_match_count);
   }
   return result;
 }
