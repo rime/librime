@@ -69,7 +69,7 @@ struct DfsState {
 
 void DfsState::RecruitEntry(size_t pos) {
   shared_ptr<DictEntry> e =
-      UserDictionary::CreateDictEntry<DictEntry>(key, value, present_tick, credibility.back());
+      UserDictionary::CreateDictEntry(key, value, present_tick, credibility.back());
   if (e) {
     e->code = code;
     DLOG(INFO) << "add entry at pos " << pos;
@@ -226,15 +226,16 @@ const UserDictEntryIterator UserDictionary::LookupWords(const std::string &input
     bool is_exact_match = (len < key.length() && key[len] == ' ');
     if (!is_exact_match && !predictive)
       break;
-    shared_ptr<CustomEntry> e =
-        CreateDictEntry<CustomEntry>(key, value, present_tick, 1.0, &full_code);
+    shared_ptr<DictEntry> e =
+        CreateDictEntry(key, value, present_tick, 1.0, &full_code);
     if (!e)
       continue;
+    e->custom_code = full_code;
+    boost::trim_right(full_code);  // remove trailing space a user dict key has
     if (full_code.length() > len) {
       e->comment = "~" + full_code.substr(len);
       e->remaining_code_length = full_code.length() - len;
     }
-    e->custom_code = full_code;
     result.Add(e);
     if (is_exact_match)
       ++exact_match_count;
@@ -246,8 +247,8 @@ const UserDictEntryIterator UserDictionary::LookupWords(const std::string &input
 }
 
 bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
-  std::string code_str;
-  if (!TranslateCodeToString(entry.code, &code_str))
+  std::string code_str(entry.custom_code);
+  if (code_str.empty() && !TranslateCodeToString(entry.code, &code_str))
     return false;
   std::string key(code_str + '\t' + entry.text);
   std::string value;
@@ -357,14 +358,12 @@ bool UserDictionary::UnpackValues(const std::string &value,
   return true;
 }
 
-template <class EntryType>
-shared_ptr<EntryType> UserDictionary::CreateDictEntry(const std::string& key,
+shared_ptr<DictEntry> UserDictionary::CreateDictEntry(const std::string& key,
                                                       const std::string& value,
                                                       TickCount present_tick,
                                                       double credibility,
                                                       std::string* full_code) {
-  //BOOST_MPL_ASSERT(( boost::is_base_of(DictEntry, EntryType) ));
-  shared_ptr<EntryType> e;  
+  shared_ptr<DictEntry> e;  
   size_t separator_pos = key.find('\t');
   if (separator_pos == std::string::npos)
     return e;
@@ -377,7 +376,7 @@ shared_ptr<EntryType> UserDictionary::CreateDictEntry(const std::string& key,
     return e;
   dee = algo::formula_d(0, (double)present_tick, dee, (double)last_tick);
   // create!
-  e = make_shared<EntryType>();
+  e = make_shared<DictEntry>();
   e->text = key.substr(separator_pos + 1);
   e->commit_count = commit_count;
   // TODO: argument s not defined...
@@ -387,7 +386,6 @@ shared_ptr<EntryType> UserDictionary::CreateDictEntry(const std::string& key,
                               dee) * credibility;
   if (full_code) {
     *full_code = key.substr(0, separator_pos);
-    boost::trim_right(*full_code);
   }
   DLOG(INFO) << "text = '" << e->text
              << "', code_len = " << e->code.size()

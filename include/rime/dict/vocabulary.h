@@ -31,21 +31,17 @@ class Code : public std::vector<int> {
 };
 
 struct DictEntry {
-  Code code;
   std::string text;
   std::string comment;
   std::string preedit;
   double weight;
   int commit_count;
+  Code code;  // multi-syllable code from prism
+  std::string custom_code;  // user defined code
   int remaining_code_length;
 
   DictEntry() : weight(0.0), commit_count(0), remaining_code_length(0) {}
   bool operator< (const DictEntry& other) const;
-};
-
-// represent an entry with user defined code
-struct CustomEntry : DictEntry {
-  std::string custom_code;
 };
 
 class DictEntryList : public std::vector<shared_ptr<DictEntry> > {

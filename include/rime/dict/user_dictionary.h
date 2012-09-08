@@ -68,8 +68,7 @@ class UserDictionary : public Class<UserDictionary, Schema*> {
   const std::string& name() const { return name_; }
   const TickCount tick() const { return tick_; }
 
-  template <class EntryType>
-  static shared_ptr<EntryType> CreateDictEntry(const std::string& key,
+  static shared_ptr<DictEntry> CreateDictEntry(const std::string& key,
                                                const std::string& value,
                                                TickCount present_tick,
                                                double credibility = 1.0,
