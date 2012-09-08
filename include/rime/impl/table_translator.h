@@ -35,7 +35,6 @@ class TableTranslator : public Translator,
   virtual bool Memorize(const DictEntry& commit_entry,
                         const std::vector<const DictEntry*>& elements);
   
-
   shared_ptr<Translation> MakeSentence(const std::string &input,
                                        size_t start);
 

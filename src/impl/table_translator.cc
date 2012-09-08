@@ -111,6 +111,7 @@ bool TableTranslation::PreferUserPhrase() {
     return true;
 }
 
+// LazyTableTranslation
 
 class LazyTableTranslation : public TableTranslation {
  public:
@@ -121,17 +122,16 @@ class LazyTableTranslation : public TableTranslation {
                        const std::string &input,
                        size_t start, size_t end,
                        bool enable_user_dict);
+  virtual bool FetchMoreUserPhrases();
   virtual bool FetchMoreTableEntries();
   
  private:
   Dictionary* dict_;
   UserDictionary* user_dict_;
   size_t limit_;
+  size_t user_dict_limit_;
+  std::string user_dict_key_;
 };
-
-// LazyTableTranslation
-
-// TODO: more lazy
 
 LazyTableTranslation::LazyTableTranslation(TableTranslator* translator,
                                            const std::string &input,
@@ -142,11 +142,25 @@ LazyTableTranslation::LazyTableTranslation(TableTranslator* translator,
                        input, start, end),
       dict_(translator->dict()),
       user_dict_(enable_user_dict ? translator->user_dict() : NULL),
-      limit_(kInitialSearchLimit) {
-  if (user_dict_)
-    uter_ = user_dict_->LookupWords(input, true);
+      limit_(kInitialSearchLimit), user_dict_limit_(kInitialSearchLimit) {
+  FetchMoreUserPhrases();
   FetchMoreTableEntries();
   CheckEmpty();
+}
+
+bool LazyTableTranslation::FetchMoreUserPhrases() {
+  if (!user_dict_ || user_dict_limit_ == 0)
+    return false;
+  size_t count = user_dict_->LookupWords(&uter_, input_, true,
+                                         user_dict_limit_, &user_dict_key_);
+  if (count < user_dict_limit_) {
+    DLOG(INFO) << "all user dict entries obtained.";
+    user_dict_limit_ = 0;  // no more try
+  }
+  else {
+    user_dict_limit_ *= kExpandingFactor;
+  }
+  return !uter_.exhausted();
 }
 
 bool LazyTableTranslation::FetchMoreTableEntries() {
@@ -157,7 +171,7 @@ bool LazyTableTranslation::FetchMoreTableEntries() {
              << ", count = " << previous_entry_count;
   DictEntryIterator more;
   if (dict_->LookupWords(&more, input_, true, limit_) < limit_) {
-    DLOG(INFO) << "all entries obtained.";
+    DLOG(INFO) << "all table entries obtained.";
     limit_ = 0;  // no more try
   }
   else {
@@ -225,7 +239,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
     dict_->LookupWords(&iter, code, false);
     UserDictEntryIterator uter;
     if (user_dict_ && enable_user_dict) {
-      uter = user_dict_->LookupWords(code, false);
+      user_dict_->LookupWords(&uter, code, false);
     }
     if (!iter.exhausted() || !uter.exhausted())
       translation = boost::make_shared<TableTranslation>(

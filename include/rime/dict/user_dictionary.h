@@ -60,8 +60,11 @@ class UserDictionary : public Class<UserDictionary, Schema*> {
                                             size_t start_pos,
                                             size_t depth_limit = 0,
                                             double initial_credibility = 1.0);
-  const UserDictEntryIterator LookupWords(const std::string &input,
-                                          bool predictive);
+  size_t LookupWords(UserDictEntryIterator* result,
+                     const std::string& input,
+                     bool predictive,
+                     size_t limit = 0,
+                     std::string* resume_key = NULL);
   bool UpdateEntry(const DictEntry &entry, int commit);
   bool UpdateTickCount(TickCount increment);
 

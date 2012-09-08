@@ -6,8 +6,8 @@
 //
 // 2011-10-30 GONG Chen <chen.sst@gmail.com>
 //
-#include <map>
 #include <algorithm>
+#include <map>
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
@@ -212,17 +212,28 @@ shared_ptr<UserDictEntryCollector> UserDictionary::Lookup(const SyllableGraph &s
   return state.collector;
 }
 
-const UserDictEntryIterator UserDictionary::LookupWords(const std::string &input,
-                                                        bool predictive) {
-  UserDictEntryIterator result;
+size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
+                                   const std::string& input,
+                                   bool predictive,
+                                   size_t limit,
+                                   std::string* resume_key) {
   TickCount present_tick = tick_ + 1;
   size_t len = input.length();
+  size_t count = 0;
   size_t exact_match_count = 0;
   std::string key;
   std::string value;
   std::string full_code;
   shared_ptr<UserDbAccessor> a = db_->Query(input);
-  while (a && a->GetNextRecord(&key, &value)) {
+  if (!a)
+    return 0;
+  if (resume_key && !resume_key->empty()) {
+    if (!a->Forward(*resume_key) ||
+        !a->GetNextRecord(&key, &value))
+      return 0;
+    DLOG(INFO) << "resume lookup after: " << key;
+  }
+  while (a->GetNextRecord(&key, &value)) {
     bool is_exact_match = (len < key.length() && key[len] == ' ');
     if (!is_exact_match && !predictive)
       break;
@@ -236,14 +247,21 @@ const UserDictEntryIterator UserDictionary::LookupWords(const std::string &input
       e->comment = "~" + full_code.substr(len);
       e->remaining_code_length = full_code.length() - len;
     }
-    result.Add(e);
+    result->Add(e);
+    ++count;
     if (is_exact_match)
       ++exact_match_count;
+    else if (limit && count >= limit)
+      break;
   }
   if (exact_match_count > 0) {
-    result.SortN(exact_match_count);
+    result->SortN(exact_match_count);
   }
-  return result;
+  if (resume_key) {
+    *resume_key = key;
+    DLOG(INFO) << "resume key reset to: " << *resume_key;
+  }
+  return count;
 }
 
 bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
