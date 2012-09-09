@@ -99,6 +99,40 @@ bool CharsetFilter::Passed(const std::string& text) {
   return true;
 }
 
+// UniqueFilter
+
+UniqueFilter::UniqueFilter(shared_ptr<Translation> translation)
+    : translation_(translation) {
+  set_exhausted(!translation_ || translation_->exhausted());
+}
+
+bool UniqueFilter::Next() {
+  if (exhausted())
+    return false;
+  // skip duplicate candidates
+  do {
+    candidate_set_.insert(translation_->Peek()->text());
+    translation_->Next();
+  }
+  while (!translation_->exhausted() &&
+         AlreadyHas(translation_->Peek()->text()));
+  if (translation_->exhausted()) {
+    set_exhausted(true);
+    return false;
+  }
+  return true;
+}
+
+shared_ptr<Candidate> UniqueFilter::Peek() {
+  if (exhausted())
+    return shared_ptr<Candidate>();
+  return translation_->Peek();
+}
+
+bool UniqueFilter::AlreadyHas(const std::string& text) const {
+  return candidate_set_.find(text) != candidate_set_.end();
+}
+
 // Memory
 
 Memory::Memory(Engine* engine) {
@@ -216,5 +250,16 @@ TranslatorOptions::TranslatorOptions(Engine* engine,
     delimiters_ = " ";
   }
 }
+
+bool TranslatorOptions::IsUserDictDisabledFor(const std::string& input) const {
+  if (user_dict_disabling_patterns_.empty())
+    return false;
+  BOOST_FOREACH(const boost::regex& pattern, user_dict_disabling_patterns_) {
+    if (boost::regex_match(input, pattern))
+      return true;
+  }
+  return false;
+}
+
 
 }  // namespace rime

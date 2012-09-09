@@ -28,10 +28,11 @@ namespace rime {
 
 TableTranslation::TableTranslation(TranslatorOptions* options,
                                    Language* language,
-                                   const std::string &input,
-                                   size_t start, size_t end)
+                                   const std::string& input,
+                                   size_t start, size_t end,
+                                   const std::string& preedit)
     : options_(options), language_(language),
-      input_(input), start_(start), end_(end), preedit_(input) {
+      input_(input), start_(start), end_(end), preedit_(preedit) {
   if (options_)
     options_->preedit_formatter().Apply(&preedit_);
   set_exhausted(true);
@@ -39,12 +40,13 @@ TableTranslation::TableTranslation(TranslatorOptions* options,
 
 TableTranslation::TableTranslation(TranslatorOptions* options,
                                    Language* language,
-                                   const std::string &input,
+                                   const std::string& input,
                                    size_t start, size_t end,
+                                   const std::string& preedit,
                                    const DictEntryIterator& iter,
                                    const UserDictEntryIterator& uter)
     : options_(options), language_(language),
-      input_(input), start_(start), end_(end), preedit_(input),
+      input_(input), start_(start), end_(end), preedit_(preedit),
       iter_(iter), uter_(uter) {
   if (options_)
     options_->preedit_formatter().Apply(&preedit_);
@@ -54,23 +56,17 @@ TableTranslation::TableTranslation(TranslatorOptions* options,
 bool TableTranslation::Next() {
   if (exhausted())
     return false;
-  do {
-    bool prefer_user_phrase = PreferUserPhrase();
-    candidate_set_.insert(PreferedEntry(prefer_user_phrase)->text);
-    if (prefer_user_phrase) {
-      uter_.Next();
-      if (uter_.exhausted())
-        FetchMoreUserPhrases();
-    }
-    else {
-      iter_.Next();
-      if (iter_.exhausted())
-        FetchMoreTableEntries();
-    }
-    CheckEmpty();
+  if (PreferUserPhrase()) {
+    uter_.Next();
+    if (uter_.exhausted())
+      FetchMoreUserPhrases();
   }
-  while (!exhausted() && /* skip duplicate candidates */
-         HasCandidate(PreferedEntry(PreferUserPhrase())->text));
+  else {
+    iter_.Next();
+    if (iter_.exhausted())
+      FetchMoreTableEntries();
+  }
+  CheckEmpty();
   return !exhausted();
 }
 
@@ -119,8 +115,9 @@ class LazyTableTranslation : public TableTranslation {
   static const size_t kExpandingFactor = 10;
   
   LazyTableTranslation(TableTranslator* translator,
-                       const std::string &input,
+                       const std::string& input,
                        size_t start, size_t end,
+                       const std::string& preedit,
                        bool enable_user_dict);
   virtual bool FetchMoreUserPhrases();
   virtual bool FetchMoreTableEntries();
@@ -134,12 +131,13 @@ class LazyTableTranslation : public TableTranslation {
 };
 
 LazyTableTranslation::LazyTableTranslation(TableTranslator* translator,
-                                           const std::string &input,
+                                           const std::string& input,
                                            size_t start, size_t end,
+                                           const std::string& preedit,
                                            bool enable_user_dict)
     : TableTranslation(translator,
                        translator->language(),
-                       input, start, end),
+                       input, start, end, preedit),
       dict_(translator->dict()),
       user_dict_(enable_user_dict ? translator->user_dict() : NULL),
       limit_(kInitialSearchLimit), user_dict_limit_(kInitialSearchLimit) {
@@ -212,16 +210,10 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
 
-  bool enable_user_dict = true;
-  if (!user_dict_disabling_patterns_.empty()) {
-    BOOST_FOREACH(const boost::regex& pattern, user_dict_disabling_patterns_) {
-      if (boost::regex_match(input, pattern)) {
-        enable_user_dict = false;
-        break;
-      }
-    }
-  }
+  bool enable_user_dict = user_dict_ && user_dict_->loaded() &&
+      !IsUserDictDisabledFor(input);
 
+  const std::string& preedit(input);
   std::string code(input);
   boost::trim_right_if(code, boost::is_any_of(delimiters_));
   
@@ -232,13 +224,14 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
         code,
         segment.start,
         segment.start + input.length(),
+        preedit,
         enable_user_dict);
   }
   else {
     DictEntryIterator iter;
     dict_->LookupWords(&iter, code, false);
     UserDictEntryIterator uter;
-    if (user_dict_ && enable_user_dict) {
+    if (enable_user_dict) {
       user_dict_->LookupWords(&uter, code, false);
     }
     if (!iter.exhausted() || !uter.exhausted())
@@ -248,6 +241,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
           code,
           segment.start,
           segment.start + input.length(),
+          preedit,
           iter,
           uter);
   }
@@ -261,6 +255,9 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
   }
   if (!translation || translation->exhausted()) {
     translation = MakeSentence(input, segment.start);
+  }
+  if (translation) {
+    translation = make_shared<UniqueFilter>(translation);
   }
   return translation;
 }
@@ -360,6 +357,21 @@ void SentenceTranslation::PrepareSentence() {
   sentence_->set_preedit(preedit);
 }
 
+template <class Iter>
+shared_ptr<DictEntry> get_first_entry(Iter& iter, bool filter_by_charset) {
+  if (iter.exhausted())
+    return shared_ptr<DictEntry>();
+  shared_ptr<DictEntry> entry = iter.Peek();
+  if (filter_by_charset) {
+    while (entry && !CharsetFilter::Passed(entry->text)) {
+      if (!iter.Next())
+        return shared_ptr<DictEntry>();
+      entry = iter.Peek();
+    }
+  }
+  return entry;
+}
+
 shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
                                                       size_t start) {
   bool filter_by_charset = enable_charset_filter_ &&
@@ -370,40 +382,54 @@ shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
   for (size_t start_pos = 0; start_pos < input.length(); ++start_pos) {
     if (sentences.find(start_pos) == sentences.end())
       continue;
+    const std::string active_input(input.substr(start_pos));
+    std::vector<shared_ptr<DictEntry> > entries(active_input.length() + 1);
+    // lookup dictionaries
+    if (user_dict_ && user_dict_->loaded()) {
+      for (size_t len = 1;
+           len <= active_input.length();
+           ++len) {
+        DLOG(INFO) << "active input: " << active_input << "[0, " << len << ")";
+        UserDictEntryIterator uter;
+        std::string resume_key;
+        user_dict_->LookupWords(&uter, active_input.substr(0, len),
+                                false, 0, &resume_key);
+        entries[len] = get_first_entry(uter, filter_by_charset);
+        if (resume_key > active_input &&
+            !boost::starts_with(resume_key, active_input + " "))
+          break;
+      }
+    }
     std::vector<Prism::Match> matches;
     dict_->prism()->CommonPrefixSearch(input.substr(start_pos), &matches);
     if (matches.empty()) continue;
     BOOST_REVERSE_FOREACH(const Prism::Match &m, matches) {
       if (m.length == 0) continue;
+      if (entries[m.length]) continue;
       DictEntryIterator iter;
-      dict_->LookupWords(&iter, input.substr(start_pos, m.length), false);
-      if (iter.exhausted()) continue;
-      size_t end_pos = start_pos + m.length;
+      dict_->LookupWords(&iter, active_input.substr(0, m.length), false);
+      entries[m.length] = get_first_entry(iter, filter_by_charset);
+    }
+    for (size_t len = 1; len <= active_input.length(); ++len) {
+      if (!entries[len]) continue;
+      size_t end_pos = start_pos + len;
       // consume trailing delimiters
       while (end_pos < input.length() &&
              delimiters_.find(input[end_pos]) != std::string::npos)
         ++end_pos;
+      // create a new sentence
       shared_ptr<Sentence> new_sentence =
           make_shared<Sentence>(*sentences[start_pos]);
-      // extend the sentence with the first suitable entry
-      shared_ptr<DictEntry> entry = iter.Peek();
-      if (filter_by_charset) {
-        while (!CharsetFilter::Passed(entry->text) &&
-               iter.Next()) {
-          entry = iter.Peek();
-        }
-        if (iter.exhausted()) continue;
-      }
-      new_sentence->Extend(*entry, end_pos);
+      new_sentence->Extend(*entries[len], end_pos);
       // compare and update sentences
       if (sentences.find(end_pos) == sentences.end() ||
           sentences[end_pos]->weight() <= new_sentence->weight()) {
         sentences[end_pos] = new_sentence;
       }
-      // also provide words for manual composition
-      if (start_pos == 0) {
-        collector[end_pos] = iter;
-      }
+      // TODO also provide words for manual composition
+      //if (start_pos == 0) {
+      //  collector[end_pos] = iter;
+      //}
     }
   }
   shared_ptr<Translation> result;

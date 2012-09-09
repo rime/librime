@@ -105,7 +105,7 @@ shared_ptr<DictEntry> DictEntryIterator::Peek() {
     DLOG(INFO) << "creating temporary dict entry '" << e.text.c_str() << "'.";
     entry_->code = chunk.code;
     entry_->text = e.text.c_str();
-    const double kS = 100000.0;
+    const double kS = 1e8;
     entry_->weight = (e.weight + 1) / kS * chunk.credibility;
     if (!chunk.remaining_code.empty()) {
       entry_->comment = "~" + chunk.remaining_code;

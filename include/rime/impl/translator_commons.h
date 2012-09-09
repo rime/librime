@@ -9,8 +9,9 @@
 #ifndef RIME_TRANSLATOR_COMMONS_H_
 #define RIME_TRANSLATOR_COMMONS_H_
 
-#include <vector>
+#include <set>
 #include <string>
+#include <vector>
 #include <boost/regex.hpp>
 #include <boost/signals/connection.hpp>
 #include <rime/common.h>
@@ -100,7 +101,7 @@ class Sentence : public Candidate {
 
 class CharsetFilter : public Translation {
  public:
-  CharsetFilter(shared_ptr<Translation> translation_);
+  CharsetFilter(shared_ptr<Translation> translation);
   virtual bool Next();
   virtual shared_ptr<Candidate> Peek();
 
@@ -110,6 +111,21 @@ class CharsetFilter : public Translation {
   bool LocateNextCandidate();
   
   shared_ptr<Translation> translation_;
+};
+
+//
+
+class UniqueFilter : public Translation {
+ public:
+  UniqueFilter(shared_ptr<Translation> translation);
+  virtual bool Next();
+  virtual shared_ptr<Candidate> Peek();
+
+ protected:
+  bool AlreadyHas(const std::string& text) const;
+
+  shared_ptr<Translation> translation_;
+  std::set<std::string> candidate_set_;
 };
 
 //
@@ -153,6 +169,8 @@ class Memory : public Language {
 class TranslatorOptions {
  public:
   TranslatorOptions(Engine* engine, const std::string& prefix = "translator");
+
+  bool IsUserDictDisabledFor(const std::string& input) const;
   
   const std::string& delimiters() const { return delimiters_; }
   bool enable_completion() const { return enable_completion_; }

@@ -221,16 +221,22 @@ size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
   size_t len = input.length();
   size_t count = 0;
   size_t exact_match_count = 0;
+  const std::string kEnd = "\xff";
   std::string key;
   std::string value;
   std::string full_code;
   shared_ptr<UserDbAccessor> a = db_->Query(input);
-  if (!a)
+  if (!a || a->exhausted()) {
+    if (resume_key)
+      *resume_key = kEnd;
     return 0;
+  }
   if (resume_key && !resume_key->empty()) {
     if (!a->Forward(*resume_key) ||
-        !a->GetNextRecord(&key, &value))
+        !a->GetNextRecord(&key, &value)) {
+      *resume_key = kEnd;
       return 0;
+    }
     DLOG(INFO) << "resume lookup after: " << key;
   }
   while (a->GetNextRecord(&key, &value)) {

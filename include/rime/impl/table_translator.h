@@ -9,7 +9,6 @@
 #ifndef RIME_TABLE_TRANSLATOR_H_
 #define RIME_TABLE_TRANSLATOR_H_
 
-#include <set>
 #include <string>
 #include <rime/common.h>
 #include <rime/config.h>
@@ -46,9 +45,11 @@ class TableTranslation : public Translation {
  public:
   
   TableTranslation(TranslatorOptions* options, Language* language,
-                   const std::string& input, size_t start, size_t end);
+                   const std::string& input, size_t start, size_t end,
+                   const std::string& preedit);
   TableTranslation(TranslatorOptions* options, Language* language,
                    const std::string& input, size_t start, size_t end,
+                   const std::string& preedit,
                    const DictEntryIterator& iter,
                    const UserDictEntryIterator& uter = UserDictEntryIterator());
   
@@ -66,10 +67,6 @@ class TableTranslation : public Translation {
     return prefer_user_phrase ? uter_.Peek() : iter_.Peek();
   }
 
-  bool HasCandidate(const std::string& text) const {
-    return candidate_set_.find(text) != candidate_set_.end();
-  }
-  
   TranslatorOptions* options_;
   Language* language_;
   std::string input_;
@@ -78,7 +75,6 @@ class TableTranslation : public Translation {
   std::string preedit_;
   DictEntryIterator iter_;
   UserDictEntryIterator uter_;
-  std::set<std::string> candidate_set_;
 };
 
 }  // namespace rime

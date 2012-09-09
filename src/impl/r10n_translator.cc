@@ -96,9 +96,6 @@ class R10nTranslation : public Translation {
   const std::string GetOriginalSpelling(const CandidateT &cand) const;
   const shared_ptr<Sentence> MakeSentence(Dictionary *dict,
                                           UserDictionary *user_dict);
-  bool HasCandidate(const std::string& text) const {
-    return candidate_set_.find(text) != candidate_set_.end();
-  }
   
   R10nTranslator *translator_;
   const std::string input_;
@@ -112,7 +109,6 @@ class R10nTranslation : public Translation {
   DictEntryCollector::reverse_iterator phrase_iter_;
   UserDictEntryCollector::reverse_iterator user_phrase_iter_;
   size_t user_phrase_index_;
-  std::set<std::string> candidate_set_;
 };
 
 // R10nTranslator implementation
@@ -142,24 +138,18 @@ shared_ptr<Translation> R10nTranslator::Query(const std::string &input,
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
 
-  bool enable_user_dict = true;
-  if (!user_dict_disabling_patterns_.empty()) {
-    BOOST_FOREACH(const boost::regex& pattern, user_dict_disabling_patterns_) {
-      if (boost::regex_match(input, pattern)) {
-        enable_user_dict = false;
-        break;
-      }
-    }
-  }
+  bool enable_user_dict = user_dict_ && user_dict_->loaded() &&
+      !IsUserDictDisabledFor(input);
+
   // the translator should survive translations it creates
   shared_ptr<R10nTranslation> result =
       boost::make_shared<R10nTranslation>(this, input, segment.start);
   if (!result ||
       !result->Evaluate(dict_.get(),
                         enable_user_dict ? user_dict_.get() : NULL)) {
-    result.reset();
+    return shared_ptr<Translation>();
   }
-  return result;
+  return make_shared<UniqueFilter>(result);
 }
 
 const std::string R10nTranslator::FormatPreedit(const std::string& preedit) {
@@ -263,40 +253,33 @@ bool R10nTranslation::Next() {
   if (exhausted())
     return false;
   if (sentence_) {
-    candidate_set_.insert(sentence_->text());
     sentence_.reset();
     CheckEmpty();
     return exhausted();
   }
-  do {
-    int user_phrase_code_length = 0;
-    if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
-      user_phrase_code_length = user_phrase_iter_->first;
-    }
-    int phrase_code_length = 0;
-    if (phrase_ && phrase_iter_ != phrase_->rend()) {
-      phrase_code_length = phrase_iter_->first;
-    }
-    if (user_phrase_code_length > 0 &&
-        user_phrase_code_length >= phrase_code_length) {
-      DictEntryList &entries(user_phrase_iter_->second);
-      candidate_set_.insert(entries[user_phrase_index_]->text);
-      if (++user_phrase_index_ >= entries.size()) {
-        ++user_phrase_iter_;
-        user_phrase_index_ = 0;
-      }
-    }
-    else if (phrase_code_length > 0) {
-      DictEntryIterator &iter(phrase_iter_->second);
-      candidate_set_.insert(iter.Peek()->text);
-      if (!iter.Next()) {
-        ++phrase_iter_;
-      }
-    }
-    CheckEmpty();
+  int user_phrase_code_length = 0;
+  if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
+    user_phrase_code_length = user_phrase_iter_->first;
   }
-  while (!exhausted() && /* skip duplicate candidates */
-         HasCandidate(Peek()->text()));
+  int phrase_code_length = 0;
+  if (phrase_ && phrase_iter_ != phrase_->rend()) {
+    phrase_code_length = phrase_iter_->first;
+  }
+  if (user_phrase_code_length > 0 &&
+      user_phrase_code_length >= phrase_code_length) {
+    DictEntryList &entries(user_phrase_iter_->second);
+    if (++user_phrase_index_ >= entries.size()) {
+      ++user_phrase_iter_;
+      user_phrase_index_ = 0;
+    }
+  }
+  else if (phrase_code_length > 0) {
+    DictEntryIterator &iter(phrase_iter_->second);
+    if (!iter.Next()) {
+      ++phrase_iter_;
+    }
+  }
+  CheckEmpty();
   return exhausted();
 }
 

@@ -31,10 +31,11 @@ class ReverseLookupTranslation : public TableTranslation {
  public:
   ReverseLookupTranslation(ReverseLookupDictionary* dict,
                            TranslatorOptions* options,
-                           const std::string &input,
+                           const std::string& input,
                            size_t start, size_t end,
+                           const std::string& preedit,
                            const DictEntryIterator &iter)
-      : TableTranslation(options, NULL, input, start, end, iter),
+      : TableTranslation(options, NULL, input, start, end, preedit, iter),
         dict_(dict), options_(options) {
   }
   virtual shared_ptr<Candidate> Peek();
@@ -121,6 +122,8 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
 
+  const std::string& preedit(input);
+  
   size_t start = 0;
   if (!prefix_.empty() && boost::starts_with(input, prefix_))
     start = prefix_.length();
@@ -157,6 +160,7 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
                                                         code,
                                                         segment.start,
                                                         segment.end,
+                                                        preedit,
                                                         iter);
   }
   return shared_ptr<Translation>();
