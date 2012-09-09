@@ -89,7 +89,7 @@ class R10nTranslation : public Translation {
   virtual shared_ptr<Candidate> Peek();
 
  protected:
-  void CheckEmpty();
+  bool CheckEmpty();
   template <class CandidateT>
   const std::string GetPreeditString(const CandidateT &cand) const;
   template <class CandidateT>
@@ -217,8 +217,7 @@ bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
 
   if (phrase_) phrase_iter_ = phrase_->rbegin();
   if (user_phrase_) user_phrase_iter_ = user_phrase_->rbegin();
-  CheckEmpty();
-  return !exhausted();
+  return !CheckEmpty();
 }
 
 template <class CandidateT>
@@ -254,8 +253,7 @@ bool R10nTranslation::Next() {
     return false;
   if (sentence_) {
     sentence_.reset();
-    CheckEmpty();
-    return exhausted();
+    return !CheckEmpty();
   }
   int user_phrase_code_length = 0;
   if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
@@ -279,8 +277,7 @@ bool R10nTranslation::Next() {
       ++phrase_iter_;
     }
   }
-  CheckEmpty();
-  return exhausted();
+  return !CheckEmpty();
 }
 
 shared_ptr<Candidate> R10nTranslation::Peek() {
@@ -344,9 +341,10 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
   return cand;
 }
 
-void R10nTranslation::CheckEmpty() {
+bool R10nTranslation::CheckEmpty() {
   set_exhausted((!phrase_ || phrase_iter_ == phrase_->rend()) &&
                 (!user_phrase_ || user_phrase_iter_ == user_phrase_->rend()));
+  return exhausted();
 }
 
 const shared_ptr<Sentence> R10nTranslation::MakeSentence(

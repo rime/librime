@@ -91,6 +91,17 @@ void UserDictEntryIterator::SortN(size_t count) {
     entries_->SortN(count);
 }
 
+bool UserDictEntryIterator::Release(DictEntryList* receiver) {
+  if (!entries_)
+    return false;
+  if (receiver)
+    entries_->swap(*receiver);
+  entries_.reset();
+  index_ = 0;
+  return true;
+}
+
+
 shared_ptr<DictEntry> UserDictEntryIterator::Peek() {
   if (exhausted())
     return shared_ptr<DictEntry>();

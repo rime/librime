@@ -29,6 +29,8 @@ class UserDictEntryIterator {
   
   void Add(const shared_ptr<DictEntry>& entry);
   void SortN(size_t count);
+  bool Release(DictEntryList* receiver);
+  
   shared_ptr<DictEntry> Peek();
   bool Next();
   bool exhausted() const {

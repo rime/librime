@@ -66,8 +66,7 @@ bool TableTranslation::Next() {
     if (iter_.exhausted())
       FetchMoreTableEntries();
   }
-  CheckEmpty();
-  return !exhausted();
+  return !CheckEmpty();
 }
 
 shared_ptr<Candidate> TableTranslation::Peek() {
@@ -278,62 +277,96 @@ class SentenceTranslation : public Translation {
  public:
   SentenceTranslation(TableTranslator* translator,
                       shared_ptr<Sentence> sentence,
-                      DictEntryCollector collector,
+                      DictEntryCollector* collector,
+                      UserDictEntryCollector* user_phrase_collector,
                       const std::string& input,
-                      size_t start)
-      : translator_(translator), input_(input), start_(start) {
-    sentence_.swap(sentence);
-    collector_.swap(collector);
-    PrepareSentence();
-    set_exhausted(!sentence_ && collector_.empty());
-  }
-
-  bool Next() {
-    if (sentence_) {
-      sentence_.reset();
-    }
-    else if (!collector_.empty()) {
-      DictEntryCollector::reverse_iterator r(collector_.rbegin());
-      if (!r->second.Next()) {
-        collector_.erase(r->first);
-      }
-    }
-    set_exhausted(!sentence_ && collector_.empty());
-    return !exhausted();
-  }
-  
-  shared_ptr<Candidate> Peek() {
-    if (sentence_) {
-      return sentence_;
-    }
-    if (collector_.empty()) {
-      return shared_ptr<Candidate>();
-    }
-    DictEntryCollector::reverse_iterator r(collector_.rbegin());
-    shared_ptr<DictEntry> entry(r->second.Peek());
-    shared_ptr<Phrase> result = boost::make_shared<Phrase>(
-        translator_ ? translator_->language() : NULL,
-        "table",
-        start_,
-        start_ + r->first,
-        entry);
-    if (translator_) {
-      std::string preedit(input_.substr(0, r->first));
-      translator_->preedit_formatter().Apply(&preedit);
-      result->set_preedit(preedit);
-    }
-    return result;
-  }
+                      size_t start);
+  bool Next();
+  shared_ptr<Candidate> Peek();
   
  protected:
   void PrepareSentence();
+  bool CheckEmpty();
+  bool PreferUserPhrase() const;
   
   TableTranslator* translator_;
   shared_ptr<Sentence> sentence_;
   DictEntryCollector collector_;
+  UserDictEntryCollector user_phrase_collector_;
+  size_t user_phrase_index_;
   std::string input_;
   size_t start_;
 };
+
+SentenceTranslation::SentenceTranslation(TableTranslator* translator,
+                                         shared_ptr<Sentence> sentence,
+                                         DictEntryCollector* collector,
+                                         UserDictEntryCollector* user_phrase_collector,
+                                         const std::string& input,
+                                         size_t start)
+    : translator_(translator),
+      input_(input), start_(start), user_phrase_index_(0) {
+  sentence_.swap(sentence);
+  collector_.swap(*collector);
+  user_phrase_collector_.swap(*user_phrase_collector);
+  PrepareSentence();
+  CheckEmpty();
+}
+
+bool SentenceTranslation::Next() {
+  if (sentence_) {
+    sentence_.reset();
+    return !CheckEmpty();
+  }
+  if (PreferUserPhrase()) {
+    UserDictEntryCollector::reverse_iterator r =
+        user_phrase_collector_.rbegin();
+    if (++user_phrase_index_ >= r->second.size()) {
+      user_phrase_collector_.erase(r->first);
+      user_phrase_index_ = 0;
+    }
+  }
+  else {
+    DictEntryCollector::reverse_iterator r = collector_.rbegin();
+    if (!r->second.Next()) {
+      collector_.erase(r->first);
+    }
+  }
+  return !CheckEmpty();
+}
+  
+shared_ptr<Candidate> SentenceTranslation::Peek() {
+  if (exhausted())
+    return shared_ptr<Candidate>();
+  if (sentence_) {
+    return sentence_;
+  }
+  size_t code_length = 0;
+  shared_ptr<DictEntry> entry;
+  if (PreferUserPhrase()) {
+    UserDictEntryCollector::reverse_iterator r =
+        user_phrase_collector_.rbegin();
+    code_length = r->first;
+    entry = r->second[user_phrase_index_];
+  }
+  else {
+    DictEntryCollector::reverse_iterator r = collector_.rbegin();
+    code_length = r->first;
+    entry = r->second.Peek();
+  }
+  shared_ptr<Phrase> result = boost::make_shared<Phrase>(
+      translator_ ? translator_->language() : NULL,
+      "table",
+      start_,
+      start_ + code_length,
+      entry);
+  if (translator_) {
+    std::string preedit(input_.substr(0, code_length));
+    translator_->preedit_formatter().Apply(&preedit);
+    result->set_preedit(preedit);
+  }
+  return result;
+}
 
 void SentenceTranslation::PrepareSentence() {
   if (!sentence_) return;
@@ -357,6 +390,31 @@ void SentenceTranslation::PrepareSentence() {
   sentence_->set_preedit(preedit);
 }
 
+bool SentenceTranslation::CheckEmpty() {
+  set_exhausted(!sentence_ &&
+                collector_.empty() &&
+                user_phrase_collector_.empty());
+  return exhausted();
+}
+
+bool SentenceTranslation::PreferUserPhrase() const {
+  // compare code length
+  int user_phrase_code_length = 0;
+  int table_code_length = 0;
+  if (!user_phrase_collector_.empty()) {
+    user_phrase_code_length =
+        user_phrase_collector_.rbegin()->first;
+  }
+  if (!collector_.empty()) {
+    table_code_length = collector_.rbegin()->first;
+  }
+  if (user_phrase_code_length > 0 &&
+      user_phrase_code_length >= table_code_length) {
+    return true;
+  }
+  return false;
+}
+
 template <class Iter>
 shared_ptr<DictEntry> get_first_entry(Iter& iter, bool filter_by_charset) {
   if (iter.exhausted())
@@ -372,11 +430,21 @@ shared_ptr<DictEntry> get_first_entry(Iter& iter, bool filter_by_charset) {
   return entry;
 }
 
+static size_t consume_trailing_delimiters(size_t pos,
+                                          const std::string& input,
+                                          const std::string& delimiters) {
+  while (pos < input.length() &&
+         delimiters.find(input[pos]) != std::string::npos)
+        ++pos;
+  return pos;
+}
+
 shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
                                                       size_t start) {
   bool filter_by_charset = enable_charset_filter_ &&
       !engine_->context()->get_option("extended_charset");
   DictEntryCollector collector;
+  UserDictEntryCollector user_phrase_collector;
   std::map<int, shared_ptr<Sentence> > sentences;
   sentences[0] = make_shared<Sentence>(language());
   for (size_t start_pos = 0; start_pos < input.length(); ++start_pos) {
@@ -386,15 +454,21 @@ shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
     std::vector<shared_ptr<DictEntry> > entries(active_input.length() + 1);
     // lookup dictionaries
     if (user_dict_ && user_dict_->loaded()) {
-      for (size_t len = 1;
-           len <= active_input.length();
-           ++len) {
+      for (size_t len = 1; len <= active_input.length(); ++len) {
         DLOG(INFO) << "active input: " << active_input << "[0, " << len << ")";
         UserDictEntryIterator uter;
         std::string resume_key;
         user_dict_->LookupWords(&uter, active_input.substr(0, len),
                                 false, 0, &resume_key);
-        entries[len] = get_first_entry(uter, filter_by_charset);
+        size_t consumed_length =
+            consume_trailing_delimiters(len, active_input, delimiters_);
+        entries[consumed_length] = get_first_entry(uter, filter_by_charset);
+        if (start_pos == 0 && !uter.exhausted()) {
+          // also provide words for manual composition
+          uter.Release(&user_phrase_collector[consumed_length]);
+          DLOG(INFO) << "user phrase[" << consumed_length << "]: "
+                     << user_phrase_collector[consumed_length].size();
+        }
         if (resume_key > active_input &&
             !boost::starts_with(resume_key, active_input + " "))
           break;
@@ -408,15 +482,19 @@ shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
       if (entries[m.length]) continue;
       DictEntryIterator iter;
       dict_->LookupWords(&iter, active_input.substr(0, m.length), false);
-      entries[m.length] = get_first_entry(iter, filter_by_charset);
+      size_t consumed_length =
+          consume_trailing_delimiters(m.length, active_input, delimiters_);
+      entries[consumed_length] = get_first_entry(iter, filter_by_charset);
+      if (start_pos == 0 && !iter.exhausted()) {
+        // also provide words for manual composition
+        collector[consumed_length] = iter;
+        DLOG(INFO) << "table[" << consumed_length << "]: "
+                   << collector[consumed_length].entry_count();
+      }
     }
     for (size_t len = 1; len <= active_input.length(); ++len) {
       if (!entries[len]) continue;
       size_t end_pos = start_pos + len;
-      // consume trailing delimiters
-      while (end_pos < input.length() &&
-             delimiters_.find(input[end_pos]) != std::string::npos)
-        ++end_pos;
       // create a new sentence
       shared_ptr<Sentence> new_sentence =
           make_shared<Sentence>(*sentences[start_pos]);
@@ -426,17 +504,14 @@ shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
           sentences[end_pos]->weight() <= new_sentence->weight()) {
         sentences[end_pos] = new_sentence;
       }
-      // TODO also provide words for manual composition
-      //if (start_pos == 0) {
-      //  collector[end_pos] = iter;
-      //}
     }
   }
   shared_ptr<Translation> result;
   if (sentences.find(input.length()) != sentences.end()) {
     result = boost::make_shared<SentenceTranslation>(this,
                                                      sentences[input.length()],
-                                                     collector,
+                                                     &collector,
+                                                     &user_phrase_collector,
                                                      input,
                                                      start);
     if (result && filter_by_charset) {
