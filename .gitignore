@@ -1,4 +1,5 @@
 build/
+debug-build/
 vcbuild/
 xbuild/
 data/*
