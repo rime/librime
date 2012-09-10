@@ -158,6 +158,12 @@ RIME_API Bool RimeFreeContext(RimeContext* context);
 RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status);
 RIME_API Bool RimeFreeStatus(RimeStatus* status);
 
+// runtime options
+  
+RIME_API void RimeSetOption(RimeSessionId session_id, const char* option, Bool value);
+RIME_API Bool RimeGetOption(RimeSessionId session_id, const char* option);
+
+  
 // configuration
 
 RIME_API Bool RimeConfigOpen(const char *config_id, RimeConfig* config);

@@ -178,7 +178,7 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
     return False;
   if (ctx->IsComposing()) {
     rime::Preedit preedit;
-    ctx->GetPreedit(&preedit);
+    ctx->GetPreedit(&preedit, ctx->get_option("soft_cursor"));
     context->composition.length = preedit.text.length();
     context->composition.preedit = new char[preedit.text.length() + 1];
     std::strcpy(context->composition.preedit, preedit.text.c_str());
@@ -303,6 +303,30 @@ RIME_API Bool RimeFreeStatus(RimeStatus* status) {
   std::memset((char*)status + sizeof(status->data_size), 0, status->data_size);
   return True;
 }
+
+// runtime options
+
+RIME_API void RimeSetOption(RimeSessionId session_id, const char* option, Bool value) {
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  if (!session)
+    return;
+  rime::Context *ctx = session->context();
+  if (!ctx)
+    return;
+  ctx->set_option(option, bool(value));
+}
+
+RIME_API Bool RimeGetOption(RimeSessionId session_id, const char* option) {
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  rime::Context *ctx = session->context();
+  if (!ctx)
+    return False;
+  return Bool(ctx->get_option(option));
+}
+
+// config
 
 RIME_API Bool RimeConfigOpen(const char *config_id, RimeConfig* config) {
   if (!config || !config) return False;

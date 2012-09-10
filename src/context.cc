@@ -42,13 +42,14 @@ const std::string Context::GetScriptText() const {
   return composition_->GetScriptText();
 }
 
-void Context::GetPreedit(Preedit *preedit) const {
+void Context::GetPreedit(Preedit *preedit, bool soft_cursor) const {
   composition_->GetPreedit(preedit);
   preedit->caret_pos = preedit->text.length();
   if (IsComposing()) {
-    // TODO: use schema settings
-    const std::string caret("\xe2\x80\xba");
-    preedit->text.append(caret);
+    if (soft_cursor) {
+      const std::string caret("\xe2\x80\xba");
+      preedit->text.append(caret);
+    }
     if (caret_pos_ < input_.length()) {
       preedit->text.append(input_.substr(caret_pos_));
     }
