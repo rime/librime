@@ -26,6 +26,9 @@ class WorkspaceUpdate : public DeploymentTask {
  public:
   WorkspaceUpdate() {}
   bool Run(Deployer* deployer);
+ protected:
+  const std::string GetSchemaPath(Deployer* deployer,
+                                  const std::string& schema_id);
 };
 
 // update a specific schema, build corresponding dictionary

@@ -103,7 +103,6 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     t->Run(deployer);
   }
 
-  fs::path shared_data_path(deployer->shared_data_dir);
   fs::path user_data_path(deployer->user_data_dir);
   fs::path default_config_path(user_data_path / "default.yaml");
   Config config;
@@ -119,8 +118,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   }
 
   LOG(INFO) << "updating schemas.";
-  int success = 0;
-  int failure = 0;
+  std::map<std::string, std::string> schemas;
   ConfigList::Iterator it = schema_list->begin();
   for (; it != schema_list->end(); ++it) {
     ConfigMapPtr item = As<ConfigMap>(*it);
@@ -128,11 +126,44 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     ConfigValuePtr schema_property = item->GetValue("schema");
     if (!schema_property) continue;
     const std::string &schema_id(schema_property->str());
-    fs::path schema_path = shared_data_path / (schema_id + ".schema.yaml");
-    if (!fs::exists(schema_path)) {
-      schema_path = user_data_path / (schema_id + ".schema.yaml");
+    LOG(INFO) << "schema: " << schema_id;
+    std::string schema_path;
+    if (schemas.find(schema_id) == schemas.end()) {
+      schema_path = GetSchemaPath(deployer, schema_id);
+      schemas[schema_id] = schema_path;
     }
-    scoped_ptr<DeploymentTask> t(new SchemaUpdate(schema_path.string()));
+    else {
+      schema_path = schemas[schema_id];
+    }
+    if (schema_path.empty()) {
+      LOG(WARNING) << "missing schema file for '" << schema_id << "'.";
+      continue;
+    }
+    // find dependencies
+    Config schema_config;
+    if (!schema_config.LoadFromFile(schema_path))
+      continue;
+    ConfigListPtr dependencies = schema_config.GetList("schema/dependencies");
+    if (!dependencies)
+      continue;
+    ConfigList::Iterator it = dependencies->begin();
+    for (; it != dependencies->end(); ++it) {
+      ConfigValuePtr dependency = As<ConfigValue>(*it);
+      if (!dependency) continue;
+      std::string dependency_id(dependency->str());
+      if (schemas.find(dependency_id) != schemas.end())
+        continue;
+      LOG(INFO) << "new dependency: " << dependency_id;
+      std::string dependency_path(GetSchemaPath(deployer, dependency_id));
+      schemas[dependency_id] = dependency_path;
+    }
+  }
+  // build
+  int success = 0;
+  int failure = 0;
+  for (std::map<std::string, std::string>::const_iterator it = schemas.begin();
+       it != schemas.end(); ++it) {
+    scoped_ptr<DeploymentTask> t(new SchemaUpdate(it->second));
     if (t->Run(deployer))
       ++success;
     else
@@ -141,6 +172,19 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "finished updating schemas: "
             << success << " success, " << failure << " failure.";
   return failure == 0;
+}
+
+const std::string WorkspaceUpdate::GetSchemaPath(Deployer* deployer,
+                                                 const std::string& schema_id) {
+  fs::path shared_data_path(deployer->shared_data_dir);
+  fs::path user_data_path(deployer->user_data_dir);
+  fs::path schema_path = shared_data_path / (schema_id + ".schema.yaml");
+  if (!fs::exists(schema_path)) {
+    schema_path = user_data_path / (schema_id + ".schema.yaml");
+    if (!fs::exists(schema_path))
+      schema_path.clear();
+  }
+  return schema_path.string();
 }
 
 bool SchemaUpdate::Run(Deployer* deployer) {
