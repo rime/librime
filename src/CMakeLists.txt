@@ -3,15 +3,15 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 aux_source_directory(. LIBRIME_SRC)
 aux_source_directory(algo LIBRIME_ALGO_SRC)
 aux_source_directory(dict LIBRIME_DICT_SRC)
-aux_source_directory(impl LIBRIME_IMPL_SRC)
-aux_source_directory(expl LIBRIME_EXPL_SRC)
+aux_source_directory(gear LIBRIME_GEAR_SRC)
+aux_source_directory(lever LIBRIME_LEVER_SRC)
 
 set(RIME_OPTIONAL_DEPS "")
 if(Gflags_FOUND)
   set(RIME_OPTIONAL_DEPS ${RIME_OPTIONAL_DEPS} ${Gflags_LIBRARY})
 endif(Gflags_FOUND)
 
-add_library(rime-static STATIC ${LIBRIME_SRC} ${LIBRIME_ALGO_SRC} ${LIBRIME_DICT_SRC} ${LIBRIME_IMPL_SRC} ${LIBRIME_EXPL_SRC})
+add_library(rime-static STATIC ${LIBRIME_SRC} ${LIBRIME_ALGO_SRC} ${LIBRIME_DICT_SRC} ${LIBRIME_GEAR_SRC} ${LIBRIME_LEVER_SRC})
 target_link_libraries(rime-static
   ${Boost_LIBRARIES} ${Glog_LIBRARY} ${YamlCpp_LIBRARY} ${KyotoCabinet_LIBRARY} ${Opencc_LIBRARY}
   ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${RIME_OPTIONAL_DEPS})

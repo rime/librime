@@ -18,26 +18,26 @@
 #include <rime/dict/dictionary.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 #include <rime/dict/user_dictionary.h>
-#include <rime/impl/abc_segmentor.h>
-#include <rime/impl/ascii_composer.h>
-#include <rime/impl/ascii_segmentor.h>
-#include <rime/impl/chord_composer.h>
-#include <rime/impl/echo_translator.h>
-#include <rime/impl/editor.h>
-#include <rime/impl/fallback_segmentor.h>
-#include <rime/impl/matcher.h>
-#include <rime/impl/navigator.h>
-#include <rime/impl/key_binder.h>
-#include <rime/impl/punctuator.h>
-#include <rime/impl/r10n_translator.h>
-#include <rime/impl/recognizer.h>
-#include <rime/impl/selector.h>
-#include <rime/impl/simplifier.h>
-#include <rime/impl/speller.h>
-#include <rime/impl/reverse_lookup_translator.h>
-#include <rime/impl/table_translator.h>
-//#include <rime/impl/trivial_translator.h>
-#include <rime/impl/uniquifier.h>
+#include <rime/gear/abc_segmentor.h>
+#include <rime/gear/ascii_composer.h>
+#include <rime/gear/ascii_segmentor.h>
+#include <rime/gear/chord_composer.h>
+#include <rime/gear/echo_translator.h>
+#include <rime/gear/editor.h>
+#include <rime/gear/fallback_segmentor.h>
+#include <rime/gear/matcher.h>
+#include <rime/gear/navigator.h>
+#include <rime/gear/key_binder.h>
+#include <rime/gear/punctuator.h>
+#include <rime/gear/r10n_translator.h>
+#include <rime/gear/recognizer.h>
+#include <rime/gear/selector.h>
+#include <rime/gear/simplifier.h>
+#include <rime/gear/speller.h>
+#include <rime/gear/reverse_lookup_translator.h>
+#include <rime/gear/table_translator.h>
+//#include <rime/gear/trivial_translator.h>
+#include <rime/gear/uniquifier.h>
 
 namespace rime {
 

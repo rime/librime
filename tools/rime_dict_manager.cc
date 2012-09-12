@@ -11,7 +11,7 @@
 #include <boost/foreach.hpp>
 #include <rime/deployer.h>
 #include <rime/service.h>
-#include <rime/expl/user_dict_manager.h>
+#include <rime/lever/user_dict_manager.h>
 
 int main(int argc, char *argv[]) {
   rime::SetupLogging("rime.tools");

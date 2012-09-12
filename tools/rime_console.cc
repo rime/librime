@@ -22,7 +22,7 @@
 #include <rime/switcher.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
-#include <rime/expl/deployment_tasks.h>
+#include <rime/lever/deployment_tasks.h>
 
 class RimeConsole {
  public:

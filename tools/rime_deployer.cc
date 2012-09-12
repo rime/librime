@@ -10,7 +10,7 @@
 #include <string>
 #include <rime/deployer.h>
 #include <rime/service.h>
-#include <rime/expl/deployment_tasks.h>
+#include <rime/lever/deployment_tasks.h>
 
 int main(int argc, char *argv[]) {
   rime::SetupLogging("rime.tools");
