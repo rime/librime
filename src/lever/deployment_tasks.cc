@@ -19,6 +19,9 @@
 #include <rime/lever/customizer.h>
 #include <rime/lever/deployment_tasks.h>
 #include <rime/lever/user_dict_manager.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace fs = boost::filesystem;
 
@@ -347,7 +350,14 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
   DLOG(INFO) << "today: " << today;
 
   std::vector<std::string> dirs;
+#ifdef _WIN32
+  // work-around: google::GetExistingTempDirectories crashes on windows 7
+  char tmp[MAX_PATH];
+  if (GetTempPathA(MAX_PATH, tmp))
+    dirs.push_back(tmp);
+#else
   google::GetExistingTempDirectories(&dirs);
+#endif  // _WIN32
   DLOG(INFO) << "scanning " << dirs.size() << " temp directory for log files.";
 
   bool success = true;
