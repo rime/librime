@@ -389,6 +389,67 @@ RIME_API Bool RimeConfigUpdateSignature(RimeConfig *config, const char* signer) 
   return Bool(sig.Sign(c, &deployer));
 }
 
+template <class T>
+struct RimeConfigIteratorImpl {
+  typename T::Iterator iter;
+  typename T::Iterator end;
+  std::string root_path;
+  std::string key;
+  std::string path;
+  RimeConfigIteratorImpl<T>(T& container, const std::string& root)
+  : iter(container.begin()),
+    end(container.end()),
+    root_path(root) {
+  }
+};
+
+RIME_API Bool RimeConfigBeginMap(RimeConfigIterator* iterator,
+                                 RimeConfig* config, const char* key) {
+  if (!iterator || !config || !key)
+    return False;
+  iterator->list = NULL;
+  iterator->map = NULL;
+  iterator->index = -1;
+  iterator->key = NULL;
+  iterator->path = NULL;
+  rime::Config *c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c) return False;
+  rime::ConfigMapPtr m = c->GetMap(key);
+  if (!m) return False;
+  iterator->map = new RimeConfigIteratorImpl<rime::ConfigMap>(*m, key);
+  return True;
+}
+
+RIME_API Bool RimeConfigNext(RimeConfigIterator* iterator) {
+  if (!iterator->list && !iterator->map)
+    return False;
+  if (iterator->map) {
+    RimeConfigIteratorImpl<rime::ConfigMap>* p =
+        reinterpret_cast<RimeConfigIteratorImpl<rime::ConfigMap>*>(iterator->map);
+    if (!p) return False;
+    if (++iterator->index > 0)
+      ++p->iter;
+    if (p->iter == p->end)
+      return False;
+    p->key = p->iter->first;
+    p->path = p->root_path + "/" + p->key;
+    iterator->key = p->key.c_str();
+    iterator->path = p->path.c_str();
+    return True;
+  }
+  return False;
+}
+
+RIME_API void RimeConfigEnd(RimeConfigIterator* iterator) {
+  if (!iterator) return;
+  if (iterator->list)
+    delete reinterpret_cast<RimeConfigIteratorImpl<rime::ConfigList>*>(iterator->list);
+  if (iterator->map)
+    delete reinterpret_cast<RimeConfigIteratorImpl<rime::ConfigMap>*>(iterator->map);
+  memset(iterator, 0, sizeof(RimeConfigIterator));
+}
+
+
 RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence) {
     LOG(INFO) << "simulate key sequence: " << key_sequence;
     boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));

@@ -110,6 +110,14 @@ typedef struct {
   void* ptr;
 } RimeConfig;
 
+typedef struct {
+  void* list;
+  void* map;
+  int index;
+  const char* key;
+  const char* path;
+} RimeConfigIterator;
+
 // entry and exit
 
 // call this function before accessing any other API.
@@ -173,7 +181,10 @@ RIME_API Bool RimeConfigGetInt(RimeConfig *config, const char *key, int *value);
 RIME_API Bool RimeConfigGetDouble(RimeConfig *config, const char *key, double *value);
 RIME_API Bool RimeConfigGetString(RimeConfig *config, const char *key,
                                   char *value, size_t buffer_size);
-RIME_API Bool RimeConfigUpdateSignature(RimeConfig *config, const char* signer);
+RIME_API Bool RimeConfigUpdateSignature(RimeConfig* config, const char* signer);
+RIME_API Bool RimeConfigBeginMap(RimeConfigIterator* iterator, RimeConfig* config, const char* key);
+RIME_API Bool RimeConfigNext(RimeConfigIterator* iterator);
+RIME_API void RimeConfigEnd(RimeConfigIterator* iterator);
 
 // testing
 
