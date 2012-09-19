@@ -31,6 +31,12 @@ bool InstallationUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating rime installation info.";
   fs::path shared_data_path(deployer->shared_data_dir);
   fs::path user_data_path(deployer->user_data_dir);
+  if (!fs::exists(user_data_path)) {
+    LOG(INFO) << "creating user data dir: " << user_data_path.string();
+    if (!fs::create_directories(user_data_path)) {
+      LOG(ERROR) << "Error creating user data dir: " << user_data_path.string();
+    }
+  }
   fs::path installation_info(user_data_path / "installation.yaml");
   rime::Config config;
   std::string installation_id;
