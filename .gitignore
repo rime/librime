@@ -2,6 +2,7 @@ build/
 debug-build/
 vcbuild/
 xbuild/
+xdebug/
 data/*
 data/preset
 data/supplement

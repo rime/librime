@@ -14,7 +14,6 @@
 #include <rime/deployer.h>
 #include <rime/key_event.h>
 #include <rime/menu.h>
-#include <rime/registry.h>
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/lever/deployment_tasks.h>
@@ -28,14 +27,12 @@ RIME_API void RimeSetupLogging(const char* app_name) {
 
 RIME_API void RimeInitialize(RimeTraits *traits) {
   RimeDeployerInitialize(traits);
-  rime::RegisterComponents();
   rime::Service::instance().StartService();
 }
 
 RIME_API void RimeFinalize() {
   RimeJoinMaintenanceThread();
   rime::Service::instance().StopService();
-  rime::Registry::instance().Clear();
 }
 
 RIME_API Bool RimeStartMaintenance(Bool full_check) {
