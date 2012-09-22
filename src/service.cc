@@ -52,6 +52,10 @@ void Session::ClearComposition() {
   engine_->context()->Clear();
 }
 
+void Session::ApplySchema(Schema* schema) {
+  switcher_->ApplySchema(schema);
+}
+
 void Session::OnCommit(const std::string &commit_text) {
   commit_text_ += commit_text;
 }

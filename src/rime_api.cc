@@ -323,6 +323,70 @@ RIME_API Bool RimeGetOption(RimeSessionId session_id, const char* option) {
   return Bool(ctx->get_option(option));
 }
 
+RIME_API Bool RimeGetSchemaList(RimeSchemaList* output) {
+  if (!output) return False;
+  output->size = 0;
+  output->list = NULL;
+  rime::Schema default_schema;
+  rime::Config* config = default_schema.config();
+  if (!config) return False;
+  rime::ConfigListPtr schema_list = config->GetList("schema_list");
+  if (!schema_list || schema_list->size() == 0)
+    return False;
+  output->list = new RimeSchemaListItem[schema_list->size()];
+  for (size_t i = 0; i < schema_list->size(); ++i) {
+    rime::ConfigMapPtr item = rime::As<rime::ConfigMap>(schema_list->GetAt(i));
+    if (!item) continue;
+    rime::ConfigValuePtr schema_property = item->GetValue("schema");
+    if (!schema_property) continue;
+    const std::string &schema_id(schema_property->str());
+    RimeSchemaListItem& x(output->list[output->size]);
+    x.schema_id = new char[schema_id.length() + 1];
+    strcpy(x.schema_id, schema_id.c_str());
+    rime::Schema schema(schema_id);
+    x.name = new char[schema.schema_name().length() + 1];
+    strcpy(x.name, schema.schema_name().c_str());
+    x.unused = NULL;
+    ++output->size;
+  }
+  if (output->size == 0) {
+    delete[] output->list;
+    output->list = NULL;
+    return False;
+  }
+  return True;
+}
+
+RIME_API void RimeFreeSchemaList(RimeSchemaList* schema_list) {
+  if (!schema_list) return;
+  if (schema_list->list) {
+    for (size_t i = 0; i < schema_list->size; ++i) {
+      delete[] schema_list->list[i].schema_id;
+      delete[] schema_list->list[i].name;
+    }
+    delete[] schema_list->list;
+  }
+  schema_list->size = 0;
+  schema_list->list = NULL;
+}
+
+RIME_API Bool RimeGetCurrentSchema(RimeSessionId session_id, char* schema_id, size_t buffer_size) {
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  if (!session) return False;
+  rime::Schema* schema = session->schema();
+  if (!schema) return False;
+  strncpy(schema_id, schema->schema_id().c_str(), buffer_size);
+  return True;
+}
+
+RIME_API Bool RimeSelectSchema(RimeSessionId session_id, const char* schema_id) {
+  if (!schema_id) return False;
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  if (!session) return False;
+  session->ApplySchema(new rime::Schema(schema_id));
+  return True;
+}
+
 // config
 
 RIME_API Bool RimeConfigOpen(const char *config_id, RimeConfig* config) {

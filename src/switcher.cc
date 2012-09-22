@@ -189,6 +189,13 @@ Schema* Switcher::CreateSchema() {
     return new Schema(recent);
 }
 
+void Switcher::ApplySchema(Schema* schema) {
+  if (!schema) return;
+  if (active_)
+    Deactivate();
+  target_engine_->set_schema(schema);
+}
+
 void Switcher::OnSelect(Context *ctx) {
   LOG(INFO) << "a switcher option is selected.";
   Segment &seg(ctx->composition()->back());

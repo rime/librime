@@ -28,6 +28,7 @@ class Switcher : public Engine {
   void Attach(Engine *engine);
   bool ProcessKeyEvent(const KeyEvent &key_event);
   Schema* CreateSchema();
+  void ApplySchema(Schema* schema);
 
   bool active() const { return active_; }
   

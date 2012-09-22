@@ -91,12 +91,39 @@ void Print(RimeSessionId session_id) {
   }
 }
 
+bool ExecuteSpecialCommand(const char* line, RimeSessionId session_id) {
+    if (!strcmp(line, "print schema list")) {
+      RimeSchemaList list;
+      if (RimeGetSchemaList(&list)) {
+        printf("schema list:\n");
+        for (size_t i = 0; i < list.size; ++i) {
+          printf("%ld. %s [%s]\n", (i + 1),
+                 list.list[i].name, list.list[i].schema_id);
+        }
+        RimeFreeSchemaList(&list);
+      }
+      char current[100] = {0};
+      if (RimeGetCurrentSchema(session_id, current, sizeof(current))) {
+        printf("current schema: [%s]\n", current);
+      }
+      return true;
+    }
+    if (!strncmp(line, "select schema ", 14)) {
+      const char* schema_id = line + 14;
+      if (RimeSelectSchema(session_id, schema_id)) {
+        printf("selected schema: [%s]\n", schema_id);
+      }
+      return true;
+    }
+    return false;
+}
+
 int main(int argc, char *argv[]) {
   RimeSetupLogging("rime.console");
 
   fprintf(stderr, "initializing...");
   RimeInitialize(NULL);
-  if (RimeStartMaintenanceOnWorkspaceChange())
+  if (RimeStartMaintenance(True))
     RimeJoinMaintenanceThread();
   fprintf(stderr, "ready.\n");
 
@@ -115,6 +142,10 @@ int main(int argc, char *argv[]) {
         break;
       }
     }
+    if (!strcmp(line, "exit"))
+      break;
+    if (ExecuteSpecialCommand(line, session_id))
+      continue;
     if (!RimeSimulateKeySequence(session_id, line)) {
       fprintf(stderr, "Error processing key sequence: %s\n", line);
     }

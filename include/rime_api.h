@@ -118,6 +118,18 @@ typedef struct {
   const char* path;
 } RimeConfigIterator;
 
+
+typedef struct {
+  char* schema_id;
+  char* name;
+  void* unused;
+} RimeSchemaListItem;
+
+typedef struct {
+  size_t size;
+  RimeSchemaListItem* list;
+} RimeSchemaList;
+
 // entry and exit
 
 // call this function before accessing any other API.
@@ -171,6 +183,10 @@ RIME_API Bool RimeFreeStatus(RimeStatus* status);
 RIME_API void RimeSetOption(RimeSessionId session_id, const char* option, Bool value);
 RIME_API Bool RimeGetOption(RimeSessionId session_id, const char* option);
 
+RIME_API Bool RimeGetSchemaList(RimeSchemaList* schema_list);
+RIME_API void RimeFreeSchemaList(RimeSchemaList* schema_list);
+RIME_API Bool RimeGetCurrentSchema(RimeSessionId session_id, char* schema_id, size_t buffer_size);
+RIME_API Bool RimeSelectSchema(RimeSessionId session_id, const char* schema_id);
   
 // configuration
 

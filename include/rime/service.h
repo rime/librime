@@ -37,6 +37,7 @@ class Session {
   void ResetCommitText();
   bool CommitComposition();
   void ClearComposition();
+  void ApplySchema(Schema* schema);
 
   Context* context() const;
   Schema* schema() const;
