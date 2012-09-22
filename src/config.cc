@@ -434,6 +434,7 @@ bool ConfigData::SaveToFile(const std::string& file_name) {
   YAML::Emitter emitter;
   EmitYaml(root, &emitter);
   out << emitter.c_str();
+  LOG(INFO) << "saved config file '" << file_name << "'.";
   return true;
 }
 
