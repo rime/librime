@@ -127,9 +127,12 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   }
 
   LOG(INFO) << "updating schemas.";
+  int success = 0;
+  int failure = 0;
   std::map<std::string, std::string> schemas;
-  ConfigList::Iterator it = schema_list->begin();
-  for (; it != schema_list->end(); ++it) {
+  // fill the prescription
+  for (ConfigList::Iterator it = schema_list->begin();
+       it != schema_list->end(); ++it) {
     ConfigMapPtr item = As<ConfigMap>(*it);
     if (!item) continue;
     ConfigValuePtr schema_property = item->GetValue("schema");
@@ -138,7 +141,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     LOG(INFO) << "schema: " << schema_id;
     std::string schema_path;
     if (schemas.find(schema_id) == schemas.end()) {
-      schema_path = GetSchemaPath(deployer, schema_id);
+      schema_path = GetSchemaPath(deployer, schema_id, true);
       schemas[schema_id] = schema_path;
     }
     else {
@@ -148,35 +151,45 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
       LOG(WARNING) << "missing schema file for '" << schema_id << "'.";
       continue;
     }
-    // find dependencies
-    Config schema_config;
-    if (!schema_config.LoadFromFile(schema_path))
-      continue;
-    ConfigListPtr dependencies = schema_config.GetList("schema/dependencies");
-    if (!dependencies)
-      continue;
-    ConfigList::Iterator it = dependencies->begin();
-    for (; it != dependencies->end(); ++it) {
-      ConfigValuePtr dependency = As<ConfigValue>(*it);
-      if (!dependency) continue;
-      std::string dependency_id(dependency->str());
-      if (schemas.find(dependency_id) != schemas.end())
-        continue;
-      LOG(INFO) << "new dependency: " << dependency_id;
-      std::string dependency_path(GetSchemaPath(deployer, dependency_id));
-      schemas[dependency_id] = dependency_path;
-    }
-  }
-  // build
-  int success = 0;
-  int failure = 0;
-  for (std::map<std::string, std::string>::const_iterator it = schemas.begin();
-       it != schemas.end(); ++it) {
-    scoped_ptr<DeploymentTask> t(new SchemaUpdate(it->second));
+    // build schema
+    scoped_ptr<DeploymentTask> t(new SchemaUpdate(schema_path));
     if (t->Run(deployer))
       ++success;
     else
       ++failure;
+  }
+  // find dependencies
+  for (std::map<std::string, std::string>::const_iterator s = schemas.begin();
+       s != schemas.end(); ++s) {
+    Config schema_config;
+    // user could have customized dependencies in the resulting schema
+    std::string user_schema_path = GetSchemaPath(deployer, s->first, false);
+    if (!schema_config.LoadFromFile(user_schema_path))
+      continue;
+    ConfigListPtr dependencies = schema_config.GetList("schema/dependencies");
+    if (!dependencies)
+      continue;
+    for (ConfigList::Iterator d = dependencies->begin();
+         d != dependencies->end(); ++d) {
+      ConfigValuePtr dependency = As<ConfigValue>(*d);
+      if (!dependency) continue;
+      std::string dependency_id(dependency->str());
+      if (schemas.find(dependency_id) != schemas.end())  // already built
+        continue;
+      LOG(INFO) << "new dependency: " << dependency_id;
+      std::string dependency_path(GetSchemaPath(deployer, dependency_id, true));
+      schemas[dependency_id] = dependency_path;
+      if (dependency_path.empty()) {
+        LOG(WARNING) << "missing schema file for dependency '" << dependency_id << "'.";
+        continue;
+      }
+      // build dependency
+      scoped_ptr<DeploymentTask> t(new SchemaUpdate(dependency_path));
+      if (t->Run(deployer))
+        ++success;
+      else
+        ++failure;
+    }
   }
   LOG(INFO) << "finished updating schemas: "
             << success << " success, " << failure << " failure.";
@@ -184,11 +197,17 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
 }
 
 const std::string WorkspaceUpdate::GetSchemaPath(Deployer* deployer,
-                                                 const std::string& schema_id) {
-  fs::path shared_data_path(deployer->shared_data_dir);
-  fs::path user_data_path(deployer->user_data_dir);
-  fs::path schema_path = shared_data_path / (schema_id + ".schema.yaml");
-  if (!fs::exists(schema_path)) {
+                                                 const std::string& schema_id,
+                                                 bool prefer_shared_copy) {
+  fs::path schema_path;
+  if (prefer_shared_copy) {
+    fs::path shared_data_path(deployer->shared_data_dir);
+    schema_path = shared_data_path / (schema_id + ".schema.yaml");
+    if (!fs::exists(schema_path))
+      schema_path.clear();
+  }
+  if (schema_path.empty()) {
+    fs::path user_data_path(deployer->user_data_dir);
     schema_path = user_data_path / (schema_id + ".schema.yaml");
     if (!fs::exists(schema_path))
       schema_path.clear();
