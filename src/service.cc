@@ -10,7 +10,6 @@
 #include <boost/bind.hpp>
 #include <rime/context.h>
 #include <rime/engine.h>
-#include <rime/registry.h>
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/switcher.h>
@@ -82,14 +81,12 @@ Service::~Service() {
 }
 
 void Service::StartService() {
-  rime::RegisterComponents();
   started_ = true;
 }
 
 void Service::StopService() {
   started_ = false;
   CleanupAllSessions();
-  rime::Registry::instance().Clear();
 }
 
 SessionId Service::CreateSession() {
