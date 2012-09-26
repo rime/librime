@@ -1,4 +1,5 @@
 build/
+build-static/
 debug-build/
 vcbuild/
 xbuild/

@@ -8,8 +8,8 @@ endif(BUILD_STATIC)
 
 set(RIME_API_CONSOLE_SRC "rime_api_console.cc")
 add_executable(rime_api_console ${RIME_API_CONSOLE_SRC})
-target_link_libraries(rime_api_console rime)
-add_dependencies(rime_api_console rime)
+target_link_libraries(rime_api_console ${RIME_LIBRARY})
+add_dependencies(rime_api_console ${RIME_LIBRARY})
 
 set(RIME_CONSOLE_SRC "rime_console.cc")
 add_executable(rime_console ${RIME_CONSOLE_SRC})

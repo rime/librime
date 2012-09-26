@@ -10,6 +10,11 @@ install: install-librime
 uninstall: uninstall-librime
 	@echo ':)'
 
+librime-static:
+	mkdir -p build-static
+	(cd build-static; cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC=ON ..)
+	make -C build-static
+
 librime:
 	mkdir -p build
 	(cd build; cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release ..)
