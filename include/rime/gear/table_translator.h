@@ -39,6 +39,7 @@ class TableTranslator : public Translator,
 
  protected:
   bool enable_charset_filter_;
+  bool enable_sentence_;
 };
 
 class TableTranslation : public Translation {

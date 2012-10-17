@@ -187,12 +187,15 @@ TableTranslator::TableTranslator(Engine *engine)
     : Translator(engine),
       Memory(engine),
       TranslatorOptions(engine),
-      enable_charset_filter_(false) {
+      enable_charset_filter_(false),
+      enable_sentence_(true) {
   if (!engine) return;
   Config *config = engine->schema()->config();
   if (config) {
     config->GetBool("translator/enable_charset_filter",
                     &enable_charset_filter_);
+    config->GetBool("translator/enable_sentence",
+                    &enable_sentence_);
   }
 }
 
@@ -252,7 +255,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
       translation = make_shared<CharsetFilter>(translation);
     }
   }
-  if (!translation || translation->exhausted()) {
+  if (enable_sentence_ && (!translation || translation->exhausted())) {
     translation = MakeSentence(input, segment.start);
   }
   if (translation) {
