@@ -183,6 +183,9 @@ RIME_API Bool RimeFreeStatus(RimeStatus* status);
 RIME_API void RimeSetOption(RimeSessionId session_id, const char* option, Bool value);
 RIME_API Bool RimeGetOption(RimeSessionId session_id, const char* option);
 
+RIME_API void RimeSetProperty(RimeSessionId session_id, const char* prop, const char* value);
+RIME_API Bool RimeGetProperty(RimeSessionId session_id, const char* prop, char* value, size_t buffer_size);
+
 RIME_API Bool RimeGetSchemaList(RimeSchemaList* schema_list);
 RIME_API void RimeFreeSchemaList(RimeSchemaList* schema_list);
 RIME_API Bool RimeGetCurrentSchema(RimeSessionId session_id, char* schema_id, size_t buffer_size);

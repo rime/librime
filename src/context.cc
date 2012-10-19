@@ -276,4 +276,18 @@ bool Context::get_option(const std::string &name) const {
     return false;
 }
 
+void Context::set_property(const std::string &name,
+                           const std::string& value) {
+  properties_[name] = value;
+}
+
+const std::string Context::get_property(const std::string &name) const {
+  std::map<std::string, std::string>::const_iterator it =
+      properties_.find(name);
+  if (it != properties_.end())
+    return it->second;
+  else
+    return std::string();
+}
+
 }  // namespace rime

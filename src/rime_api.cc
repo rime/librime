@@ -326,6 +326,31 @@ RIME_API Bool RimeGetOption(RimeSessionId session_id, const char* option) {
   return Bool(ctx->get_option(option));
 }
 
+RIME_API void RimeSetProperty(RimeSessionId session_id, const char* prop, const char* value) {
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  if (!session)
+    return;
+  rime::Context *ctx = session->context();
+  if (!ctx)
+    return;
+  ctx->set_property(prop, value);
+}
+
+RIME_API Bool RimeGetProperty(RimeSessionId session_id, const char* prop,
+                              char* value, size_t buffer_size) {
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  rime::Context *ctx = session->context();
+  if (!ctx)
+    return False;
+  const std::string str_value(ctx->get_property(prop));
+  if (str_value.empty())
+    return False;
+  strncpy(value, str_value.c_str(), buffer_size);
+  return True;
+}
+
 RIME_API Bool RimeGetSchemaList(RimeSchemaList* output) {
   if (!output) return False;
   output->size = 0;

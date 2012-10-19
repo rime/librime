@@ -69,6 +69,8 @@ class Context {
 
   void set_option(const std::string &name, bool value);
   bool get_option(const std::string &name) const;
+  void set_property(const std::string &name, const std::string& value);
+  const std::string get_property(const std::string &name) const;
   
   Notifier& commit_notifier() { return commit_notifier_; }
   Notifier& select_notifier() { return select_notifier_; }
@@ -84,6 +86,7 @@ class Context {
   scoped_ptr<Composition> composition_;
   CommitHistory commit_history_;
   std::map<std::string, bool> options_;
+  std::map<std::string, std::string> properties_;
 
   Notifier commit_notifier_;
   Notifier select_notifier_;
