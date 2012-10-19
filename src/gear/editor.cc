@@ -93,7 +93,8 @@ inline void Editor::CommitRawInput(Context* ctx) {
 }
 
 inline void Editor::CommitComposition(Context* ctx) {
-  ctx->Commit();
+  if (!ctx->ConfirmCurrentSelection() || !ctx->HasMenu())
+    ctx->Commit();
 }
 
 inline void Editor::RevertLastAction(Context* ctx) {
