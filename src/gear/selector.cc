@@ -60,16 +60,16 @@ Processor::Result Selector::ProcessKeyEvent(const KeyEvent &key_event) {
       return kAccepted;
   }
   int index = -1;
-  if (ch >= XK_0 && ch <= XK_9)
-    index = ((ch - XK_0) + 9) % 10;
-  else if (ch >= XK_KP_0 && ch <= XK_KP_9)
-    index = ((ch - XK_KP_0) + 9) % 10;
-  else if (!select_keys_.empty()) {
+  if (!select_keys_.empty()) {
     size_t pos = select_keys_.find(ch);
     if (pos != std::string::npos) {
       index = static_cast<int>(pos);
     }
   }
+  else if (ch >= XK_0 && ch <= XK_9)
+    index = ((ch - XK_0) + 9) % 10;
+  else if (ch >= XK_KP_0 && ch <= XK_KP_9)
+    index = ((ch - XK_KP_0) + 9) % 10;
   if (index >= 0) {
     SelectCandidateAt(ctx, index);
     return kAccepted;
@@ -105,7 +105,7 @@ bool Selector::PageDown(Context *ctx) {
   comp->back().selected_index = index;
   comp->back().tags.insert("paging");
   return true;
-  
+
 }
 
 bool Selector::CursorUp(Context *ctx) {
