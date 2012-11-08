@@ -15,21 +15,11 @@
 #include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
-#if defined(_MSC_VER)
-#pragma warning(disable: 4244)
-#pragma warning(disable: 4351)
-#endif
-#include <kchashdb.h>
-#if defined(_MSC_VER)
-#pragma warning(default: 4351)
-#pragma warning(default: 4244)
-#endif
-#include <utf8.h>
 #include <yaml-cpp/yaml.h>
-#include <rime/service.h>
 #include <rime/algo/algebra.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
+#include <rime/dict/preset_vocabulary.h>
 #include <rime/dict/prism.h>
 #include <rime/dict/table.h>
 #include <rime/dict/user_db.h>
@@ -48,90 +38,6 @@ uint32_t checksum(const std::string &file_name) {
 }
 
 }  // namespace dictionary
-
-class PresetVocabulary {
- public:
-  static PresetVocabulary *Create();
-  // random access
-  bool GetWeightForEntry(const std::string &key, double *weight);
-  // traversing
-  void Reset();
-  bool GetNextEntry(std::string *key, std::string *value);
-  bool IsQualifiedPhrase(const std::string& phrase,
-                         const std::string& weight_str);
-  
-  void set_max_phrase_length(int length) { max_phrase_length_ = length; }
-  void set_min_phrase_weight(double weight) { min_phrase_weight_ = weight; }
-
- protected:
-  PresetVocabulary(const shared_ptr<kyotocabinet::TreeDB>& db)
-      : db_(db), cursor_(db->cursor()),
-        max_phrase_length_(0), min_phrase_weight_(0.0) {}
-  
-  shared_ptr<kyotocabinet::TreeDB> db_;
-  scoped_ptr<kyotocabinet::DB::Cursor> cursor_;
-  int max_phrase_length_;
-  double min_phrase_weight_;
-};
-
-PresetVocabulary* PresetVocabulary::Create() {
-  boost::filesystem::path path(Service::instance().deployer().shared_data_dir);
-  path /= "essay.kct";
-  shared_ptr<kyotocabinet::TreeDB> db(new kyotocabinet::TreeDB);
-  if (!db) return NULL;
-  //db->tune_options(kyotocabinet::TreeDB::TLINEAR | kyotocabinet::TreeDB::TCOMPRESS);
-  //db->tune_buckets(30LL * 1000);
-  db->tune_defrag(8);
-  db->tune_page(32768);
-  if (!db->open(path.string(), kyotocabinet::TreeDB::OREADER)) {
-    return NULL;
-  }
-  return new PresetVocabulary(db);
-}
-
-bool PresetVocabulary::GetWeightForEntry(const std::string &key, double *weight) {
-  std::string weight_str;
-  if (!db_ || !db_->get(key, &weight_str))
-    return false;
-  try {
-    *weight = boost::lexical_cast<double>(weight_str);
-  }
-  catch (...) {
-    return false;
-  }
-  return true;
-}
-
-void PresetVocabulary::Reset() {
-  if (cursor_)
-    cursor_->jump();
-}
-
-bool PresetVocabulary::GetNextEntry(std::string *key, std::string *value) {
-  if (!cursor_) return false;
-  bool got = false;
-  do {
-    got = cursor_->get(key, value, true);
-  }
-  while (got && !IsQualifiedPhrase(*key, *value));
-  return got;
-}
-
-bool PresetVocabulary::IsQualifiedPhrase(const std::string& phrase,
-                                         const std::string& weight_str) {
-  if (max_phrase_length_ > 0) {
-    size_t length = utf8::unchecked::distance(phrase.c_str(),
-                                              phrase.c_str() + phrase.length());
-    if (static_cast<int>(length) > max_phrase_length_)
-      return false;
-  }
-  if (min_phrase_weight_ > 0.0) {
-    double weight = boost::lexical_cast<double>(weight_str);
-    if (weight < min_phrase_weight_)
-      return false;
-  }
-  return true;
-}
 
 // EntryCollector
 
