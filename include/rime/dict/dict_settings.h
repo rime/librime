@@ -1,0 +1,29 @@
+// encoding: utf-8
+//
+// Copyleft 2012 RIME Developers
+// License: GPLv3
+//
+// 2012-11-11 GONG Chen <chen.sst@gmail.com>
+//
+#ifndef RIME_DICT_SETTINGS_H_
+#define RIME_DICT_SETTINGS_H_
+
+#include <string>
+#include <rime/common.h>
+
+namespace rime {
+
+struct DictSettings {
+  std::string dict_name;
+  std::string dict_version;
+  std::string sort_order;
+  bool use_preset_vocabulary;
+  int max_phrase_length;
+  double min_phrase_weight;
+  DictSettings();
+  bool LoadFromFile(const std::string& dict_file);
+};
+
+}  // namespace rime
+
+#endif  // RIME_DICT_SETTINGS_H_

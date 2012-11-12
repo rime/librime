@@ -21,6 +21,7 @@
 namespace rime {
 
 class PresetVocabulary;
+struct DictSettings;
 
 struct EntryCollector {
   scoped_ptr<PresetVocabulary> preset_vocabulary;
@@ -35,7 +36,7 @@ struct EntryCollector {
 
   EntryCollector();
   ~EntryCollector();
-  void LoadPresetVocabulary(int max_length = 0, double min_weight = 0.0);
+  void LoadPresetVocabulary(DictSettings* settings);
   void Collect(const std::string &dict_file);
   void CreateEntry(const std::string &word,
                    const std::string &code_str,

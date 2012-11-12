@@ -14,10 +14,10 @@
 #include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
-#include <yaml-cpp/yaml.h>
 #include <rime/algo/algebra.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
+#include <rime/dict/dict_settings.h>
 #include <rime/dict/entry_collector.h>
 #include <rime/dict/prism.h>
 #include <rime/dict/table.h>
@@ -91,55 +91,16 @@ bool DictCompiler::Compile(const std::string &dict_file, const std::string &sche
 
 bool DictCompiler::BuildTable(const std::string &dict_file, uint32_t checksum) {
   LOG(INFO) << "building table...";
-  YAML::Node doc;
-  {
-    std::ifstream fin(dict_file.c_str());
-    YAML::Parser parser(fin);
-    if (!parser.GetNextDocument(doc)) {
-      LOG(ERROR) << "Error parsing yaml doc in '" << dict_file << "'.";
-      return false;
-    }
-  }
-  if (doc.Type() != YAML::NodeType::Map) {
-    LOG(ERROR) << "invalid yaml doc in '" << dict_file << "'.";
+
+  DictSettings settings;
+  if (!settings.LoadFromFile(dict_file))
     return false;
-  }
-  std::string dict_name;
-  std::string dict_version;
-  std::string sort_order;
-  bool use_preset_vocabulary = false;
-  int max_phrase_length = 0;
-  double min_phrase_weight = 0;
-  {
-    const YAML::Node *name_node = doc.FindValue("name");
-    const YAML::Node *version_node = doc.FindValue("version");
-    const YAML::Node *sort_order_node = doc.FindValue("sort");
-    const YAML::Node *use_preset_vocabulary_node = doc.FindValue("use_preset_vocabulary");
-    const YAML::Node *max_phrase_length_node = doc.FindValue("max_phrase_length");
-    const YAML::Node *min_phrase_weight_node = doc.FindValue("min_phrase_weight");
-    if (!name_node || !version_node) {
-      LOG(ERROR) << "incomplete dict info in '" << dict_file << "'.";
-      return false;
-    }
-    *name_node >> dict_name;
-    *version_node >> dict_version;
-    if (sort_order_node) {
-      *sort_order_node >> sort_order;
-    }
-    if (use_preset_vocabulary_node) {
-      *use_preset_vocabulary_node >> use_preset_vocabulary;
-      if (max_phrase_length_node)
-        *max_phrase_length_node >> max_phrase_length;
-      if (min_phrase_weight_node)
-        *min_phrase_weight_node >> min_phrase_weight;
-    }
-  }
-  LOG(INFO) << "dict name: " << dict_name;
-  LOG(INFO) << "dict version: " << dict_version;
+  LOG(INFO) << "dict name: " << settings.dict_name;
+  LOG(INFO) << "dict version: " << settings.dict_version;
   
   EntryCollector collector;
-  if (use_preset_vocabulary) {
-    collector.LoadPresetVocabulary(max_phrase_length, min_phrase_weight);
+  if (settings.use_preset_vocabulary) {
+    collector.LoadPresetVocabulary(&settings);
   }
   collector.Collect(dict_file);
   // build table
@@ -166,7 +127,7 @@ bool DictCompiler::BuildTable(const std::string &dict_file, uint32_t checksum) {
       e->weight = r.weight;
       ls->push_back(e);
     }
-    if (sort_order != "original") {
+    if (settings.sort_order != "original") {
       vocabulary.SortHomophones();
     }
     table_->Remove();

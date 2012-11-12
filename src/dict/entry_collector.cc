@@ -10,6 +10,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
+#include <rime/dict/dict_settings.h>
 #include <rime/dict/entry_collector.h>
 #include <rime/dict/preset_vocabulary.h>
 
@@ -22,13 +23,14 @@ EntryCollector::EntryCollector()
 EntryCollector::~EntryCollector() {
 }
 
-void EntryCollector::LoadPresetVocabulary(int max_phrase_length,
-                                          double min_phrase_weight) {
+void EntryCollector::LoadPresetVocabulary(DictSettings* settings) {
     preset_vocabulary.reset(PresetVocabulary::Create());
-    if (max_phrase_length > 0)
-      preset_vocabulary->set_max_phrase_length(max_phrase_length);
-    if (min_phrase_weight > 0)
-      preset_vocabulary->set_min_phrase_weight(min_phrase_weight);
+    if (preset_vocabulary && settings) {
+      if (settings->max_phrase_length > 0)
+        preset_vocabulary->set_max_phrase_length(settings->max_phrase_length);
+      if (settings->min_phrase_weight > 0)
+        preset_vocabulary->set_min_phrase_weight(settings->min_phrase_weight);
+    }
 }
 
 void EntryCollector::Collect(const std::string &dict_file) {
