@@ -11,6 +11,8 @@
 
 namespace rime {
 
+static void DiscoverColumns(DictSettings* settings, const YAML::Node* doc);
+
 DictSettings::DictSettings()
     : use_preset_vocabulary(false)
     , max_phrase_length(0)
@@ -54,7 +56,28 @@ bool DictSettings::LoadFromFile(const std::string& dict_file) {
     if (min_phrase_weight_node)
       *min_phrase_weight_node >> min_phrase_weight;
   }
+  DiscoverColumns(this, &doc);
   return true;
+}
+
+static void DiscoverColumns(DictSettings* settings, const YAML::Node* doc) {
+  if (!settings || !doc) return;
+  settings->columns.clear();
+  const YAML::Node* node = doc->FindValue("columns");
+  if (node) {
+    // user defined column order
+    for (YAML::Iterator it = node->begin(); it != node->end(); ++it) {
+      std::string column_label;
+      *it >> column_label;
+      settings->columns.push_back(column_label);
+    }
+  }
+  else {
+    // default
+    //settings->columns.push_back("text");
+    //settings->columns.push_back("code");
+    //settings->columns.push_back("weight");
+  }
 }
 
 }  // namespace rime
