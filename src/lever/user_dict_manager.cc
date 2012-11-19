@@ -147,7 +147,7 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
       c = (std::max)(c, c0);
       d = (std::max)(d, d0);
     }
-    right = boost::str(boost::format("c=%1% d=%2% t=%3%") % 
+    right = boost::str(boost::format("c=%1% d=%2% t=%3%") %
                        c % d % tick_left);
     if (dest.Update(key, right))
       ++num_entries;
@@ -272,7 +272,7 @@ int UserDictManager::Import(const std::string& dict_name,
 
 bool UserDictManager::UpgradeUserDict(const std::string& dict_name) {
   UserDb db(dict_name);
-  if (!db.OpenReadOnly())
+  if (!db.OpenRepaired())
     return false;
   if (!IsUserDb(db))
     return false;

@@ -65,10 +65,9 @@ TreeDb::TreeDb(const std::string &name) : name_(name), loaded_(false) {
 
 void TreeDb::Initialize() {
   db_.reset(new kyotocabinet::TreeDB);
-  db_->tune_options(kyotocabinet::TreeDB::TLINEAR | kyotocabinet::TreeDB::TCOMPRESS);
-  db_->tune_buckets(10LL * 1000);
+  db_->tune_options(kyotocabinet::TreeDB::TSMALL | kyotocabinet::TreeDB::TLINEAR);
+  db_->tune_map(4LL << 20);
   db_->tune_defrag(8);
-  db_->tune_page(32768);
 }
 
 TreeDb::~TreeDb() {
@@ -154,7 +153,11 @@ bool TreeDb::Remove() {
 bool TreeDb::Open() {
   if (loaded()) return false;
   Initialize();
-  loaded_ = db_->open(file_name());
+  loaded_ = db_->open(file_name(),
+                      kyotocabinet::TreeDB::OWRITER |
+                      kyotocabinet::TreeDB::OCREATE |
+                      kyotocabinet::TreeDB::OTRYLOCK |
+                      kyotocabinet::TreeDB::ONOREPAIR);
   if (loaded_) {
     std::string db_name;
     if (!Fetch("\x01/db_name", &db_name))
@@ -172,9 +175,24 @@ bool TreeDb::Open() {
 bool TreeDb::OpenReadOnly() {
   if (loaded()) return false;
   Initialize();
-  loaded_ = db_->open(file_name(), kyotocabinet::TreeDB::OREADER);
+  loaded_ = db_->open(file_name(),
+                      kyotocabinet::TreeDB::OREADER |
+                      kyotocabinet::TreeDB::OTRYLOCK |
+                      kyotocabinet::TreeDB::ONOREPAIR);
   if (!loaded_) {
     LOG(ERROR) << "Error opening db '" << name_ << "' read-only.";
+  }
+  return loaded_;
+}
+
+bool TreeDb::OpenRepaired() {
+  if (loaded()) return false;
+  Initialize();
+  loaded_ = db_->open(file_name(),
+                      kyotocabinet::TreeDB::OREADER |
+                      kyotocabinet::TreeDB::OTRYLOCK);
+  if (!loaded_) {
+    LOG(ERROR) << "Error opening db '" << name_ << "' repaired.";
   }
   return loaded_;
 }

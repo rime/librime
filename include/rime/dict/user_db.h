@@ -5,7 +5,7 @@
 // License: GPLv3
 //
 // A simple wrapper for kyotocabinet::TreeDB
-// 
+//
 // 2011-11-02 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_USER_DB_H_
@@ -53,6 +53,7 @@ class TreeDb {
   bool Remove();
   bool Open();
   bool OpenReadOnly();
+  bool OpenRepaired();
   bool Close();
 
   const shared_ptr<TreeDbAccessor> Query(const std::string &key);
@@ -70,7 +71,7 @@ class TreeDb {
  protected:
   virtual bool CreateMetadata();
   void Initialize();
-  
+
   std::string name_;
   std::string file_name_;
   bool loaded_;
