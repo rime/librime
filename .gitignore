@@ -10,6 +10,7 @@ data/supplement
 data/extra
 thirdparty/include/*
 thirdparty/lib/*
+thirdparty/bin/*
 env.bat
 *~
 .*.swp

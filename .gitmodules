@@ -1,0 +1,3 @@
+[submodule "thirdparty/src/kyotocabinet"]
+	path = thirdparty/src/kyotocabinet
+	url = git://github.com/lotem/kyotocabinet-treedb.git
