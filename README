@@ -2,41 +2,28 @@
 
 RIME: Rime Input Method Engine
 
+Home: http://code.google.com/p/rimeime/
+
 Features:
+  - support for shape-based and phonetic-based input methods, including those for Chinese dialects
+  - a selected dictionary in traditional Chinese, powered by opencc for simplified Chinese output
+  - lightweight and extensible input method framework to create your innovative input schema in YAML syntax
+  - cross-platform core library in C++, built on top of open-source technologies
+  - OS-specific wrappers working consistently for Windows, Linux and Mac OS
 
- - lightweight, customizable and extensible framework
- - supporting various input schemata including glyph-based input methods, 
-   romanization-based input methods as well as those for Chinese dialects
- - syllabification algorithm adaptive to any scripting system
- - intelligent composition of phrases and sentences
- - accurate traditional Chinese output
- - built on top of open-source technology
- - cross-platform core library in C++
- - OS-specific wrappers working consistently for Windows, Linux and Mac OS
-
-Install: |
+Install the library: |
   make
   sudo make install
 
-Sub-projects:
-
-- ibus-rime : Linux/ibus client
-- weasel    : Windows client
-- squirrel  : Mac OS X client
+Wrappers:
+  - fcitx-rime: Linux/fcitx client
+  - ibus-rime : Linux/ibus client
+  - squirrel  : Mac OS X client
+  - weasel    : Windows client
 
 Related works:
+  - brise     : rime schema repository
+  - essay     : vocabulary and language model for rime
+  - combo-py  : an innovative chord-typing practice
+  - zhung-r10n: a romanization scheme for Zhungyuan Mandarin
 
-- brise     : rime schema repository
-- essay     : vocabulary and language model for rime
-- plume     : web input
-- combo-py  : an innovative chord-typing practice
-- zhung-r10n: a romanization scheme for Zhungyuan Mandarin
-
-Epilogue: |
-
-    Sorry for the temporary short of documentation. Feel free to explore.
-
-    For lastest news, visit rime project home page:
-    http://code.google.com/p/rimeime/
-
-    Thanks.
