@@ -1,0 +1,42 @@
+2012-09-26  GONG Chen  <chen.sst@gmail.com>
+
+	- new dependency: 'google-glog'.
+	- fix x64 build.
+
+	- Release: 0.9.4-1
+
+2012-09-25  GONG Chen  <chen.sst@gmail.com>
+
+	* table_translator: add user dictionary.
+	* deployment_tasks: automatically build schema dependencies.
+	* logging: adopt google-glog.
+	* brise: install data files from a separate package.
+	* new API: accessing schema list.
+	* new API: enabling/disabling soft cursor in preedit string.
+
+	- Release: 0.9.3
+
+2012-07-08  GONG Chen  <chen.sst@gmail.com>
+
+	* chord_composer: combine multiple keys to compose a syllable at once.
+	* configuration: global page_size setting.
+	* API: extend the API to support inline mode.
+	* table_translator: add option to filter candidates by character set.
+	* user_dictionary: automatic recovery for corrupted databases.
+	* user_dictionary: fixed a bug that was responsible for missing user phrases.
+
+	* rime_deployer: a utility program to prepare Rime's workspace.
+	* rime_dict_manager: a utility program to import/export user dictionaries.
+
+	* librime: include 'brise', a collection of preset schemata in the package.
+	* new schema: Middle Chinese Phonetic Transcription.
+	* new schema: IPA input method in X-SAMPA.
+
+	- Release: 0.9.2-1
+
+2012-05-06  GONG Chen  <chen.sst@gmail.com>
+
+	- Revised API.
+
+	- Release: 0.9.1-1
+
