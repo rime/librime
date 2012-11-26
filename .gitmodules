@@ -1,3 +1,12 @@
 [submodule "thirdparty/src/kyotocabinet"]
 	path = thirdparty/src/kyotocabinet
 	url = git://github.com/lotem/kyotocabinet-treedb.git
+[submodule "thirdparty/src/opencc"]
+	path = thirdparty/src/opencc
+	url = git@github.com:BYVoid/OpenCC.git
+[submodule "thirdparty/src/yaml-cpp"]
+	path = thirdparty/src/yaml-cpp
+	url = git@github.com:bref/yaml-cpp.git
+[submodule "thirdparty/src/glog"]
+	path = thirdparty/src/glog
+	url = git@github.com:mdavid/google-glog.git
