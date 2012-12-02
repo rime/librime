@@ -278,7 +278,7 @@ bool UserDictManager::UpgradeUserDict(const std::string& dict_name) {
     return false;
   std::string db_creator_version;
   db.Fetch("\x01/rime_version", &db_creator_version);
-  if (CompareVersionString(db_creator_version, "0.9.1") <= 0) {
+  if (CompareVersionString(db_creator_version, "0.9.5") <= 0) {
     // fix invalid keys created by a buggy version of Import()
     LOG(INFO) << "upgrading user dict '" << dict_name << "'.";
     std::string snapshot_file(db.file_name() + ".snapshot");
