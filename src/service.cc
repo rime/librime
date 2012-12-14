@@ -1,6 +1,3 @@
-
-// vim: set sts=2 sw=2 et:
-// encoding: utf-8
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
@@ -23,6 +20,7 @@ Session::Session() : last_active_time_(0) {
   engine_.reset(Engine::Create(switcher_->CreateSchema()));
   switcher_->Attach(engine_.get());
   engine_->sink().connect(boost::bind(&Session::OnCommit, this, _1));
+  engine_->message_sink().connect(boost::bind(&Service::Notify, &Service::instance(), _1, _2));
 }
 
 bool Session::ProcessKeyEvent(const KeyEvent &key_event) {
@@ -155,6 +153,21 @@ void Service::CleanupStaleSessions() {
 
 void Service::CleanupAllSessions() {
   sessions_.clear();
+}
+
+void Service::SetNotificationHandler(const NotificationHandler& handler) {
+  notification_handler_ = handler;
+}
+
+void Service::ClearNotificationHandler() {
+  notification_handler_.clear();
+}
+
+void Service::Notify(const std::string& message_type,
+                     const std::string& message_value) {
+  if (notification_handler_) {
+    notification_handler_(message_type.c_str(), message_value.c_str());
+  }
 }
 
 }  // namespace rime
