@@ -1,4 +1,3 @@
-// encoding: utf-8
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
@@ -32,7 +31,7 @@ class ConcreteEngine : public Engine {
   virtual ~ConcreteEngine();
   virtual bool ProcessKeyEvent(const KeyEvent &key_event);
   virtual void set_schema(Schema *schema);
-  
+
  protected:
   void InitializeComponents();
   void InitializeOptions();
@@ -44,7 +43,7 @@ class ConcreteEngine : public Engine {
   void OnSelect(Context *ctx);
   void OnContextUpdate(Context *ctx);
   void OnOptionUpdate(Context *ctx, const std::string &option);
-  
+
   std::vector<shared_ptr<Processor> > processors_;
   std::vector<shared_ptr<Segmentor> > segmentors_;
   std::vector<shared_ptr<Translator> > translators_;
