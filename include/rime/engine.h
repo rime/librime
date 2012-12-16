@@ -1,5 +1,3 @@
-// vim: set sts=2 sw=2 et:
-// encoding: utf-8
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
@@ -10,8 +8,8 @@
 #define RIME_ENGINE_H_
 
 #include <string>
-#include <boost/signals.hpp>
 #include <rime/common.h>
+#include <rime/messenger.h>
 
 namespace rime {
 
@@ -19,7 +17,7 @@ class KeyEvent;
 class Schema;
 class Context;
 
-class Engine {
+class Engine : public Messenger {
  public:
   typedef boost::signal<void (const std::string &commit_text)> CommitSink;
 

@@ -1,5 +1,3 @@
-// vim: set sts=2 sw=2 et:
-// encoding: utf-8
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
@@ -12,6 +10,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <map>
+#include <boost/thread.hpp>
 #include <rime/common.h>
 #include <rime/deployer.h>
 
@@ -20,6 +19,9 @@ namespace rime {
 typedef uintptr_t SessionId;
 
 static const SessionId kInvalidSessionId = 0;
+
+typedef boost::function<void (const char* message_type,
+                              const char* message_value)> NotificationHandler;
 
 class Context;
 class Engine;
@@ -66,6 +68,11 @@ class Service {
   void CleanupStaleSessions();
   void CleanupAllSessions();
 
+  void SetNotificationHandler(const NotificationHandler& handler);
+  void ClearNotificationHandler();
+  void Notify(const std::string& message_type,
+              const std::string& message_value);
+
   Deployer& deployer() { return deployer_; }
   bool disabled() { return !started_ || deployer_.IsMaintenancing(); }
 
@@ -81,6 +88,8 @@ class Service {
   typedef std::map<SessionId, shared_ptr<Session> > SessionMap;
   SessionMap sessions_;
   Deployer deployer_;
+  NotificationHandler notification_handler_;
+  boost::mutex mutex_;
   bool started_;
 };
 

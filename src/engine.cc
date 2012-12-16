@@ -1,5 +1,3 @@
-// vim: set sts=2 sw=2 et:
-// encoding: utf-8
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
@@ -33,7 +31,7 @@ class ConcreteEngine : public Engine {
   virtual ~ConcreteEngine();
   virtual bool ProcessKeyEvent(const KeyEvent &key_event);
   virtual void set_schema(Schema *schema);
-  
+
  protected:
   void InitializeComponents();
   void InitializeOptions();
@@ -45,7 +43,7 @@ class ConcreteEngine : public Engine {
   void OnSelect(Context *ctx);
   void OnContextUpdate(Context *ctx);
   void OnOptionUpdate(Context *ctx, const std::string &option);
-  
+
   std::vector<shared_ptr<Processor> > processors_;
   std::vector<shared_ptr<Segmentor> > segmentors_;
   std::vector<shared_ptr<Translator> > translators_;
@@ -109,8 +107,14 @@ void ConcreteEngine::OnContextUpdate(Context *ctx) {
 void ConcreteEngine::OnOptionUpdate(Context *ctx, const std::string &option) {
   if (!ctx) return;
   LOG(INFO) << "updated option: " << option;
-  if (ctx->IsComposing())
+  // apply new option to active segment
+  if (ctx->IsComposing()) {
     ctx->RefreshNonConfirmedComposition();
+  }
+  // notification
+  bool option_is_on = ctx->get_option(option);
+  std::string msg(option_is_on ? option : "!" + option);
+  message_sink_("option", msg);
 }
 
 void ConcreteEngine::Compose(Context *ctx) {
@@ -228,6 +232,7 @@ void ConcreteEngine::set_schema(Schema *schema) {
   context_->Clear();
   InitializeComponents();
   InitializeOptions();
+  message_sink_("schema", schema->schema_id());
 }
 
 void ConcreteEngine::InitializeComponents() {

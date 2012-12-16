@@ -1,5 +1,3 @@
-// vim: set sts=2 sw=2 et:
-// encoding: utf-8
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
@@ -7,6 +5,7 @@
 // 2011-08-09 GONG Chen <chen.sst@gmail.com>
 //
 #include <cstring>
+#include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
@@ -24,6 +23,17 @@
 
 RIME_API void RimeSetupLogging(const char* app_name) {
   rime::SetupLogging(app_name);
+}
+
+RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
+                                         void* context_object) {
+  if (handler) {
+    rime::Service::instance().SetNotificationHandler(
+        boost::bind(handler, context_object, _1, _2));
+  }
+  else {
+    rime::Service::instance().ClearNotificationHandler();
+  }
 }
 
 RIME_API void RimeInitialize(RimeTraits *traits) {

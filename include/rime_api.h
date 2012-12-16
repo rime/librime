@@ -1,6 +1,4 @@
-/* vim: set sts=2 sw=2 et:
- * encoding: utf-8
- *
+/*
  * Copyleft 2011 RIME Developers
  * License: GPLv3
  *
@@ -130,13 +128,38 @@ typedef struct {
   RimeSchemaListItem* list;
 } RimeSchemaList;
 
-// entry and exit
+typedef void (*RimeNotificationHandler)(void* context_object,
+                                        const char* message_type,
+                                        const char* message_value);
+
+// setup
 
 // call this function before accessing any other API.
 // pass a C-string constant in the format "rime.x"
 // where 'x' is the name of your application.
-// the prefix "rime." ensures old log files are automatically cleaned.
+// adding prefix "rime." ensures old log files are automatically cleaned.
+//
 RIME_API void RimeSetupLogging(const char* app_name);
+
+// receive notifications
+// on loading schema:
+//   message_type="schema", message_value="luna_pinyin"
+// on changing mode:
+//   message_type="option", message_value="ascii_mode"
+//   message_type="option", message_value="!ascii_mode"
+// on deployment:
+//   message_type="deploy", message_value="start"
+//   message_type="deploy", message_value="success"
+//   message_type="deploy", message_value="failure"
+//
+// @handler will be called with @context_object as the first parameter
+// every time an event occurs in librime, until RimeFinalize() is called.
+// when @handler is NULL, notification is disabled.
+//
+RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
+                                         void* context_object);
+
+// entry and exit
 
 RIME_API void RimeInitialize(RimeTraits *traits);
 RIME_API void RimeFinalize();

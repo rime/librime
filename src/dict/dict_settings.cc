@@ -1,4 +1,3 @@
-// encoding: utf-8
 //
 // Copyleft 2012 RIME Developers
 // License: GPLv3

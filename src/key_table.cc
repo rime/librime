@@ -1,5 +1,3 @@
-// vim: set sw=2 sts=2 et:
-// encoding: utf-8
 
 #include <stddef.h>
 #include <string.h>
