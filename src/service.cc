@@ -72,6 +72,8 @@ Schema* Session::schema() const {
 }
 
 Service::Service() : started_(false) {
+  deployer_.message_sink().connect(
+      boost::bind(&Service::Notify, this, _1, _2));
 }
 
 Service::~Service() {
@@ -166,6 +168,7 @@ void Service::ClearNotificationHandler() {
 void Service::Notify(const std::string& message_type,
                      const std::string& message_value) {
   if (notification_handler_) {
+    boost::lock_guard<boost::mutex> lock(mutex_);
     notification_handler_(message_type.c_str(), message_value.c_str());
   }
 }

@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <map>
+#include <boost/thread.hpp>
 #include <rime/common.h>
 #include <rime/deployer.h>
 
@@ -88,6 +89,7 @@ class Service {
   SessionMap sessions_;
   Deployer deployer_;
   NotificationHandler notification_handler_;
+  boost::mutex mutex_;
   bool started_;
 };
 

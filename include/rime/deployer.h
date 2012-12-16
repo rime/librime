@@ -1,5 +1,3 @@
-// vim: set sts=2 sw=2 et:
-// encoding: utf-8
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
@@ -13,6 +11,7 @@
 #include <queue>
 #include <boost/thread.hpp>
 #include <rime/common.h>
+#include <rime/messenger.h>
 
 namespace rime {
 
@@ -29,7 +28,7 @@ class DeploymentTask {
   virtual bool Run(Deployer* deployer) = 0;
 };
 
-class Deployer {
+class Deployer : public Messenger {
  public:
   // read-only access after library initialization {
   std::string shared_data_dir;

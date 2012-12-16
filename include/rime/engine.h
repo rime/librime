@@ -1,5 +1,3 @@
-// vim: set sts=2 sw=2 et:
-// encoding: utf-8
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
@@ -10,8 +8,8 @@
 #define RIME_ENGINE_H_
 
 #include <string>
-#include <boost/signals.hpp>
 #include <rime/common.h>
+#include <rime/messenger.h>
 
 namespace rime {
 
@@ -19,11 +17,9 @@ class KeyEvent;
 class Schema;
 class Context;
 
-class Engine {
+class Engine : public Messenger {
  public:
   typedef boost::signal<void (const std::string &commit_text)> CommitSink;
-  typedef boost::signal<void (const std::string& message_type,
-                              const std::string& message_value)> MessageSink;
 
   virtual ~Engine();
   virtual bool ProcessKeyEvent(const KeyEvent &key_event) = 0;
@@ -32,7 +28,6 @@ class Engine {
   Schema* schema() const { return schema_.get(); }
   Context* context() const { return context_.get(); }
   CommitSink& sink() { return sink_; }
-  MessageSink& message_sink() { return message_sink_; }
 
   static Engine* Create(Schema *schema = NULL);
   
@@ -42,7 +37,6 @@ class Engine {
   scoped_ptr<Schema> schema_;
   scoped_ptr<Context> context_;
   CommitSink sink_;
-  MessageSink message_sink_;
 };
 
 }  // namespace rime

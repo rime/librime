@@ -1,6 +1,4 @@
-/* vim: set sts=2 sw=2 et:
- * encoding: utf-8
- *
+/*
  * Copyleft 2011 RIME Developers
  * License: GPLv3
  *
@@ -118,10 +116,17 @@ bool ExecuteSpecialCommand(const char* line, RimeSessionId session_id) {
     return false;
 }
 
+void OnMessage(void* context_object,
+               const char* message_type,
+               const char* message_value) {
+  printf("message: [%s] %s\n", message_type, message_value);
+}
+
 int main(int argc, char *argv[]) {
   RimeSetupLogging("rime.console");
+  RimeSetNotificationHandler(&OnMessage, NULL);
 
-  fprintf(stderr, "initializing...");
+  fprintf(stderr, "initializing...\n");
   RimeInitialize(NULL);
   if (RimeStartMaintenance(True))
     RimeJoinMaintenanceThread();

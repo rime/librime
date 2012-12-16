@@ -1,5 +1,3 @@
-// vim: set sts=2 sw=2 et:
-// encoding: utf-8
 //
 // Copyleft 2011 RIME Developers
 // License: GPLv3
@@ -52,6 +50,7 @@ shared_ptr<DeploymentTask> Deployer::NextTask() {
 
 bool Deployer::Run() {
   LOG(INFO) << "running deployment tasks:";
+  message_sink_("deploy", "start");
   shared_ptr<DeploymentTask> task;
   int success = 0;
   int failure = 0;
@@ -64,7 +63,8 @@ bool Deployer::Run() {
   }
   LOG(INFO) << success + failure << " tasks ran: "
             << success << " success, " << failure << " failure.";
-  return failure == 0;
+  message_sink_("deploy", !failure ? "success" : "failure");
+  return !failure;
 }
 
 bool Deployer::StartMaintenance() {

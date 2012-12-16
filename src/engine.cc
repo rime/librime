@@ -1,4 +1,3 @@
-// vim: set sts=2 sw=2 et:
 // encoding: utf-8
 //
 // Copyleft 2011 RIME Developers
@@ -109,8 +108,14 @@ void ConcreteEngine::OnContextUpdate(Context *ctx) {
 void ConcreteEngine::OnOptionUpdate(Context *ctx, const std::string &option) {
   if (!ctx) return;
   LOG(INFO) << "updated option: " << option;
-  if (ctx->IsComposing())
+  // apply new option to active segment
+  if (ctx->IsComposing()) {
     ctx->RefreshNonConfirmedComposition();
+  }
+  // notification
+  bool option_is_on = ctx->get_option(option);
+  std::string msg(option_is_on ? option : "!" + option);
+  message_sink_("option", msg);
 }
 
 void ConcreteEngine::Compose(Context *ctx) {
