@@ -16,33 +16,23 @@ int add_schema(int count, char* schemas[]) {
   if (!config.LoadFromFile("default.custom.yaml")) {
     LOG(INFO) << "creating new file 'default.custom.yaml'.";
   }
-  rime::ConfigListPtr schema_list = config.GetList("patch/schema_list");
-  if (!schema_list) {
-    schema_list = rime::make_shared<rime::ConfigList>();
-    config.SetItem("patch/schema_list", schema_list);
-  }
+  rime::ConfigMapEntryRef schema_list(config["patch"]["schema_list"]);
   for (int i = 0; i < count; ++i) {
     if (!schemas[i])
       return 1;
     std::string new_schema_id(schemas[i]);
     bool already_there = false;
-    for (rime::ConfigList::Iterator it = schema_list->begin();
-         it != schema_list->end(); ++it) {
-      rime::ConfigMapPtr item = rime::As<rime::ConfigMap>(*it);
-      if (!item) continue;
-      rime::ConfigValuePtr schema_property = item->GetValue("schema");
-      if (!schema_property) continue;
-      const std::string &schema_id(schema_property->str());
+    for (size_t j = 0; j < schema_list.size(); ++j) {
+      if (!schema_list[j].HasKey("schema"))
+        continue;
+      const std::string schema_id(schema_list[j]["schema"].ToString());
       if (schema_id == new_schema_id) {
         already_there = true;
         break;
       }
     }
     if (already_there) continue;
-    rime::ConfigMapPtr new_item = rime::make_shared<rime::ConfigMap>();
-    new_item->Set("schema",
-                  rime::make_shared<rime::ConfigValue>(new_schema_id));
-    schema_list->Append(new_item);
+    schema_list[schema_list.size()]["schema"] = new_schema_id;
     LOG(INFO) << "added schema: " << new_schema_id;
   }
   if (!config.SaveToFile("default.custom.yaml")) {
@@ -57,8 +47,8 @@ int set_active_schema(const std::string& schema_id) {
   if (!config.LoadFromFile("user.yaml")) {
     LOG(INFO) << "creating new file 'user.yaml'.";
   }
-  if (!config.SetString("var/previously_selected_schema", schema_id) ||
-      !config.SaveToFile("user.yaml")) {
+  config["var"]["previously_selected_schema"] = schema_id;
+  if (!config.SaveToFile("user.yaml")) {
     LOG(ERROR) << "failed to set active schema: " << schema_id;
     return 1;
   }

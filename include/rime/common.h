@@ -25,6 +25,16 @@ shared_ptr<A> As(const B &ptr) {
   return boost::dynamic_pointer_cast<A>(ptr);
 }
 
+template <class T>
+shared_ptr<T> New() {
+  return boost::make_shared<T>();
+}
+
+template <class T, class A>
+shared_ptr<T> New(const A& a) {
+  return boost::make_shared<T>(a);
+}
+
 void SetupLogging(const char* app_name);
 void RegisterComponents();
 

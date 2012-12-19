@@ -193,3 +193,39 @@ TEST(RimeConfigWriterTest, Greetings) {
   EXPECT_FALSE(config3->GetString("zergs/overmind/greetings", &value));
   EXPECT_FALSE(config3->GetMap("zergs/overmind"));
 }
+
+TEST(RimeConfigxxTest, Operations) {
+  Config config;
+  config["str"] = "STR";
+  config["nested"]["bool"] = true;
+  config["nested"]["int"] = 1000000;
+  config["nested"]["greetings"] = New<ConfigValue>("Hello!");
+  config["list"][0] = New<ConfigMap>();
+  config["list"][0]["abc"] = "ABC";
+  config["list"].Append(New<ConfigMap>());
+  config["list"][1]["abc"] = "ZYX";
+  config["list"][2] = config["nested"]["greetings"];
+  config["list"][3]["abc"] = "123";
+  config["str"].Clear();
+  EXPECT_TRUE(config["str"].IsNull());
+  EXPECT_EQ(true, config["nested"]["bool"].ToBool());
+  EXPECT_EQ(1000000, config["nested"]["int"].ToInt());
+  EXPECT_EQ("Hello!", config["nested"]["greetings"].ToString());
+  EXPECT_TRUE(config["list"].IsList());
+  EXPECT_EQ(4, config["list"].size());
+  EXPECT_EQ("123", config["list"][3]["abc"].ToString());
+  EXPECT_EQ("Hello!", config["list"][2].ToString());
+  ConfigItemPtr v1(config["list"][2]);
+  ConfigItemPtr v2(config["nested"]["greetings"]);
+  EXPECT_EQ(v1, v2);
+  EXPECT_TRUE(config.modified());
+  EXPECT_TRUE(config.SaveToFile("rime_configxx_test.yaml"));
+  EXPECT_TRUE(config.LoadFromFile("rime_configxx_test.yaml"));
+  EXPECT_TRUE(config["str"].IsNull());
+  EXPECT_FALSE(config.modified());
+  EXPECT_EQ("Hello!", config["nested"]["greetings"].ToString());
+  config["list"].Append(New<ConfigValue>("orz"));
+  EXPECT_TRUE(config.modified());
+  ConfigMapEntryRef r(config["nested"]["greetings"]);
+  EXPECT_EQ("Hello!", r.ToString());
+}

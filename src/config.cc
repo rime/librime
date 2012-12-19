@@ -40,6 +40,22 @@ class ConfigData {
   bool modified_;
 };
 
+class ConfigDataManager : public std::map<std::string, weak_ptr<ConfigData> > {
+ public:
+  shared_ptr<ConfigData> GetConfigData(const std::string &config_file_path);
+  bool ReloadConfigData(const std::string &config_file_path);
+  
+  static ConfigDataManager& instance() {
+    if (!instance_) instance_.reset(new ConfigDataManager);
+    return *instance_;
+  }
+
+ private:
+  ConfigDataManager() {}
+
+  static scoped_ptr<ConfigDataManager> instance_;
+};
+
 // ConfigValue members
 
 ConfigValue::ConfigValue(bool value)
@@ -162,13 +178,18 @@ ConfigValuePtr ConfigList::GetValueAt(size_t i) const {
 
 bool ConfigList::SetAt(size_t i, const ConfigItemPtr &element) {
   if (i >= seq_.size())
-    return false;
+    seq_.resize(i + 1);
   seq_[i] = element;
   return true;
 }
 
 bool ConfigList::Append(const ConfigItemPtr &element) {
   seq_.push_back(element);
+  return true;
+}
+
+bool ConfigList::Resize(size_t size) {
+  seq_.resize(size);
   return true;
 }
 
@@ -225,16 +246,115 @@ ConfigMap::Iterator ConfigMap::end() {
   return map_.end();
 }
 
+// ConfigItemRef members
+
+bool ConfigItemRef::IsNull() const {
+  ConfigItemPtr item = GetItem();
+  return !item || item->type() == ConfigItem::kNull;
+}
+
+bool ConfigItemRef::IsValue() const {
+  ConfigItemPtr item = GetItem();
+  return item && item->type() == ConfigItem::kScalar;
+}
+
+bool ConfigItemRef::IsList() const {
+  ConfigItemPtr item = GetItem();
+  return item && item->type() == ConfigItem::kList;
+}
+
+bool ConfigItemRef::IsMap() const {
+  ConfigItemPtr item = GetItem();
+  return item && item->type() == ConfigItem::kMap;
+}
+
+bool ConfigItemRef::ToBool() const {
+  bool value = false;
+  ConfigValuePtr item = As<ConfigValue>(GetItem());
+  if (item)
+    item->GetBool(&value);
+  return value;
+}
+
+int ConfigItemRef::ToInt() const {
+  int value = 0;
+  ConfigValuePtr item = As<ConfigValue>(GetItem());
+  if (item)
+    item->GetInt(&value);
+  return value;
+}
+
+double ConfigItemRef::ToDouble() const {
+  double value = 0.0;
+  ConfigValuePtr item = As<ConfigValue>(GetItem());
+  if (item)
+    item->GetDouble(&value);
+  return value;
+}
+
+const std::string ConfigItemRef::ToString() const {
+  std::string value;
+  ConfigValuePtr item = As<ConfigValue>(GetItem());
+  if (item)
+    item->GetString(&value);
+  return value;
+}
+
+ConfigListPtr ConfigItemRef::AsList() {
+  ConfigListPtr list = As<ConfigList>(GetItem());
+  if (!list)
+    SetItem(list = New<ConfigList>());
+  return list;
+}
+
+ConfigMapPtr ConfigItemRef::AsMap() {
+  ConfigMapPtr map = As<ConfigMap>(GetItem());
+  if (!map)
+    SetItem(map = New<ConfigMap>());
+  return map;
+}
+
+void ConfigItemRef::Clear() {
+  SetItem(ConfigItemPtr());
+}
+
+bool ConfigItemRef::Append(const ConfigItemPtr& item) {
+  if (AsList()->Append(item)) {
+    set_modified();
+    return true;
+  }
+  return false;
+}
+
+size_t ConfigItemRef::size() const {
+  ConfigListPtr list = As<ConfigList>(GetItem());
+  return list ? list->size() : 0;
+}
+
+bool ConfigItemRef::HasKey(const std::string& key) const {
+  ConfigMapPtr map = As<ConfigMap>(GetItem());
+  return map ? map->HasKey(key) : false;
+}
+
+bool ConfigItemRef::modified() const {
+  return data_ && data_->modified();
+}
+
+void ConfigItemRef::set_modified() {
+  if (data_)
+    data_->set_modified();
+}
+
 // Config members
 
-Config::Config() : data_(make_shared<ConfigData>()) {
+Config::Config() : ConfigItemRef(make_shared<ConfigData>()) {
 }
 
 Config::~Config() {
 }
 
-Config::Config(const std::string &file_name) {
-  data_ = ConfigDataManager::instance().GetConfigData(file_name);
+Config::Config(const std::string &file_name)
+    : ConfigItemRef(ConfigDataManager::instance().GetConfigData(file_name)) {
 }
 
 bool Config::LoadFromFile(const std::string& file_name) {
@@ -246,9 +366,23 @@ bool Config::SaveToFile(const std::string& file_name) {
 }
 
 bool Config::IsNull(const std::string &key) {
-  DLOG(INFO) << "read: " << key;
   ConfigItemPtr p = data_->Traverse(key);
   return !p || p->type() == ConfigItem::kNull;
+}
+
+bool Config::IsValue(const std::string &key) {
+  ConfigItemPtr p = data_->Traverse(key);
+  return !p || p->type() == ConfigItem::kScalar;
+}
+
+bool Config::IsList(const std::string &key) {
+  ConfigItemPtr p = data_->Traverse(key);
+  return !p || p->type() == ConfigItem::kList;
+}
+
+bool Config::IsMap(const std::string &key) {
+  ConfigItemPtr p = data_->Traverse(key);
+  return !p || p->type() == ConfigItem::kMap;
 }
 
 bool Config::GetBool(const std::string& key, bool *value) {
@@ -291,23 +425,23 @@ ConfigMapPtr Config::GetMap(const std::string& key) {
 }
 
 bool Config::SetBool(const std::string &key, bool value) {
-  return SetItem(key, make_shared<ConfigValue>(value));
+  return SetItem(key, New<ConfigValue>(value));
 }
 
 bool Config::SetInt(const std::string &key, int value) {
-  return SetItem(key, make_shared<ConfigValue>(value));
+  return SetItem(key, New<ConfigValue>(value));
 }
 
 bool Config::SetDouble(const std::string &key, double value) {
-  return SetItem(key, make_shared<ConfigValue>(value));
+  return SetItem(key, New<ConfigValue>(value));
 }
 
 bool Config::SetString(const std::string &key, const char *value) {
-  return SetItem(key, make_shared<ConfigValue>(value));
+  return SetItem(key, New<ConfigValue>(value));
 }
 
 bool Config::SetString(const std::string &key, const std::string &value) {
-  return SetItem(key, boost::make_shared<ConfigValue>(value));
+  return SetItem(key, New<ConfigValue>(value));
 }
 
 bool Config::SetItem(const std::string &key, const ConfigItemPtr &item) {
@@ -318,7 +452,7 @@ bool Config::SetItem(const std::string &key, const ConfigItemPtr &item) {
     return true;
   }
   if (!data_->root) {
-    data_->root = make_shared<ConfigMap>();
+    data_->root = New<ConfigMap>();
   }
   ConfigItemPtr p(data_->root);
   std::vector<std::string> keys;
@@ -335,7 +469,7 @@ bool Config::SetItem(const std::string &key, const ConfigItemPtr &item) {
     else {
       ConfigItemPtr next(As<ConfigMap>(p)->Get(keys[i]));
       if (!next) {
-        next = make_shared<ConfigMap>();
+        next = New<ConfigMap>();
         As<ConfigMap>(p)->Set(keys[i], next);
       }
       p = next;
@@ -343,7 +477,16 @@ bool Config::SetItem(const std::string &key, const ConfigItemPtr &item) {
   }
   return false;
 }
-                 
+
+ConfigItemPtr Config::GetItem() const {
+  return data_->root;
+}
+
+void Config::SetItem(const ConfigItemPtr& item) {
+  data_->root = item;
+  set_modified();
+}
+
 // ConfigComponent members
 
 const std::string ConfigComponent::GetConfigFilePath(const std::string &config_id) {
@@ -427,6 +570,10 @@ bool ConfigData::SaveToFile(const std::string& file_name) {
   // update status
   file_name_ = file_name;
   modified_ = false;
+  if (file_name.empty()) {
+    // not really saving
+    return false;
+  }
   // dump tree
   std::ofstream out(file_name.c_str());
   YAML::Emitter emitter;
