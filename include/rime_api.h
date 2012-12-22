@@ -129,6 +129,7 @@ typedef struct {
 } RimeSchemaList;
 
 typedef void (*RimeNotificationHandler)(void* context_object,
+                                        RimeSessionId session_id,
                                         const char* message_type,
                                         const char* message_value);
 
@@ -143,14 +144,14 @@ RIME_API void RimeSetupLogging(const char* app_name);
 
 // receive notifications
 // on loading schema:
-//   message_type="schema", message_value="luna_pinyin"
+//   message_type="schema", message_value="luna_pinyin/Luna Pinyin"
 // on changing mode:
 //   message_type="option", message_value="ascii_mode"
 //   message_type="option", message_value="!ascii_mode"
 // on deployment:
-//   message_type="deploy", message_value="start"
-//   message_type="deploy", message_value="success"
-//   message_type="deploy", message_value="failure"
+//   session_id = 0, message_type="deploy", message_value="start"
+//   session_id = 0, message_type="deploy", message_value="success"
+//   session_id = 0, message_type="deploy", message_value="failure"
 //
 // @handler will be called with @context_object as the first parameter
 // every time an event occurs in librime, until RimeFinalize() is called.

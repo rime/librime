@@ -29,7 +29,7 @@ RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
                                          void* context_object) {
   if (handler) {
     rime::Service::instance().SetNotificationHandler(
-        boost::bind(handler, context_object, _1, _2));
+        boost::bind(handler, context_object, _1, _2, _3));
   }
   else {
     rime::Service::instance().ClearNotificationHandler();

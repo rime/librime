@@ -232,7 +232,7 @@ void ConcreteEngine::set_schema(Schema *schema) {
   context_->Clear();
   InitializeComponents();
   InitializeOptions();
-  message_sink_("schema", schema->schema_id());
+  message_sink_("schema", schema->schema_id() + "/" + schema->schema_name());
 }
 
 void ConcreteEngine::InitializeComponents() {

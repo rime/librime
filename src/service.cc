@@ -20,7 +20,9 @@ Session::Session() : last_active_time_(0) {
   engine_.reset(Engine::Create(switcher_->CreateSchema()));
   switcher_->Attach(engine_.get());
   engine_->sink().connect(boost::bind(&Session::OnCommit, this, _1));
-  engine_->message_sink().connect(boost::bind(&Service::Notify, &Service::instance(), _1, _2));
+  SessionId session_id = reinterpret_cast<SessionId>(this);
+  engine_->message_sink().connect(
+      boost::bind(&Service::Notify, &Service::instance(), session_id, _1, _2));
 }
 
 bool Session::ProcessKeyEvent(const KeyEvent &key_event) {
@@ -73,7 +75,7 @@ Schema* Session::schema() const {
 
 Service::Service() : started_(false) {
   deployer_.message_sink().connect(
-      boost::bind(&Service::Notify, this, _1, _2));
+      boost::bind(&Service::Notify, this, 0, _1, _2));
 }
 
 Service::~Service() {
@@ -165,11 +167,13 @@ void Service::ClearNotificationHandler() {
   notification_handler_.clear();
 }
 
-void Service::Notify(const std::string& message_type,
+void Service::Notify(SessionId session_id,
+                     const std::string& message_type,
                      const std::string& message_value) {
   if (notification_handler_) {
     boost::lock_guard<boost::mutex> lock(mutex_);
-    notification_handler_(message_type.c_str(), message_value.c_str());
+    notification_handler_(session_id,
+                          message_type.c_str(), message_value.c_str());
   }
 }
 

@@ -117,9 +117,10 @@ bool ExecuteSpecialCommand(const char* line, RimeSessionId session_id) {
 }
 
 void OnMessage(void* context_object,
+               RimeSessionId session_id,
                const char* message_type,
                const char* message_value) {
-  printf("message: [%s] %s\n", message_type, message_value);
+  printf("message: [%x] [%s] %s\n", session_id, message_type, message_value);
 }
 
 int main(int argc, char *argv[]) {

@@ -20,7 +20,8 @@ typedef uintptr_t SessionId;
 
 static const SessionId kInvalidSessionId = 0;
 
-typedef boost::function<void (const char* message_type,
+typedef boost::function<void (SessionId session_id,
+                              const char* message_type,
                               const char* message_value)> NotificationHandler;
 
 class Context;
@@ -70,7 +71,8 @@ class Service {
 
   void SetNotificationHandler(const NotificationHandler& handler);
   void ClearNotificationHandler();
-  void Notify(const std::string& message_type,
+  void Notify(SessionId session_id,
+              const std::string& message_type,
               const std::string& message_value);
 
   Deployer& deployer() { return deployer_; }
