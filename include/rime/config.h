@@ -260,7 +260,7 @@ class Config : public Class<Config, const std::string&>, public ConfigItemRef {
   bool SetItem(const std::string &key, const ConfigItemPtr &item);
 
   template <class T>
-  ConfigListEntryRef& operator= (const T& a) {
+  Config& operator= (const T& a) {
     SetItem(AsConfigItem(a, boost::is_convertible<T, ConfigItemPtr>()));
     return *this;
   }
