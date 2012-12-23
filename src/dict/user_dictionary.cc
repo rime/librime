@@ -313,9 +313,11 @@ bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
 
 bool UserDictionary::UpdateTickCount(TickCount increment) {
   tick_ += increment;
+  /* TODO: this should be done in a separate thread
   if (tick_ % 50 == 0) {  // backup every 50 commits
     db_->Backup();
   }
+  */
   try {
     return db_->Update("\x01/tick", boost::lexical_cast<std::string>(tick_));
   }
