@@ -32,9 +32,10 @@ class ReverseLookupTranslation : public TableTranslation {
                            const std::string& input,
                            size_t start, size_t end,
                            const std::string& preedit,
-                           const DictEntryIterator &iter)
+                           const DictEntryIterator &iter,
+                           bool quality)
       : TableTranslation(options, NULL, input, start, end, preedit, iter),
-        dict_(dict), options_(options) {
+        dict_(dict), options_(options), quality_(quality) {
   }
   virtual shared_ptr<Candidate> Peek();
   virtual int Compare(shared_ptr<Translation> other,
@@ -42,6 +43,7 @@ class ReverseLookupTranslation : public TableTranslation {
  protected:
   ReverseLookupDictionary* dict_;
   TranslatorOptions* options_;
+  bool quality_;
 };
 
 shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
@@ -75,8 +77,12 @@ int ReverseLookupTranslation::Compare(shared_ptr<Translation> other,
   shared_ptr<const Candidate> theirs = other->Peek();
   if (!theirs)
     return -1;
-  if (theirs->type() == "completion" || theirs->type() == "sentence")
+  if (quality_ && theirs->type() == "completion") {
     return -1;
+  }
+  if (theirs->type() == "sentence") {
+    return -1;
+  }
   return 1;
 }
 
@@ -135,9 +141,12 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
   }
   
   DictEntryIterator iter;
+  bool quality = false;
   if (start < input.length()) {
     if (options_ && options_->enable_completion()) {
       dict_->LookupWords(&iter, code, true, 100);
+      quality = !iter.exhausted() &&
+          (iter.Peek()->remaining_code_length == 0);
     }
     else {
       // 2012-04-08 gongchen: fetch multi-syllable words from rev-lookup table
@@ -151,6 +160,8 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
         if (collector && !collector->empty() &&
             collector->rbegin()->first == consumed) {
           iter = collector->rbegin()->second;
+          quality = !graph.vertices.empty() &&
+              (graph.vertices.rbegin()->second == kNormalSpelling);
         }
       }
     }
@@ -162,7 +173,7 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
                                                         segment.start,
                                                         segment.end,
                                                         preedit,
-                                                        iter);
+                                                        iter, quality);
   }
   return shared_ptr<Translation>();
 }
