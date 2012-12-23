@@ -91,6 +91,7 @@ void ReverseLookupTranslator::Initialize() {
   Config *config = engine_->schema()->config();
   if (!config) return;
   config->GetString("reverse_lookup/prefix", &prefix_);
+  config->GetString("reverse_lookup/suffix", &suffix_);
   config->GetString("reverse_lookup/tips", &tips_);
   
   DictionaryComponent *component =
@@ -126,6 +127,8 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
   if (!prefix_.empty() && boost::starts_with(input, prefix_))
     start = prefix_.length();
   std::string code(input.substr(start));
+  if (!suffix_.empty() && boost::ends_with(code, suffix_))
+    code.resize(code.length() - suffix_.length());
   
   if (start > 0 && prompt) {
     *prompt = tips_;

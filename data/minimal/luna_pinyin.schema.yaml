@@ -1,11 +1,10 @@
 # Rime schema
-# vim: set sw=2 sts=2 et:
 # encoding: utf-8
 
 schema:
   schema_id: luna_pinyin
   name: 朙月拼音
-  version: "0.11"
+  version: "0.11.test"
   author:
     - 佛振 <chen.sst@gmail.com>
   description: |
@@ -76,6 +75,7 @@ reverse_lookup:
   dictionary: cangjie5
   enable_completion: true
   prefix: "`"
+  suffix: "'"
   tips: 〔倉頡〕
   preedit_format:
     - "xlit|abcdefghijklmnopqrstuvwxyz|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符|"
@@ -91,4 +91,4 @@ key_binder:
 recognizer:
   import_preset: default
   patterns:
-    reverse_lookup: "`[a-z]*$"
+    reverse_lookup: "`[a-z]*'?$"

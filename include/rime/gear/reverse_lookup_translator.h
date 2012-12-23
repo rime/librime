@@ -34,6 +34,7 @@ class ReverseLookupTranslator : public Translator {
   scoped_ptr<ReverseLookupDictionary> rev_dict_;
   scoped_ptr<TranslatorOptions> options_;
   std::string prefix_;
+  std::string suffix_;
   std::string tips_;
 };
 
