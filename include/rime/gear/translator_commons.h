@@ -30,6 +30,15 @@ class Patterns : public std::vector<boost::regex> {
 
 //
 
+class Syllabification {
+ public:
+  // move the caret by syllable by returning a value different from caret_pos
+  virtual size_t PreviousStop(size_t caret_pos) const { return caret_pos; }
+  virtual size_t NextStop(size_t caret_pos) const { return caret_pos; }
+};
+
+//
+
 class Language;
 
 class Phrase : public Candidate {
@@ -50,47 +59,47 @@ class Phrase : public Candidate {
   void set_preedit(const std::string &preedit) {
     entry_->preedit = preedit;
   }
+  void set_syllabification(const shared_ptr<Syllabification>& s) {
+    syllabification_ = s;
+  }
+  
+  double weight() const { return entry_->weight; }
   const Code& code() const { return entry_->code; }
   const DictEntry& entry() const { return *entry_; }
   Language* language() const { return language_; }
+  shared_ptr<Syllabification> syllabification() const {
+    return syllabification_;
+  }
   
  protected:
   Language* language_;
-  const shared_ptr<DictEntry> entry_;
+  shared_ptr<DictEntry> entry_;
+  shared_ptr<Syllabification> syllabification_;
 };
 
 //
 
-class Sentence : public Candidate {
+class Sentence : public Phrase {
  public:
   Sentence(Language* language)
-      : Candidate("sentence", 0, 0), language_(language) {
-    entry_.weight = 1.0;
+      : Phrase(language, "sentence", 0, 0, make_shared<DictEntry>()) {
+    entry_->weight = 1.0;
+  }
+  Sentence(const Sentence& other)
+      : Phrase(other),
+        components_(other.components_),
+        syllable_lengths_(other.syllable_lengths_) {
+    entry_ = make_shared<DictEntry>(other.entry());
   }
   void Extend(const DictEntry& entry, size_t end_pos);
   void Offset(size_t offset);
 
-  const std::string& text() const { return entry_.text; }
-  const std::string comment() const { return entry_.comment; }
-  const std::string preedit() const { return entry_.preedit; }
-  void set_comment(const std::string &comment) {
-    entry_.comment = comment;
-  }
-  void set_preedit(const std::string &preedit) {
-    entry_.preedit = preedit;
-  }
-  const Code& code() const { return entry_.code; }
-  double weight() const { return entry_.weight; }
   const std::vector<DictEntry>& components() const
   { return components_; }
   const std::vector<size_t>& syllable_lengths() const
   { return syllable_lengths_; }
   
-  Language* language() const { return language_; }
-
  protected:
-  Language* language_;
-  DictEntry entry_;
   std::vector<DictEntry> components_;
   std::vector<size_t> syllable_lengths_;
 };

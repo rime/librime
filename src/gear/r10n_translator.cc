@@ -8,6 +8,7 @@
 //
 #include <algorithm>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/foreach.hpp>
 #include <rime/composition.h>
 #include <rime/candidate.h>
@@ -73,7 +74,9 @@ bool DelimitSyllablesDfs(DelimitSyllableState *state,
 
 }  // anonymous namespace
 
-class R10nTranslation : public Translation {
+class R10nTranslation : public Translation, public Syllabification,
+                        public boost::enable_shared_from_this<R10nTranslation>
+{
  public:
   R10nTranslation(R10nTranslator *translator,
                   const std::string &input, size_t start)
@@ -85,6 +88,8 @@ class R10nTranslation : public Translation {
   bool Evaluate(Dictionary *dict, UserDictionary *user_dict);
   virtual bool Next();
   virtual shared_ptr<Candidate> Peek();
+  virtual size_t PreviousStop(size_t caret_pos) const;
+  virtual size_t NextStop(size_t caret_pos) const;
 
  protected:
   bool CheckEmpty();
@@ -326,7 +331,7 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
                                start_ + phrase_code_length,
                                e);
   }
-  if (cand && cand->preedit().empty()) {
+  if (cand->preedit().empty()) {
     cand->set_preedit(GetPreeditString(*cand));
   }
   if (cand->comment().empty()) {
@@ -336,6 +341,7 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
       cand->set_comment(quote_left + spelling + quote_right);
     }
   }
+  cand->set_syllabification(shared_from_this());
   return cand;
 }
 
@@ -383,8 +389,28 @@ const shared_ptr<Sentence> R10nTranslation::MakeSentence(
       poet.MakeSentence(graph, syllable_graph_.interpreted_length);
   if (sentence) {
     sentence->Offset(start_);
+    sentence->set_syllabification(shared_from_this());
   }
   return sentence;
+}
+
+size_t R10nTranslation::PreviousStop(size_t caret_pos) const {
+  size_t offset = caret_pos - start_;
+  BOOST_REVERSE_FOREACH(const VertexMap::value_type& x,
+                        syllable_graph_.vertices) {
+    if (x.first < offset)
+      return x.first + start_;
+  }
+  return caret_pos;
+}
+
+size_t R10nTranslation::NextStop(size_t caret_pos) const {
+  size_t offset = caret_pos - start_;
+  BOOST_FOREACH(const VertexMap::value_type& x, syllable_graph_.vertices) {
+    if (x.first > offset)
+      return x.first + start_;
+  }
+  return caret_pos;
 }
 
 }  // namespace rime

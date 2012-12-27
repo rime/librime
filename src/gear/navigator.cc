@@ -12,6 +12,7 @@
 #include <rime/key_event.h>
 #include <rime/key_table.h>
 #include <rime/gear/navigator.h>
+#include <rime/gear/translator_commons.h>
 
 namespace rime {
 
@@ -47,6 +48,18 @@ bool Navigator::Left(Context *ctx) {
   size_t caret_pos = ctx->caret_pos();
   if (caret_pos == 0)
     return End(ctx);
+  const Composition* comp = ctx->composition();
+  if (comp && !comp->empty()) {
+    const shared_ptr<Phrase> phrase =
+        As<Phrase>(comp->back().GetSelectedCandidate());
+    if (phrase && phrase->syllabification()) {
+      size_t stop = phrase->syllabification()->PreviousStop(caret_pos);
+      if (stop != caret_pos) {
+        ctx->set_caret_pos(stop);
+        return true;
+      }
+    }
+  }
   ctx->set_caret_pos(caret_pos - 1);
   return true;
 }

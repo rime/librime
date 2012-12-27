@@ -36,15 +36,15 @@ bool Patterns::Load(ConfigListPtr patterns) {
 void Sentence::Extend(const DictEntry& entry, size_t end_pos) {
   const double kEpsilon = 1e-200;
   const double kPenalty = 1e-8;
-  entry_.code.insert(entry_.code.end(),
+  entry_->code.insert(entry_->code.end(),
                      entry.code.begin(), entry.code.end());
-  entry_.text.append(entry.text);
-  entry_.weight *= (std::max)(entry.weight, kEpsilon) * kPenalty;
+  entry_->text.append(entry.text);
+  entry_->weight *= (std::max)(entry.weight, kEpsilon) * kPenalty;
   components_.push_back(entry);
   syllable_lengths_.push_back(end_pos - end());
   set_end(end_pos);
   DLOG(INFO) << "extend sentence " << end_pos << ") "
-             << entry_.text << " : " << entry_.weight;
+             << entry_->text << " : " << entry_->weight;
 }
 
 void Sentence::Offset(size_t offset) {
@@ -176,22 +176,20 @@ void Memory::OnCommit(Context* ctx) {
     shared_ptr<ShadowCandidate> shadow = As<ShadowCandidate>(cand);
     if (shadow) cand = shadow->item();
     shared_ptr<Phrase> phrase = As<Phrase>(cand);
-    shared_ptr<Sentence> sentence = As<Sentence>(cand);
     bool unrecognized = false;
     if (phrase && phrase->language() == language()) {
       commit_entry.text += phrase->text();
       commit_entry.code.insert(commit_entry.code.end(),
                                phrase->code().begin(),
                                phrase->code().end());
-      elements.push_back(&phrase->entry());
-    }
-    else if (sentence && sentence->language() == language()) {
-      commit_entry.text += sentence->text();
-      commit_entry.code.insert(commit_entry.code.end(),
-                               sentence->code().begin(),
-                               sentence->code().end());
-      BOOST_FOREACH(const DictEntry& e, sentence->components()) {
-        elements.push_back(&e);
+      shared_ptr<Sentence> sentence = As<Sentence>(phrase);
+      if (sentence) {
+        BOOST_FOREACH(const DictEntry& e, sentence->components()) {
+          elements.push_back(&e);
+        }
+      }
+      else {
+        elements.push_back(&phrase->entry());
       }
     }
     else {

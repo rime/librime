@@ -45,6 +45,7 @@ struct Segment {
     tags.clear();
     menu.reset();
     selected_index = 0;
+    prompt.clear();
   }
 
   bool HasTag(const std::string &tag) const {
