@@ -17,8 +17,8 @@
 #include <rime/schema.h>
 #include <rime/translation.h>
 #include <rime/dict/dictionary.h>
-#include <rime/algo/poet.h>
 #include <rime/algo/syllabifier.h>
+#include <rime/gear/poet.h>
 #include <rime/gear/r10n_translator.h>
 #include <rime/gear/translator_commons.h>
 
@@ -378,7 +378,7 @@ const shared_ptr<Sentence> R10nTranslation::MakeSentence(
       }
     }
   }
-  Poet<Sentence> poet(translator_->language());
+  Poet poet(translator_->language());
   shared_ptr<Sentence> sentence =
       poet.MakeSentence(graph, syllable_graph_.interpreted_length);
   if (sentence) {
