@@ -15,6 +15,7 @@
 #include <rime/algo/algebra.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/user_dictionary.h>
+#include <rime/gear/memory.h>
 #include <rime/gear/translator_commons.h>
 
 namespace rime {

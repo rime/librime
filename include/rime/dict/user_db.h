@@ -62,9 +62,14 @@ class TreeDb {
   bool RecoverFromSnapshot();
   bool Restore(const std::string& snapshot_file);
 
+  bool BeginTransaction();
+  bool AbortTransaction();
+  bool CommitTransaction();
+
   const std::string& name() const { return name_; }
   const std::string& file_name() const { return file_name_; }
   bool loaded() const { return loaded_; }
+  bool in_transaction() const { return in_transaction_; }
 
  protected:
   virtual bool CreateMetadata();
@@ -74,6 +79,7 @@ class TreeDb {
   std::string file_name_;
   bool loaded_;
   scoped_ptr<kyotocabinet::TreeDB> db_;
+  bool in_transaction_;
 };
 
 typedef TreeDbAccessor UserDbAccessor;

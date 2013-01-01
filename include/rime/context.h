@@ -14,6 +14,7 @@
 
 namespace rime {
 
+class KeyEvent;
 class Composition;
 class Segmentation;
 struct Preedit;
@@ -23,6 +24,8 @@ class Context {
   typedef boost::signal<void (Context *ctx)> Notifier;
   typedef boost::signal<void (Context *ctx, const std::string& option)>
   OptionUpdateNotifier;
+  typedef boost::signal<void (Context *ctx, const KeyEvent& key_event)>
+  KeyEventNotifier;
 
   Context();
   ~Context();
@@ -77,6 +80,9 @@ class Context {
   OptionUpdateNotifier& option_update_notifier() {
     return option_update_notifier_;
   }
+  KeyEventNotifier& unhandled_key_notifier() {
+    return unhandled_key_notifier_;
+  }
 
  private:
   std::string input_;
@@ -91,6 +97,7 @@ class Context {
   Notifier update_notifier_;
   Notifier delete_notifier_;
   OptionUpdateNotifier option_update_notifier_;
+  KeyEventNotifier unhandled_key_notifier_;
 };
 
 }  // namespace rime

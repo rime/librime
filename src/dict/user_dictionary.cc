@@ -116,10 +116,13 @@ bool UserDictEntryIterator::Next() {
 // UserDictionary members
 
 UserDictionary::UserDictionary(const shared_ptr<UserDb> &user_db)
-    : db_(user_db), tick_(0) {
+    : db_(user_db), tick_(0), transaction_time_(0) {
 }
 
 UserDictionary::~UserDictionary() {
+  if (loaded() && db_->in_transaction()) {
+    db_->CommitTransaction();
+  }
 }
 
 void UserDictionary::Attach(const shared_ptr<Table> &table, const shared_ptr<Prism> &prism) {
@@ -344,6 +347,27 @@ bool UserDictionary::FetchTickCount() {
     tick_ = 0;
     return false;
   }
+}
+
+bool UserDictionary::NewTransaction() {
+  CommitPendingTransaction();
+  transaction_time_ = time(NULL);
+  return db_->BeginTransaction();
+}
+
+bool UserDictionary::RevertRecentTransaction() {
+  if (!db_->in_transaction())
+    return false;
+  if (time(NULL) - transaction_time_ > 3/*seconds*/)
+    return false;
+  return db_->AbortTransaction();
+}
+
+bool UserDictionary::CommitPendingTransaction() {
+  if (db_->in_transaction()) {
+    return db_->CommitTransaction();
+  }
+  return false;
 }
 
 bool UserDictionary::TranslateCodeToString(const Code &code, std::string* result) {

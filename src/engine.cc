@@ -96,6 +96,8 @@ bool ConcreteEngine::ProcessKeyEvent(const KeyEvent &key_event) {
   }
   // record unhandled keys, eg. spaces, numbers, bksp's.
   context_->commit_history().Push(key_event);
+  // notify interested parties
+  context_->unhandled_key_notifier()(context_.get(), key_event);
   return false;
 }
 

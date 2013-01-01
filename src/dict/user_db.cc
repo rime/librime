@@ -56,7 +56,9 @@ bool TreeDbAccessor::exhausted() {
 
 // TreeDb members
 
-TreeDb::TreeDb(const std::string &name) : name_(name), loaded_(false) {
+TreeDb::TreeDb(const std::string &name) : name_(name),
+                                          loaded_(false),
+                                          in_transaction_(false) {
   boost::filesystem::path path(Service::instance().deployer().user_data_dir);
   file_name_ = (path / name).string();
 }
@@ -200,6 +202,7 @@ bool TreeDb::Close() {
   db_->close();
   LOG(INFO) << "closed db '" << name_ << "'.";
   loaded_ = false;
+  in_transaction_ = false;
   return true;
 }
 
@@ -209,6 +212,24 @@ bool TreeDb::CreateMetadata() {
   // '\x01' is the meta character
   return db_->set("\x01/db_name", name_) &&
          db_->set("\x01/rime_version", rime_version);
+}
+
+bool TreeDb::BeginTransaction() {
+  if (!loaded()) return false;
+  in_transaction_ = db_->begin_transaction();
+  return in_transaction_;
+}
+
+bool TreeDb::AbortTransaction() {
+  if (!loaded() || !in_transaction()) return false;
+  in_transaction_ = !db_->end_transaction(false);
+  return !in_transaction_;
+}
+
+bool TreeDb::CommitTransaction() {
+  if (!loaded() || !in_transaction()) return false;
+  in_transaction_ = !db_->end_transaction(true);
+  return !in_transaction_;
 }
 
 // UserDb members

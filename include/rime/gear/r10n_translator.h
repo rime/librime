@@ -12,6 +12,7 @@
 #include <rime/translation.h>
 #include <rime/translator.h>
 #include <rime/algo/algebra.h>
+#include <rime/gear/memory.h>
 #include <rime/gear/translator_commons.h>
 
 namespace rime {

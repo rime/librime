@@ -8,6 +8,7 @@
 #define RIME_USER_DICTIONARY_H_
 
 #include <stdint.h>
+#include <time.h>
 #include <map>
 #include <string>
 #include <rime/common.h>
@@ -68,6 +69,10 @@ class UserDictionary : public Class<UserDictionary, Schema*> {
   bool UpdateEntry(const DictEntry &entry, int commit);
   bool UpdateTickCount(TickCount increment);
 
+  bool NewTransaction();
+  bool RevertRecentTransaction();
+  bool CommitPendingTransaction();
+
   const std::string& name() const { return name_; }
   const TickCount tick() const { return tick_; }
 
@@ -93,6 +98,7 @@ class UserDictionary : public Class<UserDictionary, Schema*> {
   shared_ptr<Table> table_;
   shared_ptr<Prism> prism_;
   TickCount tick_;
+  time_t transaction_time_;
 };
 
 class UserDictionaryComponent : public UserDictionary::Component {
