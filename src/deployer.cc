@@ -6,6 +6,7 @@
 //
 #include <boost/algorithm/string.hpp>
 #include <boost/bind.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <rime/deployer.h>
 
@@ -29,6 +30,12 @@ int CompareVersionString(const std::string &x, const std::string &y) {
   if (i < xx.size()) return 1;
   if (i < yy.size()) return -1;
   return 0;
+}
+
+const std::string Deployer::user_data_sync_dir() const {
+  boost::filesystem::path p(sync_dir);
+  p /= user_id;
+  return p.string();
 }
 
 void Deployer::ScheduleTask(const shared_ptr<DeploymentTask>& task) {

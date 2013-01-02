@@ -178,6 +178,8 @@ RIME_API Bool RimeDeployWorkspace();
 RIME_API Bool RimeDeploySchema(const char *schema_file);
 RIME_API Bool RimeDeployConfigFile(const char *file_name, const char *version_key);
 
+RIME_API Bool RimeSyncUserDict();
+  
 // session management
 
 RIME_API RimeSessionId RimeCreateSession();

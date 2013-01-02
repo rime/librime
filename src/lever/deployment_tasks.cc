@@ -48,6 +48,10 @@ bool InstallationUpdate::Run(Deployer* deployer) {
       // for now:
       deployer->user_id = installation_id;
     }
+    if (!config.GetString("sync_dir", &deployer->sync_dir)) {
+      deployer->sync_dir = (user_data_path / "sync").string();
+    }
+    LOG(INFO) << "sync dir: " << deployer->sync_dir;
     if (config.GetString("distribution_code_name", &last_distro_code_name)) {
       LOG(INFO) << "previous distribution: " << last_distro_code_name;
     }
@@ -363,6 +367,11 @@ bool UserDictUpgration::Run(Deployer* deployer) {
       ok = false;
   }
   return ok;
+}
+
+bool UserDictSync::Run(Deployer* deployer) {
+  rime::UserDictManager mgr(deployer);
+  return mgr.SynchronizeAll();
 }
 
 bool CleanOldLogFiles::Run(Deployer* deployer) {

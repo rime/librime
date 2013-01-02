@@ -33,6 +33,9 @@ class UserDictManager {
   // returns num of imported entires, -1 denotes failure
   int Import(const std::string& dict_name, const std::string& text_file);
 
+  bool Synchronize(const std::string& dict_name);
+  bool SynchronizeAll();
+
  protected:
   Deployer* deployer_;
   boost::filesystem::path path_;

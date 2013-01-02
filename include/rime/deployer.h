@@ -33,6 +33,7 @@ class Deployer : public Messenger {
   // read-only access after library initialization {
   std::string shared_data_dir;
   std::string user_data_dir;
+  std::string sync_dir;
   std::string user_id;
   std::string distribution_name;
   std::string distribution_code_name;
@@ -41,6 +42,7 @@ class Deployer : public Messenger {
 
   Deployer() : shared_data_dir("."),
                user_data_dir("."),
+               sync_dir("sync"),
                user_id("unknown") {}
 
   void ScheduleTask(const shared_ptr<DeploymentTask>& task);
@@ -49,6 +51,8 @@ class Deployer : public Messenger {
   bool StartMaintenance();
   bool IsMaintenancing();
   void JoinMaintenanceThread();
+
+  const std::string user_data_sync_dir() const;
 
  private:
   std::queue<shared_ptr<DeploymentTask> > pending_tasks_;

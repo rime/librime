@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include <boost/foreach.hpp>
+#include <rime/config.h>
 #include <rime/deployer.h>
 #include <rime/service.h>
 #include <rime/lever/user_dict_manager.h>
@@ -22,6 +23,7 @@ int main(int argc, char *argv[]) {
   if (argc == 1) {
     std::cout << "options:" << std::endl
               << "\t-l|--list" << std::endl
+              << "\t-s|--sync" << std::endl
               << "\t-b|--backup dict_name" << std::endl
               << "\t-r|--restore xxx.userdb.kct.snapshot" << std::endl
               << "\t-e|--export dict_name export.txt" << std::endl
@@ -29,7 +31,15 @@ int main(int argc, char *argv[]) {
         ;
     return 0;
   }
+  
   rime::Deployer& deployer(rime::Service::instance().deployer());
+  {
+    rime::Config config;
+    if (config.LoadFromFile("installation.yaml")) {
+      config.GetString("installation_id", &deployer.user_id);
+      config.GetString("sync_dir", &deployer.sync_dir);
+    }
+  }
   rime::UserDictManager mgr(&deployer);
   if (argc == 2 && (option == "-l" || option == "--list")) {
     rime::UserDictList list;
@@ -42,6 +52,14 @@ int main(int argc, char *argv[]) {
       std::cout << e << std::endl;
     }
     return 0;
+  }
+  if (argc == 2 && (option == "-s" || option == "--sync")) {
+    std::cout << "sync dir: " << deployer.sync_dir << std::endl;
+    std::cout << "user id: " << deployer.user_id << std::endl;
+    if (mgr.SynchronizeAll())
+      return 0;
+    else
+      return 1;
   }
   if (argc == 3 && (option == "-b" || option == "--backup")) {
     if (mgr.Backup(arg1))

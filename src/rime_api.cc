@@ -124,9 +124,16 @@ RIME_API Bool RimeDeploySchema(const char *schema_file) {
 
 RIME_API Bool RimeDeployConfigFile(const char *file_name,
                                    const char *version_key) {
-  rime::Deployer &deployer(rime::Service::instance().deployer());
+  rime::Deployer& deployer(rime::Service::instance().deployer());
   rime::ConfigFileUpdate update(file_name, version_key);
   return Bool(update.Run(&deployer));
+}
+
+RIME_API Bool RimeSyncUserDict() {
+  RimeCleanupAllSessions();
+  rime::Deployer& deployer(rime::Service::instance().deployer());
+  deployer.ScheduleTask(boost::make_shared<rime::UserDictSync>());
+  return Bool(deployer.StartMaintenance());
 }
 
 // session management

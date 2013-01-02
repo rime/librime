@@ -6,6 +6,8 @@
 //
 #include <fstream>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/scope_exit.hpp>
@@ -82,8 +84,11 @@ bool UserDictManager::Backup(const std::string& dict_name) {
   if (!db.OpenReadOnly())
     return false;
   if (GetUserId(db) != deployer_->user_id) {
-    if (!db.Close() || !db.Open() || !db.CreateMetadata())
+    LOG(INFO) << "user id not match; recreating metadata in " << dict_name;
+    if (!db.Close() || !db.Open() || !db.CreateMetadata()) {
+      LOG(ERROR) << "failed to recreate metadata in " << dict_name;
       return false;
+    }
   }
   return db.Backup();
 }
@@ -114,7 +119,7 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
     dest.Close();
   } BOOST_SCOPE_EXIT_END
   LOG(INFO) << "merging '" << snapshot_file
-            << "' by " << GetUserId(temp)
+            << "' from " << GetUserId(temp)
             << " into userdb '" << db_name << "'...";
   TickCount tick_left = GetTickCount(dest);
   TickCount tick_right = GetTickCount(temp);
@@ -281,14 +286,57 @@ bool UserDictManager::UpgradeUserDict(const std::string& dict_name) {
   if (CompareVersionString(db_creator_version, "0.9.5") <= 0) {
     // fix invalid keys created by a buggy version of Import()
     LOG(INFO) << "upgrading user dict '" << dict_name << "'.";
-    std::string snapshot_file(db.file_name() + ".snapshot");
+    fs::path snapshot_file(deployer_->user_data_sync_dir());
+    snapshot_file /= (db.file_name() + ".snapshot");
     return db.Backup() &&
         db.Close() &&
         db.Remove() &&
-        Restore(snapshot_file);
+        Restore(snapshot_file.string());
   }
   return true;
 }
 
+bool UserDictManager::Synchronize(const std::string& dict_name) {
+  LOG(INFO) << "synchronize user dict '" << dict_name << "'.";
+  bool success = true;
+  fs::path sync_dir(deployer_->sync_dir);
+  if (!boost::filesystem::exists(sync_dir)) {
+    if (!boost::filesystem::create_directories(sync_dir)) {
+      LOG(ERROR) << "error creating directory '" << sync_dir.string() << "'.";
+      return false;
+    }
+  }
+  fs::directory_iterator it(sync_dir);
+  fs::directory_iterator end;
+  const std::string snapshot_file(dict_name + ".userdb.kct.snapshot");
+  for (; it != end; ++it) {
+    if (!fs::is_directory(it->path()))
+      continue;
+    fs::path file_path = it->path() / snapshot_file;
+    if (fs::exists(file_path)) {
+      LOG(INFO) << "merging snapshot file: " << file_path.string();
+      if (!Restore(file_path.string())) {
+        LOG(ERROR) << "failed to merge snapshot file: " << file_path.string();
+        success = false;
+      }
+    }
+  }
+  if (!Backup(dict_name)) {
+    LOG(ERROR) << "error backing up user dict '" << dict_name << "'.";
+    success = false;
+  }
+  return success;
+}
+
+bool UserDictManager::SynchronizeAll() {
+  UserDictList user_dicts;
+  GetUserDictList(&user_dicts);
+  LOG(INFO) << "synchronizing " << user_dicts.size() << " user dicts.";
+  BOOST_FOREACH(const std::string& dict_name, user_dicts) {
+    if (!Synchronize(dict_name))
+      return false;
+  }
+  return true;
+}
 
 }  // namespace rime
