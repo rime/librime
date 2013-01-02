@@ -87,7 +87,6 @@ typedef TreeDbAccessor UserDbAccessor;
 class UserDb : public TreeDb {
  public:
   UserDb(const std::string &name);
- protected:
   virtual bool CreateMetadata();
 };
 

@@ -81,6 +81,10 @@ bool UserDictManager::Backup(const std::string& dict_name) {
   UserDb db(dict_name);
   if (!db.OpenReadOnly())
     return false;
+  if (GetUserId(db) != deployer_->user_id) {
+    if (!db.Close() || !db.Open() || !db.CreateMetadata())
+      return false;
+  }
   return db.Backup();
 }
 
@@ -110,10 +114,8 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
     dest.Close();
   } BOOST_SCOPE_EXIT_END
   LOG(INFO) << "merging '" << snapshot_file
-            << "' into userdb '" << db_name << "'...";
-  std::string user_id = GetUserId(dest);
-  if (user_id == "unknown")
-    user_id = GetUserId(temp);
+            << "' by " << GetUserId(temp)
+            << " into userdb '" << db_name << "'...";
   TickCount tick_left = GetTickCount(dest);
   TickCount tick_right = GetTickCount(temp);
   tick_left = (std::max)(tick_left, tick_right);
@@ -153,7 +155,7 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
   if (num_entries > 0) {
     try {
       dest.Update("\x01/tick", boost::lexical_cast<std::string>(tick_left));
-      dest.Update("\x01/user_id", user_id);
+      dest.Update("\x01/user_id", deployer_->user_id);
     }
     catch (...) {
       LOG(WARNING) << "failed to update tick count.";

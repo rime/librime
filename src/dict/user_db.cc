@@ -238,12 +238,11 @@ UserDb::UserDb(const std::string &name) : TreeDb(name + ".userdb.kct") {
 }
 
 bool UserDb::CreateMetadata() {
-  Deployer &deployer(Service::instance().deployer());
-  std::string user_id(deployer.user_id);
+  Deployer& deployer(Service::instance().deployer());
   // '\x01' is the meta character
   return TreeDb::CreateMetadata() &&
       db_->set("\x01/db_type", "userdb") &&
-      db_->set("\x01/user_id", user_id);
+      db_->set("\x01/user_id", deployer.user_id);
 }
 
 }  // namespace rime
