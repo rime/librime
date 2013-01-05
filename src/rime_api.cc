@@ -132,6 +132,7 @@ RIME_API Bool RimeDeployConfigFile(const char *file_name,
 RIME_API Bool RimeSyncUserDict() {
   RimeCleanupAllSessions();
   rime::Deployer& deployer(rime::Service::instance().deployer());
+  deployer.ScheduleTask(boost::make_shared<rime::InstallationUpdate>());
   deployer.ScheduleTask(boost::make_shared<rime::UserDictSync>());
   return Bool(deployer.StartMaintenance());
 }
