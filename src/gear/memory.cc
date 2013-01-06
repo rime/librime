@@ -62,11 +62,8 @@ void Memory::OnCommit(Context* ctx) {
   std::vector<const DictEntry*> elements;
   BOOST_FOREACH(Composition::value_type &seg, *ctx->composition()) {
     shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
-    shared_ptr<UniquifiedCandidate> uniquified = As<UniquifiedCandidate>(cand);
-    if (uniquified) cand = uniquified->items().front();
-    shared_ptr<ShadowCandidate> shadow = As<ShadowCandidate>(cand);
-    if (shadow) cand = shadow->item();
-    shared_ptr<Phrase> phrase = As<Phrase>(cand);
+    shared_ptr<Phrase> phrase =
+        As<Phrase>(Candidate::GetGenuineCandidate(cand));
     bool unrecognized = false;
     if (phrase && phrase->language() == language()) {
       commit_entry.text += phrase->text();
@@ -103,13 +100,9 @@ void Memory::OnDeleteEntry(Context* ctx) {
       ctx->composition()->empty())
     return;
   Segment &seg(ctx->composition()->back());
-  shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
+  shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
   if (!cand) return;
-  shared_ptr<UniquifiedCandidate> uniquified = As<UniquifiedCandidate>(cand);
-  if (uniquified) cand = uniquified->items().front();
-  shared_ptr<ShadowCandidate> shadow = As<ShadowCandidate>(cand);
-  if (shadow) cand = shadow->item();
-  shared_ptr<Phrase> phrase = As<Phrase>(cand);
+  shared_ptr<Phrase> phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
   if (phrase && phrase->language() == language()) {
     const DictEntry& entry(phrase->entry());
     LOG(INFO) << "deleting entry: '" << entry.text << "'.";

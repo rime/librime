@@ -20,6 +20,9 @@ class Candidate {
       : type_(type), start_(start), end_(end) {}
   virtual ~Candidate() {}
 
+  static const shared_ptr<Candidate>
+  GetGenuineCandidate(const shared_ptr<Candidate>& cand);
+
   // recognized by translators in learning phase
   const std::string& type() const { return type_; }
   // [start, end) mark a range in the input that the candidate corresponds to
@@ -133,7 +136,7 @@ class UniquifiedCandidate : public Candidate {
   std::string text_;
   std::string comment_;
   CandidateList items_;
-};        
+};
 
 }  // namespace rime
 
