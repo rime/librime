@@ -75,6 +75,11 @@ class UserDictSync : public DeploymentTask {
   bool Run(Deployer* deployer);
 };
 
+class BackupConfigFiles : public DeploymentTask {
+ public:
+  bool Run(Deployer* deployer);
+};
+
 class CleanOldLogFiles : public DeploymentTask {
  public:
   bool Run(Deployer* deployer);

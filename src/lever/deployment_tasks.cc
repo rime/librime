@@ -374,6 +374,43 @@ bool UserDictSync::Run(Deployer* deployer) {
   return mgr.SynchronizeAll();
 }
 
+bool BackupConfigFiles::Run(Deployer* deployer) {
+  fs::path user_data_path(deployer->user_data_dir);
+  if (!fs::exists(user_data_path))
+    return false;
+  fs::path backup_dir(deployer->user_data_sync_dir());
+  if (!fs::exists(backup_dir)) {
+    if (!fs::create_directories(backup_dir)) {
+      LOG(ERROR) << "error creating directory '" << backup_dir.string() << "'.";
+      return false;
+    }
+  }
+  int success = 0, failure = 0;
+  fs::directory_iterator iter(user_data_path);
+  fs::directory_iterator end;
+  for (; iter != end; ++iter) {
+    fs::path entry(iter->path());
+    if (fs::is_regular_file(entry) &&
+        entry.extension().string() == ".yaml" &&
+        !boost::ends_with(entry.string(), ".schema.yaml") &&
+        !boost::ends_with(entry.string(), ".dict.yaml")) {
+      fs::path backup = backup_dir / entry.filename();
+      boost::system::error_code ec;
+      fs::copy_file(entry, backup, fs::copy_option::overwrite_if_exists, ec);
+      if (ec) {
+        LOG(ERROR) << "error backing up file " << backup.string();
+        ++failure;
+      }
+      else {
+        ++success;
+      }
+    }
+  }
+  LOG(INFO) << "backed up " << success << " config files to "
+            << backup_dir.string() << ", " << failure << " failed.";
+  return !failure;
+}
+
 bool CleanOldLogFiles::Run(Deployer* deployer) {
   char ymd[12] = {0};
   time_t now = time(NULL);
