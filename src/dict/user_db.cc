@@ -123,7 +123,7 @@ bool TreeDb::Backup() {
 bool TreeDb::RecoverFromSnapshot() {
   Deployer& deployer(Service::instance().deployer());
   boost::filesystem::path snapshot_file(deployer.user_data_sync_dir());
-  snapshot_file /= file_name() + ".snapshot";
+  snapshot_file /= (name_ + ".snapshot");
   if (!boost::filesystem::exists(snapshot_file))
     return false;
   LOG(INFO) << "snapshot file exists, trying to recover db '" << name_ << "'.";

@@ -287,7 +287,7 @@ bool UserDictManager::UpgradeUserDict(const std::string& dict_name) {
     // fix invalid keys created by a buggy version of Import()
     LOG(INFO) << "upgrading user dict '" << dict_name << "'.";
     fs::path snapshot_file(deployer_->user_data_sync_dir());
-    snapshot_file /= (db.file_name() + ".snapshot");
+    snapshot_file /= (db.name() + ".snapshot");
     return db.Backup() &&
         db.Close() &&
         db.Remove() &&
