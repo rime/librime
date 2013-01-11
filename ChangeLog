@@ -1,7 +1,43 @@
+2013-01-12  GONG Chen  <chen.sst@gmail.com>
+
+	* rime_deployer:
+	manipulate user's schema list with command line options
+	--add-schema, --set-active-schema
+
+	* rime_dict_manager: add command line option --sync
+
+	* rime_api.h (RimeSyncUserData):
+	add API function to start a data synching task in maintenance thread.
+
+	* rime_api.h (RimeSetNotificationHandler):
+	setup a callback function to receive notifcations from librime.
+	* rime_api.h (RimeGetProperty, RimeSetProperty):
+	add API functions to access session specific string properties.
+
+	* config: support subscript, assignment operators
+	and simplified value accessors.
+
+	* user_db: optimize user_db for space efficiency;
+	avoid blocking user input when the database file needs repair.
+
+	* user_dictionary: add transaction support.
+	* memory: cancel memorizing newly committed phrases that has been
+	immediately erased with BackSpace key.
+
+	* navigator: move caret left by syllable in phonetic input schemas.
+
+	* express_editor: fix problem memorizing phrases committed with return key.
+	* table_translator: add option 'translator/enable_sentence'.
+	* reverse_lookup_translator:
+	a reverse lookup segment can be suffixed by a delimiter.
+	phonetic abbreviations now come after completion results in a mixed input scenario.
+
+	- Release: 0.9.6
+
 2012-09-26  GONG Chen  <chen.sst@gmail.com>
 
-	- new dependency: 'google-glog'.
-	- fix x64 build.
+	* new dependency: 'google-glog'.
+	* CMakeLists.txt: fix x64 build.
 
 	- Release: 0.9.4-1
 

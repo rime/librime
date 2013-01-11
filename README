@@ -1,4 +1,3 @@
-# README
 
 RIME: Rime Input Method Engine
 
@@ -7,7 +6,7 @@ Home: http://code.google.com/p/rimeime/
 Features:
   - support for shape-based and phonetic-based input methods, including those for Chinese dialects
   - a selected dictionary in traditional Chinese, powered by opencc for simplified Chinese output
-  - lightweight and extensible input method framework to create your innovative input schema in YAML syntax
+  - a lightweight and extensible input method framework to create your innovative input schema in YAML syntax
   - cross-platform core library in C++, built on top of open-source technologies
   - OS-specific wrappers working consistently for Windows, Linux and Mac OS
 
@@ -16,14 +15,14 @@ Install the library: |
   sudo make install
 
 Wrappers:
-  - fcitx-rime: Linux/fcitx client
-  - ibus-rime : Linux/ibus client
-  - squirrel  : Mac OS X client
-  - weasel    : Windows client
+  - fcitx-rime   : Linux/fcitx client
+  - ibus-rime    : Linux/ibus client
+  - squirrel     : Mac OS X client
+  - weasel       : Windows client
 
 Related works:
-  - brise     : rime schema repository
-  - essay     : vocabulary and language model for rime
-  - combo-py  : an innovative chord-typing practice
-  - zhung-r10n: a romanization scheme for Zhungyuan Mandarin
+  - brise        : rime schema repository
+  - essay        : vocabulary and language model for rime
+  - combo-pinyin : an innovative chord-typing practice
+  - zhung-r10n   : a romanization scheme for Zhungyuan Mandarin
 
