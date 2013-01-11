@@ -1,7 +1,9 @@
-all: release
-
 RIME_ROOT = $(CURDIR)
 THIRDPARTY_PATHS = -DCMAKE_INCLUDE_PATH=$(RIME_ROOT)/thirdparty/include -DCMAKE_LIBRARY_PATH=$(RIME_ROOT)/thirdparty/lib
+
+.PHONY: all release debug clean thirdparty
+
+all: release
 
 release:
 	mkdir -p xbuild
@@ -19,36 +21,5 @@ clean:
 	rm -rf xdebug
 	rm build.log
 
-thirdparty: glog kyotocabinet opencc yaml-cpp
-
-glog:
-	cd thirdparty/src/glog; ./configure --disable-dependency-tracking --enable-static --disable-shared && make
-	cp -R thirdparty/src/glog/src/glog thirdparty/include/
-	cp thirdparty/src/glog/.libs/libglog.a thirdparty/lib/
-
-kyotocabinet:
-	cd thirdparty/src/kyotocabinet; chmod +x configure; ./configure --disable-debug && make
-	cp thirdparty/src/kyotocabinet/kc*.h thirdparty/include/
-	cp thirdparty/src/kyotocabinet/libkyotocabinet.a thirdparty/lib/
-
-opencc:
-	cd thirdparty/src/opencc; mkdir -p build && \
-	cd build && cmake \
-	-DENABLE_GETTEXT:BOOL=OFF \
-	-DCMAKE_BUILD_TYPE=Release \
-	-DCMAKE_INSTALL_PREFIX=/usr \
-	.. && \
-	make
-	mkdir -p thirdparty/include/opencc/ && \
-	cp thirdparty/src/opencc/src/opencc*.h thirdparty/include/opencc/
-	cp thirdparty/src/opencc/build/src/libopencc.a thirdparty/lib/
-
-yaml-cpp:
-	cd thirdparty/src/yaml-cpp; mkdir -p build && \
-	cd build && cmake \
-	-DCMAKE_BUILD_TYPE=Release \
-	.. && \
-	make
-	cp -R thirdparty/src/yaml-cpp/include/yaml-cpp thirdparty/include/
-	cp thirdparty/src/yaml-cpp/build/libyaml-cpp.a thirdparty/lib/
-
+thirdparty:
+	make -f Makefile.thirdparty

@@ -7,7 +7,8 @@ cmake_minimum_required(VERSION 2.8)
 set(LIBRIME_VERSION 0.9.6)
 set(LIBRIME_SOVERSION 0)
 
-option(BUILD_STATIC "Build static version of Rime" OFF)
+option(BUILD_SHARED_LIBS "Build Rime as shared library" ON)
+option(BUILD_STATIC "Build Rime using static libraries" OFF)
 option(BUILD_DATA "Build data for Rime" OFF)
 
 SET(RIME_DATA_DIR "/share/rime-data" CACHE STRING "Target directory for Rime data")

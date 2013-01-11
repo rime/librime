@@ -1,8 +1,8 @@
-if(BUILD_STATIC)
-  set(RIME_LIBRARY rime-static)
-else(BUILD_STATIC)
+if(BUILD_SHARED_LIBS)
   set(RIME_LIBRARY rime)
-endif(BUILD_STATIC)
+else(BUILD_SHARED_LIBS)
+  set(RIME_LIBRARY rime-static)
+endif(BUILD_SHARED_LIBS)
 
 aux_source_directory(. RIME_TEST_SRC)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/test)
@@ -12,9 +12,9 @@ target_link_libraries(rime_test
                       ${GTEST_LIBRARIES})
 add_dependencies(rime_test ${RIME_LIBRARY})
 
-file(COPY ${PROJECT_SOURCE_DIR}/data/test/config_test.yaml 
+file(COPY ${PROJECT_SOURCE_DIR}/data/test/config_test.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
-file(COPY ${PROJECT_SOURCE_DIR}/data/test/dictionary_test.yaml 
+file(COPY ${PROJECT_SOURCE_DIR}/data/test/dictionary_test.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 
 if(NOT MSVC AND NOT XCODE_VERSION)

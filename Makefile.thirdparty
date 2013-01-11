@@ -1,0 +1,38 @@
+# a minimal build for static linking
+
+SRC_DIR=thirdparty/src
+
+.PHONY: all glog kyotocabinet opencc yaml-cpp
+
+all: glog kyotocabinet opencc yaml-cpp
+
+glog:
+	cd $(SRC_DIR)/glog; ./configure --disable-dependency-tracking --enable-static --disable-shared && make
+	cp -R $(SRC_DIR)/glog/src/glog thirdparty/include/
+	cp $(SRC_DIR)/glog/.libs/libglog.a thirdparty/lib/
+
+kyotocabinet:
+	cd $(SRC_DIR)/kyotocabinet; chmod +x configure; ./configure --disable-debug && make
+	cp $(SRC_DIR)/kyotocabinet/kc*.h thirdparty/include/
+	cp $(SRC_DIR)/kyotocabinet/libkyotocabinet.a thirdparty/lib/
+
+opencc:
+	cd $(SRC_DIR)/opencc; mkdir -p build && \
+	cd build && cmake \
+	-DENABLE_GETTEXT:BOOL=OFF \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_INSTALL_PREFIX=/usr \
+	.. && \
+	make
+	mkdir -p thirdparty/include/opencc/ && \
+	cp $(SRC_DIR)/opencc/src/opencc*.h thirdparty/include/opencc/
+	cp $(SRC_DIR)/opencc/build/src/libopencc.a thirdparty/lib/
+
+yaml-cpp:
+	cd $(SRC_DIR)/yaml-cpp; mkdir -p build && \
+	cd build && cmake \
+	-DCMAKE_BUILD_TYPE=Release \
+	.. && \
+	make
+	cp -R $(SRC_DIR)/yaml-cpp/include/yaml-cpp thirdparty/include/
+	cp $(SRC_DIR)/yaml-cpp/build/libyaml-cpp.a thirdparty/lib/
