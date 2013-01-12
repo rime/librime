@@ -47,6 +47,8 @@ class Deployer : public Messenger {
 
   void ScheduleTask(const shared_ptr<DeploymentTask>& task);
   shared_ptr<DeploymentTask> NextTask();
+  bool HasPendingTasks();
+  
   bool Run();
   bool StartMaintenance();
   bool IsMaintenancing();

@@ -55,22 +55,32 @@ shared_ptr<DeploymentTask> Deployer::NextTask() {
   return result;
 }
 
+bool Deployer::HasPendingTasks() {
+    boost::lock_guard<boost::mutex> lock(mutex_);
+    return !pending_tasks_.empty();
+}
+
 bool Deployer::Run() {
   LOG(INFO) << "running deployment tasks:";
   message_sink_("deploy", "start");
   shared_ptr<DeploymentTask> task;
   int success = 0;
   int failure = 0;
-  while ((task = NextTask())) {
-    if (task->Run(this))
-      ++success;
-    else
-      ++failure;
-    boost::this_thread::interruption_point();
+  do {
+    while ((task = NextTask())) {
+      if (task->Run(this))
+        ++success;
+      else
+        ++failure;
+      boost::this_thread::interruption_point();
+    }
+    LOG(INFO) << success + failure << " tasks ran: "
+              << success << " success, " << failure << " failure.";
+    message_sink_("deploy", !failure ? "success" : "failure");
+    // new tasks could have been enqueued while we were sending the message.
+    // before quitting, double check if there is nothing left to do.
   }
-  LOG(INFO) << success + failure << " tasks ran: "
-            << success << " success, " << failure << " failure.";
-  message_sink_("deploy", !failure ? "success" : "failure");
+  while (HasPendingTasks());
   return !failure;
 }
 
