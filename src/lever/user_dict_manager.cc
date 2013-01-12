@@ -301,7 +301,8 @@ bool UserDictManager::Synchronize(const std::string& dict_name) {
   bool success = true;
   fs::path sync_dir(deployer_->sync_dir);
   if (!fs::exists(sync_dir)) {
-    if (!fs::create_directories(sync_dir)) {
+    boost::system::error_code ec;
+    if (!fs::create_directories(sync_dir, ec)) {
       LOG(ERROR) << "error creating directory '" << sync_dir.string() << "'.";
       return false;
     }

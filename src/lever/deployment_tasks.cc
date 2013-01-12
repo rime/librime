@@ -31,7 +31,8 @@ bool InstallationUpdate::Run(Deployer* deployer) {
   fs::path user_data_path(deployer->user_data_dir);
   if (!fs::exists(user_data_path)) {
     LOG(INFO) << "creating user data dir: " << user_data_path.string();
-    if (!fs::create_directories(user_data_path)) {
+    boost::system::error_code ec;
+    if (!fs::create_directories(user_data_path, ec)) {
       LOG(ERROR) << "Error creating user data dir: " << user_data_path.string();
     }
   }
@@ -375,12 +376,14 @@ bool UserDictSync::Run(Deployer* deployer) {
 }
 
 bool BackupConfigFiles::Run(Deployer* deployer) {
+  LOG(INFO) << "backing up config files.";
   fs::path user_data_path(deployer->user_data_dir);
   if (!fs::exists(user_data_path))
     return false;
   fs::path backup_dir(deployer->user_data_sync_dir());
   if (!fs::exists(backup_dir)) {
-    if (!fs::create_directories(backup_dir)) {
+    boost::system::error_code ec;
+    if (!fs::create_directories(backup_dir, ec)) {
       LOG(ERROR) << "error creating directory '" << backup_dir.string() << "'.";
       return false;
     }
