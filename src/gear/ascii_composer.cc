@@ -60,12 +60,38 @@ Processor::Result AsciiComposer::ProcessKeyEvent(const KeyEvent &key_event) {
     return kNoop;
   }
   int ch = key_event.keycode();
+  // when caps lock is on, output ascii characters ignoring Caps Lock modifier
+  if (ch == XK_Caps_Lock) {
+    if (!key_event.release()) {
+      shift_key_pressed_ = ctrl_key_pressed_ = false;
+      // NOTE: for Linux, Caps Lock modifier is clear when we are about to
+      // turn it on; for Windows it is the opposite:
+      // Caps Lock modifier has been set before we process VK_CAPITAL.
+      // here we assume IBus' behavior and invert caps with ! operation.
+      SwitchAsciiMode(!key_event.caps(), kAsciiModeSwitchCommitCode);
+      return kAccepted;
+    }
+    else {
+      return kRejected;
+    }
+  }
+  if (key_event.caps()) {
+    // force committing, since letter case may be opposite to the original
+    if (!key_event.release() && !key_event.ctrl() &&
+        isascii(ch) && isalpha(ch)) {
+      engine_->sink()(std::string(1, ch));
+      return kAccepted;
+    }
+    else {
+      return kRejected;
+    }
+  }
   bool is_shift = (ch == XK_Shift_L || ch == XK_Shift_R);
   bool is_ctrl = (ch == XK_Control_L || ch == XK_Control_R);
   if (is_shift || is_ctrl) {
     if (key_event.release()) {
       if (shift_key_pressed_ || ctrl_key_pressed_) {
-        ToggleAsciiMode(ch);
+        ToggleAsciiModeWithKey(ch);
         shift_key_pressed_ = ctrl_key_pressed_ = false;
         return kRejected;
       }
@@ -87,7 +113,8 @@ Processor::Result AsciiComposer::ProcessKeyEvent(const KeyEvent &key_event) {
       return kRejected;  // direct commit
     }
     // edit inline ascii
-    if (!key_event.release() && (ch >= 0x20 && ch < 0x80)) {
+    if (!key_event.release() && !key_event.ctrl() &&
+        ch >= 0x20 && ch < 0x80) {
       ctx->PushInput(ch);
       return kAccepted;
     }
@@ -115,14 +142,21 @@ void AsciiComposer::LoadConfig(Schema* schema) {
   load_bindings(bindings, &bindings_);
 }
 
-void AsciiComposer::ToggleAsciiMode(int key_code) {
+bool AsciiComposer::ToggleAsciiModeWithKey(int key_code) {
   AsciiModeSwitchKeyBindings::const_iterator it = bindings_.find(key_code);
   if (it == bindings_.end())
-    return;
+    return false;
   AsciiModeSwitchStyle style = it->second;
-  DLOG(INFO) << "ascii mode switch style: " << style;
   Context *ctx = engine_->context();
   bool ascii_mode = !ctx->get_option("ascii_mode");
+  SwitchAsciiMode(ascii_mode, style);
+  return true;
+}
+
+void AsciiComposer::SwitchAsciiMode(bool ascii_mode,
+                                    AsciiModeSwitchStyle style) {
+  DLOG(INFO) << "ascii mode: " << ascii_mode << ", switch style: " << style;
+  Context *ctx = engine_->context();
   if (ctx->IsComposing()) {
     connection_.disconnect();
     // temporary ascii mode in desired manner

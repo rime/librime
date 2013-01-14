@@ -21,7 +21,7 @@ enum AsciiModeSwitchStyle {
   kAsciiModeSwitchCommitCode,
   kAsciiModeSwitchNoop
 };
-  
+
 typedef std::map<int /* keycode */,
                  AsciiModeSwitchStyle> AsciiModeSwitchKeyBindings;
 
@@ -30,10 +30,11 @@ class AsciiComposer : public Processor {
   AsciiComposer(Engine *engine);
   virtual ~AsciiComposer() {}
   virtual Result ProcessKeyEvent(const KeyEvent &key_event);
-  
+
  protected:
   void LoadConfig(Schema* schema);
-  void ToggleAsciiMode(int key_code);
+  bool ToggleAsciiModeWithKey(int key_code);
+  void SwitchAsciiMode(bool ascii_mode, AsciiModeSwitchStyle style);
   void OnContextUpdate(Context *ctx);
 
   AsciiModeSwitchKeyBindings bindings_;
