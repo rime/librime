@@ -123,7 +123,7 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
             << " into userdb '" << db_name << "'...";
   TickCount tick_left = GetTickCount(dest);
   TickCount tick_right = GetTickCount(temp);
-  tick_left = (std::max)(tick_left, tick_right);
+  TickCount tick_max = (std::max)(tick_left, tick_right);
   shared_ptr<TreeDbAccessor> a = temp.Query("");
   std::string key, left, right;
   int num_entries = 0;
@@ -153,13 +153,13 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
       d = (std::max)(d, d0);
     }
     right = boost::str(boost::format("c=%1% d=%2% t=%3%") %
-                       c % d % tick_left);
+                       c % d % tick_max);
     if (dest.Update(key, right))
       ++num_entries;
   }
   if (num_entries > 0) {
     try {
-      dest.Update("\x01/tick", boost::lexical_cast<std::string>(tick_left));
+      dest.Update("\x01/tick", boost::lexical_cast<std::string>(tick_max));
       dest.Update("\x01/user_id", deployer_->user_id);
     }
     catch (...) {
@@ -167,7 +167,7 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
     }
   }
   LOG(INFO) << "total " << num_entries << " entries imported, tick = "
-            << tick_left;
+            << tick_max;
   return true;
 }
 
