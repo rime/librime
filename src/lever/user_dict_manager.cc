@@ -150,7 +150,7 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
       if (t0 < tick_left)
         d0 = algo::formula_d(0, (double)tick_left, d0, (double)t0);
       c = (std::max)(c, c0);
-      d = (std::max)(d, d0);
+      d = (std::min)(300.0, (std::max)(d, d0));
     }
     right = boost::str(boost::format("c=%1% d=%2% t=%3%") %
                        c % d % tick_max);
@@ -283,7 +283,7 @@ bool UserDictManager::UpgradeUserDict(const std::string& dict_name) {
     return false;
   std::string db_creator_version;
   db.Fetch("\x01/rime_version", &db_creator_version);
-  if (CompareVersionString(db_creator_version, "0.9.5") <= 0) {
+  if (CompareVersionString(db_creator_version, "0.9.7") < 0) {
     // fix invalid keys created by a buggy version of Import()
     LOG(INFO) << "upgrading user dict '" << dict_name << "'.";
     fs::path snapshot_file(deployer_->user_data_sync_dir());

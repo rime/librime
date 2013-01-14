@@ -344,7 +344,7 @@ bool UserDictionary::FetchTickCount() {
     return true;
   }
   catch (...) {
-    tick_ = 0;
+    //tick_ = 0;
     return false;
   }
 }
