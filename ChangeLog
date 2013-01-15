@@ -1,3 +1,18 @@
+2013-01-16  GONG Chen  <chen.sst@gmail.com>
+
+	* ascii_composer: support changing conversion mode with Caps Lock.
+	fixed Control + letter key in temporary ascii mode.
+	pressing Command/Super + Shift shouldn't toggle ascii mode.
+
+	* user_dictionary(UserDictionary::FetchTickCount):
+	tick was reset to zero when I/O error is encountered,
+	messing up order of user dict entries.
+
+	* user_dict_manager(UserDictManager::Restore):
+	used to favor imported entries too much while merging snapshots.
+
+	- Release: 0.9.7
+
 2013-01-12  GONG Chen  <chen.sst@gmail.com>
 
 	* rime_deployer:
