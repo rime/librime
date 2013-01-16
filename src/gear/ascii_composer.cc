@@ -49,43 +49,24 @@ static void load_bindings(const ConfigMapPtr &src,
 }
 
 AsciiComposer::AsciiComposer(Engine *engine)
-    : Processor(engine), shift_key_pressed_(false), ctrl_key_pressed_(false) {
+    : Processor(engine),
+      caps_lock_switch_style_(kAsciiModeSwitchNoop),
+      shift_key_pressed_(false), ctrl_key_pressed_(false) {
   LoadConfig(engine->schema());
 }
 
-Processor::Result AsciiComposer::ProcessKeyEvent(const KeyEvent &key_event) {
+Processor::Result AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   if ((key_event.shift() && key_event.ctrl()) ||
       key_event.alt() || key_event.super()) {
     shift_key_pressed_ = ctrl_key_pressed_ = false;
     return kNoop;
   }
+  if (caps_lock_switch_style_ != kAsciiModeSwitchNoop) {
+    Result result = ProcessCapsLock(key_event);
+    if (result != kNoop)
+      return result;
+  }
   int ch = key_event.keycode();
-  // when caps lock is on, output ascii characters ignoring Caps Lock modifier
-  if (ch == XK_Caps_Lock) {
-    if (!key_event.release()) {
-      shift_key_pressed_ = ctrl_key_pressed_ = false;
-      // NOTE: for Linux, Caps Lock modifier is clear when we are about to
-      // turn it on; for Windows it is the opposite:
-      // Caps Lock modifier has been set before we process VK_CAPITAL.
-      // here we assume IBus' behavior and invert caps with ! operation.
-      SwitchAsciiMode(!key_event.caps(), kAsciiModeSwitchCommitCode);
-      return kAccepted;
-    }
-    else {
-      return kRejected;
-    }
-  }
-  if (key_event.caps()) {
-    // force committing, since letter case may be opposite to the original
-    if (!key_event.release() && !key_event.ctrl() &&
-        isascii(ch) && isalpha(ch)) {
-      engine_->sink()(std::string(1, ch));
-      return kAccepted;
-    }
-    else {
-      return kRejected;
-    }
-  }
   bool is_shift = (ch == XK_Shift_L || ch == XK_Shift_R);
   bool is_ctrl = (ch == XK_Control_L || ch == XK_Control_R);
   if (is_shift || is_ctrl) {
@@ -122,7 +103,44 @@ Processor::Result AsciiComposer::ProcessKeyEvent(const KeyEvent &key_event) {
   return kNoop;
 }
 
+Processor::Result AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
+  int ch = key_event.keycode();
+  if (ch == XK_Caps_Lock) {
+    if (!key_event.release()) {
+      shift_key_pressed_ = ctrl_key_pressed_ = false;
+      // NOTE: for Linux, Caps Lock modifier is clear when we are about to
+      // turn it on; for Windows it is the opposite:
+      // Caps Lock modifier has been set before we process VK_CAPITAL.
+      // here we assume IBus' behavior and invert caps with ! operation.
+      SwitchAsciiMode(!key_event.caps(), caps_lock_switch_style_);
+      return kAccepted;
+    }
+    else {
+      return kRejected;
+    }
+  }
+  if (key_event.caps()) {
+    // when caps lock is on, output ascii characters ignoring Caps Lock
+    if (!key_event.release() && !key_event.ctrl() &&
+        isascii(ch) && isalpha(ch)) {
+      if (islower(ch))
+        ch = toupper(ch);
+      else if (isupper(ch))
+        ch = tolower(ch);
+      // force committing
+      engine_->sink()(std::string(1, ch));
+      return kAccepted;
+    }
+    else {
+      return kRejected;
+    }
+  }
+  return kNoop;
+}
+
 void AsciiComposer::LoadConfig(Schema* schema) {
+  bindings_.clear();
+  caps_lock_switch_style_ = kAsciiModeSwitchNoop;
   if (!schema) return;
   Config *config = schema->config();
   ConfigMapPtr  bindings = config->GetMap("ascii_composer/switch_key");
@@ -140,6 +158,12 @@ void AsciiComposer::LoadConfig(Schema* schema) {
     }
   }
   load_bindings(bindings, &bindings_);
+  AsciiModeSwitchKeyBindings::const_iterator it = bindings_.find(XK_Caps_Lock);
+  if (it != bindings_.end()) {
+    caps_lock_switch_style_ = it->second;
+    if (caps_lock_switch_style_ == kAsciiModeSwitchInline) // cannot do that
+      caps_lock_switch_style_ = kAsciiModeSwitchCommitCode;
+  }
 }
 
 bool AsciiComposer::ToggleAsciiModeWithKey(int key_code) {

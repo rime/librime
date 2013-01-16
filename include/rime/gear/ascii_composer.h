@@ -16,10 +16,10 @@
 namespace rime {
 
 enum AsciiModeSwitchStyle {
+  kAsciiModeSwitchNoop,
   kAsciiModeSwitchInline,
   kAsciiModeSwitchCommitText,
   kAsciiModeSwitchCommitCode,
-  kAsciiModeSwitchNoop
 };
 
 typedef std::map<int /* keycode */,
@@ -29,15 +29,19 @@ class AsciiComposer : public Processor {
  public:
   AsciiComposer(Engine *engine);
   virtual ~AsciiComposer() {}
-  virtual Result ProcessKeyEvent(const KeyEvent &key_event);
+  virtual Result ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:
+  Result ProcessCapsLock(const KeyEvent& key_event);
   void LoadConfig(Schema* schema);
   bool ToggleAsciiModeWithKey(int key_code);
   void SwitchAsciiMode(bool ascii_mode, AsciiModeSwitchStyle style);
   void OnContextUpdate(Context *ctx);
 
+  // config options
   AsciiModeSwitchKeyBindings bindings_;
+  AsciiModeSwitchStyle caps_lock_switch_style_;
+  // state
   bool shift_key_pressed_;
   bool ctrl_key_pressed_;
   boost::signals::connection connection_;
