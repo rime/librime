@@ -51,6 +51,7 @@ static void load_bindings(const ConfigMapPtr &src,
 AsciiComposer::AsciiComposer(Engine *engine)
     : Processor(engine),
       caps_lock_switch_style_(kAsciiModeSwitchNoop),
+      good_old_caps_lock_(false),
       shift_key_pressed_(false), ctrl_key_pressed_(false) {
   LoadConfig(engine->schema());
 }
@@ -120,14 +121,14 @@ Processor::Result AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
     }
   }
   if (key_event.caps()) {
-    // when caps lock is on, output ascii characters ignoring Caps Lock
-    if (!key_event.release() && !key_event.ctrl() &&
+    if (!good_old_caps_lock_ &&
+        !key_event.release() && !key_event.ctrl() &&
         isascii(ch) && isalpha(ch)) {
+      // output ascii characters ignoring Caps Lock
       if (islower(ch))
         ch = toupper(ch);
       else if (isupper(ch))
         ch = tolower(ch);
-      // force committing
       engine_->sink()(std::string(1, ch));
       return kAccepted;
     }
@@ -141,12 +142,17 @@ Processor::Result AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
 void AsciiComposer::LoadConfig(Schema* schema) {
   bindings_.clear();
   caps_lock_switch_style_ = kAsciiModeSwitchNoop;
+  good_old_caps_lock_ = false;
   if (!schema) return;
+  scoped_ptr<Config> preset_config(
+      Config::Require("config")->Create("default"));
+  if (preset_config) {
+    preset_config->GetBool("ascii_composer/good_old_caps_lock",
+                           &good_old_caps_lock_);
+  }
   Config *config = schema->config();
   ConfigMapPtr  bindings = config->GetMap("ascii_composer/switch_key");
   if (!bindings) {
-    scoped_ptr<Config> preset_config(
-        Config::Require("config")->Create("default"));
     if (!preset_config) {
       LOG(ERROR) << "Error importing preset ascii bindings.";
       return;
