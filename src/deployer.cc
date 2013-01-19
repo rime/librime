@@ -106,6 +106,8 @@ bool Deployer::IsMaintenancing() {
 }
 
 void Deployer::JoinMaintenanceThread() {
+  if (!maintenance_thread_.joinable())
+    return;
   maintenance_thread_.join();
 }
 
