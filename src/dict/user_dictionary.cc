@@ -31,7 +31,7 @@ struct DfsState {
   shared_ptr<UserDbAccessor> accessor;
   std::string key;
   std::string value;
-  
+
   bool IsExactMatch(const std::string &prefix) {
     return boost::starts_with(key, prefix + '\t');
   }
@@ -293,6 +293,9 @@ bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
   TickCount last_tick = 0;
   if (db_->Fetch(key, &value)) {
     UnpackValues(value, &commit_count, &dee, &last_tick);
+    if (last_tick > tick_) {
+      last_tick = tick_;  // fix abnormal timestamp
+    }
   }
   if (commit > 0) {
     if (commit_count < 0)
@@ -309,18 +312,13 @@ bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
     commit_count = (std::min)(-1, -commit_count);
     dee = algo::formula_d(0.0, (double)tick_, dee, (double)last_tick);
   }
-  value = boost::str(boost::format("c=%1% d=%2% t=%3%") % 
+  value = boost::str(boost::format("c=%1% d=%2% t=%3%") %
                      commit_count % dee % tick_);
   return db_->Update(key, value);
 }
 
 bool UserDictionary::UpdateTickCount(TickCount increment) {
   tick_ += increment;
-  /* TODO: this should be done in a separate thread
-  if (tick_ % 50 == 0) {  // backup every 50 commits
-    db_->Backup();
-  }
-  */
   try {
     return db_->Update("\x01/tick", boost::lexical_cast<std::string>(tick_));
   }
@@ -403,14 +401,15 @@ bool UserDictionary::UnpackValues(const std::string &value,
         *commit_count = boost::lexical_cast<int>(v);
       }
       else if (k == "d") {
-        *dee = boost::lexical_cast<double>(v);
+        *dee = (std::min)(200.0, boost::lexical_cast<double>(v));
       }
       else if (k == "t") {
         *tick = boost::lexical_cast<TickCount>(v);
       }
     }
     catch (...) {
-      LOG(ERROR) << "failed in parsing key-value from userdict entry '" << k_eq_v << "'.";
+      LOG(ERROR) << "failed in parsing key-value from userdict entry '"
+                 << k_eq_v << "'.";
       return false;
     }
   }
@@ -422,7 +421,7 @@ shared_ptr<DictEntry> UserDictionary::CreateDictEntry(const std::string& key,
                                                       TickCount present_tick,
                                                       double credibility,
                                                       std::string* full_code) {
-  shared_ptr<DictEntry> e;  
+  shared_ptr<DictEntry> e;
   size_t separator_pos = key.find('\t');
   if (separator_pos == std::string::npos)
     return e;
@@ -433,7 +432,8 @@ shared_ptr<DictEntry> UserDictionary::CreateDictEntry(const std::string& key,
     return e;
   if (commit_count < 0)  // deleted entry
     return e;
-  dee = algo::formula_d(0, (double)present_tick, dee, (double)last_tick);
+  if (last_tick < present_tick)
+    dee = algo::formula_d(0, (double)present_tick, dee, (double)last_tick);
   // create!
   e = make_shared<DictEntry>();
   e->text = key.substr(separator_pos + 1);
