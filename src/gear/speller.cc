@@ -97,6 +97,7 @@ Processor::Result Speller::ProcessKeyEvent(
                            ctx->input(), delimiter_)) {
       DLOG(INFO) << "auto-select unique candidate.";
       ctx->ConfirmCurrentSelection();
+      return kAccepted;
     }
   }
   if (auto_select_ && !ctx->HasMenu() && previous_segment.menu) {
@@ -107,6 +108,7 @@ Processor::Result Speller::ProcessKeyEvent(
       ctx->composition()->pop_back();
       ctx->composition()->push_back(previous_segment);
       ctx->ConfirmCurrentSelection();
+      return kAccepted;
     }
   }
   return kAccepted;
