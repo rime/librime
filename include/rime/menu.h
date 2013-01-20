@@ -42,6 +42,10 @@ class Menu {
   // rather than the total number of available candidates.
   size_t candidate_count() const { return candidates_.size(); }
 
+  bool empty() const {
+    return translations_.empty() && candidates_.empty();
+  }
+
  private:
   std::vector<shared_ptr<Translation> > translations_;
   CandidateList candidates_;

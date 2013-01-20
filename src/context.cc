@@ -59,7 +59,10 @@ bool Context::IsComposing() const {
 }
 
 bool Context::HasMenu() const {
-  return !composition_->empty() && composition_->back().menu;
+  if (composition_->empty())
+    return false;
+  const shared_ptr<Menu>& menu(composition_->back().menu);
+  return menu && !menu->empty();
 }
 
 bool Context::PushInput(char ch) {
