@@ -21,11 +21,13 @@ class Speller : public Processor {
   
  protected:
   std::string alphabet_;
-  std::string delimiter_;
+  std::string delimiters_;
   std::string initials_;
+  std::string finals_;
   int max_code_length_;
   bool auto_select_;
   bool auto_select_unique_candidate_;
+  bool use_space_;
 };
 
 }  // namespace rime
