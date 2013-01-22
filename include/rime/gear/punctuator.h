@@ -38,6 +38,7 @@ class Punctuator : public Processor {
   bool PairPunct(const ConfigItemPtr &definition);
 
   PunctConfig config_;
+  bool use_space_;
   int oddness_;
 };
 

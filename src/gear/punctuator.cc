@@ -53,7 +53,13 @@ const ConfigItemPtr PunctConfig::GetPunctDefinition(const std::string key) {
   return punct_definition;
 }
 
-Punctuator::Punctuator(Engine *engine) : Processor(engine), oddness_(0) {
+Punctuator::Punctuator(Engine *engine) : Processor(engine),
+                                         use_space_(false),
+                                         oddness_(0) {
+  Config *config = engine->schema()->config();
+  if (config) {
+    config->GetBool("punctuator/use_space", &use_space_);
+  }
   config_.LoadConfig(engine);
 }
 
@@ -61,9 +67,9 @@ Processor::Result Punctuator::ProcessKeyEvent(const KeyEvent &key_event) {
   if (key_event.release() || key_event.ctrl() || key_event.alt())
     return kNoop;
   int ch = key_event.keycode();
-  if (ch < 0x20 || ch > 0x7f)
+  if (ch < 0x20 || ch >= 0x7f)
     return kNoop;
-  if (ch == XK_space && engine_->context()->IsComposing())
+  if (!use_space_ && ch == XK_space && engine_->context()->IsComposing())
     return kNoop;
   if (ch == '.' || ch == ':') {  // 3.14, 12:30
     const CommitHistory& history(engine_->context()->commit_history());
@@ -79,7 +85,7 @@ Processor::Result Punctuator::ProcessKeyEvent(const KeyEvent &key_event) {
   ConfigItemPtr punct_definition(config_.GetPunctDefinition(punct_key));
   if (!punct_definition)
     return kNoop;
-  DLOG(INFO) << "punct key: " << punct_key;
+  DLOG(INFO) << "punct key: '" << punct_key << "'";
   if (!AlternatePunct(punct_key, punct_definition)) {
     engine_->context()->PushInput(ch) &&
         (ConfirmUniquePunct(punct_definition) ||
@@ -162,7 +168,7 @@ bool PunctSegmentor::Proceed(Segmentation *segmentation) {
   if (k == input.length())
     return false;  // no chance for others too
   char ch = input[k];
-  if (ch < 0x20 || ch > 0x7f)
+  if (ch < 0x20 || ch >= 0x7f)
     return true;
   config_.LoadConfig(engine_);
   std::string punct_key(1, ch);
