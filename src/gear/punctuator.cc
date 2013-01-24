@@ -6,6 +6,7 @@
 // 2011-11-21 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/foreach.hpp>
+#include <utf8.h>
 #include <rime/commit_history.h>
 #include <rime/common.h>
 #include <rime/composition.h>
@@ -192,13 +193,26 @@ PunctTranslator::PunctTranslator(Engine *engine) : Translator(engine) {
 }
 
 shared_ptr<Candidate> CreatePunctCandidate(const std::string &punct, const Segment &segment) {
-  bool is_ascii = (punct.length() == 1 && punct[0] >= 0x20 && punct[0] <= 0x7f);
   const char half_shape[] = "\xe3\x80\x94\xe5\x8d\x8a\xe8\xa7\x92\xe3\x80\x95";  // 〔半角〕
+  const char full_shape[] = "\xe3\x80\x94\xe5\x85\xa8\xe8\xa7\x92\xe3\x80\x95";  // 〔全角〕
+  bool is_half_shape = false;
+  bool is_full_shape = false;
+  const char* p = punct.c_str();
+  uint32_t ch = utf8::unchecked::next(p);
+  if (*p == '\0') {  // length == 1 unicode character
+    bool is_ascii = (ch >= 0x20 && ch < 0x7F);
+    bool is_ideographic_space = (ch == 0x3000);
+    bool is_full_shape_ascii = (ch >= 0xFF01 && ch <= 0xFF5E);
+    bool is_half_shape_kana = (ch >= 0xFF65 && ch <= 0xFFDC);
+    is_half_shape = is_ascii || is_half_shape_kana;
+    is_full_shape = is_ideographic_space || is_full_shape_ascii;
+  }
   return boost::make_shared<SimpleCandidate>("punct",
                                              segment.start,
                                              segment.end,
                                              punct,
-                                             (is_ascii ? half_shape : ""),
+                                             (is_half_shape ? half_shape :
+                                              is_full_shape ? full_shape : ""),
                                              punct);
 }
 
