@@ -414,6 +414,48 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
   return !failure;
 }
 
+bool CleanUpTrash::Run(Deployer* deployer) {
+  LOG(INFO) << "clean up trash.";
+  fs::path user_data_path(deployer->user_data_dir);
+  if (!fs::exists(user_data_path))
+    return false;
+  fs::path trash = user_data_path / "trash";
+  int success = 0, failure = 0;
+  fs::directory_iterator iter(user_data_path);
+  fs::directory_iterator end;
+  for (; iter != end; ++iter) {
+    fs::path entry(iter->path());
+    if (!fs::is_regular_file(entry))
+      continue;
+    std::string filename(entry.filename().string());
+    if (filename == "rime.log" ||
+        boost::ends_with(filename, ".userdb.kct.old") ||
+        boost::ends_with(filename, ".userdb.kct.snapshot")) {
+      if (!success && !failure && !fs::exists(trash)) {
+        boost::system::error_code ec;
+        if (!fs::create_directories(trash, ec)) {
+          LOG(ERROR) << "error creating directory '" << trash.string() << "'.";
+          return false;
+        }
+      }
+      fs::path backup = trash / entry.filename();
+      boost::system::error_code ec;
+      fs::rename(entry, backup, ec);
+      if (ec) {
+        LOG(ERROR) << "error clean up file " << entry.string();
+        ++failure;
+      }
+      else {
+        ++success;
+      }
+    }
+  }
+  if (success) {
+    LOG(INFO) << "moved " << success << " files to " << trash.string();
+  }
+  return !failure;
+}
+
 bool CleanOldLogFiles::Run(Deployer* deployer) {
   char ymd[12] = {0};
   time_t now = time(NULL);

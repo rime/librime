@@ -67,6 +67,7 @@ RIME_API Bool RimeStartMaintenance(Bool full_check) {
   }
   deployer.ScheduleTask(boost::make_shared<rime::WorkspaceUpdate>());
   deployer.ScheduleTask(boost::make_shared<rime::UserDictUpgration>());
+  deployer.ScheduleTask(boost::make_shared<rime::CleanUpTrash>());
   deployer.StartMaintenance();
   return True;
 }
@@ -111,9 +112,11 @@ RIME_API Bool RimeDeployWorkspace() {
   rime::InstallationUpdate installation;
   rime::WorkspaceUpdate update;
   rime::UserDictUpgration upgration;
+  rime::CleanUpTrash cleanup;
   return Bool(installation.Run(&deployer) &&
               update.Run(&deployer) &&
-              upgration.Run(&deployer));
+              upgration.Run(&deployer) &&
+              cleanup.Run(&deployer));
 }
 
 RIME_API Bool RimeDeploySchema(const char *schema_file) {
