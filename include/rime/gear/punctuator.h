@@ -18,12 +18,14 @@ namespace rime {
 
 class PunctConfig {
  public:
-  void LoadConfig(Engine *engine);
+  void LoadConfig(Engine *engine, bool load_symbols = false);
   const ConfigItemPtr GetPunctDefinition(const std::string key);
  protected:
   ConfigMapPtr mapping_;
   ConfigMapPtr preset_mapping_;
   std::string shape_;
+  ConfigMapPtr symbols_;
+  ConfigMapPtr preset_symbols_;
 };
 
 class Punctuator : public Processor {

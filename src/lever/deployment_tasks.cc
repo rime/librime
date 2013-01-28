@@ -111,6 +111,9 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     scoped_ptr<DeploymentTask> t;
     t.reset(new ConfigFileUpdate("default.yaml", "config_version"));
     t->Run(deployer);
+    // since brise 0.18
+    t.reset(new ConfigFileUpdate("symbols.yaml", "config_version"));
+    t->Run(deployer);
     t.reset(new SymlinkingPrebuiltDictionaries);
     t->Run(deployer);
   }

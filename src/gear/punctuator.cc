@@ -21,7 +21,7 @@
 
 namespace rime {
 
-void PunctConfig::LoadConfig(Engine *engine) {
+void PunctConfig::LoadConfig(Engine *engine, bool load_symbols) {
   bool full_shape = engine->context()->get_option("full_shape");
   std::string shape(full_shape ? "full_shape" : "half_shape");
   if (shape_ == shape) return;
@@ -38,10 +38,16 @@ void PunctConfig::LoadConfig(Engine *engine) {
     if (!preset_mapping_) {
       LOG(WARNING) << "missing preset punctuation mapping.";
     }
+    if (load_symbols && !preset_symbols_) {
+      preset_symbols_ = preset_config->GetMap("punctuator/symbols");
+    }
   }
   mapping_ = config->GetMap("punctuator/" + shape);
   if (!mapping_ && !preset_mapping_) {
     LOG(WARNING) << "missing punctuation mapping.";
+  }
+  if (load_symbols) {
+    symbols_ = config->GetMap("punctuator/symbols");
   }
 }
 
@@ -49,8 +55,21 @@ const ConfigItemPtr PunctConfig::GetPunctDefinition(const std::string key) {
   ConfigItemPtr punct_definition;
   if (mapping_)
     punct_definition = mapping_->Get(key);
-  if (!punct_definition && preset_mapping_)
+  if (punct_definition)
+    return punct_definition;
+  
+  if (preset_mapping_)
     punct_definition = preset_mapping_->Get(key);
+  if (punct_definition)
+    return punct_definition;
+
+  if (symbols_)
+    punct_definition = symbols_->Get(key);
+  if (punct_definition)
+    return punct_definition;
+  
+  if (preset_symbols_)
+    punct_definition = preset_symbols_->Get(key);
   return punct_definition;
 }
 
@@ -189,7 +208,8 @@ bool PunctSegmentor::Proceed(Segmentation *segmentation) {
 }
 
 PunctTranslator::PunctTranslator(Engine *engine) : Translator(engine) {
-  config_.LoadConfig(engine);
+  const bool load_symbols = true;
+  config_.LoadConfig(engine, load_symbols);
 }
 
 shared_ptr<Candidate> CreatePunctCandidate(const std::string &punct, const Segment &segment) {
@@ -207,13 +227,14 @@ shared_ptr<Candidate> CreatePunctCandidate(const std::string &punct, const Segme
     is_half_shape = is_ascii || is_half_shape_kana;
     is_full_shape = is_ideographic_space || is_full_shape_ascii;
   }
+  bool one_key = (segment.end - segment.start == 1);
   return boost::make_shared<SimpleCandidate>("punct",
                                              segment.start,
                                              segment.end,
                                              punct,
                                              (is_half_shape ? half_shape :
                                               is_full_shape ? full_shape : ""),
-                                             punct);
+                                             one_key ? punct : "");
 }
 
 shared_ptr<Translation> PunctTranslator::Query(const std::string &input,
