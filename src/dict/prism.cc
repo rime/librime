@@ -7,7 +7,6 @@
 //
 #include <cstring>
 #include <queue>
-#include <boost/scoped_array.hpp>
 #include <rime/algo/algebra.h>
 #include <rime/dict/prism.h>
 
@@ -20,16 +19,16 @@ struct node_t {
   }
 };
 
-const char kPrismFormatPrefix[] = "Rime::Prism/";
-const size_t kPrismFormatPrefixLen = sizeof(kPrismFormatPrefix) - 1;
-
-const char kPrismFormat[] = "Rime::Prism/1.0";
-
-const char kDefaultAlphabet[] = "abcdefghijklmnopqrstuvwxyz";
-
 }  // namespace
 
 namespace rime {
+
+const char kPrismFormat[] = "Rime::Prism/1.0";
+
+const char kPrismFormatPrefix[] = "Rime::Prism/";
+const size_t kPrismFormatPrefixLen = sizeof(kPrismFormatPrefix) - 1;
+
+const char kDefaultAlphabet[] = "abcdefghijklmnopqrstuvwxyz";
 
 SpellingAccessor::SpellingAccessor(prism::SpellingMap* spelling_map, int spelling_id)
     : spelling_id_(spelling_id), iter_(NULL), end_(NULL) {
@@ -83,10 +82,12 @@ bool Prism::Load() {
   metadata_ = Find<prism::Metadata>(0);
   if (!metadata_) {
     LOG(ERROR) << "metadata not found.";
+    Close();
     return false;
   }
   if (strncmp(metadata_->format, kPrismFormatPrefix, kPrismFormatPrefixLen)) {
     LOG(ERROR) << "invalid metadata.";
+    Close();
     return false;
   }
   format_ = atof(&metadata_->format[kPrismFormatPrefixLen]);
@@ -94,6 +95,7 @@ bool Prism::Load() {
   char *array = metadata_->double_array.get();
   if (!array) {
     LOG(ERROR) << "double array image not found.";
+    Close();
     return false;
   }
   size_t array_size = metadata_->double_array_size;
@@ -160,7 +162,6 @@ bool Prism::Build(const Syllabary &syllabary,
     LOG(ERROR) << "Error creating metadata in file '" << file_name() << "'.";
     return false;
   }
-  std::strncpy(metadata->format, kPrismFormat, prism::Metadata::kFormatMaxLength);
   metadata->dict_file_checksum = dict_file_checksum;
   metadata->schema_file_checksum = schema_file_checksum;
   metadata->num_syllables = num_syllables;
@@ -227,6 +228,8 @@ bool Prism::Build(const Syllabary &syllabary,
     metadata->spelling_map = spelling_map;
     spelling_map_ = spelling_map;
   }
+  // at last, complete the metadata
+  std::strncpy(metadata->format, kPrismFormat, prism::Metadata::kFormatMaxLength);
   return true;
 }
 

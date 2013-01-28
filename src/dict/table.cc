@@ -17,6 +17,9 @@ namespace rime {
 
 const char kTableFormat[] = "Rime::Table/1.0";
 
+const char kTableFormatPrefix[] = "Rime::Table/";
+const size_t kTableFormatPrefixLen = sizeof(kTableFormatPrefix) - 1;
+
 inline static bool node_less(const table::TrunkIndexNode &a,
                              const table::TrunkIndexNode &b) {
   return a.key < b.key;
@@ -203,16 +206,26 @@ bool Table::Load() {
   metadata_ = Find<table::Metadata>(0);
   if (!metadata_) {
     LOG(ERROR) << "metadata not found.";
+    Close();
     return false;
   }
+  if (strncmp(metadata_->format, kTableFormatPrefix, kTableFormatPrefixLen)) {
+    LOG(ERROR) << "invalid metadata.";
+    Close();
+    return false;
+  }
+  //double format = atof(&metadata_->format[kTableFormatPrefixLen]);
+  
   syllabary_ = metadata_->syllabary.get();
   if (!syllabary_) {
     LOG(ERROR) << "syllabary not found.";
+    Close();
     return false;
   }
   index_ = metadata_->index.get();
   if (!index_) {
     LOG(ERROR) << "table index not found.";
+    Close();
     return false;
   }
   return true;
@@ -253,7 +266,6 @@ bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size
     return false;
   }
   metadata_->dict_file_checksum = dict_file_checksum;
-  std::strncpy(metadata_->format, kTableFormat, table::Metadata::kFormatMaxLength);
   metadata_->num_syllables = num_syllables;
   metadata_->num_entries = num_entries;
 
@@ -279,6 +291,8 @@ bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size
   }
   metadata_->index = index_;
 
+  // at last, complete the metadata
+  std::strncpy(metadata_->format, kTableFormat, table::Metadata::kFormatMaxLength);
   return true;
 }
 
