@@ -211,7 +211,7 @@ void ConcreteEngine::OnSelect(Context *ctx) {
     seg.status = Segment::kConfirmed;
     // strategy one: commit directly;
     // strategy two: continue composing with another empty segment.
-    if (ctx->get_option("auto_commit"))
+    if (ctx->get_option("_auto_commit"))
       ctx->Commit();
     else
       ctx->composition()->Forward();
@@ -232,6 +232,7 @@ void ConcreteEngine::OnSelect(Context *ctx) {
 void ConcreteEngine::set_schema(Schema *schema) {
   schema_.reset(schema);
   context_->Clear();
+  context_->ClearTransientOptions();
   InitializeComponents();
   InitializeOptions();
   message_sink_("schema", schema->schema_id() + "/" + schema->schema_name());

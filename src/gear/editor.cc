@@ -15,7 +15,7 @@
 namespace rime {
 
 Editor::Editor(Engine* engine, bool auto_commit) : Processor(engine) {
-  engine->context()->set_option("auto_commit", auto_commit);
+  engine->context()->set_option("_auto_commit", auto_commit);
 }
 
 Processor::Result Editor::ProcessKeyEvent(const KeyEvent &key_event) {

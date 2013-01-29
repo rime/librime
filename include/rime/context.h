@@ -72,6 +72,9 @@ class Context {
   bool get_option(const std::string &name) const;
   void set_property(const std::string &name, const std::string& value);
   const std::string get_property(const std::string &name) const;
+  // options and properties starting with '_' are local to schema;
+  // others are session scoped.
+  void ClearTransientOptions();
   
   Notifier& commit_notifier() { return commit_notifier_; }
   Notifier& select_notifier() { return select_notifier_; }

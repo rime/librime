@@ -30,6 +30,7 @@ ChordComposer::ChordComposer(Engine *engine) : Processor(engine),
     output_format_.Load(config->GetList("chord_composer/output_format"));
     prompt_format_.Load(config->GetList("chord_composer/prompt_format"));
   }
+  engine->context()->set_option("_chord_typing", true);
 }
 
 Processor::Result ChordComposer::ProcessKeyEvent(const KeyEvent &key_event) {

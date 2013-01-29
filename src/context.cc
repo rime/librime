@@ -291,4 +291,18 @@ const std::string Context::get_property(const std::string &name) const {
     return std::string();
 }
 
+void Context::ClearTransientOptions() {
+  std::map<std::string, bool>::iterator oit = options_.lower_bound("_");
+  while (oit != options_.end() &&
+         !oit->first.empty() && oit->first[0] == '_') {
+    options_.erase(oit++);
+  }
+  std::map<std::string, std::string>::iterator pit =
+      properties_.lower_bound("_");
+  while (pit != properties_.end() &&
+         !pit->first.empty() && pit->first[0] == '_') {
+    properties_.erase(pit++);
+  }
+}
+
 }  // namespace rime
