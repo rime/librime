@@ -12,6 +12,7 @@
 #include <rime_version.h>
 #include <rime/common.h>
 #include <rime/config.h>
+#include <rime/algo/utilities.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
 #include <rime/lever/customizer.h>
@@ -391,29 +392,50 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
       return false;
     }
   }
-  int success = 0, failure = 0;
+  int success = 0, failure = 0, latest = 0, skipped = 0;
   fs::directory_iterator iter(user_data_path);
   fs::directory_iterator end;
   for (; iter != end; ++iter) {
     fs::path entry(iter->path());
-    if (fs::is_regular_file(entry) &&
-        entry.extension().string() == ".yaml" &&
-        !boost::ends_with(entry.string(), ".schema.yaml") &&
-        !boost::ends_with(entry.string(), ".dict.yaml")) {
-      fs::path backup = backup_dir / entry.filename();
-      boost::system::error_code ec;
-      fs::copy_file(entry, backup, fs::copy_option::overwrite_if_exists, ec);
-      if (ec) {
-        LOG(ERROR) << "error backing up file " << backup.string();
-        ++failure;
+    {
+      bool is_yaml_file = fs::is_regular_file(entry) &&
+          entry.extension().string() == ".yaml";
+      if (!is_yaml_file)
+        continue;
+    }
+    fs::path backup = backup_dir / entry.filename();
+    {
+      bool up_to_date = fs::exists(backup) &&
+          Checksum(backup.string()) == Checksum(entry.string());
+      if (up_to_date) {
+        ++latest;
+        continue;
       }
-      else {
-        ++success;
+    }
+    if (!boost::ends_with(entry.string(), ".custom.yaml")) {
+      Config config;
+      std::string checksum;
+      bool is_customized_copy = config.LoadFromFile(entry.string()) &&
+          config.GetString("customization", &checksum);
+      if (is_customized_copy) {
+        ++skipped;
+        continue;
       }
+    }
+    boost::system::error_code ec;
+    fs::copy_file(entry, backup, fs::copy_option::overwrite_if_exists, ec);
+    if (ec) {
+      LOG(ERROR) << "error backing up file " << backup.string();
+      ++failure;
+    }
+    else {
+      ++success;
     }
   }
   LOG(INFO) << "backed up " << success << " config files to "
-            << backup_dir.string() << ", " << failure << " failed.";
+            << backup_dir.string() << ", " << failure << " failed, "
+            << latest << " up-to-date, "
+            << skipped << " skipped.";
   return !failure;
 }
 

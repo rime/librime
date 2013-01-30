@@ -14,6 +14,7 @@
 #include <rime/common.h>
 #include <rime/deployer.h>
 #include <rime/algo/dynamics.h>
+#include <rime/algo/utilities.h>
 #include <rime/dict/user_db.h>
 #include <rime/dict/user_dictionary.h>
 #include <rime/lever/user_dict_manager.h>

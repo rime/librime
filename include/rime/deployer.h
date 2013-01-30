@@ -7,16 +7,13 @@
 #ifndef RIME_DEPLOYER_H_
 #define RIME_DEPLOYER_H_
 
-#include <string>
 #include <queue>
+#include <string>
 #include <boost/thread.hpp>
 #include <rime/common.h>
 #include <rime/messenger.h>
 
 namespace rime {
-
-int CompareVersionString(const std::string& x,
-                         const std::string& y);
 
 class Deployer;
 

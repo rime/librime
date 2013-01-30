@@ -5,28 +5,15 @@
 // 2011-12-12 GONG Chen <chen.sst@gmail.com>
 //
 #include <stdint.h>
-#include <fstream>
-#include <boost/algorithm/string.hpp>
-#include <boost/crc.hpp>
 #include <boost/lexical_cast.hpp>
 #include <rime/common.h>
 #include <rime/config.h>
+#include <rime/algo/utilities.h>
 #include <rime/lever/customizer.h>
 
 namespace fs = boost::filesystem;
 
-static uint32_t checksum(const std::string &file_name) {
-  std::ifstream fin(file_name.c_str());
-  std::string file_content((std::istreambuf_iterator<char>(fin)),
-                           std::istreambuf_iterator<char>());
-  boost::crc_32_type crc_32;
-  crc_32.process_bytes(file_content.data(), file_content.length());
-  return crc_32.checksum();
-}
-
 namespace rime {
-
-int CompareVersionString(const std::string& x, const std::string& y);
 
 // update strategy:
 //
@@ -88,7 +75,7 @@ bool Customizer::UpdateConfigFile() {
   std::string customization;
   if (!custom_path.empty() && fs::exists(custom_path)) {
     customization = boost::lexical_cast<std::string>(
-        checksum(custom_path.string()));
+        Checksum(custom_path.string()));
   }
   if (applied_customization != customization) {
     need_update = true;

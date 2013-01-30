@@ -4,15 +4,14 @@
 //
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
-#include <fstream>
 #include <map>
 #include <set>
 #include <boost/algorithm/string.hpp>
-#include <boost/crc.hpp>
 #include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <rime/algo/algebra.h>
+#include <rime/algo/utilities.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
 #include <rime/dict/dict_settings.h>
@@ -23,19 +22,6 @@
 
 namespace rime {
 
-namespace dictionary {
-
-uint32_t checksum(const std::string &file_name) {
-  std::ifstream fin(file_name.c_str());
-  std::string file_content((std::istreambuf_iterator<char>(fin)),
-                           std::istreambuf_iterator<char>());
-  boost::crc_32_type crc_32;
-  crc_32.process_bytes(file_content.data(), file_content.length());
-  return crc_32.checksum();
-}
-
-}  // namespace dictionary
-
 DictCompiler::DictCompiler(Dictionary *dictionary)
     : dict_name_(dictionary->name()),
       prism_(dictionary->prism()), table_(dictionary->table()) {
@@ -43,8 +29,8 @@ DictCompiler::DictCompiler(Dictionary *dictionary)
 
 bool DictCompiler::Compile(const std::string &dict_file, const std::string &schema_file) {
   LOG(INFO) << "compiling:";
-  uint32_t dict_file_checksum = dict_file.empty() ? 0 : dictionary::checksum(dict_file);
-  uint32_t schema_file_checksum = schema_file.empty() ? 0 : dictionary::checksum(schema_file);
+  uint32_t dict_file_checksum = dict_file.empty() ? 0 : Checksum(dict_file);
+  uint32_t schema_file_checksum = schema_file.empty() ? 0 : Checksum(schema_file);
   LOG(INFO) << dict_file << " (" << dict_file_checksum << ")";
   LOG(INFO) << schema_file << " (" << schema_file_checksum << ")";
   bool rebuild_table = true;
