@@ -1,3 +1,29 @@
+2013-02-02  GONG Chen  <chen.sst@gmail.com>
+
+	* ascii_composer: support customizing Caps Lock behavior.
+
+	* speller: support auto-selecting unique candidates.
+	add options 'speller/use_space' and 'speller/finals' for bopomofo.
+
+	* punctuator: display half-shape, full-shape labels.
+	support committing a phrase with a trailing space character.
+	support inputting special characters with mnemonics such as '/ts'.
+
+	* user_dictionary: fix abnormal records introduced by a bug in merging.
+	* prism, table: avoid creating / loading incomplete dictionary files.
+
+	* context: clear transient options (whose names start with '_') and
+	properties when loading a different schema.
+	chord_composer sets '_chord_typing' so that the input method program would
+	know that a chord-typing schema is in use.
+
+	* deployment_tasks.cc(BackupConfigFiles::Run): while synching user data,
+	backup user created / modified YAML files.
+
+	* deployer.cc(Deployer::JoinMaintenanceThread): fix a boost-related crash.
+
+	- Release: 0.9.8
+
 2013-01-16  GONG Chen  <chen.sst@gmail.com>
 
 	* ascii_composer: support changing conversion mode with Caps Lock.

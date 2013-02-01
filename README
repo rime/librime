@@ -1,26 +1,44 @@
 
 RIME: Rime Input Method Engine
 
-Home: http://code.google.com/p/rimeime/
+license: GPLv3
 
-Features:
+project home: http://code.google.com/p/rimeime/
+
+features:
   - support for shape-based and phonetic-based input methods, including those for Chinese dialects
   - a selected dictionary in traditional Chinese, powered by opencc for simplified Chinese output
   - a lightweight and extensible input method framework to create your innovative input schema in YAML syntax
   - cross-platform core library in C++, built on top of open-source technologies
   - OS-specific wrappers working consistently for Windows, Linux and Mac OS
 
-Install the library: |
+build dependencies:
+  - cmake>=2.8
+  - libboost>=1.46 (development package)
+  - libglog (development package)
+  - libkyotocabinet (development package)
+  - libopencc (development package)
+  - libyaml-cpp (development package)
+  - libgtest (optional)
+
+runtime dependencies:
+  - libboost
+  - libglog
+  - libkyotocabinet
+  - libopencc
+  - libyaml-cpp
+
+install the library: |
   make
   sudo make install
 
-Wrappers:
+clients:
   - fcitx-rime   : Linux/fcitx client
   - ibus-rime    : Linux/ibus client
   - squirrel     : Mac OS X client
   - weasel       : Windows client
 
-Related works:
+related works:
   - brise        : rime schema repository
   - essay        : vocabulary and language model for rime
   - combo-pinyin : an innovative chord-typing practice
