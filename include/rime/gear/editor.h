@@ -25,6 +25,7 @@ class Editor : public Processor {
   
   virtual Handler OnSpace;
   virtual Handler OnBackSpace;
+  Handler OnShiftBackSpace;
   virtual Handler OnReturn;
   Handler OnShiftReturn;
   Handler OnDelete;
@@ -39,7 +40,8 @@ class Editor : public Processor {
   Handler CommitRawInput;
   Handler CommitComposition;
   Handler RevertLastAction;
-  Handler DiscoverPreviousInput;
+  Handler RevertToPreviousInput;
+  Handler DropPreviousSyllable;
   Handler DeleteHighlightedPhrase;
   Handler DeleteChar;
   Handler CancelComposition;

@@ -6,11 +6,13 @@
 //
 #include <cctype>
 #include <rime/common.h>
+#include <rime/composition.h>
 #include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/key_event.h>
 #include <rime/key_table.h>
 #include <rime/gear/editor.h>
+#include <rime/gear/translator_commons.h>
 
 namespace rime {
 
@@ -45,7 +47,12 @@ Processor::Result Editor::ProcessKeyEvent(const KeyEvent &key_event) {
       return kAccepted;
     }
     if (ch == XK_BackSpace) {
-      OnBackSpace(ctx);
+      if (key_event.shift() || key_event.ctrl()) {
+        OnShiftBackSpace(ctx);
+      }
+      else {
+        OnBackSpace(ctx);
+      }
       return kAccepted;
     }
     if (ch == XK_Delete || ch == XK_KP_Delete) {
@@ -72,7 +79,7 @@ Processor::Result Editor::ProcessKeyEvent(const KeyEvent &key_event) {
 }
 
 inline bool Editor::WorkWithCtrl(int ch) {
-  return ch == XK_Return ||
+  return ch == XK_Return || ch == XK_BackSpace ||
     ch == XK_Delete || ch == XK_KP_Delete;
 }
 
@@ -101,10 +108,30 @@ inline void Editor::RevertLastAction(Context* ctx) {
     ctx->PopInput() && ctx->ReopenPreviousSegment();
 }
 
-inline void Editor::DiscoverPreviousInput(Context* ctx) {
+inline void Editor::RevertToPreviousInput(Context* ctx) {
   ctx->ReopenPreviousSegment() ||
       ctx->ReopenPreviousSelection() ||
       ctx->PopInput();
+}
+
+void Editor::DropPreviousSyllable(Context* ctx) {
+  size_t caret_pos = ctx->caret_pos();
+  if (caret_pos == 0)
+    return;
+  const Composition* comp = ctx->composition();
+  if (comp && !comp->empty()) {
+    shared_ptr<Candidate> cand = comp->back().GetSelectedCandidate();
+    const shared_ptr<Phrase> phrase =
+        As<Phrase>(Candidate::GetGenuineCandidate(cand));
+    if (phrase && phrase->syllabification()) {
+      size_t stop = phrase->syllabification()->PreviousStop(caret_pos);
+      if (stop != caret_pos) {
+        ctx->PopInput(caret_pos - stop);
+        return;
+      }
+    }
+  }
+  ctx->PopInput();
 }
 
 inline void Editor::DeleteHighlightedPhrase(Context* ctx) {
@@ -136,7 +163,11 @@ inline void Editor::OnSpace(Context* ctx) {
 }
 
 inline void Editor::OnBackSpace(Context* ctx) {
-  DiscoverPreviousInput(ctx);
+  RevertToPreviousInput(ctx);
+}
+
+inline void Editor::OnShiftBackSpace(Context* ctx) {
+  DropPreviousSyllable(ctx);
 }
 
 inline void Editor::OnReturn(Context* ctx) {
