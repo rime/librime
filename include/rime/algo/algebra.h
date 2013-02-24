@@ -26,6 +26,7 @@ class Script : public std::map<std::string, std::vector<Spelling> > {
   void Merge(const std::string& s,
              const SpellingProperties& sp,
              const std::vector<Spelling>& v);
+  void Dump(const std::string& file_name) const;
 };
 
 class Projection {

@@ -41,6 +41,7 @@ struct EntryCollector {
                    const std::string &weight_str);
   bool Encode(const std::string &phrase, const std::string &weight_str,
               size_t start_pos, dictionary::RawCode *code);
+  void Dump(const std::string& file_name) const;
 };
 
 }  // namespace rime

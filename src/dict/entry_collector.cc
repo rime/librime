@@ -169,4 +169,19 @@ bool EntryCollector::Encode(const std::string &phrase, const std::string &weight
   return ret;
 }
 
+void EntryCollector::Dump(const std::string& file_name) const {
+  std::ofstream out(file_name.c_str());
+  out << "# syllabary:" << std::endl;
+  BOOST_FOREACH(const std::string& syllable, syllabary) {
+    out << "# - " << syllable << std::endl;
+  }
+  out << std::endl;
+  BOOST_FOREACH(const dictionary::RawDictEntry &e, entries) {
+    out << e.text << '\t'
+        << e.raw_code.ToString() << '\t'
+        << e.weight << std::endl;
+  }
+  out.close();
+}
+
 }  // namespace rime

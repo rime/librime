@@ -275,6 +275,9 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   }
   LOG(INFO) << "preparing dictionary '" << dict_name << "'.";
   DictCompiler dict_compiler(dict.get());
+  if (verbose_) {
+    dict_compiler.set_options(DictCompiler::kRebuild | DictCompiler::kDump);
+  }
   dict_compiler.Compile(dict_path.string(), destination_path.string());
   LOG(INFO) << "dictionary '" << dict_name << "' is ready.";
   return true;

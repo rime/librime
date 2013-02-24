@@ -55,42 +55,60 @@ int set_active_schema(const std::string& schema_id) {
   return 0;
 }
 
+static void configure_deployer(rime::Deployer* deployer,
+                               int argc, char* argv[]) {
+  if (argc > 0) {
+    deployer->user_data_dir = argv[0];
+    if (argc > 1) {
+      deployer->shared_data_dir = argv[1];
+    }
+    else {
+      deployer->shared_data_dir = argv[0];
+    }
+  }
+}
+
 int main(int argc, char* argv[]) {
   rime::SetupLogging("rime.tools");
 
-  std::string option;
-  std::string arg1, arg2;
-  if (argc >= 2) option = argv[1];
-  if (argc >= 3) arg1 = argv[2];
-  if (argc >= 4) arg2 = argv[3];
   if (argc == 1) {
     std::cout << "options:" << std::endl
-              << "\t--build [dest_dir [source_dir]]" << std::endl
+              << "\t--build [dest_dir [shared_data_dir]]" << std::endl
               << "\t--add-schema schema_id [...]" << std::endl
               << "\t--set-active-schema schema_id" << std::endl
+              << "\t--compile x.schema.yaml [dest_dir [shared_data_dir]]" << std::endl
         ;
     return 0;
   }
-  rime::Deployer& deployer(rime::Service::instance().deployer());
-  if (argc >= 2 && argc <= 4 && option == "--build") {
-    if (!arg1.empty()) {
-      deployer.user_data_dir = arg1;
-      if (!arg2.empty()) {
-        deployer.shared_data_dir = arg2;
-      }
-      else {
-        deployer.shared_data_dir = arg1;
-      }
-    }
+
+  std::string option;
+  if (argc >= 2) option = argv[1];
+  // shift
+  argc -= 2, argv += 2;
+
+  if (argc >= 0 && argc <= 2 && option == "--build") {
+    rime::Deployer& deployer(rime::Service::instance().deployer());
+    configure_deployer(&deployer, argc, argv);
     rime::WorkspaceUpdate update;
     return update.Run(&deployer) ? 0 : 1;
   }
-  if (argc >= 3 && option == "--add-schema") {
-    return add_schema(argc - 2, argv + 2);
+
+  if (argc >= 1 && option == "--add-schema") {
+    return add_schema(argc, argv);
   }
-  if (argc == 3 && option == "--set-active-schema") {
-    return set_active_schema(arg1);
+
+  if (argc == 1 && option == "--set-active-schema") {
+    return set_active_schema(argv[0]);
   }
+
+  if (argc >= 1 && option == "--compile") {
+    rime::Deployer& deployer(rime::Service::instance().deployer());
+    configure_deployer(&deployer, argc - 1, argv + 1);
+    rime::SchemaUpdate update(argv[0]);
+    update.set_verbose(true);
+    return update.Run(&deployer) ? 0 : 1;
+  }
+
   std::cerr << "invalid arguments." << std::endl;
   return 1;
 }

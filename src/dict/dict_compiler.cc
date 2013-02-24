@@ -24,7 +24,9 @@ namespace rime {
 
 DictCompiler::DictCompiler(Dictionary *dictionary)
     : dict_name_(dictionary->name()),
-      prism_(dictionary->prism()), table_(dictionary->table()) {
+      prism_(dictionary->prism()),
+      table_(dictionary->table()),
+      options_(0) {
 }
 
 bool DictCompiler::Compile(const std::string &dict_file, const std::string &schema_file) {
@@ -63,6 +65,13 @@ bool DictCompiler::Compile(const std::string &dict_file, const std::string &sche
     }
     db.Close();
   }
+  if (options_ & kRebuildTable) {
+    rebuild_table = true;
+    rebuild_rev_lookup_dict = true;
+  }
+  if (options_ & kRebuildPrism) {
+    rebuild_prism = true;
+  }
   if (rebuild_table && !BuildTable(dict_file, dict_file_checksum))
     return false;
   if (rebuild_prism && !BuildPrism(schema_file, dict_file_checksum, schema_file_checksum))
@@ -87,6 +96,11 @@ bool DictCompiler::BuildTable(const std::string &dict_file, uint32_t checksum) {
     collector.LoadPresetVocabulary(&settings);
   }
   collector.Collect(dict_file);
+  if (options_ & kDump) {
+    boost::filesystem::path path(table_->file_name());
+    path.replace_extension(".txt");
+    collector.Dump(path.string());
+  }
   // build table
   {
     std::map<std::string, int> syllable_to_id;
@@ -144,6 +158,11 @@ bool DictCompiler::BuildPrism(const std::string &schema_file,
         script.clear();
       }
     }
+  }
+  if ((options_ & kDump) && !script.empty()) {
+    boost::filesystem::path path(prism_->file_name());
+    path.replace_extension(".txt");
+    script.Dump(path.string());
   }
   // build prism
   {

@@ -5,6 +5,7 @@
 // 2012-01-19 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
+#include <fstream>
 #include <boost/foreach.hpp>
 #include <rime/algo/algebra.h>
 #include <rime/algo/calculus.h>
@@ -46,6 +47,22 @@ void Script::Merge(const std::string& s,
       zz.tips.clear();
     }
   }
+}
+
+void Script::Dump(const std::string& file_name) const {
+  std::ofstream out(file_name.c_str());
+  BOOST_FOREACH(const value_type& v, *this) {
+    bool first = true;
+    BOOST_FOREACH(const Spelling& s, v.second) {
+      out << (first ? v.first : "") << '\t'
+          << s.str << '\t'
+          << "-ac?!"[s.properties.type] << '\t'
+          << s.properties.credibility << '\t'
+          << s.properties.tips << std::endl;
+      first = false;
+    }
+  }
+  out.close();
 }
 
 bool Projection::Load(ConfigListPtr settings) {

@@ -34,10 +34,12 @@ class WorkspaceUpdate : public DeploymentTask {
 class SchemaUpdate : public DeploymentTask {
  public:
   explicit SchemaUpdate(const std::string& schema_file)
-      : schema_file_(schema_file) {}
+      : schema_file_(schema_file), verbose_(false) {}
   bool Run(Deployer* deployer);
+  bool set_verbose(bool verbose) { verbose_ = verbose; }
  protected:
   std::string schema_file_;
+  bool verbose_;
 };
 
 // update a specific config file

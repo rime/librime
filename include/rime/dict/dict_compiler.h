@@ -19,9 +19,17 @@ class TreeDb;
 
 class DictCompiler {
  public:
+  enum Options {
+    kRebuildPrism = 1,
+    kRebuildTable = 2,
+    kRebuild = kRebuildPrism | kRebuildTable,
+    kDump = 4,
+  };
+
   DictCompiler(Dictionary *dictionary);
   
   bool Compile(const std::string &dict_file, const std::string &schema_file);
+  void set_options(int options) { options_ = options; }
 
  private:
   bool BuildTable(const std::string &dict_file, uint32_t checksum);
@@ -32,6 +40,7 @@ class DictCompiler {
   std::string dict_name_;
   shared_ptr<Prism> prism_;
   shared_ptr<Table> table_;
+  int options_;
 };
 
 }  // namespace rime
