@@ -101,6 +101,7 @@ typedef struct {
   Bool is_ascii_mode;
   Bool is_full_shape;
   Bool is_simplified;
+  Bool is_traditionalized;
   // ...
 } RimeStatus;
 

@@ -1,9 +1,3 @@
-//
-// Copyleft 2011 RIME Developers
-// License: GPLv3
-//
-// 2011-12-12 GONG Chen <chen.sst@gmail.com>
-//
 #include <string>
 #include <vector>
 #include <boost/algorithm/string.hpp>
@@ -19,41 +13,41 @@
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/gear/opencc.h>
-#include <rime/gear/simplifier.h>
+#include <rime/gear/traditionalizer.h>
 
 static const char *quote_left = "\xe3\x80\x94";  //"\xef\xbc\x88";
 static const char *quote_right = "\xe3\x80\x95";  //"\xef\xbc\x89";
 
 namespace rime {
 
-// Simplifier
+// Traditionalizer
 
-Simplifier::Simplifier(Engine *engine) : Filter(engine),
-                                         initialized_(false),
-                                         tip_level_(kTipNone) {
+Traditionalizer::Traditionalizer(Engine *engine) : Filter(engine),
+                                                   initialized_(false),
+                                                   tip_level_(kTipNone) {
   Config *config = engine->schema()->config();
   if (config) {
     std::string tip;
-    if (config->GetString("simplifier/tip", &tip)) {
+    if (config->GetString("traditionalizer/tip", &tip)) {
       tip_level_ =
           (tip == "all") ? kTipAll :
           (tip == "char") ? kTipChar : kTipNone;
     }
-    config->GetString("simplifier/option_name", &option_name_);
-    config->GetString("simplifier/opencc_config", &opencc_config_);
+    config->GetString("traditionalizer/option_name", &option_name_);
+    config->GetString("traditionalizer/opencc_config", &opencc_config_);
   }
   if (option_name_.empty()) {
-    option_name_ = "simplification";  // default switcher option
+    option_name_ = "traditionalizing";  // default switcher option
   }
   if (opencc_config_.empty()) {
-    opencc_config_ = "zht2zhs.ini";  // default opencc config file
+    opencc_config_ = "zhs2zht.ini";  // default opencc config file
   }
 }
 
-Simplifier::~Simplifier() {
+Traditionalizer::~Traditionalizer() {
 }
 
-void Simplifier::Initialize() {
+void Traditionalizer::Initialize() {
   initialized_ = true;  // no retry
   boost::filesystem::path opencc_config_path = opencc_config_;
   if (opencc_config_path.is_relative()) {
@@ -71,8 +65,8 @@ void Simplifier::Initialize() {
   opencc_.reset(new Opencc(opencc_config_path.string()));
 }
 
-bool Simplifier::Proceed(CandidateList *recruited,
-                         CandidateList *candidates) {
+bool Traditionalizer::Proceed(CandidateList *recruited,
+                              CandidateList *candidates) {
   if (!engine_->context()->get_option(option_name_))  // off
     return true;
   if (!initialized_) Initialize();
@@ -88,8 +82,8 @@ bool Simplifier::Proceed(CandidateList *recruited,
   return true;
 }
 
-bool Simplifier::Convert(const shared_ptr<Candidate> &original,
-                         CandidateList *result) {
+bool Traditionalizer::Convert(const shared_ptr<Candidate> &original,
+                              CandidateList *result) {
   std::string simplified;
   bool is_single_char = false;
   if (!opencc_->ConvertText(original->text(), &simplified, &is_single_char) ||
@@ -111,7 +105,7 @@ bool Simplifier::Convert(const shared_ptr<Candidate> &original,
         result->push_back(
             boost::make_shared<ShadowCandidate>(
                 original,
-                "zh_simplified",
+                "zh_traditionalized",
                 forms[i],
                 tip));
       }
@@ -125,7 +119,7 @@ bool Simplifier::Convert(const shared_ptr<Candidate> &original,
     result->push_back(
         boost::make_shared<ShadowCandidate>(
             original,
-            "zh_simplified",
+            "zh_traditionalized",
             simplified,
             tip));
   }

@@ -17,6 +17,7 @@ void PrintStatus(RimeStatus *status) {
   if (status->is_ascii_mode) printf("ascii ");
   if (status->is_full_shape) printf("full_shape ");
   if (status->is_simplified) printf("simplified ");
+  if (status->is_traditionalized) printf("traditionalized ");
   printf("\n");
 }
 
