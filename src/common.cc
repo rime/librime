@@ -31,6 +31,7 @@
 #include <rime/gear/recognizer.h>
 #include <rime/gear/selector.h>
 #include <rime/gear/simplifier.h>
+#include <rime/gear/traditionalizer.h>
 #include <rime/gear/speller.h>
 #include <rime/gear/reverse_lookup_translator.h>
 #include <rime/gear/table_translator.h>
@@ -87,6 +88,7 @@ void RegisterComponents() {
 
   // filters
   r.Register("simplifier", new Component<Simplifier>);
+  r.Register("traditionalizer", new Component<Traditionalizer>);
   r.Register("uniquifier", new Component<Uniquifier>);
 }
 
