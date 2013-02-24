@@ -314,6 +314,7 @@ RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
   status->is_ascii_mode = Bool(ctx->get_option("ascii_mode"));
   status->is_full_shape = Bool(ctx->get_option("full_shape"));
   status->is_simplified = Bool(ctx->get_option("simplification"));
+  status->is_traditionalized = Bool(ctx->get_option("traditionalizing"));
   return True;
 }
 
