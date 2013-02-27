@@ -19,11 +19,12 @@
 
 namespace rime {
 
-Memory::Memory(Engine* engine) {
+Memory::Memory(Engine* engine, const std::string& name_space) {
   if (!engine) return;
 
   Dictionary::Component *dictionary = Dictionary::Require("dictionary");
   if (dictionary) {
+    // TODO
     dict_.reset(dictionary->Create(engine->schema()));
     if (dict_)
       dict_->Load();

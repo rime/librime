@@ -181,23 +181,20 @@ bool LazyTableTranslation::FetchMoreTableEntries() {
 
 // TableTranslator
 
-TableTranslator::TableTranslator(Engine *engine)
-    : Translator(engine),
-      Memory(engine),
-      TranslatorOptions(engine),
+TableTranslator::TableTranslator(const TranslatorTicket& ticket)
+    : Translator(ticket),
+      Memory(engine_, name_space_),
+      TranslatorOptions(engine_, name_space_),
       enable_charset_filter_(false),
       enable_sentence_(true) {
-  if (!engine) return;
-  Config *config = engine->schema()->config();
+  if (!engine_) return;
+  Config *config = engine_->schema()->config();
   if (config) {
-    config->GetBool("translator/enable_charset_filter",
+    config->GetBool(name_space_ + "/enable_charset_filter",
                     &enable_charset_filter_);
-    config->GetBool("translator/enable_sentence",
+    config->GetBool(name_space_ + "/enable_sentence",
                     &enable_sentence_);
   }
-}
-
-TableTranslator::~TableTranslator() {
 }
 
 shared_ptr<Translation> TableTranslator::Query(const std::string &input,

@@ -13,8 +13,8 @@ namespace rime {
 
 class EchoTranslator : public Translator {
  public:
-  EchoTranslator(Engine *engine) : Translator(engine) {}
-  virtual ~EchoTranslator() {}
+  EchoTranslator(const TranslatorTicket& ticket);
+
   virtual shared_ptr<Translation> Query(const std::string &input,
                                         const Segment &segment,
                                         std::string* prompt);

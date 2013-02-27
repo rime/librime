@@ -24,8 +24,7 @@ class TableTranslator : public Translator,
                         public Memory,
                         public TranslatorOptions {
  public:
-  TableTranslator(Engine *engine);
-  virtual ~TableTranslator();
+  TableTranslator(const TranslatorTicket& ticket);
 
   virtual shared_ptr<Translation> Query(const std::string &input,
                                         const Segment &segment,

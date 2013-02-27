@@ -207,9 +207,10 @@ bool PunctSegmentor::Proceed(Segmentation *segmentation) {
   return false;  // exclusive
 }
 
-PunctTranslator::PunctTranslator(Engine *engine) : Translator(engine) {
+PunctTranslator::PunctTranslator(const TranslatorTicket& ticket)
+    : Translator(ticket) {
   const bool load_symbols = true;
-  config_.LoadConfig(engine, load_symbols);
+  config_.LoadConfig(engine_, load_symbols);
 }
 
 shared_ptr<Candidate> CreatePunctCandidate(const std::string &punct, const Segment &segment) {

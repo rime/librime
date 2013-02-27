@@ -285,14 +285,16 @@ void ConcreteEngine::InitializeComponents() {
   if (translator_list) {
     size_t n = translator_list->size();
     for (size_t i = 0; i < n; ++i) {
-      shared_ptr<ConfigValue> klass = As<ConfigValue>(translator_list->GetAt(i));
-      if (!klass) continue;
-      Translator::Component *c = Translator::Require(klass->str());
+      shared_ptr<ConfigValue> instruction =
+          As<ConfigValue>(translator_list->GetAt(i));
+      if (!instruction) continue;
+      TranslatorTicket ticket(this, instruction->str());
+      Translator::Component *c = Translator::Require(ticket.klass);
       if (!c) {
-        LOG(ERROR) << "error creating translator: '" << klass->str() << "'";
+        LOG(ERROR) << "error creating translator: '" << ticket.klass << "'";
       }
       else {
-        shared_ptr<Translator> d(c->Create(this));
+        shared_ptr<Translator> d(c->Create(ticket));
         translators_.push_back(d);
       }
     }

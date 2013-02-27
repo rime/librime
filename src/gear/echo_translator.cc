@@ -28,6 +28,10 @@ class EchoTranslation : public UniqueTranslation {
   }
 };
 
+EchoTranslator::EchoTranslator(const TranslatorTicket& ticket)
+    : Translator(ticket) {
+}
+
 shared_ptr<Translation> EchoTranslator::Query(const std::string& input,
                                               const Segment& segment,
                                               std::string* prompt) {

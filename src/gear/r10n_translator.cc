@@ -116,19 +116,16 @@ class R10nTranslation : public Translation, public Syllabification,
 
 // R10nTranslator implementation
 
-R10nTranslator::R10nTranslator(Engine *engine)
-    : Translator(engine),
-      Memory(engine),
-      TranslatorOptions(engine),
+R10nTranslator::R10nTranslator(const TranslatorTicket& ticket)
+    : Translator(ticket),
+      Memory(engine_, name_space_),
+      TranslatorOptions(engine_, name_space_),
       spelling_hints_(0) {
-  if (!engine) return;
-  Config *config = engine->schema()->config();
+  if (!engine_) return;
+  Config *config = engine_->schema()->config();
   if (config) {
-    config->GetInt("translator/spelling_hints", &spelling_hints_);
+    config->GetInt(name_space_ + "/spelling_hints", &spelling_hints_);
   }
-}
-
-R10nTranslator::~R10nTranslator() {
 }
 
 shared_ptr<Translation> R10nTranslator::Query(const std::string &input,

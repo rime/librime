@@ -28,8 +28,7 @@ class R10nTranslator : public Translator,
                        public Memory,
                        public TranslatorOptions {
  public:
-  R10nTranslator(Engine *engine);
-  virtual ~R10nTranslator();
+  R10nTranslator(const TranslatorTicket& ticket);
 
   virtual shared_ptr<Translation> Query(const std::string &input,
                                         const Segment &segment,

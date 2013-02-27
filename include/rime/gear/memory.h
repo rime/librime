@@ -7,6 +7,7 @@
 #ifndef RIME_MEMORY_H_
 #define RIME_MEMORY_H_
 
+#include <string>
 #include <vector>
 #include <boost/signals/connection.hpp>
 #include <rime/common.h>
@@ -25,7 +26,7 @@ class Language {
 
 class Memory : public Language {
  public:
-  Memory(Engine* engine);
+  Memory(Engine* engine, const std::string& name_space);
   virtual ~Memory();
   
   virtual bool Memorize(const DictEntry& commit_entry,
