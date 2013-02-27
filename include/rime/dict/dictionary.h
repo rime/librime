@@ -83,8 +83,9 @@ struct DictEntryCollector : std::map<size_t, DictEntryIterator> {
 class Config;
 class Schema;
 struct SyllableGraph;
+struct Ticket;
 
-class Dictionary : public Class<Dictionary, Schema*> {
+class Dictionary : public Class<Dictionary, const Ticket&> {
  public:
   Dictionary(const std::string &name,
              const shared_ptr<Table> &table,
@@ -122,9 +123,7 @@ class Dictionary : public Class<Dictionary, Schema*> {
 class DictionaryComponent : public Dictionary::Component {
  public:
   DictionaryComponent();
-  Dictionary* Create(Schema *schema);
-  Dictionary* CreateDictionaryFromConfig(Config *config,
-                                         const std::string &customer);
+  Dictionary* Create(const Ticket& ticket);
   Dictionary* CreateDictionaryWithName(const std::string &dict_name,
                                        const std::string &prism_name);
 

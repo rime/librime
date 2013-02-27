@@ -24,7 +24,7 @@ struct DictEntry;
 class Language {
 };
 
-class Memory : public Language {
+class Memory {
  public:
   Memory(Engine* engine, const std::string& name_space);
   virtual ~Memory();
@@ -32,8 +32,7 @@ class Memory : public Language {
   virtual bool Memorize(const DictEntry& commit_entry,
                         const std::vector<const DictEntry*>& elements) = 0;
 
-  // TODO
-  Language* language() { return this; }
+  Language* language() { return &language_; }
   
   Dictionary* dict() const { return dict_.get(); }
   UserDictionary* user_dict() const { return user_dict_.get(); }
@@ -50,6 +49,7 @@ class Memory : public Language {
   boost::signals::connection commit_connection_;
   boost::signals::connection delete_connection_;
   boost::signals::connection unhandled_key_connection_;
+  Language language_;
 };
 
 }  // namespace rime

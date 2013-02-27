@@ -303,7 +303,7 @@ SentenceTranslation::SentenceTranslation(TableTranslator* translator,
                                          const std::string& input,
                                          size_t start)
     : translator_(translator),
-      input_(input), start_(start), user_phrase_index_(0) {
+      user_phrase_index_(0), input_(input), start_(start) {
   sentence_.swap(sentence);
   collector_.swap(*collector);
   user_phrase_collector_.swap(*user_phrase_collector);

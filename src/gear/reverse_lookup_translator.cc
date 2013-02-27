@@ -107,10 +107,11 @@ void ReverseLookupTranslator::Initialize() {
       options_->set_enable_completion(false);  // overridden default
   }
   
+  Ticket ticket(engine_->schema(), name_space_);
   DictionaryComponent *component =
       dynamic_cast<DictionaryComponent*>(Dictionary::Require("dictionary"));
   if (!component) return;
-  dict_.reset(component->CreateDictionaryFromConfig(config, name_space_));
+  dict_.reset(component->Create(ticket));
   if (dict_) 
     dict_->Load();
   else
@@ -118,7 +119,7 @@ void ReverseLookupTranslator::Initialize() {
   ReverseLookupDictionary::Component *rev_component =
       ReverseLookupDictionary::Require("reverse_lookup_dictionary");
   if (!rev_component) return;
-  rev_dict_.reset(rev_component->Create(engine_->schema()));
+  rev_dict_.reset(rev_component->Create(ticket));
   if (rev_dict_)
     rev_dict_->Load();
 }

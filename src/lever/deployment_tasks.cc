@@ -12,6 +12,7 @@
 #include <rime_version.h>
 #include <rime/common.h>
 #include <rime/config.h>
+#include <rime/schema.h>
 #include <rime/algo/utilities.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
@@ -229,15 +230,16 @@ bool SchemaUpdate::Run(Deployer* deployer) {
                << schema_file_ << "'.";
     return false;
   }
-  Config config;
   std::string schema_id;
-  if (!config.LoadFromFile(schema_file_) ||
-      !config.GetString("schema/schema_id", &schema_id) ||
-      schema_id.empty()) {
-    LOG(ERROR) << "invalid schema definition in '" << schema_file_ << "'.";
-    return false;
+  {
+    Config source;
+    if (!source.LoadFromFile(schema_file_) ||
+        !source.GetString("schema/schema_id", &schema_id) ||
+        schema_id.empty()) {
+      LOG(ERROR) << "invalid schema definition in '" << schema_file_ << "'.";
+      return false;
+    }
   }
-  
   fs::path shared_data_path(deployer->shared_data_dir);
   fs::path user_data_path(deployer->user_data_dir);
   fs::path destination_path(user_data_path / (schema_id + ".schema.yaml"));
@@ -245,14 +247,16 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   if (customizer.UpdateConfigFile()) {
     LOG(INFO) << "schema '" << schema_id << "' is updated.";
   }
-  
-  if (!config.LoadFromFile(destination_path.string())) {
+
+  Schema schema(schema_id, new Config);
+  Config* config = schema.config();
+  if (!config || !config->LoadFromFile(destination_path.string())) {
     LOG(ERROR) << "Error loading schema file '"
                << destination_path.string() << "'.";
     return false;
   }
   std::string dict_name;
-  if (!config.GetString("translator/dictionary", &dict_name)) {
+  if (!config->GetString("translator/dictionary", &dict_name)) {
     // not requiring a dictionary
     return true;
   }
@@ -268,7 +272,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   }
   DictionaryComponent component;
   scoped_ptr<Dictionary> dict;
-  dict.reset(component.CreateDictionaryFromConfig(&config, "translator"));
+  dict.reset(component.Create(Ticket(&schema, "translator")));
   if (!dict) {
     LOG(ERROR) << "Error creating dictionary '" << dict_name << "'.";
     return false;

@@ -22,10 +22,11 @@ namespace rime {
 Memory::Memory(Engine* engine, const std::string& name_space) {
   if (!engine) return;
 
+  Ticket ticket(engine->schema(), name_space);
+  
   Dictionary::Component *dictionary = Dictionary::Require("dictionary");
   if (dictionary) {
-    // TODO
-    dict_.reset(dictionary->Create(engine->schema()));
+    dict_.reset(dictionary->Create(ticket));
     if (dict_)
       dict_->Load();
   }
@@ -33,7 +34,7 @@ Memory::Memory(Engine* engine, const std::string& name_space) {
   UserDictionary::Component *user_dictionary =
       UserDictionary::Require("user_dictionary");
   if (user_dictionary) {
-    user_dict_.reset(user_dictionary->Create(engine->schema()));
+    user_dict_.reset(user_dictionary->Create(ticket));
     if (user_dict_) {
       user_dict_->Load();
       if (dict_)

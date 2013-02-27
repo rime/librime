@@ -40,6 +40,14 @@ class Schema {
   std::string select_keys_;
 };
 
+struct Ticket {
+  Schema* schema;
+  std::string name_space;
+  
+  Ticket(Schema* a_schema, const std::string& a_name_space)
+      : schema(a_schema), name_space(a_name_space) {}
+};
+
 }  // namespace rime
 
 #endif  // RIME_SCHEMA_H_

@@ -47,8 +47,9 @@ class Prism;
 class UserDb;
 struct SyllableGraph;
 struct DfsState;
+struct Ticket;
 
-class UserDictionary : public Class<UserDictionary, Schema*> {
+class UserDictionary : public Class<UserDictionary, const Ticket&> {
  public:
   explicit UserDictionary(const shared_ptr<UserDb> &user_db);
   virtual ~UserDictionary();
@@ -104,7 +105,7 @@ class UserDictionary : public Class<UserDictionary, Schema*> {
 class UserDictionaryComponent : public UserDictionary::Component {
  public:
   UserDictionaryComponent();
-  UserDictionary* Create(Schema *schema);
+  UserDictionary* Create(const Ticket& ticket);
  private:
   std::map<std::string, weak_ptr<UserDb> > db_pool_;
 };
