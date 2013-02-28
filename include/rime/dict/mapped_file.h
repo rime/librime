@@ -22,15 +22,16 @@ class OffsetPtr {
  public:
   OffsetPtr() : offset_(0) {}
   OffsetPtr(Offset offset) : offset_(offset) {}
-  OffsetPtr(const OffsetPtr<T> &ptr) : offset_(ptr.offset_) {}
+  OffsetPtr(const OffsetPtr<T> &ptr)
+      : offset_(to_offset(ptr.get())) {}
   OffsetPtr(const T *ptr)
-      : offset_(!ptr ? 0 : (char*)ptr - (char*)(&offset_)) {}
+      : offset_(to_offset(ptr)) {}
   OffsetPtr<T>& operator= (const OffsetPtr<T> &ptr) {
-    offset_ = ptr.offset_;
+    offset_ = to_offset(ptr.get());
     return *this;
   }
   OffsetPtr<T>& operator= (const T *ptr) {
-    offset_ = (char*)ptr - (char*)(&offset_);
+    offset_ = to_offset(ptr);
     return *this;
   }
   operator bool() const {
@@ -48,14 +49,16 @@ class OffsetPtr {
     return reinterpret_cast<T*>((char*)&offset_ + offset_);
   }
  private:
+  Offset to_offset(const T* ptr) const {
+    return ptr ? (char*)ptr - (char*)(&offset_) : 0;
+  }
   Offset offset_;
 };
 
 struct String {
   OffsetPtr<char> data;
-
-  const char *c_str() const;
-  size_t length() const;
+  const char* c_str() const { return data.get(); }
+  size_t length() const { return c_str() ? strlen(c_str()) : 0; }
 };
 
 template <class T, class Size = uint32_t>
@@ -124,15 +127,6 @@ public:
 };
 
 // member function definitions
-
-inline const char* String::c_str() const {
-  return data.get();
-}
-
-inline size_t String::length() const {
-  const char *str = data.get();
-  return str ? std::strlen(str) : 0;
-}
 
 template <class T>
 T* MappedFile::Allocate(size_t count) {
