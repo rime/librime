@@ -62,7 +62,7 @@ const SpellingProperties SpellingAccessor::properties() const {
   if (iter_ && iter_ < end_) {
     props.type = static_cast<SpellingType>(iter_->type);
     props.credibility = iter_->credibility;
-    if (iter_->tips.c_str())
+    if (!iter_->tips.empty())
       props.tips = iter_->tips.c_str();
   }
   return props;
@@ -219,7 +219,8 @@ bool Prism::Build(const Syllabary &syllabary,
         desc->syllable_id = syllable_to_id[j->str];
         desc->type = static_cast<int32_t>(j->properties.type);
         desc->credibility = j->properties.credibility;
-        if (!CopyString(j->properties.tips, &desc->tips)) {
+        if (!j->properties.tips.empty() &&
+            !CopyString(j->properties.tips, &desc->tips)) {
           LOG(ERROR) << "Error creating spelling properties.";
           return false;
         }

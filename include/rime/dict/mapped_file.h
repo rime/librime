@@ -59,6 +59,7 @@ struct String {
   OffsetPtr<char> data;
   const char* c_str() const { return data.get(); }
   size_t length() const { return c_str() ? strlen(c_str()) : 0; }
+  bool empty() const { return !data || !data[0]; }
 };
 
 template <class T, class Size = uint32_t>
