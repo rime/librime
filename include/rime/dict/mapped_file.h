@@ -37,6 +37,9 @@ class OffsetPtr {
   operator bool() const {
     return !!offset_;
   }
+  T* operator-> () const {
+    return get();
+  }
   T& operator* () const {
     return *get();
   }
