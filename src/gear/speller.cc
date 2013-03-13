@@ -27,10 +27,13 @@ static inline bool belongs_to(char ch, const std::string& charset) {
 static bool is_auto_selectable(const shared_ptr<Candidate>& cand,
                                const std::string& input,
                                const std::string& delimiters) {
-  return cand->end() == input.length() &&  // reaches end of input
-      cand->type() == "table" &&           // is table entry
-      input.find_first_of(delimiters, cand->start()) == std::string::npos;
+  return
+      // reaches end of input
+      cand->end() == input.length() &&
+      // is table entry
+      Candidate::GetGenuineCandidate(cand)->type() == "table" &&
       // no delimiters
+      input.find_first_of(delimiters, cand->start()) == std::string::npos;
 }
 
 static bool expecting_an_initial(Context* ctx,
