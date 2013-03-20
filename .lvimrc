@@ -1,0 +1,2 @@
+" a.vim configuration
+let g:alternateSearchPath = '../src,../../src,../include,../include/rime,reg:|/include/rime/\([^/]*\)|/src/\1|,reg:|/src/\([^/]*\)|/include/rime/\1|'
