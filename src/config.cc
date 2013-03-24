@@ -33,8 +33,11 @@ class ConfigData {
 
  protected:
   static ConfigItemPtr ConvertFromYaml(const YAML::Node &yaml_node);
-  static void EmitYaml(const ConfigItemPtr &node, YAML::Emitter *emitter);
-  static void EmitScalar(const std::string &str_value, YAML::Emitter *emitter);
+  static void EmitYaml(const ConfigItemPtr &node,
+                       YAML::Emitter *emitter,
+                       int depth);
+  static void EmitScalar(const std::string &str_value,
+                         YAML::Emitter *emitter);
 
   std::string file_name_;
   bool modified_;
@@ -571,7 +574,7 @@ bool ConfigData::SaveToFile(const std::string& file_name) {
   // dump tree
   std::ofstream out(file_name.c_str());
   YAML::Emitter emitter;
-  EmitYaml(root, &emitter);
+  EmitYaml(root, &emitter, 0);
   out << emitter.c_str();
   LOG(INFO) << "saved config file '" << file_name << "'.";
   return true;
@@ -624,7 +627,10 @@ ConfigItemPtr ConfigData::ConvertFromYaml(const YAML::Node &node) {
 
 void ConfigData::EmitScalar(const std::string &str_value,
                             YAML::Emitter *emitter) {
-  if (!boost::algorithm::all(str_value,
+  if (str_value.find_first_of("\r\n") != std::string::npos) {
+    *emitter << YAML::Literal;
+  }
+  else if (!boost::algorithm::all(str_value,
                              boost::algorithm::is_alnum() ||
                              boost::algorithm::is_any_of("_."))) {
     *emitter << YAML::DoubleQuoted;
@@ -632,7 +638,9 @@ void ConfigData::EmitScalar(const std::string &str_value,
   *emitter << str_value;
 }
 
-void ConfigData::EmitYaml(const ConfigItemPtr &node, YAML::Emitter *emitter) {
+void ConfigData::EmitYaml(const ConfigItemPtr &node,
+                          YAML::Emitter *emitter,
+                          int depth) {
   if (!node || !emitter) return;
   if (node->type() == ConfigItem::kScalar) {
     ConfigValuePtr config_value(As<ConfigValue>(node));
@@ -642,9 +650,12 @@ void ConfigData::EmitYaml(const ConfigItemPtr &node, YAML::Emitter *emitter) {
     ConfigListPtr config_list(As<ConfigList>(node));
     ConfigList::Iterator it = config_list->begin();
     ConfigList::Iterator end = config_list->end();
+    if (depth >= 3) {
+      *emitter << YAML::Flow;
+    }
     *emitter << YAML::BeginSeq;
     for ( ; it != end; ++it) {
-      EmitYaml(*it, emitter);
+      EmitYaml(*it, emitter, depth + 1);
     }
     *emitter << YAML::EndSeq;
   }
@@ -652,6 +663,9 @@ void ConfigData::EmitYaml(const ConfigItemPtr &node, YAML::Emitter *emitter) {
     ConfigMapPtr config_map(As<ConfigMap>(node));
     ConfigMap::Iterator it = config_map->begin();
     ConfigMap::Iterator end = config_map->end();
+    if (depth >= 3) {
+      *emitter << YAML::Flow;
+    }
     *emitter << YAML::BeginMap;
     for ( ; it != end; ++it) {
       if (!it->second || it->second->type() == ConfigItem::kNull)
@@ -659,7 +673,7 @@ void ConfigData::EmitYaml(const ConfigItemPtr &node, YAML::Emitter *emitter) {
       *emitter << YAML::Key;
       EmitScalar(it->first, emitter);
       *emitter << YAML::Value;
-      EmitYaml(it->second, emitter);
+      EmitYaml(it->second, emitter, depth + 1);
     }
     *emitter << YAML::EndMap;
   }
