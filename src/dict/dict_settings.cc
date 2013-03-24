@@ -10,7 +10,7 @@
 
 namespace rime {
 
-static void DiscoverColumns(DictSettings* settings, const YAML::Node* doc);
+static void DiscoverColumns(DictSettings* settings, const YAML::Node& doc);
 
 DictSettings::DictSettings()
     : use_preset_vocabulary(false)
@@ -20,54 +20,39 @@ DictSettings::DictSettings()
 }
 
 bool DictSettings::LoadFromFile(const std::string& dict_file) {
-  YAML::Node doc;
-  {
-    std::ifstream fin(dict_file.c_str());
-    YAML::Parser parser(fin);
-    if (!parser.GetNextDocument(doc)) {
-      LOG(ERROR) << "Error parsing yaml doc in '" << dict_file << "'.";
-      return false;
-    }
-  }
+  YAML::Node doc = YAML::LoadFile(dict_file);
   if (doc.Type() != YAML::NodeType::Map) {
     LOG(ERROR) << "invalid yaml doc in '" << dict_file << "'.";
     return false;
   }
-  const YAML::Node *name_node = doc.FindValue("name");
-  const YAML::Node *version_node = doc.FindValue("version");
-  const YAML::Node *sort_order_node = doc.FindValue("sort");
-  const YAML::Node *use_preset_vocabulary_node = doc.FindValue("use_preset_vocabulary");
-  const YAML::Node *max_phrase_length_node = doc.FindValue("max_phrase_length");
-  const YAML::Node *min_phrase_weight_node = doc.FindValue("min_phrase_weight");
-  if (!name_node || !version_node) {
+  if (!doc["name"] || !doc["version"]) {
     LOG(ERROR) << "incomplete dict info in '" << dict_file << "'.";
     return false;
   }
-  *name_node >> dict_name;
-  *version_node >> dict_version;
-  if (sort_order_node) {
-    *sort_order_node >> sort_order;
+  dict_name = doc["name"].as<std::string>();
+  dict_version = doc["version"].as<std::string>();
+  if (doc["sort"]) {
+    sort_order = doc["sort"].as<std::string>();
   }
-  if (use_preset_vocabulary_node) {
-    *use_preset_vocabulary_node >> use_preset_vocabulary;
-    if (max_phrase_length_node)
-      *max_phrase_length_node >> max_phrase_length;
-    if (min_phrase_weight_node)
-      *min_phrase_weight_node >> min_phrase_weight;
+  if (doc["use_preset_vocabulary"]) {
+    use_preset_vocabulary = doc["use_preset_vocabulary"].as<bool>();
+    if (doc["max_phrase_length"])
+      max_phrase_length = doc["max_phrase_length"].as<int>();
+    if (doc["min_phrase_weight"])
+      min_phrase_weight = doc["min_phrase_weight"].as<double>();
   }
-  DiscoverColumns(this, &doc);
+  DiscoverColumns(this, doc);
   return true;
 }
 
-static void DiscoverColumns(DictSettings* settings, const YAML::Node* doc) {
-  if (!settings || !doc) return;
+static void DiscoverColumns(DictSettings* settings, const YAML::Node& doc) {
+  if (!settings) return;
   settings->columns.clear();
-  const YAML::Node* node = doc->FindValue("columns");
-  if (node) {
+  YAML::Node columns = doc["columns"];
+  if (columns) {
     // user defined column order
-    for (YAML::Iterator it = node->begin(); it != node->end(); ++it) {
-      std::string column_label;
-      *it >> column_label;
+    for (YAML::const_iterator it = columns.begin(); it != columns.end(); ++it) {
+      std::string column_label = it->as<std::string>();
       settings->columns.push_back(column_label);
     }
   }

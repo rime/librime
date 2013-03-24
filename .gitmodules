@@ -9,4 +9,4 @@
 	url = git@github.com:BYVoid/OpenCC.git
 [submodule "thirdparty/src/yaml-cpp"]
 	path = thirdparty/src/yaml-cpp
-	url = git@github.com:bref/yaml-cpp.git
+	url = git@github.com:oftc/yaml-cpp.git

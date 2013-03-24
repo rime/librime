@@ -550,13 +550,7 @@ bool ConfigData::LoadFromFile(const std::string& file_name) {
   }
   LOG(INFO) << "loading config file '" << file_name << "'.";
   try {
-    YAML::Node doc;
-    std::ifstream fin(file_name.c_str());
-    YAML::Parser parser(fin);
-    if (!parser.GetNextDocument(doc)) {
-      LOG(WARNING) << "document not found in config file '" << file_name << "'.";
-      return false;
-    }
+    YAML::Node doc = YAML::LoadFile(file_name);
     root = ConvertFromYaml(doc);
   }
   catch (YAML::Exception& e) {
@@ -604,12 +598,12 @@ ConfigItemPtr ConfigData::ConvertFromYaml(const YAML::Node &node) {
     return ConfigItemPtr();
   }
   if (YAML::NodeType::Scalar == node.Type()) {
-    return boost::make_shared<ConfigValue>(node.to<std::string>());
+    return boost::make_shared<ConfigValue>(node.as<std::string>());
   }
   if (YAML::NodeType::Sequence == node.Type()) {
     ConfigListPtr config_list = make_shared<ConfigList>();
-    YAML::Iterator it = node.begin();
-    YAML::Iterator end = node.end();
+    YAML::const_iterator it = node.begin();
+    YAML::const_iterator end = node.end();
     for ( ; it != end; ++it) {
       config_list->Append(ConvertFromYaml(*it));
     }
@@ -617,11 +611,11 @@ ConfigItemPtr ConfigData::ConvertFromYaml(const YAML::Node &node) {
   }
   else if (YAML::NodeType::Map == node.Type()) {
     ConfigMapPtr config_map = make_shared<ConfigMap>();
-    YAML::Iterator it = node.begin();
-    YAML::Iterator end = node.end();
+    YAML::const_iterator it = node.begin();
+    YAML::const_iterator end = node.end();
     for ( ; it != end; ++it) {
-      std::string key = it.first().to<std::string>();
-      config_map->Set(key, ConvertFromYaml(it.second()));
+      std::string key = it->first.as<std::string>();
+      config_map->Set(key, ConvertFromYaml(it->second));
     }
     return config_map;
   }
