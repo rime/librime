@@ -21,11 +21,11 @@ class ConfigData {
  public:
   ConfigData() : modified_(false) {}
   ~ConfigData();
-  
+
   bool LoadFromFile(const std::string& file_name);
   bool SaveToFile(const std::string& file_name);
   ConfigItemPtr Traverse(const std::string &key);
-  
+
   bool modified() const { return modified_; }
   void set_modified() { modified_ = true; }
 
@@ -44,7 +44,7 @@ class ConfigDataManager : public std::map<std::string, weak_ptr<ConfigData> > {
  public:
   shared_ptr<ConfigData> GetConfigData(const std::string &config_file_path);
   bool ReloadConfigData(const std::string &config_file_path);
-  
+
   static ConfigDataManager& instance() {
     if (!instance_) instance_.reset(new ConfigDataManager);
     return *instance_;
@@ -104,7 +104,7 @@ bool ConfigValue::GetInt(int *value) const {
   // try to parse hex number
   if (boost::starts_with(value_, "0x")) {
     char *p = NULL;
-    unsigned int hex = std::strtoul(value_.c_str(), &p, 16); 
+    unsigned int hex = std::strtoul(value_.c_str(), &p, 16);
     if (*p == '\0') {
       *value = static_cast<int>(hex);
       return true;
