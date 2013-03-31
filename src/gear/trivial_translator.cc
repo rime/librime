@@ -12,8 +12,8 @@
 
 namespace rime {
 
-TrivialTranslator::TrivialTranslator(Engine *engine)
-    : Translator(engine) {
+TrivialTranslator::TrivialTranslator(const TranslatorTicket& ticket)
+    : Translator(ticket) {
   dictionary_["yi"] = "\xe4\xb8\x80";  // 一
   dictionary_["er"] = "\xe4\xba\x8c";  // 二
   dictionary_["san"] = "\xe4\xb8\x89";  // 三

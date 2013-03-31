@@ -86,24 +86,32 @@ int ReverseLookupTranslation::Compare(shared_ptr<Translation> other,
   return 1;
 }
 
-ReverseLookupTranslator::ReverseLookupTranslator(Engine *engine)
-    : Translator(engine), initialized_(false) {
+ReverseLookupTranslator::ReverseLookupTranslator(const TranslatorTicket& ticket)
+    : Translator(ticket), initialized_(false) {
+  if (ticket.alias.empty())
+    name_space_ = "reverse_lookup";
 }
 
 void ReverseLookupTranslator::Initialize() {
   initialized_ = true;  // no retry
   if (!engine_) return;
-  options_.reset(new TranslatorOptions(engine_, "reverse_lookup"));
+  options_.reset(new TranslatorOptions(engine_, name_space_));
   Config *config = engine_->schema()->config();
   if (!config) return;
-  config->GetString("reverse_lookup/prefix", &prefix_);
-  config->GetString("reverse_lookup/suffix", &suffix_);
-  config->GetString("reverse_lookup/tips", &tips_);
+  config->GetString(name_space_ + "/prefix", &prefix_);
+  config->GetString(name_space_ + "/suffix", &suffix_);
+  config->GetString(name_space_ + "/tips", &tips_);
+  {
+    bool enabled = false;
+    if (!config->GetBool(name_space_ + "/enable_completion", &enabled))
+      options_->set_enable_completion(false);  // overridden default
+  }
   
+  Ticket ticket(engine_->schema(), name_space_);
   DictionaryComponent *component =
       dynamic_cast<DictionaryComponent*>(Dictionary::Require("dictionary"));
   if (!component) return;
-  dict_.reset(component->CreateDictionaryFromConfig(config, "reverse_lookup"));
+  dict_.reset(component->Create(ticket));
   if (dict_) 
     dict_->Load();
   else
@@ -111,7 +119,7 @@ void ReverseLookupTranslator::Initialize() {
   ReverseLookupDictionary::Component *rev_component =
       ReverseLookupDictionary::Require("reverse_lookup_dictionary");
   if (!rev_component) return;
-  rev_dict_.reset(rev_component->Create(engine_->schema()));
+  rev_dict_.reset(rev_component->Create(ticket));
   if (rev_dict_)
     rev_dict_->Load();
 }

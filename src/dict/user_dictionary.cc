@@ -459,16 +459,17 @@ shared_ptr<DictEntry> UserDictionary::CreateDictEntry(const std::string& key,
 UserDictionaryComponent::UserDictionaryComponent() {
 }
 
-UserDictionary* UserDictionaryComponent::Create(Schema *schema) {
-  if (!schema) return NULL;
-  Config *config = schema->config();
+UserDictionary* UserDictionaryComponent::Create(const Ticket& ticket) {
+  if (!ticket.schema) return NULL;
+  Config *config = ticket.schema->config();
   bool enable_user_dict = true;
-  config->GetBool("translator/enable_user_dict", &enable_user_dict);
+  config->GetBool(ticket.name_space + "/enable_user_dict", &enable_user_dict);
   if (!enable_user_dict)
     return NULL;
   std::string dict_name;
-  if (!config->GetString("translator/dictionary", &dict_name)) {
-    LOG(ERROR) << "dictionary not specified in schema '" << schema->schema_id() << "'.";
+  if (!config->GetString(ticket.name_space + "/dictionary", &dict_name)) {
+    LOG(ERROR) << ticket.name_space << "/dictionary not specified in schema '"
+               << ticket.schema->schema_id() << "'.";
     return NULL;
   }
   // obtain userdb object

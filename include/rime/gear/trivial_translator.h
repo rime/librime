@@ -17,8 +17,7 @@ namespace rime {
 
 class TrivialTranslator : public Translator {
  public:
-  TrivialTranslator(Engine *engine);
-  virtual ~TrivialTranslator() {}
+  TrivialTranslator(const TranslatorTicket& ticket);
 
   virtual shared_ptr<Translation> Query(const std::string &input,
                                         const Segment &segment,

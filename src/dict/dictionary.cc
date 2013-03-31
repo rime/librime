@@ -283,21 +283,17 @@ bool Dictionary::loaded() const {
 DictionaryComponent::DictionaryComponent() {
 }
 
-Dictionary* DictionaryComponent::Create(Schema *schema) {
-  if (!schema) return NULL;
-  return CreateDictionaryFromConfig(schema->config(), "translator");
-}
-
-Dictionary* DictionaryComponent::CreateDictionaryFromConfig(
-    Config *config, const std::string &customer) {
+Dictionary* DictionaryComponent::Create(const Ticket& ticket) {
+  if (!ticket.schema) return NULL;
+  Config *config = ticket.schema->config();
   std::string dict_name;
-  if (!config->GetString(customer + "/dictionary", &dict_name)) {
-    LOG(ERROR) << "dictionary not specified for " << customer << ".";
+  if (!config->GetString(ticket.name_space + "/dictionary", &dict_name)) {
+    LOG(ERROR) << ticket.name_space << "/dictionary not specified in schema '"
+               << ticket.schema->schema_id() << "'.";
     return NULL;
   }
   std::string prism_name;
-  if (!config->GetString(customer + "/prism", &prism_name)) {
-    // usually same with dictionary name; different for alternative spelling
+  if (!config->GetString(ticket.name_space + "/prism", &prism_name)) {
     prism_name = dict_name;
   }
   return CreateDictionaryWithName(dict_name, prism_name);

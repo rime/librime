@@ -140,12 +140,12 @@ class Engine;
 
 class TranslatorOptions {
  public:
-  TranslatorOptions(Engine* engine, const std::string& prefix = "translator");
-
+  TranslatorOptions(Engine* engine, const std::string& name_space);
   bool IsUserDictDisabledFor(const std::string& input) const;
-  
+
   const std::string& delimiters() const { return delimiters_; }
   bool enable_completion() const { return enable_completion_; }
+  void set_enable_completion(bool enabled) { enable_completion_ = enabled; }
   Projection& preedit_formatter() { return preedit_formatter_; }
   Projection& comment_formatter() { return comment_formatter_; }
   

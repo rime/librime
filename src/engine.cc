@@ -247,11 +247,11 @@ void ConcreteEngine::InitializeComponents() {
   Config *config = schema_->config();
   if (!config) return;
   // create processors
-  shared_ptr<ConfigList> processor_list(config->GetList("engine/processors"));
+  ConfigListPtr processor_list(config->GetList("engine/processors"));
   if (processor_list) {
     size_t n = processor_list->size();
     for (size_t i = 0; i < n; ++i) {
-      shared_ptr<ConfigValue> klass = As<ConfigValue>(processor_list->GetAt(i));
+      ConfigValuePtr klass = As<ConfigValue>(processor_list->GetAt(i));
       if (!klass) continue;
       Processor::Component *c = Processor::Require(klass->str());
       if (!c) {
@@ -264,11 +264,11 @@ void ConcreteEngine::InitializeComponents() {
     }
   }
   // create segmentors
-  shared_ptr<ConfigList> segmentor_list(config->GetList("engine/segmentors"));
+  ConfigListPtr segmentor_list(config->GetList("engine/segmentors"));
   if (segmentor_list) {
     size_t n = segmentor_list->size();
     for (size_t i = 0; i < n; ++i) {
-      shared_ptr<ConfigValue> klass = As<ConfigValue>(segmentor_list->GetAt(i));
+      ConfigValuePtr klass = As<ConfigValue>(segmentor_list->GetAt(i));
       if (!klass) continue;
       Segmentor::Component *c = Segmentor::Require(klass->str());
       if (!c) {
@@ -281,28 +281,29 @@ void ConcreteEngine::InitializeComponents() {
     }
   }
   // create translators
-  shared_ptr<ConfigList> translator_list(config->GetList("engine/translators"));
+  ConfigListPtr translator_list(config->GetList("engine/translators"));
   if (translator_list) {
     size_t n = translator_list->size();
     for (size_t i = 0; i < n; ++i) {
-      shared_ptr<ConfigValue> klass = As<ConfigValue>(translator_list->GetAt(i));
-      if (!klass) continue;
-      Translator::Component *c = Translator::Require(klass->str());
+      ConfigValuePtr instruction = As<ConfigValue>(translator_list->GetAt(i));
+      if (!instruction) continue;
+      TranslatorTicket ticket(this, instruction->str());
+      Translator::Component *c = Translator::Require(ticket.klass);
       if (!c) {
-        LOG(ERROR) << "error creating translator: '" << klass->str() << "'";
+        LOG(ERROR) << "error creating translator: '" << ticket.klass << "'";
       }
       else {
-        shared_ptr<Translator> d(c->Create(this));
+        shared_ptr<Translator> d(c->Create(ticket));
         translators_.push_back(d);
       }
     }
   }
   // create filters
-  shared_ptr<ConfigList> filter_list(config->GetList("engine/filters"));
+  ConfigListPtr filter_list(config->GetList("engine/filters"));
   if (filter_list) {
     size_t n = filter_list->size();
     for (size_t i = 0; i < n; ++i) {
-      shared_ptr<ConfigValue> klass = As<ConfigValue>(filter_list->GetAt(i));
+      ConfigValuePtr klass = As<ConfigValue>(filter_list->GetAt(i));
       if (!klass) continue;
       Filter::Component *c = Filter::Require(klass->str());
       if (!c) {

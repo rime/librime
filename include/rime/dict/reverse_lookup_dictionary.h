@@ -15,10 +15,10 @@
 
 namespace rime {
 
-class Schema;
+struct Ticket;
 
 class ReverseLookupDictionary
-    : public Class<ReverseLookupDictionary, Schema*> {
+    : public Class<ReverseLookupDictionary, const Ticket&> {
  public:
   explicit ReverseLookupDictionary(const shared_ptr<TreeDb> &db);
   bool Load();
@@ -31,7 +31,7 @@ class ReverseLookupDictionaryComponent
     : public ReverseLookupDictionary::Component {
  public:
   ReverseLookupDictionaryComponent();
-  ReverseLookupDictionary* Create(Schema *schema);
+  ReverseLookupDictionary* Create(const Ticket& ticket);
  private:
   std::map<std::string, weak_ptr<TreeDb> > db_pool_;
 };

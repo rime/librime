@@ -129,17 +129,17 @@ bool UniqueFilter::AlreadyHas(const std::string& text) const {
 // TranslatorOptions
 
 TranslatorOptions::TranslatorOptions(Engine* engine,
-                                     const std::string& prefix)
-    : enable_completion_(prefix == "translator") {
+                                     const std::string& name_space)
+    : enable_completion_(true) {
   if (!engine) return;
   Config *config = engine->schema()->config();
   if (config) {
     config->GetString("speller/delimiter", &delimiters_);
-    config->GetBool(prefix + "/enable_completion", &enable_completion_);
-    preedit_formatter_.Load(config->GetList(prefix + "/preedit_format"));
-    comment_formatter_.Load(config->GetList(prefix + "/comment_format"));
+    config->GetBool(name_space + "/enable_completion", &enable_completion_);
+    preedit_formatter_.Load(config->GetList(name_space + "/preedit_format"));
+    comment_formatter_.Load(config->GetList(name_space + "/comment_format"));
     user_dict_disabling_patterns_.Load(
-        config->GetList(prefix + "/disable_user_dict_for_patterns"));
+        config->GetList(name_space + "/disable_user_dict_for_patterns"));
   }
   if (delimiters_.empty()) {
     delimiters_ = " ";

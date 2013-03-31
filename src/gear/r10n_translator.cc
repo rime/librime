@@ -74,7 +74,8 @@ bool DelimitSyllablesDfs(DelimitSyllableState *state,
 
 }  // anonymous namespace
 
-class R10nTranslation : public Translation, public Syllabification,
+class R10nTranslation : public Translation,
+                        public Syllabification,
                         public boost::enable_shared_from_this<R10nTranslation>
 {
  public:
@@ -93,22 +94,23 @@ class R10nTranslation : public Translation, public Syllabification,
 
  protected:
   bool CheckEmpty();
+  bool IsNormalSpelling() const;
   template <class CandidateT>
   const std::string GetPreeditString(const CandidateT &cand) const;
   template <class CandidateT>
   const std::string GetOriginalSpelling(const CandidateT &cand) const;
   const shared_ptr<Sentence> MakeSentence(Dictionary *dict,
                                           UserDictionary *user_dict);
-  
+
   R10nTranslator *translator_;
   const std::string input_;
   size_t start_;
-  
+
   SyllableGraph syllable_graph_;
   shared_ptr<DictEntryCollector> phrase_;
   shared_ptr<UserDictEntryCollector> user_phrase_;
   shared_ptr<Sentence> sentence_;
-  
+
   DictEntryCollector::reverse_iterator phrase_iter_;
   UserDictEntryCollector::reverse_iterator user_phrase_iter_;
   size_t user_phrase_index_;
@@ -116,19 +118,16 @@ class R10nTranslation : public Translation, public Syllabification,
 
 // R10nTranslator implementation
 
-R10nTranslator::R10nTranslator(Engine *engine)
-    : Translator(engine),
-      Memory(engine),
-      TranslatorOptions(engine),
+R10nTranslator::R10nTranslator(const TranslatorTicket& ticket)
+    : Translator(ticket),
+      Memory(engine_, name_space_),
+      TranslatorOptions(engine_, name_space_),
       spelling_hints_(0) {
-  if (!engine) return;
-  Config *config = engine->schema()->config();
+  if (!engine_) return;
+  Config *config = engine_->schema()->config();
   if (config) {
-    config->GetInt("translator/spelling_hints", &spelling_hints_);
+    config->GetInt(name_space_ + "/spelling_hints", &spelling_hints_);
   }
-}
-
-R10nTranslator::~R10nTranslator() {
 }
 
 shared_ptr<Translation> R10nTranslator::Query(const std::string &input,
@@ -172,11 +171,12 @@ const std::string R10nTranslator::Spell(const Code &code) {
   return result;
 }
 
-bool R10nTranslator::Memorize(const DictEntry& commit_entry,
-                              const std::vector<const DictEntry*>& elements) {
+bool R10nTranslator::Memorize(const CommitEntry& commit_entry) {
   bool update_elements = false;
-  if (elements.size() > 1) {
-    BOOST_FOREACH(const DictEntry* e, elements) {
+  // avoid updating single character entries within a phrase which is
+  // composed with single characters only
+  if (commit_entry.elements.size() > 1) {
+    BOOST_FOREACH(const DictEntry* e, commit_entry.elements) {
       if (e->code.size() > 1) {
         update_elements = true;
         break;
@@ -184,7 +184,7 @@ bool R10nTranslator::Memorize(const DictEntry& commit_entry,
     }
   }
   if (update_elements) {
-    BOOST_FOREACH(const DictEntry* e, elements) {
+    BOOST_FOREACH(const DictEntry* e, commit_entry.elements) {
       user_dict_->UpdateEntry(*e, 0);
     }
   }
@@ -283,6 +283,11 @@ bool R10nTranslation::Next() {
   return !CheckEmpty();
 }
 
+bool R10nTranslation::IsNormalSpelling() const {
+  return !syllable_graph_.vertices.empty() &&
+    (syllable_graph_.vertices.rbegin()->second == kNormalSpelling);
+}
+
 shared_ptr<Candidate> R10nTranslation::Peek() {
   if (exhausted())
     return shared_ptr<Candidate>();
@@ -342,6 +347,7 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
     }
   }
   cand->set_syllabification(shared_from_this());
+  cand->set_quality(IsNormalSpelling() ? 0 : -1);
   return cand;
 }
 

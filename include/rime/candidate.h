@@ -15,20 +15,23 @@ namespace rime {
 
 class Candidate {
  public:
-  Candidate() : type_(), start_(0), end_(0) {}
+  Candidate() : type_(), start_(0), end_(0), quality_(0) {}
   Candidate(const std::string type, size_t start, size_t end)
-      : type_(type), start_(start), end_(end) {}
+      : type_(type), start_(start), end_(end), quality_(0) {}
   virtual ~Candidate() {}
 
-  static const shared_ptr<Candidate>
+  static shared_ptr<Candidate>
   GetGenuineCandidate(const shared_ptr<Candidate>& cand);
+  static std::vector<shared_ptr<Candidate> >
+  GetGenuineCandidates(const shared_ptr<Candidate>& cand);
 
   // recognized by translators in learning phase
   const std::string& type() const { return type_; }
   // [start, end) mark a range in the input that the candidate corresponds to
   size_t start() const { return start_; }
   size_t end() const { return end_; }
-  
+  int quality() const { return quality_; }
+
   // candidate text to commit
   virtual const std::string& text() const = 0;
   // (optional)
@@ -39,11 +42,13 @@ class Candidate {
   void set_type(const std::string &type) { type_ = type; }
   void set_start(size_t start) { start_ = start; }
   void set_end(size_t end) { end_ = end; }
+  void set_quality(int quality) { quality_ = quality; }
 
  private:
   std::string type_;
   size_t start_;
   size_t end_;
+  int quality_;
 };
 
 typedef std::vector<shared_ptr<Candidate> > CandidateList;
@@ -102,7 +107,7 @@ class ShadowCandidate : public Candidate {
   std::string text_;
   std::string comment_;
   shared_ptr<Candidate> item_;
-};        
+};
 
 class UniquifiedCandidate : public Candidate {
  public:

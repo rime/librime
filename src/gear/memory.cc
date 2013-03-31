@@ -19,20 +19,50 @@
 
 namespace rime {
 
-Memory::Memory(Engine* engine) {
+void CommitEntry::Clear() {
+  text.clear();
+  code.clear();
+  elements.clear();
+}
+
+void CommitEntry::AppendPhrase(const shared_ptr<Phrase>& phrase) {
+  text += phrase->text();
+  code.insert(code.end(), phrase->code().begin(), phrase->code().end());
+  shared_ptr<Sentence> sentence = As<Sentence>(phrase);
+  if (sentence) {
+    BOOST_FOREACH(const DictEntry& e, sentence->components()) {
+      elements.push_back(&e);
+    }
+  }
+  else {
+    elements.push_back(&phrase->entry());
+  }
+}
+
+bool CommitEntry::Save() const {
+  if (memory && !empty()) {
+    DLOG(INFO) << "memorize commit entry: " << text;
+    return memory->Memorize(*this);
+  }
+  return false;
+}
+
+Memory::Memory(Engine* engine, const std::string& name_space) {
   if (!engine) return;
+
+  Ticket ticket(engine->schema(), name_space);
 
   Dictionary::Component *dictionary = Dictionary::Require("dictionary");
   if (dictionary) {
-    dict_.reset(dictionary->Create(engine->schema()));
+    dict_.reset(dictionary->Create(ticket));
     if (dict_)
       dict_->Load();
   }
-  
+
   UserDictionary::Component *user_dictionary =
       UserDictionary::Require("user_dictionary");
   if (user_dictionary) {
-    user_dict_.reset(user_dictionary->Create(engine->schema()));
+    user_dict_.reset(user_dictionary->Create(ticket));
     if (user_dict_) {
       user_dict_->Load();
       if (dict_)
@@ -58,38 +88,18 @@ Memory::~Memory() {
 void Memory::OnCommit(Context* ctx) {
   if (!user_dict_) return;
   user_dict_->NewTransaction();
-  DictEntry commit_entry;
-  std::vector<const DictEntry*> elements;
+
+  CommitEntry commit_entry(this);
   BOOST_FOREACH(Composition::value_type &seg, *ctx->composition()) {
-    shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
     shared_ptr<Phrase> phrase =
-        As<Phrase>(Candidate::GetGenuineCandidate(cand));
-    bool unrecognized = false;
-    if (phrase && phrase->language() == language()) {
-      commit_entry.text += phrase->text();
-      commit_entry.code.insert(commit_entry.code.end(),
-                               phrase->code().begin(),
-                               phrase->code().end());
-      shared_ptr<Sentence> sentence = As<Sentence>(phrase);
-      if (sentence) {
-        BOOST_FOREACH(const DictEntry& e, sentence->components()) {
-          elements.push_back(&e);
-        }
-      }
-      else {
-        elements.push_back(&phrase->entry());
-      }
+        As<Phrase>(Candidate::GetGenuineCandidate(seg.GetSelectedCandidate()));
+    bool recognized = phrase && phrase->language() == language();
+    if (recognized) {
+      commit_entry.AppendPhrase(phrase);
     }
-    else {
-      unrecognized = true;
-    }
-    if ((unrecognized || seg.status >= Segment::kConfirmed) &&
-        !commit_entry.text.empty()) {
-      DLOG(INFO) << "memorize commit entry: " << commit_entry.text;
-      Memorize(commit_entry, elements);
-      elements.clear();
-      commit_entry.text.clear();
-      commit_entry.code.clear();
+    if (!recognized || seg.status >= Segment::kConfirmed) {
+      commit_entry.Save();
+      commit_entry.Clear();
     }
   }
 }
@@ -100,10 +110,10 @@ void Memory::OnDeleteEntry(Context* ctx) {
       ctx->composition()->empty())
     return;
   Segment &seg(ctx->composition()->back());
-  shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
-  if (!cand) return;
-  shared_ptr<Phrase> phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
-  if (phrase && phrase->language() == language()) {
+  shared_ptr<Phrase> phrase =
+      As<Phrase>(Candidate::GetGenuineCandidate(seg.GetSelectedCandidate()));
+  bool recognized = phrase && phrase->language() == language();
+  if (recognized) {
     const DictEntry& entry(phrase->entry());
     LOG(INFO) << "deleting entry: '" << entry.text << "'.";
     user_dict_->UpdateEntry(entry, -1);  // mark as deleted in user dict

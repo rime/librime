@@ -25,11 +25,12 @@ bool ReverseLookupDictionary::ReverseLookup(const std::string &text,
 ReverseLookupDictionaryComponent::ReverseLookupDictionaryComponent() {
 }
 
-ReverseLookupDictionary* ReverseLookupDictionaryComponent::Create(Schema *schema) {
-  if (!schema) return NULL;
-  Config *config = schema->config();
+ReverseLookupDictionary* ReverseLookupDictionaryComponent::Create(
+    const Ticket& ticket) {
+  if (!ticket.schema) return NULL;
+  Config *config = ticket.schema->config();
   std::string reverse_lookup;
-  if (!config->GetString("reverse_lookup/dictionary", &reverse_lookup)) {
+  if (!config->GetString(ticket.name_space + "/dictionary", &reverse_lookup)) {
     // reverse lookup not enabled
     return NULL;
   }
