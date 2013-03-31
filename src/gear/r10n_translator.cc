@@ -74,7 +74,8 @@ bool DelimitSyllablesDfs(DelimitSyllableState *state,
 
 }  // anonymous namespace
 
-class R10nTranslation : public Translation, public Syllabification,
+class R10nTranslation : public Translation,
+                        public Syllabification,
                         public boost::enable_shared_from_this<R10nTranslation>
 {
  public:
@@ -93,6 +94,7 @@ class R10nTranslation : public Translation, public Syllabification,
 
  protected:
   bool CheckEmpty();
+  bool IsNormalSpelling() const;
   template <class CandidateT>
   const std::string GetPreeditString(const CandidateT &cand) const;
   template <class CandidateT>
@@ -281,6 +283,11 @@ bool R10nTranslation::Next() {
   return !CheckEmpty();
 }
 
+bool R10nTranslation::IsNormalSpelling() const {
+  return !syllable_graph_.vertices.empty() &&
+    (syllable_graph_.vertices.rbegin()->second == kNormalSpelling);
+}
+
 shared_ptr<Candidate> R10nTranslation::Peek() {
   if (exhausted())
     return shared_ptr<Candidate>();
@@ -340,6 +347,7 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
     }
   }
   cand->set_syllabification(shared_from_this());
+  cand->set_quality(IsNormalSpelling() ? 0 : -1);
   return cand;
 }
 

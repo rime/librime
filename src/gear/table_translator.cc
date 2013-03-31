@@ -82,6 +82,7 @@ shared_ptr<Candidate> TableTranslation::Peek() {
   if (phrase) {
     phrase->set_comment(comment);
     phrase->set_preedit(preedit_);
+    phrase->set_quality(e->remaining_code_length ? -1 : 0);
   }
   return phrase;
 }
