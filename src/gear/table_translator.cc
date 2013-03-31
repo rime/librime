@@ -110,7 +110,7 @@ class LazyTableTranslation : public TableTranslation {
  public:
   static const size_t kInitialSearchLimit = 10;
   static const size_t kExpandingFactor = 10;
-  
+
   LazyTableTranslation(TableTranslator* translator,
                        const std::string& input,
                        size_t start, size_t end,
@@ -118,7 +118,7 @@ class LazyTableTranslation : public TableTranslation {
                        bool enable_user_dict);
   virtual bool FetchMoreUserPhrases();
   virtual bool FetchMoreTableEntries();
-  
+
  private:
   Dictionary* dict_;
   UserDictionary* user_dict_;
@@ -213,7 +213,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
   const std::string& preedit(input);
   std::string code(input);
   boost::trim_right_if(code, boost::is_any_of(delimiters_));
-  
+
   shared_ptr<Translation> translation;
   if (enable_completion_) {
     translation = boost::make_shared<LazyTableTranslation>(
@@ -259,10 +259,9 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
   return translation;
 }
 
-bool TableTranslator::Memorize(const DictEntry& commit_entry,
-                               const std::vector<const DictEntry*>& elements) {
+bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
   if (!user_dict_) return false;
-  BOOST_FOREACH(const DictEntry* e, elements) {
+  BOOST_FOREACH(const DictEntry* e, commit_entry.elements) {
     user_dict_->UpdateEntry(*e, 1);
   }
   // TODO
@@ -281,12 +280,12 @@ class SentenceTranslation : public Translation {
                       size_t start);
   bool Next();
   shared_ptr<Candidate> Peek();
-  
+
  protected:
   void PrepareSentence();
   bool CheckEmpty();
   bool PreferUserPhrase() const;
-  
+
   TableTranslator* translator_;
   shared_ptr<Sentence> sentence_;
   DictEntryCollector collector_;
@@ -332,7 +331,7 @@ bool SentenceTranslation::Next() {
   }
   return !CheckEmpty();
 }
-  
+
 shared_ptr<Candidate> SentenceTranslation::Peek() {
   if (exhausted())
     return shared_ptr<Candidate>();
@@ -370,7 +369,7 @@ void SentenceTranslation::PrepareSentence() {
   if (!sentence_) return;
   sentence_->Offset(start_);
   sentence_->set_comment(kUnityTableEncoder);
-  
+
   if (!translator_) return;
   std::string preedit(input_);
   const std::string& delimiters(translator_->delimiters());

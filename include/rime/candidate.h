@@ -20,15 +20,17 @@ class Candidate {
       : type_(type), start_(start), end_(end) {}
   virtual ~Candidate() {}
 
-  static const shared_ptr<Candidate>
+  static shared_ptr<Candidate>
   GetGenuineCandidate(const shared_ptr<Candidate>& cand);
+  static std::vector<shared_ptr<Candidate> >
+  GetGenuineCandidates(const shared_ptr<Candidate>& cand);
 
   // recognized by translators in learning phase
   const std::string& type() const { return type_; }
   // [start, end) mark a range in the input that the candidate corresponds to
   size_t start() const { return start_; }
   size_t end() const { return end_; }
-  
+
   // candidate text to commit
   virtual const std::string& text() const = 0;
   // (optional)
@@ -102,7 +104,7 @@ class ShadowCandidate : public Candidate {
   std::string text_;
   std::string comment_;
   shared_ptr<Candidate> item_;
-};        
+};
 
 class UniquifiedCandidate : public Candidate {
  public:

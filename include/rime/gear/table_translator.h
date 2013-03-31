@@ -29,9 +29,8 @@ class TableTranslator : public Translator,
   virtual shared_ptr<Translation> Query(const std::string &input,
                                         const Segment &segment,
                                         std::string* prompt);
-  virtual bool Memorize(const DictEntry& commit_entry,
-                        const std::vector<const DictEntry*>& elements);
-  
+  virtual bool Memorize(const CommitEntry& commit_entry);
+
   shared_ptr<Translation> MakeSentence(const std::string &input,
                                        size_t start);
 
@@ -42,7 +41,7 @@ class TableTranslator : public Translator,
 
 class TableTranslation : public Translation {
  public:
-  
+
   TableTranslation(TranslatorOptions* options, Language* language,
                    const std::string& input, size_t start, size_t end,
                    const std::string& preedit);
@@ -51,17 +50,17 @@ class TableTranslation : public Translation {
                    const std::string& preedit,
                    const DictEntryIterator& iter,
                    const UserDictEntryIterator& uter = UserDictEntryIterator());
-  
+
   virtual bool Next();
   virtual shared_ptr<Candidate> Peek();
-  
+
  protected:
   virtual bool FetchMoreUserPhrases() { return false; }
   virtual bool FetchMoreTableEntries() { return false; }
-  
+
   bool CheckEmpty();
   bool PreferUserPhrase();
-  
+
   shared_ptr<DictEntry> PreferedEntry(bool prefer_user_phrase) {
     return prefer_user_phrase ? uter_.Peek() : iter_.Peek();
   }

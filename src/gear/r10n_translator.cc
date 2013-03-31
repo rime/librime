@@ -99,16 +99,16 @@ class R10nTranslation : public Translation, public Syllabification,
   const std::string GetOriginalSpelling(const CandidateT &cand) const;
   const shared_ptr<Sentence> MakeSentence(Dictionary *dict,
                                           UserDictionary *user_dict);
-  
+
   R10nTranslator *translator_;
   const std::string input_;
   size_t start_;
-  
+
   SyllableGraph syllable_graph_;
   shared_ptr<DictEntryCollector> phrase_;
   shared_ptr<UserDictEntryCollector> user_phrase_;
   shared_ptr<Sentence> sentence_;
-  
+
   DictEntryCollector::reverse_iterator phrase_iter_;
   UserDictEntryCollector::reverse_iterator user_phrase_iter_;
   size_t user_phrase_index_;
@@ -169,11 +169,12 @@ const std::string R10nTranslator::Spell(const Code &code) {
   return result;
 }
 
-bool R10nTranslator::Memorize(const DictEntry& commit_entry,
-                              const std::vector<const DictEntry*>& elements) {
+bool R10nTranslator::Memorize(const CommitEntry& commit_entry) {
   bool update_elements = false;
-  if (elements.size() > 1) {
-    BOOST_FOREACH(const DictEntry* e, elements) {
+  // avoid updating single character entries within a phrase which is
+  // composed with single characters only
+  if (commit_entry.elements.size() > 1) {
+    BOOST_FOREACH(const DictEntry* e, commit_entry.elements) {
       if (e->code.size() > 1) {
         update_elements = true;
         break;
@@ -181,7 +182,7 @@ bool R10nTranslator::Memorize(const DictEntry& commit_entry,
     }
   }
   if (update_elements) {
-    BOOST_FOREACH(const DictEntry* e, elements) {
+    BOOST_FOREACH(const DictEntry* e, commit_entry.elements) {
       user_dict_->UpdateEntry(*e, 0);
     }
   }

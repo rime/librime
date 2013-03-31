@@ -33,15 +33,14 @@ class R10nTranslator : public Translator,
   virtual shared_ptr<Translation> Query(const std::string &input,
                                         const Segment &segment,
                                         std::string* prompt);
-  virtual bool Memorize(const DictEntry& commit_entry,
-                        const std::vector<const DictEntry*>& elements);
-  
+  virtual bool Memorize(const CommitEntry& commit_entry);
+
   const std::string FormatPreedit(const std::string &preedit);
   const std::string Spell(const Code &code);
 
   // options
   int spelling_hints() const { return spelling_hints_; }
-  
+
  protected:
   int spelling_hints_;
 };
