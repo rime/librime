@@ -66,7 +66,7 @@ TEST_F(RimeDictionaryTest, PredictiveLookup) {
   EXPECT_EQ("za", raw_code.ToString());
 }
 
-TEST_F(RimeDictionaryTest, R10nLookup) {
+TEST_F(RimeDictionaryTest, ScriptLookup) {
   ASSERT_TRUE(dict_->loaded());
   rime::SyllableGraph g;
   rime::Syllabifier s;

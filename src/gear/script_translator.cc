@@ -2,7 +2,7 @@
 // Copyleft 2011 RIME Developers
 // License: GPLv3
 //
-// Romanization translator
+// Script translator
 //
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
@@ -20,7 +20,7 @@
 #include <rime/dict/dictionary.h>
 #include <rime/algo/syllabifier.h>
 #include <rime/gear/poet.h>
-#include <rime/gear/r10n_translator.h>
+#include <rime/gear/script_translator.h>
 #include <rime/gear/translator_commons.h>
 
 
@@ -74,13 +74,13 @@ bool DelimitSyllablesDfs(DelimitSyllableState *state,
 
 }  // anonymous namespace
 
-class R10nTranslation : public Translation,
-                        public Syllabification,
-                        public boost::enable_shared_from_this<R10nTranslation>
+class ScriptTranslation : public Translation,
+                          public Syllabification,
+                          public boost::enable_shared_from_this<ScriptTranslation>
 {
  public:
-  R10nTranslation(R10nTranslator *translator,
-                  const std::string &input, size_t start)
+  ScriptTranslation(ScriptTranslator *translator,
+                    const std::string &input, size_t start)
       : translator_(translator),
         input_(input), start_(start),
         user_phrase_index_(0) {
@@ -102,7 +102,7 @@ class R10nTranslation : public Translation,
   const shared_ptr<Sentence> MakeSentence(Dictionary *dict,
                                           UserDictionary *user_dict);
 
-  R10nTranslator *translator_;
+  ScriptTranslator *translator_;
   const std::string input_;
   size_t start_;
 
@@ -116,9 +116,9 @@ class R10nTranslation : public Translation,
   size_t user_phrase_index_;
 };
 
-// R10nTranslator implementation
+// ScriptTranslator implementation
 
-R10nTranslator::R10nTranslator(const TranslatorTicket& ticket)
+ScriptTranslator::ScriptTranslator(const TranslatorTicket& ticket)
     : Translator(ticket),
       Memory(engine_, name_space_),
       TranslatorOptions(engine_, name_space_),
@@ -130,9 +130,9 @@ R10nTranslator::R10nTranslator(const TranslatorTicket& ticket)
   }
 }
 
-shared_ptr<Translation> R10nTranslator::Query(const std::string &input,
-                                              const Segment &segment,
-                                              std::string* prompt) {
+shared_ptr<Translation> ScriptTranslator::Query(const std::string &input,
+                                                const Segment &segment,
+                                                std::string* prompt) {
   if (!dict_ || !dict_->loaded())
     return shared_ptr<Translation>();
   if (!segment.HasTag("abc"))
@@ -144,8 +144,8 @@ shared_ptr<Translation> R10nTranslator::Query(const std::string &input,
       !IsUserDictDisabledFor(input);
 
   // the translator should survive translations it creates
-  shared_ptr<R10nTranslation> result =
-      boost::make_shared<R10nTranslation>(this, input, segment.start);
+  shared_ptr<ScriptTranslation> result =
+      boost::make_shared<ScriptTranslation>(this, input, segment.start);
   if (!result ||
       !result->Evaluate(dict_.get(),
                         enable_user_dict ? user_dict_.get() : NULL)) {
@@ -154,13 +154,13 @@ shared_ptr<Translation> R10nTranslator::Query(const std::string &input,
   return make_shared<UniqueFilter>(result);
 }
 
-const std::string R10nTranslator::FormatPreedit(const std::string& preedit) {
+const std::string ScriptTranslator::FormatPreedit(const std::string& preedit) {
   std::string result(preedit);
   preedit_formatter_.Apply(&result);
   return result;
 }
 
-const std::string R10nTranslator::Spell(const Code &code) {
+const std::string ScriptTranslator::Spell(const Code &code) {
   std::string result;
   dictionary::RawCode syllables;
   if (!dict_ || !dict_->Decode(code, &syllables) || syllables.empty())
@@ -171,7 +171,7 @@ const std::string R10nTranslator::Spell(const Code &code) {
   return result;
 }
 
-bool R10nTranslator::Memorize(const CommitEntry& commit_entry) {
+bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
   bool update_elements = false;
   // avoid updating single character entries within a phrase which is
   // composed with single characters only
@@ -192,9 +192,9 @@ bool R10nTranslator::Memorize(const CommitEntry& commit_entry) {
   return true;
 }
 
-// R10nTranslation implementation
+// ScriptTranslation implementation
 
-bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
+bool ScriptTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
   Syllabifier syllabifier(translator_->delimiters(),
                           translator_->enable_completion());
   size_t consumed = syllabifier.BuildSyllableGraph(input_,
@@ -224,7 +224,7 @@ bool R10nTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
 }
 
 template <class CandidateT>
-const std::string R10nTranslation::GetPreeditString(
+const std::string ScriptTranslation::GetPreeditString(
     const CandidateT &cand) const {
   DelimitSyllableState state;
   state.input = &input_;
@@ -242,7 +242,7 @@ const std::string R10nTranslation::GetPreeditString(
 }
 
 template <class CandidateT>
-const std::string R10nTranslation::GetOriginalSpelling(
+const std::string ScriptTranslation::GetOriginalSpelling(
     const CandidateT& cand) const {
   if (translator_ &&
       static_cast<int>(cand.code().size()) <= translator_->spelling_hints()) {
@@ -251,7 +251,7 @@ const std::string R10nTranslation::GetOriginalSpelling(
   return std::string();
 }
 
-bool R10nTranslation::Next() {
+bool ScriptTranslation::Next() {
   if (exhausted())
     return false;
   if (sentence_) {
@@ -283,12 +283,12 @@ bool R10nTranslation::Next() {
   return !CheckEmpty();
 }
 
-bool R10nTranslation::IsNormalSpelling() const {
+bool ScriptTranslation::IsNormalSpelling() const {
   return !syllable_graph_.vertices.empty() &&
-    (syllable_graph_.vertices.rbegin()->second == kNormalSpelling);
+      (syllable_graph_.vertices.rbegin()->second == kNormalSpelling);
 }
 
-shared_ptr<Candidate> R10nTranslation::Peek() {
+shared_ptr<Candidate> ScriptTranslation::Peek() {
   if (exhausted())
     return shared_ptr<Candidate>();
   if (sentence_) {
@@ -351,13 +351,13 @@ shared_ptr<Candidate> R10nTranslation::Peek() {
   return cand;
 }
 
-bool R10nTranslation::CheckEmpty() {
+bool ScriptTranslation::CheckEmpty() {
   set_exhausted((!phrase_ || phrase_iter_ == phrase_->rend()) &&
                 (!user_phrase_ || user_phrase_iter_ == user_phrase_->rend()));
   return exhausted();
 }
 
-const shared_ptr<Sentence> R10nTranslation::MakeSentence(
+const shared_ptr<Sentence> ScriptTranslation::MakeSentence(
     Dictionary *dict, UserDictionary *user_dict) {
   const int kMaxSyllablesForUserPhraseQuery = 5;
   const double kPenaltyForAmbiguousSyllable = 1e-10;
@@ -400,7 +400,7 @@ const shared_ptr<Sentence> R10nTranslation::MakeSentence(
   return sentence;
 }
 
-size_t R10nTranslation::PreviousStop(size_t caret_pos) const {
+size_t ScriptTranslation::PreviousStop(size_t caret_pos) const {
   size_t offset = caret_pos - start_;
   BOOST_REVERSE_FOREACH(const VertexMap::value_type& x,
                         syllable_graph_.vertices) {
@@ -410,7 +410,7 @@ size_t R10nTranslation::PreviousStop(size_t caret_pos) const {
   return caret_pos;
 }
 
-size_t R10nTranslation::NextStop(size_t caret_pos) const {
+size_t ScriptTranslation::NextStop(size_t caret_pos) const {
   size_t offset = caret_pos - start_;
   BOOST_FOREACH(const VertexMap::value_type& x, syllable_graph_.vertices) {
     if (x.first > offset)

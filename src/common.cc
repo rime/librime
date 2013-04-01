@@ -27,7 +27,7 @@
 #include <rime/gear/navigator.h>
 #include <rime/gear/key_binder.h>
 #include <rime/gear/punctuator.h>
-#include <rime/gear/r10n_translator.h>
+#include <rime/gear/script_translator.h>
 #include <rime/gear/recognizer.h>
 #include <rime/gear/selector.h>
 #include <rime/gear/simplifier.h>
@@ -47,13 +47,13 @@ void RegisterComponents() {
   LOG(INFO) << "registering built-in components";
 
   Registry &r = Registry::instance();
-  
+
   boost::filesystem::path user_data_dir(Service::instance().deployer().user_data_dir);
   boost::filesystem::path config_path = user_data_dir / "%s.yaml";
   boost::filesystem::path schema_path = user_data_dir / "%s.schema.yaml";
   r.Register("config", new ConfigComponent(config_path.string()));
   r.Register("schema_config", new ConfigComponent(schema_path.string()));
-  
+
   r.Register("dictionary", new DictionaryComponent);
   r.Register("reverse_lookup_dictionary", new ReverseLookupDictionaryComponent);
   r.Register("user_dictionary", new UserDictionaryComponent);
@@ -82,7 +82,8 @@ void RegisterComponents() {
   r.Register("punct_translator", new Component<PunctTranslator>);
   //r.Register("trivial_translator", new Component<TrivialTranslator>);
   r.Register("table_translator", new Component<TableTranslator>);
-  r.Register("r10n_translator", new Component<R10nTranslator>);
+  r.Register("script_translator", new Component<ScriptTranslator>);
+  r.Register("r10n_translator", new Component<ScriptTranslator>);  // alias
   r.Register("reverse_lookup_translator", new Component<ReverseLookupTranslator>);
 
   // filters
