@@ -52,7 +52,9 @@ AsciiComposer::AsciiComposer(Engine *engine)
     : Processor(engine),
       caps_lock_switch_style_(kAsciiModeSwitchNoop),
       good_old_caps_lock_(false),
-      shift_key_pressed_(false), ctrl_key_pressed_(false) {
+      toggle_with_caps_(false),
+      shift_key_pressed_(false),
+      ctrl_key_pressed_(false) {
   LoadConfig(engine->schema());
 }
 
@@ -109,6 +111,16 @@ Processor::Result AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
   if (ch == XK_Caps_Lock) {
     if (!key_event.release()) {
       shift_key_pressed_ = ctrl_key_pressed_ = false;
+      // temprarily disable good-old (uppercase) Caps Lock as mode switch key
+      // in case the user switched to ascii mode with other keys, eg. with Shift
+      if (good_old_caps_lock_ && !toggle_with_caps_) {
+        Context *ctx = engine_->context();
+        bool ascii_mode = ctx->get_option("ascii_mode");
+        if (ascii_mode) {
+          return kRejected;
+        }
+      }
+      toggle_with_caps_ = !key_event.caps();
       // NOTE: for Linux, Caps Lock modifier is clear when we are about to
       // turn it on; for Windows it is the opposite:
       // Caps Lock modifier has been set before we process VK_CAPITAL.
@@ -180,6 +192,7 @@ bool AsciiComposer::ToggleAsciiModeWithKey(int key_code) {
   Context *ctx = engine_->context();
   bool ascii_mode = !ctx->get_option("ascii_mode");
   SwitchAsciiMode(ascii_mode, style);
+  toggle_with_caps_ = (key_code == XK_Caps_Lock);
   return true;
 }
 

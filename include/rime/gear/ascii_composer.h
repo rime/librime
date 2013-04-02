@@ -43,6 +43,7 @@ class AsciiComposer : public Processor {
   AsciiModeSwitchStyle caps_lock_switch_style_;
   bool good_old_caps_lock_;
   // state
+  bool toggle_with_caps_;
   bool shift_key_pressed_;
   bool ctrl_key_pressed_;
   boost::signals::connection connection_;
