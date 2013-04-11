@@ -467,7 +467,16 @@ UserDictionary* UserDictionaryComponent::Create(const Ticket& ticket) {
   if (!enable_user_dict)
     return NULL;
   std::string dict_name;
-  if (!config->GetString(ticket.name_space + "/dictionary", &dict_name)) {
+  if (config->GetString(ticket.name_space + "/user_dict", &dict_name)) {
+    // user specified name
+  }
+  else if (config->GetString(ticket.name_space + "/dictionary", &dict_name)) {
+    // {dictionary: lunapinyin.extra} implies {user_dict: luna_pinyin}
+    size_t dot = dict_name.find('.');
+    if (dot != std::string::npos && dot != 0)
+      dict_name.resize(dot);
+  }
+  else {
     LOG(ERROR) << ticket.name_space << "/dictionary not specified in schema '"
                << ticket.schema->schema_id() << "'.";
     return NULL;
