@@ -8,6 +8,8 @@
 #define RIME_DICT_COMPILER_H_
 
 #include <string>
+#include <vector>
+#include <boost/function.hpp>
 #include <rime/common.h>
 
 namespace rime {
@@ -16,6 +18,11 @@ class Dictionary;
 class Prism;
 class Table;
 class TreeDb;
+struct DictSettings;
+
+// return found dict file path, otherwize return empty string
+typedef boost::function<const std::string (const std::string& file_name)>
+DictFileFinder;
 
 class DictCompiler {
  public:
@@ -26,13 +33,17 @@ class DictCompiler {
     kDump = 4,
   };
 
-  DictCompiler(Dictionary *dictionary);
-  
-  bool Compile(const std::string &dict_file, const std::string &schema_file);
+  DictCompiler(Dictionary *dictionary,
+               DictFileFinder finder = NULL);
+
+  bool Compile(const std::string &schema_file);
   void set_options(int options) { options_ = options; }
 
  private:
-  bool BuildTable(const std::string &dict_file, uint32_t checksum);
+  const std::string FindDictFile(const std::string& dict_name);
+  bool BuildTable(const DictSettings &settings,
+                  const std::vector<std::string> &dict_files,
+                  uint32_t dict_file_checksum);
   bool BuildPrism(const std::string &schema_file,
                   uint32_t dict_file_checksum, uint32_t schema_file_checksum);
   bool BuildReverseLookupDict(TreeDb *db, uint32_t dict_file_checksum);
@@ -41,6 +52,7 @@ class DictCompiler {
   shared_ptr<Prism> prism_;
   shared_ptr<Table> table_;
   int options_;
+  DictFileFinder dict_file_finder_;
 };
 
 }  // namespace rime

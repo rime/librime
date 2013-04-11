@@ -10,6 +10,7 @@
 
 namespace rime {
 
+static void DiscoverTables(DictSettings* settings, const YAML::Node& doc);
 static void DiscoverColumns(DictSettings* settings, const YAML::Node& doc);
 
 DictSettings::DictSettings()
@@ -41,8 +42,25 @@ bool DictSettings::LoadFromFile(const std::string& dict_file) {
     if (doc["min_phrase_weight"])
       min_phrase_weight = doc["min_phrase_weight"].as<double>();
   }
+  DiscoverTables(this, doc);
   DiscoverColumns(this, doc);
   return true;
+}
+
+static void DiscoverTables(DictSettings* settings, const YAML::Node& doc) {
+  settings->tables.clear();
+  settings->tables.push_back(settings->dict_name);
+  YAML::Node imports = doc["import_tables"];
+  if (imports) {
+    for (YAML::const_iterator it = imports.begin(); it != imports.end(); ++it) {
+      std::string table = it->as<std::string>();
+      if (table == settings->dict_name) {
+        LOG(WARNING) << "cannot import '" << table << "' from itself.";
+        continue;
+      }
+      settings->tables.push_back(table);
+    }
+  }
 }
 
 static void DiscoverColumns(DictSettings* settings, const YAML::Node& doc) {

@@ -20,6 +20,7 @@ struct DictSettings {
   bool use_preset_vocabulary;
   int max_phrase_length;
   double min_phrase_weight;
+  std::vector<std::string> tables;
   std::vector<std::string> columns;
   DictSettings();
   bool LoadFromFile(const std::string& dict_file);

@@ -223,6 +223,20 @@ const std::string WorkspaceUpdate::GetSchemaPath(Deployer* deployer,
   return schema_path.string();
 }
 
+static const std::string find_dict_file(const std::string& dict_file_name,
+                                        const fs::path& shared_data_path,
+                                        const fs::path& user_data_path) {
+  fs::path dict_path(user_data_path / dict_file_name);
+  if (!fs::exists(dict_path)) {
+    dict_path = shared_data_path / dict_file_name;
+    if (!fs::exists(dict_path)) {
+      LOG(ERROR) << "source file '" << dict_file_name << "' does not exist.";
+      return std::string();
+    }
+  }
+  return dict_path.string();
+}
+
 bool SchemaUpdate::Run(Deployer* deployer) {
   fs::path source_path(schema_file_);
   if (!fs::exists(source_path)) {
@@ -260,16 +274,6 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     // not requiring a dictionary
     return true;
   }
-  std::string dict_file_name(dict_name + ".dict.yaml");
-  fs::path dict_path(source_path.parent_path() / dict_file_name);
-  if (!fs::exists(dict_path)) {
-    dict_path = shared_data_path / dict_file_name;
-    if (!fs::exists(dict_path)) {
-      LOG(ERROR) << "source file for dictionary '"
-                 << dict_name << "' does not exist.";
-      return false;
-    }
-  }
   DictionaryComponent component;
   scoped_ptr<Dictionary> dict;
   dict.reset(component.Create(Ticket(&schema, "translator")));
@@ -278,11 +282,16 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     return false;
   }
   LOG(INFO) << "preparing dictionary '" << dict_name << "'.";
-  DictCompiler dict_compiler(dict.get());
+  DictFileFinder finder =
+      boost::bind(&find_dict_file, _1, shared_data_path, user_data_path);
+  DictCompiler dict_compiler(dict.get(), finder);
   if (verbose_) {
     dict_compiler.set_options(DictCompiler::kRebuild | DictCompiler::kDump);
   }
-  dict_compiler.Compile(dict_path.string(), destination_path.string());
+  if (!dict_compiler.Compile(destination_path.string())) {
+    LOG(ERROR) << "dictionary '" << dict_name << "' failed to compile.";
+    return false;
+  }
   LOG(INFO) << "dictionary '" << dict_name << "' is ready.";
   return true;
 }

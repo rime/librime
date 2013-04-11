@@ -21,17 +21,19 @@ EntryCollector::EntryCollector()
 EntryCollector::~EntryCollector() {
 }
 
-void EntryCollector::LoadPresetVocabulary(DictSettings* settings) {
-    preset_vocabulary.reset(PresetVocabulary::Create());
-    if (preset_vocabulary && settings) {
-      if (settings->max_phrase_length > 0)
-        preset_vocabulary->set_max_phrase_length(settings->max_phrase_length);
-      if (settings->min_phrase_weight > 0)
-        preset_vocabulary->set_min_phrase_weight(settings->min_phrase_weight);
-    }
+void EntryCollector::LoadPresetVocabulary(const DictSettings* settings) {
+  LOG(INFO) << "loading preset vocabulary.";
+  preset_vocabulary.reset(PresetVocabulary::Create());
+  if (preset_vocabulary && settings) {
+    if (settings->max_phrase_length > 0)
+      preset_vocabulary->set_max_phrase_length(settings->max_phrase_length);
+    if (settings->min_phrase_weight > 0)
+      preset_vocabulary->set_min_phrase_weight(settings->min_phrase_weight);
+  }
 }
 
 void EntryCollector::Collect(const std::string &dict_file) {
+  LOG(INFO) << "collecting entries from " << dict_file;
   std::ifstream fin(dict_file.c_str());
   std::string line;
   bool in_yaml_doc = true;
@@ -67,9 +69,12 @@ void EntryCollector::Collect(const std::string &dict_file) {
       encode_queue.push(std::make_pair(word, weight_str));
     }
   }
-  LOG(INFO) << "Pass 1: " << num_entries << " entries collected.";
+  LOG(INFO) << "Pass 1: total " << num_entries << " entries collected.";
   LOG(INFO) << "num unique syllables: " << syllabary.size();
   LOG(INFO) << "num of entries to encode: " << encode_queue.size();
+}
+
+void EntryCollector::Finish() {
   dictionary::RawCode code;
   while (!encode_queue.empty()) {
     const std::string &phrase(encode_queue.front().first);
@@ -80,7 +85,7 @@ void EntryCollector::Collect(const std::string &dict_file) {
     }
     encode_queue.pop();
   }
-  LOG(INFO) << "Pass 2: " << num_entries << " entries collected.";
+  LOG(INFO) << "Pass 2: total " << num_entries << " entries collected.";
   if (preset_vocabulary) {
     preset_vocabulary->Reset();
     std::string phrase, weight_str;
@@ -93,7 +98,7 @@ void EntryCollector::Collect(const std::string &dict_file) {
       }
     }
   }
-  LOG(INFO) << "Pass 3: " << num_entries << " entries collected.";
+  LOG(INFO) << "Pass 3: total " << num_entries << " entries collected.";
 }
 
 void EntryCollector::CreateEntry(const std::string &word,

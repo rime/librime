@@ -22,18 +22,37 @@
 
 namespace rime {
 
-DictCompiler::DictCompiler(Dictionary *dictionary)
+DictCompiler::DictCompiler(Dictionary *dictionary, DictFileFinder finder)
     : dict_name_(dictionary->name()),
       prism_(dictionary->prism()),
       table_(dictionary->table()),
-      options_(0) {
+      options_(0),
+      dict_file_finder_(finder) {
 }
 
-bool DictCompiler::Compile(const std::string &dict_file, const std::string &schema_file) {
+bool DictCompiler::Compile(const std::string &schema_file) {
   LOG(INFO) << "compiling:";
-  uint32_t dict_file_checksum = dict_file.empty() ? 0 : Checksum(dict_file);
-  uint32_t schema_file_checksum = schema_file.empty() ? 0 : Checksum(schema_file);
-  LOG(INFO) << dict_file << " (" << dict_file_checksum << ")";
+  std::string dict_file(FindDictFile(dict_name_));
+  if (dict_file.empty())
+    return false;
+  DictSettings settings;
+  if (!settings.LoadFromFile(dict_file))
+    return false;
+  LOG(INFO) << "dict name: " << settings.dict_name;
+  LOG(INFO) << "dict version: " << settings.dict_version;
+  std::vector<std::string> dict_files;
+  BOOST_FOREACH(const std::string& table, settings.tables) {
+    std::string dict_file(FindDictFile(table));
+    if (dict_file.empty())
+      return false;
+    dict_files.push_back(dict_file);
+  }
+  uint32_t dict_file_checksum =
+      dict_file.empty() ? 0 : Checksum(dict_files);
+  uint32_t schema_file_checksum =
+      schema_file.empty() ? 0 : Checksum(schema_file);
+  LOG(INFO) << dict_file << "[" << dict_files.size() << "]"
+            << " (" << dict_file_checksum << ")";
   LOG(INFO) << schema_file << " (" << schema_file_checksum << ")";
   bool rebuild_table = true;
   bool rebuild_prism = true;
@@ -72,30 +91,38 @@ bool DictCompiler::Compile(const std::string &dict_file, const std::string &sche
   if (options_ & kRebuildPrism) {
     rebuild_prism = true;
   }
-  if (rebuild_table && !BuildTable(dict_file, dict_file_checksum))
+  if (rebuild_table && !BuildTable(settings, dict_files, dict_file_checksum))
     return false;
-  if (rebuild_prism && !BuildPrism(schema_file, dict_file_checksum, schema_file_checksum))
+  if (rebuild_prism && !BuildPrism(schema_file,
+                                   dict_file_checksum, schema_file_checksum))
     return false;
-  if (rebuild_rev_lookup_dict && !BuildReverseLookupDict(&db, dict_file_checksum))
+  if (rebuild_rev_lookup_dict &&
+      !BuildReverseLookupDict(&db, dict_file_checksum))
     return false;
   // done!
   return true;
 }
 
-bool DictCompiler::BuildTable(const std::string &dict_file, uint32_t checksum) {
-  LOG(INFO) << "building table...";
+const std::string DictCompiler::FindDictFile(const std::string& dict_name) {
+  std::string dict_file(dict_name + ".dict.yaml");
+  if (dict_file_finder_) {
+    dict_file = dict_file_finder_(dict_file);
+  }
+  return dict_file;
+}
 
-  DictSettings settings;
-  if (!settings.LoadFromFile(dict_file))
-    return false;
-  LOG(INFO) << "dict name: " << settings.dict_name;
-  LOG(INFO) << "dict version: " << settings.dict_version;
-  
+bool DictCompiler::BuildTable(const DictSettings &settings,
+                              const std::vector<std::string> &dict_files,
+                              uint32_t dict_file_checksum) {
+  LOG(INFO) << "building table...";
   EntryCollector collector;
   if (settings.use_preset_vocabulary) {
     collector.LoadPresetVocabulary(&settings);
   }
-  collector.Collect(dict_file);
+  BOOST_FOREACH(const std::string& dict_file, dict_files) {
+    collector.Collect(dict_file);
+  }
+  collector.Finish();
   if (options_ & kDump) {
     boost::filesystem::path path(table_->file_name());
     path.replace_extension(".txt");
@@ -129,7 +156,8 @@ bool DictCompiler::BuildTable(const std::string &dict_file, uint32_t checksum) {
       vocabulary.SortHomophones();
     }
     table_->Remove();
-    if (!table_->Build(collector.syllabary, vocabulary, collector.num_entries, checksum) ||
+    if (!table_->Build(collector.syllabary, vocabulary, collector.num_entries,
+                       dict_file_checksum) ||
         !table_->Save()) {
       return false;
     }

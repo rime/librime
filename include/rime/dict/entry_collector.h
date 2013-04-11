@@ -34,14 +34,20 @@ struct EntryCollector {
 
   EntryCollector();
   ~EntryCollector();
-  void LoadPresetVocabulary(DictSettings* settings);
+  void LoadPresetVocabulary(const DictSettings* settings);
+  // call Collect() multiple times for all required tables
   void Collect(const std::string &dict_file);
+  // encode all collected entries
+  void Finish();
+  // export contents of table and prism to text files
+  void Dump(const std::string& file_name) const;
+
+ protected:
   void CreateEntry(const std::string &word,
                    const std::string &code_str,
                    const std::string &weight_str);
   bool Encode(const std::string &phrase, const std::string &weight_str,
               size_t start_pos, dictionary::RawCode *code);
-  void Dump(const std::string& file_name) const;
 };
 
 }  // namespace rime
