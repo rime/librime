@@ -67,7 +67,8 @@ struct DfsState {
 
 void DfsState::RecruitEntry(size_t pos) {
   shared_ptr<DictEntry> e =
-      UserDictionary::CreateDictEntry(key, value, present_tick, credibility.back());
+      UserDictionary::CreateDictEntry(key, value, present_tick,
+                                      credibility.back());
   if (e) {
     e->code = code;
     DLOG(INFO) << "add entry at pos " << pos;
@@ -125,7 +126,8 @@ UserDictionary::~UserDictionary() {
   }
 }
 
-void UserDictionary::Attach(const shared_ptr<Table> &table, const shared_ptr<Prism> &prism) {
+void UserDictionary::Attach(const shared_ptr<Table> &table,
+                            const shared_ptr<Prism> &prism) {
   table_ = table;
   prism_ = prism;
 }
@@ -142,18 +144,24 @@ bool UserDictionary::loaded() const {
   return db_ && db_->loaded();
 }
 
-// this is a one-pass scan for the user db which supports sequential access in alphabetical order (of syllables).
-// each call to DfsLookup() searches matching phrases at a given start position: current_pos.
-// there may be multiple edges that starts at current_pos, and ends at different positions after current_pos.
-// on each edge, there may be multiple syllables the spelling on the edge maps to.
+// this is a one-pass scan for the user db which supports sequential access
+// in alphabetical order (of syllables).
+// each call to DfsLookup() searches for matching phrases at a given
+// start position: current_pos.
+// there may be multiple edges that start at current_pos, and ends at different
+// positions after current_pos. on each edge, there can be multiple syllables
+// the spelling on the edge maps to.
 // in order to enable forward scaning and to avoid backdating, our strategy is:
-// sort all those syllables from edges that starts at current_pos, so that the syllables are in the same
-// alphabetical order with the user db's.
-// this having been done by transposing the syllable graph into SyllableGraph::index.
-// however, in the case of 'shsh' which could be the abbreviation of either 'sh(a) sh(i)' or 'sh(a) s(hi) h(ou)',
+// sort all those syllables from edges that starts at current_pos, so that
+// the syllables are in the same alphabetical order as the user db's.
+// this having been done by transposing the syllable graph into
+// SyllableGraph::index.
+// however, in the case of 'shsh' which could be the abbreviation of either
+// 'sh(a) sh(i)' or 'sh(a) s(hi) h(ou)',
 // we now have to give up the latter path in order to avoid backdating.
 
-void UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_pos,
+void UserDictionary::DfsLookup(const SyllableGraph &syll_graph,
+                               size_t current_pos,
                                const std::string &current_prefix,
                                DfsState *state) {
   SpellingIndices::const_iterator index = syll_graph.indices.find(current_pos);
@@ -166,10 +174,13 @@ void UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
     if (spelling.second.empty()) continue;
     const SpellingProperties* props = spelling.second[0];
     size_t end_pos = props->end_pos;
-    DLOG(INFO) << "prefix: '" << current_prefix << "', syll_id: " << spelling.first
-               << ", edge: [" << current_pos << ", " << end_pos << ") of " << spelling.second.size();
+    DLOG(INFO) << "prefix: '" << current_prefix
+               << "', syll_id: " << spelling.first
+               << ", edge: [" << current_pos << ", " << end_pos << ") of "
+               << spelling.second.size();
     state->code.push_back(spelling.first);
-    state->credibility.push_back(state->credibility.back() * props->credibility);
+    state->credibility.push_back(
+        state->credibility.back() * props->credibility);
     BOOST_SCOPE_EXIT( (&state) ) {
       state->code.pop_back();
       state->credibility.pop_back();
@@ -198,10 +209,11 @@ void UserDictionary::DfsLookup(const SyllableGraph &syll_graph, size_t current_p
   }
 }
 
-shared_ptr<UserDictEntryCollector> UserDictionary::Lookup(const SyllableGraph &syll_graph,
-                                                          size_t start_pos,
-                                                          size_t depth_limit,
-                                                          double initial_credibility) {
+shared_ptr<UserDictEntryCollector>
+UserDictionary::Lookup(const SyllableGraph &syll_graph,
+                       size_t start_pos,
+                       size_t depth_limit,
+                       double initial_credibility) {
   if (!table_ || !prism_ || !loaded() ||
       start_pos >= syll_graph.interpreted_length)
     return shared_ptr<UserDictEntryCollector>();
@@ -368,7 +380,8 @@ bool UserDictionary::CommitPendingTransaction() {
   return false;
 }
 
-bool UserDictionary::TranslateCodeToString(const Code &code, std::string* result) {
+bool UserDictionary::TranslateCodeToString(const Code &code,
+                                           std::string* result) {
   if (!table_ || !result) return false;
   result->clear();
   BOOST_FOREACH(const int &syllable_id, code) {
