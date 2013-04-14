@@ -51,7 +51,6 @@ class TreeDb {
   bool Remove();
   bool Open();
   bool OpenReadOnly();
-  bool OpenRepaired();
   bool Close();
 
   const shared_ptr<TreeDbAccessor> Query(const std::string &key);
@@ -59,7 +58,7 @@ class TreeDb {
   bool Update(const std::string &key, const std::string &value);
   bool Erase(const std::string &key);
   bool Backup();
-  bool RecoverFromSnapshot();
+  bool Recover();
   bool Restore(const std::string& snapshot_file);
 
   bool BeginTransaction();
@@ -71,6 +70,10 @@ class TreeDb {
   bool loaded() const { return loaded_; }
   bool in_transaction() const { return in_transaction_; }
 
+  bool disabled() const { return disabled_; }
+  void Disable() { disabled_ = true; }
+  void Enable() { disabled_ = false; }
+
  protected:
   virtual bool CreateMetadata();
   void Initialize();
@@ -80,6 +83,7 @@ class TreeDb {
   bool loaded_;
   scoped_ptr<kyotocabinet::TreeDB> db_;
   bool in_transaction_;
+  bool disabled_;
 };
 
 typedef TreeDbAccessor UserDbAccessor;

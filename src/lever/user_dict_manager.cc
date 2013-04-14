@@ -278,7 +278,7 @@ int UserDictManager::Import(const std::string& dict_name,
 
 bool UserDictManager::UpgradeUserDict(const std::string& dict_name) {
   UserDb db(dict_name);
-  if (!db.OpenRepaired())
+  if (!db.OpenReadOnly())
     return false;
   if (!IsUserDb(db))
     return false;

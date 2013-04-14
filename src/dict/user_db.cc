@@ -58,7 +58,8 @@ bool TreeDbAccessor::exhausted() {
 
 TreeDb::TreeDb(const std::string &name) : name_(name),
                                           loaded_(false),
-                                          in_transaction_(false) {
+                                          in_transaction_(false),
+                                          disabled_(false) {
   boost::filesystem::path path(Service::instance().deployer().user_data_dir);
   file_name_ = (path / name).string();
 }
@@ -120,17 +121,16 @@ bool TreeDb::Backup() {
   return success;
 }
 
-bool TreeDb::RecoverFromSnapshot() {
-  Deployer& deployer(Service::instance().deployer());
-  boost::filesystem::path snapshot_file(deployer.user_data_sync_dir());
-  snapshot_file /= (name_ + ".snapshot");
-  if (!boost::filesystem::exists(snapshot_file))
-    return false;
-  LOG(INFO) << "snapshot file exists, trying to recover db '" << name_ << "'.";
-  if (loaded()) {
+bool TreeDb::Recover() {
+  LOG(INFO) << "trying to recover db '" << name_ << "'.";
+  // first try to open treedb with repair option on
+  if (OpenReadOnly()) {
+    LOG(INFO) << "treedb repaired.";
     Close();
   }
-  if (Exists()) {
+  else if (Exists()) {
+    // repair doesn't work on the damanged db file; remove and recreate it
+    LOG(INFO) << "recreating db file.";
     boost::system::error_code ec;
     boost::filesystem::rename(file_name(), file_name() + ".old", ec);
     if (ec && !Remove()) {
@@ -138,7 +138,21 @@ bool TreeDb::RecoverFromSnapshot() {
       return false;
     }
   }
-  return Open() && Restore(snapshot_file.string());
+  if (Open()) {
+    Deployer& deployer(Service::instance().deployer());
+    boost::filesystem::path snapshot_file(deployer.user_data_sync_dir());
+    snapshot_file /= (name_ + ".snapshot");
+    if (boost::filesystem::exists(snapshot_file)) {
+      LOG(INFO) << "snapshot exists, trying to recover db '" << name_ << "'.";
+      if (Restore(snapshot_file.string())) {
+        LOG(INFO) << "recovered db '" << name_ << "' from snapshot.";
+      }
+    }
+    LOG(INFO) << "recovery successful.";
+    return true;
+  }
+  LOG(ERROR) << "recovery failed.";
+  return false;
 }
 
 bool TreeDb::Restore(const std::string& snapshot_file) {
@@ -172,14 +186,15 @@ bool TreeDb::Open() {
                       kyotocabinet::TreeDB::ONOREPAIR);
   if (loaded_) {
     std::string db_name;
-    if (!Fetch("\x01/db_name", &db_name))
-      CreateMetadata();
+    if (!Fetch("\x01/db_name", &db_name)) {
+      if (!CreateMetadata()) {
+        LOG(ERROR) << "error creating metadata.";
+        Close();
+      }
+    }
   }
   else {
     LOG(ERROR) << "Error opening db '" << name_ << "'.";
-    if (RecoverFromSnapshot()) {
-      LOG(INFO) << "successfully recovered db '" << name_ << "' from snapshot.";
-    }
   }
   return loaded_;
 }
@@ -189,22 +204,9 @@ bool TreeDb::OpenReadOnly() {
   Initialize();
   loaded_ = db_->open(file_name(),
                       kyotocabinet::TreeDB::OREADER |
-                      kyotocabinet::TreeDB::OTRYLOCK |
-                      kyotocabinet::TreeDB::ONOREPAIR);
-  if (!loaded_) {
-    LOG(ERROR) << "Error opening db '" << name_ << "' read-only.";
-  }
-  return loaded_;
-}
-
-bool TreeDb::OpenRepaired() {
-  if (loaded()) return false;
-  Initialize();
-  loaded_ = db_->open(file_name(),
-                      kyotocabinet::TreeDB::OREADER |
                       kyotocabinet::TreeDB::OTRYLOCK);
   if (!loaded_) {
-    LOG(ERROR) << "Error opening db '" << name_ << "' repaired.";
+    LOG(ERROR) << "Error opening db '" << name_ << "' read-only.";
   }
   return loaded_;
 }

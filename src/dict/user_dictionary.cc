@@ -14,6 +14,7 @@
 #include <rime/common.h>
 #include <rime/config.h>
 #include <rime/schema.h>
+#include <rime/service.h>
 #include <rime/algo/dynamics.h>
 #include <rime/algo/syllabifier.h>
 #include <rime/dict/table.h>
@@ -76,6 +77,20 @@ void DfsState::RecruitEntry(size_t pos) {
   }
 }
 
+class UserDbRecoveryTask : public DeploymentTask {
+ public:
+  explicit UserDbRecoveryTask(shared_ptr<UserDb> db) : db_(db) {}
+  bool Run(Deployer* deployer);
+ protected:
+  shared_ptr<UserDb> db_;
+};
+
+bool UserDbRecoveryTask::Run(Deployer* deployer) {
+  bool success = db_->Recover();
+  db_->Enable();
+  return success;
+}
+
 // UserDictEntryIterator members
 
 void UserDictEntryIterator::Add(const shared_ptr<DictEntry>& entry) {
@@ -133,15 +148,25 @@ void UserDictionary::Attach(const shared_ptr<Table> &table,
 }
 
 bool UserDictionary::Load() {
-  if (!db_ || !db_->Open())
+  if (!db_)
     return false;
+  if (!db_->Open()) {
+    // try to recover userdb in work thread
+    Deployer& deployer(Service::instance().deployer());
+    if (!deployer.IsWorking()) {
+      db_->Disable();
+      deployer.ScheduleTask(New<UserDbRecoveryTask>(db_));
+      deployer.StartWork();
+    }
+    return false;
+  }
   if (!FetchTickCount() && !Initialize())
     return false;
   return true;
 }
 
 bool UserDictionary::loaded() const {
-  return db_ && db_->loaded();
+  return db_ && !db_->disabled() && db_->loaded();
 }
 
 // this is a one-pass scan for the user db which supports sequential access

@@ -25,17 +25,17 @@ struct UserDictEntryCollector : std::map<size_t, DictEntryList> {
 class UserDictEntryIterator {
  public:
   UserDictEntryIterator() : entries_(), index_(0) {}
-  
+
   void Add(const shared_ptr<DictEntry>& entry);
   void SortN(size_t count);
   bool Release(DictEntryList* receiver);
-  
+
   shared_ptr<DictEntry> Peek();
   bool Next();
   bool exhausted() const {
     return !entries_ || index_ >= entries_->size();
   }
-  
+
  protected:
   shared_ptr<DictEntryList> entries_;
   size_t index_;
