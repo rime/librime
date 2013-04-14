@@ -11,6 +11,17 @@
 
 namespace rime {
 
+Deployer::Deployer() : shared_data_dir("."),
+                       user_data_dir("."),
+                       sync_dir("sync"),
+                       user_id("unknown"),
+                       maintenance_mode_(false) {
+}
+
+Deployer::~Deployer() {
+  JoinWorkThread();
+}
+
 const std::string Deployer::user_data_sync_dir() const {
   boost::filesystem::path p(sync_dir);
   p /= user_id;
@@ -35,8 +46,8 @@ shared_ptr<DeploymentTask> Deployer::NextTask() {
 }
 
 bool Deployer::HasPendingTasks() {
-    boost::lock_guard<boost::mutex> lock(mutex_);
-    return !pending_tasks_.empty();
+  boost::lock_guard<boost::mutex> lock(mutex_);
+  return !pending_tasks_.empty();
 }
 
 bool Deployer::Run() {
@@ -63,31 +74,43 @@ bool Deployer::Run() {
   return !failure;
 }
 
-bool Deployer::StartMaintenance() {
-  if (IsMaintenancing()) {
-    LOG(WARNING) << "a maintenance thread is already running.";
+bool Deployer::StartWork(bool maintenance_mode) {
+  if (IsWorking()) {
+    LOG(WARNING) << "a work thread is already running.";
     return false;
   }
+  maintenance_mode_ = maintenance_mode;
   if (pending_tasks_.empty()) {
     return false;
   }
-  LOG(INFO) << "starting maintenance thread for "
+  LOG(INFO) << "starting work thread for "
             << pending_tasks_.size() << " tasks.";
   boost::thread t(boost::bind(&Deployer::Run, this));
-  maintenance_thread_.swap(t);
-  return maintenance_thread_.joinable();
+  work_thread_.swap(t);
+  return work_thread_.joinable();
+}
+
+bool Deployer::StartMaintenance() {
+  return StartWork(true);
+}
+
+bool Deployer::IsWorking() {
+  if (!work_thread_.joinable())
+    return false;
+  return !work_thread_.timed_join(boost::posix_time::milliseconds(0));
 }
 
 bool Deployer::IsMaintenancing() {
-  if (!maintenance_thread_.joinable())
-    return false;
-  return !maintenance_thread_.timed_join(boost::posix_time::milliseconds(0));
+  return maintenance_mode_ && IsWorking();
+}
+
+void Deployer::JoinWorkThread() {
+  if (work_thread_.joinable())
+    work_thread_.join();
 }
 
 void Deployer::JoinMaintenanceThread() {
-  if (!maintenance_thread_.joinable())
-    return;
-  maintenance_thread_.join();
+  JoinWorkThread();
 }
 
 }  // namespace rime

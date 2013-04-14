@@ -21,7 +21,7 @@ class DeploymentTask {
  public:
   DeploymentTask() {}
   virtual ~DeploymentTask() {}
-  
+
   virtual bool Run(Deployer* deployer) = 0;
 };
 
@@ -37,18 +37,20 @@ class Deployer : public Messenger {
   std::string distribution_version;
   // }
 
-  Deployer() : shared_data_dir("."),
-               user_data_dir("."),
-               sync_dir("sync"),
-               user_id("unknown") {}
+  Deployer();
+  ~Deployer();
 
   void ScheduleTask(const shared_ptr<DeploymentTask>& task);
   shared_ptr<DeploymentTask> NextTask();
   bool HasPendingTasks();
-  
+
   bool Run();
+  bool StartWork(bool maintenance_mode = false);
   bool StartMaintenance();
+  bool IsWorking();
   bool IsMaintenancing();
+  // the following two methods equally wait until all threads are joined
+  void JoinWorkThread();
   void JoinMaintenanceThread();
 
   const std::string user_data_sync_dir() const;
@@ -56,7 +58,8 @@ class Deployer : public Messenger {
  private:
   std::queue<shared_ptr<DeploymentTask> > pending_tasks_;
   boost::mutex mutex_;
-  boost::thread maintenance_thread_;
+  boost::thread work_thread_;
+  bool maintenance_mode_;
 };
 
 }  // namespace rime
