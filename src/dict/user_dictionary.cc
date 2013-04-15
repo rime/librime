@@ -17,8 +17,8 @@
 #include <rime/service.h>
 #include <rime/algo/dynamics.h>
 #include <rime/algo/syllabifier.h>
+#include <rime/dict/db.h>
 #include <rime/dict/table.h>
-#include <rime/dict/user_db.h>
 #include <rime/dict/user_dictionary.h>
 
 namespace rime {
@@ -530,10 +530,19 @@ UserDictionary* UserDictionaryComponent::Create(const Ticket& ticket) {
                << ticket.schema->schema_id() << "'.";
     return NULL;
   }
+  std::string db_class("userdb");
+  if (config->GetString(ticket.name_space + "/db_class", &db_class)) {
+    // user specified db class
+  }
   // obtain userdb object
   shared_ptr<Db> db(db_pool_[dict_name].lock());
   if (!db) {
-    db = boost::make_shared<UserDb>(dict_name);
+    Db::Component* c = Db::Require(db_class);
+    if (!c) {
+      LOG(ERROR) << "undefined db class '" << db_class << "'.";
+      return NULL;
+    }
+    db.reset(c->Create(dict_name));
     db_pool_[dict_name] = db;
   }
   return new UserDictionary(db);

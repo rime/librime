@@ -48,11 +48,14 @@ void RegisterComponents() {
 
   Registry &r = Registry::instance();
 
-  boost::filesystem::path user_data_dir(Service::instance().deployer().user_data_dir);
+  boost::filesystem::path user_data_dir =
+      Service::instance().deployer().user_data_dir;
   boost::filesystem::path config_path = user_data_dir / "%s.yaml";
   boost::filesystem::path schema_path = user_data_dir / "%s.schema.yaml";
   r.Register("config", new ConfigComponent(config_path.string()));
   r.Register("schema_config", new ConfigComponent(schema_path.string()));
+
+  r.Register("userdb", new Component<UserDb>);
 
   r.Register("dictionary", new DictionaryComponent);
   r.Register("reverse_lookup_dictionary", new ReverseLookupDictionaryComponent);
@@ -84,7 +87,8 @@ void RegisterComponents() {
   r.Register("table_translator", new Component<TableTranslator>);
   r.Register("script_translator", new Component<ScriptTranslator>);
   r.Register("r10n_translator", new Component<ScriptTranslator>);  // alias
-  r.Register("reverse_lookup_translator", new Component<ReverseLookupTranslator>);
+  r.Register("reverse_lookup_translator",
+             new Component<ReverseLookupTranslator>);
 
   // filters
   r.Register("simplifier", new Component<Simplifier>);
