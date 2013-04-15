@@ -17,7 +17,7 @@ namespace rime {
 class Dictionary;
 class Prism;
 class Table;
-class TreeDb;
+class ReverseDb;
 struct DictSettings;
 
 // return found dict file path, otherwize return empty string
@@ -46,7 +46,7 @@ class DictCompiler {
                   uint32_t dict_file_checksum);
   bool BuildPrism(const std::string &schema_file,
                   uint32_t dict_file_checksum, uint32_t schema_file_checksum);
-  bool BuildReverseLookupDict(TreeDb *db, uint32_t dict_file_checksum);
+  bool BuildReverseLookupDict(ReverseDb* db, uint32_t dict_file_checksum);
 
   std::string dict_name_;
   shared_ptr<Prism> prism_;

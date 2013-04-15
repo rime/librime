@@ -17,14 +17,57 @@
 
 namespace rime {
 
+// DbAccessor members
+
+DbAccessor::DbAccessor() {
+}
+
+DbAccessor::~DbAccessor() {
+}
+
+void DbAccessor::Initialize() {
+  Reset();
+  if (!prefix_.empty())
+    Forward(prefix_);
+}
+
+bool DbAccessor::MatchesPrefix(const std::string& key) {
+  return boost::starts_with(key, prefix_);
+}
+
+// Db members
+
+Db::Db(const std::string& name)
+    : name_(name), loaded_(false), readonly_(false), disabled_(false) {
+  boost::filesystem::path path(Service::instance().deployer().user_data_dir);
+  file_name_ = (path / name).string();
+}
+
+Db::~Db() {
+}
+
+bool Db::Exists() const {
+  return boost::filesystem::exists(file_name());
+}
+
+bool Db::Remove() {
+  if (loaded()) {
+    LOG(ERROR) << "attempt to remove opened db '" << name_ << "'.";
+    return false;
+  }
+  return boost::filesystem::remove(file_name());
+}
+
 // TreeDbAccessor memebers
 
-TreeDbAccessor::TreeDbAccessor(kyotocabinet::DB::Cursor *cursor,
-                               const std::string &prefix)
-    : cursor_(cursor), prefix_(prefix) {
-  Reset();
-  if (!prefix.empty())
-    Forward(prefix);
+TreeDbAccessor::TreeDbAccessor() {
+}
+
+TreeDbAccessor::TreeDbAccessor(kyotocabinet::DB::Cursor* cursor,
+                               const std::string& prefix)
+    : cursor_(cursor) {
+  prefix_ = prefix;
+  Initialize();
 }
 
 TreeDbAccessor::~TreeDbAccessor() {
@@ -46,29 +89,18 @@ bool TreeDbAccessor::Backward(const std::string &key) {
 bool TreeDbAccessor::GetNextRecord(std::string *key, std::string *value) {
   if (!cursor_ || !key || !value)
     return false;
-  return cursor_->get(key, value, true) && boost::starts_with(*key, prefix_);
+  return cursor_->get(key, value, true) && MatchesPrefix(*key);
 }
 
 bool TreeDbAccessor::exhausted() {
   std::string key;
-  return !cursor_->get_key(&key, false) || !boost::starts_with(key, prefix_);
+  return !cursor_->get_key(&key, false) || !MatchesPrefix(key);
 }
 
 // TreeDb members
 
-TreeDb::TreeDb(const std::string &name) : name_(name),
-                                          loaded_(false),
-                                          in_transaction_(false),
-                                          disabled_(false) {
-  boost::filesystem::path path(Service::instance().deployer().user_data_dir);
-  file_name_ = (path / name).string();
-}
-
-void TreeDb::Initialize() {
-  db_.reset(new kyotocabinet::TreeDB);
-  db_->tune_options(kyotocabinet::TreeDB::TSMALL | kyotocabinet::TreeDB::TLINEAR);
-  db_->tune_map(4LL << 20);
-  db_->tune_defrag(8);
+TreeDb::TreeDb(const std::string& name, const std::string& db_type)
+    : Db(name), db_type_(db_type) {
 }
 
 TreeDb::~TreeDb() {
@@ -76,11 +108,18 @@ TreeDb::~TreeDb() {
     Close();
 }
 
-const shared_ptr<TreeDbAccessor> TreeDb::Query(const std::string &key) {
+void TreeDb::Initialize() {
+  db_.reset(new kyotocabinet::TreeDB);
+  db_->tune_options(kyotocabinet::TreeDB::TSMALL |
+                    kyotocabinet::TreeDB::TLINEAR);
+  db_->tune_map(4LL << 20);
+  db_->tune_defrag(8);
+}
+
+shared_ptr<DbAccessor> TreeDb::Query(const std::string &key) {
   if (!loaded())
-    return shared_ptr<TreeDbAccessor>();
-  kyotocabinet::DB::Cursor *cursor = db_->cursor();  // should be freed by us
-  return boost::make_shared<TreeDbAccessor>(cursor, key);
+    return shared_ptr<DbAccessor>();
+  return boost::make_shared<TreeDbAccessor>(db_->cursor(), key);
 }
 
 bool TreeDb::Fetch(const std::string &key, std::string *value) {
@@ -164,21 +203,10 @@ bool TreeDb::Restore(const std::string& snapshot_file) {
   return success;
 }
 
-bool TreeDb::Exists() const {
-  return boost::filesystem::exists(file_name());
-}
-
-bool TreeDb::Remove() {
-  if (loaded()) {
-    LOG(ERROR) << "attempt to remove opened db '" << name_ << "'.";
-    return false;
-  }
-  return boost::filesystem::remove(file_name());
-}
-
 bool TreeDb::Open() {
   if (loaded()) return false;
   Initialize();
+  readonly_ = false;
   loaded_ = db_->open(file_name(),
                       kyotocabinet::TreeDB::OWRITER |
                       kyotocabinet::TreeDB::OCREATE |
@@ -202,6 +230,7 @@ bool TreeDb::Open() {
 bool TreeDb::OpenReadOnly() {
   if (loaded()) return false;
   Initialize();
+  readonly_ = true;
   loaded_ = db_->open(file_name(),
                       kyotocabinet::TreeDB::OREADER |
                       kyotocabinet::TreeDB::OTRYLOCK);
@@ -216,16 +245,19 @@ bool TreeDb::Close() {
   db_->close();
   LOG(INFO) << "closed db '" << name_ << "'.";
   loaded_ = false;
+  readonly_ = false;
   in_transaction_ = false;
   return true;
 }
 
 bool TreeDb::CreateMetadata() {
   LOG(INFO) << "creating metadata for db '" << name_ << "'.";
-  std::string rime_version(RIME_VERSION);
+  Deployer& deployer(Service::instance().deployer());
   // '\x01' is the meta character
   return db_->set("\x01/db_name", name_) &&
-         db_->set("\x01/rime_version", rime_version);
+      db_->set("\x01/db_type", db_type_) &&
+      db_->set("\x01/rime_version", RIME_VERSION) &&
+      db_->set("\x01/user_id", deployer.user_id);
 }
 
 bool TreeDb::BeginTransaction() {
@@ -248,15 +280,36 @@ bool TreeDb::CommitTransaction() {
 
 // UserDb members
 
-UserDb::UserDb(const std::string &name) : TreeDb(name + ".userdb.kct") {
+bool UserDb::IsUserDb() {
+  std::string db_type;
+  return Fetch("\x01/db_type", &db_type) && db_type == "userdb";
 }
 
-bool UserDb::CreateMetadata() {
-  Deployer& deployer(Service::instance().deployer());
-  // '\x01' is the meta character
-  return TreeDb::CreateMetadata() &&
-      db_->set("\x01/db_type", "userdb") &&
-      db_->set("\x01/user_id", deployer.user_id);
+const std::string UserDb::GetDbName() {
+  std::string name;
+  if (!Fetch("\x01/db_name", &name))
+    return name;
+  boost::erase_last(name, ".kct");
+  boost::erase_last(name, ".userdb");
+  return name;
+}
+
+const std::string UserDb::GetUserId() {
+  std::string user_id("unknown");
+  Fetch("\x01/user_id", &user_id);
+  return user_id;
+}
+
+TickCount UserDb::GetTickCount() {
+  std::string tick;
+  if (Fetch("\x01/tick", &tick)) {
+    try {
+      return boost::lexical_cast<TickCount>(tick);
+    }
+    catch (...) {
+    }
+  }
+  return 1;
 }
 
 }  // namespace rime

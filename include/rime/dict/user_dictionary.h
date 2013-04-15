@@ -44,19 +44,20 @@ class UserDictEntryIterator {
 class Schema;
 class Table;
 class Prism;
-class UserDb;
+class Db;
 struct SyllableGraph;
 struct DfsState;
 struct Ticket;
 
 class UserDictionary : public Class<UserDictionary, const Ticket&> {
  public:
-  explicit UserDictionary(const shared_ptr<UserDb> &user_db);
+  explicit UserDictionary(const shared_ptr<Db> &db);
   virtual ~UserDictionary();
 
   void Attach(const shared_ptr<Table> &table, const shared_ptr<Prism> &prism);
   bool Load();
   bool loaded() const;
+  bool readonly() const;
 
   shared_ptr<UserDictEntryCollector> Lookup(const SyllableGraph &syllable_graph,
                                             size_t start_pos,
@@ -95,7 +96,7 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
 
  private:
   std::string name_;
-  shared_ptr<UserDb> db_;
+  shared_ptr<Db> db_;
   shared_ptr<Table> table_;
   shared_ptr<Prism> prism_;
   TickCount tick_;
@@ -107,7 +108,7 @@ class UserDictionaryComponent : public UserDictionary::Component {
   UserDictionaryComponent();
   UserDictionary* Create(const Ticket& ticket);
  private:
-  std::map<std::string, weak_ptr<UserDb> > db_pool_;
+  std::map<std::string, weak_ptr<Db> > db_pool_;
 };
 
 }  // namespace rime

@@ -29,7 +29,7 @@ struct DfsState {
   Code code;
   std::vector<double> credibility;
   shared_ptr<UserDictEntryCollector> collector;
-  shared_ptr<UserDbAccessor> accessor;
+  shared_ptr<DbAccessor> accessor;
   std::string key;
   std::string value;
 
@@ -79,15 +79,17 @@ void DfsState::RecruitEntry(size_t pos) {
 
 class UserDbRecoveryTask : public DeploymentTask {
  public:
-  explicit UserDbRecoveryTask(shared_ptr<UserDb> db) : db_(db) {}
+  explicit UserDbRecoveryTask(shared_ptr<Db> db) : db_(db) {}
   bool Run(Deployer* deployer);
  protected:
-  shared_ptr<UserDb> db_;
+  shared_ptr<Db> db_;
 };
 
 bool UserDbRecoveryTask::Run(Deployer* deployer) {
-  bool success = db_->Recover();
-  db_->Enable();
+  if (!Is<Managed>(db_))
+    return false;
+  bool success = As<Managed>(db_)->Recover();
+  db_->enable();
   return success;
 }
 
@@ -131,13 +133,13 @@ bool UserDictEntryIterator::Next() {
 
 // UserDictionary members
 
-UserDictionary::UserDictionary(const shared_ptr<UserDb> &user_db)
-    : db_(user_db), tick_(0), transaction_time_(0) {
+UserDictionary::UserDictionary(const shared_ptr<Db> &db)
+    : db_(db), tick_(0), transaction_time_(0) {
 }
 
 UserDictionary::~UserDictionary() {
-  if (loaded() && db_->in_transaction()) {
-    db_->CommitTransaction();
+  if (loaded()) {
+    CommitPendingTransaction();
   }
 }
 
@@ -151,10 +153,10 @@ bool UserDictionary::Load() {
   if (!db_)
     return false;
   if (!db_->Open()) {
-    // try to recover userdb in work thread
+    // try to recover managed db in available work thread
     Deployer& deployer(Service::instance().deployer());
-    if (!deployer.IsWorking()) {
-      db_->Disable();
+    if (Is<Managed>(db_) && !deployer.IsWorking()) {
+      db_->disable();
       deployer.ScheduleTask(New<UserDbRecoveryTask>(db_));
       deployer.StartWork();
     }
@@ -167,6 +169,10 @@ bool UserDictionary::Load() {
 
 bool UserDictionary::loaded() const {
   return db_ && !db_->disabled() && db_->loaded();
+}
+
+bool UserDictionary::readonly() const {
+  return db_ && db_->readonly();
 }
 
 // this is a one-pass scan for the user db which supports sequential access
@@ -274,7 +280,7 @@ size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
   std::string key;
   std::string value;
   std::string full_code;
-  shared_ptr<UserDbAccessor> a = db_->Query(input);
+  shared_ptr<DbAccessor> a = db_->Query(input);
   if (!a || a->exhausted()) {
     if (resume_key)
       *resume_key = kEnd;
@@ -385,22 +391,27 @@ bool UserDictionary::FetchTickCount() {
 }
 
 bool UserDictionary::NewTransaction() {
+  shared_ptr<Transactional> db = As<Transactional>(db_);
+  if (!db)
+    return false;
   CommitPendingTransaction();
   transaction_time_ = time(NULL);
-  return db_->BeginTransaction();
+  return db->BeginTransaction();
 }
 
 bool UserDictionary::RevertRecentTransaction() {
-  if (!db_->in_transaction())
+  shared_ptr<Transactional> db = As<Transactional>(db_);
+  if (!db || !db->in_transaction())
     return false;
   if (time(NULL) - transaction_time_ > 3/*seconds*/)
     return false;
-  return db_->AbortTransaction();
+  return db->AbortTransaction();
 }
 
 bool UserDictionary::CommitPendingTransaction() {
-  if (db_->in_transaction()) {
-    return db_->CommitTransaction();
+  shared_ptr<Transactional> db = As<Transactional>(db_);
+  if (db && db->in_transaction()) {
+    return db->CommitTransaction();
   }
   return false;
 }
@@ -520,7 +531,7 @@ UserDictionary* UserDictionaryComponent::Create(const Ticket& ticket) {
     return NULL;
   }
   // obtain userdb object
-  shared_ptr<UserDb> db(db_pool_[dict_name].lock());
+  shared_ptr<Db> db(db_pool_[dict_name].lock());
   if (!db) {
     db = boost::make_shared<UserDb>(dict_name);
     db_pool_[dict_name] = db;

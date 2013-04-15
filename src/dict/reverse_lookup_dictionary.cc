@@ -9,7 +9,7 @@
 
 namespace rime {
 
-ReverseLookupDictionary::ReverseLookupDictionary(const shared_ptr<TreeDb> &db)
+ReverseLookupDictionary::ReverseLookupDictionary(shared_ptr<ReverseDb> db)
     : db_(db) {
 }
 
@@ -39,13 +39,12 @@ ReverseLookupDictionary* ReverseLookupDictionaryComponent::Create(
     // missing!
     return NULL;
   }
-  shared_ptr<TreeDb> db(db_pool_[dict_name].lock());
+  shared_ptr<ReverseDb> db(db_pool_[dict_name].lock());
   if (!db) {
-    db = boost::make_shared<TreeDb>(dict_name + ".reverse.bin");
+    db = boost::make_shared<ReverseDb>(dict_name);
     db_pool_[dict_name] = db;
   }
   return new ReverseLookupDictionary(db);
 }
-
 
 }  // namespace rime

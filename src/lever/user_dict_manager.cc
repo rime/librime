@@ -23,38 +23,6 @@ namespace fs = boost::filesystem;
 
 namespace rime {
 
-static bool IsUserDb(UserDb& db) {
-  std::string db_type;
-  return db.Fetch("\x01/db_type", &db_type) && db_type == "userdb";
-}
-
-static const std::string GetDbName(UserDb& db) {
-  std::string name;
-  if (!db.Fetch("\x01/db_name", &name))
-    return name;
-  boost::erase_last(name, ".kct");
-  boost::erase_last(name, ".userdb");
-  return name;
-}
-
-static const std::string GetUserId(UserDb& db) {
-  std::string user_id("unknown");
-  db.Fetch("\x01/user_id", &user_id);
-  return user_id;
-}
-
-static TickCount GetTickCount(UserDb& db) {
-  std::string tick;
-  if (db.Fetch("\x01/tick", &tick)) {
-    try {
-      return boost::lexical_cast<TickCount>(tick);
-    }
-    catch (...) {
-    }
-  }
-  return 1;
-}
-
 UserDictManager::UserDictManager(Deployer* deployer)
     : deployer_(deployer) {
   if (deployer) {
@@ -84,7 +52,7 @@ bool UserDictManager::Backup(const std::string& dict_name) {
   UserDb db(dict_name);
   if (!db.OpenReadOnly())
     return false;
-  if (GetUserId(db) != deployer_->user_id) {
+  if (db.GetUserId() != deployer_->user_id) {
     LOG(INFO) << "user id not match; recreating metadata in " << dict_name;
     if (!db.Close() || !db.Open() || !db.CreateMetadata()) {
       LOG(ERROR) << "failed to recreate metadata in " << dict_name;
@@ -107,9 +75,9 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
   } BOOST_SCOPE_EXIT_END
   if (!temp.Restore(snapshot_file))
     return false;
-  if (!IsUserDb(temp))
+  if (!temp.IsUserDb())
     return false;
-  std::string db_name(GetDbName(temp));
+  std::string db_name(temp.GetDbName());
   if (db_name.empty())
     return false;
   UserDb dest(db_name);
@@ -120,12 +88,12 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
     dest.Close();
   } BOOST_SCOPE_EXIT_END
   LOG(INFO) << "merging '" << snapshot_file
-            << "' from " << GetUserId(temp)
+            << "' from " << temp.GetUserId()
             << " into userdb '" << db_name << "'...";
-  TickCount tick_left = GetTickCount(dest);
-  TickCount tick_right = GetTickCount(temp);
+  TickCount tick_left = dest.GetTickCount();
+  TickCount tick_right = temp.GetTickCount();
   TickCount tick_max = (std::max)(tick_left, tick_right);
-  shared_ptr<TreeDbAccessor> a = temp.Query("");
+  shared_ptr<DbAccessor> a = temp.Query("");
   std::string key, left, right;
   int num_entries = 0;
   while (a->GetNextRecord(&key, &right)) {
@@ -181,18 +149,18 @@ int UserDictManager::Export(const std::string& dict_name,
   {
     db.Close();
   } BOOST_SCOPE_EXIT_END
-  if (!IsUserDb(db))
+  if (!db.IsUserDb())
     return -1;
   std::ofstream fout(text_file.c_str());
   fout << "# Rime user dictionary export" << std::endl
-       << "# db_name: " << GetDbName(db) << std::endl
-       << "# user_id: " << GetUserId(db) << std::endl
-       << "# commits: " << GetTickCount(db) << std::endl
+       << "# db_name: " << db.GetDbName() << std::endl
+       << "# user_id: " << db.GetUserId() << std::endl
+       << "# commits: " << db.GetTickCount() << std::endl
        << std::endl;
   std::string key, value;
   std::vector<std::string> row;
   int num_entries = 0;
-  shared_ptr<UserDbAccessor> a = db.Query("");
+  shared_ptr<DbAccessor> a = db.Query("");
   while (a->GetNextRecord(&key, &value)) {
     if (boost::starts_with(key, "\x01/"))  // skip metadata
       continue;
@@ -224,7 +192,7 @@ int UserDictManager::Import(const std::string& dict_name,
   {
     db.Close();
   } BOOST_SCOPE_EXIT_END
-  if (!IsUserDb(db))
+  if (!db.IsUserDb())
     return -1;
   std::ifstream fin(text_file.c_str());
   std::string line, key, value;
@@ -280,7 +248,7 @@ bool UserDictManager::UpgradeUserDict(const std::string& dict_name) {
   UserDb db(dict_name);
   if (!db.OpenReadOnly())
     return false;
-  if (!IsUserDb(db))
+  if (!db.IsUserDb())
     return false;
   std::string db_creator_version;
   db.Fetch("\x01/rime_version", &db_creator_version);

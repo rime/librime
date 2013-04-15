@@ -18,7 +18,7 @@
 #include <rime/dict/entry_collector.h>
 #include <rime/dict/prism.h>
 #include <rime/dict/table.h>
-#include <rime/dict/user_db.h>
+#include <rime/dict/reverse_lookup_dictionary.h>
 
 namespace rime {
 
@@ -70,12 +70,12 @@ bool DictCompiler::Compile(const std::string &schema_file) {
     }
     prism_->Close();
   }
-  TreeDb deprecated_db(dict_name_ + ".reverse.kct");
+  TreeDb deprecated_db(dict_name_ + ".reverse.kct", "reversedb");
   if (deprecated_db.Exists()) {
     deprecated_db.Remove();
     LOG(INFO) << "removed deprecated db '" << deprecated_db.name() << "'.";
   }
-  TreeDb db(dict_name_ + ".reverse.bin");
+  ReverseDb db(dict_name_);
   if (db.Exists() && db.OpenReadOnly()) {
     std::string checksum;
     if (db.Fetch("\x01/dict_file_checksum", &checksum) &&
@@ -204,7 +204,8 @@ bool DictCompiler::BuildPrism(const std::string &schema_file,
   return true;
 }
 
-bool DictCompiler::BuildReverseLookupDict(TreeDb *db, uint32_t dict_file_checksum) {
+bool DictCompiler::BuildReverseLookupDict(ReverseDb* db,
+                                          uint32_t dict_file_checksum) {
   LOG(INFO) << "building reverse lookup db...";
   if (db->Exists())
     db->Remove();

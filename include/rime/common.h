@@ -21,8 +21,13 @@ using boost::weak_ptr;
 using boost::make_shared;
 
 template <class A, class B>
-shared_ptr<A> As(const B &ptr) {
+shared_ptr<A> As(const B& ptr) {
   return boost::dynamic_pointer_cast<A>(ptr);
+}
+
+template <class A, class B>
+bool Is(const B& ptr) {
+  return bool(As<A, B>(ptr));
 }
 
 template <class T>
