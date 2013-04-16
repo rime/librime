@@ -14,7 +14,6 @@
 namespace rime {
 
 class Deployer;
-class UserDb;
 
 typedef std::vector<std::string> UserDictList;
 

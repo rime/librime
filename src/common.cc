@@ -13,6 +13,9 @@
 
 // built-in components
 #include <rime/config.h>
+#include <rime/dict/text_db.h>
+#include <rime/dict/tree_db.h>
+#include <rime/dict/user_db.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 #include <rime/dict/user_dictionary.h>
@@ -55,7 +58,8 @@ void RegisterComponents() {
   r.Register("config", new ConfigComponent(config_path.string()));
   r.Register("schema_config", new ConfigComponent(schema_path.string()));
 
-  r.Register("userdb", new Component<UserDb>);
+  r.Register("textdb", new Component<UserDb<TextDb> >);
+  r.Register("userdb", new Component<UserDb<TreeDb> >);
 
   r.Register("dictionary", new DictionaryComponent);
   r.Register("reverse_lookup_dictionary", new ReverseLookupDictionaryComponent);

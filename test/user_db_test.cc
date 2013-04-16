@@ -6,10 +6,13 @@
 //
 #include <gtest/gtest.h>
 #include <rime/algo/syllabifier.h>
+#include <rime/dict/text_db.h>
 #include <rime/dict/user_db.h>
 
+typedef rime::UserDb<rime::TextDb> TestDb;
+
 TEST(RimeUserDbTest, AccessRecordByKey) {
-  rime::UserDb db("user_db_test");
+  TestDb db("user_db_test");
   if (db.Exists())
     db.Remove();
   ASSERT_FALSE(db.Exists());
@@ -36,7 +39,7 @@ TEST(RimeUserDbTest, AccessRecordByKey) {
 }
 
 TEST(RimeUserDbTest, Query) {
-  rime::UserDb db("user_db_test");
+  TestDb db("user_db_test");
   if (db.Exists())
     db.Remove();
   ASSERT_FALSE(db.Exists());

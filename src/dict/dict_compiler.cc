@@ -18,6 +18,7 @@
 #include <rime/dict/entry_collector.h>
 #include <rime/dict/prism.h>
 #include <rime/dict/table.h>
+#include <rime/dict/tree_db.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 
 namespace rime {

@@ -7,49 +7,61 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <rime/service.h>
+#include <rime/dict/text_db.h>
+#include <rime/dict/tree_db.h>
 #include <rime/dict/user_db.h>
 
 namespace rime {
 
-// UserDb members
+const std::string UserDb<TextDb>::extension(".userdb.txt");
+const std::string UserDb<TreeDb>::extension(".userdb.kct");
 
-UserDb::UserDb(const std::string& name)
-    : TreeDb(name + ".userdb.kct", "userdb") {
+UserDb<TextDb>::UserDb(const std::string& name)
+    : TextDb(name + extension, "userdb", 2) {
 }
 
-bool UserDb::CreateMetadata() {
+UserDb<TreeDb>::UserDb(const std::string& name)
+    : TreeDb(name + extension, "userdb") {
+}
+
+template <class BaseDb>
+bool UserDb<BaseDb>::CreateMetadata() {
   Deployer& deployer(Service::instance().deployer());
-  return TreeDb::CreateMetadata() &&
+  return BaseDb::CreateMetadata() &&
       MetaUpdate("/user_id", deployer.user_id);
 }
 
-bool UserDb::IsUserDb() {
+template <class BaseDb>
+bool UserDb<BaseDb>::IsUserDb() {
   std::string db_type;
   return MetaFetch("/db_type", &db_type) && (db_type == "userdb");
 }
 
-const std::string UserDb::GetDbName() {
+template <class BaseDb>
+const std::string UserDb<BaseDb>::GetDbName() {
   std::string name;
   if (!MetaFetch("/db_name", &name))
     return name;
-  boost::erase_last(name, ".kct");
-  boost::erase_last(name, ".userdb");
+  boost::erase_last(name, extension);
   return name;
 }
 
-const std::string UserDb::GetUserId() {
+template <class BaseDb>
+const std::string UserDb<BaseDb>::GetUserId() {
   std::string user_id("unknown");
   MetaFetch("/user_id", &user_id);
   return user_id;
 }
 
-const std::string UserDb::GetRimeVersion() {
+template <class BaseDb>
+const std::string UserDb<BaseDb>::GetRimeVersion() {
   std::string version;
   MetaFetch("/rime_version", &version);
   return version;
 }
 
-TickCount UserDb::GetTickCount() {
+template <class BaseDb>
+TickCount UserDb<BaseDb>::GetTickCount() {
   std::string tick;
   if (MetaFetch("/tick", &tick)) {
     try {
@@ -60,5 +72,8 @@ TickCount UserDb::GetTickCount() {
   }
   return 1;
 }
+
+template class UserDb<TextDb>;
+template class UserDb<TreeDb>;
 
 }  // namespace rime

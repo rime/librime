@@ -11,7 +11,7 @@
 #include <string>
 #include <rime/common.h>
 #include <rime/component.h>
-#include <rime/dict/user_db.h>
+#include <rime/dict/tree_db.h>
 
 namespace rime {
 

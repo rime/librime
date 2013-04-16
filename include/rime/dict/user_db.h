@@ -7,16 +7,17 @@
 #ifndef RIME_USER_DB_H_
 #define RIME_USER_DB_H_
 
+#include <stdint.h>
 #include <string>
-#include <rime/dict/tree_db.h>
 
 namespace rime {
 
 typedef uint64_t TickCount;
 
-class UserDb : public TreeDb {
+template <class BaseDb>
+class UserDb : public BaseDb {
  public:
-  UserDb(const std::string& name);
+  explicit UserDb(const std::string& name);
   virtual bool CreateMetadata();
 
   bool IsUserDb();
@@ -24,6 +25,8 @@ class UserDb : public TreeDb {
   const std::string GetUserId();
   const std::string GetRimeVersion();
   TickCount GetTickCount();
+
+  static const std::string extension;
 };
 
 }  // namespace rime

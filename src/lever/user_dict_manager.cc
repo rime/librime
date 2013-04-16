@@ -15,6 +15,7 @@
 #include <rime/deployer.h>
 #include <rime/algo/dynamics.h>
 #include <rime/algo/utilities.h>
+#include <rime/dict/tree_db.h>
 #include <rime/dict/user_db.h>
 #include <rime/dict/user_dictionary.h>
 #include <rime/lever/user_dict_manager.h>
@@ -41,15 +42,15 @@ void UserDictManager::GetUserDictList(UserDictList* user_dict_list) {
   fs::directory_iterator end;
   for (; it != end; ++it) {
     std::string name(it->path().filename().string());
-    if (boost::ends_with(name, ".userdb.kct")) {
-      boost::erase_last(name, ".userdb.kct");
+    if (boost::ends_with(name, UserDb<TreeDb>::extension)) {
+      boost::erase_last(name, UserDb<TreeDb>::extension);
       user_dict_list->push_back(name);
     }
   }
 }
 
 bool UserDictManager::Backup(const std::string& dict_name) {
-  UserDb db(dict_name);
+  UserDb<TreeDb> db(dict_name);
   if (!db.OpenReadOnly())
     return false;
   if (db.GetUserId() != deployer_->user_id) {
@@ -66,12 +67,13 @@ bool UserDictManager::Backup(const std::string& dict_name) {
       return false;
     }
   }
-  boost::filesystem::path snapshot_file = dir / (dict_name + ".snapshot");
-  return db.Backup(snapshot_file.string());
+  std::string snapshot_file =
+      dict_name + UserDb<TreeDb>::extension + ".snapshot";
+  return db.Backup((dir / snapshot_file).string());
 }
 
 bool UserDictManager::Restore(const std::string& snapshot_file) {
-  UserDb temp(".temp");
+  UserDb<TreeDb> temp(".temp");
   if (temp.Exists())
     temp.Remove();
   if (!temp.Open())
@@ -88,7 +90,7 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
   std::string db_name(temp.GetDbName());
   if (db_name.empty())
     return false;
-  UserDb dest(db_name);
+  UserDb<TreeDb> dest(db_name);
   if (!dest.Open())
     return false;
   BOOST_SCOPE_EXIT( (&dest) )
@@ -149,7 +151,7 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
 
 int UserDictManager::Export(const std::string& dict_name,
                             const std::string& text_file) {
-  UserDb db(dict_name);
+  UserDb<TreeDb> db(dict_name);
   if (!db.OpenReadOnly())
     return -1;
   BOOST_SCOPE_EXIT( (&db) )
@@ -191,7 +193,7 @@ int UserDictManager::Export(const std::string& dict_name,
 
 int UserDictManager::Import(const std::string& dict_name,
                             const std::string& text_file) {
-  UserDb db(dict_name);
+  UserDb<TreeDb> db(dict_name);
   if (!db.Open())
     return -1;
   BOOST_SCOPE_EXIT( (&db) )
@@ -251,7 +253,7 @@ int UserDictManager::Import(const std::string& dict_name,
 }
 
 bool UserDictManager::UpgradeUserDict(const std::string& dict_name) {
-  UserDb db(dict_name);
+  UserDb<TreeDb> db(dict_name);
   if (!db.OpenReadOnly())
     return false;
   if (!db.IsUserDb())
@@ -290,7 +292,8 @@ bool UserDictManager::Synchronize(const std::string& dict_name) {
   }
   fs::directory_iterator it(sync_dir);
   fs::directory_iterator end;
-  const std::string snapshot_file(dict_name + ".userdb.kct.snapshot");
+  std::string snapshot_file =
+      dict_name + UserDb<TreeDb>::extension + ".snapshot";
   for (; it != end; ++it) {
     if (!fs::is_directory(it->path()))
       continue;
