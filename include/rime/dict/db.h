@@ -16,16 +16,15 @@ namespace rime {
 class DbAccessor {
  public:
   DbAccessor();
+  explicit DbAccessor(const std::string& prefix);
   virtual ~DbAccessor();
 
   virtual bool Reset() = 0;
-  virtual bool Forward(const std::string &key) = 0;
-  virtual bool Backward(const std::string &key) = 0;
+  virtual bool Jump(const std::string &key) = 0;
   virtual bool GetNextRecord(std::string *key, std::string *value) = 0;
   virtual bool exhausted() = 0;
 
  protected:
-  void Initialize();
   bool MatchesPrefix(const std::string& key);
 
   std::string prefix_;
@@ -42,7 +41,10 @@ class Db : public Class<Db, const std::string&> {
   virtual bool Open() = 0;
   virtual bool OpenReadOnly() = 0;
   virtual bool Close() = 0;
-  virtual bool CreateMetadata() = 0;
+
+  virtual bool CreateMetadata();
+  virtual bool MetaFetch(const std::string& key, std::string* value) = 0;
+  virtual bool MetaUpdate(const std::string& key, const std::string& value) = 0;
 
   virtual shared_ptr<DbAccessor> Query(const std::string &key) = 0;
   virtual bool Fetch(const std::string &key, std::string *value) = 0;

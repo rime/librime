@@ -94,11 +94,10 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
   TickCount tick_right = temp.GetTickCount();
   TickCount tick_max = (std::max)(tick_left, tick_right);
   shared_ptr<DbAccessor> a = temp.Query("");
+  a->Jump(" ");  // skip metadata
   std::string key, left, right;
   int num_entries = 0;
   while (a->GetNextRecord(&key, &right)) {
-    if (boost::starts_with(key, "\x01/"))  // skip metadata
-      continue;
     size_t tab_pos = key.find('\t');
     if (tab_pos == 0 || tab_pos == std::string::npos)
       continue;
@@ -128,8 +127,8 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
   }
   if (num_entries > 0) {
     try {
-      dest.Update("\x01/tick", boost::lexical_cast<std::string>(tick_max));
-      dest.Update("\x01/user_id", deployer_->user_id);
+      dest.MetaUpdate("/tick", boost::lexical_cast<std::string>(tick_max));
+      dest.MetaUpdate("/user_id", deployer_->user_id);
     }
     catch (...) {
       LOG(WARNING) << "failed to update tick count.";
@@ -161,9 +160,8 @@ int UserDictManager::Export(const std::string& dict_name,
   std::vector<std::string> row;
   int num_entries = 0;
   shared_ptr<DbAccessor> a = db.Query("");
+  a->Jump(" ");  // skip metadata
   while (a->GetNextRecord(&key, &value)) {
-    if (boost::starts_with(key, "\x01/"))  // skip metadata
-      continue;
     boost::algorithm::split(row, key,
                             boost::algorithm::is_any_of("\t"));
     if (row.size() != 2 ||
@@ -250,8 +248,7 @@ bool UserDictManager::UpgradeUserDict(const std::string& dict_name) {
     return false;
   if (!db.IsUserDb())
     return false;
-  std::string db_creator_version;
-  db.Fetch("\x01/rime_version", &db_creator_version);
+  std::string db_creator_version(db.GetRimeVersion());
   if (CompareVersionString(db_creator_version, "0.9.7") < 0) {
     // fix invalid keys created by a buggy version of Import()
     LOG(INFO) << "upgrading user dict '" << dict_name << "'.";

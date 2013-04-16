@@ -78,7 +78,7 @@ bool DictCompiler::Compile(const std::string &schema_file) {
   ReverseDb db(dict_name_);
   if (db.Exists() && db.OpenReadOnly()) {
     std::string checksum;
-    if (db.Fetch("\x01/dict_file_checksum", &checksum) &&
+    if (db.MetaFetch("/dict_file_checksum", &checksum) &&
         boost::lexical_cast<uint32_t>(checksum) == dict_file_checksum) {
       rebuild_rev_lookup_dict = false;
     }
@@ -232,8 +232,8 @@ bool DictCompiler::BuildReverseLookupDict(ReverseDb* db,
     std::string code_list(boost::algorithm::join(v.second, " "));
     db->Update(v.first, code_list);
   }
-  db->Update("\x01/dict_file_checksum",
-             boost::lexical_cast<std::string>(dict_file_checksum));
+  db->MetaUpdate("/dict_file_checksum",
+                 boost::lexical_cast<std::string>(dict_file_checksum));
   db->Close();
   return true;
 }

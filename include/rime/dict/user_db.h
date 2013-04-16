@@ -19,9 +19,11 @@ class UserDb : public TreeDb {
   UserDb(const std::string& name)
       : TreeDb(name + ".userdb.kct", "userdb") {
   }
+  virtual bool CreateMetadata();
   bool IsUserDb();
   const std::string GetDbName();
   const std::string GetUserId();
+  const std::string GetRimeVersion();
   TickCount GetTickCount();
 };
 

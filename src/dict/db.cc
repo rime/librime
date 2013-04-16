@@ -6,6 +6,7 @@
 //
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <rime_version.h>
 #include <rime/common.h>
 #include <rime/service.h>
 #include <rime/dict/db.h>
@@ -17,13 +18,10 @@ namespace rime {
 DbAccessor::DbAccessor() {
 }
 
-DbAccessor::~DbAccessor() {
+DbAccessor::DbAccessor(const std::string& prefix) : prefix_(prefix) {
 }
 
-void DbAccessor::Initialize() {
-  Reset();
-  if (!prefix_.empty())
-    Forward(prefix_);
+DbAccessor::~DbAccessor() {
 }
 
 bool DbAccessor::MatchesPrefix(const std::string& key) {
@@ -51,6 +49,12 @@ bool Db::Remove() {
     return false;
   }
   return boost::filesystem::remove(file_name());
+}
+
+bool Db::CreateMetadata() {
+  LOG(INFO) << "creating metadata for db '" << name_ << "'.";
+  return MetaUpdate("/db_name", name_) &&
+      MetaUpdate("/rime_version", RIME_VERSION);
 }
 
 }  // namespace rime

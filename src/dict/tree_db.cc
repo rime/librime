@@ -5,7 +5,6 @@
 // 2011-11-02 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/filesystem.hpp>
-#include <rime_version.h>
 #include <rime/common.h>
 #include <rime/service.h>
 #include <rime/dict/tree_db.h>
@@ -19,9 +18,8 @@ TreeDbAccessor::TreeDbAccessor() {
 
 TreeDbAccessor::TreeDbAccessor(kyotocabinet::DB::Cursor* cursor,
                                const std::string& prefix)
-    : cursor_(cursor) {
-  prefix_ = prefix;
-  Initialize();
+    : DbAccessor(prefix), cursor_(cursor) {
+  Reset();
 }
 
 TreeDbAccessor::~TreeDbAccessor() {
@@ -29,15 +27,11 @@ TreeDbAccessor::~TreeDbAccessor() {
 }
 
 bool TreeDbAccessor::Reset() {
-  return cursor_ && cursor_->jump();
+  return cursor_ && cursor_->jump(prefix_);
 }
 
-bool TreeDbAccessor::Forward(const std::string &key) {
+bool TreeDbAccessor::Jump(const std::string &key) {
   return cursor_ && cursor_->jump(key);
-}
-
-bool TreeDbAccessor::Backward(const std::string &key) {
-  return cursor_ && cursor_->jump_back(key);
 }
 
 bool TreeDbAccessor::GetNextRecord(std::string *key, std::string *value) {
@@ -83,13 +77,13 @@ bool TreeDb::Fetch(const std::string &key, std::string *value) {
 }
 
 bool TreeDb::Update(const std::string &key, const std::string &value) {
-  if (!loaded()) return false;
+  if (!loaded() || readonly()) return false;
   DLOG(INFO) << "update db entry: " << key << " => " << value;
   return db_->set(key, value);
 }
 
 bool TreeDb::Erase(const std::string &key) {
-  if (!loaded()) return false;
+  if (!loaded() || readonly()) return false;
   DLOG(INFO) << "erase db entry: " << key;
   return db_->remove(key);
 }
@@ -149,7 +143,7 @@ bool TreeDb::Recover() {
 }
 
 bool TreeDb::Restore(const std::string& snapshot_file) {
-  if (!loaded()) return false;
+  if (!loaded() || readonly()) return false;
   bool success = db_->load_snapshot(snapshot_file);
   if (!success) {
     LOG(ERROR) << "failed to restore db from '" << snapshot_file << "'.";
@@ -168,7 +162,7 @@ bool TreeDb::Open() {
                       kyotocabinet::TreeDB::ONOREPAIR);
   if (loaded_) {
     std::string db_name;
-    if (!Fetch("\x01/db_name", &db_name)) {
+    if (!MetaFetch("/db_name", &db_name)) {
       if (!CreateMetadata()) {
         LOG(ERROR) << "error creating metadata.";
         Close();
@@ -205,13 +199,18 @@ bool TreeDb::Close() {
 }
 
 bool TreeDb::CreateMetadata() {
-  LOG(INFO) << "creating metadata for db '" << name_ << "'.";
-  Deployer& deployer(Service::instance().deployer());
-  // '\x01' is the meta character
-  return db_->set("\x01/db_name", name_) &&
-      db_->set("\x01/db_type", db_type_) &&
-      db_->set("\x01/rime_version", RIME_VERSION) &&
-      db_->set("\x01/user_id", deployer.user_id);
+  return Db::CreateMetadata() &&
+      MetaUpdate("/db_type", db_type_);
+}
+
+static const char* kMetaCharacter = "\x01";
+
+bool TreeDb::MetaFetch(const std::string &key, std::string *value) {
+  return Fetch(kMetaCharacter + key, value);
+}
+
+bool TreeDb::MetaUpdate(const std::string &key, const std::string &value) {
+  return Update(kMetaCharacter + key, value);
 }
 
 bool TreeDb::BeginTransaction() {

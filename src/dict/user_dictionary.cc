@@ -49,16 +49,14 @@ struct DfsState {
     return true;
   }
   bool ForwardScan(const std::string &prefix) {
-    if (!accessor->Forward(prefix)) {
+    if (!accessor->Jump(prefix)) {
       return false;
     }
     return NextEntry();
   }
   bool Backdate(const std::string &prefix) {
     DLOG(INFO) << "backdate; prefix: " << prefix;
-    if (prefix.empty() ?
-        !accessor->Reset() :
-        !accessor->Forward(prefix)) {
+    if (!accessor->Reset()) {
       LOG(WARNING) << "backdating failed for '" << prefix << "'.";
       return false;
     }
@@ -255,7 +253,7 @@ UserDictionary::Lookup(const SyllableGraph &syll_graph,
   state.credibility.push_back(initial_credibility);
   state.collector = make_shared<UserDictEntryCollector>();
   state.accessor = db_->Query("");
-  state.accessor->Forward(" ");  // skip metadata
+  state.accessor->Jump(" ");  // skip metadata
   std::string prefix;
   DfsLookup(syll_graph, start_pos, prefix, &state);
   if (state.collector->empty())
@@ -287,7 +285,7 @@ size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
     return 0;
   }
   if (resume_key && !resume_key->empty()) {
-    if (!a->Forward(*resume_key) ||
+    if (!a->Jump(*resume_key) ||
         !a->GetNextRecord(&key, &value)) {
       *resume_key = kEnd;
       return 0;
@@ -363,7 +361,7 @@ bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
 bool UserDictionary::UpdateTickCount(TickCount increment) {
   tick_ += increment;
   try {
-    return db_->Update("\x01/tick", boost::lexical_cast<std::string>(tick_));
+    return db_->MetaUpdate("/tick", boost::lexical_cast<std::string>(tick_));
   }
   catch (...) {
     return false;
@@ -371,14 +369,14 @@ bool UserDictionary::UpdateTickCount(TickCount increment) {
 }
 
 bool UserDictionary::Initialize() {
-  return db_->Update("\x01/tick", "0");
+  return db_->MetaUpdate("/tick", "0");
 }
 
 bool UserDictionary::FetchTickCount() {
   std::string value;
   try {
     // an earlier version mistakenly wrote tick count into an empty key
-    if (!db_->Fetch("\x01/tick", &value) &&
+    if (!db_->MetaFetch("/tick", &value) &&
         !db_->Fetch("", &value))
       return false;
     tick_ = boost::lexical_cast<TickCount>(value);
