@@ -84,9 +84,7 @@ class UserDbRecoveryTask : public DeploymentTask {
 };
 
 bool UserDbRecoveryTask::Run(Deployer* deployer) {
-  if (!Is<Managed>(db_))
-    return false;
-  bool success = As<Managed>(db_)->Recover();
+  bool success = As<Recoverable>(db_)->Recover();
   db_->enable();
   return success;
 }
@@ -153,7 +151,7 @@ bool UserDictionary::Load() {
   if (!db_->Open()) {
     // try to recover managed db in available work thread
     Deployer& deployer(Service::instance().deployer());
-    if (Is<Managed>(db_) && !deployer.IsWorking()) {
+    if (Is<Recoverable>(db_) && !deployer.IsWorking()) {
       db_->disable();
       deployer.ScheduleTask(New<UserDbRecoveryTask>(db_));
       deployer.StartWork();

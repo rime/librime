@@ -43,7 +43,7 @@ class TreeDbAccessor : public DbAccessor {
 };
 
 class TreeDb : public Db,
-               public Managed,
+               public Recoverable,
                public Transactional {
  public:
   TreeDb(const std::string& name, const std::string& db_type = "");
@@ -52,6 +52,9 @@ class TreeDb : public Db,
   virtual bool Open();
   virtual bool OpenReadOnly();
   virtual bool Close();
+
+  virtual bool Backup(const std::string& snapshot_file);
+  virtual bool Restore(const std::string& snapshot_file);
 
   virtual bool CreateMetadata();
   virtual bool MetaFetch(const std::string &key, std::string *value);
@@ -62,10 +65,8 @@ class TreeDb : public Db,
   virtual bool Update(const std::string &key, const std::string &value);
   virtual bool Erase(const std::string &key);
 
-  // Managed
+  // Recoverable
   virtual bool Recover();
-  virtual bool Backup();
-  virtual bool Restore(const std::string& snapshot_file);
 
   // Transactional
   virtual bool BeginTransaction();

@@ -13,6 +13,10 @@ namespace rime {
 
 // UserDb members
 
+UserDb::UserDb(const std::string& name)
+    : TreeDb(name + ".userdb.kct", "userdb") {
+}
+
 bool UserDb::CreateMetadata() {
   Deployer& deployer(Service::instance().deployer());
   return TreeDb::CreateMetadata() &&

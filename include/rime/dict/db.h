@@ -42,6 +42,9 @@ class Db : public Class<Db, const std::string&> {
   virtual bool OpenReadOnly() = 0;
   virtual bool Close() = 0;
 
+  virtual bool Backup(const std::string& snapshot_file) = 0;
+  virtual bool Restore(const std::string& snapshot_file) = 0;
+
   virtual bool CreateMetadata();
   virtual bool MetaFetch(const std::string& key, std::string* value) = 0;
   virtual bool MetaUpdate(const std::string& key, const std::string& value) = 0;
@@ -79,12 +82,10 @@ class Transactional {
   bool in_transaction_;
 };
 
-class Managed {
+class Recoverable {
  public:
-  virtual ~Managed() {}
+  virtual ~Recoverable() {}
   virtual bool Recover() = 0;
-  virtual bool Backup() = 0;
-  virtual bool Restore(const std::string& snapshot_file) = 0;
 };
 
 }  // namespace rime

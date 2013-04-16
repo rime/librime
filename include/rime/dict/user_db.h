@@ -16,10 +16,9 @@ typedef uint64_t TickCount;
 
 class UserDb : public TreeDb {
  public:
-  UserDb(const std::string& name)
-      : TreeDb(name + ".userdb.kct", "userdb") {
-  }
+  UserDb(const std::string& name);
   virtual bool CreateMetadata();
+
   bool IsUserDb();
   const std::string GetDbName();
   const std::string GetUserId();

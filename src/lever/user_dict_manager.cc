@@ -59,7 +59,15 @@ bool UserDictManager::Backup(const std::string& dict_name) {
       return false;
     }
   }
-  return db.Backup();
+  boost::filesystem::path dir(deployer_->user_data_sync_dir());
+  if (!boost::filesystem::exists(dir)) {
+    if (!boost::filesystem::create_directories(dir)) {
+      LOG(ERROR) << "error creating directory '" << dir.string() << "'.";
+      return false;
+    }
+  }
+  boost::filesystem::path snapshot_file = dir / (dict_name + ".snapshot");
+  return db.Backup(snapshot_file.string());
 }
 
 bool UserDictManager::Restore(const std::string& snapshot_file) {
@@ -252,9 +260,16 @@ bool UserDictManager::UpgradeUserDict(const std::string& dict_name) {
   if (CompareVersionString(db_creator_version, "0.9.7") < 0) {
     // fix invalid keys created by a buggy version of Import()
     LOG(INFO) << "upgrading user dict '" << dict_name << "'.";
-    fs::path snapshot_file(deployer_->user_data_sync_dir());
-    snapshot_file /= (db.name() + ".snapshot");
-    return db.Backup() &&
+    fs::path trash = fs::path(deployer_->user_data_dir) / "trash";
+    if (!fs::exists(trash)) {
+      boost::system::error_code ec;
+      if (!fs::create_directories(trash, ec)) {
+        LOG(ERROR) << "error creating directory '" << trash.string() << "'.";
+        return false;
+      }
+    }
+    fs::path snapshot_file = trash / (db.name() + ".snapshot");
+    return db.Backup(snapshot_file.string()) &&
         db.Close() &&
         db.Remove() &&
         Restore(snapshot_file.string());

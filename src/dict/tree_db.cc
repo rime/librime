@@ -88,35 +88,36 @@ bool TreeDb::Erase(const std::string &key) {
   return db_->remove(key);
 }
 
-bool TreeDb::Backup() {
+bool TreeDb::Backup(const std::string& snapshot_file) {
   if (!loaded()) return false;
-  Deployer& deployer(Service::instance().deployer());
-  boost::filesystem::path dir(deployer.user_data_sync_dir());
-  if (!boost::filesystem::exists(dir)) {
-    if (!boost::filesystem::create_directories(dir)) {
-      LOG(ERROR) << "error creating directory '" << dir.string() << "'.";
-      return false;
-    }
-  }
-  LOG(INFO) << "backing up db '" << name_ << "' into " << dir.string();
-  boost::filesystem::path snapshot_file = dir / (name_ + ".snapshot");
-  bool success = db_->dump_snapshot(snapshot_file.string());
+  LOG(INFO) << "backing up db '" << name() << "' to " << snapshot_file;
+  bool success = db_->dump_snapshot(snapshot_file);
   if (!success) {
-    LOG(ERROR) << "failed to create snapshot file '" << snapshot_file.string()
-               << "' for  db '" << name_ << "'.";
+    LOG(ERROR) << "failed to create snapshot file '" << snapshot_file
+               << "' for db '" << name() << "'.";
+  }
+  return success;
+}
+
+bool TreeDb::Restore(const std::string& snapshot_file) {
+  if (!loaded() || readonly()) return false;
+  bool success = db_->load_snapshot(snapshot_file);
+  if (!success) {
+    LOG(ERROR) << "failed to restore db '" << name()
+               << "' from '" << snapshot_file << "'.";
   }
   return success;
 }
 
 bool TreeDb::Recover() {
-  LOG(INFO) << "trying to recover db '" << name_ << "'.";
-  // first try to open treedb with repair option on
+  LOG(INFO) << "trying to recover db '" << name() << "'.";
+  // first try to open the db with repair option on
   if (OpenReadOnly()) {
-    LOG(INFO) << "treedb repaired.";
+    LOG(INFO) << "db has been repaired.";
     Close();
   }
   else if (Exists()) {
-    // repair doesn't work on the damanged db file; remove and recreate it
+    // repair didn't work on the damanged db file; remove and recreate it
     LOG(INFO) << "recreating db file.";
     boost::system::error_code ec;
     boost::filesystem::rename(file_name(), file_name() + ".old", ec);
@@ -128,11 +129,11 @@ bool TreeDb::Recover() {
   if (Open()) {
     Deployer& deployer(Service::instance().deployer());
     boost::filesystem::path snapshot_file(deployer.user_data_sync_dir());
-    snapshot_file /= (name_ + ".snapshot");
+    snapshot_file /= (name() + ".snapshot");
     if (boost::filesystem::exists(snapshot_file)) {
-      LOG(INFO) << "snapshot exists, trying to recover db '" << name_ << "'.";
+      LOG(INFO) << "snapshot exists, trying to recover db '" << name() << "'.";
       if (Restore(snapshot_file.string())) {
-        LOG(INFO) << "recovered db '" << name_ << "' from snapshot.";
+        LOG(INFO) << "recovered db '" << name() << "' from snapshot.";
       }
     }
     LOG(INFO) << "recovery successful.";
@@ -140,15 +141,6 @@ bool TreeDb::Recover() {
   }
   LOG(ERROR) << "recovery failed.";
   return false;
-}
-
-bool TreeDb::Restore(const std::string& snapshot_file) {
-  if (!loaded() || readonly()) return false;
-  bool success = db_->load_snapshot(snapshot_file);
-  if (!success) {
-    LOG(ERROR) << "failed to restore db from '" << snapshot_file << "'.";
-  }
-  return success;
 }
 
 bool TreeDb::Open() {
