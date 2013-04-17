@@ -10,6 +10,7 @@
 #include <map>
 #include <string>
 #include <rime/dict/db.h>
+#include <rime/dict/tsv.h>
 
 namespace rime {
 
@@ -32,11 +33,17 @@ class TextDbAccessor : public DbAccessor {
   TextDbData::const_iterator iter_;
 };
 
+struct TextFormat {
+  TsvParser parser;
+  TsvFormatter formatter;
+  std::string file_description;
+};
+
 class TextDb : public Db {
  public:
   TextDb(const std::string& name,
-         const std::string& db_type = "",
-         int key_fields = 1);
+         const std::string& db_type,
+         TextFormat format);
   virtual ~TextDb();
 
   virtual bool Open();
@@ -50,17 +57,20 @@ class TextDb : public Db {
   virtual bool MetaFetch(const std::string &key, std::string *value);
   virtual bool MetaUpdate(const std::string &key, const std::string &value);
 
+  virtual shared_ptr<DbAccessor> QueryMetadata();
+  virtual shared_ptr<DbAccessor> QueryAll();
   virtual shared_ptr<DbAccessor> Query(const std::string &key);
   virtual bool Fetch(const std::string &key, std::string *value);
   virtual bool Update(const std::string &key, const std::string &value);
   virtual bool Erase(const std::string &key);
 
  protected:
+  void Clear();
   bool LoadFromFile(const std::string& file);
   bool SaveToFile(const std::string& file);
 
   std::string db_type_;
-  int key_fields_;
+  TextFormat format_;
   TextDbData metadata_;
   TextDbData data_;
   bool modified_;

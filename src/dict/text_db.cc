@@ -4,6 +4,7 @@
 //
 // 2013-04-14 GONG Chen <chen.sst@gmail.com>
 //
+#include <rime/dict/db_utils.h>
 #include <rime/dict/text_db.h>
 
 namespace rime {
@@ -46,16 +47,26 @@ bool TextDbAccessor::exhausted() {
 
 TextDb::TextDb(const std::string& name,
                const std::string& db_type,
-               int key_fields)
+               TextFormat format)
     : Db(name),
       db_type_(db_type),
-      key_fields_(key_fields),
+      format_(format),
       modified_(false) {
 }
 
 TextDb::~TextDb() {
   if (loaded())
     Close();
+}
+
+shared_ptr<DbAccessor> TextDb::QueryMetadata() {
+  if (!loaded())
+    return shared_ptr<DbAccessor>();
+  return boost::make_shared<TextDbAccessor>(metadata_, "");
+}
+
+shared_ptr<DbAccessor> TextDb::QueryAll() {
+  return Query("");
 }
 
 shared_ptr<DbAccessor> TextDb::Query(const std::string &key) {
@@ -120,10 +131,14 @@ bool TextDb::Close() {
   }
   loaded_ = false;
   readonly_ = false;
-  metadata_.clear();
-  data_.clear();
+  Clear();
   modified_ = false;
   return true;
+}
+
+void TextDb::Clear() {
+  metadata_.clear();
+  data_.clear();
 }
 
 bool TextDb::Backup(const std::string& snapshot_file) {
@@ -172,13 +187,17 @@ bool TextDb::MetaUpdate(const std::string &key, const std::string &value) {
 }
 
 bool TextDb::LoadFromFile(const std::string& file) {
-  // TODO:
-  return false;
+  Clear();
+  DbSink sink(this);
+  TsvReader reader(&sink, format_.parser);
+  return reader(file);
 }
 
 bool TextDb::SaveToFile(const std::string& file) {
-  // TODO:
-  return false;
+  DbSource source(this);
+  source.file_description = format_.file_description;
+  TsvWriter writer(&source, format_.formatter);
+  return writer(file);
 }
 
 }  // namespace rime

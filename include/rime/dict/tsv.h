@@ -25,12 +25,14 @@ typedef boost::function<bool (const std::string& key,
 
 class TsvSink {
  public:
+  virtual ~TsvSink() {}
   virtual bool MetaPut(const std::string& key, const std::string& value) = 0;
   virtual bool Put(const std::string& key, const std::string& value) = 0;
 };
 
 class TsvSource {
  public:
+  virtual ~TsvSource() {}
   virtual bool MetaGet(std::string* key, std::string* value) = 0;
   virtual bool Get(std::string* key, std::string* value) = 0;
   std::string file_description;

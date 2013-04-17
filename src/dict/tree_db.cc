@@ -11,6 +11,8 @@
 
 namespace rime {
 
+static const char* kMetaCharacter = "\x01";
+
 // TreeDbAccessor memebers
 
 TreeDbAccessor::TreeDbAccessor() {
@@ -37,7 +39,11 @@ bool TreeDbAccessor::Jump(const std::string &key) {
 bool TreeDbAccessor::GetNextRecord(std::string *key, std::string *value) {
   if (!cursor_ || !key || !value)
     return false;
-  return cursor_->get(key, value, true) && MatchesPrefix(*key);
+  bool got = cursor_->get(key, value, true) && MatchesPrefix(*key);
+  if (got && prefix_ == kMetaCharacter) {
+    key->erase(0, 1);  // remove meta character
+  }
+  return got;
 }
 
 bool TreeDbAccessor::exhausted() {
@@ -62,6 +68,17 @@ void TreeDb::Initialize() {
                     kyotocabinet::TreeDB::TLINEAR);
   db_->tune_map(4LL << 20);
   db_->tune_defrag(8);
+}
+
+shared_ptr<DbAccessor> TreeDb::QueryMetadata() {
+  return Query(kMetaCharacter);
+}
+
+shared_ptr<DbAccessor> TreeDb::QueryAll() {
+  shared_ptr<DbAccessor> all = Query("");
+  if (all)
+    all->Jump(" ");  // skip metadata
+  return all;
 }
 
 shared_ptr<DbAccessor> TreeDb::Query(const std::string &key) {
@@ -194,8 +211,6 @@ bool TreeDb::CreateMetadata() {
   return Db::CreateMetadata() &&
       MetaUpdate("/db_type", db_type_);
 }
-
-static const char* kMetaCharacter = "\x01";
 
 bool TreeDb::MetaFetch(const std::string &key, std::string *value) {
   return Fetch(kMetaCharacter + key, value);

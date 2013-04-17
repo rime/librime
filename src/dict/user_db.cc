@@ -65,9 +65,30 @@ const std::string UserDb<TextDb>::extension(".userdb.txt");
 template <>
 const std::string UserDb<TreeDb>::extension(".userdb.kct");
 
+static bool userdb_entry_parser(const Tsv& row,
+                                std::string* key,
+                                std::string* value) {
+  // TODO:
+  return false;
+}
+
+static bool userdb_entry_formatter(const std::string& key,
+                                   const std::string& value,
+                                   Tsv* row) {
+  // TODO:
+  return false;
+}
+
+
+static TextFormat plain_userdb_format = {
+  userdb_entry_parser,
+  userdb_entry_formatter,
+  "Rime user dictionary",
+};
+
 template <>
 UserDb<TextDb>::UserDb(const std::string& name)
-    : TextDb(name + extension, "userdb", 2) {
+    : TextDb(name + extension, "userdb", plain_userdb_format) {
 }
 
 template <>

@@ -49,6 +49,8 @@ class Db : public Class<Db, const std::string&> {
   virtual bool MetaFetch(const std::string& key, std::string* value) = 0;
   virtual bool MetaUpdate(const std::string& key, const std::string& value) = 0;
 
+  virtual shared_ptr<DbAccessor> QueryMetadata() = 0;
+  virtual shared_ptr<DbAccessor> QueryAll() = 0;
   virtual shared_ptr<DbAccessor> Query(const std::string &key) = 0;
   virtual bool Fetch(const std::string &key, std::string *value) = 0;
   virtual bool Update(const std::string &key, const std::string &value) = 0;

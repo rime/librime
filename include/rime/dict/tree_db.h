@@ -60,6 +60,8 @@ class TreeDb : public Db,
   virtual bool MetaFetch(const std::string &key, std::string *value);
   virtual bool MetaUpdate(const std::string &key, const std::string &value);
 
+  virtual shared_ptr<DbAccessor> QueryMetadata();
+  virtual shared_ptr<DbAccessor> QueryAll();
   virtual shared_ptr<DbAccessor> Query(const std::string &key);
   virtual bool Fetch(const std::string &key, std::string *value);
   virtual bool Update(const std::string &key, const std::string &value);
