@@ -26,7 +26,8 @@ int TsvReader::operator() (const std::string& path) {
     if (enable_comment && line[0] == '#') {
       if (boost::starts_with(line, "#@")) {
         // metadata
-        boost::algorithm::split(row, line.substr(2),
+        line.erase(0, 2);
+        boost::algorithm::split(row, line,
                                 boost::algorithm::is_any_of("\t"));
         if (row.size() != 2 ||
             !sink_->MetaPut(row[0], row[1])) {
