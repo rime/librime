@@ -14,6 +14,17 @@ namespace rime {
 
 typedef uint64_t TickCount;
 
+struct UserDbValue {
+  int commits;
+  double dee;
+  TickCount tick;
+
+  UserDbValue();
+  UserDbValue(const std::string& value);
+  const std::string Pack() const;
+  bool Unpack(const std::string &value);
+};
+
 template <class BaseDb>
 class UserDb : public BaseDb {
  public:

@@ -8,7 +8,6 @@
 #include <map>
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
-#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/scope_exit.hpp>
 #include <rime/common.h>
@@ -321,39 +320,36 @@ size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
   return count;
 }
 
-bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
+bool UserDictionary::UpdateEntry(const DictEntry &entry, int commits) {
   std::string code_str(entry.custom_code);
   if (code_str.empty() && !TranslateCodeToString(entry.code, &code_str))
     return false;
   std::string key(code_str + '\t' + entry.text);
   std::string value;
-  int commit_count = 0;
-  double dee = 0.0;
-  TickCount last_tick = 0;
+  UserDbValue v;
   if (db_->Fetch(key, &value)) {
-    UnpackValues(value, &commit_count, &dee, &last_tick);
-    if (last_tick > tick_) {
-      last_tick = tick_;  // fix abnormal timestamp
+    v.Unpack(value);
+    if (v.tick > tick_) {
+      v.tick = tick_;  // fix abnormal timestamp
     }
   }
-  if (commit > 0) {
-    if (commit_count < 0)
-      commit_count = -commit_count;  // revive a deleted item
-    commit_count += commit;
+  if (commits > 0) {
+    if (v.commits < 0)
+      v.commits = -v.commits;  // revive a deleted item
+    v.commits += commits;
     UpdateTickCount(1);
-    dee = algo::formula_d(commit, (double)tick_, dee, (double)last_tick);
+    v.dee = algo::formula_d(commits, (double)tick_, v.dee, (double)v.tick);
   }
-  else if (commit == 0) {
+  else if (commits == 0) {
     const double k = 0.1;
-    dee = algo::formula_d(k, (double)tick_, dee, (double)last_tick);
+    v.dee = algo::formula_d(k, (double)tick_, v.dee, (double)v.tick);
   }
-  else if (commit < 0) {  // mark as deleted
-    commit_count = (std::min)(-1, -commit_count);
-    dee = algo::formula_d(0.0, (double)tick_, dee, (double)last_tick);
+  else if (commits < 0) {  // mark as deleted
+    v.commits = (std::min)(-1, -v.commits);
+    v.dee = algo::formula_d(0.0, (double)tick_, v.dee, (double)v.tick);
   }
-  value = boost::str(boost::format("c=%1% d=%2% t=%3%") %
-                     commit_count % dee % tick_);
-  return db_->Update(key, value);
+  v.tick = tick_;
+  return db_->Update(key, v.Pack());
 }
 
 bool UserDictionary::UpdateTickCount(TickCount increment) {
@@ -429,38 +425,6 @@ bool UserDictionary::TranslateCodeToString(const Code &code,
   return true;
 }
 
-bool UserDictionary::UnpackValues(const std::string &value,
-                                  int *commit_count,
-                                  double *dee,
-                                  TickCount *tick) {
-  std::vector<std::string> kv;
-  boost::split(kv, value, boost::is_any_of(" "));
-  BOOST_FOREACH(const std::string &k_eq_v, kv) {
-    size_t eq = k_eq_v.find('=');
-    if (eq == std::string::npos)
-      continue;
-    const std::string k(k_eq_v.substr(0, eq));
-    const std::string v(k_eq_v.substr(eq + 1));
-    try {
-      if (k == "c") {
-        *commit_count = boost::lexical_cast<int>(v);
-      }
-      else if (k == "d") {
-        *dee = (std::min)(200.0, boost::lexical_cast<double>(v));
-      }
-      else if (k == "t") {
-        *tick = boost::lexical_cast<TickCount>(v);
-      }
-    }
-    catch (...) {
-      LOG(ERROR) << "failed in parsing key-value from userdict entry '"
-                 << k_eq_v << "'.";
-      return false;
-    }
-  }
-  return true;
-}
-
 shared_ptr<DictEntry> UserDictionary::CreateDictEntry(const std::string& key,
                                                       const std::string& value,
                                                       TickCount present_tick,
@@ -470,24 +434,22 @@ shared_ptr<DictEntry> UserDictionary::CreateDictEntry(const std::string& key,
   size_t separator_pos = key.find('\t');
   if (separator_pos == std::string::npos)
     return e;
-  int commit_count = 0;
-  double dee = 0.0;
-  TickCount last_tick = 0;
-  if (!UnpackValues(value, &commit_count, &dee, &last_tick))
+  UserDbValue v;
+  if (!v.Unpack(value))
     return e;
-  if (commit_count < 0)  // deleted entry
+  if (v.commits < 0)  // deleted entry
     return e;
-  if (last_tick < present_tick)
-    dee = algo::formula_d(0, (double)present_tick, dee, (double)last_tick);
+  if (v.tick < present_tick)
+    v.dee = algo::formula_d(0, (double)present_tick, v.dee, (double)v.tick);
   // create!
   e = make_shared<DictEntry>();
   e->text = key.substr(separator_pos + 1);
-  e->commit_count = commit_count;
+  e->commit_count = v.commits;
   // TODO: argument s not defined...
   e->weight = algo::formula_p(0,
-                              (double)commit_count / present_tick,
+                              (double)v.commits / present_tick,
                               (double)present_tick,
-                              dee) * credibility;
+                              v.dee) * credibility;
   if (full_code) {
     *full_code = key.substr(0, separator_pos);
   }

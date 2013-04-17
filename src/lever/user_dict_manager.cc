@@ -114,25 +114,18 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
     // fix invalid keys created by a buggy version of Import()
     if (key[tab_pos - 1] != ' ')
       key.insert(tab_pos, 1, ' ');
-    int c = 0;
-    double d = 0.0;
-    TickCount t = 0;
-    UserDictionary::UnpackValues(right, &c, &d, &t);
-    if (t < tick_right)
-      d = algo::formula_d(0, (double)tick_right, d, (double)t);
+    UserDbValue v(right);
+    if (v.tick < tick_right)
+      v.dee = algo::formula_d(0, (double)tick_right, v.dee, (double)v.tick);
     if (dest.Fetch(key, &left)) {
-      int c0 = 0;
-      double d0 = 0.0;
-      TickCount t0 = 0;
-      UserDictionary::UnpackValues(left, &c0, &d0, &t0);
-      if (t0 < tick_left)
-        d0 = algo::formula_d(0, (double)tick_left, d0, (double)t0);
-      c = (std::max)(c, c0);
-      d = (std::max)(d, d0);
+      UserDbValue u(left);
+      if (u.tick < tick_left)
+        u.dee = algo::formula_d(0, (double)tick_left, u.dee, (double)u.tick);
+      v.commits = (std::max)(v.commits, u.commits);
+      v.dee = (std::max)(v.dee, u.dee);
     }
-    right = boost::str(boost::format("c=%1% d=%2% t=%3%") %
-                       c % d % tick_max);
-    if (dest.Update(key, right))
+    v.tick = tick_max;
+    if (dest.Update(key, v.Pack()))
       ++num_entries;
   }
   if (num_entries > 0) {
@@ -178,13 +171,10 @@ int UserDictManager::Export(const std::string& dict_name,
         row[0].empty() || row[1].empty())
       continue;
     boost::algorithm::trim(row[0]);
-    int c = 0;
-    double d = 0.0;
-    TickCount t = 0;
-    UserDictionary::UnpackValues(value, &c, &d, &t);
-    if (c < 0)  // deleted entry
+    UserDbValue v(value);
+    if (v.commits < 0)  // deleted entry
       continue;
-    fout << row[1] << "\t" << row[0] << "\t" << c << std::endl;
+    fout << row[1] << "\t" << row[0] << "\t" << v.commits << std::endl;
     ++num_entries;
   }
   fout.close();
@@ -234,18 +224,14 @@ int UserDictManager::Import(const std::string& dict_name,
       catch (...) {
       }
     }
-    int c = 0;
-    double d = 0.0;
-    TickCount t = 0;
+    UserDbValue v;
     if (db.Fetch(key, &value))
-      UserDictionary::UnpackValues(value, &c, &d, &t);
+      v.Unpack(value);
     if (commits > 0)
-      c = (std::max)(commits, c);
+      v.commits = (std::max)(commits, v.commits);
     else if (commits < 0)  // mark as deleted
-      c = commits;
-    value = boost::str(boost::format("c=%1% d=%2% t=%3%") %
-                       c % d % t);
-    if (db.Update(key, value))
+      v.commits = commits;
+    if (db.Update(key, v.Pack()))
       ++num_entries;
   }
   fin.close();
