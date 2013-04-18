@@ -104,9 +104,19 @@ bool TextDb::Erase(const std::string &key) {
 
 bool TextDb::Open() {
   if (loaded()) return false;
+  loaded_ = true;
   readonly_ = false;
   loaded_ = !Exists() || LoadFromFile(file_name());
-  if (!loaded_) {
+  if (loaded_) {
+    std::string db_name;
+    if (!MetaFetch("/db_name", &db_name)) {
+      if (!CreateMetadata()) {
+        LOG(ERROR) << "error creating metadata.";
+        Close();
+      }
+    }
+  }
+  else {
     LOG(ERROR) << "Error opening db '" << name_ << "'.";
   }
   modified_ = false;
@@ -115,9 +125,13 @@ bool TextDb::Open() {
 
 bool TextDb::OpenReadOnly() {
   if (loaded()) return false;
-  readonly_ = true;
+  loaded_ = true;
+  readonly_ = false;
   loaded_ = Exists() && LoadFromFile(file_name());
-  if (!loaded_) {
+  if (loaded_) {
+    readonly_ = true;
+  }
+  else {
     LOG(ERROR) << "Error opening db '" << name_ << "' read-only.";
   }
   modified_ = false;
@@ -190,14 +204,30 @@ bool TextDb::LoadFromFile(const std::string& file) {
   Clear();
   DbSink sink(this);
   TsvReader reader(&sink, format_.parser);
-  return reader(file);
+  try {
+    int entries = reader(file);
+    DLOG(INFO) << entries << " entries loaded.";
+  }
+  catch (std::exception& ex) {
+    LOG(ERROR) << ex.what();
+    return false;
+  }
+  return true;
 }
 
 bool TextDb::SaveToFile(const std::string& file) {
   DbSource source(this);
   source.file_description = format_.file_description;
   TsvWriter writer(&source, format_.formatter);
-  return writer(file);
+   try {
+     int entries = writer(file);
+     DLOG(INFO) << entries << " entries saved.";
+   }
+   catch (std::exception& ex) {
+     LOG(ERROR) << ex.what();
+     return false;
+   }
+   return true;
 }
 
 }  // namespace rime

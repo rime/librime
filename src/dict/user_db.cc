@@ -65,20 +65,38 @@ const std::string UserDb<TextDb>::extension(".userdb.txt");
 template <>
 const std::string UserDb<TreeDb>::extension(".userdb.kct");
 
+// key ::= code <space> <Tab> phrase
+
 static bool userdb_entry_parser(const Tsv& row,
                                 std::string* key,
                                 std::string* value) {
-  // TODO:
-  return false;
+  if (row.size() < 2 ||
+      row[0].empty() || row[1].empty()) {
+    return false;
+  }
+  std::string code(row[0]);
+  if (code[code.length() - 1] != ' ')
+    code += ' ';
+  *key = code + "\t" + row[1];
+  if (row.size() >= 3)
+    *value = row[2];
+  else
+    value->clear();
+  return true;
 }
 
 static bool userdb_entry_formatter(const std::string& key,
                                    const std::string& value,
-                                   Tsv* row) {
-  // TODO:
-  return false;
+                                   Tsv* tsv) {
+  Tsv& row(*tsv);
+  boost::algorithm::split(row, key,
+                          boost::algorithm::is_any_of("\t"));
+  if (row.size() != 2 ||
+      row[0].empty() || row[1].empty())
+    return false;
+  row.push_back(value);
+  return true;
 }
-
 
 static TextFormat plain_userdb_format = {
   userdb_entry_parser,

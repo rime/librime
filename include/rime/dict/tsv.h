@@ -41,7 +41,8 @@ class TsvSource {
 class TsvReader {
  public:
   explicit TsvReader(TsvSink* sink, TsvParser parser)
-      : sink_(sink) {}
+      : sink_(sink), parser_(parser) {
+  }
   // return number of records read
   int operator() (const std::string& path);
  protected:
@@ -52,7 +53,8 @@ class TsvReader {
 class TsvWriter {
  public:
   TsvWriter(TsvSource* source, TsvFormatter formatter)
-      : source_(source) {}
+      : source_(source), formatter_(formatter) {
+  }
   // return number of records written
   int operator() (const std::string& path);
  protected:
