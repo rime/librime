@@ -50,21 +50,23 @@ static bool rime_table_entry_formatter(const std::string& key,
   if (row.size() != 2 ||
       row[0].empty() || row[1].empty())
     return false;
+  UserDbValue v(value);
+  if (v.commits < 0)  // deleted entry
+    return false;
   boost::algorithm::trim(row[0]);  // remove trailing space
   row[0].swap(row[1]);
-  UserDbValue v(value);
   row.push_back(boost::lexical_cast<std::string>(v.commits));
   return true;
 }
 
-static TextFormat tabledb_format = {
+const TextFormat TableDb::format = {
   rime_table_entry_parser,
   rime_table_entry_formatter,
   "Rime table",
 };
 
 TableDb::TableDb(const std::string& name)
-    : TextDb(name + ".txt", "tabledb", tabledb_format) {
+    : TextDb(name + ".txt", "tabledb", TableDb::format) {
 }
 
 }  // namespace rime

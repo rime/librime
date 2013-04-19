@@ -15,9 +15,10 @@
 #include <rime/deployer.h>
 #include <rime/algo/dynamics.h>
 #include <rime/algo/utilities.h>
+#include <rime/dict/db_utils.h>
+#include <rime/dict/table_db.h>
 #include <rime/dict/tree_db.h>
 #include <rime/dict/user_db.h>
-#include <rime/dict/user_dictionary.h>
 #include <rime/lever/user_dict_manager.h>
 
 namespace fs = boost::filesystem;
@@ -153,31 +154,18 @@ int UserDictManager::Export(const std::string& dict_name,
   } BOOST_SCOPE_EXIT_END
   if (!db.IsUserDb())
     return -1;
-  std::ofstream fout(text_file.c_str());
-  fout << "# Rime user dictionary export" << std::endl
-       << "# db_name: " << db.GetDbName() << std::endl
-       << "# user_id: " << db.GetUserId() << std::endl
-       << "# commits: " << db.GetTickCount() << std::endl
-       << std::endl;
-  std::string key, value;
-  std::vector<std::string> row;
+  DbSource source(&db);
+  source.file_description = "Rime user dictionary export";
+  TsvWriter writer(&source, TableDb::format.formatter);
   int num_entries = 0;
-  shared_ptr<DbAccessor> a = db.Query("");
-  a->Jump(" ");  // skip metadata
-  while (a->GetNextRecord(&key, &value)) {
-    boost::algorithm::split(row, key,
-                            boost::algorithm::is_any_of("\t"));
-    if (row.size() != 2 ||
-        row[0].empty() || row[1].empty())
-      continue;
-    boost::algorithm::trim(row[0]);
-    UserDbValue v(value);
-    if (v.commits < 0)  // deleted entry
-      continue;
-    fout << row[1] << "\t" << row[0] << "\t" << v.commits << std::endl;
-    ++num_entries;
+  try {
+    num_entries = writer(text_file);
+    DLOG(INFO) << num_entries << " entries saved.";
   }
-  fout.close();
+  catch (std::exception& ex) {
+    LOG(ERROR) << ex.what();
+    return -1;
+  }
   return num_entries;
 }
 

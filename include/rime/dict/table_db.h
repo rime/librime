@@ -15,6 +15,8 @@ namespace rime {
 class TableDb : public TextDb {
  public:
   explicit TableDb(const std::string& name);
+
+  static const TextFormat format;
 };
 
 }  // namespace rime
