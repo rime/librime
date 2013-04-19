@@ -18,7 +18,7 @@ build dependencies:
   - libglog (development package)
   - libkyotocabinet (development package)
   - libopencc (development package)
-  - libyaml-cpp (development package)
+  - libyaml-cpp>=0.5 (development package)
   - libgtest (optional)
 
 runtime dependencies:
