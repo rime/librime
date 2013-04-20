@@ -8,12 +8,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/scope_exit.hpp>
 #include <rime/common.h>
 #include <rime/deployer.h>
-#include <rime/algo/dynamics.h>
 #include <rime/algo/utilities.h>
 #include <rime/dict/db_utils.h>
 #include <rime/dict/table_db.h>
@@ -101,45 +98,9 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
   LOG(INFO) << "merging '" << snapshot_file
             << "' from " << temp.GetUserId()
             << " into userdb '" << db_name << "'...";
-  TickCount tick_left = dest.GetTickCount();
-  TickCount tick_right = temp.GetTickCount();
-  TickCount tick_max = (std::max)(tick_left, tick_right);
-  shared_ptr<DbAccessor> a = temp.Query("");
-  a->Jump(" ");  // skip metadata
-  std::string key, left, right;
-  int num_entries = 0;
-  while (a->GetNextRecord(&key, &right)) {
-    size_t tab_pos = key.find('\t');
-    if (tab_pos == 0 || tab_pos == std::string::npos)
-      continue;
-    // fix invalid keys created by a buggy version of Import()
-    if (key[tab_pos - 1] != ' ')
-      key.insert(tab_pos, 1, ' ');
-    UserDbValue v(right);
-    if (v.tick < tick_right)
-      v.dee = algo::formula_d(0, (double)tick_right, v.dee, (double)v.tick);
-    if (dest.Fetch(key, &left)) {
-      UserDbValue u(left);
-      if (u.tick < tick_left)
-        u.dee = algo::formula_d(0, (double)tick_left, u.dee, (double)u.tick);
-      v.commits = (std::max)(v.commits, u.commits);
-      v.dee = (std::max)(v.dee, u.dee);
-    }
-    v.tick = tick_max;
-    if (dest.Update(key, v.Pack()))
-      ++num_entries;
-  }
-  if (num_entries > 0) {
-    try {
-      dest.MetaUpdate("/tick", boost::lexical_cast<std::string>(tick_max));
-      dest.MetaUpdate("/user_id", deployer_->user_id);
-    }
-    catch (...) {
-      LOG(WARNING) << "failed to update tick count.";
-    }
-  }
-  LOG(INFO) << "total " << num_entries << " entries imported, tick = "
-            << tick_max;
+  DbSource source(&temp);
+  UserDbMerger merger(&dest);
+  source >> merger;
   return true;
 }
 
@@ -154,18 +115,18 @@ int UserDictManager::Export(const std::string& dict_name,
   } BOOST_SCOPE_EXIT_END
   if (!db.IsUserDb())
     return -1;
+  TsvWriter writer(text_file, TableDb::format.formatter);
+  writer.file_description = "Rime user dictionary export";
   DbSource source(&db);
-  source.file_description = "Rime user dictionary export";
-  TsvWriter writer(&source, TableDb::format.formatter);
   int num_entries = 0;
   try {
-    num_entries = writer(text_file);
-    DLOG(INFO) << num_entries << " entries saved.";
+    num_entries = writer << source;
   }
   catch (std::exception& ex) {
     LOG(ERROR) << ex.what();
     return -1;
   }
+  DLOG(INFO) << num_entries << " entries exported.";
   return num_entries;
 }
 
@@ -180,49 +141,17 @@ int UserDictManager::Import(const std::string& dict_name,
   } BOOST_SCOPE_EXIT_END
   if (!db.IsUserDb())
     return -1;
-  std::ifstream fin(text_file.c_str());
-  std::string line, key, value;
+  TsvReader reader(text_file, TableDb::format.parser);
+  UserDbImporter importer(&db);
   int num_entries = 0;
-  while (getline(fin, line)) {
-    // skip empty lines and comments
-    if (line.empty() || line[0] == '#') continue;
-    // read a dict entry
-    std::vector<std::string> row;
-    boost::algorithm::split(row, line,
-                            boost::algorithm::is_any_of("\t"));
-    if (row.size() < 2 ||
-        row[0].empty() || row[1].empty()) {
-      LOG(WARNING) << "invalid entry at #" << num_entries << ".";
-      continue;
-    }
-    boost::algorithm::trim(row[1]);
-    if (!row[1].empty()) {
-      std::vector<std::string> syllables;
-      boost::algorithm::split(syllables, row[1],
-                              boost::algorithm::is_any_of(" "),
-                              boost::algorithm::token_compress_on);
-      row[1] = boost::algorithm::join(syllables, " ");
-    }
-    key = row[1] + " \t" + row[0];
-    int commits = 0;
-    if (row.size() >= 3 && !row[2].empty()) {
-      try {
-        commits = boost::lexical_cast<int>(row[2]);
-      }
-      catch (...) {
-      }
-    }
-    UserDbValue v;
-    if (db.Fetch(key, &value))
-      v.Unpack(value);
-    if (commits > 0)
-      v.commits = (std::max)(commits, v.commits);
-    else if (commits < 0)  // mark as deleted
-      v.commits = commits;
-    if (db.Update(key, v.Pack()))
-      ++num_entries;
+  try {
+    num_entries = reader >> importer;
   }
-  fin.close();
+  catch (std::exception& ex) {
+    LOG(ERROR) << ex.what();
+    return -1;
+  }
+  DLOG(INFO) << num_entries << " entries imported.";
   return num_entries;
 }
 
@@ -232,8 +161,7 @@ bool UserDictManager::UpgradeUserDict(const std::string& dict_name) {
     return false;
   if (!db.IsUserDb())
     return false;
-  std::string db_creator_version(db.GetRimeVersion());
-  if (CompareVersionString(db_creator_version, "0.9.7") < 0) {
+  if (CompareVersionString(db.GetRimeVersion(), "0.9.7") < 0) {
     // fix invalid keys created by a buggy version of Import()
     LOG(INFO) << "upgrading user dict '" << dict_name << "'.";
     fs::path trash = fs::path(deployer_->user_data_dir) / "trash";

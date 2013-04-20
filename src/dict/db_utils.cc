@@ -9,6 +9,22 @@
 
 namespace rime {
 
+int Source::Dump(Sink* sink) {
+  if (!sink)
+    return 0;
+  int num_entries = 0;
+  std::string key, value;
+  while (MetaGet(&key, &value)) {
+    if (sink->MetaPut(key, value))
+      ++num_entries;
+  }
+  while (Get(&key, &value)) {
+    if (sink->Put(key, value))
+      ++num_entries;
+  }
+  return num_entries;
+}
+
 DbSink::DbSink(Db* db) : db_(db) {
 }
 

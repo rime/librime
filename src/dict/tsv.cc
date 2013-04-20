@@ -7,13 +7,15 @@
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <rime/common.h>
+#include <rime/dict/db_utils.h>
 #include <rime/dict/tsv.h>
 
 namespace rime {
 
-int TsvReader::operator() (const std::string& path) {
-  LOG(INFO) << "reading tsv file: " << path;
-  std::ifstream fin(path.c_str());
+int TsvReader::operator() (Sink* sink) {
+  if (!sink) return 0;
+  LOG(INFO) << "reading tsv file: " << path_;
+  std::ifstream fin(path_.c_str());
   std::string line, key, value;
   Tsv row;
   int line_no = 0;
@@ -30,7 +32,7 @@ int TsvReader::operator() (const std::string& path) {
         boost::algorithm::split(row, line,
                                 boost::algorithm::is_any_of("\t"));
         if (row.size() != 2 ||
-            !sink_->MetaPut(row[0], row[1])) {
+            !sink->MetaPut(row[0], row[1])) {
           LOG(WARNING) << "invalid metadata at line " << line_no << ".";
         }
       }
@@ -44,7 +46,7 @@ int TsvReader::operator() (const std::string& path) {
     boost::algorithm::split(row, line,
                             boost::algorithm::is_any_of("\t"));
     if (!parser_(row, &key, &value) ||
-        !sink_->Put(key, value)) {
+        !sink->Put(key, value)) {
       LOG(WARNING) << "invalid entry at line " << line_no << ".";
       continue;
     }
@@ -54,19 +56,20 @@ int TsvReader::operator() (const std::string& path) {
   return num_entries;
 }
 
-int TsvWriter::operator() (const std::string& path) {
-  LOG(INFO) << "writing tsv file: " << path;
-  std::ofstream fout(path.c_str());
-  if (!source_->file_description.empty()) {
-    fout << "# " << source_->file_description << std::endl;
+int TsvWriter::operator() (Source* source) {
+  if (!source) return 0;
+  LOG(INFO) << "writing tsv file: " << path_;
+  std::ofstream fout(path_.c_str());
+  if (!file_description.empty()) {
+    fout << "# " << file_description << std::endl;
   }
   std::string key, value;
-  while (source_->MetaGet(&key, &value)) {
+  while (source->MetaGet(&key, &value)) {
     fout << "#@" << key << '\t' << value << std::endl;
   }
   Tsv row;
   int num_entries = 0;
-  while (source_->Get(&key, &value)) {
+  while (source->Get(&key, &value)) {
     row.clear();
     if (formatter_(key, value, &row) && !row.empty()) {
       for (Tsv::const_iterator it = row.begin(); it != row.end(); ++it) {

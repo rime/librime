@@ -23,44 +23,54 @@ typedef boost::function<bool (const std::string& key,
                               const std::string& value,
                               Tsv* row)> TsvFormatter;
 
-class TsvSink {
- public:
-  virtual ~TsvSink() {}
-  virtual bool MetaPut(const std::string& key, const std::string& value) = 0;
-  virtual bool Put(const std::string& key, const std::string& value) = 0;
-};
-
-class TsvSource {
- public:
-  virtual ~TsvSource() {}
-  virtual bool MetaGet(std::string* key, std::string* value) = 0;
-  virtual bool Get(std::string* key, std::string* value) = 0;
-  std::string file_description;
-};
+class Sink;
+class Source;
 
 class TsvReader {
  public:
-  explicit TsvReader(TsvSink* sink, TsvParser parser)
-      : sink_(sink), parser_(parser) {
+  TsvReader(const std::string& path, TsvParser parser)
+      : path_(path), parser_(parser) {
   }
   // return number of records read
-  int operator() (const std::string& path);
+  int operator() (Sink* sink);
  protected:
-  TsvSink* sink_;  // weak ref
+  std::string path_;
   TsvParser parser_;
 };
 
 class TsvWriter {
  public:
-  TsvWriter(TsvSource* source, TsvFormatter formatter)
-      : source_(source), formatter_(formatter) {
+  TsvWriter(const std::string& path, TsvFormatter formatter)
+      : path_(path), formatter_(formatter) {
   }
   // return number of records written
-  int operator() (const std::string& path);
+  int operator() (Source* source);
  protected:
-  TsvSource* source_;  // weak ref
+  std::string path_;
   TsvFormatter formatter_;
+ public:
+  std::string file_description;
 };
+
+template <class SinkType>
+int operator<< (SinkType& sink, TsvReader& reader) {
+  return reader(&sink);
+}
+
+template <class SinkType>
+int operator>> (TsvReader& reader, SinkType& sink) {
+  return reader(&sink);
+}
+
+template <class SourceType>
+int operator<< (TsvWriter& writer, SourceType& source) {
+  return writer(&source);
+}
+
+template <class SourceType>
+int operator>> (SourceType& source, TsvWriter& writer) {
+  return writer(&source);
+}
 
 }  // namespace rime
 

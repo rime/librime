@@ -4,12 +4,14 @@
 //
 // 2011-11-02 GONG Chen <chen.sst@gmail.com>
 //
+#include <cstdlib>
 #include <vector>
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <rime/service.h>
+#include <rime/algo/dynamics.h>
 #include <rime/dict/text_db.h>
 #include <rime/dict/tree_db.h>
 #include <rime/dict/user_db.h>
@@ -75,6 +77,7 @@ static bool userdb_entry_parser(const Tsv& row,
     return false;
   }
   std::string code(row[0]);
+  // fix invalid keys created by a buggy version
   if (code[code.length() - 1] != ' ')
     code += ' ';
   *key = code + "\t" + row[1];
@@ -150,10 +153,12 @@ const std::string UserDb<BaseDb>::GetRimeVersion() {
   return version;
 }
 
-template <class BaseDb>
-TickCount UserDb<BaseDb>::GetTickCount() {
+template class UserDb<TextDb>;
+template class UserDb<TreeDb>;
+
+static TickCount get_tick_count(Db* db) {
   std::string tick;
-  if (UserDb::MetaFetch("/tick", &tick)) {
+  if (db && db->MetaFetch("/tick", &tick)) {
     try {
       return boost::lexical_cast<TickCount>(tick);
     }
@@ -163,7 +168,90 @@ TickCount UserDb<BaseDb>::GetTickCount() {
   return 1;
 }
 
-template class UserDb<TextDb>;
-template class UserDb<TreeDb>;
+UserDbMerger::UserDbMerger(Db* db) : db_(db) {
+  our_tick_ = get_tick_count(db);
+  their_tick_ = 0;
+  max_tick_ = our_tick_;
+}
+
+UserDbMerger::~UserDbMerger() {
+  CloseMerge();
+}
+
+bool UserDbMerger::MetaPut(const std::string& key, const std::string& value) {
+  if (key == "/tick") {
+    try {
+      their_tick_ = boost::lexical_cast<TickCount>(value);
+      max_tick_ = (std::max)(our_tick_, their_tick_);
+    }
+    catch (...) {
+    }
+  }
+  return true;
+}
+
+bool UserDbMerger::Put(const std::string& key, const std::string& value) {
+  if (!db_) return false;
+  UserDbValue v(value);
+  if (v.tick < their_tick_) {
+    v.dee = algo::formula_d(0, (double)their_tick_, v.dee, (double)v.tick);
+  }
+  UserDbValue o;
+  std::string our_value;
+  if (db_->Fetch(key, &our_value)) {
+    o.Unpack(our_value);
+  }
+  if (o.tick < our_tick_) {
+    o.dee = algo::formula_d(0, (double)our_tick_, o.dee, (double)o.tick);
+  }
+  if (std::abs(o.commits) < std::abs(v.commits))
+      o.commits = v.commits;
+  o.dee = (std::max)(o.dee, v.dee);
+  o.tick = max_tick_;
+  return db_->Update(key, o.Pack()) && ++merged_entries_;
+}
+
+void UserDbMerger::CloseMerge() {
+  if (!db_ || !merged_entries_)
+    return;
+  Deployer& deployer(Service::instance().deployer());
+  try {
+    db_->MetaUpdate("/tick", boost::lexical_cast<std::string>(max_tick_));
+    db_->MetaUpdate("/user_id", deployer.user_id);
+  }
+  catch (...) {
+    LOG(ERROR) << "failed to update tick count.";
+    return;
+  }
+  LOG(INFO) << "total " << merged_entries_ << " entries merged, tick = "
+            << max_tick_;
+  merged_entries_ = 0;
+}
+
+UserDbImporter::UserDbImporter(Db* db)
+    : db_(db) {
+}
+
+bool UserDbImporter::MetaPut(const std::string& key, const std::string& value) {
+  return true;
+}
+
+bool UserDbImporter::Put(const std::string& key, const std::string& value) {
+  if (!db_) return false;
+  UserDbValue v(value);
+  UserDbValue o;
+  std::string old_value;
+  if (db_->Fetch(key, &old_value)) {
+    o.Unpack(old_value);
+  }
+  if (v.commits > 0) {
+    o.commits = (std::max)(o.commits, v.commits);
+    o.dee = (std::max)(o.dee, v.dee);
+  }
+  else if (v.commits < 0) {  // mark as deleted
+    o.commits = (std::min)(v.commits, -std::abs(o.commits));
+  }
+  return db_->Update(key, o.Pack());
+}
 
 }  // namespace rime

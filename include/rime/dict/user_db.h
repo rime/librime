@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <rime/dict/db_utils.h>
 
 namespace rime {
 
@@ -35,9 +36,37 @@ class UserDb : public BaseDb {
   const std::string GetDbName();
   const std::string GetUserId();
   const std::string GetRimeVersion();
-  TickCount GetTickCount();
 
   static const std::string extension;
+};
+
+class UserDbMerger : public Sink {
+ public:
+  explicit UserDbMerger(Db* db);
+  virtual ~UserDbMerger();
+
+  virtual bool MetaPut(const std::string& key, const std::string& value);
+  virtual bool Put(const std::string& key, const std::string& value);
+
+  void CloseMerge();
+
+ protected:
+  Db* db_;
+  TickCount our_tick_;
+  TickCount their_tick_;
+  TickCount max_tick_;
+  int merged_entries_;
+};
+
+class UserDbImporter : public Sink {
+ public:
+  explicit UserDbImporter(Db* db);
+
+  virtual bool MetaPut(const std::string& key, const std::string& value);
+  virtual bool Put(const std::string& key, const std::string& value);
+
+ protected:
+  Db* db_;
 };
 
 }  // namespace rime

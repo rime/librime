@@ -202,32 +202,34 @@ bool TextDb::MetaUpdate(const std::string &key, const std::string &value) {
 
 bool TextDb::LoadFromFile(const std::string& file) {
   Clear();
+  TsvReader reader(file, format_.parser);
   DbSink sink(this);
-  TsvReader reader(&sink, format_.parser);
+  int entries = 0;
   try {
-    int entries = reader(file);
-    DLOG(INFO) << entries << " entries loaded.";
+    entries = reader >> sink;
   }
   catch (std::exception& ex) {
     LOG(ERROR) << ex.what();
     return false;
   }
+  DLOG(INFO) << entries << " entries loaded.";
   return true;
 }
 
 bool TextDb::SaveToFile(const std::string& file) {
+  TsvWriter writer(file, format_.formatter);
+  writer.file_description = format_.file_description;
   DbSource source(this);
-  source.file_description = format_.file_description;
-  TsvWriter writer(&source, format_.formatter);
-   try {
-     int entries = writer(file);
-     DLOG(INFO) << entries << " entries saved.";
-   }
-   catch (std::exception& ex) {
-     LOG(ERROR) << ex.what();
-     return false;
-   }
-   return true;
+  int entries = 0;
+  try {
+    entries = writer << source;
+  }
+  catch (std::exception& ex) {
+    LOG(ERROR) << ex.what();
+    return false;
+  }
+  DLOG(INFO) << entries << " entries saved.";
+  return true;
 }
 
 }  // namespace rime
