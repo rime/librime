@@ -66,7 +66,7 @@ bool UserDictManager::Backup(const std::string& dict_name) {
     }
   }
   std::string snapshot_file =
-      dict_name + UserDb<TreeDb>::extension + ".snapshot";
+      dict_name + UserDb<TextDb>::snapshot_extension;
   return db.Backup((dir / snapshot_file).string());
 }
 
@@ -172,11 +172,13 @@ bool UserDictManager::UpgradeUserDict(const std::string& dict_name) {
         return false;
       }
     }
-    fs::path snapshot_file = trash / (db.name() + ".snapshot");
-    return db.Backup(snapshot_file.string()) &&
+    std::string snapshot_file =
+        dict_name + UserDb<TextDb>::snapshot_extension;
+    fs::path snapshot_path = trash / snapshot_file;
+    return db.Backup(snapshot_path.string()) &&
         db.Close() &&
         db.Remove() &&
-        Restore(snapshot_file.string());
+        Restore(snapshot_path.string());
   }
   return true;
 }
@@ -194,12 +196,20 @@ bool UserDictManager::Synchronize(const std::string& dict_name) {
   }
   fs::directory_iterator it(sync_dir);
   fs::directory_iterator end;
+  // *.userdb.txt
   std::string snapshot_file =
+      dict_name + UserDb<TextDb>::snapshot_extension;
+  // *.userdb.kct.snapshot
+  std::string legacy_snapshot_file =
       dict_name + UserDb<TreeDb>::extension + ".snapshot";
   for (; it != end; ++it) {
     if (!fs::is_directory(it->path()))
       continue;
     fs::path file_path = it->path() / snapshot_file;
+    fs::path legacy_path = it->path() / legacy_snapshot_file;
+    if (!fs::exists(file_path) && fs::exists(legacy_path)) {
+      file_path = legacy_path;
+    }
     if (fs::exists(file_path)) {
       LOG(INFO) << "merging snapshot file: " << file_path.string();
       if (!Restore(file_path.string())) {

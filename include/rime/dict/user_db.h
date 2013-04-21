@@ -31,6 +31,8 @@ class UserDb : public BaseDb {
  public:
   explicit UserDb(const std::string& name);
   virtual bool CreateMetadata();
+  virtual bool Backup(const std::string& snapshot_file);
+  virtual bool Restore(const std::string& snapshot_file);
 
   bool IsUserDb();
   const std::string GetDbName();
@@ -38,6 +40,7 @@ class UserDb : public BaseDb {
   const std::string GetRimeVersion();
 
   static const std::string extension;
+  static const std::string snapshot_extension;
 };
 
 class UserDbMerger : public Sink {

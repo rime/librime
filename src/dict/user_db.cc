@@ -65,7 +65,13 @@ template <>
 const std::string UserDb<TextDb>::extension(".userdb.txt");
 
 template <>
+const std::string UserDb<TextDb>::snapshot_extension(".userdb.txt");
+
+template <>
 const std::string UserDb<TreeDb>::extension(".userdb.kct");
+
+template <>
+const std::string UserDb<TreeDb>::snapshot_extension(".userdb.kcss");
 
 // key ::= code <space> <Tab> phrase
 
@@ -122,6 +128,57 @@ bool UserDb<BaseDb>::CreateMetadata() {
   Deployer& deployer(Service::instance().deployer());
   return BaseDb::CreateMetadata() &&
       BaseDb::MetaUpdate("/user_id", deployer.user_id);
+}
+
+template <>
+bool UserDb<TextDb>::Backup(const std::string& snapshot_file) {
+  return TextDb::Backup(snapshot_file);
+}
+
+template <>
+bool UserDb<TextDb>::Restore(const std::string& snapshot_file) {
+  return TextDb::Restore(snapshot_file);
+}
+
+template <>
+bool UserDb<TreeDb>::Backup(const std::string& snapshot_file) {
+  // plain userdb format
+  if (boost::ends_with(snapshot_file, UserDb<TextDb>::snapshot_extension)) {
+    LOG(INFO) << "backing up db '" << name() << "' to " << snapshot_file;
+    TsvWriter writer(snapshot_file, plain_userdb_format.formatter);
+    writer.file_description = plain_userdb_format.file_description;
+    DbSource source(this);
+    try {
+      writer << source;
+    }
+    catch (std::exception& ex) {
+      LOG(ERROR) << ex.what();
+      return false;
+    }
+    return true;
+  }
+  // KCSS format
+  return TreeDb::Backup(snapshot_file);
+}
+
+template <>
+bool UserDb<TreeDb>::Restore(const std::string& snapshot_file) {
+  // plain userdb format
+  if (boost::ends_with(snapshot_file, UserDb<TextDb>::snapshot_extension)) {
+    LOG(INFO) << "restoring db '" << name() << "' from " << snapshot_file;
+    TsvReader reader(snapshot_file, plain_userdb_format.parser);
+    DbSink sink(this);
+    try {
+      reader >> sink;
+    }
+    catch (std::exception& ex) {
+      LOG(ERROR) << ex.what();
+      return false;
+    }
+    return true;
+  }
+  // KCSS format
+  return TreeDb::Restore(snapshot_file);
 }
 
 template <class BaseDb>
