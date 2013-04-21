@@ -37,6 +37,7 @@ void EntryCollector::Collect(const std::string &dict_file) {
   std::ifstream fin(dict_file.c_str());
   std::string line;
   bool in_yaml_doc = true;
+  bool enable_comment = true;
   while (getline(fin, line)) {
     boost::algorithm::trim_right(line);
     // skip yaml doc
@@ -45,7 +46,14 @@ void EntryCollector::Collect(const std::string &dict_file) {
       continue;
     }
     // skip empty lines and comments
-    if (line.empty() || line[0] == '#') continue;
+    if (line.empty()) continue;
+    if (enable_comment && line[0] == '#') {
+      if (line == "# no comment") {
+        // a "# no comment" line disables further comments
+        enable_comment = false;
+      }
+      continue;
+    }
     // read a dict entry
     std::vector<std::string> row;
     boost::algorithm::split(row, line,

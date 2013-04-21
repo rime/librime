@@ -6,10 +6,13 @@
 //
 #include <gtest/gtest.h>
 #include <rime/algo/syllabifier.h>
+#include <rime/dict/text_db.h>
 #include <rime/dict/user_db.h>
 
+typedef rime::UserDb<rime::TextDb> TestDb;
+
 TEST(RimeUserDbTest, AccessRecordByKey) {
-  rime::UserDb db("user_db_test");
+  TestDb db("user_db_test");
   if (db.Exists())
     db.Remove();
   ASSERT_FALSE(db.Exists());
@@ -36,7 +39,7 @@ TEST(RimeUserDbTest, AccessRecordByKey) {
 }
 
 TEST(RimeUserDbTest, Query) {
-  rime::UserDb db("user_db_test");
+  TestDb db("user_db_test");
   if (db.Exists())
     db.Remove();
   ASSERT_FALSE(db.Exists());
@@ -46,7 +49,7 @@ TEST(RimeUserDbTest, Query) {
   EXPECT_TRUE(db.Update("zyx", "ABC"));
   EXPECT_TRUE(db.Update("wvu", "DEF"));
   {
-    boost::shared_ptr<rime::UserDbAccessor> accessor = db.Query("abc");
+    boost::shared_ptr<rime::DbAccessor> accessor = db.Query("abc");
     ASSERT_TRUE(accessor);
     EXPECT_FALSE(accessor->exhausted());
     std::string key, value;
@@ -64,14 +67,14 @@ TEST(RimeUserDbTest, Query) {
     // key, value contain invalid contents
   }
   {
-    boost::shared_ptr<rime::UserDbAccessor> accessor = db.Query("wvu\tt");
+    boost::shared_ptr<rime::DbAccessor> accessor = db.Query("wvu\tt");
     ASSERT_TRUE(accessor);
     EXPECT_TRUE(accessor->exhausted());
     std::string key, value;
     EXPECT_FALSE(accessor->GetNextRecord(&key, &value));
   }
   {
-    boost::shared_ptr<rime::UserDbAccessor> accessor = db.Query("z");
+    boost::shared_ptr<rime::DbAccessor> accessor = db.Query("z");
     ASSERT_TRUE(accessor);
     EXPECT_FALSE(accessor->exhausted());
     std::string key, value;

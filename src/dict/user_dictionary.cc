@@ -8,7 +8,6 @@
 #include <map>
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
-#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/scope_exit.hpp>
 #include <rime/common.h>
@@ -17,8 +16,8 @@
 #include <rime/service.h>
 #include <rime/algo/dynamics.h>
 #include <rime/algo/syllabifier.h>
+#include <rime/dict/db.h>
 #include <rime/dict/table.h>
-#include <rime/dict/user_db.h>
 #include <rime/dict/user_dictionary.h>
 
 namespace rime {
@@ -29,7 +28,7 @@ struct DfsState {
   Code code;
   std::vector<double> credibility;
   shared_ptr<UserDictEntryCollector> collector;
-  shared_ptr<UserDbAccessor> accessor;
+  shared_ptr<DbAccessor> accessor;
   std::string key;
   std::string value;
 
@@ -49,16 +48,14 @@ struct DfsState {
     return true;
   }
   bool ForwardScan(const std::string &prefix) {
-    if (!accessor->Forward(prefix)) {
+    if (!accessor->Jump(prefix)) {
       return false;
     }
     return NextEntry();
   }
   bool Backdate(const std::string &prefix) {
     DLOG(INFO) << "backdate; prefix: " << prefix;
-    if (prefix.empty() ?
-        !accessor->Reset() :
-        !accessor->Forward(prefix)) {
+    if (!accessor->Reset()) {
       LOG(WARNING) << "backdating failed for '" << prefix << "'.";
       return false;
     }
@@ -79,15 +76,15 @@ void DfsState::RecruitEntry(size_t pos) {
 
 class UserDbRecoveryTask : public DeploymentTask {
  public:
-  explicit UserDbRecoveryTask(shared_ptr<UserDb> db) : db_(db) {}
+  explicit UserDbRecoveryTask(shared_ptr<Db> db) : db_(db) {}
   bool Run(Deployer* deployer);
  protected:
-  shared_ptr<UserDb> db_;
+  shared_ptr<Db> db_;
 };
 
 bool UserDbRecoveryTask::Run(Deployer* deployer) {
-  bool success = db_->Recover();
-  db_->Enable();
+  bool success = As<Recoverable>(db_)->Recover();
+  db_->enable();
   return success;
 }
 
@@ -131,13 +128,13 @@ bool UserDictEntryIterator::Next() {
 
 // UserDictionary members
 
-UserDictionary::UserDictionary(const shared_ptr<UserDb> &user_db)
-    : db_(user_db), tick_(0), transaction_time_(0) {
+UserDictionary::UserDictionary(const shared_ptr<Db> &db)
+    : db_(db), tick_(0), transaction_time_(0) {
 }
 
 UserDictionary::~UserDictionary() {
-  if (loaded() && db_->in_transaction()) {
-    db_->CommitTransaction();
+  if (loaded()) {
+    CommitPendingTransaction();
   }
 }
 
@@ -151,10 +148,10 @@ bool UserDictionary::Load() {
   if (!db_)
     return false;
   if (!db_->Open()) {
-    // try to recover userdb in work thread
+    // try to recover managed db in available work thread
     Deployer& deployer(Service::instance().deployer());
-    if (!deployer.IsWorking()) {
-      db_->Disable();
+    if (Is<Recoverable>(db_) && !deployer.IsWorking()) {
+      db_->disable();
       deployer.ScheduleTask(New<UserDbRecoveryTask>(db_));
       deployer.StartWork();
     }
@@ -167,6 +164,10 @@ bool UserDictionary::Load() {
 
 bool UserDictionary::loaded() const {
   return db_ && !db_->disabled() && db_->loaded();
+}
+
+bool UserDictionary::readonly() const {
+  return db_ && db_->readonly();
 }
 
 // this is a one-pass scan for the user db which supports sequential access
@@ -249,7 +250,7 @@ UserDictionary::Lookup(const SyllableGraph &syll_graph,
   state.credibility.push_back(initial_credibility);
   state.collector = make_shared<UserDictEntryCollector>();
   state.accessor = db_->Query("");
-  state.accessor->Forward(" ");  // skip metadata
+  state.accessor->Jump(" ");  // skip metadata
   std::string prefix;
   DfsLookup(syll_graph, start_pos, prefix, &state);
   if (state.collector->empty())
@@ -274,14 +275,14 @@ size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
   std::string key;
   std::string value;
   std::string full_code;
-  shared_ptr<UserDbAccessor> a = db_->Query(input);
+  shared_ptr<DbAccessor> a = db_->Query(input);
   if (!a || a->exhausted()) {
     if (resume_key)
       *resume_key = kEnd;
     return 0;
   }
   if (resume_key && !resume_key->empty()) {
-    if (!a->Forward(*resume_key) ||
+    if (!a->Jump(*resume_key) ||
         !a->GetNextRecord(&key, &value)) {
       *resume_key = kEnd;
       return 0;
@@ -319,45 +320,42 @@ size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
   return count;
 }
 
-bool UserDictionary::UpdateEntry(const DictEntry &entry, int commit) {
+bool UserDictionary::UpdateEntry(const DictEntry &entry, int commits) {
   std::string code_str(entry.custom_code);
   if (code_str.empty() && !TranslateCodeToString(entry.code, &code_str))
     return false;
   std::string key(code_str + '\t' + entry.text);
   std::string value;
-  int commit_count = 0;
-  double dee = 0.0;
-  TickCount last_tick = 0;
+  UserDbValue v;
   if (db_->Fetch(key, &value)) {
-    UnpackValues(value, &commit_count, &dee, &last_tick);
-    if (last_tick > tick_) {
-      last_tick = tick_;  // fix abnormal timestamp
+    v.Unpack(value);
+    if (v.tick > tick_) {
+      v.tick = tick_;  // fix abnormal timestamp
     }
   }
-  if (commit > 0) {
-    if (commit_count < 0)
-      commit_count = -commit_count;  // revive a deleted item
-    commit_count += commit;
+  if (commits > 0) {
+    if (v.commits < 0)
+      v.commits = -v.commits;  // revive a deleted item
+    v.commits += commits;
     UpdateTickCount(1);
-    dee = algo::formula_d(commit, (double)tick_, dee, (double)last_tick);
+    v.dee = algo::formula_d(commits, (double)tick_, v.dee, (double)v.tick);
   }
-  else if (commit == 0) {
+  else if (commits == 0) {
     const double k = 0.1;
-    dee = algo::formula_d(k, (double)tick_, dee, (double)last_tick);
+    v.dee = algo::formula_d(k, (double)tick_, v.dee, (double)v.tick);
   }
-  else if (commit < 0) {  // mark as deleted
-    commit_count = (std::min)(-1, -commit_count);
-    dee = algo::formula_d(0.0, (double)tick_, dee, (double)last_tick);
+  else if (commits < 0) {  // mark as deleted
+    v.commits = (std::min)(-1, -v.commits);
+    v.dee = algo::formula_d(0.0, (double)tick_, v.dee, (double)v.tick);
   }
-  value = boost::str(boost::format("c=%1% d=%2% t=%3%") %
-                     commit_count % dee % tick_);
-  return db_->Update(key, value);
+  v.tick = tick_;
+  return db_->Update(key, v.Pack());
 }
 
 bool UserDictionary::UpdateTickCount(TickCount increment) {
   tick_ += increment;
   try {
-    return db_->Update("\x01/tick", boost::lexical_cast<std::string>(tick_));
+    return db_->MetaUpdate("/tick", boost::lexical_cast<std::string>(tick_));
   }
   catch (...) {
     return false;
@@ -365,14 +363,14 @@ bool UserDictionary::UpdateTickCount(TickCount increment) {
 }
 
 bool UserDictionary::Initialize() {
-  return db_->Update("\x01/tick", "0");
+  return db_->MetaUpdate("/tick", "0");
 }
 
 bool UserDictionary::FetchTickCount() {
   std::string value;
   try {
     // an earlier version mistakenly wrote tick count into an empty key
-    if (!db_->Fetch("\x01/tick", &value) &&
+    if (!db_->MetaFetch("/tick", &value) &&
         !db_->Fetch("", &value))
       return false;
     tick_ = boost::lexical_cast<TickCount>(value);
@@ -385,22 +383,27 @@ bool UserDictionary::FetchTickCount() {
 }
 
 bool UserDictionary::NewTransaction() {
+  shared_ptr<Transactional> db = As<Transactional>(db_);
+  if (!db)
+    return false;
   CommitPendingTransaction();
   transaction_time_ = time(NULL);
-  return db_->BeginTransaction();
+  return db->BeginTransaction();
 }
 
 bool UserDictionary::RevertRecentTransaction() {
-  if (!db_->in_transaction())
+  shared_ptr<Transactional> db = As<Transactional>(db_);
+  if (!db || !db->in_transaction())
     return false;
   if (time(NULL) - transaction_time_ > 3/*seconds*/)
     return false;
-  return db_->AbortTransaction();
+  return db->AbortTransaction();
 }
 
 bool UserDictionary::CommitPendingTransaction() {
-  if (db_->in_transaction()) {
-    return db_->CommitTransaction();
+  shared_ptr<Transactional> db = As<Transactional>(db_);
+  if (db && db->in_transaction()) {
+    return db->CommitTransaction();
   }
   return false;
 }
@@ -422,38 +425,6 @@ bool UserDictionary::TranslateCodeToString(const Code &code,
   return true;
 }
 
-bool UserDictionary::UnpackValues(const std::string &value,
-                                  int *commit_count,
-                                  double *dee,
-                                  TickCount *tick) {
-  std::vector<std::string> kv;
-  boost::split(kv, value, boost::is_any_of(" "));
-  BOOST_FOREACH(const std::string &k_eq_v, kv) {
-    size_t eq = k_eq_v.find('=');
-    if (eq == std::string::npos)
-      continue;
-    const std::string k(k_eq_v.substr(0, eq));
-    const std::string v(k_eq_v.substr(eq + 1));
-    try {
-      if (k == "c") {
-        *commit_count = boost::lexical_cast<int>(v);
-      }
-      else if (k == "d") {
-        *dee = (std::min)(200.0, boost::lexical_cast<double>(v));
-      }
-      else if (k == "t") {
-        *tick = boost::lexical_cast<TickCount>(v);
-      }
-    }
-    catch (...) {
-      LOG(ERROR) << "failed in parsing key-value from userdict entry '"
-                 << k_eq_v << "'.";
-      return false;
-    }
-  }
-  return true;
-}
-
 shared_ptr<DictEntry> UserDictionary::CreateDictEntry(const std::string& key,
                                                       const std::string& value,
                                                       TickCount present_tick,
@@ -463,24 +434,22 @@ shared_ptr<DictEntry> UserDictionary::CreateDictEntry(const std::string& key,
   size_t separator_pos = key.find('\t');
   if (separator_pos == std::string::npos)
     return e;
-  int commit_count = 0;
-  double dee = 0.0;
-  TickCount last_tick = 0;
-  if (!UnpackValues(value, &commit_count, &dee, &last_tick))
+  UserDbValue v;
+  if (!v.Unpack(value))
     return e;
-  if (commit_count < 0)  // deleted entry
+  if (v.commits < 0)  // deleted entry
     return e;
-  if (last_tick < present_tick)
-    dee = algo::formula_d(0, (double)present_tick, dee, (double)last_tick);
+  if (v.tick < present_tick)
+    v.dee = algo::formula_d(0, (double)present_tick, v.dee, (double)v.tick);
   // create!
   e = make_shared<DictEntry>();
   e->text = key.substr(separator_pos + 1);
-  e->commit_count = commit_count;
+  e->commit_count = v.commits;
   // TODO: argument s not defined...
   e->weight = algo::formula_p(0,
-                              (double)commit_count / present_tick,
+                              (double)v.commits / present_tick,
                               (double)present_tick,
-                              dee) * credibility;
+                              v.dee) * credibility;
   if (full_code) {
     *full_code = key.substr(0, separator_pos);
   }
@@ -519,10 +488,19 @@ UserDictionary* UserDictionaryComponent::Create(const Ticket& ticket) {
                << ticket.schema->schema_id() << "'.";
     return NULL;
   }
+  std::string db_class("userdb");
+  if (config->GetString(ticket.name_space + "/db_class", &db_class)) {
+    // user specified db class
+  }
   // obtain userdb object
-  shared_ptr<UserDb> db(db_pool_[dict_name].lock());
+  shared_ptr<Db> db(db_pool_[dict_name].lock());
   if (!db) {
-    db = boost::make_shared<UserDb>(dict_name);
+    Db::Component* c = Db::Require(db_class);
+    if (!c) {
+      LOG(ERROR) << "undefined db class '" << db_class << "'.";
+      return NULL;
+    }
+    db.reset(c->Create(dict_name));
     db_pool_[dict_name] = db;
   }
   return new UserDictionary(db);

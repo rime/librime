@@ -7,17 +7,15 @@
 #ifndef RIME_USER_DICTIONARY_H_
 #define RIME_USER_DICTIONARY_H_
 
-#include <stdint.h>
 #include <time.h>
 #include <map>
 #include <string>
 #include <rime/common.h>
 #include <rime/component.h>
+#include <rime/dict/user_db.h>
 #include <rime/dict/vocabulary.h>
 
 namespace rime {
-
-typedef uint64_t TickCount;
 
 struct UserDictEntryCollector : std::map<size_t, DictEntryList> {
 };
@@ -44,19 +42,20 @@ class UserDictEntryIterator {
 class Schema;
 class Table;
 class Prism;
-class UserDb;
+class Db;
 struct SyllableGraph;
 struct DfsState;
 struct Ticket;
 
 class UserDictionary : public Class<UserDictionary, const Ticket&> {
  public:
-  explicit UserDictionary(const shared_ptr<UserDb> &user_db);
+  explicit UserDictionary(const shared_ptr<Db> &db);
   virtual ~UserDictionary();
 
   void Attach(const shared_ptr<Table> &table, const shared_ptr<Prism> &prism);
   bool Load();
   bool loaded() const;
+  bool readonly() const;
 
   shared_ptr<UserDictEntryCollector> Lookup(const SyllableGraph &syllable_graph,
                                             size_t start_pos,
@@ -67,7 +66,7 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
                      bool predictive,
                      size_t limit = 0,
                      std::string* resume_key = NULL);
-  bool UpdateEntry(const DictEntry &entry, int commit);
+  bool UpdateEntry(const DictEntry &entry, int commits);
   bool UpdateTickCount(TickCount increment);
 
   bool NewTransaction();
@@ -82,8 +81,6 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
                                                TickCount present_tick,
                                                double credibility = 1.0,
                                                std::string* full_code = NULL);
-  static bool UnpackValues(const std::string &value,
-                           int *commit_count, double *dee, TickCount *tick);
 
  protected:
   bool Initialize();
@@ -95,7 +92,7 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
 
  private:
   std::string name_;
-  shared_ptr<UserDb> db_;
+  shared_ptr<Db> db_;
   shared_ptr<Table> table_;
   shared_ptr<Prism> prism_;
   TickCount tick_;
@@ -107,7 +104,7 @@ class UserDictionaryComponent : public UserDictionary::Component {
   UserDictionaryComponent();
   UserDictionary* Create(const Ticket& ticket);
  private:
-  std::map<std::string, weak_ptr<UserDb> > db_pool_;
+  std::map<std::string, weak_ptr<Db> > db_pool_;
 };
 
 }  // namespace rime

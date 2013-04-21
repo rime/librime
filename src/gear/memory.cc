@@ -86,7 +86,8 @@ Memory::~Memory() {
 }
 
 void Memory::OnCommit(Context* ctx) {
-  if (!user_dict_) return;
+  if (!user_dict_|| user_dict_->readonly())
+    return;
   user_dict_->NewTransaction();
 
   CommitEntry commit_entry(this);
@@ -106,6 +107,7 @@ void Memory::OnCommit(Context* ctx) {
 
 void Memory::OnDeleteEntry(Context* ctx) {
   if (!user_dict_ ||
+      user_dict_->readonly() ||
       !ctx ||
       ctx->composition()->empty())
     return;
@@ -122,7 +124,7 @@ void Memory::OnDeleteEntry(Context* ctx) {
 }
 
 void Memory::OnUnhandledKey(Context* ctx, const KeyEvent& key) {
-  if (!user_dict_) return;
+  if (!user_dict_ || user_dict_->readonly()) return;
   if ((key.modifier() & ~kShiftMask) == 0) {
     if (key.keycode() == XK_BackSpace &&
         user_dict_->RevertRecentTransaction()) {
