@@ -292,6 +292,9 @@ Dictionary* DictionaryComponent::Create(const Ticket& ticket) {
                << ticket.schema->schema_id() << "'.";
     return NULL;
   }
+  if (dict_name.empty()) {
+    return NULL;  // not requiring static dictionary
+  }
   std::string prism_name;
   if (!config->GetString(ticket.name_space + "/prism", &prism_name)) {
     prism_name = dict_name;

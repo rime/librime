@@ -201,8 +201,6 @@ TableTranslator::TableTranslator(const TranslatorTicket& ticket)
 shared_ptr<Translation> TableTranslator::Query(const std::string &input,
                                                const Segment &segment,
                                                std::string* prompt) {
-  if (!dict_ || !dict_->loaded())
-    return shared_ptr<Translation>();
   if (!segment.HasTag("abc"))
     return shared_ptr<Translation>();
   DLOG(INFO) << "input = '" << input
@@ -227,7 +225,9 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
   }
   else {
     DictEntryIterator iter;
-    dict_->LookupWords(&iter, code, false);
+    if (dict_ && dict_->loaded()) {
+      dict_->LookupWords(&iter, code, false);
+    }
     UserDictEntryIterator uter;
     if (enable_user_dict) {
       user_dict_->LookupWords(&uter, code, false);
@@ -472,22 +472,24 @@ shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
           break;
       }
     }
-    std::vector<Prism::Match> matches;
-    dict_->prism()->CommonPrefixSearch(input.substr(start_pos), &matches);
-    if (matches.empty()) continue;
-    BOOST_REVERSE_FOREACH(const Prism::Match &m, matches) {
-      if (m.length == 0) continue;
-      if (entries[m.length]) continue;
-      DictEntryIterator iter;
-      dict_->LookupWords(&iter, active_input.substr(0, m.length), false);
-      size_t consumed_length =
-          consume_trailing_delimiters(m.length, active_input, delimiters_);
-      entries[consumed_length] = get_first_entry(iter, filter_by_charset);
-      if (start_pos == 0 && !iter.exhausted()) {
-        // also provide words for manual composition
-        collector[consumed_length] = iter;
-        DLOG(INFO) << "table[" << consumed_length << "]: "
-                   << collector[consumed_length].entry_count();
+    if (dict_ && dict_->loaded()) {
+      std::vector<Prism::Match> matches;
+      dict_->prism()->CommonPrefixSearch(input.substr(start_pos), &matches);
+      if (matches.empty()) continue;
+      BOOST_REVERSE_FOREACH(const Prism::Match &m, matches) {
+        if (m.length == 0) continue;
+        if (entries[m.length]) continue;
+        DictEntryIterator iter;
+        dict_->LookupWords(&iter, active_input.substr(0, m.length), false);
+        size_t consumed_length =
+            consume_trailing_delimiters(m.length, active_input, delimiters_);
+        entries[consumed_length] = get_first_entry(iter, filter_by_charset);
+        if (start_pos == 0 && !iter.exhausted()) {
+          // also provide words for manual composition
+          collector[consumed_length] = iter;
+          DLOG(INFO) << "table[" << consumed_length << "]: "
+                     << collector[consumed_length].entry_count();
+        }
       }
     }
     for (size_t len = 1; len <= active_input.length(); ++len) {
