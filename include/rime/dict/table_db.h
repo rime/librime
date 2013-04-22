@@ -19,6 +19,14 @@ class TableDb : public TextDb {
   static const TextFormat format;
 };
 
+// read-only tabledb
+class StableDb : public TableDb {
+ public:
+  explicit StableDb(const std::string& name);
+
+  virtual bool Open();
+};
+
 }  // namespace rime
 
 #endif  // RIME_TEXT_DB_H_

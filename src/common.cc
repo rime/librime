@@ -60,6 +60,7 @@ void RegisterComponents() {
   r.Register("schema_config", new ConfigComponent(schema_path.string()));
 
   r.Register("tabledb", new Component<TableDb>);
+  r.Register("stabledb", new Component<StableDb>);
   r.Register("plain_userdb", new Component<UserDb<TextDb> >);
   r.Register("userdb", new Component<UserDb<TreeDb> >);
 

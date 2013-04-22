@@ -69,4 +69,18 @@ TableDb::TableDb(const std::string& name)
     : TextDb(name + ".txt", "tabledb", TableDb::format) {
 }
 
+// StableDb
+
+StableDb::StableDb(const std::string& name)
+    : TableDb(name) {}
+
+bool StableDb::Open() {
+  if (loaded()) return false;
+  if (!Exists()) {
+    LOG(INFO) << "stabledb '" << name() << "' does not exist.";
+    return false;
+  }
+  return TableDb::OpenReadOnly();
+}
+
 }  // namespace rime
