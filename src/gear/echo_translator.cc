@@ -42,6 +42,9 @@ shared_ptr<Translation> EchoTranslator::Query(const std::string& input,
                                           segment.start,
                                           segment.end,
                                           input);
+  if (candidate) {
+    candidate->set_quality(-100);  // lowest priority
+  }
   return make_shared<EchoTranslation>(candidate);
 }
 
