@@ -130,33 +130,13 @@ bool TreeDb::Recover() {
   LOG(INFO) << "trying to recover db '" << name() << "'.";
   // first try to open the db with repair option on
   if (OpenReadOnly()) {
-    LOG(INFO) << "db has been repaired.";
-    Close();
-  }
-  else if (Exists()) {
-    // repair didn't work on the damanged db file; remove and recreate it
-    LOG(INFO) << "recreating db file.";
-    boost::system::error_code ec;
-    boost::filesystem::rename(file_name(), file_name() + ".old", ec);
-    if (ec && !Remove()) {
-      LOG(ERROR) << "Error removing db file '" << file_name() << "'.";
-      return false;
+    LOG(INFO) << "repair finished.";
+    if (Close() && Open()) {
+      LOG(INFO) << "treedb recovery successful.";
+      return true;
     }
   }
-  if (Open()) {
-    Deployer& deployer(Service::instance().deployer());
-    boost::filesystem::path snapshot_file(deployer.user_data_sync_dir());
-    snapshot_file /= (name() + ".snapshot");
-    if (boost::filesystem::exists(snapshot_file)) {
-      LOG(INFO) << "snapshot exists, trying to recover db '" << name() << "'.";
-      if (Restore(snapshot_file.string())) {
-        LOG(INFO) << "recovered db '" << name() << "' from snapshot.";
-      }
-    }
-    LOG(INFO) << "recovery successful.";
-    return true;
-  }
-  LOG(ERROR) << "recovery failed.";
+  LOG(ERROR) << "treedb recovery failed.";
   return false;
 }
 

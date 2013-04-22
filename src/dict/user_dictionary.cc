@@ -19,6 +19,7 @@
 #include <rime/dict/db.h>
 #include <rime/dict/table.h>
 #include <rime/dict/user_dictionary.h>
+#include <rime/lever/userdb_recovery_task.h>
 
 namespace rime {
 
@@ -72,20 +73,6 @@ void DfsState::RecruitEntry(size_t pos) {
     DLOG(INFO) << "add entry at pos " << pos;
     (*collector)[pos].push_back(e);
   }
-}
-
-class UserDbRecoveryTask : public DeploymentTask {
- public:
-  explicit UserDbRecoveryTask(shared_ptr<Db> db) : db_(db) {}
-  bool Run(Deployer* deployer);
- protected:
-  shared_ptr<Db> db_;
-};
-
-bool UserDbRecoveryTask::Run(Deployer* deployer) {
-  bool success = As<Recoverable>(db_)->Recover();
-  db_->enable();
-  return success;
 }
 
 // UserDictEntryIterator members
@@ -147,11 +134,10 @@ void UserDictionary::Attach(const shared_ptr<Table> &table,
 bool UserDictionary::Load() {
   if (!db_)
     return false;
-  if (!db_->Open()) {
+  if (!db_->loaded() && !db_->Open()) {
     // try to recover managed db in available work thread
     Deployer& deployer(Service::instance().deployer());
     if (Is<Recoverable>(db_) && !deployer.IsWorking()) {
-      db_->disable();
       deployer.ScheduleTask(New<UserDbRecoveryTask>(db_));
       deployer.StartWork();
     }
