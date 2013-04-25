@@ -16,9 +16,13 @@
 namespace rime {
 
 typedef std::pair<size_t, SpellingType> Vertex;
-typedef std::priority_queue<Vertex, std::vector<Vertex>, std::greater<Vertex> > VertexQueue;
+typedef std::priority_queue<Vertex,
+                            std::vector<Vertex>,
+                            std::greater<Vertex> > VertexQueue;
 
-int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, SyllableGraph *graph) {
+int Syllabifier::BuildSyllableGraph(const std::string &input,
+                                    Prism &prism,
+                                    SyllableGraph *graph) {
   if (input.empty())
     return 0;
 
@@ -38,6 +42,10 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
     else
       continue;  // discard worse spelling types
 
+    if (current_pos > farthest)
+      farthest = current_pos;
+    DLOG(INFO) << "current_pos: " << current_pos;
+
     // see where we can go by advancing a syllable
     std::vector<Prism::Match> matches;
     prism.CommonPrefixSearch(input.substr(current_pos), &matches);
@@ -50,38 +58,59 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
         while (end_pos < input.length() &&
                delimiters_.find(input[end_pos]) != std::string::npos)
           ++end_pos;
-        if (end_pos > farthest)
-          farthest = end_pos;
-        SpellingMap &spellings(end_vertices[end_pos]);
+        DLOG(INFO) << "end_pos: " << end_pos;
+        bool matches_input = (current_pos == 0 && end_pos == input.length());
+        SpellingMap spellings;
         SpellingType end_vertex_type = kInvalidSpelling;
-        // when spelling algebra is enabled, a spelling evaluates to a set of syllables;
+        // when spelling algebra is enabled,
+        // a spelling evaluates to a set of syllables;
         // otherwise, it resembles exactly the syllable itself.
         SpellingAccessor accessor(prism.QuerySpelling(m.value));
         while (!accessor.exhausted()) {
           SyllableId syllable_id(accessor.syllable_id());
           SpellingProperties props(accessor.properties());
-          props.end_pos = end_pos;
-          // add a syllable with properties to the edge's spelling-to-syllable map
-          spellings.insert(SpellingMap::value_type(syllable_id, props));
-          if (props.type < end_vertex_type) {
-            end_vertex_type = props.type;
+          if (strict_spelling_ &&
+              matches_input &&
+              props.type != kNormalSpelling) {
+            // disqualify fuzzy spelling or abbreviation as single word
+          }
+          else {
+            props.end_pos = end_pos;
+            // add a syllable with properties to the edge's
+            // spelling-to-syllable map
+            spellings.insert(SpellingMap::value_type(syllable_id, props));
+            // let end_vertex_type be the best (smaller) type of spelling
+            // that ends at the vertex
+            if (end_vertex_type > props.type) {
+              end_vertex_type = props.type;
+            }
           }
           accessor.Next();
         }
-        // update the vertex type
+        if (spellings.empty()) {
+          DLOG(INFO) << "not spelt.";
+          continue;
+        }
+        end_vertices[end_pos].swap(spellings);
+        // find the best common type in a path up to the end vertex
+        // eg. pinyin "shurfa" has vertex type kNormalSpelling at position 3,
+        // kAbbreviation at position 4 and kAbbreviation at position 6
         if (end_vertex_type < vertex.second) {
           end_vertex_type = vertex.second;
         }
         queue.push(Vertex(end_pos, end_vertex_type));
-        DLOG(INFO) << "added to syllable graph, edge: [" << current_pos << ", " << end_pos << ")";
+        DLOG(INFO) << "added to syllable graph, edge: ["
+                   << current_pos << ", " << end_pos << ")";
       }
     }
   }
 
-  // remove stale vertices and edges
+  DLOG(INFO) << "remove stale vertices and edges";
   std::set<int> good;
   good.insert(farthest);
-  SpellingType last_type = graph->vertices[farthest];
+  // fuzzy spellings are immune to invalidation by normal spellings
+  SpellingType last_type = (std::max)(graph->vertices[farthest],
+                                      kFuzzySpelling);
   for (int i = farthest - 1; i >= 0; --i) {
     if (graph->vertices.find(i) == graph->vertices.end())
       continue;
@@ -94,7 +123,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
         continue;
       }
       // remove disqualified syllables (eg. matching abbreviated spellings)
-      // when there is a path of more favored type (eg. normal spellings only)
+      // when there is a path of more favored type
       SpellingType edge_type = kInvalidSpelling;
       for (SpellingMap::iterator k = j->second.begin();
            k != j->second.end(); ) {
@@ -111,13 +140,13 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
         graph->edges[i].erase(j++);
       }
       else {
-        if (edge_type == kNormalSpelling)
+        if (edge_type < kAbbreviation)
           CheckOverlappedSpellings(graph, i, j->first);
         ++j;
       }
     }
     if (graph->vertices[i] > last_type || graph->edges[i].empty()) {
-      // remove stale vertex
+      DLOG(INFO) << "remove stale vertex at " << i;
       graph->vertices.erase(i);
       graph->edges.erase(i);
       continue;
@@ -127,36 +156,45 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
   }
 
   if (enable_completion_ && farthest < input.length()) {
+    DLOG(INFO) << "completion enabled";
     const size_t kExpandSearchLimit = 512;
     std::vector<Prism::Match> keys;
     prism.ExpandSearch(input.substr(farthest), &keys, kExpandSearchLimit);
     if (!keys.empty()) {
       size_t current_pos = farthest;
-      size_t end_pos = current_pos;
-      size_t code_length = input.length() - farthest;
+      size_t end_pos = input.length();
+      size_t code_length = end_pos - current_pos;
       EndVertexMap &end_vertices(graph->edges[current_pos]);
+      SpellingMap &spellings(end_vertices[end_pos]);
       BOOST_FOREACH(const Prism::Match &m, keys) {
         if (m.length < code_length) continue;
-        end_pos = input.length();
-        SpellingMap &spellings(end_vertices[end_pos]);
-        // when spelling algebra is enabled, a spelling evaluates to a set of syllables;
+        // when spelling algebra is enabled,
+        // a spelling evaluates to a set of syllables;
         // otherwise, it resembles exactly the syllable itself.
         SpellingAccessor accessor(prism.QuerySpelling(m.value));
         while (!accessor.exhausted()) {
           SyllableId syllable_id(accessor.syllable_id());
           SpellingProperties props(accessor.properties());
-          if (props.type > kNormalSpelling) continue;
-          props.type = kCompletion;
-          props.credibility *= 0.5;
-          props.end_pos = end_pos;
-          // add a syllable with properties to the edge's spelling-to-syllable map
-          spellings.insert(SpellingMap::value_type(syllable_id, props));
+          if (props.type < kAbbreviation) {
+            props.type = kCompletion;
+            props.credibility *= 0.5;
+            props.end_pos = end_pos;
+            // add a syllable with properties to the edge's
+            // spelling-to-syllable map
+            spellings.insert(SpellingMap::value_type(syllable_id, props));
+          }
           accessor.Next();
         }
-        queue.push(Vertex(end_pos, kCompletion));
-        DLOG(INFO) << "added to syllable graph, compl. edge: [" << current_pos << ", " << end_pos << ")";
       }
-      farthest = end_pos;
+      if (spellings.empty()) {
+        DLOG(INFO) << "no completion could be made.";
+        end_vertices.erase(end_pos);
+      }
+      else {
+        DLOG(INFO) << "added to syllable graph, completion: ["
+                   << current_pos << ", " << end_pos << ")";
+        farthest = end_pos;
+      }
     }
   }
 
@@ -170,7 +208,8 @@ int Syllabifier::BuildSyllableGraph(const std::string &input, Prism &prism, Syll
   return farthest;
 }
 
-void Syllabifier::CheckOverlappedSpellings(SyllableGraph *graph, size_t start, size_t end) {
+void Syllabifier::CheckOverlappedSpellings(SyllableGraph *graph,
+                                           size_t start, size_t end) {
   // TODO: more cases to handle...
   if (!graph || graph->edges.find(start) == graph->edges.end())
     return;

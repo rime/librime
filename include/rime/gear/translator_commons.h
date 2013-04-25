@@ -61,7 +61,7 @@ class Phrase : public Candidate {
   void set_syllabification(const shared_ptr<Syllabification>& s) {
     syllabification_ = s;
   }
-  
+
   double weight() const { return entry_->weight; }
   const Code& code() const { return entry_->code; }
   const DictEntry& entry() const { return *entry_; }
@@ -69,7 +69,7 @@ class Phrase : public Candidate {
   shared_ptr<Syllabification> syllabification() const {
     return syllabification_;
   }
-  
+
  protected:
   Language* language_;
   shared_ptr<DictEntry> entry_;
@@ -97,7 +97,7 @@ class Sentence : public Phrase {
   { return components_; }
   const std::vector<size_t>& syllable_lengths() const
   { return syllable_lengths_; }
-  
+
  protected:
   std::vector<DictEntry> components_;
   std::vector<size_t> syllable_lengths_;
@@ -112,10 +112,10 @@ class CharsetFilter : public Translation {
   virtual shared_ptr<Candidate> Peek();
 
   static bool Passed(const std::string& text);
-  
+
  protected:
   bool LocateNextCandidate();
-  
+
   shared_ptr<Translation> translation_;
 };
 
@@ -146,12 +146,15 @@ class TranslatorOptions {
   const std::string& delimiters() const { return delimiters_; }
   bool enable_completion() const { return enable_completion_; }
   void set_enable_completion(bool enabled) { enable_completion_ = enabled; }
+  bool strict_spelling() const { return strict_spelling_; }
+  void set_strict_spelling(bool is_strict) { strict_spelling_ = is_strict; }
   Projection& preedit_formatter() { return preedit_formatter_; }
   Projection& comment_formatter() { return comment_formatter_; }
-  
+
  protected:
   std::string delimiters_;
   bool enable_completion_;
+  bool strict_spelling_;
   Projection preedit_formatter_;
   Projection comment_formatter_;
   Patterns user_dict_disabling_patterns_;

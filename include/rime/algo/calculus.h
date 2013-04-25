@@ -43,7 +43,7 @@ class Transliteration : public Calculation {
  public:
   static Factory Parse;
   bool Apply(Spelling* spelling);
-  
+
  protected:
   std::map<uint32_t, uint32_t> char_map_;
 };
@@ -53,7 +53,7 @@ class Transformation : public Calculation {
  public:
   static Factory Parse;
   bool Apply(Spelling* spelling);
-  
+
  protected:
   boost::regex pattern_;
   std::string replacement_;
@@ -75,6 +75,13 @@ class Derivation : public Transformation {
  public:
   static Factory Parse;
   bool deletion() { return false; }
+};
+
+// fuzz/zyx/zx/
+class Fuzzing : public Derivation {
+ public:
+  static Factory Parse;
+  bool Apply(Spelling* spelling);
 };
 
 // abbrev/zyx/z/

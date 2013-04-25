@@ -106,13 +106,13 @@ void ReverseLookupTranslator::Initialize() {
     if (!config->GetBool(name_space_ + "/enable_completion", &enabled))
       options_->set_enable_completion(false);  // overridden default
   }
-  
+
   Ticket ticket(engine_->schema(), name_space_);
   DictionaryComponent *component =
       dynamic_cast<DictionaryComponent*>(Dictionary::Require("dictionary"));
   if (!component) return;
   dict_.reset(component->Create(ticket));
-  if (dict_) 
+  if (dict_)
     dict_->Load();
   else
     return;
@@ -136,18 +136,18 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
              << "', [" << segment.start << ", " << segment.end << ")";
 
   const std::string& preedit(input);
-  
+
   size_t start = 0;
   if (!prefix_.empty() && boost::starts_with(input, prefix_))
     start = prefix_.length();
   std::string code(input.substr(start));
   if (!suffix_.empty() && boost::ends_with(code, suffix_))
     code.resize(code.length() - suffix_.length());
-  
+
   if (start > 0 && prompt) {
     *prompt = tips_;
   }
-  
+
   DictEntryIterator iter;
   bool quality = false;
   if (start < input.length()) {
@@ -159,7 +159,7 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
     else {
       // 2012-04-08 gongchen: fetch multi-syllable words from rev-lookup table
       SyllableGraph graph;
-      Syllabifier syllabifier("", true);
+      Syllabifier syllabifier("", true, options_->strict_spelling());
       size_t consumed = syllabifier.BuildSyllableGraph(code,
                                                        *dict_->prism(),
                                                        &graph);

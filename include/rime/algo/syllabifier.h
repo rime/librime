@@ -38,18 +38,30 @@ struct SyllableGraph {
 
 class Syllabifier {
  public:
-  Syllabifier() : enable_completion_(false) {}
-  explicit Syllabifier(const std::string &delimiters, bool enable_completion = false)
-      : delimiters_(delimiters), enable_completion_(enable_completion) {}
-  
-  int BuildSyllableGraph(const std::string &input, Prism &prism, SyllableGraph *graph);
+  Syllabifier()
+      : enable_completion_(false),
+        strict_spelling_(false) {
+  }
+  explicit Syllabifier(const std::string &delimiters,
+                       bool enable_completion = false,
+                       bool strict_spelling = false)
+      : delimiters_(delimiters),
+        enable_completion_(enable_completion),
+        strict_spelling_(strict_spelling) {
+  }
+
+  int BuildSyllableGraph(const std::string &input,
+                         Prism &prism,
+                         SyllableGraph *graph);
 
  protected:
-  void CheckOverlappedSpellings(SyllableGraph *graph, size_t start, size_t end);
+  void CheckOverlappedSpellings(SyllableGraph *graph,
+                                size_t start, size_t end);
   void Transpose(SyllableGraph* graph);
-  
+
   std::string delimiters_;
   bool enable_completion_;
+  bool strict_spelling_;
 };
 
 }  // namespace rime

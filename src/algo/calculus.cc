@@ -15,6 +15,7 @@ Calculus::Calculus() {
   Register("xform", &Transformation::Parse);
   Register("erase", &Erasion::Parse);
   Register("derive", &Derivation::Parse);
+  Register("fuzz", &Fuzzing::Parse);
   Register("abbrev", &Abbreviation::Parse);
 }
 
@@ -152,6 +153,30 @@ Calculation* Derivation::Parse(const std::vector<std::string>& args) {
   x->pattern_.assign(left);
   x->replacement_.assign(right);
   return x;
+}
+
+// Fuzzing
+
+Calculation* Fuzzing::Parse(const std::vector<std::string>& args) {
+  if (args.size() < 3)
+    return NULL;
+  const std::string& left(args[1]);
+  const std::string& right(args[2]);
+  if (left.empty())
+    return NULL;
+  Fuzzing* x = new Fuzzing;
+  x->pattern_.assign(left);
+  x->replacement_.assign(right);
+  return x;
+}
+
+bool Fuzzing::Apply(Spelling* spelling) {
+  bool result = Transformation::Apply(spelling);
+  if (result) {
+    spelling->properties.type = kFuzzySpelling;
+    spelling->properties.credibility *= 0.5;
+  }
+  return result;
 }
 
 // Abbreviation

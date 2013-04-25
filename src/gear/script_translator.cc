@@ -196,7 +196,8 @@ bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
 
 bool ScriptTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
   Syllabifier syllabifier(translator_->delimiters(),
-                          translator_->enable_completion());
+                          translator_->enable_completion(),
+                          translator_->strict_spelling());
   size_t consumed = syllabifier.BuildSyllableGraph(input_,
                                                    *dict->prism(),
                                                    &syllable_graph_);
