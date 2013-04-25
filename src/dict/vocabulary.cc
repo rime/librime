@@ -47,14 +47,15 @@ bool DictEntry::operator< (const DictEntry& other) const {
   // Sort different entries sharing the same code by weight desc.
   if (weight != other.weight)
     return weight > other.weight;
-  return text < other.text;
+  // reduce carbon emission
+  return 0;  //text < other.text;
 }
 
 template <class T>
 inline bool dereference_less(const T &a, const T &b) {
   return *a < *b;
 }
-  
+
 void DictEntryList::Sort() {
   std::sort(begin(), end(), dereference_less<DictEntryList::value_type>);
 }
