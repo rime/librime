@@ -25,13 +25,14 @@ int main(int argc, char *argv[]) {
               << "\t-l|--list" << std::endl
               << "\t-s|--sync" << std::endl
               << "\t-b|--backup dict_name" << std::endl
+              << "\t-r|--restore xxx.userdb.txt" << std::endl
               << "\t-r|--restore xxx.userdb.kct.snapshot" << std::endl
               << "\t-e|--export dict_name export.txt" << std::endl
               << "\t-i|--import dict_name import.txt" << std::endl
         ;
     return 0;
   }
-  
+
   rime::Deployer& deployer(rime::Service::instance().deployer());
   {
     rime::Config config;
