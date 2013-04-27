@@ -66,7 +66,7 @@ Processor::Result ChordComposer::ProcessKeyEvent(const KeyEvent &key_event) {
   return kAccepted;
 }
 
-const std::string ChordComposer::SerializeChord() {
+std::string ChordComposer::SerializeChord() {
   std::string code;
   BOOST_FOREACH(char ch, alphabet_) {
     if (chord_.find(ch) != chord_.end())
@@ -113,7 +113,7 @@ void ChordComposer::FinishChord() {
   std::string code(SerializeChord());
   output_format_.Apply(&code);
   ClearChord();
-  
+
   KeySequence sequence;
   if (sequence.Parse(code)) {
     pass_thru_ = true;

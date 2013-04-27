@@ -50,7 +50,7 @@ shared_ptr<Translation> TrivialTranslator::Query(const std::string &input,
   return make_shared<UniqueTranslation>(candidate);
 }
 
-const std::string TrivialTranslator::Translate(const std::string &input) {
+std::string TrivialTranslator::Translate(const std::string &input) {
   const size_t kMinPinyinLength = 2;
   const size_t kMaxPinyinLength = 6;
   std::string result;

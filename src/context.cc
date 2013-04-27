@@ -30,13 +30,13 @@ bool Context::Commit() {
   return true;
 }
 
-const std::string Context::GetCommitText() const {
+std::string Context::GetCommitText() const {
   if (get_option("dumb"))
     return std::string();
   return composition_->GetCommitText();
 }
 
-const std::string Context::GetScriptText() const {
+std::string Context::GetScriptText() const {
   return composition_->GetScriptText();
 }
 
@@ -282,7 +282,7 @@ void Context::set_property(const std::string &name,
   properties_[name] = value;
 }
 
-const std::string Context::get_property(const std::string &name) const {
+std::string Context::get_property(const std::string &name) const {
   std::map<std::string, std::string>::const_iterator it =
       properties_.find(name);
   if (it != properties_.end())

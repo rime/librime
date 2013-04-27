@@ -25,9 +25,9 @@ class WorkspaceUpdate : public DeploymentTask {
   WorkspaceUpdate() {}
   bool Run(Deployer* deployer);
  protected:
-  const std::string GetSchemaPath(Deployer* deployer,
-                                  const std::string& schema_id,
-                                  bool prefer_shared_copy);
+  std::string GetSchemaPath(Deployer* deployer,
+                            const std::string& schema_id,
+                            bool prefer_shared_copy);
 };
 
 // update a specific schema, build corresponding dictionary

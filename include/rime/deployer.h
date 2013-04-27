@@ -53,7 +53,7 @@ class Deployer : public Messenger {
   void JoinWorkThread();
   void JoinMaintenanceThread();
 
-  const std::string user_data_sync_dir() const;
+  std::string user_data_sync_dir() const;
 
  private:
   std::queue<shared_ptr<DeploymentTask> > pending_tasks_;

@@ -40,7 +40,7 @@ class DictCompiler {
   void set_options(int options) { options_ = options; }
 
  private:
-  const std::string FindDictFile(const std::string& dict_name);
+  std::string FindDictFile(const std::string& dict_name);
   bool BuildTable(const DictSettings &settings,
                   const std::vector<std::string> &dict_files,
                   uint32_t dict_file_checksum);

@@ -104,7 +104,7 @@ bool DictCompiler::Compile(const std::string &schema_file) {
   return true;
 }
 
-const std::string DictCompiler::FindDictFile(const std::string& dict_name) {
+std::string DictCompiler::FindDictFile(const std::string& dict_name) {
   std::string dict_file(dict_name + ".dict.yaml");
   if (dict_file_finder_) {
     dict_file = dict_file_finder_(dict_file);

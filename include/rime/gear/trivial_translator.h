@@ -24,7 +24,7 @@ class TrivialTranslator : public Translator {
                                         std::string* prompt);
 
  private:
-  const std::string Translate(const std::string &input);
+  std::string Translate(const std::string &input);
 
   typedef std::map<std::string, std::string> TrivialDictionary;
   TrivialDictionary dictionary_;

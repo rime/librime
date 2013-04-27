@@ -204,9 +204,9 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   return failure == 0;
 }
 
-const std::string WorkspaceUpdate::GetSchemaPath(Deployer* deployer,
-                                                 const std::string& schema_id,
-                                                 bool prefer_shared_copy) {
+std::string WorkspaceUpdate::GetSchemaPath(Deployer* deployer,
+                                           const std::string& schema_id,
+                                           bool prefer_shared_copy) {
   fs::path schema_path;
   if (prefer_shared_copy) {
     fs::path shared_data_path(deployer->shared_data_dir);
@@ -223,9 +223,9 @@ const std::string WorkspaceUpdate::GetSchemaPath(Deployer* deployer,
   return schema_path.string();
 }
 
-static const std::string find_dict_file(const std::string& dict_file_name,
-                                        const fs::path& shared_data_path,
-                                        const fs::path& user_data_path) {
+static std::string find_dict_file(const std::string& dict_file_name,
+                                  const fs::path& shared_data_path,
+                                  const fs::path& user_data_path) {
   fs::path dict_path(user_data_path / dict_file_name);
   if (!fs::exists(dict_path)) {
     dict_path = shared_data_path / dict_file_name;

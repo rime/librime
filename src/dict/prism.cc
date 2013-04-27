@@ -57,7 +57,7 @@ int SpellingAccessor::syllable_id() const {
     return spelling_id_;
 }
 
-const SpellingProperties SpellingAccessor::properties() const {
+SpellingProperties SpellingAccessor::properties() const {
   SpellingProperties props;
   if (iter_ && iter_ < end_) {
     props.type = static_cast<SpellingType>(iter_->type);
@@ -91,7 +91,7 @@ bool Prism::Load() {
     return false;
   }
   format_ = atof(&metadata_->format[kPrismFormatPrefixLen]);
-  
+
   char *array = metadata_->double_array.get();
   if (!array) {
     LOG(ERROR) << "double array image not found.";
@@ -314,7 +314,7 @@ void Prism::ExpandSearch(const std::string &key, std::vector<Match> *result, siz
   }
 }
 
-const SpellingAccessor Prism::QuerySpelling(int spelling_id) {
+SpellingAccessor Prism::QuerySpelling(int spelling_id) {
   return SpellingAccessor(spelling_map_, spelling_id);
 }
 

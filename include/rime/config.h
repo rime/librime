@@ -28,7 +28,7 @@ class ConfigItem {
 
  protected:
   ConfigItem(ValueType type) : type_(type) {}
-  
+
   ValueType type_;
 };
 
@@ -42,7 +42,7 @@ class ConfigValue : public ConfigItem {
   ConfigValue(double value);
   ConfigValue(const char *value);
   ConfigValue(const std::string &value);
-  
+
   // schalar value accessors
   bool GetBool(bool *value) const;
   bool GetInt(int *value) const;
@@ -53,9 +53,9 @@ class ConfigValue : public ConfigItem {
   bool SetDouble(double value);
   bool SetString(const char *value);
   bool SetString(const std::string &value);
-  
+
   const std::string& str() const { return value_; }
-  
+
  protected:
   std::string value_;
 };
@@ -66,7 +66,7 @@ class ConfigList : public ConfigItem {
  public:
   typedef std::vector<ConfigItemPtr> Sequence;
   typedef Sequence::iterator Iterator;
-  
+
   ConfigList() : ConfigItem(kList) {}
   ConfigItemPtr GetAt(size_t i) const;
   ConfigValuePtr GetValueAt(size_t i) const;
@@ -90,7 +90,7 @@ class ConfigMap : public ConfigItem {
  public:
   typedef std::map<std::string, ConfigItemPtr> Map;
   typedef Map::iterator Iterator;
-  
+
   ConfigMap() : ConfigItem(kMap) {}
   bool HasKey(const std::string &key) const;
   ConfigItemPtr Get(const std::string &key) const;
@@ -120,21 +120,21 @@ class ConfigItemRef {
   }
   ConfigListEntryRef operator[] (size_t index);
   ConfigMapEntryRef operator[] (const std::string& key);
-  
+
   bool IsNull() const;
   bool IsValue() const;
   bool IsList() const;
   bool IsMap() const;
-  
+
   bool ToBool() const;
   int ToInt() const;
   double ToDouble() const;
-  const std::string ToString() const;
+  std::string ToString() const;
 
   ConfigListPtr AsList();
   ConfigMapPtr AsMap();
   void Clear();
-  
+
   // list
   bool Append(const ConfigItemPtr& item);
   size_t size() const;
@@ -210,7 +210,7 @@ class ConfigMapEntryRef : public ConfigItemRef {
   }
  private:
   ConfigMapPtr map_;
-  const std::string key_;
+  std::string key_;
 };
 
 inline ConfigListEntryRef ConfigItemRef::operator[] (size_t index) {
@@ -231,7 +231,7 @@ class Config : public Class<Config, const std::string&>, public ConfigItemRef {
   virtual ~Config();
   // instances of Config with identical file_name share a copy of config data
   // that could be reloaded by ConfigComponent once notified changes to the file
-  explicit Config(const std::string &file_name);
+  explicit Config(const std::string& file_name);
 
   bool LoadFromFile(const std::string& file_name);
   bool SaveToFile(const std::string& file_name);
@@ -264,7 +264,7 @@ class Config : public Class<Config, const std::string&>, public ConfigItemRef {
     SetItem(AsConfigItem(a, boost::is_convertible<T, ConfigItemPtr>()));
     return *this;
   }
-  
+
  protected:
   ConfigItemPtr GetItem() const;
   void SetItem(const ConfigItemPtr& item);
@@ -274,10 +274,10 @@ class Config : public Class<Config, const std::string&>, public ConfigItemRef {
 
 class ConfigComponent : public Config::Component {
  public:
-  
+
   ConfigComponent(const std::string &pattern) : pattern_(pattern) {}
   Config* Create(const std::string &config_id);
-  const std::string GetConfigFilePath(const std::string &config_id);
+  std::string GetConfigFilePath(const std::string &config_id);
   const std::string& pattern() const { return pattern_; }
 
  private:

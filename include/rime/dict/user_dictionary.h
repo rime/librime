@@ -74,7 +74,7 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
   bool CommitPendingTransaction();
 
   const std::string& name() const { return name_; }
-  const TickCount tick() const { return tick_; }
+  TickCount tick() const { return tick_; }
 
   static shared_ptr<DictEntry> CreateDictEntry(const std::string& key,
                                                const std::string& value,

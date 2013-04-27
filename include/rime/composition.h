@@ -24,9 +24,9 @@ class Composition : public Segmentation {
   Composition();
   bool HasFinishedComposition() const;
   void GetPreedit(Preedit *preedit) const;
-  const std::string GetCommitText() const;
-  const std::string GetScriptText() const;
-  const std::string GetDebugText() const;
+  std::string GetCommitText() const;
+  std::string GetScriptText() const;
+  std::string GetDebugText() const;
 };
 
 }  // namespace rime

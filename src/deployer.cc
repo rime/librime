@@ -22,7 +22,7 @@ Deployer::~Deployer() {
   JoinWorkThread();
 }
 
-const std::string Deployer::user_data_sync_dir() const {
+std::string Deployer::user_data_sync_dir() const {
   boost::filesystem::path p(sync_dir);
   p /= user_id;
   return p.string();

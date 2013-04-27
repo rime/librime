@@ -37,7 +37,7 @@ class KeyEvent {
   // 按鍵表示為形如「狀態+鍵名」的文字
   // 若無鍵名，則以四位或六位十六进制数形式的文字來標識
   // 形如 "0x12ab", "0xfffffe"
-  const std::string repr() const;
+  std::string repr() const;
 
   // 解析文字表示的按鍵
   bool Parse(const std::string &repr);
@@ -60,7 +60,7 @@ class KeySequence : public std::vector<KeyEvent> {
   // 可表示為一串文字
   // 若其中包含不產生可打印字符的按鍵，以 {鍵名} 來標記
   // 組合鍵也用 {組合鍵狀態+鍵名} 來標記
-  const std::string repr() const;
+  std::string repr() const;
 
   // 解析按鍵序列描述文字
   bool Parse(const std::string &repr);

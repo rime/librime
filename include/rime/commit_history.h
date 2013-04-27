@@ -29,7 +29,7 @@ class CommitHistory : public std::list<CommitRecord> {
   void Push(const CommitRecord& record);
   void Push(const KeyEvent& key_event);
   void Push(const Composition& composition, const std::string& input);
-  const std::string repr() const;
+  std::string repr() const;
 };
 
 }  // Namespace rime

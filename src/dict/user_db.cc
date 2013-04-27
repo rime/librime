@@ -27,7 +27,7 @@ UserDbValue::UserDbValue(const std::string& value)
   Unpack(value);
 }
 
-const std::string UserDbValue::Pack() const {
+std::string UserDbValue::Pack() const {
   return boost::str(boost::format("c=%1% d=%2% t=%3%") %
                     commits % dee % tick);
 }
@@ -39,8 +39,8 @@ bool UserDbValue::Unpack(const std::string &value) {
     size_t eq = k_eq_v.find('=');
     if (eq == std::string::npos)
       continue;
-    const std::string k(k_eq_v.substr(0, eq));
-    const std::string v(k_eq_v.substr(eq + 1));
+    std::string k(k_eq_v.substr(0, eq));
+    std::string v(k_eq_v.substr(eq + 1));
     try {
       if (k == "c") {
         commits = boost::lexical_cast<int>(v);
@@ -188,7 +188,7 @@ bool UserDb<BaseDb>::IsUserDb() {
 }
 
 template <class BaseDb>
-const std::string UserDb<BaseDb>::GetDbName() {
+std::string UserDb<BaseDb>::GetDbName() {
   std::string name;
   if (!BaseDb::MetaFetch("/db_name", &name))
     return name;
@@ -197,14 +197,14 @@ const std::string UserDb<BaseDb>::GetDbName() {
 }
 
 template <class BaseDb>
-const std::string UserDb<BaseDb>::GetUserId() {
+std::string UserDb<BaseDb>::GetUserId() {
   std::string user_id("unknown");
   BaseDb::MetaFetch("/user_id", &user_id);
   return user_id;
 }
 
 template <class BaseDb>
-const std::string UserDb<BaseDb>::GetRimeVersion() {
+std::string UserDb<BaseDb>::GetRimeVersion() {
   std::string version;
   BaseDb::MetaFetch("/rime_version", &version);
   return version;

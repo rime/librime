@@ -23,7 +23,7 @@ namespace dictionary {
 
 class RawCode : public std::vector<std::string> {
  public:
-  const std::string ToString() const;
+  std::string ToString() const;
   void FromString(const std::string &str_code);
 };
 
@@ -110,7 +110,7 @@ class Dictionary : public Class<Dictionary, const Ticket&> {
 
   const std::string& name() const { return name_; }
   bool loaded() const;
-  
+
   shared_ptr<Table> table() { return table_; }
   shared_ptr<Prism> prism() { return prism_; }
 

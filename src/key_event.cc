@@ -17,7 +17,7 @@ KeyEvent::KeyEvent(const std::string &repr) {
     keycode_ = modifier_ = 0;
 }
 
-const std::string KeyEvent::repr() const {
+std::string KeyEvent::repr() const {
   // stringify modifiers
   std::ostringstream modifiers;
   if (modifier_) {
@@ -90,7 +90,7 @@ KeySequence::KeySequence(const std::string &repr) {
     clear();
 }
 
-const std::string KeySequence::repr() const {
+std::string KeySequence::repr() const {
   std::ostringstream result;
   std::string k;
   for (const_iterator it = begin(); it != end(); ++it) {

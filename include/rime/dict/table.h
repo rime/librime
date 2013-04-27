@@ -83,7 +83,7 @@ class TableAccessor {
   const table::Entry* entry() const;
   const table::Code* extra_code() const;
   const Code& index_code() const { return index_code_; }
-  const Code code() const;
+  Code code() const;
   double credibility() const { return credibility_; }
 
  private:
@@ -98,8 +98,8 @@ class TableVisitor {
  public:
   TableVisitor(table::Index *index);
 
-  const TableAccessor Access(int syllable_id,
-                             double credibility = 1.0) const;
+  TableAccessor Access(int syllable_id,
+                       double credibility = 1.0) const;
 
   // down to next level
   bool Walk(int syllable_id, double credibility = 1.0);
@@ -107,7 +107,7 @@ class TableVisitor {
   bool Backdate();
   // back to root
   void Reset();
-  
+
   size_t level() const { return level_; }
 
  private:
@@ -138,11 +138,11 @@ class Table : public MappedFile {
              const Vocabulary &vocabulary,
              size_t num_entries,
              uint32_t dict_file_checksum = 0);
-  
+
   bool GetSyllabary(Syllabary *syllabary);
   const char* GetSyllableById(int syllable_id);
-  const TableAccessor QueryWords(int syllable_id);
-  const TableAccessor QueryPhrases(const Code &code);
+  TableAccessor QueryWords(int syllable_id);
+  TableAccessor QueryPhrases(const Code &code);
   bool Query(const SyllableGraph &syll_graph,
              size_t start_pos,
              TableQueryResult *result);

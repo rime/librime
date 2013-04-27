@@ -51,13 +51,13 @@ void PunctConfig::LoadConfig(Engine *engine, bool load_symbols) {
   }
 }
 
-const ConfigItemPtr PunctConfig::GetPunctDefinition(const std::string key) {
+ConfigItemPtr PunctConfig::GetPunctDefinition(const std::string key) {
   ConfigItemPtr punct_definition;
   if (mapping_)
     punct_definition = mapping_->Get(key);
   if (punct_definition)
     return punct_definition;
-  
+
   if (preset_mapping_)
     punct_definition = preset_mapping_->Get(key);
   if (punct_definition)
@@ -67,7 +67,7 @@ const ConfigItemPtr PunctConfig::GetPunctDefinition(const std::string key) {
     punct_definition = symbols_->Get(key);
   if (punct_definition)
     return punct_definition;
-  
+
   if (preset_symbols_)
     punct_definition = preset_symbols_->Get(key);
   return punct_definition;

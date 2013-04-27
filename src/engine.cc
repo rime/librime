@@ -163,7 +163,7 @@ void ConcreteEngine::TranslateSegments(Composition *comp) {
       continue;
     size_t len = segment.end - segment.start;
     if (len == 0) continue;
-    const std::string input(comp->input().substr(segment.start, len));
+    std::string input(comp->input().substr(segment.start, len));
     DLOG(INFO) << "translating segment: " << input;
     shared_ptr<Menu> menu = boost::make_shared<Menu>(filter);
     BOOST_FOREACH(shared_ptr<Translator>& translator, translators_) {
@@ -194,7 +194,7 @@ void ConcreteEngine::FilterCandidates(CandidateList *recruited,
 }
 
 void ConcreteEngine::OnCommit(Context *ctx) {
-  const std::string commit_text = ctx->GetCommitText();
+  std::string commit_text = ctx->GetCommitText();
   DLOG(INFO) << "committing: " << commit_text;
   sink_(commit_text);
 }

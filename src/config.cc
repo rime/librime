@@ -295,7 +295,7 @@ double ConfigItemRef::ToDouble() const {
   return value;
 }
 
-const std::string ConfigItemRef::ToString() const {
+std::string ConfigItemRef::ToString() const {
   std::string value;
   ConfigValuePtr item = As<ConfigValue>(GetItem());
   if (item)
@@ -492,12 +492,12 @@ void Config::SetItem(const ConfigItemPtr& item) {
 
 // ConfigComponent members
 
-const std::string ConfigComponent::GetConfigFilePath(const std::string &config_id) {
+std::string ConfigComponent::GetConfigFilePath(const std::string &config_id) {
   return boost::str(boost::format(pattern_) % config_id);
 }
 
 Config* ConfigComponent::Create(const std::string &config_id) {
-  const std::string path(GetConfigFilePath(config_id));
+  std::string path(GetConfigFilePath(config_id));
   DLOG(INFO) << "config file path: " << path;
   return new Config(path);
 }

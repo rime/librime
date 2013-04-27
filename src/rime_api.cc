@@ -208,7 +208,7 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
     context->composition.sel_start = preedit.sel_start;
     context->composition.sel_end = preedit.sel_end;
     if (RIME_STRUCT_HAS_MEMBER(*context, context->commit_text_preview)) {
-      const std::string commit_text(ctx->GetCommitText());
+      std::string commit_text(ctx->GetCommitText());
       if (!commit_text.empty()) {
         context->commit_text_preview = new char[commit_text.length() + 1];
         std::strcpy(context->commit_text_preview, commit_text.c_str());
@@ -234,7 +234,7 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
         RimeCandidate* dest = &context->menu.candidates[i];
         dest->text = new char[cand->text().length() + 1];
         std::strcpy(dest->text, cand->text().c_str());
-        const std::string comment(cand->comment());
+        std::string comment(cand->comment());
         if (!comment.empty()) {
           dest->comment = new char[comment.length() + 1];
           std::strcpy(dest->comment, comment.c_str());
@@ -366,7 +366,7 @@ RIME_API Bool RimeGetProperty(RimeSessionId session_id, const char* prop,
   rime::Context *ctx = session->context();
   if (!ctx)
     return False;
-  const std::string str_value(ctx->get_property(prop));
+  std::string str_value(ctx->get_property(prop));
   if (str_value.empty())
     return False;
   strncpy(value, str_value.c_str(), buffer_size);

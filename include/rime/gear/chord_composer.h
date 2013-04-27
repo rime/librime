@@ -20,14 +20,14 @@ class ChordComposer : public Processor {
   ChordComposer(Engine *engine);
 
   virtual Result ProcessKeyEvent(const KeyEvent &key_event);
-  
+
  protected:
-  const std::string SerializeChord();
+  std::string SerializeChord();
   void UpdateChord();
   void FinishChord();
   void ClearChord();
   bool DeleteLastSyllable();
-  
+
   std::string alphabet_;
   std::string delimiter_;
   Projection algebra_;

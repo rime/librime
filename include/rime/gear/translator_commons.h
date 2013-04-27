@@ -50,8 +50,8 @@ class Phrase : public Candidate {
         entry_(entry) {
   }
   const std::string& text() const { return entry_->text; }
-  const std::string comment() const { return entry_->comment; }
-  const std::string preedit() const { return entry_->preedit; }
+  std::string comment() const { return entry_->comment; }
+  std::string preedit() const { return entry_->preedit; }
   void set_comment(const std::string &comment) {
     entry_->comment = comment;
   }
@@ -63,7 +63,7 @@ class Phrase : public Candidate {
   }
 
   double weight() const { return entry_->weight; }
-  const Code& code() const { return entry_->code; }
+  Code& code() const { return entry_->code; }
   const DictEntry& entry() const { return *entry_; }
   Language* language() const { return language_; }
   shared_ptr<Syllabification> syllabification() const {

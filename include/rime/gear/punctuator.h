@@ -19,7 +19,7 @@ namespace rime {
 class PunctConfig {
  public:
   void LoadConfig(Engine *engine, bool load_symbols = false);
-  const ConfigItemPtr GetPunctDefinition(const std::string key);
+  ConfigItemPtr GetPunctDefinition(const std::string key);
  protected:
   ConfigMapPtr mapping_;
   ConfigMapPtr preset_mapping_;
@@ -61,18 +61,22 @@ class PunctTranslator : public Translator {
                                         std::string* prompt);
 
  protected:
-  shared_ptr<Translation> TranslateUniquePunct(const std::string &key,
-                                               const Segment &segment,
-                                               const ConfigValuePtr &definition);
-  shared_ptr<Translation> TranslateAlternatingPunct(const std::string &key,
-                                                    const Segment &segment,
-                                                    const ConfigListPtr &definition);
-  shared_ptr<Translation> TranslateAutoCommitPunct(const std::string &key,
-                                                   const Segment &segment,
-                                                   const ConfigMapPtr &definition);
-  shared_ptr<Translation> TranslatePairedPunct(const std::string &key,
-                                               const Segment &segment,
-                                               const ConfigMapPtr &definition);
+  shared_ptr<Translation>
+  TranslateUniquePunct(const std::string &key,
+                       const Segment &segment,
+                       const ConfigValuePtr &definition);
+  shared_ptr<Translation>
+  TranslateAlternatingPunct(const std::string &key,
+                            const Segment &segment,
+                            const ConfigListPtr &definition);
+  shared_ptr<Translation>
+  TranslateAutoCommitPunct(const std::string &key,
+                           const Segment &segment,
+                           const ConfigMapPtr &definition);
+  shared_ptr<Translation>
+  TranslatePairedPunct(const std::string &key,
+                       const Segment &segment,
+                       const ConfigMapPtr &definition);
 
   PunctConfig config_;
 };

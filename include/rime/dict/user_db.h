@@ -22,7 +22,7 @@ struct UserDbValue {
 
   UserDbValue();
   UserDbValue(const std::string& value);
-  const std::string Pack() const;
+  std::string Pack() const;
   bool Unpack(const std::string &value);
 };
 
@@ -35,9 +35,9 @@ class UserDb : public BaseDb {
   virtual bool Restore(const std::string& snapshot_file);
 
   bool IsUserDb();
-  const std::string GetDbName();
-  const std::string GetUserId();
-  const std::string GetRimeVersion();
+  std::string GetDbName();
+  std::string GetUserId();
+  std::string GetRimeVersion();
 
   static const std::string extension;
   static const std::string snapshot_extension;

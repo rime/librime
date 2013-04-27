@@ -96,14 +96,14 @@ class ScriptTranslation : public Translation,
   bool CheckEmpty();
   bool IsNormalSpelling() const;
   template <class CandidateT>
-  const std::string GetPreeditString(const CandidateT &cand) const;
+  std::string GetPreeditString(const CandidateT &cand) const;
   template <class CandidateT>
-  const std::string GetOriginalSpelling(const CandidateT &cand) const;
-  const shared_ptr<Sentence> MakeSentence(Dictionary *dict,
-                                          UserDictionary *user_dict);
+  std::string GetOriginalSpelling(const CandidateT &cand) const;
+  shared_ptr<Sentence> MakeSentence(Dictionary *dict,
+                                    UserDictionary *user_dict);
 
   ScriptTranslator *translator_;
-  const std::string input_;
+  std::string input_;
   size_t start_;
 
   SyllableGraph syllable_graph_;
@@ -154,13 +154,13 @@ shared_ptr<Translation> ScriptTranslator::Query(const std::string &input,
   return make_shared<UniqueFilter>(result);
 }
 
-const std::string ScriptTranslator::FormatPreedit(const std::string& preedit) {
+std::string ScriptTranslator::FormatPreedit(const std::string& preedit) {
   std::string result(preedit);
   preedit_formatter_.Apply(&result);
   return result;
 }
 
-const std::string ScriptTranslator::Spell(const Code &code) {
+std::string ScriptTranslator::Spell(const Code &code) {
   std::string result;
   dictionary::RawCode syllables;
   if (!dict_ || !dict_->Decode(code, &syllables) || syllables.empty())
@@ -225,7 +225,7 @@ bool ScriptTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
 }
 
 template <class CandidateT>
-const std::string ScriptTranslation::GetPreeditString(
+std::string ScriptTranslation::GetPreeditString(
     const CandidateT &cand) const {
   DelimitSyllableState state;
   state.input = &input_;
@@ -243,7 +243,7 @@ const std::string ScriptTranslation::GetPreeditString(
 }
 
 template <class CandidateT>
-const std::string ScriptTranslation::GetOriginalSpelling(
+std::string ScriptTranslation::GetOriginalSpelling(
     const CandidateT& cand) const {
   if (translator_ &&
       static_cast<int>(cand.code().size()) <= translator_->spelling_hints()) {
@@ -297,7 +297,7 @@ shared_ptr<Candidate> ScriptTranslation::Peek() {
       sentence_->set_preedit(GetPreeditString(*sentence_));
     }
     if (sentence_->comment().empty()) {
-      const std::string spelling(GetOriginalSpelling(*sentence_));
+      std::string spelling(GetOriginalSpelling(*sentence_));
       if (!spelling.empty() &&
           spelling != sentence_->preedit()) {
         sentence_->set_comment(quote_left + spelling + quote_right);
@@ -341,7 +341,7 @@ shared_ptr<Candidate> ScriptTranslation::Peek() {
     cand->set_preedit(GetPreeditString(*cand));
   }
   if (cand->comment().empty()) {
-    const std::string spelling(GetOriginalSpelling(*cand));
+    std::string spelling(GetOriginalSpelling(*cand));
     if (!spelling.empty() &&
         spelling != cand->preedit()) {
       cand->set_comment(quote_left + spelling + quote_right);
@@ -358,7 +358,7 @@ bool ScriptTranslation::CheckEmpty() {
   return exhausted();
 }
 
-const shared_ptr<Sentence> ScriptTranslation::MakeSentence(
+shared_ptr<Sentence> ScriptTranslation::MakeSentence(
     Dictionary *dict, UserDictionary *user_dict) {
   const int kMaxSyllablesForUserPhraseQuery = 5;
   const double kPenaltyForAmbiguousSyllable = 1e-10;

@@ -17,7 +17,7 @@ namespace rime {
 
 namespace dictionary {
 
-const std::string RawCode::ToString() const {
+std::string RawCode::ToString() const {
   return boost::join(*this, " ");
 }
 
@@ -226,7 +226,7 @@ size_t Dictionary::LookupWords(DictEntryIterator *result,
         if (syllable_code_length > code_length)
           remaining_code = syllable + code_length;
       }
-      const TableAccessor a(table_->QueryWords(syllable_id));
+      TableAccessor a(table_->QueryWords(syllable_id));
       if (!a.exhausted()) {
         DLOG(INFO) << "remaining code: " << remaining_code;
         result->AddChunk(dictionary::Chunk(a, remaining_code));

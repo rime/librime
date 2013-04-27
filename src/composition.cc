@@ -34,7 +34,7 @@ void Composition::GetPreedit(Preedit *preedit) const {
   size_t end = 0;
   for (size_t i = 0; i < size(); ++i) {
     start = end;
-    const shared_ptr<Candidate> cand(at(i).GetSelectedCandidate());
+    shared_ptr<Candidate> cand(at(i).GetSelectedCandidate());
     if (i < size() - 1) {  // converted
       if (cand) {
         end = cand->end();
@@ -69,11 +69,11 @@ void Composition::GetPreedit(Preedit *preedit) const {
   }
 }
 
-const std::string Composition::GetCommitText() const {
+std::string Composition::GetCommitText() const {
   std::string result;
   size_t end = 0;
   BOOST_FOREACH(const Segment &seg, *this) {
-    const shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
+    shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
     if (cand) {
       end = cand->end();
       result += cand->text();
@@ -89,12 +89,12 @@ const std::string Composition::GetCommitText() const {
   return result;
 }
 
-const std::string Composition::GetScriptText() const {
+std::string Composition::GetScriptText() const {
   std::string result;
   size_t start = 0;
   size_t end = 0;
   BOOST_FOREACH(const Segment &seg, *this) {
-    const shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
+    shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
     start = end;
     end = cand ? cand->end() : seg.end;
     if (cand && !cand->preedit().empty())
@@ -108,13 +108,13 @@ const std::string Composition::GetScriptText() const {
   return result;
 }
 
-const std::string Composition::GetDebugText() const {
+std::string Composition::GetDebugText() const {
   std::string result;
   int i = 0;
   BOOST_FOREACH(const Segment &seg, *this) {
     if (i++ > 0)
       result += "|";
-    const shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
+    shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
     if (cand)
       result += cand->text();
     else

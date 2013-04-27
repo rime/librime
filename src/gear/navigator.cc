@@ -51,7 +51,7 @@ bool Navigator::Left(Context *ctx) {
   const Composition* comp = ctx->composition();
   if (comp && !comp->empty()) {
     shared_ptr<Candidate> cand = comp->back().GetSelectedCandidate();
-    const shared_ptr<Phrase> phrase =
+    shared_ptr<Phrase> phrase =
         As<Phrase>(Candidate::GetGenuineCandidate(cand));
     if (phrase && phrase->syllabification()) {
       size_t stop = phrase->syllabification()->PreviousStop(caret_pos);

@@ -80,18 +80,16 @@ const table::Code* TableAccessor::extra_code() const {
   return &code_map_->at[cursor_].extra_code;
 }
 
-const Code TableAccessor::code() const {
+Code TableAccessor::code() const {
   const table::Code *extra = extra_code();
   if (!extra) {
     return index_code();
   }
-  else {
-    Code code(index_code());
-    for (const table::SyllableId *p = extra->begin(); p != extra->end(); ++p) {
-      code.push_back(*p);
-    }
-    return code;
+  Code code(index_code());
+  for (const table::SyllableId *p = extra->begin(); p != extra->end(); ++p) {
+    code.push_back(*p);
   }
+  return code;
 }
 
 bool TableAccessor::Next() {
@@ -108,8 +106,8 @@ TableVisitor::TableVisitor(table::Index *index)
   Reset();
 }
 
-const TableAccessor TableVisitor::Access(int syllable_id,
-                                         double credibility) const {
+TableAccessor TableVisitor::Access(int syllable_id,
+                                   double credibility) const {
   credibility *= credibility_.back();
   if (level_ == 0) {
     if (!lv1_index_ ||
@@ -215,7 +213,7 @@ bool Table::Load() {
     return false;
   }
   //double format = atof(&metadata_->format[kTableFormatPrefixLen]);
-  
+
   syllabary_ = metadata_->syllabary.get();
   if (!syllabary_) {
     LOG(ERROR) << "syllabary not found.";
@@ -432,12 +430,12 @@ const char* Table::GetSyllableById(int syllable_id) {
   return syllabary_->at[syllable_id].c_str();
 }
 
-const TableAccessor Table::QueryWords(int syllable_id) {
+TableAccessor Table::QueryWords(int syllable_id) {
   TableVisitor visitor(index_);
   return visitor.Access(syllable_id);
 }
 
-const TableAccessor Table::QueryPhrases(const Code &code) {
+TableAccessor Table::QueryPhrases(const Code &code) {
   if (code.empty()) return TableAccessor();
   TableVisitor visitor(index_);
   for (size_t i = 0; i < Code::kIndexCodeMaxLength; ++i) {

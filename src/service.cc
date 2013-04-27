@@ -138,7 +138,7 @@ bool Service::DestroySession(SessionId session_id) {
 }
 
 void Service::CleanupStaleSessions() {
-  const time_t now = time(NULL);
+  time_t now = time(NULL);
   int count = 0;
   for (SessionMap::iterator it = sessions_.begin();
        it != sessions_.end(); ) {

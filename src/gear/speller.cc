@@ -93,7 +93,7 @@ Processor::Result Speller::ProcessKeyEvent(
       max_code_length_ > 0 &&  // at a fixed code length
       ctx->HasMenu()) {
     const Segment& seg(ctx->composition()->back());
-    const shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
+    shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
     if (cand) {
       int code_length = static_cast<int>(cand->end() - cand->start());
       if (code_length == max_code_length_ &&  // exceeds max code length

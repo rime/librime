@@ -12,14 +12,14 @@
 
 namespace rime {
 
-const shared_ptr<Candidate> Segment::GetCandidateAt(size_t index) const {
-  if (!menu) 
+shared_ptr<Candidate> Segment::GetCandidateAt(size_t index) const {
+  if (!menu)
     return shared_ptr<Candidate>();
   else
     return menu->GetCandidateAt(index);
 }
 
-const shared_ptr<Candidate> Segment::GetSelectedCandidate() const {
+shared_ptr<Candidate> Segment::GetSelectedCandidate() const {
   return GetCandidateAt(selected_index);
 }
 
@@ -43,7 +43,7 @@ void Segmentation::Reset(const std::string &new_input) {
     ++disposed;
   }
   if (disposed > 0) Forward();
-  
+
   input_ = new_input;
 }
 

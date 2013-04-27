@@ -41,10 +41,10 @@ class SwitcherOption : public Candidate {
         auto_save_(auto_save) {}
 
   void Apply(Engine *target_engine, Config *user_config);
-  
+
   const std::string& text() const { return text_; }
-  const std::string comment() const { return comment_; }
-  
+  std::string comment() const { return comment_; }
+
  protected:
   std::string text_;
   std::string comment_;
@@ -77,7 +77,7 @@ Switcher::Switcher() : Engine(new Schema),
                        target_engine_(NULL),
                        active_(false) {
   context_->set_option("dumb", true);  // not going to commit anything
-  
+
   // receive context notifications
   context_->select_notifier().connect(
       boost::bind(&Switcher::OnSelect, this, _1));

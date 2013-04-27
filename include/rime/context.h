@@ -31,12 +31,12 @@ class Context {
   ~Context();
 
   bool Commit();
-  const std::string GetCommitText() const;
-  const std::string GetScriptText() const;
+  std::string GetCommitText() const;
+  std::string GetScriptText() const;
   void GetPreedit(Preedit *preedit, bool soft_cursor = false) const;
   bool IsComposing() const;
   bool HasMenu() const;
-  
+
   bool PushInput(char ch);
   bool PushInput(const std::string& str);
   bool PopInput(size_t len = 1);
@@ -48,7 +48,7 @@ class Context {
   // return false if there's no candidate for current segment
   bool ConfirmCurrentSelection();
   bool DeleteCurrentSelection();
-  
+
   bool ConfirmPreviousSelection();
   bool ReopenPreviousSegment();
   bool ClearPreviousSegment();
@@ -60,7 +60,7 @@ class Context {
   const std::string& input() const { return input_; }
 
   void set_caret_pos(size_t caret_pos);
-  const size_t caret_pos() const { return caret_pos_; }
+  size_t caret_pos() const { return caret_pos_; }
 
   void set_composition(Composition *comp);
   Composition* composition();
@@ -71,15 +71,15 @@ class Context {
   void set_option(const std::string &name, bool value);
   bool get_option(const std::string &name) const;
   void set_property(const std::string &name, const std::string& value);
-  const std::string get_property(const std::string &name) const;
+  std::string get_property(const std::string &name) const;
   // options and properties starting with '_' are local to schema;
   // others are session scoped.
   void ClearTransientOptions();
-  
+
   Notifier& commit_notifier() { return commit_notifier_; }
   Notifier& select_notifier() { return select_notifier_; }
   Notifier& update_notifier() { return update_notifier_; }
-  Notifier& delete_notifier() {return delete_notifier_;}
+  Notifier& delete_notifier() { return delete_notifier_; }
   OptionUpdateNotifier& option_update_notifier() {
     return option_update_notifier_;
   }

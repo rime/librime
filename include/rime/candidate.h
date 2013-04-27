@@ -35,9 +35,9 @@ class Candidate {
   // candidate text to commit
   virtual const std::string& text() const = 0;
   // (optional)
-  virtual const std::string comment() const { return std::string(); }
+  virtual std::string comment() const { return std::string(); }
   // text shown in the preedit area, replacing input string (optional)
-  virtual const std::string preedit() const { return std::string(); }
+  virtual std::string preedit() const { return std::string(); }
 
   void set_type(const std::string &type) { type_ = type; }
   void set_start(size_t start) { start_ = start; }
@@ -68,8 +68,8 @@ class SimpleCandidate : public Candidate {
       text_(text), comment_(comment), preedit_(preedit) {}
 
   const std::string& text() const { return text_; }
-  const std::string comment() const { return comment_; }
-  const std::string preedit() const { return preedit_; }
+  std::string comment() const { return comment_; }
+  std::string preedit() const { return preedit_; }
 
   void set_text(const std::string &text) { text_ = text; }
   void set_comment(const std::string &comment) { comment_ = comment; }
@@ -94,14 +94,14 @@ class ShadowCandidate : public Candidate {
   const std::string& text() const {
     return text_.empty() ? item_->text() : text_;
   }
-  const std::string comment() const {
+  std::string comment() const {
     return comment_.empty() ? item_->comment() : comment_;
   }
-  const std::string preedit() const {
+  std::string preedit() const {
     return item_->preedit();
   }
 
-  const shared_ptr<Candidate> item() const { return item_; }
+  const shared_ptr<Candidate>& item() const { return item_; }
 
  protected:
   std::string text_;
@@ -124,11 +124,11 @@ class UniquifiedCandidate : public Candidate {
     return text_.empty() && !items_.empty() ?
         items_.front()->text() : text_;
   }
-  const std::string comment() const {
+  std::string comment() const {
     return comment_.empty() && !items_.empty() ?
         items_.front()->comment() : comment_;
   }
-  const std::string preedit() const {
+  std::string preedit() const {
     return !items_.empty() ? items_.front()->preedit() : std::string();
   }
 

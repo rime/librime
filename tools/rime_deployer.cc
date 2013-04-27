@@ -25,7 +25,7 @@ int add_schema(int count, char* schemas[]) {
     for (size_t j = 0; j < schema_list.size(); ++j) {
       if (!schema_list[j].HasKey("schema"))
         continue;
-      const std::string schema_id(schema_list[j]["schema"].ToString());
+      std::string schema_id(schema_list[j]["schema"].ToString());
       if (schema_id == new_schema_id) {
         already_there = true;
         break;

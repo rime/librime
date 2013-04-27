@@ -12,7 +12,7 @@ using namespace rime;
 
 class Greeting : public Class<Greeting, const std::string&> {
  public:
-  virtual const std::string Say() = 0;
+  virtual std::string Say() = 0;
 };
 
 typedef std::pair<std::string, std::string> HelloMessage;
@@ -21,7 +21,7 @@ class Hello : public Greeting {
  public:
   Hello(const HelloMessage &msg) : word_(msg.first), name_(msg.second) {
   }
-  const std::string Say() {
+  std::string Say() {
     return word_ + ", " + name_ + "!";
   }
  private:
@@ -38,7 +38,7 @@ class HelloComponent : public Hello::Component {
     return new Hello(std::make_pair(word_, name));
   }
  private:
-  const std::string word_;
+  std::string word_;
 };
 
 
@@ -63,4 +63,3 @@ TEST(RimeComponentTest, UnknownComponent) {
   // unregistered component class
   EXPECT_FALSE(Registry::instance().Find("test_unknown"));
 }
-

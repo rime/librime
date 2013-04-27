@@ -44,7 +44,7 @@ class Session {
 
   Context* context() const;
   Schema* schema() const;
-  const time_t last_active_time() const { return last_active_time_; }
+  time_t last_active_time() const { return last_active_time_; }
   const std::string& commit_text() const { return commit_text_; }
 
  private:
@@ -82,7 +82,7 @@ class Service {
     if (!instance_) instance_.reset(new Service);
     return *instance_;
   }
-  
+
  private:
   Service();
   static scoped_ptr<Service> instance_;

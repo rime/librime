@@ -36,7 +36,7 @@ void CommitHistory::Push(const Composition& composition,
   CommitRecord* last = NULL;
   size_t end = 0;
   BOOST_FOREACH(const Segment &seg, composition) {
-    const shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
+    shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
     if (cand) {
       if (last && last->type == cand->type()) {
         // join adjacent text of same type
@@ -64,7 +64,7 @@ void CommitHistory::Push(const Composition& composition,
   }
 }
 
-const std::string CommitHistory::repr() const {
+std::string CommitHistory::repr() const {
   std::string result;
   BOOST_FOREACH(const CommitRecord& record, *this) {
     result += "[" + record.type + "]" + record.text;

@@ -448,7 +448,7 @@ shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
   for (size_t start_pos = 0; start_pos < input.length(); ++start_pos) {
     if (sentences.find(start_pos) == sentences.end())
       continue;
-    const std::string active_input(input.substr(start_pos));
+    std::string active_input(input.substr(start_pos));
     std::vector<shared_ptr<DictEntry> > entries(active_input.length() + 1);
     // lookup dictionaries
     if (user_dict_ && user_dict_->loaded()) {

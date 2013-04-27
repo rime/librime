@@ -35,8 +35,8 @@ class ScriptTranslator : public Translator,
                                         std::string* prompt);
   virtual bool Memorize(const CommitEntry& commit_entry);
 
-  const std::string FormatPreedit(const std::string &preedit);
-  const std::string Spell(const Code &code);
+  std::string FormatPreedit(const std::string &preedit);
+  std::string Spell(const Code &code);
 
   // options
   int spelling_hints() const { return spelling_hints_; }

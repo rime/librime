@@ -55,8 +55,8 @@ class SpellingAccessor {
   bool Next();
   bool exhausted() const;
   int syllable_id() const;
-  const SpellingProperties properties() const;
-  
+  SpellingProperties properties() const;
+
  protected:
   int spelling_id_;
   prism::SpellingDescriptor* iter_;
@@ -79,12 +79,12 @@ class Prism : public MappedFile {
              const Script *script = NULL,
              uint32_t dict_file_checksum = 0,
              uint32_t schema_file_checksum = 0);
-  
+
   bool HasKey(const std::string &key);
   bool GetValue(const std::string &key, int *value);
   void CommonPrefixSearch(const std::string &key, std::vector<Match> *result);
   void ExpandSearch(const std::string &key, std::vector<Match> *result, size_t limit);
-  const SpellingAccessor QuerySpelling(int spelling_id);
+  SpellingAccessor QuerySpelling(int spelling_id);
 
   size_t array_size() const;
 
