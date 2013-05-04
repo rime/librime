@@ -1,5 +1,5 @@
 RIME_ROOT = $(CURDIR)
-THIRDPARTY_PATHS = -DCMAKE_INCLUDE_PATH=$(RIME_ROOT)/thirdparty/include -DCMAKE_LIBRARY_PATH=$(RIME_ROOT)/thirdparty/lib
+THIRDPARTY_PATHS = -DCMAKE_INCLUDE_PATH="$(RIME_ROOT)/thirdparty/include" -DCMAKE_LIBRARY_PATH="$(RIME_ROOT)/thirdparty/lib"
 
 sharedir = $(DESTDIR)/usr/share
 bindir = $(DESTDIR)/usr/bin
