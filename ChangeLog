@@ -1,3 +1,24 @@
+2013-05-05  GONG Chen  <chen.sst@gmail.com>
+
+	* config: update yaml-cpp to version 0.5 (with new API);
+	emit prettier yaml.
+	* deployer: introduce a work thread for ordinary background tasks.
+	* algo/calculus: 'fuzz' calculation, to create lower quality spellings.
+	* dict/dict_compiler: importing external table files into *.dict.yaml.
+	* dict/entry_collector: support '# no comment' directive in *.dict.yaml.
+	* dict/table_db: 'tabledb' and 'stabledb' to support custom phrase.
+	* dict/user_db: implement 'plain_userdb', in plain text files.
+	* dict/user_dictionary: recover damaged userdb in work thread.
+	* gear/ascii_composer: fix unexpected mode switching with Caps Lock.
+	* gear/editor: delete previous syllable with Control+BackSpace.
+	* gear/*_translator: support multiple translator instances in a engine.
+	* gear/script_translator: rename r10n_translator to script_translator.
+	* lever/user_dict_manager: create snapshots in plain userdb format.
+	* rime_deployer: with command line option '--compile',
+	dump table/prism contents into text files while compiling a dictionary.
+
+	- Release: 0.9.9
+
 2013-02-02  GONG Chen  <chen.sst@gmail.com>
 
 	* ascii_composer: support customizing Caps Lock behavior.
