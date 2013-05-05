@@ -92,7 +92,7 @@ if(NOT DEFINED BIN_INSTALL_DIR)
     set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
 endif()
 
-if(NOT BUILD_STATIC)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   # uninstall target
   configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
@@ -112,13 +112,14 @@ if(NOT BUILD_STATIC)
   install(FILES cmake/RimeConfig.cmake DESTINATION share/cmake/rime)
   if(BUILD_DATA)
     install(FILES ${PROJECT_SOURCE_DIR}/data/default.yaml DESTINATION ${pkgdatadir})
+    install(FILES ${PROJECT_SOURCE_DIR}/data/symbols.yaml DESTINATION ${pkgdatadir})
     install(FILES ${PROJECT_SOURCE_DIR}/data/essay.kct DESTINATION ${pkgdatadir})
     file(GLOB preset_schema ${PROJECT_SOURCE_DIR}/data/preset/*.yaml)
     install(FILES ${preset_schema} DESTINATION ${pkgdatadir})
     file(GLOB supplement_schema ${PROJECT_SOURCE_DIR}/data/supplement/*.yaml)
     install(FILES ${supplement_schema} DESTINATION ${pkgdatadir})
   endif(BUILD_DATA)
-endif(NOT BUILD_STATIC)
+endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 add_subdirectory(src)
 add_subdirectory(tools)
