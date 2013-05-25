@@ -13,6 +13,8 @@
 
 namespace rime {
 
+class Schema;
+
 class Selector : public Processor {
  public:
   Selector(Engine *engine);
@@ -28,7 +30,7 @@ class Selector : public Processor {
   bool End(Context *ctx);
   bool SelectCandidateAt(Context *ctx, int index);
 
-  std::string select_keys_;
+  Schema* schema_;
 };
 
 }  // namespace rime

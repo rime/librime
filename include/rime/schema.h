@@ -27,11 +27,12 @@ class Schema {
   void set_config(Config *config) { config_.reset(config); }
 
   int page_size() const { return page_size_; }
-  const std::string& alternative_select_keys() const { return select_keys_; }
+  const std::string& select_keys() const { return select_keys_; }
+  void set_select_keys(const std::string& keys) { select_keys_ = keys; }
 
  private:
   void FetchUsefulConfigItems();
-  
+
   std::string schema_id_;
   std::string schema_name_;
   scoped_ptr<Config> config_;
@@ -43,7 +44,7 @@ class Schema {
 struct Ticket {
   Schema* schema;
   std::string name_space;
-  
+
   Ticket(Schema* a_schema, const std::string& a_name_space)
       : schema(a_schema), name_space(a_name_space) {}
 };

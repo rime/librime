@@ -16,11 +16,8 @@
 
 namespace rime {
 
-Selector::Selector(Engine *engine) : Processor(engine) {
-  Config *config = engine->schema()->config();
-  if (config) {
-    config->GetString("menu/alternative_select_keys", &select_keys_);
-  }
+Selector::Selector(Engine *engine) : Processor(engine),
+                                     schema_(engine->schema()) {
 }
 
 Processor::Result Selector::ProcessKeyEvent(const KeyEvent &key_event) {
@@ -58,8 +55,8 @@ Processor::Result Selector::ProcessKeyEvent(const KeyEvent &key_event) {
       return kAccepted;
   }
   int index = -1;
-  if (!select_keys_.empty()) {
-    size_t pos = select_keys_.find(ch);
+  if (!schema_->select_keys().empty()) {
+    size_t pos = schema_->select_keys().find(ch);
     if (pos != std::string::npos) {
       index = static_cast<int>(pos);
     }
