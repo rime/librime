@@ -70,7 +70,8 @@ bool TableTranslation::Next() {
 shared_ptr<Candidate> TableTranslation::Peek() {
   if (exhausted())
     return shared_ptr<Candidate>();
-  const shared_ptr<DictEntry> &e = PreferedEntry(PreferUserPhrase());
+  bool is_user_phrase = PreferUserPhrase();
+  shared_ptr<DictEntry> e = PreferedEntry(is_user_phrase);
   std::string comment(e->comment);
   if (options_) {
     options_->comment_formatter().Apply(&comment);
@@ -82,7 +83,10 @@ shared_ptr<Candidate> TableTranslation::Peek() {
   if (phrase) {
     phrase->set_comment(comment);
     phrase->set_preedit(preedit_);
-    phrase->set_quality(e->remaining_code_length ? -1 : 0);
+    bool incomplete = e->remaining_code_length != 0;
+    phrase->set_quality(e->weight +
+                        (incomplete ? -1 : 0) +
+                        (is_user_phrase ? 0.5 : 0));
   }
   return phrase;
 }

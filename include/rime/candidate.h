@@ -15,9 +15,12 @@ namespace rime {
 
 class Candidate {
  public:
-  Candidate() : type_(), start_(0), end_(0), quality_(0) {}
-  Candidate(const std::string type, size_t start, size_t end)
-      : type_(type), start_(start), end_(end), quality_(0) {}
+  Candidate() : type_(), start_(0), end_(0), quality_(0.) {}
+  Candidate(const std::string type,
+            size_t start,
+            size_t end,
+            double quality = 0.)
+      : type_(type), start_(start), end_(end), quality_(quality) {}
   virtual ~Candidate() {}
 
   static shared_ptr<Candidate>
@@ -30,7 +33,7 @@ class Candidate {
   // [start, end) mark a range in the input that the candidate corresponds to
   size_t start() const { return start_; }
   size_t end() const { return end_; }
-  int quality() const { return quality_; }
+  double quality() const { return quality_; }
 
   // candidate text to commit
   virtual const std::string& text() const = 0;
@@ -42,13 +45,13 @@ class Candidate {
   void set_type(const std::string &type) { type_ = type; }
   void set_start(size_t start) { start_ = start; }
   void set_end(size_t end) { end_ = end; }
-  void set_quality(int quality) { quality_ = quality; }
+  void set_quality(double quality) { quality_ = quality; }
 
  private:
   std::string type_;
   size_t start_;
   size_t end_;
-  int quality_;
+  double quality_;
 };
 
 typedef std::vector<shared_ptr<Candidate> > CandidateList;
@@ -87,7 +90,7 @@ class ShadowCandidate : public Candidate {
                   const std::string &type,
                   const std::string &text = std::string(),
                   const std::string &comment = std::string())
-      : Candidate(type, item->start(), item->end()),
+      : Candidate(type, item->start(), item->end(), item->quality()),
         text_(text), comment_(comment),
         item_(item) {}
 
@@ -115,7 +118,7 @@ class UniquifiedCandidate : public Candidate {
                       const std::string &type,
                       const std::string &text = std::string(),
                       const std::string &comment = std::string())
-      : Candidate(type, item->start(), item->end()),
+      : Candidate(type, item->start(), item->end(), item->quality()),
         text_(text), comment_(comment) {
     Append(item);
   }
@@ -134,6 +137,8 @@ class UniquifiedCandidate : public Candidate {
 
   void Append(const shared_ptr<Candidate> &item) {
     items_.push_back(item);
+    if (quality() < item->quality())
+      set_quality(item->quality());
   }
   const CandidateList& items() const { return items_; }
 

@@ -25,8 +25,9 @@ int Translation::Compare(shared_ptr<Translation> other,
   k = ours->end() - theirs->end();
   if (k != 0) return -k;
   // compare quality
-  k = ours->quality() - theirs->quality();
-  if (k != 0) return -k;
+  double qdiff = ours->quality() - theirs->quality();
+  if (qdiff != 0.)
+    return (qdiff > 0.) ? -1 : 1;
   // draw
   return 0;
 }

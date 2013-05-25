@@ -67,6 +67,7 @@ class RimeConsole {
       std::cout << "]";
       if (!cand->comment().empty())
         std::cout << "  " << cand->comment();
+      std::cout << "  quality=" << cand->quality();
       std::cout << std::endl;
     }
   }
