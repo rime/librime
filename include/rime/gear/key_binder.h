@@ -21,8 +21,9 @@ class KeyBinder : public Processor {
   virtual Result ProcessKeyEvent(const KeyEvent &key_event);
 
  protected:
+  void LoadConfig();
   bool ReinterpretPagingKey(const KeyEvent &key_event);
-  
+
   scoped_ptr<KeyBindings> key_bindings_;
   bool redirecting_;
   int last_key_;

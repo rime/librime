@@ -105,7 +105,7 @@ key_binder:
     - { when: composing, accept: Control+g, send: Escape }
     - { when: composing, accept: Alt+v, send: Page_Up }
     - { when: composing, accept: Control+v, send: Page_Down }
-    # commonly used paging keys
+    # paging keys
     - { when: composing, accept: ISO_Left_Tab, send: Page_Up }
     - { when: composing, accept: Shift+Tab, send: Page_Up }
     - { when: composing, accept: Tab, send: Page_Down }
@@ -113,6 +113,12 @@ key_binder:
     - { when: has_menu, accept: equal, send: Page_Down }
     - { when: paging, accept: comma, send: Page_Up }
     - { when: has_menu, accept: period, send: Page_Down }
+    # hotkey switch
+    - { when: always, accept: Shift+space, toggle: full_shape }
+    - { when: always, accept: Control+Shift+2, toggle: ascii_mode }
+    - { when: always, accept: Control+Shift+3, toggle: full_shape }
+    - { when: always, accept: Control+Shift+4, toggle: simplification }
+    - { when: always, accept: Control+Shift+5, toggle: extended_charset }
 
 recognizer:
   patterns:
