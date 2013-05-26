@@ -66,7 +66,9 @@ class UniqueTranslation : public Translation {
 
 class FifoTranslation : public Translation {
  public:
-  FifoTranslation() : cursor_(0) {}
+  FifoTranslation() : cursor_(0) {
+    set_exhausted(true);
+  }
 
   bool Next() {
     if (exhausted())
@@ -91,7 +93,7 @@ class FifoTranslation : public Translation {
     return candies_.size() - cursor_;
   }
 
- private:
+ protected:
   std::vector<shared_ptr<Candidate> > candies_;
   size_t cursor_;
 };

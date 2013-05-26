@@ -30,7 +30,7 @@ class Translator : public Class<Translator, const TranslatorTicket&> {
  public:
   Translator(const TranslatorTicket& ticket);
   virtual ~Translator() {}
-  
+
   virtual shared_ptr<Translation> Query(const std::string &input,
                                         const Segment &segment,
                                         std::string* prompt = NULL) = 0;
@@ -43,5 +43,3 @@ class Translator : public Class<Translator, const TranslatorTicket&> {
 }  // namespace rime
 
 #endif  // RIME_TRANSLATOR_H_
-
-

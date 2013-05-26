@@ -8,6 +8,7 @@
 #define RIME_SWITCHER_H_
 
 #include <set>
+#include <string>
 #include <vector>
 #include <rime/common.h>
 #include <rime/engine.h>
@@ -17,21 +18,25 @@ namespace rime {
 
 class Config;
 class Processor;
+class Translator;
 
 class Switcher : public Engine {
  public:
   Switcher();
   ~Switcher();
-  
+
   void Attach(Engine *engine);
   bool ProcessKeyEvent(const KeyEvent &key_event);
   Schema* CreateSchema();
   void ApplySchema(Schema* schema);
+  bool IsAutoSave(const std::string& option) const;
 
+  Config* user_config() const { return user_config_.get(); }
+  Engine* target_engine() const { return target_engine_; }
   bool active() const { return active_; }
-  
+
  protected:
-  void InitializeSubProcessors();
+  void InitializeComponents();
   void LoadSettings();
   void Activate();
   void Deactivate();
@@ -43,8 +48,20 @@ class Switcher : public Engine {
   std::vector<KeyEvent> hotkeys_;
   std::set<std::string> save_options_;
   std::vector<shared_ptr<Processor> > processors_;
-  Engine *target_engine_;
+  std::vector<shared_ptr<Translator> > translators_;
+  Engine* target_engine_;
   bool active_;
+};
+
+class SwitcherCommand {
+ public:
+  SwitcherCommand(const std::string& keyword)
+      : keyword_(keyword) {
+  }
+  virtual void Apply(Switcher* switcher) = 0;
+
+ protected:
+  std::string keyword_;
 };
 
 }  // namespace rime

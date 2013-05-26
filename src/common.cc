@@ -37,6 +37,8 @@
 #include <rime/gear/simplifier.h>
 #include <rime/gear/speller.h>
 #include <rime/gear/reverse_lookup_translator.h>
+#include <rime/gear/schema_list_translator.h>
+#include <rime/gear/switch_translator.h>
 #include <rime/gear/table_translator.h>
 //#include <rime/gear/trivial_translator.h>
 #include <rime/gear/uniquifier.h>
@@ -96,6 +98,8 @@ void RegisterComponents() {
   r.Register("r10n_translator", new Component<ScriptTranslator>);  // alias
   r.Register("reverse_lookup_translator",
              new Component<ReverseLookupTranslator>);
+  r.Register("schema_list_translator", new Component<SchemaListTranslator>);
+  r.Register("switch_translator", new Component<SwitchTranslator>);
 
   // filters
   r.Register("simplifier", new Component<Simplifier>);

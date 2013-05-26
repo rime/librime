@@ -10,6 +10,7 @@
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/composition.h>
+#include <rime/config.h>
 #include <rime/context.h>
 #include <rime/key_event.h>
 #include <rime/menu.h>
@@ -17,61 +18,9 @@
 #include <rime/schema.h>
 #include <rime/switcher.h>
 #include <rime/translation.h>
-
-static const char* kRightArrow = " \xe2\x86\x92 ";
+#include <rime/translator.h>
 
 namespace rime {
-
-class SwitcherOption : public Candidate {
- public:
-  SwitcherOption(Schema *schema)
-      : Candidate("schema", 0, 0),
-        text_(schema->schema_name()),
-        comment_(),
-        value_(schema->schema_id()),
-        auto_save_(true) {}
-  SwitcherOption(const std::string &current_state_label,
-                 const std::string &next_state_label,
-                 const std::string &option_name,
-                 bool current_state,
-                 bool auto_save)
-      : Candidate(current_state ? "switch_off" : "switch_on", 0, 0),
-        text_(current_state_label + kRightArrow + next_state_label),
-        value_(option_name),
-        auto_save_(auto_save) {}
-
-  void Apply(Engine *target_engine, Config *user_config);
-
-  const std::string& text() const { return text_; }
-  std::string comment() const { return comment_; }
-
- protected:
-  std::string text_;
-  std::string comment_;
-  std::string value_;
-  bool auto_save_;
-};
-
-void SwitcherOption::Apply(Engine *target_engine, Config *user_config) {
-  if (type() == "schema") {
-    const std::string &current_schema_id(target_engine->schema()->schema_id());
-    if (value_ != current_schema_id) {
-      target_engine->set_schema(new Schema(value_));
-    }
-    if (auto_save_ && user_config) {
-      user_config->SetString("var/previously_selected_schema", value_);
-    }
-    return;
-  }
-  if (type() == "switch_off" || type() == "switch_on") {
-    bool option_is_on = (type() == "switch_on");
-    target_engine->context()->set_option(value_, option_is_on);
-    if (auto_save_ && user_config) {
-      user_config->SetBool("var/option/" + value_, option_is_on);
-    }
-    return;
-  }
-}
 
 Switcher::Switcher() : Engine(new Schema),
                        target_engine_(NULL),
@@ -83,7 +32,7 @@ Switcher::Switcher() : Engine(new Schema),
       boost::bind(&Switcher::OnSelect, this, _1));
 
   user_config_.reset(Config::Require("config")->Create("user"));
-  InitializeSubProcessors();
+  InitializeComponents();
   LoadSettings();
 }
 
@@ -140,7 +89,7 @@ void Switcher::HighlightNextSchema() {
     return;
   Segment& seg(comp->back());
   int index = seg.selected_index;
-  shared_ptr<SwitcherOption> option;
+  shared_ptr<Candidate> option;
   do {
     ++index;  // next
     int candidate_count = seg.menu->Prepare(index + 1);
@@ -149,7 +98,7 @@ void Switcher::HighlightNextSchema() {
       break;
     }
     else {
-      option = As<SwitcherOption>(seg.GetCandidateAt(index));
+      option = seg.GetCandidateAt(index);
     }
   }
   while (!option || option->type() != "schema");
@@ -194,81 +143,39 @@ void Switcher::ApplySchema(Schema* schema) {
   target_engine_->set_schema(schema);
 }
 
+bool Switcher::IsAutoSave(const std::string& option) const {
+  return save_options_.find(option) != save_options_.end();
+}
+
 void Switcher::OnSelect(Context *ctx) {
   LOG(INFO) << "a switcher option is selected.";
   Segment &seg(ctx->composition()->back());
-  shared_ptr<SwitcherOption> option =
-      As<SwitcherOption>(seg.GetSelectedCandidate());
-  if (!option) return;
+  shared_ptr<SwitcherCommand> command =
+      As<SwitcherCommand>(seg.GetSelectedCandidate());
+  if (!command) return;
   if (target_engine_) {
-    option->Apply(target_engine_, user_config_.get());
+    command->Apply(this);
   }
   Deactivate();
 }
 
 void Switcher::Activate() {
   LOG(INFO) << "switcher is activated.";
-  Config *config = schema_->config();
-  if (!config) return;
-  ConfigListPtr schema_list = config->GetList("schema_list");
-  if (!schema_list) return;
-
-  shared_ptr<FifoTranslation> switcher_options = make_shared<FifoTranslation>();
-  Schema *current_schema = NULL;
-  // current schema comes first
-  if (target_engine_ && target_engine_->schema()) {
-    current_schema = target_engine_->schema();
-    switcher_options->Append(make_shared<SwitcherOption>(current_schema));
-    // add custom switches
-    Config *custom = current_schema->config();
-    if (custom) {
-      ConfigListPtr switches = custom->GetList("switches");
-      if (switches) {
-        Context *context = target_engine_->context();
-        for (size_t i = 0; i < switches->size(); ++i) {
-          ConfigMapPtr item = As<ConfigMap>(switches->GetAt(i));
-          if (!item) continue;
-          ConfigValuePtr name_property = item->GetValue("name");
-          if (!name_property) continue;
-          ConfigListPtr states = As<ConfigList>(item->Get("states"));
-          if (!states || states->size() != 2) continue;
-          bool current_state = context->get_option(name_property->str());
-          bool auto_save = (save_options_.find(name_property->str()) != save_options_.end());
-          switcher_options->Append(
-              boost::make_shared<SwitcherOption>(
-                  states->GetValueAt(current_state)->str(),
-                  states->GetValueAt(1 - current_state)->str(),
-                  name_property->str(),
-                  current_state,
-                  auto_save));
-        }
-      }
-    }
-  }
-  // load schema list
-  for (size_t i = 0; i < schema_list->size(); ++i) {
-    ConfigMapPtr item = As<ConfigMap>(schema_list->GetAt(i));
-    if (!item) continue;
-    ConfigValuePtr schema_property = item->GetValue("schema");
-    if (!schema_property) continue;
-    const std::string &schema_id(schema_property->str());
-    if (current_schema && schema_id == current_schema->schema_id())
-      continue;
-    scoped_ptr<Schema> schema(new Schema(schema_id));
-    // the switcher option doesn't own the schema object
-    switcher_options->Append(make_shared<SwitcherOption>(schema.get()));
-  }
-  // assign menu to switcher's context
   Composition *comp = context_->composition();
   if (comp->empty()) {
-    context_->set_input(" ");
-    Segment seg(0, 0);
+    context_->set_input(" ");  // make context_->IsComposing() == true
+    Segment seg(0, 0);         // empty range
     seg.prompt = caption_;
     comp->AddSegment(seg);
   }
   shared_ptr<Menu> menu = make_shared<Menu>();
   comp->back().menu = menu;
-  menu->AddTranslation(switcher_options);
+  BOOST_FOREACH(shared_ptr<Translator>& translator, translators_) {
+    shared_ptr<Translation> t = translator->Query("", comp->back(), NULL);
+    if (t)
+      menu->AddTranslation(t);
+  }
+
   // activated!
   active_ = true;
 }
@@ -302,10 +209,11 @@ void Switcher::LoadSettings() {
   }
 }
 
-void Switcher::InitializeSubProcessors() {
+void Switcher::InitializeComponents() {
   processors_.clear();
+  translators_.clear();
   {
-    Processor::Component *c = Processor::Require("key_binder");
+    Processor::Component* c = Processor::Require("key_binder");
     if (!c) {
       LOG(WARNING) << "key_binder not available.";
     }
@@ -315,7 +223,7 @@ void Switcher::InitializeSubProcessors() {
     }
   }
   {
-    Processor::Component *c = Processor::Require("selector");
+    Processor::Component* c = Processor::Require("selector");
     if (!c) {
       LOG(WARNING) << "selector not available.";
     }
@@ -324,6 +232,30 @@ void Switcher::InitializeSubProcessors() {
       processors_.push_back(p);
     }
   }
+  DLOG(INFO) << "num processors: " << processors_.size();
+  {
+    Translator::Component* c = Translator::Require("schema_list_translator");
+    if (!c) {
+      LOG(WARNING) << "schema_list_translator not available.";
+    }
+    else {
+      TranslatorTicket ticket(this, "");
+      shared_ptr<Translator> t(c->Create(ticket));
+      translators_.push_back(t);
+    }
+  }
+  {
+    Translator::Component* c = Translator::Require("switch_translator");
+    if (!c) {
+      LOG(WARNING) << "switch_translator not available.";
+    }
+    else {
+      TranslatorTicket ticket(this, "");
+      shared_ptr<Translator> t(c->Create(ticket));
+      translators_.push_back(t);
+    }
+  }
+  DLOG(INFO) << "num translators: " << translators_.size();
 }
 
 }  // namespace rime
