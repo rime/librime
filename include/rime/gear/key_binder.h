@@ -13,6 +13,7 @@
 
 namespace rime {
 
+struct KeyBinding;
 class KeyBindings;
 
 class KeyBinder : public Processor {
@@ -23,6 +24,7 @@ class KeyBinder : public Processor {
  protected:
   void LoadConfig();
   bool ReinterpretPagingKey(const KeyEvent &key_event);
+  void PerformKeyBinding(const KeyBinding& binding);
 
   scoped_ptr<KeyBindings> key_bindings_;
   bool redirecting_;

@@ -46,6 +46,12 @@ class KeyEvent {
     return keycode_ == other.keycode_ && modifier_ == other.modifier_;
   }
 
+  bool operator< (const KeyEvent &other) const {
+    if (keycode_ != other.keycode_)
+      return keycode_ < other.keycode_;
+    return modifier_ < other.modifier_;
+  }
+
  private:
   int keycode_;
   int modifier_;

@@ -4,8 +4,11 @@
 //
 // 2011-11-23 GONG Chen <chen.sst@gmail.com>
 //
+#include <algorithm>
+#include <map>
 #include <set>
 #include <string>
+#include <vector>
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/function.hpp>
@@ -20,19 +23,51 @@
 
 namespace rime {
 
+enum KeyBindingCondition {
+  kNever,
+  kWhenPaging,     // user has changed page
+  kWhenHasMenu,    // at least one candidate
+  kWhenComposing,  // input string is not empty
+  kAlways,
+};
+
+static struct KeyBindingConditionDef {
+  KeyBindingCondition condition;
+  const char* name;
+} condition_definitions[] = {
+  { kWhenPaging,    "paging"    },
+  { kWhenHasMenu,   "has_menu"  },
+  { kWhenComposing, "composing" },
+  { kAlways,        "always"    },
+  { kNever,         NULL        }
+};
+
+static KeyBindingCondition translate_condition(const std::string& str) {
+  for (KeyBindingConditionDef* d = condition_definitions; d->name; ++d) {
+    if (str == d->name)
+      return d->condition;
+  }
+  return kNever;
+}
+
 struct KeyBinding {
-  std::string whence;
-  KeyEvent pattern;
+  KeyBindingCondition whence;
   KeyEvent target;
   boost::function<void (Engine* engine)> action;
+
+  bool operator< (const KeyBinding& o) const {
+    return whence < o.whence;
+  }
 };
 
-class KeyBindings : public std::vector<KeyBinding> {
+class KeyBindings : public std::map<KeyEvent,
+                                    std::vector<KeyBinding> > {
  public:
   void LoadBindings(const ConfigListPtr &bindings);
+  void Bind(const KeyEvent& key, const KeyBinding& binding);
 };
 
-static void ToggleContextOption(Engine* engine, const std::string& option) {
+static void toggle_option(Engine* engine, const std::string& option) {
   if (!engine) return;
   Context* ctx = engine->context();
   ctx->set_option(option, !ctx->get_option(option));
@@ -48,8 +83,12 @@ void KeyBindings::LoadBindings(const ConfigListPtr &bindings) {
     ConfigValuePtr pattern = map->GetValue("accept");
     if (!pattern) continue;
     KeyBinding binding;
-    binding.whence = whence->str();
-    if (!binding.pattern.Parse(pattern->str())) {
+    binding.whence = translate_condition(whence->str());
+    if (binding.whence == kNever) {
+      continue;
+    }
+    KeyEvent key;
+    if (!key.Parse(pattern->str())) {
       LOG(WARNING) << "invalid key binding #" << i << ".";
       continue;
     }
@@ -58,16 +97,24 @@ void KeyBindings::LoadBindings(const ConfigListPtr &bindings) {
         LOG(WARNING) << "invalid key binding #" << i << ".";
         continue;
       }
-      push_back(binding);
     }
     else if (ConfigValuePtr option = map->GetValue("toggle")) {
-      binding.action = boost::bind(&ToggleContextOption, _1, option->str());
-      push_back(binding);
+      binding.action = boost::bind(&toggle_option, _1, option->str());
     }
     else {
       LOG(WARNING) << "invalid key binding #" << i << ".";
+      continue;
     }
+    Bind(key, binding);
   }
+}
+
+void KeyBindings::Bind(const KeyEvent& key, const KeyBinding& binding) {
+  std::vector<KeyBinding>& v = (*this)[key];
+  // insert before existing binding of the same condition
+  std::vector<KeyBinding>::iterator lb =
+      std::lower_bound(v.begin(), v.end(), binding);
+  v.insert(lb, binding);
 }
 
 KeyBinder::KeyBinder(Engine *engine) : Processor(engine),
@@ -77,22 +124,25 @@ KeyBinder::KeyBinder(Engine *engine) : Processor(engine),
   LoadConfig();
 }
 
-typedef std::set<std::string> Conditions;
+typedef std::set<KeyBindingCondition> Conditions;
 
 static void calculate_conditions(Context *ctx, Conditions *conditions) {
   // prevent duplicated evaluation
   if (!conditions->empty()) return;
-  conditions->insert("always");
+
+  conditions->insert(kAlways);
 
   if (ctx->IsComposing()) {
-    conditions->insert("composing");
+    conditions->insert(kWhenComposing);
   }
+
   if (ctx->HasMenu() && !ctx->get_option("ascii_mode")) {
-    conditions->insert("has_menu");
+    conditions->insert(kWhenHasMenu);
   }
+
   Composition *comp = ctx->composition();
   if (!comp->empty() && comp->back().HasTag("paging")) {
-    conditions->insert("paging");
+    conditions->insert(kWhenPaging);
   }
 }
 
@@ -101,34 +151,34 @@ Processor::Result KeyBinder::ProcessKeyEvent(const KeyEvent &key_event) {
     return kNoop;
   if (ReinterpretPagingKey(key_event))
     return kNoop;
+  if (key_bindings_->find(key_event) == key_bindings_->end())
+    return kNoop;
   Conditions conditions;
-  BOOST_FOREACH(const KeyBinding &binding, *key_bindings_) {
-    if (key_event == binding.pattern) {
-      calculate_conditions(engine_->context(), &conditions);
-      if (conditions.find(binding.whence) != conditions.end()) {
-        if (binding.action) {
-          binding.action(engine_);
-        }
-        else {
-          redirecting_ = true;
-          engine_->ProcessKeyEvent(binding.target);
-          redirecting_ = false;
-        }
-        return kAccepted;
-
-      }
-    }
+  calculate_conditions(engine_->context(), &conditions);
+  BOOST_FOREACH(const KeyBinding& binding, (*key_bindings_)[key_event]) {
+    if (conditions.find(binding.whence) == conditions.end())
+      continue;
+    PerformKeyBinding(binding);
+    return kAccepted;
   }
   // not handled
   return kNoop;
 }
 
+void KeyBinder::PerformKeyBinding(const KeyBinding& binding) {
+  if (binding.action) {
+    binding.action(engine_);
+  }
+  else {
+    redirecting_ = true;
+    engine_->ProcessKeyEvent(binding.target);
+    redirecting_ = false;
+  }
+}
+
 void KeyBinder::LoadConfig() {
   if (!engine_) return;
   Config *config = engine_->schema()->config();
-  ConfigListPtr bindings = config->GetList("key_binder/bindings");
-  if (bindings)
-    key_bindings_->LoadBindings(bindings);
   std::string preset;
   if (config->GetString("key_binder/import_preset", &preset)) {
     scoped_ptr<Config> preset_config(Config::Require("config")->Create(preset));
@@ -136,12 +186,16 @@ void KeyBinder::LoadConfig() {
       LOG(ERROR) << "Error importing preset key bindings '" << preset << "'.";
       return;
     }
-    bindings = preset_config->GetList("key_binder/bindings");
+    ConfigListPtr bindings = preset_config->GetList("key_binder/bindings");
     if (bindings)
       key_bindings_->LoadBindings(bindings);
     else
       LOG(WARNING) << "missing preset key bindings.";
   }
+  // per schema configuration, overriding preset bindings
+  ConfigListPtr bindings = config->GetList("key_binder/bindings");
+  if (bindings)
+    key_bindings_->LoadBindings(bindings);
 }
 
 bool KeyBinder::ReinterpretPagingKey(const KeyEvent &key_event) {
