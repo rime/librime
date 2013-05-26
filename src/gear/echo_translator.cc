@@ -20,7 +20,7 @@ class EchoTranslation : public UniqueTranslation {
   }
   virtual int Compare(shared_ptr<Translation> other,
                       const CandidateList &candidates) {
-    if (!candidates.empty() || other && other->Peek()) {
+    if (!candidates.empty() || (other && other->Peek())) {
       set_exhausted(true);
       return 1;
     }

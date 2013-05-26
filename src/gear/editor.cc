@@ -105,7 +105,7 @@ inline void Editor::CommitComposition(Context* ctx) {
 inline void Editor::RevertLastAction(Context* ctx) {
   // different behavior in regard to previous operation type
   ctx->ReopenPreviousSelection() ||
-    ctx->PopInput() && ctx->ReopenPreviousSegment();
+      (ctx->PopInput() && ctx->ReopenPreviousSegment());
 }
 
 inline void Editor::RevertToPreviousInput(Context* ctx) {
