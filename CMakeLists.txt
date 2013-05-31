@@ -10,6 +10,7 @@ set(LIBRIME_SOVERSION 0)
 option(BUILD_SHARED_LIBS "Build Rime as shared library" ON)
 option(BUILD_STATIC "Build Rime using static libraries" OFF)
 option(BUILD_DATA "Build data for Rime" OFF)
+option(BUILD_TEST "Build gtest framwork for Rime" OFF)
 
 SET(RIME_DATA_DIR "/share/rime-data" CACHE STRING "Target directory for Rime data")
 
@@ -47,10 +48,14 @@ if(Glog_FOUND)
 endif(Glog_FOUND)
 
 find_package(Threads)
-find_package(GTest)
+
+if(BUILD_TEST)
+  find_package(GTest REQUIRED)
 if(GTEST_FOUND)
+  enable_testing()
   include_directories(${GTEST_INCLUDE_DIRS})
 endif(GTEST_FOUND)
+endif(BUILD_TEST)
 
 find_package(YamlCpp REQUIRED)
 if(YamlCpp_FOUND)
