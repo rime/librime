@@ -5,7 +5,7 @@
 # http://android.git.kernel.org/?p=platform/packages/inputmethods/PinyinIME.git
 
 ---
-name: luna_pinyin
+name: dictionary_test
 version: "0.1"
 sort: by_weight  # by_weight / original
 ...
