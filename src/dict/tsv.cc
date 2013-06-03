@@ -23,6 +23,7 @@ int TsvReader::operator() (Sink* sink) {
   bool enable_comment = true;
   while (getline(fin, line)) {
     ++line_no;
+    boost::algorithm::trim_right(line);
     // skip empty lines and comments
     if (line.empty()) continue;
     if (enable_comment && line[0] == '#') {

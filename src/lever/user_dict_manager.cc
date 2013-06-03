@@ -229,11 +229,16 @@ bool UserDictManager::SynchronizeAll() {
   UserDictList user_dicts;
   GetUserDictList(&user_dicts);
   LOG(INFO) << "synchronizing " << user_dicts.size() << " user dicts.";
+  int failure = 0;
   BOOST_FOREACH(const std::string& dict_name, user_dicts) {
     if (!Synchronize(dict_name))
-      return false;
+      ++failure;
   }
-  return true;
+  if (failure) {
+    LOG(ERROR) << "failed synchronizing "
+               << failure << "/" << user_dicts.size() << " user dicts.";
+  }
+  return !failure;
 }
 
 }  // namespace rime
