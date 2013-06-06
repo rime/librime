@@ -30,7 +30,7 @@ class ConcreteEngine : public Engine {
   ConcreteEngine(Schema *schema);
   virtual ~ConcreteEngine();
   virtual bool ProcessKeyEvent(const KeyEvent &key_event);
-  virtual void set_schema(Schema *schema);
+  virtual void ApplySchema(Schema *schema);
 
  protected:
   void InitializeComponents();
@@ -57,7 +57,8 @@ Engine* Engine::Create(Schema *schema) {
 }
 
 Engine::Engine(Schema *schema) : schema_(schema),
-                                 context_(new Context) {
+                                 context_(new Context),
+                                 attached_engine_(NULL) {
 }
 
 Engine::~Engine() {
@@ -229,7 +230,7 @@ void ConcreteEngine::OnSelect(Context *ctx) {
   }
 }
 
-void ConcreteEngine::set_schema(Schema *schema) {
+void ConcreteEngine::ApplySchema(Schema *schema) {
   schema_.reset(schema);
   context_->Clear();
   context_->ClearTransientOptions();

@@ -23,7 +23,6 @@
 namespace rime {
 
 Switcher::Switcher() : Engine(new Schema),
-                       target_engine_(NULL),
                        active_(false) {
   context_->set_option("dumb", true);  // not going to commit anything
 
@@ -40,7 +39,7 @@ Switcher::~Switcher() {
 }
 
 void Switcher::Attach(Engine *engine) {
-  target_engine_ = engine;
+  attached_engine_ = engine;
   // restore saved options
   if (user_config_) {
     BOOST_FOREACH(const std::string& option_name, save_options_) {
@@ -55,7 +54,7 @@ void Switcher::Attach(Engine *engine) {
 bool Switcher::ProcessKeyEvent(const KeyEvent &key_event) {
   BOOST_FOREACH(const KeyEvent &hotkey, hotkeys_) {
     if (key_event == hotkey) {
-      if (!active_ && target_engine_) {
+      if (!active_ && attached_engine_) {
         Activate();
       }
       else if (active_) {
@@ -138,9 +137,23 @@ Schema* Switcher::CreateSchema() {
 
 void Switcher::ApplySchema(Schema* schema) {
   if (!schema) return;
-  if (active_)
+  if (active_) {
     Deactivate();
-  target_engine_->set_schema(schema);
+  }
+  attached_engine_->ApplySchema(schema);
+}
+
+void Switcher::SelectNextSchema() {
+  if (translators_.empty()) return;
+  shared_ptr<Translator> x = translators_[0];  // schema_list_translator
+  if (!x) return;
+  Menu menu;
+  menu.AddTranslation(x->Query("", Segment(), NULL));
+  if (menu.Prepare(2) < 2) return;
+  shared_ptr<SwitcherCommand> command =
+      As<SwitcherCommand>(menu.GetCandidateAt(1));
+  if (!command) return;
+  command->Apply(this);
 }
 
 bool Switcher::IsAutoSave(const std::string& option) const {
@@ -153,7 +166,7 @@ void Switcher::OnSelect(Context *ctx) {
   shared_ptr<SwitcherCommand> command =
       As<SwitcherCommand>(seg.GetSelectedCandidate());
   if (!command) return;
-  if (target_engine_) {
+  if (attached_engine_) {
     command->Apply(this);
   }
   Deactivate();

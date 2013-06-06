@@ -26,11 +26,10 @@ class SchemaSelection : public SimpleCandidate, public SwitcherCommand {
 };
 
 void SchemaSelection::Apply(Switcher* switcher) {
-  Engine* target_engine = switcher->target_engine();
-  if (!target_engine) return;
-  Schema* current_schema = target_engine->schema();
-  if (keyword_ != current_schema->schema_id()) {
-    target_engine->set_schema(new Schema(keyword_));
+  Engine* engine = switcher->attached_engine();
+  if (!engine) return;
+  if (keyword_ != engine->schema()->schema_id()) {
+    switcher->ApplySchema(new Schema(keyword_));
   }
   Config* user_config = switcher->user_config();
   if (user_config) {
@@ -63,14 +62,14 @@ int SchemaListTranslation::Compare(shared_ptr<Translation> other,
 }
 
 void SchemaListTranslation::LoadSchemaList(Switcher* switcher) {
-  Engine* target_engine = switcher->target_engine();
-  if (!target_engine) return;
+  Engine* engine = switcher->attached_engine();
+  if (!engine) return;
   Config *config = switcher->schema()->config();
   if (!config) return;
   ConfigListPtr schema_list = config->GetList("schema_list");
   if (!schema_list) return;
   // current schema comes first
-  Schema* current_schema = target_engine->schema();
+  Schema* current_schema = engine->schema();
   if (current_schema) {
     Append(make_shared<SchemaSelection>(current_schema));
   }

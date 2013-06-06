@@ -19,6 +19,7 @@ Session::Session() : last_active_time_(0) {
   switcher_.reset(new Switcher);
   engine_.reset(Engine::Create(switcher_->CreateSchema()));
   switcher_->Attach(engine_.get());
+  engine_->Attach(switcher_.get());
   engine_->sink().connect(boost::bind(&Session::OnCommit, this, _1));
   SessionId session_id = reinterpret_cast<SessionId>(this);
   engine_->message_sink().connect(

@@ -39,9 +39,9 @@ class Switch : public SimpleCandidate, public SwitcherCommand {
 };
 
 void Switch::Apply(Switcher* switcher) {
-  Engine* target_engine = switcher->target_engine();
-  if (!target_engine) return;
-  target_engine->context()->set_option(keyword_, target_state_);
+  Engine* engine = switcher->attached_engine();
+  if (!engine) return;
+  engine->context()->set_option(keyword_, target_state_);
   if (auto_save_) {
     Config* user_config = switcher->user_config();
     if (user_config) {
@@ -60,13 +60,13 @@ class SwitchTranslation : public FifoTranslation {
 };
 
 void SwitchTranslation::LoadSwitches(Switcher* switcher) {
-  Engine* target_engine = switcher->target_engine();
-  if (!target_engine) return;
-  Config *config = target_engine->schema()->config();
+  Engine* engine = switcher->attached_engine();
+  if (!engine) return;
+  Config *config = engine->schema()->config();
   if (!config) return;
   ConfigListPtr switches = config->GetList("switches");
   if (!switches) return;
-  Context *context = target_engine->context();
+  Context *context = engine->context();
   for (size_t i = 0; i < switches->size(); ++i) {
     ConfigMapPtr item = As<ConfigMap>(switches->GetAt(i));
     if (!item) continue;

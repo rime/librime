@@ -19,6 +19,7 @@
 #include <rime/key_event.h>
 #include <rime/key_table.h>
 #include <rime/schema.h>
+#include <rime/switcher.h>
 #include <rime/gear/key_binder.h>
 
 namespace rime {
@@ -73,6 +74,18 @@ static void toggle_option(Engine* engine, const std::string& option) {
   ctx->set_option(option, !ctx->get_option(option));
 }
 
+static void select_schema(Engine* engine, const std::string& schema) {
+  if (!engine) return;
+  Switcher* switcher = dynamic_cast<Switcher*>(engine->attached_engine());
+  if (!switcher) return;
+  if (schema == ".next") {
+    switcher->SelectNextSchema();
+  }
+  else {
+    switcher->ApplySchema(new Schema(schema));
+  }
+}
+
 void KeyBindings::LoadBindings(const ConfigListPtr &bindings) {
   if (!bindings) return;
   for (size_t i = 0; i < bindings->size(); ++i) {
@@ -100,6 +113,9 @@ void KeyBindings::LoadBindings(const ConfigListPtr &bindings) {
     }
     else if (ConfigValuePtr option = map->GetValue("toggle")) {
       binding.action = boost::bind(&toggle_option, _1, option->str());
+    }
+    else if (ConfigValuePtr schema = map->GetValue("select")) {
+      binding.action = boost::bind(&select_schema, _1, schema->str());
     }
     else {
       LOG(WARNING) << "invalid key binding #" << i << ".";

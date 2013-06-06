@@ -25,14 +25,15 @@ class Switcher : public Engine {
   Switcher();
   ~Switcher();
 
-  void Attach(Engine *engine);
   bool ProcessKeyEvent(const KeyEvent &key_event);
-  Schema* CreateSchema();
+  void Attach(Engine *engine);
   void ApplySchema(Schema* schema);
+
+  Schema* CreateSchema();
+  void SelectNextSchema();
   bool IsAutoSave(const std::string& option) const;
 
   Config* user_config() const { return user_config_.get(); }
-  Engine* target_engine() const { return target_engine_; }
   bool active() const { return active_; }
 
  protected:
@@ -49,7 +50,6 @@ class Switcher : public Engine {
   std::set<std::string> save_options_;
   std::vector<shared_ptr<Processor> > processors_;
   std::vector<shared_ptr<Translator> > translators_;
-  Engine* target_engine_;
   bool active_;
 };
 
