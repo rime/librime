@@ -5,6 +5,7 @@
 // 2013-05-26 GONG Chen <chen.sst@gmail.com>
 //
 
+#include <ctime>
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/config.h>
@@ -34,6 +35,7 @@ void SchemaSelection::Apply(Switcher* switcher) {
   Config* user_config = switcher->user_config();
   if (user_config) {
     user_config->SetString("var/previously_selected_schema", keyword_);
+    user_config->SetInt("var/schema_access_time/" + keyword_, time(NULL));
   }
 }
 
@@ -61,6 +63,11 @@ int SchemaListTranslation::Compare(shared_ptr<Translation> other,
   return Translation::Compare(other, candidates);
 }
 
+static bool compare_access_time(const shared_ptr<Candidate>& a,
+                                const shared_ptr<Candidate>& b) {
+  return a->quality() > b->quality();
+}
+
 void SchemaListTranslation::LoadSchemaList(Switcher* switcher) {
   Engine* engine = switcher->attached_engine();
   if (!engine) return;
@@ -73,6 +80,9 @@ void SchemaListTranslation::LoadSchemaList(Switcher* switcher) {
   if (current_schema) {
     Append(make_shared<SchemaSelection>(current_schema));
   }
+  size_t fixed = candies_.size();
+  Config* user_config = switcher->user_config();
+  time_t now = time(NULL);
   // load the rest schema list
   for (size_t i = 0; i < schema_list->size(); ++i) {
     ConfigMapPtr item = As<ConfigMap>(schema_list->GetAt(i));
@@ -83,9 +93,19 @@ void SchemaListTranslation::LoadSchemaList(Switcher* switcher) {
     if (current_schema && schema_id == current_schema->schema_id())
       continue;
     Schema schema(schema_id);
-    Append(make_shared<SchemaSelection>(&schema));
+    shared_ptr<Candidate> cand = make_shared<SchemaSelection>(&schema);
+    int timestamp = 0;
+    if (user_config &&
+        user_config->GetInt("var/schema_access_time/" + schema_id,
+                            &timestamp)) {
+      if (timestamp <= now)
+        cand->set_quality(timestamp);
+    }
+    Append(cand);
   }
   DLOG(INFO) << "num schemata: " << candies_.size();
+  std::stable_sort(candies_.begin() + fixed, candies_.end(),
+                   compare_access_time);
 }
 
 SchemaListTranslator::SchemaListTranslator(const TranslatorTicket& ticket)
