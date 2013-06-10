@@ -46,7 +46,7 @@ bool UserDbValue::Unpack(const std::string &value) {
         commits = boost::lexical_cast<int>(v);
       }
       else if (k == "d") {
-        dee = (std::min)(200.0, boost::lexical_cast<double>(v));
+        dee = (std::min)(10000.0, boost::lexical_cast<double>(v));
       }
       else if (k == "t") {
         tick = boost::lexical_cast<TickCount>(v);
