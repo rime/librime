@@ -7,6 +7,8 @@
 #ifndef RIME_SIMPLIFIER_H_
 #define RIME_SIMPLIFIER_H_
 
+#include <set>
+#include <string>
 #include <rime/filter.h>
 
 namespace rime {
@@ -27,12 +29,13 @@ class Simplifier : public Filter {
   void Initialize();
   bool Convert(const shared_ptr<Candidate> &original,
                CandidateList *result);
-  
+
   bool initialized_;
   scoped_ptr<Opencc> opencc_;
   TipLevel tip_level_;
   std::string option_name_;
   std::string opencc_config_;
+  std::set<std::string> excluded_types_;
 };
 
 }  // namespace rime

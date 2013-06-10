@@ -30,8 +30,10 @@ class Opencc {
  public:
   Opencc(const std::string &config_path);
   ~Opencc();
-  bool ConvertText(const std::string &text, std::string *simplified, bool *is_single_char);
-  
+  bool ConvertText(const std::string &text,
+                   std::string *simplified,
+                   bool *is_single_char);
+
  private:
   opencc_t od_;
 };
@@ -50,11 +52,15 @@ Opencc::~Opencc() {
   }
 }
 
-bool Opencc::ConvertText(const std::string &text, std::string *simplified, bool *is_single_char) {
+bool Opencc::ConvertText(const std::string &text,
+                         std::string *simplified,
+                         bool *is_single_char) {
   if (od_ == (opencc_t) -1)
     return false;
   boost::scoped_array<uint32_t> inbuf(new uint32_t[text.length() + 1]);
-  uint32_t *end = utf8::unchecked::utf8to32(text.c_str(), text.c_str() + text.length(), inbuf.get());
+  uint32_t *end = utf8::unchecked::utf8to32(text.c_str(),
+                                            text.c_str() + text.length(),
+                                            inbuf.get());
   *end = L'\0';
   size_t inlen = end - inbuf.get();
   uint32_t *inptr = inbuf.get();
@@ -76,7 +82,9 @@ bool Opencc::ConvertText(const std::string &text, std::string *simplified, bool 
   }
   *outptr = L'\0';
   boost::scoped_array<char> out_utf8(new char[(outptr - outbuf.get()) * 6 + 1]);
-  char *utf8_end = utf8::unchecked::utf32to8(outbuf.get(), outptr, out_utf8.get());
+  char *utf8_end = utf8::unchecked::utf32to8(outbuf.get(),
+                                             outptr,
+                                             out_utf8.get());
   *utf8_end = '\0';
   *simplified = out_utf8.get();
   return true;
@@ -97,6 +105,14 @@ Simplifier::Simplifier(Engine *engine) : Filter(engine),
     }
     config->GetString("simplifier/option_name", &option_name_);
     config->GetString("simplifier/opencc_config", &opencc_config_);
+    ConfigListPtr types = config->GetList("simplifier/excluded_types");
+    if (types) {
+      for (ConfigList::Iterator it = types->begin(); it != types->end(); ++it) {
+        ConfigValuePtr value = As<ConfigValue>(*it);
+        if (!value) continue;
+        excluded_types_.insert(value->str());
+      }
+    }
   }
   if (option_name_.empty()) {
     option_name_ = "simplification";  // default switcher option
@@ -113,8 +129,10 @@ void Simplifier::Initialize() {
   initialized_ = true;  // no retry
   boost::filesystem::path opencc_config_path = opencc_config_;
   if (opencc_config_path.is_relative()) {
-    boost::filesystem::path user_config_path(Service::instance().deployer().user_data_dir);
-    boost::filesystem::path shared_config_path(Service::instance().deployer().shared_data_dir);
+    boost::filesystem::path user_config_path =
+        Service::instance().deployer().user_data_dir;
+    boost::filesystem::path shared_config_path =
+        Service::instance().deployer().shared_data_dir;
     (user_config_path /= "opencc") /= opencc_config_path;
     (shared_config_path /= "opencc") /= opencc_config_path;
     if (boost::filesystem::exists(user_config_path)) {
@@ -146,6 +164,9 @@ bool Simplifier::Proceed(CandidateList *recruited,
 
 bool Simplifier::Convert(const shared_ptr<Candidate> &original,
                          CandidateList *result) {
+  if (excluded_types_.find(original->type()) != excluded_types_.end()) {
+    return false;
+  }
   std::string simplified;
   bool is_single_char = false;
   if (!opencc_->ConvertText(original->text(), &simplified, &is_single_char) ||
@@ -167,7 +188,7 @@ bool Simplifier::Convert(const shared_ptr<Candidate> &original,
         result->push_back(
             boost::make_shared<ShadowCandidate>(
                 original,
-                "zh_simplified",
+                "simplified",
                 forms[i],
                 tip));
       }
@@ -181,7 +202,7 @@ bool Simplifier::Convert(const shared_ptr<Candidate> &original,
     result->push_back(
         boost::make_shared<ShadowCandidate>(
             original,
-            "zh_simplified",
+            "simplified",
             simplified,
             tip));
   }
