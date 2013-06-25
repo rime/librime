@@ -172,6 +172,13 @@ bool UserDictionary::readonly() const {
 // 'sh(a) sh(i)' or 'sh(a) s(hi) h(ou)',
 // we now have to give up the latter path in order to avoid backdating.
 
+// update: 2013-06-25
+// to fix the following issue, we have to reintroduce backdating in db scan:
+// given aaa=A, b=B, ab=C, derive/^(aa)a$/$1/,
+// the input 'aaab' can be either aaa'b=AB or aa'ab=AC.
+// note that backdating works only for normal or fuzzy spellings, but not for
+// abbreviations such as 'shsh' in the previous example.
+
 void UserDictionary::DfsLookup(const SyllableGraph &syll_graph,
                                size_t current_pos,
                                const std::string &current_prefix,
@@ -183,37 +190,41 @@ void UserDictionary::DfsLookup(const SyllableGraph &syll_graph,
   DLOG(INFO) << "dfs lookup starts from " << current_pos;
   std::string prefix;
   BOOST_FOREACH(const SpellingIndex::value_type& spelling, index->second) {
-    if (spelling.second.empty()) continue;
-    const SpellingProperties* props = spelling.second[0];
-    size_t end_pos = props->end_pos;
-    DLOG(INFO) << "prefix: '" << current_prefix
-               << "', syll_id: " << spelling.first
-               << ", edge: [" << current_pos << ", " << end_pos << ") of "
-               << spelling.second.size();
+    DLOG(INFO) << "prefix: '" << current_prefix << "'"
+               << ", syll_id: " << spelling.first
+               << ", num_spellings: " << spelling.second.size();
     state->code.push_back(spelling.first);
-    state->credibility.push_back(
-        state->credibility.back() * props->credibility);
     BOOST_SCOPE_EXIT( (&state) ) {
       state->code.pop_back();
-      state->credibility.pop_back();
     } BOOST_SCOPE_EXIT_END
     if (!TranslateCodeToString(state->code, &prefix))
       continue;
-    if (prefix > state->key) {  // 'a b c |d ' > 'a b c \tabracadabra'
-      DLOG(INFO) << "forward scanning for '" << prefix << "'.";
-      if (!state->ForwardScan(prefix))  // reached the end of db
-        return;
-    }
-    while (state->IsExactMatch(prefix)) {  // 'b |e ' vs. 'b e \tBe'
-      DLOG(INFO) << "match found for '" << prefix << "'.";
-      state->RecruitEntry(end_pos);
-      if (!state->NextEntry())  // reached the end of db
-        return;
-    }
-    // the caller can limit the number of syllables to look up
-    if ((!state->depth_limit || state->code.size() < state->depth_limit)
-        && state->IsPrefixMatch(prefix)) {  // 'b |e ' vs. 'b e f \tBefore'
-      DfsLookup(syll_graph, end_pos, prefix, state);
+    for (size_t i = 0; i < spelling.second.size(); ++i) {
+      const SpellingProperties* props = spelling.second[i];
+      if (i > 0 && props->type >= kAbbreviation) continue;
+      state->credibility.push_back(
+          state->credibility.back() * props->credibility);
+      BOOST_SCOPE_EXIT( (&state) ) {
+        state->credibility.pop_back();
+      } BOOST_SCOPE_EXIT_END
+      size_t end_pos = props->end_pos;
+      DLOG(INFO) << "edge: [" << current_pos << ", " << end_pos << ")";
+      if (prefix != state->key) {  // 'a b c |d ' > 'a b c \tabracadabra'
+        DLOG(INFO) << "forward scanning for '" << prefix << "'.";
+        if (!state->ForwardScan(prefix))  // reached the end of db
+          continue;
+      }
+      while (state->IsExactMatch(prefix)) {  // 'b |e ' vs. 'b e \tBe'
+        DLOG(INFO) << "match found for '" << prefix << "'.";
+        state->RecruitEntry(end_pos);
+        if (!state->NextEntry())  // reached the end of db
+          break;
+      }
+      // the caller can limit the number of syllables to look up
+      if ((!state->depth_limit || state->code.size() < state->depth_limit)
+          && state->IsPrefixMatch(prefix)) {  // 'b |e ' vs. 'b e f \tBefore'
+        DfsLookup(syll_graph, end_pos, prefix, state);
+      }
     }
     if (!state->IsPrefixMatch(current_prefix))  // 'b |' vs. 'g o \tGo'
       return;
