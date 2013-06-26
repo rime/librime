@@ -90,15 +90,17 @@ Processor::Result AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   }
   // other keys
   shift_key_pressed_ = ctrl_key_pressed_ = false;
+  if (key_event.ctrl()) {
+    return kNoop;  // possible key binding Control+x
+  }
   Context *ctx = engine_->context();
   bool ascii_mode = ctx->get_option("ascii_mode");
   if (ascii_mode) {
     if (!ctx->IsComposing()) {
       return kRejected;  // direct commit
     }
-    // edit inline ascii
-    if (!key_event.release() && !key_event.ctrl() &&
-        ch >= 0x20 && ch < 0x80) {
+    // edit inline ascii string
+    if (!key_event.release() && ch >= 0x20 && ch < 0x80) {
       ctx->PushInput(ch);
       return kAccepted;
     }
