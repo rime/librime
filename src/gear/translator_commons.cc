@@ -131,13 +131,15 @@ bool UniqueFilter::AlreadyHas(const std::string& text) const {
 TranslatorOptions::TranslatorOptions(Engine* engine,
                                      const std::string& name_space)
     : enable_completion_(true),
-      strict_spelling_(false) {
+      strict_spelling_(false),
+      initial_quality_(0.0) {
   if (!engine) return;
   Config *config = engine->schema()->config();
   if (config) {
     config->GetString("speller/delimiter", &delimiters_);
     config->GetBool(name_space + "/enable_completion", &enable_completion_);
     config->GetBool(name_space + "/strict_spelling", &strict_spelling_);
+    config->GetDouble(name_space + "/initial_quality", &initial_quality_);
     preedit_formatter_.Load(config->GetList(name_space + "/preedit_format"));
     comment_formatter_.Load(config->GetList(name_space + "/comment_format"));
     user_dict_disabling_patterns_.Load(

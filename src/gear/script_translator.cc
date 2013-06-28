@@ -325,7 +325,9 @@ shared_ptr<Candidate> ScriptTranslation::Peek() {
                                start_,
                                start_ + user_phrase_code_length,
                                e);
-    cand->set_quality(e->weight + (IsNormalSpelling() ? 0.5 : -0.5));
+    cand->set_quality(e->weight +
+                      translator_->initial_quality() +
+                      (IsNormalSpelling() ? 0.5 : -0.5));
   }
   else if (phrase_code_length > 0) {
     DictEntryIterator &iter(phrase_iter_->second);
@@ -337,7 +339,9 @@ shared_ptr<Candidate> ScriptTranslation::Peek() {
                                start_,
                                start_ + phrase_code_length,
                                e);
-    cand->set_quality(e->weight + (IsNormalSpelling() ? 0 : -1));
+    cand->set_quality(e->weight +
+                      translator_->initial_quality() +
+                      (IsNormalSpelling() ? 0 : -1));
   }
   if (cand->preedit().empty()) {
     cand->set_preedit(GetPreeditString(*cand));

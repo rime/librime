@@ -148,6 +148,8 @@ class TranslatorOptions {
   void set_enable_completion(bool enabled) { enable_completion_ = enabled; }
   bool strict_spelling() const { return strict_spelling_; }
   void set_strict_spelling(bool is_strict) { strict_spelling_ = is_strict; }
+  double initial_quality() const { return initial_quality_; }
+  void set_initial_quality(double quality) { initial_quality_ = quality; }
   Projection& preedit_formatter() { return preedit_formatter_; }
   Projection& comment_formatter() { return comment_formatter_; }
 
@@ -155,6 +157,7 @@ class TranslatorOptions {
   std::string delimiters_;
   bool enable_completion_;
   bool strict_spelling_;
+  double initial_quality_;
   Projection preedit_formatter_;
   Projection comment_formatter_;
   Patterns user_dict_disabling_patterns_;
