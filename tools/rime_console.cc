@@ -57,6 +57,8 @@ class RimeConsole {
     int page_no = current.selected_index / page_size;
     boost::scoped_ptr<rime::Page> page(
         current.menu->CreatePage(page_size, page_no));
+    if (!page)
+      return;
     std::cout << "page_no: " << page_no
               << ", index: " << current.selected_index << std::endl;
     int i = 0;
