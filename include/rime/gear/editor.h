@@ -18,11 +18,11 @@ class Context;
 class Editor : public Processor {
  public:
   typedef void Handler(Context* ctx);
-  typedef Result CharHandler(Context* ctx, int ch);
-  
+  typedef ProcessResult CharHandler(Context* ctx, int ch);
+
   Editor(Engine* engine, bool auto_commit);
-  Result ProcessKeyEvent(const KeyEvent &key_event);
-  
+  ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
+
   virtual Handler OnSpace;
   virtual Handler OnBackSpace;
   Handler OnShiftBackSpace;

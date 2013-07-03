@@ -35,6 +35,7 @@
 #include <rime/gear/recognizer.h>
 #include <rime/gear/selector.h>
 #include <rime/gear/simplifier.h>
+#include <rime/gear/shape.h>
 #include <rime/gear/speller.h>
 #include <rime/gear/reverse_lookup_translator.h>
 #include <rime/gear/schema_list_translator.h>
@@ -81,6 +82,7 @@ void RegisterComponents() {
   r.Register("recognizer", new Component<Recognizer>);
   r.Register("selector", new Component<Selector>);
   r.Register("speller", new Component<Speller>);
+  r.Register("shape_processor", new Component<ShapeProcessor>);
 
   // segmentors
   r.Register("abc_segmentor", new Component<AbcSegmentor>);
@@ -104,6 +106,9 @@ void RegisterComponents() {
   // filters
   r.Register("simplifier", new Component<Simplifier>);
   r.Register("uniquifier", new Component<Uniquifier>);
+
+  // formatters
+  r.Register("shape_formatter", new Component<ShapeFormatter>);
 }
 
 }  // namespace rime

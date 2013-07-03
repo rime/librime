@@ -19,7 +19,7 @@ class ChordComposer : public Processor {
  public:
   ChordComposer(Engine *engine);
 
-  virtual Result ProcessKeyEvent(const KeyEvent &key_event);
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
 
  protected:
   std::string SerializeChord();

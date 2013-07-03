@@ -14,6 +14,7 @@
 #include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/filter.h>
+#include <rime/formatter.h>
 #include <rime/key_event.h>
 #include <rime/menu.h>
 #include <rime/processor.h>
@@ -31,6 +32,7 @@ class ConcreteEngine : public Engine {
   virtual ~ConcreteEngine();
   virtual bool ProcessKeyEvent(const KeyEvent &key_event);
   virtual void ApplySchema(Schema *schema);
+  virtual void CommitText(std::string text);
 
  protected:
   void InitializeComponents();
@@ -39,6 +41,7 @@ class ConcreteEngine : public Engine {
   void CalculateSegmentation(Composition *comp);
   void TranslateSegments(Composition *comp);
   void FilterCandidates(CandidateList *recruited, CandidateList *candidates);
+  void FormatText(std::string* text);
   void OnCommit(Context *ctx);
   void OnSelect(Context *ctx);
   void OnContextUpdate(Context *ctx);
@@ -48,6 +51,8 @@ class ConcreteEngine : public Engine {
   std::vector<shared_ptr<Segmentor> > segmentors_;
   std::vector<shared_ptr<Translator> > translators_;
   std::vector<shared_ptr<Filter> > filters_;
+  std::vector<shared_ptr<Formatter> > formatters_;
+  std::vector<shared_ptr<Processor> > post_processors_;
 };
 
 // implementations
@@ -90,13 +95,20 @@ ConcreteEngine::~ConcreteEngine() {
 
 bool ConcreteEngine::ProcessKeyEvent(const KeyEvent &key_event) {
   DLOG(INFO) << "process key event: " << key_event;
-  BOOST_FOREACH(shared_ptr<Processor> &p, processors_) {
-    Processor::Result ret = p->ProcessKeyEvent(key_event);
-    if (ret == Processor::kRejected) break;
-    if (ret == Processor::kAccepted) return true;
+  ProcessResult ret = kNoop;
+  BOOST_FOREACH(shared_ptr<Processor>& p, processors_) {
+    ret = p->ProcessKeyEvent(key_event);
+    if (ret == kRejected) break;
+    if (ret == kAccepted) return true;
   }
   // record unhandled keys, eg. spaces, numbers, bksp's.
   context_->commit_history().Push(key_event);
+  // post-processing
+  BOOST_FOREACH(shared_ptr<Processor>& p, post_processors_) {
+    ret = p->ProcessKeyEvent(key_event);
+    if (ret == kRejected) break;
+    if (ret == kAccepted) return true;
+  }
   // notify interested parties
   context_->unhandled_key_notifier()(context_.get(), key_event);
   return false;
@@ -189,15 +201,31 @@ void ConcreteEngine::FilterCandidates(CandidateList *recruited,
   if (filters_.empty()) return;
   DLOG(INFO) << "applying filters.";
   BOOST_FOREACH(shared_ptr<Filter> filter, filters_) {
-    if (!filter->Proceed(recruited, candidates))
-      break;
+    filter->Apply(recruited, candidates);
   }
 }
 
+void ConcreteEngine::FormatText(std::string* text) {
+  if (formatters_.empty()) return;
+  DLOG(INFO) << "applying formatters.";
+  BOOST_FOREACH(shared_ptr<Formatter> formatter, formatters_) {
+    formatter->Format(text);
+  }
+}
+
+void ConcreteEngine::CommitText(std::string text) {
+  context_->commit_history().Push(CommitRecord("raw", text));
+  FormatText(&text);
+  DLOG(INFO) << "committing text: " << text;
+  sink_(text);
+}
+
 void ConcreteEngine::OnCommit(Context *ctx) {
-  std::string commit_text = ctx->GetCommitText();
-  DLOG(INFO) << "committing: " << commit_text;
-  sink_(commit_text);
+  context_->commit_history().Push(*ctx->composition(), ctx->input());
+  std::string text = ctx->GetCommitText();
+  FormatText(&text);
+  DLOG(INFO) << "committing composition: " << text;
+  sink_(text);
 }
 
 void ConcreteEngine::OnSelect(Context *ctx) {
@@ -314,6 +342,28 @@ void ConcreteEngine::InitializeComponents() {
         shared_ptr<Filter> d(c->Create(this));
         filters_.push_back(d);
       }
+    }
+  }
+  // create formatters
+  {
+    Formatter::Component* c = Formatter::Require("shape_formatter");
+    if (!c) {
+      LOG(WARNING) << "shape_formatter not available.";
+    }
+    else {
+      shared_ptr<Formatter> f(c->Create(this));
+      formatters_.push_back(f);
+    }
+  }
+  // create post-processors
+  {
+    Processor::Component* c = Processor::Require("shape_processor");
+    if (!c) {
+      LOG(WARNING) << "shape_processor not available.";
+    }
+    else {
+      shared_ptr<Processor> p(c->Create(this));
+      post_processors_.push_back(p);
     }
   }
 }

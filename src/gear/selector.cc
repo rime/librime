@@ -20,7 +20,7 @@ Selector::Selector(Engine *engine) : Processor(engine),
                                      schema_(engine->schema()) {
 }
 
-Processor::Result Selector::ProcessKeyEvent(const KeyEvent &key_event) {
+ProcessResult Selector::ProcessKeyEvent(const KeyEvent &key_event) {
   if (key_event.release())
     return kNoop;
   Context *ctx = engine_->context();

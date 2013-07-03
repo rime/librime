@@ -20,7 +20,7 @@ Editor::Editor(Engine* engine, bool auto_commit) : Processor(engine) {
   engine->context()->set_option("_auto_commit", auto_commit);
 }
 
-Processor::Result Editor::ProcessKeyEvent(const KeyEvent &key_event) {
+ProcessResult Editor::ProcessKeyEvent(const KeyEvent &key_event) {
   if (key_event.release() || key_event.alt())
     return kRejected;
   int ch = key_event.keycode();
@@ -39,10 +39,10 @@ Processor::Result Editor::ProcessKeyEvent(const KeyEvent &key_event) {
   if (ctx->IsComposing()) {
     if (ch == XK_Return) {
       if (key_event.shift() || key_event.ctrl()) {
-	OnShiftReturn(ctx);
+        OnShiftReturn(ctx);
       }
       else {
-	OnReturn(ctx);
+        OnReturn(ctx);
       }
       return kAccepted;
     }
@@ -57,10 +57,10 @@ Processor::Result Editor::ProcessKeyEvent(const KeyEvent &key_event) {
     }
     if (ch == XK_Delete || ch == XK_KP_Delete) {
       if (key_event.shift() || key_event.ctrl()) {
-	OnShiftDelete(ctx);
+        OnShiftDelete(ctx);
       }
       else {
-	OnDelete(ctx);
+        OnDelete(ctx);
       }
       return kAccepted;
     }
@@ -147,12 +147,12 @@ inline void Editor::CancelComposition(Context* ctx) {
     ctx->Clear();
 }
 
-inline Processor::Result Editor::DirectCommit(Context* ctx, int ch) {
+inline ProcessResult Editor::DirectCommit(Context* ctx, int ch) {
   ctx->Commit();
   return kRejected;
 }
 
-inline Processor::Result Editor::AddToInput(Context* ctx, int ch) {
+inline ProcessResult Editor::AddToInput(Context* ctx, int ch) {
     ctx->PushInput(ch);
     ctx->ConfirmPreviousSelection();
     return kAccepted;
@@ -190,7 +190,7 @@ inline void Editor::OnEscape(Context* ctx) {
   CancelComposition(ctx);
 }
 
-inline Processor::Result Editor::OnChar(Context* ctx, int ch) {
+inline ProcessResult Editor::OnChar(Context* ctx, int ch) {
   return AddToInput(ctx, ch);
 }
 
@@ -210,7 +210,7 @@ inline void ExpressEditor::OnReturn(Context* ctx) {
   CommitRawInput(ctx);
 }
 
-inline Processor::Result ExpressEditor::OnChar(Context* ctx, int ch) {
+inline ProcessResult ExpressEditor::OnChar(Context* ctx, int ch) {
   return DirectCommit(ctx, ch);
 }
 

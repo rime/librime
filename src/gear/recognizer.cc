@@ -55,15 +55,15 @@ RecognizerMatch RecognizerPatterns::GetMatch(
       size_t end = start + m.length();
       if (end != input.length()) continue;
       if (start == j) {
-        LOG(INFO) << "input [" << start << ", " << end << ") '"
-                  << m.str() << "' matches pattern: " << v.first;
+        DLOG(INFO) << "input [" << start << ", " << end << ") '"
+                   << m.str() << "' matches pattern: " << v.first;
         return RecognizerMatch(v.first, start, end);
       }
       BOOST_FOREACH(const Segment &seg, *segmentation) {
         if (start < seg.start) break;
         if (start == seg.start) {
-          LOG(INFO) << "input [" << start << ", " << end << ") '"
-                    << m.str() << "' matches pattern: " << v.first;
+          DLOG(INFO) << "input [" << start << ", " << end << ") '"
+                     << m.str() << "' matches pattern: " << v.first;
           return RecognizerMatch(v.first, start, end);
         }
       }
@@ -78,7 +78,7 @@ Recognizer::Recognizer(Engine *engine) : Processor(engine) {
   patterns_.LoadConfig(config);
 }
 
-Processor::Result Recognizer::ProcessKeyEvent(const KeyEvent &key_event) {
+ProcessResult Recognizer::ProcessKeyEvent(const KeyEvent &key_event) {
   if (patterns_.empty() ||
       key_event.ctrl() || key_event.alt() || key_event.release()) {
     return kNoop;

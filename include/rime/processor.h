@@ -14,17 +14,18 @@ namespace rime {
 class Engine;
 class KeyEvent;
 
+enum ProcessResult {
+  kRejected,  // do the OS default processing
+  kAccepted,  // consume it
+  kNoop,      // leave it to other processors
+};
+
 class Processor : public Class<Processor, Engine*> {
  public:
-  enum Result {
-    kRejected,  // do the OS default processing
-    kAccepted,  // consume it
-    kNoop,      // leave it to other processors
-  };
   explicit Processor(Engine *engine) : engine_(engine) {}
   virtual ~Processor() {}
 
-  virtual Result ProcessKeyEvent(const KeyEvent &/*key_event*/) {
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   }
 

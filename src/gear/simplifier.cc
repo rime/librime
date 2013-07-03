@@ -145,13 +145,13 @@ void Simplifier::Initialize() {
   opencc_.reset(new Opencc(opencc_config_path.string()));
 }
 
-bool Simplifier::Proceed(CandidateList *recruited,
-                         CandidateList *candidates) {
+void Simplifier::Apply(CandidateList *recruited,
+                       CandidateList *candidates) {
   if (!engine_->context()->get_option(option_name_))  // off
-    return true;
+    return;
   if (!initialized_) Initialize();
   if (!opencc_ || !candidates || candidates->empty())
-    return true;
+    return;
   CandidateList result;
   for (CandidateList::iterator it = candidates->begin();
        it != candidates->end(); ++it) {
@@ -159,7 +159,6 @@ bool Simplifier::Proceed(CandidateList *recruited,
       result.push_back(*it);
   }
   candidates->swap(result);
-  return true;
 }
 
 bool Simplifier::Convert(const shared_ptr<Candidate> &original,

@@ -83,7 +83,7 @@ Punctuator::Punctuator(Engine *engine) : Processor(engine),
   config_.LoadConfig(engine);
 }
 
-Processor::Result Punctuator::ProcessKeyEvent(const KeyEvent &key_event) {
+ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent &key_event) {
   if (key_event.release() || key_event.ctrl() || key_event.alt())
     return kNoop;
   int ch = key_event.keycode();

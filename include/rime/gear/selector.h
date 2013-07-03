@@ -19,7 +19,7 @@ class Selector : public Processor {
  public:
   Selector(Engine *engine);
   virtual ~Selector() {}
-  virtual Result ProcessKeyEvent(const KeyEvent &key_event);
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
 
  protected:
   bool PageUp(Context *ctx);

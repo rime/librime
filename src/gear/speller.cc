@@ -72,7 +72,7 @@ Speller::Speller(Engine *engine) : Processor(engine),
   if (initials_.empty()) initials_ = alphabet_;
 }
 
-Processor::Result Speller::ProcessKeyEvent(
+ProcessResult Speller::ProcessKeyEvent(
     const KeyEvent &key_event) {
   if (key_event.release() || key_event.ctrl() || key_event.alt())
     return kNoop;

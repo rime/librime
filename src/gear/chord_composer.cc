@@ -33,7 +33,7 @@ ChordComposer::ChordComposer(Engine *engine) : Processor(engine),
   engine->context()->set_option("_chord_typing", true);
 }
 
-Processor::Result ChordComposer::ProcessKeyEvent(const KeyEvent &key_event) {
+ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent &key_event) {
   if (pass_thru_)
     return kNoop;
   bool composing = !chord_.empty();
@@ -120,7 +120,7 @@ void ChordComposer::FinishChord() {
     BOOST_FOREACH(const KeyEvent& ke, sequence) {
       if (!engine_->ProcessKeyEvent(ke)) {
         // direct commit
-        engine_->sink()(std::string(1, ke.keycode()));
+        engine_->CommitText(std::string(1, ke.keycode()));
       }
     }
     pass_thru_ = false;

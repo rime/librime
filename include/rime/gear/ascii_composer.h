@@ -29,10 +29,10 @@ class AsciiComposer : public Processor {
  public:
   AsciiComposer(Engine *engine);
   virtual ~AsciiComposer() {}
-  virtual Result ProcessKeyEvent(const KeyEvent& key_event);
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:
-  Result ProcessCapsLock(const KeyEvent& key_event);
+  ProcessResult ProcessCapsLock(const KeyEvent& key_event);
   void LoadConfig(Schema* schema);
   bool ToggleAsciiModeWithKey(int key_code);
   void SwitchAsciiMode(bool ascii_mode, AsciiModeSwitchStyle style);

@@ -65,7 +65,7 @@ bool Switcher::ProcessKeyEvent(const KeyEvent &key_event) {
   }
   if (active_) {
     BOOST_FOREACH(shared_ptr<Processor> &p, processors_) {
-      if (Processor::kNoop != p->ProcessKeyEvent(key_event))
+      if (kNoop != p->ProcessKeyEvent(key_event))
         return true;
     }
     if (key_event.release() || key_event.ctrl() || key_event.alt())

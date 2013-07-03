@@ -58,14 +58,14 @@ AsciiComposer::AsciiComposer(Engine *engine)
   LoadConfig(engine->schema());
 }
 
-Processor::Result AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
+ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   if ((key_event.shift() && key_event.ctrl()) ||
       key_event.alt() || key_event.super()) {
     shift_key_pressed_ = ctrl_key_pressed_ = false;
     return kNoop;
   }
   if (caps_lock_switch_style_ != kAsciiModeSwitchNoop) {
-    Result result = ProcessCapsLock(key_event);
+    ProcessResult result = ProcessCapsLock(key_event);
     if (result != kNoop)
       return result;
   }
@@ -108,7 +108,7 @@ Processor::Result AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   return kNoop;
 }
 
-Processor::Result AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
+ProcessResult AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
   int ch = key_event.keycode();
   if (ch == XK_Caps_Lock) {
     if (!key_event.release()) {
@@ -143,7 +143,7 @@ Processor::Result AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
         ch = toupper(ch);
       else if (isupper(ch))
         ch = tolower(ch);
-      engine_->sink()(std::string(1, ch));
+      engine_->CommitText(std::string(1, ch));
       return kAccepted;
     }
     else {

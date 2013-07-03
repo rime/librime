@@ -15,8 +15,8 @@ class Uniquifier : public Filter {
  public:
   explicit Uniquifier(Engine *engine);
 
-  virtual bool Proceed(CandidateList *recruited,
-                       CandidateList *candidates);
+  virtual void Apply(CandidateList *recruited,
+                     CandidateList *candidates);
 };
 
 }  // namespace rime

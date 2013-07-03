@@ -17,7 +17,7 @@ class Navigator : public Processor {
  public:
   Navigator(Engine *engine) : Processor(engine) {}
   virtual ~Navigator() {}
-  virtual Result ProcessKeyEvent(const KeyEvent &key_event);
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
 
  private:
   bool Left(Context *ctx);

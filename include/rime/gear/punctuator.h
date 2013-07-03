@@ -31,7 +31,7 @@ class PunctConfig {
 class Punctuator : public Processor {
  public:
   Punctuator(Engine *engine);
-  virtual Result ProcessKeyEvent(const KeyEvent &key_event);
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
 
  protected:
   bool ConfirmUniquePunct(const ConfigItemPtr &definition);

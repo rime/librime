@@ -162,7 +162,7 @@ static void calculate_conditions(Context *ctx, Conditions *conditions) {
   }
 }
 
-Processor::Result KeyBinder::ProcessKeyEvent(const KeyEvent &key_event) {
+ProcessResult KeyBinder::ProcessKeyEvent(const KeyEvent &key_event) {
   if (redirecting_ || !key_bindings_ || key_bindings_->empty())
     return kNoop;
   if (ReinterpretPagingKey(key_event))

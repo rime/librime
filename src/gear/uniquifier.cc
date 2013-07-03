@@ -16,10 +16,10 @@ namespace rime {
 Uniquifier::Uniquifier(Engine *engine) : Filter(engine) {
 }
 
-bool Uniquifier::Proceed(CandidateList *recruited,
-                         CandidateList *candidates) {
+void Uniquifier::Apply(CandidateList *recruited,
+                       CandidateList *candidates) {
   if (!candidates || candidates->empty())
-    return true;
+    return;
   CandidateList::iterator i = candidates->begin();
   while (i != candidates->end()) {
     CandidateList::iterator j = recruited->begin();
@@ -39,7 +39,6 @@ bool Uniquifier::Proceed(CandidateList *recruited,
     else
       i = candidates->erase(i);
   }
-  return true;
 }
 
 }  // namespace rime

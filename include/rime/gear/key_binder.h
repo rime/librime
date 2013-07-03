@@ -19,7 +19,7 @@ class KeyBindings;
 class KeyBinder : public Processor {
  public:
   KeyBinder(Engine *engine);
-  virtual Result ProcessKeyEvent(const KeyEvent &key_event);
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
 
  protected:
   void LoadConfig();

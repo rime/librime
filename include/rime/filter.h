@@ -21,8 +21,8 @@ class Filter : public Class<Filter, Engine*> {
   Filter(Engine *engine) : engine_(engine) {}
   virtual ~Filter() {}
 
-  virtual bool Proceed(CandidateList *recruited,
-                       CandidateList *candidates) = 0;
+  virtual void Apply(CandidateList *recruited,
+                     CandidateList *candidates) = 0;
 
  protected:
   Engine *engine_;
@@ -31,5 +31,3 @@ class Filter : public Class<Filter, Engine*> {
 }  // namespace rime
 
 #endif  // RIME_FILTER_H_
-
-

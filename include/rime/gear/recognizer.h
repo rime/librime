@@ -25,7 +25,7 @@ struct RecognizerMatch {
   RecognizerMatch() : tag(), start(0), end(0) {}
   RecognizerMatch(const std::string &_tag, size_t _start, size_t _end)
       : tag(_tag), start(_start), end(_end) {}
-  
+
   bool found() const { return start < end; }
 };
 
@@ -39,9 +39,9 @@ class RecognizerPatterns : public std::map<std::string, boost::regex> {
 class Recognizer : public Processor {
  public:
   Recognizer(Engine *engine);
-  
-  virtual Result ProcessKeyEvent(const KeyEvent &key_event);
-  
+
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
+
  protected:
   RecognizerPatterns patterns_;
 };

@@ -20,8 +20,8 @@ class Simplifier : public Filter {
   explicit Simplifier(Engine *engine);
   ~Simplifier();
 
-  virtual bool Proceed(CandidateList *recruited,
-                       CandidateList *candidates);
+  virtual void Apply(CandidateList *recruited,
+                     CandidateList *candidates);
 
  protected:
   typedef enum { kTipNone, kTipChar, kTipAll } TipLevel;

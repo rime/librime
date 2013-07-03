@@ -17,8 +17,8 @@ class Speller : public Processor {
  public:
   Speller(Engine *engine);
   virtual ~Speller() {}
-  virtual Result ProcessKeyEvent(const KeyEvent &key_event);
-  
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
+
  protected:
   std::string alphabet_;
   std::string delimiters_;
