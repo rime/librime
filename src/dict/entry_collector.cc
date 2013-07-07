@@ -34,6 +34,21 @@ void EntryCollector::LoadPresetVocabulary(const DictSettings* settings) {
 
 void EntryCollector::Collect(const std::string &dict_file) {
   LOG(INFO) << "collecting entries from " << dict_file;
+  // read column definitions
+  DictSettings settings;
+  if (!settings.LoadFromFile(dict_file)) {
+    LOG(ERROR) << "missing dict settings.";
+    return;
+  }
+  int text_column = settings.GetColumnIndex("text");
+  int code_column = settings.GetColumnIndex("code");
+  int weight_column = settings.GetColumnIndex("weight");
+  //int stem_column = settings.GetColumnIndex("stem");
+  if (text_column == -1) {
+    LOG(ERROR) << "missing text column definition.";
+    return;
+  }
+  // read table
   std::ifstream fin(dict_file.c_str());
   std::string line;
   bool in_yaml_doc = true;
@@ -58,17 +73,19 @@ void EntryCollector::Collect(const std::string &dict_file) {
     std::vector<std::string> row;
     boost::algorithm::split(row, line,
                             boost::algorithm::is_any_of("\t"));
-    if (row.size() == 0 || row[0].empty()) {
+    if (row.size() <= text_column || row[text_column].empty()) {
       LOG(WARNING) << "Missing entry text at #" << num_entries << ".";
       continue;
     }
-    std::string &word(row[0]);
+    std::string &word(row[text_column]);
     std::string code_str;
     std::string weight_str;
-    if (row.size() > 1 && !row[1].empty())
-      code_str = row[1];
-    if (row.size() > 2 && !row[2].empty())
-      weight_str = row[2];
+    if (code_column != -1 &&
+        row.size() > code_column && !row[code_column].empty())
+      code_str = row[code_column];
+    if (weight_column != -1 &&
+        row.size() > weight_column && !row[weight_column].empty())
+      weight_str = row[weight_column];
     collection.insert(word);
     if (!code_str.empty()) {
       CreateEntry(word, code_str, weight_str);
