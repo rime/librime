@@ -43,7 +43,7 @@ void EntryCollector::Collect(const std::string &dict_file) {
   int text_column = settings.GetColumnIndex("text");
   int code_column = settings.GetColumnIndex("code");
   int weight_column = settings.GetColumnIndex("weight");
-  //int stem_column = settings.GetColumnIndex("stem");
+  int stem_column = settings.GetColumnIndex("stem");
   if (text_column == -1) {
     LOG(ERROR) << "missing text column definition.";
     return;
@@ -80,18 +80,26 @@ void EntryCollector::Collect(const std::string &dict_file) {
     std::string &word(row[text_column]);
     std::string code_str;
     std::string weight_str;
+    std::string stem_str;
     if (code_column != -1 &&
         row.size() > code_column && !row[code_column].empty())
       code_str = row[code_column];
     if (weight_column != -1 &&
         row.size() > weight_column && !row[weight_column].empty())
       weight_str = row[weight_column];
+    if (stem_column != -1 &&
+        row.size() > stem_column && !row[stem_column].empty())
+      stem_str = row[stem_column];
+    // collect entry
     collection.insert(word);
     if (!code_str.empty()) {
       CreateEntry(word, code_str, weight_str);
     }
     else {
       encode_queue.push(std::make_pair(word, weight_str));
+    }
+    if (!stem_str.empty() && !code_str.empty()) {
+      stem_index[word + "\t" + code_str] = stem_str;
     }
   }
   LOG(INFO) << "Pass 1: total " << num_entries << " entries collected.";

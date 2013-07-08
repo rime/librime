@@ -31,6 +31,7 @@ struct EntryCollector {
   std::map<std::string, WeightMap> words;
   WeightMap total_weight_for_word;
   std::set<std::string> collection;
+  std::map<std::string/* word + code */, std::string/* stem */> stem_index;
 
   EntryCollector();
   ~EntryCollector();
