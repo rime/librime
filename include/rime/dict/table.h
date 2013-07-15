@@ -29,7 +29,7 @@ typedef List<SyllableId> Code;
 
 struct Entry {
   String text;
-  float weight;
+  double weight;
 };
 
 struct HeadIndexNode {

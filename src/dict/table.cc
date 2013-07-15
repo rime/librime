@@ -410,7 +410,7 @@ bool Table::BuildEntry(const DictEntry &dict_entry, table::Entry *entry) {
     LOG(ERROR) << "Error creating table entry '" << dict_entry.text << "'; file size: " << file_size();
     return false;
   }
-  entry->weight = static_cast<float>(dict_entry.weight);
+  entry->weight = static_cast<double>(dict_entry.weight);
   return true;
 }
 
