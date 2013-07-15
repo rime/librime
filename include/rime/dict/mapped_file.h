@@ -136,7 +136,9 @@ template <class T>
 T* MappedFile::Allocate(size_t count) {
   if (!IsOpen())
     return NULL;
-  size_t used_space = size_;
+
+  /* do the alignment computing for mapped file. */
+  size_t used_space = (size_ + __alignof__(T) - 1) & ~(__alignof__(T) - 1);
   size_t required_space = sizeof(T) * count;
   size_t file_size = capacity();
   if (used_space + required_space > file_size) {
@@ -144,13 +146,11 @@ T* MappedFile::Allocate(size_t count) {
     size_t new_size = (std::max)(used_space + required_space, file_size * 2);
     if(!Resize(new_size) || !OpenReadWrite())
       return NULL;
-    // note that size_ has been reset after the file was closed for resizing
-    // now lets restore it to the saved value
-    size_ = used_space;
   }
+
   T *ptr = reinterpret_cast<T*>(address() + used_space);
   std::memset(ptr, 0, required_space);
-  size_ += required_space;
+  size_ = used_space + required_space;
   return ptr;
 }
 
