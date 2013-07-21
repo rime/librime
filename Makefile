@@ -39,7 +39,7 @@ uninstall-librime:
 
 debug:
 	mkdir -p debug-build
-	(cd debug-build; cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..)
+	(cd debug-build; cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug -DBUILD_TEST=ON ..)
 	make -C debug-build
 
 install-debug:

@@ -2,9 +2,9 @@
 
 SRC_DIR=thirdparty/src
 
-.PHONY: all glog kyotocabinet opencc yaml-cpp
+.PHONY: all glog kyotocabinet opencc yaml-cpp gtest
 
-all: glog kyotocabinet opencc yaml-cpp
+all: glog kyotocabinet opencc yaml-cpp gtest
 
 glog:
 	cd $(SRC_DIR)/glog; ./configure --disable-dependency-tracking --enable-static --disable-shared && make
@@ -36,3 +36,10 @@ yaml-cpp:
 	make
 	cp -R $(SRC_DIR)/yaml-cpp/include/yaml-cpp thirdparty/include/
 	cp $(SRC_DIR)/yaml-cpp/build/libyaml-cpp.a thirdparty/lib/
+
+gtest:
+	cd $(SRC_DIR)/gtest; mkdir -p build && \
+	cd build && cmake .. && \
+	make
+	cp -R $(SRC_DIR)/gtest/include/gtest thirdparty/include/
+	cp $(SRC_DIR)/gtest/build/libgtest*.a thirdparty/lib/

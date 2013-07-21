@@ -17,7 +17,7 @@ file(COPY ${PROJECT_SOURCE_DIR}/data/test/config_test.yaml
 file(COPY ${PROJECT_SOURCE_DIR}/data/test/dictionary_test.dict.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 
-if(NOT MSVC AND NOT XCODE_VERSION)
+if(NOT MSVC)
 set(RIME_TEST_EXECUTABLE ${EXECUTABLE_OUTPUT_PATH}/rime_test${EXT})
 add_test(rime_test ${RIME_TEST_EXECUTABLE})
-endif(NOT MSVC AND NOT XCODE_VERSION)
+endif(NOT MSVC)

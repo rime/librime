@@ -10,3 +10,6 @@
 [submodule "thirdparty/src/yaml-cpp"]
 	path = thirdparty/src/yaml-cpp
 	url = git@github.com:oftc/yaml-cpp.git
+[submodule "thirdparty/src/gtest"]
+	path = thirdparty/src/gtest
+	url = git@github.com:tomgr/googletest-mirror.git
