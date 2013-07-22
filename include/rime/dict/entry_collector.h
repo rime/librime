@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <rime/common.h>
+#include <rime/algo/encoder.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/vocabulary.h>
 
@@ -26,12 +27,17 @@ struct EntryCollector {
   Syllabary syllabary;
   std::vector<dictionary::RawDictEntry> entries;
   size_t num_entries;
-  std::queue<std::pair<std::string, std::string> > encode_queue;
+  typedef std::queue<std::pair<std::string/* word */,
+                               std::string/* weight */> > EncodeQueue;
+  EncodeQueue encode_queue;
   typedef std::map<std::string, double> WeightMap;
   std::map<std::string, WeightMap> words;
   WeightMap total_weight_for_word;
   std::set<std::string> collection;
-  std::map<std::string/* word + code */, std::string/* stem */> stem_index;
+  typedef std::map<std::string/* word + code */,
+                   std::string/* stem */> StemIndex;
+  StemIndex stem_index;
+  TableEncoder encoder;
 
   EntryCollector();
   ~EntryCollector();

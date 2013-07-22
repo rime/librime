@@ -45,13 +45,20 @@ struct TableEncodingRule {
   std::vector<CodeCoords> coords;
 };
 
+class Config;
+
 class TableEncoder {
  public:
+  TableEncoder();
+
   void LoadSettings(Config* config);
+  bool LoadFromFile(const std::string& filename);
+
   bool Encode(const std::vector<std::string>& code, std::string* result);
-  std::set<std::string> EncodePhrase(const std::string& phrase);
 
   bool IsCodeExcluded(const std::string& code);
+
+  bool loaded() const { return loaded_; }
   const std::vector<TableEncodingRule>& encoding_rules() const {
     return encoding_rules_;
   }
@@ -68,6 +75,7 @@ class TableEncoder {
   // may return a negative number if `index` does not exist in `code`.
   int CalculateCodeIndex(const std::string& code, int index, int start);
 
+  bool loaded_;
   // settings
   std::vector<TableEncodingRule> encoding_rules_;
   std::vector<boost::regex> exclude_patterns_;

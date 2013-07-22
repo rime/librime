@@ -120,6 +120,9 @@ bool DictCompiler::BuildTable(const DictSettings &settings,
   if (settings.use_preset_vocabulary) {
     collector.LoadPresetVocabulary(&settings);
   }
+  if (!dict_files.empty()) {
+    collector.encoder.LoadFromFile(dict_files[0]);
+  }
   BOOST_FOREACH(const std::string& dict_file, dict_files) {
     collector.Collect(dict_file);
   }

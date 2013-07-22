@@ -5,6 +5,7 @@
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
 #include <fstream>
+#include <utf8.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
@@ -73,7 +74,8 @@ void EntryCollector::Collect(const std::string &dict_file) {
     std::vector<std::string> row;
     boost::algorithm::split(row, line,
                             boost::algorithm::is_any_of("\t"));
-    if (row.size() <= text_column || row[text_column].empty()) {
+    int num_columns = static_cast<int>(row.size());
+    if (num_columns <= text_column || row[text_column].empty()) {
       LOG(WARNING) << "Missing entry text at #" << num_entries << ".";
       continue;
     }
@@ -82,13 +84,13 @@ void EntryCollector::Collect(const std::string &dict_file) {
     std::string weight_str;
     std::string stem_str;
     if (code_column != -1 &&
-        row.size() > code_column && !row[code_column].empty())
+        num_columns > code_column && !row[code_column].empty())
       code_str = row[code_column];
     if (weight_column != -1 &&
-        row.size() > weight_column && !row[weight_column].empty())
+        num_columns > weight_column && !row[weight_column].empty())
       weight_str = row[weight_column];
     if (stem_column != -1 &&
-        row.size() > stem_column && !row[stem_column].empty())
+        num_columns > stem_column && !row[stem_column].empty())
       stem_str = row[stem_column];
     // collect entry
     collection.insert(word);
@@ -99,11 +101,14 @@ void EntryCollector::Collect(const std::string &dict_file) {
       encode_queue.push(std::make_pair(word, weight_str));
     }
     if (!stem_str.empty() && !code_str.empty()) {
+      DLOG(INFO) << "add stem '" << word << "': "
+                 << "[" << code_str << "] = [" << stem_str << "]";
       stem_index[word + "\t" + code_str] = stem_str;
     }
   }
   LOG(INFO) << "Pass 1: total " << num_entries << " entries collected.";
   LOG(INFO) << "num unique syllables: " << syllabary.size();
+  LOG(INFO) << "num of stems: " << stem_index.size();
   LOG(INFO) << "num of entries to encode: " << encode_queue.size();
 }
 
@@ -138,6 +143,47 @@ void EntryCollector::CreateEntry(const std::string &word,
                                  const std::string &code_str,
                                  const std::string &weight_str) {
   dictionary::RawDictEntry e;
+  e.raw_code.FromString(code_str);
+  bool is_word = (e.raw_code.size() == 1);
+  if (encoder.loaded()) {
+    size_t length = utf8::unchecked::distance(word.c_str(),
+                                              word.c_str() + word.length());
+    is_word = (length == 1);
+    if (e.raw_code.size() != 1) {
+      if (e.raw_code.size() != length) {
+        LOG(WARNING) << "unable to encode '" << word << "': "
+                     << "[" << code_str << "]";
+        return;
+      }
+      std::vector<std::string> code(e.raw_code);
+      const char* p = word.c_str();
+      // replace code with stems
+      BOOST_FOREACH(std::string& c, code) {
+        const char* q = p;
+        utf8::unchecked::next(p);
+        std::string w(q, p - q);
+        DLOG(INFO) << "w = '" << w << "', c = [" << c << "]";
+        StemIndex::const_iterator it = stem_index.find(w + "\t" + c);
+        if (it != stem_index.end()) {
+         DLOG(INFO) << "use stem '" << w << "': "
+                    << "[" << c << "] = [" << it->second << "]";
+          c = it->second;
+        }
+      }
+      std::string encoded;
+      if (encoder.Encode(code, &encoded)) {
+        DLOG(INFO) << "encode '" << word << "': "
+                   << "[" << code_str << "] -> [" << encoded << "]";
+        e.raw_code.clear();
+        e.raw_code.push_back(encoded);
+      }
+      else {
+        LOG(WARNING) << "failed to encode '" << word << "': "
+                     << "[" << code_str << "]";
+        return;
+      }
+    }
+  }
   e.text = word;
   e.weight = 0.0;
   bool scaled = boost::ends_with(weight_str, "%");
@@ -147,7 +193,8 @@ void EntryCollector::CreateEntry(const std::string &word,
   if (scaled) {
     double percentage = 100.0;
     try {
-      percentage = boost::lexical_cast<double>(weight_str.substr(0, weight_str.length() - 1));
+      percentage = boost::lexical_cast<double>(
+          weight_str.substr(0, weight_str.length() - 1));
     }
     catch (...) {
       LOG(WARNING) << "invalid entry definition at #" << num_entries << ".";
@@ -164,16 +211,17 @@ void EntryCollector::CreateEntry(const std::string &word,
       e.weight = 0.0;
     }
   }
-  e.raw_code.FromString(code_str);
   // learn new syllables
   BOOST_FOREACH(const std::string &s, e.raw_code) {
     if (syllabary.find(s) == syllabary.end())
       syllabary.insert(s);
   }
   // learn new word
-  if (e.raw_code.size() == 1) {
+  if (is_word) {
     if (words[e.text].find(code_str) != words[e.text].end()) {
-      LOG(WARNING) << "duplicate word definition '" << e.text << "': [" << code_str << "].";
+      LOG(WARNING) << "duplicate word definition '"
+                   << e.text << "': [" << code_str << "].";
+      return;
     }
     words[e.text][code_str] += e.weight;
     total_weight_for_word[e.text] += e.weight;
@@ -182,8 +230,10 @@ void EntryCollector::CreateEntry(const std::string &word,
   ++num_entries;
 }
 
-bool EntryCollector::Encode(const std::string &phrase, const std::string &weight_str,
-                            size_t start_pos, dictionary::RawCode *code) {
+bool EntryCollector::Encode(const std::string &phrase,
+                            const std::string &weight_str,
+                            size_t start_pos,
+                            dictionary::RawCode *code) {
   const double kMinimalWeightProportionForWordMaking = 0.05;
   if (start_pos == phrase.length()) {
     CreateEntry(phrase, code->ToString(), weight_str);

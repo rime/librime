@@ -10,7 +10,11 @@
 
 namespace rime {
 
+TableEncoder::TableEncoder() : loaded_(false) {
+}
+
 void TableEncoder::LoadSettings(Config* config) {
+  loaded_ = false;
   encoding_rules_.clear();
   exclude_patterns_.clear();
   tail_anchor_.clear();
@@ -48,6 +52,7 @@ void TableEncoder::LoadSettings(Config* config) {
       encoding_rules_.push_back(r);
     }
   }
+  loaded_ = !encoding_rules_.empty();
   if (ConfigListPtr excludes = config->GetList("encoder/exclude_patterns")) {
     for (ConfigList::Iterator it = excludes->begin();
          it != excludes->end(); ++it) {
@@ -58,6 +63,15 @@ void TableEncoder::LoadSettings(Config* config) {
     }
   }
   config->GetString("encoder/tail_anchor", &tail_anchor_);
+}
+
+bool TableEncoder::LoadFromFile(const std::string& filename) {
+  Config config;
+  if (!config.LoadFromFile(filename)) {
+    return false;
+  }
+  LoadSettings(&config);
+  return loaded();
 }
 
 bool TableEncoder::ParseFormula(const std::string& formula,
@@ -96,9 +110,10 @@ bool TableEncoder::IsCodeExcluded(const std::string& code) {
 
 bool TableEncoder::Encode(const std::vector<std::string>& code,
                           std::string* result) {
+  int num_syllables = static_cast<int>(code.size());
   BOOST_FOREACH(const TableEncodingRule& rule, encoding_rules_) {
-    if (code.size() < rule.min_word_length ||
-        code.size() > rule.max_word_length) {
+    if (num_syllables < rule.min_word_length ||
+        num_syllables > rule.max_word_length) {
       continue;
     }
     result->clear();
@@ -107,9 +122,9 @@ bool TableEncoder::Encode(const std::vector<std::string>& code,
     BOOST_FOREACH(const CodeCoords& current, rule.coords) {
       CodeCoords c(current);
       if (c.char_index < 0) {
-          c.char_index += static_cast<int>(code.size());
+        c.char_index += num_syllables;
       }
-      if (c.char_index >= static_cast<int>(code.size())) {
+      if (c.char_index >= num_syllables) {
         continue;  // 'abc def' ~ 'Ca'
       }
       if (c.char_index < 0) {
@@ -122,7 +137,7 @@ bool TableEncoder::Encode(const std::vector<std::string>& code,
       }
       int start_index = 0;
       if (c.char_index == encoded.char_index) {
-        start_index = encoded.code_index;
+        start_index = encoded.code_index + 1;
       }
       c.code_index = CalculateCodeIndex(code[c.char_index],  c.code_index,
                                         start_index);
@@ -156,17 +171,19 @@ bool TableEncoder::Encode(const std::vector<std::string>& code,
 
 int TableEncoder::CalculateCodeIndex(const std::string& code, int index,
                                      int start) {
+  DLOG(INFO) << "code = " << code
+             << ", index = " << index << ", start = " << start;
   // tail_anchor = '|'
   const int n = static_cast<int>(code.length());
   int k = 0;
   if (index < 0) {
-    // 'ab|cd|ef|g' ~ '(Aa)Az' -> 'ac'; start = 1, index = -1
-    // 'ab|cd|ef|g' ~ '(AaAbAc)Az' -> 'abce'; start = 4, index = -1
-    // 'ab|cd|ef|g' ~ '(AaAbAc)Ay' -> 'abcd'; start = 4, index = -2
+    // 'ab|cd|ef|g' ~ '(Aa)Az' -> 'ab'; start = 1, index = -1
+    // 'ab|cd|ef|g' ~ '(AaAb)Az' -> 'abd'; start = 4, index = -1
+    // 'ab|cd|ef|g' ~ '(AaAb)Ay' -> 'abc'; start = 4, index = -2
     k = n - 1;
-    size_t tail = code.find_first_of(tail_anchor_, start);
-    if (tail != std::string::npos && static_cast<int>(tail) + 1 < k) {
-      k = static_cast<int>(tail) + 1;
+    size_t tail = code.find_first_of(tail_anchor_, start + 1);
+    if (tail != std::string::npos) {
+      k = static_cast<int>(tail) - 1;
     }
     while (++index < 0) {
       while (--k >= 0 &&

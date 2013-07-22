@@ -20,6 +20,7 @@ TEST(RimeEncoderTest, Settings) {
   config["encoder"]["rules"][2]["formula"] = "AaBaCaZz";
   rime::TableEncoder encoder;
   encoder.LoadSettings(&config);
+  EXPECT_TRUE(encoder.loaded());
   const std::vector<rime::TableEncodingRule>& rules(encoder.encoding_rules());
   ASSERT_EQ(3, rules.size());
   EXPECT_EQ(2, rules[0].min_word_length);
@@ -119,15 +120,15 @@ TEST(RimeEncoderTest, TailAnchor) {
   config["encoder"]["rules"][0]["formula"] = "AaAzBaBzCaCz";
   encoder.LoadSettings(&config);
   EXPECT_TRUE(encoder.Encode(c, &result));
-  EXPECT_EQ("zwqnga", result);
+  EXPECT_EQ("zxqoga", result);
   // case 2
   config["encoder"]["rules"][0]["formula"] = "AaAbAcAzBwBxByBz";
   encoder.LoadSettings(&config);
   EXPECT_TRUE(encoder.Encode(c, &result));
-  EXPECT_EQ("zyxwqpon", result);
+  EXPECT_EQ("zyxuqpo", result);
   // case 3
-  config["encoder"]["rules"][0]["formula"] = "AaAbAcAdAzBaBbBxByBz";
+  config["encoder"]["rules"][0]["formula"] = "AaAbAcAdAzBaBxByBz";
   encoder.LoadSettings(&config);
   EXPECT_TRUE(encoder.Encode(c, &result));
-  EXPECT_EQ("zyxwtqpon", result);
+  EXPECT_EQ("zyxwuqpo", result);
 }
