@@ -94,6 +94,20 @@ if %build_thirdparty% == 1 (
   copy /Y Release\libyaml-cppmt.lib "%RIME_ROOT%"\thirdparty\lib\
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
+  echo building gtest.
+  cd "%RIME_ROOT%"\thirdparty\src\gtest
+  if not exist build mkdir build
+  cd build
+  cmake ..
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+  devenv gtest.sln /build "Release"
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+  echo built. copying artifacts.
+  xcopy /S /I /Y ..\include\gtest "%RIME_ROOT%"\thirdparty\include\gtest\
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+  copy /Y Release\gtest*.lib "%RIME_ROOT%"\thirdparty\lib\
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+
   echo skipped building opencc.
 
   cd "%RIME_ROOT%"\thirdparty\include
