@@ -104,3 +104,30 @@ TEST(RimeEncoderTest, Encode) {
   EXPECT_TRUE(encoder.Encode(c0, &result));
   EXPECT_EQ("adf", result);
 }
+
+TEST(RimeEncoderTest, TailAnchor) {
+  rime::TableEncoder encoder;
+  rime::Config config;
+  config["encoder"]["rules"][0]["length_equal"] = 3;
+  config["encoder"]["tail_anchor"] = "'";
+  std::vector<std::string> c;
+  c.push_back("zyx'wvu'tsr");
+  c.push_back("qpo'nmlk'jih");
+  c.push_back("gfedcba");
+  std::string result;
+  // case 1
+  config["encoder"]["rules"][0]["formula"] = "AaAzBaBzCaCz";
+  encoder.LoadSettings(&config);
+  EXPECT_TRUE(encoder.Encode(c, &result));
+  EXPECT_EQ("zwqnga", result);
+  // case 2
+  config["encoder"]["rules"][0]["formula"] = "AaAbAcAzBwBxByBz";
+  encoder.LoadSettings(&config);
+  EXPECT_TRUE(encoder.Encode(c, &result));
+  EXPECT_EQ("zyxwqpon", result);
+  // case 3
+  config["encoder"]["rules"][0]["formula"] = "AaAbAcAdAzBaBbBxByBz";
+  encoder.LoadSettings(&config);
+  EXPECT_TRUE(encoder.Encode(c, &result));
+  EXPECT_EQ("zyxwtqpon", result);
+}
