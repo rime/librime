@@ -15,6 +15,7 @@ static void DiscoverColumns(DictSettings* settings, const YAML::Node& doc);
 
 DictSettings::DictSettings()
     : use_preset_vocabulary(false)
+    , use_rule_based_encoder(false)
     , max_phrase_length(0)
     , min_phrase_weight(0)
 {
@@ -48,6 +49,12 @@ bool DictSettings::LoadFromFile(const std::string& dict_file) {
       max_phrase_length = doc["max_phrase_length"].as<int>();
     if (doc["min_phrase_weight"])
       min_phrase_weight = doc["min_phrase_weight"].as<double>();
+  }
+  if (doc["encoder"]["rules"]) {
+    use_rule_based_encoder = true;
+  }
+  else {
+    use_rule_based_encoder = false;
   }
   DiscoverTables(this, doc);
   DiscoverColumns(this, doc);
