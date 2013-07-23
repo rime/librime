@@ -270,6 +270,9 @@ bool TableEncoder::DfsEncode(const std::string& phrase,
   std::vector<std::string> translations;
   if (collector_->TranslateWord(word, &translations)) {
     BOOST_FOREACH(const std::string& x, translations) {
+      if (IsCodeExcluded(x)) {
+        continue;
+      }
       code->push_back(x);
       bool ok = DfsEncode(phrase, value, start_pos + word_len, code);
       ret = ret || ok;
