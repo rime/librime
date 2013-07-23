@@ -60,11 +60,9 @@ TEST(RimeEncoderTest, ExcludePatterns) {
 TEST(RimeEncoderTest, Encode) {
   rime::TableEncoder encoder;
   rime::Config config;
-  std::vector<std::string> c0, c1;
-  c0.push_back("abc");
-  c0.push_back("def");
-  c1 = c0;
-  c1.push_back("ghi");
+  rime::RawCode c0, c1;
+  c0.FromString("abc def");
+  c1.FromString("abc def ghi");
   std::string result;
   // case 1
   config["encoder"]["rules"][0]["length_equal"] = 2;
@@ -111,10 +109,8 @@ TEST(RimeEncoderTest, TailAnchor) {
   rime::Config config;
   config["encoder"]["rules"][0]["length_equal"] = 3;
   config["encoder"]["tail_anchor"] = "'";
-  std::vector<std::string> c;
-  c.push_back("zyx'wvu'tsr");
-  c.push_back("qpo'nmlk'jih");
-  c.push_back("gfedcba");
+  rime::RawCode c;
+  c.FromString("zyx'wvu'tsr qpo'nmlk'jih gfedcba");
   std::string result;
   // case 1
   config["encoder"]["rules"][0]["formula"] = "AaAzBaBzCaCz";

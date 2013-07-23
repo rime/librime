@@ -6,6 +6,7 @@
 //
 #include <gtest/gtest.h>
 #include <rime/common.h>
+#include <rime/algo/encoder.h>
 #include <rime/algo/syllabifier.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
@@ -49,7 +50,7 @@ TEST_F(RimeDictionaryTest, SimpleLookup) {
   ASSERT_FALSE(it.exhausted());
   EXPECT_EQ("\xe4\xb8\xad", it.Peek()->text);  // 中
   ASSERT_EQ(1, it.Peek()->code.size());
-  rime::dictionary::RawCode raw_code;
+  rime::RawCode raw_code;
   ASSERT_TRUE(dict_->Decode(it.Peek()->code, &raw_code));
   EXPECT_EQ("zhong", raw_code.ToString());
 }
@@ -61,7 +62,7 @@ TEST_F(RimeDictionaryTest, PredictiveLookup) {
   ASSERT_FALSE(it.exhausted());
   EXPECT_EQ("\xe5\x92\x8b", it.Peek()->text);  // 咋
   ASSERT_EQ(1, it.Peek()->code.size());
-  rime::dictionary::RawCode raw_code;
+  rime::RawCode raw_code;
   ASSERT_TRUE(dict_->Decode(it.Peek()->code, &raw_code));
   EXPECT_EQ("za", raw_code.ToString());
 }

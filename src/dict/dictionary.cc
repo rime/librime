@@ -4,7 +4,6 @@
 //
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <rime/common.h>
@@ -16,17 +15,6 @@
 namespace rime {
 
 namespace dictionary {
-
-std::string RawCode::ToString() const {
-  return boost::join(*this, " ");
-}
-
-void RawCode::FromString(const std::string &code) {
-  boost::split(*dynamic_cast<std::vector<std::string> *>(this),
-               code,
-               boost::algorithm::is_space(),
-               boost::algorithm::token_compress_on);
-}
 
 bool compare_chunk_by_head_element(const Chunk &a, const Chunk &b) {
   if (!a.entries || a.cursor >= a.size) return false;
@@ -236,7 +224,7 @@ size_t Dictionary::LookupWords(DictEntryIterator *result,
   return keys.size();
 }
 
-bool Dictionary::Decode(const Code &code, dictionary::RawCode *result) {
+bool Dictionary::Decode(const Code &code, std::vector<std::string>* result) {
   if (!result || !table_)
     return false;
   result->clear();
@@ -263,11 +251,11 @@ bool Dictionary::Remove() {
 
 bool Dictionary::Load() {
   LOG(INFO) << "loading dictionary '" << name_ << "'.";
-  if (!table_ || !table_->IsOpen() && !table_->Load()) {
+  if (!table_ || (!table_->IsOpen() && !table_->Load())) {
     LOG(ERROR) << "Error loading table for dictionary '" << name_ << "'.";
     return false;
   }
-  if (!prism_ || !prism_->IsOpen() && !prism_->Load()) {
+  if (!prism_ || (!prism_->IsOpen() && !prism_->Load())) {
     LOG(ERROR) << "Error loading prism for dictionary '" << name_ << "'.";
     return false;
   }

@@ -19,6 +19,7 @@ struct DictSettings {
   std::string dict_version;
   std::string sort_order;
   bool use_preset_vocabulary;
+  bool use_rule_based_encoder;
   int max_phrase_length;
   double min_phrase_weight;
   std::vector<std::string> tables;

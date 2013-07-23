@@ -19,42 +19,59 @@
 
 namespace rime {
 
+struct RawDictEntry {
+  RawCode raw_code;
+  std::string text;
+  double weight;
+};
+
+typedef std::map<std::string/* code */, double/* weight */> WeightMap;
+typedef std::map<std::string/* word */, WeightMap> WordMap;
+typedef std::map<std::string/* word */,
+                 std::set<std::string/* stem */> > StemMap;
+
+typedef std::queue<std::pair<std::string/* word */,
+                             std::string/* weight */> > EncodeQueue;
+
 class PresetVocabulary;
 struct DictSettings;
 
-struct EntryCollector {
-  scoped_ptr<PresetVocabulary> preset_vocabulary;
+class EntryCollector : public PhraseCollector {
+ public:
   Syllabary syllabary;
-  std::vector<dictionary::RawDictEntry> entries;
+  std::vector<RawDictEntry> entries;
   size_t num_entries;
-  typedef std::queue<std::pair<std::string/* word */,
-                               std::string/* weight */> > EncodeQueue;
-  EncodeQueue encode_queue;
-  typedef std::map<std::string, double> WeightMap;
-  std::map<std::string, WeightMap> words;
-  WeightMap total_weight_for_word;
-  std::set<std::string> collection;
-  typedef std::map<std::string/* word + code */,
-                   std::string/* stem */> StemIndex;
-  StemIndex stem_index;
-  TableEncoder encoder;
 
+ public:
   EntryCollector();
   ~EntryCollector();
+
+  void Configure(const DictSettings& settings);
+  void Collect(const std::vector<std::string>& dict_files);
+
+  // export contents of table and prism to text files
+  void Dump(const std::string& file_name) const;
+
+  void CreateEntry(const std::string &word,
+                   const std::string &code_str,
+                   const std::string &weight_str);
+  bool TranslateWord(const std::string& word,
+                     std::vector<std::string>* code);
+ protected:
   void LoadPresetVocabulary(const DictSettings* settings);
   // call Collect() multiple times for all required tables
   void Collect(const std::string &dict_file);
   // encode all collected entries
   void Finish();
-  // export contents of table and prism to text files
-  void Dump(const std::string& file_name) const;
 
  protected:
-  void CreateEntry(const std::string &word,
-                   const std::string &code_str,
-                   const std::string &weight_str);
-  bool Encode(const std::string &phrase, const std::string &weight_str,
-              size_t start_pos, dictionary::RawCode *code);
+  scoped_ptr<PresetVocabulary> preset_vocabulary;
+  scoped_ptr<Encoder> encoder;
+  EncodeQueue encode_queue;
+  std::set<std::string/* word */> collection;
+  WordMap words;
+  WeightMap total_weight;
+  StemMap stems;
 };
 
 }  // namespace rime

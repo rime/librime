@@ -15,21 +15,40 @@
 
 namespace rime {
 
-/*
-# sample encoder configuration (from cangjie5.dict.yaml)
-encoder:
-  exclude_patterns:
-  - '^x.*$'
-  - '^z.*$'
-  rules:
-  - length_equal: 2
-    formula: "AaAzBaBbBz"
-  - length_equal: 3
-    formula: "AaAzBaBzCz"
-  - length_in_range: [4, 10]
-    formula: "AaBzCaYzZz"
-  tail_anchor: "'"
-*/
+class RawCode : public std::vector<std::string> {
+ public:
+  std::string ToString() const;
+  void FromString(const std::string &code_str);
+};
+
+class PhraseCollector {
+ public:
+  PhraseCollector() {}
+  virtual ~PhraseCollector() {}
+
+  virtual void CreateEntry(const std::string& phrase,
+                           const std::string& code_str,
+                           const std::string& value) = 0;
+  // return a list of alternative code for the given word
+  virtual bool TranslateWord(const std::string& word,
+                             std::vector<std::string>* code) = 0;
+};
+
+class Encoder {
+ public:
+  Encoder(PhraseCollector* collector) : collector_(collector) {}
+  virtual ~Encoder() {}
+
+  virtual bool LoadSettings(const std::string& filename) {
+    return false;
+  }
+
+  virtual bool EncodePhrase(const std::string& phrase,
+                            const std::string& value) = 0;
+
+ protected:
+  PhraseCollector* collector_;
+};
 
 // Aa : code at index 0 for character at index 0
 // Az : code at index -1 for character at index 0
@@ -47,14 +66,16 @@ struct TableEncodingRule {
 
 class Config;
 
-class TableEncoder {
+// for rule-based phrase encoding
+class TableEncoder : public Encoder {
  public:
-  TableEncoder();
+  TableEncoder(PhraseCollector* collector = NULL);
 
   void LoadSettings(Config* config);
-  bool LoadFromFile(const std::string& filename);
+  bool LoadSettings(const std::string& filename);
 
-  bool Encode(const std::vector<std::string>& code, std::string* result);
+  bool Encode(const RawCode& code, std::string* result);
+  bool EncodePhrase(const std::string& phrase, const std::string& value);
 
   bool IsCodeExcluded(const std::string& code);
 
@@ -66,20 +87,27 @@ class TableEncoder {
 
  protected:
   bool ParseFormula(const std::string& formula, TableEncodingRule* rule);
-  // index: 0-based virtual index of encoding characters in `code`.
-  //        counting from the end of `code` if `index` is negative.
-  //        tail anchors do not count as encoding characters.
-  // start: when `index` is negative, the first appearance of a tail anchor
-  //        beyond `start` is used to locate the encoding character at index -1.
-  // returns string index in `code` for the character at virtual `index`.
-  // may return a negative number if `index` does not exist in `code`.
   int CalculateCodeIndex(const std::string& code, int index, int start);
+  bool DfsEncode(const std::string& phrase, const std::string& value,
+                 size_t start_pos, RawCode* code);
 
   bool loaded_;
   // settings
   std::vector<TableEncodingRule> encoding_rules_;
   std::vector<boost::regex> exclude_patterns_;
   std::string tail_anchor_;
+};
+
+// for syllable-based phrase encoding
+class ScriptEncoder : public Encoder {
+ public:
+  ScriptEncoder(PhraseCollector* collector);
+
+  bool EncodePhrase(const std::string& phrase, const std::string& value);
+
+ private:
+  bool DfsEncode(const std::string& phrase, const std::string& value,
+                 size_t start_pos, RawCode* code);
 };
 
 }  // namespace rime

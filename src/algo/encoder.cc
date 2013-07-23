@@ -4,15 +4,44 @@
 //
 // 2013-07-17 GONG Chen <chen.sst@gmail.com>
 //
+#include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
+#include <utf8.h>
 #include <rime/config.h>
 #include <rime/algo/encoder.h>
 
 namespace rime {
 
-TableEncoder::TableEncoder() : loaded_(false) {
+std::string RawCode::ToString() const {
+  return boost::join(*this, " ");
 }
 
+void RawCode::FromString(const std::string &code_str) {
+  boost::split(*dynamic_cast<std::vector<std::string> *>(this),
+               code_str,
+               boost::algorithm::is_space(),
+               boost::algorithm::token_compress_on);
+}
+
+TableEncoder::TableEncoder(PhraseCollector* collector)
+    : Encoder(collector), loaded_(false) {
+}
+
+/*
+  # sample encoder configuration (from cangjie5.dict.yaml)
+  encoder:
+  exclude_patterns:
+  - '^x.*$'
+  - '^z.*$'
+  rules:
+  - length_equal: 2
+  formula: "AaAzBaBbBz"
+  - length_equal: 3
+  formula: "AaAzBaBzCz"
+  - length_in_range: [4, 10]
+  formula: "AaBzCaYzZz"
+  tail_anchor: "'"
+*/
 void TableEncoder::LoadSettings(Config* config) {
   loaded_ = false;
   encoding_rules_.clear();
@@ -65,7 +94,7 @@ void TableEncoder::LoadSettings(Config* config) {
   config->GetString("encoder/tail_anchor", &tail_anchor_);
 }
 
-bool TableEncoder::LoadFromFile(const std::string& filename) {
+bool TableEncoder::LoadSettings(const std::string& filename) {
   Config config;
   if (!config.LoadFromFile(filename)) {
     return false;
@@ -108,8 +137,7 @@ bool TableEncoder::IsCodeExcluded(const std::string& code) {
   return false;
 }
 
-bool TableEncoder::Encode(const std::vector<std::string>& code,
-                          std::string* result) {
+bool TableEncoder::Encode(const RawCode& code, std::string* result) {
   int num_syllables = static_cast<int>(code.size());
   BOOST_FOREACH(const TableEncodingRule& rule, encoding_rules_) {
     if (num_syllables < rule.min_word_length ||
@@ -169,6 +197,13 @@ bool TableEncoder::Encode(const std::vector<std::string>& code,
   return false;
 }
 
+// index: 0-based virtual index of encoding characters in `code`.
+//        counting from the end of `code` if `index` is negative.
+//        tail anchors do not count as encoding characters.
+// start: when `index` is negative, the first appearance of a tail anchor
+//        beyond `start` is used to locate the encoding character at index -1.
+// returns string index in `code` for the character at virtual `index`.
+// may return a negative number if `index` does not exist in `code`.
 int TableEncoder::CalculateCodeIndex(const std::string& code, int index,
                                      int start) {
   DLOG(INFO) << "code = " << code
@@ -200,6 +235,82 @@ int TableEncoder::CalculateCodeIndex(const std::string& code, int index,
     }
   }
   return k;
+}
+
+bool TableEncoder::EncodePhrase(const std::string& phrase,
+                                const std::string& value) {
+  RawCode code;
+  return DfsEncode(phrase, value, 0, &code);
+}
+
+bool TableEncoder::DfsEncode(const std::string& phrase,
+                             const std::string& value,
+                             size_t start_pos,
+                             RawCode* code) {
+  if (start_pos == phrase.length()) {
+    std::string encoded;
+    if (Encode(*code, &encoded)) {
+      DLOG(INFO) << "encode '" << phrase << "': "
+                 << "[" << code->ToString() << "] -> [" << encoded << "]";
+      collector_->CreateEntry(phrase, encoded, value);
+      return true;
+    }
+    else {
+      LOG(WARNING) << "failed to encode '" << phrase << "': "
+                   << "[" << code->ToString() << "]";
+      return false;
+    }
+  }
+  const char* word_start = phrase.c_str() + start_pos;
+  const char* word_end = word_start;
+  utf8::unchecked::next(word_end);
+  size_t word_len = word_end - word_start;
+  std::string word(word_start, word_len);
+  bool ret = false;
+  std::vector<std::string> translations;
+  if (collector_->TranslateWord(word, &translations)) {
+    BOOST_FOREACH(const std::string& x, translations) {
+      code->push_back(x);
+      bool ok = DfsEncode(phrase, value, start_pos + word_len, code);
+      ret = ret || ok;
+      code->pop_back();
+    }
+  }
+  return ret;
+}
+
+ScriptEncoder::ScriptEncoder(PhraseCollector* collector)
+    : Encoder(collector) {
+}
+
+bool ScriptEncoder::EncodePhrase(const std::string& phrase,
+                                 const std::string& value) {
+  RawCode code;
+  return DfsEncode(phrase, value, 0, &code);
+}
+
+bool ScriptEncoder::DfsEncode(const std::string& phrase,
+                              const std::string& value,
+                              size_t start_pos,
+                              RawCode* code) {
+  if (start_pos == phrase.length()) {
+    collector_->CreateEntry(phrase, code->ToString(), value);
+    return true;
+  }
+  bool ret = false;
+  for (size_t k = phrase.length() - start_pos; k > 0; --k) {
+    std::string word(phrase.substr(start_pos, k));
+    std::vector<std::string> translations;
+    if (collector_->TranslateWord(word, &translations)) {
+      BOOST_FOREACH(const std::string& x, translations) {
+        code->push_back(x);
+        bool ok = DfsEncode(phrase, value, start_pos + k, code);
+        ret = ret || ok;
+        code->pop_back();
+      }
+    }
+  }
+  return ret;
 }
 
 }  // namespace rime
