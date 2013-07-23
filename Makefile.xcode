@@ -12,7 +12,7 @@ release:
 
 debug:
 	mkdir -p xdebug
-	cd xdebug; cmake -G Xcode .. -DBUILD_STATIC=ON $(THIRDPARTY_PATHS)
+	cd xdebug; cmake -G Xcode .. -DBUILD_STATIC=ON $(THIRDPARTY_PATHS) -DBUILD_TEST=ON
 	cd xdebug; xcodebuild -project rime.xcodeproj -configuration Debug build | grep -v setenv | tee build.log
 	@echo 'built librime for testing and debugging with command line tools.'
 

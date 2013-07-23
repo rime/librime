@@ -112,18 +112,13 @@ std::string DictCompiler::FindDictFile(const std::string& dict_name) {
   return dict_file;
 }
 
-bool DictCompiler::BuildTable(const DictSettings &settings,
-                              const std::vector<std::string> &dict_files,
+bool DictCompiler::BuildTable(const DictSettings& settings,
+                              const std::vector<std::string>& dict_files,
                               uint32_t dict_file_checksum) {
   LOG(INFO) << "building table...";
   EntryCollector collector;
-  if (settings.use_preset_vocabulary) {
-    collector.LoadPresetVocabulary(&settings);
-  }
-  BOOST_FOREACH(const std::string& dict_file, dict_files) {
-    collector.Collect(dict_file);
-  }
-  collector.Finish();
+  collector.Configure(settings);
+  collector.Collect(dict_files);
   if (options_ & kDump) {
     boost::filesystem::path path(table_->file_name());
     path.replace_extension(".txt");
@@ -137,7 +132,7 @@ bool DictCompiler::BuildTable(const DictSettings &settings,
       syllable_to_id[s] = syllable_id++;
     }
     Vocabulary vocabulary;
-    BOOST_FOREACH(dictionary::RawDictEntry &r, collector.entries) {
+    BOOST_FOREACH(RawDictEntry &r, collector.entries) {
       Code code;
       BOOST_FOREACH(const std::string &s, r.raw_code) {
         code.push_back(syllable_to_id[s]);

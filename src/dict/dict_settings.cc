@@ -20,6 +20,13 @@ DictSettings::DictSettings()
 {
 }
 
+int DictSettings::GetColumnIndex(const std::string& column_label) const {
+  std::map<std::string, int>::const_iterator it = columns.find(column_label);
+  if (it == columns.end())
+    return -1;
+  return it->second;
+}
+
 bool DictSettings::LoadFromFile(const std::string& dict_file) {
   YAML::Node doc = YAML::LoadFile(dict_file);
   if (doc.Type() != YAML::NodeType::Map) {
@@ -69,16 +76,17 @@ static void DiscoverColumns(DictSettings* settings, const YAML::Node& doc) {
   YAML::Node columns = doc["columns"];
   if (columns) {
     // user defined column order
+    int i = 0;
     for (YAML::const_iterator it = columns.begin(); it != columns.end(); ++it) {
       std::string column_label = it->as<std::string>();
-      settings->columns.push_back(column_label);
+      settings->columns[column_label] = i++;
     }
   }
   else {
     // default
-    //settings->columns.push_back("text");
-    //settings->columns.push_back("code");
-    //settings->columns.push_back("weight");
+    settings->columns["text"] = 0;
+    settings->columns["code"] = 1;
+    settings->columns["weight"] = 2;
   }
 }
 

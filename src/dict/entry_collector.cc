@@ -21,6 +21,28 @@ EntryCollector::EntryCollector()
 EntryCollector::~EntryCollector() {
 }
 
+void EntryCollector::Configure(const DictSettings& settings) {
+  if (settings.use_preset_vocabulary) {
+    LoadPresetVocabulary(&settings);
+  }
+  if (settings.use_rule_based_encoder) {
+    encoder.reset(new TableEncoder(this));
+  }
+  else {
+    encoder.reset(new ScriptEncoder(this));
+  }
+}
+
+void EntryCollector::Collect(const std::vector<std::string>& dict_files) {
+  if (encoder && !dict_files.empty()) {
+    encoder->LoadSettings(dict_files[0]);
+  }
+  BOOST_FOREACH(const std::string& dict_file, dict_files) {
+    Collect(dict_file);
+  }
+  Finish();
+}
+
 void EntryCollector::LoadPresetVocabulary(const DictSettings* settings) {
   LOG(INFO) << "loading preset vocabulary.";
   preset_vocabulary.reset(PresetVocabulary::Create());
@@ -34,6 +56,21 @@ void EntryCollector::LoadPresetVocabulary(const DictSettings* settings) {
 
 void EntryCollector::Collect(const std::string &dict_file) {
   LOG(INFO) << "collecting entries from " << dict_file;
+  // read column definitions
+  DictSettings settings;
+  if (!settings.LoadFromFile(dict_file)) {
+    LOG(ERROR) << "missing dict settings.";
+    return;
+  }
+  int text_column = settings.GetColumnIndex("text");
+  int code_column = settings.GetColumnIndex("code");
+  int weight_column = settings.GetColumnIndex("weight");
+  int stem_column = settings.GetColumnIndex("stem");
+  if (text_column == -1) {
+    LOG(ERROR) << "missing text column definition.";
+    return;
+  }
+  // read table
   std::ifstream fin(dict_file.c_str());
   std::string line;
   bool in_yaml_doc = true;
@@ -58,23 +95,36 @@ void EntryCollector::Collect(const std::string &dict_file) {
     std::vector<std::string> row;
     boost::algorithm::split(row, line,
                             boost::algorithm::is_any_of("\t"));
-    if (row.size() == 0 || row[0].empty()) {
+    int num_columns = static_cast<int>(row.size());
+    if (num_columns <= text_column || row[text_column].empty()) {
       LOG(WARNING) << "Missing entry text at #" << num_entries << ".";
       continue;
     }
-    std::string &word(row[0]);
+    std::string &word(row[text_column]);
     std::string code_str;
     std::string weight_str;
-    if (row.size() > 1 && !row[1].empty())
-      code_str = row[1];
-    if (row.size() > 2 && !row[2].empty())
-      weight_str = row[2];
+    std::string stem_str;
+    if (code_column != -1 &&
+        num_columns > code_column && !row[code_column].empty())
+      code_str = row[code_column];
+    if (weight_column != -1 &&
+        num_columns > weight_column && !row[weight_column].empty())
+      weight_str = row[weight_column];
+    if (stem_column != -1 &&
+        num_columns > stem_column && !row[stem_column].empty())
+      stem_str = row[stem_column];
+    // collect entry
     collection.insert(word);
     if (!code_str.empty()) {
       CreateEntry(word, code_str, weight_str);
     }
     else {
       encode_queue.push(std::make_pair(word, weight_str));
+    }
+    if (!stem_str.empty() && !code_str.empty()) {
+      DLOG(INFO) << "add stem '" << word << "': "
+                 << "[" << code_str << "] = [" << stem_str << "]";
+      stems[word].insert(stem_str);
     }
   }
   LOG(INFO) << "Pass 1: total " << num_entries << " entries collected.";
@@ -83,12 +133,10 @@ void EntryCollector::Collect(const std::string &dict_file) {
 }
 
 void EntryCollector::Finish() {
-  dictionary::RawCode code;
   while (!encode_queue.empty()) {
     const std::string &phrase(encode_queue.front().first);
     const std::string &weight_str(encode_queue.front().second);
-    code.clear();
-    if (!Encode(phrase, weight_str, 0, &code)) {
+    if (!encoder->EncodePhrase(phrase, weight_str)) {
       LOG(ERROR) << "Encode failure: '" << phrase << "'.";
     }
     encode_queue.pop();
@@ -100,8 +148,7 @@ void EntryCollector::Finish() {
     while (preset_vocabulary->GetNextEntry(&phrase, &weight_str)) {
       if (collection.find(phrase) != collection.end())
         continue;
-      code.clear();
-      if (!Encode(phrase, weight_str, 0, &code)) {
+      if (!encoder->EncodePhrase(phrase, weight_str)) {
         LOG(WARNING) << "Encode failure: '" << phrase << "'.";
       }
     }
@@ -112,7 +159,8 @@ void EntryCollector::Finish() {
 void EntryCollector::CreateEntry(const std::string &word,
                                  const std::string &code_str,
                                  const std::string &weight_str) {
-  dictionary::RawDictEntry e;
+  RawDictEntry e;
+  e.raw_code.FromString(code_str);
   e.text = word;
   e.weight = 0.0;
   bool scaled = boost::ends_with(weight_str, "%");
@@ -122,7 +170,8 @@ void EntryCollector::CreateEntry(const std::string &word,
   if (scaled) {
     double percentage = 100.0;
     try {
-      percentage = boost::lexical_cast<double>(weight_str.substr(0, weight_str.length() - 1));
+      percentage = boost::lexical_cast<double>(
+          weight_str.substr(0, weight_str.length() - 1));
     }
     catch (...) {
       LOG(WARNING) << "invalid entry definition at #" << num_entries << ".";
@@ -139,47 +188,47 @@ void EntryCollector::CreateEntry(const std::string &word,
       e.weight = 0.0;
     }
   }
-  e.raw_code.FromString(code_str);
   // learn new syllables
   BOOST_FOREACH(const std::string &s, e.raw_code) {
     if (syllabary.find(s) == syllabary.end())
       syllabary.insert(s);
   }
   // learn new word
-  if (e.raw_code.size() == 1) {
+  bool is_word = (e.raw_code.size() == 1);
+  if (is_word) {
     if (words[e.text].find(code_str) != words[e.text].end()) {
-      LOG(WARNING) << "duplicate word definition '" << e.text << "': [" << code_str << "].";
+      LOG(WARNING) << "duplicate word definition '"
+                   << e.text << "': [" << code_str << "].";
+      return;
     }
     words[e.text][code_str] += e.weight;
-    total_weight_for_word[e.text] += e.weight;
+    total_weight[e.text] += e.weight;
   }
   entries.push_back(e);
   ++num_entries;
 }
 
-bool EntryCollector::Encode(const std::string &phrase, const std::string &weight_str,
-                            size_t start_pos, dictionary::RawCode *code) {
-  const double kMinimalWeightProportionForWordMaking = 0.05;
-  if (start_pos == phrase.length()) {
-    CreateEntry(phrase, code->ToString(), weight_str);
+bool EntryCollector::TranslateWord(const std::string& word,
+                                   std::vector<std::string>* result) {
+  StemMap::const_iterator s = stems.find(word);
+  if (s != stems.end()) {
+    BOOST_FOREACH(const std::string& stem, s->second) {
+      result->push_back(stem);
+    }
     return true;
   }
-  bool ret = false;
-  for (size_t k = phrase.length() - start_pos; k > 0; --k) {
-    std::string w(phrase.substr(start_pos, k));
-    if (words.find(w) != words.end()) {
-      BOOST_FOREACH(const WeightMap::value_type &v, words[w]) {
-        double min_weight = total_weight_for_word[w] * kMinimalWeightProportionForWordMaking;
-        if (v.second < min_weight)
-          continue;
-        code->push_back(v.first);
-        bool ok = Encode(phrase, weight_str, start_pos + k, code);
-        ret = ret || ok;
-        code->pop_back();
-      }
+  WordMap::const_iterator w = words.find(word);
+  if (w != words.end()) {
+    BOOST_FOREACH(const WeightMap::value_type& v, w->second) {
+      const double kMinimalWeight = 0.05;  // 5%
+      double min_weight = total_weight[word] * kMinimalWeight;
+      if (v.second < min_weight)
+        continue;
+      result->push_back(v.first);
     }
+    return true;
   }
-  return ret;
+  return false;
 }
 
 void EntryCollector::Dump(const std::string& file_name) const {
@@ -189,7 +238,7 @@ void EntryCollector::Dump(const std::string& file_name) const {
     out << "# - " << syllable << std::endl;
   }
   out << std::endl;
-  BOOST_FOREACH(const dictionary::RawDictEntry &e, entries) {
+  BOOST_FOREACH(const RawDictEntry &e, entries) {
     out << e.text << '\t'
         << e.raw_code.ToString() << '\t'
         << e.weight << std::endl;

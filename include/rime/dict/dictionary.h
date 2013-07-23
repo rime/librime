@@ -21,18 +21,6 @@ namespace rime {
 
 namespace dictionary {
 
-class RawCode : public std::vector<std::string> {
- public:
-  std::string ToString() const;
-  void FromString(const std::string &str_code);
-};
-
-struct RawDictEntry {
-  RawCode raw_code;
-  std::string text;
-  double weight;
-};
-
 struct Chunk {
   Code code;
   const table::Entry *entries;
@@ -106,7 +94,7 @@ class Dictionary : public Class<Dictionary, const Ticket&> {
                      const std::string &str_code,
                      bool predictive, size_t limit = 0);
   // translate syllable id sequence to string code
-  bool Decode(const Code &code, dictionary::RawCode *result);
+  bool Decode(const Code &code, std::vector<std::string>* result);
 
   const std::string& name() const { return name_; }
   bool loaded() const;

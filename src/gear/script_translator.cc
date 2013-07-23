@@ -162,7 +162,7 @@ std::string ScriptTranslator::FormatPreedit(const std::string& preedit) {
 
 std::string ScriptTranslator::Spell(const Code &code) {
   std::string result;
-  dictionary::RawCode syllables;
+  std::vector<std::string> syllables;
   if (!dict_ || !dict_->Decode(code, &syllables) || syllables.empty())
     return result;
   result =  boost::algorithm::join(syllables,
