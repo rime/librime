@@ -289,8 +289,8 @@ class SentenceTranslation : public Translation {
                       UserDictEntryCollector* user_phrase_collector,
                       const std::string& input,
                       size_t start);
-  bool Next();
-  shared_ptr<Candidate> Peek();
+  virtual bool Next();
+  virtual shared_ptr<Candidate> Peek();
 
  protected:
   void PrepareSentence();
@@ -304,6 +304,18 @@ class SentenceTranslation : public Translation {
   size_t user_phrase_index_;
   std::string input_;
   size_t start_;
+};
+
+class SentenceSyllabification : public Syllabification {
+ public:
+  SentenceSyllabification(shared_ptr<Sentence> sentence)
+      : syllabified_(sentence) {
+  }
+  virtual size_t PreviousStop(size_t caret_pos) const;
+  virtual size_t NextStop(size_t caret_pos) const;
+
+ protected:
+  shared_ptr<Sentence> syllabified_;
 };
 
 SentenceTranslation::SentenceTranslation(TableTranslator* translator,
@@ -380,6 +392,8 @@ void SentenceTranslation::PrepareSentence() {
   if (!sentence_) return;
   sentence_->Offset(start_);
   sentence_->set_comment(kUnityTableEncoder);
+  sentence_->set_syllabification(
+      make_shared<SentenceSyllabification>(sentence_));
 
   if (!translator_) return;
   std::string preedit(input_);
@@ -421,6 +435,32 @@ bool SentenceTranslation::PreferUserPhrase() const {
     return true;
   }
   return false;
+}
+
+size_t SentenceSyllabification::PreviousStop(size_t caret_pos) const {
+  if (syllabified_) {
+    size_t stop = syllabified_->start();
+    BOOST_FOREACH(size_t len, syllabified_->syllable_lengths()) {
+      if (stop + len >= caret_pos) {
+        return stop;
+      }
+      stop += len;
+    }
+  }
+  return caret_pos;
+}
+
+size_t SentenceSyllabification::NextStop(size_t caret_pos) const {
+  if (syllabified_) {
+    size_t stop = syllabified_->start();
+    BOOST_FOREACH(size_t len, syllabified_->syllable_lengths()) {
+      stop += len;
+      if (stop > caret_pos) {
+        return stop;
+      }
+    }
+  }
+  return caret_pos;
 }
 
 template <class Iter>
