@@ -248,9 +248,6 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
           iter,
           uter);
   }
-  if (translation && translation->exhausted()) {
-    translation.reset();  // discard futile translation
-  }
   if (translation) {
     bool filter_by_charset = enable_charset_filter_ &&
         !engine_->context()->get_option("extended_charset");
@@ -258,14 +255,17 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
       translation = make_shared<CharsetFilter>(translation);
     }
   }
-  if (enable_sentence_ && !translation) {
-    translation = MakeSentence(input, segment.start);
-  }
   if (translation && translation->exhausted()) {
     translation.reset();  // discard futile translation
   }
+  if (enable_sentence_ && !translation) {
+    translation = MakeSentence(input, segment.start);
+  }
   if (translation) {
     translation = make_shared<UniqueFilter>(translation);
+  }
+  if (translation && translation->exhausted()) {
+    translation.reset();  // discard futile translation
   }
   return translation;
 }
