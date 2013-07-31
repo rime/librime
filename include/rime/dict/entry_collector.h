@@ -34,7 +34,7 @@ typedef std::queue<std::pair<std::string/* word */,
                              std::string/* weight */> > EncodeQueue;
 
 class PresetVocabulary;
-struct DictSettings;
+class DictSettings;
 
 class EntryCollector : public PhraseCollector {
  public:
@@ -46,7 +46,7 @@ class EntryCollector : public PhraseCollector {
   EntryCollector();
   ~EntryCollector();
 
-  void Configure(const DictSettings& settings);
+  void Configure(DictSettings* settings);
   void Collect(const std::vector<std::string>& dict_files);
 
   // export contents of table and prism to text files
@@ -58,7 +58,7 @@ class EntryCollector : public PhraseCollector {
   bool TranslateWord(const std::string& word,
                      std::vector<std::string>* code);
  protected:
-  void LoadPresetVocabulary(const DictSettings* settings);
+  void LoadPresetVocabulary(DictSettings* settings);
   // call Collect() multiple times for all required tables
   void Collect(const std::string &dict_file);
   // encode all collected entries

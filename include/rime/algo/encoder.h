@@ -34,12 +34,14 @@ class PhraseCollector {
                              std::vector<std::string>* code) = 0;
 };
 
+class Config;
+
 class Encoder {
  public:
   Encoder(PhraseCollector* collector) : collector_(collector) {}
   virtual ~Encoder() {}
 
-  virtual bool LoadSettings(const std::string& filename) {
+  virtual bool LoadSettings(Config* config) {
     return false;
   }
 
@@ -64,15 +66,12 @@ struct TableEncodingRule {
   std::vector<CodeCoords> coords;
 };
 
-class Config;
-
 // for rule-based phrase encoding
 class TableEncoder : public Encoder {
  public:
   TableEncoder(PhraseCollector* collector = NULL);
 
-  void LoadSettings(Config* config);
-  bool LoadSettings(const std::string& filename);
+  bool LoadSettings(Config* config);
 
   bool Encode(const RawCode& code, std::string* result);
   bool EncodePhrase(const std::string& phrase, const std::string& value);

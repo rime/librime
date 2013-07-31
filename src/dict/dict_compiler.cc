@@ -36,14 +36,21 @@ bool DictCompiler::Compile(const std::string &schema_file) {
   std::string dict_file(FindDictFile(dict_name_));
   if (dict_file.empty())
     return false;
+  std::ifstream fin(dict_file.c_str());
   DictSettings settings;
-  if (!settings.LoadFromFile(dict_file))
+  if (!settings.LoadDictHeader(fin)) {
+    LOG(ERROR) << "failed to load settings from '" << dict_file << "'.";
     return false;
-  LOG(INFO) << "dict name: " << settings.dict_name;
-  LOG(INFO) << "dict version: " << settings.dict_version;
+  }
+  fin.close();
+  LOG(INFO) << "dict name: " << settings.dict_name();
+  LOG(INFO) << "dict version: " << settings.dict_version();
   std::vector<std::string> dict_files;
-  BOOST_FOREACH(const std::string& table, settings.tables) {
-    std::string dict_file(FindDictFile(table));
+  ConfigListPtr tables = settings.GetTables();
+  for(ConfigList::Iterator it = tables->begin(); it != tables->end(); ++it) {
+    if (!Is<ConfigValue>(*it))
+      continue;
+    std::string dict_file(FindDictFile(As<ConfigValue>(*it)->str()));
     if (dict_file.empty())
       return false;
     dict_files.push_back(dict_file);
@@ -92,7 +99,7 @@ bool DictCompiler::Compile(const std::string &schema_file) {
   if (options_ & kRebuildPrism) {
     rebuild_prism = true;
   }
-  if (rebuild_table && !BuildTable(settings, dict_files, dict_file_checksum))
+  if (rebuild_table && !BuildTable(&settings, dict_files, dict_file_checksum))
     return false;
   if (rebuild_prism && !BuildPrism(schema_file,
                                    dict_file_checksum, schema_file_checksum))
@@ -112,7 +119,7 @@ std::string DictCompiler::FindDictFile(const std::string& dict_name) {
   return dict_file;
 }
 
-bool DictCompiler::BuildTable(const DictSettings& settings,
+bool DictCompiler::BuildTable(DictSettings* settings,
                               const std::vector<std::string>& dict_files,
                               uint32_t dict_file_checksum) {
   LOG(INFO) << "building table...";
@@ -148,7 +155,7 @@ bool DictCompiler::BuildTable(const DictSettings& settings,
       e->weight = r.weight;
       ls->push_back(e);
     }
-    if (settings.sort_order != "original") {
+    if (settings->sort_order() != "original") {
       vocabulary.SortHomophones();
     }
     table_->Remove();

@@ -7,6 +7,7 @@
 #ifndef RIME_CONFIG_H_
 #define RIME_CONFIG_H_
 
+#include <istream>
 #include <map>
 #include <string>
 #include <boost/type_traits.hpp>
@@ -233,6 +234,7 @@ class Config : public Class<Config, const std::string&>, public ConfigItemRef {
   // that could be reloaded by ConfigComponent once notified changes to the file
   explicit Config(const std::string& file_name);
 
+  bool LoadFromStream(std::istream& stream);
   bool LoadFromFile(const std::string& file_name);
   bool SaveToFile(const std::string& file_name);
 

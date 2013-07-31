@@ -4,97 +4,101 @@
 //
 // 2012-11-11 GONG Chen <chen.sst@gmail.com>
 //
-#include <fstream>
-#include <yaml-cpp/yaml.h>
+#include <sstream>
+#include <boost/algorithm/string.hpp>
 #include <rime/dict/dict_settings.h>
 
 namespace rime {
 
-static void DiscoverTables(DictSettings* settings, const YAML::Node& doc);
-static void DiscoverColumns(DictSettings* settings, const YAML::Node& doc);
-
-DictSettings::DictSettings()
-    : use_preset_vocabulary(false)
-    , use_rule_based_encoder(false)
-    , max_phrase_length(0)
-    , min_phrase_weight(0)
-{
+DictSettings::DictSettings() {
 }
 
-int DictSettings::GetColumnIndex(const std::string& column_label) const {
-  std::map<std::string, int>::const_iterator it = columns.find(column_label);
-  if (it == columns.end())
-    return -1;
-  return it->second;
-}
-
-bool DictSettings::LoadFromFile(const std::string& dict_file) {
-  YAML::Node doc = YAML::LoadFile(dict_file);
-  if (doc.Type() != YAML::NodeType::Map) {
-    LOG(ERROR) << "invalid yaml doc in '" << dict_file << "'.";
+bool DictSettings::LoadDictHeader(std::istream& stream) {
+  if (!stream.good()) {
+    LOG(ERROR) << "failed to load dict header from stream.";
     return false;
   }
-  if (!doc["name"] || !doc["version"]) {
-    LOG(ERROR) << "incomplete dict info in '" << dict_file << "'.";
+  std::stringstream header;
+  std::string line;
+  while (getline(stream, line)) {
+    boost::algorithm::trim_right(line);
+    header << line << std::endl;
+    if (line == "...") {  // yaml doc ending
+      break;
+    }
+  }
+  if (!LoadFromStream(header)) {
     return false;
   }
-  dict_name = doc["name"].as<std::string>();
-  dict_version = doc["version"].as<std::string>();
-  if (doc["sort"]) {
-    sort_order = doc["sort"].as<std::string>();
+  if ((*this)["name"].IsNull() || (*this)["version"].IsNull()) {
+    LOG(ERROR) << "incomplete dict header.";
+    return false;
   }
-  if (doc["use_preset_vocabulary"]) {
-    use_preset_vocabulary = doc["use_preset_vocabulary"].as<bool>();
-    if (doc["max_phrase_length"])
-      max_phrase_length = doc["max_phrase_length"].as<int>();
-    if (doc["min_phrase_weight"])
-      min_phrase_weight = doc["min_phrase_weight"].as<double>();
-  }
-  if (doc["encoder"]["rules"]) {
-    use_rule_based_encoder = true;
-  }
-  else {
-    use_rule_based_encoder = false;
-  }
-  DiscoverTables(this, doc);
-  DiscoverColumns(this, doc);
   return true;
 }
 
-static void DiscoverTables(DictSettings* settings, const YAML::Node& doc) {
-  settings->tables.clear();
-  settings->tables.push_back(settings->dict_name);
-  YAML::Node imports = doc["import_tables"];
-  if (imports) {
-    for (YAML::const_iterator it = imports.begin(); it != imports.end(); ++it) {
-      std::string table = it->as<std::string>();
-      if (table == settings->dict_name) {
-        LOG(WARNING) << "cannot import '" << table << "' from itself.";
-        continue;
-      }
-      settings->tables.push_back(table);
-    }
-  }
+std::string DictSettings::dict_name() {
+  return (*this)["name"].ToString();
 }
 
-static void DiscoverColumns(DictSettings* settings, const YAML::Node& doc) {
-  if (!settings) return;
-  settings->columns.clear();
-  YAML::Node columns = doc["columns"];
-  if (columns) {
-    // user defined column order
-    int i = 0;
-    for (YAML::const_iterator it = columns.begin(); it != columns.end(); ++it) {
-      std::string column_label = it->as<std::string>();
-      settings->columns[column_label] = i++;
+std::string DictSettings::dict_version() {
+  return (*this)["version"].ToString();
+}
+
+std::string DictSettings::sort_order() {
+  return (*this)["sort"].ToString();
+}
+
+bool DictSettings::use_preset_vocabulary() {
+  return (*this)["use_preset_vocabulary"].ToBool();
+}
+
+bool DictSettings::use_rule_based_encoder() {
+  return (*this)["encoder"]["rules"].IsList();
+}
+
+int DictSettings::max_phrase_length() {
+  return (*this)["max_phrase_length"].ToInt();
+}
+
+double DictSettings::min_phrase_weight() {
+  return (*this)["min_phrase_weight"].ToDouble();
+}
+
+ConfigListPtr DictSettings::GetTables() {
+  ConfigListPtr tables = New<ConfigList>();
+  tables->Append((*this)["name"]);
+  ConfigListPtr imports = (*this)["import_tables"].AsList();
+  for (ConfigList::Iterator it = imports->begin(); it != imports->end(); ++it) {
+    if (!Is<ConfigValue>(*it))
+      continue;
+    std::string table(As<ConfigValue>(*it)->str());
+    if (table == dict_name()) {
+      LOG(WARNING) << "cannot import '" << table << "' from itself.";
+      continue;
+    }
+    tables->Append(*it);
+  }
+  return tables;
+}
+
+int DictSettings::GetColumnIndex(const std::string& column_label) {
+  if ((*this)["columns"].IsNull()) {
+    // default
+    if (column_label == "text") return 0;
+    if (column_label == "code") return 1;
+    if (column_label == "weight") return 2;
+    return -1;
+  }
+  ConfigListPtr columns = (*this)["columns"].AsList();
+  int index = 0;
+  for (ConfigList::Iterator it = columns->begin();
+       it != columns->end(); ++it, ++index) {
+    if (Is<ConfigValue>(*it) && As<ConfigValue>(*it)->str() == column_label) {
+      return index;
     }
   }
-  else {
-    // default
-    settings->columns["text"] = 0;
-    settings->columns["code"] = 1;
-    settings->columns["weight"] = 2;
-  }
+  return -1;
 }
 
 }  // namespace rime

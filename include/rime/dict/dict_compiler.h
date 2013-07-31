@@ -18,7 +18,7 @@ class Dictionary;
 class Prism;
 class Table;
 class ReverseDb;
-struct DictSettings;
+class DictSettings;
 
 // return found dict file path, otherwize return empty string
 typedef boost::function<const std::string (const std::string& file_name)>
@@ -41,10 +41,10 @@ class DictCompiler {
 
  private:
   std::string FindDictFile(const std::string& dict_name);
-  bool BuildTable(const DictSettings &settings,
-                  const std::vector<std::string> &dict_files,
+  bool BuildTable(DictSettings* settings,
+                  const std::vector<std::string>& dict_files,
                   uint32_t dict_file_checksum);
-  bool BuildPrism(const std::string &schema_file,
+  bool BuildPrism(const std::string& schema_file,
                   uint32_t dict_file_checksum, uint32_t schema_file_checksum);
   bool BuildReverseLookupDict(ReverseDb* db, uint32_t dict_file_checksum);
 

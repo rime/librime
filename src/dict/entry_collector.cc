@@ -21,47 +21,48 @@ EntryCollector::EntryCollector()
 EntryCollector::~EntryCollector() {
 }
 
-void EntryCollector::Configure(const DictSettings& settings) {
-  if (settings.use_preset_vocabulary) {
-    LoadPresetVocabulary(&settings);
+void EntryCollector::Configure(DictSettings* settings) {
+  if (settings->use_preset_vocabulary()) {
+    LoadPresetVocabulary(settings);
   }
-  if (settings.use_rule_based_encoder) {
+
+  if (settings->use_rule_based_encoder()) {
     encoder.reset(new TableEncoder(this));
   }
   else {
     encoder.reset(new ScriptEncoder(this));
   }
+  encoder->LoadSettings(settings);
 }
 
 void EntryCollector::Collect(const std::vector<std::string>& dict_files) {
-  if (encoder && !dict_files.empty()) {
-    encoder->LoadSettings(dict_files[0]);
-  }
   BOOST_FOREACH(const std::string& dict_file, dict_files) {
     Collect(dict_file);
   }
   Finish();
 }
 
-void EntryCollector::LoadPresetVocabulary(const DictSettings* settings) {
+void EntryCollector::LoadPresetVocabulary(DictSettings* settings) {
   LOG(INFO) << "loading preset vocabulary.";
   preset_vocabulary.reset(PresetVocabulary::Create());
   if (preset_vocabulary && settings) {
-    if (settings->max_phrase_length > 0)
-      preset_vocabulary->set_max_phrase_length(settings->max_phrase_length);
-    if (settings->min_phrase_weight > 0)
-      preset_vocabulary->set_min_phrase_weight(settings->min_phrase_weight);
+    if (settings->max_phrase_length() > 0)
+      preset_vocabulary->set_max_phrase_length(settings->max_phrase_length());
+    if (settings->min_phrase_weight() > 0)
+      preset_vocabulary->set_min_phrase_weight(settings->min_phrase_weight());
   }
 }
 
-void EntryCollector::Collect(const std::string &dict_file) {
+void EntryCollector::Collect(const std::string& dict_file) {
   LOG(INFO) << "collecting entries from " << dict_file;
-  // read column definitions
+  // read table
+  std::ifstream fin(dict_file.c_str());
   DictSettings settings;
-  if (!settings.LoadFromFile(dict_file)) {
+  if (!settings.LoadDictHeader(fin)) {
     LOG(ERROR) << "missing dict settings.";
     return;
   }
+  // column definitions
   int text_column = settings.GetColumnIndex("text");
   int code_column = settings.GetColumnIndex("code");
   int weight_column = settings.GetColumnIndex("weight");
@@ -70,18 +71,10 @@ void EntryCollector::Collect(const std::string &dict_file) {
     LOG(ERROR) << "missing text column definition.";
     return;
   }
-  // read table
-  std::ifstream fin(dict_file.c_str());
-  std::string line;
-  bool in_yaml_doc = true;
   bool enable_comment = true;
+  std::string line;
   while (getline(fin, line)) {
     boost::algorithm::trim_right(line);
-    // skip yaml doc
-    if (in_yaml_doc) {
-      if (line == "...") in_yaml_doc = false;
-      continue;
-    }
     // skip empty lines and comments
     if (line.empty()) continue;
     if (enable_comment && line[0] == '#') {
@@ -127,6 +120,7 @@ void EntryCollector::Collect(const std::string &dict_file) {
       stems[word].insert(stem_str);
     }
   }
+  fin.close();
   LOG(INFO) << "Pass 1: total " << num_entries << " entries collected.";
   LOG(INFO) << "num unique syllables: " << syllabary.size();
   LOG(INFO) << "num of entries to encode: " << encode_queue.size();

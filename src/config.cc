@@ -22,6 +22,7 @@ class ConfigData {
   ConfigData() : modified_(false) {}
   ~ConfigData();
 
+  bool LoadFromStream(std::istream& stream);
   bool LoadFromFile(const std::string& file_name);
   bool SaveToFile(const std::string& file_name);
   ConfigItemPtr Traverse(const std::string &key);
@@ -360,6 +361,10 @@ Config::Config(const std::string &file_name)
     : ConfigItemRef(ConfigDataManager::instance().GetConfigData(file_name)) {
 }
 
+bool Config::LoadFromStream(std::istream& stream) {
+  return data_->LoadFromStream(stream);
+}
+
 bool Config::LoadFromFile(const std::string& file_name) {
   return data_->LoadFromFile(file_name);
 }
@@ -540,6 +545,22 @@ bool ConfigDataManager::ReloadConfigData(const std::string &config_file_path) {
 ConfigData::~ConfigData() {
   if (modified_ && !file_name_.empty())
     SaveToFile(file_name_);
+}
+
+bool ConfigData::LoadFromStream(std::istream& stream) {
+  if (!stream.good()) {
+    LOG(ERROR) << "failed to load config from stream.";
+    return false;
+  }
+  try {
+    YAML::Node doc = YAML::Load(stream);
+    root = ConvertFromYaml(doc);
+  }
+  catch (YAML::Exception& e) {
+    LOG(ERROR) << "Error parsing YAML: " << e.what();
+    return false;
+  }
+  return true;
 }
 
 bool ConfigData::LoadFromFile(const std::string& file_name) {
