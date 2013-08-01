@@ -7,7 +7,7 @@
 #ifndef RIME_CONFIG_H_
 #define RIME_CONFIG_H_
 
-#include <istream>
+#include <iostream>
 #include <map>
 #include <string>
 #include <boost/type_traits.hpp>
@@ -235,6 +235,7 @@ class Config : public Class<Config, const std::string&>, public ConfigItemRef {
   explicit Config(const std::string& file_name);
 
   bool LoadFromStream(std::istream& stream);
+  bool SaveToStream(std::ostream& stream);
   bool LoadFromFile(const std::string& file_name);
   bool SaveToFile(const std::string& file_name);
 
