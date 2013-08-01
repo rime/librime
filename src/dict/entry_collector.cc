@@ -204,7 +204,7 @@ void EntryCollector::CreateEntry(const std::string &word,
 
 bool EntryCollector::TranslateWord(const std::string& word,
                                    std::vector<std::string>* result) {
-  StemMap::const_iterator s = stems.find(word);
+  ReverseLookupTable::const_iterator s = stems.find(word);
   if (s != stems.end()) {
     BOOST_FOREACH(const std::string& stem, s->second) {
       result->push_back(stem);

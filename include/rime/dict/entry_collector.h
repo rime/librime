@@ -25,13 +25,12 @@ struct RawDictEntry {
   double weight;
 };
 
-typedef std::map<std::string/* code */, double/* weight */> WeightMap;
-typedef std::map<std::string/* word */, WeightMap> WordMap;
-typedef std::map<std::string/* word */,
-                 std::set<std::string/* stem */> > StemMap;
-
-typedef std::queue<std::pair<std::string/* word */,
-                             std::string/* weight */> > EncodeQueue;
+// code -> weight
+typedef std::map<std::string, double> WeightMap;
+// word -> { code -> weight }
+typedef std::map<std::string, WeightMap> WordMap;
+// [ (word, weight), ... ]
+typedef std::queue<std::pair<std::string, std::string> > EncodeQueue;
 
 class PresetVocabulary;
 class DictSettings;
@@ -41,6 +40,7 @@ class EntryCollector : public PhraseCollector {
   Syllabary syllabary;
   std::vector<RawDictEntry> entries;
   size_t num_entries;
+  ReverseLookupTable stems;
 
  public:
   EntryCollector();
@@ -71,7 +71,6 @@ class EntryCollector : public PhraseCollector {
   std::set<std::string/* word */> collection;
   WordMap words;
   WeightMap total_weight;
-  StemMap stems;
 };
 
 }  // namespace rime

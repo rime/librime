@@ -61,6 +61,9 @@ class Vocabulary : public std::map<int, VocabularyPage> {
   void SortHomophones();
 };
 
+// word -> { code, ... }
+typedef std::map<std::string, std::set<std::string> > ReverseLookupTable;
+
 }  // namespace rime
 
 #endif  // RIME_VOCABULARY_H_
