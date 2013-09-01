@@ -17,6 +17,7 @@
 #include <rime/dict/user_dictionary.h>
 #include <rime/gear/table_translator.h>
 #include <rime/gear/translator_commons.h>
+#include <rime/gear/unity_table_encoder.h>
 
 static const char* kUnityTableEncoder = " \xe2\x98\xaf ";
 
@@ -201,6 +202,11 @@ TableTranslator::TableTranslator(const TranslatorTicket& ticket)
     config->GetBool(name_space_ + "/enable_sentence",
                     &enable_sentence_);
   }
+  if (user_dict_) {
+    unite_.reset(new UnityTableEncoder(user_dict_.get()));
+    Ticket ticket(engine_->schema(), name_space_);
+    unite_->Load(ticket);
+  }
 }
 
 shared_ptr<Translation> TableTranslator::Query(const std::string &input,
@@ -270,7 +276,12 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
   BOOST_FOREACH(const DictEntry* e, commit_entry.elements) {
     user_dict_->UpdateEntry(*e, 1);
   }
-  // TODO
+  if (unite_ && unite_->loaded()) {
+    // TODO: make new phrases out of commit history
+    if (commit_entry.elements.size() > 1) {
+      unite_->EncodePhrase(commit_entry.text, "1");
+    }
+  }
   return true;
 }
 

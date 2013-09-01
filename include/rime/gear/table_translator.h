@@ -20,6 +20,8 @@
 
 namespace rime {
 
+class UnityTableEncoder;
+
 class TableTranslator : public Translator,
                         public Memory,
                         public TranslatorOptions {
@@ -37,6 +39,7 @@ class TableTranslator : public Translator,
  protected:
   bool enable_charset_filter_;
   bool enable_sentence_;
+  scoped_ptr<UnityTableEncoder> unite_;
 };
 
 class TableTranslation : public Translation {
