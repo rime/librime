@@ -20,7 +20,7 @@ namespace rime {
 struct UserDictEntryCollector : std::map<size_t, DictEntryList> {
 };
 
-class UserDictEntryIterator {
+class UserDictEntryIterator : public DictEntryFilterManager {
  public:
   UserDictEntryIterator() : entries_(), index_(0) {}
 
@@ -66,7 +66,9 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
                      bool predictive,
                      size_t limit = 0,
                      std::string* resume_key = NULL);
-  bool UpdateEntry(const DictEntry &entry, int commits);
+  bool UpdateEntry(const DictEntry& entry, int commits);
+  bool UpdateEntry(const DictEntry& entry, int commits,
+                   const std::string& new_entry_prefix);
   bool UpdateTickCount(TickCount increment);
 
   bool NewTransaction();

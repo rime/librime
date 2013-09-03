@@ -71,7 +71,7 @@ shared_ptr<Candidate> CharsetFilter::Peek() {
 bool CharsetFilter::LocateNextCandidate() {
   while (!translation_->exhausted()) {
     shared_ptr<Candidate> cand = translation_->Peek();
-    if (cand && Passed(cand->text()))
+    if (cand && FilterText(cand->text()))
       return true;
     translation_->Next();
   }
@@ -79,7 +79,7 @@ bool CharsetFilter::LocateNextCandidate() {
   return false;
 }
 
-bool CharsetFilter::Passed(const std::string& text) {
+bool CharsetFilter::FilterText(const std::string& text) {
   const char* p = text.c_str();
   utf8::uint32_t c;
   while ((c = utf8::unchecked::next(p))) {
@@ -90,6 +90,10 @@ bool CharsetFilter::Passed(const std::string& text) {
       return false;
   }
   return true;
+}
+
+bool CharsetFilter::FilterDictEntry(shared_ptr<DictEntry> entry) {
+  return entry && FilterText(entry->text);
 }
 
 // UniqueFilter

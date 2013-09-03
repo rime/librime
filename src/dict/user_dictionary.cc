@@ -101,9 +101,15 @@ bool UserDictEntryIterator::Release(DictEntryList* receiver) {
 
 
 shared_ptr<DictEntry> UserDictEntryIterator::Peek() {
-  if (exhausted())
-    return shared_ptr<DictEntry>();
-  return (*entries_)[index_];
+  shared_ptr<DictEntry> result;
+  while (!result && !exhausted()) {
+    result = (*entries_)[index_];
+    if (filter_ && !filter_(result)) {
+      ++index_;
+      result.reset();
+    }
+  }
+  return result;
 }
 
 bool UserDictEntryIterator::Next() {
@@ -317,7 +323,12 @@ size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
   return count;
 }
 
-bool UserDictionary::UpdateEntry(const DictEntry &entry, int commits) {
+bool UserDictionary::UpdateEntry(const DictEntry& entry, int commits) {
+  return UpdateEntry(entry, commits, "");
+}
+
+bool UserDictionary::UpdateEntry(const DictEntry& entry, int commits,
+                                 const std::string& new_entry_prefix) {
   std::string code_str(entry.custom_code);
   if (code_str.empty() && !TranslateCodeToString(entry.code, &code_str))
     return false;
@@ -329,6 +340,9 @@ bool UserDictionary::UpdateEntry(const DictEntry &entry, int commits) {
     if (v.tick > tick_) {
       v.tick = tick_;  // fix abnormal timestamp
     }
+  }
+  else if (!new_entry_prefix.empty()) {
+    key.insert(0, new_entry_prefix);
   }
   if (commits > 0) {
     if (v.commits < 0)

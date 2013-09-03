@@ -12,6 +12,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <boost/function.hpp>
 #include <rime/common.h>
 
 namespace rime {
@@ -46,6 +47,16 @@ class DictEntryList : public std::vector<shared_ptr<DictEntry> > {
  public:
   void Sort();
   void SortN(size_t count);
+};
+
+typedef boost::function<bool (shared_ptr<DictEntry> entry)> DictEntryFilter;
+
+class DictEntryFilterManager {
+ public:
+  void AddFilter(DictEntryFilter filter);
+
+ protected:
+  DictEntryFilter filter_;
 };
 
 class Vocabulary;

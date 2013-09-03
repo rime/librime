@@ -29,6 +29,16 @@ class UnityTableEncoder : public PhraseCollector, public TableEncoder {
   bool TranslateWord(const std::string& word,
                      std::vector<std::string>* code);
 
+  size_t LookupPhrases(UserDictEntryIterator* result,
+                       const std::string& input,
+                       bool predictive,
+                       size_t limit = 0,
+                       std::string* resume_key = NULL);
+
+  static bool HasPrefix(const std::string& key);
+  static bool AddPrefix(std::string* key);
+  static bool RemovePrefix(std::string* key);
+
  protected:
   UserDictionary* user_dict_;
   scoped_ptr<ReverseLookupDictionary> rev_dict_;

@@ -44,7 +44,8 @@ bool compare_chunk_by_leading_element(const Chunk &a, const Chunk &b);
 
 }  // namespace dictionary
 
-class DictEntryIterator : protected std::list<dictionary::Chunk> {
+class DictEntryIterator : protected std::list<dictionary::Chunk>,
+                          public DictEntryFilterManager {
  public:
   typedef std::list<dictionary::Chunk> Base;
 
@@ -60,7 +61,10 @@ class DictEntryIterator : protected std::list<dictionary::Chunk> {
   bool exhausted() const;
   size_t entry_count() const { return entry_count_; }
 
-private:
+ protected:
+  void PrepareEntry();
+
+ private:
   shared_ptr<DictEntry> entry_;
   size_t entry_count_;
 };

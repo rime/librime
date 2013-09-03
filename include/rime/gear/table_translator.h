@@ -36,10 +36,12 @@ class TableTranslator : public Translator,
   shared_ptr<Translation> MakeSentence(const std::string &input,
                                        size_t start);
 
+  UnityTableEncoder* encoder() const { return encoder_.get(); }
+
  protected:
   bool enable_charset_filter_;
   bool enable_sentence_;
-  scoped_ptr<UnityTableEncoder> unite_;
+  scoped_ptr<UnityTableEncoder> encoder_;
 };
 
 class TableTranslation : public Translation {
