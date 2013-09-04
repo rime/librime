@@ -6,6 +6,7 @@
 //
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
+#include <utf8.h>
 #include <rime/candidate.h>
 #include <rime/composition.h>
 #include <rime/config.h>
@@ -309,7 +310,23 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
       encoder_->EncodePhrase(commit_entry.text, "1");
     }
     if (encode_commit_history_) {
-      // TODO
+      const CommitHistory& history(engine_->context()->commit_history());
+      if (!history.empty()) {
+        DLOG(INFO) << "history: " << history.repr();
+        CommitHistory::const_reverse_iterator it = history.rbegin();
+        std::string phrase = it->text;
+        for (++it; it != history.rend(); ++it) {
+          if (it->type != "table" && it->type != "sentence")
+            break;
+          size_t phrase_length = utf8::unchecked::distance(
+              phrase.c_str(), phrase.c_str() + phrase.length());
+          if (phrase_length >= max_phrase_length_)
+            break;
+          phrase = it->text + phrase;
+          DLOG(INFO) << "phrase: " << phrase;
+          encoder_->EncodePhrase(phrase, "0");
+        }
+      }
     }
   }
   return true;
