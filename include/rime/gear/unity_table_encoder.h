@@ -16,7 +16,7 @@ struct Ticket;
 class ReverseLookupDictionary;
 class UserDictionary;
 
-class UnityTableEncoder : public PhraseCollector, public TableEncoder {
+class UnityTableEncoder : public TableEncoder, public PhraseCollector {
  public:
   UnityTableEncoder(UserDictionary* user_dict);
   ~UnityTableEncoder();

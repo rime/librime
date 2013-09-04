@@ -48,6 +48,8 @@ class Encoder {
   virtual bool EncodePhrase(const std::string& phrase,
                             const std::string& value) = 0;
 
+  void set_collector(PhraseCollector* collector) { collector_ = collector; }
+
  protected:
   PhraseCollector* collector_;
 };
