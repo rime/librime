@@ -203,16 +203,24 @@ TableTranslator::TableTranslator(const TranslatorTicket& ticket)
       Memory(engine_, name_space_),
       TranslatorOptions(engine_, name_space_),
       enable_charset_filter_(false),
-      enable_sentence_(true) {
+      enable_sentence_(true),
+      enable_encoder_(true),
+      encode_commit_history_(true),
+      max_phrase_length_(5) {
   if (!engine_) return;
-  Config *config = engine_->schema()->config();
-  if (config) {
+  if (Config *config = engine_->schema()->config()) {
     config->GetBool(name_space_ + "/enable_charset_filter",
                     &enable_charset_filter_);
     config->GetBool(name_space_ + "/enable_sentence",
                     &enable_sentence_);
+    config->GetBool(name_space_ + "/enable_encoder",
+                    &enable_encoder_);
+    config->GetBool(name_space_ + "/encode_commit_history",
+                    &encode_commit_history_);
+    config->GetInt(name_space_ + "/max_phrase_length",
+                   &max_phrase_length_);
   }
-  if (user_dict_) {
+  if (enable_encoder_ && user_dict_) {
     encoder_.reset(new UnityTableEncoder(user_dict_.get()));
     Ticket ticket(engine_->schema(), name_space_);
     encoder_->Load(ticket);
@@ -297,9 +305,11 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
     }
   }
   if (encoder_ && encoder_->loaded()) {
-    // TODO: make new phrases out of commit history
     if (commit_entry.elements.size() > 1) {
       encoder_->EncodePhrase(commit_entry.text, "1");
+    }
+    if (encode_commit_history_) {
+      // TODO
     }
   }
   return true;

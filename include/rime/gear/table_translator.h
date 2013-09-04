@@ -41,6 +41,9 @@ class TableTranslator : public Translator,
  protected:
   bool enable_charset_filter_;
   bool enable_sentence_;
+  bool enable_encoder_;
+  bool encode_commit_history_;
+  int max_phrase_length_;
   scoped_ptr<UnityTableEncoder> encoder_;
 };
 
