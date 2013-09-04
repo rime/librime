@@ -1,13 +1,44 @@
 # encoding: utf-8
-# 五倉世紀
-# 碼表來自 www.chinesecj.com
+#
+# 單字碼表《五倉世紀》來自 www.chinesecj.com
+#
+# 又：
+# 倉頡五代構詞碼碼表
+# 由惜緣兄製作
+# 佛振修訂於 2012-04-08
+#
+# License: GPL
+#
+# 說明：
+# 詞彙編碼中，單字的取碼有幾種情況：
+# 取首碼、取尾碼、取首尾二碼、取首、次、尾三碼。
+# 輔助字形中的單字，在詞彙中直接用倉頡字母而不拆開；
+# 包含結構的單字，被包含部分的編碼位於'符號之後，可據此取得尾碼。
+#
 
 ---
 name: "cangjie5"
-version: "0.12"
-sort: original
+version: "0.17"
+sort: by_weight
 use_preset_vocabulary: true
-max_phrase_length: 1
+max_phrase_length: 7
+min_phrase_weight: 100
+columns:
+  - text
+  - code
+  - stem
+encoder:
+  exclude_patterns:
+    - '^x.*$'
+    - '^z.*$'
+  rules:
+    - length_equal: 2
+      formula: "AaAzBaBbBz"
+    - length_equal: 3
+      formula: "AaAzBaBzCz"
+    - length_in_range: [4, 10]
+      formula: "AaBzCaYzZz"
+  tail_anchor: "'"
 ...
 
 日	a
@@ -39,7 +70,7 @@ max_phrase_length: 1
 盟	abbt
 覵	abbuu
 焽	abf
-晭	abgr
+晭	abgr	ab'gr
 鷳	abhaf
 猒	abik
 曌	abjcm
@@ -49,7 +80,7 @@ max_phrase_length: 1
 晖	abkq
 暖	abme
 琞	abmgi
-晍	abmr
+晍	abmr	ab'mr
 勗	abms
 暩	abof
 暚	abou
@@ -68,7 +99,7 @@ max_phrase_length: 1
 时	adi
 昩	adj
 暐	admq
-暕	adwf
+暕	adwf	adw'f
 鄤	aenl
 炅	af
 炚	af
@@ -90,8 +121,8 @@ max_phrase_length: 1
 暿	agrr
 暭	ahaj
 暤	ahaj
-晌	ahbr
-晑	ahbr
+晌	ahbr	ahb'r
+晑	ahbr	ahb'r
 眉	ahbu
 昄	ahe
 昸	ahey
@@ -135,7 +166,7 @@ max_phrase_length: 1
 早	aj
 旪	aj
 昁	ajb
-暔	ajbj
+暔	ajbj	ajb'j
 昧	ajd
 暷	ajii
 暑	ajka
@@ -217,7 +248,7 @@ max_phrase_length: 1
 閑	and
 閉	andh
 闈	andmq
-闌	andwf
+闌	andwf	andw'f
 閖	ane
 閯	anefh
 闊	anehr
@@ -231,7 +262,7 @@ max_phrase_length: 1
 闎	anhae
 昅	anhe
 閣	anher
-闏	anhni
+闏	anhni	anhn'i
 閽	anhpa
 閐	anhqu
 闙	anhrk
@@ -302,7 +333,7 @@ max_phrase_length: 1
 闓	anumt
 闗	anvif
 關	anvit
-閫	anwd
+閫	anwd	anw'd
 閘	anwl
 闤	anwlv
 闥	anygq
@@ -345,7 +376,7 @@ max_phrase_length: 1
 鹍	appym
 昫	apr
 旽	apu
-曷	apvo
+曷	apvo	apv'o
 晣	aqhl
 暳	aqjm
 暳	aqjs
@@ -366,7 +397,7 @@ max_phrase_length: 1
 曜	asmg
 昵	asp
 昛	ass
-暱	astr
+暱	astr	as'tr
 暯	atak
 晪	atbc
 曚	atbo
@@ -452,7 +483,7 @@ max_phrase_length: 1
 肎	bb
 骨	bbb
 朤	bbbb
-腡	bbbr
+腡	bbbr	bbb'r
 覶	bbbuu
 骽	bbbv
 骳	bbdhe
@@ -466,7 +497,7 @@ max_phrase_length: 1
 鵬	bbhf
 骺	bbhmr
 骰	bbhne
-骪	bbhni
+骪	bbhni	bbhn'i
 骶	bbhpm
 觅	bbhu
 骶	bbhvi
@@ -494,7 +525,7 @@ max_phrase_length: 1
 骬	bbmd
 骭	bbmj
 骾	bbmlk
-胴	bbmr
+胴	bbmr	bb'mr
 旤	bbmvu
 脬	bbnd
 歄	bbno
@@ -505,7 +536,7 @@ max_phrase_length: 1
 鹏	bbpm
 骲	bbpru
 鹘	bbpym
-咼	bbr
+咼	bbr	bb'r
 髎	bbsmh
 髒	bbtmt
 髊	bbtqm
@@ -534,7 +565,7 @@ max_phrase_length: 1
 賜	bcaph
 贔	bcbcc
 賝	bcbcd
-賙	bcbgr
+賙	bcbgr	bcb'gr
 賱	bcbjj
 賏	bcbuc
 覭	bcbuu
@@ -597,7 +628,7 @@ max_phrase_length: 1
 賯	bcpad
 貤	bcpd
 賰	bcqka
-冏	bcr
+冏	bcr	b'cr
 貺	bcrhu
 腳	bcrl
 脫	bcru
@@ -671,7 +702,7 @@ max_phrase_length: 1
 膡	bfqu
 媵	bfqv
 乿	bfu
-脳	bfuk
+脳	bfuk	bfu'k
 肚	bg
 爯	bgb
 胿	bgg
@@ -681,7 +712,7 @@ max_phrase_length: 1
 胠	bgi
 戵	bgi
 脚	bgil
-周	bgr
+周	bgr	b'gr
 臌	bgte
 膨	bgth
 胉	bha
@@ -739,7 +770,7 @@ max_phrase_length: 1
 貚	bhrrj
 貑	bhrse
 貂	bhshr
-貙	bhsrr
+貙	bhsrr	bhs'rr
 貘	bhtak
 貖	bhtct
 貛	bhtrg
@@ -789,7 +820,7 @@ max_phrase_length: 1
 虢	biypu
 肺	bjb
 脖	bjbd
-腩	bjbj
+腩	bjbj	bjb'j
 膣	bjcg
 腔	bjcm
 皸	bjdhe
@@ -811,7 +842,7 @@ max_phrase_length: 1
 臗	bjti
 胺	bjv
 軍	bjwj
-冈	bk
+冈	bk	b'k
 罓	bk
 膫	bkcf
 谿	bkcor
@@ -823,7 +854,7 @@ max_phrase_length: 1
 鶪	bkhaf
 肱	bki
 肽	bki
-网	bkk
+网	bkk	b'kk
 脪	bkkb
 刚	bkln
 腌	bklu
@@ -843,7 +874,7 @@ max_phrase_length: 1
 胦	blbk
 胇	blln
 膢	bllv
-円	blm
+円	blm	b'lm
 膭	blmc
 朓	blmo
 脁	blmo
@@ -854,11 +885,11 @@ max_phrase_length: 1
 胏	blxh
 且	bm
 肛	bm
-囗	bm
+囗	bm	w
 臑	bmbb
 臛	bmbg
 腝	bmbk
-胹	bmbl
+胹	bmbl	bmb'l
 膤	bmbm
 膤	bmbs
 脜	bmbu
@@ -877,7 +908,7 @@ max_phrase_length: 1
 删	bmln
 刞	bmln
 冄	bmm
-冃	bmm
+冃	bmm	b'mm
 具	bmmc
 冡	bmmo
 肟	bmms
@@ -885,7 +916,7 @@ max_phrase_length: 1
 脤	bmmv
 胢	bmnr
 雎	bmog
-同	bmr
+同	bmr	b'mr
 膈	bmrb
 脰	bmrt
 腷	bmrw
@@ -896,7 +927,7 @@ max_phrase_length: 1
 冠	bmui
 脛	bmvm
 膘	bmwf
-腼	bmwl
+腼	bmwl	bmw'l
 腰	bmwv
 肊	bn
 冤	bnai
@@ -924,8 +955,8 @@ max_phrase_length: 1
 膓	boah
 赐	boaph
 肭	bob
-赒	bobgr
-朒	bobo
+赒	bobgr	bob'gr
+朒	bobo	bob'o
 赑	boboo
 赠	bocwa
 财	bodh
@@ -996,8 +1027,8 @@ max_phrase_length: 1
 胞	bpru
 朑	bpt
 肫	bpu
-胸	bpuk
-用	bq
+胸	bpuk	bpu'k
+用	bq	b'q
 皲	bqdhe
 肨	bqj
 腠	bqkk
@@ -1007,7 +1038,7 @@ max_phrase_length: 1
 郓	bqnl
 肤	bqo
 甩	bqu
-冋	br
+冋	br	b'r
 胑	brc
 鵰	brhaf
 脭	brhg
@@ -1022,7 +1053,7 @@ max_phrase_length: 1
 腭	brrs
 腵	brse
 翢	brsmm
-囘	bru
+囘	bru	b'ru
 爭	bsd
 脲	bse
 臔	bsec
@@ -1038,7 +1069,7 @@ max_phrase_length: 1
 臎	bsmj
 脹	bsmv
 胒	bsp
-膒	bsrr
+膒	bsrr	bs'rr
 凸	bss
 皿	bt
 冊	bt
@@ -1063,11 +1094,11 @@ max_phrase_length: 1
 胼	btt
 肼	btt
 膳	bttr
-岡	btu
+岡	btu	b'tu
 膿	btwv
 膁	btxc
 膵	btyj
-罔	btyv
+罔	btyv	b'tyv
 目	bu
 冚	bu
 睲	buahm
@@ -1085,10 +1116,10 @@ max_phrase_length: 1
 瞹	bubbe
 瞬	bubbq
 睬	bubd
-睭	bubgr
+睭	bubgr	bub'gr
 鷪	bubhf
 睴	bubjj
-眮	bubmr
+眮	bubmr	bub'mr
 睜	bubsd
 瞁	bubuk
 睍	bubuu
@@ -1130,8 +1161,8 @@ max_phrase_length: 1
 睡	buhjm
 瞃	buhju
 盺	buhml
-颻	buhni
-飖	buhnk
+颻	buhni	buhn'i
+飖	buhnk	buhn'k
 矀	buhok
 覹	buhok
 瞛	buhoo
@@ -1257,11 +1288,11 @@ max_phrase_length: 1
 瞩	bushb
 眧	bushr
 眲	busj
-眍	busk
-眶	busmg
+眍	busk	bus'k
+眶	busmg	bus'mg
 矅	busmg
 眤	busp
-瞘	busrr
+瞘	busrr	bus'rr
 瞙	butak
 睓	butbc
 矇	butbo
@@ -1285,7 +1316,7 @@ max_phrase_length: 1
 鼎	buvml
 鼎	buvmn
 睩	buvne
-睏	buwd
+睏	buwd	buw'd
 睤	buwml
 瞮	buybk
 矓	buybp
@@ -1316,17 +1347,17 @@ max_phrase_length: 1
 臘	bvvv
 腦	bvvw
 腂	bwd
-膕	bwim
-胭	bwk
+膕	bwim	bw'im
+胭	bwk	bw'k
 胛	bwl
 腢	bwlb
 爵	bwli
 臅	bwli
-腘	bwmi
+腘	bwmi	bw'mi
 腲	bwmv
 膃	bwot
 腮	bwp
-胟	bwyi
+胟	bwyi	bwy'i
 丹	by
 腿	byav
 膼	bybb
@@ -1363,7 +1394,7 @@ max_phrase_length: 1
 膧	bytg
 雘	bytoe
 臆	bytp
-脑	byuk
+脑	byuk	byu'k
 臃	byvg
 胘	byvi
 胲	byvo
@@ -1402,20 +1433,20 @@ max_phrase_length: 1
 錋	cbb
 鑀	cbbe
 銏	cbbm
-鍋	cbbr
+鍋	cbbr	cbb'r
 鍘	cbcn
 鋝	cbdi
-錭	cbgr
+錭	cbgr	cb'gr
 鍕	cbjj
 鉏	cbm
 鍰	cbme
-銅	cbmr
+銅	cbmr	cb'mr
 鋤	cbms
 鋢	cbnd
 鎐	cbou
 錚	cbsd
 銏	cbt
-鋼	cbtu
+鋼	cbtu	cb'tu
 鉬	cbu
 鋇	cbuc
 钁	cbue
@@ -1448,7 +1479,7 @@ max_phrase_length: 1
 鍏	cdmq
 錸	cdoo
 錬	cdw
-鍊	cdwf
+鍊	cdwf	cdw'f
 淾	ce
 錔	cea
 鐋	ceah
@@ -1456,7 +1487,8 @@ max_phrase_length: 1
 錣	ceee
 鍅	cegi
 鎃	cehv
-釵	cei
+釵	cei	cei
+釵	cei	ce'i
 鈥	cf
 釥	cf
 銷	cfb
@@ -1467,7 +1499,7 @@ max_phrase_length: 1
 钂	cfbf
 鏜	cfbg
 鐣	cfbq
-鋿	cfbr
+鋿	cfbr	cfb'r
 鎲	cfbu
 鐺	cfbw
 銤	cfd
@@ -1497,7 +1529,7 @@ max_phrase_length: 1
 鍠	chag
 鎫	chbe
 鐭	chbk
-銄	chbr
+銄	chbr	chb'r
 鉌	chd
 鏼	chdb
 鍬	chdf
@@ -1542,7 +1574,7 @@ max_phrase_length: 1
 釠	chn
 鏫	chnd
 鈠	chne
-釩	chni
+釩	chni	chn'i
 邠	chnl
 鉛	chnr
 攽	chok
@@ -1772,7 +1804,7 @@ max_phrase_length: 1
 鈒	cnhe
 釢	cnhs
 錎	cnhx
-釸	cni
+釸	cni	cn'i
 銿	cnib
 鏹	cnii
 鉹	cnin
@@ -1939,8 +1971,8 @@ max_phrase_length: 1
 銸	csju
 釼	csk
 兯	csl
-鉔	cslb
-鑎	cslc
+鉔	cslb	cs'lb
+鑎	cslc	cs'lc
 鋟	csme
 鑃	csmg
 鏐	csmh
@@ -1951,11 +1983,11 @@ max_phrase_length: 1
 鈬	cso
 鈮	csp
 鎷	csqf
-鉕	csr
+鉕	csr	cs'r
 鐴	csrj
-鏂	csrr
+鏂	csrr	cs'rr
 鉅	css
-鋦	cssr
+鋦	cssr	css'r
 錯	cta
 鏌	ctak
 钄	ctaw
@@ -1979,7 +2011,7 @@ max_phrase_length: 1
 鏋	ctlb
 鐄	ctlc
 鍈	ctlk
-鉗	ctm
+鉗	ctm	ct'm
 錤	ctmc
 鏵	ctmj
 鍖	ctmv
@@ -2040,8 +2072,8 @@ max_phrase_length: 1
 鋰	cwg
 单	cwj
 鏆	cwjc
-錮	cwjr
-銦	cwk
+錮	cwjr	cw'jr
+銦	cwk	cw'k
 鉀	cwl
 鍝	cwlb
 鑼	cwlg
@@ -2059,7 +2091,7 @@ max_phrase_length: 1
 鏍	cwvf
 鑸	cwwg
 鑘	cwww
-鉧	cwyi
+鉧	cwyi	cwy'i
 釙	cy
 鋽	cyaj
 鍗	cybb
@@ -2123,7 +2155,7 @@ max_phrase_length: 1
 釯	cyv
 鉉	cyvi
 鏲	cyvq
-鏀	cywi
+鏀	cywi	cyw'i
 鑇	cyx
 木	d
 杳	da
@@ -2163,14 +2195,14 @@ max_phrase_length: 1
 榾	dbbb
 栅	dbbm
 橓	dbbq
-楇	dbbr
+楇	dbbr	dbb'r
 棎	dbcd
 櫻	dbcv
 棌	dbd
 棘	dbdb
 棗	dbdb
 橳	dbfs
-椆	dbgr
+椆	dbgr	db'gr
 枧	dbhu
 槄	dbhx
 楎	dbjj
@@ -2182,7 +2214,7 @@ max_phrase_length: 1
 楥	dbme
 枏	dbmm
 檼	dbmp
-桐	dbmr
+桐	dbmr	db'mr
 桴	dbnd
 僰	dbo
 敇	dbok
@@ -2191,8 +2223,8 @@ max_phrase_length: 1
 棦	dbsd
 棴	dbse
 柵	dbt
-棡	dbtu
-棢	dbtv
+棡	dbtu	db'tu
+棢	dbtv	db'tv
 相	dbu
 梖	dbuc
 欔	dbue
@@ -2238,8 +2270,8 @@ max_phrase_length: 1
 材	ddh
 柀	ddhe
 彬	ddhh
-梵	ddhni
-檒	ddhni
+梵	ddhni	ddhn'i
+檒	ddhni	ddhn'i
 村	ddi
 椘	ddino
 麓	ddixp
@@ -2256,7 +2288,7 @@ max_phrase_length: 1
 辳	ddmmv
 椲	ddmq
 梺	ddmy
-梦	ddni
+梦	ddni	ddn'i
 郴	ddnl
 楚	ddnyo
 棽	ddoin
@@ -2267,7 +2299,7 @@ max_phrase_length: 1
 婪	ddv
 棟	ddw
 榃	ddw
-楝	ddwf
+楝	ddwf	ddw'f
 欝	ddwli
 权	de
 皹	debjj
@@ -2277,7 +2309,8 @@ max_phrase_length: 1
 棳	deee
 桫	defh
 柽	deg
-杈	dei
+杈	dei	dei
+杈	dei	de'i
 樑	deid
 頗	dembc
 颇	dembo
@@ -2307,7 +2340,7 @@ max_phrase_length: 1
 柈	dfq
 椦	dfqs
 棬	dfqu
-档	dfsm
+档	dfsm	dfs'm
 桜	dfv
 杜	dg
 柟	dgb
@@ -2388,9 +2421,9 @@ max_phrase_length: 1
 柝	dhmy
 机	dhn
 杸	dhne
-楓	dhni
-杋	dhni
-枫	dhnk
+楓	dhni	dhn'i
+杋	dhni	dhn'i
+枫	dhnk	dhn'k
 桁	dhon
 椼	dhon
 樅	dhoo
@@ -2489,7 +2522,7 @@ max_phrase_length: 1
 槙	djbc
 桲	djbd
 檫	djbf
-楠	djbj
+楠	djbj	djb'j
 植	djbm
 椬	djbm
 欜	djbv
@@ -2573,7 +2606,7 @@ max_phrase_length: 1
 朸	dks
 槬	dkso
 枷	dksr
-檶	dksr
+檶	dksr	dks'r
 栛	dkss
 束	dl
 晳	dla
@@ -2628,7 +2661,7 @@ max_phrase_length: 1
 槓	dmbc
 櫌	dmbe
 橒	dmbi
-栭	dmbl
+栭	dmbl	dmb'l
 樰	dmbm
 欞	dmbo
 櫺	dmbr
@@ -2715,10 +2748,10 @@ max_phrase_length: 1
 橡	dnao
 栬	dnau
 梚	dnau
-桷	dnbg
+桷	dnbg	dnb'g
 槲	dnbj
 檞	dnbq
-桷	dnbq
+桷	dnbq	dnb'q
 檐	dncr
 李	dnd
 杍	dnd
@@ -2918,7 +2951,7 @@ max_phrase_length: 1
 椵	drse
 枴	drsh
 楫	drsj
-椻	dsav
+椻	dsav	ds'av
 樫	dseg
 欘	dsei
 樨	dseq
@@ -2935,15 +2968,15 @@ max_phrase_length: 1
 欇	dsjj
 椰	dsjl
 椐	dsjr
-枢	dsk
+枢	dsk	ds'k
 桾	dskr
-櫃	dslc
-栕	dsll
-榧	dsly
+櫃	dslc	ds'lc
+栕	dsll	ds'll
+榧	dsly	ds'ly
 槢	dsma
 梫	dsme
 棂	dsmf
-框	dsmg
+框	dsmg	ds'mg
 櫂	dsmg
 楃	dsmg
 樛	dsmh
@@ -2955,17 +2988,17 @@ max_phrase_length: 1
 檻	dsmt
 棖	dsmv
 樼	dsnd
-柩	dsno
-膥	dsobo
+柩	dsno	ds'no
+膥	dsobo	dsob'o
 柅	dsp
 愸	dsp
 榪	dsqf
 梛	dsql
 檉	dsrg
 檘	dsrj
-樞	dsrr
+樞	dsrr	ds'rr
 柜	dss
-梮	dssr
+梮	dssr	dss'r
 榐	dstv
 杞	dsu
 梞	dsup
@@ -3008,7 +3041,7 @@ max_phrase_length: 1
 楧	dtlk
 槿	dtlm
 櫹	dtlx
-柑	dtm
+柑	dtm	dt'm
 棋	dtmc
 橫	dtmc
 楳	dtmd
@@ -3027,7 +3060,7 @@ max_phrase_length: 1
 權	dtrg
 榵	dtsj
 栉	dtsl
-櫙	dtsr
+櫙	dtsr	dts'r
 栟	dtt
 構	dttb
 椪	dttc
@@ -3069,19 +3102,19 @@ max_phrase_length: 1
 桚	dvvn
 椔	dvvw
 東	dw
-柶	dwc
+柶	dwc	dw'c
 棵	dwd
-梱	dwd
-柬	dwf
+梱	dwd	dw'd
+柬	dwf	dw'f
 梩	dwg
 鶇	dwhaf
 鶫	dwhaf
-棞	dwhd
-槶	dwim
+棞	dwhd	dw'hd
+槶	dwim	dw'im
 樌	dwjc
-檲	dwji
-棝	dwjr
-栶	dwk
+檲	dwji	dw'ji
+棝	dwjr	dw'jr
+栶	dwk	dw'k
 柙	dwl
 欏	dwlg
 檡	dwlj
@@ -3089,7 +3122,7 @@ max_phrase_length: 1
 楞	dwls
 檈	dwlv
 檌	dwly
-椢	dwmi
+椢	dwmi	dw'mi
 椳	dwmv
 楐	dwol
 榲	dwot
@@ -3097,7 +3130,7 @@ max_phrase_length: 1
 樏	dwvf
 欙	dwwf
 櫑	dwww
-栂	dwyi
+栂	dwyi	dwy'i
 朴	dy
 槕	dyad
 棹	dyaj
@@ -3176,7 +3209,7 @@ max_phrase_length: 1
 槒	dyvw
 檁	dywd
 檩	dywf
-樐	dywi
+樐	dywi	dyw'i
 檀	dywm
 櫰	dywv
 榱	dywv
@@ -3230,18 +3263,18 @@ max_phrase_length: 1
 淜	ebb
 滑	ebbb
 涭	ebbe
-渦	ebbr
+渦	ebbr	ebb'r
 漞	ebbu
 深	ebcd
 瀃	ebch
 濺	ebci
 浫	ebcj
 測	ebcn
-浻	ebcr
+浻	ebcr	eb'cr
 滘	ebcr
 瀴	ebcv
 浖	ebdi
-淍	ebgr
+淍	ebgr	eb'gr
 潙	ebhf
 淫	ebhg
 沉	ebhn
@@ -3255,7 +3288,7 @@ max_phrase_length: 1
 湲	ebme
 溕	ebmo
 濦	ebmp
-洞	ebmr
+洞	ebmr	eb'mr
 浮	ebnd
 漈	ebof
 溅	eboj
@@ -3266,7 +3299,7 @@ max_phrase_length: 1
 慂	ebp
 懘	ebp
 渓	ebqo
-泂	ebr
+泂	ebr	eb'r
 淨	ebsd
 泴	ebt
 泪	ebu
@@ -3341,7 +3374,7 @@ max_phrase_length: 1
 瀒	edow
 涞	edt
 涷	edw
-湅	edwf
+湅	edwf	edw'f
 汉	ee
 双	ee
 沝	ee
@@ -3360,7 +3393,8 @@ max_phrase_length: 1
 欼	eeeeo
 毲	eeeeu
 叠	eeem
-汊	eei
+汊	eei	eei
+汊	eei	ee'i
 溞	eeii
 碆	eemr
 滩	eeog
@@ -3372,7 +3406,7 @@ max_phrase_length: 1
 灙	efbf
 漟	efbg
 潎	efbk
-淌	efbr
+淌	efbr	efb'r
 澢	efbw
 洣	efd
 瀵	efdc
@@ -3487,10 +3521,10 @@ max_phrase_length: 1
 泝	ehmy
 乷	ehn
 没	ehne
-汎	ehni
-渢	ehni
-沨	ehnk
-洬	ehnn
+汎	ehni	ehn'i
+渢	ehni	ehn'i
+沨	ehnk	ehn'k
+洬	ehnn	ehn'n
 沿	ehnr
 鯊	ehnwf
 鲨	ehnwm
@@ -3538,8 +3572,9 @@ max_phrase_length: 1
 湼	ehxm
 淣	ehxu
 裟	ehyhv
+叉	ei	ei
+叉	ei	e'i
 戏	ei
-叉	ei
 浪	eiav
 溥	eibi
 浚	eice
@@ -3602,7 +3637,7 @@ max_phrase_length: 1
 滇	ejbc
 浡	ejbd
 溹	ejbf
-湳	ejbj
+湳	ejbj	ejb'j
 淔	ejbm
 灢	ejbv
 泬	ejc
@@ -3747,7 +3782,7 @@ max_phrase_length: 1
 澪	embi
 瀜	embi
 渜	embk
-洏	embl
+洏	embl	emb'l
 灀	embu
 溍	emca
 酒	emcw
@@ -3812,7 +3847,7 @@ max_phrase_length: 1
 湮	emwg
 湹	emwg
 潭	emwj
-湎	emwl
+湎	emwl	emw'l
 漹	emyf
 泟	emym
 潒	enao
@@ -3833,7 +3868,7 @@ max_phrase_length: 1
 渘	enhd
 汲	enhe
 淊	enhx
-汐	eni
+汐	eni	en'i
 泓	eni
 涌	enib
 濥	enic
@@ -3965,7 +4000,7 @@ max_phrase_length: 1
 泄	ept
 渫	eptd
 沌	epu
-洶	epuk
+洶	epuk	epu'k
 鸡	epym
 渹	epyr
 瀞	eqbd
@@ -4036,10 +4071,10 @@ max_phrase_length: 1
 滠	esje
 灄	esjj
 涺	esjr
-沤	esk
+沤	esk	es'k
 泦	eskn
 涒	eskr
-洍	esll
+洍	esll	es'll
 瀶	eslr
 汈	esm
 漝	esma
@@ -4048,7 +4083,7 @@ max_phrase_length: 1
 瀷	esmc
 浸	esme
 濯	esmg
-洭	esmg
+洭	esmg	es'mg
 渥	esmg
 漻	esmh
 潯	esmi
@@ -4060,12 +4095,12 @@ max_phrase_length: 1
 涱	esmv
 潺	esnd
 沢	eso
-滙	esog
+滙	esog	es'og
 浕	esoy
 泥	esp
 溤	esqf
 澼	esrj
-漚	esrr
+漚	esrr	es'rr
 洰	ess
 氾	esu
 淈	esuu
@@ -4110,7 +4145,7 @@ max_phrase_length: 1
 漌	etlm
 漢	etlo
 瀟	etlx
-泔	etm
+泔	etm	et'm
 满	etmb
 頮	etmbc
 颒	etmbo
@@ -4161,7 +4196,7 @@ max_phrase_length: 1
 溄	euhq
 漴	eujf
 灃	eujt
-汹	euk
+汹	euk	eu'k
 湠	eukf
 湍	eumb
 湠	eumf
@@ -4169,7 +4204,7 @@ max_phrase_length: 1
 瑬	eumgi
 滍	eumi
 溰	eumt
-涵	eune
+涵	eune	eu'ne
 溦	eunk
 漼	euog
 涔	euon
@@ -4196,18 +4231,18 @@ max_phrase_length: 1
 沺	ew
 畓	ew
 渭	ewb
-泗	ewc
+泗	ewc	ew'c
 溭	ewce
 淉	ewd
-涃	ewd
-潿	ewdq
+涃	ewd	ew'd
+潿	ewdq	ew'dq
 溿	ewfq
 浬	ewg
 潶	ewgf
 濹	ewgg
-漍	ewim
-涸	ewjr
-洇	ewk
+漍	ewim	ew'im
+涸	ewjr	ew'jr
+洇	ewk	ew'k
 濖	ewla
 湡	ewlb
 濁	ewli
@@ -4217,13 +4252,13 @@ max_phrase_length: 1
 潈	ewlo
 澴	ewlv
 淠	ewml
-溷	ewmo
+溷	ewmo	ew'mo
 渨	ewmv
 歠	ewno
-泅	ewo
+泅	ewo	ew'o
 溫	ewot
-涠	ewqs
-洄	ewr
+涠	ewqs	ew'qs
+洄	ewr	ew'r
 潩	ewtc
 滭	ewtj
 漯	ewvf
@@ -4334,7 +4369,7 @@ max_phrase_length: 1
 泫	eyvi
 滀	eyvw
 澟	eywd
-滷	eywi
+滷	eywi	eyw'i
 澶	eywm
 瀤	eywv
 滖	eywv
@@ -4372,9 +4407,9 @@ max_phrase_length: 1
 焩	fbb
 燰	fbbe
 觉	fbbhu
-煱	fbbr
+煱	fbbr	fbb'r
 覚	fbbuu
-烱	fbcr
+烱	fbcr	fb'cr
 栄	fbd
 泶	fbe
 坣	fbg
@@ -4389,7 +4424,7 @@ max_phrase_length: 1
 削	fbln
 煖	fbme
 尝	fbmmi
-烔	fbmr
+烔	fbmr	fb'mr
 学	fbnd
 烰	fbnd
 鲎	fbnwm
@@ -4398,9 +4433,9 @@ max_phrase_length: 1
 熎	fbou
 鹡	fbpym
 鸴	fbpym
-尚	fbr
-炯	fbr
-尙	fbr
+尚	fbr	fb'r
+炯	fbr	fb'r
+尙	fbr	fb'r
 賞	fbrbc
 赏	fbrbo
 棠	fbrd
@@ -4418,8 +4453,8 @@ max_phrase_length: 1
 黨	fbrwf
 裳	fbryv
 黉	fbtlc
-焵	fbtu
-焹	fbtv
+焵	fbtu	fb'tu
+焹	fbtv	fb'tv
 峃	fbu
 爠	fbug
 覍	fbuu
@@ -4441,7 +4476,7 @@ max_phrase_length: 1
 粑	fdau
 粣	fdbbm
 粗	fdbm
-粡	fdbmr
+粡	fdbmr	fdb'mr
 粰	fdbnd
 粣	fdbt
 粯	fdbuu
@@ -4489,7 +4524,7 @@ max_phrase_length: 1
 糯	fdmbb
 糥	fdmbb
 頪	fdmbc
-粫	fdmbl
+粫	fdmbl	fdmb'l
 粞	fdmcw
 粳	fdmlk
 粝	fdmms
@@ -4498,7 +4533,7 @@ max_phrase_length: 1
 糲	fdmtb
 糣	fdmua
 糎	fdmwg
-糆	fdmwl
+糆	fdmwl	fdmw'l
 籽	fdnd
 粈	fdng
 糅	fdnhd
@@ -4535,7 +4570,7 @@ max_phrase_length: 1
 粠	fdtc
 糕	fdtgf
 糒	fdthb
-粓	fdtm
+粓	fdtm	fdt'm
 粸	fdtmc
 糂	fdtmv
 糀	fdtop
@@ -4551,9 +4586,9 @@ max_phrase_length: 1
 粶	fdvne
 畨	fdw
 粿	fdwd
-煉	fdwf
+煉	fdwf	fdw'f
 粴	fdwg
-糰	fdwji
+糰	fdwji	fdw'ji
 糬	fdwla
 糫	fdwlv
 糞	fdwtc
@@ -4587,7 +4622,7 @@ max_phrase_length: 1
 禜	ffbmf
 瑩	ffbmi
 甇	ffbmn
-醟	ffbmw
+醟	ffbmw	ffb'mw
 煢	ffbnj
 罃	ffbou
 營	ffbrr
@@ -4609,7 +4644,7 @@ max_phrase_length: 1
 炒	ffh
 鶑	ffhaf
 夑	ffhe
-飊	ffhni
+飊	ffhni	ffhn'i
 勬	ffks
 剡	ffln
 纇	ffmbc
@@ -4663,7 +4698,7 @@ max_phrase_length: 1
 燬	fhme
 炘	fhml
 炈	fhne
-煈	fhni
+煈	fhni	fhn'i
 鼡	fhnq
 烆	fhon
 灹	fhp
@@ -4702,7 +4737,7 @@ max_phrase_length: 1
 燫	fitc
 熫	fitf
 熝	fixp
-煵	fjbj
+煵	fjbj	fjb'j
 焢	fjcm
 焪	fjcn
 熔	fjcr
@@ -4860,8 +4895,8 @@ max_phrase_length: 1
 豢	fqmso
 甐	fqmvn
 弮	fqn
-觠	fqnbg
-觠	fqnbq
+觠	fqnbg	fqnb'g
+觠	fqnbq	fqnb'q
 鄰	fqnl
 鮝	fqnwf
 鲞	fqnwm
@@ -4894,17 +4929,17 @@ max_phrase_length: 1
 灱	fsh
 炤	fshr
 爁	fsit
-烥	fsll
-当	fsm
+烥	fsll	fs'll
+当	fsm	fs'm
 熠	fsma
 燿	fsmg
 熮	fsmh
 燖	fsmi
 熤	fsmt
 烬	fsoy
-熰	fsrr
+熰	fsrr	fs'rr
 炬	fss
-焗	fssr
+焗	fssr	fss'r
 煀	fsuu
 爦	fswu
 灷	ft
@@ -4959,10 +4994,10 @@ max_phrase_length: 1
 畄	fw
 煟	fwb
 巣	fwd
-焑	fwd
+焑	fwd	fw'd
 爅	fwgg
 単	fwj
-烟	fwk
+烟	fwk	fw'k
 煾	fwkp
 炠	fwl
 燭	fwli
@@ -5032,9 +5067,9 @@ max_phrase_length: 1
 冉	gb
 塓	gbac
 堋	gbb
-堝	gbbr
+堝	gbbr	gbb'r
 堔	gbcd
-埛	gbcr
+埛	gbcr	gb'cr
 埰	gbd
 埒	gbdi
 埓	gbdi
@@ -5056,15 +5091,15 @@ max_phrase_length: 1
 壼	gbmm
 塚	gbmo
 塜	gbmo
-垌	gbmr
+垌	gbmr	gb'mr
 壹	gbmt
 垺	gbnd
 坝	gbo
 壱	gbp
-坰	gbr
+坰	gbr	gb'r
 埩	gbsd
 壶	gbtc
-堈	gbtu
+堈	gbtu	gb'tu
 垻	gbuc
 垷	gbuu
 坍	gby
@@ -5090,7 +5125,7 @@ max_phrase_length: 1
 丧	gcv
 增	gcwa
 増	gcwa
-啬	gcwr
+啬	gcwr	gcw'r
 赬	gcybc
 赪	gcybo
 坡	gdhe
@@ -5100,7 +5135,7 @@ max_phrase_length: 1
 寺	gdi
 块	gdk
 埬	gdw
-堜	gdwf
+堜	gdwf	gdw'f
 瞽	gebu
 鏧	gec
 墚	gecd
@@ -5127,7 +5162,7 @@ max_phrase_length: 1
 謦	geymr
 韾	geyta
 灻	gf
-埫	gfbr
+埫	gfbr	gfb'r
 壋	gfbw
 塉	gfcb
 埮	gff
@@ -5165,7 +5200,7 @@ max_phrase_length: 1
 卦	ggy
 堭	ghag
 墺	ghbk
-垧	ghbr
+垧	ghbr	ghb'r
 垍	ghbu
 塖	ghdp
 墦	ghdw
@@ -5189,7 +5224,7 @@ max_phrase_length: 1
 坼	ghmy
 垛	ghnd
 坄	ghne
-堸	ghni
+堸	ghni	ghn'i
 垳	ghon
 圫	ghp
 坻	ghpm
@@ -5358,8 +5393,8 @@ max_phrase_length: 1
 圷	gmy
 墕	gmyf
 堍	gnai
-埆	gnbg
-埆	gnbq
+埆	gnbg	gnb'g
+埆	gnbq	gnb'q
 圾	gnhe
 殼	gnhne
 彀	gnhne
@@ -5389,7 +5424,7 @@ max_phrase_length: 1
 赽	godk
 趚	godl
 趙	gofb
-趟	gofbr
+趟	gofbr	gofb'r
 赻	gofh
 堆	gog
 趬	goggu
@@ -5436,7 +5471,7 @@ max_phrase_length: 1
 趢	gonme
 赼	gono
 趓	gonsd
-趋	gonsm
+趋	gonsm	gons'm
 趡	goog
 趭	googf
 趁	goohh
@@ -5467,7 +5502,7 @@ max_phrase_length: 1
 趉	gouu
 赳	govl
 趢	govne
-嗇	gowr
+嗇	gowr	gow'r
 趩	gowtc
 赴	goy
 趠	goyaj
@@ -5529,7 +5564,7 @@ max_phrase_length: 1
 圯	gru
 垊	grvp
 敼	grye
-堰	gsav
+堰	gsav	gs'av
 墀	gseq
 墛	gsfi
 壏	gsit
@@ -5540,7 +5575,7 @@ max_phrase_length: 1
 敖	gsok
 坭	gsp
 壀	gsrj
-塸	gsrr
+塸	gsrr	gs'rr
 垇	gssu
 塀	gstt
 圮	gsu
@@ -5564,7 +5599,7 @@ max_phrase_length: 1
 鼓	gtje
 墴	gtlc
 墐	gtlm
-坩	gtm
+坩	gtm	gt'm
 墴	gtmc
 墷	gtmj
 懿	gtmop
@@ -5602,7 +5637,7 @@ max_phrase_length: 1
 埋	gwg
 毐	gwj
 毐	gwjh
-堌	gwjr
+堌	gwjr	gw'jr
 堣	gwlb
 賣	gwlc
 墿	gwlj
@@ -5611,7 +5646,7 @@ max_phrase_length: 1
 夁	gwlw
 堺	gwol
 塭	gwot
-坶	gwyi
+坶	gwyi	gwy'i
 圤	gy
 壠	gybp
 塝	gybs
@@ -5655,10 +5690,10 @@ max_phrase_length: 1
 垶	gytj
 培	gytr
 境	gytu
-垴	gyuk
+垴	gyuk	gyu'k
 垓	gyvo
 壈	gywd
-塷	gywi
+塷	gywi	gyw'i
 壇	gywm
 壞	gywv
 竹	h
@@ -5669,7 +5704,7 @@ max_phrase_length: 1
 馤	haapv
 皅	haau
 皧	habbe
-皗	habgr
+皗	habgr	hab'gr
 馟	habnd
 皭	habwi
 馚	hacsh
@@ -5774,12 +5809,12 @@ max_phrase_length: 1
 顅	hbmbc
 釁	hbmch
 璺	hbmgi
-筒	hbmr
+筒	hbmr	hb'mr
 礐	hbmr
 筯	hbms
 甂	hbmvn
-觷	hbnbg
-觷	hbnbq
+觷	hbnbg	hbnb'g
+觷	hbnbq	hbnb'q
 學	hbnd
 筟	hbnd
 鄅	hbnl
@@ -5787,8 +5822,8 @@ max_phrase_length: 1
 雤	hbog
 敿	hbok
 箆	hbop
-甪	hbq
-向	hbr
+甪	hbq	hb'q
+向	hbr	hb'r
 簓	hbrh
 箏	hbsd
 箙	hbse
@@ -5812,7 +5847,7 @@ max_phrase_length: 1
 籑	hbuv
 农	hbv
 敽	hbye
-舟	hbyi
+舟	hbyi	hby'i
 乊	hc
 臖	hcb
 盨	hcbt
@@ -5846,12 +5881,12 @@ max_phrase_length: 1
 策	hdb
 稝	hdbb
 稱	hdbgb
-稠	hdbgr
+稠	hdbgr	hdb'gr
 稻	hdbhx
 稲	hdbla
 租	hdbm
 穩	hdbmp
-秱	hdbmr
+秱	hdbmr	hdb'mr
 箣	hdbn
 稃	hdbnd
 穄	hdbof
@@ -6005,7 +6040,7 @@ max_phrase_length: 1
 程	hdrmg
 稆	hdrr
 鼄	hdrxu
-篐	hdsb
+篐	hdsb	hds'b
 穉	hdseq
 穋	hdsmh
 釈	hdso
@@ -6025,17 +6060,17 @@ max_phrase_length: 1
 稴	hdtxc
 秈	hdu
 稯	hduce
-秽	hduni
+秽	hduni	hdun'i
 委	hdv
 穖	hdvii
 番	hdw
 稩	hdwb
 稷	hdwce
 稞	hdwd
-稇	hdwd
-稛	hdwhd
-稒	hdwjr
-秵	hdwk
+稇	hdwd	hdw'd
+稛	hdwhd	hdw'hd
+稒	hdwjr	hdw'jr
+秵	hdwk	hdw'k
 釋	hdwlj
 穓	hdwtc
 穣	hdycv
@@ -6189,7 +6224,7 @@ max_phrase_length: 1
 筿	hhed
 笿	hher
 笗	hhey
-躺	hhfbr
+躺	hhfbr	hhfb'r
 軂	hhffs
 軇	hhgni
 筶	hhgr
@@ -6222,7 +6257,7 @@ max_phrase_length: 1
 軅	hhmog
 躬	hhn
 凢	hhn
-竼	hhni
+竼	hhni	hhn'i
 躱	hhnsd
 鯬	hhnwf
 黎	hhoe
@@ -6239,18 +6274,18 @@ max_phrase_length: 1
 躳	hhrhr
 躳	hhrr
 軃	hhrrj
-躽	hhsav
+躽	hhsav	hhs'av
 篇	hhsb
 剓	hhsh
 躵	hhsip
-躯	hhsk
+躯	hhsk	hhs'k
 卯	hhsl
 贕	hhslc
 孵	hhsld
 毈	hhsle
-卵	hhsli
+卵	hhsli	hhsl'i
 躼	hhsmv
-軀	hhsrr
+軀	hhsrr	hhs'rr
 簄	hhsu
 躾	hhtgk
 軆	hhtwt
@@ -6269,7 +6304,7 @@ max_phrase_length: 1
 么	hi
 筤	hiav
 簠	hibt
-魍	hibtv
+魍	hibtv	hib'tv
 魈	hifb
 簶	hife
 鵝	hihaf
@@ -6381,7 +6416,7 @@ max_phrase_length: 1
 懲	hkp
 呑	hkr
 啓	hkr
-喬	hkrbr
+喬	hkrbr	hkrb'r
 竻	hks
 笳	hksr
 岙	hku
@@ -6392,7 +6427,7 @@ max_phrase_length: 1
 兎	hlai
 齃	hlapv
 币	hlb
-禹	hlbi
+禹	hlbi	hlb'i
 質	hlbuc
 齄	hldam
 斦	hlhml
@@ -6492,10 +6527,10 @@ max_phrase_length: 1
 簷	hncr
 朵	hnd
 梨	hnd
-凩	hnd
+凩	hnd	hn'd
 颹	hndmq
 箛	hndo
-凤	hne
+凤	hne	hn'e
 殳	hne
 篜	hnef
 颾	hneii
@@ -6503,45 +6538,45 @@ max_phrase_length: 1
 颷	hnff
 飈	hnfff
 飚	hnfff
-鳯	hnhaf
+鳯	hnhaf	hn'haf
 鷉	hnhaf
-凰	hnhag
+凰	hnhag	hn'hag
 笈	hnhe
 颩	hnhhh
 飀	hnhhw
 飗	hnhhw
 颳	hnhjr
-風	hnhli
+風	hnhli	hn'hli
 飍	hnhnn
 犁	hnhq
 颼	hnhxe
 飕	hnhxe
-凡	hni
+凡	hni	hn'i
 筩	hnib
 颰	hnike
 飇	hnikk
 颰	hnikk
 颱	hnir
-风	hnk
+风	hnk	hn'k
 飉	hnkcf
 筳	hnkg
 筵	hnkm
 筵	hnkv
-凧	hnlb
+凧	hnlb	hn'lb
 篨	hnld
 第	hnlh
-凮	hnma
-凬	hnma
-鳳	hnmaf
+凮	hnma	hn'ma
+凬	hnma	hn'ma
+鳳	hnmaf	hn'maf
 頽	hnmbc
 颓	hnmbo
 箓	hnme
 飋	hnmgh
-風	hnmli
+風	hnmli	hn'mli
 飅	hnmlw
 篛	hnmm
-凨	hnmmi
-夙	hnmni
+凨	hnmmi	hn'mmi
+夙	hnmni	hn'mn'i
 颲	hnmnn
 颬	hnmvh
 飃	hnmwf
@@ -6559,17 +6594,17 @@ max_phrase_length: 1
 躛	hnryo
 筝	hnsd
 飂	hnsmh
-凲	hntxc
+凲	hntxc	hn'txc
 笃	hnvm
 颸	hnwp
 飔	hnwp
 製	hnyhv
-凪	hnylm
+凪	hnylm	hn'ylm
 讆	hnymr
 讏	hnymr
 颭	hnyr
 飐	hnyr
-八	ho
+八	ho	c
 彳	ho
 昝	hoa
 得	hoami
@@ -6581,7 +6616,7 @@ max_phrase_length: 1
 籲	hobc
 篧	hobg
 衢	hobgn
-徟	hobgr
+徟	hobgr	hob'gr
 徂	hobm
 徭	hobou
 衕	hobrn
@@ -6596,11 +6631,11 @@ max_phrase_length: 1
 徠	hodoo
 衛	hodqn
 徕	hodt
-徚	hodwf
+徚	hodwf	hodw'f
 衍	hoemn
 熧	hof
 徶	hofbk
-徜	hofbr
+徜	hofbr	hofb'r
 坕	hog
 待	hogdi
 篗	hoge
@@ -6725,7 +6760,7 @@ max_phrase_length: 1
 媭	hov
 後	hovie
 衟	hovun
-徊	howr
+徊	howr	how'r
 徹	hoybk
 徿	hoybp
 徬	hoybs
@@ -6770,7 +6805,7 @@ max_phrase_length: 1
 筢	hqau
 乕	hqb
 犋	hqbmc
-犅	hqbtu
+犅	hqbtu	hqb'tu
 看	hqbu
 犑	hqbuk
 掰	hqchq
@@ -6823,8 +6858,8 @@ max_phrase_length: 1
 犡	hqmtb
 牼	hqmvm
 籒	hqmw
-觕	hqnbg
-觕	hqnbq
+觕	hqnbg	hqnb'g
+觕	hqnbq	hqnb'q
 犍	hqnkq
 失	hqo
 簮	hqoa
@@ -6841,7 +6876,7 @@ max_phrase_length: 1
 吿	hqr
 箉	hqrs
 犌	hqrse
-箍	hqsb
+箍	hqsb	hqs'b
 牣	hqshi
 簎	hqta
 簼	hqtb
@@ -6849,13 +6884,13 @@ max_phrase_length: 1
 犠	hqtgi
 犧	hqtgs
 犕	hqthb
-箝	hqtm
+箝	hqtm	hqt'm
 毛	hqu
 犣	hqvvv
-牭	hqwc
+牭	hqwc	hqw'c
 籜	hqwj
 犤	hqwlp
-牳	hqwyi
+牳	hqwyi	hqwy'i
 犜	hqydk
 牨	hqyhn
 牥	hqyhs
@@ -6907,7 +6942,7 @@ max_phrase_length: 1
 筥	hrr
 簞	hrrj
 箿	hrsj
-甜	hrtm
+甜	hrtm	hrt'm
 乱	hru
 峊	hru
 簨	hruc
@@ -6919,12 +6954,12 @@ max_phrase_length: 1
 戶	hs
 勹	hs
 肩	hsb
-扃	hsbr
-扁	hsbt
+扃	hsbr	hsb'r
+扁	hsbt	hsb't
 勲	hsf
 扊	hsff
 鳸	hshaf
-扄	hshbr
+扄	hshbr	hshb'r
 所	hshml
 殷	hshne
 笤	hshr
@@ -6934,16 +6969,16 @@ max_phrase_length: 1
 箃	hsje
 笋	hsk
 戻	hsk
-篋	hsko
-箧	hskt
+篋	hsko	hs'ko
+箧	hskt	hs'kt
 帍	hslb
-籄	hslc
+籄	hslc	hs'lc
 扉	hslmy
 肁	hslq
-篚	hsly
+篚	hsly	hs'ly
 箒	hsmb
 頺	hsmbc
-筐	hsmg
+筐	hsmg	hs'mg
 籊	hsmg
 箼	hsmg
 筺	hsmi
@@ -6955,13 +6990,13 @@ max_phrase_length: 1
 敫	hsok
 憅	hsp
 篤	hsqf
-笸	hsr
+笸	hsr	hs'r
 启	hsr
 扈	hsrau
 戺	hsru
 扇	hssmm
 箳	hstt
-筪	hswl
+筪	hswl	hs'wl
 房	hsyhs
 扆	hsyhv
 戽	hsyj
@@ -7098,25 +7133,25 @@ max_phrase_length: 1
 鼩	hvpr
 鼱	hvqmb
 筎	hvr
-鼴	hvsav
+鼴	hvsav	hvs'av
 鼦	hvshr
 卬	hvsl
 鼸	hvtxc
 鼺	hvwww
 鼤	hvyk
 甶	hw
-笝	hwe
+笝	hwe	hw'e
 睾	hwgtj
 鷭	hwhaf
 鶹	hwhaf
-箘	hwhd
+箘	hwhd	hw'hd
 囱	hwhe
 卑	hwhj
-簂	hwim
-箇	hwjr
-囟	hwk
-筃	hwk
-囪	hwkk
+簂	hwim	hw'im
+箇	hwjr	hw'jr
+囟	hwk	hw'k
+筃	hwk	hw'k
+囪	hwkk	hw'kk
 勫	hwks
 笚	hwl
 簚	hwlb
@@ -7127,7 +7162,7 @@ max_phrase_length: 1
 箅	hwml
 粵	hwmvs
 粤	hwmvs
-囱	hwni
+囱	hwni	hw'ni
 鄱	hwnl
 飜	hwnoo
 悤	hwp
@@ -7184,8 +7219,8 @@ max_phrase_length: 1
 簅	hyhm
 笐	hyhn
 般	hyhne
-舤	hyhni
-舧	hyhni
+舤	hyhni	hyhn'i
+舧	hyhni	hyhn'i
 船	hyhnr
 簉	hyhr
 籩	hyhs
@@ -7369,8 +7404,8 @@ max_phrase_length: 1
 禔	ifamo
 禵	ifaoc
 禢	ifasm
-禍	ifbbr
-禂	ifbgr
+禍	ifbbr	ifbb'r
+禂	ifbgr	ifb'gr
 视	ifbhu
 禈	ifbjj
 廠	ifbk
@@ -7482,8 +7517,8 @@ max_phrase_length: 1
 禒	ifvno
 禝	ifwce
 祼	ifwd
-祵	ifwd
-祻	ifwjr
+祵	ifwd	ifw'd
+祻	ifwjr	ifw'jr
 禑	ifwlb
 禤	ifwlm
 禗	ifwp
@@ -7592,8 +7627,8 @@ max_phrase_length: 1
 棨	ikd
 犮	ike
 参	ikhhh
-飆	ikhni
-飙	ikhnk
+飆	ikhni	ikhn'i
+飙	ikhnk	ikhn'k
 猋	ikikk
 軬	ikjwj
 犮	ikk
@@ -7610,7 +7645,7 @@ max_phrase_length: 1
 库	ikq
 啓	ikr
 彧	ikrm
-为	iksi
+为	iksi	iks'i
 尤	iku
 尨	ikuh
 綮	ikvif
@@ -7630,7 +7665,7 @@ max_phrase_length: 1
 冫	im
 亠	im
 凕	imbac
-凋	imbgr
+凋	imbgr	imb'gr
 凈	imbsd
 凎	imc
 庮	imcw
@@ -7679,7 +7714,7 @@ max_phrase_length: 1
 凊	imqmb
 况	imrhu
 冺	imrvp
-臧	imsll
+臧	imsll	ims'll
 馮	imsqf
 凞	imsuf
 凘	imtcl
@@ -7687,7 +7722,7 @@ max_phrase_length: 1
 凒	imumt
 凗	imuog
 庌	imvh
-凅	imwjr
+凅	imwjr	imw'jr
 凙	imwlj
 凉	imyrf
 凜	imywd
@@ -7796,10 +7831,10 @@ max_phrase_length: 1
 聋	ipsj
 麏	ipskr
 龚	iptc
-甙	iptm
+甙	iptm	ipt'm
 麒	iptmc
 庉	ipu
-麕	ipwhd
+麕	ipwhd	ipw'hd
 麈	ipyg
 袭	ipyhv
 麍	ipyiu
@@ -7823,8 +7858,8 @@ max_phrase_length: 1
 顑	irmbc
 戜	irmg
 瓵	irmvn
-觱	irnbg
-觱	irnbq
+觱	irnbg	irnb'g
+觱	irnbq	irnb'q
 邰	irnl
 鄌	irnl
 啟	irok
@@ -7834,13 +7869,13 @@ max_phrase_length: 1
 辝	irytj
 户	is
 肩	isb
-扃	isbr
+扃	isbr	isb'r
 盛	isbt
-扁	isbt
+扁	isbt	isb't
 扊	isff
 廳	isgp
 鳸	ishaf
-扄	ishbr
+扄	ishbr	ishb'r
 戾	isik
 廜	isja
 廰	isjp
@@ -7888,18 +7923,18 @@ max_phrase_length: 1
 戉	iv
 谒	ivapv
 谩	ivawe
-调	ivbgr
+调	ivbgr	ivb'gr
 诨	ivbkq
 诅	ivbm
 谖	ivbme
 谣	ivbou
-诇	ivbr
+诇	ivbr	ivb'r
 讼	ivci
 说	ivcru
 诐	ivdhe
 讨	ivdi
 诀	ivdk
-谏	ivdwf
+谏	ivdwf	ivdw'f
 译	iveq
 诮	ivfb
 谠	ivfbu
@@ -7918,7 +7953,7 @@ max_phrase_length: 1
 诉	ivhmy
 讥	ivhn
 设	ivhne
-讽	ivhnk
+讽	ivhnk	ivhn'k
 讬	ivhp
 诋	ivhvi
 谀	ivhxo
@@ -7967,7 +8002,7 @@ max_phrase_length: 1
 诡	ivnmu
 谞	ivnob
 诤	ivnsd
-诌	ivnsm
+诌	ivnsm	ivns'm
 谗	ivnuy
 认	ivo
 讷	ivob
@@ -7999,8 +8034,8 @@ max_phrase_length: 1
 讱	ivshi
 诏	ivshr
 诹	ivsje
-讴	ivsk
-诓	ivsmg
+讴	ivsk	ivs'k
+诓	ivsmg	ivs'mg
 谬	ivsmh
 诩	ivsmm
 词	ivsmr
@@ -8088,13 +8123,13 @@ max_phrase_length: 1
 孛	jbnd
 察	jbof
 囊	jbrrv
-南	jbtj
+南	jbtj	jb'tj
 蟗	jbuui
 索	jbvif
 疐	jbwno
 穴	jc
 窤	jcapp
-窩	jcbbr
+窩	jcbbr	jcbb'r
 窰	jcbou
 窅	jcbu
 穼	jcd
@@ -8124,8 +8159,8 @@ max_phrase_length: 1
 竅	jchsk
 竁	jchuu
 窊	jchvo
-窗	jchwe
-窗	jchwk
+窗	jchwe	jchw'e
+窗	jchwk	jchw'k
 窗	jchwn
 窻	jchwp
 竄	jchxv
@@ -8159,7 +8194,7 @@ max_phrase_length: 1
 穹	jcn
 穵	jcn
 窞	jcnhx
-穸	jcni
+穸	jcni	jcn'i
 窿	jcnlm
 歕	jcno
 窑	jcoju
@@ -8219,7 +8254,7 @@ max_phrase_length: 1
 頍	jembc
 麪	jemls
 礊	jemr
-麵	jemwl
+麵	jemwl	jemw'l
 麫	jemys
 罊	jeoju
 麧	jeon
@@ -8291,9 +8326,9 @@ max_phrase_length: 1
 朝	jjb
 輣	jjbb
 寘	jjbc
-輖	jjbgr
+輖	jjbgr	jjb'gr
 轁	jjbhx
-輞	jjbtv
+輞	jjbtv	jjb'tv
 輍	jjcor
 韓	jjdmq
 輟	jjeee
@@ -8313,7 +8348,7 @@ max_phrase_length: 1
 轎	jjhkb
 斬	jjhml
 軗	jjhne
-軓	jjhni
+軓	jjhni	jjhn'i
 軧	jjhpm
 軼	jjhqo
 軞	jjhqu
@@ -8355,7 +8390,7 @@ max_phrase_length: 1
 軸	jjlw
 轜	jjmbb
 輭	jjmbk
-輀	jjmbl
+輀	jjmbl	jjmb'l
 轌	jjmbm
 轌	jjmbs
 輏	jjmcw
@@ -8416,7 +8451,7 @@ max_phrase_length: 1
 輙	jjsje
 輒	jjsju
 輑	jjskr
-軭	jjsmg
+軭	jjsmg	jjs'mg
 轇	jjsmh
 轞	jjsmt
 轏	jjsnd
@@ -8497,7 +8532,7 @@ max_phrase_length: 1
 宙	jlw
 审	jlwl
 疌	jlyo
-士	jm
+士	jm	g
 宣	jmam
 鑋	jmc
 寡	jmch
@@ -8546,14 +8581,14 @@ max_phrase_length: 1
 宿	joma
 顁	jombc
 宾	jomc
-麥	joni
+麥	joni	jon'i
 宱	joos
 寑	jose
 它	jp
 耆	jpa
 寧	jpbn
 寜	jpbn
-甯	jpbq
+甯	jpbq	jpb'q
 寍	jpbt
 宓	jph
 寗	jphb
@@ -8596,8 +8631,8 @@ max_phrase_length: 1
 辜	jrytj
 肀	js
 宭	jskr
-宦	jsll
-宧	jsll
+宦	jsll	js'll
+宧	jsll	js'll
 寥	jsmh
 愂	jsp
 卉	jt
@@ -8627,7 +8662,7 @@ max_phrase_length: 1
 鼖	jtge
 尭	jthu
 宑	jtt
-七	ju
+七	ju	p
 兝	jucsh
 尅	judi
 鵷	juhaf
@@ -8696,9 +8731,9 @@ max_phrase_length: 1
 冇	kb
 痭	kbb
 奟	kbb
-瘑	kbbr
+瘑	kbbr	kbb'r
 癭	kbcv
-奝	kbgr
+奝	kbgr	kb'gr
 鵗	kbhaf
 殽	kbhne
 牵	kbhq
@@ -8706,7 +8741,7 @@ max_phrase_length: 1
 戫	kbirm
 瘒	kbjj
 疽	kbm
-痌	kbmr
+痌	kbmr	kb'mr
 瓻	kbmvn
 郗	kbnl
 郁	kbnl
@@ -8714,7 +8749,7 @@ max_phrase_length: 1
 欷	kbno
 瘵	kbof
 瘿	kbov
-痈	kbq
+痈	kbq	kb'q
 癯	kbug
 龓	kbybp
 昚	kca
@@ -8782,10 +8817,10 @@ max_phrase_length: 1
 獌	khawe
 猽	khbac
 猾	khbbb
-猧	khbbr
+猧	khbbr	khbb'r
 狙	khbm
 猨	khbme
-狪	khbmr
+狪	khbmr	khb'mr
 痸	khbn
 狈	khbo
 猺	khbou
@@ -8826,7 +8861,7 @@ max_phrase_length: 1
 狧	khhjr
 獢	khhkb
 奅	khhl
-猦	khhni
+猦	khhni	khhn'i
 狌	khhqm
 獅	khhrb
 猵	khhsb
@@ -8905,8 +8940,8 @@ max_phrase_length: 1
 峱	khngu
 獝	khnhb
 猱	khnhd
-瘋	khni
-疯	khnk
+瘋	khni	khn'i
+疯	khnk	khn'k
 狿	khnkm
 狿	khnkv
 獼	khnmb
@@ -9101,7 +9136,7 @@ max_phrase_length: 1
 疨	kmvh
 痙	kmvm
 瘭	kmwf
-奤	kmwl
+奤	kmwl	kmw'l
 疜	kmy
 症	kmym
 九	kn
@@ -9178,7 +9213,7 @@ max_phrase_length: 1
 车	kq
 辒	kqabt
 辊	kqapp
-辋	kqbtv
+辋	kqbtv	kqb'tv
 轰	kqee
 辍	kqeee
 辚	kqfdq
@@ -9257,7 +9292,7 @@ max_phrase_length: 1
 綔	kshvf
 瓠	kshvo
 耷	ksj
-奁	ksk
+奁	ksk	ks'k
 脅	ksksb
 劦	kskss
 姭	ksksv
@@ -9273,7 +9308,7 @@ max_phrase_length: 1
 匏	kspru
 加	ksr
 癖	ksrj
-奩	ksrr
+奩	ksrr	ks'rr
 奆	kss
 劜	ksu
 勰	kswp
@@ -9286,7 +9321,7 @@ max_phrase_length: 1
 癀	ktlc
 瘽	ktlm
 刾	ktln
-疳	ktm
+疳	ktm	kt'm
 頬	ktmbc
 颊	ktmbo
 瘎	ktmv
@@ -9324,13 +9359,13 @@ max_phrase_length: 1
 癰	kvug
 奋	kw
 癦	kwgg
-痼	kwjr
+痼	kwjr	kw'jr
 瘝	kwle
 瘝	kwlf
 癏	kwlv
 痹	kwml
 瘟	kwot
-痐	kwr
+痐	kwr	kw'r
 瘰	kwvf
 癳	kwwf
 冭	ky
@@ -9390,11 +9425,11 @@ max_phrase_length: 1
 帩	lbfb
 幥	lbfbq
 幬	lbgni
-裯	lbgr
+裯	lbgr	lb'gr
 帕	lbha
 幯	lbhal
 幡	lbhdw
-帆	lbhni
+帆	lbhni	lbhn'i
 帙	lbhqo
 幒	lbhwp
 幮	lbigi
@@ -9447,8 +9482,8 @@ max_phrase_length: 1
 帡	lbtt
 幭	lbtwi
 冘	lbu
-幗	lbwim
-帼	lbwmi
+幗	lbwim	lbw'im
+帼	lbwmi	lbw'mi
 袇	lby
 幀	lbybc
 帧	lbybo
@@ -9479,7 +9514,8 @@ max_phrase_length: 1
 褬	leed
 裰	leee
 坚	leg
-衩	lei
+衩	lei	lei
+衩	lei	le'i
 紧	levif
 竖	leyt
 襒	lfbk
@@ -9488,7 +9524,7 @@ max_phrase_length: 1
 裧	lff
 袢	lfq
 裷	lfqu
-裆	lfsm
+裆	lfsm	lfs'm
 褝	lfwj
 書	lga
 晝	lgam
@@ -9502,7 +9538,7 @@ max_phrase_length: 1
 袺	lgr
 襭	lgrc
 褤	lgrv
-畵	lguw
+畵	lguw	lgu'w
 襩	lgwc
 畫	lgwm
 装	lgyhv
@@ -9550,14 +9586,14 @@ max_phrase_length: 1
 蚏	lib
 螟	libac
 螖	libbb
-蝸	libbr
+蝸	libbr	libb'r
 蠳	libcv
 蛶	libdi
-蜩	libgr
+蜩	libgr	lib'gr
 蟡	libhf
 览	libhu
 蚬	libhu
-蛧	libkk
+蛧	libkk	lib'kk
 蛆	libm
 蝯	libme
 蚦	libmm
@@ -9565,7 +9601,7 @@ max_phrase_length: 1
 褦	libp
 监	libt
 蛊	libt
-蝄	libtv
+蝄	libtv	lib'tv
 蛽	libuc
 蠼	libue
 蠷	libug
@@ -9671,7 +9707,7 @@ max_phrase_length: 1
 蛖	liiuh
 螰	liixp
 補	lijb
-蝻	lijbj
+蝻	lijbj	lijb'j
 螲	lijcg
 蚑	lije
 蠘	lijig
@@ -9750,7 +9786,7 @@ max_phrase_length: 1
 蛵	limvm
 螵	limwf
 蟫	limwj
-蝒	limwl
+蝒	limwl	limw'l
 虾	limy
 蟓	linao
 蝜	linbc
@@ -9824,7 +9860,7 @@ max_phrase_length: 1
 蜈	lirvk
 蠅	lirxu
 门	lis
-蝘	lisav
+蝘	lisav	lis'av
 褊	lisb
 蠾	lisei
 蠮	lisem
@@ -9860,7 +9896,7 @@ max_phrase_length: 1
 蟏	litll
 螼	litlm
 蠨	litlx
-蚶	litm
+蚶	litm	lit'm
 螨	litmb
 蜞	litmc
 蜹	litob
@@ -9882,7 +9918,7 @@ max_phrase_length: 1
 虬	liu
 蝬	liuce
 螘	liumt
-蜬	liune
+蜬	liune	liu'ne
 蠵	liuob
 袯	live
 蟣	livii
@@ -9893,16 +9929,16 @@ max_phrase_length: 1
 蝟	liwb
 蜾	liwd
 蟔	liwgf
-蜠	liwhd
-蟈	liwim
+蜠	liwhd	liw'hd
+蟈	liwim	liw'im
 蠋	liwli
 蠌	liwlj
 蝿	liwlu
 蠉	liwlv
-蝈	liwmi
+蝈	liwmi	liw'mi
 蝹	liwot
-蛔	liwr
-蜖	liwsl
+蛔	liwr	liw'r
+蜖	liwsl	liw'sl
 螺	liwvf
 蠝	liwww
 虲	liy
@@ -9960,7 +9996,7 @@ max_phrase_length: 1
 暢	llamh
 衴	llbu
 覑	llbuu
-朄	lldwf
+朄	lldwf	lldw'f
 肃	llfl
 粛	llfl
 牉	llfq
@@ -9999,7 +10035,7 @@ max_phrase_length: 1
 鹔	llpym
 裥	llsa
 牊	llshr
-归	llsm
+归	llsm	lls'm
 帰	llsmb
 襕	llsw
 婁	llv
@@ -10010,7 +10046,7 @@ max_phrase_length: 1
 丄	lm
 袹	lma
 襦	lmbb
-袻	lmbl
+袻	lmbl	lmb'l
 贵	lmbo
 貴	lmbuc
 衧	lmd
@@ -10153,7 +10189,7 @@ max_phrase_length: 1
 阐	lscwj
 闲	lsd
 闭	lsdh
-阑	lsdwf
+阑	lsdwf	lsdw'f
 阔	lsehr
 闺	lsgg
 阖	lsgit
@@ -10197,7 +10233,7 @@ max_phrase_length: 1
 闻	lssj
 阙	lstuo
 闿	lsusu
-阃	lswd
+阃	lswd	lsw'd
 闸	lswl
 阛	lswlv
 闶	lsyhn
@@ -10208,7 +10244,7 @@ max_phrase_length: 1
 阏	lsysy
 阂	lsyvo
 襽	ltaw
-襺	ltbi
+襺	ltbi	ltb'i
 襆	ltco
 襼	ltgi
 襨	ltgi
@@ -10220,7 +10256,7 @@ max_phrase_length: 1
 褿	ltwa
 襪	ltwi
 襛	ltwv
-儿	lu
+儿	lu	c
 乚	lu
 沊	lue
 鴆	luhaf
@@ -10241,9 +10277,9 @@ max_phrase_length: 1
 胄	lwb
 冑	lwb
 裸	lwd
-裍	lwd
+裍	lwd	lw'd
 裡	lwg
-裀	lwk
+裀	lwk	lw'k
 申	lwl
 襡	lwli
 襗	lwlj
@@ -10304,7 +10340,7 @@ max_phrase_length: 1
 厚	mand
 鄑	manl
 霷	mbaah
-霌	mbbgr
+霌	mbbgr	mbb'gr
 霾	mbbhg
 霢	mbbhv
 霡	mbbie
@@ -10320,7 +10356,7 @@ max_phrase_length: 1
 霦	mbddh
 耐	mbdi
 霪	mbebg
-霘	mbebr
+霘	mbebr	mbeb'r
 霂	mbed
 霈	mbejb
 霃	mbelu
@@ -10357,14 +10393,14 @@ max_phrase_length: 1
 耎	mbk
 勵	mbks
 雵	mblbk
-而	mbll
+而	mbll	mb'll
 融	mblmi
 蠒	mblmi
 雿	mblmo
 霏	mblmy
 亙	mbm
 顬	mbmbc
-需	mbmbl
+需	mbmbl	mbmb'l
 颥	mbmbo
 璽	mbmgi
 靂	mbmhm
@@ -10412,7 +10448,8 @@ max_phrase_length: 1
 孁	mbrrv
 霞	mbrse
 霨	mbsfi
-雪	mbsm
+雪	mbsm	mbsm
+雪	mbsm	mbs'm
 霫	mbsma
 翮	mbsmm
 霹	mbsrj
@@ -10451,7 +10488,7 @@ max_phrase_length: 1
 顨	mcml
 恶	mcp
 西	mcw
-酉	mcwm
+酉	mcwm	mcw'm
 于	md
 盂	mdbt
 厢	mdbu
@@ -10467,16 +10504,16 @@ max_phrase_length: 1
 唘	mer
 不	mf
 灭	mf
-爾	mfbk
+爾	mfbk	mfb'k
 厰	mfbk
-甭	mfbq
+甭	mfbq	mfb'q
 盃	mfbt
 覔	mfbuu
 覝	mfbuu
 鴀	mfhaf
 彯	mfhhh
-飄	mfhni
-飘	mfhnk
+飄	mfhni	mfhn'i
+飘	mfhnk	mfhn'k
 瓢	mfhvo
 平	mfj
 奀	mfk
@@ -10516,7 +10553,7 @@ max_phrase_length: 1
 珊	mgbbm
 琛	mgbcd
 瓔	mgbcv
-琱	mgbgr
+琱	mgbgr	mgb'gr
 现	mgbhu
 瑫	mgbhx
 琿	mgbjj
@@ -10547,7 +10584,7 @@ max_phrase_length: 1
 瓎	mgdlc
 瑋	mgdmq
 琜	mgdoo
-瑓	mgdwf
+瑓	mgdwf	mgdw'f
 琺	mgegi
 瑵	mgeii
 璖	mgesd
@@ -10575,7 +10612,7 @@ max_phrase_length: 1
 鳿	mghaf
 鸖	mghaf
 瑝	mghag
-珦	mghbr
+珦	mghbr	mghb'r
 珘	mghby
 璳	mghdc
 琍	mghdn
@@ -10593,8 +10630,8 @@ max_phrase_length: 1
 瑀	mghlb
 瓆	mghlc
 玑	mghn
-珮	mghnb
-珟	mghnn
+珮	mghnb	mghn'b
+珟	mghnn	mghn'n
 珩	mghon
 瑽	mghoo
 琘	mghpa
@@ -10786,7 +10823,7 @@ max_phrase_length: 1
 璜	mgtlc
 瑛	mgtlk
 瑾	mgtlm
-玵	mgtm
+玵	mgtm	mgt'm
 琪	mgtmc
 璍	mgtmj
 瑹	mgtod
@@ -10810,7 +10847,7 @@ max_phrase_length: 1
 瑙	mgvvw
 理	mgwg
 瑻	mgwjc
-珚	mgwk
+珚	mgwk	mgw'k
 玾	mgwl
 環	mgwlv
 琾	mgwol
@@ -10856,7 +10893,7 @@ max_phrase_length: 1
 璾	mgyx
 玣	mgyy
 瓋	mgyyb
-厂	mh
+厂	mh	m
 丆	mh
 乛	mh
 厡	mhae
@@ -10868,7 +10905,7 @@ max_phrase_length: 1
 磿	mhdr
 鴉	mhhaf
 厜	mhjm
-巩	mhni
+巩	mhni	mhn'i
 邪	mhnl
 雅	mhog
 餮	mhoiv
@@ -10927,7 +10964,7 @@ max_phrase_length: 1
 魘	mkhui
 蚕	mklmi
 蝅	mklmi
-靨	mkmwl
+靨	mkmwl	mkmw'l
 郠	mknl
 饏	mkoiv
 饜	mkoiv
@@ -10946,14 +10983,14 @@ max_phrase_length: 1
 丌	ml
 丅	ml
 帀	mlb
-兩	mlbo
-雨	mlby
+兩	mlbo	mlb'o
+雨	mlby	mlb'y
 亞	mllm
 亜	mllm
 丣	mlls
 覀	mllw
 畱	mllw
-工	mlm
+工	mlm	m
 厞	mlmy
 丏	mlvs
 更	mlwk
@@ -11037,7 +11074,7 @@ max_phrase_length: 1
 殅	mnhqm
 瓱	mnhqu
 殠	mnhuk
-歹	mni
+歹	mni	mn'i
 殘	mnii
 残	mnij
 殏	mnije
@@ -11184,18 +11221,18 @@ max_phrase_length: 1
 礘	mravf
 硼	mrbb
 磆	mrbbb
-碢	mrbbr
-碉	mrbgr
+碢	mrbbr	mrbb'r
+碉	mrbgr	mrb'gr
 砚	mrbhu
 鞷	mrbj
-鬲	mrbl
+鬲	mrbl	mrb'l
 砠	mrbm
-硐	mrbmr
+硐	mrbmr	mrb'mr
 磜	mrbof
 磘	mrbou
-砽	mrbq
+砽	mrbq	mrb'q
 碀	mrbsd
-碙	mrbtu
+碙	mrbtu	mrb'tu
 硯	mrbuu
 磎	mrbvk
 砃	mrby
@@ -11250,9 +11287,9 @@ max_phrase_length: 1
 斫	mrhml
 矶	mrhn
 砓	mrhne
-矾	mrhni
-碸	mrhni
-砜	mrhnk
+矾	mrhni	mrhn'i
+碸	mrhni	mrhn'i
+砜	mrhnk	mrhn'k
 磫	mrhoo
 矺	mrhp
 碈	mrhpa
@@ -11267,7 +11304,7 @@ max_phrase_length: 1
 砾	mrhvd
 砥	mrhvi
 碑	mrhwj
-硇	mrhwk
+硇	mrhwk	mrhw'k
 磇	mrhwp
 礖	mrhxc
 磶	mrhxf
@@ -11356,11 +11393,11 @@ max_phrase_length: 1
 磹	mrmwj
 礓	mrmwm
 乭	mrn
-确	mrnbg
-确	mrnbq
+确	mrnbg	mrnb'g
+确	mrnbq	mrnb'q
 矷	mrnd
 砐	mrnhe
-矽	mrni
+矽	mrni	mrn'i
 硧	mrnib
 硟	mrnkm
 硟	mrnkv
@@ -11419,7 +11456,7 @@ max_phrase_length: 1
 礮	mrsfk
 礟	mrsfk
 礛	mrsit
-砸	mrslb
+砸	mrslb	mrs'lb
 磖	mrsma
 磟	mrsmh
 碼	mrsqf
@@ -11472,14 +11509,14 @@ max_phrase_length: 1
 碌	mrvne
 碯	mrvvw
 畐	mrw
-硱	mrwd
-碅	mrwhd
+硱	mrwd	mrw'd
+碅	mrwhd	mrw'hd
 礋	mrwlj
 碨	mrwmv
-硘	mrwr
+硘	mrwr	mrw'r
 磥	mrwvf
 礧	mrwww
-砪	mrwyi
+砪	mrwyi	mrwy'i
 碲	mrybb
 碵	mrybc
 礲	mrybp
@@ -11503,8 +11540,8 @@ max_phrase_length: 1
 碚	mrytr
 磀	mrytu
 硋	mryvo
-磠	mrywi
-硵	mrywk
+磠	mrywi	mryw'i
+硵	mrywk	mryw'k
 万	ms
 戸	ms
 豕	msho
@@ -11568,7 +11605,7 @@ max_phrase_length: 1
 鹴	mupym
 尶	musit
 尶	musmt
-画	muw
+画	muw	mu'w
 匚	mv
 匸	mv
 脣	mvb
@@ -11578,7 +11615,7 @@ max_phrase_length: 1
 蜃	mvlmi
 頋	mvmbc
 顾	mvmbo
-瓦	mvni
+瓦	mvni	mvn'i
 互	mvnm
 敐	mvok
 覅	mvphh
@@ -11592,7 +11629,7 @@ max_phrase_length: 1
 醍	mwamo
 醌	mwapp
 酹	mwbdi
-酮	mwbmr
+酮	mwbmr	mwb'mr
 酻	mwbnd
 贾	mwbo
 賈	mwbuc
@@ -11690,13 +11727,13 @@ max_phrase_length: 1
 醄	mwpou
 靤	mwpru
 酜	mwqo
-靣	mwr
+靣	mwr	mw'r
 酲	mwrhg
 酲	mwrmg
 釅	mwrrk
-面	mwsl
+面	mwsl	mw'sl
 醪	mwsmh
-醧	mwsrr
+醧	mwsrr	mws'rr
 配	mwsu
 醋	mwta
 醭	mwtco
@@ -11704,13 +11741,13 @@ max_phrase_length: 1
 覊	mwtjf
 覉	mwtjr
 醼	mwtlf
-酣	mwtm
+酣	mwtm	mwt'm
 醛	mwtog
 醝	mwtqm
 醩	mwtwa
 醴	mwtwt
 醲	mwtwv
-酗	mwuk
+酗	mwuk	mwu'k
 要	mwv
 酳	mwvib
 醁	mwvne
@@ -11758,7 +11795,7 @@ max_phrase_length: 1
 烉	nbf
 觘	nbfh
 觥	nbfmu
-角	nbg
+角	nbg	nb'g
 墮	nbg
 堕	nbg
 觟	nbgg
@@ -11794,7 +11831,7 @@ max_phrase_length: 1
 隳	nbop
 恿	nbp
 鹬	nbpym
-角	nbq
+角	nbq	nb'q
 觶	nbrrj
 解	nbshq
 觲	nbtgq
@@ -11812,7 +11849,7 @@ max_phrase_length: 1
 觸	nbwli
 斛	nbyj
 觪	nbytj
-小	nc
+小	nc	f
 弹	ncwj
 詹	ncymr
 子	nd
@@ -11865,10 +11902,10 @@ max_phrase_length: 1
 鱫	nfbbe
 鱡	nfbcj
 鰂	nfbcn
-鯛	nfbgr
+鯛	nfbgr	nfb'gr
 鯶	nfbjj
 鰀	nfbme
-鮦	nfbmr
+鮦	nfbmr	nfb'mr
 鰶	nfbof
 鰩	nfbou
 覙	nfbuu
@@ -11882,7 +11919,7 @@ max_phrase_length: 1
 粥	nfdn
 鯠	nfdoo
 鯟	nfdw
-鰊	nfdwf
+鰊	nfdwf	nfdw'f
 鯋	nfefh
 鰠	nfeii
 鮹	nffb
@@ -11985,7 +12022,7 @@ max_phrase_length: 1
 魟	nfm
 鱬	nfmbb
 鱏	nfmbj
-鮞	nfmbl
+鮞	nfmbl	nfmb'l
 鱈	nfmbm
 鱈	nfmbs
 鱩	nfmbw
@@ -12062,7 +12099,7 @@ max_phrase_length: 1
 鰐	nfrrs
 鰕	nfrse
 鱦	nfrxu
-鰋	nfsav
+鰋	nfsav	nfs'av
 鰹	nfseg
 魛	nfsh
 鮉	nfshr
@@ -12075,7 +12112,7 @@ max_phrase_length: 1
 鱘	nfsmi
 鮙	nfsmm
 鰢	nfsqf
-鰸	nfsrr
+鰸	nfsrr	nfs'rr
 鮔	nfss
 魢	nfsu
 鰌	nftcw
@@ -12083,7 +12120,7 @@ max_phrase_length: 1
 鰳	nftjs
 鰙	nftkr
 鱑	nftlc
-魽	nftm
+魽	nftm	nft'm
 鯕	nftmc
 鱯	nftoe
 鱶	nftov
@@ -12106,7 +12143,7 @@ max_phrase_length: 1
 鯔	nfvvw
 鯉	nfwg
 弾	nfwj
-鯝	nfwjr
+鯝	nfwjr	nfw'jr
 魻	nfwl
 鱰	nfwla
 鰅	nfwlb
@@ -12114,10 +12151,10 @@ max_phrase_length: 1
 鰥	nfwlf
 鱞	nfwlv
 鰃	nfwmv
-鮂	nfwo
+鮂	nfwo	nfw'o
 鰮	nfwot
 鰓	nfwp
-鮰	nfwr
+鮰	nfwr	nfw'r
 鰟	nfybs
 鮫	nfyck
 魧	nfyhn
@@ -12149,7 +12186,7 @@ max_phrase_length: 1
 頲	ngmbc
 颋	ngmbo
 疆	ngmwm
-矞	nhbcr
+矞	nhbcr	nhb'cr
 矡	nhbue
 柔	nhd
 及	nhe
@@ -12170,9 +12207,9 @@ max_phrase_length: 1
 弤	nhvi
 弧	nhvo
 臽	nhx
-夕	ni
+夕	ni	n'i
 弘	ni
-甬	nibq
+甬	nibq	nib'q
 鵵	nihaf
 犟	nihq
 夝	nihqm
@@ -12181,7 +12218,7 @@ max_phrase_length: 1
 強	nili
 劖	niln
 矛	ninh
-多	nini
+多	nini	nin'i
 邜	ninl
 酁	ninl
 予	ninn
@@ -12192,7 +12229,7 @@ max_phrase_length: 1
 夗	nisu
 彍	nitc
 婱	niv
-圅	niwj
+圅	niwj	niw'j
 麁	nixp
 外	niy
 斘	niyj
@@ -12204,7 +12241,7 @@ max_phrase_length: 1
 聼	njjwp
 蝨	njlii
 敢	njok
-又	nk
+又	nk	e
 暓	nka
 瞀	nkbu
 鍪	nkc
@@ -12232,8 +12269,8 @@ max_phrase_length: 1
 嵍	nku
 婺	nkv
 廵	nkvvv
-廻	nkwr
-廽	nkwsl
+廻	nkwr	nkw'r
+廽	nkwsl	nkw'sl
 引	nl
 弔	nl
 阝	nl
@@ -12315,7 +12352,7 @@ max_phrase_length: 1
 陌	nlma
 隭	nlmbb
 陾	nlmbk
-陑	nlmbl
+陑	nlmbl	nlmb'l
 陋	nlmbv
 阫	nlmf
 隬	nlmfb
@@ -12366,9 +12403,9 @@ max_phrase_length: 1
 陆	nlqu
 隕	nlrbc
 陨	nlrbo
-隁	nlsav
+隁	nlsav	nls'av
 陬	nlsje
-陿	nlsko
+陿	nlsko	nls'ko
 隦	nlsrj
 隘	nltct
 隊	nltpo
@@ -12410,9 +12447,9 @@ max_phrase_length: 1
 鳎	nmasm
 鲃	nmau
 鳗	nmawe
-鲷	nmbgr
+鲷	nmbgr	nmb'gr
 驵	nmbm
-鲖	nmbmr
+鲖	nmbmr	nmb'mr
 鲗	nmbon
 鳐	nmbou
 彚	nmbwd
@@ -12485,7 +12522,7 @@ max_phrase_length: 1
 彐	nmm
 骊	nmmbb
 鲡	nmmbb
-鲕	nmmbl
+鲕	nmmbl	nmmb'l
 颈	nmmbo
 鳕	nmmbs
 骦	nmmbu
@@ -12505,7 +12542,7 @@ max_phrase_length: 1
 鶸	nmnmf
 骉	nmnmm
 骙	nmnok
-驺	nmnsm
+驺	nmnsm	nmns'm
 鳆	nmoae
 驸	nmodi
 鲋	nmodi
@@ -12529,7 +12566,7 @@ max_phrase_length: 1
 鳚	nmsfi
 鱽	nmsh
 鲰	nmsje
-驱	nmsk
+驱	nmsk	nms'k
 鲪	nmskr
 鳛	nmsma
 骎	nmsme
@@ -12549,11 +12586,11 @@ max_phrase_length: 1
 鳒	nmtxc
 弳	nmvm
 鲻	nmvvw
-驷	nmwc
+驷	nmwc	nmw'c
 骒	nmwd
 鲤	nmwg
-鲴	nmwjr
-骃	nmwk
+鲴	nmwjr	nmw'jr
+骃	nmwk	nmw'k
 鳏	nmwle
 鳏	nmwlf
 彊	nmwm
@@ -12643,21 +12680,21 @@ max_phrase_length: 1
 尕	nsf
 熃	nsf
 埅	nsg
-夃	nshe
+夃	nshe	ns'he
 弨	nshr
 弭	nsj
 呄	nsjr
 奦	nsk
-弬	nsll
-弫	nsll
-刍	nsm
+弬	nsll	ns'll
+弫	nsll	ns'll
+刍	nsm	ns'm
 戼	nsmls
 張	nsmv
 孕	nsnd
 邹	nsnl
 雏	nsog
 急	nsp
-彄	nsrr
+彄	nsrr	ns'rr
 弡	nss
 彅	ntbh
 覴	ntbuu
@@ -12666,7 +12703,7 @@ max_phrase_length: 1
 勐	ntks
 彉	ntlc
 鄧	ntnl
-乙	nu
+乙	nu	n
 盌	nubt
 眢	nubu
 弢	nue
@@ -12684,7 +12721,7 @@ max_phrase_length: 1
 馁	nvbv
 馇	nvdam
 馌	nvgit
-饷	nvhbr
+饷	nvhbr	nvhb'r
 饭	nvhe
 饹	nvher
 饪	nvhg
@@ -12786,7 +12823,7 @@ max_phrase_length: 1
 倸	obd
 隺	obg
 偁	obgb
-倜	obgr
+倜	obgr	ob'gr
 鸙	obhaf
 龢	obhd
 僞	obhf
@@ -12796,17 +12833,17 @@ max_phrase_length: 1
 伹	obm
 龥	obmbc
 俱	obmc
-侗	obmr
+侗	obmr	ob'mr
 俘	obnd
 龣	obnme
 龡	obno
-肉	obo
+肉	obo	ob'o
 傺	obof
 侧	obon
 傜	obou
 憊	obp
 龤	obppa
-佣	obq
+佣	obq	ob'q
 倶	obuc
 俔	obuu
 俀	obv
@@ -12861,7 +12898,7 @@ max_phrase_length: 1
 儻	ofbf
 偿	ofbi
 僘	ofbk
-倘	ofbr
+倘	ofbr	ofb'r
 傥	ofbu
 儅	ofbw
 籴	ofd
@@ -12933,7 +12970,7 @@ max_phrase_length: 1
 儥	ogwc
 讐	ogymr
 讎	ogyrg
-入	oh
+入	oh	o
 伯	oha
 鳰	ohaf
 偟	ohag
@@ -12976,9 +13013,9 @@ max_phrase_length: 1
 俽	ohlo
 伒	ohml
 仉	ohn
-佩	ohnb
+佩	ohnb	ohn'b
 伇	ohne
-偑	ohni
+偑	ohni	ohn'i
 偺	ohoa
 偫	ohoi
 傱	ohoo
@@ -13022,7 +13059,7 @@ max_phrase_length: 1
 傅	oibi
 餫	oibjj
 飷	oibm
-餇	oibmr
+餇	oibmr	oib'mr
 餒	oibv
 俊	oice
 餩	oicyo
@@ -13039,7 +13076,7 @@ max_phrase_length: 1
 饎	oigrr
 鴒	oihaf
 餭	oihag
-餉	oihbr
+餉	oihbr	oihb'r
 餧	oihdv
 飯	oihe
 餎	oiher
@@ -13144,7 +13181,7 @@ max_phrase_length: 1
 翎	oismm
 飼	oismr
 餦	oismv
-饇	oisrr
+饇	oisrr	ois'rr
 饃	oitak
 饊	oitbk
 饛	oitbo
@@ -13331,10 +13368,10 @@ max_phrase_length: 1
 俪	ombb
 優	ombe
 偄	ombk
-侕	ombl
+侕	ombl	omb'l
 俞	ombn
 愈	ombp
-侖	ombt
+侖	ombt	omb't
 兪	ombv
 兵	omc
 余	omd
@@ -13415,7 +13452,7 @@ max_phrase_length: 1
 傈	omwd
 僳	omwd
 僄	omwf
-偭	omwl
+偭	omwl	omw'l
 僵	omwm
 僲	omwq
 僊	omwu
@@ -13488,7 +13525,7 @@ max_phrase_length: 1
 氧	ontq
 氙	onu
 氯	onvne
-氤	onwk
+氤	onwk	onw'k
 氳	onwot
 氦	onyvo
 从	oo
@@ -13496,7 +13533,7 @@ max_phrase_length: 1
 傷	ooah
 傕	oobg
 俎	oobm
-肏	oobo
+肏	oobo	oob'o
 伱	oof
 燞	oof
 坐	oog
@@ -13562,9 +13599,9 @@ max_phrase_length: 1
 镘	opawe
 钥	opb
 锊	opbdi
-钢	opbk
+钢	opbk	opb'k
 锾	opbme
-铜	opbmr
+铜	opbmr	opb'mr
 锄	opbms
 货	opbo
 贷	opbo
@@ -13580,7 +13617,8 @@ max_phrase_length: 1
 铍	opdhe
 钵	opdm
 铼	opdt
-钗	opei
+钗	opei	opei
+钗	opei	ope'i
 铴	openh
 铎	opeq
 钬	opf
@@ -13592,7 +13630,7 @@ max_phrase_length: 1
 锬	opff
 钞	opfh
 锩	opfqu
-铛	opfsm
+铛	opfsm	opfs'm
 垈	opg
 钍	opg
 佖	oph
@@ -13620,7 +13658,7 @@ max_phrase_length: 1
 铦	ophjr
 锸	ophjx
 锨	ophlo
-钒	ophni
+钒	ophni	ophn'i
 铅	ophnr
 牮	ophq
 锇	ophqi
@@ -13757,9 +13795,9 @@ max_phrase_length: 1
 锓	opsme
 镠	opsmh
 铌	opsp
-钷	opsr
+钷	opsr	ops'r
 钜	opss
-锔	opssr
+锔	opssr	opss'r
 伳	opt
 错	opta
 镆	optak
@@ -13771,7 +13809,7 @@ max_phrase_length: 1
 镁	optgk
 锘	optkr
 锳	optlk
-钳	optm
+钳	optm	opt'm
 镬	optoe
 镃	optvi
 锚	optw
@@ -13789,8 +13827,8 @@ max_phrase_length: 1
 锞	opwd
 锂	opwg
 黛	opwgf
-锢	opwjr
-铟	opwk
+锢	opwjr	opw'jr
+铟	opwk	opw'k
 钾	opwl
 镯	opwli
 锣	opwln
@@ -13897,7 +13935,7 @@ max_phrase_length: 1
 敆	orye
 促	oryo
 乍	os
-偃	osav
+偃	osav	os'av
 榘	osd
 仞	oshi
 佋	oshr
@@ -13909,7 +13947,7 @@ max_phrase_length: 1
 伛	osk
 仭	osk
 侰	oskr
-仺	osm
+仺	osm	os'm
 侵	osme
 偓	osmg
 僇	osmh
@@ -13924,9 +13962,9 @@ max_phrase_length: 1
 伲	osp
 傌	osqf
 僻	osrj
-傴	osrr
+傴	osrr	os'rr
 佢	oss
-侷	ossr
+侷	ossr	oss'r
 偋	ostt
 仓	osu
 倔	osuu
@@ -13949,7 +13987,7 @@ max_phrase_length: 1
 偀	otlk
 僅	otlm
 傼	otlo
-佄	otm
+佄	otm	ot'm
 倛	otmc
 偡	otmv
 舞	otniq
@@ -13974,7 +14012,7 @@ max_phrase_length: 1
 屳	ou
 罎	ouami
 傰	oubb
-罁	oubtu
+罁	oubtu	oub'tu
 儍	ouce
 缺	oudk
 缽	oudm
@@ -14008,22 +14046,22 @@ max_phrase_length: 1
 侞	ovr
 儠	ovvv
 佃	ow
-伵	owc
+伵	owc	ow'c
 倮	owd
 俚	owg
 毎	owj
-個	owjr
+個	owjr	ow'jr
 侽	owks
 偶	owlb
 儸	owlg
 儇	owlv
 偎	owmv
 偲	owp
-佪	owr
+佪	owr	ow'r
 傫	owvf
 儽	owwf
 儡	owww
-每	owyi
+每	owyi	owy'i
 韽	owyta
 仆	oy
 仒	oy
@@ -14123,7 +14161,7 @@ max_phrase_length: 1
 懓	pbbe
 惻	pbcn
 墯	pbg
-惆	pbgr
+惆	pbgr	pb'gr
 慆	pbhx
 惲	pbjj
 恽	pbkq
@@ -14131,11 +14169,11 @@ max_phrase_length: 1
 惧	pbmc
 愋	pbme
 懚	pbmp
-恫	pbmr
+恫	pbmr	pb'mr
 憏	pbof
 恻	pbon
 愮	pbou
-惘	pbtv
+惘	pbtv	pb'tv
 眞	pbuc
 戄	pbue
 懼	pbug
@@ -14166,7 +14204,7 @@ max_phrase_length: 1
 穎	pdmbc
 颖	pdmbo
 愇	pdmq
-乸	pdwyi
+乸	pdwyi	pdwy'i
 惙	peee
 怪	peg
 慅	peii
@@ -14177,7 +14215,7 @@ max_phrase_length: 1
 悄	pfb
 戃	pfbf
 憆	pfbg
-惝	pfbr
+惝	pfbr	pfb'r
 匊	pfd
 憐	pfdq
 惔	pff
@@ -14191,7 +14229,7 @@ max_phrase_length: 1
 怑	pfq
 惓	pfqu
 慻	pfqu
-悩	pfuk
+悩	pfuk	pfu'k
 懗	pgcc
 恃	pgdi
 憢	pggu
@@ -14209,8 +14247,8 @@ max_phrase_length: 1
 曶	pha
 惶	phag
 懊	phbk
-甮	phbq
-恦	phbr
+甮	phbq	phb'q
+恦	phbr	phb'r
 恤	phbt
 覕	phbuu
 懰	phcn
@@ -14235,7 +14273,7 @@ max_phrase_length: 1
 刎	phln
 惞	phlo
 忻	phml
-忛	phni
+忛	phni	phn'i
 邲	phnl
 忽	php
 惛	phpa
@@ -14385,7 +14423,7 @@ max_phrase_length: 1
 憟	pmwd
 慓	pmwf
 憛	pmwj
-愐	pmwl
+愐	pmwl	pmw'l
 怔	pmym
 忆	pn
 乜	pn
@@ -14398,7 +14436,7 @@ max_phrase_length: 1
 憰	pnhb
 忣	pnhe
 惂	pnhx
-匇	pni
+匇	pni	pn'i
 悀	pnib
 恀	pnin
 忬	pnin
@@ -14436,8 +14474,8 @@ max_phrase_length: 1
 恰	pomr
 匌	pomr
 忔	pon
-觺	ponbg
-觺	ponbq
+觺	ponbg	ponb'g
+觺	ponbq	ponb'q
 愾	pond
 怍	pos
 怆	posu
@@ -14472,7 +14510,7 @@ max_phrase_length: 1
 怈	ppt
 惵	pptd
 忳	ppu
-恟	ppuk
+恟	ppuk	ppu'k
 懳	pqjp
 情	pqmb
 愫	pqmf
@@ -14505,7 +14543,7 @@ max_phrase_length: 1
 怋	prvp
 憴	prxu
 乜	ps
-愝	psav
+愝	psav	ps'av
 慳	pseg
 切	psh
 忉	psh
@@ -14513,17 +14551,17 @@ max_phrase_length: 1
 懢	psit
 慑	psje
 懾	psjj
-怄	psk
-愜	psko
-惬	pskt
+怄	psk	ps'k
+愜	psko	ps'ko
+惬	pskt	ps'kt
 慴	psma
-恇	psmg
+恇	psmg	ps'mg
 憀	psmh
 憳	psmi
 懢	psmt
 悵	psmv
 怩	psp
-慪	psrr
+慪	psrr	ps'rr
 怇	pss
 忋	psu
 世	pt
@@ -14561,8 +14599,8 @@ max_phrase_length: 1
 皺	pudhe
 炰	puf
 鶵	puhaf
-匈	puk
-忷	puk
+匈	puk	pu'k
+忷	puk	pu'k
 刨	puln
 惴	pumb
 頓	pumbc
@@ -14576,16 +14614,16 @@ max_phrase_length: 1
 恺	pusu
 怓	pve
 怮	pvis
-匃	pvo
+匃	pvo	pv'o
 乌	pvsm
 惱	pvvw
 匘	pvvw
 甸	pw
-怬	pwc
+怬	pwc	pw'c
 惈	pwd
-悃	pwd
+悃	pwd	pw'd
 悝	pwg
-慖	pwim
+慖	pwim	pw'im
 慣	pwjc
 惯	pwjo
 懌	pwlj
@@ -14594,7 +14632,7 @@ max_phrase_length: 1
 愄	pwmv
 慍	pwot
 愢	pwp
-恛	pwr
+恛	pwr	pw'r
 悼	pyaj
 恔	pyck
 憞	pydk
@@ -14685,7 +14723,7 @@ max_phrase_length: 1
 挥	qbkq
 抯	qbm
 援	qbme
-挏	qbmr
+挏	qbmr	qb'mr
 揺	qbmu
 靘	qbnau
 捊	qbnd
@@ -14697,9 +14735,9 @@ max_phrase_length: 1
 搖	qbou
 摇	qbou
 撄	qbov
-拥	qbq
+拥	qbq	qb'q
 掙	qbsd
-掆	qbtu
+掆	qbtu	qb'tu
 攫	qbue
 挸	qbuu
 挼	qbv
@@ -14723,7 +14761,7 @@ max_phrase_length: 1
 耝	qdbm
 耡	qdbms
 耚	qddhe
-耥	qdfbr
+耥	qdfbr	qdfb'r
 耧	qdfdv
 耮	qdffs
 耖	qdfh
@@ -14756,7 +14794,7 @@ max_phrase_length: 1
 耕	qdtt
 耩	qdttb
 耭	qdvii
-揀	qdwf
+揀	qdwf	qdw'f
 耦	qdwlb
 耪	qdybs
 耲	qdywv
@@ -14764,10 +14802,11 @@ max_phrase_length: 1
 搡	qeed
 掇	qeee
 挱	qefh
-扠	qei
+扠	qei	qei
+扠	qei	qe'i
 搔	qeii
 掻	qeli
-麺	qemwl
+麺	qemwl	qemw'l
 摊	qeog
 麹	qepfd
 择	qeq
@@ -14793,7 +14832,7 @@ max_phrase_length: 1
 拌	qfq
 搼	qfqq
 捲	qfqu
-挡	qfsm
+挡	qfsm	qfs'm
 擞	qfvk
 繛	qfyaj
 扗	qg
@@ -14851,8 +14890,8 @@ max_phrase_length: 1
 抓	qhlo
 折	qhml
 拆	qhmy
-觢	qhnbg
-觢	qhnbq
+觢	qhnbg	qhnb'g
+觢	qhnbq	qhnb'q
 挆	qhnd
 投	qhne
 擨	qhno
@@ -14956,7 +14995,7 @@ max_phrase_length: 1
 搷	qjbc
 挬	qjbd
 擦	qjbf
-揇	qjbj
+揇	qjbj	qjb'j
 擜	qjbk
 攮	qjbv
 攧	qjcc
@@ -15006,7 +15045,8 @@ max_phrase_length: 1
 搳	qjqr
 邫	qjrau
 捾	qjrr
-彗	qjsm
+彗	qjsm	qjsm
+彗	qjsm	qjs'm
 熭	qjsmf
 慧	qjsmp
 攓	qjto
@@ -15112,7 +15152,7 @@ max_phrase_length: 1
 摃	qmbc
 擾	qmbe
 攉	qmbg
-靑	qmblm
+靑	qmblm	qmb'lm
 责	qmbo
 摴	qmbs
 責	qmbuc
@@ -15169,12 +15209,12 @@ max_phrase_length: 1
 摽	qmwf
 撢	qmwj
 纛	qmwyf
-毒	qmwyi
+毒	qmwyi	qmwy'i
 挽	qnau
-捔	qnbg
+捔	qnbg	qnb'g
 換	qnbk
 换	qnbk
-捔	qnbq
+捔	qnbq	qnb'q
 擔	qncr
 搎	qndf
 掹	qndt
@@ -15327,10 +15367,10 @@ max_phrase_length: 1
 捉	qryo
 韦	qs
 韫	qsabt
-揠	qsav
+揠	qsav	qs'av
 韬	qsbhx
 摼	qseg
-擓	qseg
+擓	qseg	qs'eg
 摨	qseq
 扨	qshi
 招	qshr
@@ -15343,12 +15383,12 @@ max_phrase_length: 1
 揶	qsjl
 摂	qsjo
 据	qsjr
-抠	qsk
+抠	qsk	qs'k
 扨	qsk
 捃	qskr
 报	qsle
-挋	qsll
-扫	qsm
+挋	qsll	qs'll
+扫	qsm	qs'm
 摺	qsma
 掃	qsmb
 握	qsmg
@@ -15363,10 +15403,10 @@ max_phrase_length: 1
 抳	qsp
 挪	qsql
 擗	qsrj
-摳	qsrr
+摳	qsrr	qs'rr
 拒	qss
 韧	qsshi
-挶	qssr
+挶	qssr	qss'r
 摒	qstt
 搌	qstv
 掘	qsuu
@@ -15392,7 +15432,7 @@ max_phrase_length: 1
 掷	qtkl
 掿	qtkr
 撗	qtlc
-拑	qtm
+拑	qtm	qt'm
 掑	qtmc
 撶	qtmj
 拦	qtmm
@@ -15439,11 +15479,11 @@ max_phrase_length: 1
 摷	qvvd
 拶	qvvn
 擸	qvvv
-捆	qwd
+捆	qwd	qw'd
 捰	qwd
 捚	qwg
 撂	qwhr
-摑	qwim
+摑	qwim	qw'im
 摜	qwjc
 掼	qwjo
 摁	qwkp
@@ -15454,14 +15494,14 @@ max_phrase_length: 1
 擇	qwlj
 擺	qwlp
 擐	qwlv
-掴	qwmi
+掴	qwmi	qw'mi
 揋	qwmv
 搵	qwot
 揌	qwp
 摞	qwvf
-攌	qwwv
+攌	qwwv	qw'wv
 攂	qwww
-拇	qwyi
+拇	qwyi	qwy'i
 憃	qxp
 扑	qy
 掉	qyaj
@@ -15550,13 +15590,13 @@ max_phrase_length: 1
 嗗	rbbb
 噯	rbbe
 嗳	rbbe
-喎	rbbr
+喎	rbbr	rbb'r
 囎	rbca
 嚶	rbcv
 啋	rbd
 哷	rbdi
 啂	rbdu
-啁	rbgr
+啁	rbgr	rb'gr
 鵑	rbhaf
 噅	rbhf
 喗	rbjj
@@ -15565,7 +15605,7 @@ max_phrase_length: 1
 剈	rbln
 咀	rbm
 喛	rbme
-哃	rbmr
+哃	rbmr	rb'mr
 瓹	rbmvn
 哹	rbnd
 员	rbo
@@ -15665,7 +15705,7 @@ max_phrase_length: 1
 唕	rhaj
 唣	rhap
 噢	rhbk
-响	rhbr
+响	rhbr	rhb'r
 咱	rhbu
 哝	rhbv
 嚠	rhcn
@@ -15763,7 +15803,7 @@ max_phrase_length: 1
 哱	rjbd
 嗦	rjbf
 嚓	rjbf
-喃	rjbj
+喃	rjbj	rjb'j
 嚏	rjbo
 嚔	rjbo
 囔	rjbv
@@ -15861,7 +15901,7 @@ max_phrase_length: 1
 跀	rmb
 嚅	rmbb
 跚	rmbbm
-踻	rmbbr
+踻	rmbbr	rmbb'r
 嗊	rmbc
 踩	rmbd
 嚘	rmbe
@@ -16065,7 +16105,7 @@ max_phrase_length: 1
 跜	rmsp
 躃	rmsrj
 距	rmss
-跼	rmssr
+跼	rmssr	rmss'r
 蹍	rmstv
 呃	rmsu
 跽	rmsup
@@ -16109,7 +16149,7 @@ max_phrase_length: 1
 喱	rmwg
 嘾	rmwj
 躀	rmwjc
-喕	rmwl
+喕	rmwl	rmw'l
 躅	rmwli
 蹕	rmwtj
 喓	rmwv
@@ -16144,11 +16184,11 @@ max_phrase_length: 1
 踣	rmytr
 踥	rmytv
 躋	rmyx
-唃	rnbg
+唃	rnbg	rnb'g
 嘝	rnbj
 喚	rnbk
 唤	rnbk
-唃	rnbq
+唃	rnbq	rnb'q
 噡	rncr
 吇	rnd
 吼	rndu
@@ -16218,7 +16258,7 @@ max_phrase_length: 1
 呛	rosu
 嘸	rotf
 嚹	roud
-嗰	rowr
+嗰	rowr	row'r
 噙	royb
 叱	rp
 吣	rp
@@ -16245,7 +16285,7 @@ max_phrase_length: 1
 喋	rptd
 吨	rpu
 噸	rpuc
-哅	rpuk
+哅	rpuk	rpu'k
 呜	rpvm
 鸣	rpym
 啪	rqha
@@ -16325,10 +16365,10 @@ max_phrase_length: 1
 嗫	rsje
 囁	rsjj
 啹	rsjr
-呕	rsk
+呕	rsk	rs'k
 吚	rsk
 叩	rsl
-咂	rslb
+咂	rslb	rs'lb
 別	rsln
 别	rsln
 叼	rsm
@@ -16337,7 +16377,7 @@ max_phrase_length: 1
 唚	rsme
 喔	rsmg
 嚁	rsmg
-哐	rsmg
+哐	rsmg	rs'mg
 嘐	rsmh
 噚	rsmi
 噿	rsmj
@@ -16352,7 +16392,7 @@ max_phrase_length: 1
 嗎	rsqf
 哪	rsql
 噼	rsrj
-嘔	rsrr
+嘔	rsrr	rs'rr
 叚	rsse
 卾	rssl
 啒	rsuu
@@ -16379,7 +16419,7 @@ max_phrase_length: 1
 喏	rtkr
 嚥	rtlf
 嘆	rtlo
-咁	rtm
+咁	rtm	rt'm
 唭	rtmc
 嘩	rtmj
 哶	rtmj
@@ -16414,7 +16454,7 @@ max_phrase_length: 1
 嘊	rumg
 嗤	rumi
 啱	rumr
-哕	runi
+哕	runi	run'i
 鄳	runl
 嗺	ruog
 饕	ruoiv
@@ -16439,14 +16479,14 @@ max_phrase_length: 1
 咝	rvvm
 嗈	rvvu
 喟	rwb
-呬	rwc
+呬	rwc	rw'c
 嚸	rwfr
 哩	rwg
 嘿	rwgf
 嚜	rwgg
 嘢	rwgn
-嘓	rwim
-咽	rwk
+嘓	rwim	rw'im
+咽	rwk	rw'k
 嗯	rwkp
 呷	rwl
 喁	rwlb
@@ -16455,12 +16495,12 @@ max_phrase_length: 1
 噣	rwli
 啰	rwln
 噮	rwlv
-啯	rwmi
+啯	rwmi	rw'mi
 喂	rwmv
 鄙	rwnl
 嗢	rwot
 嗶	rwtj
-呣	rwyi
+呣	rwyi	rwy'i
 黽	rxu
 卟	ry
 啅	ryaj
@@ -16530,21 +16570,21 @@ max_phrase_length: 1
 嚃	rywe
 嚃	rywf
 嚺	rywo
-啚	rywr
+啚	rywr	ryw'r
 嚌	ryx
 尸	s
 鷵	sahaf
-飁	sahni
+飁	sahni	sahn'i
 翫	sammu
-匽	sav
+匽	sav	s'av
 屭	sbcc
 朢	sbhg
 刷	sbln
 朢	sbmg
 屃	sbo
 屓	sbuc
-匷	sbug
-匹	sc
+匷	sbug	s'bug
+匹	sc	s'c
 鴄	schaf
 殿	schne
 層	scwa
@@ -16572,8 +16612,8 @@ max_phrase_length: 1
 硻	semr
 豎	semrt
 孯	send
-臋	seobo
-匯	seog
+臋	seobo	seob'o
+匯	seog	s'eog
 聚	seoho
 聚	seooo
 鹥	sepym
@@ -16594,11 +16634,11 @@ max_phrase_length: 1
 騉	sfapp
 騔	sfapv
 屑	sfb
-騧	sfbbr
-騆	sfbgr
+騧	sfbbr	sfbb'r
+騆	sfbgr	sfb'gr
 駔	sfbm
-駧	sfbmr
-駉	sfbr
+駧	sfbmr	sfb'mr
+駉	sfbr	sfb'r
 騱	sfbvk
 駾	sfcru
 驓	sfcwa
@@ -16629,7 +16669,7 @@ max_phrase_length: 1
 駯	sfhjd
 驕	sfhkb
 馸	sfhml
-颿	sfhni
+颿	sfhni	sfhn'i
 馲	sfhp
 騀	sfhqi
 馿	sfhs
@@ -16733,9 +16773,9 @@ max_phrase_length: 1
 驏	sfsnd
 駅	sfso
 騳	sfsqf
-驅	sfsrr
+驅	sfsrr	sfs'rr
 駏	sfss
-駶	sfssr
+駶	sfssr	sfss'r
 馵	sft
 騲	sftaj
 騚	sftbn
@@ -16750,9 +16790,9 @@ max_phrase_length: 1
 騣	sfuce
 驨	sfuob
 騄	sfvne
-駟	sfwc
+駟	sfwc	sfw'c
 騍	sfwd
-駰	sfwk
+駰	sfwk	sfw'k
 驛	sfwlj
 騦	sfwp
 驆	sfwtj
@@ -16778,7 +16818,7 @@ max_phrase_length: 1
 劻	sgks
 剭	sgln
 邼	sgnl
-匵	sgwc
+匵	sgwc	s'gwc
 刀	sh
 鳲	shaf
 鬝	shana
@@ -16788,7 +16828,7 @@ max_phrase_length: 1
 鬅	shbb
 髥	shbmm
 鬇	shbsd
-匴	shbt
+匴	shbt	s'hbt
 刅	shc
 鬀	shcnh
 鬙	shcwa
@@ -16831,9 +16871,9 @@ max_phrase_length: 1
 髴	shlln
 剹	shln
 顟	shmbc
-髵	shmbl
+髵	shmbl	shmb'l
 髬	shmfm
-匠	shml
+匠	shml	s'hml
 髩	shmls
 髨	shmmu
 髡	shmu
@@ -16861,7 +16901,7 @@ max_phrase_length: 1
 鬊	shqka
 尾	shqu
 召	shr
-匾	shsb
+匾	shsb	s'hsb
 脋	shshb
 刕	shshh
 髫	shshr
@@ -16902,9 +16942,9 @@ max_phrase_length: 1
 镹	sino
 忍	sip
 慰	sip
-匾	sisb
+匾	sisb	s'isb
 镼	sisuu
-匥	sit
+匥	sit	s'it
 彠	sitoe
 彟	sitoe
 褽	siyhv
@@ -16945,7 +16985,7 @@ max_phrase_length: 1
 聜	sjjcm
 聍	sjjmn
 聢	sjjmo
-匭	sjjn
+匭	sjjn	s'jjn
 聹	sjjpn
 聴	sjjwp
 屠	sjka
@@ -16960,7 +17000,7 @@ max_phrase_length: 1
 刵	sjln
 聘	sjlws
 顳	sjmbc
-聏	sjmbl
+聏	sjmbl	sjmb'l
 璧	sjmgi
 耺	sjmmi
 耵	sjmn
@@ -17004,7 +17044,7 @@ max_phrase_length: 1
 耻	sjylm
 譬	sjymr
 聤	sjyrn
-区	sk
+区	sk	s'k
 尹	sk
 刄	sk
 鴎	skhaf
@@ -17014,14 +17054,14 @@ max_phrase_length: 1
 瓯	skmvn
 尻	skn
 欧	skno
-匧	skoo
+匧	skoo	s'koo
 悘	skp
 鸥	skpym
-匦	skqn
+匦	skqn	s'kqn
 君	skr
-匲	skrr
+匲	skrr	s'krr
 卩	sl
-匝	slb
+匝	slb	s'lb
 臤	sle
 卪	sli
 屢	sllv
@@ -17029,23 +17069,23 @@ max_phrase_length: 1
 頤	slmbc
 頣	slmbc
 颐	slmbo
-匱	slmc
-匮	slmo
-匪	slmy
+匱	slmc	s'lmc
+匮	slmo	s'lmo
+匪	slmy	s'lmy
 屝	slmy
 臥	slo
 臨	slorr
 賾	slqmc
 赜	slqmo
 巸	slru
-臣	slsl
-臦	slsll
+臣	slsl	s'lsl
+臦	slsll	sls'll
 綤	slvif
 届	slw
 卧	sly
 刁	sm
 彐	sm
-匞	sm
+匞	sm	s'm
 翨	smamo
 翬	smbjj
 翚	smbkq
@@ -17056,8 +17096,8 @@ max_phrase_length: 1
 寻	smdi
 灵	smf
 彛	smfht
-匡	smg
-匤	smgi
+匡	smg	s'mg
+匤	smgi	s'mgi
 習	smha
 翵	smhaf
 翐	smhqo
@@ -17096,29 +17136,29 @@ max_phrase_length: 1
 翣	smytv
 孱	sndd
 屙	snlr
-匛	sno
+匛	sno	s'no
 尺	so
 昼	soam
-医	sok
-匬	somn
-匳	somo
-匼	somr
+医	sok	s'ok
+匬	somn	s'omn
+匳	somo	s'omo
+匼	somr	s'omr
 鄹	sonl
 咫	sorc
 尽	soy
 尼	sp
 贒	spbuc
-匜	spd
-匫	spha
+匜	spd	s'pd
+匫	spha	s'pha
 鵋	sphaf
-匢	sphh
+匢	sphh	s'phh
 屁	spp
 屉	spt
 屟	sptd
 鸤	spym
 那	sqnl
 馬	sqsf
-叵	sr
+叵	sr	s'r
 盬	srbt
 覗	srbuu
 覠	srbuu
@@ -17144,8 +17184,8 @@ max_phrase_length: 1
 歐	srno
 欩	srno
 慝	srp
-匰	srrj
-區	srrr
+匰	srrj	s'rrj
+區	srrr	s'rrr
 巶	srru
 卲	srsl
 群	srtq
@@ -17160,11 +17200,11 @@ max_phrase_length: 1
 螶	sslii
 乬	ssn
 巪	ssn
-局	ssr
+局	ssr	ss'r
 凹	ssu
 兕	ssuu
-匿	stkr
-匶	stox
+匿	stkr	s'tkr
+匶	stox	s'tox
 羼	stqq
 屏	stt
 展	stv
@@ -17173,9 +17213,9 @@ max_phrase_length: 1
 屗	sudi
 熙	suf
 煕	suf
-屆	sug
+屆	sug	su'g
 鶌	suhaf
-匩	sumg
+匩	sumg	s'umg
 屘	sund
 邔	sunl
 改	suok
@@ -17186,7 +17226,7 @@ max_phrase_length: 1
 妀	suv
 鶠	svhaf
 屫	svmb
-匨	svmg
+匨	svmg	s'vmg
 郾	svnl
 邔	svnl
 改	svok
@@ -17195,12 +17235,12 @@ max_phrase_length: 1
 鹽	swbt
 覽	swbuu
 鑒	swc
-匣	swl
+匣	swl	s'wl
 擥	swq
 譼	swymr
-匟	syhn
+匟	syhn	s'yhn
 屛	syjj
-屖	sytj
+屖	sytj	s'ytj
 廿	t
 昔	ta
 菖	taa
@@ -17255,7 +17295,7 @@ max_phrase_length: 1
 薆	tbbe
 觏	tbbhu
 蕣	tbbq
-萵	tbbr
+萵	tbbr	tbb'r
 薍	tbbu
 覯	tbbuu
 典	tbc
@@ -17288,7 +17328,7 @@ max_phrase_length: 1
 荕	tbks
 勱	tbks
 萤	tbli
-繭	tbli
+繭	tbli	tb'li
 前	tbln
 蒯	tbln
 苴	tbm
@@ -17299,7 +17339,7 @@ max_phrase_length: 1
 莹	tbmi
 蒄	tbmi
 蒙	tbmo
-茼	tbmr
+茼	tbmr	tb'mr
 莇	tbms
 蒏	tbmw
 莩	tbnd
@@ -17316,11 +17356,11 @@ max_phrase_length: 1
 愬	tbp
 莺	tbpm
 葋	tbpr
-苚	tbq
-苘	tbr
+苚	tbq	tb'q
+苘	tbr	tb'r
 营	tbrr
 菔	tbse
-菵	tbtv
+菵	tbtv	tb'tv
 苜	tbu
 蔝	tbud
 蘨	tbuf
@@ -17379,9 +17419,9 @@ max_phrase_length: 1
 叢	tcte
 丵	tctj
 菐	tcto
-凿	tcuj
+凿	tcuj	tcu'j
 綦	tcvif
-酋	tcwm
+酋	tcwm	tcw'm
 黈	tcyg
 斢	tcyj
 諅	tcymr
@@ -17409,10 +17449,10 @@ max_phrase_length: 1
 藮	tdof
 萊	tdoo
 莕	tdr
-藲	tdsr
+藲	tdsr	tds'r
 莱	tdt
 菄	tdw
-萰	tdwf
+萰	tdwf	tdw'f
 蕩	teah
 蕰	teat
 菹	tebm
@@ -17504,7 +17544,7 @@ max_phrase_length: 1
 蕘	tggu
 鸛	tghaf
 羲	tghds
-飌	tghni
+飌	tghni	tghn'i
 義	tghqi
 羌	tghu
 爇	tgif
@@ -17525,7 +17565,7 @@ max_phrase_length: 1
 羑	tgno
 莰	tgno
 羐	tgno
-臡	tgobo
+臡	tgobo	tgob'o
 薔	tgow
 恙	tgp
 戁	tgp
@@ -17601,8 +17641,8 @@ max_phrase_length: 1
 芁	thn
 蘈	thnc
 芟	thne
-芃	thni
-葻	thni
+芃	thni	thn'i
+葻	thni	thn'i
 蒣	thod
 蕧	thoe
 薇	thok
@@ -17725,7 +17765,7 @@ max_phrase_length: 1
 蒖	tjbc
 荸	tjbd
 鞱	tjbhx
-萳	tjbj
+萳	tjbj	tjb'j
 带	tjblb
 帯	tjblb
 靻	tjbm
@@ -17744,11 +17784,12 @@ max_phrase_length: 1
 芰	tje
 鞜	tjea
 蘻	tjef
-靫	tjei
+靫	tjei	tjei
+靫	tjei	tje'i
 鞘	tjfb
 鞺	tjfbg
 鞩	tjfbn
-鞝	tjfbr
+鞝	tjfbr	tjfb'r
 糵	tjfd
 靽	tjfq
 靯	tjg
@@ -17857,7 +17898,7 @@ max_phrase_length: 1
 鞿	tjvii
 靿	tjvis
 莗	tjwj
-鞇	tjwk
+鞇	tjwk	tjw'k
 鞸	tjwtj
 鞹	tjydl
 韃	tjygq
@@ -17945,7 +17986,7 @@ max_phrase_length: 1
 茰	tlwk
 蕭	tlx
 蕜	tlyp
-甘	tm
+甘	tm	t'm
 荁	tmam
 薷	tmbb
 虉	tmbf
@@ -17953,7 +17994,7 @@ max_phrase_length: 1
 觐	tmbhu
 蕓	tmbi
 蕶	tmbi
-荋	tmbl
+荋	tmbl	tmb'l
 虂	tmbr
 蘦	tmbr
 蘎	tmbu
@@ -18061,7 +18102,7 @@ max_phrase_length: 1
 蓩	tnhs
 萏	tnhx
 苰	tni
-芕	tni
+芕	tni	tn'i
 茅	tnih
 蔃	tnii
 茒	tnil
@@ -18314,7 +18355,7 @@ max_phrase_length: 1
 茣	trvk
 苠	trvp
 莡	tryo
-苉	tsc
+苉	tsc	ts'c
 藖	tsec
 蘙	tsem
 藂	tseo
@@ -18336,8 +18377,8 @@ max_phrase_length: 1
 莙	tskr
 节	tsl
 菣	tsle
-茝	tsll
-茞	tsll
+茝	tsll	ts'll
+茞	tsll	ts'll
 菷	tsmb
 藋	tsmg
 蓼	tsmh
@@ -18350,7 +18391,7 @@ max_phrase_length: 1
 苨	tsp
 蔒	tsrf
 薜	tsrj
-蓲	tsrr
+蓲	tsrr	ts'rr
 苣	tss
 芑	tsu
 井	tt
@@ -18371,11 +18412,11 @@ max_phrase_length: 1
 葁	ttgv
 鷁	tthaf
 鵧	tthaf
-丼	tti
+丼	tti	tt'i
 蘜	ttjd
 蓳	ttlm
 荆	ttln
-苷	ttm
+苷	ttm	tt'm
 頩	ttmbc
 萁	ttmc
 葚	ttmv
@@ -18405,7 +18446,7 @@ max_phrase_length: 1
 羗	tui
 馘	tuirm
 蘴	tujt
-菡	tune
+菡	tune	tu'ne
 欮	tuno
 茁	tuu
 蒳	tvfb
@@ -18465,18 +18506,18 @@ max_phrase_length: 1
 曹	twa
 蠆	twbi
 躉	twbo
-莔	twcb
+莔	twcb	tw'cb
 菓	twd
 尊	twdi
-蔨	twfu
+蔨	twfu	tw'fu
 荲	twg
-薗	twgv
+薗	twgv	tw'gv
 鶓	twhaf
-菌	twhd
+菌	twhd	tw'hd
 猷	twik
-蔮	twim
+蔮	twim	tw'im
 奠	twk
-茵	twk
+茵	twk	tw'k
 蒽	twkp
 莮	twks
 薯	twla
@@ -18499,18 +18540,18 @@ max_phrase_length: 1
 農	twmmv
 豊	twmrt
 葨	twmv
-苬	two
+苬	two	tw'o
 蒕	twot
 葸	twp
 鹋	twpym
-茴	twr
+茴	twr	tw'r
 蓽	twtj
 蔂	twvf
 蘽	twwd
 虆	twwf
 蘲	twwg
 藟	twww
-苺	twyi
+苺	twyi	twy'i
 兼	txc
 蒂	tybb
 薖	tybb
@@ -18596,7 +18637,7 @@ max_phrase_length: 1
 莣	tyvp
 荒	tyvu
 蓄	tyvw
-蓾	tywi
+蓾	tywi	tyw'i
 蓑	tywv
 薺	tyx
 苄	tyy
@@ -18617,7 +18658,7 @@ max_phrase_length: 1
 崱	ubcn
 巊	ubcv
 岘	ubhu
-岗	ubk
+岗	ubk	ub'k
 剬	ubln
 剻	ubln
 岨	ubm
@@ -18625,12 +18666,12 @@ max_phrase_length: 1
 颛	ubmbo
 嵈	ubme
 嶾	ubmp
-峒	ubmr
-峝	ubmr
+峒	ubmr	ub'mr
+峝	ubmr	ub'mr
 酅	ubnl
 歂	ubno
 崢	ubsd
-崗	ubtu
+崗	ubtu	ub'tu
 峴	ubuu
 嵠	ubvk
 崟	uc
@@ -18652,7 +18693,7 @@ max_phrase_length: 1
 崬	udw
 嵀	udyg
 汖	ue
-凼	ue
+凼	ue	u'e
 崉	uea
 埊	ueg
 顄	uembc
@@ -18666,7 +18707,7 @@ max_phrase_length: 1
 嶗	uffs
 巀	ufgi
 巌	ufmk
-凷	ug
+凷	ug	u'g
 崚	ugce
 峙	ugdi
 崶	uggi
@@ -18674,7 +18715,7 @@ max_phrase_length: 1
 嶤	uggu
 嶹	ugni
 崁	ugno
-匕	uh
+匕	uh	p
 岶	uha
 嶋	uhaf
 嶌	uhaf
@@ -18699,8 +18740,8 @@ max_phrase_length: 1
 峤	uhkl
 巋	uhmb
 岓	uhml
-嵐	uhni
-岚	uhnk
+嵐	uhni	uhn'i
+岚	uhnk	uhn'k
 崻	uhoi
 嶶	uhok
 嵷	uhoo
@@ -18755,7 +18796,7 @@ max_phrase_length: 1
 峣	ujpu
 岵	ujr
 峖	ujv
-凶	uk
+凶	uk	u'k
 峟	ukb
 嶛	ukcf
 嶚	ukcf
@@ -18788,8 +18829,8 @@ max_phrase_length: 1
 峘	umam
 嶿	umbb
 崸	umbc
-耑	umbl
-峏	umbl
+耑	umbl	umb'l
+峏	umbl	umb'l
 嶀	umbs
 巎	umce
 炭	umf
@@ -18813,7 +18854,7 @@ max_phrase_length: 1
 岢	umnr
 嵟	umog
 嶳	umog
-豳	umoo
+豳	umoo	u'moo
 岩	umr
 豈	umrt
 岍	umt
@@ -18828,9 +18869,9 @@ max_phrase_length: 1
 崾	umwv
 嶑	unao
 嶰	unbq
-崅	unbq
+崅	unbq	unb'q
 嶦	uncr
-函	une
+函	une	u'ne
 岌	unhe
 岋	unhe
 屷	unhs
@@ -18844,7 +18885,7 @@ max_phrase_length: 1
 峞	unmu
 嶝	unot
 嵥	unqd
-凾	unre
+凾	unre	u'nre
 巉	unri
 嵹	unri
 峥	unsd
@@ -18902,11 +18943,11 @@ max_phrase_length: 1
 岧	ushr
 岹	ushr
 崌	usjr
-岖	usk
+岖	usk	us'k
 峮	uskr
 嶍	usma
 嵺	usmh
-嶇	usrr
+嶇	usrr	us'rr
 岠	uss
 岂	usu
 屺	usu
@@ -18925,7 +18966,7 @@ max_phrase_length: 1
 豔	utgit
 嵄	utgk
 凱	uthn
-颽	uthni
+颽	uthni	uthn'i
 巕	uthv
 獃	utik
 巈	utjd
@@ -18959,16 +19000,16 @@ max_phrase_length: 1
 剀	uuln
 祟	uummf
 嵦	uumt
-崡	uune
+崡	uune	uu'ne
 欪	uuno
 芔	uuu
 茻	uuuu
-幽	uvii
+幽	uvii	u'vii
 岰	uvis
 嶈	uvmi
 崰	uvvw
-崓	uwjr
-崮	uwjr
+崓	uwjr	uw'jr
+崮	uwjr	uw'jr
 岬	uwl
 嵎	uwlb
 嶧	uwlj
@@ -19024,17 +19065,17 @@ max_phrase_length: 1
 嬡	vbbe
 嫒	vbbe
 姗	vbbm
-媧	vbbr
+媧	vbbr	vbb'r
 孆	vbcv
 婇	vbd
-婤	vbgr
+婤	vbgr	vb'gr
 嬀	vbhf
 婬	vbhg
 嫍	vbhx
 媈	vbjj
 姐	vbm
 媛	vbme
-姛	vbmr
+姛	vbmr	vb'mr
 娐	vbnd
 媱	vbou
 婙	vbsd
@@ -19060,7 +19101,7 @@ max_phrase_length: 1
 婡	vdoo
 恏	vdp
 娻	vdw
-媡	vdwf
+媡	vdwf	vdw'f
 奴	ve
 盝	vebt
 娺	veee
@@ -19073,7 +19114,7 @@ max_phrase_length: 1
 孥	vend
 媣	vend
 驽	venvm
-胬	veobo
+胬	veobo	veob'o
 怒	vep
 拏	veq
 駑	vesqf
@@ -19092,23 +19133,23 @@ max_phrase_length: 1
 綳	vfbb
 縎	vfbbb
 綬	vfbbe
-緺	vfbbr
-綗	vfbcr
+緺	vfbbr	vfbb'r
+綗	vfbcr	vfb'cr
 纓	vfbcv
 綵	vfbd
-綢	vfbgr
+綢	vfbgr	vfb'gr
 縚	vfbhx
 緷	vfbjj
 繎	vfbkf
 組	vfbm
 緩	vfbme
-絧	vfbmr
+絧	vfbmr	vfb'mr
 綒	vfbnd
 縩	vfbof
-絅	vfbr
+絅	vfbr	vfb'r
 絼	vfbsh
-綱	vfbtu
-網	vfbtv
+綱	vfbtu	vfb'tu
+網	vfbtv	vfb'tv
 矕	vfbu
 緲	vfbuh
 繉	vfbuo
@@ -19132,7 +19173,7 @@ max_phrase_length: 1
 絊	vfdm
 緯	vfdmq
 嫾	vfdq
-練	vfdwf
+練	vfdwf	vfdw'f
 灓	vfe
 縔	vfeed
 綴	vfeee
@@ -19140,7 +19181,7 @@ max_phrase_length: 1
 紁	vfei
 婒	vff
 綃	vffb
-緔	vffbr
+緔	vffbr	vffb'r
 嬫	vffd
 繗	vffdq
 緂	vfff
@@ -19305,7 +19346,7 @@ max_phrase_length: 1
 緾	vfmwg
 纒	vfmwg
 緸	vfmwg
-緬	vfmwl
+緬	vfmwl	vfmw'l
 繮	vfmwm
 彎	vfn
 絶	vfnau
@@ -19330,7 +19371,7 @@ max_phrase_length: 1
 繦	vfnri
 緮	vfoae
 納	vfob
-臠	vfobo
+臠	vfobo	vfob'o
 紨	vfodi
 維	vfog
 絍	vfohg
@@ -19409,7 +19450,7 @@ max_phrase_length: 1
 繕	vftgr
 緙	vftlj
 緓	vftlk
-紺	vftm
+紺	vftm	vft'm
 綨	vftmc
 繱	vftpp
 絴	vftq
@@ -19442,10 +19483,10 @@ max_phrase_length: 1
 緇	vfvvw
 細	vfw
 緭	vfwb
-綑	vfwd
+綑	vfwd	vfw'd
 綶	vfwd
 纆	vfwgg
-絪	vfwk
+絪	vfwk	vfw'k
 纙	vfwlg
 繹	vfwlj
 縄	vfwlu
@@ -19453,7 +19494,7 @@ max_phrase_length: 1
 綥	vfwml
 縕	vfwot
 緦	vfwp
-絗	vfwr
+絗	vfwr	vfw'r
 縪	vfwtj
 縲	vfwvf
 纝	vfwwf
@@ -19522,7 +19563,7 @@ max_phrase_length: 1
 孂	vhat
 嬝	vhav
 嫓	vhbp
-姠	vhbr
+姠	vhbr	vhb'r
 嬼	vhcn
 姀	vhd
 娳	vhdn
@@ -19546,7 +19587,7 @@ max_phrase_length: 1
 蚃	vhlmi
 妡	vhml
 姤	vhmr
-姵	vhnb
+姵	vhnb	vhn'b
 飨	vhoiv
 奼	vhp
 婚	vhpa
@@ -19612,7 +19653,7 @@ max_phrase_length: 1
 畿	viw
 姉	vjb
 嫃	vjbc
-婻	vjbj
+婻	vjbj	vjb'j
 嫆	vjcr
 妹	vjd
 妓	vje
@@ -19654,7 +19695,7 @@ max_phrase_length: 1
 妉	vlbu
 収	vle
 嫿	vlgm
-嚮	vlhbr
+嚮	vlhbr	vlhb'r
 丱	vlllm
 蠁	vllmi
 爿	vlm
@@ -19681,8 +19722,8 @@ max_phrase_length: 1
 绷	vmbb
 绶	vmbbe
 將	vmbdi
-绸	vmbgr
-纲	vmbk
+绸	vmbgr	vmb'gr
+纲	vmbk	vmb'k
 媆	vmbk
 组	vmbm
 缓	vmbme
@@ -19704,7 +19745,7 @@ max_phrase_length: 1
 妚	vmf
 嬭	vmfb
 绡	vmfb
-绱	vmfbr
+绱	vmfbr	vmfb'r
 缕	vmfdv
 彝	vmfft
 纱	vmfh
@@ -19790,7 +19831,7 @@ max_phrase_length: 1
 娠	vmmv
 缛	vmmvi
 缥	vmmwf
-缅	vmmwl
+缅	vmmwl	vmmw'l
 缰	vmmwm
 奵	vmn
 绝	vmnau
@@ -19801,7 +19842,7 @@ max_phrase_length: 1
 绿	vmnme
 经	vmnom
 妸	vmnr
-绉	vmnsm
+绉	vmnsm	vmns'm
 纳	vmob
 维	vmog
 牄	vmoir
@@ -19841,12 +19882,12 @@ max_phrase_length: 1
 缢	vmtct
 缂	vmtlj
 绬	vmtlk
-绀	vmtm
+绀	vmtm	vmt'm
 牂	vmtq
 缮	vmttr
 缣	vmtxc
 绌	vmuu
-婳	vmuw
+婳	vmuw	vmu'w
 妝	vmv
 继	vmvfd
 媷	vmvi
@@ -19857,7 +19898,7 @@ max_phrase_length: 1
 缁	vmvvw
 细	vmw
 嫖	vmwf
-媔	vmwl
+媔	vmwl	vmw'l
 缳	vmwlv
 缌	vmwp
 婹	vmwv
@@ -19984,11 +20025,11 @@ max_phrase_length: 1
 娓	vshu
 娵	vsje
 婮	vsjr
-妪	vsk
+妪	vsk	vs'k
 嫕	vskp
-姬	vsll
-姫	vsll
-妇	vsm
+姬	vsll	vs'll
+姫	vsll	vs'll
+妇	vsm	vs'm
 婦	vsmb
 嬥	vsmg
 媉	vsmg
@@ -19998,9 +20039,9 @@ max_phrase_length: 1
 媽	vsqf
 娜	vsql
 嬺	vsrp
-嫗	vsrr
+嫗	vsrr	vs'rr
 姖	vss
-嫟	vstr
+嫟	vstr	vs'tr
 妃	vsu
 嫫	vtak
 孏	vtaw
@@ -20018,7 +20059,7 @@ max_phrase_length: 1
 媖	vtlk
 嫤	vtlm
 嫨	vtlo
-姏	vtm
+姏	vtm	vt'm
 娸	vtmc
 媒	vtmd
 嬅	vtmj
@@ -20066,8 +20107,8 @@ max_phrase_length: 1
 嫼	vwgf
 鶅	vwhaf
 疀	vwjlo
-婟	vwjr
-姻	vwk
+婟	vwjr	vw'jr
+姻	vwk	vw'k
 娚	vwks
 媀	vwlb
 嬕	vwlj
@@ -20077,7 +20118,7 @@ max_phrase_length: 1
 媤	vwp
 嫐	vwsv
 嫘	vwvf
-姆	vwyi
+姆	vwyi	vwy'i
 卐	vx
 婥	vyaj
 媂	vybb
@@ -20118,24 +20159,24 @@ max_phrase_length: 1
 顒	wbmbc
 颙	wbmbo
 愚	wbp
-四	wc
-囧	wcb
-囶	wcg
+四	wc	w'c
+囧	wcb	w'cb
+囶	wcg	w'cg
 鷶	wchaf
 畟	wche
-圙	wcmw
-圀	wcys
+圙	wcmw	w'cmw
+圀	wcys	w'cys
 果	wd
-困	wd
-团	wdh
+困	wd	w'd
+团	wdh	w'dh
 褁	wdhv
-団	wdi
+団	wdi	w'di
 顆	wdmbc
 颗	wdmbo
-圍	wdmq
+圍	wdmq	w'dmq
 夥	wdnin
 敤	wdye
-囦	we
+囦	we	w'e
 畷	weee
 疄	wfdq
 黠	wfgr
@@ -20161,8 +20202,8 @@ max_phrase_length: 1
 黗	wfpu
 畔	wfq
 畻	wfqg
-圈	wfqu
-圏	wfqu
+圈	wfqu	w'fqu
+圏	wfqu	w'fqu
 黚	wftm
 黮	wftmv
 黜	wfuu
@@ -20178,33 +20219,33 @@ max_phrase_length: 1
 黒	wgf
 墨	wgfg
 畦	wgg
-圔	wgit
+圔	wgit	w'git
 疇	wgni
 野	wgnin
-園	wgrv
-圉	wgtj
+園	wgrv	w'grv
+圉	wgtj	w'gtj
 鴫	whaf
-囷	whd
+囷	whd	w'hd
 畈	whe
 略	wher
 畧	wher
-图	whey
+图	whey	w'hey
 畽	whjg
 畖	whvo
-囜	wi
-圎	wibc
-圑	wibi
+囜	wi	w'i
+圎	wibc	w'ibc
+圑	wibi	w'ibi
 畯	wice
 鸀	wihaf
-圃	wijb
-圗	wijw
+圃	wijb	w'ijb
+圗	wijw	w'ijw
 畎	wik
 劅	wiln
 歜	wino
 塁	wiog
 疂	wiom
-囼	wir
-國	wirm
+囼	wir	w'ir
+國	wirm	w'irm
 斀	wiye
 斣	wiyj
 毌	wj
@@ -20213,13 +20254,13 @@ max_phrase_length: 1
 毋	wjh
 鸅	wjhaf
 鷝	wjhaf
-團	wjii
+團	wjii	w'jii
 歝	wjno
 畹	wjnu
 斁	wjok
-固	wjr
-因	wk
-囿	wkb
+固	wjr	w'jr
+因	wk	w'k
+囿	wkb	w'kb
 盢	wkbt
 黙	wkf
 畸	wkmr
@@ -20227,7 +20268,7 @@ max_phrase_length: 1
 恩	wkp
 男	wks
 甲	wl
-禺	wlbi
+禺	wlbi	wlb'i
 罝	wlbm
 罦	wlbnd
 買	wlbuc
@@ -20237,7 +20278,7 @@ max_phrase_length: 1
 眔	wle
 罬	wleee
 眔	wlff
-圕	wlga
+圕	wlga	w'lga
 罣	wlgg
 罫	wlggy
 罢	wlgi
@@ -20251,7 +20292,7 @@ max_phrase_length: 1
 羆	wlipf
 罭	wlirm
 罚	wlivn
-罱	wljbj
+罱	wljbj	wljb'j
 置	wljbm
 署	wljka
 罟	wljr
@@ -20259,12 +20300,12 @@ max_phrase_length: 1
 罒	wll
 甽	wlll
 罪	wllmy
-圚	wlmc
+圚	wlmc	w'lmc
 罘	wlmf
 罽	wlmfn
 睘	wlmrv
 罡	wlmym
-罗	wlni
+罗	wlni	wln'i
 罞	wlnih
 罖	wloi
 眾	wlooo
@@ -20295,75 +20336,75 @@ max_phrase_length: 1
 罰	wlyrn
 罯	wlyta
 罿	wlytg
-囨	wmf
-囯	wmg
-国	wmgi
+囨	wmf	w'mf
+囯	wmg	w'mg
+国	wmgi	w'mgi
 爴	wmhlo
 氎	wmhqu
 畀	wml
 曱	wmll
-囩	wmmi
-圄	wmmr
-园	wmmu
+囩	wmmi	w'mmi
+圄	wmmr	w'mmr
+园	wmmu	w'mmu
 町	wmn
 甼	wmn
-圂	wmso
+圂	wmso	w'mso
 畏	wmv
 疅	wmwm
-囸	wmym
-囝	wnd
+囸	wmym	w'mym
+囝	wnd	w'nd
 墅	wng
 畂	wno
-囚	wo
+囚	wo	w'o
 畛	wohh
-囹	woii
+囹	woii	w'oii
 畋	wok
 界	woll
 畍	woll
-圇	womb
+圇	womb	w'omb
 畭	womd
-囵	wop
+囵	wop	w'op
 慁	wop
-囮	wop
+囮	wop	w'op
 畮	wowy
 思	wp
-囫	wphh
+囫	wphh	w'phh
 畇	wpim
 顋	wpmbc
 畇	wpmm
 毗	wpp
 毘	wpp
-囤	wpu
+囤	wpu	w'pu
 畴	wqki
-圊	wqmb
+圊	wqmb	w'qmb
 畉	wqo
-围	wqs
-回	wr
-圓	wrbc
-圆	wrbo
+围	wqs	w'qs
+回	wr	w'r
+圓	wrbc	w'rbc
+圆	wrbo	w'rbo
 圖	wrjw
-囻	wrvp
-圖	wryw
-囙	ws
-囬	wsl
+囻	wrvp	w'rvp
+圖	wryw	w'ryw
+囙	ws	w's
+囬	wsl	w'sl
 疁	wsmh
 嬲	wsvws
 異	wtc
 畢	wtj
-囲	wtt
+囲	wtt	w'tt
 畊	wtt
-圌	wumb
-囡	wv
-圞	wvfd
-圝	wvff
+圌	wumb	w'umb
+囡	wv	w'v
+圞	wvfd	w'vfd
+圝	wvff	w'vff
 累	wvif
 鹮	wvpym
 翾	wvsmm
 畕	ww
 鸓	wwhaf
-圛	wwlj
-圐	wwls
-圜	wwlv
+圛	wwlj	w'wlj
+圐	wwls	w'wls
+圜	wwlv	w'wlv
 畾	www
 櫐	wwwd
 纍	wwwf
@@ -20373,11 +20414,11 @@ max_phrase_length: 1
 礨	wwwr
 罍	wwwu
 壨	wwwwg
-囥	wyhn
+囥	wyhn	w'yhn
 畩	wyhv
-母	wyi
-図	wyk
-圁	wymr
+母	wyi	wy'i
+図	wyk	w'yk
+圁	wymr	w'ymr
 毑	wypd
 疃	wytg
 甿	wyv
@@ -20411,10 +20452,10 @@ max_phrase_length: 1
 迌	yb
 髜	ybaht
 肻	ybb
-過	ybbr
-卨	ybbr
+過	ybbr	ybb'r
+卨	ybbr	ybb'r
 髝	ybffs
-週	ybgr
+週	ybgr	yb'gr
 鶙	ybhaf
 鶮	ybhaf
 望	ybhg
@@ -20427,7 +20468,7 @@ max_phrase_length: 1
 睿	ybmcu
 望	ybmg
 遯	ybmo
-迵	ybmr
+迵	ybmr	yb'mr
 甋	ybmvn
 甗	ybmvn
 鄗	ybnl
@@ -20440,7 +20481,7 @@ max_phrase_length: 1
 遙	ybou
 遥	ybou
 啻	ybr
-迥	ybr
+迥	ybr	yb'r
 邎	ybrf
 髞	ybrrd
 髛	ybskn
@@ -20453,8 +20494,8 @@ max_phrase_length: 1
 龍	ybysp
 六	yc
 觑	ycbhu
-商	ycbr
-啇	ycbr
+商	ycbr	ycb'r
+啇	ycbr	ycb'r
 覷	ycbuu
 銮	ycc
 栾	ycd
@@ -20475,7 +20516,7 @@ max_phrase_length: 1
 孪	ycnd
 递	ycnh
 歔	ycno
-脔	ycobo
+脔	ycobo	ycob'o
 逧	ycor
 恋	ycp
 戇	ycp
@@ -20545,12 +20586,12 @@ max_phrase_length: 1
 達	ygtq
 逺	ygvo
 逺	ygvv
-广	yh
+广	yh	i
 迫	yha
 鳪	yhaf
 遑	yhag
 亹	yhbm
-逈	yhbr
+逈	yhbr	yhb'r
 透	yhds
 逶	yhdv
 褎	yhdv
@@ -20627,7 +20668,7 @@ max_phrase_length: 1
 玆	yiyvi
 斗	yj
 辻	yj
-遖	yjbj
+遖	yjbj	yjb'j
 邃	yjco
 辣	yjdl
 鵫	yjhaf
@@ -20691,7 +20732,7 @@ max_phrase_length: 1
 斓	yklsw
 遀	ykmb
 頝	ykmbc
-斋	ykmbl
+斋	ykmbl	ykmb'l
 彥	ykmhh
 產	ykmhm
 斌	ykmpm
@@ -20790,9 +20831,9 @@ max_phrase_length: 1
 迈	yms
 逐	ymso
 歫	ymss
-歯	ymufd
-齿	ymuo
-齒	ymuoo
+歯	ymufd	ymu'fd
+齿	ymuo	ymu'o
+齒	ymuoo	ymu'oo
 迓	ymvh
 逕	ymvm
 遷	ymwu
@@ -20890,10 +20931,10 @@ max_phrase_length: 1
 礱	ypmr
 鬳	ypmrb
 豦	ypmso
-觜	ypnbg
-觜	ypnbq
+觜	ypnbg	ypnb'g
+觜	ypnbq	ypnb'q
 鮆	ypnwf
-胔	ypobo
+胔	ypobo	ypob'o
 雐	ypog
 飺	ypoiv
 虗	ypom
@@ -20947,18 +20988,18 @@ max_phrase_length: 1
 詪	yrav
 謾	yrawe
 膏	yrbb
-諣	yrbbr
+諣	yrbbr	yrbb'r
 槀	yrbd
 稾	yrbd
 稁	yrbd
-調	yrbgr
+調	yrbgr	yrb'gr
 譌	yrbhf
 觇	yrbhu
 謟	yrbhx
 諢	yrbjj
 詛	yrbm
 諼	yrbme
-詷	yrbmr
+詷	yrbmr	yrb'mr
 亮	yrbn
 亭	yrbn
 亴	yrbn
@@ -20966,10 +21007,10 @@ max_phrase_length: 1
 謠	yrbou
 謡	yrbou
 亳	yrbp
-高	yrbr
-詗	yrbr
+高	yrbr	yrb'r
+詗	yrbr	yrb'r
 諍	yrbsd
-誷	yrbtv
+誷	yrbtv	yrb'tv
 亮	yrbu
 毫	yrbu
 覘	yrbuu
@@ -20989,10 +21030,11 @@ max_phrase_length: 1
 諱	yrdmq
 誺	yrdoo
 諌	yrdw
-諫	yrdwf
+諫	yrdwf	yrdw'f
 誻	yrea
 諁	yreee
-訍	yrei
+訍	yrei	yrei
+訍	yrei	yre'i
 京	yrf
 点	yrf
 誚	yrfb
@@ -21039,8 +21081,8 @@ max_phrase_length: 1
 詬	yrhmr
 訴	yrhmy
 設	yrhne
-諷	yrhni
-訉	yrhni
+諷	yrhni	yrhn'i
+訉	yrhni	yrhn'i
 譗	yrhor
 託	yrhp
 諙	yrhpa
@@ -21088,7 +21130,7 @@ max_phrase_length: 1
 計	yrj
 謓	yrjbc
 誖	yrjbd
-諵	yrjbj
+諵	yrjbj	yrjb'j
 誼	yrjbm
 詫	yrjhp
 讅	yrjhw
@@ -21220,7 +21262,7 @@ max_phrase_length: 1
 詍	yrpt
 諜	yrptd
 訰	yrpu
-詾	yrpuk
+詾	yrpuk	yrpu'k
 謅	yrpuu
 誄	yrqd
 譿	yrqjp
@@ -21254,12 +21296,12 @@ max_phrase_length: 1
 讘	yrsjj
 謵	yrsma
 誛	yrsme
-誆	yrsmg
+誆	yrsmg	yrs'mg
 謬	yrsmh
 詡	yrsmm
 詞	yrsmr
 訳	yrso
-謳	yrsrr
+謳	yrsrr	yrs'rr
 詎	yrss
 記	yrsu
 誋	yrsup
@@ -21279,7 +21321,7 @@ max_phrase_length: 1
 讌	yrtlf
 諽	yrtlj
 謹	yrtlm
-詌	yrtm
+詌	yrtm	yrt'm
 諆	yrtmc
 謀	yrtmd
 譁	yrtmj
@@ -21299,7 +21341,7 @@ max_phrase_length: 1
 乩	yru
 選	yruc
 詜	yrue
-訩	yruk
+訩	yruk	yru'k
 諯	yrumb
 讗	yruob
 詘	yruu
@@ -21310,7 +21352,7 @@ max_phrase_length: 1
 詤	yrvou
 畗	yrw
 謂	yrwb
-訵	yrwc
+訵	yrwc	yrw'c
 謖	yrwce
 課	yrwd
 謴	yrwjc
@@ -21447,8 +21489,8 @@ max_phrase_length: 1
 竬	ythlb
 竌	ythn
 竐	ythne
-颯	ythni
-飒	ythnk
+颯	ythni	ythn'i
+飒	ythnk	ythn'k
 竓	ythqu
 竔	ytht
 道	ythu
@@ -21563,11 +21605,11 @@ max_phrase_length: 1
 龌	yusmg
 齰	yuta
 齸	yutct
-甝	yutm
+甝	yutm	yut'm
 齓	yuu
 鼑	yuvml
 鼑	yuvmn
-齫	yuwd
+齫	yuwd	yuw'd
 齵	yuwlb
 齩	yuyck
 齴	yuyhh
@@ -21580,7 +21622,7 @@ max_phrase_length: 1
 朚	yvab
 肓	yvb
 膂	yvb
-裔	yvbcr
+裔	yvbcr	yvb'cr
 牽	yvbq
 盲	yvbu
 杗	yvd
@@ -21599,7 +21641,7 @@ max_phrase_length: 1
 蝱	yvlii
 逯	yvne
 邙	yvnl
-膐	yvobo
+膐	yvobo	yvob'o
 賌	yvoc
 忘	yvp
 吂	yvr
@@ -21612,11 +21654,11 @@ max_phrase_length: 1
 裏	ywgv
 畆	ywi
 鹹	ywihr
-鹵	ywii
+鹵	ywii	yw'ii
 遦	ywjc
-卤	ywk
+卤	ywk	yw'k
 禼	ywkb
-卥	ywkk
+卥	ywkk	yw'kk
 遇	ywlb
 遝	ywle
 遝	ywlf
@@ -21632,12 +21674,12 @@ max_phrase_length: 1
 鹶	ywoin
 鹼	ywomo
 鹸	ywomo
-迴	ywr
+迴	ywr	yw'r
 稟	ywrd
 禀	ywrf
 亶	ywrm
-卣	yws
-逥	ywsl
+卣	yws	yw's
+逥	ywsl	yw'sl
 鹺	ywtqm
 鹾	ywtqm
 鹻	ywtxc
@@ -21668,7 +21710,7 @@ max_phrase_length: 1
 遊	yysd
 遧	yytj
 邅	yywm
-逌	yyws
+逌	yyws	yyw's
 的	x
 曰	xa
 昍	xaa
@@ -23887,10 +23929,11 @@ max_phrase_length: 1
 ｝	yyyar
 →	yyyas
 ←	yyyat
-↓	yyyau
-↗	yyyav
-↘	yyyaw
-↖	yyyax
+↑	yyyau
+↓	yyyav
+↗	yyyaw
+↘	yyyax
+↖	yyyay
 ↙	yyyay
 △	yyyba
 ▲	yyybb
