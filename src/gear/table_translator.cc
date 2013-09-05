@@ -157,7 +157,10 @@ bool LazyTableTranslation::FetchUserPhrases(TableTranslator* translator) {
   if (!user_dict_) return false;
   // fetch all exact match entries
   user_dict_->LookupWords(&uter_, input_, false, 0, &user_dict_key_);
-  translator->encoder()->LookupPhrases(&uter_, input_, false);
+  UnityTableEncoder* encoder = translator->encoder();
+  if (encoder && encoder->loaded()) {
+    encoder->LookupPhrases(&uter_, input_, false);
+  }
   return !uter_.exhausted();
 }
 
