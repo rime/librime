@@ -51,7 +51,7 @@ class DictEntryList : public std::vector<shared_ptr<DictEntry> > {
 
 typedef boost::function<bool (shared_ptr<DictEntry> entry)> DictEntryFilter;
 
-class DictEntryFilterManager {
+class DictEntryFilterBinder {
  public:
   void AddFilter(DictEntryFilter filter);
 

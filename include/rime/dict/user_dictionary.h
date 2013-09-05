@@ -20,7 +20,7 @@ namespace rime {
 struct UserDictEntryCollector : std::map<size_t, DictEntryList> {
 };
 
-class UserDictEntryIterator : public DictEntryFilterManager {
+class UserDictEntryIterator : public DictEntryFilterBinder {
  public:
   UserDictEntryIterator() : entries_(), index_(0) {}
 

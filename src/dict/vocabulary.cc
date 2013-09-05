@@ -66,7 +66,7 @@ void DictEntryList::SortN(size_t count) {
   std::sort(begin(), nth, dereference_less<DictEntryList::value_type>);
 }
 
-void DictEntryFilterManager::AddFilter(DictEntryFilter filter) {
+void DictEntryFilterBinder::AddFilter(DictEntryFilter filter) {
   if (!filter_) {
     filter_.swap(filter);
   }

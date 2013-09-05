@@ -45,7 +45,7 @@ bool compare_chunk_by_leading_element(const Chunk &a, const Chunk &b);
 }  // namespace dictionary
 
 class DictEntryIterator : protected std::list<dictionary::Chunk>,
-                          public DictEntryFilterManager {
+                          public DictEntryFilterBinder {
  public:
   typedef std::list<dictionary::Chunk> Base;
 
