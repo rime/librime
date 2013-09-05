@@ -321,11 +321,11 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
         for (++it; it != history.rend(); ++it) {
           if (it->type != "table" && it->type != "sentence")
             break;
+          phrase = it->text + phrase;
           size_t phrase_length = utf8::unchecked::distance(
               phrase.c_str(), phrase.c_str() + phrase.length());
-          if (static_cast<int>(phrase_length) >= max_phrase_length_)
+          if (static_cast<int>(phrase_length) > max_phrase_length_)
             break;
-          phrase = it->text + phrase;
           DLOG(INFO) << "phrase: " << phrase;
           encoder_->EncodePhrase(phrase, "0");
         }
