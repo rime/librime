@@ -292,10 +292,15 @@ size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
     }
     DLOG(INFO) << "resume lookup after: " << key;
   }
+  std::string last_key(key);
   while (a->GetNextRecord(&key, &value)) {
+    DLOG(INFO) << "key : " << key << ", value: " << value;
     bool is_exact_match = (len < key.length() && key[len] == ' ');
-    if (!is_exact_match && !predictive)
+    if (!is_exact_match && !predictive) {
+      key = last_key;
       break;
+    }
+    last_key = key;
     shared_ptr<DictEntry> e =
         CreateDictEntry(key, value, present_tick, 1.0, &full_code);
     if (!e)
