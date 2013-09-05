@@ -207,8 +207,8 @@ TableTranslator::TableTranslator(const TranslatorTicket& ticket)
       Memory(engine_, name_space_),
       TranslatorOptions(engine_, name_space_),
       enable_charset_filter_(false),
+      enable_encoder_(false),
       enable_sentence_(true),
-      enable_encoder_(true),
       encode_commit_history_(true),
       max_phrase_length_(5) {
   if (!engine_) return;
