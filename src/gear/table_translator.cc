@@ -317,11 +317,18 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
       if (!history.empty()) {
         DLOG(INFO) << "history: " << history.repr();
         CommitHistory::const_reverse_iterator it = history.rbegin();
-        std::string phrase = it->text;
-        for (++it; it != history.rend(); ++it) {
+        if (it->type == "punct") {  // ending with punctuation
+            ++it;
+        }
+        std::string phrase;
+        for (; it != history.rend(); ++it) {
           if (it->type != "table" && it->type != "sentence")
             break;
-          phrase = it->text + phrase;
+          if (phrase.empty()) {
+            phrase = it->text;  // last word
+            continue;
+          }
+          phrase = it->text + phrase;  // prepend another word
           size_t phrase_length = utf8::unchecked::distance(
               phrase.c_str(), phrase.c_str() + phrase.length());
           if (static_cast<int>(phrase_length) > max_phrase_length_)
