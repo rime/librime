@@ -323,7 +323,7 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
             break;
           size_t phrase_length = utf8::unchecked::distance(
               phrase.c_str(), phrase.c_str() + phrase.length());
-          if (phrase_length >= max_phrase_length_)
+          if (static_cast<int>(phrase_length) >= max_phrase_length_)
             break;
           phrase = it->text + phrase;
           DLOG(INFO) << "phrase: " << phrase;
