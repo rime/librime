@@ -6,10 +6,8 @@
 //
 #include <map>
 #include <set>
-#include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/lexical_cast.hpp>
 #include <rime/algo/algebra.h>
 #include <rime/algo/utilities.h>
 #include <rime/dict/dictionary.h>
@@ -36,14 +34,21 @@ bool DictCompiler::Compile(const std::string &schema_file) {
   std::string dict_file(FindDictFile(dict_name_));
   if (dict_file.empty())
     return false;
+  std::ifstream fin(dict_file.c_str());
   DictSettings settings;
-  if (!settings.LoadFromFile(dict_file))
+  if (!settings.LoadDictHeader(fin)) {
+    LOG(ERROR) << "failed to load settings from '" << dict_file << "'.";
     return false;
-  LOG(INFO) << "dict name: " << settings.dict_name;
-  LOG(INFO) << "dict version: " << settings.dict_version;
+  }
+  fin.close();
+  LOG(INFO) << "dict name: " << settings.dict_name();
+  LOG(INFO) << "dict version: " << settings.dict_version();
   std::vector<std::string> dict_files;
-  BOOST_FOREACH(const std::string& table, settings.tables) {
-    std::string dict_file(FindDictFile(table));
+  ConfigListPtr tables = settings.GetTables();
+  for(ConfigList::Iterator it = tables->begin(); it != tables->end(); ++it) {
+    if (!Is<ConfigValue>(*it))
+      continue;
+    std::string dict_file(FindDictFile(As<ConfigValue>(*it)->str()));
     if (dict_file.empty())
       return false;
     dict_files.push_back(dict_file);
@@ -57,7 +62,6 @@ bool DictCompiler::Compile(const std::string &schema_file) {
   LOG(INFO) << schema_file << " (" << schema_file_checksum << ")";
   bool rebuild_table = true;
   bool rebuild_prism = true;
-  bool rebuild_rev_lookup_dict = true;
   if (boost::filesystem::exists(table_->file_name()) && table_->Load()) {
     if (table_->dict_file_checksum() == dict_file_checksum) {
       rebuild_table = false;
@@ -71,34 +75,29 @@ bool DictCompiler::Compile(const std::string &schema_file) {
     }
     prism_->Close();
   }
-  TreeDb deprecated_db(dict_name_ + ".reverse.kct", "reversedb");
-  if (deprecated_db.Exists()) {
-    deprecated_db.Remove();
-    LOG(INFO) << "removed deprecated db '" << deprecated_db.name() << "'.";
-  }
-  ReverseDb db(dict_name_);
-  if (db.Exists() && db.OpenReadOnly()) {
-    std::string checksum;
-    if (db.MetaFetch("/dict_file_checksum", &checksum) &&
-        boost::lexical_cast<uint32_t>(checksum) == dict_file_checksum) {
-      rebuild_rev_lookup_dict = false;
+  {
+    TreeDb deprecated_db(dict_name_ + ".reverse.kct", "reversedb");
+    if (deprecated_db.Exists()) {
+      deprecated_db.Remove();
+      LOG(INFO) << "removed deprecated db '" << deprecated_db.name() << "'.";
     }
-    db.Close();
+    ReverseLookupDictionary rev_dict(dict_name_);
+    if (rev_dict.Load()) {
+      if (rev_dict.GetDictFileChecksum() != dict_file_checksum) {
+        rebuild_table = true;
+      }
+    }
   }
   if (options_ & kRebuildTable) {
     rebuild_table = true;
-    rebuild_rev_lookup_dict = true;
   }
   if (options_ & kRebuildPrism) {
     rebuild_prism = true;
   }
-  if (rebuild_table && !BuildTable(settings, dict_files, dict_file_checksum))
+  if (rebuild_table && !BuildTable(&settings, dict_files, dict_file_checksum))
     return false;
   if (rebuild_prism && !BuildPrism(schema_file,
                                    dict_file_checksum, schema_file_checksum))
-    return false;
-  if (rebuild_rev_lookup_dict &&
-      !BuildReverseLookupDict(&db, dict_file_checksum))
     return false;
   // done!
   return true;
@@ -112,7 +111,7 @@ std::string DictCompiler::FindDictFile(const std::string& dict_name) {
   return dict_file;
 }
 
-bool DictCompiler::BuildTable(const DictSettings& settings,
+bool DictCompiler::BuildTable(DictSettings* settings,
                               const std::vector<std::string>& dict_files,
                               uint32_t dict_file_checksum) {
   LOG(INFO) << "building table...";
@@ -124,14 +123,14 @@ bool DictCompiler::BuildTable(const DictSettings& settings,
     path.replace_extension(".txt");
     collector.Dump(path.string());
   }
-  // build table
+  Vocabulary vocabulary;
+  // build .table.bin
   {
     std::map<std::string, int> syllable_to_id;
     int syllable_id = 0;
     BOOST_FOREACH(const std::string &s, collector.syllabary) {
       syllable_to_id[s] = syllable_id++;
     }
-    Vocabulary vocabulary;
     BOOST_FOREACH(RawDictEntry &r, collector.entries) {
       Code code;
       BOOST_FOREACH(const std::string &s, r.raw_code) {
@@ -148,7 +147,7 @@ bool DictCompiler::BuildTable(const DictSettings& settings,
       e->weight = r.weight;
       ls->push_back(e);
     }
-    if (settings.sort_order != "original") {
+    if (settings->sort_order() != "original") {
       vocabulary.SortHomophones();
     }
     table_->Remove();
@@ -157,6 +156,16 @@ bool DictCompiler::BuildTable(const DictSettings& settings,
         !table_->Save()) {
       return false;
     }
+  }
+  // build .reverse.bin
+  ReverseLookupDictionary rev_dict(dict_name_);
+  if (!rev_dict.Build(settings,
+                      collector.syllabary,
+                      vocabulary,
+                      collector.stems,
+                      dict_file_checksum)) {
+    LOG(ERROR) << "error building reverse lookup dict.";
+    return false;
   }
   return true;
 }
@@ -188,7 +197,7 @@ bool DictCompiler::BuildPrism(const std::string &schema_file,
     path.replace_extension(".txt");
     script.Dump(path.string());
   }
-  // build prism
+  // build .prism.bin
   {
     prism_->Remove();
     if (!prism_->Build(syllabary, script.empty() ? NULL : &script,
@@ -197,40 +206,6 @@ bool DictCompiler::BuildPrism(const std::string &schema_file,
       return false;
     }
   }
-  return true;
-}
-
-bool DictCompiler::BuildReverseLookupDict(ReverseDb* db,
-                                          uint32_t dict_file_checksum) {
-  LOG(INFO) << "building reverse lookup db...";
-  if (db->Exists())
-    db->Remove();
-  if (!db->Open())
-    return false;
-  // load syllable - word mapping from table
-  Syllabary syllabary;
-  if (!table_->Load() || !table_->GetSyllabary(&syllabary) || syllabary.empty())
-    return false;
-  typedef std::map<std::string, std::set<std::string> > ReverseLookupTable;
-  ReverseLookupTable rev_table;
-  int num_syllables = static_cast<int>(syllabary.size());
-  for (int syllable_id = 0; syllable_id < num_syllables; ++syllable_id) {
-    std::string syllable(table_->GetSyllableById(syllable_id));
-    TableAccessor a(table_->QueryWords(syllable_id));
-    while (!a.exhausted()) {
-      std::string word(a.entry()->text.c_str());
-      rev_table[word].insert(syllable);
-      a.Next();
-    }
-  }
-  // save reverse lookup dict
-  BOOST_FOREACH(const ReverseLookupTable::value_type &v, rev_table) {
-    std::string code_list(boost::algorithm::join(v.second, " "));
-    db->Update(v.first, code_list);
-  }
-  db->MetaUpdate("/dict_file_checksum",
-                 boost::lexical_cast<std::string>(dict_file_checksum));
-  db->Close();
   return true;
 }
 

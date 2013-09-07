@@ -111,7 +111,9 @@ class CharsetFilter : public Translation {
   virtual bool Next();
   virtual shared_ptr<Candidate> Peek();
 
-  static bool Passed(const std::string& text);
+  // return true to accept, false to reject the tested item
+  static bool FilterText(const std::string& text);
+  static bool FilterDictEntry(shared_ptr<DictEntry> entry);
 
  protected:
   bool LocateNextCandidate();

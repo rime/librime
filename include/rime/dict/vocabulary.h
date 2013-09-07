@@ -12,6 +12,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <boost/function.hpp>
 #include <rime/common.h>
 
 namespace rime {
@@ -48,6 +49,16 @@ class DictEntryList : public std::vector<shared_ptr<DictEntry> > {
   void SortN(size_t count);
 };
 
+typedef boost::function<bool (shared_ptr<DictEntry> entry)> DictEntryFilter;
+
+class DictEntryFilterBinder {
+ public:
+  void AddFilter(DictEntryFilter filter);
+
+ protected:
+  DictEntryFilter filter_;
+};
+
 class Vocabulary;
 
 struct VocabularyPage {
@@ -60,6 +71,9 @@ class Vocabulary : public std::map<int, VocabularyPage> {
   DictEntryList* LocateEntries(const Code &code);
   void SortHomophones();
 };
+
+// word -> { code, ... }
+typedef std::map<std::string, std::set<std::string> > ReverseLookupTable;
 
 }  // namespace rime
 

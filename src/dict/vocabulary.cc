@@ -5,6 +5,7 @@
 // 2011-07-24 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
+#include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <rime/dict/vocabulary.h>
 
@@ -63,6 +64,15 @@ void DictEntryList::Sort() {
 void DictEntryList::SortN(size_t count) {
   iterator nth(count > size() ? end() : begin() + count);
   std::sort(begin(), nth, dereference_less<DictEntryList::value_type>);
+}
+
+void DictEntryFilterBinder::AddFilter(DictEntryFilter filter) {
+  if (!filter_) {
+    filter_.swap(filter);
+  }
+  else {
+    filter_ = boost::bind(filter_, _1) && boost::bind(filter, _1);
+  }
 }
 
 DictEntryList* Vocabulary::LocateEntries(const Code &code) {

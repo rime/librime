@@ -6,6 +6,7 @@
 //
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
+#include <utf8.h>
 #include <rime/candidate.h>
 #include <rime/composition.h>
 #include <rime/config.h>
@@ -17,10 +18,11 @@
 #include <rime/dict/user_dictionary.h>
 #include <rime/gear/table_translator.h>
 #include <rime/gear/translator_commons.h>
-
-static const char* kUnityTableEncoder = " \xe2\x98\xaf ";
+#include <rime/gear/unity_table_encoder.h>
 
 namespace rime {
+
+static const char* kUnitySymbol = " \xe2\x98\xaf ";
 
 // TableTranslation
 
@@ -72,7 +74,8 @@ shared_ptr<Candidate> TableTranslation::Peek() {
     return shared_ptr<Candidate>();
   bool is_user_phrase = PreferUserPhrase();
   shared_ptr<DictEntry> e = PreferedEntry(is_user_phrase);
-  std::string comment(e->comment);
+  bool is_unity_phrase = UnityTableEncoder::HasPrefix(e->custom_code);
+  std::string comment(is_unity_phrase ? kUnitySymbol : e->comment);
   if (options_) {
     options_->comment_formatter().Apply(&comment);
   }
@@ -122,6 +125,7 @@ class LazyTableTranslation : public TableTranslation {
                        size_t start, size_t end,
                        const std::string& preedit,
                        bool enable_user_dict);
+  bool FetchUserPhrases(TableTranslator* translator);
   virtual bool FetchMoreUserPhrases();
   virtual bool FetchMoreTableEntries();
 
@@ -144,9 +148,20 @@ LazyTableTranslation::LazyTableTranslation(TableTranslator* translator,
       dict_(translator->dict()),
       user_dict_(enable_user_dict ? translator->user_dict() : NULL),
       limit_(kInitialSearchLimit), user_dict_limit_(kInitialSearchLimit) {
-  FetchMoreUserPhrases();
+  FetchUserPhrases(translator) || FetchMoreUserPhrases();
   FetchMoreTableEntries();
   CheckEmpty();
+}
+
+bool LazyTableTranslation::FetchUserPhrases(TableTranslator* translator) {
+  if (!user_dict_) return false;
+  // fetch all exact match entries
+  user_dict_->LookupWords(&uter_, input_, false, 0, &user_dict_key_);
+  UnityTableEncoder* encoder = translator->encoder();
+  if (encoder && encoder->loaded()) {
+    encoder->LookupPhrases(&uter_, input_, false);
+  }
+  return !uter_.exhausted();
 }
 
 bool LazyTableTranslation::FetchMoreUserPhrases() {
@@ -192,14 +207,27 @@ TableTranslator::TableTranslator(const TranslatorTicket& ticket)
       Memory(engine_, name_space_),
       TranslatorOptions(engine_, name_space_),
       enable_charset_filter_(false),
-      enable_sentence_(true) {
+      enable_encoder_(false),
+      enable_sentence_(true),
+      encode_commit_history_(true),
+      max_phrase_length_(5) {
   if (!engine_) return;
-  Config *config = engine_->schema()->config();
-  if (config) {
+  if (Config *config = engine_->schema()->config()) {
     config->GetBool(name_space_ + "/enable_charset_filter",
                     &enable_charset_filter_);
     config->GetBool(name_space_ + "/enable_sentence",
                     &enable_sentence_);
+    config->GetBool(name_space_ + "/enable_encoder",
+                    &enable_encoder_);
+    config->GetBool(name_space_ + "/encode_commit_history",
+                    &encode_commit_history_);
+    config->GetInt(name_space_ + "/max_phrase_length",
+                   &max_phrase_length_);
+  }
+  if (enable_encoder_ && user_dict_) {
+    encoder_.reset(new UnityTableEncoder(user_dict_.get()));
+    Ticket ticket(engine_->schema(), name_space_);
+    encoder_->Load(ticket);
   }
 }
 
@@ -236,6 +264,9 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
     UserDictEntryIterator uter;
     if (enable_user_dict) {
       user_dict_->LookupWords(&uter, code, false);
+      if (encoder_ && encoder_->loaded()) {
+        encoder_->LookupPhrases(&uter, code, false);
+      }
     }
     if (!iter.exhausted() || !uter.exhausted())
       translation = boost::make_shared<TableTranslation>(
@@ -273,9 +304,46 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
 bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
   if (!user_dict_) return false;
   BOOST_FOREACH(const DictEntry* e, commit_entry.elements) {
-    user_dict_->UpdateEntry(*e, 1);
+    if (UnityTableEncoder::HasPrefix(e->custom_code)) {
+      DictEntry blessed(*e);
+      UnityTableEncoder::RemovePrefix(&blessed.custom_code);
+      user_dict_->UpdateEntry(blessed, 1);
+    }
+    else {
+      user_dict_->UpdateEntry(*e, 1);
+    }
   }
-  // TODO
+  if (encoder_ && encoder_->loaded()) {
+    if (commit_entry.elements.size() > 1) {
+      encoder_->EncodePhrase(commit_entry.text, "1");
+    }
+    if (encode_commit_history_) {
+      const CommitHistory& history(engine_->context()->commit_history());
+      if (!history.empty()) {
+        DLOG(INFO) << "history: " << history.repr();
+        CommitHistory::const_reverse_iterator it = history.rbegin();
+        if (it->type == "punct") {  // ending with punctuation
+            ++it;
+        }
+        std::string phrase;
+        for (; it != history.rend(); ++it) {
+          if (it->type != "table" && it->type != "sentence")
+            break;
+          if (phrase.empty()) {
+            phrase = it->text;  // last word
+            continue;
+          }
+          phrase = it->text + phrase;  // prepend another word
+          size_t phrase_length = utf8::unchecked::distance(
+              phrase.c_str(), phrase.c_str() + phrase.length());
+          if (static_cast<int>(phrase_length) > max_phrase_length_)
+            break;
+          DLOG(INFO) << "phrase: " << phrase;
+          encoder_->EncodePhrase(phrase, "0");
+        }
+      }
+    }
+  }
   return true;
 }
 
@@ -391,7 +459,7 @@ shared_ptr<Candidate> SentenceTranslation::Peek() {
 void SentenceTranslation::PrepareSentence() {
   if (!sentence_) return;
   sentence_->Offset(start_);
-  sentence_->set_comment(kUnityTableEncoder);
+  sentence_->set_comment(kUnitySymbol);
   sentence_->set_syllabification(
       make_shared<SentenceSyllabification>(sentence_));
 
@@ -463,21 +531,6 @@ size_t SentenceSyllabification::NextStop(size_t caret_pos) const {
   return caret_pos;
 }
 
-template <class Iter>
-shared_ptr<DictEntry> get_first_entry(Iter& iter, bool filter_by_charset) {
-  if (iter.exhausted())
-    return shared_ptr<DictEntry>();
-  shared_ptr<DictEntry> entry = iter.Peek();
-  if (filter_by_charset) {
-    while (entry && !CharsetFilter::Passed(entry->text)) {
-      if (!iter.Next())
-        return shared_ptr<DictEntry>();
-      entry = iter.Peek();
-    }
-  }
-  return entry;
-}
-
 static size_t consume_trailing_delimiters(size_t pos,
                                           const std::string& input,
                                           const std::string& delimiters) {
@@ -499,26 +552,59 @@ shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
     if (sentences.find(start_pos) == sentences.end())
       continue;
     std::string active_input(input.substr(start_pos));
+    std::string active_key(active_input + ' ');
     std::vector<shared_ptr<DictEntry> > entries(active_input.length() + 1);
     // lookup dictionaries
     if (user_dict_ && user_dict_->loaded()) {
       for (size_t len = 1; len <= active_input.length(); ++len) {
+        size_t consumed_length =
+            consume_trailing_delimiters(len, active_input, delimiters_);
+        if (entries[consumed_length])
+          continue;
         DLOG(INFO) << "active input: " << active_input << "[0, " << len << ")";
         UserDictEntryIterator uter;
         std::string resume_key;
-        user_dict_->LookupWords(&uter, active_input.substr(0, len),
-                                false, 0, &resume_key);
-        size_t consumed_length =
-            consume_trailing_delimiters(len, active_input, delimiters_);
-        entries[consumed_length] = get_first_entry(uter, filter_by_charset);
+        std::string key(active_input.substr(0, len));
+        user_dict_->LookupWords(&uter, key, false, 0, &resume_key);
+        if (filter_by_charset) {
+          uter.AddFilter(CharsetFilter::FilterDictEntry);
+        }
+        entries[consumed_length] = uter.Peek();
         if (start_pos == 0 && !uter.exhausted()) {
           // also provide words for manual composition
           uter.Release(&user_phrase_collector[consumed_length]);
           DLOG(INFO) << "user phrase[" << consumed_length << "]: "
                      << user_phrase_collector[consumed_length].size();
         }
-        if (resume_key > active_input &&
-            !boost::starts_with(resume_key, active_input + " "))
+        if (resume_key > active_key &&
+            !boost::starts_with(resume_key, active_key))
+          break;
+      }
+    }
+    if (encoder_ && encoder_->loaded()) {
+      UnityTableEncoder::AddPrefix(&active_key);
+      for (size_t len = 1; len <= active_input.length(); ++len) {
+        size_t consumed_length =
+            consume_trailing_delimiters(len, active_input, delimiters_);
+        if (entries[consumed_length])
+          continue;
+        DLOG(INFO) << "active input: " << active_input << "[0, " << len << ")";
+        UserDictEntryIterator uter;
+        std::string resume_key;
+        std::string key(active_input.substr(0, len));
+        encoder_->LookupPhrases(&uter, key, false, 0, &resume_key);
+        if (filter_by_charset) {
+          uter.AddFilter(CharsetFilter::FilterDictEntry);
+        }
+        entries[consumed_length] = uter.Peek();
+        if (start_pos == 0 && !uter.exhausted()) {
+          // also provide words for manual composition
+          uter.Release(&user_phrase_collector[consumed_length]);
+          DLOG(INFO) << "unity phrase[" << consumed_length << "]: "
+                     << user_phrase_collector[consumed_length].size();
+        }
+        if (resume_key > active_key &&
+            !boost::starts_with(resume_key, active_key))
           break;
       }
     }
@@ -528,12 +614,16 @@ shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
       if (matches.empty()) continue;
       BOOST_REVERSE_FOREACH(const Prism::Match &m, matches) {
         if (m.length == 0) continue;
-        if (entries[m.length]) continue;
-        DictEntryIterator iter;
-        dict_->LookupWords(&iter, active_input.substr(0, m.length), false);
         size_t consumed_length =
             consume_trailing_delimiters(m.length, active_input, delimiters_);
-        entries[consumed_length] = get_first_entry(iter, filter_by_charset);
+        if (entries[consumed_length])
+          continue;
+        DictEntryIterator iter;
+        dict_->LookupWords(&iter, active_input.substr(0, m.length), false);
+        if (filter_by_charset) {
+          iter.AddFilter(CharsetFilter::FilterDictEntry);
+        }
+        entries[consumed_length] = iter.Peek();
         if (start_pos == 0 && !iter.exhausted()) {
           // also provide words for manual composition
           collector[consumed_length] = iter;

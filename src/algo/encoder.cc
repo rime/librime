@@ -42,12 +42,14 @@ TableEncoder::TableEncoder(PhraseCollector* collector)
   formula: "AaBzCaYzZz"
   tail_anchor: "'"
 */
-void TableEncoder::LoadSettings(Config* config) {
+bool TableEncoder::LoadSettings(Config* config) {
   loaded_ = false;
   encoding_rules_.clear();
   exclude_patterns_.clear();
   tail_anchor_.clear();
-  if (!config) return;
+
+  if (!config) return false;
+
   if (ConfigListPtr rules = config->GetList("encoder/rules")) {
     for (ConfigList::Iterator it = rules->begin(); it != rules->end(); ++it) {
       ConfigMapPtr rule = As<ConfigMap>(*it);
@@ -81,7 +83,6 @@ void TableEncoder::LoadSettings(Config* config) {
       encoding_rules_.push_back(r);
     }
   }
-  loaded_ = !encoding_rules_.empty();
   if (ConfigListPtr excludes = config->GetList("encoder/exclude_patterns")) {
     for (ConfigList::Iterator it = excludes->begin();
          it != excludes->end(); ++it) {
@@ -92,15 +93,9 @@ void TableEncoder::LoadSettings(Config* config) {
     }
   }
   config->GetString("encoder/tail_anchor", &tail_anchor_);
-}
 
-bool TableEncoder::LoadSettings(const std::string& filename) {
-  Config config;
-  if (!config.LoadFromFile(filename)) {
-    return false;
-  }
-  LoadSettings(&config);
-  return loaded();
+  loaded_ = !encoding_rules_.empty();
+  return loaded_;
 }
 
 bool TableEncoder::ParseFormula(const std::string& formula,

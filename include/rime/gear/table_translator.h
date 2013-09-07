@@ -20,6 +20,8 @@
 
 namespace rime {
 
+class UnityTableEncoder;
+
 class TableTranslator : public Translator,
                         public Memory,
                         public TranslatorOptions {
@@ -34,9 +36,15 @@ class TableTranslator : public Translator,
   shared_ptr<Translation> MakeSentence(const std::string &input,
                                        size_t start);
 
+  UnityTableEncoder* encoder() const { return encoder_.get(); }
+
  protected:
   bool enable_charset_filter_;
+  bool enable_encoder_;
   bool enable_sentence_;
+  bool encode_commit_history_;
+  int max_phrase_length_;
+  scoped_ptr<UnityTableEncoder> encoder_;
 };
 
 class TableTranslation : public Translation {

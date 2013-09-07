@@ -79,29 +79,34 @@ void DictEntryIterator::Sort() {
   sort(dictionary::compare_chunk_by_head_element);
 }
 
-shared_ptr<DictEntry> DictEntryIterator::Peek() {
-  if (empty()) {
-    LOG(WARNING) << "oops! no more dict entries.";
-    return shared_ptr<DictEntry>();
+void DictEntryIterator::PrepareEntry() {
+  if (empty()) return;
+  const dictionary::Chunk &chunk(front());
+  entry_ = make_shared<DictEntry>();
+  const table::Entry &e(chunk.entries[chunk.cursor]);
+  DLOG(INFO) << "creating temporary dict entry '" << e.text.c_str() << "'.";
+  entry_->code = chunk.code;
+  entry_->text = e.text.c_str();
+  const double kS = 1e8;
+  entry_->weight = (e.weight + 1) / kS * chunk.credibility;
+  if (!chunk.remaining_code.empty()) {
+    entry_->comment = "~" + chunk.remaining_code;
+    entry_->remaining_code_length = chunk.remaining_code.length();
   }
-  if (!entry_) {
-    const dictionary::Chunk &chunk(front());
-    entry_ = make_shared<DictEntry>();
-    const table::Entry &e(chunk.entries[chunk.cursor]);
-    DLOG(INFO) << "creating temporary dict entry '" << e.text.c_str() << "'.";
-    entry_->code = chunk.code;
-    entry_->text = e.text.c_str();
-    const double kS = 1e8;
-    entry_->weight = (e.weight + 1) / kS * chunk.credibility;
-    if (!chunk.remaining_code.empty()) {
-      entry_->comment = "~" + chunk.remaining_code;
-      entry_->remaining_code_length = chunk.remaining_code.length();
+}
+
+shared_ptr<DictEntry> DictEntryIterator::Peek() {
+  while (!entry_ && !empty()) {
+    PrepareEntry();
+    if (filter_ && !filter_(entry_)) {
+      Next();
     }
   }
   return entry_;
 }
 
 bool DictEntryIterator::Next() {
+  entry_.reset();
   if (empty()) {
     return false;
   }
@@ -113,8 +118,6 @@ bool DictEntryIterator::Next() {
     // reorder chunks since front() has got a new head element
     Sort();
   }
-  // unload retired entry
-  entry_.reset();
   return !empty();
 }
 

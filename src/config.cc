@@ -22,6 +22,8 @@ class ConfigData {
   ConfigData() : modified_(false) {}
   ~ConfigData();
 
+  bool LoadFromStream(std::istream& stream);
+  bool SaveToStream(std::ostream& stream);
   bool LoadFromFile(const std::string& file_name);
   bool SaveToFile(const std::string& file_name);
   ConfigItemPtr Traverse(const std::string &key);
@@ -360,6 +362,14 @@ Config::Config(const std::string &file_name)
     : ConfigItemRef(ConfigDataManager::instance().GetConfigData(file_name)) {
 }
 
+bool Config::LoadFromStream(std::istream& stream) {
+  return data_->LoadFromStream(stream);
+}
+
+bool Config::SaveToStream(std::ostream& stream) {
+  return data_->SaveToStream(stream);
+}
+
 bool Config::LoadFromFile(const std::string& file_name) {
   return data_->LoadFromFile(file_name);
 }
@@ -542,6 +552,38 @@ ConfigData::~ConfigData() {
     SaveToFile(file_name_);
 }
 
+bool ConfigData::LoadFromStream(std::istream& stream) {
+  if (!stream.good()) {
+    LOG(ERROR) << "failed to load config from stream.";
+    return false;
+  }
+  try {
+    YAML::Node doc = YAML::Load(stream);
+    root = ConvertFromYaml(doc);
+  }
+  catch (YAML::Exception& e) {
+    LOG(ERROR) << "Error parsing YAML: " << e.what();
+    return false;
+  }
+  return true;
+}
+
+bool ConfigData::SaveToStream(std::ostream& stream) {
+  if (!stream.good()) {
+    LOG(ERROR) << "failed to save config to stream.";
+    return false;
+  }
+  try {
+    YAML::Emitter emitter(stream);
+    EmitYaml(root, &emitter, 0);
+  }
+  catch (YAML::Exception& e) {
+    LOG(ERROR) << "Error emitting YAML: " << e.what();
+    return false;
+  }
+  return true;
+}
+
 bool ConfigData::LoadFromFile(const std::string& file_name) {
   // update status
   file_name_ = file_name;
@@ -571,13 +613,10 @@ bool ConfigData::SaveToFile(const std::string& file_name) {
     // not really saving
     return false;
   }
+  LOG(INFO) << "saving config file '" << file_name << "'.";
   // dump tree
   std::ofstream out(file_name.c_str());
-  YAML::Emitter emitter;
-  EmitYaml(root, &emitter, 0);
-  out << emitter.c_str();
-  LOG(INFO) << "saved config file '" << file_name << "'.";
-  return true;
+  return SaveToStream(out);
 }
 
 ConfigItemPtr ConfigData::Traverse(const std::string &key) {
