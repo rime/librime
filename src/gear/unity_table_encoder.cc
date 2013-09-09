@@ -25,16 +25,21 @@ UnityTableEncoder::~UnityTableEncoder() {
 bool UnityTableEncoder::Load(const Ticket& ticket) {
   ReverseLookupDictionary::Component *c =
       ReverseLookupDictionary::Require("reverse_lookup_dictionary");
-  if (c) {
-    rev_dict_.reset(c->Create(ticket));
-    if (rev_dict_ && rev_dict_->Load()) {
-      shared_ptr<DictSettings> settings = rev_dict_->GetDictSettings();
-      if (settings && settings->use_rule_based_encoder()) {
-        LoadSettings(settings.get());
-      }
-    }
+  if (!c) {
+    LOG(ERROR) << "component not available: reverse_lookup_dictionary";
+    return false;
   }
-  return loaded();
+  rev_dict_.reset(c->Create(ticket));
+  if (!rev_dict_ || !rev_dict_->Load()) {
+    LOG(ERROR) << "error loading dictionary for unity table encoder.";
+    return false;
+  }
+  shared_ptr<DictSettings> settings = rev_dict_->GetDictSettings();
+  if (!settings || !settings->use_rule_based_encoder()) {
+    LOG(WARNING) << "unity table encoder is not enabled in dict settings.";
+    return false;
+  }
+  return LoadSettings(settings.get());
 }
 
 void UnityTableEncoder::CreateEntry(const std::string &word,
