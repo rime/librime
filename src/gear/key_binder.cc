@@ -218,7 +218,12 @@ bool KeyBinder::ReinterpretPagingKey(const KeyEvent &key_event) {
   if (key_event.release()) return false;
   bool ret = false;
   int ch = (key_event.modifier() == 0) ? key_event.keycode() : 0;
-  // reinterpret period (as page down) if succeeded by alphabetic keys
+  // reinterpret period key followed by alphabetic keys
+  // unless period/comma key has been used multiple times
+  if (ch == '.' && (last_key_ == '.' || last_key_ == ',')) {
+    last_key_ = 0;
+    return ret;
+  }
   if (last_key_ == '.' && ch >= 'a' && ch <= 'z') {
     Context *ctx = engine_->context();
     const std::string &input(ctx->input());
