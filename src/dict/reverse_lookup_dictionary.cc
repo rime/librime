@@ -29,7 +29,9 @@ ReverseLookupDictionary::ReverseLookupDictionary(const std::string& dict_name)
 }
 
 bool ReverseLookupDictionary::Load() {
-  return db_ && (db_->loaded() || db_->OpenReadOnly());
+  if (!db_) return false;
+  if (db_->loaded()) return true;
+  return db_->Exists() && db_->OpenReadOnly();
 }
 
 bool ReverseLookupDictionary::ReverseLookup(const std::string &text,

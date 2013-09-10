@@ -82,10 +82,9 @@ bool DictCompiler::Compile(const std::string &schema_file) {
       LOG(INFO) << "removed deprecated db '" << deprecated_db.name() << "'.";
     }
     ReverseLookupDictionary rev_dict(dict_name_);
-    if (rev_dict.Load()) {
-      if (rev_dict.GetDictFileChecksum() != dict_file_checksum) {
-        rebuild_table = true;
-      }
+    if (!rev_dict.Load() ||
+        rev_dict.GetDictFileChecksum() != dict_file_checksum) {
+      rebuild_table = true;
     }
   }
   if (options_ & kRebuildTable) {
