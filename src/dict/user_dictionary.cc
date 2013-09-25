@@ -84,9 +84,9 @@ void UserDictEntryIterator::Add(const shared_ptr<DictEntry>& entry) {
   entries_->push_back(entry);
 }
 
-void UserDictEntryIterator::SortN(size_t count) {
+void UserDictEntryIterator::SortRange(size_t start, size_t count) {
   if (entries_)
-    entries_->SortN(count);
+    entries_->SortRange(start, count);
 }
 
 bool UserDictEntryIterator::Release(DictEntryList* receiver) {
@@ -272,6 +272,7 @@ size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
                                    std::string* resume_key) {
   TickCount present_tick = tick_ + 1;
   size_t len = input.length();
+  size_t start = result->size();
   size_t count = 0;
   size_t exact_match_count = 0;
   const std::string kEnd = "\xff";
@@ -319,7 +320,7 @@ size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
       break;
   }
   if (exact_match_count > 0) {
-    result->SortN(exact_match_count);
+    result->SortRange(start, exact_match_count);
   }
   if (resume_key) {
     *resume_key = key;

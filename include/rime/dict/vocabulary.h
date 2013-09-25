@@ -46,7 +46,7 @@ struct DictEntry {
 class DictEntryList : public std::vector<shared_ptr<DictEntry> > {
  public:
   void Sort();
-  void SortN(size_t count);
+  void SortRange(size_t start, size_t count);
 };
 
 typedef boost::function<bool (shared_ptr<DictEntry> entry)> DictEntryFilter;

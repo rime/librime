@@ -69,13 +69,16 @@ bool TableTranslation::Next() {
   return !CheckEmpty();
 }
 
+static bool is_constructed(const DictEntry* e) {
+  return UnityTableEncoder::HasPrefix(e->custom_code);
+}
+
 shared_ptr<Candidate> TableTranslation::Peek() {
   if (exhausted())
     return shared_ptr<Candidate>();
   bool is_user_phrase = PreferUserPhrase();
   shared_ptr<DictEntry> e = PreferedEntry(is_user_phrase);
-  bool is_unity_phrase = UnityTableEncoder::HasPrefix(e->custom_code);
-  std::string comment(is_unity_phrase ? kUnitySymbol : e->comment);
+  std::string comment(is_constructed(e.get()) ? kUnitySymbol : e->comment);
   if (options_) {
     options_->comment_formatter().Apply(&comment);
   }
@@ -107,7 +110,8 @@ bool TableTranslation::PreferUserPhrase() {
   if (iter_.exhausted())
     return true;
   if (iter_.Peek()->remaining_code_length == 0 &&
-      uter_.Peek()->remaining_code_length != 0)
+      (uter_.Peek()->remaining_code_length != 0 ||
+       is_constructed(uter_.Peek().get())))
     return false;
   else
     return true;
@@ -304,7 +308,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
 bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
   if (!user_dict_) return false;
   BOOST_FOREACH(const DictEntry* e, commit_entry.elements) {
-    if (UnityTableEncoder::HasPrefix(e->custom_code)) {
+    if (is_constructed(e)) {
       DictEntry blessed(*e);
       UnityTableEncoder::RemovePrefix(&blessed.custom_code);
       user_dict_->UpdateEntry(blessed, 1);

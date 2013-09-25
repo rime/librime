@@ -25,13 +25,16 @@ class UserDictEntryIterator : public DictEntryFilterBinder {
   UserDictEntryIterator() : entries_(), index_(0) {}
 
   void Add(const shared_ptr<DictEntry>& entry);
-  void SortN(size_t count);
+  void SortRange(size_t start, size_t count);
   bool Release(DictEntryList* receiver);
 
   shared_ptr<DictEntry> Peek();
   bool Next();
   bool exhausted() const {
     return !entries_ || index_ >= entries_->size();
+  }
+  size_t size() const {
+    return entries_ ? entries_->size() : 0;
   }
 
  protected:

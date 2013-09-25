@@ -61,9 +61,12 @@ void DictEntryList::Sort() {
   std::sort(begin(), end(), dereference_less<DictEntryList::value_type>);
 }
 
-void DictEntryList::SortN(size_t count) {
-  iterator nth(count > size() ? end() : begin() + count);
-  std::sort(begin(), nth, dereference_less<DictEntryList::value_type>);
+void DictEntryList::SortRange(size_t start, size_t count) {
+  if (start >= size())
+    return;
+  iterator i(begin() + start);
+  iterator j(start + count >= size() ? end() : i + count);
+  std::sort(i, j, dereference_less<DictEntryList::value_type>);
 }
 
 void DictEntryFilterBinder::AddFilter(DictEntryFilter filter) {
