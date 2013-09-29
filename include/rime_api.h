@@ -219,6 +219,9 @@ RIME_API Bool RimeSelectSchema(RimeSessionId session_id, const char* schema_id);
   
 // configuration
 
+// <schema_id>.schema.yaml
+RIME_API Bool RimeSchemaOpen(const char *schema_id, RimeConfig* config);
+// <config_id>.yaml
 RIME_API Bool RimeConfigOpen(const char *config_id, RimeConfig* config);
 RIME_API Bool RimeConfigClose(RimeConfig *config);
 RIME_API Bool RimeConfigGetBool(RimeConfig *config, const char *key, Bool *value);

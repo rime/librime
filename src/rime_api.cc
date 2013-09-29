@@ -439,6 +439,16 @@ RIME_API Bool RimeSelectSchema(RimeSessionId session_id, const char* schema_id) 
 
 // config
 
+RIME_API Bool RimeSchemaOpen(const char *schema_id, RimeConfig* config) {
+  if (!config || !config) return False;
+  rime::Config::Component* cc = rime::Config::Require("schema_config");
+  if (!cc) return False;
+  rime::Config* c = cc->Create(schema_id);
+  if (!c) return False;
+  config->ptr = (void*)c;
+  return True;
+}
+
 RIME_API Bool RimeConfigOpen(const char *config_id, RimeConfig* config) {
   if (!config || !config) return False;
   rime::Config::Component* cc = rime::Config::Require("config");
