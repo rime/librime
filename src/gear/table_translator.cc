@@ -380,14 +380,14 @@ class SentenceTranslation : public Translation {
 
 class SentenceSyllabification : public Syllabification {
  public:
-  SentenceSyllabification(shared_ptr<Sentence> sentence)
+  SentenceSyllabification(weak_ptr<Sentence> sentence)
       : syllabified_(sentence) {
   }
   virtual size_t PreviousStop(size_t caret_pos) const;
   virtual size_t NextStop(size_t caret_pos) const;
 
  protected:
-  shared_ptr<Sentence> syllabified_;
+  weak_ptr<Sentence> syllabified_;
 };
 
 SentenceTranslation::SentenceTranslation(TableTranslator* translator,
@@ -510,9 +510,10 @@ bool SentenceTranslation::PreferUserPhrase() const {
 }
 
 size_t SentenceSyllabification::PreviousStop(size_t caret_pos) const {
-  if (syllabified_) {
-    size_t stop = syllabified_->start();
-    BOOST_FOREACH(size_t len, syllabified_->syllable_lengths()) {
+  shared_ptr<Sentence> sentence = syllabified_.lock();
+  if (sentence) {
+    size_t stop = sentence->start();
+    BOOST_FOREACH(size_t len, sentence->syllable_lengths()) {
       if (stop + len >= caret_pos) {
         return stop;
       }
@@ -523,9 +524,10 @@ size_t SentenceSyllabification::PreviousStop(size_t caret_pos) const {
 }
 
 size_t SentenceSyllabification::NextStop(size_t caret_pos) const {
-  if (syllabified_) {
-    size_t stop = syllabified_->start();
-    BOOST_FOREACH(size_t len, syllabified_->syllable_lengths()) {
+  shared_ptr<Sentence> sentence = syllabified_.lock();
+  if (sentence) {
+    size_t stop = sentence->start();
+    BOOST_FOREACH(size_t len, sentence->syllable_lengths()) {
       stop += len;
       if (stop > caret_pos) {
         return stop;
