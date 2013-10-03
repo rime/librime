@@ -339,6 +339,7 @@ struct RimeApi {
 
   // configuration
 
+  Bool (*schema_open)(const char *schema_id, RimeConfig* config);
   Bool (*config_open)(const char *config_id, RimeConfig* config);
   Bool (*config_close)(RimeConfig *config);
   Bool (*config_get_bool)(RimeConfig *config, const char *key, Bool *value);

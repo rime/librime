@@ -631,6 +631,7 @@ RIME_API RimeApi* rime_api_init() {
     s_api.free_schema_list = &RimeFreeSchemaList;
     s_api.get_current_schema = &RimeGetCurrentSchema;
     s_api.select_schema = &RimeSelectSchema;
+    s_api.schema_open = &RimeSchemaOpen;
     s_api.config_open = &RimeConfigOpen;
     s_api.config_close = &RimeConfigClose;
     s_api.config_get_bool = &RimeConfigGetBool;
