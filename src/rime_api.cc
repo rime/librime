@@ -191,7 +191,7 @@ RIME_API void RimeClearComposition(RimeSessionId session_id) {
 RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
   if (!context || context->data_size <= 0)
     return False;
-  std::memset((char*)context + sizeof(context->data_size), 0, context->data_size);
+  RIME_STRUCT_CLEAR(*context);
   boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
@@ -230,8 +230,10 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
       context->menu.is_last_page = Bool(page->is_last_page);
       context->menu.highlighted_candidate_index = selected_index % page_size;
       int i = 0;
+      context->menu.num_candidates = page->candidates.size();
+      context->menu.candidates = new RimeCandidate[page->candidates.size()];
       BOOST_FOREACH(const boost::shared_ptr<rime::Candidate> &cand, page->candidates) {
-        RimeCandidate* dest = &context->menu.candidates[i];
+        RimeCandidate* dest = &context->menu.candidates[i++];
         dest->text = new char[cand->text().length() + 1];
         std::strcpy(dest->text, cand->text().c_str());
         std::string comment(cand->comment());
@@ -239,14 +241,15 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
           dest->comment = new char[comment.length() + 1];
           std::strcpy(dest->comment, comment.c_str());
         }
-        if (++i >= RIME_MAX_NUM_CANDIDATES) break;
+        else {
+          dest->comment = NULL;
+        }
       }
-      context->menu.num_candidates = i;
       if (schema) {
         const std::string& select_keys(schema->select_keys());
         if (!select_keys.empty()) {
-          std::strncpy(context->menu.select_keys, select_keys.c_str(),
-                       RIME_MAX_NUM_CANDIDATES);
+          context->menu.select_keys = new char[select_keys.length() + 1];
+          std::strcpy(context->menu.select_keys, select_keys.c_str());
         }
       }
     }
@@ -262,17 +265,19 @@ RIME_API Bool RimeFreeContext(RimeContext* context) {
     delete[] context->menu.candidates[i].text;
     delete[] context->menu.candidates[i].comment;
   }
+  delete[] context->menu.candidates;
+  delete[] context->menu.select_keys;
   if (RIME_STRUCT_HAS_MEMBER(*context, context->commit_text_preview)) {
     delete[] context->commit_text_preview;
   }
-  std::memset((char*)context + sizeof(context->data_size), 0, context->data_size);
+  RIME_STRUCT_CLEAR(*context);
   return True;
 }
 
 RIME_API Bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit) {
   if (!commit)
     return False;
-  std::memset(commit, 0, sizeof(RimeCommit));
+  RIME_STRUCT_CLEAR(*commit);
   boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
@@ -290,14 +295,14 @@ RIME_API Bool RimeFreeCommit(RimeCommit* commit) {
   if (!commit)
     return False;
   delete[] commit->text;
-  std::memset(commit, 0, sizeof(RimeCommit));
+  RIME_STRUCT_CLEAR(*commit);
   return True;
 }
 
 RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
   if (!status || status->data_size <= 0)
     return False;
-  std::memset((char*)status + sizeof(status->data_size), 0, status->data_size);
+  RIME_STRUCT_CLEAR(*status);
   boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
@@ -322,7 +327,7 @@ RIME_API Bool RimeFreeStatus(RimeStatus* status) {
     return False;
   delete[] status->schema_id;
   delete[] status->schema_name;
-  std::memset((char*)status + sizeof(status->data_size), 0, status->data_size);
+  RIME_STRUCT_CLEAR(*status);
   return True;
 }
 
@@ -396,7 +401,7 @@ RIME_API Bool RimeGetSchemaList(RimeSchemaList* output) {
     rime::Schema schema(schema_id);
     x.name = new char[schema.schema_name().length() + 1];
     strcpy(x.name, schema.schema_name().c_str());
-    x.unused = NULL;
+    x.reserved = NULL;
     ++output->size;
   }
   if (output->size == 0) {
@@ -585,4 +590,59 @@ RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_
       session->ProcessKeyEvent(ke);
     }
     return True;
+}
+
+RIME_API RimeApi* rime_api_init() {
+  static RimeApi s_api = {0};
+  if (!s_api.data_size) {
+    RIME_STRUCT_INIT(RimeApi, s_api);
+    s_api.setup_logging = &RimeSetupLogging;
+    s_api.set_notification_handler = &RimeSetNotificationHandler;
+    s_api.initialize = &RimeInitialize;
+    s_api.finalize = &RimeFinalize;
+    s_api.start_maintenance = &RimeStartMaintenance;
+    s_api.is_maintenancing = &RimeIsMaintenancing;
+    s_api.join_maintenance_thread = &RimeJoinMaintenanceThread;
+    s_api.deployer_initialize = &RimeDeployerInitialize;
+    s_api.prebuild = &RimePrebuildAllSchemas;
+    s_api.deploy = &RimeDeployWorkspace;
+    s_api.deploy_schema = &RimeDeploySchema;
+    s_api.deploy_config_file = &RimeDeployConfigFile;
+    s_api.sync_user_data = &RimeSyncUserData;
+    s_api.create_session = &RimeCreateSession;
+    s_api.find_session = &RimeFindSession;
+    s_api.destroy_session = &RimeDestroySession;
+    s_api.cleanup_stale_sessions = &RimeCleanupStaleSessions;
+    s_api.cleanup_all_sessions = &RimeCleanupAllSessions;
+    s_api.process_key = &RimeProcessKey;
+    s_api.commit_composition = &RimeCommitComposition;
+    s_api.clear_composition = &RimeClearComposition;
+    s_api.get_commit = &RimeGetCommit;
+    s_api.free_commit = &RimeFreeCommit;
+    s_api.get_context = &RimeGetContext;
+    s_api.free_context = &RimeFreeContext;
+    s_api.get_status =  &RimeGetStatus;
+    s_api.free_status = &RimeFreeStatus;
+    s_api.set_option = &RimeSetOption;
+    s_api.get_option = &RimeGetOption;
+    s_api.set_property = &RimeSetProperty;
+    s_api.get_property = &RimeGetProperty;
+    s_api.get_schema_list = &RimeGetSchemaList;
+    s_api.free_schema_list = &RimeFreeSchemaList;
+    s_api.get_current_schema = &RimeGetCurrentSchema;
+    s_api.select_schema = &RimeSelectSchema;
+    s_api.schema_open = &RimeSchemaOpen;
+    s_api.config_open = &RimeConfigOpen;
+    s_api.config_close = &RimeConfigClose;
+    s_api.config_get_bool = &RimeConfigGetBool;
+    s_api.config_get_int = &RimeConfigGetInt;
+    s_api.config_get_double = &RimeConfigGetDouble;
+    s_api.config_get_string = &RimeConfigGetString;
+    s_api.config_update_signature = &RimeConfigUpdateSignature;
+    s_api.config_begin_map = &RimeConfigBeginMap;
+    s_api.config_next = &RimeConfigNext;
+    s_api.config_end = &RimeConfigEnd;
+    s_api.simulate_key_sequence = &RimeSimulateKeySequence;
+  }
+  return &s_api;
 }
