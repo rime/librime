@@ -250,7 +250,7 @@ RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_
 
 // v1
 
-struct RimeApi {
+typedef struct {
   int data_size;
 
   // setup
@@ -356,7 +356,7 @@ struct RimeApi {
 
   Bool (*simulate_key_sequence)(RimeSessionId session_id, const char *key_sequence);
 
-};
+} RimeApi;
 
 RIME_API RimeApi* rime_api_init();
 
