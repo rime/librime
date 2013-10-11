@@ -57,14 +57,13 @@ bool ReverseLookupDictionary::Build(DictSettings* settings,
   ReverseLookupTable rev_table;
   int syllable_id = 0;
   BOOST_FOREACH(const std::string& syllable, syllabary) {
-    Vocabulary::const_iterator it = vocabulary.find(syllable_id);
+    Vocabulary::const_iterator it = vocabulary.find(syllable_id++);
     if (it == vocabulary.end())
       continue;
     const DictEntryList& entries(it->second.entries);
     BOOST_FOREACH(const shared_ptr<DictEntry>& e, entries) {
       rev_table[e->text].insert(syllable);
     }
-    ++syllable_id;
   }
   // save reverse lookup entries
   BOOST_FOREACH(const ReverseLookupTable::value_type& v, rev_table) {
