@@ -413,27 +413,24 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
   fs::directory_iterator end;
   for (; iter != end; ++iter) {
     fs::path entry(iter->path());
-    {
-      bool is_yaml_file = fs::is_regular_file(entry) &&
-          entry.extension().string() == ".yaml";
-      if (!is_yaml_file)
-        continue;
-    }
+    if (!fs::is_regular_file(entry))
+      continue;
+    const std::string file_extension(entry.extension().string());
+    bool is_yaml_file = file_extension == ".yaml";
+    bool is_text_file = file_extension == ".txt";
+    if (!is_yaml_file && !is_text_file)
+      continue;
     fs::path backup = backup_dir / entry.filename();
-    {
-      bool up_to_date = fs::exists(backup) &&
-          Checksum(backup.string()) == Checksum(entry.string());
-      if (up_to_date) {
-        ++latest;
-        continue;
-      }
+    if (bool up_to_date = fs::exists(backup) &&
+        Checksum(backup.string()) == Checksum(entry.string())) {
+      ++latest;
+      continue;
     }
-    if (!boost::ends_with(entry.string(), ".custom.yaml")) {
+    if (is_yaml_file && !boost::ends_with(entry.string(), ".custom.yaml")) {
       Config config;
       std::string checksum;
-      bool is_customized_copy = config.LoadFromFile(entry.string()) &&
-          config.GetString("customization", &checksum);
-      if (is_customized_copy) {
+      if (bool is_customized_copy = config.LoadFromFile(entry.string()) &&
+          config.GetString("customization", &checksum)) {
         ++skipped;
         continue;
       }
