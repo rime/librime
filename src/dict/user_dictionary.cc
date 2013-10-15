@@ -19,7 +19,6 @@
 #include <rime/dict/db.h>
 #include <rime/dict/table.h>
 #include <rime/dict/user_dictionary.h>
-#include <rime/lever/userdb_recovery_task.h>
 
 namespace rime {
 
@@ -142,9 +141,11 @@ bool UserDictionary::Load() {
     return false;
   if (!db_->loaded() && !db_->Open()) {
     // try to recover managed db in available work thread
+    DeploymentTask::Component* task =
+        DeploymentTask::Require("userdb_recovery_task");
     Deployer& deployer(Service::instance().deployer());
-    if (Is<Recoverable>(db_) && !deployer.IsWorking()) {
-      deployer.ScheduleTask(New<UserDbRecoveryTask>(db_));
+    if (task && Is<Recoverable>(db_) && !deployer.IsWorking()) {
+      deployer.ScheduleTask(shared_ptr<DeploymentTask>(task->Create(db_)));
       deployer.StartWork();
     }
     return false;

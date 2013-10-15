@@ -9,15 +9,19 @@
 
 #include <queue>
 #include <string>
+#include <boost/any.hpp>
 #include <boost/thread.hpp>
 #include <rime/common.h>
+#include <rime/component.h>
 #include <rime/messenger.h>
 
 namespace rime {
 
 class Deployer;
 
-class DeploymentTask {
+typedef boost::any TaskInitializer;
+
+class DeploymentTask : public Class<DeploymentTask, TaskInitializer> {
  public:
   DeploymentTask() {}
   virtual ~DeploymentTask() {}

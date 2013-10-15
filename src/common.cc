@@ -44,6 +44,8 @@
 //#include <rime/gear/trivial_translator.h>
 #include <rime/gear/uniquifier.h>
 
+#include <rime/lever/userdb_recovery_task.h>
+
 namespace rime {
 
 void SetupLogging(const char* app_name) {
@@ -109,6 +111,9 @@ void RegisterComponents() {
 
   // formatters
   r.Register("shape_formatter", new Component<ShapeFormatter>);
+
+  // deployment tools
+  r.Register("userdb_recovery_task", new UserDictionaryComponent);
 }
 
 }  // namespace rime
