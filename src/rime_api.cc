@@ -16,8 +16,7 @@
 #include <rime/registry.h>
 #include <rime/schema.h>
 #include <rime/service.h>
-#include <rime/lever/deployment_tasks.h>
-#include <rime/lever/signature.h>
+#include <rime/signature.h>
 #include <rime_api.h>
 
 
@@ -50,24 +49,21 @@ RIME_API void RimeFinalize() {
 
 RIME_API Bool RimeStartMaintenance(Bool full_check) {
   rime::Deployer &deployer(rime::Service::instance().deployer());
-  rime::CleanOldLogFiles cleaning;
-  cleaning.Run(&deployer);
-  rime::InstallationUpdate installation;
-  installation.Run(&deployer);
+  deployer.RunTask("clean_old_log_files");
+  if (!deployer.RunTask("installation_update")) {
+    return False;
+  }
   if (!full_check) {
-    rime::ConfigFileUpdate default_config_update("default.yaml",
-                                                 "config_version");
-    bool updated = default_config_update.Run(&deployer);
-    if (!updated) {
+    rime::TaskInitializer args(std::make_pair<std::string, std::string>(
+        "default.yaml", "config_version"));
+    if (!deployer.RunTask("config_file_update", args)) {
       return False;
     }
-    else {
-      LOG(INFO) << "changes detected; starting maintenance.";
-    }
+    LOG(INFO) << "changes detected; starting maintenance.";
   }
-  deployer.ScheduleTask(boost::make_shared<rime::WorkspaceUpdate>());
-  deployer.ScheduleTask(boost::make_shared<rime::UserDictUpgration>());
-  deployer.ScheduleTask(boost::make_shared<rime::CleanUpTrash>());
+  deployer.ScheduleTask("workspace_update");
+  deployer.ScheduleTask("user_dict_upgration");
+  deployer.ScheduleTask("clean_up_trash");
   deployer.StartMaintenance();
   return True;
 }
@@ -78,7 +74,7 @@ RIME_API Bool RimeStartMaintenanceOnWorkspaceChange() {
 
 RIME_API Bool RimeIsMaintenancing() {
   rime::Deployer &deployer(rime::Service::instance().deployer());
-  return Bool(deployer.IsMaintenancing());
+  return Bool(deployer.IsMaintenanceMode());
 }
 
 RIME_API void RimeJoinMaintenanceThread() {
@@ -103,41 +99,35 @@ RIME_API void RimeDeployerInitialize(RimeTraits *traits) {
 
 RIME_API Bool RimePrebuildAllSchemas() {
   rime::Deployer &deployer(rime::Service::instance().deployer());
-  rime::PrebuildAllSchemas prebuild;
-  return Bool(prebuild.Run(&deployer));
+  return Bool(deployer.RunTask("prebuild_all_schemas"));
 }
 
 RIME_API Bool RimeDeployWorkspace() {
   rime::Deployer &deployer(rime::Service::instance().deployer());
-  rime::InstallationUpdate installation;
-  rime::WorkspaceUpdate update;
-  rime::UserDictUpgration upgration;
-  rime::CleanUpTrash cleanup;
-  return Bool(installation.Run(&deployer) &&
-              update.Run(&deployer) &&
-              upgration.Run(&deployer) &&
-              cleanup.Run(&deployer));
+  return Bool(deployer.RunTask("installation_update") &&
+              deployer.RunTask("workspace_update") &&
+              deployer.RunTask("user_dict_upgration") &&
+              deployer.RunTask("cleanup_trash"));
 }
 
 RIME_API Bool RimeDeploySchema(const char *schema_file) {
   rime::Deployer &deployer(rime::Service::instance().deployer());
-  rime::SchemaUpdate update(schema_file);
-  return Bool(update.Run(&deployer));
+  return Bool(deployer.RunTask("schema_update", std::string(schema_file)));
 }
 
 RIME_API Bool RimeDeployConfigFile(const char *file_name,
                                    const char *version_key) {
   rime::Deployer& deployer(rime::Service::instance().deployer());
-  rime::ConfigFileUpdate update(file_name, version_key);
-  return Bool(update.Run(&deployer));
+  rime::TaskInitializer args(std::make_pair(file_name, version_key));
+  return Bool(deployer.RunTask("config_file_update", args));
 }
 
 RIME_API Bool RimeSyncUserData() {
   RimeCleanupAllSessions();
   rime::Deployer& deployer(rime::Service::instance().deployer());
-  deployer.ScheduleTask(boost::make_shared<rime::InstallationUpdate>());
-  deployer.ScheduleTask(boost::make_shared<rime::BackupConfigFiles>());
-  deployer.ScheduleTask(boost::make_shared<rime::UserDictSync>());
+  deployer.ScheduleTask("installation_update");
+  deployer.ScheduleTask("backup_config_files");
+  deployer.ScheduleTask("user_dict_sync");
   return Bool(deployer.StartMaintenance());
 }
 
@@ -601,7 +591,7 @@ RIME_API RimeApi* rime_api_init() {
     s_api.initialize = &RimeInitialize;
     s_api.finalize = &RimeFinalize;
     s_api.start_maintenance = &RimeStartMaintenance;
-    s_api.is_maintenancing = &RimeIsMaintenancing;
+    s_api.is_maintenance_mode = &RimeIsMaintenancing;
     s_api.join_maintenance_thread = &RimeJoinMaintenanceThread;
     s_api.deployer_initialize = &RimeDeployerInitialize;
     s_api.prebuild = &RimePrebuildAllSchemas;

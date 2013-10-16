@@ -104,7 +104,8 @@ int main(int argc, char* argv[]) {
   if (argc >= 1 && option == "--compile") {
     rime::Deployer& deployer(rime::Service::instance().deployer());
     configure_deployer(&deployer, argc - 1, argv + 1);
-    rime::SchemaUpdate update(argv[0]);
+    std::string schema_file(argv[0]);
+    rime::SchemaUpdate update(schema_file);
     update.set_verbose(true);
     return update.Run(&deployer) ? 0 : 1;
   }

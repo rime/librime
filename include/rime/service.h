@@ -76,7 +76,7 @@ class Service {
               const std::string& message_value);
 
   Deployer& deployer() { return deployer_; }
-  bool disabled() { return !started_ || deployer_.IsMaintenancing(); }
+  bool disabled() { return !started_ || deployer_.IsMaintenanceMode(); }
 
   static Service& instance() {
     if (!instance_) instance_.reset(new Service);

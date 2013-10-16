@@ -223,6 +223,15 @@ std::string WorkspaceUpdate::GetSchemaPath(Deployer* deployer,
   return schema_path.string();
 }
 
+SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
+  try {
+    schema_file_ = boost::any_cast<std::string>(arg);
+  }
+  catch (const boost::bad_any_cast&) {
+    LOG(ERROR) << "SchemaUpdate: invalid arguments.";
+  }
+}
+
 static std::string find_dict_file(const std::string& dict_file_name,
                                   const fs::path& shared_data_path,
                                   const fs::path& user_data_path) {
@@ -294,6 +303,18 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   }
   LOG(INFO) << "dictionary '" << dict_name << "' is ready.";
   return true;
+}
+
+ConfigFileUpdate::ConfigFileUpdate(TaskInitializer arg) {
+  try {
+    std::pair<std::string, std::string> p =
+        boost::any_cast< std::pair<std::string, std::string> >(arg);
+    file_name_ = p.first;
+    version_key_ = p.second;
+  }
+  catch (const boost::bad_any_cast&) {
+    LOG(ERROR) << "ConfigFileUpdate: invalid arguments.";
+  }
 }
 
 bool ConfigFileUpdate::Run(Deployer* deployer) {
@@ -452,7 +473,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
   return !failure;
 }
 
-bool CleanUpTrash::Run(Deployer* deployer) {
+bool CleanupTrash::Run(Deployer* deployer) {
   LOG(INFO) << "clean up trash.";
   fs::path user_data_path(deployer->user_data_dir);
   if (!fs::exists(user_data_path))

@@ -25,6 +25,11 @@ class UserDbRecoveryTask : public DeploymentTask {
   shared_ptr<Db> db_;
 };
 
+class UserDbRecoveryTaskComponent : public UserDbRecoveryTask::Component {
+ public:
+  UserDbRecoveryTask* Create(TaskInitializer arg);
+};
+
 }  // namespace rime
 
 #endif  // RIME_USERDB_RECOVERY_TASK_H_

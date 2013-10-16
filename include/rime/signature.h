@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2012-02-21 GONG Chen <chen.sst@gmail.com>
@@ -16,11 +16,14 @@ class Deployer;
 
 class Signature {
  public:
-  explicit Signature(const std::string& generator)
-      : generator_(generator) {}
+  Signature(const std::string& generator, const std::string& key = "signature")
+      : generator_(generator), key_(key) {}
+
   bool Sign(Config* config, Deployer* deployer);
+
  private:
   std::string generator_;
+  std::string key_;
 };
 
 }  // namespace rime

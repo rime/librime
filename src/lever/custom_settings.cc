@@ -8,7 +8,7 @@
 #include <boost/filesystem.hpp>
 #include <rime/config.h>
 #include <rime/deployer.h>
-#include <rime/lever/signature.h>
+#include <rime/signature.h>
 #include <rime/lever/custom_settings.h>
 
 namespace fs = boost::filesystem;
@@ -41,7 +41,7 @@ bool CustomSettings::Load() {
 
 bool CustomSettings::Save() {
   if (!modified_) return false;
-  Signature signature(generator_id_);
+  Signature signature(generator_id_, "customization");
   signature.Sign(&custom_config_, deployer_);
   fs::path custom_config_path(deployer_->user_data_dir);
   custom_config_path /= config_id_ + ".custom.yaml";
