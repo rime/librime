@@ -16,7 +16,7 @@
 #include <rime/registry.h>
 #include <rime/schema.h>
 #include <rime/service.h>
-#include <rime/lever/signature.h>
+#include <rime/signature.h>
 #include <rime_api.h>
 
 
