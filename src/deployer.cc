@@ -28,6 +28,35 @@ std::string Deployer::user_data_sync_dir() const {
   return p.string();
 }
 
+bool Deployer::RunTask(const std::string& task_name, TaskInitializer arg) {
+  DeploymentTask::Component* c = DeploymentTask::Require(task_name);
+  if (!c) {
+    LOG(ERROR) << "unknown deployment task: " << task_name;
+    return false;
+  }
+  scoped_ptr<DeploymentTask> t(c->Create(arg));
+  if (!t) {
+    LOG(ERROR) << "error creating deployment task: " << task_name;
+    return false;
+  }
+  return t->Run(this);
+}
+
+bool Deployer::ScheduleTask(const std::string& task_name, TaskInitializer arg) {
+  DeploymentTask::Component* c = DeploymentTask::Require(task_name);
+  if (!c) {
+    LOG(ERROR) << "unknown deployment task: " << task_name;
+    return false;
+  }
+  shared_ptr<DeploymentTask> t(c->Create(arg));
+  if (!t) {
+    LOG(ERROR) << "error creating deployment task: " << task_name;
+    return false;
+  }
+  ScheduleTask(t);
+  return true;
+}
+
 void Deployer::ScheduleTask(const shared_ptr<DeploymentTask>& task) {
   boost::lock_guard<boost::mutex> lock(mutex_);
   pending_tasks_.push(task);
@@ -100,7 +129,7 @@ bool Deployer::IsWorking() {
   return !work_thread_.timed_join(boost::posix_time::milliseconds(0));
 }
 
-bool Deployer::IsMaintenancing() {
+bool Deployer::IsMaintenanceMode() {
   return maintenance_mode_ && IsWorking();
 }
 

@@ -287,7 +287,7 @@ typedef struct {
   void (*finalize)();
 
   Bool (*start_maintenance)(Bool full_check);
-  Bool (*is_maintenancing)();
+  Bool (*is_maintenance_mode)();
   void (*join_maintenance_thread)();
 
   // deployment

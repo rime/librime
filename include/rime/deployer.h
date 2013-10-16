@@ -44,6 +44,11 @@ class Deployer : public Messenger {
   Deployer();
   ~Deployer();
 
+  bool RunTask(const std::string& task_name,
+               TaskInitializer arg = TaskInitializer());
+  bool ScheduleTask(const std::string& task_name,
+                    TaskInitializer arg = TaskInitializer());
+
   void ScheduleTask(const shared_ptr<DeploymentTask>& task);
   shared_ptr<DeploymentTask> NextTask();
   bool HasPendingTasks();
@@ -52,7 +57,7 @@ class Deployer : public Messenger {
   bool StartWork(bool maintenance_mode = false);
   bool StartMaintenance();
   bool IsWorking();
-  bool IsMaintenancing();
+  bool IsMaintenanceMode();
   // the following two methods equally wait until all threads are joined
   void JoinWorkThread();
   void JoinMaintenanceThread();

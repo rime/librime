@@ -43,7 +43,7 @@
 #include <rime/gear/table_translator.h>
 //#include <rime/gear/trivial_translator.h>
 #include <rime/gear/uniquifier.h>
-
+#include <rime/lever/deployment_tasks.h>
 #include <rime/lever/userdb_recovery_task.h>
 
 namespace rime {
@@ -113,6 +113,16 @@ void RegisterComponents() {
   r.Register("shape_formatter", new Component<ShapeFormatter>);
 
   // deployment tools
+  r.Register("installation_update", new Component<InstallationUpdate>);
+  r.Register("workspace_update", new Component<WorkspaceUpdate>);
+  r.Register("schema_update", new Component<SchemaUpdate>);
+  r.Register("config_file_update", new Component<ConfigFileUpdate>);
+  r.Register("prebuild_all_schemas", new Component<PrebuildAllSchemas>);
+  r.Register("user_dict_upgration", new Component<UserDictUpgration>);
+  r.Register("cleanup_trash", new Component<CleanupTrash>);
+  r.Register("user_dict_sync", new Component<UserDictSync>);
+  r.Register("backup_config_files", new Component<BackupConfigFiles>);
+  r.Register("clean_old_log_files", new Component<CleanOldLogFiles>);
   r.Register("userdb_recovery_task", new UserDbRecoveryTaskComponent);
 }
 
