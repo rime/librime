@@ -113,7 +113,7 @@ void RegisterComponents() {
   r.Register("shape_formatter", new Component<ShapeFormatter>);
 
   // deployment tools
-  r.Register("userdb_recovery_task", new UserDictionaryComponent);
+  r.Register("userdb_recovery_task", new UserDbRecoveryTaskComponent);
 }
 
 }  // namespace rime
