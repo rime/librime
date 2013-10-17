@@ -14,6 +14,10 @@ scoped_ptr<Registry> Registry::instance_;
 
 void Registry::Register(const std::string &name, ComponentBase *component) {
   LOG(INFO) << "registering component: " << name;
+  if (ComponentBase* existing = Find(name)) {
+    LOG(WARNING) << "replacing previously registered component: " << name;
+    delete existing;
+  }
   map_[name] = component;
 }
 
