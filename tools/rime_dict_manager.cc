@@ -10,6 +10,7 @@
 #include <rime/config.h>
 #include <rime/deployer.h>
 #include <rime/service.h>
+#include <rime/setup.h>
 #include <rime/lever/user_dict_manager.h>
 
 int main(int argc, char *argv[]) {
@@ -49,7 +50,7 @@ int main(int argc, char *argv[]) {
       std::cerr << "no user dictionary is found." << std::endl;
       return 0;
     }
-    BOOST_FOREACH(const std::string&e, list) {
+    BOOST_FOREACH(const std::string& e, list) {
       std::cout << e << std::endl;
     }
     return 0;

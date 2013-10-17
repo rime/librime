@@ -40,9 +40,6 @@ shared_ptr<T> New(const A& a) {
   return boost::make_shared<T>(a);
 }
 
-void SetupLogging(const char* app_name);
-void RegisterComponents();
-
 }  // namespace rime
 
 #endif  // RIME_COMMON_H_

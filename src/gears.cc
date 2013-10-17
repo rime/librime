@@ -1,25 +1,14 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
-//
-// 2011-10-02 GONG Chen <chen.sst@gmail.com>
+// 2013-10-17 GONG Chen <chen.sst@gmail.com>
 //
 
-#include <boost/filesystem.hpp>
+#include <rime_api.h>
 #include <rime/common.h>
 #include <rime/registry.h>
-#include <rime/service.h>
 
-// built-in components
-#include <rime/config.h>
-#include <rime/dict/table_db.h>
-#include <rime/dict/text_db.h>
-#include <rime/dict/tree_db.h>
-#include <rime/dict/user_db.h>
-#include <rime/dict/dictionary.h>
-#include <rime/dict/reverse_lookup_dictionary.h>
-#include <rime/dict/user_dictionary.h>
 #include <rime/gear/abc_segmentor.h>
 #include <rime/gear/ascii_composer.h>
 #include <rime/gear/ascii_segmentor.h>
@@ -41,37 +30,14 @@
 #include <rime/gear/schema_list_translator.h>
 #include <rime/gear/switch_translator.h>
 #include <rime/gear/table_translator.h>
-//#include <rime/gear/trivial_translator.h>
 #include <rime/gear/uniquifier.h>
-#include <rime/lever/deployment_tasks.h>
-#include <rime/lever/userdb_recovery_task.h>
+//#include <rime/gear/trivial_translator.h>
 
-namespace rime {
+static void rime_gears_initialize() {
+  using namespace rime;
 
-void SetupLogging(const char* app_name) {
-  google::InitGoogleLogging(app_name);
-}
-
-void RegisterComponents() {
-  LOG(INFO) << "registering built-in components";
-
+  LOG(INFO) << "registering components from module 'gears'";
   Registry &r = Registry::instance();
-
-  boost::filesystem::path user_data_dir =
-      Service::instance().deployer().user_data_dir;
-  boost::filesystem::path config_path = user_data_dir / "%s.yaml";
-  boost::filesystem::path schema_path = user_data_dir / "%s.schema.yaml";
-  r.Register("config", new ConfigComponent(config_path.string()));
-  r.Register("schema_config", new ConfigComponent(schema_path.string()));
-
-  r.Register("tabledb", new Component<TableDb>);
-  r.Register("stabledb", new Component<StableDb>);
-  r.Register("plain_userdb", new Component<UserDb<TextDb> >);
-  r.Register("userdb", new Component<UserDb<TreeDb> >);
-
-  r.Register("dictionary", new DictionaryComponent);
-  r.Register("reverse_lookup_dictionary", new ReverseLookupDictionaryComponent);
-  r.Register("user_dictionary", new UserDictionaryComponent);
 
   // processors
   r.Register("ascii_composer", new Component<AsciiComposer>);
@@ -96,7 +62,6 @@ void RegisterComponents() {
   // translators
   r.Register("echo_translator", new Component<EchoTranslator>);
   r.Register("punct_translator", new Component<PunctTranslator>);
-  //r.Register("trivial_translator", new Component<TrivialTranslator>);
   r.Register("table_translator", new Component<TableTranslator>);
   r.Register("script_translator", new Component<ScriptTranslator>);
   r.Register("r10n_translator", new Component<ScriptTranslator>);  // alias
@@ -104,6 +69,7 @@ void RegisterComponents() {
              new Component<ReverseLookupTranslator>);
   r.Register("schema_list_translator", new Component<SchemaListTranslator>);
   r.Register("switch_translator", new Component<SwitchTranslator>);
+  //r.Register("trivial_translator", new Component<TrivialTranslator>);
 
   // filters
   r.Register("simplifier", new Component<Simplifier>);
@@ -111,19 +77,17 @@ void RegisterComponents() {
 
   // formatters
   r.Register("shape_formatter", new Component<ShapeFormatter>);
-
-  // deployment tools
-  r.Register("installation_update", new Component<InstallationUpdate>);
-  r.Register("workspace_update", new Component<WorkspaceUpdate>);
-  r.Register("schema_update", new Component<SchemaUpdate>);
-  r.Register("config_file_update", new Component<ConfigFileUpdate>);
-  r.Register("prebuild_all_schemas", new Component<PrebuildAllSchemas>);
-  r.Register("user_dict_upgration", new Component<UserDictUpgration>);
-  r.Register("cleanup_trash", new Component<CleanupTrash>);
-  r.Register("user_dict_sync", new Component<UserDictSync>);
-  r.Register("backup_config_files", new Component<BackupConfigFiles>);
-  r.Register("clean_old_log_files", new Component<CleanOldLogFiles>);
-  r.Register("userdb_recovery_task", new UserDbRecoveryTaskComponent);
 }
 
-}  // namespace rime
+static void rime_gears_finalize() {
+}
+
+RimeModule* rime_gears_module_init() {
+  static RimeModule s_module = {0};
+  if (!s_module.data_size) {
+    RIME_STRUCT_INIT(RimeModule, s_module);
+    s_module.initialize = rime_gears_initialize;
+    s_module.finalize = rime_gears_finalize;
+  }
+  return &s_module;
+}
