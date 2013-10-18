@@ -2,6 +2,7 @@ build/
 build-static/
 debug-build/
 vcbuild/
+vcbuild-static/
 xbuild/
 xdebug/
 data/*
