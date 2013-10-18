@@ -39,13 +39,15 @@ static void initialize_modules(const char** module_names) {
 static void setup_deployer(RimeTraits *traits) {
   if (!traits) return;
   rime::Deployer &deployer(rime::Service::instance().deployer());
-  deployer.shared_data_dir = traits->shared_data_dir;
-  deployer.user_data_dir = traits->user_data_dir;
-  if (traits->distribution_name)
+  if (PROVIDED(traits, shared_data_dir))
+    deployer.shared_data_dir = traits->shared_data_dir;
+  if (PROVIDED(traits, user_data_dir))
+    deployer.user_data_dir = traits->user_data_dir;
+  if (PROVIDED(traits, distribution_name))
     deployer.distribution_name = traits->distribution_name;
-  if (traits->distribution_code_name)
+  if (PROVIDED(traits, distribution_code_name))
     deployer.distribution_code_name = traits->distribution_code_name;
-  if (traits->distribution_version)
+  if (PROVIDED(traits, distribution_version))
     deployer.distribution_version = traits->distribution_version;
 }
 
@@ -102,7 +104,7 @@ RIME_API Bool RimeStartMaintenance(Bool full_check) {
   }
   deployer.ScheduleTask("workspace_update");
   deployer.ScheduleTask("user_dict_upgration");
-  deployer.ScheduleTask("clean_up_trash");
+  deployer.ScheduleTask("cleanup_trash");
   deployer.StartMaintenance();
   return True;
 }
