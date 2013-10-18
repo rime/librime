@@ -126,6 +126,12 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   endif(BUILD_DATA)
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
+if(BUILD_SHARED_LIBS)
+  set(RIME_LIBRARY rime)
+else(BUILD_SHARED_LIBS)
+  set(RIME_LIBRARY rime-static)
+endif(BUILD_SHARED_LIBS)
+
 add_subdirectory(src)
 add_subdirectory(tools)
 if(GTEST_FOUND)

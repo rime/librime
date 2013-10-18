@@ -17,6 +17,7 @@
 #include <rime/key_event.h>
 #include <rime/menu.h>
 #include <rime/schema.h>
+#include <rime/setup.h>
 #include <rime/switcher.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
@@ -105,10 +106,9 @@ class RimeConsole {
 
 // program entry
 int main(int argc, char *argv[]) {
-  rime::SetupLogging("rime.console");
-
   // initialize la Rime
-  rime::RegisterComponents();
+  rime::SetupLogging("rime.console");
+  rime::RegisterBuiltinModules();
 
   rime::Deployer deployer;
   rime::InstallationUpdate installation;

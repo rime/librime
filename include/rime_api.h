@@ -12,6 +12,7 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
 #include <stdint.h>
 
 #if defined(_WIN32)
@@ -40,12 +41,12 @@ typedef int Bool;
 #define True 1
 #endif
 
-// deprecated
-#define RIME_MAX_NUM_CANDIDATES 10
+// DEPRECATED. there is no limit to the number of candidates in RimeMenu
+//#define RIME_MAX_NUM_CANDIDATES 10
 
 // version control
 #define RIME_STRUCT_INIT(Type, var) ((var).data_size = sizeof(Type) - sizeof((var).data_size))
-#define RIME_STRUCT_HAS_MEMBER(var, member) (sizeof((var).data_size) + (var).data_size > (char*)&member - (char*)&var)
+#define RIME_STRUCT_HAS_MEMBER(var, member) ((int)(sizeof((var).data_size) + (var).data_size) > (char*)&member - (char*)&var)
 #define RIME_STRUCT_CLEAR(var) std::memset((char*)&(var) + sizeof((var).data_size), 0, (var).data_size)
 // define a variable of Type
 #define RIME_STRUCT(Type, var)  Type var = {0}; RIME_STRUCT_INIT(Type, var);
@@ -59,6 +60,13 @@ typedef struct {
   const char* distribution_name;
   const char* distribution_code_name;
   const char* distribution_version;
+  // v1.0
+  // pass a C-string constant in the format "rime.x"
+  // where 'x' is the name of your application.
+  // adding prefix "rime." ensures old log files are automatically cleaned.
+  const char* app_name;
+  // a list of modules to load before initializing
+  const char** modules;
 } RimeTraits;
 
 typedef struct {
@@ -147,11 +155,15 @@ typedef void (*RimeNotificationHandler)(void* context_object,
 // setup
 
 // call this function before accessing any other API.
+RIME_API void RimeSetup(RimeTraits *traits);
+
 // pass a C-string constant in the format "rime.x"
 // where 'x' is the name of your application.
 // adding prefix "rime." ensures old log files are automatically cleaned.
 //
-RIME_API void RimeSetupLogging(const char* app_name);
+// DEPRECATED. use RimeSetup() instead.
+//
+//RIME_API void RimeSetupLogging(const char* app_name);
 
 // receive notifications
 // on loading schema:
@@ -177,7 +189,8 @@ RIME_API void RimeInitialize(RimeTraits *traits);
 RIME_API void RimeFinalize();
 
 RIME_API Bool RimeStartMaintenance(Bool full_check);
-RIME_API Bool RimeStartMaintenanceOnWorkspaceChange();
+// DEPRECATED. use RimeStartMaintenance(/*full_check = */False) instead.
+//RIME_API Bool RimeStartMaintenanceOnWorkspaceChange();
 RIME_API Bool RimeIsMaintenancing();
 RIME_API void RimeJoinMaintenanceThread();
 
@@ -249,7 +262,7 @@ RIME_API void RimeConfigEnd(RimeConfigIterator* iterator);
 
 RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence);
 
-// v1
+// rime api v1
 
 typedef struct {
   int data_size;
@@ -257,11 +270,8 @@ typedef struct {
   // setup
 
   // call this function before accessing any other API functions.
-  // pass a C-string constant in the format "rime.x"
-  // where 'x' is the name of your application.
-  // adding prefix "rime." ensures old log files are automatically cleaned.
   //
-  void (*setup_logging)(const char* app_name);
+  void (*setup)(RimeTraits* traits);
 
   // receive notifications
   // on loading schema:
@@ -361,7 +371,20 @@ typedef struct {
 
 RIME_API RimeApi* rime_api_init();
 
-#define RIME_API_AVAILABLE(api, func) RIME_STRUCT_HAS_MEMBER(*api, api->func)
+#define RIME_API_AVAILABLE(api, func) RIME_STRUCT_HAS_MEMBER(*(api), (api)->func)
+
+// module api
+
+typedef struct {
+  int data_size;
+
+  void (*initialize)();
+  void (*finalize)();
+
+} RimeModule;
+
+RIME_API void rime_register_module(const char* module_name, RimeModule* module);
+RIME_API RimeModule* rime_find_module(const char* module_name);
 
 #ifdef __cplusplus
 }

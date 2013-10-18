@@ -15,6 +15,9 @@
 
 namespace rime {
 
+class Context;
+class Schema;
+
 enum AsciiModeSwitchStyle {
   kAsciiModeSwitchNoop,
   kAsciiModeSwitchInline,

@@ -9,6 +9,7 @@
 #include <rime/config.h>
 #include <rime/deployer.h>
 #include <rime/service.h>
+#include <rime/setup.h>
 #include <rime/lever/deployment_tasks.h>
 
 int add_schema(int count, char* schemas[]) {

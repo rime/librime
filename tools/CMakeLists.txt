@@ -1,15 +1,12 @@
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
-if(BUILD_SHARED_LIBS)
-  set(RIME_LIBRARY rime)
-else(BUILD_SHARED_LIBS)
-  set(RIME_LIBRARY rime-static)
-endif(BUILD_SHARED_LIBS)
-
 set(RIME_API_CONSOLE_SRC "rime_api_console.cc")
 add_executable(rime_api_console ${RIME_API_CONSOLE_SRC})
 target_link_libraries(rime_api_console ${RIME_LIBRARY})
 add_dependencies(rime_api_console ${RIME_LIBRARY})
+
+# msvc doesn't export all symbols
+if(NOT (MSVC AND BUILD_SHARED_LIBS))
 
 set(RIME_CONSOLE_SRC "rime_console.cc")
 add_executable(rime_console ${RIME_CONSOLE_SRC})
@@ -28,6 +25,8 @@ add_dependencies(rime_deployer ${RIME_LIBRARY})
 
 install(TARGETS rime_dict_manager DESTINATION ${BIN_INSTALL_DIR})
 install(TARGETS rime_deployer DESTINATION ${BIN_INSTALL_DIR})
+
+endif(NOT (MSVC AND BUILD_SHARED_LIBS))
 
 file(COPY ${PROJECT_SOURCE_DIR}/data/minimal/default.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})

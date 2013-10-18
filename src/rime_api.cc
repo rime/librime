@@ -13,15 +13,54 @@
 #include <rime/deployer.h>
 #include <rime/key_event.h>
 #include <rime/menu.h>
+#include <rime/module.h>
 #include <rime/registry.h>
 #include <rime/schema.h>
 #include <rime/service.h>
+#include <rime/setup.h>
 #include <rime/signature.h>
 #include <rime_api.h>
 
+// assuming member is a pointer in struct *p
+#define PROVIDED(p, member) ((p) && RIME_STRUCT_HAS_MEMBER(*(p), (p)->member) && (p)->member)
 
-RIME_API void RimeSetupLogging(const char* app_name) {
-  rime::SetupLogging(app_name);
+static const char* builtin_modules[] = { "core", "levers", "gears", NULL };
+static const char* deployer_modules[] = { "core", "levers", NULL };
+
+static void initialize_modules(const char** module_names) {
+  rime::ModuleManager& mm(rime::ModuleManager::instance());
+  for (const char** m = module_names; *m; ++m) {
+    if (RimeModule* module = mm.Find(*m)) {
+      mm.LoadModule(module);
+    }
+  }
+}
+
+static void setup_deployer(RimeTraits *traits) {
+  if (!traits) return;
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  if (PROVIDED(traits, shared_data_dir))
+    deployer.shared_data_dir = traits->shared_data_dir;
+  if (PROVIDED(traits, user_data_dir))
+    deployer.user_data_dir = traits->user_data_dir;
+  if (PROVIDED(traits, distribution_name))
+    deployer.distribution_name = traits->distribution_name;
+  if (PROVIDED(traits, distribution_code_name))
+    deployer.distribution_code_name = traits->distribution_code_name;
+  if (PROVIDED(traits, distribution_version))
+    deployer.distribution_version = traits->distribution_version;
+}
+
+//RIME_API void RimeSetupLogging(const char* app_name) {
+//  rime::SetupLogging(app_name);
+//}
+
+RIME_API void RimeSetup(RimeTraits *traits) {
+  setup_deployer(traits);
+  if (PROVIDED(traits, app_name)) {
+    rime::SetupLogging(traits->app_name);
+  }
+  rime::RegisterBuiltinModules();
 }
 
 RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
@@ -36,8 +75,8 @@ RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
 }
 
 RIME_API void RimeInitialize(RimeTraits *traits) {
-  RimeDeployerInitialize(traits);
-  rime::RegisterComponents();
+  setup_deployer(traits);
+  initialize_modules(PROVIDED(traits, modules) ? traits->modules : builtin_modules);
   rime::Service::instance().StartService();
 }
 
@@ -45,6 +84,7 @@ RIME_API void RimeFinalize() {
   RimeJoinMaintenanceThread();
   rime::Service::instance().StopService();
   rime::Registry::instance().Clear();
+  rime::ModuleManager::instance().UnloadModules();
 }
 
 RIME_API Bool RimeStartMaintenance(Bool full_check) {
@@ -54,8 +94,9 @@ RIME_API Bool RimeStartMaintenance(Bool full_check) {
     return False;
   }
   if (!full_check) {
-    rime::TaskInitializer args(std::make_pair<std::string, std::string>(
-        "default.yaml", "config_version"));
+    rime::TaskInitializer args(
+        std::make_pair<std::string, std::string>(
+            "default.yaml", "config_version"));
     if (!deployer.RunTask("config_file_update", args)) {
       return False;
     }
@@ -63,14 +104,14 @@ RIME_API Bool RimeStartMaintenance(Bool full_check) {
   }
   deployer.ScheduleTask("workspace_update");
   deployer.ScheduleTask("user_dict_upgration");
-  deployer.ScheduleTask("clean_up_trash");
+  deployer.ScheduleTask("cleanup_trash");
   deployer.StartMaintenance();
   return True;
 }
 
-RIME_API Bool RimeStartMaintenanceOnWorkspaceChange() {
-  return RimeStartMaintenance(False);
-}
+//RIME_API Bool RimeStartMaintenanceOnWorkspaceChange() {
+//  return RimeStartMaintenance(False);
+//}
 
 RIME_API Bool RimeIsMaintenancing() {
   rime::Deployer &deployer(rime::Service::instance().deployer());
@@ -85,16 +126,8 @@ RIME_API void RimeJoinMaintenanceThread() {
 // deployment
 
 RIME_API void RimeDeployerInitialize(RimeTraits *traits) {
-  if (!traits) return;
-  rime::Deployer &deployer(rime::Service::instance().deployer());
-  deployer.shared_data_dir = traits->shared_data_dir;
-  deployer.user_data_dir = traits->user_data_dir;
-  if (traits->distribution_name)
-    deployer.distribution_name = traits->distribution_name;
-  if (traits->distribution_code_name)
-    deployer.distribution_code_name = traits->distribution_code_name;
-  if (traits->distribution_version)
-    deployer.distribution_version = traits->distribution_version;
+  setup_deployer(traits);
+  initialize_modules(PROVIDED(traits, modules) ? traits->modules : deployer_modules);
 }
 
 RIME_API Bool RimePrebuildAllSchemas() {
@@ -118,7 +151,9 @@ RIME_API Bool RimeDeploySchema(const char *schema_file) {
 RIME_API Bool RimeDeployConfigFile(const char *file_name,
                                    const char *version_key) {
   rime::Deployer& deployer(rime::Service::instance().deployer());
-  rime::TaskInitializer args(std::make_pair(file_name, version_key));
+  rime::TaskInitializer args(
+      std::make_pair<std::string, std::string>(
+          file_name, version_key));
   return Bool(deployer.RunTask("config_file_update", args));
 }
 
@@ -330,7 +365,7 @@ RIME_API void RimeSetOption(RimeSessionId session_id, const char* option, Bool v
   rime::Context *ctx = session->context();
   if (!ctx)
     return;
-  ctx->set_option(option, bool(value));
+  ctx->set_option(option, !!value);
 }
 
 RIME_API Bool RimeGetOption(RimeSessionId session_id, const char* option) {
@@ -586,7 +621,7 @@ RIME_API RimeApi* rime_api_init() {
   static RimeApi s_api = {0};
   if (!s_api.data_size) {
     RIME_STRUCT_INIT(RimeApi, s_api);
-    s_api.setup_logging = &RimeSetupLogging;
+    s_api.setup = &RimeSetup;
     s_api.set_notification_handler = &RimeSetNotificationHandler;
     s_api.initialize = &RimeInitialize;
     s_api.finalize = &RimeFinalize;
@@ -635,4 +670,12 @@ RIME_API RimeApi* rime_api_init() {
     s_api.simulate_key_sequence = &RimeSimulateKeySequence;
   }
   return &s_api;
+}
+
+RIME_API void rime_register_module(const char* module_name, RimeModule* module) {
+  rime::ModuleManager::instance().Register(module_name, module);
+}
+
+RIME_API RimeModule* rime_find_module(const char* module_name) {
+  return rime::ModuleManager::instance().Find(module_name);
 }

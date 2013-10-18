@@ -128,12 +128,17 @@ void on_message(void* context_object,
 
 int main(int argc, char *argv[]) {
   RimeApi* rime = rime_api_init();
-  rime->setup_logging("rime.console");
+
+  RIME_STRUCT(RimeTraits, traits);
+  traits.app_name = "rime.console";
+  rime->setup(&traits);
+
   rime->set_notification_handler(&on_message, NULL);
 
   fprintf(stderr, "initializing...\n");
   rime->initialize(NULL);
-  if (rime->start_maintenance(True))
+  Bool full_check = True;
+  if (rime->start_maintenance(full_check))
     rime->join_maintenance_thread();
   fprintf(stderr, "ready.\n");
 
