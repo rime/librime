@@ -40,8 +40,8 @@ typedef int Bool;
 #define True 1
 #endif
 
-// deprecated
-#define RIME_MAX_NUM_CANDIDATES 10
+// DEPRECATED. there is no limit to the number of candidates in RimeMenu
+//#define RIME_MAX_NUM_CANDIDATES 10
 
 // version control
 #define RIME_STRUCT_INIT(Type, var) ((var).data_size = sizeof(Type) - sizeof((var).data_size))
@@ -162,7 +162,7 @@ RIME_API void RimeSetup(RimeTraits *traits);
 //
 // DEPRECATED. use RimeSetup() instead.
 //
-RIME_API void RimeSetupLogging(const char* app_name);
+//RIME_API void RimeSetupLogging(const char* app_name);
 
 // receive notifications
 // on loading schema:
@@ -189,7 +189,7 @@ RIME_API void RimeFinalize();
 
 RIME_API Bool RimeStartMaintenance(Bool full_check);
 // DEPRECATED. use RimeStartMaintenance(/*full_check = */False) instead.
-RIME_API Bool RimeStartMaintenanceOnWorkspaceChange();
+//RIME_API Bool RimeStartMaintenanceOnWorkspaceChange();
 RIME_API Bool RimeIsMaintenancing();
 RIME_API void RimeJoinMaintenanceThread();
 

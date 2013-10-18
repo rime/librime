@@ -49,9 +49,9 @@ static void setup_deployer(RimeTraits *traits) {
     deployer.distribution_version = traits->distribution_version;
 }
 
-RIME_API void RimeSetupLogging(const char* app_name) {
-  rime::SetupLogging(app_name);
-}
+//RIME_API void RimeSetupLogging(const char* app_name) {
+//  rime::SetupLogging(app_name);
+//}
 
 RIME_API void RimeSetup(RimeTraits *traits) {
   setup_deployer(traits);
@@ -107,9 +107,9 @@ RIME_API Bool RimeStartMaintenance(Bool full_check) {
   return True;
 }
 
-RIME_API Bool RimeStartMaintenanceOnWorkspaceChange() {
-  return RimeStartMaintenance(False);
-}
+//RIME_API Bool RimeStartMaintenanceOnWorkspaceChange() {
+//  return RimeStartMaintenance(False);
+//}
 
 RIME_API Bool RimeIsMaintenancing() {
   rime::Deployer &deployer(rime::Service::instance().deployer());
