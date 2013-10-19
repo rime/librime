@@ -15,7 +15,7 @@
 static void rime_levers_initialize() {
   using namespace rime;
 
-  LOG(INFO) << "registering components from module 'levers'";
+  LOG(INFO) << "registering components from module 'levers'.";
   Registry &r = Registry::instance();
 
   // deployment tools
@@ -36,12 +36,4 @@ static void rime_levers_initialize() {
 static void rime_levers_finalize() {
 }
 
-RimeModule* rime_levers_module_init() {
-  static RimeModule s_module = {0};
-  if (!s_module.data_size) {
-    RIME_STRUCT_INIT(RimeModule, s_module);
-    s_module.initialize = rime_levers_initialize;
-    s_module.finalize = rime_levers_finalize;
-  }
-  return &s_module;
-}
+RIME_REGISTER_MODULE(levers)

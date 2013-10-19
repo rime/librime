@@ -36,7 +36,7 @@
 static void rime_gears_initialize() {
   using namespace rime;
 
-  LOG(INFO) << "registering components from module 'gears'";
+  LOG(INFO) << "registering components from module 'gears'.";
   Registry &r = Registry::instance();
 
   // processors
@@ -82,12 +82,4 @@ static void rime_gears_initialize() {
 static void rime_gears_finalize() {
 }
 
-RimeModule* rime_gears_module_init() {
-  static RimeModule s_module = {0};
-  if (!s_module.data_size) {
-    RIME_STRUCT_INIT(RimeModule, s_module);
-    s_module.initialize = rime_gears_initialize;
-    s_module.finalize = rime_gears_finalize;
-  }
-  return &s_module;
-}
+RIME_REGISTER_MODULE(gears)

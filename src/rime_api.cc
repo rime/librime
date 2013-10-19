@@ -24,18 +24,6 @@
 // assuming member is a pointer in struct *p
 #define PROVIDED(p, member) ((p) && RIME_STRUCT_HAS_MEMBER(*(p), (p)->member) && (p)->member)
 
-static const char* builtin_modules[] = { "core", "levers", "gears", NULL };
-static const char* deployer_modules[] = { "core", "levers", NULL };
-
-static void initialize_modules(const char** module_names) {
-  rime::ModuleManager& mm(rime::ModuleManager::instance());
-  for (const char** m = module_names; *m; ++m) {
-    if (RimeModule* module = mm.Find(*m)) {
-      mm.LoadModule(module);
-    }
-  }
-}
-
 static void setup_deployer(RimeTraits *traits) {
   if (!traits) return;
   rime::Deployer &deployer(rime::Service::instance().deployer());
@@ -51,16 +39,15 @@ static void setup_deployer(RimeTraits *traits) {
     deployer.distribution_version = traits->distribution_version;
 }
 
-//RIME_API void RimeSetupLogging(const char* app_name) {
-//  rime::SetupLogging(app_name);
-//}
+RIME_API void RimeSetupLogging(const char* app_name) {
+  rime::SetupLogging(app_name);
+}
 
 RIME_API void RimeSetup(RimeTraits *traits) {
   setup_deployer(traits);
   if (PROVIDED(traits, app_name)) {
     rime::SetupLogging(traits->app_name);
   }
-  rime::RegisterBuiltinModules();
 }
 
 RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
@@ -76,7 +63,8 @@ RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
 
 RIME_API void RimeInitialize(RimeTraits *traits) {
   setup_deployer(traits);
-  initialize_modules(PROVIDED(traits, modules) ? traits->modules : builtin_modules);
+  rime::LoadModules(
+      PROVIDED(traits, modules) ? traits->modules : rime::kDefaultModules);
   rime::Service::instance().StartService();
 }
 
@@ -109,9 +97,9 @@ RIME_API Bool RimeStartMaintenance(Bool full_check) {
   return True;
 }
 
-//RIME_API Bool RimeStartMaintenanceOnWorkspaceChange() {
-//  return RimeStartMaintenance(False);
-//}
+RIME_API Bool RimeStartMaintenanceOnWorkspaceChange() {
+  return RimeStartMaintenance(False);
+}
 
 RIME_API Bool RimeIsMaintenancing() {
   rime::Deployer &deployer(rime::Service::instance().deployer());
@@ -127,7 +115,8 @@ RIME_API void RimeJoinMaintenanceThread() {
 
 RIME_API void RimeDeployerInitialize(RimeTraits *traits) {
   setup_deployer(traits);
-  initialize_modules(PROVIDED(traits, modules) ? traits->modules : deployer_modules);
+  rime::LoadModules(
+      PROVIDED(traits, modules) ? traits->modules : rime::kDeployerModules);
 }
 
 RIME_API Bool RimePrebuildAllSchemas() {
@@ -617,7 +606,18 @@ RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_
     return True;
 }
 
-RIME_API RimeApi* rime_api_init() {
+RIME_API Bool RimeRegisterModule(RimeModule* module) {
+  if (!module || !module->module_name)
+    return False;
+  rime::ModuleManager::instance().Register(module->module_name, module);
+  return True;
+}
+
+RIME_API RimeModule* RimeFindModule(const char* module_name) {
+  return rime::ModuleManager::instance().Find(module_name);
+}
+
+RIME_API RimeApi* rime_get_api() {
   static RimeApi s_api = {0};
   if (!s_api.data_size) {
     RIME_STRUCT_INIT(RimeApi, s_api);
@@ -668,14 +668,8 @@ RIME_API RimeApi* rime_api_init() {
     s_api.config_next = &RimeConfigNext;
     s_api.config_end = &RimeConfigEnd;
     s_api.simulate_key_sequence = &RimeSimulateKeySequence;
+    s_api.register_module = &RimeRegisterModule;
+    s_api.find_module = &RimeFindModule;
   }
   return &s_api;
-}
-
-RIME_API void rime_register_module(const char* module_name, RimeModule* module) {
-  rime::ModuleManager::instance().Register(module_name, module);
-}
-
-RIME_API RimeModule* rime_find_module(const char* module_name) {
-  return rime::ModuleManager::instance().Find(module_name);
 }

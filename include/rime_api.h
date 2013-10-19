@@ -42,7 +42,7 @@ typedef int Bool;
 #endif
 
 // DEPRECATED. there is no limit to the number of candidates in RimeMenu
-//#define RIME_MAX_NUM_CANDIDATES 10
+#define RIME_MAX_NUM_CANDIDATES 10
 
 // version control
 #define RIME_STRUCT_INIT(Type, var) ((var).data_size = sizeof(Type) - sizeof((var).data_size))
@@ -52,7 +52,7 @@ typedef int Bool;
 #define RIME_STRUCT(Type, var)  Type var = {0}; RIME_STRUCT_INIT(Type, var);
 
 // should be initialized by calling RIME_STRUCT_INIT(Type, var);
-typedef struct {
+typedef struct rime_traits_t {
   int data_size;
   // v0.9
   const char* shared_data_dir;
@@ -77,7 +77,7 @@ typedef struct {
   char* preedit;
 } RimeComposition;
 
-typedef struct {
+typedef struct rime_candidate_t {
   char* text;
   char* comment;
   void* reserved;
@@ -94,14 +94,14 @@ typedef struct {
 } RimeMenu;
 
 // should be initialized by calling RIME_STRUCT_INIT(Type, var);
-typedef struct {
+typedef struct rime_commit_t {
   int data_size;
   // v0.9
   char* text;
 } RimeCommit;
 
 // should be initialized by calling RIME_STRUCT_INIT(Type, var);
-typedef struct {
+typedef struct rime_context_t {
   int data_size;
   // v0.9
   RimeComposition composition;
@@ -111,7 +111,7 @@ typedef struct {
 } RimeContext;
 
 // should be initialized by calling RIME_STRUCT_INIT(Type, var);
-typedef struct {
+typedef struct rime_status_t {
   int data_size;
   // v0.9
   char* schema_id;
@@ -123,11 +123,11 @@ typedef struct {
   Bool is_simplified;
 } RimeStatus;
 
-typedef struct {
+typedef struct rime_config_t {
   void* ptr;
 } RimeConfig;
 
-typedef struct {
+typedef struct rime_config_iterator_t {
   void* list;
   void* map;
   int index;
@@ -136,13 +136,13 @@ typedef struct {
 } RimeConfigIterator;
 
 
-typedef struct {
+typedef struct rime_schema_list_item_t {
   char* schema_id;
   char* name;
   void* reserved;
 } RimeSchemaListItem;
 
-typedef struct {
+typedef struct rime_schema_list_t {
   size_t size;
   RimeSchemaListItem* list;
 } RimeSchemaList;
@@ -163,7 +163,7 @@ RIME_API void RimeSetup(RimeTraits *traits);
 //
 // DEPRECATED. use RimeSetup() instead.
 //
-//RIME_API void RimeSetupLogging(const char* app_name);
+RIME_API void RimeSetupLogging(const char* app_name);
 
 // receive notifications
 // on loading schema:
@@ -190,7 +190,7 @@ RIME_API void RimeFinalize();
 
 RIME_API Bool RimeStartMaintenance(Bool full_check);
 // DEPRECATED. use RimeStartMaintenance(/*full_check = */False) instead.
-//RIME_API Bool RimeStartMaintenanceOnWorkspaceChange();
+RIME_API Bool RimeStartMaintenanceOnWorkspaceChange();
 RIME_API Bool RimeIsMaintenancing();
 RIME_API void RimeJoinMaintenanceThread();
 
@@ -262,9 +262,31 @@ RIME_API void RimeConfigEnd(RimeConfigIterator* iterator);
 
 RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence);
 
+// module
+
+typedef struct rime_custom_api_t {
+  int data_size;
+
+  // extend the structure to publish custom data/functions in your specific module
+
+} RimeCustomApi;
+
+typedef struct rime_module_t {
+  int data_size;
+
+  const char* module_name;
+  void (*initialize)();
+  void (*finalize)();
+  RimeCustomApi* (*get_api)();
+
+} RimeModule;
+
+RIME_API Bool RimeRegisterModule(RimeModule* module);
+RIME_API RimeModule* RimeFindModule(const char* module_name);
+
 // rime api v1
 
-typedef struct {
+typedef struct rime_api_t {
   int data_size;
 
   // setup
@@ -367,24 +389,63 @@ typedef struct {
 
   Bool (*simulate_key_sequence)(RimeSessionId session_id, const char *key_sequence);
 
+  // module
+
+  Bool (*register_module)(RimeModule* module);
+  RimeModule* (*find_module)(const char* module_name);
+
 } RimeApi;
 
-RIME_API RimeApi* rime_api_init();
+// api entry; acquire the version controlled RimeApi structure.
+RIME_API RimeApi* rime_get_api();
 
-#define RIME_API_AVAILABLE(api, func) RIME_STRUCT_HAS_MEMBER(*(api), (api)->func)
+// clients should test if an api function is available in the current version before calling it.
+#define RIME_API_AVAILABLE(api, func) (RIME_STRUCT_HAS_MEMBER(*(api), (api)->func) && (api)->func)
 
-// module api
+// Initializer for MSVC and GCC.
+// 2010 Joe Lowe. Released into the public domain.
+#if defined(__GNUC__)
+#define RIME_MODULE_INITIALIZER(f) \
+  static void f(void) __attribute__((constructor)); \
+  static void f(void)
+#elif defined(_MSC_VER)
+#pragma section(".CRT$XCU",read)
+#define RIME_MODULE_INITIALIZER(f) \
+  static void __cdecl f(void); \
+  __declspec(allocate(".CRT$XCU")) void (__cdecl*f##_)(void) = f; \
+  static void __cdecl f(void)
+#endif
 
-typedef struct {
-  int data_size;
+// automatically register a rime module when the library is loaded.
+// clients should define functions called rime_<module_name>_initialize(),
+// and rime_<module_name>_finalize(). see src/core_module.cc for an example.
+#define RIME_REGISTER_MODULE(name) \
+RIME_MODULE_INITIALIZER(rime_register_module_##name) { \
+  static RimeModule module = {0}; \
+  if (!module.data_size) { \
+    RIME_STRUCT_INIT(RimeModule, module); \
+    module.module_name = #name; \
+    module.initialize = rime_##name##_initialize; \
+    module.finalize = rime_##name##_finalize; \
+  } \
+  rime_get_api()->register_module(&module); \
+}
 
-  void (*initialize)();
-  void (*finalize)();
-
-} RimeModule;
-
-RIME_API void rime_register_module(const char* module_name, RimeModule* module);
-RIME_API RimeModule* rime_find_module(const char* module_name);
+// customize the module by assigning additional functions, eg. module->get_api.
+#define RIME_REGISTER_CUSTOM_MODULE(name) \
+static void rime_customize_module_##name##(RimeModule* module); \
+RIME_MODULE_INITIALIZER(rime_register_module_##name) { \
+  static RimeModule module = {0}; \
+  if (!module.data_size) { \
+    RIME_STRUCT_INIT(RimeModule, module); \
+    module.module_name = #name; \
+    module.initialize = rime_##name##_initialize; \
+    module.finalize = rime_##name##_finalize; \
+    rime_customize_module_##name##(&module); \
+  } \
+  rime_get_api()->register_module(&module); \
+} \
+static void rime_customize_module_##name##(RimeModule* module)
 
 #ifdef __cplusplus
 }

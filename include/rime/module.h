@@ -10,8 +10,10 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <rime_api.h>
 #include <rime/common.h>
+
+struct rime_module_t;
+typedef struct rime_module_t RimeModule;
 
 namespace rime {
 
@@ -24,14 +26,10 @@ class ModuleManager {
   void LoadModule(RimeModule* module);
   void UnloadModules();
 
-  static ModuleManager& instance() {
-    if (!instance_) instance_.reset(new ModuleManager);
-    return *instance_;
-  }
+  static ModuleManager& instance();
 
  private:
   ModuleManager() {}
-  static scoped_ptr<ModuleManager> instance_;
 
   // module registry
   typedef std::map<std::string, RimeModule*> ModuleMap;
