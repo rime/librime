@@ -402,15 +402,18 @@ RIME_API RimeApi* rime_get_api();
 // clients should test if an api function is available in the current version before calling it.
 #define RIME_API_AVAILABLE(api, func) (RIME_STRUCT_HAS_MEMBER(*(api), (api)->func) && (api)->func)
 
+// Initializer for MSVC and GCC.
+// 2010 Joe Lowe. Released into the public domain.
 #if defined(__GNUC__)
-  #define RIME_MODULE_INITIALIZER(f) \
-    static void f(void) __attribute__((constructor)); \
-    static void f(void)
+#define RIME_MODULE_INITIALIZER(f) \
+  static void f(void) __attribute__((constructor)); \
+  static void f(void)
 #elif defined(_MSC_VER)
-  #define RIME_MODULE_INITIALIZER(f) \
-    static void __cdecl f(void); \
-    __declspec(allocate(".CRT$XCU")) void (__cdecl*f##_)(void) = f; \
-    static void __cdecl f(void)
+#pragma section(".CRT$XCU",read)
+#define RIME_MODULE_INITIALIZER(f) \
+  static void __cdecl f(void); \
+  __declspec(allocate(".CRT$XCU")) void (__cdecl*f##_)(void) = f; \
+  static void __cdecl f(void)
 #endif
 
 // automatically register a rime module when the library is loaded.
