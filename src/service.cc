@@ -13,8 +13,6 @@
 
 namespace rime {
 
-scoped_ptr<Service> Service::instance_;
-
 Session::Session() : last_active_time_(0) {
   switcher_.reset(new Switcher);
   engine_.reset(Engine::Create(switcher_->CreateSchema()));
@@ -176,6 +174,14 @@ void Service::Notify(SessionId session_id,
     notification_handler_(session_id,
                           message_type.c_str(), message_value.c_str());
   }
+}
+
+Service& Service::instance() {
+  static scoped_ptr<Service> s_instance;
+  if (!s_instance) {
+    s_instance.reset(new Service);
+  }
+  return *s_instance;
 }
 
 }  // namespace rime

@@ -108,7 +108,6 @@ class RimeConsole {
 int main(int argc, char *argv[]) {
   // initialize la Rime
   rime::SetupLogging("rime.console");
-  rime::RegisterBuiltinModules();
   rime::LoadModules(rime::kDefaultModules);
 
   rime::Deployer deployer;

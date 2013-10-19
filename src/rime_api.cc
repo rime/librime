@@ -48,7 +48,6 @@ RIME_API void RimeSetup(RimeTraits *traits) {
   if (PROVIDED(traits, app_name)) {
     rime::SetupLogging(traits->app_name);
   }
-  rime::RegisterBuiltinModules();
 }
 
 RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
@@ -607,7 +606,18 @@ RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_
     return True;
 }
 
-RIME_API RimeApi* rime_api_init() {
+RIME_API Bool RimeRegisterModule(RimeModule* module) {
+  if (!module || !module->module_name)
+    return False;
+  rime::ModuleManager::instance().Register(module->module_name, module);
+  return True;
+}
+
+RIME_API RimeModule* RimeFindModule(const char* module_name) {
+  return rime::ModuleManager::instance().Find(module_name);
+}
+
+RIME_API RimeApi* rime_get_api() {
   static RimeApi s_api = {0};
   if (!s_api.data_size) {
     RIME_STRUCT_INIT(RimeApi, s_api);
@@ -658,14 +668,8 @@ RIME_API RimeApi* rime_api_init() {
     s_api.config_next = &RimeConfigNext;
     s_api.config_end = &RimeConfigEnd;
     s_api.simulate_key_sequence = &RimeSimulateKeySequence;
+    s_api.register_module = &RimeRegisterModule;
+    s_api.find_module = &RimeFindModule;
   }
   return &s_api;
-}
-
-RIME_API void rime_register_module(const char* module_name, RimeModule* module) {
-  rime::ModuleManager::instance().Register(module_name, module);
-}
-
-RIME_API RimeModule* rime_find_module(const char* module_name) {
-  return rime::ModuleManager::instance().Find(module_name);
 }

@@ -4,7 +4,6 @@
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   rime::SetupLogging("rime.test");
-  rime::RegisterBuiltinModules();
   rime::LoadModules(rime::kDefaultModules);
   return RUN_ALL_TESTS();
 }

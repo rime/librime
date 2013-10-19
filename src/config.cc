@@ -50,15 +50,10 @@ class ConfigDataManager : public std::map<std::string, weak_ptr<ConfigData> > {
   shared_ptr<ConfigData> GetConfigData(const std::string &config_file_path);
   bool ReloadConfigData(const std::string &config_file_path);
 
-  static ConfigDataManager& instance() {
-    if (!instance_) instance_.reset(new ConfigDataManager);
-    return *instance_;
-  }
+  static ConfigDataManager& instance();
 
  private:
   ConfigDataManager() {}
-
-  static scoped_ptr<ConfigDataManager> instance_;
 };
 
 // ConfigValue members
@@ -514,7 +509,13 @@ Config* ConfigComponent::Create(const std::string &config_id) {
 
 // ConfigDataManager memebers
 
-scoped_ptr<ConfigDataManager> ConfigDataManager::instance_;
+ConfigDataManager& ConfigDataManager::instance() {
+  static scoped_ptr<ConfigDataManager> s_instance;
+  if (!s_instance) {
+    s_instance.reset(new ConfigDataManager);
+  }
+  return *s_instance;
+}
 
 shared_ptr<ConfigData> ConfigDataManager::GetConfigData(const std::string &config_file_path) {
   shared_ptr<ConfigData> sp;

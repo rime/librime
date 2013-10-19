@@ -67,13 +67,11 @@ void print_context(RimeContext *context) {
 }
 
 void print(RimeSessionId session_id) {
-  RimeCommit commit = {0};
-  RimeStatus status = {0};
-  RimeContext context = {0};
-  RIME_STRUCT_INIT(RimeCommit, commit);
-  RIME_STRUCT_INIT(RimeStatus, status);
-  RIME_STRUCT_INIT(RimeContext, context);
-  RimeApi* rime = rime_api_init();
+  RimeApi* rime = rime_get_api();
+
+  RIME_STRUCT(RimeCommit, commit);
+  RIME_STRUCT(RimeStatus, status);
+  RIME_STRUCT(RimeContext, context);
 
   if (rime->get_commit(session_id, &commit)) {
     printf("commit: %s\n", commit.text);
@@ -92,7 +90,7 @@ void print(RimeSessionId session_id) {
 }
 
 bool execute_special_command(const char* line, RimeSessionId session_id) {
-  RimeApi* rime = rime_api_init();
+  RimeApi* rime = rime_get_api();
   if (!strcmp(line, "print schema list")) {
     RimeSchemaList list;
     if (rime->get_schema_list(&list)) {
@@ -127,7 +125,7 @@ void on_message(void* context_object,
 }
 
 int main(int argc, char *argv[]) {
-  RimeApi* rime = rime_api_init();
+  RimeApi* rime = rime_get_api();
 
   RIME_STRUCT(RimeTraits, traits);
   traits.app_name = "rime.console";

@@ -12,9 +12,9 @@ namespace rime {
 extern const char* kDefaultModules[];
 extern const char* kDeployerModules[];
 
-void SetupLogging(const char* app_name);
-void RegisterBuiltinModules();
 void LoadModules(const char* module_names[]);
+
+void SetupLogging(const char* app_name);
 
 }  // namespace rime
 

@@ -20,7 +20,7 @@
 static void rime_dict_initialize() {
   using namespace rime;
 
-  LOG(INFO) << "registering components from module 'dict'";
+  LOG(INFO) << "registering components from module 'dict'.";
   Registry &r = Registry::instance();
 
   r.Register("tabledb", new Component<TableDb>);
@@ -35,15 +35,6 @@ static void rime_dict_initialize() {
 }
 
 static void rime_dict_finalize() {
-  // registered components have been automatically destroyed prior to this call
 }
 
-RimeModule* rime_dict_module_init() {
-  static RimeModule s_module = {0};
-  if (!s_module.data_size) {
-    RIME_STRUCT_INIT(RimeModule, s_module);
-    s_module.initialize = rime_dict_initialize;
-    s_module.finalize = rime_dict_finalize;
-  }
-  return &s_module;
-}
+RIME_REGISTER_MODULE(dict)
