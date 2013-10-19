@@ -9,6 +9,7 @@
 #include <rime/module.h>
 
 extern RimeModule* rime_core_module_init();
+extern RimeModule* rime_dict_module_init();
 extern RimeModule* rime_levers_module_init();
 extern RimeModule* rime_gears_module_init();
 
@@ -21,6 +22,7 @@ void SetupLogging(const char* app_name) {
 void RegisterBuiltinModules() {
   ModuleManager& mm(ModuleManager::instance());
   mm.Register("core", rime_core_module_init());
+  mm.Register("dict", rime_dict_module_init());
   mm.Register("levers", rime_levers_module_init());
   mm.Register("gears", rime_gears_module_init());
 }

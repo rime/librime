@@ -24,7 +24,7 @@
 // assuming member is a pointer in struct *p
 #define PROVIDED(p, member) ((p) && RIME_STRUCT_HAS_MEMBER(*(p), (p)->member) && (p)->member)
 
-static const char* builtin_modules[] = { "core", "levers", "gears", NULL };
+static const char* builtin_modules[] = { "core", "dict", "gears", "levers", NULL };
 static const char* deployer_modules[] = { "core", "levers", NULL };
 
 static void initialize_modules(const char** module_names) {

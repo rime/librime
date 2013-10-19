@@ -13,13 +13,6 @@
 
 // built-in components
 #include <rime/config.h>
-#include <rime/dict/table_db.h>
-#include <rime/dict/text_db.h>
-#include <rime/dict/tree_db.h>
-#include <rime/dict/user_db.h>
-#include <rime/dict/dictionary.h>
-#include <rime/dict/reverse_lookup_dictionary.h>
-#include <rime/dict/user_dictionary.h>
 
 static void rime_core_initialize() {
   using namespace rime;
@@ -33,16 +26,6 @@ static void rime_core_initialize() {
   boost::filesystem::path schema_path = user_data_dir / "%s.schema.yaml";
   r.Register("config", new ConfigComponent(config_path.string()));
   r.Register("schema_config", new ConfigComponent(schema_path.string()));
-
-  r.Register("tabledb", new Component<TableDb>);
-  r.Register("stabledb", new Component<StableDb>);
-  r.Register("plain_userdb", new Component<UserDb<TextDb> >);
-  r.Register("userdb", new Component<UserDb<TreeDb> >);
-
-  r.Register("dictionary", new DictionaryComponent);
-  r.Register("reverse_lookup_dictionary",
-             new ReverseLookupDictionaryComponent);
-  r.Register("user_dictionary", new UserDictionaryComponent);
 }
 
 static void rime_core_finalize() {
