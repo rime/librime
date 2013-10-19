@@ -15,6 +15,18 @@ extern RimeModule* rime_gears_module_init();
 
 namespace rime {
 
+const char* kDefaultModules[] = { "core", "dict", "gears", "levers", NULL };
+const char* kDeployerModules[] = { "core", "levers", NULL };
+
+void LoadModules(const char* module_names[]) {
+  ModuleManager& mm(ModuleManager::instance());
+  for (const char** m = module_names; *m; ++m) {
+    if (RimeModule* module = mm.Find(*m)) {
+      mm.LoadModule(module);
+    }
+  }
+}
+
 void SetupLogging(const char* app_name) {
   google::InitGoogleLogging(app_name);
 }

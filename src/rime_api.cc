@@ -24,18 +24,6 @@
 // assuming member is a pointer in struct *p
 #define PROVIDED(p, member) ((p) && RIME_STRUCT_HAS_MEMBER(*(p), (p)->member) && (p)->member)
 
-static const char* builtin_modules[] = { "core", "dict", "gears", "levers", NULL };
-static const char* deployer_modules[] = { "core", "levers", NULL };
-
-static void initialize_modules(const char** module_names) {
-  rime::ModuleManager& mm(rime::ModuleManager::instance());
-  for (const char** m = module_names; *m; ++m) {
-    if (RimeModule* module = mm.Find(*m)) {
-      mm.LoadModule(module);
-    }
-  }
-}
-
 static void setup_deployer(RimeTraits *traits) {
   if (!traits) return;
   rime::Deployer &deployer(rime::Service::instance().deployer());
@@ -76,7 +64,8 @@ RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
 
 RIME_API void RimeInitialize(RimeTraits *traits) {
   setup_deployer(traits);
-  initialize_modules(PROVIDED(traits, modules) ? traits->modules : builtin_modules);
+  rime::LoadModules(
+      PROVIDED(traits, modules) ? traits->modules : rime::kDefaultModules);
   rime::Service::instance().StartService();
 }
 
@@ -127,7 +116,8 @@ RIME_API void RimeJoinMaintenanceThread() {
 
 RIME_API void RimeDeployerInitialize(RimeTraits *traits) {
   setup_deployer(traits);
-  initialize_modules(PROVIDED(traits, modules) ? traits->modules : deployer_modules);
+  rime::LoadModules(
+      PROVIDED(traits, modules) ? traits->modules : rime::kDeployerModules);
 }
 
 RIME_API Bool RimePrebuildAllSchemas() {
