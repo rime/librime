@@ -617,6 +617,13 @@ RIME_API RimeModule* RimeFindModule(const char* module_name) {
   return rime::ModuleManager::instance().Find(module_name);
 }
 
+RIME_API Bool RimeRunTask(const char* task_name) {
+  if (!task_name)
+    return False;
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return Bool(deployer.RunTask(task_name));
+}
+
 RIME_API RimeApi* rime_get_api() {
   static RimeApi s_api = {0};
   if (!s_api.data_size) {
@@ -670,6 +677,7 @@ RIME_API RimeApi* rime_get_api() {
     s_api.simulate_key_sequence = &RimeSimulateKeySequence;
     s_api.register_module = &RimeRegisterModule;
     s_api.find_module = &RimeFindModule;
+    s_api.run_task = &RimeRunTask;
   }
   return &s_api;
 }

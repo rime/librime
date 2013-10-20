@@ -284,6 +284,9 @@ typedef struct rime_module_t {
 RIME_API Bool RimeRegisterModule(RimeModule* module);
 RIME_API RimeModule* RimeFindModule(const char* module_name);
 
+// run a registered task
+RIME_API Bool RimeRunTask(const char* task_name);
+
 // rime api v1
 
 typedef struct rime_api_t {
@@ -393,6 +396,8 @@ typedef struct rime_api_t {
 
   Bool (*register_module)(RimeModule* module);
   RimeModule* (*find_module)(const char* module_name);
+
+  Bool (*run_task)(const char* task_name);
 
 } RimeApi;
 
