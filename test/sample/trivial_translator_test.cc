@@ -1,9 +1,10 @@
 ﻿// encoding: utf-8
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-05-02 Wensong He <snowhws@gmail.com>
+// 2013-10-20 GONG Chen <chen.sst@gmail.com>
 //
 #include <gtest/gtest.h>
 #include <rime/candidate.h>
@@ -14,7 +15,7 @@
 
 using namespace rime;
 
-TEST(DISABLED_TrivialTranslatorTest, Query) {
+TEST(/*DISABLED_*/TrivialTranslatorTest, Query) {
   // make sure the component has been registered
   Translator::Component *component =
       Translator::Require("trivial_translator");

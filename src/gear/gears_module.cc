@@ -31,7 +31,6 @@
 #include <rime/gear/switch_translator.h>
 #include <rime/gear/table_translator.h>
 #include <rime/gear/uniquifier.h>
-//#include <rime/gear/trivial_translator.h>
 
 static void rime_gears_initialize() {
   using namespace rime;
@@ -69,7 +68,6 @@ static void rime_gears_initialize() {
              new Component<ReverseLookupTranslator>);
   r.Register("schema_list_translator", new Component<SchemaListTranslator>);
   r.Register("switch_translator", new Component<SwitchTranslator>);
-  //r.Register("trivial_translator", new Component<TrivialTranslator>);
 
   // filters
   r.Register("simplifier", new Component<Simplifier>);
