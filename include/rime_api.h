@@ -287,6 +287,11 @@ RIME_API RimeModule* RimeFindModule(const char* module_name);
 // run a registered task
 RIME_API Bool RimeRunTask(const char* task_name);
 
+RIME_API const char* RimeGetSharedDataDir();
+RIME_API const char* RimeGetUserDataDir();
+RIME_API const char* RimeGetSyncDir();
+RIME_API const char* RimeGetUserId();
+
 // rime api v1
 
 typedef struct rime_api_t {
@@ -398,6 +403,10 @@ typedef struct rime_api_t {
   RimeModule* (*find_module)(const char* module_name);
 
   Bool (*run_task)(const char* task_name);
+  const char* (*get_shared_data_dir)();
+  const char* (*get_user_data_dir)();
+  const char* (*get_sync_dir)();
+  const char* (*get_user_id)();
 
 } RimeApi;
 

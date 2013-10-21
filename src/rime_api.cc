@@ -624,6 +624,26 @@ RIME_API Bool RimeRunTask(const char* task_name) {
   return Bool(deployer.RunTask(task_name));
 }
 
+RIME_API const char* RimeGetSharedDataDir() {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return deployer.shared_data_dir.c_str();
+}
+
+RIME_API const char* RimeGetUserDataDir() {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return deployer.user_data_dir.c_str();
+}
+
+RIME_API const char* RimeGetSyncDir() {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return deployer.sync_dir.c_str();
+}
+
+RIME_API const char* RimeGetUserId() {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return deployer.user_id.c_str();
+}
+
 RIME_API RimeApi* rime_get_api() {
   static RimeApi s_api = {0};
   if (!s_api.data_size) {
@@ -678,6 +698,10 @@ RIME_API RimeApi* rime_get_api() {
     s_api.register_module = &RimeRegisterModule;
     s_api.find_module = &RimeFindModule;
     s_api.run_task = &RimeRunTask;
+    s_api.get_shared_data_dir = &RimeGetSharedDataDir;
+    s_api.get_user_data_dir = &RimeGetUserDataDir;
+    s_api.get_sync_dir = &RimeGetSyncDir;
+    s_api.get_user_id = &RimeGetUserId;
   }
   return &s_api;
 }
