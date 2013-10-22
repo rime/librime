@@ -28,6 +28,7 @@ class CustomSettings {
   bool Customize(const std::string& key, const ConfigItemPtr& item);
   bool IsFirstRun();
   bool modified() const { return modified_; }
+  Config* config() { return &config_; }
 
  protected:
   Deployer* deployer_;

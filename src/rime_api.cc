@@ -513,12 +513,23 @@ RIME_API Bool RimeConfigGetString(RimeConfig *config, const char *key,
                                   char *value, size_t buffer_size) {
   if (!config || !key || !value) return False;
   rime::Config *c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c) return False;
   std::string str_value;
   if (c->GetString(key, &str_value)) {
     std::strncpy(value, str_value.c_str(), buffer_size);
     return True;
   }
   return False;
+}
+
+RIME_API const char* RimeConfigGetCString(RimeConfig *config, const char *key) {
+  if (!config || !key) return NULL;
+  rime::Config *c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c) return NULL;
+  if (rime::ConfigValuePtr v = c->GetValue(key)) {
+    return v->str().c_str();
+  }
+  return NULL;
 }
 
 RIME_API Bool RimeConfigUpdateSignature(RimeConfig *config, const char* signer) {
