@@ -253,6 +253,7 @@ RIME_API Bool RimeConfigGetInt(RimeConfig *config, const char *key, int *value);
 RIME_API Bool RimeConfigGetDouble(RimeConfig *config, const char *key, double *value);
 RIME_API Bool RimeConfigGetString(RimeConfig *config, const char *key,
                                   char *value, size_t buffer_size);
+RIME_API const char* RimeConfigGetCString(RimeConfig *config, const char *key);
 RIME_API Bool RimeConfigUpdateSignature(RimeConfig* config, const char* signer);
 RIME_API Bool RimeConfigBeginMap(RimeConfigIterator* iterator, RimeConfig* config, const char* key);
 RIME_API Bool RimeConfigNext(RimeConfigIterator* iterator);
@@ -283,6 +284,14 @@ typedef struct rime_module_t {
 
 RIME_API Bool RimeRegisterModule(RimeModule* module);
 RIME_API RimeModule* RimeFindModule(const char* module_name);
+
+// run a registered task
+RIME_API Bool RimeRunTask(const char* task_name);
+
+RIME_API const char* RimeGetSharedDataDir();
+RIME_API const char* RimeGetUserDataDir();
+RIME_API const char* RimeGetSyncDir();
+RIME_API const char* RimeGetUserId();
 
 // rime api v1
 
@@ -380,6 +389,7 @@ typedef struct rime_api_t {
   Bool (*config_get_double)(RimeConfig *config, const char *key, double *value);
   Bool (*config_get_string)(RimeConfig *config, const char *key,
                             char *value, size_t buffer_size);
+  const char* (*config_get_cstring)(RimeConfig *config, const char *key);
   Bool (*config_update_signature)(RimeConfig* config, const char* signer);
   Bool (*config_begin_map)(RimeConfigIterator* iterator, RimeConfig* config, const char* key);
   Bool (*config_next)(RimeConfigIterator* iterator);
@@ -393,6 +403,13 @@ typedef struct rime_api_t {
 
   Bool (*register_module)(RimeModule* module);
   RimeModule* (*find_module)(const char* module_name);
+
+  Bool (*run_task)(const char* task_name);
+  const char* (*get_shared_data_dir)();
+  const char* (*get_user_data_dir)();
+  const char* (*get_sync_dir)();
+  const char* (*get_user_id)();
+  void (*get_user_data_sync_dir)(char* dir, size_t buffer_size);
 
 } RimeApi;
 

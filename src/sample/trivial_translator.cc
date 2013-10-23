@@ -1,14 +1,15 @@
 ﻿// encoding: utf-8
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-05-02 Wensong He <snowhws@gmail.com>
+// 2013-10-20 GONG Chen <chen.sst@gmail.com>
 //
 
 #include <rime/candidate.h>
 #include <rime/segmentation.h>
-#include <rime/gear/trivial_translator.h>
+#include <rime/sample/trivial_translator.h>
 
 namespace rime {
 
@@ -38,8 +39,9 @@ shared_ptr<Translation> TrivialTranslator::Query(const std::string &input,
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
   std::string output(Translate(input));
-  if (output.empty())
+  if (output.empty()) {
     return shared_ptr<Translation>();
+  }
   shared_ptr<Candidate> candidate =
       boost::make_shared<SimpleCandidate>(
           "abc",

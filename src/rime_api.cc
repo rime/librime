@@ -513,12 +513,23 @@ RIME_API Bool RimeConfigGetString(RimeConfig *config, const char *key,
                                   char *value, size_t buffer_size) {
   if (!config || !key || !value) return False;
   rime::Config *c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c) return False;
   std::string str_value;
   if (c->GetString(key, &str_value)) {
     std::strncpy(value, str_value.c_str(), buffer_size);
     return True;
   }
   return False;
+}
+
+RIME_API const char* RimeConfigGetCString(RimeConfig *config, const char *key) {
+  if (!config || !key) return NULL;
+  rime::Config *c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c) return NULL;
+  if (rime::ConfigValuePtr v = c->GetValue(key)) {
+    return v->str().c_str();
+  }
+  return NULL;
 }
 
 RIME_API Bool RimeConfigUpdateSignature(RimeConfig *config, const char* signer) {
@@ -617,6 +628,38 @@ RIME_API RimeModule* RimeFindModule(const char* module_name) {
   return rime::ModuleManager::instance().Find(module_name);
 }
 
+RIME_API Bool RimeRunTask(const char* task_name) {
+  if (!task_name)
+    return False;
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return Bool(deployer.RunTask(task_name));
+}
+
+RIME_API const char* RimeGetSharedDataDir() {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return deployer.shared_data_dir.c_str();
+}
+
+RIME_API const char* RimeGetUserDataDir() {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return deployer.user_data_dir.c_str();
+}
+
+RIME_API const char* RimeGetSyncDir() {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return deployer.sync_dir.c_str();
+}
+
+RIME_API const char* RimeGetUserId() {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return deployer.user_id.c_str();
+}
+
+RIME_API void RimeGetUserDataSyncDir(char* dir, size_t buffer_size) {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  strncpy(dir, deployer.user_data_sync_dir().c_str(), buffer_size);
+}
+
 RIME_API RimeApi* rime_get_api() {
   static RimeApi s_api = {0};
   if (!s_api.data_size) {
@@ -663,6 +706,7 @@ RIME_API RimeApi* rime_get_api() {
     s_api.config_get_int = &RimeConfigGetInt;
     s_api.config_get_double = &RimeConfigGetDouble;
     s_api.config_get_string = &RimeConfigGetString;
+    s_api.config_get_cstring = &RimeConfigGetCString;
     s_api.config_update_signature = &RimeConfigUpdateSignature;
     s_api.config_begin_map = &RimeConfigBeginMap;
     s_api.config_next = &RimeConfigNext;
@@ -670,6 +714,12 @@ RIME_API RimeApi* rime_get_api() {
     s_api.simulate_key_sequence = &RimeSimulateKeySequence;
     s_api.register_module = &RimeRegisterModule;
     s_api.find_module = &RimeFindModule;
+    s_api.run_task = &RimeRunTask;
+    s_api.get_shared_data_dir = &RimeGetSharedDataDir;
+    s_api.get_user_data_dir = &RimeGetUserDataDir;
+    s_api.get_sync_dir = &RimeGetSyncDir;
+    s_api.get_user_id = &RimeGetUserId;
+    s_api.get_user_data_sync_dir = &RimeGetUserDataSyncDir;
   }
   return &s_api;
 }
