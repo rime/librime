@@ -409,6 +409,7 @@ typedef struct rime_api_t {
   const char* (*get_user_data_dir)();
   const char* (*get_sync_dir)();
   const char* (*get_user_id)();
+  void (*get_user_data_sync_dir)(char* dir, size_t buffer_size);
 
 } RimeApi;
 

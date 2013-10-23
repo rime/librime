@@ -655,6 +655,11 @@ RIME_API const char* RimeGetUserId() {
   return deployer.user_id.c_str();
 }
 
+RIME_API void RimeGetUserDataSyncDir(char* dir, size_t buffer_size) {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  strncpy(dir, deployer.user_data_sync_dir().c_str(), buffer_size);
+}
+
 RIME_API RimeApi* rime_get_api() {
   static RimeApi s_api = {0};
   if (!s_api.data_size) {
@@ -701,6 +706,7 @@ RIME_API RimeApi* rime_get_api() {
     s_api.config_get_int = &RimeConfigGetInt;
     s_api.config_get_double = &RimeConfigGetDouble;
     s_api.config_get_string = &RimeConfigGetString;
+    s_api.config_get_cstring = &RimeConfigGetCString;
     s_api.config_update_signature = &RimeConfigUpdateSignature;
     s_api.config_begin_map = &RimeConfigBeginMap;
     s_api.config_next = &RimeConfigNext;
@@ -713,6 +719,7 @@ RIME_API RimeApi* rime_get_api() {
     s_api.get_user_data_dir = &RimeGetUserDataDir;
     s_api.get_sync_dir = &RimeGetSyncDir;
     s_api.get_user_id = &RimeGetUserId;
+    s_api.get_user_data_sync_dir = &RimeGetUserDataSyncDir;
   }
   return &s_api;
 }
