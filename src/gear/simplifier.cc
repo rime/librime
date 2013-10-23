@@ -94,14 +94,15 @@ bool Opencc::ConvertText(const std::string &text,
 
 Simplifier::Simplifier(Engine *engine) : Filter(engine),
                                          initialized_(false),
-                                         tip_level_(kTipNone) {
+                                         tips_level_(kTipsNone) {
   Config *config = engine->schema()->config();
   if (config) {
-    std::string tip;
-    if (config->GetString("simplifier/tip", &tip)) {
-      tip_level_ =
-          (tip == "all") ? kTipAll :
-          (tip == "char") ? kTipChar : kTipNone;
+    std::string tips;
+    if (config->GetString("simplifier/tips", &tips) ||
+        config->GetString("simplifier/tip", &tips)) {
+      tips_level_ =
+          (tips == "all") ? kTipsAll :
+          (tips == "char") ? kTipsChar : kTipsNone;
     }
     config->GetString("simplifier/option_name", &option_name_);
     config->GetString("simplifier/opencc_config", &opencc_config_);
@@ -180,30 +181,30 @@ bool Simplifier::Convert(const shared_ptr<Candidate> &original,
         result->push_back(original);
       }
       else {
-        std::string tip;
-        if (tip_level_ >= kTipChar) {
-          tip = quote_left + original->text() + quote_right;
+        std::string tips;
+        if (tips_level_ >= kTipsChar) {
+          tips = quote_left + original->text() + quote_right;
         }
         result->push_back(
             boost::make_shared<ShadowCandidate>(
                 original,
                 "simplified",
                 forms[i],
-                tip));
+                tips));
       }
     }
   }
   else {
-    std::string tip;
-    if (tip_level_ == kTipAll) {
-      tip = quote_left + original->text() + quote_right;
+    std::string tips;
+    if (tips_level_ == kTipsAll) {
+      tips = quote_left + original->text() + quote_right;
     }
     result->push_back(
         boost::make_shared<ShadowCandidate>(
             original,
             "simplified",
             simplified,
-            tip));
+            tips));
   }
   return true;
 }

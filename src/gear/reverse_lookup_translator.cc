@@ -19,9 +19,9 @@
 #include <rime/gear/table_translator.h>
 
 
-static const char *quote_left = "\xef\xbc\x88";
-static const char *quote_right = "\xef\xbc\x89";
-static const char *separator = "\xef\xbc\x8c";
+//static const char *quote_left = "\xef\xbc\x88";
+//static const char *quote_right = "\xef\xbc\x89";
+//static const char *separator = "\xef\xbc\x8c";
 
 namespace rime {
 
@@ -56,16 +56,16 @@ shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
     if (options_) {
       options_->comment_formatter().Apply(&tips);
     }
-    if (!tips.empty()) {
-      boost::algorithm::replace_all(tips, " ", separator);
-    }
+    //if (!tips.empty()) {
+    //  boost::algorithm::replace_all(tips, " ", separator);
+    //}
   }
   shared_ptr<Candidate> cand = boost::make_shared<SimpleCandidate>(
       "reverse_lookup",
       start_,
       end_,
       e->text,
-      !tips.empty() ? (quote_left + tips + quote_right) : e->comment,
+      !tips.empty() ? (/*quote_left + */tips/* + quote_right*/) : e->comment,
       preedit_);
   return cand;
 }

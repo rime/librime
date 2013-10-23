@@ -24,8 +24,8 @@
 #include <rime/gear/translator_commons.h>
 
 
-static const char *quote_left = "\xef\xbc\x88";
-static const char *quote_right = "\xef\xbc\x89";
+//static const char *quote_left = "\xef\xbc\x88";
+//static const char *quote_right = "\xef\xbc\x89";
 
 namespace rime {
 
@@ -300,7 +300,7 @@ shared_ptr<Candidate> ScriptTranslation::Peek() {
       std::string spelling(GetOriginalSpelling(*sentence_));
       if (!spelling.empty() &&
           spelling != sentence_->preedit()) {
-        sentence_->set_comment(quote_left + spelling + quote_right);
+        sentence_->set_comment(/*quote_left + */spelling/* + quote_right*/);
       }
     }
     return sentence_;
@@ -350,7 +350,7 @@ shared_ptr<Candidate> ScriptTranslation::Peek() {
     std::string spelling(GetOriginalSpelling(*cand));
     if (!spelling.empty() &&
         spelling != cand->preedit()) {
-      cand->set_comment(quote_left + spelling + quote_right);
+      cand->set_comment(/*quote_left + */spelling/* + quote_right*/);
     }
   }
   cand->set_syllabification(shared_from_this());

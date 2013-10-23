@@ -24,7 +24,7 @@ class Simplifier : public Filter {
                      CandidateList *candidates);
 
  protected:
-  typedef enum { kTipNone, kTipChar, kTipAll } TipLevel;
+  typedef enum { kTipsNone, kTipsChar, kTipsAll } TipsLevel;
 
   void Initialize();
   bool Convert(const shared_ptr<Candidate> &original,
@@ -32,7 +32,7 @@ class Simplifier : public Filter {
 
   bool initialized_;
   scoped_ptr<Opencc> opencc_;
-  TipLevel tip_level_;
+  TipsLevel tips_level_;
   std::string option_name_;
   std::string opencc_config_;
   std::set<std::string> excluded_types_;
