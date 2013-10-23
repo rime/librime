@@ -450,7 +450,7 @@ RIME_MODULE_INITIALIZER(rime_register_module_##name) { \
 
 // customize the module by assigning additional functions, eg. module->get_api.
 #define RIME_REGISTER_CUSTOM_MODULE(name) \
-static void rime_customize_module_##name##(RimeModule* module); \
+static void rime_customize_module_##name(RimeModule* module); \
 RIME_MODULE_INITIALIZER(rime_register_module_##name) { \
   static RimeModule module = {0}; \
   if (!module.data_size) { \
@@ -458,11 +458,11 @@ RIME_MODULE_INITIALIZER(rime_register_module_##name) { \
     module.module_name = #name; \
     module.initialize = rime_##name##_initialize; \
     module.finalize = rime_##name##_finalize; \
-    rime_customize_module_##name##(&module); \
+    rime_customize_module_##name(&module); \
   } \
   rime_get_api()->register_module(&module); \
 } \
-static void rime_customize_module_##name##(RimeModule* module)
+static void rime_customize_module_##name(RimeModule* module)
 
 #ifdef __cplusplus
 }
