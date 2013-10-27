@@ -8,7 +8,6 @@
 #define RIME_CONTEXT_H_
 
 #include <string>
-#include <boost/signals.hpp>
 #include <rime/common.h>
 #include <rime/commit_history.h>
 
@@ -21,10 +20,10 @@ struct Preedit;
 
 class Context {
  public:
-  typedef boost::signal<void (Context *ctx)> Notifier;
-  typedef boost::signal<void (Context *ctx, const std::string& option)>
+  typedef signal<void (Context *ctx)> Notifier;
+  typedef signal<void (Context *ctx, const std::string& option)>
   OptionUpdateNotifier;
-  typedef boost::signal<void (Context *ctx, const KeyEvent& key_event)>
+  typedef signal<void (Context *ctx, const KeyEvent& key_event)>
   KeyEventNotifier;
 
   Context();

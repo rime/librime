@@ -19,7 +19,7 @@ class Context;
 
 class Engine : public Messenger {
  public:
-  typedef boost::signal<void (const std::string& commit_text)> CommitSink;
+  typedef signal<void (const std::string& commit_text)> CommitSink;
 
   virtual ~Engine();
   virtual bool ProcessKeyEvent(const KeyEvent &key_event) = 0;

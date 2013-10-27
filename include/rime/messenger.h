@@ -8,15 +8,14 @@
 #define RIME_MESSENGER_H_
 
 #include <string>
-#include <boost/signals.hpp>
 #include <rime/common.h>
 
 namespace rime {
 
 class Messenger {
  public:
-  typedef boost::signal<void (const std::string& message_type,
-                              const std::string& message_value)> MessageSink;
+  typedef signal<void (const std::string& message_type,
+                       const std::string& message_value)> MessageSink;
   
   MessageSink& message_sink() { return message_sink_; }
   

@@ -101,7 +101,7 @@ class RimeConsole {
  private:
   bool interactive_;
   boost::scoped_ptr<rime::Engine> engine_;
-  boost::signals::connection conn_;
+  rime::connection conn_;
 };
 
 // program entry

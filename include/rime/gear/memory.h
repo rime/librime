@@ -9,7 +9,6 @@
 
 #include <string>
 #include <vector>
-#include <boost/signals/connection.hpp>
 #include <rime/common.h>
 #include <rime/dict/vocabulary.h>
 
@@ -58,9 +57,9 @@ class Memory {
   scoped_ptr<UserDictionary> user_dict_;
 
  private:
-  boost::signals::connection commit_connection_;
-  boost::signals::connection delete_connection_;
-  boost::signals::connection unhandled_key_connection_;
+  connection commit_connection_;
+  connection delete_connection_;
+  connection unhandled_key_connection_;
   Language language_;
 };
 
