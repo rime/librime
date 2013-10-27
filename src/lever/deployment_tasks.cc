@@ -442,17 +442,17 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
     if (!is_yaml_file && !is_text_file)
       continue;
     fs::path backup = backup_dir / entry.filename();
-    if (bool up_to_date = fs::exists(backup) &&
+    if (fs::exists(backup) &&
         Checksum(backup.string()) == Checksum(entry.string())) {
-      ++latest;
+      ++latest;  // already up-to-date
       continue;
     }
     if (is_yaml_file && !boost::ends_with(entry.string(), ".custom.yaml")) {
       Config config;
       std::string checksum;
-      if (bool is_customized_copy = config.LoadFromFile(entry.string()) &&
+      if (config.LoadFromFile(entry.string()) &&
           config.GetString("customization", &checksum)) {
-        ++skipped;
+        ++skipped;  // customized copy
         continue;
       }
     }
