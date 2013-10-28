@@ -13,7 +13,7 @@ namespace rime {
 
 class SwitchTranslator : public Translator {
  public:
-  SwitchTranslator(const TranslatorTicket& ticket);
+  SwitchTranslator(const Ticket& ticket);
 
   virtual shared_ptr<Translation> Query(const std::string &input,
                                         const Segment &segment,

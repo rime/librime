@@ -21,6 +21,7 @@
 #include <rime/schema.h>
 #include <rime/segmentation.h>
 #include <rime/segmentor.h>
+#include <rime/ticket.h>
 #include <rime/translation.h>
 #include <rime/translator.h>
 
@@ -314,9 +315,9 @@ void ConcreteEngine::InitializeComponents() {
   if (translator_list) {
     size_t n = translator_list->size();
     for (size_t i = 0; i < n; ++i) {
-      ConfigValuePtr instruction = As<ConfigValue>(translator_list->GetAt(i));
-      if (!instruction) continue;
-      TranslatorTicket ticket(this, instruction->str());
+      ConfigValuePtr prescription = As<ConfigValue>(translator_list->GetAt(i));
+      if (!prescription) continue;
+      Ticket ticket(this, "translator", prescription->str());
       Translator::Component *c = Translator::Require(ticket.klass);
       if (!c) {
         LOG(ERROR) << "error creating translator: '" << ticket.klass << "'";

@@ -6,10 +6,10 @@
 //
 #include <boost/algorithm/string.hpp>
 #include <rime/candidate.h>
-#include <rime/config.h>
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/segmentation.h>
+#include <rime/ticket.h>
 #include <rime/translation.h>
 #include <rime/algo/syllabifier.h>
 #include <rime/dict/dictionary.h>
@@ -86,16 +86,18 @@ int ReverseLookupTranslation::Compare(shared_ptr<Translation> other,
   return 1;
 }
 
-ReverseLookupTranslator::ReverseLookupTranslator(const TranslatorTicket& ticket)
+ReverseLookupTranslator::ReverseLookupTranslator(const Ticket& ticket)
     : Translator(ticket), initialized_(false) {
-  if (ticket.alias.empty())
+  if (ticket.name_space == "translator") {
     name_space_ = "reverse_lookup";
+  }
 }
 
 void ReverseLookupTranslator::Initialize() {
   initialized_ = true;  // no retry
   if (!engine_) return;
-  options_.reset(new TranslatorOptions(engine_, name_space_));
+  Ticket ticket(engine_, name_space_);
+  options_.reset(new TranslatorOptions(ticket));
   Config *config = engine_->schema()->config();
   if (!config) return;
   config->GetString(name_space_ + "/prefix", &prefix_);
@@ -107,7 +109,6 @@ void ReverseLookupTranslator::Initialize() {
       options_->set_enable_completion(false);  // overridden default
   }
 
-  Ticket ticket(engine_->schema(), name_space_);
   DictionaryComponent *component =
       dynamic_cast<DictionaryComponent*>(Dictionary::Require("dictionary"));
   if (!component) return;

@@ -17,6 +17,7 @@
 #include <rime/processor.h>
 #include <rime/schema.h>
 #include <rime/switcher.h>
+#include <rime/ticket.h>
 #include <rime/translation.h>
 #include <rime/translator.h>
 
@@ -252,7 +253,7 @@ void Switcher::InitializeComponents() {
       LOG(WARNING) << "schema_list_translator not available.";
     }
     else {
-      TranslatorTicket ticket(this, "");
+      Ticket ticket(this, "");
       shared_ptr<Translator> t(c->Create(ticket));
       translators_.push_back(t);
     }
@@ -263,7 +264,7 @@ void Switcher::InitializeComponents() {
       LOG(WARNING) << "switch_translator not available.";
     }
     else {
-      TranslatorTicket ticket(this, "");
+      Ticket ticket(this, "");
       shared_ptr<Translator> t(c->Create(ticket));
       translators_.push_back(t);
     }

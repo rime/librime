@@ -20,7 +20,7 @@ TEST(/*DISABLED_*/TrivialTranslatorTest, Query) {
   Translator::Component *component =
       Translator::Require("trivial_translator");
   ASSERT_TRUE(component != NULL);
-  TranslatorTicket ticket(NULL, "trivial_translator");
+  Ticket ticket;
   scoped_ptr<Translator> translator(component->Create(ticket));
   // make sure the dict object has been created
   ASSERT_TRUE(translator);

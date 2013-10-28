@@ -11,8 +11,8 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <rime_version.h>
 #include <rime/common.h>
-#include <rime/config.h>
 #include <rime/schema.h>
+#include <rime/ticket.h>
 #include <rime/algo/utilities.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
@@ -138,7 +138,6 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   int success = 0;
   int failure = 0;
   std::map<std::string, std::string> schemas;
-  // fill the prescription
   for (ConfigList::Iterator it = schema_list->begin();
        it != schema_list->end(); ++it) {
     ConfigMapPtr item = As<ConfigMap>(*it);

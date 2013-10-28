@@ -118,10 +118,10 @@ class ScriptTranslation : public Translation,
 
 // ScriptTranslator implementation
 
-ScriptTranslator::ScriptTranslator(const TranslatorTicket& ticket)
+ScriptTranslator::ScriptTranslator(const Ticket& ticket)
     : Translator(ticket),
-      Memory(engine_, name_space_),
-      TranslatorOptions(engine_, name_space_),
+      Memory(ticket),
+      TranslatorOptions(ticket),
       spelling_hints_(0) {
   if (!engine_) return;
   Config *config = engine_->schema()->config();

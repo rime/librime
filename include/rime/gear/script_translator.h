@@ -28,7 +28,7 @@ class ScriptTranslator : public Translator,
                          public Memory,
                          public TranslatorOptions {
  public:
-  ScriptTranslator(const TranslatorTicket& ticket);
+  ScriptTranslator(const Ticket& ticket);
 
   virtual shared_ptr<Translation> Query(const std::string &input,
                                         const Segment &segment,

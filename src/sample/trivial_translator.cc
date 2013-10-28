@@ -13,7 +13,7 @@
 
 namespace rime {
 
-TrivialTranslator::TrivialTranslator(const TranslatorTicket& ticket)
+TrivialTranslator::TrivialTranslator(const Ticket& ticket)
     : Translator(ticket) {
   dictionary_["yi"] = "\xe4\xb8\x80";  // 一
   dictionary_["er"] = "\xe4\xba\x8c";  // 二

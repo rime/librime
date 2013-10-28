@@ -20,7 +20,7 @@ class TranslatorOptions;
 
 class ReverseLookupTranslator : public Translator {
  public:
-  ReverseLookupTranslator(const TranslatorTicket& ticket);
+  ReverseLookupTranslator(const Ticket& ticket);
 
   virtual shared_ptr<Translation> Query(const std::string &input,
                                         const Segment &segment,

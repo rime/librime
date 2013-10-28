@@ -55,7 +55,7 @@ class PunctSegmentor : public Segmentor {
 
 class PunctTranslator : public Translator {
  public:
-  PunctTranslator(const TranslatorTicket& ticket);
+  PunctTranslator(const Ticket& ticket);
   virtual shared_ptr<Translation> Query(const std::string &input,
                                         const Segment &segment,
                                         std::string* prompt);

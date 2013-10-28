@@ -206,10 +206,10 @@ bool LazyTableTranslation::FetchMoreTableEntries() {
 
 // TableTranslator
 
-TableTranslator::TableTranslator(const TranslatorTicket& ticket)
+TableTranslator::TableTranslator(const Ticket& ticket)
     : Translator(ticket),
-      Memory(engine_, name_space_),
-      TranslatorOptions(engine_, name_space_),
+      Memory(ticket),
+      TranslatorOptions(ticket),
       enable_charset_filter_(false),
       enable_encoder_(false),
       enable_sentence_(true),
@@ -230,7 +230,6 @@ TableTranslator::TableTranslator(const TranslatorTicket& ticket)
   }
   if (enable_encoder_ && user_dict_) {
     encoder_.reset(new UnityTableEncoder(user_dict_.get()));
-    Ticket ticket(engine_->schema(), name_space_);
     encoder_->Load(ticket);
   }
 }

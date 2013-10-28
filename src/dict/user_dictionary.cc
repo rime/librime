@@ -11,9 +11,9 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/scope_exit.hpp>
 #include <rime/common.h>
-#include <rime/config.h>
 #include <rime/schema.h>
 #include <rime/service.h>
+#include <rime/ticket.h>
 #include <rime/algo/dynamics.h>
 #include <rime/algo/syllabifier.h>
 #include <rime/dict/db.h>

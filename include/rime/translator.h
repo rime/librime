@@ -17,18 +17,12 @@ namespace rime {
 class Context;
 class Engine;
 struct Segment;
+struct Ticket;
 class Translation;
 
-struct TranslatorTicket {
-  Engine* engine;
-  std::string klass;
-  std::string alias;
-  TranslatorTicket(Engine* an_engine, const std::string& instruction);
-};
-
-class Translator : public Class<Translator, const TranslatorTicket&> {
+class Translator : public Class<Translator, const Ticket&> {
  public:
-  Translator(const TranslatorTicket& ticket);
+  Translator(const Ticket& ticket);
   virtual ~Translator() {}
 
   virtual shared_ptr<Translation> Query(const std::string &input,

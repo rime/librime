@@ -138,11 +138,11 @@ class UniqueFilter : public Translation {
 
 //
 
-class Engine;
+struct Ticket;
 
 class TranslatorOptions {
  public:
-  TranslatorOptions(Engine* engine, const std::string& name_space);
+  TranslatorOptions(const Ticket& ticket);
   bool IsUserDictDisabledFor(const std::string& input) const;
 
   const std::string& delimiters() const { return delimiters_; }

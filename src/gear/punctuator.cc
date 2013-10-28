@@ -207,7 +207,7 @@ bool PunctSegmentor::Proceed(Segmentation *segmentation) {
   return false;  // exclusive
 }
 
-PunctTranslator::PunctTranslator(const TranslatorTicket& ticket)
+PunctTranslator::PunctTranslator(const Ticket& ticket)
     : Translator(ticket) {
   const bool load_symbols = true;
   config_.LoadConfig(engine_, load_symbols);

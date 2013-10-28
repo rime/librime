@@ -38,7 +38,7 @@ class Language {
 
 class Memory {
  public:
-  Memory(Engine* engine, const std::string& name_space);
+  Memory(const Ticket& ticket);
   virtual ~Memory();
 
   virtual bool Memorize(const CommitEntry& commit_entry) = 0;
