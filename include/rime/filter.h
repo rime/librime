@@ -11,14 +11,16 @@
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/component.h>
+#include <rime/ticket.h>
 
 namespace rime {
 
 class Engine;
 
-class Filter : public Class<Filter, Engine*> {
+class Filter : public Class<Filter, const Ticket&> {
  public:
-  Filter(Engine *engine) : engine_(engine) {}
+  explicit Filter(const Ticket& ticket)
+      : engine_(ticket.engine), name_space_(ticket.name_space) {}
   virtual ~Filter() {}
 
   virtual void Apply(CandidateList *recruited,
@@ -26,6 +28,7 @@ class Filter : public Class<Filter, Engine*> {
 
  protected:
   Engine *engine_;
+  std::string name_space_;
 };
 
 }  // namespace rime

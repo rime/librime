@@ -49,13 +49,13 @@ static bool expecting_an_initial(Context* ctx,
       !belongs_to(previous_char, alphabet);
 }
 
-Speller::Speller(Engine *engine) : Processor(engine),
-                                   alphabet_(kRimeAlphabet),
-                                   max_code_length_(0),
-                                   auto_select_(false),
-                                   auto_select_unique_candidate_(false),
-                                   use_space_(false) {
-  Config *config = engine->schema()->config();
+Speller::Speller(const Ticket& ticket) : Processor(ticket),
+                                         alphabet_(kRimeAlphabet),
+                                         max_code_length_(0),
+                                         auto_select_(false),
+                                         auto_select_unique_candidate_(false),
+                                         use_space_(false) {
+  Config *config = engine_->schema()->config();
   if (config) {
     config->GetString("speller/alphabet", &alphabet_);
     config->GetString("speller/delimiter", &delimiters_);

@@ -8,6 +8,7 @@
 #define RIME_PROCESSOR_H_
 
 #include <rime/component.h>
+#include <rime/ticket.h>
 
 namespace rime {
 
@@ -20,9 +21,10 @@ enum ProcessResult {
   kNoop,      // leave it to other processors
 };
 
-class Processor : public Class<Processor, Engine*> {
+class Processor : public Class<Processor, const Ticket&> {
  public:
-  explicit Processor(Engine *engine) : engine_(engine) {}
+  explicit Processor(const Ticket& ticket)
+      : engine_(ticket.engine), name_space_(ticket.name_space) {}
   virtual ~Processor() {}
 
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event) {
@@ -31,6 +33,7 @@ class Processor : public Class<Processor, Engine*> {
 
  protected:
   Engine *engine_;
+  std::string name_space_;
 };
 
 }  // namespace rime

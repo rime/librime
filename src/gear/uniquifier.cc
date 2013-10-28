@@ -6,14 +6,13 @@
 //
 #include <rime/candidate.h>
 #include <rime/common.h>
-#include <rime/engine.h>
 #include <rime/gear/uniquifier.h>
 
 namespace rime {
 
 // Uniquifier
 
-Uniquifier::Uniquifier(Engine *engine) : Filter(engine) {
+Uniquifier::Uniquifier(const Ticket& ticket) : Filter(ticket) {
 }
 
 void Uniquifier::Apply(CandidateList *recruited,

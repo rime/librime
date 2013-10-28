@@ -15,7 +15,7 @@ namespace rime {
 
 class AbcSegmentor : public Segmentor {
  public:
-  explicit AbcSegmentor(Engine *engine);
+  explicit AbcSegmentor(const Ticket& ticket);
 
   virtual bool Proceed(Segmentation *segmentation);
 

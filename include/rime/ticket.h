@@ -24,7 +24,7 @@ struct Ticket {
   Ticket(Schema* s, const std::string& ns);
   // prescription: in the form of "klass" or "klass@alias"
   // where alias, if given, will override default name space
-  Ticket(Engine* e, const std::string& ns,
+  Ticket(Engine* e, const std::string& ns = "",
          const std::string& prescription = "");
 };
 

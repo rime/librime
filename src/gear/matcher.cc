@@ -7,17 +7,16 @@
 #include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/config.h>
-#include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/segmentation.h>
 #include <rime/gear/matcher.h>
 
 namespace rime {
 
-Matcher::Matcher(Engine *engine) : Segmentor(engine) {
+Matcher::Matcher(const Ticket& ticket) : Segmentor(ticket) {
   // read schema settings
-  Config *config = engine->schema()->config();
-  if (!config) return;
+  if (!ticket.schema) return;
+  Config *config = ticket.schema->config();
   patterns_.LoadConfig(config);
 }
 

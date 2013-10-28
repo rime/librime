@@ -92,10 +92,10 @@ bool Opencc::ConvertText(const std::string &text,
 
 // Simplifier
 
-Simplifier::Simplifier(Engine *engine) : Filter(engine),
-                                         initialized_(false),
-                                         tips_level_(kTipsNone) {
-  Config *config = engine->schema()->config();
+Simplifier::Simplifier(const Ticket& ticket) : Filter(ticket),
+                                               initialized_(false),
+                                               tips_level_(kTipsNone) {
+  Config *config = engine_->schema()->config();
   if (config) {
     std::string tips;
     if (config->GetString("simplifier/tips", &tips) ||
@@ -121,9 +121,6 @@ Simplifier::Simplifier(Engine *engine) : Filter(engine),
   if (opencc_config_.empty()) {
     opencc_config_ = "zht2zhs.ini";  // default opencc config file
   }
-}
-
-Simplifier::~Simplifier() {
 }
 
 void Simplifier::Initialize() {

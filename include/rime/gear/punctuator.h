@@ -16,6 +16,8 @@
 
 namespace rime {
 
+class Engine;
+
 class PunctConfig {
  public:
   void LoadConfig(Engine *engine, bool load_symbols = false);
@@ -30,7 +32,7 @@ class PunctConfig {
 
 class Punctuator : public Processor {
  public:
-  Punctuator(Engine *engine);
+  Punctuator(const Ticket& ticket);
   virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
 
  protected:
@@ -46,7 +48,7 @@ class Punctuator : public Processor {
 
 class PunctSegmentor : public Segmentor {
  public:
-  PunctSegmentor(Engine *engine);
+  PunctSegmentor(const Ticket& ticket);
   virtual bool Proceed(Segmentation *segmentation);
 
  protected:

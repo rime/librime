@@ -15,15 +15,15 @@ namespace rime {
 
 class ShapeFormatter : public Formatter {
  public:
-  ShapeFormatter(Engine *engine) : Formatter(engine) {
+  ShapeFormatter(const Ticket& ticket) : Formatter(ticket) {
   }
   virtual void Format(std::string* text);
 };
 
 class ShapeProcessor : public Processor {
  public:
-  ShapeProcessor(Engine *engine) : Processor(engine),
-                                   formatter_(engine) {
+  ShapeProcessor(const Ticket& ticket) : Processor(ticket),
+                                         formatter_(ticket) {
   }
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 

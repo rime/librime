@@ -29,8 +29,8 @@ typedef std::map<int /* keycode */,
 
 class AsciiComposer : public Processor {
  public:
-  AsciiComposer(Engine *engine);
-  virtual ~AsciiComposer() {}
+  AsciiComposer(const Ticket& ticket);
+
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:

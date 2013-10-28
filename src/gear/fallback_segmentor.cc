@@ -10,7 +10,8 @@
 
 namespace rime {
 
-FallbackSegmentor::FallbackSegmentor(Engine *engine) : Segmentor(engine) {
+FallbackSegmentor::FallbackSegmentor(const Ticket& ticket)
+    : Segmentor(ticket) {
 }
 
 bool FallbackSegmentor::Proceed(Segmentation *segmentation) {

@@ -20,17 +20,17 @@ static const char* kZeroWidthSpace = "\xef\xbb\xbf";  //"\xe2\x80\x8b";
 namespace rime {
 
 
-ChordComposer::ChordComposer(Engine *engine) : Processor(engine),
-                                               pass_thru_(false) {
-  Config *config = engine->schema()->config();
-  if (config) {
+ChordComposer::ChordComposer(const Ticket& ticket) : Processor(ticket),
+                                                     pass_thru_(false) {
+  if (!engine_) return;
+  if (Config *config = engine_->schema()->config()) {
     config->GetString("chord_composer/alphabet", &alphabet_);
     config->GetString("speller/delimiter", &delimiter_);
     algebra_.Load(config->GetList("chord_composer/algebra"));
     output_format_.Load(config->GetList("chord_composer/output_format"));
     prompt_format_.Load(config->GetList("chord_composer/prompt_format"));
   }
-  engine->context()->set_option("_chord_typing", true);
+  engine_->context()->set_option("_chord_typing", true);
 }
 
 ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent &key_event) {

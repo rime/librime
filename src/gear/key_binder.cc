@@ -133,10 +133,10 @@ void KeyBindings::Bind(const KeyEvent& key, const KeyBinding& binding) {
   v.insert(lb, binding);
 }
 
-KeyBinder::KeyBinder(Engine *engine) : Processor(engine),
-                                       key_bindings_(new KeyBindings),
-                                       redirecting_(false),
-                                       last_key_(0) {
+KeyBinder::KeyBinder(const Ticket& ticket) : Processor(ticket),
+                                             key_bindings_(new KeyBindings),
+                                             redirecting_(false),
+                                             last_key_(0) {
   LoadConfig();
 }
 

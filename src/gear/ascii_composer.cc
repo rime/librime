@@ -48,14 +48,14 @@ static void load_bindings(const ConfigMapPtr &src,
   }
 }
 
-AsciiComposer::AsciiComposer(Engine *engine)
-    : Processor(engine),
+AsciiComposer::AsciiComposer(const Ticket& ticket)
+    : Processor(ticket),
       caps_lock_switch_style_(kAsciiModeSwitchNoop),
       good_old_caps_lock_(false),
       toggle_with_caps_(false),
       shift_key_pressed_(false),
       ctrl_key_pressed_(false) {
-  LoadConfig(engine->schema());
+  LoadConfig(ticket.schema);
 }
 
 ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {

@@ -72,10 +72,11 @@ RecognizerMatch RecognizerPatterns::GetMatch(
   return RecognizerMatch();
 }
 
-Recognizer::Recognizer(Engine *engine) : Processor(engine) {
-  Config *config = engine->schema()->config();
-  if (!config) return;
-  patterns_.LoadConfig(config);
+Recognizer::Recognizer(const Ticket& ticket) : Processor(ticket) {
+  if (!ticket.schema) return;
+  if (Config *config = ticket.schema->config()) {
+    patterns_.LoadConfig(config);
+  }
 }
 
 ProcessResult Recognizer::ProcessKeyEvent(const KeyEvent &key_event) {

@@ -7,16 +7,15 @@
 #ifndef RIME_ASCII_SEGMENTOR_H_
 #define RIME_ASCII_SEGMENTOR_H_
 
-#include <string>
 #include <rime/segmentor.h>
 
 namespace rime {
 
 class AsciiSegmentor : public Segmentor {
  public:
-  explicit AsciiSegmentor(Engine *engine);
+  explicit AsciiSegmentor(const Ticket& ticket);
 
-  virtual bool Proceed(Segmentation *segmentation);
+  virtual bool Proceed(Segmentation* segmentation);
 };
 
 }  // namespace rime
