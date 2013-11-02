@@ -23,6 +23,7 @@ class AffixSegmentor : public Segmentor {
   std::string prefix_;
   std::string suffix_;
   std::string tips_;
+  std::string closing_tips_;
 };
 
 }  // namespace rime

@@ -21,6 +21,7 @@ AffixSegmentor::AffixSegmentor(const Ticket& ticket)
     config->GetString(name_space_ + "/prefix", &prefix_);
     config->GetString(name_space_ + "/suffix", &suffix_);
     config->GetString(name_space_ + "/tips", &tips_);
+    config->GetString(name_space_ + "/closing_tips", &closing_tips_);
   }
 }
 
@@ -39,8 +40,8 @@ bool AffixSegmentor::Proceed(Segmentation *segmentation) {
   if (active_input.length() == prefix_.length()) {
     Segment &prefix_segment(segmentation->back());
     prefix_segment.tags.erase(tag_);
-    prefix_segment.tags.insert(tag_ + "_prefix");
     prefix_segment.prompt = tips_;
+    prefix_segment.tags.insert(tag_ + "_prefix");
     DLOG(INFO) << "prefix: " << *segmentation;
     // continue this round
     return true;
@@ -49,6 +50,7 @@ bool AffixSegmentor::Proceed(Segmentation *segmentation) {
   active_input.erase(0, prefix_.length());
   Segment prefix_segment(j, j + prefix_.length());
   prefix_segment.status = Segment::kGuess;
+  prefix_segment.prompt = tips_;
   prefix_segment.tags.insert(tag_ + "_prefix");
   prefix_segment.tags.insert("phony");  // do not commit raw input
   segmentation->pop_back();
@@ -71,6 +73,7 @@ bool AffixSegmentor::Proceed(Segmentation *segmentation) {
     }
     Segment suffix_segment(k, k + suffix_.length());
     suffix_segment.status = Segment::kGuess;
+    suffix_segment.prompt = closing_tips_.empty() ? tips_ : closing_tips_;
     suffix_segment.tags.insert(tag_ + "_suffix");
     suffix_segment.tags.insert("phony");  // do not commit raw input
     segmentation->Forward();
