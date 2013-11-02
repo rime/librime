@@ -43,8 +43,10 @@ void Composition::GetPreedit(Preedit *preedit) const {
       }
       else {  // raw input
         end = at(i).end;
-        preedit->text += input_.substr(start, end - start);
-        text_len = preedit->text.length();
+        if (!at(i).HasTag("phony")) {
+          preedit->text += input_.substr(start, end - start);
+          text_len = preedit->text.length();
+        }
       }
     }
     else {  // highlighted
@@ -80,7 +82,9 @@ std::string Composition::GetCommitText() const {
     }
     else {
       end = seg.end;
-      result += input_.substr(seg.start, seg.end - seg.start);
+      if (!seg.HasTag("phony")) {
+        result += input_.substr(seg.start, seg.end - seg.start);
+      }
     }
   }
   if (input_.length() > end) {
