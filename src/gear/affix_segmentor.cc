@@ -4,6 +4,7 @@
 //
 // 2013-10-30 GONG Chen <chen.sst@gmail.com>
 //
+#include <boost/algorithm/string.hpp>
 #include <rime/common.h>
 #include <rime/schema.h>
 #include <rime/segmentation.h>
@@ -24,11 +25,60 @@ AffixSegmentor::AffixSegmentor(const Ticket& ticket)
 }
 
 bool AffixSegmentor::Proceed(Segmentation *segmentation) {
-  const std::string &input(segmentation->input());
-  DLOG(INFO) << "affix_segmentor: " << input;
-  // TODO
-  // continue this round
-  return true;
+  if (segmentation->empty() || !segmentation->back().HasTag(tag_))
+    return true;
+  size_t j = segmentation->GetCurrentStartPosition();
+  size_t k = segmentation->GetCurrentEndPosition();
+  std::string active_input(segmentation->input().substr(j, k - j));
+  if (prefix_.empty() || !boost::starts_with(active_input, prefix_)) {
+    return true;
+  }
+  DLOG(INFO) << "affix_segmentor: " << active_input;
+  DLOG(INFO) << "segmentation: " << *segmentation;
+  // just prefix
+  if (active_input.length() == prefix_.length()) {
+    Segment &prefix_segment(segmentation->back());
+    prefix_segment.tags.erase(tag_);
+    prefix_segment.tags.insert(tag_ + "_prefix");
+    prefix_segment.prompt = tips_;
+    DLOG(INFO) << "prefix: " << *segmentation;
+    // continue this round
+    return true;
+  }
+  // prefix + code
+  active_input.erase(0, prefix_.length());
+  Segment prefix_segment(j, j + prefix_.length());
+  prefix_segment.status = Segment::kGuess;
+  prefix_segment.tags.insert(tag_ + "_prefix");
+  prefix_segment.tags.insert("phony");  // do not commit raw input
+  segmentation->pop_back();
+  segmentation->Forward();
+  segmentation->AddSegment(prefix_segment);
+  j += prefix_.length();
+  Segment code_segment(j, k);
+  code_segment.tags.insert(tag_);
+  segmentation->Forward();
+  segmentation->AddSegment(code_segment);
+  DLOG(INFO) << "prefix+code: " << *segmentation;
+  // has suffix?
+  if (!suffix_.empty() && boost::ends_with(active_input, suffix_)) {
+    k -= suffix_.length();
+    if (k == segmentation->back().start) {
+      segmentation->pop_back();  // code is empty
+    }
+    else {
+      segmentation->back().end = k;
+    }
+    Segment suffix_segment(k, k + suffix_.length());
+    suffix_segment.status = Segment::kGuess;
+    suffix_segment.tags.insert(tag_ + "_suffix");
+    suffix_segment.tags.insert("phony");  // do not commit raw input
+    segmentation->Forward();
+    segmentation->AddSegment(suffix_segment);
+    DLOG(INFO) << "prefix+suffix: " << *segmentation;
+  }
+  // exclusive
+  return false;
 }
 
 }  // namespace rime

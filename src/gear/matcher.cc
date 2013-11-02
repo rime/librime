@@ -33,8 +33,8 @@ bool Matcher::Proceed(Segmentation *segmentation) {
     segment.end = m.end;
     segment.tags.insert(m.tag);
     segmentation->AddSegment(segment);
-    // terminate this round
-    return false;
+    // terminate this round?
+    //return false;
   }
   return true;
 }
