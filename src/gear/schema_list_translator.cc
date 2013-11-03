@@ -108,7 +108,7 @@ void SchemaListTranslation::LoadSchemaList(Switcher* switcher) {
                    compare_access_time);
 }
 
-SchemaListTranslator::SchemaListTranslator(const TranslatorTicket& ticket)
+SchemaListTranslator::SchemaListTranslator(const Ticket& ticket)
     : Translator(ticket) {
 }
 

@@ -8,27 +8,21 @@
 #ifndef RIME_TRANSLATOR_H_
 #define RIME_TRANSLATOR_H_
 
-#include <string>
 #include <rime/common.h>
 #include <rime/component.h>
+#include <rime/ticket.h>
 
 namespace rime {
 
 class Context;
 class Engine;
-struct Segment;
 class Translation;
+struct Segment;
 
-struct TranslatorTicket {
-  Engine* engine;
-  std::string klass;
-  std::string alias;
-  TranslatorTicket(Engine* an_engine, const std::string& instruction);
-};
-
-class Translator : public Class<Translator, const TranslatorTicket&> {
+class Translator : public Class<Translator, const Ticket&> {
  public:
-  Translator(const TranslatorTicket& ticket);
+  explicit Translator(const Ticket& ticket)
+      : engine_(ticket.engine), name_space_(ticket.name_space) {}
   virtual ~Translator() {}
 
   virtual shared_ptr<Translation> Query(const std::string &input,

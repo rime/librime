@@ -10,6 +10,7 @@
 #include <rime/registry.h>
 
 #include <rime/gear/abc_segmentor.h>
+#include <rime/gear/affix_segmentor.h>
 #include <rime/gear/ascii_composer.h>
 #include <rime/gear/ascii_segmentor.h>
 #include <rime/gear/chord_composer.h>
@@ -53,6 +54,7 @@ static void rime_gears_initialize() {
 
   // segmentors
   r.Register("abc_segmentor", new Component<AbcSegmentor>);
+  r.Register("affix_segmentor", new Component<AffixSegmentor>);
   r.Register("ascii_segmentor", new Component<AsciiSegmentor>);
   r.Register("matcher", new Component<Matcher>);
   r.Register("punct_segmentor", new Component<PunctSegmentor>);

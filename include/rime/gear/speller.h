@@ -15,8 +15,8 @@ namespace rime {
 
 class Speller : public Processor {
  public:
-  Speller(Engine *engine);
-  virtual ~Speller() {}
+  Speller(const Ticket& ticket);
+
   virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
 
  protected:

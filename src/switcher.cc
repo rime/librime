@@ -17,6 +17,7 @@
 #include <rime/processor.h>
 #include <rime/schema.h>
 #include <rime/switcher.h>
+#include <rime/ticket.h>
 #include <rime/translation.h>
 #include <rime/translator.h>
 
@@ -231,7 +232,7 @@ void Switcher::InitializeComponents() {
       LOG(WARNING) << "key_binder not available.";
     }
     else {
-      shared_ptr<Processor> p(c->Create(this));
+      shared_ptr<Processor> p(c->Create(Ticket(this)));
       processors_.push_back(p);
     }
   }
@@ -241,7 +242,7 @@ void Switcher::InitializeComponents() {
       LOG(WARNING) << "selector not available.";
     }
     else {
-      shared_ptr<Processor> p(c->Create(this));
+      shared_ptr<Processor> p(c->Create(Ticket(this)));
       processors_.push_back(p);
     }
   }
@@ -252,8 +253,7 @@ void Switcher::InitializeComponents() {
       LOG(WARNING) << "schema_list_translator not available.";
     }
     else {
-      TranslatorTicket ticket(this, "");
-      shared_ptr<Translator> t(c->Create(ticket));
+      shared_ptr<Translator> t(c->Create(Ticket(this)));
       translators_.push_back(t);
     }
   }
@@ -263,8 +263,7 @@ void Switcher::InitializeComponents() {
       LOG(WARNING) << "switch_translator not available.";
     }
     else {
-      TranslatorTicket ticket(this, "");
-      shared_ptr<Translator> t(c->Create(ticket));
+      shared_ptr<Translator> t(c->Create(Ticket(this)));
       translators_.push_back(t);
     }
   }

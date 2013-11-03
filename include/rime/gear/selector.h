@@ -13,12 +13,10 @@
 
 namespace rime {
 
-class Schema;
-
 class Selector : public Processor {
  public:
-  Selector(Engine *engine);
-  virtual ~Selector() {}
+  Selector(const Ticket& ticket);
+
   virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
 
  protected:
@@ -29,8 +27,6 @@ class Selector : public Processor {
   bool Home(Context *ctx);
   bool End(Context *ctx);
   bool SelectCandidateAt(Context *ctx, int index);
-
-  Schema* schema_;
 };
 
 }  // namespace rime

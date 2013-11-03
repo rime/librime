@@ -13,7 +13,7 @@
 
 namespace rime {
 
-TrivialTranslator::TrivialTranslator(const TranslatorTicket& ticket)
+TrivialTranslator::TrivialTranslator(const Ticket& ticket)
     : Translator(ticket) {
   dictionary_["yi"] = "\xe4\xb8\x80";  // 一
   dictionary_["er"] = "\xe4\xba\x8c";  // 二
@@ -34,7 +34,7 @@ TrivialTranslator::TrivialTranslator(const TranslatorTicket& ticket)
 shared_ptr<Translation> TrivialTranslator::Query(const std::string &input,
                                                  const Segment &segment,
                                                  std::string* prompt) {
-  if (!segment.HasTag("abc"))
+  if (!segment.HasTag(tag_))
     return shared_ptr<Translation>();
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
@@ -44,7 +44,7 @@ shared_ptr<Translation> TrivialTranslator::Query(const std::string &input,
   }
   shared_ptr<Candidate> candidate =
       boost::make_shared<SimpleCandidate>(
-          "abc",
+          "trivial",
           segment.start,
           segment.end,
           output,

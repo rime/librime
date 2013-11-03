@@ -14,7 +14,7 @@
 
 namespace rime {
 
-AsciiSegmentor::AsciiSegmentor(Engine *engine) : Segmentor(engine) {
+AsciiSegmentor::AsciiSegmentor(const Ticket& ticket) : Segmentor(ticket) {
 }
 
 bool AsciiSegmentor::Proceed(Segmentation *segmentation) {

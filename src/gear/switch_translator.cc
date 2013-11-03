@@ -85,7 +85,7 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
   DLOG(INFO) << "num switches: " << candies_.size();
 }
 
-SwitchTranslator::SwitchTranslator(const TranslatorTicket& ticket)
+SwitchTranslator::SwitchTranslator(const Ticket& ticket)
     : Translator(ticket) {
 }
 

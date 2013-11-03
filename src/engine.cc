@@ -21,6 +21,7 @@
 #include <rime/schema.h>
 #include <rime/segmentation.h>
 #include <rime/segmentor.h>
+#include <rime/ticket.h>
 #include <rime/translation.h>
 #include <rime/translator.h>
 
@@ -280,14 +281,15 @@ void ConcreteEngine::InitializeComponents() {
   if (processor_list) {
     size_t n = processor_list->size();
     for (size_t i = 0; i < n; ++i) {
-      ConfigValuePtr klass = As<ConfigValue>(processor_list->GetAt(i));
-      if (!klass) continue;
-      Processor::Component *c = Processor::Require(klass->str());
+      ConfigValuePtr prescription = As<ConfigValue>(processor_list->GetAt(i));
+      if (!prescription) continue;
+      Ticket ticket(this, "processor", prescription->str());
+      Processor::Component *c = Processor::Require(ticket.klass);
       if (!c) {
-        LOG(ERROR) << "error creating processor: '" << klass->str() << "'";
+        LOG(ERROR) << "error creating processor: '" << ticket.klass << "'";
       }
       else {
-        shared_ptr<Processor> p(c->Create(this));
+        shared_ptr<Processor> p(c->Create(ticket));
         processors_.push_back(p);
       }
     }
@@ -297,14 +299,15 @@ void ConcreteEngine::InitializeComponents() {
   if (segmentor_list) {
     size_t n = segmentor_list->size();
     for (size_t i = 0; i < n; ++i) {
-      ConfigValuePtr klass = As<ConfigValue>(segmentor_list->GetAt(i));
-      if (!klass) continue;
-      Segmentor::Component *c = Segmentor::Require(klass->str());
+      ConfigValuePtr prescription = As<ConfigValue>(segmentor_list->GetAt(i));
+      if (!prescription) continue;
+      Ticket ticket(this, "segmentor", prescription->str());
+      Segmentor::Component *c = Segmentor::Require(ticket.klass);
       if (!c) {
-        LOG(ERROR) << "error creating segmentor: '" << klass->str() << "'";
+        LOG(ERROR) << "error creating segmentor: '" << ticket.klass << "'";
       }
       else {
-        shared_ptr<Segmentor> s(c->Create(this));
+        shared_ptr<Segmentor> s(c->Create(ticket));
         segmentors_.push_back(s);
       }
     }
@@ -314,9 +317,9 @@ void ConcreteEngine::InitializeComponents() {
   if (translator_list) {
     size_t n = translator_list->size();
     for (size_t i = 0; i < n; ++i) {
-      ConfigValuePtr instruction = As<ConfigValue>(translator_list->GetAt(i));
-      if (!instruction) continue;
-      TranslatorTicket ticket(this, instruction->str());
+      ConfigValuePtr prescription = As<ConfigValue>(translator_list->GetAt(i));
+      if (!prescription) continue;
+      Ticket ticket(this, "translator", prescription->str());
       Translator::Component *c = Translator::Require(ticket.klass);
       if (!c) {
         LOG(ERROR) << "error creating translator: '" << ticket.klass << "'";
@@ -332,14 +335,15 @@ void ConcreteEngine::InitializeComponents() {
   if (filter_list) {
     size_t n = filter_list->size();
     for (size_t i = 0; i < n; ++i) {
-      ConfigValuePtr klass = As<ConfigValue>(filter_list->GetAt(i));
-      if (!klass) continue;
-      Filter::Component *c = Filter::Require(klass->str());
+      ConfigValuePtr prescription = As<ConfigValue>(filter_list->GetAt(i));
+      if (!prescription) continue;
+      Ticket ticket(this, "filter", prescription->str());
+      Filter::Component *c = Filter::Require(ticket.klass);
       if (!c) {
-        LOG(ERROR) << "error creating filter: '" << klass->str() << "'";
+        LOG(ERROR) << "error creating filter: '" << ticket.klass << "'";
       }
       else {
-        shared_ptr<Filter> d(c->Create(this));
+        shared_ptr<Filter> d(c->Create(ticket));
         filters_.push_back(d);
       }
     }
@@ -351,7 +355,7 @@ void ConcreteEngine::InitializeComponents() {
       LOG(WARNING) << "shape_formatter not available.";
     }
     else {
-      shared_ptr<Formatter> f(c->Create(this));
+      shared_ptr<Formatter> f(c->Create(Ticket(this)));
       formatters_.push_back(f);
     }
   }
@@ -362,7 +366,7 @@ void ConcreteEngine::InitializeComponents() {
       LOG(WARNING) << "shape_processor not available.";
     }
     else {
-      shared_ptr<Processor> p(c->Create(this));
+      shared_ptr<Processor> p(c->Create(Ticket(this)));
       post_processors_.push_back(p);
     }
   }

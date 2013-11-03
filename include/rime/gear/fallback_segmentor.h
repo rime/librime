@@ -14,12 +14,9 @@ namespace rime {
 
 class FallbackSegmentor : public Segmentor {
  public:
-  explicit FallbackSegmentor(Engine *engine);
+  explicit FallbackSegmentor(const Ticket& ticket);
 
   virtual bool Proceed(Segmentation *segmentation);
-
- private:
-
 };
 
 }  // namespace rime

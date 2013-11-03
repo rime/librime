@@ -17,8 +17,7 @@ class Opencc;
 
 class Simplifier : public Filter {
  public:
-  explicit Simplifier(Engine *engine);
-  ~Simplifier();
+  explicit Simplifier(const Ticket& ticket);
 
   virtual void Apply(CandidateList *recruited,
                      CandidateList *candidates);

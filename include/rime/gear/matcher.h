@@ -14,7 +14,7 @@ namespace rime {
 
 class Matcher : public Segmentor {
  public:
-  explicit Matcher(Engine *engine);
+  explicit Matcher(const Ticket& ticket);
 
   virtual bool Proceed(Segmentation *segmentation);
 

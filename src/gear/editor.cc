@@ -16,8 +16,8 @@
 
 namespace rime {
 
-Editor::Editor(Engine* engine, bool auto_commit) : Processor(engine) {
-  engine->context()->set_option("_auto_commit", auto_commit);
+Editor::Editor(const Ticket& ticket, bool auto_commit) : Processor(ticket) {
+  engine_->context()->set_option("_auto_commit", auto_commit);
 }
 
 ProcessResult Editor::ProcessKeyEvent(const KeyEvent &key_event) {
@@ -196,10 +196,10 @@ inline ProcessResult Editor::OnChar(Context* ctx, int ch) {
 
 //
 
-FluencyEditor::FluencyEditor(Engine* engine) : Editor(engine, false) {
+FluencyEditor::FluencyEditor(const Ticket& ticket) : Editor(ticket, false) {
 }
 
-ExpressEditor::ExpressEditor(Engine* engine) : Editor(engine, true) {
+ExpressEditor::ExpressEditor(const Ticket& ticket) : Editor(ticket, true) {
 }
 
 inline void ExpressEditor::OnBackSpace(Context* ctx) {

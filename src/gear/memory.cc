@@ -12,6 +12,7 @@
 #include <rime/engine.h>
 #include <rime/key_event.h>
 #include <rime/schema.h>
+#include <rime/ticket.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/user_dictionary.h>
 #include <rime/gear/memory.h>
@@ -47,10 +48,8 @@ bool CommitEntry::Save() const {
   return false;
 }
 
-Memory::Memory(Engine* engine, const std::string& name_space) {
-  if (!engine) return;
-
-  Ticket ticket(engine->schema(), name_space);
+Memory::Memory(const Ticket& ticket) {
+  if (!ticket.engine) return;
 
   Dictionary::Component *dictionary = Dictionary::Require("dictionary");
   if (dictionary) {
@@ -70,13 +69,13 @@ Memory::Memory(Engine* engine, const std::string& name_space) {
     }
   }
 
-  commit_connection_ = engine->context()->commit_notifier().connect(
+  Context* ctx = ticket.engine->context();
+  commit_connection_ = ctx->commit_notifier().connect(
       boost::bind(&Memory::OnCommit, this, _1));
-  delete_connection_ = engine->context()->delete_notifier().connect(
+  delete_connection_ = ctx->delete_notifier().connect(
       boost::bind(&Memory::OnDeleteEntry, this, _1));
-  unhandled_key_connection_ =
-      engine->context()->unhandled_key_notifier().connect(
-          boost::bind(&Memory::OnUnhandledKey, this, _1, _2));
+  unhandled_key_connection_ = ctx->unhandled_key_notifier().connect(
+      boost::bind(&Memory::OnUnhandledKey, this, _1, _2));
 }
 
 Memory::~Memory() {

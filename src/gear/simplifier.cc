@@ -92,21 +92,24 @@ bool Opencc::ConvertText(const std::string &text,
 
 // Simplifier
 
-Simplifier::Simplifier(Engine *engine) : Filter(engine),
-                                         initialized_(false),
-                                         tips_level_(kTipsNone) {
-  Config *config = engine->schema()->config();
+Simplifier::Simplifier(const Ticket& ticket) : Filter(ticket),
+                                               initialized_(false),
+                                               tips_level_(kTipsNone) {
+  if (name_space_ == "filter") {
+    name_space_ = "simplifier";
+  }
+  Config *config = engine_->schema()->config();
   if (config) {
     std::string tips;
-    if (config->GetString("simplifier/tips", &tips) ||
-        config->GetString("simplifier/tip", &tips)) {
+    if (config->GetString(name_space_ + "/tips", &tips) ||
+        config->GetString(name_space_ + "/tip", &tips)) {
       tips_level_ =
           (tips == "all") ? kTipsAll :
           (tips == "char") ? kTipsChar : kTipsNone;
     }
-    config->GetString("simplifier/option_name", &option_name_);
-    config->GetString("simplifier/opencc_config", &opencc_config_);
-    ConfigListPtr types = config->GetList("simplifier/excluded_types");
+    config->GetString(name_space_ + "/option_name", &option_name_);
+    config->GetString(name_space_ + "/opencc_config", &opencc_config_);
+    ConfigListPtr types = config->GetList(name_space_ + "/excluded_types");
     if (types) {
       for (ConfigList::Iterator it = types->begin(); it != types->end(); ++it) {
         ConfigValuePtr value = As<ConfigValue>(*it);
@@ -121,9 +124,6 @@ Simplifier::Simplifier(Engine *engine) : Filter(engine),
   if (opencc_config_.empty()) {
     opencc_config_ = "zht2zhs.ini";  // default opencc config file
   }
-}
-
-Simplifier::~Simplifier() {
 }
 
 void Simplifier::Initialize() {

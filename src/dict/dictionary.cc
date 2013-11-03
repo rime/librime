@@ -9,6 +9,7 @@
 #include <rime/common.h>
 #include <rime/schema.h>
 #include <rime/service.h>
+#include <rime/ticket.h>
 #include <rime/dict/dictionary.h>
 #include <rime/algo/syllabifier.h>
 

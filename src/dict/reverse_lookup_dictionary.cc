@@ -9,6 +9,7 @@
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <rime/schema.h>
+#include <rime/ticket.h>
 #include <rime/dict/dict_settings.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 

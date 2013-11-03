@@ -16,8 +16,7 @@
 
 namespace rime {
 
-Selector::Selector(Engine *engine) : Processor(engine),
-                                     schema_(engine->schema()) {
+Selector::Selector(const Ticket& ticket) : Processor(ticket) {
 }
 
 ProcessResult Selector::ProcessKeyEvent(const KeyEvent &key_event) {
@@ -55,8 +54,9 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent &key_event) {
       return kAccepted;
   }
   int index = -1;
-  if (!schema_->select_keys().empty()) {
-    size_t pos = schema_->select_keys().find(ch);
+  const std::string& select_keys(engine_->schema()->select_keys());
+  if (!select_keys.empty()) {
+    size_t pos = select_keys.find(ch);
     if (pos != std::string::npos) {
       index = static_cast<int>(pos);
     }

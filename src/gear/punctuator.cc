@@ -73,14 +73,14 @@ ConfigItemPtr PunctConfig::GetPunctDefinition(const std::string key) {
   return punct_definition;
 }
 
-Punctuator::Punctuator(Engine *engine) : Processor(engine),
-                                         use_space_(false),
-                                         oddness_(0) {
-  Config *config = engine->schema()->config();
+Punctuator::Punctuator(const Ticket& ticket) : Processor(ticket),
+                                               use_space_(false),
+                                               oddness_(0) {
+  Config *config = engine_->schema()->config();
   if (config) {
     config->GetBool("punctuator/use_space", &use_space_);
   }
-  config_.LoadConfig(engine);
+  config_.LoadConfig(engine_);
 }
 
 ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent &key_event) {
@@ -178,8 +178,8 @@ bool Punctuator::PairPunct(const ConfigItemPtr &definition) {
   return false;
 }
 
-PunctSegmentor::PunctSegmentor(Engine *engine) : Segmentor(engine) {
-  config_.LoadConfig(engine);
+PunctSegmentor::PunctSegmentor(const Ticket& ticket) : Segmentor(ticket) {
+  config_.LoadConfig(engine_);
 }
 
 bool PunctSegmentor::Proceed(Segmentation *segmentation) {
@@ -207,7 +207,7 @@ bool PunctSegmentor::Proceed(Segmentation *segmentation) {
   return false;  // exclusive
 }
 
-PunctTranslator::PunctTranslator(const TranslatorTicket& ticket)
+PunctTranslator::PunctTranslator(const Ticket& ticket)
     : Translator(ticket) {
   const bool load_symbols = true;
   config_.LoadConfig(engine_, load_symbols);

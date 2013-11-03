@@ -17,7 +17,7 @@ namespace rime {
 
 class ChordComposer : public Processor {
  public:
-  ChordComposer(Engine *engine);
+  ChordComposer(const Ticket& ticket);
 
   virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
 

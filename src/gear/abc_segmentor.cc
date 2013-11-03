@@ -7,7 +7,6 @@
 #include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/config.h>
-#include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/segmentation.h>
 #include <rime/gear/abc_segmentor.h>
@@ -16,11 +15,11 @@ static const char kRimeAlphabet[] = "zyxwvutsrqponmlkjihgfedcba";
 
 namespace rime {
 
-AbcSegmentor::AbcSegmentor(Engine *engine)
-    : Segmentor(engine), alphabet_(kRimeAlphabet) {
+AbcSegmentor::AbcSegmentor(const Ticket& ticket)
+    : Segmentor(ticket), alphabet_(kRimeAlphabet) {
   // read schema settings
-  Config *config = engine->schema()->config();
-  if (config) {
+  if (!ticket.schema) return;
+  if (Config *config = ticket.schema->config()) {
     config->GetString("speller/alphabet", &alphabet_);
     config->GetString("speller/delimiter", &delimiter_);
     ConfigListPtr extra_tags = config->GetList("abc_segmentor/extra_tags");
