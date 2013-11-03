@@ -87,10 +87,13 @@ int ReverseLookupTranslation::Compare(shared_ptr<Translation> other,
 }
 
 ReverseLookupTranslator::ReverseLookupTranslator(const Ticket& ticket)
-    : Translator(ticket), initialized_(false) {
+    : Translator(ticket), tag_("reverse_lookup"), initialized_(false) {
   if (ticket.name_space == "translator") {
     name_space_ = "reverse_lookup";
   }
+  if (!ticket.schema) return;
+  Config* config = ticket.schema->config();
+  config->GetString(name_space_ + "/tag", &tag_);
 }
 
 void ReverseLookupTranslator::Initialize() {
@@ -128,7 +131,7 @@ void ReverseLookupTranslator::Initialize() {
 shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
                                                        const Segment &segment,
                                                        std::string* prompt) {
-  if (!segment.HasTag("reverse_lookup"))
+  if (!segment.HasTag(tag_))
     return shared_ptr<Translation>();
   if (!initialized_) Initialize();  // load reverse dict at first use
   if (!dict_ || !dict_->loaded())

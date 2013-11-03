@@ -135,7 +135,7 @@ shared_ptr<Translation> ScriptTranslator::Query(const std::string &input,
                                                 std::string* prompt) {
   if (!dict_ || !dict_->loaded())
     return shared_ptr<Translation>();
-  if (!segment.HasTag("abc"))
+  if (!segment.HasTag(tag_))
     return shared_ptr<Translation>();
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";

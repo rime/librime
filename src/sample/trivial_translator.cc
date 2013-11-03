@@ -34,7 +34,7 @@ TrivialTranslator::TrivialTranslator(const Ticket& ticket)
 shared_ptr<Translation> TrivialTranslator::Query(const std::string &input,
                                                  const Segment &segment,
                                                  std::string* prompt) {
-  if (!segment.HasTag("abc"))
+  if (!segment.HasTag(tag_))
     return shared_ptr<Translation>();
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
@@ -44,7 +44,7 @@ shared_ptr<Translation> TrivialTranslator::Query(const std::string &input,
   }
   shared_ptr<Candidate> candidate =
       boost::make_shared<SimpleCandidate>(
-          "abc",
+          "trivial",
           segment.start,
           segment.end,
           output,

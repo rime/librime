@@ -133,13 +133,16 @@ bool UniqueFilter::AlreadyHas(const std::string& text) const {
 // TranslatorOptions
 
 TranslatorOptions::TranslatorOptions(const Ticket& ticket)
-    : enable_completion_(true),
+    : tag_("abc"),
+      enable_completion_(true),
       strict_spelling_(false),
       initial_quality_(0.0) {
   if (!ticket.schema) return;
   Config *config = ticket.schema->config();
   if (config) {
-    config->GetString("speller/delimiter", &delimiters_);
+    config->GetString(ticket.name_space + "/delimiter", &delimiters_) ||
+        config->GetString("speller/delimiter", &delimiters_);
+    config->GetString(ticket.name_space + "/tag", &tag_);
     config->GetBool(ticket.name_space + "/enable_completion",
                     &enable_completion_);
     config->GetBool(ticket.name_space + "/strict_spelling",
