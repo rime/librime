@@ -21,8 +21,14 @@ switches:
     states: [ 中文, 西文 ]
   - name: full_shape
     states: [ 半角, 全角 ]
-  - name: simplification
-    states: [ 漢字, 汉字 ]
+#  - name: simplification
+#    states: [ 漢字, 汉字 ]
+  - options: [ zh_trad, zh_tw, zh_simp ]
+    states:
+      - 字形 → 傳統漢字
+      - 字形 → 臺灣正體
+      - 字形 → 簡化字
+    reset: 0
 
 engine:
   processors:
@@ -50,7 +56,8 @@ engine:
     - table_translator@cangjie
     - script_translator@pinyin
   filters:
-    - simplifier
+    - simplifier@zh_simp
+    - simplifier@zh_tw
     - uniquifier
 
 speller:
@@ -112,6 +119,14 @@ reverse_lookup:
     - "xlit|abcdefghijklmnopqrstuvwxyz|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符|"
   comment_format:
     - xform/([nl])v/$1ü/
+
+zh_simp:
+  option_name: zh_simp
+  tips: all
+
+zh_tw:
+  option_name: zh_tw
+  opencc_config: zht2zhtw_v.ini
 
 punctuator:
   import_preset: default

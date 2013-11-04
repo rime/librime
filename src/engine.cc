@@ -376,19 +376,27 @@ void ConcreteEngine::InitializeOptions() {
   if (!schema_) return;
   // reset custom switches
   Config *config = schema_->config();
-  if (!config) return;
-  ConfigListPtr switches = config->GetList("switches");
-  if (switches) {
+  if (ConfigListPtr switches = config->GetList("switches")) {
     for (size_t i = 0; i < switches->size(); ++i) {
       ConfigMapPtr item = As<ConfigMap>(switches->GetAt(i));
       if (!item) continue;
-      ConfigValuePtr name_property = item->GetValue("name");
-      if (!name_property) continue;
-      ConfigValuePtr reset_property = item->GetValue("reset");
-      if (!reset_property) continue;
+      ConfigValuePtr reset_value = item->GetValue("reset");
+      if (!reset_value) continue;
       int value = 0;
-      reset_property->GetInt(&value);
-      context_->set_option(name_property->str(), (value != 0));
+      reset_value->GetInt(&value);
+      if (ConfigValuePtr option_name = item->GetValue("name")) {
+        // toggle
+        context_->set_option(option_name->str(), (value != 0));
+      }
+      else if (ConfigListPtr options = As<ConfigList>(item->Get("options"))) {
+        // radio
+        for (size_t i = 0; i < options->size(); ++i) {
+          if (ConfigValuePtr option_name = options->GetValueAt(i)) {
+            context_->set_option(option_name->str(),
+                                 static_cast<int>(i) == value);
+          }
+        }
+      }
     }
   }
 }
