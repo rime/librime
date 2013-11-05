@@ -117,13 +117,9 @@ ReverseLookupDictionary* ReverseLookupDictionaryComponent::Create(
     const Ticket& ticket) {
   if (!ticket.schema) return NULL;
   Config *config = ticket.schema->config();
-  std::string reverse_lookup;
-  if (!config->GetString(ticket.name_space + "/dictionary", &reverse_lookup)) {
-    // reverse lookup not enabled
-    return NULL;
-  }
   std::string dict_name;
-  if (!config->GetString("translator/dictionary", &dict_name)) {
+  if (!config->GetString(ticket.name_space + "/dictionary",
+                         &dict_name)) {
     // missing!
     return NULL;
   }

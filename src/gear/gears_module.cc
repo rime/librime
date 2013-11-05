@@ -27,6 +27,7 @@
 #include <rime/gear/simplifier.h>
 #include <rime/gear/shape.h>
 #include <rime/gear/speller.h>
+#include <rime/gear/reverse_lookup_filter.h>
 #include <rime/gear/reverse_lookup_translator.h>
 #include <rime/gear/schema_list_translator.h>
 #include <rime/gear/switch_translator.h>
@@ -74,6 +75,7 @@ static void rime_gears_initialize() {
   // filters
   r.Register("simplifier", new Component<Simplifier>);
   r.Register("uniquifier", new Component<Uniquifier>);
+  r.Register("reverse_lookup_filter", new Component<ReverseLookupFilter>);
 
   // formatters
   r.Register("shape_formatter", new Component<ShapeFormatter>);

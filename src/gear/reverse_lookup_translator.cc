@@ -123,7 +123,11 @@ void ReverseLookupTranslator::Initialize() {
   ReverseLookupDictionary::Component *rev_component =
       ReverseLookupDictionary::Require("reverse_lookup_dictionary");
   if (!rev_component) return;
-  rev_dict_.reset(rev_component->Create(ticket));
+  // lookup target defaults to "translator/dictionary"
+  std::string rev_target("translator");
+  config->GetString(name_space_ + "/target", &rev_target);
+  Ticket rev_ticket(engine_, rev_target);
+  rev_dict_.reset(rev_component->Create(rev_ticket));
   if (rev_dict_)
     rev_dict_->Load();
 }

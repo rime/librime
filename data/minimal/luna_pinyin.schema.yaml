@@ -56,6 +56,7 @@ engine:
     - table_translator@cangjie
     - script_translator@pinyin
   filters:
+    - reverse_lookup_filter@cangjie_lookup
     - simplifier@zh_simp
     - simplifier@zh_tw
     - uniquifier
@@ -108,6 +109,11 @@ pinyin:
   tips: 〔拼音〕
   preedit_format:
     - xform/([nl])v/$1ü/
+
+cangjie_lookup:
+  dictionary: cangjie5
+  comment_format:
+    - "xlit|abcdefghijklmnopqrstuvwxyz ~|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符、～|"
 
 reverse_lookup:
   dictionary: cangjie5
