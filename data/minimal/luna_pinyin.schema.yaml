@@ -4,7 +4,7 @@
 schema:
   schema_id: luna_pinyin
   name: 朙月拼音
-  version: "0.12.test"
+  version: "0.13.test"
   author:
     - 佛振 <chen.sst@gmail.com>
   description: |
@@ -100,6 +100,8 @@ cangjie:
   closing_tips: 〔拼音〕
   preedit_format:
     - "xlit|abcdefghijklmnopqrstuvwxyz|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符|"
+  comment_format:
+    - "xlit|abcdefghijklmnopqrstuvwxyz~|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符～|"
 
 pinyin:
   tag: pinyin
@@ -111,6 +113,7 @@ pinyin:
     - xform/([nl])v/$1ü/
 
 cangjie_lookup:
+  tags: [ pinyin ]
   dictionary: cangjie5
   comment_format:
     - "xlit|abcdefghijklmnopqrstuvwxyz ~|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符、～|"

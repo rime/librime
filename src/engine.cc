@@ -41,7 +41,9 @@ class ConcreteEngine : public Engine {
   void Compose(Context *ctx);
   void CalculateSegmentation(Composition *comp);
   void TranslateSegments(Composition *comp);
-  void FilterCandidates(CandidateList *recruited, CandidateList *candidates);
+  void FilterCandidates(Segment* segment,
+                        CandidateList *recruited,
+                        CandidateList *candidates);
   void FormatText(std::string* text);
   void OnCommit(Context *ctx);
   void OnSelect(Context *ctx);
@@ -170,16 +172,17 @@ void ConcreteEngine::CalculateSegmentation(Composition *comp) {
 }
 
 void ConcreteEngine::TranslateSegments(Composition *comp) {
-  Menu::CandidateFilter filter(boost::bind(&ConcreteEngine::FilterCandidates,
-                                           this, _1, _2));
-  BOOST_FOREACH(Segment &segment, *comp) {
+  BOOST_FOREACH(Segment& segment, *comp) {
     if (segment.status >= Segment::kGuess)
       continue;
     size_t len = segment.end - segment.start;
     if (len == 0) continue;
     std::string input(comp->input().substr(segment.start, len));
     DLOG(INFO) << "translating segment: " << input;
-    shared_ptr<Menu> menu = boost::make_shared<Menu>(filter);
+    Menu::CandidateFilter cand_filter(
+        boost::bind(&ConcreteEngine::FilterCandidates,
+                    this, &segment, _1, _2));
+    shared_ptr<Menu> menu = boost::make_shared<Menu>(cand_filter);
     BOOST_FOREACH(shared_ptr<Translator>& translator, translators_) {
       shared_ptr<Translation> translation =
           translator->Query(input, segment, &segment.prompt);
@@ -197,12 +200,15 @@ void ConcreteEngine::TranslateSegments(Composition *comp) {
   }
 }
 
-void ConcreteEngine::FilterCandidates(CandidateList *recruited,
-                                      CandidateList *candidates) {
+void ConcreteEngine::FilterCandidates(Segment* segment,
+                                      CandidateList* recruited,
+                                      CandidateList* candidates) {
   if (filters_.empty()) return;
   DLOG(INFO) << "applying filters.";
   BOOST_FOREACH(shared_ptr<Filter> filter, filters_) {
-    filter->Apply(recruited, candidates);
+    if (filter->AppliesToSegment(segment)) {
+      filter->Apply(recruited, candidates);
+    }
   }
 }
 

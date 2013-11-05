@@ -93,6 +93,7 @@ bool Opencc::ConvertText(const std::string &text,
 // Simplifier
 
 Simplifier::Simplifier(const Ticket& ticket) : Filter(ticket),
+                                               TagMatching(ticket),
                                                initialized_(false),
                                                tips_level_(kTipsNone) {
   if (name_space_ == "filter") {

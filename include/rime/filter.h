@@ -16,6 +16,7 @@
 namespace rime {
 
 class Engine;
+struct Segment;
 
 class Filter : public Class<Filter, const Ticket&> {
  public:
@@ -25,6 +26,10 @@ class Filter : public Class<Filter, const Ticket&> {
 
   virtual void Apply(CandidateList *recruited,
                      CandidateList *candidates) = 0;
+
+  virtual bool AppliesToSegment(Segment* segment) {
+    return true;
+  }
 
  protected:
   Engine *engine_;

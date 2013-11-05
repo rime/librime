@@ -10,17 +10,22 @@
 #include <rime/common.h>
 #include <rime/filter.h>
 #include <rime/algo/algebra.h>
+#include <rime/gear/filter_commons.h>
 
 namespace rime {
 
 class ReverseLookupDictionary;
 
-class ReverseLookupFilter : public Filter {
+class ReverseLookupFilter : public Filter, TagMatching {
  public:
   explicit ReverseLookupFilter(const Ticket& ticket);
 
   virtual void Apply(CandidateList *recruited,
                      CandidateList *candidates);
+
+  virtual bool AppliesToSegment(Segment* segment) {
+    return TagsMatch(segment);
+  }
 
  protected:
   void Initialize();

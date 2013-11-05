@@ -15,7 +15,10 @@
 namespace rime {
 
 ReverseLookupFilter::ReverseLookupFilter(const Ticket& ticket)
-    : Filter(ticket), initialized_(false), overwrite_comment_(false) {
+    : Filter(ticket),
+      TagMatching(ticket),
+      initialized_(false),
+      overwrite_comment_(false) {
   if (ticket.name_space == "filter") {
     name_space_ = "reverse_lookup";
   }
