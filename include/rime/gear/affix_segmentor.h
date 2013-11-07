@@ -7,6 +7,7 @@
 #ifndef RIME_AFFIX_SEGMENTOR_H_
 #define RIME_AFFIX_SEGMENTOR_H_
 
+#include <set>
 #include <string>
 #include <rime/segmentor.h>
 
@@ -24,6 +25,7 @@ class AffixSegmentor : public Segmentor {
   std::string suffix_;
   std::string tips_;
   std::string closing_tips_;
+  std::set<std::string> extra_tags_;
 };
 
 }  // namespace rime

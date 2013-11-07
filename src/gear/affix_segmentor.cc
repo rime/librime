@@ -5,6 +5,7 @@
 // 2013-10-30 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/schema.h>
 #include <rime/segmentation.h>
@@ -22,6 +23,14 @@ AffixSegmentor::AffixSegmentor(const Ticket& ticket)
     config->GetString(name_space_ + "/suffix", &suffix_);
     config->GetString(name_space_ + "/tips", &tips_);
     config->GetString(name_space_ + "/closing_tips", &closing_tips_);
+    if (ConfigListPtr extra_tags =
+        config->GetList(name_space_ + "/extra_tags")) {
+      for (size_t i = 0; i < extra_tags->size(); ++i) {
+        if (ConfigValuePtr value = extra_tags->GetValueAt(i)) {
+          extra_tags_.insert(value->str());
+        }
+      }
+    }
   }
 }
 
@@ -59,6 +68,9 @@ bool AffixSegmentor::Proceed(Segmentation *segmentation) {
   j += prefix_.length();
   Segment code_segment(j, k);
   code_segment.tags.insert(tag_);
+  BOOST_FOREACH(const std::string& tag, extra_tags_) {
+    code_segment.tags.insert(tag);
+  }
   segmentation->Forward();
   segmentation->AddSegment(code_segment);
   DLOG(INFO) << "prefix+code: " << *segmentation;
