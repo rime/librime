@@ -4,8 +4,8 @@ set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_fla
 project(rime)
 cmake_minimum_required(VERSION 2.8)
 
-set(LIBRIME_VERSION 0.9.9)
-set(LIBRIME_SOVERSION 0)
+set(LIBRIME_VERSION 1.0.0)
+set(LIBRIME_SOVERSION 1)
 
 option(BUILD_SHARED_LIBS "Build Rime as shared library" ON)
 option(BUILD_STATIC "Build Rime using static libraries" OFF)
