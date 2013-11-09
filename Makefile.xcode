@@ -1,5 +1,7 @@
 RIME_ROOT = $(CURDIR)
 THIRDPARTY_PATHS = -DCMAKE_INCLUDE_PATH="$(RIME_ROOT)/thirdparty/include" -DCMAKE_LIBRARY_PATH="$(RIME_ROOT)/thirdparty/lib"
+RIME_COMPILER_OPTIONS = CC=clang CXX=clang++ CXXFLAGS="-stdlib=libc++" LDFLAGS="-stdlib=libc++"
+
 
 .PHONY: all release debug clean thirdparty
 
@@ -16,9 +18,9 @@ debug:
 	cd xdebug; xcodebuild -project rime.xcodeproj -configuration Debug build | grep -v setenv | tee build.log
 
 clean:
-	rm -rf xbuild
-	rm -rf xdebug
-	rm build.log
+	rm -rf xbuild > /dev/null 2>&1 || true
+	rm -rf xdebug > /dev/null 2>&1 || true
+	rm build.log > /dev/null 2>&1 || true
 
 thirdparty:
-	make -f Makefile.thirdparty
+	make -f Makefile.thirdparty $(RIME_COMPILER_OPTIONS)
