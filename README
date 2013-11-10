@@ -6,19 +6,19 @@ license: GPLv3
 project home: http://code.google.com/p/rimeime/
 
 features:
-  - support for shape-based and phonetic-based input methods, including those for Chinese dialects
-  - a selected dictionary in traditional Chinese, powered by opencc for simplified Chinese output
-  - a lightweight and extensible input method framework to create your innovative input schema in YAML syntax
+  - supporting varieties of input methods, either shape-based or phonetic-based, including those for Chinese dialects
+  - a built-in dictionary in traditional Chinese, easily converting to simplified Chinese via opencc
+  - a modulized, extensible input method framework to create innovative input schemata in YAML syntax
   - cross-platform core library in C++, built on top of open-source technologies
-  - OS-specific wrappers working consistently for Windows, Linux and Mac OS
+  - OS-specific wrappers working consistently on Windows, Linux and OS X
 
 build dependencies:
   - cmake>=2.8
-  - libboost>=1.46 (development package)
-  - libglog (development package)
-  - libkyotocabinet (development package)
-  - libopencc (development package)
-  - libyaml-cpp>=0.5 (development package)
+  - libboost>=1.46
+  - libglog
+  - libkyotocabinet
+  - libopencc
+  - libyaml-cpp>=0.5
   - libgtest (optional)
 
 runtime dependencies:
@@ -40,7 +40,16 @@ clients:
 
 related works:
   - brise        : rime schema repository
-  - essay        : vocabulary and language model for rime
   - combo-pinyin : an innovative chord-typing practice
-  - zhung-r10n   : a romanization scheme for Zhungyuan Mandarin
+  - essay        : vocabulary and language model for rime
+  - rimekit      : configuration tools for rime
 
+credits:  # we are grateful to the makers of the following open source libraries
+  - Boost C++ Libraries  (Boost Software License)
+  - darts-clone          (New BSD License)
+  - google-glog          (New BSD License)
+  - Google Test          (New BSD License)
+  - Kyoto Cabinet        (GNU Public License)
+  - opencc               (Apache License 2.0)
+  - UTF8-CPP             (Boost Software License)
+  - yaml-cpp             (MIT License)
