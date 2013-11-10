@@ -13,7 +13,7 @@ namespace rime {
 
 class Uniquifier : public Filter {
  public:
-  explicit Uniquifier(Engine *engine);
+  explicit Uniquifier(const Ticket& ticket);
 
   virtual void Apply(CandidateList *recruited,
                      CandidateList *candidates);

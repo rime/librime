@@ -277,7 +277,6 @@ class Config : public Class<Config, const std::string&>, public ConfigItemRef {
 
 class ConfigComponent : public Config::Component {
  public:
-
   ConfigComponent(const std::string &pattern) : pattern_(pattern) {}
   Config* Create(const std::string &config_id);
   std::string GetConfigFilePath(const std::string &config_id);

@@ -18,7 +18,7 @@ class KeyBindings;
 
 class KeyBinder : public Processor {
  public:
-  KeyBinder(Engine *engine);
+  KeyBinder(const Ticket& ticket);
   virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
 
  protected:

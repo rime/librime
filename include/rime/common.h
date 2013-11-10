@@ -9,11 +9,16 @@
 
 #include <cstdlib>
 #include <string>
+#include <boost/signals2/connection.hpp>
+#include <boost/signals2/signal.hpp>
 #include <boost/smart_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <glog/logging.h>
 
 namespace rime {
+
+using boost::signals2::connection;
+using boost::signals2::signal;
 
 using boost::scoped_ptr;
 using boost::shared_ptr;
@@ -39,9 +44,6 @@ template <class T, class A>
 shared_ptr<T> New(const A& a) {
   return boost::make_shared<T>(a);
 }
-
-void SetupLogging(const char* app_name);
-void RegisterComponents();
 
 }  // namespace rime
 

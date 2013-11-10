@@ -138,14 +138,16 @@ class UniqueFilter : public Translation {
 
 //
 
-class Engine;
+struct Ticket;
 
 class TranslatorOptions {
  public:
-  TranslatorOptions(Engine* engine, const std::string& name_space);
+  TranslatorOptions(const Ticket& ticket);
   bool IsUserDictDisabledFor(const std::string& input) const;
 
   const std::string& delimiters() const { return delimiters_; }
+  const std::string& tag() const { return tag_; }
+  void set_tag(const std::string& tag) { tag_ = tag; }
   bool enable_completion() const { return enable_completion_; }
   void set_enable_completion(bool enabled) { enable_completion_ = enabled; }
   bool strict_spelling() const { return strict_spelling_; }
@@ -157,6 +159,7 @@ class TranslatorOptions {
 
  protected:
   std::string delimiters_;
+  std::string tag_;
   bool enable_completion_;
   bool strict_spelling_;
   double initial_quality_;

@@ -15,8 +15,8 @@ namespace rime {
 
 class Navigator : public Processor {
  public:
-  Navigator(Engine *engine) : Processor(engine) {}
-  virtual ~Navigator() {}
+  Navigator(const Ticket& ticket) : Processor(ticket) {}
+
   virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
 
  private:

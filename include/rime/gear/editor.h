@@ -20,7 +20,7 @@ class Editor : public Processor {
   typedef void Handler(Context* ctx);
   typedef ProcessResult CharHandler(Context* ctx, int ch);
 
-  Editor(Engine* engine, bool auto_commit);
+  Editor(const Ticket& ticket, bool auto_commit);
   ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
 
   virtual Handler OnSpace;
@@ -51,12 +51,12 @@ class Editor : public Processor {
 
 class FluencyEditor : public Editor {
  public:
-  FluencyEditor(Engine* engine);
+  FluencyEditor(const Ticket& ticket);
 };
 
 class ExpressEditor : public Editor {
  public:
-  ExpressEditor(Engine* engine);
+  ExpressEditor(const Ticket& ticket);
   Handler OnBackSpace;
   Handler OnReturn;
   CharHandler OnChar;

@@ -4,13 +4,14 @@ set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_fla
 project(rime)
 cmake_minimum_required(VERSION 2.8)
 
-set(LIBRIME_VERSION 0.9.9)
-set(LIBRIME_SOVERSION 0)
+set(LIBRIME_VERSION 1.0.0)
+set(LIBRIME_SOVERSION 1)
 
 option(BUILD_SHARED_LIBS "Build Rime as shared library" ON)
 option(BUILD_STATIC "Build Rime using static libraries" OFF)
 option(BUILD_DATA "Build data for Rime" OFF)
 option(BUILD_TEST "Build gtest framwork for Rime" OFF)
+option(BUILD_SEPARATE_LIBS "Build a separate rime-gears library" OFF)
 
 SET(RIME_DATA_DIR "/share/rime-data" CACHE STRING "Target directory for Rime data")
 
@@ -125,6 +126,18 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     install(FILES ${supplement_schema} DESTINATION ${pkgdatadir})
   endif(BUILD_DATA)
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+
+if(BUILD_SHARED_LIBS)
+  set(RIME_LIBRARY rime)
+  if(BUILD_SEPARATE_LIBS)
+    set(RIME_GEARS_LIBRARY rime-gears)
+  endif(BUILD_SEPARATE_LIBS)
+else(BUILD_SHARED_LIBS)
+  set(RIME_LIBRARY rime-static)
+  if(BUILD_SEPARATE_LIBS)
+    set(RIME_GEARS_LIBRARY rime-gears-static)
+  endif(BUILD_SEPARATE_LIBS)
+endif(BUILD_SHARED_LIBS)
 
 add_subdirectory(src)
 add_subdirectory(tools)

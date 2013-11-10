@@ -7,8 +7,8 @@
 #include <boost/foreach.hpp>
 #include <utf8.h>
 #include <rime/config.h>
-#include <rime/engine.h>
 #include <rime/schema.h>
+#include <rime/ticket.h>
 #include <rime/gear/translator_commons.h>
 
 namespace rime {
@@ -132,22 +132,29 @@ bool UniqueFilter::AlreadyHas(const std::string& text) const {
 
 // TranslatorOptions
 
-TranslatorOptions::TranslatorOptions(Engine* engine,
-                                     const std::string& name_space)
-    : enable_completion_(true),
+TranslatorOptions::TranslatorOptions(const Ticket& ticket)
+    : tag_("abc"),
+      enable_completion_(true),
       strict_spelling_(false),
       initial_quality_(0.0) {
-  if (!engine) return;
-  Config *config = engine->schema()->config();
+  if (!ticket.schema) return;
+  Config *config = ticket.schema->config();
   if (config) {
-    config->GetString("speller/delimiter", &delimiters_);
-    config->GetBool(name_space + "/enable_completion", &enable_completion_);
-    config->GetBool(name_space + "/strict_spelling", &strict_spelling_);
-    config->GetDouble(name_space + "/initial_quality", &initial_quality_);
-    preedit_formatter_.Load(config->GetList(name_space + "/preedit_format"));
-    comment_formatter_.Load(config->GetList(name_space + "/comment_format"));
+    config->GetString(ticket.name_space + "/delimiter", &delimiters_) ||
+        config->GetString("speller/delimiter", &delimiters_);
+    config->GetString(ticket.name_space + "/tag", &tag_);
+    config->GetBool(ticket.name_space + "/enable_completion",
+                    &enable_completion_);
+    config->GetBool(ticket.name_space + "/strict_spelling",
+                    &strict_spelling_);
+    config->GetDouble(ticket.name_space + "/initial_quality",
+                      &initial_quality_);
+    preedit_formatter_.Load(
+        config->GetList(ticket.name_space + "/preedit_format"));
+    comment_formatter_.Load(
+        config->GetList(ticket.name_space + "/comment_format"));
     user_dict_disabling_patterns_.Load(
-        config->GetList(name_space + "/disable_user_dict_for_patterns"));
+        config->GetList(ticket.name_space + "/disable_user_dict_for_patterns"));
   }
   if (delimiters_.empty()) {
     delimiters_ = " ";

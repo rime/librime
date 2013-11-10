@@ -10,10 +10,12 @@
 
 namespace rime {
 
-scoped_ptr<Registry> Registry::instance_;
-
 void Registry::Register(const std::string &name, ComponentBase *component) {
   LOG(INFO) << "registering component: " << name;
+  if (ComponentBase* existing = Find(name)) {
+    LOG(WARNING) << "replacing previously registered component: " << name;
+    delete existing;
+  }
   map_[name] = component;
 }
 
@@ -40,6 +42,14 @@ ComponentBase* Registry::Find(const std::string &name) {
     return it->second;
   }
   return NULL;
+}
+
+Registry& Registry::instance() {
+  static scoped_ptr<Registry> s_instance;
+  if (!s_instance) {
+    s_instance.reset(new Registry);
+  }
+  return *s_instance;
 }
 
 }  // namespace rime

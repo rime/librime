@@ -13,7 +13,7 @@ namespace rime {
 
 class SchemaListTranslator : public Translator {
  public:
-  SchemaListTranslator(const TranslatorTicket& ticket);
+  SchemaListTranslator(const Ticket& ticket);
 
   virtual shared_ptr<Translation> Query(const std::string &input,
                                         const Segment &segment,

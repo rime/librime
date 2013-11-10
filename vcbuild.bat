@@ -19,10 +19,12 @@ echo.
 echo BOOST_ROOT=%BOOST_ROOT%
 echo.
 
+set build=vcbuild
 set build_boost=0
 set build_thirdparty=0
 set build_librime=0
-set build_test=0
+set build_shared=ON
+set build_test=OFF
 
 if "%1" == "" set build_librime=1
 
@@ -31,9 +33,19 @@ if "%1" == "" goto end_parsing_cmdline_options
 if "%1" == "boost" set build_boost=1
 if "%1" == "thirdparty" set build_thirdparty=1
 if "%1" == "librime" set build_librime=1
+if "%1" == "static" (
+  set build=vcbuild-static
+  set build_librime=1
+  set build_shared=OFF
+)
+if "%1" == "shared" (
+  set build=vcbuild
+  set build_librime=1
+  set build_shared=ON
+)
 if "%1" == "test" (
   set build_librime=1
-  set build_test=1
+  set build_test=ON
 )
 shift
 goto parse_cmdline_options
@@ -139,14 +151,10 @@ rem set CMAKE_GENERATOR="Eclipse CDT4 - MinGW Makefiles"
 rem set CMAKE_GENERATOR="Visual Studio 9 2008"
 set CMAKE_GENERATOR="Visual Studio 10"
 
-set BUILD_DIR=%RIME_ROOT%\vcbuild
+set BUILD_DIR=%RIME_ROOT%\%build%
 if not exist %BUILD_DIR% mkdir %BUILD_DIR%
 
-set RIME_CMAKE_FLAGS=-DBUILD_STATIC=ON -DBUILD_SHARED_LIBS=OFF
-
-if %build_test% == 1 (
-  set RIME_CMAKE_FLAGS=%RIME_CMAKE_FLAGS% -DBUILD_TEST=ON
-)
+set RIME_CMAKE_FLAGS=-DBUILD_STATIC=ON -DBUILD_SHARED_LIBS=%build_shared% -DBUILD_TEST=%build_test%
 
 cd %BUILD_DIR%
 echo cmake -G %CMAKE_GENERATOR% %RIME_CMAKE_FLAGS% %RIME_ROOT%
@@ -155,8 +163,8 @@ if %ERRORLEVEL% NEQ 0 goto ERROR
 
 echo.
 echo building librime.
-if exist vcbuild.log del vcbuild.log
-devenv rime.sln /Build Release /Out vcbuild.log
+if exist %build%.log del %build%.log
+devenv rime.sln /Build Release /Out %build%.log
 if %ERRORLEVEL% NEQ 0 goto ERROR
 
 echo.

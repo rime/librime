@@ -10,21 +10,25 @@
 #include <set>
 #include <string>
 #include <rime/filter.h>
+#include <rime/gear/filter_commons.h>
 
 namespace rime {
 
 class Opencc;
 
-class Simplifier : public Filter {
+class Simplifier : public Filter, TagMatching {
  public:
-  explicit Simplifier(Engine *engine);
-  ~Simplifier();
+  explicit Simplifier(const Ticket& ticket);
 
   virtual void Apply(CandidateList *recruited,
                      CandidateList *candidates);
 
+  virtual bool AppliesToSegment(Segment* segment) {
+    return TagsMatch(segment);
+  }
+
  protected:
-  typedef enum { kTipNone, kTipChar, kTipAll } TipLevel;
+  typedef enum { kTipsNone, kTipsChar, kTipsAll } TipsLevel;
 
   void Initialize();
   bool Convert(const shared_ptr<Candidate> &original,
@@ -32,7 +36,7 @@ class Simplifier : public Filter {
 
   bool initialized_;
   scoped_ptr<Opencc> opencc_;
-  TipLevel tip_level_;
+  TipsLevel tips_level_;
   std::string option_name_;
   std::string opencc_config_;
   std::set<std::string> excluded_types_;

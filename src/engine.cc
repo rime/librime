@@ -21,6 +21,7 @@
 #include <rime/schema.h>
 #include <rime/segmentation.h>
 #include <rime/segmentor.h>
+#include <rime/ticket.h>
 #include <rime/translation.h>
 #include <rime/translator.h>
 
@@ -40,7 +41,9 @@ class ConcreteEngine : public Engine {
   void Compose(Context *ctx);
   void CalculateSegmentation(Composition *comp);
   void TranslateSegments(Composition *comp);
-  void FilterCandidates(CandidateList *recruited, CandidateList *candidates);
+  void FilterCandidates(Segment* segment,
+                        CandidateList *recruited,
+                        CandidateList *candidates);
   void FormatText(std::string* text);
   void OnCommit(Context *ctx);
   void OnSelect(Context *ctx);
@@ -169,16 +172,17 @@ void ConcreteEngine::CalculateSegmentation(Composition *comp) {
 }
 
 void ConcreteEngine::TranslateSegments(Composition *comp) {
-  Menu::CandidateFilter filter(boost::bind(&ConcreteEngine::FilterCandidates,
-                                           this, _1, _2));
-  BOOST_FOREACH(Segment &segment, *comp) {
+  BOOST_FOREACH(Segment& segment, *comp) {
     if (segment.status >= Segment::kGuess)
       continue;
     size_t len = segment.end - segment.start;
     if (len == 0) continue;
     std::string input(comp->input().substr(segment.start, len));
     DLOG(INFO) << "translating segment: " << input;
-    shared_ptr<Menu> menu = boost::make_shared<Menu>(filter);
+    Menu::CandidateFilter cand_filter(
+        boost::bind(&ConcreteEngine::FilterCandidates,
+                    this, &segment, _1, _2));
+    shared_ptr<Menu> menu = boost::make_shared<Menu>(cand_filter);
     BOOST_FOREACH(shared_ptr<Translator>& translator, translators_) {
       shared_ptr<Translation> translation =
           translator->Query(input, segment, &segment.prompt);
@@ -196,12 +200,15 @@ void ConcreteEngine::TranslateSegments(Composition *comp) {
   }
 }
 
-void ConcreteEngine::FilterCandidates(CandidateList *recruited,
-                                      CandidateList *candidates) {
+void ConcreteEngine::FilterCandidates(Segment* segment,
+                                      CandidateList* recruited,
+                                      CandidateList* candidates) {
   if (filters_.empty()) return;
   DLOG(INFO) << "applying filters.";
   BOOST_FOREACH(shared_ptr<Filter> filter, filters_) {
-    filter->Apply(recruited, candidates);
+    if (filter->AppliesToSegment(segment)) {
+      filter->Apply(recruited, candidates);
+    }
   }
 }
 
@@ -280,14 +287,15 @@ void ConcreteEngine::InitializeComponents() {
   if (processor_list) {
     size_t n = processor_list->size();
     for (size_t i = 0; i < n; ++i) {
-      ConfigValuePtr klass = As<ConfigValue>(processor_list->GetAt(i));
-      if (!klass) continue;
-      Processor::Component *c = Processor::Require(klass->str());
+      ConfigValuePtr prescription = As<ConfigValue>(processor_list->GetAt(i));
+      if (!prescription) continue;
+      Ticket ticket(this, "processor", prescription->str());
+      Processor::Component *c = Processor::Require(ticket.klass);
       if (!c) {
-        LOG(ERROR) << "error creating processor: '" << klass->str() << "'";
+        LOG(ERROR) << "error creating processor: '" << ticket.klass << "'";
       }
       else {
-        shared_ptr<Processor> p(c->Create(this));
+        shared_ptr<Processor> p(c->Create(ticket));
         processors_.push_back(p);
       }
     }
@@ -297,14 +305,15 @@ void ConcreteEngine::InitializeComponents() {
   if (segmentor_list) {
     size_t n = segmentor_list->size();
     for (size_t i = 0; i < n; ++i) {
-      ConfigValuePtr klass = As<ConfigValue>(segmentor_list->GetAt(i));
-      if (!klass) continue;
-      Segmentor::Component *c = Segmentor::Require(klass->str());
+      ConfigValuePtr prescription = As<ConfigValue>(segmentor_list->GetAt(i));
+      if (!prescription) continue;
+      Ticket ticket(this, "segmentor", prescription->str());
+      Segmentor::Component *c = Segmentor::Require(ticket.klass);
       if (!c) {
-        LOG(ERROR) << "error creating segmentor: '" << klass->str() << "'";
+        LOG(ERROR) << "error creating segmentor: '" << ticket.klass << "'";
       }
       else {
-        shared_ptr<Segmentor> s(c->Create(this));
+        shared_ptr<Segmentor> s(c->Create(ticket));
         segmentors_.push_back(s);
       }
     }
@@ -314,9 +323,9 @@ void ConcreteEngine::InitializeComponents() {
   if (translator_list) {
     size_t n = translator_list->size();
     for (size_t i = 0; i < n; ++i) {
-      ConfigValuePtr instruction = As<ConfigValue>(translator_list->GetAt(i));
-      if (!instruction) continue;
-      TranslatorTicket ticket(this, instruction->str());
+      ConfigValuePtr prescription = As<ConfigValue>(translator_list->GetAt(i));
+      if (!prescription) continue;
+      Ticket ticket(this, "translator", prescription->str());
       Translator::Component *c = Translator::Require(ticket.klass);
       if (!c) {
         LOG(ERROR) << "error creating translator: '" << ticket.klass << "'";
@@ -332,14 +341,15 @@ void ConcreteEngine::InitializeComponents() {
   if (filter_list) {
     size_t n = filter_list->size();
     for (size_t i = 0; i < n; ++i) {
-      ConfigValuePtr klass = As<ConfigValue>(filter_list->GetAt(i));
-      if (!klass) continue;
-      Filter::Component *c = Filter::Require(klass->str());
+      ConfigValuePtr prescription = As<ConfigValue>(filter_list->GetAt(i));
+      if (!prescription) continue;
+      Ticket ticket(this, "filter", prescription->str());
+      Filter::Component *c = Filter::Require(ticket.klass);
       if (!c) {
-        LOG(ERROR) << "error creating filter: '" << klass->str() << "'";
+        LOG(ERROR) << "error creating filter: '" << ticket.klass << "'";
       }
       else {
-        shared_ptr<Filter> d(c->Create(this));
+        shared_ptr<Filter> d(c->Create(ticket));
         filters_.push_back(d);
       }
     }
@@ -351,7 +361,7 @@ void ConcreteEngine::InitializeComponents() {
       LOG(WARNING) << "shape_formatter not available.";
     }
     else {
-      shared_ptr<Formatter> f(c->Create(this));
+      shared_ptr<Formatter> f(c->Create(Ticket(this)));
       formatters_.push_back(f);
     }
   }
@@ -362,7 +372,7 @@ void ConcreteEngine::InitializeComponents() {
       LOG(WARNING) << "shape_processor not available.";
     }
     else {
-      shared_ptr<Processor> p(c->Create(this));
+      shared_ptr<Processor> p(c->Create(Ticket(this)));
       post_processors_.push_back(p);
     }
   }
@@ -372,19 +382,27 @@ void ConcreteEngine::InitializeOptions() {
   if (!schema_) return;
   // reset custom switches
   Config *config = schema_->config();
-  if (!config) return;
-  ConfigListPtr switches = config->GetList("switches");
-  if (switches) {
+  if (ConfigListPtr switches = config->GetList("switches")) {
     for (size_t i = 0; i < switches->size(); ++i) {
       ConfigMapPtr item = As<ConfigMap>(switches->GetAt(i));
       if (!item) continue;
-      ConfigValuePtr name_property = item->GetValue("name");
-      if (!name_property) continue;
-      ConfigValuePtr reset_property = item->GetValue("reset");
-      if (!reset_property) continue;
+      ConfigValuePtr reset_value = item->GetValue("reset");
+      if (!reset_value) continue;
       int value = 0;
-      reset_property->GetInt(&value);
-      context_->set_option(name_property->str(), (value != 0));
+      reset_value->GetInt(&value);
+      if (ConfigValuePtr option_name = item->GetValue("name")) {
+        // toggle
+        context_->set_option(option_name->str(), (value != 0));
+      }
+      else if (ConfigListPtr options = As<ConfigList>(item->Get("options"))) {
+        // radio
+        for (size_t i = 0; i < options->size(); ++i) {
+          if (ConfigValuePtr option_name = options->GetValueAt(i)) {
+            context_->set_option(option_name->str(),
+                                 static_cast<int>(i) == value);
+          }
+        }
+      }
     }
   }
 }

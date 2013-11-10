@@ -76,16 +76,12 @@ class Service {
               const std::string& message_value);
 
   Deployer& deployer() { return deployer_; }
-  bool disabled() { return !started_ || deployer_.IsMaintenancing(); }
+  bool disabled() { return !started_ || deployer_.IsMaintenanceMode(); }
 
-  static Service& instance() {
-    if (!instance_) instance_.reset(new Service);
-    return *instance_;
-  }
+  static Service& instance();
 
  private:
   Service();
-  static scoped_ptr<Service> instance_;
 
   typedef std::map<SessionId, shared_ptr<Session> > SessionMap;
   SessionMap sessions_;

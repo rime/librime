@@ -1,18 +1,19 @@
 ﻿// encoding: utf-8
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-05-02 Wensong He <snowhws@gmail.com>
+// 2013-10-20 GONG Chen <chen.sst@gmail.com>
 //
 
 #include <rime/candidate.h>
 #include <rime/segmentation.h>
-#include <rime/gear/trivial_translator.h>
+#include <rime/sample/trivial_translator.h>
 
 namespace rime {
 
-TrivialTranslator::TrivialTranslator(const TranslatorTicket& ticket)
+TrivialTranslator::TrivialTranslator(const Ticket& ticket)
     : Translator(ticket) {
   dictionary_["yi"] = "\xe4\xb8\x80";  // 一
   dictionary_["er"] = "\xe4\xba\x8c";  // 二
@@ -33,16 +34,17 @@ TrivialTranslator::TrivialTranslator(const TranslatorTicket& ticket)
 shared_ptr<Translation> TrivialTranslator::Query(const std::string &input,
                                                  const Segment &segment,
                                                  std::string* prompt) {
-  if (!segment.HasTag("abc"))
+  if (!segment.HasTag(tag_))
     return shared_ptr<Translation>();
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
   std::string output(Translate(input));
-  if (output.empty())
+  if (output.empty()) {
     return shared_ptr<Translation>();
+  }
   shared_ptr<Candidate> candidate =
       boost::make_shared<SimpleCandidate>(
-          "abc",
+          "trivial",
           segment.start,
           segment.end,
           output,

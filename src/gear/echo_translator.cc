@@ -28,7 +28,7 @@ class EchoTranslation : public UniqueTranslation {
   }
 };
 
-EchoTranslator::EchoTranslator(const TranslatorTicket& ticket)
+EchoTranslator::EchoTranslator(const Ticket& ticket)
     : Translator(ticket) {
 }
 

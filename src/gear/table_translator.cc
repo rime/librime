@@ -206,10 +206,10 @@ bool LazyTableTranslation::FetchMoreTableEntries() {
 
 // TableTranslator
 
-TableTranslator::TableTranslator(const TranslatorTicket& ticket)
+TableTranslator::TableTranslator(const Ticket& ticket)
     : Translator(ticket),
-      Memory(engine_, name_space_),
-      TranslatorOptions(engine_, name_space_),
+      Memory(ticket),
+      TranslatorOptions(ticket),
       enable_charset_filter_(false),
       enable_encoder_(false),
       enable_sentence_(true),
@@ -230,7 +230,6 @@ TableTranslator::TableTranslator(const TranslatorTicket& ticket)
   }
   if (enable_encoder_ && user_dict_) {
     encoder_.reset(new UnityTableEncoder(user_dict_.get()));
-    Ticket ticket(engine_->schema(), name_space_);
     encoder_->Load(ticket);
   }
 }
@@ -238,7 +237,7 @@ TableTranslator::TableTranslator(const TranslatorTicket& ticket)
 shared_ptr<Translation> TableTranslator::Query(const std::string &input,
                                                const Segment &segment,
                                                std::string* prompt) {
-  if (!segment.HasTag("abc"))
+  if (!segment.HasTag(tag_))
     return shared_ptr<Translation>();
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
@@ -380,14 +379,14 @@ class SentenceTranslation : public Translation {
 
 class SentenceSyllabification : public Syllabification {
  public:
-  SentenceSyllabification(shared_ptr<Sentence> sentence)
+  SentenceSyllabification(weak_ptr<Sentence> sentence)
       : syllabified_(sentence) {
   }
   virtual size_t PreviousStop(size_t caret_pos) const;
   virtual size_t NextStop(size_t caret_pos) const;
 
  protected:
-  shared_ptr<Sentence> syllabified_;
+  weak_ptr<Sentence> syllabified_;
 };
 
 SentenceTranslation::SentenceTranslation(TableTranslator* translator,
@@ -510,9 +509,10 @@ bool SentenceTranslation::PreferUserPhrase() const {
 }
 
 size_t SentenceSyllabification::PreviousStop(size_t caret_pos) const {
-  if (syllabified_) {
-    size_t stop = syllabified_->start();
-    BOOST_FOREACH(size_t len, syllabified_->syllable_lengths()) {
+  shared_ptr<Sentence> sentence = syllabified_.lock();
+  if (sentence) {
+    size_t stop = sentence->start();
+    BOOST_FOREACH(size_t len, sentence->syllable_lengths()) {
       if (stop + len >= caret_pos) {
         return stop;
       }
@@ -523,9 +523,10 @@ size_t SentenceSyllabification::PreviousStop(size_t caret_pos) const {
 }
 
 size_t SentenceSyllabification::NextStop(size_t caret_pos) const {
-  if (syllabified_) {
-    size_t stop = syllabified_->start();
-    BOOST_FOREACH(size_t len, syllabified_->syllable_lengths()) {
+  shared_ptr<Sentence> sentence = syllabified_.lock();
+  if (sentence) {
+    size_t stop = sentence->start();
+    BOOST_FOREACH(size_t len, sentence->syllable_lengths()) {
       stop += len;
       if (stop > caret_pos) {
         return stop;

@@ -13,16 +13,41 @@
 #include <rime/deployer.h>
 #include <rime/key_event.h>
 #include <rime/menu.h>
+#include <rime/module.h>
 #include <rime/registry.h>
 #include <rime/schema.h>
 #include <rime/service.h>
-#include <rime/lever/deployment_tasks.h>
-#include <rime/lever/signature.h>
+#include <rime/setup.h>
+#include <rime/signature.h>
 #include <rime_api.h>
 
+// assuming member is a pointer in struct *p
+#define PROVIDED(p, member) ((p) && RIME_STRUCT_HAS_MEMBER(*(p), (p)->member) && (p)->member)
+
+static void setup_deployer(RimeTraits *traits) {
+  if (!traits) return;
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  if (PROVIDED(traits, shared_data_dir))
+    deployer.shared_data_dir = traits->shared_data_dir;
+  if (PROVIDED(traits, user_data_dir))
+    deployer.user_data_dir = traits->user_data_dir;
+  if (PROVIDED(traits, distribution_name))
+    deployer.distribution_name = traits->distribution_name;
+  if (PROVIDED(traits, distribution_code_name))
+    deployer.distribution_code_name = traits->distribution_code_name;
+  if (PROVIDED(traits, distribution_version))
+    deployer.distribution_version = traits->distribution_version;
+}
 
 RIME_API void RimeSetupLogging(const char* app_name) {
   rime::SetupLogging(app_name);
+}
+
+RIME_API void RimeSetup(RimeTraits *traits) {
+  setup_deployer(traits);
+  if (PROVIDED(traits, app_name)) {
+    rime::SetupLogging(traits->app_name);
+  }
 }
 
 RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
@@ -37,8 +62,9 @@ RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
 }
 
 RIME_API void RimeInitialize(RimeTraits *traits) {
-  RimeDeployerInitialize(traits);
-  rime::RegisterComponents();
+  setup_deployer(traits);
+  rime::LoadModules(
+      PROVIDED(traits, modules) ? traits->modules : rime::kDefaultModules);
   rime::Service::instance().StartService();
 }
 
@@ -46,28 +72,27 @@ RIME_API void RimeFinalize() {
   RimeJoinMaintenanceThread();
   rime::Service::instance().StopService();
   rime::Registry::instance().Clear();
+  rime::ModuleManager::instance().UnloadModules();
 }
 
 RIME_API Bool RimeStartMaintenance(Bool full_check) {
   rime::Deployer &deployer(rime::Service::instance().deployer());
-  rime::CleanOldLogFiles cleaning;
-  cleaning.Run(&deployer);
-  rime::InstallationUpdate installation;
-  installation.Run(&deployer);
+  deployer.RunTask("clean_old_log_files");
+  if (!deployer.RunTask("installation_update")) {
+    return False;
+  }
   if (!full_check) {
-    rime::ConfigFileUpdate default_config_update("default.yaml",
-                                                 "config_version");
-    bool updated = default_config_update.Run(&deployer);
-    if (!updated) {
+    rime::TaskInitializer args(
+        std::make_pair<std::string, std::string>(
+            "default.yaml", "config_version"));
+    if (!deployer.RunTask("config_file_update", args)) {
       return False;
     }
-    else {
-      LOG(INFO) << "changes detected; starting maintenance.";
-    }
+    LOG(INFO) << "changes detected; starting maintenance.";
   }
-  deployer.ScheduleTask(boost::make_shared<rime::WorkspaceUpdate>());
-  deployer.ScheduleTask(boost::make_shared<rime::UserDictUpgration>());
-  deployer.ScheduleTask(boost::make_shared<rime::CleanUpTrash>());
+  deployer.ScheduleTask("workspace_update");
+  deployer.ScheduleTask("user_dict_upgration");
+  deployer.ScheduleTask("cleanup_trash");
   deployer.StartMaintenance();
   return True;
 }
@@ -78,7 +103,7 @@ RIME_API Bool RimeStartMaintenanceOnWorkspaceChange() {
 
 RIME_API Bool RimeIsMaintenancing() {
   rime::Deployer &deployer(rime::Service::instance().deployer());
-  return Bool(deployer.IsMaintenancing());
+  return Bool(deployer.IsMaintenanceMode());
 }
 
 RIME_API void RimeJoinMaintenanceThread() {
@@ -89,55 +114,44 @@ RIME_API void RimeJoinMaintenanceThread() {
 // deployment
 
 RIME_API void RimeDeployerInitialize(RimeTraits *traits) {
-  if (!traits) return;
-  rime::Deployer &deployer(rime::Service::instance().deployer());
-  deployer.shared_data_dir = traits->shared_data_dir;
-  deployer.user_data_dir = traits->user_data_dir;
-  if (traits->distribution_name)
-    deployer.distribution_name = traits->distribution_name;
-  if (traits->distribution_code_name)
-    deployer.distribution_code_name = traits->distribution_code_name;
-  if (traits->distribution_version)
-    deployer.distribution_version = traits->distribution_version;
+  setup_deployer(traits);
+  rime::LoadModules(
+      PROVIDED(traits, modules) ? traits->modules : rime::kDeployerModules);
 }
 
 RIME_API Bool RimePrebuildAllSchemas() {
   rime::Deployer &deployer(rime::Service::instance().deployer());
-  rime::PrebuildAllSchemas prebuild;
-  return Bool(prebuild.Run(&deployer));
+  return Bool(deployer.RunTask("prebuild_all_schemas"));
 }
 
 RIME_API Bool RimeDeployWorkspace() {
   rime::Deployer &deployer(rime::Service::instance().deployer());
-  rime::InstallationUpdate installation;
-  rime::WorkspaceUpdate update;
-  rime::UserDictUpgration upgration;
-  rime::CleanUpTrash cleanup;
-  return Bool(installation.Run(&deployer) &&
-              update.Run(&deployer) &&
-              upgration.Run(&deployer) &&
-              cleanup.Run(&deployer));
+  return Bool(deployer.RunTask("installation_update") &&
+              deployer.RunTask("workspace_update") &&
+              deployer.RunTask("user_dict_upgration") &&
+              deployer.RunTask("cleanup_trash"));
 }
 
 RIME_API Bool RimeDeploySchema(const char *schema_file) {
   rime::Deployer &deployer(rime::Service::instance().deployer());
-  rime::SchemaUpdate update(schema_file);
-  return Bool(update.Run(&deployer));
+  return Bool(deployer.RunTask("schema_update", std::string(schema_file)));
 }
 
 RIME_API Bool RimeDeployConfigFile(const char *file_name,
                                    const char *version_key) {
   rime::Deployer& deployer(rime::Service::instance().deployer());
-  rime::ConfigFileUpdate update(file_name, version_key);
-  return Bool(update.Run(&deployer));
+  rime::TaskInitializer args(
+      std::make_pair<std::string, std::string>(
+          file_name, version_key));
+  return Bool(deployer.RunTask("config_file_update", args));
 }
 
 RIME_API Bool RimeSyncUserData() {
   RimeCleanupAllSessions();
   rime::Deployer& deployer(rime::Service::instance().deployer());
-  deployer.ScheduleTask(boost::make_shared<rime::InstallationUpdate>());
-  deployer.ScheduleTask(boost::make_shared<rime::BackupConfigFiles>());
-  deployer.ScheduleTask(boost::make_shared<rime::UserDictSync>());
+  deployer.ScheduleTask("installation_update");
+  deployer.ScheduleTask("backup_config_files");
+  deployer.ScheduleTask("user_dict_sync");
   return Bool(deployer.StartMaintenance());
 }
 
@@ -191,7 +205,7 @@ RIME_API void RimeClearComposition(RimeSessionId session_id) {
 RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
   if (!context || context->data_size <= 0)
     return False;
-  std::memset((char*)context + sizeof(context->data_size), 0, context->data_size);
+  RIME_STRUCT_CLEAR(*context);
   boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
@@ -230,8 +244,10 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
       context->menu.is_last_page = Bool(page->is_last_page);
       context->menu.highlighted_candidate_index = selected_index % page_size;
       int i = 0;
+      context->menu.num_candidates = page->candidates.size();
+      context->menu.candidates = new RimeCandidate[page->candidates.size()];
       BOOST_FOREACH(const boost::shared_ptr<rime::Candidate> &cand, page->candidates) {
-        RimeCandidate* dest = &context->menu.candidates[i];
+        RimeCandidate* dest = &context->menu.candidates[i++];
         dest->text = new char[cand->text().length() + 1];
         std::strcpy(dest->text, cand->text().c_str());
         std::string comment(cand->comment());
@@ -239,14 +255,15 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
           dest->comment = new char[comment.length() + 1];
           std::strcpy(dest->comment, comment.c_str());
         }
-        if (++i >= RIME_MAX_NUM_CANDIDATES) break;
+        else {
+          dest->comment = NULL;
+        }
       }
-      context->menu.num_candidates = i;
       if (schema) {
         const std::string& select_keys(schema->select_keys());
         if (!select_keys.empty()) {
-          std::strncpy(context->menu.select_keys, select_keys.c_str(),
-                       RIME_MAX_NUM_CANDIDATES);
+          context->menu.select_keys = new char[select_keys.length() + 1];
+          std::strcpy(context->menu.select_keys, select_keys.c_str());
         }
       }
     }
@@ -262,17 +279,19 @@ RIME_API Bool RimeFreeContext(RimeContext* context) {
     delete[] context->menu.candidates[i].text;
     delete[] context->menu.candidates[i].comment;
   }
+  delete[] context->menu.candidates;
+  delete[] context->menu.select_keys;
   if (RIME_STRUCT_HAS_MEMBER(*context, context->commit_text_preview)) {
     delete[] context->commit_text_preview;
   }
-  std::memset((char*)context + sizeof(context->data_size), 0, context->data_size);
+  RIME_STRUCT_CLEAR(*context);
   return True;
 }
 
 RIME_API Bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit) {
   if (!commit)
     return False;
-  std::memset(commit, 0, sizeof(RimeCommit));
+  RIME_STRUCT_CLEAR(*commit);
   boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
@@ -290,14 +309,14 @@ RIME_API Bool RimeFreeCommit(RimeCommit* commit) {
   if (!commit)
     return False;
   delete[] commit->text;
-  std::memset(commit, 0, sizeof(RimeCommit));
+  RIME_STRUCT_CLEAR(*commit);
   return True;
 }
 
 RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
   if (!status || status->data_size <= 0)
     return False;
-  std::memset((char*)status + sizeof(status->data_size), 0, status->data_size);
+  RIME_STRUCT_CLEAR(*status);
   boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
@@ -322,7 +341,7 @@ RIME_API Bool RimeFreeStatus(RimeStatus* status) {
     return False;
   delete[] status->schema_id;
   delete[] status->schema_name;
-  std::memset((char*)status + sizeof(status->data_size), 0, status->data_size);
+  RIME_STRUCT_CLEAR(*status);
   return True;
 }
 
@@ -335,7 +354,7 @@ RIME_API void RimeSetOption(RimeSessionId session_id, const char* option, Bool v
   rime::Context *ctx = session->context();
   if (!ctx)
     return;
-  ctx->set_option(option, bool(value));
+  ctx->set_option(option, !!value);
 }
 
 RIME_API Bool RimeGetOption(RimeSessionId session_id, const char* option) {
@@ -396,7 +415,7 @@ RIME_API Bool RimeGetSchemaList(RimeSchemaList* output) {
     rime::Schema schema(schema_id);
     x.name = new char[schema.schema_name().length() + 1];
     strcpy(x.name, schema.schema_name().c_str());
-    x.unused = NULL;
+    x.reserved = NULL;
     ++output->size;
   }
   if (output->size == 0) {
@@ -438,6 +457,16 @@ RIME_API Bool RimeSelectSchema(RimeSessionId session_id, const char* schema_id) 
 }
 
 // config
+
+RIME_API Bool RimeSchemaOpen(const char *schema_id, RimeConfig* config) {
+  if (!config || !config) return False;
+  rime::Config::Component* cc = rime::Config::Require("schema_config");
+  if (!cc) return False;
+  rime::Config* c = cc->Create(schema_id);
+  if (!c) return False;
+  config->ptr = (void*)c;
+  return True;
+}
 
 RIME_API Bool RimeConfigOpen(const char *config_id, RimeConfig* config) {
   if (!config || !config) return False;
@@ -484,12 +513,23 @@ RIME_API Bool RimeConfigGetString(RimeConfig *config, const char *key,
                                   char *value, size_t buffer_size) {
   if (!config || !key || !value) return False;
   rime::Config *c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c) return False;
   std::string str_value;
   if (c->GetString(key, &str_value)) {
     std::strncpy(value, str_value.c_str(), buffer_size);
     return True;
   }
   return False;
+}
+
+RIME_API const char* RimeConfigGetCString(RimeConfig *config, const char *key) {
+  if (!config || !key) return NULL;
+  rime::Config *c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c) return NULL;
+  if (rime::ConfigValuePtr v = c->GetValue(key)) {
+    return v->str().c_str();
+  }
+  return NULL;
 }
 
 RIME_API Bool RimeConfigUpdateSignature(RimeConfig *config, const char* signer) {
@@ -575,4 +615,111 @@ RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_
       session->ProcessKeyEvent(ke);
     }
     return True;
+}
+
+RIME_API Bool RimeRegisterModule(RimeModule* module) {
+  if (!module || !module->module_name)
+    return False;
+  rime::ModuleManager::instance().Register(module->module_name, module);
+  return True;
+}
+
+RIME_API RimeModule* RimeFindModule(const char* module_name) {
+  return rime::ModuleManager::instance().Find(module_name);
+}
+
+RIME_API Bool RimeRunTask(const char* task_name) {
+  if (!task_name)
+    return False;
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return Bool(deployer.RunTask(task_name));
+}
+
+RIME_API const char* RimeGetSharedDataDir() {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return deployer.shared_data_dir.c_str();
+}
+
+RIME_API const char* RimeGetUserDataDir() {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return deployer.user_data_dir.c_str();
+}
+
+RIME_API const char* RimeGetSyncDir() {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return deployer.sync_dir.c_str();
+}
+
+RIME_API const char* RimeGetUserId() {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  return deployer.user_id.c_str();
+}
+
+RIME_API void RimeGetUserDataSyncDir(char* dir, size_t buffer_size) {
+  rime::Deployer &deployer(rime::Service::instance().deployer());
+  strncpy(dir, deployer.user_data_sync_dir().c_str(), buffer_size);
+}
+
+RIME_API RimeApi* rime_get_api() {
+  static RimeApi s_api = {0};
+  if (!s_api.data_size) {
+    RIME_STRUCT_INIT(RimeApi, s_api);
+    s_api.setup = &RimeSetup;
+    s_api.set_notification_handler = &RimeSetNotificationHandler;
+    s_api.initialize = &RimeInitialize;
+    s_api.finalize = &RimeFinalize;
+    s_api.start_maintenance = &RimeStartMaintenance;
+    s_api.is_maintenance_mode = &RimeIsMaintenancing;
+    s_api.join_maintenance_thread = &RimeJoinMaintenanceThread;
+    s_api.deployer_initialize = &RimeDeployerInitialize;
+    s_api.prebuild = &RimePrebuildAllSchemas;
+    s_api.deploy = &RimeDeployWorkspace;
+    s_api.deploy_schema = &RimeDeploySchema;
+    s_api.deploy_config_file = &RimeDeployConfigFile;
+    s_api.sync_user_data = &RimeSyncUserData;
+    s_api.create_session = &RimeCreateSession;
+    s_api.find_session = &RimeFindSession;
+    s_api.destroy_session = &RimeDestroySession;
+    s_api.cleanup_stale_sessions = &RimeCleanupStaleSessions;
+    s_api.cleanup_all_sessions = &RimeCleanupAllSessions;
+    s_api.process_key = &RimeProcessKey;
+    s_api.commit_composition = &RimeCommitComposition;
+    s_api.clear_composition = &RimeClearComposition;
+    s_api.get_commit = &RimeGetCommit;
+    s_api.free_commit = &RimeFreeCommit;
+    s_api.get_context = &RimeGetContext;
+    s_api.free_context = &RimeFreeContext;
+    s_api.get_status =  &RimeGetStatus;
+    s_api.free_status = &RimeFreeStatus;
+    s_api.set_option = &RimeSetOption;
+    s_api.get_option = &RimeGetOption;
+    s_api.set_property = &RimeSetProperty;
+    s_api.get_property = &RimeGetProperty;
+    s_api.get_schema_list = &RimeGetSchemaList;
+    s_api.free_schema_list = &RimeFreeSchemaList;
+    s_api.get_current_schema = &RimeGetCurrentSchema;
+    s_api.select_schema = &RimeSelectSchema;
+    s_api.schema_open = &RimeSchemaOpen;
+    s_api.config_open = &RimeConfigOpen;
+    s_api.config_close = &RimeConfigClose;
+    s_api.config_get_bool = &RimeConfigGetBool;
+    s_api.config_get_int = &RimeConfigGetInt;
+    s_api.config_get_double = &RimeConfigGetDouble;
+    s_api.config_get_string = &RimeConfigGetString;
+    s_api.config_get_cstring = &RimeConfigGetCString;
+    s_api.config_update_signature = &RimeConfigUpdateSignature;
+    s_api.config_begin_map = &RimeConfigBeginMap;
+    s_api.config_next = &RimeConfigNext;
+    s_api.config_end = &RimeConfigEnd;
+    s_api.simulate_key_sequence = &RimeSimulateKeySequence;
+    s_api.register_module = &RimeRegisterModule;
+    s_api.find_module = &RimeFindModule;
+    s_api.run_task = &RimeRunTask;
+    s_api.get_shared_data_dir = &RimeGetSharedDataDir;
+    s_api.get_user_data_dir = &RimeGetUserDataDir;
+    s_api.get_sync_dir = &RimeGetSyncDir;
+    s_api.get_user_id = &RimeGetUserId;
+    s_api.get_user_data_sync_dir = &RimeGetUserDataSyncDir;
+  }
+  return &s_api;
 }

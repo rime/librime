@@ -9,6 +9,7 @@
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <rime/schema.h>
+#include <rime/ticket.h>
 #include <rime/dict/dict_settings.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 
@@ -57,14 +58,13 @@ bool ReverseLookupDictionary::Build(DictSettings* settings,
   ReverseLookupTable rev_table;
   int syllable_id = 0;
   BOOST_FOREACH(const std::string& syllable, syllabary) {
-    Vocabulary::const_iterator it = vocabulary.find(syllable_id);
+    Vocabulary::const_iterator it = vocabulary.find(syllable_id++);
     if (it == vocabulary.end())
       continue;
     const DictEntryList& entries(it->second.entries);
     BOOST_FOREACH(const shared_ptr<DictEntry>& e, entries) {
       rev_table[e->text].insert(syllable);
     }
-    ++syllable_id;
   }
   // save reverse lookup entries
   BOOST_FOREACH(const ReverseLookupTable::value_type& v, rev_table) {
@@ -117,13 +117,9 @@ ReverseLookupDictionary* ReverseLookupDictionaryComponent::Create(
     const Ticket& ticket) {
   if (!ticket.schema) return NULL;
   Config *config = ticket.schema->config();
-  std::string reverse_lookup;
-  if (!config->GetString(ticket.name_space + "/dictionary", &reverse_lookup)) {
-    // reverse lookup not enabled
-    return NULL;
-  }
   std::string dict_name;
-  if (!config->GetString("translator/dictionary", &dict_name)) {
+  if (!config->GetString(ticket.name_space + "/dictionary",
+                         &dict_name)) {
     // missing!
     return NULL;
   }

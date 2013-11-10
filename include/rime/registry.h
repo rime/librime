@@ -24,15 +24,11 @@ class Registry {
   void Unregister(const std::string& name);
   void Clear();
 
-  static Registry& instance() {
-    if (!instance_) instance_.reset(new Registry);
-    return *instance_;
-  }
+  static Registry& instance();
 
  private:
   Registry() {}
-  static scoped_ptr<Registry> instance_;
-  
+
   ComponentMap map_;
 };
 

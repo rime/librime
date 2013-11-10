@@ -92,20 +92,25 @@ bool Opencc::ConvertText(const std::string &text,
 
 // Simplifier
 
-Simplifier::Simplifier(Engine *engine) : Filter(engine),
-                                         initialized_(false),
-                                         tip_level_(kTipNone) {
-  Config *config = engine->schema()->config();
+Simplifier::Simplifier(const Ticket& ticket) : Filter(ticket),
+                                               TagMatching(ticket),
+                                               initialized_(false),
+                                               tips_level_(kTipsNone) {
+  if (name_space_ == "filter") {
+    name_space_ = "simplifier";
+  }
+  Config *config = engine_->schema()->config();
   if (config) {
-    std::string tip;
-    if (config->GetString("simplifier/tip", &tip)) {
-      tip_level_ =
-          (tip == "all") ? kTipAll :
-          (tip == "char") ? kTipChar : kTipNone;
+    std::string tips;
+    if (config->GetString(name_space_ + "/tips", &tips) ||
+        config->GetString(name_space_ + "/tip", &tips)) {
+      tips_level_ =
+          (tips == "all") ? kTipsAll :
+          (tips == "char") ? kTipsChar : kTipsNone;
     }
-    config->GetString("simplifier/option_name", &option_name_);
-    config->GetString("simplifier/opencc_config", &opencc_config_);
-    ConfigListPtr types = config->GetList("simplifier/excluded_types");
+    config->GetString(name_space_ + "/option_name", &option_name_);
+    config->GetString(name_space_ + "/opencc_config", &opencc_config_);
+    ConfigListPtr types = config->GetList(name_space_ + "/excluded_types");
     if (types) {
       for (ConfigList::Iterator it = types->begin(); it != types->end(); ++it) {
         ConfigValuePtr value = As<ConfigValue>(*it);
@@ -120,9 +125,6 @@ Simplifier::Simplifier(Engine *engine) : Filter(engine),
   if (opencc_config_.empty()) {
     opencc_config_ = "zht2zhs.ini";  // default opencc config file
   }
-}
-
-Simplifier::~Simplifier() {
 }
 
 void Simplifier::Initialize() {
@@ -180,30 +182,30 @@ bool Simplifier::Convert(const shared_ptr<Candidate> &original,
         result->push_back(original);
       }
       else {
-        std::string tip;
-        if (tip_level_ >= kTipChar) {
-          tip = quote_left + original->text() + quote_right;
+        std::string tips;
+        if (tips_level_ >= kTipsChar) {
+          tips = quote_left + original->text() + quote_right;
         }
         result->push_back(
             boost::make_shared<ShadowCandidate>(
                 original,
                 "simplified",
                 forms[i],
-                tip));
+                tips));
       }
     }
   }
   else {
-    std::string tip;
-    if (tip_level_ == kTipAll) {
-      tip = quote_left + original->text() + quote_right;
+    std::string tips;
+    if (tips_level_ == kTipsAll) {
+      tips = quote_left + original->text() + quote_right;
     }
     result->push_back(
         boost::make_shared<ShadowCandidate>(
             original,
             "simplified",
             simplified,
-            tip));
+            tips));
   }
   return true;
 }

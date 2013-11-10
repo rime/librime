@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-03-14 GONG Chen <chen.sst@gmail.com>
@@ -19,7 +19,7 @@ class Context;
 
 class Engine : public Messenger {
  public:
-  typedef boost::signal<void (const std::string& commit_text)> CommitSink;
+  typedef signal<void (const std::string& commit_text)> CommitSink;
 
   virtual ~Engine();
   virtual bool ProcessKeyEvent(const KeyEvent &key_event) = 0;

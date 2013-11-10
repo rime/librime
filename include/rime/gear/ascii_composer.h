@@ -8,12 +8,14 @@
 #define RIME_ASCII_COMPOSER_H_
 
 #include <map>
-#include <boost/signals.hpp>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/processor.h>
 
 namespace rime {
+
+class Context;
+class Schema;
 
 enum AsciiModeSwitchStyle {
   kAsciiModeSwitchNoop,
@@ -27,8 +29,8 @@ typedef std::map<int /* keycode */,
 
 class AsciiComposer : public Processor {
  public:
-  AsciiComposer(Engine *engine);
-  virtual ~AsciiComposer() {}
+  AsciiComposer(const Ticket& ticket);
+
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:
@@ -46,7 +48,7 @@ class AsciiComposer : public Processor {
   bool toggle_with_caps_;
   bool shift_key_pressed_;
   bool ctrl_key_pressed_;
-  boost::signals::connection connection_;
+  connection connection_;
 };
 
 }  // namespace rime

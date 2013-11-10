@@ -19,10 +19,15 @@ namespace fs = boost::filesystem;
 namespace rime {
 
 UserDbRecoveryTask::UserDbRecoveryTask(shared_ptr<Db> db) : db_(db) {
-  db_->disable();
+  if (db_) {
+    db_->disable();
+  }
 }
 
 bool UserDbRecoveryTask::Run(Deployer* deployer) {
+  if (!db_) {
+    return false;
+  }
   BOOST_SCOPE_EXIT( (&db_) ) {
     db_->enable();
   } BOOST_SCOPE_EXIT_END
@@ -76,6 +81,16 @@ void UserDbRecoveryTask::RestoreUserDataFromSnapshot(Deployer* deployer) {
   LOG(INFO) << "snapshot exists, trying to restore db '" << dict_name << "'.";
   if (db_->Restore(snapshot_path.string())) {
     LOG(INFO) << "restored db '" << dict_name << "' from snapshot.";
+  }
+}
+
+UserDbRecoveryTask* UserDbRecoveryTaskComponent::Create(TaskInitializer arg) {
+  try {
+    shared_ptr<Db> db = boost::any_cast< shared_ptr<Db> >(arg);
+    return new UserDbRecoveryTask(db);
+  }
+  catch (const boost::bad_any_cast&) {
+    return NULL;
   }
 }
 

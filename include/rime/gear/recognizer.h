@@ -38,7 +38,7 @@ class RecognizerPatterns : public std::map<std::string, boost::regex> {
 
 class Recognizer : public Processor {
  public:
-  Recognizer(Engine *engine);
+  Recognizer(const Ticket& ticket);
 
   virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
 

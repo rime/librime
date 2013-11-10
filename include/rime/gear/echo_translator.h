@@ -13,7 +13,7 @@ namespace rime {
 
 class EchoTranslator : public Translator {
  public:
-  EchoTranslator(const TranslatorTicket& ticket);
+  EchoTranslator(const Ticket& ticket);
 
   virtual shared_ptr<Translation> Query(const std::string &input,
                                         const Segment &segment,

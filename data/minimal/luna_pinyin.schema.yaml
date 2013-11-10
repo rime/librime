@@ -4,7 +4,7 @@
 schema:
   schema_id: luna_pinyin
   name: 朙月拼音
-  version: "0.11.test"
+  version: "0.13.test"
   author:
     - 佛振 <chen.sst@gmail.com>
   description: |
@@ -21,8 +21,14 @@ switches:
     states: [ 中文, 西文 ]
   - name: full_shape
     states: [ 半角, 全角 ]
-  - name: simplification
-    states: [ 漢字, 汉字 ]
+#  - name: simplification
+#    states: [ 漢字, 汉字 ]
+  - options: [ zh_trad, zh_tw, zh_simp ]
+    states:
+      - 字形 → 傳統漢字
+      - 字形 → 臺灣正體
+      - 字形 → 簡化字
+    reset: 0
 
 engine:
   processors:
@@ -37,15 +43,22 @@ engine:
   segmentors:
     - ascii_segmentor
     - matcher
+    - affix_segmentor@alphabet
+    - affix_segmentor@cangjie
+    - affix_segmentor@pinyin
     - abc_segmentor
     - punct_segmentor
     - fallback_segmentor
   translators:
     - punct_translator
-    - r10n_translator
     - reverse_lookup_translator
+    - script_translator
+    - table_translator@cangjie
+    - script_translator@pinyin
   filters:
-    - simplifier
+    - reverse_lookup_filter@cangjie_lookup
+    - simplifier@zh_simp
+    - simplifier@zh_tw
     - uniquifier
 
 speller:
@@ -71,16 +84,58 @@ translator:
   preedit_format:
     - xform/([nljqxy])v/$1ü/
 
+alphabet:
+  tag: alphabet
+  prefix: ':'
+  suffix: ';'
+  tips: 〔西文〕
+  closing_tips: 〔中文〕
+
+cangjie:
+  tag: cangjie
+  dictionary: cangjie5
+  prefix: 'C:'
+  suffix: ';'
+  tips: 〔倉頡〕
+  closing_tips: 〔拼音〕
+  preedit_format:
+    - "xlit|abcdefghijklmnopqrstuvwxyz|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符|"
+  comment_format:
+    - "xlit|abcdefghijklmnopqrstuvwxyz~|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符～|"
+
+pinyin:
+  tag: pinyin
+  dictionary: luna_pinyin
+  prefix: 'P:'
+  suffix: ';'
+  tips: 〔拼音〕
+  preedit_format:
+    - xform/([nl])v/$1ü/
+
+cangjie_lookup:
+  tags: [ pinyin ]
+  dictionary: cangjie5
+  comment_format:
+    - "xlit|abcdefghijklmnopqrstuvwxyz ~|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符、～|"
+
 reverse_lookup:
   dictionary: cangjie5
   enable_completion: true
-  prefix: "`"
+  prefix: '`'
   suffix: "'"
   tips: 〔倉頡〕
   preedit_format:
     - "xlit|abcdefghijklmnopqrstuvwxyz|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符|"
   comment_format:
     - xform/([nl])v/$1ü/
+
+zh_simp:
+  option_name: zh_simp
+  tips: all
+
+zh_tw:
+  option_name: zh_tw
+  opencc_config: zht2zhtw_v.ini
 
 punctuator:
   import_preset: default
@@ -91,4 +146,7 @@ key_binder:
 recognizer:
   import_preset: default
   patterns:
+    alphabet: '(?<![A-Z]):[^;]*;?$'
+    cangjie: "C:[a-z']*;?$"
+    pinyin: "P:[a-z']*;?$"
     reverse_lookup: "`[a-z]*'?$"

@@ -31,6 +31,7 @@ namespace rime {
 bool Customizer::UpdateConfigFile() {
   bool need_update = false;
   bool redistribute = false;
+  bool missing_original_copy = false;
   std::string source_version;
   std::string dest_version;
   std::string applied_customization;
@@ -43,6 +44,7 @@ bool Customizer::UpdateConfigFile() {
   if (fs::exists(source_path_) &&
       fs::exists(dest_path_) &&
       fs::equivalent(source_path_, dest_path_)) {
+    missing_original_copy = true;
     source_version = dest_version;
   }
   else {
@@ -87,8 +89,8 @@ bool Customizer::UpdateConfigFile() {
   }
   LOG(INFO) << "updating config file '" << dest_path_.string() << "'.";
 
-  if (redistribute ||
-      !applied_customization.empty()) {
+  bool is_dirty = !applied_customization.empty();
+  if (redistribute || (is_dirty && !missing_original_copy)) {
     try {
       fs::copy_file(source_path_, dest_path_,
                     fs::copy_option::overwrite_if_exists);
@@ -100,6 +102,10 @@ bool Customizer::UpdateConfigFile() {
     }
   }
   if (!customization.empty()) {
+    if (missing_original_copy) {
+      LOG(WARNING) << "patching user config without a shared original copy "
+          "is discouraged.";
+    }
     LOG(INFO) << "applying customization file: " << custom_path.string();
     if (!dest_config.LoadFromFile(dest_path_.string())) {
       LOG(ERROR) << "Error reloading destination config file.";
@@ -125,8 +131,12 @@ bool Customizer::UpdateConfigFile() {
     }
     // update config version
     dest_config.GetString(version_key_, &dest_version);
-    dest_config.SetString(version_key_,
-                          dest_version + ".custom." + customization);
+    size_t custom_part = dest_version.find(".custom.");
+    if (custom_part != std::string::npos) {
+      dest_version.erase(custom_part);
+    }
+    dest_version.append(".custom.").append(customization);
+    dest_config.SetString(version_key_, dest_version);
     dest_config.SetString("customization", customization);
     if (!dest_config.SaveToFile(dest_path_.string())) {
       LOG(ERROR) << "Error saving destination config file.";

@@ -1,8 +1,9 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-04-26 Wensong He <snowhws@gmail.com>
+// 2013-10-20 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_TRIVIAL_TRANSLATOR_H_
 #define RIME_TRIVIAL_TRANSLATOR_H_
@@ -17,7 +18,7 @@ namespace rime {
 
 class TrivialTranslator : public Translator {
  public:
-  TrivialTranslator(const TranslatorTicket& ticket);
+  TrivialTranslator(const Ticket& ticket);
 
   virtual shared_ptr<Translation> Query(const std::string &input,
                                         const Segment &segment,

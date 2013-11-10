@@ -24,8 +24,8 @@
 #include <rime/gear/translator_commons.h>
 
 
-static const char *quote_left = "\xef\xbc\x88";
-static const char *quote_right = "\xef\xbc\x89";
+//static const char *quote_left = "\xef\xbc\x88";
+//static const char *quote_right = "\xef\xbc\x89";
 
 namespace rime {
 
@@ -118,10 +118,10 @@ class ScriptTranslation : public Translation,
 
 // ScriptTranslator implementation
 
-ScriptTranslator::ScriptTranslator(const TranslatorTicket& ticket)
+ScriptTranslator::ScriptTranslator(const Ticket& ticket)
     : Translator(ticket),
-      Memory(engine_, name_space_),
-      TranslatorOptions(engine_, name_space_),
+      Memory(ticket),
+      TranslatorOptions(ticket),
       spelling_hints_(0) {
   if (!engine_) return;
   Config *config = engine_->schema()->config();
@@ -135,7 +135,7 @@ shared_ptr<Translation> ScriptTranslator::Query(const std::string &input,
                                                 std::string* prompt) {
   if (!dict_ || !dict_->loaded())
     return shared_ptr<Translation>();
-  if (!segment.HasTag("abc"))
+  if (!segment.HasTag(tag_))
     return shared_ptr<Translation>();
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
@@ -300,7 +300,7 @@ shared_ptr<Candidate> ScriptTranslation::Peek() {
       std::string spelling(GetOriginalSpelling(*sentence_));
       if (!spelling.empty() &&
           spelling != sentence_->preedit()) {
-        sentence_->set_comment(quote_left + spelling + quote_right);
+        sentence_->set_comment(/*quote_left + */spelling/* + quote_right*/);
       }
     }
     return sentence_;
@@ -350,7 +350,7 @@ shared_ptr<Candidate> ScriptTranslation::Peek() {
     std::string spelling(GetOriginalSpelling(*cand));
     if (!spelling.empty() &&
         spelling != cand->preedit()) {
-      cand->set_comment(quote_left + spelling + quote_right);
+      cand->set_comment(/*quote_left + */spelling/* + quote_right*/);
     }
   }
   cand->set_syllabification(shared_from_this());

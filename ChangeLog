@@ -1,3 +1,31 @@
+2013-11-10  GONG Chen  <chen.sst@gmail.com>
+
+	* rime_api: version 1.0 breaks ABI compatiblility.
+
+	the minimum changes in code required to migrate from rime 0.9 api is
+	to initialize RimeTraits with either RIME_STRUCT or RIME_STRUCT_INIT macro.
+
+	while source code compatibility is largely maintained with the exception
+	of the aforementioned RimeTraits structure, rime 1.0 introduces a version
+	controlled RimeApi structure which provides all the api functions.
+
+	* module: suppport adding modules; modulize 'gears' and 'levers'.
+	* ticket: used to instantiate compnents and to associate the instance with
+	a name space in the configuration.
+	* encoder: encode new phrases for table_translator and script_translator
+	using different rules.
+	* affix_segmentor: strip optional prefix and suffix from a code segment.
+	* reverse_lookup_filter: lookup candidate text for code in a specified
+	dictonary.
+	* shape: add full-shape support.
+	* key_binder: switch input schemata and toggle options with hotkeys.
+	* switcher: list input schemata ordered by recency; support radio options.
+	* tsv: fix reading user dict snapshot files with DOS line endings.
+	* entry_collector: support custom order of table columns in *.dict.yaml.
+	* CMakeLists.txt: add options BUILD_TEST and BUILD_SEPARATE_LIBS.
+
+	- Release: 1.0
+
 2013-05-05  GONG Chen  <chen.sst@gmail.com>
 
 	* config: update yaml-cpp to version 0.5 (with new API);
