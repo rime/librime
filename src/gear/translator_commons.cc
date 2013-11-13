@@ -86,7 +86,7 @@ bool CharsetFilter::FilterText(const std::string& text) {
     if ((c >= 0x3400 && c <= 0x4DBF) ||    // CJK Unified Ideographs Extension A
         (c >= 0x20000 && c <= 0x2A6DF) ||  // CJK Unified Ideographs Extension B
         (c >= 0x2A700 && c <= 0x2B73F) ||  // CJK Unified Ideographs Extension C
-        (c >= 0x2B840 && c <= 0x2B81F))    // CJK Unified Ideographs Extension D
+        (c >= 0x2B740 && c <= 0x2B81F))    // CJK Unified Ideographs Extension D
       return false;
   }
   return true;
