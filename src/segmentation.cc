@@ -130,11 +130,23 @@ size_t Segmentation::GetConfirmedPosition() const {
 
 std::ostream& operator<< (std::ostream& out,
                           const Segmentation &segmentation) {
-  out << "<" << segmentation.input();
+  out << "[" << segmentation.input();
   BOOST_FOREACH(const Segment &segment, segmentation) {
     out << "|" << segment.start << "," << segment.end;
+    if (!segment.tags.empty()) {
+      out << "{";
+      bool first = true;
+      BOOST_FOREACH(const std::string& tag, segment.tags) {
+        if (first)
+          first = false;
+        else
+          out << ",";
+        out << tag;
+      }
+      out << "}";
+    }
   }
-  out << ">";
+  out << "]";
   return out;
 }
 
