@@ -80,32 +80,21 @@ void ChordComposer::UpdateChord() {
   if (!engine_) return;
   Context* ctx = engine_->context();
   Composition* comp = ctx->composition();
-  bool chord_exists = !comp->empty() && comp->back().HasTag("chord");
-  bool chord_prompt = !comp->empty() && comp->back().HasTag("chord_prompt");
-  if (chord_.empty()) {
-    if (chord_exists) {
-      ctx->PopInput(ctx->caret_pos() - comp->back().start);
+  std::string code(SerializeChord());
+  prompt_format_.Apply(&code);
+  if (comp->empty()) {
+    // add an invisbile place holder segment
+    // 1. to cheat context_->IsComposing() == true
+    // 2. to attach chord prompt to while composing the chord
+    ctx->PushInput(kZeroWidthSpace);
+    if (comp->empty()) {
+      LOG(ERROR) << "failed to update chord.";
+      return;
     }
-    else if (chord_prompt) {
-      comp->back().prompt.clear();
-      comp->back().tags.erase("chord_prompt");
-    }
+    comp->back().tags.insert("phony");
   }
-  else {
-    std::string code(SerializeChord());
-    prompt_format_.Apply(&code);
-    if (!chord_exists && !chord_prompt) {
-      if (comp->empty()) {
-        comp->Forward();
-        ctx->PushInput(kZeroWidthSpace);
-        comp->back().tags.insert("chord");
-      }
-      else {
-        comp->back().tags.insert("chord_prompt");
-      }
-    }
-    comp->back().prompt = code;
-  }
+  comp->back().tags.insert("chord_prompt");
+  comp->back().prompt = code;
 }
 
 void ChordComposer::FinishChord() {
@@ -128,9 +117,21 @@ void ChordComposer::FinishChord() {
 }
 
 void ChordComposer::ClearChord() {
-    pressed_.clear();
-    chord_.clear();
-    UpdateChord();
+  pressed_.clear();
+  chord_.clear();
+  if (!engine_) return;
+  Context* ctx = engine_->context();
+  Composition* comp = ctx->composition();
+  if (comp->empty()) {
+    return;
+  }
+  if (comp->input().substr(comp->back().start) == kZeroWidthSpace) {
+    ctx->PopInput(ctx->caret_pos() - comp->back().start);
+  }
+  else if (comp->back().HasTag("chord_prompt")) {
+    comp->back().prompt.clear();
+    comp->back().tags.erase("chord_prompt");
+  }
 }
 
 bool ChordComposer::DeleteLastSyllable() {
