@@ -1,6 +1,6 @@
 ﻿// encoding: utf-8
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-04-17 GONG Chen <chen.sst@gmail.com>

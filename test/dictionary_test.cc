@@ -1,5 +1,5 @@
 ﻿//
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
