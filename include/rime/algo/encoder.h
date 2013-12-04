@@ -90,7 +90,7 @@ class TableEncoder : public Encoder {
   bool ParseFormula(const std::string& formula, TableEncodingRule* rule);
   int CalculateCodeIndex(const std::string& code, int index, int start);
   bool DfsEncode(const std::string& phrase, const std::string& value,
-                 size_t start_pos, RawCode* code);
+                 size_t start_pos, RawCode* code, int* limit);
 
   bool loaded_;
   // settings
@@ -108,7 +108,7 @@ class ScriptEncoder : public Encoder {
 
  private:
   bool DfsEncode(const std::string& phrase, const std::string& value,
-                 size_t start_pos, RawCode* code);
+                 size_t start_pos, RawCode* code, int* limit);
 };
 
 }  // namespace rime

@@ -12,6 +12,8 @@
 
 namespace rime {
 
+static const int kEncoderDfsLimit = 32;
+
 std::string RawCode::ToString() const {
   return boost::join(*this, " ");
 }
@@ -235,14 +237,19 @@ int TableEncoder::CalculateCodeIndex(const std::string& code, int index,
 bool TableEncoder::EncodePhrase(const std::string& phrase,
                                 const std::string& value) {
   RawCode code;
-  return DfsEncode(phrase, value, 0, &code);
+  int limit = kEncoderDfsLimit;
+  return DfsEncode(phrase, value, 0, &code, &limit);
 }
 
 bool TableEncoder::DfsEncode(const std::string& phrase,
                              const std::string& value,
                              size_t start_pos,
-                             RawCode* code) {
+                             RawCode* code,
+                             int* limit) {
   if (start_pos == phrase.length()) {
+    if (limit) {
+      --*limit;
+    }
     std::string encoded;
     if (Encode(*code, &encoded)) {
       DLOG(INFO) << "encode '" << phrase << "': "
@@ -269,9 +276,12 @@ bool TableEncoder::DfsEncode(const std::string& phrase,
         continue;
       }
       code->push_back(x);
-      bool ok = DfsEncode(phrase, value, start_pos + word_len, code);
+      bool ok = DfsEncode(phrase, value, start_pos + word_len, code, limit);
       ret = ret || ok;
       code->pop_back();
+      if (limit && *limit <= 0) {
+        return ret;
+      }
     }
   }
   return ret;
@@ -284,14 +294,19 @@ ScriptEncoder::ScriptEncoder(PhraseCollector* collector)
 bool ScriptEncoder::EncodePhrase(const std::string& phrase,
                                  const std::string& value) {
   RawCode code;
-  return DfsEncode(phrase, value, 0, &code);
+  int limit = kEncoderDfsLimit;
+  return DfsEncode(phrase, value, 0, &code, &limit);
 }
 
 bool ScriptEncoder::DfsEncode(const std::string& phrase,
                               const std::string& value,
                               size_t start_pos,
-                              RawCode* code) {
+                              RawCode* code,
+                              int* limit) {
   if (start_pos == phrase.length()) {
+    if (limit) {
+      --*limit;
+    }
     collector_->CreateEntry(phrase, code->ToString(), value);
     return true;
   }
@@ -302,9 +317,12 @@ bool ScriptEncoder::DfsEncode(const std::string& phrase,
     if (collector_->TranslateWord(word, &translations)) {
       BOOST_FOREACH(const std::string& x, translations) {
         code->push_back(x);
-        bool ok = DfsEncode(phrase, value, start_pos + k, code);
+        bool ok = DfsEncode(phrase, value, start_pos + k, code, limit);
         ret = ret || ok;
         code->pop_back();
+        if (limit && *limit <= 0) {
+          return ret;
+        }
       }
     }
   }
