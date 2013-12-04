@@ -251,8 +251,8 @@ bool TableEncoder::DfsEncode(const std::string& phrase,
       return true;
     }
     else {
-      LOG(WARNING) << "failed to encode '" << phrase << "': "
-                   << "[" << code->ToString() << "]";
+      DLOG(WARNING) << "failed to encode '" << phrase << "': "
+                    << "[" << code->ToString() << "]";
       return false;
     }
   }
