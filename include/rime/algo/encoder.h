@@ -97,6 +97,8 @@ class TableEncoder : public Encoder {
   std::vector<TableEncodingRule> encoding_rules_;
   std::vector<boost::regex> exclude_patterns_;
   std::string tail_anchor_;
+  // for optimization
+  int max_phrase_length_;
 };
 
 // for syllable-based phrase encoding

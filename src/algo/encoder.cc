@@ -13,6 +13,7 @@
 namespace rime {
 
 static const int kEncoderDfsLimit = 32;
+static const int kMaxPhraseLength = 32;
 
 std::string RawCode::ToString() const {
   return boost::join(*this, " ");
@@ -26,7 +27,7 @@ void RawCode::FromString(const std::string &code_str) {
 }
 
 TableEncoder::TableEncoder(PhraseCollector* collector)
-    : Encoder(collector), loaded_(false) {
+    : Encoder(collector), loaded_(false), max_phrase_length_(0) {
 }
 
 /*
@@ -46,6 +47,7 @@ TableEncoder::TableEncoder(PhraseCollector* collector)
 */
 bool TableEncoder::LoadSettings(Config* config) {
   loaded_ = false;
+  max_phrase_length_ = 0;
   encoding_rules_.clear();
   exclude_patterns_.clear();
   tail_anchor_.clear();
@@ -69,6 +71,9 @@ bool TableEncoder::LoadSettings(Config* config) {
           continue;
         }
         r.min_word_length = r.max_word_length = length;
+        if (max_phrase_length_ < length) {
+          max_phrase_length_ = length;
+        }
       }
       else if (ConfigListPtr range =
                As<ConfigList>(rule->Get("length_in_range"))) {
@@ -81,8 +86,14 @@ bool TableEncoder::LoadSettings(Config* config) {
           LOG(ERROR) << "invalid range.";
           continue;
         }
+        if (max_phrase_length_ < r.max_word_length) {
+          max_phrase_length_ = r.max_word_length;
+        }
       }
       encoding_rules_.push_back(r);
+    }
+    if (max_phrase_length_ > kMaxPhraseLength) {
+      max_phrase_length_ = kMaxPhraseLength;
     }
   }
   if (ConfigListPtr excludes = config->GetList("encoder/exclude_patterns")) {
@@ -236,6 +247,11 @@ int TableEncoder::CalculateCodeIndex(const std::string& code, int index,
 
 bool TableEncoder::EncodePhrase(const std::string& phrase,
                                 const std::string& value) {
+  size_t phrase_length = utf8::unchecked::distance(
+      phrase.c_str(), phrase.c_str() + phrase.length());
+  if (static_cast<int>(phrase_length) > max_phrase_length_)
+    return false;
+
   RawCode code;
   int limit = kEncoderDfsLimit;
   return DfsEncode(phrase, value, 0, &code, &limit);
@@ -293,6 +309,11 @@ ScriptEncoder::ScriptEncoder(PhraseCollector* collector)
 
 bool ScriptEncoder::EncodePhrase(const std::string& phrase,
                                  const std::string& value) {
+  size_t phrase_length = utf8::unchecked::distance(
+      phrase.c_str(), phrase.c_str() + phrase.length());
+  if (static_cast<int>(phrase_length) > kMaxPhraseLength)
+    return false;
+
   RawCode code;
   int limit = kEncoderDfsLimit;
   return DfsEncode(phrase, value, 0, &code, &limit);
