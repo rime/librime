@@ -104,6 +104,11 @@ void SchemaListTranslation::LoadSchemaList(Switcher* switcher) {
     Append(cand);
   }
   DLOG(INFO) << "num schemata: " << candies_.size();
+  bool fix_order = false;
+  config->GetBool("switcher/fix_schema_list_order", &fix_order);
+  if (fix_order)
+    return;
+  // reorder schema list by recency
   std::stable_sort(candies_.begin() + fixed, candies_.end(),
                    compare_access_time);
 }
