@@ -300,12 +300,12 @@ Dictionary* DictionaryComponent::CreateDictionaryWithName(
   boost::filesystem::path path(Service::instance().deployer().user_data_dir);
   shared_ptr<Table> table(table_map_[dict_name].lock());
   if (!table) {
-    table = boost::make_shared<Table>((path / dict_name).string() + ".table.bin");
+    table = make_shared<Table>((path / dict_name).string() + ".table.bin");
     table_map_[dict_name] = table;
   }
   shared_ptr<Prism> prism(prism_map_[prism_name].lock());
   if (!prism) {
-    prism = boost::make_shared<Prism>((path / prism_name).string() + ".prism.bin");
+    prism = make_shared<Prism>((path / prism_name).string() + ".prism.bin");
     prism_map_[prism_name] = prism;
   }
   return new Dictionary(dict_name, table, prism);

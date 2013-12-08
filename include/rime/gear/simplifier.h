@@ -35,7 +35,7 @@ class Simplifier : public Filter, TagMatching {
                CandidateList *result);
 
   bool initialized_;
-  scoped_ptr<Opencc> opencc_;
+  unique_ptr<Opencc> opencc_;
   TipsLevel tips_level_;
   std::string option_name_;
   std::string opencc_config_;

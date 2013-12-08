@@ -177,7 +177,7 @@ void Service::Notify(SessionId session_id,
 }
 
 Service& Service::instance() {
-  static scoped_ptr<Service> s_instance;
+  static unique_ptr<Service> s_instance;
   if (!s_instance) {
     s_instance.reset(new Service);
   }

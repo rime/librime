@@ -38,7 +38,7 @@ shared_ptr<Translation> EchoTranslator::Query(const std::string& input,
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
   shared_ptr<Candidate> candidate =
-      boost::make_shared<SimpleCandidate>("raw",
+      make_shared<SimpleCandidate>("raw",
                                           segment.start,
                                           segment.end,
                                           input);

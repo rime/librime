@@ -84,7 +84,7 @@ shared_ptr<DbAccessor> TreeDb::QueryAll() {
 shared_ptr<DbAccessor> TreeDb::Query(const std::string &key) {
   if (!loaded())
     return shared_ptr<DbAccessor>();
-  return boost::make_shared<TreeDbAccessor>(db_->cursor(), key);
+  return make_shared<TreeDbAccessor>(db_->cursor(), key);
 }
 
 bool TreeDb::Fetch(const std::string &key, std::string *value) {

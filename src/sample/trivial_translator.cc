@@ -43,7 +43,7 @@ shared_ptr<Translation> TrivialTranslator::Query(const std::string &input,
     return shared_ptr<Translation>();
   }
   shared_ptr<Candidate> candidate =
-      boost::make_shared<SimpleCandidate>(
+      make_shared<SimpleCandidate>(
           "trivial",
           segment.start,
           segment.end,

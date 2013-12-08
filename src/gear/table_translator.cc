@@ -82,7 +82,7 @@ shared_ptr<Candidate> TableTranslation::Peek() {
   if (options_) {
     options_->comment_formatter().Apply(&comment);
   }
-  shared_ptr<Phrase> phrase = boost::make_shared<Phrase>(
+  shared_ptr<Phrase> phrase = make_shared<Phrase>(
       language_,
       e->remaining_code_length == 0 ? "table" : "completion",
       start_, end_, e);
@@ -251,7 +251,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
 
   shared_ptr<Translation> translation;
   if (enable_completion_) {
-    translation = boost::make_shared<LazyTableTranslation>(
+    translation = make_shared<LazyTableTranslation>(
         this,
         code,
         segment.start,
@@ -272,7 +272,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
       }
     }
     if (!iter.exhausted() || !uter.exhausted())
-      translation = boost::make_shared<TableTranslation>(
+      translation = make_shared<TableTranslation>(
           this,
           language(),
           code,
@@ -445,7 +445,7 @@ shared_ptr<Candidate> SentenceTranslation::Peek() {
     code_length = r->first;
     entry = r->second.Peek();
   }
-  shared_ptr<Phrase> result = boost::make_shared<Phrase>(
+  shared_ptr<Phrase> result = make_shared<Phrase>(
       translator_ ? translator_->language() : NULL,
       "table",
       start_,
@@ -653,7 +653,7 @@ shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
   }
   shared_ptr<Translation> result;
   if (sentences.find(input.length()) != sentences.end()) {
-    result = boost::make_shared<SentenceTranslation>(this,
+    result = make_shared<SentenceTranslation>(this,
                                                      sentences[input.length()],
                                                      &collector,
                                                      &user_phrase_collector,

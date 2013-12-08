@@ -37,7 +37,7 @@ void Schema::FetchUsefulConfigItems() {
   if (!config_->GetInt("menu/page_size", &page_size_) &&
       schema_id_ != ".default") {
     // not defined in schema, use default setting
-    scoped_ptr<Config> default_config(
+    unique_ptr<Config> default_config(
         Config::Require("config")->Create("default"));
     if (default_config)
       default_config->GetInt("menu/page_size", &page_size_);

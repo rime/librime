@@ -44,7 +44,7 @@ class RimeSyllabifierTest : public ::testing::Test {
 
  protected:
   std::map<std::string, int> syllable_id_;
-  boost::scoped_ptr<rime::Prism> prism_;
+  unique_ptr<rime::Prism> prism_;
 };
 
 TEST_F(RimeSyllabifierTest, CaseAlpha) {

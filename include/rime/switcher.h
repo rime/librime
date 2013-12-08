@@ -44,7 +44,7 @@ class Switcher : public Engine {
   void HighlightNextSchema();
   void OnSelect(Context *ctx);
 
-  scoped_ptr<Config> user_config_;
+  unique_ptr<Config> user_config_;
   std::string caption_;
   std::vector<KeyEvent> hotkeys_;
   std::set<std::string> save_options_;

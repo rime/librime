@@ -197,7 +197,7 @@ void KeyBinder::LoadConfig() {
   Config *config = engine_->schema()->config();
   std::string preset;
   if (config->GetString("key_binder/import_preset", &preset)) {
-    scoped_ptr<Config> preset_config(Config::Require("config")->Create(preset));
+    unique_ptr<Config> preset_config(Config::Require("config")->Create(preset));
     if (!preset_config) {
       LOG(ERROR) << "Error importing preset key bindings '" << preset << "'.";
       return;

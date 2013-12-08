@@ -31,9 +31,9 @@ class ReverseLookupTranslator : public Translator {
   
   std::string tag_;
   bool initialized_;
-  scoped_ptr<Dictionary> dict_;
-  scoped_ptr<ReverseLookupDictionary> rev_dict_;
-  scoped_ptr<TranslatorOptions> options_;
+  unique_ptr<Dictionary> dict_;
+  unique_ptr<ReverseLookupDictionary> rev_dict_;
+  unique_ptr<TranslatorOptions> options_;
   std::string prefix_;
   std::string suffix_;
   std::string tips_;

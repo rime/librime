@@ -182,7 +182,7 @@ void ConcreteEngine::TranslateSegments(Composition *comp) {
     Menu::CandidateFilter cand_filter(
         boost::bind(&ConcreteEngine::FilterCandidates,
                     this, &segment, _1, _2));
-    shared_ptr<Menu> menu = boost::make_shared<Menu>(cand_filter);
+    shared_ptr<Menu> menu = make_shared<Menu>(cand_filter);
     BOOST_FOREACH(shared_ptr<Translator>& translator, translators_) {
       shared_ptr<Translation> translation =
           translator->Query(input, segment, &segment.prompt);

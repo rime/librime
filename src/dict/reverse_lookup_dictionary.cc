@@ -26,7 +26,7 @@ ReverseLookupDictionary::ReverseLookupDictionary(shared_ptr<ReverseDb> db)
 }
 
 ReverseLookupDictionary::ReverseLookupDictionary(const std::string& dict_name)
-    : db_(boost::make_shared<ReverseDb>(dict_name)) {
+    : db_(make_shared<ReverseDb>(dict_name)) {
 }
 
 bool ReverseLookupDictionary::Load() {
@@ -125,7 +125,7 @@ ReverseLookupDictionary* ReverseLookupDictionaryComponent::Create(
   }
   shared_ptr<ReverseDb> db(db_pool_[dict_name].lock());
   if (!db) {
-    db = boost::make_shared<ReverseDb>(dict_name);
+    db = make_shared<ReverseDb>(dict_name);
     db_pool_[dict_name] = db;
   }
   return new ReverseLookupDictionary(db);

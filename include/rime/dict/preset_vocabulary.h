@@ -44,7 +44,7 @@ class PresetVocabulary {
   PresetVocabulary(const shared_ptr<kyotocabinet::TreeDB>& db);
   
   shared_ptr<kyotocabinet::TreeDB> db_;
-  scoped_ptr<kyotocabinet::DB::Cursor> cursor_;
+  unique_ptr<kyotocabinet::DB::Cursor> cursor_;
   int max_phrase_length_;
   double min_phrase_weight_;
 };

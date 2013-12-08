@@ -65,8 +65,8 @@ class EntryCollector : public PhraseCollector {
   void Finish();
 
  protected:
-  scoped_ptr<PresetVocabulary> preset_vocabulary;
-  scoped_ptr<Encoder> encoder;
+  unique_ptr<PresetVocabulary> preset_vocabulary;
+  unique_ptr<Encoder> encoder;
   EncodeQueue encode_queue;
   std::set<std::string/* word */> collection;
   WordMap words;

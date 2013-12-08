@@ -44,7 +44,7 @@ class TableTranslator : public Translator,
   bool enable_sentence_;
   bool encode_commit_history_;
   int max_phrase_length_;
-  scoped_ptr<UnityTableEncoder> encoder_;
+  unique_ptr<UnityTableEncoder> encoder_;
 };
 
 class TableTranslation : public Translation {

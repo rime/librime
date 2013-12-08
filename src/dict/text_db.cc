@@ -62,7 +62,7 @@ TextDb::~TextDb() {
 shared_ptr<DbAccessor> TextDb::QueryMetadata() {
   if (!loaded())
     return shared_ptr<DbAccessor>();
-  return boost::make_shared<TextDbAccessor>(metadata_, "");
+  return make_shared<TextDbAccessor>(metadata_, "");
 }
 
 shared_ptr<DbAccessor> TextDb::QueryAll() {
@@ -72,7 +72,7 @@ shared_ptr<DbAccessor> TextDb::QueryAll() {
 shared_ptr<DbAccessor> TextDb::Query(const std::string &key) {
   if (!loaded())
     return shared_ptr<DbAccessor>();
-  return boost::make_shared<TextDbAccessor>(data_, key);
+  return make_shared<TextDbAccessor>(data_, key);
 }
 
 bool TextDb::Fetch(const std::string &key, std::string *value) {

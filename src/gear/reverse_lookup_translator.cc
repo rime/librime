@@ -60,7 +60,7 @@ shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
     //  boost::algorithm::replace_all(tips, " ", separator);
     //}
   }
-  shared_ptr<Candidate> cand = boost::make_shared<SimpleCandidate>(
+  shared_ptr<Candidate> cand = make_shared<SimpleCandidate>(
       "reverse_lookup",
       start_,
       end_,
@@ -183,7 +183,7 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
     }
   }
   if (!iter.exhausted()) {
-    return boost::make_shared<ReverseLookupTranslation>(rev_dict_.get(),
+    return make_shared<ReverseLookupTranslation>(rev_dict_.get(),
                                                         options_.get(),
                                                         code,
                                                         segment.start,

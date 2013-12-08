@@ -34,7 +34,7 @@ bool Deployer::RunTask(const std::string& task_name, TaskInitializer arg) {
     LOG(ERROR) << "unknown deployment task: " << task_name;
     return false;
   }
-  scoped_ptr<DeploymentTask> t(c->Create(arg));
+  unique_ptr<DeploymentTask> t(c->Create(arg));
   if (!t) {
     LOG(ERROR) << "error creating deployment task: " << task_name;
     return false;

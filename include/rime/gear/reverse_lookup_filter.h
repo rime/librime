@@ -31,7 +31,7 @@ class ReverseLookupFilter : public Filter, TagMatching {
   void Initialize();
 
   bool initialized_;
-  scoped_ptr<ReverseLookupDictionary> rev_dict_;
+  unique_ptr<ReverseLookupDictionary> rev_dict_;
   bool overwrite_comment_;
   Projection comment_formatter_;
 };

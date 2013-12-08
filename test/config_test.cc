@@ -23,8 +23,8 @@ class RimeConfigTest : public ::testing::Test {
   virtual void TearDown() {
   }
 
-  scoped_ptr<Config::Component> component_;
-  scoped_ptr<Config> config_;
+  unique_ptr<Config::Component> component_;
+  unique_ptr<Config> config_;
 };
 
 TEST(RimeConfigComponentTest, RealCreationWorkflow) {
@@ -35,7 +35,7 @@ TEST(RimeConfigComponentTest, RealCreationWorkflow) {
   Config::Component *cc = Config::Require("test_config");
   ASSERT_TRUE(cc != NULL);
   // creation
-  scoped_ptr<Config> config(cc->Create("config_test"));
+  unique_ptr<Config> config(cc->Create("config_test"));
   EXPECT_TRUE(config);
   r.Unregister("test_config");
 }
@@ -143,7 +143,7 @@ TEST_F(RimeConfigTest, Config_GetMap) {
 }
 
 TEST(RimeConfigWriterTest, Greetings) {
-  scoped_ptr<Config> config(new Config);
+  unique_ptr<Config> config(new Config);
   ASSERT_TRUE(config);
   // creating contents
   EXPECT_TRUE(config->SetItem("/", make_shared<ConfigMap>()));
@@ -160,7 +160,7 @@ TEST(RimeConfigWriterTest, Greetings) {
   // saving
   EXPECT_TRUE(config->SaveToFile("config_writer_test.yaml"));
   // verify
-  scoped_ptr<Config> config2(new Config);
+  unique_ptr<Config> config2(new Config);
   ASSERT_TRUE(config2);
   EXPECT_TRUE(config2->LoadFromFile("config_writer_test.yaml"));
   std::string the_greetings;
@@ -181,7 +181,7 @@ TEST(RimeConfigWriterTest, Greetings) {
   EXPECT_TRUE(config2->SetItem("zergs/overmind", ConfigItemPtr()));
   EXPECT_TRUE(config2->SaveToFile("config_rewriter_test.yaml"));
   // verify
-  scoped_ptr<Config> config3(new Config);
+  unique_ptr<Config> config3(new Config);
   ASSERT_TRUE(config3);
   EXPECT_TRUE(config3->LoadFromFile("config_rewriter_test.yaml"));
   EXPECT_TRUE(config3->GetInt("zergs/statistics/population", &population));

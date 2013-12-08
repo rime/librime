@@ -89,7 +89,7 @@ class Context {
  private:
   std::string input_;
   size_t caret_pos_;
-  scoped_ptr<Composition> composition_;
+  unique_ptr<Composition> composition_;
   CommitHistory commit_history_;
   std::map<std::string, bool> options_;
   std::map<std::string, std::string> properties_;

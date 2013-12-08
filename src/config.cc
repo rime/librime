@@ -510,7 +510,7 @@ Config* ConfigComponent::Create(const std::string &config_id) {
 // ConfigDataManager memebers
 
 ConfigDataManager& ConfigDataManager::instance() {
-  static scoped_ptr<ConfigDataManager> s_instance;
+  static unique_ptr<ConfigDataManager> s_instance;
   if (!s_instance) {
     s_instance.reset(new ConfigDataManager);
   }
@@ -641,7 +641,7 @@ ConfigItemPtr ConfigData::ConvertFromYaml(const YAML::Node &node) {
     return ConfigItemPtr();
   }
   if (YAML::NodeType::Scalar == node.Type()) {
-    return boost::make_shared<ConfigValue>(node.as<std::string>());
+    return make_shared<ConfigValue>(node.as<std::string>());
   }
   if (YAML::NodeType::Sequence == node.Type()) {
     ConfigListPtr config_list = make_shared<ConfigList>();

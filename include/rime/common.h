@@ -9,10 +9,9 @@
 
 #include <cstdlib>
 #include <string>
+#include <memory>
 #include <boost/signals2/connection.hpp>
 #include <boost/signals2/signal.hpp>
-#include <boost/smart_ptr.hpp>
-#include <boost/make_shared.hpp>
 #include <glog/logging.h>
 
 namespace rime {
@@ -20,14 +19,15 @@ namespace rime {
 using boost::signals2::connection;
 using boost::signals2::signal;
 
-using boost::scoped_ptr;
-using boost::shared_ptr;
-using boost::weak_ptr;
-using boost::make_shared;
+using std::unique_ptr;
+using std::shared_ptr;
+using std::weak_ptr;
+using std::make_shared;
+using std::enable_shared_from_this;
 
 template <class A, class B>
 shared_ptr<A> As(const B& ptr) {
-  return boost::dynamic_pointer_cast<A>(ptr);
+  return std::dynamic_pointer_cast<A>(ptr);
 }
 
 template <class A, class B>
@@ -37,12 +37,12 @@ bool Is(const B& ptr) {
 
 template <class T>
 shared_ptr<T> New() {
-  return boost::make_shared<T>();
+  return std::make_shared<T>();
 }
 
 template <class T, class A>
 shared_ptr<T> New(const A& a) {
-  return boost::make_shared<T>(a);
+  return std::make_shared<T>(a);
 }
 
 }  // namespace rime

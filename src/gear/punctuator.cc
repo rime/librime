@@ -29,7 +29,7 @@ void PunctConfig::LoadConfig(Engine *engine, bool load_symbols) {
   Config *config = engine->schema()->config();
   std::string preset;
   if (config->GetString("punctuator/import_preset", &preset)) {
-    scoped_ptr<Config> preset_config(Config::Require("config")->Create(preset));
+    unique_ptr<Config> preset_config(Config::Require("config")->Create(preset));
     if (!preset_config) {
       LOG(ERROR) << "Error importing preset punctuation '" << preset << "'.";
       return;
@@ -229,7 +229,7 @@ shared_ptr<Candidate> CreatePunctCandidate(const std::string &punct, const Segme
     is_full_shape = is_ideographic_space || is_full_shape_ascii;
   }
   bool one_key = (segment.end - segment.start == 1);
-  return boost::make_shared<SimpleCandidate>("punct",
+  return make_shared<SimpleCandidate>("punct",
                                              segment.start,
                                              segment.end,
                                              punct,

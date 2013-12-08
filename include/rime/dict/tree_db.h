@@ -39,7 +39,7 @@ class TreeDbAccessor : public DbAccessor {
   virtual bool exhausted();
 
  private:
-  scoped_ptr<kyotocabinet::DB::Cursor> cursor_;
+  unique_ptr<kyotocabinet::DB::Cursor> cursor_;
 };
 
 class TreeDb : public Db,
@@ -78,7 +78,7 @@ class TreeDb : public Db,
  private:
   void Initialize();
 
-  scoped_ptr<kyotocabinet::TreeDB> db_;
+  unique_ptr<kyotocabinet::TreeDB> db_;
   std::string db_type_;
 };
 

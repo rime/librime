@@ -158,7 +158,7 @@ void AsciiComposer::LoadConfig(Schema* schema) {
   caps_lock_switch_style_ = kAsciiModeSwitchNoop;
   good_old_caps_lock_ = false;
   if (!schema) return;
-  scoped_ptr<Config> preset_config(
+  unique_ptr<Config> preset_config(
       Config::Require("config")->Create("default"));
   if (preset_config) {
     preset_config->GetBool("ascii_composer/good_old_caps_lock",

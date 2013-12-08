@@ -46,7 +46,7 @@ void ModuleManager::UnloadModules() {
 }
 
 ModuleManager& ModuleManager::instance() {
-  static scoped_ptr<ModuleManager> s_instance;
+  static unique_ptr<ModuleManager> s_instance;
   if (!s_instance) {
     s_instance.reset(new ModuleManager);
   }

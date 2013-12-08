@@ -5,7 +5,6 @@
 // 2013-05-26 GONG Chen <chen.sst@gmail.com>
 //
 #include <vector>
-#include <boost/enable_shared_from_this.hpp>
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/config.h>
@@ -54,7 +53,7 @@ void Switch::Apply(Switcher* switcher) {
 
 class RadioOption;
 
-class RadioGroup : public boost::enable_shared_from_this<RadioGroup> {
+class RadioGroup : public enable_shared_from_this<RadioGroup> {
  public:
   RadioGroup(Context* context, Switcher* switcher)
       : context_(context), switcher_(switcher) {
@@ -99,7 +98,7 @@ void RadioOption::UpdateState(bool selected) {
 
 shared_ptr<RadioOption> RadioGroup::CreateOption(const std::string& state_label,
                                                  const std::string& option_name) {
-  shared_ptr<RadioOption> option = boost::make_shared<RadioOption>(
+  shared_ptr<RadioOption> option = make_shared<RadioOption>(
       shared_from_this(), state_label, option_name);
   options_.push_back(option.get());
   return option;
@@ -159,7 +158,7 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
       // toggle
       if (states->size() != 2) continue;
       bool current_state = context->get_option(option_name->str());
-      Append(boost::make_shared<Switch>(
+      Append(make_shared<Switch>(
           states->GetValueAt(current_state)->str(),
           states->GetValueAt(1 - current_state)->str(),
           option_name->str(),

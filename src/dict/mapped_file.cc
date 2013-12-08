@@ -69,8 +69,8 @@ class MappedFileImpl {
   }
 
  private:
-  scoped_ptr<boost::interprocess::file_mapping> file_;
-  scoped_ptr<boost::interprocess::mapped_region> region_;
+  unique_ptr<boost::interprocess::file_mapping> file_;
+  unique_ptr<boost::interprocess::mapped_region> region_;
 
 };
 
@@ -106,7 +106,7 @@ bool MappedFile::Create(size_t capacity) {
   LOG(INFO) << "opening file for read/write access.";
   file_.reset(new MappedFileImpl(file_name_, MappedFileImpl::kOpenReadWrite));
   size_ = 0;
-  return file_;
+  return bool(file_);
 }
 
 bool MappedFile::OpenReadOnly() {
@@ -116,7 +116,7 @@ bool MappedFile::OpenReadOnly() {
   }
   file_.reset(new MappedFileImpl(file_name_, MappedFileImpl::kOpenReadOnly));
   size_ = file_->get_size();
-  return file_;
+  return bool(file_);
 }
 
 bool MappedFile::OpenReadWrite() {
@@ -126,7 +126,7 @@ bool MappedFile::OpenReadWrite() {
   }
   file_.reset(new MappedFileImpl(file_name_, MappedFileImpl::kOpenReadWrite));
   size_ = 0;
-  return file_;
+  return bool(file_);
 }
 
 void MappedFile::Close() {
@@ -137,7 +137,7 @@ void MappedFile::Close() {
 }
 
 bool MappedFile::IsOpen() const {
-  return file_;
+  return bool(file_);
 }
 
 bool MappedFile::Flush() {

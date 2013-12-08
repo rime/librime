@@ -30,7 +30,7 @@ void RecognizerPatterns::LoadConfig(Config *config) {
   ConfigMapPtr pattern_map;
   std::string preset;
   if (config->GetString("recognizer/import_preset", &preset)) {
-    scoped_ptr<Config> preset_config(Config::Require("config")->Create(preset));
+    unique_ptr<Config> preset_config(Config::Require("config")->Create(preset));
     if (!preset_config) {
       LOG(ERROR) << "Error importing preset patterns '" << preset << "'.";
       return;

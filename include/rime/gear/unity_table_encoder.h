@@ -41,7 +41,7 @@ class UnityTableEncoder : public TableEncoder, public PhraseCollector {
 
  protected:
   UserDictionary* user_dict_;
-  scoped_ptr<ReverseLookupDictionary> rev_dict_;
+  unique_ptr<ReverseLookupDictionary> rev_dict_;
 };
 
 }  // namespace rime

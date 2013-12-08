@@ -8,7 +8,6 @@
 //
 #include <algorithm>
 #include <boost/algorithm/string/join.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include <boost/foreach.hpp>
 #include <rime/composition.h>
 #include <rime/candidate.h>
@@ -76,7 +75,7 @@ bool DelimitSyllablesDfs(DelimitSyllableState *state,
 
 class ScriptTranslation : public Translation,
                           public Syllabification,
-                          public boost::enable_shared_from_this<ScriptTranslation>
+                          public enable_shared_from_this<ScriptTranslation>
 {
  public:
   ScriptTranslation(ScriptTranslator *translator,
@@ -145,7 +144,7 @@ shared_ptr<Translation> ScriptTranslator::Query(const std::string &input,
 
   // the translator should survive translations it creates
   shared_ptr<ScriptTranslation> result =
-      boost::make_shared<ScriptTranslation>(this, input, segment.start);
+      make_shared<ScriptTranslation>(this, input, segment.start);
   if (!result ||
       !result->Evaluate(dict_.get(),
                         enable_user_dict ? user_dict_.get() : NULL)) {

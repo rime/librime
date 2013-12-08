@@ -35,7 +35,7 @@ class Schema {
 
   std::string schema_id_;
   std::string schema_name_;
-  scoped_ptr<Config> config_;
+  unique_ptr<Config> config_;
   // frequently used config items
   int page_size_;
   std::string select_keys_;

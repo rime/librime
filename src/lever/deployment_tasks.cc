@@ -110,7 +110,7 @@ bool InstallationUpdate::Run(Deployer* deployer) {
 bool WorkspaceUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating workspace.";
   {
-    scoped_ptr<DeploymentTask> t;
+    unique_ptr<DeploymentTask> t;
     t.reset(new ConfigFileUpdate("default.yaml", "config_version"));
     t->Run(deployer);
     // since brise 0.18
@@ -159,7 +159,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
       continue;
     }
     // build schema
-    scoped_ptr<DeploymentTask> t(new SchemaUpdate(schema_path));
+    unique_ptr<DeploymentTask> t(new SchemaUpdate(schema_path));
     if (t->Run(deployer))
       ++success;
     else
@@ -191,7 +191,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
         continue;
       }
       // build dependency
-      scoped_ptr<DeploymentTask> t(new SchemaUpdate(dependency_path));
+      unique_ptr<DeploymentTask> t(new SchemaUpdate(dependency_path));
       if (t->Run(deployer))
         ++success;
       else
@@ -283,7 +283,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     return true;
   }
   DictionaryComponent component;
-  scoped_ptr<Dictionary> dict;
+  unique_ptr<Dictionary> dict;
   dict.reset(component.Create(Ticket(&schema, "translator")));
   if (!dict) {
     LOG(ERROR) << "Error creating dictionary '" << dict_name << "'.";
@@ -341,7 +341,7 @@ bool PrebuildAllSchemas::Run(Deployer* deployer) {
   for (; iter != end; ++iter) {
     fs::path entry(iter->path());
     if (boost::ends_with(entry.string(), ".schema.yaml")) {
-      scoped_ptr<DeploymentTask> t(new SchemaUpdate(entry.string()));
+      unique_ptr<DeploymentTask> t(new SchemaUpdate(entry.string()));
       if (!t->Run(deployer))
         success = false;
     }
