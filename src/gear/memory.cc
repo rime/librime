@@ -5,7 +5,6 @@
 // 2013-01-02 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/bind.hpp>
-#include <boost/foreach.hpp>
 #include <rime/candidate.h>
 #include <rime/context.h>
 #include <rime/composition.h>
@@ -31,7 +30,7 @@ void CommitEntry::AppendPhrase(const shared_ptr<Phrase>& phrase) {
   code.insert(code.end(), phrase->code().begin(), phrase->code().end());
   shared_ptr<Sentence> sentence = As<Sentence>(phrase);
   if (sentence) {
-    BOOST_FOREACH(const DictEntry& e, sentence->components()) {
+    for (const DictEntry& e : sentence->components()) {
       elements.push_back(&e);
     }
   }
@@ -90,7 +89,7 @@ void Memory::OnCommit(Context* ctx) {
   user_dict_->NewTransaction();
 
   CommitEntry commit_entry(this);
-  BOOST_FOREACH(Composition::value_type &seg, *ctx->composition()) {
+  for (Composition::value_type &seg : *ctx->composition()) {
     shared_ptr<Phrase> phrase =
         As<Phrase>(Candidate::GetGenuineCandidate(seg.GetSelectedCandidate()));
     bool recognized = phrase && phrase->language() == language();

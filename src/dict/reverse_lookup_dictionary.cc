@@ -6,7 +6,6 @@
 //
 #include <sstream>
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <rime/schema.h>
 #include <rime/ticket.h>
@@ -57,22 +56,22 @@ bool ReverseLookupDictionary::Build(DictSettings* settings,
     return false;
   ReverseLookupTable rev_table;
   int syllable_id = 0;
-  BOOST_FOREACH(const std::string& syllable, syllabary) {
+  for (const std::string& syllable : syllabary) {
     Vocabulary::const_iterator it = vocabulary.find(syllable_id++);
     if (it == vocabulary.end())
       continue;
     const DictEntryList& entries(it->second.entries);
-    BOOST_FOREACH(const shared_ptr<DictEntry>& e, entries) {
+    for (const shared_ptr<DictEntry>& e : entries) {
       rev_table[e->text].insert(syllable);
     }
   }
   // save reverse lookup entries
-  BOOST_FOREACH(const ReverseLookupTable::value_type& v, rev_table) {
+  for (const ReverseLookupTable::value_type& v : rev_table) {
     std::string code_list(boost::algorithm::join(v.second, " "));
     db_->Update(v.first, code_list);
   }
   // save stems
-  BOOST_FOREACH(const ReverseLookupTable::value_type& v, stems) {
+  for (const ReverseLookupTable::value_type& v : stems) {
     std::string key(v.first + kStemKeySuffix);
     std::string code_list(boost::algorithm::join(v.second, " "));
     db_->Update(key, code_list);

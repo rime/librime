@@ -4,7 +4,6 @@
 //
 // 2012-01-01 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/config.h>
 #include <rime/schema.h>

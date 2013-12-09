@@ -4,7 +4,6 @@
 //
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <rime/common.h>
 #include <rime/schema.h>
@@ -40,7 +39,7 @@ size_t match_extra_code(const table::Code *extra_code, size_t depth,
   if (spellings == index->second.end())
     return 0;
   size_t best_match = 0;
-  BOOST_FOREACH(const SpellingProperties* props, spellings->second) {
+  for (const SpellingProperties* props : spellings->second) {
     size_t match_end_pos = match_extra_code(extra_code, depth + 1,
                                             syll_graph, props->end_pos);
     if (!match_end_pos) continue;
@@ -159,9 +158,9 @@ shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_
   }
   shared_ptr<DictEntryCollector> collector = make_shared<DictEntryCollector>();
   // copy result
-  BOOST_FOREACH(TableQueryResult::value_type &v, result) {
+  for (TableQueryResult::value_type &v : result) {
     size_t end_pos = v.first;
-    BOOST_FOREACH(TableAccessor &a, v.second) {
+    for (TableAccessor &a : v.second) {
       double cr = initial_credibility * a.credibility();
       if (a.extra_code()) {
         do {
@@ -179,7 +178,7 @@ shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_
     }
   }
   // sort each group of equal code length
-  BOOST_FOREACH(DictEntryCollector::value_type &v, *collector) {
+  for (DictEntryCollector::value_type &v : *collector) {
     v.second.Sort();
   }
   return collector;
@@ -204,7 +203,7 @@ size_t Dictionary::LookupWords(DictEntryIterator *result,
   }
   DLOG(INFO) << "found " << keys.size() << " matching keys thru the prism.";
   size_t code_length(str_code.length());
-  BOOST_FOREACH(Prism::Match &match, keys) {
+  for (Prism::Match &match : keys) {
     SpellingAccessor accessor(prism_->QuerySpelling(match.value));
     while (!accessor.exhausted()) {
       int syllable_id = accessor.syllable_id();
@@ -232,7 +231,7 @@ bool Dictionary::Decode(const Code &code, std::vector<std::string>* result) {
   if (!result || !table_)
     return false;
   result->clear();
-  BOOST_FOREACH(int c, code) {
+  for (int c : code) {
     const char *s = table_->GetSyllableById(c);
     if (!s)
       return false;

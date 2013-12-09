@@ -8,7 +8,7 @@
 //
 #include <algorithm>
 #include <boost/algorithm/string/join.hpp>
-#include <boost/foreach.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 #include <rime/composition.h>
 #include <rime/candidate.h>
 #include <rime/config.h>
@@ -49,7 +49,8 @@ bool DelimitSyllablesDfs(DelimitSyllableState *state,
   if (z == state->graph->edges.end())
     return false;
   // favor longer spellings
-  BOOST_REVERSE_FOREACH(const EndVertexMap::value_type &y, z->second) {
+  for (const EndVertexMap::value_type &y :
+       boost::adaptors::reverse(z->second)) {
     size_t end_vertex_pos = y.first;
     if (end_vertex_pos > state->end_pos)
       continue;
@@ -175,7 +176,7 @@ bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
   // avoid updating single character entries within a phrase which is
   // composed with single characters only
   if (commit_entry.elements.size() > 1) {
-    BOOST_FOREACH(const DictEntry* e, commit_entry.elements) {
+    for (const DictEntry* e : commit_entry.elements) {
       if (e->code.size() > 1) {
         update_elements = true;
         break;
@@ -183,7 +184,7 @@ bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
     }
   }
   if (update_elements) {
-    BOOST_FOREACH(const DictEntry* e, commit_entry.elements) {
+    for (const DictEntry* e : commit_entry.elements) {
       user_dict_->UpdateEntry(*e, 0);
     }
   }
@@ -367,7 +368,7 @@ shared_ptr<Sentence> ScriptTranslation::MakeSentence(
   const int kMaxSyllablesForUserPhraseQuery = 5;
   const double kPenaltyForAmbiguousSyllable = 1e-10;
   WordGraph graph;
-  BOOST_FOREACH(const EdgeMap::value_type &s, syllable_graph_.edges) {
+  for (const EdgeMap::value_type &s : syllable_graph_.edges) {
     // discourage starting a word from an ambiguous joint
     // bad cases include pinyin syllabification "niju'ede"
     double credibility = 1.0;
@@ -386,7 +387,7 @@ shared_ptr<Sentence> ScriptTranslation::MakeSentence(
         dict->Lookup(syllable_graph_, s.first, credibility);
     if (phrase) {
       // merge lookup results
-      BOOST_FOREACH(DictEntryCollector::value_type &t, *phrase) {
+      for (DictEntryCollector::value_type &t : *phrase) {
         DictEntryList &entries(u[t.first]);
         if (entries.empty()) {
           shared_ptr<DictEntry> e(t.second.Peek());
@@ -407,8 +408,8 @@ shared_ptr<Sentence> ScriptTranslation::MakeSentence(
 
 size_t ScriptTranslation::PreviousStop(size_t caret_pos) const {
   size_t offset = caret_pos - start_;
-  BOOST_REVERSE_FOREACH(const VertexMap::value_type& x,
-                        syllable_graph_.vertices) {
+  for (const VertexMap::value_type& x :
+       boost::adaptors::reverse(syllable_graph_.vertices)) {
     if (x.first < offset)
       return x.first + start_;
   }
@@ -417,7 +418,7 @@ size_t ScriptTranslation::PreviousStop(size_t caret_pos) const {
 
 size_t ScriptTranslation::NextStop(size_t caret_pos) const {
   size_t offset = caret_pos - start_;
-  BOOST_FOREACH(const VertexMap::value_type& x, syllable_graph_.vertices) {
+  for (const VertexMap::value_type& x : syllable_graph_.vertices) {
     if (x.first > offset)
       return x.first + start_;
   }

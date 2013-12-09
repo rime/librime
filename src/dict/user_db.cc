@@ -7,7 +7,6 @@
 #include <cstdlib>
 #include <vector>
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <rime/service.h>
@@ -35,7 +34,7 @@ std::string UserDbValue::Pack() const {
 bool UserDbValue::Unpack(const std::string &value) {
   std::vector<std::string> kv;
   boost::split(kv, value, boost::is_any_of(" "));
-  BOOST_FOREACH(const std::string &k_eq_v, kv) {
+  for (const std::string &k_eq_v : kv) {
     size_t eq = k_eq_v.find('=');
     if (eq == std::string::npos)
       continue;

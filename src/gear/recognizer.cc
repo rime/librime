@@ -4,7 +4,6 @@
 //
 // 2012-01-01 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/config.h>
@@ -48,7 +47,7 @@ RecognizerMatch RecognizerPatterns::GetMatch(
   size_t k = segmentation->GetConfirmedPosition();
   std::string active_input(input.substr(k));
   DLOG(INFO) << "matching active input '" << active_input << "' at pos " << k;
-  BOOST_FOREACH(const RecognizerPatterns::value_type &v, *this) {
+  for (const RecognizerPatterns::value_type &v : *this) {
     std::smatch m;
     if (std::regex_search(active_input, m, v.second)) {
       size_t start = k + m.position();
@@ -59,7 +58,7 @@ RecognizerMatch RecognizerPatterns::GetMatch(
                    << m.str() << "' matches pattern: " << v.first;
         return RecognizerMatch(v.first, start, end);
       }
-      BOOST_FOREACH(const Segment &seg, *segmentation) {
+      for (const Segment &seg : *segmentation) {
         if (start < seg.start) break;
         if (start == seg.start) {
           DLOG(INFO) << "input [" << start << ", " << end << ") '"

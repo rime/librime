@@ -4,7 +4,6 @@
 //
 // 2013-01-06 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/foreach.hpp>
 #include <rime/candidate.h>
 
 namespace rime {
@@ -26,7 +25,7 @@ Candidate::GetGenuineCandidates(const shared_ptr<Candidate>& cand) {
   std::vector<shared_ptr<Candidate> > result;
   shared_ptr<UniquifiedCandidate> uniquified(As<UniquifiedCandidate>(cand));
   if (uniquified) {
-    BOOST_FOREACH(const shared_ptr<Candidate>& item, uniquified->items()) {
+    for (const shared_ptr<Candidate>& item : uniquified->items()) {
       result.push_back(UnpackShadowCandidate(item));
     }
   }

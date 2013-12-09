@@ -10,7 +10,6 @@
 #include <string>
 #include <vector>
 #include <boost/bind.hpp>
-#include <boost/foreach.hpp>
 #include <boost/function.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
@@ -171,7 +170,7 @@ ProcessResult KeyBinder::ProcessKeyEvent(const KeyEvent &key_event) {
     return kNoop;
   Conditions conditions;
   calculate_conditions(engine_->context(), &conditions);
-  BOOST_FOREACH(const KeyBinding& binding, (*key_bindings_)[key_event]) {
+  for (const KeyBinding& binding : (*key_bindings_)[key_event]) {
     if (conditions.find(binding.whence) == conditions.end())
       continue;
     PerformKeyBinding(binding);

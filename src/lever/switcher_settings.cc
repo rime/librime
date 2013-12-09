@@ -6,7 +6,6 @@
 //
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/foreach.hpp>
 #include <rime/config.h>
 #include <rime/deployer.h>
 #include <rime/lever/switcher_settings.h>
@@ -37,7 +36,7 @@ bool SwitcherSettings::Load() {
 bool SwitcherSettings::Select(const Selection& selection) {
   selection_ = selection;
   ConfigListPtr schema_list = make_shared<ConfigList>();
-  BOOST_FOREACH(const std::string& schema_id, selection_) {
+  for (const std::string& schema_id : selection_) {
     ConfigMapPtr item = make_shared<ConfigMap>();
     item->Set("schema", make_shared<ConfigValue>(schema_id));
     schema_list->Append(item);
@@ -68,7 +67,7 @@ void SwitcherSettings::GetAvailableSchemasFromDirectory(const fs::path& dir) {
         if (!config.GetString("schema/name", &info.name)) continue;
         // check for duplicates
         bool duplicated = false;
-        BOOST_FOREACH(const SchemaInfo& other, available_) {
+        for (const SchemaInfo& other : available_) {
           if (other.schema_id == info.schema_id) {
             duplicated = true;
             break;

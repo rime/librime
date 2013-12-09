@@ -4,7 +4,6 @@
 //
 // 2013-10-17 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/foreach.hpp>
 
 #include <rime_api.h>
 #include <rime_levers_api.h>
@@ -115,7 +114,7 @@ static Bool rime_levers_get_available_schema_list(RimeSwitcherSettings* settings
     return False;
   }
   list->list = new RimeSchemaListItem[ss->available().size()];
-  BOOST_FOREACH(const rime::SchemaInfo& info, ss->available()) {
+  for (const rime::SchemaInfo& info : ss->available()) {
     RimeSchemaListItem& item(list->list[list->size]);
     item.schema_id = const_cast<char*>(info.schema_id.c_str());
     item.name = const_cast<char*>(info.name.c_str());
@@ -134,7 +133,7 @@ static Bool rime_levers_get_selected_schema_list(RimeSwitcherSettings* settings,
     return False;
   }
   list->list = new RimeSchemaListItem[ss->selection().size()];
-  BOOST_FOREACH(const std::string& schema_id, ss->selection()) {
+  for (const std::string& schema_id : ss->selection()) {
     RimeSchemaListItem& item(list->list[list->size]);
     item.schema_id = const_cast<char*>(schema_id.c_str());
     ++list->size;

@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <map>
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/scope_exit.hpp>
 #include <rime/common.h>
@@ -196,7 +195,7 @@ void UserDictionary::DfsLookup(const SyllableGraph &syll_graph,
   }
   DLOG(INFO) << "dfs lookup starts from " << current_pos;
   std::string prefix;
-  BOOST_FOREACH(const SpellingIndex::value_type& spelling, index->second) {
+  for (const SpellingIndex::value_type& spelling : index->second) {
     DLOG(INFO) << "prefix: '" << current_prefix << "'"
                << ", syll_id: " << spelling.first
                << ", num_spellings: " << spelling.second.size();
@@ -260,7 +259,7 @@ UserDictionary::Lookup(const SyllableGraph &syll_graph,
   if (state.collector->empty())
     return shared_ptr<UserDictEntryCollector>();
   // sort each group of homophones by weight
-  BOOST_FOREACH(UserDictEntryCollector::value_type &v, *state.collector) {
+  for (UserDictEntryCollector::value_type &v : *state.collector) {
     v.second.Sort();
   }
   return state.collector;
@@ -430,7 +429,7 @@ bool UserDictionary::TranslateCodeToString(const Code &code,
                                            std::string* result) {
   if (!table_ || !result) return false;
   result->clear();
-  BOOST_FOREACH(const int &syllable_id, code) {
+  for (const int &syllable_id : code) {
     const char *spelling = table_->GetSyllableById(syllable_id);
     if (!spelling) {
       LOG(ERROR) << "Error translating syllable_id '" << syllable_id << "'.";

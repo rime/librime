@@ -6,7 +6,6 @@
 //
 #include <string>
 #include <boost/bind.hpp>
-#include <boost/foreach.hpp>
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/composition.h>
@@ -43,7 +42,7 @@ void Switcher::Attach(Engine *engine) {
   attached_engine_ = engine;
   // restore saved options
   if (user_config_) {
-    BOOST_FOREACH(const std::string& option_name, save_options_) {
+    for (const std::string& option_name : save_options_) {
       bool value = false;
       if (user_config_->GetBool("var/option/" + option_name, &value)) {
         engine->context()->set_option(option_name, value);
@@ -53,7 +52,7 @@ void Switcher::Attach(Engine *engine) {
 }
 
 bool Switcher::ProcessKeyEvent(const KeyEvent &key_event) {
-  BOOST_FOREACH(const KeyEvent &hotkey, hotkeys_) {
+  for (const KeyEvent &hotkey : hotkeys_) {
     if (key_event == hotkey) {
       if (!active_ && attached_engine_) {
         Activate();
@@ -65,7 +64,7 @@ bool Switcher::ProcessKeyEvent(const KeyEvent &key_event) {
     }
   }
   if (active_) {
-    BOOST_FOREACH(shared_ptr<Processor> &p, processors_) {
+    for (shared_ptr<Processor> &p : processors_) {
       if (kNoop != p->ProcessKeyEvent(key_event))
         return true;
     }
@@ -184,7 +183,7 @@ void Switcher::Activate() {
   }
   shared_ptr<Menu> menu = make_shared<Menu>();
   comp->back().menu = menu;
-  BOOST_FOREACH(shared_ptr<Translator>& translator, translators_) {
+  for (shared_ptr<Translator>& translator : translators_) {
     shared_ptr<Translation> t = translator->Query("", comp->back(), NULL);
     if (t)
       menu->AddTranslation(t);

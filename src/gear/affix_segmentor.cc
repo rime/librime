@@ -5,7 +5,6 @@
 // 2013-10-30 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/schema.h>
 #include <rime/segmentation.h>
@@ -68,7 +67,7 @@ bool AffixSegmentor::Proceed(Segmentation *segmentation) {
   j += prefix_.length();
   Segment code_segment(j, k);
   code_segment.tags.insert(tag_);
-  BOOST_FOREACH(const std::string& tag, extra_tags_) {
+  for (const std::string& tag : extra_tags_) {
     code_segment.tags.insert(tag);
   }
   segmentation->Forward();

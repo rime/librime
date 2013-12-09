@@ -6,7 +6,6 @@
 //
 #include <algorithm>
 #include <iterator>
-#include <boost/foreach.hpp>
 #include <rime/menu.h>
 #include <rime/segmentation.h>
 
@@ -121,7 +120,7 @@ size_t Segmentation::GetCurrentSegmentLength() const {
 
 size_t Segmentation::GetConfirmedPosition() const {
   size_t k = 0;
-  BOOST_FOREACH(const Segment &seg, *this) {
+  for (const Segment &seg : *this) {
     if (seg.status >= Segment::kSelected)
       k = seg.end;
   }
@@ -131,12 +130,12 @@ size_t Segmentation::GetConfirmedPosition() const {
 std::ostream& operator<< (std::ostream& out,
                           const Segmentation &segmentation) {
   out << "[" << segmentation.input();
-  BOOST_FOREACH(const Segment &segment, segmentation) {
+  for (const Segment &segment : segmentation) {
     out << "|" << segment.start << "," << segment.end;
     if (!segment.tags.empty()) {
       out << "{";
       bool first = true;
-      BOOST_FOREACH(const std::string& tag, segment.tags) {
+      for (const std::string& tag : segment.tags) {
         if (first)
           first = false;
         else

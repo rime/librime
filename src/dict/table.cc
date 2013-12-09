@@ -9,7 +9,6 @@
 #include <queue>
 #include <vector>
 #include <utility>
-#include <boost/foreach.hpp>
 #include <rime/algo/syllabifier.h>
 #include <rime/dict/table.h>
 
@@ -275,7 +274,7 @@ bool Table::Build(const Syllabary &syllabary, const Vocabulary &vocabulary, size
   }
   else {
     size_t i = 0;
-    BOOST_FOREACH(const std::string &syllable, syllabary) {
+    for (const std::string &syllable : syllabary) {
       CopyString(syllable, &syllabary_->at[i++]);
     }
   }
@@ -299,7 +298,7 @@ table::HeadIndex* Table::BuildHeadIndex(const Vocabulary &vocabulary, size_t num
   if (!index) {
     return NULL;
   }
-  BOOST_FOREACH(const Vocabulary::value_type &v, vocabulary) {
+  for (const Vocabulary::value_type &v : vocabulary) {
     int syllable_id = v.first;
     table::HeadIndexNode &node(index->at[syllable_id]);
     const DictEntryList &entries(v.second.entries);
@@ -325,7 +324,7 @@ table::TrunkIndex* Table::BuildTrunkIndex(const Code &prefix, const Vocabulary &
     return NULL;
   }
   size_t count = 0;
-  BOOST_FOREACH(const Vocabulary::value_type &v, vocabulary) {
+  for (const Vocabulary::value_type &v : vocabulary) {
     int syllable_id = v.first;
     table::TrunkIndexNode &node(index->at[count++]);
     node.key = syllable_id;
@@ -366,7 +365,7 @@ table::TailIndex* Table::BuildTailIndex(const Code &prefix, const Vocabulary &vo
     return NULL;
   }
   size_t count = 0;
-  BOOST_FOREACH(const DictEntryList::value_type &src, page.entries) {
+  for (const DictEntryList::value_type &src : page.entries) {
     DLOG(INFO) << "count: " << count;
     DLOG(INFO) << "entry: " << src->text;
     table::TailIndexNode &dest(index->at[count++]);
@@ -469,10 +468,10 @@ bool Table::Query(const SyllableGraph &syll_graph, size_t start_pos,
       }
       continue;
     }
-    BOOST_FOREACH(const SpellingIndex::value_type& spellings, index->second) {
+    for (const SpellingIndex::value_type& spellings : index->second) {
       SyllableId syll_id = spellings.first;
       TableAccessor accessor(visitor.Access(syll_id));
-      BOOST_FOREACH(const SpellingProperties* props, spellings.second) {
+      for (const SpellingProperties* props : spellings.second) {
         size_t end_pos = props->end_pos;
         if (!accessor.exhausted()) {
           (*result)[end_pos].push_back(accessor);

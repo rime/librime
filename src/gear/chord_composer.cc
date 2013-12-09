@@ -4,7 +4,6 @@
 //
 // 2012-06-05 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/config.h>
@@ -68,7 +67,7 @@ ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent &key_event) {
 
 std::string ChordComposer::SerializeChord() {
   std::string code;
-  BOOST_FOREACH(char ch, alphabet_) {
+  for (char ch : alphabet_) {
     if (chord_.find(ch) != chord_.end())
       code.push_back(ch);
   }
@@ -106,7 +105,7 @@ void ChordComposer::FinishChord() {
   KeySequence sequence;
   if (sequence.Parse(code)) {
     pass_thru_ = true;
-    BOOST_FOREACH(const KeyEvent& ke, sequence) {
+    for (const KeyEvent& ke : sequence) {
       if (!engine_->ProcessKeyEvent(ke)) {
         // direct commit
         engine_->CommitText(std::string(1, ke.keycode()));

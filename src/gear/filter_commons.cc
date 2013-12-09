@@ -4,7 +4,6 @@
 //
 // 2013-11-05 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/foreach.hpp>
 #include <rime/schema.h>
 #include <rime/segmentation.h>
 #include <rime/ticket.h>
@@ -29,7 +28,7 @@ bool TagMatching::TagsMatch(Segment* segment) {
     return false;
   if (tags_.empty())  // match any
     return true;
-  BOOST_FOREACH(const std::string& tag, tags_) {
+  for (const std::string& tag : tags_) {
     if (segment->HasTag(tag))
       return true;
   }

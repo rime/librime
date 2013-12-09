@@ -4,7 +4,6 @@
 //
 // 2012-04-27 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/foreach.hpp>
 #include <rime/candidate.h>
 #include <rime/commit_history.h>
 #include <rime/composition.h>
@@ -35,7 +34,7 @@ void CommitHistory::Push(const Composition& composition,
                          const std::string& input) {
   CommitRecord* last = NULL;
   size_t end = 0;
-  BOOST_FOREACH(const Segment &seg, composition) {
+  for (const Segment &seg : composition) {
     shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
     if (cand) {
       if (last && last->type == cand->type()) {
@@ -66,7 +65,7 @@ void CommitHistory::Push(const Composition& composition,
 
 std::string CommitHistory::repr() const {
   std::string result;
-  BOOST_FOREACH(const CommitRecord& record, *this) {
+  for (const CommitRecord& record : *this) {
     result += "[" + record.type + "]" + record.text;
   }
   return result;

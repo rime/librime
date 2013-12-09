@@ -6,7 +6,6 @@
 //
 #include <fstream>
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <rime/dict/dict_settings.h>
 #include <rime/dict/entry_collector.h>
@@ -36,7 +35,7 @@ void EntryCollector::Configure(DictSettings* settings) {
 }
 
 void EntryCollector::Collect(const std::vector<std::string>& dict_files) {
-  BOOST_FOREACH(const std::string& dict_file, dict_files) {
+  for (const std::string& dict_file : dict_files) {
     Collect(dict_file);
   }
   Finish();
@@ -183,7 +182,7 @@ void EntryCollector::CreateEntry(const std::string &word,
     }
   }
   // learn new syllables
-  BOOST_FOREACH(const std::string &s, e.raw_code) {
+  for (const std::string &s : e.raw_code) {
     if (syllabary.find(s) == syllabary.end())
       syllabary.insert(s);
   }
@@ -206,14 +205,14 @@ bool EntryCollector::TranslateWord(const std::string& word,
                                    std::vector<std::string>* result) {
   ReverseLookupTable::const_iterator s = stems.find(word);
   if (s != stems.end()) {
-    BOOST_FOREACH(const std::string& stem, s->second) {
+    for (const std::string& stem : s->second) {
       result->push_back(stem);
     }
     return true;
   }
   WordMap::const_iterator w = words.find(word);
   if (w != words.end()) {
-    BOOST_FOREACH(const WeightMap::value_type& v, w->second) {
+    for (const WeightMap::value_type& v : w->second) {
       const double kMinimalWeight = 0.05;  // 5%
       double min_weight = total_weight[word] * kMinimalWeight;
       if (v.second < min_weight)
@@ -228,11 +227,11 @@ bool EntryCollector::TranslateWord(const std::string& word,
 void EntryCollector::Dump(const std::string& file_name) const {
   std::ofstream out(file_name.c_str());
   out << "# syllabary:" << std::endl;
-  BOOST_FOREACH(const std::string& syllable, syllabary) {
+  for (const std::string& syllable : syllabary) {
     out << "# - " << syllable << std::endl;
   }
   out << std::endl;
-  BOOST_FOREACH(const RawDictEntry &e, entries) {
+  for (const RawDictEntry &e : entries) {
     out << e.text << '\t'
         << e.raw_code.ToString() << '\t'
         << e.weight << std::endl;

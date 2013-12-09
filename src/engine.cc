@@ -8,7 +8,6 @@
 #include <string>
 #include <vector>
 #include <boost/bind.hpp>
-#include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -99,7 +98,7 @@ ConcreteEngine::~ConcreteEngine() {
 bool ConcreteEngine::ProcessKeyEvent(const KeyEvent &key_event) {
   DLOG(INFO) << "process key event: " << key_event;
   ProcessResult ret = kNoop;
-  BOOST_FOREACH(shared_ptr<Processor>& p, processors_) {
+  for (shared_ptr<Processor>& p : processors_) {
     ret = p->ProcessKeyEvent(key_event);
     if (ret == kRejected) break;
     if (ret == kAccepted) return true;
@@ -107,7 +106,7 @@ bool ConcreteEngine::ProcessKeyEvent(const KeyEvent &key_event) {
   // record unhandled keys, eg. spaces, numbers, bksp's.
   context_->commit_history().Push(key_event);
   // post-processing
-  BOOST_FOREACH(shared_ptr<Processor>& p, post_processors_) {
+  for (shared_ptr<Processor>& p : post_processors_) {
     ret = p->ProcessKeyEvent(key_event);
     if (ret == kRejected) break;
     if (ret == kAccepted) return true;
@@ -153,7 +152,7 @@ void ConcreteEngine::CalculateSegmentation(Composition *comp) {
     DLOG(INFO) << "start pos: " << start_pos;
     DLOG(INFO) << "end pos: " << end_pos;
     // recognize a segment by calling the segmentors in turn
-    BOOST_FOREACH(shared_ptr<Segmentor> &segmentor, segmentors_) {
+    for (shared_ptr<Segmentor> &segmentor : segmentors_) {
       if (!segmentor->Proceed(comp))
         break;
     }
@@ -172,7 +171,7 @@ void ConcreteEngine::CalculateSegmentation(Composition *comp) {
 }
 
 void ConcreteEngine::TranslateSegments(Composition *comp) {
-  BOOST_FOREACH(Segment& segment, *comp) {
+  for (Segment& segment : *comp) {
     if (segment.status >= Segment::kGuess)
       continue;
     size_t len = segment.end - segment.start;
@@ -183,7 +182,7 @@ void ConcreteEngine::TranslateSegments(Composition *comp) {
         boost::bind(&ConcreteEngine::FilterCandidates,
                     this, &segment, _1, _2));
     shared_ptr<Menu> menu = make_shared<Menu>(cand_filter);
-    BOOST_FOREACH(shared_ptr<Translator>& translator, translators_) {
+    for (shared_ptr<Translator>& translator : translators_) {
       shared_ptr<Translation> translation =
           translator->Query(input, segment, &segment.prompt);
       if (!translation)
@@ -205,7 +204,7 @@ void ConcreteEngine::FilterCandidates(Segment* segment,
                                       CandidateList* candidates) {
   if (filters_.empty()) return;
   DLOG(INFO) << "applying filters.";
-  BOOST_FOREACH(shared_ptr<Filter> filter, filters_) {
+  for (shared_ptr<Filter> filter : filters_) {
     if (filter->AppliesToSegment(segment)) {
       filter->Apply(recruited, candidates);
     }
@@ -215,7 +214,7 @@ void ConcreteEngine::FilterCandidates(Segment* segment,
 void ConcreteEngine::FormatText(std::string* text) {
   if (formatters_.empty()) return;
   DLOG(INFO) << "applying formatters.";
-  BOOST_FOREACH(shared_ptr<Formatter> formatter, formatters_) {
+  for (shared_ptr<Formatter> formatter : formatters_) {
     formatter->Format(text);
   }
 }

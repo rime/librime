@@ -5,7 +5,7 @@
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 #include <utf8.h>
 #include <rime/candidate.h>
 #include <rime/composition.h>
@@ -306,7 +306,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
 
 bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
   if (!user_dict_) return false;
-  BOOST_FOREACH(const DictEntry* e, commit_entry.elements) {
+  for (const DictEntry* e : commit_entry.elements) {
     if (is_constructed(e)) {
       DictEntry blessed(*e);
       UnityTableEncoder::RemovePrefix(&blessed.custom_code);
@@ -471,7 +471,7 @@ void SentenceTranslation::PrepareSentence() {
   const std::string& delimiters(translator_->delimiters());
   // split syllables
   size_t pos = 0;
-  BOOST_FOREACH(int len, sentence_->syllable_lengths()) {
+  for (int len : sentence_->syllable_lengths()) {
     if (pos > 0 &&
         delimiters.find(input_[pos - 1]) == std::string::npos) {
       preedit.insert(pos, 1, ' ');
@@ -512,7 +512,7 @@ size_t SentenceSyllabification::PreviousStop(size_t caret_pos) const {
   shared_ptr<Sentence> sentence = syllabified_.lock();
   if (sentence) {
     size_t stop = sentence->start();
-    BOOST_FOREACH(size_t len, sentence->syllable_lengths()) {
+    for (size_t len : sentence->syllable_lengths()) {
       if (stop + len >= caret_pos) {
         return stop;
       }
@@ -526,7 +526,7 @@ size_t SentenceSyllabification::NextStop(size_t caret_pos) const {
   shared_ptr<Sentence> sentence = syllabified_.lock();
   if (sentence) {
     size_t stop = sentence->start();
-    BOOST_FOREACH(size_t len, sentence->syllable_lengths()) {
+    for (size_t len : sentence->syllable_lengths()) {
       stop += len;
       if (stop > caret_pos) {
         return stop;
@@ -617,7 +617,7 @@ shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
       std::vector<Prism::Match> matches;
       dict_->prism()->CommonPrefixSearch(input.substr(start_pos), &matches);
       if (matches.empty()) continue;
-      BOOST_REVERSE_FOREACH(const Prism::Match &m, matches) {
+      for (const Prism::Match &m : boost::adaptors::reverse(matches)) {
         if (m.length == 0) continue;
         size_t consumed_length =
             consume_trailing_delimiters(m.length, active_input, delimiters_);

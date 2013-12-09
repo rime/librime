@@ -4,7 +4,6 @@
 //
 // 2013-11-05 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/foreach.hpp>
 #include <rime/candidate.h>
 #include <rime/engine.h>
 #include <rime/schema.h>
@@ -48,7 +47,7 @@ void ReverseLookupFilter::Apply(CandidateList *recruited,
     Initialize();
   if (!rev_dict_)
     return;
-  BOOST_FOREACH(shared_ptr<Candidate>& c, *candidates) {
+  for (shared_ptr<Candidate>& c : *candidates) {
     if (!overwrite_comment_ && !c->comment().empty())
       continue;
     shared_ptr<Phrase> phrase = As<Phrase>(Candidate::GetGenuineCandidate(c));

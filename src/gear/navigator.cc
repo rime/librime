@@ -4,7 +4,7 @@
 //
 // 2011-11-20 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/foreach.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -80,7 +80,7 @@ bool Navigator::Home(Context *ctx) {
   Composition *comp = ctx->composition();
   if (!comp->empty()) {
     size_t confirmed_pos = caret_pos;
-    BOOST_REVERSE_FOREACH(const Segment &seg, *comp) {
+    for (const Segment &seg : boost::adaptors::reverse(*comp)) {
       if (seg.status >= Segment::kSelected) {
         break;
       }

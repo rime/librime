@@ -4,7 +4,6 @@
 //
 // 2011-05-15 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/config.h>
 #include <rime/schema.h>
@@ -51,7 +50,7 @@ bool AbcSegmentor::Proceed(Segmentation *segmentation) {
     segment.start = j;
     segment.end = k;
     segment.tags.insert("abc");
-    BOOST_FOREACH(const std::string& tag, extra_tags_) {
+    for (const std::string& tag : extra_tags_) {
       segment.tags.insert(tag);
     }
     segmentation->AddSegment(segment);

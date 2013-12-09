@@ -8,7 +8,6 @@
 //
 #include <map>
 #include <vector>
-#include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/candidate.h>
 #include <rime/dict/vocabulary.h>
@@ -22,12 +21,12 @@ shared_ptr<Sentence> Poet::MakeSentence(const WordGraph& graph,
   std::map<int, shared_ptr<Sentence> > sentences;
   sentences[0] = make_shared<Sentence>(language_);
   // dynamic programming
-  BOOST_FOREACH(const WordGraph::value_type& w, graph) {
+  for (const WordGraph::value_type& w : graph) {
     size_t start_pos = w.first;
     DLOG(INFO) << "start pos: " << start_pos;
     if (sentences.find(start_pos) == sentences.end())
       continue;
-    BOOST_FOREACH(const UserDictEntryCollector::value_type& x, w.second) {
+    for (const UserDictEntryCollector::value_type& x : w.second) {
       size_t end_pos = x.first;
       if (start_pos == 0 && end_pos == total_length)
         continue;  // exclude single words from the result

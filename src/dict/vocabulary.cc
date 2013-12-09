@@ -6,7 +6,6 @@
 //
 #include <algorithm>
 #include <boost/bind.hpp>
-#include <boost/foreach.hpp>
 #include <rime/dict/vocabulary.h>
 
 namespace rime {
@@ -100,7 +99,7 @@ DictEntryList* Vocabulary::LocateEntries(const Code &code) {
 }
 
 void Vocabulary::SortHomophones() {
-  BOOST_FOREACH(Vocabulary::value_type &v, *this) {
+  for (Vocabulary::value_type &v : *this) {
     VocabularyPage &page(v.second);
     page.entries.Sort();
     if (page.next_level)

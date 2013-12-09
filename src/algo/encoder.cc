@@ -5,7 +5,6 @@
 // 2013-07-17 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #include <utf8.h>
 #include <rime/config.h>
 #include <rime/algo/encoder.h>
@@ -138,7 +137,7 @@ bool TableEncoder::ParseFormula(const std::string& formula,
 }
 
 bool TableEncoder::IsCodeExcluded(const std::string& code) {
-  BOOST_FOREACH(const std::regex& pattern, exclude_patterns_) {
+  for (const std::regex& pattern : exclude_patterns_) {
     if (std::regex_match(code, pattern))
       return true;
   }
@@ -147,7 +146,7 @@ bool TableEncoder::IsCodeExcluded(const std::string& code) {
 
 bool TableEncoder::Encode(const RawCode& code, std::string* result) {
   int num_syllables = static_cast<int>(code.size());
-  BOOST_FOREACH(const TableEncodingRule& rule, encoding_rules_) {
+  for (const TableEncodingRule& rule : encoding_rules_) {
     if (num_syllables < rule.min_word_length ||
         num_syllables > rule.max_word_length) {
       continue;
@@ -155,7 +154,7 @@ bool TableEncoder::Encode(const RawCode& code, std::string* result) {
     result->clear();
     CodeCoords previous = {0, 0};
     CodeCoords encoded = {0, 0};
-    BOOST_FOREACH(const CodeCoords& current, rule.coords) {
+    for (const CodeCoords& current : rule.coords) {
       CodeCoords c(current);
       if (c.char_index < 0) {
         c.char_index += num_syllables;
@@ -287,7 +286,7 @@ bool TableEncoder::DfsEncode(const std::string& phrase,
   bool ret = false;
   std::vector<std::string> translations;
   if (collector_->TranslateWord(word, &translations)) {
-    BOOST_FOREACH(const std::string& x, translations) {
+    for (const std::string& x : translations) {
       if (IsCodeExcluded(x)) {
         continue;
       }
@@ -336,7 +335,7 @@ bool ScriptEncoder::DfsEncode(const std::string& phrase,
     std::string word(phrase.substr(start_pos, k));
     std::vector<std::string> translations;
     if (collector_->TranslateWord(word, &translations)) {
-      BOOST_FOREACH(const std::string& x, translations) {
+      for (const std::string& x : translations) {
         code->push_back(x);
         bool ok = DfsEncode(phrase, value, start_pos + k, code, limit);
         ret = ret || ok;

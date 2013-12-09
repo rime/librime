@@ -4,7 +4,6 @@
 //
 // 2012-04-22 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/foreach.hpp>
 #include <utf8.h>
 #include <rime/config.h>
 #include <rime/schema.h>
@@ -164,7 +163,7 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket)
 bool TranslatorOptions::IsUserDictDisabledFor(const std::string& input) const {
   if (user_dict_disabling_patterns_.empty())
     return false;
-  BOOST_FOREACH(const std::regex& pattern, user_dict_disabling_patterns_) {
+  for (const std::regex& pattern : user_dict_disabling_patterns_) {
     if (std::regex_match(input, pattern))
       return true;
   }

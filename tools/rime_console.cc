@@ -7,7 +7,6 @@
 #include <cstring>
 #include <iostream>
 #include <boost/bind.hpp>
-#include <boost/foreach.hpp>
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/composition.h>
@@ -63,7 +62,7 @@ class RimeConsole {
     std::cout << "page_no: " << page_no
               << ", index: " << current.selected_index << std::endl;
     int i = 0;
-    BOOST_FOREACH(const rime::shared_ptr<rime::Candidate> &cand,
+    for (const rime::shared_ptr<rime::Candidate> &cand :
                   page->candidates) {
       std::cout << "cand. " << (++i % 10) <<  ": [";
       std::cout << cand->text();
@@ -81,7 +80,7 @@ class RimeConsole {
       LOG(ERROR) << "error parsing input: '" << line << "'";
       return;
     }
-    BOOST_FOREACH(const rime::KeyEvent &ke, keys) {
+    for (const rime::KeyEvent &ke : keys) {
       engine_->ProcessKeyEvent(ke);
     }
     rime::Context *ctx = engine_->context();

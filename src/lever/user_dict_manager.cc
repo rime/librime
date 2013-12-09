@@ -7,7 +7,6 @@
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/foreach.hpp>
 #include <boost/scope_exit.hpp>
 #include <rime/common.h>
 #include <rime/deployer.h>
@@ -230,7 +229,7 @@ bool UserDictManager::SynchronizeAll() {
   GetUserDictList(&user_dicts);
   LOG(INFO) << "synchronizing " << user_dicts.size() << " user dicts.";
   int failure = 0;
-  BOOST_FOREACH(const std::string& dict_name, user_dicts) {
+  for (const std::string& dict_name : user_dicts) {
     if (!Synchronize(dict_name))
       ++failure;
   }

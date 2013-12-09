@@ -6,7 +6,6 @@
 //
 #include <cstring>
 #include <boost/bind.hpp>
-#include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -246,7 +245,7 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
       int i = 0;
       context->menu.num_candidates = page->candidates.size();
       context->menu.candidates = new RimeCandidate[page->candidates.size()];
-      BOOST_FOREACH(const rime::shared_ptr<rime::Candidate> &cand, page->candidates) {
+      for (const rime::shared_ptr<rime::Candidate> &cand : page->candidates) {
         RimeCandidate* dest = &context->menu.candidates[i++];
         dest->text = new char[cand->text().length() + 1];
         std::strcpy(dest->text, cand->text().c_str());
@@ -611,7 +610,7 @@ RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_
       LOG(ERROR) << "error parsing input: '" << key_sequence << "'";
       return False;
     }
-    BOOST_FOREACH(const rime::KeyEvent &ke, keys) {
+    for (const rime::KeyEvent &ke : keys) {
       session->ProcessKeyEvent(ke);
     }
     return True;

@@ -4,7 +4,6 @@
 //
 // 2011-06-19 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/foreach.hpp>
 #include <rime/candidate.h>
 #include <rime/composition.h>
 #include <rime/menu.h>
@@ -74,7 +73,7 @@ void Composition::GetPreedit(Preedit *preedit) const {
 std::string Composition::GetCommitText() const {
   std::string result;
   size_t end = 0;
-  BOOST_FOREACH(const Segment &seg, *this) {
+  for (const Segment &seg : *this) {
     shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
     if (cand) {
       end = cand->end();
@@ -97,7 +96,7 @@ std::string Composition::GetScriptText() const {
   std::string result;
   size_t start = 0;
   size_t end = 0;
-  BOOST_FOREACH(const Segment &seg, *this) {
+  for (const Segment &seg : *this) {
     shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
     start = end;
     end = cand ? cand->end() : seg.end;
@@ -115,7 +114,7 @@ std::string Composition::GetScriptText() const {
 std::string Composition::GetDebugText() const {
   std::string result;
   int i = 0;
-  BOOST_FOREACH(const Segment &seg, *this) {
+  for (const Segment &seg : *this) {
     if (i++ > 0)
       result += "|";
     shared_ptr<Candidate> cand(seg.GetSelectedCandidate());

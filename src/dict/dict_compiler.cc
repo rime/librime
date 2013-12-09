@@ -6,7 +6,6 @@
 //
 #include <map>
 #include <set>
-#include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <rime/algo/algebra.h>
 #include <rime/algo/utilities.h>
@@ -127,12 +126,12 @@ bool DictCompiler::BuildTable(DictSettings* settings,
   {
     std::map<std::string, int> syllable_to_id;
     int syllable_id = 0;
-    BOOST_FOREACH(const std::string &s, collector.syllabary) {
+    for (const std::string &s : collector.syllabary) {
       syllable_to_id[s] = syllable_id++;
     }
-    BOOST_FOREACH(RawDictEntry &r, collector.entries) {
+    for (RawDictEntry &r : collector.entries) {
       Code code;
-      BOOST_FOREACH(const std::string &s, r.raw_code) {
+      for (const std::string &s : r.raw_code) {
         code.push_back(syllable_to_id[s]);
       }
       DictEntryList *ls = vocabulary.LocateEntries(code);
@@ -183,7 +182,7 @@ bool DictCompiler::BuildPrism(const std::string &schema_file,
     Config config(schema_file);
     ConfigListPtr algebra = config.GetList("speller/algebra");
     if (algebra && p.Load(algebra)) {
-      BOOST_FOREACH(Syllabary::value_type const& x, syllabary) {
+      for (Syllabary::value_type const& x : syllabary) {
         script.AddSyllable(x);
       }
       if (!p.Apply(&script)) {

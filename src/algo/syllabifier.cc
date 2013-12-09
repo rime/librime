@@ -9,7 +9,7 @@
 #include <queue>
 #include <utility>
 #include <vector>
-#include <boost/foreach.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 #include <rime/dict/prism.h>
 #include <rime/algo/syllabifier.h>
 
@@ -51,7 +51,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input,
     prism.CommonPrefixSearch(input.substr(current_pos), &matches);
     if (!matches.empty()) {
       EndVertexMap &end_vertices(graph->edges[current_pos]);
-      BOOST_FOREACH(const Prism::Match &m, matches) {
+      for (const Prism::Match &m : matches) {
         if (m.length == 0) continue;
         size_t end_pos = current_pos + m.length;
         // consume trailing delimiters
@@ -166,7 +166,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input,
       size_t code_length = end_pos - current_pos;
       EndVertexMap &end_vertices(graph->edges[current_pos]);
       SpellingMap &spellings(end_vertices[end_pos]);
-      BOOST_FOREACH(const Prism::Match &m, keys) {
+      for (const Prism::Match &m : keys) {
         if (m.length < code_length) continue;
         // when spelling algebra is enabled,
         // a spelling evaluates to a set of syllables;
@@ -216,14 +216,14 @@ void Syllabifier::CheckOverlappedSpellings(SyllableGraph *graph,
   // if "Z" = "YX", mark the vertex between Y and X an ambiguous syllable joint
   EndVertexMap& y_end_vertices(graph->edges[start]);
   // enumerate Ys
-  BOOST_FOREACH(const EndVertexMap::value_type& y, y_end_vertices) {
+  for (const EndVertexMap::value_type& y : y_end_vertices) {
     size_t joint = y.first;
     if (joint >= end) break;
     // test X
     if (graph->edges.find(joint) == graph->edges.end())
       continue;
     EndVertexMap& x_end_vertices(graph->edges[joint]);
-    BOOST_FOREACH(const EndVertexMap::value_type& x, x_end_vertices) {
+    for (const EndVertexMap::value_type& x : x_end_vertices) {
       if (x.first < end) continue;
       if (x.first == end) {
         graph->vertices[joint] = kAmbiguousSpelling;
@@ -235,10 +235,11 @@ void Syllabifier::CheckOverlappedSpellings(SyllableGraph *graph,
 }
 
 void Syllabifier::Transpose(SyllableGraph* graph) {
-  BOOST_FOREACH(const EdgeMap::value_type& start, graph->edges) {
+  for (const EdgeMap::value_type& start : graph->edges) {
     SpellingIndex& index(graph->indices[start.first]);
-    BOOST_REVERSE_FOREACH(const EndVertexMap::value_type& end, start.second) {
-      BOOST_FOREACH(const SpellingMap::value_type& spelling, end.second) {
+    for (const EndVertexMap::value_type& end :
+         boost::adaptors::reverse(start.second)) {
+      for (const SpellingMap::value_type& spelling : end.second) {
         SyllableId syll_id = spelling.first;
         index[syll_id].push_back(&spelling.second);
       }
