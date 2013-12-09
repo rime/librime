@@ -24,6 +24,8 @@
 #include <windows.h>
 #endif
 
+using namespace std::placeholders;
+
 namespace fs = boost::filesystem;
 
 namespace rime {
@@ -292,7 +294,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   }
   LOG(INFO) << "preparing dictionary '" << dict_name << "'.";
   DictFileFinder finder =
-      boost::bind(&find_dict_file, _1, shared_data_path, user_data_path);
+      std::bind(&find_dict_file, _1, shared_data_path, user_data_path);
   DictCompiler dict_compiler(dict.get(), finder);
   if (verbose_) {
     dict_compiler.set_options(DictCompiler::kRebuild | DictCompiler::kDump);

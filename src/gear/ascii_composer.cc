@@ -4,7 +4,6 @@
 //
 // 2011-12-18 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/bind.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/config.h>
@@ -210,7 +209,7 @@ void AsciiComposer::SwitchAsciiMode(bool ascii_mode,
                 << (ascii_mode ? "ascii" : "non-ascii") << " mode.";
       if (ascii_mode) {
         connection_ = ctx->update_notifier().connect(
-            boost::bind(&AsciiComposer::OnContextUpdate, this, _1));
+            [this](Context* ctx) { OnContextUpdate(ctx); });
       }
     }
     else if (style == kAsciiModeSwitchCommitText) {

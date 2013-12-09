@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include <time.h>
+#include <functional>
 #include <map>
 #include <boost/thread.hpp>
 #include <rime/common.h>
@@ -20,9 +21,9 @@ typedef uintptr_t SessionId;
 
 static const SessionId kInvalidSessionId = 0;
 
-typedef boost::function<void (SessionId session_id,
-                              const char* message_type,
-                              const char* message_value)> NotificationHandler;
+typedef std::function<void (SessionId session_id,
+                            const char* message_type,
+                            const char* message_value)> NotificationHandler;
 
 class Context;
 class Engine;

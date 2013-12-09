@@ -7,9 +7,9 @@
 #ifndef RIME_DICT_COMPILER_H_
 #define RIME_DICT_COMPILER_H_
 
+#include <functional>
 #include <string>
 #include <vector>
-#include <boost/function.hpp>
 #include <rime/common.h>
 
 namespace rime {
@@ -21,7 +21,7 @@ class ReverseDb;
 class DictSettings;
 
 // return found dict file path, otherwize return empty string
-typedef boost::function<const std::string (const std::string& file_name)>
+typedef std::function<const std::string (const std::string& file_name)>
 DictFileFinder;
 
 class DictCompiler {

@@ -4,7 +4,6 @@
 //
 // 2011-12-01 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <rime/deployer.h>
@@ -114,7 +113,7 @@ bool Deployer::StartWork(bool maintenance_mode) {
   }
   LOG(INFO) << "starting work thread for "
             << pending_tasks_.size() << " tasks.";
-  boost::thread t(boost::bind(&Deployer::Run, this));
+  boost::thread t([this] { Run(); });
   work_thread_.swap(t);
   return work_thread_.joinable();
 }

@@ -5,7 +5,7 @@
 // 2011-07-24 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
-#include <boost/bind.hpp>
+#include <utility>
 #include <rime/dict/vocabulary.h>
 
 namespace rime {
@@ -73,7 +73,10 @@ void DictEntryFilterBinder::AddFilter(DictEntryFilter filter) {
     filter_.swap(filter);
   }
   else {
-    filter_ = boost::bind(filter_, _1) && boost::bind(filter, _1);
+    DictEntryFilter previous_filter(std::move(filter_));
+    filter_ = [previous_filter, filter](shared_ptr<DictEntry> e) {
+      return previous_filter(e) && filter(e);
+    };
   }
 }
 

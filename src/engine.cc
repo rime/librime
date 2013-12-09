@@ -5,9 +5,9 @@
 // 2011-04-24 GONG Chen <chen.sst@gmail.com>
 //
 #include <cctype>
+#include <functional>
 #include <string>
 #include <vector>
-#include <boost/bind.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -23,6 +23,8 @@
 #include <rime/ticket.h>
 #include <rime/translation.h>
 #include <rime/translator.h>
+
+using namespace std::placeholders;
 
 namespace rime {
 
@@ -77,13 +79,15 @@ ConcreteEngine::ConcreteEngine(Schema *schema) : Engine(schema) {
   LOG(INFO) << "starting engine.";
   // receive context notifications
   context_->commit_notifier().connect(
-      boost::bind(&ConcreteEngine::OnCommit, this, _1));
+      [this](Context* ctx) { OnCommit(ctx); });
   context_->select_notifier().connect(
-      boost::bind(&ConcreteEngine::OnSelect, this, _1));
+      [this](Context* ctx) { OnSelect(ctx); });
   context_->update_notifier().connect(
-      boost::bind(&ConcreteEngine::OnContextUpdate, this, _1));
+      [this](Context* ctx) { OnContextUpdate(ctx); });
   context_->option_update_notifier().connect(
-      boost::bind(&ConcreteEngine::OnOptionUpdate, this, _1, _2));
+      [this](Context* ctx, const std::string& option) {
+        OnOptionUpdate(ctx, option);
+      });
   InitializeComponents();
   InitializeOptions();
 }
@@ -179,7 +183,7 @@ void ConcreteEngine::TranslateSegments(Composition *comp) {
     std::string input(comp->input().substr(segment.start, len));
     DLOG(INFO) << "translating segment: " << input;
     Menu::CandidateFilter cand_filter(
-        boost::bind(&ConcreteEngine::FilterCandidates,
+        std::bind(&ConcreteEngine::FilterCandidates,
                     this, &segment, _1, _2));
     shared_ptr<Menu> menu = make_shared<Menu>(cand_filter);
     for (shared_ptr<Translator>& translator : translators_) {

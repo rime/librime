@@ -5,7 +5,7 @@
 // 2011-08-09 GONG Chen <chen.sst@gmail.com>
 //
 #include <cstring>
-#include <boost/bind.hpp>
+#include <functional>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -19,6 +19,8 @@
 #include <rime/setup.h>
 #include <rime/signature.h>
 #include <rime_api.h>
+
+using namespace std::placeholders;
 
 // assuming member is a pointer in struct *p
 #define PROVIDED(p, member) ((p) && RIME_STRUCT_HAS_MEMBER(*(p), (p)->member) && (p)->member)
@@ -53,7 +55,7 @@ RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
                                          void* context_object) {
   if (handler) {
     rime::Service::instance().SetNotificationHandler(
-        boost::bind(handler, context_object, _1, _2, _3));
+        std::bind(handler, context_object, _1, _2, _3));
   }
   else {
     rime::Service::instance().ClearNotificationHandler();

@@ -5,12 +5,11 @@
 // 2011-11-23 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
+#include <functional>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -20,6 +19,8 @@
 #include <rime/schema.h>
 #include <rime/switcher.h>
 #include <rime/gear/key_binder.h>
+
+using namespace std::placeholders;
 
 namespace rime {
 
@@ -53,7 +54,7 @@ static KeyBindingCondition translate_condition(const std::string& str) {
 struct KeyBinding {
   KeyBindingCondition whence;
   KeyEvent target;
-  boost::function<void (Engine* engine)> action;
+  std::function<void (Engine* engine)> action;
 
   bool operator< (const KeyBinding& o) const {
     return whence < o.whence;
@@ -111,10 +112,10 @@ void KeyBindings::LoadBindings(const ConfigListPtr &bindings) {
       }
     }
     else if (ConfigValuePtr option = map->GetValue("toggle")) {
-      binding.action = boost::bind(&toggle_option, _1, option->str());
+      binding.action = std::bind(&toggle_option, _1, option->str());
     }
     else if (ConfigValuePtr schema = map->GetValue("select")) {
-      binding.action = boost::bind(&select_schema, _1, schema->str());
+      binding.action = std::bind(&select_schema, _1, schema->str());
     }
     else {
       LOG(WARNING) << "invalid key binding #" << i << ".";

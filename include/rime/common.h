@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <string>
 #include <memory>
+#define BOOST_BIND_NO_PLACEHOLDERS
 #include <boost/signals2/connection.hpp>
 #include <boost/signals2/signal.hpp>
 #include <glog/logging.h>

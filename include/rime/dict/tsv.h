@@ -7,21 +7,21 @@
 #ifndef RIME_TSV_H_
 #define RIME_TSV_H_
 
+#include <functional>
 #include <string>
 #include <vector>
-#include <boost/function.hpp>
 
 namespace rime {
 
 typedef std::vector<std::string> Tsv;
 
-typedef boost::function<bool (const Tsv& row,
-                              std::string* key,
-                              std::string* value)> TsvParser;
+typedef std::function<bool (const Tsv& row,
+                            std::string* key,
+                            std::string* value)> TsvParser;
 
-typedef boost::function<bool (const std::string& key,
-                              const std::string& value,
-                              Tsv* row)> TsvFormatter;
+typedef std::function<bool (const std::string& key,
+                            const std::string& value,
+                            Tsv* row)> TsvFormatter;
 
 class Sink;
 class Source;

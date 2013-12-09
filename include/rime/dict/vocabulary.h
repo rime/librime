@@ -8,11 +8,11 @@
 #ifndef RIME_VOCABULARY_H_
 #define RIME_VOCABULARY_H_
 
+#include <functional>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-#include <boost/function.hpp>
 #include <rime/common.h>
 
 namespace rime {
@@ -49,7 +49,7 @@ class DictEntryList : public std::vector<shared_ptr<DictEntry> > {
   void SortRange(size_t start, size_t count);
 };
 
-typedef boost::function<bool (shared_ptr<DictEntry> entry)> DictEntryFilter;
+typedef std::function<bool (shared_ptr<DictEntry> entry)> DictEntryFilter;
 
 class DictEntryFilterBinder {
  public:

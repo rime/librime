@@ -4,12 +4,13 @@
 //
 // 2011-08-08 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/bind.hpp>
 #include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/switcher.h>
+
+using namespace std::placeholders;
 
 namespace rime {
 
@@ -18,10 +19,10 @@ Session::Session() : last_active_time_(0) {
   engine_.reset(Engine::Create(switcher_->CreateSchema()));
   switcher_->Attach(engine_.get());
   engine_->Attach(switcher_.get());
-  engine_->sink().connect(boost::bind(&Session::OnCommit, this, _1));
+  engine_->sink().connect(std::bind(&Session::OnCommit, this, _1));
   SessionId session_id = reinterpret_cast<SessionId>(this);
   engine_->message_sink().connect(
-      boost::bind(&Service::Notify, &Service::instance(), session_id, _1, _2));
+      std::bind(&Service::Notify, &Service::instance(), session_id, _1, _2));
 }
 
 bool Session::ProcessKeyEvent(const KeyEvent &key_event) {
@@ -74,7 +75,7 @@ Schema* Session::schema() const {
 
 Service::Service() : started_(false) {
   deployer_.message_sink().connect(
-      boost::bind(&Service::Notify, this, 0, _1, _2));
+      std::bind(&Service::Notify, this, 0, _1, _2));
 }
 
 Service::~Service() {
@@ -163,7 +164,7 @@ void Service::SetNotificationHandler(const NotificationHandler& handler) {
 }
 
 void Service::ClearNotificationHandler() {
-  notification_handler_.clear();
+  notification_handler_ = nullptr;
 }
 
 void Service::Notify(SessionId session_id,

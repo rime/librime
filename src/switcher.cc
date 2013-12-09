@@ -5,7 +5,6 @@
 // 2011-12-07 GONG Chen <chen.sst@gmail.com>
 //
 #include <string>
-#include <boost/bind.hpp>
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/composition.h>
@@ -28,7 +27,7 @@ Switcher::Switcher() : Engine(new Schema),
 
   // receive context notifications
   context_->select_notifier().connect(
-      boost::bind(&Switcher::OnSelect, this, _1));
+      [this](Context* ctx) { OnSelect(ctx); });
 
   user_config_.reset(Config::Require("config")->Create("user"));
   InitializeComponents();

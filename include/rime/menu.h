@@ -7,8 +7,8 @@
 #ifndef RIME_MENU_H_
 #define RIME_MENU_H_
 
+#include <functional>
 #include <vector>
-#include <boost/function.hpp>
 #include <rime/candidate.h>
 #include <rime/common.h>
 
@@ -25,9 +25,8 @@ struct Page {
 
 class Menu {
  public:
-  typedef boost::function<void (CandidateList *recruited,
-                                CandidateList *candidates)>
-  CandidateFilter;
+  typedef std::function<void (CandidateList *recruited,
+                              CandidateList *candidates)> CandidateFilter;
 
   Menu() {}
   Menu(const CandidateFilter &filter) : filter_(filter) {}

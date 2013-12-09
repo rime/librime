@@ -5,7 +5,6 @@
 // 2011-07-12 Zou Xu <zouivex@gmail.com>
 // 2012-02-11 GONG Chen <chen.sst@gmail.com>
 //
-#include <functional>
 #include <queue>
 #include <utility>
 #include <vector>

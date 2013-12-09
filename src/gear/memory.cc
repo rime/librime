@@ -4,7 +4,6 @@
 //
 // 2013-01-02 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/bind.hpp>
 #include <rime/candidate.h>
 #include <rime/context.h>
 #include <rime/composition.h>
@@ -70,11 +69,11 @@ Memory::Memory(const Ticket& ticket) {
 
   Context* ctx = ticket.engine->context();
   commit_connection_ = ctx->commit_notifier().connect(
-      boost::bind(&Memory::OnCommit, this, _1));
+      [this](Context* ctx) { OnCommit(ctx); });
   delete_connection_ = ctx->delete_notifier().connect(
-      boost::bind(&Memory::OnDeleteEntry, this, _1));
+      [this](Context* ctx) { OnDeleteEntry(ctx); });
   unhandled_key_connection_ = ctx->unhandled_key_notifier().connect(
-      boost::bind(&Memory::OnUnhandledKey, this, _1, _2));
+      [this](Context* ctx, const KeyEvent& key) { OnUnhandledKey(ctx, key); });
 }
 
 Memory::~Memory() {

@@ -6,7 +6,6 @@
 //
 #include <cstring>
 #include <iostream>
-#include <boost/bind.hpp>
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/composition.h>
@@ -27,7 +26,7 @@ class RimeConsole {
   RimeConsole(rime::Schema *schema) : interactive_(false),
                                       engine_(rime::Engine::Create(schema)) {
     conn_ = engine_->sink().connect(
-        boost::bind(&RimeConsole::OnCommit, this, _1));
+        [this](const std::string& x) { OnCommit(x); });
   }
   ~RimeConsole() {
     conn_.disconnect();
