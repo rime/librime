@@ -18,7 +18,7 @@ TEST(AbcSegmentorTest, NoMatch) {
   ASSERT_TRUE(component != NULL);
   unique_ptr<Engine> engine(Engine::Create());
   unique_ptr<Segmentor> segmentor(component->Create(engine.get()));
-  ASSERT_TRUE(segmentor);
+  ASSERT_TRUE(bool(segmentor));
   Segmentation segmentation;
   segmentation.Reset("3.1415926");
   bool goon = segmentor->Proceed(&segmentation);
@@ -32,7 +32,7 @@ TEST(AbcSegmentorTest, FullMatch) {
   ASSERT_TRUE(component != NULL);
   unique_ptr<Engine> engine(Engine::Create());
   unique_ptr<Segmentor> segmentor(component->Create(engine.get()));
-  ASSERT_TRUE(segmentor);
+  ASSERT_TRUE(bool(segmentor));
   Segmentation segmentation;
   segmentation.Reset("zyxwvutsrqponmlkjihgfedcba");
   bool goon = segmentor->Proceed(&segmentation);
@@ -49,7 +49,7 @@ TEST(AbcSegmentorTest, PrefixMatch) {
   ASSERT_TRUE(component != NULL);
   unique_ptr<Engine> engine(Engine::Create());
   unique_ptr<Segmentor> segmentor(component->Create(engine.get()));
-  ASSERT_TRUE(segmentor);
+  ASSERT_TRUE(bool(segmentor));
   Segmentation segmentation;
   segmentation.Reset("abcdefg.1415926");
   bool goon = segmentor->Proceed(&segmentation);

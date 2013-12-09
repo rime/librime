@@ -36,7 +36,7 @@ TEST(RimeConfigComponentTest, RealCreationWorkflow) {
   ASSERT_TRUE(cc != NULL);
   // creation
   unique_ptr<Config> config(cc->Create("config_test"));
-  EXPECT_TRUE(config);
+  EXPECT_TRUE(bool(config));
   r.Unregister("test_config");
 }
 
@@ -103,16 +103,16 @@ TEST_F(RimeConfigTest, Config_GetString) {
 TEST_F(RimeConfigTest, Config_GetList) {
   ConfigListPtr p;
   p = config_->GetList("protoss/air_force");
-  ASSERT_TRUE(p);
+  ASSERT_TRUE(bool(p));
   ASSERT_EQ(4, p->size());
   ConfigValuePtr element;
   std::string value;
   element = p->GetValueAt(0);
-  ASSERT_TRUE(element);
+  ASSERT_TRUE(bool(element));
   ASSERT_TRUE(element->GetString(&value));
   EXPECT_EQ("scout", value);
   element = p->GetValueAt(3);
-  ASSERT_TRUE(element);
+  ASSERT_TRUE(bool(element));
   ASSERT_TRUE(element->GetString(&value));
   EXPECT_EQ("arbiter", value);
 
@@ -121,7 +121,7 @@ TEST_F(RimeConfigTest, Config_GetList) {
 TEST_F(RimeConfigTest, Config_GetMap) {
   ConfigMapPtr p;
   p = config_->GetMap("terrans/tank/cost");
-  ASSERT_TRUE(p);
+  ASSERT_TRUE(bool(p));
   EXPECT_FALSE(p->HasKey("rime"));
   ASSERT_TRUE(p->HasKey("time"));
   ConfigValuePtr item;
@@ -129,22 +129,22 @@ TEST_F(RimeConfigTest, Config_GetMap) {
   int mineral = 0;
   int gas = 0;
   item = p->GetValue("time");
-  ASSERT_TRUE(item);
+  ASSERT_TRUE(bool(item));
   ASSERT_TRUE(item->GetString(&time));
   EXPECT_EQ("30 seconds", time);
   item = p->GetValue("mineral");
-  ASSERT_TRUE(item);
+  ASSERT_TRUE(bool(item));
   ASSERT_TRUE(item->GetInt(&mineral));
   EXPECT_EQ(150, mineral);
   item = p->GetValue("gas");
-  ASSERT_TRUE(item);
+  ASSERT_TRUE(bool(item));
   ASSERT_TRUE(item->GetInt(&gas));
   EXPECT_EQ(100, gas);
 }
 
 TEST(RimeConfigWriterTest, Greetings) {
   unique_ptr<Config> config(new Config);
-  ASSERT_TRUE(config);
+  ASSERT_TRUE(bool(config));
   // creating contents
   EXPECT_TRUE(config->SetItem("/", make_shared<ConfigMap>()));
   ConfigItemPtr terran_greetings = make_shared<ConfigValue>("Greetings, Terrans!");
@@ -161,7 +161,7 @@ TEST(RimeConfigWriterTest, Greetings) {
   EXPECT_TRUE(config->SaveToFile("config_writer_test.yaml"));
   // verify
   unique_ptr<Config> config2(new Config);
-  ASSERT_TRUE(config2);
+  ASSERT_TRUE(bool(config2));
   EXPECT_TRUE(config2->LoadFromFile("config_writer_test.yaml"));
   std::string the_greetings;
   EXPECT_TRUE(config2->GetString("greetings", &the_greetings));
@@ -182,7 +182,7 @@ TEST(RimeConfigWriterTest, Greetings) {
   EXPECT_TRUE(config2->SaveToFile("config_rewriter_test.yaml"));
   // verify
   unique_ptr<Config> config3(new Config);
-  ASSERT_TRUE(config3);
+  ASSERT_TRUE(bool(config3));
   EXPECT_TRUE(config3->LoadFromFile("config_rewriter_test.yaml"));
   EXPECT_TRUE(config3->GetInt("zergs/statistics/population", &population));
   EXPECT_EQ(500000, population);

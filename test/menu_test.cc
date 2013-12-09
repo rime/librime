@@ -64,7 +64,7 @@ TEST(RimeMenuTest, RecipeAlphaBeta) {
   // explicit call to Menu::Prepare() is not necessary
   menu.Prepare(2);
   unique_ptr<Page> page(menu.CreatePage(5, 0));
-  ASSERT_TRUE(page);
+  ASSERT_TRUE(bool(page));
   EXPECT_EQ(5, page->page_size);
   EXPECT_EQ(0, page->page_no);
   EXPECT_TRUE(page->is_last_page);
@@ -75,5 +75,5 @@ TEST(RimeMenuTest, RecipeAlphaBeta) {
   EXPECT_EQ("Beta-1", page->candidates[1]->text());
   EXPECT_EQ("Beta-3", page->candidates[3]->text());
   unique_ptr<Page> no_more_page(menu.CreatePage(5, 1));
-  EXPECT_FALSE(no_more_page);
+  EXPECT_FALSE(bool(no_more_page));
 }

@@ -21,9 +21,9 @@ static const char* kInstructions[kNumOfInstructions] = {
 };
 
 TEST(RimeAlgebraTest, SpellingManipulation) {
-  rime::ConfigListPtr c = make_shared<rime::ConfigList>();
-  c->Append(make_shared<rime::ConfigValue>(kTransliteration));
-  c->Append(make_shared<rime::ConfigValue>(kTransformation));
+  rime::ConfigListPtr c = rime::make_shared<rime::ConfigList>();
+  c->Append(rime::make_shared<rime::ConfigValue>(kTransliteration));
+  c->Append(rime::make_shared<rime::ConfigValue>(kTransformation));
   rime::Projection p;
   ASSERT_TRUE(p.Load(c));
 
@@ -33,9 +33,9 @@ TEST(RimeAlgebraTest, SpellingManipulation) {
 }
 
 TEST(RimeAlgebraTest, Projection) {
-  rime::ConfigListPtr c = make_shared<rime::ConfigList>();
+  rime::ConfigListPtr c = rime::make_shared<rime::ConfigList>();
   for (int i = 0; i < kNumOfInstructions; ++i) {
-    c->Append(make_shared<rime::ConfigValue>(kInstructions[i]));
+    c->Append(rime::make_shared<rime::ConfigValue>(kInstructions[i]));
   }
   rime::Projection p;
   ASSERT_TRUE(p.Load(c));
