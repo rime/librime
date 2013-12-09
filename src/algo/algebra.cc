@@ -82,7 +82,7 @@ bool Projection::Load(ConfigListPtr settings) {
     try {
       x.reset(calc.Parse(formula));
     }
-    catch (boost::regex_error& e) {
+    catch (std::regex_error& e) {
       LOG(ERROR) << "Error parsing formula '" << formula << "': " << e.what();
     }
     if (!x) {

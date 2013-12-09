@@ -110,8 +110,8 @@ Calculation* Transformation::Parse(const std::vector<std::string>& args) {
 bool Transformation::Apply(Spelling* spelling) {
   if (!spelling || spelling->str.empty())
     return false;
-  std::string result(boost::regex_replace(spelling->str,
-                                          pattern_, replacement_));
+  std::string result(std::regex_replace(spelling->str,
+                                        pattern_, replacement_));
   if (result == spelling->str)
     return false;
   spelling->str.swap(result);
@@ -134,7 +134,7 @@ Calculation* Erasion::Parse(const std::vector<std::string>& args) {
 bool Erasion::Apply(Spelling* spelling) {
   if (!spelling || spelling->str.empty())
     return false;
-  if (!boost::regex_match(spelling->str, pattern_))
+  if (!std::regex_match(spelling->str, pattern_))
     return false;
   spelling->str.clear();
   return true;
