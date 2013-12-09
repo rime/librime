@@ -8,7 +8,6 @@
 #include <vector>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/scoped_array.hpp>
 #include <opencc/opencc.h>
 #include <stdint.h>
 #include <utf8.h>
@@ -57,7 +56,7 @@ bool Opencc::ConvertText(const std::string &text,
                          bool *is_single_char) {
   if (od_ == (opencc_t) -1)
     return false;
-  boost::scoped_array<uint32_t> inbuf(new uint32_t[text.length() + 1]);
+  unique_ptr<uint32_t[]> inbuf(new uint32_t[text.length() + 1]);
   uint32_t *end = utf8::unchecked::utf8to32(text.c_str(),
                                             text.c_str() + text.length(),
                                             inbuf.get());
@@ -65,7 +64,7 @@ bool Opencc::ConvertText(const std::string &text,
   size_t inlen = end - inbuf.get();
   uint32_t *inptr = inbuf.get();
   size_t outlen = inlen * 5;
-  boost::scoped_array<uint32_t> outbuf(new uint32_t[outlen + 1]);
+  unique_ptr<uint32_t[]> outbuf(new uint32_t[outlen + 1]);
   uint32_t *outptr = outbuf.get();
   if (inlen == 1) {
     *is_single_char = true;
@@ -81,7 +80,7 @@ bool Opencc::ConvertText(const std::string &text,
     return false;
   }
   *outptr = L'\0';
-  boost::scoped_array<char> out_utf8(new char[(outptr - outbuf.get()) * 6 + 1]);
+  unique_ptr<char[]> out_utf8(new char[(outptr - outbuf.get()) * 6 + 1]);
   char *utf8_end = utf8::unchecked::utf32to8(outbuf.get(),
                                              outptr,
                                              out_utf8.get());
