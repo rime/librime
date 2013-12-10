@@ -17,18 +17,19 @@ enum SpellingType { kNormalSpelling, kFuzzySpelling,
                     kInvalidSpelling };
 
 struct SpellingProperties {
-  SpellingType type;
-  size_t end_pos;
-  double credibility;
+  SpellingType type = kNormalSpelling;
+  size_t end_pos = 0;
+  double credibility = 1.0;
   std::string tips;
-  SpellingProperties() : type(kNormalSpelling), end_pos(0), credibility(1.0) {}
 };
 
 struct Spelling {
   std::string str;
   SpellingProperties properties;
-  Spelling() {}
-  Spelling(const std::string& _str) : str(_str), properties() {}
+
+  Spelling() = default;
+  Spelling(const std::string& _str) : str(_str) {}
+
   bool operator== (const Spelling& other) { return str == other.str; }
   bool operator< (const Spelling& other) { return str < other.str; }
 };

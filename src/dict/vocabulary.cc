@@ -10,7 +10,7 @@
 
 namespace rime {
 
-bool Code::operator< (const Code &other) const {
+bool Code::operator< (const Code& other) const {
   if (size() != other.size())
     return size() < other.size();
   for (size_t i = 0; i < size(); ++i) {
@@ -20,7 +20,7 @@ bool Code::operator< (const Code &other) const {
   return false;
 }
 
-bool Code::operator== (const Code &other) const {
+bool Code::operator== (const Code& other) const {
   if (size() != other.size())
     return false;
   for (size_t i = 0; i < size(); ++i) {
@@ -30,7 +30,7 @@ bool Code::operator== (const Code &other) const {
   return true;
 }
 
-void Code::CreateIndex(Code *index_code) {
+void Code::CreateIndex(Code* index_code) {
   if (!index_code)
     return;
   size_t index_code_size = Code::kIndexCodeMaxLength;
@@ -52,7 +52,7 @@ bool DictEntry::operator< (const DictEntry& other) const {
 }
 
 template <class T>
-inline bool dereference_less(const T &a, const T &b) {
+inline bool dereference_less(const T& a, const T& b) {
   return *a < *b;
 }
 
@@ -80,14 +80,14 @@ void DictEntryFilterBinder::AddFilter(DictEntryFilter filter) {
   }
 }
 
-DictEntryList* Vocabulary::LocateEntries(const Code &code) {
-  Vocabulary *v = this;
+DictEntryList* Vocabulary::LocateEntries(const Code& code) {
+  Vocabulary* v = this;
   size_t n = code.size();
   for (size_t i = 0; i < n; ++i) {
     int key = -1;
     if (i < Code::kIndexCodeMaxLength)
       key = code[i];
-    VocabularyPage &page((*v)[key]);
+    auto& page((*v)[key]);
     if (i == n - 1 || i == Code::kIndexCodeMaxLength) {
       return &page.entries;
     }
@@ -102,8 +102,8 @@ DictEntryList* Vocabulary::LocateEntries(const Code &code) {
 }
 
 void Vocabulary::SortHomophones() {
-  for (Vocabulary::value_type &v : *this) {
-    VocabularyPage &page(v.second);
+  for (auto& v : *this) {
+    auto& page(v.second);
     page.entries.Sort();
     if (page.next_level)
       page.next_level->SortHomophones();

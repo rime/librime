@@ -17,12 +17,7 @@
 
 namespace rime {
 
-UserDbValue::UserDbValue()
-    : commits(0), dee(0.0), tick(0) {
-}
-
-UserDbValue::UserDbValue(const std::string& value)
-    : commits(0), dee(0.0), tick(0) {
+UserDbValue::UserDbValue(const std::string& value) {
   Unpack(value);
 }
 
@@ -31,10 +26,10 @@ std::string UserDbValue::Pack() const {
                     commits % dee % tick);
 }
 
-bool UserDbValue::Unpack(const std::string &value) {
+bool UserDbValue::Unpack(const std::string& value) {
   std::vector<std::string> kv;
   boost::split(kv, value, boost::is_any_of(" "));
-  for (const std::string &k_eq_v : kv) {
+  for (const std::string& k_eq_v : kv) {
     size_t eq = k_eq_v.find('=');
     if (eq == std::string::npos)
       continue;

@@ -34,13 +34,13 @@ bool ReverseLookupDictionary::Load() {
   return db_->Exists() && db_->OpenReadOnly();
 }
 
-bool ReverseLookupDictionary::ReverseLookup(const std::string &text,
-                                            std::string *result) {
+bool ReverseLookupDictionary::ReverseLookup(const std::string& text,
+                                            std::string* result) {
   return db_ && db_->Fetch(text, result);
 }
 
-bool ReverseLookupDictionary::LookupStems(const std::string &text,
-                                            std::string *result) {
+bool ReverseLookupDictionary::LookupStems(const std::string& text,
+                                            std::string* result) {
 return db_ && db_->Fetch(text + kStemKeySuffix, result);
 }
 
@@ -57,21 +57,21 @@ bool ReverseLookupDictionary::Build(DictSettings* settings,
   ReverseLookupTable rev_table;
   int syllable_id = 0;
   for (const std::string& syllable : syllabary) {
-    Vocabulary::const_iterator it = vocabulary.find(syllable_id++);
+    auto it = vocabulary.find(syllable_id++);
     if (it == vocabulary.end())
       continue;
-    const DictEntryList& entries(it->second.entries);
-    for (const shared_ptr<DictEntry>& e : entries) {
+    const auto& entries(it->second.entries);
+    for (const auto& e : entries) {
       rev_table[e->text].insert(syllable);
     }
   }
   // save reverse lookup entries
-  for (const ReverseLookupTable::value_type& v : rev_table) {
+  for (const auto& v : rev_table) {
     std::string code_list(boost::algorithm::join(v.second, " "));
     db_->Update(v.first, code_list);
   }
   // save stems
-  for (const ReverseLookupTable::value_type& v : stems) {
+  for (const auto& v : stems) {
     std::string key(v.first + kStemKeySuffix);
     std::string code_list(boost::algorithm::join(v.second, " "));
     db_->Update(key, code_list);
@@ -115,14 +115,14 @@ ReverseLookupDictionaryComponent::ReverseLookupDictionaryComponent() {
 ReverseLookupDictionary* ReverseLookupDictionaryComponent::Create(
     const Ticket& ticket) {
   if (!ticket.schema) return NULL;
-  Config *config = ticket.schema->config();
+  Config* config = ticket.schema->config();
   std::string dict_name;
   if (!config->GetString(ticket.name_space + "/dictionary",
                          &dict_name)) {
     // missing!
     return NULL;
   }
-  shared_ptr<ReverseDb> db(db_pool_[dict_name].lock());
+  auto db = db_pool_[dict_name].lock();
   if (!db) {
     db = make_shared<ReverseDb>(dict_name);
     db_pool_[dict_name] = db;

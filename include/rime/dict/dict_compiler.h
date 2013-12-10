@@ -21,8 +21,8 @@ class ReverseDb;
 class DictSettings;
 
 // return found dict file path, otherwize return empty string
-typedef std::function<const std::string (const std::string& file_name)>
-DictFileFinder;
+using DictFileFinder =
+    std::function<const std::string (const std::string& file_name)>;
 
 class DictCompiler {
  public:
@@ -51,7 +51,7 @@ class DictCompiler {
   std::string dict_name_;
   shared_ptr<Prism> prism_;
   shared_ptr<Table> table_;
-  int options_;
+  int options_ = 0;
   DictFileFinder dict_file_finder_;
 };
 

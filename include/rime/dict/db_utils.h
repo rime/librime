@@ -14,7 +14,7 @@ namespace rime {
 
 class Sink {
  public:
-  virtual ~Sink() {}
+  virtual ~Sink() = default;
   virtual bool MetaPut(const std::string& key, const std::string& value) = 0;
   virtual bool Put(const std::string& key, const std::string& value) = 0;
 
@@ -24,7 +24,7 @@ class Sink {
 
 class Source {
  public:
-  virtual ~Source() {}
+  virtual ~Source() = default;
   virtual bool MetaGet(std::string* key, std::string* value) = 0;
   virtual bool Get(std::string* key, std::string* value) = 0;
 

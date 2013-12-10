@@ -53,9 +53,9 @@ bool TableEncoder::LoadSettings(Config* config) {
 
   if (!config) return false;
 
-  if (ConfigListPtr rules = config->GetList("encoder/rules")) {
-    for (ConfigList::Iterator it = rules->begin(); it != rules->end(); ++it) {
-      ConfigMapPtr rule = As<ConfigMap>(*it);
+  if (auto rules = config->GetList("encoder/rules")) {
+    for (auto it = rules->begin(); it != rules->end(); ++it) {
+      auto rule = As<ConfigMap>(*it);
       if (!rule || !rule->HasKey("formula"))
         continue;
       const std::string formula(rule->GetValue("formula")->str());
@@ -74,8 +74,7 @@ bool TableEncoder::LoadSettings(Config* config) {
           max_phrase_length_ = length;
         }
       }
-      else if (ConfigListPtr range =
-               As<ConfigList>(rule->Get("length_in_range"))) {
+      else if (auto range = As<ConfigList>(rule->Get("length_in_range"))) {
         if (range->size() != 2 ||
             !range->GetValueAt(0) ||
             !range->GetValueAt(1) ||
@@ -95,10 +94,9 @@ bool TableEncoder::LoadSettings(Config* config) {
       max_phrase_length_ = kMaxPhraseLength;
     }
   }
-  if (ConfigListPtr excludes = config->GetList("encoder/exclude_patterns")) {
-    for (ConfigList::Iterator it = excludes->begin();
-         it != excludes->end(); ++it) {
-      ConfigValuePtr pattern = As<ConfigValue>(*it);
+  if (auto excludes = config->GetList("encoder/exclude_patterns")) {
+    for (auto it = excludes->begin(); it != excludes->end(); ++it) {
+      auto pattern = As<ConfigValue>(*it);
       if (!pattern)
         continue;
       exclude_patterns_.push_back(boost::regex(pattern->str()));
@@ -116,8 +114,7 @@ bool TableEncoder::ParseFormula(const std::string& formula,
     LOG(ERROR) << "bad formula: '%s'" << formula;
     return false;
   }
-  for (std::string::const_iterator it = formula.begin(), end = formula.end();
-       it != end; ) {
+  for (auto it = formula.cbegin(), end = formula.cend(); it != end; ) {
     CodeCoords c;
     if (*it < 'A' || *it > 'Z') {
       LOG(ERROR) << "invalid character index in formula: '%s'" << formula;

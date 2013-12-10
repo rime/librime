@@ -17,14 +17,14 @@
 
 namespace rime {
 
-typedef std::set<std::string> Syllabary;
+using Syllabary = std::set<std::string>;
 
 class Code : public std::vector<int> {
  public:
   static const size_t kIndexCodeMaxLength = 3;
 
-  bool operator< (const Code &other) const;
-  bool operator== (const Code &other) const;
+  bool operator< (const Code& other) const;
+  bool operator== (const Code& other) const;
 
   void CreateIndex(Code* index_code);
 };
@@ -33,13 +33,13 @@ struct DictEntry {
   std::string text;
   std::string comment;
   std::string preedit;
-  double weight;
-  int commit_count;
+  double weight = 0.0;
+  int commit_count = 0;
   Code code;  // multi-syllable code from prism
   std::string custom_code;  // user defined code
-  int remaining_code_length;
+  int remaining_code_length = 0;
 
-  DictEntry() : weight(0.0), commit_count(0), remaining_code_length(0) {}
+  DictEntry() = default;
   bool operator< (const DictEntry& other) const;
 };
 
@@ -49,7 +49,7 @@ class DictEntryList : public std::vector<shared_ptr<DictEntry>> {
   void SortRange(size_t start, size_t count);
 };
 
-typedef std::function<bool (shared_ptr<DictEntry> entry)> DictEntryFilter;
+using DictEntryFilter = std::function<bool (shared_ptr<DictEntry> entry)>;
 
 class DictEntryFilterBinder {
  public:
@@ -68,12 +68,12 @@ struct VocabularyPage {
 
 class Vocabulary : public std::map<int, VocabularyPage> {
  public:
-  DictEntryList* LocateEntries(const Code &code);
+  DictEntryList* LocateEntries(const Code& code);
   void SortHomophones();
 };
 
 // word -> { code, ... }
-typedef std::map<std::string, std::set<std::string>> ReverseLookupTable;
+using ReverseLookupTable = std::map<std::string, std::set<std::string>>;
 
 }  // namespace rime
 

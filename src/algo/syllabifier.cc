@@ -14,10 +14,10 @@
 
 namespace rime {
 
-typedef std::pair<size_t, SpellingType> Vertex;
-typedef std::priority_queue<Vertex,
-                            std::vector<Vertex>,
-                            std::greater<Vertex>> VertexQueue;
+using Vertex = std::pair<size_t, SpellingType>;
+using VertexQueue = std::priority_queue<Vertex,
+                                        std::vector<Vertex>,
+                                        std::greater<Vertex>>;
 
 int Syllabifier::BuildSyllableGraph(const std::string &input,
                                     Prism &prism,
@@ -27,7 +27,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input,
 
   size_t farthest = 0;
   VertexQueue queue;
-  queue.push(Vertex(0, kNormalSpelling));  // start
+  queue.push(Vertex{0, kNormalSpelling});  // start
 
   while (!queue.empty()) {
     Vertex vertex(queue.top());
@@ -35,8 +35,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input,
     size_t current_pos = vertex.first;
 
     // record a visit to the vertex
-    VertexMap::iterator it = graph->vertices.find(current_pos);
-    if (it == graph->vertices.end())
+    if (graph->vertices.find(current_pos) == graph->vertices.end())
       graph->vertices.insert(vertex);  // preferred spelling type comes first
     else
       continue;  // discard worse spelling types
@@ -49,8 +48,8 @@ int Syllabifier::BuildSyllableGraph(const std::string &input,
     std::vector<Prism::Match> matches;
     prism.CommonPrefixSearch(input.substr(current_pos), &matches);
     if (!matches.empty()) {
-      EndVertexMap &end_vertices(graph->edges[current_pos]);
-      for (const Prism::Match &m : matches) {
+      auto& end_vertices(graph->edges[current_pos]);
+      for (const auto& m : matches) {
         if (m.length == 0) continue;
         size_t end_pos = current_pos + m.length;
         // consume trailing delimiters
@@ -66,8 +65,8 @@ int Syllabifier::BuildSyllableGraph(const std::string &input,
         // otherwise, it resembles exactly the syllable itself.
         SpellingAccessor accessor(prism.QuerySpelling(m.value));
         while (!accessor.exhausted()) {
-          SyllableId syllable_id(accessor.syllable_id());
-          SpellingProperties props(accessor.properties());
+          SyllableId syllable_id = accessor.syllable_id();
+          SpellingProperties props = accessor.properties();
           if (strict_spelling_ &&
               matches_input &&
               props.type != kNormalSpelling) {
@@ -77,7 +76,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input,
             props.end_pos = end_pos;
             // add a syllable with properties to the edge's
             // spelling-to-syllable map
-            spellings.insert(SpellingMap::value_type(syllable_id, props));
+            spellings.insert({syllable_id, props});
             // let end_vertex_type be the best (smaller) type of spelling
             // that ends at the vertex
             if (end_vertex_type > props.type) {
@@ -97,7 +96,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input,
         if (end_vertex_type < vertex.second) {
           end_vertex_type = vertex.second;
         }
-        queue.push(Vertex(end_pos, end_vertex_type));
+        queue.push(Vertex{end_pos, end_vertex_type});
         DLOG(INFO) << "added to syllable graph, edge: ["
                    << current_pos << ", " << end_pos << ")";
       }
@@ -114,8 +113,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input,
     if (graph->vertices.find(i) == graph->vertices.end())
       continue;
     // remove stale edges
-    for (EndVertexMap::iterator j = graph->edges[i].begin();
-         j != graph->edges[i].end(); ) {
+    for (auto j = graph->edges[i].begin(); j != graph->edges[i].end(); ) {
       if (good.find(j->first) == good.end()) {
         // not connected
         graph->edges[i].erase(j++);
@@ -124,8 +122,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input,
       // remove disqualified syllables (eg. matching abbreviated spellings)
       // when there is a path of more favored type
       SpellingType edge_type = kInvalidSpelling;
-      for (SpellingMap::iterator k = j->second.begin();
-           k != j->second.end(); ) {
+      for (auto k = j->second.begin(); k != j->second.end(); ) {
         if (k->second.type > last_type) {
           j->second.erase(k++);
         }
@@ -163,24 +160,24 @@ int Syllabifier::BuildSyllableGraph(const std::string &input,
       size_t current_pos = farthest;
       size_t end_pos = input.length();
       size_t code_length = end_pos - current_pos;
-      EndVertexMap &end_vertices(graph->edges[current_pos]);
-      SpellingMap &spellings(end_vertices[end_pos]);
-      for (const Prism::Match &m : keys) {
+      auto& end_vertices(graph->edges[current_pos]);
+      auto& spellings(end_vertices[end_pos]);
+      for (const auto& m : keys) {
         if (m.length < code_length) continue;
         // when spelling algebra is enabled,
         // a spelling evaluates to a set of syllables;
         // otherwise, it resembles exactly the syllable itself.
         SpellingAccessor accessor(prism.QuerySpelling(m.value));
         while (!accessor.exhausted()) {
-          SyllableId syllable_id(accessor.syllable_id());
-          SpellingProperties props(accessor.properties());
+          SyllableId syllable_id = accessor.syllable_id();
+          SpellingProperties props = accessor.properties();
           if (props.type < kAbbreviation) {
             props.type = kCompletion;
             props.credibility *= 0.5;
             props.end_pos = end_pos;
             // add a syllable with properties to the edge's
             // spelling-to-syllable map
-            spellings.insert(SpellingMap::value_type(syllable_id, props));
+            spellings.insert({syllable_id, props});
           }
           accessor.Next();
         }
@@ -213,16 +210,16 @@ void Syllabifier::CheckOverlappedSpellings(SyllableGraph *graph,
   if (!graph || graph->edges.find(start) == graph->edges.end())
     return;
   // if "Z" = "YX", mark the vertex between Y and X an ambiguous syllable joint
-  EndVertexMap& y_end_vertices(graph->edges[start]);
+  auto& y_end_vertices(graph->edges[start]);
   // enumerate Ys
-  for (const EndVertexMap::value_type& y : y_end_vertices) {
+  for (const auto& y : y_end_vertices) {
     size_t joint = y.first;
     if (joint >= end) break;
     // test X
     if (graph->edges.find(joint) == graph->edges.end())
       continue;
-    EndVertexMap& x_end_vertices(graph->edges[joint]);
-    for (const EndVertexMap::value_type& x : x_end_vertices) {
+    auto& x_end_vertices(graph->edges[joint]);
+    for (const auto& x : x_end_vertices) {
       if (x.first < end) continue;
       if (x.first == end) {
         graph->vertices[joint] = kAmbiguousSpelling;
@@ -234,11 +231,10 @@ void Syllabifier::CheckOverlappedSpellings(SyllableGraph *graph,
 }
 
 void Syllabifier::Transpose(SyllableGraph* graph) {
-  for (const EdgeMap::value_type& start : graph->edges) {
-    SpellingIndex& index(graph->indices[start.first]);
-    for (const EndVertexMap::value_type& end :
-         boost::adaptors::reverse(start.second)) {
-      for (const SpellingMap::value_type& spelling : end.second) {
+  for (const auto& start : graph->edges) {
+    auto& index(graph->indices[start.first]);
+    for (const auto& end : boost::adaptors::reverse(start.second)) {
+      for (const auto& spelling : end.second) {
         SyllableId syll_id = spelling.first;
         index[syll_id].push_back(&spelling.second);
       }

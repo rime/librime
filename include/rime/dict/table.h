@@ -21,11 +21,11 @@ namespace rime {
 
 namespace table {
 
-typedef Array<String> Syllabary;
+using Syllabary = Array<String>;
 
-typedef int32_t SyllableId;
+using SyllableId = int32_t;
 
-typedef List<SyllableId> Code;
+using Code = List<SyllableId>;
 
 struct Entry {
   String text;
@@ -37,7 +37,7 @@ struct HeadIndexNode {
   OffsetPtr<> next_level;
 };
 
-typedef Array<HeadIndexNode> HeadIndex;
+using HeadIndex = Array<HeadIndexNode>;
 
 struct TrunkIndexNode {
   SyllableId key;
@@ -45,16 +45,16 @@ struct TrunkIndexNode {
   OffsetPtr<> next_level;
 };
 
-typedef Array<TrunkIndexNode> TrunkIndex;
+using TrunkIndex = Array<TrunkIndexNode>;
 
 struct TailIndexNode {
   Code extra_code;
   Entry entry;
 };
 
-typedef Array<TailIndexNode> TailIndex;
+using TailIndex = Array<TailIndexNode>;
 
-typedef HeadIndex Index;
+using Index = HeadIndex;
 
 struct Metadata {
   static const int kFormatMaxLength = 32;
@@ -70,10 +70,10 @@ struct Metadata {
 
 class TableAccessor {
  public:
-  TableAccessor();
-  TableAccessor(const Code &index_code, const List<table::Entry> *entries,
+  TableAccessor() = default;
+  TableAccessor(const Code& index_code, const List<table::Entry>* entries,
                 double credibility = 1.0);
-  TableAccessor(const Code &index_code, const table::TailIndex *code_map,
+  TableAccessor(const Code& index_code, const table::TailIndex* code_map,
                 double credibility = 1.0);
 
   bool Next();
@@ -88,15 +88,15 @@ class TableAccessor {
 
  private:
   Code index_code_;
-  const List<table::Entry> *entries_;
-  const table::TailIndex *code_map_;
-  size_t cursor_;
-  double credibility_;
+  const List<table::Entry>* entries_ = nullptr;
+  const table::TailIndex* code_map_ = nullptr;
+  size_t cursor_ = 0;
+  double credibility_ = 1.0;
 };
 
 class TableVisitor {
  public:
-  TableVisitor(table::Index *index);
+  TableVisitor(table::Index* index);
 
   TableAccessor Access(int syllable_id,
                        double credibility = 1.0) const;
@@ -111,53 +111,50 @@ class TableVisitor {
   size_t level() const { return level_; }
 
  private:
-  table::HeadIndex *lv1_index_;
-  table::TrunkIndex *lv2_index_;
-  table::TrunkIndex *lv3_index_;
-  table::TailIndex *lv4_index_;
-  size_t level_;
+  table::HeadIndex* lv1_index_ = nullptr;
+  table::TrunkIndex* lv2_index_ = nullptr;
+  table::TrunkIndex* lv3_index_ = nullptr;
+  table::TailIndex* lv4_index_ = nullptr;
+  size_t level_ = 0;
   Code index_code_;
   std::vector<double> credibility_;
 };
 
-typedef std::map<int, std::vector<TableAccessor>> TableQueryResult;
+using TableQueryResult = std::map<int, std::vector<TableAccessor>>;
 
 struct SyllableGraph;
 
 class Table : public MappedFile {
  public:
-  Table(const std::string &file_name)
-      : MappedFile(file_name),
-        index_(NULL),
-        syllabary_(NULL),
-        metadata_(NULL) {}
+  Table(const std::string& file_name)
+      : MappedFile(file_name) {}
 
   bool Load();
   bool Save();
-  bool Build(const Syllabary &syllabary,
-             const Vocabulary &vocabulary,
+  bool Build(const Syllabary& syllabary,
+             const Vocabulary& vocabulary,
              size_t num_entries,
              uint32_t dict_file_checksum = 0);
 
-  bool GetSyllabary(Syllabary *syllabary);
+  bool GetSyllabary(Syllabary* syllabary);
   const char* GetSyllableById(int syllable_id);
   TableAccessor QueryWords(int syllable_id);
-  TableAccessor QueryPhrases(const Code &code);
-  bool Query(const SyllableGraph &syll_graph,
+  TableAccessor QueryPhrases(const Code& code);
+  bool Query(const SyllableGraph& syll_graph,
              size_t start_pos,
-             TableQueryResult *result);
+             TableQueryResult* result);
   uint32_t dict_file_checksum() const;
 
  private:
-  table::HeadIndex* BuildHeadIndex(const Vocabulary &vocabulary, size_t num_syllables);
-  table::TrunkIndex* BuildTrunkIndex(const Code &prefix, const Vocabulary &vocabulary);
-  table::TailIndex* BuildTailIndex(const Code &prefix, const Vocabulary &vocabulary);
-  bool BuildEntryList(const DictEntryList &src, List<table::Entry> *dest);
-  bool BuildEntry(const DictEntry &dict_entry, table::Entry *entry);
+  table::HeadIndex* BuildHeadIndex(const Vocabulary& vocabulary, size_t num_syllables);
+  table::TrunkIndex* BuildTrunkIndex(const Code& prefix, const Vocabulary& vocabulary);
+  table::TailIndex* BuildTailIndex(const Code& prefix, const Vocabulary& vocabulary);
+  bool BuildEntryList(const DictEntryList& src, List<table::Entry>* dest);
+  bool BuildEntry(const DictEntry& dict_entry, table::Entry* entry);
 
-  table::Index *index_;
-  table::Syllabary *syllabary_;
-  table::Metadata *metadata_;
+  table::Index* index_ = nullptr;
+  table::Syllabary* syllabary_ = nullptr;
+  table::Metadata* metadata_ = nullptr;
 };
 
 }  // namespace rime

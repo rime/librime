@@ -25,12 +25,12 @@ bool TextDbAccessor::Reset() {
   return iter_ != data_.end();
 }
 
-bool TextDbAccessor::Jump(const std::string &key) {
+bool TextDbAccessor::Jump(const std::string& key) {
   iter_ = data_.lower_bound(key);
   return iter_ != data_.end();
 }
 
-bool TextDbAccessor::GetNextRecord(std::string *key, std::string *value) {
+bool TextDbAccessor::GetNextRecord(std::string* key, std::string* value) {
   if (!key || !value || exhausted())
     return false;
   *key = iter_->first;
@@ -48,10 +48,7 @@ bool TextDbAccessor::exhausted() {
 TextDb::TextDb(const std::string& name,
                const std::string& db_type,
                TextFormat format)
-    : Db(name),
-      db_type_(db_type),
-      format_(format),
-      modified_(false) {
+    : Db(name), db_type_(db_type), format_(format) {
 }
 
 TextDb::~TextDb() {
@@ -69,13 +66,13 @@ shared_ptr<DbAccessor> TextDb::QueryAll() {
   return Query("");
 }
 
-shared_ptr<DbAccessor> TextDb::Query(const std::string &key) {
+shared_ptr<DbAccessor> TextDb::Query(const std::string& key) {
   if (!loaded())
     return shared_ptr<DbAccessor>();
   return make_shared<TextDbAccessor>(data_, key);
 }
 
-bool TextDb::Fetch(const std::string &key, std::string *value) {
+bool TextDb::Fetch(const std::string& key, std::string* value) {
   if (!value || !loaded())
     return false;
   TextDbData::const_iterator it = data_.find(key);
@@ -85,7 +82,7 @@ bool TextDb::Fetch(const std::string &key, std::string *value) {
   return true;
 }
 
-bool TextDb::Update(const std::string &key, const std::string &value) {
+bool TextDb::Update(const std::string& key, const std::string& value) {
   if (!loaded() || readonly()) return false;
   DLOG(INFO) << "update db entry: " << key << " => " << value;
   data_[key] = value;
@@ -93,7 +90,7 @@ bool TextDb::Update(const std::string &key, const std::string &value) {
   return true;
 }
 
-bool TextDb::Erase(const std::string &key) {
+bool TextDb::Erase(const std::string& key) {
   if (!loaded() || readonly()) return false;
   DLOG(INFO) << "erase db entry: " << key;
   if (data_.erase(key) == 0)
@@ -182,7 +179,7 @@ bool TextDb::CreateMetadata() {
       MetaUpdate("/db_type", db_type_);
 }
 
-bool TextDb::MetaFetch(const std::string &key, std::string *value) {
+bool TextDb::MetaFetch(const std::string& key, std::string* value) {
   if (!value || !loaded())
     return false;
   TextDbData::const_iterator it = metadata_.find(key);
@@ -192,7 +189,7 @@ bool TextDb::MetaFetch(const std::string &key, std::string *value) {
   return true;
 }
 
-bool TextDb::MetaUpdate(const std::string &key, const std::string &value) {
+bool TextDb::MetaUpdate(const std::string& key, const std::string& value) {
   if (!loaded() || readonly()) return false;
   DLOG(INFO) << "update db metadata: " << key << " => " << value;
   metadata_[key] = value;

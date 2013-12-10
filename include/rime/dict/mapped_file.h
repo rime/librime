@@ -20,17 +20,15 @@ namespace rime {
 template <class T = char, class Offset = int32_t>
 class OffsetPtr {
  public:
-  OffsetPtr() : offset_(0) {}
+  OffsetPtr() = default;
   OffsetPtr(Offset offset) : offset_(offset) {}
-  OffsetPtr(const OffsetPtr<T> &ptr)
-      : offset_(to_offset(ptr.get())) {}
-  OffsetPtr(const T *ptr)
-      : offset_(to_offset(ptr)) {}
-  OffsetPtr<T>& operator= (const OffsetPtr<T> &ptr) {
+  OffsetPtr(const T* ptr) : OffsetPtr(to_offset(ptr)) {}
+  OffsetPtr(const OffsetPtr<T>& ptr) : OffsetPtr(ptr.get()) {}
+  OffsetPtr<T>& operator= (const OffsetPtr<T>& ptr) {
     offset_ = to_offset(ptr.get());
     return *this;
   }
-  OffsetPtr<T>& operator= (const T *ptr) {
+  OffsetPtr<T>& operator= (const T* ptr) {
     offset_ = to_offset(ptr);
     return *this;
   }
@@ -46,7 +44,6 @@ class OffsetPtr {
   T& operator[] (size_t index) const {
     return *(get() + index);
   }
-  // TODO: define other operations
   T* get() const {
     if (!offset_) return NULL;
     return reinterpret_cast<T*>((char*)&offset_ + offset_);
@@ -55,7 +52,7 @@ class OffsetPtr {
   Offset to_offset(const T* ptr) const {
     return ptr ? (char*)ptr - (char*)(&offset_) : 0;
   }
-  Offset offset_;
+  Offset offset_ = 0;
 };
 
 struct String {
@@ -91,7 +88,7 @@ class MappedFileImpl;
 
 class MappedFile : boost::noncopyable {
  protected:
-  explicit MappedFile(const std::string &file_name);
+  explicit MappedFile(const std::string& file_name);
   virtual ~MappedFile();
 
   bool Create(size_t capacity);
@@ -110,11 +107,11 @@ class MappedFile : boost::noncopyable {
   template <class T>
   Array<T>* CreateArray(size_t array_size);
 
-  String* CreateString(const std::string &str);
-  bool CopyString(const std::string &src, String *dest);
+  String* CreateString(const std::string& str);
+  bool CopyString(const std::string& src, String* dest);
 
   size_t capacity() const;
-  char * address() const;
+  char* address() const;
 
 public:
   bool IsOpen() const;
@@ -126,7 +123,7 @@ public:
 
  private:
   std::string file_name_;
-  size_t size_;
+  size_t size_ = 0;
   unique_ptr<MappedFileImpl> file_;
 };
 
@@ -148,7 +145,7 @@ T* MappedFile::Allocate(size_t count) {
     // now lets restore it to the saved value
     size_ = used_space;
   }
-  T *ptr = reinterpret_cast<T*>(address() + used_space);
+  T* ptr = reinterpret_cast<T*>(address() + used_space);
   std::memset(ptr, 0, required_space);
   size_ += required_space;
   return ptr;

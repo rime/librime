@@ -33,7 +33,7 @@ void Script::Merge(const std::string& s,
       if (!sp.tips.empty())
         yy.tips = sp.tips;
     }
-    std::vector<Spelling>::iterator e = std::find(m.begin(), m.end(), x);
+    auto e = std::find(m.begin(), m.end(), x);
     if (e == m.end()) {
       m.push_back(y);
     }

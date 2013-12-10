@@ -31,8 +31,8 @@ class ReverseLookupDictionary
   explicit ReverseLookupDictionary(shared_ptr<ReverseDb> db);
   explicit ReverseLookupDictionary(const std::string& dict_name);
   bool Load();
-  bool ReverseLookup(const std::string &text, std::string *result);
-  bool LookupStems(const std::string &text, std::string *result);
+  bool ReverseLookup(const std::string& text, std::string* result);
+  bool LookupStems(const std::string& text, std::string* result);
   bool Build(DictSettings* settings,
              const Syllabary& syllabary,
              const Vocabulary& vocabulary,

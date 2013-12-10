@@ -13,8 +13,7 @@
 
 namespace rime {
 
-EntryCollector::EntryCollector()
-    : num_entries(0) {
+EntryCollector::EntryCollector() {
 }
 
 EntryCollector::~EntryCollector() {
@@ -43,7 +42,7 @@ void EntryCollector::Collect(const std::vector<std::string>& dict_files) {
 
 void EntryCollector::LoadPresetVocabulary(DictSettings* settings) {
   LOG(INFO) << "loading preset vocabulary.";
-  preset_vocabulary.reset(PresetVocabulary::Create());
+  preset_vocabulary.reset(new PresetVocabulary);
   if (preset_vocabulary && settings) {
     if (settings->max_phrase_length() > 0)
       preset_vocabulary->set_max_phrase_length(settings->max_phrase_length());
@@ -92,7 +91,7 @@ void EntryCollector::Collect(const std::string& dict_file) {
       LOG(WARNING) << "Missing entry text at #" << num_entries << ".";
       continue;
     }
-    std::string &word(row[text_column]);
+    const auto& word(row[text_column]);
     std::string code_str;
     std::string weight_str;
     std::string stem_str;
@@ -111,7 +110,7 @@ void EntryCollector::Collect(const std::string& dict_file) {
       CreateEntry(word, code_str, weight_str);
     }
     else {
-      encode_queue.push(std::make_pair(word, weight_str));
+      encode_queue.push({word, weight_str});
     }
     if (!stem_str.empty() && !code_str.empty()) {
       DLOG(INFO) << "add stem '" << word << "': "
@@ -127,8 +126,8 @@ void EntryCollector::Collect(const std::string& dict_file) {
 
 void EntryCollector::Finish() {
   while (!encode_queue.empty()) {
-    const std::string &phrase(encode_queue.front().first);
-    const std::string &weight_str(encode_queue.front().second);
+    const auto& phrase(encode_queue.front().first);
+    const auto& weight_str(encode_queue.front().second);
     if (!encoder->EncodePhrase(phrase, weight_str)) {
       LOG(ERROR) << "Encode failure: '" << phrase << "'.";
     }
@@ -182,7 +181,7 @@ void EntryCollector::CreateEntry(const std::string &word,
     }
   }
   // learn new syllables
-  for (const std::string &s : e.raw_code) {
+  for (const std::string& s : e.raw_code) {
     if (syllabary.find(s) == syllabary.end())
       syllabary.insert(s);
   }
@@ -212,7 +211,7 @@ bool EntryCollector::TranslateWord(const std::string& word,
   }
   WordMap::const_iterator w = words.find(word);
   if (w != words.end()) {
-    for (const WeightMap::value_type& v : w->second) {
+    for (const auto& v : w->second) {
       const double kMinimalWeight = 0.05;  // 5%
       double min_weight = total_weight[word] * kMinimalWeight;
       if (v.second < min_weight)
@@ -231,7 +230,7 @@ void EntryCollector::Dump(const std::string& file_name) const {
     out << "# - " << syllable << std::endl;
   }
   out << std::endl;
-  for (const RawDictEntry &e : entries) {
+  for (const RawDictEntry& e : entries) {
     out << e.text << '\t'
         << e.raw_code.ToString() << '\t'
         << e.weight << std::endl;
