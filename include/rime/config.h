@@ -10,7 +10,7 @@
 #include <iostream>
 #include <map>
 #include <string>
-#include <boost/type_traits.hpp>
+#include <type_traits>
 #include <rime/common.h>
 #include <rime/component.h>
 
@@ -155,12 +155,12 @@ class ConfigItemRef {
 namespace {
 
 template <class T>
-ConfigItemPtr AsConfigItem(const T& a, const boost::false_type&) {
+ConfigItemPtr AsConfigItem(const T& a, const std::false_type&) {
   return New<ConfigValue>(a);
 };
 
 template <class T>
-ConfigItemPtr AsConfigItem(const T& a, const boost::true_type&) {
+ConfigItemPtr AsConfigItem(const T& a, const std::true_type&) {
   return a;
 };
 
@@ -174,7 +174,7 @@ class ConfigListEntryRef : public ConfigItemRef {
   }
   template <class T>
   ConfigListEntryRef& operator= (const T& a) {
-    SetItem(AsConfigItem(a, boost::is_convertible<T, ConfigItemPtr>()));
+    SetItem(AsConfigItem(a, std::is_convertible<T, ConfigItemPtr>()));
     return *this;
   }
  protected:
@@ -198,7 +198,7 @@ class ConfigMapEntryRef : public ConfigItemRef {
   }
   template <class T>
   ConfigMapEntryRef& operator= (const T& a) {
-    SetItem(AsConfigItem(a, boost::is_convertible<T, ConfigItemPtr>()));
+    SetItem(AsConfigItem(a, std::is_convertible<T, ConfigItemPtr>()));
     return *this;
   }
  protected:
@@ -264,7 +264,7 @@ class Config : public Class<Config, const std::string&>, public ConfigItemRef {
 
   template <class T>
   Config& operator= (const T& a) {
-    SetItem(AsConfigItem(a, boost::is_convertible<T, ConfigItemPtr>()));
+    SetItem(AsConfigItem(a, std::is_convertible<T, ConfigItemPtr>()));
     return *this;
   }
 
