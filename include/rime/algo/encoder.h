@@ -8,10 +8,10 @@
 #ifndef RIME_ENCODER_H_
 #define RIME_ENCODER_H_
 
-#include <regex>
 #include <set>
 #include <string>
 #include <vector>
+#include <boost/regex.hpp>
 
 namespace rime {
 
@@ -95,7 +95,7 @@ class TableEncoder : public Encoder {
   bool loaded_;
   // settings
   std::vector<TableEncodingRule> encoding_rules_;
-  std::vector<std::regex> exclude_patterns_;
+  std::vector<boost::regex> exclude_patterns_;
   std::string tail_anchor_;
   // for optimization
   int max_phrase_length_;

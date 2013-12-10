@@ -48,8 +48,8 @@ RecognizerMatch RecognizerPatterns::GetMatch(
   std::string active_input(input.substr(k));
   DLOG(INFO) << "matching active input '" << active_input << "' at pos " << k;
   for (const RecognizerPatterns::value_type &v : *this) {
-    std::smatch m;
-    if (std::regex_search(active_input, m, v.second)) {
+    boost::smatch m;
+    if (boost::regex_search(active_input, m, v.second)) {
       size_t start = k + m.position();
       size_t end = start + m.length();
       if (end != input.length()) continue;

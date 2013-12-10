@@ -8,8 +8,8 @@
 #define RIME_RECOGNIZER_H_
 
 #include <map>
-#include <regex>
 #include <string>
+#include <boost/regex.hpp>
 #include <rime/common.h>
 #include <rime/processor.h>
 
@@ -29,7 +29,7 @@ struct RecognizerMatch {
   bool found() const { return start < end; }
 };
 
-class RecognizerPatterns : public std::map<std::string, std::regex> {
+class RecognizerPatterns : public std::map<std::string, boost::regex> {
  public:
   void LoadConfig(Config *config);
   RecognizerMatch GetMatch(const std::string &input,

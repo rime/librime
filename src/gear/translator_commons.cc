@@ -20,7 +20,7 @@ bool Patterns::Load(ConfigListPtr patterns) {
   for (ConfigList::Iterator it = patterns->begin(); it != patterns->end(); ++it) {
     ConfigValuePtr value = As<ConfigValue>(*it);
     if (!value) continue;
-    push_back(std::regex(value->str()));
+    push_back(boost::regex(value->str()));
   }
   return true;
 }
@@ -163,8 +163,8 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket)
 bool TranslatorOptions::IsUserDictDisabledFor(const std::string& input) const {
   if (user_dict_disabling_patterns_.empty())
     return false;
-  for (const std::regex& pattern : user_dict_disabling_patterns_) {
-    if (std::regex_match(input, pattern))
+  for (const boost::regex& pattern : user_dict_disabling_patterns_) {
+    if (boost::regex_match(input, pattern))
       return true;
   }
   return false;

@@ -101,7 +101,7 @@ bool TableEncoder::LoadSettings(Config* config) {
       ConfigValuePtr pattern = As<ConfigValue>(*it);
       if (!pattern)
         continue;
-      exclude_patterns_.push_back(std::regex(pattern->str()));
+      exclude_patterns_.push_back(boost::regex(pattern->str()));
     }
   }
   config->GetString("encoder/tail_anchor", &tail_anchor_);
@@ -137,8 +137,8 @@ bool TableEncoder::ParseFormula(const std::string& formula,
 }
 
 bool TableEncoder::IsCodeExcluded(const std::string& code) {
-  for (const std::regex& pattern : exclude_patterns_) {
-    if (std::regex_match(code, pattern))
+  for (const boost::regex& pattern : exclude_patterns_) {
+    if (boost::regex_match(code, pattern))
       return true;
   }
   return false;
