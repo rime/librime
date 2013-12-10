@@ -20,9 +20,9 @@ Candidate::GetGenuineCandidate(const shared_ptr<Candidate>& cand) {
   return UnpackShadowCandidate(uniquified ? uniquified->items().front() : cand);
 }
 
-std::vector<shared_ptr<Candidate> >
+std::vector<shared_ptr<Candidate>>
 Candidate::GetGenuineCandidates(const shared_ptr<Candidate>& cand) {
-  std::vector<shared_ptr<Candidate> > result;
+  std::vector<shared_ptr<Candidate>> result;
   shared_ptr<UniquifiedCandidate> uniquified(As<UniquifiedCandidate>(cand));
   if (uniquified) {
     for (const shared_ptr<Candidate>& item : uniquified->items()) {

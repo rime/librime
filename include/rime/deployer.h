@@ -66,7 +66,7 @@ class Deployer : public Messenger {
   std::string user_data_sync_dir() const;
 
  private:
-  std::queue<shared_ptr<DeploymentTask> > pending_tasks_;
+  std::queue<shared_ptr<DeploymentTask>> pending_tasks_;
   std::mutex mutex_;
   std::future<void> work_;
   bool maintenance_mode_;

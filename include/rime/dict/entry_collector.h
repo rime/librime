@@ -30,7 +30,7 @@ typedef std::map<std::string, double> WeightMap;
 // word -> { code -> weight }
 typedef std::map<std::string, WeightMap> WordMap;
 // [ (word, weight), ... ]
-typedef std::queue<std::pair<std::string, std::string> > EncodeQueue;
+typedef std::queue<std::pair<std::string, std::string>> EncodeQueue;
 
 class PresetVocabulary;
 class DictSettings;

@@ -48,8 +48,8 @@ class Switcher : public Engine {
   std::string caption_;
   std::vector<KeyEvent> hotkeys_;
   std::set<std::string> save_options_;
-  std::vector<shared_ptr<Processor> > processors_;
-  std::vector<shared_ptr<Translator> > translators_;
+  std::vector<shared_ptr<Processor>> processors_;
+  std::vector<shared_ptr<Translator>> translators_;
   bool active_;
 };
 

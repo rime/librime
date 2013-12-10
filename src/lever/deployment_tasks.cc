@@ -310,7 +310,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
 ConfigFileUpdate::ConfigFileUpdate(TaskInitializer arg) {
   try {
     std::pair<std::string, std::string> p =
-        boost::any_cast< std::pair<std::string, std::string> >(arg);
+        boost::any_cast< std::pair<std::string, std::string>>(arg);
     file_name_ = p.first;
     version_key_ = p.second;
   }

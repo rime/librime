@@ -50,7 +50,7 @@ class ReverseLookupDictionaryComponent
   ReverseLookupDictionaryComponent();
   ReverseLookupDictionary* Create(const Ticket& ticket);
  private:
-  std::map<std::string, weak_ptr<ReverseDb> > db_pool_;
+  std::map<std::string, weak_ptr<ReverseDb>> db_pool_;
 };
 
 }  // namespace rime

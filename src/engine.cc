@@ -51,12 +51,12 @@ class ConcreteEngine : public Engine {
   void OnContextUpdate(Context *ctx);
   void OnOptionUpdate(Context *ctx, const std::string &option);
 
-  std::vector<shared_ptr<Processor> > processors_;
-  std::vector<shared_ptr<Segmentor> > segmentors_;
-  std::vector<shared_ptr<Translator> > translators_;
-  std::vector<shared_ptr<Filter> > filters_;
-  std::vector<shared_ptr<Formatter> > formatters_;
-  std::vector<shared_ptr<Processor> > post_processors_;
+  std::vector<shared_ptr<Processor>> processors_;
+  std::vector<shared_ptr<Segmentor>> segmentors_;
+  std::vector<shared_ptr<Translator>> translators_;
+  std::vector<shared_ptr<Filter>> filters_;
+  std::vector<shared_ptr<Formatter>> formatters_;
+  std::vector<shared_ptr<Processor>> post_processors_;
 };
 
 // implementations

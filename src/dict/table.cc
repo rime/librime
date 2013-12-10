@@ -451,7 +451,7 @@ bool Table::Query(const SyllableGraph &syll_graph, size_t start_pos,
       start_pos >= syll_graph.interpreted_length)
     return false;
   result->clear();
-  std::queue<std::pair<size_t, TableVisitor> > q;
+  std::queue<std::pair<size_t, TableVisitor>> q;
   q.push(std::make_pair(start_pos, TableVisitor(index_)));
   while (!q.empty()) {
     int current_pos = q.front().first;

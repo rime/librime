@@ -120,8 +120,8 @@ class DictionaryComponent : public Dictionary::Component {
                                        const std::string &prism_name);
 
  private:
-  std::map<std::string, weak_ptr<Prism> > prism_map_;
-  std::map<std::string, weak_ptr<Table> > table_map_;
+  std::map<std::string, weak_ptr<Prism>> prism_map_;
+  std::map<std::string, weak_ptr<Table>> table_map_;
 };
 
 }  // namespace rime

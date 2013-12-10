@@ -551,14 +551,14 @@ shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
       !engine_->context()->get_option("extended_charset");
   DictEntryCollector collector;
   UserDictEntryCollector user_phrase_collector;
-  std::map<int, shared_ptr<Sentence> > sentences;
+  std::map<int, shared_ptr<Sentence>> sentences;
   sentences[0] = make_shared<Sentence>(language());
   for (size_t start_pos = 0; start_pos < input.length(); ++start_pos) {
     if (sentences.find(start_pos) == sentences.end())
       continue;
     std::string active_input(input.substr(start_pos));
     std::string active_key(active_input + ' ');
-    std::vector<shared_ptr<DictEntry> > entries(active_input.length() + 1);
+    std::vector<shared_ptr<DictEntry>> entries(active_input.length() + 1);
     // lookup dictionaries
     if (user_dict_ && user_dict_->loaded()) {
       for (size_t len = 1; len <= active_input.length(); ++len) {

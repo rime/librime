@@ -94,7 +94,7 @@ class FifoTranslation : public Translation {
   }
 
  protected:
-  std::vector<shared_ptr<Candidate> > candies_;
+  std::vector<shared_ptr<Candidate>> candies_;
   size_t cursor_;
 };
 

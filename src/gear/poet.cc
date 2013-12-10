@@ -18,7 +18,7 @@ namespace rime {
 shared_ptr<Sentence> Poet::MakeSentence(const WordGraph& graph,
                                         size_t total_length) {
   const int kMaxHomophonesInMind = 1;
-  std::map<int, shared_ptr<Sentence> > sentences;
+  std::map<int, shared_ptr<Sentence>> sentences;
   sentences[0] = make_shared<Sentence>(language_);
   // dynamic programming
   for (const WordGraph::value_type& w : graph) {

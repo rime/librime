@@ -84,7 +84,7 @@ class Service {
  private:
   Service();
 
-  typedef std::map<SessionId, shared_ptr<Session> > SessionMap;
+  typedef std::map<SessionId, shared_ptr<Session>> SessionMap;
   SessionMap sessions_;
   Deployer deployer_;
   NotificationHandler notification_handler_;

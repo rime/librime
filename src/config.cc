@@ -45,7 +45,7 @@ class ConfigData {
   bool modified_;
 };
 
-class ConfigDataManager : public std::map<std::string, weak_ptr<ConfigData> > {
+class ConfigDataManager : public std::map<std::string, weak_ptr<ConfigData>> {
  public:
   shared_ptr<ConfigData> GetConfigData(const std::string &config_file_path);
   bool ReloadConfigData(const std::string &config_file_path);

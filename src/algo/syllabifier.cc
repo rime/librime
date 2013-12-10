@@ -17,7 +17,7 @@ namespace rime {
 typedef std::pair<size_t, SpellingType> Vertex;
 typedef std::priority_queue<Vertex,
                             std::vector<Vertex>,
-                            std::greater<Vertex> > VertexQueue;
+                            std::greater<Vertex>> VertexQueue;
 
 int Syllabifier::BuildSyllableGraph(const std::string &input,
                                     Prism &prism,

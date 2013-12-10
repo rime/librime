@@ -46,7 +46,7 @@ class Menu {
   }
 
  private:
-  std::vector<shared_ptr<Translation> > translations_;
+  std::vector<shared_ptr<Translation>> translations_;
   CandidateList candidates_;
   CandidateFilter filter_;
 };

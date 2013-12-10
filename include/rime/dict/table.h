@@ -120,7 +120,7 @@ class TableVisitor {
   std::vector<double> credibility_;
 };
 
-typedef std::map<int, std::vector<TableAccessor> > TableQueryResult;
+typedef std::map<int, std::vector<TableAccessor>> TableQueryResult;
 
 struct SyllableGraph;
 

@@ -109,7 +109,7 @@ class UserDictionaryComponent : public UserDictionary::Component {
   UserDictionaryComponent();
   UserDictionary* Create(const Ticket& ticket);
  private:
-  std::map<std::string, weak_ptr<Db> > db_pool_;
+  std::map<std::string, weak_ptr<Db>> db_pool_;
 };
 
 }  // namespace rime

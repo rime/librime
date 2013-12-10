@@ -62,7 +62,7 @@ struct KeyBinding {
 };
 
 class KeyBindings : public std::map<KeyEvent,
-                                    std::vector<KeyBinding> > {
+                                    std::vector<KeyBinding>> {
  public:
   void LoadBindings(const ConfigListPtr &bindings);
   void Bind(const KeyEvent& key, const KeyBinding& binding);

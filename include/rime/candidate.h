@@ -25,7 +25,7 @@ class Candidate {
 
   static shared_ptr<Candidate>
   GetGenuineCandidate(const shared_ptr<Candidate>& cand);
-  static std::vector<shared_ptr<Candidate> >
+  static std::vector<shared_ptr<Candidate>>
   GetGenuineCandidates(const shared_ptr<Candidate>& cand);
 
   // recognized by translators in learning phase
@@ -54,7 +54,7 @@ class Candidate {
   double quality_;
 };
 
-typedef std::vector<shared_ptr<Candidate> > CandidateList;
+typedef std::vector<shared_ptr<Candidate>> CandidateList;
 
 // useful implimentations
 

@@ -43,7 +43,7 @@ struct DictEntry {
   bool operator< (const DictEntry& other) const;
 };
 
-class DictEntryList : public std::vector<shared_ptr<DictEntry> > {
+class DictEntryList : public std::vector<shared_ptr<DictEntry>> {
  public:
   void Sort();
   void SortRange(size_t start, size_t count);
@@ -73,7 +73,7 @@ class Vocabulary : public std::map<int, VocabularyPage> {
 };
 
 // word -> { code, ... }
-typedef std::map<std::string, std::set<std::string> > ReverseLookupTable;
+typedef std::map<std::string, std::set<std::string>> ReverseLookupTable;
 
 }  // namespace rime
 
