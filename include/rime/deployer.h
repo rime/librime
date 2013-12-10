@@ -7,10 +7,11 @@
 #ifndef RIME_DEPLOYER_H_
 #define RIME_DEPLOYER_H_
 
+#include <future>
+#include <mutex>
 #include <queue>
 #include <string>
 #include <boost/any.hpp>
-#include <boost/thread.hpp>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/messenger.h>
@@ -66,8 +67,8 @@ class Deployer : public Messenger {
 
  private:
   std::queue<shared_ptr<DeploymentTask> > pending_tasks_;
-  boost::mutex mutex_;
-  boost::thread work_thread_;
+  std::mutex mutex_;
+  std::future<void> work_;
   bool maintenance_mode_;
 };
 

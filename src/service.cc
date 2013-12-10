@@ -171,7 +171,7 @@ void Service::Notify(SessionId session_id,
                      const std::string& message_type,
                      const std::string& message_value) {
   if (notification_handler_) {
-    boost::lock_guard<boost::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     notification_handler_(session_id,
                           message_type.c_str(), message_value.c_str());
   }
