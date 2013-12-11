@@ -115,8 +115,7 @@ bool Deployer::StartWork(bool maintenance_mode) {
   }
   LOG(INFO) << "starting work thread for "
             << pending_tasks_.size() << " tasks.";
-  auto future = std::async(std::launch::async, [this] { Run(); });
-  work_.swap(future);
+  work_ = std::async(std::launch::async, [this] { Run(); });
   return work_.valid();
 }
 
