@@ -12,6 +12,9 @@ data/extra
 thirdparty/include/*
 thirdparty/lib/*
 thirdparty/bin/*
+thirdparty/src/opencc-windows/*.def
+thirdparty/src/opencc-windows/*.exp
+thirdparty/src/opencc-windows/*.lib
 env.bat
 *~
 .*.swp
