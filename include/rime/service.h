@@ -17,13 +17,13 @@
 
 namespace rime {
 
-typedef uintptr_t SessionId;
+using SessionId = uintptr_t;
 
 static const SessionId kInvalidSessionId = 0;
 
-typedef std::function<void (SessionId session_id,
-                            const char* message_type,
-                            const char* message_value)> NotificationHandler;
+using NotificationHandler = std::function<void (SessionId session_id,
+                                                const char* message_type,
+                                                const char* message_value)>;
 
 class Context;
 class Engine;
@@ -36,7 +36,7 @@ class Session {
   static const int kLifeSpan = 5 * 60;  // seconds
 
   Session();
-  bool ProcessKeyEvent(const KeyEvent &key_event);
+  bool ProcessKeyEvent(const KeyEvent& key_event);
   void Activate();
   void ResetCommitText();
   bool CommitComposition();
@@ -49,11 +49,11 @@ class Session {
   const std::string& commit_text() const { return commit_text_; }
 
  private:
-  void OnCommit(const std::string &commit_text);
+  void OnCommit(const std::string& commit_text);
 
   unique_ptr<Switcher> switcher_;
   unique_ptr<Engine> engine_;
-  time_t last_active_time_;
+  time_t last_active_time_ = 0;
   std::string commit_text_;
 };
 
@@ -84,12 +84,12 @@ class Service {
  private:
   Service();
 
-  typedef std::map<SessionId, shared_ptr<Session>> SessionMap;
+  using SessionMap = std::map<SessionId, shared_ptr<Session>>;
   SessionMap sessions_;
   Deployer deployer_;
   NotificationHandler notification_handler_;
   std::mutex mutex_;
-  bool started_;
+  bool started_ = false;
 };
 
 }  // namespace rime

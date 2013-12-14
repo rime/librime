@@ -14,16 +14,17 @@ namespace rime {
 
 struct Preedit {
   std::string text;
-  size_t caret_pos;
-  size_t sel_start;
-  size_t sel_end;
+  size_t caret_pos = 0;
+  size_t sel_start = 0;
+  size_t sel_end = 0;
 };
 
 class Composition : public Segmentation {
  public:
-  Composition();
+  Composition() = default;
+
   bool HasFinishedComposition() const;
-  void GetPreedit(Preedit *preedit) const;
+  void GetPreedit(Preedit* preedit) const;
   std::string GetCommitText() const;
   std::string GetScriptText() const;
   std::string GetDebugText() const;

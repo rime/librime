@@ -17,20 +17,20 @@ namespace rime {
 class Translation;
 
 struct Page {
-  int page_size;
-  int page_no;
-  bool is_last_page;
+  int page_size = 0;
+  int page_no = 0;
+  bool is_last_page = false;
   CandidateList candidates;
 };
 
 class Menu {
  public:
-  typedef std::function<void (CandidateList *recruited,
-                              CandidateList *candidates)> CandidateFilter;
+  typedef std::function<void (CandidateList* recruited,
+                              CandidateList* candidates)> CandidateFilter;
 
-  Menu() {}
-  Menu(const CandidateFilter &filter) : filter_(filter) {}
-  ~Menu() {}
+  Menu() = default;
+  ~Menu() = default;
+  Menu(const CandidateFilter& filter) : filter_(filter) {}
 
   void AddTranslation(shared_ptr<Translation> translation);
   size_t Prepare(size_t candidate_count);

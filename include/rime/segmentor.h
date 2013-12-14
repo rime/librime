@@ -19,12 +19,12 @@ class Segmentor : public Class<Segmentor, const Ticket&> {
  public:
   explicit Segmentor(const Ticket& ticket)
       : engine_(ticket.engine), name_space_(ticket.name_space) {}
-  virtual ~Segmentor() {}
+  virtual ~Segmentor() = default;
 
-  virtual bool Proceed(Segmentation *segmentation) = 0;
+  virtual bool Proceed(Segmentation* segmentation) = 0;
 
  protected:
-  Engine *engine_;
+  Engine* engine_;
   std::string name_space_;
 };
 

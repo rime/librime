@@ -12,7 +12,7 @@
 
 namespace rime {
 
-Context::Context() : input_(), caret_pos_(0), composition_(new Composition) {
+Context::Context() : composition_(new Composition) {
 }
 
 Context::~Context() {
@@ -38,7 +38,7 @@ std::string Context::GetScriptText() const {
   return composition_->GetScriptText();
 }
 
-void Context::GetPreedit(Preedit *preedit, bool soft_cursor) const {
+void Context::GetPreedit(Preedit* preedit, bool soft_cursor) const {
   composition_->GetPreedit(preedit);
   preedit->caret_pos = preedit->text.length();
   if (IsComposing()) {
@@ -59,7 +59,7 @@ bool Context::IsComposing() const {
 bool Context::HasMenu() const {
   if (composition_->empty())
     return false;
-  const shared_ptr<Menu>& menu(composition_->back().menu);
+  const auto& menu(composition_->back().menu);
   return menu && !menu->empty();
 }
 
@@ -116,9 +116,8 @@ void Context::Clear() {
 bool Context::Select(size_t index) {
   if (composition_->empty())
     return false;
-  Segment &seg(composition_->back());
-  shared_ptr<Candidate> cand(seg.GetCandidateAt(index));
-  if (cand) {
+  Segment& seg(composition_->back());
+  if (auto cand = seg.GetCandidateAt(index)) {
     seg.selected_index = index;
     seg.status = Segment::kSelected;
     DLOG(INFO) << "Selected: '" << cand->text() << "', index = " << index;
@@ -131,9 +130,8 @@ bool Context::Select(size_t index) {
 bool Context::DeleteCurrentSelection() {
   if (composition_->empty())
     return false;
-  Segment &seg(composition_->back());
-  shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
-  if (cand) {
+  Segment& seg(composition_->back());
+  if (auto cand = seg.GetSelectedCandidate()) {
     DLOG(INFO) << "Deleting: '" << cand->text()
                << "', selected_index = " << seg.selected_index;
     delete_notifier_(this);
@@ -145,10 +143,9 @@ bool Context::DeleteCurrentSelection() {
 bool Context::ConfirmCurrentSelection() {
   if (composition_->empty())
     return false;
-  Segment &seg(composition_->back());
+  Segment& seg(composition_->back());
   seg.status = Segment::kSelected;
-  shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
-  if (cand) {
+  if (auto cand = seg.GetSelectedCandidate()) {
     DLOG(INFO) << "Confirmed: '" << cand->text()
                << "', selected_index = " << seg.selected_index;
   }
@@ -164,9 +161,10 @@ bool Context::ConfirmCurrentSelection() {
 }
 
 bool Context::ConfirmPreviousSelection() {
-  for (Composition::reverse_iterator it = composition_->rbegin();
-       it != composition_->rend(); ++it) {
-    if (it->status > Segment::kSelected) return false;
+  for (auto it = composition_->rbegin(); it != composition_->rend(); ++it) {
+    if (it->status > Segment::kSelected) {
+      return false;
+    }
     if (it->status == Segment::kSelected) {
       it->status = Segment::kConfirmed;
       return true;
@@ -178,7 +176,7 @@ bool Context::ConfirmPreviousSelection() {
 bool Context::ReopenPreviousSegment() {
   if (composition_->Trim()) {
     if (!composition_->empty() &&
-      composition_->back().status >= Segment::kSelected) {
+        composition_->back().status >= Segment::kSelected) {
       composition_->back().status = Segment::kVoid;
     }
     update_notifier_(this);
@@ -198,13 +196,14 @@ bool Context::ClearPreviousSegment() {
 }
 
 bool Context::ReopenPreviousSelection() {
-  for (Composition::reverse_iterator it = composition_->rbegin();
-       it != composition_->rend(); ++it) {
-    if (it->status > Segment::kSelected) return false;
+  for (auto it = composition_->rbegin(); it != composition_->rend(); ++it) {
+    if (it->status > Segment::kSelected)
+      return false;
     if (it->status == Segment::kSelected) {
       it->status = Segment::kVoid;
-      while (it != composition_->rbegin())
+      while (it != composition_->rbegin()) {
         composition_->pop_back();
+      }
       update_notifier_(this);
       return true;
     }
@@ -242,13 +241,13 @@ void Context::set_caret_pos(size_t caret_pos) {
   update_notifier_(this);
 }
 
-void Context::set_composition(Composition *comp) {
+void Context::set_composition(Composition* comp) {
   if (composition_.get() != comp)
     composition_.reset(comp);
   // TODO: notification
 }
 
-void Context::set_input(const std::string &value) {
+void Context::set_input(const std::string& value) {
   input_ = value;
   caret_pos_ = input_.length();
   update_notifier_(this);
@@ -262,27 +261,26 @@ const Composition* Context::composition() const {
   return composition_.get();
 }
 
-void Context::set_option(const std::string &name, bool value) {
+void Context::set_option(const std::string& name, bool value) {
   options_[name] = value;
   option_update_notifier_(this, name);
 }
 
-bool Context::get_option(const std::string &name) const {
-  std::map<std::string, bool>::const_iterator it = options_.find(name);
+bool Context::get_option(const std::string& name) const {
+  auto it = options_.find(name);
   if (it != options_.end())
     return it->second;
   else
     return false;
 }
 
-void Context::set_property(const std::string &name,
+void Context::set_property(const std::string& name,
                            const std::string& value) {
   properties_[name] = value;
 }
 
-std::string Context::get_property(const std::string &name) const {
-  std::map<std::string, std::string>::const_iterator it =
-      properties_.find(name);
+std::string Context::get_property(const std::string& name) const {
+  auto it = properties_.find(name);
   if (it != properties_.end())
     return it->second;
   else
@@ -290,16 +288,15 @@ std::string Context::get_property(const std::string &name) const {
 }
 
 void Context::ClearTransientOptions() {
-  std::map<std::string, bool>::iterator oit = options_.lower_bound("_");
-  while (oit != options_.end() &&
-         !oit->first.empty() && oit->first[0] == '_') {
-    options_.erase(oit++);
+  auto opt = options_.lower_bound("_");
+  while (opt != options_.end() &&
+         !opt->first.empty() && opt->first[0] == '_') {
+    options_.erase(opt++);
   }
-  std::map<std::string, std::string>::iterator pit =
-      properties_.lower_bound("_");
-  while (pit != properties_.end() &&
-         !pit->first.empty() && pit->first[0] == '_') {
-    properties_.erase(pit++);
+  auto prop = properties_.lower_bound("_");
+  while (prop != properties_.end() &&
+         !prop->first.empty() && prop->first[0] == '_') {
+    properties_.erase(prop++);
   }
 }
 

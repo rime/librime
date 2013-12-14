@@ -24,8 +24,8 @@ typedef boost::any TaskInitializer;
 
 class DeploymentTask : public Class<DeploymentTask, TaskInitializer> {
  public:
-  DeploymentTask() {}
-  virtual ~DeploymentTask() {}
+  DeploymentTask() = default;
+  virtual ~DeploymentTask() = default;
 
   virtual bool Run(Deployer* deployer) = 0;
 };
@@ -49,8 +49,7 @@ class Deployer : public Messenger {
                TaskInitializer arg = TaskInitializer());
   bool ScheduleTask(const std::string& task_name,
                     TaskInitializer arg = TaskInitializer());
-
-  void ScheduleTask(const shared_ptr<DeploymentTask>& task);
+  void ScheduleTask(shared_ptr<DeploymentTask> task);
   shared_ptr<DeploymentTask> NextTask();
   bool HasPendingTasks();
 
@@ -69,7 +68,7 @@ class Deployer : public Messenger {
   std::queue<shared_ptr<DeploymentTask>> pending_tasks_;
   std::mutex mutex_;
   std::future<void> work_;
-  bool maintenance_mode_;
+  bool maintenance_mode_ = false;
 };
 
 }  // namespace rime

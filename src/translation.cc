@@ -10,20 +10,24 @@
 namespace rime {
 
 int Translation::Compare(shared_ptr<Translation> other,
-                         const CandidateList &candidates) {
-  if (!other || other->exhausted()) return -1;
-  if (exhausted()) return 1;
-  shared_ptr<const Candidate> ours = Peek();
-  shared_ptr<const Candidate> theirs = other->Peek();
-  if (!ours) return 1;
-  if (!theirs) return -1;
+                         const CandidateList& candidates) {
+  if (!other || other->exhausted())
+    return -1;
+  if (exhausted())
+    return 1;
+  auto ours = Peek();
+  auto theirs = other->Peek();
+  if (!ours || !theirs)
+    return 1;
   int k = 0;
   // the one nearer to the beginning of segment comes first
   k = ours->start() - theirs->start();
-  if (k != 0) return k;
+  if (k != 0)
+    return k;
   // then the longer comes first
   k = ours->end() - theirs->end();
-  if (k != 0) return -k;
+  if (k != 0)
+    return -k;
   // compare quality
   double qdiff = ours->quality() - theirs->quality();
   if (qdiff != 0.)

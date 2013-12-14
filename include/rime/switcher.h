@@ -25,8 +25,8 @@ class Switcher : public Engine {
   Switcher();
   ~Switcher();
 
-  bool ProcessKeyEvent(const KeyEvent &key_event);
-  void Attach(Engine *engine);
+  bool ProcessKeyEvent(const KeyEvent& key_event);
+  void Attach(Engine* engine);
   void ApplySchema(Schema* schema);
 
   Schema* CreateSchema();
@@ -42,7 +42,7 @@ class Switcher : public Engine {
   void Activate();
   void Deactivate();
   void HighlightNextSchema();
-  void OnSelect(Context *ctx);
+  void OnSelect(Context* ctx);
 
   unique_ptr<Config> user_config_;
   std::string caption_;
@@ -50,7 +50,7 @@ class Switcher : public Engine {
   std::set<std::string> save_options_;
   std::vector<shared_ptr<Processor>> processors_;
   std::vector<shared_ptr<Translator>> translators_;
-  bool active_;
+  bool active_ = false;
 };
 
 class SwitcherCommand {

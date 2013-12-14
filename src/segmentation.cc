@@ -13,9 +13,8 @@ namespace rime {
 
 shared_ptr<Candidate> Segment::GetCandidateAt(size_t index) const {
   if (!menu)
-    return shared_ptr<Candidate>();
-  else
-    return menu->GetCandidateAt(index);
+    return nullptr;
+  return menu->GetCandidateAt(index);
 }
 
 shared_ptr<Candidate> Segment::GetSelectedCandidate() const {
@@ -25,7 +24,7 @@ shared_ptr<Candidate> Segment::GetSelectedCandidate() const {
 Segmentation::Segmentation() {
 }
 
-void Segmentation::Reset(const std::string &new_input) {
+void Segmentation::Reset(const std::string& new_input) {
   DLOG(INFO) << "reset to " << size() << " segments.";
   // mark redo segmentation, while keeping user confirmed segments
   size_t diff_pos = 0;
@@ -41,7 +40,8 @@ void Segmentation::Reset(const std::string &new_input) {
     pop_back();
     ++disposed;
   }
-  if (disposed > 0) Forward();
+  if (disposed > 0)
+    Forward();
 
   input_ = new_input;
 }
@@ -52,7 +52,7 @@ void Segmentation::Reset(size_t num_segments) {
   resize(num_segments);
 }
 
-bool Segmentation::AddSegment(const Segment &segment) {
+bool Segmentation::AddSegment(const Segment& segment) {
   int start = GetCurrentStartPosition();
   if (segment.start != start) {
     // rule one: in one round, we examine only those segs
@@ -65,7 +65,7 @@ bool Segmentation::AddSegment(const Segment &segment) {
     return true;
   }
 
-  Segment &last = back();
+  Segment& last = back();
   if (last.end > segment.end) {
     // rule two: always prefer the longer segment...
   }
@@ -120,7 +120,7 @@ size_t Segmentation::GetCurrentSegmentLength() const {
 
 size_t Segmentation::GetConfirmedPosition() const {
   size_t k = 0;
-  for (const Segment &seg : *this) {
+  for (const Segment& seg : *this) {
     if (seg.status >= Segment::kSelected)
       k = seg.end;
   }
@@ -128,9 +128,9 @@ size_t Segmentation::GetConfirmedPosition() const {
 }
 
 std::ostream& operator<< (std::ostream& out,
-                          const Segmentation &segmentation) {
+                          const Segmentation& segmentation) {
   out << "[" << segmentation.input();
-  for (const Segment &segment : segmentation) {
+  for (const Segment& segment : segmentation) {
     out << "|" << segment.start << "," << segment.end;
     if (!segment.tags.empty()) {
       out << "{";

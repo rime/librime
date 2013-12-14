@@ -9,14 +9,14 @@
 
 namespace rime {
 
-Schema::Schema() : schema_id_(".default"),
-                   page_size_(5) {
+Schema::Schema()
+    : schema_id_(".default") {
   config_.reset(Config::Require("config")->Create("default"));
   FetchUsefulConfigItems();
 }
 
-Schema::Schema(const std::string &schema_id) : schema_id_(schema_id),
-                                               page_size_(5) {
+Schema::Schema(const std::string& schema_id)
+    : schema_id_(schema_id) {
   if (boost::starts_with(schema_id_, L".")) {
     config_.reset(Config::Require("config")->Create(schema_id.substr(1)));
   }
@@ -39,8 +39,9 @@ void Schema::FetchUsefulConfigItems() {
     // not defined in schema, use default setting
     unique_ptr<Config> default_config(
         Config::Require("config")->Create("default"));
-    if (default_config)
+    if (default_config) {
       default_config->GetInt("menu/page_size", &page_size_);
+    }
   }
   config_->GetString("menu/alternative_select_keys", &select_keys_);
 }

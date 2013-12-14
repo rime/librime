@@ -15,8 +15,7 @@ namespace rime {
 Deployer::Deployer() : shared_data_dir("."),
                        user_data_dir("."),
                        sync_dir("sync"),
-                       user_id("unknown"),
-                       maintenance_mode_(false) {
+                       user_id("unknown") {
 }
 
 Deployer::~Deployer() {
@@ -30,7 +29,7 @@ std::string Deployer::user_data_sync_dir() const {
 }
 
 bool Deployer::RunTask(const std::string& task_name, TaskInitializer arg) {
-  DeploymentTask::Component* c = DeploymentTask::Require(task_name);
+  auto c = DeploymentTask::Require(task_name);
   if (!c) {
     LOG(ERROR) << "unknown deployment task: " << task_name;
     return false;
@@ -44,7 +43,7 @@ bool Deployer::RunTask(const std::string& task_name, TaskInitializer arg) {
 }
 
 bool Deployer::ScheduleTask(const std::string& task_name, TaskInitializer arg) {
-  DeploymentTask::Component* c = DeploymentTask::Require(task_name);
+  auto c = DeploymentTask::Require(task_name);
   if (!c) {
     LOG(ERROR) << "unknown deployment task: " << task_name;
     return false;
@@ -58,21 +57,21 @@ bool Deployer::ScheduleTask(const std::string& task_name, TaskInitializer arg) {
   return true;
 }
 
-void Deployer::ScheduleTask(const shared_ptr<DeploymentTask>& task) {
+void Deployer::ScheduleTask(shared_ptr<DeploymentTask> task) {
   std::lock_guard<std::mutex> lock(mutex_);
   pending_tasks_.push(task);
 }
 
 shared_ptr<DeploymentTask> Deployer::NextTask() {
   std::lock_guard<std::mutex> lock(mutex_);
-  shared_ptr<DeploymentTask> result;
   if (!pending_tasks_.empty()) {
-    result = pending_tasks_.front();
+    auto result = pending_tasks_.front();
     pending_tasks_.pop();
+    return result;
   }
   // there is still chance that a task is added by another thread
   // right after this call... careful.
-  return result;
+  return nullptr;
 }
 
 bool Deployer::HasPendingTasks() {
@@ -83,11 +82,10 @@ bool Deployer::HasPendingTasks() {
 bool Deployer::Run() {
   LOG(INFO) << "running deployment tasks:";
   message_sink_("deploy", "start");
-  shared_ptr<DeploymentTask> task;
   int success = 0;
   int failure = 0;
   do {
-    while ((task = NextTask())) {
+    while (auto task = NextTask()) {
       if (task->Run(this))
         ++success;
       else
