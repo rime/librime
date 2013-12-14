@@ -19,9 +19,9 @@
 #include <rime/gear/table_translator.h>
 
 
-//static const char *quote_left = "\xef\xbc\x88";
-//static const char *quote_right = "\xef\xbc\x89";
-//static const char *separator = "\xef\xbc\x8c";
+//static const char* quote_left = "\xef\xbc\x88";
+//static const char* quote_right = "\xef\xbc\x89";
+//static const char* separator = "\xef\xbc\x8c";
 
 namespace rime {
 
@@ -32,14 +32,14 @@ class ReverseLookupTranslation : public TableTranslation {
                            const std::string& input,
                            size_t start, size_t end,
                            const std::string& preedit,
-                           const DictEntryIterator &iter,
+                           const DictEntryIterator& iter,
                            bool quality)
       : TableTranslation(options, NULL, input, start, end, preedit, iter),
         dict_(dict), options_(options), quality_(quality) {
   }
   virtual shared_ptr<Candidate> Peek();
   virtual int Compare(shared_ptr<Translation> other,
-                      const CandidateList &candidates);
+                      const CandidateList& candidates);
  protected:
   ReverseLookupDictionary* dict_;
   TranslatorOptions* options_;
@@ -48,11 +48,11 @@ class ReverseLookupTranslation : public TableTranslation {
 
 shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
   if (exhausted())
-    return shared_ptr<Candidate>();
-  const shared_ptr<DictEntry> &e(iter_.Peek());
+    return nullptr;
+  const auto& entry(iter_.Peek());
   std::string tips;
   if (dict_) {
-    dict_->ReverseLookup(e->text, &tips);
+    dict_->ReverseLookup(entry->text, &tips);
     if (options_) {
       options_->comment_formatter().Apply(&tips);
     }
@@ -64,45 +64,48 @@ shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
       "reverse_lookup",
       start_,
       end_,
-      e->text,
-      !tips.empty() ? (/*quote_left + */tips/* + quote_right*/) : e->comment,
+      entry->text,
+      !tips.empty() ? tips : entry->comment,
       preedit_);
   return cand;
 }
 
 int ReverseLookupTranslation::Compare(shared_ptr<Translation> other,
-                                      const CandidateList &candidates) {
-  if (!other || other->exhausted()) return -1;
-  if (exhausted()) return 1;
-  shared_ptr<const Candidate> theirs = other->Peek();
+                                      const CandidateList& candidates) {
+  if (!other || other->exhausted())
+    return -1;
+  if (exhausted())
+    return 1;
+  auto theirs = other->Peek();
   if (!theirs)
     return -1;
-  if (quality_ && theirs->type() == "completion") {
+  if (quality_ && theirs->type() == "completion")
     return -1;
-  }
-  if (theirs->type() == "sentence") {
+  if (theirs->type() == "sentence")
     return -1;
-  }
   return 1;
 }
 
 ReverseLookupTranslator::ReverseLookupTranslator(const Ticket& ticket)
-    : Translator(ticket), tag_("reverse_lookup"), initialized_(false) {
+    : Translator(ticket), tag_("reverse_lookup") {
   if (ticket.name_space == "translator") {
     name_space_ = "reverse_lookup";
   }
-  if (!ticket.schema) return;
+  if (!ticket.schema)
+    return;
   Config* config = ticket.schema->config();
   config->GetString(name_space_ + "/tag", &tag_);
 }
 
 void ReverseLookupTranslator::Initialize() {
   initialized_ = true;  // no retry
-  if (!engine_) return;
+  if (!engine_)
+    return;
   Ticket ticket(engine_, name_space_);
   options_.reset(new TranslatorOptions(ticket));
-  Config *config = engine_->schema()->config();
-  if (!config) return;
+  Config* config = engine_->schema()->config();
+  if (!config)
+    return;
   config->GetString(name_space_ + "/prefix", &prefix_);
   config->GetString(name_space_ + "/suffix", &suffix_);
   config->GetString(name_space_ + "/tips", &tips_);
@@ -112,45 +115,51 @@ void ReverseLookupTranslator::Initialize() {
       options_->set_enable_completion(false);  // overridden default
   }
 
-  DictionaryComponent *component =
-      dynamic_cast<DictionaryComponent*>(Dictionary::Require("dictionary"));
-  if (!component) return;
-  dict_.reset(component->Create(ticket));
-  if (dict_)
+  if (auto component = Dictionary::Require("dictionary")) {
+    dict_.reset(component->Create(ticket));
+  }
+  if (dict_) {
     dict_->Load();
-  else
+  }
+  else {
     return;
-  ReverseLookupDictionary::Component *rev_component =
+  }
+  auto rev_component =
       ReverseLookupDictionary::Require("reverse_lookup_dictionary");
-  if (!rev_component) return;
+  if (!rev_component)
+    return;
   // lookup target defaults to "translator/dictionary"
   std::string rev_target("translator");
   config->GetString(name_space_ + "/target", &rev_target);
   Ticket rev_ticket(engine_, rev_target);
   rev_dict_.reset(rev_component->Create(rev_ticket));
-  if (rev_dict_)
+  if (rev_dict_) {
     rev_dict_->Load();
+  }
 }
 
-shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
-                                                       const Segment &segment,
+shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string& input,
+                                                       const Segment& segment,
                                                        std::string* prompt) {
   if (!segment.HasTag(tag_))
-    return shared_ptr<Translation>();
-  if (!initialized_) Initialize();  // load reverse dict at first use
+    return nullptr;
+  if (!initialized_)
+    Initialize();  // load reverse dict at first use
   if (!dict_ || !dict_->loaded())
-    return shared_ptr<Translation>();
+    return nullptr;
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
 
   const std::string& preedit(input);
 
   size_t start = 0;
-  if (!prefix_.empty() && boost::starts_with(input, prefix_))
+  if (!prefix_.empty() && boost::starts_with(input, prefix_)) {
     start = prefix_.length();
-  std::string code(input.substr(start));
-  if (!suffix_.empty() && boost::ends_with(code, suffix_))
+  }
+  std::string code = input.substr(start);
+  if (!suffix_.empty() && boost::ends_with(code, suffix_)) {
     code.resize(code.length() - suffix_.length());
+  }
 
   if (start > 0 && prompt) {
     *prompt = tips_;
@@ -162,7 +171,7 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
     if (options_ && options_->enable_completion()) {
       dict_->LookupWords(&iter, code, true, 100);
       quality = !iter.exhausted() &&
-          (iter.Peek()->remaining_code_length == 0);
+                (iter.Peek()->remaining_code_length == 0);
     }
     else {
       // 2012-04-08 gongchen: fetch multi-syllable words from rev-lookup table
@@ -172,7 +181,7 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
                                                        *dict_->prism(),
                                                        &graph);
       if (consumed == code.length()) {
-        shared_ptr<DictEntryCollector> collector = dict_->Lookup(graph, 0);
+        auto collector = dict_->Lookup(graph, 0);
         if (collector && !collector->empty() &&
             collector->rbegin()->first == consumed) {
           iter = collector->rbegin()->second;
@@ -184,14 +193,14 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
   }
   if (!iter.exhausted()) {
     return make_shared<ReverseLookupTranslation>(rev_dict_.get(),
-                                                        options_.get(),
-                                                        code,
-                                                        segment.start,
-                                                        segment.end,
-                                                        preedit,
-                                                        iter, quality);
+                                                 options_.get(),
+                                                 code,
+                                                 segment.start,
+                                                 segment.end,
+                                                 preedit,
+                                                 iter, quality);
   }
-  return shared_ptr<Translation>();
+  return nullptr;
 }
 
 }  // namespace rime

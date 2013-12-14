@@ -22,15 +22,15 @@ class ReverseLookupTranslator : public Translator {
  public:
   ReverseLookupTranslator(const Ticket& ticket);
 
-  virtual shared_ptr<Translation> Query(const std::string &input,
-                                        const Segment &segment,
+  virtual shared_ptr<Translation> Query(const std::string& input,
+                                        const Segment& segment,
                                         std::string* prompt);
-  
+
  protected:
   void Initialize();
-  
+
   std::string tag_;
-  bool initialized_;
+  bool initialized_ = false;
   unique_ptr<Dictionary> dict_;
   unique_ptr<ReverseLookupDictionary> rev_dict_;
   unique_ptr<TranslatorOptions> options_;

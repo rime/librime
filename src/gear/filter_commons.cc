@@ -12,10 +12,11 @@
 namespace rime {
 
 TagMatching::TagMatching(const Ticket& ticket) {
-  if (!ticket.schema) return;
+  if (!ticket.schema)
+    return;
   Config* config = ticket.schema->config();
-  if (ConfigListPtr tags = config->GetList(ticket.name_space + "/tags")) {
-    for (ConfigList::Iterator it = tags->begin(); it != tags->end(); ++it) {
+  if (auto tags = config->GetList(ticket.name_space + "/tags")) {
+    for (auto it = tags->begin(); it != tags->end(); ++it) {
       if (Is<ConfigValue>(*it)) {
         tags_.push_back(As<ConfigValue>(*it)->str());
       }

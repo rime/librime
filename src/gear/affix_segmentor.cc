@@ -14,18 +14,17 @@ namespace rime {
 
 AffixSegmentor::AffixSegmentor(const Ticket& ticket)
     : Segmentor(ticket), tag_("abc") {
-  // read schema settings
-  if (!ticket.schema) return;
-  if (Config *config = ticket.schema->config()) {
+  if (!ticket.schema)
+    return;
+  if (Config* config = ticket.schema->config()) {
     config->GetString(name_space_ + "/tag", &tag_);
     config->GetString(name_space_ + "/prefix", &prefix_);
     config->GetString(name_space_ + "/suffix", &suffix_);
     config->GetString(name_space_ + "/tips", &tips_);
     config->GetString(name_space_ + "/closing_tips", &closing_tips_);
-    if (ConfigListPtr extra_tags =
-        config->GetList(name_space_ + "/extra_tags")) {
+    if (auto extra_tags = config->GetList(name_space_ + "/extra_tags")) {
       for (size_t i = 0; i < extra_tags->size(); ++i) {
-        if (ConfigValuePtr value = extra_tags->GetValueAt(i)) {
+        if (auto value = extra_tags->GetValueAt(i)) {
           extra_tags_.insert(value->str());
         }
       }
@@ -33,7 +32,7 @@ AffixSegmentor::AffixSegmentor(const Ticket& ticket)
   }
 }
 
-bool AffixSegmentor::Proceed(Segmentation *segmentation) {
+bool AffixSegmentor::Proceed(Segmentation* segmentation) {
   if (segmentation->empty() || !segmentation->back().HasTag(tag_))
     return true;
   size_t j = segmentation->GetCurrentStartPosition();
@@ -46,7 +45,7 @@ bool AffixSegmentor::Proceed(Segmentation *segmentation) {
   DLOG(INFO) << "segmentation: " << *segmentation;
   // just prefix
   if (active_input.length() == prefix_.length()) {
-    Segment &prefix_segment(segmentation->back());
+    Segment& prefix_segment(segmentation->back());
     prefix_segment.tags.erase(tag_);
     prefix_segment.prompt = tips_;
     prefix_segment.tags.insert(tag_ + "_prefix");

@@ -30,19 +30,19 @@ class ScriptTranslator : public Translator,
  public:
   ScriptTranslator(const Ticket& ticket);
 
-  virtual shared_ptr<Translation> Query(const std::string &input,
-                                        const Segment &segment,
+  virtual shared_ptr<Translation> Query(const std::string& input,
+                                        const Segment& segment,
                                         std::string* prompt);
   virtual bool Memorize(const CommitEntry& commit_entry);
 
-  std::string FormatPreedit(const std::string &preedit);
-  std::string Spell(const Code &code);
+  std::string FormatPreedit(const std::string& preedit);
+  std::string Spell(const Code& code);
 
   // options
   int spelling_hints() const { return spelling_hints_; }
 
  protected:
-  int spelling_hints_;
+  int spelling_hints_ = 0;
 };
 
 }  // namespace rime

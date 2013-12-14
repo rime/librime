@@ -19,7 +19,7 @@ class ChordComposer : public Processor {
  public:
   ChordComposer(const Ticket& ticket);
 
-  virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:
   std::string SerializeChord();
@@ -36,7 +36,7 @@ class ChordComposer : public Processor {
 
   std::set<char> pressed_;
   std::set<char> chord_;
-  bool pass_thru_;
+  bool pass_thru_ = false;
 };
 
 }  // namespace rime

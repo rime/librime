@@ -15,11 +15,11 @@ namespace rime {
 
 class EchoTranslation : public UniqueTranslation {
  public:
-  EchoTranslation(const shared_ptr<Candidate> &candidate)
+  EchoTranslation(const shared_ptr<Candidate>& candidate)
       : UniqueTranslation(candidate) {
   }
   virtual int Compare(shared_ptr<Translation> other,
-                      const CandidateList &candidates) {
+                      const CandidateList& candidates) {
     if (!candidates.empty() || (other && other->Peek())) {
       set_exhausted(true);
       return 1;
@@ -37,11 +37,10 @@ shared_ptr<Translation> EchoTranslator::Query(const std::string& input,
                                               std::string* prompt) {
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
-  shared_ptr<Candidate> candidate =
-      make_shared<SimpleCandidate>("raw",
-                                          segment.start,
-                                          segment.end,
-                                          input);
+  auto candidate = make_shared<SimpleCandidate>("raw",
+                                                segment.start,
+                                                segment.end,
+                                                input);
   if (candidate) {
     candidate->set_quality(-100);  // lowest priority
   }

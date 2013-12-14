@@ -19,11 +19,11 @@ class KeyBindings;
 class KeyBinder : public Processor {
  public:
   KeyBinder(const Ticket& ticket);
-  virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:
   void LoadConfig();
-  bool ReinterpretPagingKey(const KeyEvent &key_event);
+  bool ReinterpretPagingKey(const KeyEvent& key_event);
   void PerformKeyBinding(const KeyBinding& binding);
 
   unique_ptr<KeyBindings> key_bindings_;

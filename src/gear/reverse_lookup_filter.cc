@@ -14,10 +14,7 @@
 namespace rime {
 
 ReverseLookupFilter::ReverseLookupFilter(const Ticket& ticket)
-    : Filter(ticket),
-      TagMatching(ticket),
-      initialized_(false),
-      overwrite_comment_(false) {
+    : Filter(ticket), TagMatching(ticket) {
   if (ticket.name_space == "filter") {
     name_space_ = "reverse_lookup";
   }
@@ -25,10 +22,10 @@ ReverseLookupFilter::ReverseLookupFilter(const Ticket& ticket)
 
 void ReverseLookupFilter::Initialize() {
   initialized_ = true;
-  if (!engine_) return;
+  if (!engine_)
+    return;
   Ticket ticket(engine_, name_space_);
-  if (ReverseLookupDictionary::Component* c =
-      ReverseLookupDictionary::Require("reverse_lookup_dictionary")) {
+  if (auto c = ReverseLookupDictionary::Require("reverse_lookup_dictionary")) {
     rev_dict_.reset(c->Create(ticket));
     if (rev_dict_ && !rev_dict_->Load()) {
       rev_dict_.reset();
@@ -36,21 +33,20 @@ void ReverseLookupFilter::Initialize() {
   }
   if (Config* config = engine_->schema()->config()) {
     config->GetBool(name_space_ + "/overwrite_comment", &overwrite_comment_);
-    comment_formatter_.Load(
-        config->GetList(name_space_ + "/comment_format"));
+    comment_formatter_.Load(config->GetList(name_space_ + "/comment_format"));
   }
 }
 
-void ReverseLookupFilter::Apply(CandidateList *recruited,
-                                CandidateList *candidates) {
+void ReverseLookupFilter::Apply(CandidateList* recruited,
+                                CandidateList* candidates) {
   if (!initialized_)
     Initialize();
   if (!rev_dict_)
     return;
-  for (shared_ptr<Candidate>& c : *candidates) {
-    if (!overwrite_comment_ && !c->comment().empty())
+  for (auto& cand : *candidates) {
+    if (!overwrite_comment_ && !cand->comment().empty())
       continue;
-    shared_ptr<Phrase> phrase = As<Phrase>(Candidate::GetGenuineCandidate(c));
+    auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
     if (!phrase)
       continue;
     std::string codes;

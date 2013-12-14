@@ -28,22 +28,22 @@ class TableTranslator : public Translator,
  public:
   TableTranslator(const Ticket& ticket);
 
-  virtual shared_ptr<Translation> Query(const std::string &input,
-                                        const Segment &segment,
+  virtual shared_ptr<Translation> Query(const std::string& input,
+                                        const Segment& segment,
                                         std::string* prompt);
   virtual bool Memorize(const CommitEntry& commit_entry);
 
-  shared_ptr<Translation> MakeSentence(const std::string &input,
+  shared_ptr<Translation> MakeSentence(const std::string& input,
                                        size_t start);
 
   UnityTableEncoder* encoder() const { return encoder_.get(); }
 
  protected:
-  bool enable_charset_filter_;
-  bool enable_encoder_;
-  bool enable_sentence_;
-  bool encode_commit_history_;
-  int max_phrase_length_;
+  bool enable_charset_filter_ = false;
+  bool enable_encoder_ = false;
+  bool enable_sentence_ = true;
+  bool encode_commit_history_ = true;
+  int max_phrase_length_ = 5;
   unique_ptr<UnityTableEncoder> encoder_;
 };
 

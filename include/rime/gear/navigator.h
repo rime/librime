@@ -17,13 +17,13 @@ class Navigator : public Processor {
  public:
   Navigator(const Ticket& ticket) : Processor(ticket) {}
 
-  virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  private:
-  bool Left(Context *ctx);
-  bool Right(Context *ctx);
-  bool Home(Context *ctx);
-  bool End(Context *ctx);
+  bool Left(Context* ctx);
+  bool Right(Context* ctx);
+  bool Home(Context* ctx);
+  bool End(Context* ctx);
 };
 
 }  // namespace rime

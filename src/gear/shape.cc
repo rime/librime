@@ -36,7 +36,7 @@ void ShapeFormatter::Format(std::string* text) {
   *text = oss.str();
 }
 
-ProcessResult ShapeProcessor::ProcessKeyEvent(const KeyEvent &key_event) {
+ProcessResult ShapeProcessor::ProcessKeyEvent(const KeyEvent& key_event) {
   DLOG(INFO) << "shape_processor: " << key_event;
   if (!engine_->context()->get_option("full_shape")) {
     return kNoop;

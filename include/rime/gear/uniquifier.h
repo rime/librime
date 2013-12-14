@@ -15,8 +15,8 @@ class Uniquifier : public Filter {
  public:
   explicit Uniquifier(const Ticket& ticket);
 
-  virtual void Apply(CandidateList *recruited,
-                     CandidateList *candidates);
+  virtual void Apply(CandidateList* recruited,
+                     CandidateList* candidates);
 };
 
 }  // namespace rime
