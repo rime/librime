@@ -17,8 +17,8 @@ class Context;
 
 class Editor : public Processor {
  public:
-  using Handler = void (Context* ctx);
-  using CharHandler = ProcessResult (Context* ctx, int ch);
+  typedef void Handler(Context* ctx);
+  typedef ProcessResult CharHandler(Context* ctx, int ch);
 
   Editor(const Ticket& ticket, bool auto_commit);
   ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
