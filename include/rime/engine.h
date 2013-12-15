@@ -19,10 +19,10 @@ class Context;
 
 class Engine : public Messenger {
  public:
-  typedef signal<void (const std::string& commit_text)> CommitSink;
+  using CommitSink = signal<void (const std::string& commit_text)>;
 
   virtual ~Engine();
-  virtual bool ProcessKeyEvent(const KeyEvent &key_event) = 0;
+  virtual bool ProcessKeyEvent(const KeyEvent& key_event) = 0;
   virtual void Attach(Engine* engine) { attached_engine_ = engine; }
   virtual void ApplySchema(Schema* schema) {}
   virtual void CommitText(std::string text) { sink_(text); }
@@ -32,15 +32,15 @@ class Engine : public Messenger {
   CommitSink& sink() { return sink_; }
   Engine* attached_engine() const { return attached_engine_; }
 
-  static Engine* Create(Schema *schema = NULL);
+  static Engine* Create(Schema* schema = NULL);
 
  protected:
-  Engine(Schema *schema);
+  Engine(Schema* schema);
 
-  scoped_ptr<Schema> schema_;
-  scoped_ptr<Context> context_;
+  unique_ptr<Schema> schema_;
+  unique_ptr<Context> context_;
   CommitSink sink_;
-  Engine* attached_engine_;
+  Engine* attached_engine_ = nullptr;
 };
 
 }  // namespace rime

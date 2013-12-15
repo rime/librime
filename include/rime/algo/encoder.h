@@ -23,8 +23,8 @@ class RawCode : public std::vector<std::string> {
 
 class PhraseCollector {
  public:
-  PhraseCollector() {}
-  virtual ~PhraseCollector() {}
+  PhraseCollector() = default;
+  virtual ~PhraseCollector() = default;
 
   virtual void CreateEntry(const std::string& phrase,
                            const std::string& code_str,
@@ -39,7 +39,7 @@ class Config;
 class Encoder {
  public:
   Encoder(PhraseCollector* collector) : collector_(collector) {}
-  virtual ~Encoder() {}
+  virtual ~Encoder() = default;
 
   virtual bool LoadSettings(Config* config) {
     return false;

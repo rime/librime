@@ -15,28 +15,15 @@ namespace rime {
 
 // DbAccessor members
 
-DbAccessor::DbAccessor() {
-}
-
-DbAccessor::DbAccessor(const std::string& prefix) : prefix_(prefix) {
-}
-
-DbAccessor::~DbAccessor() {
-}
-
 bool DbAccessor::MatchesPrefix(const std::string& key) {
   return boost::starts_with(key, prefix_);
 }
 
 // Db members
 
-Db::Db(const std::string& name)
-    : name_(name), loaded_(false), readonly_(false), disabled_(false) {
+Db::Db(const std::string& name) : name_(name) {
   boost::filesystem::path path(Service::instance().deployer().user_data_dir);
   file_name_ = (path / name).string();
-}
-
-Db::~Db() {
 }
 
 bool Db::Exists() const {

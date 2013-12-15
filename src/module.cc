@@ -25,7 +25,8 @@ RimeModule* ModuleManager::Find(const std::string& name) {
 
 void ModuleManager::LoadModule(RimeModule* module) {
   DLOG(INFO) << "loading module: " << module;
-  if (!module) return;
+  if (!module)
+    return;
   loaded_.push_back(module);
   if (module->initialize != NULL) {
     module->initialize();
@@ -36,8 +37,7 @@ void ModuleManager::LoadModule(RimeModule* module) {
 }
 
 void ModuleManager::UnloadModules() {
-  for (std::vector<RimeModule*>::const_iterator it = loaded_.begin();
-       it != loaded_.end(); ++it) {
+  for (auto it = loaded_.cbegin(); it != loaded_.cend(); ++it) {
     if ((*it)->finalize != NULL) {
       (*it)->finalize();
     }
@@ -46,7 +46,7 @@ void ModuleManager::UnloadModules() {
 }
 
 ModuleManager& ModuleManager::instance() {
-  static scoped_ptr<ModuleManager> s_instance;
+  static unique_ptr<ModuleManager> s_instance;
   if (!s_instance) {
     s_instance.reset(new ModuleManager);
   }

@@ -20,23 +20,24 @@ class Simplifier : public Filter, TagMatching {
  public:
   explicit Simplifier(const Ticket& ticket);
 
-  virtual void Apply(CandidateList *recruited,
-                     CandidateList *candidates);
+  virtual void Apply(CandidateList* recruited,
+                     CandidateList* candidates);
 
   virtual bool AppliesToSegment(Segment* segment) {
     return TagsMatch(segment);
   }
 
  protected:
-  typedef enum { kTipsNone, kTipsChar, kTipsAll } TipsLevel;
+  enum TipsLevel { kTipsNone, kTipsChar, kTipsAll };
 
   void Initialize();
-  bool Convert(const shared_ptr<Candidate> &original,
-               CandidateList *result);
+  bool Convert(const shared_ptr<Candidate>& original,
+               CandidateList* result);
 
-  bool initialized_;
-  scoped_ptr<Opencc> opencc_;
-  TipsLevel tips_level_;
+  bool initialized_ = false;
+  unique_ptr<Opencc> opencc_;
+  // settings
+  TipsLevel tips_level_ =  kTipsNone;
   std::string option_name_;
   std::string opencc_config_;
   std::set<std::string> excluded_types_;

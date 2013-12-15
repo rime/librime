@@ -8,7 +8,8 @@
 #include <rime/common.h>
 #include <rime/algo/algebra.h>
 
-static const char* kTransliteration = "xlit/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/";
+static const char* kTransliteration =
+    "xlit/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/";
 static const char* kTransformation = "xform/^([zcs])h(.*)$/$1$2/";
 
 static const int kNumOfInstructions = 5;
@@ -21,9 +22,9 @@ static const char* kInstructions[kNumOfInstructions] = {
 };
 
 TEST(RimeAlgebraTest, SpellingManipulation) {
-  rime::ConfigListPtr c = boost::make_shared<rime::ConfigList>();
-  c->Append(boost::make_shared<rime::ConfigValue>(kTransliteration));
-  c->Append(boost::make_shared<rime::ConfigValue>(kTransformation));
+  auto c = rime::New<rime::ConfigList>();
+  c->Append(rime::New<rime::ConfigValue>(kTransliteration));
+  c->Append(rime::New<rime::ConfigValue>(kTransformation));
   rime::Projection p;
   ASSERT_TRUE(p.Load(c));
 
@@ -33,9 +34,9 @@ TEST(RimeAlgebraTest, SpellingManipulation) {
 }
 
 TEST(RimeAlgebraTest, Projection) {
-  rime::ConfigListPtr c = boost::make_shared<rime::ConfigList>();
+  auto c = rime::New<rime::ConfigList>();
   for (int i = 0; i < kNumOfInstructions; ++i) {
-    c->Append(boost::make_shared<rime::ConfigValue>(kInstructions[i]));
+    c->Append(rime::New<rime::ConfigValue>(kInstructions[i]));
   }
   rime::Projection p;
   ASSERT_TRUE(p.Load(c));

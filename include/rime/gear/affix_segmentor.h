@@ -17,7 +17,7 @@ class AffixSegmentor : public Segmentor {
  public:
   explicit AffixSegmentor(const Ticket& ticket);
 
-  virtual bool Proceed(Segmentation *segmentation);
+  virtual bool Proceed(Segmentation* segmentation);
 
  protected:
   std::string tag_;

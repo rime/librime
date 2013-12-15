@@ -22,7 +22,7 @@ struct UserDictEntryCollector : std::map<size_t, DictEntryList> {
 
 class UserDictEntryIterator : public DictEntryFilterBinder {
  public:
-  UserDictEntryIterator() : entries_(), index_(0) {}
+  UserDictEntryIterator() = default;
 
   void Add(const shared_ptr<DictEntry>& entry);
   void SortRange(size_t start, size_t count);
@@ -39,7 +39,7 @@ class UserDictEntryIterator : public DictEntryFilterBinder {
 
  protected:
   shared_ptr<DictEntryList> entries_;
-  size_t index_;
+  size_t index_ = 0;
 };
 
 class Schema;
@@ -52,15 +52,15 @@ struct Ticket;
 
 class UserDictionary : public Class<UserDictionary, const Ticket&> {
  public:
-  explicit UserDictionary(const shared_ptr<Db> &db);
+  explicit UserDictionary(const shared_ptr<Db>& db);
   virtual ~UserDictionary();
 
-  void Attach(const shared_ptr<Table> &table, const shared_ptr<Prism> &prism);
+  void Attach(const shared_ptr<Table>& table, const shared_ptr<Prism>& prism);
   bool Load();
   bool loaded() const;
   bool readonly() const;
 
-  shared_ptr<UserDictEntryCollector> Lookup(const SyllableGraph &syllable_graph,
+  shared_ptr<UserDictEntryCollector> Lookup(const SyllableGraph& syllable_graph,
                                             size_t start_pos,
                                             size_t depth_limit = 0,
                                             double initial_credibility = 1.0);
@@ -90,18 +90,18 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
  protected:
   bool Initialize();
   bool FetchTickCount();
-  bool TranslateCodeToString(const Code &code, std::string *result);
-  void DfsLookup(const SyllableGraph &syll_graph, size_t current_pos,
-                 const std::string &current_prefix,
-                 DfsState *state);
+  bool TranslateCodeToString(const Code& code, std::string* result);
+  void DfsLookup(const SyllableGraph& syll_graph, size_t current_pos,
+                 const std::string& current_prefix,
+                 DfsState* state);
 
  private:
   std::string name_;
   shared_ptr<Db> db_;
   shared_ptr<Table> table_;
   shared_ptr<Prism> prism_;
-  TickCount tick_;
-  time_t transaction_time_;
+  TickCount tick_ = 0;
+  time_t transaction_time_ = 0;
 };
 
 class UserDictionaryComponent : public UserDictionary::Component {
@@ -109,7 +109,7 @@ class UserDictionaryComponent : public UserDictionary::Component {
   UserDictionaryComponent();
   UserDictionary* Create(const Ticket& ticket);
  private:
-  std::map<std::string, weak_ptr<Db> > db_pool_;
+  std::map<std::string, weak_ptr<Db>> db_pool_;
 };
 
 }  // namespace rime

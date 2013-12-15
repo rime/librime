@@ -4,7 +4,6 @@
 //
 // 2012-04-22 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/foreach.hpp>
 #include <utf8.h>
 #include <rime/config.h>
 #include <rime/schema.h>
@@ -17,11 +16,12 @@ namespace rime {
 
 bool Patterns::Load(ConfigListPtr patterns) {
   clear();
-  if (!patterns) return false;
-  for (ConfigList::Iterator it = patterns->begin(); it != patterns->end(); ++it) {
-    ConfigValuePtr value = As<ConfigValue>(*it);
-    if (!value) continue;
-    push_back(boost::regex(value->str()));
+  if (!patterns)
+    return false;
+  for (auto it = patterns->begin(); it != patterns->end(); ++it) {
+    if (auto value = As<ConfigValue>(*it)) {
+      push_back(boost::regex(value->str()));
+    }
   }
   return true;
 }
@@ -70,7 +70,7 @@ shared_ptr<Candidate> CharsetFilter::Peek() {
 
 bool CharsetFilter::LocateNextCandidate() {
   while (!translation_->exhausted()) {
-    shared_ptr<Candidate> cand = translation_->Peek();
+    auto cand = translation_->Peek();
     if (cand && FilterText(cand->text()))
       return true;
     translation_->Next();
@@ -122,7 +122,7 @@ bool UniqueFilter::Next() {
 
 shared_ptr<Candidate> UniqueFilter::Peek() {
   if (exhausted())
-    return shared_ptr<Candidate>();
+    return nullptr;
   return translation_->Peek();
 }
 
@@ -132,14 +132,10 @@ bool UniqueFilter::AlreadyHas(const std::string& text) const {
 
 // TranslatorOptions
 
-TranslatorOptions::TranslatorOptions(const Ticket& ticket)
-    : tag_("abc"),
-      enable_completion_(true),
-      strict_spelling_(false),
-      initial_quality_(0.0) {
-  if (!ticket.schema) return;
-  Config *config = ticket.schema->config();
-  if (config) {
+TranslatorOptions::TranslatorOptions(const Ticket& ticket) {
+  if (!ticket.schema)
+    return;
+  if (Config *config = ticket.schema->config()) {
     config->GetString(ticket.name_space + "/delimiter", &delimiters_) ||
         config->GetString("speller/delimiter", &delimiters_);
     config->GetString(ticket.name_space + "/tag", &tag_);
@@ -154,7 +150,8 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket)
     comment_formatter_.Load(
         config->GetList(ticket.name_space + "/comment_format"));
     user_dict_disabling_patterns_.Load(
-        config->GetList(ticket.name_space + "/disable_user_dict_for_patterns"));
+        config->GetList(
+            ticket.name_space + "/disable_user_dict_for_patterns"));
   }
   if (delimiters_.empty()) {
     delimiters_ = " ";
@@ -164,12 +161,11 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket)
 bool TranslatorOptions::IsUserDictDisabledFor(const std::string& input) const {
   if (user_dict_disabling_patterns_.empty())
     return false;
-  BOOST_FOREACH(const boost::regex& pattern, user_dict_disabling_patterns_) {
+  for (const auto& pattern : user_dict_disabling_patterns_) {
     if (boost::regex_match(input, pattern))
       return true;
   }
   return false;
 }
-
 
 }  // namespace rime

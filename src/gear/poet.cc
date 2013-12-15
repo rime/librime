@@ -8,7 +8,6 @@
 //
 #include <map>
 #include <vector>
-#include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/candidate.h>
 #include <rime/dict/vocabulary.h>
@@ -19,24 +18,24 @@ namespace rime {
 shared_ptr<Sentence> Poet::MakeSentence(const WordGraph& graph,
                                         size_t total_length) {
   const int kMaxHomophonesInMind = 1;
-  std::map<int, shared_ptr<Sentence> > sentences;
-  sentences[0] = make_shared<Sentence>(language_);
+  std::map<int, shared_ptr<Sentence>> sentences;
+  sentences[0] = New<Sentence>(language_);
   // dynamic programming
-  BOOST_FOREACH(const WordGraph::value_type& w, graph) {
+  for (const auto& w : graph) {
     size_t start_pos = w.first;
     DLOG(INFO) << "start pos: " << start_pos;
     if (sentences.find(start_pos) == sentences.end())
       continue;
-    BOOST_FOREACH(const UserDictEntryCollector::value_type& x, w.second) {
+    for (const auto& x : w.second) {
       size_t end_pos = x.first;
       if (start_pos == 0 && end_pos == total_length)
         continue;  // exclude single words from the result
       DLOG(INFO) << "end pos: " << end_pos;
-      const DictEntryList &entries(x.second);
+      const DictEntryList& entries(x.second);
       for (size_t i = 0; i < kMaxHomophonesInMind && i < entries.size(); ++i) {
-        const shared_ptr<DictEntry> &e(entries[i]);
-        shared_ptr<Sentence> new_sentence = make_shared<Sentence>(*sentences[start_pos]);
-        new_sentence->Extend(*e, end_pos);
+        const auto& entry(entries[i]);
+        auto new_sentence = New<Sentence>(*sentences[start_pos]);
+        new_sentence->Extend(*entry, end_pos);
         if (sentences.find(end_pos) == sentences.end() ||
             sentences[end_pos]->weight() < new_sentence->weight()) {
           DLOG(INFO) << "updated sentences " << end_pos << ") with '"
@@ -47,7 +46,7 @@ shared_ptr<Sentence> Poet::MakeSentence(const WordGraph& graph,
     }
   }
   if (sentences.find(total_length) == sentences.end())
-    return shared_ptr<Sentence>();
+    return nullptr;
   else
     return sentences[total_length];
 }

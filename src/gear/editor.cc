@@ -20,13 +20,13 @@ Editor::Editor(const Ticket& ticket, bool auto_commit) : Processor(ticket) {
   engine_->context()->set_option("_auto_commit", auto_commit);
 }
 
-ProcessResult Editor::ProcessKeyEvent(const KeyEvent &key_event) {
+ProcessResult Editor::ProcessKeyEvent(const KeyEvent& key_event) {
   if (key_event.release() || key_event.alt())
     return kRejected;
   int ch = key_event.keycode();
   if (key_event.ctrl() && !WorkWithCtrl(ch))
     return kNoop;
-  Context *ctx = engine_->context();
+  Context* ctx = engine_->context();
   if (ch == XK_space) {
     if (ctx->IsComposing()) {
       OnSpace(ctx);
@@ -120,9 +120,8 @@ void Editor::DropPreviousSyllable(Context* ctx) {
     return;
   const Composition* comp = ctx->composition();
   if (comp && !comp->empty()) {
-    shared_ptr<Candidate> cand = comp->back().GetSelectedCandidate();
-    shared_ptr<Phrase> phrase =
-        As<Phrase>(Candidate::GetGenuineCandidate(cand));
+    auto cand = comp->back().GetSelectedCandidate();
+    auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
     if (phrase && phrase->syllabification()) {
       size_t stop = phrase->syllabification()->PreviousStop(caret_pos);
       if (stop != caret_pos) {

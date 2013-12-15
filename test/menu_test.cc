@@ -23,17 +23,17 @@ class TranslationAlpha : public Translation {
   }
   shared_ptr<Candidate> Peek() {
     if (exhausted())
-      return shared_ptr<Candidate>();
-    return make_shared<SimpleCandidate>("alpha", 0, 5, "Alpha");
+      return nullptr;
+    return New<SimpleCandidate>("alpha", 0, 5, "Alpha");
   }
 };
 
 class TranslationBeta : public Translation {
  public:
   TranslationBeta() : cursor_(0) {
-    candies_.push_back(make_shared<SimpleCandidate>("beta", 0, 4, "Beta-1"));
-    candies_.push_back(make_shared<SimpleCandidate>("beta", 0, 4, "Beta-2"));
-    candies_.push_back(make_shared<SimpleCandidate>("beta", 0, 4, "Beta-3"));
+    candies_.push_back(New<SimpleCandidate>("beta", 0, 4, "Beta-1"));
+    candies_.push_back(New<SimpleCandidate>("beta", 0, 4, "Beta-2"));
+    candies_.push_back(New<SimpleCandidate>("beta", 0, 4, "Beta-3"));
   }
 
   bool Next() {
@@ -46,25 +46,25 @@ class TranslationBeta : public Translation {
 
   shared_ptr<Candidate> Peek() {
     if (exhausted())
-      return shared_ptr<Candidate>();
+      return nullptr;
     return candies_[cursor_];
   }
 
  private:
-  std::vector<shared_ptr<Candidate> > candies_;
+  std::vector<shared_ptr<Candidate>> candies_;
   size_t cursor_;
 };
 
 TEST(RimeMenuTest, RecipeAlphaBeta) {
   Menu menu;
-  shared_ptr<Translation> alpha = make_shared<TranslationAlpha>();
-  shared_ptr<Translation> beta = make_shared<TranslationBeta>();
+  auto alpha = New<TranslationAlpha>();
+  auto beta = New<TranslationBeta>();
   menu.AddTranslation(alpha);
   menu.AddTranslation(beta);
   // explicit call to Menu::Prepare() is not necessary
   menu.Prepare(2);
-  scoped_ptr<Page> page(menu.CreatePage(5, 0));
-  ASSERT_TRUE(page);
+  unique_ptr<Page> page(menu.CreatePage(5, 0));
+  ASSERT_TRUE(bool(page));
   EXPECT_EQ(5, page->page_size);
   EXPECT_EQ(0, page->page_no);
   EXPECT_TRUE(page->is_last_page);
@@ -74,6 +74,6 @@ TEST(RimeMenuTest, RecipeAlphaBeta) {
   EXPECT_EQ("beta", page->candidates[1]->type());
   EXPECT_EQ("Beta-1", page->candidates[1]->text());
   EXPECT_EQ("Beta-3", page->candidates[3]->text());
-  scoped_ptr<Page> no_more_page(menu.CreatePage(5, 1));
-  EXPECT_FALSE(no_more_page);
+  unique_ptr<Page> no_more_page(menu.CreatePage(5, 1));
+  EXPECT_FALSE(bool(no_more_page));
 }

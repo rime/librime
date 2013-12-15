@@ -15,9 +15,10 @@ namespace rime {
 
 class DbAccessor {
  public:
-  DbAccessor();
-  explicit DbAccessor(const std::string& prefix);
-  virtual ~DbAccessor();
+  DbAccessor() = default;
+  explicit DbAccessor(const std::string& prefix)
+      : prefix_(prefix) {}
+  virtual ~DbAccessor() = default;
 
   virtual bool Reset() = 0;
   virtual bool Jump(const std::string &key) = 0;
@@ -33,7 +34,7 @@ class DbAccessor {
 class Db : public Class<Db, const std::string&> {
  public:
   explicit Db(const std::string& name);
-  virtual ~Db();
+  virtual ~Db() = default;
 
   bool Exists() const;
   bool Remove();
@@ -67,26 +68,26 @@ class Db : public Class<Db, const std::string&> {
  protected:
   std::string name_;
   std::string file_name_;
-  bool loaded_;
-  bool readonly_;
-  bool disabled_;
+  bool loaded_ = false;
+  bool readonly_ = false;
+  bool disabled_ = false;
 };
 
 class Transactional {
  public:
-  Transactional() : in_transaction_(false) {}
-  virtual ~Transactional() {}
+  Transactional() = default;
+  virtual ~Transactional() = default;
   virtual bool BeginTransaction() { return false; }
   virtual bool AbortTransaction() { return false; }
   virtual bool CommitTransaction() { return false; }
   bool in_transaction() const { return in_transaction_; }
  protected:
-  bool in_transaction_;
+  bool in_transaction_ = false;
 };
 
 class Recoverable {
  public:
-  virtual ~Recoverable() {}
+  virtual ~Recoverable() = default;
   virtual bool Recover() = 0;
 };
 

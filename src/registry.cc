@@ -45,7 +45,7 @@ ComponentBase* Registry::Find(const std::string &name) {
 }
 
 Registry& Registry::instance() {
-  static scoped_ptr<Registry> s_instance;
+  static unique_ptr<Registry> s_instance;
   if (!s_instance) {
     s_instance.reset(new Registry);
   }

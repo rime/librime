@@ -8,8 +8,7 @@
 //
 #include <algorithm>
 #include <boost/algorithm/string/join.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/foreach.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 #include <rime/composition.h>
 #include <rime/candidate.h>
 #include <rime/config.h>
@@ -24,37 +23,37 @@
 #include <rime/gear/translator_commons.h>
 
 
-//static const char *quote_left = "\xef\xbc\x88";
-//static const char *quote_right = "\xef\xbc\x89";
+//static const char* quote_left = "\xef\xbc\x88";
+//static const char* quote_right = "\xef\xbc\x89";
 
 namespace rime {
 
 namespace {
 
 struct DelimitSyllableState {
-  const std::string *input;
-  const std::string *delimiters;
-  const SyllableGraph *graph;
-  const Code *code;
+  const std::string* input;
+  const std::string* delimiters;
+  const SyllableGraph* graph;
+  const Code* code;
   size_t end_pos;
   std::string output;
 };
 
-bool DelimitSyllablesDfs(DelimitSyllableState *state,
+bool DelimitSyllablesDfs(DelimitSyllableState* state,
                          size_t current_pos, size_t depth) {
   if (depth == state->code->size()) {
     return current_pos == state->end_pos;
   }
   SyllableId syllable_id = state->code->at(depth);
-  EdgeMap::const_iterator z = state->graph->edges.find(current_pos);
+  auto z = state->graph->edges.find(current_pos);
   if (z == state->graph->edges.end())
     return false;
   // favor longer spellings
-  BOOST_REVERSE_FOREACH(const EndVertexMap::value_type &y, z->second) {
+  for (const auto& y : boost::adaptors::reverse(z->second)) {
     size_t end_vertex_pos = y.first;
     if (end_vertex_pos > state->end_pos)
       continue;
-    SpellingMap::const_iterator x = y.second.find(syllable_id);
+    auto x = y.second.find(syllable_id);
     if (x != y.second.end()) {
       size_t len = state->output.length();
       if (depth > 0 && len > 0 &&
@@ -74,19 +73,19 @@ bool DelimitSyllablesDfs(DelimitSyllableState *state,
 
 }  // anonymous namespace
 
-class ScriptTranslation : public Translation,
-                          public Syllabification,
-                          public boost::enable_shared_from_this<ScriptTranslation>
+class ScriptTranslation
+    : public Translation,
+      public Syllabification,
+      public std::enable_shared_from_this<ScriptTranslation>
 {
  public:
-  ScriptTranslation(ScriptTranslator *translator,
-                    const std::string &input, size_t start)
+  ScriptTranslation(ScriptTranslator* translator,
+                    const std::string& input, size_t start)
       : translator_(translator),
-        input_(input), start_(start),
-        user_phrase_index_(0) {
+        input_(input), start_(start) {
     set_exhausted(true);
   }
-  bool Evaluate(Dictionary *dict, UserDictionary *user_dict);
+  bool Evaluate(Dictionary* dict, UserDictionary* user_dict);
   virtual bool Next();
   virtual shared_ptr<Candidate> Peek();
   virtual size_t PreviousStop(size_t caret_pos) const;
@@ -96,13 +95,13 @@ class ScriptTranslation : public Translation,
   bool CheckEmpty();
   bool IsNormalSpelling() const;
   template <class CandidateT>
-  std::string GetPreeditString(const CandidateT &cand) const;
+  std::string GetPreeditString(const CandidateT& cand) const;
   template <class CandidateT>
-  std::string GetOriginalSpelling(const CandidateT &cand) const;
-  shared_ptr<Sentence> MakeSentence(Dictionary *dict,
-                                    UserDictionary *user_dict);
+  std::string GetOriginalSpelling(const CandidateT& cand) const;
+  shared_ptr<Sentence> MakeSentence(Dictionary* dict,
+                                    UserDictionary* user_dict);
 
-  ScriptTranslator *translator_;
+  ScriptTranslator* translator_;
   std::string input_;
   size_t start_;
 
@@ -113,7 +112,7 @@ class ScriptTranslation : public Translation,
 
   DictEntryCollector::reverse_iterator phrase_iter_;
   UserDictEntryCollector::reverse_iterator user_phrase_iter_;
-  size_t user_phrase_index_;
+  size_t user_phrase_index_ = 0;
 };
 
 // ScriptTranslator implementation
@@ -121,22 +120,21 @@ class ScriptTranslation : public Translation,
 ScriptTranslator::ScriptTranslator(const Ticket& ticket)
     : Translator(ticket),
       Memory(ticket),
-      TranslatorOptions(ticket),
-      spelling_hints_(0) {
-  if (!engine_) return;
-  Config *config = engine_->schema()->config();
-  if (config) {
+      TranslatorOptions(ticket) {
+  if (!engine_)
+    return;
+  if (Config* config = engine_->schema()->config()) {
     config->GetInt(name_space_ + "/spelling_hints", &spelling_hints_);
   }
 }
 
-shared_ptr<Translation> ScriptTranslator::Query(const std::string &input,
-                                                const Segment &segment,
+shared_ptr<Translation> ScriptTranslator::Query(const std::string& input,
+                                                const Segment& segment,
                                                 std::string* prompt) {
   if (!dict_ || !dict_->loaded())
-    return shared_ptr<Translation>();
+    return nullptr;
   if (!segment.HasTag(tag_))
-    return shared_ptr<Translation>();
+    return nullptr;
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
 
@@ -144,23 +142,22 @@ shared_ptr<Translation> ScriptTranslator::Query(const std::string &input,
       !IsUserDictDisabledFor(input);
 
   // the translator should survive translations it creates
-  shared_ptr<ScriptTranslation> result =
-      boost::make_shared<ScriptTranslation>(this, input, segment.start);
+  auto result = New<ScriptTranslation>(this, input, segment.start);
   if (!result ||
       !result->Evaluate(dict_.get(),
                         enable_user_dict ? user_dict_.get() : NULL)) {
-    return shared_ptr<Translation>();
+    return nullptr;
   }
-  return make_shared<UniqueFilter>(result);
+  return New<UniqueFilter>(result);
 }
 
 std::string ScriptTranslator::FormatPreedit(const std::string& preedit) {
-  std::string result(preedit);
+  std::string result = preedit;
   preedit_formatter_.Apply(&result);
   return result;
 }
 
-std::string ScriptTranslator::Spell(const Code &code) {
+std::string ScriptTranslator::Spell(const Code& code) {
   std::string result;
   std::vector<std::string> syllables;
   if (!dict_ || !dict_->Decode(code, &syllables) || syllables.empty())
@@ -176,7 +173,7 @@ bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
   // avoid updating single character entries within a phrase which is
   // composed with single characters only
   if (commit_entry.elements.size() > 1) {
-    BOOST_FOREACH(const DictEntry* e, commit_entry.elements) {
+    for (const DictEntry* e : commit_entry.elements) {
       if (e->code.size() > 1) {
         update_elements = true;
         break;
@@ -184,7 +181,7 @@ bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
     }
   }
   if (update_elements) {
-    BOOST_FOREACH(const DictEntry* e, commit_entry.elements) {
+    for (const DictEntry* e : commit_entry.elements) {
       user_dict_->UpdateEntry(*e, 0);
     }
   }
@@ -194,7 +191,7 @@ bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
 
 // ScriptTranslation implementation
 
-bool ScriptTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
+bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   Syllabifier syllabifier(translator_->delimiters(),
                           translator_->enable_completion(),
                           translator_->strict_spelling());
@@ -219,22 +216,23 @@ bool ScriptTranslation::Evaluate(Dictionary *dict, UserDictionary *user_dict) {
     sentence_ = MakeSentence(dict, user_dict);
   }
 
-  if (phrase_) phrase_iter_ = phrase_->rbegin();
-  if (user_phrase_) user_phrase_iter_ = user_phrase_->rbegin();
+  if (phrase_)
+    phrase_iter_ = phrase_->rbegin();
+  if (user_phrase_)
+    user_phrase_iter_ = user_phrase_->rbegin();
   return !CheckEmpty();
 }
 
 template <class CandidateT>
-std::string ScriptTranslation::GetPreeditString(
-    const CandidateT &cand) const {
+std::string
+ScriptTranslation::GetPreeditString(const CandidateT& cand) const {
   DelimitSyllableState state;
   state.input = &input_;
   state.delimiters = &translator_->delimiters();
   state.graph = &syllable_graph_;
   state.code = &cand.code();
   state.end_pos = cand.end() - start_;
-  bool success = DelimitSyllablesDfs(&state, cand.start() - start_, 0);
-  if (success) {
+  if (bool success = DelimitSyllablesDfs(&state, cand.start() - start_, 0)) {
     return translator_->FormatPreedit(state.output);
   }
   else {
@@ -243,8 +241,8 @@ std::string ScriptTranslation::GetPreeditString(
 }
 
 template <class CandidateT>
-std::string ScriptTranslation::GetOriginalSpelling(
-    const CandidateT& cand) const {
+std::string
+ScriptTranslation::GetOriginalSpelling(const CandidateT& cand) const {
   if (translator_ &&
       static_cast<int>(cand.code().size()) <= translator_->spelling_hints()) {
     return translator_->Spell(cand.code());
@@ -269,14 +267,14 @@ bool ScriptTranslation::Next() {
   }
   if (user_phrase_code_length > 0 &&
       user_phrase_code_length >= phrase_code_length) {
-    DictEntryList &entries(user_phrase_iter_->second);
+    DictEntryList& entries(user_phrase_iter_->second);
     if (++user_phrase_index_ >= entries.size()) {
       ++user_phrase_iter_;
       user_phrase_index_ = 0;
     }
   }
   else if (phrase_code_length > 0) {
-    DictEntryIterator &iter(phrase_iter_->second);
+    DictEntryIterator& iter(phrase_iter_->second);
     if (!iter.Next()) {
       ++phrase_iter_;
     }
@@ -291,7 +289,7 @@ bool ScriptTranslation::IsNormalSpelling() const {
 
 shared_ptr<Candidate> ScriptTranslation::Peek() {
   if (exhausted())
-    return shared_ptr<Candidate>();
+    return nullptr;
   if (sentence_) {
     if (sentence_->preedit().empty()) {
       sentence_->set_preedit(GetPreeditString(*sentence_));
@@ -316,30 +314,30 @@ shared_ptr<Candidate> ScriptTranslation::Peek() {
   shared_ptr<Phrase> cand;
   if (user_phrase_code_length > 0 &&
       user_phrase_code_length >= phrase_code_length) {
-    DictEntryList &entries(user_phrase_iter_->second);
-    const shared_ptr<DictEntry> &e(entries[user_phrase_index_]);
-    DLOG(INFO) << "user phrase '" << e->text
+    DictEntryList& entries(user_phrase_iter_->second);
+    const auto& entry(entries[user_phrase_index_]);
+    DLOG(INFO) << "user phrase '" << entry->text
                << "', code length: " << user_phrase_code_length;
-    cand = make_shared<Phrase>(translator_->language(),
-                               "phrase",
-                               start_,
-                               start_ + user_phrase_code_length,
-                               e);
-    cand->set_quality(e->weight +
+    cand = New<Phrase>(translator_->language(),
+                       "phrase",
+                       start_,
+                       start_ + user_phrase_code_length,
+                       entry);
+    cand->set_quality(entry->weight +
                       translator_->initial_quality() +
                       (IsNormalSpelling() ? 0.5 : -0.5));
   }
   else if (phrase_code_length > 0) {
-    DictEntryIterator &iter(phrase_iter_->second);
-    const shared_ptr<DictEntry> &e(iter.Peek());
-    DLOG(INFO) << "phrase '" << e->text
+    DictEntryIterator& iter(phrase_iter_->second);
+    const auto& entry(iter.Peek());
+    DLOG(INFO) << "phrase '" << entry->text
                << "', code length: " << user_phrase_code_length;
-    cand = make_shared<Phrase>(translator_->language(),
-                               "phrase",
-                               start_,
-                               start_ + phrase_code_length,
-                               e);
-    cand->set_quality(e->weight +
+    cand = New<Phrase>(translator_->language(),
+                       "phrase",
+                       start_,
+                       start_ + phrase_code_length,
+                       entry);
+    cand->set_quality(entry->weight +
                       translator_->initial_quality() +
                       (IsNormalSpelling() ? 0 : -1));
   }
@@ -347,9 +345,8 @@ shared_ptr<Candidate> ScriptTranslation::Peek() {
     cand->set_preedit(GetPreeditString(*cand));
   }
   if (cand->comment().empty()) {
-    std::string spelling(GetOriginalSpelling(*cand));
-    if (!spelling.empty() &&
-        spelling != cand->preedit()) {
+    std::string spelling = GetOriginalSpelling(*cand);
+    if (!spelling.empty() && spelling != cand->preedit()) {
       cand->set_comment(/*quote_left + */spelling/* + quote_right*/);
     }
   }
@@ -363,42 +360,38 @@ bool ScriptTranslation::CheckEmpty() {
   return exhausted();
 }
 
-shared_ptr<Sentence> ScriptTranslation::MakeSentence(
-    Dictionary *dict, UserDictionary *user_dict) {
+shared_ptr<Sentence>
+ScriptTranslation::MakeSentence(Dictionary* dict, UserDictionary* user_dict) {
   const int kMaxSyllablesForUserPhraseQuery = 5;
   const double kPenaltyForAmbiguousSyllable = 1e-10;
   WordGraph graph;
-  BOOST_FOREACH(const EdgeMap::value_type &s, syllable_graph_.edges) {
+  for (const auto& x : syllable_graph_.edges) {
     // discourage starting a word from an ambiguous joint
     // bad cases include pinyin syllabification "niju'ede"
     double credibility = 1.0;
-    if (syllable_graph_.vertices[s.first] >= kAmbiguousSpelling)
+    if (syllable_graph_.vertices[x.first] >= kAmbiguousSpelling)
       credibility = kPenaltyForAmbiguousSyllable;
-    shared_ptr<UserDictEntryCollector> user_phrase;
+    UserDictEntryCollector& dest(graph[x.first]);
     if (user_dict) {
-      user_phrase = user_dict->Lookup(syllable_graph_, s.first,
-                                      kMaxSyllablesForUserPhraseQuery,
-                                      credibility);
+      auto user_phrase = user_dict->Lookup(syllable_graph_, x.first,
+                                           kMaxSyllablesForUserPhraseQuery,
+                                           credibility);
+      if (user_phrase)
+        dest.swap(*user_phrase);
     }
-    UserDictEntryCollector &u(graph[s.first]);
-    if (user_phrase)
-      u.swap(*user_phrase);
-    shared_ptr<DictEntryCollector> phrase =
-        dict->Lookup(syllable_graph_, s.first, credibility);
-    if (phrase) {
+    if (auto phrase = dict->Lookup(syllable_graph_, x.first, credibility)) {
       // merge lookup results
-      BOOST_FOREACH(DictEntryCollector::value_type &t, *phrase) {
-        DictEntryList &entries(u[t.first]);
+      for (auto& y : *phrase) {
+        DictEntryList& entries(dest[y.first]);
         if (entries.empty()) {
-          shared_ptr<DictEntry> e(t.second.Peek());
-          entries.push_back(e);
+          entries.push_back(y.second.Peek());
         }
       }
     }
   }
   Poet poet(translator_->language());
-  shared_ptr<Sentence> sentence =
-      poet.MakeSentence(graph, syllable_graph_.interpreted_length);
+  auto sentence = poet.MakeSentence(graph,
+                                    syllable_graph_.interpreted_length);
   if (sentence) {
     sentence->Offset(start_);
     sentence->set_syllabification(shared_from_this());
@@ -408,8 +401,7 @@ shared_ptr<Sentence> ScriptTranslation::MakeSentence(
 
 size_t ScriptTranslation::PreviousStop(size_t caret_pos) const {
   size_t offset = caret_pos - start_;
-  BOOST_REVERSE_FOREACH(const VertexMap::value_type& x,
-                        syllable_graph_.vertices) {
+  for (const auto& x : boost::adaptors::reverse(syllable_graph_.vertices)) {
     if (x.first < offset)
       return x.first + start_;
   }
@@ -418,7 +410,7 @@ size_t ScriptTranslation::PreviousStop(size_t caret_pos) const {
 
 size_t ScriptTranslation::NextStop(size_t caret_pos) const {
   size_t offset = caret_pos - start_;
-  BOOST_FOREACH(const VertexMap::value_type& x, syllable_graph_.vertices) {
+  for (const auto& x : syllable_graph_.vertices) {
     if (x.first > offset)
       return x.first + start_;
   }

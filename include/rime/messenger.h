@@ -14,11 +14,11 @@ namespace rime {
 
 class Messenger {
  public:
-  typedef signal<void (const std::string& message_type,
-                       const std::string& message_value)> MessageSink;
-  
+  using MessageSink = signal<void (const std::string& message_type,
+                                   const std::string& message_value)>;
+
   MessageSink& message_sink() { return message_sink_; }
-  
+
  protected:
   MessageSink message_sink_;
 };

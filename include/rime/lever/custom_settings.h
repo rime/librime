@@ -19,7 +19,8 @@ class CustomSettings {
   CustomSettings(Deployer* deployer,
                  const std::string& config_id,
                  const std::string& generator_id);
-  virtual ~CustomSettings() {}
+  virtual ~CustomSettings() = default;
+
   virtual bool Load();
   virtual bool Save();
   ConfigValuePtr GetValue(const std::string& key);
@@ -32,7 +33,7 @@ class CustomSettings {
 
  protected:
   Deployer* deployer_;
-  bool modified_;
+  bool modified_ = false;
   std::string config_id_;
   std::string generator_id_;
   Config config_;

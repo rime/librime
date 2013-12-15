@@ -15,12 +15,12 @@ class Engine;
 class Schema;
 
 struct Ticket {
-  Engine* engine;
-  Schema* schema;
+  Engine* engine = nullptr;
+  Schema* schema = nullptr;
   std::string name_space;
   std::string klass;
 
-  Ticket();
+  Ticket() = default;
   Ticket(Schema* s, const std::string& ns);
   // prescription: in the form of "klass" or "klass@alias"
   // where alias, if given, will override default name space

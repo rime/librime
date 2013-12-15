@@ -32,8 +32,12 @@ class Patterns : public std::vector<boost::regex> {
 class Syllabification {
  public:
   // move the caret by syllable by returning a value different from caret_pos
-  virtual size_t PreviousStop(size_t caret_pos) const { return caret_pos; }
-  virtual size_t NextStop(size_t caret_pos) const { return caret_pos; }
+  virtual size_t PreviousStop(size_t caret_pos) const {
+    return caret_pos;
+  }
+  virtual size_t NextStop(size_t caret_pos) const {
+    return caret_pos;
+  }
 };
 
 //
@@ -44,7 +48,7 @@ class Phrase : public Candidate {
  public:
   Phrase(Language* language,
          const std::string& type, size_t start, size_t end,
-         const shared_ptr<DictEntry> &entry)
+         const shared_ptr<DictEntry>& entry)
       : Candidate(type, start, end),
         language_(language),
         entry_(entry) {
@@ -52,13 +56,13 @@ class Phrase : public Candidate {
   const std::string& text() const { return entry_->text; }
   std::string comment() const { return entry_->comment; }
   std::string preedit() const { return entry_->preedit; }
-  void set_comment(const std::string &comment) {
+  void set_comment(const std::string& comment) {
     entry_->comment = comment;
   }
-  void set_preedit(const std::string &preedit) {
+  void set_preedit(const std::string& preedit) {
     entry_->preedit = preedit;
   }
-  void set_syllabification(const shared_ptr<Syllabification>& s) {
+  void set_syllabification(shared_ptr<Syllabification> s) {
     syllabification_ = s;
   }
 
@@ -81,22 +85,24 @@ class Phrase : public Candidate {
 class Sentence : public Phrase {
  public:
   Sentence(Language* language)
-      : Phrase(language, "sentence", 0, 0, make_shared<DictEntry>()) {
+      : Phrase(language, "sentence", 0, 0, New<DictEntry>()) {
     entry_->weight = 1.0;
   }
   Sentence(const Sentence& other)
       : Phrase(other),
         components_(other.components_),
         syllable_lengths_(other.syllable_lengths_) {
-    entry_ = make_shared<DictEntry>(other.entry());
+    entry_ = New<DictEntry>(other.entry());
   }
   void Extend(const DictEntry& entry, size_t end_pos);
   void Offset(size_t offset);
 
-  const std::vector<DictEntry>& components() const
-  { return components_; }
-  const std::vector<size_t>& syllable_lengths() const
-  { return syllable_lengths_; }
+  const std::vector<DictEntry>& components() const {
+    return components_;
+  }
+  const std::vector<size_t>& syllable_lengths() const {
+    return syllable_lengths_;
+  }
 
  protected:
   std::vector<DictEntry> components_;
@@ -159,10 +165,10 @@ class TranslatorOptions {
 
  protected:
   std::string delimiters_;
-  std::string tag_;
-  bool enable_completion_;
-  bool strict_spelling_;
-  double initial_quality_;
+  std::string tag_ = "abc";
+  bool enable_completion_ = true;
+  bool strict_spelling_ = false;
+  double initial_quality_ = 0.;
   Projection preedit_formatter_;
   Projection comment_formatter_;
   Patterns user_dict_disabling_patterns_;

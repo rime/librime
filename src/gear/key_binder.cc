@@ -5,13 +5,11 @@
 // 2011-11-23 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
+#include <functional>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-#include <boost/bind.hpp>
-#include <boost/foreach.hpp>
-#include <boost/function.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -21,6 +19,8 @@
 #include <rime/schema.h>
 #include <rime/switcher.h>
 #include <rime/gear/key_binder.h>
+
+using namespace std::placeholders;
 
 namespace rime {
 
@@ -44,7 +44,7 @@ static struct KeyBindingConditionDef {
 };
 
 static KeyBindingCondition translate_condition(const std::string& str) {
-  for (KeyBindingConditionDef* d = condition_definitions; d->name; ++d) {
+  for (auto* d = condition_definitions; d->name; ++d) {
     if (str == d->name)
       return d->condition;
   }
@@ -54,7 +54,7 @@ static KeyBindingCondition translate_condition(const std::string& str) {
 struct KeyBinding {
   KeyBindingCondition whence;
   KeyEvent target;
-  boost::function<void (Engine* engine)> action;
+  std::function<void (Engine* engine)> action;
 
   bool operator< (const KeyBinding& o) const {
     return whence < o.whence;
@@ -62,22 +62,25 @@ struct KeyBinding {
 };
 
 class KeyBindings : public std::map<KeyEvent,
-                                    std::vector<KeyBinding> > {
+                                    std::vector<KeyBinding>> {
  public:
-  void LoadBindings(const ConfigListPtr &bindings);
+  void LoadBindings(const ConfigListPtr& bindings);
   void Bind(const KeyEvent& key, const KeyBinding& binding);
 };
 
 static void toggle_option(Engine* engine, const std::string& option) {
-  if (!engine) return;
+  if (!engine)
+    return;
   Context* ctx = engine->context();
   ctx->set_option(option, !ctx->get_option(option));
 }
 
 static void select_schema(Engine* engine, const std::string& schema) {
-  if (!engine) return;
-  Switcher* switcher = dynamic_cast<Switcher*>(engine->attached_engine());
-  if (!switcher) return;
+  if (!engine)
+    return;
+  auto* switcher = dynamic_cast<Switcher*>(engine->attached_engine());
+  if (!switcher)
+    return;
   if (schema == ".next") {
     switcher->SelectNextSchema();
   }
@@ -86,15 +89,19 @@ static void select_schema(Engine* engine, const std::string& schema) {
   }
 }
 
-void KeyBindings::LoadBindings(const ConfigListPtr &bindings) {
-  if (!bindings) return;
+void KeyBindings::LoadBindings(const ConfigListPtr& bindings) {
+  if (!bindings)
+    return;
   for (size_t i = 0; i < bindings->size(); ++i) {
-    ConfigMapPtr map = As<ConfigMap>(bindings->GetAt(i));
-    if (!map) continue;
-    ConfigValuePtr whence = map->GetValue("when");
-    if (!whence) continue;
-    ConfigValuePtr pattern = map->GetValue("accept");
-    if (!pattern) continue;
+    auto map = As<ConfigMap>(bindings->GetAt(i));
+    if (!map)
+      continue;
+    auto whence = map->GetValue("when");
+    if (!whence)
+      continue;
+    auto pattern = map->GetValue("accept");
+    if (!pattern)
+      continue;
     KeyBinding binding;
     binding.whence = translate_condition(whence->str());
     if (binding.whence == kNever) {
@@ -105,17 +112,17 @@ void KeyBindings::LoadBindings(const ConfigListPtr &bindings) {
       LOG(WARNING) << "invalid key binding #" << i << ".";
       continue;
     }
-    if (ConfigValuePtr target = map->GetValue("send")) {
+    if (auto target = map->GetValue("send")) {
       if (!binding.target.Parse(target->str())) {
         LOG(WARNING) << "invalid key binding #" << i << ".";
         continue;
       }
     }
-    else if (ConfigValuePtr option = map->GetValue("toggle")) {
-      binding.action = boost::bind(&toggle_option, _1, option->str());
+    else if (auto option = map->GetValue("toggle")) {
+      binding.action = std::bind(&toggle_option, _1, option->str());
     }
-    else if (ConfigValuePtr schema = map->GetValue("select")) {
-      binding.action = boost::bind(&select_schema, _1, schema->str());
+    else if (auto schema = map->GetValue("select")) {
+      binding.action = std::bind(&select_schema, _1, schema->str());
     }
     else {
       LOG(WARNING) << "invalid key binding #" << i << ".";
@@ -126,11 +133,10 @@ void KeyBindings::LoadBindings(const ConfigListPtr &bindings) {
 }
 
 void KeyBindings::Bind(const KeyEvent& key, const KeyBinding& binding) {
-  std::vector<KeyBinding>& v = (*this)[key];
+  auto& vec = (*this)[key];
   // insert before existing binding of the same condition
-  std::vector<KeyBinding>::iterator lb =
-      std::lower_bound(v.begin(), v.end(), binding);
-  v.insert(lb, binding);
+  auto lb = std::lower_bound(vec.begin(), vec.end(), binding);
+  vec.insert(lb, binding);
 }
 
 KeyBinder::KeyBinder(const Ticket& ticket) : Processor(ticket),
@@ -140,38 +146,37 @@ KeyBinder::KeyBinder(const Ticket& ticket) : Processor(ticket),
   LoadConfig();
 }
 
-typedef std::set<KeyBindingCondition> Conditions;
+class KeyBindingConditions : public std::set<KeyBindingCondition> {
+ public:
+  explicit KeyBindingConditions(Context* ctx);
+};
 
-static void calculate_conditions(Context *ctx, Conditions *conditions) {
-  // prevent duplicated evaluation
-  if (!conditions->empty()) return;
-
-  conditions->insert(kAlways);
+KeyBindingConditions::KeyBindingConditions(Context* ctx) {
+  insert(kAlways);
 
   if (ctx->IsComposing()) {
-    conditions->insert(kWhenComposing);
+    insert(kWhenComposing);
   }
 
   if (ctx->HasMenu() && !ctx->get_option("ascii_mode")) {
-    conditions->insert(kWhenHasMenu);
+    insert(kWhenHasMenu);
   }
 
-  Composition *comp = ctx->composition();
+  Composition* comp = ctx->composition();
   if (!comp->empty() && comp->back().HasTag("paging")) {
-    conditions->insert(kWhenPaging);
+    insert(kWhenPaging);
   }
 }
 
-ProcessResult KeyBinder::ProcessKeyEvent(const KeyEvent &key_event) {
+ProcessResult KeyBinder::ProcessKeyEvent(const KeyEvent& key_event) {
   if (redirecting_ || !key_bindings_ || key_bindings_->empty())
     return kNoop;
   if (ReinterpretPagingKey(key_event))
     return kNoop;
   if (key_bindings_->find(key_event) == key_bindings_->end())
     return kNoop;
-  Conditions conditions;
-  calculate_conditions(engine_->context(), &conditions);
-  BOOST_FOREACH(const KeyBinding& binding, (*key_bindings_)[key_event]) {
+  KeyBindingConditions conditions(engine_->context());
+  for (const KeyBinding& binding : (*key_bindings_)[key_event]) {
     if (conditions.find(binding.whence) == conditions.end())
       continue;
     PerformKeyBinding(binding);
@@ -193,29 +198,29 @@ void KeyBinder::PerformKeyBinding(const KeyBinding& binding) {
 }
 
 void KeyBinder::LoadConfig() {
-  if (!engine_) return;
-  Config *config = engine_->schema()->config();
+  if (!engine_)
+    return;
+  Config* config = engine_->schema()->config();
   std::string preset;
   if (config->GetString("key_binder/import_preset", &preset)) {
-    scoped_ptr<Config> preset_config(Config::Require("config")->Create(preset));
+    unique_ptr<Config> preset_config(Config::Require("config")->Create(preset));
     if (!preset_config) {
       LOG(ERROR) << "Error importing preset key bindings '" << preset << "'.";
       return;
     }
-    ConfigListPtr bindings = preset_config->GetList("key_binder/bindings");
-    if (bindings)
+    if (auto bindings = preset_config->GetList("key_binder/bindings"))
       key_bindings_->LoadBindings(bindings);
     else
       LOG(WARNING) << "missing preset key bindings.";
   }
   // per schema configuration, overriding preset bindings
-  ConfigListPtr bindings = config->GetList("key_binder/bindings");
-  if (bindings)
+  if (auto bindings = config->GetList("key_binder/bindings"))
     key_bindings_->LoadBindings(bindings);
 }
 
-bool KeyBinder::ReinterpretPagingKey(const KeyEvent &key_event) {
-  if (key_event.release()) return false;
+bool KeyBinder::ReinterpretPagingKey(const KeyEvent& key_event) {
+  if (key_event.release())
+    return false;
   bool ret = false;
   int ch = (key_event.modifier() == 0) ? key_event.keycode() : 0;
   // reinterpret period key followed by alphabetic keys
@@ -225,8 +230,8 @@ bool KeyBinder::ReinterpretPagingKey(const KeyEvent &key_event) {
     return ret;
   }
   if (last_key_ == '.' && ch >= 'a' && ch <= 'z') {
-    Context *ctx = engine_->context();
-    const std::string &input(ctx->input());
+    Context* ctx = engine_->context();
+    const std::string& input(ctx->input());
     if (!input.empty() && input[input.length() - 1] != '.') {
       LOG(INFO) << "reinterpreted key: '" << last_key_
                 << "', successor: '" << (char)ch << "'";

@@ -17,7 +17,7 @@ class AbcSegmentor : public Segmentor {
  public:
   explicit AbcSegmentor(const Ticket& ticket);
 
-  virtual bool Proceed(Segmentation *segmentation);
+  virtual bool Proceed(Segmentation* segmentation);
 
  protected:
   std::string alphabet_;

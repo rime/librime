@@ -17,15 +17,13 @@ namespace rime {
 AsciiSegmentor::AsciiSegmentor(const Ticket& ticket) : Segmentor(ticket) {
 }
 
-bool AsciiSegmentor::Proceed(Segmentation *segmentation) {
+bool AsciiSegmentor::Proceed(Segmentation* segmentation) {
   if (!engine_->context()->get_option("ascii_mode"))
     return true;
-  const std::string &input = segmentation->input();
+  const std::string& input = segmentation->input();
   size_t j = segmentation->GetCurrentStartPosition();
   if (j < input.length()) {
-    Segment segment;
-    segment.start = j;
-    segment.end = input.length();
+    Segment segment(j, input.length());
     segment.tags.insert("raw");
     segmentation->AddSegment(segment);
   }

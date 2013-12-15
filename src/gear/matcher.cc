@@ -4,7 +4,6 @@
 //
 // 2012-01-01 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/config.h>
 #include <rime/schema.h>
@@ -15,23 +14,23 @@ namespace rime {
 
 Matcher::Matcher(const Ticket& ticket) : Segmentor(ticket) {
   // read schema settings
-  if (!ticket.schema) return;
-  Config *config = ticket.schema->config();
+  if (!ticket.schema)
+    return;
+  Config* config = ticket.schema->config();
   patterns_.LoadConfig(config);
 }
 
-bool Matcher::Proceed(Segmentation *segmentation) {
-  if (patterns_.empty()) return true;
-  RecognizerMatch m = patterns_.GetMatch(segmentation->input(), segmentation);
-  if (m.found()) {
-    DLOG(INFO) << "match: " << m.tag
-               << " [" << m.start << ", " << m.end << ")";
-    while (segmentation->GetCurrentStartPosition() > m.start)
+bool Matcher::Proceed(Segmentation* segmentation) {
+  if (patterns_.empty())
+    return true;
+  auto match = patterns_.GetMatch(segmentation->input(), segmentation);
+  if (match.found()) {
+    DLOG(INFO) << "match: " << match.tag
+               << " [" << match.start << ", " << match.end << ")";
+    while (segmentation->GetCurrentStartPosition() > match.start)
       segmentation->pop_back();
-    Segment segment;
-    segment.start = m.start;
-    segment.end = m.end;
-    segment.tags.insert(m.tag);
+    Segment segment(match.start, match.end);
+    segment.tags.insert(match.tag);
     segmentation->AddSegment(segment);
     // terminate this round?
     //return false;

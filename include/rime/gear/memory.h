@@ -53,8 +53,8 @@ class Memory {
   void OnDeleteEntry(Context* ctx);
   void OnUnhandledKey(Context* ctx, const KeyEvent& key);
 
-  scoped_ptr<Dictionary> dict_;
-  scoped_ptr<UserDictionary> user_dict_;
+  unique_ptr<Dictionary> dict_;
+  unique_ptr<UserDictionary> user_dict_;
 
  private:
   connection commit_connection_;

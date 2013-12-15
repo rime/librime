@@ -31,8 +31,8 @@ class ReverseLookupDictionary
   explicit ReverseLookupDictionary(shared_ptr<ReverseDb> db);
   explicit ReverseLookupDictionary(const std::string& dict_name);
   bool Load();
-  bool ReverseLookup(const std::string &text, std::string *result);
-  bool LookupStems(const std::string &text, std::string *result);
+  bool ReverseLookup(const std::string& text, std::string* result);
+  bool LookupStems(const std::string& text, std::string* result);
   bool Build(DictSettings* settings,
              const Syllabary& syllabary,
              const Vocabulary& vocabulary,
@@ -50,7 +50,7 @@ class ReverseLookupDictionaryComponent
   ReverseLookupDictionaryComponent();
   ReverseLookupDictionary* Create(const Ticket& ticket);
  private:
-  std::map<std::string, weak_ptr<ReverseDb> > db_pool_;
+  std::map<std::string, weak_ptr<ReverseDb>> db_pool_;
 };
 
 }  // namespace rime

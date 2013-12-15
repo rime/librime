@@ -6,8 +6,6 @@
 //
 #include <cstring>
 #include <iostream>
-#include <boost/bind.hpp>
-#include <boost/foreach.hpp>
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/composition.h>
@@ -28,7 +26,7 @@ class RimeConsole {
   RimeConsole(rime::Schema *schema) : interactive_(false),
                                       engine_(rime::Engine::Create(schema)) {
     conn_ = engine_->sink().connect(
-        boost::bind(&RimeConsole::OnCommit, this, _1));
+        [this](const std::string& x) { OnCommit(x); });
   }
   ~RimeConsole() {
     conn_.disconnect();
@@ -56,14 +54,14 @@ class RimeConsole {
       return;
     int page_size = engine_->schema()->page_size();
     int page_no = current.selected_index / page_size;
-    boost::scoped_ptr<rime::Page> page(
+    rime::unique_ptr<rime::Page> page(
         current.menu->CreatePage(page_size, page_no));
     if (!page)
       return;
     std::cout << "page_no: " << page_no
               << ", index: " << current.selected_index << std::endl;
     int i = 0;
-    BOOST_FOREACH(const boost::shared_ptr<rime::Candidate> &cand,
+    for (const rime::shared_ptr<rime::Candidate> &cand :
                   page->candidates) {
       std::cout << "cand. " << (++i % 10) <<  ": [";
       std::cout << cand->text();
@@ -81,7 +79,7 @@ class RimeConsole {
       LOG(ERROR) << "error parsing input: '" << line << "'";
       return;
     }
-    BOOST_FOREACH(const rime::KeyEvent &ke, keys) {
+    for (const rime::KeyEvent &ke : keys) {
       engine_->ProcessKeyEvent(ke);
     }
     rime::Context *ctx = engine_->context();
@@ -100,7 +98,7 @@ class RimeConsole {
 
  private:
   bool interactive_;
-  boost::scoped_ptr<rime::Engine> engine_;
+  rime::unique_ptr<rime::Engine> engine_;
   rime::connection conn_;
 };
 

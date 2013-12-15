@@ -20,27 +20,27 @@ class Segmentation;
 
 struct RecognizerMatch {
   std::string tag;
-  size_t start, end;
+  size_t start = 0, end = 0;
 
-  RecognizerMatch() : tag(), start(0), end(0) {}
-  RecognizerMatch(const std::string &_tag, size_t _start, size_t _end)
-      : tag(_tag), start(_start), end(_end) {}
+  RecognizerMatch() = default;
+  RecognizerMatch(const std::string& a_tag, size_t a_start, size_t an_end)
+      : tag(a_tag), start(a_start), end(an_end) {}
 
   bool found() const { return start < end; }
 };
 
 class RecognizerPatterns : public std::map<std::string, boost::regex> {
  public:
-  void LoadConfig(Config *config);
-  RecognizerMatch GetMatch(const std::string &input,
-                           Segmentation *segmentation) const;
+  void LoadConfig(Config* config);
+  RecognizerMatch GetMatch(const std::string& input,
+                           Segmentation* segmentation) const;
 };
 
 class Recognizer : public Processor {
  public:
   Recognizer(const Ticket& ticket);
 
-  virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:
   RecognizerPatterns patterns_;

@@ -4,8 +4,6 @@
 //
 // 2013-01-02 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/bind.hpp>
-#include <boost/foreach.hpp>
 #include <rime/candidate.h>
 #include <rime/context.h>
 #include <rime/composition.h>
@@ -28,10 +26,10 @@ void CommitEntry::Clear() {
 
 void CommitEntry::AppendPhrase(const shared_ptr<Phrase>& phrase) {
   text += phrase->text();
-  code.insert(code.end(), phrase->code().begin(), phrase->code().end());
-  shared_ptr<Sentence> sentence = As<Sentence>(phrase);
-  if (sentence) {
-    BOOST_FOREACH(const DictEntry& e, sentence->components()) {
+  code.insert(code.end(),
+              phrase->code().begin(), phrase->code().end());
+  if (auto sentence = As<Sentence>(phrase)) {
+    for (const DictEntry& e : sentence->components()) {
       elements.push_back(&e);
     }
   }
@@ -49,18 +47,16 @@ bool CommitEntry::Save() const {
 }
 
 Memory::Memory(const Ticket& ticket) {
-  if (!ticket.engine) return;
+  if (!ticket.engine)
+    return;
 
-  Dictionary::Component *dictionary = Dictionary::Require("dictionary");
-  if (dictionary) {
+  if (auto dictionary = Dictionary::Require("dictionary")) {
     dict_.reset(dictionary->Create(ticket));
     if (dict_)
       dict_->Load();
   }
 
-  UserDictionary::Component *user_dictionary =
-      UserDictionary::Require("user_dictionary");
-  if (user_dictionary) {
+  if (auto user_dictionary = UserDictionary::Require("user_dictionary")) {
     user_dict_.reset(user_dictionary->Create(ticket));
     if (user_dict_) {
       user_dict_->Load();
@@ -71,11 +67,11 @@ Memory::Memory(const Ticket& ticket) {
 
   Context* ctx = ticket.engine->context();
   commit_connection_ = ctx->commit_notifier().connect(
-      boost::bind(&Memory::OnCommit, this, _1));
+      [this](Context* ctx) { OnCommit(ctx); });
   delete_connection_ = ctx->delete_notifier().connect(
-      boost::bind(&Memory::OnDeleteEntry, this, _1));
+      [this](Context* ctx) { OnDeleteEntry(ctx); });
   unhandled_key_connection_ = ctx->unhandled_key_notifier().connect(
-      boost::bind(&Memory::OnUnhandledKey, this, _1, _2));
+      [this](Context* ctx, const KeyEvent& key) { OnUnhandledKey(ctx, key); });
 }
 
 Memory::~Memory() {
@@ -90,9 +86,9 @@ void Memory::OnCommit(Context* ctx) {
   user_dict_->NewTransaction();
 
   CommitEntry commit_entry(this);
-  BOOST_FOREACH(Composition::value_type &seg, *ctx->composition()) {
-    shared_ptr<Phrase> phrase =
-        As<Phrase>(Candidate::GetGenuineCandidate(seg.GetSelectedCandidate()));
+  for (auto& seg : *ctx->composition()) {
+    auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(
+            seg.GetSelectedCandidate()));
     bool recognized = phrase && phrase->language() == language();
     if (recognized) {
       commit_entry.AppendPhrase(phrase);
@@ -110,9 +106,9 @@ void Memory::OnDeleteEntry(Context* ctx) {
       !ctx ||
       ctx->composition()->empty())
     return;
-  Segment &seg(ctx->composition()->back());
-  shared_ptr<Phrase> phrase =
-      As<Phrase>(Candidate::GetGenuineCandidate(seg.GetSelectedCandidate()));
+  Segment& seg(ctx->composition()->back());
+  auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(
+          seg.GetSelectedCandidate()));
   bool recognized = phrase && phrase->language() == language();
   if (recognized) {
     const DictEntry& entry(phrase->entry());

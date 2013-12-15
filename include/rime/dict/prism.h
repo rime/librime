@@ -22,7 +22,7 @@ namespace rime {
 
 namespace prism {
 
-typedef int32_t SyllableId;
+using SyllableId = int32_t;
 
 struct SpellingDescriptor {
   SyllableId syllable_id;
@@ -31,8 +31,8 @@ struct SpellingDescriptor {
   String tips;
 };
 
-typedef List<SpellingDescriptor> SpellingMapItem;
-typedef Array<SpellingMapItem> SpellingMap;
+using SpellingMapItem = List<SpellingDescriptor>;
+using SpellingMap = Array<SpellingMapItem>;
 
 struct Metadata {
   static const int kFormatMaxLength = 32;
@@ -67,23 +67,21 @@ class Script;
 
 class Prism : public MappedFile {
  public:
-  typedef Darts::DoubleArray::result_pair_type Match;
+  using Match = Darts::DoubleArray::result_pair_type;
 
-  Prism(const std::string &file_name)
-      : MappedFile(file_name), trie_(new Darts::DoubleArray),
-        metadata_(NULL), spelling_map_(NULL), format_(0.0) {}
+  explicit Prism(const std::string& file_name);
 
   bool Load();
   bool Save();
-  bool Build(const Syllabary &syllabary,
-             const Script *script = NULL,
+  bool Build(const Syllabary& syllabary,
+             const Script* script = NULL,
              uint32_t dict_file_checksum = 0,
              uint32_t schema_file_checksum = 0);
 
-  bool HasKey(const std::string &key);
-  bool GetValue(const std::string &key, int *value);
-  void CommonPrefixSearch(const std::string &key, std::vector<Match> *result);
-  void ExpandSearch(const std::string &key, std::vector<Match> *result, size_t limit);
+  bool HasKey(const std::string& key);
+  bool GetValue(const std::string& key, int* value);
+  void CommonPrefixSearch(const std::string& key, std::vector<Match>* result);
+  void ExpandSearch(const std::string& key, std::vector<Match>* result, size_t limit);
   SpellingAccessor QuerySpelling(int spelling_id);
 
   size_t array_size() const;
@@ -92,10 +90,10 @@ class Prism : public MappedFile {
   uint32_t schema_file_checksum() const;
 
  private:
-  scoped_ptr<Darts::DoubleArray> trie_;
-  prism::Metadata* metadata_;
-  prism::SpellingMap* spelling_map_;
-  double format_;
+  unique_ptr<Darts::DoubleArray> trie_;
+  prism::Metadata* metadata_ = nullptr;
+  prism::SpellingMap* spelling_map_ = nullptr;
+  double format_ = 0.0;
 };
 
 }  // namespace rime

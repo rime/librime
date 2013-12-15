@@ -4,29 +4,30 @@
 //
 // 2011-08-08 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/bind.hpp>
 #include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/switcher.h>
 
+using namespace std::placeholders;
+
 namespace rime {
 
-Session::Session() : last_active_time_(0) {
+Session::Session() {
   switcher_.reset(new Switcher);
   engine_.reset(Engine::Create(switcher_->CreateSchema()));
   switcher_->Attach(engine_.get());
   engine_->Attach(switcher_.get());
-  engine_->sink().connect(boost::bind(&Session::OnCommit, this, _1));
+  engine_->sink().connect(std::bind(&Session::OnCommit, this, _1));
   SessionId session_id = reinterpret_cast<SessionId>(this);
   engine_->message_sink().connect(
-      boost::bind(&Service::Notify, &Service::instance(), session_id, _1, _2));
+      std::bind(&Service::Notify, &Service::instance(), session_id, _1, _2));
 }
 
-bool Session::ProcessKeyEvent(const KeyEvent &key_event) {
+bool Session::ProcessKeyEvent(const KeyEvent& key_event) {
   return switcher_->ProcessKeyEvent(key_event) ||
-      engine_->ProcessKeyEvent(key_event);
+         engine_->ProcessKeyEvent(key_event);
 }
 
 void Session::Activate() {
@@ -54,7 +55,7 @@ void Session::ApplySchema(Schema* schema) {
   switcher_->ApplySchema(schema);
 }
 
-void Session::OnCommit(const std::string &commit_text) {
+void Session::OnCommit(const std::string& commit_text) {
   commit_text_ += commit_text;
 }
 
@@ -72,9 +73,9 @@ Schema* Session::schema() const {
   return engine_ ? engine_->schema() : NULL;
 }
 
-Service::Service() : started_(false) {
+Service::Service() {
   deployer_.message_sink().connect(
-      boost::bind(&Service::Notify, this, 0, _1, _2));
+      std::bind(&Service::Notify, this, 0, _1, _2));
 }
 
 Service::~Service() {
@@ -94,7 +95,7 @@ SessionId Service::CreateSession() {
   SessionId id = kInvalidSessionId;
   if (disabled()) return id;
   try {
-    shared_ptr<Session> session = make_shared<Session>();
+    auto session = New<Session>();
     session->Activate();
     id = reinterpret_cast<uintptr_t>(session.get());
     sessions_[id] = session;
@@ -118,18 +119,19 @@ SessionId Service::CreateSession() {
 }
 
 shared_ptr<Session> Service::GetSession(SessionId session_id) {
-  shared_ptr<Session> session;
-  if (disabled()) return session;
+  if (disabled())
+    return nullptr;
   SessionMap::iterator it = sessions_.find(session_id);
   if (it != sessions_.end()) {
-    session = it->second;
+    auto& session = it->second;
     session->Activate();
+    return session;
   }
-  return session;
+  return nullptr;
 }
 
 bool Service::DestroySession(SessionId session_id) {
-  SessionMap::iterator it = sessions_.find(session_id);
+  auto it = sessions_.find(session_id);
   if (it == sessions_.end())
     return false;
   sessions_.erase(it);
@@ -139,15 +141,15 @@ bool Service::DestroySession(SessionId session_id) {
 void Service::CleanupStaleSessions() {
   time_t now = time(NULL);
   int count = 0;
-  for (SessionMap::iterator it = sessions_.begin();
-       it != sessions_.end(); ) {
+  for (auto it = sessions_.begin(); it != sessions_.end(); ) {
     if (it->second &&
         it->second->last_active_time() < now - Session::kLifeSpan) {
       sessions_.erase(it++);
       ++count;
     }
-    else
+    else {
       ++it;
+    }
   }
   if (count > 0) {
     LOG(INFO) << "Recycled " << count << " stale sessions.";
@@ -163,21 +165,22 @@ void Service::SetNotificationHandler(const NotificationHandler& handler) {
 }
 
 void Service::ClearNotificationHandler() {
-  notification_handler_.clear();
+  notification_handler_ = nullptr;
 }
 
 void Service::Notify(SessionId session_id,
                      const std::string& message_type,
                      const std::string& message_value) {
   if (notification_handler_) {
-    boost::lock_guard<boost::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     notification_handler_(session_id,
-                          message_type.c_str(), message_value.c_str());
+                          message_type.c_str(),
+                          message_value.c_str());
   }
 }
 
 Service& Service::instance() {
-  static scoped_ptr<Service> s_instance;
+  static unique_ptr<Service> s_instance;
   if (!s_instance) {
     s_instance.reset(new Service);
   }
