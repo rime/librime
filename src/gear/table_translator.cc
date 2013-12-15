@@ -82,7 +82,7 @@ shared_ptr<Candidate> TableTranslation::Peek() {
   if (options_) {
     options_->comment_formatter().Apply(&comment);
   }
-  auto phrase = make_shared<Phrase>(
+  auto phrase = New<Phrase>(
       language_,
       e->remaining_code_length == 0 ? "table" : "completion",
       start_, end_, e);
@@ -248,7 +248,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string& input,
 
   shared_ptr<Translation> translation;
   if (enable_completion_) {
-    translation = make_shared<LazyTableTranslation>(
+    translation = New<LazyTableTranslation>(
         this,
         code,
         segment.start,
@@ -269,7 +269,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string& input,
       }
     }
     if (!iter.exhausted() || !uter.exhausted())
-      translation = make_shared<TableTranslation>(
+      translation = New<TableTranslation>(
           this,
           language(),
           code,
@@ -283,7 +283,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string& input,
     bool filter_by_charset = enable_charset_filter_ &&
         !engine_->context()->get_option("extended_charset");
     if (filter_by_charset) {
-      translation = make_shared<CharsetFilter>(translation);
+      translation = New<CharsetFilter>(translation);
     }
   }
   if (translation && translation->exhausted()) {
@@ -440,7 +440,7 @@ shared_ptr<Candidate> SentenceTranslation::Peek() {
     code_length = r->first;
     entry = r->second.Peek();
   }
-  auto result = make_shared<Phrase>(
+  auto result = New<Phrase>(
       translator_ ? translator_->language() : NULL,
       "table",
       start_,
@@ -545,7 +545,7 @@ TableTranslator::MakeSentence(const std::string& input, size_t start) {
   DictEntryCollector collector;
   UserDictEntryCollector user_phrase_collector;
   std::map<int, shared_ptr<Sentence>> sentences;
-  sentences[0] = make_shared<Sentence>(language());
+  sentences[0] = New<Sentence>(language());
   for (size_t start_pos = 0; start_pos < input.length(); ++start_pos) {
     if (sentences.find(start_pos) == sentences.end())
       continue;
@@ -637,7 +637,7 @@ TableTranslator::MakeSentence(const std::string& input, size_t start) {
         continue;
       size_t end_pos = start_pos + len;
       // create a new sentence
-      auto new_sentence = make_shared<Sentence>(*sentences[start_pos]);
+      auto new_sentence = New<Sentence>(*sentences[start_pos]);
       new_sentence->Extend(*entries[len], end_pos);
       // compare and update sentences
       if (sentences.find(end_pos) == sentences.end() ||
@@ -648,12 +648,13 @@ TableTranslator::MakeSentence(const std::string& input, size_t start) {
   }
   shared_ptr<Translation> result;
   if (sentences.find(input.length()) != sentences.end()) {
-    result = make_shared<SentenceTranslation>(this,
-                                              sentences[input.length()],
-                                              &collector,
-                                              &user_phrase_collector,
-                                              input,
-                                              start);
+    result = New<SentenceTranslation>(
+        this,
+        sentences[input.length()],
+        &collector,
+        &user_phrase_collector,
+        input,
+        start);
     if (result && filter_by_charset) {
       result = New<CharsetFilter>(result);
     }

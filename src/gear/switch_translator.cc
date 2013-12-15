@@ -53,7 +53,7 @@ void Switch::Apply(Switcher* switcher) {
 
 class RadioOption;
 
-class RadioGroup : public enable_shared_from_this<RadioGroup> {
+class RadioGroup : public std::enable_shared_from_this<RadioGroup> {
  public:
   RadioGroup(Context* context, Switcher* switcher)
       : context_(context), switcher_(switcher) {
@@ -99,9 +99,9 @@ void RadioOption::UpdateState(bool selected) {
 shared_ptr<RadioOption>
 RadioGroup::CreateOption(const std::string& state_label,
                          const std::string& option_name) {
-  auto option = make_shared<RadioOption>(shared_from_this(),
-                                         state_label,
-                                         option_name);
+  auto option = New<RadioOption>(shared_from_this(),
+                                 state_label,
+                                 option_name);
   options_.push_back(option.get());
   return option;
 }
@@ -165,7 +165,7 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
       if (states->size() != 2)
         continue;
       bool current_state = context->get_option(option_name->str());
-      Append(make_shared<Switch>(
+      Append(New<Switch>(
           states->GetValueAt(current_state)->str(),
           states->GetValueAt(1 - current_state)->str(),
           option_name->str(),
@@ -178,7 +178,7 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
         continue;
       if (states->size() != options->size())
         continue;
-      auto group = make_shared<RadioGroup>(context, switcher);
+      auto group = New<RadioGroup>(context, switcher);
       for (size_t i = 0; i < options->size(); ++i) {
         auto option_name = options->GetValueAt(i);
         auto state_label = states->GetValueAt(i);

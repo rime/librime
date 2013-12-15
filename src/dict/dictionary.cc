@@ -84,7 +84,7 @@ void DictEntryIterator::Sort() {
 void DictEntryIterator::PrepareEntry() {
   if (empty()) return;
   const auto& chunk(front());
-  entry_ = make_shared<DictEntry>();
+  entry_ = New<DictEntry>();
   const auto& e(chunk.entries[chunk.cursor]);
   DLOG(INFO) << "creating temporary dict entry '" << e.text.c_str() << "'.";
   entry_->code = chunk.code;
@@ -149,16 +149,17 @@ Dictionary::~Dictionary() {
   // should not close shared table and prism objects
 }
 
-shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph& syllable_graph,
-                                                  size_t start_pos,
-                                                  double initial_credibility) {
+shared_ptr<DictEntryCollector>
+Dictionary::Lookup(const SyllableGraph& syllable_graph,
+                   size_t start_pos,
+                   double initial_credibility) {
   if (!loaded())
-    return shared_ptr<DictEntryCollector>();
+    return nullptr;
   TableQueryResult result;
   if (!table_->Query(syllable_graph, start_pos, &result)) {
-    return shared_ptr<DictEntryCollector>();
+    return nullptr;
   }
-  shared_ptr<DictEntryCollector> collector = make_shared<DictEntryCollector>();
+  auto collector = New<DictEntryCollector>();
   // copy result
   for (auto& v : result) {
     size_t end_pos = v.first;
@@ -294,18 +295,19 @@ Dictionary* DictionaryComponent::Create(const Ticket& ticket) {
   return CreateDictionaryWithName(dict_name, prism_name);
 }
 
-Dictionary* DictionaryComponent::CreateDictionaryWithName(
-    const std::string& dict_name, const std::string& prism_name) {
+Dictionary*
+DictionaryComponent::CreateDictionaryWithName(const std::string& dict_name,
+                                              const std::string& prism_name) {
   // obtain prism and table objects
   boost::filesystem::path path(Service::instance().deployer().user_data_dir);
   auto table = table_map_[dict_name].lock();
   if (!table) {
-    table = make_shared<Table>((path / dict_name).string() + ".table.bin");
+    table = New<Table>((path / dict_name).string() + ".table.bin");
     table_map_[dict_name] = table;
   }
   auto prism = prism_map_[prism_name].lock();
   if (!prism) {
-    prism = make_shared<Prism>((path / prism_name).string() + ".prism.bin");
+    prism = New<Prism>((path / prism_name).string() + ".prism.bin");
     prism_map_[prism_name] = prism;
   }
   return new Dictionary(dict_name, table, prism);

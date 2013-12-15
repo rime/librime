@@ -24,16 +24,16 @@ class TranslationAlpha : public Translation {
   shared_ptr<Candidate> Peek() {
     if (exhausted())
       return nullptr;
-    return make_shared<SimpleCandidate>("alpha", 0, 5, "Alpha");
+    return New<SimpleCandidate>("alpha", 0, 5, "Alpha");
   }
 };
 
 class TranslationBeta : public Translation {
  public:
   TranslationBeta() : cursor_(0) {
-    candies_.push_back(make_shared<SimpleCandidate>("beta", 0, 4, "Beta-1"));
-    candies_.push_back(make_shared<SimpleCandidate>("beta", 0, 4, "Beta-2"));
-    candies_.push_back(make_shared<SimpleCandidate>("beta", 0, 4, "Beta-3"));
+    candies_.push_back(New<SimpleCandidate>("beta", 0, 4, "Beta-1"));
+    candies_.push_back(New<SimpleCandidate>("beta", 0, 4, "Beta-2"));
+    candies_.push_back(New<SimpleCandidate>("beta", 0, 4, "Beta-3"));
   }
 
   bool Next() {

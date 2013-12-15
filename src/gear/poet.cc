@@ -19,7 +19,7 @@ shared_ptr<Sentence> Poet::MakeSentence(const WordGraph& graph,
                                         size_t total_length) {
   const int kMaxHomophonesInMind = 1;
   std::map<int, shared_ptr<Sentence>> sentences;
-  sentences[0] = make_shared<Sentence>(language_);
+  sentences[0] = New<Sentence>(language_);
   // dynamic programming
   for (const auto& w : graph) {
     size_t start_pos = w.first;
@@ -34,7 +34,7 @@ shared_ptr<Sentence> Poet::MakeSentence(const WordGraph& graph,
       const DictEntryList& entries(x.second);
       for (size_t i = 0; i < kMaxHomophonesInMind && i < entries.size(); ++i) {
         const auto& entry(entries[i]);
-        auto new_sentence = make_shared<Sentence>(*sentences[start_pos]);
+        auto new_sentence = New<Sentence>(*sentences[start_pos]);
         new_sentence->Extend(*entry, end_pos);
         if (sentences.find(end_pos) == sentences.end() ||
             sentences[end_pos]->weight() < new_sentence->weight()) {

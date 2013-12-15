@@ -117,8 +117,8 @@ shared_ptr<DbAccessor> TreeDb::QueryAll() {
 
 shared_ptr<DbAccessor> TreeDb::Query(const std::string& key) {
   if (!loaded())
-    return shared_ptr<DbAccessor>();
-  return make_shared<TreeDbAccessor>(db_->GetCursor(), key);
+    return nullptr;
+  return New<TreeDbAccessor>(db_->GetCursor(), key);
 }
 
 bool TreeDb::Fetch(const std::string& key, std::string* value) {
@@ -128,19 +128,22 @@ bool TreeDb::Fetch(const std::string& key, std::string* value) {
 }
 
 bool TreeDb::Update(const std::string& key, const std::string& value) {
-  if (!loaded() || readonly()) return false;
+  if (!loaded() || readonly())
+    return false;
   DLOG(INFO) << "update db entry: " << key << " => " << value;
   return db_->kcdb.set(key, value);
 }
 
 bool TreeDb::Erase(const std::string& key) {
-  if (!loaded() || readonly()) return false;
+  if (!loaded() || readonly())
+    return false;
   DLOG(INFO) << "erase db entry: " << key;
   return db_->kcdb.remove(key);
 }
 
 bool TreeDb::Backup(const std::string& snapshot_file) {
-  if (!loaded()) return false;
+  if (!loaded())
+    return false;
   LOG(INFO) << "backing up db '" << name() << "' to " << snapshot_file;
   bool success = db_->kcdb.dump_snapshot(snapshot_file);
   if (!success) {
@@ -151,7 +154,8 @@ bool TreeDb::Backup(const std::string& snapshot_file) {
 }
 
 bool TreeDb::Restore(const std::string& snapshot_file) {
-  if (!loaded() || readonly()) return false;
+  if (!loaded() || readonly())
+    return false;
   bool success = db_->kcdb.load_snapshot(snapshot_file);
   if (!success) {
     LOG(ERROR) << "failed to restore db '" << name()
@@ -175,7 +179,8 @@ bool TreeDb::Recover() {
 }
 
 bool TreeDb::Open() {
-  if (loaded()) return false;
+  if (loaded())
+    return false;
   Initialize();
   readonly_ = false;
   loaded_ = db_->kcdb.open(file_name(),
@@ -199,7 +204,8 @@ bool TreeDb::Open() {
 }
 
 bool TreeDb::OpenReadOnly() {
-  if (loaded()) return false;
+  if (loaded())
+    return false;
   Initialize();
   readonly_ = true;
   loaded_ = db_->kcdb.open(file_name(),
@@ -212,7 +218,8 @@ bool TreeDb::OpenReadOnly() {
 }
 
 bool TreeDb::Close() {
-  if (!loaded()) return false;
+  if (!loaded())
+    return false;
   db_->kcdb.close();
   LOG(INFO) << "closed db '" << name_ << "'.";
   loaded_ = false;
@@ -235,19 +242,22 @@ bool TreeDb::MetaUpdate(const std::string& key, const std::string& value) {
 }
 
 bool TreeDb::BeginTransaction() {
-  if (!loaded()) return false;
+  if (!loaded())
+    return false;
   in_transaction_ = db_->kcdb.begin_transaction();
   return in_transaction_;
 }
 
 bool TreeDb::AbortTransaction() {
-  if (!loaded() || !in_transaction()) return false;
+  if (!loaded() || !in_transaction())
+    return false;
   in_transaction_ = !db_->kcdb.end_transaction(false);
   return !in_transaction_;
 }
 
 bool TreeDb::CommitTransaction() {
-  if (!loaded() || !in_transaction()) return false;
+  if (!loaded() || !in_transaction())
+    return false;
   in_transaction_ = !db_->kcdb.end_transaction(true);
   return !in_transaction_;
 }

@@ -58,8 +58,8 @@ TextDb::~TextDb() {
 
 shared_ptr<DbAccessor> TextDb::QueryMetadata() {
   if (!loaded())
-    return shared_ptr<DbAccessor>();
-  return make_shared<TextDbAccessor>(metadata_, "");
+    return nullptr;
+  return New<TextDbAccessor>(metadata_, "");
 }
 
 shared_ptr<DbAccessor> TextDb::QueryAll() {
@@ -68,8 +68,8 @@ shared_ptr<DbAccessor> TextDb::QueryAll() {
 
 shared_ptr<DbAccessor> TextDb::Query(const std::string& key) {
   if (!loaded())
-    return shared_ptr<DbAccessor>();
-  return make_shared<TextDbAccessor>(data_, key);
+    return nullptr;
+  return New<TextDbAccessor>(data_, key);
 }
 
 bool TextDb::Fetch(const std::string& key, std::string* value) {
@@ -83,7 +83,8 @@ bool TextDb::Fetch(const std::string& key, std::string* value) {
 }
 
 bool TextDb::Update(const std::string& key, const std::string& value) {
-  if (!loaded() || readonly()) return false;
+  if (!loaded() || readonly())
+    return false;
   DLOG(INFO) << "update db entry: " << key << " => " << value;
   data_[key] = value;
   modified_ = true;
@@ -91,7 +92,8 @@ bool TextDb::Update(const std::string& key, const std::string& value) {
 }
 
 bool TextDb::Erase(const std::string& key) {
-  if (!loaded() || readonly()) return false;
+  if (!loaded() || readonly())
+    return false;
   DLOG(INFO) << "erase db entry: " << key;
   if (data_.erase(key) == 0)
     return false;
@@ -100,7 +102,8 @@ bool TextDb::Erase(const std::string& key) {
 }
 
 bool TextDb::Open() {
-  if (loaded()) return false;
+  if (loaded())
+    return false;
   loaded_ = true;
   readonly_ = false;
   loaded_ = !Exists() || LoadFromFile(file_name());
@@ -121,7 +124,8 @@ bool TextDb::Open() {
 }
 
 bool TextDb::OpenReadOnly() {
-  if (loaded()) return false;
+  if (loaded())
+    return false;
   loaded_ = true;
   readonly_ = false;
   loaded_ = Exists() && LoadFromFile(file_name());
@@ -153,7 +157,8 @@ void TextDb::Clear() {
 }
 
 bool TextDb::Backup(const std::string& snapshot_file) {
-  if (!loaded()) return false;
+  if (!loaded())
+    return false;
   LOG(INFO) << "backing up db '" << name() << "' to " << snapshot_file;
   if (!SaveToFile(snapshot_file)) {
     LOG(ERROR) << "failed to create snapshot file '" << snapshot_file
@@ -164,7 +169,8 @@ bool TextDb::Backup(const std::string& snapshot_file) {
 }
 
 bool TextDb::Restore(const std::string& snapshot_file) {
-  if (!loaded() || readonly()) return false;
+  if (!loaded() || readonly())
+    return false;
   if (!LoadFromFile(snapshot_file)) {
     LOG(ERROR) << "failed to restore db '" << name()
                << "' from '" << snapshot_file << "'.";
@@ -190,7 +196,8 @@ bool TextDb::MetaFetch(const std::string& key, std::string* value) {
 }
 
 bool TextDb::MetaUpdate(const std::string& key, const std::string& value) {
-  if (!loaded() || readonly()) return false;
+  if (!loaded() || readonly())
+    return false;
   DLOG(INFO) << "update db metadata: " << key << " => " << value;
   metadata_[key] = value;
   modified_ = true;

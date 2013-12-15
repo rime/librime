@@ -347,7 +347,7 @@ void ConfigItemRef::set_modified() {
 
 // Config members
 
-Config::Config() : ConfigItemRef(make_shared<ConfigData>()) {
+Config::Config() : ConfigItemRef(New<ConfigData>()) {
 }
 
 Config::~Config() {
@@ -523,7 +523,7 @@ ConfigDataManager::GetConfigData(const std::string& config_file_path) {
   // keep a weak reference to the shared config data in the manager
   weak_ptr<ConfigData>& wp((*this)[config_file_path]);
   if (wp.expired()) {  // create a new copy and load it
-    sp = make_shared<ConfigData>();
+    sp = New<ConfigData>();
     sp->LoadFromFile(config_file_path);
     wp = sp;
   }
@@ -640,17 +640,17 @@ ConfigItemPtr ConfigData::ConvertFromYaml(const YAML::Node& node) {
     return ConfigItemPtr();
   }
   if (YAML::NodeType::Scalar == node.Type()) {
-    return make_shared<ConfigValue>(node.as<std::string>());
+    return New<ConfigValue>(node.as<std::string>());
   }
   if (YAML::NodeType::Sequence == node.Type()) {
-    auto config_list = make_shared<ConfigList>();
+    auto config_list = New<ConfigList>();
     for (auto it = node.begin(), end = node.end(); it != end; ++it) {
       config_list->Append(ConvertFromYaml(*it));
     }
     return config_list;
   }
   else if (YAML::NodeType::Map == node.Type()) {
-    auto config_map = make_shared<ConfigMap>();
+    auto config_map = New<ConfigMap>();
     for (auto it = node.begin(), end = node.end(); it != end; ++it) {
       std::string key = it->first.as<std::string>();
       config_map->Set(key, ConvertFromYaml(it->second));

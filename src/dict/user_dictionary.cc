@@ -76,7 +76,7 @@ void DfsState::RecruitEntry(size_t pos) {
 
 void UserDictEntryIterator::Add(const shared_ptr<DictEntry>& entry) {
   if (!entries_) {
-    entries_ = make_shared<DictEntryList>();
+    entries_ = New<DictEntryList>();
   }
   entries_->push_back(entry);
 }
@@ -251,7 +251,7 @@ UserDictionary::Lookup(const SyllableGraph& syll_graph,
   FetchTickCount();
   state.present_tick = tick_ + 1;
   state.credibility.push_back(initial_credibility);
-  state.collector = make_shared<UserDictEntryCollector>();
+  state.collector = New<UserDictEntryCollector>();
   state.accessor = db_->Query("");
   state.accessor->Jump(" ");  // skip metadata
   std::string prefix;
@@ -458,7 +458,7 @@ shared_ptr<DictEntry> UserDictionary::CreateDictEntry(const std::string& key,
   if (v.tick < present_tick)
     v.dee = algo::formula_d(0, (double)present_tick, v.dee, (double)v.tick);
   // create!
-  e = make_shared<DictEntry>();
+  e = New<DictEntry>();
   e->text = key.substr(separator_pos + 1);
   e->commit_count = v.commits;
   // TODO: argument s not defined...

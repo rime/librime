@@ -230,13 +230,13 @@ CreatePunctCandidate(const std::string& punct, const Segment& segment) {
     is_full_shape = is_ideographic_space || is_full_shape_ascii;
   }
   bool one_key = (segment.end - segment.start == 1);
-  return make_shared<SimpleCandidate>("punct",
-                                      segment.start,
-                                      segment.end,
-                                      punct,
-                                      (is_half_shape ? half_shape :
-                                       is_full_shape ? full_shape : ""),
-                                      one_key ? punct : "");
+  return New<SimpleCandidate>("punct",
+                              segment.start,
+                              segment.end,
+                              punct,
+                              (is_half_shape ? half_shape :
+                               is_full_shape ? full_shape : ""),
+                              one_key ? punct : "");
 }
 
 shared_ptr<Translation> PunctTranslator::Query(const std::string& input,

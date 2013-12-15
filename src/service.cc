@@ -95,7 +95,7 @@ SessionId Service::CreateSession() {
   SessionId id = kInvalidSessionId;
   if (disabled()) return id;
   try {
-    auto session = make_shared<Session>();
+    auto session = New<Session>();
     session->Activate();
     id = reinterpret_cast<uintptr_t>(session.get());
     sessions_[id] = session;

@@ -73,9 +73,10 @@ bool DelimitSyllablesDfs(DelimitSyllableState* state,
 
 }  // anonymous namespace
 
-class ScriptTranslation : public Translation,
-                          public Syllabification,
-                          public enable_shared_from_this<ScriptTranslation>
+class ScriptTranslation
+    : public Translation,
+      public Syllabification,
+      public std::enable_shared_from_this<ScriptTranslation>
 {
  public:
   ScriptTranslation(ScriptTranslator* translator,
@@ -141,13 +142,13 @@ shared_ptr<Translation> ScriptTranslator::Query(const std::string& input,
       !IsUserDictDisabledFor(input);
 
   // the translator should survive translations it creates
-  auto result = make_shared<ScriptTranslation>(this, input, segment.start);
+  auto result = New<ScriptTranslation>(this, input, segment.start);
   if (!result ||
       !result->Evaluate(dict_.get(),
                         enable_user_dict ? user_dict_.get() : NULL)) {
     return nullptr;
   }
-  return make_shared<UniqueFilter>(result);
+  return New<UniqueFilter>(result);
 }
 
 std::string ScriptTranslator::FormatPreedit(const std::string& preedit) {
@@ -317,11 +318,11 @@ shared_ptr<Candidate> ScriptTranslation::Peek() {
     const auto& entry(entries[user_phrase_index_]);
     DLOG(INFO) << "user phrase '" << entry->text
                << "', code length: " << user_phrase_code_length;
-    cand = make_shared<Phrase>(translator_->language(),
-                               "phrase",
-                               start_,
-                               start_ + user_phrase_code_length,
-                               entry);
+    cand = New<Phrase>(translator_->language(),
+                       "phrase",
+                       start_,
+                       start_ + user_phrase_code_length,
+                       entry);
     cand->set_quality(entry->weight +
                       translator_->initial_quality() +
                       (IsNormalSpelling() ? 0.5 : -0.5));
@@ -331,11 +332,11 @@ shared_ptr<Candidate> ScriptTranslation::Peek() {
     const auto& entry(iter.Peek());
     DLOG(INFO) << "phrase '" << entry->text
                << "', code length: " << user_phrase_code_length;
-    cand = make_shared<Phrase>(translator_->language(),
-                               "phrase",
-                               start_,
-                               start_ + phrase_code_length,
-                               entry);
+    cand = New<Phrase>(translator_->language(),
+                       "phrase",
+                       start_,
+                       start_ + phrase_code_length,
+                       entry);
     cand->set_quality(entry->weight +
                       translator_->initial_quality() +
                       (IsNormalSpelling() ? 0 : -1));

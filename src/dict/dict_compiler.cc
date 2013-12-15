@@ -139,7 +139,7 @@ bool DictCompiler::BuildTable(DictSettings* settings,
         LOG(ERROR) << "Error locating entries in vocabulary.";
         continue;
       }
-      auto e = make_shared<DictEntry>();
+      auto e = New<DictEntry>();
       e->code.swap(code);
       e->text.swap(r.text);
       e->weight = r.weight;

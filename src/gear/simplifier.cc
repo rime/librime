@@ -180,7 +180,7 @@ bool Simplifier::Convert(const shared_ptr<Candidate>& original,
           tips = quote_left + original->text() + quote_right;
         }
         result->push_back(
-            make_shared<ShadowCandidate>(
+            New<ShadowCandidate>(
                 original,
                 "simplified",
                 forms[i],
@@ -194,7 +194,7 @@ bool Simplifier::Convert(const shared_ptr<Candidate>& original,
       tips = quote_left + original->text() + quote_right;
     }
     result->push_back(
-        make_shared<ShadowCandidate>(
+        New<ShadowCandidate>(
             original,
             "simplified",
             simplified,

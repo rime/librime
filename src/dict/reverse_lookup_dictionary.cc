@@ -25,7 +25,7 @@ ReverseLookupDictionary::ReverseLookupDictionary(shared_ptr<ReverseDb> db)
 }
 
 ReverseLookupDictionary::ReverseLookupDictionary(const std::string& dict_name)
-    : db_(make_shared<ReverseDb>(dict_name)) {
+    : db_(New<ReverseDb>(dict_name)) {
 }
 
 bool ReverseLookupDictionary::Load() {
@@ -101,7 +101,7 @@ shared_ptr<DictSettings> ReverseLookupDictionary::GetDictSettings() {
   std::string yaml;
   if (db_->MetaFetch("/dict_settings", &yaml)) {
     std::istringstream iss(yaml);
-    settings = make_shared<DictSettings>();
+    settings = New<DictSettings>();
     if (!settings->LoadFromStream(iss)) {
       settings.reset();
     }
@@ -112,8 +112,8 @@ shared_ptr<DictSettings> ReverseLookupDictionary::GetDictSettings() {
 ReverseLookupDictionaryComponent::ReverseLookupDictionaryComponent() {
 }
 
-ReverseLookupDictionary* ReverseLookupDictionaryComponent::Create(
-    const Ticket& ticket) {
+ReverseLookupDictionary*
+ReverseLookupDictionaryComponent::Create(const Ticket& ticket) {
   if (!ticket.schema) return NULL;
   Config* config = ticket.schema->config();
   std::string dict_name;
@@ -124,7 +124,7 @@ ReverseLookupDictionary* ReverseLookupDictionaryComponent::Create(
   }
   auto db = db_pool_[dict_name].lock();
   if (!db) {
-    db = make_shared<ReverseDb>(dict_name);
+    db = New<ReverseDb>(dict_name);
     db_pool_[dict_name] = db;
   }
   return new ReverseLookupDictionary(db);

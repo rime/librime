@@ -180,11 +180,11 @@ void ConcreteEngine::TranslateSegments(Composition* comp) {
     size_t len = segment.end - segment.start;
     if (len == 0)
       continue;
-    std::string input(comp->input().substr(segment.start, len));
+    std::string input = comp->input().substr(segment.start, len);
     DLOG(INFO) << "translating segment: " << input;
     Menu::CandidateFilter cand_filter(
         std::bind(&ConcreteEngine::FilterCandidates, this, &segment, _1, _2));
-    auto menu = make_shared<Menu>(cand_filter);
+    auto menu = New<Menu>(cand_filter);
     for (auto& translator : translators_) {
       auto translation = translator->Query(input, segment, &segment.prompt);
       if (!translation)

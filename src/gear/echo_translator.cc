@@ -37,14 +37,14 @@ shared_ptr<Translation> EchoTranslator::Query(const std::string& input,
                                               std::string* prompt) {
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
-  auto candidate = make_shared<SimpleCandidate>("raw",
-                                                segment.start,
-                                                segment.end,
-                                                input);
+  auto candidate = New<SimpleCandidate>("raw",
+                                        segment.start,
+                                        segment.end,
+                                        input);
   if (candidate) {
     candidate->set_quality(-100);  // lowest priority
   }
-  return make_shared<EchoTranslation>(candidate);
+  return New<EchoTranslation>(candidate);
 }
 
 }  // namespace rime

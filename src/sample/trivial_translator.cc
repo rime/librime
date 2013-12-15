@@ -42,13 +42,13 @@ shared_ptr<Translation> TrivialTranslator::Query(const std::string& input,
   if (output.empty()) {
     return nullptr;
   }
-  auto candidate = make_shared<SimpleCandidate>(
+  auto candidate = New<SimpleCandidate>(
       "trivial",
       segment.start,
       segment.end,
       output,
       ":-)");
-  return make_shared<UniqueTranslation>(candidate);
+  return New<UniqueTranslation>(candidate);
 }
 
 std::string TrivialTranslator::Translate(const std::string& input) {

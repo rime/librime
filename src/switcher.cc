@@ -182,7 +182,7 @@ void Switcher::Activate() {
     seg.prompt = caption_;
     comp->AddSegment(seg);
   }
-  auto menu = make_shared<Menu>();
+  auto menu = New<Menu>();
   comp->back().menu = menu;
   for (auto& translator : translators_) {
     if (auto t = translator->Query("", comp->back(), NULL)) {

@@ -26,7 +26,7 @@ void Uniquifier::Apply(CandidateList* recruited,
       if ((*i)->text() == (*j)->text()) {
         auto u = As<UniquifiedCandidate>(*j);
         if (!u) {
-          u = make_shared<UniquifiedCandidate>(*j, "uniquified");
+          u = New<UniquifiedCandidate>(*j, "uniquified");
           *j = u;
         }
         u->Append(*i);
