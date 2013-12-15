@@ -170,8 +170,9 @@ bool Punctuator::PairPunct(const ConfigItemPtr& definition) {
       return false;
     }
     DLOG(INFO) << "alternating paired punctuation.";
-    (segment.selected_index += oddness_) %= 2;
-    oddness_ = 1 - oddness_;
+    auto& oddness(oddness_[definition]);
+    (segment.selected_index += oddness) %= 2;
+    oddness = 1 - oddness;
     ctx->ConfirmCurrentSelection();
     return true;
   }
