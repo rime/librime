@@ -25,13 +25,13 @@ struct SchemaInfo {
 
 class SwitcherSettings : public CustomSettings {
  public:
-  typedef std::vector<SchemaInfo> SchemaList;
+  using SchemaList = std::vector<SchemaInfo>;
   // a list of schema_ids
-  typedef std::vector<std::string> Selection;
+  using Selection = std::vector<std::string>;
   
   explicit SwitcherSettings(Deployer* deployer);
   bool Load();
-  bool Select(const Selection& selection);
+  bool Select(Selection selection);
   bool SetHotkeys(const std::string& hotkeys);
   
   const SchemaList& available() const { return available_; }

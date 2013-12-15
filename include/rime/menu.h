@@ -25,8 +25,8 @@ struct Page {
 
 class Menu {
  public:
-  typedef std::function<void (CandidateList* recruited,
-                              CandidateList* candidates)> CandidateFilter;
+  using CandidateFilter = std::function<void (CandidateList* recruited,
+                                              CandidateList* candidates)>;
 
   Menu() = default;
   ~Menu() = default;

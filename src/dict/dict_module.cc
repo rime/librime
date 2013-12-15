@@ -21,7 +21,7 @@ static void rime_dict_initialize() {
   using namespace rime;
 
   LOG(INFO) << "registering components from module 'dict'.";
-  Registry &r = Registry::instance();
+  Registry& r = Registry::instance();
 
   r.Register("tabledb", new Component<TableDb>);
   r.Register("stabledb", new Component<StableDb>);

@@ -14,7 +14,7 @@
 using namespace rime;
 
 TEST(AbcSegmentorTest, NoMatch) {
-  Segmentor::Component *component = Segmentor::Require("abc_segmentor");
+  Segmentor::Component* component = Segmentor::Require("abc_segmentor");
   ASSERT_TRUE(component != NULL);
   unique_ptr<Engine> engine(Engine::Create());
   unique_ptr<Segmentor> segmentor(component->Create(engine.get()));
@@ -28,7 +28,7 @@ TEST(AbcSegmentorTest, NoMatch) {
 }
 
 TEST(AbcSegmentorTest, FullMatch) {
-  Segmentor::Component *component = Segmentor::Require("abc_segmentor");
+  Segmentor::Component* component = Segmentor::Require("abc_segmentor");
   ASSERT_TRUE(component != NULL);
   unique_ptr<Engine> engine(Engine::Create());
   unique_ptr<Segmentor> segmentor(component->Create(engine.get()));
@@ -45,7 +45,7 @@ TEST(AbcSegmentorTest, FullMatch) {
 }
 
 TEST(AbcSegmentorTest, PrefixMatch) {
-  Segmentor::Component *component = Segmentor::Require("abc_segmentor");
+  Segmentor::Component* component = Segmentor::Require("abc_segmentor");
   ASSERT_TRUE(component != NULL);
   unique_ptr<Engine> engine(Engine::Create());
   unique_ptr<Segmentor> segmentor(component->Create(engine.get()));

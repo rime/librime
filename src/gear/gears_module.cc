@@ -38,7 +38,7 @@ static void rime_gears_initialize() {
   using namespace rime;
 
   LOG(INFO) << "registering components from module 'gears'.";
-  Registry &r = Registry::instance();
+  Registry& r = Registry::instance();
 
   // processors
   r.Register("ascii_composer", new Component<AsciiComposer>);

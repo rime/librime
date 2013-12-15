@@ -29,16 +29,15 @@ UserDictManager::UserDictManager(Deployer* deployer)
 }
 
 void UserDictManager::GetUserDictList(UserDictList* user_dict_list) {
-  if (!user_dict_list) return;
+  if (!user_dict_list)
+    return;
   user_dict_list->clear();
   if (!fs::exists(path_) || !fs::is_directory(path_)) {
     LOG(INFO) << "directory '" << path_.string() << "' does not exist.";
     return;
   }
-  fs::directory_iterator it(path_);
-  fs::directory_iterator end;
-  for (; it != end; ++it) {
-    std::string name(it->path().filename().string());
+  for (fs::directory_iterator it(path_), end; it != end; ++it) {
+    std::string name = it->path().filename().string();
     if (boost::ends_with(name, UserDb<TreeDb>::extension)) {
       boost::erase_last(name, UserDb<TreeDb>::extension);
       user_dict_list->push_back(name);
@@ -79,12 +78,13 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
   {
     temp.Close();
     temp.Remove();
-  } BOOST_SCOPE_EXIT_END
+  }
+  BOOST_SCOPE_EXIT_END
   if (!temp.Restore(snapshot_file))
     return false;
   if (!temp.IsUserDb())
     return false;
-  std::string db_name(temp.GetDbName());
+  std::string db_name = temp.GetDbName();
   if (db_name.empty())
     return false;
   UserDb<TreeDb> dest(db_name);
@@ -111,7 +111,8 @@ int UserDictManager::Export(const std::string& dict_name,
   BOOST_SCOPE_EXIT( (&db) )
   {
     db.Close();
-  } BOOST_SCOPE_EXIT_END
+  }
+  BOOST_SCOPE_EXIT_END
   if (!db.IsUserDb())
     return -1;
   TsvWriter writer(text_file, TableDb::format.formatter);
@@ -137,7 +138,8 @@ int UserDictManager::Import(const std::string& dict_name,
   BOOST_SCOPE_EXIT( (&db) )
   {
     db.Close();
-  } BOOST_SCOPE_EXIT_END
+  }
+  BOOST_SCOPE_EXIT_END
   if (!db.IsUserDb())
     return -1;
   TsvReader reader(text_file, TableDb::format.parser);
@@ -175,9 +177,9 @@ bool UserDictManager::UpgradeUserDict(const std::string& dict_name) {
         dict_name + UserDb<TextDb>::snapshot_extension;
     fs::path snapshot_path = trash / snapshot_file;
     return db.Backup(snapshot_path.string()) &&
-        db.Close() &&
-        db.Remove() &&
-        Restore(snapshot_path.string());
+           db.Close() &&
+           db.Remove() &&
+           Restore(snapshot_path.string());
   }
   return true;
 }
@@ -193,15 +195,13 @@ bool UserDictManager::Synchronize(const std::string& dict_name) {
       return false;
     }
   }
-  fs::directory_iterator it(sync_dir);
-  fs::directory_iterator end;
   // *.userdb.txt
   std::string snapshot_file =
       dict_name + UserDb<TextDb>::snapshot_extension;
   // *.userdb.kct.snapshot
   std::string legacy_snapshot_file =
       dict_name + UserDb<TreeDb>::extension + ".snapshot";
-  for (; it != end; ++it) {
+  for (fs::directory_iterator it(sync_dir), end; it != end; ++it) {
     if (!fs::is_directory(it->path()))
       continue;
     fs::path file_path = it->path() / snapshot_file;

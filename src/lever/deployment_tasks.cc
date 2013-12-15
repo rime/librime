@@ -131,7 +131,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
                << default_config_path.string() << "'.";
     return false;
   }
-  ConfigListPtr schema_list = config.GetList("schema_list");
+  auto schema_list = config.GetList("schema_list");
   if (!schema_list) {
     LOG(WARNING) << "schema list not defined.";
     return false;
@@ -141,13 +141,14 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   int success = 0;
   int failure = 0;
   std::map<std::string, std::string> schemas;
-  for (ConfigList::Iterator it = schema_list->begin();
-       it != schema_list->end(); ++it) {
-    ConfigMapPtr item = As<ConfigMap>(*it);
-    if (!item) continue;
-    ConfigValuePtr schema_property = item->GetValue("schema");
-    if (!schema_property) continue;
-    const std::string &schema_id(schema_property->str());
+  for (auto it = schema_list->begin(); it != schema_list->end(); ++it) {
+    auto item = As<ConfigMap>(*it);
+    if (!item)
+      continue;
+    auto schema_property = item->GetValue("schema");
+    if (!schema_property)
+      continue;
+    const std::string& schema_id(schema_property->str());
     LOG(INFO) << "schema: " << schema_id;
     std::string schema_path;
     if (schemas.find(schema_id) == schemas.end()) {
@@ -169,25 +170,24 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
       ++failure;
   }
   // find dependencies
-  for (std::map<std::string, std::string>::const_iterator s = schemas.begin();
-       s != schemas.end(); ++s) {
+  for (auto s = schemas.cbegin(); s != schemas.cend(); ++s) {
     Config schema_config;
     // user could have customized dependencies in the resulting schema
     std::string user_schema_path = GetSchemaPath(deployer, s->first, false);
     if (!schema_config.LoadFromFile(user_schema_path))
       continue;
-    ConfigListPtr dependencies = schema_config.GetList("schema/dependencies");
+    auto dependencies = schema_config.GetList("schema/dependencies");
     if (!dependencies)
       continue;
-    for (ConfigList::Iterator d = dependencies->begin();
-         d != dependencies->end(); ++d) {
-      ConfigValuePtr dependency = As<ConfigValue>(*d);
-      if (!dependency) continue;
+    for (auto d = dependencies->begin(); d != dependencies->end(); ++d) {
+      auto dependency = As<ConfigValue>(*d);
+      if (!dependency)
+        continue;
       std::string dependency_id(dependency->str());
       if (schemas.find(dependency_id) != schemas.end())  // already built
         continue;
       LOG(INFO) << "new dependency: " << dependency_id;
-      std::string dependency_path(GetSchemaPath(deployer, dependency_id, true));
+      std::string dependency_path = GetSchemaPath(deployer, dependency_id, true);
       schemas[dependency_id] = dependency_path;
       if (dependency_path.empty()) {
         LOG(WARNING) << "missing schema file for dependency '" << dependency_id << "'.";
@@ -286,15 +286,14 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     return true;
   }
   DictionaryComponent component;
-  unique_ptr<Dictionary> dict;
-  dict.reset(component.Create(Ticket(&schema, "translator")));
+  unique_ptr<Dictionary> dict(component.Create({&schema, "translator"}));
   if (!dict) {
     LOG(ERROR) << "Error creating dictionary '" << dict_name << "'.";
     return false;
   }
   LOG(INFO) << "preparing dictionary '" << dict_name << "'.";
-  DictFileFinder finder =
-      std::bind(&find_dict_file, _1, shared_data_path, user_data_path);
+  DictFileFinder finder = std::bind(&find_dict_file,
+                                    _1, shared_data_path, user_data_path);
   DictCompiler dict_compiler(dict.get(), finder);
   if (verbose_) {
     dict_compiler.set_options(DictCompiler::kRebuild | DictCompiler::kDump);
@@ -309,8 +308,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
 
 ConfigFileUpdate::ConfigFileUpdate(TaskInitializer arg) {
   try {
-    std::pair<std::string, std::string> p =
-        boost::any_cast< std::pair<std::string, std::string>>(arg);
+    auto p = boost::any_cast< std::pair<std::string, std::string>>(arg);
     file_name_ = p.first;
     version_key_ = p.second;
   }
@@ -338,10 +336,9 @@ bool PrebuildAllSchemas::Run(Deployer* deployer) {
   fs::path user_data_path(deployer->user_data_dir);
   if (!fs::exists(shared_data_path) || !fs::is_directory(shared_data_path))
     return false;
-  fs::directory_iterator iter(shared_data_path);
-  fs::directory_iterator end;
   bool success = true;
-  for (; iter != end; ++iter) {
+  for (fs::directory_iterator iter(shared_data_path), end;
+       iter != end; ++iter) {
     fs::path entry(iter->path());
     if (boost::ends_with(entry.string(), ".schema.yaml")) {
       unique_ptr<DeploymentTask> t(new SchemaUpdate(entry.string()));
@@ -361,9 +358,8 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
     return false;
   bool success = false;
   // test existing link
-  fs::directory_iterator test(user_data_path);
-  fs::directory_iterator end;
-  for (; test != end; ++test) {
+  for (fs::directory_iterator test(user_data_path), end;
+       test != end; ++test) {
     fs::path entry(test->path());
     if (fs::is_symlink(entry) && entry.extension().string() == ".bin") {
       try {
@@ -380,8 +376,8 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
     }
   }
   // create link
-  fs::directory_iterator iter(shared_data_path);
-  for (; iter != end; ++iter) {
+  for (fs::directory_iterator iter(shared_data_path), end;
+       iter != end; ++iter) {
     fs::path entry(iter->path());
     fs::path link(user_data_path / entry.filename());
     try {
@@ -405,8 +401,7 @@ bool UserDictUpgration::Run(Deployer* deployer) {
   UserDictList dicts;
   manager.GetUserDictList(&dicts);
   bool ok = true;
-  UserDictList::const_iterator it = dicts.begin();
-  for (; it != dicts.end(); ++it) {
+  for (auto it = dicts.cbegin(); it != dicts.cend(); ++it) {
     if (!manager.UpgradeUserDict(*it))
       ok = false;
   }
@@ -427,18 +422,18 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
   if (!fs::exists(backup_dir)) {
     boost::system::error_code ec;
     if (!fs::create_directories(backup_dir, ec)) {
-      LOG(ERROR) << "error creating directory '" << backup_dir.string() << "'.";
+      LOG(ERROR) << "error creating directory '"
+                 << backup_dir.string() << "'.";
       return false;
     }
   }
   int success = 0, failure = 0, latest = 0, skipped = 0;
-  fs::directory_iterator iter(user_data_path);
-  fs::directory_iterator end;
-  for (; iter != end; ++iter) {
+  for (fs::directory_iterator iter(user_data_path), end;
+       iter != end; ++iter) {
     fs::path entry(iter->path());
     if (!fs::is_regular_file(entry))
       continue;
-    const std::string file_extension(entry.extension().string());
+    auto file_extension = entry.extension().string();
     bool is_yaml_file = file_extension == ".yaml";
     bool is_text_file = file_extension == ".txt";
     if (!is_yaml_file && !is_text_file)
@@ -482,13 +477,12 @@ bool CleanupTrash::Run(Deployer* deployer) {
     return false;
   fs::path trash = user_data_path / "trash";
   int success = 0, failure = 0;
-  fs::directory_iterator iter(user_data_path);
-  fs::directory_iterator end;
-  for (; iter != end; ++iter) {
+  for (fs::directory_iterator iter(user_data_path), end;
+       iter != end; ++iter) {
     fs::path entry(iter->path());
     if (!fs::is_regular_file(entry))
       continue;
-    std::string filename(entry.filename().string());
+    auto filename = entry.filename().string();
     if (filename == "rime.log" ||
         boost::ends_with(filename, ".userdb.kct.old") ||
         boost::ends_with(filename, ".userdb.kct.snapshot")) {
@@ -537,12 +531,9 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
 
   bool success = true;
   int removed = 0;
-  std::vector<std::string>::const_iterator i = dirs.begin();
-  for (; i != dirs.end(); ++i) {
+  for (auto i = dirs.cbegin(); i != dirs.cend(); ++i) {
     DLOG(INFO) << "temp directory: " << *i;
-    fs::directory_iterator j(*i);
-    fs::directory_iterator end;
-    for (; j != end; ++j) {
+    for (fs::directory_iterator j(*i), end; j != end; ++j) {
       fs::path entry(j->path());
       std::string file_name(entry.filename().string());
       try {

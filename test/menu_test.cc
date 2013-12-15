@@ -23,7 +23,7 @@ class TranslationAlpha : public Translation {
   }
   shared_ptr<Candidate> Peek() {
     if (exhausted())
-      return shared_ptr<Candidate>();
+      return nullptr;
     return make_shared<SimpleCandidate>("alpha", 0, 5, "Alpha");
   }
 };
@@ -46,7 +46,7 @@ class TranslationBeta : public Translation {
 
   shared_ptr<Candidate> Peek() {
     if (exhausted())
-      return shared_ptr<Candidate>();
+      return nullptr;
     return candies_[cursor_];
   }
 
@@ -57,8 +57,8 @@ class TranslationBeta : public Translation {
 
 TEST(RimeMenuTest, RecipeAlphaBeta) {
   Menu menu;
-  shared_ptr<Translation> alpha = make_shared<TranslationAlpha>();
-  shared_ptr<Translation> beta = make_shared<TranslationBeta>();
+  auto alpha = New<TranslationAlpha>();
+  auto beta = New<TranslationBeta>();
   menu.AddTranslation(alpha);
   menu.AddTranslation(beta);
   // explicit call to Menu::Prepare() is not necessary

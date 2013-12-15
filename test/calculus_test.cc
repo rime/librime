@@ -8,7 +8,8 @@
 #include <rime/common.h>
 #include <rime/algo/calculus.h>
 
-static const char* kTransliteration = "xlit abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+static const char* kTransliteration =
+    "xlit abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 static const char* kTransformation = "xform/^([zcs])h(.*)$/$1$2/";
 static const char* kErasion = "erase/^[czs]h[aoe]ng?$/";
 static const char* kDerivation = "derive/^([zcs])h/$1/";

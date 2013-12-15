@@ -31,28 +31,27 @@ TrivialTranslator::TrivialTranslator(const Ticket& ticket)
   dictionary_["wan"] = "\xe8\x90\xac";  // 萬
 }
 
-shared_ptr<Translation> TrivialTranslator::Query(const std::string &input,
-                                                 const Segment &segment,
+shared_ptr<Translation> TrivialTranslator::Query(const std::string& input,
+                                                 const Segment& segment,
                                                  std::string* prompt) {
-  if (!segment.HasTag(tag_))
-    return shared_ptr<Translation>();
+  if (!segment.HasTag("abc"))
+    return nullptr;
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
-  std::string output(Translate(input));
+  std::string output = Translate(input);
   if (output.empty()) {
-    return shared_ptr<Translation>();
+    return nullptr;
   }
-  shared_ptr<Candidate> candidate =
-      make_shared<SimpleCandidate>(
-          "trivial",
-          segment.start,
-          segment.end,
-          output,
-          ":-)");
+  auto candidate = make_shared<SimpleCandidate>(
+      "trivial",
+      segment.start,
+      segment.end,
+      output,
+      ":-)");
   return make_shared<UniqueTranslation>(candidate);
 }
 
-std::string TrivialTranslator::Translate(const std::string &input) {
+std::string TrivialTranslator::Translate(const std::string& input) {
   const size_t kMinPinyinLength = 2;
   const size_t kMaxPinyinLength = 6;
   std::string result;
@@ -61,8 +60,7 @@ std::string TrivialTranslator::Translate(const std::string &input) {
     int translated = 0;
     size_t len = (std::max)(kMaxPinyinLength, input_len - i);
     for ( ; len >= kMinPinyinLength; --len) {
-      TrivialDictionary::const_iterator it =
-          dictionary_.find(input.substr(i, len));
+      auto it = dictionary_.find(input.substr(i, len));
       if (it != dictionary_.end()) {
         result += it->second;
         translated = len;

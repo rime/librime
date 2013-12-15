@@ -4,6 +4,7 @@
 //
 // 2012-02-18 GONG Chen <chen.sst@gmail.com>
 //
+#include <utility>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <rime/config.h>
@@ -33,12 +34,12 @@ bool SwitcherSettings::Load() {
   return true;
 }
 
-bool SwitcherSettings::Select(const Selection& selection) {
-  selection_ = selection;
-  ConfigListPtr schema_list = make_shared<ConfigList>();
+bool SwitcherSettings::Select(Selection selection) {
+  selection_ = std::move(selection);
+  auto schema_list = New<ConfigList>();
   for (const std::string& schema_id : selection_) {
-    ConfigMapPtr item = make_shared<ConfigMap>();
-    item->Set("schema", make_shared<ConfigValue>(schema_id));
+    auto item = New<ConfigMap>();
+    item->Set("schema", New<ConfigValue>(schema_id));
     schema_list->Append(item);
   }
   return Customize("schema_list", schema_list);
@@ -54,17 +55,18 @@ void SwitcherSettings::GetAvailableSchemasFromDirectory(const fs::path& dir) {
     LOG(INFO) << "directory '" << dir.string() << "' does not exist.";
     return;
   }
-  fs::directory_iterator it(dir);
-  fs::directory_iterator end;
-  for (; it != end; ++it) {
+  for (fs::directory_iterator it(dir), end;
+       it != end; ++it) {
     std::string file_path(it->path().string());
     if (boost::ends_with(file_path, ".schema.yaml")) {
       Config config;
       if (config.LoadFromFile(file_path)) {
         SchemaInfo info;
         // required properties
-        if (!config.GetString("schema/schema_id", &info.schema_id)) continue;
-        if (!config.GetString("schema/name", &info.name)) continue;
+        if (!config.GetString("schema/schema_id", &info.schema_id))
+          continue;
+        if (!config.GetString("schema/name", &info.name))
+          continue;
         // check for duplicates
         bool duplicated = false;
         for (const SchemaInfo& other : available_) {
@@ -73,13 +75,13 @@ void SwitcherSettings::GetAvailableSchemasFromDirectory(const fs::path& dir) {
             break;
           }
         }
-        if (duplicated) continue;
+        if (duplicated)
+          continue;
         // details
         config.GetString("schema/version", &info.version);
-        ConfigListPtr authors = config.GetList("schema/author");
-        if (authors) {
+        if (auto authors = config.GetList("schema/author")) {
           for (size_t i = 0; i < authors->size(); ++i) {
-            ConfigValuePtr author = authors->GetValueAt(i);
+            auto author = authors->GetValueAt(i);
             if (author && !author->str().empty()) {
               if (!info.author.empty())
                 info.author += "\n";
@@ -96,34 +98,36 @@ void SwitcherSettings::GetAvailableSchemasFromDirectory(const fs::path& dir) {
 }
 
 void SwitcherSettings::GetSelectedSchemasFromConfig() {
-  ConfigListPtr schema_list = config_.GetList("schema_list");
+  auto schema_list = config_.GetList("schema_list");
   if (!schema_list) {
     LOG(WARNING) << "schema list not defined.";
     return;
   }
-  ConfigList::Iterator it = schema_list->begin();
-  for (; it != schema_list->end(); ++it) {
-    ConfigMapPtr item = As<ConfigMap>(*it);
-    if (!item) continue;
-    ConfigValuePtr schema_property = item->GetValue("schema");
-    if (!schema_property) continue;
-    const std::string &schema_id(schema_property->str());
+  for (auto it = schema_list->begin(); it != schema_list->end(); ++it) {
+    auto item = As<ConfigMap>(*it);
+    if (!item)
+      continue;
+    auto schema_property = item->GetValue("schema");
+    if (!schema_property)
+      continue;
+    const std::string& schema_id(schema_property->str());
     selection_.push_back(schema_id);
   }
 }
 
 void SwitcherSettings::GetHotkeysFromConfig() {
-  ConfigListPtr hotkeys = config_.GetList("switcher/hotkeys");
+  auto hotkeys = config_.GetList("switcher/hotkeys");
   if (!hotkeys) {
     LOG(WARNING) << "hotkeys not defined.";
     return;
   }
-  ConfigList::Iterator it = hotkeys->begin();
-  for (; it != hotkeys->end(); ++it) {
-    ConfigValuePtr item = As<ConfigValue>(*it);
-    if (!item) continue;
-    const std::string &hotkey(item->str());
-    if (hotkey.empty()) continue;
+  for (auto it = hotkeys->begin(); it != hotkeys->end(); ++it) {
+    auto item = As<ConfigValue>(*it);
+    if (!item)
+      continue;
+    const std::string& hotkey(item->str());
+    if (hotkey.empty())
+      continue;
     if (!hotkeys_.empty())
       hotkeys_ += ", ";
     hotkeys_ += hotkey;

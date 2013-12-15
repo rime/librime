@@ -20,7 +20,7 @@ namespace rime {
 
 class Deployer;
 
-typedef boost::any TaskInitializer;
+using TaskInitializer = boost::any;
 
 class DeploymentTask : public Class<DeploymentTask, TaskInitializer> {
  public:

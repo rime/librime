@@ -13,7 +13,7 @@ using namespace rime;
 
 class RimeConfigTest : public ::testing::Test {
  protected:
-  RimeConfigTest() {}
+  RimeConfigTest() = default;
 
   virtual void SetUp() {
     component_.reset(new ConfigComponent("%s.yaml"));
@@ -29,10 +29,10 @@ class RimeConfigTest : public ::testing::Test {
 
 TEST(RimeConfigComponentTest, RealCreationWorkflow) {
   // registration
-  Registry &r = Registry::instance();
+  Registry& r = Registry::instance();
   r.Register("test_config", new ConfigComponent("%s.yaml"));
   // finding component
-  Config::Component *cc = Config::Require("test_config");
+  Config::Component* cc = Config::Require("test_config");
   ASSERT_TRUE(cc != NULL);
   // creation
   unique_ptr<Config> config(cc->Create("config_test"));
@@ -146,11 +146,11 @@ TEST(RimeConfigWriterTest, Greetings) {
   unique_ptr<Config> config(new Config);
   ASSERT_TRUE(bool(config));
   // creating contents
-  EXPECT_TRUE(config->SetItem("/", make_shared<ConfigMap>()));
-  ConfigItemPtr terran_greetings = make_shared<ConfigValue>("Greetings, Terrans!");
-  ConfigItemPtr zerg_greetings = make_shared<ConfigValue>("Zergsss are coming!");
-  ConfigItemPtr zergs_coming = make_shared<ConfigValue>(true);
-  ConfigItemPtr zergs_population = make_shared<ConfigValue>(1000000);
+  EXPECT_TRUE(config->SetItem("/", New<ConfigMap>()));
+  ConfigItemPtr terran_greetings = New<ConfigValue>("Greetings, Terrans!");
+  ConfigItemPtr zerg_greetings = New<ConfigValue>("Zergsss are coming!");
+  ConfigItemPtr zergs_coming = New<ConfigValue>(true);
+  ConfigItemPtr zergs_population = New<ConfigValue>(1000000);
   EXPECT_TRUE(config->SetItem("greetings", terran_greetings));
   EXPECT_TRUE(config->SetItem("zergs/overmind/greetings", zerg_greetings));
   EXPECT_TRUE(config->SetItem("zergs/going", zergs_coming));

@@ -21,7 +21,7 @@ TEST(RimeEncoderTest, Settings) {
   rime::TableEncoder encoder;
   encoder.LoadSettings(&config);
   EXPECT_TRUE(encoder.loaded());
-  const std::vector<rime::TableEncodingRule>& rules(encoder.encoding_rules());
+  const auto& rules(encoder.encoding_rules());
   ASSERT_EQ(3, rules.size());
   EXPECT_EQ(2, rules[0].min_word_length);
   EXPECT_EQ(2, rules[0].max_word_length);
