@@ -24,6 +24,14 @@ static inline bool belongs_to(char ch, const std::string& charset) {
   return charset.find(ch) != std::string::npos;
 }
 
+static bool reached_max_code_length(const shared_ptr<Candidate>& cand,
+                                    int max_code_length) {
+  if (!cand)
+    return false;
+  int code_length = static_cast<int>(cand->end() - cand->start());
+  return code_length >= max_code_length;
+}
+
 static bool is_auto_selectable(const shared_ptr<Candidate>& cand,
                                const std::string& input,
                                const std::string& delimiters) {
@@ -58,10 +66,6 @@ Speller::Speller(const Ticket& ticket) : Processor(ticket),
     config->GetString("speller/finals", &finals_);
     config->GetInt("speller/max_code_length", &max_code_length_);
     config->GetBool("speller/auto_select", &auto_select_);
-    if (!config->GetBool("speller/auto_select_unique_candidate",
-                         &auto_select_unique_candidate_)) {
-      auto_select_unique_candidate_ = auto_select_;
-    }
     config->GetBool("speller/use_space", &use_space_);
   }
   if (initials_.empty()) {
@@ -90,8 +94,7 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
       ctx->HasMenu()) {
     const Segment& seg(ctx->composition()->back());
     if (auto cand = seg.GetSelectedCandidate()) {
-      int code_length = static_cast<int>(cand->end() - cand->start());
-      if (code_length == max_code_length_ &&  // exceeds max code length
+      if (reached_max_code_length(cand, max_code_length_) &&
           is_auto_selectable(cand, ctx->input(), delimiters_)) {
         ctx->ConfirmCurrentSelection();
       }
@@ -105,25 +108,34 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
   ctx->PushInput(key_event.keycode());
   ctx->ConfirmPreviousSelection();  // so that next BackSpace won't revert
                                     // previous selection
-  if (auto_select_unique_candidate_ && ctx->HasMenu()) {
+  if (auto_select_&& ctx->HasMenu()) {
     const Segment& seg(ctx->composition()->back());
     bool unique_candidate = seg.menu->Prepare(2) == 1;
+    auto cand = seg.GetSelectedCandidate();
     if (unique_candidate &&
-        is_auto_selectable(seg.GetSelectedCandidate(),
-                           ctx->input(), delimiters_)) {
+        (max_code_length_ == 0 ||  // at any length if not specified
+         reached_max_code_length(cand, max_code_length_)) &&
+        is_auto_selectable(cand, ctx->input(), delimiters_)) {
       DLOG(INFO) << "auto-select unique candidate.";
       ctx->ConfirmCurrentSelection();
       return kAccepted;
     }
   }
   if (auto_select_ && !ctx->HasMenu() && previous_segment.menu) {
+    size_t converted_length = previous_segment.end;
+    std::string converted = ctx->input().substr(0, converted_length);
     if (is_auto_selectable(previous_segment.GetSelectedCandidate(),
-                           ctx->input().substr(0, previous_segment.end),
-                           delimiters_)) {
+                           converted, delimiters_)) {
       DLOG(INFO) << "auto-select previous word";
       ctx->composition()->pop_back();
       ctx->composition()->push_back(previous_segment);
       ctx->ConfirmCurrentSelection();
+      if (ctx->get_option("_auto_commit")) {
+        std::string rest = ctx->input().substr(converted_length);
+        ctx->set_input(converted);
+        ctx->Commit();
+        ctx->set_input(rest);
+      }
       return kAccepted;
     }
   }

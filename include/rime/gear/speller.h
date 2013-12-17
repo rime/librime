@@ -26,7 +26,6 @@ class Speller : public Processor {
   std::string finals_;
   int max_code_length_ = 0;
   bool auto_select_ = false;
-  bool auto_select_unique_candidate_ = false;
   bool use_space_ = false;
 };
 
