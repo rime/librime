@@ -4,6 +4,7 @@
 //
 // 2011-10-27 GONG Chen <chen.sst@gmail.com>
 //
+#include <utility>
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/composition.h>
@@ -89,17 +90,10 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
       expecting_an_initial(ctx, alphabet_, finals_)) {
     return kNoop;
   }
-  if (is_initial &&  // an initial triggers auto-select
-      max_code_length_ > 0 &&  // at a fixed code length
-      ctx->HasMenu()) {
-    const Segment& seg(ctx->composition()->back());
-    if (auto cand = seg.GetSelectedCandidate()) {
-      if (reached_max_code_length(cand, max_code_length_) &&
-          is_auto_selectable(cand, ctx->input(), delimiters_)) {
-        ctx->ConfirmCurrentSelection();
-      }
-    }
+  if (is_initial && AutoSelectAtMaxCodeLength(ctx)) {
+    DLOG(INFO) << "auto-select at max code length.";
   }
+  // make a backup of previous conversion before modifying input
   Segment previous_segment;
   if (auto_select_ && ctx->HasMenu()) {
     previous_segment = ctx->composition()->back();
@@ -108,38 +102,102 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
   ctx->PushInput(key_event.keycode());
   ctx->ConfirmPreviousSelection();  // so that next BackSpace won't revert
                                     // previous selection
-  if (auto_select_&& ctx->HasMenu()) {
-    const Segment& seg(ctx->composition()->back());
-    bool unique_candidate = seg.menu->Prepare(2) == 1;
-    auto cand = seg.GetSelectedCandidate();
-    if (unique_candidate &&
-        (max_code_length_ == 0 ||  // at any length if not specified
-         reached_max_code_length(cand, max_code_length_)) &&
-        is_auto_selectable(cand, ctx->input(), delimiters_)) {
-      DLOG(INFO) << "auto-select unique candidate.";
-      ctx->ConfirmCurrentSelection();
-      return kAccepted;
-    }
+  if (AutoSelectUniqueCandidate(ctx)) {
+    DLOG(INFO) << "auto-select unique candidate.";
+    return kAccepted;
   }
-  if (auto_select_ && !ctx->HasMenu() && previous_segment.menu) {
-    size_t converted_length = previous_segment.end;
-    std::string converted = ctx->input().substr(0, converted_length);
-    if (is_auto_selectable(previous_segment.GetSelectedCandidate(),
-                           converted, delimiters_)) {
-      DLOG(INFO) << "auto-select previous word";
-      ctx->composition()->pop_back();
-      ctx->composition()->push_back(previous_segment);
-      ctx->ConfirmCurrentSelection();
-      if (ctx->get_option("_auto_commit")) {
-        std::string rest = ctx->input().substr(converted_length);
-        ctx->set_input(converted);
-        ctx->Commit();
-        ctx->set_input(rest);
-      }
-      return kAccepted;
-    }
+  if (AutoSelectPreviousMatch(ctx, &previous_segment)) {
+    DLOG(INFO) << "auto-select previous match.";
+    return kAccepted;
   }
   return kAccepted;
+}
+
+bool Speller::AutoSelectAtMaxCodeLength(Context* ctx) {
+  if (max_code_length_ <= 0)
+    return false;
+  if (!ctx->HasMenu())
+    return false;
+  const Segment& seg(ctx->composition()->back());
+  auto cand = seg.GetSelectedCandidate();
+  if (cand &&
+      reached_max_code_length(cand, max_code_length_) &&
+      is_auto_selectable(cand, ctx->input(), delimiters_)) {
+    ctx->ConfirmCurrentSelection();
+    return true;
+  }
+  return false;
+}
+
+bool Speller::AutoSelectUniqueCandidate(Context* ctx) {
+  if (!auto_select_)
+    return false;
+  if (!ctx->HasMenu())
+    return false;
+  const Segment& seg(ctx->composition()->back());
+  bool unique_candidate = seg.menu->Prepare(2) == 1;
+  if (!unique_candidate)
+    return false;
+  auto cand = seg.GetSelectedCandidate();
+  if ((max_code_length_ == 0 ||  // at any length if not specified
+       reached_max_code_length(cand, max_code_length_)) &&
+      is_auto_selectable(cand, ctx->input(), delimiters_)) {
+    ctx->ConfirmCurrentSelection();
+    return true;
+  }
+  return false;
+}
+
+bool Speller::AutoSelectPreviousMatch(Context* ctx,
+                                      Segment* previous_segment) {
+  if (!auto_select_)
+    return false;
+  if (ctx->HasMenu())  // if and only if current conversion fails
+    return false;
+  if (!previous_segment->menu)
+    return false;
+  std::string input = ctx->input();
+  size_t start = previous_segment->start;
+  size_t end = previous_segment->end;
+  std::string converted = input.substr(0, end);
+  if (is_auto_selectable(previous_segment->GetSelectedCandidate(),
+                         converted, delimiters_)) {
+    // reuse previous match
+    ctx->composition()->pop_back();
+    ctx->composition()->push_back(std::move(*previous_segment));
+    ctx->ConfirmCurrentSelection();
+    if (ctx->get_option("_auto_commit")) {
+      ctx->set_input(converted);
+      ctx->Commit();
+      std::string rest = input.substr(end);
+      ctx->set_input(rest);
+    }
+    return true;
+  }
+  // backdate to find an earlier match
+  while (--end > start) {
+    converted = input.substr(0, end);
+    ctx->set_input(converted);
+    if (!ctx->HasMenu())
+      break;
+    const Segment& segment(ctx->composition()->back());
+    if (is_auto_selectable(segment.GetSelectedCandidate(),
+                           converted, delimiters_)) {
+      // select previous match
+      if (ctx->get_option("_auto_commit")) {
+        ctx->Commit();
+        std::string rest = input.substr(end);
+        ctx->set_input(rest);
+      }
+      else {
+        ctx->ConfirmCurrentSelection();
+        ctx->set_input(input);
+      }
+      return true;
+    }
+  }
+  ctx->set_input(input);
+  return false;
 }
 
 }  // namespace rime
