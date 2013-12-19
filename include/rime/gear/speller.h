@@ -26,6 +26,7 @@ class Speller : public Processor {
   bool AutoSelectAtMaxCodeLength(Context* ctx);
   bool AutoSelectUniqueCandidate(Context* ctx);
   bool AutoSelectPreviousMatch(Context* ctx, Segment* previous_segment);
+  bool FindEarlierMatch(Context* ctx, size_t start, size_t end);
 
   std::string alphabet_;
   std::string delimiters_;

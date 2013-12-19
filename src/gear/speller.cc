@@ -156,9 +156,9 @@ bool Speller::AutoSelectPreviousMatch(Context* ctx,
     return false;
   if (!previous_segment->menu)
     return false;
-  std::string input = ctx->input();
   size_t start = previous_segment->start;
   size_t end = previous_segment->end;
+  std::string input = ctx->input();
   std::string converted = input.substr(0, end);
   if (is_auto_selectable(previous_segment->GetSelectedCandidate(),
                          converted, delimiters_)) {
@@ -174,9 +174,16 @@ bool Speller::AutoSelectPreviousMatch(Context* ctx,
     }
     return true;
   }
-  // backdate to find an earlier match
+  return FindEarlierMatch(ctx, start ,end);
+}
+
+bool Speller::FindEarlierMatch(Context* ctx, size_t start, size_t end) {
+  if (end <= start + 1)
+    return false;
+  std::string input = ctx->input();
+  std::string converted = input;
   while (--end > start) {
-    converted = input.substr(0, end);
+    converted.resize(end);
     ctx->set_input(converted);
     if (!ctx->HasMenu())
       break;
@@ -188,10 +195,19 @@ bool Speller::AutoSelectPreviousMatch(Context* ctx,
         ctx->Commit();
         std::string rest = input.substr(end);
         ctx->set_input(rest);
+        end = 0;
       }
       else {
         ctx->ConfirmCurrentSelection();
         ctx->set_input(input);
+      }
+      if (!ctx->HasMenu()) {
+        size_t next_start = ctx->composition()->GetCurrentStartPosition();
+        size_t next_end = ctx->composition()->GetCurrentEndPosition();
+        if (next_start == end) {
+          // continue splitting
+          FindEarlierMatch(ctx, next_start, next_end);
+        }
       }
       return true;
     }
