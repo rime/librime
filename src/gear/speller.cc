@@ -102,13 +102,11 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
   ctx->PushInput(key_event.keycode());
   ctx->ConfirmPreviousSelection();  // so that next BackSpace won't revert
                                     // previous selection
-  if (AutoSelectUniqueCandidate(ctx)) {
-    DLOG(INFO) << "auto-select unique candidate.";
-    return kAccepted;
-  }
   if (AutoSelectPreviousMatch(ctx, &previous_segment)) {
     DLOG(INFO) << "auto-select previous match.";
-    return kAccepted;
+  }
+  if (AutoSelectUniqueCandidate(ctx)) {
+    DLOG(INFO) << "auto-select unique candidate.";
   }
   return kAccepted;
 }
