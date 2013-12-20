@@ -299,7 +299,8 @@ shared_ptr<Translation> TableTranslator::Query(const std::string& input,
     translation.reset();  // discard futile translation
   }
   if (enable_sentence_ && !translation) {
-    translation = MakeSentence(input, segment.start);
+    translation = MakeSentence(input, segment.start,
+                               /* include_prefix_phrases = */true);
   }
   else if (sentence_over_completion_ &&
            starts_with_completion(translation)) {
@@ -410,8 +411,10 @@ SentenceTranslation::SentenceTranslation(TableTranslator* translator,
                                          size_t start)
     : translator_(translator), input_(input), start_(start) {
   sentence_.swap(sentence);
-  collector_.swap(*collector);
-  user_phrase_collector_.swap(*ucollector);
+  if (collector)
+    collector_.swap(*collector);
+  if (ucollector)
+    user_phrase_collector_.swap(*ucollector);
   PrepareSentence();
   CheckEmpty();
 }
@@ -554,7 +557,8 @@ static size_t consume_trailing_delimiters(size_t pos,
 }
 
 shared_ptr<Translation>
-TableTranslator::MakeSentence(const std::string& input, size_t start) {
+TableTranslator::MakeSentence(const std::string& input, size_t start,
+                              bool include_prefix_phrases) {
   bool filter_by_charset = enable_charset_filter_ &&
       !engine_->context()->get_option("extended_charset");
   DictEntryCollector collector;
@@ -666,8 +670,8 @@ TableTranslator::MakeSentence(const std::string& input, size_t start) {
     result = New<SentenceTranslation>(
         this,
         sentences[input.length()],
-        &collector,
-        &user_phrase_collector,
+        include_prefix_phrases ? &collector : NULL,
+        include_prefix_phrases ? &user_phrase_collector : NULL,
         input,
         start);
     if (result && filter_by_charset) {

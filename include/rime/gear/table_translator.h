@@ -34,7 +34,8 @@ class TableTranslator : public Translator,
   virtual bool Memorize(const CommitEntry& commit_entry);
 
   shared_ptr<Translation> MakeSentence(const std::string& input,
-                                       size_t start);
+                                       size_t start,
+                                       bool include_prefix_phrases = false);
 
   UnityTableEncoder* encoder() const { return encoder_.get(); }
 
