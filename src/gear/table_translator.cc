@@ -218,6 +218,8 @@ TableTranslator::TableTranslator(const Ticket& ticket)
                     &enable_charset_filter_);
     config->GetBool(name_space_ + "/enable_sentence",
                     &enable_sentence_);
+    config->GetBool(name_space_ + "/sentence_over_completion",
+                    &sentence_over_completion_);
     config->GetBool(name_space_ + "/enable_encoder",
                     &enable_encoder_);
     config->GetBool(name_space_ + "/encode_commit_history",
@@ -229,6 +231,13 @@ TableTranslator::TableTranslator(const Ticket& ticket)
     encoder_.reset(new UnityTableEncoder(user_dict_.get()));
     encoder_->Load(ticket);
   }
+}
+
+static bool starts_with_completion(shared_ptr<Translation> translation) {
+  if (!translation)
+    return false;
+  auto cand = translation->Peek();
+  return cand && cand->type() == "completion";
 }
 
 shared_ptr<Translation> TableTranslator::Query(const std::string& input,
@@ -291,6 +300,12 @@ shared_ptr<Translation> TableTranslator::Query(const std::string& input,
   }
   if (enable_sentence_ && !translation) {
     translation = MakeSentence(input, segment.start);
+  }
+  else if (sentence_over_completion_ &&
+           starts_with_completion(translation)) {
+    if (auto sentence = MakeSentence(input, segment.start)) {
+      translation = sentence + translation;
+    }
   }
   if (translation) {
     translation = New<UniqueFilter>(translation);
