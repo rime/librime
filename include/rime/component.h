@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-03-14 GONG Chen <chen.sst@gmail.com>
@@ -15,13 +15,13 @@ namespace rime {
 
 class ComponentBase {
  public:
-  ComponentBase() {}
-  virtual ~ComponentBase() {}
+  ComponentBase() = default;
+  virtual ~ComponentBase() = default;
 };
 
 template <class T, class Arg>
 struct Class {
-  typedef Arg Initializer;
+  using Initializer = Arg;
 
   class Component : public ComponentBase {
    public:

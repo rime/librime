@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
@@ -26,11 +26,11 @@ struct RawDictEntry {
 };
 
 // code -> weight
-typedef std::map<std::string, double> WeightMap;
+using WeightMap = std::map<std::string, double>;
 // word -> { code -> weight }
-typedef std::map<std::string, WeightMap> WordMap;
+using WordMap = std::map<std::string, WeightMap>;
 // [ (word, weight), ... ]
-typedef std::queue<std::pair<std::string, std::string> > EncodeQueue;
+using EncodeQueue = std::queue<std::pair<std::string, std::string>>;
 
 class PresetVocabulary;
 class DictSettings;
@@ -39,7 +39,7 @@ class EntryCollector : public PhraseCollector {
  public:
   Syllabary syllabary;
   std::vector<RawDictEntry> entries;
-  size_t num_entries;
+  size_t num_entries = 0;
   ReverseLookupTable stems;
 
  public:
@@ -65,8 +65,8 @@ class EntryCollector : public PhraseCollector {
   void Finish();
 
  protected:
-  scoped_ptr<PresetVocabulary> preset_vocabulary;
-  scoped_ptr<Encoder> encoder;
+  unique_ptr<PresetVocabulary> preset_vocabulary;
+  unique_ptr<Encoder> encoder;
   EncodeQueue encode_queue;
   std::set<std::string/* word */> collection;
   WordMap words;

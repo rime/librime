@@ -13,6 +13,7 @@ features:
   - OS-specific wrappers working consistently on Windows, Linux and OS X
 
 build dependencies:
+  - compiler with C++11 support
   - cmake>=2.8
   - libboost>=1.46
   - libglog

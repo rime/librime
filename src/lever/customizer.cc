@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-12-12 GONG Chen <chen.sst@gmail.com>
@@ -117,17 +117,16 @@ bool Customizer::UpdateConfigFile() {
       LOG(ERROR) << "Error loading customization file.";
       return false;
     }
-    ConfigMapPtr patch = custom_config.GetMap("patch");
-    if (!patch) {
-      LOG(WARNING) << "'patch' not found in customization file.";
-    }
-    else {
-      for (ConfigMap::Iterator it = patch->begin(); it != patch->end(); ++it) {
+    if (auto patch = custom_config.GetMap("patch")) {
+      for (auto it = patch->begin(); it != patch->end(); ++it) {
         if (!dest_config.SetItem(it->first, it->second)) {
           LOG(ERROR) << "Error applying customization: '" << it->first << "'.";
           return false;
         }
       }
+    }
+    else {
+      LOG(WARNING) << "'patch' not found in customization file.";
     }
     // update config version
     dest_config.GetString(version_key_, &dest_version);

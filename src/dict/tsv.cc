@@ -1,5 +1,5 @@
 //
-// Copyleft 2013 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2013-04-14 GONG Chen <chen.sst@gmail.com>
@@ -73,8 +73,8 @@ int TsvWriter::operator() (Source* source) {
   while (source->Get(&key, &value)) {
     row.clear();
     if (formatter_(key, value, &row) && !row.empty()) {
-      for (Tsv::const_iterator it = row.begin(); it != row.end(); ++it) {
-        if (it != row.begin())
+      for (auto it = row.cbegin(); it != row.cend(); ++it) {
+        if (it != row.cbegin())
           fout << '\t';
         fout << *it;
       }

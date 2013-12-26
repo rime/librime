@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-10-23 GONG Chen <chen.sst@gmail.com>
@@ -21,7 +21,7 @@ class Editor : public Processor {
   typedef ProcessResult CharHandler(Context* ctx, int ch);
 
   Editor(const Ticket& ticket, bool auto_commit);
-  ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
+  ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
   virtual Handler OnSpace;
   virtual Handler OnBackSpace;

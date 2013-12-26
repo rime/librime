@@ -5,12 +5,14 @@
 // 2013-07-17 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #include <utf8.h>
 #include <rime/config.h>
 #include <rime/algo/encoder.h>
 
 namespace rime {
+
+static const int kEncoderDfsLimit = 32;
+static const int kMaxPhraseLength = 32;
 
 std::string RawCode::ToString() const {
   return boost::join(*this, " ");
@@ -24,7 +26,7 @@ void RawCode::FromString(const std::string &code_str) {
 }
 
 TableEncoder::TableEncoder(PhraseCollector* collector)
-    : Encoder(collector), loaded_(false) {
+    : Encoder(collector), loaded_(false), max_phrase_length_(0) {
 }
 
 /*
@@ -44,15 +46,16 @@ TableEncoder::TableEncoder(PhraseCollector* collector)
 */
 bool TableEncoder::LoadSettings(Config* config) {
   loaded_ = false;
+  max_phrase_length_ = 0;
   encoding_rules_.clear();
   exclude_patterns_.clear();
   tail_anchor_.clear();
 
   if (!config) return false;
 
-  if (ConfigListPtr rules = config->GetList("encoder/rules")) {
-    for (ConfigList::Iterator it = rules->begin(); it != rules->end(); ++it) {
-      ConfigMapPtr rule = As<ConfigMap>(*it);
+  if (auto rules = config->GetList("encoder/rules")) {
+    for (auto it = rules->begin(); it != rules->end(); ++it) {
+      auto rule = As<ConfigMap>(*it);
       if (!rule || !rule->HasKey("formula"))
         continue;
       const std::string formula(rule->GetValue("formula")->str());
@@ -67,9 +70,11 @@ bool TableEncoder::LoadSettings(Config* config) {
           continue;
         }
         r.min_word_length = r.max_word_length = length;
+        if (max_phrase_length_ < length) {
+          max_phrase_length_ = length;
+        }
       }
-      else if (ConfigListPtr range =
-               As<ConfigList>(rule->Get("length_in_range"))) {
+      else if (auto range = As<ConfigList>(rule->Get("length_in_range"))) {
         if (range->size() != 2 ||
             !range->GetValueAt(0) ||
             !range->GetValueAt(1) ||
@@ -79,14 +84,19 @@ bool TableEncoder::LoadSettings(Config* config) {
           LOG(ERROR) << "invalid range.";
           continue;
         }
+        if (max_phrase_length_ < r.max_word_length) {
+          max_phrase_length_ = r.max_word_length;
+        }
       }
       encoding_rules_.push_back(r);
     }
+    if (max_phrase_length_ > kMaxPhraseLength) {
+      max_phrase_length_ = kMaxPhraseLength;
+    }
   }
-  if (ConfigListPtr excludes = config->GetList("encoder/exclude_patterns")) {
-    for (ConfigList::Iterator it = excludes->begin();
-         it != excludes->end(); ++it) {
-      ConfigValuePtr pattern = As<ConfigValue>(*it);
+  if (auto excludes = config->GetList("encoder/exclude_patterns")) {
+    for (auto it = excludes->begin(); it != excludes->end(); ++it) {
+      auto pattern = As<ConfigValue>(*it);
       if (!pattern)
         continue;
       exclude_patterns_.push_back(boost::regex(pattern->str()));
@@ -104,8 +114,7 @@ bool TableEncoder::ParseFormula(const std::string& formula,
     LOG(ERROR) << "bad formula: '%s'" << formula;
     return false;
   }
-  for (std::string::const_iterator it = formula.begin(), end = formula.end();
-       it != end; ) {
+  for (auto it = formula.cbegin(), end = formula.cend(); it != end; ) {
     CodeCoords c;
     if (*it < 'A' || *it > 'Z') {
       LOG(ERROR) << "invalid character index in formula: '%s'" << formula;
@@ -125,7 +134,7 @@ bool TableEncoder::ParseFormula(const std::string& formula,
 }
 
 bool TableEncoder::IsCodeExcluded(const std::string& code) {
-  BOOST_FOREACH(const boost::regex& pattern, exclude_patterns_) {
+  for (const boost::regex& pattern : exclude_patterns_) {
     if (boost::regex_match(code, pattern))
       return true;
   }
@@ -134,7 +143,7 @@ bool TableEncoder::IsCodeExcluded(const std::string& code) {
 
 bool TableEncoder::Encode(const RawCode& code, std::string* result) {
   int num_syllables = static_cast<int>(code.size());
-  BOOST_FOREACH(const TableEncodingRule& rule, encoding_rules_) {
+  for (const TableEncodingRule& rule : encoding_rules_) {
     if (num_syllables < rule.min_word_length ||
         num_syllables > rule.max_word_length) {
       continue;
@@ -142,7 +151,7 @@ bool TableEncoder::Encode(const RawCode& code, std::string* result) {
     result->clear();
     CodeCoords previous = {0, 0};
     CodeCoords encoded = {0, 0};
-    BOOST_FOREACH(const CodeCoords& current, rule.coords) {
+    for (const CodeCoords& current : rule.coords) {
       CodeCoords c(current);
       if (c.char_index < 0) {
         c.char_index += num_syllables;
@@ -234,15 +243,25 @@ int TableEncoder::CalculateCodeIndex(const std::string& code, int index,
 
 bool TableEncoder::EncodePhrase(const std::string& phrase,
                                 const std::string& value) {
+  size_t phrase_length = utf8::unchecked::distance(
+      phrase.c_str(), phrase.c_str() + phrase.length());
+  if (static_cast<int>(phrase_length) > max_phrase_length_)
+    return false;
+
   RawCode code;
-  return DfsEncode(phrase, value, 0, &code);
+  int limit = kEncoderDfsLimit;
+  return DfsEncode(phrase, value, 0, &code, &limit);
 }
 
 bool TableEncoder::DfsEncode(const std::string& phrase,
                              const std::string& value,
                              size_t start_pos,
-                             RawCode* code) {
+                             RawCode* code,
+                             int* limit) {
   if (start_pos == phrase.length()) {
+    if (limit) {
+      --*limit;
+    }
     std::string encoded;
     if (Encode(*code, &encoded)) {
       DLOG(INFO) << "encode '" << phrase << "': "
@@ -251,8 +270,8 @@ bool TableEncoder::DfsEncode(const std::string& phrase,
       return true;
     }
     else {
-      LOG(WARNING) << "failed to encode '" << phrase << "': "
-                   << "[" << code->ToString() << "]";
+      DLOG(WARNING) << "failed to encode '" << phrase << "': "
+                    << "[" << code->ToString() << "]";
       return false;
     }
   }
@@ -264,14 +283,17 @@ bool TableEncoder::DfsEncode(const std::string& phrase,
   bool ret = false;
   std::vector<std::string> translations;
   if (collector_->TranslateWord(word, &translations)) {
-    BOOST_FOREACH(const std::string& x, translations) {
+    for (const std::string& x : translations) {
       if (IsCodeExcluded(x)) {
         continue;
       }
       code->push_back(x);
-      bool ok = DfsEncode(phrase, value, start_pos + word_len, code);
+      bool ok = DfsEncode(phrase, value, start_pos + word_len, code, limit);
       ret = ret || ok;
       code->pop_back();
+      if (limit && *limit <= 0) {
+        return ret;
+      }
     }
   }
   return ret;
@@ -283,15 +305,25 @@ ScriptEncoder::ScriptEncoder(PhraseCollector* collector)
 
 bool ScriptEncoder::EncodePhrase(const std::string& phrase,
                                  const std::string& value) {
+  size_t phrase_length = utf8::unchecked::distance(
+      phrase.c_str(), phrase.c_str() + phrase.length());
+  if (static_cast<int>(phrase_length) > kMaxPhraseLength)
+    return false;
+
   RawCode code;
-  return DfsEncode(phrase, value, 0, &code);
+  int limit = kEncoderDfsLimit;
+  return DfsEncode(phrase, value, 0, &code, &limit);
 }
 
 bool ScriptEncoder::DfsEncode(const std::string& phrase,
                               const std::string& value,
                               size_t start_pos,
-                              RawCode* code) {
+                              RawCode* code,
+                              int* limit) {
   if (start_pos == phrase.length()) {
+    if (limit) {
+      --*limit;
+    }
     collector_->CreateEntry(phrase, code->ToString(), value);
     return true;
   }
@@ -300,11 +332,14 @@ bool ScriptEncoder::DfsEncode(const std::string& phrase,
     std::string word(phrase.substr(start_pos, k));
     std::vector<std::string> translations;
     if (collector_->TranslateWord(word, &translations)) {
-      BOOST_FOREACH(const std::string& x, translations) {
+      for (const std::string& x : translations) {
         code->push_back(x);
-        bool ok = DfsEncode(phrase, value, start_pos + k, code);
+        bool ok = DfsEncode(phrase, value, start_pos + k, code, limit);
         ret = ret || ok;
         code->pop_back();
+        if (limit && *limit <= 0) {
+          return ret;
+        }
       }
     }
   }

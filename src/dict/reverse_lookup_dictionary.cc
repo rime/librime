@@ -1,12 +1,11 @@
 //
-// Copyleft 2012 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2012-01-05 GONG Chen <chen.sst@gmail.com>
 //
 #include <sstream>
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <rime/schema.h>
 #include <rime/ticket.h>
@@ -26,7 +25,7 @@ ReverseLookupDictionary::ReverseLookupDictionary(shared_ptr<ReverseDb> db)
 }
 
 ReverseLookupDictionary::ReverseLookupDictionary(const std::string& dict_name)
-    : db_(boost::make_shared<ReverseDb>(dict_name)) {
+    : db_(New<ReverseDb>(dict_name)) {
 }
 
 bool ReverseLookupDictionary::Load() {
@@ -35,13 +34,13 @@ bool ReverseLookupDictionary::Load() {
   return db_->Exists() && db_->OpenReadOnly();
 }
 
-bool ReverseLookupDictionary::ReverseLookup(const std::string &text,
-                                            std::string *result) {
+bool ReverseLookupDictionary::ReverseLookup(const std::string& text,
+                                            std::string* result) {
   return db_ && db_->Fetch(text, result);
 }
 
-bool ReverseLookupDictionary::LookupStems(const std::string &text,
-                                            std::string *result) {
+bool ReverseLookupDictionary::LookupStems(const std::string& text,
+                                            std::string* result) {
 return db_ && db_->Fetch(text + kStemKeySuffix, result);
 }
 
@@ -57,22 +56,22 @@ bool ReverseLookupDictionary::Build(DictSettings* settings,
     return false;
   ReverseLookupTable rev_table;
   int syllable_id = 0;
-  BOOST_FOREACH(const std::string& syllable, syllabary) {
-    Vocabulary::const_iterator it = vocabulary.find(syllable_id++);
+  for (const std::string& syllable : syllabary) {
+    auto it = vocabulary.find(syllable_id++);
     if (it == vocabulary.end())
       continue;
-    const DictEntryList& entries(it->second.entries);
-    BOOST_FOREACH(const shared_ptr<DictEntry>& e, entries) {
+    const auto& entries(it->second.entries);
+    for (const auto& e : entries) {
       rev_table[e->text].insert(syllable);
     }
   }
   // save reverse lookup entries
-  BOOST_FOREACH(const ReverseLookupTable::value_type& v, rev_table) {
+  for (const auto& v : rev_table) {
     std::string code_list(boost::algorithm::join(v.second, " "));
     db_->Update(v.first, code_list);
   }
   // save stems
-  BOOST_FOREACH(const ReverseLookupTable::value_type& v, stems) {
+  for (const auto& v : stems) {
     std::string key(v.first + kStemKeySuffix);
     std::string code_list(boost::algorithm::join(v.second, " "));
     db_->Update(key, code_list);
@@ -102,7 +101,7 @@ shared_ptr<DictSettings> ReverseLookupDictionary::GetDictSettings() {
   std::string yaml;
   if (db_->MetaFetch("/dict_settings", &yaml)) {
     std::istringstream iss(yaml);
-    settings = make_shared<DictSettings>();
+    settings = New<DictSettings>();
     if (!settings->LoadFromStream(iss)) {
       settings.reset();
     }
@@ -113,19 +112,19 @@ shared_ptr<DictSettings> ReverseLookupDictionary::GetDictSettings() {
 ReverseLookupDictionaryComponent::ReverseLookupDictionaryComponent() {
 }
 
-ReverseLookupDictionary* ReverseLookupDictionaryComponent::Create(
-    const Ticket& ticket) {
+ReverseLookupDictionary*
+ReverseLookupDictionaryComponent::Create(const Ticket& ticket) {
   if (!ticket.schema) return NULL;
-  Config *config = ticket.schema->config();
+  Config* config = ticket.schema->config();
   std::string dict_name;
   if (!config->GetString(ticket.name_space + "/dictionary",
                          &dict_name)) {
     // missing!
     return NULL;
   }
-  shared_ptr<ReverseDb> db(db_pool_[dict_name].lock());
+  auto db = db_pool_[dict_name].lock();
   if (!db) {
-    db = boost::make_shared<ReverseDb>(dict_name);
+    db = New<ReverseDb>(dict_name);
     db_pool_[dict_name] = db;
   }
   return new ReverseLookupDictionary(db);

@@ -1,5 +1,5 @@
 //
-// Copyleft 2013 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2013-04-16 GONG Chen <chen.sst@gmail.com>
@@ -13,23 +13,25 @@
 
 namespace rime {
 
-typedef uint64_t TickCount;
+using TickCount = uint64_t;
 
 struct UserDbValue {
-  int commits;
-  double dee;
-  TickCount tick;
+  int commits = 0;
+  double dee = 0.0;
+  TickCount tick = 0;
 
-  UserDbValue();
+  UserDbValue() = default;
   UserDbValue(const std::string& value);
+
   std::string Pack() const;
-  bool Unpack(const std::string &value);
+  bool Unpack(const std::string& value);
 };
 
 template <class BaseDb>
 class UserDb : public BaseDb {
  public:
   explicit UserDb(const std::string& name);
+
   virtual bool CreateMetadata();
   virtual bool Backup(const std::string& snapshot_file);
   virtual bool Restore(const std::string& snapshot_file);

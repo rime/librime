@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-05-07 GONG Chen <chen.sst@gmail.com>
@@ -17,17 +17,17 @@ class ComponentBase;
 
 class Registry {
  public:
-  typedef std::map<std::string, ComponentBase*> ComponentMap;
+  using ComponentMap = std::map<std::string, ComponentBase*>;
 
   ComponentBase* Find(const std::string& name);
-  void Register(const std::string& name, ComponentBase *component);
+  void Register(const std::string& name, ComponentBase* component);
   void Unregister(const std::string& name);
   void Clear();
 
   static Registry& instance();
 
  private:
-  Registry() {}
+  Registry() = default;
 
   ComponentMap map_;
 };

@@ -1,3 +1,17 @@
+2013-12-26  GONG Chen  <chen.sst@gmail.com>
+
+	* new build dependency: compiler with C++11 support.
+	tested with GCC 4.8.2, Apple LLVM version 5.0, MSVC 12 (2013).
+	* encoder: disable warnings for phrase encode failures in log output;
+	limit the number of results in encoding a phrase with multiple solutions.
+	* punctuator: fixed a bug in matching nested "pairs of 'symbols'".
+	* speller: better support for auto-committing, allowing users of table
+	based input schemata to omit explicitly selecting candidates in many cases.
+	* schema_list_translator: option for static schema list order.
+	* table_translator: fixed the range of CJK-D in charset filter.
+
+	- Release: 1.1
+
 2013-11-10  GONG Chen  <chen.sst@gmail.com>
 
 	* rime_api: version 1.0 breaks ABI compatiblility.

@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-10-30 GONG Chen <chen.sst@gmail.com>
@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <map>
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/scope_exit.hpp>
 #include <rime/common.h>
@@ -32,10 +31,10 @@ struct DfsState {
   std::string key;
   std::string value;
 
-  bool IsExactMatch(const std::string &prefix) {
+  bool IsExactMatch(const std::string& prefix) {
     return boost::starts_with(key, prefix + '\t');
   }
-  bool IsPrefixMatch(const std::string &prefix) {
+  bool IsPrefixMatch(const std::string& prefix) {
     return boost::starts_with(key, prefix);
   }
   void RecruitEntry(size_t pos);
@@ -47,13 +46,13 @@ struct DfsState {
     }
     return true;
   }
-  bool ForwardScan(const std::string &prefix) {
+  bool ForwardScan(const std::string& prefix) {
     if (!accessor->Jump(prefix)) {
       return false;
     }
     return NextEntry();
   }
-  bool Backdate(const std::string &prefix) {
+  bool Backdate(const std::string& prefix) {
     DLOG(INFO) << "backdate; prefix: " << prefix;
     if (!accessor->Reset()) {
       LOG(WARNING) << "backdating failed for '" << prefix << "'.";
@@ -64,9 +63,8 @@ struct DfsState {
 };
 
 void DfsState::RecruitEntry(size_t pos) {
-  shared_ptr<DictEntry> e =
-      UserDictionary::CreateDictEntry(key, value, present_tick,
-                                      credibility.back());
+  auto e = UserDictionary::CreateDictEntry(key, value, present_tick,
+                                           credibility.back());
   if (e) {
     e->code = code;
     DLOG(INFO) << "add entry at pos " << pos;
@@ -78,7 +76,7 @@ void DfsState::RecruitEntry(size_t pos) {
 
 void UserDictEntryIterator::Add(const shared_ptr<DictEntry>& entry) {
   if (!entries_) {
-    entries_ = make_shared<DictEntryList>();
+    entries_ = New<DictEntryList>();
   }
   entries_->push_back(entry);
 }
@@ -97,7 +95,6 @@ bool UserDictEntryIterator::Release(DictEntryList* receiver) {
   index_ = 0;
   return true;
 }
-
 
 shared_ptr<DictEntry> UserDictEntryIterator::Peek() {
   shared_ptr<DictEntry> result;
@@ -120,8 +117,8 @@ bool UserDictEntryIterator::Next() {
 
 // UserDictionary members
 
-UserDictionary::UserDictionary(const shared_ptr<Db> &db)
-    : db_(db), tick_(0), transaction_time_(0) {
+UserDictionary::UserDictionary(const shared_ptr<Db>& db)
+    : db_(db) {
 }
 
 UserDictionary::~UserDictionary() {
@@ -130,8 +127,8 @@ UserDictionary::~UserDictionary() {
   }
 }
 
-void UserDictionary::Attach(const shared_ptr<Table> &table,
-                            const shared_ptr<Prism> &prism) {
+void UserDictionary::Attach(const shared_ptr<Table>& table,
+                            const shared_ptr<Prism>& prism) {
   table_ = table;
   prism_ = prism;
 }
@@ -141,9 +138,8 @@ bool UserDictionary::Load() {
     return false;
   if (!db_->loaded() && !db_->Open()) {
     // try to recover managed db in available work thread
-    DeploymentTask::Component* task =
-        DeploymentTask::Require("userdb_recovery_task");
     Deployer& deployer(Service::instance().deployer());
+    auto task = DeploymentTask::Require("userdb_recovery_task");
     if (task && Is<Recoverable>(db_) && !deployer.IsWorking()) {
       deployer.ScheduleTask(shared_ptr<DeploymentTask>(task->Create(db_)));
       deployer.StartWork();
@@ -186,34 +182,37 @@ bool UserDictionary::readonly() const {
 // note that backdating works only for normal or fuzzy spellings, but not for
 // abbreviations such as 'shsh' in the previous example.
 
-void UserDictionary::DfsLookup(const SyllableGraph &syll_graph,
+void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
                                size_t current_pos,
-                               const std::string &current_prefix,
-                               DfsState *state) {
-  SpellingIndices::const_iterator index = syll_graph.indices.find(current_pos);
+                               const std::string& current_prefix,
+                               DfsState* state) {
+  auto index = syll_graph.indices.find(current_pos);
   if (index == syll_graph.indices.end()) {
     return;
   }
   DLOG(INFO) << "dfs lookup starts from " << current_pos;
   std::string prefix;
-  BOOST_FOREACH(const SpellingIndex::value_type& spelling, index->second) {
+  for (const auto& spelling : index->second) {
     DLOG(INFO) << "prefix: '" << current_prefix << "'"
                << ", syll_id: " << spelling.first
                << ", num_spellings: " << spelling.second.size();
     state->code.push_back(spelling.first);
     BOOST_SCOPE_EXIT( (&state) ) {
       state->code.pop_back();
-    } BOOST_SCOPE_EXIT_END
+    }
+    BOOST_SCOPE_EXIT_END
     if (!TranslateCodeToString(state->code, &prefix))
       continue;
     for (size_t i = 0; i < spelling.second.size(); ++i) {
-      const SpellingProperties* props = spelling.second[i];
-      if (i > 0 && props->type >= kAbbreviation) continue;
+      auto props = spelling.second[i];
+      if (i > 0 && props->type >= kAbbreviation)
+        continue;
       state->credibility.push_back(
           state->credibility.back() * props->credibility);
       BOOST_SCOPE_EXIT( (&state) ) {
         state->credibility.pop_back();
-      } BOOST_SCOPE_EXIT_END
+      }
+      BOOST_SCOPE_EXIT_END
       size_t end_pos = props->end_pos;
       DLOG(INFO) << "edge: [" << current_pos << ", " << end_pos << ")";
       if (prefix != state->key) {  // 'a b c |d ' > 'a b c \tabracadabra'
@@ -228,8 +227,8 @@ void UserDictionary::DfsLookup(const SyllableGraph &syll_graph,
           break;
       }
       // the caller can limit the number of syllables to look up
-      if ((!state->depth_limit || state->code.size() < state->depth_limit)
-          && state->IsPrefixMatch(prefix)) {  // 'b |e ' vs. 'b e f \tBefore'
+      if ((!state->depth_limit || state->code.size() < state->depth_limit) &&
+          state->IsPrefixMatch(prefix)) {  // 'b |e ' vs. 'b e f \tBefore'
         DfsLookup(syll_graph, end_pos, prefix, state);
       }
     }
@@ -240,27 +239,27 @@ void UserDictionary::DfsLookup(const SyllableGraph &syll_graph,
 }
 
 shared_ptr<UserDictEntryCollector>
-UserDictionary::Lookup(const SyllableGraph &syll_graph,
+UserDictionary::Lookup(const SyllableGraph& syll_graph,
                        size_t start_pos,
                        size_t depth_limit,
                        double initial_credibility) {
   if (!table_ || !prism_ || !loaded() ||
       start_pos >= syll_graph.interpreted_length)
-    return shared_ptr<UserDictEntryCollector>();
+    return nullptr;
   DfsState state;
   state.depth_limit = depth_limit;
   FetchTickCount();
   state.present_tick = tick_ + 1;
   state.credibility.push_back(initial_credibility);
-  state.collector = make_shared<UserDictEntryCollector>();
+  state.collector = New<UserDictEntryCollector>();
   state.accessor = db_->Query("");
   state.accessor->Jump(" ");  // skip metadata
   std::string prefix;
   DfsLookup(syll_graph, start_pos, prefix, &state);
   if (state.collector->empty())
-    return shared_ptr<UserDictEntryCollector>();
+    return nullptr;
   // sort each group of homophones by weight
-  BOOST_FOREACH(UserDictEntryCollector::value_type &v, *state.collector) {
+  for (auto& v : *state.collector) {
     v.second.Sort();
   }
   return state.collector;
@@ -280,22 +279,22 @@ size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
   std::string key;
   std::string value;
   std::string full_code;
-  shared_ptr<DbAccessor> a = db_->Query(input);
-  if (!a || a->exhausted()) {
+  auto accessor = db_->Query(input);
+  if (!accessor || accessor->exhausted()) {
     if (resume_key)
       *resume_key = kEnd;
     return 0;
   }
   if (resume_key && !resume_key->empty()) {
-    if (!a->Jump(*resume_key) ||
-        !a->GetNextRecord(&key, &value)) {
+    if (!accessor->Jump(*resume_key) ||
+        !accessor->GetNextRecord(&key, &value)) {
       *resume_key = kEnd;
       return 0;
     }
     DLOG(INFO) << "resume lookup after: " << key;
   }
   std::string last_key(key);
-  while (a->GetNextRecord(&key, &value)) {
+  while (accessor->GetNextRecord(&key, &value)) {
     DLOG(INFO) << "key : " << key << ", value: " << value;
     bool is_exact_match = (len < key.length() && key[len] == ' ');
     if (!is_exact_match && !predictive) {
@@ -303,8 +302,7 @@ size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
       break;
     }
     last_key = key;
-    shared_ptr<DictEntry> e =
-        CreateDictEntry(key, value, present_tick, 1.0, &full_code);
+    auto e = CreateDictEntry(key, value, present_tick, 1.0, &full_code);
     if (!e)
       continue;
     e->custom_code = full_code;
@@ -401,7 +399,7 @@ bool UserDictionary::FetchTickCount() {
 }
 
 bool UserDictionary::NewTransaction() {
-  shared_ptr<Transactional> db = As<Transactional>(db_);
+  auto db = As<Transactional>(db_);
   if (!db)
     return false;
   CommitPendingTransaction();
@@ -410,7 +408,7 @@ bool UserDictionary::NewTransaction() {
 }
 
 bool UserDictionary::RevertRecentTransaction() {
-  shared_ptr<Transactional> db = As<Transactional>(db_);
+  auto db = As<Transactional>(db_);
   if (!db || !db->in_transaction())
     return false;
   if (time(NULL) - transaction_time_ > 3/*seconds*/)
@@ -419,19 +417,19 @@ bool UserDictionary::RevertRecentTransaction() {
 }
 
 bool UserDictionary::CommitPendingTransaction() {
-  shared_ptr<Transactional> db = As<Transactional>(db_);
+  auto db = As<Transactional>(db_);
   if (db && db->in_transaction()) {
     return db->CommitTransaction();
   }
   return false;
 }
 
-bool UserDictionary::TranslateCodeToString(const Code &code,
+bool UserDictionary::TranslateCodeToString(const Code& code,
                                            std::string* result) {
   if (!table_ || !result) return false;
   result->clear();
-  BOOST_FOREACH(const int &syllable_id, code) {
-    const char *spelling = table_->GetSyllableById(syllable_id);
+  for (const int& syllable_id : code) {
+    const char* spelling = table_->GetSyllableById(syllable_id);
     if (!spelling) {
       LOG(ERROR) << "Error translating syllable_id '" << syllable_id << "'.";
       result->clear();
@@ -460,7 +458,7 @@ shared_ptr<DictEntry> UserDictionary::CreateDictEntry(const std::string& key,
   if (v.tick < present_tick)
     v.dee = algo::formula_d(0, (double)present_tick, v.dee, (double)v.tick);
   // create!
-  e = make_shared<DictEntry>();
+  e = New<DictEntry>();
   e->text = key.substr(separator_pos + 1);
   e->commit_count = v.commits;
   // TODO: argument s not defined...
@@ -485,8 +483,9 @@ UserDictionaryComponent::UserDictionaryComponent() {
 }
 
 UserDictionary* UserDictionaryComponent::Create(const Ticket& ticket) {
-  if (!ticket.schema) return NULL;
-  Config *config = ticket.schema->config();
+  if (!ticket.schema)
+    return NULL;
+  Config* config = ticket.schema->config();
   bool enable_user_dict = true;
   config->GetBool(ticket.name_space + "/enable_user_dict", &enable_user_dict);
   if (!enable_user_dict)
@@ -511,14 +510,14 @@ UserDictionary* UserDictionaryComponent::Create(const Ticket& ticket) {
     // user specified db class
   }
   // obtain userdb object
-  shared_ptr<Db> db(db_pool_[dict_name].lock());
+  auto db = db_pool_[dict_name].lock();
   if (!db) {
-    Db::Component* c = Db::Require(db_class);
-    if (!c) {
+    auto component = Db::Require(db_class);
+    if (!component) {
       LOG(ERROR) << "undefined db class '" << db_class << "'.";
       return NULL;
     }
-    db.reset(c->Create(dict_name));
+    db.reset(component->Create(dict_name));
     db_pool_[dict_name] = db;
   }
   return new UserDictionary(db);

@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-06-20 GONG Chen <chen.sst@gmail.com>
@@ -15,8 +15,8 @@ class EchoTranslator : public Translator {
  public:
   EchoTranslator(const Ticket& ticket);
 
-  virtual shared_ptr<Translation> Query(const std::string &input,
-                                        const Segment &segment,
+  virtual shared_ptr<Translation> Query(const std::string& input,
+                                        const Segment& segment,
                                         std::string* prompt);
 };
 

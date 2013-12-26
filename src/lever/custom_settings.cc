@@ -1,5 +1,5 @@
 //
-// Copyleft 2012 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2012-02-26 GONG Chen <chen.sst@gmail.com>
@@ -18,8 +18,9 @@ namespace rime {
 CustomSettings::CustomSettings(Deployer* deployer,
                                const std::string& config_id,
                                const std::string& generator_id)
-    : deployer_(deployer), modified_(false),
-      config_id_(config_id), generator_id_(generator_id) {
+    : deployer_(deployer),
+      config_id_(config_id),
+      generator_id_(generator_id) {
 }
 
 bool CustomSettings::Load() {
@@ -40,7 +41,8 @@ bool CustomSettings::Load() {
 }
 
 bool CustomSettings::Save() {
-  if (!modified_) return false;
+  if (!modified_)
+    return false;
   Signature signature(generator_id_, "customization");
   signature.Sign(&custom_config_, deployer_);
   fs::path custom_config_path(deployer_->user_data_dir);
@@ -64,9 +66,9 @@ ConfigMapPtr CustomSettings::GetMap(const std::string& key) {
 
 bool CustomSettings::Customize(const std::string& key,
                                const ConfigItemPtr& item) {
-  ConfigMapPtr patch = custom_config_.GetMap("patch");
+  auto patch = custom_config_.GetMap("patch");
   if (!patch) {
-    patch = make_shared<ConfigMap>();
+    patch = New<ConfigMap>();
   }
   patch->Set(key, item);
   // the branch 'patch' should be set as a whole in order to be saved, for

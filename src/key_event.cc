@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-04-20 GONG Chen <chen.sst@gmail.com>
@@ -12,7 +12,7 @@
 
 namespace rime {
 
-KeyEvent::KeyEvent(const std::string &repr) {
+KeyEvent::KeyEvent(const std::string& repr) {
   if (!Parse(repr))
     keycode_ = modifier_ = 0;
 }
@@ -22,7 +22,7 @@ std::string KeyEvent::repr() const {
   std::ostringstream modifiers;
   if (modifier_) {
     int k = modifier_ & kModifierMask;
-    const char *modifier_name = NULL;
+    const char* modifier_name = NULL;
     for (int i = 0; k; ++i, k >>= 1) {
       if (!(k & 1))
         continue;
@@ -33,9 +33,9 @@ std::string KeyEvent::repr() const {
     }
   }
   // first lookup predefined key name
-  const char *name = RimeGetKeyName(keycode_);
-  if (name)
+  if (const char* name = RimeGetKeyName(keycode_)) {
     return modifiers.str() + name;
+  }
   // no name :-| return its hex value
   std::string value;
   if (keycode_ <= 0xffff) {
@@ -50,7 +50,7 @@ std::string KeyEvent::repr() const {
   return modifiers.str() + value;
 }
 
-bool KeyEvent::Parse(const std::string &repr) {
+bool KeyEvent::Parse(const std::string& repr) {
   keycode_ = modifier_ = 0;
   if (repr.empty()) {
     return false;
@@ -85,7 +85,7 @@ bool KeyEvent::Parse(const std::string &repr) {
   return true;
 }
 
-KeySequence::KeySequence(const std::string &repr) {
+KeySequence::KeySequence(const std::string& repr) {
   if (!Parse(repr))
     clear();
 }
@@ -93,7 +93,7 @@ KeySequence::KeySequence(const std::string &repr) {
 std::string KeySequence::repr() const {
   std::ostringstream result;
   std::string k;
-  for (const_iterator it = begin(); it != end(); ++it) {
+  for (auto it = cbegin(); it != cend(); ++it) {
     k = it->repr();
     if (k.size() == 1) {
       result << k;
@@ -105,7 +105,7 @@ std::string KeySequence::repr() const {
   return result.str();
 }
 
-bool KeySequence::Parse(const std::string &repr) {
+bool KeySequence::Parse(const std::string& repr) {
   clear();
   size_t n = repr.size();
   size_t start = 0;

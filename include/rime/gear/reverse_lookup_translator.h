@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2012-01-03 GONG Chen <chen.sst@gmail.com>
@@ -22,18 +22,18 @@ class ReverseLookupTranslator : public Translator {
  public:
   ReverseLookupTranslator(const Ticket& ticket);
 
-  virtual shared_ptr<Translation> Query(const std::string &input,
-                                        const Segment &segment,
+  virtual shared_ptr<Translation> Query(const std::string& input,
+                                        const Segment& segment,
                                         std::string* prompt);
-  
+
  protected:
   void Initialize();
-  
+
   std::string tag_;
-  bool initialized_;
-  scoped_ptr<Dictionary> dict_;
-  scoped_ptr<ReverseLookupDictionary> rev_dict_;
-  scoped_ptr<TranslatorOptions> options_;
+  bool initialized_ = false;
+  unique_ptr<Dictionary> dict_;
+  unique_ptr<ReverseLookupDictionary> rev_dict_;
+  unique_ptr<TranslatorOptions> options_;
   std::string prefix_;
   std::string suffix_;
   std::string tips_;

@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-12-18 GONG Chen <chen.sst@gmail.com>
@@ -24,8 +24,8 @@ enum AsciiModeSwitchStyle {
   kAsciiModeSwitchCommitCode,
 };
 
-typedef std::map<int /* keycode */,
-                 AsciiModeSwitchStyle> AsciiModeSwitchKeyBindings;
+using AsciiModeSwitchKeyBindings = std::map<int /* keycode */,
+                                            AsciiModeSwitchStyle>;
 
 class AsciiComposer : public Processor {
  public:
@@ -38,16 +38,16 @@ class AsciiComposer : public Processor {
   void LoadConfig(Schema* schema);
   bool ToggleAsciiModeWithKey(int key_code);
   void SwitchAsciiMode(bool ascii_mode, AsciiModeSwitchStyle style);
-  void OnContextUpdate(Context *ctx);
+  void OnContextUpdate(Context* ctx);
 
   // config options
   AsciiModeSwitchKeyBindings bindings_;
-  AsciiModeSwitchStyle caps_lock_switch_style_;
-  bool good_old_caps_lock_;
+  AsciiModeSwitchStyle caps_lock_switch_style_ = kAsciiModeSwitchNoop;
+  bool good_old_caps_lock_ = false;
   // state
-  bool toggle_with_caps_;
-  bool shift_key_pressed_;
-  bool ctrl_key_pressed_;
+  bool toggle_with_caps_ = false;
+  bool shift_key_pressed_ = false;
+  bool ctrl_key_pressed_ = false;
   connection connection_;
 };
 

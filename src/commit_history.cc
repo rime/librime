@@ -1,10 +1,9 @@
 //
-// Copyleft 2012 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2012-04-27 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/foreach.hpp>
 #include <rime/candidate.h>
 #include <rime/commit_history.h>
 #include <rime/composition.h>
@@ -35,16 +34,15 @@ void CommitHistory::Push(const Composition& composition,
                          const std::string& input) {
   CommitRecord* last = NULL;
   size_t end = 0;
-  BOOST_FOREACH(const Segment &seg, composition) {
-    shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
-    if (cand) {
+  for (const Segment& seg : composition) {
+    if (auto cand = seg.GetSelectedCandidate()) {
       if (last && last->type == cand->type()) {
         // join adjacent text of same type
         last->text += cand->text();
       }
       else {
         // new record
-        Push(CommitRecord(cand->type(), cand->text()));
+        Push({cand->type(), cand->text()});
         last = &back();
       }
       if (seg.status >= Segment::kConfirmed) {
@@ -55,18 +53,18 @@ void CommitHistory::Push(const Composition& composition,
     }
     else {
       // no translation for the segment
-      Push(CommitRecord("raw", input.substr(seg.start, seg.end - seg.start)));
+      Push({"raw", input.substr(seg.start, seg.end - seg.start)});
       end = seg.end;
     }
   }
   if (input.length() > end) {
-    Push(CommitRecord("raw", input.substr(end)));
+    Push({"raw", input.substr(end)});
   }
 }
 
 std::string CommitHistory::repr() const {
   std::string result;
-  BOOST_FOREACH(const CommitRecord& record, *this) {
+  for (const CommitRecord& record : *this) {
     result += "[" + record.type + "]" + record.text;
   }
   return result;

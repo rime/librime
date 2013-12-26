@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-06-20 GONG Chen <chen.sst@gmail.com>
@@ -16,7 +16,7 @@ class FallbackSegmentor : public Segmentor {
  public:
   explicit FallbackSegmentor(const Ticket& ticket);
 
-  virtual bool Proceed(Segmentation *segmentation);
+  virtual bool Proceed(Segmentation* segmentation);
 };
 
 }  // namespace rime

@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-03-14 GONG Chen <chen.sst@gmail.com>
@@ -45,7 +45,7 @@ ComponentBase* Registry::Find(const std::string &name) {
 }
 
 Registry& Registry::instance() {
-  static scoped_ptr<Registry> s_instance;
+  static unique_ptr<Registry> s_instance;
   if (!s_instance) {
     s_instance.reset(new Registry);
   }

@@ -1,5 +1,5 @@
 //
-// Copyleft 2012 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2012-03-23 GONG Chen <chen.sst@gmail.com>
@@ -15,7 +15,7 @@ namespace rime {
 
 class Deployer;
 
-typedef std::vector<std::string> UserDictList;
+using UserDictList = std::vector<std::string>;
 
 class UserDictManager {
  public:

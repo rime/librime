@@ -1,5 +1,5 @@
 //
-// Copyleft 2013 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2013-04-16 GONG Chen <chen.sst@gmail.com>
@@ -7,21 +7,21 @@
 #ifndef RIME_TSV_H_
 #define RIME_TSV_H_
 
+#include <functional>
 #include <string>
 #include <vector>
-#include <boost/function.hpp>
 
 namespace rime {
 
-typedef std::vector<std::string> Tsv;
+using Tsv = std::vector<std::string>;
 
-typedef boost::function<bool (const Tsv& row,
-                              std::string* key,
-                              std::string* value)> TsvParser;
+using TsvParser = std::function<bool (const Tsv& row,
+                                      std::string* key,
+                                      std::string* value)>;
 
-typedef boost::function<bool (const std::string& key,
-                              const std::string& value,
-                              Tsv* row)> TsvFormatter;
+using TsvFormatter = std::function<bool (const std::string& key,
+                                         const std::string& value,
+                                         Tsv* row)>;
 
 class Sink;
 class Source;

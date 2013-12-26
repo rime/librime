@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-12-12 GONG Chen <chen.sst@gmail.com>
@@ -15,21 +15,21 @@ namespace rime {
 Uniquifier::Uniquifier(const Ticket& ticket) : Filter(ticket) {
 }
 
-void Uniquifier::Apply(CandidateList *recruited,
-                       CandidateList *candidates) {
+void Uniquifier::Apply(CandidateList* recruited,
+                       CandidateList* candidates) {
   if (!candidates || candidates->empty())
     return;
-  CandidateList::iterator i = candidates->begin();
+  auto i = candidates->begin();
   while (i != candidates->end()) {
-    CandidateList::iterator j = recruited->begin();
-    for (; j != recruited->end(); ++j) {
+    auto j = recruited->begin();
+    for ( ; j != recruited->end(); ++j) {
       if ((*i)->text() == (*j)->text()) {
-        shared_ptr<UniquifiedCandidate> c = As<UniquifiedCandidate>(*j);
-        if (!c) {
-          c = make_shared<UniquifiedCandidate>(*j, "uniquified");
-          *j = c;
+        auto u = As<UniquifiedCandidate>(*j);
+        if (!u) {
+          u = New<UniquifiedCandidate>(*j, "uniquified");
+          *j = u;
         }
-        c->Append(*i);
+        u->Append(*i);
         break;
       }
     }

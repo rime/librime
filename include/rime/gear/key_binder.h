@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-11-23 GONG Chen <chen.sst@gmail.com>
@@ -19,14 +19,14 @@ class KeyBindings;
 class KeyBinder : public Processor {
  public:
   KeyBinder(const Ticket& ticket);
-  virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:
   void LoadConfig();
-  bool ReinterpretPagingKey(const KeyEvent &key_event);
+  bool ReinterpretPagingKey(const KeyEvent& key_event);
   void PerformKeyBinding(const KeyBinding& binding);
 
-  scoped_ptr<KeyBindings> key_bindings_;
+  unique_ptr<KeyBindings> key_bindings_;
   bool redirecting_;
   int last_key_;
 };

@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-11-20 GONG Chen <chen.sst@gmail.com>
@@ -17,13 +17,13 @@ class Navigator : public Processor {
  public:
   Navigator(const Ticket& ticket) : Processor(ticket) {}
 
-  virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  private:
-  bool Left(Context *ctx);
-  bool Right(Context *ctx);
-  bool Home(Context *ctx);
-  bool End(Context *ctx);
+  bool Left(Context* ctx);
+  bool Right(Context* ctx);
+  bool Home(Context* ctx);
+  bool End(Context* ctx);
 };
 
 }  // namespace rime

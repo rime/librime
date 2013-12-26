@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2012-01-01 GONG Chen <chen.sst@gmail.com>
@@ -16,7 +16,7 @@ class Matcher : public Segmentor {
  public:
   explicit Matcher(const Ticket& ticket);
 
-  virtual bool Proceed(Segmentation *segmentation);
+  virtual bool Proceed(Segmentation* segmentation);
 
  protected:
   RecognizerPatterns patterns_;

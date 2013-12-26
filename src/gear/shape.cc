@@ -6,7 +6,6 @@
 //
 #include <sstream>
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/key_event.h>
@@ -22,7 +21,7 @@ void ShapeFormatter::Format(std::string* text) {
     return;
   }
   std::ostringstream oss;
-  BOOST_FOREACH(char ch, *text) {
+  for (char ch : *text) {
     if (ch == 0x20) {
       oss << "\xe3\x80\x80";
     }
@@ -37,7 +36,7 @@ void ShapeFormatter::Format(std::string* text) {
   *text = oss.str();
 }
 
-ProcessResult ShapeProcessor::ProcessKeyEvent(const KeyEvent &key_event) {
+ProcessResult ShapeProcessor::ProcessKeyEvent(const KeyEvent& key_event) {
   DLOG(INFO) << "shape_processor: " << key_event;
   if (!engine_->context()->get_option("full_shape")) {
     return kNoop;

@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-05-17 Zou xu <zouivex@gmail.com>
@@ -37,7 +37,7 @@ class RimePrismTest : public ::testing::Test {
   virtual void TearDown() {
   }
 
-  scoped_ptr<Prism> prism_;
+  unique_ptr<Prism> prism_;
 };
 
 TEST_F(RimePrismTest, SaveAndLoad) {

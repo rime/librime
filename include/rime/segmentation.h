@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-05-15 GONG Chen <chen.sst@gmail.com>
@@ -24,21 +24,18 @@ struct Segment {
     kSelected,
     kConfirmed,
   };
-  Status status;
-  size_t start;
-  size_t end;
+  Status status = kVoid;
+  size_t start = 0;
+  size_t end = 0;
   std::set<std::string> tags;
   shared_ptr<Menu> menu;
-  size_t selected_index;
+  size_t selected_index = 0;
   std::string prompt;
 
-  Segment()
-  : status(kVoid), start(0), end(0),
-    selected_index(0) {}
+  Segment() = default;
 
   Segment(int start_pos, int end_pos)
-  : status(kVoid), start(start_pos), end(end_pos),
-    selected_index(0) {}
+      : start(start_pos), end(end_pos) {}
 
   void Clear() {
     status = kVoid;
@@ -48,7 +45,7 @@ struct Segment {
     prompt.clear();
   }
 
-  bool HasTag(const std::string &tag) const {
+  bool HasTag(const std::string& tag) const {
     return tags.find(tag) != tags.end();
   }
 
@@ -60,9 +57,9 @@ class Segmentation : public std::vector<Segment> {
  public:
   Segmentation();
   virtual ~Segmentation() {}
-  void Reset(const std::string &input);
+  void Reset(const std::string& input);
   void Reset(size_t num_segments);
-  bool AddSegment(const Segment &segment);
+  bool AddSegment(const Segment& segment);
 
   bool Forward();
   bool Trim();
@@ -79,7 +76,7 @@ class Segmentation : public std::vector<Segment> {
 };
 
 std::ostream& operator<< (std::ostream& out,
-                          const Segmentation &segmentation);
+                          const Segmentation& segmentation);
 
 }  // namespace rime
 

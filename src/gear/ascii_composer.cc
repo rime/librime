@@ -1,10 +1,9 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-12-18 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/bind.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/config.h>
@@ -26,14 +25,15 @@ static struct AsciiModeSwitchStyleDefinition {
   { NULL, kAsciiModeSwitchNoop }
 };
 
-static void load_bindings(const ConfigMapPtr &src,
+static void load_bindings(const ConfigMapPtr& src,
                           AsciiModeSwitchKeyBindings* dest) {
-  if (!src) return;
-  for (ConfigMap::Iterator it = src->begin();
-       it != src->end(); ++it) {
-    ConfigValuePtr value(As<ConfigValue>(it->second));
-    if (!value) continue;
-    AsciiModeSwitchStyleDefinition* p = ascii_mode_switch_styles;
+  if (!src)
+    return;
+  for (auto it = src->begin(); it != src->end(); ++it) {
+    auto value = As<ConfigValue>(it->second);
+    if (!value)
+      continue;
+    auto* p = ascii_mode_switch_styles;
     while (p->repr && p->repr != value->str())
       ++p;
     if (p->style == kAsciiModeSwitchNoop)
@@ -49,12 +49,7 @@ static void load_bindings(const ConfigMapPtr &src,
 }
 
 AsciiComposer::AsciiComposer(const Ticket& ticket)
-    : Processor(ticket),
-      caps_lock_switch_style_(kAsciiModeSwitchNoop),
-      good_old_caps_lock_(false),
-      toggle_with_caps_(false),
-      shift_key_pressed_(false),
-      ctrl_key_pressed_(false) {
+    : Processor(ticket) {
   LoadConfig(ticket.schema);
 }
 
@@ -93,7 +88,7 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   if (key_event.ctrl()) {
     return kNoop;  // possible key binding Control+x
   }
-  Context *ctx = engine_->context();
+  Context* ctx = engine_->context();
   bool ascii_mode = ctx->get_option("ascii_mode");
   if (ascii_mode) {
     if (!ctx->IsComposing()) {
@@ -116,7 +111,7 @@ ProcessResult AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
       // temprarily disable good-old (uppercase) Caps Lock as mode switch key
       // in case the user switched to ascii mode with other keys, eg. with Shift
       if (good_old_caps_lock_ && !toggle_with_caps_) {
-        Context *ctx = engine_->context();
+        Context* ctx = engine_->context();
         bool ascii_mode = ctx->get_option("ascii_mode");
         if (ascii_mode) {
           return kRejected;
@@ -157,15 +152,16 @@ void AsciiComposer::LoadConfig(Schema* schema) {
   bindings_.clear();
   caps_lock_switch_style_ = kAsciiModeSwitchNoop;
   good_old_caps_lock_ = false;
-  if (!schema) return;
-  scoped_ptr<Config> preset_config(
+  if (!schema)
+    return;
+  unique_ptr<Config> preset_config(
       Config::Require("config")->Create("default"));
   if (preset_config) {
     preset_config->GetBool("ascii_composer/good_old_caps_lock",
                            &good_old_caps_lock_);
   }
-  Config *config = schema->config();
-  ConfigMapPtr  bindings = config->GetMap("ascii_composer/switch_key");
+  Config* config = schema->config();
+  auto bindings = config->GetMap("ascii_composer/switch_key");
   if (!bindings) {
     if (!preset_config) {
       LOG(ERROR) << "Error importing preset ascii bindings.";
@@ -178,20 +174,21 @@ void AsciiComposer::LoadConfig(Schema* schema) {
     }
   }
   load_bindings(bindings, &bindings_);
-  AsciiModeSwitchKeyBindings::const_iterator it = bindings_.find(XK_Caps_Lock);
+  auto it = bindings_.find(XK_Caps_Lock);
   if (it != bindings_.end()) {
     caps_lock_switch_style_ = it->second;
-    if (caps_lock_switch_style_ == kAsciiModeSwitchInline) // cannot do that
+    if (caps_lock_switch_style_ == kAsciiModeSwitchInline) {  // can't do that
       caps_lock_switch_style_ = kAsciiModeSwitchCommitCode;
+    }
   }
 }
 
 bool AsciiComposer::ToggleAsciiModeWithKey(int key_code) {
-  AsciiModeSwitchKeyBindings::const_iterator it = bindings_.find(key_code);
+  auto it = bindings_.find(key_code);
   if (it == bindings_.end())
     return false;
   AsciiModeSwitchStyle style = it->second;
-  Context *ctx = engine_->context();
+  Context* ctx = engine_->context();
   bool ascii_mode = !ctx->get_option("ascii_mode");
   SwitchAsciiMode(ascii_mode, style);
   toggle_with_caps_ = (key_code == XK_Caps_Lock);
@@ -201,7 +198,7 @@ bool AsciiComposer::ToggleAsciiModeWithKey(int key_code) {
 void AsciiComposer::SwitchAsciiMode(bool ascii_mode,
                                     AsciiModeSwitchStyle style) {
   DLOG(INFO) << "ascii mode: " << ascii_mode << ", switch style: " << style;
-  Context *ctx = engine_->context();
+  Context* ctx = engine_->context();
   if (ctx->IsComposing()) {
     connection_.disconnect();
     // temporary ascii mode in desired manner
@@ -210,7 +207,7 @@ void AsciiComposer::SwitchAsciiMode(bool ascii_mode,
                 << (ascii_mode ? "ascii" : "non-ascii") << " mode.";
       if (ascii_mode) {
         connection_ = ctx->update_notifier().connect(
-            boost::bind(&AsciiComposer::OnContextUpdate, this, _1));
+            [this](Context* ctx) { OnContextUpdate(ctx); });
       }
     }
     else if (style == kAsciiModeSwitchCommitText) {
@@ -225,7 +222,7 @@ void AsciiComposer::SwitchAsciiMode(bool ascii_mode,
   ctx->set_option("ascii_mode", ascii_mode);
 }
 
-void AsciiComposer::OnContextUpdate(Context *ctx) {
+void AsciiComposer::OnContextUpdate(Context* ctx) {
   if (!ctx->IsComposing()) {
     connection_.disconnect();
     // quit temporary ascii mode

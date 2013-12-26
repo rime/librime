@@ -1,10 +1,20 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-11-02 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/filesystem.hpp>
+#if defined(_MSC_VER)
+#pragma warning(disable: 4244)
+#pragma warning(disable: 4351)
+#endif
+#include <kchashdb.h>
+#if defined(_MSC_VER)
+#pragma warning(default: 4351)
+#pragma warning(default: 4244)
+#endif
+
 #include <rime/common.h>
 #include <rime/service.h>
 #include <rime/dict/tree_db.h>
@@ -13,12 +23,40 @@ namespace rime {
 
 static const char* kMetaCharacter = "\x01";
 
+struct TreeDbCursor {
+  TreeDbCursor(kyotocabinet::DB::Cursor* cursor)
+      : kcursor(cursor) {
+  }
+
+  unique_ptr<kyotocabinet::DB::Cursor> kcursor;
+};
+
+struct TreeDbWrapper {
+  TreeDbWrapper();
+
+  TreeDbCursor* GetCursor() {
+    if (auto cursor = kcdb.cursor())
+      return new TreeDbCursor(cursor);
+    else
+      return nullptr;
+  }
+
+  kyotocabinet::TreeDB kcdb;
+};
+
+TreeDbWrapper::TreeDbWrapper() {
+  kcdb.tune_options(kyotocabinet::TreeDB::TSMALL |
+                    kyotocabinet::TreeDB::TLINEAR);
+  kcdb.tune_map(4LL << 20);
+  kcdb.tune_defrag(8);
+}
+
 // TreeDbAccessor memebers
 
 TreeDbAccessor::TreeDbAccessor() {
 }
 
-TreeDbAccessor::TreeDbAccessor(kyotocabinet::DB::Cursor* cursor,
+TreeDbAccessor::TreeDbAccessor(TreeDbCursor* cursor,
                                const std::string& prefix)
     : DbAccessor(prefix), cursor_(cursor) {
   Reset();
@@ -29,17 +67,17 @@ TreeDbAccessor::~TreeDbAccessor() {
 }
 
 bool TreeDbAccessor::Reset() {
-  return cursor_ && cursor_->jump(prefix_);
+  return cursor_ && cursor_->kcursor->jump(prefix_);
 }
 
-bool TreeDbAccessor::Jump(const std::string &key) {
-  return cursor_ && cursor_->jump(key);
+bool TreeDbAccessor::Jump(const std::string& key) {
+  return cursor_ && cursor_->kcursor->jump(key);
 }
 
-bool TreeDbAccessor::GetNextRecord(std::string *key, std::string *value) {
+bool TreeDbAccessor::GetNextRecord(std::string* key, std::string* value) {
   if (!cursor_ || !key || !value)
     return false;
-  bool got = cursor_->get(key, value, true) && MatchesPrefix(*key);
+  bool got = cursor_->kcursor->get(key, value, true) && MatchesPrefix(*key);
   if (got && prefix_ == kMetaCharacter) {
     key->erase(0, 1);  // remove meta character
   }
@@ -48,7 +86,7 @@ bool TreeDbAccessor::GetNextRecord(std::string *key, std::string *value) {
 
 bool TreeDbAccessor::exhausted() {
   std::string key;
-  return !cursor_->get_key(&key, false) || !MatchesPrefix(key);
+  return !cursor_->kcursor->get_key(&key, false) || !MatchesPrefix(key);
 }
 
 // TreeDb members
@@ -63,11 +101,7 @@ TreeDb::~TreeDb() {
 }
 
 void TreeDb::Initialize() {
-  db_.reset(new kyotocabinet::TreeDB);
-  db_->tune_options(kyotocabinet::TreeDB::TSMALL |
-                    kyotocabinet::TreeDB::TLINEAR);
-  db_->tune_map(4LL << 20);
-  db_->tune_defrag(8);
+  db_.reset(new TreeDbWrapper);
 }
 
 shared_ptr<DbAccessor> TreeDb::QueryMetadata() {
@@ -81,34 +115,37 @@ shared_ptr<DbAccessor> TreeDb::QueryAll() {
   return all;
 }
 
-shared_ptr<DbAccessor> TreeDb::Query(const std::string &key) {
+shared_ptr<DbAccessor> TreeDb::Query(const std::string& key) {
   if (!loaded())
-    return shared_ptr<DbAccessor>();
-  return boost::make_shared<TreeDbAccessor>(db_->cursor(), key);
+    return nullptr;
+  return New<TreeDbAccessor>(db_->GetCursor(), key);
 }
 
-bool TreeDb::Fetch(const std::string &key, std::string *value) {
+bool TreeDb::Fetch(const std::string& key, std::string* value) {
   if (!value || !loaded())
     return false;
-  return db_->get(key, value);
+  return db_->kcdb.get(key, value);
 }
 
-bool TreeDb::Update(const std::string &key, const std::string &value) {
-  if (!loaded() || readonly()) return false;
+bool TreeDb::Update(const std::string& key, const std::string& value) {
+  if (!loaded() || readonly())
+    return false;
   DLOG(INFO) << "update db entry: " << key << " => " << value;
-  return db_->set(key, value);
+  return db_->kcdb.set(key, value);
 }
 
-bool TreeDb::Erase(const std::string &key) {
-  if (!loaded() || readonly()) return false;
+bool TreeDb::Erase(const std::string& key) {
+  if (!loaded() || readonly())
+    return false;
   DLOG(INFO) << "erase db entry: " << key;
-  return db_->remove(key);
+  return db_->kcdb.remove(key);
 }
 
 bool TreeDb::Backup(const std::string& snapshot_file) {
-  if (!loaded()) return false;
+  if (!loaded())
+    return false;
   LOG(INFO) << "backing up db '" << name() << "' to " << snapshot_file;
-  bool success = db_->dump_snapshot(snapshot_file);
+  bool success = db_->kcdb.dump_snapshot(snapshot_file);
   if (!success) {
     LOG(ERROR) << "failed to create snapshot file '" << snapshot_file
                << "' for db '" << name() << "'.";
@@ -117,8 +154,9 @@ bool TreeDb::Backup(const std::string& snapshot_file) {
 }
 
 bool TreeDb::Restore(const std::string& snapshot_file) {
-  if (!loaded() || readonly()) return false;
-  bool success = db_->load_snapshot(snapshot_file);
+  if (!loaded() || readonly())
+    return false;
+  bool success = db_->kcdb.load_snapshot(snapshot_file);
   if (!success) {
     LOG(ERROR) << "failed to restore db '" << name()
                << "' from '" << snapshot_file << "'.";
@@ -141,14 +179,15 @@ bool TreeDb::Recover() {
 }
 
 bool TreeDb::Open() {
-  if (loaded()) return false;
+  if (loaded())
+    return false;
   Initialize();
   readonly_ = false;
-  loaded_ = db_->open(file_name(),
-                      kyotocabinet::TreeDB::OWRITER |
-                      kyotocabinet::TreeDB::OCREATE |
-                      kyotocabinet::TreeDB::OTRYLOCK |
-                      kyotocabinet::TreeDB::ONOREPAIR);
+  loaded_ = db_->kcdb.open(file_name(),
+                           kyotocabinet::TreeDB::OWRITER |
+                           kyotocabinet::TreeDB::OCREATE |
+                           kyotocabinet::TreeDB::OTRYLOCK |
+                           kyotocabinet::TreeDB::ONOREPAIR);
   if (loaded_) {
     std::string db_name;
     if (!MetaFetch("/db_name", &db_name)) {
@@ -165,12 +204,13 @@ bool TreeDb::Open() {
 }
 
 bool TreeDb::OpenReadOnly() {
-  if (loaded()) return false;
+  if (loaded())
+    return false;
   Initialize();
   readonly_ = true;
-  loaded_ = db_->open(file_name(),
-                      kyotocabinet::TreeDB::OREADER |
-                      kyotocabinet::TreeDB::OTRYLOCK);
+  loaded_ = db_->kcdb.open(file_name(),
+                           kyotocabinet::TreeDB::OREADER |
+                           kyotocabinet::TreeDB::OTRYLOCK);
   if (!loaded_) {
     LOG(ERROR) << "Error opening db '" << name_ << "' read-only.";
   }
@@ -178,8 +218,9 @@ bool TreeDb::OpenReadOnly() {
 }
 
 bool TreeDb::Close() {
-  if (!loaded()) return false;
-  db_->close();
+  if (!loaded())
+    return false;
+  db_->kcdb.close();
   LOG(INFO) << "closed db '" << name_ << "'.";
   loaded_ = false;
   readonly_ = false;
@@ -192,29 +233,32 @@ bool TreeDb::CreateMetadata() {
       MetaUpdate("/db_type", db_type_);
 }
 
-bool TreeDb::MetaFetch(const std::string &key, std::string *value) {
+bool TreeDb::MetaFetch(const std::string& key, std::string* value) {
   return Fetch(kMetaCharacter + key, value);
 }
 
-bool TreeDb::MetaUpdate(const std::string &key, const std::string &value) {
+bool TreeDb::MetaUpdate(const std::string& key, const std::string& value) {
   return Update(kMetaCharacter + key, value);
 }
 
 bool TreeDb::BeginTransaction() {
-  if (!loaded()) return false;
-  in_transaction_ = db_->begin_transaction();
+  if (!loaded())
+    return false;
+  in_transaction_ = db_->kcdb.begin_transaction();
   return in_transaction_;
 }
 
 bool TreeDb::AbortTransaction() {
-  if (!loaded() || !in_transaction()) return false;
-  in_transaction_ = !db_->end_transaction(false);
+  if (!loaded() || !in_transaction())
+    return false;
+  in_transaction_ = !db_->kcdb.end_transaction(false);
   return !in_transaction_;
 }
 
 bool TreeDb::CommitTransaction() {
-  if (!loaded() || !in_transaction()) return false;
-  in_transaction_ = !db_->end_transaction(true);
+  if (!loaded() || !in_transaction())
+    return false;
+  in_transaction_ = !db_->kcdb.end_transaction(true);
   return !in_transaction_;
 }
 

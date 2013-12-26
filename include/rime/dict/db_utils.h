@@ -1,5 +1,5 @@
 //
-// Copyleft 2013 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2013-04-18 GONG Chen <chen.sst@gmail.com>
@@ -14,7 +14,7 @@ namespace rime {
 
 class Sink {
  public:
-  virtual ~Sink() {}
+  virtual ~Sink() = default;
   virtual bool MetaPut(const std::string& key, const std::string& value) = 0;
   virtual bool Put(const std::string& key, const std::string& value) = 0;
 
@@ -24,7 +24,7 @@ class Sink {
 
 class Source {
  public:
-  virtual ~Source() {}
+  virtual ~Source() = default;
   virtual bool MetaGet(std::string* key, std::string* value) = 0;
   virtual bool Get(std::string* key, std::string* value) = 0;
 

@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-03-14 GONG Chen <chen.sst@gmail.com>
@@ -25,14 +25,14 @@ class Processor : public Class<Processor, const Ticket&> {
  public:
   explicit Processor(const Ticket& ticket)
       : engine_(ticket.engine), name_space_(ticket.name_space) {}
-  virtual ~Processor() {}
+  virtual ~Processor() = default;
 
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   }
 
  protected:
-  Engine *engine_;
+  Engine* engine_;
   std::string name_space_;
 };
 

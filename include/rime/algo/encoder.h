@@ -23,8 +23,8 @@ class RawCode : public std::vector<std::string> {
 
 class PhraseCollector {
  public:
-  PhraseCollector() {}
-  virtual ~PhraseCollector() {}
+  PhraseCollector() = default;
+  virtual ~PhraseCollector() = default;
 
   virtual void CreateEntry(const std::string& phrase,
                            const std::string& code_str,
@@ -39,7 +39,7 @@ class Config;
 class Encoder {
  public:
   Encoder(PhraseCollector* collector) : collector_(collector) {}
-  virtual ~Encoder() {}
+  virtual ~Encoder() = default;
 
   virtual bool LoadSettings(Config* config) {
     return false;
@@ -90,13 +90,15 @@ class TableEncoder : public Encoder {
   bool ParseFormula(const std::string& formula, TableEncodingRule* rule);
   int CalculateCodeIndex(const std::string& code, int index, int start);
   bool DfsEncode(const std::string& phrase, const std::string& value,
-                 size_t start_pos, RawCode* code);
+                 size_t start_pos, RawCode* code, int* limit);
 
   bool loaded_;
   // settings
   std::vector<TableEncodingRule> encoding_rules_;
   std::vector<boost::regex> exclude_patterns_;
   std::string tail_anchor_;
+  // for optimization
+  int max_phrase_length_;
 };
 
 // for syllable-based phrase encoding
@@ -108,7 +110,7 @@ class ScriptEncoder : public Encoder {
 
  private:
   bool DfsEncode(const std::string& phrase, const std::string& value,
-                 size_t start_pos, RawCode* code);
+                 size_t start_pos, RawCode* code, int* limit);
 };
 
 }  // namespace rime

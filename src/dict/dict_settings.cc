@@ -1,5 +1,5 @@
 //
-// Copyleft 2012 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2012-11-11 GONG Chen <chen.sst@gmail.com>
@@ -66,13 +66,13 @@ double DictSettings::min_phrase_weight() {
 }
 
 ConfigListPtr DictSettings::GetTables() {
-  ConfigListPtr tables = New<ConfigList>();
+  auto tables = New<ConfigList>();
   tables->Append((*this)["name"]);
-  ConfigListPtr imports = (*this)["import_tables"].AsList();
-  for (ConfigList::Iterator it = imports->begin(); it != imports->end(); ++it) {
+  auto imports = (*this)["import_tables"].AsList();
+  for (auto it = imports->begin(); it != imports->end(); ++it) {
     if (!Is<ConfigValue>(*it))
       continue;
-    std::string table(As<ConfigValue>(*it)->str());
+    std::string table = As<ConfigValue>(*it)->str();
     if (table == dict_name()) {
       LOG(WARNING) << "cannot import '" << table << "' from itself.";
       continue;
@@ -90,10 +90,9 @@ int DictSettings::GetColumnIndex(const std::string& column_label) {
     if (column_label == "weight") return 2;
     return -1;
   }
-  ConfigListPtr columns = (*this)["columns"].AsList();
+  auto columns = (*this)["columns"].AsList();
   int index = 0;
-  for (ConfigList::Iterator it = columns->begin();
-       it != columns->end(); ++it, ++index) {
+  for (auto it = columns->begin(); it != columns->end(); ++it, ++index) {
     if (Is<ConfigValue>(*it) && As<ConfigValue>(*it)->str() == column_label) {
       return index;
     }

@@ -1,5 +1,5 @@
 //
-// Copyleft 2012 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // simplistic sentence-making
@@ -15,19 +15,19 @@
 
 namespace rime {
 
-typedef std::map<int, UserDictEntryCollector> WordGraph;
+using WordGraph = std::map<int, UserDictEntryCollector>;
 
 class Language;
 
 class Poet {
  public:
   Poet(Language* language) : language_(language) {}
-  
+
   shared_ptr<Sentence> MakeSentence(const WordGraph& graph,
                                     size_t total_length);
  protected:
   Language* language_;
-};  
+};
 
 }  // namespace rime
 

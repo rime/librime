@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-09-11 GONG Chen <chen.sst@gmail.com>
@@ -19,13 +19,13 @@ namespace rime {
 Selector::Selector(const Ticket& ticket) : Processor(ticket) {
 }
 
-ProcessResult Selector::ProcessKeyEvent(const KeyEvent &key_event) {
+ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
   if (key_event.release())
     return kNoop;
-  Context *ctx = engine_->context();
+  Context* ctx = engine_->context();
   if (!ctx->composition() || ctx->composition()->empty())
     return kNoop;
-  Segment &current_segment(ctx->composition()->back());
+  Segment& current_segment(ctx->composition()->back());
   if (!current_segment.menu || current_segment.HasTag("raw"))
     return kNoop;
   int ch = key_event.keycode();
@@ -73,8 +73,8 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent &key_event) {
   return kNoop;
 }
 
-bool Selector::PageUp(Context *ctx) {
-  Composition *comp = ctx->composition();
+bool Selector::PageUp(Context* ctx) {
+  Composition* comp = ctx->composition();
   if (comp->empty())
     return false;
   int page_size = engine_->schema()->page_size();
@@ -85,8 +85,8 @@ bool Selector::PageUp(Context *ctx) {
   return true;
 }
 
-bool Selector::PageDown(Context *ctx) {
-  Composition *comp = ctx->composition();
+bool Selector::PageDown(Context* ctx) {
+  Composition* comp = ctx->composition();
   if (comp->empty() || !comp->back().menu)
     return false;
   int page_size = engine_->schema()->page_size();
@@ -103,8 +103,8 @@ bool Selector::PageDown(Context *ctx) {
 
 }
 
-bool Selector::CursorUp(Context *ctx) {
-  Composition *comp = ctx->composition();
+bool Selector::CursorUp(Context* ctx) {
+  Composition* comp = ctx->composition();
   if (comp->empty())
     return false;
   int index = comp->back().selected_index;
@@ -115,8 +115,8 @@ bool Selector::CursorUp(Context *ctx) {
   return true;
 }
 
-bool Selector::CursorDown(Context *ctx) {
-  Composition *comp = ctx->composition();
+bool Selector::CursorDown(Context* ctx) {
+  Composition* comp = ctx->composition();
   if (comp->empty() || !comp->back().menu)
     return false;
   int index = comp->back().selected_index + 1;
@@ -128,10 +128,10 @@ bool Selector::CursorDown(Context *ctx) {
   return true;
 }
 
-bool Selector::Home(Context *ctx) {
+bool Selector::Home(Context* ctx) {
   if (ctx->composition()->empty())
     return false;
-  Segment &seg(ctx->composition()->back());
+  Segment& seg(ctx->composition()->back());
   if (seg.selected_index > 0) {
     seg.selected_index = 0;
     return true;
@@ -139,7 +139,7 @@ bool Selector::Home(Context *ctx) {
   return false;
 }
 
-bool Selector::End(Context *ctx) {
+bool Selector::End(Context* ctx) {
   if (ctx->caret_pos() < ctx->input().length()) {
     // navigator should handle this
     return false;
@@ -149,8 +149,8 @@ bool Selector::End(Context *ctx) {
 }
 
 
-bool Selector::SelectCandidateAt(Context *ctx, int index) {
-  Composition *comp = ctx->composition();
+bool Selector::SelectCandidateAt(Context* ctx, int index) {
+  Composition* comp = ctx->composition();
   if (comp->empty())
     return false;
   int page_size = engine_->schema()->page_size();

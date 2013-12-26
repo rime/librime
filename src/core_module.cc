@@ -16,14 +16,14 @@
 
 static void rime_core_initialize() {
   using namespace rime;
+  using boost::filesystem::path;
 
   LOG(INFO) << "registering core components.";
-  Registry &r = Registry::instance();
+  Registry& r = Registry::instance();
 
-  boost::filesystem::path user_data_dir =
-      Service::instance().deployer().user_data_dir;
-  boost::filesystem::path config_path = user_data_dir / "%s.yaml";
-  boost::filesystem::path schema_path = user_data_dir / "%s.schema.yaml";
+  path user_data_dir = Service::instance().deployer().user_data_dir;
+  path config_path = user_data_dir / "%s.yaml";
+  path schema_path = user_data_dir / "%s.schema.yaml";
 
   r.Register("config", new ConfigComponent(config_path.string()));
   r.Register("schema_config", new ConfigComponent(schema_path.string()));

@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-07-03 GONG Chen <chen.sst@gmail.com>
@@ -28,19 +28,18 @@ class RimeTableTest : public ::testing::Test {
   static const int total_num_entries = 8;
   static const char file_name[];
 
-  static void PrepareSampleVocabulary(rime::Syllabary &syll,
-                                      rime::Vocabulary &voc);
-  static boost::scoped_ptr<rime::Table> table_;
+  static void PrepareSampleVocabulary(rime::Syllabary& syll,
+                                      rime::Vocabulary& voc);
+  static rime::unique_ptr<rime::Table> table_;
 };
 
 const char RimeTableTest::file_name[] = "table_test.bin";
 
-boost::scoped_ptr<rime::Table> RimeTableTest::table_;
+rime::unique_ptr<rime::Table> RimeTableTest::table_;
 
-void RimeTableTest::PrepareSampleVocabulary(rime::Syllabary &syll,
-                                            rime::Vocabulary &voc) {
-  boost::shared_ptr<rime::DictEntry> d;
-  d = boost::make_shared<rime::DictEntry>();
+void RimeTableTest::PrepareSampleVocabulary(rime::Syllabary& syll,
+                                            rime::Vocabulary& voc) {
+  auto d = rime::New<rime::DictEntry>();
   syll.insert("0");
   // no entries for '0', however
   syll.insert("1");
@@ -48,43 +47,43 @@ void RimeTableTest::PrepareSampleVocabulary(rime::Syllabary &syll,
   d->text = "yi";
   d->weight = 1.0;
   voc[1].entries.push_back(d);
-  d = boost::make_shared<rime::DictEntry>(*d);
+  d = rime::New<rime::DictEntry>(*d);
   syll.insert("2");
   d->code.back() = 2;
   d->text = "er";
   voc[2].entries.push_back(d);
-  d = boost::make_shared<rime::DictEntry>(*d);
+  d = rime::New<rime::DictEntry>(*d);
   d->text = "liang";
   voc[2].entries.push_back(d);
-  d = boost::make_shared<rime::DictEntry>(*d);
+  d = rime::New<rime::DictEntry>(*d);
   d->text = "lia";
   voc[2].entries.push_back(d);
-  d = boost::make_shared<rime::DictEntry>(*d);
+  d = rime::New<rime::DictEntry>(*d);
   syll.insert("3");
   d->code.back() = 3;
   d->text = "san";
   voc[3].entries.push_back(d);
-  d = boost::make_shared<rime::DictEntry>(*d);
+  d = rime::New<rime::DictEntry>(*d);
   d->text = "sa";
   voc[3].entries.push_back(d);
-  d = boost::make_shared<rime::DictEntry>(*d);
+  d = rime::New<rime::DictEntry>(*d);
   syll.insert("4");
-  boost::shared_ptr<rime::Vocabulary> lv2 = boost::make_shared<rime::Vocabulary>();
+  auto lv2 = rime::New<rime::Vocabulary>();
   voc[1].next_level = lv2;
-  boost::shared_ptr<rime::Vocabulary> lv3 = boost::make_shared<rime::Vocabulary>();
+  auto lv3 = rime::New<rime::Vocabulary>();
   (*lv2)[2].next_level = lv3;
-  boost::shared_ptr<rime::Vocabulary> lv4 = boost::make_shared<rime::Vocabulary>();
+  auto lv4 = rime::New<rime::Vocabulary>();
   (*lv3)[3].next_level = lv4;
   d->code.back() = 1;
   d->code.push_back(2);
   d->code.push_back(3);
   d->text = "yi-er-san";
   (*lv3)[3].entries.push_back(d);
-  d = boost::make_shared<rime::DictEntry>(*d);
+  d = rime::New<rime::DictEntry>(*d);
   d->code.push_back(4);
   d->text = "yi-er-san-si";
   (*lv4)[-1].entries.push_back(d);
-  d = boost::make_shared<rime::DictEntry>(*d);
+  d = rime::New<rime::DictEntry>(*d);
   d->code.resize(3);
   d->code.push_back(2);
   d->code.push_back(1);
@@ -94,7 +93,7 @@ void RimeTableTest::PrepareSampleVocabulary(rime::Syllabary &syll,
 
 TEST_F(RimeTableTest, IntegrityTest) {
   table_.reset(new rime::Table(file_name));
-  ASSERT_TRUE(table_);
+  ASSERT_TRUE(bool(table_));
   ASSERT_TRUE(table_->Load());
 }
 

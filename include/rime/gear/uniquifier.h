@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-12-12 GONG Chen <chen.sst@gmail.com>
@@ -15,8 +15,8 @@ class Uniquifier : public Filter {
  public:
   explicit Uniquifier(const Ticket& ticket);
 
-  virtual void Apply(CandidateList *recruited,
-                     CandidateList *candidates);
+  virtual void Apply(CandidateList* recruited,
+                     CandidateList* candidates);
 };
 
 }  // namespace rime

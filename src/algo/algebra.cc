@@ -1,12 +1,11 @@
 //
-// Copyleft 2012 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2012-01-19 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
 #include <fstream>
-#include <boost/foreach.hpp>
 #include <rime/algo/algebra.h>
 #include <rime/algo/calculus.h>
 
@@ -24,7 +23,7 @@ void Script::Merge(const std::string& s,
                    const SpellingProperties& sp,
                    const std::vector<Spelling>& v) {
   std::vector<Spelling>& m((*this)[s]);
-  BOOST_FOREACH(const Spelling& x, v) {
+  for (const Spelling& x : v) {
     Spelling y(x);
     SpellingProperties& yy(y.properties);
     {
@@ -34,7 +33,7 @@ void Script::Merge(const std::string& s,
       if (!sp.tips.empty())
         yy.tips = sp.tips;
     }
-    std::vector<Spelling>::iterator e = std::find(m.begin(), m.end(), x);
+    auto e = std::find(m.begin(), m.end(), x);
     if (e == m.end()) {
       m.push_back(y);
     }
@@ -51,9 +50,9 @@ void Script::Merge(const std::string& s,
 
 void Script::Dump(const std::string& file_name) const {
   std::ofstream out(file_name.c_str());
-  BOOST_FOREACH(const value_type& v, *this) {
+  for (const value_type& v : *this) {
     bool first = true;
-    BOOST_FOREACH(const Spelling& s, v.second) {
+    for (const Spelling& s : v.second) {
       out << (first ? v.first : "") << '\t'
           << s.str << '\t'
           << "-ac?!"[s.properties.type] << '\t'
@@ -104,7 +103,7 @@ bool Projection::Apply(std::string* value) {
     return false;
   bool modified = false;
   Spelling s(*value);
-  BOOST_FOREACH(shared_ptr<Calculation>& x, calculation_) {
+  for (shared_ptr<Calculation>& x : calculation_) {
     try {
       if (x->Apply(&s))
         modified = true;
@@ -124,11 +123,11 @@ bool Projection::Apply(Script* value) {
     return false;
   bool modified = false;
   int round = 0;
-  BOOST_FOREACH(shared_ptr<Calculation>& x, calculation_) {
+  for (shared_ptr<Calculation>& x : calculation_) {
     ++round;
     DLOG(INFO) << "round #" << round;
     Script temp;
-    BOOST_FOREACH(const Script::value_type& v, *value) {
+    for (const Script::value_type& v : *value) {
       Spelling s(v.first);
       bool applied = false;
       try {

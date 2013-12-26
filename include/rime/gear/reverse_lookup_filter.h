@@ -20,8 +20,8 @@ class ReverseLookupFilter : public Filter, TagMatching {
  public:
   explicit ReverseLookupFilter(const Ticket& ticket);
 
-  virtual void Apply(CandidateList *recruited,
-                     CandidateList *candidates);
+  virtual void Apply(CandidateList* recruited,
+                     CandidateList* candidates);
 
   virtual bool AppliesToSegment(Segment* segment) {
     return TagsMatch(segment);
@@ -30,9 +30,10 @@ class ReverseLookupFilter : public Filter, TagMatching {
  protected:
   void Initialize();
 
-  bool initialized_;
-  scoped_ptr<ReverseLookupDictionary> rev_dict_;
-  bool overwrite_comment_;
+  bool initialized_ = false;
+  unique_ptr<ReverseLookupDictionary> rev_dict_;
+  // settings
+  bool overwrite_comment_ = false;
   Projection comment_formatter_;
 };
 

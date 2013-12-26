@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
@@ -35,7 +35,8 @@ class RimeSyllabifierTest : public ::testing::Test {
 
     prism_.reset(new rime::Prism("syllabifier_test.bin"));
     std::set<std::string> keyset;
-    std::copy(syllables.begin(), syllables.end(), std::inserter(keyset, keyset.begin()));
+    std::copy(syllables.begin(), syllables.end(),
+              std::inserter(keyset, keyset.begin()));
     prism_->Build(keyset);
   }
 
@@ -44,7 +45,7 @@ class RimeSyllabifierTest : public ::testing::Test {
 
  protected:
   std::map<std::string, int> syllable_id_;
-  boost::scoped_ptr<rime::Prism> prism_;
+  rime::unique_ptr<rime::Prism> prism_;
 };
 
 TEST_F(RimeSyllabifierTest, CaseAlpha) {
@@ -57,7 +58,7 @@ TEST_F(RimeSyllabifierTest, CaseAlpha) {
   EXPECT_EQ(2, g.vertices.size());
   ASSERT_FALSE(g.vertices.end() == g.vertices.find(1));
   EXPECT_EQ(rime::kNormalSpelling, g.vertices[1]);
-  rime::SpellingMap &sp(g.edges[0][1]);
+  rime::SpellingMap& sp(g.edges[0][1]);
   EXPECT_EQ(1, sp.size());
   ASSERT_FALSE(sp.end() == sp.find(syllable_id_["a"]));
   EXPECT_EQ(rime::kNormalSpelling, sp[0].type);
@@ -75,7 +76,7 @@ TEST_F(RimeSyllabifierTest, CaseFailure) {
   ASSERT_TRUE(g.vertices.end() == g.vertices.find(1));
   ASSERT_FALSE(g.vertices.end() == g.vertices.find(2));
   EXPECT_EQ(rime::kNormalSpelling, g.vertices[2]);
-  rime::SpellingMap &sp(g.edges[0][2]);
+  rime::SpellingMap& sp(g.edges[0][2]);
   EXPECT_EQ(1, sp.size());
   ASSERT_FALSE(sp.end() == sp.find(syllable_id_["an"]));
 }
@@ -95,19 +96,19 @@ TEST_F(RimeSyllabifierTest, CaseChangan) {
   EXPECT_EQ(rime::kNormalSpelling, g.vertices[4]);
   EXPECT_EQ(rime::kNormalSpelling, g.vertices[5]);
   // chan, chang but not cha
-  rime::EndVertexMap &e0(g.edges[0]);
+  rime::EndVertexMap& e0(g.edges[0]);
   EXPECT_EQ(2, e0.size());
   ASSERT_FALSE(e0.end() == e0.find(4));
   ASSERT_FALSE(e0.end() == e0.find(5));
   EXPECT_FALSE(e0[4].end() == e0[4].find(syllable_id_["chan"]));
   EXPECT_FALSE(e0[5].end() == e0[5].find(syllable_id_["chang"]));
   // gan$
-  rime::EndVertexMap &e4(g.edges[4]);
+  rime::EndVertexMap& e4(g.edges[4]);
   EXPECT_EQ(1, e4.size());
   ASSERT_FALSE(e4.end() == e4.find(7));
   EXPECT_FALSE(e4[7].end() == e4[7].find(syllable_id_["gan"]));
   // an$
-  rime::EndVertexMap &e5(g.edges[5]);
+  rime::EndVertexMap& e5(g.edges[5]);
   EXPECT_EQ(1, e5.size());
   ASSERT_FALSE(e5.end() == e5.find(7));
   EXPECT_FALSE(e5[7].end() == e5[7].find(syllable_id_["an"]));
@@ -126,14 +127,14 @@ TEST_F(RimeSyllabifierTest, CaseTuan) {
   ASSERT_FALSE(g.vertices.end() == g.vertices.find(4));
   EXPECT_EQ(rime::kAmbiguousSpelling, g.vertices[2]);
   EXPECT_EQ(rime::kNormalSpelling, g.vertices[4]);
-  rime::EndVertexMap &e0(g.edges[0]);
+  rime::EndVertexMap& e0(g.edges[0]);
   EXPECT_EQ(2, e0.size());
   ASSERT_FALSE(e0.end() == e0.find(2));
   ASSERT_FALSE(e0.end() == e0.find(4));
   EXPECT_FALSE(e0[2].end() == e0[2].find(syllable_id_["tu"]));
   EXPECT_FALSE(e0[4].end() == e0[4].find(syllable_id_["tuan"]));
   // an$
-  rime::EndVertexMap &e2(g.edges[2]);
+  rime::EndVertexMap& e2(g.edges[2]);
   EXPECT_EQ(1, e2.size());
   ASSERT_FALSE(e2.end() == e2.find(4));
   EXPECT_FALSE(e2[4].end() == e2[4].find(syllable_id_["an"]));

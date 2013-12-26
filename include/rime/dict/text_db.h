@@ -1,5 +1,5 @@
 //
-// Copyleft 2013 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2013-04-14 GONG Chen <chen.sst@gmail.com>
@@ -16,7 +16,7 @@ namespace rime {
 
 class TextDb;
 
-typedef std::map<std::string, std::string> TextDbData;
+using TextDbData = std::map<std::string, std::string>;
 
 class TextDbAccessor : public DbAccessor {
  public:
@@ -24,8 +24,8 @@ class TextDbAccessor : public DbAccessor {
   virtual ~TextDbAccessor();
 
   virtual bool Reset();
-  virtual bool Jump(const std::string &key);
-  virtual bool GetNextRecord(std::string *key, std::string *value);
+  virtual bool Jump(const std::string& key);
+  virtual bool GetNextRecord(std::string* key, std::string* value);
   virtual bool exhausted();
 
  private:
@@ -54,15 +54,15 @@ class TextDb : public Db {
   virtual bool Restore(const std::string& snapshot_file);
 
   virtual bool CreateMetadata();
-  virtual bool MetaFetch(const std::string &key, std::string *value);
-  virtual bool MetaUpdate(const std::string &key, const std::string &value);
+  virtual bool MetaFetch(const std::string& key, std::string* value);
+  virtual bool MetaUpdate(const std::string& key, const std::string& value);
 
   virtual shared_ptr<DbAccessor> QueryMetadata();
   virtual shared_ptr<DbAccessor> QueryAll();
-  virtual shared_ptr<DbAccessor> Query(const std::string &key);
-  virtual bool Fetch(const std::string &key, std::string *value);
-  virtual bool Update(const std::string &key, const std::string &value);
-  virtual bool Erase(const std::string &key);
+  virtual shared_ptr<DbAccessor> Query(const std::string& key);
+  virtual bool Fetch(const std::string& key, std::string* value);
+  virtual bool Update(const std::string& key, const std::string& value);
+  virtual bool Erase(const std::string& key);
 
  protected:
   void Clear();
@@ -73,7 +73,7 @@ class TextDb : public Db {
   TextFormat format_;
   TextDbData metadata_;
   TextDbData data_;
-  bool modified_;
+  bool modified_ = false;
 };
 
 }  // namespace rime

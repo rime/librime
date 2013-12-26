@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2011-12-11 GONG Chen <chen.sst@gmail.com>
@@ -22,17 +22,17 @@ class Filter : public Class<Filter, const Ticket&> {
  public:
   explicit Filter(const Ticket& ticket)
       : engine_(ticket.engine), name_space_(ticket.name_space) {}
-  virtual ~Filter() {}
+  virtual ~Filter() = default;
 
-  virtual void Apply(CandidateList *recruited,
-                     CandidateList *candidates) = 0;
+  virtual void Apply(CandidateList* recruited,
+                     CandidateList* candidates) = 0;
 
   virtual bool AppliesToSegment(Segment* segment) {
     return true;
   }
 
  protected:
-  Engine *engine_;
+  Engine* engine_;
   std::string name_space_;
 };
 

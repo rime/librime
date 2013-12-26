@@ -1,5 +1,5 @@
 //
-// Copyleft 2012 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // 2012-01-17 GONG Chen <chen.sst@gmail.com>
@@ -19,10 +19,10 @@ namespace rime {
 
 class Calculation {
  public:
-  typedef Calculation* Factory(const std::vector<std::string>& args);
+  using Factory = Calculation* (const std::vector<std::string>& args);
 
-  Calculation() {}
-  virtual ~Calculation() {}
+  Calculation() = default;
+  virtual ~Calculation() = default;
   virtual bool Apply(Spelling* spelling) = 0;
   virtual bool addition() { return true; }
   virtual bool deletion() { return true; }

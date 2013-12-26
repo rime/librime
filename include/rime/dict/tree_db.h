@@ -1,5 +1,5 @@
 //
-// Copyleft 2011 RIME Developers
+// Copyleft RIME Developers
 // License: GPLv3
 //
 // A simple wrapper for kyotocabinet::TreeDB
@@ -9,37 +9,30 @@
 #ifndef RIME_TREE_DB_H_
 #define RIME_TREE_DB_H_
 
-#if defined(_MSC_VER)
-#pragma warning(disable: 4244)
-#pragma warning(disable: 4351)
-#endif
-#include <kchashdb.h>
-#if defined(_MSC_VER)
-#pragma warning(default: 4351)
-#pragma warning(default: 4244)
-#endif
-
 #include <string>
 #include <rime/dict/db.h>
 
 namespace rime {
+
+struct TreeDbCursor;
+struct TreeDbWrapper;
 
 class TreeDb;
 
 class TreeDbAccessor : public DbAccessor {
  public:
   TreeDbAccessor();
-  TreeDbAccessor(kyotocabinet::DB::Cursor *cursor,
-                 const std::string &prefix);
+  TreeDbAccessor(TreeDbCursor* cursor,
+                 const std::string& prefix);
   virtual ~TreeDbAccessor();
 
   virtual bool Reset();
-  virtual bool Jump(const std::string &key);
-  virtual bool GetNextRecord(std::string *key, std::string *value);
+  virtual bool Jump(const std::string& key);
+  virtual bool GetNextRecord(std::string* key, std::string* value);
   virtual bool exhausted();
 
  private:
-  scoped_ptr<kyotocabinet::DB::Cursor> cursor_;
+  unique_ptr<TreeDbCursor> cursor_;
 };
 
 class TreeDb : public Db,
@@ -57,15 +50,15 @@ class TreeDb : public Db,
   virtual bool Restore(const std::string& snapshot_file);
 
   virtual bool CreateMetadata();
-  virtual bool MetaFetch(const std::string &key, std::string *value);
-  virtual bool MetaUpdate(const std::string &key, const std::string &value);
+  virtual bool MetaFetch(const std::string& key, std::string* value);
+  virtual bool MetaUpdate(const std::string& key, const std::string& value);
 
   virtual shared_ptr<DbAccessor> QueryMetadata();
   virtual shared_ptr<DbAccessor> QueryAll();
-  virtual shared_ptr<DbAccessor> Query(const std::string &key);
-  virtual bool Fetch(const std::string &key, std::string *value);
-  virtual bool Update(const std::string &key, const std::string &value);
-  virtual bool Erase(const std::string &key);
+  virtual shared_ptr<DbAccessor> Query(const std::string& key);
+  virtual bool Fetch(const std::string& key, std::string* value);
+  virtual bool Update(const std::string& key, const std::string& value);
+  virtual bool Erase(const std::string& key);
 
   // Recoverable
   virtual bool Recover();
@@ -78,7 +71,7 @@ class TreeDb : public Db,
  private:
   void Initialize();
 
-  scoped_ptr<kyotocabinet::TreeDB> db_;
+  unique_ptr<TreeDbWrapper> db_;
   std::string db_type_;
 };
 
