@@ -111,6 +111,23 @@ class Sentence : public Phrase {
 
 //
 
+class CacheTranslation : public Translation {
+ public:
+  CacheTranslation(shared_ptr<Translation> translation);
+
+  virtual bool Next();
+  virtual shared_ptr<Candidate> Peek();
+
+ protected:
+  shared_ptr<Translation> translation_;
+  shared_ptr<Candidate> cache_;
+};
+
+template <class T, class... Args>
+inline shared_ptr<Translation> Cached(Args&&... args) {
+  return New<CacheTranslation>(New<T>(std::forward<Args>(args)...));
+}
+
 class CharsetFilter : public Translation {
  public:
   CharsetFilter(shared_ptr<Translation> translation);
@@ -127,18 +144,14 @@ class CharsetFilter : public Translation {
   shared_ptr<Translation> translation_;
 };
 
-//
-
-class UniqueFilter : public Translation {
+class UniqueFilter : public CacheTranslation {
  public:
   UniqueFilter(shared_ptr<Translation> translation);
   virtual bool Next();
-  virtual shared_ptr<Candidate> Peek();
 
  protected:
   bool AlreadyHas(const std::string& text) const;
 
-  shared_ptr<Translation> translation_;
   std::set<std::string> candidate_set_;
 };
 
