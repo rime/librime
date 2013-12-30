@@ -70,16 +70,23 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   if (is_shift || is_ctrl) {
     if (key_event.release()) {
       if (shift_key_pressed_ || ctrl_key_pressed_) {
-        ToggleAsciiModeWithKey(ch);
+        auto now = std::chrono::steady_clock::now();
+        if (now < toggle_expired_) {
+          ToggleAsciiModeWithKey(ch);
+        }
         shift_key_pressed_ = ctrl_key_pressed_ = false;
         return kRejected;
       }
     }
-    else {  // start pressing
+    else if (!(shift_key_pressed_ || ctrl_key_pressed_)) {  // first key down
       if (is_shift)
         shift_key_pressed_ = true;
       else
         ctrl_key_pressed_ = true;
+      // will not toggle unless the toggle key is released shortly
+      const auto toggle_duration_limit = std::chrono::milliseconds(500);
+      auto now = std::chrono::steady_clock::now();
+      toggle_expired_= now + toggle_duration_limit;
     }
     return kNoop;
   }
