@@ -9,15 +9,27 @@
 
 #include <stdint.h>
 #include <string>
-#include <vector>
+#include <boost/crc.hpp>
 
 namespace rime {
 
 int CompareVersionString(const std::string& x,
                          const std::string& y);
 
-uint32_t Checksum(const std::string& file_name);
-uint32_t Checksum(const std::vector<std::string>& files);
+class ChecksumComputer {
+ public:
+  void ProcessFile(const std::string& file_name);
+  uint32_t Checksum();
+
+ private:
+  boost::crc_32_type crc_;
+};
+
+inline uint32_t Checksum(const std::string& file_name) {
+  ChecksumComputer c;
+  c.ProcessFile(file_name);
+  return c.Checksum();
+}
 
 }  // namespace rime
 

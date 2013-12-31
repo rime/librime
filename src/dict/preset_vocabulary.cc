@@ -37,12 +37,16 @@ VocabularyDb::VocabularyDb()
   kcdb.tune_page(32768);
 }
 
-PresetVocabulary::PresetVocabulary() {
+std::string PresetVocabulary::DictFilePath() {
   boost::filesystem::path path(Service::instance().deployer().shared_data_dir);
   path /= "essay.kct";
+  return path.string();
+}
+
+PresetVocabulary::PresetVocabulary() {
   db_.reset(new VocabularyDb);
   if (!db_) return;
-  if (!db_->kcdb.open(path.string(), kyotocabinet::TreeDB::OREADER)) {
+  if (!db_->kcdb.open(DictFilePath(), kyotocabinet::TreeDB::OREADER)) {
     db_.reset();
   }
 }
