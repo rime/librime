@@ -5,6 +5,7 @@
 // 2013-01-30 GONG Chen <chen.sst@gmail.com>
 //
 #include <fstream>
+#include <vector>
 #include <boost/algorithm/string.hpp>
 #include <rime/algo/utilities.h>
 
