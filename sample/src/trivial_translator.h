@@ -5,8 +5,8 @@
 // 2011-04-26 Wensong He <snowhws@gmail.com>
 // 2013-10-20 GONG Chen <chen.sst@gmail.com>
 //
-#ifndef RIME_TRIVIAL_TRANSLATOR_H_
-#define RIME_TRIVIAL_TRANSLATOR_H_
+#ifndef TRIVIAL_TRANSLATOR_H_
+#define TRIVIAL_TRANSLATOR_H_
 
 #include <map>
 #include <string>
@@ -14,7 +14,9 @@
 #include <rime/translation.h>
 #include <rime/translator.h>
 
-namespace rime {
+namespace sample {
+
+using namespace rime;
 
 class TrivialTranslator : public Translator {
  public:
@@ -31,6 +33,6 @@ class TrivialTranslator : public Translator {
   TrivialDictionary dictionary_;
 };
 
-}  // namespace rime
+}  // namespace sample
 
-#endif  // RIME_TRIVIAL_TRANSLATOR_H_
+#endif  // TRIVIAL_TRANSLATOR_H_

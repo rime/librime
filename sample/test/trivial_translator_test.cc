@@ -40,7 +40,7 @@ TEST(/*DISABLED_*/TrivialTranslatorTest, Query) {
   ASSERT_FALSE(translation->exhausted());
   auto candidate = translation->Peek();
   ASSERT_TRUE(bool(candidate));
-  EXPECT_EQ("abc", candidate->type());
+  EXPECT_EQ("trivial", candidate->type());
   EXPECT_EQ(expected_output, candidate->text());
   EXPECT_EQ(segment.start, candidate->start());
   EXPECT_EQ(segment.end, candidate->end());
