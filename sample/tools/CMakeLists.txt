@@ -6,5 +6,7 @@ add_dependencies(sample_console rime-sample)
 
 file(COPY ${PROJECT_SOURCE_DIR}/tools/default.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
+file(COPY ${PROJECT_SOURCE_DIR}/tools/symbols.yaml
+     DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 file(COPY ${PROJECT_SOURCE_DIR}/tools/sample.schema.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
