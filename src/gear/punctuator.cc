@@ -74,8 +74,7 @@ ConfigItemPtr PunctConfig::GetPunctDefinition(const std::string key) {
 }
 
 Punctuator::Punctuator(const Ticket& ticket) : Processor(ticket),
-                                               use_space_(false),
-                                               oddness_(0) {
+                                               use_space_(false) {
   Config *config = engine_->schema()->config();
   if (config) {
     config->GetBool("punctuator/use_space", &use_space_);
@@ -170,8 +169,9 @@ bool Punctuator::PairPunct(const ConfigItemPtr &definition) {
       return false;
     }
     DLOG(INFO) << "alternating paired punctuation.";
-    (segment.selected_index += oddness_) %= 2;
-    oddness_ = 1 - oddness_;
+    auto& oddness(oddness_[definition]);
+    (segment.selected_index += oddness) %= 2;
+    oddness = 1 - oddness;
     ctx->ConfirmCurrentSelection();
     return true;
   }

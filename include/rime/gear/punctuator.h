@@ -7,6 +7,7 @@
 #ifndef RIME_PUNCTUATOR_H_
 #define RIME_PUNCTUATOR_H_
 
+#include <map>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/config.h>
@@ -43,7 +44,7 @@ class Punctuator : public Processor {
 
   PunctConfig config_;
   bool use_space_;
-  int oddness_;
+  std::map<ConfigItemPtr, int> oddness_;
 };
 
 class PunctSegmentor : public Segmentor {
