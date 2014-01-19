@@ -14,6 +14,7 @@
 #include <rime/dict/dict_compiler.h>
 #include <rime/dict/dict_settings.h>
 #include <rime/dict/entry_collector.h>
+#include <rime/dict/preset_vocabulary.h>
 #include <rime/dict/prism.h>
 #include <rime/dict/table.h>
 #include <rime/dict/tree_db.h>
@@ -53,8 +54,17 @@ bool DictCompiler::Compile(const std::string &schema_file) {
       return false;
     dict_files.push_back(dict_file);
   }
-  uint32_t dict_file_checksum =
-      dict_file.empty() ? 0 : Checksum(dict_files);
+  uint32_t dict_file_checksum = 0;
+  if (!dict_files.empty()) {
+    ChecksumComputer cc;
+    BOOST_FOREACH(const auto& file_name, dict_files) {
+      cc.ProcessFile(file_name);
+    }
+    if (settings.use_preset_vocabulary()) {
+      cc.ProcessFile(PresetVocabulary::DictFilePath());
+    }
+    dict_file_checksum = cc.Checksum();
+  }
   uint32_t schema_file_checksum =
       schema_file.empty() ? 0 : Checksum(schema_file);
   LOG(INFO) << dict_file << "[" << dict_files.size() << "]"

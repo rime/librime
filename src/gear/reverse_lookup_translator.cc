@@ -183,13 +183,15 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string &input,
     }
   }
   if (!iter.exhausted()) {
-    return boost::make_shared<ReverseLookupTranslation>(rev_dict_.get(),
-                                                        options_.get(),
-                                                        code,
-                                                        segment.start,
-                                                        segment.end,
-                                                        preedit,
-                                                        iter, quality);
+    return New<CacheTranslation>(
+        boost::make_shared<ReverseLookupTranslation>(
+            rev_dict_.get(),
+            options_.get(),
+            code,
+            segment.start,
+            segment.end,
+            preedit,
+            iter, quality));
   }
   return shared_ptr<Translation>();
 }

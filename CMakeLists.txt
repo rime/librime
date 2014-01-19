@@ -10,7 +10,7 @@ set(LIBRIME_SOVERSION 1)
 option(BUILD_SHARED_LIBS "Build Rime as shared library" ON)
 option(BUILD_STATIC "Build Rime using static libraries" OFF)
 option(BUILD_DATA "Build data for Rime" OFF)
-option(BUILD_TEST "Build gtest framwork for Rime" OFF)
+option(BUILD_TEST "Build and run tests" OFF)
 option(BUILD_SEPARATE_LIBS "Build a separate rime-gears library" OFF)
 
 SET(RIME_DATA_DIR "/share/rime-data" CACHE STRING "Target directory for Rime data")

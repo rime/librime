@@ -9,9 +9,9 @@
 
 #include <rime/candidate.h>
 #include <rime/segmentation.h>
-#include <rime/sample/trivial_translator.h>
+#include "trivial_translator.h"
 
-namespace rime {
+namespace sample {
 
 TrivialTranslator::TrivialTranslator(const Ticket& ticket)
     : Translator(ticket) {
@@ -79,4 +79,4 @@ std::string TrivialTranslator::Translate(const std::string &input) {
   return result;
 }
 
-}  // namespace rime
+}  // namespace sample

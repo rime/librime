@@ -261,13 +261,14 @@ shared_ptr<Translation> TableTranslator::Query(const std::string& input,
 
   shared_ptr<Translation> translation;
   if (enable_completion_) {
-    translation = boost::make_shared<LazyTableTranslation>(
-        this,
-        code,
-        segment.start,
-        segment.start + input.length(),
-        preedit,
-        enable_user_dict);
+    translation = New<CacheTranslation>(
+        boost::make_shared<LazyTableTranslation>(
+            this,
+            code,
+            segment.start,
+            segment.start + input.length(),
+            preedit,
+            enable_user_dict));
   }
   else {
     DictEntryIterator iter;
@@ -282,15 +283,16 @@ shared_ptr<Translation> TableTranslator::Query(const std::string& input,
       }
     }
     if (!iter.exhausted() || !uter.exhausted())
-      translation = boost::make_shared<TableTranslation>(
-          this,
-          language(),
-          code,
-          segment.start,
-          segment.start + input.length(),
-          preedit,
-          iter,
-          uter);
+      translation = New<CacheTranslation>(
+          boost::make_shared<TableTranslation>(
+              this,
+              language(),
+              code,
+              segment.start,
+              segment.start + input.length(),
+              preedit,
+              iter,
+              uter));
   }
   if (translation) {
     bool filter_by_charset = enable_charset_filter_ &&
@@ -673,13 +675,14 @@ TableTranslator::MakeSentence(const std::string& input, size_t start,
   }
   shared_ptr<Translation> result;
   if (sentences.find(input.length()) != sentences.end()) {
-    result = boost::make_shared<SentenceTranslation>(
-        this,
-        sentences[input.length()],
-        include_prefix_phrases ? &collector : NULL,
-        include_prefix_phrases ? &user_phrase_collector : NULL,
-        input,
-        start);
+    result = New<CacheTranslation>(
+        boost::make_shared<SentenceTranslation>(
+            this,
+            sentences[input.length()],
+            include_prefix_phrases ? &collector : NULL,
+            include_prefix_phrases ? &user_phrase_collector : NULL,
+            input,
+            start));
     if (result && filter_by_charset) {
       result = make_shared<CharsetFilter>(result);
     }

@@ -5,9 +5,8 @@
 // 2013-01-30 GONG Chen <chen.sst@gmail.com>
 //
 #include <fstream>
+#include <vector>
 #include <boost/algorithm/string.hpp>
-#include <boost/crc.hpp>
-#include <boost/foreach.hpp>
 #include <rime/algo/utilities.h>
 
 namespace rime {
@@ -32,24 +31,15 @@ int CompareVersionString(const std::string& x, const std::string& y) {
   return 0;
 }
 
-uint32_t Checksum(const std::string& file_name) {
+void ChecksumComputer::ProcessFile(const std::string& file_name) {
   std::ifstream fin(file_name.c_str());
   std::string file_content((std::istreambuf_iterator<char>(fin)),
                            std::istreambuf_iterator<char>());
-  boost::crc_32_type crc_32;
-  crc_32.process_bytes(file_content.data(), file_content.length());
-  return crc_32.checksum();
+  crc_.process_bytes(file_content.data(), file_content.length());
 }
 
-uint32_t Checksum(const std::vector<std::string>& files) {
-  boost::crc_32_type crc_32;
-  BOOST_FOREACH(const std::string& file_name, files) {
-    std::ifstream fin(file_name.c_str());
-    std::string file_content((std::istreambuf_iterator<char>(fin)),
-                             std::istreambuf_iterator<char>());
-    crc_32.process_bytes(file_content.data(), file_content.length());
-  }
-  return crc_32.checksum();
+uint32_t ChecksumComputer::Checksum() {
+  return crc_.checksum();
 }
 
 }  // namespace rime

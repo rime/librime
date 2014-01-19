@@ -47,6 +47,34 @@ void Sentence::Offset(size_t offset) {
   set_end(end() + offset);
 }
 
+// CacheTranslation
+
+CacheTranslation::CacheTranslation(shared_ptr<Translation> translation)
+    : translation_(translation) {
+  set_exhausted(!translation_ || translation_->exhausted());
+}
+
+bool CacheTranslation::Next() {
+  if (exhausted())
+    return false;
+  cache_.reset();
+  translation_->Next();
+  if (translation_->exhausted()) {
+    set_exhausted(true);
+    return false;
+  }
+  return true;
+}
+
+shared_ptr<Candidate> CacheTranslation::Peek() {
+  if (exhausted())
+    return shared_ptr<Candidate>();
+  if (!cache_) {
+    cache_ = translation_->Peek();
+  }
+  return cache_;
+}
+
 // CharsetFilter
 
 CharsetFilter::CharsetFilter(shared_ptr<Translation> translation)
@@ -99,8 +127,7 @@ bool CharsetFilter::FilterDictEntry(shared_ptr<DictEntry> entry) {
 // UniqueFilter
 
 UniqueFilter::UniqueFilter(shared_ptr<Translation> translation)
-    : translation_(translation) {
-  set_exhausted(!translation_ || translation_->exhausted());
+    : CacheTranslation(translation) {
 }
 
 bool UniqueFilter::Next() {
@@ -108,22 +135,12 @@ bool UniqueFilter::Next() {
     return false;
   // skip duplicate candidates
   do {
-    candidate_set_.insert(translation_->Peek()->text());
-    translation_->Next();
+    candidate_set_.insert(Peek()->text());
+    CacheTranslation::Next();
   }
-  while (!translation_->exhausted() &&
-         AlreadyHas(translation_->Peek()->text()));
-  if (translation_->exhausted()) {
-    set_exhausted(true);
-    return false;
-  }
-  return true;
-}
-
-shared_ptr<Candidate> UniqueFilter::Peek() {
-  if (exhausted())
-    return shared_ptr<Candidate>();
-  return translation_->Peek();
+  while (!exhausted() &&
+         AlreadyHas(Peek()->text()));
+  return !exhausted();
 }
 
 bool UniqueFilter::AlreadyHas(const std::string& text) const {

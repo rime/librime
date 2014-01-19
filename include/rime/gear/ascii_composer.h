@@ -8,6 +8,7 @@
 #define RIME_ASCII_COMPOSER_H_
 
 #include <map>
+#include <boost/chrono.hpp>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/processor.h>
@@ -48,6 +49,8 @@ class AsciiComposer : public Processor {
   bool toggle_with_caps_;
   bool shift_key_pressed_;
   bool ctrl_key_pressed_;
+  typedef boost::chrono::time_point<boost::chrono::steady_clock> TimePoint;
+  TimePoint toggle_expired_;
   connection connection_;
 };
 
