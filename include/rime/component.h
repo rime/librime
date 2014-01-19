@@ -15,13 +15,13 @@ namespace rime {
 
 class ComponentBase {
  public:
-  ComponentBase() = default;
-  virtual ~ComponentBase() = default;
+  ComponentBase() {}
+  virtual ~ComponentBase() {}
 };
 
 template <class T, class Arg>
 struct Class {
-  using Initializer = Arg;
+  typedef Arg Initializer;
 
   class Component : public ComponentBase {
    public:

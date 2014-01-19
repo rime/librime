@@ -23,7 +23,8 @@ UnityTableEncoder::~UnityTableEncoder() {
 }
 
 bool UnityTableEncoder::Load(const Ticket& ticket) {
-  auto c = ReverseLookupDictionary::Require("reverse_lookup_dictionary");
+  ReverseLookupDictionary::Component *c =
+      ReverseLookupDictionary::Require("reverse_lookup_dictionary");
   if (!c) {
     LOG(ERROR) << "component not available: reverse_lookup_dictionary";
     return false;
@@ -33,7 +34,7 @@ bool UnityTableEncoder::Load(const Ticket& ticket) {
     LOG(ERROR) << "error loading dictionary for unity table encoder.";
     return false;
   }
-  auto settings = rev_dict_->GetDictSettings();
+  shared_ptr<DictSettings> settings = rev_dict_->GetDictSettings();
   if (!settings || !settings->use_rule_based_encoder()) {
     LOG(WARNING) << "unity table encoder is not enabled in dict settings.";
     return false;
@@ -41,11 +42,10 @@ bool UnityTableEncoder::Load(const Ticket& ticket) {
   return LoadSettings(settings.get());
 }
 
-void UnityTableEncoder::CreateEntry(const std::string& word,
-                                    const std::string& code_str,
-                                    const std::string& weight_str) {
-  if (!user_dict_)
-    return;
+void UnityTableEncoder::CreateEntry(const std::string &word,
+                                    const std::string &code_str,
+                                    const std::string &weight_str) {
+  if (!user_dict_) return;
   DictEntry entry;
   entry.text = word;
   entry.custom_code = code_str + ' ';
@@ -72,8 +72,7 @@ size_t UnityTableEncoder::LookupPhrases(UserDictEntryIterator* result,
                                         bool predictive,
                                         size_t limit,
                                         std::string* resume_key) {
-  if (!user_dict_)
-    return 0;
+  if (!user_dict_) return 0;
   return user_dict_->LookupWords(result,
                                  kEncodedPrefix + input,
                                  predictive, limit, resume_key);
@@ -89,8 +88,7 @@ bool UnityTableEncoder::AddPrefix(std::string* key) {
 }
 
 bool UnityTableEncoder::RemovePrefix(std::string* key) {
-  if (!HasPrefix(*key))
-    return false;
+  if (!HasPrefix(*key)) return false;
   key->erase(0, strlen(kEncodedPrefix));
   return true;
 }

@@ -5,6 +5,7 @@
 // 2013-07-17 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 #include <utf8.h>
 #include <rime/config.h>
 #include <rime/algo/encoder.h>
@@ -53,9 +54,9 @@ bool TableEncoder::LoadSettings(Config* config) {
 
   if (!config) return false;
 
-  if (auto rules = config->GetList("encoder/rules")) {
-    for (auto it = rules->begin(); it != rules->end(); ++it) {
-      auto rule = As<ConfigMap>(*it);
+  if (ConfigListPtr rules = config->GetList("encoder/rules")) {
+    for (ConfigList::Iterator it = rules->begin(); it != rules->end(); ++it) {
+      ConfigMapPtr rule = As<ConfigMap>(*it);
       if (!rule || !rule->HasKey("formula"))
         continue;
       const std::string formula(rule->GetValue("formula")->str());
@@ -74,7 +75,8 @@ bool TableEncoder::LoadSettings(Config* config) {
           max_phrase_length_ = length;
         }
       }
-      else if (auto range = As<ConfigList>(rule->Get("length_in_range"))) {
+      else if (ConfigListPtr range =
+               As<ConfigList>(rule->Get("length_in_range"))) {
         if (range->size() != 2 ||
             !range->GetValueAt(0) ||
             !range->GetValueAt(1) ||
@@ -94,9 +96,10 @@ bool TableEncoder::LoadSettings(Config* config) {
       max_phrase_length_ = kMaxPhraseLength;
     }
   }
-  if (auto excludes = config->GetList("encoder/exclude_patterns")) {
-    for (auto it = excludes->begin(); it != excludes->end(); ++it) {
-      auto pattern = As<ConfigValue>(*it);
+  if (ConfigListPtr excludes = config->GetList("encoder/exclude_patterns")) {
+    for (ConfigList::Iterator it = excludes->begin();
+         it != excludes->end(); ++it) {
+      ConfigValuePtr pattern = As<ConfigValue>(*it);
       if (!pattern)
         continue;
       exclude_patterns_.push_back(boost::regex(pattern->str()));
@@ -114,7 +117,8 @@ bool TableEncoder::ParseFormula(const std::string& formula,
     LOG(ERROR) << "bad formula: '%s'" << formula;
     return false;
   }
-  for (auto it = formula.cbegin(), end = formula.cend(); it != end; ) {
+  for (std::string::const_iterator it = formula.begin(), end = formula.end();
+       it != end; ) {
     CodeCoords c;
     if (*it < 'A' || *it > 'Z') {
       LOG(ERROR) << "invalid character index in formula: '%s'" << formula;
@@ -134,7 +138,7 @@ bool TableEncoder::ParseFormula(const std::string& formula,
 }
 
 bool TableEncoder::IsCodeExcluded(const std::string& code) {
-  for (const boost::regex& pattern : exclude_patterns_) {
+  BOOST_FOREACH(const boost::regex& pattern, exclude_patterns_) {
     if (boost::regex_match(code, pattern))
       return true;
   }
@@ -143,7 +147,7 @@ bool TableEncoder::IsCodeExcluded(const std::string& code) {
 
 bool TableEncoder::Encode(const RawCode& code, std::string* result) {
   int num_syllables = static_cast<int>(code.size());
-  for (const TableEncodingRule& rule : encoding_rules_) {
+  BOOST_FOREACH(const TableEncodingRule& rule, encoding_rules_) {
     if (num_syllables < rule.min_word_length ||
         num_syllables > rule.max_word_length) {
       continue;
@@ -151,7 +155,7 @@ bool TableEncoder::Encode(const RawCode& code, std::string* result) {
     result->clear();
     CodeCoords previous = {0, 0};
     CodeCoords encoded = {0, 0};
-    for (const CodeCoords& current : rule.coords) {
+    BOOST_FOREACH(const CodeCoords& current, rule.coords) {
       CodeCoords c(current);
       if (c.char_index < 0) {
         c.char_index += num_syllables;
@@ -283,7 +287,7 @@ bool TableEncoder::DfsEncode(const std::string& phrase,
   bool ret = false;
   std::vector<std::string> translations;
   if (collector_->TranslateWord(word, &translations)) {
-    for (const std::string& x : translations) {
+    BOOST_FOREACH(const std::string& x, translations) {
       if (IsCodeExcluded(x)) {
         continue;
       }
@@ -332,7 +336,7 @@ bool ScriptEncoder::DfsEncode(const std::string& phrase,
     std::string word(phrase.substr(start_pos, k));
     std::vector<std::string> translations;
     if (collector_->TranslateWord(word, &translations)) {
-      for (const std::string& x : translations) {
+      BOOST_FOREACH(const std::string& x, translations) {
         code->push_back(x);
         bool ok = DfsEncode(phrase, value, start_pos + k, code, limit);
         ret = ret || ok;

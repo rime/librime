@@ -16,8 +16,8 @@ namespace rime {
 
 class Translation {
  public:
-  Translation() = default;
-  virtual ~Translation() = default;
+  Translation() : exhausted_(false) {}
+  virtual ~Translation() {}
 
   // A translation may contain multiple results, looks
   // something like a generator of candidates.
@@ -28,7 +28,7 @@ class Translation {
   // should it provide the next candidate (negative value, zero) or
   // should it give up the chance for other translations (positive)?
   virtual int Compare(shared_ptr<Translation> other,
-                      const CandidateList& candidates);
+                      const CandidateList &candidates);
 
   bool exhausted() const { return exhausted_; }
 
@@ -36,15 +36,16 @@ class Translation {
   void set_exhausted(bool exhausted) { exhausted_ = exhausted; }
 
  private:
-  bool exhausted_ = false;
+  bool exhausted_;
 };
 
 class UniqueTranslation : public Translation {
  public:
-  UniqueTranslation(shared_ptr<Candidate> candidate)
+  UniqueTranslation(const shared_ptr<Candidate> &candidate)
       : candidate_(candidate) {
   }
-  virtual ~UniqueTranslation() = default;
+  virtual ~UniqueTranslation() {
+  }
 
   virtual bool Next() {
     if (exhausted())
@@ -55,7 +56,7 @@ class UniqueTranslation : public Translation {
 
   virtual shared_ptr<Candidate> Peek() {
     if (exhausted())
-      return nullptr;
+      return shared_ptr<Candidate>();
     return candidate_;
   }
 
@@ -65,7 +66,7 @@ class UniqueTranslation : public Translation {
 
 class FifoTranslation : public Translation {
  public:
-  FifoTranslation() {
+  FifoTranslation() : cursor_(0) {
     set_exhausted(true);
   }
 
@@ -79,11 +80,11 @@ class FifoTranslation : public Translation {
 
   shared_ptr<Candidate> Peek() {
     if (exhausted())
-      return nullptr;
+      return shared_ptr<Candidate>();
     return candies_[cursor_];
   }
 
-  void Append(const shared_ptr<Candidate>& candy) {
+  void Append(const shared_ptr<Candidate> &candy) {
     candies_.push_back(candy);
     set_exhausted(false);
   }
@@ -93,8 +94,8 @@ class FifoTranslation : public Translation {
   }
 
  protected:
-  std::vector<shared_ptr<Candidate>> candies_;
-  size_t cursor_ = 0;
+  std::vector<shared_ptr<Candidate> > candies_;
+  size_t cursor_;
 };
 
 } // namespace rime

@@ -15,6 +15,8 @@ namespace {
 struct node_t {
   std::string key;
   size_t node_pos;
+  node_t(const std::string& k, size_t pos) : key(k), node_pos(pos) {
+  }
 };
 
 }  // namespace
@@ -28,8 +30,7 @@ const size_t kPrismFormatPrefixLen = sizeof(kPrismFormatPrefix) - 1;
 
 const char kDefaultAlphabet[] = "abcdefghijklmnopqrstuvwxyz";
 
-SpellingAccessor::SpellingAccessor(prism::SpellingMap* spelling_map,
-                                   int spelling_id)
+SpellingAccessor::SpellingAccessor(prism::SpellingMap* spelling_map, int spelling_id)
     : spelling_id_(spelling_id), iter_(NULL), end_(NULL) {
   if (spelling_map && spelling_id < static_cast<int>(spelling_map->size)) {
     iter_ = spelling_map->at[spelling_id].begin();
@@ -67,10 +68,6 @@ SpellingProperties SpellingAccessor::properties() const {
   return props;
 }
 
-Prism::Prism(const std::string& file_name)
-  : MappedFile(file_name), trie_(new Darts::DoubleArray) {
-}
-
 bool Prism::Load() {
   LOG(INFO) << "loading prism file: " << file_name();
 
@@ -95,7 +92,7 @@ bool Prism::Load() {
   }
   format_ = atof(&metadata_->format[kPrismFormatPrefixLen]);
 
-  char* array = metadata_->double_array.get();
+  char *array = metadata_->double_array.get();
   if (!array) {
     LOG(ERROR) << "double array image not found.";
     Close();
@@ -121,24 +118,26 @@ bool Prism::Save() {
   return ShrinkToFit();
 }
 
-bool Prism::Build(const Syllabary& syllabary,
-                  const Script* script,
+bool Prism::Build(const Syllabary &syllabary,
+                  const Script *script,
                   uint32_t dict_file_checksum,
                   uint32_t schema_file_checksum) {
   // building double-array trie
   size_t num_syllables = syllabary.size();
   size_t num_spellings = script ? script->size() : syllabary.size();
-  std::vector<const char*> keys(num_spellings);
+  std::vector<const char *> keys(num_spellings);
   size_t key_id = 0;
   size_t map_size = 0;
   if (script) {
-    for (auto it = script->begin(); it != script->end(); ++it, ++key_id) {
+    for (Script::const_iterator it = script->begin();
+         it != script->end(); ++it, ++key_id) {
       keys[key_id] = it->first.c_str();
       map_size += it->second.size();
     }
   }
   else {
-    for (auto it = syllabary.begin(); it != syllabary.end(); ++it, ++key_id) {
+    for (Syllabary::const_iterator it = syllabary.begin();
+         it != syllabary.end(); ++it, ++key_id) {
       keys[key_id] = it->c_str();
     }
   }
@@ -158,7 +157,7 @@ bool Prism::Build(const Syllabary& syllabary,
     return false;
   }
   // creating metadata
-  auto metadata = Allocate<prism::Metadata>();
+  prism::Metadata *metadata = Allocate<prism::Metadata>();
   if (!metadata) {
     LOG(ERROR) << "Error creating metadata in file '" << file_name() << "'.";
     return false;
@@ -172,16 +171,16 @@ bool Prism::Build(const Syllabary& syllabary,
   {
     std::set<char> alphabet;
     for (size_t i = 0; i < num_spellings; ++i)
-      for (const char* p = keys[i]; *p; ++p)
+      for (const char *p = keys[i]; *p; ++p)
         alphabet.insert(*p);
-    char* p = metadata->alphabet;
+    char *p = metadata->alphabet;
     std::set<char>::const_iterator c = alphabet.begin();
     for (; c != alphabet.end(); ++p, ++c)
       *p = *c;
     *p = '\0';
   }
   // saving double-array image
-  char* array = Allocate<char>(image_size);
+  char *array = Allocate<char>(image_size);
   if (!array) {
     LOG(ERROR) << "Error creating double-array image.";
     return false;
@@ -193,17 +192,19 @@ bool Prism::Build(const Syllabary& syllabary,
   if (script) {
     std::map<std::string, prism::SyllableId> syllable_to_id;
     prism::SyllableId syll_id = 0;
-    for (auto it = syllabary.begin(); it != syllabary.end(); ++it) {
+    for (Syllabary::const_iterator it = syllabary.begin();
+         it != syllabary.end(); ++it) {
       syllable_to_id[*it] = syll_id++;
     }
-    auto spelling_map = CreateArray<prism::SpellingMapItem>(num_spellings);
+    prism::SpellingMap* spelling_map = CreateArray<prism::SpellingMapItem>(num_spellings);
     if (!spelling_map) {
       LOG(ERROR) << "Error creating spelling map.";
       return false;
     }
-    auto i = script->begin();
-    auto item = spelling_map->begin();
-    for (; i != script->end(); ++i, ++item) {
+    Script::const_iterator i;
+    prism::SpellingMapItem* item;
+    for (i = script->begin(), item = spelling_map->begin();
+         i != script->end(); ++i, ++item) {
       size_t list_size = i->second.size();
       item->size = list_size;
       item->at = Allocate<prism::SpellingDescriptor>(list_size);
@@ -211,9 +212,10 @@ bool Prism::Build(const Syllabary& syllabary,
         LOG(ERROR) << "Error creating spelling descriptors.";
         return false;
       }
-      auto j = i->second.begin();
-      auto desc = item->begin();
-      for (; j != i->second.end(); ++j, ++desc) {
+      std::vector<Spelling>::const_iterator j;
+      prism::SpellingDescriptor* desc;
+      for (j = i->second.begin(), desc = item->begin();
+           j != i->second.end(); ++j, ++desc) {
         desc->syllable_id = syllable_to_id[j->str];
         desc->type = static_cast<int32_t>(j->properties.type);
         desc->credibility = j->properties.credibility;
@@ -228,18 +230,17 @@ bool Prism::Build(const Syllabary& syllabary,
     spelling_map_ = spelling_map;
   }
   // at last, complete the metadata
-  std::strncpy(metadata->format, kPrismFormat,
-               prism::Metadata::kFormatMaxLength);
+  std::strncpy(metadata->format, kPrismFormat, prism::Metadata::kFormatMaxLength);
   return true;
 }
 
-bool Prism::HasKey(const std::string& key) {
+bool Prism::HasKey(const std::string &key) {
   Darts::DoubleArray::value_type value;
   trie_->exactMatchSearch(key.c_str(), value);
   return value != -1;
 }
 
-bool Prism::GetValue(const std::string& key, int* value) {
+bool Prism::GetValue(const std::string &key, int *value) {
   Darts::DoubleArray::result_pair_type result;
   trie_->exactMatchSearch(key.c_str(), result);
 
@@ -250,22 +251,17 @@ bool Prism::GetValue(const std::string& key, int* value) {
   return true;
 }
 
-// Given a key, search all the keys in the tree that share
-// a common prefix with that key.
-void Prism::CommonPrefixSearch(const std::string& key,
-                               std::vector<Match>* result) {
+// Given a key, search all the keys in the tree which share a common prefix with that key.
+void Prism::CommonPrefixSearch(const std::string &key, std::vector<Match> *result) {
   if (!result || key.empty())
     return;
   size_t len = key.length();
   result->resize(len);
-  size_t num_results = trie_->commonPrefixSearch(key.c_str(),
-                                                 &result->front(), len, len);
+  size_t num_results = trie_->commonPrefixSearch(key.c_str(), &result->front(), len, len);
   result->resize(num_results);
 }
 
-void Prism::ExpandSearch(const std::string& key,
-                         std::vector<Match>* result,
-                         size_t limit) {
+void Prism::ExpandSearch(const std::string &key, std::vector<Match> *result, size_t limit) {
   if (!result)
     return;
   result->clear();
@@ -277,16 +273,21 @@ void Prism::ExpandSearch(const std::string& key,
   if (ret == -2)
     return;
   if (ret != -1) {
-    result->push_back(Match{ret, key_pos});
+    {
+      Match match;
+      match.value = ret;
+      match.length = key_pos;
+      result->push_back(match);
+    }
     if (limit && ++count >= limit)
       return;
   }
   std::queue<node_t> q;
-  q.push({key, node_pos});
+  q.push(node_t(key, node_pos));
   while(!q.empty()) {
     node_t node = q.front();
     q.pop();
-    const char* c = (format_ > 0.99) ? metadata_->alphabet : kDefaultAlphabet;
+    const char *c = (format_ > 0.99) ? metadata_->alphabet : kDefaultAlphabet;
     for (; *c; ++c) {
       std::string k = node.key + *c;
       size_t k_pos = node.key.length();
@@ -296,11 +297,16 @@ void Prism::ExpandSearch(const std::string& key,
         //ignore
       }
       else if (ret == -1) {
-        q.push({k, n_pos});
+        q.push(node_t(k, n_pos));
       }
       else {
-        q.push({k, n_pos});
-        result->push_back(Match{ret, k_pos});
+        q.push(node_t(k, n_pos));
+        {
+          Match match;
+          match.value = ret;
+          match.length = k_pos;
+          result->push_back(match);
+        }
         if (limit && ++count >= limit)
           return;
       }

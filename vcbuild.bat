@@ -59,9 +59,9 @@ if %build_boost% == 1 (
   cd %BOOST_ROOT%
   if not exist bjam.exe call bootstrap.bat
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  bjam toolset=msvc-12.0 variant=release link=static threading=multi runtime-link=static stage --with-chrono --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
+  bjam toolset=msvc-10.0 variant=release link=static threading=multi runtime-link=static stage --with-chrono --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  bjam toolset=msvc-12.0 variant=release link=static threading=multi runtime-link=static address-model=64 --stagedir=stage_x64 stage --with-chrono --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
+  bjam toolset=msvc-10.0 variant=release link=static threading=multi runtime-link=static address-model=64 --stagedir=stage_x64 stage --with-chrono --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
   if %ERRORLEVEL% NEQ 0 goto ERROR
 )
 
@@ -69,7 +69,7 @@ if %build_thirdparty% == 1 (
   echo building glog.
   cd "%RIME_ROOT%"\thirdparty\src\glog
   rem devenv google-glog-vc10.sln /build "Release"
-  msbuild.exe google-glog-vc12.sln /p:Configuration=Release
+  msbuild.exe google-glog-vc10.sln /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
   xcopy /S /I /Y src\windows\glog "%RIME_ROOT%"\thirdparty\include\glog\
@@ -81,9 +81,9 @@ if %build_thirdparty% == 1 (
 
   echo building kyotocabinet.
   cd "%RIME_ROOT%"\thirdparty\src\kyotocabinet
-  nmake -f VC12makefile
+  nmake -f VCmakefile
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  nmake -f VC12makefile binpkg
+  nmake -f VCmakefile binpkg
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
   copy /Y output\include\*.h "%RIME_ROOT%"\thirdparty\include\
@@ -164,7 +164,7 @@ rem TODO: select a cmake generator
 rem set CMAKE_GENERATOR="MinGW Makefiles"
 rem set CMAKE_GENERATOR="Eclipse CDT4 - MinGW Makefiles"
 rem set CMAKE_GENERATOR="Visual Studio 9 2008"
-set CMAKE_GENERATOR="Visual Studio 12"
+set CMAKE_GENERATOR="Visual Studio 10"
 
 set BUILD_DIR=%RIME_ROOT%\%build%
 if not exist %BUILD_DIR% mkdir %BUILD_DIR%

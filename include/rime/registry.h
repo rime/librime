@@ -17,17 +17,17 @@ class ComponentBase;
 
 class Registry {
  public:
-  using ComponentMap = std::map<std::string, ComponentBase*>;
+  typedef std::map<std::string, ComponentBase*> ComponentMap;
 
   ComponentBase* Find(const std::string& name);
-  void Register(const std::string& name, ComponentBase* component);
+  void Register(const std::string& name, ComponentBase *component);
   void Unregister(const std::string& name);
   void Clear();
 
   static Registry& instance();
 
  private:
-  Registry() = default;
+  Registry() {}
 
   ComponentMap map_;
 };

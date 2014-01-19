@@ -30,10 +30,9 @@ bool UserDbRecoveryTask::Run(Deployer* deployer) {
   }
   BOOST_SCOPE_EXIT( (&db_) ) {
     db_->enable();
-  }
-  BOOST_SCOPE_EXIT_END
+  } BOOST_SCOPE_EXIT_END
   //
-  auto r = As<Recoverable>(db_);
+  shared_ptr<Recoverable> r = As<Recoverable>(db_);
   if (r && r->Recover()) {
     return true;
   }
@@ -61,7 +60,7 @@ bool UserDbRecoveryTask::Run(Deployer* deployer) {
 }
 
 void UserDbRecoveryTask::RestoreUserDataFromSnapshot(Deployer* deployer) {
-  if (!Is<UserDb<TreeDb>>(db_))
+  if (!Is< UserDb<TreeDb> >(db_))
     return;
   std::string dict_name(db_->name());
   boost::erase_last(dict_name, UserDb<TreeDb>::extension);
@@ -87,7 +86,7 @@ void UserDbRecoveryTask::RestoreUserDataFromSnapshot(Deployer* deployer) {
 
 UserDbRecoveryTask* UserDbRecoveryTaskComponent::Create(TaskInitializer arg) {
   try {
-    auto db = boost::any_cast<shared_ptr<Db>>(arg);
+    shared_ptr<Db> db = boost::any_cast< shared_ptr<Db> >(arg);
     return new UserDbRecoveryTask(db);
   }
   catch (const boost::bad_any_cast&) {

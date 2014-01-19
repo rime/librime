@@ -9,31 +9,44 @@
 
 #include <string>
 #include <rime/common.h>
+#if defined(_MSC_VER)
+#pragma warning(disable: 4244)
+#pragma warning(disable: 4351)
+#endif
+#include <kchashdb.h>
+#if defined(_MSC_VER)
+#pragma warning(default: 4351)
+#pragma warning(default: 4244)
+#endif
 
 namespace rime {
 
-struct VocabularyDb;
+class Dictionary;
+class Prism;
+class Table;
+class TreeDb;
 
 class PresetVocabulary {
  public:
-  PresetVocabulary();
-  ~PresetVocabulary();
-
+  static PresetVocabulary *Create();
   // random access
-  bool GetWeightForEntry(const std::string& key, double* weight);
+  bool GetWeightForEntry(const std::string &key, double *weight);
   // traversing
   void Reset();
-  bool GetNextEntry(std::string* key, std::string* value);
+  bool GetNextEntry(std::string *key, std::string *value);
   bool IsQualifiedPhrase(const std::string& phrase,
                          const std::string& weight_str);
-
+  
   void set_max_phrase_length(int length) { max_phrase_length_ = length; }
   void set_min_phrase_weight(double weight) { min_phrase_weight_ = weight; }
 
  protected:
-  unique_ptr<VocabularyDb> db_;
-  int max_phrase_length_ = 0;
-  double min_phrase_weight_ = 0.0;
+  PresetVocabulary(const shared_ptr<kyotocabinet::TreeDB>& db);
+  
+  shared_ptr<kyotocabinet::TreeDB> db_;
+  scoped_ptr<kyotocabinet::DB::Cursor> cursor_;
+  int max_phrase_length_;
+  double min_phrase_weight_;
 };
 
 }  // namespace rime

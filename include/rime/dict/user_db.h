@@ -13,25 +13,23 @@
 
 namespace rime {
 
-using TickCount = uint64_t;
+typedef uint64_t TickCount;
 
 struct UserDbValue {
-  int commits = 0;
-  double dee = 0.0;
-  TickCount tick = 0;
+  int commits;
+  double dee;
+  TickCount tick;
 
-  UserDbValue() = default;
+  UserDbValue();
   UserDbValue(const std::string& value);
-
   std::string Pack() const;
-  bool Unpack(const std::string& value);
+  bool Unpack(const std::string &value);
 };
 
 template <class BaseDb>
 class UserDb : public BaseDb {
  public:
   explicit UserDb(const std::string& name);
-
   virtual bool CreateMetadata();
   virtual bool Backup(const std::string& snapshot_file);
   virtual bool Restore(const std::string& snapshot_file);

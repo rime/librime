@@ -17,12 +17,13 @@ using namespace rime;
 
 TEST(/*DISABLED_*/TrivialTranslatorTest, Query) {
   // make sure the component has been registered
-  auto component = Translator::Require("trivial_translator");
+  Translator::Component *component =
+      Translator::Require("trivial_translator");
   ASSERT_TRUE(component != NULL);
   Ticket ticket;
-  unique_ptr<Translator> translator(component->Create(ticket));
+  scoped_ptr<Translator> translator(component->Create(ticket));
   // make sure the dict object has been created
-  ASSERT_TRUE(bool(translator));
+  ASSERT_TRUE(translator);
   // lookup test
   const std::string test_input("yiqianerbaisanshisi");
   // 一千二百三十四
@@ -33,13 +34,15 @@ TEST(/*DISABLED_*/TrivialTranslatorTest, Query) {
                                     "\xe4\xb8\x89"
                                     "\xe5\x8d\x81"
                                     "\xe5\x9b\x9b");
-  Segment segment(0, test_input.length());
+  Segment segment;
+  segment.start = 0;
+  segment.end = test_input.length();
   segment.tags.insert("abc");
-  auto translation = translator->Query(test_input, segment);
-  ASSERT_TRUE(bool(translation));
+  shared_ptr<Translation> translation(translator->Query(test_input, segment));
+  ASSERT_TRUE(translation);
   ASSERT_FALSE(translation->exhausted());
-  auto candidate = translation->Peek();
-  ASSERT_TRUE(bool(candidate));
+  shared_ptr<Candidate> candidate = translation->Peek();
+  ASSERT_TRUE(candidate);
   EXPECT_EQ("abc", candidate->type());
   EXPECT_EQ(expected_output, candidate->text());
   EXPECT_EQ(segment.start, candidate->start());

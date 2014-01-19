@@ -26,11 +26,11 @@ struct RawDictEntry {
 };
 
 // code -> weight
-using WeightMap = std::map<std::string, double>;
+typedef std::map<std::string, double> WeightMap;
 // word -> { code -> weight }
-using WordMap = std::map<std::string, WeightMap>;
+typedef std::map<std::string, WeightMap> WordMap;
 // [ (word, weight), ... ]
-using EncodeQueue = std::queue<std::pair<std::string, std::string>>;
+typedef std::queue<std::pair<std::string, std::string> > EncodeQueue;
 
 class PresetVocabulary;
 class DictSettings;
@@ -39,7 +39,7 @@ class EntryCollector : public PhraseCollector {
  public:
   Syllabary syllabary;
   std::vector<RawDictEntry> entries;
-  size_t num_entries = 0;
+  size_t num_entries;
   ReverseLookupTable stems;
 
  public:
@@ -65,8 +65,8 @@ class EntryCollector : public PhraseCollector {
   void Finish();
 
  protected:
-  unique_ptr<PresetVocabulary> preset_vocabulary;
-  unique_ptr<Encoder> encoder;
+  scoped_ptr<PresetVocabulary> preset_vocabulary;
+  scoped_ptr<Encoder> encoder;
   EncodeQueue encode_queue;
   std::set<std::string/* word */> collection;
   WordMap words;

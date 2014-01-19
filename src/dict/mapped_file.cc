@@ -47,7 +47,7 @@ class MappedFileImpl {
     kOpenReadWrite,
   };
 
-  MappedFileImpl(const std::string& file_name, OpenMode mode) {
+  MappedFileImpl(const std::string &file_name, OpenMode mode) {
     boost::interprocess::mode_t file_mapping_mode =
         (mode == kOpenReadOnly) ? boost::interprocess::read_only
                                 : boost::interprocess::read_write;
@@ -69,13 +69,15 @@ class MappedFileImpl {
   }
 
  private:
-  unique_ptr<boost::interprocess::file_mapping> file_;
-  unique_ptr<boost::interprocess::mapped_region> region_;
+  scoped_ptr<boost::interprocess::file_mapping> file_;
+  scoped_ptr<boost::interprocess::mapped_region> region_;
 
 };
 
-MappedFile::MappedFile(const std::string& file_name)
-    : file_name_(file_name) {
+MappedFile::MappedFile(const std::string &file_name)
+    : file_name_(file_name),
+      size_(0),
+      file_() {
 }
 
 MappedFile::~MappedFile() {
@@ -104,7 +106,7 @@ bool MappedFile::Create(size_t capacity) {
   LOG(INFO) << "opening file for read/write access.";
   file_.reset(new MappedFileImpl(file_name_, MappedFileImpl::kOpenReadWrite));
   size_ = 0;
-  return bool(file_);
+  return file_;
 }
 
 bool MappedFile::OpenReadOnly() {
@@ -114,7 +116,7 @@ bool MappedFile::OpenReadOnly() {
   }
   file_.reset(new MappedFileImpl(file_name_, MappedFileImpl::kOpenReadOnly));
   size_ = file_->get_size();
-  return bool(file_);
+  return file_;
 }
 
 bool MappedFile::OpenReadWrite() {
@@ -124,7 +126,7 @@ bool MappedFile::OpenReadWrite() {
   }
   file_.reset(new MappedFileImpl(file_name_, MappedFileImpl::kOpenReadWrite));
   size_ = 0;
-  return bool(file_);
+  return file_;
 }
 
 void MappedFile::Close() {
@@ -135,7 +137,7 @@ void MappedFile::Close() {
 }
 
 bool MappedFile::IsOpen() const {
-  return bool(file_);
+  return file_;
 }
 
 bool MappedFile::Flush() {
@@ -167,7 +169,7 @@ bool MappedFile::Resize(size_t capacity) {
   return true;
 }
 
-String* MappedFile::CreateString(const std::string& str) {
+String* MappedFile::CreateString(const std::string &str) {
   String* ret = Allocate<String>();
   if (ret && !str.empty()) {
     CopyString(str, ret);
@@ -175,11 +177,11 @@ String* MappedFile::CreateString(const std::string& str) {
   return ret;
 }
 
-bool MappedFile::CopyString(const std::string& src, String* dest) {
+bool MappedFile::CopyString(const std::string &src, String *dest) {
   if (!dest)
     return false;
   size_t size = src.length() + 1;
-  char* ptr = Allocate<char>(size);
+  char *ptr = Allocate<char>(size);
   if (!ptr)
     return false;
   std::strncpy(ptr, src.c_str(), size);

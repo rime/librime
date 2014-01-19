@@ -18,10 +18,10 @@ namespace rime {
 
 class KeyEvent {
  public:
-  KeyEvent() = default;
+  KeyEvent() : keycode_(0), modifier_(0) {}
   KeyEvent(int keycode, int modifier)
       : keycode_(keycode), modifier_(modifier) {}
-  KeyEvent(const std::string& repr);
+  KeyEvent(const std::string &repr);
 
   int keycode() const { return keycode_; }
   void keycode(int value) { keycode_ = value; }
@@ -40,28 +40,28 @@ class KeyEvent {
   std::string repr() const;
 
   // 解析文字表示的按鍵
-  bool Parse(const std::string& repr);
+  bool Parse(const std::string &repr);
 
-  bool operator== (const KeyEvent& other) const {
+  bool operator== (const KeyEvent &other) const {
     return keycode_ == other.keycode_ && modifier_ == other.modifier_;
   }
 
-  bool operator< (const KeyEvent& other) const {
+  bool operator< (const KeyEvent &other) const {
     if (keycode_ != other.keycode_)
       return keycode_ < other.keycode_;
     return modifier_ < other.modifier_;
   }
 
  private:
-  int keycode_ = 0;
-  int modifier_ = 0;
+  int keycode_;
+  int modifier_;
 };
 
 // 按鍵序列
 class KeySequence : public std::vector<KeyEvent> {
  public:
-  KeySequence() = default;
-  KeySequence(const std::string& repr);
+  KeySequence() {}
+  KeySequence(const std::string &repr);
 
   // 可表示為一串文字
   // 若其中包含不產生可打印字符的按鍵，以 {鍵名} 來標記
@@ -69,15 +69,15 @@ class KeySequence : public std::vector<KeyEvent> {
   std::string repr() const;
 
   // 解析按鍵序列描述文字
-  bool Parse(const std::string& repr);
+  bool Parse(const std::string &repr);
 };
 
-inline std::ostream& operator<< (std::ostream& out, const KeyEvent& key_event) {
+inline std::ostream& operator<< (std::ostream& out, const KeyEvent &key_event) {
   out << key_event.repr();
   return out;
 }
 
-inline std::ostream& operator<< (std::ostream& out, const KeySequence& key_seq) {
+inline std::ostream& operator<< (std::ostream& out, const KeySequence &key_seq) {
   out << key_seq.repr();
   return out;
 }

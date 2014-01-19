@@ -4,6 +4,7 @@
 //
 // 2012-06-05 GONG Chen <chen.sst@gmail.com>
 //
+#include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/config.h>
@@ -19,10 +20,10 @@ static const char* kZeroWidthSpace = "\xef\xbb\xbf";  //"\xe2\x80\x8b";
 namespace rime {
 
 
-ChordComposer::ChordComposer(const Ticket& ticket) : Processor(ticket) {
-  if (!engine_)
-    return;
-  if (Config* config = engine_->schema()->config()) {
+ChordComposer::ChordComposer(const Ticket& ticket) : Processor(ticket),
+                                                     pass_thru_(false) {
+  if (!engine_) return;
+  if (Config *config = engine_->schema()->config()) {
     config->GetString("chord_composer/alphabet", &alphabet_);
     config->GetString("speller/delimiter", &delimiter_);
     algebra_.Load(config->GetList("chord_composer/algebra"));
@@ -32,7 +33,7 @@ ChordComposer::ChordComposer(const Ticket& ticket) : Processor(ticket) {
   engine_->context()->set_option("_chord_typing", true);
 }
 
-ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
+ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent &key_event) {
   if (pass_thru_)
     return kNoop;
   bool composing = !chord_.empty();
@@ -67,7 +68,7 @@ ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
 
 std::string ChordComposer::SerializeChord() {
   std::string code;
-  for (char ch : alphabet_) {
+  BOOST_FOREACH(char ch, alphabet_) {
     if (chord_.find(ch) != chord_.end())
       code.push_back(ch);
   }
@@ -76,11 +77,10 @@ std::string ChordComposer::SerializeChord() {
 }
 
 void ChordComposer::UpdateChord() {
-  if (!engine_)
-    return;
+  if (!engine_) return;
   Context* ctx = engine_->context();
   Composition* comp = ctx->composition();
-  std::string code = SerializeChord();
+  std::string code(SerializeChord());
   prompt_format_.Apply(&code);
   if (comp->empty()) {
     // add an invisbile place holder segment
@@ -98,16 +98,15 @@ void ChordComposer::UpdateChord() {
 }
 
 void ChordComposer::FinishChord() {
-  if (!engine_)
-    return;
-  std::string code = SerializeChord();
+  if (!engine_) return;
+  std::string code(SerializeChord());
   output_format_.Apply(&code);
   ClearChord();
 
   KeySequence sequence;
   if (sequence.Parse(code)) {
     pass_thru_ = true;
-    for (const KeyEvent& ke : sequence) {
+    BOOST_FOREACH(const KeyEvent& ke, sequence) {
       if (!engine_->ProcessKeyEvent(ke)) {
         // direct commit
         engine_->CommitText(std::string(1, ke.keycode()));
@@ -120,8 +119,7 @@ void ChordComposer::FinishChord() {
 void ChordComposer::ClearChord() {
   pressed_.clear();
   chord_.clear();
-  if (!engine_)
-    return;
+  if (!engine_) return;
   Context* ctx = engine_->context();
   Composition* comp = ctx->composition();
   if (comp->empty()) {

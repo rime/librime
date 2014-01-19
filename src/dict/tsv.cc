@@ -73,8 +73,8 @@ int TsvWriter::operator() (Source* source) {
   while (source->Get(&key, &value)) {
     row.clear();
     if (formatter_(key, value, &row) && !row.empty()) {
-      for (auto it = row.cbegin(); it != row.cend(); ++it) {
-        if (it != row.cbegin())
+      for (Tsv::const_iterator it = row.begin(); it != row.end(); ++it) {
+        if (it != row.begin())
           fout << '\t';
         fout << *it;
       }

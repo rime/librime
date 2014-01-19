@@ -25,14 +25,14 @@ class Processor : public Class<Processor, const Ticket&> {
  public:
   explicit Processor(const Ticket& ticket)
       : engine_(ticket.engine), name_space_(ticket.name_space) {}
-  virtual ~Processor() = default;
+  virtual ~Processor() {}
 
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   }
 
  protected:
-  Engine* engine_;
+  Engine *engine_;
   std::string name_space_;
 };
 

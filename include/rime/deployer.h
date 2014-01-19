@@ -7,11 +7,10 @@
 #ifndef RIME_DEPLOYER_H_
 #define RIME_DEPLOYER_H_
 
-#include <future>
-#include <mutex>
 #include <queue>
 #include <string>
 #include <boost/any.hpp>
+#include <boost/thread.hpp>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/messenger.h>
@@ -20,12 +19,12 @@ namespace rime {
 
 class Deployer;
 
-using TaskInitializer = boost::any;
+typedef boost::any TaskInitializer;
 
 class DeploymentTask : public Class<DeploymentTask, TaskInitializer> {
  public:
-  DeploymentTask() = default;
-  virtual ~DeploymentTask() = default;
+  DeploymentTask() {}
+  virtual ~DeploymentTask() {}
 
   virtual bool Run(Deployer* deployer) = 0;
 };
@@ -49,7 +48,8 @@ class Deployer : public Messenger {
                TaskInitializer arg = TaskInitializer());
   bool ScheduleTask(const std::string& task_name,
                     TaskInitializer arg = TaskInitializer());
-  void ScheduleTask(shared_ptr<DeploymentTask> task);
+
+  void ScheduleTask(const shared_ptr<DeploymentTask>& task);
   shared_ptr<DeploymentTask> NextTask();
   bool HasPendingTasks();
 
@@ -65,10 +65,10 @@ class Deployer : public Messenger {
   std::string user_data_sync_dir() const;
 
  private:
-  std::queue<shared_ptr<DeploymentTask>> pending_tasks_;
-  std::mutex mutex_;
-  std::future<void> work_;
-  bool maintenance_mode_ = false;
+  std::queue<shared_ptr<DeploymentTask> > pending_tasks_;
+  boost::mutex mutex_;
+  boost::thread work_thread_;
+  bool maintenance_mode_;
 };
 
 }  // namespace rime

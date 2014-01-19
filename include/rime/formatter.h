@@ -20,12 +20,12 @@ class Formatter : public Class<Formatter, const Ticket&> {
  public:
   Formatter(const Ticket& ticket)
       : engine_(ticket.engine), name_space_(ticket.name_space) {}
-  virtual ~Formatter() = default;
+  virtual ~Formatter() {}
 
   virtual void Format(std::string* text) = 0;
 
  protected:
-  Engine* engine_;
+  Engine *engine_;
   std::string name_space_;
 };
 

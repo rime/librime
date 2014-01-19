@@ -14,11 +14,11 @@
 using namespace rime;
 
 TEST(AbcSegmentorTest, NoMatch) {
-  Segmentor::Component* component = Segmentor::Require("abc_segmentor");
+  Segmentor::Component *component = Segmentor::Require("abc_segmentor");
   ASSERT_TRUE(component != NULL);
-  unique_ptr<Engine> engine(Engine::Create());
-  unique_ptr<Segmentor> segmentor(component->Create(engine.get()));
-  ASSERT_TRUE(bool(segmentor));
+  scoped_ptr<Engine> engine(Engine::Create());
+  scoped_ptr<Segmentor> segmentor(component->Create(engine.get()));
+  ASSERT_TRUE(segmentor);
   Segmentation segmentation;
   segmentation.Reset("3.1415926");
   bool goon = segmentor->Proceed(&segmentation);
@@ -28,11 +28,11 @@ TEST(AbcSegmentorTest, NoMatch) {
 }
 
 TEST(AbcSegmentorTest, FullMatch) {
-  Segmentor::Component* component = Segmentor::Require("abc_segmentor");
+  Segmentor::Component *component = Segmentor::Require("abc_segmentor");
   ASSERT_TRUE(component != NULL);
-  unique_ptr<Engine> engine(Engine::Create());
-  unique_ptr<Segmentor> segmentor(component->Create(engine.get()));
-  ASSERT_TRUE(bool(segmentor));
+  scoped_ptr<Engine> engine(Engine::Create());
+  scoped_ptr<Segmentor> segmentor(component->Create(engine.get()));
+  ASSERT_TRUE(segmentor);
   Segmentation segmentation;
   segmentation.Reset("zyxwvutsrqponmlkjihgfedcba");
   bool goon = segmentor->Proceed(&segmentation);
@@ -45,11 +45,11 @@ TEST(AbcSegmentorTest, FullMatch) {
 }
 
 TEST(AbcSegmentorTest, PrefixMatch) {
-  Segmentor::Component* component = Segmentor::Require("abc_segmentor");
+  Segmentor::Component *component = Segmentor::Require("abc_segmentor");
   ASSERT_TRUE(component != NULL);
-  unique_ptr<Engine> engine(Engine::Create());
-  unique_ptr<Segmentor> segmentor(component->Create(engine.get()));
-  ASSERT_TRUE(bool(segmentor));
+  scoped_ptr<Engine> engine(Engine::Create());
+  scoped_ptr<Segmentor> segmentor(component->Create(engine.get()));
+  ASSERT_TRUE(segmentor);
   Segmentation segmentation;
   segmentation.Reset("abcdefg.1415926");
   bool goon = segmentor->Proceed(&segmentation);

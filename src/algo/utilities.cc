@@ -7,6 +7,7 @@
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/crc.hpp>
+#include <boost/foreach.hpp>
 #include <rime/algo/utilities.h>
 
 namespace rime {
@@ -42,7 +43,7 @@ uint32_t Checksum(const std::string& file_name) {
 
 uint32_t Checksum(const std::vector<std::string>& files) {
   boost::crc_32_type crc_32;
-  for (const std::string& file_name : files) {
+  BOOST_FOREACH(const std::string& file_name, files) {
     std::ifstream fin(file_name.c_str());
     std::string file_content((std::istreambuf_iterator<char>(fin)),
                              std::istreambuf_iterator<char>());

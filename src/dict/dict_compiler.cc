@@ -4,9 +4,9 @@
 //
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
-#include <fstream>
 #include <map>
 #include <set>
+#include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <rime/algo/algebra.h>
 #include <rime/algo/utilities.h>
@@ -25,6 +25,7 @@ DictCompiler::DictCompiler(Dictionary *dictionary, DictFileFinder finder)
     : dict_name_(dictionary->name()),
       prism_(dictionary->prism()),
       table_(dictionary->table()),
+      options_(0),
       dict_file_finder_(finder) {
 }
 
@@ -43,8 +44,8 @@ bool DictCompiler::Compile(const std::string &schema_file) {
   LOG(INFO) << "dict name: " << settings.dict_name();
   LOG(INFO) << "dict version: " << settings.dict_version();
   std::vector<std::string> dict_files;
-  auto tables = settings.GetTables();
-  for(auto it = tables->begin(); it != tables->end(); ++it) {
+  ConfigListPtr tables = settings.GetTables();
+  for(ConfigList::Iterator it = tables->begin(); it != tables->end(); ++it) {
     if (!Is<ConfigValue>(*it))
       continue;
     std::string dict_file(FindDictFile(As<ConfigValue>(*it)->str()));
@@ -126,20 +127,20 @@ bool DictCompiler::BuildTable(DictSettings* settings,
   {
     std::map<std::string, int> syllable_to_id;
     int syllable_id = 0;
-    for (const auto& s : collector.syllabary) {
+    BOOST_FOREACH(const std::string &s, collector.syllabary) {
       syllable_to_id[s] = syllable_id++;
     }
-    for (RawDictEntry& r : collector.entries) {
+    BOOST_FOREACH(RawDictEntry &r, collector.entries) {
       Code code;
-      for (const auto& s : r.raw_code) {
+      BOOST_FOREACH(const std::string &s, r.raw_code) {
         code.push_back(syllable_to_id[s]);
       }
-      DictEntryList* ls = vocabulary.LocateEntries(code);
+      DictEntryList *ls = vocabulary.LocateEntries(code);
       if (!ls) {
         LOG(ERROR) << "Error locating entries in vocabulary.";
         continue;
       }
-      auto e = New<DictEntry>();
+      shared_ptr<DictEntry> e = make_shared<DictEntry>();
       e->code.swap(code);
       e->text.swap(r.text);
       e->weight = r.weight;
@@ -180,9 +181,9 @@ bool DictCompiler::BuildPrism(const std::string &schema_file,
   if (!schema_file.empty()) {
     Projection p;
     Config config(schema_file);
-    auto algebra = config.GetList("speller/algebra");
+    ConfigListPtr algebra = config.GetList("speller/algebra");
     if (algebra && p.Load(algebra)) {
-      for (const auto& x : syllabary) {
+      BOOST_FOREACH(Syllabary::value_type const& x, syllabary) {
         script.AddSyllable(x);
       }
       if (!p.Apply(&script)) {

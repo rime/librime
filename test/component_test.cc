@@ -15,11 +15,11 @@ class Greeting : public Class<Greeting, const std::string&> {
   virtual std::string Say() = 0;
 };
 
-using HelloMessage = std::pair<std::string, std::string>;
+typedef std::pair<std::string, std::string> HelloMessage;
 
 class Hello : public Greeting {
  public:
-  Hello(const HelloMessage& msg) : word_(msg.first), name_(msg.second) {
+  Hello(const HelloMessage &msg) : word_(msg.first), name_(msg.second) {
   }
   std::string Say() {
     return word_ + ", " + name_ + "!";
@@ -32,9 +32,9 @@ class Hello : public Greeting {
 // customize a hello component with parameters
 class HelloComponent : public Hello::Component {
  public:
-  HelloComponent(const std::string& word) : word_(word) {}
+  HelloComponent(const std::string &word) : word_(word) {}
   // define a custom creator to provide an additional argument
-  Hello* Create(const std::string& name) {
+  Hello* Create(const std::string &name) {
     return new Hello(std::make_pair(word_, name));
   }
  private:
@@ -43,7 +43,7 @@ class HelloComponent : public Hello::Component {
 
 
 TEST(RimeComponentTest, UsingComponent) {
-  Registry& r = Registry::instance();
+  Registry &r = Registry::instance();
   r.Register("test_hello", new HelloComponent("hello"));
   r.Register("test_morning", new HelloComponent("good morning"));
 
@@ -52,7 +52,7 @@ TEST(RimeComponentTest, UsingComponent) {
   Greeting::Component* gm = Greeting::Require("test_morning");
   EXPECT_TRUE(gm != NULL);
 
-  unique_ptr<Greeting> g(gm->Create("michael"));
+  scoped_ptr<Greeting> g(gm->Create("michael"));
   EXPECT_STREQ("good morning, michael!", g->Say().c_str());
 
   r.Unregister("test_hello");

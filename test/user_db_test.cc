@@ -49,8 +49,8 @@ TEST(RimeUserDbTest, Query) {
   EXPECT_TRUE(db.Update("zyx", "ABC"));
   EXPECT_TRUE(db.Update("wvu", "DEF"));
   {
-    rime::shared_ptr<rime::DbAccessor> accessor = db.Query("abc");
-    ASSERT_TRUE(bool(accessor));
+    boost::shared_ptr<rime::DbAccessor> accessor = db.Query("abc");
+    ASSERT_TRUE(accessor);
     EXPECT_FALSE(accessor->exhausted());
     std::string key, value;
     EXPECT_TRUE(accessor->GetNextRecord(&key, &value));
@@ -67,15 +67,15 @@ TEST(RimeUserDbTest, Query) {
     // key, value contain invalid contents
   }
   {
-    rime::shared_ptr<rime::DbAccessor> accessor = db.Query("wvu\tt");
-    ASSERT_TRUE(bool(accessor));
+    boost::shared_ptr<rime::DbAccessor> accessor = db.Query("wvu\tt");
+    ASSERT_TRUE(accessor);
     EXPECT_TRUE(accessor->exhausted());
     std::string key, value;
     EXPECT_FALSE(accessor->GetNextRecord(&key, &value));
   }
   {
-    rime::shared_ptr<rime::DbAccessor> accessor = db.Query("z");
-    ASSERT_TRUE(bool(accessor));
+    boost::shared_ptr<rime::DbAccessor> accessor = db.Query("z");
+    ASSERT_TRUE(accessor);
     EXPECT_FALSE(accessor->exhausted());
     std::string key, value;
     EXPECT_TRUE(accessor->GetNextRecord(&key, &value));

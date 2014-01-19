@@ -16,7 +16,7 @@ class FallbackSegmentor : public Segmentor {
  public:
   explicit FallbackSegmentor(const Ticket& ticket);
 
-  virtual bool Proceed(Segmentation* segmentation);
+  virtual bool Proceed(Segmentation *segmentation);
 };
 
 }  // namespace rime

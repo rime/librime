@@ -16,28 +16,32 @@ namespace rime {
 
 class Prism;
 
-using SyllableId = int;
+typedef int SyllableId;
 
-using SpellingMap = std::map<SyllableId, SpellingProperties>;
-using VertexMap = std::map<size_t, SpellingType>;
-using EndVertexMap = std::map<size_t, SpellingMap>;
-using EdgeMap = std::map<size_t, EndVertexMap>;
+typedef std::map<SyllableId, SpellingProperties> SpellingMap;
+typedef std::map<size_t, SpellingType> VertexMap;
+typedef std::map<size_t, SpellingMap> EndVertexMap;
+typedef std::map<size_t, EndVertexMap> EdgeMap;
 
-using SpellingPropertiesList = std::vector<const SpellingProperties*>;
-using SpellingIndex = std::map<SyllableId, SpellingPropertiesList>;
-using SpellingIndices = std::map<size_t, SpellingIndex>;
+typedef std::vector<const SpellingProperties*> SpellingPropertiesList;
+typedef std::map<SyllableId, SpellingPropertiesList> SpellingIndex;
+typedef std::map<size_t, SpellingIndex> SpellingIndices;
 
 struct SyllableGraph {
-  size_t input_length = 0;
-  size_t interpreted_length = 0;
+  size_t input_length;
+  size_t interpreted_length;
   VertexMap vertices;
   EdgeMap edges;
   SpellingIndices indices;
+  SyllableGraph() : input_length(0), interpreted_length(0) {}
 };
 
 class Syllabifier {
  public:
-  Syllabifier() = default;
+  Syllabifier()
+      : enable_completion_(false),
+        strict_spelling_(false) {
+  }
   explicit Syllabifier(const std::string &delimiters,
                        bool enable_completion = false,
                        bool strict_spelling = false)
@@ -56,8 +60,8 @@ class Syllabifier {
   void Transpose(SyllableGraph* graph);
 
   std::string delimiters_;
-  bool enable_completion_ = false;
-  bool strict_spelling_ = false;
+  bool enable_completion_;
+  bool strict_spelling_;
 };
 
 }  // namespace rime

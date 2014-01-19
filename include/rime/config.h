@@ -10,7 +10,7 @@
 #include <iostream>
 #include <map>
 #include <string>
-#include <type_traits>
+#include <boost/type_traits.hpp>
 #include <rime/common.h>
 #include <rime/component.h>
 
@@ -21,18 +21,19 @@ class ConfigItem {
  public:
   enum ValueType { kNull, kScalar, kList, kMap };
 
-  ConfigItem() = default;  // null
-  virtual ~ConfigItem() = default;
+  // construct a null item
+  ConfigItem() : type_(kNull) {}
+  virtual ~ConfigItem() {}
 
   ValueType type() const { return type_; }
 
  protected:
   ConfigItem(ValueType type) : type_(type) {}
 
-  ValueType type_ = kNull;
+  ValueType type_;
 };
 
-using ConfigItemPtr = shared_ptr<ConfigItem>;
+typedef shared_ptr<ConfigItem> ConfigItemPtr;
 
 class ConfigValue : public ConfigItem {
  public:
@@ -40,19 +41,19 @@ class ConfigValue : public ConfigItem {
   ConfigValue(bool value);
   ConfigValue(int value);
   ConfigValue(double value);
-  ConfigValue(const char* value);
-  ConfigValue(const std::string& value);
+  ConfigValue(const char *value);
+  ConfigValue(const std::string &value);
 
   // schalar value accessors
-  bool GetBool(bool* value) const;
-  bool GetInt(int* value) const;
-  bool GetDouble(double* value) const;
-  bool GetString(std::string* value) const;
+  bool GetBool(bool *value) const;
+  bool GetInt(int *value) const;
+  bool GetDouble(double *value) const;
+  bool GetString(std::string *value) const;
   bool SetBool(bool value);
   bool SetInt(int value);
   bool SetDouble(double value);
-  bool SetString(const char* value);
-  bool SetString(const std::string& value);
+  bool SetString(const char *value);
+  bool SetString(const std::string &value);
 
   const std::string& str() const { return value_; }
 
@@ -60,18 +61,18 @@ class ConfigValue : public ConfigItem {
   std::string value_;
 };
 
-using ConfigValuePtr = shared_ptr<ConfigValue>;
+typedef shared_ptr<ConfigValue> ConfigValuePtr;
 
 class ConfigList : public ConfigItem {
  public:
-  using Sequence = std::vector<ConfigItemPtr>;
-  using Iterator = Sequence::iterator;
+  typedef std::vector<ConfigItemPtr> Sequence;
+  typedef Sequence::iterator Iterator;
 
   ConfigList() : ConfigItem(kList) {}
   ConfigItemPtr GetAt(size_t i) const;
   ConfigValuePtr GetValueAt(size_t i) const;
-  bool SetAt(size_t i, ConfigItemPtr element);
-  bool Append(ConfigItemPtr element);
+  bool SetAt(size_t i, const ConfigItemPtr &element);
+  bool Append(const ConfigItemPtr &element);
   bool Resize(size_t size);
   bool Clear();
   size_t size() const;
@@ -83,19 +84,19 @@ class ConfigList : public ConfigItem {
   Sequence seq_;
 };
 
-using ConfigListPtr = shared_ptr<ConfigList>;
+typedef shared_ptr<ConfigList> ConfigListPtr;
 
 // limitation: map keys have to be strings, preferably alphanumeric
 class ConfigMap : public ConfigItem {
  public:
-  using Map = std::map<std::string, ConfigItemPtr>;
-  using Iterator = Map::iterator;
+  typedef std::map<std::string, ConfigItemPtr> Map;
+  typedef Map::iterator Iterator;
 
   ConfigMap() : ConfigItem(kMap) {}
-  bool HasKey(const std::string& key) const;
-  ConfigItemPtr Get(const std::string& key) const;
-  ConfigValuePtr GetValue(const std::string& key) const;
-  bool Set(const std::string& key, ConfigItemPtr element);
+  bool HasKey(const std::string &key) const;
+  ConfigItemPtr Get(const std::string &key) const;
+  ConfigValuePtr GetValue(const std::string &key) const;
+  bool Set(const std::string &key, const ConfigItemPtr &element);
   bool Clear();
 
   Iterator begin();
@@ -105,7 +106,7 @@ class ConfigMap : public ConfigItem {
   Map map_;
 };
 
-using ConfigMapPtr = shared_ptr<ConfigMap>;
+typedef shared_ptr<ConfigMap> ConfigMapPtr;
 
 class ConfigData;
 class ConfigListEntryRef;
@@ -136,7 +137,7 @@ class ConfigItemRef {
   void Clear();
 
   // list
-  bool Append(ConfigItemPtr item);
+  bool Append(const ConfigItemPtr& item);
   size_t size() const;
   // map
   bool HasKey(const std::string& key) const;
@@ -146,7 +147,7 @@ class ConfigItemRef {
 
  protected:
   virtual ConfigItemPtr GetItem() const = 0;
-  virtual void SetItem(ConfigItemPtr item) = 0;
+  virtual void SetItem(const ConfigItemPtr& item) = 0;
 
   shared_ptr<ConfigData> data_;
 };
@@ -154,12 +155,12 @@ class ConfigItemRef {
 namespace {
 
 template <class T>
-ConfigItemPtr AsConfigItem(const T& a, const std::false_type&) {
+ConfigItemPtr AsConfigItem(const T& a, const boost::false_type&) {
   return New<ConfigValue>(a);
 };
 
 template <class T>
-ConfigItemPtr AsConfigItem(const T& a, const std::true_type&) {
+ConfigItemPtr AsConfigItem(const T& a, const boost::true_type&) {
   return a;
 };
 
@@ -167,20 +168,20 @@ ConfigItemPtr AsConfigItem(const T& a, const std::true_type&) {
 
 class ConfigListEntryRef : public ConfigItemRef {
  public:
-  ConfigListEntryRef(shared_ptr<ConfigData> data,
-                     ConfigListPtr list, size_t index)
+  ConfigListEntryRef(const shared_ptr<ConfigData>& data,
+                     const ConfigListPtr& list, size_t index)
       : ConfigItemRef(data), list_(list), index_(index) {
   }
   template <class T>
   ConfigListEntryRef& operator= (const T& a) {
-    SetItem(AsConfigItem(a, std::is_convertible<T, ConfigItemPtr>()));
+    SetItem(AsConfigItem(a, boost::is_convertible<T, ConfigItemPtr>()));
     return *this;
   }
  protected:
   ConfigItemPtr GetItem() const {
     return list_->GetAt(index_);
   }
-  void SetItem(ConfigItemPtr item) {
+  void SetItem(const ConfigItemPtr& item) {
     list_->SetAt(index_, item);
     set_modified();
   }
@@ -191,20 +192,20 @@ class ConfigListEntryRef : public ConfigItemRef {
 
 class ConfigMapEntryRef : public ConfigItemRef {
  public:
-  ConfigMapEntryRef(shared_ptr<ConfigData> data,
-                    ConfigMapPtr map, const std::string& key)
+  ConfigMapEntryRef(const shared_ptr<ConfigData>& data,
+                    const ConfigMapPtr& map, const std::string& key)
       : ConfigItemRef(data), map_(map), key_(key) {
   }
   template <class T>
   ConfigMapEntryRef& operator= (const T& a) {
-    SetItem(AsConfigItem(a, std::is_convertible<T, ConfigItemPtr>()));
+    SetItem(AsConfigItem(a, boost::is_convertible<T, ConfigItemPtr>()));
     return *this;
   }
  protected:
   ConfigItemPtr GetItem() const {
     return map_->Get(key_);
   }
-  void SetItem(ConfigItemPtr item) {
+  void SetItem(const ConfigItemPtr& item) {
     map_->Set(key_, item);
     set_modified();
   }
@@ -239,46 +240,46 @@ class Config : public Class<Config, const std::string&>, public ConfigItemRef {
   bool SaveToFile(const std::string& file_name);
 
   // access a tree node of a particular type with "path/to/key"
-  bool IsNull(const std::string& key);
-  bool IsValue(const std::string& key);
-  bool IsList(const std::string& key);
-  bool IsMap(const std::string& key);
-  bool GetBool(const std::string& key, bool* value);
-  bool GetInt(const std::string& key, int* value);
-  bool GetDouble(const std::string& key, double* value);
-  bool GetString(const std::string& key, std::string* value);
+  bool IsNull(const std::string &key);
+  bool IsValue(const std::string &key);
+  bool IsList(const std::string &key);
+  bool IsMap(const std::string &key);
+  bool GetBool(const std::string &key, bool *value);
+  bool GetInt(const std::string &key, int *value);
+  bool GetDouble(const std::string &key, double *value);
+  bool GetString(const std::string &key, std::string *value);
 
-  ConfigValuePtr GetValue(const std::string& key);
-  ConfigListPtr GetList(const std::string& key);
-  ConfigMapPtr GetMap(const std::string& key);
+  ConfigValuePtr GetValue(const std::string &key);
+  ConfigListPtr GetList(const std::string &key);
+  ConfigMapPtr GetMap(const std::string &key);
 
   // setters
-  bool SetBool(const std::string& key, bool value);
-  bool SetInt(const std::string& key, int value);
-  bool SetDouble(const std::string& key, double value);
-  bool SetString(const std::string& key, const char* value);
-  bool SetString(const std::string& key, const std::string& value);
+  bool SetBool(const std::string &key, bool value);
+  bool SetInt(const std::string &key, int value);
+  bool SetDouble(const std::string &key, double value);
+  bool SetString(const std::string &key, const char *value);
+  bool SetString(const std::string &key, const std::string &value);
   // setter for adding / replacing items to the tree
-  bool SetItem(const std::string& key, ConfigItemPtr item);
+  bool SetItem(const std::string &key, const ConfigItemPtr &item);
 
   template <class T>
   Config& operator= (const T& a) {
-    SetItem(AsConfigItem(a, std::is_convertible<T, ConfigItemPtr>()));
+    SetItem(AsConfigItem(a, boost::is_convertible<T, ConfigItemPtr>()));
     return *this;
   }
 
  protected:
   ConfigItemPtr GetItem() const;
-  void SetItem(ConfigItemPtr item);
+  void SetItem(const ConfigItemPtr& item);
  };
 
 // ConfigComponent class
 
 class ConfigComponent : public Config::Component {
  public:
-  ConfigComponent(const std::string& pattern) : pattern_(pattern) {}
-  Config* Create(const std::string& config_id);
-  std::string GetConfigFilePath(const std::string& config_id);
+  ConfigComponent(const std::string &pattern) : pattern_(pattern) {}
+  Config* Create(const std::string &config_id);
+  std::string GetConfigFilePath(const std::string &config_id);
   const std::string& pattern() const { return pattern_; }
 
  private:

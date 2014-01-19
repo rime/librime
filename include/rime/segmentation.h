@@ -24,18 +24,21 @@ struct Segment {
     kSelected,
     kConfirmed,
   };
-  Status status = kVoid;
-  size_t start = 0;
-  size_t end = 0;
+  Status status;
+  size_t start;
+  size_t end;
   std::set<std::string> tags;
   shared_ptr<Menu> menu;
-  size_t selected_index = 0;
+  size_t selected_index;
   std::string prompt;
 
-  Segment() = default;
+  Segment()
+  : status(kVoid), start(0), end(0),
+    selected_index(0) {}
 
   Segment(int start_pos, int end_pos)
-      : start(start_pos), end(end_pos) {}
+  : status(kVoid), start(start_pos), end(end_pos),
+    selected_index(0) {}
 
   void Clear() {
     status = kVoid;
@@ -45,7 +48,7 @@ struct Segment {
     prompt.clear();
   }
 
-  bool HasTag(const std::string& tag) const {
+  bool HasTag(const std::string &tag) const {
     return tags.find(tag) != tags.end();
   }
 
@@ -57,9 +60,9 @@ class Segmentation : public std::vector<Segment> {
  public:
   Segmentation();
   virtual ~Segmentation() {}
-  void Reset(const std::string& input);
+  void Reset(const std::string &input);
   void Reset(size_t num_segments);
-  bool AddSegment(const Segment& segment);
+  bool AddSegment(const Segment &segment);
 
   bool Forward();
   bool Trim();
@@ -76,7 +79,7 @@ class Segmentation : public std::vector<Segment> {
 };
 
 std::ostream& operator<< (std::ostream& out,
-                          const Segmentation& segmentation);
+                          const Segmentation &segmentation);
 
 }  // namespace rime
 

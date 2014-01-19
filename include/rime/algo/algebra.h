@@ -20,7 +20,7 @@ namespace rime {
 class Calculation;
 class Schema;
 
-class Script : public std::map<std::string, std::vector<Spelling>> {
+class Script : public std::map<std::string, std::vector<Spelling> > {
  public:
   bool AddSyllable(const std::string& syllable);
   void Merge(const std::string& s,
@@ -37,7 +37,7 @@ class Projection {
   // {z, y, x} -> {a, b, c, d}
   bool Apply(Script* value);
  protected:
-  std::vector<shared_ptr<Calculation>> calculation_;
+  std::vector<shared_ptr<Calculation> > calculation_;
 };
 
 }  // namespace rime

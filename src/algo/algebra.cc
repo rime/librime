@@ -6,6 +6,7 @@
 //
 #include <algorithm>
 #include <fstream>
+#include <boost/foreach.hpp>
 #include <rime/algo/algebra.h>
 #include <rime/algo/calculus.h>
 
@@ -23,7 +24,7 @@ void Script::Merge(const std::string& s,
                    const SpellingProperties& sp,
                    const std::vector<Spelling>& v) {
   std::vector<Spelling>& m((*this)[s]);
-  for (const Spelling& x : v) {
+  BOOST_FOREACH(const Spelling& x, v) {
     Spelling y(x);
     SpellingProperties& yy(y.properties);
     {
@@ -33,7 +34,7 @@ void Script::Merge(const std::string& s,
       if (!sp.tips.empty())
         yy.tips = sp.tips;
     }
-    auto e = std::find(m.begin(), m.end(), x);
+    std::vector<Spelling>::iterator e = std::find(m.begin(), m.end(), x);
     if (e == m.end()) {
       m.push_back(y);
     }
@@ -50,9 +51,9 @@ void Script::Merge(const std::string& s,
 
 void Script::Dump(const std::string& file_name) const {
   std::ofstream out(file_name.c_str());
-  for (const value_type& v : *this) {
+  BOOST_FOREACH(const value_type& v, *this) {
     bool first = true;
-    for (const Spelling& s : v.second) {
+    BOOST_FOREACH(const Spelling& s, v.second) {
       out << (first ? v.first : "") << '\t'
           << s.str << '\t'
           << "-ac?!"[s.properties.type] << '\t'
@@ -103,7 +104,7 @@ bool Projection::Apply(std::string* value) {
     return false;
   bool modified = false;
   Spelling s(*value);
-  for (shared_ptr<Calculation>& x : calculation_) {
+  BOOST_FOREACH(shared_ptr<Calculation>& x, calculation_) {
     try {
       if (x->Apply(&s))
         modified = true;
@@ -123,11 +124,11 @@ bool Projection::Apply(Script* value) {
     return false;
   bool modified = false;
   int round = 0;
-  for (shared_ptr<Calculation>& x : calculation_) {
+  BOOST_FOREACH(shared_ptr<Calculation>& x, calculation_) {
     ++round;
     DLOG(INFO) << "round #" << round;
     Script temp;
-    for (const Script::value_type& v : *value) {
+    BOOST_FOREACH(const Script::value_type& v, *value) {
       Spelling s(v.first);
       bool applied = false;
       try {

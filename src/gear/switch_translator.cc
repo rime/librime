@@ -5,6 +5,7 @@
 // 2013-05-26 GONG Chen <chen.sst@gmail.com>
 //
 #include <vector>
+#include <boost/enable_shared_from_this.hpp>
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/config.h>
@@ -22,9 +23,9 @@ namespace rime {
 
 class Switch : public SimpleCandidate, public SwitcherCommand {
  public:
-  Switch(const std::string& current_state_label,
-         const std::string& next_state_label,
-         const std::string& option_name,
+  Switch(const std::string &current_state_label,
+         const std::string &next_state_label,
+         const std::string &option_name,
          bool current_state,
          bool auto_save)
       : SimpleCandidate("switch", 0, 0,
@@ -53,7 +54,7 @@ void Switch::Apply(Switcher* switcher) {
 
 class RadioOption;
 
-class RadioGroup : public std::enable_shared_from_this<RadioGroup> {
+class RadioGroup : public boost::enable_shared_from_this<RadioGroup> {
  public:
   RadioGroup(Context* context, Switcher* switcher)
       : context_(context), switcher_(switcher) {
@@ -72,8 +73,8 @@ class RadioGroup : public std::enable_shared_from_this<RadioGroup> {
 class RadioOption : public SimpleCandidate, public SwitcherCommand {
  public:
   RadioOption(shared_ptr<RadioGroup> group,
-              const std::string& state_label,
-              const std::string& option_name)
+              const std::string &state_label,
+              const std::string &option_name)
       : SimpleCandidate("switch", 0, 0, state_label),
         SwitcherCommand(option_name),
         group_(group),
@@ -96,21 +97,19 @@ void RadioOption::UpdateState(bool selected) {
   set_text(selected ? state_label_ + kRadioSelected : state_label_);
 }
 
-shared_ptr<RadioOption>
-RadioGroup::CreateOption(const std::string& state_label,
-                         const std::string& option_name) {
-  auto option = New<RadioOption>(shared_from_this(),
-                                 state_label,
-                                 option_name);
+shared_ptr<RadioOption> RadioGroup::CreateOption(const std::string& state_label,
+                                                 const std::string& option_name) {
+  shared_ptr<RadioOption> option = boost::make_shared<RadioOption>(
+      shared_from_this(), state_label, option_name);
   options_.push_back(option.get());
   return option;
 }
 
 void RadioGroup::SelectOption(RadioOption* option) {
-  if (!option)
-    return;
+  if (!option) return;
   Config* user_config = switcher_->user_config();
-  for (auto it = options_.begin(); it != options_.end(); ++it) {
+  for (std::vector<RadioOption*>::iterator it = options_.begin();
+       it != options_.end(); ++it) {
     bool selected = (*it == option);
     (*it)->UpdateState(selected);
     const std::string& option_name((*it)->name());
@@ -126,7 +125,8 @@ void RadioGroup::SelectOption(RadioOption* option) {
 RadioOption* RadioGroup::GetSelectedOption() const {
   if (options_.empty())
     return NULL;
-  for (auto it = options_.begin(); it != options_.end(); ++it) {
+  for (std::vector<RadioOption*>::const_iterator it = options_.begin();
+       it != options_.end(); ++it) {
     if (context_->get_option((*it)->name()))
       return *it;
   }
@@ -144,46 +144,37 @@ class SwitchTranslation : public FifoTranslation {
 
 void SwitchTranslation::LoadSwitches(Switcher* switcher) {
   Engine* engine = switcher->attached_engine();
-  if (!engine)
-    return;
-  Config* config = engine->schema()->config();
-  if (!config)
-    return;
-  auto switches = config->GetList("switches");
-  if (!switches)
-    return;
-  Context* context = engine->context();
+  if (!engine) return;
+  Config *config = engine->schema()->config();
+  if (!config) return;
+  ConfigListPtr switches = config->GetList("switches");
+  if (!switches) return;
+  Context *context = engine->context();
   for (size_t i = 0; i < switches->size(); ++i) {
-    auto item = As<ConfigMap>(switches->GetAt(i));
-    if (!item)
-      continue;
-    auto states = As<ConfigList>(item->Get("states"));
-    if (!states)
-      continue;
-    if (auto option_name = item->GetValue("name")) {
+    ConfigMapPtr item = As<ConfigMap>(switches->GetAt(i));
+    if (!item) continue;
+    ConfigListPtr states = As<ConfigList>(item->Get("states"));
+    if (!states) continue;
+    if (ConfigValuePtr option_name = item->GetValue("name")) {
       // toggle
-      if (states->size() != 2)
-        continue;
+      if (states->size() != 2) continue;
       bool current_state = context->get_option(option_name->str());
-      Append(New<Switch>(
+      Append(boost::make_shared<Switch>(
           states->GetValueAt(current_state)->str(),
           states->GetValueAt(1 - current_state)->str(),
           option_name->str(),
           current_state,
           switcher->IsAutoSave(option_name->str())));
     }
-    else if (auto options = As<ConfigList>(item->Get("options"))) {
+    else if (ConfigListPtr options = As<ConfigList>(item->Get("options"))) {
       // radio
-      if (states->size() < 2)
-        continue;
-      if (states->size() != options->size())
-        continue;
-      auto group = New<RadioGroup>(context, switcher);
+      if (states->size() < 2) continue;
+      if (states->size() != options->size()) continue;
+      shared_ptr<RadioGroup> group = make_shared<RadioGroup>(context, switcher);
       for (size_t i = 0; i < options->size(); ++i) {
-        auto option_name = options->GetValueAt(i);
-        auto state_label = states->GetValueAt(i);
-        if (!option_name || !state_label)
-          continue;
+        ConfigValuePtr option_name = options->GetValueAt(i);
+        ConfigValuePtr state_label = states->GetValueAt(i);
+        if (!option_name || !state_label) continue;
         Append(group->CreateOption(state_label->str(), option_name->str()));
       }
       group->SelectOption(group->GetSelectedOption());
@@ -196,15 +187,14 @@ SwitchTranslator::SwitchTranslator(const Ticket& ticket)
     : Translator(ticket) {
 }
 
-shared_ptr<Translation>
-SwitchTranslator::Query(const std::string& input,
-                        const Segment& segment,
-                        std::string* prompt) {
-  auto switcher = dynamic_cast<Switcher*>(engine_);
+shared_ptr<Translation> SwitchTranslator::Query(const std::string& input,
+                                                const Segment& segment,
+                                                std::string* prompt) {
+  Switcher* switcher = dynamic_cast<Switcher*>(engine_);
   if (!switcher) {
-    return nullptr;
+    return shared_ptr<Translation>();
   }
-  return New<SwitchTranslation>(switcher);
+  return make_shared<SwitchTranslation>(switcher);
 }
 
 }  // namespace rime

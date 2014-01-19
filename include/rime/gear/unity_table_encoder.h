@@ -23,9 +23,9 @@ class UnityTableEncoder : public TableEncoder, public PhraseCollector {
 
   bool Load(const Ticket& ticket);
 
-  void CreateEntry(const std::string& word,
-                   const std::string& code_str,
-                   const std::string& weight_str);
+  void CreateEntry(const std::string &word,
+                   const std::string &code_str,
+                   const std::string &weight_str);
   bool TranslateWord(const std::string& word,
                      std::vector<std::string>* code);
 
@@ -41,7 +41,7 @@ class UnityTableEncoder : public TableEncoder, public PhraseCollector {
 
  protected:
   UserDictionary* user_dict_;
-  unique_ptr<ReverseLookupDictionary> rev_dict_;
+  scoped_ptr<ReverseLookupDictionary> rev_dict_;
 };
 
 }  // namespace rime

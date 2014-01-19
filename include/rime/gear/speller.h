@@ -17,17 +17,17 @@ class Speller : public Processor {
  public:
   Speller(const Ticket& ticket);
 
-  virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
 
  protected:
   std::string alphabet_;
   std::string delimiters_;
   std::string initials_;
   std::string finals_;
-  int max_code_length_ = 0;
-  bool auto_select_ = false;
-  bool auto_select_unique_candidate_ = false;
-  bool use_space_ = false;
+  int max_code_length_;
+  bool auto_select_;
+  bool auto_select_unique_candidate_;
+  bool use_space_;
 };
 
 }  // namespace rime

@@ -15,7 +15,7 @@ namespace rime {
 
 class Deployer;
 
-using UserDictList = std::vector<std::string>;
+typedef std::vector<std::string> UserDictList;
 
 class UserDictManager {
  public:

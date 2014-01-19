@@ -37,7 +37,7 @@ class RimePrismTest : public ::testing::Test {
   virtual void TearDown() {
   }
 
-  unique_ptr<Prism> prism_;
+  scoped_ptr<Prism> prism_;
 };
 
 TEST_F(RimePrismTest, SaveAndLoad) {

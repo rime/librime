@@ -23,14 +23,14 @@ class Translator : public Class<Translator, const Ticket&> {
  public:
   explicit Translator(const Ticket& ticket)
       : engine_(ticket.engine), name_space_(ticket.name_space) {}
-  virtual ~Translator() = default;
+  virtual ~Translator() {}
 
-  virtual shared_ptr<Translation> Query(const std::string& input,
-                                        const Segment& segment,
+  virtual shared_ptr<Translation> Query(const std::string &input,
+                                        const Segment &segment,
                                         std::string* prompt = NULL) = 0;
 
  protected:
-  Engine* engine_;
+  Engine *engine_;
   std::string name_space_;
 };
 

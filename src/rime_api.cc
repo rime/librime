@@ -5,7 +5,8 @@
 // 2011-08-09 GONG Chen <chen.sst@gmail.com>
 //
 #include <cstring>
-#include <functional>
+#include <boost/bind.hpp>
+#include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -19,8 +20,6 @@
 #include <rime/setup.h>
 #include <rime/signature.h>
 #include <rime_api.h>
-
-using namespace std::placeholders;
 
 // assuming member is a pointer in struct *p
 #define PROVIDED(p, member) ((p) && RIME_STRUCT_HAS_MEMBER(*(p), (p)->member) && (p)->member)
@@ -55,7 +54,7 @@ RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
                                          void* context_object) {
   if (handler) {
     rime::Service::instance().SetNotificationHandler(
-        std::bind(handler, context_object, _1, _2, _3));
+        boost::bind(handler, context_object, _1, _2, _3));
   }
   else {
     rime::Service::instance().ClearNotificationHandler();
@@ -181,21 +180,21 @@ RIME_API void RimeCleanupAllSessions() {
 // input
 
 RIME_API Bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask) {
-  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
   return Bool(session->ProcessKeyEvent(rime::KeyEvent(keycode, mask)));
 }
 
 RIME_API Bool RimeCommitComposition(RimeSessionId session_id) {
-  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
   return Bool(session->CommitComposition());
 }
 
 RIME_API void RimeClearComposition(RimeSessionId session_id) {
-  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return;
   session->ClearComposition();
@@ -207,7 +206,7 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
   if (!context || context->data_size <= 0)
     return False;
   RIME_STRUCT_CLEAR(*context);
-  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
   rime::Context *ctx = session->context();
@@ -238,7 +237,7 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
       page_size = schema->page_size();
     int selected_index = seg.selected_index;
     int page_no = selected_index / page_size;
-    rime::unique_ptr<rime::Page> page(seg.menu->CreatePage(page_size, page_no));
+    boost::scoped_ptr<rime::Page> page(seg.menu->CreatePage(page_size, page_no));
     if (page) {
       context->menu.page_size = page_size;
       context->menu.page_no = page_no;
@@ -247,7 +246,7 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
       int i = 0;
       context->menu.num_candidates = page->candidates.size();
       context->menu.candidates = new RimeCandidate[page->candidates.size()];
-      for (const rime::shared_ptr<rime::Candidate> &cand : page->candidates) {
+      BOOST_FOREACH(const boost::shared_ptr<rime::Candidate> &cand, page->candidates) {
         RimeCandidate* dest = &context->menu.candidates[i++];
         dest->text = new char[cand->text().length() + 1];
         std::strcpy(dest->text, cand->text().c_str());
@@ -293,7 +292,7 @@ RIME_API Bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit) {
   if (!commit)
     return False;
   RIME_STRUCT_CLEAR(*commit);
-  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
   const std::string& commit_text(session->commit_text());
@@ -318,7 +317,7 @@ RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
   if (!status || status->data_size <= 0)
     return False;
   RIME_STRUCT_CLEAR(*status);
-  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
   rime::Schema *schema = session->schema();
@@ -349,7 +348,7 @@ RIME_API Bool RimeFreeStatus(RimeStatus* status) {
 // runtime options
 
 RIME_API void RimeSetOption(RimeSessionId session_id, const char* option, Bool value) {
-  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return;
   rime::Context *ctx = session->context();
@@ -359,7 +358,7 @@ RIME_API void RimeSetOption(RimeSessionId session_id, const char* option, Bool v
 }
 
 RIME_API Bool RimeGetOption(RimeSessionId session_id, const char* option) {
-  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
   rime::Context *ctx = session->context();
@@ -369,7 +368,7 @@ RIME_API Bool RimeGetOption(RimeSessionId session_id, const char* option) {
 }
 
 RIME_API void RimeSetProperty(RimeSessionId session_id, const char* prop, const char* value) {
-  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return;
   rime::Context *ctx = session->context();
@@ -380,7 +379,7 @@ RIME_API void RimeSetProperty(RimeSessionId session_id, const char* prop, const 
 
 RIME_API Bool RimeGetProperty(RimeSessionId session_id, const char* prop,
                               char* value, size_t buffer_size) {
-  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
   rime::Context *ctx = session->context();
@@ -441,7 +440,7 @@ RIME_API void RimeFreeSchemaList(RimeSchemaList* schema_list) {
 }
 
 RIME_API Bool RimeGetCurrentSchema(RimeSessionId session_id, char* schema_id, size_t buffer_size) {
-  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session) return False;
   rime::Schema* schema = session->schema();
   if (!schema) return False;
@@ -451,7 +450,7 @@ RIME_API Bool RimeGetCurrentSchema(RimeSessionId session_id, char* schema_id, si
 
 RIME_API Bool RimeSelectSchema(RimeSessionId session_id, const char* schema_id) {
   if (!schema_id) return False;
-  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session) return False;
   session->ApplySchema(new rime::Schema(schema_id));
   return True;
@@ -604,7 +603,7 @@ RIME_API void RimeConfigEnd(RimeConfigIterator* iterator) {
 
 RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence) {
     LOG(INFO) << "simulate key sequence: " << key_sequence;
-    rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+    boost::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
     if (!session)
       return False;
     rime::KeySequence keys;
@@ -612,7 +611,7 @@ RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_
       LOG(ERROR) << "error parsing input: '" << key_sequence << "'";
       return False;
     }
-    for (const rime::KeyEvent &ke : keys) {
+    BOOST_FOREACH(const rime::KeyEvent &ke, keys) {
       session->ProcessKeyEvent(ke);
     }
     return True;

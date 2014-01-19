@@ -4,6 +4,7 @@
 //
 // 2013-11-05 GONG Chen <chen.sst@gmail.com>
 //
+#include <boost/foreach.hpp>
 #include <rime/schema.h>
 #include <rime/segmentation.h>
 #include <rime/ticket.h>
@@ -12,11 +13,10 @@
 namespace rime {
 
 TagMatching::TagMatching(const Ticket& ticket) {
-  if (!ticket.schema)
-    return;
+  if (!ticket.schema) return;
   Config* config = ticket.schema->config();
-  if (auto tags = config->GetList(ticket.name_space + "/tags")) {
-    for (auto it = tags->begin(); it != tags->end(); ++it) {
+  if (ConfigListPtr tags = config->GetList(ticket.name_space + "/tags")) {
+    for (ConfigList::Iterator it = tags->begin(); it != tags->end(); ++it) {
       if (Is<ConfigValue>(*it)) {
         tags_.push_back(As<ConfigValue>(*it)->str());
       }
@@ -29,7 +29,7 @@ bool TagMatching::TagsMatch(Segment* segment) {
     return false;
   if (tags_.empty())  // match any
     return true;
-  for (const std::string& tag : tags_) {
+  BOOST_FOREACH(const std::string& tag, tags_) {
     if (segment->HasTag(tag))
       return true;
   }

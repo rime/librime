@@ -15,19 +15,19 @@
 
 namespace rime {
 
-using WordGraph = std::map<int, UserDictEntryCollector>;
+typedef std::map<int, UserDictEntryCollector> WordGraph;
 
 class Language;
 
 class Poet {
  public:
   Poet(Language* language) : language_(language) {}
-
+  
   shared_ptr<Sentence> MakeSentence(const WordGraph& graph,
                                     size_t total_length);
  protected:
   Language* language_;
-};
+};  
 
 }  // namespace rime
 

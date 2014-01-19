@@ -9,21 +9,20 @@
 
 #include <stdint.h>
 #include <time.h>
-#include <functional>
 #include <map>
-#include <mutex>
+#include <boost/thread.hpp>
 #include <rime/common.h>
 #include <rime/deployer.h>
 
 namespace rime {
 
-using SessionId = uintptr_t;
+typedef uintptr_t SessionId;
 
 static const SessionId kInvalidSessionId = 0;
 
-using NotificationHandler = std::function<void (SessionId session_id,
-                                                const char* message_type,
-                                                const char* message_value)>;
+typedef boost::function<void (SessionId session_id,
+                              const char* message_type,
+                              const char* message_value)> NotificationHandler;
 
 class Context;
 class Engine;
@@ -36,7 +35,7 @@ class Session {
   static const int kLifeSpan = 5 * 60;  // seconds
 
   Session();
-  bool ProcessKeyEvent(const KeyEvent& key_event);
+  bool ProcessKeyEvent(const KeyEvent &key_event);
   void Activate();
   void ResetCommitText();
   bool CommitComposition();
@@ -49,11 +48,11 @@ class Session {
   const std::string& commit_text() const { return commit_text_; }
 
  private:
-  void OnCommit(const std::string& commit_text);
+  void OnCommit(const std::string &commit_text);
 
-  unique_ptr<Switcher> switcher_;
-  unique_ptr<Engine> engine_;
-  time_t last_active_time_ = 0;
+  scoped_ptr<Switcher> switcher_;
+  scoped_ptr<Engine> engine_;
+  time_t last_active_time_;
   std::string commit_text_;
 };
 
@@ -84,12 +83,12 @@ class Service {
  private:
   Service();
 
-  using SessionMap = std::map<SessionId, shared_ptr<Session>>;
+  typedef std::map<SessionId, shared_ptr<Session> > SessionMap;
   SessionMap sessions_;
   Deployer deployer_;
   NotificationHandler notification_handler_;
-  std::mutex mutex_;
-  bool started_ = false;
+  boost::mutex mutex_;
+  bool started_;
 };
 
 }  // namespace rime

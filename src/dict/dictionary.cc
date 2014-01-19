@@ -4,7 +4,7 @@
 //
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
-#include <utility>
+#include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <rime/common.h>
 #include <rime/schema.h>
@@ -17,7 +17,7 @@ namespace rime {
 
 namespace dictionary {
 
-bool compare_chunk_by_head_element(const Chunk& a, const Chunk& b) {
+bool compare_chunk_by_head_element(const Chunk &a, const Chunk &b) {
   if (!a.entries || a.cursor >= a.size) return false;
   if (!b.entries || b.cursor >= b.size) return true;
   if (a.remaining_code.length() != b.remaining_code.length())
@@ -26,26 +26,25 @@ bool compare_chunk_by_head_element(const Chunk& a, const Chunk& b) {
          b.credibility * b.entries[b.cursor].weight;  // by weight desc
 }
 
-size_t match_extra_code(const table::Code* extra_code, size_t depth,
-                        const SyllableGraph& syll_graph, size_t current_pos) {
+size_t match_extra_code(const table::Code *extra_code, size_t depth,
+                        const SyllableGraph &syll_graph, size_t current_pos) {
   if (!extra_code || depth >= extra_code->size)
     return current_pos;  // success
   if (current_pos >= syll_graph.interpreted_length)
     return 0;  // failure (possibly success for completion in the future)
-  auto index = syll_graph.indices.find(current_pos);
+  SpellingIndices::const_iterator index = syll_graph.indices.find(current_pos);
   if (index == syll_graph.indices.end())
     return 0;
   table::SyllableId current_syll_id = extra_code->at[depth];
-  auto spellings = index->second.find(current_syll_id);
+  SpellingIndex::const_iterator spellings = index->second.find(current_syll_id);
   if (spellings == index->second.end())
     return 0;
   size_t best_match = 0;
-  for (const SpellingProperties* props : spellings->second) {
+  BOOST_FOREACH(const SpellingProperties* props, spellings->second) {
     size_t match_end_pos = match_extra_code(extra_code, depth + 1,
                                             syll_graph, props->end_pos);
     if (!match_end_pos) continue;
-    if (match_end_pos > best_match)
-      best_match = match_end_pos;
+    if (match_end_pos > best_match) best_match = match_end_pos;
   }
   return best_match;
 }
@@ -56,11 +55,11 @@ DictEntryIterator::DictEntryIterator()
     : Base(), entry_(), entry_count_(0) {
 }
 
-DictEntryIterator::DictEntryIterator(const DictEntryIterator& other)
+DictEntryIterator::DictEntryIterator(const DictEntryIterator &other)
     : Base(other), entry_(other.entry_), entry_count_(other.entry_count_) {
 }
 
-DictEntryIterator& DictEntryIterator::operator= (DictEntryIterator& other) {
+DictEntryIterator& DictEntryIterator::operator= (DictEntryIterator &other) {
   DLOG(INFO) << "swapping iterator contents.";
   swap(other);
   entry_ = other.entry_;
@@ -72,8 +71,8 @@ bool DictEntryIterator::exhausted() const {
   return empty();
 }
 
-void DictEntryIterator::AddChunk(dictionary::Chunk&& chunk) {
-  push_back(std::move(chunk));
+void DictEntryIterator::AddChunk(const dictionary::Chunk &chunk) {
+  push_back(chunk);
   entry_count_ += chunk.size;
 }
 
@@ -83,9 +82,9 @@ void DictEntryIterator::Sort() {
 
 void DictEntryIterator::PrepareEntry() {
   if (empty()) return;
-  const auto& chunk(front());
-  entry_ = New<DictEntry>();
-  const auto& e(chunk.entries[chunk.cursor]);
+  const dictionary::Chunk &chunk(front());
+  entry_ = make_shared<DictEntry>();
+  const table::Entry &e(chunk.entries[chunk.cursor]);
   DLOG(INFO) << "creating temporary dict entry '" << e.text.c_str() << "'.";
   entry_->code = chunk.code;
   entry_->text = e.text.c_str();
@@ -112,7 +111,7 @@ bool DictEntryIterator::Next() {
   if (empty()) {
     return false;
   }
-  auto& chunk(front());
+  dictionary::Chunk &chunk(front());
   if (++chunk.cursor >= chunk.size) {
     pop_front();
   }
@@ -126,7 +125,7 @@ bool DictEntryIterator::Next() {
 bool DictEntryIterator::Skip(size_t num_entries) {
   while (num_entries > 0) {
     if (empty()) return false;
-    auto& chunk(front());
+    dictionary::Chunk &chunk(front());
     if (chunk.cursor + num_entries < chunk.size) {
       chunk.cursor += num_entries;
       return true;
@@ -139,9 +138,9 @@ bool DictEntryIterator::Skip(size_t num_entries) {
 
 // Dictionary members
 
-Dictionary::Dictionary(const std::string& name,
-                       const shared_ptr<Table>& table,
-                       const shared_ptr<Prism>& prism)
+Dictionary::Dictionary(const std::string &name,
+                       const shared_ptr<Table> &table,
+                       const shared_ptr<Prism> &prism)
     : name_(name), table_(table), prism_(prism) {
 }
 
@@ -149,45 +148,45 @@ Dictionary::~Dictionary() {
   // should not close shared table and prism objects
 }
 
-shared_ptr<DictEntryCollector>
-Dictionary::Lookup(const SyllableGraph& syllable_graph,
-                   size_t start_pos,
-                   double initial_credibility) {
+shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_graph,
+                                                  size_t start_pos,
+                                                  double initial_credibility) {
   if (!loaded())
-    return nullptr;
+    return shared_ptr<DictEntryCollector>();
   TableQueryResult result;
   if (!table_->Query(syllable_graph, start_pos, &result)) {
-    return nullptr;
+    return shared_ptr<DictEntryCollector>();
   }
-  auto collector = New<DictEntryCollector>();
+  shared_ptr<DictEntryCollector> collector = make_shared<DictEntryCollector>();
   // copy result
-  for (auto& v : result) {
+  BOOST_FOREACH(TableQueryResult::value_type &v, result) {
     size_t end_pos = v.first;
-    for (TableAccessor& a : v.second) {
+    BOOST_FOREACH(TableAccessor &a, v.second) {
       double cr = initial_credibility * a.credibility();
       if (a.extra_code()) {
         do {
           size_t actual_end_pos = dictionary::match_extra_code(
               a.extra_code(), 0, syllable_graph, end_pos);
           if (actual_end_pos == 0) continue;
-          (*collector)[actual_end_pos].AddChunk({a.code(), a.entry(), cr});
+          (*collector)[actual_end_pos].AddChunk(
+              dictionary::Chunk(a.code(), a.entry(), cr));
         }
         while (a.Next());
       }
       else {
-        (*collector)[end_pos].AddChunk({a, cr});
+        (*collector)[end_pos].AddChunk(dictionary::Chunk(a, cr));
       }
     }
   }
   // sort each group of equal code length
-  for (auto& v : *collector) {
+  BOOST_FOREACH(DictEntryCollector::value_type &v, *collector) {
     v.second.Sort();
   }
   return collector;
 }
 
-size_t Dictionary::LookupWords(DictEntryIterator* result,
-                               const std::string& str_code,
+size_t Dictionary::LookupWords(DictEntryIterator *result,
+                               const std::string &str_code,
                                bool predictive,
                                size_t expand_search_limit) {
   DLOG(INFO) << "lookup: " << str_code;
@@ -198,14 +197,14 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
     prism_->ExpandSearch(str_code, &keys, expand_search_limit);
   }
   else {
-    Prism::Match match{0, 0};
+    Prism::Match match = {0, 0};
     if (prism_->GetValue(str_code, &match.value)) {
       keys.push_back(match);
     }
   }
   DLOG(INFO) << "found " << keys.size() << " matching keys thru the prism.";
   size_t code_length(str_code.length());
-  for (auto& match : keys) {
+  BOOST_FOREACH(Prism::Match &match, keys) {
     SpellingAccessor accessor(prism_->QuerySpelling(match.value));
     while (!accessor.exhausted()) {
       int syllable_id = accessor.syllable_id();
@@ -214,7 +213,7 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
       if (type > kNormalSpelling) continue;
       std::string remaining_code;
       if (match.length > code_length) {
-        const char* syllable = table_->GetSyllableById(syllable_id);
+        const char *syllable = table_->GetSyllableById(syllable_id);
         size_t syllable_code_length = syllable ? strlen(syllable) : 0;
         if (syllable_code_length > code_length)
           remaining_code = syllable + code_length;
@@ -222,19 +221,19 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
       TableAccessor a(table_->QueryWords(syllable_id));
       if (!a.exhausted()) {
         DLOG(INFO) << "remaining code: " << remaining_code;
-        result->AddChunk({a, remaining_code});
+        result->AddChunk(dictionary::Chunk(a, remaining_code));
       }
     }
   }
   return keys.size();
 }
 
-bool Dictionary::Decode(const Code& code, std::vector<std::string>* result) {
+bool Dictionary::Decode(const Code &code, std::vector<std::string>* result) {
   if (!result || !table_)
     return false;
   result->clear();
-  for (int c : code) {
-    const char* s = table_->GetSyllableById(c);
+  BOOST_FOREACH(int c, code) {
+    const char *s = table_->GetSyllableById(c);
     if (!s)
       return false;
     result->push_back(s);
@@ -278,7 +277,7 @@ DictionaryComponent::DictionaryComponent() {
 
 Dictionary* DictionaryComponent::Create(const Ticket& ticket) {
   if (!ticket.schema) return NULL;
-  Config* config = ticket.schema->config();
+  Config *config = ticket.schema->config();
   std::string dict_name;
   if (!config->GetString(ticket.name_space + "/dictionary", &dict_name)) {
     LOG(ERROR) << ticket.name_space << "/dictionary not specified in schema '"
@@ -295,19 +294,18 @@ Dictionary* DictionaryComponent::Create(const Ticket& ticket) {
   return CreateDictionaryWithName(dict_name, prism_name);
 }
 
-Dictionary*
-DictionaryComponent::CreateDictionaryWithName(const std::string& dict_name,
-                                              const std::string& prism_name) {
+Dictionary* DictionaryComponent::CreateDictionaryWithName(
+    const std::string &dict_name, const std::string &prism_name) {
   // obtain prism and table objects
   boost::filesystem::path path(Service::instance().deployer().user_data_dir);
-  auto table = table_map_[dict_name].lock();
+  shared_ptr<Table> table(table_map_[dict_name].lock());
   if (!table) {
-    table = New<Table>((path / dict_name).string() + ".table.bin");
+    table = boost::make_shared<Table>((path / dict_name).string() + ".table.bin");
     table_map_[dict_name] = table;
   }
-  auto prism = prism_map_[prism_name].lock();
+  shared_ptr<Prism> prism(prism_map_[prism_name].lock());
   if (!prism) {
-    prism = New<Prism>((path / prism_name).string() + ".prism.bin");
+    prism = boost::make_shared<Prism>((path / prism_name).string() + ".prism.bin");
     prism_map_[prism_name] = prism;
   }
   return new Dictionary(dict_name, table, prism);

@@ -8,23 +8,23 @@
 #ifndef RIME_VOCABULARY_H_
 #define RIME_VOCABULARY_H_
 
-#include <functional>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
+#include <boost/function.hpp>
 #include <rime/common.h>
 
 namespace rime {
 
-using Syllabary = std::set<std::string>;
+typedef std::set<std::string> Syllabary;
 
 class Code : public std::vector<int> {
  public:
   static const size_t kIndexCodeMaxLength = 3;
 
-  bool operator< (const Code& other) const;
-  bool operator== (const Code& other) const;
+  bool operator< (const Code &other) const;
+  bool operator== (const Code &other) const;
 
   void CreateIndex(Code* index_code);
 };
@@ -33,23 +33,23 @@ struct DictEntry {
   std::string text;
   std::string comment;
   std::string preedit;
-  double weight = 0.0;
-  int commit_count = 0;
+  double weight;
+  int commit_count;
   Code code;  // multi-syllable code from prism
   std::string custom_code;  // user defined code
-  int remaining_code_length = 0;
+  int remaining_code_length;
 
-  DictEntry() = default;
+  DictEntry() : weight(0.0), commit_count(0), remaining_code_length(0) {}
   bool operator< (const DictEntry& other) const;
 };
 
-class DictEntryList : public std::vector<shared_ptr<DictEntry>> {
+class DictEntryList : public std::vector<shared_ptr<DictEntry> > {
  public:
   void Sort();
   void SortRange(size_t start, size_t count);
 };
 
-using DictEntryFilter = std::function<bool (shared_ptr<DictEntry> entry)>;
+typedef boost::function<bool (shared_ptr<DictEntry> entry)> DictEntryFilter;
 
 class DictEntryFilterBinder {
  public:
@@ -68,12 +68,12 @@ struct VocabularyPage {
 
 class Vocabulary : public std::map<int, VocabularyPage> {
  public:
-  DictEntryList* LocateEntries(const Code& code);
+  DictEntryList* LocateEntries(const Code &code);
   void SortHomophones();
 };
 
 // word -> { code, ... }
-using ReverseLookupTable = std::map<std::string, std::set<std::string>>;
+typedef std::map<std::string, std::set<std::string> > ReverseLookupTable;
 
 }  // namespace rime
 

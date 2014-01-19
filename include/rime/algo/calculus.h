@@ -19,10 +19,10 @@ namespace rime {
 
 class Calculation {
  public:
-  using Factory = Calculation* (const std::vector<std::string>& args);
+  typedef Calculation* Factory(const std::vector<std::string>& args);
 
-  Calculation() = default;
-  virtual ~Calculation() = default;
+  Calculation() {}
+  virtual ~Calculation() {}
   virtual bool Apply(Spelling* spelling) = 0;
   virtual bool addition() { return true; }
   virtual bool deletion() { return true; }

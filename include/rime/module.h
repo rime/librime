@@ -32,7 +32,7 @@ class ModuleManager {
   ModuleManager() {}
 
   // module registry
-  using ModuleMap = std::map<std::string, RimeModule*>;
+  typedef std::map<std::string, RimeModule*> ModuleMap;
   ModuleMap map_;
   // list of loaded modules
   std::vector<RimeModule*> loaded_;

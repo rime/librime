@@ -46,12 +46,17 @@ static bool expecting_an_initial(Context* ctx,
   //assert(input.length() >= caret_pos);
   char previous_char = input[caret_pos - 1];
   return belongs_to(previous_char, finals) ||
-         !belongs_to(previous_char, alphabet);
+      !belongs_to(previous_char, alphabet);
 }
 
 Speller::Speller(const Ticket& ticket) : Processor(ticket),
-                                         alphabet_(kRimeAlphabet) {
-  if (Config* config = engine_->schema()->config()) {
+                                         alphabet_(kRimeAlphabet),
+                                         max_code_length_(0),
+                                         auto_select_(false),
+                                         auto_select_unique_candidate_(false),
+                                         use_space_(false) {
+  Config *config = engine_->schema()->config();
+  if (config) {
     config->GetString("speller/alphabet", &alphabet_);
     config->GetString("speller/delimiter", &delimiters_);
     config->GetString("speller/initials", &initials_);
@@ -64,12 +69,11 @@ Speller::Speller(const Ticket& ticket) : Processor(ticket),
     }
     config->GetBool("speller/use_space", &use_space_);
   }
-  if (initials_.empty()) {
-    initials_ = alphabet_;
-  }
+  if (initials_.empty()) initials_ = alphabet_;
 }
 
-ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
+ProcessResult Speller::ProcessKeyEvent(
+    const KeyEvent &key_event) {
   if (key_event.release() || key_event.ctrl() || key_event.alt())
     return kNoop;
   int ch = key_event.keycode();
@@ -79,7 +83,7 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   if (!belongs_to(ch, alphabet_) && !belongs_to(ch, delimiters_))
     return kNoop;
-  Context* ctx = engine_->context();
+  Context *ctx = engine_->context();
   bool is_initial = belongs_to(ch, initials_);
   if (!is_initial &&
       expecting_an_initial(ctx, alphabet_, finals_)) {
@@ -89,7 +93,8 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
       max_code_length_ > 0 &&  // at a fixed code length
       ctx->HasMenu()) {
     const Segment& seg(ctx->composition()->back());
-    if (auto cand = seg.GetSelectedCandidate()) {
+    shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
+    if (cand) {
       int code_length = static_cast<int>(cand->end() - cand->start());
       if (code_length == max_code_length_ &&  // exceeds max code length
           is_auto_selectable(cand, ctx->input(), delimiters_)) {

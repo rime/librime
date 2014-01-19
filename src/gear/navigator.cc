@@ -4,7 +4,7 @@
 //
 // 2011-11-20 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/range/adaptor/reversed.hpp>
+#include <boost/foreach.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -16,10 +16,10 @@
 
 namespace rime {
 
-ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
+ProcessResult Navigator::ProcessKeyEvent(const KeyEvent &key_event) {
   if (key_event.release())
     return kNoop;
-  Context* ctx = engine_->context();
+  Context *ctx = engine_->context();
   if (!ctx->IsComposing())
     return kNoop;
   int ch = key_event.keycode();
@@ -43,15 +43,16 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
   return kNoop;
 }
 
-bool Navigator::Left(Context* ctx) {
+bool Navigator::Left(Context *ctx) {
   DLOG(INFO) << "navigate left.";
   size_t caret_pos = ctx->caret_pos();
   if (caret_pos == 0)
     return End(ctx);
   const Composition* comp = ctx->composition();
   if (comp && !comp->empty()) {
-    auto cand = comp->back().GetSelectedCandidate();
-    auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
+    shared_ptr<Candidate> cand = comp->back().GetSelectedCandidate();
+    shared_ptr<Phrase> phrase =
+        As<Phrase>(Candidate::GetGenuineCandidate(cand));
     if (phrase && phrase->syllabification()) {
       size_t stop = phrase->syllabification()->PreviousStop(caret_pos);
       if (stop != caret_pos) {
@@ -64,7 +65,7 @@ bool Navigator::Left(Context* ctx) {
   return true;
 }
 
-bool Navigator::Right(Context* ctx) {
+bool Navigator::Right(Context *ctx) {
   DLOG(INFO) << "navigate right.";
   size_t caret_pos = ctx->caret_pos();
   if (caret_pos >= ctx->input().length())
@@ -73,13 +74,13 @@ bool Navigator::Right(Context* ctx) {
   return true;
 }
 
-bool Navigator::Home(Context* ctx) {
+bool Navigator::Home(Context *ctx) {
   DLOG(INFO) << "navigate home.";
   size_t caret_pos = ctx->caret_pos();
-  const Composition* comp = ctx->composition();
+  Composition *comp = ctx->composition();
   if (!comp->empty()) {
     size_t confirmed_pos = caret_pos;
-    for (const Segment& seg : boost::adaptors::reverse(*comp)) {
+    BOOST_REVERSE_FOREACH(const Segment &seg, *comp) {
       if (seg.status >= Segment::kSelected) {
         break;
       }
@@ -94,7 +95,7 @@ bool Navigator::Home(Context* ctx) {
   return true;
 }
 
-bool Navigator::End(Context* ctx) {
+bool Navigator::End(Context *ctx) {
   DLOG(INFO) << "navigate end.";
   size_t end_pos = ctx->input().length();
   if (ctx->caret_pos() != end_pos) {
