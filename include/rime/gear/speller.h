@@ -13,6 +13,9 @@
 
 namespace rime {
 
+class Context;
+struct Segment;
+
 class Speller : public Processor {
  public:
   Speller(const Ticket& ticket);
@@ -20,13 +23,17 @@ class Speller : public Processor {
   virtual ProcessResult ProcessKeyEvent(const KeyEvent &key_event);
 
  protected:
+  bool AutoSelectAtMaxCodeLength(Context* ctx);
+  bool AutoSelectUniqueCandidate(Context* ctx);
+  bool AutoSelectPreviousMatch(Context* ctx, Segment* previous_segment);
+  bool FindEarlierMatch(Context* ctx, size_t start, size_t end);
+
   std::string alphabet_;
   std::string delimiters_;
   std::string initials_;
   std::string finals_;
   int max_code_length_;
   bool auto_select_;
-  bool auto_select_unique_candidate_;
   bool use_space_;
 };
 

@@ -213,6 +213,7 @@ TableTranslator::TableTranslator(const Ticket& ticket)
       enable_charset_filter_(false),
       enable_encoder_(false),
       enable_sentence_(true),
+      sentence_over_completion_(false),
       encode_commit_history_(true),
       max_phrase_length_(5) {
   if (!engine_) return;
@@ -221,6 +222,8 @@ TableTranslator::TableTranslator(const Ticket& ticket)
                     &enable_charset_filter_);
     config->GetBool(name_space_ + "/enable_sentence",
                     &enable_sentence_);
+    config->GetBool(name_space_ + "/sentence_over_completion",
+                    &sentence_over_completion_);
     config->GetBool(name_space_ + "/enable_encoder",
                     &enable_encoder_);
     config->GetBool(name_space_ + "/encode_commit_history",
@@ -234,8 +237,15 @@ TableTranslator::TableTranslator(const Ticket& ticket)
   }
 }
 
-shared_ptr<Translation> TableTranslator::Query(const std::string &input,
-                                               const Segment &segment,
+static bool starts_with_completion(shared_ptr<Translation> translation) {
+  if (!translation)
+    return false;
+  auto cand = translation->Peek();
+  return cand && cand->type() == "completion";
+}
+
+shared_ptr<Translation> TableTranslator::Query(const std::string& input,
+                                               const Segment& segment,
                                                std::string* prompt) {
   if (!segment.HasTag(tag_))
     return shared_ptr<Translation>();
@@ -293,7 +303,14 @@ shared_ptr<Translation> TableTranslator::Query(const std::string &input,
     translation.reset();  // discard futile translation
   }
   if (enable_sentence_ && !translation) {
-    translation = MakeSentence(input, segment.start);
+    translation = MakeSentence(input, segment.start,
+                               /* include_prefix_phrases = */true);
+  }
+  else if (sentence_over_completion_ &&
+           starts_with_completion(translation)) {
+    if (auto sentence = MakeSentence(input, segment.start)) {
+      translation = sentence + translation;
+    }
   }
   if (translation) {
     translation = make_shared<UniqueFilter>(translation);
@@ -392,14 +409,16 @@ class SentenceSyllabification : public Syllabification {
 SentenceTranslation::SentenceTranslation(TableTranslator* translator,
                                          shared_ptr<Sentence> sentence,
                                          DictEntryCollector* collector,
-                                         UserDictEntryCollector* user_phrase_collector,
+                                         UserDictEntryCollector* ucollector,
                                          const std::string& input,
                                          size_t start)
     : translator_(translator),
       user_phrase_index_(0), input_(input), start_(start) {
   sentence_.swap(sentence);
-  collector_.swap(*collector);
-  user_phrase_collector_.swap(*user_phrase_collector);
+  if (collector)
+    collector_.swap(*collector);
+  if (ucollector)
+    user_phrase_collector_.swap(*ucollector);
   PrepareSentence();
   CheckEmpty();
 }
@@ -545,8 +564,9 @@ static size_t consume_trailing_delimiters(size_t pos,
   return pos;
 }
 
-shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
-                                                      size_t start) {
+shared_ptr<Translation>
+TableTranslator::MakeSentence(const std::string& input, size_t start,
+                              bool include_prefix_phrases) {
   bool filter_by_charset = enable_charset_filter_ &&
       !engine_->context()->get_option("extended_charset");
   DictEntryCollector collector;
@@ -653,12 +673,13 @@ shared_ptr<Translation> TableTranslator::MakeSentence(const std::string& input,
   }
   shared_ptr<Translation> result;
   if (sentences.find(input.length()) != sentences.end()) {
-    result = boost::make_shared<SentenceTranslation>(this,
-                                                     sentences[input.length()],
-                                                     &collector,
-                                                     &user_phrase_collector,
-                                                     input,
-                                                     start);
+    result = boost::make_shared<SentenceTranslation>(
+        this,
+        sentences[input.length()],
+        include_prefix_phrases ? &collector : NULL,
+        include_prefix_phrases ? &user_phrase_collector : NULL,
+        input,
+        start);
     if (result && filter_by_charset) {
       result = make_shared<CharsetFilter>(result);
     }

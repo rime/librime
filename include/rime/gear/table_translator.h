@@ -33,8 +33,9 @@ class TableTranslator : public Translator,
                                         std::string* prompt);
   virtual bool Memorize(const CommitEntry& commit_entry);
 
-  shared_ptr<Translation> MakeSentence(const std::string &input,
-                                       size_t start);
+  shared_ptr<Translation> MakeSentence(const std::string& input,
+                                       size_t start,
+                                       bool include_prefix_phrases = false);
 
   UnityTableEncoder* encoder() const { return encoder_.get(); }
 
@@ -42,6 +43,7 @@ class TableTranslator : public Translator,
   bool enable_charset_filter_;
   bool enable_encoder_;
   bool enable_sentence_;
+  bool sentence_over_completion_;
   bool encode_commit_history_;
   int max_phrase_length_;
   scoped_ptr<UnityTableEncoder> encoder_;

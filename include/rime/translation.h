@@ -8,7 +8,9 @@
 #ifndef RIME_TRANSLATION_H_
 #define RIME_TRANSLATION_H_
 
+#include <list>
 #include <string>
+#include <vector>
 #include <rime/candidate.h>
 #include <rime/common.h>
 
@@ -44,21 +46,9 @@ class UniqueTranslation : public Translation {
   UniqueTranslation(const shared_ptr<Candidate> &candidate)
       : candidate_(candidate) {
   }
-  virtual ~UniqueTranslation() {
-  }
 
-  virtual bool Next() {
-    if (exhausted())
-      return false;
-    set_exhausted(true);
-    return true;
-  }
-
-  virtual shared_ptr<Candidate> Peek() {
-    if (exhausted())
-      return shared_ptr<Candidate>();
-    return candidate_;
-  }
+  bool Next();
+  shared_ptr<Candidate> Peek();
 
  protected:
   shared_ptr<Candidate> candidate_;
@@ -66,28 +56,12 @@ class UniqueTranslation : public Translation {
 
 class FifoTranslation : public Translation {
  public:
-  FifoTranslation() : cursor_(0) {
-    set_exhausted(true);
-  }
+  FifoTranslation();
 
-  bool Next() {
-    if (exhausted())
-      return false;
-    if (++cursor_ >= candies_.size())
-      set_exhausted(true);
-    return true;
-  }
+  bool Next();
+  shared_ptr<Candidate> Peek();
 
-  shared_ptr<Candidate> Peek() {
-    if (exhausted())
-      return shared_ptr<Candidate>();
-    return candies_[cursor_];
-  }
-
-  void Append(const shared_ptr<Candidate> &candy) {
-    candies_.push_back(candy);
-    set_exhausted(false);
-  }
+  void Append(const shared_ptr<Candidate>& candy);
 
   size_t size() const {
     return candies_.size() - cursor_;
@@ -97,6 +71,22 @@ class FifoTranslation : public Translation {
   std::vector<shared_ptr<Candidate> > candies_;
   size_t cursor_;
 };
+
+class UnionTranslation : public Translation {
+ public:
+  UnionTranslation();
+
+  bool Next();
+  shared_ptr<Candidate> Peek();
+
+  UnionTranslation& operator+= (shared_ptr<Translation> t);
+
+ protected:
+  std::list<shared_ptr<Translation>> translations_;
+};
+
+shared_ptr<UnionTranslation> operator+ (shared_ptr<Translation> a,
+                                        shared_ptr<Translation> b);
 
 } // namespace rime
 
