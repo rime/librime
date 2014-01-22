@@ -55,6 +55,12 @@ rem set CURL=%RIME_ROOT%\thirdparty\bin\curl.exe
 rem set DOWNLOAD="%CURL%" --remote-name-all
 rem set GOOGLECODE_SVN=http://rimeime.googlecode.com/svn/trunk/
 
+rem TODO: select a cmake generator
+rem set CMAKE_GENERATOR="MinGW Makefiles"
+rem set CMAKE_GENERATOR="Eclipse CDT4 - MinGW Makefiles"
+rem set CMAKE_GENERATOR="Visual Studio 9 2008"
+set CMAKE_GENERATOR="Visual Studio 10"
+
 if %build_boost% == 1 (
   cd %BOOST_ROOT%
   if not exist bjam.exe call bootstrap.bat
@@ -97,7 +103,7 @@ if %build_thirdparty% == 1 (
   cd "%RIME_ROOT%"\thirdparty\src\yaml-cpp
   if not exist build mkdir build
   cd build
-  cmake -DMSVC_SHARED_RT=OFF ..
+  cmake -G %CMAKE_GENERATOR% -DMSVC_SHARED_RT=OFF ..
   if %ERRORLEVEL% NEQ 0 goto ERROR
   rem devenv YAML_CPP.sln /build "Release"
   msbuild.exe YAML_CPP.sln /p:Configuration=Release
@@ -112,7 +118,7 @@ if %build_thirdparty% == 1 (
   cd "%RIME_ROOT%"\thirdparty\src\gtest
   if not exist build mkdir build
   cd build
-  cmake ..
+  cmake -G %CMAKE_GENERATOR% ..
   if %ERRORLEVEL% NEQ 0 goto ERROR
   rem devenv gtest.sln /build "Release"
   msbuild.exe gtest.sln /p:Configuration=Release
@@ -159,12 +165,6 @@ echo.
 set CMAKE_LIBRARY_PATH=%RIME_ROOT%\thirdparty\lib
 echo CMAKE_LIBRARY_PATH=%CMAKE_LIBRARY_PATH%
 echo.
-
-rem TODO: select a cmake generator
-rem set CMAKE_GENERATOR="MinGW Makefiles"
-rem set CMAKE_GENERATOR="Eclipse CDT4 - MinGW Makefiles"
-rem set CMAKE_GENERATOR="Visual Studio 9 2008"
-set CMAKE_GENERATOR="Visual Studio 10"
 
 set BUILD_DIR=%RIME_ROOT%\%build%
 if not exist %BUILD_DIR% mkdir %BUILD_DIR%
