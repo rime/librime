@@ -66,7 +66,6 @@ ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
     }
   }
   if (alphabet_.find(ch) == std::string::npos) {
-    ClearChord();
     return composing ? kAccepted : kNoop;
   }
   // in alphabet
