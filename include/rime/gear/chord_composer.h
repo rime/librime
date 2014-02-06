@@ -37,6 +37,7 @@ class ChordComposer : public Processor {
   std::set<char> pressed_;
   std::set<char> chord_;
   bool pass_thru_ = false;
+  std::string sequence_;
 };
 
 }  // namespace rime

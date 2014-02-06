@@ -42,9 +42,28 @@ ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   }
   bool is_key_up = key_event.release();
   int ch = key_event.keycode();
+  Context* ctx = engine_->context();
+  if (ch == XK_Return && !is_key_up && !sequence_.empty()) {
+    // commit raw input
+    ctx->set_input(sequence_);
+    sequence_.clear();
+    ClearChord();
+    return kNoop;
+  }
   if (!composing && ch == XK_BackSpace && !is_key_up) {
+    sequence_.clear();
+    ClearChord();
     if (DeleteLastSyllable())
       return kAccepted;
+  }
+  if (!is_key_up && ch >= 0x20 && ch <= 0x7e) {
+    // save raw input
+    if (!ctx->IsComposing()) {
+      sequence_.assign(1, ch);
+    }
+    else if (!sequence_.empty()) {
+      sequence_.push_back(ch);
+    }
   }
   if (alphabet_.find(ch) == std::string::npos) {
     ClearChord();
@@ -84,7 +103,7 @@ void ChordComposer::UpdateChord() {
   prompt_format_.Apply(&code);
   if (comp->empty()) {
     // add an invisbile place holder segment
-    // 1. to cheat context_->IsComposing() == true
+    // 1. to cheat ctx->IsComposing() == true
     // 2. to attach chord prompt to while composing the chord
     ctx->PushInput(kZeroWidthSpace);
     if (comp->empty()) {
