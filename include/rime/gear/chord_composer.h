@@ -27,6 +27,7 @@ class ChordComposer : public Processor {
   void FinishChord();
   void ClearChord();
   bool DeleteLastSyllable();
+  void OnContextUpdate(Context* ctx);
 
   std::string alphabet_;
   std::string delimiter_;
@@ -37,7 +38,9 @@ class ChordComposer : public Processor {
   std::set<char> pressed_;
   std::set<char> chord_;
   bool pass_thru_ = false;
+  bool composing_ = false;
   std::string sequence_;
+  connection connection_;
 };
 
 }  // namespace rime

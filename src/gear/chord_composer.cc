@@ -29,44 +29,57 @@ ChordComposer::ChordComposer(const Ticket& ticket) : Processor(ticket) {
     output_format_.Load(config->GetList("chord_composer/output_format"));
     prompt_format_.Load(config->GetList("chord_composer/prompt_format"));
   }
-  engine_->context()->set_option("_chord_typing", true);
+  Context* ctx = engine_->context();
+  ctx->set_option("_chord_typing", true);
+  connection_ = ctx->update_notifier().connect(
+      [this](Context* ctx) { OnContextUpdate(ctx); });
 }
 
 ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   if (pass_thru_)
     return kNoop;
-  bool composing = !chord_.empty();
+  bool chording = !chord_.empty();
   if (key_event.shift() || key_event.ctrl() || key_event.alt()) {
     ClearChord();
-    return composing ? kAccepted : kNoop;
+    return chording ? kAccepted : kNoop;
   }
   bool is_key_up = key_event.release();
   int ch = key_event.keycode();
   Context* ctx = engine_->context();
-  if (ch == XK_Return && !is_key_up && !sequence_.empty()) {
-    // commit raw input
-    ctx->set_input(sequence_);
+  if (!is_key_up && ch == XK_Return) {
+    if (!sequence_.empty()) {
+      // commit raw input
+      ctx->set_input(sequence_);
+      // then the sequence should not be used again
+      sequence_.clear();
+    }
+    ClearChord();
+    return kNoop;
+  }
+  if (!is_key_up && ch == XK_BackSpace) {
+    // invalidate sequence
+    sequence_.clear();
+    ClearChord();
+    if (DeleteLastSyllable()) {
+      return kAccepted;
+    }
+    return kNoop;
+  }
+  if (!is_key_up && ch == XK_Escape) {
+    // to clear a sequence made of invalid combos
     sequence_.clear();
     ClearChord();
     return kNoop;
   }
-  if (!composing && ch == XK_BackSpace && !is_key_up) {
-    sequence_.clear();
-    ClearChord();
-    if (DeleteLastSyllable())
-      return kAccepted;
-  }
   if (!is_key_up && ch >= 0x20 && ch <= 0x7e) {
     // save raw input
-    if (!ctx->IsComposing()) {
-      sequence_.assign(1, ch);
-    }
-    else if (!sequence_.empty()) {
+    if (!ctx->IsComposing() || !sequence_.empty()) {
       sequence_.push_back(ch);
+      DLOG(INFO) << "update sequence: " << sequence_;
     }
   }
   if (alphabet_.find(ch) == std::string::npos) {
-    return composing ? kAccepted : kNoop;
+    return chording ? kAccepted : kNoop;
   }
   // in alphabet
   if (is_key_up) {
@@ -103,7 +116,7 @@ void ChordComposer::UpdateChord() {
   if (comp->empty()) {
     // add an invisbile place holder segment
     // 1. to cheat ctx->IsComposing() == true
-    // 2. to attach chord prompt to while composing the chord
+    // 2. to attach chord prompt to while chording
     ctx->PushInput(kZeroWidthSpace);
     if (comp->empty()) {
       LOG(ERROR) << "failed to update chord.";
@@ -123,12 +136,14 @@ void ChordComposer::FinishChord() {
   ClearChord();
 
   KeySequence sequence;
-  if (sequence.Parse(code)) {
+  if (sequence.Parse(code) && !sequence.empty()) {
     pass_thru_ = true;
     for (const KeyEvent& ke : sequence) {
       if (!engine_->ProcessKeyEvent(ke)) {
         // direct commit
         engine_->CommitText(std::string(1, ke.keycode()));
+        // exclude the character (eg. space) from the following sequence
+        sequence_.clear();
       }
     }
     pass_thru_ = false;
@@ -172,6 +187,17 @@ bool ChordComposer::DeleteLastSyllable() {
   }
   ctx->PopInput(deleted);
   return true;
+}
+
+void ChordComposer::OnContextUpdate(Context* ctx) {
+  if (ctx->IsComposing() && ctx->input() != kZeroWidthSpace) {
+    composing_ = true;
+  }
+  else if (composing_) {
+    composing_ = false;
+    sequence_.clear();
+    DLOG(INFO) << "clear sequence.";
+  }
 }
 
 }  // namespace rime
