@@ -39,7 +39,12 @@ ChordComposer::ChordComposer(const Ticket& ticket) : Processor(ticket),
       boost::bind(&ChordComposer::OnUnhandledKey, this, _1, _2));
 }
 
-ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent &key_event) {
+ChordComposer::~ChordComposer() {
+  update_connection_.disconnect();
+  unhandled_key_connection_.disconnect();
+}
+
+ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   if (pass_thru_)
     return kNoop;
   bool chording = !chord_.empty();
