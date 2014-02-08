@@ -28,6 +28,7 @@ class ChordComposer : public Processor {
   void ClearChord();
   bool DeleteLastSyllable();
   void OnContextUpdate(Context* ctx);
+  void OnUnhandledKey(Context* ctx, const KeyEvent& key);
 
   std::string alphabet_;
   std::string delimiter_;
@@ -40,7 +41,8 @@ class ChordComposer : public Processor {
   bool pass_thru_ = false;
   bool composing_ = false;
   std::string sequence_;
-  connection connection_;
+  connection update_connection_;
+  connection unhandled_key_connection_;
 };
 
 }  // namespace rime

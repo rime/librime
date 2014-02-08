@@ -31,8 +31,10 @@ ChordComposer::ChordComposer(const Ticket& ticket) : Processor(ticket) {
   }
   Context* ctx = engine_->context();
   ctx->set_option("_chord_typing", true);
-  connection_ = ctx->update_notifier().connect(
+  update_connection_ = ctx->update_notifier().connect(
       [this](Context* ctx) { OnContextUpdate(ctx); });
+  unhandled_key_connection_ = ctx->unhandled_key_notifier().connect(
+      [this](Context* ctx, const KeyEvent& key) { OnUnhandledKey(ctx, key); });
 }
 
 ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
@@ -195,6 +197,17 @@ void ChordComposer::OnContextUpdate(Context* ctx) {
   }
   else if (composing_) {
     composing_ = false;
+    sequence_.clear();
+    DLOG(INFO) << "clear sequence.";
+  }
+}
+
+void ChordComposer::OnUnhandledKey(Context* ctx, const KeyEvent& key) {
+  // directly committed ascii should not be captured into the sequence
+  // test case:
+  // 3.14{Return} should not commit an extra sequence '14'
+  if ((key.modifier() & ~kShiftMask) == 0 &&
+      key.keycode() >= 0x20 && key.keycode() <= 0x7e) {
     sequence_.clear();
     DLOG(INFO) << "clear sequence.";
   }
