@@ -45,7 +45,7 @@ shared_ptr<Candidate> UniqueTranslation::Peek() {
   return candidate_;
 }
 
-FifoTranslation::FifoTranslation() {
+FifoTranslation::FifoTranslation() : cursor_(0) {
   set_exhausted(true);
 }
 
