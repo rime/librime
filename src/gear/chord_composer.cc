@@ -37,6 +37,11 @@ ChordComposer::ChordComposer(const Ticket& ticket) : Processor(ticket) {
       [this](Context* ctx, const KeyEvent& key) { OnUnhandledKey(ctx, key); });
 }
 
+ChordComposer::~ChordComposer() {
+  update_connection_.disconnect();
+  unhandled_key_connection_.disconnect();
+}
+
 ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   if (pass_thru_)
     return kNoop;

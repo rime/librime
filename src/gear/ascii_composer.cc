@@ -53,6 +53,10 @@ AsciiComposer::AsciiComposer(const Ticket& ticket)
   LoadConfig(ticket.schema);
 }
 
+AsciiComposer::~AsciiComposer() {
+  connection_.disconnect();
+}
+
 ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   if ((key_event.shift() && key_event.ctrl()) ||
       key_event.alt() || key_event.super()) {
