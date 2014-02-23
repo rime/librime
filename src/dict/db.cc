@@ -32,8 +32,14 @@ bool DbAccessor::MatchesPrefix(const std::string& key) {
 
 Db::Db(const std::string& name)
     : name_(name), loaded_(false), readonly_(false), disabled_(false) {
-  boost::filesystem::path path(Service::instance().deployer().user_data_dir);
-  file_name_ = (path / name).string();
+  boost::filesystem::path path(name);
+  if (path.has_parent_path()) {
+    file_name_ = name;
+  }
+  else {
+    boost::filesystem::path dir(Service::instance().deployer().user_data_dir);
+    file_name_ = (dir / path).string();
+  }
 }
 
 Db::~Db() {

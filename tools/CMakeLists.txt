@@ -32,7 +32,7 @@ file(COPY ${PROJECT_SOURCE_DIR}/data/minimal/default.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 file(COPY ${PROJECT_SOURCE_DIR}/data/minimal/symbols.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
-file(COPY ${PROJECT_SOURCE_DIR}/data/minimal/essay.kct
+file(COPY ${PROJECT_SOURCE_DIR}/data/minimal/essay.txt
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 file(COPY ${PROJECT_SOURCE_DIR}/data/minimal/luna_pinyin.dict.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
