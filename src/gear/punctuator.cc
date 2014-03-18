@@ -88,10 +88,15 @@ ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
   int ch = key_event.keycode();
   if (ch < 0x20 || ch >= 0x7f)
     return kNoop;
-  if (!use_space_ && ch == XK_space && engine_->context()->IsComposing())
+  Context *ctx = engine_->context();
+  if (bool ascii_punct = ctx->get_option("ascii_punct")) {
     return kNoop;
+  }
+  if (!use_space_ && ch == XK_space && ctx->IsComposing()) {
+    return kNoop;
+  }
   if (ch == '.' || ch == ':') {  // 3.14, 12:30
-    const CommitHistory& history(engine_->context()->commit_history());
+    const CommitHistory& history(ctx->commit_history());
     if (!history.empty()) {
       const CommitRecord& cr(history.back());
       if (cr.type == "thru" &&
@@ -107,7 +112,7 @@ ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   DLOG(INFO) << "punct key: '" << punct_key << "'";
   if (!AlternatePunct(punct_key, punct_definition)) {
-    engine_->context()->PushInput(ch) &&
+    ctx->PushInput(ch) &&
         (ConfirmUniquePunct(punct_definition) ||
          AutoCommitPunct(punct_definition) ||
          PairPunct(punct_definition));
