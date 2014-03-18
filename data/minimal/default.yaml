@@ -16,6 +16,7 @@ switcher:
     - F4
   save_options:
     - full_shape
+    - ascii_punct
     - simplification
     - extended_charset
 
@@ -120,6 +121,7 @@ key_binder:
     - { when: always, accept: Control+Shift+4, toggle: simplification }
     - { when: always, accept: Control+Shift+5, toggle: extended_charset }
     - { when: always, accept: Shift+space, toggle: full_shape }
+    - { when: always, accept: Control+period, toggle: ascii_punct }
 
 recognizer:
   patterns:

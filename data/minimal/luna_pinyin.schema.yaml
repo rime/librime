@@ -21,6 +21,8 @@ switches:
     states: [ 中文, 西文 ]
   - name: full_shape
     states: [ 半角, 全角 ]
+  - name: ascii_punct
+    states: [ 標點, 符號 ]
 #  - name: simplification
 #    states: [ 漢字, 汉字 ]
   - options: [ zh_trad, zh_tw, zh_simp ]
