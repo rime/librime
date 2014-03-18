@@ -2,6 +2,11 @@ set(_yamlcpp_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
 
 find_path(YamlCpp_INCLUDE_PATH yaml-cpp/yaml.h)
 
+find_path(YamlCpp_NEW_API yaml-cpp/node/node.h)
+if(YamlCpp_INCLUDE_PATH AND NOT YamlCpp_NEW_API)
+  message(FATAL_ERROR "The new yaml-cpp 0.5 API is not available.")
+endif()
+
 if (YamlCpp_STATIC)
   if (WIN32)
     set(CMAKE_FIND_LIBRARY_SUFFIXES .lib ${CMAKE_FIND_LIBRARY_SUFFIXES})
@@ -10,6 +15,7 @@ if (YamlCpp_STATIC)
   endif (WIN32)
 endif (YamlCpp_STATIC)
 find_library(YamlCpp_LIBRARY NAMES libyaml-cppmt yaml-cpp)
+
 if(YamlCpp_INCLUDE_PATH AND YamlCpp_LIBRARY)
   set(YamlCpp_FOUND TRUE)
 endif(YamlCpp_INCLUDE_PATH AND YamlCpp_LIBRARY)
