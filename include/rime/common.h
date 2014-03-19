@@ -12,7 +12,12 @@
 #define BOOST_BIND_NO_PLACEHOLDERS
 #include <boost/signals2/connection.hpp>
 #include <boost/signals2/signal.hpp>
+
+#ifdef RIME_ENABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include "no_logging.h"
+#endif  // RIME_ENABLE_LOGGGING
 
 namespace rime {
 

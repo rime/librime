@@ -519,6 +519,7 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
   DLOG(INFO) << "today: " << today;
 
   std::vector<std::string> dirs;
+#ifdef RIME_ENABLE_LOGGING
 #ifdef _WIN32
   // work-around: google::GetExistingTempDirectories crashes on windows 7
   char tmp[MAX_PATH];
@@ -527,6 +528,7 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
 #else
   google::GetExistingTempDirectories(&dirs);
 #endif  // _WIN32
+#endif  // RIME_ENABLE_LOGGING
   DLOG(INFO) << "scanning " << dirs.size() << " temp directory for log files.";
 
   bool success = true;
