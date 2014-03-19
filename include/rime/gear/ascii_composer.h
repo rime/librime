@@ -23,6 +23,7 @@ enum AsciiModeSwitchStyle {
   kAsciiModeSwitchInline,
   kAsciiModeSwitchCommitText,
   kAsciiModeSwitchCommitCode,
+  kAsciiModeSwitchClear,
 };
 
 using AsciiModeSwitchKeyBindings = std::map<int /* keycode */,
