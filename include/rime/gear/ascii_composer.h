@@ -23,6 +23,7 @@ enum AsciiModeSwitchStyle {
   kAsciiModeSwitchInline,
   kAsciiModeSwitchCommitText,
   kAsciiModeSwitchCommitCode,
+  kAsciiModeSwitchClear,
 };
 
 typedef std::map<int /* keycode */,

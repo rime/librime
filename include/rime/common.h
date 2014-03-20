@@ -13,7 +13,12 @@
 #include <boost/signals2/signal.hpp>
 #include <boost/smart_ptr.hpp>
 #include <boost/make_shared.hpp>
+
+#ifdef RIME_ENABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include "no_logging.h"
+#endif  // RIME_ENABLE_LOGGGING
 
 namespace rime {
 

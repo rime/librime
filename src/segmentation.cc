@@ -6,6 +6,7 @@
 //
 #include <algorithm>
 #include <iterator>
+#include <ostream>
 #include <boost/foreach.hpp>
 #include <rime/menu.h>
 #include <rime/segmentation.h>

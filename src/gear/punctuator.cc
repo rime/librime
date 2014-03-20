@@ -89,7 +89,7 @@ ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent &key_event) {
   if (ch < 0x20 || ch >= 0x7f)
     return kNoop;
   Context *ctx = engine_->context();
-  if (bool ascii_punct = ctx->get_option("ascii_punct")) {
+  if (ctx->get_option("ascii_punct")) {
     return kNoop;
   }
   if (!use_space_ && ch == XK_space && ctx->IsComposing()) {

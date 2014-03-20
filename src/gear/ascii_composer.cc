@@ -23,6 +23,7 @@ static struct AsciiModeSwitchStyleDefinition {
   { "inline_ascii", kAsciiModeSwitchInline },
   { "commit_text", kAsciiModeSwitchCommitText },
   { "commit_code", kAsciiModeSwitchCommitCode },
+  { "clear", kAsciiModeSwitchClear },
   { NULL, kAsciiModeSwitchNoop }
 };
 
@@ -74,6 +75,16 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
       return result;
   }
   int ch = key_event.keycode();
+  if (ch == XK_Eisu_toggle) {  // Alphanumeric toggle
+    if (!key_event.release()) {
+      shift_key_pressed_ = ctrl_key_pressed_ = false;
+      ToggleAsciiModeWithKey(ch);
+      return kAccepted;
+    }
+    else {
+      return kRejected;
+    }
+  }
   bool is_shift = (ch == XK_Shift_L || ch == XK_Shift_R);
   bool is_ctrl = (ch == XK_Control_L || ch == XK_Control_R);
   if (is_shift || is_ctrl) {
@@ -192,8 +203,9 @@ void AsciiComposer::LoadConfig(Schema* schema) {
   AsciiModeSwitchKeyBindings::const_iterator it = bindings_.find(XK_Caps_Lock);
   if (it != bindings_.end()) {
     caps_lock_switch_style_ = it->second;
-    if (caps_lock_switch_style_ == kAsciiModeSwitchInline) // cannot do that
-      caps_lock_switch_style_ = kAsciiModeSwitchCommitCode;
+    if (caps_lock_switch_style_ == kAsciiModeSwitchInline) {  // cannot do that
+      caps_lock_switch_style_ = kAsciiModeSwitchClear;
+    }
   }
 }
 
@@ -230,6 +242,9 @@ void AsciiComposer::SwitchAsciiMode(bool ascii_mode,
     else if (style == kAsciiModeSwitchCommitCode) {
       ctx->ClearNonConfirmedComposition();
       ctx->Commit();
+    }
+    else if (style == kAsciiModeSwitchClear) {
+      ctx->Clear();
     }
   }
   // refresh non-confirmed composition with new mode

@@ -32,18 +32,22 @@ DictCompiler::DictCompiler(Dictionary *dictionary, DictFileFinder finder)
 
 bool DictCompiler::Compile(const std::string &schema_file) {
   LOG(INFO) << "compiling:";
-  std::string dict_file(FindDictFile(dict_name_));
-  if (dict_file.empty())
-    return false;
-  std::ifstream fin(dict_file.c_str());
+  bool build_table_from_source = true;
   DictSettings settings;
-  if (!settings.LoadDictHeader(fin)) {
-    LOG(ERROR) << "failed to load settings from '" << dict_file << "'.";
-    return false;
+  std::string dict_file(FindDictFile(dict_name_));
+  if (dict_file.empty()) {
+    build_table_from_source = false;
   }
-  fin.close();
-  LOG(INFO) << "dict name: " << settings.dict_name();
-  LOG(INFO) << "dict version: " << settings.dict_version();
+  else {
+    std::ifstream fin(dict_file.c_str());
+    if (!settings.LoadDictHeader(fin)) {
+      LOG(ERROR) << "failed to load settings from '" << dict_file << "'.";
+      return false;
+    }
+    fin.close();
+    LOG(INFO) << "dict name: " << settings.dict_name();
+    LOG(INFO) << "dict version: " << settings.dict_version();
+  }
   std::vector<std::string> dict_files;
   ConfigListPtr tables = settings.GetTables();
   for(ConfigList::Iterator it = tables->begin(); it != tables->end(); ++it) {
@@ -67,16 +71,22 @@ bool DictCompiler::Compile(const std::string &schema_file) {
   }
   uint32_t schema_file_checksum =
       schema_file.empty() ? 0 : Checksum(schema_file);
-  LOG(INFO) << dict_file << "[" << dict_files.size() << "]"
-            << " (" << dict_file_checksum << ")";
-  LOG(INFO) << schema_file << " (" << schema_file_checksum << ")";
   bool rebuild_table = true;
   bool rebuild_prism = true;
   if (boost::filesystem::exists(table_->file_name()) && table_->Load()) {
+    if (!build_table_from_source) {
+      dict_file_checksum = table_->dict_file_checksum();
+      LOG(INFO) << "reuse existing table: " << table_->file_name();
+    }
     if (table_->dict_file_checksum() == dict_file_checksum) {
       rebuild_table = false;
     }
     table_->Close();
+  }
+  else if (!build_table_from_source) {
+    LOG(ERROR) << "neither " << dict_name_ << ".dict.yaml nor "
+        << dict_name_ << ".table.bin exists.";
+    return false;
   }
   if (boost::filesystem::exists(prism_->file_name()) && prism_->Load()) {
     if (prism_->dict_file_checksum() == dict_file_checksum &&
@@ -85,6 +95,9 @@ bool DictCompiler::Compile(const std::string &schema_file) {
     }
     prism_->Close();
   }
+  LOG(INFO) << dict_file << "[" << dict_files.size() << " file(s)]"
+            << " (" << dict_file_checksum << ")";
+  LOG(INFO) << schema_file << " (" << schema_file_checksum << ")";
   {
     TreeDb deprecated_db(dict_name_ + ".reverse.kct", "reversedb");
     if (deprecated_db.Exists()) {
@@ -97,7 +110,7 @@ bool DictCompiler::Compile(const std::string &schema_file) {
       rebuild_table = true;
     }
   }
-  if (options_ & kRebuildTable) {
+  if (build_table_from_source && (options_ & kRebuildTable)) {
     rebuild_table = true;
   }
   if (options_ & kRebuildPrism) {

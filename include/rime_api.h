@@ -121,6 +121,8 @@ typedef struct rime_status_t {
   Bool is_ascii_mode;
   Bool is_full_shape;
   Bool is_simplified;
+  Bool is_traditional;
+  Bool is_ascii_punct;
 } RimeStatus;
 
 typedef struct rime_config_t {
