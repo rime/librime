@@ -25,6 +25,7 @@ set build_thirdparty=0
 set build_librime=0
 set build_shared=ON
 set build_test=OFF
+set enable_logging=ON
 
 if "%1" == "" set build_librime=1
 
@@ -46,6 +47,10 @@ if "%1" == "shared" (
 if "%1" == "test" (
   set build_librime=1
   set build_test=ON
+)
+if "%1" == "nologging" (
+  set build_librime=1
+  set enable_logging=OFF
 )
 shift
 goto parse_cmdline_options
@@ -169,7 +174,7 @@ echo.
 set BUILD_DIR=%RIME_ROOT%\%build%
 if not exist %BUILD_DIR% mkdir %BUILD_DIR%
 
-set RIME_CMAKE_FLAGS=-DBUILD_STATIC=ON -DBUILD_SHARED_LIBS=%build_shared% -DBUILD_TEST=%build_test%
+set RIME_CMAKE_FLAGS=-DBUILD_STATIC=ON -DBUILD_SHARED_LIBS=%build_shared% -DBUILD_TEST=%build_test% -DENABLE_LOGGING=%enable_logging%
 
 cd %BUILD_DIR%
 echo cmake -G %CMAKE_GENERATOR% %RIME_CMAKE_FLAGS% %RIME_ROOT%
