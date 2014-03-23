@@ -71,6 +71,7 @@ class ConfigList : public ConfigItem {
   ConfigItemPtr GetAt(size_t i) const;
   ConfigValuePtr GetValueAt(size_t i) const;
   bool SetAt(size_t i, ConfigItemPtr element);
+  bool Insert(size_t i, ConfigItemPtr element);
   bool Append(ConfigItemPtr element);
   bool Resize(size_t size);
   bool Clear();
