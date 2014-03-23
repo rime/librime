@@ -249,6 +249,7 @@ class Config : public Class<Config, const std::string&>, public ConfigItemRef {
   bool GetDouble(const std::string& key, double* value);
   bool GetString(const std::string& key, std::string* value);
 
+  ConfigItemPtr GetItem(const std::string& key);
   ConfigValuePtr GetValue(const std::string& key);
   ConfigListPtr GetList(const std::string& key);
   ConfigMapPtr GetMap(const std::string& key);

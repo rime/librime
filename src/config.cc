@@ -425,6 +425,11 @@ bool Config::GetString(const std::string& key, std::string* value) {
   return p && p->GetString(value);
 }
 
+ConfigItemPtr Config::GetItem(const std::string& key) {
+  DLOG(INFO) << "read: " << key;
+  return data_->Traverse(key);
+}
+
 ConfigValuePtr Config::GetValue(const std::string& key) {
   DLOG(INFO) << "read: " << key;
   return As<ConfigValue>(data_->Traverse(key));
