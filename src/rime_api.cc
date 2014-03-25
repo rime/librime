@@ -8,6 +8,7 @@
 #include <sstream>
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
+#include <boost/format.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -547,13 +548,18 @@ template <class T>
 struct RimeConfigIteratorImpl {
   typename T::Iterator iter;
   typename T::Iterator end;
-  std::string root_path;
+  std::string prefix;
   std::string key;
   std::string path;
-  RimeConfigIteratorImpl<T>(T& container, const std::string& root)
-  : iter(container.begin()),
-    end(container.end()),
-    root_path(root) {
+  RimeConfigIteratorImpl<T>(T& container, const std::string& root_path)
+      : iter(container.begin()),
+        end(container.end()) {
+    if (root_path.empty() || root_path == "/") {
+      // prefix is empty
+    }
+    else {
+      prefix = root_path + "/";
+    }
   }
 };
 
@@ -596,6 +602,20 @@ RIME_API Bool RimeConfigBeginMap(RimeConfigIterator* iterator,
 RIME_API Bool RimeConfigNext(RimeConfigIterator* iterator) {
   if (!iterator->list && !iterator->map)
     return False;
+  if (iterator->list) {
+    RimeConfigIteratorImpl<rime::ConfigList>* p =
+        reinterpret_cast<RimeConfigIteratorImpl<rime::ConfigList>*>(iterator->list);
+    if (!p) return False;
+    if (++iterator->index > 0)
+      ++p->iter;
+    if (p->iter == p->end)
+      return False;
+    p->key = boost::str(boost::format("@%1%") % iterator->index);
+    p->path = p->prefix + p->key;
+    iterator->key = p->key.c_str();
+    iterator->path = p->path.c_str();
+    return True;
+  }
   if (iterator->map) {
     RimeConfigIteratorImpl<rime::ConfigMap>* p =
         reinterpret_cast<RimeConfigIteratorImpl<rime::ConfigMap>*>(iterator->map);
@@ -605,7 +625,7 @@ RIME_API Bool RimeConfigNext(RimeConfigIterator* iterator) {
     if (p->iter == p->end)
       return False;
     p->key = p->iter->first;
-    p->path = p->root_path + "/" + p->key;
+    p->path = p->prefix + p->key;
     iterator->key = p->key.c_str();
     iterator->path = p->path.c_str();
     return True;
