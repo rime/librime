@@ -719,6 +719,9 @@ bool ConfigData::SaveToFile(const std::string& file_name) {
 
 ConfigItemPtr ConfigData::Traverse(const std::string& key) {
   DLOG(INFO) << "traverse: " << key;
+  if (key.empty() || key == "/") {
+    return root;
+  }
   std::vector<std::string> keys;
   boost::split(keys, key, boost::is_any_of("/"));
   // find the YAML::Node, and wrap it!
