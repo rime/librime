@@ -229,3 +229,56 @@ TEST(RimeConfigxxTest, Operations) {
   ConfigMapEntryRef r(config["nested"]["greetings"]);
   EXPECT_EQ("Hello!", r.ToString());
 }
+
+TEST(RimeConfigListKeyPathTest, Greetings) {
+  int id = 0;
+  int value = 0;
+  unique_ptr<Config> config(new Config);
+  ASSERT_TRUE(bool(config));
+  // append items
+  EXPECT_TRUE(config->SetInt("list/@next/id", 1));
+  EXPECT_TRUE(config->SetInt("list/@last/value", 100));
+  EXPECT_TRUE(config->SetInt("list/@next/id", 2));
+  EXPECT_TRUE(config->SetInt("list/@last/value", 200));
+  ASSERT_TRUE(bool(config->GetList("list")));
+  ASSERT_EQ(2, config->GetList("list")->size());
+  value = 0;
+  EXPECT_TRUE(config->GetInt("list/@0/value", &value));
+  EXPECT_EQ(100, value);
+  value = 0;
+  EXPECT_TRUE(config->GetInt("list/@1/value", &value));
+  EXPECT_EQ(200, value);
+  // insert items
+  EXPECT_TRUE(config->SetInt("list/@before 0/id", 3));
+  EXPECT_TRUE(config->SetInt("list/@0/value", 50));
+  EXPECT_TRUE(config->SetInt("list/@after last/id", 4));
+  EXPECT_TRUE(config->SetInt("list/@last/value", 400));
+  ASSERT_EQ(4, config->GetList("list")->size());
+  value = 0;
+  EXPECT_TRUE(config->GetInt("list/@0/value", &value));
+  EXPECT_EQ(50, value);
+  value = 0;
+  EXPECT_TRUE(config->GetInt("list/@1/value", &value));
+  EXPECT_EQ(100, value);
+  value = 0;
+  EXPECT_TRUE(config->GetInt("list/@2/value", &value));
+  EXPECT_EQ(200, value);
+  value = 0;
+  EXPECT_TRUE(config->GetInt("list/@3/value", &value));
+  EXPECT_EQ(400, value);
+  // refer to last item in an empty list
+  config->GetList("list")->Clear();
+  ASSERT_EQ(0, config->GetList("list")->size());
+  config->SetInt("list/@after last/id", 5);
+  EXPECT_EQ(1, config->GetList("list")->size());
+  id = 0;
+  EXPECT_TRUE(config->GetInt("list/@last/id", &id));
+  EXPECT_EQ(5, id);
+  config->GetList("list")->Clear();
+  ASSERT_EQ(0, config->GetList("list")->size());
+  config->SetInt("list/@before last/id", 6);
+  EXPECT_EQ(1, config->GetList("list")->size());
+  id = 0;
+  EXPECT_TRUE(config->GetInt("list/@last/id", &id));
+  EXPECT_EQ(6, id);
+}

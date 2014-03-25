@@ -71,8 +71,9 @@ class ConfigList : public ConfigItem {
   ConfigList() : ConfigItem(kList) {}
   ConfigItemPtr GetAt(size_t i) const;
   ConfigValuePtr GetValueAt(size_t i) const;
-  bool SetAt(size_t i, const ConfigItemPtr &element);
-  bool Append(const ConfigItemPtr &element);
+  bool SetAt(size_t i, ConfigItemPtr element);
+  bool Insert(size_t i, ConfigItemPtr element);
+  bool Append(ConfigItemPtr element);
   bool Resize(size_t size);
   bool Clear();
   size_t size() const;
@@ -240,18 +241,19 @@ class Config : public Class<Config, const std::string&>, public ConfigItemRef {
   bool SaveToFile(const std::string& file_name);
 
   // access a tree node of a particular type with "path/to/key"
-  bool IsNull(const std::string &key);
-  bool IsValue(const std::string &key);
-  bool IsList(const std::string &key);
-  bool IsMap(const std::string &key);
-  bool GetBool(const std::string &key, bool *value);
-  bool GetInt(const std::string &key, int *value);
-  bool GetDouble(const std::string &key, double *value);
-  bool GetString(const std::string &key, std::string *value);
+  bool IsNull(const std::string& key);
+  bool IsValue(const std::string& key);
+  bool IsList(const std::string& key);
+  bool IsMap(const std::string& key);
+  bool GetBool(const std::string& key, bool* value);
+  bool GetInt(const std::string& key, int* value);
+  bool GetDouble(const std::string& key, double* value);
+  bool GetString(const std::string& key, std::string* value);
 
-  ConfigValuePtr GetValue(const std::string &key);
-  ConfigListPtr GetList(const std::string &key);
-  ConfigMapPtr GetMap(const std::string &key);
+  ConfigItemPtr GetItem(const std::string& key);
+  ConfigValuePtr GetValue(const std::string& key);
+  ConfigListPtr GetList(const std::string& key);
+  ConfigMapPtr GetMap(const std::string& key);
 
   // setters
   bool SetBool(const std::string &key, bool value);

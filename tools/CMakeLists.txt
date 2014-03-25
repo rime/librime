@@ -5,6 +5,11 @@ add_executable(rime_api_console ${RIME_API_CONSOLE_SRC})
 target_link_libraries(rime_api_console ${RIME_LIBRARY} ${RIME_GEARS_LIBRARY})
 add_dependencies(rime_api_console ${RIME_LIBRARY} ${RIME_GEARS_LIBRARY})
 
+set(RIME_PATCH_SRC "rime_patch.cc")
+add_executable(rime_patch ${RIME_PATCH_SRC})
+target_link_libraries(rime_patch ${RIME_LIBRARY} ${RIME_GEARS_LIBRARY})
+add_dependencies(rime_patch ${RIME_LIBRARY} ${RIME_GEARS_LIBRARY})
+
 # msvc doesn't export all symbols
 if(NOT (MSVC AND BUILD_SHARED_LIBS))
 

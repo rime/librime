@@ -87,6 +87,18 @@ static Bool rime_levers_customize_string(RimeCustomSettings* settings,
   return reinterpret_cast<rime::CustomSettings*>(settings)->Customize(key, item);
 }
 
+static Bool rime_levers_customize_item(RimeCustomSettings* settings,
+                                       const char* key, RimeConfig* value) {
+  rime::ConfigItemPtr item;
+  if (value) {
+    if (rime::Config* v = reinterpret_cast<rime::Config*>(value->ptr)) {
+      item = v->GetItem("");
+    }
+  }
+  auto custom_settings = reinterpret_cast<rime::CustomSettings*>(settings);
+  return custom_settings->Customize(key, item);
+}
+
 static Bool rime_levers_is_first_run(RimeCustomSettings* settings) {
   return reinterpret_cast<rime::CustomSettings*>(settings)->IsFirstRun();
 }
@@ -282,6 +294,7 @@ static RimeCustomApi* rime_levers_get_api() {
     s_api.restore_user_dict = rime_levers_restore_user_dict;
     s_api.export_user_dict = rime_levers_export_user_dict;
     s_api.import_user_dict = rime_levers_import_user_dict;
+    s_api.customize_item = rime_levers_customize_item;
   }
   return (RimeCustomApi*)&s_api;
 }
