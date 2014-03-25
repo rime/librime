@@ -66,6 +66,10 @@ typedef struct rime_levers_api_t {
   int (*export_user_dict)(const char* dict_name, const char* text_file);
   int (*import_user_dict)(const char* dict_name, const char* text_file);
 
+  // patch a list or a map
+  Bool (*customize_item)(RimeCustomSettings* settings,
+                         const char* key, RimeConfig* value);
+
 } RimeLeversApi;
 
 #ifdef __cplusplus

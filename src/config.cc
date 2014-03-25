@@ -183,6 +183,14 @@ bool ConfigList::SetAt(size_t i, ConfigItemPtr element) {
   return true;
 }
 
+bool ConfigList::Insert(size_t i, ConfigItemPtr element) {
+  if (i > seq_.size()) {
+    seq_.resize(i);
+  }
+  seq_.insert(seq_.begin() + i, element);
+  return true;
+}
+
 bool ConfigList::Append(ConfigItemPtr element) {
   seq_.push_back(element);
   return true;
@@ -417,6 +425,11 @@ bool Config::GetString(const std::string& key, std::string* value) {
   return p && p->GetString(value);
 }
 
+ConfigItemPtr Config::GetItem(const std::string& key) {
+  DLOG(INFO) << "read: " << key;
+  return data_->Traverse(key);
+}
+
 ConfigValuePtr Config::GetValue(const std::string& key) {
   DLOG(INFO) << "read: " << key;
   return As<ConfigValue>(data_->Traverse(key));
@@ -452,6 +465,58 @@ bool Config::SetString(const std::string& key, const std::string& value) {
   return SetItem(key, New<ConfigValue>(value));
 }
 
+static inline bool IsListItemReference(const std::string& key) {
+  return !key.empty() && key[0] == '@';
+}
+
+static size_t ResolveListIndex(ConfigItemPtr p, const std::string& key,
+                               bool read_only = false) {
+  //if (!IsListItemReference(key)) {
+  //  return 0;
+  //}
+  ConfigListPtr list = As<ConfigList>(p);
+  if (!list) {
+    return 0;
+  }
+  const std::string kAfter("after");
+  const std::string kBefore("before");
+  const std::string kLast("last");
+  const std::string kNext("next");
+  size_t cursor = 1;
+  unsigned int index = 0;
+  bool will_insert = false;
+  if (key.compare(cursor, kNext.length(), kNext) == 0) {
+    cursor += kNext.length();
+    index = list->size();
+  }
+  else if (key.compare(cursor, kBefore.length(), kBefore) == 0) {
+    cursor += kBefore.length();
+    will_insert = true;
+  }
+  else if (key.compare(cursor, kAfter.length(), kAfter) == 0) {
+    cursor += kAfter.length();
+    index += 1;  // after i == before i+1
+    will_insert = true;
+  }
+  if (cursor < key.length() && key[cursor] == ' ') {
+    ++cursor;
+  }
+  if (key.compare(cursor, kLast.length(), kLast) == 0) {
+    cursor += kLast.length();
+    index += list->size();
+    if (index != 0) {  // when list is empty, (before|after) last == 0
+      --index;
+    }
+  }
+  else {
+    index += std::strtoul(key.c_str() + cursor, NULL, 10);
+  }
+  if (will_insert && !read_only) {
+    list->Insert(index, nullptr);
+  }
+  return index;
+}
+
 bool Config::SetItem(const std::string& key, ConfigItemPtr item) {
   LOG(INFO) << "write: " << key;
   if (key.empty() || key == "/") {
@@ -467,18 +532,49 @@ bool Config::SetItem(const std::string& key, ConfigItemPtr item) {
   boost::split(keys, key, boost::is_any_of("/"));
   size_t k = keys.size() - 1;
   for (size_t i = 0; i <= k; ++i) {
-    if (!p || p->type() != ConfigItem::kMap)
+    ConfigItem::ValueType node_type = ConfigItem::kMap;
+    size_t list_index = 0;
+    if (IsListItemReference(keys[i])) {
+      node_type = ConfigItem::kList;
+      list_index = ResolveListIndex(p, keys[i]);
+      DLOG(INFO) << "list index " << keys[i] << " == " << list_index;
+    }
+    if (!p || p->type() != node_type) {
       return false;
+    }
     if (i == k) {
-      As<ConfigMap>(p)->Set(keys[i], item);
+      if (node_type == ConfigItem::kList) {
+        As<ConfigList>(p)->SetAt(list_index, item);
+      }
+      else {
+        As<ConfigMap>(p)->Set(keys[i], item);
+      }
       data_->set_modified();
       return true;
     }
     else {
-      ConfigItemPtr next(As<ConfigMap>(p)->Get(keys[i]));
+      ConfigItemPtr next;
+      if (node_type == ConfigItem::kList) {
+        next = As<ConfigList>(p)->GetAt(list_index);
+      }
+      else {
+        next = As<ConfigMap>(p)->Get(keys[i]);
+      }
       if (!next) {
-        next = New<ConfigMap>();
-        As<ConfigMap>(p)->Set(keys[i], next);
+        if (IsListItemReference(keys[i + 1])) {
+          DLOG(INFO) << "creating list node for key: " << keys[i + 1];
+          next = New<ConfigList>();
+        }
+        else {
+          DLOG(INFO) << "creating map node for key: " << keys[i + 1];
+          next = New<ConfigMap>();
+        }
+        if (node_type == ConfigItem::kList) {
+          As<ConfigList>(p)->SetAt(list_index, next);
+        }
+        else {
+          As<ConfigMap>(p)->Set(keys[i], next);
+        }
       }
       p = next;
     }
@@ -623,14 +719,29 @@ bool ConfigData::SaveToFile(const std::string& file_name) {
 
 ConfigItemPtr ConfigData::Traverse(const std::string& key) {
   DLOG(INFO) << "traverse: " << key;
+  if (key.empty() || key == "/") {
+    return root;
+  }
   std::vector<std::string> keys;
   boost::split(keys, key, boost::is_any_of("/"));
   // find the YAML::Node, and wrap it!
   ConfigItemPtr p = root;
   for (auto it = keys.begin(), end = keys.end(); it != end; ++it) {
-    if (!p || p->type() != ConfigItem::kMap)
-      return ConfigItemPtr();
-    p = As<ConfigMap>(p)->Get(*it);
+    ConfigItem::ValueType node_type = ConfigItem::kMap;
+    size_t list_index = 0;
+    if (IsListItemReference(*it)) {
+      node_type = ConfigItem::kList;
+      list_index = ResolveListIndex(p, *it, true);
+    }
+    if (!p || p->type() != node_type) {
+      return nullptr;
+    }
+    if (node_type == ConfigItem::kList) {
+      p = As<ConfigList>(p)->GetAt(list_index);
+    }
+    else {
+      p = As<ConfigMap>(p)->Get(*it);
+    }
   }
   return p;
 }
