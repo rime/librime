@@ -645,19 +645,19 @@ RIME_API void RimeConfigEnd(RimeConfigIterator* iterator) {
 
 
 RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence) {
-    LOG(INFO) << "simulate key sequence: " << key_sequence;
-    rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
-    if (!session)
-      return False;
-    rime::KeySequence keys;
-    if (!keys.Parse(key_sequence)) {
-      LOG(ERROR) << "error parsing input: '" << key_sequence << "'";
-      return False;
-    }
-    for (const rime::KeyEvent &ke : keys) {
-      session->ProcessKeyEvent(ke);
-    }
-    return True;
+  LOG(INFO) << "simulate key sequence: " << key_sequence;
+  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  rime::KeySequence keys;
+  if (!keys.Parse(key_sequence)) {
+    LOG(ERROR) << "error parsing input: '" << key_sequence << "'";
+    return False;
+  }
+  for (const rime::KeyEvent &ke : keys) {
+    session->ProcessKeyEvent(ke);
+  }
+  return True;
 }
 
 RIME_API Bool RimeRegisterModule(RimeModule* module) {
@@ -826,6 +826,36 @@ RIME_API size_t RimeConfigListSize(RimeConfig* config, const char* key) {
   return 0;
 }
 
+const char* RimeGetInput(RimeSessionId session_id) {
+  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  if (!session)
+    return NULL;
+  rime::Context *ctx = session->context();
+  if (!ctx)
+    return NULL;
+  return ctx->input().c_str();
+}
+
+size_t RimeGetCaretPos(RimeSessionId session_id) {
+  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  if (!session)
+    return 0;
+  rime::Context *ctx = session->context();
+  if (!ctx)
+    return 0;
+  return ctx->caret_pos();
+}
+
+Bool RimeSelectCandidate(RimeSessionId session_id, size_t index) {
+  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  rime::Context *ctx = session->context();
+  if (!ctx)
+    return False;
+  return Bool(ctx->Select(index));
+}
+
 RIME_API RimeApi* rime_get_api() {
   static RimeApi s_api = {0};
   if (!s_api.data_size) {
@@ -899,6 +929,9 @@ RIME_API RimeApi* rime_get_api() {
     s_api.config_create_map = &RimeConfigCreateMap;
     s_api.config_list_size = &RimeConfigListSize;
     s_api.config_begin_list = &RimeConfigBeginList;
+    s_api.get_input = &RimeGetInput;
+    s_api.get_caret_pos = &RimeGetCaretPos;
+    s_api.select_candidate = &RimeSelectCandidate;
   }
   return &s_api;
 }
