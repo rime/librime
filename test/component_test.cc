@@ -13,6 +13,7 @@ using namespace rime;
 class Greeting : public Class<Greeting, const std::string&> {
  public:
   virtual std::string Say() = 0;
+  virtual ~Greeting() = default;
 };
 
 using HelloMessage = std::pair<std::string, std::string>;
