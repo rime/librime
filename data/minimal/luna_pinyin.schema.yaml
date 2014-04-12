@@ -45,10 +45,10 @@ engine:
   segmentors:
     - ascii_segmentor
     - matcher
+    - abc_segmentor
     - affix_segmentor@alphabet
     - affix_segmentor@cangjie
     - affix_segmentor@pinyin
-    - abc_segmentor
     - punct_segmentor
     - fallback_segmentor
   translators:

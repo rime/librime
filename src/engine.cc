@@ -145,6 +145,7 @@ void ConcreteEngine::Compose(Context* ctx) {
   comp->Reset(active_input);
   CalculateSegmentation(comp);
   TranslateSegments(comp);
+  DLOG(INFO) << "composition: " << comp->GetDebugText();
   ctx->set_composition(comp);
 }
 
@@ -244,6 +245,7 @@ void ConcreteEngine::OnSelect(Context* ctx) {
   if (cand && cand->end() < seg.end) {
     // having selected a partially matched candidate, split it into 2 segments
     seg.end = cand->end();
+    seg.tags.insert("partial");
   }
   if (seg.end == ctx->input().length()) {
     // composition has finished
