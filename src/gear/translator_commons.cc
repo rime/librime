@@ -8,6 +8,7 @@
 #include <rime/config.h>
 #include <rime/schema.h>
 #include <rime/ticket.h>
+#include <rime/gear/cjk_minifier.h>
 #include <rime/gear/translator_commons.h>
 
 namespace rime {
@@ -108,16 +109,7 @@ bool CharsetFilter::LocateNextCandidate() {
 }
 
 bool CharsetFilter::FilterText(const std::string& text) {
-  const char* p = text.c_str();
-  utf8::uint32_t c;
-  while ((c = utf8::unchecked::next(p))) {
-    if ((c >= 0x3400 && c <= 0x4DBF) ||    // CJK Unified Ideographs Extension A
-        (c >= 0x20000 && c <= 0x2A6DF) ||  // CJK Unified Ideographs Extension B
-        (c >= 0x2A700 && c <= 0x2B73F) ||  // CJK Unified Ideographs Extension C
-        (c >= 0x2B740 && c <= 0x2B81F))    // CJK Unified Ideographs Extension D
-      return false;
-  }
-  return true;
+  return !contains_extended_cjk(text);
 }
 
 bool CharsetFilter::FilterDictEntry(shared_ptr<DictEntry> entry) {
