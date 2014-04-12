@@ -33,6 +33,7 @@
 #include <rime/gear/switch_translator.h>
 #include <rime/gear/table_translator.h>
 #include <rime/gear/uniquifier.h>
+#include <rime/gear/cjk_minifier.h>
 
 static void rime_gears_initialize() {
   using namespace rime;
@@ -75,6 +76,7 @@ static void rime_gears_initialize() {
   // filters
   r.Register("simplifier", new Component<Simplifier>);
   r.Register("uniquifier", new Component<Uniquifier>);
+  r.Register("cjk_minifier", new Component<CJKMinifier>);
   r.Register("reverse_lookup_filter", new Component<ReverseLookupFilter>);
 
   // formatters
