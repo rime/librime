@@ -8,10 +8,11 @@
 #include <rime/config.h>
 #include <rime/schema.h>
 #include <rime/ticket.h>
-#include <rime/gear/cjk_minifier.h>
 #include <rime/gear/translator_commons.h>
 
 namespace rime {
+
+bool contains_extended_cjk(const std::string &text);
 
 // Patterns
 
