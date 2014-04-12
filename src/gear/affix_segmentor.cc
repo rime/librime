@@ -34,9 +34,24 @@ AffixSegmentor::AffixSegmentor(const Ticket& ticket)
   }
 }
 
-bool AffixSegmentor::Proceed(Segmentation *segmentation) {
-  if (segmentation->empty() || !segmentation->back().HasTag(tag_))
+bool AffixSegmentor::Proceed(Segmentation* segmentation) {
+  if (segmentation->empty())
     return true;
+  if (!segmentation->back().HasTag(tag_)) {
+    if (segmentation->size() >= 2) {
+      Segment& previous_segment(*(segmentation->rbegin() + 1));
+      if (previous_segment.HasTag("partial") &&
+          previous_segment.HasTag(tag_)) {
+        // the remaining part of a partial selection should inherit the tag
+        segmentation->back().tags.insert(tag_);
+        // without adding new tag "abc"
+        if (!previous_segment.HasTag("abc")) {
+          segmentation->back().tags.erase("abc");
+        }
+      }
+    }
+    return true;
+  }
   size_t j = segmentation->GetCurrentStartPosition();
   size_t k = segmentation->GetCurrentEndPosition();
   std::string active_input(segmentation->input().substr(j, k - j));

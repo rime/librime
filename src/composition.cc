@@ -118,11 +118,21 @@ std::string Composition::GetDebugText() const {
   BOOST_FOREACH(const Segment &seg, *this) {
     if (i++ > 0)
       result += "|";
-    shared_ptr<Candidate> cand(seg.GetSelectedCandidate());
-    if (cand)
+    if (!seg.tags.empty()) {
+      result += "{";
+      int j = 0;
+      BOOST_FOREACH(const std::string& tag, seg.tags) {
+        if (j++ > 0)
+          result += ",";
+        result += tag;
+      }
+      result += "}";
+    }
+    result += input_.substr(seg.start, seg.end - seg.start);
+    if (shared_ptr<Candidate> cand = seg.GetSelectedCandidate()) {
+      result += "=>";
       result += cand->text();
-    else
-      result += input_.substr(seg.start, seg.end - seg.start);
+    }
   }
   return result;
 }
