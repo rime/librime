@@ -24,6 +24,7 @@
 namespace rime {
 
 Switcher::Switcher() : Engine(new Schema),
+                       fold_options_(false),
                        active_(false) {
   context_->set_option("dumb", true);  // not going to commit anything
 
@@ -163,19 +164,15 @@ bool Switcher::IsAutoSave(const std::string& option) const {
 
 void Switcher::OnSelect(Context *ctx) {
   LOG(INFO) << "a switcher option is selected.";
-  Segment &seg(ctx->composition()->back());
-  shared_ptr<SwitcherCommand> command =
-      As<SwitcherCommand>(seg.GetSelectedCandidate());
-  if (!command) return;
-  if (attached_engine_) {
+  Segment& seg(ctx->composition()->back());
+  if (shared_ptr<SwitcherCommand> command =
+      As<SwitcherCommand>(seg.GetSelectedCandidate())) {
     command->Apply(this);
   }
-  Deactivate();
 }
 
-void Switcher::Activate() {
-  LOG(INFO) << "switcher is activated.";
-  Composition *comp = context_->composition();
+void Switcher::RefreshMenu() {
+  Composition* comp = context_->composition();
   if (comp->empty()) {
     context_->set_input(" ");  // make context_->IsComposing() == true
     Segment seg(0, 0);         // empty range
@@ -189,7 +186,12 @@ void Switcher::Activate() {
     if (t)
       menu->AddTranslation(t);
   }
+}
 
+void Switcher::Activate() {
+  LOG(INFO) << "switcher is activated.";
+  context_->set_option("_fold_options", fold_options_);
+  RefreshMenu();
   // activated!
   active_ = true;
 }
@@ -205,22 +207,26 @@ void Switcher::LoadSettings() {
   if (!config->GetString("switcher/caption", &caption_) || caption_.empty()) {
     caption_ = ":-)";
   }
-  ConfigListPtr hotkeys = config->GetList("switcher/hotkeys");
-  if (!hotkeys) return;
-  hotkeys_.clear();
-  for (size_t i = 0; i < hotkeys->size(); ++i) {
-    ConfigValuePtr value = hotkeys->GetValueAt(i);
-    if (!value) continue;
-    hotkeys_.push_back(KeyEvent(value->str()));
+  if (ConfigListPtr hotkeys = config->GetList("switcher/hotkeys")) {
+    hotkeys_.clear();
+    for (size_t i = 0; i < hotkeys->size(); ++i) {
+      ConfigValuePtr value = hotkeys->GetValueAt(i);
+      if (!value)
+        continue;
+      hotkeys_.push_back(KeyEvent(value->str()));
+    }
   }
-  ConfigListPtr options = config->GetList("switcher/save_options");
-  if (!options) return;
-  save_options_.clear();
-  for (ConfigList::Iterator it = options->begin(); it != options->end(); ++it) {
-    ConfigValuePtr option_name = As<ConfigValue>(*it);
-    if (!option_name) continue;
-    save_options_.insert(option_name->str());
+  if (ConfigListPtr options = config->GetList("switcher/save_options")) {
+    save_options_.clear();
+    for (ConfigList::Iterator it = options->begin();
+         it != options->end(); ++it) {
+      ConfigValuePtr option_name = As<ConfigValue>(*it);
+      if (!option_name)
+        continue;
+      save_options_.insert(option_name->str());
+    }
   }
+  config->GetBool("switcher/fold_options", &fold_options_);
 }
 
 void Switcher::InitializeComponents() {

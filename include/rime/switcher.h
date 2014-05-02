@@ -33,14 +33,16 @@ class Switcher : public Engine {
   void SelectNextSchema();
   bool IsAutoSave(const std::string& option) const;
 
+  void RefreshMenu();
+  void Activate();
+  void Deactivate();
+
   Config* user_config() const { return user_config_.get(); }
   bool active() const { return active_; }
 
  protected:
   void InitializeComponents();
   void LoadSettings();
-  void Activate();
-  void Deactivate();
   void HighlightNextSchema();
   void OnSelect(Context *ctx);
 
@@ -48,6 +50,8 @@ class Switcher : public Engine {
   std::string caption_;
   std::vector<KeyEvent> hotkeys_;
   std::set<std::string> save_options_;
+  bool fold_options_;
+
   std::vector<shared_ptr<Processor> > processors_;
   std::vector<shared_ptr<Translator> > translators_;
   bool active_;
@@ -59,6 +63,7 @@ class SwitcherCommand {
       : keyword_(keyword) {
   }
   virtual void Apply(Switcher* switcher) = 0;
+  const std::string& keyword() const { return keyword_; }
 
  protected:
   std::string keyword_;

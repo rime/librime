@@ -6,6 +6,7 @@
 //
 #include <vector>
 #include <boost/enable_shared_from_this.hpp>
+#include <utf8.h>
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/config.h>
@@ -15,7 +16,7 @@
 #include <rime/translation.h>
 #include <rime/gear/switch_translator.h>
 
-static const char* kRightArrow = " \xe2\x86\x92 ";
+static const char* kRightArrow = "\xe2\x86\x92 ";
 //static const char* kRadioSelected = " \xe2\x97\x89";  // U+25C9 FISHEYE
 static const char* kRadioSelected = " \xe2\x9c\x93";  // U+2713 CHECK MARK
 
@@ -29,7 +30,7 @@ class Switch : public SimpleCandidate, public SwitcherCommand {
          bool current_state,
          bool auto_save)
       : SimpleCandidate("switch", 0, 0,
-                        current_state_label + kRightArrow + next_state_label),
+                        current_state_label, kRightArrow + next_state_label),
         SwitcherCommand(option_name),
         target_state_(!current_state),
         auto_save_(auto_save) {
@@ -50,6 +51,7 @@ void Switch::Apply(Switcher* switcher) {
       user_config->SetBool("var/option/" + keyword_, target_state_);
     }
   }
+  switcher->Deactivate();
 }
 
 class RadioOption;
@@ -77,24 +79,25 @@ class RadioOption : public SimpleCandidate, public SwitcherCommand {
               const std::string &option_name)
       : SimpleCandidate("switch", 0, 0, state_label),
         SwitcherCommand(option_name),
-        group_(group),
-        state_label_(state_label) {
+        group_(group) {
   }
   virtual void Apply(Switcher* switcher);
   void UpdateState(bool selected);
-  const std::string& name() const { return keyword_; }
+  bool selected() const { return selected_; }
 
  protected:
   shared_ptr<RadioGroup> group_;
-  std::string state_label_;
+  bool selected_ = false;
 };
 
 void RadioOption::Apply(Switcher* switcher) {
   group_->SelectOption(this);
+  switcher->Deactivate();
 }
 
 void RadioOption::UpdateState(bool selected) {
-  set_text(selected ? state_label_ + kRadioSelected : state_label_);
+  selected_ = selected;
+  set_comment(selected ? kRadioSelected : "");
 }
 
 shared_ptr<RadioOption> RadioGroup::CreateOption(const std::string& state_label,
@@ -112,7 +115,7 @@ void RadioGroup::SelectOption(RadioOption* option) {
        it != options_.end(); ++it) {
     bool selected = (*it == option);
     (*it)->UpdateState(selected);
-    const std::string& option_name((*it)->name());
+    const std::string& option_name((*it)->keyword());
     if (context_->get_option(option_name) != selected) {
       context_->set_option(option_name, selected);
       if (user_config && switcher_->IsAutoSave(option_name)) {
@@ -127,10 +130,79 @@ RadioOption* RadioGroup::GetSelectedOption() const {
     return NULL;
   for (std::vector<RadioOption*>::const_iterator it = options_.begin();
        it != options_.end(); ++it) {
-    if (context_->get_option((*it)->name()))
+    if (context_->get_option((*it)->keyword()))
       return *it;
   }
   return options_[0];
+}
+
+class FoldedOptions : public SimpleCandidate, public SwitcherCommand {
+ public:
+  FoldedOptions(Config* config)
+      : SimpleCandidate("unfold", 0, 0, ""),
+        SwitcherCommand("_fold_options") {
+    LoadConfig(config);
+  }
+  virtual void Apply(Switcher* switcher);
+  void Append(const std::string& label) {
+    labels_.push_back(label);
+  }
+  size_t size() const {
+    return labels_.size();
+  }
+  void Finish();
+
+ private:
+  void LoadConfig(Config* config);
+
+  std::string prefix_;
+  std::string suffix_;
+  std::string separator_ = " ";
+  bool abbreviate_options_ = false;
+
+  std::vector<std::string> labels_;
+};
+
+void FoldedOptions::LoadConfig(Config* config) {
+  if (!config) {
+    return;
+  }
+  config->GetString("switcher/option_list_prefix", &prefix_);
+  config->GetString("switcher/option_list_suffix", &suffix_);
+  config->GetString("switcher/option_list_separator", &separator_);
+  config->GetBool("switcher/abbreviate_options", &abbreviate_options_);
+}
+
+void FoldedOptions::Apply(Switcher* switcher) {
+  // expand the list of options
+  switcher->context()->set_option(keyword_, false);
+  switcher->RefreshMenu();
+}
+
+static std::string FirstCharOf(const std::string& str) {
+  if (str.empty()) {
+    return str;
+  }
+  std::string first_char;
+  const char* start = str.c_str();
+  const char* end = start;
+  utf8::unchecked::next(end);
+  return std::string(start, end - start);
+}
+
+void FoldedOptions::Finish() {
+  text_ = prefix_;
+  bool first = true;
+  for (auto& label : labels_) {
+    if (first) {
+      first = false;
+    }
+    else {
+      text_ += separator_;
+    }
+    text_ += abbreviate_options_ ? FirstCharOf(label) : label;
+  }
+  text_ += suffix_;
 }
 
 class SwitchTranslation : public FifoTranslation {
@@ -178,6 +250,20 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
         Append(group->CreateOption(state_label->str(), option_name->str()));
       }
       group->SelectOption(group->GetSelectedOption());
+    }
+  }
+  if (bool fold_options = switcher->context()->get_option("_fold_options")) {
+    auto folded_options = New<FoldedOptions>(switcher->schema()->config());
+    for (auto x : candies_) {
+      if (Is<Switch>(x) ||
+          (Is<RadioOption>(x) && As<RadioOption>(x)->selected())) {
+        folded_options->Append(x->text());
+      }
+    }
+    if (folded_options->size() > 1) {
+      folded_options->Finish();
+      candies_.clear();
+      Append(folded_options);
     }
   }
   DLOG(INFO) << "num switches: " << candies_.size();
