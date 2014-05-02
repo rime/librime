@@ -22,7 +22,6 @@ class SchemaSelection : public SimpleCandidate, public SwitcherCommand {
       : SimpleCandidate("schema", 0, 0, schema->schema_name()),
         SwitcherCommand(schema->schema_id()) {
   }
-
   virtual void Apply(Switcher* switcher);
 };
 
@@ -33,9 +32,32 @@ void SchemaSelection::Apply(Switcher* switcher) {
   if (keyword_ != engine->schema()->schema_id()) {
     switcher->ApplySchema(new Schema(keyword_));
   }
+  else {
+    switcher->Deactivate();
+  }
   if (Config* user_config = switcher->user_config()) {
     user_config->SetString("var/previously_selected_schema", keyword_);
     user_config->SetInt("var/schema_access_time/" + keyword_, time(NULL));
+  }
+}
+
+class SchemaAction : public ShadowCandidate, public SwitcherCommand {
+ public:
+  SchemaAction(shared_ptr<Candidate> schema,
+               shared_ptr<Candidate> command)
+      : ShadowCandidate(schema, command->type()),
+        SwitcherCommand(As<SwitcherCommand>(schema)->keyword()),
+        command_(As<SwitcherCommand>(command)) {
+  }
+  virtual void Apply(Switcher* switcher);
+
+ private:
+  shared_ptr<SwitcherCommand> command_;
+};
+
+void SchemaAction::Apply(Switcher* switcher) {
+  if (command_) {
+    command_->Apply(switcher);
   }
 }
 
@@ -59,6 +81,13 @@ int SchemaListTranslation::Compare(shared_ptr<Translation> other,
     return 1;
   // switches should immediately follow current schema (#0)
   auto theirs = other->Peek();
+  if (theirs && theirs->type() == "unfold") {
+    if (cursor_ == 0) {
+      // unfold its options when the current schema is selected
+      candies_[0] = New<SchemaAction>(candies_[0], theirs);
+    }
+    return cursor_ == 0 ? -1 : 1;
+  }
   if (theirs && theirs->type() == "switch") {
     return cursor_ == 0 ? -1 : 1;
   }

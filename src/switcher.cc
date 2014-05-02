@@ -164,17 +164,12 @@ bool Switcher::IsAutoSave(const std::string& option) const {
 void Switcher::OnSelect(Context* ctx) {
   LOG(INFO) << "a switcher option is selected.";
   Segment& seg(ctx->composition()->back());
-  auto command = As<SwitcherCommand>(seg.GetSelectedCandidate());
-  if (!command)
-    return;
-  if (attached_engine_) {
+  if (auto command = As<SwitcherCommand>(seg.GetSelectedCandidate())) {
     command->Apply(this);
   }
-  Deactivate();
 }
 
-void Switcher::Activate() {
-  LOG(INFO) << "switcher is activated.";
+void Switcher::RefreshMenu() {
   Composition* comp = context_->composition();
   if (comp->empty()) {
     context_->set_input(" ");  // make context_->IsComposing() == true
@@ -189,7 +184,12 @@ void Switcher::Activate() {
       menu->AddTranslation(t);
     }
   }
+}
 
+void Switcher::Activate() {
+  LOG(INFO) << "switcher is activated.";
+  context_->set_option("_fold_options", fold_options_);
+  RefreshMenu();
   // activated!
   active_ = true;
 }
@@ -206,26 +206,25 @@ void Switcher::LoadSettings() {
   if (!config->GetString("switcher/caption", &caption_) || caption_.empty()) {
     caption_ = ":-)";
   }
-  auto hotkeys = config->GetList("switcher/hotkeys");
-  if (!hotkeys)
-    return;
-  hotkeys_.clear();
-  for (size_t i = 0; i < hotkeys->size(); ++i) {
-    auto value = hotkeys->GetValueAt(i);
-    if (!value)
-      continue;
-    hotkeys_.push_back(KeyEvent(value->str()));
+  if (auto hotkeys = config->GetList("switcher/hotkeys")) {
+    hotkeys_.clear();
+    for (size_t i = 0; i < hotkeys->size(); ++i) {
+      auto value = hotkeys->GetValueAt(i);
+      if (!value)
+        continue;
+      hotkeys_.push_back(KeyEvent(value->str()));
+    }
   }
-  auto options = config->GetList("switcher/save_options");
-  if (!options)
-    return;
-  save_options_.clear();
-  for (auto it = options->begin(); it != options->end(); ++it) {
-    auto option_name = As<ConfigValue>(*it);
-    if (!option_name)
-      continue;
-    save_options_.insert(option_name->str());
+  if (auto options = config->GetList("switcher/save_options")) {
+    save_options_.clear();
+    for (auto it = options->begin(); it != options->end(); ++it) {
+      auto option_name = As<ConfigValue>(*it);
+      if (!option_name)
+        continue;
+      save_options_.insert(option_name->str());
+    }
   }
+  config->GetBool("switcher/fold_options", &fold_options_);
 }
 
 void Switcher::InitializeComponents() {
