@@ -145,10 +145,10 @@ void ChordComposer::FinishChord() {
   KeySequence sequence;
   if (sequence.Parse(code) && !sequence.empty()) {
     pass_thru_ = true;
-    for (const KeyEvent& ke : sequence) {
-      if (!engine_->ProcessKeyEvent(ke)) {
+    for (const KeyEvent& key : sequence) {
+      if (!engine_->ProcessKey(key)) {
         // direct commit
-        engine_->CommitText(std::string(1, ke.keycode()));
+        engine_->CommitText(std::string(1, key.keycode()));
         // exclude the character (eg. space) from the following sequence
         sequence_.clear();
       }

@@ -8,26 +8,21 @@
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/service.h>
-#include <rime/switcher.h>
 
 using namespace std::placeholders;
 
 namespace rime {
 
 Session::Session() {
-  switcher_.reset(new Switcher);
-  engine_.reset(Engine::Create(switcher_->CreateSchema()));
-  switcher_->Attach(engine_.get());
-  engine_->Attach(switcher_.get());
+  engine_.reset(Engine::Create());
   engine_->sink().connect(std::bind(&Session::OnCommit, this, _1));
   SessionId session_id = reinterpret_cast<SessionId>(this);
   engine_->message_sink().connect(
       std::bind(&Service::Notify, &Service::instance(), session_id, _1, _2));
 }
 
-bool Session::ProcessKeyEvent(const KeyEvent& key_event) {
-  return switcher_->ProcessKeyEvent(key_event) ||
-         engine_->ProcessKeyEvent(key_event);
+bool Session::ProcessKey(const KeyEvent& key_event) {
+  return engine_->ProcessKey(key_event);
 }
 
 void Session::Activate() {
@@ -52,7 +47,7 @@ void Session::ClearComposition() {
 }
 
 void Session::ApplySchema(Schema* schema) {
-  switcher_->ApplySchema(schema);
+  engine_->ApplySchema(schema);
 }
 
 void Session::OnCommit(const std::string& commit_text) {
@@ -60,16 +55,10 @@ void Session::OnCommit(const std::string& commit_text) {
 }
 
 Context* Session::context() const {
-  if (switcher_->active()) {
-    return switcher_->context();
-  }
-  return engine_ ? engine_->context() : NULL;
+  return engine_ ? engine_->active_context() : NULL;
 }
 
 Schema* Session::schema() const {
-  if (switcher_->active()) {
-    return switcher_->schema();
-  }
   return engine_ ? engine_->schema() : NULL;
 }
 

@@ -16,15 +16,14 @@
 #include <rime/menu.h>
 #include <rime/schema.h>
 #include <rime/setup.h>
-#include <rime/switcher.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
 #include <rime/lever/deployment_tasks.h>
 
 class RimeConsole {
  public:
-  RimeConsole(rime::Schema *schema) : interactive_(false),
-                                      engine_(rime::Engine::Create(schema)) {
+  RimeConsole() : interactive_(false),
+                  engine_(rime::Engine::Create()) {
     conn_ = engine_->sink().connect(
         [this](const std::string& x) { OnCommit(x); });
   }
@@ -79,8 +78,8 @@ class RimeConsole {
       LOG(ERROR) << "error parsing input: '" << line << "'";
       return;
     }
-    for (const rime::KeyEvent &ke : keys) {
-      engine_->ProcessKeyEvent(ke);
+    for (const rime::KeyEvent &key : keys) {
+      engine_->ProcessKey(key);
     }
     rime::Context *ctx = engine_->context();
     if (interactive_) {
@@ -122,10 +121,7 @@ int main(int argc, char *argv[]) {
   }
   std::cerr << "ready." << std::endl;
 
-  rime::Switcher switcher;
-  rime::Schema *schema = switcher.CreateSchema();
-
-  RimeConsole console(schema);
+  RimeConsole console;
   // "-i" turns on interactive mode (no commit at the end of line)
   bool interactive = argc > 1 && !strcmp(argv[1], "-i");
   console.set_interactive(interactive);

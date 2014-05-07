@@ -186,7 +186,7 @@ RIME_API Bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask) {
   rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
-  return Bool(session->ProcessKeyEvent(rime::KeyEvent(keycode, mask)));
+  return Bool(session->ProcessKey(rime::KeyEvent(keycode, mask)));
 }
 
 RIME_API Bool RimeCommitComposition(RimeSessionId session_id) {
@@ -654,8 +654,8 @@ RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_
     LOG(ERROR) << "error parsing input: '" << key_sequence << "'";
     return False;
   }
-  for (const rime::KeyEvent &ke : keys) {
-    session->ProcessKeyEvent(ke);
+  for (const rime::KeyEvent& key : keys) {
+    session->ProcessKey(key);
   }
   return True;
 }

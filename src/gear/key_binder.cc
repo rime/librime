@@ -78,14 +78,12 @@ static void toggle_option(Engine* engine, const std::string& option) {
 static void select_schema(Engine* engine, const std::string& schema) {
   if (!engine)
     return;
-  auto* switcher = dynamic_cast<Switcher*>(engine->attached_engine());
-  if (!switcher)
-    return;
   if (schema == ".next") {
-    switcher->SelectNextSchema();
+    Switcher switcher(engine);
+    switcher.SelectNextSchema();
   }
   else {
-    switcher->ApplySchema(new Schema(schema));
+    engine->ApplySchema(new Schema(schema));
   }
 }
 
@@ -192,7 +190,7 @@ void KeyBinder::PerformKeyBinding(const KeyBinding& binding) {
   }
   else {
     redirecting_ = true;
-    engine_->ProcessKeyEvent(binding.target);
+    engine_->ProcessKey(binding.target);
     redirecting_ = false;
   }
 }

@@ -261,7 +261,7 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
       group->SelectOption(group->GetSelectedOption());
     }
   }
-  if (bool fold_options = switcher->context()->get_option("_fold_options")) {
+  if (switcher->context()->get_option("_fold_options")) {
     auto folded_options = New<FoldedOptions>(switcher->schema()->config());
     for (auto x : candies_) {
       if (Is<Switch>(x) ||
