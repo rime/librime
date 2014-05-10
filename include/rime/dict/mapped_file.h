@@ -129,13 +129,18 @@ public:
 
 // member function definitions
 
+# if defined(__arm__)
+# define RIME_ALIGNED(size, T) ((size + alignof(T) - 1) & ~(alignof(T) - 1))
+# else
+# define RIME_ALIGNED(size, T) (size)
+# endif
+
 template <class T>
 T* MappedFile::Allocate(size_t count) {
   if (!IsOpen())
     return NULL;
 
-  /* do the alignment computing for mapped file. */
-  size_t used_space = (size_ + __alignof__(T) - 1) & ~(__alignof__(T) - 1);
+  size_t used_space = RIME_ALIGNED(size_, T);
   size_t required_space = sizeof(T) * count;
   size_t file_size = capacity();
   if (used_space + required_space > file_size) {

@@ -27,9 +27,15 @@ using SyllableId = int32_t;
 
 using Code = List<SyllableId>;
 
+#if defined(__arm__)
+using Weight = double;
+#else
+using Weight = float;
+#endif
+
 struct Entry {
   String text;
-  double weight;
+  Weight weight;
 };
 
 struct HeadIndexNode {
