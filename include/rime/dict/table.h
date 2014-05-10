@@ -29,7 +29,7 @@ using Code = List<SyllableId>;
 
 struct Entry {
   String text;
-  float weight;
+  double weight;
 };
 
 struct HeadIndexNode {
