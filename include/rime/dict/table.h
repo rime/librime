@@ -27,9 +27,15 @@ typedef int32_t SyllableId;
 
 typedef List<SyllableId> Code;
 
+#if defined(__arm__)
+using Weight = double;
+#else
+using Weight = float;
+#endif
+
 struct Entry {
   String text;
-  float weight;
+  Weight weight;
 };
 
 struct HeadIndexNode {
