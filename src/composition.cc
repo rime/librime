@@ -117,7 +117,7 @@ std::string Composition::GetDebugText() const {
     if (!seg.tags.empty()) {
       result += "{";
       int j = 0;
-      for (auto tag : seg.tags) {
+      for (const std::string& tag : seg.tags) {
         if (j++ > 0)
           result += ",";
         result += tag;
