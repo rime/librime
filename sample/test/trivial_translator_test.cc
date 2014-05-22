@@ -41,7 +41,7 @@ TEST(/*DISABLED_*/TrivialTranslatorTest, Query) {
   shared_ptr<Translation> translation(translator->Query(test_input, segment));
   ASSERT_TRUE(translation);
   ASSERT_FALSE(translation->exhausted());
-  auto candidate = translation->Peek();
+  shared_ptr<Candidate> candidate = translation->Peek();
   ASSERT_TRUE(bool(candidate));
   EXPECT_EQ("trivial", candidate->type());
   EXPECT_EQ(expected_output, candidate->text());

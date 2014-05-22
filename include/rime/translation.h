@@ -82,7 +82,7 @@ class UnionTranslation : public Translation {
   UnionTranslation& operator+= (shared_ptr<Translation> t);
 
  protected:
-  std::list<shared_ptr<Translation>> translations_;
+  std::list<shared_ptr<Translation> > translations_;
 };
 
 shared_ptr<UnionTranslation> operator+ (shared_ptr<Translation> a,

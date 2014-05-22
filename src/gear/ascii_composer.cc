@@ -90,7 +90,8 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   if (is_shift || is_ctrl) {
     if (key_event.release()) {
       if (shift_key_pressed_ || ctrl_key_pressed_) {
-        auto now = boost::chrono::steady_clock::now();
+        boost::chrono::steady_clock::time_point now =
+            boost::chrono::steady_clock::now();
         if (now < toggle_expired_) {
           ToggleAsciiModeWithKey(ch);
         }
@@ -104,8 +105,10 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
       else
         ctrl_key_pressed_ = true;
       // will not toggle unless the toggle key is released shortly
-      const auto toggle_duration_limit = boost::chrono::milliseconds(500);
-      auto now = boost::chrono::steady_clock::now();
+      const boost::chrono::milliseconds toggle_duration_limit =
+          boost::chrono::milliseconds(500);
+      boost::chrono::steady_clock::time_point now =
+          boost::chrono::steady_clock::now();
       toggle_expired_= now + toggle_duration_limit;
     }
     return kNoop;

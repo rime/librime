@@ -101,7 +101,7 @@ UnionTranslation& UnionTranslation::operator+= (shared_ptr<Translation> t) {
 
 shared_ptr<UnionTranslation> operator+ (shared_ptr<Translation> a,
                                         shared_ptr<Translation> b) {
-  auto c = New<UnionTranslation>();
+  shared_ptr<UnionTranslation> c = New<UnionTranslation>();
   *c += a;
   *c += b;
   return c->exhausted() ? shared_ptr<UnionTranslation>() : c;

@@ -240,7 +240,7 @@ TableTranslator::TableTranslator(const Ticket& ticket)
 static bool starts_with_completion(shared_ptr<Translation> translation) {
   if (!translation)
     return false;
-  auto cand = translation->Peek();
+  shared_ptr<Candidate> cand = translation->Peek();
   return cand && cand->type() == "completion";
 }
 
@@ -310,7 +310,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string& input,
   }
   else if (sentence_over_completion_ &&
            starts_with_completion(translation)) {
-    if (auto sentence = MakeSentence(input, segment.start)) {
+    if (shared_ptr<Translation> sentence = MakeSentence(input, segment.start)) {
       translation = sentence + translation;
     }
   }

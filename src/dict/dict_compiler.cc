@@ -61,7 +61,7 @@ bool DictCompiler::Compile(const std::string &schema_file) {
   uint32_t dict_file_checksum = 0;
   if (!dict_files.empty()) {
     ChecksumComputer cc;
-    BOOST_FOREACH(const auto& file_name, dict_files) {
+    BOOST_FOREACH(const std::string& file_name, dict_files) {
       cc.ProcessFile(file_name);
     }
     if (settings.use_preset_vocabulary()) {

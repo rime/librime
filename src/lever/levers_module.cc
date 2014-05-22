@@ -95,7 +95,8 @@ static Bool rime_levers_customize_item(RimeCustomSettings* settings,
       item = v->GetItem("");
     }
   }
-  auto custom_settings = reinterpret_cast<rime::CustomSettings*>(settings);
+  rime::CustomSettings* custom_settings =
+      reinterpret_cast<rime::CustomSettings*>(settings);
   return custom_settings->Customize(key, item);
 }
 

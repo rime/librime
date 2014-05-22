@@ -120,7 +120,7 @@ bool Speller::AutoSelectAtMaxCodeLength(Context* ctx) {
   if (!ctx->HasMenu())
     return false;
   const Segment& seg(ctx->composition()->back());
-  auto cand = seg.GetSelectedCandidate();
+  shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
   if (cand &&
       reached_max_code_length(cand, max_code_length_) &&
       is_auto_selectable(cand, ctx->input(), delimiters_)) {
@@ -139,7 +139,7 @@ bool Speller::AutoSelectUniqueCandidate(Context* ctx) {
   bool unique_candidate = seg.menu->Prepare(2) == 1;
   if (!unique_candidate)
     return false;
-  auto cand = seg.GetSelectedCandidate();
+  shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
   if ((max_code_length_ == 0 ||  // at any length if not specified
        reached_max_code_length(cand, max_code_length_)) &&
       is_auto_selectable(cand, ctx->input(), delimiters_)) {
@@ -165,7 +165,7 @@ bool Speller::AutoSelectPreviousMatch(Context* ctx,
                          converted, delimiters_)) {
     // reuse previous match
     ctx->composition()->pop_back();
-    ctx->composition()->push_back(std::move(*previous_segment));
+    ctx->composition()->push_back(boost::move(*previous_segment));
     ctx->ConfirmCurrentSelection();
     if (ctx->get_option("_auto_commit")) {
       ctx->set_input(converted);
