@@ -12,22 +12,20 @@
 #include <vector>
 #include <rime/common.h>
 #include <rime/engine.h>
-#include <rime/key_event.h>
+#include <rime/processor.h>
 
 namespace rime {
 
 class Config;
-class Processor;
+class Context;
 class Translator;
 
-class Switcher : public Engine {
+class Switcher : public Processor, public Engine {
  public:
-  Switcher();
-  ~Switcher();
+  Switcher(const Ticket& ticket);
+  virtual ~Switcher();
 
-  bool ProcessKeyEvent(const KeyEvent &key_event);
-  void Attach(Engine *engine);
-  void ApplySchema(Schema* schema);
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
   Schema* CreateSchema();
   void SelectNextSchema();
@@ -37,12 +35,14 @@ class Switcher : public Engine {
   void Activate();
   void Deactivate();
 
+  Engine* attached_engine() const { return engine_; }
   Config* user_config() const { return user_config_.get(); }
   bool active() const { return active_; }
 
  protected:
   void InitializeComponents();
   void LoadSettings();
+  void RestoreSavedOptions();
   void HighlightNextSchema();
   void OnSelect(Context *ctx);
 

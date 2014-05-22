@@ -28,14 +28,13 @@ class Context;
 class Engine;
 class KeyEvent;
 class Schema;
-class Switcher;
 
 class Session {
  public:
   static const int kLifeSpan = 5 * 60;  // seconds
 
   Session();
-  bool ProcessKeyEvent(const KeyEvent &key_event);
+  bool ProcessKey(const KeyEvent& key_event);
   void Activate();
   void ResetCommitText();
   bool CommitComposition();
@@ -50,8 +49,7 @@ class Session {
  private:
   void OnCommit(const std::string &commit_text);
 
-  scoped_ptr<Switcher> switcher_;
-  scoped_ptr<Engine> engine_;
+  unique_ptr<Engine> engine_;
   time_t last_active_time_;
   std::string commit_text_;
 };

@@ -21,6 +21,7 @@
 #include <rime/schema.h>
 #include <rime/segmentation.h>
 #include <rime/segmentor.h>
+#include <rime/switcher.h>
 #include <rime/ticket.h>
 #include <rime/translation.h>
 #include <rime/translator.h>
@@ -29,10 +30,10 @@ namespace rime {
 
 class ConcreteEngine : public Engine {
  public:
-  ConcreteEngine(Schema *schema);
+  ConcreteEngine();
   virtual ~ConcreteEngine();
-  virtual bool ProcessKeyEvent(const KeyEvent &key_event);
-  virtual void ApplySchema(Schema *schema);
+  virtual bool ProcessKey(const KeyEvent& key_event);
+  virtual void ApplySchema(Schema* schema);
   virtual void CommitText(std::string text);
 
  protected:
@@ -60,13 +61,13 @@ class ConcreteEngine : public Engine {
 
 // implementations
 
-Engine* Engine::Create(Schema *schema) {
-  return new ConcreteEngine(schema ? schema : new Schema);
+Engine* Engine::Create() {
+  return new ConcreteEngine;
 }
 
-Engine::Engine(Schema *schema) : schema_(schema),
-                                 context_(new Context),
-                                 attached_engine_(NULL) {
+Engine::Engine()
+    : schema_(new Schema), context_(new Context),
+      active_context_(NULL) {
 }
 
 Engine::~Engine() {
@@ -74,7 +75,7 @@ Engine::~Engine() {
   schema_.reset();
 }
 
-ConcreteEngine::ConcreteEngine(Schema *schema) : Engine(schema) {
+ConcreteEngine::ConcreteEngine() {
   LOG(INFO) << "starting engine.";
   // receive context notifications
   context_->commit_notifier().connect(
@@ -96,8 +97,8 @@ ConcreteEngine::~ConcreteEngine() {
   translators_.clear();
 }
 
-bool ConcreteEngine::ProcessKeyEvent(const KeyEvent &key_event) {
-  DLOG(INFO) << "process key event: " << key_event;
+bool ConcreteEngine::ProcessKey(const KeyEvent& key_event) {
+  DLOG(INFO) << "process key: " << key_event;
   ProcessResult ret = kNoop;
   BOOST_FOREACH(shared_ptr<Processor>& p, processors_) {
     ret = p->ProcessKeyEvent(key_event);
@@ -267,7 +268,9 @@ void ConcreteEngine::OnSelect(Context *ctx) {
   }
 }
 
-void ConcreteEngine::ApplySchema(Schema *schema) {
+void ConcreteEngine::ApplySchema(Schema* schema) {
+  if (!schema)
+    return;
   schema_.reset(schema);
   context_->Clear();
   context_->ClearTransientOptions();
@@ -277,13 +280,23 @@ void ConcreteEngine::ApplySchema(Schema *schema) {
 }
 
 void ConcreteEngine::InitializeComponents() {
-  if (!schema_) return;
   processors_.clear();
   segmentors_.clear();
   translators_.clear();
   filters_.clear();
-  Config *config = schema_->config();
-  if (!config) return;
+
+  if (shared_ptr<Switcher> switcher = New<Switcher>(this)) {
+    processors_.push_back(switcher);
+    if (schema_->schema_id() == ".default") {
+      if (Schema* schema = switcher->CreateSchema()) {
+        schema_.reset(schema);
+      }
+    }
+  }
+
+  Config* config = schema_->config();
+  if (!config)
+    return;
   // create processors
   ConfigListPtr processor_list(config->GetList("engine/processors"));
   if (processor_list) {
@@ -381,7 +394,6 @@ void ConcreteEngine::InitializeComponents() {
 }
 
 void ConcreteEngine::InitializeOptions() {
-  if (!schema_) return;
   // reset custom switches
   Config *config = schema_->config();
   if (ConfigListPtr switches = config->GetList("switches")) {

@@ -23,9 +23,10 @@
 
 namespace rime {
 
-Switcher::Switcher() : Engine(new Schema),
-                       fold_options_(false),
-                       active_(false) {
+Switcher::Switcher(const Ticket& ticket)
+    : Processor(ticket),
+      fold_options_(false),
+      active_(false) {
   context_->set_option("dumb", true);  // not going to commit anything
 
   // receive context notifications
@@ -35,43 +36,48 @@ Switcher::Switcher() : Engine(new Schema),
   user_config_.reset(Config::Require("config")->Create("user"));
   InitializeComponents();
   LoadSettings();
+  RestoreSavedOptions();
 }
 
 Switcher::~Switcher() {
+  if (active_) {
+    Deactivate();
+  }
 }
 
-void Switcher::Attach(Engine *engine) {
-  attached_engine_ = engine;
-  // restore saved options
+void Switcher::RestoreSavedOptions() {
   if (user_config_) {
     BOOST_FOREACH(const std::string& option_name, save_options_) {
       bool value = false;
       if (user_config_->GetBool("var/option/" + option_name, &value)) {
-        engine->context()->set_option(option_name, value);
+        engine_->context()->set_option(option_name, value);
       }
     }
   }
 }
 
-bool Switcher::ProcessKeyEvent(const KeyEvent &key_event) {
-  BOOST_FOREACH(const KeyEvent &hotkey, hotkeys_) {
+ProcessResult Switcher::ProcessKeyEvent(const KeyEvent& key_event) {
+  BOOST_FOREACH(const KeyEvent& hotkey, hotkeys_) {
     if (key_event == hotkey) {
-      if (!active_ && attached_engine_) {
+      if (!active_ && engine_) {
         Activate();
       }
       else if (active_) {
         HighlightNextSchema();
       }
-      return true;
+      return kAccepted;
     }
   }
   if (active_) {
-    BOOST_FOREACH(shared_ptr<Processor> &p, processors_) {
-      if (kNoop != p->ProcessKeyEvent(key_event))
-        return true;
+    BOOST_FOREACH(shared_ptr<Processor>& p, processors_) {
+      ProcessResult result = p->ProcessKeyEvent(key_event);
+      if (result != kNoop) {
+        return result;
+      }
     }
-    if (key_event.release() || key_event.ctrl() || key_event.alt())
-      return true;
+    if (key_event.release() || key_event.ctrl() || key_event.alt()) {
+      return kAccepted;
+    }
     int ch = key_event.keycode();
     if (ch == XK_space || ch == XK_Return) {
       context_->ConfirmCurrentSelection();
@@ -79,9 +85,9 @@ bool Switcher::ProcessKeyEvent(const KeyEvent &key_event) {
     else if (ch == XK_Escape) {
       Deactivate();
     }
-    return true;
+    return kAccepted;
   }
-  return false;
+  return kNoop;
 }
 
 void Switcher::HighlightNextSchema() {
@@ -109,10 +115,12 @@ void Switcher::HighlightNextSchema() {
 }
 
 Schema* Switcher::CreateSchema() {
-  Config *config = schema_->config();
-  if (!config) return NULL;
+  Config* config = schema_->config();
+  if (!config)
+    return NULL;
   ConfigListPtr schema_list = config->GetList("schema_list");
-  if (!schema_list) return NULL;
+  if (!schema_list)
+    return NULL;
   std::string previous;
   if (user_config_) {
     user_config_->GetString("var/previously_selected_schema", &previous);
@@ -120,10 +128,12 @@ Schema* Switcher::CreateSchema() {
   std::string recent;
   for (size_t i = 0; i < schema_list->size(); ++i) {
     ConfigMapPtr item = As<ConfigMap>(schema_list->GetAt(i));
-    if (!item) continue;
+    if (!item)
+      continue;
     ConfigValuePtr schema_property = item->GetValue("schema");
-    if (!schema_property) continue;
-    const std::string &schema_id(schema_property->str());
+    if (!schema_property)
+      continue;
+    const std::string& schema_id(schema_property->str());
     if (previous.empty() || previous == schema_id) {
       recent = schema_id;
       break;
@@ -135,14 +145,6 @@ Schema* Switcher::CreateSchema() {
     return NULL;
   else
     return new Schema(recent);
-}
-
-void Switcher::ApplySchema(Schema* schema) {
-  if (!schema) return;
-  if (active_) {
-    Deactivate();
-  }
-  attached_engine_->ApplySchema(schema);
 }
 
 void Switcher::SelectNextSchema() {
@@ -192,12 +194,13 @@ void Switcher::Activate() {
   LOG(INFO) << "switcher is activated.";
   context_->set_option("_fold_options", fold_options_);
   RefreshMenu();
-  // activated!
+  engine_->set_active_context(context_.get());
   active_ = true;
 }
 
 void Switcher::Deactivate() {
   context_->Clear();
+  engine_->set_active_context();
   active_ = false;
 }
 
