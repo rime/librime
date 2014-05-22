@@ -25,6 +25,9 @@ class Switcher : public Processor, public Engine {
   Switcher(const Ticket& ticket);
   virtual ~Switcher();
 
+  virtual bool ProcessKey(const KeyEvent& key_event) {
+    return ProcessKeyEvent(key_event) == kAccepted;
+  }
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
   Schema* CreateSchema();
