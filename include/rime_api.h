@@ -486,6 +486,7 @@ RIME_API RimeApi* rime_get_api();
 // clients should define functions called rime_<module_name>_initialize(),
 // and rime_<module_name>_finalize(). see src/core_module.cc for an example.
 #define RIME_REGISTER_MODULE(name) \
+void rime_require_module_##name() {} \
 RIME_MODULE_INITIALIZER(rime_register_module_##name) { \
   static RimeModule module = {0}; \
   if (!module.data_size) { \
@@ -499,6 +500,7 @@ RIME_MODULE_INITIALIZER(rime_register_module_##name) { \
 
 // customize the module by assigning additional functions, eg. module->get_api.
 #define RIME_REGISTER_CUSTOM_MODULE(name) \
+void rime_require_module_##name() {} \
 static void rime_customize_module_##name(RimeModule* module); \
 RIME_MODULE_INITIALIZER(rime_register_module_##name) { \
   static RimeModule module = {0}; \

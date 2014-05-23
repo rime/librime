@@ -45,7 +45,25 @@ RIME_API void RimeSetupLogging(const char* app_name) {
   rime::SetupLogging(app_name);
 }
 
+#if RIME_BUILD_SHARED_LIBS
+#define rime_declare_module_dependencies()
+#else
+extern void rime_require_module_core();
+extern void rime_require_module_dict();
+extern void rime_require_module_gears();
+extern void rime_require_module_levers();
+// link to default modules explicitly when building static library.
+static void rime_declare_module_dependencies() {
+  rime_require_module_core();
+  rime_require_module_dict();
+  rime_require_module_gears();
+  rime_require_module_levers();
+}
+#endif
+
 RIME_API void RimeSetup(RimeTraits *traits) {
+  rime_declare_module_dependencies();
+
   setup_deployer(traits);
   if (PROVIDED(traits, app_name)) {
     rime::SetupLogging(traits->app_name);
