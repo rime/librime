@@ -75,11 +75,11 @@ int SchemaListTranslation::Compare(shared_ptr<Translation> other,
   if (!other || other->exhausted()) return -1;
   if (exhausted()) return 1;
   // switches should immediately follow current schema (#0)
-  shared_ptr<Candidate>  theirs = other->Peek();
+  shared_ptr<Candidate> theirs = other->Peek();
   if (theirs && theirs->type() == "unfold") {
     if (cursor_ == 0) {
       // unfold its options when the current schema is selected
-      candies_[0] = New<SchemaAction>(candies_[0], theirs);
+      candies_[0] = boost::make_shared<SchemaAction>(candies_[0], theirs);
     }
     return cursor_ == 0 ? -1 : 1;
   }

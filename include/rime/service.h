@@ -49,7 +49,7 @@ class Session {
  private:
   void OnCommit(const std::string &commit_text);
 
-  unique_ptr<Engine> engine_;
+  scoped_ptr<Engine> engine_;
   time_t last_active_time_;
   std::string commit_text_;
 };

@@ -233,7 +233,7 @@ TEST(RimeConfigxxTest, Operations) {
 TEST(RimeConfigListKeyPathTest, Greetings) {
   int id = 0;
   int value = 0;
-  unique_ptr<Config> config(new Config);
+  scoped_ptr<Config> config(new Config);
   ASSERT_TRUE(bool(config));
   // append items
   EXPECT_TRUE(config->SetInt("list/@next/id", 1));

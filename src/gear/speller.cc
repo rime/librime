@@ -165,7 +165,7 @@ bool Speller::AutoSelectPreviousMatch(Context* ctx,
                          converted, delimiters_)) {
     // reuse previous match
     ctx->composition()->pop_back();
-    ctx->composition()->push_back(boost::move(*previous_segment));
+    ctx->composition()->push_back(*previous_segment);
     ctx->ConfirmCurrentSelection();
     if (ctx->get_option("_auto_commit")) {
       ctx->set_input(converted);
