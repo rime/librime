@@ -141,6 +141,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 if(BUILD_SHARED_LIBS)
+  add_definitions(-DRIME_BUILD_SHARED_LIBS)
   set(RIME_LIBRARY rime)
   if(BUILD_SEPARATE_LIBS)
     set(RIME_GEARS_LIBRARY rime-gears)
