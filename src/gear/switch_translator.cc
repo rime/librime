@@ -193,7 +193,7 @@ static std::string FirstCharOf(const std::string& str) {
 void FoldedOptions::Finish() {
   text_ = prefix_;
   bool first = true;
-  for (auto& label : labels_) {
+  for (const auto& label : labels_) {
     if (first) {
       first = false;
     }
