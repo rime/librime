@@ -28,9 +28,9 @@ typedef int32_t SyllableId;
 typedef List<SyllableId> Code;
 
 #if defined(__arm__)
-using Weight = double;
+typedef double Weight;
 #else
-using Weight = float;
+typedef float Weight;
 #endif
 
 struct Entry {

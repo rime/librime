@@ -6,6 +6,7 @@
 //
 #include <vector>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/foreach.hpp>
 #include <utf8.h>
 #include <rime/candidate.h>
 #include <rime/common.h>
@@ -79,7 +80,7 @@ class RadioOption : public SimpleCandidate, public SwitcherCommand {
               const std::string &option_name)
       : SimpleCandidate("switch", 0, 0, state_label),
         SwitcherCommand(option_name),
-        group_(group) {
+        group_(group), selected_(false) {
   }
   virtual void Apply(Switcher* switcher);
   void UpdateState(bool selected);
@@ -87,7 +88,7 @@ class RadioOption : public SimpleCandidate, public SwitcherCommand {
 
  protected:
   shared_ptr<RadioGroup> group_;
-  bool selected_ = false;
+  bool selected_;
 };
 
 void RadioOption::Apply(Switcher* switcher) {
@@ -140,7 +141,9 @@ class FoldedOptions : public SimpleCandidate, public SwitcherCommand {
  public:
   FoldedOptions(Config* config)
       : SimpleCandidate("unfold", 0, 0, ""),
-        SwitcherCommand("_fold_options") {
+        SwitcherCommand("_fold_options"),
+        separator_(" "),
+        abbreviate_options_(false) {
     LoadConfig(config);
   }
   virtual void Apply(Switcher* switcher);
@@ -157,8 +160,8 @@ class FoldedOptions : public SimpleCandidate, public SwitcherCommand {
 
   std::string prefix_;
   std::string suffix_;
-  std::string separator_ = " ";
-  bool abbreviate_options_ = false;
+  std::string separator_;
+  bool abbreviate_options_;
 
   std::vector<std::string> labels_;
 };
@@ -193,7 +196,7 @@ static std::string FirstCharOf(const std::string& str) {
 void FoldedOptions::Finish() {
   text_ = prefix_;
   bool first = true;
-  for (auto& label : labels_) {
+  BOOST_FOREACH(const std::string& label, labels_) {
     if (first) {
       first = false;
     }
@@ -253,8 +256,9 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
     }
   }
   if (switcher->context()->get_option("_fold_options")) {
-    auto folded_options = New<FoldedOptions>(switcher->schema()->config());
-    for (auto x : candies_) {
+    shared_ptr<FoldedOptions> folded_options =
+        New<FoldedOptions>(switcher->schema()->config());
+    BOOST_FOREACH(shared_ptr<Candidate> x, candies_) {
       if (Is<Switch>(x) ||
           (Is<RadioOption>(x) && As<RadioOption>(x)->selected())) {
         folded_options->Append(x->text());
