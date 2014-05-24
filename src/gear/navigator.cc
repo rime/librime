@@ -24,18 +24,22 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent &key_event) {
     return kNoop;
   int ch = key_event.keycode();
   if (ch == XK_Left || ch == XK_KP_Left) {
+    ctx->ConfirmPreviousSelection();
     Left(ctx);
     return kAccepted;
   }
   if (ch == XK_Right || ch == XK_KP_Right) {
+    ctx->ConfirmPreviousSelection();
     Right(ctx);
     return kAccepted;
   }
   if (ch == XK_Home || ch == XK_KP_Home) {
+    ctx->ConfirmPreviousSelection();
     Home(ctx);
     return kAccepted;
   }
   if (ch == XK_End || ch == XK_KP_End) {
+    ctx->ConfirmPreviousSelection();
     End(ctx);
     return kAccepted;
   }
