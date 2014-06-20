@@ -2,9 +2,9 @@
 
 SRC_DIR=thirdparty/src
 
-.PHONY: all glog kyotocabinet opencc yaml-cpp gtest
+.PHONY: all glog kyotocabinet marisa opencc yaml-cpp gtest
 
-all: glog kyotocabinet opencc yaml-cpp gtest
+all: glog kyotocabinet marisa opencc yaml-cpp gtest
 
 glog:
 	cd $(SRC_DIR)/glog; ./configure --disable-dependency-tracking --enable-static --disable-shared && make
@@ -15,6 +15,12 @@ kyotocabinet:
 	cd $(SRC_DIR)/kyotocabinet; chmod +x configure; ./configure --disable-debug && make
 	cp $(SRC_DIR)/kyotocabinet/kc*.h thirdparty/include/
 	cp $(SRC_DIR)/kyotocabinet/libkyotocabinet.a thirdparty/lib/
+
+marisa:
+	cd $(SRC_DIR)/marisa-trie; ./configure --disable-debug --disable-dependency-tracking --enable-static && make
+	cp -R $(SRC_DIR)/marisa-trie/lib/marisa/ thirdparty/include/
+	cp $(SRC_DIR)/marisa-trie/lib/marisa.h thirdparty/include/
+	cp $(SRC_DIR)/marisa-trie/lib/.libs/libmarisa.a thirdparty/lib/
 
 opencc:
 	cd $(SRC_DIR)/opencc; mkdir -p build && \
