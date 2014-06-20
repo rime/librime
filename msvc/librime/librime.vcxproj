@@ -1,0 +1,284 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{6B14E590-8826-4122-AF0A-46C598FF686E}</ProjectGuid>
+    <RootNamespace>librimestatic</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <NuGetPackageImportStamp>ae468d25</NuGetPackageImportStamp>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>false</SDLCheck>
+      <AdditionalIncludeDirectories>../../include;../../thirdparty/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>../../thirdparty/lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>kyotocabinet.lib;libglog.lib;libyaml-cppmt.lib;zlib.lib;opencc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <AdditionalIncludeDirectories>../../include;../../thirdparty/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>../../thirdparty/lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>kyotocabinet.lib;libglog.lib;libyaml-cppmt.lib;zlib.lib;opencc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\algo\algebra.cc" />
+    <ClCompile Include="..\..\src\algo\calculus.cc" />
+    <ClCompile Include="..\..\src\algo\encoder.cc" />
+    <ClCompile Include="..\..\src\algo\syllabifier.cc" />
+    <ClCompile Include="..\..\src\algo\utilities.cc" />
+    <ClCompile Include="..\..\src\candidate.cc" />
+    <ClCompile Include="..\..\src\commit_history.cc" />
+    <ClCompile Include="..\..\src\composition.cc" />
+    <ClCompile Include="..\..\src\config.cc" />
+    <ClCompile Include="..\..\src\context.cc" />
+    <ClCompile Include="..\..\src\core_module.cc" />
+    <ClCompile Include="..\..\src\deployer.cc" />
+    <ClCompile Include="..\..\src\dict\db.cc" />
+    <ClCompile Include="..\..\src\dict\db_utils.cc" />
+    <ClCompile Include="..\..\src\dict\dictionary.cc" />
+    <ClCompile Include="..\..\src\dict\dict_compiler.cc" />
+    <ClCompile Include="..\..\src\dict\dict_module.cc" />
+    <ClCompile Include="..\..\src\dict\dict_settings.cc" />
+    <ClCompile Include="..\..\src\dict\entry_collector.cc" />
+    <ClCompile Include="..\..\src\dict\mapped_file.cc" />
+    <ClCompile Include="..\..\src\dict\preset_vocabulary.cc" />
+    <ClCompile Include="..\..\src\dict\prism.cc" />
+    <ClCompile Include="..\..\src\dict\reverse_lookup_dictionary.cc" />
+    <ClCompile Include="..\..\src\dict\table.cc" />
+    <ClCompile Include="..\..\src\dict\table_db.cc" />
+    <ClCompile Include="..\..\src\dict\text_db.cc" />
+    <ClCompile Include="..\..\src\dict\tree_db.cc" />
+    <ClCompile Include="..\..\src\dict\tsv.cc" />
+    <ClCompile Include="..\..\src\dict\user_db.cc" />
+    <ClCompile Include="..\..\src\dict\user_dictionary.cc" />
+    <ClCompile Include="..\..\src\dict\vocabulary.cc" />
+    <ClCompile Include="..\..\src\engine.cc" />
+    <ClCompile Include="..\..\src\gear\abc_segmentor.cc" />
+    <ClCompile Include="..\..\src\gear\affix_segmentor.cc" />
+    <ClCompile Include="..\..\src\gear\ascii_composer.cc" />
+    <ClCompile Include="..\..\src\gear\ascii_segmentor.cc" />
+    <ClCompile Include="..\..\src\gear\chord_composer.cc" />
+    <ClCompile Include="..\..\src\gear\cjk_minifier.cc" />
+    <ClCompile Include="..\..\src\gear\echo_translator.cc" />
+    <ClCompile Include="..\..\src\gear\editor.cc" />
+    <ClCompile Include="..\..\src\gear\fallback_segmentor.cc" />
+    <ClCompile Include="..\..\src\gear\filter_commons.cc" />
+    <ClCompile Include="..\..\src\gear\gears_module.cc" />
+    <ClCompile Include="..\..\src\gear\key_binder.cc" />
+    <ClCompile Include="..\..\src\gear\matcher.cc" />
+    <ClCompile Include="..\..\src\gear\memory.cc" />
+    <ClCompile Include="..\..\src\gear\navigator.cc" />
+    <ClCompile Include="..\..\src\gear\poet.cc" />
+    <ClCompile Include="..\..\src\gear\punctuator.cc" />
+    <ClCompile Include="..\..\src\gear\recognizer.cc" />
+    <ClCompile Include="..\..\src\gear\reverse_lookup_filter.cc" />
+    <ClCompile Include="..\..\src\gear\reverse_lookup_translator.cc" />
+    <ClCompile Include="..\..\src\gear\schema_list_translator.cc" />
+    <ClCompile Include="..\..\src\gear\script_translator.cc" />
+    <ClCompile Include="..\..\src\gear\selector.cc" />
+    <ClCompile Include="..\..\src\gear\shape.cc" />
+    <ClCompile Include="..\..\src\gear\simplifier.cc" />
+    <ClCompile Include="..\..\src\gear\speller.cc" />
+    <ClCompile Include="..\..\src\gear\switch_translator.cc" />
+    <ClCompile Include="..\..\src\gear\table_translator.cc" />
+    <ClCompile Include="..\..\src\gear\translator_commons.cc" />
+    <ClCompile Include="..\..\src\gear\uniquifier.cc" />
+    <ClCompile Include="..\..\src\gear\unity_table_encoder.cc" />
+    <ClCompile Include="..\..\src\key_event.cc" />
+    <ClCompile Include="..\..\src\key_table.cc" />
+    <ClCompile Include="..\..\src\lever\customizer.cc" />
+    <ClCompile Include="..\..\src\lever\custom_settings.cc" />
+    <ClCompile Include="..\..\src\lever\deployment_tasks.cc" />
+    <ClCompile Include="..\..\src\lever\levers_module.cc" />
+    <ClCompile Include="..\..\src\lever\switcher_settings.cc" />
+    <ClCompile Include="..\..\src\lever\userdb_recovery_task.cc" />
+    <ClCompile Include="..\..\src\lever\user_dict_manager.cc" />
+    <ClCompile Include="..\..\src\menu.cc" />
+    <ClCompile Include="..\..\src\module.cc" />
+    <ClCompile Include="..\..\src\registry.cc" />
+    <ClCompile Include="..\..\src\rime_api.cc" />
+    <ClCompile Include="..\..\src\schema.cc" />
+    <ClCompile Include="..\..\src\segmentation.cc" />
+    <ClCompile Include="..\..\src\service.cc" />
+    <ClCompile Include="..\..\src\setup.cc" />
+    <ClCompile Include="..\..\src\signature.cc" />
+    <ClCompile Include="..\..\src\switcher.cc" />
+    <ClCompile Include="..\..\src\ticket.cc" />
+    <ClCompile Include="..\..\src\translation.cc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\rime\algo\algebra.h" />
+    <ClInclude Include="..\..\include\rime\algo\calculus.h" />
+    <ClInclude Include="..\..\include\rime\algo\dynamics.h" />
+    <ClInclude Include="..\..\include\rime\algo\encoder.h" />
+    <ClInclude Include="..\..\include\rime\algo\spelling.h" />
+    <ClInclude Include="..\..\include\rime\algo\syllabifier.h" />
+    <ClInclude Include="..\..\include\rime\algo\utilities.h" />
+    <ClInclude Include="..\..\include\rime\candidate.h" />
+    <ClInclude Include="..\..\include\rime\commit_history.h" />
+    <ClInclude Include="..\..\include\rime\common.h" />
+    <ClInclude Include="..\..\include\rime\component.h" />
+    <ClInclude Include="..\..\include\rime\composition.h" />
+    <ClInclude Include="..\..\include\rime\config.h" />
+    <ClInclude Include="..\..\include\rime\context.h" />
+    <ClInclude Include="..\..\include\rime\deployer.h" />
+    <ClInclude Include="..\..\include\rime\dict\db.h" />
+    <ClInclude Include="..\..\include\rime\dict\db_utils.h" />
+    <ClInclude Include="..\..\include\rime\dict\dictionary.h" />
+    <ClInclude Include="..\..\include\rime\dict\dict_compiler.h" />
+    <ClInclude Include="..\..\include\rime\dict\dict_settings.h" />
+    <ClInclude Include="..\..\include\rime\dict\entry_collector.h" />
+    <ClInclude Include="..\..\include\rime\dict\mapped_file.h" />
+    <ClInclude Include="..\..\include\rime\dict\preset_vocabulary.h" />
+    <ClInclude Include="..\..\include\rime\dict\prism.h" />
+    <ClInclude Include="..\..\include\rime\dict\reverse_lookup_dictionary.h" />
+    <ClInclude Include="..\..\include\rime\dict\table.h" />
+    <ClInclude Include="..\..\include\rime\dict\table_db.h" />
+    <ClInclude Include="..\..\include\rime\dict\text_db.h" />
+    <ClInclude Include="..\..\include\rime\dict\tree_db.h" />
+    <ClInclude Include="..\..\include\rime\dict\tsv.h" />
+    <ClInclude Include="..\..\include\rime\dict\user_db.h" />
+    <ClInclude Include="..\..\include\rime\dict\user_dictionary.h" />
+    <ClInclude Include="..\..\include\rime\dict\vocabulary.h" />
+    <ClInclude Include="..\..\include\rime\engine.h" />
+    <ClInclude Include="..\..\include\rime\filter.h" />
+    <ClInclude Include="..\..\include\rime\formatter.h" />
+    <ClInclude Include="..\..\include\rime\gear\abc_segmentor.h" />
+    <ClInclude Include="..\..\include\rime\gear\affix_segmentor.h" />
+    <ClInclude Include="..\..\include\rime\gear\ascii_composer.h" />
+    <ClInclude Include="..\..\include\rime\gear\ascii_segmentor.h" />
+    <ClInclude Include="..\..\include\rime\gear\chord_composer.h" />
+    <ClInclude Include="..\..\include\rime\gear\cjk_minifier.h" />
+    <ClInclude Include="..\..\include\rime\gear\echo_translator.h" />
+    <ClInclude Include="..\..\include\rime\gear\editor.h" />
+    <ClInclude Include="..\..\include\rime\gear\fallback_segmentor.h" />
+    <ClInclude Include="..\..\include\rime\gear\filter_commons.h" />
+    <ClInclude Include="..\..\include\rime\gear\key_binder.h" />
+    <ClInclude Include="..\..\include\rime\gear\matcher.h" />
+    <ClInclude Include="..\..\include\rime\gear\memory.h" />
+    <ClInclude Include="..\..\include\rime\gear\navigator.h" />
+    <ClInclude Include="..\..\include\rime\gear\poet.h" />
+    <ClInclude Include="..\..\include\rime\gear\punctuator.h" />
+    <ClInclude Include="..\..\include\rime\gear\recognizer.h" />
+    <ClInclude Include="..\..\include\rime\gear\reverse_lookup_filter.h" />
+    <ClInclude Include="..\..\include\rime\gear\reverse_lookup_translator.h" />
+    <ClInclude Include="..\..\include\rime\gear\schema_list_translator.h" />
+    <ClInclude Include="..\..\include\rime\gear\script_translator.h" />
+    <ClInclude Include="..\..\include\rime\gear\selector.h" />
+    <ClInclude Include="..\..\include\rime\gear\shape.h" />
+    <ClInclude Include="..\..\include\rime\gear\simplifier.h" />
+    <ClInclude Include="..\..\include\rime\gear\speller.h" />
+    <ClInclude Include="..\..\include\rime\gear\switch_translator.h" />
+    <ClInclude Include="..\..\include\rime\gear\table_translator.h" />
+    <ClInclude Include="..\..\include\rime\gear\translator_commons.h" />
+    <ClInclude Include="..\..\include\rime\gear\uniquifier.h" />
+    <ClInclude Include="..\..\include\rime\gear\unity_table_encoder.h" />
+    <ClInclude Include="..\..\include\rime\key_event.h" />
+    <ClInclude Include="..\..\include\rime\key_table.h" />
+    <ClInclude Include="..\..\include\rime\lever\customizer.h" />
+    <ClInclude Include="..\..\include\rime\lever\custom_settings.h" />
+    <ClInclude Include="..\..\include\rime\lever\deployment_tasks.h" />
+    <ClInclude Include="..\..\include\rime\lever\switcher_settings.h" />
+    <ClInclude Include="..\..\include\rime\lever\userdb_recovery_task.h" />
+    <ClInclude Include="..\..\include\rime\lever\user_dict_manager.h" />
+    <ClInclude Include="..\..\include\rime\menu.h" />
+    <ClInclude Include="..\..\include\rime\messenger.h" />
+    <ClInclude Include="..\..\include\rime\module.h" />
+    <ClInclude Include="..\..\include\rime\no_logging.h" />
+    <ClInclude Include="..\..\include\rime\processor.h" />
+    <ClInclude Include="..\..\include\rime\registry.h" />
+    <ClInclude Include="..\..\include\rime\schema.h" />
+    <ClInclude Include="..\..\include\rime\segmentation.h" />
+    <ClInclude Include="..\..\include\rime\segmentor.h" />
+    <ClInclude Include="..\..\include\rime\service.h" />
+    <ClInclude Include="..\..\include\rime\setup.h" />
+    <ClInclude Include="..\..\include\rime\signature.h" />
+    <ClInclude Include="..\..\include\rime\switcher.h" />
+    <ClInclude Include="..\..\include\rime\ticket.h" />
+    <ClInclude Include="..\..\include\rime\translation.h" />
+    <ClInclude Include="..\..\include\rime\translator.h" />
+    <ClInclude Include="..\..\include\rime_api.h" />
+    <ClInclude Include="..\..\include\rime_levers_api.h" />
+    <ClInclude Include="..\..\include\rime_version.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\boost.1.55.0.16\build\native\boost.targets" Condition="Exists('..\packages\boost.1.55.0.16\build\native\boost.targets')" />
+    <Import Project="..\packages\boost_regex.1.55.0.16\build\native\boost_regex.targets" Condition="Exists('..\packages\boost_regex.1.55.0.16\build\native\boost_regex.targets')" />
+    <Import Project="..\packages\boost_filesystem.1.55.0.16\build\native\boost_filesystem.targets" Condition="Exists('..\packages\boost_filesystem.1.55.0.16\build\native\boost_filesystem.targets')" />
+    <Import Project="..\packages\boost_system.1.55.0.16\build\native\boost_system.targets" Condition="Exists('..\packages\boost_system.1.55.0.16\build\native\boost_system.targets')" />
+    <Import Project="..\packages\boost_thread.1.55.0.16\build\native\boost_thread.targets" Condition="Exists('..\packages\boost_thread.1.55.0.16\build\native\boost_thread.targets')" />
+    <Import Project="..\packages\boost_date_time.1.55.0.16\build\native\boost_date_time.targets" Condition="Exists('..\packages\boost_date_time.1.55.0.16\build\native\boost_date_time.targets')" />
+    <Import Project="..\packages\boost_chrono.1.55.0.16\build\native\boost_chrono.targets" Condition="Exists('..\packages\boost_chrono.1.55.0.16\build\native\boost_chrono.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\boost.1.55.0.16\build\native\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost.1.55.0.16\build\native\boost.targets'))" />
+    <Error Condition="!Exists('..\packages\boost_regex.1.55.0.16\build\native\boost_regex.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_regex.1.55.0.16\build\native\boost_regex.targets'))" />
+    <Error Condition="!Exists('..\packages\boost_filesystem.1.55.0.16\build\native\boost_filesystem.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_filesystem.1.55.0.16\build\native\boost_filesystem.targets'))" />
+    <Error Condition="!Exists('..\packages\boost_system.1.55.0.16\build\native\boost_system.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_system.1.55.0.16\build\native\boost_system.targets'))" />
+    <Error Condition="!Exists('..\packages\boost_thread.1.55.0.16\build\native\boost_thread.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_thread.1.55.0.16\build\native\boost_thread.targets'))" />
+    <Error Condition="!Exists('..\packages\boost_date_time.1.55.0.16\build\native\boost_date_time.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_date_time.1.55.0.16\build\native\boost_date_time.targets'))" />
+    <Error Condition="!Exists('..\packages\boost_chrono.1.55.0.16\build\native\boost_chrono.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_chrono.1.55.0.16\build\native\boost_chrono.targets'))" />
+  </Target>
+</Project>
