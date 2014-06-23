@@ -90,7 +90,7 @@ ProcessResult Recognizer::ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   }
   int ch = key_event.keycode();
-  if (ch > 0x20 && ch < 0x80) {
+  if (ch >= 0x20 && ch < 0x80) {
     // pattern matching against the input string plus the incoming character
     Context* ctx = engine_->context();
     std::string input = ctx->input();
