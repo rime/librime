@@ -1,5 +1,4 @@
 RIME_ROOT = $(CURDIR)
-THIRDPARTY_PATHS = -DCMAKE_INCLUDE_PATH="$(RIME_ROOT)/thirdparty/include" -DCMAKE_LIBRARY_PATH="$(RIME_ROOT)/thirdparty/lib"
 RIME_COMPILER_OPTIONS = CC=clang CXX=clang++ CXXFLAGS="-stdlib=libc++" LDFLAGS="-stdlib=libc++"
 
 
@@ -9,12 +8,12 @@ all: release
 
 release:
 	mkdir -p xbuild
-	cd xbuild; cmake -G Xcode .. -DBUILD_STATIC=ON -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON $(THIRDPARTY_PATHS)
+	cd xbuild; cmake -G Xcode .. -DBUILD_STATIC=ON -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
 	cd xbuild; xcodebuild -project rime.xcodeproj -configuration Release build | grep -v setenv | tee build.log
 
 debug:
 	mkdir -p xdebug
-	cd xdebug; cmake -G Xcode .. -DBUILD_STATIC=ON $(THIRDPARTY_PATHS) -DBUILD_TEST=ON -DBUILD_SEPARATE_LIBS=ON
+	cd xdebug; cmake -G Xcode .. -DBUILD_STATIC=ON -DBUILD_TEST=ON -DBUILD_SEPARATE_LIBS=ON
 	cd xdebug; xcodebuild -project rime.xcodeproj -configuration Debug build | grep -v setenv | tee build.log
 
 clean:
