@@ -1,6 +1,6 @@
 language: cpp
 compiler:
-  - clang
+  - gcc
 before_install:
   - sudo apt-get install cmake -y
   - sudo apt-get install libboost-all-dev -y
