@@ -1,0 +1,6 @@
+language: cpp
+compiler:
+  - clang
+before_install:
+  - sudo apt-get install cmake -y
+script: make -f Makefile.thirdparty && make
