@@ -1,0 +1,7 @@
+language: cpp
+compiler:
+  - clang
+before_install:
+  - sudo apt-get install cmake -y
+  - sudo apt-get install libboost-all-dev -y
+script: make -f Makefile.thirdparty && make
