@@ -13,6 +13,7 @@ option(BUILD_DATA "Build data for Rime" OFF)
 option(BUILD_TEST "Build and run tests" OFF)
 option(BUILD_SEPARATE_LIBS "Build a separate rime-gears library" OFF)
 option(ENABLE_LOGGING "Enable logging with google-glog library" ON)
+option(BOOST_USE_CXX11 "Boost has been built with C++11 support" OFF)
 
 SET(RIME_DATA_DIR "/share/rime-data" CACHE STRING "Target directory for Rime data")
 
@@ -109,6 +110,9 @@ endif(MSVC)
 if(UNIX)
   add_definitions("-std=c++11")
 endif(UNIX)
+if(NOT BOOST_USE_CXX11)
+  add_definitions("-DBOOST_NO_CXX11_SCOPED_ENUMS")
+endif()
 
 if(NOT DEFINED LIB_INSTALL_DIR)
     set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
