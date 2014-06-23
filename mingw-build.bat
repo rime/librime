@@ -20,18 +20,6 @@ echo.
 echo BOOST_ROOT=%BOOST_ROOT%
 echo.
 
-echo TODO: populate this folder with third-party library header files.
-set CMAKE_INCLUDE_PATH=%RIME_ROOT%\thirdparty\include
-echo CMAKE_INCLUDE_PATH=%CMAKE_INCLUDE_PATH%
-
-echo.
-
-echo TODO: populate this folder with third-party libraries.
-set CMAKE_LIBRARY_PATH=%RIME_ROOT%\thirdparty\lib
-echo CMAKE_LIBRARY_PATH=%CMAKE_LIBRARY_PATH%
-
-echo.
-
 rem TODO: select a cmake generator
 rem set CMAKE_GENERATOR="MinGW Makefiles"
 set CMAKE_GENERATOR="Eclipse CDT4 - MinGW Makefiles"

@@ -171,13 +171,6 @@ if %build_thirdparty% == 1 (
 
 if %build_librime% == 0 goto EXIT
 
-set CMAKE_INCLUDE_PATH=%RIME_ROOT%\thirdparty\include
-echo CMAKE_INCLUDE_PATH=%CMAKE_INCLUDE_PATH%
-echo.
-set CMAKE_LIBRARY_PATH=%RIME_ROOT%\thirdparty\lib
-echo CMAKE_LIBRARY_PATH=%CMAKE_LIBRARY_PATH%
-echo.
-
 rem TODO: select a cmake generator
 rem set CMAKE_GENERATOR="MinGW Makefiles"
 rem set CMAKE_GENERATOR="Eclipse CDT4 - MinGW Makefiles"
