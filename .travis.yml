@@ -1,7 +1,17 @@
 language: cpp
 compiler:
   - gcc
+
 before_install:
   - sudo apt-get install cmake -y
   - sudo apt-get install libboost-all-dev -y
+  - if [ "$CXX" == "g++" ]; then sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test; fi  
+  - sudo apt-get update -qq
+
+# Install dependencies
+install:
+  # install g++ 4.8, if tests are run with g++
+  - if [ "$CXX" == "g++" ]; then sudo apt-get install -qq g++-4.8; fi
+  - if [ "$CXX" == "g++" ]; then sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 50; fi
+
 script: make -f Makefile.thirdparty && make
