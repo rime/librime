@@ -8,7 +8,6 @@
 #define RIME_CUSTOMIZER_H_
 
 #include <string>
-#define BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/filesystem.hpp>
 
 namespace rime {
