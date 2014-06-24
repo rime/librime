@@ -68,6 +68,10 @@ Speller::Speller(const Ticket& ticket) : Processor(ticket),
     config->GetInt("speller/max_code_length", &max_code_length_);
     config->GetBool("speller/auto_select", &auto_select_);
     config->GetBool("speller/use_space", &use_space_);
+    std::string pattern;
+    if (config->GetString("speller/auto_select_pattern", &pattern)) {
+      auto_select_pattern_ = pattern;
+    }
   }
   if (initials_.empty()) {
     initials_ = alphabet_;
@@ -136,10 +140,20 @@ bool Speller::AutoSelectUniqueCandidate(Context* ctx) {
   bool unique_candidate = seg.menu->Prepare(2) == 1;
   if (!unique_candidate)
     return false;
+  const std::string& input(ctx->input());
   auto cand = seg.GetSelectedCandidate();
-  if ((max_code_length_ == 0 ||  // at any length if not specified
-       reached_max_code_length(cand, max_code_length_)) &&
-      is_auto_selectable(cand, ctx->input(), delimiters_)) {
+  bool matches_input_pattern = false;
+  if (auto_select_pattern_.empty()) {
+    matches_input_pattern =
+        max_code_length_ == 0 ||  // match any length if not set
+        reached_max_code_length(cand, max_code_length_);
+  }
+  else {
+    std::string code(input.substr(cand->start(), cand->end()));
+    matches_input_pattern = boost::regex_match(code, auto_select_pattern_);
+  }
+  if (matches_input_pattern &&
+      is_auto_selectable(cand, input, delimiters_)) {
     ctx->ConfirmCurrentSelection();
     return true;
   }
