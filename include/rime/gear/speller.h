@@ -7,6 +7,7 @@
 #ifndef RIME_SPELLER_H_
 #define RIME_SPELLER_H_
 
+#include <boost/regex.hpp>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/processor.h>
@@ -35,6 +36,7 @@ class Speller : public Processor {
   int max_code_length_;
   bool auto_select_;
   bool use_space_;
+  boost::regex auto_select_pattern_;
 };
 
 }  // namespace rime

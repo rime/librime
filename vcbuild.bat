@@ -164,21 +164,14 @@ if %build_thirdparty% == 1 (
 
 if %build_librime% == 0 goto EXIT
 
-set CMAKE_INCLUDE_PATH=%RIME_ROOT%\thirdparty\include
-echo CMAKE_INCLUDE_PATH=%CMAKE_INCLUDE_PATH%
-echo.
-set CMAKE_LIBRARY_PATH=%RIME_ROOT%\thirdparty\lib
-echo CMAKE_LIBRARY_PATH=%CMAKE_LIBRARY_PATH%
-echo.
-
 set BUILD_DIR=%RIME_ROOT%\%build%
 if not exist %BUILD_DIR% mkdir %BUILD_DIR%
 
-set RIME_CMAKE_FLAGS=-DBUILD_STATIC=ON -DBUILD_SHARED_LIBS=%build_shared% -DBUILD_TEST=%build_test% -DENABLE_LOGGING=%enable_logging%
+set RIME_CMAKE_FLAGS=-DBUILD_STATIC=ON -DBUILD_SHARED_LIBS=%build_shared% -DBUILD_TEST=%build_test% -DENABLE_LOGGING=%enable_logging% -DBOOST_USE_CXX11=ON
 
 cd %BUILD_DIR%
 echo cmake -G %CMAKE_GENERATOR% %RIME_CMAKE_FLAGS% %RIME_ROOT%
-cmake -G %CMAKE_GENERATOR% %RIME_CMAKE_FLAGS% %RIME_ROOT%
+call cmake -G %CMAKE_GENERATOR% %RIME_CMAKE_FLAGS% %RIME_ROOT%
 if %ERRORLEVEL% NEQ 0 goto ERROR
 
 echo.

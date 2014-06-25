@@ -13,6 +13,7 @@ option(BUILD_DATA "Build data for Rime" OFF)
 option(BUILD_TEST "Build and run tests" OFF)
 option(BUILD_SEPARATE_LIBS "Build a separate rime-gears library" OFF)
 option(ENABLE_LOGGING "Enable logging with google-glog library" ON)
+option(BOOST_USE_CXX11 "Boost has been built with C++11 support" OFF)
 
 SET(RIME_DATA_DIR "/share/rime-data" CACHE STRING "Target directory for Rime data")
 
@@ -20,7 +21,8 @@ if(WIN32)
   set(EXT ".exe")
 endif(WIN32)
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${PROJECT_SOURCE_DIR}/thirdparty")
 
 set(Boost_USE_STATIC_LIBS ${BUILD_STATIC})
 set(Gflags_STATIC ${BUILD_STATIC})
@@ -99,6 +101,9 @@ if(MSVC)
   endif(MSVC10)
   add_definitions("/wd4244 /wd4996")
 endif(MSVC)
+if(NOT BOOST_USE_CXX11)
+  add_definitions("-DBOOST_NO_CXX11_SCOPED_ENUMS")
+endif()
 
 if(NOT DEFINED LIB_INSTALL_DIR)
     set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
