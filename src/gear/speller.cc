@@ -1,4 +1,4 @@
-//
+﻿//
 // Copyleft RIME Developers
 // License: GPLv3
 //
@@ -84,11 +84,12 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent &key_event) {
   if (key_event.release() || key_event.ctrl() || key_event.alt())
     return kNoop;
   int ch = key_event.keycode();
-  if (ch < 0x20 || ch >= 0x7f)  // not a valid key for spelling
+  if (ch < 0x20 || ch >= 0x7f) // not a valid key for spelling
     return kNoop;
   if (ch == XK_space && (!use_space_ || key_event.shift()))
     return kNoop;
-  if (!belongs_to(ch, alphabet_) && !belongs_to(ch, delimiters_))
+  bool isdelimiters = belongs_to(ch, delimiters_);
+  if (!belongs_to(ch, alphabet_) && !isdelimiters)
     return kNoop;
   Context *ctx = engine_->context();
   bool is_initial = belongs_to(ch, initials_);
@@ -96,18 +97,24 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent &key_event) {
       expecting_an_initial(ctx, alphabet_, finals_)) {
     return kNoop;
   }
-  if (is_initial && AutoSelectAtMaxCodeLength(ctx)) {
-    DLOG(INFO) << "auto-select at max code length.";
-  }
+
   // make a backup of previous conversion before modifying input
   Segment previous_segment;
   if (auto_select_ && ctx->HasMenu()) {
     previous_segment = ctx->composition()->back();
   }
   DLOG(INFO) << "add to input: '" << (char)ch << "', " << key_event.repr();
-  ctx->PushInput(key_event.keycode());
-  ctx->ConfirmPreviousSelection();  // so that next BackSpace won't revert
+  ctx->PushInput(ch);
+  ctx->ConfirmPreviousSelection(); // so that next BackSpace won't revert
                                     // previous selection
+
+  if (!isdelimiters && AutoSelectAtMaxCodeLength(ctx)) {
+	if (is_initial)
+		ctx->PushInput(ch);
+	else
+		return kNoop;
+  }
+
   if (AutoSelectPreviousMatch(ctx, &previous_segment)) {
     DLOG(INFO) << "auto-select previous match.";
   }
@@ -120,17 +127,28 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent &key_event) {
 bool Speller::AutoSelectAtMaxCodeLength(Context* ctx) {
   if (max_code_length_ <= 0)
     return false;
+
   if (!ctx->HasMenu())
     return false;
+
   const Segment& seg(ctx->composition()->back());
   shared_ptr<Candidate> cand = seg.GetSelectedCandidate();
+
+  if (!reached_max_code_length(cand, max_code_length_+1))
+	return false;
+
+  if (cand && is_auto_selectable(cand, ctx->input(), delimiters_))
+	return false;
+
+  ctx->PopInput();
+  const Segment& previous_segment(ctx->composition()->back());
+  cand = previous_segment.GetSelectedCandidate();
   if (cand &&
-      reached_max_code_length(cand, max_code_length_) &&
-      is_auto_selectable(cand, ctx->input(), delimiters_)) {
-    ctx->ConfirmCurrentSelection();
-    return true;
+	is_auto_selectable(cand, ctx->input(), delimiters_)) {
+	ctx->ConfirmCurrentSelection();
+	DLOG(INFO) << "auto-select at max code length.";
   }
-  return false;
+  return true;
 }
 
 bool Speller::AutoSelectUniqueCandidate(Context* ctx) {
@@ -147,7 +165,7 @@ bool Speller::AutoSelectUniqueCandidate(Context* ctx) {
   bool matches_input_pattern = false;
   if (auto_select_pattern_.empty()) {
     matches_input_pattern =
-        max_code_length_ == 0 ||  // match any length if not set
+        max_code_length_ == 0 || // match any length if not set
         reached_max_code_length(cand, max_code_length_);
   }
   else {
@@ -166,7 +184,7 @@ bool Speller::AutoSelectPreviousMatch(Context* ctx,
                                       Segment* previous_segment) {
   if (!auto_select_)
     return false;
-  if (ctx->HasMenu())  // if and only if current conversion fails
+  if (ctx->HasMenu()) // if and only if current conversion fails
     return false;
   if (!previous_segment->menu)
     return false;
@@ -230,4 +248,4 @@ bool Speller::FindEarlierMatch(Context* ctx, size_t start, size_t end) {
   return false;
 }
 
-}  // namespace rime
+} // namespace rime
