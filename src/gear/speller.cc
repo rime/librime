@@ -49,10 +49,11 @@ static bool expecting_an_initial(Context* ctx,
                                  const std::string& alphabet,
                                  const std::string& finals) {
   size_t caret_pos = ctx->caret_pos();
-  if (caret_pos == 0)
+  if (caret_pos == 0 ||
+      caret_pos == ctx->composition()->GetCurrentStartPosition()) {
     return true;
+  }
   const std::string& input(ctx->input());
-  //assert(input.length() >= caret_pos);
   char previous_char = input[caret_pos - 1];
   return belongs_to(previous_char, finals) ||
          !belongs_to(previous_char, alphabet);
