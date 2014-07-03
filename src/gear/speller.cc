@@ -94,6 +94,7 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
       expecting_an_initial(ctx, alphabet_, finals_)) {
     return kNoop;
   }
+  // handles input beyond max_code_length when auto_select is false.
   if (is_initial && AutoSelectAtMaxCodeLength(ctx)) {
     DLOG(INFO) << "auto-select at max code length.";
   }
@@ -103,11 +104,17 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
     previous_segment = ctx->composition()->back();
   }
   DLOG(INFO) << "add to input: '" << (char)ch << "', " << key_event.repr();
-  ctx->PushInput(key_event.keycode());
+  ctx->PushInput(ch);
   ctx->ConfirmPreviousSelection();  // so that next BackSpace won't revert
                                     // previous selection
   if (AutoSelectPreviousMatch(ctx, &previous_segment)) {
     DLOG(INFO) << "auto-select previous match.";
+    // after auto-selecting, if only the current non-initial key is left,
+    // then it should be handled by other processors.
+    if (!is_initial && ctx->composition()->GetCurrentSegmentLength() == 1) {
+      ctx->PopInput(1);
+      return kNoop;
+    }
   }
   if (AutoSelectUniqueCandidate(ctx)) {
     DLOG(INFO) << "auto-select unique candidate.";
