@@ -82,6 +82,15 @@ Punctuator::Punctuator(const Ticket& ticket) : Processor(ticket) {
   config_.LoadConfig(engine_);
 }
 
+static bool punctuation_is_translated(Context* ctx) {
+  Composition* comp = ctx->composition();
+  if (comp->empty() || !comp->back().HasTag("punct")) {
+    return false;
+  }
+  auto cand = comp->back().GetSelectedCandidate();
+  return cand && cand->type() == "punct";
+}
+
 ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
   if (key_event.release() || key_event.ctrl() || key_event.alt())
     return kNoop;
@@ -113,6 +122,7 @@ ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
   DLOG(INFO) << "punct key: '" << punct_key << "'";
   if (!AlternatePunct(punct_key, punct_definition)) {
     ctx->PushInput(ch) &&
+        punctuation_is_translated(ctx) &&
         (ConfirmUniquePunct(punct_definition) ||
          AutoCommitPunct(punct_definition) ||
          PairPunct(punct_definition));
