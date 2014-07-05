@@ -221,10 +221,9 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
       if (type > kNormalSpelling) continue;
       std::string remaining_code;
       if (match.length > code_length) {
-        const char* syllable = table_->GetSyllableById(syllable_id);
-        size_t syllable_code_length = syllable ? strlen(syllable) : 0;
-        if (syllable_code_length > code_length)
-          remaining_code = syllable + code_length;
+        std::string syllable = table_->GetSyllableById(syllable_id);
+        if (syllable.length() > code_length)
+          remaining_code = syllable.substr(code_length);
       }
       TableAccessor a(table_->QueryWords(syllable_id));
       if (!a.exhausted()) {
@@ -241,8 +240,8 @@ bool Dictionary::Decode(const Code& code, std::vector<std::string>* result) {
     return false;
   result->clear();
   for (int c : code) {
-    const char* s = table_->GetSyllableById(c);
-    if (!s)
+    std::string s = table_->GetSyllableById(c);
+    if (s.empty())
       return false;
     result->push_back(s);
   }

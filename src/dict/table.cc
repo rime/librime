@@ -272,8 +272,12 @@ bool Table::Build(const Syllabary& syllabary, const Vocabulary& vocabulary,
   metadata_->num_syllables = num_syllables;
   metadata_->num_entries = num_entries;
 
+  if (use_string_table_) {
+    string_table_builder_.reset(new StringTableBuilder);
+  }
+
   LOG(INFO) << "creating syllabary.";
-  syllabary_ = CreateArray<String>(num_syllables);
+  syllabary_ = CreateArray<table::StringType>(num_syllables);
   if (!syllabary_) {
     LOG(ERROR) << "Error creating syllabary.";
     return false;
@@ -281,14 +285,16 @@ bool Table::Build(const Syllabary& syllabary, const Vocabulary& vocabulary,
   else {
     size_t i = 0;
     for (const std::string& syllable : syllabary) {
-      CopyString(syllable, &syllabary_->at[i++]);
+      if (use_string_table_) {
+        string_table_builder_->Add(syllable, 1.0,
+                                   &syllabary_->at[i++].str_id);
+      }
+      else {
+        CopyString(syllable, &syllabary_->at[i++].str);
+      }
     }
   }
   metadata_->syllabary = syllabary_;
-
-  if (use_string_table_) {
-    string_table_builder_.reset(new StringTableBuilder);
-  }
 
   LOG(INFO) << "creating table index.";
   index_ = BuildHeadIndex(vocabulary, num_syllables);
@@ -453,16 +459,18 @@ bool Table::GetSyllabary(Syllabary* result) {
   if (!result || !syllabary_)
     return false;
   for (size_t i = 0; i < syllabary_->size; ++i) {
-    result->insert(syllabary_->at[i].c_str());
+    result->insert(GetSyllableById((int)i));
   }
   return true;
 }
-const char* Table::GetSyllableById(int syllable_id) {
+std::string Table::GetSyllableById(int syllable_id) {
   if (!syllabary_ ||
       syllable_id < 0 ||
       syllable_id >= static_cast<int>(syllabary_->size))
-    return NULL;
-  return syllabary_->at[syllable_id].c_str();
+    return std::string();
+  return use_string_table_
+      ? string_table_->GetString(syllabary_->at[syllable_id].str_id)
+      : syllabary_->at[syllable_id].str.c_str();
 }
 
 TableAccessor Table::QueryWords(int syllable_id) {

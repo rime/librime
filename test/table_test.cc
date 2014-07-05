@@ -101,9 +101,9 @@ TEST_F(RimeTableTest, IntegrityTest) {
 }
 
 TEST_F(RimeTableTest, SimpleQuery) {
-  EXPECT_STREQ("0", table_->GetSyllableById(0));
-  EXPECT_STREQ("3", table_->GetSyllableById(3));
-  EXPECT_STREQ("4", table_->GetSyllableById(4));
+  EXPECT_STREQ("0", table_->GetSyllableById(0).c_str());
+  EXPECT_STREQ("3", table_->GetSyllableById(3).c_str());
+  EXPECT_STREQ("4", table_->GetSyllableById(4).c_str());
 
   rime::TableAccessor v = table_->QueryWords(1);
   ASSERT_FALSE(v.exhausted());

@@ -22,7 +22,12 @@ namespace rime {
 
 namespace table {
 
-using Syllabary = Array<String>;
+union StringType {
+  String str;
+  StringId str_id;
+};
+
+using Syllabary = Array<StringType>;
 
 using SyllableId = int32_t;
 
@@ -35,10 +40,7 @@ using Weight = float;
 #endif
 
 struct Entry {
-  union {
-    String str;
-    StringId str_id;
-  } text;
+  StringType text;
   Weight weight;
 };
 
@@ -150,7 +152,7 @@ class Table : public MappedFile {
              uint32_t dict_file_checksum = 0);
 
   bool GetSyllabary(Syllabary* syllabary);
-  const char* GetSyllableById(int syllable_id);
+  std::string GetSyllableById(int syllable_id);
   TableAccessor QueryWords(int syllable_id);
   TableAccessor QueryPhrases(const Code& code);
   bool Query(const SyllableGraph& syll_graph,
