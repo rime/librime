@@ -53,16 +53,18 @@ size_t match_extra_code(const table::Code* extra_code, size_t depth,
 }  // namespace dictionary
 
 DictEntryIterator::DictEntryIterator()
-    : Base(), entry_(), entry_count_(0) {
+    : Base(), table_(NULL), entry_(), entry_count_(0) {
 }
 
 DictEntryIterator::DictEntryIterator(const DictEntryIterator& other)
-    : Base(other), entry_(other.entry_), entry_count_(other.entry_count_) {
+    : Base(other), table_(other.table_), entry_(other.entry_),
+      entry_count_(other.entry_count_) {
 }
 
 DictEntryIterator& DictEntryIterator::operator= (DictEntryIterator& other) {
   DLOG(INFO) << "swapping iterator contents.";
   swap(other);
+  table_ = other.table_;
   entry_ = other.entry_;
   entry_count_ = other.entry_count_;
   return *this;
@@ -72,9 +74,10 @@ bool DictEntryIterator::exhausted() const {
   return empty();
 }
 
-void DictEntryIterator::AddChunk(dictionary::Chunk&& chunk) {
+void DictEntryIterator::AddChunk(dictionary::Chunk&& chunk, Table* table) {
   push_back(std::move(chunk));
   entry_count_ += chunk.size;
+  table_ = table;
 }
 
 void DictEntryIterator::Sort() {
@@ -82,13 +85,16 @@ void DictEntryIterator::Sort() {
 }
 
 void DictEntryIterator::PrepareEntry() {
-  if (empty()) return;
+  if (empty() || !table_) {
+    return;
+  }
   const auto& chunk(front());
   entry_ = New<DictEntry>();
   const auto& e(chunk.entries[chunk.cursor]);
-  DLOG(INFO) << "creating temporary dict entry '" << e.text.c_str() << "'.";
+  DLOG(INFO) << "creating temporary dict entry '"
+             << table_->GetEntryText(e) << "'.";
   entry_->code = chunk.code;
-  entry_->text = e.text.c_str();
+  entry_->text = table_->GetEntryText(e);
   const double kS = 1e8;
   entry_->weight = (e.weight + 1) / kS * chunk.credibility;
   if (!chunk.remaining_code.empty()) {
@@ -170,12 +176,13 @@ Dictionary::Lookup(const SyllableGraph& syllable_graph,
           size_t actual_end_pos = dictionary::match_extra_code(
               a.extra_code(), 0, syllable_graph, end_pos);
           if (actual_end_pos == 0) continue;
-          (*collector)[actual_end_pos].AddChunk({a.code(), a.entry(), cr});
+          (*collector)[actual_end_pos].AddChunk(
+              {a.code(), a.entry(), cr}, table_.get());
         }
         while (a.Next());
       }
       else {
-        (*collector)[end_pos].AddChunk({a, cr});
+        (*collector)[end_pos].AddChunk({a, cr}, table_.get());
       }
     }
   }
@@ -222,7 +229,7 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
       TableAccessor a(table_->QueryWords(syllable_id));
       if (!a.exhausted()) {
         DLOG(INFO) << "remaining code: " << remaining_code;
-        result->AddChunk({a, remaining_code});
+        result->AddChunk({a, remaining_code}, table_.get());
       }
     }
   }

@@ -43,6 +43,7 @@ struct Metadata {
   uint32_t num_spellings;
   uint32_t double_array_size;
   OffsetPtr<char> double_array;
+  // v1.0
   OffsetPtr<SpellingMap> spelling_map;
   char alphabet[256];
 };

@@ -4,6 +4,7 @@
 //
 // 2011-07-02 GONG Chen <chen.sst@gmail.com>
 //
+#include <cfloat>
 #include <cstring>
 #include <algorithm>
 #include <queue>
@@ -14,7 +15,7 @@
 
 namespace rime {
 
-const char kTableFormat[] = "Rime::Table/1.0";
+const char kTableFormat[] = "Rime::Table/1.1";
 
 const char kTableFormatPrefix[] = "Rime::Table/";
 const size_t kTableFormatPrefixLen = sizeof(kTableFormatPrefix) - 1;
@@ -208,7 +209,10 @@ bool Table::Load() {
     Close();
     return false;
   }
-  //double format = atof(&metadata_->format[kTableFormatPrefixLen]);
+  double format = atof(&metadata_->format[kTableFormatPrefixLen]);
+  if (format < 1.1 - DBL_EPSILON) {
+    use_string_table_ = false;
+  }
 
   syllabary_ = metadata_->syllabary.get();
   if (!syllabary_) {
@@ -221,6 +225,11 @@ bool Table::Load() {
     LOG(ERROR) << "table index not found.";
     Close();
     return false;
+  }
+
+  if (use_string_table_) {
+    string_table_.reset(new StringTable(metadata_->string_table.get(),
+                                        metadata_->string_table_size));
   }
   return true;
 }
@@ -240,8 +249,8 @@ uint32_t Table::dict_file_checksum() const {
   return metadata_ ? metadata_->dict_file_checksum : 0;
 }
 
-bool Table::Build(const Syllabary& syllabary, const Vocabulary& vocabulary, size_t num_entries,
-                  uint32_t dict_file_checksum) {
+bool Table::Build(const Syllabary& syllabary, const Vocabulary& vocabulary,
+                  size_t num_entries, uint32_t dict_file_checksum) {
   size_t num_syllables = syllabary.size();
   size_t estimated_file_size = 32 * num_syllables + 128 * num_entries;
   LOG(INFO) << "building table.";
@@ -277,6 +286,10 @@ bool Table::Build(const Syllabary& syllabary, const Vocabulary& vocabulary, size
   }
   metadata_->syllabary = syllabary_;
 
+  if (use_string_table_) {
+    string_table_builder_.reset(new StringTableBuilder);
+  }
+
   LOG(INFO) << "creating table index.";
   index_ = BuildHeadIndex(vocabulary, num_syllables);
   if (!index_) {
@@ -284,6 +297,20 @@ bool Table::Build(const Syllabary& syllabary, const Vocabulary& vocabulary, size
     return false;
   }
   metadata_->index = index_;
+
+  if (use_string_table_) {
+    string_table_builder_->Build();
+    // saving string table image
+    size_t image_size = string_table_builder_->Size();
+    char* image = Allocate<char>(image_size);
+    if (!image) {
+      LOG(ERROR) << "Error creating string table image.";
+      return false;
+    }
+    string_table_builder_->Dump(image, image_size);
+    metadata_->string_table = image;
+    metadata_->string_table_size = image_size;
+  }
 
   // at last, complete the metadata
   std::strncpy(metadata_->format, kTableFormat,
@@ -317,7 +344,8 @@ table::HeadIndex* Table::BuildHeadIndex(const Vocabulary& vocabulary,
   return index;
 }
 
-table::TrunkIndex* Table::BuildTrunkIndex(const Code& prefix, const Vocabulary& vocabulary) {
+table::TrunkIndex* Table::BuildTrunkIndex(const Code& prefix,
+                                          const Vocabulary& vocabulary) {
   auto index = CreateArray<table::TrunkIndexNode>(vocabulary.size());
   if (!index) {
     return NULL;
@@ -353,7 +381,8 @@ table::TrunkIndex* Table::BuildTrunkIndex(const Code& prefix, const Vocabulary& 
   return index;
 }
 
-table::TailIndex* Table::BuildTailIndex(const Code& prefix, const Vocabulary& vocabulary) {
+table::TailIndex* Table::BuildTailIndex(const Code& prefix,
+                                        const Vocabulary& vocabulary) {
   if (vocabulary.find(-1) == vocabulary.end()) {
     return NULL;
   }
@@ -405,10 +434,16 @@ bool Table::BuildEntryList(const DictEntryList& src,
 bool Table::BuildEntry(const DictEntry& dict_entry, table::Entry* entry) {
   if (!entry)
     return false;
-  if (!CopyString(dict_entry.text, &entry->text)) {
-    LOG(ERROR) << "Error creating table entry '" << dict_entry.text
-               << "'; file size: " << file_size();
-    return false;
+  if (use_string_table_) {
+    string_table_builder_->Add(dict_entry.text, dict_entry.weight,
+                               &entry->text.str_id);
+  }
+  else {
+    if (!CopyString(dict_entry.text, &entry->text.str)) {
+      LOG(ERROR) << "Error creating table entry '" << dict_entry.text
+                 << "'; file size: " << file_size();
+      return false;
+    }
   }
   entry->weight = static_cast<table::Weight>(dict_entry.weight);
   return true;
@@ -489,6 +524,12 @@ bool Table::Query(const SyllableGraph& syll_graph, size_t start_pos,
     }
   }
   return !result->empty();
+}
+
+std::string Table::GetEntryText(const table::Entry& entry) {
+  return use_string_table_
+      ? string_table_->GetString(entry.text.str_id)
+      : entry.text.str.c_str();
 }
 
 }  // namespace rime

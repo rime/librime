@@ -16,6 +16,7 @@
 #include <rime/common.h>
 #include <rime/dict/mapped_file.h>
 #include <rime/dict/vocabulary.h>
+#include <rime/dict/string_table.h>
 
 namespace rime {
 
@@ -34,7 +35,10 @@ using Weight = float;
 #endif
 
 struct Entry {
-  String text;
+  union {
+    String str;
+    StringId str_id;
+  } text;
   Weight weight;
 };
 
@@ -70,6 +74,9 @@ struct Metadata {
   uint32_t num_entries;
   OffsetPtr<Syllabary> syllabary;
   OffsetPtr<Index> index;
+  // v1.1
+  OffsetPtr<char> string_table;
+  uint32_t string_table_size;
 };
 
 }  // namespace table
@@ -149,18 +156,27 @@ class Table : public MappedFile {
   bool Query(const SyllableGraph& syll_graph,
              size_t start_pos,
              TableQueryResult* result);
+  std::string GetEntryText(const table::Entry& entry);
+
   uint32_t dict_file_checksum() const;
 
  private:
-  table::HeadIndex* BuildHeadIndex(const Vocabulary& vocabulary, size_t num_syllables);
-  table::TrunkIndex* BuildTrunkIndex(const Code& prefix, const Vocabulary& vocabulary);
-  table::TailIndex* BuildTailIndex(const Code& prefix, const Vocabulary& vocabulary);
+  table::HeadIndex* BuildHeadIndex(const Vocabulary& vocabulary,
+                                   size_t num_syllables);
+  table::TrunkIndex* BuildTrunkIndex(const Code& prefix,
+                                     const Vocabulary& vocabulary);
+  table::TailIndex* BuildTailIndex(const Code& prefix,
+                                   const Vocabulary& vocabulary);
   bool BuildEntryList(const DictEntryList& src, List<table::Entry>* dest);
   bool BuildEntry(const DictEntry& dict_entry, table::Entry* entry);
 
   table::Index* index_ = nullptr;
   table::Syllabary* syllabary_ = nullptr;
   table::Metadata* metadata_ = nullptr;
+
+  bool use_string_table_ = true;
+  unique_ptr<StringTable> string_table_;
+  unique_ptr<StringTableBuilder> string_table_builder_;
 };
 
 }  // namespace rime

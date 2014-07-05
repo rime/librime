@@ -52,7 +52,7 @@ std::string StringTable::GetString(StringId string_id) {
     LOG(ERROR) << "invalid id for string table: " << string_id;
     return std::string();
   }
-  return agent.key().ptr();
+  return std::string(agent.key().ptr(), agent.key().length());
 }
 
 size_t StringTable::Size() const {

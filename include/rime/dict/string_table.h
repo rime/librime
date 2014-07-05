@@ -37,7 +37,7 @@ class StringTable {
   marisa::Trie trie_;
 };
 
-class StringTableBuilder: StringTable {
+class StringTableBuilder: public StringTable {
  public:
   void Add(const std::string& key, double weight = 1.0,
            StringId* reference = nullptr);
