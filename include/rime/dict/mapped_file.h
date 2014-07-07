@@ -114,6 +114,7 @@ class MappedFile : boost::noncopyable {
   char* address() const;
 
 public:
+  bool Exists() const;
   bool IsOpen() const;
   void Close();
   bool Remove();

@@ -85,7 +85,7 @@ MappedFile::~MappedFile() {
 }
 
 bool MappedFile::Create(size_t capacity) {
-  if (boost::filesystem::exists(file_name_)) {
+  if (Exists()) {
     LOG(INFO) << "overwriting file '" << file_name_ << "'.";
     Resize(capacity);
   }
@@ -108,7 +108,7 @@ bool MappedFile::Create(size_t capacity) {
 }
 
 bool MappedFile::OpenReadOnly() {
-  if (!boost::filesystem::exists(file_name_)) {
+  if (!Exists()) {
     LOG(ERROR) << "attempt to open non-existent file '" << file_name_ << "'.";
     return false;
   }
@@ -118,7 +118,7 @@ bool MappedFile::OpenReadOnly() {
 }
 
 bool MappedFile::OpenReadWrite() {
-  if (!boost::filesystem::exists(file_name_)) {
+  if (!Exists()) {
     LOG(ERROR) << "attempt to open non-existent file '" << file_name_ << "'.";
     return false;
   }
@@ -132,6 +132,10 @@ void MappedFile::Close() {
     file_.reset();
     size_ = 0;
   }
+}
+
+bool MappedFile::Exists() const {
+  return boost::filesystem::exists(file_name_);
 }
 
 bool MappedFile::IsOpen() const {
