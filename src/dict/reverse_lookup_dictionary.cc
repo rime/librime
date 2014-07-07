@@ -58,8 +58,8 @@ bool ReverseDb::Load() {
   }
   //double format = atof(&metadata_->format[kReverseFormatPrefixLen]);
 
-  key_trie_.reset(new Darts::DoubleArray);
-  key_trie_->set_array(metadata_->key_trie.get(), metadata_->key_trie_size);
+  key_trie_.reset(new StringTable(metadata_->key_trie.get(),
+                                  metadata_->key_trie_size));
   value_trie_.reset(new StringTable(metadata_->value_trie.get(),
                                     metadata_->value_trie_size));
 
@@ -67,15 +67,15 @@ bool ReverseDb::Load() {
 }
 
 bool ReverseDb::Lookup(const std::string& text, std::string* result) {
-  if (!key_trie_ || !value_trie_) {
+  if (!key_trie_ || !value_trie_ || !metadata_->index.size) {
     return false;
   }
-  Darts::DoubleArray::result_pair_type value_id;
-  key_trie_->exactMatchSearch(text.c_str(), value_id);
-  if (value_id.value == -1) {
+  StringId key_id = key_trie_->Lookup(text);
+  if (key_id == kInvalidStringId) {
     return false;
   }
-  *result = value_trie_->GetString(value_id.value);
+  StringId value_id = metadata_->index.at[key_id];
+  *result = value_trie_->GetString(value_id);
   return !result->empty();
 }
 
@@ -96,35 +96,30 @@ bool ReverseDb::Build(DictSettings* settings,
       rev_table[e->text].insert(syllable);
     }
   }
-  std::map<std::string, StringId> kv;
+  StringTableBuilder key_trie_builder;
   StringTableBuilder value_trie_builder;
+  size_t entry_count = rev_table.size() + stems.size();
+  std::vector<StringId> key_ids(entry_count);
+  std::vector<StringId> value_ids(entry_count);
+  int i = 0;
   // save reverse lookup entries
   for (const auto& v : rev_table) {
-    std::string code_list(boost::algorithm::join(v.second, " "));
-    value_trie_builder.Add(code_list, 1.0, &kv[v.first]);
+    const std::string& key(v.first);
+    std::string value(boost::algorithm::join(v.second, " "));
+    key_trie_builder.Add(key, 1.0, &key_ids[i]);
+    value_trie_builder.Add(value, 1.0, &value_ids[i]);
+    ++i;
   }
   // save stems
   for (const auto& v : stems) {
     std::string key(v.first + kStemKeySuffix);
-    std::string code_list(boost::algorithm::join(v.second, " "));
-    value_trie_builder.Add(code_list, 1.0, &kv[key]);
-  }
-
-  value_trie_builder.Build();
-  const size_t size = kv.size();
-  std::vector<const char*> keys(size);
-  std::vector<Darts::DoubleArray::value_type> values(size);
-  size_t i = 0;
-  for (const auto& x : kv) {
-    keys[i] = x.first.c_str();
-    values[i] = x.second;
+    std::string value(boost::algorithm::join(v.second, " "));
+    key_trie_builder.Add(key, 1.0, &key_ids[i]);
+    value_trie_builder.Add(value, 1.0, &value_ids[i]);
     ++i;
   }
-  key_trie_.reset(new Darts::DoubleArray);
-  if (0 != key_trie_->build(size, &keys[0], NULL, &values[0])) {
-    LOG(ERROR) << "Error building key trie.";
-    return false;
-  }
+  key_trie_builder.Build();
+  value_trie_builder.Build();
 
   // dict settings required by UniTE
   std::string dict_settings;
@@ -136,9 +131,11 @@ bool ReverseDb::Build(DictSettings* settings,
 
   // creating reversedb file
   const size_t kReservedSize = 1024;
-  size_t key_trie_image_size = key_trie_->total_size();
+  size_t key_trie_image_size = key_trie_builder.Size();
   size_t value_trie_image_size = value_trie_builder.Size();
-  size_t estimated_data_size = kReservedSize + dict_settings.length() +
+  size_t estimated_data_size = kReservedSize +
+      dict_settings.length() +
+      entry_count * sizeof(StringId) +
       key_trie_image_size + value_trie_image_size;
   if (!Create(estimated_data_size)) {
     LOG(ERROR) << "Error creating prism file '" << file_name() << "'.";
@@ -159,15 +156,25 @@ bool ReverseDb::Build(DictSettings* settings,
     }
   }
 
+  auto entries = Allocate<StringId>(entry_count);
+  if (!entries) {
+    return false;
+  }
+  for (size_t i = 0; i < entry_count; ++i) {
+    entries[key_ids[i]] = value_ids[i];
+  }
+  metadata_->index.size = entry_count;
+  metadata_->index.at = entries;
+
   // save key trie image
   char* key_trie_image = Allocate<char>(key_trie_image_size);
   if (!key_trie_image) {
     LOG(ERROR) << "Error creating key trie image.";
     return false;
   }
-  std::memcpy(key_trie_image, key_trie_->array(), key_trie_image_size);
+  key_trie_builder.Dump(key_trie_image, key_trie_image_size);
   metadata_->key_trie = key_trie_image;
-  metadata_->key_trie_size = key_trie_->size();
+  metadata_->key_trie_size = key_trie_image_size;
 
   // save value trie image
   char* value_trie_image = Allocate<char>();

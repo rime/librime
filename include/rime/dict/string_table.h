@@ -18,6 +18,8 @@ namespace rime {
 
 using StringId = marisa::UInt32;
 
+const StringId kInvalidStringId = (StringId)(-1);
+
 class StringTable {
  public:
   StringTable() = default;
@@ -25,6 +27,7 @@ class StringTable {
   StringTable(const char* ptr, size_t size);
 
   bool HasKey(const std::string& key);
+  StringId Lookup(const std::string& key);
   void CommonPrefixMatch(const std::string& query,
                          std::vector<StringId>* result);
   void Predict(const std::string& query,

@@ -11,7 +11,6 @@
 #include <stdint.h>
 #include <map>
 #include <string>
-#include <darts.h>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/dict/mapped_file.h>
@@ -22,13 +21,12 @@ namespace rime {
 
 namespace reverse {
 
-using Index = Array<StringId>;
-
 struct Metadata {
   static const int kFormatMaxLength = 32;
   char format[kFormatMaxLength];
   uint32_t dict_file_checksum;
   String dict_settings;
+  List<StringId> index;
   OffsetPtr<char> key_trie;
   uint32_t key_trie_size;
   OffsetPtr<char> value_trie;
@@ -58,7 +56,7 @@ class ReverseDb : public MappedFile {
 
  private:
   reverse::Metadata* metadata_ = nullptr;
-  unique_ptr<Darts::DoubleArray> key_trie_;
+  unique_ptr<StringTable> key_trie_;
   unique_ptr<StringTable> value_trie_;
 };
 

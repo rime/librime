@@ -22,6 +22,17 @@ bool StringTable::HasKey(const std::string& key) {
   return trie_.lookup(agent);
 }
 
+StringId StringTable::Lookup(const std::string& key) {
+  marisa::Agent agent;
+  agent.set_query(key.c_str());
+  if(trie_.lookup(agent)) {
+    return agent.key().id();
+  }
+  else {
+    return kInvalidStringId;
+  }
+}
+
 void StringTable::CommonPrefixMatch(const std::string& query,
                                     std::vector<StringId>* result) {
   marisa::Agent agent;
