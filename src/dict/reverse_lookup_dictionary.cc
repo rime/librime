@@ -131,8 +131,8 @@ bool ReverseDb::Build(DictSettings* settings,
 
   // creating reversedb file
   const size_t kReservedSize = 1024;
-  size_t key_trie_image_size = key_trie_builder.Size();
-  size_t value_trie_image_size = value_trie_builder.Size();
+  size_t key_trie_image_size = key_trie_builder.BinarySize();
+  size_t value_trie_image_size = value_trie_builder.BinarySize();
   size_t estimated_data_size = kReservedSize +
       dict_settings.length() +
       entry_count * sizeof(StringId) +

@@ -34,7 +34,8 @@ class StringTable {
                std::vector<StringId>* result);
   std::string GetString(StringId string_id);
 
-  size_t Size() const;
+  size_t NumKeys() const;
+  size_t BinarySize() const;
 
  protected:
   marisa::Trie trie_;

@@ -66,7 +66,11 @@ std::string StringTable::GetString(StringId string_id) {
   return std::string(agent.key().ptr(), agent.key().length());
 }
 
-size_t StringTable::Size() const {
+size_t StringTable::NumKeys() const {
+  return trie_.size();
+}
+
+size_t StringTable::BinarySize() const {
   return trie_.io_size();
 }
 
@@ -101,7 +105,7 @@ void StringTableBuilder::UpdateReferences() {
 }
 
 void StringTableBuilder::Dump(char* ptr, size_t size) {
-  if (size < Size()) {
+  if (size < BinarySize()) {
     LOG(ERROR) << "insufficient memory to dump string table.";
     return;
   }
