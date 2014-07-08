@@ -13,6 +13,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <darts.h>
 #include <rime/common.h>
 #include <rime/dict/mapped_file.h>
 #include <rime/dict/vocabulary.h>
@@ -44,29 +45,44 @@ struct Entry {
   Weight weight;
 };
 
-struct HeadIndexNode {
-  List<Entry> entries;
-  OffsetPtr<> next_level;
-};
-
-using HeadIndex = Array<HeadIndexNode>;
-
-struct TrunkIndexNode {
-  SyllableId key;
-  List<Entry> entries;
-  OffsetPtr<> next_level;
-};
-
-using TrunkIndex = Array<TrunkIndexNode>;
-
-struct TailIndexNode {
+struct LongEntry {
   Code extra_code;
   Entry entry;
 };
 
-using TailIndex = Array<TailIndexNode>;
+union PhraseIndex;
 
-using Index = HeadIndex;
+struct HeadIndexNode_v1 {
+  List<Entry> entries;
+  OffsetPtr<PhraseIndex> next_level;
+};
+
+using HeadIndex_v1 = Array<HeadIndexNode_v1>;
+
+struct TrunkIndexNode_v1 {
+  SyllableId key;
+  List<Entry> entries;
+  OffsetPtr<PhraseIndex> next_level;
+};
+
+using TrunkIndex_v1 = Array<TrunkIndexNode_v1>;
+
+using HeadIndex_v2 = Array<List<Entry>>;
+
+using TrunkIndex_v2 = Array<Entry>;
+
+using TailIndex = Array<LongEntry>;
+
+union PhraseIndex {
+  TrunkIndex_v1 trunk_v1;
+  TrunkIndex_v2 trunk_v2;
+  TailIndex tail;
+};
+
+union Index {
+  HeadIndex_v1 v1;
+  HeadIndex_v2 v2;
+};
 
 struct Metadata {
   static const int kFormatMaxLength = 32;
@@ -76,7 +92,8 @@ struct Metadata {
   uint32_t num_entries;
   OffsetPtr<Syllabary> syllabary;
   OffsetPtr<Index> index;
-  // v1.1
+  // v2
+  OffsetPtr<char> trie;
   OffsetPtr<char> string_table;
   uint32_t string_table_size;
 };
@@ -109,40 +126,15 @@ class TableAccessor {
   double credibility_ = 1.0;
 };
 
-class TableVisitor {
- public:
-  TableVisitor(table::Index* index);
-
-  TableAccessor Access(int syllable_id,
-                       double credibility = 1.0) const;
-
-  // down to next level
-  bool Walk(int syllable_id, double credibility = 1.0);
-  // up one level
-  bool Backdate();
-  // back to root
-  void Reset();
-
-  size_t level() const { return level_; }
-
- private:
-  table::HeadIndex* lv1_index_ = nullptr;
-  table::TrunkIndex* lv2_index_ = nullptr;
-  table::TrunkIndex* lv3_index_ = nullptr;
-  table::TailIndex* lv4_index_ = nullptr;
-  size_t level_ = 0;
-  Code index_code_;
-  std::vector<double> credibility_;
-};
-
 using TableQueryResult = std::map<int, std::vector<TableAccessor>>;
 
 struct SyllableGraph;
+class TableQuery;
 
 class Table : public MappedFile {
  public:
-  Table(const std::string& file_name)
-      : MappedFile(file_name) {}
+  Table(const std::string& file_name);
+  virtual ~Table();
 
   bool Load();
   bool Save();
@@ -163,20 +155,57 @@ class Table : public MappedFile {
   uint32_t dict_file_checksum() const;
 
  private:
-  table::HeadIndex* BuildHeadIndex(const Vocabulary& vocabulary,
-                                   size_t num_syllables);
-  table::TrunkIndex* BuildTrunkIndex(const Code& prefix,
-                                     const Vocabulary& vocabulary);
+  table::HeadIndex_v1* BuildHeadIndex(const Vocabulary& vocabulary,
+                                      size_t num_syllables);
+  table::TrunkIndex_v1* BuildTrunkIndex(const Code& prefix,
+                                        const Vocabulary& vocabulary);
   table::TailIndex* BuildTailIndex(const Code& prefix,
                                    const Vocabulary& vocabulary);
   bool BuildEntryList(const DictEntryList& src, List<table::Entry>* dest);
   bool BuildEntry(const DictEntry& dict_entry, table::Entry* entry);
 
-  table::Index* index_ = nullptr;
-  table::Syllabary* syllabary_ = nullptr;
-  table::Metadata* metadata_ = nullptr;
+  TableQuery* NewQuery_v1();
+  std::string GetString_v1(const table::StringType& x);
+  bool AddString_v1(const std::string& src, table::StringType* dest,
+                    double weight);
+  table::Index* BuildIndex_v1(const Vocabulary& vocabulary,
+                              size_t num_syllables);
 
-  bool use_string_table_ = true;
+  // v2
+  TableQuery* NewQuery_v2();
+  std::string GetString_v2(const table::StringType& x);
+  bool AddString_v2(const std::string& src, table::StringType* dest,
+                    double weight);
+  table::Index* BuildIndex_v2(const Vocabulary& vocabulary,
+                              size_t num_syllables);
+  bool OnBuildStart_v2();
+  bool OnBuildFinish_v2();
+  bool OnLoad_v2();
+
+  void SelectTableFormat(double format_version);
+
+ protected:
+  table::Metadata* metadata_ = nullptr;
+  table::Syllabary* syllabary_ = nullptr;
+  table::Index* index_ = nullptr;
+
+  struct TableFormat {
+    const char* format_name;
+
+    TableQuery* (Table::*NewQuery)();
+    std::string (Table::*GetString)(const table::StringType& x);
+    bool (Table::*AddString)(const std::string& src, table::StringType* dest,
+                             double weight);
+    table::Index* (Table::*BuildIndex)(const Vocabulary& vocabulary,
+                                       size_t num_syllables);
+
+    bool (Table::*OnBuildStart)();
+    bool (Table::*OnBuildFinish)();
+    bool (Table::*OnLoad)();
+  } format_;
+
+  // v2
+  unique_ptr<Darts::DoubleArray> trie_;
   unique_ptr<StringTable> string_table_;
   unique_ptr<StringTableBuilder> string_table_builder_;
 };

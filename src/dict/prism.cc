@@ -5,6 +5,7 @@
 // 2011-05-16 Zou Xu <zouivex@gmail.com>
 // 2012-01-26 GONG Chen <chen.sst@gmail.com>  spelling algebra support
 //
+#include <cfloat>
 #include <cstring>
 #include <queue>
 #include <rime/algo/algebra.h>
@@ -106,7 +107,7 @@ bool Prism::Load() {
   trie_->set_array(array, array_size);
 
   spelling_map_ = NULL;
-  if (format_ >= 0.99) {
+  if (format_ > 1.0 - DBL_EPSILON) {
     spelling_map_ = metadata_->spelling_map.get();
   }
   return true;
@@ -286,7 +287,8 @@ void Prism::ExpandSearch(const std::string& key,
   while(!q.empty()) {
     node_t node = q.front();
     q.pop();
-    const char* c = (format_ > 0.99) ? metadata_->alphabet : kDefaultAlphabet;
+    const char* c = (format_ > 1.0 - DBL_EPSILON) ? metadata_->alphabet
+                                                  : kDefaultAlphabet;
     for (; *c; ++c) {
       std::string k = node.key + *c;
       size_t k_pos = node.key.length();
