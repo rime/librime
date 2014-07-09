@@ -52,7 +52,7 @@ class DictEntryIterator : protected std::list<dictionary::Chunk>,
   DictEntryIterator(const DictEntryIterator& other);
   DictEntryIterator& operator= (DictEntryIterator& other);
 
-  void AddChunk(dictionary::Chunk&& chunk);
+  void AddChunk(dictionary::Chunk&& chunk, Table* table);
   void Sort();
   shared_ptr<DictEntry> Peek();
   bool Next();
@@ -64,6 +64,7 @@ class DictEntryIterator : protected std::list<dictionary::Chunk>,
   void PrepareEntry();
 
  private:
+  Table* table_;
   shared_ptr<DictEntry> entry_;
   size_t entry_count_;
 };
