@@ -18,3 +18,4 @@ thirdparty/src/opencc-windows/*.lib
 env.bat
 *~
 .*.swp
+.ycm_extra_conf.pyc
