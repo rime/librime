@@ -35,7 +35,7 @@ size_t match_extra_code(const table::Code* extra_code, size_t depth,
   auto index = syll_graph.indices.find(current_pos);
   if (index == syll_graph.indices.end())
     return 0;
-  table::SyllableId current_syll_id = extra_code->at[depth];
+  SyllableId current_syll_id = extra_code->at[depth];
   auto spellings = index->second.find(current_syll_id);
   if (spellings == index->second.end())
     return 0;
@@ -215,7 +215,7 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
   for (auto& match : keys) {
     SpellingAccessor accessor(prism_->QuerySpelling(match.value));
     while (!accessor.exhausted()) {
-      int syllable_id = accessor.syllable_id();
+      SyllableId syllable_id = accessor.syllable_id();
       SpellingType type = accessor.properties().type;
       accessor.Next();
       if (type > kNormalSpelling) continue;
@@ -239,7 +239,7 @@ bool Dictionary::Decode(const Code& code, std::vector<std::string>* result) {
   if (!result || !table_)
     return false;
   result->clear();
-  for (int c : code) {
+  for (SyllableId c : code) {
     std::string s = table_->GetSyllableById(c);
     if (s.empty())
       return false;

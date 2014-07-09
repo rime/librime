@@ -25,22 +25,19 @@ const size_t kTableFormatPrefixLen = sizeof(kTableFormatPrefix) - 1;
 
 class TableQuery {
  public:
-  TableQuery() {
+  TableQuery(table::Index* index) : lv1_index_(index) {
     Reset();
   }
-  virtual ~TableQuery() = default;
 
-  virtual TableAccessor Access(int syllable_id,
-                               double credibility = 1.0) const = 0;
-
-  virtual bool Walk(int syllable_id, double credibility = 1.0) = 0;
-
-  virtual TableQuery* NewCopy() const = 0;
+  TableAccessor Access(SyllableId syllable_id,
+                       double credibility = 1.0) const;
 
   // down to next level
-  bool Advance(int syllable_id, double credibility);
+  bool Advance(SyllableId syllable_id, double credibility = 1.0);
+
   // up one level
   bool Backdate();
+
   // back to root
   void Reset();
 
@@ -50,29 +47,54 @@ class TableQuery {
   size_t level_ = 0;
   Code index_code_;
   std::vector<double> credibility_;
+
+ private:
+  bool Walk(SyllableId syllable_id);
+
+  table::HeadIndex* lv1_index_ = nullptr;
+  table::TrunkIndex* lv2_index_ = nullptr;
+  table::TrunkIndex* lv3_index_ = nullptr;
+  table::TailIndex* lv4_index_ = nullptr;
 };
 
 TableAccessor::TableAccessor(const Code& index_code,
-                             const List<table::Entry>* entries,
+                             const List<table::Entry>* list,
                              double credibility)
-    : index_code_(index_code), entries_(entries), credibility_(credibility) {
+    : index_code_(index_code),
+      entries_(list->at.get()),
+      size_(list->size),
+      credibility_(credibility) {
+}
+
+TableAccessor::TableAccessor(const Code& index_code,
+                             const Array<table::Entry>* array,
+                             double credibility)
+    : index_code_(index_code),
+      entries_(array->at),
+      size_(array->size),
+      credibility_(credibility) {
 }
 
 TableAccessor::TableAccessor(const Code& index_code,
                              const table::TailIndex* code_map,
                              double credibility)
-    : index_code_(index_code), code_map_(code_map), credibility_(credibility) {
+    : index_code_(index_code),
+      long_entries_(code_map->at),
+      size_(code_map->size),
+      credibility_(credibility) {
 }
 
 bool TableAccessor::exhausted() const {
-  if (entries_) return cursor_ >= entries_->size;
-  if (code_map_) return cursor_ >= code_map_->size;
+  if (entries_ || long_entries_) {
+    return !(size_ - cursor_);
+  }
   return true;
 }
 
 size_t TableAccessor::remaining() const {
-  if (entries_) return entries_->size - cursor_;
-  if (code_map_) return code_map_->size - cursor_;
+  if (entries_ || long_entries_) {
+    return size_ - cursor_;
+  }
   return 0;
 }
 
@@ -80,15 +102,15 @@ const table::Entry* TableAccessor::entry() const {
   if (exhausted())
     return NULL;
   if (entries_)
-    return &entries_->at[cursor_];
+    return &entries_[cursor_];
   else
-    return &code_map_->at[cursor_].entry;
+    return &long_entries_[cursor_].entry;
 }
 
 const table::Code* TableAccessor::extra_code() const {
-  if (!code_map_ || cursor_ >= code_map_->size)
+  if (!long_entries_ || cursor_ >= size_)
     return NULL;
-  return &code_map_->at[cursor_].extra_code;
+  return &long_entries_[cursor_].extra_code;
 }
 
 Code TableAccessor::code() const {
@@ -110,7 +132,10 @@ bool TableAccessor::Next() {
   return !exhausted();
 }
 
-bool TableQuery::Advance(int syllable_id, double credibility) {
+bool TableQuery::Advance(SyllableId syllable_id, double credibility) {
+  if (!Walk(syllable_id)) {
+    return false;
+  }
   ++level_;
   index_code_.push_back(syllable_id);
   credibility_.push_back(credibility_.back() * credibility);
@@ -135,49 +160,30 @@ void TableQuery::Reset() {
   credibility_.push_back(1.0);
 }
 
-class TableQuery_v1 : public TableQuery {
- public:
-  TableQuery_v1(table::Index* index) : lv1_index_(&index->v1) {
-  }
-
-  TableAccessor Access(int syllable_id, double credibility) const;
-  bool Walk(int syllable_id, double credibility);
-
-  TableQuery* NewCopy() const {
-    return new TableQuery_v1(*this);
-  }
-
- private:
-  table::HeadIndex_v1* lv1_index_ = nullptr;
-  table::TrunkIndex_v1* lv2_index_ = nullptr;
-  table::TrunkIndex_v1* lv3_index_ = nullptr;
-  table::TailIndex* lv4_index_ = nullptr;
-};
-
-inline static bool node_less(const table::TrunkIndexNode_v1& a,
-                             const table::TrunkIndexNode_v1& b) {
+inline static bool node_less(const table::TrunkIndexNode& a,
+                             const table::TrunkIndexNode& b) {
   return a.key < b.key;
 }
 
-static table::TrunkIndexNode_v1* find_node(table::TrunkIndexNode_v1* first,
-                                           table::TrunkIndexNode_v1* last,
-                                           const SyllableId& key) {
-  table::TrunkIndexNode_v1 target;
+static table::TrunkIndexNode* find_node(table::TrunkIndexNode* first,
+                                        table::TrunkIndexNode* last,
+                                        const SyllableId& key) {
+  table::TrunkIndexNode target;
   target.key = key;
   auto it = std::lower_bound(first, last, target, node_less);
   return it == last || key < it->key ? last : it;
 }
 
-bool TableQuery_v1::Walk(int syllable_id, double credibility) {
+bool TableQuery::Walk(SyllableId syllable_id) {
   if (level_ == 0) {
     if (!lv1_index_ ||
         syllable_id < 0 ||
-        syllable_id >= static_cast<int>(lv1_index_->size))
+        syllable_id >= static_cast<SyllableId>(lv1_index_->size))
       return false;
     auto node = &lv1_index_->at[syllable_id];
     if (!node->next_level)
       return false;
-    lv2_index_ = &node->next_level->trunk_v1;
+    lv2_index_ = &node->next_level->trunk;
   }
   else if (level_ == 1) {
     if (!lv2_index_)
@@ -187,7 +193,7 @@ bool TableQuery_v1::Walk(int syllable_id, double credibility) {
       return false;
     if (!node->next_level)
       return false;
-    lv3_index_ = &node->next_level->trunk_v1;
+    lv3_index_ = &node->next_level->trunk;
   }
   else if (level_ == 2) {
     if (!lv3_index_)
@@ -202,22 +208,21 @@ bool TableQuery_v1::Walk(int syllable_id, double credibility) {
   else {
     return false;
   }
-  Advance(syllable_id, credibility);
   return true;
 }
 
-inline static Code add_syllable(Code code, int syllable_id) {
+inline static Code add_syllable(Code code, SyllableId syllable_id) {
   code.push_back(syllable_id);
   return code;
 }
 
-TableAccessor TableQuery_v1::Access(int syllable_id,
-                                    double credibility) const {
+TableAccessor TableQuery::Access(SyllableId syllable_id,
+                                 double credibility) const {
   credibility *= credibility_.back();
   if (level_ == 0) {
     if (!lv1_index_ ||
         syllable_id < 0 ||
-        syllable_id >= static_cast<int>(lv1_index_->size))
+        syllable_id >= static_cast<SyllableId>(lv1_index_->size))
       return TableAccessor();
     auto node = &lv1_index_->at[syllable_id];
     return TableAccessor(add_syllable(index_code_, syllable_id),
@@ -241,26 +246,13 @@ TableAccessor TableQuery_v1::Access(int syllable_id,
   return TableAccessor();
 }
 
-TableQuery* Table::NewQuery_v1() {
-  return new TableQuery_v1(index_);
-}
-
 std::string Table::GetString_v1(const table::StringType& x) {
  return x.str.c_str();
 }
+
 bool Table::AddString_v1(const std::string& src, table::StringType* dest,
                          double /*weight*/) {
   return CopyString(src, &dest->str);
-}
-table::Index* Table::BuildIndex_v1(const Vocabulary& vocabulary,
-                                   size_t num_syllables) {
-  return reinterpret_cast<table::Index*>(
-      BuildHeadIndex(vocabulary, num_syllables));
-}
-
-TableQuery* Table::NewQuery_v2() {
-  // TODO:
-  return nullptr;
 }
 
 std::string Table::GetString_v2(const table::StringType& x) {
@@ -271,12 +263,6 @@ bool Table::AddString_v2(const std::string& src, table::StringType* dest,
                          double weight) {
   string_table_builder_->Add(src, weight, &dest->str_id);
   return true;
-}
-
-table::Index* Table::BuildIndex_v2(const Vocabulary& vocabulary,
-                                   size_t num_syllables) {
-  // TODO:
-  return nullptr;
 }
 
 bool Table::OnBuildStart_v2() {
@@ -308,20 +294,16 @@ bool Table::OnLoad_v2() {
 void Table::SelectTableFormat(double format_version) {
   if (format_version > 2.0 - DBL_EPSILON) {
     format_.format_name = kTableFormat_v2;
-    format_.NewQuery = &Table::NewQuery_v2;
     format_.GetString = &Table::GetString_v2;
     format_.AddString = &Table::AddString_v2;
-    format_.BuildIndex = &Table::BuildIndex_v2;
     format_.OnBuildStart = &Table::OnBuildStart_v2;
     format_.OnBuildFinish = &Table::OnBuildFinish_v2;
     format_.OnLoad = &Table::OnLoad_v2;
   }
   else {
     format_.format_name = kTableFormat_v1;
-    format_.NewQuery = &Table::NewQuery_v1;
     format_.GetString = &Table::GetString_v1;
     format_.AddString = &Table::AddString_v1;
-    format_.BuildIndex = &Table::BuildIndex_v1;
     format_.OnBuildStart = nullptr;
     format_.OnBuildFinish = nullptr;
     format_.OnLoad = nullptr;
@@ -396,10 +378,11 @@ uint32_t Table::dict_file_checksum() const {
 
 bool Table::Build(const Syllabary& syllabary, const Vocabulary& vocabulary,
                   size_t num_entries, uint32_t dict_file_checksum) {
-  SelectTableFormat(1.0);
+  SelectTableFormat(2.0);
 
+  const size_t kReservedSize = 4096;
   size_t num_syllables = syllabary.size();
-  size_t estimated_file_size = 4096 + 32 * num_syllables + 64 * num_entries;
+  size_t estimated_file_size = kReservedSize + 32 * num_syllables + 64 * num_entries;
   LOG(INFO) << "building table.";
   LOG(INFO) << "num syllables: " << num_syllables;
   LOG(INFO) << "num entries: " << num_entries;
@@ -438,7 +421,7 @@ bool Table::Build(const Syllabary& syllabary, const Vocabulary& vocabulary,
   metadata_->syllabary = syllabary_;
 
   LOG(INFO) << "creating table index.";
-  index_ = RIME_THIS_CALL(format_.BuildIndex)(vocabulary, num_syllables);
+  index_ = BuildIndex(vocabulary, num_syllables);
   if (!index_) {
     LOG(ERROR) << "Error creating table index.";
     return false;
@@ -455,9 +438,15 @@ bool Table::Build(const Syllabary& syllabary, const Vocabulary& vocabulary,
   return true;
 }
 
-table::HeadIndex_v1* Table::BuildHeadIndex(const Vocabulary& vocabulary,
-                                           size_t num_syllables) {
-  auto index = CreateArray<table::HeadIndexNode_v1>(num_syllables);
+table::Index* Table::BuildIndex(const Vocabulary& vocabulary,
+                                size_t num_syllables) {
+  return reinterpret_cast<table::Index*>(BuildHeadIndex(vocabulary,
+                                                        num_syllables));
+}
+
+table::HeadIndex* Table::BuildHeadIndex(const Vocabulary& vocabulary,
+                                        size_t num_syllables) {
+  auto index = CreateArray<table::HeadIndexNode>(num_syllables);
   if (!index) {
     return NULL;
   }
@@ -481,9 +470,9 @@ table::HeadIndex_v1* Table::BuildHeadIndex(const Vocabulary& vocabulary,
   return index;
 }
 
-table::TrunkIndex_v1* Table::BuildTrunkIndex(const Code& prefix,
+table::TrunkIndex* Table::BuildTrunkIndex(const Code& prefix,
                                           const Vocabulary& vocabulary) {
-  auto index = CreateArray<table::TrunkIndexNode_v1>(vocabulary.size());
+  auto index = CreateArray<table::TrunkIndexNode>(vocabulary.size());
   if (!index) {
     return NULL;
   }
@@ -538,7 +527,7 @@ table::TailIndex* Table::BuildTailIndex(const Code& prefix,
     size_t extra_code_length = src->code.size() - Code::kIndexCodeMaxLength;
     DLOG(INFO) << "extra code length: " << extra_code_length;
     dest.extra_code.size = extra_code_length;
-    dest.extra_code.at = Allocate<table::SyllableId>(extra_code_length);
+    dest.extra_code.at = Allocate<SyllableId>(extra_code_length);
     if (!dest.extra_code.at) {
       LOG(ERROR) << "Error creating code sequence; file size: " << file_size();
       return NULL;
@@ -551,8 +540,21 @@ table::TailIndex* Table::BuildTailIndex(const Code& prefix,
   return index;
 }
 
+Array<table::Entry>* Table::BuildEntryArray(const DictEntryList& entries) {
+  auto array = CreateArray<table::Entry>(entries.size());
+  if (!array) {
+    return NULL;
+  }
+  for (size_t i = 0; i < entries.size(); ++i) {
+    if (!BuildEntry(*entries[i], &array->at[i])) {
+      return NULL;
+    }
+  }
+  return array;
+}
+
 bool Table::BuildEntryList(const DictEntryList& src,
-                               List<table::Entry>* dest) {
+                           List<table::Entry>* dest) {
   if (!dest)
     return false;
   dest->size = src.size();
@@ -586,34 +588,34 @@ bool Table::GetSyllabary(Syllabary* result) {
   if (!result || !syllabary_)
     return false;
   for (size_t i = 0; i < syllabary_->size; ++i) {
-    result->insert(GetSyllableById((int)i));
+    result->insert(GetSyllableById(static_cast<SyllableId>(i)));
   }
   return true;
 }
-std::string Table::GetSyllableById(int syllable_id) {
+std::string Table::GetSyllableById(SyllableId syllable_id) {
   if (!syllabary_ ||
       syllable_id < 0 ||
-      syllable_id >= static_cast<int>(syllabary_->size))
+      syllable_id >= static_cast<SyllableId>(syllabary_->size))
     return std::string();
   return RIME_THIS_CALL(format_.GetString)(syllabary_->at[syllable_id]);
 }
 
-TableAccessor Table::QueryWords(int syllable_id) {
-  unique_ptr<TableQuery> query(RIME_THIS_CALL(format_.NewQuery)());
-  return query->Access(syllable_id);
+TableAccessor Table::QueryWords(SyllableId syllable_id) {
+  TableQuery query(index_);
+  return query.Access(syllable_id);
 }
 
 TableAccessor Table::QueryPhrases(const Code& code) {
   if (code.empty())
     return TableAccessor();
-  unique_ptr<TableQuery> query(RIME_THIS_CALL(format_.NewQuery)());
+  TableQuery query(index_);
   for (size_t i = 0; i < Code::kIndexCodeMaxLength; ++i) {
     if (code.size() == i + 1)
-      return query->Access(code[i]);
-    if (!query->Walk(code[i]))
+      return query.Access(code[i]);
+    if (!query.Advance(code[i]))
       return TableAccessor();
   }
-  return query->Access(-1);
+  return query.Access(-1);
 }
 
 bool Table::Query(const SyllableGraph& syll_graph, size_t start_pos,
@@ -623,19 +625,19 @@ bool Table::Query(const SyllableGraph& syll_graph, size_t start_pos,
       start_pos >= syll_graph.interpreted_length)
     return false;
   result->clear();
-  std::queue<std::pair<size_t, TableQuery*>> q;
-  TableQuery* initial_state = RIME_THIS_CALL(format_.NewQuery)();
+  std::queue<std::pair<size_t, TableQuery>> q;
+  TableQuery initial_state(index_);
   q.push({start_pos, initial_state});
   while (!q.empty()) {
-    int current_pos = q.front().first;
-    unique_ptr<TableQuery> query(q.front().second);
+    size_t current_pos = q.front().first;
+    TableQuery query(q.front().second);
     q.pop();
     auto index = syll_graph.indices.find(current_pos);
     if (index == syll_graph.indices.end()) {
       continue;
     }
-    if (query->level() == Code::kIndexCodeMaxLength) {
-      TableAccessor accessor(query->Access(-1));
+    if (query.level() == Code::kIndexCodeMaxLength) {
+      TableAccessor accessor(query.Access(-1));
       if (!accessor.exhausted()) {
         (*result)[current_pos].push_back(accessor);
       }
@@ -643,16 +645,16 @@ bool Table::Query(const SyllableGraph& syll_graph, size_t start_pos,
     }
     for (const auto& spellings : index->second) {
       SyllableId syll_id = spellings.first;
-      TableAccessor accessor(query->Access(syll_id));
+      TableAccessor accessor(query.Access(syll_id));
       for (auto props : spellings.second) {
         size_t end_pos = props->end_pos;
         if (!accessor.exhausted()) {
           (*result)[end_pos].push_back(accessor);
         }
         if (end_pos < syll_graph.interpreted_length &&
-            query->Walk(syll_id, props->credibility)) {
-          q.push({end_pos, query->NewCopy()});
-          query->Backdate();
+            query.Advance(syll_id, props->credibility)) {
+          q.push({end_pos, query});
+          query.Backdate();
         }
       }
     }

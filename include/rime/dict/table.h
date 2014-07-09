@@ -30,8 +30,6 @@ union StringType {
 
 using Syllabary = Array<StringType>;
 
-using SyllableId = int32_t;
-
 using Code = List<SyllableId>;
 
 #if defined(__arm__)
@@ -52,37 +50,29 @@ struct LongEntry {
 
 union PhraseIndex;
 
-struct HeadIndexNode_v1 {
+struct HeadIndexNode {
   List<Entry> entries;
   OffsetPtr<PhraseIndex> next_level;
 };
 
-using HeadIndex_v1 = Array<HeadIndexNode_v1>;
+using HeadIndex = Array<HeadIndexNode>;
 
-struct TrunkIndexNode_v1 {
+struct TrunkIndexNode {
   SyllableId key;
   List<Entry> entries;
   OffsetPtr<PhraseIndex> next_level;
 };
 
-using TrunkIndex_v1 = Array<TrunkIndexNode_v1>;
-
-using HeadIndex_v2 = Array<List<Entry>>;
-
-using TrunkIndex_v2 = Array<Entry>;
+using TrunkIndex = Array<TrunkIndexNode>;
 
 using TailIndex = Array<LongEntry>;
 
 union PhraseIndex {
-  TrunkIndex_v1 trunk_v1;
-  TrunkIndex_v2 trunk_v2;
+  TrunkIndex trunk;
   TailIndex tail;
 };
 
-union Index {
-  HeadIndex_v1 v1;
-  HeadIndex_v2 v2;
-};
+using Index = HeadIndex;
 
 struct Metadata {
   static const int kFormatMaxLength = 32;
@@ -94,6 +84,7 @@ struct Metadata {
   OffsetPtr<Index> index;
   // v2
   OffsetPtr<char> trie;
+  uint32_t trie_size;
   OffsetPtr<char> string_table;
   uint32_t string_table_size;
 };
@@ -104,6 +95,8 @@ class TableAccessor {
  public:
   TableAccessor() = default;
   TableAccessor(const Code& index_code, const List<table::Entry>* entries,
+                double credibility = 1.0);
+  TableAccessor(const Code& index_code, const Array<table::Entry>* entries,
                 double credibility = 1.0);
   TableAccessor(const Code& index_code, const table::TailIndex* code_map,
                 double credibility = 1.0);
@@ -120,8 +113,9 @@ class TableAccessor {
 
  private:
   Code index_code_;
-  const List<table::Entry>* entries_ = nullptr;
-  const table::TailIndex* code_map_ = nullptr;
+  const table::Entry* entries_ = nullptr;
+  const table::LongEntry* long_entries_ = nullptr;
+  size_t size_ = 0;
   size_t cursor_ = 0;
   double credibility_ = 1.0;
 };
@@ -155,29 +149,28 @@ class Table : public MappedFile {
   uint32_t dict_file_checksum() const;
 
  private:
-  table::HeadIndex_v1* BuildHeadIndex(const Vocabulary& vocabulary,
-                                      size_t num_syllables);
-  table::TrunkIndex_v1* BuildTrunkIndex(const Code& prefix,
-                                        const Vocabulary& vocabulary);
+  table::Index* BuildIndex(const Vocabulary& vocabulary,
+                           size_t num_syllables);
+  table::HeadIndex* BuildHeadIndex(const Vocabulary& vocabulary,
+                                   size_t num_syllables);
+  table::TrunkIndex* BuildTrunkIndex(const Code& prefix,
+                                     const Vocabulary& vocabulary);
   table::TailIndex* BuildTailIndex(const Code& prefix,
                                    const Vocabulary& vocabulary);
+  bool BuildPhraseIndex(Code code, const Vocabulary& vocabulary,
+                        std::map<std::string, int>* index_data);
+  Array<table::Entry>* BuildEntryArray(const DictEntryList& entries);
   bool BuildEntryList(const DictEntryList& src, List<table::Entry>* dest);
   bool BuildEntry(const DictEntry& dict_entry, table::Entry* entry);
 
-  TableQuery* NewQuery_v1();
   std::string GetString_v1(const table::StringType& x);
   bool AddString_v1(const std::string& src, table::StringType* dest,
                     double weight);
-  table::Index* BuildIndex_v1(const Vocabulary& vocabulary,
-                              size_t num_syllables);
 
   // v2
-  TableQuery* NewQuery_v2();
   std::string GetString_v2(const table::StringType& x);
   bool AddString_v2(const std::string& src, table::StringType* dest,
                     double weight);
-  table::Index* BuildIndex_v2(const Vocabulary& vocabulary,
-                              size_t num_syllables);
   bool OnBuildStart_v2();
   bool OnBuildFinish_v2();
   bool OnLoad_v2();
@@ -192,12 +185,9 @@ class Table : public MappedFile {
   struct TableFormat {
     const char* format_name;
 
-    TableQuery* (Table::*NewQuery)();
     std::string (Table::*GetString)(const table::StringType& x);
     bool (Table::*AddString)(const std::string& src, table::StringType* dest,
                              double weight);
-    table::Index* (Table::*BuildIndex)(const Vocabulary& vocabulary,
-                                       size_t num_syllables);
 
     bool (Table::*OnBuildStart)();
     bool (Table::*OnBuildFinish)();
@@ -205,7 +195,6 @@ class Table : public MappedFile {
   } format_;
 
   // v2
-  unique_ptr<Darts::DoubleArray> trie_;
   unique_ptr<StringTable> string_table_;
   unique_ptr<StringTableBuilder> string_table_builder_;
 };

@@ -148,8 +148,8 @@ bool DictCompiler::BuildTable(DictSettings* settings,
   Vocabulary vocabulary;
   // build .table.bin
   {
-    std::map<std::string, int> syllable_to_id;
-    int syllable_id = 0;
+    std::map<std::string, SyllableId> syllable_to_id;
+    SyllableId syllable_id = 0;
     for (const auto& s : collector.syllabary) {
       syllable_to_id[s] = syllable_id++;
     }

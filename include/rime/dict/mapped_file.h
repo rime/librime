@@ -102,9 +102,6 @@ class MappedFile : boost::noncopyable {
   T* Allocate(size_t count = 1);
 
   template <class T>
-  T* Find(size_t offset);
-
-  template <class T>
   Array<T>* CreateArray(size_t array_size);
 
   String* CreateString(const std::string& str);
@@ -113,11 +110,14 @@ class MappedFile : boost::noncopyable {
   size_t capacity() const;
   char* address() const;
 
-public:
+ public:
   bool Exists() const;
   bool IsOpen() const;
   void Close();
   bool Remove();
+
+  template <class T>
+  T* Find(size_t offset);
 
   const std::string& file_name() const { return file_name_; }
   size_t file_size() const { return size_; }

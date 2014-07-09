@@ -22,8 +22,6 @@ namespace rime {
 
 namespace prism {
 
-using SyllableId = int32_t;
-
 struct SpellingDescriptor {
   SyllableId syllable_id;
   int32_t type;
@@ -52,14 +50,14 @@ struct Metadata {
 
 class SpellingAccessor {
  public:
-  SpellingAccessor(prism::SpellingMap* spelling_map, int spelling_id);
+  SpellingAccessor(prism::SpellingMap* spelling_map, SyllableId spelling_id);
   bool Next();
   bool exhausted() const;
-  int syllable_id() const;
+  SyllableId syllable_id() const;
   SpellingProperties properties() const;
 
  protected:
-  int spelling_id_;
+  SyllableId spelling_id_;
   prism::SpellingDescriptor* iter_;
   prism::SpellingDescriptor* end_;
 };
@@ -83,7 +81,7 @@ class Prism : public MappedFile {
   bool GetValue(const std::string& key, int* value);
   void CommonPrefixSearch(const std::string& key, std::vector<Match>* result);
   void ExpandSearch(const std::string& key, std::vector<Match>* result, size_t limit);
-  SpellingAccessor QuerySpelling(int spelling_id);
+  SpellingAccessor QuerySpelling(SyllableId spelling_id);
 
   size_t array_size() const;
 

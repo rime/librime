@@ -149,6 +149,7 @@ bool MappedFile::Flush() {
 }
 
 bool MappedFile::ShrinkToFit() {
+  LOG(INFO) << "shrinking file to fit data size. capacity: " << capacity();
   return Resize(size_);
 }
 
@@ -159,7 +160,7 @@ bool MappedFile::Remove() {
 }
 
 bool MappedFile::Resize(size_t capacity) {
-  LOG(INFO) << "resize file: " << capacity;
+  LOG(INFO) << "resize file to: " << capacity;
   if (IsOpen())
     Close();
   try {
