@@ -1,0 +1,10 @@
+*.pyc
+*.tgz
+.project
+.cproject
+/build
+/debug
+/release
+/other
+/doc/html
+/opencc.xcodeproj
