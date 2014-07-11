@@ -2,9 +2,18 @@
 
 SRC_DIR=thirdparty/src
 
-.PHONY: all glog kyotocabinet marisa opencc yaml-cpp gtest
+.PHONY: all clean-src glog kyotocabinet marisa opencc yaml-cpp gtest
 
 all: glog kyotocabinet marisa opencc yaml-cpp gtest
+
+# note: this won't clean output files under include/, lib/ and bin/.
+clean-src:
+	cd $(SRC_DIR)/glog; make distclean || true
+	rm -r $(SRC_DIR)/gtest/build || true
+	cd $(SRC_DIR)/kyotocabinet; make distclean || true
+	cd $(SRC_DIR)/marisa-trie; make distclean || true
+	rm -r $(SRC_DIR)/opencc/build || true
+	rm -r $(SRC_DIR)/yaml-cpp/build || true
 
 glog:
 	cd $(SRC_DIR)/glog; ./configure --disable-dependency-tracking --enable-static --disable-shared && make
