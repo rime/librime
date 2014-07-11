@@ -154,7 +154,7 @@ dist :
 
 
 distclean : clean
-	cd example && $(MAKE) clean
+	#cd example && $(MAKE) clean
 	rm -rf Makefile kyotocabinet.pc \
 	  config.cache config.log config.status config.tmp autom4te.cache
 
