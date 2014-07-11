@@ -1,0 +1,8 @@
+*.old
+*.ncb
+*.sdf
+*.suo
+*.user
+Debug
+Release
+ipch/
