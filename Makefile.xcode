@@ -22,4 +22,4 @@ clean:
 	rm build.log > /dev/null 2>&1 || true
 
 thirdparty:
-	make -f Makefile.thirdparty $(RIME_COMPILER_OPTIONS)
+	$(RIME_COMPILER_OPTIONS) make -f Makefile.thirdparty
