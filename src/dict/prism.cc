@@ -5,6 +5,7 @@
 // 2011-05-16 Zou Xu <zouivex@gmail.com>
 // 2012-01-26 GONG Chen <chen.sst@gmail.com>  spelling algebra support
 //
+#include <cfloat>
 #include <cstring>
 #include <queue>
 #include <rime/algo/algebra.h>
@@ -29,9 +30,10 @@ const size_t kPrismFormatPrefixLen = sizeof(kPrismFormatPrefix) - 1;
 const char kDefaultAlphabet[] = "abcdefghijklmnopqrstuvwxyz";
 
 SpellingAccessor::SpellingAccessor(prism::SpellingMap* spelling_map,
-                                   int spelling_id)
+                                   SyllableId spelling_id)
     : spelling_id_(spelling_id), iter_(NULL), end_(NULL) {
-  if (spelling_map && spelling_id < static_cast<int>(spelling_map->size)) {
+  if (spelling_map &&
+      spelling_id < static_cast<SyllableId>(spelling_map->size)) {
     iter_ = spelling_map->at[spelling_id].begin();
     end_ = spelling_map->at[spelling_id].end();
   }
@@ -49,7 +51,7 @@ bool SpellingAccessor::exhausted() const {
   return spelling_id_ == -1;
 }
 
-int SpellingAccessor::syllable_id() const {
+SyllableId SpellingAccessor::syllable_id() const {
   if (iter_ && iter_ < end_)
     return iter_->syllable_id;
   else
@@ -106,7 +108,7 @@ bool Prism::Load() {
   trie_->set_array(array, array_size);
 
   spelling_map_ = NULL;
-  if (format_ >= 0.99) {
+  if (format_ > 1.0 - DBL_EPSILON) {
     spelling_map_ = metadata_->spelling_map.get();
   }
   return true;
@@ -191,8 +193,8 @@ bool Prism::Build(const Syllabary& syllabary,
   metadata->double_array_size = array_size;
   // building spelling map
   if (script) {
-    std::map<std::string, prism::SyllableId> syllable_to_id;
-    prism::SyllableId syll_id = 0;
+    std::map<std::string, SyllableId> syllable_to_id;
+    SyllableId syll_id = 0;
     for (auto it = syllabary.begin(); it != syllabary.end(); ++it) {
       syllable_to_id[*it] = syll_id++;
     }
@@ -234,19 +236,16 @@ bool Prism::Build(const Syllabary& syllabary,
 }
 
 bool Prism::HasKey(const std::string& key) {
-  Darts::DoubleArray::value_type value;
-  trie_->exactMatchSearch(key.c_str(), value);
+  int value = trie_->exactMatchSearch<int>(key.c_str());
   return value != -1;
 }
 
 bool Prism::GetValue(const std::string& key, int* value) {
-  Darts::DoubleArray::result_pair_type result;
-  trie_->exactMatchSearch(key.c_str(), result);
-
-  if (result.value == -1)
+  int result = trie_->exactMatchSearch<int>(key.c_str());
+  if (result == -1) {
     return false;
-
-  *value = result.value;
+  }
+  *value = result;
   return true;
 }
 
@@ -286,7 +285,8 @@ void Prism::ExpandSearch(const std::string& key,
   while(!q.empty()) {
     node_t node = q.front();
     q.pop();
-    const char* c = (format_ > 0.99) ? metadata_->alphabet : kDefaultAlphabet;
+    const char* c = (format_ > 1.0 - DBL_EPSILON) ? metadata_->alphabet
+                                                  : kDefaultAlphabet;
     for (; *c; ++c) {
       std::string k = node.key + *c;
       size_t k_pos = node.key.length();
@@ -308,7 +308,7 @@ void Prism::ExpandSearch(const std::string& key,
   }
 }
 
-SpellingAccessor Prism::QuerySpelling(int spelling_id) {
+SpellingAccessor Prism::QuerySpelling(SyllableId spelling_id) {
   return SpellingAccessor(spelling_map_, spelling_id);
 }
 

@@ -49,10 +49,11 @@ static bool expecting_an_initial(Context* ctx,
                                  const std::string& alphabet,
                                  const std::string& finals) {
   size_t caret_pos = ctx->caret_pos();
-  if (caret_pos == 0)
+  if (caret_pos == 0 ||
+      caret_pos == ctx->composition()->GetCurrentStartPosition()) {
     return true;
+  }
   const std::string& input(ctx->input());
-  //assert(input.length() >= caret_pos);
   char previous_char = input[caret_pos - 1];
   return belongs_to(previous_char, finals) ||
          !belongs_to(previous_char, alphabet);
@@ -68,6 +69,10 @@ Speller::Speller(const Ticket& ticket) : Processor(ticket),
     config->GetInt("speller/max_code_length", &max_code_length_);
     config->GetBool("speller/auto_select", &auto_select_);
     config->GetBool("speller/use_space", &use_space_);
+    std::string pattern;
+    if (config->GetString("speller/auto_select_pattern", &pattern)) {
+      auto_select_pattern_ = pattern;
+    }
   }
   if (initials_.empty()) {
     initials_ = alphabet_;
@@ -90,6 +95,7 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
       expecting_an_initial(ctx, alphabet_, finals_)) {
     return kNoop;
   }
+  // handles input beyond max_code_length when auto_select is false.
   if (is_initial && AutoSelectAtMaxCodeLength(ctx)) {
     DLOG(INFO) << "auto-select at max code length.";
   }
@@ -99,11 +105,17 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
     previous_segment = ctx->composition()->back();
   }
   DLOG(INFO) << "add to input: '" << (char)ch << "', " << key_event.repr();
-  ctx->PushInput(key_event.keycode());
+  ctx->PushInput(ch);
   ctx->ConfirmPreviousSelection();  // so that next BackSpace won't revert
                                     // previous selection
   if (AutoSelectPreviousMatch(ctx, &previous_segment)) {
     DLOG(INFO) << "auto-select previous match.";
+    // after auto-selecting, if only the current non-initial key is left,
+    // then it should be handled by other processors.
+    if (!is_initial && ctx->composition()->GetCurrentSegmentLength() == 1) {
+      ctx->PopInput(1);
+      return kNoop;
+    }
   }
   if (AutoSelectUniqueCandidate(ctx)) {
     DLOG(INFO) << "auto-select unique candidate.";
@@ -136,10 +148,20 @@ bool Speller::AutoSelectUniqueCandidate(Context* ctx) {
   bool unique_candidate = seg.menu->Prepare(2) == 1;
   if (!unique_candidate)
     return false;
+  const std::string& input(ctx->input());
   auto cand = seg.GetSelectedCandidate();
-  if ((max_code_length_ == 0 ||  // at any length if not specified
-       reached_max_code_length(cand, max_code_length_)) &&
-      is_auto_selectable(cand, ctx->input(), delimiters_)) {
+  bool matches_input_pattern = false;
+  if (auto_select_pattern_.empty()) {
+    matches_input_pattern =
+        max_code_length_ == 0 ||  // match any length if not set
+        reached_max_code_length(cand, max_code_length_);
+  }
+  else {
+    std::string code(input.substr(cand->start(), cand->end()));
+    matches_input_pattern = boost::regex_match(code, auto_select_pattern_);
+  }
+  if (matches_input_pattern &&
+      is_auto_selectable(cand, input, delimiters_)) {
     ctx->ConfirmCurrentSelection();
     return true;
   }
