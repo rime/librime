@@ -49,10 +49,11 @@ static bool expecting_an_initial(Context* ctx,
                                  const std::string& alphabet,
                                  const std::string& finals) {
   size_t caret_pos = ctx->caret_pos();
-  if (caret_pos == 0)
+  if (caret_pos == 0 ||
+      caret_pos == ctx->composition()->GetCurrentStartPosition()) {
     return true;
+  }
   const std::string& input(ctx->input());
-  //assert(input.length() >= caret_pos);
   char previous_char = input[caret_pos - 1];
   return belongs_to(previous_char, finals) ||
       !belongs_to(previous_char, alphabet);
@@ -96,6 +97,7 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent &key_event) {
       expecting_an_initial(ctx, alphabet_, finals_)) {
     return kNoop;
   }
+  // handles input beyond max_code_length when auto_select is false.
   if (is_initial && AutoSelectAtMaxCodeLength(ctx)) {
     DLOG(INFO) << "auto-select at max code length.";
   }
@@ -105,11 +107,17 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent &key_event) {
     previous_segment = ctx->composition()->back();
   }
   DLOG(INFO) << "add to input: '" << (char)ch << "', " << key_event.repr();
-  ctx->PushInput(key_event.keycode());
+  ctx->PushInput(ch);
   ctx->ConfirmPreviousSelection();  // so that next BackSpace won't revert
                                     // previous selection
   if (AutoSelectPreviousMatch(ctx, &previous_segment)) {
     DLOG(INFO) << "auto-select previous match.";
+    // after auto-selecting, if only the current non-initial key is left,
+    // then it should be handled by other processors.
+    if (!is_initial && ctx->composition()->GetCurrentSegmentLength() == 1) {
+      ctx->PopInput(1);
+      return kNoop;
+    }
   }
   if (AutoSelectUniqueCandidate(ctx)) {
     DLOG(INFO) << "auto-select unique candidate.";
