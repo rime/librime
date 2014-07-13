@@ -134,6 +134,19 @@ if %build_thirdparty% == 1 (
   copy /Y Release\gtest*.lib "%RIME_ROOT%"\thirdparty\lib\
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
+  echo building marisa.
+  cd "%RIME_ROOT%"\thirdparty\src\marisa-trie\vs2010
+  msbuild.exe vs2010.sln /p:Configuration=Release
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+  echo built. copying artifacts.
+  xcopy /S /I /Y ..\lib\marisa "%RIME_ROOT%"\thirdparty\include\marisa\
+  xcopy /Y ..\lib\marisa.h "%RIME_ROOT%"\thirdparty\include\
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+  copy /Y Release\libmarisa.lib "%RIME_ROOT%"\thirdparty\lib\
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+  copy /Y Release\marisa-*.exe "%RIME_ROOT%"\thirdparty\bin\
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+
   echo skipped building opencc.
 
   cd "%RIME_ROOT%"\thirdparty\src\opencc-windows
