@@ -16,14 +16,14 @@
 
 namespace rime {
 
-using StringId = marisa::UInt32;
+typedef marisa::UInt32 StringId;
 
 const StringId kInvalidStringId = (StringId)(-1);
 
 class StringTable {
  public:
-  StringTable() = default;
-  virtual ~StringTable() = default;
+  StringTable() {}
+  virtual ~StringTable() {}
   StringTable(const char* ptr, size_t size);
 
   bool HasKey(const std::string& key);
