@@ -1,0 +1,87 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa-benchmark", "marisa-benchmark\marisa-benchmark.vcxproj", "{85E7F33D-2053-47AD-AEA4-4DB8B754BCD7}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa-build", "marisa-build\marisa-build.vcxproj", "{104CFCC9-11DF-4894-894B-BFE5F5C13DCA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa-lookup", "marisa-lookup\marisa-lookup.vcxproj", "{98C25734-1D4B-48A7-B8B2-D6559410FF3F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "io-test", "io-test\io-test.vcxproj", "{24807515-7B42-4E76-B630-E82BDA83845C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trie-test", "trie-test\trie-test.vcxproj", "{F1876AD7-43C2-4D95-BB45-E1EAED974C75}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vector-test", "vector-test\vector-test.vcxproj", "{B20AE738-2F4F-4E96-A673-F5A02591D50E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa-test", "marisa-test\marisa-test.vcxproj", "{594A9352-4170-4F5D-AEB3-E6C96DA2E87F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "base-test", "base-test\base-test.vcxproj", "{27D9F340-49F7-4715-B77D-B44CE57B7CBD}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa-reverse-lookup", "marisa-reverse-lookup\marisa-reverse-lookup.vcxproj", "{EC73A2FE-5D85-45C3-A223-37737C823476}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa-common-prefix-search", "marisa-common-prefix-search\marisa-common-prefix-search.vcxproj", "{C4C7BA27-B713-47C0-92B1-FF70EAC9A373}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa-predictive-search", "marisa-predictive-search\marisa-predictive-search.vcxproj", "{B4B56EF0-681D-4B32-AD14-F855D67CB01B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmarisa", "libmarisa\libmarisa.vcxproj", "{3BE97421-D962-4330-815B-AC9B7B799F15}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa-dump", "marisa-dump\marisa-dump.vcxproj", "{2B7CDB51-C796-4CD2-82ED-F782C7952204}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{85E7F33D-2053-47AD-AEA4-4DB8B754BCD7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{85E7F33D-2053-47AD-AEA4-4DB8B754BCD7}.Debug|Win32.Build.0 = Debug|Win32
+		{85E7F33D-2053-47AD-AEA4-4DB8B754BCD7}.Release|Win32.ActiveCfg = Release|Win32
+		{85E7F33D-2053-47AD-AEA4-4DB8B754BCD7}.Release|Win32.Build.0 = Release|Win32
+		{104CFCC9-11DF-4894-894B-BFE5F5C13DCA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{104CFCC9-11DF-4894-894B-BFE5F5C13DCA}.Debug|Win32.Build.0 = Debug|Win32
+		{104CFCC9-11DF-4894-894B-BFE5F5C13DCA}.Release|Win32.ActiveCfg = Release|Win32
+		{104CFCC9-11DF-4894-894B-BFE5F5C13DCA}.Release|Win32.Build.0 = Release|Win32
+		{98C25734-1D4B-48A7-B8B2-D6559410FF3F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{98C25734-1D4B-48A7-B8B2-D6559410FF3F}.Debug|Win32.Build.0 = Debug|Win32
+		{98C25734-1D4B-48A7-B8B2-D6559410FF3F}.Release|Win32.ActiveCfg = Release|Win32
+		{98C25734-1D4B-48A7-B8B2-D6559410FF3F}.Release|Win32.Build.0 = Release|Win32
+		{24807515-7B42-4E76-B630-E82BDA83845C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{24807515-7B42-4E76-B630-E82BDA83845C}.Debug|Win32.Build.0 = Debug|Win32
+		{24807515-7B42-4E76-B630-E82BDA83845C}.Release|Win32.ActiveCfg = Release|Win32
+		{F1876AD7-43C2-4D95-BB45-E1EAED974C75}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F1876AD7-43C2-4D95-BB45-E1EAED974C75}.Debug|Win32.Build.0 = Debug|Win32
+		{F1876AD7-43C2-4D95-BB45-E1EAED974C75}.Release|Win32.ActiveCfg = Release|Win32
+		{B20AE738-2F4F-4E96-A673-F5A02591D50E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B20AE738-2F4F-4E96-A673-F5A02591D50E}.Debug|Win32.Build.0 = Debug|Win32
+		{B20AE738-2F4F-4E96-A673-F5A02591D50E}.Release|Win32.ActiveCfg = Release|Win32
+		{594A9352-4170-4F5D-AEB3-E6C96DA2E87F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{594A9352-4170-4F5D-AEB3-E6C96DA2E87F}.Debug|Win32.Build.0 = Debug|Win32
+		{594A9352-4170-4F5D-AEB3-E6C96DA2E87F}.Release|Win32.ActiveCfg = Release|Win32
+		{27D9F340-49F7-4715-B77D-B44CE57B7CBD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{27D9F340-49F7-4715-B77D-B44CE57B7CBD}.Debug|Win32.Build.0 = Debug|Win32
+		{27D9F340-49F7-4715-B77D-B44CE57B7CBD}.Release|Win32.ActiveCfg = Release|Win32
+		{EC73A2FE-5D85-45C3-A223-37737C823476}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EC73A2FE-5D85-45C3-A223-37737C823476}.Debug|Win32.Build.0 = Debug|Win32
+		{EC73A2FE-5D85-45C3-A223-37737C823476}.Release|Win32.ActiveCfg = Release|Win32
+		{EC73A2FE-5D85-45C3-A223-37737C823476}.Release|Win32.Build.0 = Release|Win32
+		{C4C7BA27-B713-47C0-92B1-FF70EAC9A373}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C4C7BA27-B713-47C0-92B1-FF70EAC9A373}.Debug|Win32.Build.0 = Debug|Win32
+		{C4C7BA27-B713-47C0-92B1-FF70EAC9A373}.Release|Win32.ActiveCfg = Release|Win32
+		{C4C7BA27-B713-47C0-92B1-FF70EAC9A373}.Release|Win32.Build.0 = Release|Win32
+		{B4B56EF0-681D-4B32-AD14-F855D67CB01B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B4B56EF0-681D-4B32-AD14-F855D67CB01B}.Debug|Win32.Build.0 = Debug|Win32
+		{B4B56EF0-681D-4B32-AD14-F855D67CB01B}.Release|Win32.ActiveCfg = Release|Win32
+		{B4B56EF0-681D-4B32-AD14-F855D67CB01B}.Release|Win32.Build.0 = Release|Win32
+		{3BE97421-D962-4330-815B-AC9B7B799F15}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3BE97421-D962-4330-815B-AC9B7B799F15}.Debug|Win32.Build.0 = Debug|Win32
+		{3BE97421-D962-4330-815B-AC9B7B799F15}.Release|Win32.ActiveCfg = Release|Win32
+		{3BE97421-D962-4330-815B-AC9B7B799F15}.Release|Win32.Build.0 = Release|Win32
+		{2B7CDB51-C796-4CD2-82ED-F782C7952204}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2B7CDB51-C796-4CD2-82ED-F782C7952204}.Debug|Win32.Build.0 = Debug|Win32
+		{2B7CDB51-C796-4CD2-82ED-F782C7952204}.Release|Win32.ActiveCfg = Release|Win32
+		{2B7CDB51-C796-4CD2-82ED-F782C7952204}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
