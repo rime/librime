@@ -43,7 +43,7 @@ class RimeSyllabifierTest : public ::testing::Test {
   }
 
  protected:
-  std::map<std::string, int> syllable_id_;
+  std::map<std::string, rime::SyllableId> syllable_id_;
   boost::scoped_ptr<rime::Prism> prism_;
 };
 

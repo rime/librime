@@ -8,6 +8,8 @@
 #ifndef RIME_VOCABULARY_H_
 #define RIME_VOCABULARY_H_
 
+#include <stdint.h>
+#include <functional>
 #include <map>
 #include <set>
 #include <string>
@@ -19,7 +21,9 @@ namespace rime {
 
 typedef std::set<std::string> Syllabary;
 
-class Code : public std::vector<int> {
+typedef int32_t SyllableId;
+
+class Code : public std::vector<SyllableId> {
  public:
   static const size_t kIndexCodeMaxLength = 3;
 
@@ -27,6 +31,8 @@ class Code : public std::vector<int> {
   bool operator== (const Code &other) const;
 
   void CreateIndex(Code* index_code);
+
+  std::string ToString() const;
 };
 
 struct DictEntry {

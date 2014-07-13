@@ -73,7 +73,7 @@ bool DictCompiler::Compile(const std::string &schema_file) {
       schema_file.empty() ? 0 : Checksum(schema_file);
   bool rebuild_table = true;
   bool rebuild_prism = true;
-  if (boost::filesystem::exists(table_->file_name()) && table_->Load()) {
+  if (table_->Exists() && table_->Load()) {
     if (!build_table_from_source) {
       dict_file_checksum = table_->dict_file_checksum();
       LOG(INFO) << "reuse existing table: " << table_->file_name();
@@ -88,7 +88,7 @@ bool DictCompiler::Compile(const std::string &schema_file) {
         << dict_name_ << ".table.bin exists.";
     return false;
   }
-  if (boost::filesystem::exists(prism_->file_name()) && prism_->Load()) {
+  if (prism_->Exists() && prism_->Load()) {
     if (prism_->dict_file_checksum() == dict_file_checksum &&
         prism_->schema_file_checksum() == schema_file_checksum) {
       rebuild_prism = false;
@@ -104,9 +104,10 @@ bool DictCompiler::Compile(const std::string &schema_file) {
       deprecated_db.Remove();
       LOG(INFO) << "removed deprecated db '" << deprecated_db.name() << "'.";
     }
-    ReverseLookupDictionary rev_dict(dict_name_);
-    if (!rev_dict.Load() ||
-        rev_dict.GetDictFileChecksum() != dict_file_checksum) {
+    ReverseDb reverse_db(dict_name_);
+    if (!reverse_db.Exists() ||
+        !reverse_db.Load() ||
+        reverse_db.dict_file_checksum() != dict_file_checksum) {
       rebuild_table = true;
     }
   }
@@ -148,8 +149,8 @@ bool DictCompiler::BuildTable(DictSettings* settings,
   Vocabulary vocabulary;
   // build .table.bin
   {
-    std::map<std::string, int> syllable_to_id;
-    int syllable_id = 0;
+    std::map<std::string, SyllableId> syllable_to_id;
+    SyllableId syllable_id = 0;
     BOOST_FOREACH(const std::string &s, collector.syllabary) {
       syllable_to_id[s] = syllable_id++;
     }
@@ -180,13 +181,13 @@ bool DictCompiler::BuildTable(DictSettings* settings,
     }
   }
   // build .reverse.bin
-  ReverseLookupDictionary rev_dict(dict_name_);
-  if (!rev_dict.Build(settings,
-                      collector.syllabary,
-                      vocabulary,
-                      collector.stems,
-                      dict_file_checksum)) {
-    LOG(ERROR) << "error building reverse lookup dict.";
+  ReverseDb reverse_db(dict_name_);
+  if (!reverse_db.Build(settings,
+                        collector.syllabary,
+                        vocabulary,
+                        collector.stems,
+                        dict_file_checksum)) {
+    LOG(ERROR) << "error building reversedb.";
     return false;
   }
   return true;

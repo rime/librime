@@ -22,8 +22,6 @@ namespace rime {
 
 namespace prism {
 
-typedef int32_t SyllableId;
-
 struct SpellingDescriptor {
   SyllableId syllable_id;
   int32_t type;
@@ -43,6 +41,7 @@ struct Metadata {
   uint32_t num_spellings;
   uint32_t double_array_size;
   OffsetPtr<char> double_array;
+  // v1.0
   OffsetPtr<SpellingMap> spelling_map;
   char alphabet[256];
 };
@@ -51,14 +50,14 @@ struct Metadata {
 
 class SpellingAccessor {
  public:
-  SpellingAccessor(prism::SpellingMap* spelling_map, int spelling_id);
+  SpellingAccessor(prism::SpellingMap* spelling_map, SyllableId spelling_id);
   bool Next();
   bool exhausted() const;
-  int syllable_id() const;
+  SyllableId syllable_id() const;
   SpellingProperties properties() const;
 
  protected:
-  int spelling_id_;
+  SyllableId spelling_id_;
   prism::SpellingDescriptor* iter_;
   prism::SpellingDescriptor* end_;
 };
@@ -80,11 +79,11 @@ class Prism : public MappedFile {
              uint32_t dict_file_checksum = 0,
              uint32_t schema_file_checksum = 0);
 
-  bool HasKey(const std::string &key);
-  bool GetValue(const std::string &key, int *value);
-  void CommonPrefixSearch(const std::string &key, std::vector<Match> *result);
-  void ExpandSearch(const std::string &key, std::vector<Match> *result, size_t limit);
-  SpellingAccessor QuerySpelling(int spelling_id);
+  bool HasKey(const std::string& key);
+  bool GetValue(const std::string& key, int* value);
+  void CommonPrefixSearch(const std::string& key, std::vector<Match>* result);
+  void ExpandSearch(const std::string& key, std::vector<Match>* result, size_t limit);
+  SpellingAccessor QuerySpelling(SyllableId spelling_id);
 
   size_t array_size() const;
 

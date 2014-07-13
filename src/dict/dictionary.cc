@@ -35,7 +35,7 @@ size_t match_extra_code(const table::Code *extra_code, size_t depth,
   SpellingIndices::const_iterator index = syll_graph.indices.find(current_pos);
   if (index == syll_graph.indices.end())
     return 0;
-  table::SyllableId current_syll_id = extra_code->at[depth];
+  SyllableId current_syll_id = extra_code->at[depth];
   SpellingIndex::const_iterator spellings = index->second.find(current_syll_id);
   if (spellings == index->second.end())
     return 0;
@@ -52,16 +52,18 @@ size_t match_extra_code(const table::Code *extra_code, size_t depth,
 }  // namespace dictionary
 
 DictEntryIterator::DictEntryIterator()
-    : Base(), entry_(), entry_count_(0) {
+    : Base(), table_(NULL), entry_(), entry_count_(0) {
 }
 
 DictEntryIterator::DictEntryIterator(const DictEntryIterator &other)
-    : Base(other), entry_(other.entry_), entry_count_(other.entry_count_) {
+    : Base(other), table_(other.table_), entry_(other.entry_),
+      entry_count_(other.entry_count_) {
 }
 
 DictEntryIterator& DictEntryIterator::operator= (DictEntryIterator &other) {
   DLOG(INFO) << "swapping iterator contents.";
   swap(other);
+  table_ = other.table_;
   entry_ = other.entry_;
   entry_count_ = other.entry_count_;
   return *this;
@@ -71,9 +73,11 @@ bool DictEntryIterator::exhausted() const {
   return empty();
 }
 
-void DictEntryIterator::AddChunk(const dictionary::Chunk &chunk) {
+void DictEntryIterator::AddChunk(const dictionary::Chunk &chunk,
+                                 Table* table) {
   push_back(chunk);
   entry_count_ += chunk.size;
+  table_ = table;
 }
 
 void DictEntryIterator::Sort() {
@@ -81,13 +85,16 @@ void DictEntryIterator::Sort() {
 }
 
 void DictEntryIterator::PrepareEntry() {
-  if (empty()) return;
+  if (empty() || !table_) {
+    return;
+  }
   const dictionary::Chunk &chunk(front());
   entry_ = make_shared<DictEntry>();
   const table::Entry &e(chunk.entries[chunk.cursor]);
-  DLOG(INFO) << "creating temporary dict entry '" << e.text.c_str() << "'.";
+  DLOG(INFO) << "creating temporary dict entry '"
+             << table_->GetEntryText(e) << "'.";
   entry_->code = chunk.code;
-  entry_->text = e.text.c_str();
+  entry_->text = table_->GetEntryText(e);
   const double kS = 1e8;
   entry_->weight = (e.weight + 1) / kS * chunk.credibility;
   if (!chunk.remaining_code.empty()) {
@@ -169,12 +176,12 @@ shared_ptr<DictEntryCollector> Dictionary::Lookup(const SyllableGraph &syllable_
               a.extra_code(), 0, syllable_graph, end_pos);
           if (actual_end_pos == 0) continue;
           (*collector)[actual_end_pos].AddChunk(
-              dictionary::Chunk(a.code(), a.entry(), cr));
+              dictionary::Chunk(a.code(), a.entry(), cr), table_.get());
         }
         while (a.Next());
       }
       else {
-        (*collector)[end_pos].AddChunk(dictionary::Chunk(a, cr));
+        (*collector)[end_pos].AddChunk(dictionary::Chunk(a, cr), table_.get());
       }
     }
   }
@@ -207,21 +214,20 @@ size_t Dictionary::LookupWords(DictEntryIterator *result,
   BOOST_FOREACH(Prism::Match &match, keys) {
     SpellingAccessor accessor(prism_->QuerySpelling(match.value));
     while (!accessor.exhausted()) {
-      int syllable_id = accessor.syllable_id();
+      SyllableId syllable_id = accessor.syllable_id();
       SpellingType type = accessor.properties().type;
       accessor.Next();
       if (type > kNormalSpelling) continue;
       std::string remaining_code;
       if (match.length > code_length) {
-        const char *syllable = table_->GetSyllableById(syllable_id);
-        size_t syllable_code_length = syllable ? strlen(syllable) : 0;
-        if (syllable_code_length > code_length)
-          remaining_code = syllable + code_length;
+        std::string syllable = table_->GetSyllableById(syllable_id);
+        if (syllable.length() > code_length)
+          remaining_code = syllable.substr(code_length);
       }
       TableAccessor a(table_->QueryWords(syllable_id));
       if (!a.exhausted()) {
         DLOG(INFO) << "remaining code: " << remaining_code;
-        result->AddChunk(dictionary::Chunk(a, remaining_code));
+        result->AddChunk(dictionary::Chunk(a, remaining_code), table_.get());
       }
     }
   }
@@ -232,9 +238,9 @@ bool Dictionary::Decode(const Code &code, std::vector<std::string>* result) {
   if (!result || !table_)
     return false;
   result->clear();
-  BOOST_FOREACH(int c, code) {
-    const char *s = table_->GetSyllableById(c);
-    if (!s)
+  BOOST_FOREACH(SyllableId c, code) {
+    std::string s = table_->GetSyllableById(c);
+    if (s.empty())
       return false;
     result->push_back(s);
   }

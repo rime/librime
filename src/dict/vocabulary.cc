@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
+#include <sstream>
 #include <rime/dict/vocabulary.h>
 
 namespace rime {
@@ -42,6 +43,21 @@ void Code::CreateIndex(Code *index_code) {
   std::copy(begin(),
             begin() + index_code_size,
             index_code->begin());
+}
+
+std::string Code::ToString() const {
+  std::stringstream stream;
+  bool first = true;
+  BOOST_FOREACH(SyllableId syllable_id, *this) {
+    if (first) {
+      first = false;
+    }
+    else {
+      stream << ",";
+    }
+    stream << syllable_id;
+  }
+  return stream.str();
 }
 
 bool DictEntry::operator< (const DictEntry& other) const {

@@ -430,9 +430,9 @@ bool UserDictionary::TranslateCodeToString(const Code &code,
                                            std::string* result) {
   if (!table_ || !result) return false;
   result->clear();
-  BOOST_FOREACH(const int &syllable_id, code) {
-    const char *spelling = table_->GetSyllableById(syllable_id);
-    if (!spelling) {
+  BOOST_FOREACH(const SyllableId& syllable_id, code) {
+    std::string spelling = table_->GetSyllableById(syllable_id);
+    if (spelling.empty()) {
       LOG(ERROR) << "Error translating syllable_id '" << syllable_id << "'.";
       result->clear();
       return false;
