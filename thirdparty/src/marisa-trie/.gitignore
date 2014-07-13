@@ -1,5 +1,7 @@
 vs*/*.suo
 vs*/*.sdf
 vs*/*.opensdf
+vs*/Release/
+vs*/Debug/
 vs*/**/Release/
 vs*/**/Debug/
