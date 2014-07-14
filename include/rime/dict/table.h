@@ -83,8 +83,8 @@ struct Metadata {
   OffsetPtr<Syllabary> syllabary;
   OffsetPtr<Index> index;
   // v2
-  OffsetPtr<char> trie;
-  uint32_t trie_size;
+  int32_t reserved_1;
+  int32_t reserved_2;
   OffsetPtr<char> string_table;
   uint32_t string_table_size;
 };
