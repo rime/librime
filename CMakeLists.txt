@@ -4,14 +4,16 @@ set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_fla
 project(rime)
 cmake_minimum_required(VERSION 2.8)
 
-set(LIBRIME_VERSION 1.1.0)
+set(LIBRIME_VERSION 1.2.0)
 set(LIBRIME_SOVERSION 1)
 
 option(BUILD_SHARED_LIBS "Build Rime as shared library" ON)
 option(BUILD_STATIC "Build Rime using static libraries" OFF)
 option(BUILD_DATA "Build data for Rime" OFF)
-option(BUILD_TEST "Build gtest framwork for Rime" OFF)
+option(BUILD_TEST "Build and run tests" OFF)
 option(BUILD_SEPARATE_LIBS "Build a separate rime-gears library" OFF)
+option(ENABLE_LOGGING "Enable logging with google-glog library" ON)
+option(BOOST_USE_CXX11 "Boost has been built with C++11 support" OFF)
 
 SET(RIME_DATA_DIR "/share/rime-data" CACHE STRING "Target directory for Rime data")
 
@@ -19,12 +21,14 @@ if(WIN32)
   set(EXT ".exe")
 endif(WIN32)
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${PROJECT_SOURCE_DIR}/thirdparty")
 
 set(Boost_USE_STATIC_LIBS ${BUILD_STATIC})
 set(Gflags_STATIC ${BUILD_STATIC})
 set(Glog_STATIC ${BUILD_STATIC})
 set(KyotoCabinet_STATIC ${BUILD_STATIC})
+set(Marisa_STATIC ${BUILD_STATIC})
 set(Opencc_STATIC ${BUILD_STATIC})
 set(YamlCpp_STATIC ${BUILD_STATIC})
 
@@ -38,6 +42,8 @@ if(Boost_FOUND)
   link_directories(${Boost_LIBRARY_DIRS})
 endif(Boost_FOUND)
 
+if(ENABLE_LOGGING)
+
 find_package(Gflags)
 if(Gflags_FOUND)
   include_directories(${Gflags_INCLUDE_PATH})
@@ -47,6 +53,10 @@ find_package(Glog REQUIRED)
 if(Glog_FOUND)
   include_directories(${Glog_INCLUDE_PATH})
 endif(Glog_FOUND)
+
+add_definitions(-DRIME_ENABLE_LOGGING)
+
+endif(ENABLE_LOGGING)
 
 find_package(Threads)
 
@@ -68,6 +78,11 @@ find_package(KyotoCabinet REQUIRED)
 if(KyotoCabinet_FOUND)
   include_directories(${KyotoCabinet_INCLUDE_PATH})
 endif(KyotoCabinet_FOUND)
+
+find_package(Marisa REQUIRED)
+if(Marisa_FOUND)
+  include_directories(${Marisa_INCLUDE_PATH})
+endif(Marisa_FOUND)
 
 find_package(Opencc REQUIRED)
 if(Opencc_FOUND)
@@ -95,6 +110,9 @@ endif(MSVC)
 if(UNIX)
   add_definitions("-std=c++11")
 endif(UNIX)
+if(NOT BOOST_USE_CXX11)
+  add_definitions("-DBOOST_NO_CXX11_SCOPED_ENUMS")
+endif()
 
 if(NOT DEFINED LIB_INSTALL_DIR)
     set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
@@ -125,7 +143,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   if(BUILD_DATA)
     install(FILES ${PROJECT_SOURCE_DIR}/data/default.yaml DESTINATION ${pkgdatadir})
     install(FILES ${PROJECT_SOURCE_DIR}/data/symbols.yaml DESTINATION ${pkgdatadir})
-    install(FILES ${PROJECT_SOURCE_DIR}/data/essay.kct DESTINATION ${pkgdatadir})
+    install(FILES ${PROJECT_SOURCE_DIR}/data/essay.txt DESTINATION ${pkgdatadir})
     file(GLOB preset_schema ${PROJECT_SOURCE_DIR}/data/preset/*.yaml)
     install(FILES ${preset_schema} DESTINATION ${pkgdatadir})
     file(GLOB supplement_schema ${PROJECT_SOURCE_DIR}/data/supplement/*.yaml)
@@ -134,6 +152,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 if(BUILD_SHARED_LIBS)
+  add_definitions(-DRIME_BUILD_SHARED_LIBS)
   set(RIME_LIBRARY rime)
   if(BUILD_SEPARATE_LIBS)
     set(RIME_GEARS_LIBRARY rime-gears)

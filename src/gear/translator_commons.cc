@@ -12,6 +12,8 @@
 
 namespace rime {
 
+bool contains_extended_cjk(const std::string &text);
+
 // Patterns
 
 bool Patterns::Load(ConfigListPtr patterns) {
@@ -47,6 +49,34 @@ void Sentence::Offset(size_t offset) {
   set_end(end() + offset);
 }
 
+// CacheTranslation
+
+CacheTranslation::CacheTranslation(shared_ptr<Translation> translation)
+    : translation_(translation) {
+  set_exhausted(!translation_ || translation_->exhausted());
+}
+
+bool CacheTranslation::Next() {
+  if (exhausted())
+    return false;
+  cache_.reset();
+  translation_->Next();
+  if (translation_->exhausted()) {
+    set_exhausted(true);
+    return false;
+  }
+  return true;
+}
+
+shared_ptr<Candidate> CacheTranslation::Peek() {
+  if (exhausted())
+    return nullptr;
+  if (!cache_) {
+    cache_ = translation_->Peek();
+  }
+  return cache_;
+}
+
 // CharsetFilter
 
 CharsetFilter::CharsetFilter(shared_ptr<Translation> translation)
@@ -80,16 +110,7 @@ bool CharsetFilter::LocateNextCandidate() {
 }
 
 bool CharsetFilter::FilterText(const std::string& text) {
-  const char* p = text.c_str();
-  utf8::uint32_t c;
-  while ((c = utf8::unchecked::next(p))) {
-    if ((c >= 0x3400 && c <= 0x4DBF) ||    // CJK Unified Ideographs Extension A
-        (c >= 0x20000 && c <= 0x2A6DF) ||  // CJK Unified Ideographs Extension B
-        (c >= 0x2A700 && c <= 0x2B73F) ||  // CJK Unified Ideographs Extension C
-        (c >= 0x2B740 && c <= 0x2B81F))    // CJK Unified Ideographs Extension D
-      return false;
-  }
-  return true;
+  return !contains_extended_cjk(text);
 }
 
 bool CharsetFilter::FilterDictEntry(shared_ptr<DictEntry> entry) {
@@ -99,8 +120,7 @@ bool CharsetFilter::FilterDictEntry(shared_ptr<DictEntry> entry) {
 // UniqueFilter
 
 UniqueFilter::UniqueFilter(shared_ptr<Translation> translation)
-    : translation_(translation) {
-  set_exhausted(!translation_ || translation_->exhausted());
+    : CacheTranslation(translation) {
 }
 
 bool UniqueFilter::Next() {
@@ -108,22 +128,12 @@ bool UniqueFilter::Next() {
     return false;
   // skip duplicate candidates
   do {
-    candidate_set_.insert(translation_->Peek()->text());
-    translation_->Next();
+    candidate_set_.insert(Peek()->text());
+    CacheTranslation::Next();
   }
-  while (!translation_->exhausted() &&
-         AlreadyHas(translation_->Peek()->text()));
-  if (translation_->exhausted()) {
-    set_exhausted(true);
-    return false;
-  }
-  return true;
-}
-
-shared_ptr<Candidate> UniqueFilter::Peek() {
-  if (exhausted())
-    return nullptr;
-  return translation_->Peek();
+  while (!exhausted() &&
+         AlreadyHas(Peek()->text()));
+  return !exhausted();
 }
 
 bool UniqueFilter::AlreadyHas(const std::string& text) const {

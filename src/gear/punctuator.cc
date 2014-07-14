@@ -82,16 +82,30 @@ Punctuator::Punctuator(const Ticket& ticket) : Processor(ticket) {
   config_.LoadConfig(engine_);
 }
 
+static bool punctuation_is_translated(Context* ctx) {
+  Composition* comp = ctx->composition();
+  if (comp->empty() || !comp->back().HasTag("punct")) {
+    return false;
+  }
+  auto cand = comp->back().GetSelectedCandidate();
+  return cand && cand->type() == "punct";
+}
+
 ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
   if (key_event.release() || key_event.ctrl() || key_event.alt())
     return kNoop;
   int ch = key_event.keycode();
   if (ch < 0x20 || ch >= 0x7f)
     return kNoop;
-  if (!use_space_ && ch == XK_space && engine_->context()->IsComposing())
+  Context *ctx = engine_->context();
+  if (ctx->get_option("ascii_punct")) {
     return kNoop;
+  }
+  if (!use_space_ && ch == XK_space && ctx->IsComposing()) {
+    return kNoop;
+  }
   if (ch == '.' || ch == ':') {  // 3.14, 12:30
-    const CommitHistory& history(engine_->context()->commit_history());
+    const CommitHistory& history(ctx->commit_history());
     if (!history.empty()) {
       const CommitRecord& cr(history.back());
       if (cr.type == "thru" &&
@@ -107,7 +121,8 @@ ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   DLOG(INFO) << "punct key: '" << punct_key << "'";
   if (!AlternatePunct(punct_key, punct_definition)) {
-    engine_->context()->PushInput(ch) &&
+    ctx->PushInput(ch) &&
+        punctuation_is_translated(ctx) &&
         (ConfirmUniquePunct(punct_definition) ||
          AutoCommitPunct(punct_definition) ||
          PairPunct(punct_definition));

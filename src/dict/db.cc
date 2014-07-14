@@ -22,8 +22,14 @@ bool DbAccessor::MatchesPrefix(const std::string& key) {
 // Db members
 
 Db::Db(const std::string& name) : name_(name) {
-  boost::filesystem::path path(Service::instance().deployer().user_data_dir);
-  file_name_ = (path / name).string();
+  boost::filesystem::path path(name);
+  if (path.has_parent_path()) {
+    file_name_ = name;
+  }
+  else {
+    boost::filesystem::path dir(Service::instance().deployer().user_data_dir);
+    file_name_ = (dir / path).string();
+  }
 }
 
 bool Db::Exists() const {

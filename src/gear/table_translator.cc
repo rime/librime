@@ -257,7 +257,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string& input,
 
   shared_ptr<Translation> translation;
   if (enable_completion_) {
-    translation = New<LazyTableTranslation>(
+    translation = Cached<LazyTableTranslation>(
         this,
         code,
         segment.start,
@@ -278,7 +278,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string& input,
       }
     }
     if (!iter.exhausted() || !uter.exhausted())
-      translation = New<TableTranslation>(
+      translation = Cached<TableTranslation>(
           this,
           language(),
           code,
@@ -667,7 +667,7 @@ TableTranslator::MakeSentence(const std::string& input, size_t start,
   }
   shared_ptr<Translation> result;
   if (sentences.find(input.length()) != sentences.end()) {
-    result = New<SentenceTranslation>(
+    result = Cached<SentenceTranslation>(
         this,
         sentences[input.length()],
         include_prefix_phrases ? &collector : NULL,

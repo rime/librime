@@ -14,6 +14,7 @@
 #include <rime/dict/dict_compiler.h>
 #include <rime/dict/dict_settings.h>
 #include <rime/dict/entry_collector.h>
+#include <rime/dict/preset_vocabulary.h>
 #include <rime/dict/prism.h>
 #include <rime/dict/table.h>
 #include <rime/dict/tree_db.h>
@@ -30,18 +31,22 @@ DictCompiler::DictCompiler(Dictionary *dictionary, DictFileFinder finder)
 
 bool DictCompiler::Compile(const std::string &schema_file) {
   LOG(INFO) << "compiling:";
-  std::string dict_file(FindDictFile(dict_name_));
-  if (dict_file.empty())
-    return false;
-  std::ifstream fin(dict_file.c_str());
+  bool build_table_from_source = true;
   DictSettings settings;
-  if (!settings.LoadDictHeader(fin)) {
-    LOG(ERROR) << "failed to load settings from '" << dict_file << "'.";
-    return false;
+  std::string dict_file(FindDictFile(dict_name_));
+  if (dict_file.empty()) {
+    build_table_from_source = false;
   }
-  fin.close();
-  LOG(INFO) << "dict name: " << settings.dict_name();
-  LOG(INFO) << "dict version: " << settings.dict_version();
+  else {
+    std::ifstream fin(dict_file.c_str());
+    if (!settings.LoadDictHeader(fin)) {
+      LOG(ERROR) << "failed to load settings from '" << dict_file << "'.";
+      return false;
+    }
+    fin.close();
+    LOG(INFO) << "dict name: " << settings.dict_name();
+    LOG(INFO) << "dict version: " << settings.dict_version();
+  }
   std::vector<std::string> dict_files;
   auto tables = settings.GetTables();
   for(auto it = tables->begin(); it != tables->end(); ++it) {
@@ -52,41 +57,60 @@ bool DictCompiler::Compile(const std::string &schema_file) {
       return false;
     dict_files.push_back(dict_file);
   }
-  uint32_t dict_file_checksum =
-      dict_file.empty() ? 0 : Checksum(dict_files);
+  uint32_t dict_file_checksum = 0;
+  if (!dict_files.empty()) {
+    ChecksumComputer cc;
+    for (const auto& file_name : dict_files) {
+      cc.ProcessFile(file_name);
+    }
+    if (settings.use_preset_vocabulary()) {
+      cc.ProcessFile(PresetVocabulary::DictFilePath());
+    }
+    dict_file_checksum = cc.Checksum();
+  }
   uint32_t schema_file_checksum =
       schema_file.empty() ? 0 : Checksum(schema_file);
-  LOG(INFO) << dict_file << "[" << dict_files.size() << "]"
-            << " (" << dict_file_checksum << ")";
-  LOG(INFO) << schema_file << " (" << schema_file_checksum << ")";
   bool rebuild_table = true;
   bool rebuild_prism = true;
-  if (boost::filesystem::exists(table_->file_name()) && table_->Load()) {
+  if (table_->Exists() && table_->Load()) {
+    if (!build_table_from_source) {
+      dict_file_checksum = table_->dict_file_checksum();
+      LOG(INFO) << "reuse existing table: " << table_->file_name();
+    }
     if (table_->dict_file_checksum() == dict_file_checksum) {
       rebuild_table = false;
     }
     table_->Close();
   }
-  if (boost::filesystem::exists(prism_->file_name()) && prism_->Load()) {
+  else if (!build_table_from_source) {
+    LOG(ERROR) << "neither " << dict_name_ << ".dict.yaml nor "
+        << dict_name_ << ".table.bin exists.";
+    return false;
+  }
+  if (prism_->Exists() && prism_->Load()) {
     if (prism_->dict_file_checksum() == dict_file_checksum &&
         prism_->schema_file_checksum() == schema_file_checksum) {
       rebuild_prism = false;
     }
     prism_->Close();
   }
+  LOG(INFO) << dict_file << "[" << dict_files.size() << " file(s)]"
+            << " (" << dict_file_checksum << ")";
+  LOG(INFO) << schema_file << " (" << schema_file_checksum << ")";
   {
     TreeDb deprecated_db(dict_name_ + ".reverse.kct", "reversedb");
     if (deprecated_db.Exists()) {
       deprecated_db.Remove();
       LOG(INFO) << "removed deprecated db '" << deprecated_db.name() << "'.";
     }
-    ReverseLookupDictionary rev_dict(dict_name_);
-    if (!rev_dict.Load() ||
-        rev_dict.GetDictFileChecksum() != dict_file_checksum) {
+    ReverseDb reverse_db(dict_name_);
+    if (!reverse_db.Exists() ||
+        !reverse_db.Load() ||
+        reverse_db.dict_file_checksum() != dict_file_checksum) {
       rebuild_table = true;
     }
   }
-  if (options_ & kRebuildTable) {
+  if (build_table_from_source && (options_ & kRebuildTable)) {
     rebuild_table = true;
   }
   if (options_ & kRebuildPrism) {
@@ -124,8 +148,8 @@ bool DictCompiler::BuildTable(DictSettings* settings,
   Vocabulary vocabulary;
   // build .table.bin
   {
-    std::map<std::string, int> syllable_to_id;
-    int syllable_id = 0;
+    std::map<std::string, SyllableId> syllable_to_id;
+    SyllableId syllable_id = 0;
     for (const auto& s : collector.syllabary) {
       syllable_to_id[s] = syllable_id++;
     }
@@ -156,13 +180,13 @@ bool DictCompiler::BuildTable(DictSettings* settings,
     }
   }
   // build .reverse.bin
-  ReverseLookupDictionary rev_dict(dict_name_);
-  if (!rev_dict.Build(settings,
-                      collector.syllabary,
-                      vocabulary,
-                      collector.stems,
-                      dict_file_checksum)) {
-    LOG(ERROR) << "error building reverse lookup dict.";
+  ReverseDb reverse_db(dict_name_);
+  if (!reverse_db.Build(settings,
+                        collector.syllabary,
+                        vocabulary,
+                        collector.stems,
+                        dict_file_checksum)) {
+    LOG(ERROR) << "error building reversedb.";
     return false;
   }
   return true;

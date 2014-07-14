@@ -6,53 +6,70 @@
 //
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
-#if defined(_MSC_VER)
-#pragma warning(disable: 4244)
-#pragma warning(disable: 4351)
-#endif
-#include <kchashdb.h>
-#if defined(_MSC_VER)
-#pragma warning(default: 4351)
-#pragma warning(default: 4244)
-#endif
 #include <utf8.h>
 #include <rime/service.h>
 #include <rime/dict/preset_vocabulary.h>
+#include <rime/dict/text_db.h>
 
 namespace rime {
 
-struct VocabularyDb {
-  kyotocabinet::TreeDB kcdb;
-  unique_ptr<kyotocabinet::DB::Cursor> kcursor;
-
-  VocabularyDb();
+struct VocabularyDb : public TextDb {
+  VocabularyDb(const std::string& path);
+  shared_ptr<DbAccessor> cursor;
+  static const TextFormat format;
 };
 
-VocabularyDb::VocabularyDb()
-    : kcdb(), kcursor(kcdb.cursor()) {
-  //kcdb->tune_options(kyotocabinet::TreeDB::TLINEAR |
-  //                        kyotocabinet::TreeDB::TCOMPRESS);
-  //kcdb->tune_buckets(30LL * 1000);
-  kcdb.tune_defrag(8);
-  kcdb.tune_page(32768);
+VocabularyDb::VocabularyDb(const std::string& path)
+    : TextDb(path, "vocabulary", VocabularyDb::format) {
+}
+
+static bool rime_vocabulary_entry_parser(const Tsv& row,
+                                         std::string* key,
+                                         std::string* value) {
+  if (row.size() < 1 || row[0].empty()) {
+    return false;
+  }
+  *key = row[0];
+  *value = row.size() > 1 ? row[1] : "0";
+  return true;
+}
+
+static bool rime_vocabulary_entry_formatter(const std::string& key,
+                                            const std::string& value,
+                                            Tsv* tsv) {
+  //Tsv& row(*tsv);
+  //row.push_back(key);
+  //row.push_back(value);
+  return true;
+}
+
+const TextFormat VocabularyDb::format = {
+  rime_vocabulary_entry_parser,
+  rime_vocabulary_entry_formatter,
+  "Rime vocabulary",
+};
+
+std::string PresetVocabulary::DictFilePath() {
+  boost::filesystem::path path(Service::instance().deployer().shared_data_dir);
+  path /= "essay.txt";
+  return path.string();
 }
 
 PresetVocabulary::PresetVocabulary() {
-  boost::filesystem::path path(Service::instance().deployer().shared_data_dir);
-  path /= "essay.kct";
-  db_.reset(new VocabularyDb);
-  if (!db_) return;
-  if (!db_->kcdb.open(path.string(), kyotocabinet::TreeDB::OREADER)) {
-    db_.reset();
+  db_.reset(new VocabularyDb(DictFilePath()));
+  if (db_ && db_->OpenReadOnly()) {
+    db_->cursor = db_->QueryAll();
   }
 }
 
 PresetVocabulary::~PresetVocabulary() {
+  if (db_)
+    db_->Close();
 }
 
 bool PresetVocabulary::GetWeightForEntry(const std::string &key, double *weight) {
   std::string weight_str;
-  if (!db_ || !db_->kcdb.get(key, &weight_str))
+  if (!db_ || !db_->Fetch(key, &weight_str))
     return false;
   try {
     *weight = boost::lexical_cast<double>(weight_str);
@@ -64,16 +81,16 @@ bool PresetVocabulary::GetWeightForEntry(const std::string &key, double *weight)
 }
 
 void PresetVocabulary::Reset() {
-  if (db_ && db_->kcursor)
-    db_->kcursor->jump();
+  if (db_ && db_->cursor)
+    db_->cursor->Reset();
 }
 
 bool PresetVocabulary::GetNextEntry(std::string *key, std::string *value) {
-  if (!db_ || !db_->kcursor)
+  if (!db_ || !db_->cursor)
     return false;
   bool got = false;
   do {
-    got = db_->kcursor->get(key, value, true);
+    got = db_->cursor->GetNextRecord(key, value);
   }
   while (got && !IsQualifiedPhrase(*key, *value));
   return got;

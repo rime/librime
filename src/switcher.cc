@@ -21,7 +21,7 @@
 
 namespace rime {
 
-Switcher::Switcher() : Engine(new Schema) {
+Switcher::Switcher(const Ticket& ticket) : Processor(ticket) {
   context_->set_option("dumb", true);  // not going to commit anything
 
   // receive context notifications
@@ -31,43 +31,48 @@ Switcher::Switcher() : Engine(new Schema) {
   user_config_.reset(Config::Require("config")->Create("user"));
   InitializeComponents();
   LoadSettings();
+  RestoreSavedOptions();
 }
 
 Switcher::~Switcher() {
+  if (active_) {
+    Deactivate();
+  }
 }
 
-void Switcher::Attach(Engine* engine) {
-  attached_engine_ = engine;
-  // restore saved options
+void Switcher::RestoreSavedOptions() {
   if (user_config_) {
     for (const std::string& option_name : save_options_) {
       bool value = false;
       if (user_config_->GetBool("var/option/" + option_name, &value)) {
-        engine->context()->set_option(option_name, value);
+        engine_->context()->set_option(option_name, value);
       }
     }
   }
 }
 
-bool Switcher::ProcessKeyEvent(const KeyEvent& key_event) {
+ProcessResult Switcher::ProcessKeyEvent(const KeyEvent& key_event) {
   for (const KeyEvent& hotkey : hotkeys_) {
     if (key_event == hotkey) {
-      if (!active_ && attached_engine_) {
+      if (!active_ && engine_) {
         Activate();
       }
       else if (active_) {
         HighlightNextSchema();
       }
-      return true;
+      return kAccepted;
     }
   }
   if (active_) {
     for (auto& p : processors_) {
-      if (kNoop != p->ProcessKeyEvent(key_event))
-        return true;
+      ProcessResult result = p->ProcessKeyEvent(key_event);
+      if (result != kNoop) {
+        return result;
+      }
     }
-    if (key_event.release() || key_event.ctrl() || key_event.alt())
-      return true;
+    if (key_event.release() || key_event.ctrl() || key_event.alt()) {
+      return kAccepted;
+    }
     int ch = key_event.keycode();
     if (ch == XK_space || ch == XK_Return) {
       context_->ConfirmCurrentSelection();
@@ -75,9 +80,9 @@ bool Switcher::ProcessKeyEvent(const KeyEvent& key_event) {
     else if (ch == XK_Escape) {
       Deactivate();
     }
-    return true;
+    return kAccepted;
   }
-  return false;
+  return kNoop;
 }
 
 void Switcher::HighlightNextSchema() {
@@ -106,9 +111,11 @@ void Switcher::HighlightNextSchema() {
 
 Schema* Switcher::CreateSchema() {
   Config* config = schema_->config();
-  if (!config) return NULL;
+  if (!config)
+    return NULL;
   auto schema_list = config->GetList("schema_list");
-  if (!schema_list) return NULL;
+  if (!schema_list)
+    return NULL;
   std::string previous;
   if (user_config_) {
     user_config_->GetString("var/previously_selected_schema", &previous);
@@ -116,9 +123,11 @@ Schema* Switcher::CreateSchema() {
   std::string recent;
   for (size_t i = 0; i < schema_list->size(); ++i) {
     auto item = As<ConfigMap>(schema_list->GetAt(i));
-    if (!item) continue;
+    if (!item)
+      continue;
     auto schema_property = item->GetValue("schema");
-    if (!schema_property) continue;
+    if (!schema_property)
+      continue;
     const std::string& schema_id(schema_property->str());
     if (previous.empty() || previous == schema_id) {
       recent = schema_id;
@@ -131,14 +140,6 @@ Schema* Switcher::CreateSchema() {
     return NULL;
   else
     return new Schema(recent);
-}
-
-void Switcher::ApplySchema(Schema* schema) {
-  if (!schema) return;
-  if (active_) {
-    Deactivate();
-  }
-  attached_engine_->ApplySchema(schema);
 }
 
 void Switcher::SelectNextSchema() {
@@ -164,17 +165,12 @@ bool Switcher::IsAutoSave(const std::string& option) const {
 void Switcher::OnSelect(Context* ctx) {
   LOG(INFO) << "a switcher option is selected.";
   Segment& seg(ctx->composition()->back());
-  auto command = As<SwitcherCommand>(seg.GetSelectedCandidate());
-  if (!command)
-    return;
-  if (attached_engine_) {
+  if (auto command = As<SwitcherCommand>(seg.GetSelectedCandidate())) {
     command->Apply(this);
   }
-  Deactivate();
 }
 
-void Switcher::Activate() {
-  LOG(INFO) << "switcher is activated.";
+void Switcher::RefreshMenu() {
   Composition* comp = context_->composition();
   if (comp->empty()) {
     context_->set_input(" ");  // make context_->IsComposing() == true
@@ -189,13 +185,19 @@ void Switcher::Activate() {
       menu->AddTranslation(t);
     }
   }
+}
 
-  // activated!
+void Switcher::Activate() {
+  LOG(INFO) << "switcher is activated.";
+  context_->set_option("_fold_options", fold_options_);
+  RefreshMenu();
+  engine_->set_active_context(context_.get());
   active_ = true;
 }
 
 void Switcher::Deactivate() {
   context_->Clear();
+  engine_->set_active_context();
   active_ = false;
 }
 
@@ -206,26 +208,25 @@ void Switcher::LoadSettings() {
   if (!config->GetString("switcher/caption", &caption_) || caption_.empty()) {
     caption_ = ":-)";
   }
-  auto hotkeys = config->GetList("switcher/hotkeys");
-  if (!hotkeys)
-    return;
-  hotkeys_.clear();
-  for (size_t i = 0; i < hotkeys->size(); ++i) {
-    auto value = hotkeys->GetValueAt(i);
-    if (!value)
-      continue;
-    hotkeys_.push_back(KeyEvent(value->str()));
+  if (auto hotkeys = config->GetList("switcher/hotkeys")) {
+    hotkeys_.clear();
+    for (size_t i = 0; i < hotkeys->size(); ++i) {
+      auto value = hotkeys->GetValueAt(i);
+      if (!value)
+        continue;
+      hotkeys_.push_back(KeyEvent(value->str()));
+    }
   }
-  auto options = config->GetList("switcher/save_options");
-  if (!options)
-    return;
-  save_options_.clear();
-  for (auto it = options->begin(); it != options->end(); ++it) {
-    auto option_name = As<ConfigValue>(*it);
-    if (!option_name)
-      continue;
-    save_options_.insert(option_name->str());
+  if (auto options = config->GetList("switcher/save_options")) {
+    save_options_.clear();
+    for (auto it = options->begin(); it != options->end(); ++it) {
+      auto option_name = As<ConfigValue>(*it);
+      if (!option_name)
+        continue;
+      save_options_.insert(option_name->str());
+    }
   }
+  config->GetBool("switcher/fold_options", &fold_options_);
 }
 
 void Switcher::InitializeComponents() {

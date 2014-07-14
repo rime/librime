@@ -8,6 +8,7 @@
 #ifndef RIME_SYLLABIFIER_H_
 #define RIME_SYLLABIFIER_H_
 
+#include <stdint.h>
 #include <map>
 #include <string>
 #include "spelling.h"
@@ -16,7 +17,7 @@ namespace rime {
 
 class Prism;
 
-using SyllableId = int;
+using SyllableId = int32_t;
 
 using SpellingMap = std::map<SyllableId, SpellingProperties>;
 using VertexMap = std::map<size_t, SpellingType>;

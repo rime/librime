@@ -13,28 +13,46 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <darts.h>
 #include <rime/common.h>
 #include <rime/dict/mapped_file.h>
 #include <rime/dict/vocabulary.h>
+#include <rime/dict/string_table.h>
 
 namespace rime {
 
 namespace table {
 
-using Syllabary = Array<String>;
+union StringType {
+  String str;
+  StringId str_id;
+};
 
-using SyllableId = int32_t;
+using Syllabary = Array<StringType>;
 
 using Code = List<SyllableId>;
 
+#if defined(__arm__)
+using Weight = double;
+#else
+using Weight = float;
+#endif
+
 struct Entry {
-  String text;
-  float weight;
+  StringType text;
+  Weight weight;
 };
+
+struct LongEntry {
+  Code extra_code;
+  Entry entry;
+};
+
+union PhraseIndex;
 
 struct HeadIndexNode {
   List<Entry> entries;
-  OffsetPtr<> next_level;
+  OffsetPtr<PhraseIndex> next_level;
 };
 
 using HeadIndex = Array<HeadIndexNode>;
@@ -42,17 +60,17 @@ using HeadIndex = Array<HeadIndexNode>;
 struct TrunkIndexNode {
   SyllableId key;
   List<Entry> entries;
-  OffsetPtr<> next_level;
+  OffsetPtr<PhraseIndex> next_level;
 };
 
 using TrunkIndex = Array<TrunkIndexNode>;
 
-struct TailIndexNode {
-  Code extra_code;
-  Entry entry;
-};
+using TailIndex = Array<LongEntry>;
 
-using TailIndex = Array<TailIndexNode>;
+union PhraseIndex {
+  TrunkIndex trunk;
+  TailIndex tail;
+};
 
 using Index = HeadIndex;
 
@@ -64,6 +82,11 @@ struct Metadata {
   uint32_t num_entries;
   OffsetPtr<Syllabary> syllabary;
   OffsetPtr<Index> index;
+  // v2
+  int32_t reserved_1;
+  int32_t reserved_2;
+  OffsetPtr<char> string_table;
+  uint32_t string_table_size;
 };
 
 }  // namespace table
@@ -72,6 +95,8 @@ class TableAccessor {
  public:
   TableAccessor() = default;
   TableAccessor(const Code& index_code, const List<table::Entry>* entries,
+                double credibility = 1.0);
+  TableAccessor(const Code& index_code, const Array<table::Entry>* entries,
                 double credibility = 1.0);
   TableAccessor(const Code& index_code, const table::TailIndex* code_map,
                 double credibility = 1.0);
@@ -88,46 +113,22 @@ class TableAccessor {
 
  private:
   Code index_code_;
-  const List<table::Entry>* entries_ = nullptr;
-  const table::TailIndex* code_map_ = nullptr;
+  const table::Entry* entries_ = nullptr;
+  const table::LongEntry* long_entries_ = nullptr;
+  size_t size_ = 0;
   size_t cursor_ = 0;
   double credibility_ = 1.0;
-};
-
-class TableVisitor {
- public:
-  TableVisitor(table::Index* index);
-
-  TableAccessor Access(int syllable_id,
-                       double credibility = 1.0) const;
-
-  // down to next level
-  bool Walk(int syllable_id, double credibility = 1.0);
-  // up one level
-  bool Backdate();
-  // back to root
-  void Reset();
-
-  size_t level() const { return level_; }
-
- private:
-  table::HeadIndex* lv1_index_ = nullptr;
-  table::TrunkIndex* lv2_index_ = nullptr;
-  table::TrunkIndex* lv3_index_ = nullptr;
-  table::TailIndex* lv4_index_ = nullptr;
-  size_t level_ = 0;
-  Code index_code_;
-  std::vector<double> credibility_;
 };
 
 using TableQueryResult = std::map<int, std::vector<TableAccessor>>;
 
 struct SyllableGraph;
+class TableQuery;
 
 class Table : public MappedFile {
  public:
-  Table(const std::string& file_name)
-      : MappedFile(file_name) {}
+  Table(const std::string& file_name);
+  virtual ~Table();
 
   bool Load();
   bool Save();
@@ -137,24 +138,65 @@ class Table : public MappedFile {
              uint32_t dict_file_checksum = 0);
 
   bool GetSyllabary(Syllabary* syllabary);
-  const char* GetSyllableById(int syllable_id);
+  std::string GetSyllableById(int syllable_id);
   TableAccessor QueryWords(int syllable_id);
   TableAccessor QueryPhrases(const Code& code);
   bool Query(const SyllableGraph& syll_graph,
              size_t start_pos,
              TableQueryResult* result);
+  std::string GetEntryText(const table::Entry& entry);
+
   uint32_t dict_file_checksum() const;
 
  private:
-  table::HeadIndex* BuildHeadIndex(const Vocabulary& vocabulary, size_t num_syllables);
-  table::TrunkIndex* BuildTrunkIndex(const Code& prefix, const Vocabulary& vocabulary);
-  table::TailIndex* BuildTailIndex(const Code& prefix, const Vocabulary& vocabulary);
+  table::Index* BuildIndex(const Vocabulary& vocabulary,
+                           size_t num_syllables);
+  table::HeadIndex* BuildHeadIndex(const Vocabulary& vocabulary,
+                                   size_t num_syllables);
+  table::TrunkIndex* BuildTrunkIndex(const Code& prefix,
+                                     const Vocabulary& vocabulary);
+  table::TailIndex* BuildTailIndex(const Code& prefix,
+                                   const Vocabulary& vocabulary);
+  bool BuildPhraseIndex(Code code, const Vocabulary& vocabulary,
+                        std::map<std::string, int>* index_data);
+  Array<table::Entry>* BuildEntryArray(const DictEntryList& entries);
   bool BuildEntryList(const DictEntryList& src, List<table::Entry>* dest);
   bool BuildEntry(const DictEntry& dict_entry, table::Entry* entry);
 
-  table::Index* index_ = nullptr;
-  table::Syllabary* syllabary_ = nullptr;
+  std::string GetString_v1(const table::StringType& x);
+  bool AddString_v1(const std::string& src, table::StringType* dest,
+                    double weight);
+
+  // v2
+  std::string GetString_v2(const table::StringType& x);
+  bool AddString_v2(const std::string& src, table::StringType* dest,
+                    double weight);
+  bool OnBuildStart_v2();
+  bool OnBuildFinish_v2();
+  bool OnLoad_v2();
+
+  void SelectTableFormat(double format_version);
+
+ protected:
   table::Metadata* metadata_ = nullptr;
+  table::Syllabary* syllabary_ = nullptr;
+  table::Index* index_ = nullptr;
+
+  struct TableFormat {
+    const char* format_name;
+
+    std::string (Table::*GetString)(const table::StringType& x);
+    bool (Table::*AddString)(const std::string& src, table::StringType* dest,
+                             double weight);
+
+    bool (Table::*OnBuildStart)();
+    bool (Table::*OnBuildFinish)();
+    bool (Table::*OnLoad)();
+  } format_;
+
+  // v2
+  unique_ptr<StringTable> string_table_;
+  unique_ptr<StringTableBuilder> string_table_builder_;
 };
 
 }  // namespace rime

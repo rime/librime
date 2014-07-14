@@ -3,6 +3,7 @@
 // License: GPLv3
 //
 // 2012-01-05 GONG Chen <chen.sst@gmail.com>
+// 2014-07-06 GONG Chen <chen.sst@gmail.com> redesigned binary file format.
 //
 #ifndef RIME_REVERSE_LOOKUP_DICTIONARY_H_
 #define RIME_REVERSE_LOOKUP_DICTIONARY_H_
@@ -12,18 +13,52 @@
 #include <string>
 #include <rime/common.h>
 #include <rime/component.h>
-#include <rime/dict/tree_db.h>
+#include <rime/dict/mapped_file.h>
+#include <rime/dict/string_table.h>
 #include <rime/dict/vocabulary.h>
 
 namespace rime {
 
-class ReverseDb : public TreeDb {
- public:
-  explicit ReverseDb(const std::string& name);
+namespace reverse {
+
+struct Metadata {
+  static const int kFormatMaxLength = 32;
+  char format[kFormatMaxLength];
+  uint32_t dict_file_checksum;
+  String dict_settings;
+  List<StringId> index;
+  OffsetPtr<char> key_trie;
+  uint32_t key_trie_size;
+  OffsetPtr<char> value_trie;
+  uint32_t value_trie_size;
 };
+
+}  // namespace reverse
 
 struct Ticket;
 class DictSettings;
+
+class ReverseDb : public MappedFile {
+ public:
+  explicit ReverseDb(const std::string& dict_name);
+
+  bool Load();
+  bool Lookup(const std::string& text, std::string* result);
+
+  bool Build(DictSettings* settings,
+             const Syllabary& syllabary,
+             const Vocabulary& vocabulary,
+             const ReverseLookupTable& stems,
+             uint32_t dict_file_checksum);
+
+  uint32_t dict_file_checksum() const;
+  reverse::Metadata* metadata() const { return metadata_; }
+
+ private:
+  reverse::Metadata* metadata_ = nullptr;
+  unique_ptr<StringTable> key_trie_;
+  unique_ptr<StringTable> value_trie_;
+};
 
 class ReverseLookupDictionary
     : public Class<ReverseLookupDictionary, const Ticket&> {
@@ -33,13 +68,8 @@ class ReverseLookupDictionary
   bool Load();
   bool ReverseLookup(const std::string& text, std::string* result);
   bool LookupStems(const std::string& text, std::string* result);
-  bool Build(DictSettings* settings,
-             const Syllabary& syllabary,
-             const Vocabulary& vocabulary,
-             const ReverseLookupTable& stems,
-             uint32_t dict_file_checksum);
-  uint32_t GetDictFileChecksum();
   shared_ptr<DictSettings> GetDictSettings();
+
  protected:
   shared_ptr<ReverseDb> db_;
 };

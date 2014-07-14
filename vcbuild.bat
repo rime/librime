@@ -25,6 +25,7 @@ set build_thirdparty=0
 set build_librime=0
 set build_shared=ON
 set build_test=OFF
+set enable_logging=ON
 
 if "%1" == "" set build_librime=1
 
@@ -46,6 +47,10 @@ if "%1" == "shared" (
 if "%1" == "test" (
   set build_librime=1
   set build_test=ON
+)
+if "%1" == "nologging" (
+  set build_librime=1
+  set enable_logging=OFF
 )
 shift
 goto parse_cmdline_options
@@ -123,6 +128,19 @@ if %build_thirdparty% == 1 (
   copy /Y Release\gtest*.lib "%RIME_ROOT%"\thirdparty\lib\
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
+  echo building marisa.
+  cd "%RIME_ROOT%"\thirdparty\src\marisa-trie\vs2013
+  msbuild.exe vs2013.sln /p:Configuration=Release
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+  echo built. copying artifacts.
+  xcopy /S /I /Y ..\lib\marisa "%RIME_ROOT%"\thirdparty\include\marisa\
+  xcopy /Y ..\lib\marisa.h "%RIME_ROOT%"\thirdparty\include\
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+  copy /Y Release\libmarisa.lib "%RIME_ROOT%"\thirdparty\lib\
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+  copy /Y Release\marisa-*.exe "%RIME_ROOT%"\thirdparty\bin\
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+
   echo skipped building opencc.
 
   cd "%RIME_ROOT%"\thirdparty\src\opencc-windows
@@ -153,13 +171,6 @@ if %build_thirdparty% == 1 (
 
 if %build_librime% == 0 goto EXIT
 
-set CMAKE_INCLUDE_PATH=%RIME_ROOT%\thirdparty\include
-echo CMAKE_INCLUDE_PATH=%CMAKE_INCLUDE_PATH%
-echo.
-set CMAKE_LIBRARY_PATH=%RIME_ROOT%\thirdparty\lib
-echo CMAKE_LIBRARY_PATH=%CMAKE_LIBRARY_PATH%
-echo.
-
 rem TODO: select a cmake generator
 rem set CMAKE_GENERATOR="MinGW Makefiles"
 rem set CMAKE_GENERATOR="Eclipse CDT4 - MinGW Makefiles"
@@ -169,11 +180,11 @@ set CMAKE_GENERATOR="Visual Studio 12"
 set BUILD_DIR=%RIME_ROOT%\%build%
 if not exist %BUILD_DIR% mkdir %BUILD_DIR%
 
-set RIME_CMAKE_FLAGS=-DBUILD_STATIC=ON -DBUILD_SHARED_LIBS=%build_shared% -DBUILD_TEST=%build_test%
+set RIME_CMAKE_FLAGS=-DBUILD_STATIC=ON -DBUILD_SHARED_LIBS=%build_shared% -DBUILD_TEST=%build_test% -DENABLE_LOGGING=%enable_logging% -DBOOST_USE_CXX11=ON
 
 cd %BUILD_DIR%
 echo cmake -G %CMAKE_GENERATOR% %RIME_CMAKE_FLAGS% %RIME_ROOT%
-cmake -G %CMAKE_GENERATOR% %RIME_CMAKE_FLAGS% %RIME_ROOT%
+call cmake -G %CMAKE_GENERATOR% %RIME_CMAKE_FLAGS% %RIME_ROOT%
 if %ERRORLEVEL% NEQ 0 goto ERROR
 
 echo.

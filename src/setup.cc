@@ -5,7 +5,10 @@
 // 2011-10-02 GONG Chen <chen.sst@gmail.com>
 //
 
+#ifdef RIME_ENABLE_LOGGING
 #include <glog/logging.h>
+#endif  // RIME_ENABLE_LOGGING
+
 #include <rime/module.h>
 
 namespace rime {
@@ -23,7 +26,9 @@ void LoadModules(const char* module_names[]) {
 }
 
 void SetupLogging(const char* app_name) {
+#ifdef RIME_ENABLE_LOGGING
   google::InitGoogleLogging(app_name);
+#endif  // RIME_ENABLE_LOGGING
 }
 
 }  // namespace rime

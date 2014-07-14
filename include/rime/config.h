@@ -71,6 +71,7 @@ class ConfigList : public ConfigItem {
   ConfigItemPtr GetAt(size_t i) const;
   ConfigValuePtr GetValueAt(size_t i) const;
   bool SetAt(size_t i, ConfigItemPtr element);
+  bool Insert(size_t i, ConfigItemPtr element);
   bool Append(ConfigItemPtr element);
   bool Resize(size_t size);
   bool Clear();
@@ -248,6 +249,7 @@ class Config : public Class<Config, const std::string&>, public ConfigItemRef {
   bool GetDouble(const std::string& key, double* value);
   bool GetString(const std::string& key, std::string* value);
 
+  ConfigItemPtr GetItem(const std::string& key);
   ConfigValuePtr GetValue(const std::string& key);
   ConfigListPtr GetList(const std::string& key);
   ConfigMapPtr GetMap(const std::string& key);

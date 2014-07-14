@@ -114,10 +114,21 @@ std::string Composition::GetDebugText() const {
   for (const Segment& seg : *this) {
     if (i++ > 0)
       result += "|";
-    if (auto cand = seg.GetSelectedCandidate())
+    if (!seg.tags.empty()) {
+      result += "{";
+      int j = 0;
+      for (const std::string& tag : seg.tags) {
+        if (j++ > 0)
+          result += ",";
+        result += tag;
+      }
+      result += "}";
+    }
+    result += input_.substr(seg.start, seg.end - seg.start);
+    if (auto cand = seg.GetSelectedCandidate()) {
+      result += "=>";
       result += cand->text();
-    else
-      result += input_.substr(seg.start, seg.end - seg.start);
+    }
   }
   return result;
 }

@@ -22,6 +22,8 @@ class AbcSegmentor : public Segmentor {
  protected:
   std::string alphabet_;
   std::string delimiter_;
+  std::string initials_;
+  std::string finals_;
   std::set<std::string> extra_tags_;
 };
 

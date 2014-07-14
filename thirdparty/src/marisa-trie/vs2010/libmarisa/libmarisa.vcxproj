@@ -1,0 +1,123 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3BE97421-D962-4330-815B-AC9B7B799F15}</ProjectGuid>
+    <RootNamespace>libmarisa</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MARISA_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;MARISA_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\lib\marisa\agent.cc" />
+    <ClCompile Include="..\..\lib\marisa\grimoire\vector\bit-vector.cc" />
+    <ClCompile Include="..\..\lib\marisa\keyset.cc" />
+    <ClCompile Include="..\..\lib\marisa\grimoire\trie\louds-trie.cc" />
+    <ClCompile Include="..\..\lib\marisa\grimoire\io\mapper.cc" />
+    <ClCompile Include="..\..\lib\marisa\grimoire\io\reader.cc" />
+    <ClCompile Include="..\..\lib\marisa\grimoire\trie\tail.cc" />
+    <ClCompile Include="..\..\lib\marisa\trie.cc" />
+    <ClCompile Include="..\..\lib\marisa\grimoire\io\writer.cc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\lib\marisa\agent.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\algorithm.h" />
+    <ClInclude Include="..\..\lib\marisa\base.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\vector\bit-vector.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\trie\cache.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\trie\config.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\trie\entry.h" />
+    <ClInclude Include="..\..\lib\marisa\exception.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\vector\flat-vector.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\trie\header.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\trie\history.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\intrin.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\io.h" />
+    <ClInclude Include="..\..\lib\marisa\iostream.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\trie\key.h" />
+    <ClInclude Include="..\..\lib\marisa\key.h" />
+    <ClInclude Include="..\..\lib\marisa\keyset.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\trie\louds-trie.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\io\mapper.h" />
+    <ClInclude Include="..\..\lib\marisa.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\vector\pop-count.h" />
+    <ClInclude Include="..\..\lib\marisa\query.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\trie\range.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\vector\rank-index.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\io\reader.h" />
+    <ClInclude Include="..\..\lib\marisa\scoped-array.h" />
+    <ClInclude Include="..\..\lib\marisa\scoped-ptr.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\algorithm\sort.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\trie\state.h" />
+    <ClInclude Include="..\..\lib\marisa\stdio.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\trie\tail.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\trie.h" />
+    <ClInclude Include="..\..\lib\marisa\trie.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\vector.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\vector\vector.h" />
+    <ClInclude Include="..\..\lib\marisa\grimoire\io\writer.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

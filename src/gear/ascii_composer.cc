@@ -22,6 +22,7 @@ static struct AsciiModeSwitchStyleDefinition {
   { "inline_ascii", kAsciiModeSwitchInline },
   { "commit_text", kAsciiModeSwitchCommitText },
   { "commit_code", kAsciiModeSwitchCommitCode },
+  { "clear", kAsciiModeSwitchClear },
   { NULL, kAsciiModeSwitchNoop }
 };
 
@@ -53,6 +54,10 @@ AsciiComposer::AsciiComposer(const Ticket& ticket)
   LoadConfig(ticket.schema);
 }
 
+AsciiComposer::~AsciiComposer() {
+  connection_.disconnect();
+}
+
 ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   if ((key_event.shift() && key_event.ctrl()) ||
       key_event.alt() || key_event.super()) {
@@ -65,21 +70,38 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
       return result;
   }
   int ch = key_event.keycode();
+  if (ch == XK_Eisu_toggle) {  // Alphanumeric toggle
+    if (!key_event.release()) {
+      shift_key_pressed_ = ctrl_key_pressed_ = false;
+      ToggleAsciiModeWithKey(ch);
+      return kAccepted;
+    }
+    else {
+      return kRejected;
+    }
+  }
   bool is_shift = (ch == XK_Shift_L || ch == XK_Shift_R);
   bool is_ctrl = (ch == XK_Control_L || ch == XK_Control_R);
   if (is_shift || is_ctrl) {
     if (key_event.release()) {
       if (shift_key_pressed_ || ctrl_key_pressed_) {
-        ToggleAsciiModeWithKey(ch);
+        auto now = std::chrono::steady_clock::now();
+        if (now < toggle_expired_) {
+          ToggleAsciiModeWithKey(ch);
+        }
         shift_key_pressed_ = ctrl_key_pressed_ = false;
         return kRejected;
       }
     }
-    else {  // start pressing
+    else if (!(shift_key_pressed_ || ctrl_key_pressed_)) {  // first key down
       if (is_shift)
         shift_key_pressed_ = true;
       else
         ctrl_key_pressed_ = true;
+      // will not toggle unless the toggle key is released shortly
+      const auto toggle_duration_limit = std::chrono::milliseconds(500);
+      auto now = std::chrono::steady_clock::now();
+      toggle_expired_= now + toggle_duration_limit;
     }
     return kNoop;
   }
@@ -178,7 +200,7 @@ void AsciiComposer::LoadConfig(Schema* schema) {
   if (it != bindings_.end()) {
     caps_lock_switch_style_ = it->second;
     if (caps_lock_switch_style_ == kAsciiModeSwitchInline) {  // can't do that
-      caps_lock_switch_style_ = kAsciiModeSwitchCommitCode;
+      caps_lock_switch_style_ = kAsciiModeSwitchClear;
     }
   }
 }
@@ -216,6 +238,9 @@ void AsciiComposer::SwitchAsciiMode(bool ascii_mode,
     else if (style == kAsciiModeSwitchCommitCode) {
       ctx->ClearNonConfirmedComposition();
       ctx->Commit();
+    }
+    else if (style == kAsciiModeSwitchClear) {
+      ctx->Clear();
     }
   }
   // refresh non-confirmed composition with new mode

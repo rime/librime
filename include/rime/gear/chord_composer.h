@@ -18,6 +18,7 @@ namespace rime {
 class ChordComposer : public Processor {
  public:
   ChordComposer(const Ticket& ticket);
+  ~ChordComposer();
 
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
@@ -27,6 +28,8 @@ class ChordComposer : public Processor {
   void FinishChord();
   void ClearChord();
   bool DeleteLastSyllable();
+  void OnContextUpdate(Context* ctx);
+  void OnUnhandledKey(Context* ctx, const KeyEvent& key);
 
   std::string alphabet_;
   std::string delimiter_;
@@ -37,6 +40,10 @@ class ChordComposer : public Processor {
   std::set<char> pressed_;
   std::set<char> chord_;
   bool pass_thru_ = false;
+  bool composing_ = false;
+  std::string sequence_;
+  connection update_connection_;
+  connection unhandled_key_connection_;
 };
 
 }  // namespace rime

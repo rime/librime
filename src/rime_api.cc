@@ -6,6 +6,8 @@
 //
 #include <cstring>
 #include <functional>
+#include <sstream>
+#include <boost/format.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -44,7 +46,25 @@ RIME_API void RimeSetupLogging(const char* app_name) {
   rime::SetupLogging(app_name);
 }
 
+#if RIME_BUILD_SHARED_LIBS
+#define rime_declare_module_dependencies()
+#else
+extern void rime_require_module_core();
+extern void rime_require_module_dict();
+extern void rime_require_module_gears();
+extern void rime_require_module_levers();
+// link to default modules explicitly when building static library.
+static void rime_declare_module_dependencies() {
+  rime_require_module_core();
+  rime_require_module_dict();
+  rime_require_module_gears();
+  rime_require_module_levers();
+}
+#endif
+
 RIME_API void RimeSetup(RimeTraits *traits) {
+  rime_declare_module_dependencies();
+
   setup_deployer(traits);
   if (PROVIDED(traits, app_name)) {
     rime::SetupLogging(traits->app_name);
@@ -184,7 +204,7 @@ RIME_API Bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask) {
   rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
   if (!session)
     return False;
-  return Bool(session->ProcessKeyEvent(rime::KeyEvent(keycode, mask)));
+  return Bool(session->ProcessKey(rime::KeyEvent(keycode, mask)));
 }
 
 RIME_API Bool RimeCommitComposition(RimeSessionId session_id) {
@@ -334,6 +354,8 @@ RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
   status->is_ascii_mode = Bool(ctx->get_option("ascii_mode"));
   status->is_full_shape = Bool(ctx->get_option("full_shape"));
   status->is_simplified = Bool(ctx->get_option("simplification"));
+  status->is_traditional = Bool(ctx->get_option("traditional"));
+  status->is_ascii_punct = Bool(ctx->get_option("ascii_punct"));
   return True;
 }
 
@@ -460,7 +482,7 @@ RIME_API Bool RimeSelectSchema(RimeSessionId session_id, const char* schema_id) 
 // config
 
 RIME_API Bool RimeSchemaOpen(const char *schema_id, RimeConfig* config) {
-  if (!config || !config) return False;
+  if (!schema_id || !config) return False;
   rime::Config::Component* cc = rime::Config::Require("schema_config");
   if (!cc) return False;
   rime::Config* c = cc->Create(schema_id);
@@ -470,7 +492,7 @@ RIME_API Bool RimeSchemaOpen(const char *schema_id, RimeConfig* config) {
 }
 
 RIME_API Bool RimeConfigOpen(const char *config_id, RimeConfig* config) {
-  if (!config || !config) return False;
+  if (!config_id || !config) return False;
   rime::Config::Component* cc = rime::Config::Require("config");
   if (!cc) return False;
   rime::Config* c = cc->Create(config_id);
@@ -545,15 +567,39 @@ template <class T>
 struct RimeConfigIteratorImpl {
   typename T::Iterator iter;
   typename T::Iterator end;
-  std::string root_path;
+  std::string prefix;
   std::string key;
   std::string path;
-  RimeConfigIteratorImpl<T>(T& container, const std::string& root)
-  : iter(container.begin()),
-    end(container.end()),
-    root_path(root) {
+  RimeConfigIteratorImpl<T>(T& container, const std::string& root_path)
+      : iter(container.begin()),
+        end(container.end()) {
+    if (root_path.empty() || root_path == "/") {
+      // prefix is empty
+    }
+    else {
+      prefix = root_path + "/";
+    }
   }
 };
+
+RIME_API Bool RimeConfigBeginList(RimeConfigIterator* iterator,
+                                  RimeConfig* config, const char* key) {
+  if (!iterator || !config || !key)
+    return False;
+  iterator->list = NULL;
+  iterator->map = NULL;
+  iterator->index = -1;
+  iterator->key = NULL;
+  iterator->path = NULL;
+  rime::Config *c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c)
+    return False;
+  rime::ConfigListPtr list = c->GetList(key);
+  if (!list)
+    return False;
+  iterator->list = new RimeConfigIteratorImpl<rime::ConfigList>(*list, key);
+  return True;
+}
 
 RIME_API Bool RimeConfigBeginMap(RimeConfigIterator* iterator,
                                  RimeConfig* config, const char* key) {
@@ -575,6 +621,20 @@ RIME_API Bool RimeConfigBeginMap(RimeConfigIterator* iterator,
 RIME_API Bool RimeConfigNext(RimeConfigIterator* iterator) {
   if (!iterator->list && !iterator->map)
     return False;
+  if (iterator->list) {
+    RimeConfigIteratorImpl<rime::ConfigList>* p =
+        reinterpret_cast<RimeConfigIteratorImpl<rime::ConfigList>*>(iterator->list);
+    if (!p) return False;
+    if (++iterator->index > 0)
+      ++p->iter;
+    if (p->iter == p->end)
+      return False;
+    p->key = boost::str(boost::format("@%1%") % iterator->index);
+    p->path = p->prefix + p->key;
+    iterator->key = p->key.c_str();
+    iterator->path = p->path.c_str();
+    return True;
+  }
   if (iterator->map) {
     RimeConfigIteratorImpl<rime::ConfigMap>* p =
         reinterpret_cast<RimeConfigIteratorImpl<rime::ConfigMap>*>(iterator->map);
@@ -584,7 +644,7 @@ RIME_API Bool RimeConfigNext(RimeConfigIterator* iterator) {
     if (p->iter == p->end)
       return False;
     p->key = p->iter->first;
-    p->path = p->root_path + "/" + p->key;
+    p->path = p->prefix + p->key;
     iterator->key = p->key.c_str();
     iterator->path = p->path.c_str();
     return True;
@@ -603,19 +663,19 @@ RIME_API void RimeConfigEnd(RimeConfigIterator* iterator) {
 
 
 RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence) {
-    LOG(INFO) << "simulate key sequence: " << key_sequence;
-    rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
-    if (!session)
-      return False;
-    rime::KeySequence keys;
-    if (!keys.Parse(key_sequence)) {
-      LOG(ERROR) << "error parsing input: '" << key_sequence << "'";
-      return False;
-    }
-    for (const rime::KeyEvent &ke : keys) {
-      session->ProcessKeyEvent(ke);
-    }
-    return True;
+  LOG(INFO) << "simulate key sequence: " << key_sequence;
+  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  rime::KeySequence keys;
+  if (!keys.Parse(key_sequence)) {
+    LOG(ERROR) << "error parsing input: '" << key_sequence << "'";
+    return False;
+  }
+  for (const rime::KeyEvent& key : keys) {
+    session->ProcessKey(key);
+  }
+  return True;
 }
 
 RIME_API Bool RimeRegisterModule(RimeModule* module) {
@@ -659,6 +719,159 @@ RIME_API const char* RimeGetUserId() {
 RIME_API void RimeGetUserDataSyncDir(char* dir, size_t buffer_size) {
   rime::Deployer &deployer(rime::Service::instance().deployer());
   strncpy(dir, deployer.user_data_sync_dir().c_str(), buffer_size);
+}
+
+RIME_API Bool RimeConfigInit(RimeConfig* config) {
+  if (!config || config->ptr)
+    return False;
+  config->ptr = (void*)new rime::Config;
+  return True;
+}
+
+RIME_API Bool RimeConfigLoadString(RimeConfig* config, const char* yaml) {
+  if (!config || !yaml) {
+    return False;
+  }
+  if (!config->ptr) {
+    RimeConfigInit(config);
+  }
+  rime::Config* c = reinterpret_cast<rime::Config*>(config->ptr);
+  std::istringstream iss(yaml);
+  return Bool(c->LoadFromStream(iss));
+}
+
+RIME_API Bool RimeConfigGetItem(RimeConfig* config, const char* key, RimeConfig* value) {
+  if (!config || !key || !value)
+    return False;
+  rime::Config* c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c)
+    return False;
+  if (!value->ptr) {
+    RimeConfigInit(value);
+  }
+  rime::Config* v = reinterpret_cast<rime::Config*>(value->ptr);
+  *v = c->GetItem(key);
+  return True;
+}
+
+RIME_API Bool RimeConfigSetItem(RimeConfig* config, const char* key, RimeConfig* value) {
+  if (!config || !key)
+    return False;
+  rime::Config* c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c)
+    return False;
+  rime::ConfigItemPtr item;
+  if (value) {
+    if (rime::Config* v = reinterpret_cast<rime::Config*>(value->ptr)) {
+      item = v->GetItem("");
+    }
+  }
+  return Bool(c->SetItem(key, item));
+}
+
+RIME_API Bool RimeConfigSetBool(RimeConfig* config, const char* key, Bool value) {
+  if (!config || !key)
+    return False;
+  rime::Config* c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c)
+    return False;
+  return Bool(c->SetBool(key, value));
+}
+
+RIME_API Bool RimeConfigSetInt(RimeConfig* config, const char* key, int value) {
+  if (!config || !key)
+    return False;
+  rime::Config* c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c)
+    return False;
+  return Bool(c->SetInt(key, value));
+}
+
+RIME_API Bool RimeConfigSetDouble(RimeConfig* config, const char* key, double value) {
+  if (!config || !key)
+    return False;
+  rime::Config* c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c)
+    return False;
+  return Bool(c->SetDouble(key, value));
+}
+
+RIME_API Bool RimeConfigSetString(RimeConfig* config, const char* key, const char* value) {
+  if (!config || !key || !value)
+    return False;
+  rime::Config* c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c)
+    return False;
+  return Bool(c->SetString(key, value));
+}
+
+RIME_API Bool RimeConfigClear(RimeConfig* config, const char* key) {
+  if (!config || !key)
+    return False;
+  rime::Config* c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c)
+    return False;
+  return Bool(c->SetItem(key, nullptr));
+}
+
+RIME_API Bool RimeConfigCreateList(RimeConfig* config, const char* key) {
+  if (!config || !key)
+    return False;
+  rime::Config* c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c)
+    return False;
+  return Bool(c->SetItem(key, rime::New<rime::ConfigList>()));
+}
+
+RIME_API Bool RimeConfigCreateMap(RimeConfig* config, const char* key) {
+  if (!config || !key)
+    return False;
+  rime::Config* c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c)
+    return False;
+  return Bool(c->SetItem(key, rime::New<rime::ConfigMap>()));
+}
+
+RIME_API size_t RimeConfigListSize(RimeConfig* config, const char* key) {
+  if (!config || !key)
+    return 0;
+  rime::Config* c = reinterpret_cast<rime::Config*>(config->ptr);
+  if (!c)
+    return 0;
+  if (rime::ConfigListPtr list = c->GetList(key)) {
+    return list->size();
+  }
+  return 0;
+}
+
+const char* RimeGetInput(RimeSessionId session_id) {
+  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  if (!session)
+    return NULL;
+  rime::Context *ctx = session->context();
+  if (!ctx)
+    return NULL;
+  return ctx->input().c_str();
+}
+
+size_t RimeGetCaretPos(RimeSessionId session_id) {
+  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  if (!session)
+    return 0;
+  rime::Context *ctx = session->context();
+  if (!ctx)
+    return 0;
+  return ctx->caret_pos();
+}
+
+Bool RimeSelectCandidate(RimeSessionId session_id, size_t index) {
+  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  rime::Context *ctx = session->context();
+  if (!ctx)
+    return False;
+  return Bool(ctx->Select(index));
 }
 
 RIME_API RimeApi* rime_get_api() {
@@ -721,6 +934,22 @@ RIME_API RimeApi* rime_get_api() {
     s_api.get_sync_dir = &RimeGetSyncDir;
     s_api.get_user_id = &RimeGetUserId;
     s_api.get_user_data_sync_dir = &RimeGetUserDataSyncDir;
+    s_api.config_init = &RimeConfigInit;
+    s_api.config_load_string = &RimeConfigLoadString;
+    s_api.config_set_bool = &RimeConfigSetBool;
+    s_api.config_set_int = &RimeConfigSetInt;
+    s_api.config_set_double = &RimeConfigSetDouble;
+    s_api.config_set_string = &RimeConfigSetString;
+    s_api.config_get_item = &RimeConfigGetItem;
+    s_api.config_set_item = &RimeConfigSetItem;
+    s_api.config_clear = &RimeConfigClear;
+    s_api.config_create_list = &RimeConfigCreateList;
+    s_api.config_create_map = &RimeConfigCreateMap;
+    s_api.config_list_size = &RimeConfigListSize;
+    s_api.config_begin_list = &RimeConfigBeginList;
+    s_api.get_input = &RimeGetInput;
+    s_api.get_caret_pos = &RimeGetCaretPos;
+    s_api.select_candidate = &RimeSelectCandidate;
   }
   return &s_api;
 }

@@ -4,7 +4,7 @@
 schema:
   schema_id: luna_pinyin
   name: 朙月拼音
-  version: "0.13.test"
+  version: "0.14.test"
   author:
     - 佛振 <chen.sst@gmail.com>
   description: |
@@ -21,13 +21,15 @@ switches:
     states: [ 中文, 西文 ]
   - name: full_shape
     states: [ 半角, 全角 ]
+  - name: ascii_punct
+    states: [ 句讀, 符號 ]
 #  - name: simplification
 #    states: [ 漢字, 汉字 ]
   - options: [ zh_trad, zh_tw, zh_simp ]
     states:
-      - 字形 → 傳統漢字
-      - 字形 → 臺灣正體
-      - 字形 → 簡化字
+      - 傳統漢字
+      - 臺灣正體
+      - 簡化字
     reset: 0
 
 engine:
@@ -43,10 +45,10 @@ engine:
   segmentors:
     - ascii_segmentor
     - matcher
+    - abc_segmentor
     - affix_segmentor@alphabet
     - affix_segmentor@cangjie
     - affix_segmentor@pinyin
-    - abc_segmentor
     - punct_segmentor
     - fallback_segmentor
   translators:

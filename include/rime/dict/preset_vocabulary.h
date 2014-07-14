@@ -30,6 +30,8 @@ class PresetVocabulary {
   void set_max_phrase_length(int length) { max_phrase_length_ = length; }
   void set_min_phrase_weight(double weight) { min_phrase_weight_ = weight; }
 
+  static std::string DictFilePath();
+
  protected:
   unique_ptr<VocabularyDb> db_;
   int max_phrase_length_ = 0;

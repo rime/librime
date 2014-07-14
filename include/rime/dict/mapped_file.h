@@ -102,9 +102,6 @@ class MappedFile : boost::noncopyable {
   T* Allocate(size_t count = 1);
 
   template <class T>
-  T* Find(size_t offset);
-
-  template <class T>
   Array<T>* CreateArray(size_t array_size);
 
   String* CreateString(const std::string& str);
@@ -113,10 +110,14 @@ class MappedFile : boost::noncopyable {
   size_t capacity() const;
   char* address() const;
 
-public:
+ public:
+  bool Exists() const;
   bool IsOpen() const;
   void Close();
   bool Remove();
+
+  template <class T>
+  T* Find(size_t offset);
 
   const std::string& file_name() const { return file_name_; }
   size_t file_size() const { return size_; }
@@ -129,11 +130,18 @@ public:
 
 // member function definitions
 
+# if defined(__arm__)
+# define RIME_ALIGNED(size, T) ((size + alignof(T) - 1) & ~(alignof(T) - 1))
+# else
+# define RIME_ALIGNED(size, T) (size)
+# endif
+
 template <class T>
 T* MappedFile::Allocate(size_t count) {
   if (!IsOpen())
     return NULL;
-  size_t used_space = size_;
+
+  size_t used_space = RIME_ALIGNED(size_, T);
   size_t required_space = sizeof(T) * count;
   size_t file_size = capacity();
   if (used_space + required_space > file_size) {
@@ -141,13 +149,10 @@ T* MappedFile::Allocate(size_t count) {
     size_t new_size = (std::max)(used_space + required_space, file_size * 2);
     if(!Resize(new_size) || !OpenReadWrite())
       return NULL;
-    // note that size_ has been reset after the file was closed for resizing
-    // now lets restore it to the saved value
-    size_ = used_space;
   }
   T* ptr = reinterpret_cast<T*>(address() + used_space);
   std::memset(ptr, 0, required_space);
-  size_ += required_space;
+  size_ = used_space + required_space;
   return ptr;
 }
 
