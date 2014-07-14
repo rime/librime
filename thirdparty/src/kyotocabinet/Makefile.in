@@ -1,0 +1,269 @@
+# Makefile for Kyoto Cabinet
+
+
+
+#================================================================
+# Setting Variables
+#================================================================
+
+
+# Generic settings
+SHELL = @SHELL@
+
+# Package information
+PACKAGE = @PACKAGE_NAME@
+PACKAGE_TARNAME = @PACKAGE_TARNAME@
+VERSION = @PACKAGE_VERSION@
+PACKAGEDIR = $(PACKAGE)-$(VERSION)
+PACKAGETGZ = $(PACKAGE)-$(VERSION).tar.gz
+LIBVER = @MYLIBVER@
+LIBREV = @MYLIBREV@
+FORMATVER = @MYFORMATVER@
+
+# Targets
+HEADERFILES = @MYHEADERFILES@
+LIBRARYFILES = @MYLIBRARYFILES@
+LIBOBJFILES = @MYLIBOBJFILES@
+COMMANDFILES = @MYCOMMANDFILES@
+MAN1FILES = @MYMAN1FILES@
+DOCUMENTFILES = @MYDOCUMENTFILES@
+PCFILES = @MYPCFILES@
+
+# Install destinations
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+datarootdir = @datarootdir@
+INCLUDEDIR = @includedir@
+LIBDIR = @libdir@
+BINDIR = @bindir@
+LIBEXECDIR = @libexecdir@
+DATADIR = @datadir@/$(PACKAGE)
+MAN1DIR = @mandir@/man1
+DOCDIR = @docdir@
+PCDIR = @libdir@/pkgconfig
+DESTDIR =
+
+# Building configuration
+CC = @CC@
+CXX = @CXX@
+CPPFLAGS = @MYCPPFLAGS@ \
+  -D_KC_PREFIX="\"$(prefix)\"" -D_KC_INCLUDEDIR="\"$(INCLUDEDIR)\"" \
+  -D_KC_LIBDIR="\"$(LIBDIR)\"" -D_KC_BINDIR="\"$(BINDIR)\"" -D_KC_LIBEXECDIR="\"$(LIBEXECDIR)\"" \
+  -D_KC_APPINC="\"-I$(INCLUDEDIR)\"" -D_KC_APPLIBS="\"-L$(LIBDIR) -lkyotocabinet @LIBS@\""
+CFLAGS = @MYCFLAGS@
+CXXFLAGS = @MYCXXFLAGS@
+LDFLAGS = @MYLDFLAGS@
+CMDLDFLAGS = @MYCMDLDFLAGS@
+CMDLIBS = @MYCMDLIBS@
+LIBS = @LIBS@
+RUNENV = @MYLDLIBPATHENV@=@MYLDLIBPATH@
+POSTCMD = @MYPOSTCMD@
+
+
+
+#================================================================
+# Suffix rules
+#================================================================
+
+
+.SUFFIXES :
+.SUFFIXES : .c .cc .o
+
+.c.o :
+	$(CC) -c $(CPPFLAGS) $(CFLAGS) $<
+
+.cc.o :
+	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $<
+
+
+
+#================================================================
+# Actions
+#================================================================
+
+
+all : $(LIBRARYFILES) $(COMMANDFILES)
+	@$(POSTCMD)
+	@printf '\n'
+	@printf '#================================================================\n'
+	@printf '# Ready to install.\n'
+	@printf '#================================================================\n'
+
+
+clean :
+	rm -rf $(LIBRARYFILES) $(LIBOBJFILES) $(COMMANDFILES) $(CGIFILES) \
+	  *.o *.gch a.out check.in check.out gmon.out *.log *.vlog words.tsv \
+	  casket* *.kch *.kct *.kcd *.kcf *.wal *.tmpkc* *.kcss *~ hoge moge tako ika
+
+
+version :
+	sed -e 's/_KC_VERSION.*/_KC_VERSION    "$(VERSION)"/' \
+	  -e "s/_KC_LIBVER.*/_KC_LIBVER     $(LIBVER)/" \
+	  -e "s/_KC_LIBREV.*/_KC_LIBREV     $(LIBREV)/" \
+	  -e 's/_KC_FMTVER.*/_KC_FMTVER     $(FORMATVER)/' myconf.h > myconf.h~
+	[ -f myconf.h~ ] && mv -f myconf.h~ myconf.h
+
+
+untabify :
+	ls *.cc *.h *.idl | while read name ; \
+	  do \
+	    sed -e 's/\t/        /g' -e 's/ *$$//' $$name > $$name~; \
+	    [ -f $$name~ ] && mv -f $$name~ $$name ; \
+	  done
+
+
+install :
+	mkdir -p $(DESTDIR)$(INCLUDEDIR)
+	cp -Rf $(HEADERFILES) $(DESTDIR)$(INCLUDEDIR)
+	mkdir -p $(DESTDIR)$(LIBDIR)
+	cp -Rf $(LIBRARYFILES) $(DESTDIR)$(LIBDIR)
+	mkdir -p $(DESTDIR)$(BINDIR)
+	cp -Rf $(COMMANDFILES) $(DESTDIR)$(BINDIR)
+	mkdir -p $(DESTDIR)$(MAN1DIR)
+	cd man && cp -Rf $(MAN1FILES) $(DESTDIR)$(MAN1DIR)
+	mkdir -p $(DESTDIR)$(DOCDIR)
+	cp -Rf $(DOCUMENTFILES) $(DESTDIR)$(DOCDIR)
+	mkdir -p $(DESTDIR)$(PCDIR)
+	cp -Rf $(PCFILES) $(DESTDIR)$(PCDIR)
+	@printf '\n'
+	@printf '#================================================================\n'
+	@printf '# Thanks for using Kyoto Cabinet.\n'
+	@printf '#================================================================\n'
+
+
+install-strip :
+	$(MAKE) DESTDIR=$(DESTDIR) install
+	cd $(DESTDIR)$(BINDIR) && strip $(COMMANDFILES)
+
+
+uninstall :
+	-cd $(DESTDIR)$(INCLUDEDIR) && rm -f $(HEADERFILES)
+	-cd $(DESTDIR)$(LIBDIR) && rm -f $(LIBRARYFILES)
+	-cd $(DESTDIR)$(BINDIR) && rm -f $(COMMANDFILES)
+	-cd $(DESTDIR)$(MAN1DIR) && rm -f $(MAN1FILES)
+	-cd $(DESTDIR)$(DOCDIR) && rm -rf $(DOCUMENTFILES) && rmdir $(DOCDIR)
+	-cd $(DESTDIR)$(PCDIR) && rm -f $(PCFILES)
+
+
+dist :
+	$(MAKE) version
+	$(MAKE) untabify
+	$(MAKE) distclean
+	cd .. && tar cvf - $(PACKAGEDIR) | gzip -c > $(PACKAGETGZ)
+	sync ; sync
+
+
+distclean : clean
+	#cd example && $(MAKE) clean
+	rm -rf Makefile kyotocabinet.pc \
+	  config.cache config.log config.status config.tmp autom4te.cache
+
+
+doc :
+	$(MAKE) docclean
+	mkdir -p doc/api
+	doxygen
+
+
+docclean :
+	rm -rf doc/api
+
+
+gch :
+	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) *.h
+
+
+words.tsv :
+	cat /usr/share/dict/words | \
+	  tr '\t\r' '  ' | grep -v '^ *$$' | cat -n | sort | \
+	  LC_ALL=C sed -e 's/^ *//' -e 's/\(^[0-9]*\)\t\(.*\)/\2\t\1/' > words.tsv
+
+
+def : libkyotocabinet.a
+	./lab/makevcdef libkyotocabinet.a > kyotocabinet.def
+
+
+.PHONY : all clean install doc
+
+
+
+#================================================================
+# Building binaries
+#================================================================
+
+
+libkyotocabinet.a : $(LIBOBJFILES)
+	$(AR) $(ARFLAGS) $@ $(LIBOBJFILES)
+
+
+libkyotocabinet.so.$(LIBVER).$(LIBREV).0 : $(LIBOBJFILES)
+	if uname -a | egrep -i 'SunOS' > /dev/null ; \
+	  then \
+	    $(CXX) $(CXXFLAGS) -shared -Wl,-G,-h,libkyotocabinet.so.$(LIBVER) -o $@ \
+	      $(LIBOBJFILES) $(LDFLAGS) $(LIBS) ; \
+	  else \
+	    $(CXX) $(CXXFLAGS) -shared -Wl,-soname,libkyotocabinet.so.$(LIBVER) -o $@ \
+	      $(LIBOBJFILES) $(LDFLAGS) $(LIBS) ; \
+	  fi
+
+
+libkyotocabinet.so.$(LIBVER) : libkyotocabinet.so.$(LIBVER).$(LIBREV).0
+	ln -f -s libkyotocabinet.so.$(LIBVER).$(LIBREV).0 $@
+
+
+libkyotocabinet.so : libkyotocabinet.so.$(LIBVER).$(LIBREV).0
+	ln -f -s libkyotocabinet.so.$(LIBVER).$(LIBREV).0 $@
+
+
+libkyotocabinet.$(LIBVER).$(LIBREV).0.dylib : $(LIBOBJFILES)
+	$(CXX) $(CXXFLAGS) -dynamiclib -o $@ \
+	  -install_name $(LIBDIR)/libkyotocabinet.$(LIBVER).dylib \
+	  -current_version $(LIBVER).$(LIBREV).0 -compatibility_version $(LIBVER) \
+	  $(LIBOBJFILES) $(LDFLAGS) $(LIBS)
+
+
+libkyotocabinet.$(LIBVER).dylib : libkyotocabinet.$(LIBVER).$(LIBREV).0.dylib
+	ln -f -s libkyotocabinet.$(LIBVER).$(LIBREV).0.dylib $@
+
+
+libkyotocabinet.dylib : libkyotocabinet.$(LIBVER).$(LIBREV).0.dylib
+	ln -f -s libkyotocabinet.$(LIBVER).$(LIBREV).0.dylib $@
+
+
+kctreemgr : kctreemgr.o $(LIBRARYFILES)
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS) $(CMDLDFLAGS) -lkyotocabinet $(CMDLIBS)
+
+
+kcutil.o : kccommon.h kcutil.h myconf.h
+
+kcthread.o : kccommon.h kcutil.h kcthread.h myconf.h
+
+kcfile.o : kccommon.h kcutil.h kcthread.h kcfile.h myconf.h
+
+kccompress.o : kccommon.h kcutil.h kccompress.h myconf.h
+
+kccompare.o : kccommon.h kcutil.h kccompare.h myconf.h
+
+kcmap.o : kccommon.h kcutil.h kcmap.h myconf.h
+
+kcregex.o : kccommon.h kcutil.h kcregex.h myconf.h
+
+kcdb.o : kccommon.h kcutil.h kcdb.h kcthread.h kcfile.h kccompress.h kccompare.h \
+  kcmap.h kcregex.h
+
+kcplantdb.o : kccommon.h kcutil.h kcdb.h kcthread.h kcfile.h kccompress.h kccompare.h \
+  kcmap.h kcregex.h \
+  kcplantdb.h
+
+kchashdb.o : kccommon.h kcutil.h kcdb.h kcthread.h kcfile.h kccompress.h kccompare.h \
+  kcmap.h kcregex.h \
+  kcplantdb.h kchashdb.h
+
+kctreemgr.o : \
+  kccommon.h kcdb.h kcutil.h kcthread.h kcfile.h kccompress.h kccompare.h \
+  kcmap.h kcregex.h \
+  kcplantdb.h kchashdb.h cmdcommon.h
+
+
+
+# END OF FILE

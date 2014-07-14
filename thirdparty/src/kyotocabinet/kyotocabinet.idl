@@ -1,0 +1,263 @@
+/*************************************************************************************************
+ * IDL for bindings of scripting languages
+ *                                                               Copyright (C) 2009-2012 FAL Labs
+ * This file is part of Kyoto Cabinet.
+ * This program is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU General Public License as published by the Free Software Foundation, either version
+ * 3 of the License, or any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.
+ * If not, see <http://www.gnu.org/licenses/>.
+ *************************************************************************************************/
+
+
+/**
+ * namespace of Kyoto Cabinet
+ */
+module kyotocabinet {
+  //----------------------------------------------------------------
+  // prediction
+  //----------------------------------------------------------------
+  interface List;
+  interface Map;
+  interface Error;
+  interface Visitor;
+  interface FileProcessor;
+  interface Logger;
+  interface Cursor;
+  interface DB;
+  //----------------------------------------------------------------
+  // list of strings (substituted by the native mechanism)
+  //----------------------------------------------------------------
+  interface List {
+    string get(in long index);
+  };
+  //----------------------------------------------------------------
+  // map of strings (substituted by the native mechanism)
+  //----------------------------------------------------------------
+  interface Map {
+    string get(in string key);
+  };
+  //----------------------------------------------------------------
+  // error information
+  //----------------------------------------------------------------
+  interface Error {
+    const long SUCCESS = 0;
+    const long NOIMPL = 1;
+    const long INVALID = 2;
+    const long NOREPOS = 3;
+    const long NOPERM = 4;
+    const long BROKEN = 5;
+    const long DUPREC = 6;
+    const long NOREC = 7;
+    const long LOGIC = 8;
+    const long SYSTEM = 9;
+    const long MISC = 15;
+    long code();
+    string name();
+    string message();
+  };
+  //----------------------------------------------------------------
+  // record visitor
+  //----------------------------------------------------------------
+  interface Visitor {
+    const string NOP = "";
+    const string REMOVE = "";
+    string visit_full(in string key, in string value);
+    string visit_empty(in string key);
+  };
+  //----------------------------------------------------------------
+  // file processor
+  //----------------------------------------------------------------
+  interface FileProcessor {
+    boolean process(in string path, in long long count, in long long size);
+  };
+  //----------------------------------------------------------------
+  // event logger
+  //----------------------------------------------------------------
+  interface Logger {
+    const long INFO = 0;
+    const long WARN = 1;
+    const long ERROR = 2;
+    void log(in string file, in long line, in string func, in long kind, in string message);
+  };
+  //----------------------------------------------------------------
+  // meta operation trigger
+  //----------------------------------------------------------------
+  interface MetaTrigger {
+    const long OPEN = 0;
+    const long CLOSE = 1;
+    const long CLEAR = 2;
+    const long ITERATE = 3;
+    const long SYNCHRONIZE = 4;
+    const long OCCUPY = 5;
+    const long BEGINTRAN = 6;
+    const long COMMITTRAN = 7;
+    const long ABORTTRAN = 8;
+    const long MISC = 15;
+    void trigger(in long kind, in string message);
+  };
+  //----------------------------------------------------------------
+  // cursor
+  //----------------------------------------------------------------
+  interface Cursor {
+    boolean accept(inout Visitor visitor, in boolean writable, in boolean step);
+    boolean set_value(in string value, in boolean step);
+    boolean remove();
+    string get_key(in boolean step);
+    string get_value(in boolean step);
+    boolean jump();
+    boolean jump_(in string key);
+    boolean jump_back();
+    boolean jump_back_(in string key);
+    boolean step();
+    boolean step_back();
+    DB db();
+    Error error();
+  };
+  //----------------------------------------------------------------
+  // common database operations
+  //----------------------------------------------------------------
+  interface DB {
+    const long OREADER = 1 << 0;
+    const long OWRITER = 1 << 1;
+    const long OCREATE = 1 << 2;
+    const long OTRUNCATE = 1 << 3;
+    const long OAUTOTRAN = 1 << 4;
+    const long OAUTOSYNC = 1 << 5;
+    const long ONOLOCK = 1 << 6;
+    const long OTRYLOCK = 1 << 7;
+    const long ONOREPAIR = 1 << 8;
+    Error error();
+    boolean open(in string path, in long mode);
+    boolean close();
+    boolean accept(in string key, inout Visitor visitor, in boolean writable);
+    boolean accept_bulk(in List keys, inout Visitor visitor, in boolean writable);
+    boolean iterate(inout Visitor visitor, in boolean writable);
+    boolean scan_parallel(inout Visitor visitor, in long thnum);
+    boolean set(in string key, in string value);
+    boolean add(in string key, in string value);
+    boolean replace(in string key, in string value);
+    boolean append(in string key, in string value);
+    long long increment(in string key, in long long num, in long long orig);
+    double increment_double(in string key, in double num, in double orig);
+    boolean cas(in string key, in string oval, in string nval);
+    boolean remove(in string key);
+    string get(in string key);
+    long check(in string key);
+    string seize(in string key);
+    long long set_bulk(in Map recs);
+    long long remove_bulk(in List keys);
+    Map get_bulk(in List keys);
+    boolean clear();
+    boolean synchronize(in boolean hard, inout FileProcessor proc);
+    boolean occupy(in boolean writable, inout FileProcessor proc);
+    boolean copy(in string dest);
+    boolean begin_transaction(in boolean hard);
+    boolean end_transaction(in boolean commit);
+    boolean dump_snapshot(in string dest);
+    boolean load_snapshot(in string src);
+    long long count();
+    long long size();
+    string path();
+    Map status();
+    Cursor cursor();
+    boolean tune_logger(inout Logger logger);
+    boolean tune_meta_trigger(inout MetaTrigger trigger);
+  };
+  //----------------------------------------------------------------
+  // prototype hash database
+  //----------------------------------------------------------------
+  interface ProtoHashDB :DB {
+  };
+  //----------------------------------------------------------------
+  // prototype tree database
+  //----------------------------------------------------------------
+  interface ProtoTreeDB :DB {
+  };
+  //----------------------------------------------------------------
+  // stash database
+  //----------------------------------------------------------------
+  interface StashDB :DB {
+    boolean tune_buckets(in long long bnum);
+  };
+  //----------------------------------------------------------------
+  // cache hash database
+  //----------------------------------------------------------------
+  interface CacheDB :DB {
+    boolean tune_options(in long opts);
+    boolean tune_buckets(in long long bnum);
+    boolean cap_count(in long long count);
+    boolean cap_size(in long long size);
+  };
+  //----------------------------------------------------------------
+  // cache tree database
+  //----------------------------------------------------------------
+  interface GrassDB :DB {
+    boolean tune_options(in long opts);
+    boolean tune_buckets(in long long bnum);
+    boolean tune_page(in long psiz);
+    boolean tune_page_cache(in long long pccap);
+  };
+  //----------------------------------------------------------------
+  // file hash database
+  //----------------------------------------------------------------
+  interface HashDB :DB {
+    const long TSMALL = 1 << 0;
+    const long TLINEAR = 1 << 1;
+    const long TCOMPRESS = 1 << 2;
+    boolean tune_alignment(in long apow);
+    boolean tune_fbp(in long fpow);
+    boolean tune_options(in long opts);
+    boolean tune_buckets(in long long bnum);
+    boolean tune_map(in long long msiz);
+    boolean tune_defrag(in long dfunit);
+  };
+  //----------------------------------------------------------------
+  // file tree database
+  //----------------------------------------------------------------
+  interface TreeDB :DB {
+    const long TSMALL = 1 << 0;
+    const long TLINEAR = 1 << 1;
+    const long TCOMPRESS = 1 << 2;
+    boolean tune_alignment(in long apow);
+    boolean tune_fbp(in long fpow);
+    boolean tune_options(in long opts);
+    boolean tune_buckets(in long long bnum);
+    boolean tune_page(in long psiz);
+    boolean tune_map(in long long msiz);
+    boolean tune_defrag(in long dfunit);
+    boolean tune_page_cache(in long long pccap);
+  };
+  //----------------------------------------------------------------
+  // directory hash database
+  //----------------------------------------------------------------
+  interface DirDB :DB {
+    const long TCOMPRESS = 1 << 2;
+    boolean tune_options(in long opts);
+  };
+  //----------------------------------------------------------------
+  // directory tree database
+  //----------------------------------------------------------------
+  interface ForestDB :DB {
+    const long TCOMPRESS = 1 << 2;
+    boolean tune_options(in long opts);
+    boolean tune_buckets(in long long bnum);
+    boolean tune_page(in long psiz);
+    boolean tune_page_cache(in long long pccap);
+  };
+  //----------------------------------------------------------------
+  // polymorphic database
+  //----------------------------------------------------------------
+  interface PolyDB :DB {
+    List match_prefix(in string prefix, in long long max);
+    List match_regex(in string regex, in long long max);
+    List match_similar(in string origin, in long long range, in boolean utf, in long long max);
+  };
+};
+
+
+
+/* END OF FILE */
