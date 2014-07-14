@@ -44,7 +44,7 @@ class StringTable {
 class StringTableBuilder: public StringTable {
  public:
   void Add(const std::string& key, double weight = 1.0,
-           StringId* reference = nullptr);
+           StringId* reference = NULL);
   void Clear();
   void Build();
   void Dump(char* ptr, size_t size);

@@ -324,9 +324,9 @@ void Table::SelectTableFormat(double format_version) {
     format_.format_name = kTableFormat_v1;
     format_.GetString = &Table::GetString_v1;
     format_.AddString = &Table::AddString_v1;
-    format_.OnBuildStart = nullptr;
-    format_.OnBuildFinish = nullptr;
-    format_.OnLoad = nullptr;
+    format_.OnBuildStart = NULL;
+    format_.OnBuildFinish = NULL;
+    format_.OnLoad = NULL;
   }
 }
 
