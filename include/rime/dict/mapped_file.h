@@ -133,8 +133,14 @@ class MappedFile : boost::noncopyable {
 
 // member function definitions
 
+#ifdef __GNUC__
+#define ALIGNOF __alignof__
+#elif _MSC_VER
+#define ALIGNOF __alignof
+#endif
+
 # if defined(__arm__)
-# define RIME_ALIGNED(size, T) ((size + alignof(T) - 1) & ~(alignof(T) - 1))
+# define RIME_ALIGNED(size, T) ((size + ALIGNOF(T) - 1) & ~(ALIGNOF(T) - 1))
 # else
 # define RIME_ALIGNED(size, T) (size)
 # endif
