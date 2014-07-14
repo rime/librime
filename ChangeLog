@@ -1,3 +1,41 @@
+2014-07-15  GONG Chen  <chen.sst@gmail.com>
+
+	* config: support references to list elements in key paths.
+	eg. 'schema_list/@0/schema' is the id of the first schema in schema list.
+	* rime_api: add API functions to access complex structures in config;
+	add API to get the raw input and cursor position, or to select a candidate.
+	* switcher: enable folding IME options in the switcher menu.
+	* dict_compiler: also detect changes in essay when updating a dictionary;
+	support updating prism without the source file of the dictionary.
+	* preset_vocabulary: load 'essay.txt' instead of 'essay.kct'.
+	* reverse_lookup_dictionary: adopt a new file format with 50% space saving.
+	* table: add support for a new binary format with 20% space saving;
+	fix alignment on ARM.
+	* ascii_composer: do not toggle IME states when long pressing Shift key;
+	support discarding unfinished input when switching to ASCII mode.
+	* affix_segmentor: fix issues with selecting a partial-match candidate.
+	* chord_composer: commit raw input composed with original key strokes.
+	* navigator: do not use BackSpace to revert selecting a candidate but to
+	edit the input after moving the cursor left or right.
+	* punctuator: support 'ascii_punct' option for switching between Chinese and
+	Western (ASCII) punctuations.
+	* speller: auto-select candidates by pattern matching against the code;
+	fix issues to cooperate with punctuator.
+	* CMakeLists.txt: add options ENABLE_LOGGING and BOOST_USE_CXX11;
+	introduce a new dependency: libmarisa.
+	* cmake/FindYamlCpp.cmake: check the availability of the new (v0.5) API.
+	* sample: the directory containing a sample plug-in module.
+	* tools/rime_patch.cc: a command line tool to create patches.
+	* thirdparty: include source code of third-party libraries to ease
+	building librime on Windows and Mac.
+
+	- Release: 1.2
+
+2014-03-31  Chongyu Zhu  <i@lembacon.com>
+
+	* cjk_minifier: a filter to hide characters in CJK extension set, works
+	with script_translator.
+
 2013-12-26  GONG Chen  <chen.sst@gmail.com>
 
 	* new build dependency: compiler with C++11 support.
