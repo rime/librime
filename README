@@ -16,16 +16,18 @@ build dependencies:
   - compiler with C++11 support
   - cmake>=2.8
   - libboost>=1.46
-  - libglog
+  - libglog (optional)
   - libkyotocabinet
+  - libmarisa
   - libopencc
   - libyaml-cpp>=0.5
   - libgtest (optional)
 
 runtime dependencies:
   - libboost
-  - libglog
+  - libglog (optional)
   - libkyotocabinet
+  - libmarisa
   - libopencc
   - libyaml-cpp
 
@@ -51,6 +53,7 @@ credits:  # we are grateful to the makers of the following open source libraries
   - google-glog          (New BSD License)
   - Google Test          (New BSD License)
   - Kyoto Cabinet        (GNU Public License)
+  - marisa-trie          (New BSD License)
   - opencc               (Apache License 2.0)
   - UTF8-CPP             (Boost Software License)
   - yaml-cpp             (MIT License)
