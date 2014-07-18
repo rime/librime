@@ -21,8 +21,10 @@ class RimeTableTest : public ::testing::Test {
       ASSERT_TRUE(table_->Build(syll, voc, total_num_entries));
       ASSERT_TRUE(table_->Save());
     }
+    table_->Load();
   }
   virtual void TearDown() {
+    table_->Close();
   }
  protected:
   static const int total_num_entries = 8;
