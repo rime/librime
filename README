@@ -1,9 +1,10 @@
+/*! \mainpage RIME: Rime Input Method Engine
 
-RIME: Rime Input Method Engine
+license:
+  - GPLv3
 
-license: GPLv3
-
-project home: http://code.google.com/p/rimeime/
+project home:
+  - http://code.google.com/p/rimeime/
 
 features:
   - supporting varieties of input methods, either shape-based or phonetic-based, including those for Chinese dialects
@@ -31,9 +32,9 @@ runtime dependencies:
   - libopencc
   - libyaml-cpp
 
-install the library: |
-  make
-  sudo make install
+install the library:
+  - make
+  - sudo make install
 
 clients:
   - fcitx-rime   : Linux/fcitx client
@@ -57,3 +58,5 @@ credits:  # we are grateful to the makers of the following open source libraries
   - opencc               (Apache License 2.0)
   - UTF8-CPP             (Boost Software License)
   - yaml-cpp             (MIT License)
+
+*/
