@@ -41,17 +41,24 @@ typedef int Bool;
 #define True 1
 #endif
 
-// DEPRECATED. there is no limit to the number of candidates in RimeMenu
+//! Define the max rime candidates
+/*!
+ *  \deprecated There is no limit to the number of candidates in RimeMenu
+ */
 #define RIME_MAX_NUM_CANDIDATES 10
 
 // version control
 #define RIME_STRUCT_INIT(Type, var) ((var).data_size = sizeof(Type) - sizeof((var).data_size))
 #define RIME_STRUCT_HAS_MEMBER(var, member) ((int)(sizeof((var).data_size) + (var).data_size) > (char*)&member - (char*)&var)
 #define RIME_STRUCT_CLEAR(var) memset((char*)&(var) + sizeof((var).data_size), 0, (var).data_size)
-// define a variable of Type
+
+//! Define a variable of Type
 #define RIME_STRUCT(Type, var)  Type var = {0}; RIME_STRUCT_INIT(Type, var);
 
-// should be initialized by calling RIME_STRUCT_INIT(Type, var);
+//! rime trait structure
+/*!
+ *  Should be initialized by calling RIME_STRUCT_INIT(Type, var)
+ */
 typedef struct rime_traits_t {
   int data_size;
   // v0.9
@@ -61,11 +68,14 @@ typedef struct rime_traits_t {
   const char* distribution_code_name;
   const char* distribution_version;
   // v1.0
-  // pass a C-string constant in the format "rime.x"
-  // where 'x' is the name of your application.
-  // adding prefix "rime." ensures old log files are automatically cleaned.
+  /*!
+   * pass a C-string constant in the format "rime.x"
+   * where 'x' is the name of your application.
+   * adding prefix "rime." ensures old log files are automatically cleaned.
+   */
   const char* app_name;
-  // a list of modules to load before initializing
+
+  //! a list of modules to load before initializing
   const char** modules;
 } RimeTraits;
 
@@ -93,14 +103,18 @@ typedef struct {
   char* select_keys;
 } RimeMenu;
 
-// should be initialized by calling RIME_STRUCT_INIT(Type, var);
+/*!
+ *  should be initialized by calling RIME_STRUCT_INIT(Type, var);
+ */
 typedef struct rime_commit_t {
   int data_size;
   // v0.9
   char* text;
 } RimeCommit;
 
-// should be initialized by calling RIME_STRUCT_INIT(Type, var);
+/*!
+ *  should be initialized by calling RIME_STRUCT_INIT(Type, var);
+ */
 typedef struct rime_context_t {
   int data_size;
   // v0.9
@@ -110,7 +124,9 @@ typedef struct rime_context_t {
   char* commit_text_preview;
 } RimeContext;
 
-// should be initialized by calling RIME_STRUCT_INIT(Type, var);
+/*!
+ *  should be initialized by calling RIME_STRUCT_INIT(Type, var);
+ */
 typedef struct rime_status_t {
   int data_size;
   // v0.9
@@ -137,7 +153,6 @@ typedef struct rime_config_iterator_t {
   const char* path;
 } RimeConfigIterator;
 
-
 typedef struct rime_schema_list_item_t {
   char* schema_id;
   char* name;
@@ -156,32 +171,35 @@ typedef void (*RimeNotificationHandler)(void* context_object,
 
 // setup
 
-// call this function before accessing any other API.
+/*!
+ *  call this function before accessing any other API.
+ */
 RIME_API void RimeSetup(RimeTraits *traits);
 
-// pass a C-string constant in the format "rime.x"
-// where 'x' is the name of your application.
-// adding prefix "rime." ensures old log files are automatically cleaned.
-//
-// DEPRECATED. use RimeSetup() instead.
-//
+/*!
+ *  Pass a C-string constant in the format "rime.x"
+ *  where 'x' is the name of your application.
+ *  adding prefix "rime." ensures old log files are automatically cleaned.
+ *  \deprecated Use RimeSetup() instead.
+ */
 RIME_API void RimeSetupLogging(const char* app_name);
 
-// receive notifications
-// on loading schema:
-//   message_type="schema", message_value="luna_pinyin/Luna Pinyin"
-// on changing mode:
-//   message_type="option", message_value="ascii_mode"
-//   message_type="option", message_value="!ascii_mode"
-// on deployment:
-//   session_id = 0, message_type="deploy", message_value="start"
-//   session_id = 0, message_type="deploy", message_value="success"
-//   session_id = 0, message_type="deploy", message_value="failure"
-//
-// @handler will be called with @context_object as the first parameter
-// every time an event occurs in librime, until RimeFinalize() is called.
-// when @handler is NULL, notification is disabled.
-//
+//! Receive notifications
+/*!
+ * - on loading schema:
+ *   + message_type="schema", message_value="luna_pinyin/Luna Pinyin"
+ * - on changing mode:
+ *   + message_type="option", message_value="ascii_mode"
+ *   + message_type="option", message_value="!ascii_mode"
+ * - on deployment:
+ *   + session_id = 0, message_type="deploy", message_value="start"
+ *   + session_id = 0, message_type="deploy", message_value="success"
+ *   + session_id = 0, message_type="deploy", message_value="failure"
+ *
+ *   handler will be called with context_object as the first parameter
+ *   every time an event occurs in librime, until RimeFinalize() is called.
+ *   when handler is NULL, notification is disabled.
+ */
 RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
                                          void* context_object);
 
@@ -191,7 +209,8 @@ RIME_API void RimeInitialize(RimeTraits *traits);
 RIME_API void RimeFinalize();
 
 RIME_API Bool RimeStartMaintenance(Bool full_check);
-// DEPRECATED. use RimeStartMaintenance(/*full_check = */False) instead.
+
+//! \deprecated Use RimeStartMaintenance(full_check = False) instead.
 RIME_API Bool RimeStartMaintenanceOnWorkspaceChange();
 RIME_API Bool RimeIsMaintenancing();
 RIME_API void RimeJoinMaintenanceThread();
@@ -217,7 +236,9 @@ RIME_API void RimeCleanupAllSessions();
 // input
 
 RIME_API Bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask);
-// return True if there is unread commit text
+/*!
+ * return True if there is unread commit text
+ */
 RIME_API Bool RimeCommitComposition(RimeSessionId session_id);
 RIME_API void RimeClearComposition(RimeSessionId session_id);
 
@@ -283,11 +304,11 @@ RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_
 
 // module
 
+/*!
+ *  Extend the structure to publish custom data/functions in your specific module
+ */
 typedef struct rime_custom_api_t {
   int data_size;
-
-  // extend the structure to publish custom data/functions in your specific module
-
 } RimeCustomApi;
 
 typedef struct rime_module_t {
@@ -297,13 +318,12 @@ typedef struct rime_module_t {
   void (*initialize)();
   void (*finalize)();
   RimeCustomApi* (*get_api)();
-
 } RimeModule;
 
 RIME_API Bool RimeRegisterModule(RimeModule* module);
 RIME_API RimeModule* RimeFindModule(const char* module_name);
 
-// run a registered task
+//! run a registered task
 RIME_API Bool RimeRunTask(const char* task_name);
 
 RIME_API const char* RimeGetSharedDataDir();
@@ -311,32 +331,33 @@ RIME_API const char* RimeGetUserDataDir();
 RIME_API const char* RimeGetSyncDir();
 RIME_API const char* RimeGetUserId();
 
-// rime api v1
-
+/*! The api structure
+ *  rime_api_t is for rime v1.0
+ */
 typedef struct rime_api_t {
   int data_size;
 
-  // setup
-
-  // call this function before accessing any other API functions.
-  //
+  /*! setup
+   *  Call this function before accessing any other API functions.
+   */
   void (*setup)(RimeTraits* traits);
 
-  // receive notifications
-  // on loading schema:
-  //   message_type="schema", message_value="luna_pinyin/Luna Pinyin"
-  // on changing mode:
-  //   message_type="option", message_value="ascii_mode"
-  //   message_type="option", message_value="!ascii_mode"
-  // on deployment:
-  //   session_id = 0, message_type="deploy", message_value="start"
-  //   session_id = 0, message_type="deploy", message_value="success"
-  //   session_id = 0, message_type="deploy", message_value="failure"
-  //
-  // @handler will be called with @context_object as the first parameter
-  // every time an event occurs in librime, until RimeFinalize() is called.
-  // when @handler is NULL, notification is disabled.
-  //
+  /*! Set up the notification callbacks
+   *  Receive notifications
+   *  - on loading schema:
+   *    + message_type="schema", message_value="luna_pinyin/Luna Pinyin"
+   *  - on changing mode:
+   *    + message_type="option", message_value="ascii_mode"
+   *    + message_type="option", message_value="!ascii_mode"
+   *  - on deployment:
+   *    + session_id = 0, message_type="deploy", message_value="start"
+   *    + session_id = 0, message_type="deploy", message_value="success"
+   *    + session_id = 0, message_type="deploy", message_value="failure"
+   *
+   *  handler will be called with context_object as the first parameter
+   *  every time an event occurs in librime, until RimeFinalize() is called.
+   *  when handler is NULL, notification is disabled.
+   */
   void (*set_notification_handler)(RimeNotificationHandler handler,
                                    void* context_object);
 
@@ -429,10 +450,12 @@ typedef struct rime_api_t {
   const char* (*get_user_id)();
   void (*get_user_data_sync_dir)(char* dir, size_t buffer_size);
 
-  // initialize an empty config object
-  // should call config_close() to free the object
+  //! initialize an empty config object
+  /*!
+   * should call config_close() to free the object
+   */
   Bool (*config_init)(RimeConfig* config);
-  // deserialize config from a yaml string
+  //! deserialize config from a yaml string
   Bool (*config_load_string)(RimeConfig* config, const char* yaml);
 
   // configuration: setters
@@ -450,22 +473,27 @@ typedef struct rime_api_t {
   size_t (*config_list_size)(RimeConfig* config, const char* key);
   Bool (*config_begin_list)(RimeConfigIterator* iterator, RimeConfig* config, const char* key);
 
-  // get raw input
-  // NULL is returned if session does not exist.
-  // the returned pointer to input string will become invalid upon editing.
-  const char* (*get_input)(RimeSessionId session_id);
-  // caret posistion in terms of raw input
+  //! get raw input
+  /*!
+   *  NULL is returned if session does not exist.
+   *  the returned pointer to input string will become invalid upon editing.
+   *  const char* (*get_input)(RimeSessionId session_id);
+   *  caret posistion in terms of raw input
+   */
   size_t (*get_caret_pos)(RimeSessionId session_id);
 
-  // selecting a candidate from current page
+  //! selecting a candidate from current page
   Bool (*select_candidate)(RimeSessionId session_id, size_t index);
 
 } RimeApi;
 
-// api entry; acquire the version controlled RimeApi structure.
+//! api entry
+/*!
+ *  acquire the version controlled RimeApi structure.
+ */
 RIME_API RimeApi* rime_get_api();
 
-// clients should test if an api function is available in the current version before calling it.
+//! clients should test if an api function is available in the current version before calling it.
 #define RIME_API_AVAILABLE(api, func) (RIME_STRUCT_HAS_MEMBER(*(api), (api)->func) && (api)->func)
 
 // Initializer for MSVC and GCC.
@@ -482,9 +510,12 @@ RIME_API RimeApi* rime_get_api();
   static void __cdecl f(void)
 #endif
 
-// automatically register a rime module when the library is loaded.
-// clients should define functions called rime_<module_name>_initialize(),
-// and rime_<module_name>_finalize(). see src/core_module.cc for an example.
+/*!
+ *  automatically register a rime module when the library is loaded.
+ *  clients should define functions called rime_<module_name>_initialize(),
+ *  and rime_<module_name>_finalize().
+ *  \sa core_module.cc for an example.
+ */
 #define RIME_REGISTER_MODULE(name) \
 void rime_require_module_##name() {} \
 RIME_MODULE_INITIALIZER(rime_register_module_##name) { \
@@ -498,7 +529,9 @@ RIME_MODULE_INITIALIZER(rime_register_module_##name) { \
   rime_get_api()->register_module(&module); \
 }
 
-// customize the module by assigning additional functions, eg. module->get_api.
+/*!
+ *  customize the module by assigning additional functions, eg. module->get_api.
+ */
 #define RIME_REGISTER_CUSTOM_MODULE(name) \
 void rime_require_module_##name() {} \
 static void rime_customize_module_##name(RimeModule* module); \
