@@ -477,9 +477,10 @@ typedef struct rime_api_t {
   /*!
    *  NULL is returned if session does not exist.
    *  the returned pointer to input string will become invalid upon editing.
-   *  const char* (*get_input)(RimeSessionId session_id);
-   *  caret posistion in terms of raw input
    */
+  const char* (*get_input)(RimeSessionId session_id);
+
+  //! caret posistion in terms of raw input
   size_t (*get_caret_pos)(RimeSessionId session_id);
 
   //! selecting a candidate from current page
