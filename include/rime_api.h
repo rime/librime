@@ -41,13 +41,13 @@ typedef int Bool;
 #define True 1
 #endif
 
-//! Define the max rime candidates
+//! Define the max number of candidates
 /*!
  *  \deprecated There is no limit to the number of candidates in RimeMenu
  */
 #define RIME_MAX_NUM_CANDIDATES 10
 
-// version control
+// Version control
 #define RIME_STRUCT_INIT(Type, var) ((var).data_size = sizeof(Type) - sizeof((var).data_size))
 #define RIME_STRUCT_HAS_MEMBER(var, member) ((int)(sizeof((var).data_size) + (var).data_size) > (char*)&member - (char*)&var)
 #define RIME_STRUCT_CLEAR(var) memset((char*)&(var) + sizeof((var).data_size), 0, (var).data_size)
@@ -55,7 +55,7 @@ typedef int Bool;
 //! Define a variable of Type
 #define RIME_STRUCT(Type, var)  Type var = {0}; RIME_STRUCT_INIT(Type, var);
 
-//! rime trait structure
+//! Rime traits structure
 /*!
  *  Should be initialized by calling RIME_STRUCT_INIT(Type, var)
  */
@@ -69,13 +69,13 @@ typedef struct rime_traits_t {
   const char* distribution_version;
   // v1.0
   /*!
-   * pass a C-string constant in the format "rime.x"
+   * Pass a C-string constant in the format "rime.x"
    * where 'x' is the name of your application.
-   * adding prefix "rime." ensures old log files are automatically cleaned.
+   * Add prefix "rime." to ensure old log files are automatically cleaned.
    */
   const char* app_name;
 
-  //! a list of modules to load before initializing
+  //! A list of modules to load before initializing
   const char** modules;
 } RimeTraits;
 
@@ -104,7 +104,7 @@ typedef struct {
 } RimeMenu;
 
 /*!
- *  should be initialized by calling RIME_STRUCT_INIT(Type, var);
+ *  Should be initialized by calling RIME_STRUCT_INIT(Type, var);
  */
 typedef struct rime_commit_t {
   int data_size;
@@ -113,7 +113,7 @@ typedef struct rime_commit_t {
 } RimeCommit;
 
 /*!
- *  should be initialized by calling RIME_STRUCT_INIT(Type, var);
+ *  Should be initialized by calling RIME_STRUCT_INIT(Type, var);
  */
 typedef struct rime_context_t {
   int data_size;
@@ -125,7 +125,7 @@ typedef struct rime_context_t {
 } RimeContext;
 
 /*!
- *  should be initialized by calling RIME_STRUCT_INIT(Type, var);
+ *  Should be initialized by calling RIME_STRUCT_INIT(Type, var);
  */
 typedef struct rime_status_t {
   int data_size;
@@ -169,17 +169,17 @@ typedef void (*RimeNotificationHandler)(void* context_object,
                                         const char* message_type,
                                         const char* message_value);
 
-// setup
+// Setup
 
 /*!
- *  call this function before accessing any other API.
+ *  Call this function before accessing any other API.
  */
 RIME_API void RimeSetup(RimeTraits *traits);
 
 /*!
  *  Pass a C-string constant in the format "rime.x"
  *  where 'x' is the name of your application.
- *  adding prefix "rime." ensures old log files are automatically cleaned.
+ *  Add prefix "rime." to ensure old log files are automatically cleaned.
  *  \deprecated Use RimeSetup() instead.
  */
 RIME_API void RimeSetupLogging(const char* app_name);
@@ -203,7 +203,7 @@ RIME_API void RimeSetupLogging(const char* app_name);
 RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
                                          void* context_object);
 
-// entry and exit
+// Entry and exit
 
 RIME_API void RimeInitialize(RimeTraits *traits);
 RIME_API void RimeFinalize();
@@ -215,7 +215,7 @@ RIME_API Bool RimeStartMaintenanceOnWorkspaceChange();
 RIME_API Bool RimeIsMaintenancing();
 RIME_API void RimeJoinMaintenanceThread();
 
-// deployment
+// Deployment
 
 RIME_API void RimeDeployerInitialize(RimeTraits *traits);
 RIME_API Bool RimePrebuildAllSchemas();
@@ -225,7 +225,7 @@ RIME_API Bool RimeDeployConfigFile(const char *file_name, const char *version_ke
 
 RIME_API Bool RimeSyncUserData();
 
-// session management
+// Session management
 
 RIME_API RimeSessionId RimeCreateSession();
 RIME_API Bool RimeFindSession(RimeSessionId session_id);
@@ -233,7 +233,7 @@ RIME_API Bool RimeDestroySession(RimeSessionId session_id);
 RIME_API void RimeCleanupStaleSessions();
 RIME_API void RimeCleanupAllSessions();
 
-// input
+// Input
 
 RIME_API Bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask);
 /*!
@@ -242,7 +242,7 @@ RIME_API Bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask);
 RIME_API Bool RimeCommitComposition(RimeSessionId session_id);
 RIME_API void RimeClearComposition(RimeSessionId session_id);
 
-// output
+// Output
 
 RIME_API Bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit);
 RIME_API Bool RimeFreeCommit(RimeCommit* commit);
@@ -251,7 +251,7 @@ RIME_API Bool RimeFreeContext(RimeContext* context);
 RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status);
 RIME_API Bool RimeFreeStatus(RimeStatus* status);
 
-// runtime options
+// Runtime options
 
 RIME_API void RimeSetOption(RimeSessionId session_id, const char* option, Bool value);
 RIME_API Bool RimeGetOption(RimeSessionId session_id, const char* option);
@@ -264,7 +264,7 @@ RIME_API void RimeFreeSchemaList(RimeSchemaList* schema_list);
 RIME_API Bool RimeGetCurrentSchema(RimeSessionId session_id, char* schema_id, size_t buffer_size);
 RIME_API Bool RimeSelectSchema(RimeSessionId session_id, const char* schema_id);
 
-// configuration
+// Configuration
 
 // <schema_id>.schema.yaml
 RIME_API Bool RimeSchemaOpen(const char* schema_id, RimeConfig* config);
@@ -273,7 +273,7 @@ RIME_API Bool RimeConfigOpen(const char* config_id, RimeConfig* config);
 RIME_API Bool RimeConfigClose(RimeConfig* config);
 RIME_API Bool RimeConfigInit(RimeConfig* config);
 RIME_API Bool RimeConfigLoadString(RimeConfig* config, const char* yaml);
-// access config values
+// Access config values
 RIME_API Bool RimeConfigGetBool(RimeConfig *config, const char *key, Bool *value);
 RIME_API Bool RimeConfigGetInt(RimeConfig *config, const char *key, int *value);
 RIME_API Bool RimeConfigGetDouble(RimeConfig *config, const char *key, double *value);
@@ -284,7 +284,7 @@ RIME_API Bool RimeConfigSetBool(RimeConfig *config, const char *key, Bool value)
 RIME_API Bool RimeConfigSetInt(RimeConfig *config, const char *key, int value);
 RIME_API Bool RimeConfigSetDouble(RimeConfig *config, const char *key, double value);
 RIME_API Bool RimeConfigSetString(RimeConfig *config, const char *key, const char *value);
-// manipulating complex structures
+// Manipulate complex structures
 RIME_API Bool RimeConfigGetItem(RimeConfig* config, const char* key, RimeConfig* value);
 RIME_API Bool RimeConfigSetItem(RimeConfig* config, const char* key, RimeConfig* value);
 RIME_API Bool RimeConfigClear(RimeConfig* config, const char* key);
@@ -295,14 +295,14 @@ RIME_API Bool RimeConfigBeginList(RimeConfigIterator* iterator, RimeConfig* conf
 RIME_API Bool RimeConfigBeginMap(RimeConfigIterator* iterator, RimeConfig* config, const char* key);
 RIME_API Bool RimeConfigNext(RimeConfigIterator* iterator);
 RIME_API void RimeConfigEnd(RimeConfigIterator* iterator);
-// utilities
+// Utilities
 RIME_API Bool RimeConfigUpdateSignature(RimeConfig* config, const char* signer);
 
-// testing
+// Testing
 
 RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence);
 
-// module
+// Module
 
 /*!
  *  Extend the structure to publish custom data/functions in your specific module
@@ -323,7 +323,7 @@ typedef struct rime_module_t {
 RIME_API Bool RimeRegisterModule(RimeModule* module);
 RIME_API RimeModule* RimeFindModule(const char* module_name);
 
-//! run a registered task
+//! Run a registered task
 RIME_API Bool RimeRunTask(const char* task_name);
 
 RIME_API const char* RimeGetSharedDataDir();
@@ -331,8 +331,8 @@ RIME_API const char* RimeGetUserDataDir();
 RIME_API const char* RimeGetSyncDir();
 RIME_API const char* RimeGetUserId();
 
-/*! The api structure
- *  rime_api_t is for rime v1.0
+/*! The API structure
+ *  RimeApi is for rime v1.0+
  */
 typedef struct rime_api_t {
   int data_size;
@@ -483,18 +483,18 @@ typedef struct rime_api_t {
   //! caret posistion in terms of raw input
   size_t (*get_caret_pos)(RimeSessionId session_id);
 
-  //! selecting a candidate from current page
+  //! select a candidate from current page
   Bool (*select_candidate)(RimeSessionId session_id, size_t index);
 
 } RimeApi;
 
-//! api entry
+//! API entry
 /*!
- *  acquire the version controlled RimeApi structure.
+ *  Acquire the version controlled RimeApi structure.
  */
 RIME_API RimeApi* rime_get_api();
 
-//! clients should test if an api function is available in the current version before calling it.
+//! Clients should test if an api function is available in the current version before calling it.
 #define RIME_API_AVAILABLE(api, func) (RIME_STRUCT_HAS_MEMBER(*(api), (api)->func) && (api)->func)
 
 // Initializer for MSVC and GCC.
@@ -512,8 +512,8 @@ RIME_API RimeApi* rime_get_api();
 #endif
 
 /*!
- *  automatically register a rime module when the library is loaded.
- *  clients should define functions called rime_<module_name>_initialize(),
+ *  Automatically register a rime module when the library is loaded.
+ *  Clients should define functions called rime_<module_name>_initialize(),
  *  and rime_<module_name>_finalize().
  *  \sa core_module.cc for an example.
  */
@@ -531,7 +531,7 @@ RIME_MODULE_INITIALIZER(rime_register_module_##name) { \
 }
 
 /*!
- *  customize the module by assigning additional functions, eg. module->get_api.
+ *  Customize the module by assigning additional functions, eg. module->get_api.
  */
 #define RIME_REGISTER_CUSTOM_MODULE(name) \
 void rime_require_module_##name() {} \
