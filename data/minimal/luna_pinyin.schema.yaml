@@ -4,7 +4,7 @@
 schema:
   schema_id: luna_pinyin
   name: 朙月拼音
-  version: "0.15.test"
+  version: "0.14.test"
   author:
     - 佛振 <chen.sst@gmail.com>
   description: |
@@ -148,7 +148,7 @@ key_binder:
 recognizer:
   import_preset: default
   patterns:
-    alphabet: '(?<![A-Z]):[^ ;]*;?$'
+    alphabet: '(?<![A-Z]):[^;]*;?$'
     cangjie: "C:[a-z']*;?$"
     pinyin: "P:[a-z']*;?$"
     reverse_lookup: "`[a-z]*'?$"
