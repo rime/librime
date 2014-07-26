@@ -44,6 +44,7 @@ class Recognizer : public Processor {
 
  protected:
   RecognizerPatterns patterns_;
+  bool use_space_ = false;
 };
 
 }  // namespace rime

@@ -81,6 +81,7 @@ Recognizer::Recognizer(const Ticket& ticket) : Processor(ticket) {
     return;
   if (Config* config = ticket.schema->config()) {
     patterns_.LoadConfig(config);
+    config->GetBool("recognizer/use_space", &use_space_);
   }
 }
 
@@ -90,7 +91,8 @@ ProcessResult Recognizer::ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   }
   int ch = key_event.keycode();
-  if (ch >= 0x20 && ch < 0x80) {
+  if ((use_space_ && ch == ' ') ||
+      (ch > 0x20 && ch < 0x80)) {
     // pattern matching against the input string plus the incoming character
     Context* ctx = engine_->context();
     std::string input = ctx->input();
