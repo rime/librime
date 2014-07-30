@@ -17,7 +17,7 @@
 #include <glog/logging.h>
 #else
 #include "no_logging.h"
-#endif  // RIME_ENABLE_LOGGGING
+#endif  // RIME_ENABLE_LOGGING
 
 namespace rime {
 
