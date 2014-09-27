@@ -1,122 +1,127 @@
-set(
-	LIBOPENCC_HEADERS
-	opencc.h
-	opencc_types.h
-	wrapper/cplusplus/openccxx.h
-)
+include (GenerateExportHeader)
 
 set(
-	LIBOPENCC_DICTIONARY_SOURCES
-	dict.c
-	dictionary/datrie.c
-	dictionary/text.c
-	dict.h
-	dictionary/datrie.h
-	dictionary/text.h
+  LIBOPENCC_HEADERS
+  Common.hpp
+  Config.hpp
+  Conversion.hpp
+  ConversionChain.hpp
+  Converter.hpp
+  DartsDict.hpp
+  Dict.hpp
+  DictEntry.hpp
+  DictGroup.hpp
+  Export.hpp
+  MaxMatchSegmentation.hpp
+  Optional.hpp
+  Segmentation.hpp
+  TextDict.hpp
+  UTF8Util.hpp
+  opencc.h
 )
 
 set(
-	LIBOPENCC_SOURCES
-	${LIBOPENCC_DICTIONARY_SOURCES}
-	config_reader.c
-	converter.c
-	dict_group.c
-	dict_chain.c
-	encoding.c
-	utils.c
-	opencc.c
-	config_reader.h
-	converter.h
-	dict_group.h
-	dict_chain.h
-	encoding.h
-	utils.h
+  LIBOPENCC_SOURCES
+  Config.cpp
+  Conversion.cpp
+  ConversionChain.cpp
+  Converter.cpp
+  DartsDict.cpp
+  Dict.cpp
+  DictGroup.cpp
+  MaxMatchSegmentation.cpp
+  SimpleConverter.cpp
+  Segmentation.cpp
+  TextDict.cpp
+  UTF8Util.cpp
 )
 
-set (LIBOPENCC_TARGET libopencc)
-set (LIBOPENCC_STATIC_TARGET libopencc_static)
-
-add_definitions(
-	-DPKGDATADIR="${DIR_SHARE_OPENCC}"
-	-DLOCALEDIR="${DIR_SHARE_LOCALE}"
-	-DVERSION="${OPENCC_VERSION}"
-	-DBYTEORDER=${BYTEORDER}
-	-DPACKAGE_NAME="${PACKAGE_NAME}"
-	-Wall
-)
+include_directories(../deps/darts-clone)
+include_directories(../deps/rapidjson-0.11)
+include_directories(../deps/tclap-1.2.1)
 
 add_library(
-	${LIBOPENCC_TARGET}
-	SHARED
-	${LIBOPENCC_SOURCES}
+  libopencc
+  SHARED
+  ${LIBOPENCC_SOURCES}
 )
 
-add_library(
-	${LIBOPENCC_STATIC_TARGET}
-	STATIC
-	${LIBOPENCC_SOURCES}
+GENERATE_EXPORT_HEADER(
+  libopencc
+  BASE_NAME OPENCC
+  EXPORT_MACRO_NAME OPENCC_EXPORT
+  EXPORT_FILE_NAME Opencc_Export.h
+  STATIC_DEFINE Opencc_BUILT_AS_STATIC
 )
 
 set_target_properties(
-	${LIBOPENCC_TARGET}
-	${LIBOPENCC_STATIC_TARGET}
-	PROPERTIES
-		OUTPUT_NAME
-			opencc
-		VERSION
-			1.0.0
-		SOVERSION
-			1
+  libopencc
+  # libopencc_static
+  PROPERTIES
+    LINKER_LANGUAGE
+      CXX
+    OUTPUT_NAME
+      opencc
+    VERSION
+      1.0.0
+    SOVERSION
+      2
 )
 
 if (ENABLE_GETTEXT)
-
-	add_definitions(
-		-DENABLE_GETTEXT
-	)
-	
-	link_directories(
-	${GETTEXT_LIBRARIES}
-	)
-
-	include_directories(
-		${GETTEXT_INCLUDE_DIR}
-	)
-	
+  add_definitions(
+    -DENABLE_GETTEXT
+  )
+  link_directories(
+    ${GETTEXT_LIBRARIES}
+  )
+  include_directories(
+    ${GETTEXT_INCLUDE_DIR}
+  )
 endif (ENABLE_GETTEXT)
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
-
-	add_definitions(
-		-O0
-		-g3
-	)
-
+  add_definitions(
+    -O0
+    -g3
+  )
 endif (CMAKE_BUILD_TYPE MATCHES Debug)
 
-if (NOT WIN32)
 install(
-	TARGETS
-		${LIBOPENCC_TARGET}
-	LIBRARY DESTINATION
-		${DIR_LIBRARY}
-)
-endif (NOT WIN32)
-
-install(
-	TARGETS
-		${LIBOPENCC_STATIC_TARGET}
-	ARCHIVE DESTINATION
-		${DIR_LIBRARY_STATIC}
+  TARGETS
+    libopencc
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib/static
 )
 
 install(
-	FILES
-		${LIBOPENCC_HEADERS}
-	DESTINATION
-		${DIR_INCLUDE}/opencc
+  FILES
+    ${LIBOPENCC_HEADERS}
+  DESTINATION
+    ${DIR_INCLUDE}/opencc
 )
 
-include(symbols.cmake)
+add_executable(
+  opencc
+  CommandLine.cpp
+)
+target_link_libraries(
+  opencc
+  libopencc
+)
 
-add_subdirectory(tools)
+add_executable(
+  opencc_dict
+  DictConverter.cpp
+)
+target_link_libraries(
+  opencc_dict
+  libopencc
+)
+
+install(
+  TARGETS
+    opencc
+    opencc_dict
+  RUNTIME DESTINATION bin
+)
