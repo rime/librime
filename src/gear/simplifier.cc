@@ -8,7 +8,12 @@
 #include <vector>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <opencc/opencc.h>
+#include <opencc/Config.hpp>
+#include <opencc/Converter.hpp>
+#include <opencc/Conversion.hpp>
+#include <opencc/ConversionChain.hpp>
+#include <opencc/Dict.hpp>
+#include <opencc/DictEntry.hpp>
 #include <stdint.h>
 #include <utf8.h>
 #include <rime/candidate.h>
@@ -29,19 +34,34 @@ class Opencc {
  public:
   Opencc(const std::string& config_path) {
     LOG(INFO) << "initilizing opencc: " << config_path;
-    converter_ = unique_ptr<opencc::SimpleConverter>(
-      new opencc::SimpleConverter(config_path));
+    opencc::Config config(config_path);
+    converter_ = config.GetConverter();
+    const std::list<opencc::ConversionPtr> conversions =
+      converter_->GetConversionChain()->GetConversions();
+    dict_ = conversions.front()->GetDict();
   }
+
+  bool ConvertSingleCharacter(const std::string& text,
+                              std::vector<std::string>* forms) {
+    opencc::Optional<opencc::DictEntry> item = dict_->Match(text);
+    if (item.IsNull()) {
+      // Match not found
+      return false;
+    } else {
+      *forms = item.Get().values;
+      return true;
+    }
+  }
+
   bool ConvertText(const std::string& text,
-                   std::string* simplified,
-                   bool* is_single_char) {
-    //FIXME is_single_char not set
+                   std::string* simplified) {
     *simplified = converter_->Convert(text);
     return true;
   }
 
  private:
-  unique_ptr<opencc::SimpleConverter> converter_;
+   opencc::ConverterPtr converter_;
+   opencc::DictPtr dict_;
 };
 
 // Simplifier
@@ -116,15 +136,16 @@ bool Simplifier::Convert(const shared_ptr<Candidate>& original,
   if (excluded_types_.find(original->type()) != excluded_types_.end()) {
     return false;
   }
-  std::string simplified;
-  bool is_single_char = false;
-  if (!opencc_->ConvertText(original->text(), &simplified, &is_single_char) ||
-      simplified == original->text()) {
-    return false;
-  }
-  if (is_single_char) {
+  size_t length = utf8::unchecked::distance(original->text().c_str(),
+                                            original->text().c_str()
+                                            + original->text().length());
+  bool success;
+  if (length == 1) {
     std::vector<std::string> forms;
-    boost::split(forms, simplified, boost::is_any_of(" "));
+    success = opencc_->ConvertSingleCharacter(original->text(), &forms);
+    if (!success || forms.size() == 0) {
+      return false;
+    }
     for (size_t i = 0; i < forms.size(); ++i) {
       if (forms[i] == original->text()) {
         result->push_back(original);
@@ -142,8 +163,12 @@ bool Simplifier::Convert(const shared_ptr<Candidate>& original,
                 tips));
       }
     }
-  }
-  else {
+  } else {
+    std::string simplified;
+    success = opencc_->ConvertText(original->text(), &simplified);
+    if (!success || simplified == original->text()) {
+      return false;
+    }
     std::string tips;
     if (tips_level_ == kTipsAll) {
       tips = quote_left + original->text() + quote_right;
