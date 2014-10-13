@@ -1,7 +1,7 @@
 /*
  * Open Chinese Convert
  *
- * Copyright 2010-2013 BYVoid <byvoid@byvoid.com>
+ * Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@
 #include "Common.hpp"
 
 namespace opencc {
-  class OPENCC_EXPORT Segmentation {
-    public:
-      virtual StringVectorPtr Segment(const string& text) = 0;
-  };
+class OPENCC_EXPORT Segmentation {
+public:
+  virtual Segments Segment(const string& text) const = 0;
+};
 }

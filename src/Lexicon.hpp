@@ -19,20 +19,45 @@
 #pragma once
 
 #include "Common.hpp"
-#include "Conversion.hpp"
+#include "DictEntry.hpp"
 
 namespace opencc {
-class OPENCC_EXPORT ConversionChain {
+class OPENCC_EXPORT Lexicon {
 public:
-  ConversionChain(const list<ConversionPtr> _conversions);
+  Lexicon() {
+  }
 
-  Segments Convert(const Segments& input) const;
+  ~Lexicon() {
+    for (DictEntry* entry : entries) {
+      delete entry;
+    }
+  }
 
-  const list<ConversionPtr> GetConversions() const {
-    return conversions;
+  void Add(DictEntry* entry) {
+    entries.push_back(entry);
+  }
+
+  void Sort() {
+    std::sort(entries.begin(), entries.end(), DictEntry::PtrLessThan);
+  }
+
+  const DictEntry* At(size_t index) const {
+    return entries.at(index);
+  }
+
+  size_t Length() const {
+    return entries.size();
+  }
+
+  vector<DictEntry*>::const_iterator begin() const {
+    return entries.begin();
+  }
+
+  vector<DictEntry*>::const_iterator end() const {
+    return entries.end();
   }
 
 private:
-  const list<ConversionPtr> conversions;
+  vector<DictEntry*> entries;
 };
 }

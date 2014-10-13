@@ -1,7 +1,7 @@
 /*
  * Open Chinese Convert
  *
- * Copyright 2010-2013 BYVoid <byvoid@byvoid.com>
+ * Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
  */
 
 #pragma once
+
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -29,36 +31,54 @@
 #endif // ifdef _MSC_VER
 
 namespace opencc {
-  class OPENCC_EXPORT Exception : public std::exception {
-    public:
-      Exception() {}
+class OPENCC_EXPORT Exception : public std::exception {
+public:
+  Exception() {
+  }
 
-      virtual ~Exception() throw() {}
+  virtual ~Exception() throw() {
+  }
 
-      Exception(std::string message_) : message(message_) {}
+  Exception(const std::string& _message) : message(_message) {
+  }
 
-      virtual const char* what() const noexcept {
-        return message.c_str();
-      }
+  virtual const char* what() const noexcept {
+    return message.c_str();
+  }
 
-    private:
-      std::string message;
-  };
+protected:
+  std::string message;
+};
 
-  class OPENCC_EXPORT FileNotFound : public Exception {
-    public:
-      FileNotFound(const std::string fileName) :
-        Exception(fileName + " not found or not accessible") {}
-  };
+class OPENCC_EXPORT FileNotFound : public Exception {
+public:
+  FileNotFound(const std::string& fileName) :
+      Exception(fileName + " not found or not accessible.") {
+  }
+};
 
-  class OPENCC_EXPORT FileNotWritable : public Exception {
-    public:
-      FileNotWritable(const std::string fileName) :
-        Exception(fileName + " not writable") {}
-  };
+class OPENCC_EXPORT FileNotWritable : public Exception {
+public:
+  FileNotWritable(const std::string& fileName) :
+      Exception(fileName + " not writable.") {
+  }
+};
 
-  class OPENCC_EXPORT InvalidFormat : public Exception {
-    public:
-      InvalidFormat(const std::string message) : Exception(message) {}
-  };
+class OPENCC_EXPORT InvalidFormat : public Exception {
+public:
+  InvalidFormat(const std::string& message) :
+      Exception("Invalid format: " + message) {
+  }
+};
+
+class OPENCC_EXPORT InvalidTextDictionary : public InvalidFormat {
+public:
+  InvalidTextDictionary(const std::string& _message, size_t lineNum) :
+      InvalidFormat("") {
+    std::ostringstream buffer;
+    buffer << "Invalid text dictionary at line " << lineNum << ": "
+        << _message;
+    message = buffer.str();
+  }
+};
 }

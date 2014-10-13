@@ -1,7 +1,7 @@
 /*
  * Open Chinese Convert
  *
- * Copyright 2010-2013 BYVoid <byvoid@byvoid.com>
+ * Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,16 @@
  */
 
 #include "ConversionChain.hpp"
+#include "Segments.hpp"
 
 using namespace opencc;
 
-ConversionChain::ConversionChain() {}
-
-ConversionChain::~ConversionChain() {}
-
-void ConversionChain::AddConversion(ConversionPtr conversion) {
-  conversions.push_back(conversion);
+ConversionChain::ConversionChain(const list<ConversionPtr> _conversions)
+    : conversions(_conversions) {
 }
 
-StringVectorPtr ConversionChain::Convert(const StringVectorPtr input) {
-  StringVectorPtr output = input;
+Segments ConversionChain::Convert(const Segments& input) const {
+  Segments output = input;
   for (auto conversion : conversions) {
     output = conversion->Convert(output);
   }

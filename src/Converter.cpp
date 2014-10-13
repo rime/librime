@@ -1,7 +1,7 @@
-/**
+/*
  * Open Chinese Convert
  *
- * Copyright 2010-2013 BYVoid <byvoid@byvoid.com>
+ * Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,15 @@
 
 #include "ConversionChain.hpp"
 #include "Converter.hpp"
+#include "Segments.hpp"
 
 using namespace opencc;
 
-string Converter::Convert(const string& text) {
-  auto segments = segmentation->Segment(text);
-  auto converted = conversionChain->Convert(segments);
+string Converter::Convert(const string& text) const {
+  const Segments& segments = segmentation->Segment(text);
+  const Segments& converted = conversionChain->Convert(segments);
   std::ostringstream buffer;
-  for (auto segment : *converted) {
+  for (const auto& segment : converted) {
     buffer << segment;
   }
   return buffer.str();

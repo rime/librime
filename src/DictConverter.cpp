@@ -1,7 +1,7 @@
 /*
  * Open Chinese Convert
  *
- * Copyright 2010-2013 BYVoid <byvoid@byvoid.com>
+ * Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,28 @@
 
 #include "CmdLineOutput.hpp"
 #include "DartsDict.hpp"
-#include "TextDict.hpp"
 
 using namespace opencc;
 
-SerializableDictPtr CreateDictionary(const string& format) {
+SerializableDictPtr LoadDictionary(const string& format,
+                                   const string& inputFileName) {
   if (format == "text") {
-    return SerializableDictPtr(new TextDict);
+    return SerializableDict::NewFromFile<TextDict>(inputFileName);
   } else if (format == "ocd") {
-    return SerializableDictPtr(new DartsDict);
+    return SerializableDict::NewFromFile<DartsDict>(inputFileName);
+  } else {
+    fprintf(stderr, "Unknown dictionary format: %s\n", format.c_str());
+    exit(2);
+  }
+  return nullptr;
+}
+
+SerializableDictPtr ConvertDictionary(const string& format,
+                                      const SerializableDictPtr dict) {
+  if (format == "text") {
+    return TextDict::NewFromDict(*dict.get());
+  } else if (format == "ocd") {
+    return DartsDict::NewFromDict(*dict.get());
   } else {
     fprintf(stderr, "Unknown dictionary format: %s\n", format.c_str());
     exit(2);
@@ -38,11 +51,8 @@ void ConvertDictionary(const string inputFileName,
                        const string outputFileName,
                        const string formatFrom,
                        const string formatTo) {
-  SerializableDictPtr dictFrom = CreateDictionary(formatFrom);
-  SerializableDictPtr dictTo = CreateDictionary(formatTo);
-
-  dictFrom->LoadFromFile(inputFileName);
-  dictTo->LoadFromDict(dictFrom.get());
+  SerializableDictPtr dictFrom = LoadDictionary(formatFrom, inputFileName);
+  SerializableDictPtr dictTo = ConvertDictionary(formatTo, dictFrom);
   dictTo->SerializeToFile(outputFileName);
 }
 
@@ -54,7 +64,7 @@ int main(int argc, const char* argv[]) {
     CmdLineOutput cmdLineOutput;
     cmd.setOutput(&cmdLineOutput);
 
-    StringVector dictFormats { "text", "ocd" };
+    vector<string> dictFormats{"text", "ocd"};
     TCLAP::ValuesConstraint<string> allowedVals(dictFormats);
 
     TCLAP::ValueArg<string> toArg("t", "to",
@@ -86,7 +96,9 @@ int main(int argc, const char* argv[]) {
                       fromArg.getValue(), toArg.getValue());
   } catch (TCLAP::ArgException& e) {
     std::cerr << "error: " << e.error()
-              << " for arg " << e.argId() << std::endl;
+        << " for arg " << e.argId() << std::endl;
+  } catch (Exception& e) {
+    std::cerr << e.what() << std::endl;
   }
   return 0;
 }

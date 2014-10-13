@@ -1,7 +1,7 @@
 #
 # Open Chinese Convert
 #
-# Copyright 2010-2013 BYVoid <byvoid@byvoid.com>
+# Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ set (PACKAGE_NAME opencc)
 project (${PACKAGE_NAME} CXX)
 include (CTest)
 enable_testing()
+
+option(BUILD_SHARED_LIBS "Build opencc as shared library" ON)
 
 ######## Package information
 set (PACKAGE_URL https://github.com/BYVoid/Opencc)
@@ -47,12 +49,8 @@ set(CPACK_SOURCE_IGNORE_FILES
 )
 include(CPack)
 
-######## Validation
+######## Options
 option(BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" OFF)
-
-if (ENABLE_GETTEXT)
-  find_package(Gettext REQUIRED)
-endif (ENABLE_GETTEXT)
 
 ######## Windows
 
@@ -131,9 +129,4 @@ endif()
 add_subdirectory(src)
 add_subdirectory(doc)
 add_subdirectory(data)
-
-if (GETTEXT_FOUND AND ENABLE_GETTEXT)
-  add_subdirectory(po)
-endif (GETTEXT_FOUND AND ENABLE_GETTEXT)
-
 add_subdirectory(test)
