@@ -37,10 +37,11 @@ opencc:
 	-DENABLE_GETTEXT:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_INSTALL_PREFIX=/usr \
+	-DBUILD_SHARED_LIBS:BOOL=OFF \
 	.. && \
 	make
 	mkdir -p thirdparty/include/opencc/ && \
-	cp $(SRC_DIR)/opencc/src/opencc*.h thirdparty/include/opencc/
+	cp $(SRC_DIR)/opencc/src/*.h* thirdparty/include/opencc/
 	cp $(SRC_DIR)/opencc/build/src/libopencc.a thirdparty/lib/
 
 yaml-cpp:
