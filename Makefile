@@ -17,6 +17,9 @@ uninstall: uninstall-librime
 thirdparty:
 	make -f Makefile.thirdparty
 
+thirdparty/%:
+	make -f Makefile.thirdparty $(@:thirdparty/%=%)
+
 clean:
 	rm -Rf build build-static debug-build
 
