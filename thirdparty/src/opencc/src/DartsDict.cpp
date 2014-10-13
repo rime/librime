@@ -1,7 +1,7 @@
 /*
  * Open Chinese Convert
  *
- * Copyright 2010-2013 BYVoid <byvoid@byvoid.com>
+ * Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,88 +17,118 @@
  */
 
 #include "DartsDict.hpp"
-#include "UTF8Util.hpp"
 #include "darts.h"
+#include "Lexicon.hpp"
 
 using namespace opencc;
 
 static const char* OCDHEADER = "OPENCCDARTS1";
 
-DartsDict::DartsDict() {
-  maxLength = 0;
-  buffer = nullptr;
-  dict = new Darts::DoubleArray();
+DartsDict::DartsDict(const size_t _maxLength,
+                     const LexiconPtr& _lexicon,
+                     const void* _doubleArray,
+                     const void* _buffer)
+    : maxLength(_maxLength), lexicon(_lexicon), doubleArray(_doubleArray), buffer(
+    _buffer) {
 }
 
 DartsDict::~DartsDict() {
   if (buffer != nullptr) {
-    free(buffer);
+    free((void*)buffer);
   }
-  delete (Darts::DoubleArray*)dict;
+  delete (Darts::DoubleArray*)doubleArray;
 }
 
 size_t DartsDict::KeyMaxLength() const {
   return maxLength;
 }
 
-Optional<DictEntry> DartsDict::Match(const char* word) {
-  Darts::DoubleArray& dict = *(Darts::DoubleArray*)this->dict;
+Optional<const DictEntry*> DartsDict::Match(const char* word) const {
+  Darts::DoubleArray& dict = *(Darts::DoubleArray*)this->doubleArray;
   Darts::DoubleArray::result_pair_type result;
 
   dict.exactMatchSearch(word, result);
   if (result.value != -1) {
-    return Optional<DictEntry>(lexicon.at(result.value));
+    return Optional<const DictEntry*>(lexicon->At(result.value));
   } else {
-    return Optional<DictEntry>();
+    return Optional<const DictEntry*>::Null();
   }
 }
 
-Optional<DictEntry> DartsDict::MatchPrefix(const char* word) {
+Optional<const DictEntry*> DartsDict::MatchPrefix(const char* word) const {
   const size_t DEFAULT_NUM_ENTRIES = 64;
-  Darts::DoubleArray& dict = *(Darts::DoubleArray*)this->dict;
+  Darts::DoubleArray& dict = *(Darts::DoubleArray*)this->doubleArray;
   Darts::DoubleArray::value_type results[DEFAULT_NUM_ENTRIES];
   Darts::DoubleArray::value_type maxMatchedResult = -1;
   size_t numMatched = dict.commonPrefixSearch(word, results, DEFAULT_NUM_ENTRIES);
   if (numMatched == 0) {
-    return Optional<DictEntry>();
+    return Optional<const DictEntry*>::Null();
   } else if ((numMatched > 0) && (numMatched < DEFAULT_NUM_ENTRIES)) {
     maxMatchedResult = results[numMatched - 1];
   } else {
     Darts::DoubleArray::value_type* rematchedResults =
-      new Darts::DoubleArray::value_type[numMatched];
+        new Darts::DoubleArray::value_type[numMatched];
     numMatched = dict.commonPrefixSearch(word, rematchedResults, numMatched);
     maxMatchedResult = rematchedResults[numMatched - 1];
     delete[] rematchedResults;
   }
   if (maxMatchedResult >= 0) {
-    return Optional<DictEntry>(lexicon.at(maxMatchedResult));
+    return Optional<const DictEntry*>(lexicon->At(maxMatchedResult));
   } else {
-    return Optional<DictEntry>();
+    return Optional<const DictEntry*>::Null();
   }
 }
 
-vector<DictEntry> DartsDict::GetLexicon() {
+LexiconPtr DartsDict::GetLexicon() const {
   return lexicon;
 }
 
-void DartsDict::LoadFromDict(Dict* dictionary) {
-  Darts::DoubleArray& dict = *(Darts::DoubleArray*)this->dict;
-  vector<const char*> keys;
-
-  maxLength = 0;
-  lexicon = dictionary->GetLexicon();
-  size_t lexiconCount = lexicon.size();
-  keys.resize(lexiconCount);
-  for (size_t i = 0; i < lexiconCount; i++) {
-    const DictEntry& entry = lexicon.at(i);
-    keys[i] = entry.key.c_str();
-    maxLength = std::max(entry.key.length(), maxLength);
+DartsDictPtr DartsDict::NewFromFile(FILE* fp) {
+  Darts::DoubleArray* doubleArray = new Darts::DoubleArray();
+  size_t headerLen = strlen(OCDHEADER);
+  void* buffer = malloc(sizeof(char) * headerLen);
+  size_t bytesRead = fread(buffer, sizeof(char), headerLen, fp);
+  if (bytesRead != headerLen || memcmp(buffer, OCDHEADER, headerLen) != 0) {
+    throw InvalidFormat("Invalid OpenCC dictionary header");
   }
-  dict.build(lexicon.size(), &keys[0]);
+  free(buffer);
+
+  size_t dartsSize;
+  bytesRead = fread(&dartsSize, sizeof(size_t), 1, fp);
+  if (bytesRead * sizeof(size_t) != sizeof(size_t)) {
+    throw InvalidFormat("Invalid OpenCC dictionary header (dartsSize)");
+  }
+  buffer = malloc(dartsSize);
+  bytesRead = fread(buffer, 1, dartsSize, fp);
+  if (bytesRead != dartsSize) {
+    throw InvalidFormat("Invalid OpenCC dictionary size of darts mismatch");
+  }
+  doubleArray->set_array(buffer);
+
+  TextDictPtr textDict = TextDict::NewFromSortedFile(fp);
+  const LexiconPtr& lexicon = textDict->GetLexicon();
+  const size_t maxLength = textDict->KeyMaxLength();
+  return DartsDictPtr(new DartsDict(maxLength, lexicon, doubleArray, buffer));
 }
 
-void DartsDict::SerializeToFile(FILE* fp) {
-  Darts::DoubleArray& dict = *(Darts::DoubleArray*)this->dict;
+DartsDictPtr DartsDict::NewFromDict(const Dict& dict) {
+  Darts::DoubleArray* doubleArray = new Darts::DoubleArray();
+  vector<const char*> keys;
+  size_t maxLength = 0;
+  const LexiconPtr& lexicon = dict.GetLexicon();
+  size_t lexiconCount = lexicon->Length();
+  keys.resize(lexiconCount);
+  for (size_t i = 0; i < lexiconCount; i++) {
+    const DictEntry* entry = lexicon->At(i);
+    keys[i] = entry->Key();
+    maxLength = std::max(entry->KeyLength(), maxLength);
+  }
+  doubleArray->build(lexicon->Length(), &keys[0]);
+  return DartsDictPtr(new DartsDict(maxLength, lexicon, doubleArray, nullptr));
+}
+
+void DartsDict::SerializeToFile(FILE* fp) const {
+  Darts::DoubleArray& dict = *(Darts::DoubleArray*)this->doubleArray;
 
   fwrite(OCDHEADER, sizeof(char), strlen(OCDHEADER), fp);
 
@@ -106,31 +136,6 @@ void DartsDict::SerializeToFile(FILE* fp) {
   fwrite(&dartsSize, sizeof(size_t), 1, fp);
   fwrite(dict.array(), sizeof(char), dartsSize, fp);
 
-  TextDict textDict;
-  textDict.LoadFromDict(this);
-  textDict.SerializeToFile(fp);
-}
-
-void DartsDict::LoadFromFile(FILE* fp) {
-  Darts::DoubleArray& dict = *(Darts::DoubleArray*)this->dict;
-  if (buffer != nullptr) {
-    free(buffer);
-  }
-  buffer = malloc(sizeof(char) * strlen(OCDHEADER));
-  fread(buffer, sizeof(char), strlen(OCDHEADER), fp);
-  if (memcmp(buffer, OCDHEADER, strlen(OCDHEADER)) != 0) {
-    throw InvalidFormat("Invalid OpenCC dictionary");
-  }
-  free(buffer);
-
-  size_t dartsSize;
-  fread(&dartsSize, sizeof(size_t), 1, fp);
-  buffer = malloc(dartsSize);
-  fread(buffer, 1, dartsSize, fp);
-  dict.set_array(buffer);
-
-  TextDict textDict;
-  textDict.LoadFromFile(fp);
-  lexicon = textDict.GetLexicon();
-  maxLength = textDict.KeyMaxLength();
+  TextDictPtr textDict = TextDict::NewFromDict(*this);
+  textDict->SerializeToFile(fp);
 }

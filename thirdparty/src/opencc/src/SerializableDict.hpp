@@ -1,7 +1,7 @@
 /*
  * Open Chinese Convert
  *
- * Copyright 2010-2013 BYVoid <byvoid@byvoid.com>
+ * Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,33 +21,45 @@
 #include "Dict.hpp"
 
 namespace opencc {
-  class SerializableDict : public Dict {
-    public:
-      virtual void LoadFromFile(FILE* fp) = 0;
-      virtual void SerializeToFile(FILE* fp) = 0;
-      virtual bool TryLoadFromFile(const string fileName) {
-        FILE* fp = fopen(fileName.c_str(), "rb");
-        if (fp == NULL) {
-          return false;
-        }
-        LoadFromFile(fp);
-        fclose(fp);
-        return true;
-      }
+class SerializableDict : public Dict {
+public:
+  /**
+  * Serializes the dictionary and writes in to a file.
+  */
+  virtual void SerializeToFile(FILE* fp) const = 0;
 
-      virtual void LoadFromFile(const string fileName) {
-        if (!TryLoadFromFile(fileName)) {
-          throw FileNotFound(fileName);
-        }
-      }
+  /**
+  * Serializes the dictionary and writes in to a file.
+  */
+  virtual void SerializeToFile(const string& fileName) const {
+    FILE* fp = fopen(fileName.c_str(), "wb");
+    if (fp == NULL) {
+      throw FileNotWritable(fileName);
+    }
+    SerializeToFile(fp);
+    fclose(fp);
+  }
 
-      virtual void SerializeToFile(const string fileName) {
-        FILE* fp = fopen(fileName.c_str(), "wb");
-        if (fp == NULL) {
-          throw FileNotWritable(fileName);
-        }
-        SerializeToFile(fp);
-        fclose(fp);
-      }
-  };
+  template<typename DICT>
+  static bool TryLoadFromFile(const string& fileName,
+                              std::shared_ptr<DICT>* dict) {
+    FILE* fp = fopen(fileName.c_str(), "rb");
+    if (fp == NULL) {
+      return false;
+    }
+    std::shared_ptr<DICT> loadedDict = DICT::NewFromFile(fp);
+    fclose(fp);
+    *dict = loadedDict;
+    return true;
+  }
+
+  template<typename DICT>
+  static std::shared_ptr<DICT> NewFromFile(const string& fileName) {
+    std::shared_ptr<DICT> dict;
+    if (!TryLoadFromFile<DICT>(fileName, &dict)) {
+      throw FileNotFound(fileName);
+    }
+    return dict;
+  }
+};
 }

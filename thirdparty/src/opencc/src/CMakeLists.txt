@@ -13,9 +13,11 @@ set(
   DictGroup.hpp
   Exception.hpp
   Export.hpp
+  Lexicon.hpp
   MaxMatchSegmentation.hpp
   Optional.hpp
   Segmentation.hpp
+  Segments.hpp
   SerializableDict.hpp
   TextDict.hpp
   UTF8Util.hpp
@@ -30,6 +32,7 @@ set(
   Converter.cpp
   DartsDict.cpp
   Dict.cpp
+  DictEntry.cpp
   DictGroup.cpp
   MaxMatchSegmentation.cpp
   SimpleConverter.cpp
@@ -44,7 +47,6 @@ include_directories(../deps/tclap-1.2.1)
 
 add_library(
   libopencc
-  SHARED
   ${LIBOPENCC_SOURCES}
 )
 
@@ -58,7 +60,6 @@ GENERATE_EXPORT_HEADER(
 
 set_target_properties(
   libopencc
-  # libopencc_static
   PROPERTIES
     LINKER_LANGUAGE
       CXX

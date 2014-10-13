@@ -16,23 +16,26 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "DictEntry.hpp"
 
-#include "Common.hpp"
-#include "Conversion.hpp"
+using namespace opencc;
 
-namespace opencc {
-class OPENCC_EXPORT ConversionChain {
-public:
-  ConversionChain(const list<ConversionPtr> _conversions);
+size_t MultiValueDictEntry::NumValues() const {
+  return values.Length();
+}
 
-  Segments Convert(const Segments& input) const;
-
-  const list<ConversionPtr> GetConversions() const {
-    return conversions;
+string MultiValueDictEntry::ToString() const {
+  // TODO escape space
+  size_t i = 0;
+  size_t length = values.Length();
+  std::ostringstream buffer;
+  buffer << Key() << '\t';
+  for (const char* value : values) {
+    buffer << value;
+    if (i < length - 1) {
+      buffer << ' ';
+    }
+    i++;
   }
-
-private:
-  const list<ConversionPtr> conversions;
-};
+  return buffer.str();
 }

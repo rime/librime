@@ -1,7 +1,7 @@
-/**
+/*
  * Open Chinese Convert
  *
- * Copyright 2010-2013 BYVoid <byvoid@byvoid.com>
+ * Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,31 +18,31 @@
 
 #include "Conversion.hpp"
 #include "Dict.hpp"
-#include "UTF8Util.hpp"
+#include "Segments.hpp"
 
 using namespace opencc;
 
-string Conversion::Convert(const string& phrase) {
+string Conversion::Convert(const string& phrase) const {
   std::ostringstream buffer;
   for (const char* pstr = phrase.c_str(); *pstr != '\0';) {
-    Optional<DictEntry> matched = dict->MatchPrefix(pstr);
+    Optional<const DictEntry*> matched = dict->MatchPrefix(pstr);
     size_t matchedLength;
     if (matched.IsNull()) {
       matchedLength = UTF8Util::NextCharLength(pstr);
       buffer << UTF8Util::FromSubstr(pstr, matchedLength);
     } else {
-      matchedLength = matched.Get().key.length();
-      buffer << matched.Get().GetDefault();
+      matchedLength = matched.Get()->KeyLength();
+      buffer << matched.Get()->GetDefault();
     }
     pstr += matchedLength;
   }
   return buffer.str();
 }
 
-vector<string> Conversion::Convert(const vector<string>& input) {
-  vector<string> output;
+Segments Conversion::Convert(const Segments& input) const {
+  Segments output;
   for (const auto& segment : input) {
-    output.push_back(Convert(segment));
+    output.AddSegment(Convert(segment));
   }
   return output;
 }

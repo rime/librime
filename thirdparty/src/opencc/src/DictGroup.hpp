@@ -1,7 +1,7 @@
 /*
  * Open Chinese Convert
  *
- * Copyright 2010-2013 BYVoid <byvoid@byvoid.com>
+ * Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,23 +22,30 @@
 #include "Dict.hpp"
 
 namespace opencc {
-  class OPENCC_EXPORT DictGroup : public Dict {
-    public:
-      DictGroup();
-      virtual ~DictGroup();
-      virtual size_t KeyMaxLength() const;
-      virtual Optional<DictEntry> Match(const char* word);
-      virtual Optional<DictEntry> MatchPrefix(const char* word);
-      virtual vector<DictEntry> MatchAllPrefixes(const char* word);
-      virtual vector<DictEntry> GetLexicon();
-      virtual void LoadFromDict(Dict* dictionary);
-      void AddDict(DictPtr dict);
-    
-      const list<DictPtr> GetDicts() const {
-        return dicts;
-      }
-    private:
-      size_t keyMaxLength;
-      list<DictPtr> dicts;
-  };
+class OPENCC_EXPORT DictGroup : public Dict {
+public:
+  DictGroup(const list<DictPtr>& dicts);
+
+  static DictGroupPtr NewFromDict(const Dict& dict);
+
+  virtual ~DictGroup();
+
+  virtual size_t KeyMaxLength() const;
+
+  virtual Optional<const DictEntry*> Match(const char* word) const;
+
+  virtual Optional<const DictEntry*> MatchPrefix(const char* word) const;
+
+  virtual vector<const DictEntry*> MatchAllPrefixes(const char* word) const;
+
+  virtual LexiconPtr GetLexicon() const;
+
+  const list<DictPtr> GetDicts() const {
+    return dicts;
+  }
+
+private:
+  const size_t keyMaxLength;
+  const list<DictPtr> dicts;
+};
 }

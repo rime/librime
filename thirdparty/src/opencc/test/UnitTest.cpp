@@ -1,7 +1,7 @@
 ﻿/*
  * Open Chinese Convert
  *
- * Copyright 2010-2013 BYVoid <byvoid@byvoid.com>
+ * Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,12 @@
 #include <thread>
 
 #include "Config.hpp"
-#include "DictTestUtils.hpp"
-#include "DictEntry.hpp"
-#include "MaxMatchSegmentation.hpp"
 #include "ConversionChain.hpp"
 #include "Converter.hpp"
+#include "DictEntry.hpp"
+#include "DictTestUtils.hpp"
+#include "MaxMatchSegmentation.hpp"
+#include "Segments.hpp"
 #include "opencc.h"
 
 using namespace opencc;
@@ -31,52 +32,71 @@ using namespace opencc;
 void TestTextDict() {
   TextDictPtr textDict = DictTestUtils::CreateTextDictForText();
   DictTestUtils::TestDict(textDict);
-  
+
   // Serialization
   string fileName = "dict.txt";
   textDict->opencc::SerializableDict::SerializeToFile(fileName);
-  
+
   // Deserialization
-  textDict->opencc::SerializableDict::LoadFromFile(fileName);
-  DictTestUtils::TestDict(textDict);
+  TextDictPtr deserialized = SerializableDict::NewFromFile<TextDict>(fileName);
+  DictTestUtils::TestDict(deserialized);
 }
 
 void TestDartsDict() {
   TextDictPtr textDict = DictTestUtils::CreateTextDictForText();
-  DartsDictPtr dartsDict(new DartsDict());
-  dartsDict->LoadFromDict(textDict.get());
+  DartsDictPtr dartsDict = DartsDict::NewFromDict(*textDict.get());
   DictTestUtils::TestDict(dartsDict);
-  
+
   // Serialization
   string fileName = "dict.ocd";
   dartsDict->opencc::SerializableDict::SerializeToFile(fileName);
-  
+
   // Deserialization
-  dartsDict->opencc::SerializableDict::LoadFromFile(fileName);
-  DictTestUtils::TestDict(dartsDict);
+  DartsDictPtr deserialized = SerializableDict::NewFromFile<DartsDict>(fileName);
+  DictTestUtils::TestDict(deserialized);
 }
 
 void TestDictGroup() {
-  auto dictGroup = DictTestUtils::CreateDictGroupForConversion();
-  Optional<DictEntry> entry;
-  entry = dictGroup->MatchPrefix("Unknown");
-  AssertTrue(entry.IsNull());
-  
-  vector<DictEntry> matches = dictGroup->MatchAllPrefixes(utf8("干燥"));
-  AssertEquals(2, matches.size());
-  AssertEquals(utf8("乾燥"), matches.at(0).GetDefault());
-  AssertEquals(utf8("幹"), matches.at(1).GetDefault());
+  {
+    const auto& dictGroup = DictTestUtils::CreateDictGroupForConversion();
+    const auto& entry = dictGroup->Dict::MatchPrefix(utf8("Unknown"));
+    AssertTrue(entry.IsNull());
+
+    const auto& matches = dictGroup->Dict::MatchAllPrefixes(utf8("干燥"));
+    AssertEquals(2, matches.size());
+    AssertEquals(utf8("乾燥"), matches.at(0)->GetDefault());
+    AssertEquals(utf8("幹"), matches.at(1)->GetDefault());
+  }
+  {
+    DictGroupPtr dictGroup(new DictGroup(list<DictPtr>{
+        DictTestUtils::CreateDictForPhrases(),
+        DictTestUtils::CreateTaiwanPhraseDict()
+    }));
+    {
+      const auto& entry = dictGroup->Dict::MatchPrefix(utf8("鼠标"));
+      AssertEquals(utf8("鼠標"), entry.Get()->GetDefault());
+    }
+    {
+      const auto& entry = dictGroup->Dict::MatchPrefix(utf8("克罗地亚"));
+      AssertEquals(utf8("克羅埃西亞"), entry.Get()->GetDefault());
+    }
+    {
+      const auto& matches = dictGroup->Dict::MatchAllPrefixes(utf8("鼠标"));
+      AssertEquals(1, matches.size());
+      AssertEquals(utf8("鼠標"), matches[0]->GetDefault());
+    }
+  }
 }
 
 void TestSegmentation() {
   auto dict = DictTestUtils::CreateDictGroupForConversion();
   auto segmentation = SegmentationPtr(new MaxMatchSegmentation(dict));
-  auto segments = segmentation->Segment(utf8("太后的头发干燥"));
-  AssertEquals(4, segments.size());
-  AssertEquals(utf8("太后"), segments.at(0));
-  AssertEquals(utf8("的"), segments.at(1));
-  AssertEquals(utf8("头发"), segments.at(2));
-  AssertEquals(utf8("干燥"), segments.at(3));
+  const auto& segments = segmentation->Segment(utf8("太后的头发干燥"));
+  AssertEquals(4, segments.Length());
+  AssertEquals(utf8("太后"), string(segments.At(0)));
+  AssertEquals(utf8("的"), string(segments.At(1)));
+  AssertEquals(utf8("头发"), string(segments.At(2)));
+  AssertEquals(utf8("干燥"), string(segments.At(3)));
 }
 
 void TestConversion() {
@@ -93,28 +113,35 @@ void TestConversionChain() {
   // Variants
   auto dictVariants = DictTestUtils::CreateDictForTaiwanVariants();
   auto conversionVariants = ConversionPtr(new Conversion(dictVariants));
-  auto conversionChain = ConversionChainPtr(new ConversionChain());
-  conversionChain->AddConversion(conversion);
-  conversionChain->AddConversion(conversionVariants);
-  auto converted = conversionChain->Convert(vector<string>{utf8("里面")});
-  VectorAssertEquals(vector<string>{utf8("裡面")}, converted);
+  list<ConversionPtr> conversions;
+  conversions.push_back(conversion);
+  conversions.push_back(conversionVariants);
+  auto conversionChain = ConversionChainPtr(new ConversionChain(conversions));
+  auto converted = conversionChain->Convert(Segments{utf8("里面")});
+  SegmentsAssertEquals(Segments{utf8("裡面")}, converted);
 }
 
 const string CONFIG_TEST_PATH = "config_test/config_test.json";
 
 void TestConfig() {
   Config config;
-  config.LoadFile(CONFIG_TEST_PATH);
-  auto converter = config.GetConverter();
+  auto converter = config.NewFromFile(CONFIG_TEST_PATH);
   string converted = converter->Convert(utf8("燕燕于飞差池其羽之子于归远送于野"));
   AssertEquals(utf8("燕燕于飛差池其羽之子于歸遠送於野"), converted);
+
+  string path = "/opencc/no/such/file/or/directory";
+  try {
+    auto converter = config.NewFromFile(path);
+  } catch (FileNotFound& e) {
+    AssertEquals(path + " not found or not accessible.", e.what());
+  }
 }
 
 void TestMultithreading() {
   auto routine = [](std::string name) {
-    SimpleConverter converter(name);
-    string converted = converter.Convert(utf8("燕燕于飞差池其羽之子于归远送于野"));
-    AssertEquals(utf8("燕燕于飛差池其羽之子于歸遠送於野"), converted);
+      SimpleConverter converter(name);
+      string converted = converter.Convert(utf8("燕燕于飞差池其羽之子于归远送于野"));
+      AssertEquals(utf8("燕燕于飛差池其羽之子于歸遠送於野"), converted);
   };
   std::thread thread1(routine, CONFIG_TEST_PATH);
   std::thread thread2(routine, CONFIG_TEST_PATH);
@@ -123,7 +150,17 @@ void TestMultithreading() {
   thread2.join();
 }
 
-int main(int argc, const char * argv[]) {
+void TestCInterface() {
+  const string& text = utf8("燕燕于飞差池其羽之子于归远送于野");
+  const string& expected = utf8("燕燕于飛差池其羽之子于歸遠送於野");
+  opencc_t od = opencc_new(CONFIG_TEST_PATH.c_str());
+  char* converted = opencc_convert(od, text.c_str());
+  AssertEquals(expected, converted);
+  opencc_free_string(converted);
+  opencc_delete(od);
+}
+
+int main(int argc, const char* argv[]) {
   TestUtils::RunTest("TestTextDict", TestTextDict);
   TestUtils::RunTest("TestDartsDict", TestDartsDict);
   TestUtils::RunTest("TestDictGroup", TestDictGroup);
@@ -132,4 +169,5 @@ int main(int argc, const char * argv[]) {
   TestUtils::RunTest("TestConversionChain", TestConversionChain);
   TestUtils::RunTest("TestConfig", TestConfig);
   TestUtils::RunTest("TestMultithreading", TestMultithreading);
+  TestUtils::RunTest("TestCInterface", TestCInterface);
 }

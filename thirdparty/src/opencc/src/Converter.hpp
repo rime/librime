@@ -1,7 +1,7 @@
-/**
+/*
  * Open Chinese Convert
  *
- * Copyright 2010-2013 BYVoid <byvoid@byvoid.com>
+ * Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,27 +22,28 @@
 #include "Segmentation.hpp"
 
 namespace opencc {
-  class OPENCC_EXPORT Converter {
-    public:
-      Converter(const string& _name,
-                SegmentationPtr _segmentation,
-                ConversionChainPtr _conversionChain) :
-        name(_name), segmentation(_segmentation),
-        conversionChain(_conversionChain) {}
+class OPENCC_EXPORT Converter {
+public:
+  Converter(const string& _name,
+            SegmentationPtr _segmentation,
+            ConversionChainPtr _conversionChain) :
+      name(_name), segmentation(_segmentation),
+      conversionChain(_conversionChain) {
+  }
 
-      string Convert(const string& text);
+  string Convert(const string& text) const;
 
-      const SegmentationPtr GetSegmentation() const {
-        return segmentation;
-      }
+  const SegmentationPtr GetSegmentation() const {
+    return segmentation;
+  }
 
-      const ConversionChainPtr GetConversionChain() const {
-        return conversionChain;
-      }
+  const ConversionChainPtr GetConversionChain() const {
+    return conversionChain;
+  }
 
-    private:
-      const string name;
-      const SegmentationPtr segmentation;
-      const ConversionChainPtr conversionChain;
-  };
+private:
+  const string name;
+  const SegmentationPtr segmentation;
+  const ConversionChainPtr conversionChain;
+};
 }

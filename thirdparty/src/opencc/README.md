@@ -44,8 +44,10 @@ Open Chinese Convert (OpenCC, 開放中文轉換) is an opensource project for c
 
 * `s2t.json` Simplified Chinese to Traditional Chinese 簡體到繁體
 * `t2s.json` Traditional Chinese to Simplified Chinese 繁體到簡體
-* `s2tw.json` Simplified Chinese to Traditional Chinese (Taiwan Standard) 簡體到繁體（臺灣正體標準）
-* `tw2s.json` Traditional Chinese (Taiwan Standard) to Simplified Chinese 繁體（臺灣正體標準）到簡體
+* `s2tw.json` Simplified Chinese to Traditional Chinese (Taiwan Standard) 簡體到臺灣正體
+* `tw2s.json` Traditional Chinese (Taiwan Standard) to Simplified Chinese 臺灣正體到簡體
+* `s2hk.json` Simplified Chinese to Traditional Chinese (Hong Kong Standard) 簡體到香港繁體（香港小學學習字詞表標準）
+* `hk2s.json` Traditional Chinese (Hong Kong Standard) to Simplified Chinese 香港繁體（香港小學學習字詞表標準）到簡體
 * `s2twp.json` Simplified Chinese to Traditional Chinese (Taiwan Standard) with Taiwanese idiom 簡體到繁體（臺灣正體標準）並轉換爲臺灣常用詞彙
 * `tw2sp.json` Traditional Chinese (Taiwan Standard) to Simplified Chinese with Mainland Chinese idiom 繁體（臺灣正體標準）到簡體並轉換爲中國大陸常用詞彙
 
@@ -55,10 +57,9 @@ Open Chinese Convert (OpenCC, 開放中文轉換) is an opensource project for c
 
 ### Build with CMake
 
+Linux/OSX:
+
 ```
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -D ENABLE_GETTEXT:BOOL=ON ..
 make
 sudo make install
 ```
@@ -66,14 +67,14 @@ sudo make install
 Windows MSYS:
 
 ```
-cmake .. -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX="" -DCMAKE_BUILD_TYPE=Release -DENABLE_GETTEXT:BOOL=OFF
+cmake .. -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX="" -DCMAKE_BUILD_TYPE=Release
 make
 ```
 
 Windows Visual Studio (2013 or higher required):
 
 ```
-cmake .. -G "Visual Studio 12" -DCMAKE_INSTALL_PREFIX="" -DCMAKE_BUILD_TYPE=Release -DENABLE_GETTEXT:BOOL=OFF
+cmake .. -G "Visual Studio 12" -DCMAKE_INSTALL_PREFIX="" -DCMAKE_BUILD_TYPE=Release
 make
 ```
 
@@ -94,6 +95,16 @@ make
 * [ibus-libpinyin](https://github.com/libpinyin/ibus-libpinyin)
 * [BYVBlog](https://github.com/byvoid/byvblog)
 * [豆瓣同城微信](http://weixinqiao.com/douban-event/)
+
+## License 許可協議
+
+Apache License 2.0
+
+## Third Party Library 第三方庫
+
+* [darts-clone](https://code.google.com/p/darts-clone/) BSD License
+* [tclap](http://tclap.sourceforge.net/) MIT License
+* [rapidjson](https://github.com/miloyip/rapidjson) MIT License
 
 ## Contributors 貢獻者
 
