@@ -22,6 +22,10 @@
 #include "Segmentation.hpp"
 
 namespace opencc {
+/**
+* Controller of segmentation and conversion
+* @ingroup opencc_cpp_api
+*/
 class OPENCC_EXPORT Converter {
 public:
   Converter(const string& _name,
@@ -32,6 +36,8 @@ public:
   }
 
   string Convert(const string& text) const;
+  
+  size_t Convert(const char* input, char* output) const;
 
   const SegmentationPtr GetSegmentation() const {
     return segmentation;

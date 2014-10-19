@@ -22,16 +22,23 @@
 #include "Segmentation.hpp"
 
 namespace opencc {
+/**
+* Conversion interface
+* @ingroup opencc_cpp_api
+*/
 class OPENCC_EXPORT Conversion {
 public:
   Conversion(DictPtr _dict) : dict(_dict) {
   }
-
+  
   // Convert single phrase
   string Convert(const string& phrase) const;
+  
+  // Convert single phrase
+  string Convert(const char* phrase) const;
 
   // Convert segmented text
-  Segments Convert(const Segments& input) const;
+  SegmentsPtr Convert(const SegmentsPtr& input) const;
 
   const DictPtr GetDict() const {
     return dict;
