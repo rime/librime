@@ -23,12 +23,19 @@
 #include "Segmentation.hpp"
 
 namespace opencc {
+/**
+* Implementation of maximal match segmentation
+* @ingroup opencc_cpp_api
+*/
 class OPENCC_EXPORT MaxMatchSegmentation : public Segmentation {
 public:
   MaxMatchSegmentation(const DictPtr _dict) : dict(_dict) {
   }
 
-  virtual Segments Segment(const string& text) const;
+  virtual ~MaxMatchSegmentation() {
+  }
+
+  virtual SegmentsPtr Segment(const string& text) const;
 
   const DictPtr GetDict() const {
     return dict;

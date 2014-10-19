@@ -2,6 +2,7 @@ include (GenerateExportHeader)
 
 set(
   LIBOPENCC_HEADERS
+  BinaryDict.hpp
   Common.hpp
   Config.hpp
   Conversion.hpp
@@ -26,6 +27,7 @@ set(
 
 set(
   LIBOPENCC_SOURCES
+  BinaryDict.cpp
   Config.cpp
   Conversion.cpp
   ConversionChain.cpp
@@ -70,18 +72,6 @@ set_target_properties(
     SOVERSION
       2
 )
-
-if (ENABLE_GETTEXT)
-  add_definitions(
-    -DENABLE_GETTEXT
-  )
-  link_directories(
-    ${GETTEXT_LIBRARIES}
-  )
-  include_directories(
-    ${GETTEXT_INCLUDE_DIR}
-  )
-endif (ENABLE_GETTEXT)
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
   add_definitions(

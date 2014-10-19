@@ -34,8 +34,8 @@ class Opencc {
  public:
   Opencc(const std::string& config_path) {
     LOG(INFO) << "initilizing opencc: " << config_path;
-    opencc::Config config(config_path);
-    converter_ = config.GetConverter();
+    opencc::Config config;
+    converter_ = config.NewFromFile(config_path);
     const std::list<opencc::ConversionPtr> conversions =
       converter_->GetConversionChain()->GetConversions();
     dict_ = conversions.front()->GetDict();
@@ -43,12 +43,21 @@ class Opencc {
 
   bool ConvertSingleCharacter(const std::string& text,
                               std::vector<std::string>* forms) {
-    opencc::Optional<opencc::DictEntry> item = dict_->Match(text);
+    opencc::Optional<const opencc::DictEntry*> item = dict_->Match(text);
     if (item.IsNull()) {
       // Match not found
       return false;
     } else {
-      *forms = item.Get().values;
+      const opencc::DictEntry* entry = item.Get();
+      if (entry->NumValues() == 1) {
+        auto sEntry = dynamic_cast<const opencc::SingleValueDictEntry*>(entry);
+        forms->push_back(sEntry->Value());
+      } else {
+        auto mEntry = dynamic_cast<const opencc::MultiValueDictEntry*>(entry);
+        for (const char* value : mEntry->Values()) {
+          forms->push_back(value);
+        }
+      }
       return true;
     }
   }
