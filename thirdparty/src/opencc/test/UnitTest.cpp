@@ -18,13 +18,12 @@
 
 #include <thread>
 
+#include "BinaryDict.hpp"
 #include "Config.hpp"
 #include "ConversionChain.hpp"
 #include "Converter.hpp"
-#include "DictEntry.hpp"
 #include "DictTestUtils.hpp"
 #include "MaxMatchSegmentation.hpp"
-#include "Segments.hpp"
 #include "opencc.h"
 
 using namespace opencc;
@@ -40,6 +39,29 @@ void TestTextDict() {
   // Deserialization
   TextDictPtr deserialized = SerializableDict::NewFromFile<TextDict>(fileName);
   DictTestUtils::TestDict(deserialized);
+}
+
+void TestBinaryDict() {
+  TextDictPtr textDict = DictTestUtils::CreateTextDictForText();
+  BinaryDictPtr binDict(new BinaryDict(textDict->GetLexicon()));
+
+  // Serialization
+  string fileName = "dict.bin";
+  binDict->opencc::SerializableDict::SerializeToFile(fileName);
+
+  // Deserialization
+  BinaryDictPtr deserialized = SerializableDict::NewFromFile<BinaryDict>(fileName);
+  const LexiconPtr& lex1 = binDict->GetLexicon();
+  const LexiconPtr& lex2 = deserialized->GetLexicon();
+
+  AssertEquals(lex1->Length(), lex2->Length());
+  for (size_t i = 0; i < lex1->Length(); i++) {
+    AssertEquals(string(lex1->At(i)->Key()), lex2->At(i)->Key());
+    AssertEquals(lex1->At(i)->NumValues(), lex2->At(i)->NumValues());
+  }
+
+  TextDictPtr deserializedTextDict(new TextDict(lex2));
+  DictTestUtils::TestDict(deserializedTextDict);
 }
 
 void TestDartsDict() {
@@ -92,18 +114,26 @@ void TestSegmentation() {
   auto dict = DictTestUtils::CreateDictGroupForConversion();
   auto segmentation = SegmentationPtr(new MaxMatchSegmentation(dict));
   const auto& segments = segmentation->Segment(utf8("太后的头发干燥"));
-  AssertEquals(4, segments.Length());
-  AssertEquals(utf8("太后"), string(segments.At(0)));
-  AssertEquals(utf8("的"), string(segments.At(1)));
-  AssertEquals(utf8("头发"), string(segments.At(2)));
-  AssertEquals(utf8("干燥"), string(segments.At(3)));
+  AssertEquals(4, segments->Length());
+  AssertEquals(utf8("太后"), string(segments->At(0)));
+  AssertEquals(utf8("的"), string(segments->At(1)));
+  AssertEquals(utf8("头发"), string(segments->At(2)));
+  AssertEquals(utf8("干燥"), string(segments->At(3)));
 }
 
 void TestConversion() {
   auto dict = DictTestUtils::CreateDictGroupForConversion();
   auto conversion = ConversionPtr(new Conversion(dict));
-  string converted = conversion->Convert(utf8("太后的头发干燥"));
-  AssertEquals(utf8("太后的頭髮乾燥"), converted);
+  const string& input = utf8("太后的头发干燥");
+  const string& expected = utf8("太后的頭髮乾燥");
+  {
+    string converted = conversion->Convert(input);
+    AssertEquals(expected, converted);
+  }
+  {
+    string converted = conversion->Convert(input.c_str());
+    AssertEquals(expected, converted);
+  }
 }
 
 void TestConversionChain() {
@@ -117,23 +147,35 @@ void TestConversionChain() {
   conversions.push_back(conversion);
   conversions.push_back(conversionVariants);
   auto conversionChain = ConversionChainPtr(new ConversionChain(conversions));
-  auto converted = conversionChain->Convert(Segments{utf8("里面")});
-  SegmentsAssertEquals(Segments{utf8("裡面")}, converted);
+  auto converted = conversionChain->Convert(
+      SegmentsPtr(new Segments{utf8("里面")}));
+  SegmentsAssertEquals(SegmentsPtr(new Segments{utf8("裡面")}), converted);
 }
 
 const string CONFIG_TEST_PATH = "config_test/config_test.json";
 
-void TestConfig() {
+void TestConfigConverter() {
   Config config;
   auto converter = config.NewFromFile(CONFIG_TEST_PATH);
-  string converted = converter->Convert(utf8("燕燕于飞差池其羽之子于归远送于野"));
-  AssertEquals(utf8("燕燕于飛差池其羽之子于歸遠送於野"), converted);
-
-  string path = "/opencc/no/such/file/or/directory";
-  try {
-    auto converter = config.NewFromFile(path);
-  } catch (FileNotFound& e) {
-    AssertEquals(path + " not found or not accessible.", e.what());
+  const string& input = utf8("燕燕于飞差池其羽之子于归远送于野");
+  const string& expected = utf8("燕燕于飛差池其羽之子于歸遠送於野");
+  {
+    string converted = converter->Convert(input);
+    AssertEquals(expected, converted);
+  }
+  {
+    char output[1024];
+    size_t length = converter->Convert(input.c_str(), output);
+    AssertEquals(expected.length(), length);
+    AssertEquals(expected, output);
+  }
+  {
+    string path = "/opencc/no/such/file/or/directory";
+    try {
+      auto converter = config.NewFromFile(path);
+    } catch (FileNotFound& e) {
+      AssertEquals(path + " not found or not accessible.", e.what());
+    }
   }
 }
 
@@ -153,21 +195,39 @@ void TestMultithreading() {
 void TestCInterface() {
   const string& text = utf8("燕燕于飞差池其羽之子于归远送于野");
   const string& expected = utf8("燕燕于飛差池其羽之子于歸遠送於野");
-  opencc_t od = opencc_new(CONFIG_TEST_PATH.c_str());
-  char* converted = opencc_convert(od, text.c_str());
-  AssertEquals(expected, converted);
-  opencc_free_string(converted);
-  opencc_delete(od);
+  {
+    opencc_t od = opencc_open(CONFIG_TEST_PATH.c_str());
+    char* converted = opencc_convert_utf8(od, text.c_str(), (size_t)-1);
+    AssertEquals(expected, converted);
+    opencc_convert_utf8_free(converted);
+    AssertEquals(0, opencc_close(od));
+  }
+  {
+    char output[1024];
+    opencc_t od = opencc_open(CONFIG_TEST_PATH.c_str());
+    size_t length = opencc_convert_utf8_to_buffer(od, text.c_str(), (size_t)-1,
+                                                  output);
+    AssertEquals(expected.length(), length);
+    AssertEquals(expected, output);
+    AssertEquals(0, opencc_close(od));
+  }
+  {
+    string path = "/opencc/no/such/file/or/directory";
+    opencc_t od = opencc_open(path.c_str());
+    AssertEquals(reinterpret_cast<opencc_t>(-1), od);
+    AssertEquals(path + " not found or not accessible.", opencc_error());
+  }
 }
 
 int main(int argc, const char* argv[]) {
   TestUtils::RunTest("TestTextDict", TestTextDict);
+  TestUtils::RunTest("TestBinaryDict", TestBinaryDict);
   TestUtils::RunTest("TestDartsDict", TestDartsDict);
   TestUtils::RunTest("TestDictGroup", TestDictGroup);
   TestUtils::RunTest("TestSegmentation", TestSegmentation);
   TestUtils::RunTest("TestConversion", TestConversion);
   TestUtils::RunTest("TestConversionChain", TestConversionChain);
-  TestUtils::RunTest("TestConfig", TestConfig);
+  TestUtils::RunTest("TestConfigConverter", TestConfigConverter);
   TestUtils::RunTest("TestMultithreading", TestMultithreading);
   TestUtils::RunTest("TestCInterface", TestCInterface);
 }

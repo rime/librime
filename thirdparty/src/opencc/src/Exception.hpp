@@ -81,4 +81,11 @@ public:
     message = buffer.str();
   }
 };
+  
+class OPENCC_EXPORT InvalidUTF8 : public Exception {
+public:
+  InvalidUTF8(const std::string& _message) :
+    Exception("Invalid UTF8: " + _message) {
+  }
+};
 }

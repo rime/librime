@@ -23,11 +23,13 @@
 using namespace opencc;
 
 string Converter::Convert(const string& text) const {
-  const Segments& segments = segmentation->Segment(text);
-  const Segments& converted = conversionChain->Convert(segments);
-  std::ostringstream buffer;
-  for (const auto& segment : converted) {
-    buffer << segment;
-  }
-  return buffer.str();
+  const SegmentsPtr& segments = segmentation->Segment(text);
+  const SegmentsPtr& converted = conversionChain->Convert(segments);
+  return converted->ToString();
+}
+
+size_t Converter::Convert(const char* input, char* output) const {
+  const string& converted = Convert(input);
+  strcpy(output, converted.c_str());
+  return converted.length();
 }

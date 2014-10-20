@@ -36,20 +36,20 @@ static DictEntry* ParseKeyValues(const char* buff, size_t lineNum) {
   if (UTF8Util::IsLineEndingOrFileEnding(*pbuff)) {
     throw InvalidTextDictionary("Tabular not found " + string(buff), lineNum);
   }
-  length = pbuff - buff;
+  length = static_cast<size_t>(pbuff - buff);
   string key = UTF8Util::FromSubstr(buff, length);
-  Segments values;
+  vector<string> values;
   while (!UTF8Util::IsLineEndingOrFileEnding(*pbuff)) {
     buff = pbuff = UTF8Util::NextChar(pbuff);
     pbuff = UTF8Util::FindNextInline(buff, ' ');
-    length = pbuff - buff;
+	length = static_cast<size_t>(pbuff - buff);
     const string& value = UTF8Util::FromSubstr(buff, length);
-    values.AddSegment(value);
+    values.push_back(value);
   }
-  if (values.Length() == 0) {
+  if (values.size() == 0) {
     throw InvalidTextDictionary("No value in an item", lineNum);
-  } else if (values.Length() == 1) {
-    return DictEntryFactory::New(key, values.At(0));
+  } else if (values.size() == 1) {
+    return DictEntryFactory::New(key, values.at(0));
   } else {
     return DictEntryFactory::New(key, values);
   }
