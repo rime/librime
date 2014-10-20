@@ -34,7 +34,6 @@ marisa:
 opencc:
 	cd $(SRC_DIR)/opencc; mkdir -p build && \
 	cd build && cmake \
-	-DENABLE_GETTEXT:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_INSTALL_PREFIX=/usr \
 	-DBUILD_SHARED_LIBS:BOOL=OFF \
