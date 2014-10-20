@@ -49,14 +49,8 @@ class Opencc {
       return false;
     } else {
       const opencc::DictEntry* entry = item.Get();
-      if (entry->NumValues() == 1) {
-        auto sEntry = dynamic_cast<const opencc::SingleValueDictEntry*>(entry);
-        forms->push_back(sEntry->Value());
-      } else {
-        auto mEntry = dynamic_cast<const opencc::MultiValueDictEntry*>(entry);
-        for (const char* value : mEntry->Values()) {
-          forms->push_back(value);
-        }
+      for (const char* value : entry->Values()) {
+        forms->push_back(value);
       }
       return true;
     }
