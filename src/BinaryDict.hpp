@@ -23,38 +23,39 @@
 
 namespace opencc {
 /**
-* Text dictionary
+* Binary dictionary for faster deserialization
 * @ingroup opencc_cpp_api
 */
-class OPENCC_EXPORT TextDict : public Dict, public SerializableDict {
+class OPENCC_EXPORT BinaryDict : public SerializableDict {
 public:
-  /**
-  * Constructor of TextDict.
-  * _lexicon must be sorted.
-  */
-  TextDict(const LexiconPtr& _lexicon);
+  BinaryDict(const LexiconPtr& _lexicon) :
+      lexicon(_lexicon) {
+  }
 
-  virtual ~TextDict();
-
-  virtual size_t KeyMaxLength() const;
-
-  virtual Optional<const DictEntry*> Match(const char* word) const;
-
-  virtual LexiconPtr GetLexicon() const;
+  virtual ~BinaryDict() {
+  }
 
   virtual void SerializeToFile(FILE* fp) const;
 
-  /**
-  * Constructs a TextDict from another dictionary.
-  */
-  static TextDictPtr NewFromDict(const Dict& dict);
+  static BinaryDictPtr NewFromFile(FILE* fp);
 
-  static TextDictPtr NewFromFile(FILE* fp);
+  const LexiconPtr& GetLexicon() const {
+    return lexicon;
+  }
 
-  static TextDictPtr NewFromSortedFile(FILE* fp);
+  size_t KeyMaxLength() const;
 
 private:
-  const size_t maxLength;
-  const LexiconPtr lexicon;
+  LexiconPtr lexicon;
+  string keyBuffer;
+  string valueBuffer;
+
+  void ConstructBuffer(string& keyBuffer,
+                       vector<size_t>& keyOffset,
+                       size_t& keyTotalLength,
+                       string& valueBuffer,
+                       vector<size_t>& valueOffset,
+                       size_t& valueTotalLength) const;
 };
+
 }
