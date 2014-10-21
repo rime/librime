@@ -21,7 +21,11 @@
 #include "Dict.hpp"
 
 namespace opencc {
-class SerializableDict : public Dict {
+/**
+* Serializable dictionary interface
+* @ingroup opencc_cpp_api
+*/
+class OPENCC_EXPORT SerializableDict {
 public:
   /**
   * Serializes the dictionary and writes in to a file.

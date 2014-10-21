@@ -18,6 +18,11 @@
 
 #pragma once
 
+// Microsoft Visual C++ specific
+#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#pragma warning(disable : 4251 4266 4350 4503 4512 4514 4710 4820)
+#endif
+
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -44,6 +49,7 @@ using std::vector;
 
 // Forward decalarations and alias
 namespace opencc {
+class BinaryDict;
 class Config;
 class Conversion;
 class ConversionChain;
@@ -60,6 +66,7 @@ class Segments;
 class SerializableDict;
 class SingleValueDictEntry;
 class TextDict;
+typedef std::shared_ptr<BinaryDict> BinaryDictPtr;
 typedef std::shared_ptr<Conversion> ConversionPtr;
 typedef std::shared_ptr<ConversionChain> ConversionChainPtr;
 typedef std::shared_ptr<Converter> ConverterPtr;
@@ -68,6 +75,7 @@ typedef std::shared_ptr<Dict> DictPtr;
 typedef std::shared_ptr<DictGroup> DictGroupPtr;
 typedef std::shared_ptr<Lexicon> LexiconPtr;
 typedef std::shared_ptr<Segmentation> SegmentationPtr;
+typedef std::shared_ptr<Segments> SegmentsPtr;
 typedef std::shared_ptr<SerializableDict> SerializableDictPtr;
 typedef std::shared_ptr<TextDict> TextDictPtr;
 }

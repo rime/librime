@@ -18,8 +18,7 @@ Open Chinese Convert (OpenCC, 開放中文轉換) is an opensource project for c
 
 ### Links 相關鏈接
 
-* Introduction 詳細介紹 https://code.google.com/p/opencc/wiki/Introduction
-* Development Documentation 開發文檔 http://byvoid.github.io/OpenCC/
+* Introduction 詳細介紹 https://github.com/BYVoid/OpenCC/wiki/%E7%B7%A3%E7%94%B1
 * OpenCC Online (在線轉換) http://opencc.byvoid.com/
 * 現代漢語常用簡繁一對多字義辨析表 http://ytenx.org/byohlyuk/KienxPyan
 
@@ -27,10 +26,14 @@ Open Chinese Convert (OpenCC, 開放中文轉換) is an opensource project for c
 
 * [Debian](http://packages.qa.debian.org/o/opencc.html)
 * [Ubuntu](https://launchpad.net/ubuntu/+source/opencc)
-* [Fedora](https://admin.fedoraproject.org/pkgdb/acls/name/opencc)
+* [Fedora](https://admin.fedoraproject.org/pkgdb/package/opencc/)
 * [Arch Linux](https://www.archlinux.org/packages/community/x86_64/opencc/)
 * [Mac OS](https://github.com/mxcl/homebrew/blob/master/Library/Formula/opencc.rb)
 * [Node.js](https://npmjs.org/package/opencc)
+
+## Download 下載
+
+https://bintray.com/byvoid/opencc/OpenCC
 
 ## Usage 使用
 
@@ -51,13 +54,17 @@ Open Chinese Convert (OpenCC, 開放中文轉換) is an opensource project for c
 * `s2twp.json` Simplified Chinese to Traditional Chinese (Taiwan Standard) with Taiwanese idiom 簡體到繁體（臺灣正體標準）並轉換爲臺灣常用詞彙
 * `tw2sp.json` Traditional Chinese (Taiwan Standard) to Simplified Chinese with Mainland Chinese idiom 繁體（臺灣正體標準）到簡體並轉換爲中國大陸常用詞彙
 
+## Development Documentation 開發文檔
+
+* http://byvoid.github.io/OpenCC/
+
 ## Build 編譯
 
 [![Build Status](https://travis-ci.org/BYVoid/OpenCC.png?branch=master)](https://travis-ci.org/BYVoid/OpenCC)
 
 ### Build with CMake
 
-Linux/OSX:
+Linux/OSX (gcc 4.6 or clang 3.2 is required):
 
 ```
 make
@@ -78,14 +85,6 @@ cmake .. -G "Visual Studio 12" -DCMAKE_INSTALL_PREFIX="" -DCMAKE_BUILD_TYPE=Rele
 make
 ```
 
-## Screenshot 截圖
-
-![OpenCC Mac](http://opencc.googlecode.com/files/screenshot-gui-mac.png)
-
-![OpenCC Windows](http://opencc.googlecode.com/files/screenshot-gui.png)
-
-![OpenCC Ubuntu](http://opencc.googlecode.com/files/screenshot-gui-ubuntu.png)
-
 ### Projects using Opencc 使用OpenCC的項目
 
 * [ibus-pinyin](http://code.google.com/p/ibus/)
@@ -105,6 +104,8 @@ Apache License 2.0
 * [darts-clone](https://code.google.com/p/darts-clone/) BSD License
 * [tclap](http://tclap.sourceforge.net/) MIT License
 * [rapidjson](https://github.com/miloyip/rapidjson) MIT License
+
+All these libraries are statically linked.
 
 ## Contributors 貢獻者
 
@@ -128,3 +129,4 @@ Apache License 2.0
 * [Pellaeon Lin](https://github.com/pellaeon)
 * [stony](https://github.com/stony-shixz)
 * [steelywing](https://github.com/steelywing)
+* [吕旭东](https://github.com/lvxudong)

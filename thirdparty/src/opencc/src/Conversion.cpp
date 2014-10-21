@@ -18,13 +18,12 @@
 
 #include "Conversion.hpp"
 #include "Dict.hpp"
-#include "Segments.hpp"
 
 using namespace opencc;
 
-string Conversion::Convert(const string& phrase) const {
+string Conversion::Convert(const char* phrase) const {
   std::ostringstream buffer;
-  for (const char* pstr = phrase.c_str(); *pstr != '\0';) {
+  for (const char* pstr = phrase; *pstr != '\0';) {
     Optional<const DictEntry*> matched = dict->MatchPrefix(pstr);
     size_t matchedLength;
     if (matched.IsNull()) {
@@ -39,10 +38,14 @@ string Conversion::Convert(const string& phrase) const {
   return buffer.str();
 }
 
-Segments Conversion::Convert(const Segments& input) const {
-  Segments output;
-  for (const auto& segment : input) {
-    output.AddSegment(Convert(segment));
+string Conversion::Convert(const string& phrase) const {
+  return Convert(phrase.c_str());
+}
+
+SegmentsPtr Conversion::Convert(const SegmentsPtr& input) const {
+  SegmentsPtr output(new Segments);
+  for (const char* segment : *input) {
+    output->AddSegment(Convert(segment));
   }
   return output;
 }
