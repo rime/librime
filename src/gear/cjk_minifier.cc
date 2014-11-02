@@ -16,7 +16,7 @@ namespace rime {
 bool is_extended_cjk(uint32_t ch)
 {
   // ripoff from translator_commons.cc
-  if ((ch >= 0x3400 && ch <= 0x4DBF) ||     // CJK Unified Ideographs Extension A
+  if ((ch >= 0x3400 && ch <= 0x4DBF) ||    // CJK Unified Ideographs Extension A
       (ch >= 0x20000 && ch <= 0x2A6DF) ||  // CJK Unified Ideographs Extension B
       (ch >= 0x2A700 && ch <= 0x2B73F) ||  // CJK Unified Ideographs Extension C
       (ch >= 0x2B740 && ch <= 0x2B81F) ||  // CJK Unified Ideographs Extension D
