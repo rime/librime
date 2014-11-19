@@ -4,7 +4,7 @@
 schema:
   schema_id: cangjie5
   name: 倉頡五代
-  version: "0.18"
+  version: "1.0.test"
   author:
     - 發明人 朱邦復先生
   description: |
@@ -48,6 +48,7 @@ engine:
   filters:
     - simplifier
     - uniquifier
+    - single_char_filter
 
 speller:
   alphabet: zyxwvutsrqponmlkjihgfedcba

@@ -14,6 +14,7 @@
 #include <rime/gear/ascii_composer.h>
 #include <rime/gear/ascii_segmentor.h>
 #include <rime/gear/chord_composer.h>
+#include <rime/gear/cjk_minifier.h>
 #include <rime/gear/echo_translator.h>
 #include <rime/gear/editor.h>
 #include <rime/gear/fallback_segmentor.h>
@@ -25,6 +26,7 @@
 #include <rime/gear/recognizer.h>
 #include <rime/gear/selector.h>
 #include <rime/gear/simplifier.h>
+#include <rime/gear/single_char_filter.h>
 #include <rime/gear/shape.h>
 #include <rime/gear/speller.h>
 #include <rime/gear/reverse_lookup_filter.h>
@@ -33,7 +35,6 @@
 #include <rime/gear/switch_translator.h>
 #include <rime/gear/table_translator.h>
 #include <rime/gear/uniquifier.h>
-#include <rime/gear/cjk_minifier.h>
 
 static void rime_gears_initialize() {
   using namespace rime;
@@ -78,6 +79,7 @@ static void rime_gears_initialize() {
   r.Register("uniquifier", new Component<Uniquifier>);
   r.Register("cjk_minifier", new Component<CJKMinifier>);
   r.Register("reverse_lookup_filter", new Component<ReverseLookupFilter>);
+  r.Register("single_char_filter", new Component<SingleCharFilter>);
 
   // formatters
   r.Register("shape_formatter", new Component<ShapeFormatter>);
