@@ -103,6 +103,10 @@ void Simplifier::Initialize() {
   using namespace boost::filesystem;
   initialized_ = true;  // no retry
   path opencc_config_path = opencc_config_;
+  if (opencc_config_path.extension().string() == ".ini") {
+    LOG(ERROR) << "please upgrade opencc_config to an opencc 1.0 config file.";
+    return;
+  }
   if (opencc_config_path.is_relative()) {
     path user_config_path = Service::instance().deployer().user_data_dir;
     path shared_config_path = Service::instance().deployer().shared_data_dir;
