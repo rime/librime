@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <boost/filesystem.hpp>
+#include <rime/dict/user_db.h>
 
 namespace rime {
 
@@ -38,6 +39,7 @@ class UserDictManager {
  protected:
   Deployer* deployer_;
   boost::filesystem::path path_;
+  UserDb::Component* user_db_component_;
 };
 
 }  // namespace rime

@@ -483,6 +483,7 @@ bool CleanupTrash::Run(Deployer* deployer) {
       continue;
     auto filename = entry.filename().string();
     if (filename == "rime.log" ||
+        boost::ends_with(filename, ".reverse.kct") ||
         boost::ends_with(filename, ".userdb.kct.old") ||
         boost::ends_with(filename, ".userdb.kct.snapshot")) {
       if (!success && !failure && !fs::exists(trash)) {

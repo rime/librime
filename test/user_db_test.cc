@@ -9,7 +9,7 @@
 #include <rime/dict/text_db.h>
 #include <rime/dict/user_db.h>
 
-typedef rime::UserDb<rime::TextDb> TestDb;
+using TestDb = rime::UserDbWrapper<rime::TextDb>;
 
 TEST(RimeUserDbTest, AccessRecordByKey) {
   TestDb db("user_db_test");
@@ -34,8 +34,8 @@ TEST(RimeUserDbTest, AccessRecordByKey) {
   EXPECT_TRUE(db.Erase("zyx"));
   EXPECT_FALSE(db.Fetch("zyx", &value));
   EXPECT_TRUE(value.empty());
-  db.Close();
-  EXPECT_FALSE(db.loaded());
+  EXPECT_TRUE(db.Close());
+  ASSERT_FALSE(db.loaded());
 }
 
 TEST(RimeUserDbTest, Query) {
@@ -65,6 +65,8 @@ TEST(RimeUserDbTest, Query) {
     value.clear();
     EXPECT_FALSE(accessor->GetNextRecord(&key, &value));
     // key, value contain invalid contents
+    EXPECT_EQ("", key);
+    EXPECT_EQ("", value);
   }
   {
     rime::shared_ptr<rime::DbAccessor> accessor = db.Query("wvu\tt");

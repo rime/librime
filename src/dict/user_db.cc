@@ -12,7 +12,6 @@
 #include <rime/service.h>
 #include <rime/algo/dynamics.h>
 #include <rime/dict/text_db.h>
-#include <rime/dict/tree_db.h>
 #include <rime/dict/user_db.h>
 
 namespace rime {
@@ -56,16 +55,10 @@ bool UserDbValue::Unpack(const std::string& value) {
 }
 
 template <>
-const std::string UserDb<TextDb>::extension(".userdb.txt");
+const std::string UserDbFormat<TextDb>::extension(".userdb.txt");
 
 template <>
-const std::string UserDb<TextDb>::snapshot_extension(".userdb.txt");
-
-template <>
-const std::string UserDb<TreeDb>::extension(".userdb.kct");
-
-template <>
-const std::string UserDb<TreeDb>::snapshot_extension(".userdb.kcss");
+const std::string UserDbFormat<TextDb>::snapshot_extension(".userdb.txt");
 
 // key ::= code <space> <Tab> phrase
 
@@ -108,40 +101,25 @@ static TextFormat plain_userdb_format = {
 };
 
 template <>
-UserDb<TextDb>::UserDb(const std::string& name)
-    : TextDb(name + extension, "userdb", plain_userdb_format) {
+UserDbWrapper<TextDb>::UserDbWrapper(const std::string& db_name)
+    : TextDb(db_name, "userdb", plain_userdb_format) {
 }
 
-template <>
-UserDb<TreeDb>::UserDb(const std::string& name)
-    : TreeDb(name + extension, "userdb") {
-}
-
-template <class BaseDb>
-bool UserDb<BaseDb>::CreateMetadata() {
+bool UserDbHelper::UpdateUserInfo() {
   Deployer& deployer(Service::instance().deployer());
-  return BaseDb::CreateMetadata() &&
-      BaseDb::MetaUpdate("/user_id", deployer.user_id);
+  return db_->MetaUpdate("/user_id", deployer.user_id);
 }
 
-template <>
-bool UserDb<TextDb>::Backup(const std::string& snapshot_file) {
-  return TextDb::Backup(snapshot_file);
-}
-
-template <>
-bool UserDb<TextDb>::Restore(const std::string& snapshot_file) {
-  return TextDb::Restore(snapshot_file);
-}
-
-template <>
-bool UserDb<TreeDb>::Backup(const std::string& snapshot_file) {
+bool UserDbHelper::UniformBackup(const std::string& snapshot_file,
+                                 std::function<bool ()> fallback) {
   // plain userdb format
-  if (boost::ends_with(snapshot_file, UserDb<TextDb>::snapshot_extension)) {
-    LOG(INFO) << "backing up db '" << name() << "' to " << snapshot_file;
+  if (boost::ends_with(snapshot_file,
+                       UserDbFormat<TextDb>::snapshot_extension)) {
+    LOG(INFO) << "backing up userdb '" << db_->name() << "' to "
+              << snapshot_file;
     TsvWriter writer(snapshot_file, plain_userdb_format.formatter);
     writer.file_description = plain_userdb_format.file_description;
-    DbSource source(this);
+    DbSource source(db_);
     try {
       writer << source;
     }
@@ -151,17 +129,19 @@ bool UserDb<TreeDb>::Backup(const std::string& snapshot_file) {
     }
     return true;
   }
-  // KCSS format
-  return TreeDb::Backup(snapshot_file);
+  // base db format
+  return fallback();
 }
 
-template <>
-bool UserDb<TreeDb>::Restore(const std::string& snapshot_file) {
+bool UserDbHelper::UniformRestore(const std::string& snapshot_file,
+                                  std::function<bool ()> fallback) {
   // plain userdb format
-  if (boost::ends_with(snapshot_file, UserDb<TextDb>::snapshot_extension)) {
-    LOG(INFO) << "restoring db '" << name() << "' from " << snapshot_file;
+  if (boost::ends_with(snapshot_file,
+                       UserDbFormat<TextDb>::snapshot_extension)) {
+    LOG(INFO) << "restoring userdb '" << db_->name() << "' from "
+              << snapshot_file;
     TsvReader reader(snapshot_file, plain_userdb_format.parser);
-    DbSink sink(this);
+    DbSink sink(db_);
     try {
       reader >> sink;
     }
@@ -171,41 +151,38 @@ bool UserDb<TreeDb>::Restore(const std::string& snapshot_file) {
     }
     return true;
   }
-  // KCSS format
-  return TreeDb::Restore(snapshot_file);
+  // base db format
+  return fallback();
 }
 
-template <class BaseDb>
-bool UserDb<BaseDb>::IsUserDb() {
+bool UserDbHelper::IsUserDb() {
   std::string db_type;
-  return BaseDb::MetaFetch("/db_type", &db_type) && (db_type == "userdb");
+  return db_->MetaFetch("/db_type", &db_type) && (db_type == "userdb");
 }
 
-template <class BaseDb>
-std::string UserDb<BaseDb>::GetDbName() {
+std::string UserDbHelper::GetDbName() {
   std::string name;
-  if (!BaseDb::MetaFetch("/db_name", &name))
+  if (!db_->MetaFetch("/db_name", &name))
     return name;
-  boost::erase_last(name, extension);
+  auto ext = boost::find_last(name, ".userdb");
+  if (!ext.empty()) {
+    // remove ".userdb.*"
+    name.erase(ext.begin(), name.end());
+  }
   return name;
 }
 
-template <class BaseDb>
-std::string UserDb<BaseDb>::GetUserId() {
+std::string UserDbHelper::GetUserId() {
   std::string user_id("unknown");
-  BaseDb::MetaFetch("/user_id", &user_id);
+  db_->MetaFetch("/user_id", &user_id);
   return user_id;
 }
 
-template <class BaseDb>
-std::string UserDb<BaseDb>::GetRimeVersion() {
+std::string UserDbHelper::GetRimeVersion() {
   std::string version;
-  BaseDb::MetaFetch("/rime_version", &version);
+  db_->MetaFetch("/rime_version", &version);
   return version;
 }
-
-template class UserDb<TextDb>;
-template class UserDb<TreeDb>;
 
 static TickCount get_tick_count(Db* db) {
   std::string tick;
