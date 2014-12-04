@@ -43,6 +43,10 @@ class Memory {
 
   virtual bool Memorize(const CommitEntry& commit_entry) = 0;
 
+  bool StartSession();
+  bool FinishSession();
+  bool DiscardSession();
+
   Language* language() { return &language_; }
 
   Dictionary* dict() const { return dict_.get(); }

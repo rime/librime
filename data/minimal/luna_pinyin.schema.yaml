@@ -108,6 +108,7 @@ cangjie:
 pinyin:
   tag: pinyin
   dictionary: luna_pinyin
+  enable_user_dict: false
   prefix: 'P:'
   suffix: ';'
   tips: 〔拼音〕

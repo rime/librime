@@ -80,11 +80,22 @@ Memory::~Memory() {
   unhandled_key_connection_.disconnect();
 }
 
+bool Memory::StartSession() {
+  return user_dict_->NewTransaction();
+}
+
+bool Memory::FinishSession() {
+  return user_dict_->CommitPendingTransaction();
+}
+
+bool Memory::DiscardSession() {
+  return user_dict_->RevertRecentTransaction();
+}
+
 void Memory::OnCommit(Context* ctx) {
   if (!user_dict_|| user_dict_->readonly())
     return;
-  user_dict_->NewTransaction();
-
+  StartSession();
   CommitEntry commit_entry(this);
   for (auto& seg : *ctx->composition()) {
     auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(
@@ -119,13 +130,13 @@ void Memory::OnDeleteEntry(Context* ctx) {
 }
 
 void Memory::OnUnhandledKey(Context* ctx, const KeyEvent& key) {
-  if (!user_dict_ || user_dict_->readonly()) return;
+  if (!user_dict_ || user_dict_->readonly())
+    return;
   if ((key.modifier() & ~kShiftMask) == 0) {
-    if (key.keycode() == XK_BackSpace &&
-        user_dict_->RevertRecentTransaction()) {
+    if (key.keycode() == XK_BackSpace && DiscardSession()) {
       return;  // forget about last commit
     }
-    user_dict_->CommitPendingTransaction();
+    FinishSession();
   }
 }
 
