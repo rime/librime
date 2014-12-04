@@ -8,7 +8,6 @@
 #define RIME_USER_DB_H_
 
 #include <stdint.h>
-#include <functional>
 #include <string>
 #include <rime/component.h>
 #include <rime/dict/db.h>
@@ -66,10 +65,9 @@ class UserDbHelper {
   }
 
   bool UpdateUserInfo();
-  bool UniformBackup(const std::string& snapshot_file,
-                     std::function<bool ()> fallback);
-  bool UniformRestore(const std::string& snapshot_file,
-                      std::function<bool ()> fallback);
+  static bool IsUniformFormat(const std::string& name);
+  bool UniformBackup(const std::string& snapshot_file);
+  bool UniformRestore(const std::string& snapshot_file);
 
   bool IsUserDb();
   std::string GetDbName();
@@ -91,16 +89,14 @@ class UserDbWrapper : public BaseDb {
         UserDbHelper(this).UpdateUserInfo();
   }
   virtual bool Backup(const std::string& snapshot_file) {
-    return UserDbHelper(this).UniformBackup(snapshot_file,
-        [&]() -> bool {
-          return BaseDb::Backup(snapshot_file);
-        });
+    return UserDbHelper::IsUniformFormat(snapshot_file) ?
+        UserDbHelper(this).UniformBackup(snapshot_file) :
+        BaseDb::Backup(snapshot_file);
   }
   virtual bool Restore(const std::string& snapshot_file) {
-    return UserDbHelper(this).UniformRestore(snapshot_file,
-        [&]() -> bool {
-          return BaseDb::Restore(snapshot_file);
-        });
+    return UserDbHelper::IsUniformFormat(snapshot_file) ?
+        UserDbHelper(this).UniformRestore(snapshot_file) :
+        BaseDb::Restore(snapshot_file);
   }
 };
 

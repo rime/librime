@@ -110,49 +110,40 @@ bool UserDbHelper::UpdateUserInfo() {
   return db_->MetaUpdate("/user_id", deployer.user_id);
 }
 
-bool UserDbHelper::UniformBackup(const std::string& snapshot_file,
-                                 std::function<bool ()> fallback) {
-  // plain userdb format
-  if (boost::ends_with(snapshot_file,
-                       UserDbFormat<TextDb>::snapshot_extension)) {
-    LOG(INFO) << "backing up userdb '" << db_->name() << "' to "
-              << snapshot_file;
-    TsvWriter writer(snapshot_file, plain_userdb_format.formatter);
-    writer.file_description = plain_userdb_format.file_description;
-    DbSource source(db_);
-    try {
-      writer << source;
-    }
-    catch (std::exception& ex) {
-      LOG(ERROR) << ex.what();
-      return false;
-    }
-    return true;
-  }
-  // base db format
-  return fallback();
+bool UserDbHelper::IsUniformFormat(const std::string& file_name) {
+  return boost::ends_with(file_name,
+                          UserDbFormat<TextDb>::snapshot_extension);
 }
 
-bool UserDbHelper::UniformRestore(const std::string& snapshot_file,
-                                  std::function<bool ()> fallback) {
-  // plain userdb format
-  if (boost::ends_with(snapshot_file,
-                       UserDbFormat<TextDb>::snapshot_extension)) {
-    LOG(INFO) << "restoring userdb '" << db_->name() << "' from "
-              << snapshot_file;
-    TsvReader reader(snapshot_file, plain_userdb_format.parser);
-    DbSink sink(db_);
-    try {
-      reader >> sink;
-    }
-    catch (std::exception& ex) {
-      LOG(ERROR) << ex.what();
-      return false;
-    }
-    return true;
+bool UserDbHelper::UniformBackup(const std::string& snapshot_file) {
+  LOG(INFO) << "backing up userdb '" << db_->name() << "' to "
+            << snapshot_file;
+  TsvWriter writer(snapshot_file, plain_userdb_format.formatter);
+  writer.file_description = plain_userdb_format.file_description;
+  DbSource source(db_);
+  try {
+    writer << source;
   }
-  // base db format
-  return fallback();
+  catch (std::exception& ex) {
+    LOG(ERROR) << ex.what();
+    return false;
+  }
+  return true;
+}
+
+bool UserDbHelper::UniformRestore(const std::string& snapshot_file) {
+  LOG(INFO) << "restoring userdb '" << db_->name() << "' from "
+            << snapshot_file;
+  TsvReader reader(snapshot_file, plain_userdb_format.parser);
+  DbSink sink(db_);
+  try {
+    reader >> sink;
+  }
+  catch (std::exception& ex) {
+    LOG(ERROR) << ex.what();
+    return false;
+  }
+  return true;
 }
 
 bool UserDbHelper::IsUserDb() {
