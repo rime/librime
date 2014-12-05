@@ -24,10 +24,12 @@ RimeModule* ModuleManager::Find(const std::string& name) {
 }
 
 void ModuleManager::LoadModule(RimeModule* module) {
-  DLOG(INFO) << "loading module: " << module;
-  if (!module)
+  if (!module ||
+      loaded_.find(module) != loaded_.end()) {
     return;
-  loaded_.push_back(module);
+  }
+  DLOG(INFO) << "loading module: " << module;
+  loaded_.insert(module);
   if (module->initialize != NULL) {
     module->initialize();
   }
@@ -37,9 +39,9 @@ void ModuleManager::LoadModule(RimeModule* module) {
 }
 
 void ModuleManager::UnloadModules() {
-  for (auto it = loaded_.cbegin(); it != loaded_.cend(); ++it) {
-    if ((*it)->finalize != NULL) {
-      (*it)->finalize();
+  for (auto module : loaded_) {
+    if (module->finalize != NULL) {
+      module->finalize();
     }
   }
   loaded_.clear();

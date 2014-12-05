@@ -97,6 +97,7 @@ RIME_API void RimeFinalize() {
 }
 
 RIME_API Bool RimeStartMaintenance(Bool full_check) {
+  rime::LoadModules(rime::kDeployerModules);
   rime::Deployer &deployer(rime::Service::instance().deployer());
   deployer.RunTask("clean_old_log_files");
   if (!deployer.RunTask("installation_update")) {

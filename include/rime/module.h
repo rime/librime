@@ -9,7 +9,7 @@
 
 #include <map>
 #include <string>
-#include <vector>
+#include <unordered_set>
 #include <rime/common.h>
 
 struct rime_module_t;
@@ -34,8 +34,8 @@ class ModuleManager {
   // module registry
   using ModuleMap = std::map<std::string, RimeModule*>;
   ModuleMap map_;
-  // list of loaded modules
-  std::vector<RimeModule*> loaded_;
+  // set of loaded modules
+  std::unordered_set<RimeModule*> loaded_;
 };
 
 }  // namespace rime
