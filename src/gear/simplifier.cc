@@ -119,7 +119,12 @@ void Simplifier::Initialize() {
       opencc_config_path = shared_config_path;
     }
   }
-  opencc_.reset(new Opencc(opencc_config_path.string()));
+  try {
+    opencc_.reset(new Opencc(opencc_config_path.string()));
+  }
+  catch (opencc::Exception& e) {
+    LOG(ERROR) << "Error initializing opencc: " << e.what();
+  }
 }
 
 void Simplifier::Apply(CandidateList* recruited,
