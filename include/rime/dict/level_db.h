@@ -2,29 +2,27 @@
 // Copyleft RIME Developers
 // License: GPLv3
 //
-// A simple wrapper for kyotocabinet::TreeDB
+// 2014-12-04 Chen Gong <chen.sst@gmail.com>
 //
-// 2011-11-02 GONG Chen <chen.sst@gmail.com>
-//
-#ifndef RIME_TREE_DB_H_
-#define RIME_TREE_DB_H_
+#ifndef RIME_LEVEL_DB_H_
+#define RIME_LEVEL_DB_H_
 
 #include <string>
 #include <rime/dict/db.h>
 
 namespace rime {
 
-struct TreeDbCursor;
-struct TreeDbWrapper;
+struct LevelDbCursor;
+struct LevelDbWrapper;
 
-class TreeDb;
+class LevelDb;
 
-class TreeDbAccessor : public DbAccessor {
+class LevelDbAccessor : public DbAccessor {
  public:
-  TreeDbAccessor();
-  TreeDbAccessor(TreeDbCursor* cursor,
+  LevelDbAccessor();
+  LevelDbAccessor(LevelDbCursor* cursor,
                  const std::string& prefix);
-  virtual ~TreeDbAccessor();
+  virtual ~LevelDbAccessor();
 
   virtual bool Reset();
   virtual bool Jump(const std::string& key);
@@ -32,17 +30,18 @@ class TreeDbAccessor : public DbAccessor {
   virtual bool exhausted();
 
  private:
-  unique_ptr<TreeDbCursor> cursor_;
+  unique_ptr<LevelDbCursor> cursor_;
   bool is_metadata_query_ = false;
 };
 
-class TreeDb : public Db,
-               public Recoverable,
-               public Transactional {
+class LevelDb : public Db,
+                public Recoverable,
+                public Transactional {
  public:
-  TreeDb(const std::string& name, const std::string& db_type = "");
-  virtual ~TreeDb();
+  LevelDb(const std::string& name, const std::string& db_type = "");
+  virtual ~LevelDb();
 
+  virtual bool Remove();
   virtual bool Open();
   virtual bool OpenReadOnly();
   virtual bool Close();
@@ -72,10 +71,10 @@ class TreeDb : public Db,
  private:
   void Initialize();
 
-  unique_ptr<TreeDbWrapper> db_;
+  unique_ptr<LevelDbWrapper> db_;
   std::string db_type_;
 };
 
 }  // namespace rime
 
-#endif  // RIME_TREE_DB_H_
+#endif  // RIME_LEVEL_DB_H_

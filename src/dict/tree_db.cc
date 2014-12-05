@@ -35,7 +35,7 @@ struct TreeDbCursor {
 struct TreeDbWrapper {
   TreeDbWrapper();
 
-  TreeDbCursor* GetCursor() {
+  TreeDbCursor* CreateCursor() {
     if (auto cursor = kcdb.cursor())
       return new TreeDbCursor(cursor);
     else
@@ -59,7 +59,8 @@ TreeDbAccessor::TreeDbAccessor() {
 
 TreeDbAccessor::TreeDbAccessor(TreeDbCursor* cursor,
                                const std::string& prefix)
-    : DbAccessor(prefix), cursor_(cursor) {
+    : DbAccessor(prefix), cursor_(cursor),
+      is_metadata_query_(prefix == kMetaCharacter) {
   Reset();
 }
 
@@ -79,7 +80,7 @@ bool TreeDbAccessor::GetNextRecord(std::string* key, std::string* value) {
   if (!cursor_ || !key || !value)
     return false;
   bool got = cursor_->kcursor->get(key, value, true) && MatchesPrefix(*key);
-  if (got && prefix_ == kMetaCharacter) {
+  if (got && is_metadata_query_) {
     key->erase(0, 1);  // remove meta character
   }
   return got;
@@ -119,7 +120,7 @@ shared_ptr<DbAccessor> TreeDb::QueryAll() {
 shared_ptr<DbAccessor> TreeDb::Query(const std::string& key) {
   if (!loaded())
     return nullptr;
-  return New<TreeDbAccessor>(db_->GetCursor(), key);
+  return New<TreeDbAccessor>(db_->CreateCursor(), key);
 }
 
 bool TreeDb::Fetch(const std::string& key, std::string* value) {

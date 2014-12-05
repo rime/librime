@@ -9,6 +9,7 @@
 #include <rime/common.h>
 #include <rime/registry.h>
 
+#include <rime/dict/level_db.h>
 #include <rime/dict/table_db.h>
 #include <rime/dict/text_db.h>
 #include <rime/dict/tree_db.h>
@@ -27,7 +28,7 @@ static void rime_dict_initialize() {
   r.Register("stabledb", new Component<StableDb>);
   r.Register("plain_userdb", new UserDbComponent<TextDb>);
   r.Register("legacy_userdb", new UserDbComponent<TreeDb>);
-  r.Register("userdb", new UserDbComponent<TreeDb>);
+  r.Register("userdb", new UserDbComponent<LevelDb>);
 
   r.Register("dictionary", new DictionaryComponent);
   r.Register("reverse_lookup_dictionary",

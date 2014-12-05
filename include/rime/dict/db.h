@@ -37,7 +37,7 @@ class Db : public Class<Db, const std::string&> {
   virtual ~Db() = default;
 
   bool Exists() const;
-  bool Remove();
+  virtual bool Remove();
 
   virtual bool Open() = 0;
   virtual bool OpenReadOnly() = 0;
