@@ -398,7 +398,11 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
 bool UserDictUpgration::Run(Deployer* deployer) {
   UserDictManager manager(deployer);
   UserDictList dicts;
-  manager.GetUserDictList(&dicts);
+  auto legacy_userdb_component = UserDb::Require("legacy_userdb");
+  if (!legacy_userdb_component) {
+    return false;
+  }
+  manager.GetUserDictList(&dicts, legacy_userdb_component);
   bool ok = true;
   for (auto it = dicts.cbegin(); it != dicts.cend(); ++it) {
     if (!manager.UpgradeUserDict(*it))
