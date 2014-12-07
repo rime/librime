@@ -17,6 +17,7 @@
 #include <rime/dict/dictionary.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 #include <rime/dict/user_dictionary.h>
+#include <rime/dict/user_db_recovery_task.h>
 
 static void rime_dict_initialize() {
   using namespace rime;
@@ -34,6 +35,8 @@ static void rime_dict_initialize() {
   r.Register("reverse_lookup_dictionary",
              new ReverseLookupDictionaryComponent);
   r.Register("user_dictionary", new UserDictionaryComponent);
+
+  r.Register("userdb_recovery_task", new UserDbRecoveryTaskComponent);
 }
 
 static void rime_dict_finalize() {

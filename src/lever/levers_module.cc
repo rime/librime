@@ -14,7 +14,6 @@
 #include <rime/lever/custom_settings.h>
 #include <rime/lever/deployment_tasks.h>
 #include <rime/lever/switcher_settings.h>
-#include <rime/lever/userdb_recovery_task.h>
 #include <rime/lever/user_dict_manager.h>
 
 static void rime_levers_initialize() {
@@ -34,8 +33,6 @@ static void rime_levers_initialize() {
   r.Register("user_dict_sync", new Component<UserDictSync>);
   r.Register("backup_config_files", new Component<BackupConfigFiles>);
   r.Register("clean_old_log_files", new Component<CleanOldLogFiles>);
-
-  r.Register("userdb_recovery_task", new UserDbRecoveryTaskComponent);
 }
 
 static void rime_levers_finalize() {

@@ -10,7 +10,7 @@
 #include <rime/deployer.h>
 #include <rime/dict/db.h>
 #include <rime/dict/user_db.h>
-#include <rime/lever/userdb_recovery_task.h>
+#include <rime/dict/user_db_recovery_task.h>
 
 namespace fs = boost::filesystem;
 
