@@ -17,10 +17,12 @@
 
 #include <rime/common.h>
 #include <rime/service.h>
-#include <rime/dict/tree_db.h>
 #include <rime/dict/user_db.h>
 
+#include "tree_db.h"
+
 namespace rime {
+namespace legacy {
 
 static const char* kMetaCharacter = "\x01";
 
@@ -264,15 +266,17 @@ bool TreeDb::CommitTransaction() {
   return !in_transaction_;
 }
 
-template <>
-const std::string UserDbFormat<TreeDb>::extension(".userdb.kct");
+}  // namespace legacy
 
 template <>
-const std::string UserDbFormat<TreeDb>::snapshot_extension(".userdb.kcss");
+const std::string UserDbFormat<legacy::TreeDb>::extension(".userdb.kct");
 
 template <>
-UserDbWrapper<TreeDb>::UserDbWrapper(const std::string& db_name)
-    : TreeDb(db_name, "userdb") {
+const std::string UserDbFormat<legacy::TreeDb>::snapshot_extension(".userdb.kcss");
+
+template <>
+UserDbWrapper<legacy::TreeDb>::UserDbWrapper(const std::string& db_name)
+    : legacy::TreeDb(db_name, "userdb") {
 }
 
 }  // namespace rime
