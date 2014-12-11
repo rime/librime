@@ -86,7 +86,7 @@ endif(Marisa_FOUND)
 
 find_package(Opencc REQUIRED)
 if(Opencc_FOUND)
-  include_directories(${Opencc_INCLUDE_PATH})
+include_directories(${Opencc_INCLUDE_PATH})
 endif(Opencc_FOUND)
 
 find_path(X11Keysym X11/keysym.h)

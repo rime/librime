@@ -1,0 +1,29 @@
+{
+  "name": "opencc",
+  "version": "1.0.2",
+  "description": "Conversion between Traditional and Simplified Chinese",
+  "author": "BYVoid <byvoid@byvoid.com>",
+  "license": "Apache",
+  "main": "node/opencc.js",
+  "scripts": {
+    "test": "mocha -R spec node/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/BYVoid/OpenCC.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BYVoid/Opencc/issues"
+  },
+  "keywords": [
+    "opencc",
+    "Chinese",
+    "conversion",
+    "unicode",
+    "Simplified Chinese",
+    "Traditional Chinese"
+  ],
+  "devDependencies": {
+    "mocha": "1.8.1"
+  }
+}
