@@ -1,7 +1,7 @@
 /*
  * Open Chinese Convert
  *
- * Copyright 2010-2013 BYVoid <byvoid@byvoid.com>
+ * Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,29 +17,30 @@
  */
 
 #include "MaxMatchSegmentation.hpp"
-#include "UTF8Util.hpp"
 
 using namespace opencc;
 
-vector<string> MaxMatchSegmentation::Segment(const string& text) {
-  vector<string> segments;
-  vector<string> buffer;
-  auto clearBuffer = [&segments, &buffer]() {
-                       if (buffer.size() > 0) {
-                         segments.push_back(UTF8Util::Join(buffer));
-                         buffer.clear();
-                       }
-                     };
+SegmentsPtr MaxMatchSegmentation::Segment(const string& text) const {
+  SegmentsPtr segments(new Segments);
+  const char* segStart = text.c_str();
+  size_t segLength = 0;
+  auto clearBuffer = [&segments, &segStart, &segLength]() {
+      if (segLength > 0) {
+        segments->AddSegment(UTF8Util::FromSubstr(segStart, segLength));
+        segLength = 0;
+      }
+  };
   for (const char* pstr = text.c_str(); *pstr != '\0';) {
-    Optional<DictEntry> matched = dict->MatchPrefix(pstr);
+    const Optional<const DictEntry*>& matched = dict->MatchPrefix(pstr);
     size_t matchedLength;
     if (matched.IsNull()) {
       matchedLength = UTF8Util::NextCharLength(pstr);
-      buffer.push_back(UTF8Util::FromSubstr(pstr, matchedLength));
+      segLength += matchedLength;
     } else {
       clearBuffer();
-      matchedLength = matched.Get().key.length();
-      segments.push_back(matched.Get().key);
+      matchedLength = matched.Get()->KeyLength();
+      segments->AddSegment(matched.Get()->Key());
+      segStart = pstr + matchedLength;
     }
     pstr += matchedLength;
   }
