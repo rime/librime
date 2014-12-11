@@ -24,7 +24,7 @@ namespace opencc {
   class OPENCC_EXPORT DictEntry {
     public:
       string key;
-      StringVector values;
+      vector<string> values;
       DictEntry() {}
 
       DictEntry(string key_) : key(key_) {}
@@ -33,7 +33,7 @@ namespace opencc {
         values.push_back(value_);
       }
 
-      DictEntry(string key_, StringVector values_)
+      DictEntry(string key_, vector<string> values_)
         : key(key_), values(values_) {}
 
       bool operator<(const DictEntry& that) const {
@@ -48,8 +48,8 @@ namespace opencc {
         }
       }
 
-      static bool PtrCmp(DictEntryPtr a, DictEntryPtr b) {
-        return a->key < b->key;
+      static bool Cmp(DictEntry a, DictEntry b) {
+        return a.key < b.key;
       }
   };
 }
