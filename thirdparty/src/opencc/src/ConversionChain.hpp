@@ -1,7 +1,7 @@
 /*
  * Open Chinese Convert
  *
- * Copyright 2010-2013 BYVoid <byvoid@byvoid.com>
+ * Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,17 +22,22 @@
 #include "Conversion.hpp"
 
 namespace opencc {
-  class OPENCC_EXPORT ConversionChain {
-    public:
-      ConversionChain();
-      void AddConversion(ConversionPtr conversion);
-      vector<string> Convert(const vector<string>& input);
+/**
+* Chain of conversions
+* Consists of a list of conversions. Converts input in sequence.
+* @ingroup opencc_cpp_api
+*/
+class OPENCC_EXPORT ConversionChain {
+public:
+  ConversionChain(const list<ConversionPtr> _conversions);
 
-      const list<ConversionPtr> GetConversions() const {
-        return conversions;
-      }
+  SegmentsPtr Convert(const SegmentsPtr& input) const;
 
-    private:
-      list<ConversionPtr> conversions;
-  };
+  const list<ConversionPtr> GetConversions() const {
+    return conversions;
+  }
+
+private:
+  const list<ConversionPtr> conversions;
+};
 }

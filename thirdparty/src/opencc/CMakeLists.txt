@@ -1,7 +1,7 @@
 #
 # Open Chinese Convert
 #
-# Copyright 2010-2013 BYVoid <byvoid@byvoid.com>
+# Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,12 +23,14 @@ project (${PACKAGE_NAME} CXX)
 include (CTest)
 enable_testing()
 
+option(BUILD_SHARED_LIBS "Build opencc as shared library" ON)
+
 ######## Package information
 set (PACKAGE_URL https://github.com/BYVoid/Opencc)
 set (PACKAGE_BUGREPORT https://github.com/BYVoid/Opencc/issues)
 set (OPENCC_VERSION_MAJOR 1)
 set (OPENCC_VERSION_MINOR 0)
-set (OPENCC_VERSION_REVISION 0)
+set (OPENCC_VERSION_REVISION 1)
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
   set (version_suffix .Debug)
@@ -47,12 +49,8 @@ set(CPACK_SOURCE_IGNORE_FILES
 )
 include(CPack)
 
-######## Validation
+######## Options
 option(BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" OFF)
-
-if (ENABLE_GETTEXT)
-  find_package(Gettext REQUIRED)
-endif (ENABLE_GETTEXT)
 
 ######## Windows
 
@@ -60,6 +58,10 @@ if (WIN32)
   set(CMAKE_SHARED_LIBRARY_PREFIX ${CMAKE_INSTALL_PREFIX})
   set(CMAKE_STATIC_LIBRARY_PREFIX ${CMAKE_INSTALL_PREFIX})
 endif (WIN32)
+
+######## Mac OS X
+
+set(CMAKE_MACOSX_RPATH 1)
 
 ######## Directory
 
@@ -123,6 +125,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   add_definitions(
     /Wall
+    /D "_CRT_SECURE_NO_WARNINGS"
   )
 endif()
 
@@ -131,9 +134,4 @@ endif()
 add_subdirectory(src)
 add_subdirectory(doc)
 add_subdirectory(data)
-
-if (GETTEXT_FOUND AND ENABLE_GETTEXT)
-  add_subdirectory(po)
-endif (GETTEXT_FOUND AND ENABLE_GETTEXT)
-
 add_subdirectory(test)

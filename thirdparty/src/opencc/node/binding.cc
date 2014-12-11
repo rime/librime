@@ -20,19 +20,22 @@ class OpenccBinding : public node::ObjectWrap {
     string output;
     Persistent<Function> callback;
     Optional<opencc::Exception> ex;
+
+    ConvertRequest()
+        : instance(nullptr), ex(Optional<opencc::Exception>::Null()) {
+    }
   };
 
   Config config_;
-  ConverterPtr converter_;
+  const ConverterPtr converter_;
  public:
-  explicit OpenccBinding(const string configFileName) {
-    config_.LoadFile(configFileName);
-    converter_ = config_.GetConverter();
-  }
+  explicit OpenccBinding(const string configFileName)
+    : config_(),
+      converter_(config_.NewFromFile(configFileName)) {}
 
   virtual ~OpenccBinding() {
   }
-  
+
   string Convert(const string& input) {
     return converter_->Convert(input);
   }
@@ -69,14 +72,14 @@ class OpenccBinding : public node::ObjectWrap {
     conv_data->instance = ObjectWrap::Unwrap<OpenccBinding>(args.This());
     conv_data->input = ToUtf8String(args[0]->ToString());
     conv_data->callback = Persistent<Function>::New(Local<Function>::Cast(args[1]));
-    conv_data->ex = Optional<opencc::Exception>();
+    conv_data->ex = Optional<opencc::Exception>::Null();
     uv_work_t* req = new uv_work_t;
     req->data = conv_data;
     uv_queue_work(uv_default_loop(), req, DoConvert, (uv_after_work_cb)AfterConvert);
 
     return Undefined();
   }
-  
+
   static void DoConvert(uv_work_t* req) {
     ConvertRequest* conv_data = static_cast<ConvertRequest*>(req->data);
     OpenccBinding* instance = conv_data->instance;

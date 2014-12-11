@@ -1,7 +1,7 @@
-/**
+/*
  * Open Chinese Convert
  *
- * Copyright 2010-2013 BYVoid <byvoid@byvoid.com>
+ * Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,60 +19,128 @@
 #include "Config.hpp"
 #include "Converter.hpp"
 #include "opencc.h"
+#include "UTF8Util.hpp"
 
 using namespace opencc;
 
 struct InternalData {
-  Config config;
-  ConverterPtr converter;
+  const ConverterPtr converter;
+
+  InternalData(const ConverterPtr& _converter) : converter(_converter) {
+  }
 };
 
-SimpleConverter::SimpleConverter(const std::string configFileName) try {
-  InternalData* data = new InternalData();
-
-  internalData = data;
-  data->config.LoadFile(configFileName);
-  data->converter = data->config.GetConverter();
-} catch (Exception& ex) {
-  throw std::runtime_error(ex.what());
+SimpleConverter::SimpleConverter(const std::string& configFileName) {
+  try {
+    Config config;
+    internalData = new InternalData(config.NewFromFile(configFileName));
+  } catch (Exception& ex) {
+    throw std::runtime_error(ex.what());
+  }
 }
+
 SimpleConverter::~SimpleConverter() {
   delete (InternalData*)internalData;
 }
 
-std::string SimpleConverter::Convert(const std::string input) const try {
-  InternalData* data = (InternalData*)internalData;
-
-  return data->converter->Convert(input);
-} catch (Exception& ex) {
-  throw std::runtime_error(ex.what());
-}
-opencc_t opencc_new(const char* configFileName) try {
-  SimpleConverter* instance = new SimpleConverter(configFileName);
-
-  return instance;
-} catch (std::runtime_error& ex) {
-  // TODO report error
-  return NULL;
-}
-void opencc_delete(opencc_t opencc) {
-  SimpleConverter* instance = reinterpret_cast<SimpleConverter*>(opencc);
-
-  delete instance;
+std::string SimpleConverter::Convert(const std::string& input) const {
+  try {
+    const InternalData* data = (InternalData*)internalData;
+    return data->converter->Convert(input);
+  } catch (Exception& ex) {
+    throw std::runtime_error(ex.what());
+  }
 }
 
-char* opencc_convert(opencc_t opencc, const char* input) try {
-  SimpleConverter* instance = reinterpret_cast<SimpleConverter*>(opencc);
-  std::string converted = instance->Convert(input);
-  char* output = new char[converted.length() + 1];
-
-  strncpy(output, converted.c_str(), converted.length());
-  output[converted.length()] = '\0';
-  return output;
-} catch (std::runtime_error& ex) {
-  // TODO report error
-  return NULL;
+std::string SimpleConverter::Convert(const char* input) const {
+  return Convert(string(input));
 }
-void opencc_free_string(char* str) {
+
+std::string SimpleConverter::Convert(const char* input, size_t length) const {
+  if (length == static_cast<size_t>(-1)) {
+    return Convert(string(input));
+  } else {
+    return Convert(UTF8Util::FromSubstr(input, length));
+  }
+}
+
+size_t SimpleConverter::Convert(const char* input, char* output) const {
+  try {
+    const InternalData* data = (InternalData*)internalData;
+    return data->converter->Convert(input, output);
+  } catch (Exception& ex) {
+    throw std::runtime_error(ex.what());
+  }
+}
+
+size_t SimpleConverter::Convert(const char* input,
+                                size_t length,
+                                char* output) const {
+  if (length == static_cast<size_t>(-1)) {
+    return Convert(input, output);
+  } else {
+    string trimmed = UTF8Util::FromSubstr(input, length);
+    return Convert(trimmed.c_str(), output);
+  }
+}
+
+static string cError;
+
+opencc_t opencc_open(const char* configFileName) {
+  try {
+    if (configFileName == nullptr) {
+      configFileName = OPENCC_DEFAULT_CONFIG_SIMP_TO_TRAD;
+    }
+    SimpleConverter* instance = new SimpleConverter(configFileName);
+    return instance;
+  } catch (std::runtime_error& ex) {
+    cError = ex.what();
+    return reinterpret_cast<opencc_t>(-1);
+  }
+}
+
+int opencc_close(opencc_t opencc) {
+  try {
+    SimpleConverter* instance = reinterpret_cast<SimpleConverter*>(opencc);
+    delete instance;
+    return 0;
+  } catch (std::exception& ex) {
+    cError = ex.what();
+    return 1;
+  }
+}
+
+size_t opencc_convert_utf8_to_buffer(opencc_t opencc,
+                                     const char* input,
+                                     size_t length,
+                                     char* output) {
+  try {
+    SimpleConverter* instance = reinterpret_cast<SimpleConverter*>(opencc);
+    return instance->Convert(input, length, output);
+  } catch (std::runtime_error& ex) {
+    cError = ex.what();
+    return static_cast<size_t>(-1);
+  }
+}
+
+char* opencc_convert_utf8(opencc_t opencc, const char* input, size_t length) {
+  try {
+    SimpleConverter* instance = reinterpret_cast<SimpleConverter*>(opencc);
+    std::string converted = instance->Convert(input, length);
+    char* output = new char[converted.length() + 1];
+    strncpy(output, converted.c_str(), converted.length());
+    output[converted.length()] = '\0';
+    return output;
+  } catch (std::runtime_error& ex) {
+    cError = ex.what();
+    return nullptr;
+  }
+}
+
+void opencc_convert_utf8_free(char* str) {
   delete[] str;
+}
+
+const char* opencc_error(void) {
+  return cError.c_str();
 }

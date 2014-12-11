@@ -2,6 +2,7 @@ include (GenerateExportHeader)
 
 set(
   LIBOPENCC_HEADERS
+  BinaryDict.hpp
   Common.hpp
   Config.hpp
   Conversion.hpp
@@ -13,9 +14,11 @@ set(
   DictGroup.hpp
   Exception.hpp
   Export.hpp
+  Lexicon.hpp
   MaxMatchSegmentation.hpp
   Optional.hpp
   Segmentation.hpp
+  Segments.hpp
   SerializableDict.hpp
   TextDict.hpp
   UTF8Util.hpp
@@ -24,12 +27,14 @@ set(
 
 set(
   LIBOPENCC_SOURCES
+  BinaryDict.cpp
   Config.cpp
   Conversion.cpp
   ConversionChain.cpp
   Converter.cpp
   DartsDict.cpp
   Dict.cpp
+  DictEntry.cpp
   DictGroup.cpp
   MaxMatchSegmentation.cpp
   SimpleConverter.cpp
@@ -44,7 +49,6 @@ include_directories(../deps/tclap-1.2.1)
 
 add_library(
   libopencc
-  SHARED
   ${LIBOPENCC_SOURCES}
 )
 
@@ -58,7 +62,6 @@ GENERATE_EXPORT_HEADER(
 
 set_target_properties(
   libopencc
-  # libopencc_static
   PROPERTIES
     LINKER_LANGUAGE
       CXX
@@ -69,18 +72,6 @@ set_target_properties(
     SOVERSION
       2
 )
-
-if (ENABLE_GETTEXT)
-  add_definitions(
-    -DENABLE_GETTEXT
-  )
-  link_directories(
-    ${GETTEXT_LIBRARIES}
-  )
-  include_directories(
-    ${GETTEXT_INCLUDE_DIR}
-  )
-endif (ENABLE_GETTEXT)
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
   add_definitions(
