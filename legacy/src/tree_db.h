@@ -2,17 +2,19 @@
 // Copyleft RIME Developers
 // License: GPLv3
 //
-// A simple wrapper for kyotocabinet::TreeDB
+// A simple wrapper around kyotocabinet::TreeDB.
 //
 // 2011-11-02 GONG Chen <chen.sst@gmail.com>
+// 2014-12-10 GONG Chen <chen.sst@gmail.com>  move to namespace rime::legacy.
 //
-#ifndef RIME_TREE_DB_H_
-#define RIME_TREE_DB_H_
+#ifndef RIME_LEGACY_TREE_DB_H_
+#define RIME_LEGACY_TREE_DB_H_
 
 #include <string>
 #include <rime/dict/db.h>
 
 namespace rime {
+namespace legacy {
 
 struct TreeDbCursor;
 struct TreeDbWrapper;
@@ -33,6 +35,7 @@ class TreeDbAccessor : public DbAccessor {
 
  private:
   unique_ptr<TreeDbCursor> cursor_;
+  bool is_metadata_query_ = false;
 };
 
 class TreeDb : public Db,
@@ -75,6 +78,7 @@ class TreeDb : public Db,
   std::string db_type_;
 };
 
+}  // namespace legacy
 }  // namespace rime
 
-#endif  // RIME_TREE_DB_H_
+#endif  // RIME_LEGACY_TREE_DB_H_

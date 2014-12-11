@@ -17,9 +17,12 @@
 
 #include <rime/common.h>
 #include <rime/service.h>
-#include <rime/dict/tree_db.h>
+#include <rime/dict/user_db.h>
+
+#include "tree_db.h"
 
 namespace rime {
+namespace legacy {
 
 static const char* kMetaCharacter = "\x01";
 
@@ -34,7 +37,7 @@ struct TreeDbCursor {
 struct TreeDbWrapper {
   TreeDbWrapper();
 
-  TreeDbCursor* GetCursor() {
+  TreeDbCursor* CreateCursor() {
     if (auto cursor = kcdb.cursor())
       return new TreeDbCursor(cursor);
     else
@@ -58,7 +61,8 @@ TreeDbAccessor::TreeDbAccessor() {
 
 TreeDbAccessor::TreeDbAccessor(TreeDbCursor* cursor,
                                const std::string& prefix)
-    : DbAccessor(prefix), cursor_(cursor) {
+    : DbAccessor(prefix), cursor_(cursor),
+      is_metadata_query_(prefix == kMetaCharacter) {
   Reset();
 }
 
@@ -78,7 +82,7 @@ bool TreeDbAccessor::GetNextRecord(std::string* key, std::string* value) {
   if (!cursor_ || !key || !value)
     return false;
   bool got = cursor_->kcursor->get(key, value, true) && MatchesPrefix(*key);
-  if (got && prefix_ == kMetaCharacter) {
+  if (got && is_metadata_query_) {
     key->erase(0, 1);  // remove meta character
   }
   return got;
@@ -118,7 +122,7 @@ shared_ptr<DbAccessor> TreeDb::QueryAll() {
 shared_ptr<DbAccessor> TreeDb::Query(const std::string& key) {
   if (!loaded())
     return nullptr;
-  return New<TreeDbAccessor>(db_->GetCursor(), key);
+  return New<TreeDbAccessor>(db_->CreateCursor(), key);
 }
 
 bool TreeDb::Fetch(const std::string& key, std::string* value) {
@@ -260,6 +264,19 @@ bool TreeDb::CommitTransaction() {
     return false;
   in_transaction_ = !db_->kcdb.end_transaction(true);
   return !in_transaction_;
+}
+
+}  // namespace legacy
+
+template <>
+const std::string UserDbFormat<legacy::TreeDb>::extension(".userdb.kct");
+
+template <>
+const std::string UserDbFormat<legacy::TreeDb>::snapshot_extension(".userdb.kcss");
+
+template <>
+UserDbWrapper<legacy::TreeDb>::UserDbWrapper(const std::string& db_name)
+    : legacy::TreeDb(db_name, "userdb") {
 }
 
 }  // namespace rime

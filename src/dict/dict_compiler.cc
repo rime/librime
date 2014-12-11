@@ -17,7 +17,6 @@
 #include <rime/dict/preset_vocabulary.h>
 #include <rime/dict/prism.h>
 #include <rime/dict/table.h>
-#include <rime/dict/tree_db.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 
 namespace rime {
@@ -98,11 +97,6 @@ bool DictCompiler::Compile(const std::string &schema_file) {
             << " (" << dict_file_checksum << ")";
   LOG(INFO) << schema_file << " (" << schema_file_checksum << ")";
   {
-    TreeDb deprecated_db(dict_name_ + ".reverse.kct", "reversedb");
-    if (deprecated_db.Exists()) {
-      deprecated_db.Remove();
-      LOG(INFO) << "removed deprecated db '" << deprecated_db.name() << "'.";
-    }
     ReverseDb reverse_db(dict_name_);
     if (!reverse_db.Exists() ||
         !reverse_db.Load() ||

@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <boost/filesystem.hpp>
+#include <rime/dict/user_db.h>
 
 namespace rime {
 
@@ -21,7 +22,9 @@ class UserDictManager {
  public:
   UserDictManager(Deployer* deployer);
 
-  void GetUserDictList(UserDictList* user_dict_list);
+  // If component is null, the current userdb component is used.
+  void GetUserDictList(UserDictList* user_dict_list,
+                       UserDb::Component* component = nullptr);
 
   // CAVEAT: the user dict should be closed before the following operations
   bool Backup(const std::string& dict_name);
@@ -38,6 +41,7 @@ class UserDictManager {
  protected:
   Deployer* deployer_;
   boost::filesystem::path path_;
+  UserDb::Component* user_db_component_;
 };
 
 }  // namespace rime

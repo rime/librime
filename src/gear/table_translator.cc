@@ -248,6 +248,8 @@ shared_ptr<Translation> TableTranslator::Query(const std::string& input,
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
 
+  FinishSession();
+
   bool enable_user_dict = user_dict_ && user_dict_->loaded() &&
       !IsUserDictDisabledFor(input);
 

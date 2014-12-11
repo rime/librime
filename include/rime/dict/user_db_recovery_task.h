@@ -4,8 +4,8 @@
 //
 // 2013-04-22 GONG Chen <chen.sst@gmail.com>
 //
-#ifndef RIME_USERDB_RECOVERY_TASK_H_
-#define RIME_USERDB_RECOVERY_TASK_H_
+#ifndef RIME_USER_DB_RECOVERY_TASK_H_
+#define RIME_USER_DB_RECOVERY_TASK_H_
 
 #include <rime/common.h>
 #include <rime/deployer.h>
@@ -32,4 +32,4 @@ class UserDbRecoveryTaskComponent : public UserDbRecoveryTask::Component {
 
 }  // namespace rime
 
-#endif  // RIME_USERDB_RECOVERY_TASK_H_
+#endif  // RIME_USER_DB_RECOVERY_TASK_H_

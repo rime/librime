@@ -9,10 +9,8 @@
 #include <boost/scope_exit.hpp>
 #include <rime/deployer.h>
 #include <rime/dict/db.h>
-#include <rime/dict/tree_db.h>
-#include <rime/dict/text_db.h>
 #include <rime/dict/user_db.h>
-#include <rime/lever/userdb_recovery_task.h>
+#include <rime/dict/user_db_recovery_task.h>
 
 namespace fs = boost::filesystem;
 
@@ -61,19 +59,20 @@ bool UserDbRecoveryTask::Run(Deployer* deployer) {
 }
 
 void UserDbRecoveryTask::RestoreUserDataFromSnapshot(Deployer* deployer) {
-  if (!Is<UserDb<TreeDb>>(db_))
+  UserDb::Component* component = UserDb::Require("userdb");
+  if (!component || !UserDbHelper(db_).IsUserDb())
     return;
   std::string dict_name(db_->name());
-  boost::erase_last(dict_name, UserDb<TreeDb>::extension);
+  boost::erase_last(dict_name, component->extension());
   // locate snapshot file
   boost::filesystem::path dir(deployer->user_data_sync_dir());
   // try *.userdb.txt
   fs::path snapshot_path =
-      dir / (dict_name + UserDb<TextDb>::snapshot_extension);
+      dir / (dict_name + component->snapshot_extension());
   if (!fs::exists(snapshot_path)) {
-    // try *.userdb.kct.snapshot
+    // try *.userdb.*.snapshot
     std::string legacy_snapshot_file =
-        dict_name + UserDb<TreeDb>::extension + ".snapshot";
+        dict_name + component->extension() + ".snapshot";
     snapshot_path = dir / legacy_snapshot_file;
     if (!fs::exists(snapshot_path)) {
       return;  // not found

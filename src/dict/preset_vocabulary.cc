@@ -14,7 +14,7 @@
 namespace rime {
 
 struct VocabularyDb : public TextDb {
-  VocabularyDb(const std::string& path);
+  explicit VocabularyDb(const std::string& path);
   shared_ptr<DbAccessor> cursor;
   static const TextFormat format;
 };

@@ -13,8 +13,8 @@
 
 namespace rime {
 
-const char* kDefaultModules[] = { "core", "dict", "gears", "levers", NULL };
-const char* kDeployerModules[] = { "core", "levers", NULL };
+const char* kDefaultModules[] = { "core", "dict", "gears", NULL };
+const char* kDeployerModules[] = { "core", "dict", "levers", NULL };
 
 void LoadModules(const char* module_names[]) {
   ModuleManager& mm(ModuleManager::instance());
