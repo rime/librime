@@ -25,6 +25,12 @@
 #include "Export.hpp"
 
 extern "C" {
+#else
+#include <stddef.h>
+#endif
+
+#ifndef OPENCC_EXPORT
+#define OPENCC_EXPORT
 #endif
 
 /**
@@ -38,7 +44,7 @@ extern "C" {
 *
 * @ingroup opencc_c_api
 */
-#define OPENCC_DEFAULT_CONFIG_SIMP_TO_TRAD "st2.json"
+#define OPENCC_DEFAULT_CONFIG_SIMP_TO_TRAD "s2t.json"
 
 /**
 * Filename of default Traditional to Simplified configuration
@@ -132,7 +138,6 @@ OPENCC_EXPORT const char* opencc_error(void);
 
 #ifdef __cplusplus
 }
-#endif
 
 /**
 * @defgroup opencc_simple_api OpenCC C++ Simple API
@@ -198,6 +203,7 @@ private:
   const void* internalData;
 };
 }
+#endif
 
 /**
 * @defgroup opencc_cpp_api OpenCC C++ Comprehensive API
