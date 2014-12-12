@@ -47,4 +47,12 @@ if(UNIX)
   add_definitions("-std=c++11")
 endif(UNIX)
 
+if(NOT DEFINED LIB_INSTALL_DIR)
+    set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+endif()
+
+if(NOT DEFINED BIN_INSTALL_DIR)
+    set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+endif()
+
 add_subdirectory(src)

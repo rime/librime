@@ -6,3 +6,4 @@ set_target_properties(rime-legacy PROPERTIES VERSION ${RIME_LEGACY_VERSION} SOVE
 if(XCODE_VERSION)
   set_target_properties(rime-legacy PROPERTIES INSTALL_NAME_DIR "@rpath")
 endif(XCODE_VERSION)
+install(TARGETS rime-legacy DESTINATION ${LIB_INSTALL_DIR})
