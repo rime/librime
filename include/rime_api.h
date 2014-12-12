@@ -549,6 +549,27 @@ RIME_MODULE_INITIALIZER(rime_register_module_##name) { \
 } \
 static void rime_customize_module_##name(RimeModule* module)
 
+/*!
+ *  Defines a constant for a list of module names.
+ */
+#define RIME_MODULE_LIST(var, ...) \
+const char* var[] = { \
+  __VA_ARGS__, NULL \
+} \
+
+/*!
+ *  Register a phony module which, when loaded, will load a list of modules.
+ *  \sa setup.cc for an example.
+ */
+#define RIME_REGISTER_MODULE_GROUP(name, ...) \
+static RIME_MODULE_LIST(rime_##name##_module_group, __VA_ARGS__); \
+static void rime_##name##_initialize() { \
+  rime::LoadModules(rime_##name##_module_group); \
+} \
+static void rime_##name##_finalize() { \
+} \
+RIME_REGISTER_MODULE(name)
+
 #ifdef __cplusplus
 }
 #endif

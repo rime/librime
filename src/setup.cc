@@ -9,12 +9,13 @@
 #include <glog/logging.h>
 #endif  // RIME_ENABLE_LOGGING
 
+#include <rime_api.h>
 #include <rime/module.h>
 
 namespace rime {
 
-const char* kDefaultModules[] = { "core", "dict", "gears", NULL };
-const char* kDeployerModules[] = { "core", "dict", "levers", NULL };
+RIME_MODULE_LIST(kDefaultModules, "default");
+RIME_MODULE_LIST(kDeployerModules, "deployer");
 
 void LoadModules(const char* module_names[]) {
   ModuleManager& mm(ModuleManager::instance());
@@ -30,5 +31,8 @@ void SetupLogging(const char* app_name) {
   google::InitGoogleLogging(app_name);
 #endif  // RIME_ENABLE_LOGGING
 }
+
+RIME_REGISTER_MODULE_GROUP(default, "core", "dict", "gears")
+RIME_REGISTER_MODULE_GROUP(deployer, "core", "dict", "levers")
 
 }  // namespace rime

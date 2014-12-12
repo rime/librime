@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
   traits.app_name = "rime.patch";
   rime->setup(&traits);
 
-  rime->initialize(&traits);
+  rime->deployer_initialize(&traits);
 
   std::string config_id(argv[1]);
   std::string key(argv[2]);

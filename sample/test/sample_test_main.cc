@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <rime/setup.h>
 
-static const char* test_modules[] = { "core", "sample", NULL };
+static RIME_MODULE_LIST(test_modules, "default", "sample");
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
