@@ -1,5 +1,6 @@
 2014-12-14  GONG Chen  <chen.sst@gmail.com>
 
+	* CMakeLists.txt: bump version to 1.2.9.
 	* Makefile: add make targets 'thirdparty/*' to build individual libraries.
 	* include/rime_api.h: add RIME_MODULE_LIST, RIME_REGISTER_MODULE_GROUP.
 	* legacy/src/legacy_module.cc: plugin module 'rime-legacy' for GPL'd code,
