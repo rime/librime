@@ -486,6 +486,9 @@ typedef struct rime_api_t {
   //! select a candidate from current page
   Bool (*select_candidate)(RimeSessionId session_id, size_t index);
 
+  //! get the version of librime
+  const char* (*get_version)();
+
 } RimeApi;
 
 //! API entry

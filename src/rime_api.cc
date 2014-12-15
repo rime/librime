@@ -875,6 +875,10 @@ Bool RimeSelectCandidate(RimeSessionId session_id, size_t index) {
   return Bool(ctx->Select(index));
 }
 
+const char* RimeGetVersion() {
+  return RIME_VERSION;
+}
+
 RIME_API RimeApi* rime_get_api() {
   static RimeApi s_api = {0};
   if (!s_api.data_size) {
@@ -951,6 +955,7 @@ RIME_API RimeApi* rime_get_api() {
     s_api.get_input = &RimeGetInput;
     s_api.get_caret_pos = &RimeGetCaretPos;
     s_api.select_candidate = &RimeSelectCandidate;
+    s_api.get_version = &RimeGetVersion;
   }
   return &s_api;
 }
