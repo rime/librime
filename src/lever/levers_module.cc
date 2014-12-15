@@ -28,7 +28,7 @@ static void rime_levers_initialize() {
   r.Register("schema_update", new Component<SchemaUpdate>);
   r.Register("config_file_update", new Component<ConfigFileUpdate>);
   r.Register("prebuild_all_schemas", new Component<PrebuildAllSchemas>);
-  r.Register("user_dict_upgration", new Component<UserDictUpgration>);
+  r.Register("user_dict_upgrade", new Component<UserDictUpgrade>);
   r.Register("cleanup_trash", new Component<CleanupTrash>);
   r.Register("user_dict_sync", new Component<UserDictSync>);
   r.Register("backup_config_files", new Component<BackupConfigFiles>);

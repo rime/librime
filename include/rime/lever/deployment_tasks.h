@@ -74,9 +74,9 @@ class SymlinkingPrebuiltDictionaries : public DeploymentTask {
 };
 
 // upgrade user dictionaries
-class UserDictUpgration : public DeploymentTask {
+class UserDictUpgrade : public DeploymentTask {
  public:
-  UserDictUpgration(TaskInitializer arg = TaskInitializer()) {}
+  UserDictUpgrade(TaskInitializer arg = TaskInitializer()) {}
   bool Run(Deployer* deployer);
 };
 

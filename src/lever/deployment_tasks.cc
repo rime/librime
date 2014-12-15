@@ -395,7 +395,7 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
   return success;
 }
 
-bool UserDictUpgration::Run(Deployer* deployer) {
+bool UserDictUpgrade::Run(Deployer* deployer) {
   UserDictManager manager(deployer);
   UserDictList dicts;
   auto legacy_userdb_component = UserDb::Require("legacy_userdb");

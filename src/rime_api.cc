@@ -113,7 +113,7 @@ RIME_API Bool RimeStartMaintenance(Bool full_check) {
     LOG(INFO) << "changes detected; starting maintenance.";
   }
   deployer.ScheduleTask("workspace_update");
-  deployer.ScheduleTask("user_dict_upgration");
+  deployer.ScheduleTask("user_dict_upgrade");
   deployer.ScheduleTask("cleanup_trash");
   deployer.StartMaintenance();
   return True;
@@ -150,7 +150,7 @@ RIME_API Bool RimeDeployWorkspace() {
   rime::Deployer &deployer(rime::Service::instance().deployer());
   return Bool(deployer.RunTask("installation_update") &&
               deployer.RunTask("workspace_update") &&
-              deployer.RunTask("user_dict_upgration") &&
+              deployer.RunTask("user_dict_upgrade") &&
               deployer.RunTask("cleanup_trash"));
 }
 
