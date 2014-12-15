@@ -6,7 +6,6 @@
 //
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <rime_version.h>
 #include <rime/common.h>
 #include <rime/service.h>
 #include <rime/dict/db.h>

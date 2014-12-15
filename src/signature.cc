@@ -6,7 +6,6 @@
 //
 #include <time.h>
 #include <boost/algorithm/string.hpp>
-#include <rime_version.h>
 #include <rime/config.h>
 #include <rime/deployer.h>
 #include <rime/signature.h>
@@ -24,8 +23,7 @@ bool Signature::Sign(Config* config, Deployer* deployer) {
                     deployer->distribution_code_name);
   config->SetString(key_ + "/distribution_version",
                     deployer->distribution_version);
-  config->SetString(key_ + "/rime_version",
-                    RIME_VERSION);
+  config->SetString(key_ + "/rime_version", RIME_VERSION);
   return true;
 }
 

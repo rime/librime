@@ -9,7 +9,6 @@
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
-#include <rime_version.h>
 #include <rime/common.h>
 #include <rime/schema.h>
 #include <rime/ticket.h>

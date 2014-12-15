@@ -7,6 +7,8 @@ cmake_minimum_required(VERSION 2.8)
 set(LIBRIME_VERSION 1.2.0)
 set(LIBRIME_SOVERSION 1)
 
+add_definitions(-DRIME_VERSION="${LIBRIME_VERSION}")
+
 option(BUILD_SHARED_LIBS "Build Rime as shared library" ON)
 option(BUILD_STATIC "Build Rime using static libraries" OFF)
 option(BUILD_DATA "Build data for Rime" OFF)
@@ -135,7 +137,10 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   set(libdir "${LIB_INSTALL_DIR}")
   set(pkgdatadir "${prefix}${RIME_DATA_DIR}")
   set(includedir "${CMAKE_INSTALL_PREFIX}/include")
-  configure_file(${PROJECT_SOURCE_DIR}/rime.pc.in ${PROJECT_BINARY_DIR}/rime.pc)
+  configure_file(
+      ${PROJECT_SOURCE_DIR}/rime.pc.in
+      ${PROJECT_BINARY_DIR}/rime.pc
+      @ONLY)
   install(FILES include/rime_api.h DESTINATION include)
   install(FILES ${PROJECT_BINARY_DIR}/rime.pc DESTINATION ${LIB_INSTALL_DIR}/pkgconfig)
   install(FILES cmake/RimeConfig.cmake DESTINATION share/cmake/rime)
