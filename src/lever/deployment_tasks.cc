@@ -399,7 +399,7 @@ bool UserDictUpgrade::Run(Deployer* deployer) {
   UserDictList dicts;
   auto legacy_userdb_component = UserDb::Require("legacy_userdb");
   if (!legacy_userdb_component) {
-    return false;
+    return true;  // nothing to upgrade
   }
   manager.GetUserDictList(&dicts, legacy_userdb_component);
   bool ok = true;
