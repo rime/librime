@@ -1,19 +1,19 @@
 <meta charset="UTF-8">
 
-# RIME: Rime Input Method Engine
-
+RIME: Rime Input Method Engine
+===
 rimes with your keystrokes.
 
-## Project home
-
+Project home
+---
 [rimeime.github.io](https://rimeime.github.io)
 
-## License
-
+License
+---
 GPLv3
 
-# Features
-
+Features
+===
   - A modular, extensible input method engine in cross-platform C++ code, built on top of open-source technologies
   - Covering features found in a large variety of Chinese input methods, either shape-based or phonetic-based
   - Built with native support for Traditional Chinese, conversion to Simplified Chinese and other regional standards via OpenCC
@@ -21,12 +21,12 @@ GPLv3
   - Spelling Algebra, a mechanism to create variant spelling, especially useful for Chinese dialects
   - Support for chord-typing with a generic Qwerty keyboard
 
-# Install
-
+Install
+===
 TODO: instructions to build Rime for Windows and Mac OS X.
 
-## Build dependencies
-
+Build dependencies
+---
   - compiler with C++11 support
   - cmake>=2.8
   - libboost>=1.46
@@ -38,8 +38,8 @@ TODO: instructions to build Rime for Windows and Mac OS X.
   - libyaml-cpp>=0.5
   - libgtest (optional)
 
-## Runtime dependencies
-
+Runtime dependencies
+---
   - libboost
   - libglog (optional)
   - libkyotocabinet (optional; required by rime-legacy module)
@@ -48,42 +48,42 @@ TODO: instructions to build Rime for Windows and Mac OS X.
   - libopencc
   - libyaml-cpp
 
-## Build and install librime on Linux
+Build and install librime on Linux
+---
+```
+make
+sudo make install
+```
 
-  ```
-  make
-  sudo make install
-  ```
+Build and install rime-legacy module
+---
+```
+cd legacy
+mkdir -p build
+cd build
+cmake .. -DCMAKE_INSTALL_PREFIX=/usr
+make
+sudo make install
+```
 
-## Build and install rime-legacy module
-
-  ```
-  cd legacy
-  mkdir -p build
-  cd build
-  cmake .. -DCMAKE_INSTALL_PREFIX=/usr
-  make
-  sudo make install
-  ```
-
-# Frontends
-
+Frontends
+===
   - [fcitx-rime](https://github.com/fcitx/fcitx-rime): Fcitx frontend for Linux
   - [ibus-rime](https://github.com/lotem/ibus-rime): IBus frontend for Linux
   - [Squirrel](https://github.com/lotem/squirrel): frontend for Mac OS X
   - [Weasel](https://github.com/lotem/weasel): frontend for Windows
   - [XIME](https://github.com/stackia/XIME): yet another Rime frontend for Mac OS X
 
-# Related works
-
+Related works
+===
   - [brise](https://github.com/lotem/brise): Rime schema repository
   - Combo Pinyin: an innovative chord-typing practice to input Pinyin
   - essay: the vocabulary and language model for Rime
   - [rimekit](https://github.com/lotem/rimekit): configuration tools for Rime (under construction)
   - [SCU](https://github.com/neolee/SCU/): Squirrel Configuration Utilities
 
-# Credits
-
+Credits
+===
 We are grateful to the makers of the following open source libraries:
 
   - [Boost C++ Libraries](http://www.boost.org/) (Boost Software License)
@@ -97,8 +97,8 @@ We are grateful to the makers of the following open source libraries:
   - [UTF8-CPP](http://utfcpp.sourceforge.net/) (Boost Software License)
   - [yaml-cpp](https://code.google.com/p/yaml-cpp/) (MIT License)
 
-# Contributors
-
+Contributors
+===
   - [佛振](https://github.com/lotem)
   - [鄒旭](https://githbu.com/zouivex)
   - [Weng Xuetian](http://csslayer.info)
