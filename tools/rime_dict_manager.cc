@@ -10,6 +10,8 @@
 #include <rime/deployer.h>
 #include <rime/service.h>
 #include <rime/setup.h>
+#include <rime/dict/level_db.h>
+#include <rime/dict/user_db.h>
 #include <rime/lever/user_dict_manager.h>
 
 int main(int argc, char *argv[]) {
@@ -26,13 +28,14 @@ int main(int argc, char *argv[]) {
               << "\t-s|--sync" << std::endl
               << "\t-b|--backup dict_name" << std::endl
               << "\t-r|--restore xxx.userdb.txt" << std::endl
-              << "\t-r|--restore xxx.userdb.kct.snapshot" << std::endl
               << "\t-e|--export dict_name export.txt" << std::endl
               << "\t-i|--import dict_name import.txt" << std::endl
         ;
     return 0;
   }
 
+  rime::Registry& registry = rime::Registry::instance();
+  registry.Register("userdb", new rime::UserDbComponent<rime::LevelDb>);
   rime::Deployer& deployer(rime::Service::instance().deployer());
   {
     rime::Config config;
