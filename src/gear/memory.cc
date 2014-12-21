@@ -81,15 +81,15 @@ Memory::~Memory() {
 }
 
 bool Memory::StartSession() {
-  return user_dict_->NewTransaction();
+  return user_dict_ && user_dict_->NewTransaction();
 }
 
 bool Memory::FinishSession() {
-  return user_dict_->CommitPendingTransaction();
+  return user_dict_ && user_dict_->CommitPendingTransaction();
 }
 
 bool Memory::DiscardSession() {
-  return user_dict_->RevertRecentTransaction();
+  return user_dict_ && user_dict_->RevertRecentTransaction();
 }
 
 void Memory::OnCommit(Context* ctx) {
