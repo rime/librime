@@ -51,6 +51,7 @@ Runtime dependencies
 Build and install librime on Linux
 ---
 ```
+make -f Makefile.thirdparty
 make
 sudo make install
 ```
@@ -106,4 +107,3 @@ Contributors
   - [Zhiwei Liu](https://github.com/liuzhiwei)
   - [BYVoid](http://www.byvoid.com)
   - [雪齋](https://github.com/LEOYoon-Tsaw)
-
