@@ -11,6 +11,7 @@ namespace rime {
 
 extern const char* kDefaultModules[];
 extern const char* kDeployerModules[];
+extern const char* kLegacyModules[];
 
 void LoadModules(const char* module_names[]);
 

@@ -16,6 +16,7 @@ namespace rime {
 
 RIME_MODULE_LIST(kDefaultModules, "default");
 RIME_MODULE_LIST(kDeployerModules, "deployer");
+RIME_MODULE_LIST(kLegacyModules, "legacy");
 
 void LoadModules(const char* module_names[]) {
   ModuleManager& mm(ModuleManager::instance());

@@ -11,6 +11,7 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <rime/common.h>
 #include <rime/schema.h>
+#include <rime/setup.h>
 #include <rime/ticket.h>
 #include <rime/algo/utilities.h>
 #include <rime/dict/dictionary.h>
@@ -395,12 +396,13 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
 }
 
 bool UserDictUpgrade::Run(Deployer* deployer) {
-  UserDictManager manager(deployer);
-  UserDictList dicts;
+  LoadModules(kLegacyModules);
   auto legacy_userdb_component = UserDb::Require("legacy_userdb");
   if (!legacy_userdb_component) {
     return true;  // nothing to upgrade
   }
+  UserDictManager manager(deployer);
+  UserDictList dicts;
   manager.GetUserDictList(&dicts, legacy_userdb_component);
   bool ok = true;
   for (auto it = dicts.cbegin(); it != dicts.cend(); ++it) {
