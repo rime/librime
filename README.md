@@ -6,7 +6,7 @@ rimes with your keystrokes.
 
 Project home
 ---
-[rimeime.github.io](https://rimeime.github.io)
+[rimeime.github.io](http://rimeime.github.io)
 
 License
 ---
