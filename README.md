@@ -31,7 +31,6 @@ Build dependencies
   - cmake>=2.8
   - libboost>=1.46
   - libglog (optional)
-  - libkyotocabinet (optional; required by rime-legacy module)
   - libleveldb
   - libmarisa
   - libopencc>=1.0.2
@@ -42,7 +41,6 @@ Runtime dependencies
 ---
   - libboost
   - libglog (optional)
-  - libkyotocabinet (optional; required by rime-legacy module)
   - libleveldb
   - libmarisa
   - libopencc
@@ -55,17 +53,6 @@ make
 sudo make install
 ```
 
-Build and install rime-legacy module
----
-```
-cd legacy
-mkdir -p build
-cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=/usr
-make
-sudo make install
-```
-
 Frontends
 ===
   - [fcitx-rime](https://github.com/fcitx/fcitx-rime): Fcitx frontend for Linux
@@ -73,6 +60,10 @@ Frontends
   - [Squirrel](https://github.com/lotem/squirrel): frontend for Mac OS X
   - [Weasel](https://github.com/lotem/weasel): frontend for Windows
   - [XIME](https://github.com/stackia/XIME): yet another Rime frontend for Mac OS X
+
+Plugins
+===
+  - [librime-legacy](https://github.com/lotem/librime-legacy) Legacy module for Rime
 
 Related works
 ===
@@ -90,7 +81,6 @@ We are grateful to the makers of the following open source libraries:
   - [darts-clone](https://code.google.com/p/darts-clone/) (New BSD License)
   - [google-glog](https://code.google.com/p/google-glog/) (New BSD License)
   - [Google Test](https://code.google.com/p/googletest/) (New BSD License)
-  - [Kyoto Cabinet](http://fallabs.com/kyotocabinet/) (GNU General Public License)
   - [LevelDB](https://github.com/google/leveldb) (New BSD License)
   - [marisa-trie](https://code.google.com/p/marisa-trie/) (New BSD License)
   - [OpenCC](https://github.com/BYVoid/OpenCC) (Apache License 2.0)
