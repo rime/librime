@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-05-16 Zou Xu <zouivex@gmail.com>
 // 2012-01-26 GONG Chen <chen.sst@gmail.com>  spelling algebra support

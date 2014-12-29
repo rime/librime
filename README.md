@@ -10,7 +10,7 @@ Project home
 
 License
 ---
-GPLv3
+The BSD License
 
 Features
 ===
@@ -82,7 +82,7 @@ We are grateful to the makers of the following open source libraries:
   - [google-glog](https://code.google.com/p/google-glog/) (New BSD License)
   - [Google Test](https://code.google.com/p/googletest/) (New BSD License)
   - [LevelDB](https://github.com/google/leveldb) (New BSD License)
-  - [marisa-trie](https://code.google.com/p/marisa-trie/) (New BSD License)
+  - [marisa-trie](https://code.google.com/p/marisa-trie/) (BSD License)
   - [OpenCC](https://github.com/BYVoid/OpenCC) (Apache License 2.0)
   - [UTF8-CPP](http://utfcpp.sourceforge.net/) (Boost Software License)
   - [yaml-cpp](https://code.google.com/p/yaml-cpp/) (MIT License)

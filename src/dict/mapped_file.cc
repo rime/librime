@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // register components
 //

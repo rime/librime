@@ -7,7 +7,7 @@
 #==============================================================================
 # Copyright 2012 Xuetian Weng
 #
-# Distributed under the GPLv3 License
+# Distributed under the BSD License
 #==============================================================================
 
 # use pkg-config to get the directories and then use these values

@@ -1,7 +1,7 @@
 
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-05-29 GONG Chen <chen.sst@gmail.com>
 //

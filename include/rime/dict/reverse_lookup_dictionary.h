@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2012-01-05 GONG Chen <chen.sst@gmail.com>
 // 2014-07-06 GONG Chen <chen.sst@gmail.com> redesigned binary file format.
