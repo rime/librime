@@ -183,7 +183,7 @@ bool TableQuery::Walk(SyllableId syllable_id) {
     auto node = &lv1_index_->at[syllable_id];
     if (!node->next_level)
       return false;
-    lv2_index_ = &node->next_level->trunk;
+    lv2_index_ = &node->next_level->trunk();
   }
   else if (level_ == 1) {
     if (!lv2_index_)
@@ -193,7 +193,7 @@ bool TableQuery::Walk(SyllableId syllable_id) {
       return false;
     if (!node->next_level)
       return false;
-    lv3_index_ = &node->next_level->trunk;
+    lv3_index_ = &node->next_level->trunk();
   }
   else if (level_ == 2) {
     if (!lv3_index_)
@@ -203,7 +203,7 @@ bool TableQuery::Walk(SyllableId syllable_id) {
       return false;
     if (!node->next_level)
       return false;
-    lv4_index_ = &node->next_level->tail;
+    lv4_index_ = &node->next_level->tail();
   }
   else {
     return false;
@@ -247,21 +247,21 @@ TableAccessor TableQuery::Access(SyllableId syllable_id,
 }
 
 std::string Table::GetString_v1(const table::StringType& x) {
- return x.str.c_str();
+ return x.str().c_str();
 }
 
 bool Table::AddString_v1(const std::string& src, table::StringType* dest,
                          double /*weight*/) {
-  return CopyString(src, &dest->str);
+  return CopyString(src, &dest->str());
 }
 
 std::string Table::GetString_v2(const table::StringType& x) {
-  return string_table_->GetString(x.str_id);
+  return string_table_->GetString(x.str_id());
 }
 
 bool Table::AddString_v2(const std::string& src, table::StringType* dest,
                          double weight) {
-  string_table_builder_->Add(src, weight, &dest->str_id);
+  string_table_builder_->Add(src, weight, &dest->str_id());
   return true;
 }
 

@@ -19,14 +19,26 @@
 #include <rime/dict/vocabulary.h>
 #include <rime/dict/string_table.h>
 
+#define RIME_TABLE_UNION(U, V, Ta, a, Tb, b) \
+    struct U { \
+      V value; \
+      const Ta& a() const { return *reinterpret_cast<const Ta*>(this); } \
+      const Tb& b() const { return *reinterpret_cast<const Tb*>(this); } \
+      Ta& a() { return *reinterpret_cast<Ta*>(this); } \
+      Tb& b() { return *reinterpret_cast<Tb*>(this); } \
+    }
+
 namespace rime {
 
 namespace table {
 
-union StringType {
-  String str;
-  StringId str_id;
-};
+//union StringType {
+//  String str;
+//  StringId str_id;
+//};
+RIME_TABLE_UNION(StringType, int32_t,
+                 String, str,
+                 StringId, str_id);
 
 using Syllabary = Array<StringType>;
 
@@ -48,7 +60,7 @@ struct LongEntry {
   Entry entry;
 };
 
-union PhraseIndex;
+struct PhraseIndex;
 
 struct HeadIndexNode {
   List<Entry> entries;
@@ -67,10 +79,13 @@ using TrunkIndex = Array<TrunkIndexNode>;
 
 using TailIndex = Array<LongEntry>;
 
-union PhraseIndex {
-  TrunkIndex trunk;
-  TailIndex tail;
-};
+//union Phraseindex {
+//  TrunkIndex trunk;
+//  TailIndex tail;
+//};
+RIME_TABLE_UNION(PhraseIndex, Array<char>,
+                 TrunkIndex, trunk,
+                 TailIndex, tail);
 
 using Index = HeadIndex;
 
