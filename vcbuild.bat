@@ -1,7 +1,7 @@
 @echo off
 rem rime build script for msvc toolchain.
 rem
-rem 2012-11-25 <chen.sst@gmail.com>
+rem 2014-12-30  Chen Gong <chen.sst@gmail.com>
 
 set BACK=%CD%
 
@@ -58,7 +58,6 @@ goto parse_cmdline_options
 
 rem set CURL=%RIME_ROOT%\thirdparty\bin\curl.exe
 rem set DOWNLOAD="%CURL%" --remote-name-all
-rem set GOOGLECODE_SVN=http://rimeime.googlecode.com/svn/trunk/
 
 if %build_boost% == 1 (
   cd %BOOST_ROOT%
@@ -73,7 +72,6 @@ if %build_boost% == 1 (
 if %build_thirdparty% == 1 (
   echo building glog.
   cd "%RIME_ROOT%"\thirdparty\src\glog
-  rem devenv google-glog-vc10.sln /build "Release"
   msbuild.exe google-glog-vc12.sln /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
@@ -84,18 +82,19 @@ if %build_thirdparty% == 1 (
   copy /Y Release\libglog.dll "%RIME_ROOT%"\thirdparty\bin\
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
-  echo building kyotocabinet.
-  cd "%RIME_ROOT%"\thirdparty\src\kyotocabinet
-  nmake -f VC12makefile
+  echo building leveldb.
+  cd "%RIME_ROOT%"\thirdparty\src\
+  echo "checking out 'windows' branch from lotem/leveldb"
+  git clone -b windows git@github.com:lotem/leveldb.git leveldb-windows
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  nmake -f VC12makefile binpkg
+  cd leveldb-windows
+  echo BOOST_ROOT=%BOOST_ROOT%
+  msbuild.exe leveldb.sln /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
-  copy /Y output\include\*.h "%RIME_ROOT%"\thirdparty\include\
+  xcopy /S /I /Y include\leveldb "%RIME_ROOT%"\thirdparty\include\leveldb\
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y output\lib\*.lib "%RIME_ROOT%"\thirdparty\lib\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y output\bin\*.* "%RIME_ROOT%"\thirdparty\bin\
+  copy /Y Release\leveldb.lib "%RIME_ROOT%"\thirdparty\lib\
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
   echo building yaml-cpp.
@@ -104,7 +103,6 @@ if %build_thirdparty% == 1 (
   cd build
   cmake -DMSVC_SHARED_RT=OFF ..
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  rem devenv YAML_CPP.sln /build "Release"
   msbuild.exe YAML_CPP.sln /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
@@ -119,7 +117,6 @@ if %build_thirdparty% == 1 (
   cd build
   cmake ..
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  rem devenv gtest.sln /build "Release"
   msbuild.exe gtest.sln /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
@@ -141,40 +138,34 @@ if %build_thirdparty% == 1 (
   copy /Y Release\marisa-*.exe "%RIME_ROOT%"\thirdparty\bin\
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
-  echo skipped building opencc.
-
-  cd "%RIME_ROOT%"\thirdparty\src\opencc-windows
-  call generate_vc_lib_file.bat
+  echo building opencc.
+  cd "%RIME_ROOT%"\thirdparty\src\opencc
+  if not exist build mkdir build
+  cd build
+  cmake .. -DCMAKE_INSTALL_PREFIX=""
+  echo patching src\libopencc.vcxproj for static linking runtime.
+  sed -i "s/MultiThreadedDLL/MultiThreaded/" src\libopencc.vcxproj
+  sed -i "s/MultiThreadedDLL/MultiThreaded/" src\opencc.vcxproj
+  sed -i "s/MultiThreadedDLL/MultiThreaded/" src\opencc_dict.vcxproj
+  msbuild.exe opencc.sln /t:libopencc;opencc;opencc_dict /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
-
+  echo built. copying artifacts.
   cd "%RIME_ROOT%"\thirdparty\include
   if not exist opencc mkdir opencc
-  cd opencc
-  rem if not exist opencc.h %DOWNLOAD% %GOOGLECODE_SVN%misc/opencc/opencc.h
-  rem if not exist opencc_types.h %DOWNLOAD% %GOOGLECODE_SVN%misc/opencc/opencc_types.h
-  copy /Y "%RIME_ROOT%"\thirdparty\src\opencc-windows\opencc.h .
-  copy /Y "%RIME_ROOT%"\thirdparty\src\opencc-windows\opencc_types.h .
+  copy /Y "%RIME_ROOT%"\thirdparty\src\opencc\src\*.h* opencc\
   if %ERRORLEVEL% NEQ 0 goto ERROR
   cd "%RIME_ROOT%"\thirdparty\lib
-  rem if not exist opencc.lib %DOWNLOAD% %GOOGLECODE_SVN%misc/opencc/vc10/opencc.lib
-  copy /Y "%RIME_ROOT%"\thirdparty\src\opencc-windows\opencc.lib .
+  copy /Y "%RIME_ROOT%"\thirdparty\src\opencc\build\src\Release\opencc.lib .
   if %ERRORLEVEL% NEQ 0 goto ERROR
   cd "%RIME_ROOT%"\thirdparty\bin
-  rem if not exist opencc.dll %DOWNLOAD% %GOOGLECODE_SVN%misc/opencc/opencc.dll
-  rem if not exist opencc.exe %DOWNLOAD% %GOOGLECODE_SVN%misc/opencc/opencc.exe
-  rem if not exist opencc_dict.exe %DOWNLOAD% %GOOGLECODE_SVN%misc/opencc/opencc_dict.exe
-  copy /Y "%RIME_ROOT%"\thirdparty\src\opencc-windows\opencc.dll .
-  copy /Y "%RIME_ROOT%"\thirdparty\src\opencc-windows\opencc.exe .
-  copy /Y "%RIME_ROOT%"\thirdparty\src\opencc-windows\opencc_dict.exe .
+  copy /Y "%RIME_ROOT%"\thirdparty\src\opencc\build\src\Release\opencc.dll .
+  copy /Y "%RIME_ROOT%"\thirdparty\src\opencc\build\src\Release\opencc.exe .
+  copy /Y "%RIME_ROOT%"\thirdparty\src\opencc\build\src\Release\opencc_dict.exe .
   if %ERRORLEVEL% NEQ 0 goto ERROR
 )
 
 if %build_librime% == 0 goto EXIT
 
-rem TODO: select a cmake generator
-rem set CMAKE_GENERATOR="MinGW Makefiles"
-rem set CMAKE_GENERATOR="Eclipse CDT4 - MinGW Makefiles"
-rem set CMAKE_GENERATOR="Visual Studio 9 2008"
 set CMAKE_GENERATOR="Visual Studio 12"
 
 set BUILD_DIR=%RIME_ROOT%\%build%
