@@ -63,9 +63,9 @@ if %build_boost% == 1 (
   cd %BOOST_ROOT%
   if not exist bjam.exe call bootstrap.bat
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  bjam toolset=msvc-12.0 variant=release link=static threading=multi runtime-link=static stage --with-chrono --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
+  bjam toolset=msvc-12.0 variant=release link=static threading=multi runtime-link=static stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  bjam toolset=msvc-12.0 variant=release link=static threading=multi runtime-link=static address-model=64 --stagedir=stage_x64 stage --with-chrono --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
+  bjam toolset=msvc-12.0 variant=release link=static threading=multi runtime-link=static address-model=64 --stagedir=stage_x64 stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
   if %ERRORLEVEL% NEQ 0 goto ERROR
 )
 
