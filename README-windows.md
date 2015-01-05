@@ -52,7 +52,7 @@ build.bat
 ```
 This creates `build\lib\Release\rime.dll`.
 
-Try it on the console
+Try it in the console
 ---
 ``` batch
 copy /Y build\lib\Release\rime.dll build\bin
