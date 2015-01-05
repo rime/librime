@@ -23,7 +23,9 @@ Features
 
 Install
 ===
-TODO: instructions to build Rime for Windows and Mac OS X.
+Follow the instructions to build librime on platforms other than Linux:
+  - [Mac OS X](https://github.com/lotem/librime/tree/develop/README-mac.md)
+  - [Windows](https://github.com/lotem/librime/tree/develop/README-windows.md)
 
 Build dependencies
 ---
