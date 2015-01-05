@@ -1,8 +1,8 @@
 @echo off
-rem rime build script for msvc toolchain.
-rem
+rem Rime build script for msvc toolchain.
 rem 2014-12-30  Chen Gong <chen.sst@gmail.com>
 
+setlocal
 set BACK=%CD%
 
 if exist env.bat call env.bat
@@ -19,7 +19,7 @@ echo.
 echo BOOST_ROOT=%BOOST_ROOT%
 echo.
 
-set build=vcbuild
+set build=build
 set build_boost=0
 set build_thirdparty=0
 set build_librime=0
@@ -35,12 +35,12 @@ if "%1" == "boost" set build_boost=1
 if "%1" == "thirdparty" set build_thirdparty=1
 if "%1" == "librime" set build_librime=1
 if "%1" == "static" (
-  set build=vcbuild-static
+  set build=build-static
   set build_librime=1
   set build_shared=OFF
 )
 if "%1" == "shared" (
-  set build=vcbuild
+  set build=build
   set build_librime=1
   set build_shared=ON
 )
@@ -59,14 +59,16 @@ goto parse_cmdline_options
 rem set CURL=%RIME_ROOT%\thirdparty\bin\curl.exe
 rem set DOWNLOAD="%CURL%" --remote-name-all
 
+set LEVELDB_REPOSITORY=lotem/leveldb
+
 if %build_boost% == 1 (
   cd %BOOST_ROOT%
   if not exist bjam.exe call bootstrap.bat
   if %ERRORLEVEL% NEQ 0 goto ERROR
   bjam toolset=msvc-12.0 variant=release link=static threading=multi runtime-link=static stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  bjam toolset=msvc-12.0 variant=release link=static threading=multi runtime-link=static address-model=64 --stagedir=stage_x64 stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  rem bjam toolset=msvc-12.0 variant=release link=static threading=multi runtime-link=static address-model=64 --stagedir=stage_x64 stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
+  rem if %ERRORLEVEL% NEQ 0 goto ERROR
 )
 
 if %build_thirdparty% == 1 (
@@ -84,8 +86,8 @@ if %build_thirdparty% == 1 (
 
   echo building leveldb.
   cd "%RIME_ROOT%"\thirdparty\src\
-  echo "checking out 'windows' branch from lotem/leveldb"
-  git clone -b windows git@github.com:lotem/leveldb.git leveldb-windows
+  echo "checking out 'windows' branch from %LEVELDB_REPOSITORY%"
+  git clone -b windows git@github.com:%LEVELDB_REPOSITORY%.git leveldb-windows
   if %ERRORLEVEL% NEQ 0 goto ERROR
   cd leveldb-windows
   echo BOOST_ROOT=%BOOST_ROOT%
