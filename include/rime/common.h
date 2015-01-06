@@ -19,6 +19,9 @@
 #include "no_logging.h"
 #endif  // RIME_ENABLE_LOGGING
 
+// call a pointer to member function on this
+#define RIME_THIS_CALL(f) (this->*(f))
+
 namespace rime {
 
 using boost::signals2::connection;

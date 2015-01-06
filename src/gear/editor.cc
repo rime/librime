@@ -7,114 +7,191 @@
 #include <cctype>
 #include <rime/common.h>
 #include <rime/composition.h>
+#include <rime/config.h>
 #include <rime/context.h>
 #include <rime/engine.h>
-#include <rime/key_event.h>
+#include <rime/schema.h>
 #include <rime/key_table.h>
 #include <rime/gear/editor.h>
 #include <rime/gear/translator_commons.h>
 
 namespace rime {
 
+static struct EditorActionDef {
+  const char* name;
+  Editor::HandlerPtr action;
+} editor_action_definitions[] = {
+  { "confirm",  &Editor::Confirm },
+  { "commit_comment", &Editor::CommitComment },
+  { "commit_raw_input", &Editor::CommitRawInput },
+  { "commit_script_text", &Editor::CommitScriptText },
+  { "commit_composition", &Editor::CommitComposition },
+  { "revert", &Editor::RevertLastEdit },
+  { "back", &Editor::BackToPreviousInput },
+  { "back_syllable", &Editor::BackToPreviousSyllable },
+  { "delete_candidate", &Editor::DeleteCandidate },
+  { "delete", &Editor::DeleteChar },
+  { "cancel", &Editor::CancelComposition },
+  { "noop", nullptr }
+};
+
+static struct EditorCharHandlerDef {
+  const char* name;
+  Editor::CharHandlerPtr action;
+} editor_char_handler_definitions[] = {
+  { "direct_commit", &Editor::DirectCommit },
+  { "add_to_input", &Editor::AddToInput },
+  { "noop", nullptr }
+};
+
 Editor::Editor(const Ticket& ticket, bool auto_commit) : Processor(ticket) {
   engine_->context()->set_option("_auto_commit", auto_commit);
 }
 
 ProcessResult Editor::ProcessKeyEvent(const KeyEvent& key_event) {
-  if (key_event.release() || key_event.alt())
+  if (key_event.release())
     return kRejected;
   int ch = key_event.keycode();
-  if (key_event.ctrl() && !WorkWithCtrl(ch))
-    return kNoop;
   Context* ctx = engine_->context();
-  if (ch == XK_space) {
-    if (ctx->IsComposing()) {
-      OnSpace(ctx);
+  if (ctx->IsComposing()) {
+    if (Accept(key_event)) {
       return kAccepted;
     }
-    else {
+    if (key_event.ctrl() || key_event.alt()) {
       return kNoop;
     }
-  }
-  if (ctx->IsComposing()) {
-    if (ch == XK_Return) {
-      if (key_event.shift() || key_event.ctrl()) {
-        OnShiftReturn(ctx);
+    if (key_event.shift()) {
+      KeyEvent shift_as_ctrl{
+          key_event.keycode(),
+          (key_event.modifier() & ~kShiftMask) | kControlMask
+      };
+      if (Accept(shift_as_ctrl)) {
+        return kAccepted;
       }
-      else {
-        OnReturn(ctx);
+      KeyEvent remove_shift{
+          key_event.keycode(),
+          key_event.modifier() & ~kShiftMask
+      };
+      if (Accept(remove_shift)) {
+        return kAccepted;
       }
-      return kAccepted;
-    }
-    if (ch == XK_BackSpace) {
-      if (key_event.shift() || key_event.ctrl()) {
-        OnShiftBackSpace(ctx);
-      }
-      else {
-        OnBackSpace(ctx);
-      }
-      return kAccepted;
-    }
-    if (ch == XK_Delete || ch == XK_KP_Delete) {
-      if (key_event.shift() || key_event.ctrl()) {
-        OnShiftDelete(ctx);
-      }
-      else {
-        OnDelete(ctx);
-      }
-      return kAccepted;
-    }
-    if (ch == XK_Escape) {
-      OnEscape(ctx);
-      return kAccepted;
     }
   }
-  if (ch > 0x20 && ch < 0x7f) {
+  if (char_handler_ &&
+      !key_event.ctrl() && !key_event.alt() &&
+      ch > 0x20 && ch < 0x7f) {
     DLOG(INFO) << "input char: '" << (char)ch << "', " << ch
                << ", '" << key_event.repr() << "'";
-    return OnChar(ctx, ch);
+    return RIME_THIS_CALL(char_handler_)(ctx, ch);
   }
   // not handled
   return kNoop;
 }
 
-inline bool Editor::WorkWithCtrl(int ch) {
-  return ch == XK_Return || ch == XK_BackSpace ||
-    ch == XK_Delete || ch == XK_KP_Delete;
+bool Editor::Accept(const KeyEvent& key_event) {
+  auto binding = key_bindings_.find(key_event);
+  if (binding != key_bindings_.end()) {
+    auto action = binding->second;
+    RIME_THIS_CALL(action)(engine_->context());
+    DLOG(INFO) << "editor action key accepted: " << key_event.repr();
+    return true;
+  }
+  return false;
 }
 
-inline void Editor::Confirm(Context* ctx) {
+void Editor::Bind(KeyEvent key_event, HandlerPtr action) {
+  if (action) {
+    key_bindings_[key_event] = action;
+  }
+  else {
+    key_bindings_.erase(key_event);
+  }
+}
+
+void Editor::LoadConfig() {
+  if (!engine_) {
+    return;
+  }
+  Config* config = engine_->schema()->config();
+  if (auto bindings = config->GetMap("editor/bindings")) {
+    for (auto it = bindings->begin(); it != bindings->end(); ++it) {
+      auto value = As<ConfigValue>(it->second);
+      if (!value) {
+        continue;
+      }
+      auto* p = editor_action_definitions;
+      while (p->action && p->name != value->str()) {
+        ++p;
+      }
+      if (!p->action && p->name != value->str()) {
+        LOG(WARNING) << "invalid editor action: " << value->str();
+        continue;
+      }
+      KeyEvent ke;
+      if (!ke.Parse(it->first)) {
+        LOG(WARNING) << "invalid edit key: " << it->first;
+        continue;
+      }
+      Bind(ke, p->action);
+    }
+  }
+  if (auto value = config->GetValue("editor/char_handler")) {
+    auto* p = editor_char_handler_definitions;
+    while (p->action && p->name != value->str()) {
+      ++p;
+    }
+    if (!p->action && p->name != value->str()) {
+      LOG(WARNING) << "invalid char_handler: " << value->str();
+    }
+    else {
+      char_handler_ = p->action;
+    }
+  }
+}
+
+void Editor::Confirm(Context* ctx) {
   ctx->ConfirmCurrentSelection() || ctx->Commit();
 }
 
-inline void Editor::CommitScriptText(Context* ctx) {
+void Editor::CommitComment(Context* ctx) {
+  const Composition* comp = ctx->composition();
+  if (comp && !comp->empty()) {
+    auto cand = comp->back().GetSelectedCandidate();
+    if (cand && !cand->comment().empty()) {
+      engine_->sink()(cand->comment());
+      ctx->Clear();
+    }
+  }
+}
+
+void Editor::CommitScriptText(Context* ctx) {
   engine_->sink()(ctx->GetScriptText());
   ctx->Clear();
 }
 
-inline void Editor::CommitRawInput(Context* ctx) {
+void Editor::CommitRawInput(Context* ctx) {
   ctx->ClearNonConfirmedComposition();
   ctx->Commit();
 }
 
-inline void Editor::CommitComposition(Context* ctx) {
+void Editor::CommitComposition(Context* ctx) {
   if (!ctx->ConfirmCurrentSelection() || !ctx->HasMenu())
     ctx->Commit();
 }
 
-inline void Editor::RevertLastAction(Context* ctx) {
+void Editor::RevertLastEdit(Context* ctx) {
   // different behavior in regard to previous operation type
   ctx->ReopenPreviousSelection() ||
       (ctx->PopInput() && ctx->ReopenPreviousSegment());
 }
 
-inline void Editor::RevertToPreviousInput(Context* ctx) {
+void Editor::BackToPreviousInput(Context* ctx) {
   ctx->ReopenPreviousSegment() ||
       ctx->ReopenPreviousSelection() ||
       ctx->PopInput();
 }
 
-void Editor::DropPreviousSyllable(Context* ctx) {
+void Editor::BackToPreviousSyllable(Context* ctx) {
   size_t caret_pos = ctx->caret_pos();
   if (caret_pos == 0)
     return;
@@ -133,84 +210,57 @@ void Editor::DropPreviousSyllable(Context* ctx) {
   ctx->PopInput();
 }
 
-inline void Editor::DeleteHighlightedPhrase(Context* ctx) {
+void Editor::DeleteCandidate(Context* ctx) {
   ctx->DeleteCurrentSelection();
 }
 
-inline void Editor::DeleteChar(Context* ctx) {
+void Editor::DeleteChar(Context* ctx) {
   ctx->DeleteInput();
 }
 
-inline void Editor::CancelComposition(Context* ctx) {
+void Editor::CancelComposition(Context* ctx) {
   if (!ctx->ClearPreviousSegment())
     ctx->Clear();
 }
 
-inline ProcessResult Editor::DirectCommit(Context* ctx, int ch) {
+ProcessResult Editor::DirectCommit(Context* ctx, int ch) {
   ctx->Commit();
   return kRejected;
 }
 
-inline ProcessResult Editor::AddToInput(Context* ctx, int ch) {
+ProcessResult Editor::AddToInput(Context* ctx, int ch) {
     ctx->PushInput(ch);
     ctx->ConfirmPreviousSelection();
     return kAccepted;
 }
 
-inline void Editor::OnSpace(Context* ctx) {
-  Confirm(ctx);
-}
-
-inline void Editor::OnBackSpace(Context* ctx) {
-  RevertToPreviousInput(ctx);
-}
-
-inline void Editor::OnShiftBackSpace(Context* ctx) {
-  DropPreviousSyllable(ctx);
-}
-
-inline void Editor::OnReturn(Context* ctx) {
-  CommitComposition(ctx);
-}
-
-inline void Editor::OnShiftReturn(Context* ctx) {
-  CommitScriptText(ctx);
-}
-
-inline void Editor::OnDelete(Context* ctx) {
-  DeleteChar(ctx);
-}
-
-inline void Editor::OnShiftDelete(Context* ctx) {
-  DeleteHighlightedPhrase(ctx);
-}
-
-inline void Editor::OnEscape(Context* ctx) {
-  CancelComposition(ctx);
-}
-
-inline ProcessResult Editor::OnChar(Context* ctx, int ch) {
-  return AddToInput(ctx, ch);
-}
-
-//
-
-FluencyEditor::FluencyEditor(const Ticket& ticket) : Editor(ticket, false) {
+FluidEditor::FluidEditor(const Ticket& ticket) : Editor(ticket, false) {
+  Bind({XK_space, 0}, &Editor::Confirm);
+  Bind({XK_BackSpace, 0}, &Editor::BackToPreviousInput);  //
+  Bind({XK_BackSpace, kControlMask}, &Editor::BackToPreviousSyllable);
+  Bind({XK_Return, 0}, &Editor::CommitComposition);  //
+  Bind({XK_Return, kControlMask}, &Editor::CommitRawInput);  //
+  Bind({XK_Return, kShiftMask}, &Editor::CommitScriptText);  //
+  Bind({XK_Return, kControlMask | kShiftMask}, &Editor::CommitComment);
+  Bind({XK_Delete, 0}, &Editor::DeleteChar);
+  Bind({XK_Delete, kControlMask}, &Editor::DeleteCandidate);
+  Bind({XK_Escape, 0}, &Editor::CancelComposition);
+  char_handler_ = &Editor::AddToInput;  //
+  LoadConfig();
 }
 
 ExpressEditor::ExpressEditor(const Ticket& ticket) : Editor(ticket, true) {
-}
-
-inline void ExpressEditor::OnBackSpace(Context* ctx) {
-  RevertLastAction(ctx);
-}
-
-inline void ExpressEditor::OnReturn(Context* ctx) {
-  CommitRawInput(ctx);
-}
-
-inline ProcessResult ExpressEditor::OnChar(Context* ctx, int ch) {
-  return DirectCommit(ctx, ch);
+  Bind({XK_space, 0}, &Editor::Confirm);
+  Bind({XK_BackSpace, 0}, &Editor::RevertLastEdit);  //
+  Bind({XK_BackSpace, kControlMask}, &Editor::BackToPreviousSyllable);
+  Bind({XK_Return, 0}, &Editor::CommitRawInput);  //
+  Bind({XK_Return, kControlMask}, &Editor::CommitScriptText);  //
+  Bind({XK_Return, kControlMask | kShiftMask}, &Editor::CommitComment);
+  Bind({XK_Delete, 0}, &Editor::DeleteChar);
+  Bind({XK_Delete, kControlMask}, &Editor::DeleteCandidate);
+  Bind({XK_Escape, 0}, &Editor::CancelComposition);
+  char_handler_ = &Editor::DirectCommit;  //
+  LoadConfig();
 }
 
 }  // namespace rime
