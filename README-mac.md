@@ -56,7 +56,7 @@ make -f Makefile.xcode debug
 Try it in the console
 ---
 ``` sh
-(cd xdebug/bin; echo "congmingdeRime{space}shurufa" | Debug\rime_api_console)
+(cd xdebug/bin; echo "congmingdeRime{space}shurufa" | Debug/rime_api_console)
 
 # REPL, quit with Control+d
 (cd xdebug/bin; ./Debug/rime_api_console)
