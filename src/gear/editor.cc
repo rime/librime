@@ -7,8 +7,10 @@
 #include <cctype>
 #include <rime/common.h>
 #include <rime/composition.h>
+#include <rime/config.h>
 #include <rime/context.h>
 #include <rime/engine.h>
+#include <rime/schema.h>
 #include <rime/key_table.h>
 #include <rime/gear/editor.h>
 #include <rime/gear/translator_commons.h>
@@ -98,11 +100,53 @@ bool Editor::Accept(const KeyEvent& key_event) {
 }
 
 void Editor::Bind(KeyEvent key_event, HandlerPtr action) {
-  key_bindings_[key_event] = action;
+  if (action) {
+    key_bindings_[key_event] = action;
+  }
+  else {
+    key_bindings_.erase(key_event);
+  }
 }
 
 void Editor::LoadConfig() {
-  // TODO
+  if (!engine_) {
+    return;
+  }
+  Config* config = engine_->schema()->config();
+  if (auto bindings = config->GetMap("editor/bindings")) {
+    for (auto it = bindings->begin(); it != bindings->end(); ++it) {
+      auto value = As<ConfigValue>(it->second);
+      if (!value) {
+        continue;
+      }
+      auto* p = editor_action_definitions;
+      while (p->action && p->name != value->str()) {
+        ++p;
+      }
+      if (!p->action && p->name != value->str()) {
+        LOG(WARNING) << "invalid editor action: " << value->str();
+        continue;
+      }
+      KeyEvent ke;
+      if (!ke.Parse(it->first)) {
+        LOG(WARNING) << "invalid edit key: " << it->first;
+        continue;
+      }
+      Bind(ke, p->action);
+    }
+  }
+  if (auto value = config->GetValue("editor/char_handler")) {
+    auto* p = editor_char_handler_definitions;
+    while (p->action && p->name != value->str()) {
+      ++p;
+    }
+    if (!p->action && p->name != value->str()) {
+      LOG(WARNING) << "invalid char_handler: " << value->str();
+    }
+    else {
+      char_handler_ = p->action;
+    }
+  }
 }
 
 void Editor::Confirm(Context* ctx) {
