@@ -154,7 +154,14 @@ void Editor::Confirm(Context* ctx) {
 }
 
 void Editor::CommitComment(Context* ctx) {
-  // TODO
+  const Composition* comp = ctx->composition();
+  if (comp && !comp->empty()) {
+    auto cand = comp->back().GetSelectedCandidate();
+    if (cand && !cand->comment().empty()) {
+      engine_->sink()(cand->comment());
+      ctx->Clear();
+    }
+  }
 }
 
 void Editor::CommitScriptText(Context* ctx) {
