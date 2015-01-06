@@ -46,7 +46,8 @@ static void rime_gears_initialize() {
   r.Register("ascii_composer", new Component<AsciiComposer>);
   r.Register("chord_composer", new Component<ChordComposer>);
   r.Register("express_editor", new Component<ExpressEditor>);
-  r.Register("fluency_editor", new Component<FluencyEditor>);
+  r.Register("fluid_editor", new Component<FluidEditor>);
+  r.Register("fluency_editor", new Component<FluidEditor>);  // alias
   r.Register("key_binder", new Component<KeyBinder>);
   r.Register("navigator", new Component<Navigator>);
   r.Register("punctuator", new Component<Punctuator>);
