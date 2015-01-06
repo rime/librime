@@ -10,10 +10,9 @@
 #include <queue>
 #include <vector>
 #include <utility>
+#include <rime/common.h>
 #include <rime/algo/syllabifier.h>
 #include <rime/dict/table.h>
-
-#define RIME_THIS_CALL(f) (this->*(f))
 
 namespace rime {
 
