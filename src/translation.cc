@@ -111,4 +111,62 @@ shared_ptr<UnionTranslation> operator+ (shared_ptr<Translation> a,
   return c->exhausted() ? nullptr : c;
 }
 
+MergedTranslation::MergedTranslation(const CandidateList& candidates)
+    : previous_candidates_(candidates) {
+  set_exhausted(true);
+}
+
+bool MergedTranslation::Next() {
+  if (exhausted()) {
+    return false;
+  }
+  translations_[elected_]->Next();
+  if (translations_[elected_]->exhausted()) {
+    DLOG(INFO) << "translation #" << elected_ << " has been exhausted.";
+    translations_.erase(translations_.begin() + elected_);
+  }
+  Elect();
+  return true;
+}
+
+shared_ptr<Candidate> MergedTranslation::Peek() {
+  if (exhausted()) {
+    return nullptr;
+  }
+  return translations_[elected_]->Peek();
+}
+
+void MergedTranslation::Elect() {
+  if (translations_.empty()) {
+    set_exhausted(true);
+    return;
+  }
+  size_t k = 0;
+  for (; k < translations_.size(); ++k) {
+    shared_ptr<Translation> next;
+    if (k + 1 < translations_.size()) {
+      next = translations_[k + 1];
+    }
+    if (translations_[k]->Compare(next, previous_candidates_) <= 0) {
+      break;
+    }
+  }
+  elected_ = k;
+  if (k >= translations_.size()) {
+    DLOG(WARNING) << "failed to elect a winner translation.";
+    set_exhausted(true);
+  }
+  else {
+    set_exhausted(false);
+  }
+}
+
+MergedTranslation& MergedTranslation::operator+= (shared_ptr<Translation> t) {
+  if (t && !t->exhausted()) {
+    translations_.push_back(t);
+    Elect();
+  }
+  return *this;
+}
+
 }  // namespace rime

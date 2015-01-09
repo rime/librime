@@ -10,11 +10,10 @@
 #include <functional>
 #include <vector>
 #include <rime/candidate.h>
+#include <rime/translation.h>
 #include <rime/common.h>
 
 namespace rime {
-
-class Translation;
 
 struct Page {
   int page_size = 0;
@@ -23,14 +22,13 @@ struct Page {
   CandidateList candidates;
 };
 
-class Menu {
+class Menu : protected MergedTranslation {
  public:
   using CandidateFilter = std::function<void (CandidateList* recruited,
                                               CandidateList* candidates)>;
 
-  Menu() = default;
-  ~Menu() = default;
-  Menu(const CandidateFilter& filter) : filter_(filter) {}
+  Menu() : MergedTranslation(candidates_) {
+  }
 
   void AddTranslation(shared_ptr<Translation> translation);
   size_t Prepare(size_t candidate_count);
@@ -42,11 +40,12 @@ class Menu {
   size_t candidate_count() const { return candidates_.size(); }
 
   bool empty() const {
-    return translations_.empty() && candidates_.empty();
+    return candidates_.empty() && exhausted();
   }
 
+  void set_filter(CandidateFilter filter) { filter_ = filter; }
+
  private:
-  std::vector<shared_ptr<Translation>> translations_;
   CandidateList candidates_;
   CandidateFilter filter_;
 };

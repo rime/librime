@@ -88,6 +88,23 @@ class UnionTranslation : public Translation {
 shared_ptr<UnionTranslation> operator+ (shared_ptr<Translation> a,
                                         shared_ptr<Translation> b);
 
+class MergedTranslation : public Translation {
+ public:
+  explicit MergedTranslation(const CandidateList& previous_candidates);
+
+  bool Next();
+  shared_ptr<Candidate> Peek();
+
+  MergedTranslation& operator+= (shared_ptr<Translation> t);
+
+ protected:
+  void Elect();
+
+  const CandidateList& previous_candidates_;
+  std::vector<shared_ptr<Translation>> translations_;
+  size_t elected_ = 0;
+};
+
 } // namespace rime
 
 #endif  // RIME_TRANSLATION_H_

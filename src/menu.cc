@@ -13,36 +13,20 @@
 namespace rime {
 
 void Menu::AddTranslation(shared_ptr<Translation> translation) {
-  translations_.push_back(translation);
+  *this += translation;
   DLOG(INFO) << translations_.size() << " translations added.";
 }
 
 size_t Menu::Prepare(size_t candidate_count) {
   DLOG(INFO) << "preparing " << candidate_count << " candidates.";
   size_t count = candidates_.size();
-  if (count >= candidate_count)
+  if (count >= candidate_count) {
     return count;
-  while (count < candidate_count && !translations_.empty()) {
-    size_t k = 0;
-    for (; k < translations_.size(); ++k) {
-      shared_ptr<Translation> next;
-      if (k + 1 < translations_.size())
-        next = translations_[k + 1];
-      if (translations_[k]->Compare(next, candidates_) <= 0) {
-        break;
-      }
-    }
-    if (k >= translations_.size()) {
-      DLOG(WARNING) << "failed to select a winner translation.";
-      break;
-    }
-    if (translations_[k]->exhausted()) {
-      LOG(WARNING) << "selected translation #" << k << " has been exhausted!";
-      translations_.erase(translations_.begin() + k);
-      continue;
-    }
+  }
+  while (count < candidate_count && !exhausted()) {
     CandidateList next_candidates;
-    next_candidates.push_back(translations_[k]->Peek());
+    next_candidates.push_back(Peek());
+    Next();
     if (filter_) {
       filter_(&candidates_, &next_candidates);
     }
@@ -55,11 +39,6 @@ size_t Menu::Prepare(size_t candidate_count) {
                 std::back_inserter(candidates_));
     }
     count = candidates_.size();
-    translations_[k]->Next();
-    if (translations_[k]->exhausted()) {
-      DLOG(INFO) << "translation #" << k << " has been exhausted.";
-      translations_.erase(translations_.begin() + k);
-    }
   }
   return count;
 }
@@ -68,7 +47,7 @@ Page* Menu::CreatePage(size_t page_size, size_t page_no) {
   size_t start_pos = page_size * page_no;
   size_t end_pos = start_pos + page_size;
   if (end_pos > candidates_.size()) {
-    if (translations_.empty())
+    if (exhausted())
       end_pos = candidates_.size();
     else
       end_pos = Prepare(end_pos);
@@ -81,7 +60,7 @@ Page* Menu::CreatePage(size_t page_size, size_t page_no) {
     return NULL;
   page->page_size = page_size;
   page->page_no = page_no;
-  page->is_last_page = (translations_.empty()) && (end_pos == candidates_.size());
+  page->is_last_page = exhausted() && (end_pos == candidates_.size());
   std::copy(candidates_.begin() + start_pos,
             candidates_.begin() + end_pos,
             std::back_inserter(page->candidates));

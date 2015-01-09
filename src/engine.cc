@@ -185,7 +185,8 @@ void ConcreteEngine::TranslateSegments(Composition* comp) {
     DLOG(INFO) << "translating segment: " << input;
     Menu::CandidateFilter cand_filter(
         std::bind(&ConcreteEngine::FilterCandidates, this, &segment, _1, _2));
-    auto menu = New<Menu>(cand_filter);
+    auto menu = New<Menu>();
+    menu->set_filter(cand_filter);
     for (auto& translator : translators_) {
       auto translation = translator->Query(input, segment, &segment.prompt);
       if (!translation)
