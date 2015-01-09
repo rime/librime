@@ -97,6 +97,8 @@ class MergedTranslation : public Translation {
 
   MergedTranslation& operator+= (shared_ptr<Translation> t);
 
+  size_t size() const { return translations_.size(); }
+
  protected:
   void Elect();
 

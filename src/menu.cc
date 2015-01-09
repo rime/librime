@@ -1,4 +1,3 @@
-
 //
 // Copyright RIME Developers
 // Distributed under the BSD License
@@ -7,47 +6,40 @@
 //
 #include <algorithm>
 #include <iterator>
+#include <rime/filter.h>
 #include <rime/menu.h>
 #include <rime/translation.h>
 
 namespace rime {
 
-void Menu::AddTranslation(shared_ptr<Translation> translation) {
-  *this += translation;
-  DLOG(INFO) << translations_.size() << " translations added.";
+Menu::Menu()
+    : merged_(new MergedTranslation(candidates_)),
+      result_(merged_) {
 }
 
-size_t Menu::Prepare(size_t candidate_count) {
-  DLOG(INFO) << "preparing " << candidate_count << " candidates.";
-  size_t count = candidates_.size();
-  if (count >= candidate_count) {
-    return count;
+void Menu::AddTranslation(shared_ptr<Translation> translation) {
+  *merged_ += translation;
+  DLOG(INFO) << merged_->size() << " translations added.";
+}
+
+void Menu::AddFilter(Filter* filter) {
+  result_ = filter->Apply(result_, &candidates_);
+}
+
+size_t Menu::Prepare(size_t requested) {
+  DLOG(INFO) << "preparing " << requested << " candidates.";
+  while (candidates_.size() < requested && !result_->exhausted()) {
+    candidates_.push_back(result_->Peek());
+    result_->Next();
   }
-  while (count < candidate_count && !exhausted()) {
-    CandidateList next_candidates;
-    next_candidates.push_back(Peek());
-    Next();
-    if (filter_) {
-      filter_(&candidates_, &next_candidates);
-    }
-    if (next_candidates.empty()) {
-      DLOG(INFO) << "filter returns empty candidate list.";
-    }
-    else {
-      DLOG(INFO) << "recruiting " << next_candidates.size() << " candidates.";
-      std::copy(next_candidates.begin(), next_candidates.end(),
-                std::back_inserter(candidates_));
-    }
-    count = candidates_.size();
-  }
-  return count;
+  return candidates_.size();
 }
 
 Page* Menu::CreatePage(size_t page_size, size_t page_no) {
   size_t start_pos = page_size * page_no;
   size_t end_pos = start_pos + page_size;
   if (end_pos > candidates_.size()) {
-    if (exhausted())
+    if (result_->exhausted())
       end_pos = candidates_.size();
     else
       end_pos = Prepare(end_pos);
@@ -60,7 +52,7 @@ Page* Menu::CreatePage(size_t page_size, size_t page_no) {
     return NULL;
   page->page_size = page_size;
   page->page_no = page_no;
-  page->is_last_page = exhausted() && (end_pos == candidates_.size());
+  page->is_last_page = result_->exhausted() && (end_pos == candidates_.size());
   std::copy(candidates_.begin() + start_pos,
             candidates_.begin() + end_pos,
             std::back_inserter(page->candidates));
@@ -73,6 +65,10 @@ shared_ptr<Candidate> Menu::GetCandidateAt(size_t index) {
     return shared_ptr<Candidate>();
   }
   return candidates_[index];
+}
+
+bool Menu::empty() const {
+  return candidates_.empty() && result_->exhausted();
 }
 
 }  // namespace rime
