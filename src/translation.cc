@@ -169,4 +169,39 @@ MergedTranslation& MergedTranslation::operator+= (shared_ptr<Translation> t) {
   return *this;
 }
 
+// PrefetchTranslation
+
+PrefetchTranslation::PrefetchTranslation(shared_ptr<Translation> translation)
+    : translation_(translation) {
+  set_exhausted(!translation_ || translation_->exhausted());
+}
+
+bool PrefetchTranslation::Next() {
+  if (exhausted()) {
+    return false;
+  }
+  if (!cache_.empty()) {
+    cache_.pop_front();
+  }
+  else {
+    translation_->Next();
+  }
+  if (cache_.empty() && translation_->exhausted()) {
+    set_exhausted(true);
+  }
+  return true;
+}
+
+shared_ptr<Candidate> PrefetchTranslation::Peek() {
+  if (exhausted()) {
+    return nullptr;
+  }
+  if (!cache_.empty() || Replenish()) {
+    return cache_.front();
+  }
+  else {
+    return translation_->Peek();
+  }
+}
+
 }  // namespace rime

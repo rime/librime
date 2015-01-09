@@ -105,6 +105,20 @@ class MergedTranslation : public Translation {
   size_t elected_ = 0;
 };
 
+class PrefetchTranslation : public Translation {
+ public:
+  PrefetchTranslation(shared_ptr<Translation> translation);
+
+  virtual bool Next();
+  virtual shared_ptr<Candidate> Peek();
+
+ protected:
+  virtual bool Replenish() { return false; }
+
+  shared_ptr<Translation> translation_;
+  std::list<shared_ptr<Candidate>> cache_;
+};
+
 } // namespace rime
 
 #endif  // RIME_TRANSLATION_H_
