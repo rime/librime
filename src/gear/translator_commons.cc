@@ -11,8 +11,6 @@
 
 namespace rime {
 
-bool contains_extended_cjk(const std::string &text);
-
 // Patterns
 
 bool Patterns::Load(ConfigListPtr patterns) {
@@ -74,46 +72,6 @@ shared_ptr<Candidate> CacheTranslation::Peek() {
     cache_ = translation_->Peek();
   }
   return cache_;
-}
-
-// CharsetFilter
-
-CharsetFilter::CharsetFilter(shared_ptr<Translation> translation)
-    : translation_(translation) {
-  LocateNextCandidate();
-}
-
-bool CharsetFilter::Next() {
-  if (exhausted())
-    return false;
-  if (!translation_->Next()) {
-    set_exhausted(true);
-    return false;
-  }
-  return LocateNextCandidate();
-}
-
-shared_ptr<Candidate> CharsetFilter::Peek() {
-  return translation_->Peek();
-}
-
-bool CharsetFilter::LocateNextCandidate() {
-  while (!translation_->exhausted()) {
-    auto cand = translation_->Peek();
-    if (cand && FilterText(cand->text()))
-      return true;
-    translation_->Next();
-  }
-  set_exhausted(true);
-  return false;
-}
-
-bool CharsetFilter::FilterText(const std::string& text) {
-  return !contains_extended_cjk(text);
-}
-
-bool CharsetFilter::FilterDictEntry(shared_ptr<DictEntry> entry) {
-  return entry && FilterText(entry->text);
 }
 
 // UniqueFilter

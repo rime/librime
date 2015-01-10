@@ -16,6 +16,7 @@
 #include <rime/translation.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/user_dictionary.h>
+#include <rime/gear/charset_filter.h>
 #include <rime/gear/table_translator.h>
 #include <rime/gear/translator_commons.h>
 #include <rime/gear/unity_table_encoder.h>
@@ -294,7 +295,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string& input,
     bool filter_by_charset = enable_charset_filter_ &&
         !engine_->context()->get_option("extended_charset");
     if (filter_by_charset) {
-      translation = New<CharsetFilter>(translation);
+      translation = New<CharsetFilterTranslation>(translation);
     }
   }
   if (translation && translation->exhausted()) {
@@ -677,7 +678,7 @@ TableTranslator::MakeSentence(const std::string& input, size_t start,
         input,
         start);
     if (result && filter_by_charset) {
-      result = New<CharsetFilter>(result);
+      result = New<CharsetFilterTranslation>(result);
     }
   }
   return result;

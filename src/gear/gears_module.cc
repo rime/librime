@@ -13,8 +13,8 @@
 #include <rime/gear/affix_segmentor.h>
 #include <rime/gear/ascii_composer.h>
 #include <rime/gear/ascii_segmentor.h>
+#include <rime/gear/charset_filter.h>
 #include <rime/gear/chord_composer.h>
-#include <rime/gear/cjk_minifier.h>
 #include <rime/gear/echo_translator.h>
 #include <rime/gear/editor.h>
 #include <rime/gear/fallback_segmentor.h>
@@ -78,7 +78,8 @@ static void rime_gears_initialize() {
   // filters
   r.Register("simplifier", new Component<Simplifier>);
   r.Register("uniquifier", new Component<Uniquifier>);
-  r.Register("cjk_minifier", new Component<CJKMinifier>);
+  r.Register("charset_filter", new Component<CharsetFilter>);
+  r.Register("cjk_minifier", new Component<CharsetFilter>);  // alias
   r.Register("reverse_lookup_filter", new Component<ReverseLookupFilter>);
   r.Register("single_char_filter", new Component<SingleCharFilter>);
 
