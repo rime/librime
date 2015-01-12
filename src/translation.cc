@@ -185,7 +185,6 @@ bool CacheTranslation::Next() {
   translation_->Next();
   if (translation_->exhausted()) {
     set_exhausted(true);
-    return false;
   }
   return true;
 }
