@@ -6,38 +6,58 @@
 //
 #include <rime/candidate.h>
 #include <rime/common.h>
+#include <rime/translation.h>
 #include <rime/gear/uniquifier.h>
 
 namespace rime {
+
+class UniquifiedTranslation : public CacheTranslation {
+ public:
+  UniquifiedTranslation(shared_ptr<Translation> translation,
+                        CandidateList* candidates)
+      : CacheTranslation(translation), candidates_(candidates) {
+    Uniquify();
+  }
+  virtual bool Next();
+
+ protected:
+  bool Uniquify();
+
+  shared_ptr<Translation> translation_;
+  CandidateList* candidates_;
+};
+
+bool UniquifiedTranslation::Next() {
+  return CacheTranslation::Next() && Uniquify();
+}
+
+bool UniquifiedTranslation::Uniquify() {
+  if (exhausted()) {
+    return false;
+  }
+  auto next = Peek();
+  for (auto& c : *candidates_) {
+    if (c->text() == next->text()) {
+      auto u = As<UniquifiedCandidate>(c);
+      if (!u) {
+        u = New<UniquifiedCandidate>(c, "uniquified");
+        c = u;
+      }
+      u->Append(next);
+      return CacheTranslation::Next();
+    }
+  }
+  return true;
+}
 
 // Uniquifier
 
 Uniquifier::Uniquifier(const Ticket& ticket) : Filter(ticket) {
 }
 
-void Uniquifier::Apply(CandidateList* recruited,
-                       CandidateList* candidates) {
-  if (!candidates || candidates->empty())
-    return;
-  auto i = candidates->begin();
-  while (i != candidates->end()) {
-    auto j = recruited->begin();
-    for ( ; j != recruited->end(); ++j) {
-      if ((*i)->text() == (*j)->text()) {
-        auto u = As<UniquifiedCandidate>(*j);
-        if (!u) {
-          u = New<UniquifiedCandidate>(*j, "uniquified");
-          *j = u;
-        }
-        u->Append(*i);
-        break;
-      }
-    }
-    if (j == recruited->end())
-      ++i;
-    else
-      i = candidates->erase(i);
-  }
+shared_ptr<Translation> Uniquifier::Apply(shared_ptr<Translation> translation,
+                                          CandidateList* candidates) {
+  return New<UniquifiedTranslation>(translation, candidates);
 }
 
 }  // namespace rime

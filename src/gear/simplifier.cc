@@ -23,6 +23,7 @@
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/service.h>
+#include <rime/translation.h>
 #include <rime/gear/simplifier.h>
 
 static const char* quote_left = "\xe3\x80\x94";  //"\xef\xbc\x88";
@@ -127,24 +128,45 @@ void Simplifier::Initialize() {
   }
 }
 
-void Simplifier::Apply(CandidateList* recruited,
-                       CandidateList* candidates) {
-  if (!engine_->context()->get_option(option_name_))  // off
-    return;
-  if (!initialized_)
-    Initialize();
-  if (!opencc_ || !candidates || candidates->empty())
-    return;
-  CandidateList result;
-  for (auto it = candidates->begin(); it != candidates->end(); ++it) {
-    if (!Convert(*it, &result))
-      result.push_back(*it);
+class SimplifiedTranslation : public PrefetchTranslation {
+ public:
+  SimplifiedTranslation(shared_ptr<Translation> translation,
+                        Simplifier* simplifier)
+      : PrefetchTranslation(translation), simplifier_(simplifier) {
   }
-  candidates->swap(result);
+
+ protected:
+  virtual bool Replenish();
+
+  Simplifier* simplifier_;
+};
+
+
+bool SimplifiedTranslation::Replenish() {
+  auto next = translation_->Peek();
+  translation_->Next();
+  if (!simplifier_->Convert(next, &cache_)) {
+    cache_.push_back(next);
+  }
+  return !cache_.empty();
+}
+
+shared_ptr<Translation> Simplifier::Apply(shared_ptr<Translation> translation,
+                                          CandidateList* candidates) {
+  if (!engine_->context()->get_option(option_name_)) {  // off
+    return translation;
+  }
+  if (!initialized_) {
+    Initialize();
+  }
+  if (!opencc_) {
+    return translation;
+  }
+  return New<SimplifiedTranslation>(translation, this);
 }
 
 bool Simplifier::Convert(const shared_ptr<Candidate>& original,
-                         CandidateList* result) {
+                         CandidateQueue* result) {
   if (excluded_types_.find(original->type()) != excluded_types_.end()) {
     return false;
   }

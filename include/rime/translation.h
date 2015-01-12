@@ -9,6 +9,7 @@
 #define RIME_TRANSLATION_H_
 
 #include <list>
+#include <set>
 #include <string>
 #include <vector>
 #include <rime/candidate.h>
@@ -61,14 +62,14 @@ class FifoTranslation : public Translation {
   bool Next();
   shared_ptr<Candidate> Peek();
 
-  void Append(const shared_ptr<Candidate>& candy);
+  void Append(shared_ptr<Candidate> candy);
 
   size_t size() const {
     return candies_.size() - cursor_;
   }
 
  protected:
-  std::vector<shared_ptr<Candidate>> candies_;
+  CandidateList candies_;
   size_t cursor_ = 0;
 };
 
@@ -87,6 +88,67 @@ class UnionTranslation : public Translation {
 
 shared_ptr<UnionTranslation> operator+ (shared_ptr<Translation> a,
                                         shared_ptr<Translation> b);
+
+class MergedTranslation : public Translation {
+ public:
+  explicit MergedTranslation(const CandidateList& previous_candidates);
+
+  bool Next();
+  shared_ptr<Candidate> Peek();
+
+  MergedTranslation& operator+= (shared_ptr<Translation> t);
+
+  size_t size() const { return translations_.size(); }
+
+ protected:
+  void Elect();
+
+  const CandidateList& previous_candidates_;
+  std::vector<shared_ptr<Translation>> translations_;
+  size_t elected_ = 0;
+};
+
+class CacheTranslation : public Translation {
+ public:
+  CacheTranslation(shared_ptr<Translation> translation);
+
+  virtual bool Next();
+  virtual shared_ptr<Candidate> Peek();
+
+ protected:
+  shared_ptr<Translation> translation_;
+  shared_ptr<Candidate> cache_;
+};
+
+template <class T, class... Args>
+inline shared_ptr<Translation> Cached(Args&&... args) {
+  return New<CacheTranslation>(New<T>(std::forward<Args>(args)...));
+}
+
+class DistinctTranslation : public CacheTranslation {
+ public:
+  DistinctTranslation(shared_ptr<Translation> translation);
+  virtual bool Next();
+
+ protected:
+  bool AlreadyHas(const std::string& text) const;
+
+  std::set<std::string> candidate_set_;
+};
+
+class PrefetchTranslation : public Translation {
+ public:
+  PrefetchTranslation(shared_ptr<Translation> translation);
+
+  virtual bool Next();
+  virtual shared_ptr<Candidate> Peek();
+
+ protected:
+  virtual bool Replenish() { return false; }
+
+  shared_ptr<Translation> translation_;
+  CandidateQueue cache_;
+};
 
 } // namespace rime
 

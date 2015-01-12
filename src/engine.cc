@@ -5,7 +5,6 @@
 // 2011-04-24 GONG Chen <chen.sst@gmail.com>
 //
 #include <cctype>
-#include <functional>
 #include <string>
 #include <vector>
 #include <rime/common.h>
@@ -25,8 +24,6 @@
 #include <rime/translation.h>
 #include <rime/translator.h>
 
-using namespace std::placeholders;
-
 namespace rime {
 
 class ConcreteEngine : public Engine {
@@ -43,9 +40,6 @@ class ConcreteEngine : public Engine {
   void Compose(Context* ctx);
   void CalculateSegmentation(Composition* comp);
   void TranslateSegments(Composition* comp);
-  void FilterCandidates(Segment* segment,
-                        CandidateList* recruited,
-                        CandidateList* candidates);
   void FormatText(std::string* text);
   void OnCommit(Context* ctx);
   void OnSelect(Context* ctx);
@@ -183,9 +177,7 @@ void ConcreteEngine::TranslateSegments(Composition* comp) {
       continue;
     std::string input = comp->input().substr(segment.start, len);
     DLOG(INFO) << "translating segment: " << input;
-    Menu::CandidateFilter cand_filter(
-        std::bind(&ConcreteEngine::FilterCandidates, this, &segment, _1, _2));
-    auto menu = New<Menu>(cand_filter);
+    auto menu = New<Menu>();
     for (auto& translator : translators_) {
       auto translation = translator->Query(input, segment, &segment.prompt);
       if (!translation)
@@ -196,22 +188,14 @@ void ConcreteEngine::TranslateSegments(Composition* comp) {
       }
       menu->AddTranslation(translation);
     }
+    for (auto& filter : filters_) {
+      if (filter->AppliesToSegment(&segment)) {
+        menu->AddFilter(filter.get());
+      }
+    }
     segment.status = Segment::kGuess;
     segment.menu = menu;
     segment.selected_index = 0;
-  }
-}
-
-void ConcreteEngine::FilterCandidates(Segment* segment,
-                                      CandidateList* recruited,
-                                      CandidateList* candidates) {
-  if (filters_.empty())
-    return;
-  DLOG(INFO) << "applying filters.";
-  for (auto& filter : filters_) {
-    if (filter->AppliesToSegment(segment)) {
-      filter->Apply(recruited, candidates);
-    }
   }
 }
 

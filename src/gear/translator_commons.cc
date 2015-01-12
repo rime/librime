@@ -4,15 +4,12 @@
 //
 // 2012-04-22 GONG Chen <chen.sst@gmail.com>
 //
-#include <utf8.h>
 #include <rime/config.h>
 #include <rime/schema.h>
 #include <rime/ticket.h>
 #include <rime/gear/translator_commons.h>
 
 namespace rime {
-
-bool contains_extended_cjk(const std::string &text);
 
 // Patterns
 
@@ -47,97 +44,6 @@ void Sentence::Extend(const DictEntry& entry, size_t end_pos) {
 void Sentence::Offset(size_t offset) {
   set_start(start() + offset);
   set_end(end() + offset);
-}
-
-// CacheTranslation
-
-CacheTranslation::CacheTranslation(shared_ptr<Translation> translation)
-    : translation_(translation) {
-  set_exhausted(!translation_ || translation_->exhausted());
-}
-
-bool CacheTranslation::Next() {
-  if (exhausted())
-    return false;
-  cache_.reset();
-  translation_->Next();
-  if (translation_->exhausted()) {
-    set_exhausted(true);
-    return false;
-  }
-  return true;
-}
-
-shared_ptr<Candidate> CacheTranslation::Peek() {
-  if (exhausted())
-    return nullptr;
-  if (!cache_) {
-    cache_ = translation_->Peek();
-  }
-  return cache_;
-}
-
-// CharsetFilter
-
-CharsetFilter::CharsetFilter(shared_ptr<Translation> translation)
-    : translation_(translation) {
-  LocateNextCandidate();
-}
-
-bool CharsetFilter::Next() {
-  if (exhausted())
-    return false;
-  if (!translation_->Next()) {
-    set_exhausted(true);
-    return false;
-  }
-  return LocateNextCandidate();
-}
-
-shared_ptr<Candidate> CharsetFilter::Peek() {
-  return translation_->Peek();
-}
-
-bool CharsetFilter::LocateNextCandidate() {
-  while (!translation_->exhausted()) {
-    auto cand = translation_->Peek();
-    if (cand && FilterText(cand->text()))
-      return true;
-    translation_->Next();
-  }
-  set_exhausted(true);
-  return false;
-}
-
-bool CharsetFilter::FilterText(const std::string& text) {
-  return !contains_extended_cjk(text);
-}
-
-bool CharsetFilter::FilterDictEntry(shared_ptr<DictEntry> entry) {
-  return entry && FilterText(entry->text);
-}
-
-// UniqueFilter
-
-UniqueFilter::UniqueFilter(shared_ptr<Translation> translation)
-    : CacheTranslation(translation) {
-}
-
-bool UniqueFilter::Next() {
-  if (exhausted())
-    return false;
-  // skip duplicate candidates
-  do {
-    candidate_set_.insert(Peek()->text());
-    CacheTranslation::Next();
-  }
-  while (!exhausted() &&
-         AlreadyHas(Peek()->text()));
-  return !exhausted();
-}
-
-bool UniqueFilter::AlreadyHas(const std::string& text) const {
-  return candidate_set_.find(text) != candidate_set_.end();
 }
 
 // TranslatorOptions

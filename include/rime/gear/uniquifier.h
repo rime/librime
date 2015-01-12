@@ -15,8 +15,9 @@ class Uniquifier : public Filter {
  public:
   explicit Uniquifier(const Ticket& ticket);
 
-  virtual void Apply(CandidateList* recruited,
-                     CandidateList* candidates);
+  virtual shared_ptr<Translation> Apply(shared_ptr<Translation> translation,
+                                        CandidateList* candidates);
+
 };
 
 }  // namespace rime

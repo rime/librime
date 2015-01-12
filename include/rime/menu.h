@@ -14,8 +14,6 @@
 
 namespace rime {
 
-class Translation;
-
 struct Page {
   int page_size = 0;
   int page_no = 0;
@@ -23,16 +21,17 @@ struct Page {
   CandidateList candidates;
 };
 
+class Filter;
+class MergedTranslation;
+class Translation;
+
 class Menu {
  public:
-  using CandidateFilter = std::function<void (CandidateList* recruited,
-                                              CandidateList* candidates)>;
-
-  Menu() = default;
-  ~Menu() = default;
-  Menu(const CandidateFilter& filter) : filter_(filter) {}
+  Menu();
 
   void AddTranslation(shared_ptr<Translation> translation);
+  void AddFilter(Filter* filter);
+
   size_t Prepare(size_t candidate_count);
   Page* CreatePage(size_t page_size, size_t page_no);
   shared_ptr<Candidate> GetCandidateAt(size_t index);
@@ -41,14 +40,12 @@ class Menu {
   // rather than the total number of available candidates.
   size_t candidate_count() const { return candidates_.size(); }
 
-  bool empty() const {
-    return translations_.empty() && candidates_.empty();
-  }
+  bool empty() const;
 
  private:
-  std::vector<shared_ptr<Translation>> translations_;
+  shared_ptr<MergedTranslation> merged_;
+  shared_ptr<Translation> result_;
   CandidateList candidates_;
-  CandidateFilter filter_;
 };
 
 }  // namespace rime

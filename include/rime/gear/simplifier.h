@@ -20,19 +20,21 @@ class Simplifier : public Filter, TagMatching {
  public:
   explicit Simplifier(const Ticket& ticket);
 
-  virtual void Apply(CandidateList* recruited,
-                     CandidateList* candidates);
+  virtual shared_ptr<Translation> Apply(shared_ptr<Translation> translation,
+                                        CandidateList* candidates);
+
 
   virtual bool AppliesToSegment(Segment* segment) {
     return TagsMatch(segment);
   }
 
+  bool Convert(const shared_ptr<Candidate>& original,
+               CandidateQueue* result);
+
  protected:
   enum TipsLevel { kTipsNone, kTipsChar, kTipsAll };
 
   void Initialize();
-  bool Convert(const shared_ptr<Candidate>& original,
-               CandidateList* result);
 
   bool initialized_ = false;
   unique_ptr<Opencc> opencc_;

@@ -150,7 +150,7 @@ shared_ptr<Translation> ScriptTranslator::Query(const std::string& input,
                         enable_user_dict ? user_dict_.get() : NULL)) {
     return nullptr;
   }
-  return New<UniqueFilter>(result);
+  return New<DistinctTranslation>(result);
 }
 
 std::string ScriptTranslator::FormatPreedit(const std::string& preedit) {

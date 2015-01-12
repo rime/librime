@@ -67,7 +67,7 @@ shared_ptr<Candidate> FifoTranslation::Peek() {
   return candies_[cursor_];
 }
 
-void FifoTranslation::Append(const shared_ptr<Candidate>& candy) {
+void FifoTranslation::Append(shared_ptr<Candidate> candy) {
   candies_.push_back(candy);
   set_exhausted(false);
 }
@@ -109,6 +109,150 @@ shared_ptr<UnionTranslation> operator+ (shared_ptr<Translation> a,
   *c += a;
   *c += b;
   return c->exhausted() ? nullptr : c;
+}
+
+// MergedTranslation
+
+MergedTranslation::MergedTranslation(const CandidateList& candidates)
+    : previous_candidates_(candidates) {
+  set_exhausted(true);
+}
+
+bool MergedTranslation::Next() {
+  if (exhausted()) {
+    return false;
+  }
+  translations_[elected_]->Next();
+  if (translations_[elected_]->exhausted()) {
+    DLOG(INFO) << "translation #" << elected_ << " has been exhausted.";
+    translations_.erase(translations_.begin() + elected_);
+  }
+  Elect();
+  return true;
+}
+
+shared_ptr<Candidate> MergedTranslation::Peek() {
+  if (exhausted()) {
+    return nullptr;
+  }
+  return translations_[elected_]->Peek();
+}
+
+void MergedTranslation::Elect() {
+  if (translations_.empty()) {
+    set_exhausted(true);
+    return;
+  }
+  size_t k = 0;
+  for (; k < translations_.size(); ++k) {
+    shared_ptr<Translation> next;
+    if (k + 1 < translations_.size()) {
+      next = translations_[k + 1];
+    }
+    if (translations_[k]->Compare(next, previous_candidates_) <= 0) {
+      break;
+    }
+  }
+  elected_ = k;
+  if (k >= translations_.size()) {
+    DLOG(WARNING) << "failed to elect a winner translation.";
+    set_exhausted(true);
+  }
+  else {
+    set_exhausted(false);
+  }
+}
+
+MergedTranslation& MergedTranslation::operator+= (shared_ptr<Translation> t) {
+  if (t && !t->exhausted()) {
+    translations_.push_back(t);
+    Elect();
+  }
+  return *this;
+}
+
+// CacheTranslation
+
+CacheTranslation::CacheTranslation(shared_ptr<Translation> translation)
+    : translation_(translation) {
+  set_exhausted(!translation_ || translation_->exhausted());
+}
+
+bool CacheTranslation::Next() {
+  if (exhausted())
+    return false;
+  cache_.reset();
+  translation_->Next();
+  if (translation_->exhausted()) {
+    set_exhausted(true);
+  }
+  return true;
+}
+
+shared_ptr<Candidate> CacheTranslation::Peek() {
+  if (exhausted())
+    return nullptr;
+  if (!cache_) {
+    cache_ = translation_->Peek();
+  }
+  return cache_;
+}
+
+// DistinctTranslation
+
+DistinctTranslation::DistinctTranslation(shared_ptr<Translation> translation)
+    : CacheTranslation(translation) {
+}
+
+bool DistinctTranslation::Next() {
+  if (exhausted())
+    return false;
+  candidate_set_.insert(Peek()->text());
+  do {
+    CacheTranslation::Next();
+  }
+  while (!exhausted() &&
+         AlreadyHas(Peek()->text()));  // skip duplicate candidates
+  return true;
+}
+
+bool DistinctTranslation::AlreadyHas(const std::string& text) const {
+  return candidate_set_.find(text) != candidate_set_.end();
+}
+
+// PrefetchTranslation
+
+PrefetchTranslation::PrefetchTranslation(shared_ptr<Translation> translation)
+    : translation_(translation) {
+  set_exhausted(!translation_ || translation_->exhausted());
+}
+
+bool PrefetchTranslation::Next() {
+  if (exhausted()) {
+    return false;
+  }
+  if (!cache_.empty()) {
+    cache_.pop_front();
+  }
+  else {
+    translation_->Next();
+  }
+  if (cache_.empty() && translation_->exhausted()) {
+    set_exhausted(true);
+  }
+  return true;
+}
+
+shared_ptr<Candidate> PrefetchTranslation::Peek() {
+  if (exhausted()) {
+    return nullptr;
+  }
+  if (!cache_.empty() || Replenish()) {
+    return cache_.front();
+  }
+  else {
+    return translation_->Peek();
+  }
 }
 
 }  // namespace rime

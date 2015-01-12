@@ -17,6 +17,7 @@ namespace rime {
 
 class Engine;
 struct Segment;
+class Translation;
 
 class Filter : public Class<Filter, const Ticket&> {
  public:
@@ -24,8 +25,8 @@ class Filter : public Class<Filter, const Ticket&> {
       : engine_(ticket.engine), name_space_(ticket.name_space) {}
   virtual ~Filter() = default;
 
-  virtual void Apply(CandidateList* recruited,
-                     CandidateList* candidates) = 0;
+  virtual shared_ptr<Translation> Apply(shared_ptr<Translation> translation,
+                                        CandidateList* candidates) = 0;
 
   virtual bool AppliesToSegment(Segment* segment) {
     return true;

@@ -6,51 +6,63 @@
 //
 #include <utf8.h>
 #include <rime/candidate.h>
+#include <rime/translation.h>
 #include <rime/gear/single_char_filter.h>
 #include <rime/gear/translator_commons.h>
 
 namespace rime {
-
-SingleCharFilter::SingleCharFilter(const Ticket& ticket)
-    : Filter(ticket) {
-}
 
 static inline size_t unistrlen(const std::string& text) {
   return utf8::unchecked::distance(
       text.c_str(), text.c_str() + text.length());
 }
 
-void SingleCharFilter::Apply(CandidateList* recruited,
-                             CandidateList* candidates) {
-  size_t insert_pos = recruited->size();
-  for (auto rit = recruited->rbegin(); rit != recruited->rend(); ) {
-    auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(*rit));
+class SingleCharFirstTranslation : public PrefetchTranslation {
+ public:
+  SingleCharFirstTranslation(shared_ptr<Translation> translation);
+
+ private:
+  bool Rearrange();
+};
+
+SingleCharFirstTranslation::SingleCharFirstTranslation(
+    shared_ptr<Translation> translation)
+    : PrefetchTranslation(translation) {
+  Rearrange();
+}
+
+bool SingleCharFirstTranslation::Rearrange() {
+  if (exhausted()) {
+    return false;
+  }
+  CandidateQueue top;
+  CandidateQueue bottom;
+  while (!translation_->exhausted()) {
+    auto cand = translation_->Peek();
+    auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
     if (!phrase || phrase->type() != "table") {
       break;
     }
-    if (unistrlen((*rit)->text()) == 1) {
-      break;
-    }
-    ++rit;
-    insert_pos = rit.base() - recruited->begin();
-  }
-  if (insert_pos == recruited->size()) {
-    return;
-  }
-  for (auto it = candidates->begin(); it != candidates->end(); ) {
-    auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(*it));
-    if (!phrase || phrase->type() != "table") {
-      break;
-    }
-    if (unistrlen((*it)->text()) == 1) {
-      recruited->insert(recruited->begin() + insert_pos, *it);
-      ++insert_pos;
-      candidates->erase(it);
+    if (unistrlen(cand->text()) == 1) {
+      top.push_back(cand);
     }
     else {
-      ++it;
+      bottom.push_back(cand);
     }
+    translation_->Next();
   }
+  cache_.splice(cache_.end(), top);
+  cache_.splice(cache_.end(), bottom);
+  return !cache_.empty();
+}
+
+SingleCharFilter::SingleCharFilter(const Ticket& ticket)
+    : Filter(ticket) {
+}
+
+shared_ptr<Translation> SingleCharFilter::Apply(
+    shared_ptr<Translation> translation, CandidateList* candidates) {
+  return New<SingleCharFirstTranslation>(translation);
 }
 
 }  // namespace rime
