@@ -46,29 +46,6 @@ void Sentence::Offset(size_t offset) {
   set_end(end() + offset);
 }
 
-// UniqueFilter
-
-UniqueFilter::UniqueFilter(shared_ptr<Translation> translation)
-    : CacheTranslation(translation) {
-}
-
-bool UniqueFilter::Next() {
-  if (exhausted())
-    return false;
-  // skip duplicate candidates
-  do {
-    candidate_set_.insert(Peek()->text());
-    CacheTranslation::Next();
-  }
-  while (!exhausted() &&
-         AlreadyHas(Peek()->text()));
-  return !exhausted();
-}
-
-bool UniqueFilter::AlreadyHas(const std::string& text) const {
-  return candidate_set_.find(text) != candidate_set_.end();
-}
-
 // TranslatorOptions
 
 TranslatorOptions::TranslatorOptions(const Ticket& ticket) {

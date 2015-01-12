@@ -312,7 +312,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string& input,
     }
   }
   if (translation) {
-    translation = New<UniqueFilter>(translation);
+    translation = New<DistinctTranslation>(translation);
   }
   if (translation && translation->exhausted()) {
     translation.reset();  // discard futile translation

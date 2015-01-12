@@ -111,19 +111,6 @@ class Sentence : public Phrase {
 
 //
 
-class UniqueFilter : public CacheTranslation {
- public:
-  UniqueFilter(shared_ptr<Translation> translation);
-  virtual bool Next();
-
- protected:
-  bool AlreadyHas(const std::string& text) const;
-
-  std::set<std::string> candidate_set_;
-};
-
-//
-
 struct Ticket;
 
 class TranslatorOptions {

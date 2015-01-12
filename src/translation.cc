@@ -198,6 +198,28 @@ shared_ptr<Candidate> CacheTranslation::Peek() {
   return cache_;
 }
 
+// DistinctTranslation
+
+DistinctTranslation::DistinctTranslation(shared_ptr<Translation> translation)
+    : CacheTranslation(translation) {
+}
+
+bool DistinctTranslation::Next() {
+  if (exhausted())
+    return false;
+  candidate_set_.insert(Peek()->text());
+  do {
+    CacheTranslation::Next();
+  }
+  while (!exhausted() &&
+         AlreadyHas(Peek()->text()));  // skip duplicate candidates
+  return true;
+}
+
+bool DistinctTranslation::AlreadyHas(const std::string& text) const {
+  return candidate_set_.find(text) != candidate_set_.end();
+}
+
 // PrefetchTranslation
 
 PrefetchTranslation::PrefetchTranslation(shared_ptr<Translation> translation)

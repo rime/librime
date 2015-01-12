@@ -9,6 +9,7 @@
 #define RIME_TRANSLATION_H_
 
 #include <list>
+#include <set>
 #include <string>
 #include <vector>
 #include <rime/candidate.h>
@@ -123,6 +124,17 @@ template <class T, class... Args>
 inline shared_ptr<Translation> Cached(Args&&... args) {
   return New<CacheTranslation>(New<T>(std::forward<Args>(args)...));
 }
+
+class DistinctTranslation : public CacheTranslation {
+ public:
+  DistinctTranslation(shared_ptr<Translation> translation);
+  virtual bool Next();
+
+ protected:
+  bool AlreadyHas(const std::string& text) const;
+
+  std::set<std::string> candidate_set_;
+};
 
 class PrefetchTranslation : public Translation {
  public:
