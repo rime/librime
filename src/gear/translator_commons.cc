@@ -46,34 +46,6 @@ void Sentence::Offset(size_t offset) {
   set_end(end() + offset);
 }
 
-// CacheTranslation
-
-CacheTranslation::CacheTranslation(shared_ptr<Translation> translation)
-    : translation_(translation) {
-  set_exhausted(!translation_ || translation_->exhausted());
-}
-
-bool CacheTranslation::Next() {
-  if (exhausted())
-    return false;
-  cache_.reset();
-  translation_->Next();
-  if (translation_->exhausted()) {
-    set_exhausted(true);
-    return false;
-  }
-  return true;
-}
-
-shared_ptr<Candidate> CacheTranslation::Peek() {
-  if (exhausted())
-    return nullptr;
-  if (!cache_) {
-    cache_ = translation_->Peek();
-  }
-  return cache_;
-}
-
 // UniqueFilter
 
 UniqueFilter::UniqueFilter(shared_ptr<Translation> translation)

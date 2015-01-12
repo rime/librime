@@ -111,6 +111,8 @@ shared_ptr<UnionTranslation> operator+ (shared_ptr<Translation> a,
   return c->exhausted() ? nullptr : c;
 }
 
+// MergedTranslation
+
 MergedTranslation::MergedTranslation(const CandidateList& candidates)
     : previous_candidates_(candidates) {
   set_exhausted(true);
@@ -167,6 +169,34 @@ MergedTranslation& MergedTranslation::operator+= (shared_ptr<Translation> t) {
     Elect();
   }
   return *this;
+}
+
+// CacheTranslation
+
+CacheTranslation::CacheTranslation(shared_ptr<Translation> translation)
+    : translation_(translation) {
+  set_exhausted(!translation_ || translation_->exhausted());
+}
+
+bool CacheTranslation::Next() {
+  if (exhausted())
+    return false;
+  cache_.reset();
+  translation_->Next();
+  if (translation_->exhausted()) {
+    set_exhausted(true);
+    return false;
+  }
+  return true;
+}
+
+shared_ptr<Candidate> CacheTranslation::Peek() {
+  if (exhausted())
+    return nullptr;
+  if (!cache_) {
+    cache_ = translation_->Peek();
+  }
+  return cache_;
 }
 
 // PrefetchTranslation

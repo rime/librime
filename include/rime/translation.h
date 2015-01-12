@@ -107,6 +107,23 @@ class MergedTranslation : public Translation {
   size_t elected_ = 0;
 };
 
+class CacheTranslation : public Translation {
+ public:
+  CacheTranslation(shared_ptr<Translation> translation);
+
+  virtual bool Next();
+  virtual shared_ptr<Candidate> Peek();
+
+ protected:
+  shared_ptr<Translation> translation_;
+  shared_ptr<Candidate> cache_;
+};
+
+template <class T, class... Args>
+inline shared_ptr<Translation> Cached(Args&&... args) {
+  return New<CacheTranslation>(New<T>(std::forward<Args>(args)...));
+}
+
 class PrefetchTranslation : public Translation {
  public:
   PrefetchTranslation(shared_ptr<Translation> translation);
