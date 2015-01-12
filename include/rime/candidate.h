@@ -7,6 +7,7 @@
 #ifndef RIME_CANDIDATE_H_
 #define RIME_CANDIDATE_H_
 
+#include <list>
 #include <string>
 #include <vector>
 #include <rime/common.h>
@@ -54,6 +55,7 @@ class Candidate {
   double quality_ = 0.;
 };
 
+using CandidateQueue = std::list<shared_ptr<Candidate>>;
 using CandidateList = std::vector<shared_ptr<Candidate>>;
 
 // useful implimentations

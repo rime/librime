@@ -67,7 +67,7 @@ shared_ptr<Candidate> FifoTranslation::Peek() {
   return candies_[cursor_];
 }
 
-void FifoTranslation::Append(const shared_ptr<Candidate>& candy) {
+void FifoTranslation::Append(shared_ptr<Candidate> candy) {
   candies_.push_back(candy);
   set_exhausted(false);
 }

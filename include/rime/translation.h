@@ -62,14 +62,14 @@ class FifoTranslation : public Translation {
   bool Next();
   shared_ptr<Candidate> Peek();
 
-  void Append(const shared_ptr<Candidate>& candy);
+  void Append(shared_ptr<Candidate> candy);
 
   size_t size() const {
     return candies_.size() - cursor_;
   }
 
  protected:
-  std::vector<shared_ptr<Candidate>> candies_;
+  CandidateList candies_;
   size_t cursor_ = 0;
 };
 
@@ -147,7 +147,7 @@ class PrefetchTranslation : public Translation {
   virtual bool Replenish() { return false; }
 
   shared_ptr<Translation> translation_;
-  std::list<shared_ptr<Candidate>> cache_;
+  CandidateQueue cache_;
 };
 
 } // namespace rime
