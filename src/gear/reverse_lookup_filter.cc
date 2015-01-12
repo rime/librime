@@ -7,11 +7,32 @@
 #include <rime/candidate.h>
 #include <rime/engine.h>
 #include <rime/schema.h>
+#include <rime/translation.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 #include <rime/gear/reverse_lookup_filter.h>
 #include <rime/gear/translator_commons.h>
 
 namespace rime {
+
+class ReverseLookupFilterTranslation : public CacheTranslation {
+ public:
+  ReverseLookupFilterTranslation(shared_ptr<Translation> translation,
+                                 ReverseLookupFilter* filter)
+      : CacheTranslation(translation), filter_(filter) {
+  }
+  virtual shared_ptr<Candidate> Peek();
+
+ protected:
+  ReverseLookupFilter* filter_;
+};
+
+shared_ptr<Candidate> ReverseLookupFilterTranslation::Peek() {
+  auto cand = CacheTranslation::Peek();
+  if (cand) {
+    filter_->Process(cand);
+  }
+  return cand;
+}
 
 ReverseLookupFilter::ReverseLookupFilter(const Ticket& ticket)
     : Filter(ticket), TagMatching(ticket) {
@@ -37,24 +58,28 @@ void ReverseLookupFilter::Initialize() {
   }
 }
 
-void ReverseLookupFilter::Apply(CandidateList* recruited,
-                                CandidateList* candidates) {
-  if (!initialized_)
+shared_ptr<Translation> ReverseLookupFilter::Apply(
+    shared_ptr<Translation> translation, CandidateList* candidates) {
+  if (!initialized_) {
     Initialize();
-  if (!rev_dict_)
+  }
+  if (!rev_dict_) {
+    return translation;
+  }
+  return New<ReverseLookupFilterTranslation>(translation, this);
+}
+
+void ReverseLookupFilter::Process(const shared_ptr<Candidate>& cand) {
+  if (!overwrite_comment_ && !cand->comment().empty())
     return;
-  for (auto& cand : *candidates) {
-    if (!overwrite_comment_ && !cand->comment().empty())
-      continue;
-    auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
-    if (!phrase)
-      continue;
-    std::string codes;
-    if (rev_dict_->ReverseLookup(phrase->text(), &codes)) {
-      comment_formatter_.Apply(&codes);
-      if (!codes.empty()) {
-        phrase->set_comment(codes);
-      }
+  auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
+  if (!phrase)
+    return;
+  std::string codes;
+  if (rev_dict_->ReverseLookup(phrase->text(), &codes)) {
+    comment_formatter_.Apply(&codes);
+    if (!codes.empty()) {
+      phrase->set_comment(codes);
     }
   }
 }
