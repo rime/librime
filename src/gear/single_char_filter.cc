@@ -25,7 +25,8 @@ class SingleCharFirstTranslation : public PrefetchTranslation {
   bool Rearrange();
 };
 
-SingleCharFirstTranslation::SingleCharFirstTranslation(shared_ptr<Translation> translation)
+SingleCharFirstTranslation::SingleCharFirstTranslation(
+    shared_ptr<Translation> translation)
     : PrefetchTranslation(translation) {
   Rearrange();
 }
@@ -34,8 +35,8 @@ bool SingleCharFirstTranslation::Rearrange() {
   if (exhausted()) {
     return false;
   }
-  std::list<shared_ptr<Candidate>> top;
-  std::list<shared_ptr<Candidate>> bottom;
+  CandidateQueue top;
+  CandidateQueue bottom;
   while (!translation_->exhausted()) {
     auto cand = translation_->Peek();
     auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
@@ -59,37 +60,9 @@ SingleCharFilter::SingleCharFilter(const Ticket& ticket)
     : Filter(ticket) {
 }
 
-void SingleCharFilter::Apply(CandidateList* recruited,
-                             CandidateList* candidates) {
-  size_t insert_pos = recruited->size();
-  for (auto rit = recruited->rbegin(); rit != recruited->rend(); ) {
-    auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(*rit));
-    if (!phrase || phrase->type() != "table") {
-      break;
-    }
-    if (unistrlen((*rit)->text()) == 1) {
-      break;
-    }
-    ++rit;
-    insert_pos = rit.base() - recruited->begin();
-  }
-  if (insert_pos == recruited->size()) {
-    return;
-  }
-  for (auto it = candidates->begin(); it != candidates->end(); ) {
-    auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(*it));
-    if (!phrase || phrase->type() != "table") {
-      break;
-    }
-    if (unistrlen((*it)->text()) == 1) {
-      recruited->insert(recruited->begin() + insert_pos, *it);
-      ++insert_pos;
-      candidates->erase(it);
-    }
-    else {
-      ++it;
-    }
-  }
+shared_ptr<Translation> SingleCharFilter::Apply(
+    shared_ptr<Translation> translation, CandidateList* candidates) {
+  return New<SingleCharFirstTranslation>(translation);
 }
 
 }  // namespace rime
