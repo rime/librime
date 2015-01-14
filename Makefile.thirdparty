@@ -2,9 +2,9 @@
 
 SRC_DIR=thirdparty/src
 
-.PHONY: all clean-src glog leveldb kyotocabinet marisa opencc yaml-cpp gtest
+.PHONY: all clean-src glog leveldb marisa opencc yaml-cpp gtest
 
-all: glog leveldb kyotocabinet marisa opencc yaml-cpp gtest
+all: glog leveldb marisa opencc yaml-cpp gtest
 
 # note: this won't clean output files under include/, lib/ and bin/.
 clean-src:
@@ -25,11 +25,6 @@ leveldb:
 	cd $(SRC_DIR)/leveldb; make
 	cp -R $(SRC_DIR)/leveldb/include/leveldb thirdparty/include/
 	cp $(SRC_DIR)/leveldb/libleveldb.a thirdparty/lib/
-
-kyotocabinet:
-	cd $(SRC_DIR)/kyotocabinet; chmod +x configure; ./configure --disable-debug && make
-	cp $(SRC_DIR)/kyotocabinet/kc*.h thirdparty/include/
-	cp $(SRC_DIR)/kyotocabinet/libkyotocabinet.a thirdparty/lib/
 
 marisa:
 	cd $(SRC_DIR)/marisa-trie; ./configure --disable-debug --disable-dependency-tracking --enable-static && make
