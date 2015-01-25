@@ -234,7 +234,7 @@ ScriptTranslation::GetPreeditString(const CandidateT& cand) const {
   state.graph = &syllable_graph_;
   state.code = &cand.code();
   state.end_pos = cand.end() - start_;
-  if (bool success = DelimitSyllablesDfs(&state, cand.start() - start_, 0)) {
+  if (DelimitSyllablesDfs(&state, cand.start() - start_, 0)) {
     return translator_->FormatPreedit(state.output);
   }
   else {
@@ -365,23 +365,16 @@ bool ScriptTranslation::CheckEmpty() {
 shared_ptr<Sentence>
 ScriptTranslation::MakeSentence(Dictionary* dict, UserDictionary* user_dict) {
   const int kMaxSyllablesForUserPhraseQuery = 5;
-  const double kPenaltyForAmbiguousSyllable = 1e-10;
   WordGraph graph;
   for (const auto& x : syllable_graph_.edges) {
-    // discourage starting a word from an ambiguous joint
-    // bad cases include pinyin syllabification "niju'ede"
-    double credibility = 1.0;
-    if (syllable_graph_.vertices[x.first] >= kAmbiguousSpelling)
-      credibility = kPenaltyForAmbiguousSyllable;
     UserDictEntryCollector& dest(graph[x.first]);
     if (user_dict) {
       auto user_phrase = user_dict->Lookup(syllable_graph_, x.first,
-                                           kMaxSyllablesForUserPhraseQuery,
-                                           credibility);
+                                           kMaxSyllablesForUserPhraseQuery);
       if (user_phrase)
         dest.swap(*user_phrase);
     }
-    if (auto phrase = dict->Lookup(syllable_graph_, x.first, credibility)) {
+    if (auto phrase = dict->Lookup(syllable_graph_, x.first)) {
       // merge lookup results
       for (auto& y : *phrase) {
         DictEntryList& entries(dest[y.first]);

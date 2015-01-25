@@ -206,7 +206,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input,
 
 void Syllabifier::CheckOverlappedSpellings(SyllableGraph *graph,
                                            size_t start, size_t end) {
-  // TODO: more cases to handle...
+  const double kPenaltyForAmbiguousSyllable = 1e-10;
   if (!graph || graph->edges.find(start) == graph->edges.end())
     return;
   // if "Z" = "YX", mark the vertex between Y and X an ambiguous syllable joint
@@ -219,9 +219,14 @@ void Syllabifier::CheckOverlappedSpellings(SyllableGraph *graph,
     if (graph->edges.find(joint) == graph->edges.end())
       continue;
     auto& x_end_vertices(graph->edges[joint]);
-    for (const auto& x : x_end_vertices) {
+    for (auto& x : x_end_vertices) {
       if (x.first < end) continue;
       if (x.first == end) {
+        // discourage syllables at an ambiguous joint
+        // bad cases include pinyin syllabification "niju'ede"
+        for (auto& spelling : x.second) {
+          spelling.second.credibility *= kPenaltyForAmbiguousSyllable;
+        }
         graph->vertices[joint] = kAmbiguousSpelling;
         DLOG(INFO) << "ambiguous syllable joint at position " << joint << ".";
       }
