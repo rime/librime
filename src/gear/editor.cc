@@ -22,6 +22,7 @@ static struct EditorActionDef {
   Editor::HandlerPtr action;
 } editor_action_definitions[] = {
   { "confirm",  &Editor::Confirm },
+  { "toggle_selection",  &Editor::ToggleSelection },
   { "commit_comment", &Editor::CommitComment },
   { "commit_raw_input", &Editor::CommitRawInput },
   { "commit_script_text", &Editor::CommitScriptText },
@@ -151,6 +152,11 @@ void Editor::LoadConfig() {
 
 void Editor::Confirm(Context* ctx) {
   ctx->ConfirmCurrentSelection() || ctx->Commit();
+}
+
+void Editor::ToggleSelection(Context* ctx) {
+  ctx->ReopenPreviousSegment() ||
+      ctx->ConfirmCurrentSelection();
 }
 
 void Editor::CommitComment(Context* ctx) {

@@ -29,6 +29,7 @@ class Editor : public Processor {
   ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
   Handler Confirm;
+  Handler ToggleSelection;
   Handler CommitComment;
   Handler CommitScriptText;
   Handler CommitRawInput;
