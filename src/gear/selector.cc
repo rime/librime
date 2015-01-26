@@ -20,7 +20,7 @@ Selector::Selector(const Ticket& ticket) : Processor(ticket) {
 }
 
 ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
-  if (key_event.release())
+  if (key_event.release() || key_event.alt())
     return kNoop;
   Context* ctx = engine_->context();
   if (!ctx->composition() || ctx->composition()->empty())
@@ -55,8 +55,10 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
   }
   int index = -1;
   const std::string& select_keys(engine_->schema()->select_keys());
-  if (!select_keys.empty()) {
-    size_t pos = select_keys.find(ch);
+  if (!select_keys.empty() &&
+      !key_event.ctrl() &&
+      ch >= 0x20 && ch < 0x7f) {
+    size_t pos = select_keys.find((char)ch);
     if (pos != std::string::npos) {
       index = static_cast<int>(pos);
     }
