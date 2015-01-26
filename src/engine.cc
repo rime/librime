@@ -225,12 +225,7 @@ void ConcreteEngine::OnCommit(Context* ctx) {
 
 void ConcreteEngine::OnSelect(Context* ctx) {
   Segment& seg(ctx->composition()->back());
-  auto cand =seg.GetSelectedCandidate();
-  if (cand && cand->end() < seg.end) {
-    // having selected a partially matched candidate, split it into 2 segments
-    seg.end = cand->end();
-    seg.tags.insert("partial");
-  }
+  seg.Close();
   if (seg.end == ctx->input().length()) {
     // composition has finished
     seg.status = Segment::kConfirmed;

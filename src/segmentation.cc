@@ -12,6 +12,37 @@
 
 namespace rime {
 
+static const char* kPartialSelectionTag = "partial";
+
+void Segment::Close() {
+  auto cand = GetSelectedCandidate();
+  if (cand && cand->end() < end) {
+    // having selected a partially matched candidate, split it into 2 segments
+    end = cand->end();
+    tags.insert(kPartialSelectionTag);
+  }
+}
+
+bool Segment::Reopen(size_t caret_pos) {
+  if (status < kSelected) {
+    return false;
+  }
+  const size_t original_end_pos = start + length;
+  if (original_end_pos == caret_pos) {
+    // reuse previous candidates and keep selection
+    if (end < original_end_pos) {
+      // restore partial-selected segment
+      end = original_end_pos;
+      tags.erase(kPartialSelectionTag);
+    }
+    status = kGuess;
+  }
+  else {
+    status = kVoid;
+  }
+  return true;
+}
+
 shared_ptr<Candidate> Segment::GetCandidateAt(size_t index) const {
   if (!menu)
     return nullptr;

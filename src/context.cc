@@ -151,7 +151,7 @@ bool Context::ConfirmCurrentSelection() {
   }
   else {
     if (seg.end == seg.start) {
-      // fluency editor will confirm the whole sentence
+      // fluid_editor will confirm the whole sentence
       return false;
     }
     // confirm raw input
@@ -177,7 +177,7 @@ bool Context::ReopenPreviousSegment() {
   if (composition_->Trim()) {
     if (!composition_->empty() &&
         composition_->back().status >= Segment::kSelected) {
-      composition_->back().status = Segment::kVoid;
+      composition_->back().Reopen(caret_pos());
     }
     update_notifier_(this);
     return true;
@@ -200,10 +200,10 @@ bool Context::ReopenPreviousSelection() {
     if (it->status > Segment::kSelected)
       return false;
     if (it->status == Segment::kSelected) {
-      it->status = Segment::kVoid;
       while (it != composition_->rbegin()) {
         composition_->pop_back();
       }
+      it->Reopen(caret_pos());
       update_notifier_(this);
       return true;
     }
