@@ -7,6 +7,8 @@
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
+#include <functional>
+#include <stack>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <rime/composition.h>
@@ -30,42 +32,35 @@ namespace rime {
 
 namespace {
 
-struct DelimitSyllableState {
-  const std::string* input;
-  const std::string* delimiters;
-  const SyllableGraph* graph;
-  const Code* code;
-  size_t end_pos;
-  std::string output;
+struct SyllabifyTask {
+  const Code& code;
+  const SyllableGraph& graph;
+  size_t target_pos;
+  std::function<void (SyllabifyTask* task, size_t depth,
+                      size_t current_pos, size_t next_pos)> push;
+  std::function<void (SyllabifyTask* task, size_t depth)> pop;
 };
 
-bool DelimitSyllablesDfs(DelimitSyllableState* state,
-                         size_t current_pos, size_t depth) {
-  if (depth == state->code->size()) {
-    return current_pos == state->end_pos;
+static bool syllabify_dfs(SyllabifyTask* task,
+                          size_t depth, size_t current_pos) {
+  if (depth == task->code.size()) {
+    return current_pos == task->target_pos;
   }
-  SyllableId syllable_id = state->code->at(depth);
-  auto z = state->graph->edges.find(current_pos);
-  if (z == state->graph->edges.end())
+  SyllableId syllable_id = task->code.at(depth);
+  auto z = task->graph.edges.find(current_pos);
+  if (z == task->graph.edges.end())
     return false;
   // favor longer spellings
   for (const auto& y : boost::adaptors::reverse(z->second)) {
     size_t end_vertex_pos = y.first;
-    if (end_vertex_pos > state->end_pos)
+    if (end_vertex_pos > task->target_pos)
       continue;
     auto x = y.second.find(syllable_id);
     if (x != y.second.end()) {
-      size_t len = state->output.length();
-      if (depth > 0 && len > 0 &&
-          state->delimiters->find(
-              state->output[len - 1]) == std::string::npos) {
-        state->output += state->delimiters->at(0);
-      }
-      state->output += state->input->substr(current_pos,
-                                            end_vertex_pos - current_pos);
-      if (DelimitSyllablesDfs(state, end_vertex_pos, depth + 1))
+      task->push(task, depth, current_pos, end_vertex_pos);
+      if (syllabify_dfs(task, depth + 1, end_vertex_pos))
         return true;
-      state->output.resize(len);
+      task->pop(task, depth);
     }
   }
   return false;
@@ -94,8 +89,7 @@ class ScriptTranslation
  protected:
   bool CheckEmpty();
   bool IsNormalSpelling() const;
-  template <class CandidateT>
-  std::string GetPreeditString(const CandidateT& cand) const;
+  std::string GetPreeditString(const Phrase& cand) const;
   template <class CandidateT>
   std::string GetOriginalSpelling(const CandidateT& cand) const;
   shared_ptr<Sentence> MakeSentence(Dictionary* dict,
@@ -225,17 +219,30 @@ bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   return !CheckEmpty();
 }
 
-template <class CandidateT>
-std::string
-ScriptTranslation::GetPreeditString(const CandidateT& cand) const {
-  DelimitSyllableState state;
-  state.input = &input_;
-  state.delimiters = &translator_->delimiters();
-  state.graph = &syllable_graph_;
-  state.code = &cand.code();
-  state.end_pos = cand.end() - start_;
-  if (DelimitSyllablesDfs(&state, cand.start() - start_, 0)) {
-    return translator_->FormatPreedit(state.output);
+std::string ScriptTranslation::GetPreeditString(const Phrase& cand) const {
+  const auto& delimiters = translator_->delimiters();
+  std::stack<size_t> lengths;
+  std::string output;
+  SyllabifyTask task{
+    cand.code(),
+    syllable_graph_,
+    cand.end() - start_,
+    [&](SyllabifyTask* task, size_t depth, size_t current_pos, size_t next_pos) {
+      size_t len = output.length();
+      if (depth > 0 && len > 0 &&
+          delimiters.find(output[len - 1]) == std::string::npos) {
+        output += delimiters.at(0);
+      }
+      output += input_.substr(current_pos, next_pos - current_pos);
+      lengths.push(len);
+    },
+    [&](SyllabifyTask* task, size_t depth) {
+      output.resize(lengths.top());
+      lengths.pop();
+    }
+  };
+  if (syllabify_dfs(&task, 0, cand.start() - start_)) {
+    return translator_->FormatPreedit(output);
   }
   else {
     return std::string();
