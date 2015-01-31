@@ -11,9 +11,18 @@
 #include <stdint.h>
 #include <map>
 #include <string>
+#include <vector>
 #include "spelling.h"
 
 namespace rime {
+
+struct Syllabification {
+  std::vector<size_t> vertices;
+
+  // move by syllable by returning a value different from caret_pos
+  size_t PreviousStop(size_t caret_pos) const;
+  size_t NextStop(size_t caret_pos) const;
+};
 
 class Prism;
 

@@ -14,6 +14,22 @@
 
 namespace rime {
 
+size_t Syllabification::PreviousStop(size_t caret_pos) const {
+  for (auto x : boost::adaptors::reverse(vertices)) {
+    if (x < caret_pos)
+      return x;
+  }
+  return caret_pos;
+}
+
+size_t Syllabification::NextStop(size_t caret_pos) const {
+  for (auto x : vertices) {
+    if (x > caret_pos)
+      return x;
+  }
+  return caret_pos;
+}
+
 using Vertex = std::pair<size_t, SpellingType>;
 using VertexQueue = std::priority_queue<Vertex,
                                         std::vector<Vertex>,
