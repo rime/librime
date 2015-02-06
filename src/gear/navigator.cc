@@ -24,22 +24,32 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   int ch = key_event.keycode();
   if (ch == XK_Left || ch == XK_KP_Left) {
-    ctx->ConfirmPreviousSelection();
-    Left(ctx);
+    BeginMove(ctx);
+    if (key_event.ctrl() || key_event.shift()) {
+      JumpLeft(ctx) || Home(ctx) || End(ctx);
+    }
+    else {
+      JumpLeft(ctx) || Left(ctx) || End(ctx);
+    }
     return kAccepted;
   }
   if (ch == XK_Right || ch == XK_KP_Right) {
-    ctx->ConfirmPreviousSelection();
-    Right(ctx);
+    BeginMove(ctx);
+    if (key_event.ctrl() || key_event.shift()) {
+      JumpRight(ctx) || End(ctx) || Home(ctx);
+    }
+    else {
+      Right(ctx) || Home(ctx);
+    }
     return kAccepted;
   }
   if (ch == XK_Home || ch == XK_KP_Home) {
-    ctx->ConfirmPreviousSelection();
+    BeginMove(ctx);
     Home(ctx);
     return kAccepted;
   }
   if (ch == XK_End || ch == XK_KP_End) {
-    ctx->ConfirmPreviousSelection();
+    BeginMove(ctx);
     End(ctx);
     return kAccepted;
   }
@@ -47,23 +57,78 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
   return kNoop;
 }
 
-bool Navigator::Left(Context* ctx) {
-  DLOG(INFO) << "navigate left.";
+void Navigator::BeginMove(Context* ctx) {
+  ctx->ConfirmPreviousSelection();
+
   size_t caret_pos = ctx->caret_pos();
-  if (caret_pos == 0)
-    return End(ctx);
+  if (!syllabification_.empty() &&
+      (input_ != ctx->input() ||
+       caret_pos < syllabification_.start() ||
+       caret_pos > syllabification_.end())) {
+    input_.clear();
+    syllabification_.vertices.clear();
+  }
+
+  if (input_.empty()) {
+    const Composition* comp = ctx->composition();
+    if (comp && !comp->empty()) {
+      if (auto phrase = As<Phrase>(
+              Candidate::GetGenuineCandidate(
+                  comp->back().GetSelectedCandidate()))) {
+        input_ = ctx->input();
+        syllabification_ = phrase->syllabification();
+      }
+    }
+  }
+}
+
+bool Navigator::JumpLeft(Context* ctx) {
+  DLOG(INFO) << "jump left.";
+  size_t caret_pos = ctx->caret_pos();
+  if (!syllabification_.empty()) {
+    size_t stop = syllabification_.PreviousStop(caret_pos);
+    if (stop == 0) {
+      stop = ctx->input().length();  // rewind
+    }
+    if (stop != caret_pos) {
+      ctx->set_caret_pos(stop);
+      return true;
+    }
+  }
+  // try to locate previous segment
   const Composition* comp = ctx->composition();
-  if (comp && !comp->empty()) {
-    auto cand = comp->back().GetSelectedCandidate();
-    auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
-    if (phrase) {
-      size_t stop = phrase->syllabification().PreviousStop(caret_pos);
-      if (stop != caret_pos) {
-        ctx->set_caret_pos(stop);
+  if (!comp->empty()) {
+    for (const Segment& seg : boost::adaptors::reverse(*comp)) {
+      if (seg.end < caret_pos) {
+        ctx->set_caret_pos(seg.end);
         return true;
       }
     }
   }
+  return false;
+}
+
+bool Navigator::JumpRight(Context* ctx) {
+  DLOG(INFO) << "jump right.";
+  size_t caret_pos = ctx->caret_pos();
+  if (caret_pos == ctx->input().length()) {
+    caret_pos = 0;  // rewind
+  }
+  if (!syllabification_.empty()) {
+    size_t stop = syllabification_.NextStop(caret_pos);
+    if (stop != caret_pos) {
+      ctx->set_caret_pos(stop);
+      return true;
+    }
+  }
+  return false;
+}
+
+bool Navigator::Left(Context* ctx) {
+  DLOG(INFO) << "navigate left.";
+  size_t caret_pos = ctx->caret_pos();
+  if (caret_pos == 0)
+    return false;
   ctx->set_caret_pos(caret_pos - 1);
   return true;
 }
@@ -72,7 +137,7 @@ bool Navigator::Right(Context* ctx) {
   DLOG(INFO) << "navigate right.";
   size_t caret_pos = ctx->caret_pos();
   if (caret_pos >= ctx->input().length())
-    return Home(ctx);
+    return false;
   ctx->set_caret_pos(caret_pos + 1);
   return true;
 }
@@ -94,8 +159,11 @@ bool Navigator::Home(Context* ctx) {
       return true;
     }
   }
-  ctx->set_caret_pos(0);
-  return true;
+  if (caret_pos != 0) {
+    ctx->set_caret_pos(0);
+    return true;
+  }
+  return false;
 }
 
 bool Navigator::End(Context* ctx) {
