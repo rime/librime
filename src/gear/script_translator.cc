@@ -76,7 +76,7 @@ class ScriptSyllabifier : public PhraseSyllabifier {
       : translator_(translator), input_(input), start_(start) {
   }
 
-  virtual Syllabification Syllabify(const Phrase* phrase);
+  virtual Spans Syllabify(const Phrase* phrase);
   size_t BuildSyllableGraph(Prism& prism);
   std::string GetPreeditString(const Phrase& cand) const;
   std::string GetOriginalSpelling(const Phrase& cand) const;
@@ -199,23 +199,24 @@ bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
 
 // ScriptSyllabifier implementation
 
-Syllabification ScriptSyllabifier::Syllabify(const Phrase* phrase) {
-  Syllabification result;
-  result.vertices.push_back(start_);
+Spans ScriptSyllabifier::Syllabify(const Phrase* phrase) {
+  Spans result;
+  std::vector<size_t> vertices;
+  vertices.push_back(start_);
   SyllabifyTask task{
     phrase->code(),
     syllable_graph_,
     phrase->end() - start_,
     [&](SyllabifyTask* task, size_t depth,
         size_t current_pos, size_t next_pos) {
-      result.vertices.push_back(start_ + next_pos);
+      vertices.push_back(start_ + next_pos);
     },
     [&](SyllabifyTask* task, size_t depth) {
-      result.vertices.pop_back();
+      vertices.pop_back();
     }
   };
-  if (!syllabify_dfs(&task, 0, phrase->start() - start_)) {
-    result.vertices.clear();
+  if (syllabify_dfs(&task, 0, phrase->start() - start_)) {
+    result.set_vertices(std::move(vertices));
   }
   return result;
 }

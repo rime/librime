@@ -26,17 +26,20 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
   if (ch == XK_Left || ch == XK_KP_Left) {
     BeginMove(ctx);
     if (key_event.ctrl() || key_event.shift()) {
-      JumpLeft(ctx) || Home(ctx) || End(ctx);
+      JumpLeft(ctx) || Home(ctx);
     }
     else {
-      JumpLeft(ctx) || Left(ctx) || End(ctx);
+      // take a jump left when there are multiple spans, but not from within
+      // the leftmost span.
+      (spans_.Count(ctx->caret_pos()) > 0 && JumpLeft(ctx)) ||
+          Left(ctx) || End(ctx);
     }
     return kAccepted;
   }
   if (ch == XK_Right || ch == XK_KP_Right) {
     BeginMove(ctx);
     if (key_event.ctrl() || key_event.shift()) {
-      JumpRight(ctx) || End(ctx) || Home(ctx);
+      JumpRight(ctx) || End(ctx);
     }
     else {
       Right(ctx) || Home(ctx);
@@ -59,25 +62,17 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
 
 void Navigator::BeginMove(Context* ctx) {
   ctx->ConfirmPreviousSelection();
-
+  // update spans
   size_t caret_pos = ctx->caret_pos();
-  if (!syllabification_.empty() &&
-      (input_ != ctx->input() ||
-       caret_pos < syllabification_.start() ||
-       caret_pos > syllabification_.end())) {
-    input_.clear();
-    syllabification_.vertices.clear();
-  }
-
-  if (input_.empty()) {
-    const Composition* comp = ctx->composition();
-    if (comp && !comp->empty()) {
+  if (input_ != ctx->input() || caret_pos > spans_.end()) {
+    input_ = ctx->input();
+    for (const auto &seg : *ctx->composition()) {
       if (auto phrase = As<Phrase>(
               Candidate::GetGenuineCandidate(
-                  comp->back().GetSelectedCandidate()))) {
-        input_ = ctx->input();
-        syllabification_ = phrase->syllabification();
+                  seg.GetSelectedCandidate()))) {
+        spans_.AddSpans(phrase->spans());
       }
+      spans_.AddSpan(seg.start, seg.end);
     }
   }
 }
@@ -85,25 +80,13 @@ void Navigator::BeginMove(Context* ctx) {
 bool Navigator::JumpLeft(Context* ctx) {
   DLOG(INFO) << "jump left.";
   size_t caret_pos = ctx->caret_pos();
-  if (!syllabification_.empty()) {
-    size_t stop = syllabification_.PreviousStop(caret_pos);
-    if (stop == 0) {
-      stop = ctx->input().length();  // rewind
-    }
-    if (stop != caret_pos) {
-      ctx->set_caret_pos(stop);
-      return true;
-    }
+  size_t stop = spans_.PreviousStop(caret_pos);
+  if (stop == 0) {
+    stop = ctx->input().length();  // rewind
   }
-  // try to locate previous segment
-  const Composition* comp = ctx->composition();
-  if (!comp->empty()) {
-    for (const Segment& seg : boost::adaptors::reverse(*comp)) {
-      if (seg.end < caret_pos) {
-        ctx->set_caret_pos(seg.end);
-        return true;
-      }
-    }
+  if (stop != caret_pos) {
+    ctx->set_caret_pos(stop);
+    return true;
   }
   return false;
 }
@@ -114,12 +97,10 @@ bool Navigator::JumpRight(Context* ctx) {
   if (caret_pos == ctx->input().length()) {
     caret_pos = 0;  // rewind
   }
-  if (!syllabification_.empty()) {
-    size_t stop = syllabification_.NextStop(caret_pos);
-    if (stop != caret_pos) {
-      ctx->set_caret_pos(stop);
-      return true;
-    }
+  size_t stop = spans_.NextStop(caret_pos);
+  if (stop != caret_pos) {
+    ctx->set_caret_pos(stop);
+    return true;
   }
   return false;
 }

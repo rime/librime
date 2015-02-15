@@ -11,7 +11,7 @@
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/processor.h>
-#include <rime/algo/syllabifier.h>
+#include <rime/gear/translator_commons.h>
 
 namespace rime {
 
@@ -31,7 +31,7 @@ class Navigator : public Processor {
   bool End(Context* ctx);
 
   std::string input_;
-  Syllabification syllabification_;
+  Spans spans_;
 };
 
 }  // namespace rime

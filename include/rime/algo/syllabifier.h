@@ -16,24 +16,6 @@
 
 namespace rime {
 
-struct Syllabification {
-  std::vector<size_t> vertices;
-
-  // move by syllable by returning a value different from caret_pos
-  size_t PreviousStop(size_t caret_pos) const;
-  size_t NextStop(size_t caret_pos) const;
-
-  bool empty() const {
-    return vertices.empty();
-  }
-  size_t start() const {
-    return empty() ? 0 : vertices.front();
-  }
-  size_t end() const {
-    return empty() ? 0 : vertices.back();
-  }
-};
-
 class Prism;
 
 using SyllableId = int32_t;

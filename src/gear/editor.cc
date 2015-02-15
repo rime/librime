@@ -206,7 +206,7 @@ void Editor::BackToPreviousSyllable(Context* ctx) {
     auto cand = comp->back().GetSelectedCandidate();
     auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
     if (phrase) {
-      size_t stop = phrase->syllabification().PreviousStop(caret_pos);
+      size_t stop = phrase->spans().PreviousStop(caret_pos);
       if (stop != caret_pos) {
         ctx->PopInput(caret_pos - stop);
         return;

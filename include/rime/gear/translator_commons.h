@@ -30,13 +30,36 @@ class Patterns : public std::vector<boost::regex> {
 
 //
 
+class Spans {
+ public:
+  void AddVertex(size_t vertex);
+  void AddSpan(size_t start, size_t end);
+  void AddSpans(const Spans& spans);
+  // move by syllable by returning a value different from caret_pos
+  size_t PreviousStop(size_t caret_pos) const;
+  size_t NextStop(size_t caret_pos) const;
+  size_t Count(size_t end_pos) const;
+  size_t start() const {
+    return vertices_.empty() ? 0 : vertices_.front();
+  }
+  size_t end() const {
+    return vertices_.empty() ? 0 : vertices_.back();
+  }
+  void set_vertices(std::vector<size_t>&& vertices) {
+    vertices_ = vertices;
+  }
+
+ private:
+  std::vector<size_t> vertices_;
+};
+
 class Phrase;
 
 class PhraseSyllabifier {
  public:
   virtual ~PhraseSyllabifier() = default;
 
-  virtual Syllabification Syllabify(const Phrase* phrase) = 0;
+  virtual Spans Syllabify(const Phrase* phrase) = 0;
 };
 
 //
@@ -69,9 +92,9 @@ class Phrase : public Candidate {
   Code& code() const { return entry_->code; }
   const DictEntry& entry() const { return *entry_; }
   Language* language() const { return language_; }
-  Syllabification syllabification() {
+  Spans spans() {
     return syllabifier_ ? syllabifier_->Syllabify(this)
-                        : Syllabification();
+                        : Spans();
   }
 
  protected:

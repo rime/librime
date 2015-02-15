@@ -371,17 +371,17 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
 
 class SentenceSyllabifier : public PhraseSyllabifier {
  public:
-  virtual Syllabification Syllabify(const Phrase* phrase);
+  virtual Spans Syllabify(const Phrase* phrase);
 };
 
-Syllabification SentenceSyllabifier::Syllabify(const Phrase* phrase) {
-  Syllabification result;
+Spans SentenceSyllabifier::Syllabify(const Phrase* phrase) {
+  Spans result;
   if (auto sentence = dynamic_cast<const Sentence*>(phrase)) {
     size_t stop = sentence->start();
-    result.vertices.push_back(stop);
+    result.AddVertex(stop);
     for (size_t len : sentence->syllable_lengths()) {
       stop += len;
-      result.vertices.push_back(stop);
+      result.AddVertex(stop);
     }
   }
   return result;
