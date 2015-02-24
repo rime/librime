@@ -26,12 +26,13 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
   if (ch == XK_Left || ch == XK_KP_Left) {
     BeginMove(ctx);
     if (key_event.ctrl() || key_event.shift()) {
-      JumpLeft(ctx) || Home(ctx);
+      size_t confirmed_pos = ctx->composition()->GetConfirmedPosition();
+      JumpLeft(ctx, confirmed_pos) || Home(ctx);
     }
     else {
       // take a jump left when there are multiple spans, but not from within
       // the leftmost span.
-      (spans_.Count(ctx->caret_pos()) > 0 && JumpLeft(ctx)) ||
+      (spans_.Count(0, ctx->caret_pos()) > 0 && JumpLeft(ctx)) ||
           Left(ctx) || End(ctx);
     }
     return kAccepted;
@@ -39,7 +40,8 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
   if (ch == XK_Right || ch == XK_KP_Right) {
     BeginMove(ctx);
     if (key_event.ctrl() || key_event.shift()) {
-      JumpRight(ctx) || End(ctx);
+      size_t confirmed_pos = ctx->composition()->GetConfirmedPosition();
+      JumpRight(ctx, confirmed_pos) || End(ctx);
     }
     else {
       Right(ctx) || Home(ctx);
@@ -66,6 +68,7 @@ void Navigator::BeginMove(Context* ctx) {
   size_t caret_pos = ctx->caret_pos();
   if (input_ != ctx->input() || caret_pos > spans_.end()) {
     input_ = ctx->input();
+    spans_.Clear();
     for (const auto &seg : *ctx->composition()) {
       if (auto phrase = As<Phrase>(
               Candidate::GetGenuineCandidate(
@@ -77,11 +80,11 @@ void Navigator::BeginMove(Context* ctx) {
   }
 }
 
-bool Navigator::JumpLeft(Context* ctx) {
+bool Navigator::JumpLeft(Context* ctx, size_t start_pos) {
   DLOG(INFO) << "jump left.";
   size_t caret_pos = ctx->caret_pos();
   size_t stop = spans_.PreviousStop(caret_pos);
-  if (stop == 0) {
+  if (stop <= start_pos) {
     stop = ctx->input().length();  // rewind
   }
   if (stop != caret_pos) {
@@ -91,11 +94,11 @@ bool Navigator::JumpLeft(Context* ctx) {
   return false;
 }
 
-bool Navigator::JumpRight(Context* ctx) {
+bool Navigator::JumpRight(Context* ctx, size_t start_pos) {
   DLOG(INFO) << "jump right.";
   size_t caret_pos = ctx->caret_pos();
   if (caret_pos == ctx->input().length()) {
-    caret_pos = 0;  // rewind
+    caret_pos = start_pos;  // rewind
   }
   size_t stop = spans_.NextStop(caret_pos);
   if (stop != caret_pos) {

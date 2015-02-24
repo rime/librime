@@ -50,6 +50,10 @@ void Spans::AddSpans(const Spans& spans) {
   }
 }
 
+void Spans::Clear() {
+  vertices_.clear();
+}
+
 size_t Spans::PreviousStop(size_t caret_pos) const {
   for (auto x : boost::adaptors::reverse(vertices_)) {
     if (x < caret_pos)
@@ -66,10 +70,10 @@ size_t Spans::NextStop(size_t caret_pos) const {
   return caret_pos;
 }
 
-size_t Spans::Count(size_t end_pos) const {
+size_t Spans::Count(size_t start_pos, size_t end_pos) const {
   size_t count = 0;
   for (auto v : vertices_) {
-    if (v == 0) continue;
+    if (v <= start_pos) continue;
     else if (v > end_pos) break;
     else ++count;
   }

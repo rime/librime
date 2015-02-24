@@ -23,8 +23,8 @@ class Navigator : public Processor {
 
  private:
   void BeginMove(Context* ctx);
-  bool JumpLeft(Context* ctx);
-  bool JumpRight(Context* ctx);
+  bool JumpLeft(Context* ctx, size_t start_pos = 0);
+  bool JumpRight(Context* ctx, size_t start_pos = 0);
   bool Left(Context* ctx);
   bool Right(Context* ctx);
   bool Home(Context* ctx);

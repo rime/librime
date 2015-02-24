@@ -35,10 +35,11 @@ class Spans {
   void AddVertex(size_t vertex);
   void AddSpan(size_t start, size_t end);
   void AddSpans(const Spans& spans);
+  void Clear();
   // move by syllable by returning a value different from caret_pos
   size_t PreviousStop(size_t caret_pos) const;
   size_t NextStop(size_t caret_pos) const;
-  size_t Count(size_t end_pos) const;
+  size_t Count(size_t start_pos, size_t end_pos) const;
   size_t start() const {
     return vertices_.empty() ? 0 : vertices_.front();
   }
