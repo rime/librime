@@ -33,11 +33,11 @@ class ConcreteEngine : public Engine {
   virtual bool ProcessKey(const KeyEvent& key_event);
   virtual void ApplySchema(Schema* schema);
   virtual void CommitText(std::string text);
+  virtual void Compose(Context* ctx);
 
  protected:
   void InitializeComponents();
   void InitializeOptions();
-  void Compose(Context* ctx);
   void CalculateSegmentation(Composition* comp);
   void TranslateSegments(Composition* comp);
   void FormatText(std::string* text);
@@ -225,12 +225,7 @@ void ConcreteEngine::OnCommit(Context* ctx) {
 
 void ConcreteEngine::OnSelect(Context* ctx) {
   Segment& seg(ctx->composition()->back());
-  auto cand =seg.GetSelectedCandidate();
-  if (cand && cand->end() < seg.end) {
-    // having selected a partially matched candidate, split it into 2 segments
-    seg.end = cand->end();
-    seg.tags.insert("partial");
-  }
+  seg.Close();
   if (seg.end == ctx->input().length()) {
     // composition has finished
     seg.status = Segment::kConfirmed;

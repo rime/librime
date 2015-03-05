@@ -367,6 +367,26 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
   return true;
 }
 
+// SentenceSyllabifier
+
+class SentenceSyllabifier : public PhraseSyllabifier {
+ public:
+  virtual Spans Syllabify(const Phrase* phrase);
+};
+
+Spans SentenceSyllabifier::Syllabify(const Phrase* phrase) {
+  Spans result;
+  if (auto sentence = dynamic_cast<const Sentence*>(phrase)) {
+    size_t stop = sentence->start();
+    result.AddVertex(stop);
+    for (size_t len : sentence->syllable_lengths()) {
+      stop += len;
+      result.AddVertex(stop);
+    }
+  }
+  return result;
+}
+
 // SentenceTranslation
 
 class SentenceTranslation : public Translation {
@@ -392,18 +412,6 @@ class SentenceTranslation : public Translation {
   size_t user_phrase_index_ = 0;
   std::string input_;
   size_t start_;
-};
-
-class SentenceSyllabification : public Syllabification {
- public:
-  SentenceSyllabification(weak_ptr<Sentence> sentence)
-      : syllabified_(sentence) {
-  }
-  virtual size_t PreviousStop(size_t caret_pos) const;
-  virtual size_t NextStop(size_t caret_pos) const;
-
- protected:
-  weak_ptr<Sentence> syllabified_;
 };
 
 SentenceTranslation::SentenceTranslation(TableTranslator* translator,
@@ -480,7 +488,7 @@ void SentenceTranslation::PrepareSentence() {
     return;
   sentence_->Offset(start_);
   sentence_->set_comment(kUnitySymbol);
-  sentence_->set_syllabification(New<SentenceSyllabification>(sentence_));
+  sentence_->set_syllabifier(New<SentenceSyllabifier>());
 
   if (!translator_)
     return;
@@ -521,32 +529,6 @@ bool SentenceTranslation::PreferUserPhrase() const {
     return true;
   }
   return false;
-}
-
-size_t SentenceSyllabification::PreviousStop(size_t caret_pos) const {
-  if (auto sentence = syllabified_.lock()) {
-    size_t stop = sentence->start();
-    for (size_t len : sentence->syllable_lengths()) {
-      if (stop + len >= caret_pos) {
-        return stop;
-      }
-      stop += len;
-    }
-  }
-  return caret_pos;
-}
-
-size_t SentenceSyllabification::NextStop(size_t caret_pos) const {
-  if (auto sentence = syllabified_.lock()) {
-    size_t stop = sentence->start();
-    for (size_t len : sentence->syllable_lengths()) {
-      stop += len;
-      if (stop > caret_pos) {
-        return stop;
-      }
-    }
-  }
-  return caret_pos;
 }
 
 static size_t consume_trailing_delimiters(size_t pos,

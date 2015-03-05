@@ -32,7 +32,7 @@ class Context {
   bool Commit();
   std::string GetCommitText() const;
   std::string GetScriptText() const;
-  void GetPreedit(Preedit* preedit, bool soft_cursor = false) const;
+  void GetPreedit(Preedit* preedit) const;
   bool IsComposing() const;
   bool HasMenu() const;
 

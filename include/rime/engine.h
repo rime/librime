@@ -25,6 +25,7 @@ class Engine : public Messenger {
   virtual bool ProcessKey(const KeyEvent& key_event) { return false; }
   virtual void ApplySchema(Schema* schema) {}
   virtual void CommitText(std::string text) { sink_(text); }
+  virtual void Compose(Context* ctx) {}
 
   Schema* schema() const { return schema_.get(); }
   Context* context() const { return context_.get(); }

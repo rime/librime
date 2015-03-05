@@ -16,6 +16,7 @@
 #include <rime/candidate.h>
 #include <rime/translation.h>
 #include <rime/algo/algebra.h>
+#include <rime/algo/syllabifier.h>
 #include <rime/dict/vocabulary.h>
 
 namespace rime {
@@ -29,15 +30,37 @@ class Patterns : public std::vector<boost::regex> {
 
 //
 
-class Syllabification {
+class Spans {
  public:
-  // move the caret by syllable by returning a value different from caret_pos
-  virtual size_t PreviousStop(size_t caret_pos) const {
-    return caret_pos;
+  void AddVertex(size_t vertex);
+  void AddSpan(size_t start, size_t end);
+  void AddSpans(const Spans& spans);
+  void Clear();
+  // move by syllable by returning a value different from caret_pos
+  size_t PreviousStop(size_t caret_pos) const;
+  size_t NextStop(size_t caret_pos) const;
+  size_t Count(size_t start_pos, size_t end_pos) const;
+  size_t start() const {
+    return vertices_.empty() ? 0 : vertices_.front();
   }
-  virtual size_t NextStop(size_t caret_pos) const {
-    return caret_pos;
+  size_t end() const {
+    return vertices_.empty() ? 0 : vertices_.back();
   }
+  void set_vertices(std::vector<size_t>&& vertices) {
+    vertices_ = vertices;
+  }
+
+ private:
+  std::vector<size_t> vertices_;
+};
+
+class Phrase;
+
+class PhraseSyllabifier {
+ public:
+  virtual ~PhraseSyllabifier() = default;
+
+  virtual Spans Syllabify(const Phrase* phrase) = 0;
 };
 
 //
@@ -62,22 +85,23 @@ class Phrase : public Candidate {
   void set_preedit(const std::string& preedit) {
     entry_->preedit = preedit;
   }
-  void set_syllabification(shared_ptr<Syllabification> s) {
-    syllabification_ = s;
+  void set_syllabifier(shared_ptr<PhraseSyllabifier> syllabifier) {
+    syllabifier_ = syllabifier;
   }
 
   double weight() const { return entry_->weight; }
   Code& code() const { return entry_->code; }
   const DictEntry& entry() const { return *entry_; }
   Language* language() const { return language_; }
-  shared_ptr<Syllabification> syllabification() const {
-    return syllabification_;
+  Spans spans() {
+    return syllabifier_ ? syllabifier_->Syllabify(this)
+                        : Spans();
   }
 
  protected:
   Language* language_;
   shared_ptr<DictEntry> entry_;
-  shared_ptr<Syllabification> syllabification_;
+  shared_ptr<PhraseSyllabifier> syllabifier_;
 };
 
 //

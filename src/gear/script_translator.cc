@@ -7,6 +7,8 @@
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
+#include <functional>
+#include <stack>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <rime/composition.h>
@@ -30,42 +32,35 @@ namespace rime {
 
 namespace {
 
-struct DelimitSyllableState {
-  const std::string* input;
-  const std::string* delimiters;
-  const SyllableGraph* graph;
-  const Code* code;
-  size_t end_pos;
-  std::string output;
+struct SyllabifyTask {
+  const Code& code;
+  const SyllableGraph& graph;
+  size_t target_pos;
+  std::function<void (SyllabifyTask* task, size_t depth,
+                      size_t current_pos, size_t next_pos)> push;
+  std::function<void (SyllabifyTask* task, size_t depth)> pop;
 };
 
-bool DelimitSyllablesDfs(DelimitSyllableState* state,
-                         size_t current_pos, size_t depth) {
-  if (depth == state->code->size()) {
-    return current_pos == state->end_pos;
+static bool syllabify_dfs(SyllabifyTask* task,
+                          size_t depth, size_t current_pos) {
+  if (depth == task->code.size()) {
+    return current_pos == task->target_pos;
   }
-  SyllableId syllable_id = state->code->at(depth);
-  auto z = state->graph->edges.find(current_pos);
-  if (z == state->graph->edges.end())
+  SyllableId syllable_id = task->code.at(depth);
+  auto z = task->graph.edges.find(current_pos);
+  if (z == task->graph.edges.end())
     return false;
   // favor longer spellings
   for (const auto& y : boost::adaptors::reverse(z->second)) {
     size_t end_vertex_pos = y.first;
-    if (end_vertex_pos > state->end_pos)
+    if (end_vertex_pos > task->target_pos)
       continue;
     auto x = y.second.find(syllable_id);
     if (x != y.second.end()) {
-      size_t len = state->output.length();
-      if (depth > 0 && len > 0 &&
-          state->delimiters->find(
-              state->output[len - 1]) == std::string::npos) {
-        state->output += state->delimiters->at(0);
-      }
-      state->output += state->input->substr(current_pos,
-                                            end_vertex_pos - current_pos);
-      if (DelimitSyllablesDfs(state, end_vertex_pos, depth + 1))
+      task->push(task, depth, current_pos, end_vertex_pos);
+      if (syllabify_dfs(task, depth + 1, end_vertex_pos))
         return true;
-      state->output.resize(len);
+      task->pop(task, depth);
     }
   }
   return false;
@@ -73,39 +68,50 @@ bool DelimitSyllablesDfs(DelimitSyllableState* state,
 
 }  // anonymous namespace
 
-class ScriptTranslation
-    : public Translation,
-      public Syllabification,
-      public std::enable_shared_from_this<ScriptTranslation>
-{
+class ScriptSyllabifier : public PhraseSyllabifier {
+ public:
+  ScriptSyllabifier(ScriptTranslator* translator,
+                    const std::string& input,
+                    size_t start)
+      : translator_(translator), input_(input), start_(start) {
+  }
+
+  virtual Spans Syllabify(const Phrase* phrase);
+  size_t BuildSyllableGraph(Prism& prism);
+  std::string GetPreeditString(const Phrase& cand) const;
+  std::string GetOriginalSpelling(const Phrase& cand) const;
+
+  const SyllableGraph& syllable_graph() const { return syllable_graph_; }
+
+ protected:
+  ScriptTranslator* translator_;
+  std::string input_;
+  size_t start_;
+  SyllableGraph syllable_graph_;
+};
+
+class ScriptTranslation : public Translation {
  public:
   ScriptTranslation(ScriptTranslator* translator,
                     const std::string& input, size_t start)
-      : translator_(translator),
-        input_(input), start_(start) {
+      : translator_(translator), start_(start),
+        syllabifier_(New<ScriptSyllabifier>(translator, input, start)) {
     set_exhausted(true);
   }
   bool Evaluate(Dictionary* dict, UserDictionary* user_dict);
   virtual bool Next();
   virtual shared_ptr<Candidate> Peek();
-  virtual size_t PreviousStop(size_t caret_pos) const;
-  virtual size_t NextStop(size_t caret_pos) const;
 
  protected:
   bool CheckEmpty();
   bool IsNormalSpelling() const;
-  template <class CandidateT>
-  std::string GetPreeditString(const CandidateT& cand) const;
-  template <class CandidateT>
-  std::string GetOriginalSpelling(const CandidateT& cand) const;
   shared_ptr<Sentence> MakeSentence(Dictionary* dict,
                                     UserDictionary* user_dict);
 
   ScriptTranslator* translator_;
-  std::string input_;
   size_t start_;
+  shared_ptr<ScriptSyllabifier> syllabifier_;
 
-  SyllableGraph syllable_graph_;
   shared_ptr<DictEntryCollector> phrase_;
   shared_ptr<UserDictEntryCollector> user_phrase_;
   shared_ptr<Sentence> sentence_;
@@ -191,19 +197,88 @@ bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
   return true;
 }
 
-// ScriptTranslation implementation
+// ScriptSyllabifier implementation
 
-bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
+Spans ScriptSyllabifier::Syllabify(const Phrase* phrase) {
+  Spans result;
+  std::vector<size_t> vertices;
+  vertices.push_back(start_);
+  SyllabifyTask task{
+    phrase->code(),
+    syllable_graph_,
+    phrase->end() - start_,
+    [&](SyllabifyTask* task, size_t depth,
+        size_t current_pos, size_t next_pos) {
+      vertices.push_back(start_ + next_pos);
+    },
+    [&](SyllabifyTask* task, size_t depth) {
+      vertices.pop_back();
+    }
+  };
+  if (syllabify_dfs(&task, 0, phrase->start() - start_)) {
+    result.set_vertices(std::move(vertices));
+  }
+  return result;
+}
+
+size_t ScriptSyllabifier::BuildSyllableGraph(Prism& prism) {
   Syllabifier syllabifier(translator_->delimiters(),
                           translator_->enable_completion(),
                           translator_->strict_spelling());
   size_t consumed = syllabifier.BuildSyllableGraph(input_,
-                                                   *dict->prism(),
+                                                   prism,
                                                    &syllable_graph_);
+  return consumed;
+}
 
-  phrase_ = dict->Lookup(syllable_graph_, 0);
+std::string ScriptSyllabifier::GetPreeditString(const Phrase& cand) const {
+  const auto& delimiters = translator_->delimiters();
+  std::stack<size_t> lengths;
+  std::string output;
+  SyllabifyTask task{
+    cand.code(),
+    syllable_graph_,
+    cand.end() - start_,
+    [&](SyllabifyTask* task, size_t depth,
+        size_t current_pos, size_t next_pos) {
+      size_t len = output.length();
+      if (depth > 0 && len > 0 &&
+          delimiters.find(output[len - 1]) == std::string::npos) {
+        output += delimiters.at(0);
+      }
+      output += input_.substr(current_pos, next_pos - current_pos);
+      lengths.push(len);
+    },
+    [&](SyllabifyTask* task, size_t depth) {
+      output.resize(lengths.top());
+      lengths.pop();
+    }
+  };
+  if (syllabify_dfs(&task, 0, cand.start() - start_)) {
+    return translator_->FormatPreedit(output);
+  }
+  else {
+    return std::string();
+  }
+}
+
+std::string ScriptSyllabifier::GetOriginalSpelling(const Phrase& cand) const {
+  if (translator_ &&
+      static_cast<int>(cand.code().size()) <= translator_->spelling_hints()) {
+    return translator_->Spell(cand.code());
+  }
+  return std::string();
+}
+
+// ScriptTranslation implementation
+
+bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
+  size_t consumed = syllabifier_->BuildSyllableGraph(*dict->prism());
+  const auto& syllable_graph = syllabifier_->syllable_graph();
+
+  phrase_ = dict->Lookup(syllable_graph, 0);
   if (user_dict) {
-    user_phrase_ = user_dict->Lookup(syllable_graph_, 0);
+    user_phrase_ = user_dict->Lookup(syllable_graph, 0);
   }
   if (!phrase_ && !user_phrase_)
     return false;
@@ -214,7 +289,7 @@ bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   if (user_phrase_ && !user_phrase_->empty())
     translated_len = (std::max)(translated_len, user_phrase_->rbegin()->first);
   if (translated_len < consumed &&
-      syllable_graph_.edges.size() > 1) {  // at least 2 syllables required
+      syllable_graph.edges.size() > 1) {  // at least 2 syllables required
     sentence_ = MakeSentence(dict, user_dict);
   }
 
@@ -223,33 +298,6 @@ bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   if (user_phrase_)
     user_phrase_iter_ = user_phrase_->rbegin();
   return !CheckEmpty();
-}
-
-template <class CandidateT>
-std::string
-ScriptTranslation::GetPreeditString(const CandidateT& cand) const {
-  DelimitSyllableState state;
-  state.input = &input_;
-  state.delimiters = &translator_->delimiters();
-  state.graph = &syllable_graph_;
-  state.code = &cand.code();
-  state.end_pos = cand.end() - start_;
-  if (DelimitSyllablesDfs(&state, cand.start() - start_, 0)) {
-    return translator_->FormatPreedit(state.output);
-  }
-  else {
-    return std::string();
-  }
-}
-
-template <class CandidateT>
-std::string
-ScriptTranslation::GetOriginalSpelling(const CandidateT& cand) const {
-  if (translator_ &&
-      static_cast<int>(cand.code().size()) <= translator_->spelling_hints()) {
-    return translator_->Spell(cand.code());
-  }
-  return std::string();
 }
 
 bool ScriptTranslation::Next() {
@@ -285,8 +333,9 @@ bool ScriptTranslation::Next() {
 }
 
 bool ScriptTranslation::IsNormalSpelling() const {
-  return !syllable_graph_.vertices.empty() &&
-      (syllable_graph_.vertices.rbegin()->second == kNormalSpelling);
+  const auto& syllable_graph = syllabifier_->syllable_graph();
+  return !syllable_graph.vertices.empty() &&
+      (syllable_graph.vertices.rbegin()->second == kNormalSpelling);
 }
 
 shared_ptr<Candidate> ScriptTranslation::Peek() {
@@ -294,12 +343,11 @@ shared_ptr<Candidate> ScriptTranslation::Peek() {
     return nullptr;
   if (sentence_) {
     if (sentence_->preedit().empty()) {
-      sentence_->set_preedit(GetPreeditString(*sentence_));
+      sentence_->set_preedit(syllabifier_->GetPreeditString(*sentence_));
     }
     if (sentence_->comment().empty()) {
-      std::string spelling(GetOriginalSpelling(*sentence_));
-      if (!spelling.empty() &&
-          spelling != sentence_->preedit()) {
+      auto spelling = syllabifier_->GetOriginalSpelling(*sentence_);
+      if (!spelling.empty() && spelling != sentence_->preedit()) {
         sentence_->set_comment(/*quote_left + */spelling/* + quote_right*/);
       }
     }
@@ -344,15 +392,15 @@ shared_ptr<Candidate> ScriptTranslation::Peek() {
                       (IsNormalSpelling() ? 0 : -1));
   }
   if (cand->preedit().empty()) {
-    cand->set_preedit(GetPreeditString(*cand));
+    cand->set_preedit(syllabifier_->GetPreeditString(*cand));
   }
   if (cand->comment().empty()) {
-    std::string spelling = GetOriginalSpelling(*cand);
+    auto spelling = syllabifier_->GetOriginalSpelling(*cand);
     if (!spelling.empty() && spelling != cand->preedit()) {
       cand->set_comment(/*quote_left + */spelling/* + quote_right*/);
     }
   }
-  cand->set_syllabification(shared_from_this());
+  cand->set_syllabifier(syllabifier_);
   return cand;
 }
 
@@ -365,16 +413,17 @@ bool ScriptTranslation::CheckEmpty() {
 shared_ptr<Sentence>
 ScriptTranslation::MakeSentence(Dictionary* dict, UserDictionary* user_dict) {
   const int kMaxSyllablesForUserPhraseQuery = 5;
+  const auto& syllable_graph = syllabifier_->syllable_graph();
   WordGraph graph;
-  for (const auto& x : syllable_graph_.edges) {
+  for (const auto& x : syllable_graph.edges) {
     UserDictEntryCollector& dest(graph[x.first]);
     if (user_dict) {
-      auto user_phrase = user_dict->Lookup(syllable_graph_, x.first,
+      auto user_phrase = user_dict->Lookup(syllable_graph, x.first,
                                            kMaxSyllablesForUserPhraseQuery);
       if (user_phrase)
         dest.swap(*user_phrase);
     }
-    if (auto phrase = dict->Lookup(syllable_graph_, x.first)) {
+    if (auto phrase = dict->Lookup(syllable_graph, x.first)) {
       // merge lookup results
       for (auto& y : *phrase) {
         DictEntryList& entries(dest[y.first]);
@@ -386,30 +435,12 @@ ScriptTranslation::MakeSentence(Dictionary* dict, UserDictionary* user_dict) {
   }
   Poet poet(translator_->language());
   auto sentence = poet.MakeSentence(graph,
-                                    syllable_graph_.interpreted_length);
+                                    syllable_graph.interpreted_length);
   if (sentence) {
     sentence->Offset(start_);
-    sentence->set_syllabification(shared_from_this());
+    sentence->set_syllabifier(syllabifier_);
   }
   return sentence;
-}
-
-size_t ScriptTranslation::PreviousStop(size_t caret_pos) const {
-  size_t offset = caret_pos - start_;
-  for (const auto& x : boost::adaptors::reverse(syllable_graph_.vertices)) {
-    if (x.first < offset)
-      return x.first + start_;
-  }
-  return caret_pos;
-}
-
-size_t ScriptTranslation::NextStop(size_t caret_pos) const {
-  size_t offset = caret_pos - start_;
-  for (const auto& x : syllable_graph_.vertices) {
-    if (x.first > offset)
-      return x.first + start_;
-  }
-  return caret_pos;
 }
 
 }  // namespace rime

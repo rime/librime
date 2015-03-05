@@ -38,13 +38,17 @@ std::string Context::GetScriptText() const {
   return composition_->GetScriptText();
 }
 
-void Context::GetPreedit(Preedit* preedit, bool soft_cursor) const {
+void Context::GetPreedit(Preedit* preedit) const {
   composition_->GetPreedit(preedit);
   preedit->caret_pos = preedit->text.length();
   if (IsComposing()) {
-    if (soft_cursor) {
-      const std::string caret("\xe2\x80\xba");
+    if (get_option("soft_cursor")) {
+      const std::string caret("\xe2\x80\xb8");
       preedit->text.append(caret);
+    }
+    auto prompt = composition_->GetPrompt();
+    if (!prompt.empty()) {
+      preedit->text.append(prompt);
     }
     if (caret_pos_ < input_.length()) {
       preedit->text.append(input_.substr(caret_pos_));
@@ -151,7 +155,7 @@ bool Context::ConfirmCurrentSelection() {
   }
   else {
     if (seg.end == seg.start) {
-      // fluency editor will confirm the whole sentence
+      // fluid_editor will confirm the whole sentence
       return false;
     }
     // confirm raw input
@@ -177,7 +181,7 @@ bool Context::ReopenPreviousSegment() {
   if (composition_->Trim()) {
     if (!composition_->empty() &&
         composition_->back().status >= Segment::kSelected) {
-      composition_->back().status = Segment::kVoid;
+      composition_->back().Reopen(caret_pos());
     }
     update_notifier_(this);
     return true;
@@ -200,10 +204,10 @@ bool Context::ReopenPreviousSelection() {
     if (it->status > Segment::kSelected)
       return false;
     if (it->status == Segment::kSelected) {
-      it->status = Segment::kVoid;
       while (it != composition_->rbegin()) {
         composition_->pop_back();
       }
+      it->Reopen(caret_pos());
       update_notifier_(this);
       return true;
     }

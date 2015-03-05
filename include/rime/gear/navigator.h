@@ -7,9 +7,11 @@
 #ifndef RIME_NAVIGATOR_H_
 #define RIME_NAVIGATOR_H_
 
+#include <string>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/processor.h>
+#include <rime/gear/translator_commons.h>
 
 namespace rime {
 
@@ -20,10 +22,16 @@ class Navigator : public Processor {
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  private:
+  void BeginMove(Context* ctx);
+  bool JumpLeft(Context* ctx, size_t start_pos = 0);
+  bool JumpRight(Context* ctx, size_t start_pos = 0);
   bool Left(Context* ctx);
   bool Right(Context* ctx);
   bool Home(Context* ctx);
   bool End(Context* ctx);
+
+  std::string input_;
+  Spans spans_;
 };
 
 }  // namespace rime

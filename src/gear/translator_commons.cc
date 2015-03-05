@@ -4,6 +4,7 @@
 //
 // 2012-04-22 GONG Chen <chen.sst@gmail.com>
 //
+#include <boost/range/adaptor/reversed.hpp>
 #include <rime/config.h>
 #include <rime/schema.h>
 #include <rime/ticket.h>
@@ -23,6 +24,60 @@ bool Patterns::Load(ConfigListPtr patterns) {
     }
   }
   return true;
+}
+
+// Spans
+
+void Spans::AddVertex(size_t vertex) {
+  if (vertices_.empty() || vertices_.back() < vertex) {
+    vertices_.push_back(vertex);
+    return;
+  }
+  auto lb = std::lower_bound(vertices_.begin(), vertices_.end(), vertex);
+  if (*lb != vertex) {
+    vertices_.insert(lb, vertex);
+  }
+}
+
+void Spans::AddSpan(size_t start, size_t end) {
+  AddVertex(start);
+  AddVertex(end);
+}
+
+void Spans::AddSpans(const Spans& spans) {
+  for (auto vertex : spans.vertices_) {
+    AddVertex(vertex);
+  }
+}
+
+void Spans::Clear() {
+  vertices_.clear();
+}
+
+size_t Spans::PreviousStop(size_t caret_pos) const {
+  for (auto x : boost::adaptors::reverse(vertices_)) {
+    if (x < caret_pos)
+      return x;
+  }
+  return caret_pos;
+}
+
+size_t Spans::NextStop(size_t caret_pos) const {
+  for (auto x : vertices_) {
+    if (x > caret_pos)
+      return x;
+  }
+  return caret_pos;
+}
+
+size_t Spans::Count(size_t start_pos, size_t end_pos) const {
+  size_t count = 0;
+  for (auto v : vertices_) {
+    if (v <= start_pos) continue;
+    else if (v > end_pos) break;
+    else ++count;
+  }
+  return count;
 }
 
 // Sentence

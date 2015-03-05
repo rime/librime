@@ -27,6 +27,7 @@ struct Segment {
   Status status = kVoid;
   size_t start = 0;
   size_t end = 0;
+  size_t length = 0;
   std::set<std::string> tags;
   shared_ptr<Menu> menu;
   size_t selected_index = 0;
@@ -35,7 +36,8 @@ struct Segment {
   Segment() = default;
 
   Segment(int start_pos, int end_pos)
-      : start(start_pos), end(end_pos) {}
+      : start(start_pos), end(end_pos), length(end_pos - start_pos) {
+  }
 
   void Clear() {
     status = kVoid;
@@ -44,6 +46,9 @@ struct Segment {
     selected_index = 0;
     prompt.clear();
   }
+
+  void Close();
+  bool Reopen(size_t caret_pos);
 
   bool HasTag(const std::string& tag) const {
     return tags.find(tag) != tags.end();
