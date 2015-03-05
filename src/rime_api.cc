@@ -236,7 +236,7 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
     return False;
   if (ctx->IsComposing()) {
     rime::Preedit preedit;
-    ctx->GetPreedit(&preedit, ctx->get_option("soft_cursor"));
+    ctx->GetPreedit(&preedit);
     context->composition.length = preedit.text.length();
     context->composition.preedit = new char[preedit.text.length() + 1];
     std::strcpy(context->composition.preedit, preedit.text.c_str());

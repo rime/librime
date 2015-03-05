@@ -38,13 +38,17 @@ std::string Context::GetScriptText() const {
   return composition_->GetScriptText();
 }
 
-void Context::GetPreedit(Preedit* preedit, bool soft_cursor) const {
+void Context::GetPreedit(Preedit* preedit) const {
   composition_->GetPreedit(preedit);
   preedit->caret_pos = preedit->text.length();
   if (IsComposing()) {
-    if (soft_cursor) {
-      const std::string caret("\xe2\x80\xba");
+    if (get_option("soft_cursor")) {
+      const std::string caret("\xe2\x80\xb8");
       preedit->text.append(caret);
+    }
+    auto prompt = composition_->GetPrompt();
+    if (!prompt.empty()) {
+      preedit->text.append(prompt);
     }
     if (caret_pos_ < input_.length()) {
       preedit->text.append(input_.substr(caret_pos_));

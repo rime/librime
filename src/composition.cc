@@ -24,9 +24,9 @@ void Composition::GetPreedit(Preedit* preedit) const {
     return;
   preedit->text.clear();
   preedit->sel_start = preedit->sel_end = 0;
+  preedit->caret_pos = 0;
   if (empty())
     return;
-  size_t text_len = 0;
   size_t start = 0;
   size_t end = 0;
   for (size_t i = 0; i < size(); ++i) {
@@ -36,18 +36,16 @@ void Composition::GetPreedit(Preedit* preedit) const {
       if (cand) {
         end = cand->end();
         preedit->text += cand->text();
-        text_len = preedit->text.length();
       }
       else {  // raw input
         end = at(i).end;
         if (!at(i).HasTag("phony")) {
           preedit->text += input_.substr(start, end - start);
-          text_len = preedit->text.length();
         }
       }
     }
     else {  // highlighted
-      preedit->sel_start = text_len;
+      preedit->sel_start = preedit->text.length();
       if (cand && !cand->preedit().empty()) {
         end = cand->end();
         preedit->text += cand->preedit();
@@ -56,16 +54,17 @@ void Composition::GetPreedit(Preedit* preedit) const {
         end = at(i).end;
         preedit->text += input_.substr(start, end - start);
       }
-      if (!at(i).prompt.empty()) {  // show prompt
-        preedit->text += at(i).prompt;
-      }
-      text_len = preedit->text.length();
-      preedit->sel_end = text_len;
+      preedit->sel_end = preedit->text.length();
     }
   }
   if (input_.length() > end) {
     preedit->text += input_.substr(end);
   }
+  preedit->caret_pos = preedit->text.length();
+}
+
+std::string Composition::GetPrompt() const {
+  return empty() ? std::string() : back().prompt;
 }
 
 std::string Composition::GetCommitText() const {
