@@ -29,8 +29,7 @@ class TableTranslator : public Translator,
   TableTranslator(const Ticket& ticket);
 
   virtual shared_ptr<Translation> Query(const std::string& input,
-                                        const Segment& segment,
-                                        std::string* prompt);
+                                        const Segment& segment);
   virtual bool Memorize(const CommitEntry& commit_entry);
 
   shared_ptr<Translation> MakeSentence(const std::string& input,

@@ -149,7 +149,7 @@ void Switcher::SelectNextSchema() {
   if (!xlator)
     return;
   Menu menu;
-  menu.AddTranslation(xlator->Query("", Segment(), NULL));
+  menu.AddTranslation(xlator->Query("", Segment()));
   if (menu.Prepare(2) < 2)
     return;
   auto command = As<SwitcherCommand>(menu.GetCandidateAt(1));
@@ -181,7 +181,7 @@ void Switcher::RefreshMenu() {
   auto menu = New<Menu>();
   comp.back().menu = menu;
   for (auto& translator : translators_) {
-    if (auto t = translator->Query("", comp.back(), NULL)) {
+    if (auto t = translator->Query("", comp.back())) {
       menu->AddTranslation(t);
     }
   }

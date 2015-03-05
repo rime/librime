@@ -32,8 +32,7 @@ TrivialTranslator::TrivialTranslator(const Ticket& ticket)
 }
 
 shared_ptr<Translation> TrivialTranslator::Query(const std::string& input,
-                                                 const Segment& segment,
-                                                 std::string* prompt) {
+                                                 const Segment& segment) {
   if (!segment.HasTag("abc"))
     return nullptr;
   DLOG(INFO) << "input = '" << input

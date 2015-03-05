@@ -23,8 +23,7 @@ class TrivialTranslator : public Translator {
   TrivialTranslator(const Ticket& ticket);
 
   virtual shared_ptr<Translation> Query(const std::string& input,
-                                        const Segment& segment,
-                                        std::string* prompt);
+                                        const Segment& segment);
 
  private:
   std::string Translate(const std::string& input);

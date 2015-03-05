@@ -16,8 +16,7 @@ class SwitchTranslator : public Translator {
   SwitchTranslator(const Ticket& ticket);
 
   virtual shared_ptr<Translation> Query(const std::string& input,
-                                        const Segment& segment,
-                                        std::string* prompt);
+                                        const Segment& segment);
 };
 
 }  // namespace rime

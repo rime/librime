@@ -135,8 +135,7 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
 }
 
 shared_ptr<Translation> ScriptTranslator::Query(const std::string& input,
-                                                const Segment& segment,
-                                                std::string* prompt) {
+                                                const Segment& segment) {
   if (!dict_ || !dict_->loaded())
     return nullptr;
   if (!segment.HasTag(tag_))

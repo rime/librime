@@ -148,8 +148,7 @@ SchemaListTranslator::SchemaListTranslator(const Ticket& ticket)
 }
 
 shared_ptr<Translation> SchemaListTranslator::Query(const std::string& input,
-                                                    const Segment& segment,
-                                                    std::string* prompt) {
+                                                    const Segment& segment) {
   auto switcher = dynamic_cast<Switcher*>(engine_);
   if (!switcher) {
     return nullptr;

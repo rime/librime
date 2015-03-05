@@ -242,8 +242,7 @@ static bool starts_with_completion(shared_ptr<Translation> translation) {
 }
 
 shared_ptr<Translation> TableTranslator::Query(const std::string& input,
-                                               const Segment& segment,
-                                               std::string* prompt) {
+                                               const Segment& segment) {
   if (!segment.HasTag(tag_))
     return nullptr;
   DLOG(INFO) << "input = '" << input

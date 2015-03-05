@@ -178,7 +178,7 @@ void ConcreteEngine::TranslateSegments(Segmentation* segments) {
     DLOG(INFO) << "translating segment: " << input;
     auto menu = New<Menu>();
     for (auto& translator : translators_) {
-      auto translation = translator->Query(input, segment, &segment.prompt);
+      auto translation = translator->Query(input, segment);
       if (!translation)
         continue;
       if (translation->exhausted()) {

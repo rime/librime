@@ -282,10 +282,8 @@ SwitchTranslator::SwitchTranslator(const Ticket& ticket)
     : Translator(ticket) {
 }
 
-shared_ptr<Translation>
-SwitchTranslator::Query(const std::string& input,
-                        const Segment& segment,
-                        std::string* prompt) {
+shared_ptr<Translation> SwitchTranslator::Query(const std::string& input,
+                                                const Segment& segment) {
   auto switcher = dynamic_cast<Switcher*>(engine_);
   if (!switcher) {
     return nullptr;

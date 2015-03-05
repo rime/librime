@@ -33,8 +33,7 @@ EchoTranslator::EchoTranslator(const Ticket& ticket)
 }
 
 shared_ptr<Translation> EchoTranslator::Query(const std::string& input,
-                                              const Segment& segment,
-                                              std::string* prompt) {
+                                              const Segment& segment) {
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
   auto candidate = New<SimpleCandidate>("raw",

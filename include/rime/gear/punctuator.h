@@ -60,8 +60,7 @@ class PunctTranslator : public Translator {
  public:
   PunctTranslator(const Ticket& ticket);
   virtual shared_ptr<Translation> Query(const std::string& input,
-                                        const Segment& segment,
-                                        std::string* prompt);
+                                        const Segment& segment);
 
  protected:
   shared_ptr<Translation>

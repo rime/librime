@@ -23,8 +23,7 @@ class ReverseLookupTranslator : public Translator {
   ReverseLookupTranslator(const Ticket& ticket);
 
   virtual shared_ptr<Translation> Query(const std::string& input,
-                                        const Segment& segment,
-                                        std::string* prompt);
+                                        const Segment& segment);
 
  protected:
   void Initialize();

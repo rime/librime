@@ -139,8 +139,7 @@ void ReverseLookupTranslator::Initialize() {
 }
 
 shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string& input,
-                                                       const Segment& segment,
-                                                       std::string* prompt) {
+                                                       const Segment& segment) {
   if (!segment.HasTag(tag_))
     return nullptr;
   if (!initialized_)
@@ -161,8 +160,10 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string& input,
     code.resize(code.length() - suffix_.length());
   }
 
-  if (start > 0 && prompt) {
-    *prompt = tips_;
+  if (start > 0) {
+    // usually translators do not modify the segment directly;
+    // prompt text is best set by a processor or a segmentor.
+    const_cast<Segment*>(&segment)->prompt = tips_;
   }
 
   DictEntryIterator iter;
