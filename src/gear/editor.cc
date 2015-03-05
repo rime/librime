@@ -160,9 +160,9 @@ void Editor::ToggleSelection(Context* ctx) {
 }
 
 void Editor::CommitComment(Context* ctx) {
-  const Composition* comp = ctx->composition();
-  if (comp && !comp->empty()) {
-    auto cand = comp->back().GetSelectedCandidate();
+  const Composition& comp = ctx->composition();
+  if (!comp.empty()) {
+    auto cand = comp.back().GetSelectedCandidate();
     if (cand && !cand->comment().empty()) {
       engine_->sink()(cand->comment());
       ctx->Clear();
@@ -201,9 +201,9 @@ void Editor::BackToPreviousSyllable(Context* ctx) {
   size_t caret_pos = ctx->caret_pos();
   if (caret_pos == 0)
     return;
-  const Composition* comp = ctx->composition();
-  if (comp && !comp->empty()) {
-    auto cand = comp->back().GetSelectedCandidate();
+  const Composition& comp = ctx->composition();
+  if (!comp.empty()) {
+    auto cand = comp.back().GetSelectedCandidate();
     auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
     if (phrase) {
       size_t stop = phrase->spans().PreviousStop(caret_pos);

@@ -86,10 +86,10 @@ ProcessResult Switcher::ProcessKeyEvent(const KeyEvent& key_event) {
 }
 
 void Switcher::HighlightNextSchema() {
-  Composition* comp = context_->composition();
-  if (!comp || comp->empty() || !comp->back().menu)
+  Composition& comp = context_->composition();
+  if (comp.empty() || !comp.back().menu)
     return;
-  Segment& seg(comp->back());
+  Segment& seg(comp.back());
   int index = seg.selected_index;
   shared_ptr<Candidate> option;
   do {
@@ -164,24 +164,24 @@ bool Switcher::IsAutoSave(const std::string& option) const {
 
 void Switcher::OnSelect(Context* ctx) {
   LOG(INFO) << "a switcher option is selected.";
-  Segment& seg(ctx->composition()->back());
+  Segment& seg(ctx->composition().back());
   if (auto command = As<SwitcherCommand>(seg.GetSelectedCandidate())) {
     command->Apply(this);
   }
 }
 
 void Switcher::RefreshMenu() {
-  Composition* comp = context_->composition();
-  if (comp->empty()) {
+  Composition& comp = context_->composition();
+  if (comp.empty()) {
     context_->set_input(" ");  // make context_->IsComposing() == true
     Segment seg(0, 0);         // empty range
     seg.prompt = caption_;
-    comp->AddSegment(seg);
+    comp.AddSegment(seg);
   }
   auto menu = New<Menu>();
-  comp->back().menu = menu;
+  comp.back().menu = menu;
   for (auto& translator : translators_) {
-    if (auto t = translator->Query("", comp->back(), NULL)) {
+    if (auto t = translator->Query("", comp.back(), NULL)) {
       menu->AddTranslation(t);
     }
   }

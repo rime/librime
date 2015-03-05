@@ -24,7 +24,7 @@ class Composition : public Segmentation {
   Composition() = default;
 
   bool HasFinishedComposition() const;
-  void GetPreedit(Preedit* preedit) const;
+  Preedit GetPreedit() const;
   std::string GetPrompt() const;
   std::string GetCommitText() const;
   std::string GetScriptText() const;

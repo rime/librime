@@ -38,8 +38,8 @@ class ConcreteEngine : public Engine {
  protected:
   void InitializeComponents();
   void InitializeOptions();
-  void CalculateSegmentation(Composition* comp);
-  void TranslateSegments(Composition* comp);
+  void CalculateSegmentation(Segmentation* segments);
+  void TranslateSegments(Segmentation* segments);
   void FormatText(std::string* text);
   void OnCommit(Context* ctx);
   void OnSelect(Context* ctx);
@@ -133,49 +133,48 @@ void ConcreteEngine::OnOptionUpdate(Context* ctx, const std::string& option) {
 
 void ConcreteEngine::Compose(Context* ctx) {
   if (!ctx) return;
-  Composition* comp = ctx->composition();
+  Composition& comp = ctx->composition();
   std::string active_input(ctx->input().substr(0, ctx->caret_pos()));
   DLOG(INFO) << "active input: " << active_input;
-  comp->Reset(active_input);
-  CalculateSegmentation(comp);
-  TranslateSegments(comp);
-  DLOG(INFO) << "composition: " << comp->GetDebugText();
-  ctx->set_composition(comp);
+  comp.Reset(active_input);
+  CalculateSegmentation(&comp);
+  TranslateSegments(&comp);
+  DLOG(INFO) << "composition: " << comp.GetDebugText();
 }
 
-void ConcreteEngine::CalculateSegmentation(Composition* comp) {
-  while (!comp->HasFinishedSegmentation()) {
-    size_t start_pos = comp->GetCurrentStartPosition();
-    size_t end_pos = comp->GetCurrentEndPosition();
+void ConcreteEngine::CalculateSegmentation(Segmentation* segments) {
+  while (!segments->HasFinishedSegmentation()) {
+    size_t start_pos = segments->GetCurrentStartPosition();
+    size_t end_pos = segments->GetCurrentEndPosition();
     DLOG(INFO) << "start pos: " << start_pos;
     DLOG(INFO) << "end pos: " << end_pos;
     // recognize a segment by calling the segmentors in turn
     for (auto& segmentor : segmentors_) {
-      if (!segmentor->Proceed(comp))
+      if (!segmentor->Proceed(segments))
         break;
     }
-    DLOG(INFO) << "segmentation: " << *comp;
+    DLOG(INFO) << "segmentation: " << *segments;
     // no advancement
-    if (start_pos == comp->GetCurrentEndPosition())
+    if (start_pos == segments->GetCurrentEndPosition())
       break;
     // move onto the next segment...
-    if (!comp->HasFinishedSegmentation())
-      comp->Forward();
+    if (!segments->HasFinishedSegmentation())
+      segments->Forward();
   }
   // start an empty segment only at the end of a confirmed composition.
-  comp->Trim();
-  if (!comp->empty() && comp->back().status >= Segment::kSelected)
-    comp->Forward();
+  segments->Trim();
+  if (!segments->empty() && segments->back().status >= Segment::kSelected)
+    segments->Forward();
 }
 
-void ConcreteEngine::TranslateSegments(Composition* comp) {
-  for (Segment& segment : *comp) {
+void ConcreteEngine::TranslateSegments(Segmentation* segments) {
+  for (Segment& segment : *segments) {
     if (segment.status >= Segment::kGuess)
       continue;
     size_t len = segment.end - segment.start;
     if (len == 0)
       continue;
-    std::string input = comp->input().substr(segment.start, len);
+    std::string input = segments->input().substr(segment.start, len);
     DLOG(INFO) << "translating segment: " << input;
     auto menu = New<Menu>();
     for (auto& translator : translators_) {
@@ -216,7 +215,7 @@ void ConcreteEngine::CommitText(std::string text) {
 }
 
 void ConcreteEngine::OnCommit(Context* ctx) {
-  context_->commit_history().Push(*ctx->composition(), ctx->input());
+  context_->commit_history().Push(ctx->composition(), ctx->input());
   std::string text = ctx->GetCommitText();
   FormatText(&text);
   DLOG(INFO) << "committing composition: " << text;
@@ -224,7 +223,7 @@ void ConcreteEngine::OnCommit(Context* ctx) {
 }
 
 void ConcreteEngine::OnSelect(Context* ctx) {
-  Segment& seg(ctx->composition()->back());
+  Segment& seg(ctx->composition().back());
   seg.Close();
   if (seg.end == ctx->input().length()) {
     // composition has finished
@@ -234,10 +233,10 @@ void ConcreteEngine::OnSelect(Context* ctx) {
     if (ctx->get_option("_auto_commit"))
       ctx->Commit();
     else
-      ctx->composition()->Forward();
+      ctx->composition().Forward();
   }
   else {
-    ctx->composition()->Forward();
+    ctx->composition().Forward();
     if (seg.end >= ctx->caret_pos()) {
       // finished converting current segment
       // move caret to the end of input

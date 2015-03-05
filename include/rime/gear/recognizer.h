@@ -33,7 +33,7 @@ class RecognizerPatterns : public std::map<std::string, boost::regex> {
  public:
   void LoadConfig(Config* config);
   RecognizerMatch GetMatch(const std::string& input,
-                           Segmentation* segmentation) const;
+                           const Segmentation& segmentation) const;
 };
 
 class Recognizer : public Processor {

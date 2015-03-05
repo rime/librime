@@ -83,11 +83,11 @@ Punctuator::Punctuator(const Ticket& ticket) : Processor(ticket) {
 }
 
 static bool punctuation_is_translated(Context* ctx) {
-  Composition* comp = ctx->composition();
-  if (comp->empty() || !comp->back().HasTag("punct")) {
+  Composition& comp = ctx->composition();
+  if (comp.empty() || !comp.back().HasTag("punct")) {
     return false;
   }
-  auto cand = comp->back().GetSelectedCandidate();
+  auto cand = comp.back().GetSelectedCandidate();
   return cand && cand->type() == "punct";
 }
 
@@ -135,10 +135,10 @@ bool Punctuator::AlternatePunct(const std::string& key,
   if (!As<ConfigList>(definition))
     return false;
   Context* ctx = engine_->context();
-  Composition* comp = ctx->composition();
-  if (comp->empty())
+  Composition& comp = ctx->composition();
+  if (comp.empty())
     return false;
-  Segment& segment(comp->back());
+  Segment& segment(comp.back());
   if (segment.status > Segment::kVoid &&
       segment.HasTag("punct") &&
       key == ctx->input().substr(segment.start, segment.end - segment.start)) {
@@ -175,10 +175,10 @@ bool Punctuator::PairPunct(const ConfigItemPtr& definition) {
   if (!map || !map->HasKey("pair"))
     return false;
   Context* ctx = engine_->context();
-  Composition* comp = ctx->composition();
-  if (comp->empty())
+  Composition& comp = ctx->composition();
+  if (comp.empty())
     return false;
-  Segment& segment(comp->back());
+  Segment& segment(comp.back());
   if (segment.status > Segment::kVoid && segment.HasTag("punct")) {
     if (!segment.menu || segment.menu->Prepare(2) < 2) {
       LOG(ERROR) << "missing candidate for paired punctuation.";

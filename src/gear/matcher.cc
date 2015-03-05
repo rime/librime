@@ -23,7 +23,7 @@ Matcher::Matcher(const Ticket& ticket) : Segmentor(ticket) {
 bool Matcher::Proceed(Segmentation* segmentation) {
   if (patterns_.empty())
     return true;
-  auto match = patterns_.GetMatch(segmentation->input(), segmentation);
+  auto match = patterns_.GetMatch(segmentation->input(), *segmentation);
   if (match.found()) {
     DLOG(INFO) << "match: " << match.tag
                << " [" << match.start << ", " << match.end << ")";

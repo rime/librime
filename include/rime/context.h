@@ -10,13 +10,11 @@
 #include <string>
 #include <rime/common.h>
 #include <rime/commit_history.h>
+#include <rime/composition.h>
 
 namespace rime {
 
 class KeyEvent;
-class Composition;
-class Segmentation;
-struct Preedit;
 
 class Context {
  public:
@@ -26,13 +24,13 @@ class Context {
   using KeyEventNotifier =
       signal<void (Context* ctx, const KeyEvent& key_event)>;
 
-  Context();
-  ~Context();
+  Context() = default;
+  ~Context() = default;
 
   bool Commit();
   std::string GetCommitText() const;
   std::string GetScriptText() const;
-  void GetPreedit(Preedit* preedit) const;
+  Preedit GetPreedit() const;
   bool IsComposing() const;
   bool HasMenu() const;
 
@@ -61,9 +59,9 @@ class Context {
   void set_caret_pos(size_t caret_pos);
   size_t caret_pos() const { return caret_pos_; }
 
-  void set_composition(Composition* comp);
-  Composition* composition();
-  const Composition* composition() const;
+  void set_composition(Composition&& comp);
+  Composition& composition() { return composition_; }
+  const Composition& composition() const { return composition_; }
   CommitHistory& commit_history() { return commit_history_; }
   const CommitHistory& commit_history() const { return commit_history_; }
 
@@ -89,7 +87,7 @@ class Context {
  private:
   std::string input_;
   size_t caret_pos_ = 0;
-  unique_ptr<Composition> composition_;
+  Composition composition_;
   CommitHistory commit_history_;
   std::map<std::string, bool> options_;
   std::map<std::string, std::string> properties_;

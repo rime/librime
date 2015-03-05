@@ -235,8 +235,7 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
   if (!ctx)
     return False;
   if (ctx->IsComposing()) {
-    rime::Preedit preedit;
-    ctx->GetPreedit(&preedit);
+    rime::Preedit preedit = ctx->GetPreedit();
     context->composition.length = preedit.text.length();
     context->composition.preedit = new char[preedit.text.length() + 1];
     std::strcpy(context->composition.preedit, preedit.text.c_str());
@@ -252,7 +251,7 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
     }
   }
   if (ctx->HasMenu()) {
-    rime::Segment &seg(ctx->composition()->back());
+    rime::Segment &seg(ctx->composition().back());
     int page_size = 5;
     rime::Schema *schema = session->schema();
     if (schema)

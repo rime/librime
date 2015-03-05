@@ -44,11 +44,11 @@ class RimeConsole {
     if (!ctx || !ctx->IsComposing())
       return;
     std::cout << "input  : [" << ctx->input() << "]" << std::endl;
-    const rime::Composition *comp = ctx->composition();
-    if (!comp || comp->empty())
+    const rime::Composition &comp = ctx->composition();
+    if (comp.empty())
       return;
-    std::cout << "comp.  : [" << comp->GetDebugText() << "]" << std::endl;
-    const rime::Segment &current(comp->back());
+    std::cout << "comp.  : [" << comp.GetDebugText() << "]" << std::endl;
+    const rime::Segment &current(comp.back());
     if (!current.menu)
       return;
     int page_size = engine_->schema()->page_size();

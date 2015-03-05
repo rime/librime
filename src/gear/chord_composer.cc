@@ -117,22 +117,22 @@ void ChordComposer::UpdateChord() {
   if (!engine_)
     return;
   Context* ctx = engine_->context();
-  Composition* comp = ctx->composition();
+  Composition& comp = ctx->composition();
   std::string code = SerializeChord();
   prompt_format_.Apply(&code);
-  if (comp->empty()) {
+  if (comp.empty()) {
     // add an invisbile place holder segment
     // 1. to cheat ctx->IsComposing() == true
     // 2. to attach chord prompt to while chording
     ctx->PushInput(kZeroWidthSpace);
-    if (comp->empty()) {
+    if (comp.empty()) {
       LOG(ERROR) << "failed to update chord.";
       return;
     }
-    comp->back().tags.insert("phony");
+    comp.back().tags.insert("phony");
   }
-  comp->back().tags.insert("chord_prompt");
-  comp->back().prompt = code;
+  comp.back().tags.insert("chord_prompt");
+  comp.back().prompt = code;
 }
 
 void ChordComposer::FinishChord() {
@@ -163,16 +163,16 @@ void ChordComposer::ClearChord() {
   if (!engine_)
     return;
   Context* ctx = engine_->context();
-  Composition* comp = ctx->composition();
-  if (comp->empty()) {
+  Composition& comp = ctx->composition();
+  if (comp.empty()) {
     return;
   }
-  if (comp->input().substr(comp->back().start) == kZeroWidthSpace) {
-    ctx->PopInput(ctx->caret_pos() - comp->back().start);
+  if (comp.input().substr(comp.back().start) == kZeroWidthSpace) {
+    ctx->PopInput(ctx->caret_pos() - comp.back().start);
   }
-  else if (comp->back().HasTag("chord_prompt")) {
-    comp->back().prompt.clear();
-    comp->back().tags.erase("chord_prompt");
+  else if (comp.back().HasTag("chord_prompt")) {
+    comp.back().prompt.clear();
+    comp.back().tags.erase("chord_prompt");
   }
 }
 
@@ -180,9 +180,9 @@ bool ChordComposer::DeleteLastSyllable() {
   if (!engine_)
     return false;
   Context* ctx = engine_->context();
-  Composition* comp = ctx->composition();
+  Composition& comp = ctx->composition();
   const std::string& input(ctx->input());
-  size_t start = comp->empty() ? 0 : comp->back().start;
+  size_t start = comp.empty() ? 0 : comp.back().start;
   size_t caret_pos = ctx->caret_pos();
   if (input.empty() || caret_pos <= start)
     return false;

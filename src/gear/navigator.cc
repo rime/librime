@@ -26,7 +26,7 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
   if (ch == XK_Left || ch == XK_KP_Left) {
     BeginMove(ctx);
     if (key_event.ctrl() || key_event.shift()) {
-      size_t confirmed_pos = ctx->composition()->GetConfirmedPosition();
+      size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
       JumpLeft(ctx, confirmed_pos) || Home(ctx);
     }
     else {
@@ -40,7 +40,7 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
   if (ch == XK_Right || ch == XK_KP_Right) {
     BeginMove(ctx);
     if (key_event.ctrl() || key_event.shift()) {
-      size_t confirmed_pos = ctx->composition()->GetConfirmedPosition();
+      size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
       JumpRight(ctx, confirmed_pos) || End(ctx);
     }
     else {
@@ -69,7 +69,7 @@ void Navigator::BeginMove(Context* ctx) {
   if (input_ != ctx->input() || caret_pos > spans_.end()) {
     input_ = ctx->input();
     spans_.Clear();
-    for (const auto &seg : *ctx->composition()) {
+    for (const auto &seg : ctx->composition()) {
       if (auto phrase = As<Phrase>(
               Candidate::GetGenuineCandidate(
                   seg.GetSelectedCandidate()))) {
@@ -129,10 +129,10 @@ bool Navigator::Right(Context* ctx) {
 bool Navigator::Home(Context* ctx) {
   DLOG(INFO) << "navigate home.";
   size_t caret_pos = ctx->caret_pos();
-  const Composition* comp = ctx->composition();
-  if (!comp->empty()) {
+  const Composition& comp = ctx->composition();
+  if (!comp.empty()) {
     size_t confirmed_pos = caret_pos;
-    for (const Segment& seg : boost::adaptors::reverse(*comp)) {
+    for (const Segment& seg : boost::adaptors::reverse(comp)) {
       if (seg.status >= Segment::kSelected) {
         break;
       }

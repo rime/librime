@@ -45,9 +45,9 @@ void RecognizerPatterns::LoadConfig(Config* config) {
 
 RecognizerMatch
 RecognizerPatterns::GetMatch(const std::string& input,
-                             Segmentation* segmentation) const {
-  size_t j = segmentation->GetCurrentEndPosition();
-  size_t k = segmentation->GetConfirmedPosition();
+                             const Segmentation& segmentation) const {
+  size_t j = segmentation.GetCurrentEndPosition();
+  size_t k = segmentation.GetConfirmedPosition();
   std::string active_input = input.substr(k);
   DLOG(INFO) << "matching active input '" << active_input << "' at pos " << k;
   for (const auto& v : *this) {
@@ -62,7 +62,7 @@ RecognizerPatterns::GetMatch(const std::string& input,
                    << m.str() << "' matches pattern: " << v.first;
         return {v.first, start, end};
       }
-      for (const Segment& seg : *segmentation) {
+      for (const Segment& seg : segmentation) {
         if (start < seg.start)
           break;
         if (start == seg.start) {

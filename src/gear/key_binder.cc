@@ -160,8 +160,8 @@ KeyBindingConditions::KeyBindingConditions(Context* ctx) {
     insert(kWhenHasMenu);
   }
 
-  Composition* comp = ctx->composition();
-  if (!comp->empty() && comp->back().HasTag("paging")) {
+  Composition& comp = ctx->composition();
+  if (!comp.empty() && comp.back().HasTag("paging")) {
     insert(kWhenPaging);
   }
 }

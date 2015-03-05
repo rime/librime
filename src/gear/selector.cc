@@ -23,9 +23,9 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
   if (key_event.release() || key_event.alt())
     return kNoop;
   Context* ctx = engine_->context();
-  if (!ctx->composition() || ctx->composition()->empty())
+  if (ctx->composition().empty())
     return kNoop;
-  Segment& current_segment(ctx->composition()->back());
+  Segment& current_segment(ctx->composition().back());
   if (!current_segment.menu || current_segment.HasTag("raw"))
     return kNoop;
   int ch = key_event.keycode();
@@ -76,64 +76,64 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
 }
 
 bool Selector::PageUp(Context* ctx) {
-  Composition* comp = ctx->composition();
-  if (comp->empty())
+  Composition& comp = ctx->composition();
+  if (comp.empty())
     return false;
   int page_size = engine_->schema()->page_size();
-  int selected_index = comp->back().selected_index;
+  int selected_index = comp.back().selected_index;
   int index = selected_index < page_size ? 0 : selected_index - page_size;
-  comp->back().selected_index = index;
-  comp->back().tags.insert("paging");
+  comp.back().selected_index = index;
+  comp.back().tags.insert("paging");
   return true;
 }
 
 bool Selector::PageDown(Context* ctx) {
-  Composition* comp = ctx->composition();
-  if (comp->empty() || !comp->back().menu)
+  Composition& comp = ctx->composition();
+  if (comp.empty() || !comp.back().menu)
     return false;
   int page_size = engine_->schema()->page_size();
-  int index = comp->back().selected_index + page_size;
+  int index = comp.back().selected_index + page_size;
   int page_start = (index / page_size) * page_size;
-  int candidate_count = comp->back().menu->Prepare(page_start + page_size);
+  int candidate_count = comp.back().menu->Prepare(page_start + page_size);
   if (candidate_count <= page_start)
     return false;
   if (index >= candidate_count)
     index = candidate_count - 1;
-  comp->back().selected_index = index;
-  comp->back().tags.insert("paging");
+  comp.back().selected_index = index;
+  comp.back().tags.insert("paging");
   return true;
 
 }
 
 bool Selector::CursorUp(Context* ctx) {
-  Composition* comp = ctx->composition();
-  if (comp->empty())
+  Composition& comp = ctx->composition();
+  if (comp.empty())
     return false;
-  int index = comp->back().selected_index;
+  int index = comp.back().selected_index;
   if (index <= 0)
     return false;
-  comp->back().selected_index = index - 1;
-  comp->back().tags.insert("paging");
+  comp.back().selected_index = index - 1;
+  comp.back().tags.insert("paging");
   return true;
 }
 
 bool Selector::CursorDown(Context* ctx) {
-  Composition* comp = ctx->composition();
-  if (comp->empty() || !comp->back().menu)
+  Composition& comp = ctx->composition();
+  if (comp.empty() || !comp.back().menu)
     return false;
-  int index = comp->back().selected_index + 1;
-  int candidate_count = comp->back().menu->Prepare(index + 1);
+  int index = comp.back().selected_index + 1;
+  int candidate_count = comp.back().menu->Prepare(index + 1);
   if (candidate_count <= index)
     return false;
-  comp->back().selected_index = index;
-  comp->back().tags.insert("paging");
+  comp.back().selected_index = index;
+  comp.back().tags.insert("paging");
   return true;
 }
 
 bool Selector::Home(Context* ctx) {
-  if (ctx->composition()->empty())
+  if (ctx->composition().empty())
     return false;
-  Segment& seg(ctx->composition()->back());
+  Segment& seg(ctx->composition().back());
   if (seg.selected_index > 0) {
     seg.selected_index = 0;
     return true;
@@ -152,13 +152,13 @@ bool Selector::End(Context* ctx) {
 
 
 bool Selector::SelectCandidateAt(Context* ctx, int index) {
-  Composition* comp = ctx->composition();
-  if (comp->empty())
+  Composition& comp = ctx->composition();
+  if (comp.empty())
     return false;
   int page_size = engine_->schema()->page_size();
   if (index >= page_size)
     return false;
-  int selected_index = comp->back().selected_index;
+  int selected_index = comp.back().selected_index;
   int page_start = (selected_index / page_size) * page_size;
   return ctx->Select(page_start + index);
 }

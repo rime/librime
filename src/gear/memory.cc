@@ -97,7 +97,7 @@ void Memory::OnCommit(Context* ctx) {
     return;
   StartSession();
   CommitEntry commit_entry(this);
-  for (auto& seg : *ctx->composition()) {
+  for (auto& seg : ctx->composition()) {
     auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(
             seg.GetSelectedCandidate()));
     bool recognized = phrase && phrase->language() == language();
@@ -115,9 +115,9 @@ void Memory::OnDeleteEntry(Context* ctx) {
   if (!user_dict_ ||
       user_dict_->readonly() ||
       !ctx ||
-      ctx->composition()->empty())
+      ctx->composition().empty())
     return;
-  Segment& seg(ctx->composition()->back());
+  Segment& seg(ctx->composition().back());
   auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(
           seg.GetSelectedCandidate()));
   bool recognized = phrase && phrase->language() == language();
