@@ -164,8 +164,7 @@ bool Switcher::IsAutoSave(const std::string& option) const {
 
 void Switcher::OnSelect(Context* ctx) {
   LOG(INFO) << "a switcher option is selected.";
-  Segment& seg(ctx->composition().back());
-  if (auto command = As<SwitcherCommand>(seg.GetSelectedCandidate())) {
+  if (auto command = As<SwitcherCommand>(ctx->GetSelectedCandidate())) {
     command->Apply(this);
   }
 }

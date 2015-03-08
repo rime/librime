@@ -115,11 +115,10 @@ void Memory::OnDeleteEntry(Context* ctx) {
   if (!user_dict_ ||
       user_dict_->readonly() ||
       !ctx ||
-      ctx->composition().empty())
+      !ctx->HasMenu())
     return;
-  Segment& seg(ctx->composition().back());
   auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(
-          seg.GetSelectedCandidate()));
+          ctx->GetSelectedCandidate()));
   bool recognized = phrase && phrase->language() == language();
   if (recognized) {
     const DictEntry& entry(phrase->entry());

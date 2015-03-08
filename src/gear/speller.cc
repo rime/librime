@@ -128,8 +128,7 @@ bool Speller::AutoSelectAtMaxCodeLength(Context* ctx) {
     return false;
   if (!ctx->HasMenu())
     return false;
-  const Segment& seg(ctx->composition().back());
-  auto cand = seg.GetSelectedCandidate();
+  auto cand = ctx->GetSelectedCandidate();
   if (cand &&
       reached_max_code_length(cand, max_code_length_) &&
       is_auto_selectable(cand, ctx->input(), delimiters_)) {

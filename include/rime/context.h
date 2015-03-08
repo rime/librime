@@ -14,6 +14,7 @@
 
 namespace rime {
 
+class Candidate;
 class KeyEvent;
 
 class Context {
@@ -33,6 +34,7 @@ class Context {
   Preedit GetPreedit() const;
   bool IsComposing() const;
   bool HasMenu() const;
+  shared_ptr<Candidate> GetSelectedCandidate() const;
 
   bool PushInput(char ch);
   bool PushInput(const std::string& str);

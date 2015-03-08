@@ -62,6 +62,12 @@ bool Context::HasMenu() const {
   return menu && !menu->empty();
 }
 
+shared_ptr<Candidate> Context::GetSelectedCandidate() const {
+  if (composition_.empty())
+    return nullptr;
+  return composition_.back().GetSelectedCandidate();
+}
+
 bool Context::PushInput(char ch) {
   if (caret_pos_ >= input_.length()) {
     input_.push_back(ch);
