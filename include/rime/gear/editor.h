@@ -19,8 +19,8 @@ class Context;
 
 class Editor : public Processor {
  public:
-  using Handler = void (Context* ctx);
-  using CharHandler = ProcessResult (Context* ctx, int ch);
+  typedef void Handler(Context* ctx);
+  typedef ProcessResult CharHandler(Context* ctx, int ch);
   using HandlerPtr = void (Editor::*)(Context* ctx);
   using CharHandlerPtr = ProcessResult (Editor::*)(Context* ctx, int ch);
   using KeyBindings = std::map<KeyEvent, HandlerPtr>;
