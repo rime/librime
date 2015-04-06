@@ -6,7 +6,7 @@ rimes with your keystrokes.
 
 Project home
 ---
-[rimeime.github.io](http://rimeime.github.io)
+[rime.github.io](http://rime.github.io)
 
 License
 ---
@@ -24,8 +24,8 @@ Features
 Install
 ===
 Follow the instructions to build librime on platforms other than Linux:
-  - [Mac OS X](https://github.com/lotem/librime/tree/develop/README-mac.md)
-  - [Windows](https://github.com/lotem/librime/tree/develop/README-windows.md)
+  - [Mac OS X](https://github.com/rime/librime/tree/develop/README-mac.md)
+  - [Windows](https://github.com/rime/librime/tree/develop/README-windows.md)
 
 Build dependencies
 ---
@@ -58,18 +58,18 @@ sudo make install
 Frontends
 ===
   - [fcitx-rime](https://github.com/fcitx/fcitx-rime): Fcitx frontend for Linux
-  - [ibus-rime](https://github.com/lotem/ibus-rime): IBus frontend for Linux
-  - [Squirrel](https://github.com/lotem/squirrel): frontend for Mac OS X
-  - [Weasel](https://github.com/lotem/weasel): frontend for Windows
+  - [ibus-rime](https://github.com/rime/ibus-rime): IBus frontend for Linux
+  - [Squirrel](https://github.com/rime/squirrel): frontend for Mac OS X
+  - [Weasel](https://github.com/rime/weasel): frontend for Windows
   - [XIME](https://github.com/stackia/XIME): yet another Rime frontend for Mac OS X
 
 Plugins
 ===
-  - [librime-legacy](https://github.com/lotem/librime-legacy) Legacy module for Rime
+  - [librime-legacy](https://github.com/rime/librime-legacy) Legacy module with GPL-licensed code
 
 Related works
 ===
-  - [brise](https://github.com/lotem/brise): Rime schema repository
+  - [brise](https://github.com/rime/brise): Rime schema repository
   - Combo Pinyin: an innovative chord-typing practice to input Pinyin
   - essay: the vocabulary and language model for Rime
   - [rimekit](https://github.com/lotem/rimekit): configuration tools for Rime (under construction)
