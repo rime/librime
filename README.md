@@ -10,7 +10,7 @@ Project home
 
 License
 ---
-The BSD License
+GPLv3 for `legacy` branch.
 
 Features
 ===
@@ -33,6 +33,7 @@ Build dependencies
   - cmake>=2.8
   - libboost>=1.46
   - libglog (optional)
+  - libkyotocabinet
   - libleveldb
   - libmarisa
   - libopencc>=1.0.2
@@ -43,6 +44,7 @@ Runtime dependencies
 ---
   - libboost
   - libglog (optional)
+  - libkyotocabinet
   - libleveldb
   - libmarisa
   - libopencc
