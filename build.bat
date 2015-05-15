@@ -144,25 +144,22 @@ if %build_thirdparty% == 1 (
   cd "%RIME_ROOT%"\thirdparty\src\opencc
   if not exist build mkdir build
   cd build
-  cmake .. -DCMAKE_INSTALL_PREFIX=""
+  cmake .. -DCMAKE_INSTALL_PREFIX="" -DBUILD_SHARED_LIBS=OFF
   echo patching src\libopencc.vcxproj for static linking runtime.
   sed -i "s/MultiThreadedDLL/MultiThreaded/" src\libopencc.vcxproj
-  sed -i "s/MultiThreadedDLL/MultiThreaded/" src\opencc.vcxproj
-  sed -i "s/MultiThreadedDLL/MultiThreaded/" src\opencc_dict.vcxproj
+  sed -i "s/MultiThreadedDLL/MultiThreaded/" src\tools\opencc.vcxproj
+  sed -i "s/MultiThreadedDLL/MultiThreaded/" src\tools\opencc_dict.vcxproj
   msbuild.exe opencc.sln /t:libopencc;opencc;opencc_dict /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
-  cd "%RIME_ROOT%"\thirdparty\include
-  if not exist opencc mkdir opencc
-  copy /Y "%RIME_ROOT%"\thirdparty\src\opencc\src\*.h* opencc\
+  cd ..
+  if not exist "%RIME_ROOT%"\thirdparty\include\opencc mkdir "%RIME_ROOT%"\thirdparty\include\opencc
+  copy /Y src\*.h* "%RIME_ROOT%"\thirdparty\include\opencc\
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  cd "%RIME_ROOT%"\thirdparty\lib
-  copy /Y "%RIME_ROOT%"\thirdparty\src\opencc\build\src\Release\opencc.lib .
+  copy /Y build\src\Release\opencc.lib "%RIME_ROOT%"\thirdparty\lib
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  cd "%RIME_ROOT%"\thirdparty\bin
-  copy /Y "%RIME_ROOT%"\thirdparty\src\opencc\build\src\Release\opencc.dll .
-  copy /Y "%RIME_ROOT%"\thirdparty\src\opencc\build\src\Release\opencc.exe .
-  copy /Y "%RIME_ROOT%"\thirdparty\src\opencc\build\src\Release\opencc_dict.exe .
+  copy /Y build\src\tools\Release\opencc.exe "%RIME_ROOT%"\thirdparty\bin
+  copy /Y build\src\tools\Release\opencc_dict.exe "%RIME_ROOT%"\thirdparty\bin
   if %ERRORLEVEL% NEQ 0 goto ERROR
 )
 
