@@ -151,7 +151,7 @@ if %build_thirdparty% == 1 (
   sed -i "s/MultiThreadedDLL/MultiThreaded/" src\libopencc.vcxproj
   sed -i "s/MultiThreadedDLL/MultiThreaded/" src\tools\opencc.vcxproj
   sed -i "s/MultiThreadedDLL/MultiThreaded/" src\tools\opencc_dict.vcxproj
-  msbuild.exe opencc.sln /t:libopencc;opencc;opencc_dict /p:Configuration=Release
+  msbuild.exe opencc.sln /t:libopencc;opencc;opencc_dict;Dictionaries /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
   cd ..
