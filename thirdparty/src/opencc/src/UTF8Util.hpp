@@ -38,12 +38,12 @@ public:
   */
   static size_t NextCharLengthNoException(const char* str) {
     char ch = *str;
-    if ((ch & 0x80) == 0x00) {
+    if ((ch & 0xF0) == 0xE0) {
+      return 3;
+    } else if ((ch & 0x80) == 0x00) {
       return 1;
     } else if ((ch & 0xE0) == 0xC0) {
       return 2;
-    } else if ((ch & 0xF0) == 0xE0) {
-      return 3;
     } else if ((ch & 0xF8) == 0xF0) {
       return 4;
     } else if ((ch & 0xFC) == 0xF8) {
@@ -53,7 +53,7 @@ public:
     }
     return 0;
   }
-  
+
   /**
    * Returns the length in byte for the next UTF8 character.
    */
@@ -69,9 +69,26 @@ public:
   * Returns the length in byte for the previous UTF8 character.
   */
   static size_t PrevCharLength(const char* str) {
-    for (size_t i = 1; i <= 6; i++) {
-      str--;
-      size_t length = NextCharLengthNoException(str);
+    {
+      const size_t length = NextCharLengthNoException(str - 3);
+      if (length == 3) {
+        return length;
+      }
+    }
+    {
+      const size_t length = NextCharLengthNoException(str - 1);
+      if (length == 1) {
+        return length;
+      }
+    }
+    {
+      const size_t length = NextCharLengthNoException(str - 2);
+      if (length == 2) {
+        return length;
+      }
+    }
+    for (size_t i = 4; i <= 6; i++) {
+      const size_t length = NextCharLengthNoException(str - i);
       if (length == i) {
         return length;
       }
@@ -91,6 +108,18 @@ public:
   */
   static const char* PrevChar(const char* str) {
     return str - PrevCharLength(str);
+  }
+
+  /**
+   * Returns the UTF8 length of a valid UTF8 string.
+   */
+  static size_t Length(const char* str) {
+    size_t length = 0;
+    while (*str != '\0') {
+      str = NextChar(str);
+      length++;
+    }
+    return length;
   }
 
   /**
@@ -126,30 +155,33 @@ public:
   /**
   * Returns true if the given string is longer or as long as the given length.
   */
-  static bool NotShorterThan(const char* str, size_t length) {
-    while (length > 0) {
+  static bool NotShorterThan(const char* str, size_t byteLength) {
+    while (byteLength > 0) {
       if (*str == '\0') {
         return false;
       }
-      length--;
+      byteLength--;
       str++;
     }
     return true;
   }
 
   /**
-  * Truncates a string with a maximal length.
+  * Truncates a string with a maximal length in byte.
   * No UTF8 character will be broken.
   */
-  static string TruncateUTF8(const char* str, size_t maxLength) {
+  static string TruncateUTF8(const char* str, size_t maxByteLength) {
     string wordTrunc;
-    if (NotShorterThan(str, maxLength)) {
+    if (NotShorterThan(str, maxByteLength)) {
       size_t len = 0;
       const char* pStr = str;
-      while (len < maxLength) {
-        size_t nextLen = NextCharLength(pStr);
-        pStr += nextLen;
-        len += nextLen;
+      for (;;) {
+        const size_t charLength = NextCharLength(pStr);
+        if (len + charLength > maxByteLength) {
+          break;
+        }
+        pStr += charLength;
+        len += charLength;
       }
       wordTrunc = FromSubstr(str, len);
     } else {
@@ -196,6 +228,18 @@ public:
       buffer << str;
     }
     return buffer.str();
+  }
+
+  static void GetByteMap(const char* str, const size_t utf8Length,
+                         vector<size_t>* byteMap) {
+    if (byteMap->size() < utf8Length) {
+      byteMap->resize(utf8Length);
+    }
+    const char* pstr = str;
+    for (size_t i = 0; i < utf8Length; i++) {
+      (*byteMap)[i] = pstr - str;
+      pstr = NextChar(pstr);
+    }
   }
 };
 }

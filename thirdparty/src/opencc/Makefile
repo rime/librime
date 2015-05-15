@@ -1,7 +1,7 @@
 #
 # Open Chinese Convert
 #
-# Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
+# Copyright 2010-2015 BYVoid <byvoid@byvoid.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,24 +22,26 @@ build:
 	mkdir -p build/rel
 	(cd build/rel; cmake \
 	-DBUILD_DOCUMENTATION:BOOL=ON \
+	-DENABLE_GTEST:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_INSTALL_PREFIX=/usr \
 	../..)
-	make -C build/rel
+	make -C build/rel VERBOSE=${VERBOSE}
 
 package: build
-	make -C build/rel package_source
+	make -C build/rel package_source VERBOSE=${VERBOSE}
 
 test:
 	mkdir -p build/dbg/root
 	(cd build/dbg; cmake \
 	-DBUILD_DOCUMENTATION:BOOL=OFF \
+	-DENABLE_GTEST:BOOL=ON \
 	-DCMAKE_BUILD_TYPE=Debug \
 	-DCMAKE_INSTALL_PREFIX=`pwd`/root \
 	../..)
-	make -C build/dbg
-	make -C build/dbg test
-	make -C build/dbg install
+	make -C build/dbg VERBOSE=${VERBOSE}
+	(cd build/dbg; ctest --verbose)
+	make -C build/dbg install VERBOSE=${VERBOSE}
 
 node:
 	node-gyp configure
@@ -53,6 +55,7 @@ xcode-build:
 	(cd xcode; cmake \
 	-G "Xcode" \
 	-DBUILD_DOCUMENTATION:BOOL=OFF \
+	-DENABLE_GTEST:BOOL=ON \
 	..; \
 	xcodebuild build)
 
@@ -62,7 +65,4 @@ clean:
 	rm -rf build xcode
 
 install: build
-	make -C build/rel install
-
-dist: release
-	make -C build/rel package_source
+	make -C build/rel install VERBOSE=${VERBOSE}
