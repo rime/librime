@@ -40,9 +40,12 @@ opencc:
 	-DBUILD_SHARED_LIBS:BOOL=OFF \
 	.. && \
 	make
-	mkdir -p thirdparty/include/opencc/ && \
+	mkdir -p thirdparty/include/opencc
 	cp $(SRC_DIR)/opencc/src/*.h* thirdparty/include/opencc/
 	cp $(SRC_DIR)/opencc/build/src/libopencc.a thirdparty/lib/
+	mkdir -p thirdparty/data/opencc
+	cp $(SRC_DIR)/opencc/data/config/*.json thirdparty/data/opencc/
+	cp $(SRC_DIR)/opencc/build/data/*.ocd thirdparty/data/opencc/
 
 yaml-cpp:
 	cd $(SRC_DIR)/yaml-cpp; mkdir -p build && \
