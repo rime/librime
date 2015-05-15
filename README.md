@@ -53,6 +53,8 @@ https://bintray.com/byvoid/opencc/OpenCC
 * `hk2s.json` Traditional Chinese (Hong Kong Standard) to Simplified Chinese 香港繁體（香港小學學習字詞表標準）到簡體
 * `s2twp.json` Simplified Chinese to Traditional Chinese (Taiwan Standard) with Taiwanese idiom 簡體到繁體（臺灣正體標準）並轉換爲臺灣常用詞彙
 * `tw2sp.json` Traditional Chinese (Taiwan Standard) to Simplified Chinese with Mainland Chinese idiom 繁體（臺灣正體標準）到簡體並轉換爲中國大陸常用詞彙
+* `t2tw.json` Traditional Chinese (OpenCC Standard) to Taiwan Standard 繁體（OpenCC 標準）到臺灣正體
+* `t2hk.json` Traditional Chinese (OpenCC Standard) to Hong Kong Standard 繁體（OpenCC 標準）到香港繁體（香港小學學習字詞表標準）
 
 ## Development Documentation 開發文檔
 
@@ -60,7 +62,7 @@ https://bintray.com/byvoid/opencc/OpenCC
 
 ## Build 編譯
 
-[![Build Status](https://travis-ci.org/BYVoid/OpenCC.png?branch=master)](https://travis-ci.org/BYVoid/OpenCC)
+[![Build Status](https://travis-ci.org/BYVoid/OpenCC.svg?branch=master)](https://travis-ci.org/BYVoid/OpenCC)
 
 ### Build with CMake
 
@@ -131,3 +133,4 @@ All these libraries are statically linked.
 * [steelywing](https://github.com/steelywing)
 * [吕旭东](https://github.com/lvxudong)
 * [Weng Xuetian](https://github.com/wengxt)
+* [Ma Tao](https://github.com/iwater)

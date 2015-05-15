@@ -1,5 +1,11 @@
 include (GenerateExportHeader)
 
+include_directories(../deps/darts-clone)
+include_directories(../deps/rapidjson-0.11)
+include_directories(../deps/tclap-1.2.1)
+
+# Library
+
 set(
   LIBOPENCC_HEADERS
   BinaryDict.hpp
@@ -17,10 +23,13 @@ set(
   Lexicon.hpp
   MaxMatchSegmentation.hpp
   Optional.hpp
+  PhraseExtract.hpp
   Segmentation.hpp
   Segments.hpp
   SerializableDict.hpp
+  SimpleConverter.hpp
   TextDict.hpp
+  UTF8StringSlice.hpp
   UTF8Util.hpp
   opencc.h
 )
@@ -37,20 +46,15 @@ set(
   DictEntry.cpp
   DictGroup.cpp
   MaxMatchSegmentation.cpp
+  PhraseExtract.cpp
   SimpleConverter.cpp
   Segmentation.cpp
   TextDict.cpp
+  UTF8StringSlice.cpp
   UTF8Util.cpp
 )
 
-include_directories(../deps/darts-clone)
-include_directories(../deps/rapidjson-0.11)
-include_directories(../deps/tclap-1.2.1)
-
-add_library(
-  libopencc
-  ${LIBOPENCC_SOURCES}
-)
+add_library(libopencc ${LIBOPENCC_SOURCES})
 
 GENERATE_EXPORT_HEADER(
   libopencc
@@ -73,48 +77,42 @@ set_target_properties(
       2
 )
 
-if (CMAKE_BUILD_TYPE MATCHES Debug)
-  add_definitions(
-    -O0
-    -g3
+# Installation
+
+install(
+  TARGETS libopencc
+  LIBRARY DESTINATION ${DIR_LIBRARY}
+  ARCHIVE DESTINATION ${DIR_LIBRARY}
+)
+
+install(
+  FILES ${LIBOPENCC_HEADERS}
+  DESTINATION ${DIR_INCLUDE}/opencc
+)
+
+# Gtest
+
+if (ENABLE_GTEST)
+  include_directories(../deps/gtest-1.7.0/include)
+  set(UNITTESTS
+    BinaryDictTest.cpp
+    ConfigTest.cpp
+    ConversionChainTest.cpp
+    ConversionTest.cpp
+    DartsDictTest.cpp
+    DictGroupTest.cpp
+    MaxMatchSegmentationTest.cpp
+    PhraseExtractTest.cpp
+    SimpleConverterTest.cpp
+    TextDictTest.cpp
+    UTF8StringSliceTest.cpp
+    UTF8UtilTest.cpp
   )
-endif (CMAKE_BUILD_TYPE MATCHES Debug)
+  add_executable(UnitTest ${UNITTESTS})
+  target_link_libraries(UnitTest gtest gtest_main libopencc)
+  add_test(UnitTest UnitTest)
+endif()
 
-install(
-  TARGETS
-    libopencc
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib/static
-)
+# Subdir
 
-install(
-  FILES
-    ${LIBOPENCC_HEADERS}
-  DESTINATION
-    ${DIR_INCLUDE}/opencc
-)
-
-add_executable(
-  opencc
-  CommandLine.cpp
-)
-target_link_libraries(
-  opencc
-  libopencc
-)
-
-add_executable(
-  opencc_dict
-  DictConverter.cpp
-)
-target_link_libraries(
-  opencc_dict
-  libopencc
-)
-
-install(
-  TARGETS
-    opencc
-    opencc_dict
-  RUNTIME DESTINATION bin
-)
+add_subdirectory(tools)
