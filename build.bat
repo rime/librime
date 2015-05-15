@@ -163,6 +163,10 @@ if %build_thirdparty% == 1 (
   copy /Y build\src\tools\Release\opencc.exe %THIRDPARTY%\bin
   copy /Y build\src\tools\Release\opencc_dict.exe %THIRDPARTY%\bin
   if %ERRORLEVEL% NEQ 0 goto ERROR
+  if not exist %THIRDPARTY%\data\opencc mkdir %THIRDPARTY%\data\opencc
+  copy /Y data\config\*.json %THIRDPARTY%\data\opencc
+  copy /Y build\data\*.ocd %THIRDPARTY%\data\opencc
+  if %ERRORLEVEL% NEQ 0 goto ERROR
 )
 
 if %build_librime% == 0 goto EXIT
