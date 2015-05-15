@@ -10,6 +10,7 @@ data/extra
 thirdparty/include/*
 thirdparty/lib/*
 thirdparty/bin/*
+thirdparty/data/*
 thirdparty/src/leveldb-windows
 env.bat
 *~
