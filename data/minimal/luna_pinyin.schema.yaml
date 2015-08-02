@@ -138,7 +138,7 @@ zh_simp:
 
 zh_tw:
   option_name: zh_tw
-  opencc_config: zht2zhtw_v.ini
+  opencc_config: t2tw.json
 
 punctuator:
   import_preset: default
