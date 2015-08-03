@@ -7,8 +7,13 @@
 #ifndef RIME_COMMON_H_
 #define RIME_COMMON_H_
 
+#include <forward_list>
 #include <memory>
+#include <string>
 #include <utility>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 #define BOOST_BIND_NO_PLACEHOLDERS
 #include <boost/signals2/connection.hpp>
 #include <boost/signals2/signal.hpp>
@@ -24,27 +29,40 @@
 
 namespace rime {
 
-using boost::signals2::connection;
-using boost::signals2::signal;
+using std::string;
+using std::vector;
 
-using std::unique_ptr;
-using std::shared_ptr;
-using std::weak_ptr;
+template <class T>
+using list = std::forward_list<T>;
+template <class Key, class T>
+using map = std::unordered_map<Key, T>;
+template <class T>
+using set = std::unordered_set<T>;
 
-template <class A, class B>
-shared_ptr<A> As(const B& ptr) {
-  return std::dynamic_pointer_cast<A>(ptr);
+template <class T>
+using the = std::unique_ptr<T>;
+template <class T>
+using a = std::shared_ptr<T>;
+template <class T>
+using weak = std::weak_ptr<T>;
+
+template <class X, class Y>
+inline a<X> As(const a<Y>& ptr) {
+  return std::dynamic_pointer_cast<X>(ptr);
 }
 
-template <class A, class B>
-bool Is(const B& ptr) {
-  return bool(As<A, B>(ptr));
+template <class X, class Y>
+inline bool Is(const a<Y>& ptr) {
+  return bool(As<X, Y>(ptr));
 }
 
 template <class T, class... Args>
-inline shared_ptr<T> New(Args&&... args) {
+inline a<T> New(Args&&... args) {
   return std::make_shared<T>(std::forward<Args>(args)...);
 }
+
+using boost::signals2::connection;
+using boost::signals2::signal;
 
 }  // namespace rime
 
