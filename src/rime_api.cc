@@ -878,6 +878,16 @@ const char* RimeGetVersion() {
   return RIME_VERSION;
 }
 
+void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos) {
+  rime::shared_ptr<rime::Session> session(rime::Service::instance().GetSession(session_id));
+  if (!session)
+    return;
+  rime::Context *ctx = session->context();
+  if (!ctx)
+    return;
+  return ctx->set_caret_pos(caret_pos);
+}
+
 RIME_API RimeApi* rime_get_api() {
   static RimeApi s_api = {0};
   if (!s_api.data_size) {
@@ -955,6 +965,7 @@ RIME_API RimeApi* rime_get_api() {
     s_api.get_caret_pos = &RimeGetCaretPos;
     s_api.select_candidate = &RimeSelectCandidate;
     s_api.get_version = &RimeGetVersion;
+    s_api.set_caret_pos = &RimeSetCaretPos;
   }
   return &s_api;
 }

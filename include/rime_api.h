@@ -489,6 +489,9 @@ typedef struct rime_api_t {
   //! get the version of librime
   const char* (*get_version)();
 
+  //! set caret posistion in terms of raw input
+  void (*set_caret_pos)(RimeSessionId session_id, size_t caret_pos);
+
 } RimeApi;
 
 //! API entry
