@@ -15,7 +15,7 @@
 
 namespace rime {
 
-using WordGraph = std::map<int, UserDictEntryCollector>;
+using WordGraph = map<int, UserDictEntryCollector>;
 
 class Language;
 
@@ -23,7 +23,7 @@ class Poet {
  public:
   Poet(Language* language) : language_(language) {}
 
-  shared_ptr<Sentence> MakeSentence(const WordGraph& graph,
+  a<Sentence> MakeSentence(const WordGraph& graph,
                                     size_t total_length);
  protected:
   Language* language_;

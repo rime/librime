@@ -7,7 +7,6 @@
 #ifndef RIME_EDITOR_H_
 #define RIME_EDITOR_H_
 
-#include <map>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/key_event.h>
@@ -23,7 +22,7 @@ class Editor : public Processor {
   typedef ProcessResult CharHandler(Context* ctx, int ch);
   using HandlerPtr = void (Editor::*)(Context* ctx);
   using CharHandlerPtr = ProcessResult (Editor::*)(Context* ctx, int ch);
-  using KeyBindings = std::map<KeyEvent, HandlerPtr>;
+  using KeyBindings = map<KeyEvent, HandlerPtr>;
 
   Editor(const Ticket& ticket, bool auto_commit);
   ProcessResult ProcessKeyEvent(const KeyEvent& key_event);

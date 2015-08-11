@@ -43,20 +43,20 @@ bool Segment::Reopen(size_t caret_pos) {
   return true;
 }
 
-shared_ptr<Candidate> Segment::GetCandidateAt(size_t index) const {
+a<Candidate> Segment::GetCandidateAt(size_t index) const {
   if (!menu)
     return nullptr;
   return menu->GetCandidateAt(index);
 }
 
-shared_ptr<Candidate> Segment::GetSelectedCandidate() const {
+a<Candidate> Segment::GetSelectedCandidate() const {
   return GetCandidateAt(selected_index);
 }
 
 Segmentation::Segmentation() {
 }
 
-void Segmentation::Reset(const std::string& new_input) {
+void Segmentation::Reset(const string& new_input) {
   DLOG(INFO) << "reset to " << size() << " segments.";
   // mark redo segmentation, while keeping user confirmed segments
   size_t diff_pos = 0;
@@ -107,8 +107,8 @@ bool Segmentation::AddSegment(const Segment& segment) {
   }
   else {
     // rule three: with segments equal in length, merge their tags
-    std::set<std::string> result;
-    std::set_union(last.tags.begin(), last.tags.end(),
+    set<string> result;
+    set_union(last.tags.begin(), last.tags.end(),
                    segment.tags.begin(), segment.tags.end(),
                    std::inserter(result, result.begin()));
     last.tags.swap(result);
@@ -167,7 +167,7 @@ std::ostream& operator<< (std::ostream& out,
     if (!segment.tags.empty()) {
       out << "{";
       bool first = true;
-      for (const std::string& tag : segment.tags) {
+      for (const string& tag : segment.tags) {
         if (first)
           first = false;
         else

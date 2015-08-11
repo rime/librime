@@ -30,11 +30,11 @@ struct LevelDbCursor {
     return iterator && iterator->Valid();
   }
 
-  std::string GetKey() const {
+  string GetKey() const {
     return iterator->key().ToString();
   }
 
-  std::string GetValue() const {
+  string GetValue() const {
     return iterator->value().ToString();
   }
 
@@ -42,7 +42,7 @@ struct LevelDbCursor {
     iterator->Next();
   }
 
-  bool Jump(const std::string& key) {
+  bool Jump(const string& key) {
     if (!iterator) {
       return false;
     }
@@ -60,7 +60,7 @@ struct LevelDbWrapper {
   leveldb::DB* ptr = nullptr;
   leveldb::WriteBatch batch;
 
-  leveldb::Status Open(const std::string& file_name, bool readonly) {
+  leveldb::Status Open(const string& file_name, bool readonly) {
     leveldb::Options options;
     options.create_if_missing = !readonly;
     return leveldb::DB::Open(options, file_name, &ptr);
@@ -75,12 +75,12 @@ struct LevelDbWrapper {
     return new LevelDbCursor(ptr);
   }
 
-  bool Fetch(const std::string& key, std::string* value) {
+  bool Fetch(const string& key, string* value) {
     auto status = ptr->Get(leveldb::ReadOptions(), key, value);
     return status.ok();
   }
 
-  bool Update(const std::string& key, const std::string& value, bool write_batch) {
+  bool Update(const string& key, const string& value, bool write_batch) {
     if (write_batch) {
       batch.Put(key, value);
       return true;
@@ -89,7 +89,7 @@ struct LevelDbWrapper {
     return status.ok();
   }
 
-  bool Erase(const std::string& key, bool write_batch) {
+  bool Erase(const string& key, bool write_batch) {
     if (write_batch) {
       batch.Delete(key);
       return true;
@@ -115,7 +115,7 @@ LevelDbAccessor::LevelDbAccessor() {
 }
 
 LevelDbAccessor::LevelDbAccessor(LevelDbCursor* cursor,
-                                 const std::string& prefix)
+                                 const string& prefix)
     : DbAccessor(prefix), cursor_(cursor),
       is_metadata_query_(prefix == kMetaCharacter) {
   Reset();
@@ -129,11 +129,11 @@ bool LevelDbAccessor::Reset() {
   return cursor_->Jump(prefix_);
 }
 
-bool LevelDbAccessor::Jump(const std::string& key) {
+bool LevelDbAccessor::Jump(const string& key) {
   return cursor_->Jump(key);
 }
 
-bool LevelDbAccessor::GetNextRecord(std::string* key, std::string* value) {
+bool LevelDbAccessor::GetNextRecord(string* key, string* value) {
   if (!cursor_->IsValid() || !key || !value)
     return false;
   *key = cursor_->GetKey();
@@ -154,7 +154,7 @@ bool LevelDbAccessor::exhausted() {
 
 // LevelDb members
 
-LevelDb::LevelDb(const std::string& name, const std::string& db_type)
+LevelDb::LevelDb(const string& name, const string& db_type)
     : Db(name), db_type_(db_type) {
 }
 
@@ -167,44 +167,44 @@ void LevelDb::Initialize() {
   db_.reset(new LevelDbWrapper);
 }
 
-shared_ptr<DbAccessor> LevelDb::QueryMetadata() {
+a<DbAccessor> LevelDb::QueryMetadata() {
   return Query(kMetaCharacter);
 }
 
-shared_ptr<DbAccessor> LevelDb::QueryAll() {
-  shared_ptr<DbAccessor> all = Query("");
+a<DbAccessor> LevelDb::QueryAll() {
+  a<DbAccessor> all = Query("");
   if (all)
     all->Jump(" ");  // skip metadata
   return all;
 }
 
-shared_ptr<DbAccessor> LevelDb::Query(const std::string& key) {
+a<DbAccessor> LevelDb::Query(const string& key) {
   if (!loaded())
     return nullptr;
   return New<LevelDbAccessor>(db_->CreateCursor(), key);
 }
 
-bool LevelDb::Fetch(const std::string& key, std::string* value) {
+bool LevelDb::Fetch(const string& key, string* value) {
   if (!value || !loaded())
     return false;
   return db_->Fetch(key, value);
 }
 
-bool LevelDb::Update(const std::string& key, const std::string& value) {
+bool LevelDb::Update(const string& key, const string& value) {
   if (!loaded() || readonly())
     return false;
   DLOG(INFO) << "update db entry: " << key << " => " << value;
   return db_->Update(key, value, in_transaction());
 }
 
-bool LevelDb::Erase(const std::string& key) {
+bool LevelDb::Erase(const string& key) {
   if (!loaded() || readonly())
     return false;
   DLOG(INFO) << "erase db entry: " << key;
   return db_->Erase(key, in_transaction());
 }
 
-bool LevelDb::Backup(const std::string& snapshot_file) {
+bool LevelDb::Backup(const string& snapshot_file) {
   if (!loaded())
     return false;
   LOG(INFO) << "backing up db '" << name() << "' to " << snapshot_file;
@@ -217,7 +217,7 @@ bool LevelDb::Backup(const std::string& snapshot_file) {
   return success;
 }
 
-bool LevelDb::Restore(const std::string& snapshot_file) {
+bool LevelDb::Restore(const string& snapshot_file) {
   if (!loaded() || readonly())
     return false;
   // TODO(chen): suppose we only use this method for user dbs.
@@ -265,7 +265,7 @@ bool LevelDb::Open() {
   loaded_ = status.ok();
 
   if (loaded_) {
-    std::string db_name;
+    string db_name;
     if (!MetaFetch("/db_name", &db_name)) {
       if (!CreateMetadata()) {
         LOG(ERROR) << "error creating metadata.";
@@ -311,11 +311,11 @@ bool LevelDb::CreateMetadata() {
       MetaUpdate("/db_type", db_type_);
 }
 
-bool LevelDb::MetaFetch(const std::string& key, std::string* value) {
+bool LevelDb::MetaFetch(const string& key, string* value) {
   return Fetch(kMetaCharacter + key, value);
 }
 
-bool LevelDb::MetaUpdate(const std::string& key, const std::string& value) {
+bool LevelDb::MetaUpdate(const string& key, const string& value) {
   return Update(kMetaCharacter + key, value);
 }
 
@@ -345,13 +345,13 @@ bool LevelDb::CommitTransaction() {
 }
 
 template <>
-const std::string UserDbFormat<LevelDb>::extension(".userdb");
+const string UserDbFormat<LevelDb>::extension(".userdb");
 
 template <>
-const std::string UserDbFormat<LevelDb>::snapshot_extension(".userdb.txt");
+const string UserDbFormat<LevelDb>::snapshot_extension(".userdb.txt");
 
 template <>
-UserDbWrapper<LevelDb>::UserDbWrapper(const std::string& db_name)
+UserDbWrapper<LevelDb>::UserDbWrapper(const string& db_name)
     : LevelDb(db_name, "userdb") {
 }
 

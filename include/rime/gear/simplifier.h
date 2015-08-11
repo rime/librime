@@ -7,8 +7,6 @@
 #ifndef RIME_SIMPLIFIER_H_
 #define RIME_SIMPLIFIER_H_
 
-#include <set>
-#include <string>
 #include <rime/filter.h>
 #include <rime/gear/filter_commons.h>
 
@@ -20,7 +18,7 @@ class Simplifier : public Filter, TagMatching {
  public:
   explicit Simplifier(const Ticket& ticket);
 
-  virtual shared_ptr<Translation> Apply(shared_ptr<Translation> translation,
+  virtual a<Translation> Apply(a<Translation> translation,
                                         CandidateList* candidates);
 
 
@@ -28,7 +26,7 @@ class Simplifier : public Filter, TagMatching {
     return TagsMatch(segment);
   }
 
-  bool Convert(const shared_ptr<Candidate>& original,
+  bool Convert(const a<Candidate>& original,
                CandidateQueue* result);
 
  protected:
@@ -37,12 +35,12 @@ class Simplifier : public Filter, TagMatching {
   void Initialize();
 
   bool initialized_ = false;
-  unique_ptr<Opencc> opencc_;
+  the<Opencc> opencc_;
   // settings
   TipsLevel tips_level_ =  kTipsNone;
-  std::string option_name_;
-  std::string opencc_config_;
-  std::set<std::string> excluded_types_;
+  string option_name_;
+  string opencc_config_;
+  set<string> excluded_types_;
 };
 
 }  // namespace rime

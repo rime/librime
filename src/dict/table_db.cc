@@ -17,13 +17,13 @@
 namespace rime {
 
 static bool rime_table_entry_parser(const Tsv& row,
-                                    std::string* key,
-                                    std::string* value) {
+                                    string* key,
+                                    string* value) {
   if (row.size() < 2 ||
       row[0].empty() || row[1].empty()) {
     return false;
   }
-  std::string code(row[1]);
+  string code(row[1]);
   boost::algorithm::trim(code);
   *key = code + " \t" + row[0];
   UserDbValue v;
@@ -40,8 +40,8 @@ static bool rime_table_entry_parser(const Tsv& row,
   return true;
 }
 
-static bool rime_table_entry_formatter(const std::string& key,
-                                       const std::string& value,
+static bool rime_table_entry_formatter(const string& key,
+                                       const string& value,
                                        Tsv* tsv) {
   Tsv& row(*tsv);
   // key ::= code <space> <Tab> phrase
@@ -55,7 +55,7 @@ static bool rime_table_entry_formatter(const std::string& key,
     return false;
   boost::algorithm::trim(row[0]);  // remove trailing space
   row[0].swap(row[1]);
-  row.push_back(boost::lexical_cast<std::string>(v.commits));
+  row.push_back(boost::lexical_cast<string>(v.commits));
   return true;
 }
 
@@ -65,13 +65,13 @@ const TextFormat TableDb::format = {
   "Rime table",
 };
 
-TableDb::TableDb(const std::string& name)
+TableDb::TableDb(const string& name)
     : TextDb(name + ".txt", "tabledb", TableDb::format) {
 }
 
 // StableDb
 
-StableDb::StableDb(const std::string& name)
+StableDb::StableDb(const string& name)
     : TableDb(name) {}
 
 bool StableDb::Open() {

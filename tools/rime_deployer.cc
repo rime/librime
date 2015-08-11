@@ -5,7 +5,6 @@
 // 2012-07-07 GONG Chen <chen.sst@gmail.com>
 //
 #include <iostream>
-#include <string>
 #include <rime/config.h>
 #include <rime/deployer.h>
 #include <rime/service.h>
@@ -21,12 +20,12 @@ int add_schema(int count, char* schemas[]) {
   for (int i = 0; i < count; ++i) {
     if (!schemas[i])
       return 1;
-    std::string new_schema_id(schemas[i]);
+    rime::string new_schema_id(schemas[i]);
     bool already_there = false;
     for (size_t j = 0; j < schema_list.size(); ++j) {
       if (!schema_list[j].HasKey("schema"))
         continue;
-      std::string schema_id(schema_list[j]["schema"].ToString());
+      rime::string schema_id(schema_list[j]["schema"].ToString());
       if (schema_id == new_schema_id) {
         already_there = true;
         break;
@@ -43,7 +42,7 @@ int add_schema(int count, char* schemas[]) {
   return 0;
 }
 
-int set_active_schema(const std::string& schema_id) {
+int set_active_schema(const rime::string& schema_id) {
   rime::Config config;
   if (!config.LoadFromFile("user.yaml")) {
     LOG(INFO) << "creating new file 'user.yaml'.";
@@ -82,7 +81,7 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
-  std::string option;
+  rime::string option;
   if (argc >= 2) option = argv[1];
   // shift
   argc -= 2, argv += 2;
@@ -105,7 +104,7 @@ int main(int argc, char* argv[]) {
   if (argc >= 1 && option == "--compile") {
     rime::Deployer& deployer(rime::Service::instance().deployer());
     configure_deployer(&deployer, argc - 1, argv + 1);
-    std::string schema_file(argv[0]);
+    rime::string schema_file(argv[0]);
     rime::SchemaUpdate update(schema_file);
     update.set_verbose(true);
     return update.Run(&deployer) ? 0 : 1;

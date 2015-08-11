@@ -11,7 +11,7 @@
 
 namespace rime {
 
-bool Script::AddSyllable(const std::string& syllable) {
+bool Script::AddSyllable(const string& syllable) {
   if (find(syllable) != end())
     return false;
   Spelling spelling(syllable);
@@ -19,10 +19,10 @@ bool Script::AddSyllable(const std::string& syllable) {
   return true;
 }
 
-void Script::Merge(const std::string& s,
+void Script::Merge(const string& s,
                    const SpellingProperties& sp,
-                   const std::vector<Spelling>& v) {
-  std::vector<Spelling>& m((*this)[s]);
+                   const vector<Spelling>& v) {
+  vector<Spelling>& m((*this)[s]);
   for (const Spelling& x : v) {
     Spelling y(x);
     SpellingProperties& yy(y.properties);
@@ -48,7 +48,7 @@ void Script::Merge(const std::string& s,
   }
 }
 
-void Script::Dump(const std::string& file_name) const {
+void Script::Dump(const string& file_name) const {
   std::ofstream out(file_name.c_str());
   for (const value_type& v : *this) {
     bool first = true;
@@ -76,8 +76,8 @@ bool Projection::Load(ConfigListPtr settings) {
       success = false;
       break;
     }
-    const std::string &formula(v->str());
-    shared_ptr<Calculation> x;
+    const string &formula(v->str());
+    a<Calculation> x;
     try {
       x.reset(calc.Parse(formula));
     }
@@ -98,12 +98,12 @@ bool Projection::Load(ConfigListPtr settings) {
   return success;
 }
 
-bool Projection::Apply(std::string* value) {
+bool Projection::Apply(string* value) {
   if (!value || value->empty())
     return false;
   bool modified = false;
   Spelling s(*value);
-  for (shared_ptr<Calculation>& x : calculation_) {
+  for (a<Calculation>& x : calculation_) {
     try {
       if (x->Apply(&s))
         modified = true;
@@ -123,7 +123,7 @@ bool Projection::Apply(Script* value) {
     return false;
   bool modified = false;
   int round = 0;
-  for (shared_ptr<Calculation>& x : calculation_) {
+  for (a<Calculation>& x : calculation_) {
     ++round;
     DLOG(INFO) << "round #" << round;
     Script temp;

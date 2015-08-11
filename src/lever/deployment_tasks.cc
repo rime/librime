@@ -42,10 +42,10 @@ bool InstallationUpdate::Run(Deployer* deployer) {
   }
   fs::path installation_info(user_data_path / "installation.yaml");
   rime::Config config;
-  std::string installation_id;
-  std::string last_distro_code_name;
-  std::string last_distro_version;
-  std::string last_rime_version;
+  string installation_id;
+  string last_distro_code_name;
+  string last_distro_version;
+  string last_rime_version;
   if (config.LoadFromFile(installation_info.string())) {
     if (config.GetString("installation_id", &installation_id)) {
       LOG(INFO) << "installation info exists. installation id: "
@@ -75,7 +75,7 @@ bool InstallationUpdate::Run(Deployer* deployer) {
   }
   LOG(INFO) << "creating installation info.";
   time_t now = time(NULL);
-  std::string time_str(ctime(&now));
+  string time_str(ctime(&now));
   boost::trim(time_str);
   if (installation_id.empty()) {
     installation_id =
@@ -112,7 +112,7 @@ bool InstallationUpdate::Run(Deployer* deployer) {
 bool WorkspaceUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating workspace.";
   {
-    unique_ptr<DeploymentTask> t;
+    the<DeploymentTask> t;
     t.reset(new ConfigFileUpdate("default.yaml", "config_version"));
     t->Run(deployer);
     // since brise 0.18
@@ -139,7 +139,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating schemas.";
   int success = 0;
   int failure = 0;
-  std::map<std::string, std::string> schemas;
+  map<string, string> schemas;
   for (auto it = schema_list->begin(); it != schema_list->end(); ++it) {
     auto item = As<ConfigMap>(*it);
     if (!item)
@@ -147,9 +147,9 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     auto schema_property = item->GetValue("schema");
     if (!schema_property)
       continue;
-    const std::string& schema_id(schema_property->str());
+    const string& schema_id(schema_property->str());
     LOG(INFO) << "schema: " << schema_id;
-    std::string schema_path;
+    string schema_path;
     if (schemas.find(schema_id) == schemas.end()) {
       schema_path = GetSchemaPath(deployer, schema_id, true);
       schemas[schema_id] = schema_path;
@@ -162,7 +162,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
       continue;
     }
     // build schema
-    unique_ptr<DeploymentTask> t(new SchemaUpdate(schema_path));
+    the<DeploymentTask> t(new SchemaUpdate(schema_path));
     if (t->Run(deployer))
       ++success;
     else
@@ -172,7 +172,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   for (auto s = schemas.cbegin(); s != schemas.cend(); ++s) {
     Config schema_config;
     // user could have customized dependencies in the resulting schema
-    std::string user_schema_path = GetSchemaPath(deployer, s->first, false);
+    string user_schema_path = GetSchemaPath(deployer, s->first, false);
     if (!schema_config.LoadFromFile(user_schema_path))
       continue;
     auto dependencies = schema_config.GetList("schema/dependencies");
@@ -182,18 +182,18 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
       auto dependency = As<ConfigValue>(*d);
       if (!dependency)
         continue;
-      std::string dependency_id(dependency->str());
+      string dependency_id(dependency->str());
       if (schemas.find(dependency_id) != schemas.end())  // already built
         continue;
       LOG(INFO) << "new dependency: " << dependency_id;
-      std::string dependency_path = GetSchemaPath(deployer, dependency_id, true);
+      string dependency_path = GetSchemaPath(deployer, dependency_id, true);
       schemas[dependency_id] = dependency_path;
       if (dependency_path.empty()) {
         LOG(WARNING) << "missing schema file for dependency '" << dependency_id << "'.";
         continue;
       }
       // build dependency
-      unique_ptr<DeploymentTask> t(new SchemaUpdate(dependency_path));
+      the<DeploymentTask> t(new SchemaUpdate(dependency_path));
       if (t->Run(deployer))
         ++success;
       else
@@ -205,8 +205,8 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   return failure == 0;
 }
 
-std::string WorkspaceUpdate::GetSchemaPath(Deployer* deployer,
-                                           const std::string& schema_id,
+string WorkspaceUpdate::GetSchemaPath(Deployer* deployer,
+                                           const string& schema_id,
                                            bool prefer_shared_copy) {
   fs::path schema_path;
   if (prefer_shared_copy) {
@@ -226,14 +226,14 @@ std::string WorkspaceUpdate::GetSchemaPath(Deployer* deployer,
 
 SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
   try {
-    schema_file_ = boost::any_cast<std::string>(arg);
+    schema_file_ = boost::any_cast<string>(arg);
   }
   catch (const boost::bad_any_cast&) {
     LOG(ERROR) << "SchemaUpdate: invalid arguments.";
   }
 }
 
-static std::string find_dict_file(const std::string& dict_file_name,
+static string find_dict_file(const string& dict_file_name,
                                   const fs::path& shared_data_path,
                                   const fs::path& user_data_path) {
   fs::path dict_path(user_data_path / dict_file_name);
@@ -241,7 +241,7 @@ static std::string find_dict_file(const std::string& dict_file_name,
     dict_path = shared_data_path / dict_file_name;
     if (!fs::exists(dict_path)) {
       LOG(ERROR) << "source file '" << dict_file_name << "' does not exist.";
-      return std::string();
+      return string();
     }
   }
   return dict_path.string();
@@ -254,7 +254,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
                << schema_file_ << "'.";
     return false;
   }
-  std::string schema_id;
+  string schema_id;
   {
     Config source;
     if (!source.LoadFromFile(schema_file_) ||
@@ -279,13 +279,13 @@ bool SchemaUpdate::Run(Deployer* deployer) {
                << destination_path.string() << "'.";
     return false;
   }
-  std::string dict_name;
+  string dict_name;
   if (!config->GetString("translator/dictionary", &dict_name)) {
     // not requiring a dictionary
     return true;
   }
   DictionaryComponent component;
-  unique_ptr<Dictionary> dict(component.Create({&schema, "translator"}));
+  the<Dictionary> dict(component.Create({&schema, "translator"}));
   if (!dict) {
     LOG(ERROR) << "Error creating dictionary '" << dict_name << "'.";
     return false;
@@ -307,7 +307,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
 
 ConfigFileUpdate::ConfigFileUpdate(TaskInitializer arg) {
   try {
-    auto p = boost::any_cast< std::pair<std::string, std::string>>(arg);
+    auto p = boost::any_cast< std::pair<string, string>>(arg);
     file_name_ = p.first;
     version_key_ = p.second;
   }
@@ -340,7 +340,7 @@ bool PrebuildAllSchemas::Run(Deployer* deployer) {
        iter != end; ++iter) {
     fs::path entry(iter->path());
     if (boost::ends_with(entry.string(), ".schema.yaml")) {
-      unique_ptr<DeploymentTask> t(new SchemaUpdate(entry.string()));
+      the<DeploymentTask> t(new SchemaUpdate(entry.string()));
       if (!t->Run(deployer))
         success = false;
     }
@@ -450,7 +450,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
     }
     if (is_yaml_file && !boost::ends_with(entry.string(), ".custom.yaml")) {
       Config config;
-      std::string checksum;
+      string checksum;
       if (config.LoadFromFile(entry.string()) &&
           config.GetString("customization", &checksum)) {
         ++skipped;  // customized copy
@@ -520,10 +520,10 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
   char ymd[12] = {0};
   time_t now = time(NULL);
   strftime(ymd, sizeof(ymd), ".%Y%m%d", localtime(&now));
-  std::string today(ymd);
+  string today(ymd);
   DLOG(INFO) << "today: " << today;
 
-  std::vector<std::string> dirs;
+  vector<string> dirs;
 #ifdef RIME_ENABLE_LOGGING
 #ifdef _WIN32
   // work-around: google::GetExistingTempDirectories crashes on windows 7
@@ -542,7 +542,7 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
     DLOG(INFO) << "temp directory: " << *i;
     for (fs::directory_iterator j(*i), end; j != end; ++j) {
       fs::path entry(j->path());
-      std::string file_name(entry.filename().string());
+      string file_name(entry.filename().string());
       try {
         if (fs::is_regular_file(entry) &&
             !fs::is_symlink(entry) &&

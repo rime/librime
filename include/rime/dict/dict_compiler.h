@@ -7,9 +7,6 @@
 #ifndef RIME_DICT_COMPILER_H_
 #define RIME_DICT_COMPILER_H_
 
-#include <functional>
-#include <string>
-#include <vector>
 #include <rime/common.h>
 
 namespace rime {
@@ -22,7 +19,7 @@ class DictSettings;
 
 // return found dict file path, otherwize return empty string
 using DictFileFinder =
-    std::function<const std::string (const std::string& file_name)>;
+    function<const string (const string& file_name)>;
 
 class DictCompiler {
  public:
@@ -36,21 +33,21 @@ class DictCompiler {
   DictCompiler(Dictionary *dictionary,
                DictFileFinder finder = NULL);
 
-  bool Compile(const std::string &schema_file);
+  bool Compile(const string &schema_file);
   void set_options(int options) { options_ = options; }
 
  private:
-  std::string FindDictFile(const std::string& dict_name);
+  string FindDictFile(const string& dict_name);
   bool BuildTable(DictSettings* settings,
-                  const std::vector<std::string>& dict_files,
+                  const vector<string>& dict_files,
                   uint32_t dict_file_checksum);
-  bool BuildPrism(const std::string& schema_file,
+  bool BuildPrism(const string& schema_file,
                   uint32_t dict_file_checksum, uint32_t schema_file_checksum);
   bool BuildReverseLookupDict(ReverseDb* db, uint32_t dict_file_checksum);
 
-  std::string dict_name_;
-  shared_ptr<Prism> prism_;
-  shared_ptr<Table> table_;
+  string dict_name_;
+  a<Prism> prism_;
+  a<Table> table_;
   int options_ = 0;
   DictFileFinder dict_file_finder_;
 };

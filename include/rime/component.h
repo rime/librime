@@ -7,8 +7,6 @@
 #ifndef RIME_COMPONENT_H_
 #define RIME_COMPONENT_H_
 
-#include <map>
-#include <string>
 #include <rime/registry.h>
 
 namespace rime {
@@ -28,7 +26,7 @@ struct Class {
     virtual T* Create(Initializer arg) = 0;
   };
 
-  static Component* Require(const std::string& name) {
+  static Component* Require(const string& name) {
     return dynamic_cast<Component*>(Registry::instance().Find(name));
   }
 };

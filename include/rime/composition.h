@@ -7,13 +7,12 @@
 #ifndef RIME_COMPOSITION_H_
 #define RIME_COMPOSITION_H_
 
-#include <string>
 #include <rime/segmentation.h>
 
 namespace rime {
 
 struct Preedit {
-  std::string text;
+  string text;
   size_t caret_pos = 0;
   size_t sel_start = 0;
   size_t sel_end = 0;
@@ -25,10 +24,10 @@ class Composition : public Segmentation {
 
   bool HasFinishedComposition() const;
   Preedit GetPreedit() const;
-  std::string GetPrompt() const;
-  std::string GetCommitText() const;
-  std::string GetScriptText() const;
-  std::string GetDebugText() const;
+  string GetPrompt() const;
+  string GetCommitText() const;
+  string GetScriptText() const;
+  string GetDebugText() const;
 };
 
 }  // namespace rime

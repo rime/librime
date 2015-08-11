@@ -7,8 +7,6 @@
 #ifndef RIME_FILTER_COMMONS_H_
 #define RIME_FILTER_COMMONS_H_
 
-#include <string>
-#include <vector>
 
 namespace rime {
 
@@ -21,7 +19,7 @@ class TagMatching {
   bool TagsMatch(Segment* segment);
 
  protected:
-  std::vector<std::string> tags_;
+  vector<string> tags_;
 };
 
 }  // namespace rime

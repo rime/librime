@@ -13,7 +13,7 @@ int Source::Dump(Sink* sink) {
   if (!sink)
     return 0;
   int num_entries = 0;
-  std::string key, value;
+  string key, value;
   while (MetaGet(&key, &value)) {
     if (sink->MetaPut(key, value))
       ++num_entries;
@@ -28,11 +28,11 @@ int Source::Dump(Sink* sink) {
 DbSink::DbSink(Db* db) : db_(db) {
 }
 
-bool DbSink::MetaPut(const std::string& key, const std::string& value) {
+bool DbSink::MetaPut(const string& key, const string& value) {
   return db_ && db_->MetaUpdate(key, value);
 }
 
-bool DbSink::Put(const std::string& key, const std::string& value) {
+bool DbSink::Put(const string& key, const string& value) {
   return db_ && db_->Update(key, value);
 }
 
@@ -42,11 +42,11 @@ DbSource::DbSource(Db* db)
       data_(db->QueryAll()) {
 }
 
-bool DbSource::MetaGet(std::string* key, std::string* value) {
+bool DbSource::MetaGet(string* key, string* value) {
   return metadata_ && metadata_->GetNextRecord(key, value);
 }
 
-bool DbSource::Get(std::string* key, std::string* value) {
+bool DbSource::Get(string* key, string* value) {
   return data_ && data_->GetNextRecord(key, value);
 }
 

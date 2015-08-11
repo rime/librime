@@ -7,7 +7,6 @@
 #ifndef RIME_DEPLOYMENT_TASKS_H_
 #define RIME_DEPLOYMENT_TASKS_H_
 
-#include <string>
 #include <rime/deployer.h>
 
 namespace rime {
@@ -26,37 +25,37 @@ class WorkspaceUpdate : public DeploymentTask {
   bool Run(Deployer* deployer);
 
  protected:
-  std::string GetSchemaPath(Deployer* deployer,
-                            const std::string& schema_id,
+  string GetSchemaPath(Deployer* deployer,
+                            const string& schema_id,
                             bool prefer_shared_copy);
 };
 
 // update a specific schema, build corresponding dictionary
 class SchemaUpdate : public DeploymentTask {
  public:
-  explicit SchemaUpdate(const std::string& schema_file)
+  explicit SchemaUpdate(const string& schema_file)
       : schema_file_(schema_file) {}
   SchemaUpdate(TaskInitializer arg);
   bool Run(Deployer* deployer);
   void set_verbose(bool verbose) { verbose_ = verbose; }
 
  protected:
-  std::string schema_file_;
+  string schema_file_;
   bool verbose_ = false;
 };
 
 // update a specific config file
 class ConfigFileUpdate : public DeploymentTask {
  public:
-  ConfigFileUpdate(const std::string& file_name,
-                   const std::string& version_key)
+  ConfigFileUpdate(const string& file_name,
+                   const string& version_key)
       : file_name_(file_name), version_key_(version_key) {}
   ConfigFileUpdate(TaskInitializer arg);
   bool Run(Deployer* deployer);
 
  protected:
-  std::string file_name_;
-  std::string version_key_;
+  string file_name_;
+  string version_key_;
 };
 
 // for installer

@@ -15,7 +15,7 @@ class SwitchTranslator : public Translator {
  public:
   SwitchTranslator(const Ticket& ticket);
 
-  virtual shared_ptr<Translation> Query(const std::string& input,
+  virtual a<Translation> Query(const string& input,
                                         const Segment& segment);
 };
 

@@ -33,7 +33,7 @@ class Processor : public Class<Processor, const Ticket&> {
 
  protected:
   Engine* engine_;
-  std::string name_space_;
+  string name_space_;
 };
 
 }  // namespace rime

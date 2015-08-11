@@ -7,11 +7,7 @@
 #ifndef RIME_ENTRY_COLLECTOR_H_
 #define RIME_ENTRY_COLLECTOR_H_
 
-#include <map>
 #include <queue>
-#include <set>
-#include <string>
-#include <vector>
 #include <rime/common.h>
 #include <rime/algo/encoder.h>
 #include <rime/dict/dictionary.h>
@@ -21,16 +17,16 @@ namespace rime {
 
 struct RawDictEntry {
   RawCode raw_code;
-  std::string text;
+  string text;
   double weight;
 };
 
 // code -> weight
-using WeightMap = std::map<std::string, double>;
+using WeightMap = map<string, double>;
 // word -> { code -> weight }
-using WordMap = std::map<std::string, WeightMap>;
+using WordMap = map<string, WeightMap>;
 // [ (word, weight), ... ]
-using EncodeQueue = std::queue<std::pair<std::string, std::string>>;
+using EncodeQueue = std::queue<std::pair<string, string>>;
 
 class PresetVocabulary;
 class DictSettings;
@@ -38,7 +34,7 @@ class DictSettings;
 class EntryCollector : public PhraseCollector {
  public:
   Syllabary syllabary;
-  std::vector<RawDictEntry> entries;
+  vector<RawDictEntry> entries;
   size_t num_entries = 0;
   ReverseLookupTable stems;
 
@@ -47,28 +43,28 @@ class EntryCollector : public PhraseCollector {
   ~EntryCollector();
 
   void Configure(DictSettings* settings);
-  void Collect(const std::vector<std::string>& dict_files);
+  void Collect(const vector<string>& dict_files);
 
   // export contents of table and prism to text files
-  void Dump(const std::string& file_name) const;
+  void Dump(const string& file_name) const;
 
-  void CreateEntry(const std::string &word,
-                   const std::string &code_str,
-                   const std::string &weight_str);
-  bool TranslateWord(const std::string& word,
-                     std::vector<std::string>* code);
+  void CreateEntry(const string &word,
+                   const string &code_str,
+                   const string &weight_str);
+  bool TranslateWord(const string& word,
+                     vector<string>* code);
  protected:
   void LoadPresetVocabulary(DictSettings* settings);
   // call Collect() multiple times for all required tables
-  void Collect(const std::string &dict_file);
+  void Collect(const string &dict_file);
   // encode all collected entries
   void Finish();
 
  protected:
-  unique_ptr<PresetVocabulary> preset_vocabulary;
-  unique_ptr<Encoder> encoder;
+  the<PresetVocabulary> preset_vocabulary;
+  the<Encoder> encoder;
   EncodeQueue encode_queue;
-  std::set<std::string/* word */> collection;
+  set<string/* word */> collection;
   WordMap words;
   WeightMap total_weight;
 };

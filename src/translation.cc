@@ -9,7 +9,7 @@
 
 namespace rime {
 
-int Translation::Compare(shared_ptr<Translation> other,
+int Translation::Compare(a<Translation> other,
                          const CandidateList& candidates) {
   if (!other || other->exhausted())
     return -1;
@@ -43,7 +43,7 @@ bool UniqueTranslation::Next() {
   return true;
 }
 
-shared_ptr<Candidate> UniqueTranslation::Peek() {
+a<Candidate> UniqueTranslation::Peek() {
   if (exhausted())
     return nullptr;
   return candidate_;
@@ -61,13 +61,13 @@ bool FifoTranslation::Next() {
   return true;
 }
 
-shared_ptr<Candidate> FifoTranslation::Peek() {
+a<Candidate> FifoTranslation::Peek() {
   if (exhausted())
     return nullptr;
   return candies_[cursor_];
 }
 
-void FifoTranslation::Append(shared_ptr<Candidate> candy) {
+void FifoTranslation::Append(a<Candidate> candy) {
   candies_.push_back(candy);
   set_exhausted(false);
 }
@@ -89,13 +89,13 @@ bool UnionTranslation::Next() {
   return true;
 }
 
-shared_ptr<Candidate> UnionTranslation::Peek() {
+a<Candidate> UnionTranslation::Peek() {
   if (exhausted())
     return nullptr;
   return translations_.front()->Peek();
 }
 
-UnionTranslation& UnionTranslation::operator+= (shared_ptr<Translation> t) {
+UnionTranslation& UnionTranslation::operator+= (a<Translation> t) {
   if (t && !t->exhausted()) {
     translations_.push_back(t);
     set_exhausted(false);
@@ -103,12 +103,11 @@ UnionTranslation& UnionTranslation::operator+= (shared_ptr<Translation> t) {
   return *this;
 }
 
-shared_ptr<UnionTranslation> operator+ (shared_ptr<Translation> a,
-                                        shared_ptr<Translation> b) {
-  auto c = New<UnionTranslation>();
-  *c += a;
-  *c += b;
-  return c->exhausted() ? nullptr : c;
+a<UnionTranslation> operator+ (a<Translation> x, a<Translation> y) {
+  auto z = New<UnionTranslation>();
+  *z += x;
+  *z += y;
+  return z->exhausted() ? nullptr : z;
 }
 
 // MergedTranslation
@@ -131,7 +130,7 @@ bool MergedTranslation::Next() {
   return true;
 }
 
-shared_ptr<Candidate> MergedTranslation::Peek() {
+a<Candidate> MergedTranslation::Peek() {
   if (exhausted()) {
     return nullptr;
   }
@@ -145,7 +144,7 @@ void MergedTranslation::Elect() {
   }
   size_t k = 0;
   for (; k < translations_.size(); ++k) {
-    shared_ptr<Translation> next;
+    a<Translation> next;
     if (k + 1 < translations_.size()) {
       next = translations_[k + 1];
     }
@@ -163,7 +162,7 @@ void MergedTranslation::Elect() {
   }
 }
 
-MergedTranslation& MergedTranslation::operator+= (shared_ptr<Translation> t) {
+MergedTranslation& MergedTranslation::operator+= (a<Translation> t) {
   if (t && !t->exhausted()) {
     translations_.push_back(t);
     Elect();
@@ -173,7 +172,7 @@ MergedTranslation& MergedTranslation::operator+= (shared_ptr<Translation> t) {
 
 // CacheTranslation
 
-CacheTranslation::CacheTranslation(shared_ptr<Translation> translation)
+CacheTranslation::CacheTranslation(a<Translation> translation)
     : translation_(translation) {
   set_exhausted(!translation_ || translation_->exhausted());
 }
@@ -189,7 +188,7 @@ bool CacheTranslation::Next() {
   return true;
 }
 
-shared_ptr<Candidate> CacheTranslation::Peek() {
+a<Candidate> CacheTranslation::Peek() {
   if (exhausted())
     return nullptr;
   if (!cache_) {
@@ -200,7 +199,7 @@ shared_ptr<Candidate> CacheTranslation::Peek() {
 
 // DistinctTranslation
 
-DistinctTranslation::DistinctTranslation(shared_ptr<Translation> translation)
+DistinctTranslation::DistinctTranslation(a<Translation> translation)
     : CacheTranslation(translation) {
 }
 
@@ -216,13 +215,13 @@ bool DistinctTranslation::Next() {
   return true;
 }
 
-bool DistinctTranslation::AlreadyHas(const std::string& text) const {
+bool DistinctTranslation::AlreadyHas(const string& text) const {
   return candidate_set_.find(text) != candidate_set_.end();
 }
 
 // PrefetchTranslation
 
-PrefetchTranslation::PrefetchTranslation(shared_ptr<Translation> translation)
+PrefetchTranslation::PrefetchTranslation(a<Translation> translation)
     : translation_(translation) {
   set_exhausted(!translation_ || translation_->exhausted());
 }
@@ -243,7 +242,7 @@ bool PrefetchTranslation::Next() {
   return true;
 }
 
-shared_ptr<Candidate> PrefetchTranslation::Peek() {
+a<Candidate> PrefetchTranslation::Peek() {
   if (exhausted()) {
     return nullptr;
   }

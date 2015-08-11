@@ -28,7 +28,7 @@ TEST(RimeAlgebraTest, SpellingManipulation) {
   rime::Projection p;
   ASSERT_TRUE(p.Load(c));
 
-  std::string str("Shang");
+  rime::string str("Shang");
   EXPECT_TRUE(p.Apply(&str));
   EXPECT_EQ("sang", str);
 }

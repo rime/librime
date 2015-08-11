@@ -14,18 +14,18 @@
 namespace rime {
 
 struct VocabularyDb : public TextDb {
-  explicit VocabularyDb(const std::string& path);
-  shared_ptr<DbAccessor> cursor;
+  explicit VocabularyDb(const string& path);
+  a<DbAccessor> cursor;
   static const TextFormat format;
 };
 
-VocabularyDb::VocabularyDb(const std::string& path)
+VocabularyDb::VocabularyDb(const string& path)
     : TextDb(path, "vocabulary", VocabularyDb::format) {
 }
 
 static bool rime_vocabulary_entry_parser(const Tsv& row,
-                                         std::string* key,
-                                         std::string* value) {
+                                         string* key,
+                                         string* value) {
   if (row.size() < 1 || row[0].empty()) {
     return false;
   }
@@ -34,8 +34,8 @@ static bool rime_vocabulary_entry_parser(const Tsv& row,
   return true;
 }
 
-static bool rime_vocabulary_entry_formatter(const std::string& key,
-                                            const std::string& value,
+static bool rime_vocabulary_entry_formatter(const string& key,
+                                            const string& value,
                                             Tsv* tsv) {
   //Tsv& row(*tsv);
   //row.push_back(key);
@@ -49,7 +49,7 @@ const TextFormat VocabularyDb::format = {
   "Rime vocabulary",
 };
 
-std::string PresetVocabulary::DictFilePath() {
+string PresetVocabulary::DictFilePath() {
   boost::filesystem::path path(Service::instance().deployer().shared_data_dir);
   path /= "essay.txt";
   return path.string();
@@ -67,8 +67,8 @@ PresetVocabulary::~PresetVocabulary() {
     db_->Close();
 }
 
-bool PresetVocabulary::GetWeightForEntry(const std::string &key, double *weight) {
-  std::string weight_str;
+bool PresetVocabulary::GetWeightForEntry(const string &key, double *weight) {
+  string weight_str;
   if (!db_ || !db_->Fetch(key, &weight_str))
     return false;
   try {
@@ -85,7 +85,7 @@ void PresetVocabulary::Reset() {
     db_->cursor->Reset();
 }
 
-bool PresetVocabulary::GetNextEntry(std::string *key, std::string *value) {
+bool PresetVocabulary::GetNextEntry(string *key, string *value) {
   if (!db_ || !db_->cursor)
     return false;
   bool got = false;
@@ -96,8 +96,8 @@ bool PresetVocabulary::GetNextEntry(std::string *key, std::string *value) {
   return got;
 }
 
-bool PresetVocabulary::IsQualifiedPhrase(const std::string& phrase,
-                                         const std::string& weight_str) {
+bool PresetVocabulary::IsQualifiedPhrase(const string& phrase,
+                                         const string& weight_str) {
   if (max_phrase_length_ > 0) {
     size_t length = utf8::unchecked::distance(phrase.c_str(),
                                               phrase.c_str() + phrase.length());

@@ -160,7 +160,7 @@ ProcessResult AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
         ch = toupper(ch);
       else if (isupper(ch))
         ch = tolower(ch);
-      engine_->CommitText(std::string(1, ch));
+      engine_->CommitText(string(1, ch));
       return kAccepted;
     }
     else {
@@ -176,7 +176,7 @@ void AsciiComposer::LoadConfig(Schema* schema) {
   good_old_caps_lock_ = false;
   if (!schema)
     return;
-  unique_ptr<Config> preset_config(
+  the<Config> preset_config(
       Config::Require("config")->Create("default"));
   if (preset_config) {
     preset_config->GetBool("ascii_composer/good_old_caps_lock",

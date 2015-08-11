@@ -8,9 +8,7 @@
 #ifndef RIME_STRING_TABLE_H_
 #define RIME_STRING_TABLE_H_
 
-#include <string>
 #include <utility>
-#include <vector>
 #include <marisa.h>
 #include <rime/common.h>
 
@@ -26,13 +24,13 @@ class StringTable {
   virtual ~StringTable() = default;
   StringTable(const char* ptr, size_t size);
 
-  bool HasKey(const std::string& key);
-  StringId Lookup(const std::string& key);
-  void CommonPrefixMatch(const std::string& query,
-                         std::vector<StringId>* result);
-  void Predict(const std::string& query,
-               std::vector<StringId>* result);
-  std::string GetString(StringId string_id);
+  bool HasKey(const string& key);
+  StringId Lookup(const string& key);
+  void CommonPrefixMatch(const string& query,
+                         vector<StringId>* result);
+  void Predict(const string& query,
+               vector<StringId>* result);
+  string GetString(StringId string_id);
 
   size_t NumKeys() const;
   size_t BinarySize() const;
@@ -43,7 +41,7 @@ class StringTable {
 
 class StringTableBuilder: public StringTable {
  public:
-  void Add(const std::string& key, double weight = 1.0,
+  void Add(const string& key, double weight = 1.0,
            StringId* reference = nullptr);
   void Clear();
   void Build();
@@ -53,7 +51,7 @@ class StringTableBuilder: public StringTable {
   void UpdateReferences();
 
   marisa::Keyset keys_;
-  std::vector<StringId*> references_;
+  vector<StringId*> references_;
 };
 
 }  // namespace rime

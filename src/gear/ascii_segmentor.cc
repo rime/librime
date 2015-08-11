@@ -20,7 +20,7 @@ AsciiSegmentor::AsciiSegmentor(const Ticket& ticket) : Segmentor(ticket) {
 bool AsciiSegmentor::Proceed(Segmentation* segmentation) {
   if (!engine_->context()->get_option("ascii_mode"))
     return true;
-  const std::string& input = segmentation->input();
+  const string& input = segmentation->input();
   size_t j = segmentation->GetCurrentStartPosition();
   if (j < input.length()) {
     Segment segment(j, input.length());

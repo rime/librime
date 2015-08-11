@@ -7,15 +7,14 @@
 #ifndef RIME_MESSENGER_H_
 #define RIME_MESSENGER_H_
 
-#include <string>
 #include <rime/common.h>
 
 namespace rime {
 
 class Messenger {
  public:
-  using MessageSink = signal<void (const std::string& message_type,
-                                   const std::string& message_value)>;
+  using MessageSink = signal<void (const string& message_type,
+                                   const string& message_value)>;
 
   MessageSink& message_sink() { return message_sink_; }
 

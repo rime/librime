@@ -7,8 +7,11 @@
 #ifndef RIME_COMMON_H_
 #define RIME_COMMON_H_
 
-#include <forward_list>
+#include <functional>
+#include <list>
+#include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <utility>
 #include <unordered_map>
@@ -29,15 +32,17 @@
 
 namespace rime {
 
+using std::function;
+using std::list;
+using std::map;
+using std::set;
 using std::string;
 using std::vector;
 
-template <class T>
-using list = std::forward_list<T>;
 template <class Key, class T>
-using map = std::unordered_map<Key, T>;
+using hash_map = std::unordered_map<Key, T>;
 template <class T>
-using set = std::unordered_set<T>;
+using hash_set = std::unordered_set<T>;
 
 template <class T>
 using the = std::unique_ptr<T>;

@@ -8,8 +8,6 @@
 #define RIME_CONFIG_H_
 
 #include <iostream>
-#include <map>
-#include <string>
 #include <type_traits>
 #include <rime/common.h>
 #include <rime/component.h>
@@ -32,7 +30,7 @@ class ConfigItem {
   ValueType type_ = kNull;
 };
 
-using ConfigItemPtr = shared_ptr<ConfigItem>;
+using ConfigItemPtr = a<ConfigItem>;
 
 class ConfigValue : public ConfigItem {
  public:
@@ -41,30 +39,30 @@ class ConfigValue : public ConfigItem {
   ConfigValue(int value);
   ConfigValue(double value);
   ConfigValue(const char* value);
-  ConfigValue(const std::string& value);
+  ConfigValue(const string& value);
 
   // schalar value accessors
   bool GetBool(bool* value) const;
   bool GetInt(int* value) const;
   bool GetDouble(double* value) const;
-  bool GetString(std::string* value) const;
+  bool GetString(string* value) const;
   bool SetBool(bool value);
   bool SetInt(int value);
   bool SetDouble(double value);
   bool SetString(const char* value);
-  bool SetString(const std::string& value);
+  bool SetString(const string& value);
 
-  const std::string& str() const { return value_; }
+  const string& str() const { return value_; }
 
  protected:
-  std::string value_;
+  string value_;
 };
 
-using ConfigValuePtr = shared_ptr<ConfigValue>;
+using ConfigValuePtr = a<ConfigValue>;
 
 class ConfigList : public ConfigItem {
  public:
-  using Sequence = std::vector<ConfigItemPtr>;
+  using Sequence = vector<ConfigItemPtr>;
   using Iterator = Sequence::iterator;
 
   ConfigList() : ConfigItem(kList) {}
@@ -84,19 +82,19 @@ class ConfigList : public ConfigItem {
   Sequence seq_;
 };
 
-using ConfigListPtr = shared_ptr<ConfigList>;
+using ConfigListPtr = a<ConfigList>;
 
 // limitation: map keys have to be strings, preferably alphanumeric
 class ConfigMap : public ConfigItem {
  public:
-  using Map = std::map<std::string, ConfigItemPtr>;
+  using Map = map<string, ConfigItemPtr>;
   using Iterator = Map::iterator;
 
   ConfigMap() : ConfigItem(kMap) {}
-  bool HasKey(const std::string& key) const;
-  ConfigItemPtr Get(const std::string& key) const;
-  ConfigValuePtr GetValue(const std::string& key) const;
-  bool Set(const std::string& key, ConfigItemPtr element);
+  bool HasKey(const string& key) const;
+  ConfigItemPtr Get(const string& key) const;
+  ConfigValuePtr GetValue(const string& key) const;
+  bool Set(const string& key, ConfigItemPtr element);
   bool Clear();
 
   Iterator begin();
@@ -106,7 +104,7 @@ class ConfigMap : public ConfigItem {
   Map map_;
 };
 
-using ConfigMapPtr = shared_ptr<ConfigMap>;
+using ConfigMapPtr = a<ConfigMap>;
 
 class ConfigData;
 class ConfigListEntryRef;
@@ -114,13 +112,13 @@ class ConfigMapEntryRef;
 
 class ConfigItemRef {
  public:
-  ConfigItemRef(const shared_ptr<ConfigData>& data) : data_(data) {
+  ConfigItemRef(const a<ConfigData>& data) : data_(data) {
   }
   operator ConfigItemPtr () const {
     return GetItem();
   }
   ConfigListEntryRef operator[] (size_t index);
-  ConfigMapEntryRef operator[] (const std::string& key);
+  ConfigMapEntryRef operator[] (const string& key);
 
   bool IsNull() const;
   bool IsValue() const;
@@ -130,7 +128,7 @@ class ConfigItemRef {
   bool ToBool() const;
   int ToInt() const;
   double ToDouble() const;
-  std::string ToString() const;
+  string ToString() const;
 
   ConfigListPtr AsList();
   ConfigMapPtr AsMap();
@@ -140,7 +138,7 @@ class ConfigItemRef {
   bool Append(ConfigItemPtr item);
   size_t size() const;
   // map
-  bool HasKey(const std::string& key) const;
+  bool HasKey(const string& key) const;
 
   bool modified() const;
   void set_modified();
@@ -149,7 +147,7 @@ class ConfigItemRef {
   virtual ConfigItemPtr GetItem() const = 0;
   virtual void SetItem(ConfigItemPtr item) = 0;
 
-  shared_ptr<ConfigData> data_;
+  a<ConfigData> data_;
 };
 
 namespace {
@@ -168,7 +166,7 @@ ConfigItemPtr AsConfigItem(const T& a, const std::true_type&) {
 
 class ConfigListEntryRef : public ConfigItemRef {
  public:
-  ConfigListEntryRef(shared_ptr<ConfigData> data,
+  ConfigListEntryRef(a<ConfigData> data,
                      ConfigListPtr list, size_t index)
       : ConfigItemRef(data), list_(list), index_(index) {
   }
@@ -192,8 +190,8 @@ class ConfigListEntryRef : public ConfigItemRef {
 
 class ConfigMapEntryRef : public ConfigItemRef {
  public:
-  ConfigMapEntryRef(shared_ptr<ConfigData> data,
-                    ConfigMapPtr map, const std::string& key)
+  ConfigMapEntryRef(a<ConfigData> data,
+                    ConfigMapPtr map, const string& key)
       : ConfigItemRef(data), map_(map), key_(key) {
   }
   template <class T>
@@ -211,20 +209,20 @@ class ConfigMapEntryRef : public ConfigItemRef {
   }
  private:
   ConfigMapPtr map_;
-  std::string key_;
+  string key_;
 };
 
 inline ConfigListEntryRef ConfigItemRef::operator[] (size_t index) {
   return ConfigListEntryRef(data_, AsList(), index);
 }
 
-inline ConfigMapEntryRef ConfigItemRef::operator[] (const std::string& key) {
+inline ConfigMapEntryRef ConfigItemRef::operator[] (const string& key) {
   return ConfigMapEntryRef(data_, AsMap(), key);
 }
 
 // Config class
 
-class Config : public Class<Config, const std::string&>, public ConfigItemRef {
+class Config : public Class<Config, const string&>, public ConfigItemRef {
  public:
   // CAVEAT: Config instances created without argument will NOT
   // be managed by ConfigComponent
@@ -232,36 +230,36 @@ class Config : public Class<Config, const std::string&>, public ConfigItemRef {
   virtual ~Config();
   // instances of Config with identical file_name share a copy of config data
   // that could be reloaded by ConfigComponent once notified changes to the file
-  explicit Config(const std::string& file_name);
+  explicit Config(const string& file_name);
 
   bool LoadFromStream(std::istream& stream);
   bool SaveToStream(std::ostream& stream);
-  bool LoadFromFile(const std::string& file_name);
-  bool SaveToFile(const std::string& file_name);
+  bool LoadFromFile(const string& file_name);
+  bool SaveToFile(const string& file_name);
 
   // access a tree node of a particular type with "path/to/key"
-  bool IsNull(const std::string& key);
-  bool IsValue(const std::string& key);
-  bool IsList(const std::string& key);
-  bool IsMap(const std::string& key);
-  bool GetBool(const std::string& key, bool* value);
-  bool GetInt(const std::string& key, int* value);
-  bool GetDouble(const std::string& key, double* value);
-  bool GetString(const std::string& key, std::string* value);
+  bool IsNull(const string& key);
+  bool IsValue(const string& key);
+  bool IsList(const string& key);
+  bool IsMap(const string& key);
+  bool GetBool(const string& key, bool* value);
+  bool GetInt(const string& key, int* value);
+  bool GetDouble(const string& key, double* value);
+  bool GetString(const string& key, string* value);
 
-  ConfigItemPtr GetItem(const std::string& key);
-  ConfigValuePtr GetValue(const std::string& key);
-  ConfigListPtr GetList(const std::string& key);
-  ConfigMapPtr GetMap(const std::string& key);
+  ConfigItemPtr GetItem(const string& key);
+  ConfigValuePtr GetValue(const string& key);
+  ConfigListPtr GetList(const string& key);
+  ConfigMapPtr GetMap(const string& key);
 
   // setters
-  bool SetBool(const std::string& key, bool value);
-  bool SetInt(const std::string& key, int value);
-  bool SetDouble(const std::string& key, double value);
-  bool SetString(const std::string& key, const char* value);
-  bool SetString(const std::string& key, const std::string& value);
+  bool SetBool(const string& key, bool value);
+  bool SetInt(const string& key, int value);
+  bool SetDouble(const string& key, double value);
+  bool SetString(const string& key, const char* value);
+  bool SetString(const string& key, const string& value);
   // setter for adding / replacing items to the tree
-  bool SetItem(const std::string& key, ConfigItemPtr item);
+  bool SetItem(const string& key, ConfigItemPtr item);
 
   template <class T>
   Config& operator= (const T& a) {
@@ -278,13 +276,13 @@ class Config : public Class<Config, const std::string&>, public ConfigItemRef {
 
 class ConfigComponent : public Config::Component {
  public:
-  ConfigComponent(const std::string& pattern) : pattern_(pattern) {}
-  Config* Create(const std::string& config_id);
-  std::string GetConfigFilePath(const std::string& config_id);
-  const std::string& pattern() const { return pattern_; }
+  ConfigComponent(const string& pattern) : pattern_(pattern) {}
+  Config* Create(const string& config_id);
+  string GetConfigFilePath(const string& config_id);
+  const string& pattern() const { return pattern_; }
 
  private:
-  std::string pattern_;
+  string pattern_;
 };
 
 }  // namespace rime

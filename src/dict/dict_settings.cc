@@ -19,7 +19,7 @@ bool DictSettings::LoadDictHeader(std::istream& stream) {
     return false;
   }
   std::stringstream header;
-  std::string line;
+  string line;
   while (getline(stream, line)) {
     boost::algorithm::trim_right(line);
     header << line << std::endl;
@@ -37,15 +37,15 @@ bool DictSettings::LoadDictHeader(std::istream& stream) {
   return true;
 }
 
-std::string DictSettings::dict_name() {
+string DictSettings::dict_name() {
   return (*this)["name"].ToString();
 }
 
-std::string DictSettings::dict_version() {
+string DictSettings::dict_version() {
   return (*this)["version"].ToString();
 }
 
-std::string DictSettings::sort_order() {
+string DictSettings::sort_order() {
   return (*this)["sort"].ToString();
 }
 
@@ -72,7 +72,7 @@ ConfigListPtr DictSettings::GetTables() {
   for (auto it = imports->begin(); it != imports->end(); ++it) {
     if (!Is<ConfigValue>(*it))
       continue;
-    std::string table = As<ConfigValue>(*it)->str();
+    string table = As<ConfigValue>(*it)->str();
     if (table == dict_name()) {
       LOG(WARNING) << "cannot import '" << table << "' from itself.";
       continue;
@@ -82,7 +82,7 @@ ConfigListPtr DictSettings::GetTables() {
   return tables;
 }
 
-int DictSettings::GetColumnIndex(const std::string& column_label) {
+int DictSettings::GetColumnIndex(const string& column_label) {
   if ((*this)["columns"].IsNull()) {
     // default
     if (column_label == "text") return 0;

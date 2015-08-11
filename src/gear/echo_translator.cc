@@ -15,10 +15,10 @@ namespace rime {
 
 class EchoTranslation : public UniqueTranslation {
  public:
-  EchoTranslation(const shared_ptr<Candidate>& candidate)
+  EchoTranslation(const a<Candidate>& candidate)
       : UniqueTranslation(candidate) {
   }
-  virtual int Compare(shared_ptr<Translation> other,
+  virtual int Compare(a<Translation> other,
                       const CandidateList& candidates) {
     if (!candidates.empty() || (other && other->Peek())) {
       set_exhausted(true);
@@ -32,7 +32,7 @@ EchoTranslator::EchoTranslator(const Ticket& ticket)
     : Translator(ticket) {
 }
 
-shared_ptr<Translation> EchoTranslator::Query(const std::string& input,
+a<Translation> EchoTranslator::Query(const string& input,
                                               const Segment& segment) {
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";

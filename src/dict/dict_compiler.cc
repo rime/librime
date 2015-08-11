@@ -5,8 +5,6 @@
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
 #include <fstream>
-#include <map>
-#include <set>
 #include <boost/filesystem.hpp>
 #include <rime/algo/algebra.h>
 #include <rime/algo/utilities.h>
@@ -28,11 +26,11 @@ DictCompiler::DictCompiler(Dictionary *dictionary, DictFileFinder finder)
       dict_file_finder_(finder) {
 }
 
-bool DictCompiler::Compile(const std::string &schema_file) {
+bool DictCompiler::Compile(const string &schema_file) {
   LOG(INFO) << "compiling:";
   bool build_table_from_source = true;
   DictSettings settings;
-  std::string dict_file(FindDictFile(dict_name_));
+  string dict_file(FindDictFile(dict_name_));
   if (dict_file.empty()) {
     build_table_from_source = false;
   }
@@ -46,12 +44,12 @@ bool DictCompiler::Compile(const std::string &schema_file) {
     LOG(INFO) << "dict name: " << settings.dict_name();
     LOG(INFO) << "dict version: " << settings.dict_version();
   }
-  std::vector<std::string> dict_files;
+  vector<string> dict_files;
   auto tables = settings.GetTables();
   for(auto it = tables->begin(); it != tables->end(); ++it) {
     if (!Is<ConfigValue>(*it))
       continue;
-    std::string dict_file(FindDictFile(As<ConfigValue>(*it)->str()));
+    string dict_file(FindDictFile(As<ConfigValue>(*it)->str()));
     if (dict_file.empty())
       return false;
     dict_files.push_back(dict_file);
@@ -119,8 +117,8 @@ bool DictCompiler::Compile(const std::string &schema_file) {
   return true;
 }
 
-std::string DictCompiler::FindDictFile(const std::string& dict_name) {
-  std::string dict_file(dict_name + ".dict.yaml");
+string DictCompiler::FindDictFile(const string& dict_name) {
+  string dict_file(dict_name + ".dict.yaml");
   if (dict_file_finder_) {
     dict_file = dict_file_finder_(dict_file);
   }
@@ -128,7 +126,7 @@ std::string DictCompiler::FindDictFile(const std::string& dict_name) {
 }
 
 bool DictCompiler::BuildTable(DictSettings* settings,
-                              const std::vector<std::string>& dict_files,
+                              const vector<string>& dict_files,
                               uint32_t dict_file_checksum) {
   LOG(INFO) << "building table...";
   EntryCollector collector;
@@ -142,7 +140,7 @@ bool DictCompiler::BuildTable(DictSettings* settings,
   Vocabulary vocabulary;
   // build .table.bin
   {
-    std::map<std::string, SyllableId> syllable_to_id;
+    map<string, SyllableId> syllable_to_id;
     SyllableId syllable_id = 0;
     for (const auto& s : collector.syllabary) {
       syllable_to_id[s] = syllable_id++;
@@ -186,7 +184,7 @@ bool DictCompiler::BuildTable(DictSettings* settings,
   return true;
 }
 
-bool DictCompiler::BuildPrism(const std::string &schema_file,
+bool DictCompiler::BuildPrism(const string &schema_file,
                               uint32_t dict_file_checksum, uint32_t schema_file_checksum) {
   LOG(INFO) << "building prism...";
   // get syllabary from table

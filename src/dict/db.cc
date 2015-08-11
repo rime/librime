@@ -14,13 +14,13 @@ namespace rime {
 
 // DbAccessor members
 
-bool DbAccessor::MatchesPrefix(const std::string& key) {
+bool DbAccessor::MatchesPrefix(const string& key) {
   return boost::starts_with(key, prefix_);
 }
 
 // Db members
 
-Db::Db(const std::string& name) : name_(name) {
+Db::Db(const string& name) : name_(name) {
   boost::filesystem::path path(name);
   if (path.has_parent_path()) {
     file_name_ = name;

@@ -7,7 +7,6 @@
 #ifndef RIME_REVERSE_LOOKUP_TRANSLATOR_H_
 #define RIME_REVERSE_LOOKUP_TRANSLATOR_H_
 
-#include <string>
 #include <rime/common.h>
 #include <rime/translator.h>
 #include <rime/algo/algebra.h>
@@ -22,20 +21,20 @@ class ReverseLookupTranslator : public Translator {
  public:
   ReverseLookupTranslator(const Ticket& ticket);
 
-  virtual shared_ptr<Translation> Query(const std::string& input,
+  virtual a<Translation> Query(const string& input,
                                         const Segment& segment);
 
  protected:
   void Initialize();
 
-  std::string tag_;
+  string tag_;
   bool initialized_ = false;
-  unique_ptr<Dictionary> dict_;
-  unique_ptr<ReverseLookupDictionary> rev_dict_;
-  unique_ptr<TranslatorOptions> options_;
-  std::string prefix_;
-  std::string suffix_;
-  std::string tips_;
+  the<Dictionary> dict_;
+  the<ReverseLookupDictionary> rev_dict_;
+  the<TranslatorOptions> options_;
+  string prefix_;
+  string suffix_;
+  string tips_;
 };
 
 }  // namespace rime

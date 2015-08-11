@@ -21,7 +21,7 @@ TEST(RimeUserDbTest, AccessRecordByKey) {
   EXPECT_TRUE(db.Update("abc", "ZYX"));
   EXPECT_TRUE(db.Update("zyx", "CBA"));
   EXPECT_TRUE(db.Update("zyx", "ABC"));
-  std::string value;
+  rime::string value;
   EXPECT_TRUE(db.Fetch("abc", &value));
   EXPECT_EQ("ZYX", value);
   value.clear();
@@ -49,10 +49,10 @@ TEST(RimeUserDbTest, Query) {
   EXPECT_TRUE(db.Update("zyx", "ABC"));
   EXPECT_TRUE(db.Update("wvu", "DEF"));
   {
-    rime::shared_ptr<rime::DbAccessor> accessor = db.Query("abc");
+    rime::a<rime::DbAccessor> accessor = db.Query("abc");
     ASSERT_TRUE(bool(accessor));
     EXPECT_FALSE(accessor->exhausted());
-    std::string key, value;
+    rime::string key, value;
     EXPECT_TRUE(accessor->GetNextRecord(&key, &value));
     EXPECT_EQ("abc", key);
     EXPECT_EQ("ZYX", value);
@@ -69,17 +69,17 @@ TEST(RimeUserDbTest, Query) {
     EXPECT_EQ("", value);
   }
   {
-    rime::shared_ptr<rime::DbAccessor> accessor = db.Query("wvu\tt");
+    rime::a<rime::DbAccessor> accessor = db.Query("wvu\tt");
     ASSERT_TRUE(bool(accessor));
     EXPECT_TRUE(accessor->exhausted());
-    std::string key, value;
+    rime::string key, value;
     EXPECT_FALSE(accessor->GetNextRecord(&key, &value));
   }
   {
-    rime::shared_ptr<rime::DbAccessor> accessor = db.Query("z");
+    rime::a<rime::DbAccessor> accessor = db.Query("z");
     ASSERT_TRUE(bool(accessor));
     EXPECT_FALSE(accessor->exhausted());
-    std::string key, value;
+    rime::string key, value;
     EXPECT_TRUE(accessor->GetNextRecord(&key, &value));
     EXPECT_EQ("zyx", key);
     EXPECT_EQ("ABC", value);

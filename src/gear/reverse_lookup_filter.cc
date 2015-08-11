@@ -16,17 +16,17 @@ namespace rime {
 
 class ReverseLookupFilterTranslation : public CacheTranslation {
  public:
-  ReverseLookupFilterTranslation(shared_ptr<Translation> translation,
+  ReverseLookupFilterTranslation(a<Translation> translation,
                                  ReverseLookupFilter* filter)
       : CacheTranslation(translation), filter_(filter) {
   }
-  virtual shared_ptr<Candidate> Peek();
+  virtual a<Candidate> Peek();
 
  protected:
   ReverseLookupFilter* filter_;
 };
 
-shared_ptr<Candidate> ReverseLookupFilterTranslation::Peek() {
+a<Candidate> ReverseLookupFilterTranslation::Peek() {
   auto cand = CacheTranslation::Peek();
   if (cand) {
     filter_->Process(cand);
@@ -58,8 +58,8 @@ void ReverseLookupFilter::Initialize() {
   }
 }
 
-shared_ptr<Translation> ReverseLookupFilter::Apply(
-    shared_ptr<Translation> translation, CandidateList* candidates) {
+a<Translation> ReverseLookupFilter::Apply(
+    a<Translation> translation, CandidateList* candidates) {
   if (!initialized_) {
     Initialize();
   }
@@ -69,13 +69,13 @@ shared_ptr<Translation> ReverseLookupFilter::Apply(
   return New<ReverseLookupFilterTranslation>(translation, this);
 }
 
-void ReverseLookupFilter::Process(const shared_ptr<Candidate>& cand) {
+void ReverseLookupFilter::Process(const a<Candidate>& cand) {
   if (!overwrite_comment_ && !cand->comment().empty())
     return;
   auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
   if (!phrase)
     return;
-  std::string codes;
+  string codes;
   if (rev_dict_->ReverseLookup(phrase->text(), &codes)) {
     comment_formatter_.Apply(&codes);
     if (!codes.empty()) {

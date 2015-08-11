@@ -7,7 +7,6 @@
 #ifndef RIME_DB_UTILS_H_
 #define RIME_DB_UTILS_H_
 
-#include <string>
 #include <rime/common.h>
 
 namespace rime {
@@ -15,8 +14,8 @@ namespace rime {
 class Sink {
  public:
   virtual ~Sink() = default;
-  virtual bool MetaPut(const std::string& key, const std::string& value) = 0;
-  virtual bool Put(const std::string& key, const std::string& value) = 0;
+  virtual bool MetaPut(const string& key, const string& value) = 0;
+  virtual bool Put(const string& key, const string& value) = 0;
 
   template <class SourceType>
   int operator<< (SourceType& source);
@@ -25,8 +24,8 @@ class Sink {
 class Source {
  public:
   virtual ~Source() = default;
-  virtual bool MetaGet(std::string* key, std::string* value) = 0;
-  virtual bool Get(std::string* key, std::string* value) = 0;
+  virtual bool MetaGet(string* key, string* value) = 0;
+  virtual bool Get(string* key, string* value) = 0;
 
   template <class SinkType>
   int operator>> (SinkType& sink);
@@ -51,8 +50,8 @@ class DbSink : public Sink {
  public:
   explicit DbSink(Db* db);
 
-  virtual bool MetaPut(const std::string& key, const std::string& value);
-  virtual bool Put(const std::string& key, const std::string& value);
+  virtual bool MetaPut(const string& key, const string& value);
+  virtual bool Put(const string& key, const string& value);
 
  protected:
   Db* db_;
@@ -62,13 +61,13 @@ class DbSource : public Source {
  public:
   explicit DbSource(Db* db);
 
-  virtual bool MetaGet(std::string* key, std::string* value);
-  virtual bool Get(std::string* key, std::string* value);
+  virtual bool MetaGet(string* key, string* value);
+  virtual bool Get(string* key, string* value);
 
  protected:
   Db* db_;
-  shared_ptr<DbAccessor> metadata_;
-  shared_ptr<DbAccessor> data_;
+  a<DbAccessor> metadata_;
+  a<DbAccessor> data_;
 };
 
 }  // namespace rime

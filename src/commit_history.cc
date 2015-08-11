@@ -31,7 +31,7 @@ void CommitHistory::Push(const KeyEvent& key_event) {
 }
 
 void CommitHistory::Push(const Composition& composition,
-                         const std::string& input) {
+                         const string& input) {
   CommitRecord* last = NULL;
   size_t end = 0;
   for (const Segment& seg : composition) {
@@ -62,8 +62,8 @@ void CommitHistory::Push(const Composition& composition,
   }
 }
 
-std::string CommitHistory::repr() const {
-  std::string result;
+string CommitHistory::repr() const {
+  string result;
   for (const CommitRecord& record : *this) {
     result += "[" + record.type + "]" + record.text;
   }

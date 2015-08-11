@@ -41,9 +41,9 @@ bool UnityTableEncoder::Load(const Ticket& ticket) {
   return LoadSettings(settings.get());
 }
 
-void UnityTableEncoder::CreateEntry(const std::string& word,
-                                    const std::string& code_str,
-                                    const std::string& weight_str) {
+void UnityTableEncoder::CreateEntry(const string& word,
+                                    const string& code_str,
+                                    const string& weight_str) {
   if (!user_dict_)
     return;
   DictEntry entry;
@@ -53,12 +53,12 @@ void UnityTableEncoder::CreateEntry(const std::string& word,
   user_dict_->UpdateEntry(entry, commits, kEncodedPrefix);
 }
 
-bool UnityTableEncoder::TranslateWord(const std::string& word,
-                                      std::vector<std::string>* code) {
+bool UnityTableEncoder::TranslateWord(const string& word,
+                                      vector<string>* code) {
   if (!rev_dict_) {
     return false;
   }
-  std::string str_list;
+  string str_list;
   if (rev_dict_->LookupStems(word, &str_list) ||
       rev_dict_->ReverseLookup(word, &str_list)) {
     boost::split(*code, str_list, boost::is_any_of(" "));
@@ -68,10 +68,10 @@ bool UnityTableEncoder::TranslateWord(const std::string& word,
 }
 
 size_t UnityTableEncoder::LookupPhrases(UserDictEntryIterator* result,
-                                        const std::string& input,
+                                        const string& input,
                                         bool predictive,
                                         size_t limit,
-                                        std::string* resume_key) {
+                                        string* resume_key) {
   if (!user_dict_)
     return 0;
   return user_dict_->LookupWords(result,
@@ -79,16 +79,16 @@ size_t UnityTableEncoder::LookupPhrases(UserDictEntryIterator* result,
                                  predictive, limit, resume_key);
 }
 
-bool UnityTableEncoder::HasPrefix(const std::string& key) {
+bool UnityTableEncoder::HasPrefix(const string& key) {
   return boost::starts_with(key, kEncodedPrefix);
 }
 
-bool UnityTableEncoder::AddPrefix(std::string* key) {
+bool UnityTableEncoder::AddPrefix(string* key) {
   key->insert(0, kEncodedPrefix);
   return true;
 }
 
-bool UnityTableEncoder::RemovePrefix(std::string* key) {
+bool UnityTableEncoder::RemovePrefix(string* key) {
   if (!HasPrefix(*key))
     return false;
   key->erase(0, strlen(kEncodedPrefix));

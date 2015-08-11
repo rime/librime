@@ -7,8 +7,6 @@
 #ifndef RIME_USER_DICT_MANAGER_H_
 #define RIME_USER_DICT_MANAGER_H_
 
-#include <string>
-#include <vector>
 #include <boost/filesystem.hpp>
 #include <rime/dict/user_db.h>
 
@@ -16,7 +14,7 @@ namespace rime {
 
 class Deployer;
 
-using UserDictList = std::vector<std::string>;
+using UserDictList = vector<string>;
 
 class UserDictManager {
  public:
@@ -27,15 +25,15 @@ class UserDictManager {
                        UserDb::Component* component = nullptr);
 
   // CAVEAT: the user dict should be closed before the following operations
-  bool Backup(const std::string& dict_name);
-  bool Restore(const std::string& snapshot_file);
-  bool UpgradeUserDict(const std::string& dict_name);
+  bool Backup(const string& dict_name);
+  bool Restore(const string& snapshot_file);
+  bool UpgradeUserDict(const string& dict_name);
   // returns num of exported entires, -1 denotes failure
-  int Export(const std::string& dict_name, const std::string& text_file);
+  int Export(const string& dict_name, const string& text_file);
   // returns num of imported entires, -1 denotes failure
-  int Import(const std::string& dict_name, const std::string& text_file);
+  int Import(const string& dict_name, const string& text_file);
 
-  bool Synchronize(const std::string& dict_name);
+  bool Synchronize(const string& dict_name);
   bool SynchronizeAll();
 
  protected:

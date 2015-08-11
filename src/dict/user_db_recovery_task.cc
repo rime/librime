@@ -16,7 +16,7 @@ namespace fs = boost::filesystem;
 
 namespace rime {
 
-UserDbRecoveryTask::UserDbRecoveryTask(shared_ptr<Db> db) : db_(db) {
+UserDbRecoveryTask::UserDbRecoveryTask(a<Db> db) : db_(db) {
   if (db_) {
     db_->disable();
   }
@@ -62,7 +62,7 @@ void UserDbRecoveryTask::RestoreUserDataFromSnapshot(Deployer* deployer) {
   UserDb::Component* component = UserDb::Require("userdb");
   if (!component || !UserDbHelper(db_).IsUserDb())
     return;
-  std::string dict_name(db_->name());
+  string dict_name(db_->name());
   boost::erase_last(dict_name, component->extension());
   // locate snapshot file
   boost::filesystem::path dir(deployer->user_data_sync_dir());
@@ -71,7 +71,7 @@ void UserDbRecoveryTask::RestoreUserDataFromSnapshot(Deployer* deployer) {
       dir / (dict_name + component->snapshot_extension());
   if (!fs::exists(snapshot_path)) {
     // try *.userdb.*.snapshot
-    std::string legacy_snapshot_file =
+    string legacy_snapshot_file =
         dict_name + component->extension() + ".snapshot";
     snapshot_path = dir / legacy_snapshot_file;
     if (!fs::exists(snapshot_path)) {
@@ -86,7 +86,7 @@ void UserDbRecoveryTask::RestoreUserDataFromSnapshot(Deployer* deployer) {
 
 UserDbRecoveryTask* UserDbRecoveryTaskComponent::Create(TaskInitializer arg) {
   try {
-    auto db = boost::any_cast<shared_ptr<Db>>(arg);
+    auto db = boost::any_cast<a<Db>>(arg);
     return new UserDbRecoveryTask(db);
   }
   catch (const boost::bad_any_cast&) {

@@ -29,10 +29,10 @@ class Speller : public Processor {
   bool AutoSelectPreviousMatch(Context* ctx, Segment* previous_segment);
   bool FindEarlierMatch(Context* ctx, size_t start, size_t end);
 
-  std::string alphabet_;
-  std::string delimiters_;
-  std::string initials_;
-  std::string finals_;
+  string alphabet_;
+  string delimiters_;
+  string initials_;
+  string finals_;
   int max_code_length_ = 0;
   bool auto_select_ = false;
   bool use_space_ = false;

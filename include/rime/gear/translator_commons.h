@@ -7,9 +7,6 @@
 #ifndef RIME_TRANSLATOR_COMMONS_H_
 #define RIME_TRANSLATOR_COMMONS_H_
 
-#include <set>
-#include <string>
-#include <vector>
 #include <boost/regex.hpp>
 #include <rime/common.h>
 #include <rime/config.h>
@@ -23,7 +20,7 @@ namespace rime {
 
 //
 
-class Patterns : public std::vector<boost::regex> {
+class Patterns : public vector<boost::regex> {
  public:
   bool Load(ConfigListPtr patterns);
 };
@@ -46,12 +43,12 @@ class Spans {
   size_t end() const {
     return vertices_.empty() ? 0 : vertices_.back();
   }
-  void set_vertices(std::vector<size_t>&& vertices) {
+  void set_vertices(vector<size_t>&& vertices) {
     vertices_ = vertices;
   }
 
  private:
-  std::vector<size_t> vertices_;
+  vector<size_t> vertices_;
 };
 
 class Phrase;
@@ -70,22 +67,22 @@ class Language;
 class Phrase : public Candidate {
  public:
   Phrase(Language* language,
-         const std::string& type, size_t start, size_t end,
-         const shared_ptr<DictEntry>& entry)
+         const string& type, size_t start, size_t end,
+         const a<DictEntry>& entry)
       : Candidate(type, start, end),
         language_(language),
         entry_(entry) {
   }
-  const std::string& text() const { return entry_->text; }
-  std::string comment() const { return entry_->comment; }
-  std::string preedit() const { return entry_->preedit; }
-  void set_comment(const std::string& comment) {
+  const string& text() const { return entry_->text; }
+  string comment() const { return entry_->comment; }
+  string preedit() const { return entry_->preedit; }
+  void set_comment(const string& comment) {
     entry_->comment = comment;
   }
-  void set_preedit(const std::string& preedit) {
+  void set_preedit(const string& preedit) {
     entry_->preedit = preedit;
   }
-  void set_syllabifier(shared_ptr<PhraseSyllabifier> syllabifier) {
+  void set_syllabifier(a<PhraseSyllabifier> syllabifier) {
     syllabifier_ = syllabifier;
   }
 
@@ -100,8 +97,8 @@ class Phrase : public Candidate {
 
  protected:
   Language* language_;
-  shared_ptr<DictEntry> entry_;
-  shared_ptr<PhraseSyllabifier> syllabifier_;
+  a<DictEntry> entry_;
+  a<PhraseSyllabifier> syllabifier_;
 };
 
 //
@@ -121,16 +118,16 @@ class Sentence : public Phrase {
   void Extend(const DictEntry& entry, size_t end_pos);
   void Offset(size_t offset);
 
-  const std::vector<DictEntry>& components() const {
+  const vector<DictEntry>& components() const {
     return components_;
   }
-  const std::vector<size_t>& syllable_lengths() const {
+  const vector<size_t>& syllable_lengths() const {
     return syllable_lengths_;
   }
 
  protected:
-  std::vector<DictEntry> components_;
-  std::vector<size_t> syllable_lengths_;
+  vector<DictEntry> components_;
+  vector<size_t> syllable_lengths_;
 };
 
 //
@@ -140,11 +137,11 @@ struct Ticket;
 class TranslatorOptions {
  public:
   TranslatorOptions(const Ticket& ticket);
-  bool IsUserDictDisabledFor(const std::string& input) const;
+  bool IsUserDictDisabledFor(const string& input) const;
 
-  const std::string& delimiters() const { return delimiters_; }
-  const std::string& tag() const { return tag_; }
-  void set_tag(const std::string& tag) { tag_ = tag; }
+  const string& delimiters() const { return delimiters_; }
+  const string& tag() const { return tag_; }
+  void set_tag(const string& tag) { tag_ = tag; }
   bool enable_completion() const { return enable_completion_; }
   void set_enable_completion(bool enabled) { enable_completion_ = enabled; }
   bool strict_spelling() const { return strict_spelling_; }
@@ -155,8 +152,8 @@ class TranslatorOptions {
   Projection& comment_formatter() { return comment_formatter_; }
 
  protected:
-  std::string delimiters_;
-  std::string tag_ = "abc";
+  string delimiters_;
+  string tag_ = "abc";
   bool enable_completion_ = true;
   bool strict_spelling_ = false;
   double initial_quality_ = 0.;

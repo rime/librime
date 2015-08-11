@@ -5,7 +5,6 @@
 // 2012-03-24 GONG Chen <chen.sst@gmail.com>
 //
 #include <iostream>
-#include <string>
 #include <rime/config.h>
 #include <rime/deployer.h>
 #include <rime/service.h>
@@ -17,8 +16,8 @@
 int main(int argc, char *argv[]) {
   rime::SetupLogging("rime.tools");
 
-  std::string option;
-  std::string arg1, arg2;
+  rime::string option;
+  rime::string arg1, arg2;
   if (argc >= 2) option = argv[1];
   if (argc >= 3) arg1 = argv[2];
   if (argc >= 4) arg2 = argv[3];
@@ -52,7 +51,7 @@ int main(int argc, char *argv[]) {
       std::cerr << "no user dictionary is found." << std::endl;
       return 0;
     }
-    for (const std::string& e : list) {
+    for (const rime::string& e : list) {
       std::cout << e << std::endl;
     }
     return 0;

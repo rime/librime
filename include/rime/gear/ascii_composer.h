@@ -8,7 +8,6 @@
 #define RIME_ASCII_COMPOSER_H_
 
 #include <chrono>
-#include <map>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/processor.h>
@@ -26,7 +25,7 @@ enum AsciiModeSwitchStyle {
   kAsciiModeSwitchClear,
 };
 
-using AsciiModeSwitchKeyBindings = std::map<int /* keycode */,
+using AsciiModeSwitchKeyBindings = map<int /* keycode */,
                                             AsciiModeSwitchStyle>;
 
 class AsciiComposer : public Processor {

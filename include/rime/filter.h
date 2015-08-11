@@ -25,7 +25,7 @@ class Filter : public Class<Filter, const Ticket&> {
       : engine_(ticket.engine), name_space_(ticket.name_space) {}
   virtual ~Filter() = default;
 
-  virtual shared_ptr<Translation> Apply(shared_ptr<Translation> translation,
+  virtual a<Translation> Apply(a<Translation> translation,
                                         CandidateList* candidates) = 0;
 
   virtual bool AppliesToSegment(Segment* segment) {
@@ -34,7 +34,7 @@ class Filter : public Class<Filter, const Ticket&> {
 
  protected:
   Engine* engine_;
-  std::string name_space_;
+  string name_space_;
 };
 
 }  // namespace rime

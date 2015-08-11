@@ -5,8 +5,6 @@
 // 2011-04-24 GONG Chen <chen.sst@gmail.com>
 //
 #include <cctype>
-#include <string>
-#include <vector>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -32,7 +30,7 @@ class ConcreteEngine : public Engine {
   virtual ~ConcreteEngine();
   virtual bool ProcessKey(const KeyEvent& key_event);
   virtual void ApplySchema(Schema* schema);
-  virtual void CommitText(std::string text);
+  virtual void CommitText(string text);
   virtual void Compose(Context* ctx);
 
  protected:
@@ -40,18 +38,18 @@ class ConcreteEngine : public Engine {
   void InitializeOptions();
   void CalculateSegmentation(Segmentation* segments);
   void TranslateSegments(Segmentation* segments);
-  void FormatText(std::string* text);
+  void FormatText(string* text);
   void OnCommit(Context* ctx);
   void OnSelect(Context* ctx);
   void OnContextUpdate(Context* ctx);
-  void OnOptionUpdate(Context* ctx, const std::string& option);
+  void OnOptionUpdate(Context* ctx, const string& option);
 
-  std::vector<shared_ptr<Processor>> processors_;
-  std::vector<shared_ptr<Segmentor>> segmentors_;
-  std::vector<shared_ptr<Translator>> translators_;
-  std::vector<shared_ptr<Filter>> filters_;
-  std::vector<shared_ptr<Formatter>> formatters_;
-  std::vector<shared_ptr<Processor>> post_processors_;
+  vector<a<Processor>> processors_;
+  vector<a<Segmentor>> segmentors_;
+  vector<a<Translator>> translators_;
+  vector<a<Filter>> filters_;
+  vector<a<Formatter>> formatters_;
+  vector<a<Processor>> post_processors_;
 };
 
 // implementations
@@ -78,7 +76,7 @@ ConcreteEngine::ConcreteEngine() {
   context_->update_notifier().connect(
       [this](Context* ctx) { OnContextUpdate(ctx); });
   context_->option_update_notifier().connect(
-      [this](Context* ctx, const std::string& option) {
+      [this](Context* ctx, const string& option) {
         OnOptionUpdate(ctx, option);
       });
   InitializeComponents();
@@ -118,7 +116,7 @@ void ConcreteEngine::OnContextUpdate(Context* ctx) {
   Compose(ctx);
 }
 
-void ConcreteEngine::OnOptionUpdate(Context* ctx, const std::string& option) {
+void ConcreteEngine::OnOptionUpdate(Context* ctx, const string& option) {
   if (!ctx) return;
   LOG(INFO) << "updated option: " << option;
   // apply new option to active segment
@@ -127,14 +125,14 @@ void ConcreteEngine::OnOptionUpdate(Context* ctx, const std::string& option) {
   }
   // notification
   bool option_is_on = ctx->get_option(option);
-  std::string msg(option_is_on ? option : "!" + option);
+  string msg(option_is_on ? option : "!" + option);
   message_sink_("option", msg);
 }
 
 void ConcreteEngine::Compose(Context* ctx) {
   if (!ctx) return;
   Composition& comp = ctx->composition();
-  std::string active_input(ctx->input().substr(0, ctx->caret_pos()));
+  string active_input(ctx->input().substr(0, ctx->caret_pos()));
   DLOG(INFO) << "active input: " << active_input;
   comp.Reset(active_input);
   CalculateSegmentation(&comp);
@@ -174,7 +172,7 @@ void ConcreteEngine::TranslateSegments(Segmentation* segments) {
     size_t len = segment.end - segment.start;
     if (len == 0)
       continue;
-    std::string input = segments->input().substr(segment.start, len);
+    string input = segments->input().substr(segment.start, len);
     DLOG(INFO) << "translating segment: " << input;
     auto menu = New<Menu>();
     for (auto& translator : translators_) {
@@ -198,7 +196,7 @@ void ConcreteEngine::TranslateSegments(Segmentation* segments) {
   }
 }
 
-void ConcreteEngine::FormatText(std::string* text) {
+void ConcreteEngine::FormatText(string* text) {
   if (formatters_.empty())
     return;
   DLOG(INFO) << "applying formatters.";
@@ -207,7 +205,7 @@ void ConcreteEngine::FormatText(std::string* text) {
   }
 }
 
-void ConcreteEngine::CommitText(std::string text) {
+void ConcreteEngine::CommitText(string text) {
   context_->commit_history().Push(CommitRecord{"raw", text});
   FormatText(&text);
   DLOG(INFO) << "committing text: " << text;
@@ -216,7 +214,7 @@ void ConcreteEngine::CommitText(std::string text) {
 
 void ConcreteEngine::OnCommit(Context* ctx) {
   context_->commit_history().Push(ctx->composition(), ctx->input());
-  std::string text = ctx->GetCommitText();
+  string text = ctx->GetCommitText();
   FormatText(&text);
   DLOG(INFO) << "committing composition: " << text;
   sink_(text);
@@ -286,7 +284,7 @@ void ConcreteEngine::InitializeComponents() {
         continue;
       Ticket ticket{this, "processor", prescription->str()};
       if (auto c = Processor::Require(ticket.klass)) {
-        shared_ptr<Processor> p(c->Create(ticket));
+        a<Processor> p(c->Create(ticket));
         processors_.push_back(p);
       }
       else {
@@ -303,7 +301,7 @@ void ConcreteEngine::InitializeComponents() {
         continue;
       Ticket ticket{this, "segmentor", prescription->str()};
       if (auto c = Segmentor::Require(ticket.klass)) {
-        shared_ptr<Segmentor> s(c->Create(ticket));
+        a<Segmentor> s(c->Create(ticket));
         segmentors_.push_back(s);
       }
       else {
@@ -320,7 +318,7 @@ void ConcreteEngine::InitializeComponents() {
         continue;
       Ticket ticket{this, "translator", prescription->str()};
       if (auto c = Translator::Require(ticket.klass)) {
-        shared_ptr<Translator> t(c->Create(ticket));
+        a<Translator> t(c->Create(ticket));
         translators_.push_back(t);
       }
       else {
@@ -337,7 +335,7 @@ void ConcreteEngine::InitializeComponents() {
         continue;
       Ticket ticket{this, "filter", prescription->str()};
       if (auto c = Filter::Require(ticket.klass)) {
-        shared_ptr<Filter> f(c->Create(ticket));
+        a<Filter> f(c->Create(ticket));
         filters_.push_back(f);
       }
       else {
@@ -347,7 +345,7 @@ void ConcreteEngine::InitializeComponents() {
   }
   // create formatters
   if (auto c = Formatter::Require("shape_formatter")) {
-    shared_ptr<Formatter> f(c->Create(Ticket(this)));
+    a<Formatter> f(c->Create(Ticket(this)));
     formatters_.push_back(f);
   }
   else {
@@ -355,7 +353,7 @@ void ConcreteEngine::InitializeComponents() {
   }
   // create post-processors
   if (auto c = Processor::Require("shape_processor")) {
-    shared_ptr<Processor> p(c->Create(Ticket(this)));
+    a<Processor> p(c->Create(Ticket(this)));
     post_processors_.push_back(p);
   }
   else {

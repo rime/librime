@@ -12,7 +12,7 @@ namespace rime {
 // TextDbAccessor memebers
 
 TextDbAccessor::TextDbAccessor(const TextDbData& data,
-                               const std::string& prefix)
+                               const string& prefix)
     : DbAccessor(prefix), data_(data) {
   Reset();
 }
@@ -25,12 +25,12 @@ bool TextDbAccessor::Reset() {
   return iter_ != data_.end();
 }
 
-bool TextDbAccessor::Jump(const std::string& key) {
+bool TextDbAccessor::Jump(const string& key) {
   iter_ = data_.lower_bound(key);
   return iter_ != data_.end();
 }
 
-bool TextDbAccessor::GetNextRecord(std::string* key, std::string* value) {
+bool TextDbAccessor::GetNextRecord(string* key, string* value) {
   if (!key || !value || exhausted())
     return false;
   *key = iter_->first;
@@ -45,8 +45,8 @@ bool TextDbAccessor::exhausted() {
 
 // TextDb members
 
-TextDb::TextDb(const std::string& name,
-               const std::string& db_type,
+TextDb::TextDb(const string& name,
+               const string& db_type,
                TextFormat format)
     : Db(name), db_type_(db_type), format_(format) {
 }
@@ -56,23 +56,23 @@ TextDb::~TextDb() {
     Close();
 }
 
-shared_ptr<DbAccessor> TextDb::QueryMetadata() {
+a<DbAccessor> TextDb::QueryMetadata() {
   if (!loaded())
     return nullptr;
   return New<TextDbAccessor>(metadata_, "");
 }
 
-shared_ptr<DbAccessor> TextDb::QueryAll() {
+a<DbAccessor> TextDb::QueryAll() {
   return Query("");
 }
 
-shared_ptr<DbAccessor> TextDb::Query(const std::string& key) {
+a<DbAccessor> TextDb::Query(const string& key) {
   if (!loaded())
     return nullptr;
   return New<TextDbAccessor>(data_, key);
 }
 
-bool TextDb::Fetch(const std::string& key, std::string* value) {
+bool TextDb::Fetch(const string& key, string* value) {
   if (!value || !loaded())
     return false;
   TextDbData::const_iterator it = data_.find(key);
@@ -82,7 +82,7 @@ bool TextDb::Fetch(const std::string& key, std::string* value) {
   return true;
 }
 
-bool TextDb::Update(const std::string& key, const std::string& value) {
+bool TextDb::Update(const string& key, const string& value) {
   if (!loaded() || readonly())
     return false;
   DLOG(INFO) << "update db entry: " << key << " => " << value;
@@ -91,7 +91,7 @@ bool TextDb::Update(const std::string& key, const std::string& value) {
   return true;
 }
 
-bool TextDb::Erase(const std::string& key) {
+bool TextDb::Erase(const string& key) {
   if (!loaded() || readonly())
     return false;
   DLOG(INFO) << "erase db entry: " << key;
@@ -108,7 +108,7 @@ bool TextDb::Open() {
   readonly_ = false;
   loaded_ = !Exists() || LoadFromFile(file_name());
   if (loaded_) {
-    std::string db_name;
+    string db_name;
     if (!MetaFetch("/db_name", &db_name)) {
       if (!CreateMetadata()) {
         LOG(ERROR) << "error creating metadata.";
@@ -156,7 +156,7 @@ void TextDb::Clear() {
   data_.clear();
 }
 
-bool TextDb::Backup(const std::string& snapshot_file) {
+bool TextDb::Backup(const string& snapshot_file) {
   if (!loaded())
     return false;
   LOG(INFO) << "backing up db '" << name() << "' to " << snapshot_file;
@@ -168,7 +168,7 @@ bool TextDb::Backup(const std::string& snapshot_file) {
   return true;
 }
 
-bool TextDb::Restore(const std::string& snapshot_file) {
+bool TextDb::Restore(const string& snapshot_file) {
   if (!loaded() || readonly())
     return false;
   if (!LoadFromFile(snapshot_file)) {
@@ -185,7 +185,7 @@ bool TextDb::CreateMetadata() {
       MetaUpdate("/db_type", db_type_);
 }
 
-bool TextDb::MetaFetch(const std::string& key, std::string* value) {
+bool TextDb::MetaFetch(const string& key, string* value) {
   if (!value || !loaded())
     return false;
   TextDbData::const_iterator it = metadata_.find(key);
@@ -195,7 +195,7 @@ bool TextDb::MetaFetch(const std::string& key, std::string* value) {
   return true;
 }
 
-bool TextDb::MetaUpdate(const std::string& key, const std::string& value) {
+bool TextDb::MetaUpdate(const string& key, const string& value) {
   if (!loaded() || readonly())
     return false;
   DLOG(INFO) << "update db metadata: " << key << " => " << value;
@@ -204,7 +204,7 @@ bool TextDb::MetaUpdate(const std::string& key, const std::string& value) {
   return true;
 }
 
-bool TextDb::LoadFromFile(const std::string& file) {
+bool TextDb::LoadFromFile(const string& file) {
   Clear();
   TsvReader reader(file, format_.parser);
   DbSink sink(this);
@@ -220,7 +220,7 @@ bool TextDb::LoadFromFile(const std::string& file) {
   return true;
 }
 
-bool TextDb::SaveToFile(const std::string& file) {
+bool TextDb::SaveToFile(const string& file) {
   TsvWriter writer(file, format_.formatter);
   writer.file_description = format_.file_description;
   DbSource source(this);

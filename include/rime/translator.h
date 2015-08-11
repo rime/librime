@@ -25,12 +25,12 @@ class Translator : public Class<Translator, const Ticket&> {
       : engine_(ticket.engine), name_space_(ticket.name_space) {}
   virtual ~Translator() = default;
 
-  virtual shared_ptr<Translation> Query(const std::string& input,
+  virtual a<Translation> Query(const string& input,
                                         const Segment& segment) = 0;
 
  protected:
   Engine* engine_;
-  std::string name_space_;
+  string name_space_;
 };
 
 }  // namespace rime

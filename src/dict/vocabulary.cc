@@ -44,7 +44,7 @@ void Code::CreateIndex(Code* index_code) {
             index_code->begin());
 }
 
-std::string Code::ToString() const {
+string Code::ToString() const {
   std::stringstream stream;
   bool first = true;
   for (SyllableId syllable_id : *this) {
@@ -90,7 +90,7 @@ void DictEntryFilterBinder::AddFilter(DictEntryFilter filter) {
   }
   else {
     DictEntryFilter previous_filter(std::move(filter_));
-    filter_ = [previous_filter, filter](shared_ptr<DictEntry> e) {
+    filter_ = [previous_filter, filter](a<DictEntry> e) {
       return previous_filter(e) && filter(e);
     };
   }

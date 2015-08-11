@@ -9,8 +9,6 @@
 #define RIME_REVERSE_LOOKUP_DICTIONARY_H_
 
 #include <stdint.h>
-#include <map>
-#include <string>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/dict/mapped_file.h>
@@ -40,10 +38,10 @@ class DictSettings;
 
 class ReverseDb : public MappedFile {
  public:
-  explicit ReverseDb(const std::string& dict_name);
+  explicit ReverseDb(const string& dict_name);
 
   bool Load();
-  bool Lookup(const std::string& text, std::string* result);
+  bool Lookup(const string& text, string* result);
 
   bool Build(DictSettings* settings,
              const Syllabary& syllabary,
@@ -56,22 +54,22 @@ class ReverseDb : public MappedFile {
 
  private:
   reverse::Metadata* metadata_ = nullptr;
-  unique_ptr<StringTable> key_trie_;
-  unique_ptr<StringTable> value_trie_;
+  the<StringTable> key_trie_;
+  the<StringTable> value_trie_;
 };
 
 class ReverseLookupDictionary
     : public Class<ReverseLookupDictionary, const Ticket&> {
  public:
-  explicit ReverseLookupDictionary(shared_ptr<ReverseDb> db);
-  explicit ReverseLookupDictionary(const std::string& dict_name);
+  explicit ReverseLookupDictionary(a<ReverseDb> db);
+  explicit ReverseLookupDictionary(const string& dict_name);
   bool Load();
-  bool ReverseLookup(const std::string& text, std::string* result);
-  bool LookupStems(const std::string& text, std::string* result);
-  shared_ptr<DictSettings> GetDictSettings();
+  bool ReverseLookup(const string& text, string* result);
+  bool LookupStems(const string& text, string* result);
+  a<DictSettings> GetDictSettings();
 
  protected:
-  shared_ptr<ReverseDb> db_;
+  a<ReverseDb> db_;
 };
 
 class ReverseLookupDictionaryComponent
@@ -80,7 +78,7 @@ class ReverseLookupDictionaryComponent
   ReverseLookupDictionaryComponent();
   ReverseLookupDictionary* Create(const Ticket& ticket);
  private:
-  std::map<std::string, weak_ptr<ReverseDb>> db_pool_;
+  map<string, weak<ReverseDb>> db_pool_;
 };
 
 }  // namespace rime

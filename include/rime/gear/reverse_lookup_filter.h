@@ -20,20 +20,20 @@ class ReverseLookupFilter : public Filter, TagMatching {
  public:
   explicit ReverseLookupFilter(const Ticket& ticket);
 
-  virtual shared_ptr<Translation> Apply(shared_ptr<Translation> translation,
+  virtual a<Translation> Apply(a<Translation> translation,
                                         CandidateList* candidates);
 
   virtual bool AppliesToSegment(Segment* segment) {
     return TagsMatch(segment);
   }
 
-  void Process(const shared_ptr<Candidate>& cand);
+  void Process(const a<Candidate>& cand);
 
  protected:
   void Initialize();
 
   bool initialized_ = false;
-  unique_ptr<ReverseLookupDictionary> rev_dict_;
+  the<ReverseLookupDictionary> rev_dict_;
   // settings
   bool overwrite_comment_ = false;
   Projection comment_formatter_;

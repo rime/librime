@@ -28,9 +28,9 @@ static void load_patterns(RecognizerPatterns* patterns, ConfigMapPtr map) {
 
 void RecognizerPatterns::LoadConfig(Config* config) {
   ConfigMapPtr pattern_map;
-  std::string preset;
+  string preset;
   if (config->GetString("recognizer/import_preset", &preset)) {
-    unique_ptr<Config> preset_config(
+    the<Config> preset_config(
         Config::Require("config")->Create(preset));
     if (!preset_config) {
       LOG(ERROR) << "Error importing preset patterns '" << preset << "'.";
@@ -44,11 +44,11 @@ void RecognizerPatterns::LoadConfig(Config* config) {
 }
 
 RecognizerMatch
-RecognizerPatterns::GetMatch(const std::string& input,
+RecognizerPatterns::GetMatch(const string& input,
                              const Segmentation& segmentation) const {
   size_t j = segmentation.GetCurrentEndPosition();
   size_t k = segmentation.GetConfirmedPosition();
-  std::string active_input = input.substr(k);
+  string active_input = input.substr(k);
   DLOG(INFO) << "matching active input '" << active_input << "' at pos " << k;
   for (const auto& v : *this) {
     boost::smatch m;
@@ -95,7 +95,7 @@ ProcessResult Recognizer::ProcessKeyEvent(const KeyEvent& key_event) {
       (ch > 0x20 && ch < 0x80)) {
     // pattern matching against the input string plus the incoming character
     Context* ctx = engine_->context();
-    std::string input = ctx->input();
+    string input = ctx->input();
     input += ch;
     auto match = patterns_.GetMatch(input, ctx->composition());
     if (match.found()) {

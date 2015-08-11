@@ -151,7 +151,7 @@ rime_levers_get_selected_schema_list(RimeSwitcherSettings* settings,
     return False;
   }
   list->list = new RimeSchemaListItem[ss->selection().size()];
-  for (const std::string& schema_id : ss->selection()) {
+  for (const rime::string& schema_id : ss->selection()) {
     auto& item(list->list[list->size]);
     item.schema_id = const_cast<char*>(schema_id.c_str());
     ++list->size;

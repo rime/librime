@@ -7,7 +7,6 @@
 #ifndef RIME_NAVIGATOR_H_
 #define RIME_NAVIGATOR_H_
 
-#include <string>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/processor.h>
@@ -30,7 +29,7 @@ class Navigator : public Processor {
   bool Home(Context* ctx);
   bool End(Context* ctx);
 
-  std::string input_;
+  string input_;
   Spans spans_;
 };
 

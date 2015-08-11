@@ -25,13 +25,13 @@ class RimeConsole {
   RimeConsole() : interactive_(false),
                   engine_(rime::Engine::Create()) {
     conn_ = engine_->sink().connect(
-        [this](const std::string& x) { OnCommit(x); });
+        [this](const rime::string& x) { OnCommit(x); });
   }
   ~RimeConsole() {
     conn_.disconnect();
   }
 
-  void OnCommit(const std::string &commit_text) {
+  void OnCommit(const rime::string &commit_text) {
     if (interactive_) {
       std::cout << "commit : [" << commit_text << "]" << std::endl;
     }
@@ -53,14 +53,14 @@ class RimeConsole {
       return;
     int page_size = engine_->schema()->page_size();
     int page_no = current.selected_index / page_size;
-    rime::unique_ptr<rime::Page> page(
+    rime::the<rime::Page> page(
         current.menu->CreatePage(page_size, page_no));
     if (!page)
       return;
     std::cout << "page_no: " << page_no
               << ", index: " << current.selected_index << std::endl;
     int i = 0;
-    for (const rime::shared_ptr<rime::Candidate> &cand :
+    for (const rime::a<rime::Candidate> &cand :
                   page->candidates) {
       std::cout << "cand. " << (++i % 10) <<  ": [";
       std::cout << cand->text();
@@ -72,7 +72,7 @@ class RimeConsole {
     }
   }
 
-  void ProcessLine(const std::string &line) {
+  void ProcessLine(const rime::string &line) {
     rime::KeySequence keys;
     if (!keys.Parse(line)) {
       LOG(ERROR) << "error parsing input: '" << line << "'";
@@ -97,7 +97,7 @@ class RimeConsole {
 
  private:
   bool interactive_;
-  rime::unique_ptr<rime::Engine> engine_;
+  rime::the<rime::Engine> engine_;
   rime::connection conn_;
 };
 
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
   console.set_interactive(interactive);
 
   // process input
-  std::string line;
+  rime::string line;
   while (std::cin) {
     std::getline(std::cin, line);
     console.ProcessLine(line);

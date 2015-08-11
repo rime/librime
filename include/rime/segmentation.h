@@ -7,9 +7,6 @@
 #ifndef RIME_SEGMENTATION_H_
 #define RIME_SEGMENTATION_H_
 
-#include <set>
-#include <string>
-#include <vector>
 #include <rime/common.h>
 
 namespace rime {
@@ -28,10 +25,10 @@ struct Segment {
   size_t start = 0;
   size_t end = 0;
   size_t length = 0;
-  std::set<std::string> tags;
-  shared_ptr<Menu> menu;
+  set<string> tags;
+  a<Menu> menu;
   size_t selected_index = 0;
-  std::string prompt;
+  string prompt;
 
   Segment() = default;
 
@@ -50,19 +47,19 @@ struct Segment {
   void Close();
   bool Reopen(size_t caret_pos);
 
-  bool HasTag(const std::string& tag) const {
+  bool HasTag(const string& tag) const {
     return tags.find(tag) != tags.end();
   }
 
-  shared_ptr<Candidate> GetCandidateAt(size_t index) const;
-  shared_ptr<Candidate> GetSelectedCandidate() const;
+  a<Candidate> GetCandidateAt(size_t index) const;
+  a<Candidate> GetSelectedCandidate() const;
 };
 
-class Segmentation : public std::vector<Segment> {
+class Segmentation : public vector<Segment> {
  public:
   Segmentation();
   virtual ~Segmentation() {}
-  void Reset(const std::string& input);
+  void Reset(const string& input);
   void Reset(size_t num_segments);
   bool AddSegment(const Segment& segment);
 
@@ -74,10 +71,10 @@ class Segmentation : public std::vector<Segment> {
   size_t GetCurrentSegmentLength() const;
   size_t GetConfirmedPosition() const;
 
-  const std::string& input() const { return input_; }
+  const string& input() const { return input_; }
 
  protected:
-  std::string input_;
+  string input_;
 };
 
 std::ostream& operator<< (std::ostream& out,

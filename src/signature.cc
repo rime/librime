@@ -16,7 +16,7 @@ bool Signature::Sign(Config* config, Deployer* deployer) {
   if (!config) return false;
   config->SetString(key_ + "/generator", generator_);
   time_t now = time(NULL);
-  std::string time_str(ctime(&now));
+  string time_str(ctime(&now));
   boost::trim(time_str);
   config->SetString(key_ + "/modified_time", time_str);
   config->SetString(key_ + "/distribution_code_name",
