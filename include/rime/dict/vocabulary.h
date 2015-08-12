@@ -43,7 +43,7 @@ struct DictEntry {
   bool operator< (const DictEntry& other) const;
 };
 
-class DictEntryList : public vector<a<DictEntry>> {
+class DictEntryList : public vector<of<DictEntry>> {
  public:
   void Sort();
   void SortRange(size_t start, size_t count);

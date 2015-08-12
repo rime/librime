@@ -20,9 +20,9 @@ Candidate::GetGenuineCandidate(const a<Candidate>& cand) {
   return UnpackShadowCandidate(uniquified ? uniquified->items().front() : cand);
 }
 
-vector<a<Candidate>>
+vector<of<Candidate>>
 Candidate::GetGenuineCandidates(const a<Candidate>& cand) {
-  vector<a<Candidate>> result;
+  vector<of<Candidate>> result;
   if (auto uniquified = As<UniquifiedCandidate>(cand)) {
     for (const auto& item : uniquified->items()) {
       result.push_back(UnpackShadowCandidate(item));

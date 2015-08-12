@@ -79,7 +79,7 @@ class UnionTranslation : public Translation {
   UnionTranslation& operator+= (a<Translation> t);
 
  protected:
-  list<a<Translation>> translations_;
+  list<of<Translation>> translations_;
 };
 
 a<UnionTranslation> operator+ (a<Translation> x, a<Translation> y);
@@ -99,7 +99,7 @@ class MergedTranslation : public Translation {
   void Elect();
 
   const CandidateList& previous_candidates_;
-  vector<a<Translation>> translations_;
+  vector<of<Translation>> translations_;
   size_t elected_ = 0;
 };
 

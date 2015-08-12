@@ -51,7 +51,7 @@ class TranslationBeta : public Translation {
   }
 
  private:
-  vector<a<Candidate>> candies_;
+  vector<of<Candidate>> candies_;
   size_t cursor_;
 };
 

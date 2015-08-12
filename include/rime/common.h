@@ -49,6 +49,8 @@ using the = std::unique_ptr<T>;
 template <class T>
 using a = std::shared_ptr<T>;
 template <class T>
+using of = a<T>;
+template <class T>
 using weak = std::weak_ptr<T>;
 
 template <class X, class Y>

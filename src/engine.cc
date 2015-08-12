@@ -44,12 +44,12 @@ class ConcreteEngine : public Engine {
   void OnContextUpdate(Context* ctx);
   void OnOptionUpdate(Context* ctx, const string& option);
 
-  vector<a<Processor>> processors_;
-  vector<a<Segmentor>> segmentors_;
-  vector<a<Translator>> translators_;
-  vector<a<Filter>> filters_;
-  vector<a<Formatter>> formatters_;
-  vector<a<Processor>> post_processors_;
+  vector<of<Processor>> processors_;
+  vector<of<Segmentor>> segmentors_;
+  vector<of<Translator>> translators_;
+  vector<of<Filter>> filters_;
+  vector<of<Formatter>> formatters_;
+  vector<of<Processor>> post_processors_;
 };
 
 // implementations

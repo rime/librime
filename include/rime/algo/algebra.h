@@ -34,7 +34,7 @@ class Projection {
   // {z, y, x} -> {a, b, c, d}
   bool Apply(Script* value);
  protected:
-  vector<a<Calculation>> calculation_;
+  vector<of<Calculation>> calculation_;
 };
 
 }  // namespace rime

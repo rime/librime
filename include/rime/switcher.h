@@ -52,8 +52,8 @@ class Switcher : public Processor, public Engine {
   set<string> save_options_;
   bool fold_options_ = false;
 
-  vector<a<Processor>> processors_;
-  vector<a<Translator>> translators_;
+  vector<of<Processor>> processors_;
+  vector<of<Translator>> translators_;
   bool active_ = false;
 };
 

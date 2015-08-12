@@ -23,7 +23,7 @@ class Candidate {
 
   static a<Candidate>
   GetGenuineCandidate(const a<Candidate>& cand);
-  static vector<a<Candidate>>
+  static vector<of<Candidate>>
   GetGenuineCandidates(const a<Candidate>& cand);
 
   // recognized by translators in learning phase
@@ -52,8 +52,8 @@ class Candidate {
   double quality_ = 0.;
 };
 
-using CandidateQueue = list<a<Candidate>>;
-using CandidateList = vector<a<Candidate>>;
+using CandidateQueue = list<of<Candidate>>;
+using CandidateList = vector<of<Candidate>>;
 
 // useful implimentations
 
