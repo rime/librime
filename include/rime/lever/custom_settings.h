@@ -22,10 +22,10 @@ class CustomSettings {
 
   virtual bool Load();
   virtual bool Save();
-  ConfigValuePtr GetValue(const string& key);
-  ConfigListPtr GetList(const string& key);
-  ConfigMapPtr GetMap(const string& key);
-  bool Customize(const string& key, const ConfigItemPtr& item);
+  a<ConfigValue> GetValue(const string& key);
+  a<ConfigList> GetList(const string& key);
+  a<ConfigMap> GetMap(const string& key);
+  bool Customize(const string& key, const a<ConfigItem>& item);
   bool IsFirstRun();
   bool modified() const { return modified_; }
   Config* config() { return &config_; }

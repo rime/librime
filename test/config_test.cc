@@ -101,11 +101,11 @@ TEST_F(RimeConfigTest, Config_GetString) {
 }
 
 TEST_F(RimeConfigTest, Config_GetList) {
-  ConfigListPtr p;
+  a<ConfigList> p;
   p = config_->GetList("protoss/air_force");
   ASSERT_TRUE(bool(p));
   ASSERT_EQ(4, p->size());
-  ConfigValuePtr element;
+  a<ConfigValue> element;
   string value;
   element = p->GetValueAt(0);
   ASSERT_TRUE(bool(element));
@@ -119,12 +119,12 @@ TEST_F(RimeConfigTest, Config_GetList) {
 }
 
 TEST_F(RimeConfigTest, Config_GetMap) {
-  ConfigMapPtr p;
+  a<ConfigMap> p;
   p = config_->GetMap("terrans/tank/cost");
   ASSERT_TRUE(bool(p));
   EXPECT_FALSE(p->HasKey("rime"));
   ASSERT_TRUE(p->HasKey("time"));
-  ConfigValuePtr item;
+  a<ConfigValue> item;
   string time;
   int mineral = 0;
   int gas = 0;
@@ -147,10 +147,10 @@ TEST(RimeConfigWriterTest, Greetings) {
   ASSERT_TRUE(bool(config));
   // creating contents
   EXPECT_TRUE(config->SetItem("/", New<ConfigMap>()));
-  ConfigItemPtr terran_greetings = New<ConfigValue>("Greetings, Terrans!");
-  ConfigItemPtr zerg_greetings = New<ConfigValue>("Zergsss are coming!");
-  ConfigItemPtr zergs_coming = New<ConfigValue>(true);
-  ConfigItemPtr zergs_population = New<ConfigValue>(1000000);
+  a<ConfigItem> terran_greetings = New<ConfigValue>("Greetings, Terrans!");
+  a<ConfigItem> zerg_greetings = New<ConfigValue>("Zergsss are coming!");
+  a<ConfigItem> zergs_coming = New<ConfigValue>(true);
+  a<ConfigItem> zergs_population = New<ConfigValue>(1000000);
   EXPECT_TRUE(config->SetItem("greetings", terran_greetings));
   EXPECT_TRUE(config->SetItem("zergs/overmind/greetings", zerg_greetings));
   EXPECT_TRUE(config->SetItem("zergs/going", zergs_coming));
@@ -178,7 +178,7 @@ TEST(RimeConfigWriterTest, Greetings) {
   // modifying tree
   EXPECT_TRUE(config2->SetInt("zergs/statistics/population", population / 2));
   EXPECT_TRUE(config2->SetString("protoss/residence", "Aiur"));
-  EXPECT_TRUE(config2->SetItem("zergs/overmind", ConfigItemPtr()));
+  EXPECT_TRUE(config2->SetItem("zergs/overmind", nullptr));
   EXPECT_TRUE(config2->SaveToFile("config_rewriter_test.yaml"));
   // verify
   the<Config> config3(new Config);
@@ -215,8 +215,8 @@ TEST(RimeConfigxxTest, Operations) {
   EXPECT_EQ(4, config["list"].size());
   EXPECT_EQ("123", config["list"][3]["abc"].ToString());
   EXPECT_EQ("Hello!", config["list"][2].ToString());
-  ConfigItemPtr v1(config["list"][2]);
-  ConfigItemPtr v2(config["nested"]["greetings"]);
+  a<ConfigItem> v1(config["list"][2]);
+  a<ConfigItem> v2(config["nested"]["greetings"]);
   EXPECT_EQ(v1, v2);
   EXPECT_TRUE(config.modified());
   EXPECT_TRUE(config.SaveToFile("rime_configxx_test.yaml"));

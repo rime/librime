@@ -14,9 +14,10 @@
 //   rime_patch default schema_list '[{schema: luna_pinyin}]'
 //   rime_patch default schema_list  # read yaml from stdin
 
+using namespace rime;
 
-int apply_patch(const rime::string& config_id,
-                const rime::string& key, const rime::string& yaml) {
+int apply_patch(const string& config_id,
+                const string& key, const string& yaml) {
   RimeApi* rime = rime_get_api();
   RimeModule* module = rime->find_module("levers");
   if (!module) {
@@ -64,9 +65,9 @@ int main(int argc, char *argv[]) {
 
   rime->deployer_initialize(&traits);
 
-  rime::string config_id(argv[1]);
-  rime::string key(argv[2]);
-  rime::string yaml;
+  string config_id(argv[1]);
+  string key(argv[2]);
+  string yaml;
   if (argc > 3) {
     yaml.assign(argv[3]);
   }

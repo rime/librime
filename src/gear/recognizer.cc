@@ -15,7 +15,7 @@
 
 namespace rime {
 
-static void load_patterns(RecognizerPatterns* patterns, ConfigMapPtr map) {
+static void load_patterns(RecognizerPatterns* patterns, a<ConfigMap> map) {
   if (!patterns || !map)
     return;
   for (auto it = map->begin(); it != map->end(); ++it) {
@@ -27,7 +27,7 @@ static void load_patterns(RecognizerPatterns* patterns, ConfigMapPtr map) {
 }
 
 void RecognizerPatterns::LoadConfig(Config* config) {
-  ConfigMapPtr pattern_map;
+  a<ConfigMap> pattern_map;
   string preset;
   if (config->GetString("recognizer/import_preset", &preset)) {
     the<Config> preset_config(

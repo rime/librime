@@ -11,16 +11,16 @@
 #include <rime/algo/algebra.h>
 #include <rime/dict/prism.h>
 
+namespace rime {
+
 namespace {
 
 struct node_t {
-  rime::string key;
+  string key;
   size_t node_pos;
 };
 
 }  // namespace
-
-namespace rime {
 
 const char kPrismFormat[] = "Rime::Prism/1.0";
 

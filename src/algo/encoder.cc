@@ -63,7 +63,7 @@ bool TableEncoder::LoadSettings(Config* config) {
       if (!ParseFormula(formula, &r))
         continue;
       r.min_word_length = r.max_word_length = 0;
-      if (ConfigValuePtr value = rule->GetValue("length_equal")) {
+      if (a<ConfigValue> value = rule->GetValue("length_equal")) {
         int length = 0;
         if (!value->GetInt(&length)) {
           LOG(ERROR) << "invalid length";

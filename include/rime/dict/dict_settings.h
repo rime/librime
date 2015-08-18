@@ -24,7 +24,7 @@ class DictSettings : public Config {
   bool use_rule_based_encoder();
   int max_phrase_length();
   double min_phrase_weight();
-  ConfigListPtr GetTables();
+  a<ConfigList> GetTables();
   int GetColumnIndex(const string& column_label);
 };
 

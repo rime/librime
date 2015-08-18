@@ -64,13 +64,13 @@ void Script::Dump(const string& file_name) const {
   out.close();
 }
 
-bool Projection::Load(ConfigListPtr settings) {
+bool Projection::Load(a<ConfigList> settings) {
   if (!settings) return false;
   calculation_.clear();
   Calculus calc;
   bool success = true;
   for (size_t i = 0; i < settings->size(); ++i) {
-    ConfigValuePtr v(settings->GetValueAt(i));
+    a<ConfigValue> v(settings->GetValueAt(i));
     if (!v) {
       LOG(ERROR) << "Error loading formula #" << (i + 1) << ".";
       success = false;

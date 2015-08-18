@@ -59,7 +59,7 @@ struct KeyBinding {
 class KeyBindings : public map<KeyEvent,
                                     vector<KeyBinding>> {
  public:
-  void LoadBindings(const ConfigListPtr& bindings);
+  void LoadBindings(const a<ConfigList>& bindings);
   void Bind(const KeyEvent& key, const KeyBinding& binding);
 };
 
@@ -82,7 +82,7 @@ static void select_schema(Engine* engine, const string& schema) {
   }
 }
 
-void KeyBindings::LoadBindings(const ConfigListPtr& bindings) {
+void KeyBindings::LoadBindings(const a<ConfigList>& bindings) {
   if (!bindings)
     return;
   for (size_t i = 0; i < bindings->size(); ++i) {

@@ -22,7 +22,7 @@ namespace rime {
 
 class Patterns : public vector<boost::regex> {
  public:
-  bool Load(ConfigListPtr patterns);
+  bool Load(a<ConfigList> patterns);
 };
 
 //

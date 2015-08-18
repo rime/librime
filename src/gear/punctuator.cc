@@ -52,8 +52,8 @@ void PunctConfig::LoadConfig(Engine* engine, bool load_symbols) {
   }
 }
 
-ConfigItemPtr PunctConfig::GetPunctDefinition(const string key) {
-  ConfigItemPtr punct_definition;
+a<ConfigItem> PunctConfig::GetPunctDefinition(const string key) {
+  a<ConfigItem> punct_definition;
   if (mapping_)
     punct_definition = mapping_->Get(key);
   if (punct_definition)
@@ -131,7 +131,7 @@ ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
 }
 
 bool Punctuator::AlternatePunct(const string& key,
-                                const ConfigItemPtr& definition) {
+                                const a<ConfigItem>& definition) {
   if (!As<ConfigList>(definition))
     return false;
   Context* ctx = engine_->context();
@@ -155,14 +155,14 @@ bool Punctuator::AlternatePunct(const string& key,
   return false;
 }
 
-bool Punctuator::ConfirmUniquePunct(const ConfigItemPtr& definition) {
+bool Punctuator::ConfirmUniquePunct(const a<ConfigItem>& definition) {
   if (!As<ConfigValue>(definition))
     return false;
   engine_->context()->ConfirmCurrentSelection();
   return true;
 }
 
-bool Punctuator::AutoCommitPunct(const ConfigItemPtr& definition) {
+bool Punctuator::AutoCommitPunct(const a<ConfigItem>& definition) {
   auto map = As<ConfigMap>(definition);
   if (!map || !map->HasKey("commit"))
     return false;
@@ -170,7 +170,7 @@ bool Punctuator::AutoCommitPunct(const ConfigItemPtr& definition) {
   return true;
 }
 
-bool Punctuator::PairPunct(const ConfigItemPtr& definition) {
+bool Punctuator::PairPunct(const a<ConfigItem>& definition) {
   auto map = As<ConfigMap>(definition);
   if (!map || !map->HasKey("pair"))
     return false;
@@ -286,7 +286,7 @@ a<Translation> PunctTranslator::Query(const string& input,
 a<Translation>
 PunctTranslator::TranslateUniquePunct(const string& key,
                                       const Segment& segment,
-                                      const ConfigValuePtr& definition) {
+                                      const a<ConfigValue>& definition) {
   if (!definition)
     return nullptr;
   return New<UniqueTranslation>(
@@ -296,7 +296,7 @@ PunctTranslator::TranslateUniquePunct(const string& key,
 a<Translation>
 PunctTranslator::TranslateAlternatingPunct(const string& key,
                                            const Segment& segment,
-                                           const ConfigListPtr& definition) {
+                                           const a<ConfigList>& definition) {
   if (!definition)
     return nullptr;
   auto translation = New<FifoTranslation>();
@@ -320,7 +320,7 @@ PunctTranslator::TranslateAlternatingPunct(const string& key,
 a<Translation>
 PunctTranslator::TranslateAutoCommitPunct(const string& key,
                                           const Segment& segment,
-                                          const ConfigMapPtr& definition) {
+                                          const a<ConfigMap>& definition) {
   if (!definition || !definition->HasKey("commit"))
     return nullptr;
   auto value = definition->GetValue("commit");
@@ -334,7 +334,7 @@ PunctTranslator::TranslateAutoCommitPunct(const string& key,
 a<Translation>
 PunctTranslator::TranslatePairedPunct(const string& key,
                                       const Segment& segment,
-                                      const ConfigMapPtr& definition) {
+                                      const a<ConfigMap>& definition) {
   if (!definition || !definition->HasKey("pair"))
     return nullptr;
   auto list = As<ConfigList>(definition->Get("pair"));

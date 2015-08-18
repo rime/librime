@@ -26,7 +26,7 @@ static struct AsciiModeSwitchStyleDefinition {
   { NULL, kAsciiModeSwitchNoop }
 };
 
-static void load_bindings(const ConfigMapPtr& src,
+static void load_bindings(const a<ConfigMap>& src,
                           AsciiModeSwitchKeyBindings* dest) {
   if (!src)
     return;

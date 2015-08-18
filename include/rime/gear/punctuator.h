@@ -21,13 +21,13 @@ class Engine;
 class PunctConfig {
  public:
   void LoadConfig(Engine* engine, bool load_symbols = false);
-  ConfigItemPtr GetPunctDefinition(const string key);
+  a<ConfigItem> GetPunctDefinition(const string key);
  protected:
-  ConfigMapPtr mapping_;
-  ConfigMapPtr preset_mapping_;
+  a<ConfigMap> mapping_;
+  a<ConfigMap> preset_mapping_;
   string shape_;
-  ConfigMapPtr symbols_;
-  ConfigMapPtr preset_symbols_;
+  a<ConfigMap> symbols_;
+  a<ConfigMap> preset_symbols_;
 };
 
 class Punctuator : public Processor {
@@ -36,14 +36,14 @@ class Punctuator : public Processor {
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:
-  bool ConfirmUniquePunct(const ConfigItemPtr& definition);
-  bool AlternatePunct(const string& key, const ConfigItemPtr& definition);
-  bool AutoCommitPunct(const ConfigItemPtr& definition);
-  bool PairPunct(const ConfigItemPtr& definition);
+  bool ConfirmUniquePunct(const a<ConfigItem>& definition);
+  bool AlternatePunct(const string& key, const a<ConfigItem>& definition);
+  bool AutoCommitPunct(const a<ConfigItem>& definition);
+  bool PairPunct(const a<ConfigItem>& definition);
 
   PunctConfig config_;
   bool use_space_ = false;
-  map<ConfigItemPtr, int> oddness_;
+  map<a<ConfigItem>, int> oddness_;
 };
 
 class PunctSegmentor : public Segmentor {
@@ -65,19 +65,19 @@ class PunctTranslator : public Translator {
   a<Translation>
   TranslateUniquePunct(const string& key,
                        const Segment& segment,
-                       const ConfigValuePtr& definition);
+                       const a<ConfigValue>& definition);
   a<Translation>
   TranslateAlternatingPunct(const string& key,
                             const Segment& segment,
-                            const ConfigListPtr& definition);
+                            const a<ConfigList>& definition);
   a<Translation>
   TranslateAutoCommitPunct(const string& key,
                            const Segment& segment,
-                           const ConfigMapPtr& definition);
+                           const a<ConfigMap>& definition);
   a<Translation>
   TranslatePairedPunct(const string& key,
                        const Segment& segment,
-                       const ConfigMapPtr& definition);
+                       const a<ConfigMap>& definition);
 
   PunctConfig config_;
 };

@@ -62,7 +62,7 @@ Page* Menu::CreatePage(size_t page_size, size_t page_no) {
 a<Candidate> Menu::GetCandidateAt(size_t index) {
   if (index >= candidates_.size() &&
       index >= Prepare(index + 1)) {
-    return a<Candidate>();
+    return nullptr;
   }
   return candidates_[index];
 }

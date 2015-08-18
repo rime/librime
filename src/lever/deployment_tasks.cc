@@ -41,7 +41,7 @@ bool InstallationUpdate::Run(Deployer* deployer) {
     }
   }
   fs::path installation_info(user_data_path / "installation.yaml");
-  rime::Config config;
+  Config config;
   string installation_id;
   string last_distro_code_name;
   string last_distro_version;
@@ -413,7 +413,7 @@ bool UserDictUpgrade::Run(Deployer* deployer) {
 }
 
 bool UserDictSync::Run(Deployer* deployer) {
-  rime::UserDictManager mgr(deployer);
+  UserDictManager mgr(deployer);
   return mgr.SynchronizeAll();
 }
 

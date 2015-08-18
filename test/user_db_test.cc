@@ -9,7 +9,9 @@
 #include <rime/dict/text_db.h>
 #include <rime/dict/user_db.h>
 
-using TestDb = rime::UserDbWrapper<rime::TextDb>;
+using namespace rime;
+
+using TestDb = UserDbWrapper<TextDb>;
 
 TEST(RimeUserDbTest, AccessRecordByKey) {
   TestDb db("user_db_test");
@@ -21,7 +23,7 @@ TEST(RimeUserDbTest, AccessRecordByKey) {
   EXPECT_TRUE(db.Update("abc", "ZYX"));
   EXPECT_TRUE(db.Update("zyx", "CBA"));
   EXPECT_TRUE(db.Update("zyx", "ABC"));
-  rime::string value;
+  string value;
   EXPECT_TRUE(db.Fetch("abc", &value));
   EXPECT_EQ("ZYX", value);
   value.clear();
@@ -49,10 +51,10 @@ TEST(RimeUserDbTest, Query) {
   EXPECT_TRUE(db.Update("zyx", "ABC"));
   EXPECT_TRUE(db.Update("wvu", "DEF"));
   {
-    rime::a<rime::DbAccessor> accessor = db.Query("abc");
+    a<DbAccessor> accessor = db.Query("abc");
     ASSERT_TRUE(bool(accessor));
     EXPECT_FALSE(accessor->exhausted());
-    rime::string key, value;
+    string key, value;
     EXPECT_TRUE(accessor->GetNextRecord(&key, &value));
     EXPECT_EQ("abc", key);
     EXPECT_EQ("ZYX", value);
@@ -69,17 +71,17 @@ TEST(RimeUserDbTest, Query) {
     EXPECT_EQ("", value);
   }
   {
-    rime::a<rime::DbAccessor> accessor = db.Query("wvu\tt");
+    a<DbAccessor> accessor = db.Query("wvu\tt");
     ASSERT_TRUE(bool(accessor));
     EXPECT_TRUE(accessor->exhausted());
-    rime::string key, value;
+    string key, value;
     EXPECT_FALSE(accessor->GetNextRecord(&key, &value));
   }
   {
-    rime::a<rime::DbAccessor> accessor = db.Query("z");
+    a<DbAccessor> accessor = db.Query("z");
     ASSERT_TRUE(bool(accessor));
     EXPECT_FALSE(accessor->exhausted());
-    rime::string key, value;
+    string key, value;
     EXPECT_TRUE(accessor->GetNextRecord(&key, &value));
     EXPECT_EQ("zyx", key);
     EXPECT_EQ("ABC", value);
