@@ -16,6 +16,7 @@ option(BUILD_TEST "Build and run tests" OFF)
 option(BUILD_SEPARATE_LIBS "Build a separate rime-gears library" OFF)
 option(ENABLE_LOGGING "Enable logging with google-glog library" ON)
 option(BOOST_USE_CXX11 "Boost has been built with C++11 support" OFF)
+option(BOOST_USE_SIGNALS2 "Boost use signals2 instead of signals" ON)
 
 SET(RIME_DATA_DIR "/share/rime-data" CACHE STRING "Target directory for Rime data")
 
@@ -116,6 +117,10 @@ if(UNIX)
 endif(UNIX)
 if(NOT BOOST_USE_CXX11)
   add_definitions("-DBOOST_NO_CXX11_SCOPED_ENUMS")
+endif()
+
+if(BOOST_USE_SIGNALS2)
+  add_definitions("-DBOOST_SIGNALS2")
 endif()
 
 if(NOT DEFINED LIB_INSTALL_DIR)

@@ -10,8 +10,12 @@
 #include <memory>
 #include <utility>
 #define BOOST_BIND_NO_PLACEHOLDERS
+#ifdef BOOST_SIGNALS2
 #include <boost/signals2/connection.hpp>
 #include <boost/signals2/signal.hpp>
+#else
+#include <boost/signals.hpp>
+#endif
 
 #ifdef RIME_ENABLE_LOGGING
 #include <glog/logging.h>
@@ -24,8 +28,13 @@
 
 namespace rime {
 
+#ifdef BOOST_SIGNALS2
 using boost::signals2::connection;
 using boost::signals2::signal;
+#else
+using boost::signals::connection;
+using boost::signal;
+#endif
 
 using std::unique_ptr;
 using std::shared_ptr;
