@@ -62,6 +62,7 @@ Frontends
   - [Squirrel](https://github.com/rime/squirrel): frontend for Mac OS X
   - [Weasel](https://github.com/rime/weasel): frontend for Windows
   - [XIME](https://github.com/stackia/XIME): yet another Rime frontend for Mac OS X
+  - [trime](https://github.com/osfans/trime): frontend for Android
 
 Plugins
 ===
@@ -99,4 +100,5 @@ Contributors
   - [BYVoid](http://www.byvoid.com)
   - [雪齋](https://github.com/LEOYoon-Tsaw)
   - [瑾昀](https://github.com/kunki)
+  - [osfans](https://github.com/osfans)
 
