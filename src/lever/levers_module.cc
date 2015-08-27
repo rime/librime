@@ -154,6 +154,8 @@ rime_levers_get_selected_schema_list(RimeSwitcherSettings* settings,
   for (const std::string& schema_id : ss->selection()) {
     auto& item(list->list[list->size]);
     item.schema_id = const_cast<char*>(schema_id.c_str());
+    item.name = NULL;
+    item.reserved = NULL;
     ++list->size;
   }
   return True;
