@@ -16,7 +16,7 @@ class Greeting : public Class<Greeting, const string&> {
   virtual ~Greeting() = default;
 };
 
-using HelloMessage = std::pair<string, string>;
+using HelloMessage = pair<string, string>;
 
 class Hello : public Greeting {
  public:
@@ -36,7 +36,7 @@ class HelloComponent : public Hello::Component {
   HelloComponent(const string& word) : word_(word) {}
   // define a custom creator to provide an additional argument
   Hello* Create(const string& name) {
-    return new Hello(std::make_pair(word_, name));
+    return new Hello(make_pair(word_, name));
   }
  private:
   string word_;

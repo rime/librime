@@ -103,7 +103,8 @@ RIME_API Bool RimeStartMaintenance(Bool full_check) {
     return False;
   }
   if (!full_check) {
-    TaskInitializer args(std::make_pair("default.yaml", "config_version"));
+    TaskInitializer args{
+        make_pair<string, string>("default.yaml", "config_version")};
     if (!deployer.RunTask("config_file_update", args)) {
       return False;
     }
@@ -158,7 +159,7 @@ RIME_API Bool RimeDeploySchema(const char *schema_file) {
 RIME_API Bool RimeDeployConfigFile(const char *file_name,
                                    const char *version_key) {
   Deployer& deployer(Service::instance().deployer());
-  TaskInitializer args(std::make_pair(file_name, version_key));
+  TaskInitializer args(make_pair<string, string>(file_name, version_key));
   return Bool(deployer.RunTask("config_file_update", args));
 }
 

@@ -16,6 +16,7 @@
 #include <utility>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 #define BOOST_BIND_NO_PLACEHOLDERS
 #ifdef BOOST_SIGNALS2
@@ -38,7 +39,9 @@ namespace rime {
 
 using std::function;
 using std::list;
+using std::make_pair;
 using std::map;
+using std::pair;
 using std::set;
 using std::string;
 using std::vector;

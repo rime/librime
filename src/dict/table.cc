@@ -623,7 +623,7 @@ bool Table::Query(const SyllableGraph& syll_graph, size_t start_pos,
       start_pos >= syll_graph.interpreted_length)
     return false;
   result->clear();
-  std::queue<std::pair<size_t, TableQuery>> q;
+  std::queue<pair<size_t, TableQuery>> q;
   TableQuery initial_state(index_);
   q.push({start_pos, initial_state});
   while (!q.empty()) {

@@ -307,7 +307,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
 
 ConfigFileUpdate::ConfigFileUpdate(TaskInitializer arg) {
   try {
-    auto p = boost::any_cast< std::pair<string, string>>(arg);
+    auto p = boost::any_cast<pair<string, string>>(arg);
     file_name_ = p.first;
     version_key_ = p.second;
   }

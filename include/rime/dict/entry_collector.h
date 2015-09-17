@@ -26,7 +26,7 @@ using WeightMap = map<string, double>;
 // word -> { code -> weight }
 using WordMap = map<string, WeightMap>;
 // [ (word, weight), ... ]
-using EncodeQueue = std::queue<std::pair<string, string>>;
+using EncodeQueue = std::queue<pair<string, string>>;
 
 class PresetVocabulary;
 class DictSettings;
