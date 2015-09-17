@@ -14,7 +14,7 @@ namespace rime {
 
 // Patterns
 
-bool Patterns::Load(a<ConfigList> patterns) {
+bool Patterns::Load(an<ConfigList> patterns) {
   clear();
   if (!patterns)
     return false;

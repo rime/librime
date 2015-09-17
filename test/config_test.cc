@@ -101,11 +101,11 @@ TEST_F(RimeConfigTest, Config_GetString) {
 }
 
 TEST_F(RimeConfigTest, Config_GetList) {
-  a<ConfigList> p;
+  an<ConfigList> p;
   p = config_->GetList("protoss/air_force");
   ASSERT_TRUE(bool(p));
   ASSERT_EQ(4, p->size());
-  a<ConfigValue> element;
+  an<ConfigValue> element;
   string value;
   element = p->GetValueAt(0);
   ASSERT_TRUE(bool(element));
@@ -119,12 +119,12 @@ TEST_F(RimeConfigTest, Config_GetList) {
 }
 
 TEST_F(RimeConfigTest, Config_GetMap) {
-  a<ConfigMap> p;
+  an<ConfigMap> p;
   p = config_->GetMap("terrans/tank/cost");
   ASSERT_TRUE(bool(p));
   EXPECT_FALSE(p->HasKey("rime"));
   ASSERT_TRUE(p->HasKey("time"));
-  a<ConfigValue> item;
+  an<ConfigValue> item;
   string time;
   int mineral = 0;
   int gas = 0;
@@ -147,10 +147,10 @@ TEST(RimeConfigWriterTest, Greetings) {
   ASSERT_TRUE(bool(config));
   // creating contents
   EXPECT_TRUE(config->SetItem("/", New<ConfigMap>()));
-  a<ConfigItem> terran_greetings = New<ConfigValue>("Greetings, Terrans!");
-  a<ConfigItem> zerg_greetings = New<ConfigValue>("Zergsss are coming!");
-  a<ConfigItem> zergs_coming = New<ConfigValue>(true);
-  a<ConfigItem> zergs_population = New<ConfigValue>(1000000);
+  an<ConfigItem> terran_greetings = New<ConfigValue>("Greetings, Terrans!");
+  an<ConfigItem> zerg_greetings = New<ConfigValue>("Zergsss are coming!");
+  an<ConfigItem> zergs_coming = New<ConfigValue>(true);
+  an<ConfigItem> zergs_population = New<ConfigValue>(1000000);
   EXPECT_TRUE(config->SetItem("greetings", terran_greetings));
   EXPECT_TRUE(config->SetItem("zergs/overmind/greetings", zerg_greetings));
   EXPECT_TRUE(config->SetItem("zergs/going", zergs_coming));
@@ -215,8 +215,8 @@ TEST(RimeConfigxxTest, Operations) {
   EXPECT_EQ(4, config["list"].size());
   EXPECT_EQ("123", config["list"][3]["abc"].ToString());
   EXPECT_EQ("Hello!", config["list"][2].ToString());
-  a<ConfigItem> v1(config["list"][2]);
-  a<ConfigItem> v2(config["nested"]["greetings"]);
+  an<ConfigItem> v1(config["list"][2]);
+  an<ConfigItem> v2(config["nested"]["greetings"]);
   EXPECT_EQ(v1, v2);
   EXPECT_TRUE(config.modified());
   EXPECT_TRUE(config.SaveToFile("rime_configxx_test.yaml"));

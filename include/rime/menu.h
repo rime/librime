@@ -27,12 +27,12 @@ class Menu {
  public:
   Menu();
 
-  void AddTranslation(a<Translation> translation);
+  void AddTranslation(an<Translation> translation);
   void AddFilter(Filter* filter);
 
   size_t Prepare(size_t candidate_count);
   Page* CreatePage(size_t page_size, size_t page_no);
-  a<Candidate> GetCandidateAt(size_t index);
+  an<Candidate> GetCandidateAt(size_t index);
 
   // CAVEAT: returns the number of candidates currently obtained,
   // rather than the total number of available candidates.
@@ -41,8 +41,8 @@ class Menu {
   bool empty() const;
 
  private:
-  a<MergedTranslation> merged_;
-  a<Translation> result_;
+  an<MergedTranslation> merged_;
+  an<Translation> result_;
   CandidateList candidates_;
 };
 

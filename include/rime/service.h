@@ -61,7 +61,7 @@ class Service {
   void StopService();
 
   SessionId CreateSession();
-  a<Session> GetSession(SessionId session_id);
+  an<Session> GetSession(SessionId session_id);
   bool DestroySession(SessionId session_id);
   void CleanupStaleSessions();
   void CleanupAllSessions();
@@ -80,7 +80,7 @@ class Service {
  private:
   Service();
 
-  using SessionMap = map<SessionId, a<Session>>;
+  using SessionMap = map<SessionId, an<Session>>;
   SessionMap sessions_;
   Deployer deployer_;
   NotificationHandler notification_handler_;

@@ -64,20 +64,20 @@ void Script::Dump(const string& file_name) const {
   out.close();
 }
 
-bool Projection::Load(a<ConfigList> settings) {
+bool Projection::Load(an<ConfigList> settings) {
   if (!settings) return false;
   calculation_.clear();
   Calculus calc;
   bool success = true;
   for (size_t i = 0; i < settings->size(); ++i) {
-    a<ConfigValue> v(settings->GetValueAt(i));
+    an<ConfigValue> v(settings->GetValueAt(i));
     if (!v) {
       LOG(ERROR) << "Error loading formula #" << (i + 1) << ".";
       success = false;
       break;
     }
     const string &formula(v->str());
-    a<Calculation> x;
+    an<Calculation> x;
     try {
       x.reset(calc.Parse(formula));
     }
@@ -103,7 +103,7 @@ bool Projection::Apply(string* value) {
     return false;
   bool modified = false;
   Spelling s(*value);
-  for (a<Calculation>& x : calculation_) {
+  for (an<Calculation>& x : calculation_) {
     try {
       if (x->Apply(&s))
         modified = true;
@@ -123,7 +123,7 @@ bool Projection::Apply(Script* value) {
     return false;
   bool modified = false;
   int round = 0;
-  for (a<Calculation>& x : calculation_) {
+  for (an<Calculation>& x : calculation_) {
     ++round;
     DLOG(INFO) << "round #" << round;
     Script temp;

@@ -18,7 +18,7 @@ class Simplifier : public Filter, TagMatching {
  public:
   explicit Simplifier(const Ticket& ticket);
 
-  virtual a<Translation> Apply(a<Translation> translation,
+  virtual an<Translation> Apply(an<Translation> translation,
                                         CandidateList* candidates);
 
 
@@ -26,7 +26,7 @@ class Simplifier : public Filter, TagMatching {
     return TagsMatch(segment);
   }
 
-  bool Convert(const a<Candidate>& original,
+  bool Convert(const an<Candidate>& original,
                CandidateQueue* result);
 
  protected:

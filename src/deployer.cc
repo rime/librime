@@ -48,7 +48,7 @@ bool Deployer::ScheduleTask(const string& task_name, TaskInitializer arg) {
     LOG(ERROR) << "unknown deployment task: " << task_name;
     return false;
   }
-  a<DeploymentTask> t(c->Create(arg));
+  an<DeploymentTask> t(c->Create(arg));
   if (!t) {
     LOG(ERROR) << "error creating deployment task: " << task_name;
     return false;
@@ -57,12 +57,12 @@ bool Deployer::ScheduleTask(const string& task_name, TaskInitializer arg) {
   return true;
 }
 
-void Deployer::ScheduleTask(a<DeploymentTask> task) {
+void Deployer::ScheduleTask(an<DeploymentTask> task) {
   std::lock_guard<std::mutex> lock(mutex_);
   pending_tasks_.push(task);
 }
 
-a<DeploymentTask> Deployer::NextTask() {
+an<DeploymentTask> Deployer::NextTask() {
   std::lock_guard<std::mutex> lock(mutex_);
   if (!pending_tasks_.empty()) {
     auto result = pending_tasks_.front();

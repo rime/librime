@@ -21,13 +21,13 @@ class Engine;
 class PunctConfig {
  public:
   void LoadConfig(Engine* engine, bool load_symbols = false);
-  a<ConfigItem> GetPunctDefinition(const string key);
+  an<ConfigItem> GetPunctDefinition(const string key);
  protected:
-  a<ConfigMap> mapping_;
-  a<ConfigMap> preset_mapping_;
+  an<ConfigMap> mapping_;
+  an<ConfigMap> preset_mapping_;
   string shape_;
-  a<ConfigMap> symbols_;
-  a<ConfigMap> preset_symbols_;
+  an<ConfigMap> symbols_;
+  an<ConfigMap> preset_symbols_;
 };
 
 class Punctuator : public Processor {
@@ -36,14 +36,14 @@ class Punctuator : public Processor {
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:
-  bool ConfirmUniquePunct(const a<ConfigItem>& definition);
-  bool AlternatePunct(const string& key, const a<ConfigItem>& definition);
-  bool AutoCommitPunct(const a<ConfigItem>& definition);
-  bool PairPunct(const a<ConfigItem>& definition);
+  bool ConfirmUniquePunct(const an<ConfigItem>& definition);
+  bool AlternatePunct(const string& key, const an<ConfigItem>& definition);
+  bool AutoCommitPunct(const an<ConfigItem>& definition);
+  bool PairPunct(const an<ConfigItem>& definition);
 
   PunctConfig config_;
   bool use_space_ = false;
-  map<a<ConfigItem>, int> oddness_;
+  map<an<ConfigItem>, int> oddness_;
 };
 
 class PunctSegmentor : public Segmentor {
@@ -58,26 +58,26 @@ class PunctSegmentor : public Segmentor {
 class PunctTranslator : public Translator {
  public:
   PunctTranslator(const Ticket& ticket);
-  virtual a<Translation> Query(const string& input,
+  virtual an<Translation> Query(const string& input,
                                         const Segment& segment);
 
  protected:
-  a<Translation>
+  an<Translation>
   TranslateUniquePunct(const string& key,
                        const Segment& segment,
-                       const a<ConfigValue>& definition);
-  a<Translation>
+                       const an<ConfigValue>& definition);
+  an<Translation>
   TranslateAlternatingPunct(const string& key,
                             const Segment& segment,
-                            const a<ConfigList>& definition);
-  a<Translation>
+                            const an<ConfigList>& definition);
+  an<Translation>
   TranslateAutoCommitPunct(const string& key,
                            const Segment& segment,
-                           const a<ConfigMap>& definition);
-  a<Translation>
+                           const an<ConfigMap>& definition);
+  an<Translation>
   TranslatePairedPunct(const string& key,
                        const Segment& segment,
-                       const a<ConfigMap>& definition);
+                       const an<ConfigMap>& definition);
 
   PunctConfig config_;
 };

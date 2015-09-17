@@ -24,16 +24,16 @@ class ConfigData {
   bool SaveToStream(std::ostream& stream);
   bool LoadFromFile(const string& file_name);
   bool SaveToFile(const string& file_name);
-  a<ConfigItem> Traverse(const string& key);
+  an<ConfigItem> Traverse(const string& key);
 
   bool modified() const { return modified_; }
   void set_modified() { modified_ = true; }
 
-  a<ConfigItem> root;
+  an<ConfigItem> root;
 
  protected:
-  static a<ConfigItem> ConvertFromYaml(const YAML::Node& yaml_node);
-  static void EmitYaml(a<ConfigItem> node,
+  static an<ConfigItem> ConvertFromYaml(const YAML::Node& yaml_node);
+  static void EmitYaml(an<ConfigItem> node,
                        YAML::Emitter* emitter,
                        int depth);
   static void EmitScalar(const string& str_value,
@@ -45,7 +45,7 @@ class ConfigData {
 
 class ConfigDataManager : public map<string, weak<ConfigData>> {
  public:
-  a<ConfigData> GetConfigData(const string& config_file_path);
+  an<ConfigData> GetConfigData(const string& config_file_path);
   bool ReloadConfigData(const string& config_file_path);
 
   static ConfigDataManager& instance();
@@ -163,25 +163,25 @@ bool ConfigValue::SetString(const string& value) {
 
 // ConfigList members
 
-a<ConfigItem> ConfigList::GetAt(size_t i) const {
+an<ConfigItem> ConfigList::GetAt(size_t i) const {
   if (i >= seq_.size())
     return nullptr;
   else
     return seq_[i];
 }
 
-a<ConfigValue> ConfigList::GetValueAt(size_t i) const {
+an<ConfigValue> ConfigList::GetValueAt(size_t i) const {
   return As<ConfigValue>(GetAt(i));
 }
 
-bool ConfigList::SetAt(size_t i, a<ConfigItem> element) {
+bool ConfigList::SetAt(size_t i, an<ConfigItem> element) {
   if (i >= seq_.size())
     seq_.resize(i + 1);
   seq_[i] = element;
   return true;
 }
 
-bool ConfigList::Insert(size_t i, a<ConfigItem> element) {
+bool ConfigList::Insert(size_t i, an<ConfigItem> element) {
   if (i > seq_.size()) {
     seq_.resize(i);
   }
@@ -189,7 +189,7 @@ bool ConfigList::Insert(size_t i, a<ConfigItem> element) {
   return true;
 }
 
-bool ConfigList::Append(a<ConfigItem> element) {
+bool ConfigList::Append(an<ConfigItem> element) {
   seq_.push_back(element);
   return true;
 }
@@ -222,7 +222,7 @@ bool ConfigMap::HasKey(const string& key) const {
   return bool(Get(key));
 }
 
-a<ConfigItem> ConfigMap::Get(const string& key) const {
+an<ConfigItem> ConfigMap::Get(const string& key) const {
   auto it = map_.find(key);
   if (it == map_.end())
     return nullptr;
@@ -230,11 +230,11 @@ a<ConfigItem> ConfigMap::Get(const string& key) const {
     return it->second;
 }
 
-a<ConfigValue> ConfigMap::GetValue(const string& key) const {
+an<ConfigValue> ConfigMap::GetValue(const string& key) const {
   return As<ConfigValue>(Get(key));
 }
 
-bool ConfigMap::Set(const string& key, a<ConfigItem> element) {
+bool ConfigMap::Set(const string& key, an<ConfigItem> element) {
   map_[key] = element;
   return true;
 }
@@ -306,14 +306,14 @@ string ConfigItemRef::ToString() const {
   return value;
 }
 
-a<ConfigList> ConfigItemRef::AsList() {
+an<ConfigList> ConfigItemRef::AsList() {
   auto list = As<ConfigList>(GetItem());
   if (!list)
     SetItem(list = New<ConfigList>());
   return list;
 }
 
-a<ConfigMap> ConfigItemRef::AsMap() {
+an<ConfigMap> ConfigItemRef::AsMap() {
   auto map = As<ConfigMap>(GetItem());
   if (!map)
     SetItem(map = New<ConfigMap>());
@@ -324,7 +324,7 @@ void ConfigItemRef::Clear() {
   SetItem(nullptr);
 }
 
-bool ConfigItemRef::Append(a<ConfigItem> item) {
+bool ConfigItemRef::Append(an<ConfigItem> item) {
   if (AsList()->Append(item)) {
     set_modified();
     return true;
@@ -423,22 +423,22 @@ bool Config::GetString(const string& key, string* value) {
   return p && p->GetString(value);
 }
 
-a<ConfigItem> Config::GetItem(const string& key) {
+an<ConfigItem> Config::GetItem(const string& key) {
   DLOG(INFO) << "read: " << key;
   return data_->Traverse(key);
 }
 
-a<ConfigValue> Config::GetValue(const string& key) {
+an<ConfigValue> Config::GetValue(const string& key) {
   DLOG(INFO) << "read: " << key;
   return As<ConfigValue>(data_->Traverse(key));
 }
 
-a<ConfigList> Config::GetList(const string& key) {
+an<ConfigList> Config::GetList(const string& key) {
   DLOG(INFO) << "read: " << key;
   return As<ConfigList>(data_->Traverse(key));
 }
 
-a<ConfigMap> Config::GetMap(const string& key) {
+an<ConfigMap> Config::GetMap(const string& key) {
   DLOG(INFO) << "read: " << key;
   return As<ConfigMap>(data_->Traverse(key));
 }
@@ -467,12 +467,12 @@ static inline bool IsListItemReference(const string& key) {
   return !key.empty() && key[0] == '@';
 }
 
-static size_t ResolveListIndex(a<ConfigItem> p, const string& key,
+static size_t ResolveListIndex(an<ConfigItem> p, const string& key,
                                bool read_only = false) {
   //if (!IsListItemReference(key)) {
   //  return 0;
   //}
-  a<ConfigList> list = As<ConfigList>(p);
+  an<ConfigList> list = As<ConfigList>(p);
   if (!list) {
     return 0;
   }
@@ -515,7 +515,7 @@ static size_t ResolveListIndex(a<ConfigItem> p, const string& key,
   return index;
 }
 
-bool Config::SetItem(const string& key, a<ConfigItem> item) {
+bool Config::SetItem(const string& key, an<ConfigItem> item) {
   LOG(INFO) << "write: " << key;
   if (key.empty() || key == "/") {
     data_->root = item;
@@ -525,7 +525,7 @@ bool Config::SetItem(const string& key, a<ConfigItem> item) {
   if (!data_->root) {
     data_->root = New<ConfigMap>();
   }
-  a<ConfigItem> p(data_->root);
+  an<ConfigItem> p(data_->root);
   vector<string> keys;
   boost::split(keys, key, boost::is_any_of("/"));
   size_t k = keys.size() - 1;
@@ -551,7 +551,7 @@ bool Config::SetItem(const string& key, a<ConfigItem> item) {
       return true;
     }
     else {
-      a<ConfigItem> next;
+      an<ConfigItem> next;
       if (node_type == ConfigItem::kList) {
         next = As<ConfigList>(p)->GetAt(list_index);
       }
@@ -580,11 +580,11 @@ bool Config::SetItem(const string& key, a<ConfigItem> item) {
   return false;
 }
 
-a<ConfigItem> Config::GetItem() const {
+an<ConfigItem> Config::GetItem() const {
   return data_->root;
 }
 
-void Config::SetItem(a<ConfigItem> item) {
+void Config::SetItem(an<ConfigItem> item) {
   data_->root = item;
   set_modified();
 }
@@ -611,9 +611,9 @@ ConfigDataManager& ConfigDataManager::instance() {
   return *s_instance;
 }
 
-a<ConfigData>
+an<ConfigData>
 ConfigDataManager::GetConfigData(const string& config_file_path) {
-  a<ConfigData> sp;
+  an<ConfigData> sp;
   // keep a weak reference to the shared config data in the manager
   weak<ConfigData>& wp((*this)[config_file_path]);
   if (wp.expired()) {  // create a new copy and load it
@@ -632,7 +632,7 @@ bool ConfigDataManager::ReloadConfigData(const string& config_file_path) {
   if (it == end()) {  // never loaded
     return false;
   }
-  a<ConfigData> sp = it->second.lock();
+  an<ConfigData> sp = it->second.lock();
   if (!sp)  {  // already been freed
     erase(it);
     return false;
@@ -715,7 +715,7 @@ bool ConfigData::SaveToFile(const string& file_name) {
   return SaveToStream(out);
 }
 
-a<ConfigItem> ConfigData::Traverse(const string& key) {
+an<ConfigItem> ConfigData::Traverse(const string& key) {
   DLOG(INFO) << "traverse: " << key;
   if (key.empty() || key == "/") {
     return root;
@@ -723,7 +723,7 @@ a<ConfigItem> ConfigData::Traverse(const string& key) {
   vector<string> keys;
   boost::split(keys, key, boost::is_any_of("/"));
   // find the YAML::Node, and wrap it!
-  a<ConfigItem> p = root;
+  an<ConfigItem> p = root;
   for (auto it = keys.begin(), end = keys.end(); it != end; ++it) {
     ConfigItem::ValueType node_type = ConfigItem::kMap;
     size_t list_index = 0;
@@ -744,7 +744,7 @@ a<ConfigItem> ConfigData::Traverse(const string& key) {
   return p;
 }
 
-a<ConfigItem> ConfigData::ConvertFromYaml(const YAML::Node& node) {
+an<ConfigItem> ConfigData::ConvertFromYaml(const YAML::Node& node) {
   if (YAML::NodeType::Null == node.Type()) {
     return nullptr;
   }
@@ -782,7 +782,7 @@ void ConfigData::EmitScalar(const string& str_value,
   *emitter << str_value;
 }
 
-void ConfigData::EmitYaml(a<ConfigItem> node,
+void ConfigData::EmitYaml(an<ConfigItem> node,
                           YAML::Emitter* emitter,
                           int depth) {
   if (!node || !emitter) return;

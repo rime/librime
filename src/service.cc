@@ -107,7 +107,7 @@ SessionId Service::CreateSession() {
   return id;
 }
 
-a<Session> Service::GetSession(SessionId session_id) {
+an<Session> Service::GetSession(SessionId session_id) {
   if (disabled())
     return nullptr;
   SessionMap::iterator it = sessions_.find(session_id);

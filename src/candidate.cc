@@ -8,20 +8,20 @@
 
 namespace rime {
 
-static a<Candidate>
-UnpackShadowCandidate(const a<Candidate>& cand) {
+static an<Candidate>
+UnpackShadowCandidate(const an<Candidate>& cand) {
   auto shadow = As<ShadowCandidate>(cand);
   return shadow ? shadow->item() : cand;
 }
 
-a<Candidate>
-Candidate::GetGenuineCandidate(const a<Candidate>& cand) {
+an<Candidate>
+Candidate::GetGenuineCandidate(const an<Candidate>& cand) {
   auto uniquified = As<UniquifiedCandidate>(cand);
   return UnpackShadowCandidate(uniquified ? uniquified->items().front() : cand);
 }
 
 vector<of<Candidate>>
-Candidate::GetGenuineCandidates(const a<Candidate>& cand) {
+Candidate::GetGenuineCandidates(const an<Candidate>& cand) {
   vector<of<Candidate>> result;
   if (auto uniquified = As<UniquifiedCandidate>(cand)) {
     for (const auto& item : uniquified->items()) {

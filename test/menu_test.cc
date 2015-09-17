@@ -21,7 +21,7 @@ class TranslationAlpha : public Translation {
     set_exhausted(true);
     return true;
   }
-  a<Candidate> Peek() {
+  an<Candidate> Peek() {
     if (exhausted())
       return nullptr;
     return New<SimpleCandidate>("alpha", 0, 5, "Alpha");
@@ -44,7 +44,7 @@ class TranslationBeta : public Translation {
     return true;
   }
 
-  a<Candidate> Peek() {
+  an<Candidate> Peek() {
     if (exhausted())
       return nullptr;
     return candies_[cursor_];

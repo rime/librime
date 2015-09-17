@@ -62,7 +62,7 @@ bool Context::HasMenu() const {
   return menu && !menu->empty();
 }
 
-a<Candidate> Context::GetSelectedCandidate() const {
+an<Candidate> Context::GetSelectedCandidate() const {
   if (composition_.empty())
     return nullptr;
   return composition_.back().GetSelectedCandidate();

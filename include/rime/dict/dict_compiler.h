@@ -46,8 +46,8 @@ class DictCompiler {
   bool BuildReverseLookupDict(ReverseDb* db, uint32_t dict_file_checksum);
 
   string dict_name_;
-  a<Prism> prism_;
-  a<Table> table_;
+  an<Prism> prism_;
+  an<Table> table_;
   int options_ = 0;
   DictFileFinder dict_file_finder_;
 };

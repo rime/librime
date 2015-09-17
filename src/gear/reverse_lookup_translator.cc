@@ -37,8 +37,8 @@ class ReverseLookupTranslation : public TableTranslation {
       : TableTranslation(options, NULL, input, start, end, preedit, iter),
         dict_(dict), options_(options), quality_(quality) {
   }
-  virtual a<Candidate> Peek();
-  virtual int Compare(a<Translation> other,
+  virtual an<Candidate> Peek();
+  virtual int Compare(an<Translation> other,
                       const CandidateList& candidates);
  protected:
   ReverseLookupDictionary* dict_;
@@ -46,7 +46,7 @@ class ReverseLookupTranslation : public TableTranslation {
   bool quality_;
 };
 
-a<Candidate> ReverseLookupTranslation::Peek() {
+an<Candidate> ReverseLookupTranslation::Peek() {
   if (exhausted())
     return nullptr;
   const auto& entry(iter_.Peek());
@@ -60,7 +60,7 @@ a<Candidate> ReverseLookupTranslation::Peek() {
     //  boost::algorithm::replace_all(tips, " ", separator);
     //}
   }
-  a<Candidate> cand = New<SimpleCandidate>(
+  an<Candidate> cand = New<SimpleCandidate>(
       "reverse_lookup",
       start_,
       end_,
@@ -70,7 +70,7 @@ a<Candidate> ReverseLookupTranslation::Peek() {
   return cand;
 }
 
-int ReverseLookupTranslation::Compare(a<Translation> other,
+int ReverseLookupTranslation::Compare(an<Translation> other,
                                       const CandidateList& candidates) {
   if (!other || other->exhausted())
     return -1;
@@ -138,7 +138,7 @@ void ReverseLookupTranslator::Initialize() {
   }
 }
 
-a<Translation> ReverseLookupTranslator::Query(const string& input,
+an<Translation> ReverseLookupTranslator::Query(const string& input,
                                                        const Segment& segment) {
   if (!segment.HasTag(tag_))
     return nullptr;

@@ -284,7 +284,7 @@ void ConcreteEngine::InitializeComponents() {
         continue;
       Ticket ticket{this, "processor", prescription->str()};
       if (auto c = Processor::Require(ticket.klass)) {
-        a<Processor> p(c->Create(ticket));
+        an<Processor> p(c->Create(ticket));
         processors_.push_back(p);
       }
       else {
@@ -301,7 +301,7 @@ void ConcreteEngine::InitializeComponents() {
         continue;
       Ticket ticket{this, "segmentor", prescription->str()};
       if (auto c = Segmentor::Require(ticket.klass)) {
-        a<Segmentor> s(c->Create(ticket));
+        an<Segmentor> s(c->Create(ticket));
         segmentors_.push_back(s);
       }
       else {
@@ -318,7 +318,7 @@ void ConcreteEngine::InitializeComponents() {
         continue;
       Ticket ticket{this, "translator", prescription->str()};
       if (auto c = Translator::Require(ticket.klass)) {
-        a<Translator> t(c->Create(ticket));
+        an<Translator> t(c->Create(ticket));
         translators_.push_back(t);
       }
       else {
@@ -335,7 +335,7 @@ void ConcreteEngine::InitializeComponents() {
         continue;
       Ticket ticket{this, "filter", prescription->str()};
       if (auto c = Filter::Require(ticket.klass)) {
-        a<Filter> f(c->Create(ticket));
+        an<Filter> f(c->Create(ticket));
         filters_.push_back(f);
       }
       else {
@@ -345,7 +345,7 @@ void ConcreteEngine::InitializeComponents() {
   }
   // create formatters
   if (auto c = Formatter::Require("shape_formatter")) {
-    a<Formatter> f(c->Create(Ticket(this)));
+    an<Formatter> f(c->Create(Ticket(this)));
     formatters_.push_back(f);
   }
   else {
@@ -353,7 +353,7 @@ void ConcreteEngine::InitializeComponents() {
   }
   // create post-processors
   if (auto c = Processor::Require("shape_processor")) {
-    a<Processor> p(c->Create(Ticket(this)));
+    an<Processor> p(c->Create(Ticket(this)));
     post_processors_.push_back(p);
   }
   else {

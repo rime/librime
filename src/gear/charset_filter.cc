@@ -45,7 +45,7 @@ bool contains_extended_cjk(const string& text)
 // CharsetFilterTranslation
 
 CharsetFilterTranslation::CharsetFilterTranslation(
-    a<Translation> translation)
+    an<Translation> translation)
     : translation_(translation) {
   LocateNextCandidate();
 }
@@ -60,7 +60,7 @@ bool CharsetFilterTranslation::Next() {
   return LocateNextCandidate();
 }
 
-a<Candidate> CharsetFilterTranslation::Peek() {
+an<Candidate> CharsetFilterTranslation::Peek() {
   return translation_->Peek();
 }
 
@@ -81,7 +81,7 @@ bool CharsetFilter::FilterText(const string& text) {
   return !contains_extended_cjk(text);
 }
 
-bool CharsetFilter::FilterDictEntry(a<DictEntry> entry) {
+bool CharsetFilter::FilterDictEntry(an<DictEntry> entry) {
   return entry && FilterText(entry->text);
 }
 
@@ -89,8 +89,8 @@ CharsetFilter::CharsetFilter(const Ticket& ticket)
     : Filter(ticket), TagMatching(ticket) {
 }
 
-a<Translation> CharsetFilter::Apply(
-    a<Translation> translation, CandidateList* candidates) {
+an<Translation> CharsetFilter::Apply(
+    an<Translation> translation, CandidateList* candidates) {
   if (engine_->context()->get_option("extended_charset")) {
     return translation;
   }

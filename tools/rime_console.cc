@@ -61,7 +61,7 @@ class RimeConsole {
     std::cout << "page_no: " << page_no
               << ", index: " << current.selected_index << std::endl;
     int i = 0;
-    for (const a<Candidate> &cand : page->candidates) {
+    for (const an<Candidate> &cand : page->candidates) {
       std::cout << "cand. " << (++i % 10) <<  ": [";
       std::cout << cand->text();
       std::cout << "]";

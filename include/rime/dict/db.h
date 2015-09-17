@@ -49,9 +49,9 @@ class Db : public Class<Db, const string&> {
   virtual bool MetaFetch(const string& key, string* value) = 0;
   virtual bool MetaUpdate(const string& key, const string& value) = 0;
 
-  virtual a<DbAccessor> QueryMetadata() = 0;
-  virtual a<DbAccessor> QueryAll() = 0;
-  virtual a<DbAccessor> Query(const string &key) = 0;
+  virtual an<DbAccessor> QueryMetadata() = 0;
+  virtual an<DbAccessor> QueryAll() = 0;
+  virtual an<DbAccessor> Query(const string &key) = 0;
   virtual bool Fetch(const string &key, string *value) = 0;
   virtual bool Update(const string &key, const string &value) = 0;
   virtual bool Erase(const string &key) = 0;

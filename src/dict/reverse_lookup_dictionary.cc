@@ -196,7 +196,7 @@ uint32_t ReverseDb::dict_file_checksum() const {
   return metadata_ ? metadata_->dict_file_checksum : 0;
 }
 
-ReverseLookupDictionary::ReverseLookupDictionary(a<ReverseDb> db)
+ReverseLookupDictionary::ReverseLookupDictionary(an<ReverseDb> db)
     : db_(db) {
 }
 
@@ -219,8 +219,8 @@ bool ReverseLookupDictionary::LookupStems(const string& text,
   return db_->Lookup(text + kStemKeySuffix, result);
 }
 
-a<DictSettings> ReverseLookupDictionary::GetDictSettings() {
-  a<DictSettings> settings;
+an<DictSettings> ReverseLookupDictionary::GetDictSettings() {
+  an<DictSettings> settings;
   reverse::Metadata* metadata = db_->metadata();
   if (metadata && !metadata->dict_settings.empty()) {
     string yaml(metadata->dict_settings.c_str());

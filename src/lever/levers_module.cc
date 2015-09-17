@@ -63,35 +63,35 @@ static Bool rime_levers_save_settings(RimeCustomSettings* settings) {
 
 static Bool rime_levers_customize_bool(RimeCustomSettings* settings,
                                        const char* key, bool value) {
-  a<ConfigItem> item = New<ConfigValue>(value);
+  an<ConfigItem> item = New<ConfigValue>(value);
   auto custom_settings = reinterpret_cast<CustomSettings*>(settings);
   return custom_settings->Customize(key, item);
 }
 
 static Bool rime_levers_customize_int(RimeCustomSettings* settings,
                                       const char* key, int value) {
-  a<ConfigItem> item = New<ConfigValue>(value);
+  an<ConfigItem> item = New<ConfigValue>(value);
   auto custom_settings = reinterpret_cast<CustomSettings*>(settings);
   return custom_settings->Customize(key, item);
 }
 
 static Bool rime_levers_customize_double(RimeCustomSettings* settings,
                                          const char* key, double value) {
-  a<ConfigItem> item = New<ConfigValue>(value);
+  an<ConfigItem> item = New<ConfigValue>(value);
   auto custom_settings = reinterpret_cast<CustomSettings*>(settings);
   return custom_settings->Customize(key, item);
 }
 
 static Bool rime_levers_customize_string(RimeCustomSettings* settings,
                                          const char* key, const char* value) {
-  a<ConfigItem> item = New<ConfigValue>(value);
+  an<ConfigItem> item = New<ConfigValue>(value);
   auto custom_settings = reinterpret_cast<CustomSettings*>(settings);
   return custom_settings->Customize(key, item);
 }
 
 static Bool rime_levers_customize_item(RimeCustomSettings* settings,
                                        const char* key, RimeConfig* value) {
-  a<ConfigItem> item;
+  an<ConfigItem> item;
   if (value) {
     if (Config* v = reinterpret_cast<Config*>(value->ptr)) {
       item = v->GetItem("");

@@ -60,7 +60,7 @@ class UserDbHelper {
   }
   UserDbHelper(const the<Db>& db) : db_(db.get()) {
   }
-  UserDbHelper(const a<Db>& db) : db_(db.get()) {
+  UserDbHelper(const an<Db>& db) : db_(db.get()) {
   }
 
   bool UpdateUserInfo();

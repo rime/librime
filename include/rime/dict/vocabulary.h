@@ -49,7 +49,7 @@ class DictEntryList : public vector<of<DictEntry>> {
   void SortRange(size_t start, size_t count);
 };
 
-using DictEntryFilter = function<bool (a<DictEntry> entry)>;
+using DictEntryFilter = function<bool (an<DictEntry> entry)>;
 
 class DictEntryFilterBinder {
  public:
@@ -63,7 +63,7 @@ class Vocabulary;
 
 struct VocabularyPage {
   DictEntryList entries;
-  a<Vocabulary> next_level;
+  an<Vocabulary> next_level;
 };
 
 class Vocabulary : public map<int, VocabularyPage> {

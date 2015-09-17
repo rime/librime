@@ -54,24 +54,24 @@ using hash_set = std::unordered_set<T>;
 template <class T>
 using the = std::unique_ptr<T>;
 template <class T>
-using a = std::shared_ptr<T>;
+using an = std::shared_ptr<T>;
 template <class T>
-using of = a<T>;
+using of = an<T>;
 template <class T>
 using weak = std::weak_ptr<T>;
 
 template <class X, class Y>
-inline a<X> As(const a<Y>& ptr) {
+inline an<X> As(const an<Y>& ptr) {
   return std::dynamic_pointer_cast<X>(ptr);
 }
 
 template <class X, class Y>
-inline bool Is(const a<Y>& ptr) {
+inline bool Is(const an<Y>& ptr) {
   return bool(As<X, Y>(ptr));
 }
 
 template <class T, class... Args>
-inline a<T> New(Args&&... args) {
+inline an<T> New(Args&&... args) {
   return std::make_shared<T>(std::forward<Args>(args)...);
 }
 

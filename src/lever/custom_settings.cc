@@ -52,20 +52,20 @@ bool CustomSettings::Save() {
   return true;
 }
 
-a<ConfigValue> CustomSettings::GetValue(const string& key) {
+an<ConfigValue> CustomSettings::GetValue(const string& key) {
   return config_.GetValue(key);
 }
 
-a<ConfigList> CustomSettings::GetList(const string& key) {
+an<ConfigList> CustomSettings::GetList(const string& key) {
   return config_.GetList(key);
 }
 
-a<ConfigMap> CustomSettings::GetMap(const string& key) {
+an<ConfigMap> CustomSettings::GetMap(const string& key) {
   return config_.GetMap(key);
 }
 
 bool CustomSettings::Customize(const string& key,
-                               const a<ConfigItem>& item) {
+                               const an<ConfigItem>& item) {
   auto patch = custom_config_.GetMap("patch");
   if (!patch) {
     patch = New<ConfigMap>();

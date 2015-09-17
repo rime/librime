@@ -15,7 +15,7 @@ namespace rime {
 
 struct VocabularyDb : public TextDb {
   explicit VocabularyDb(const string& path);
-  a<DbAccessor> cursor;
+  an<DbAccessor> cursor;
   static const TextFormat format;
 };
 

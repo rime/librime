@@ -27,11 +27,11 @@ class TableTranslator : public Translator,
  public:
   TableTranslator(const Ticket& ticket);
 
-  virtual a<Translation> Query(const string& input,
+  virtual an<Translation> Query(const string& input,
                                         const Segment& segment);
   virtual bool Memorize(const CommitEntry& commit_entry);
 
-  a<Translation> MakeSentence(const string& input,
+  an<Translation> MakeSentence(const string& input,
                                        size_t start,
                                        bool include_prefix_phrases = false);
 
@@ -60,7 +60,7 @@ class TableTranslation : public Translation {
                    const UserDictEntryIterator& uter = UserDictEntryIterator());
 
   virtual bool Next();
-  virtual a<Candidate> Peek();
+  virtual an<Candidate> Peek();
 
  protected:
   virtual bool FetchMoreUserPhrases() { return false; }
@@ -69,7 +69,7 @@ class TableTranslation : public Translation {
   bool CheckEmpty();
   bool PreferUserPhrase();
 
-  a<DictEntry> PreferedEntry(bool prefer_user_phrase) {
+  an<DictEntry> PreferedEntry(bool prefer_user_phrase) {
     return prefer_user_phrase ? uter_.Peek() : iter_.Peek();
   }
 

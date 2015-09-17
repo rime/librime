@@ -22,11 +22,11 @@ class UserDictEntryIterator : public DictEntryFilterBinder {
  public:
   UserDictEntryIterator() = default;
 
-  void Add(const a<DictEntry>& entry);
+  void Add(const an<DictEntry>& entry);
   void SortRange(size_t start, size_t count);
   bool Release(DictEntryList* receiver);
 
-  a<DictEntry> Peek();
+  an<DictEntry> Peek();
   bool Next();
   bool exhausted() const {
     return !entries_ || index_ >= entries_->size();
@@ -36,7 +36,7 @@ class UserDictEntryIterator : public DictEntryFilterBinder {
   }
 
  protected:
-  a<DictEntryList> entries_;
+  an<DictEntryList> entries_;
   size_t index_ = 0;
 };
 
@@ -50,15 +50,15 @@ struct Ticket;
 
 class UserDictionary : public Class<UserDictionary, const Ticket&> {
  public:
-  explicit UserDictionary(const a<Db>& db);
+  explicit UserDictionary(const an<Db>& db);
   virtual ~UserDictionary();
 
-  void Attach(const a<Table>& table, const a<Prism>& prism);
+  void Attach(const an<Table>& table, const an<Prism>& prism);
   bool Load();
   bool loaded() const;
   bool readonly() const;
 
-  a<UserDictEntryCollector> Lookup(const SyllableGraph& syllable_graph,
+  an<UserDictEntryCollector> Lookup(const SyllableGraph& syllable_graph,
                                             size_t start_pos,
                                             size_t depth_limit = 0,
                                             double initial_credibility = 1.0);
@@ -79,7 +79,7 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
   const string& name() const { return name_; }
   TickCount tick() const { return tick_; }
 
-  static a<DictEntry> CreateDictEntry(const string& key,
+  static an<DictEntry> CreateDictEntry(const string& key,
                                                const string& value,
                                                TickCount present_tick,
                                                double credibility = 1.0,
@@ -95,9 +95,9 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
 
  private:
   string name_;
-  a<Db> db_;
-  a<Table> table_;
-  a<Prism> prism_;
+  an<Db> db_;
+  an<Table> table_;
+  an<Prism> prism_;
   TickCount tick_ = 0;
   time_t transaction_time_ = 0;
 };

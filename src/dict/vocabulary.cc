@@ -90,7 +90,7 @@ void DictEntryFilterBinder::AddFilter(DictEntryFilter filter) {
   }
   else {
     DictEntryFilter previous_filter(std::move(filter_));
-    filter_ = [previous_filter, filter](a<DictEntry> e) {
+    filter_ = [previous_filter, filter](an<DictEntry> e) {
       return previous_filter(e) && filter(e);
     };
   }

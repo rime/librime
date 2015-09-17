@@ -15,7 +15,7 @@ class EchoTranslator : public Translator {
  public:
   EchoTranslator(const Ticket& ticket);
 
-  virtual a<Translation> Query(const string& input,
+  virtual an<Translation> Query(const string& input,
                                         const Segment& segment);
 };
 

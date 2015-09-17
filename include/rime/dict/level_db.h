@@ -52,9 +52,9 @@ class LevelDb : public Db,
   virtual bool MetaFetch(const string& key, string* value);
   virtual bool MetaUpdate(const string& key, const string& value);
 
-  virtual a<DbAccessor> QueryMetadata();
-  virtual a<DbAccessor> QueryAll();
-  virtual a<DbAccessor> Query(const string& key);
+  virtual an<DbAccessor> QueryMetadata();
+  virtual an<DbAccessor> QueryAll();
+  virtual an<DbAccessor> Query(const string& key);
   virtual bool Fetch(const string& key, string* value);
   virtual bool Update(const string& key, const string& value);
   virtual bool Erase(const string& key);

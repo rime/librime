@@ -21,10 +21,10 @@ class Candidate {
       : type_(type), start_(start), end_(end), quality_(quality) {}
   virtual ~Candidate() = default;
 
-  static a<Candidate>
-  GetGenuineCandidate(const a<Candidate>& cand);
+  static an<Candidate>
+  GetGenuineCandidate(const an<Candidate>& cand);
   static vector<of<Candidate>>
-  GetGenuineCandidates(const a<Candidate>& cand);
+  GetGenuineCandidates(const an<Candidate>& cand);
 
   // recognized by translators in learning phase
   const string& type() const { return type_; }
@@ -85,7 +85,7 @@ class SimpleCandidate : public Candidate {
 
 class ShadowCandidate : public Candidate {
  public:
-  ShadowCandidate(const a<Candidate>& item,
+  ShadowCandidate(const an<Candidate>& item,
                   const string& type,
                   const string& text = string(),
                   const string& comment = string())
@@ -103,17 +103,17 @@ class ShadowCandidate : public Candidate {
     return item_->preedit();
   }
 
-  const a<Candidate>& item() const { return item_; }
+  const an<Candidate>& item() const { return item_; }
 
  protected:
   string text_;
   string comment_;
-  a<Candidate> item_;
+  an<Candidate> item_;
 };
 
 class UniquifiedCandidate : public Candidate {
  public:
-  UniquifiedCandidate(const a<Candidate>& item,
+  UniquifiedCandidate(const an<Candidate>& item,
                       const string& type,
                       const string& text = string(),
                       const string& comment = string())
@@ -134,7 +134,7 @@ class UniquifiedCandidate : public Candidate {
     return !items_.empty() ? items_.front()->preedit() : string();
   }
 
-  void Append(a<Candidate> item) {
+  void Append(an<Candidate> item) {
     items_.push_back(item);
     if (quality() < item->quality())
       set_quality(item->quality());

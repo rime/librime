@@ -19,14 +19,14 @@ static inline size_t unistrlen(const string& text) {
 
 class SingleCharFirstTranslation : public PrefetchTranslation {
  public:
-  SingleCharFirstTranslation(a<Translation> translation);
+  SingleCharFirstTranslation(an<Translation> translation);
 
  private:
   bool Rearrange();
 };
 
 SingleCharFirstTranslation::SingleCharFirstTranslation(
-    a<Translation> translation)
+    an<Translation> translation)
     : PrefetchTranslation(translation) {
   Rearrange();
 }
@@ -60,8 +60,8 @@ SingleCharFilter::SingleCharFilter(const Ticket& ticket)
     : Filter(ticket) {
 }
 
-a<Translation> SingleCharFilter::Apply(
-    a<Translation> translation, CandidateList* candidates) {
+an<Translation> SingleCharFilter::Apply(
+    an<Translation> translation, CandidateList* candidates) {
   return New<SingleCharFirstTranslation>(translation);
 }
 

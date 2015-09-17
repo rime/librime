@@ -26,7 +26,7 @@ struct Segment {
   size_t end = 0;
   size_t length = 0;
   set<string> tags;
-  a<Menu> menu;
+  an<Menu> menu;
   size_t selected_index = 0;
   string prompt;
 
@@ -51,8 +51,8 @@ struct Segment {
     return tags.find(tag) != tags.end();
   }
 
-  a<Candidate> GetCandidateAt(size_t index) const;
-  a<Candidate> GetSelectedCandidate() const;
+  an<Candidate> GetCandidateAt(size_t index) const;
+  an<Candidate> GetSelectedCandidate() const;
 };
 
 class Segmentation : public vector<Segment> {

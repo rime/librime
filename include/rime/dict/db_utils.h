@@ -66,8 +66,8 @@ class DbSource : public Source {
 
  protected:
   Db* db_;
-  a<DbAccessor> metadata_;
-  a<DbAccessor> data_;
+  an<DbAccessor> metadata_;
+  an<DbAccessor> data_;
 };
 
 }  // namespace rime

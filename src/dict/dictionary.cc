@@ -103,7 +103,7 @@ void DictEntryIterator::PrepareEntry() {
   }
 }
 
-a<DictEntry> DictEntryIterator::Peek() {
+an<DictEntry> DictEntryIterator::Peek() {
   while (!entry_ && !empty()) {
     PrepareEntry();
     if (filter_ && !filter_(entry_)) {
@@ -146,8 +146,8 @@ bool DictEntryIterator::Skip(size_t num_entries) {
 // Dictionary members
 
 Dictionary::Dictionary(const string& name,
-                       const a<Table>& table,
-                       const a<Prism>& prism)
+                       const an<Table>& table,
+                       const an<Prism>& prism)
     : name_(name), table_(table), prism_(prism) {
 }
 
@@ -155,7 +155,7 @@ Dictionary::~Dictionary() {
   // should not close shared table and prism objects
 }
 
-a<DictEntryCollector>
+an<DictEntryCollector>
 Dictionary::Lookup(const SyllableGraph& syllable_graph,
                    size_t start_pos,
                    double initial_credibility) {

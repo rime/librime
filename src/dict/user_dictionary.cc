@@ -25,8 +25,8 @@ struct DfsState {
   TickCount present_tick;
   Code code;
   vector<double> credibility;
-  a<UserDictEntryCollector> collector;
-  a<DbAccessor> accessor;
+  an<UserDictEntryCollector> collector;
+  an<DbAccessor> accessor;
   string key;
   string value;
 
@@ -73,7 +73,7 @@ void DfsState::RecruitEntry(size_t pos) {
 
 // UserDictEntryIterator members
 
-void UserDictEntryIterator::Add(const a<DictEntry>& entry) {
+void UserDictEntryIterator::Add(const an<DictEntry>& entry) {
   if (!entries_) {
     entries_ = New<DictEntryList>();
   }
@@ -95,8 +95,8 @@ bool UserDictEntryIterator::Release(DictEntryList* receiver) {
   return true;
 }
 
-a<DictEntry> UserDictEntryIterator::Peek() {
-  a<DictEntry> result;
+an<DictEntry> UserDictEntryIterator::Peek() {
+  an<DictEntry> result;
   while (!result && !exhausted()) {
     result = (*entries_)[index_];
     if (filter_ && !filter_(result)) {
@@ -116,7 +116,7 @@ bool UserDictEntryIterator::Next() {
 
 // UserDictionary members
 
-UserDictionary::UserDictionary(const a<Db>& db)
+UserDictionary::UserDictionary(const an<Db>& db)
     : db_(db) {
 }
 
@@ -126,8 +126,8 @@ UserDictionary::~UserDictionary() {
   }
 }
 
-void UserDictionary::Attach(const a<Table>& table,
-                            const a<Prism>& prism) {
+void UserDictionary::Attach(const an<Table>& table,
+                            const an<Prism>& prism) {
   table_ = table;
   prism_ = prism;
 }
@@ -140,7 +140,7 @@ bool UserDictionary::Load() {
     Deployer& deployer(Service::instance().deployer());
     auto task = DeploymentTask::Require("userdb_recovery_task");
     if (task && Is<Recoverable>(db_) && !deployer.IsWorking()) {
-      deployer.ScheduleTask(a<DeploymentTask>(task->Create(db_)));
+      deployer.ScheduleTask(an<DeploymentTask>(task->Create(db_)));
       deployer.StartWork();
     }
     return false;
@@ -237,7 +237,7 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
   }
 }
 
-a<UserDictEntryCollector>
+an<UserDictEntryCollector>
 UserDictionary::Lookup(const SyllableGraph& syll_graph,
                        size_t start_pos,
                        size_t depth_limit,
@@ -440,12 +440,12 @@ bool UserDictionary::TranslateCodeToString(const Code& code,
   return true;
 }
 
-a<DictEntry> UserDictionary::CreateDictEntry(const string& key,
+an<DictEntry> UserDictionary::CreateDictEntry(const string& key,
                                                       const string& value,
                                                       TickCount present_tick,
                                                       double credibility,
                                                       string* full_code) {
-  a<DictEntry> e;
+  an<DictEntry> e;
   size_t separator_pos = key.find('\t');
   if (separator_pos == string::npos)
     return e;

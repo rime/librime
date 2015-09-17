@@ -25,7 +25,7 @@ static inline bool belongs_to(char ch, const string& charset) {
   return charset.find(ch) != string::npos;
 }
 
-static bool reached_max_code_length(const a<Candidate>& cand,
+static bool reached_max_code_length(const an<Candidate>& cand,
                                     int max_code_length) {
   if (!cand)
     return false;
@@ -33,7 +33,7 @@ static bool reached_max_code_length(const a<Candidate>& cand,
   return code_length >= max_code_length;
 }
 
-static bool is_auto_selectable(const a<Candidate>& cand,
+static bool is_auto_selectable(const an<Candidate>& cand,
                                const string& input,
                                const string& delimiters) {
   return

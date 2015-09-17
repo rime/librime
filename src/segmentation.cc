@@ -43,13 +43,13 @@ bool Segment::Reopen(size_t caret_pos) {
   return true;
 }
 
-a<Candidate> Segment::GetCandidateAt(size_t index) const {
+an<Candidate> Segment::GetCandidateAt(size_t index) const {
   if (!menu)
     return nullptr;
   return menu->GetCandidateAt(index);
 }
 
-a<Candidate> Segment::GetSelectedCandidate() const {
+an<Candidate> Segment::GetSelectedCandidate() const {
   return GetCandidateAt(selected_index);
 }
 

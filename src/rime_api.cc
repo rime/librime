@@ -197,21 +197,21 @@ RIME_API void RimeCleanupAllSessions() {
 // input
 
 RIME_API Bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask) {
-  a<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return False;
   return Bool(session->ProcessKey(KeyEvent(keycode, mask)));
 }
 
 RIME_API Bool RimeCommitComposition(RimeSessionId session_id) {
-  a<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return False;
   return Bool(session->CommitComposition());
 }
 
 RIME_API void RimeClearComposition(RimeSessionId session_id) {
-  a<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return;
   session->ClearComposition();
@@ -223,7 +223,7 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
   if (!context || context->data_size <= 0)
     return False;
   RIME_STRUCT_CLEAR(*context);
-  a<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return False;
   Context *ctx = session->context();
@@ -262,7 +262,7 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
       int i = 0;
       context->menu.num_candidates = page->candidates.size();
       context->menu.candidates = new RimeCandidate[page->candidates.size()];
-      for (const a<Candidate> &cand : page->candidates) {
+      for (const an<Candidate> &cand : page->candidates) {
         RimeCandidate* dest = &context->menu.candidates[i++];
         dest->text = new char[cand->text().length() + 1];
         std::strcpy(dest->text, cand->text().c_str());
@@ -308,7 +308,7 @@ RIME_API Bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit) {
   if (!commit)
     return False;
   RIME_STRUCT_CLEAR(*commit);
-  a<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return False;
   const string& commit_text(session->commit_text());
@@ -333,7 +333,7 @@ RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
   if (!status || status->data_size <= 0)
     return False;
   RIME_STRUCT_CLEAR(*status);
-  a<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return False;
   Schema *schema = session->schema();
@@ -366,7 +366,7 @@ RIME_API Bool RimeFreeStatus(RimeStatus* status) {
 // runtime options
 
 RIME_API void RimeSetOption(RimeSessionId session_id, const char* option, Bool value) {
-  a<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return;
   Context *ctx = session->context();
@@ -376,7 +376,7 @@ RIME_API void RimeSetOption(RimeSessionId session_id, const char* option, Bool v
 }
 
 RIME_API Bool RimeGetOption(RimeSessionId session_id, const char* option) {
-  a<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return False;
   Context *ctx = session->context();
@@ -386,7 +386,7 @@ RIME_API Bool RimeGetOption(RimeSessionId session_id, const char* option) {
 }
 
 RIME_API void RimeSetProperty(RimeSessionId session_id, const char* prop, const char* value) {
-  a<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return;
   Context *ctx = session->context();
@@ -397,7 +397,7 @@ RIME_API void RimeSetProperty(RimeSessionId session_id, const char* prop, const 
 
 RIME_API Bool RimeGetProperty(RimeSessionId session_id, const char* prop,
                               char* value, size_t buffer_size) {
-  a<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return False;
   Context *ctx = session->context();
@@ -417,14 +417,14 @@ RIME_API Bool RimeGetSchemaList(RimeSchemaList* output) {
   Schema default_schema;
   Config* config = default_schema.config();
   if (!config) return False;
-  a<ConfigList> schema_list = config->GetList("schema_list");
+  an<ConfigList> schema_list = config->GetList("schema_list");
   if (!schema_list || schema_list->size() == 0)
     return False;
   output->list = new RimeSchemaListItem[schema_list->size()];
   for (size_t i = 0; i < schema_list->size(); ++i) {
-    a<ConfigMap> item = As<ConfigMap>(schema_list->GetAt(i));
+    an<ConfigMap> item = As<ConfigMap>(schema_list->GetAt(i));
     if (!item) continue;
-    a<ConfigValue> schema_property = item->GetValue("schema");
+    an<ConfigValue> schema_property = item->GetValue("schema");
     if (!schema_property) continue;
     const string &schema_id(schema_property->str());
     RimeSchemaListItem& x(output->list[output->size]);
@@ -458,7 +458,7 @@ RIME_API void RimeFreeSchemaList(RimeSchemaList* schema_list) {
 }
 
 RIME_API Bool RimeGetCurrentSchema(RimeSessionId session_id, char* schema_id, size_t buffer_size) {
-  a<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(Service::instance().GetSession(session_id));
   if (!session) return False;
   Schema* schema = session->schema();
   if (!schema) return False;
@@ -468,7 +468,7 @@ RIME_API Bool RimeGetCurrentSchema(RimeSessionId session_id, char* schema_id, si
 
 RIME_API Bool RimeSelectSchema(RimeSessionId session_id, const char* schema_id) {
   if (!schema_id) return False;
-  a<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(Service::instance().GetSession(session_id));
   if (!session) return False;
   session->ApplySchema(new Schema(schema_id));
   return True;
@@ -544,7 +544,7 @@ RIME_API const char* RimeConfigGetCString(RimeConfig *config, const char *key) {
   if (!config || !key) return NULL;
   Config *c = reinterpret_cast<Config*>(config->ptr);
   if (!c) return NULL;
-  if (a<ConfigValue> v = c->GetValue(key)) {
+  if (an<ConfigValue> v = c->GetValue(key)) {
     return v->str().c_str();
   }
   return NULL;
@@ -589,7 +589,7 @@ RIME_API Bool RimeConfigBeginList(RimeConfigIterator* iterator,
   Config *c = reinterpret_cast<Config*>(config->ptr);
   if (!c)
     return False;
-  a<ConfigList> list = c->GetList(key);
+  an<ConfigList> list = c->GetList(key);
   if (!list)
     return False;
   iterator->list = new RimeConfigIteratorImpl<ConfigList>(*list, key);
@@ -607,7 +607,7 @@ RIME_API Bool RimeConfigBeginMap(RimeConfigIterator* iterator,
   iterator->path = NULL;
   Config *c = reinterpret_cast<Config*>(config->ptr);
   if (!c) return False;
-  a<ConfigMap> m = c->GetMap(key);
+  an<ConfigMap> m = c->GetMap(key);
   if (!m) return False;
   iterator->map = new RimeConfigIteratorImpl<ConfigMap>(*m, key);
   return True;
@@ -659,7 +659,7 @@ RIME_API void RimeConfigEnd(RimeConfigIterator* iterator) {
 
 RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence) {
   LOG(INFO) << "simulate key sequence: " << key_sequence;
-  a<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return False;
   KeySequence keys;
@@ -755,7 +755,7 @@ RIME_API Bool RimeConfigSetItem(RimeConfig* config, const char* key, RimeConfig*
   Config* c = reinterpret_cast<Config*>(config->ptr);
   if (!c)
     return False;
-  a<ConfigItem> item;
+  an<ConfigItem> item;
   if (value) {
     if (Config* v = reinterpret_cast<Config*>(value->ptr)) {
       item = v->GetItem("");
@@ -833,14 +833,14 @@ RIME_API size_t RimeConfigListSize(RimeConfig* config, const char* key) {
   Config* c = reinterpret_cast<Config*>(config->ptr);
   if (!c)
     return 0;
-  if (a<ConfigList> list = c->GetList(key)) {
+  if (an<ConfigList> list = c->GetList(key)) {
     return list->size();
   }
   return 0;
 }
 
 const char* RimeGetInput(RimeSessionId session_id) {
-  a<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return NULL;
   Context *ctx = session->context();
@@ -850,7 +850,7 @@ const char* RimeGetInput(RimeSessionId session_id) {
 }
 
 size_t RimeGetCaretPos(RimeSessionId session_id) {
-  a<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return 0;
   Context *ctx = session->context();
@@ -860,7 +860,7 @@ size_t RimeGetCaretPos(RimeSessionId session_id) {
 }
 
 Bool RimeSelectCandidate(RimeSessionId session_id, size_t index) {
-  a<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return False;
   Context *ctx = session->context();
@@ -874,7 +874,7 @@ const char* RimeGetVersion() {
 }
 
 void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos) {
-  a<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return;
   Context *ctx = session->context();

@@ -13,7 +13,7 @@ namespace rime {
 
 class UniquifiedTranslation : public CacheTranslation {
  public:
-  UniquifiedTranslation(a<Translation> translation,
+  UniquifiedTranslation(an<Translation> translation,
                         CandidateList* candidates)
       : CacheTranslation(translation), candidates_(candidates) {
     Uniquify();
@@ -23,7 +23,7 @@ class UniquifiedTranslation : public CacheTranslation {
  protected:
   bool Uniquify();
 
-  a<Translation> translation_;
+  an<Translation> translation_;
   CandidateList* candidates_;
 };
 
@@ -55,7 +55,7 @@ bool UniquifiedTranslation::Uniquify() {
 Uniquifier::Uniquifier(const Ticket& ticket) : Filter(ticket) {
 }
 
-a<Translation> Uniquifier::Apply(a<Translation> translation,
+an<Translation> Uniquifier::Apply(an<Translation> translation,
                                           CandidateList* candidates) {
   return New<UniquifiedTranslation>(translation, candidates);
 }

@@ -48,8 +48,8 @@ class Deployer : public Messenger {
                TaskInitializer arg = TaskInitializer());
   bool ScheduleTask(const string& task_name,
                     TaskInitializer arg = TaskInitializer());
-  void ScheduleTask(a<DeploymentTask> task);
-  a<DeploymentTask> NextTask();
+  void ScheduleTask(an<DeploymentTask> task);
+  an<DeploymentTask> NextTask();
   bool HasPendingTasks();
 
   bool Run();

@@ -22,11 +22,11 @@ class Translation {
   // something like a generator of candidates.
   virtual bool Next() = 0;
 
-  virtual a<Candidate> Peek() = 0;
+  virtual an<Candidate> Peek() = 0;
 
   // should it provide the next candidate (negative value, zero) or
   // should it give up the chance for other translations (positive)?
-  virtual int Compare(a<Translation> other,
+  virtual int Compare(an<Translation> other,
                       const CandidateList& candidates);
 
   bool exhausted() const { return exhausted_; }
@@ -40,15 +40,15 @@ class Translation {
 
 class UniqueTranslation : public Translation {
  public:
-  UniqueTranslation(a<Candidate> candidate)
+  UniqueTranslation(an<Candidate> candidate)
       : candidate_(candidate) {
   }
 
   bool Next();
-  a<Candidate> Peek();
+  an<Candidate> Peek();
 
  protected:
-  a<Candidate> candidate_;
+  an<Candidate> candidate_;
 };
 
 class FifoTranslation : public Translation {
@@ -56,9 +56,9 @@ class FifoTranslation : public Translation {
   FifoTranslation();
 
   bool Next();
-  a<Candidate> Peek();
+  an<Candidate> Peek();
 
-  void Append(a<Candidate> candy);
+  void Append(an<Candidate> candy);
 
   size_t size() const {
     return candies_.size() - cursor_;
@@ -74,24 +74,24 @@ class UnionTranslation : public Translation {
   UnionTranslation();
 
   bool Next();
-  a<Candidate> Peek();
+  an<Candidate> Peek();
 
-  UnionTranslation& operator+= (a<Translation> t);
+  UnionTranslation& operator+= (an<Translation> t);
 
  protected:
   list<of<Translation>> translations_;
 };
 
-a<UnionTranslation> operator+ (a<Translation> x, a<Translation> y);
+an<UnionTranslation> operator+ (an<Translation> x, an<Translation> y);
 
 class MergedTranslation : public Translation {
  public:
   explicit MergedTranslation(const CandidateList& previous_candidates);
 
   bool Next();
-  a<Candidate> Peek();
+  an<Candidate> Peek();
 
-  MergedTranslation& operator+= (a<Translation> t);
+  MergedTranslation& operator+= (an<Translation> t);
 
   size_t size() const { return translations_.size(); }
 
@@ -105,24 +105,24 @@ class MergedTranslation : public Translation {
 
 class CacheTranslation : public Translation {
  public:
-  CacheTranslation(a<Translation> translation);
+  CacheTranslation(an<Translation> translation);
 
   virtual bool Next();
-  virtual a<Candidate> Peek();
+  virtual an<Candidate> Peek();
 
  protected:
-  a<Translation> translation_;
-  a<Candidate> cache_;
+  an<Translation> translation_;
+  an<Candidate> cache_;
 };
 
 template <class T, class... Args>
-inline a<Translation> Cached(Args&&... args) {
+inline an<Translation> Cached(Args&&... args) {
   return New<CacheTranslation>(New<T>(std::forward<Args>(args)...));
 }
 
 class DistinctTranslation : public CacheTranslation {
  public:
-  DistinctTranslation(a<Translation> translation);
+  DistinctTranslation(an<Translation> translation);
   virtual bool Next();
 
  protected:
@@ -133,15 +133,15 @@ class DistinctTranslation : public CacheTranslation {
 
 class PrefetchTranslation : public Translation {
  public:
-  PrefetchTranslation(a<Translation> translation);
+  PrefetchTranslation(an<Translation> translation);
 
   virtual bool Next();
-  virtual a<Candidate> Peek();
+  virtual an<Candidate> Peek();
 
  protected:
   virtual bool Replenish() { return false; }
 
-  a<Translation> translation_;
+  an<Translation> translation_;
   CandidateQueue cache_;
 };
 

@@ -23,7 +23,7 @@ class Poet {
  public:
   Poet(Language* language) : language_(language) {}
 
-  a<Sentence> MakeSentence(const WordGraph& graph,
+  an<Sentence> MakeSentence(const WordGraph& graph,
                                     size_t total_length);
  protected:
   Language* language_;

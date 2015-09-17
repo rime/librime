@@ -15,14 +15,14 @@ namespace rime {
 
 class CharsetFilterTranslation : public Translation {
  public:
-  CharsetFilterTranslation(a<Translation> translation);
+  CharsetFilterTranslation(an<Translation> translation);
   virtual bool Next();
-  virtual a<Candidate> Peek();
+  virtual an<Candidate> Peek();
 
  protected:
   bool LocateNextCandidate();
 
-  a<Translation> translation_;
+  an<Translation> translation_;
 };
 
 struct DictEntry;
@@ -31,7 +31,7 @@ class CharsetFilter : public Filter, TagMatching {
  public:
   explicit CharsetFilter(const Ticket& ticket);
 
-  virtual a<Translation> Apply(a<Translation> translation,
+  virtual an<Translation> Apply(an<Translation> translation,
                                         CandidateList* candidates);
 
   virtual bool AppliesToSegment(Segment* segment) {
@@ -40,7 +40,7 @@ class CharsetFilter : public Filter, TagMatching {
 
   // return true to accept, false to reject the tested item
   static bool FilterText(const string& text);
-  static bool FilterDictEntry(a<DictEntry> entry);
+  static bool FilterDictEntry(an<DictEntry> entry);
 };
 
 }  // namespace rime

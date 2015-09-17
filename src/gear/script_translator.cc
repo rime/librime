@@ -99,21 +99,21 @@ class ScriptTranslation : public Translation {
   }
   bool Evaluate(Dictionary* dict, UserDictionary* user_dict);
   virtual bool Next();
-  virtual a<Candidate> Peek();
+  virtual an<Candidate> Peek();
 
  protected:
   bool CheckEmpty();
   bool IsNormalSpelling() const;
-  a<Sentence> MakeSentence(Dictionary* dict,
+  an<Sentence> MakeSentence(Dictionary* dict,
                                     UserDictionary* user_dict);
 
   ScriptTranslator* translator_;
   size_t start_;
-  a<ScriptSyllabifier> syllabifier_;
+  an<ScriptSyllabifier> syllabifier_;
 
-  a<DictEntryCollector> phrase_;
-  a<UserDictEntryCollector> user_phrase_;
-  a<Sentence> sentence_;
+  an<DictEntryCollector> phrase_;
+  an<UserDictEntryCollector> user_phrase_;
+  an<Sentence> sentence_;
 
   DictEntryCollector::reverse_iterator phrase_iter_;
   UserDictEntryCollector::reverse_iterator user_phrase_iter_;
@@ -133,7 +133,7 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
   }
 }
 
-a<Translation> ScriptTranslator::Query(const string& input,
+an<Translation> ScriptTranslator::Query(const string& input,
                                                 const Segment& segment) {
   if (!dict_ || !dict_->loaded())
     return nullptr;
@@ -336,7 +336,7 @@ bool ScriptTranslation::IsNormalSpelling() const {
       (syllable_graph.vertices.rbegin()->second == kNormalSpelling);
 }
 
-a<Candidate> ScriptTranslation::Peek() {
+an<Candidate> ScriptTranslation::Peek() {
   if (exhausted())
     return nullptr;
   if (sentence_) {
@@ -359,7 +359,7 @@ a<Candidate> ScriptTranslation::Peek() {
   if (phrase_ && phrase_iter_ != phrase_->rend()) {
     phrase_code_length = phrase_iter_->first;
   }
-  a<Phrase> cand;
+  an<Phrase> cand;
   if (user_phrase_code_length > 0 &&
       user_phrase_code_length >= phrase_code_length) {
     DictEntryList& entries(user_phrase_iter_->second);
@@ -408,7 +408,7 @@ bool ScriptTranslation::CheckEmpty() {
   return exhausted();
 }
 
-a<Sentence>
+an<Sentence>
 ScriptTranslation::MakeSentence(Dictionary* dict, UserDictionary* user_dict) {
   const int kMaxSyllablesForUserPhraseQuery = 5;
   const auto& syllable_graph = syllabifier_->syllable_graph();

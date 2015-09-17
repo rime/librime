@@ -15,7 +15,7 @@ class SingleCharFilter : public Filter {
  public:
   explicit SingleCharFilter(const Ticket& ticket);
 
-  virtual a<Translation> Apply(a<Translation> translation,
+  virtual an<Translation> Apply(an<Translation> translation,
                                         CandidateList* candidates);
 };
 

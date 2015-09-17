@@ -65,7 +65,7 @@ double DictSettings::min_phrase_weight() {
   return (*this)["min_phrase_weight"].ToDouble();
 }
 
-a<ConfigList> DictSettings::GetTables() {
+an<ConfigList> DictSettings::GetTables() {
   auto tables = New<ConfigList>();
   tables->Append((*this)["name"]);
   auto imports = (*this)["import_tables"].AsList();

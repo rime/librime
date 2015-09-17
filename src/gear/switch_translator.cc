@@ -59,7 +59,7 @@ class RadioGroup : public std::enable_shared_from_this<RadioGroup> {
   RadioGroup(Context* context, Switcher* switcher)
       : context_(context), switcher_(switcher) {
   }
-  a<RadioOption> CreateOption(const string& state_label,
+  an<RadioOption> CreateOption(const string& state_label,
                                        const string& option_name);
   void SelectOption(RadioOption* option);
   RadioOption* GetSelectedOption() const;
@@ -72,7 +72,7 @@ class RadioGroup : public std::enable_shared_from_this<RadioGroup> {
 
 class RadioOption : public SimpleCandidate, public SwitcherCommand {
  public:
-  RadioOption(a<RadioGroup> group,
+  RadioOption(an<RadioGroup> group,
               const string& state_label,
               const string& option_name)
       : SimpleCandidate("switch", 0, 0, state_label),
@@ -84,7 +84,7 @@ class RadioOption : public SimpleCandidate, public SwitcherCommand {
   bool selected() const { return selected_; }
 
  protected:
-  a<RadioGroup> group_;
+  an<RadioGroup> group_;
   bool selected_ = false;
 };
 
@@ -98,7 +98,7 @@ void RadioOption::UpdateState(bool selected) {
   set_comment(selected ? kRadioSelected : "");
 }
 
-a<RadioOption>
+an<RadioOption>
 RadioGroup::CreateOption(const string& state_label,
                          const string& option_name) {
   auto option = New<RadioOption>(shared_from_this(),
@@ -281,7 +281,7 @@ SwitchTranslator::SwitchTranslator(const Ticket& ticket)
     : Translator(ticket) {
 }
 
-a<Translation> SwitchTranslator::Query(const string& input,
+an<Translation> SwitchTranslator::Query(const string& input,
                                                 const Segment& segment) {
   auto switcher = dynamic_cast<Switcher*>(engine_);
   if (!switcher) {

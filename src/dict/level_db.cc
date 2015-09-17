@@ -167,18 +167,18 @@ void LevelDb::Initialize() {
   db_.reset(new LevelDbWrapper);
 }
 
-a<DbAccessor> LevelDb::QueryMetadata() {
+an<DbAccessor> LevelDb::QueryMetadata() {
   return Query(kMetaCharacter);
 }
 
-a<DbAccessor> LevelDb::QueryAll() {
-  a<DbAccessor> all = Query("");
+an<DbAccessor> LevelDb::QueryAll() {
+  an<DbAccessor> all = Query("");
   if (all)
     all->Jump(" ");  // skip metadata
   return all;
 }
 
-a<DbAccessor> LevelDb::Query(const string& key) {
+an<DbAccessor> LevelDb::Query(const string& key) {
   if (!loaded())
     return nullptr;
   return New<LevelDbAccessor>(db_->CreateCursor(), key);

@@ -17,7 +17,7 @@ Menu::Menu()
       result_(merged_) {
 }
 
-void Menu::AddTranslation(a<Translation> translation) {
+void Menu::AddTranslation(an<Translation> translation) {
   *merged_ += translation;
   DLOG(INFO) << merged_->size() << " translations added.";
 }
@@ -59,7 +59,7 @@ Page* Menu::CreatePage(size_t page_size, size_t page_no) {
   return page;
 }
 
-a<Candidate> Menu::GetCandidateAt(size_t index) {
+an<Candidate> Menu::GetCandidateAt(size_t index) {
   if (index >= candidates_.size() &&
       index >= Prepare(index + 1)) {
     return nullptr;

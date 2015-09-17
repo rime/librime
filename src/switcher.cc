@@ -90,7 +90,7 @@ void Switcher::HighlightNextSchema() {
     return;
   Segment& seg(comp.back());
   int index = seg.selected_index;
-  a<Candidate> option;
+  an<Candidate> option;
   do {
     ++index;  // next
     int candidate_count = seg.menu->Prepare(index + 1);
@@ -231,14 +231,14 @@ void Switcher::InitializeComponents() {
   processors_.clear();
   translators_.clear();
   if (auto c = Processor::Require("key_binder")) {
-    a<Processor> p(c->Create(Ticket(this)));
+    an<Processor> p(c->Create(Ticket(this)));
     processors_.push_back(p);
   }
   else {
     LOG(WARNING) << "key_binder not available.";
   }
   if (auto c = Processor::Require("selector")) {
-    a<Processor> p(c->Create(Ticket(this)));
+    an<Processor> p(c->Create(Ticket(this)));
     processors_.push_back(p);
   }
   else {
@@ -246,14 +246,14 @@ void Switcher::InitializeComponents() {
   }
   DLOG(INFO) << "num processors: " << processors_.size();
   if (auto c = Translator::Require("schema_list_translator")) {
-    a<Translator> t(c->Create(Ticket(this)));
+    an<Translator> t(c->Create(Ticket(this)));
     translators_.push_back(t);
   }
   else {
     LOG(WARNING) << "schema_list_translator not available.";
   }
   if (auto c = Translator::Require("switch_translator")) {
-    a<Translator> t(c->Create(Ticket(this)));
+    an<Translator> t(c->Create(Ticket(this)));
     translators_.push_back(t);
   }
   else {

@@ -50,7 +50,7 @@ class DictEntryIterator : protected list<dictionary::Chunk>,
 
   void AddChunk(dictionary::Chunk&& chunk, Table* table);
   void Sort();
-  a<DictEntry> Peek();
+  an<DictEntry> Peek();
   bool Next();
   bool Skip(size_t num_entries);
   bool exhausted() const;
@@ -61,7 +61,7 @@ class DictEntryIterator : protected list<dictionary::Chunk>,
 
  private:
   Table* table_;
-  a<DictEntry> entry_;
+  an<DictEntry> entry_;
   size_t entry_count_;
 };
 
@@ -76,15 +76,15 @@ struct Ticket;
 class Dictionary : public Class<Dictionary, const Ticket&> {
  public:
   Dictionary(const string& name,
-             const a<Table>& table,
-             const a<Prism>& prism);
+             const an<Table>& table,
+             const an<Prism>& prism);
   virtual ~Dictionary();
 
   bool Exists() const;
   bool Remove();
   bool Load();
 
-  a<DictEntryCollector> Lookup(const SyllableGraph& syllable_graph,
+  an<DictEntryCollector> Lookup(const SyllableGraph& syllable_graph,
                                         size_t start_pos,
                                         double initial_credibility = 1.0);
   // if predictive is true, do an expand search with limit,
@@ -99,13 +99,13 @@ class Dictionary : public Class<Dictionary, const Ticket&> {
   const string& name() const { return name_; }
   bool loaded() const;
 
-  a<Table> table() { return table_; }
-  a<Prism> prism() { return prism_; }
+  an<Table> table() { return table_; }
+  an<Prism> prism() { return prism_; }
 
  private:
   string name_;
-  a<Table> table_;
-  a<Prism> prism_;
+  an<Table> table_;
+  an<Prism> prism_;
 };
 
 class DictionaryComponent : public Dictionary::Component {

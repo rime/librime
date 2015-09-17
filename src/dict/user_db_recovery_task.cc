@@ -16,7 +16,7 @@ namespace fs = boost::filesystem;
 
 namespace rime {
 
-UserDbRecoveryTask::UserDbRecoveryTask(a<Db> db) : db_(db) {
+UserDbRecoveryTask::UserDbRecoveryTask(an<Db> db) : db_(db) {
   if (db_) {
     db_->disable();
   }
@@ -86,7 +86,7 @@ void UserDbRecoveryTask::RestoreUserDataFromSnapshot(Deployer* deployer) {
 
 UserDbRecoveryTask* UserDbRecoveryTaskComponent::Create(TaskInitializer arg) {
   try {
-    auto db = boost::any_cast<a<Db>>(arg);
+    auto db = boost::any_cast<an<Db>>(arg);
     return new UserDbRecoveryTask(db);
   }
   catch (const boost::bad_any_cast&) {

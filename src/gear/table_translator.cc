@@ -74,7 +74,7 @@ static bool is_constructed(const DictEntry* e) {
   return UnityTableEncoder::HasPrefix(e->custom_code);
 }
 
-a<Candidate> TableTranslation::Peek() {
+an<Candidate> TableTranslation::Peek() {
   if (exhausted())
     return nullptr;
   bool is_user_phrase = PreferUserPhrase();
@@ -234,14 +234,14 @@ TableTranslator::TableTranslator(const Ticket& ticket)
   }
 }
 
-static bool starts_with_completion(a<Translation> translation) {
+static bool starts_with_completion(an<Translation> translation) {
   if (!translation)
     return false;
   auto cand = translation->Peek();
   return cand && cand->type() == "completion";
 }
 
-a<Translation> TableTranslator::Query(const string& input,
+an<Translation> TableTranslator::Query(const string& input,
                                                const Segment& segment) {
   if (!segment.HasTag(tag_))
     return nullptr;
@@ -257,7 +257,7 @@ a<Translation> TableTranslator::Query(const string& input,
   string code = input;
   boost::trim_right_if(code, boost::is_any_of(delimiters_));
 
-  a<Translation> translation;
+  an<Translation> translation;
   if (enable_completion_) {
     translation = Cached<LazyTableTranslation>(
         this,
@@ -391,13 +391,13 @@ Spans SentenceSyllabifier::Syllabify(const Phrase* phrase) {
 class SentenceTranslation : public Translation {
  public:
   SentenceTranslation(TableTranslator* translator,
-                      a<Sentence> sentence,
+                      an<Sentence> sentence,
                       DictEntryCollector* collector,
                       UserDictEntryCollector* ucollector,
                       const string& input,
                       size_t start);
   virtual bool Next();
-  virtual a<Candidate> Peek();
+  virtual an<Candidate> Peek();
 
  protected:
   void PrepareSentence();
@@ -405,7 +405,7 @@ class SentenceTranslation : public Translation {
   bool PreferUserPhrase() const;
 
   TableTranslator* translator_;
-  a<Sentence> sentence_;
+  an<Sentence> sentence_;
   DictEntryCollector collector_;
   UserDictEntryCollector user_phrase_collector_;
   size_t user_phrase_index_ = 0;
@@ -414,7 +414,7 @@ class SentenceTranslation : public Translation {
 };
 
 SentenceTranslation::SentenceTranslation(TableTranslator* translator,
-                                         a<Sentence> sentence,
+                                         an<Sentence> sentence,
                                          DictEntryCollector* collector,
                                          UserDictEntryCollector* ucollector,
                                          const string& input,
@@ -450,14 +450,14 @@ bool SentenceTranslation::Next() {
   return !CheckEmpty();
 }
 
-a<Candidate> SentenceTranslation::Peek() {
+an<Candidate> SentenceTranslation::Peek() {
   if (exhausted())
     return nullptr;
   if (sentence_) {
     return sentence_;
   }
   size_t code_length = 0;
-  a<DictEntry> entry;
+  an<DictEntry> entry;
   if (PreferUserPhrase()) {
     auto r = user_phrase_collector_.rbegin();
     code_length = r->first;
@@ -540,14 +540,14 @@ static size_t consume_trailing_delimiters(size_t pos,
   return pos;
 }
 
-a<Translation>
+an<Translation>
 TableTranslator::MakeSentence(const string& input, size_t start,
                               bool include_prefix_phrases) {
   bool filter_by_charset = enable_charset_filter_ &&
       !engine_->context()->get_option("extended_charset");
   DictEntryCollector collector;
   UserDictEntryCollector user_phrase_collector;
-  map<int, a<Sentence>> sentences;
+  map<int, an<Sentence>> sentences;
   sentences[0] = New<Sentence>(language());
   for (size_t start_pos = 0; start_pos < input.length(); ++start_pos) {
     if (sentences.find(start_pos) == sentences.end())
@@ -649,7 +649,7 @@ TableTranslator::MakeSentence(const string& input, size_t start,
       }
     }
   }
-  a<Translation> result;
+  an<Translation> result;
   if (sentences.find(input.length()) != sentences.end()) {
     result = Cached<SentenceTranslation>(
         this,

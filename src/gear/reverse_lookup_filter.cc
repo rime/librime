@@ -16,17 +16,17 @@ namespace rime {
 
 class ReverseLookupFilterTranslation : public CacheTranslation {
  public:
-  ReverseLookupFilterTranslation(a<Translation> translation,
+  ReverseLookupFilterTranslation(an<Translation> translation,
                                  ReverseLookupFilter* filter)
       : CacheTranslation(translation), filter_(filter) {
   }
-  virtual a<Candidate> Peek();
+  virtual an<Candidate> Peek();
 
  protected:
   ReverseLookupFilter* filter_;
 };
 
-a<Candidate> ReverseLookupFilterTranslation::Peek() {
+an<Candidate> ReverseLookupFilterTranslation::Peek() {
   auto cand = CacheTranslation::Peek();
   if (cand) {
     filter_->Process(cand);
@@ -58,8 +58,8 @@ void ReverseLookupFilter::Initialize() {
   }
 }
 
-a<Translation> ReverseLookupFilter::Apply(
-    a<Translation> translation, CandidateList* candidates) {
+an<Translation> ReverseLookupFilter::Apply(
+    an<Translation> translation, CandidateList* candidates) {
   if (!initialized_) {
     Initialize();
   }
@@ -69,7 +69,7 @@ a<Translation> ReverseLookupFilter::Apply(
   return New<ReverseLookupFilterTranslation>(translation, this);
 }
 
-void ReverseLookupFilter::Process(const a<Candidate>& cand) {
+void ReverseLookupFilter::Process(const an<Candidate>& cand) {
   if (!overwrite_comment_ && !cand->comment().empty())
     return;
   auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));

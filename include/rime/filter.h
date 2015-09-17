@@ -25,7 +25,7 @@ class Filter : public Class<Filter, const Ticket&> {
       : engine_(ticket.engine), name_space_(ticket.name_space) {}
   virtual ~Filter() = default;
 
-  virtual a<Translation> Apply(a<Translation> translation,
+  virtual an<Translation> Apply(an<Translation> translation,
                                         CandidateList* candidates) = 0;
 
   virtual bool AppliesToSegment(Segment* segment) {

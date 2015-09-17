@@ -15,7 +15,7 @@ class Uniquifier : public Filter {
  public:
   explicit Uniquifier(const Ticket& ticket);
 
-  virtual a<Translation> Apply(a<Translation> translation,
+  virtual an<Translation> Apply(an<Translation> translation,
                                         CandidateList* candidates);
 
 };

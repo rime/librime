@@ -56,17 +56,17 @@ TextDb::~TextDb() {
     Close();
 }
 
-a<DbAccessor> TextDb::QueryMetadata() {
+an<DbAccessor> TextDb::QueryMetadata() {
   if (!loaded())
     return nullptr;
   return New<TextDbAccessor>(metadata_, "");
 }
 
-a<DbAccessor> TextDb::QueryAll() {
+an<DbAccessor> TextDb::QueryAll() {
   return Query("");
 }
 
-a<DbAccessor> TextDb::Query(const string& key) {
+an<DbAccessor> TextDb::Query(const string& key) {
   if (!loaded())
     return nullptr;
   return New<TextDbAccessor>(data_, key);

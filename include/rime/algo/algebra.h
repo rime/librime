@@ -28,7 +28,7 @@ class Script : public map<string, vector<Spelling>> {
 
 class Projection {
  public:
-  bool Load(a<ConfigList> settings);
+  bool Load(an<ConfigList> settings);
   // "spelling" -> "gnilleps"
   bool Apply(string* value);
   // {z, y, x} -> {a, b, c, d}

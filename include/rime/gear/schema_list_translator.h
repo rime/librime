@@ -16,7 +16,7 @@ class SchemaListTranslator : public Translator {
  public:
   SchemaListTranslator(const Ticket& ticket);
 
-  virtual a<Translation> Query(const string& input,
+  virtual an<Translation> Query(const string& input,
                                         const Segment& segment);
 };
 

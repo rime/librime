@@ -52,8 +52,8 @@ void PunctConfig::LoadConfig(Engine* engine, bool load_symbols) {
   }
 }
 
-a<ConfigItem> PunctConfig::GetPunctDefinition(const string key) {
-  a<ConfigItem> punct_definition;
+an<ConfigItem> PunctConfig::GetPunctDefinition(const string key) {
+  an<ConfigItem> punct_definition;
   if (mapping_)
     punct_definition = mapping_->Get(key);
   if (punct_definition)
@@ -131,7 +131,7 @@ ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
 }
 
 bool Punctuator::AlternatePunct(const string& key,
-                                const a<ConfigItem>& definition) {
+                                const an<ConfigItem>& definition) {
   if (!As<ConfigList>(definition))
     return false;
   Context* ctx = engine_->context();
@@ -155,14 +155,14 @@ bool Punctuator::AlternatePunct(const string& key,
   return false;
 }
 
-bool Punctuator::ConfirmUniquePunct(const a<ConfigItem>& definition) {
+bool Punctuator::ConfirmUniquePunct(const an<ConfigItem>& definition) {
   if (!As<ConfigValue>(definition))
     return false;
   engine_->context()->ConfirmCurrentSelection();
   return true;
 }
 
-bool Punctuator::AutoCommitPunct(const a<ConfigItem>& definition) {
+bool Punctuator::AutoCommitPunct(const an<ConfigItem>& definition) {
   auto map = As<ConfigMap>(definition);
   if (!map || !map->HasKey("commit"))
     return false;
@@ -170,7 +170,7 @@ bool Punctuator::AutoCommitPunct(const a<ConfigItem>& definition) {
   return true;
 }
 
-bool Punctuator::PairPunct(const a<ConfigItem>& definition) {
+bool Punctuator::PairPunct(const an<ConfigItem>& definition) {
   auto map = As<ConfigMap>(definition);
   if (!map || !map->HasKey("pair"))
     return false;
@@ -227,7 +227,7 @@ PunctTranslator::PunctTranslator(const Ticket& ticket)
   config_.LoadConfig(engine_, load_symbols);
 }
 
-a<Candidate>
+an<Candidate>
 CreatePunctCandidate(const string& punct, const Segment& segment) {
   const char half_shape[] =
       "\xe3\x80\x94\xe5\x8d\x8a\xe8\xa7\x92\xe3\x80\x95";  // 〔半角〕
@@ -255,7 +255,7 @@ CreatePunctCandidate(const string& punct, const Segment& segment) {
                               one_key ? punct : "");
 }
 
-a<Translation> PunctTranslator::Query(const string& input,
+an<Translation> PunctTranslator::Query(const string& input,
                                                const Segment& segment) {
   if (!segment.HasTag("punct"))
     return nullptr;
@@ -283,20 +283,20 @@ a<Translation> PunctTranslator::Query(const string& input,
   return translation;
 }
 
-a<Translation>
+an<Translation>
 PunctTranslator::TranslateUniquePunct(const string& key,
                                       const Segment& segment,
-                                      const a<ConfigValue>& definition) {
+                                      const an<ConfigValue>& definition) {
   if (!definition)
     return nullptr;
   return New<UniqueTranslation>(
       CreatePunctCandidate(definition->str(), segment));
 }
 
-a<Translation>
+an<Translation>
 PunctTranslator::TranslateAlternatingPunct(const string& key,
                                            const Segment& segment,
-                                           const a<ConfigList>& definition) {
+                                           const an<ConfigList>& definition) {
   if (!definition)
     return nullptr;
   auto translation = New<FifoTranslation>();
@@ -317,10 +317,10 @@ PunctTranslator::TranslateAlternatingPunct(const string& key,
   return translation;
 }
 
-a<Translation>
+an<Translation>
 PunctTranslator::TranslateAutoCommitPunct(const string& key,
                                           const Segment& segment,
-                                          const a<ConfigMap>& definition) {
+                                          const an<ConfigMap>& definition) {
   if (!definition || !definition->HasKey("commit"))
     return nullptr;
   auto value = definition->GetValue("commit");
@@ -331,10 +331,10 @@ PunctTranslator::TranslateAutoCommitPunct(const string& key,
   return New<UniqueTranslation>(CreatePunctCandidate(value->str(), segment));
 }
 
-a<Translation>
+an<Translation>
 PunctTranslator::TranslatePairedPunct(const string& key,
                                       const Segment& segment,
-                                      const a<ConfigMap>& definition) {
+                                      const an<ConfigMap>& definition) {
   if (!definition || !definition->HasKey("pair"))
     return nullptr;
   auto list = As<ConfigList>(definition->Get("pair"));

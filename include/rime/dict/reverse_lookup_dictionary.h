@@ -61,15 +61,15 @@ class ReverseDb : public MappedFile {
 class ReverseLookupDictionary
     : public Class<ReverseLookupDictionary, const Ticket&> {
  public:
-  explicit ReverseLookupDictionary(a<ReverseDb> db);
+  explicit ReverseLookupDictionary(an<ReverseDb> db);
   explicit ReverseLookupDictionary(const string& dict_name);
   bool Load();
   bool ReverseLookup(const string& text, string* result);
   bool LookupStems(const string& text, string* result);
-  a<DictSettings> GetDictSettings();
+  an<DictSettings> GetDictSettings();
 
  protected:
-  a<ReverseDb> db_;
+  an<ReverseDb> db_;
 };
 
 class ReverseLookupDictionaryComponent

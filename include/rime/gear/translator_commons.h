@@ -22,7 +22,7 @@ namespace rime {
 
 class Patterns : public vector<boost::regex> {
  public:
-  bool Load(a<ConfigList> patterns);
+  bool Load(an<ConfigList> patterns);
 };
 
 //
@@ -68,7 +68,7 @@ class Phrase : public Candidate {
  public:
   Phrase(Language* language,
          const string& type, size_t start, size_t end,
-         const a<DictEntry>& entry)
+         const an<DictEntry>& entry)
       : Candidate(type, start, end),
         language_(language),
         entry_(entry) {
@@ -82,7 +82,7 @@ class Phrase : public Candidate {
   void set_preedit(const string& preedit) {
     entry_->preedit = preedit;
   }
-  void set_syllabifier(a<PhraseSyllabifier> syllabifier) {
+  void set_syllabifier(an<PhraseSyllabifier> syllabifier) {
     syllabifier_ = syllabifier;
   }
 
@@ -97,8 +97,8 @@ class Phrase : public Candidate {
 
  protected:
   Language* language_;
-  a<DictEntry> entry_;
-  a<PhraseSyllabifier> syllabifier_;
+  an<DictEntry> entry_;
+  an<PhraseSyllabifier> syllabifier_;
 };
 
 //

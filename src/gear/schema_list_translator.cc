@@ -40,8 +40,8 @@ void SchemaSelection::Apply(Switcher* switcher) {
 
 class SchemaAction : public ShadowCandidate, public SwitcherCommand {
  public:
-  SchemaAction(a<Candidate> schema,
-               a<Candidate> command)
+  SchemaAction(an<Candidate> schema,
+               an<Candidate> command)
       : ShadowCandidate(schema, command->type()),
         SwitcherCommand(As<SwitcherCommand>(schema)->keyword()),
         command_(As<SwitcherCommand>(command)) {
@@ -49,7 +49,7 @@ class SchemaAction : public ShadowCandidate, public SwitcherCommand {
   virtual void Apply(Switcher* switcher);
 
  private:
-  a<SwitcherCommand> command_;
+  an<SwitcherCommand> command_;
 };
 
 void SchemaAction::Apply(Switcher* switcher) {
@@ -63,14 +63,14 @@ class SchemaListTranslation : public FifoTranslation {
   SchemaListTranslation(Switcher* switcher) {
     LoadSchemaList(switcher);
   }
-  virtual int Compare(a<Translation> other,
+  virtual int Compare(an<Translation> other,
                       const CandidateList& candidates);
 
  protected:
   void LoadSchemaList(Switcher* switcher);
 };
 
-int SchemaListTranslation::Compare(a<Translation> other,
+int SchemaListTranslation::Compare(an<Translation> other,
                                    const CandidateList& candidates) {
   if (!other || other->exhausted())
     return -1;
@@ -138,7 +138,7 @@ void SchemaListTranslation::LoadSchemaList(Switcher* switcher) {
     return;
   // reorder schema list by recency
   std::stable_sort(candies_.begin() + fixed, candies_.end(),
-      [](const a<Candidate>& x, const a<Candidate>& y) {
+      [](const an<Candidate>& x, const an<Candidate>& y) {
         return x->quality() > y->quality();
       });
 }
@@ -147,7 +147,7 @@ SchemaListTranslator::SchemaListTranslator(const Ticket& ticket)
     : Translator(ticket) {
 }
 
-a<Translation> SchemaListTranslator::Query(const string& input,
+an<Translation> SchemaListTranslator::Query(const string& input,
                                                     const Segment& segment) {
   auto switcher = dynamic_cast<Switcher*>(engine_);
   if (!switcher) {

@@ -128,7 +128,7 @@ void Simplifier::Initialize() {
 
 class SimplifiedTranslation : public PrefetchTranslation {
  public:
-  SimplifiedTranslation(a<Translation> translation,
+  SimplifiedTranslation(an<Translation> translation,
                         Simplifier* simplifier)
       : PrefetchTranslation(translation), simplifier_(simplifier) {
   }
@@ -149,7 +149,7 @@ bool SimplifiedTranslation::Replenish() {
   return !cache_.empty();
 }
 
-a<Translation> Simplifier::Apply(a<Translation> translation,
+an<Translation> Simplifier::Apply(an<Translation> translation,
                                           CandidateList* candidates) {
   if (!engine_->context()->get_option(option_name_)) {  // off
     return translation;
@@ -163,7 +163,7 @@ a<Translation> Simplifier::Apply(a<Translation> translation,
   return New<SimplifiedTranslation>(translation, this);
 }
 
-bool Simplifier::Convert(const a<Candidate>& original,
+bool Simplifier::Convert(const an<Candidate>& original,
                          CandidateQueue* result) {
   if (excluded_types_.find(original->type()) != excluded_types_.end()) {
     return false;

@@ -9,7 +9,7 @@
 
 namespace rime {
 
-int Translation::Compare(a<Translation> other,
+int Translation::Compare(an<Translation> other,
                          const CandidateList& candidates) {
   if (!other || other->exhausted())
     return -1;
@@ -43,7 +43,7 @@ bool UniqueTranslation::Next() {
   return true;
 }
 
-a<Candidate> UniqueTranslation::Peek() {
+an<Candidate> UniqueTranslation::Peek() {
   if (exhausted())
     return nullptr;
   return candidate_;
@@ -61,13 +61,13 @@ bool FifoTranslation::Next() {
   return true;
 }
 
-a<Candidate> FifoTranslation::Peek() {
+an<Candidate> FifoTranslation::Peek() {
   if (exhausted())
     return nullptr;
   return candies_[cursor_];
 }
 
-void FifoTranslation::Append(a<Candidate> candy) {
+void FifoTranslation::Append(an<Candidate> candy) {
   candies_.push_back(candy);
   set_exhausted(false);
 }
@@ -89,13 +89,13 @@ bool UnionTranslation::Next() {
   return true;
 }
 
-a<Candidate> UnionTranslation::Peek() {
+an<Candidate> UnionTranslation::Peek() {
   if (exhausted())
     return nullptr;
   return translations_.front()->Peek();
 }
 
-UnionTranslation& UnionTranslation::operator+= (a<Translation> t) {
+UnionTranslation& UnionTranslation::operator+= (an<Translation> t) {
   if (t && !t->exhausted()) {
     translations_.push_back(t);
     set_exhausted(false);
@@ -103,7 +103,7 @@ UnionTranslation& UnionTranslation::operator+= (a<Translation> t) {
   return *this;
 }
 
-a<UnionTranslation> operator+ (a<Translation> x, a<Translation> y) {
+an<UnionTranslation> operator+ (an<Translation> x, an<Translation> y) {
   auto z = New<UnionTranslation>();
   *z += x;
   *z += y;
@@ -130,7 +130,7 @@ bool MergedTranslation::Next() {
   return true;
 }
 
-a<Candidate> MergedTranslation::Peek() {
+an<Candidate> MergedTranslation::Peek() {
   if (exhausted()) {
     return nullptr;
   }
@@ -144,7 +144,7 @@ void MergedTranslation::Elect() {
   }
   size_t k = 0;
   for (; k < translations_.size(); ++k) {
-    a<Translation> next;
+    an<Translation> next;
     if (k + 1 < translations_.size()) {
       next = translations_[k + 1];
     }
@@ -162,7 +162,7 @@ void MergedTranslation::Elect() {
   }
 }
 
-MergedTranslation& MergedTranslation::operator+= (a<Translation> t) {
+MergedTranslation& MergedTranslation::operator+= (an<Translation> t) {
   if (t && !t->exhausted()) {
     translations_.push_back(t);
     Elect();
@@ -172,7 +172,7 @@ MergedTranslation& MergedTranslation::operator+= (a<Translation> t) {
 
 // CacheTranslation
 
-CacheTranslation::CacheTranslation(a<Translation> translation)
+CacheTranslation::CacheTranslation(an<Translation> translation)
     : translation_(translation) {
   set_exhausted(!translation_ || translation_->exhausted());
 }
@@ -188,7 +188,7 @@ bool CacheTranslation::Next() {
   return true;
 }
 
-a<Candidate> CacheTranslation::Peek() {
+an<Candidate> CacheTranslation::Peek() {
   if (exhausted())
     return nullptr;
   if (!cache_) {
@@ -199,7 +199,7 @@ a<Candidate> CacheTranslation::Peek() {
 
 // DistinctTranslation
 
-DistinctTranslation::DistinctTranslation(a<Translation> translation)
+DistinctTranslation::DistinctTranslation(an<Translation> translation)
     : CacheTranslation(translation) {
 }
 
@@ -221,7 +221,7 @@ bool DistinctTranslation::AlreadyHas(const string& text) const {
 
 // PrefetchTranslation
 
-PrefetchTranslation::PrefetchTranslation(a<Translation> translation)
+PrefetchTranslation::PrefetchTranslation(an<Translation> translation)
     : translation_(translation) {
   set_exhausted(!translation_ || translation_->exhausted());
 }
@@ -242,7 +242,7 @@ bool PrefetchTranslation::Next() {
   return true;
 }
 
-a<Candidate> PrefetchTranslation::Peek() {
+an<Candidate> PrefetchTranslation::Peek() {
   if (exhausted()) {
     return nullptr;
   }

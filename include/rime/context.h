@@ -33,7 +33,7 @@ class Context {
   Preedit GetPreedit() const;
   bool IsComposing() const;
   bool HasMenu() const;
-  a<Candidate> GetSelectedCandidate() const;
+  an<Candidate> GetSelectedCandidate() const;
 
   bool PushInput(char ch);
   bool PushInput(const string& str);

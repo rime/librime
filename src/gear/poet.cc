@@ -13,10 +13,10 @@
 
 namespace rime {
 
-a<Sentence> Poet::MakeSentence(const WordGraph& graph,
+an<Sentence> Poet::MakeSentence(const WordGraph& graph,
                                         size_t total_length) {
   const int kMaxHomophonesInMind = 1;
-  map<int, a<Sentence>> sentences;
+  map<int, an<Sentence>> sentences;
   sentences[0] = New<Sentence>(language_);
   // dynamic programming
   for (const auto& w : graph) {
