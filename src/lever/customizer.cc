@@ -32,9 +32,9 @@ bool Customizer::UpdateConfigFile() {
   bool need_update = false;
   bool redistribute = false;
   bool missing_original_copy = false;
-  std::string source_version;
-  std::string dest_version;
-  std::string applied_customization;
+  string source_version;
+  string dest_version;
+  string applied_customization;
 
   Config dest_config;
   if (dest_config.LoadFromFile(dest_path_.string())) {
@@ -74,9 +74,9 @@ bool Customizer::UpdateConfigFile() {
     }
     custom_path = custom_path.string() + ".custom.yaml";
   }
-  std::string customization;
+  string customization;
   if (!custom_path.empty() && fs::exists(custom_path)) {
-    customization = boost::lexical_cast<std::string>(
+    customization = boost::lexical_cast<string>(
         Checksum(custom_path.string()));
   }
   if (applied_customization != customization) {
@@ -131,7 +131,7 @@ bool Customizer::UpdateConfigFile() {
     // update config version
     dest_config.GetString(version_key_, &dest_version);
     size_t custom_part = dest_version.find(".custom.");
-    if (custom_part != std::string::npos) {
+    if (custom_part != string::npos) {
       dest_version.erase(custom_part);
     }
     dest_version.append(".custom.").append(customization);

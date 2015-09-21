@@ -4,7 +4,6 @@
 //
 // 2013-05-26 GONG Chen <chen.sst@gmail.com>
 //
-#include <vector>
 #include <utf8.h>
 #include <rime/candidate.h>
 #include <rime/common.h>
@@ -23,9 +22,9 @@ namespace rime {
 
 class Switch : public SimpleCandidate, public SwitcherCommand {
  public:
-  Switch(const std::string& current_state_label,
-         const std::string& next_state_label,
-         const std::string& option_name,
+  Switch(const string& current_state_label,
+         const string& next_state_label,
+         const string& option_name,
          bool current_state,
          bool auto_save)
       : SimpleCandidate("switch", 0, 0,
@@ -60,22 +59,22 @@ class RadioGroup : public std::enable_shared_from_this<RadioGroup> {
   RadioGroup(Context* context, Switcher* switcher)
       : context_(context), switcher_(switcher) {
   }
-  shared_ptr<RadioOption> CreateOption(const std::string& state_label,
-                                       const std::string& option_name);
+  an<RadioOption> CreateOption(const string& state_label,
+                                       const string& option_name);
   void SelectOption(RadioOption* option);
   RadioOption* GetSelectedOption() const;
 
  private:
   Context* context_;
   Switcher* switcher_;
-  std::vector<RadioOption*> options_;
+  vector<RadioOption*> options_;
 };
 
 class RadioOption : public SimpleCandidate, public SwitcherCommand {
  public:
-  RadioOption(shared_ptr<RadioGroup> group,
-              const std::string& state_label,
-              const std::string& option_name)
+  RadioOption(an<RadioGroup> group,
+              const string& state_label,
+              const string& option_name)
       : SimpleCandidate("switch", 0, 0, state_label),
         SwitcherCommand(option_name),
         group_(group) {
@@ -85,7 +84,7 @@ class RadioOption : public SimpleCandidate, public SwitcherCommand {
   bool selected() const { return selected_; }
 
  protected:
-  shared_ptr<RadioGroup> group_;
+  an<RadioGroup> group_;
   bool selected_ = false;
 };
 
@@ -99,9 +98,9 @@ void RadioOption::UpdateState(bool selected) {
   set_comment(selected ? kRadioSelected : "");
 }
 
-shared_ptr<RadioOption>
-RadioGroup::CreateOption(const std::string& state_label,
-                         const std::string& option_name) {
+an<RadioOption>
+RadioGroup::CreateOption(const string& state_label,
+                         const string& option_name) {
   auto option = New<RadioOption>(shared_from_this(),
                                  state_label,
                                  option_name);
@@ -116,7 +115,7 @@ void RadioGroup::SelectOption(RadioOption* option) {
   for (auto it = options_.begin(); it != options_.end(); ++it) {
     bool selected = (*it == option);
     (*it)->UpdateState(selected);
-    const std::string& option_name((*it)->keyword());
+    const string& option_name((*it)->keyword());
     if (context_->get_option(option_name) != selected) {
       context_->set_option(option_name, selected);
       if (user_config && switcher_->IsAutoSave(option_name)) {
@@ -144,7 +143,7 @@ class FoldedOptions : public SimpleCandidate, public SwitcherCommand {
     LoadConfig(config);
   }
   virtual void Apply(Switcher* switcher);
-  void Append(const std::string& label) {
+  void Append(const string& label) {
     labels_.push_back(label);
   }
   size_t size() const {
@@ -155,12 +154,12 @@ class FoldedOptions : public SimpleCandidate, public SwitcherCommand {
  private:
   void LoadConfig(Config* config);
 
-  std::string prefix_;
-  std::string suffix_;
-  std::string separator_ = " ";
+  string prefix_;
+  string suffix_;
+  string separator_ = " ";
   bool abbreviate_options_ = false;
 
-  std::vector<std::string> labels_;
+  vector<string> labels_;
 };
 
 void FoldedOptions::LoadConfig(Config* config) {
@@ -179,15 +178,15 @@ void FoldedOptions::Apply(Switcher* switcher) {
   switcher->RefreshMenu();
 }
 
-static std::string FirstCharOf(const std::string& str) {
+static string FirstCharOf(const string& str) {
   if (str.empty()) {
     return str;
   }
-  std::string first_char;
+  string first_char;
   const char* start = str.c_str();
   const char* end = start;
   utf8::unchecked::next(end);
-  return std::string(start, end - start);
+  return string(start, end - start);
 }
 
 void FoldedOptions::Finish() {
@@ -282,7 +281,7 @@ SwitchTranslator::SwitchTranslator(const Ticket& ticket)
     : Translator(ticket) {
 }
 
-shared_ptr<Translation> SwitchTranslator::Query(const std::string& input,
+an<Translation> SwitchTranslator::Query(const string& input,
                                                 const Segment& segment) {
   auto switcher = dynamic_cast<Switcher*>(engine_);
   if (!switcher) {

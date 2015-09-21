@@ -37,19 +37,19 @@ AbcSegmentor::AbcSegmentor(const Ticket& ticket)
 }
 
 bool AbcSegmentor::Proceed(Segmentation* segmentation) {
-  const std::string& input(segmentation->input());
+  const string& input(segmentation->input());
   DLOG(INFO) << "abc_segmentor: " << input;
   size_t j = segmentation->GetCurrentStartPosition();
   size_t k = j;
   bool expecting_an_initial = true;
   for (; k < input.length(); ++k) {
-    bool is_letter = alphabet_.find(input[k]) != std::string::npos;
+    bool is_letter = alphabet_.find(input[k]) != string::npos;
     bool is_delimiter =
-        (k != j) && (delimiter_.find(input[k]) != std::string::npos);
+        (k != j) && (delimiter_.find(input[k]) != string::npos);
     if (!is_letter && !is_delimiter)
       break;
-    bool is_initial = initials_.find(input[k]) != std::string::npos;
-    bool is_final = finals_.find(input[k]) != std::string::npos;
+    bool is_initial = initials_.find(input[k]) != string::npos;
+    bool is_final = finals_.find(input[k]) != string::npos;
     if (expecting_an_initial && !is_initial && !is_delimiter) {
       break;  // not a valid seplling.
     }
@@ -60,7 +60,7 @@ bool AbcSegmentor::Proceed(Segmentation* segmentation) {
   if (j < k) {
     Segment segment(j, k);
     segment.tags.insert("abc");
-    for (const std::string& tag : extra_tags_) {
+    for (const string& tag : extra_tags_) {
       segment.tags.insert(tag);
     }
     segmentation->AddSegment(segment);

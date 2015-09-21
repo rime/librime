@@ -8,7 +8,6 @@
 #include <cstring>
 #include <algorithm>
 #include <queue>
-#include <vector>
 #include <utility>
 #include <rime/common.h>
 #include <rime/algo/syllabifier.h>
@@ -45,7 +44,7 @@ class TableQuery {
  protected:
   size_t level_ = 0;
   Code index_code_;
-  std::vector<double> credibility_;
+  vector<double> credibility_;
 
  private:
   bool Walk(SyllableId syllable_id);
@@ -245,20 +244,20 @@ TableAccessor TableQuery::Access(SyllableId syllable_id,
   return TableAccessor();
 }
 
-std::string Table::GetString_v1(const table::StringType& x) {
+string Table::GetString_v1(const table::StringType& x) {
  return x.str().c_str();
 }
 
-bool Table::AddString_v1(const std::string& src, table::StringType* dest,
+bool Table::AddString_v1(const string& src, table::StringType* dest,
                          double /*weight*/) {
   return CopyString(src, &dest->str());
 }
 
-std::string Table::GetString_v2(const table::StringType& x) {
+string Table::GetString_v2(const table::StringType& x) {
   return string_table_->GetString(x.str_id());
 }
 
-bool Table::AddString_v2(const std::string& src, table::StringType* dest,
+bool Table::AddString_v2(const string& src, table::StringType* dest,
                          double weight) {
   string_table_builder_->Add(src, weight, &dest->str_id());
   return true;
@@ -309,7 +308,7 @@ void Table::SelectTableFormat(double format_version) {
   }
 }
 
-Table::Table(const std::string& file_name) : MappedFile(file_name) {
+Table::Table(const string& file_name) : MappedFile(file_name) {
 }
 
 Table::~Table() {
@@ -413,7 +412,7 @@ bool Table::Build(const Syllabary& syllabary, const Vocabulary& vocabulary,
   }
   else {
     size_t i = 0;
-    for (const std::string& syllable : syllabary) {
+    for (const string& syllable : syllabary) {
       RIME_THIS_CALL(format_.AddString)(syllable, &syllabary_->at[i++], 0.0);
     }
   }
@@ -591,11 +590,11 @@ bool Table::GetSyllabary(Syllabary* result) {
   }
   return true;
 }
-std::string Table::GetSyllableById(SyllableId syllable_id) {
+string Table::GetSyllableById(SyllableId syllable_id) {
   if (!syllabary_ ||
       syllable_id < 0 ||
       syllable_id >= static_cast<SyllableId>(syllabary_->size))
-    return std::string();
+    return string();
   return RIME_THIS_CALL(format_.GetString)(syllabary_->at[syllable_id]);
 }
 
@@ -624,7 +623,7 @@ bool Table::Query(const SyllableGraph& syll_graph, size_t start_pos,
       start_pos >= syll_graph.interpreted_length)
     return false;
   result->clear();
-  std::queue<std::pair<size_t, TableQuery>> q;
+  std::queue<pair<size_t, TableQuery>> q;
   TableQuery initial_state(index_);
   q.push({start_pos, initial_state});
   while (!q.empty()) {
@@ -661,7 +660,7 @@ bool Table::Query(const SyllableGraph& syll_graph, size_t start_pos,
   return !result->empty();
 }
 
-std::string Table::GetEntryText(const table::Entry& entry) {
+string Table::GetEntryText(const table::Entry& entry) {
   return RIME_THIS_CALL(format_.GetString)(entry.text);
 }
 

@@ -7,7 +7,6 @@
 #ifndef RIME_CONTEXT_H_
 #define RIME_CONTEXT_H_
 
-#include <string>
 #include <rime/common.h>
 #include <rime/commit_history.h>
 #include <rime/composition.h>
@@ -21,7 +20,7 @@ class Context {
  public:
   using Notifier = signal<void (Context* ctx)>;
   using OptionUpdateNotifier =
-      signal<void (Context* ctx, const std::string& option)>;
+      signal<void (Context* ctx, const string& option)>;
   using KeyEventNotifier =
       signal<void (Context* ctx, const KeyEvent& key_event)>;
 
@@ -29,15 +28,15 @@ class Context {
   ~Context() = default;
 
   bool Commit();
-  std::string GetCommitText() const;
-  std::string GetScriptText() const;
+  string GetCommitText() const;
+  string GetScriptText() const;
   Preedit GetPreedit() const;
   bool IsComposing() const;
   bool HasMenu() const;
-  shared_ptr<Candidate> GetSelectedCandidate() const;
+  an<Candidate> GetSelectedCandidate() const;
 
   bool PushInput(char ch);
-  bool PushInput(const std::string& str);
+  bool PushInput(const string& str);
   bool PopInput(size_t len = 1);
   bool DeleteInput(size_t len = 1);
   void Clear();
@@ -55,8 +54,8 @@ class Context {
   bool ClearNonConfirmedComposition();
   bool RefreshNonConfirmedComposition();
 
-  void set_input(const std::string& value);
-  const std::string& input() const { return input_; }
+  void set_input(const string& value);
+  const string& input() const { return input_; }
 
   void set_caret_pos(size_t caret_pos);
   size_t caret_pos() const { return caret_pos_; }
@@ -67,10 +66,10 @@ class Context {
   CommitHistory& commit_history() { return commit_history_; }
   const CommitHistory& commit_history() const { return commit_history_; }
 
-  void set_option(const std::string& name, bool value);
-  bool get_option(const std::string& name) const;
-  void set_property(const std::string& name, const std::string& value);
-  std::string get_property(const std::string& name) const;
+  void set_option(const string& name, bool value);
+  bool get_option(const string& name) const;
+  void set_property(const string& name, const string& value);
+  string get_property(const string& name) const;
   // options and properties starting with '_' are local to schema;
   // others are session scoped.
   void ClearTransientOptions();
@@ -87,12 +86,12 @@ class Context {
   }
 
  private:
-  std::string input_;
+  string input_;
   size_t caret_pos_ = 0;
   Composition composition_;
   CommitHistory commit_history_;
-  std::map<std::string, bool> options_;
-  std::map<std::string, std::string> properties_;
+  map<string, bool> options_;
+  map<string, string> properties_;
 
   Notifier commit_notifier_;
   Notifier select_notifier_;

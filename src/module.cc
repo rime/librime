@@ -10,12 +10,12 @@
 
 namespace rime {
 
-void ModuleManager::Register(const std::string& name,
+void ModuleManager::Register(const string& name,
                               RimeModule* module) {
   map_[name] = module;
 }
 
-RimeModule* ModuleManager::Find(const std::string& name) {
+RimeModule* ModuleManager::Find(const string& name) {
   ModuleMap::const_iterator it = map_.find(name);
   if (it != map_.end()) {
     return it->second;
@@ -48,7 +48,7 @@ void ModuleManager::UnloadModules() {
 }
 
 ModuleManager& ModuleManager::instance() {
-  static unique_ptr<ModuleManager> s_instance;
+  static the<ModuleManager> s_instance;
   if (!s_instance) {
     s_instance.reset(new ModuleManager);
   }

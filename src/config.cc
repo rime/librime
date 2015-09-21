@@ -6,8 +6,6 @@
 //
 #include <cstdlib>
 #include <fstream>
-#include <vector>
-#include <map>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
@@ -24,31 +22,31 @@ class ConfigData {
 
   bool LoadFromStream(std::istream& stream);
   bool SaveToStream(std::ostream& stream);
-  bool LoadFromFile(const std::string& file_name);
-  bool SaveToFile(const std::string& file_name);
-  ConfigItemPtr Traverse(const std::string& key);
+  bool LoadFromFile(const string& file_name);
+  bool SaveToFile(const string& file_name);
+  an<ConfigItem> Traverse(const string& key);
 
   bool modified() const { return modified_; }
   void set_modified() { modified_ = true; }
 
-  ConfigItemPtr root;
+  an<ConfigItem> root;
 
  protected:
-  static ConfigItemPtr ConvertFromYaml(const YAML::Node& yaml_node);
-  static void EmitYaml(ConfigItemPtr node,
+  static an<ConfigItem> ConvertFromYaml(const YAML::Node& yaml_node);
+  static void EmitYaml(an<ConfigItem> node,
                        YAML::Emitter* emitter,
                        int depth);
-  static void EmitScalar(const std::string& str_value,
+  static void EmitScalar(const string& str_value,
                          YAML::Emitter* emitter);
 
-  std::string file_name_;
+  string file_name_;
   bool modified_ = false;
 };
 
-class ConfigDataManager : public std::map<std::string, weak_ptr<ConfigData>> {
+class ConfigDataManager : public map<string, weak<ConfigData>> {
  public:
-  shared_ptr<ConfigData> GetConfigData(const std::string& config_file_path);
-  bool ReloadConfigData(const std::string& config_file_path);
+  an<ConfigData> GetConfigData(const string& config_file_path);
+  bool ReloadConfigData(const string& config_file_path);
 
   static ConfigDataManager& instance();
 
@@ -77,14 +75,14 @@ ConfigValue::ConfigValue(const char* value)
     : ConfigItem(kScalar), value_(value) {
 }
 
-ConfigValue::ConfigValue(const std::string& value)
+ConfigValue::ConfigValue(const string& value)
     : ConfigItem(kScalar), value_(value) {
 }
 
 bool ConfigValue::GetBool(bool* value) const {
   if (!value || value_.empty())
     return false;
-  std::string bstr = value_;
+  string bstr = value_;
   boost::to_lower(bstr);
   if ("true" == bstr) {
     *value = true;
@@ -132,7 +130,7 @@ bool ConfigValue::GetDouble(double* value) const {
   return true;
 }
 
-bool ConfigValue::GetString(std::string* value) const {
+bool ConfigValue::GetString(string* value) const {
   if (!value) return false;
   *value = value_;
   return true;
@@ -144,12 +142,12 @@ bool ConfigValue::SetBool(bool value) {
 }
 
 bool ConfigValue::SetInt(int value) {
-  value_ = boost::lexical_cast<std::string>(value);
+  value_ = boost::lexical_cast<string>(value);
   return true;
 }
 
 bool ConfigValue::SetDouble(double value) {
-  value_ = boost::lexical_cast<std::string>(value);
+  value_ = boost::lexical_cast<string>(value);
   return true;
 }
 
@@ -158,32 +156,32 @@ bool ConfigValue::SetString(const char* value) {
   return true;
 }
 
-bool ConfigValue::SetString(const std::string& value) {
+bool ConfigValue::SetString(const string& value) {
   value_ = value;
   return true;
 }
 
 // ConfigList members
 
-ConfigItemPtr ConfigList::GetAt(size_t i) const {
+an<ConfigItem> ConfigList::GetAt(size_t i) const {
   if (i >= seq_.size())
     return nullptr;
   else
     return seq_[i];
 }
 
-ConfigValuePtr ConfigList::GetValueAt(size_t i) const {
+an<ConfigValue> ConfigList::GetValueAt(size_t i) const {
   return As<ConfigValue>(GetAt(i));
 }
 
-bool ConfigList::SetAt(size_t i, ConfigItemPtr element) {
+bool ConfigList::SetAt(size_t i, an<ConfigItem> element) {
   if (i >= seq_.size())
     seq_.resize(i + 1);
   seq_[i] = element;
   return true;
 }
 
-bool ConfigList::Insert(size_t i, ConfigItemPtr element) {
+bool ConfigList::Insert(size_t i, an<ConfigItem> element) {
   if (i > seq_.size()) {
     seq_.resize(i);
   }
@@ -191,7 +189,7 @@ bool ConfigList::Insert(size_t i, ConfigItemPtr element) {
   return true;
 }
 
-bool ConfigList::Append(ConfigItemPtr element) {
+bool ConfigList::Append(an<ConfigItem> element) {
   seq_.push_back(element);
   return true;
 }
@@ -220,11 +218,11 @@ ConfigList::Iterator ConfigList::end() {
 
 // ConfigMap members
 
-bool ConfigMap::HasKey(const std::string& key) const {
+bool ConfigMap::HasKey(const string& key) const {
   return bool(Get(key));
 }
 
-ConfigItemPtr ConfigMap::Get(const std::string& key) const {
+an<ConfigItem> ConfigMap::Get(const string& key) const {
   auto it = map_.find(key);
   if (it == map_.end())
     return nullptr;
@@ -232,11 +230,11 @@ ConfigItemPtr ConfigMap::Get(const std::string& key) const {
     return it->second;
 }
 
-ConfigValuePtr ConfigMap::GetValue(const std::string& key) const {
+an<ConfigValue> ConfigMap::GetValue(const string& key) const {
   return As<ConfigValue>(Get(key));
 }
 
-bool ConfigMap::Set(const std::string& key, ConfigItemPtr element) {
+bool ConfigMap::Set(const string& key, an<ConfigItem> element) {
   map_[key] = element;
   return true;
 }
@@ -300,22 +298,22 @@ double ConfigItemRef::ToDouble() const {
   return value;
 }
 
-std::string ConfigItemRef::ToString() const {
-  std::string value;
+string ConfigItemRef::ToString() const {
+  string value;
   if (auto item = As<ConfigValue>(GetItem())) {
     item->GetString(&value);
   }
   return value;
 }
 
-ConfigListPtr ConfigItemRef::AsList() {
+an<ConfigList> ConfigItemRef::AsList() {
   auto list = As<ConfigList>(GetItem());
   if (!list)
     SetItem(list = New<ConfigList>());
   return list;
 }
 
-ConfigMapPtr ConfigItemRef::AsMap() {
+an<ConfigMap> ConfigItemRef::AsMap() {
   auto map = As<ConfigMap>(GetItem());
   if (!map)
     SetItem(map = New<ConfigMap>());
@@ -323,10 +321,10 @@ ConfigMapPtr ConfigItemRef::AsMap() {
 }
 
 void ConfigItemRef::Clear() {
-  SetItem(ConfigItemPtr());
+  SetItem(nullptr);
 }
 
-bool ConfigItemRef::Append(ConfigItemPtr item) {
+bool ConfigItemRef::Append(an<ConfigItem> item) {
   if (AsList()->Append(item)) {
     set_modified();
     return true;
@@ -339,7 +337,7 @@ size_t ConfigItemRef::size() const {
   return list ? list->size() : 0;
 }
 
-bool ConfigItemRef::HasKey(const std::string& key) const {
+bool ConfigItemRef::HasKey(const string& key) const {
   auto map = As<ConfigMap>(GetItem());
   return map ? map->HasKey(key) : false;
 }
@@ -361,7 +359,7 @@ Config::Config() : ConfigItemRef(New<ConfigData>()) {
 Config::~Config() {
 }
 
-Config::Config(const std::string& file_name)
+Config::Config(const string& file_name)
     : ConfigItemRef(ConfigDataManager::instance().GetConfigData(file_name)) {
 }
 
@@ -373,115 +371,115 @@ bool Config::SaveToStream(std::ostream& stream) {
   return data_->SaveToStream(stream);
 }
 
-bool Config::LoadFromFile(const std::string& file_name) {
+bool Config::LoadFromFile(const string& file_name) {
   return data_->LoadFromFile(file_name);
 }
 
-bool Config::SaveToFile(const std::string& file_name) {
+bool Config::SaveToFile(const string& file_name) {
   return data_->SaveToFile(file_name);
 }
 
-bool Config::IsNull(const std::string& key) {
+bool Config::IsNull(const string& key) {
   auto p = data_->Traverse(key);
   return !p || p->type() == ConfigItem::kNull;
 }
 
-bool Config::IsValue(const std::string& key) {
+bool Config::IsValue(const string& key) {
   auto p = data_->Traverse(key);
   return !p || p->type() == ConfigItem::kScalar;
 }
 
-bool Config::IsList(const std::string& key) {
+bool Config::IsList(const string& key) {
   auto p = data_->Traverse(key);
   return !p || p->type() == ConfigItem::kList;
 }
 
-bool Config::IsMap(const std::string& key) {
+bool Config::IsMap(const string& key) {
   auto p = data_->Traverse(key);
   return !p || p->type() == ConfigItem::kMap;
 }
 
-bool Config::GetBool(const std::string& key, bool* value) {
+bool Config::GetBool(const string& key, bool* value) {
   DLOG(INFO) << "read: " << key;
   auto p = As<ConfigValue>(data_->Traverse(key));
   return p && p->GetBool(value);
 }
 
-bool Config::GetInt(const std::string& key, int* value) {
+bool Config::GetInt(const string& key, int* value) {
   DLOG(INFO) << "read: " << key;
   auto p = As<ConfigValue>(data_->Traverse(key));
   return p && p->GetInt(value);
 }
 
-bool Config::GetDouble(const std::string& key, double* value) {
+bool Config::GetDouble(const string& key, double* value) {
   DLOG(INFO) << "read: " << key;
   auto p = As<ConfigValue>(data_->Traverse(key));
   return p && p->GetDouble(value);
 }
 
-bool Config::GetString(const std::string& key, std::string* value) {
+bool Config::GetString(const string& key, string* value) {
   DLOG(INFO) << "read: " << key;
   auto p = As<ConfigValue>(data_->Traverse(key));
   return p && p->GetString(value);
 }
 
-ConfigItemPtr Config::GetItem(const std::string& key) {
+an<ConfigItem> Config::GetItem(const string& key) {
   DLOG(INFO) << "read: " << key;
   return data_->Traverse(key);
 }
 
-ConfigValuePtr Config::GetValue(const std::string& key) {
+an<ConfigValue> Config::GetValue(const string& key) {
   DLOG(INFO) << "read: " << key;
   return As<ConfigValue>(data_->Traverse(key));
 }
 
-ConfigListPtr Config::GetList(const std::string& key) {
+an<ConfigList> Config::GetList(const string& key) {
   DLOG(INFO) << "read: " << key;
   return As<ConfigList>(data_->Traverse(key));
 }
 
-ConfigMapPtr Config::GetMap(const std::string& key) {
+an<ConfigMap> Config::GetMap(const string& key) {
   DLOG(INFO) << "read: " << key;
   return As<ConfigMap>(data_->Traverse(key));
 }
 
-bool Config::SetBool(const std::string& key, bool value) {
+bool Config::SetBool(const string& key, bool value) {
   return SetItem(key, New<ConfigValue>(value));
 }
 
-bool Config::SetInt(const std::string& key, int value) {
+bool Config::SetInt(const string& key, int value) {
   return SetItem(key, New<ConfigValue>(value));
 }
 
-bool Config::SetDouble(const std::string& key, double value) {
+bool Config::SetDouble(const string& key, double value) {
   return SetItem(key, New<ConfigValue>(value));
 }
 
-bool Config::SetString(const std::string& key, const char* value) {
+bool Config::SetString(const string& key, const char* value) {
   return SetItem(key, New<ConfigValue>(value));
 }
 
-bool Config::SetString(const std::string& key, const std::string& value) {
+bool Config::SetString(const string& key, const string& value) {
   return SetItem(key, New<ConfigValue>(value));
 }
 
-static inline bool IsListItemReference(const std::string& key) {
+static inline bool IsListItemReference(const string& key) {
   return !key.empty() && key[0] == '@';
 }
 
-static size_t ResolveListIndex(ConfigItemPtr p, const std::string& key,
+static size_t ResolveListIndex(an<ConfigItem> p, const string& key,
                                bool read_only = false) {
   //if (!IsListItemReference(key)) {
   //  return 0;
   //}
-  ConfigListPtr list = As<ConfigList>(p);
+  an<ConfigList> list = As<ConfigList>(p);
   if (!list) {
     return 0;
   }
-  const std::string kAfter("after");
-  const std::string kBefore("before");
-  const std::string kLast("last");
-  const std::string kNext("next");
+  const string kAfter("after");
+  const string kBefore("before");
+  const string kLast("last");
+  const string kNext("next");
   size_t cursor = 1;
   unsigned int index = 0;
   bool will_insert = false;
@@ -517,7 +515,7 @@ static size_t ResolveListIndex(ConfigItemPtr p, const std::string& key,
   return index;
 }
 
-bool Config::SetItem(const std::string& key, ConfigItemPtr item) {
+bool Config::SetItem(const string& key, an<ConfigItem> item) {
   LOG(INFO) << "write: " << key;
   if (key.empty() || key == "/") {
     data_->root = item;
@@ -527,8 +525,8 @@ bool Config::SetItem(const std::string& key, ConfigItemPtr item) {
   if (!data_->root) {
     data_->root = New<ConfigMap>();
   }
-  ConfigItemPtr p(data_->root);
-  std::vector<std::string> keys;
+  an<ConfigItem> p(data_->root);
+  vector<string> keys;
   boost::split(keys, key, boost::is_any_of("/"));
   size_t k = keys.size() - 1;
   for (size_t i = 0; i <= k; ++i) {
@@ -553,7 +551,7 @@ bool Config::SetItem(const std::string& key, ConfigItemPtr item) {
       return true;
     }
     else {
-      ConfigItemPtr next;
+      an<ConfigItem> next;
       if (node_type == ConfigItem::kList) {
         next = As<ConfigList>(p)->GetAt(list_index);
       }
@@ -582,23 +580,23 @@ bool Config::SetItem(const std::string& key, ConfigItemPtr item) {
   return false;
 }
 
-ConfigItemPtr Config::GetItem() const {
+an<ConfigItem> Config::GetItem() const {
   return data_->root;
 }
 
-void Config::SetItem(ConfigItemPtr item) {
+void Config::SetItem(an<ConfigItem> item) {
   data_->root = item;
   set_modified();
 }
 
 // ConfigComponent members
 
-std::string ConfigComponent::GetConfigFilePath(const std::string& config_id) {
+string ConfigComponent::GetConfigFilePath(const string& config_id) {
   return boost::str(boost::format(pattern_) % config_id);
 }
 
-Config* ConfigComponent::Create(const std::string& config_id) {
-  std::string path(GetConfigFilePath(config_id));
+Config* ConfigComponent::Create(const string& config_id) {
+  string path(GetConfigFilePath(config_id));
   DLOG(INFO) << "config file path: " << path;
   return new Config(path);
 }
@@ -606,18 +604,18 @@ Config* ConfigComponent::Create(const std::string& config_id) {
 // ConfigDataManager memebers
 
 ConfigDataManager& ConfigDataManager::instance() {
-  static unique_ptr<ConfigDataManager> s_instance;
+  static the<ConfigDataManager> s_instance;
   if (!s_instance) {
     s_instance.reset(new ConfigDataManager);
   }
   return *s_instance;
 }
 
-shared_ptr<ConfigData>
-ConfigDataManager::GetConfigData(const std::string& config_file_path) {
-  shared_ptr<ConfigData> sp;
+an<ConfigData>
+ConfigDataManager::GetConfigData(const string& config_file_path) {
+  an<ConfigData> sp;
   // keep a weak reference to the shared config data in the manager
-  weak_ptr<ConfigData>& wp((*this)[config_file_path]);
+  weak<ConfigData>& wp((*this)[config_file_path]);
   if (wp.expired()) {  // create a new copy and load it
     sp = New<ConfigData>();
     sp->LoadFromFile(config_file_path);
@@ -629,12 +627,12 @@ ConfigDataManager::GetConfigData(const std::string& config_file_path) {
   return sp;
 }
 
-bool ConfigDataManager::ReloadConfigData(const std::string& config_file_path) {
+bool ConfigDataManager::ReloadConfigData(const string& config_file_path) {
   iterator it = find(config_file_path);
   if (it == end()) {  // never loaded
     return false;
   }
-  shared_ptr<ConfigData> sp = it->second.lock();
+  an<ConfigData> sp = it->second.lock();
   if (!sp)  {  // already been freed
     erase(it);
     return false;
@@ -682,7 +680,7 @@ bool ConfigData::SaveToStream(std::ostream& stream) {
   return true;
 }
 
-bool ConfigData::LoadFromFile(const std::string& file_name) {
+bool ConfigData::LoadFromFile(const string& file_name) {
   // update status
   file_name_ = file_name;
   modified_ = false;
@@ -703,7 +701,7 @@ bool ConfigData::LoadFromFile(const std::string& file_name) {
   return true;
 }
 
-bool ConfigData::SaveToFile(const std::string& file_name) {
+bool ConfigData::SaveToFile(const string& file_name) {
   // update status
   file_name_ = file_name;
   modified_ = false;
@@ -717,15 +715,15 @@ bool ConfigData::SaveToFile(const std::string& file_name) {
   return SaveToStream(out);
 }
 
-ConfigItemPtr ConfigData::Traverse(const std::string& key) {
+an<ConfigItem> ConfigData::Traverse(const string& key) {
   DLOG(INFO) << "traverse: " << key;
   if (key.empty() || key == "/") {
     return root;
   }
-  std::vector<std::string> keys;
+  vector<string> keys;
   boost::split(keys, key, boost::is_any_of("/"));
   // find the YAML::Node, and wrap it!
-  ConfigItemPtr p = root;
+  an<ConfigItem> p = root;
   for (auto it = keys.begin(), end = keys.end(); it != end; ++it) {
     ConfigItem::ValueType node_type = ConfigItem::kMap;
     size_t list_index = 0;
@@ -746,12 +744,12 @@ ConfigItemPtr ConfigData::Traverse(const std::string& key) {
   return p;
 }
 
-ConfigItemPtr ConfigData::ConvertFromYaml(const YAML::Node& node) {
+an<ConfigItem> ConfigData::ConvertFromYaml(const YAML::Node& node) {
   if (YAML::NodeType::Null == node.Type()) {
-    return ConfigItemPtr();
+    return nullptr;
   }
   if (YAML::NodeType::Scalar == node.Type()) {
-    return New<ConfigValue>(node.as<std::string>());
+    return New<ConfigValue>(node.as<string>());
   }
   if (YAML::NodeType::Sequence == node.Type()) {
     auto config_list = New<ConfigList>();
@@ -763,17 +761,17 @@ ConfigItemPtr ConfigData::ConvertFromYaml(const YAML::Node& node) {
   else if (YAML::NodeType::Map == node.Type()) {
     auto config_map = New<ConfigMap>();
     for (auto it = node.begin(), end = node.end(); it != end; ++it) {
-      std::string key = it->first.as<std::string>();
+      string key = it->first.as<string>();
       config_map->Set(key, ConvertFromYaml(it->second));
     }
     return config_map;
   }
-  return ConfigItemPtr();
+  return nullptr;
 }
 
-void ConfigData::EmitScalar(const std::string& str_value,
+void ConfigData::EmitScalar(const string& str_value,
                             YAML::Emitter* emitter) {
-  if (str_value.find_first_of("\r\n") != std::string::npos) {
+  if (str_value.find_first_of("\r\n") != string::npos) {
     *emitter << YAML::Literal;
   }
   else if (!boost::algorithm::all(str_value,
@@ -784,7 +782,7 @@ void ConfigData::EmitScalar(const std::string& str_value,
   *emitter << str_value;
 }
 
-void ConfigData::EmitYaml(ConfigItemPtr node,
+void ConfigData::EmitYaml(an<ConfigItem> node,
                           YAML::Emitter* emitter,
                           int depth) {
   if (!node || !emitter) return;

@@ -8,9 +8,6 @@
 #ifndef RIME_ALGEBRA_H_
 #define RIME_ALGEBRA_H_
 
-#include <map>
-#include <string>
-#include <vector>
 #include <rime/common.h>
 #include <rime/config.h>
 #include "spelling.h"
@@ -20,24 +17,24 @@ namespace rime {
 class Calculation;
 class Schema;
 
-class Script : public std::map<std::string, std::vector<Spelling>> {
+class Script : public map<string, vector<Spelling>> {
  public:
-  bool AddSyllable(const std::string& syllable);
-  void Merge(const std::string& s,
+  bool AddSyllable(const string& syllable);
+  void Merge(const string& s,
              const SpellingProperties& sp,
-             const std::vector<Spelling>& v);
-  void Dump(const std::string& file_name) const;
+             const vector<Spelling>& v);
+  void Dump(const string& file_name) const;
 };
 
 class Projection {
  public:
-  bool Load(ConfigListPtr settings);
+  bool Load(an<ConfigList> settings);
   // "spelling" -> "gnilleps"
-  bool Apply(std::string* value);
+  bool Apply(string* value);
   // {z, y, x} -> {a, b, c, d}
   bool Apply(Script* value);
  protected:
-  std::vector<shared_ptr<Calculation>> calculation_;
+  vector<of<Calculation>> calculation_;
 };
 
 }  // namespace rime

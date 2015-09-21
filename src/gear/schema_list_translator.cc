@@ -40,8 +40,8 @@ void SchemaSelection::Apply(Switcher* switcher) {
 
 class SchemaAction : public ShadowCandidate, public SwitcherCommand {
  public:
-  SchemaAction(shared_ptr<Candidate> schema,
-               shared_ptr<Candidate> command)
+  SchemaAction(an<Candidate> schema,
+               an<Candidate> command)
       : ShadowCandidate(schema, command->type()),
         SwitcherCommand(As<SwitcherCommand>(schema)->keyword()),
         command_(As<SwitcherCommand>(command)) {
@@ -49,7 +49,7 @@ class SchemaAction : public ShadowCandidate, public SwitcherCommand {
   virtual void Apply(Switcher* switcher);
 
  private:
-  shared_ptr<SwitcherCommand> command_;
+  an<SwitcherCommand> command_;
 };
 
 void SchemaAction::Apply(Switcher* switcher) {
@@ -63,14 +63,14 @@ class SchemaListTranslation : public FifoTranslation {
   SchemaListTranslation(Switcher* switcher) {
     LoadSchemaList(switcher);
   }
-  virtual int Compare(shared_ptr<Translation> other,
+  virtual int Compare(an<Translation> other,
                       const CandidateList& candidates);
 
  protected:
   void LoadSchemaList(Switcher* switcher);
 };
 
-int SchemaListTranslation::Compare(shared_ptr<Translation> other,
+int SchemaListTranslation::Compare(an<Translation> other,
                                    const CandidateList& candidates) {
   if (!other || other->exhausted())
     return -1;
@@ -117,7 +117,7 @@ void SchemaListTranslation::LoadSchemaList(Switcher* switcher) {
     auto schema_property = item->GetValue("schema");
     if (!schema_property)
       continue;
-    const std::string& schema_id(schema_property->str());
+    const string& schema_id(schema_property->str());
     if (current_schema && schema_id == current_schema->schema_id())
       continue;
     Schema schema(schema_id);
@@ -138,8 +138,8 @@ void SchemaListTranslation::LoadSchemaList(Switcher* switcher) {
     return;
   // reorder schema list by recency
   std::stable_sort(candies_.begin() + fixed, candies_.end(),
-      [](const shared_ptr<Candidate>& a, const shared_ptr<Candidate>& b) {
-        return a->quality() > b->quality();
+      [](const an<Candidate>& x, const an<Candidate>& y) {
+        return x->quality() > y->quality();
       });
 }
 
@@ -147,7 +147,7 @@ SchemaListTranslator::SchemaListTranslator(const Ticket& ticket)
     : Translator(ticket) {
 }
 
-shared_ptr<Translation> SchemaListTranslator::Query(const std::string& input,
+an<Translation> SchemaListTranslator::Query(const string& input,
                                                     const Segment& segment) {
   auto switcher = dynamic_cast<Switcher*>(engine_);
   if (!switcher) {

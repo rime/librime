@@ -7,8 +7,6 @@
 #ifndef RIME_AFFIX_SEGMENTOR_H_
 #define RIME_AFFIX_SEGMENTOR_H_
 
-#include <set>
-#include <string>
 #include <rime/segmentor.h>
 
 namespace rime {
@@ -20,12 +18,12 @@ class AffixSegmentor : public Segmentor {
   virtual bool Proceed(Segmentation* segmentation);
 
  protected:
-  std::string tag_;
-  std::string prefix_;
-  std::string suffix_;
-  std::string tips_;
-  std::string closing_tips_;
-  std::set<std::string> extra_tags_;
+  string tag_;
+  string prefix_;
+  string suffix_;
+  string tips_;
+  string closing_tips_;
+  set<string> extra_tags_;
 };
 
 }  // namespace rime

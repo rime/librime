@@ -9,9 +9,6 @@
 #define RIME_SYLLABIFIER_H_
 
 #include <stdint.h>
-#include <map>
-#include <string>
-#include <vector>
 #include "spelling.h"
 
 namespace rime {
@@ -20,14 +17,14 @@ class Prism;
 
 using SyllableId = int32_t;
 
-using SpellingMap = std::map<SyllableId, SpellingProperties>;
-using VertexMap = std::map<size_t, SpellingType>;
-using EndVertexMap = std::map<size_t, SpellingMap>;
-using EdgeMap = std::map<size_t, EndVertexMap>;
+using SpellingMap = map<SyllableId, SpellingProperties>;
+using VertexMap = map<size_t, SpellingType>;
+using EndVertexMap = map<size_t, SpellingMap>;
+using EdgeMap = map<size_t, EndVertexMap>;
 
-using SpellingPropertiesList = std::vector<const SpellingProperties*>;
-using SpellingIndex = std::map<SyllableId, SpellingPropertiesList>;
-using SpellingIndices = std::map<size_t, SpellingIndex>;
+using SpellingPropertiesList = vector<const SpellingProperties*>;
+using SpellingIndex = map<SyllableId, SpellingPropertiesList>;
+using SpellingIndices = map<size_t, SpellingIndex>;
 
 struct SyllableGraph {
   size_t input_length = 0;
@@ -40,7 +37,7 @@ struct SyllableGraph {
 class Syllabifier {
  public:
   Syllabifier() = default;
-  explicit Syllabifier(const std::string &delimiters,
+  explicit Syllabifier(const string &delimiters,
                        bool enable_completion = false,
                        bool strict_spelling = false)
       : delimiters_(delimiters),
@@ -48,7 +45,7 @@ class Syllabifier {
         strict_spelling_(strict_spelling) {
   }
 
-  int BuildSyllableGraph(const std::string &input,
+  int BuildSyllableGraph(const string &input,
                          Prism &prism,
                          SyllableGraph *graph);
 
@@ -57,7 +54,7 @@ class Syllabifier {
                                 size_t start, size_t end);
   void Transpose(SyllableGraph* graph);
 
-  std::string delimiters_;
+  string delimiters_;
   bool enable_completion_ = false;
   bool strict_spelling_ = false;
 };

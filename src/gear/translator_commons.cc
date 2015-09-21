@@ -14,7 +14,7 @@ namespace rime {
 
 // Patterns
 
-bool Patterns::Load(ConfigListPtr patterns) {
+bool Patterns::Load(an<ConfigList> patterns) {
   clear();
   if (!patterns)
     return false;
@@ -129,7 +129,7 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket) {
   }
 }
 
-bool TranslatorOptions::IsUserDictDisabledFor(const std::string& input) const {
+bool TranslatorOptions::IsUserDictDisabledFor(const string& input) const {
   if (user_dict_disabling_patterns_.empty())
     return false;
   for (const auto& pattern : user_dict_disabling_patterns_) {

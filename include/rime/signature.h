@@ -7,7 +7,6 @@
 #ifndef RIME_SIGNATURE_H_
 #define RIME_SIGNATURE_H_
 
-#include <string>
 
 namespace rime {
 
@@ -16,14 +15,14 @@ class Deployer;
 
 class Signature {
  public:
-  Signature(const std::string& generator, const std::string& key = "signature")
+  Signature(const string& generator, const string& key = "signature")
       : generator_(generator), key_(key) {}
 
   bool Sign(Config* config, Deployer* deployer);
 
  private:
-  std::string generator_;
-  std::string key_;
+  string generator_;
+  string key_;
 };
 
 }  // namespace rime

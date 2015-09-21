@@ -11,11 +11,12 @@
 
 #include "trivial_translator.h"
 
+using namespace rime;
+
 static void rime_sample_initialize() {
   LOG(INFO) << "registering components from module 'sample'.";
-  rime::Registry& r = rime::Registry::instance();
-  r.Register("trivial_translator",
-             new rime::Component<sample::TrivialTranslator>);
+  Registry& r = Registry::instance();
+  r.Register("trivial_translator", new Component<sample::TrivialTranslator>);
 }
 
 static void rime_sample_finalize() {

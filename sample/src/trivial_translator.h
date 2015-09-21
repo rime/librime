@@ -22,13 +22,13 @@ class TrivialTranslator : public Translator {
  public:
   TrivialTranslator(const Ticket& ticket);
 
-  virtual shared_ptr<Translation> Query(const std::string& input,
-                                        const Segment& segment);
+  virtual an<Translation> Query(const string& input,
+                                const Segment& segment);
 
  private:
-  std::string Translate(const std::string& input);
+  string Translate(const string& input);
 
-  using TrivialDictionary = std::map<std::string, std::string>;
+  using TrivialDictionary = map<string, string>;
   TrivialDictionary dictionary_;
 };
 

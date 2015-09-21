@@ -10,36 +10,36 @@
 
 using namespace rime;
 
-class Greeting : public Class<Greeting, const std::string&> {
+class Greeting : public Class<Greeting, const string&> {
  public:
-  virtual std::string Say() = 0;
+  virtual string Say() = 0;
   virtual ~Greeting() = default;
 };
 
-using HelloMessage = std::pair<std::string, std::string>;
+using HelloMessage = pair<string, string>;
 
 class Hello : public Greeting {
  public:
   Hello(const HelloMessage& msg) : word_(msg.first), name_(msg.second) {
   }
-  std::string Say() {
+  string Say() {
     return word_ + ", " + name_ + "!";
   }
  private:
-  std::string word_;
-  std::string name_;
+  string word_;
+  string name_;
 };
 
 // customize a hello component with parameters
 class HelloComponent : public Hello::Component {
  public:
-  HelloComponent(const std::string& word) : word_(word) {}
+  HelloComponent(const string& word) : word_(word) {}
   // define a custom creator to provide an additional argument
-  Hello* Create(const std::string& name) {
-    return new Hello(std::make_pair(word_, name));
+  Hello* Create(const string& name) {
+    return new Hello(make_pair(word_, name));
   }
  private:
-  std::string word_;
+  string word_;
 };
 
 
@@ -53,7 +53,7 @@ TEST(RimeComponentTest, UsingComponent) {
   Greeting::Component* gm = Greeting::Require("test_morning");
   EXPECT_TRUE(gm != NULL);
 
-  unique_ptr<Greeting> g(gm->Create("michael"));
+  the<Greeting> g(gm->Create("michael"));
   EXPECT_STREQ("good morning, michael!", g->Say().c_str());
 
   r.Unregister("test_hello");

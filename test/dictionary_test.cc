@@ -32,11 +32,11 @@ class RimeDictionaryTest : public ::testing::Test {
     dict_.reset();
   }
  protected:
-  static rime::unique_ptr<rime::Dictionary> dict_;
+  static rime::the<rime::Dictionary> dict_;
   static bool rebuilt_;
 };
 
-rime::unique_ptr<rime::Dictionary> RimeDictionaryTest::dict_;
+rime::the<rime::Dictionary> RimeDictionaryTest::dict_;
 bool RimeDictionaryTest::rebuilt_ = false;
 
 TEST_F(RimeDictionaryTest, Ready) {
@@ -71,7 +71,7 @@ TEST_F(RimeDictionaryTest, ScriptLookup) {
   ASSERT_TRUE(dict_->loaded());
   rime::SyllableGraph g;
   rime::Syllabifier s;
-  std::string input("shurufa");
+  rime::string input("shurufa");
   ASSERT_TRUE(s.BuildSyllableGraph(input, *dict_->prism(), &g) > 0);
   EXPECT_EQ(g.interpreted_length, g.input_length);
   auto c = dict_->Lookup(g, 0);

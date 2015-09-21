@@ -8,10 +8,6 @@
 #ifndef RIME_TRANSLATION_H_
 #define RIME_TRANSLATION_H_
 
-#include <list>
-#include <set>
-#include <string>
-#include <vector>
 #include <rime/candidate.h>
 #include <rime/common.h>
 
@@ -26,11 +22,11 @@ class Translation {
   // something like a generator of candidates.
   virtual bool Next() = 0;
 
-  virtual shared_ptr<Candidate> Peek() = 0;
+  virtual an<Candidate> Peek() = 0;
 
   // should it provide the next candidate (negative value, zero) or
   // should it give up the chance for other translations (positive)?
-  virtual int Compare(shared_ptr<Translation> other,
+  virtual int Compare(an<Translation> other,
                       const CandidateList& candidates);
 
   bool exhausted() const { return exhausted_; }
@@ -44,15 +40,15 @@ class Translation {
 
 class UniqueTranslation : public Translation {
  public:
-  UniqueTranslation(shared_ptr<Candidate> candidate)
+  UniqueTranslation(an<Candidate> candidate)
       : candidate_(candidate) {
   }
 
   bool Next();
-  shared_ptr<Candidate> Peek();
+  an<Candidate> Peek();
 
  protected:
-  shared_ptr<Candidate> candidate_;
+  an<Candidate> candidate_;
 };
 
 class FifoTranslation : public Translation {
@@ -60,9 +56,9 @@ class FifoTranslation : public Translation {
   FifoTranslation();
 
   bool Next();
-  shared_ptr<Candidate> Peek();
+  an<Candidate> Peek();
 
-  void Append(shared_ptr<Candidate> candy);
+  void Append(an<Candidate> candy);
 
   size_t size() const {
     return candies_.size() - cursor_;
@@ -78,25 +74,24 @@ class UnionTranslation : public Translation {
   UnionTranslation();
 
   bool Next();
-  shared_ptr<Candidate> Peek();
+  an<Candidate> Peek();
 
-  UnionTranslation& operator+= (shared_ptr<Translation> t);
+  UnionTranslation& operator+= (an<Translation> t);
 
  protected:
-  std::list<shared_ptr<Translation>> translations_;
+  list<of<Translation>> translations_;
 };
 
-shared_ptr<UnionTranslation> operator+ (shared_ptr<Translation> a,
-                                        shared_ptr<Translation> b);
+an<UnionTranslation> operator+ (an<Translation> x, an<Translation> y);
 
 class MergedTranslation : public Translation {
  public:
   explicit MergedTranslation(const CandidateList& previous_candidates);
 
   bool Next();
-  shared_ptr<Candidate> Peek();
+  an<Candidate> Peek();
 
-  MergedTranslation& operator+= (shared_ptr<Translation> t);
+  MergedTranslation& operator+= (an<Translation> t);
 
   size_t size() const { return translations_.size(); }
 
@@ -104,49 +99,49 @@ class MergedTranslation : public Translation {
   void Elect();
 
   const CandidateList& previous_candidates_;
-  std::vector<shared_ptr<Translation>> translations_;
+  vector<of<Translation>> translations_;
   size_t elected_ = 0;
 };
 
 class CacheTranslation : public Translation {
  public:
-  CacheTranslation(shared_ptr<Translation> translation);
+  CacheTranslation(an<Translation> translation);
 
   virtual bool Next();
-  virtual shared_ptr<Candidate> Peek();
+  virtual an<Candidate> Peek();
 
  protected:
-  shared_ptr<Translation> translation_;
-  shared_ptr<Candidate> cache_;
+  an<Translation> translation_;
+  an<Candidate> cache_;
 };
 
 template <class T, class... Args>
-inline shared_ptr<Translation> Cached(Args&&... args) {
+inline an<Translation> Cached(Args&&... args) {
   return New<CacheTranslation>(New<T>(std::forward<Args>(args)...));
 }
 
 class DistinctTranslation : public CacheTranslation {
  public:
-  DistinctTranslation(shared_ptr<Translation> translation);
+  DistinctTranslation(an<Translation> translation);
   virtual bool Next();
 
  protected:
-  bool AlreadyHas(const std::string& text) const;
+  bool AlreadyHas(const string& text) const;
 
-  std::set<std::string> candidate_set_;
+  set<string> candidate_set_;
 };
 
 class PrefetchTranslation : public Translation {
  public:
-  PrefetchTranslation(shared_ptr<Translation> translation);
+  PrefetchTranslation(an<Translation> translation);
 
   virtual bool Next();
-  virtual shared_ptr<Candidate> Peek();
+  virtual an<Candidate> Peek();
 
  protected:
   virtual bool Replenish() { return false; }
 
-  shared_ptr<Translation> translation_;
+  an<Translation> translation_;
   CandidateQueue cache_;
 };
 

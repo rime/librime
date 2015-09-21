@@ -7,8 +7,6 @@
 #ifndef RIME_REGISTRY_H_
 #define RIME_REGISTRY_H_
 
-#include <map>
-#include <string>
 #include <rime/common.h>
 
 namespace rime {
@@ -17,11 +15,11 @@ class ComponentBase;
 
 class Registry {
  public:
-  using ComponentMap = std::map<std::string, ComponentBase*>;
+  using ComponentMap = map<string, ComponentBase*>;
 
-  ComponentBase* Find(const std::string& name);
-  void Register(const std::string& name, ComponentBase* component);
-  void Unregister(const std::string& name);
+  ComponentBase* Find(const string& name);
+  void Register(const string& name, ComponentBase* component);
+  void Unregister(const string& name);
   void Clear();
 
   static Registry& instance();

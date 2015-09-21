@@ -17,7 +17,7 @@ class ShapeFormatter : public Formatter {
  public:
   ShapeFormatter(const Ticket& ticket) : Formatter(ticket) {
   }
-  virtual void Format(std::string* text);
+  virtual void Format(string* text);
 };
 
 class ShapeProcessor : public Processor {

@@ -24,7 +24,7 @@ void CommitEntry::Clear() {
   elements.clear();
 }
 
-void CommitEntry::AppendPhrase(const shared_ptr<Phrase>& phrase) {
+void CommitEntry::AppendPhrase(const an<Phrase>& phrase) {
   text += phrase->text();
   code.insert(code.end(),
               phrase->code().begin(), phrase->code().end());

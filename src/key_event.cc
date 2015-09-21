@@ -4,7 +4,6 @@
 //
 // 2011-04-20 GONG Chen <chen.sst@gmail.com>
 //
-#include <string>
 #include <sstream>
 #include <boost/format.hpp>
 #include <rime/key_event.h>
@@ -12,12 +11,12 @@
 
 namespace rime {
 
-KeyEvent::KeyEvent(const std::string& repr) {
+KeyEvent::KeyEvent(const string& repr) {
   if (!Parse(repr))
     keycode_ = modifier_ = 0;
 }
 
-std::string KeyEvent::repr() const {
+string KeyEvent::repr() const {
   // stringify modifiers
   std::ostringstream modifiers;
   if (modifier_) {
@@ -37,7 +36,7 @@ std::string KeyEvent::repr() const {
     return modifiers.str() + name;
   }
   // no name :-| return its hex value
-  std::string value;
+  string value;
   if (keycode_ <= 0xffff) {
     value = boost::str(boost::format("0x%4x") % keycode_);
   }
@@ -50,7 +49,7 @@ std::string KeyEvent::repr() const {
   return modifiers.str() + value;
 }
 
-bool KeyEvent::Parse(const std::string& repr) {
+bool KeyEvent::Parse(const string& repr) {
   keycode_ = modifier_ = 0;
   if (repr.empty()) {
     return false;
@@ -61,9 +60,9 @@ bool KeyEvent::Parse(const std::string& repr) {
   else {
     size_t start = 0;
     size_t found = 0;
-    std::string token;
+    string token;
     int mask = 0;
-    while ((found = repr.find('+', start)) != std::string::npos) {
+    while ((found = repr.find('+', start)) != string::npos) {
       token = repr.substr(start, found - start);
       mask = RimeGetModifierByName(token.c_str());
       if (mask) {
@@ -85,14 +84,14 @@ bool KeyEvent::Parse(const std::string& repr) {
   return true;
 }
 
-KeySequence::KeySequence(const std::string& repr) {
+KeySequence::KeySequence(const string& repr) {
   if (!Parse(repr))
     clear();
 }
 
-std::string KeySequence::repr() const {
+string KeySequence::repr() const {
   std::ostringstream result;
-  std::string k;
+  string k;
   for (auto it = cbegin(); it != cend(); ++it) {
     k = it->repr();
     if (k.size() == 1) {
@@ -105,7 +104,7 @@ std::string KeySequence::repr() const {
   return result.str();
 }
 
-bool KeySequence::Parse(const std::string& repr) {
+bool KeySequence::Parse(const string& repr) {
   clear();
   size_t n = repr.size();
   size_t start = 0;
@@ -115,7 +114,7 @@ bool KeySequence::Parse(const std::string& repr) {
     if (repr[i] == '{' && i + 1 < n) {
       start = i + 1;
       size_t j = repr.find('}', start);
-      if (j == std::string::npos) {
+      if (j == string::npos) {
         LOG(ERROR) << "parse error: unparalleled brace in '" << repr << "'";
         return false;
       }

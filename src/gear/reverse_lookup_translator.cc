@@ -29,16 +29,16 @@ class ReverseLookupTranslation : public TableTranslation {
  public:
   ReverseLookupTranslation(ReverseLookupDictionary* dict,
                            TranslatorOptions* options,
-                           const std::string& input,
+                           const string& input,
                            size_t start, size_t end,
-                           const std::string& preedit,
+                           const string& preedit,
                            const DictEntryIterator& iter,
                            bool quality)
       : TableTranslation(options, NULL, input, start, end, preedit, iter),
         dict_(dict), options_(options), quality_(quality) {
   }
-  virtual shared_ptr<Candidate> Peek();
-  virtual int Compare(shared_ptr<Translation> other,
+  virtual an<Candidate> Peek();
+  virtual int Compare(an<Translation> other,
                       const CandidateList& candidates);
  protected:
   ReverseLookupDictionary* dict_;
@@ -46,11 +46,11 @@ class ReverseLookupTranslation : public TableTranslation {
   bool quality_;
 };
 
-shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
+an<Candidate> ReverseLookupTranslation::Peek() {
   if (exhausted())
     return nullptr;
   const auto& entry(iter_.Peek());
-  std::string tips;
+  string tips;
   if (dict_) {
     dict_->ReverseLookup(entry->text, &tips);
     if (options_) {
@@ -60,7 +60,7 @@ shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
     //  boost::algorithm::replace_all(tips, " ", separator);
     //}
   }
-  shared_ptr<Candidate> cand = New<SimpleCandidate>(
+  an<Candidate> cand = New<SimpleCandidate>(
       "reverse_lookup",
       start_,
       end_,
@@ -70,7 +70,7 @@ shared_ptr<Candidate> ReverseLookupTranslation::Peek() {
   return cand;
 }
 
-int ReverseLookupTranslation::Compare(shared_ptr<Translation> other,
+int ReverseLookupTranslation::Compare(an<Translation> other,
                                       const CandidateList& candidates) {
   if (!other || other->exhausted())
     return -1;
@@ -129,7 +129,7 @@ void ReverseLookupTranslator::Initialize() {
   if (!rev_component)
     return;
   // lookup target defaults to "translator/dictionary"
-  std::string rev_target("translator");
+  string rev_target("translator");
   config->GetString(name_space_ + "/target", &rev_target);
   Ticket rev_ticket(engine_, rev_target);
   rev_dict_.reset(rev_component->Create(rev_ticket));
@@ -138,7 +138,7 @@ void ReverseLookupTranslator::Initialize() {
   }
 }
 
-shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string& input,
+an<Translation> ReverseLookupTranslator::Query(const string& input,
                                                        const Segment& segment) {
   if (!segment.HasTag(tag_))
     return nullptr;
@@ -149,13 +149,13 @@ shared_ptr<Translation> ReverseLookupTranslator::Query(const std::string& input,
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
 
-  const std::string& preedit(input);
+  const string& preedit(input);
 
   size_t start = 0;
   if (!prefix_.empty() && boost::starts_with(input, prefix_)) {
     start = prefix_.length();
   }
-  std::string code = input.substr(start);
+  string code = input.substr(start);
   if (!suffix_.empty() && boost::ends_with(code, suffix_)) {
     code.resize(code.length() - suffix_.length());
   }

@@ -5,7 +5,6 @@
 // 2011-11-02 GONG Chen <chen.sst@gmail.com>
 //
 #include <cstdlib>
-#include <vector>
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
@@ -16,24 +15,24 @@
 
 namespace rime {
 
-UserDbValue::UserDbValue(const std::string& value) {
+UserDbValue::UserDbValue(const string& value) {
   Unpack(value);
 }
 
-std::string UserDbValue::Pack() const {
+string UserDbValue::Pack() const {
   return boost::str(boost::format("c=%1% d=%2% t=%3%") %
                     commits % dee % tick);
 }
 
-bool UserDbValue::Unpack(const std::string& value) {
-  std::vector<std::string> kv;
+bool UserDbValue::Unpack(const string& value) {
+  vector<string> kv;
   boost::split(kv, value, boost::is_any_of(" "));
-  for (const std::string& k_eq_v : kv) {
+  for (const string& k_eq_v : kv) {
     size_t eq = k_eq_v.find('=');
-    if (eq == std::string::npos)
+    if (eq == string::npos)
       continue;
-    std::string k(k_eq_v.substr(0, eq));
-    std::string v(k_eq_v.substr(eq + 1));
+    string k(k_eq_v.substr(0, eq));
+    string v(k_eq_v.substr(eq + 1));
     try {
       if (k == "c") {
         commits = boost::lexical_cast<int>(v);
@@ -55,21 +54,21 @@ bool UserDbValue::Unpack(const std::string& value) {
 }
 
 template <>
-const std::string UserDbFormat<TextDb>::extension(".userdb.txt");
+const string UserDbFormat<TextDb>::extension(".userdb.txt");
 
 template <>
-const std::string UserDbFormat<TextDb>::snapshot_extension(".userdb.txt");
+const string UserDbFormat<TextDb>::snapshot_extension(".userdb.txt");
 
 // key ::= code <space> <Tab> phrase
 
 static bool userdb_entry_parser(const Tsv& row,
-                                std::string* key,
-                                std::string* value) {
+                                string* key,
+                                string* value) {
   if (row.size() < 2 ||
       row[0].empty() || row[1].empty()) {
     return false;
   }
-  std::string code(row[0]);
+  string code(row[0]);
   // fix invalid keys created by a buggy version
   if (code[code.length() - 1] != ' ')
     code += ' ';
@@ -81,8 +80,8 @@ static bool userdb_entry_parser(const Tsv& row,
   return true;
 }
 
-static bool userdb_entry_formatter(const std::string& key,
-                                   const std::string& value,
+static bool userdb_entry_formatter(const string& key,
+                                   const string& value,
                                    Tsv* tsv) {
   Tsv& row(*tsv);
   boost::algorithm::split(row, key,
@@ -101,7 +100,7 @@ static TextFormat plain_userdb_format = {
 };
 
 template <>
-UserDbWrapper<TextDb>::UserDbWrapper(const std::string& db_name)
+UserDbWrapper<TextDb>::UserDbWrapper(const string& db_name)
     : TextDb(db_name, "userdb", plain_userdb_format) {
 }
 
@@ -110,12 +109,12 @@ bool UserDbHelper::UpdateUserInfo() {
   return db_->MetaUpdate("/user_id", deployer.user_id);
 }
 
-bool UserDbHelper::IsUniformFormat(const std::string& file_name) {
+bool UserDbHelper::IsUniformFormat(const string& file_name) {
   return boost::ends_with(file_name,
                           UserDbFormat<TextDb>::snapshot_extension);
 }
 
-bool UserDbHelper::UniformBackup(const std::string& snapshot_file) {
+bool UserDbHelper::UniformBackup(const string& snapshot_file) {
   LOG(INFO) << "backing up userdb '" << db_->name() << "' to "
             << snapshot_file;
   TsvWriter writer(snapshot_file, plain_userdb_format.formatter);
@@ -131,7 +130,7 @@ bool UserDbHelper::UniformBackup(const std::string& snapshot_file) {
   return true;
 }
 
-bool UserDbHelper::UniformRestore(const std::string& snapshot_file) {
+bool UserDbHelper::UniformRestore(const string& snapshot_file) {
   LOG(INFO) << "restoring userdb '" << db_->name() << "' from "
             << snapshot_file;
   TsvReader reader(snapshot_file, plain_userdb_format.parser);
@@ -147,12 +146,12 @@ bool UserDbHelper::UniformRestore(const std::string& snapshot_file) {
 }
 
 bool UserDbHelper::IsUserDb() {
-  std::string db_type;
+  string db_type;
   return db_->MetaFetch("/db_type", &db_type) && (db_type == "userdb");
 }
 
-std::string UserDbHelper::GetDbName() {
-  std::string name;
+string UserDbHelper::GetDbName() {
+  string name;
   if (!db_->MetaFetch("/db_name", &name))
     return name;
   auto ext = boost::find_last(name, ".userdb");
@@ -163,20 +162,20 @@ std::string UserDbHelper::GetDbName() {
   return name;
 }
 
-std::string UserDbHelper::GetUserId() {
-  std::string user_id("unknown");
+string UserDbHelper::GetUserId() {
+  string user_id("unknown");
   db_->MetaFetch("/user_id", &user_id);
   return user_id;
 }
 
-std::string UserDbHelper::GetRimeVersion() {
-  std::string version;
+string UserDbHelper::GetRimeVersion() {
+  string version;
   db_->MetaFetch("/rime_version", &version);
   return version;
 }
 
 static TickCount get_tick_count(Db* db) {
-  std::string tick;
+  string tick;
   if (db && db->MetaFetch("/tick", &tick)) {
     try {
       return boost::lexical_cast<TickCount>(tick);
@@ -197,7 +196,7 @@ UserDbMerger::~UserDbMerger() {
   CloseMerge();
 }
 
-bool UserDbMerger::MetaPut(const std::string& key, const std::string& value) {
+bool UserDbMerger::MetaPut(const string& key, const string& value) {
   if (key == "/tick") {
     try {
       their_tick_ = boost::lexical_cast<TickCount>(value);
@@ -209,14 +208,14 @@ bool UserDbMerger::MetaPut(const std::string& key, const std::string& value) {
   return true;
 }
 
-bool UserDbMerger::Put(const std::string& key, const std::string& value) {
+bool UserDbMerger::Put(const string& key, const string& value) {
   if (!db_) return false;
   UserDbValue v(value);
   if (v.tick < their_tick_) {
     v.dee = algo::formula_d(0, (double)their_tick_, v.dee, (double)v.tick);
   }
   UserDbValue o;
-  std::string our_value;
+  string our_value;
   if (db_->Fetch(key, &our_value)) {
     o.Unpack(our_value);
   }
@@ -235,7 +234,7 @@ void UserDbMerger::CloseMerge() {
     return;
   Deployer& deployer(Service::instance().deployer());
   try {
-    db_->MetaUpdate("/tick", boost::lexical_cast<std::string>(max_tick_));
+    db_->MetaUpdate("/tick", boost::lexical_cast<string>(max_tick_));
     db_->MetaUpdate("/user_id", deployer.user_id);
   }
   catch (...) {
@@ -251,15 +250,15 @@ UserDbImporter::UserDbImporter(Db* db)
     : db_(db) {
 }
 
-bool UserDbImporter::MetaPut(const std::string& key, const std::string& value) {
+bool UserDbImporter::MetaPut(const string& key, const string& value) {
   return true;
 }
 
-bool UserDbImporter::Put(const std::string& key, const std::string& value) {
+bool UserDbImporter::Put(const string& key, const string& value) {
   if (!db_) return false;
   UserDbValue v(value);
   UserDbValue o;
-  std::string old_value;
+  string old_value;
   if (db_->Fetch(key, &old_value)) {
     o.Unpack(old_value);
   }

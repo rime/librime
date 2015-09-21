@@ -60,12 +60,12 @@ Preedit Composition::GetPreedit() const {
   return preedit;
 }
 
-std::string Composition::GetPrompt() const {
-  return empty() ? std::string() : back().prompt;
+string Composition::GetPrompt() const {
+  return empty() ? string() : back().prompt;
 }
 
-std::string Composition::GetCommitText() const {
-  std::string result;
+string Composition::GetCommitText() const {
+  string result;
   size_t end = 0;
   for (const Segment& seg : *this) {
     if (auto cand = seg.GetSelectedCandidate()) {
@@ -85,8 +85,8 @@ std::string Composition::GetCommitText() const {
   return result;
 }
 
-std::string Composition::GetScriptText() const {
-  std::string result;
+string Composition::GetScriptText() const {
+  string result;
   size_t start = 0;
   size_t end = 0;
   for (const Segment& seg : *this) {
@@ -104,8 +104,8 @@ std::string Composition::GetScriptText() const {
   return result;
 }
 
-std::string Composition::GetDebugText() const {
-  std::string result;
+string Composition::GetDebugText() const {
+  string result;
   int i = 0;
   for (const Segment& seg : *this) {
     if (i++ > 0)
@@ -113,7 +113,7 @@ std::string Composition::GetDebugText() const {
     if (!seg.tags.empty()) {
       result += "{";
       int j = 0;
-      for (const std::string& tag : seg.tags) {
+      for (const string& tag : seg.tags) {
         if (j++ > 0)
           result += ",";
         result += tag;

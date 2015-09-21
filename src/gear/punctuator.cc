@@ -22,14 +22,14 @@ namespace rime {
 
 void PunctConfig::LoadConfig(Engine* engine, bool load_symbols) {
   bool full_shape = engine->context()->get_option("full_shape");
-  std::string shape(full_shape ? "full_shape" : "half_shape");
+  string shape(full_shape ? "full_shape" : "half_shape");
   if (shape_ == shape)
     return;
   shape_ = shape;
   Config* config = engine->schema()->config();
-  std::string preset;
+  string preset;
   if (config->GetString("punctuator/import_preset", &preset)) {
-    unique_ptr<Config> preset_config(
+    the<Config> preset_config(
         Config::Require("config")->Create(preset));
     if (!preset_config) {
       LOG(ERROR) << "Error importing preset punctuation '" << preset << "'.";
@@ -52,8 +52,8 @@ void PunctConfig::LoadConfig(Engine* engine, bool load_symbols) {
   }
 }
 
-ConfigItemPtr PunctConfig::GetPunctDefinition(const std::string key) {
-  ConfigItemPtr punct_definition;
+an<ConfigItem> PunctConfig::GetPunctDefinition(const string key) {
+  an<ConfigItem> punct_definition;
   if (mapping_)
     punct_definition = mapping_->Get(key);
   if (punct_definition)
@@ -115,7 +115,7 @@ ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
     }
   }
   config_.LoadConfig(engine_);
-  std::string punct_key(1, ch);
+  string punct_key(1, ch);
   auto punct_definition = config_.GetPunctDefinition(punct_key);
   if (!punct_definition)
     return kNoop;
@@ -130,8 +130,8 @@ ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
   return kAccepted;
 }
 
-bool Punctuator::AlternatePunct(const std::string& key,
-                                const ConfigItemPtr& definition) {
+bool Punctuator::AlternatePunct(const string& key,
+                                const an<ConfigItem>& definition) {
   if (!As<ConfigList>(definition))
     return false;
   Context* ctx = engine_->context();
@@ -155,14 +155,14 @@ bool Punctuator::AlternatePunct(const std::string& key,
   return false;
 }
 
-bool Punctuator::ConfirmUniquePunct(const ConfigItemPtr& definition) {
+bool Punctuator::ConfirmUniquePunct(const an<ConfigItem>& definition) {
   if (!As<ConfigValue>(definition))
     return false;
   engine_->context()->ConfirmCurrentSelection();
   return true;
 }
 
-bool Punctuator::AutoCommitPunct(const ConfigItemPtr& definition) {
+bool Punctuator::AutoCommitPunct(const an<ConfigItem>& definition) {
   auto map = As<ConfigMap>(definition);
   if (!map || !map->HasKey("commit"))
     return false;
@@ -170,7 +170,7 @@ bool Punctuator::AutoCommitPunct(const ConfigItemPtr& definition) {
   return true;
 }
 
-bool Punctuator::PairPunct(const ConfigItemPtr& definition) {
+bool Punctuator::PairPunct(const an<ConfigItem>& definition) {
   auto map = As<ConfigMap>(definition);
   if (!map || !map->HasKey("pair"))
     return false;
@@ -199,7 +199,7 @@ PunctSegmentor::PunctSegmentor(const Ticket& ticket) : Segmentor(ticket) {
 }
 
 bool PunctSegmentor::Proceed(Segmentation* segmentation) {
-  const std::string& input = segmentation->input();
+  const string& input = segmentation->input();
   int k = segmentation->GetCurrentStartPosition();
   if (k == input.length())
     return false;  // no chance for others too
@@ -207,7 +207,7 @@ bool PunctSegmentor::Proceed(Segmentation* segmentation) {
   if (ch < 0x20 || ch >= 0x7f)
     return true;
   config_.LoadConfig(engine_);
-  std::string punct_key(1, ch);
+  string punct_key(1, ch);
   auto punct_definition = config_.GetPunctDefinition(punct_key);
   if (!punct_definition)
     return true;
@@ -227,8 +227,8 @@ PunctTranslator::PunctTranslator(const Ticket& ticket)
   config_.LoadConfig(engine_, load_symbols);
 }
 
-shared_ptr<Candidate>
-CreatePunctCandidate(const std::string& punct, const Segment& segment) {
+an<Candidate>
+CreatePunctCandidate(const string& punct, const Segment& segment) {
   const char half_shape[] =
       "\xe3\x80\x94\xe5\x8d\x8a\xe8\xa7\x92\xe3\x80\x95";  // 〔半角〕
   const char full_shape[] =
@@ -255,7 +255,7 @@ CreatePunctCandidate(const std::string& punct, const Segment& segment) {
                               one_key ? punct : "");
 }
 
-shared_ptr<Translation> PunctTranslator::Query(const std::string& input,
+an<Translation> PunctTranslator::Query(const string& input,
                                                const Segment& segment) {
   if (!segment.HasTag("punct"))
     return nullptr;
@@ -283,20 +283,20 @@ shared_ptr<Translation> PunctTranslator::Query(const std::string& input,
   return translation;
 }
 
-shared_ptr<Translation>
-PunctTranslator::TranslateUniquePunct(const std::string& key,
+an<Translation>
+PunctTranslator::TranslateUniquePunct(const string& key,
                                       const Segment& segment,
-                                      const ConfigValuePtr& definition) {
+                                      const an<ConfigValue>& definition) {
   if (!definition)
     return nullptr;
   return New<UniqueTranslation>(
       CreatePunctCandidate(definition->str(), segment));
 }
 
-shared_ptr<Translation>
-PunctTranslator::TranslateAlternatingPunct(const std::string& key,
+an<Translation>
+PunctTranslator::TranslateAlternatingPunct(const string& key,
                                            const Segment& segment,
-                                           const ConfigListPtr& definition) {
+                                           const an<ConfigList>& definition) {
   if (!definition)
     return nullptr;
   auto translation = New<FifoTranslation>();
@@ -317,10 +317,10 @@ PunctTranslator::TranslateAlternatingPunct(const std::string& key,
   return translation;
 }
 
-shared_ptr<Translation>
-PunctTranslator::TranslateAutoCommitPunct(const std::string& key,
+an<Translation>
+PunctTranslator::TranslateAutoCommitPunct(const string& key,
                                           const Segment& segment,
-                                          const ConfigMapPtr& definition) {
+                                          const an<ConfigMap>& definition) {
   if (!definition || !definition->HasKey("commit"))
     return nullptr;
   auto value = definition->GetValue("commit");
@@ -331,10 +331,10 @@ PunctTranslator::TranslateAutoCommitPunct(const std::string& key,
   return New<UniqueTranslation>(CreatePunctCandidate(value->str(), segment));
 }
 
-shared_ptr<Translation>
-PunctTranslator::TranslatePairedPunct(const std::string& key,
+an<Translation>
+PunctTranslator::TranslatePairedPunct(const string& key,
                                       const Segment& segment,
-                                      const ConfigMapPtr& definition) {
+                                      const an<ConfigMap>& definition) {
   if (!definition || !definition->HasKey("pair"))
     return nullptr;
   auto list = As<ConfigList>(definition->Get("pair"));

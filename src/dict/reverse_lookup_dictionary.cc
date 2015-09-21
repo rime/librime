@@ -24,12 +24,12 @@ const size_t kReverseFormatPrefixLen = sizeof(kReverseFormatPrefix) - 1;
 
 static const char* kStemKeySuffix = "\x1fstem";
 
-static std::string reverse_db_file_name(const std::string& dict_name) {
+static string reverse_db_file_name(const string& dict_name) {
   boost::filesystem::path dir(Service::instance().deployer().user_data_dir);
   return (dir / dict_name).string() + ".reverse.bin";
 }
 
-ReverseDb::ReverseDb(const std::string& dict_name)
+ReverseDb::ReverseDb(const string& dict_name)
     : MappedFile(reverse_db_file_name(dict_name)) {
 }
 
@@ -66,7 +66,7 @@ bool ReverseDb::Load() {
   return true;
 }
 
-bool ReverseDb::Lookup(const std::string& text, std::string* result) {
+bool ReverseDb::Lookup(const string& text, string* result) {
   if (!key_trie_ || !value_trie_ || !metadata_->index.size) {
     return false;
   }
@@ -87,7 +87,7 @@ bool ReverseDb::Build(DictSettings* settings,
   LOG(INFO) << "building reversedb...";
   ReverseLookupTable rev_table;
   int syllable_id = 0;
-  for (const std::string& syllable : syllabary) {
+  for (const string& syllable : syllabary) {
     auto it = vocabulary.find(syllable_id++);
     if (it == vocabulary.end())
       continue;
@@ -99,21 +99,21 @@ bool ReverseDb::Build(DictSettings* settings,
   StringTableBuilder key_trie_builder;
   StringTableBuilder value_trie_builder;
   size_t entry_count = rev_table.size() + stems.size();
-  std::vector<StringId> key_ids(entry_count);
-  std::vector<StringId> value_ids(entry_count);
+  vector<StringId> key_ids(entry_count);
+  vector<StringId> value_ids(entry_count);
   int i = 0;
   // save reverse lookup entries
   for (const auto& v : rev_table) {
-    const std::string& key(v.first);
-    std::string value(boost::algorithm::join(v.second, " "));
+    const string& key(v.first);
+    string value(boost::algorithm::join(v.second, " "));
     key_trie_builder.Add(key, 1.0, &key_ids[i]);
     value_trie_builder.Add(value, 1.0, &value_ids[i]);
     ++i;
   }
   // save stems
   for (const auto& v : stems) {
-    std::string key(v.first + kStemKeySuffix);
-    std::string value(boost::algorithm::join(v.second, " "));
+    string key(v.first + kStemKeySuffix);
+    string value(boost::algorithm::join(v.second, " "));
     key_trie_builder.Add(key, 1.0, &key_ids[i]);
     value_trie_builder.Add(value, 1.0, &value_ids[i]);
     ++i;
@@ -122,7 +122,7 @@ bool ReverseDb::Build(DictSettings* settings,
   value_trie_builder.Build();
 
   // dict settings required by UniTE
-  std::string dict_settings;
+  string dict_settings;
   if (settings && settings->use_rule_based_encoder()) {
     std::ostringstream yaml;
     settings->SaveToStream(yaml);
@@ -196,11 +196,11 @@ uint32_t ReverseDb::dict_file_checksum() const {
   return metadata_ ? metadata_->dict_file_checksum : 0;
 }
 
-ReverseLookupDictionary::ReverseLookupDictionary(shared_ptr<ReverseDb> db)
+ReverseLookupDictionary::ReverseLookupDictionary(an<ReverseDb> db)
     : db_(db) {
 }
 
-ReverseLookupDictionary::ReverseLookupDictionary(const std::string& dict_name)
+ReverseLookupDictionary::ReverseLookupDictionary(const string& dict_name)
     : db_(new ReverseDb(dict_name)) {
 }
 
@@ -208,22 +208,22 @@ bool ReverseLookupDictionary::Load() {
   return db_ && (db_->IsOpen() || db_->Load());
 }
 
-bool ReverseLookupDictionary::ReverseLookup(const std::string& text,
-                                            std::string* result) {
+bool ReverseLookupDictionary::ReverseLookup(const string& text,
+                                            string* result) {
   return db_->Lookup(text, result);
 
 }
 
-bool ReverseLookupDictionary::LookupStems(const std::string& text,
-                                          std::string* result) {
+bool ReverseLookupDictionary::LookupStems(const string& text,
+                                          string* result) {
   return db_->Lookup(text + kStemKeySuffix, result);
 }
 
-shared_ptr<DictSettings> ReverseLookupDictionary::GetDictSettings() {
-  shared_ptr<DictSettings> settings;
+an<DictSettings> ReverseLookupDictionary::GetDictSettings() {
+  an<DictSettings> settings;
   reverse::Metadata* metadata = db_->metadata();
   if (metadata && !metadata->dict_settings.empty()) {
-    std::string yaml(metadata->dict_settings.c_str());
+    string yaml(metadata->dict_settings.c_str());
     std::istringstream iss(yaml);
     settings = New<DictSettings>();
     if (!settings->LoadFromStream(iss)) {
@@ -240,7 +240,7 @@ ReverseLookupDictionary*
 ReverseLookupDictionaryComponent::Create(const Ticket& ticket) {
   if (!ticket.schema) return NULL;
   Config* config = ticket.schema->config();
-  std::string dict_name;
+  string dict_name;
   if (!config->GetString(ticket.name_space + "/dictionary",
                          &dict_name)) {
     // missing!

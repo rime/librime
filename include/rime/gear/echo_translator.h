@@ -15,7 +15,7 @@ class EchoTranslator : public Translator {
  public:
   EchoTranslator(const Ticket& ticket);
 
-  virtual shared_ptr<Translation> Query(const std::string& input,
+  virtual an<Translation> Query(const string& input,
                                         const Segment& segment);
 };
 

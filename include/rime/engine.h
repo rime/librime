@@ -7,7 +7,6 @@
 #ifndef RIME_ENGINE_H_
 #define RIME_ENGINE_H_
 
-#include <string>
 #include <rime/common.h>
 #include <rime/messenger.h>
 
@@ -19,12 +18,12 @@ class Context;
 
 class Engine : public Messenger {
  public:
-  using CommitSink = signal<void (const std::string& commit_text)>;
+  using CommitSink = signal<void (const string& commit_text)>;
 
   virtual ~Engine();
   virtual bool ProcessKey(const KeyEvent& key_event) { return false; }
   virtual void ApplySchema(Schema* schema) {}
-  virtual void CommitText(std::string text) { sink_(text); }
+  virtual void CommitText(string text) { sink_(text); }
   virtual void Compose(Context* ctx) {}
 
   Schema* schema() const { return schema_.get(); }
@@ -43,8 +42,8 @@ class Engine : public Messenger {
  protected:
   Engine();
 
-  unique_ptr<Schema> schema_;
-  unique_ptr<Context> context_;
+  the<Schema> schema_;
+  the<Context> context_;
   CommitSink sink_;
   Context* active_context_ = nullptr;
 };

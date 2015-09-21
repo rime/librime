@@ -7,7 +7,6 @@
 #ifndef RIME_SCRIPT_TRANSLATOR_H_
 #define RIME_SCRIPT_TRANSLATOR_H_
 
-#include <string>
 #include <rime/common.h>
 #include <rime/translation.h>
 #include <rime/translator.h>
@@ -30,12 +29,12 @@ class ScriptTranslator : public Translator,
  public:
   ScriptTranslator(const Ticket& ticket);
 
-  virtual shared_ptr<Translation> Query(const std::string& input,
+  virtual an<Translation> Query(const string& input,
                                         const Segment& segment);
   virtual bool Memorize(const CommitEntry& commit_entry);
 
-  std::string FormatPreedit(const std::string& preedit);
-  std::string Spell(const Code& code);
+  string FormatPreedit(const string& preedit);
+  string Spell(const Code& code);
 
   // options
   int spelling_hints() const { return spelling_hints_; }

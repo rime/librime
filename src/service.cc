@@ -50,7 +50,7 @@ void Session::ApplySchema(Schema* schema) {
   engine_->ApplySchema(schema);
 }
 
-void Session::OnCommit(const std::string& commit_text) {
+void Session::OnCommit(const string& commit_text) {
   commit_text_ += commit_text;
 }
 
@@ -92,7 +92,7 @@ SessionId Service::CreateSession() {
   catch (const std::exception& ex) {
     LOG(ERROR) << "Error creating session: " << ex.what();
   }
-  catch (const std::string& ex) {
+  catch (const string& ex) {
     LOG(ERROR) << "Error creating session: " << ex;
   }
   catch (const char* ex) {
@@ -107,7 +107,7 @@ SessionId Service::CreateSession() {
   return id;
 }
 
-shared_ptr<Session> Service::GetSession(SessionId session_id) {
+an<Session> Service::GetSession(SessionId session_id) {
   if (disabled())
     return nullptr;
   SessionMap::iterator it = sessions_.find(session_id);
@@ -158,8 +158,8 @@ void Service::ClearNotificationHandler() {
 }
 
 void Service::Notify(SessionId session_id,
-                     const std::string& message_type,
-                     const std::string& message_value) {
+                     const string& message_type,
+                     const string& message_value) {
   if (notification_handler_) {
     std::lock_guard<std::mutex> lock(mutex_);
     notification_handler_(session_id,
@@ -169,7 +169,7 @@ void Service::Notify(SessionId session_id,
 }
 
 Service& Service::instance() {
-  static unique_ptr<Service> s_instance;
+  static the<Service> s_instance;
   if (!s_instance) {
     s_instance.reset(new Service);
   }

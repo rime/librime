@@ -33,8 +33,8 @@ void EntryCollector::Configure(DictSettings* settings) {
   encoder->LoadSettings(settings);
 }
 
-void EntryCollector::Collect(const std::vector<std::string>& dict_files) {
-  for (const std::string& dict_file : dict_files) {
+void EntryCollector::Collect(const vector<string>& dict_files) {
+  for (const string& dict_file : dict_files) {
     Collect(dict_file);
   }
   Finish();
@@ -51,7 +51,7 @@ void EntryCollector::LoadPresetVocabulary(DictSettings* settings) {
   }
 }
 
-void EntryCollector::Collect(const std::string& dict_file) {
+void EntryCollector::Collect(const string& dict_file) {
   LOG(INFO) << "collecting entries from " << dict_file;
   // read table
   std::ifstream fin(dict_file.c_str());
@@ -70,7 +70,7 @@ void EntryCollector::Collect(const std::string& dict_file) {
     return;
   }
   bool enable_comment = true;
-  std::string line;
+  string line;
   while (getline(fin, line)) {
     boost::algorithm::trim_right(line);
     // skip empty lines and comments
@@ -83,7 +83,7 @@ void EntryCollector::Collect(const std::string& dict_file) {
       continue;
     }
     // read a dict entry
-    std::vector<std::string> row;
+    vector<string> row;
     boost::algorithm::split(row, line,
                             boost::algorithm::is_any_of("\t"));
     int num_columns = static_cast<int>(row.size());
@@ -92,9 +92,9 @@ void EntryCollector::Collect(const std::string& dict_file) {
       continue;
     }
     const auto& word(row[text_column]);
-    std::string code_str;
-    std::string weight_str;
-    std::string stem_str;
+    string code_str;
+    string weight_str;
+    string stem_str;
     if (code_column != -1 &&
         num_columns > code_column && !row[code_column].empty())
       code_str = row[code_column];
@@ -136,7 +136,7 @@ void EntryCollector::Finish() {
   LOG(INFO) << "Pass 2: total " << num_entries << " entries collected.";
   if (preset_vocabulary) {
     preset_vocabulary->Reset();
-    std::string phrase, weight_str;
+    string phrase, weight_str;
     while (preset_vocabulary->GetNextEntry(&phrase, &weight_str)) {
       if (collection.find(phrase) != collection.end())
         continue;
@@ -148,9 +148,9 @@ void EntryCollector::Finish() {
   LOG(INFO) << "Pass 3: total " << num_entries << " entries collected.";
 }
 
-void EntryCollector::CreateEntry(const std::string &word,
-                                 const std::string &code_str,
-                                 const std::string &weight_str) {
+void EntryCollector::CreateEntry(const string &word,
+                                 const string &code_str,
+                                 const string &weight_str) {
   RawDictEntry e;
   e.raw_code.FromString(code_str);
   e.text = word;
@@ -181,7 +181,7 @@ void EntryCollector::CreateEntry(const std::string &word,
     }
   }
   // learn new syllables
-  for (const std::string& s : e.raw_code) {
+  for (const string& s : e.raw_code) {
     if (syllabary.find(s) == syllabary.end())
       syllabary.insert(s);
   }
@@ -200,11 +200,11 @@ void EntryCollector::CreateEntry(const std::string &word,
   ++num_entries;
 }
 
-bool EntryCollector::TranslateWord(const std::string& word,
-                                   std::vector<std::string>* result) {
+bool EntryCollector::TranslateWord(const string& word,
+                                   vector<string>* result) {
   ReverseLookupTable::const_iterator s = stems.find(word);
   if (s != stems.end()) {
-    for (const std::string& stem : s->second) {
+    for (const string& stem : s->second) {
       result->push_back(stem);
     }
     return true;
@@ -223,10 +223,10 @@ bool EntryCollector::TranslateWord(const std::string& word,
   return false;
 }
 
-void EntryCollector::Dump(const std::string& file_name) const {
+void EntryCollector::Dump(const string& file_name) const {
   std::ofstream out(file_name.c_str());
   out << "# syllabary:" << std::endl;
-  for (const std::string& syllable : syllabary) {
+  for (const string& syllable : syllabary) {
     out << "# - " << syllable << std::endl;
   }
   out << std::endl;

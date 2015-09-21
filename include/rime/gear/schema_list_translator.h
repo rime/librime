@@ -7,6 +7,7 @@
 #ifndef RIME_SCHEMA_LIST_TRANSLATOR_H_
 #define RIME_SCHEMA_LIST_TRANSLATOR_H_
 
+#include <rime/common.h>
 #include <rime/translator.h>
 
 namespace rime {
@@ -15,7 +16,7 @@ class SchemaListTranslator : public Translator {
  public:
   SchemaListTranslator(const Ticket& ticket);
 
-  virtual shared_ptr<Translation> Query(const std::string& input,
+  virtual an<Translation> Query(const string& input,
                                         const Segment& segment);
 };
 

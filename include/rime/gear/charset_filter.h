@@ -7,7 +7,6 @@
 #ifndef RIME_CHARSET_FILTER_H_
 #define RIME_CHARSET_FILTER_H_
 
-#include <string>
 #include <rime/filter.h>
 #include <rime/translation.h>
 #include <rime/gear/filter_commons.h>
@@ -16,14 +15,14 @@ namespace rime {
 
 class CharsetFilterTranslation : public Translation {
  public:
-  CharsetFilterTranslation(shared_ptr<Translation> translation);
+  CharsetFilterTranslation(an<Translation> translation);
   virtual bool Next();
-  virtual shared_ptr<Candidate> Peek();
+  virtual an<Candidate> Peek();
 
  protected:
   bool LocateNextCandidate();
 
-  shared_ptr<Translation> translation_;
+  an<Translation> translation_;
 };
 
 struct DictEntry;
@@ -32,7 +31,7 @@ class CharsetFilter : public Filter, TagMatching {
  public:
   explicit CharsetFilter(const Ticket& ticket);
 
-  virtual shared_ptr<Translation> Apply(shared_ptr<Translation> translation,
+  virtual an<Translation> Apply(an<Translation> translation,
                                         CandidateList* candidates);
 
   virtual bool AppliesToSegment(Segment* segment) {
@@ -40,8 +39,8 @@ class CharsetFilter : public Filter, TagMatching {
   }
 
   // return true to accept, false to reject the tested item
-  static bool FilterText(const std::string& text);
-  static bool FilterDictEntry(shared_ptr<DictEntry> entry);
+  static bool FilterText(const string& text);
+  static bool FilterDictEntry(an<DictEntry> entry);
 };
 
 }  // namespace rime

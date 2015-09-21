@@ -7,7 +7,6 @@
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
-#include <functional>
 #include <stack>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/reversed.hpp>
@@ -36,9 +35,9 @@ struct SyllabifyTask {
   const Code& code;
   const SyllableGraph& graph;
   size_t target_pos;
-  std::function<void (SyllabifyTask* task, size_t depth,
+  function<void (SyllabifyTask* task, size_t depth,
                       size_t current_pos, size_t next_pos)> push;
-  std::function<void (SyllabifyTask* task, size_t depth)> pop;
+  function<void (SyllabifyTask* task, size_t depth)> pop;
 };
 
 static bool syllabify_dfs(SyllabifyTask* task,
@@ -71,21 +70,21 @@ static bool syllabify_dfs(SyllabifyTask* task,
 class ScriptSyllabifier : public PhraseSyllabifier {
  public:
   ScriptSyllabifier(ScriptTranslator* translator,
-                    const std::string& input,
+                    const string& input,
                     size_t start)
       : translator_(translator), input_(input), start_(start) {
   }
 
   virtual Spans Syllabify(const Phrase* phrase);
   size_t BuildSyllableGraph(Prism& prism);
-  std::string GetPreeditString(const Phrase& cand) const;
-  std::string GetOriginalSpelling(const Phrase& cand) const;
+  string GetPreeditString(const Phrase& cand) const;
+  string GetOriginalSpelling(const Phrase& cand) const;
 
   const SyllableGraph& syllable_graph() const { return syllable_graph_; }
 
  protected:
   ScriptTranslator* translator_;
-  std::string input_;
+  string input_;
   size_t start_;
   SyllableGraph syllable_graph_;
 };
@@ -93,28 +92,28 @@ class ScriptSyllabifier : public PhraseSyllabifier {
 class ScriptTranslation : public Translation {
  public:
   ScriptTranslation(ScriptTranslator* translator,
-                    const std::string& input, size_t start)
+                    const string& input, size_t start)
       : translator_(translator), start_(start),
         syllabifier_(New<ScriptSyllabifier>(translator, input, start)) {
     set_exhausted(true);
   }
   bool Evaluate(Dictionary* dict, UserDictionary* user_dict);
   virtual bool Next();
-  virtual shared_ptr<Candidate> Peek();
+  virtual an<Candidate> Peek();
 
  protected:
   bool CheckEmpty();
   bool IsNormalSpelling() const;
-  shared_ptr<Sentence> MakeSentence(Dictionary* dict,
+  an<Sentence> MakeSentence(Dictionary* dict,
                                     UserDictionary* user_dict);
 
   ScriptTranslator* translator_;
   size_t start_;
-  shared_ptr<ScriptSyllabifier> syllabifier_;
+  an<ScriptSyllabifier> syllabifier_;
 
-  shared_ptr<DictEntryCollector> phrase_;
-  shared_ptr<UserDictEntryCollector> user_phrase_;
-  shared_ptr<Sentence> sentence_;
+  an<DictEntryCollector> phrase_;
+  an<UserDictEntryCollector> user_phrase_;
+  an<Sentence> sentence_;
 
   DictEntryCollector::reverse_iterator phrase_iter_;
   UserDictEntryCollector::reverse_iterator user_phrase_iter_;
@@ -134,7 +133,7 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
   }
 }
 
-shared_ptr<Translation> ScriptTranslator::Query(const std::string& input,
+an<Translation> ScriptTranslator::Query(const string& input,
                                                 const Segment& segment) {
   if (!dict_ || !dict_->loaded())
     return nullptr;
@@ -158,19 +157,19 @@ shared_ptr<Translation> ScriptTranslator::Query(const std::string& input,
   return New<DistinctTranslation>(result);
 }
 
-std::string ScriptTranslator::FormatPreedit(const std::string& preedit) {
-  std::string result = preedit;
+string ScriptTranslator::FormatPreedit(const string& preedit) {
+  string result = preedit;
   preedit_formatter_.Apply(&result);
   return result;
 }
 
-std::string ScriptTranslator::Spell(const Code& code) {
-  std::string result;
-  std::vector<std::string> syllables;
+string ScriptTranslator::Spell(const Code& code) {
+  string result;
+  vector<string> syllables;
   if (!dict_ || !dict_->Decode(code, &syllables) || syllables.empty())
     return result;
   result =  boost::algorithm::join(syllables,
-                                   std::string(1, delimiters_.at(0)));
+                                   string(1, delimiters_.at(0)));
   comment_formatter_.Apply(&result);
   return result;
 }
@@ -200,7 +199,7 @@ bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
 
 Spans ScriptSyllabifier::Syllabify(const Phrase* phrase) {
   Spans result;
-  std::vector<size_t> vertices;
+  vector<size_t> vertices;
   vertices.push_back(start_);
   SyllabifyTask task{
     phrase->code(),
@@ -230,10 +229,10 @@ size_t ScriptSyllabifier::BuildSyllableGraph(Prism& prism) {
   return consumed;
 }
 
-std::string ScriptSyllabifier::GetPreeditString(const Phrase& cand) const {
+string ScriptSyllabifier::GetPreeditString(const Phrase& cand) const {
   const auto& delimiters = translator_->delimiters();
   std::stack<size_t> lengths;
-  std::string output;
+  string output;
   SyllabifyTask task{
     cand.code(),
     syllable_graph_,
@@ -242,7 +241,7 @@ std::string ScriptSyllabifier::GetPreeditString(const Phrase& cand) const {
         size_t current_pos, size_t next_pos) {
       size_t len = output.length();
       if (depth > 0 && len > 0 &&
-          delimiters.find(output[len - 1]) == std::string::npos) {
+          delimiters.find(output[len - 1]) == string::npos) {
         output += delimiters.at(0);
       }
       output += input_.substr(current_pos, next_pos - current_pos);
@@ -257,16 +256,16 @@ std::string ScriptSyllabifier::GetPreeditString(const Phrase& cand) const {
     return translator_->FormatPreedit(output);
   }
   else {
-    return std::string();
+    return string();
   }
 }
 
-std::string ScriptSyllabifier::GetOriginalSpelling(const Phrase& cand) const {
+string ScriptSyllabifier::GetOriginalSpelling(const Phrase& cand) const {
   if (translator_ &&
       static_cast<int>(cand.code().size()) <= translator_->spelling_hints()) {
     return translator_->Spell(cand.code());
   }
-  return std::string();
+  return string();
 }
 
 // ScriptTranslation implementation
@@ -337,7 +336,7 @@ bool ScriptTranslation::IsNormalSpelling() const {
       (syllable_graph.vertices.rbegin()->second == kNormalSpelling);
 }
 
-shared_ptr<Candidate> ScriptTranslation::Peek() {
+an<Candidate> ScriptTranslation::Peek() {
   if (exhausted())
     return nullptr;
   if (sentence_) {
@@ -360,7 +359,7 @@ shared_ptr<Candidate> ScriptTranslation::Peek() {
   if (phrase_ && phrase_iter_ != phrase_->rend()) {
     phrase_code_length = phrase_iter_->first;
   }
-  shared_ptr<Phrase> cand;
+  an<Phrase> cand;
   if (user_phrase_code_length > 0 &&
       user_phrase_code_length >= phrase_code_length) {
     DictEntryList& entries(user_phrase_iter_->second);
@@ -409,7 +408,7 @@ bool ScriptTranslation::CheckEmpty() {
   return exhausted();
 }
 
-shared_ptr<Sentence>
+an<Sentence>
 ScriptTranslation::MakeSentence(Dictionary* dict, UserDictionary* user_dict) {
   const int kMaxSyllablesForUserPhraseQuery = 5;
   const auto& syllable_graph = syllabifier_->syllable_graph();

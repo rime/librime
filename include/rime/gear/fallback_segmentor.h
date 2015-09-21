@@ -7,7 +7,6 @@
 #ifndef RIME_FALLBACK_SEGMENTOR_H_
 #define RIME_FALLBACK_SEGMENTOR_H_
 
-#include <string>
 #include <rime/segmentor.h>
 
 namespace rime {

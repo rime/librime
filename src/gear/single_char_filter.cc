@@ -12,21 +12,21 @@
 
 namespace rime {
 
-static inline size_t unistrlen(const std::string& text) {
+static inline size_t unistrlen(const string& text) {
   return utf8::unchecked::distance(
       text.c_str(), text.c_str() + text.length());
 }
 
 class SingleCharFirstTranslation : public PrefetchTranslation {
  public:
-  SingleCharFirstTranslation(shared_ptr<Translation> translation);
+  SingleCharFirstTranslation(an<Translation> translation);
 
  private:
   bool Rearrange();
 };
 
 SingleCharFirstTranslation::SingleCharFirstTranslation(
-    shared_ptr<Translation> translation)
+    an<Translation> translation)
     : PrefetchTranslation(translation) {
   Rearrange();
 }
@@ -60,8 +60,8 @@ SingleCharFilter::SingleCharFilter(const Ticket& ticket)
     : Filter(ticket) {
 }
 
-shared_ptr<Translation> SingleCharFilter::Apply(
-    shared_ptr<Translation> translation, CandidateList* candidates) {
+an<Translation> SingleCharFilter::Apply(
+    an<Translation> translation, CandidateList* candidates) {
   return New<SingleCharFirstTranslation>(translation);
 }
 

@@ -7,9 +7,6 @@
 #ifndef RIME_SWITCHER_H_
 #define RIME_SWITCHER_H_
 
-#include <set>
-#include <string>
-#include <vector>
 #include <rime/common.h>
 #include <rime/engine.h>
 #include <rime/processor.h>
@@ -32,7 +29,7 @@ class Switcher : public Processor, public Engine {
 
   Schema* CreateSchema();
   void SelectNextSchema();
-  bool IsAutoSave(const std::string& option) const;
+  bool IsAutoSave(const string& option) const;
 
   void RefreshMenu();
   void Activate();
@@ -49,27 +46,27 @@ class Switcher : public Processor, public Engine {
   void HighlightNextSchema();
   void OnSelect(Context* ctx);
 
-  unique_ptr<Config> user_config_;
-  std::string caption_;
-  std::vector<KeyEvent> hotkeys_;
-  std::set<std::string> save_options_;
+  the<Config> user_config_;
+  string caption_;
+  vector<KeyEvent> hotkeys_;
+  set<string> save_options_;
   bool fold_options_ = false;
 
-  std::vector<shared_ptr<Processor>> processors_;
-  std::vector<shared_ptr<Translator>> translators_;
+  vector<of<Processor>> processors_;
+  vector<of<Translator>> translators_;
   bool active_ = false;
 };
 
 class SwitcherCommand {
  public:
-  SwitcherCommand(const std::string& keyword)
+  SwitcherCommand(const string& keyword)
       : keyword_(keyword) {
   }
   virtual void Apply(Switcher* switcher) = 0;
-  const std::string& keyword() const { return keyword_; }
+  const string& keyword() const { return keyword_; }
 
  protected:
-  std::string keyword_;
+  string keyword_;
 };
 
 }  // namespace rime

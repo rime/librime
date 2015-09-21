@@ -10,7 +10,6 @@
 #include <future>
 #include <mutex>
 #include <queue>
-#include <string>
 #include <boost/any.hpp>
 #include <rime/common.h>
 #include <rime/component.h>
@@ -33,24 +32,24 @@ class DeploymentTask : public Class<DeploymentTask, TaskInitializer> {
 class Deployer : public Messenger {
  public:
   // read-only access after library initialization {
-  std::string shared_data_dir;
-  std::string user_data_dir;
-  std::string sync_dir;
-  std::string user_id;
-  std::string distribution_name;
-  std::string distribution_code_name;
-  std::string distribution_version;
+  string shared_data_dir;
+  string user_data_dir;
+  string sync_dir;
+  string user_id;
+  string distribution_name;
+  string distribution_code_name;
+  string distribution_version;
   // }
 
   Deployer();
   ~Deployer();
 
-  bool RunTask(const std::string& task_name,
+  bool RunTask(const string& task_name,
                TaskInitializer arg = TaskInitializer());
-  bool ScheduleTask(const std::string& task_name,
+  bool ScheduleTask(const string& task_name,
                     TaskInitializer arg = TaskInitializer());
-  void ScheduleTask(shared_ptr<DeploymentTask> task);
-  shared_ptr<DeploymentTask> NextTask();
+  void ScheduleTask(an<DeploymentTask> task);
+  an<DeploymentTask> NextTask();
   bool HasPendingTasks();
 
   bool Run();
@@ -62,10 +61,10 @@ class Deployer : public Messenger {
   void JoinWorkThread();
   void JoinMaintenanceThread();
 
-  std::string user_data_sync_dir() const;
+  string user_data_sync_dir() const;
 
  private:
-  std::queue<shared_ptr<DeploymentTask>> pending_tasks_;
+  std::queue<of<DeploymentTask>> pending_tasks_;
   std::mutex mutex_;
   std::future<void> work_;
   bool maintenance_mode_ = false;

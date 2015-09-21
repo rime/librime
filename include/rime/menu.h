@@ -7,8 +7,6 @@
 #ifndef RIME_MENU_H_
 #define RIME_MENU_H_
 
-#include <functional>
-#include <vector>
 #include <rime/candidate.h>
 #include <rime/common.h>
 
@@ -29,12 +27,12 @@ class Menu {
  public:
   Menu();
 
-  void AddTranslation(shared_ptr<Translation> translation);
+  void AddTranslation(an<Translation> translation);
   void AddFilter(Filter* filter);
 
   size_t Prepare(size_t candidate_count);
   Page* CreatePage(size_t page_size, size_t page_no);
-  shared_ptr<Candidate> GetCandidateAt(size_t index);
+  an<Candidate> GetCandidateAt(size_t index);
 
   // CAVEAT: returns the number of candidates currently obtained,
   // rather than the total number of available candidates.
@@ -43,8 +41,8 @@ class Menu {
   bool empty() const;
 
  private:
-  shared_ptr<MergedTranslation> merged_;
-  shared_ptr<Translation> result_;
+  an<MergedTranslation> merged_;
+  an<Translation> result_;
   CandidateList candidates_;
 };
 

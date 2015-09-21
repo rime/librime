@@ -7,15 +7,14 @@
 #ifndef RIME_COMMIT_HISTORY_H_
 #define RIME_COMMIT_HISTORY_H_
 
-#include <list>
-#include <string>
+#include <rime/common.h>
 
 namespace rime {
 
 struct CommitRecord {
-  std::string type;
-  std::string text;
-  CommitRecord(const std::string& a_type, const std::string& a_text)
+  string type;
+  string text;
+  CommitRecord(const string& a_type, const string& a_text)
       : type(a_type), text(a_text) {}
   CommitRecord(int keycode) : type("thru"), text(1, keycode) {}
 };
@@ -23,13 +22,13 @@ struct CommitRecord {
 class KeyEvent;
 class Composition;
 
-class CommitHistory : public std::list<CommitRecord> {
+class CommitHistory : public list<CommitRecord> {
  public:
   static const size_t kMaxRecords = 20;
   void Push(const CommitRecord& record);
   void Push(const KeyEvent& key_event);
-  void Push(const Composition& composition, const std::string& input);
-  std::string repr() const;
+  void Push(const Composition& composition, const string& input);
+  string repr() const;
 };
 
 }  // Namespace rime

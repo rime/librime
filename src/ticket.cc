@@ -9,18 +9,18 @@
 
 namespace rime {
 
-Ticket::Ticket(Schema* s, const std::string& ns)
+Ticket::Ticket(Schema* s, const string& ns)
     : schema(s), name_space(ns) {
 }
 
-Ticket::Ticket(Engine* e, const std::string& ns,
-               const std::string& prescription)
+Ticket::Ticket(Engine* e, const string& ns,
+               const string& prescription)
     : engine(e),
       schema(e ? e->schema() : NULL),
       name_space(ns),
       klass(prescription) {
   size_t separator = klass.find('@');
-  if (separator != std::string::npos) {
+  if (separator != string::npos) {
     name_space = klass.substr(separator + 1);
     klass.resize(separator);
   }

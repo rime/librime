@@ -88,7 +88,7 @@ class MappedFileImpl;
 
 class MappedFile : boost::noncopyable {
  protected:
-  explicit MappedFile(const std::string& file_name);
+  explicit MappedFile(const string& file_name);
   virtual ~MappedFile();
 
   bool Create(size_t capacity);
@@ -104,8 +104,8 @@ class MappedFile : boost::noncopyable {
   template <class T>
   Array<T>* CreateArray(size_t array_size);
 
-  String* CreateString(const std::string& str);
-  bool CopyString(const std::string& src, String* dest);
+  String* CreateString(const string& str);
+  bool CopyString(const string& src, String* dest);
 
   size_t capacity() const;
   char* address() const;
@@ -119,13 +119,13 @@ class MappedFile : boost::noncopyable {
   template <class T>
   T* Find(size_t offset);
 
-  const std::string& file_name() const { return file_name_; }
+  const string& file_name() const { return file_name_; }
   size_t file_size() const { return size_; }
 
  private:
-  std::string file_name_;
+  string file_name_;
   size_t size_ = 0;
-  unique_ptr<MappedFileImpl> file_;
+  the<MappedFileImpl> file_;
 };
 
 // member function definitions

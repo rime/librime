@@ -20,18 +20,20 @@
 #include <rime/dict/dict_compiler.h>
 #include <rime/lever/deployment_tasks.h>
 
+using namespace rime;
+
 class RimeConsole {
  public:
   RimeConsole() : interactive_(false),
-                  engine_(rime::Engine::Create()) {
+                  engine_(Engine::Create()) {
     conn_ = engine_->sink().connect(
-        [this](const std::string& x) { OnCommit(x); });
+        [this](const string& x) { OnCommit(x); });
   }
   ~RimeConsole() {
     conn_.disconnect();
   }
 
-  void OnCommit(const std::string &commit_text) {
+  void OnCommit(const string &commit_text) {
     if (interactive_) {
       std::cout << "commit : [" << commit_text << "]" << std::endl;
     }
@@ -40,28 +42,26 @@ class RimeConsole {
     }
   }
 
-  void PrintComposition(const rime::Context *ctx) {
+  void PrintComposition(const Context *ctx) {
     if (!ctx || !ctx->IsComposing())
       return;
     std::cout << "input  : [" << ctx->input() << "]" << std::endl;
-    const rime::Composition &comp = ctx->composition();
+    const Composition &comp = ctx->composition();
     if (comp.empty())
       return;
     std::cout << "comp.  : [" << comp.GetDebugText() << "]" << std::endl;
-    const rime::Segment &current(comp.back());
+    const Segment &current(comp.back());
     if (!current.menu)
       return;
     int page_size = engine_->schema()->page_size();
     int page_no = current.selected_index / page_size;
-    rime::unique_ptr<rime::Page> page(
-        current.menu->CreatePage(page_size, page_no));
+    the<Page> page(current.menu->CreatePage(page_size, page_no));
     if (!page)
       return;
     std::cout << "page_no: " << page_no
               << ", index: " << current.selected_index << std::endl;
     int i = 0;
-    for (const rime::shared_ptr<rime::Candidate> &cand :
-                  page->candidates) {
+    for (const an<Candidate> &cand : page->candidates) {
       std::cout << "cand. " << (++i % 10) <<  ": [";
       std::cout << cand->text();
       std::cout << "]";
@@ -72,16 +72,16 @@ class RimeConsole {
     }
   }
 
-  void ProcessLine(const std::string &line) {
-    rime::KeySequence keys;
+  void ProcessLine(const string &line) {
+    KeySequence keys;
     if (!keys.Parse(line)) {
       LOG(ERROR) << "error parsing input: '" << line << "'";
       return;
     }
-    for (const rime::KeyEvent &key : keys) {
+    for (const KeyEvent &key : keys) {
       engine_->ProcessKey(key);
     }
-    rime::Context *ctx = engine_->context();
+    Context *ctx = engine_->context();
     if (interactive_) {
       PrintComposition(ctx);
     }
@@ -97,24 +97,24 @@ class RimeConsole {
 
  private:
   bool interactive_;
-  rime::unique_ptr<rime::Engine> engine_;
-  rime::connection conn_;
+  the<Engine> engine_;
+  connection conn_;
 };
 
 // program entry
 int main(int argc, char *argv[]) {
   // initialize la Rime
-  rime::SetupLogging("rime.console");
-  rime::LoadModules(rime::kDefaultModules);
+  SetupLogging("rime.console");
+  LoadModules(kDefaultModules);
 
-  rime::Deployer deployer;
-  rime::InstallationUpdate installation;
+  Deployer deployer;
+  InstallationUpdate installation;
   if (!installation.Run(&deployer)) {
     std::cerr << "failed to initialize installation." << std::endl;
     return 1;
   }
   std::cerr << "initializing...";
-  rime::WorkspaceUpdate workspace_update;
+  WorkspaceUpdate workspace_update;
   if (!workspace_update.Run(&deployer)) {
     std::cerr << "failure!" << std::endl;
     return 1;
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
   console.set_interactive(interactive);
 
   // process input
-  std::string line;
+  string line;
   while (std::cin) {
     std::getline(std::cin, line);
     console.ProcessLine(line);

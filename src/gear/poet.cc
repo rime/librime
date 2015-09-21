@@ -6,8 +6,6 @@
 //
 // 2011-10-06 GONG Chen <chen.sst@gmail.com>
 //
-#include <map>
-#include <vector>
 #include <rime/common.h>
 #include <rime/candidate.h>
 #include <rime/dict/vocabulary.h>
@@ -15,10 +13,10 @@
 
 namespace rime {
 
-shared_ptr<Sentence> Poet::MakeSentence(const WordGraph& graph,
+an<Sentence> Poet::MakeSentence(const WordGraph& graph,
                                         size_t total_length) {
   const int kMaxHomophonesInMind = 1;
-  std::map<int, shared_ptr<Sentence>> sentences;
+  map<int, an<Sentence>> sentences;
   sentences[0] = New<Sentence>(language_);
   // dynamic programming
   for (const auto& w : graph) {

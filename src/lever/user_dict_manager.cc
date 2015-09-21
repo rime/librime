@@ -41,7 +41,7 @@ void UserDictManager::GetUserDictList(UserDictList* user_dict_list,
     return;
   }
   for (fs::directory_iterator it(path_), end; it != end; ++it) {
-    std::string name = it->path().filename().string();
+    string name = it->path().filename().string();
     if (boost::ends_with(name, component->extension())) {
       boost::erase_last(name, component->extension());
       user_dict_list->push_back(name);
@@ -49,8 +49,8 @@ void UserDictManager::GetUserDictList(UserDictList* user_dict_list,
   }
 }
 
-bool UserDictManager::Backup(const std::string& dict_name) {
-  unique_ptr<Db> db(user_db_component_->Create(dict_name));
+bool UserDictManager::Backup(const string& dict_name) {
+  the<Db> db(user_db_component_->Create(dict_name));
   if (!db->OpenReadOnly())
     return false;
   if (UserDbHelper(db).GetUserId() != deployer_->user_id) {
@@ -67,13 +67,13 @@ bool UserDictManager::Backup(const std::string& dict_name) {
       return false;
     }
   }
-  std::string snapshot_file =
+  string snapshot_file =
       dict_name + UserDbFormat<TextDb>::snapshot_extension;
   return db->Backup((dir / snapshot_file).string());
 }
 
-bool UserDictManager::Restore(const std::string& snapshot_file) {
-  unique_ptr<Db> temp(user_db_component_->Create(".temp"));
+bool UserDictManager::Restore(const string& snapshot_file) {
+  the<Db> temp(user_db_component_->Create(".temp"));
   if (temp->Exists())
     temp->Remove();
   if (!temp->Open())
@@ -88,10 +88,10 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
     return false;
   if (!UserDbHelper(temp).IsUserDb())
     return false;
-  std::string db_name = UserDbHelper(temp).GetDbName();
+  string db_name = UserDbHelper(temp).GetDbName();
   if (db_name.empty())
     return false;
-  unique_ptr<Db> dest(user_db_component_->Create(db_name));
+  the<Db> dest(user_db_component_->Create(db_name));
   if (!dest->Open())
     return false;
   BOOST_SCOPE_EXIT( (&dest) )
@@ -107,9 +107,9 @@ bool UserDictManager::Restore(const std::string& snapshot_file) {
   return true;
 }
 
-int UserDictManager::Export(const std::string& dict_name,
-                            const std::string& text_file) {
-  unique_ptr<Db> db(user_db_component_->Create(dict_name));
+int UserDictManager::Export(const string& dict_name,
+                            const string& text_file) {
+  the<Db> db(user_db_component_->Create(dict_name));
   if (!db->OpenReadOnly())
     return -1;
   BOOST_SCOPE_EXIT( (&db) )
@@ -134,9 +134,9 @@ int UserDictManager::Export(const std::string& dict_name,
   return num_entries;
 }
 
-int UserDictManager::Import(const std::string& dict_name,
-                            const std::string& text_file) {
-  unique_ptr<Db> db(user_db_component_->Create(dict_name));
+int UserDictManager::Import(const string& dict_name,
+                            const string& text_file) {
+  the<Db> db(user_db_component_->Create(dict_name));
   if (!db->Open())
     return -1;
   BOOST_SCOPE_EXIT( (&db) )
@@ -160,11 +160,11 @@ int UserDictManager::Import(const std::string& dict_name,
   return num_entries;
 }
 
-bool UserDictManager::UpgradeUserDict(const std::string& dict_name) {
+bool UserDictManager::UpgradeUserDict(const string& dict_name) {
   UserDb::Component* legacy_component = UserDb::Require("legacy_userdb");
   if (!legacy_component)
     return true;
-  unique_ptr<Db> legacy_db(legacy_component->Create(dict_name));
+  the<Db> legacy_db(legacy_component->Create(dict_name));
   if (!legacy_db->Exists())
     return true;
   if (!legacy_db->OpenReadOnly() || !UserDbHelper(legacy_db).IsUserDb())
@@ -178,7 +178,7 @@ bool UserDictManager::UpgradeUserDict(const std::string& dict_name) {
       return false;
     }
   }
-  std::string snapshot_file =
+  string snapshot_file =
       dict_name + UserDbFormat<TextDb>::snapshot_extension;
   fs::path snapshot_path = trash / snapshot_file;
   return legacy_db->Backup(snapshot_path.string()) &&
@@ -187,7 +187,7 @@ bool UserDictManager::UpgradeUserDict(const std::string& dict_name) {
          Restore(snapshot_path.string());
 }
 
-bool UserDictManager::Synchronize(const std::string& dict_name) {
+bool UserDictManager::Synchronize(const string& dict_name) {
   LOG(INFO) << "synchronize user dict '" << dict_name << "'.";
   bool success = true;
   fs::path sync_dir(deployer_->sync_dir);
@@ -199,7 +199,7 @@ bool UserDictManager::Synchronize(const std::string& dict_name) {
     }
   }
   // *.userdb.txt
-  std::string snapshot_file =
+  string snapshot_file =
       dict_name + UserDbFormat<TextDb>::snapshot_extension;
   for (fs::directory_iterator it(sync_dir), end; it != end; ++it) {
     if (!fs::is_directory(it->path()))
@@ -225,7 +225,7 @@ bool UserDictManager::SynchronizeAll() {
   GetUserDictList(&user_dicts);
   LOG(INFO) << "synchronizing " << user_dicts.size() << " user dicts.";
   int failure = 0;
-  for (const std::string& dict_name : user_dicts) {
+  for (const string& dict_name : user_dicts) {
     if (!Synchronize(dict_name))
       ++failure;
   }

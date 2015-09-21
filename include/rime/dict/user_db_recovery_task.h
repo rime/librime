@@ -16,13 +16,13 @@ class Db;
 
 class UserDbRecoveryTask : public DeploymentTask {
  public:
-  explicit UserDbRecoveryTask(shared_ptr<Db> db);
+  explicit UserDbRecoveryTask(an<Db> db);
   bool Run(Deployer* deployer);
 
  protected:
   void RestoreUserDataFromSnapshot(Deployer* deployer);
 
-  shared_ptr<Db> db_;
+  an<Db> db_;
 };
 
 class UserDbRecoveryTaskComponent : public UserDbRecoveryTask::Component {
