@@ -122,6 +122,7 @@ typedef struct rime_context_t {
   RimeMenu menu;
   // v0.9.2
   char* commit_text_preview;
+  char** select_labels;
 } RimeContext;
 
 /*!
