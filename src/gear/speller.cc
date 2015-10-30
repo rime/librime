@@ -73,6 +73,12 @@ Speller::Speller(const Ticket& ticket) : Processor(ticket),
     if (config->GetString("speller/auto_select_pattern", &pattern)) {
       auto_select_pattern_ = pattern;
     }
+    string auto_clear;
+    if (config->GetString("speller/auto_clear", &auto_clear)) {
+      if (auto_clear == "auto") auto_clear_ = kClearAuto;
+      else if (auto_clear == "manual") auto_clear_ = kClearManual;
+      else if (auto_clear == "max_length") auto_clear_ = kClearMaxLength;
+    }
   }
   if (initials_.empty()) {
     initials_ = alphabet_;
@@ -99,6 +105,9 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
   if (is_initial && AutoSelectAtMaxCodeLength(ctx)) {
     DLOG(INFO) << "auto-select at max code length.";
   }
+  else if ((auto_clear_ == kClearMaxLength || auto_clear_ == kClearManual) && AutoClear(ctx)) {
+    DLOG(INFO) << "auto-clear at max code when no candidate.";
+  }
   // make a backup of previous conversion before modifying input
   Segment previous_segment;
   if (auto_select_ && ctx->HasMenu()) {
@@ -119,6 +128,9 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
   }
   if (AutoSelectUniqueCandidate(ctx)) {
     DLOG(INFO) << "auto-select unique candidate.";
+  }
+  else if (auto_clear_ == kClearAuto && AutoClear(ctx)) {
+    DLOG(INFO) << "auto-clear when no candidate.";
   }
   return kAccepted;
 }
@@ -196,6 +208,16 @@ bool Speller::AutoSelectPreviousMatch(Context* ctx,
     return true;
   }
   return FindEarlierMatch(ctx, start ,end);
+}
+
+bool Speller::AutoClear(Context* ctx) {
+  if (!ctx->HasMenu() && auto_clear_ > kClearNone &&
+      (auto_clear_ != kClearMaxLength || max_code_length_ == 0 ||
+       ctx->input().length() >= max_code_length_)) {
+    ctx->Clear();
+    return true;
+  }
+  return false;
 }
 
 bool Speller::FindEarlierMatch(Context* ctx, size_t start, size_t end) {

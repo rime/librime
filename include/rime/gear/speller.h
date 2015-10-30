@@ -24,10 +24,13 @@ class Speller : public Processor {
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:
+  enum AutoClearMethod { kClearNone, kClearAuto, kClearManual, kClearMaxLength };
+
   bool AutoSelectAtMaxCodeLength(Context* ctx);
   bool AutoSelectUniqueCandidate(Context* ctx);
   bool AutoSelectPreviousMatch(Context* ctx, Segment* previous_segment);
   bool FindEarlierMatch(Context* ctx, size_t start, size_t end);
+  bool AutoClear(Context* ctx);
 
   string alphabet_;
   string delimiters_;
@@ -37,6 +40,7 @@ class Speller : public Processor {
   bool auto_select_ = false;
   bool use_space_ = false;
   boost::regex auto_select_pattern_;
+  AutoClearMethod auto_clear_ = kClearNone;
 };
 
 }  // namespace rime
