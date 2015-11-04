@@ -15,7 +15,7 @@ namespace rime {
 
 class CharsetFilterTranslation : public Translation {
  public:
-  CharsetFilterTranslation(an<Translation> translation);
+  CharsetFilterTranslation(an<Translation> translation, const string& charset = "");
   virtual bool Next();
   virtual an<Candidate> Peek();
 
@@ -23,6 +23,7 @@ class CharsetFilterTranslation : public Translation {
   bool LocateNextCandidate();
 
   an<Translation> translation_;
+  string charset_;
 };
 
 struct DictEntry;
@@ -39,7 +40,7 @@ class CharsetFilter : public Filter, TagMatching {
   }
 
   // return true to accept, false to reject the tested item
-  static bool FilterText(const string& text);
+  static bool FilterText(const string& text, const string& charset = "");
   static bool FilterDictEntry(an<DictEntry> entry);
 };
 
