@@ -12,6 +12,7 @@
 #include <rime/engine.h>
 #include <rime/dict/vocabulary.h>
 #include <rime/gear/charset_filter.h>
+#include <boost/locale/encoding.hpp>
 
 namespace rime {
 
@@ -45,8 +46,8 @@ bool contains_extended_cjk(const string& text)
 // CharsetFilterTranslation
 
 CharsetFilterTranslation::CharsetFilterTranslation(
-    an<Translation> translation)
-    : translation_(translation) {
+    an<Translation> translation, const string& charset)
+    : translation_(translation), charset_(charset) {
   LocateNextCandidate();
 }
 
@@ -67,7 +68,7 @@ an<Candidate> CharsetFilterTranslation::Peek() {
 bool CharsetFilterTranslation::LocateNextCandidate() {
   while (!translation_->exhausted()) {
     auto cand = translation_->Peek();
-    if (cand && CharsetFilter::FilterText(cand->text()))
+    if (cand && CharsetFilter::FilterText(cand->text(), charset_))
       return true;
     translation_->Next();
   }
@@ -77,8 +78,17 @@ bool CharsetFilterTranslation::LocateNextCandidate() {
 
 // CharsetFilter
 
-bool CharsetFilter::FilterText(const string& text) {
-  return !contains_extended_cjk(text);
+bool CharsetFilter::FilterText(const string& text, const string& charset) {
+  if (charset.empty()) return !contains_extended_cjk(text);
+  try {
+    boost::locale::conv::from_utf(text, charset, boost::locale::conv::method_type::stop);
+  }
+  catch(boost::locale::conv::conversion_error const&  ex) {
+    return false;
+  }
+  catch(...) {
+  }
+  return true;
 }
 
 bool CharsetFilter::FilterDictEntry(an<DictEntry> entry) {
@@ -91,10 +101,13 @@ CharsetFilter::CharsetFilter(const Ticket& ticket)
 
 an<Translation> CharsetFilter::Apply(
     an<Translation> translation, CandidateList* candidates) {
-  if (engine_->context()->get_option("extended_charset")) {
-    return translation;
+  if (name_space_.empty() && !engine_->context()->get_option("extended_charset")) {
+    return New<CharsetFilterTranslation>(translation);
   }
-  return New<CharsetFilterTranslation>(translation);
+  if (!name_space_.empty() && engine_->context()->get_option(name_space_)) {
+    return New<CharsetFilterTranslation>(translation, name_space_);
+  }
+  return translation;
 }
 
 }  // namespace rime
