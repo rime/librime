@@ -23,7 +23,6 @@ clean:
 
 thirdparty:
 	$(RIME_COMPILER_OPTIONS) make -f Makefile.thirdparty
-	make -f Makefile.thirdparty clean-src
 
 thirdparty/%:
 	make -f Makefile.thirdparty $(@:thirdparty/%=%)
