@@ -67,7 +67,7 @@ if %build_boost% == 1 (
   cd %BOOST_ROOT%
   if not exist bjam.exe call bootstrap.bat
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  bjam toolset=msvc-12.0 variant=release link=static threading=multi runtime-link=static stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
+  bjam toolset=msvc-12.0 variant=release link=static threading=multi runtime-link=static stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread --with-locale
   if %ERRORLEVEL% NEQ 0 goto ERROR
   rem bjam toolset=msvc-12.0 variant=release link=static threading=multi runtime-link=static address-model=64 --stagedir=stage_x64 stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
   rem if %ERRORLEVEL% NEQ 0 goto ERROR
@@ -170,6 +170,8 @@ if %build_thirdparty% == 1 (
 )
 
 if %build_librime% == 0 goto EXIT
+
+if defined CMAKE_INSTALL_PATH set PATH=%PATH%;%CMAKE_INSTALL_PATH%
 
 set CMAKE_GENERATOR="Visual Studio 12"
 
