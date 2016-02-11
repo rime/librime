@@ -12,7 +12,7 @@ librime is tested to work on Windows with the following build tools and librarie
 You may need to update Boost when using a higher version of VS.
 
 The following command line tools from msysgit are needed by `build.bat` to automate the build process:
-  - **git**, used by `build.bat thirdparty` to clone `windows` branch from [lotem/leveldb](https://github.com/lotem/leveldb)
+  - **git**, used by `build.bat thirdparty` to clone the [windows branch](https://github.com/lotem/leveldb/tree/windows) from lotem/leveldb
   - **sed**, used by `build.bat thirdparty` to edit project files for static-linking C++ runtime (/MT)
 
 You can also build third-party libraries manually without them, by following instructions in the build script.
@@ -20,9 +20,9 @@ You can also build third-party libraries manually without them, by following ins
 Get the code
 ---
 ``` batch
-git clone git@github.com:lotem/librime.git
+git clone --recursive https://github.com/rime/librime.git
 ```
-or [download from github](https://github.com/lotem/librime).
+or [download from GitHub](https://github.com/rime/librime).
 
 Setup a build environment
 ---

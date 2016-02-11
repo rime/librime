@@ -22,9 +22,9 @@ You can also manually download and build Boost libraries from source code, then 
 Get the code
 ---
 ``` sh
-git clone git@github.com:lotem/librime.git
+git clone --recursive https://github.com/rime/librime.git
 ```
-or [download from github](https://github.com/lotem/librime).
+or [download from GitHub](https://github.com/rime/librime).
 
 Build third-party libraries
 ---
