@@ -142,6 +142,12 @@ typedef struct rime_status_t {
   Bool is_ascii_punct;
 } RimeStatus;
 
+typedef struct rime_candidate_list_iterator_t {
+  void *ptr;
+  int index;
+  RimeCandidate candidate;
+} RimeCandidateListIterator;
+
 typedef struct rime_config_t {
   void* ptr;
 } RimeConfig;
@@ -251,6 +257,12 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context);
 RIME_API Bool RimeFreeContext(RimeContext* context);
 RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status);
 RIME_API Bool RimeFreeStatus(RimeStatus* status);
+
+// Accessing candidate list
+
+RIME_API Bool RimeCandidateListBegin(RimeSessionId session_id, RimeCandidateListIterator* iterator);
+RIME_API Bool RimeCandidateListNext(RimeCandidateListIterator* iterator);
+RIME_API void RimeCandidateListEnd(RimeCandidateListIterator* iterator);
 
 // Runtime options
 
@@ -495,6 +507,11 @@ typedef struct rime_api_t {
 
   //! select a candidate from current page.
   Bool (*select_candidate_on_current_page)(RimeSessionId session_id, size_t index);
+
+  // access candidate list.
+  Bool (*candidate_list_begin)(RimeSessionId session_id, RimeCandidateListIterator* iterator);
+  Bool (*candidate_list_next)(RimeCandidateListIterator* iterator);
+  void (*candidate_list_end)(RimeCandidateListIterator* iterator);
 
 } RimeApi;
 

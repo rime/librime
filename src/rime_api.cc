@@ -219,6 +219,20 @@ RIME_API void RimeClearComposition(RimeSessionId session_id) {
 
 // output
 
+static void rime_candidate_copy(RimeCandidate* dest, const an<Candidate>& src) {
+  dest->text = new char[src->text().length() + 1];
+  std::strcpy(dest->text, src->text().c_str());
+  string comment(src->comment());
+  if (!comment.empty()) {
+    dest->comment = new char[comment.length() + 1];
+    std::strcpy(dest->comment, comment.c_str());
+  }
+  else {
+    dest->comment = nullptr;
+  }
+  dest->reserved = nullptr;
+}
+
 RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
   if (!context || context->data_size <= 0)
     return False;
@@ -264,16 +278,7 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
       context->menu.candidates = new RimeCandidate[page->candidates.size()];
       for (const an<Candidate> &cand : page->candidates) {
         RimeCandidate* dest = &context->menu.candidates[i++];
-        dest->text = new char[cand->text().length() + 1];
-        std::strcpy(dest->text, cand->text().c_str());
-        string comment(cand->comment());
-        if (!comment.empty()) {
-          dest->comment = new char[comment.length() + 1];
-          std::strcpy(dest->comment, comment.c_str());
-        }
-        else {
-          dest->comment = NULL;
-        }
+        rime_candidate_copy(dest, cand);
       }
       if (schema) {
         const string& select_keys(schema->select_keys());
@@ -378,6 +383,46 @@ RIME_API Bool RimeFreeStatus(RimeStatus* status) {
   delete[] status->schema_name;
   RIME_STRUCT_CLEAR(*status);
   return True;
+}
+
+// Accessing candidate list
+
+RIME_API Bool RimeCandidateListBegin(RimeSessionId session_id,
+                                     RimeCandidateListIterator* iterator) {
+  if (!iterator)
+    return False;
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  Context *ctx = session->context();
+  if (!ctx || !ctx->HasMenu())
+    return False;
+  memset(iterator, 0, sizeof(RimeCandidateListIterator));
+  iterator->ptr = ctx->composition().back().menu.get();
+  iterator->index = -1;
+  return True;
+}
+
+RIME_API Bool RimeCandidateListNext(RimeCandidateListIterator* iterator) {
+  if (!iterator)
+    return False;
+  Menu *menu = reinterpret_cast<Menu*>(iterator->ptr);
+  if (!menu)
+    return False;
+  ++iterator->index;
+  if (auto cand = menu->GetCandidateAt((size_t)iterator->index)) {
+    rime_candidate_copy(&iterator->candidate, cand);
+    return True;
+  }
+  return False;
+}
+
+RIME_API void RimeCandidateListEnd(RimeCandidateListIterator* iterator) {
+  if (!iterator)
+    return;
+  delete[] iterator->candidate.text;
+  delete[] iterator->candidate.comment;
+  memset(iterator, 0, sizeof(RimeCandidateListIterator));
 }
 
 // runtime options
@@ -997,6 +1042,9 @@ RIME_API RimeApi* rime_get_api() {
     s_api.get_version = &RimeGetVersion;
     s_api.set_caret_pos = &RimeSetCaretPos;
     s_api.select_candidate_on_current_page = &RimeSelectCandidateOnCurrentPage;
+    s_api.candidate_list_begin = &RimeCandidateListBegin;
+    s_api.candidate_list_next = &RimeCandidateListNext;
+    s_api.candidate_list_end = &RimeCandidateListEnd;
   }
   return &s_api;
 }

@@ -131,6 +131,21 @@ bool execute_special_command(const char* line, RimeSessionId session_id) {
     }
     return true;
   }
+  if (!strcmp(line, "print candidate list")) {
+    RimeCandidateListIterator iterator = {0};
+    if (rime->candidate_list_begin(session_id, &iterator)) {
+      while (rime->candidate_list_next(&iterator)) {
+        printf("%d. %s", iterator.index + 1, iterator.candidate.text);
+        if (iterator.candidate.comment)
+          printf(" (%s)", iterator.candidate.comment);
+        putchar('\n');
+      }
+      rime->candidate_list_end(&iterator);
+    } else {
+      printf("no candidates.\n");
+    }
+    return true;
+  }
   return false;
 }
 
