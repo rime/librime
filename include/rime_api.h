@@ -484,7 +484,7 @@ typedef struct rime_api_t {
   //! caret posistion in terms of raw input
   size_t (*get_caret_pos)(RimeSessionId session_id);
 
-  //! select a candidate from current page
+  //! select a candidate at the given index in candidate list.
   Bool (*select_candidate)(RimeSessionId session_id, size_t index);
 
   //! get the version of librime
@@ -492,6 +492,9 @@ typedef struct rime_api_t {
 
   //! set caret posistion in terms of raw input
   void (*set_caret_pos)(RimeSessionId session_id, size_t caret_pos);
+
+  //! select a candidate from current page.
+  Bool (*select_candidate_on_current_page)(RimeSessionId session_id, size_t index);
 
 } RimeApi;
 

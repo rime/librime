@@ -886,6 +886,24 @@ Bool RimeSelectCandidate(RimeSessionId session_id, size_t index) {
   return Bool(ctx->Select(index));
 }
 
+Bool RimeSelectCandidateOnCurrentPage(RimeSessionId session_id, size_t index) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  Context *ctx = session->context();
+  if (!ctx || !ctx->HasMenu())
+    return False;
+  Schema *schema = session->schema();
+  if (!schema)
+    return False;
+  size_t page_size = (size_t)schema->page_size();
+  if (index >= page_size)
+    return False;
+  const auto& seg(ctx->composition().back());
+  size_t page_start = seg.selected_index / page_size * page_size;
+  return Bool(ctx->Select(page_start + index));
+}
+
 const char* RimeGetVersion() {
   return RIME_VERSION;
 }
@@ -978,6 +996,7 @@ RIME_API RimeApi* rime_get_api() {
     s_api.select_candidate = &RimeSelectCandidate;
     s_api.get_version = &RimeGetVersion;
     s_api.set_caret_pos = &RimeSetCaretPos;
+    s_api.select_candidate_on_current_page = &RimeSelectCandidateOnCurrentPage;
   }
   return &s_api;
 }

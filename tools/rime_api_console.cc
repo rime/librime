@@ -5,6 +5,7 @@
  * 2011-08-29 GONG Chen <chen.sst@gmail.com>
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <rime_api.h>
 
@@ -29,8 +30,11 @@ void print_composition(RimeComposition *composition) {
   //size_t cursor = composition->cursor_pos;
   for (size_t i = 0; i <= len; ++i) {
     if (start < end) {
-      if (i == start) putchar('[');
-      else if (i == end) putchar(']');
+      if (i == start) {
+        putchar('[');
+      } else if (i == end) {
+        putchar(']');
+      }
     }
     //if (i == cursor) putchar('|');
     if (i < len)
@@ -60,8 +64,7 @@ void print_context(RimeContext *context) {
   if (context->composition.length > 0) {
     print_composition(&context->composition);
     print_menu(&context->menu);
-  }
-  else {
+  } else {
     printf("(not composing)\n");
   }
 }
@@ -107,10 +110,24 @@ bool execute_special_command(const char* line, RimeSessionId session_id) {
     }
     return true;
   }
-  if (!strncmp(line, "select schema ", 14)) {
-    const char* schema_id = line + 14;
+  const char* kSelectSchemaCommand = "select schema ";
+  size_t command_length = strlen(kSelectSchemaCommand);
+  if (!strncmp(line, kSelectSchemaCommand, command_length)) {
+    const char* schema_id = line + command_length;
     if (rime->select_schema(session_id, schema_id)) {
       printf("selected schema: [%s]\n", schema_id);
+    }
+    return true;
+  }
+  const char* kSelectCandidateCommand = "select candidate ";
+  command_length = strlen("select candidate ");
+  if (!strncmp(line, kSelectCandidateCommand, command_length)) {
+    int index = atoi(line + command_length);
+    if (index > 0 &&
+        rime->select_candidate_on_current_page(session_id, index - 1)) {
+      print(session_id);
+    } else {
+      fprintf(stderr, "cannot select candidate at index %d.\n", index);
     }
     return true;
   }
@@ -159,11 +176,10 @@ int main(int argc, char *argv[]) {
       break;
     if (execute_special_command(line, session_id))
       continue;
-    if (!rime->simulate_key_sequence(session_id, line)) {
-      fprintf(stderr, "Error processing key sequence: %s\n", line);
-    }
-    else {
+    if (rime->simulate_key_sequence(session_id, line)) {
       print(session_id);
+    } else {
+      fprintf(stderr, "Error processing key sequence: %s\n", line);
     }
   }
 
