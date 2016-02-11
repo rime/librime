@@ -63,6 +63,11 @@ endif(ENABLE_LOGGING)
 
 find_package(Threads)
 
+find_package(Iconv)
+if (ICONV_FOUND)
+  include_directories(${ICONV_INCLUDE_DIRS})
+endif(ICONV_FOUND)
+
 if(BUILD_TEST)
   find_package(GTest REQUIRED)
 if(GTEST_FOUND)
