@@ -11,7 +11,7 @@ thirdparty/include/*
 thirdparty/lib/*
 thirdparty/bin/*
 thirdparty/data/*
-thirdparty/src/leveldb-windows
+thirdparty/src/*/*
 env.bat
 *~
 .*.swp
