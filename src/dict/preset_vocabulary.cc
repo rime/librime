@@ -50,8 +50,13 @@ const TextFormat VocabularyDb::format = {
 };
 
 string PresetVocabulary::DictFilePath() {
-  boost::filesystem::path path(Service::instance().deployer().shared_data_dir);
+  auto& deployer(Service::instance().deployer());
+  boost::filesystem::path path(deployer.shared_data_dir);
   path /= "essay.txt";
+  if (!boost::filesystem::exists(path)) {
+    path = deployer.user_data_dir;
+    path /= "essay.txt";
+  }
   return path.string();
 }
 
