@@ -38,20 +38,42 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
     return kAccepted;
   }
   if (ch == XK_Up || ch == XK_KP_Up) {
-    CursorUp(ctx);
+    if (ctx->get_option("_horizontal")) {
+      PageUp(ctx);
+    } else {
+      CursorUp(ctx);
+    }
     return kAccepted;
   }
   if (ch == XK_Down || ch == XK_KP_Down) {
-    CursorDown(ctx);
+    if (ctx->get_option("_horizontal")) {
+      PageDown(ctx);
+    } else {
+      CursorDown(ctx);
+    }
     return kAccepted;
   }
-  if (ch == XK_Home || ch == XK_KP_Home) {
-    if (Home(ctx))
+  if (ch == XK_Left || ch == XK_KP_Left) {
+    if (ctx->caret_pos() == ctx->input().length() &&
+        ctx->get_option("_horizontal") &&
+        CursorUp(ctx)) {
       return kAccepted;
+    }
+    return kNoop;
+  }
+  if (ch == XK_Right || ch == XK_KP_Right) {
+    if (ctx->caret_pos() == ctx->input().length() &&
+        ctx->get_option("_horizontal") &&
+        CursorDown(ctx)) {
+      return kAccepted;
+    }
+    return kNoop;
+  }
+  if (ch == XK_Home || ch == XK_KP_Home) {
+    return Home(ctx) ? kAccepted : kNoop;
   }
   if (ch == XK_End || ch == XK_KP_End) {
-    if (End(ctx))
-      return kAccepted;
+    return End(ctx) ? kAccepted : kNoop;
   }
   int index = -1;
   const string& select_keys(engine_->schema()->select_keys());
