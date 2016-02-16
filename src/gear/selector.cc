@@ -54,7 +54,9 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
     return kAccepted;
   }
   if (ch == XK_Left || ch == XK_KP_Left) {
-    if (ctx->caret_pos() == ctx->input().length() &&
+    if (!key_event.ctrl() &&
+        !key_event.shift() &&
+        ctx->caret_pos() == ctx->input().length() &&
         ctx->get_option("_horizontal") &&
         CursorUp(ctx)) {
       return kAccepted;
@@ -62,7 +64,9 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   }
   if (ch == XK_Right || ch == XK_KP_Right) {
-    if (ctx->caret_pos() == ctx->input().length() &&
+    if (!key_event.ctrl() &&
+        !key_event.shift() &&
+        ctx->caret_pos() == ctx->input().length() &&
         ctx->get_option("_horizontal") &&
         CursorDown(ctx)) {
       return kAccepted;
