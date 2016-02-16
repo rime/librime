@@ -27,13 +27,13 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
     BeginMove(ctx);
     if (key_event.ctrl() || key_event.shift()) {
       size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
-      JumpLeft(ctx, confirmed_pos) || Home(ctx);
+      JumpLeft(ctx, confirmed_pos) || End(ctx);
     }
     else {
       // take a jump left when there are multiple spans, but not from within
       // the leftmost span.
-      (spans_.Count(0, ctx->caret_pos()) > 0 && JumpLeft(ctx)) ||
-          Left(ctx) || End(ctx);
+      (spans_.Count(0, ctx->caret_pos()) > 0 ? JumpLeft(ctx) : Left(ctx)) ||
+          End(ctx);
     }
     return kAccepted;
   }
@@ -84,7 +84,7 @@ bool Navigator::JumpLeft(Context* ctx, size_t start_pos) {
   DLOG(INFO) << "jump left.";
   size_t caret_pos = ctx->caret_pos();
   size_t stop = spans_.PreviousStop(caret_pos);
-  if (stop <= start_pos) {
+  if (stop < start_pos) {
     stop = ctx->input().length();  // rewind
   }
   if (stop != caret_pos) {

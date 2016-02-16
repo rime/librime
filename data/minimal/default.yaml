@@ -2,7 +2,7 @@
 # vim: set sw=2 sts=2 et:
 # encoding: utf-8
 
-config_version: "0.14.minimal"
+config_version: "0.15.minimal"
 
 schema_list:
   - schema: luna_pinyin
@@ -109,10 +109,11 @@ key_binder:
     - { when: composing, accept: Control+g, send: Escape }
     - { when: composing, accept: Alt+v, send: Page_Up }
     - { when: composing, accept: Control+v, send: Page_Down }
-    # paging keys
-    - { when: composing, accept: ISO_Left_Tab, send: Page_Up }
-    - { when: composing, accept: Shift+Tab, send: Page_Up }
-    - { when: composing, accept: Tab, send: Page_Down }
+    # move by word
+    - { when: composing, accept: ISO_Left_Tab, send: Shift+Left }
+    - { when: composing, accept: Shift+Tab, send: Shift+Left }
+    - { when: composing, accept: Tab, send: Shift+Right }
+    # flip page
     - { when: paging, accept: minus, send: Page_Up }
     - { when: has_menu, accept: equal, send: Page_Down }
     - { when: paging, accept: comma, send: Page_Up }
