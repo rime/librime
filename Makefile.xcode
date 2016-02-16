@@ -1,7 +1,6 @@
 RIME_ROOT = $(CURDIR)
 RIME_COMPILER_OPTIONS = CC=clang CXX=clang++ CXXFLAGS="-stdlib=libc++" LDFLAGS="-stdlib=libc++"
 
-
 .PHONY: all release debug clean thirdparty
 
 all: release
@@ -20,10 +19,11 @@ clean:
 	rm -rf xbuild > /dev/null 2>&1 || true
 	rm -rf xdebug > /dev/null 2>&1 || true
 	rm build.log > /dev/null 2>&1 || true
+	rm -f thirdparty/thirdparty/lib/* > /dev/null 2>&1 || true
+	make -f Makefile.thirdparty clean-src
 
 thirdparty:
 	$(RIME_COMPILER_OPTIONS) make -f Makefile.thirdparty
-	#make -f Makefile.thirdparty clean-src
 
 thirdparty/%:
 	make -f Makefile.thirdparty $(@:thirdparty/%=%)
