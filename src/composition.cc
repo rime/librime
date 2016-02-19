@@ -4,6 +4,7 @@
 //
 // 2011-06-19 GONG Chen <chen.sst@gmail.com>
 //
+#include <boost/algorithm/string.hpp>
 #include <rime/candidate.h>
 #include <rime/composition.h>
 #include <rime/menu.h>
@@ -19,10 +20,13 @@ bool Composition::HasFinishedComposition() const {
   return at(k).status >= Segment::kSelected;
 }
 
-Preedit Composition::GetPreedit() const {
+Preedit Composition::GetPreedit(const string& full_input, size_t caret_pos,
+                                const string& caret) const {
   Preedit preedit;
-  if (empty())
+  if (empty()) {
     return preedit;
+  }
+  preedit.caret_pos = string::npos;
   size_t start = 0;
   size_t end = 0;
   for (size_t i = 0; i < size(); ++i) {
@@ -44,17 +48,49 @@ Preedit Composition::GetPreedit() const {
       preedit.sel_start = preedit.text.length();
       if (cand && !cand->preedit().empty()) {
         end = cand->end();
-        preedit.text += cand->preedit();
+        if (caret_pos < end) {
+          preedit.caret_pos = preedit.sel_start;
+        }
+        auto caret_placeholder = cand->preedit().find('\t');
+        if (caret_placeholder != string::npos) {
+          preedit.text += cand->preedit().substr(0, caret_placeholder);
+          // the part after caret is considered prompt string,
+          // show it only when the caret is at the end of input.
+          if (caret_pos == end && end == full_input.length()) {
+            preedit.caret_pos = preedit.sel_start + caret_placeholder;
+            preedit.text += cand->preedit().substr(caret_placeholder + 1);
+          }
+        } else {
+          preedit.text += cand->preedit();
+        }
       }
       else {
         end = at(i).end;
         preedit.text += input_.substr(start, end - start);
       }
-      preedit.sel_end = preedit.text.length();
+      preedit.sel_end = (preedit.caret_pos == string::npos) ?
+          preedit.text.length() : preedit.caret_pos;
     }
   }
-  if (input_.length() > end) {
+  if (end < input_.length()) {
     preedit.text += input_.substr(end);
+    end = input_.length();
+  }
+  if (preedit.caret_pos == string::npos) {
+    preedit.caret_pos = preedit.text.length();
+  }
+  if (end < full_input.length()) {
+    preedit.text += full_input.substr(end);
+  }
+  // insert soft cursor and prompt string.
+  auto prompt = caret + GetPrompt();
+  if (!prompt.empty()) {
+    preedit.text.insert(preedit.caret_pos, prompt);
+    if (preedit.caret_pos < preedit.sel_end) {
+      preedit.sel_start += prompt.length();
+      preedit.sel_end += prompt.length();
+      preedit.caret_pos = preedit.sel_start;
+    }
   }
   return preedit;
 }
@@ -93,7 +129,7 @@ string Composition::GetScriptText() const {
     start = end;
     end = cand ? cand->end() : seg.end;
     if (cand && !cand->preedit().empty())
-      result += cand->preedit();
+      result += boost::erase_first_copy(cand->preedit(), "\t");
     else
       result += input_.substr(start, end - start);
   }
