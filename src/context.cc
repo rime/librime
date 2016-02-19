@@ -32,20 +32,31 @@ string Context::GetScriptText() const {
   return composition_.GetScriptText();
 }
 
+static const string kCaretSymbol("\xe2\x80\xb8");
+
+string Context::GetSoftCursor() const {
+  return get_option("soft_cursor") ? kCaretSymbol : string();
+}
+
 Preedit Context::GetPreedit() const {
   auto preedit = composition_.GetPreedit();
-  preedit.caret_pos = preedit.text.length();
+  const auto composed_input_length = composition_.input().length();
+  if (caret_pos_ < composed_input_length) {
+    preedit.caret_pos = preedit.sel_start;
+  } else {
+    preedit.caret_pos = preedit.text.length();
+  }
   if (IsComposing()) {
-    if (get_option("soft_cursor")) {
-      const string caret("\xe2\x80\xb8");
-      preedit.text += caret;
-    }
-    auto prompt = composition_.GetPrompt();
+    const auto prompt = GetSoftCursor() + composition_.GetPrompt();
     if (!prompt.empty()) {
-      preedit.text += prompt;
+      preedit.text.insert(preedit.caret_pos, prompt);
+      if (preedit.caret_pos < preedit.sel_end) {
+        preedit.sel_start += prompt.length();
+        preedit.sel_end += prompt.length();
+      }
     }
-    if (caret_pos_ < input_.length()) {
-      preedit.text += input_.substr(caret_pos_);
+    if (composed_input_length < input_.length()) {
+      preedit.text += input_.substr(composed_input_length);
     }
   }
   return preedit;

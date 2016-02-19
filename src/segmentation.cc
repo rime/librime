@@ -84,7 +84,7 @@ void Segmentation::Reset(size_t num_segments) {
   resize(num_segments);
 }
 
-bool Segmentation::AddSegment(const Segment& segment) {
+bool Segmentation::AddSegment(Segment segment) {
   int start = GetCurrentStartPosition();
   if (segment.start != start) {
     // rule one: in one round, we examine only those segs

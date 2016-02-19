@@ -132,9 +132,14 @@ void ConcreteEngine::OnOptionUpdate(Context* ctx, const string& option) {
 void ConcreteEngine::Compose(Context* ctx) {
   if (!ctx) return;
   Composition& comp = ctx->composition();
-  string active_input(ctx->input().substr(0, ctx->caret_pos()));
+  const string active_input = ctx->input().substr(0, ctx->caret_pos());
   DLOG(INFO) << "active input: " << active_input;
   comp.Reset(active_input);
+  if (ctx->caret_pos() < ctx->input().length() &&
+      ctx->caret_pos() == comp.GetConfirmedPosition()) {
+    // translate one segment past caret pos.
+    comp.Reset(ctx->input());
+  }
   CalculateSegmentation(&comp);
   TranslateSegments(&comp);
   DLOG(INFO) << "composition: " << comp.GetDebugText();
@@ -154,6 +159,10 @@ void ConcreteEngine::CalculateSegmentation(Segmentation* segments) {
     DLOG(INFO) << "segmentation: " << *segments;
     // no advancement
     if (start_pos == segments->GetCurrentEndPosition())
+      break;
+    // only one segment is allowed past caret pos, which is the segment
+    // immediately after the caret.
+    if (start_pos >= context_->caret_pos())
       break;
     // move onto the next segment...
     if (!segments->HasFinishedSegmentation())
