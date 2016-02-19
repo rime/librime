@@ -61,7 +61,7 @@ class Segmentation : public vector<Segment> {
   virtual ~Segmentation() {}
   void Reset(const string& input);
   void Reset(size_t num_segments);
-  bool AddSegment(const Segment& segment);
+  bool AddSegment(Segment segment);
 
   bool Forward();
   bool Trim();
