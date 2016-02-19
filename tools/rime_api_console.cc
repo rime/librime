@@ -120,7 +120,7 @@ bool execute_special_command(const char* line, RimeSessionId session_id) {
     return true;
   }
   const char* kSelectCandidateCommand = "select candidate ";
-  command_length = strlen("select candidate ");
+  command_length = strlen(kSelectCandidateCommand);
   if (!strncmp(line, kSelectCandidateCommand, command_length)) {
     int index = atoi(line + command_length);
     if (index > 0 &&
@@ -144,6 +144,19 @@ bool execute_special_command(const char* line, RimeSessionId session_id) {
     } else {
       printf("no candidates.\n");
     }
+    return true;
+  }
+  const char* kSetOptionCommand = "set option ";
+  command_length = strlen(kSetOptionCommand);
+  if (!strncmp(line, kSetOptionCommand, command_length)) {
+    Bool is_on = True;
+    const char* option = line + command_length;
+    if (*option == '!') {
+      is_on = False;
+      ++option;
+    }
+    rime->set_option(session_id, option, is_on);
+    printf("%s set %s.\n", option, is_on ? "on" : "off");
     return true;
   }
   return false;
