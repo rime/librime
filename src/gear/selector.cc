@@ -67,8 +67,8 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
     if (!key_event.ctrl() &&
         !key_event.shift() &&
         ctx->caret_pos() == ctx->input().length() &&
-        ctx->get_option("_horizontal") &&
-        CursorDown(ctx)) {
+        ctx->get_option("_horizontal")) {
+      CursorDown(ctx);
       return kAccepted;
     }
     return kNoop;
