@@ -86,6 +86,8 @@ class Context {
   }
 
  private:
+  string GetSoftCursor() const;
+
   string input_;
   size_t caret_pos_ = 0;
   Composition composition_;

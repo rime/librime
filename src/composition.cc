@@ -56,7 +56,6 @@ Preedit Composition::GetPreedit() const {
   if (input_.length() > end) {
     preedit.text += input_.substr(end);
   }
-  preedit.caret_pos = preedit.text.length();
   return preedit;
 }
 
