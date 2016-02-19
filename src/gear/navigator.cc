@@ -30,10 +30,11 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
       JumpLeft(ctx, confirmed_pos) || End(ctx);
     }
     else {
-      // take a jump left when there are multiple spans, but not from within
-      // the leftmost span.
-      (spans_.Count(0, ctx->caret_pos()) > 0 ? JumpLeft(ctx) : Left(ctx)) ||
-          End(ctx);
+      // take a jump leftwards when there are multiple spans,
+      // but not from the middle of a span.
+      (spans_.Count() > 1 &&
+       spans_.HasVertex(ctx->caret_pos())
+       ? JumpLeft(ctx) : Left(ctx)) || End(ctx);
     }
     return kAccepted;
   }

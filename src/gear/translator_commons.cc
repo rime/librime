@@ -4,6 +4,7 @@
 //
 // 2012-04-22 GONG Chen <chen.sst@gmail.com>
 //
+#include <algorithm>
 #include <boost/range/adaptor/reversed.hpp>
 #include <rime/config.h>
 #include <rime/schema.h>
@@ -78,6 +79,10 @@ size_t Spans::Count(size_t start_pos, size_t end_pos) const {
     else ++count;
   }
   return count;
+}
+
+bool Spans::HasVertex(size_t vertex) const {
+  return std::binary_search(vertices_.begin(), vertices_.end(), vertex);
 }
 
 // Sentence

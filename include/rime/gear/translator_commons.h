@@ -37,12 +37,16 @@ class Spans {
   size_t PreviousStop(size_t caret_pos) const;
   size_t NextStop(size_t caret_pos) const;
   size_t Count(size_t start_pos, size_t end_pos) const;
+  size_t Count() const {
+    return vertices_.empty() ? 0 : vertices_.size() - 1;
+  }
   size_t start() const {
     return vertices_.empty() ? 0 : vertices_.front();
   }
   size_t end() const {
     return vertices_.empty() ? 0 : vertices_.back();
   }
+  bool HasVertex(size_t vertex) const;
   void set_vertices(vector<size_t>&& vertices) {
     vertices_ = vertices;
   }
