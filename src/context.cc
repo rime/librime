@@ -39,27 +39,7 @@ string Context::GetSoftCursor() const {
 }
 
 Preedit Context::GetPreedit() const {
-  auto preedit = composition_.GetPreedit();
-  const auto composed_input_length = composition_.input().length();
-  if (caret_pos_ < composed_input_length) {
-    preedit.caret_pos = preedit.sel_start;
-  } else {
-    preedit.caret_pos = preedit.text.length();
-  }
-  if (IsComposing()) {
-    const auto prompt = GetSoftCursor() + composition_.GetPrompt();
-    if (!prompt.empty()) {
-      preedit.text.insert(preedit.caret_pos, prompt);
-      if (preedit.caret_pos < preedit.sel_end) {
-        preedit.sel_start += prompt.length();
-        preedit.sel_end += prompt.length();
-      }
-    }
-    if (composed_input_length < input_.length()) {
-      preedit.text += input_.substr(composed_input_length);
-    }
-  }
-  return preedit;
+  return composition_.GetPreedit(input_, caret_pos_, GetSoftCursor());
 }
 
 bool Context::IsComposing() const {
