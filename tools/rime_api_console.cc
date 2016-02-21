@@ -27,7 +27,7 @@ void print_composition(RimeComposition *composition) {
   size_t len = strlen(preedit);
   size_t start = composition->sel_start;
   size_t end = composition->sel_end;
-  //size_t cursor = composition->cursor_pos;
+  size_t cursor = composition->cursor_pos;
   for (size_t i = 0; i <= len; ++i) {
     if (start < end) {
       if (i == start) {
@@ -36,7 +36,7 @@ void print_composition(RimeComposition *composition) {
         putchar(']');
       }
     }
-    //if (i == cursor) putchar('|');
+    if (i == cursor) putchar('|');
     if (i < len)
         putchar(preedit[i]);
   }
