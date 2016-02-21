@@ -31,6 +31,9 @@ Preedit Composition::GetPreedit(const string& full_input, size_t caret_pos,
   size_t end = 0;
   for (size_t i = 0; i < size(); ++i) {
     start = end;
+    if (caret_pos == start) {
+      preedit.caret_pos = preedit.text.length();
+    }
     auto cand = at(i).GetSelectedCandidate();
     if (i < size() - 1) {  // converted
       if (cand) {
@@ -46,18 +49,17 @@ Preedit Composition::GetPreedit(const string& full_input, size_t caret_pos,
     }
     else {  // highlighted
       preedit.sel_start = preedit.text.length();
+      preedit.sel_end = string::npos;
       if (cand && !cand->preedit().empty()) {
         end = cand->end();
-        if (caret_pos < end) {
-          preedit.caret_pos = preedit.sel_start;
-        }
         auto caret_placeholder = cand->preedit().find('\t');
         if (caret_placeholder != string::npos) {
           preedit.text += cand->preedit().substr(0, caret_placeholder);
           // the part after caret is considered prompt string,
           // show it only when the caret is at the end of input.
           if (caret_pos == end && end == full_input.length()) {
-            preedit.caret_pos = preedit.sel_start + caret_placeholder;
+            preedit.sel_end = preedit.sel_start + caret_placeholder;
+            preedit.caret_pos = preedit.sel_end;
             preedit.text += cand->preedit().substr(caret_placeholder + 1);
           }
         } else {
@@ -68,8 +70,9 @@ Preedit Composition::GetPreedit(const string& full_input, size_t caret_pos,
         end = at(i).end;
         preedit.text += input_.substr(start, end - start);
       }
-      preedit.sel_end = (preedit.caret_pos == string::npos) ?
-          preedit.text.length() : preedit.caret_pos;
+      if (preedit.sel_end == string::npos) {
+        preedit.sel_end = preedit.text.length();
+      }
     }
   }
   if (end < input_.length()) {
