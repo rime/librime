@@ -19,7 +19,7 @@
 #include <rime/service.h>
 #include <rime/translation.h>
 #include <rime/gear/simplifier.h>
-#include <opencc/Config.hpp>
+#include <opencc/Config.hpp> // Place OpenCC #includes here to avoid VS2015 compilation errors
 #include <opencc/Converter.hpp>
 #include <opencc/Conversion.hpp>
 #include <opencc/ConversionChain.hpp>
