@@ -39,7 +39,7 @@
 // vector<int> v1, v2;
 // CHECK_EQ(v1, v2);
 //
-// If you want to use this header file with hash maps or slist, you
+// If you want to use this header file with hash_compare maps or slist, you
 // need to define macros before including this file:
 //
 // - GLOG_STL_LOGGING_FOR_UNORDERED     - <unordered_map> and <unordered_set>

@@ -45,7 +45,10 @@
 
 #ifdef _WIN32
 
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN  /* We always want minimal includes */
+#endif
+
 #include <windows.h>
 #include <winsock.h>         /* for gethostname */
 #include <io.h>              /* because we so often use open/close/etc */
@@ -58,6 +61,8 @@
 /* Note: the C++ #includes are all together at the bottom.  This file is
  * used by both C and C++ code, so we put all the C++ together.
  */
+
+#ifdef _MSC_VER
 
 /* 4244: otherwise we get problems when substracting two size_t's to an int
  * 4251: it's complaining about a private struct I've chosen not to dllexport
@@ -94,7 +99,8 @@ enum { STDIN_FILENO = 0, STDOUT_FILENO = 1, STDERR_FILENO = 2 };
 #define strncasecmp  _strnicmp
 
 /* In windows-land, hash<> is called hash_compare<> (from xhash.h) */
-#if defined(_MSC_VER) && _MSC_VER < 1800
+/* VC11 provides std::hash */
+#if defined(_MSC_VER) && (_MSC_VER < 1700)
 #define hash  hash_compare
 #endif
 
@@ -105,9 +111,11 @@ enum { STDIN_FILENO = 0, STDOUT_FILENO = 1, STDERR_FILENO = 2 };
  * because they don't always NUL-terminate. :-(  We also can't use the
  * name vsnprintf, since windows defines that (but not snprintf (!)).
  */
-extern int snprintf(char *str, size_t size,
+#ifndef HAVE_SNPRINTF
+extern int GOOGLE_GLOG_DLL_DECL snprintf(char *str, size_t size,
                                        const char *format, ...);
-extern int safe_vsnprintf(char *str, size_t size,
+#endif
+extern int GOOGLE_GLOG_DLL_DECL safe_vsnprintf(char *str, size_t size,
                           const char *format, va_list ap);
 #define vsnprintf(str, size, format, ap)  safe_vsnprintf(str, size, format, ap)
 #ifndef va_copy
@@ -124,6 +132,8 @@ extern int safe_vsnprintf(char *str, size_t size,
 // ----------------------------------- SYSTEM/PROCESS
 typedef int pid_t;
 #define getpid  _getpid
+
+#endif  // _MSC_VER
 
 // ----------------------------------- THREADS
 typedef DWORD pthread_t;

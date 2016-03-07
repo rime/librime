@@ -19,6 +19,11 @@ echo.
 echo BOOST_ROOT=%BOOST_ROOT%
 echo.
 
+if defined CMAKE_INSTALL_PATH set PATH=%PATH%;%CMAKE_INSTALL_PATH%
+
+set CMAKE_GENERATOR="Visual Studio 14 2015"
+set CMAKE_TOOLSET="v140_xp"
+
 set build=build
 set build_boost=0
 set build_thirdparty=0
@@ -76,14 +81,15 @@ if %build_boost% == 1 (
 if %build_thirdparty% == 1 (
   echo building glog.
   cd %THIRDPARTY%\src\glog
-  msbuild.exe google-glog-vc12.sln /p:Configuration=Release
+  if not exist build mkdir build
+  cd build
+  cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% -DWITH_GFLAGS=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
+  msbuild.exe google-glog.sln /t:glog /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
-  xcopy /S /I /Y src\windows\glog %THIRDPARTY%\include\glog\
+  xcopy /S /I /Y ..\src\windows\glog %THIRDPARTY%\include\glog\
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y Release\libglog.lib %THIRDPARTY%\lib\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y Release\libglog.dll %THIRDPARTY%\bin\
+  copy /Y Release\glog.lib %THIRDPARTY%\lib\
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
   echo building leveldb.
@@ -170,10 +176,6 @@ if %build_thirdparty% == 1 (
 )
 
 if %build_librime% == 0 goto EXIT
-
-if defined CMAKE_INSTALL_PATH set PATH=%PATH%;%CMAKE_INSTALL_PATH%
-
-set CMAKE_GENERATOR="Visual Studio 12"
 
 set BUILD_DIR=%RIME_ROOT%\%build%
 if not exist %BUILD_DIR% mkdir %BUILD_DIR%
