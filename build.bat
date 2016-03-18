@@ -89,7 +89,7 @@ if %build_thirdparty% == 1 (
   echo building leveldb.
   cd %THIRDPARTY%\src\
   echo "checking out 'windows' branch from %LEVELDB_REPOSITORY%"
-  git clone -b windows git@github.com:%LEVELDB_REPOSITORY%.git leveldb-windows
+  git clone -b windows git://github.com/%LEVELDB_REPOSITORY%.git leveldb-windows
   if %ERRORLEVEL% NEQ 0 goto ERROR
   cd leveldb-windows
   echo BOOST_ROOT=%BOOST_ROOT%
@@ -197,11 +197,13 @@ echo.
 goto EXIT
 
 :ERROR
+set EXITCODE=%ERRORLEVEL%
 echo.
 echo error building la rime.
 echo.
 
 :EXIT
 set PATH=%OLD_PATH%
-cd %RIME_ROOT%
+cd %BACK%
 rem pause
+exit /b %EXITCODE%
