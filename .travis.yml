@@ -1,0 +1,16 @@
+language: cpp
+
+matrix:
+  include:
+    - os: osx
+      compiler: clang
+    - os: linux
+      compiler: gcc
+      dist: trusty
+      sudo: required
+
+before_install:
+  ./travis-before-install.sh
+
+script:
+  ./travis-script.sh
