@@ -24,14 +24,10 @@ init:
   - git config --global core.autocrlf true
 
 install:
-  - call .\appveyor.install.bat
-
-build:
-  parallel: true
-  verbosity: minimal
+  - .\appveyor.install.bat
 
 build_script:
-  - call .\build.bat test
+  - .\build.bat test
 
 after_build:
   - dir build /s
