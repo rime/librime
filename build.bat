@@ -82,6 +82,7 @@ if %build_thirdparty% == 1 (
   if not exist build mkdir build
   cd build
   cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% -DWITH_GFLAGS=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
+  if %ERRORLEVEL% NEQ 0 goto ERROR
   msbuild.exe google-glog.sln /t:glog /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
@@ -105,9 +106,9 @@ if %build_thirdparty% == 1 (
   cd %THIRDPARTY%\src\yaml-cpp
   if not exist build mkdir build
   cd build
-  cmake -DMSVC_SHARED_RT=OFF ..
+  cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% -DMSVC_SHARED_RT=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DYAML_CPP_BUILD_TOOLS=OFF ..
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  msbuild.exe YAML_CPP.sln /p:Configuration=Release
+  msbuild.exe YAML_CPP.sln /t:yaml-cpp /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
   xcopy /S /I /Y ..\include\yaml-cpp %THIRDPARTY%\include\yaml-cpp\

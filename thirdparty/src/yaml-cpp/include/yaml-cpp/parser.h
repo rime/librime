@@ -1,47 +1,48 @@
 #ifndef PARSER_H_62B23520_7C8E_11DE_8A39_0800200C9A66
 #define PARSER_H_62B23520_7C8E_11DE_8A39_0800200C9A66
 
-#if defined(_MSC_VER) || (defined(__GNUC__) && (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) || (__GNUC__ >= 4)) // GCC supports "pragma once" correctly since 3.4
+#if defined(_MSC_VER) ||                                            \
+    (defined(__GNUC__) && (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) || \
+     (__GNUC__ >= 4))  // GCC supports "pragma once" correctly since 3.4
 #pragma once
 #endif
 
-
-#include "yaml-cpp/dll.h"
-#include "yaml-cpp/noncopyable.h"
 #include <ios>
 #include <memory>
 
-namespace YAML
-{
-	struct Directives;
-	struct Token;
-	class EventHandler;
-	class Scanner;
+#include "yaml-cpp/dll.h"
+#include "yaml-cpp/noncopyable.h"
 
-	class YAML_CPP_API Parser: private noncopyable
-	{
-	public:
-		Parser();
-		Parser(std::istream& in);
-		~Parser();
+namespace YAML {
+class EventHandler;
+class Node;
+class Scanner;
+struct Directives;
+struct Token;
 
-		operator bool() const;
+class YAML_CPP_API Parser : private noncopyable {
+ public:
+  Parser();
+  Parser(std::istream& in);
+  ~Parser();
 
-		void Load(std::istream& in);
-		bool HandleNextDocument(EventHandler& eventHandler);
+  operator bool() const;
 
-		void PrintTokens(std::ostream& out);
+  void Load(std::istream& in);
+  bool HandleNextDocument(EventHandler& eventHandler);
 
-	private:
-		void ParseDirectives();
-		void HandleDirective(const Token& token);
-		void HandleYamlDirective(const Token& token);
-		void HandleTagDirective(const Token& token);
-		
-	private:
-		std::auto_ptr<Scanner> m_pScanner;
-		std::auto_ptr<Directives> m_pDirectives;
-	};
+  void PrintTokens(std::ostream& out);
+
+ private:
+  void ParseDirectives();
+  void HandleDirective(const Token& token);
+  void HandleYamlDirective(const Token& token);
+  void HandleTagDirective(const Token& token);
+
+ private:
+  std::unique_ptr<Scanner> m_pScanner;
+  std::unique_ptr<Directives> m_pDirectives;
+};
 }
 
-#endif // PARSER_H_62B23520_7C8E_11DE_8A39_0800200C9A66
+#endif  // PARSER_H_62B23520_7C8E_11DE_8A39_0800200C9A66
