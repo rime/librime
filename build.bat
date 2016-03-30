@@ -66,8 +66,6 @@ set THIRDPARTY="%RIME_ROOT%"\thirdparty
 rem set CURL=%THIRDPARTY%\bin\curl.exe
 rem set DOWNLOAD="%CURL%" --remote-name-all
 
-set LEVELDB_REPOSITORY=lotem/leveldb
-
 if %build_boost% == 1 (
   cd %BOOST_ROOT%
   if not exist bjam.exe call bootstrap.bat
@@ -93,11 +91,7 @@ if %build_thirdparty% == 1 (
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
   echo building leveldb.
-  cd %THIRDPARTY%\src\
-  echo "checking out 'windows' branch from %LEVELDB_REPOSITORY%"
-  git clone -b windows git://github.com/%LEVELDB_REPOSITORY%.git leveldb-windows
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  cd leveldb-windows
+  cd %THIRDPARTY%\src\leveldb-windows
   echo BOOST_ROOT=%BOOST_ROOT%
   msbuild.exe leveldb.sln /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR

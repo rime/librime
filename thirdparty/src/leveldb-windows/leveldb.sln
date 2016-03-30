@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "leveldb", "leveldb.vcxproj", "{48A42A6F-3E92-4F04-862F-DC7BF1AE543C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{48A42A6F-3E92-4F04-862F-DC7BF1AE543C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{48A42A6F-3E92-4F04-862F-DC7BF1AE543C}.Debug|Win32.Build.0 = Debug|Win32
+		{48A42A6F-3E92-4F04-862F-DC7BF1AE543C}.Release|Win32.ActiveCfg = Release|Win32
+		{48A42A6F-3E92-4F04-862F-DC7BF1AE543C}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
