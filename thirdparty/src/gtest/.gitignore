@@ -1,5 +1,2 @@
-*.cmake
-CMakeCache.txt
-CTestTestFile.txt
-Makefile
-CMakeFiles
+# python
+*.pyc

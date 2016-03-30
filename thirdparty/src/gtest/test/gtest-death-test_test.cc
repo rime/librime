@@ -45,7 +45,6 @@ using testing::internal::AlwaysTrue;
 # else
 #  include <unistd.h>
 #  include <sys/wait.h>        // For waitpid.
-#  include <limits>            // For std::numeric_limits.
 # endif  // GTEST_OS_WINDOWS
 
 # include <limits.h>
@@ -327,12 +326,9 @@ TEST_F(TestForDeathTest, EmbeddedNulInMessage) {
 // Tests that death test macros expand to code which interacts well with switch
 // statements.
 TEST_F(TestForDeathTest, SwitchStatement) {
-// Microsoft compiler usually complains about switch statements without
-// case labels. We suppress that warning for this test.
-# ifdef _MSC_VER
-#  pragma warning(push)
-#  pragma warning(disable: 4065)
-# endif  // _MSC_VER
+  // Microsoft compiler usually complains about switch statements without
+  // case labels. We suppress that warning for this test.
+  GTEST_DISABLE_MSC_WARNINGS_PUSH_(4065)
 
   switch (0)
     default:
@@ -342,9 +338,7 @@ TEST_F(TestForDeathTest, SwitchStatement) {
     case 0:
       EXPECT_DEATH(_exit(1), "") << "exit in switch case";
 
-# ifdef _MSC_VER
-#  pragma warning(pop)
-# endif  // _MSC_VER
+  GTEST_DISABLE_MSC_WARNINGS_POP_()
 }
 
 // Tests that a static member function can be used in a "fast" style
@@ -516,8 +510,12 @@ TEST_F(TestForDeathTest, AcceptsAnythingConvertibleToRE) {
 
 # endif  // GTEST_HAS_GLOBAL_STRING
 
+# if !GTEST_USES_PCRE
+
   const ::std::string regex_std_str(regex_c_str);
   EXPECT_DEATH(GlobalFunction(), regex_std_str);
+
+# endif  // !GTEST_USES_PCRE
 }
 
 // Tests that a non-void function can be used in a death test.
@@ -700,13 +698,79 @@ TEST_F(TestForDeathTest, ExpectDebugDeathDoesNotAbort) {
 
 void AssertDebugDeathHelper(bool* aborted) {
   *aborted = true;
-  ASSERT_DEBUG_DEATH(return, "") << "This is expected to fail.";
+  GTEST_LOG_(INFO) << "Before ASSERT_DEBUG_DEATH";
+  ASSERT_DEBUG_DEATH(GTEST_LOG_(INFO) << "In ASSERT_DEBUG_DEATH"; return, "")
+      << "This is expected to fail.";
+  GTEST_LOG_(INFO) << "After ASSERT_DEBUG_DEATH";
   *aborted = false;
 }
 
 // Tests that ASSERT_DEBUG_DEATH in debug mode aborts the function on
 // failure.
 TEST_F(TestForDeathTest, AssertDebugDeathAborts) {
+  static bool aborted;
+  aborted = false;
+  EXPECT_FATAL_FAILURE(AssertDebugDeathHelper(&aborted), "");
+  EXPECT_TRUE(aborted);
+}
+
+TEST_F(TestForDeathTest, AssertDebugDeathAborts2) {
+  static bool aborted;
+  aborted = false;
+  EXPECT_FATAL_FAILURE(AssertDebugDeathHelper(&aborted), "");
+  EXPECT_TRUE(aborted);
+}
+
+TEST_F(TestForDeathTest, AssertDebugDeathAborts3) {
+  static bool aborted;
+  aborted = false;
+  EXPECT_FATAL_FAILURE(AssertDebugDeathHelper(&aborted), "");
+  EXPECT_TRUE(aborted);
+}
+
+TEST_F(TestForDeathTest, AssertDebugDeathAborts4) {
+  static bool aborted;
+  aborted = false;
+  EXPECT_FATAL_FAILURE(AssertDebugDeathHelper(&aborted), "");
+  EXPECT_TRUE(aborted);
+}
+
+TEST_F(TestForDeathTest, AssertDebugDeathAborts5) {
+  static bool aborted;
+  aborted = false;
+  EXPECT_FATAL_FAILURE(AssertDebugDeathHelper(&aborted), "");
+  EXPECT_TRUE(aborted);
+}
+
+TEST_F(TestForDeathTest, AssertDebugDeathAborts6) {
+  static bool aborted;
+  aborted = false;
+  EXPECT_FATAL_FAILURE(AssertDebugDeathHelper(&aborted), "");
+  EXPECT_TRUE(aborted);
+}
+
+TEST_F(TestForDeathTest, AssertDebugDeathAborts7) {
+  static bool aborted;
+  aborted = false;
+  EXPECT_FATAL_FAILURE(AssertDebugDeathHelper(&aborted), "");
+  EXPECT_TRUE(aborted);
+}
+
+TEST_F(TestForDeathTest, AssertDebugDeathAborts8) {
+  static bool aborted;
+  aborted = false;
+  EXPECT_FATAL_FAILURE(AssertDebugDeathHelper(&aborted), "");
+  EXPECT_TRUE(aborted);
+}
+
+TEST_F(TestForDeathTest, AssertDebugDeathAborts9) {
+  static bool aborted;
+  aborted = false;
+  EXPECT_FATAL_FAILURE(AssertDebugDeathHelper(&aborted), "");
+  EXPECT_TRUE(aborted);
+}
+
+TEST_F(TestForDeathTest, AssertDebugDeathAborts10) {
   static bool aborted;
   aborted = false;
   EXPECT_FATAL_FAILURE(AssertDebugDeathHelper(&aborted), "");
@@ -827,9 +891,9 @@ class MockDeathTestFactory : public DeathTestFactory {
   // Accessors.
   int AssumeRoleCalls() const { return assume_role_calls_; }
   int WaitCalls() const { return wait_calls_; }
-  int PassedCalls() const { return passed_args_.size(); }
+  size_t PassedCalls() const { return passed_args_.size(); }
   bool PassedArgument(int n) const { return passed_args_[n]; }
-  int AbortCalls() const { return abort_args_.size(); }
+  size_t AbortCalls() const { return abort_args_.size(); }
   DeathTest::AbortReason AbortArgument(int n) const {
     return abort_args_[n];
   }
@@ -990,8 +1054,8 @@ TEST_F(MacroLogicDeathTest, NothingHappens) {
   EXPECT_FALSE(flag);
   EXPECT_EQ(0, factory_->AssumeRoleCalls());
   EXPECT_EQ(0, factory_->WaitCalls());
-  EXPECT_EQ(0, factory_->PassedCalls());
-  EXPECT_EQ(0, factory_->AbortCalls());
+  EXPECT_EQ(0U, factory_->PassedCalls());
+  EXPECT_EQ(0U, factory_->AbortCalls());
   EXPECT_FALSE(factory_->TestDeleted());
 }
 
@@ -1005,9 +1069,9 @@ TEST_F(MacroLogicDeathTest, ChildExitsSuccessfully) {
   EXPECT_FALSE(flag);
   EXPECT_EQ(1, factory_->AssumeRoleCalls());
   EXPECT_EQ(1, factory_->WaitCalls());
-  ASSERT_EQ(1, factory_->PassedCalls());
+  ASSERT_EQ(1U, factory_->PassedCalls());
   EXPECT_FALSE(factory_->PassedArgument(0));
-  EXPECT_EQ(0, factory_->AbortCalls());
+  EXPECT_EQ(0U, factory_->AbortCalls());
   EXPECT_TRUE(factory_->TestDeleted());
 }
 
@@ -1020,9 +1084,9 @@ TEST_F(MacroLogicDeathTest, ChildExitsUnsuccessfully) {
   EXPECT_FALSE(flag);
   EXPECT_EQ(1, factory_->AssumeRoleCalls());
   EXPECT_EQ(1, factory_->WaitCalls());
-  ASSERT_EQ(1, factory_->PassedCalls());
+  ASSERT_EQ(1U, factory_->PassedCalls());
   EXPECT_TRUE(factory_->PassedArgument(0));
-  EXPECT_EQ(0, factory_->AbortCalls());
+  EXPECT_EQ(0U, factory_->AbortCalls());
   EXPECT_TRUE(factory_->TestDeleted());
 }
 
@@ -1036,8 +1100,8 @@ TEST_F(MacroLogicDeathTest, ChildPerformsReturn) {
   EXPECT_TRUE(flag);
   EXPECT_EQ(1, factory_->AssumeRoleCalls());
   EXPECT_EQ(0, factory_->WaitCalls());
-  EXPECT_EQ(0, factory_->PassedCalls());
-  EXPECT_EQ(1, factory_->AbortCalls());
+  EXPECT_EQ(0U, factory_->PassedCalls());
+  EXPECT_EQ(1U, factory_->AbortCalls());
   EXPECT_EQ(DeathTest::TEST_ENCOUNTERED_RETURN_STATEMENT,
             factory_->AbortArgument(0));
   EXPECT_TRUE(factory_->TestDeleted());
@@ -1052,13 +1116,13 @@ TEST_F(MacroLogicDeathTest, ChildDoesNotDie) {
   EXPECT_TRUE(flag);
   EXPECT_EQ(1, factory_->AssumeRoleCalls());
   EXPECT_EQ(0, factory_->WaitCalls());
-  EXPECT_EQ(0, factory_->PassedCalls());
+  EXPECT_EQ(0U, factory_->PassedCalls());
   // This time there are two calls to Abort: one since the test didn't
   // die, and another from the ReturnSentinel when it's destroyed.  The
   // sentinel normally isn't destroyed if a test doesn't die, since
   // _exit(2) is called in that case by ForkingDeathTest, but not by
   // our MockDeathTest.
-  ASSERT_EQ(2, factory_->AbortCalls());
+  ASSERT_EQ(2U, factory_->AbortCalls());
   EXPECT_EQ(DeathTest::TEST_DID_NOT_DIE,
             factory_->AbortArgument(0));
   EXPECT_EQ(DeathTest::TEST_ENCOUNTERED_RETURN_STATEMENT,
@@ -1123,16 +1187,15 @@ TEST(AutoHandleTest, AutoHandleWorks) {
 # if GTEST_OS_WINDOWS
 typedef unsigned __int64 BiggestParsable;
 typedef signed __int64 BiggestSignedParsable;
-const BiggestParsable kBiggestParsableMax = ULLONG_MAX;
-const BiggestSignedParsable kBiggestSignedParsableMax = LLONG_MAX;
 # else
 typedef unsigned long long BiggestParsable;
 typedef signed long long BiggestSignedParsable;
-const BiggestParsable kBiggestParsableMax =
-    ::std::numeric_limits<BiggestParsable>::max();
-const BiggestSignedParsable kBiggestSignedParsableMax =
-    ::std::numeric_limits<BiggestSignedParsable>::max();
 # endif  // GTEST_OS_WINDOWS
+
+// We cannot use std::numeric_limits<T>::max() as it clashes with the
+// max() macro defined by <windows.h>.
+const BiggestParsable kBiggestParsableMax = ULLONG_MAX;
+const BiggestSignedParsable kBiggestSignedParsableMax = LLONG_MAX;
 
 TEST(ParseNaturalNumberTest, RejectsInvalidFormat) {
   BiggestParsable result = 0;
@@ -1240,7 +1303,27 @@ TEST(ConditionalDeathMacrosDeathTest, ExpectsDeathWhenDeathTestsAvailable) {
   EXPECT_FATAL_FAILURE(ASSERT_DEATH_IF_SUPPORTED(;, ""), "");
 }
 
-#else
+TEST(InDeathTestChildDeathTest, ReportsDeathTestCorrectlyInFastStyle) {
+  testing::GTEST_FLAG(death_test_style) = "fast";
+  EXPECT_FALSE(InDeathTestChild());
+  EXPECT_DEATH({
+    fprintf(stderr, InDeathTestChild() ? "Inside" : "Outside");
+    fflush(stderr);
+    _exit(1);
+  }, "Inside");
+}
+
+TEST(InDeathTestChildDeathTest, ReportsDeathTestCorrectlyInThreadSafeStyle) {
+  testing::GTEST_FLAG(death_test_style) = "threadsafe";
+  EXPECT_FALSE(InDeathTestChild());
+  EXPECT_DEATH({
+    fprintf(stderr, InDeathTestChild() ? "Inside" : "Outside");
+    fflush(stderr);
+    _exit(1);
+  }, "Inside");
+}
+
+#else  // !GTEST_HAS_DEATH_TEST follows
 
 using testing::internal::CaptureStderr;
 using testing::internal::GetCapturedStderr;
@@ -1289,7 +1372,8 @@ TEST(ConditionalDeathMacrosTest, AssertDeatDoesNotReturnhIfUnsupported) {
   FuncWithAssert(&n);
   EXPECT_EQ(1, n);
 }
-#endif  // GTEST_HAS_DEATH_TEST
+
+#endif  // !GTEST_HAS_DEATH_TEST
 
 // Tests that the death test macros expand to code which may or may not
 // be followed by operator<<, and that in either case the complete text
@@ -1320,12 +1404,9 @@ TEST(ConditionalDeathMacrosSyntaxDeathTest, SingleStatement) {
 // Tests that conditional death test macros expand to code which interacts
 // well with switch statements.
 TEST(ConditionalDeathMacrosSyntaxDeathTest, SwitchStatement) {
-// Microsoft compiler usually complains about switch statements without
-// case labels. We suppress that warning for this test.
-#ifdef _MSC_VER
-# pragma warning(push)
-# pragma warning(disable: 4065)
-#endif  // _MSC_VER
+  // Microsoft compiler usually complains about switch statements without
+  // case labels. We suppress that warning for this test.
+  GTEST_DISABLE_MSC_WARNINGS_PUSH_(4065)
 
   switch (0)
     default:
@@ -1336,29 +1417,7 @@ TEST(ConditionalDeathMacrosSyntaxDeathTest, SwitchStatement) {
     case 0:
       EXPECT_DEATH_IF_SUPPORTED(_exit(1), "") << "exit in switch case";
 
-#ifdef _MSC_VER
-# pragma warning(pop)
-#endif  // _MSC_VER
-}
-
-TEST(InDeathTestChildDeathTest, ReportsDeathTestCorrectlyInFastStyle) {
-  testing::GTEST_FLAG(death_test_style) = "fast";
-  EXPECT_FALSE(InDeathTestChild());
-  EXPECT_DEATH({
-    fprintf(stderr, InDeathTestChild() ? "Inside" : "Outside");
-    fflush(stderr);
-    _exit(1);
-  }, "Inside");
-}
-
-TEST(InDeathTestChildDeathTest, ReportsDeathTestCorrectlyInThreadSafeStyle) {
-  testing::GTEST_FLAG(death_test_style) = "threadsafe";
-  EXPECT_FALSE(InDeathTestChild());
-  EXPECT_DEATH({
-    fprintf(stderr, InDeathTestChild() ? "Inside" : "Outside");
-    fflush(stderr);
-    _exit(1);
-  }, "Inside");
+  GTEST_DISABLE_MSC_WARNINGS_POP_()
 }
 
 // Tests that a test case whose name ends with "DeathTest" works fine

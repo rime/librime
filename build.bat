@@ -116,19 +116,21 @@ if %build_thirdparty% == 1 (
   copy /Y Release\libyaml-cppmt.lib %THIRDPARTY%\lib\
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
-  echo building gtest.
-  cd %THIRDPARTY%\src\gtest
-  if not exist build mkdir build
-  cd build
-  cmake ..
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  msbuild.exe gtest.sln /p:Configuration=Release
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  echo built. copying artifacts.
-  xcopy /S /I /Y ..\include\gtest %THIRDPARTY%\include\gtest\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y Release\gtest*.lib %THIRDPARTY%\lib\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  if %build_test% == ON (
+    echo building gtest.
+    cd %THIRDPARTY%\src\gtest
+    if not exist build mkdir build
+    cd build
+    cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
+    if %ERRORLEVEL% NEQ 0 goto ERROR
+    msbuild.exe gtest.sln /p:Configuration=Release
+    if %ERRORLEVEL% NEQ 0 goto ERROR
+    echo built. copying artifacts.
+    xcopy /S /I /Y ..\include\gtest %THIRDPARTY%\include\gtest\
+    if %ERRORLEVEL% NEQ 0 goto ERROR
+    copy /Y Release\gtest*.lib %THIRDPARTY%\lib\
+    if %ERRORLEVEL% NEQ 0 goto ERROR
+  )
 
   echo building marisa.
   cd %THIRDPARTY%\src\marisa-trie\vs2013
