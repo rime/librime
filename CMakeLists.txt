@@ -56,6 +56,9 @@ find_package(Glog REQUIRED)
 if(Glog_FOUND)
   include_directories(${Glog_INCLUDE_PATH})
 endif(Glog_FOUND)
+if(Glog_STATIC)
+  add_definitions(-DGOOGLE_GLOG_DLL_DECL=)
+endif(Glog_STATIC)
 
 add_definitions(-DRIME_ENABLE_LOGGING)
 
