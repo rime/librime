@@ -149,11 +149,8 @@ if %build_thirdparty% == 1 (
   cd %THIRDPARTY%\src\opencc
   if not exist build mkdir build
   cd build
-  cmake .. -DCMAKE_INSTALL_PREFIX="" -DBUILD_SHARED_LIBS=OFF
-  echo patching src\libopencc.vcxproj for static linking runtime.
-  sed -i "s/MultiThreadedDLL/MultiThreaded/" src\libopencc.vcxproj
-  sed -i "s/MultiThreadedDLL/MultiThreaded/" src\tools\opencc.vcxproj
-  sed -i "s/MultiThreadedDLL/MultiThreaded/" src\tools\opencc_dict.vcxproj
+  cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% -DCMAKE_INSTALL_PREFIX="" -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
+  if %ERRORLEVEL% NEQ 0 goto ERROR
   msbuild.exe opencc.sln /t:libopencc;opencc;opencc_dict;Dictionaries /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.

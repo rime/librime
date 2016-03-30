@@ -13,7 +13,7 @@ Open Chinese Convert (OpenCC, 開放中文轉換) is an opensource project for c
 * 嚴格審校一簡對多繁詞條，原則爲「能分則不合」。
 * 支持中國大陸、臺灣、香港異體字和地區習慣用詞轉換，如「裏」「裡」、「鼠標」「滑鼠」。
 * 詞庫和函數庫完全分離，可以自由修改、導入、擴展。
-* 支持C、C++、Python、PHP、Java、Ruby、Node.js。
+* 支持C、C++、Python、PHP、Java、Ruby、Node.js and Android。
 * 兼容Windows、Linux、Mac平臺。
 
 ### Links 相關鏈接
@@ -66,11 +66,18 @@ https://bintray.com/byvoid/opencc/OpenCC
 
 ### Build with CMake
 
-Linux/OSX (gcc 4.6 or clang 3.2 is required):
+Linux (gcc 4.6 is required):
 
 ```
 make
 sudo make install
+```
+
+Mac OS X (clang 3.2 is required):
+
+```
+make PREFIX=/usr/local
+sudo make PREFIX=/usr/local install
 ```
 
 Windows MSYS:
@@ -87,7 +94,15 @@ cmake .. -G "Visual Studio 12" -DCMAKE_INSTALL_PREFIX="" -DCMAKE_BUILD_TYPE=Rele
 make
 ```
 
-### Projects using Opencc 使用OpenCC的項目
+### iOS
+
+See https://github.com/gelosie/OpenCC/tree/master/iOS
+
+### Android
+
+See [android-opencc](https://github.com/qichuan/android-opencc)
+
+## Projects using Opencc 使用OpenCC的項目
 
 * [ibus-pinyin](http://code.google.com/p/ibus/)
 * [fcitx](http://code.google.com/p/fcitx/)
@@ -96,6 +111,8 @@ make
 * [ibus-libpinyin](https://github.com/libpinyin/ibus-libpinyin)
 * [BYVBlog](https://github.com/byvoid/byvblog)
 * [豆瓣同城微信](http://weixinqiao.com/douban-event/)
+* [alfred-chinese-converter](https://github.com/amowu/alfred-chinese-converter)
+* [GoldenDict](https://github.com/goldendict/goldendict)
 
 ## License 許可協議
 
