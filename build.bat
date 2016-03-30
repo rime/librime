@@ -133,8 +133,8 @@ if %build_thirdparty% == 1 (
   )
 
   echo building marisa.
-  cd %THIRDPARTY%\src\marisa-trie\vs2013
-  msbuild.exe vs2013.sln /p:Configuration=Release
+  cd %THIRDPARTY%\src\marisa-trie\vs2015
+  msbuild.exe vs2015.sln /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
   xcopy /S /I /Y ..\lib\marisa %THIRDPARTY%\include\marisa\
