@@ -172,12 +172,9 @@ bool Simplifier::Convert(const an<Candidate>& original,
                                             original->text().c_str()
                                             + original->text().length());
   bool success;
-  if (length == 1) {
-    vector<string> forms;
-    success = opencc_->ConvertSingleCharacter(original->text(), &forms);
-    if (!success || forms.size() == 0) {
-      return false;
-    }
+  vector<string> forms;
+  success = opencc_->ConvertSingleCharacter(original->text(), &forms);
+  if (success && forms.size() > 0) {
     for (size_t i = 0; i < forms.size(); ++i) {
       if (forms[i] == original->text()) {
         result->push_back(original);
@@ -195,7 +192,7 @@ bool Simplifier::Convert(const an<Candidate>& original,
                 tips));
       }
     }
-  } else {
+  } else if (length > 1) {
     string simplified;
     success = opencc_->ConvertText(original->text(), &simplified);
     if (!success || simplified == original->text()) {
@@ -211,6 +208,8 @@ bool Simplifier::Convert(const an<Candidate>& original,
             "simplified",
             simplified,
             tips));
+  } else {
+    return false;
   }
   return true;
 }
