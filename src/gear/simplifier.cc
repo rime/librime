@@ -40,7 +40,7 @@ class Opencc {
     dict_ = conversions.front()->GetDict();
   }
 
-  bool ConvertSingleCharacter(const string& text,
+  bool ConvertWord(const string& text,
                               vector<string>* forms) {
     opencc::Optional<const opencc::DictEntry*> item = dict_->Match(text);
     if (item.IsNull()) {
@@ -173,7 +173,7 @@ bool Simplifier::Convert(const an<Candidate>& original,
                                             + original->text().length());
   bool success;
   vector<string> forms;
-  success = opencc_->ConvertSingleCharacter(original->text(), &forms);
+  success = opencc_->ConvertWord(original->text(), &forms);
   if (success && forms.size() > 0) {
     for (size_t i = 0; i < forms.size(); ++i) {
       if (forms[i] == original->text()) {
