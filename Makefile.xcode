@@ -19,7 +19,7 @@ clean:
 	rm -rf xbuild > /dev/null 2>&1 || true
 	rm -rf xdebug > /dev/null 2>&1 || true
 	rm build.log > /dev/null 2>&1 || true
-	rm -f thirdparty/thirdparty/lib/* > /dev/null 2>&1 || true
+	rm -f thirdparty/lib/* > /dev/null 2>&1 || true
 	make -f Makefile.thirdparty clean-src
 
 thirdparty:
