@@ -8,7 +8,7 @@ all: glog leveldb marisa opencc yaml-cpp gtest
 
 # note: this won't clean output files under include/, lib/ and bin/.
 clean-src:
-	cd $(SRC_DIR)/glog; make distclean || true
+	cd $(SRC_DIR)/glog/build || true
 	rm -r $(SRC_DIR)/gtest/build || true
 	cd $(SRC_DIR)/leveldb; make clean || true
 	cd $(SRC_DIR)/kyotocabinet; make distclean || true
@@ -17,9 +17,14 @@ clean-src:
 	rm -r $(SRC_DIR)/yaml-cpp/build || true
 
 glog:
-	cd $(SRC_DIR)/glog; ./configure --disable-dependency-tracking --enable-static --disable-shared && make
-	cp -R $(SRC_DIR)/glog/src/glog thirdparty/include/
-	cp $(SRC_DIR)/glog/.libs/libglog.a thirdparty/lib/
+	cd $(SRC_DIR)/glog; mkdir -p build && \
+	cd build && cmake \
+	-DWITH_GFLAGS:BOOL=OFF \
+	.. && \
+	make
+	cp -R $(SRC_DIR)/glog/build/glog thirdparty/include/
+	cp $(SRC_DIR)/glog/src/glog/log_severity.h thirdparty/include/glog/
+	cp $(SRC_DIR)/glog/build/libglog.a thirdparty/lib/
 
 leveldb:
 	cd $(SRC_DIR)/leveldb; make
