@@ -93,7 +93,7 @@ We are grateful to the makers of the following open source libraries:
 Contributors
 ===
   - [佛振](https://github.com/lotem)
-  - [鄒旭](https://githbu.com/zouivex)
+  - [鄒旭](https://github.com/zouxu09)
   - [Weng Xuetian](http://csslayer.info)
   - [Chongyu Zhu](http://lembacon.com)
   - [Zhiwei Liu](https://github.com/liuzhiwei)
@@ -102,4 +102,4 @@ Contributors
   - [瑾昀](https://github.com/kunki)
   - [osfans](https://github.com/osfans)
   - [jakwings](https://github.com/jakwings)
-
+  - [Prcuvu](https://github.com/Prcuvu)
