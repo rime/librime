@@ -8,7 +8,7 @@ all: glog leveldb marisa opencc yaml-cpp gtest
 
 # note: this won't clean output files under include/, lib/ and bin/.
 clean-src:
-	cd $(SRC_DIR)/glog/build || true
+	rm -r $(SRC_DIR)/glog/build || true
 	rm -r $(SRC_DIR)/gtest/build || true
 	cd $(SRC_DIR)/leveldb; make clean || true
 	cd $(SRC_DIR)/kyotocabinet; make distclean || true
