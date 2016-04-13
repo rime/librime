@@ -5,7 +5,7 @@ Prerequisites
 ---
 librime is tested to work on Windows with the following build tools and libraries:
   - Visual Studio 2015
-  - [Boost](http://www.boost.org/)>=1.56
+  - [Boost](http://www.boost.org/)>=1.60
   - [cmake](http://www.cmake.org/)>=2.8
 
 You may need to update Boost when using a higher version of VS.
