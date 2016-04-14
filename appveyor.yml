@@ -4,10 +4,10 @@ pull_requests:
   do_not_increment_build_number: true
 
 version: '{branch} build {build}'
-image: Visual Studio 2013
+image: Visual Studio 2015
 
 environment:
-  BOOST_ROOT: C:\Libraries\boost
+  BOOST_ROOT: C:\Libraries\libboost
 
 cache:
   - thirdparty.cached -> appveyor.install.bat
@@ -15,7 +15,7 @@ cache:
   - thirdparty\data -> appveyor.install.bat
   - thirdparty\include -> appveyor.install.bat
   - thirdparty\lib -> appveyor.install.bat
-  - C:\Libraries\boost -> appveyor.install.bat
+  - C:\Libraries\libboost -> appveyor.install.bat
 
 init:
   - git --version
@@ -34,8 +34,7 @@ after_build:
 
 before_test:
   - copy /y build\lib\Release\rime.dll build\bin
-  - copy /y thirdparty\bin\*.dll build\bin
 
 test_script:
   - cd build\bin
-  - echo "congmingdeRime{space}shurufa" | Release\rime_api_console
+  - echo "congmingdeRime{space}shurufa" | Release\rime_api_console.exe

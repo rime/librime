@@ -5,7 +5,7 @@
 # make sure we're interpreted by some minimal autoconf
 AC_PREREQ(2.57)
 
-AC_INIT(glog, 0.3.2, opensource@google.com)
+AC_INIT(glog, 0.3.4, opensource@google.com)
 # The argument here is just something that should be in the current directory
 # (for sanity checking)
 AC_CONFIG_SRCDIR(README)
@@ -44,6 +44,13 @@ AC_CHECK_HEADERS(pwd.h)
 AC_CHECK_HEADERS(syslog.h)
 AC_CHECK_HEADERS(sys/time.h)
 AC_CHECK_HEADERS(glob.h)
+# For backtrace with gcc.
+AC_CHECK_HEADERS(unwind.h)
+
+AC_CHECK_HEADER(windows.h, ac_cv_have_windows_h=1, ac_cv_have_windows_h=0)
+if test x"$ac_cv_have_windows_h" = x"1"; then
+  MINGW_CFLAGS=-Isrc/windows
+fi
 
 AC_CHECK_SIZEOF(void *)
 
@@ -56,20 +63,31 @@ AC_CHECK_TYPE(__uint16, ac_cv_have___uint16=1, ac_cv_have___uint16=0)
 AC_CHECK_FUNC(sigaltstack,
               AC_DEFINE(HAVE_SIGALTSTACK, 1,
                         [Define if you have the `sigaltstack' function]))
+AC_CHECK_FUNC(sigaction,
+              AC_DEFINE(HAVE_SIGACTION, 1,
+                        [Define if you have the 'sigaction' function]))
 AC_CHECK_FUNC(dladdr,
               AC_DEFINE(HAVE_DLADDR, 1,
                         [Define if you have the `dladdr' function]))
 AC_CHECK_FUNC(fcntl,
               AC_DEFINE(HAVE_FCNTL, 1,
                         [Define if you have the `fcntl' function]))
+AC_CHECK_FUNC(pread,
+              AC_DEFINE(HAVE_PREAD, 1,
+                        [Define if you have the 'pread' function]))
+AC_CHECK_FUNC(pwrite,
+              AC_DEFINE(HAVE_PWRITE, 1,
+                        [Define if you have the 'pwrite' function]))
 
 AX_C___ATTRIBUTE__
 # We only care about these two attributes.
 if test x"$ac_cv___attribute__" = x"yes"; then
   ac_cv___attribute___noreturn="__attribute__ ((noreturn))"
+  ac_cv___attribute___noinline="__attribute__ ((noinline))"
   ac_cv___attribute___printf_4_5="__attribute__((__format__ (__printf__, 4, 5)))"
 else
   ac_cv___attribute___noreturn=
+  ac_cv___attribute___noinline=
   ac_cv___attribute___printf_4_5=
 fi
 
@@ -92,6 +110,14 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM(, [return __x86_64__ == 1 ? 0 : 1])],
                   [is_x86_64=yes], [is_x86_64=no])
 AM_CONDITIONAL(ENABLE_FRAME_POINTERS, test "$enable_frame_pointers" = yes)
 AM_CONDITIONAL(X86_64, test "$is_x86_64" = yes)
+
+AC_ARG_ENABLE(rtti,
+              AS_HELP_STRING([--disable-rtti],
+                             [Disable RTTI in glog]))
+AM_CONDITIONAL(DISABLE_RTTI, test x"$enable_rtti" = x"no")
+if test x"$enable_rtti" = x"no"; then
+  AC_DEFINE(DISABLE_RTTI, 1, [define if glog doesn't use RTTI])
+fi
 
 # Some of the code in this directory depends on pthreads
 ACX_PTHREAD
@@ -127,7 +153,8 @@ LIBS="$SAVE_LIBS"
 #               once the m4 macro of Google Mocking becomes ready.
 # Check if there is Google Test library installed.
 AC_CHECK_PROG(GTEST_CONFIG, gtest-config, "yes")
-if test x"$GTEST_CONFIG" = "xyes"; then
+AC_CHECK_LIB(gtest, main, have_gtest_lib="yes")
+if test x"$GTEST_CONFIG" = "xyes" -a x"$have_gtest_lib" = "xyes"; then
   GTEST_CFLAGS=`gtest-config --cppflags --cxxflags`
   GTEST_LIBS=`gtest-config --ldflags --libs`
   AC_DEFINE(HAVE_LIB_GTEST, 1, [define if you have google gtest library])
@@ -185,6 +212,7 @@ AC_SUBST(ac_google_end_namespace)
 AC_SUBST(ac_google_namespace)
 AC_SUBST(ac_cv_cxx_using_operator)
 AC_SUBST(ac_cv___attribute___noreturn)
+AC_SUBST(ac_cv___attribute___noinline)
 AC_SUBST(ac_cv___attribute___printf_4_5)
 AC_SUBST(ac_cv_have___builtin_expect)
 AC_SUBST(ac_cv_have_stdint_h)
@@ -198,6 +226,7 @@ AC_SUBST(ac_cv_have_libgflags)
 AC_SUBST(GFLAGS_CFLAGS)
 AC_SUBST(GTEST_CFLAGS)
 AC_SUBST(GMOCK_CFLAGS)
+AC_SUBST(MINGW_CFLAGS)
 AC_SUBST(GFLAGS_LIBS)
 AC_SUBST(GTEST_LIBS)
 AC_SUBST(GMOCK_LIBS)

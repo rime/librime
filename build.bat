@@ -19,6 +19,11 @@ echo.
 echo BOOST_ROOT=%BOOST_ROOT%
 echo.
 
+if defined CMAKE_INSTALL_PATH set PATH=%PATH%;%CMAKE_INSTALL_PATH%
+
+set CMAKE_GENERATOR="Visual Studio 14 2015"
+set CMAKE_TOOLSET="v140_xp"
+
 set build=build
 set build_boost=0
 set build_thirdparty=0
@@ -61,37 +66,33 @@ set THIRDPARTY="%RIME_ROOT%"\thirdparty
 rem set CURL=%THIRDPARTY%\bin\curl.exe
 rem set DOWNLOAD="%CURL%" --remote-name-all
 
-set LEVELDB_REPOSITORY=lotem/leveldb
-
 if %build_boost% == 1 (
   cd %BOOST_ROOT%
   if not exist bjam.exe call bootstrap.bat
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  bjam toolset=msvc-12.0 variant=release link=static threading=multi runtime-link=static stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread --with-locale
+  bjam toolset=msvc-14.0 variant=release link=static threading=multi runtime-link=static stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread --with-locale
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  rem bjam toolset=msvc-12.0 variant=release link=static threading=multi runtime-link=static address-model=64 --stagedir=stage_x64 stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
+  rem bjam toolset=msvc-14.0 variant=release link=static threading=multi runtime-link=static address-model=64 --stagedir=stage_x64 stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
   rem if %ERRORLEVEL% NEQ 0 goto ERROR
 )
 
 if %build_thirdparty% == 1 (
   echo building glog.
   cd %THIRDPARTY%\src\glog
-  msbuild.exe google-glog-vc12.sln /p:Configuration=Release
+  if not exist build mkdir build
+  cd build
+  cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% -DWITH_GFLAGS=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+  msbuild.exe google-glog.sln /t:glog /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
-  xcopy /S /I /Y src\windows\glog %THIRDPARTY%\include\glog\
+  xcopy /S /I /Y ..\src\windows\glog %THIRDPARTY%\include\glog\
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y Release\libglog.lib %THIRDPARTY%\lib\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y Release\libglog.dll %THIRDPARTY%\bin\
+  copy /Y Release\glog.lib %THIRDPARTY%\lib\
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
   echo building leveldb.
-  cd %THIRDPARTY%\src\
-  echo "checking out 'windows' branch from %LEVELDB_REPOSITORY%"
-  git clone -b windows git://github.com/%LEVELDB_REPOSITORY%.git leveldb-windows
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  cd leveldb-windows
+  cd %THIRDPARTY%\src\leveldb-windows
   echo BOOST_ROOT=%BOOST_ROOT%
   msbuild.exe leveldb.sln /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
@@ -105,9 +106,9 @@ if %build_thirdparty% == 1 (
   cd %THIRDPARTY%\src\yaml-cpp
   if not exist build mkdir build
   cd build
-  cmake -DMSVC_SHARED_RT=OFF ..
+  cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% -DMSVC_SHARED_RT=OFF -DYAML_CPP_BUILD_TOOLS=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  msbuild.exe YAML_CPP.sln /p:Configuration=Release
+  msbuild.exe YAML_CPP.sln /t:yaml-cpp /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
   xcopy /S /I /Y ..\include\yaml-cpp %THIRDPARTY%\include\yaml-cpp\
@@ -119,7 +120,7 @@ if %build_thirdparty% == 1 (
   cd %THIRDPARTY%\src\gtest
   if not exist build mkdir build
   cd build
-  cmake ..
+  cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
   if %ERRORLEVEL% NEQ 0 goto ERROR
   msbuild.exe gtest.sln /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
@@ -130,8 +131,8 @@ if %build_thirdparty% == 1 (
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
   echo building marisa.
-  cd %THIRDPARTY%\src\marisa-trie\vs2013
-  msbuild.exe vs2013.sln /p:Configuration=Release
+  cd %THIRDPARTY%\src\marisa-trie\vs2015
+  msbuild.exe vs2015.sln /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
   xcopy /S /I /Y ..\lib\marisa %THIRDPARTY%\include\marisa\
@@ -146,11 +147,8 @@ if %build_thirdparty% == 1 (
   cd %THIRDPARTY%\src\opencc
   if not exist build mkdir build
   cd build
-  cmake .. -DCMAKE_INSTALL_PREFIX="" -DBUILD_SHARED_LIBS=OFF
-  echo patching src\libopencc.vcxproj for static linking runtime.
-  sed -i "s/MultiThreadedDLL/MultiThreaded/" src\libopencc.vcxproj
-  sed -i "s/MultiThreadedDLL/MultiThreaded/" src\tools\opencc.vcxproj
-  sed -i "s/MultiThreadedDLL/MultiThreaded/" src\tools\opencc_dict.vcxproj
+  cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% -DCMAKE_INSTALL_PREFIX="" -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
+  if %ERRORLEVEL% NEQ 0 goto ERROR
   msbuild.exe opencc.sln /t:libopencc;opencc;opencc_dict;Dictionaries /p:Configuration=Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
@@ -171,18 +169,14 @@ if %build_thirdparty% == 1 (
 
 if %build_librime% == 0 goto EXIT
 
-if defined CMAKE_INSTALL_PATH set PATH=%PATH%;%CMAKE_INSTALL_PATH%
-
-set CMAKE_GENERATOR="Visual Studio 12"
-
 set BUILD_DIR=%RIME_ROOT%\%build%
 if not exist %BUILD_DIR% mkdir %BUILD_DIR%
 
-set RIME_CMAKE_FLAGS=-DBUILD_STATIC=ON -DBUILD_SHARED_LIBS=%build_shared% -DBUILD_TEST=%build_test% -DENABLE_LOGGING=%enable_logging% -DBOOST_USE_CXX11=ON
+set RIME_CMAKE_FLAGS=-DBUILD_STATIC=ON -DBUILD_SHARED_LIBS=%build_shared% -DBUILD_TEST=%build_test% -DENABLE_LOGGING=%enable_logging% -DBOOST_USE_CXX11=ON -DCMAKE_CONFIGURATION_TYPES="Release"
 
 cd %BUILD_DIR%
-echo cmake -G %CMAKE_GENERATOR% %RIME_CMAKE_FLAGS% %RIME_ROOT%
-call cmake -G %CMAKE_GENERATOR% %RIME_CMAKE_FLAGS% %RIME_ROOT%
+echo cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% %RIME_CMAKE_FLAGS% %RIME_ROOT%
+call cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% %RIME_CMAKE_FLAGS% %RIME_ROOT%
 if %ERRORLEVEL% NEQ 0 goto ERROR
 
 echo.
