@@ -30,6 +30,7 @@ build_script:
   - .\build.bat test
 
 after_build:
+  - 7z a rime.zip %CD%\build\bin %CD%\build\lib
   - dir build /s
 
 before_test:
@@ -38,3 +39,7 @@ before_test:
 test_script:
   - cd build\bin
   - echo "congmingdeRime{space}shurufa" | Release\rime_api_console.exe
+
+artifacts:
+  - path: rime.zip
+    name: Binaries
