@@ -3,7 +3,7 @@ clone_depth: 1
 pull_requests:
   do_not_increment_build_number: true
 
-version: '{branch} static build {build}'
+version: '{branch} build {build}'
 image: Visual Studio 2015
 
 environment:
@@ -30,11 +30,11 @@ build_script:
   - .\build.bat static
 
 after_build:
-  - 7z a rime.zip %CD%\build\bin %CD%\build\lib
-  - dir build /s
+  - 7z a rime.zip %CD%\build-static\bin %CD%\build-static\lib
+  - dir build-static /s
 
 test_script:
-  - cd build\bin
+  - cd build-static\bin
   - echo "congmingdeRime{space}shurufa" | Release\rime_api_console.exe
 
 artifacts:
