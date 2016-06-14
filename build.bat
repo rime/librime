@@ -67,7 +67,7 @@ rem set CURL=%THIRDPARTY%\bin\curl.exe
 rem set DOWNLOAD="%CURL%" --remote-name-all
 
 if %build_boost% == 1 (
-  cd %BOOST_ROOT%
+  cd /d %BOOST_ROOT%
   if not exist bjam.exe call bootstrap.bat
   if %ERRORLEVEL% NEQ 0 goto ERROR
   bjam toolset=msvc-14.0 variant=release link=static threading=multi runtime-link=static stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread --with-locale
@@ -77,6 +77,8 @@ if %build_boost% == 1 (
 )
 
 if %build_thirdparty% == 1 (
+  cd /d %THIRDPARTY%
+
   echo building glog.
   cd %THIRDPARTY%\src\glog
   if not exist build mkdir build
@@ -174,7 +176,7 @@ if not exist %BUILD_DIR% mkdir %BUILD_DIR%
 
 set RIME_CMAKE_FLAGS=-DBUILD_STATIC=ON -DBUILD_SHARED_LIBS=%build_shared% -DBUILD_TEST=%build_test% -DENABLE_LOGGING=%enable_logging% -DBOOST_USE_CXX11=ON -DCMAKE_CONFIGURATION_TYPES="Release"
 
-cd %BUILD_DIR%
+cd /d %BUILD_DIR%
 echo cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% %RIME_CMAKE_FLAGS% %RIME_ROOT%
 call cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% %RIME_CMAKE_FLAGS% %RIME_ROOT%
 if %ERRORLEVEL% NEQ 0 goto ERROR
@@ -198,6 +200,6 @@ echo.
 
 :EXIT
 set PATH=%OLD_PATH%
-cd %BACK%
+cd /d %BACK%
 rem pause
 exit /b %EXITCODE%
