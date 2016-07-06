@@ -411,6 +411,8 @@ RIME_API Bool RimeCandidateListNext(RimeCandidateListIterator* iterator) {
     return False;
   ++iterator->index;
   if (auto cand = menu->GetCandidateAt((size_t)iterator->index)) {
+    delete[] iterator->candidate.text;
+    delete[] iterator->candidate.comment;
     rime_candidate_copy(&iterator->candidate, cand);
     return True;
   }
