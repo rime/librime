@@ -11,7 +11,6 @@ clean-src:
 	rm -r $(SRC_DIR)/glog/build || true
 	rm -r $(SRC_DIR)/gtest/build || true
 	cd $(SRC_DIR)/leveldb; make clean || true
-	cd $(SRC_DIR)/kyotocabinet; make distclean || true
 	cd $(SRC_DIR)/marisa-trie; make distclean || true
 	rm -r $(SRC_DIR)/opencc/build || true
 	rm -r $(SRC_DIR)/yaml-cpp/build || true
