@@ -42,6 +42,7 @@ class UniqueTranslation : public Translation {
  public:
   UniqueTranslation(an<Candidate> candidate)
       : candidate_(candidate) {
+    set_exhausted(!candidate);
   }
 
   bool Next();

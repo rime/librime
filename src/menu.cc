@@ -29,7 +29,9 @@ void Menu::AddFilter(Filter* filter) {
 size_t Menu::Prepare(size_t requested) {
   DLOG(INFO) << "preparing " << requested << " candidates.";
   while (candidates_.size() < requested && !result_->exhausted()) {
-    candidates_.push_back(result_->Peek());
+    if (auto cand = result_->Peek()) {
+      candidates_.push_back(cand);
+    }
     result_->Next();
   }
   return candidates_.size();

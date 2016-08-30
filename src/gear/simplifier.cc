@@ -143,7 +143,7 @@ class SimplifiedTranslation : public PrefetchTranslation {
 bool SimplifiedTranslation::Replenish() {
   auto next = translation_->Peek();
   translation_->Next();
-  if (!simplifier_->Convert(next, &cache_)) {
+  if (next && !simplifier_->Convert(next, &cache_)) {
     cache_.push_back(next);
   }
   return !cache_.empty();
