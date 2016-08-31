@@ -20,9 +20,8 @@ class EchoTranslation : public UniqueTranslation {
   }
   virtual int Compare(an<Translation> other,
                       const CandidateList& candidates) {
-    if (!candidates.empty() || (other && other->Peek())) {
+    if (!candidates.empty() || (other && !other->exhausted())) {
       set_exhausted(true);
-      return 1;
     }
     return UniqueTranslation::Compare(other, candidates);
   }
@@ -33,7 +32,7 @@ EchoTranslator::EchoTranslator(const Ticket& ticket)
 }
 
 an<Translation> EchoTranslator::Query(const string& input,
-                                              const Segment& segment) {
+                                      const Segment& segment) {
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
   auto candidate = New<SimpleCandidate>("raw",

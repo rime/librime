@@ -127,7 +127,7 @@ bool MergedTranslation::Next() {
     translations_.erase(translations_.begin() + elected_);
   }
   Elect();
-  return true;
+  return !exhausted();
 }
 
 an<Candidate> MergedTranslation::Peek() {
@@ -144,11 +144,15 @@ void MergedTranslation::Elect() {
   }
   size_t k = 0;
   for (; k < translations_.size(); ++k) {
-    an<Translation> next;
-    if (k + 1 < translations_.size()) {
-      next = translations_[k + 1];
-    }
-    if (translations_[k]->Compare(next, previous_candidates_) <= 0) {
+    const auto& current = translations_[k];
+    const auto& next = k + 1 < translations_.size() ?
+                               translations_[k + 1] : nullptr;
+    if (current->Compare(next, previous_candidates_) <= 0) {
+      if (current->exhausted()) {
+        translations_.erase(translations_.begin() + k);
+        k = 0;
+        continue;
+      }
       break;
     }
   }
