@@ -213,7 +213,7 @@ bool Speller::AutoSelectPreviousMatch(Context* ctx,
 bool Speller::AutoClear(Context* ctx) {
   if (!ctx->HasMenu() && auto_clear_ > kClearNone &&
       (auto_clear_ != kClearMaxLength || max_code_length_ == 0 ||
-       ctx->input().length() >= max_code_length_)) {
+       ctx->input().length() >= (size_t)max_code_length_)) {
     ctx->Clear();
     return true;
   }

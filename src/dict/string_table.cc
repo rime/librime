@@ -59,7 +59,7 @@ string StringTable::GetString(StringId string_id) {
   try {
     trie_.reverse_lookup(agent);
   }
-  catch (const marisa::Exception& ex) {
+  catch (const marisa::Exception& /*ex*/) {
     LOG(ERROR) << "invalid id for string table: " << string_id;
     return string();
   }

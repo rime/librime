@@ -73,17 +73,17 @@ an<Translation> CodepointTranslator::Query(const string& input,
     if (charset_.compare("") == 0 || charset_.compare("utf") == 0
         || charset_.compare("codepoint") == 0) {
       uint32_t i = 0;
-      sscanf(code.c_str(), "%lx", &i);
+      sscanf(code.c_str(), "%x", &i);
       if (i == 0) return nullptr;
       s = boost::locale::conv::utf_to_utf<char>(&i, &i+1);
     } else if (charset_.compare("dec") == 0 || charset_.compare("xml") == 0) {
       uint32_t i = 0;
-      sscanf(code.c_str(), "%lu", &i);
+      sscanf(code.c_str(), "%u", &i);
       if (i == 0) return nullptr;
       s = boost::locale::conv::utf_to_utf<char>(&i, &i+1);
     } else if (charset_.compare("quwei") == 0) {
       uint16_t i = 0;
-      sscanf(code.c_str(), "%u", &i);
+      sscanf(code.c_str(), "%hu", &i);
       if (i < 1601 || i > 9494) return nullptr;
       i = (i/100 + 0xa0)<<8 | (i%100 + 0xa0);
       i = ntohs(i);
@@ -91,7 +91,7 @@ an<Translation> CodepointTranslator::Query(const string& input,
     } else {
       uint32_t i = 0;
       if (n < 8) code.append(8 - n, '0');
-      sscanf(code.c_str(), "%lx", &i);
+      sscanf(code.c_str(), "%x", &i);
       if (i == 0) return nullptr;
       i = ntohl(i);
       const char* c = (const char*)&i;
