@@ -834,7 +834,7 @@ RIME_API Bool RimeConfigSetBool(RimeConfig* config, const char* key, Bool value)
   Config* c = reinterpret_cast<Config*>(config->ptr);
   if (!c)
     return False;
-  return c->SetBool(key, value) ? True : False;
+  return c->SetBool(key, value != False);
 }
 
 RIME_API Bool RimeConfigSetInt(RimeConfig* config, const char* key, int value) {
