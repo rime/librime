@@ -42,6 +42,22 @@ void CodepointTranslator::Initialize() {
   config->GetString(name_space_ + "/charset", &charset_);
 }
 
+string conv_to_utf(const string& input, const string& charset) {
+    string s = "";
+    uint32_t codepoint = 0;
+    string code = input;
+    size_t n = code.length();
+    size_t padding = 8 - (n % 8);
+    if (padding < 8) code.append(padding, '0');
+    sscanf(code.c_str(), "%x", &codepoint);
+    if (codepoint > 0) {
+      codepoint = ntohl(codepoint);
+      const char* c = (const char*)&codepoint;
+      s += boost::locale::conv::to_utf<char>(c, c + 4, charset);
+    }
+    return s;
+}
+
 an<Translation> CodepointTranslator::Query(const string& input,
                                       const Segment& segment) {
   if (!segment.HasTag(tag_))
@@ -66,47 +82,55 @@ an<Translation> CodepointTranslator::Query(const string& input,
     const_cast<Segment*>(&segment)->prompt = tips_;
   }
 
-  int n = code.length();
-  if (n == 0) return nullptr;
-  string s = "";
-  try {
-    if (charset_.compare("") == 0 || charset_.compare("utf") == 0
-        || charset_.compare("codepoint") == 0) {
+  if (code.length() == 0) return nullptr;
+  map<string /*encoding*/, function<string /*converted text*/ (const string& query)>> converters;
+  converters["utf"] = [](string code) {
+      string s = "";
       uint32_t i = 0;
       sscanf(code.c_str(), "%x", &i);
-      if (i == 0) return nullptr;
-      s = boost::locale::conv::utf_to_utf<char>(&i, &i+1);
-    } else if (charset_.compare("dec") == 0 || charset_.compare("xml") == 0) {
+      if (i > 0) {
+        s = boost::locale::conv::utf_to_utf<char>(&i, &i+1);
+      }
+      return s;
+  };
+  converters["xml"] = [](string code) {
+      string s = "";
       uint32_t i = 0;
       sscanf(code.c_str(), "%u", &i);
-      if (i == 0) return nullptr;
-      s = boost::locale::conv::utf_to_utf<char>(&i, &i+1);
-    } else if (charset_.compare("quwei") == 0) {
+      if (i > 0) {
+        s = boost::locale::conv::utf_to_utf<char>(&i, &i+1);
+      }
+      return s;
+  };
+  converters["quwei"] = [](string code) {
+      string s = "";
       uint16_t i = 0;
       sscanf(code.c_str(), "%hu", &i);
-      if (i < 1601 || i > 9494) return nullptr;
-      i = (i/100 + 0xa0)<<8 | (i%100 + 0xa0);
-      i = ntohs(i);
-      s = boost::locale::conv::to_utf<char>((const char*)&i, "gb2312");
+      if (i >= 1601 && i <= 9494) {
+        i = (i/100 + 0xa0)<<8 | (i%100 + 0xa0);
+        i = ntohs(i);
+        s = boost::locale::conv::to_utf<char>((const char*)&i, "gb2312");
+      }
+      return s;
+  };
+  converters[""] = converters["codepoint"] = converters["utf"];  // aliases
+  converters["dec"] = converters["xml"];
+  try {
+    string converted = "";
+    if (converters.find(charset_) != converters.end()) {
+      converted = converters[charset_](code);
     } else {
-      uint32_t i = 0;
-      if (n < 8) code.append(8 - n, '0');
-      sscanf(code.c_str(), "%x", &i);
-      if (i == 0) return nullptr;
-      i = ntohl(i);
-      const char* c = (const char*)&i;
-      s = boost::locale::conv::to_utf<char>(c, c + 4, charset_);
+      converted = conv_to_utf(code, charset_);
     }
-  }
-  catch (...) {
-    LOG(ERROR) << "Error conv charset.";
+    if (converted == "") return nullptr;
+    auto candidate = New<SimpleCandidate>("raw",
+                                          segment.start,
+                                          segment.end,
+                                          converted);
+    return New<UniqueTranslation>(candidate);
+  } catch (...) {
     return nullptr;
   }
-  auto candidate = New<SimpleCandidate>("raw",
-                                        segment.start,
-                                        segment.end,
-                                        s);
-  return New<UniqueTranslation>(candidate);
 }
 
 }  // namespace rime
