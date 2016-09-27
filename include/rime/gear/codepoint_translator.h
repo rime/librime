@@ -29,6 +29,7 @@ class CodepointTranslator : public Translator {
   string suffix_;
   string tips_;
   string charset_;
+  map<string /*encoding*/, function<string /*converted text*/ (const string& code)>> converters_;
 };
 
 }  // namespace rime
