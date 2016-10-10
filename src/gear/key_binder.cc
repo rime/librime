@@ -69,6 +69,18 @@ static void toggle_option(Engine* engine, const string& option) {
   Context* ctx = engine->context();
   ctx->set_option(option, !ctx->get_option(option));
 }
+static void set_option(Engine* engine, const string& option) {
+  if (!engine)
+    return;
+  Context* ctx = engine->context();
+  ctx->set_option(option, 1);
+}
+static void unset_option(Engine* engine, const string& option) {
+  if (!engine)
+    return;
+  Context* ctx = engine->context();
+  ctx->set_option(option, 0);
+}
 
 static void select_schema(Engine* engine, const string& schema) {
   if (!engine)
@@ -113,6 +125,12 @@ void KeyBindings::LoadBindings(const an<ConfigList>& bindings) {
     }
     else if (auto option = map->GetValue("toggle")) {
       binding.action = std::bind(&toggle_option, _1, option->str());
+    }
+    else if (auto option = map->GetValue("set")) {
+      binding.action = std::bind(&set_option, _1, option->str());
+    }
+    else if (auto option = map->GetValue("unset")) {
+      binding.action = std::bind(&unset_option, _1, option->str());
     }
     else if (auto schema = map->GetValue("select")) {
       binding.action = std::bind(&select_schema, _1, schema->str());
