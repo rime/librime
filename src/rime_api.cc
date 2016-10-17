@@ -288,9 +288,9 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
         }
         Config* config = schema->config();
         an<ConfigList>  select_labels = config->GetList("menu/alternative_select_labels");
-        if (select_labels && page_size <= select_labels->size()) {
+        if (select_labels && (size_t)page_size <= select_labels->size()) {
           context->select_labels = new char*[page_size];
-          for (size_t i = 0; i < page_size; ++i) {
+          for (size_t i = 0; i < (size_t)page_size; ++i) {
             an<ConfigValue> value = select_labels->GetValueAt(i);
             string label = value->str();
             context->select_labels[i] = new char[label.length() + 1];
@@ -834,7 +834,7 @@ RIME_API Bool RimeConfigSetBool(RimeConfig* config, const char* key, Bool value)
   Config* c = reinterpret_cast<Config*>(config->ptr);
   if (!c)
     return False;
-  return Bool(c->SetBool(key, value));
+  return c->SetBool(key, value != False);
 }
 
 RIME_API Bool RimeConfigSetInt(RimeConfig* config, const char* key, int value) {

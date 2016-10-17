@@ -83,7 +83,7 @@ bool CharsetFilter::FilterText(const string& text, const string& charset) {
   try {
     boost::locale::conv::from_utf(text, charset, boost::locale::conv::method_type::stop);
   }
-  catch(boost::locale::conv::conversion_error const&  ex) {
+  catch(boost::locale::conv::conversion_error const& /*ex*/) {
     return false;
   }
   catch(...) {
