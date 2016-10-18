@@ -126,10 +126,10 @@ void KeyBindings::LoadBindings(const an<ConfigList>& bindings) {
     else if (auto option = map->GetValue("toggle")) {
       binding.action = std::bind(&toggle_option, _1, option->str());
     }
-    else if (auto option = map->GetValue("set")) {
+    else if (auto option = map->GetValue("set_option")) {
       binding.action = std::bind(&set_option, _1, option->str());
     }
-    else if (auto option = map->GetValue("unset")) {
+    else if (auto option = map->GetValue("unset_option")) {
       binding.action = std::bind(&unset_option, _1, option->str());
     }
     else if (auto schema = map->GetValue("select")) {
