@@ -1,5 +1,8 @@
 # Open Chinese Convert 開放中文轉換
 
+[ ![Download](https://api.bintray.com/packages/byvoid/opencc/OpenCC/images/download.svg) ](https://bintray.com/byvoid/opencc/OpenCC/_latestVersion)
+[![Build Status](https://travis-ci.org/BYVoid/OpenCC.svg?branch=master)](https://travis-ci.org/BYVoid/OpenCC)
+
 ## Introduction 介紹
 
 Open Chinese Convert (OpenCC, 開放中文轉換) is an opensource project for conversion between Traditional Chinese and Simplified Chinese, supporting character-level conversion, phrase-level conversion, variant conversion and regional idioms among Mainland China, Taiwan and Hong kong.
@@ -28,7 +31,7 @@ Open Chinese Convert (OpenCC, 開放中文轉換) is an opensource project for c
 * [Ubuntu](https://launchpad.net/ubuntu/+source/opencc)
 * [Fedora](https://admin.fedoraproject.org/pkgdb/package/opencc/)
 * [Arch Linux](https://www.archlinux.org/packages/community/x86_64/opencc/)
-* [Mac OS](https://github.com/mxcl/homebrew/blob/master/Library/Formula/opencc.rb)
+* [Mac OS](https://github.com/Homebrew/homebrew-core/blob/master/Formula/opencc.rb)
 * [Node.js](https://npmjs.org/package/opencc)
 
 ## Download 下載
@@ -62,8 +65,6 @@ https://bintray.com/byvoid/opencc/OpenCC
 
 ## Build 編譯
 
-[![Build Status](https://travis-ci.org/BYVoid/OpenCC.svg?branch=master)](https://travis-ci.org/BYVoid/OpenCC)
-
 ### Build with CMake
 
 Linux (gcc 4.6 is required):
@@ -83,15 +84,15 @@ sudo make PREFIX=/usr/local install
 Windows MSYS:
 
 ```
-cmake .. -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX="" -DCMAKE_BUILD_TYPE=Release
-make
+cmake -H. -Bbuild -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX="path/to/install"
+cmake --build build --config Release --target install
 ```
 
 Windows Visual Studio (2013 or higher required):
 
 ```
-cmake .. -G "Visual Studio 12" -DCMAKE_INSTALL_PREFIX="" -DCMAKE_BUILD_TYPE=Release
-make
+cmake -H. -Bbuild -G"Visual Studio 12" -DCMAKE_INSTALL_PREFIX="path/to/install"
+cmake --build build --config Release --target install
 ```
 
 ### iOS
@@ -126,6 +127,10 @@ Apache License 2.0
 
 All these libraries are statically linked.
 
+## Change History 版本歷史
+
+https://github.com/BYVoid/OpenCC/blob/master/NEWS.md
+
 ## Contributors 貢獻者
 
 * [BYVoid](http://www.byvoid.com/)
@@ -151,3 +156,15 @@ All these libraries are statically linked.
 * [吕旭东](https://github.com/lvxudong)
 * [Weng Xuetian](https://github.com/wengxt)
 * [Ma Tao](https://github.com/iwater)
+* [Heinz Wiesinger](https://github.com/pprkut)
+* [J.W](https://github.com/jakwings)
+* [Amo Wu](https://github.com/amowu)
+* [Mark Tsai](https://github.com/mxgit1090)
+* [Zhe Wang](https://github.com/0x1997)
+* [sgqy](https://github.com/sgqy)
+* [Qichuan (Sean) ZHANG](https://github.com/qichuan)
+* [Flandre Scarlet](https://github.com/XadillaX)
+* [宋辰文](https://github.com/songchenwen)
+* [iwater](https://github.com/iwater)
+
+Please update this list you have contributed OpenCC.

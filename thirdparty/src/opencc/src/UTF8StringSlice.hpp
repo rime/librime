@@ -40,10 +40,12 @@ inline size_t FNVHash<4>(const char* text, const size_t byteLength) {
   return FNVHash(text, byteLength, 16777619UL, 2166136261UL);
 }
 
+#if SIZE_MAX == 0xffffffffffffffff
 template <>
 inline size_t FNVHash<8>(const char* text, const size_t byteLength) {
   return FNVHash(text, byteLength, 1099511628211UL, 14695981039346656037UL);
 }
+#endif
 
 } // namespace internal
 
@@ -52,8 +54,8 @@ public:
   typedef LENGTH_TYPE LengthType;
 
   UTF8StringSliceBase(const char* _str)
-      : str(_str), utf8Length(UTF8Util::Length(_str)),
-        byteLength(strlen(_str)) {}
+      : str(_str), utf8Length(static_cast<LengthType>(UTF8Util::Length(_str))),
+        byteLength(static_cast<LengthType>(strlen(_str))) {}
 
   UTF8StringSliceBase(const char* _str, const LengthType _utf8Length)
       : str(_str), utf8Length(_utf8Length) {
@@ -70,36 +72,36 @@ public:
 
   LengthType ByteLength() const { return byteLength; }
 
-  UTF8StringSliceBase Left(const LengthType utf8Length) const {
-    if (utf8Length == UTF8Length()) {
+  UTF8StringSliceBase Left(const LengthType numberOfCharacters) const {
+    if (numberOfCharacters == UTF8Length()) {
       return *this;
     } else {
-      return UTF8StringSliceBase(str, utf8Length);
+      return UTF8StringSliceBase(str, numberOfCharacters);
     }
   }
 
-  UTF8StringSliceBase Right(const LengthType utf8Length) const {
-    if (utf8Length == UTF8Length()) {
+  UTF8StringSliceBase Right(const LengthType numberOfCharacters) const {
+    if (numberOfCharacters == UTF8Length()) {
       return *this;
     } else {
       const char* pstr = str + byteLength;
-      for (size_t i = 0; i < utf8Length; i++) {
+      for (size_t i = 0; i < numberOfCharacters; i++) {
         pstr = UTF8Util::PrevChar(pstr);
       }
-      return UTF8StringSliceBase(pstr, utf8Length);
+      return UTF8StringSliceBase(pstr, numberOfCharacters);
     }
   }
 
   UTF8StringSliceBase SubString(const LengthType offset,
-                                const LengthType utf8Length) const {
+                                const LengthType numberOfCharacters) const {
     if (offset == 0) {
-      return Left(utf8Length);
+      return Left(numberOfCharacters);
     } else {
       const char* pstr = str;
       for (size_t i = 0; i < offset; i++) {
         pstr = UTF8Util::NextChar(pstr);
       }
-      return UTF8StringSliceBase(pstr, utf8Length);
+      return UTF8StringSliceBase(pstr, numberOfCharacters);
     }
   }
 
@@ -223,7 +225,7 @@ private:
     for (size_t i = 0; i < utf8Length; i++) {
       pstr = UTF8Util::NextChar(pstr);
     }
-    byteLength = pstr - str;
+    byteLength = static_cast<LengthType>(pstr - str);
   }
 
   const char* str;

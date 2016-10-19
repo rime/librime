@@ -32,7 +32,7 @@ set (PACKAGE_URL https://github.com/BYVoid/Opencc)
 set (PACKAGE_BUGREPORT https://github.com/BYVoid/Opencc/issues)
 set (OPENCC_VERSION_MAJOR 1)
 set (OPENCC_VERSION_MINOR 0)
-set (OPENCC_VERSION_REVISION 3)
+set (OPENCC_VERSION_REVISION 4)
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
   set (version_suffix .Debug)
@@ -53,10 +53,10 @@ include(CPack)
 
 ######## Windows
 
-if (WIN32)
-  set(CMAKE_SHARED_LIBRARY_PREFIX ${CMAKE_INSTALL_PREFIX})
-  set(CMAKE_STATIC_LIBRARY_PREFIX ${CMAKE_INSTALL_PREFIX})
-endif (WIN32)
+#if (WIN32)
+#  set(CMAKE_SHARED_LIBRARY_PREFIX ${CMAKE_INSTALL_PREFIX})
+#  set(CMAKE_STATIC_LIBRARY_PREFIX ${CMAKE_INSTALL_PREFIX})
+#endif (WIN32)
 
 ######## Mac OS X
 
@@ -68,7 +68,6 @@ set (DIR_PREFIX ${CMAKE_INSTALL_PREFIX})
 set (DIR_INCLUDE ${DIR_PREFIX}/include/)
 set (DIR_SHARE ${DIR_PREFIX}/share/)
 set (DIR_ETC ${DIR_PREFIX}/etc/)
-set (LIB_SUFFIX "")
 set (DIR_LIBRARY ${DIR_PREFIX}/lib${LIB_SUFFIX}/)
 
 if (DEFINED SHARE_INSTALL_PREFIX)
@@ -83,8 +82,12 @@ if (DEFINED SYSCONF_INSTALL_DIR)
   set (DIR_ETC ${SYSCONF_INSTALL_DIR})
 endif (DEFINED SYSCONF_INSTALL_DIR)
 
-set (DIR_SHARE_OPENCC ${DIR_SHARE}opencc/)
-set (DIR_SHARE_LOCALE ${DIR_SHARE}locale/)
+if (DEFINED LIB_INSTALL_DIR)
+  set (DIR_LIBRARY ${LIB_INSTALL_DIR})
+endif (DEFINED LIB_INSTALL_DIR)
+
+set (DIR_SHARE_OPENCC ${DIR_SHARE}/opencc/)
+set (DIR_SHARE_LOCALE ${DIR_SHARE}/locale/)
 
 ######## Configuration
 
@@ -130,7 +133,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   endif ()
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   add_definitions(
-    /Wall
+    /W4
     /D "_CRT_SECURE_NO_WARNINGS"
   )
 endif()
