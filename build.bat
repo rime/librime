@@ -70,9 +70,9 @@ if %build_boost% == 1 (
   cd /d %BOOST_ROOT%
   if not exist bjam.exe call bootstrap.bat
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  bjam toolset=msvc-14.0 variant=release link=static threading=multi runtime-link=static stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread --with-locale
+  bjam toolset=msvc-14.0 variant=release link=static threading=multi runtime-link=static stage --with-date_time --with-filesystem --with-locale --with-regex --with-signals --with-system --with-thread
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  rem bjam toolset=msvc-14.0 variant=release link=static threading=multi runtime-link=static address-model=64 --stagedir=stage_x64 stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
+  rem bjam toolset=msvc-14.0 variant=release link=static threading=multi runtime-link=static address-model=64 --stagedir=stage_x64 stage --with-date_time --with-filesystem --with-locale --with-regex --with-signals --with-system --with-thread
   rem if %ERRORLEVEL% NEQ 0 goto ERROR
 )
 
@@ -81,16 +81,14 @@ if %build_thirdparty% == 1 (
 
   echo building glog.
   cd %THIRDPARTY%\src\glog
-  if not exist build mkdir build
-  cd build
-  cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% -DWITH_GFLAGS=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
+  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%CMAKE_TOOLSET% -DWITH_GFLAGS=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  msbuild.exe google-glog.sln /t:glog /p:Configuration=Release
+  cmake --build build --config Release --target glog
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
-  xcopy /S /I /Y ..\src\windows\glog %THIRDPARTY%\include\glog\
+  xcopy /S /I /Y src\windows\glog %THIRDPARTY%\include\glog\
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y Release\glog.lib %THIRDPARTY%\lib\
+  copy /Y build\Release\glog.lib %THIRDPARTY%\lib\
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
   echo building leveldb.
@@ -106,30 +104,26 @@ if %build_thirdparty% == 1 (
 
   echo building yaml-cpp.
   cd %THIRDPARTY%\src\yaml-cpp
-  if not exist build mkdir build
-  cd build
-  cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% -DMSVC_SHARED_RT=OFF -DYAML_CPP_BUILD_TOOLS=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
+  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%CMAKE_TOOLSET% -DMSVC_SHARED_RT=OFF -DYAML_CPP_BUILD_TOOLS=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  msbuild.exe YAML_CPP.sln /t:yaml-cpp /p:Configuration=Release
+  cmake --build build --config Release --target yaml-cpp
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
-  xcopy /S /I /Y ..\include\yaml-cpp %THIRDPARTY%\include\yaml-cpp\
+  xcopy /S /I /Y include\yaml-cpp %THIRDPARTY%\include\yaml-cpp\
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y Release\libyaml-cppmt.lib %THIRDPARTY%\lib\
+  copy /Y build\Release\libyaml-cppmt.lib %THIRDPARTY%\lib\
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
   echo building gtest.
   cd %THIRDPARTY%\src\gtest
-  if not exist build mkdir build
-  cd build
-  cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
+  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%CMAKE_TOOLSET% -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  msbuild.exe gtest.sln /p:Configuration=Release
+  cmake --build build --config Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
-  xcopy /S /I /Y ..\include\gtest %THIRDPARTY%\include\gtest\
+  xcopy /S /I /Y include\gtest %THIRDPARTY%\include\gtest\
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y Release\gtest*.lib %THIRDPARTY%\lib\
+  copy /Y build\Release\gtest*.lib %THIRDPARTY%\lib\
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
   echo building marisa.
@@ -147,14 +141,17 @@ if %build_thirdparty% == 1 (
 
   echo building opencc.
   cd %THIRDPARTY%\src\opencc
-  if not exist build mkdir build
-  cd build
-  cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% -DCMAKE_INSTALL_PREFIX="" -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
+  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%CMAKE_TOOLSET% -DCMAKE_INSTALL_PREFIX="" -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  msbuild.exe opencc.sln /t:libopencc;opencc;opencc_dict;Dictionaries /p:Configuration=Release
+  cmake --build build --config Release --target libopencc
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+  cmake --build build --config Release --target opencc
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+  cmake --build build --config Release --target opencc_dict
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+  cmake --build build --config Release --target Dictionaries
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
-  cd ..
   if not exist %THIRDPARTY%\include\opencc mkdir %THIRDPARTY%\include\opencc
   copy /Y src\*.h* %THIRDPARTY%\include\opencc\
   if %ERRORLEVEL% NEQ 0 goto ERROR
@@ -171,20 +168,16 @@ if %build_thirdparty% == 1 (
 
 if %build_librime% == 0 goto EXIT
 
-set BUILD_DIR=%RIME_ROOT%\%build%
-if not exist %BUILD_DIR% mkdir %BUILD_DIR%
-
 set RIME_CMAKE_FLAGS=-DBUILD_STATIC=ON -DBUILD_SHARED_LIBS=%build_shared% -DBUILD_TEST=%build_test% -DENABLE_LOGGING=%enable_logging% -DBOOST_USE_CXX11=ON -DCMAKE_CONFIGURATION_TYPES="Release"
 
-cd /d %BUILD_DIR%
-echo cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% %RIME_CMAKE_FLAGS% %RIME_ROOT%
-call cmake -G %CMAKE_GENERATOR% -T %CMAKE_TOOLSET% %RIME_CMAKE_FLAGS% %RIME_ROOT%
+cd /d %RIME_ROOT%
+echo cmake %RIME_ROOT% -B%build% -G%CMAKE_GENERATOR% -T%CMAKE_TOOLSET% %RIME_CMAKE_FLAGS%
+call cmake %RIME_ROOT% -B%build% -G%CMAKE_GENERATOR% -T%CMAKE_TOOLSET% %RIME_CMAKE_FLAGS%
 if %ERRORLEVEL% NEQ 0 goto ERROR
 
 echo.
 echo building librime.
-if exist msbuild.log del msbuild.log
-msbuild.exe rime.sln /p:Configuration=Release /fl
+cmake --build build --config Release
 if %ERRORLEVEL% NEQ 0 goto ERROR
 
 echo.
