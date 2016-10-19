@@ -30,7 +30,7 @@ build_script:
   - .\build.bat test
 
 after_build:
-  - 7z a rime.zip %CD%\build\bin %CD%\build\lib
+  - 7z a rime.zip build\bin build\lib include thirdparty\data\opencc
   - dir build /s
 
 before_test:
@@ -42,4 +42,4 @@ test_script:
 
 artifacts:
   - path: rime.zip
-    name: Binaries
+    name: Binaries, includes and OpenCC data
