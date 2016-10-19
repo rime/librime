@@ -53,7 +53,7 @@ set OLD_PATH=%PATH%
 if defined DEV_PATH set PATH=%OLD_PATH%;%DEV_PATH%
 
 rem add cmake executable to PATH
-set PATH=%PATH%;%CMAKE_INSTALL_PATH%/bin
+set PATH=%PATH%;%CMAKE_INSTALL_PATH%\bin
 
 rem git start
 @rem Get the abolute path to the current directory, which is assumed to be the

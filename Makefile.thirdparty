@@ -16,11 +16,10 @@ clean-src:
 	rm -r $(SRC_DIR)/yaml-cpp/build || true
 
 glog:
-	cd $(SRC_DIR)/glog; mkdir -p build && \
-	cd build && cmake \
+	cd $(SRC_DIR)/glog; cmake \
+	. -Bbuild \
 	-DWITH_GFLAGS:BOOL=OFF \
-	.. && \
-	make
+	&& cmake --build build
 	cp -R $(SRC_DIR)/glog/build/glog thirdparty/include/
 	cp $(SRC_DIR)/glog/src/glog/log_severity.h thirdparty/include/glog/
 	cp $(SRC_DIR)/glog/build/libglog.a thirdparty/lib/
@@ -37,13 +36,12 @@ marisa:
 	cp $(SRC_DIR)/marisa-trie/lib/.libs/libmarisa.a thirdparty/lib/
 
 opencc:
-	cd $(SRC_DIR)/opencc; mkdir -p build && \
-	cd build && cmake \
+	cd $(SRC_DIR)/opencc; cmake \
+	. -Bbuild \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_INSTALL_PREFIX=/usr \
 	-DBUILD_SHARED_LIBS:BOOL=OFF \
-	.. && \
-	make
+	&& cmake --build build
 	mkdir -p thirdparty/include/opencc
 	cp $(SRC_DIR)/opencc/src/*.h* thirdparty/include/opencc/
 	cp $(SRC_DIR)/opencc/build/src/libopencc.a thirdparty/lib/
@@ -52,17 +50,16 @@ opencc:
 	cp $(SRC_DIR)/opencc/build/data/*.ocd thirdparty/data/opencc/
 
 yaml-cpp:
-	cd $(SRC_DIR)/yaml-cpp; mkdir -p build && \
-	cd build && cmake \
+	cd $(SRC_DIR)/yaml-cpp; cmake \
+	. -Bbuild \
 	-DCMAKE_BUILD_TYPE=Release \
-	.. && \
-	make
+	&& cmake --build build
 	cp -R $(SRC_DIR)/yaml-cpp/include/yaml-cpp thirdparty/include/
 	cp $(SRC_DIR)/yaml-cpp/build/libyaml-cpp.a thirdparty/lib/
 
 gtest:
-	cd $(SRC_DIR)/gtest; mkdir -p build && \
-	cd build && cmake .. && \
-	make
+	cd $(SRC_DIR)/gtest; cmake \
+	. -Bbuild \
+	&& cmake --build build
 	cp -R $(SRC_DIR)/gtest/include/gtest thirdparty/include/
 	cp $(SRC_DIR)/gtest/build/libgtest*.a thirdparty/lib/

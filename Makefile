@@ -24,28 +24,25 @@ clean:
 	rm -Rf build build-static debug-build
 
 librime-static:
-	mkdir -p build-static
-	(cd build-static; cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC=ON -DBUILD_SHARED_LIBS=OFF ..)
-	make -C build-static
+	cmake . -Bbuild-static -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC=ON -DBUILD_SHARED_LIBS=OFF
+	cmake --build build-static
 
 librime:
-	mkdir -p build
-	(cd build; cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release ..)
-	make -C build
+	cmake . -Bbuild -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release
+	cmake --build build
 
 install-librime:
-	make -C build install
+	cmake --build build --target install
 
 uninstall-librime:
-	make -C build uninstall
+	cmake --build build --target uninstall
 
 debug:
-	mkdir -p debug-build
-	(cd debug-build; cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug -DBUILD_TEST=ON ..)
-	make -C debug-build
+	cmake . -Bdebug-build -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug -DBUILD_TEST=ON
+	cmake --build debug-build
 
 install-debug:
-	make -C debug-build install
+	cmake --build debug-build --target install
 
 uninstall-debug:
-	make -C debug-build uninstall
+	cmake --build debug-build --target uninstall
