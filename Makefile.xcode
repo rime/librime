@@ -6,14 +6,12 @@ RIME_COMPILER_OPTIONS = CC=clang CXX=clang++ CXXFLAGS="-stdlib=libc++" LDFLAGS="
 all: release
 
 release:
-	mkdir -p xbuild
-	cd xbuild; cmake -G Xcode .. -DBUILD_STATIC=ON -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
-	cd xbuild; xcodebuild -project rime.xcodeproj -configuration Release build | grep -v setenv | tee build.log
+	cmake . -Bxbuild -GXcode -DBUILD_STATIC=ON -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
+	cmake --build xbuild --config Release | grep -v setenv | tee build.log
 
 debug:
-	mkdir -p xdebug
-	cd xdebug; cmake -G Xcode .. -DBUILD_STATIC=ON -DBUILD_TEST=ON -DBUILD_SEPARATE_LIBS=ON
-	cd xdebug; xcodebuild -project rime.xcodeproj -configuration Debug build | grep -v setenv | tee build.log
+	cmake . -Bxdebug -GXcode -DBUILD_STATIC=ON -DBUILD_TEST=ON -DBUILD_SEPARATE_LIBS=ON
+	cmake --build xdebug --config Debug | grep -v setenv | tee build.log
 
 clean:
 	rm -rf xbuild > /dev/null 2>&1 || true
