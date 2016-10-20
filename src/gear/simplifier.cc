@@ -80,6 +80,8 @@ Simplifier::Simplifier(const Ticket& ticket) : Filter(ticket),
       tips_level_ = (tips == "all") ? kTipsAll :
                     (tips == "char") ? kTipsChar : kTipsNone;
     }
+    config->GetBool(name_space_ + "/show_in_comment", &show_in_comment_);
+    comment_formatter_.Load(config->GetList(name_space_ + "/comment_format"));
     config->GetString(name_space_ + "/option_name", &option_name_);
     config->GetString(name_space_ + "/opencc_config", &opencc_config_);
     if (auto types = config->GetList(name_space_ + "/excluded_types")) {
@@ -179,6 +181,15 @@ bool Simplifier::Convert(const an<Candidate>& original,
       if (forms[i] == original->text()) {
         result->push_back(original);
       }
+      else if (show_in_comment_) {
+        comment_formatter_.Apply(&forms[i]);
+        result->push_back(
+            New<ShadowCandidate>(
+                original,
+                "simplified",
+                original->text(),
+                forms[i]));
+      }
       else {
         string tips;
         if (tips_level_ >= kTipsChar) {
@@ -198,16 +209,26 @@ bool Simplifier::Convert(const an<Candidate>& original,
     if (!success || simplified == original->text()) {
       return false;
     }
-    string tips;
-    if (tips_level_ == kTipsAll) {
-      tips = quote_left + original->text() + quote_right;
+    if (show_in_comment_) {
+      comment_formatter_.Apply(&simplified);
+      result->push_back(
+          New<ShadowCandidate>(
+              original,
+              "simplified",
+              original->text(),
+              simplified));
+    } else {
+      string tips;
+      if (tips_level_ == kTipsAll) {
+        tips = quote_left + original->text() + quote_right;
+      }
+      result->push_back(
+          New<ShadowCandidate>(
+              original,
+              "simplified",
+              simplified,
+              tips));
     }
-    result->push_back(
-        New<ShadowCandidate>(
-            original,
-            "simplified",
-            simplified,
-            tips));
   } else {
     return false;
   }

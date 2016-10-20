@@ -8,6 +8,7 @@
 #define RIME_SIMPLIFIER_H_
 
 #include <rime/filter.h>
+#include <rime/algo/algebra.h>
 #include <rime/gear/filter_commons.h>
 
 namespace rime {
@@ -41,6 +42,8 @@ class Simplifier : public Filter, TagMatching {
   string option_name_;
   string opencc_config_;
   set<string> excluded_types_;
+  bool show_in_comment_ = false;
+  Projection comment_formatter_;
 };
 
 }  // namespace rime
