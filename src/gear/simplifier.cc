@@ -55,7 +55,7 @@ class Opencc {
     }
   }
 
-  bool ConvertRandText(const string& text,
+  bool RandomConvertText(const string& text,
                    string* simplified) {
     const char *phrase = text.c_str();
     std::ostringstream buffer;
@@ -225,25 +225,29 @@ bool Simplifier::Convert(const an<Candidate>& original,
     return false;
   }
   bool success = false;
-  vector<string> forms;
-  if (!random) success = opencc_->ConvertWord(original->text(), &forms);
-  if (success) {
-    for (size_t i = 0; i < forms.size(); ++i) {
-      if (forms[i] == original->text()) {
-        result->push_back(original);
-      } else {
-        PushBack(original, result, forms[i]);
-      }
-    }
-  } else {
+  if (random_) {
     string simplified;
-    if (random_) {
-      success = opencc_->ConvertRandText(original->text(), &simplified);
-    } else {
-      success = opencc_->ConvertText(original->text(), &simplified);
-    }
+    success = opencc_->RandomConvertText(original->text(), &simplified);
     if (success) {
       PushBack(original, result, simplified);
+    }
+  } else { //!random_
+    vector<string> forms;
+    success = opencc_->ConvertWord(original->text(), &forms);
+    if (success) {
+      for (size_t i = 0; i < forms.size(); ++i) {
+        if (forms[i] == original->text()) {
+          result->push_back(original);
+        } else {
+          PushBack(original, result, forms[i]);
+        }
+      }
+    } else {
+      string simplified;
+      success = opencc_->ConvertText(original->text(), &simplified);
+      if (success) {
+        PushBack(original, result, simplified);
+      }
     }
   }
   return success;
