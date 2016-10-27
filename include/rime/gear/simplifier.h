@@ -27,9 +27,6 @@ class Simplifier : public Filter, TagMatching {
     return TagsMatch(segment);
   }
 
-  void PushBack(const an<Candidate>& original,
-                         CandidateQueue* result, const string& simplified);
-
   bool Convert(const an<Candidate>& original,
                CandidateQueue* result);
 
@@ -37,6 +34,8 @@ class Simplifier : public Filter, TagMatching {
   enum TipsLevel { kTipsNone, kTipsChar, kTipsAll };
 
   void Initialize();
+  void PushBack(const an<Candidate>& original,
+                         CandidateQueue* result, const string& simplified);
 
   bool initialized_ = false;
   the<Opencc> opencc_;
