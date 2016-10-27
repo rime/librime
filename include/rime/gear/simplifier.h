@@ -47,6 +47,7 @@ class Simplifier : public Filter, TagMatching {
   set<string> excluded_types_;
   bool show_in_comment_ = false;
   Projection comment_formatter_;
+  bool random_ = false;
 };
 
 }  // namespace rime

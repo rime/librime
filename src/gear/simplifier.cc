@@ -55,6 +55,27 @@ class Opencc {
     }
   }
 
+  bool ConvertRandText(const string& text,
+                   string* simplified) {
+    const char *phrase = text.c_str();
+    std::ostringstream buffer;
+    for (const char* pstr = phrase; *pstr != '\0';) {
+      opencc::Optional<const opencc::DictEntry*> matched = dict_->MatchPrefix(pstr);
+      size_t matchedLength;
+      if (matched.IsNull()) {
+        matchedLength = opencc::UTF8Util::NextCharLength(pstr);
+        buffer << opencc::UTF8Util::FromSubstr(pstr, matchedLength);
+      } else {
+        matchedLength = matched.Get()->KeyLength();
+        size_t i = rand() % (matched.Get()->NumValues());
+        buffer << matched.Get()->Values().at(i);
+      }
+      pstr += matchedLength;
+    }
+    *simplified = buffer.str();
+    return *simplified != text;
+  }
+
   bool ConvertText(const string& text,
                    string* simplified) {
     *simplified = converter_->Convert(text);
@@ -82,6 +103,7 @@ Simplifier::Simplifier(const Ticket& ticket) : Filter(ticket),
     }
     config->GetBool(name_space_ + "/show_in_comment", &show_in_comment_);
     comment_formatter_.Load(config->GetList(name_space_ + "/comment_format"));
+    config->GetBool(name_space_ + "/random", &random_);
     config->GetString(name_space_ + "/option_name", &option_name_);
     config->GetString(name_space_ + "/opencc_config", &opencc_config_);
     if (auto types = config->GetList(name_space_ + "/excluded_types")) {
@@ -97,6 +119,9 @@ Simplifier::Simplifier(const Ticket& ticket) : Filter(ticket),
   }
   if (opencc_config_.empty()) {
     opencc_config_ = "t2s.json";  // default opencc config file
+  }
+  if (random_) {
+    srand((unsigned)time(NULL));
   }
 }
 
@@ -199,9 +224,9 @@ bool Simplifier::Convert(const an<Candidate>& original,
   if (excluded_types_.find(original->type()) != excluded_types_.end()) {
     return false;
   }
-  bool success;
+  bool success = false;
   vector<string> forms;
-  success = opencc_->ConvertWord(original->text(), &forms);
+  if (!random) success = opencc_->ConvertWord(original->text(), &forms);
   if (success) {
     for (size_t i = 0; i < forms.size(); ++i) {
       if (forms[i] == original->text()) {
@@ -212,7 +237,11 @@ bool Simplifier::Convert(const an<Candidate>& original,
     }
   } else {
     string simplified;
-    success = opencc_->ConvertText(original->text(), &simplified);
+    if (random_) {
+      success = opencc_->ConvertRandText(original->text(), &simplified);
+    } else {
+      success = opencc_->ConvertText(original->text(), &simplified);
+    }
     if (success) {
       PushBack(original, result, simplified);
     }
