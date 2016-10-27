@@ -27,6 +27,9 @@ class Simplifier : public Filter, TagMatching {
     return TagsMatch(segment);
   }
 
+  void PushBack(const an<Candidate>& original,
+                         CandidateQueue* result, const string& simplified);
+
   bool Convert(const an<Candidate>& original,
                CandidateQueue* result);
 

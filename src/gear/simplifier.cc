@@ -51,14 +51,14 @@ class Opencc {
       for (const char* value : entry->Values()) {
         forms->push_back(value);
       }
-      return true;
+      return forms->size() > 0;
     }
   }
 
   bool ConvertText(const string& text,
                    string* simplified) {
     *simplified = converter_->Convert(text);
-    return true;
+    return *simplified != text;
   }
 
  private:
@@ -165,74 +165,59 @@ an<Translation> Simplifier::Apply(an<Translation> translation,
   return New<SimplifiedTranslation>(translation, this);
 }
 
+void Simplifier::PushBack(const an<Candidate>& original,
+                         CandidateQueue* result, const string& simplified) {
+  string tips;
+  string text;
+  if (show_in_comment_) {
+    text = original->text();
+    tips = simplified;
+    comment_formatter_.Apply(&tips);
+  } else {
+    size_t length = utf8::unchecked::distance(original->text().c_str(),
+                                              original->text().c_str()
+                                              + original->text().length());
+    text = simplified;
+    if ((tips_level_ == kTipsChar && length == 1) || tips_level_ == kTipsAll) {
+      tips = original->text();
+      bool modified = comment_formatter_.Apply(&tips);
+      if (!modified) {
+        tips = quote_left + original->text() + quote_right;
+      }
+    }
+  }
+  result->push_back(
+      New<ShadowCandidate>(
+          original,
+          "simplified",
+          text,
+          tips));
+}
+
 bool Simplifier::Convert(const an<Candidate>& original,
                          CandidateQueue* result) {
   if (excluded_types_.find(original->type()) != excluded_types_.end()) {
     return false;
   }
-  size_t length = utf8::unchecked::distance(original->text().c_str(),
-                                            original->text().c_str()
-                                            + original->text().length());
   bool success;
   vector<string> forms;
   success = opencc_->ConvertWord(original->text(), &forms);
-  if (success && forms.size() > 0) {
+  if (success) {
     for (size_t i = 0; i < forms.size(); ++i) {
       if (forms[i] == original->text()) {
         result->push_back(original);
+      } else {
+        PushBack(original, result, forms[i]);
       }
-      else if (show_in_comment_) {
-        comment_formatter_.Apply(&forms[i]);
-        result->push_back(
-            New<ShadowCandidate>(
-                original,
-                "simplified",
-                original->text(),
-                forms[i]));
-      }
-      else {
-        string tips;
-        if (tips_level_ >= kTipsChar) {
-          tips = quote_left + original->text() + quote_right;
-        }
-        result->push_back(
-            New<ShadowCandidate>(
-                original,
-                "simplified",
-                forms[i],
-                tips));
-      }
-    }
-  } else if (length > 1) {
-    string simplified;
-    success = opencc_->ConvertText(original->text(), &simplified);
-    if (!success || simplified == original->text()) {
-      return false;
-    }
-    if (show_in_comment_) {
-      comment_formatter_.Apply(&simplified);
-      result->push_back(
-          New<ShadowCandidate>(
-              original,
-              "simplified",
-              original->text(),
-              simplified));
-    } else {
-      string tips;
-      if (tips_level_ == kTipsAll) {
-        tips = quote_left + original->text() + quote_right;
-      }
-      result->push_back(
-          New<ShadowCandidate>(
-              original,
-              "simplified",
-              simplified,
-              tips));
     }
   } else {
-    return false;
+    string simplified;
+    success = opencc_->ConvertText(original->text(), &simplified);
+    if (success) {
+      PushBack(original, result, simplified);
+    }
   }
-  return true;
+  return success;
 }
 
 }  // namespace rime
