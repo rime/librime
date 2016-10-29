@@ -10,7 +10,7 @@ Project home
 
 License
 ---
-The BSD License
+BSD 3-Clause License
 
 Features
 ===
@@ -81,14 +81,12 @@ Credits
 We are grateful to the makers of the following open source libraries:
 
   - [Boost C++ Libraries](http://www.boost.org/) (Boost Software License)
-  - [darts-clone](https://code.google.com/p/darts-clone/) (New BSD License)
-  - [google-glog](https://code.google.com/p/google-glog/) (New BSD License)
-  - [Google Test](https://code.google.com/p/googletest/) (New BSD License)
-  - [LevelDB](https://github.com/google/leveldb) (New BSD License)
-  - [marisa-trie](https://code.google.com/p/marisa-trie/) (BSD License)
+  - [google-glog](https://github.com/google/glog) (BSD 3-Clause License)
+  - [Google Test](https://github.com/google/googletest) (BSD 3-Clause License)
+  - [LevelDB](https://github.com/google/leveldb) (BSD 3-Clause License)
+  - [marisa-trie](https://github.com/s-yata/marisa-trie) (BSD 2-Clause License, LGPL 2.1)
   - [OpenCC](https://github.com/BYVoid/OpenCC) (Apache License 2.0)
-  - [UTF8-CPP](http://utfcpp.sourceforge.net/) (Boost Software License)
-  - [yaml-cpp](https://code.google.com/p/yaml-cpp/) (MIT License)
+  - [yaml-cpp](https://github.com/jbeder/yaml-cpp) (MIT License)
 
 Contributors
 ===
