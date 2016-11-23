@@ -16,10 +16,9 @@ class HistoryTranslator : public Translator {
   HistoryTranslator(const Ticket& ticket);
 
   virtual an<Translation> Query(const string& input,
-                                        const Segment& segment);
+                                const Segment& segment);
 
  protected:
-
   string tag_;
   string input_;
   int size_;

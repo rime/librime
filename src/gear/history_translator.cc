@@ -16,11 +16,7 @@
 namespace rime {
 
 HistoryTranslator::HistoryTranslator(const Ticket& ticket)
-    : Translator(ticket),
-      tag_("abc"),
-      input_("ls"),
-      size_(1),
-      initial_quality_(1000) {
+    : Translator(ticket) {
   if (ticket.name_space == "translator") {
     name_space_ = "history";
   }
@@ -31,36 +27,34 @@ HistoryTranslator::HistoryTranslator(const Ticket& ticket)
   config->GetString(name_space_ + "/input", &input_);
   config->GetInt(name_space_ + "/size", &size_);
   config->GetDouble(name_space_ + "/initial_quality",
-                      &initial_quality_);
+                    &initial_quality_);
 }
 
 an<Translation> HistoryTranslator::Query(const string& input,
-                                      const Segment& segment) {
+                                         const Segment& segment) {
   if (!segment.HasTag(tag_))
     return nullptr;
-  if (!input_.empty() && input_ != input)
+  if (input_.empty() || input_ != input)
     return nullptr;
 
   const auto& history(engine_->context()->commit_history());
-  if (!history.empty()) {
-    auto translation = New<FifoTranslation>();
-    auto it = history.rbegin();
-    int count = 0;
-    for (; it != history.rend(); ++it) {
-      if (it->type == "thru") continue;
-      auto candidate = New<SimpleCandidate>(it->type,
-                                            segment.start,
-                                            segment.end,
-                                            it->text);
-      candidate->set_quality(initial_quality_);
-      translation->Append(candidate);
-      count++;
-      if (size_ > 0 && size_ == count) break;
-    }
-    return translation;
-  } else {
+  if (history.empty())
     return nullptr;
+  auto translation = New<FifoTranslation>();
+  auto it = history.rbegin();
+  int count = 0;
+  for (; it != history.rend(); ++it) {
+    if (it->type == "thru") continue;
+    auto candidate = New<SimpleCandidate>(it->type,
+                                          segment.start,
+                                          segment.end,
+                                          it->text);
+    candidate->set_quality(initial_quality_);
+    translation->Append(candidate);
+    count++;
+    if (size_ == count) break;
   }
+  return translation;
 }
 
 }  // namespace rime
