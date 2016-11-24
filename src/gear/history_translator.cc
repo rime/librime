@@ -16,7 +16,10 @@
 namespace rime {
 
 HistoryTranslator::HistoryTranslator(const Ticket& ticket)
-    : Translator(ticket) {
+    : Translator(ticket),
+      tag_("abc"),
+      size_(1),
+      initial_quality_(1000) {
   if (ticket.name_space == "translator") {
     name_space_ = "history";
   }
