@@ -1,14 +1,12 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-01-02 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_MEMORY_H_
 #define RIME_MEMORY_H_
 
-#include <string>
-#include <vector>
 #include <rime/common.h>
 #include <rime/dict/vocabulary.h>
 
@@ -23,13 +21,13 @@ class Phrase;
 class Memory;
 
 struct CommitEntry : DictEntry {
-  std::vector<const DictEntry*> elements;
+  vector<const DictEntry*> elements;
   Memory* memory;
 
   CommitEntry(Memory* a_memory = NULL) : memory(a_memory) {}
   bool empty() const { return text.empty(); }
   void Clear();
-  void AppendPhrase(const shared_ptr<Phrase>& phrase);
+  void AppendPhrase(const an<Phrase>& phrase);
   bool Save() const;
 };
 
@@ -43,6 +41,10 @@ class Memory {
 
   virtual bool Memorize(const CommitEntry& commit_entry) = 0;
 
+  bool StartSession();
+  bool FinishSession();
+  bool DiscardSession();
+
   Language* language() { return &language_; }
 
   Dictionary* dict() const { return dict_.get(); }
@@ -53,8 +55,8 @@ class Memory {
   void OnDeleteEntry(Context* ctx);
   void OnUnhandledKey(Context* ctx, const KeyEvent& key);
 
-  unique_ptr<Dictionary> dict_;
-  unique_ptr<UserDictionary> user_dict_;
+  the<Dictionary> dict_;
+  the<UserDictionary> user_dict_;
 
  private:
   connection commit_connection_;

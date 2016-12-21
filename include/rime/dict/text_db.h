@@ -1,14 +1,12 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-04-14 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_TEXT_DB_H_
 #define RIME_TEXT_DB_H_
 
-#include <map>
-#include <string>
 #include <rime/dict/db.h>
 #include <rime/dict/tsv.h>
 
@@ -16,16 +14,16 @@ namespace rime {
 
 class TextDb;
 
-using TextDbData = std::map<std::string, std::string>;
+using TextDbData = map<string, string>;
 
 class TextDbAccessor : public DbAccessor {
  public:
-  TextDbAccessor(const TextDbData& data, const std::string& prefix);
+  TextDbAccessor(const TextDbData& data, const string& prefix);
   virtual ~TextDbAccessor();
 
   virtual bool Reset();
-  virtual bool Jump(const std::string& key);
-  virtual bool GetNextRecord(std::string* key, std::string* value);
+  virtual bool Jump(const string& key);
+  virtual bool GetNextRecord(string* key, string* value);
   virtual bool exhausted();
 
  private:
@@ -36,13 +34,13 @@ class TextDbAccessor : public DbAccessor {
 struct TextFormat {
   TsvParser parser;
   TsvFormatter formatter;
-  std::string file_description;
+  string file_description;
 };
 
 class TextDb : public Db {
  public:
-  TextDb(const std::string& name,
-         const std::string& db_type,
+  TextDb(const string& name,
+         const string& db_type,
          TextFormat format);
   virtual ~TextDb();
 
@@ -50,26 +48,26 @@ class TextDb : public Db {
   virtual bool OpenReadOnly();
   virtual bool Close();
 
-  virtual bool Backup(const std::string& snapshot_file);
-  virtual bool Restore(const std::string& snapshot_file);
+  virtual bool Backup(const string& snapshot_file);
+  virtual bool Restore(const string& snapshot_file);
 
   virtual bool CreateMetadata();
-  virtual bool MetaFetch(const std::string& key, std::string* value);
-  virtual bool MetaUpdate(const std::string& key, const std::string& value);
+  virtual bool MetaFetch(const string& key, string* value);
+  virtual bool MetaUpdate(const string& key, const string& value);
 
-  virtual shared_ptr<DbAccessor> QueryMetadata();
-  virtual shared_ptr<DbAccessor> QueryAll();
-  virtual shared_ptr<DbAccessor> Query(const std::string& key);
-  virtual bool Fetch(const std::string& key, std::string* value);
-  virtual bool Update(const std::string& key, const std::string& value);
-  virtual bool Erase(const std::string& key);
+  virtual an<DbAccessor> QueryMetadata();
+  virtual an<DbAccessor> QueryAll();
+  virtual an<DbAccessor> Query(const string& key);
+  virtual bool Fetch(const string& key, string* value);
+  virtual bool Update(const string& key, const string& value);
+  virtual bool Erase(const string& key);
 
  protected:
   void Clear();
-  bool LoadFromFile(const std::string& file);
-  bool SaveToFile(const std::string& file);
+  bool LoadFromFile(const string& file);
+  bool SaveToFile(const string& file);
 
-  std::string db_type_;
+  string db_type_;
   TextFormat format_;
   TextDbData metadata_;
   TextDbData data_;

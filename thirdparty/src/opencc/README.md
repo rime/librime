@@ -1,44 +1,109 @@
-# Open Chinese Convert
+# Open Chinese Convert 開放中文轉換
 
-## Introduction
+[ ![Download](https://api.bintray.com/packages/byvoid/opencc/OpenCC/images/download.svg) ](https://bintray.com/byvoid/opencc/OpenCC/_latestVersion)
+[![Build Status](https://travis-ci.org/BYVoid/OpenCC.svg?branch=master)](https://travis-ci.org/BYVoid/OpenCC)
+
+## Introduction 介紹
 
 Open Chinese Convert (OpenCC, 開放中文轉換) is an opensource project for conversion between Traditional Chinese and Simplified Chinese, supporting character-level conversion, phrase-level conversion, variant conversion and regional idioms among Mainland China, Taiwan and Hong kong.
 
-中文簡繁轉換開源項目，支持詞彙級别的轉換、異體字轉換和地區習慣用詞轉換（中國大陸、臺灣、香港）。
+中文簡繁轉換開源項目，支持詞彙級別的轉換、異體字轉換和地區習慣用詞轉換（中國大陸、臺灣、香港）。
 
-### OpenCC特點
+### Features 特點
 
 * 嚴格區分「一簡對多繁」和「一簡對多異」。
 * 完全兼容異體字，可以實現動態替換。
 * 嚴格審校一簡對多繁詞條，原則爲「能分則不合」。
 * 支持中國大陸、臺灣、香港異體字和地區習慣用詞轉換，如「裏」「裡」、「鼠標」「滑鼠」。
-* 使用歧義分割+最少分詞算法，儘可能從技術上優化轉換效果。
 * 詞庫和函數庫完全分離，可以自由修改、導入、擴展。
-* 支持C、C++、Python、PHP、Java、Ruby、Node.js。
+* 支持C、C++、Python、PHP、Java、Ruby、Node.js and Android。
 * 兼容Windows、Linux、Mac平臺。
-* 已經用於ibus-pinyin、fcitx的繁體模式輸入。
 
-## Links
+### Links 相關鏈接
 
-### Project home page
-http://code.google.com/p/opencc/
+* Introduction 詳細介紹 https://github.com/BYVoid/OpenCC/wiki/%E7%B7%A3%E7%94%B1
+* OpenCC Online (在線轉換) http://opencc.byvoid.com/
+* 現代漢語常用簡繁一對多字義辨析表 http://ytenx.org/byohlyuk/KienxPyan
 
-### Introduction (詳細介紹)
-https://code.google.com/p/opencc/wiki/Introduction
+## Installation 安裝
 
-### Development Documentation
-http://byvoid.github.io/OpenCC/
+* [Debian](http://packages.qa.debian.org/o/opencc.html)
+* [Ubuntu](https://launchpad.net/ubuntu/+source/opencc)
+* [Fedora](https://admin.fedoraproject.org/pkgdb/package/opencc/)
+* [Arch Linux](https://www.archlinux.org/packages/community/x86_64/opencc/)
+* [Mac OS](https://github.com/Homebrew/homebrew-core/blob/master/Formula/opencc.rb)
+* [Node.js](https://npmjs.org/package/opencc)
 
-### Source Code on Github
-https://github.com/byvoid/opencc
+## Download 下載
 
-### OpenCC Online (在線轉換)
-http://opencc.byvoid.com/
+https://bintray.com/byvoid/opencc/OpenCC
 
-### 現代漢語常用簡繁一對多字義辨析表
-http://ytenx.org/byohlyuk/KienxPyan
+## Usage 使用
 
-### Projects using Opencc
+### Command Line 命令行
+
+`opencc --help`
+
+### Configurations 配置文件
+
+#### 預設配置文件
+
+* `s2t.json` Simplified Chinese to Traditional Chinese 簡體到繁體
+* `t2s.json` Traditional Chinese to Simplified Chinese 繁體到簡體
+* `s2tw.json` Simplified Chinese to Traditional Chinese (Taiwan Standard) 簡體到臺灣正體
+* `tw2s.json` Traditional Chinese (Taiwan Standard) to Simplified Chinese 臺灣正體到簡體
+* `s2hk.json` Simplified Chinese to Traditional Chinese (Hong Kong Standard) 簡體到香港繁體（香港小學學習字詞表標準）
+* `hk2s.json` Traditional Chinese (Hong Kong Standard) to Simplified Chinese 香港繁體（香港小學學習字詞表標準）到簡體
+* `s2twp.json` Simplified Chinese to Traditional Chinese (Taiwan Standard) with Taiwanese idiom 簡體到繁體（臺灣正體標準）並轉換爲臺灣常用詞彙
+* `tw2sp.json` Traditional Chinese (Taiwan Standard) to Simplified Chinese with Mainland Chinese idiom 繁體（臺灣正體標準）到簡體並轉換爲中國大陸常用詞彙
+* `t2tw.json` Traditional Chinese (OpenCC Standard) to Taiwan Standard 繁體（OpenCC 標準）到臺灣正體
+* `t2hk.json` Traditional Chinese (OpenCC Standard) to Hong Kong Standard 繁體（OpenCC 標準）到香港繁體（香港小學學習字詞表標準）
+
+## Development Documentation 開發文檔
+
+* http://byvoid.github.io/OpenCC/
+
+## Build 編譯
+
+### Build with CMake
+
+Linux (gcc 4.6 is required):
+
+```
+make
+sudo make install
+```
+
+Mac OS X (clang 3.2 is required):
+
+```
+make PREFIX=/usr/local
+sudo make PREFIX=/usr/local install
+```
+
+Windows MSYS:
+
+```
+cmake -H. -Bbuild -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX="path/to/install"
+cmake --build build --config Release --target install
+```
+
+Windows Visual Studio (2013 or higher required):
+
+```
+cmake -H. -Bbuild -G"Visual Studio 12" -DCMAKE_INSTALL_PREFIX="path/to/install"
+cmake --build build --config Release --target install
+```
+
+### iOS
+
+See https://github.com/gelosie/OpenCC/tree/master/iOS
+
+### Android
+
+See [android-opencc](https://github.com/qichuan/android-opencc)
+
+## Projects using Opencc 使用OpenCC的項目
 
 * [ibus-pinyin](http://code.google.com/p/ibus/)
 * [fcitx](http://code.google.com/p/fcitx/)
@@ -47,94 +112,59 @@ http://ytenx.org/byohlyuk/KienxPyan
 * [ibus-libpinyin](https://github.com/libpinyin/ibus-libpinyin)
 * [BYVBlog](https://github.com/byvoid/byvblog)
 * [豆瓣同城微信](http://weixinqiao.com/douban-event/)
+* [alfred-chinese-converter](https://github.com/amowu/alfred-chinese-converter)
+* [GoldenDict](https://github.com/goldendict/goldendict)
 
-## Installation
+## License 許可協議
 
-### [Debian](http://packages.qa.debian.org/o/opencc.html)/[Ubuntu](https://launchpad.net/ubuntu/+source/opencc)
+Apache License 2.0
 
-    apt-get install opencc
+## Third Party Library 第三方庫
 
-### [Fedora](https://admin.fedoraproject.org/pkgdb/acls/name/opencc)
+* [darts-clone](https://code.google.com/p/darts-clone/) BSD License
+* [tclap](http://tclap.sourceforge.net/) MIT License
+* [rapidjson](https://github.com/miloyip/rapidjson) MIT License
 
-    yum install opencc
+All these libraries are statically linked.
 
-### [Arch](https://www.archlinux.org/packages/community/x86_64/opencc/)
+## Change History 版本歷史
 
-    pacman -S opencc
+https://github.com/BYVoid/OpenCC/blob/master/NEWS.md
 
-### [Mac](https://github.com/mxcl/homebrew/blob/master/Library/Formula/opencc.rb)
-
-    brew install opencc
-
-### [Node.js](https://npmjs.org/package/opencc)
-
-    npm install opencc
-
-## Usage
-
-    $ opencc --help
-    
-    Open Chinese Convert (OpenCC) Command Line Tool
-
-    Author: BYVoid <byvoid@byvoid.com>
-    Bug Report: http://github.com/BYVoid/OpenCC/issues
-
-    Usage:
-     opencc [Options]
-
-    Options:
-     -i [file], --input=[file]   Read original text from [file].
-     -o [file], --output=[file]  Write converted text to [file].
-     -c [file], --config=[file]  Load configuration of conversion from [file].
-     -v, --version               Print version and build information.
-     -h, --help                  Print this help.
-
-    With no input file, reads standard input and writes converted stream to standard output.
-    Default configuration(zhs2zht.ini) will be loaded if not set.
-
-## Build
-
-[![Build Status](https://travis-ci.org/BYVoid/OpenCC.png?branch=master)](https://travis-ci.org/BYVoid/OpenCC)
-
-### Build with CMake
-
-Make a directory and check in:
-
-    mkdir build
-    cd build
-
-Build sources:
-
-    cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -D ENABLE_GETTEXT:BOOL=ON ..
-    make
-
-On windows, run these commands instead:
-
-    cmake .. -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX="" -DCMAKE_BUILD_TYPE=Release -DENABLE_GETTEXT:BOOL=OFF
-    make
-
-Install:
-
-    sudo make install
-
-
-### Build with gyp
-
-    mkdir build
-    gyp --depth . -D library=shared_library -f make --generator-output=build opencc.gyp
-    make -C build
-
-## Screenshot
-
-![OpenCC Mac](http://opencc.googlecode.com/files/screenshot-gui-mac.png)
-
-![OpenCC Windows](http://opencc.googlecode.com/files/screenshot-gui.png)
-
-![OpenCC Ubuntu](http://opencc.googlecode.com/files/screenshot-gui-ubuntu.png)
-
-## Contributors
+## Contributors 貢獻者
 
 * [BYVoid](http://www.byvoid.com/)
 * [佛振](https://github.com/lotem)
 * [Peng Huang](https://github.com/phuang)
 * [LI Daobing](https://github.com/lidaobing)
+* [Kefu Chai](https://github.com/tchaikov)
+* [Kan-Ru Chen](http://kanru.info/)
+* [Ma Xiaojun](https://twitter.com/damage3025)
+* [Jiang Jiang](http://jjgod.org/)
+* [Ruey-Cheng Chen](https://github.com/rueycheng)
+* [Paul Meng](http://home.mno2.org/)
+* [Lawrence Lau](https://github.com/ktslwy)
+* [瑾昀](https://github.com/kunki)
+* [Marguerite Su](https://www.marguerite.su/)
+* [Brian White](http://mscdex.net)
+* [Qijiang Fan](https://fqj.me/)
+* [LEOYoon-Tsaw](https://github.com/LEOYoon-Tsaw)
+* [Steven Yao](https://github.com/stevenyao)
+* [Pellaeon Lin](https://github.com/pellaeon)
+* [stony](https://github.com/stony-shixz)
+* [steelywing](https://github.com/steelywing)
+* [吕旭东](https://github.com/lvxudong)
+* [Weng Xuetian](https://github.com/wengxt)
+* [Ma Tao](https://github.com/iwater)
+* [Heinz Wiesinger](https://github.com/pprkut)
+* [J.W](https://github.com/jakwings)
+* [Amo Wu](https://github.com/amowu)
+* [Mark Tsai](https://github.com/mxgit1090)
+* [Zhe Wang](https://github.com/0x1997)
+* [sgqy](https://github.com/sgqy)
+* [Qichuan (Sean) ZHANG](https://github.com/qichuan)
+* [Flandre Scarlet](https://github.com/XadillaX)
+* [宋辰文](https://github.com/songchenwen)
+* [iwater](https://github.com/iwater)
+
+Please update this list you have contributed OpenCC.

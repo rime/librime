@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2012-01-01 GONG Chen <chen.sst@gmail.com>
 //
@@ -23,7 +23,7 @@ Matcher::Matcher(const Ticket& ticket) : Segmentor(ticket) {
 bool Matcher::Proceed(Segmentation* segmentation) {
   if (patterns_.empty())
     return true;
-  auto match = patterns_.GetMatch(segmentation->input(), segmentation);
+  auto match = patterns_.GetMatch(segmentation->input(), *segmentation);
   if (match.found()) {
     DLOG(INFO) << "match: " << match.tag
                << " [" << match.start << ", " << match.end << ")";

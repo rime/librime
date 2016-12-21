@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-05-08 GONG Chen <chen.sst@gmail.com>
 //
@@ -15,7 +15,7 @@ Schema::Schema()
   FetchUsefulConfigItems();
 }
 
-Schema::Schema(const std::string& schema_id)
+Schema::Schema(const string& schema_id)
     : schema_id_(schema_id) {
   if (boost::starts_with(schema_id_, L".")) {
     config_.reset(Config::Require("config")->Create(schema_id.substr(1)));
@@ -37,7 +37,7 @@ void Schema::FetchUsefulConfigItems() {
   if (!config_->GetInt("menu/page_size", &page_size_) &&
       schema_id_ != ".default") {
     // not defined in schema, use default setting
-    unique_ptr<Config> default_config(
+    the<Config> default_config(
         Config::Require("config")->Create("default"));
     if (default_config) {
       default_config->GetInt("menu/page_size", &page_size_);

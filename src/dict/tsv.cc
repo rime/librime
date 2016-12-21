@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-04-14 GONG Chen <chen.sst@gmail.com>
 //
@@ -16,7 +16,7 @@ int TsvReader::operator() (Sink* sink) {
   if (!sink) return 0;
   LOG(INFO) << "reading tsv file: " << path_;
   std::ifstream fin(path_.c_str());
-  std::string line, key, value;
+  string line, key, value;
   Tsv row;
   int line_no = 0;
   int num_entries = 0;
@@ -64,7 +64,7 @@ int TsvWriter::operator() (Source* source) {
   if (!file_description.empty()) {
     fout << "# " << file_description << std::endl;
   }
-  std::string key, value;
+  string key, value;
   while (source->MetaGet(&key, &value)) {
     fout << "#@" << key << '\t' << value << std::endl;
   }

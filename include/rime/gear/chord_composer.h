@@ -1,13 +1,12 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2012-06-05 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_CHORD_COMPOSER_H_
 #define RIME_CHORD_COMPOSER_H_
 
-#include <set>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/processor.h>
@@ -23,7 +22,7 @@ class ChordComposer : public Processor {
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:
-  std::string SerializeChord();
+  string SerializeChord();
   void UpdateChord();
   void FinishChord();
   void ClearChord();
@@ -31,17 +30,17 @@ class ChordComposer : public Processor {
   void OnContextUpdate(Context* ctx);
   void OnUnhandledKey(Context* ctx, const KeyEvent& key);
 
-  std::string alphabet_;
-  std::string delimiter_;
+  string alphabet_;
+  string delimiter_;
   Projection algebra_;
   Projection output_format_;
   Projection prompt_format_;
 
-  std::set<char> pressed_;
-  std::set<char> chord_;
+  set<char> pressed_;
+  set<char> chord_;
   bool pass_thru_ = false;
   bool composing_ = false;
-  std::string sequence_;
+  string sequence_;
   connection update_connection_;
   connection unhandled_key_connection_;
 };

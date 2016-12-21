@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-07-02 GONG Chen <chen.sst@gmail.com>
 //
@@ -13,7 +13,7 @@
 
 namespace rime {
 
-void ShapeFormatter::Format(std::string* text) {
+void ShapeFormatter::Format(string* text) {
   if (!engine_->context()->get_option("full_shape")) {
     return;
   }
@@ -48,7 +48,7 @@ ProcessResult ShapeProcessor::ProcessKeyEvent(const KeyEvent& key_event) {
   if (ch < 0x20 || ch > 0x7e) {
     return kNoop;
   }
-  std::string wide(1, ch);
+  string wide(1, ch);
   formatter_.Format(&wide);
   engine_->sink()(wide);
   return kAccepted;

@@ -1,3 +1,31 @@
+2014-12-14  GONG Chen  <chen.sst@gmail.com>
+
+	* CMakeLists.txt: bump version to 1.2.9.
+	* Makefile: add make targets 'thirdparty/*' to build individual libraries.
+	* include/rime_api.h: add RIME_MODULE_LIST, RIME_REGISTER_MODULE_GROUP.
+	* legacy/src/legacy_module.cc: plugin module 'rime-legacy' for GPL'd code,
+	providing component 'legacy_userdb' for user dictionary upgrade.
+	* src/setup.cc: define module groups "default" and "deployer", to avoid
+	naming a list of built-bin modules in RimeTraits::modules.
+	* test/table_test.cc: fix random segment faults when run shuffled.
+	* thirdparty/src/leveldb: new dependency LevelDB, replacing Kyoto Cabinet.
+	* dict/level_db: userdb implementation based on LevelDB, replacing treeDb.
+	* dict/tree_db: moved to legacy/src/.
+	* dict/user_db: refactored and modularized to ease adding implementations.
+	* gear/memory: save cached phrases as soon as the next composition begins.
+	* gear/recognizer: match space iff set recognizer/use_space: true.
+	* gear/simplifier: catch and log OpenCC exceptions when loading.
+	* gear/single_char_filter: bring single character candidates to the front.
+	* lever/deployment_tasks: update and rename task 'user_dict_upgrade'.
+
+2014-11-02  LEO Yoon-Tsaw  <lyc20041@gmail.com>
+
+	* gear/cjk_minifier: support CJK Extension E.
+
+2014-10-20  Carbo Kuo  <byvoid@byvoid.com>
+	* gear/simplifier: adapt to OpenCC 1.0 API.
+	* thirdparty/src/opencc: update OpenCC to v1.0.2 (incompatible with v0.4).
+
 2014-07-15  GONG Chen  <chen.sst@gmail.com>
 
 	* config: support references to list elements in key paths.

@@ -108,6 +108,7 @@ cangjie:
 pinyin:
   tag: pinyin
   dictionary: luna_pinyin
+  enable_user_dict: false
   prefix: 'P:'
   suffix: ';'
   tips: 〔拼音〕
@@ -137,7 +138,7 @@ zh_simp:
 
 zh_tw:
   option_name: zh_tw
-  opencc_config: zht2zhtw_v.ini
+  opencc_config: t2tw.json
 
 punctuator:
   import_preset: default

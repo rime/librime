@@ -1,5 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
+AUTOMAKE_OPTIONS=subdir-objects
+
 # Make sure that when we re-make ./configure, we get the macros we need
 ACLOCAL_AMFLAGS = -I m4
 
@@ -25,6 +27,10 @@ else
 endif
 endif
 
+if DISABLE_RTTI
+  AM_CXXFLAGS += -fno-rtti
+endif
+
 glogincludedir = $(includedir)/glog
 ## The .h files you want to install (that is, .h files that people
 ## who install this package can include in their own applications.)
@@ -47,7 +53,8 @@ lib_LTLIBRARIES =
 # The libraries libglog depends on.
 COMMON_LIBS = $(PTHREAD_LIBS) $(GFLAGS_LIBS) $(UNWIND_LIBS)
 # Compile switches for our unittest.
-TEST_CFLAGS = $(GTEST_CFLAGS) $(GMOCK_CFLAGS) $(GFLAGS_CFLAGS) $(AM_CXXFLAGS)
+TEST_CFLAGS = $(GTEST_CFLAGS) $(GMOCK_CFLAGS) $(GFLAGS_CFLAGS) \
+              $(MINGW_CFLAGS) $(AM_CXXFLAGS)
 # Libraries for our unittest.
 TEST_LIBS = $(GTEST_LIBS) $(GMOCK_LIBS) $(GFLAGS_LIBS)
 
@@ -191,7 +198,8 @@ libglog_la_SOURCES = $(gloginclude_HEADERS) \
                        src/base/commandlineflags.h src/googletest.h
 nodist_libglog_la_SOURCES = $(nodist_gloginclude_HEADERS)
 
-libglog_la_CXXFLAGS = $(PTRHEAD_CFLAGS) $(GFLAGS_CFLAGS) $(AM_CXXFLAGS) -DNDEBUG
+libglog_la_CXXFLAGS = $(PTRHEAD_CFLAGS) $(GFLAGS_CFLAGS) $(MINGW_CFLAGS) \
+                      $(AM_CXXFLAGS) -DNDEBUG
 libglog_la_LDFLAGS = $(PTRHEAD_CFLAGS) $(GFLAGS_LDFLAGS)
 libglog_la_LIBADD = $(COMMON_LIBS)
 
@@ -223,7 +231,8 @@ dist-hook:
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
 
-EXTRA_DIST = packages/rpm.sh packages/rpm/rpm.spec packages/deb.sh packages/deb \
+EXTRA_DIST = packages/rpm.sh packages/rpm/rpm.spec \
+	packages/deb.sh packages/deb/* \
 	$(SCRIPTS) src/logging_unittest.err src/demangle_unittest.txt \
 	src/windows/config.h src/windows/port.h src/windows/port.cc \
 	src/windows/preprocess.sh \

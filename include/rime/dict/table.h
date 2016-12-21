@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-07-01 GONG Chen <chen.sst@gmail.com>
 //
@@ -9,24 +9,32 @@
 #define RIME_TABLE_H_
 
 #include <cstring>
-#include <map>
-#include <set>
-#include <string>
-#include <vector>
 #include <darts.h>
 #include <rime/common.h>
 #include <rime/dict/mapped_file.h>
 #include <rime/dict/vocabulary.h>
 #include <rime/dict/string_table.h>
 
+#define RIME_TABLE_UNION(U, V, Ta, a, Tb, b) \
+    struct U { \
+      V value; \
+      const Ta& a() const { return *reinterpret_cast<const Ta*>(this); } \
+      const Tb& b() const { return *reinterpret_cast<const Tb*>(this); } \
+      Ta& a() { return *reinterpret_cast<Ta*>(this); } \
+      Tb& b() { return *reinterpret_cast<Tb*>(this); } \
+    }
+
 namespace rime {
 
 namespace table {
 
-union StringType {
-  String str;
-  StringId str_id;
-};
+//union StringType {
+//  String str;
+//  StringId str_id;
+//};
+RIME_TABLE_UNION(StringType, int32_t,
+                 String, str,
+                 StringId, str_id);
 
 using Syllabary = Array<StringType>;
 
@@ -48,7 +56,7 @@ struct LongEntry {
   Entry entry;
 };
 
-union PhraseIndex;
+struct PhraseIndex;
 
 struct HeadIndexNode {
   List<Entry> entries;
@@ -67,10 +75,13 @@ using TrunkIndex = Array<TrunkIndexNode>;
 
 using TailIndex = Array<LongEntry>;
 
-union PhraseIndex {
-  TrunkIndex trunk;
-  TailIndex tail;
-};
+//union Phraseindex {
+//  TrunkIndex trunk;
+//  TailIndex tail;
+//};
+RIME_TABLE_UNION(PhraseIndex, Array<char>,
+                 TrunkIndex, trunk,
+                 TailIndex, tail);
 
 using Index = HeadIndex;
 
@@ -120,14 +131,14 @@ class TableAccessor {
   double credibility_ = 1.0;
 };
 
-using TableQueryResult = std::map<int, std::vector<TableAccessor>>;
+using TableQueryResult = map<int, vector<TableAccessor>>;
 
 struct SyllableGraph;
 class TableQuery;
 
 class Table : public MappedFile {
  public:
-  Table(const std::string& file_name);
+  Table(const string& file_name);
   virtual ~Table();
 
   bool Load();
@@ -138,13 +149,13 @@ class Table : public MappedFile {
              uint32_t dict_file_checksum = 0);
 
   bool GetSyllabary(Syllabary* syllabary);
-  std::string GetSyllableById(int syllable_id);
+  string GetSyllableById(int syllable_id);
   TableAccessor QueryWords(int syllable_id);
   TableAccessor QueryPhrases(const Code& code);
   bool Query(const SyllableGraph& syll_graph,
              size_t start_pos,
              TableQueryResult* result);
-  std::string GetEntryText(const table::Entry& entry);
+  string GetEntryText(const table::Entry& entry);
 
   uint32_t dict_file_checksum() const;
 
@@ -158,18 +169,18 @@ class Table : public MappedFile {
   table::TailIndex* BuildTailIndex(const Code& prefix,
                                    const Vocabulary& vocabulary);
   bool BuildPhraseIndex(Code code, const Vocabulary& vocabulary,
-                        std::map<std::string, int>* index_data);
+                        map<string, int>* index_data);
   Array<table::Entry>* BuildEntryArray(const DictEntryList& entries);
   bool BuildEntryList(const DictEntryList& src, List<table::Entry>* dest);
   bool BuildEntry(const DictEntry& dict_entry, table::Entry* entry);
 
-  std::string GetString_v1(const table::StringType& x);
-  bool AddString_v1(const std::string& src, table::StringType* dest,
+  string GetString_v1(const table::StringType& x);
+  bool AddString_v1(const string& src, table::StringType* dest,
                     double weight);
 
   // v2
-  std::string GetString_v2(const table::StringType& x);
-  bool AddString_v2(const std::string& src, table::StringType* dest,
+  string GetString_v2(const table::StringType& x);
+  bool AddString_v2(const string& src, table::StringType* dest,
                     double weight);
   bool OnBuildStart_v2();
   bool OnBuildFinish_v2();
@@ -185,8 +196,8 @@ class Table : public MappedFile {
   struct TableFormat {
     const char* format_name;
 
-    std::string (Table::*GetString)(const table::StringType& x);
-    bool (Table::*AddString)(const std::string& src, table::StringType* dest,
+    string (Table::*GetString)(const table::StringType& x);
+    bool (Table::*AddString)(const string& src, table::StringType* dest,
                              double weight);
 
     bool (Table::*OnBuildStart)();
@@ -195,8 +206,8 @@ class Table : public MappedFile {
   } format_;
 
   // v2
-  unique_ptr<StringTable> string_table_;
-  unique_ptr<StringTableBuilder> string_table_builder_;
+  the<StringTable> string_table_;
+  the<StringTableBuilder> string_table_builder_;
 };
 
 }  // namespace rime

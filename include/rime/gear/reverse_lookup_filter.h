@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-11-05 GONG Chen <chen.sst@gmail.com>
 //
@@ -20,18 +20,20 @@ class ReverseLookupFilter : public Filter, TagMatching {
  public:
   explicit ReverseLookupFilter(const Ticket& ticket);
 
-  virtual void Apply(CandidateList* recruited,
-                     CandidateList* candidates);
+  virtual an<Translation> Apply(an<Translation> translation,
+                                        CandidateList* candidates);
 
   virtual bool AppliesToSegment(Segment* segment) {
     return TagsMatch(segment);
   }
 
+  void Process(const an<Candidate>& cand);
+
  protected:
   void Initialize();
 
   bool initialized_ = false;
-  unique_ptr<ReverseLookupDictionary> rev_dict_;
+  the<ReverseLookupDictionary> rev_dict_;
   // settings
   bool overwrite_comment_ = false;
   Projection comment_formatter_;

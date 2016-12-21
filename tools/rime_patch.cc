@@ -2,9 +2,9 @@
 // Foodgen <chen.sst@gmail.com>
 //
 #include <iostream>
-#include <string>
 #include <rime_api.h>
 #include <rime_levers_api.h>
+#include <rime/common.h>
 
 // usage:
 //   rime_patch config_id key [yaml]
@@ -14,9 +14,10 @@
 //   rime_patch default schema_list '[{schema: luna_pinyin}]'
 //   rime_patch default schema_list  # read yaml from stdin
 
+using namespace rime;
 
-int apply_patch(const std::string& config_id,
-                const std::string& key, const std::string& yaml) {
+int apply_patch(const string& config_id,
+                const string& key, const string& yaml) {
   RimeApi* rime = rime_get_api();
   RimeModule* module = rime->find_module("levers");
   if (!module) {
@@ -62,11 +63,11 @@ int main(int argc, char *argv[]) {
   traits.app_name = "rime.patch";
   rime->setup(&traits);
 
-  rime->initialize(&traits);
+  rime->deployer_initialize(&traits);
 
-  std::string config_id(argv[1]);
-  std::string key(argv[2]);
-  std::string yaml;
+  string config_id(argv[1]);
+  string key(argv[2]);
+  string yaml;
   if (argc > 3) {
     yaml.assign(argv[3]);
   }

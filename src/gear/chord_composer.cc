@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2012-06-05 GONG Chen <chen.sst@gmail.com>
 //
@@ -85,7 +85,7 @@ ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
       DLOG(INFO) << "update sequence: " << sequence_;
     }
   }
-  if (alphabet_.find(ch) == std::string::npos) {
+  if (alphabet_.find(ch) == string::npos) {
     return chording ? kAccepted : kNoop;
   }
   // in alphabet
@@ -103,8 +103,8 @@ ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   return kAccepted;
 }
 
-std::string ChordComposer::SerializeChord() {
-  std::string code;
+string ChordComposer::SerializeChord() {
+  string code;
   for (char ch : alphabet_) {
     if (chord_.find(ch) != chord_.end())
       code.push_back(ch);
@@ -117,28 +117,28 @@ void ChordComposer::UpdateChord() {
   if (!engine_)
     return;
   Context* ctx = engine_->context();
-  Composition* comp = ctx->composition();
-  std::string code = SerializeChord();
+  Composition& comp = ctx->composition();
+  string code = SerializeChord();
   prompt_format_.Apply(&code);
-  if (comp->empty()) {
+  if (comp.empty()) {
     // add an invisbile place holder segment
     // 1. to cheat ctx->IsComposing() == true
     // 2. to attach chord prompt to while chording
     ctx->PushInput(kZeroWidthSpace);
-    if (comp->empty()) {
+    if (comp.empty()) {
       LOG(ERROR) << "failed to update chord.";
       return;
     }
-    comp->back().tags.insert("phony");
+    comp.back().tags.insert("phony");
   }
-  comp->back().tags.insert("chord_prompt");
-  comp->back().prompt = code;
+  comp.back().tags.insert("chord_prompt");
+  comp.back().prompt = code;
 }
 
 void ChordComposer::FinishChord() {
   if (!engine_)
     return;
-  std::string code = SerializeChord();
+  string code = SerializeChord();
   output_format_.Apply(&code);
   ClearChord();
 
@@ -148,7 +148,7 @@ void ChordComposer::FinishChord() {
     for (const KeyEvent& key : sequence) {
       if (!engine_->ProcessKey(key)) {
         // direct commit
-        engine_->CommitText(std::string(1, key.keycode()));
+        engine_->CommitText(string(1, key.keycode()));
         // exclude the character (eg. space) from the following sequence
         sequence_.clear();
       }
@@ -163,16 +163,16 @@ void ChordComposer::ClearChord() {
   if (!engine_)
     return;
   Context* ctx = engine_->context();
-  Composition* comp = ctx->composition();
-  if (comp->empty()) {
+  Composition& comp = ctx->composition();
+  if (comp.empty()) {
     return;
   }
-  if (comp->input().substr(comp->back().start) == kZeroWidthSpace) {
-    ctx->PopInput(ctx->caret_pos() - comp->back().start);
+  if (comp.input().substr(comp.back().start) == kZeroWidthSpace) {
+    ctx->PopInput(ctx->caret_pos() - comp.back().start);
   }
-  else if (comp->back().HasTag("chord_prompt")) {
-    comp->back().prompt.clear();
-    comp->back().tags.erase("chord_prompt");
+  else if (comp.back().HasTag("chord_prompt")) {
+    comp.back().prompt.clear();
+    comp.back().tags.erase("chord_prompt");
   }
 }
 
@@ -180,16 +180,16 @@ bool ChordComposer::DeleteLastSyllable() {
   if (!engine_)
     return false;
   Context* ctx = engine_->context();
-  Composition* comp = ctx->composition();
-  const std::string& input(ctx->input());
-  size_t start = comp->empty() ? 0 : comp->back().start;
+  Composition& comp = ctx->composition();
+  const string& input(ctx->input());
+  size_t start = comp.empty() ? 0 : comp.back().start;
   size_t caret_pos = ctx->caret_pos();
   if (input.empty() || caret_pos <= start)
     return false;
   size_t deleted = 0;
   for (; caret_pos > start; --caret_pos, ++deleted) {
     if (deleted > 0 &&
-        delimiter_.find(input[caret_pos - 1]) != std::string::npos)
+        delimiter_.find(input[caret_pos - 1]) != string::npos)
       break;
   }
   ctx->PopInput(deleted);

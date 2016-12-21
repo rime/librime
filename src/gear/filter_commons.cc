@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-11-05 GONG Chen <chen.sst@gmail.com>
 //
@@ -29,7 +29,7 @@ bool TagMatching::TagsMatch(Segment* segment) {
     return false;
   if (tags_.empty())  // match any
     return true;
-  for (const std::string& tag : tags_) {
+  for (const string& tag : tags_) {
     if (segment->HasTag(tag))
       return true;
   }

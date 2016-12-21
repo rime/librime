@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-12-11 GONG Chen <chen.sst@gmail.com>
 //
@@ -17,6 +17,7 @@ namespace rime {
 
 class Engine;
 struct Segment;
+class Translation;
 
 class Filter : public Class<Filter, const Ticket&> {
  public:
@@ -24,8 +25,8 @@ class Filter : public Class<Filter, const Ticket&> {
       : engine_(ticket.engine), name_space_(ticket.name_space) {}
   virtual ~Filter() = default;
 
-  virtual void Apply(CandidateList* recruited,
-                     CandidateList* candidates) = 0;
+  virtual an<Translation> Apply(an<Translation> translation,
+                                        CandidateList* candidates) = 0;
 
   virtual bool AppliesToSegment(Segment* segment) {
     return true;
@@ -33,7 +34,7 @@ class Filter : public Class<Filter, const Ticket&> {
 
  protected:
   Engine* engine_;
-  std::string name_space_;
+  string name_space_;
 };
 
 }  // namespace rime

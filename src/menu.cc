@@ -1,74 +1,47 @@
-
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-05-29 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
 #include <iterator>
+#include <rime/filter.h>
 #include <rime/menu.h>
 #include <rime/translation.h>
 
 namespace rime {
 
-void Menu::AddTranslation(shared_ptr<Translation> translation) {
-  translations_.push_back(translation);
-  DLOG(INFO) << translations_.size() << " translations added.";
+Menu::Menu()
+    : merged_(new MergedTranslation(candidates_)),
+      result_(merged_) {
 }
 
-size_t Menu::Prepare(size_t candidate_count) {
-  DLOG(INFO) << "preparing " << candidate_count << " candidates.";
-  size_t count = candidates_.size();
-  if (count >= candidate_count)
-    return count;
-  while (count < candidate_count && !translations_.empty()) {
-    size_t k = 0;
-    for (; k < translations_.size(); ++k) {
-      shared_ptr<Translation> next;
-      if (k + 1 < translations_.size())
-        next = translations_[k + 1];
-      if (translations_[k]->Compare(next, candidates_) <= 0) {
-        break;
-      }
+void Menu::AddTranslation(an<Translation> translation) {
+  *merged_ += translation;
+  DLOG(INFO) << merged_->size() << " translations added.";
+}
+
+void Menu::AddFilter(Filter* filter) {
+  result_ = filter->Apply(result_, &candidates_);
+}
+
+size_t Menu::Prepare(size_t requested) {
+  DLOG(INFO) << "preparing " << requested << " candidates.";
+  while (candidates_.size() < requested && !result_->exhausted()) {
+    if (auto cand = result_->Peek()) {
+      candidates_.push_back(cand);
     }
-    if (k >= translations_.size()) {
-      DLOG(WARNING) << "failed to select a winner translation.";
-      break;
-    }
-    if (translations_[k]->exhausted()) {
-      LOG(WARNING) << "selected translation #" << k << " has been exhausted!";
-      translations_.erase(translations_.begin() + k);
-      continue;
-    }
-    CandidateList next_candidates;
-    next_candidates.push_back(translations_[k]->Peek());
-    if (filter_) {
-      filter_(&candidates_, &next_candidates);
-    }
-    if (next_candidates.empty()) {
-      DLOG(INFO) << "filter returns empty candidate list.";
-    }
-    else {
-      DLOG(INFO) << "recruiting " << next_candidates.size() << " candidates.";
-      std::copy(next_candidates.begin(), next_candidates.end(),
-                std::back_inserter(candidates_));
-    }
-    count = candidates_.size();
-    translations_[k]->Next();
-    if (translations_[k]->exhausted()) {
-      DLOG(INFO) << "translation #" << k << " has been exhausted.";
-      translations_.erase(translations_.begin() + k);
-    }
+    result_->Next();
   }
-  return count;
+  return candidates_.size();
 }
 
 Page* Menu::CreatePage(size_t page_size, size_t page_no) {
   size_t start_pos = page_size * page_no;
   size_t end_pos = start_pos + page_size;
   if (end_pos > candidates_.size()) {
-    if (translations_.empty())
+    if (result_->exhausted())
       end_pos = candidates_.size();
     else
       end_pos = Prepare(end_pos);
@@ -81,19 +54,23 @@ Page* Menu::CreatePage(size_t page_size, size_t page_no) {
     return NULL;
   page->page_size = page_size;
   page->page_no = page_no;
-  page->is_last_page = (translations_.empty()) && (end_pos == candidates_.size());
+  page->is_last_page = result_->exhausted() && (end_pos == candidates_.size());
   std::copy(candidates_.begin() + start_pos,
             candidates_.begin() + end_pos,
             std::back_inserter(page->candidates));
   return page;
 }
 
-shared_ptr<Candidate> Menu::GetCandidateAt(size_t index) {
+an<Candidate> Menu::GetCandidateAt(size_t index) {
   if (index >= candidates_.size() &&
       index >= Prepare(index + 1)) {
-    return shared_ptr<Candidate>();
+    return nullptr;
   }
   return candidates_[index];
+}
+
+bool Menu::empty() const {
+  return candidates_.empty() && result_->exhausted();
 }
 
 }  // namespace rime

@@ -1,40 +1,38 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-11-02 GONG Chen <chen.sst@gmail.com>
 //
 #include <cstdlib>
-#include <vector>
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <rime/service.h>
 #include <rime/algo/dynamics.h>
 #include <rime/dict/text_db.h>
-#include <rime/dict/tree_db.h>
 #include <rime/dict/user_db.h>
 
 namespace rime {
 
-UserDbValue::UserDbValue(const std::string& value) {
+UserDbValue::UserDbValue(const string& value) {
   Unpack(value);
 }
 
-std::string UserDbValue::Pack() const {
+string UserDbValue::Pack() const {
   return boost::str(boost::format("c=%1% d=%2% t=%3%") %
                     commits % dee % tick);
 }
 
-bool UserDbValue::Unpack(const std::string& value) {
-  std::vector<std::string> kv;
+bool UserDbValue::Unpack(const string& value) {
+  vector<string> kv;
   boost::split(kv, value, boost::is_any_of(" "));
-  for (const std::string& k_eq_v : kv) {
+  for (const string& k_eq_v : kv) {
     size_t eq = k_eq_v.find('=');
-    if (eq == std::string::npos)
+    if (eq == string::npos)
       continue;
-    std::string k(k_eq_v.substr(0, eq));
-    std::string v(k_eq_v.substr(eq + 1));
+    string k(k_eq_v.substr(0, eq));
+    string v(k_eq_v.substr(eq + 1));
     try {
       if (k == "c") {
         commits = boost::lexical_cast<int>(v);
@@ -56,27 +54,21 @@ bool UserDbValue::Unpack(const std::string& value) {
 }
 
 template <>
-const std::string UserDb<TextDb>::extension(".userdb.txt");
+const string UserDbFormat<TextDb>::extension(".userdb.txt");
 
 template <>
-const std::string UserDb<TextDb>::snapshot_extension(".userdb.txt");
-
-template <>
-const std::string UserDb<TreeDb>::extension(".userdb.kct");
-
-template <>
-const std::string UserDb<TreeDb>::snapshot_extension(".userdb.kcss");
+const string UserDbFormat<TextDb>::snapshot_extension(".userdb.txt");
 
 // key ::= code <space> <Tab> phrase
 
 static bool userdb_entry_parser(const Tsv& row,
-                                std::string* key,
-                                std::string* value) {
+                                string* key,
+                                string* value) {
   if (row.size() < 2 ||
       row[0].empty() || row[1].empty()) {
     return false;
   }
-  std::string code(row[0]);
+  string code(row[0]);
   // fix invalid keys created by a buggy version
   if (code[code.length() - 1] != ' ')
     code += ' ';
@@ -88,8 +80,8 @@ static bool userdb_entry_parser(const Tsv& row,
   return true;
 }
 
-static bool userdb_entry_formatter(const std::string& key,
-                                   const std::string& value,
+static bool userdb_entry_formatter(const string& key,
+                                   const string& value,
                                    Tsv* tsv) {
   Tsv& row(*tsv);
   boost::algorithm::split(row, key,
@@ -108,107 +100,82 @@ static TextFormat plain_userdb_format = {
 };
 
 template <>
-UserDb<TextDb>::UserDb(const std::string& name)
-    : TextDb(name + extension, "userdb", plain_userdb_format) {
+UserDbWrapper<TextDb>::UserDbWrapper(const string& db_name)
+    : TextDb(db_name, "userdb", plain_userdb_format) {
 }
 
-template <>
-UserDb<TreeDb>::UserDb(const std::string& name)
-    : TreeDb(name + extension, "userdb") {
-}
-
-template <class BaseDb>
-bool UserDb<BaseDb>::CreateMetadata() {
+bool UserDbHelper::UpdateUserInfo() {
   Deployer& deployer(Service::instance().deployer());
-  return BaseDb::CreateMetadata() &&
-      BaseDb::MetaUpdate("/user_id", deployer.user_id);
+  return db_->MetaUpdate("/user_id", deployer.user_id);
 }
 
-template <>
-bool UserDb<TextDb>::Backup(const std::string& snapshot_file) {
-  return TextDb::Backup(snapshot_file);
+bool UserDbHelper::IsUniformFormat(const string& file_name) {
+  return boost::ends_with(file_name,
+                          UserDbFormat<TextDb>::snapshot_extension);
 }
 
-template <>
-bool UserDb<TextDb>::Restore(const std::string& snapshot_file) {
-  return TextDb::Restore(snapshot_file);
-}
-
-template <>
-bool UserDb<TreeDb>::Backup(const std::string& snapshot_file) {
-  // plain userdb format
-  if (boost::ends_with(snapshot_file, UserDb<TextDb>::snapshot_extension)) {
-    LOG(INFO) << "backing up db '" << name() << "' to " << snapshot_file;
-    TsvWriter writer(snapshot_file, plain_userdb_format.formatter);
-    writer.file_description = plain_userdb_format.file_description;
-    DbSource source(this);
-    try {
-      writer << source;
-    }
-    catch (std::exception& ex) {
-      LOG(ERROR) << ex.what();
-      return false;
-    }
-    return true;
+bool UserDbHelper::UniformBackup(const string& snapshot_file) {
+  LOG(INFO) << "backing up userdb '" << db_->name() << "' to "
+            << snapshot_file;
+  TsvWriter writer(snapshot_file, plain_userdb_format.formatter);
+  writer.file_description = plain_userdb_format.file_description;
+  DbSource source(db_);
+  try {
+    writer << source;
   }
-  // KCSS format
-  return TreeDb::Backup(snapshot_file);
-}
-
-template <>
-bool UserDb<TreeDb>::Restore(const std::string& snapshot_file) {
-  // plain userdb format
-  if (boost::ends_with(snapshot_file, UserDb<TextDb>::snapshot_extension)) {
-    LOG(INFO) << "restoring db '" << name() << "' from " << snapshot_file;
-    TsvReader reader(snapshot_file, plain_userdb_format.parser);
-    DbSink sink(this);
-    try {
-      reader >> sink;
-    }
-    catch (std::exception& ex) {
-      LOG(ERROR) << ex.what();
-      return false;
-    }
-    return true;
+  catch (std::exception& ex) {
+    LOG(ERROR) << ex.what();
+    return false;
   }
-  // KCSS format
-  return TreeDb::Restore(snapshot_file);
+  return true;
 }
 
-template <class BaseDb>
-bool UserDb<BaseDb>::IsUserDb() {
-  std::string db_type;
-  return BaseDb::MetaFetch("/db_type", &db_type) && (db_type == "userdb");
+bool UserDbHelper::UniformRestore(const string& snapshot_file) {
+  LOG(INFO) << "restoring userdb '" << db_->name() << "' from "
+            << snapshot_file;
+  TsvReader reader(snapshot_file, plain_userdb_format.parser);
+  DbSink sink(db_);
+  try {
+    reader >> sink;
+  }
+  catch (std::exception& ex) {
+    LOG(ERROR) << ex.what();
+    return false;
+  }
+  return true;
 }
 
-template <class BaseDb>
-std::string UserDb<BaseDb>::GetDbName() {
-  std::string name;
-  if (!BaseDb::MetaFetch("/db_name", &name))
+bool UserDbHelper::IsUserDb() {
+  string db_type;
+  return db_->MetaFetch("/db_type", &db_type) && (db_type == "userdb");
+}
+
+string UserDbHelper::GetDbName() {
+  string name;
+  if (!db_->MetaFetch("/db_name", &name))
     return name;
-  boost::erase_last(name, extension);
+  auto ext = boost::find_last(name, ".userdb");
+  if (!ext.empty()) {
+    // remove ".userdb.*"
+    name.erase(ext.begin(), name.end());
+  }
   return name;
 }
 
-template <class BaseDb>
-std::string UserDb<BaseDb>::GetUserId() {
-  std::string user_id("unknown");
-  BaseDb::MetaFetch("/user_id", &user_id);
+string UserDbHelper::GetUserId() {
+  string user_id("unknown");
+  db_->MetaFetch("/user_id", &user_id);
   return user_id;
 }
 
-template <class BaseDb>
-std::string UserDb<BaseDb>::GetRimeVersion() {
-  std::string version;
-  BaseDb::MetaFetch("/rime_version", &version);
+string UserDbHelper::GetRimeVersion() {
+  string version;
+  db_->MetaFetch("/rime_version", &version);
   return version;
 }
 
-template class UserDb<TextDb>;
-template class UserDb<TreeDb>;
-
 static TickCount get_tick_count(Db* db) {
-  std::string tick;
+  string tick;
   if (db && db->MetaFetch("/tick", &tick)) {
     try {
       return boost::lexical_cast<TickCount>(tick);
@@ -229,7 +196,7 @@ UserDbMerger::~UserDbMerger() {
   CloseMerge();
 }
 
-bool UserDbMerger::MetaPut(const std::string& key, const std::string& value) {
+bool UserDbMerger::MetaPut(const string& key, const string& value) {
   if (key == "/tick") {
     try {
       their_tick_ = boost::lexical_cast<TickCount>(value);
@@ -241,14 +208,14 @@ bool UserDbMerger::MetaPut(const std::string& key, const std::string& value) {
   return true;
 }
 
-bool UserDbMerger::Put(const std::string& key, const std::string& value) {
+bool UserDbMerger::Put(const string& key, const string& value) {
   if (!db_) return false;
   UserDbValue v(value);
   if (v.tick < their_tick_) {
     v.dee = algo::formula_d(0, (double)their_tick_, v.dee, (double)v.tick);
   }
   UserDbValue o;
-  std::string our_value;
+  string our_value;
   if (db_->Fetch(key, &our_value)) {
     o.Unpack(our_value);
   }
@@ -267,7 +234,7 @@ void UserDbMerger::CloseMerge() {
     return;
   Deployer& deployer(Service::instance().deployer());
   try {
-    db_->MetaUpdate("/tick", boost::lexical_cast<std::string>(max_tick_));
+    db_->MetaUpdate("/tick", boost::lexical_cast<string>(max_tick_));
     db_->MetaUpdate("/user_id", deployer.user_id);
   }
   catch (...) {
@@ -283,15 +250,15 @@ UserDbImporter::UserDbImporter(Db* db)
     : db_(db) {
 }
 
-bool UserDbImporter::MetaPut(const std::string& key, const std::string& value) {
+bool UserDbImporter::MetaPut(const string& key, const string& value) {
   return true;
 }
 
-bool UserDbImporter::Put(const std::string& key, const std::string& value) {
+bool UserDbImporter::Put(const string& key, const string& value) {
   if (!db_) return false;
   UserDbValue v(value);
   UserDbValue o;
-  std::string old_value;
+  string old_value;
   if (db_->Fetch(key, &old_value)) {
     o.Unpack(old_value);
   }

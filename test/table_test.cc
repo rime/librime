@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-07-03 GONG Chen <chen.sst@gmail.com>
 //
@@ -21,8 +21,10 @@ class RimeTableTest : public ::testing::Test {
       ASSERT_TRUE(table_->Build(syll, voc, total_num_entries));
       ASSERT_TRUE(table_->Save());
     }
+    table_->Load();
   }
   virtual void TearDown() {
+    table_->Close();
   }
  protected:
   static const int total_num_entries = 8;
@@ -30,15 +32,15 @@ class RimeTableTest : public ::testing::Test {
 
   static void PrepareSampleVocabulary(rime::Syllabary& syll,
                                       rime::Vocabulary& voc);
-  static std::string Text(const rime::TableAccessor& a) {
+  static rime::string Text(const rime::TableAccessor& a) {
     return table_->GetEntryText(*a.entry());
   }
-  static rime::unique_ptr<rime::Table> table_;
+  static rime::the<rime::Table> table_;
 };
 
 const char RimeTableTest::file_name[] = "table_test.bin";
 
-rime::unique_ptr<rime::Table> RimeTableTest::table_;
+rime::the<rime::Table> RimeTableTest::table_;
 
 void RimeTableTest::PrepareSampleVocabulary(rime::Syllabary& syll,
                                             rime::Vocabulary& voc) {
@@ -158,7 +160,7 @@ TEST_F(RimeTableTest, SimpleQuery) {
 }
 
 TEST_F(RimeTableTest, QueryWithSyllableGraph) {
-  const std::string input("yiersansi");
+  const rime::string input("yiersansi");
   rime::SyllableGraph g;
   g.input_length = input.length();
   g.interpreted_length = g.input_length;

@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-10-27 GONG Chen <chen.sst@gmail.com>
 //
@@ -24,19 +24,23 @@ class Speller : public Processor {
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:
+  enum AutoClearMethod { kClearNone, kClearAuto, kClearManual, kClearMaxLength };
+
   bool AutoSelectAtMaxCodeLength(Context* ctx);
   bool AutoSelectUniqueCandidate(Context* ctx);
   bool AutoSelectPreviousMatch(Context* ctx, Segment* previous_segment);
   bool FindEarlierMatch(Context* ctx, size_t start, size_t end);
+  bool AutoClear(Context* ctx);
 
-  std::string alphabet_;
-  std::string delimiters_;
-  std::string initials_;
-  std::string finals_;
+  string alphabet_;
+  string delimiters_;
+  string initials_;
+  string finals_;
   int max_code_length_ = 0;
   bool auto_select_ = false;
   bool use_space_ = false;
   boost::regex auto_select_pattern_;
+  AutoClearMethod auto_clear_ = kClearNone;
 };
 
 }  // namespace rime

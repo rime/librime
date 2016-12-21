@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-01-02 GONG Chen <chen.sst@gmail.com>
 //
@@ -24,7 +24,7 @@ void CommitEntry::Clear() {
   elements.clear();
 }
 
-void CommitEntry::AppendPhrase(const shared_ptr<Phrase>& phrase) {
+void CommitEntry::AppendPhrase(const an<Phrase>& phrase) {
   text += phrase->text();
   code.insert(code.end(),
               phrase->code().begin(), phrase->code().end());
@@ -80,13 +80,24 @@ Memory::~Memory() {
   unhandled_key_connection_.disconnect();
 }
 
+bool Memory::StartSession() {
+  return user_dict_ && user_dict_->NewTransaction();
+}
+
+bool Memory::FinishSession() {
+  return user_dict_ && user_dict_->CommitPendingTransaction();
+}
+
+bool Memory::DiscardSession() {
+  return user_dict_ && user_dict_->RevertRecentTransaction();
+}
+
 void Memory::OnCommit(Context* ctx) {
   if (!user_dict_|| user_dict_->readonly())
     return;
-  user_dict_->NewTransaction();
-
+  StartSession();
   CommitEntry commit_entry(this);
-  for (auto& seg : *ctx->composition()) {
+  for (auto& seg : ctx->composition()) {
     auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(
             seg.GetSelectedCandidate()));
     bool recognized = phrase && phrase->language() == language();
@@ -104,11 +115,10 @@ void Memory::OnDeleteEntry(Context* ctx) {
   if (!user_dict_ ||
       user_dict_->readonly() ||
       !ctx ||
-      ctx->composition()->empty())
+      !ctx->HasMenu())
     return;
-  Segment& seg(ctx->composition()->back());
   auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(
-          seg.GetSelectedCandidate()));
+          ctx->GetSelectedCandidate()));
   bool recognized = phrase && phrase->language() == language();
   if (recognized) {
     const DictEntry& entry(phrase->entry());
@@ -119,13 +129,13 @@ void Memory::OnDeleteEntry(Context* ctx) {
 }
 
 void Memory::OnUnhandledKey(Context* ctx, const KeyEvent& key) {
-  if (!user_dict_ || user_dict_->readonly()) return;
+  if (!user_dict_ || user_dict_->readonly())
+    return;
   if ((key.modifier() & ~kShiftMask) == 0) {
-    if (key.keycode() == XK_BackSpace &&
-        user_dict_->RevertRecentTransaction()) {
+    if (key.keycode() == XK_BackSpace && DiscardSession()) {
       return;  // forget about last commit
     }
-    user_dict_->CommitPendingTransaction();
+    FinishSession();
   }
 }
 

@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-12-18 GONG Chen <chen.sst@gmail.com>
 //
@@ -20,7 +20,7 @@ AsciiSegmentor::AsciiSegmentor(const Ticket& ticket) : Segmentor(ticket) {
 bool AsciiSegmentor::Proceed(Segmentation* segmentation) {
   if (!engine_->context()->get_option("ascii_mode"))
     return true;
-  const std::string& input = segmentation->input();
+  const string& input = segmentation->input();
   size_t j = segmentation->GetCurrentStartPosition();
   if (j < input.length()) {
     Segment segment(j, input.length());

@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-05-16 Zou Xu <zouivex@gmail.com>
 // 2012-01-26 GONG Chen <chen.sst@gmail.com>  spelling algebra support
@@ -11,16 +11,16 @@
 #include <rime/algo/algebra.h>
 #include <rime/dict/prism.h>
 
+namespace rime {
+
 namespace {
 
 struct node_t {
-  std::string key;
+  string key;
   size_t node_pos;
 };
 
 }  // namespace
-
-namespace rime {
 
 const char kPrismFormat[] = "Rime::Prism/1.0";
 
@@ -69,7 +69,7 @@ SpellingProperties SpellingAccessor::properties() const {
   return props;
 }
 
-Prism::Prism(const std::string& file_name)
+Prism::Prism(const string& file_name)
   : MappedFile(file_name), trie_(new Darts::DoubleArray) {
 }
 
@@ -130,7 +130,7 @@ bool Prism::Build(const Syllabary& syllabary,
   // building double-array trie
   size_t num_syllables = syllabary.size();
   size_t num_spellings = script ? script->size() : syllabary.size();
-  std::vector<const char*> keys(num_spellings);
+  vector<const char*> keys(num_spellings);
   size_t key_id = 0;
   size_t map_size = 0;
   if (script) {
@@ -172,12 +172,12 @@ bool Prism::Build(const Syllabary& syllabary,
   metadata_ = metadata;
   // alphabet
   {
-    std::set<char> alphabet;
+    set<char> alphabet;
     for (size_t i = 0; i < num_spellings; ++i)
       for (const char* p = keys[i]; *p; ++p)
         alphabet.insert(*p);
     char* p = metadata->alphabet;
-    std::set<char>::const_iterator c = alphabet.begin();
+    set<char>::const_iterator c = alphabet.begin();
     for (; c != alphabet.end(); ++p, ++c)
       *p = *c;
     *p = '\0';
@@ -193,7 +193,7 @@ bool Prism::Build(const Syllabary& syllabary,
   metadata->double_array_size = array_size;
   // building spelling map
   if (script) {
-    std::map<std::string, SyllableId> syllable_to_id;
+    map<string, SyllableId> syllable_to_id;
     SyllableId syll_id = 0;
     for (auto it = syllabary.begin(); it != syllabary.end(); ++it) {
       syllable_to_id[*it] = syll_id++;
@@ -235,12 +235,12 @@ bool Prism::Build(const Syllabary& syllabary,
   return true;
 }
 
-bool Prism::HasKey(const std::string& key) {
+bool Prism::HasKey(const string& key) {
   int value = trie_->exactMatchSearch<int>(key.c_str());
   return value != -1;
 }
 
-bool Prism::GetValue(const std::string& key, int* value) {
+bool Prism::GetValue(const string& key, int* value) {
   int result = trie_->exactMatchSearch<int>(key.c_str());
   if (result == -1) {
     return false;
@@ -251,8 +251,8 @@ bool Prism::GetValue(const std::string& key, int* value) {
 
 // Given a key, search all the keys in the tree that share
 // a common prefix with that key.
-void Prism::CommonPrefixSearch(const std::string& key,
-                               std::vector<Match>* result) {
+void Prism::CommonPrefixSearch(const string& key,
+                               vector<Match>* result) {
   if (!result || key.empty())
     return;
   size_t len = key.length();
@@ -262,8 +262,8 @@ void Prism::CommonPrefixSearch(const std::string& key,
   result->resize(num_results);
 }
 
-void Prism::ExpandSearch(const std::string& key,
-                         std::vector<Match>* result,
+void Prism::ExpandSearch(const string& key,
+                         vector<Match>* result,
                          size_t limit) {
   if (!result)
     return;
@@ -288,7 +288,7 @@ void Prism::ExpandSearch(const std::string& key,
     const char* c = (format_ > 1.0 - DBL_EPSILON) ? metadata_->alphabet
                                                   : kDefaultAlphabet;
     for (; *c; ++c) {
-      std::string k = node.key + *c;
+      string k = node.key + *c;
       size_t k_pos = node.key.length();
       size_t n_pos = node.node_pos;
       ret = trie_->traverse(k.c_str(), n_pos, k_pos);

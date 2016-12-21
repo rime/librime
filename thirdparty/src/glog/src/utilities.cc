@@ -136,13 +136,18 @@ static void DumpStackTrace(int skip_count, DebugWriter *writerfn, void *arg) {
 static void DumpStackTraceAndExit() {
   DumpStackTrace(1, DebugWriteToStderr, NULL);
 
-  // Set the default signal handler for SIGABRT, to avoid invoking our
-  // own signal handler installed by InstallFailedSignalHandler().
-  struct sigaction sig_action;
-  memset(&sig_action, 0, sizeof(sig_action));
-  sigemptyset(&sig_action.sa_mask);
-  sig_action.sa_handler = SIG_DFL;
-  sigaction(SIGABRT, &sig_action, NULL);
+  // TOOD(hamaji): Use signal instead of sigaction?
+#ifdef HAVE_SIGACTION
+  if (IsFailureSignalHandlerInstalled()) {
+    // Set the default signal handler for SIGABRT, to avoid invoking our
+    // own signal handler installed by InstallFailureSignalHandler().
+    struct sigaction sig_action;
+    memset(&sig_action, 0, sizeof(sig_action));
+    sigemptyset(&sig_action.sa_mask);
+    sig_action.sa_handler = SIG_DFL;
+    sigaction(SIGABRT, &sig_action, NULL);
+  }
+#endif  // HAVE_SIGACTION
 
   abort();
 }
@@ -233,8 +238,8 @@ bool PidHasChanged() {
 }
 
 pid_t GetTID() {
-  // On Linux and FreeBSD, we try to use gettid().
-#if defined OS_LINUX || defined OS_FREEBSD || defined OS_MACOSX
+  // On Linux and MacOSX, we try to use gettid().
+#if defined OS_LINUX || defined OS_MACOSX
 #ifndef __NR_gettid
 #ifdef OS_MACOSX
 #define __NR_gettid SYS_gettid
@@ -256,7 +261,7 @@ pid_t GetTID() {
     // the value change to "true".
     lacks_gettid = true;
   }
-#endif  // OS_LINUX || OS_FREEBSD
+#endif  // OS_LINUX || OS_MACOSX
 
   // If gettid() could not be used, we use one of the following.
 #if defined OS_LINUX
@@ -331,6 +336,7 @@ void InitGoogleLoggingUtilities(const char* argv0) {
 void ShutdownGoogleLoggingUtilities() {
   CHECK(IsGoogleLoggingInitialized())
       << "You called ShutdownGoogleLogging() without calling InitGoogleLogging() first!";
+  g_program_invocation_short_name = NULL;
 #ifdef HAVE_SYSLOG_H
   closelog();
 #endif

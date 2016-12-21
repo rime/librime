@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2012-01-19 GONG Chen <chen.sst@gmail.com>
 //
@@ -28,7 +28,7 @@ TEST(RimeAlgebraTest, SpellingManipulation) {
   rime::Projection p;
   ASSERT_TRUE(p.Load(c));
 
-  std::string str("Shang");
+  rime::string str("Shang");
   EXPECT_TRUE(p.Apply(&str));
   EXPECT_EQ("sang", str);
 }

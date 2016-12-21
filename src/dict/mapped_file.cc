@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // register components
 //
@@ -47,7 +47,7 @@ class MappedFileImpl {
     kOpenReadWrite,
   };
 
-  MappedFileImpl(const std::string& file_name, OpenMode mode) {
+  MappedFileImpl(const string& file_name, OpenMode mode) {
     boost::interprocess::mode_t file_mapping_mode =
         (mode == kOpenReadOnly) ? boost::interprocess::read_only
                                 : boost::interprocess::read_write;
@@ -69,12 +69,12 @@ class MappedFileImpl {
   }
 
  private:
-  unique_ptr<boost::interprocess::file_mapping> file_;
-  unique_ptr<boost::interprocess::mapped_region> region_;
+  the<boost::interprocess::file_mapping> file_;
+  the<boost::interprocess::mapped_region> region_;
 
 };
 
-MappedFile::MappedFile(const std::string& file_name)
+MappedFile::MappedFile(const string& file_name)
     : file_name_(file_name) {
 }
 
@@ -172,7 +172,7 @@ bool MappedFile::Resize(size_t capacity) {
   return true;
 }
 
-String* MappedFile::CreateString(const std::string& str) {
+String* MappedFile::CreateString(const string& str) {
   String* ret = Allocate<String>();
   if (ret && !str.empty()) {
     CopyString(str, ret);
@@ -180,7 +180,7 @@ String* MappedFile::CreateString(const std::string& str) {
   return ret;
 }
 
-bool MappedFile::CopyString(const std::string& src, String* dest) {
+bool MappedFile::CopyString(const string& src, String* dest) {
   if (!dest)
     return false;
   size_t size = src.length() + 1;

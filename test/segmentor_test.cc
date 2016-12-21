@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-05-20 GONG Chen <chen.sst@gmail.com>
 //
@@ -16,8 +16,8 @@ using namespace rime;
 TEST(AbcSegmentorTest, NoMatch) {
   Segmentor::Component* component = Segmentor::Require("abc_segmentor");
   ASSERT_TRUE(component != NULL);
-  unique_ptr<Engine> engine(Engine::Create());
-  unique_ptr<Segmentor> segmentor(component->Create(engine.get()));
+  the<Engine> engine(Engine::Create());
+  the<Segmentor> segmentor(component->Create(engine.get()));
   ASSERT_TRUE(bool(segmentor));
   Segmentation segmentation;
   segmentation.Reset("3.1415926");
@@ -30,8 +30,8 @@ TEST(AbcSegmentorTest, NoMatch) {
 TEST(AbcSegmentorTest, FullMatch) {
   Segmentor::Component* component = Segmentor::Require("abc_segmentor");
   ASSERT_TRUE(component != NULL);
-  unique_ptr<Engine> engine(Engine::Create());
-  unique_ptr<Segmentor> segmentor(component->Create(engine.get()));
+  the<Engine> engine(Engine::Create());
+  the<Segmentor> segmentor(component->Create(engine.get()));
   ASSERT_TRUE(bool(segmentor));
   Segmentation segmentation;
   segmentation.Reset("zyxwvutsrqponmlkjihgfedcba");
@@ -47,8 +47,8 @@ TEST(AbcSegmentorTest, FullMatch) {
 TEST(AbcSegmentorTest, PrefixMatch) {
   Segmentor::Component* component = Segmentor::Require("abc_segmentor");
   ASSERT_TRUE(component != NULL);
-  unique_ptr<Engine> engine(Engine::Create());
-  unique_ptr<Segmentor> segmentor(component->Create(engine.get()));
+  the<Engine> engine(Engine::Create());
+  the<Segmentor> segmentor(component->Create(engine.get()));
   ASSERT_TRUE(bool(segmentor));
   Segmentation segmentation;
   segmentation.Reset("abcdefg.1415926");

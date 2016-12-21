@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-12-18 GONG Chen <chen.sst@gmail.com>
 //
@@ -8,7 +8,6 @@
 #define RIME_ASCII_COMPOSER_H_
 
 #include <chrono>
-#include <map>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/processor.h>
@@ -26,7 +25,7 @@ enum AsciiModeSwitchStyle {
   kAsciiModeSwitchClear,
 };
 
-using AsciiModeSwitchKeyBindings = std::map<int /* keycode */,
+using AsciiModeSwitchKeyBindings = map<int /* keycode */,
                                             AsciiModeSwitchStyle>;
 
 class AsciiComposer : public Processor {

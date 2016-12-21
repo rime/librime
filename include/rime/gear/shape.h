@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-07-02 GONG Chen <chen.sst@gmail.com>
 //
@@ -17,7 +17,7 @@ class ShapeFormatter : public Formatter {
  public:
   ShapeFormatter(const Ticket& ticket) : Formatter(ticket) {
   }
-  virtual void Format(std::string* text);
+  virtual void Format(string* text);
 };
 
 class ShapeProcessor : public Processor {

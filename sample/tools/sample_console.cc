@@ -1,6 +1,6 @@
 /*
- * Copyleft RIME Developers
- * License: GPLv3
+ * Copyright RIME Developers
+ * Distributed under the BSD License
  *
  * 2014-01-04 GONG Chen <chen.sst@gmail.com>
  */
@@ -124,16 +124,14 @@ void on_message(void* context_object,
   printf("message: [%lu] [%s] %s\n", session_id, message_type, message_value);
 }
 
-static const char* sample_modules[] = {
-  "core", "dict", "gears", "levers", "sample", NULL
-};
+static RIME_MODULE_LIST(sample_modules, "default", "sample");
 
 int main(int argc, char *argv[]) {
   RimeApi* rime = rime_get_api();
 
   RIME_STRUCT(RimeTraits, traits);
   traits.app_name = "sample.console";
-  traits.modules = sample_modules;  // include module name "sample"
+  traits.modules = sample_modules;
   rime->setup(&traits);
 
   rime->set_notification_handler(&on_message, NULL);

@@ -4,7 +4,7 @@
 schema:
   schema_id: cangjie5
   name: 倉頡五代
-  version: "0.18"
+  version: "1.1.test"
   author:
     - 發明人 朱邦復先生
   description: |
@@ -48,6 +48,7 @@ engine:
   filters:
     - simplifier
     - uniquifier
+    - single_char_filter
 
 speller:
   alphabet: zyxwvutsrqponmlkjihgfedcba
@@ -62,7 +63,7 @@ translator:
   encode_commit_history: true
   max_phrase_length: 5
   preedit_format:
-    - xform/^([a-z]*)$/$1｜\U$1\E/
+    - 'xform/^([a-z]*)$/$1\t（\U$1\E）/'
     - "xlit|ABCDEFGHIJKLMNOPQRSTUVWXYZ|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符|"
   comment_format:
     - "xlit|abcdefghijklmnopqrstuvwxyz~|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符～|"

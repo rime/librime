@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
@@ -16,6 +16,7 @@
 #include <rime/translation.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/user_dictionary.h>
+#include <rime/gear/charset_filter.h>
 #include <rime/gear/table_translator.h>
 #include <rime/gear/translator_commons.h>
 #include <rime/gear/unity_table_encoder.h>
@@ -28,9 +29,9 @@ static const char* kUnitySymbol = " \xe2\x98\xaf ";
 
 TableTranslation::TableTranslation(TranslatorOptions* options,
                                    Language* language,
-                                   const std::string& input,
+                                   const string& input,
                                    size_t start, size_t end,
-                                   const std::string& preedit)
+                                   const string& preedit)
     : options_(options), language_(language),
       input_(input), start_(start), end_(end), preedit_(preedit) {
   if (options_)
@@ -40,9 +41,9 @@ TableTranslation::TableTranslation(TranslatorOptions* options,
 
 TableTranslation::TableTranslation(TranslatorOptions* options,
                                    Language* language,
-                                   const std::string& input,
+                                   const string& input,
                                    size_t start, size_t end,
-                                   const std::string& preedit,
+                                   const string& preedit,
                                    const DictEntryIterator& iter,
                                    const UserDictEntryIterator& uter)
     : options_(options), language_(language),
@@ -73,12 +74,12 @@ static bool is_constructed(const DictEntry* e) {
   return UnityTableEncoder::HasPrefix(e->custom_code);
 }
 
-shared_ptr<Candidate> TableTranslation::Peek() {
+an<Candidate> TableTranslation::Peek() {
   if (exhausted())
     return nullptr;
   bool is_user_phrase = PreferUserPhrase();
   auto e = PreferedEntry(is_user_phrase);
-  std::string comment(is_constructed(e.get()) ? kUnitySymbol : e->comment);
+  string comment(is_constructed(e.get()) ? kUnitySymbol : e->comment);
   if (options_) {
     options_->comment_formatter().Apply(&comment);
   }
@@ -125,9 +126,9 @@ class LazyTableTranslation : public TableTranslation {
   static const size_t kExpandingFactor = 10;
 
   LazyTableTranslation(TableTranslator* translator,
-                       const std::string& input,
+                       const string& input,
                        size_t start, size_t end,
-                       const std::string& preedit,
+                       const string& preedit,
                        bool enable_user_dict);
   bool FetchUserPhrases(TableTranslator* translator);
   virtual bool FetchMoreUserPhrases();
@@ -138,13 +139,13 @@ class LazyTableTranslation : public TableTranslation {
   UserDictionary* user_dict_;
   size_t limit_;
   size_t user_dict_limit_;
-  std::string user_dict_key_;
+  string user_dict_key_;
 };
 
 LazyTableTranslation::LazyTableTranslation(TableTranslator* translator,
-                                           const std::string& input,
+                                           const string& input,
                                            size_t start, size_t end,
-                                           const std::string& preedit,
+                                           const string& preedit,
                                            bool enable_user_dict)
     : TableTranslation(translator, translator->language(),
                        input, start, end, preedit),
@@ -233,29 +234,30 @@ TableTranslator::TableTranslator(const Ticket& ticket)
   }
 }
 
-static bool starts_with_completion(shared_ptr<Translation> translation) {
+static bool starts_with_completion(an<Translation> translation) {
   if (!translation)
     return false;
   auto cand = translation->Peek();
   return cand && cand->type() == "completion";
 }
 
-shared_ptr<Translation> TableTranslator::Query(const std::string& input,
-                                               const Segment& segment,
-                                               std::string* prompt) {
+an<Translation> TableTranslator::Query(const string& input,
+                                               const Segment& segment) {
   if (!segment.HasTag(tag_))
     return nullptr;
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
 
+  FinishSession();
+
   bool enable_user_dict = user_dict_ && user_dict_->loaded() &&
       !IsUserDictDisabledFor(input);
 
-  const std::string& preedit(input);
-  std::string code = input;
+  const string& preedit(input);
+  string code = input;
   boost::trim_right_if(code, boost::is_any_of(delimiters_));
 
-  shared_ptr<Translation> translation;
+  an<Translation> translation;
   if (enable_completion_) {
     translation = Cached<LazyTableTranslation>(
         this,
@@ -292,7 +294,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string& input,
     bool filter_by_charset = enable_charset_filter_ &&
         !engine_->context()->get_option("extended_charset");
     if (filter_by_charset) {
-      translation = New<CharsetFilter>(translation);
+      translation = New<CharsetFilterTranslation>(translation);
     }
   }
   if (translation && translation->exhausted()) {
@@ -309,7 +311,7 @@ shared_ptr<Translation> TableTranslator::Query(const std::string& input,
     }
   }
   if (translation) {
-    translation = New<UniqueFilter>(translation);
+    translation = New<DistinctTranslation>(translation);
   }
   if (translation && translation->exhausted()) {
     translation.reset();  // discard futile translation
@@ -342,7 +344,7 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
         if (it->type == "punct") {  // ending with punctuation
             ++it;
         }
-        std::string phrase;
+        string phrase;
         for (; it != history.rend(); ++it) {
           if (it->type != "table" && it->type != "sentence")
             break;
@@ -364,18 +366,38 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
   return true;
 }
 
+// SentenceSyllabifier
+
+class SentenceSyllabifier : public PhraseSyllabifier {
+ public:
+  virtual Spans Syllabify(const Phrase* phrase);
+};
+
+Spans SentenceSyllabifier::Syllabify(const Phrase* phrase) {
+  Spans result;
+  if (auto sentence = dynamic_cast<const Sentence*>(phrase)) {
+    size_t stop = sentence->start();
+    result.AddVertex(stop);
+    for (size_t len : sentence->syllable_lengths()) {
+      stop += len;
+      result.AddVertex(stop);
+    }
+  }
+  return result;
+}
+
 // SentenceTranslation
 
 class SentenceTranslation : public Translation {
  public:
   SentenceTranslation(TableTranslator* translator,
-                      shared_ptr<Sentence> sentence,
+                      an<Sentence> sentence,
                       DictEntryCollector* collector,
                       UserDictEntryCollector* ucollector,
-                      const std::string& input,
+                      const string& input,
                       size_t start);
   virtual bool Next();
-  virtual shared_ptr<Candidate> Peek();
+  virtual an<Candidate> Peek();
 
  protected:
   void PrepareSentence();
@@ -383,31 +405,19 @@ class SentenceTranslation : public Translation {
   bool PreferUserPhrase() const;
 
   TableTranslator* translator_;
-  shared_ptr<Sentence> sentence_;
+  an<Sentence> sentence_;
   DictEntryCollector collector_;
   UserDictEntryCollector user_phrase_collector_;
   size_t user_phrase_index_ = 0;
-  std::string input_;
+  string input_;
   size_t start_;
 };
 
-class SentenceSyllabification : public Syllabification {
- public:
-  SentenceSyllabification(weak_ptr<Sentence> sentence)
-      : syllabified_(sentence) {
-  }
-  virtual size_t PreviousStop(size_t caret_pos) const;
-  virtual size_t NextStop(size_t caret_pos) const;
-
- protected:
-  weak_ptr<Sentence> syllabified_;
-};
-
 SentenceTranslation::SentenceTranslation(TableTranslator* translator,
-                                         shared_ptr<Sentence> sentence,
+                                         an<Sentence> sentence,
                                          DictEntryCollector* collector,
                                          UserDictEntryCollector* ucollector,
-                                         const std::string& input,
+                                         const string& input,
                                          size_t start)
     : translator_(translator), input_(input), start_(start) {
   sentence_.swap(sentence);
@@ -440,14 +450,14 @@ bool SentenceTranslation::Next() {
   return !CheckEmpty();
 }
 
-shared_ptr<Candidate> SentenceTranslation::Peek() {
+an<Candidate> SentenceTranslation::Peek() {
   if (exhausted())
     return nullptr;
   if (sentence_) {
     return sentence_;
   }
   size_t code_length = 0;
-  shared_ptr<DictEntry> entry;
+  an<DictEntry> entry;
   if (PreferUserPhrase()) {
     auto r = user_phrase_collector_.rbegin();
     code_length = r->first;
@@ -465,7 +475,7 @@ shared_ptr<Candidate> SentenceTranslation::Peek() {
       start_ + code_length,
       entry);
   if (translator_) {
-    std::string preedit = input_.substr(0, code_length);
+    string preedit = input_.substr(0, code_length);
     translator_->preedit_formatter().Apply(&preedit);
     result->set_preedit(preedit);
   }
@@ -477,16 +487,16 @@ void SentenceTranslation::PrepareSentence() {
     return;
   sentence_->Offset(start_);
   sentence_->set_comment(kUnitySymbol);
-  sentence_->set_syllabification(New<SentenceSyllabification>(sentence_));
+  sentence_->set_syllabifier(New<SentenceSyllabifier>());
 
   if (!translator_)
     return;
-  std::string preedit = input_;
-  const std::string& delimiters(translator_->delimiters());
+  string preedit = input_;
+  const string& delimiters(translator_->delimiters());
   // split syllables
   size_t pos = 0;
   for (int len : sentence_->syllable_lengths()) {
-    if (pos > 0 && delimiters.find(input_[pos - 1]) == std::string::npos) {
+    if (pos > 0 && delimiters.find(input_[pos - 1]) == string::npos) {
       preedit.insert(pos, 1, ' ');
       ++pos;
     }
@@ -520,57 +530,31 @@ bool SentenceTranslation::PreferUserPhrase() const {
   return false;
 }
 
-size_t SentenceSyllabification::PreviousStop(size_t caret_pos) const {
-  if (auto sentence = syllabified_.lock()) {
-    size_t stop = sentence->start();
-    for (size_t len : sentence->syllable_lengths()) {
-      if (stop + len >= caret_pos) {
-        return stop;
-      }
-      stop += len;
-    }
-  }
-  return caret_pos;
-}
-
-size_t SentenceSyllabification::NextStop(size_t caret_pos) const {
-  if (auto sentence = syllabified_.lock()) {
-    size_t stop = sentence->start();
-    for (size_t len : sentence->syllable_lengths()) {
-      stop += len;
-      if (stop > caret_pos) {
-        return stop;
-      }
-    }
-  }
-  return caret_pos;
-}
-
 static size_t consume_trailing_delimiters(size_t pos,
-                                          const std::string& input,
-                                          const std::string& delimiters) {
+                                          const string& input,
+                                          const string& delimiters) {
   while (pos < input.length() &&
-         delimiters.find(input[pos]) != std::string::npos) {
+         delimiters.find(input[pos]) != string::npos) {
     ++pos;
   }
   return pos;
 }
 
-shared_ptr<Translation>
-TableTranslator::MakeSentence(const std::string& input, size_t start,
+an<Translation>
+TableTranslator::MakeSentence(const string& input, size_t start,
                               bool include_prefix_phrases) {
   bool filter_by_charset = enable_charset_filter_ &&
       !engine_->context()->get_option("extended_charset");
   DictEntryCollector collector;
   UserDictEntryCollector user_phrase_collector;
-  std::map<int, shared_ptr<Sentence>> sentences;
+  map<int, an<Sentence>> sentences;
   sentences[0] = New<Sentence>(language());
   for (size_t start_pos = 0; start_pos < input.length(); ++start_pos) {
     if (sentences.find(start_pos) == sentences.end())
       continue;
-    std::string active_input = input.substr(start_pos);
-    std::string active_key = active_input + ' ';
-    std::vector<shared_ptr<DictEntry>> entries(active_input.length() + 1);
+    string active_input = input.substr(start_pos);
+    string active_key = active_input + ' ';
+    vector<of<DictEntry>> entries(active_input.length() + 1);
     // lookup dictionaries
     if (user_dict_ && user_dict_->loaded()) {
       for (size_t len = 1; len <= active_input.length(); ++len) {
@@ -580,8 +564,8 @@ TableTranslator::MakeSentence(const std::string& input, size_t start,
           continue;
         DLOG(INFO) << "active input: " << active_input << "[0, " << len << ")";
         UserDictEntryIterator uter;
-        std::string resume_key;
-        std::string key = active_input.substr(0, len);
+        string resume_key;
+        string key = active_input.substr(0, len);
         user_dict_->LookupWords(&uter, key, false, 0, &resume_key);
         if (filter_by_charset) {
           uter.AddFilter(CharsetFilter::FilterDictEntry);
@@ -607,8 +591,8 @@ TableTranslator::MakeSentence(const std::string& input, size_t start,
           continue;
         DLOG(INFO) << "active input: " << active_input << "[0, " << len << ")";
         UserDictEntryIterator uter;
-        std::string resume_key;
-        std::string key = active_input.substr(0, len);
+        string resume_key;
+        string key = active_input.substr(0, len);
         encoder_->LookupPhrases(&uter, key, false, 0, &resume_key);
         if (filter_by_charset) {
           uter.AddFilter(CharsetFilter::FilterDictEntry);
@@ -626,7 +610,7 @@ TableTranslator::MakeSentence(const std::string& input, size_t start,
       }
     }
     if (dict_ && dict_->loaded()) {
-      std::vector<Prism::Match> matches;
+      vector<Prism::Match> matches;
       dict_->prism()->CommonPrefixSearch(input.substr(start_pos), &matches);
       if (matches.empty())
         continue;
@@ -665,7 +649,7 @@ TableTranslator::MakeSentence(const std::string& input, size_t start,
       }
     }
   }
-  shared_ptr<Translation> result;
+  an<Translation> result;
   if (sentences.find(input.length()) != sentences.end()) {
     result = Cached<SentenceTranslation>(
         this,
@@ -675,7 +659,7 @@ TableTranslator::MakeSentence(const std::string& input, size_t start,
         input,
         start);
     if (result && filter_by_charset) {
-      result = New<CharsetFilter>(result);
+      result = New<CharsetFilterTranslation>(result);
     }
   }
   return result;

@@ -1,11 +1,10 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-10-30 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
-#include <map>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/scope_exit.hpp>
@@ -25,16 +24,16 @@ struct DfsState {
   size_t depth_limit;
   TickCount present_tick;
   Code code;
-  std::vector<double> credibility;
-  shared_ptr<UserDictEntryCollector> collector;
-  shared_ptr<DbAccessor> accessor;
-  std::string key;
-  std::string value;
+  vector<double> credibility;
+  an<UserDictEntryCollector> collector;
+  an<DbAccessor> accessor;
+  string key;
+  string value;
 
-  bool IsExactMatch(const std::string& prefix) {
+  bool IsExactMatch(const string& prefix) {
     return boost::starts_with(key, prefix + '\t');
   }
-  bool IsPrefixMatch(const std::string& prefix) {
+  bool IsPrefixMatch(const string& prefix) {
     return boost::starts_with(key, prefix);
   }
   void RecruitEntry(size_t pos);
@@ -46,13 +45,13 @@ struct DfsState {
     }
     return true;
   }
-  bool ForwardScan(const std::string& prefix) {
+  bool ForwardScan(const string& prefix) {
     if (!accessor->Jump(prefix)) {
       return false;
     }
     return NextEntry();
   }
-  bool Backdate(const std::string& prefix) {
+  bool Backdate(const string& prefix) {
     DLOG(INFO) << "backdate; prefix: " << prefix;
     if (!accessor->Reset()) {
       LOG(WARNING) << "backdating failed for '" << prefix << "'.";
@@ -74,7 +73,7 @@ void DfsState::RecruitEntry(size_t pos) {
 
 // UserDictEntryIterator members
 
-void UserDictEntryIterator::Add(const shared_ptr<DictEntry>& entry) {
+void UserDictEntryIterator::Add(const an<DictEntry>& entry) {
   if (!entries_) {
     entries_ = New<DictEntryList>();
   }
@@ -96,8 +95,8 @@ bool UserDictEntryIterator::Release(DictEntryList* receiver) {
   return true;
 }
 
-shared_ptr<DictEntry> UserDictEntryIterator::Peek() {
-  shared_ptr<DictEntry> result;
+an<DictEntry> UserDictEntryIterator::Peek() {
+  an<DictEntry> result;
   while (!result && !exhausted()) {
     result = (*entries_)[index_];
     if (filter_ && !filter_(result)) {
@@ -117,7 +116,7 @@ bool UserDictEntryIterator::Next() {
 
 // UserDictionary members
 
-UserDictionary::UserDictionary(const shared_ptr<Db>& db)
+UserDictionary::UserDictionary(const an<Db>& db)
     : db_(db) {
 }
 
@@ -127,8 +126,8 @@ UserDictionary::~UserDictionary() {
   }
 }
 
-void UserDictionary::Attach(const shared_ptr<Table>& table,
-                            const shared_ptr<Prism>& prism) {
+void UserDictionary::Attach(const an<Table>& table,
+                            const an<Prism>& prism) {
   table_ = table;
   prism_ = prism;
 }
@@ -141,7 +140,7 @@ bool UserDictionary::Load() {
     Deployer& deployer(Service::instance().deployer());
     auto task = DeploymentTask::Require("userdb_recovery_task");
     if (task && Is<Recoverable>(db_) && !deployer.IsWorking()) {
-      deployer.ScheduleTask(shared_ptr<DeploymentTask>(task->Create(db_)));
+      deployer.ScheduleTask(an<DeploymentTask>(task->Create(db_)));
       deployer.StartWork();
     }
     return false;
@@ -184,14 +183,14 @@ bool UserDictionary::readonly() const {
 
 void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
                                size_t current_pos,
-                               const std::string& current_prefix,
+                               const string& current_prefix,
                                DfsState* state) {
   auto index = syll_graph.indices.find(current_pos);
   if (index == syll_graph.indices.end()) {
     return;
   }
   DLOG(INFO) << "dfs lookup starts from " << current_pos;
-  std::string prefix;
+  string prefix;
   for (const auto& spelling : index->second) {
     DLOG(INFO) << "prefix: '" << current_prefix << "'"
                << ", syll_id: " << spelling.first
@@ -238,7 +237,7 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
   }
 }
 
-shared_ptr<UserDictEntryCollector>
+an<UserDictEntryCollector>
 UserDictionary::Lookup(const SyllableGraph& syll_graph,
                        size_t start_pos,
                        size_t depth_limit,
@@ -254,7 +253,7 @@ UserDictionary::Lookup(const SyllableGraph& syll_graph,
   state.collector = New<UserDictEntryCollector>();
   state.accessor = db_->Query("");
   state.accessor->Jump(" ");  // skip metadata
-  std::string prefix;
+  string prefix;
   DfsLookup(syll_graph, start_pos, prefix, &state);
   if (state.collector->empty())
     return nullptr;
@@ -266,19 +265,19 @@ UserDictionary::Lookup(const SyllableGraph& syll_graph,
 }
 
 size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
-                                   const std::string& input,
+                                   const string& input,
                                    bool predictive,
                                    size_t limit,
-                                   std::string* resume_key) {
+                                   string* resume_key) {
   TickCount present_tick = tick_ + 1;
   size_t len = input.length();
   size_t start = result->size();
   size_t count = 0;
   size_t exact_match_count = 0;
-  const std::string kEnd = "\xff";
-  std::string key;
-  std::string value;
-  std::string full_code;
+  const string kEnd = "\xff";
+  string key;
+  string value;
+  string full_code;
   auto accessor = db_->Query(input);
   if (!accessor || accessor->exhausted()) {
     if (resume_key)
@@ -293,7 +292,7 @@ size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
     }
     DLOG(INFO) << "resume lookup after: " << key;
   }
-  std::string last_key(key);
+  string last_key(key);
   while (accessor->GetNextRecord(&key, &value)) {
     DLOG(INFO) << "key : " << key << ", value: " << value;
     bool is_exact_match = (len < key.length() && key[len] == ' ');
@@ -333,12 +332,12 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry, int commits) {
 }
 
 bool UserDictionary::UpdateEntry(const DictEntry& entry, int commits,
-                                 const std::string& new_entry_prefix) {
-  std::string code_str(entry.custom_code);
+                                 const string& new_entry_prefix) {
+  string code_str(entry.custom_code);
   if (code_str.empty() && !TranslateCodeToString(entry.code, &code_str))
     return false;
-  std::string key(code_str + '\t' + entry.text);
-  std::string value;
+  string key(code_str + '\t' + entry.text);
+  string value;
   UserDbValue v;
   if (db_->Fetch(key, &value)) {
     v.Unpack(value);
@@ -371,7 +370,7 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry, int commits,
 bool UserDictionary::UpdateTickCount(TickCount increment) {
   tick_ += increment;
   try {
-    return db_->MetaUpdate("/tick", boost::lexical_cast<std::string>(tick_));
+    return db_->MetaUpdate("/tick", boost::lexical_cast<string>(tick_));
   }
   catch (...) {
     return false;
@@ -383,7 +382,7 @@ bool UserDictionary::Initialize() {
 }
 
 bool UserDictionary::FetchTickCount() {
-  std::string value;
+  string value;
   try {
     // an earlier version mistakenly wrote tick count into an empty key
     if (!db_->MetaFetch("/tick", &value) &&
@@ -425,11 +424,11 @@ bool UserDictionary::CommitPendingTransaction() {
 }
 
 bool UserDictionary::TranslateCodeToString(const Code& code,
-                                           std::string* result) {
+                                           string* result) {
   if (!table_ || !result) return false;
   result->clear();
   for (const SyllableId& syllable_id : code) {
-    std::string spelling = table_->GetSyllableById(syllable_id);
+    string spelling = table_->GetSyllableById(syllable_id);
     if (spelling.empty()) {
       LOG(ERROR) << "Error translating syllable_id '" << syllable_id << "'.";
       result->clear();
@@ -441,14 +440,14 @@ bool UserDictionary::TranslateCodeToString(const Code& code,
   return true;
 }
 
-shared_ptr<DictEntry> UserDictionary::CreateDictEntry(const std::string& key,
-                                                      const std::string& value,
+an<DictEntry> UserDictionary::CreateDictEntry(const string& key,
+                                                      const string& value,
                                                       TickCount present_tick,
                                                       double credibility,
-                                                      std::string* full_code) {
-  shared_ptr<DictEntry> e;
+                                                      string* full_code) {
+  an<DictEntry> e;
   size_t separator_pos = key.find('\t');
-  if (separator_pos == std::string::npos)
+  if (separator_pos == string::npos)
     return e;
   UserDbValue v;
   if (!v.Unpack(value))
@@ -490,14 +489,14 @@ UserDictionary* UserDictionaryComponent::Create(const Ticket& ticket) {
   config->GetBool(ticket.name_space + "/enable_user_dict", &enable_user_dict);
   if (!enable_user_dict)
     return NULL;
-  std::string dict_name;
+  string dict_name;
   if (config->GetString(ticket.name_space + "/user_dict", &dict_name)) {
     // user specified name
   }
   else if (config->GetString(ticket.name_space + "/dictionary", &dict_name)) {
     // {dictionary: lunapinyin.extra} implies {user_dict: luna_pinyin}
     size_t dot = dict_name.find('.');
-    if (dot != std::string::npos && dot != 0)
+    if (dot != string::npos && dot != 0)
       dict_name.resize(dot);
   }
   else {
@@ -505,7 +504,7 @@ UserDictionary* UserDictionaryComponent::Create(const Ticket& ticket) {
                << ticket.schema->schema_id() << "'.";
     return NULL;
   }
-  std::string db_class("userdb");
+  string db_class("userdb");
   if (config->GetString(ticket.name_space + "/db_class", &db_class)) {
     // user specified db class
   }

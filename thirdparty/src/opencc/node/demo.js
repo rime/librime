@@ -5,7 +5,7 @@
  * @license
  * Open Chinese Convert
  *
- * Copyright 2010-2013 BYVoid <byvoid@byvoid.com>
+ * Copyright 2010-2014 BYVoid <byvoid@byvoid.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,10 +29,7 @@
 var OpenCC = require('./opencc');
 
 // Load the default Simplified to Traditional config
-var opencc = new OpenCC('zhs2zht.ini');
-
-// Set conversion mode
-opencc.setConversionMode(OpenCC.CONVERSION_FAST);
+var opencc = new OpenCC('s2t.json');
 
 // Sync API
 var converted = opencc.convertSync("汉字");

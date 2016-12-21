@@ -1,14 +1,11 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
-#include <set>
-#include <string>
 #include <utility>
-#include <vector>
 #include <gtest/gtest.h>
 #include <rime/dict/prism.h>
 #include <rime/algo/syllabifier.h>
@@ -16,7 +13,7 @@
 class RimeSyllabifierTest : public ::testing::Test {
  public:
   virtual void SetUp() {
-    std::vector<std::string> syllables;
+    rime::vector<rime::string> syllables;
     syllables.push_back("a");      // 0 == id
     syllables.push_back("an");     // 1
     syllables.push_back("cha");    // 2
@@ -34,7 +31,7 @@ class RimeSyllabifierTest : public ::testing::Test {
     }
 
     prism_.reset(new rime::Prism("syllabifier_test.bin"));
-    std::set<std::string> keyset;
+    rime::set<rime::string> keyset;
     std::copy(syllables.begin(), syllables.end(),
               std::inserter(keyset, keyset.begin()));
     prism_->Build(keyset);
@@ -44,14 +41,14 @@ class RimeSyllabifierTest : public ::testing::Test {
   }
 
  protected:
-  std::map<std::string, rime::SyllableId> syllable_id_;
-  rime::unique_ptr<rime::Prism> prism_;
+  rime::map<rime::string, rime::SyllableId> syllable_id_;
+  rime::the<rime::Prism> prism_;
 };
 
 TEST_F(RimeSyllabifierTest, CaseAlpha) {
   rime::Syllabifier s;
   rime::SyllableGraph g;
-  const std::string input("a");
+  const rime::string input("a");
   s.BuildSyllableGraph(input, *prism_, &g);
   EXPECT_EQ(input.length(), g.input_length);
   EXPECT_EQ(input.length(), g.interpreted_length);
@@ -68,7 +65,7 @@ TEST_F(RimeSyllabifierTest, CaseAlpha) {
 TEST_F(RimeSyllabifierTest, CaseFailure) {
   rime::Syllabifier s;
   rime::SyllableGraph g;
-  const std::string input("ang");
+  const rime::string input("ang");
   s.BuildSyllableGraph(input, *prism_, &g);
   EXPECT_EQ(input.length(), g.input_length);
   EXPECT_EQ(input.length() - 1, g.interpreted_length);
@@ -84,7 +81,7 @@ TEST_F(RimeSyllabifierTest, CaseFailure) {
 TEST_F(RimeSyllabifierTest, CaseChangan) {
   rime::Syllabifier s;
   rime::SyllableGraph g;
-  const std::string input("changan");
+  const rime::string input("changan");
   s.BuildSyllableGraph(input, *prism_, &g);
   EXPECT_EQ(input.length(), g.input_length);
   EXPECT_EQ(input.length(), g.interpreted_length);
@@ -117,7 +114,7 @@ TEST_F(RimeSyllabifierTest, CaseChangan) {
 TEST_F(RimeSyllabifierTest, CaseTuan) {
   rime::Syllabifier s;
   rime::SyllableGraph g;
-  const std::string input("tuan");
+  const rime::string input("tuan");
   s.BuildSyllableGraph(input, *prism_, &g);
   EXPECT_EQ(input.length(), g.input_length);
   EXPECT_EQ(input.length(), g.interpreted_length);
@@ -143,7 +140,7 @@ TEST_F(RimeSyllabifierTest, CaseTuan) {
 TEST_F(RimeSyllabifierTest, CaseChainingAmbiguity) {
   rime::Syllabifier s;
   rime::SyllableGraph g;
-  const std::string input("anana");
+  const rime::string input("anana");
   s.BuildSyllableGraph(input, *prism_, &g);
   EXPECT_EQ(input.length(), g.input_length);
   EXPECT_EQ(input.length(), g.interpreted_length);
@@ -153,7 +150,7 @@ TEST_F(RimeSyllabifierTest, CaseChainingAmbiguity) {
 TEST_F(RimeSyllabifierTest, TransposedSyllableGraph) {
   rime::Syllabifier s;
   rime::SyllableGraph g;
-  const std::string input("changan");
+  const rime::string input("changan");
   s.BuildSyllableGraph(input, *prism_, &g);
   ASSERT_FALSE(g.indices.end() == g.indices.find(0));
   EXPECT_EQ(2, g.indices[0].size());

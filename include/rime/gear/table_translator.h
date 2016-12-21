@@ -1,13 +1,12 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_TABLE_TRANSLATOR_H_
 #define RIME_TABLE_TRANSLATOR_H_
 
-#include <string>
 #include <rime/common.h>
 #include <rime/config.h>
 #include <rime/translation.h>
@@ -28,12 +27,11 @@ class TableTranslator : public Translator,
  public:
   TableTranslator(const Ticket& ticket);
 
-  virtual shared_ptr<Translation> Query(const std::string& input,
-                                        const Segment& segment,
-                                        std::string* prompt);
+  virtual an<Translation> Query(const string& input,
+                                        const Segment& segment);
   virtual bool Memorize(const CommitEntry& commit_entry);
 
-  shared_ptr<Translation> MakeSentence(const std::string& input,
+  an<Translation> MakeSentence(const string& input,
                                        size_t start,
                                        bool include_prefix_phrases = false);
 
@@ -46,23 +44,23 @@ class TableTranslator : public Translator,
   bool sentence_over_completion_ = false;
   bool encode_commit_history_ = true;
   int max_phrase_length_ = 5;
-  unique_ptr<UnityTableEncoder> encoder_;
+  the<UnityTableEncoder> encoder_;
 };
 
 class TableTranslation : public Translation {
  public:
 
   TableTranslation(TranslatorOptions* options, Language* language,
-                   const std::string& input, size_t start, size_t end,
-                   const std::string& preedit);
+                   const string& input, size_t start, size_t end,
+                   const string& preedit);
   TableTranslation(TranslatorOptions* options, Language* language,
-                   const std::string& input, size_t start, size_t end,
-                   const std::string& preedit,
+                   const string& input, size_t start, size_t end,
+                   const string& preedit,
                    const DictEntryIterator& iter,
                    const UserDictEntryIterator& uter = UserDictEntryIterator());
 
   virtual bool Next();
-  virtual shared_ptr<Candidate> Peek();
+  virtual an<Candidate> Peek();
 
  protected:
   virtual bool FetchMoreUserPhrases() { return false; }
@@ -71,16 +69,16 @@ class TableTranslation : public Translation {
   bool CheckEmpty();
   bool PreferUserPhrase();
 
-  shared_ptr<DictEntry> PreferedEntry(bool prefer_user_phrase) {
+  an<DictEntry> PreferedEntry(bool prefer_user_phrase) {
     return prefer_user_phrase ? uter_.Peek() : iter_.Peek();
   }
 
   TranslatorOptions* options_;
   Language* language_;
-  std::string input_;
+  string input_;
   size_t start_;
   size_t end_;
-  std::string preedit_;
+  string preedit_;
   DictEntryIterator iter_;
   UserDictEntryIterator uter_;
 };

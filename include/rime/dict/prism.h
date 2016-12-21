@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-05-16 Zou Xu <zouivex@gmail.com>
 // 2012-01-26 GONG Chen <chen.sst@gmail.com>  spelling algebra support
@@ -9,9 +9,6 @@
 #ifndef RIME_PRISM_H_
 #define RIME_PRISM_H_
 
-#include <set>
-#include <string>
-#include <vector>
 #include <darts.h>
 #include <rime/common.h>
 #include <rime/algo/spelling.h>
@@ -68,7 +65,7 @@ class Prism : public MappedFile {
  public:
   using Match = Darts::DoubleArray::result_pair_type;
 
-  explicit Prism(const std::string& file_name);
+  explicit Prism(const string& file_name);
 
   bool Load();
   bool Save();
@@ -77,10 +74,10 @@ class Prism : public MappedFile {
              uint32_t dict_file_checksum = 0,
              uint32_t schema_file_checksum = 0);
 
-  bool HasKey(const std::string& key);
-  bool GetValue(const std::string& key, int* value);
-  void CommonPrefixSearch(const std::string& key, std::vector<Match>* result);
-  void ExpandSearch(const std::string& key, std::vector<Match>* result, size_t limit);
+  bool HasKey(const string& key);
+  bool GetValue(const string& key, int* value);
+  void CommonPrefixSearch(const string& key, vector<Match>* result);
+  void ExpandSearch(const string& key, vector<Match>* result, size_t limit);
   SpellingAccessor QuerySpelling(SyllableId spelling_id);
 
   size_t array_size() const;
@@ -89,7 +86,7 @@ class Prism : public MappedFile {
   uint32_t schema_file_checksum() const;
 
  private:
-  unique_ptr<Darts::DoubleArray> trie_;
+  the<Darts::DoubleArray> trie_;
   prism::Metadata* metadata_ = nullptr;
   prism::SpellingMap* spelling_map_ = nullptr;
   double format_ = 0.0;

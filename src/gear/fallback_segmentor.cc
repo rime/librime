@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-06-20 GONG Chen <chen.sst@gmail.com>
 //
@@ -20,7 +20,7 @@ bool FallbackSegmentor::Proceed(Segmentation* segmentation) {
   if (len > 0)
     return false;
 
-  const std::string& input(segmentation->input());
+  const string& input(segmentation->input());
   int k = segmentation->GetCurrentStartPosition();
   DLOG(INFO) << "current start pos: " << k;
   if (k == input.length())

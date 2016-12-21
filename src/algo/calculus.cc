@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2012-01-17 GONG Chen <chen.sst@gmail.com>
 //
@@ -19,21 +19,21 @@ Calculus::Calculus() {
   Register("abbrev", &Abbreviation::Parse);
 }
 
-void Calculus::Register(const std::string& token,
+void Calculus::Register(const string& token,
                         Calculation::Factory* factory) {
   factories_[token] = factory;
 }
 
-Calculation* Calculus::Parse(const std::string& definition) {
+Calculation* Calculus::Parse(const string& definition) {
   size_t sep = definition.find_first_not_of("zyxwvutsrqponmlkjihgfedcba");
-  if (sep == std::string::npos)
+  if (sep == string::npos)
     return NULL;
-  std::vector<std::string> args;
+  vector<string> args;
   boost::split(args, definition,
                boost::is_from_range(definition[sep], definition[sep]));
   if (args.empty())
     return NULL;
-  std::map<std::string,
+  map<string,
            Calculation::Factory*>::iterator it = factories_.find(args[0]);
   if (it == factories_.end())
     return NULL;
@@ -43,15 +43,15 @@ Calculation* Calculus::Parse(const std::string& definition) {
 
 // Transliteration
 
-Calculation* Transliteration::Parse(const std::vector<std::string>& args) {
+Calculation* Transliteration::Parse(const vector<string>& args) {
   if (args.size() < 3)
     return NULL;
-  const std::string& left(args[1]);
-  const std::string& right(args[2]);
+  const string& left(args[1]);
+  const string& right(args[2]);
   const char* pl = left.c_str();
   const char* pr = right.c_str();
   uint32_t cl, cr;
-  std::map<uint32_t, uint32_t> char_map;
+  map<uint32_t, uint32_t> char_map;
   while ((cl = utf8::unchecked::next(pl)),
          (cr = utf8::unchecked::next(pr)),
          cl && cr) {
@@ -94,11 +94,11 @@ bool Transliteration::Apply(Spelling* spelling) {
 
 // Transformation
 
-Calculation* Transformation::Parse(const std::vector<std::string>& args) {
+Calculation* Transformation::Parse(const vector<string>& args) {
   if (args.size() < 3)
     return NULL;
-  const std::string& left(args[1]);
-  const std::string& right(args[2]);
+  const string& left(args[1]);
+  const string& right(args[2]);
   if (left.empty())
     return NULL;
   Transformation* x = new Transformation;
@@ -110,7 +110,7 @@ Calculation* Transformation::Parse(const std::vector<std::string>& args) {
 bool Transformation::Apply(Spelling* spelling) {
   if (!spelling || spelling->str.empty())
     return false;
-  std::string result(boost::regex_replace(spelling->str,
+  string result(boost::regex_replace(spelling->str,
                                           pattern_, replacement_));
   if (result == spelling->str)
     return false;
@@ -120,10 +120,10 @@ bool Transformation::Apply(Spelling* spelling) {
 
 // Erasion
 
-Calculation* Erasion::Parse(const std::vector<std::string>& args) {
+Calculation* Erasion::Parse(const vector<string>& args) {
   if (args.size() < 2)
     return NULL;
-  const std::string& pattern(args[1]);
+  const string& pattern(args[1]);
   if (pattern.empty())
     return NULL;
   Erasion* x = new Erasion;
@@ -142,11 +142,11 @@ bool Erasion::Apply(Spelling* spelling) {
 
 // Derivation
 
-Calculation* Derivation::Parse(const std::vector<std::string>& args) {
+Calculation* Derivation::Parse(const vector<string>& args) {
   if (args.size() < 3)
     return NULL;
-  const std::string& left(args[1]);
-  const std::string& right(args[2]);
+  const string& left(args[1]);
+  const string& right(args[2]);
   if (left.empty())
     return NULL;
   Derivation* x = new Derivation;
@@ -157,11 +157,11 @@ Calculation* Derivation::Parse(const std::vector<std::string>& args) {
 
 // Fuzzing
 
-Calculation* Fuzzing::Parse(const std::vector<std::string>& args) {
+Calculation* Fuzzing::Parse(const vector<string>& args) {
   if (args.size() < 3)
     return NULL;
-  const std::string& left(args[1]);
-  const std::string& right(args[2]);
+  const string& left(args[1]);
+  const string& right(args[2]);
   if (left.empty())
     return NULL;
   Fuzzing* x = new Fuzzing;
@@ -181,11 +181,11 @@ bool Fuzzing::Apply(Spelling* spelling) {
 
 // Abbreviation
 
-Calculation* Abbreviation::Parse(const std::vector<std::string>& args) {
+Calculation* Abbreviation::Parse(const vector<string>& args) {
   if (args.size() < 3)
     return NULL;
-  const std::string& left(args[1]);
-  const std::string& right(args[2]);
+  const string& left(args[1]);
+  const string& right(args[2]);
   if (left.empty())
     return NULL;
   Abbreviation* x = new Abbreviation;

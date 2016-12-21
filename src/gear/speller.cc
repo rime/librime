@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-10-27 GONG Chen <chen.sst@gmail.com>
 //
@@ -21,11 +21,11 @@ static const char kRimeAlphabet[] = "zyxwvutsrqponmlkjihgfedcba";
 
 namespace rime {
 
-static inline bool belongs_to(char ch, const std::string& charset) {
-  return charset.find(ch) != std::string::npos;
+static inline bool belongs_to(char ch, const string& charset) {
+  return charset.find(ch) != string::npos;
 }
 
-static bool reached_max_code_length(const shared_ptr<Candidate>& cand,
+static bool reached_max_code_length(const an<Candidate>& cand,
                                     int max_code_length) {
   if (!cand)
     return false;
@@ -33,27 +33,27 @@ static bool reached_max_code_length(const shared_ptr<Candidate>& cand,
   return code_length >= max_code_length;
 }
 
-static bool is_auto_selectable(const shared_ptr<Candidate>& cand,
-                               const std::string& input,
-                               const std::string& delimiters) {
+static bool is_auto_selectable(const an<Candidate>& cand,
+                               const string& input,
+                               const string& delimiters) {
   return
       // reaches end of input
       cand->end() == input.length() &&
       // is table entry
       Candidate::GetGenuineCandidate(cand)->type() == "table" &&
       // no delimiters
-      input.find_first_of(delimiters, cand->start()) == std::string::npos;
+      input.find_first_of(delimiters, cand->start()) == string::npos;
 }
 
 static bool expecting_an_initial(Context* ctx,
-                                 const std::string& alphabet,
-                                 const std::string& finals) {
+                                 const string& alphabet,
+                                 const string& finals) {
   size_t caret_pos = ctx->caret_pos();
   if (caret_pos == 0 ||
-      caret_pos == ctx->composition()->GetCurrentStartPosition()) {
+      caret_pos == ctx->composition().GetCurrentStartPosition()) {
     return true;
   }
-  const std::string& input(ctx->input());
+  const string& input(ctx->input());
   char previous_char = input[caret_pos - 1];
   return belongs_to(previous_char, finals) ||
          !belongs_to(previous_char, alphabet);
@@ -69,9 +69,15 @@ Speller::Speller(const Ticket& ticket) : Processor(ticket),
     config->GetInt("speller/max_code_length", &max_code_length_);
     config->GetBool("speller/auto_select", &auto_select_);
     config->GetBool("speller/use_space", &use_space_);
-    std::string pattern;
+    string pattern;
     if (config->GetString("speller/auto_select_pattern", &pattern)) {
       auto_select_pattern_ = pattern;
+    }
+    string auto_clear;
+    if (config->GetString("speller/auto_clear", &auto_clear)) {
+      if (auto_clear == "auto") auto_clear_ = kClearAuto;
+      else if (auto_clear == "manual") auto_clear_ = kClearManual;
+      else if (auto_clear == "max_length") auto_clear_ = kClearMaxLength;
     }
   }
   if (initials_.empty()) {
@@ -99,10 +105,13 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
   if (is_initial && AutoSelectAtMaxCodeLength(ctx)) {
     DLOG(INFO) << "auto-select at max code length.";
   }
+  else if ((auto_clear_ == kClearMaxLength || auto_clear_ == kClearManual) && AutoClear(ctx)) {
+    DLOG(INFO) << "auto-clear at max code when no candidate.";
+  }
   // make a backup of previous conversion before modifying input
   Segment previous_segment;
   if (auto_select_ && ctx->HasMenu()) {
-    previous_segment = ctx->composition()->back();
+    previous_segment = ctx->composition().back();
   }
   DLOG(INFO) << "add to input: '" << (char)ch << "', " << key_event.repr();
   ctx->PushInput(ch);
@@ -112,13 +121,16 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
     DLOG(INFO) << "auto-select previous match.";
     // after auto-selecting, if only the current non-initial key is left,
     // then it should be handled by other processors.
-    if (!is_initial && ctx->composition()->GetCurrentSegmentLength() == 1) {
+    if (!is_initial && ctx->composition().GetCurrentSegmentLength() == 1) {
       ctx->PopInput(1);
       return kNoop;
     }
   }
   if (AutoSelectUniqueCandidate(ctx)) {
     DLOG(INFO) << "auto-select unique candidate.";
+  }
+  else if (auto_clear_ == kClearAuto && AutoClear(ctx)) {
+    DLOG(INFO) << "auto-clear when no candidate.";
   }
   return kAccepted;
 }
@@ -128,8 +140,7 @@ bool Speller::AutoSelectAtMaxCodeLength(Context* ctx) {
     return false;
   if (!ctx->HasMenu())
     return false;
-  const Segment& seg(ctx->composition()->back());
-  auto cand = seg.GetSelectedCandidate();
+  auto cand = ctx->GetSelectedCandidate();
   if (cand &&
       reached_max_code_length(cand, max_code_length_) &&
       is_auto_selectable(cand, ctx->input(), delimiters_)) {
@@ -144,11 +155,11 @@ bool Speller::AutoSelectUniqueCandidate(Context* ctx) {
     return false;
   if (!ctx->HasMenu())
     return false;
-  const Segment& seg(ctx->composition()->back());
+  const Segment& seg(ctx->composition().back());
   bool unique_candidate = seg.menu->Prepare(2) == 1;
   if (!unique_candidate)
     return false;
-  const std::string& input(ctx->input());
+  const string& input(ctx->input());
   auto cand = seg.GetSelectedCandidate();
   bool matches_input_pattern = false;
   if (auto_select_pattern_.empty()) {
@@ -157,7 +168,7 @@ bool Speller::AutoSelectUniqueCandidate(Context* ctx) {
         reached_max_code_length(cand, max_code_length_);
   }
   else {
-    std::string code(input.substr(cand->start(), cand->end()));
+    string code(input.substr(cand->start(), cand->end()));
     matches_input_pattern = boost::regex_match(code, auto_select_pattern_);
   }
   if (matches_input_pattern &&
@@ -172,24 +183,26 @@ bool Speller::AutoSelectPreviousMatch(Context* ctx,
                                       Segment* previous_segment) {
   if (!auto_select_)
     return false;
+  if (max_code_length_ > 0 || !auto_select_pattern_.empty())
+    return false;
   if (ctx->HasMenu())  // if and only if current conversion fails
     return false;
   if (!previous_segment->menu)
     return false;
   size_t start = previous_segment->start;
   size_t end = previous_segment->end;
-  std::string input = ctx->input();
-  std::string converted = input.substr(0, end);
+  string input = ctx->input();
+  string converted = input.substr(0, end);
   if (is_auto_selectable(previous_segment->GetSelectedCandidate(),
                          converted, delimiters_)) {
     // reuse previous match
-    ctx->composition()->pop_back();
-    ctx->composition()->push_back(std::move(*previous_segment));
+    ctx->composition().pop_back();
+    ctx->composition().push_back(std::move(*previous_segment));
     ctx->ConfirmCurrentSelection();
     if (ctx->get_option("_auto_commit")) {
       ctx->set_input(converted);
       ctx->Commit();
-      std::string rest = input.substr(end);
+      string rest = input.substr(end);
       ctx->set_input(rest);
     }
     return true;
@@ -197,23 +210,33 @@ bool Speller::AutoSelectPreviousMatch(Context* ctx,
   return FindEarlierMatch(ctx, start ,end);
 }
 
+bool Speller::AutoClear(Context* ctx) {
+  if (!ctx->HasMenu() && auto_clear_ > kClearNone &&
+      (auto_clear_ != kClearMaxLength || max_code_length_ == 0 ||
+       ctx->input().length() >= (size_t)max_code_length_)) {
+    ctx->Clear();
+    return true;
+  }
+  return false;
+}
+
 bool Speller::FindEarlierMatch(Context* ctx, size_t start, size_t end) {
   if (end <= start + 1)
     return false;
-  std::string input = ctx->input();
-  std::string converted = input;
+  string input = ctx->input();
+  string converted = input;
   while (--end > start) {
     converted.resize(end);
     ctx->set_input(converted);
     if (!ctx->HasMenu())
       break;
-    const Segment& segment(ctx->composition()->back());
+    const Segment& segment(ctx->composition().back());
     if (is_auto_selectable(segment.GetSelectedCandidate(),
                            converted, delimiters_)) {
       // select previous match
       if (ctx->get_option("_auto_commit")) {
         ctx->Commit();
-        std::string rest = input.substr(end);
+        string rest = input.substr(end);
         ctx->set_input(rest);
         end = 0;
       }
@@ -222,8 +245,8 @@ bool Speller::FindEarlierMatch(Context* ctx, size_t start, size_t end) {
         ctx->set_input(input);
       }
       if (!ctx->HasMenu()) {
-        size_t next_start = ctx->composition()->GetCurrentStartPosition();
-        size_t next_end = ctx->composition()->GetCurrentEndPosition();
+        size_t next_start = ctx->composition().GetCurrentStartPosition();
+        size_t next_end = ctx->composition().GetCurrentEndPosition();
         if (next_start == end) {
           // continue splitting
           FindEarlierMatch(ctx, next_start, next_end);

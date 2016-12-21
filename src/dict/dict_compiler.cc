@@ -1,12 +1,10 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
 #include <fstream>
-#include <map>
-#include <set>
 #include <boost/filesystem.hpp>
 #include <rime/algo/algebra.h>
 #include <rime/algo/utilities.h>
@@ -17,7 +15,6 @@
 #include <rime/dict/preset_vocabulary.h>
 #include <rime/dict/prism.h>
 #include <rime/dict/table.h>
-#include <rime/dict/tree_db.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 
 namespace rime {
@@ -29,11 +26,11 @@ DictCompiler::DictCompiler(Dictionary *dictionary, DictFileFinder finder)
       dict_file_finder_(finder) {
 }
 
-bool DictCompiler::Compile(const std::string &schema_file) {
+bool DictCompiler::Compile(const string &schema_file) {
   LOG(INFO) << "compiling:";
   bool build_table_from_source = true;
   DictSettings settings;
-  std::string dict_file(FindDictFile(dict_name_));
+  string dict_file(FindDictFile(dict_name_));
   if (dict_file.empty()) {
     build_table_from_source = false;
   }
@@ -47,12 +44,12 @@ bool DictCompiler::Compile(const std::string &schema_file) {
     LOG(INFO) << "dict name: " << settings.dict_name();
     LOG(INFO) << "dict version: " << settings.dict_version();
   }
-  std::vector<std::string> dict_files;
+  vector<string> dict_files;
   auto tables = settings.GetTables();
   for(auto it = tables->begin(); it != tables->end(); ++it) {
     if (!Is<ConfigValue>(*it))
       continue;
-    std::string dict_file(FindDictFile(As<ConfigValue>(*it)->str()));
+    string dict_file(FindDictFile(As<ConfigValue>(*it)->str()));
     if (dict_file.empty())
       return false;
     dict_files.push_back(dict_file);
@@ -98,11 +95,6 @@ bool DictCompiler::Compile(const std::string &schema_file) {
             << " (" << dict_file_checksum << ")";
   LOG(INFO) << schema_file << " (" << schema_file_checksum << ")";
   {
-    TreeDb deprecated_db(dict_name_ + ".reverse.kct", "reversedb");
-    if (deprecated_db.Exists()) {
-      deprecated_db.Remove();
-      LOG(INFO) << "removed deprecated db '" << deprecated_db.name() << "'.";
-    }
     ReverseDb reverse_db(dict_name_);
     if (!reverse_db.Exists() ||
         !reverse_db.Load() ||
@@ -125,8 +117,8 @@ bool DictCompiler::Compile(const std::string &schema_file) {
   return true;
 }
 
-std::string DictCompiler::FindDictFile(const std::string& dict_name) {
-  std::string dict_file(dict_name + ".dict.yaml");
+string DictCompiler::FindDictFile(const string& dict_name) {
+  string dict_file(dict_name + ".dict.yaml");
   if (dict_file_finder_) {
     dict_file = dict_file_finder_(dict_file);
   }
@@ -134,7 +126,7 @@ std::string DictCompiler::FindDictFile(const std::string& dict_name) {
 }
 
 bool DictCompiler::BuildTable(DictSettings* settings,
-                              const std::vector<std::string>& dict_files,
+                              const vector<string>& dict_files,
                               uint32_t dict_file_checksum) {
   LOG(INFO) << "building table...";
   EntryCollector collector;
@@ -148,7 +140,7 @@ bool DictCompiler::BuildTable(DictSettings* settings,
   Vocabulary vocabulary;
   // build .table.bin
   {
-    std::map<std::string, SyllableId> syllable_to_id;
+    map<string, SyllableId> syllable_to_id;
     SyllableId syllable_id = 0;
     for (const auto& s : collector.syllabary) {
       syllable_to_id[s] = syllable_id++;
@@ -192,7 +184,7 @@ bool DictCompiler::BuildTable(DictSettings* settings,
   return true;
 }
 
-bool DictCompiler::BuildPrism(const std::string &schema_file,
+bool DictCompiler::BuildPrism(const string &schema_file,
                               uint32_t dict_file_checksum, uint32_t schema_file_checksum) {
   LOG(INFO) << "building prism...";
   // get syllabary from table

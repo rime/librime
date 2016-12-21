@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2012-01-17 GONG Chen <chen.sst@gmail.com>
 //
@@ -8,18 +8,16 @@
 #ifndef RIME_CALCULUS_H_
 #define RIME_CALCULUS_H_
 
-#include <map>
-#include <string>
-#include <vector>
 #include <stdint.h>
 #include <boost/regex.hpp>
+#include <rime/common.h>
 #include "spelling.h"
 
 namespace rime {
 
 class Calculation {
  public:
-  using Factory = Calculation* (const std::vector<std::string>& args);
+  using Factory = Calculation* (const vector<string>& args);
 
   Calculation() = default;
   virtual ~Calculation() = default;
@@ -31,11 +29,11 @@ class Calculation {
 class Calculus {
  public:
   Calculus();
-  void Register(const std::string& token, Calculation::Factory* factory);
-  Calculation* Parse(const std::string& defintion);
+  void Register(const string& token, Calculation::Factory* factory);
+  Calculation* Parse(const string& defintion);
 
  private:
-  std::map<std::string, Calculation::Factory*> factories_;
+  map<string, Calculation::Factory*> factories_;
 };
 
 // xlit/zyx/abc/
@@ -45,7 +43,7 @@ class Transliteration : public Calculation {
   bool Apply(Spelling* spelling);
 
  protected:
-  std::map<uint32_t, uint32_t> char_map_;
+  map<uint32_t, uint32_t> char_map_;
 };
 
 // xform/x/y/
@@ -56,7 +54,7 @@ class Transformation : public Calculation {
 
  protected:
   boost::regex pattern_;
-  std::string replacement_;
+  string replacement_;
 };
 
 // erase/x/

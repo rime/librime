@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-10-17 GONG Chen <chen.sst@gmail.com>
 //
@@ -11,6 +11,7 @@ namespace rime {
 
 extern const char* kDefaultModules[];
 extern const char* kDeployerModules[];
+extern const char* kLegacyModules[];
 
 void LoadModules(const char* module_names[]);
 

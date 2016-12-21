@@ -1,6 +1,6 @@
 /*
- * Copyleft RIME Developers
- * License: GPLv3
+ * Copyright RIME Developers
+ * Distributed under the BSD License
  *
  * 2013-10-21  GONG Chen <chen.sst@gmail.com>
  */
@@ -13,11 +13,11 @@
 extern "C" {
 #endif
 
-typedef struct {} RimeCustomSettings;
+typedef struct { char placeholder; } RimeCustomSettings;
 
-typedef struct {} RimeSwitcherSettings;
+typedef struct { char placeholder; } RimeSwitcherSettings;
 
-typedef struct {} RimeSchemaInfo;
+typedef struct { char placeholder; } RimeSchemaInfo;
 
 typedef struct {
   void* ptr;

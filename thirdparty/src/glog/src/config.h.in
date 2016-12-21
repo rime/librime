@@ -1,5 +1,8 @@
 /* src/config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* define if glog doesn't use RTTI */
+#undef DISABLE_RTTI
+
 /* Namespace for Google classes */
 #undef GOOGLE_NAMESPACE
 
@@ -45,14 +48,23 @@
 /* define if the compiler implements namespaces */
 #undef HAVE_NAMESPACES
 
+/* Define if you have the 'pread' function */
+#undef HAVE_PREAD
+
 /* Define if you have POSIX threads libraries and header files. */
 #undef HAVE_PTHREAD
 
 /* Define to 1 if you have the <pwd.h> header file. */
 #undef HAVE_PWD_H
 
+/* Define if you have the 'pwrite' function */
+#undef HAVE_PWRITE
+
 /* define if the compiler implements pthread_rwlock_* */
 #undef HAVE_RWLOCK
+
+/* Define if you have the 'sigaction' function */
+#undef HAVE_SIGACTION
 
 /* Define if you have the `sigaltstack' function */
 #undef HAVE_SIGALTSTACK
@@ -98,6 +110,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the <unwind.h> header file. */
+#undef HAVE_UNWIND_H
 
 /* define if the compiler supports using expression for operator */
 #undef HAVE_USING_OPERATOR
@@ -163,3 +178,12 @@
 
 /* Puts following code inside the Google namespace */
 #undef _START_GOOGLE_NAMESPACE_
+
+// Annoying stuff for windows -- makes sure clients can import these functions
+#ifndef GOOGLE_GLOG_DLL_DECL
+# if defined(_WIN32) && !defined(__CYGWIN__)
+#   define GOOGLE_GLOG_DLL_DECL  __declspec(dllimport)
+# else
+#   define GOOGLE_GLOG_DLL_DECL
+# endif
+#endif

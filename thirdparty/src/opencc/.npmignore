@@ -2,21 +2,18 @@
 .gitignore
 CMakeLists.txt
 *.cmake
-merge.sh
+*.pyc
 
-/po
 /doc
-/data/scripts
 /data/scheme
-/src/wrapper
 /build
 /debug
 /release
 /other
-/debug.sh
-/release.sh
 /opencc.pc.in
-/opencc.gyp
-/INSTALL
 /doc/html
 /opencc.xcodeproj
+/test/dict.ocd
+/test/dict.txt
+/test/dict.bin
+/node_modules

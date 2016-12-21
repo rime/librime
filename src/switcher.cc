@@ -1,10 +1,9 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-12-07 GONG Chen <chen.sst@gmail.com>
 //
-#include <string>
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/composition.h>
@@ -42,7 +41,7 @@ Switcher::~Switcher() {
 
 void Switcher::RestoreSavedOptions() {
   if (user_config_) {
-    for (const std::string& option_name : save_options_) {
+    for (const string& option_name : save_options_) {
       bool value = false;
       if (user_config_->GetBool("var/option/" + option_name, &value)) {
         engine_->context()->set_option(option_name, value);
@@ -86,12 +85,12 @@ ProcessResult Switcher::ProcessKeyEvent(const KeyEvent& key_event) {
 }
 
 void Switcher::HighlightNextSchema() {
-  Composition* comp = context_->composition();
-  if (!comp || comp->empty() || !comp->back().menu)
+  Composition& comp = context_->composition();
+  if (comp.empty() || !comp.back().menu)
     return;
-  Segment& seg(comp->back());
+  Segment& seg(comp.back());
   int index = seg.selected_index;
-  shared_ptr<Candidate> option;
+  an<Candidate> option;
   do {
     ++index;  // next
     int candidate_count = seg.menu->Prepare(index + 1);
@@ -116,11 +115,11 @@ Schema* Switcher::CreateSchema() {
   auto schema_list = config->GetList("schema_list");
   if (!schema_list)
     return NULL;
-  std::string previous;
+  string previous;
   if (user_config_) {
     user_config_->GetString("var/previously_selected_schema", &previous);
   }
-  std::string recent;
+  string recent;
   for (size_t i = 0; i < schema_list->size(); ++i) {
     auto item = As<ConfigMap>(schema_list->GetAt(i));
     if (!item)
@@ -128,7 +127,7 @@ Schema* Switcher::CreateSchema() {
     auto schema_property = item->GetValue("schema");
     if (!schema_property)
       continue;
-    const std::string& schema_id(schema_property->str());
+    const string& schema_id(schema_property->str());
     if (previous.empty() || previous == schema_id) {
       recent = schema_id;
       break;
@@ -149,7 +148,7 @@ void Switcher::SelectNextSchema() {
   if (!xlator)
     return;
   Menu menu;
-  menu.AddTranslation(xlator->Query("", Segment(), NULL));
+  menu.AddTranslation(xlator->Query("", Segment()));
   if (menu.Prepare(2) < 2)
     return;
   auto command = As<SwitcherCommand>(menu.GetCandidateAt(1));
@@ -158,30 +157,29 @@ void Switcher::SelectNextSchema() {
   command->Apply(this);
 }
 
-bool Switcher::IsAutoSave(const std::string& option) const {
+bool Switcher::IsAutoSave(const string& option) const {
   return save_options_.find(option) != save_options_.end();
 }
 
 void Switcher::OnSelect(Context* ctx) {
   LOG(INFO) << "a switcher option is selected.";
-  Segment& seg(ctx->composition()->back());
-  if (auto command = As<SwitcherCommand>(seg.GetSelectedCandidate())) {
+  if (auto command = As<SwitcherCommand>(ctx->GetSelectedCandidate())) {
     command->Apply(this);
   }
 }
 
 void Switcher::RefreshMenu() {
-  Composition* comp = context_->composition();
-  if (comp->empty()) {
+  Composition& comp = context_->composition();
+  if (comp.empty()) {
     context_->set_input(" ");  // make context_->IsComposing() == true
     Segment seg(0, 0);         // empty range
     seg.prompt = caption_;
-    comp->AddSegment(seg);
+    comp.AddSegment(seg);
   }
   auto menu = New<Menu>();
-  comp->back().menu = menu;
+  comp.back().menu = menu;
   for (auto& translator : translators_) {
-    if (auto t = translator->Query("", comp->back(), NULL)) {
+    if (auto t = translator->Query("", comp.back())) {
       menu->AddTranslation(t);
     }
   }
@@ -233,14 +231,14 @@ void Switcher::InitializeComponents() {
   processors_.clear();
   translators_.clear();
   if (auto c = Processor::Require("key_binder")) {
-    shared_ptr<Processor> p(c->Create(Ticket(this)));
+    an<Processor> p(c->Create(Ticket(this)));
     processors_.push_back(p);
   }
   else {
     LOG(WARNING) << "key_binder not available.";
   }
   if (auto c = Processor::Require("selector")) {
-    shared_ptr<Processor> p(c->Create(Ticket(this)));
+    an<Processor> p(c->Create(Ticket(this)));
     processors_.push_back(p);
   }
   else {
@@ -248,14 +246,14 @@ void Switcher::InitializeComponents() {
   }
   DLOG(INFO) << "num processors: " << processors_.size();
   if (auto c = Translator::Require("schema_list_translator")) {
-    shared_ptr<Translator> t(c->Create(Ticket(this)));
+    an<Translator> t(c->Create(Ticket(this)));
     translators_.push_back(t);
   }
   else {
     LOG(WARNING) << "schema_list_translator not available.";
   }
   if (auto c = Translator::Require("switch_translator")) {
-    shared_ptr<Translator> t(c->Create(Ticket(this)));
+    an<Translator> t(c->Create(Ticket(this)));
     translators_.push_back(t);
   }
   else {

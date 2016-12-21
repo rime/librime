@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-04-26 Wensong He <snowhws@gmail.com>
 // 2013-10-20 GONG Chen <chen.sst@gmail.com>
@@ -22,14 +22,13 @@ class TrivialTranslator : public Translator {
  public:
   TrivialTranslator(const Ticket& ticket);
 
-  virtual shared_ptr<Translation> Query(const std::string& input,
-                                        const Segment& segment,
-                                        std::string* prompt);
+  virtual an<Translation> Query(const string& input,
+                                const Segment& segment);
 
  private:
-  std::string Translate(const std::string& input);
+  string Translate(const string& input);
 
-  using TrivialDictionary = std::map<std::string, std::string>;
+  using TrivialDictionary = map<string, string>;
   TrivialDictionary dictionary_;
 };
 

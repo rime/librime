@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-03-14 GONG Chen <chen.sst@gmail.com>
 //
@@ -33,7 +33,7 @@ class Processor : public Class<Processor, const Ticket&> {
 
  protected:
   Engine* engine_;
-  std::string name_space_;
+  string name_space_;
 };
 
 }  // namespace rime

@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-07-17 GONG Chen <chen.sst@gmail.com>
 //
@@ -14,12 +14,12 @@ namespace rime {
 static const int kEncoderDfsLimit = 32;
 static const int kMaxPhraseLength = 32;
 
-std::string RawCode::ToString() const {
+string RawCode::ToString() const {
   return boost::join(*this, " ");
 }
 
-void RawCode::FromString(const std::string &code_str) {
-  boost::split(*dynamic_cast<std::vector<std::string> *>(this),
+void RawCode::FromString(const string &code_str) {
+  boost::split(*dynamic_cast<vector<string> *>(this),
                code_str,
                boost::algorithm::is_space(),
                boost::algorithm::token_compress_on);
@@ -58,12 +58,12 @@ bool TableEncoder::LoadSettings(Config* config) {
       auto rule = As<ConfigMap>(*it);
       if (!rule || !rule->HasKey("formula"))
         continue;
-      const std::string formula(rule->GetValue("formula")->str());
+      const string formula(rule->GetValue("formula")->str());
       TableEncodingRule r;
       if (!ParseFormula(formula, &r))
         continue;
       r.min_word_length = r.max_word_length = 0;
-      if (ConfigValuePtr value = rule->GetValue("length_equal")) {
+      if (an<ConfigValue> value = rule->GetValue("length_equal")) {
         int length = 0;
         if (!value->GetInt(&length)) {
           LOG(ERROR) << "invalid length";
@@ -108,7 +108,7 @@ bool TableEncoder::LoadSettings(Config* config) {
   return loaded_;
 }
 
-bool TableEncoder::ParseFormula(const std::string& formula,
+bool TableEncoder::ParseFormula(const string& formula,
                                 TableEncodingRule* rule) {
   if (formula.length() % 2 != 0) {
     LOG(ERROR) << "bad formula: '%s'" << formula;
@@ -133,7 +133,7 @@ bool TableEncoder::ParseFormula(const std::string& formula,
   return true;
 }
 
-bool TableEncoder::IsCodeExcluded(const std::string& code) {
+bool TableEncoder::IsCodeExcluded(const string& code) {
   for (const boost::regex& pattern : exclude_patterns_) {
     if (boost::regex_match(code, pattern))
       return true;
@@ -141,7 +141,7 @@ bool TableEncoder::IsCodeExcluded(const std::string& code) {
   return false;
 }
 
-bool TableEncoder::Encode(const RawCode& code, std::string* result) {
+bool TableEncoder::Encode(const RawCode& code, string* result) {
   int num_syllables = static_cast<int>(code.size());
   for (const TableEncodingRule& rule : encoding_rules_) {
     if (num_syllables < rule.min_word_length ||
@@ -208,7 +208,7 @@ bool TableEncoder::Encode(const RawCode& code, std::string* result) {
 //        beyond `start` is used to locate the encoding character at index -1.
 // returns string index in `code` for the character at virtual `index`.
 // may return a negative number if `index` does not exist in `code`.
-int TableEncoder::CalculateCodeIndex(const std::string& code, int index,
+int TableEncoder::CalculateCodeIndex(const string& code, int index,
                                      int start) {
   DLOG(INFO) << "code = " << code
              << ", index = " << index << ", start = " << start;
@@ -221,12 +221,12 @@ int TableEncoder::CalculateCodeIndex(const std::string& code, int index,
     // 'ab|cd|ef|g' ~ '(AaAb)Ay' -> 'abc'; start = 4, index = -2
     k = n - 1;
     size_t tail = code.find_first_of(tail_anchor_, start + 1);
-    if (tail != std::string::npos) {
+    if (tail != string::npos) {
       k = static_cast<int>(tail) - 1;
     }
     while (++index < 0) {
       while (--k >= 0 &&
-             tail_anchor_.find(code[k]) != std::string::npos) {
+             tail_anchor_.find(code[k]) != string::npos) {
       }
     }
   }
@@ -234,15 +234,15 @@ int TableEncoder::CalculateCodeIndex(const std::string& code, int index,
     // 'ab|cd|ef|g' ~ '(AaAb)Ac' -> 'abc'; index = 2
     while (index-- > 0) {
       while (++k < n &&
-             tail_anchor_.find(code[k]) != std::string::npos) {
+             tail_anchor_.find(code[k]) != string::npos) {
       }
     }
   }
   return k;
 }
 
-bool TableEncoder::EncodePhrase(const std::string& phrase,
-                                const std::string& value) {
+bool TableEncoder::EncodePhrase(const string& phrase,
+                                const string& value) {
   size_t phrase_length = utf8::unchecked::distance(
       phrase.c_str(), phrase.c_str() + phrase.length());
   if (static_cast<int>(phrase_length) > max_phrase_length_)
@@ -253,8 +253,8 @@ bool TableEncoder::EncodePhrase(const std::string& phrase,
   return DfsEncode(phrase, value, 0, &code, &limit);
 }
 
-bool TableEncoder::DfsEncode(const std::string& phrase,
-                             const std::string& value,
+bool TableEncoder::DfsEncode(const string& phrase,
+                             const string& value,
                              size_t start_pos,
                              RawCode* code,
                              int* limit) {
@@ -262,7 +262,7 @@ bool TableEncoder::DfsEncode(const std::string& phrase,
     if (limit) {
       --*limit;
     }
-    std::string encoded;
+    string encoded;
     if (Encode(*code, &encoded)) {
       DLOG(INFO) << "encode '" << phrase << "': "
                  << "[" << code->ToString() << "] -> [" << encoded << "]";
@@ -279,11 +279,11 @@ bool TableEncoder::DfsEncode(const std::string& phrase,
   const char* word_end = word_start;
   utf8::unchecked::next(word_end);
   size_t word_len = word_end - word_start;
-  std::string word(word_start, word_len);
+  string word(word_start, word_len);
   bool ret = false;
-  std::vector<std::string> translations;
+  vector<string> translations;
   if (collector_->TranslateWord(word, &translations)) {
-    for (const std::string& x : translations) {
+    for (const string& x : translations) {
       if (IsCodeExcluded(x)) {
         continue;
       }
@@ -303,8 +303,8 @@ ScriptEncoder::ScriptEncoder(PhraseCollector* collector)
     : Encoder(collector) {
 }
 
-bool ScriptEncoder::EncodePhrase(const std::string& phrase,
-                                 const std::string& value) {
+bool ScriptEncoder::EncodePhrase(const string& phrase,
+                                 const string& value) {
   size_t phrase_length = utf8::unchecked::distance(
       phrase.c_str(), phrase.c_str() + phrase.length());
   if (static_cast<int>(phrase_length) > kMaxPhraseLength)
@@ -315,8 +315,8 @@ bool ScriptEncoder::EncodePhrase(const std::string& phrase,
   return DfsEncode(phrase, value, 0, &code, &limit);
 }
 
-bool ScriptEncoder::DfsEncode(const std::string& phrase,
-                              const std::string& value,
+bool ScriptEncoder::DfsEncode(const string& phrase,
+                              const string& value,
                               size_t start_pos,
                               RawCode* code,
                               int* limit) {
@@ -329,10 +329,10 @@ bool ScriptEncoder::DfsEncode(const std::string& phrase,
   }
   bool ret = false;
   for (size_t k = phrase.length() - start_pos; k > 0; --k) {
-    std::string word(phrase.substr(start_pos, k));
-    std::vector<std::string> translations;
+    string word(phrase.substr(start_pos, k));
+    vector<string> translations;
     if (collector_->TranslateWord(word, &translations)) {
-      for (const std::string& x : translations) {
+      for (const string& x : translations) {
         code->push_back(x);
         bool ok = DfsEncode(phrase, value, start_pos + k, code, limit);
         ret = ret || ok;

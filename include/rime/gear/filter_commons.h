@@ -1,14 +1,12 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-11-05 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_FILTER_COMMONS_H_
 #define RIME_FILTER_COMMONS_H_
 
-#include <string>
-#include <vector>
 
 namespace rime {
 
@@ -21,7 +19,7 @@ class TagMatching {
   bool TagsMatch(Segment* segment);
 
  protected:
-  std::vector<std::string> tags_;
+  vector<string> tags_;
 };
 
 }  // namespace rime

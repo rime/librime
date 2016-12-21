@@ -1,7 +1,7 @@
 ﻿// encoding: utf-8
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-05-02 Wensong He <snowhws@gmail.com>
 // 2013-10-20 GONG Chen <chen.sst@gmail.com>
@@ -31,14 +31,13 @@ TrivialTranslator::TrivialTranslator(const Ticket& ticket)
   dictionary_["wan"] = "\xe8\x90\xac";  // 萬
 }
 
-shared_ptr<Translation> TrivialTranslator::Query(const std::string& input,
-                                                 const Segment& segment,
-                                                 std::string* prompt) {
+an<Translation> TrivialTranslator::Query(const string& input,
+                                         const Segment& segment) {
   if (!segment.HasTag("abc"))
     return nullptr;
   DLOG(INFO) << "input = '" << input
              << "', [" << segment.start << ", " << segment.end << ")";
-  std::string output = Translate(input);
+  string output = Translate(input);
   if (output.empty()) {
     return nullptr;
   }
@@ -51,10 +50,10 @@ shared_ptr<Translation> TrivialTranslator::Query(const std::string& input,
   return New<UniqueTranslation>(candidate);
 }
 
-std::string TrivialTranslator::Translate(const std::string& input) {
+string TrivialTranslator::Translate(const string& input) {
   const size_t kMinPinyinLength = 2;
   const size_t kMaxPinyinLength = 6;
-  std::string result;
+  string result;
   size_t input_len = input.length();
   for (size_t i = 0; i < input_len; ) {
     int translated = 0;
@@ -71,7 +70,7 @@ std::string TrivialTranslator::Translate(const std::string& input) {
       i += translated;
     }
     else {
-      return std::string();
+      return string();
     }
   }
   return result;

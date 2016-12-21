@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-04-06 Zou xu <zouivex@gmail.com>
 //
@@ -23,8 +23,8 @@ class RimeConfigTest : public ::testing::Test {
   virtual void TearDown() {
   }
 
-  unique_ptr<Config::Component> component_;
-  unique_ptr<Config> config_;
+  the<Config::Component> component_;
+  the<Config> config_;
 };
 
 TEST(RimeConfigComponentTest, RealCreationWorkflow) {
@@ -35,7 +35,7 @@ TEST(RimeConfigComponentTest, RealCreationWorkflow) {
   Config::Component* cc = Config::Require("test_config");
   ASSERT_TRUE(cc != NULL);
   // creation
-  unique_ptr<Config> config(cc->Create("config_test"));
+  the<Config> config(cc->Create("config_test"));
   EXPECT_TRUE(bool(config));
   r.Unregister("test_config");
 }
@@ -90,7 +90,7 @@ TEST_F(RimeConfigTest, Config_GetDouble) {
 
 TEST_F(RimeConfigTest, Config_GetString) {
   bool ret;
-  std::string value;
+  string value;
   ret = config_->GetString("protoss/residence", &value);
   EXPECT_TRUE(ret);
   EXPECT_EQ("Aiur", value);
@@ -101,12 +101,12 @@ TEST_F(RimeConfigTest, Config_GetString) {
 }
 
 TEST_F(RimeConfigTest, Config_GetList) {
-  ConfigListPtr p;
+  an<ConfigList> p;
   p = config_->GetList("protoss/air_force");
   ASSERT_TRUE(bool(p));
   ASSERT_EQ(4, p->size());
-  ConfigValuePtr element;
-  std::string value;
+  an<ConfigValue> element;
+  string value;
   element = p->GetValueAt(0);
   ASSERT_TRUE(bool(element));
   ASSERT_TRUE(element->GetString(&value));
@@ -119,13 +119,13 @@ TEST_F(RimeConfigTest, Config_GetList) {
 }
 
 TEST_F(RimeConfigTest, Config_GetMap) {
-  ConfigMapPtr p;
+  an<ConfigMap> p;
   p = config_->GetMap("terrans/tank/cost");
   ASSERT_TRUE(bool(p));
   EXPECT_FALSE(p->HasKey("rime"));
   ASSERT_TRUE(p->HasKey("time"));
-  ConfigValuePtr item;
-  std::string time;
+  an<ConfigValue> item;
+  string time;
   int mineral = 0;
   int gas = 0;
   item = p->GetValue("time");
@@ -143,14 +143,14 @@ TEST_F(RimeConfigTest, Config_GetMap) {
 }
 
 TEST(RimeConfigWriterTest, Greetings) {
-  unique_ptr<Config> config(new Config);
+  the<Config> config(new Config);
   ASSERT_TRUE(bool(config));
   // creating contents
   EXPECT_TRUE(config->SetItem("/", New<ConfigMap>()));
-  ConfigItemPtr terran_greetings = New<ConfigValue>("Greetings, Terrans!");
-  ConfigItemPtr zerg_greetings = New<ConfigValue>("Zergsss are coming!");
-  ConfigItemPtr zergs_coming = New<ConfigValue>(true);
-  ConfigItemPtr zergs_population = New<ConfigValue>(1000000);
+  an<ConfigItem> terran_greetings = New<ConfigValue>("Greetings, Terrans!");
+  an<ConfigItem> zerg_greetings = New<ConfigValue>("Zergsss are coming!");
+  an<ConfigItem> zergs_coming = New<ConfigValue>(true);
+  an<ConfigItem> zergs_population = New<ConfigValue>(1000000);
   EXPECT_TRUE(config->SetItem("greetings", terran_greetings));
   EXPECT_TRUE(config->SetItem("zergs/overmind/greetings", zerg_greetings));
   EXPECT_TRUE(config->SetItem("zergs/going", zergs_coming));
@@ -160,10 +160,10 @@ TEST(RimeConfigWriterTest, Greetings) {
   // saving
   EXPECT_TRUE(config->SaveToFile("config_writer_test.yaml"));
   // verify
-  unique_ptr<Config> config2(new Config);
+  the<Config> config2(new Config);
   ASSERT_TRUE(bool(config2));
   EXPECT_TRUE(config2->LoadFromFile("config_writer_test.yaml"));
-  std::string the_greetings;
+  string the_greetings;
   EXPECT_TRUE(config2->GetString("greetings", &the_greetings));
   EXPECT_EQ("Greetings, Terrans!", the_greetings);
   EXPECT_TRUE(config2->GetString("zergs/overmind/greetings", &the_greetings));
@@ -178,15 +178,15 @@ TEST(RimeConfigWriterTest, Greetings) {
   // modifying tree
   EXPECT_TRUE(config2->SetInt("zergs/statistics/population", population / 2));
   EXPECT_TRUE(config2->SetString("protoss/residence", "Aiur"));
-  EXPECT_TRUE(config2->SetItem("zergs/overmind", ConfigItemPtr()));
+  EXPECT_TRUE(config2->SetItem("zergs/overmind", nullptr));
   EXPECT_TRUE(config2->SaveToFile("config_rewriter_test.yaml"));
   // verify
-  unique_ptr<Config> config3(new Config);
+  the<Config> config3(new Config);
   ASSERT_TRUE(bool(config3));
   EXPECT_TRUE(config3->LoadFromFile("config_rewriter_test.yaml"));
   EXPECT_TRUE(config3->GetInt("zergs/statistics/population", &population));
   EXPECT_EQ(500000, population);
-  std::string value;
+  string value;
   EXPECT_TRUE(config3->GetString("protoss/residence", &value));
   EXPECT_EQ("Aiur", value);
   // deleted
@@ -215,8 +215,8 @@ TEST(RimeConfigxxTest, Operations) {
   EXPECT_EQ(4, config["list"].size());
   EXPECT_EQ("123", config["list"][3]["abc"].ToString());
   EXPECT_EQ("Hello!", config["list"][2].ToString());
-  ConfigItemPtr v1(config["list"][2]);
-  ConfigItemPtr v2(config["nested"]["greetings"]);
+  an<ConfigItem> v1(config["list"][2]);
+  an<ConfigItem> v2(config["nested"]["greetings"]);
   EXPECT_EQ(v1, v2);
   EXPECT_TRUE(config.modified());
   EXPECT_TRUE(config.SaveToFile("rime_configxx_test.yaml"));
@@ -233,7 +233,7 @@ TEST(RimeConfigxxTest, Operations) {
 TEST(RimeConfigListKeyPathTest, Greetings) {
   int id = 0;
   int value = 0;
-  unique_ptr<Config> config(new Config);
+  the<Config> config(new Config);
   ASSERT_TRUE(bool(config));
   // append items
   EXPECT_TRUE(config->SetInt("list/@next/id", 1));

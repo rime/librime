@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2012-02-18 GONG Chen <chen.sst@gmail.com>
 //
@@ -37,7 +37,7 @@ bool SwitcherSettings::Load() {
 bool SwitcherSettings::Select(Selection selection) {
   selection_ = std::move(selection);
   auto schema_list = New<ConfigList>();
-  for (const std::string& schema_id : selection_) {
+  for (const string& schema_id : selection_) {
     auto item = New<ConfigMap>();
     item->Set("schema", New<ConfigValue>(schema_id));
     schema_list->Append(item);
@@ -45,7 +45,7 @@ bool SwitcherSettings::Select(Selection selection) {
   return Customize("schema_list", schema_list);
 }
 
-bool SwitcherSettings::SetHotkeys(const std::string& hotkeys) {
+bool SwitcherSettings::SetHotkeys(const string& hotkeys) {
   // TODO: not implemented; validation required
   return false;
 }
@@ -57,7 +57,7 @@ void SwitcherSettings::GetAvailableSchemasFromDirectory(const fs::path& dir) {
   }
   for (fs::directory_iterator it(dir), end;
        it != end; ++it) {
-    std::string file_path(it->path().string());
+    string file_path(it->path().string());
     if (boost::ends_with(file_path, ".schema.yaml")) {
       Config config;
       if (config.LoadFromFile(file_path)) {
@@ -110,7 +110,7 @@ void SwitcherSettings::GetSelectedSchemasFromConfig() {
     auto schema_property = item->GetValue("schema");
     if (!schema_property)
       continue;
-    const std::string& schema_id(schema_property->str());
+    const string& schema_id(schema_property->str());
     selection_.push_back(schema_id);
   }
 }
@@ -125,7 +125,7 @@ void SwitcherSettings::GetHotkeysFromConfig() {
     auto item = As<ConfigValue>(*it);
     if (!item)
       continue;
-    const std::string& hotkey(item->str());
+    const string& hotkey(item->str());
     if (hotkey.empty())
       continue;
     if (!hotkeys_.empty())

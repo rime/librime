@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2012-02-26 GONG Chen <chen.sst@gmail.com>
 //
@@ -16,8 +16,8 @@ namespace fs = boost::filesystem;
 namespace rime {
 
 CustomSettings::CustomSettings(Deployer* deployer,
-                               const std::string& config_id,
-                               const std::string& generator_id)
+                               const string& config_id,
+                               const string& generator_id)
     : deployer_(deployer),
       config_id_(config_id),
       generator_id_(generator_id) {
@@ -52,20 +52,20 @@ bool CustomSettings::Save() {
   return true;
 }
 
-ConfigValuePtr CustomSettings::GetValue(const std::string& key) {
+an<ConfigValue> CustomSettings::GetValue(const string& key) {
   return config_.GetValue(key);
 }
 
-ConfigListPtr CustomSettings::GetList(const std::string& key) {
+an<ConfigList> CustomSettings::GetList(const string& key) {
   return config_.GetList(key);
 }
 
-ConfigMapPtr CustomSettings::GetMap(const std::string& key) {
+an<ConfigMap> CustomSettings::GetMap(const string& key) {
   return config_.GetMap(key);
 }
 
-bool CustomSettings::Customize(const std::string& key,
-                               const ConfigItemPtr& item) {
+bool CustomSettings::Customize(const string& key,
+                               const an<ConfigItem>& item) {
   auto patch = custom_config_.GetMap("patch");
   if (!patch) {
     patch = New<ConfigMap>();

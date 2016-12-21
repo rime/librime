@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-11-23 GONG Chen <chen.sst@gmail.com>
 //
@@ -26,7 +26,7 @@ class KeyBinder : public Processor {
   bool ReinterpretPagingKey(const KeyEvent& key_event);
   void PerformKeyBinding(const KeyBinding& binding);
 
-  unique_ptr<KeyBindings> key_bindings_;
+  the<KeyBindings> key_bindings_;
   bool redirecting_;
   int last_key_;
 };

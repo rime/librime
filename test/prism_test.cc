@@ -1,13 +1,10 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-05-17 Zou xu <zouivex@gmail.com>
 //
 #include <algorithm>
-#include <set>
-#include <string>
-#include <vector>
 #include <gtest/gtest.h>
 #include <rime/dict/prism.h>
 
@@ -21,7 +18,7 @@ class RimePrismTest : public ::testing::Test {
     prism_.reset(new Prism("prism_test.bin"));
     prism_->Remove();
     
-    std::set<std::string> keyset;
+    set<string> keyset;
     keyset.insert("google");     // 4
     keyset.insert("good");       // 2
     keyset.insert("goodbye");    // 3
@@ -37,7 +34,7 @@ class RimePrismTest : public ::testing::Test {
   virtual void TearDown() {
   }
 
-  unique_ptr<Prism> prism_;
+  the<Prism> prism_;
 };
 
 TEST_F(RimePrismTest, SaveAndLoad) {
@@ -68,7 +65,7 @@ TEST_F(RimePrismTest, GetValue) {
 }
 
 TEST_F(RimePrismTest, CommonPrefixMatch) {
-  std::vector<Prism::Match> result;
+  vector<Prism::Match> result;
 
   prism_->CommonPrefixSearch("goodbye", &result);
   //result is good and goodbye.
@@ -80,7 +77,7 @@ TEST_F(RimePrismTest, CommonPrefixMatch) {
 }
 
 TEST_F(RimePrismTest, ExpandSearch) {
-  std::vector<Prism::Match> result;
+  vector<Prism::Match> result;
 
   prism_->ExpandSearch("goo", &result, 10);
   //result is good, google and goodbye (ordered by length asc).

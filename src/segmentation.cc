@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-05-15 GONG Chen <chen.sst@gmail.com>
 //
@@ -12,20 +12,51 @@
 
 namespace rime {
 
-shared_ptr<Candidate> Segment::GetCandidateAt(size_t index) const {
+static const char* kPartialSelectionTag = "partial";
+
+void Segment::Close() {
+  auto cand = GetSelectedCandidate();
+  if (cand && cand->end() < end) {
+    // having selected a partially matched candidate, split it into 2 segments
+    end = cand->end();
+    tags.insert(kPartialSelectionTag);
+  }
+}
+
+bool Segment::Reopen(size_t caret_pos) {
+  if (status < kSelected) {
+    return false;
+  }
+  const size_t original_end_pos = start + length;
+  if (original_end_pos == caret_pos) {
+    // reuse previous candidates and keep selection
+    if (end < original_end_pos) {
+      // restore partial-selected segment
+      end = original_end_pos;
+      tags.erase(kPartialSelectionTag);
+    }
+    status = kGuess;
+  }
+  else {
+    status = kVoid;
+  }
+  return true;
+}
+
+an<Candidate> Segment::GetCandidateAt(size_t index) const {
   if (!menu)
     return nullptr;
   return menu->GetCandidateAt(index);
 }
 
-shared_ptr<Candidate> Segment::GetSelectedCandidate() const {
+an<Candidate> Segment::GetSelectedCandidate() const {
   return GetCandidateAt(selected_index);
 }
 
 Segmentation::Segmentation() {
 }
 
-void Segmentation::Reset(const std::string& new_input) {
+void Segmentation::Reset(const string& new_input) {
   DLOG(INFO) << "reset to " << size() << " segments.";
   // mark redo segmentation, while keeping user confirmed segments
   size_t diff_pos = 0;
@@ -53,7 +84,7 @@ void Segmentation::Reset(size_t num_segments) {
   resize(num_segments);
 }
 
-bool Segmentation::AddSegment(const Segment& segment) {
+bool Segmentation::AddSegment(Segment segment) {
   int start = GetCurrentStartPosition();
   if (segment.start != start) {
     // rule one: in one round, we examine only those segs
@@ -76,8 +107,8 @@ bool Segmentation::AddSegment(const Segment& segment) {
   }
   else {
     // rule three: with segments equal in length, merge their tags
-    std::set<std::string> result;
-    std::set_union(last.tags.begin(), last.tags.end(),
+    set<string> result;
+    set_union(last.tags.begin(), last.tags.end(),
                    segment.tags.begin(), segment.tags.end(),
                    std::inserter(result, result.begin()));
     last.tags.swap(result);
@@ -136,7 +167,7 @@ std::ostream& operator<< (std::ostream& out,
     if (!segment.tags.empty()) {
       out << "{";
       bool first = true;
-      for (const std::string& tag : segment.tags) {
+      for (const string& tag : segment.tags) {
         if (first)
           first = false;
         else

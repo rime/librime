@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-08-08 GONG Chen <chen.sst@gmail.com>
 //
@@ -9,8 +9,6 @@
 
 #include <stdint.h>
 #include <time.h>
-#include <functional>
-#include <map>
 #include <mutex>
 #include <rime/common.h>
 #include <rime/deployer.h>
@@ -21,7 +19,7 @@ using SessionId = uintptr_t;
 
 static const SessionId kInvalidSessionId = 0;
 
-using NotificationHandler = std::function<void (SessionId session_id,
+using NotificationHandler = function<void (SessionId session_id,
                                                 const char* message_type,
                                                 const char* message_value)>;
 
@@ -45,14 +43,14 @@ class Session {
   Context* context() const;
   Schema* schema() const;
   time_t last_active_time() const { return last_active_time_; }
-  const std::string& commit_text() const { return commit_text_; }
+  const string& commit_text() const { return commit_text_; }
 
  private:
-  void OnCommit(const std::string& commit_text);
+  void OnCommit(const string& commit_text);
 
-  unique_ptr<Engine> engine_;
+  the<Engine> engine_;
   time_t last_active_time_ = 0;
-  std::string commit_text_;
+  string commit_text_;
 };
 
 class Service {
@@ -63,7 +61,7 @@ class Service {
   void StopService();
 
   SessionId CreateSession();
-  shared_ptr<Session> GetSession(SessionId session_id);
+  an<Session> GetSession(SessionId session_id);
   bool DestroySession(SessionId session_id);
   void CleanupStaleSessions();
   void CleanupAllSessions();
@@ -71,8 +69,8 @@ class Service {
   void SetNotificationHandler(const NotificationHandler& handler);
   void ClearNotificationHandler();
   void Notify(SessionId session_id,
-              const std::string& message_type,
-              const std::string& message_value);
+              const string& message_type,
+              const string& message_value);
 
   Deployer& deployer() { return deployer_; }
   bool disabled() { return !started_ || deployer_.IsMaintenanceMode(); }
@@ -82,7 +80,7 @@ class Service {
  private:
   Service();
 
-  using SessionMap = std::map<SessionId, shared_ptr<Session>>;
+  using SessionMap = map<SessionId, an<Session>>;
   SessionMap sessions_;
   Deployer deployer_;
   NotificationHandler notification_handler_;

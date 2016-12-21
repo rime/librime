@@ -1,13 +1,10 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-04-24 GONG Chen <chen.sst@gmail.com>
 //
 #include <cctype>
-#include <functional>
-#include <string>
-#include <vector>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -25,8 +22,6 @@
 #include <rime/translation.h>
 #include <rime/translator.h>
 
-using namespace std::placeholders;
-
 namespace rime {
 
 class ConcreteEngine : public Engine {
@@ -35,29 +30,26 @@ class ConcreteEngine : public Engine {
   virtual ~ConcreteEngine();
   virtual bool ProcessKey(const KeyEvent& key_event);
   virtual void ApplySchema(Schema* schema);
-  virtual void CommitText(std::string text);
+  virtual void CommitText(string text);
+  virtual void Compose(Context* ctx);
 
  protected:
   void InitializeComponents();
   void InitializeOptions();
-  void Compose(Context* ctx);
-  void CalculateSegmentation(Composition* comp);
-  void TranslateSegments(Composition* comp);
-  void FilterCandidates(Segment* segment,
-                        CandidateList* recruited,
-                        CandidateList* candidates);
-  void FormatText(std::string* text);
+  void CalculateSegmentation(Segmentation* segments);
+  void TranslateSegments(Segmentation* segments);
+  void FormatText(string* text);
   void OnCommit(Context* ctx);
   void OnSelect(Context* ctx);
   void OnContextUpdate(Context* ctx);
-  void OnOptionUpdate(Context* ctx, const std::string& option);
+  void OnOptionUpdate(Context* ctx, const string& option);
 
-  std::vector<shared_ptr<Processor>> processors_;
-  std::vector<shared_ptr<Segmentor>> segmentors_;
-  std::vector<shared_ptr<Translator>> translators_;
-  std::vector<shared_ptr<Filter>> filters_;
-  std::vector<shared_ptr<Formatter>> formatters_;
-  std::vector<shared_ptr<Processor>> post_processors_;
+  vector<of<Processor>> processors_;
+  vector<of<Segmentor>> segmentors_;
+  vector<of<Translator>> translators_;
+  vector<of<Filter>> filters_;
+  vector<of<Formatter>> formatters_;
+  vector<of<Processor>> post_processors_;
 };
 
 // implementations
@@ -84,7 +76,7 @@ ConcreteEngine::ConcreteEngine() {
   context_->update_notifier().connect(
       [this](Context* ctx) { OnContextUpdate(ctx); });
   context_->option_update_notifier().connect(
-      [this](Context* ctx, const std::string& option) {
+      [this](Context* ctx, const string& option) {
         OnOptionUpdate(ctx, option);
       });
   InitializeComponents();
@@ -124,7 +116,7 @@ void ConcreteEngine::OnContextUpdate(Context* ctx) {
   Compose(ctx);
 }
 
-void ConcreteEngine::OnOptionUpdate(Context* ctx, const std::string& option) {
+void ConcreteEngine::OnOptionUpdate(Context* ctx, const string& option) {
   if (!ctx) return;
   LOG(INFO) << "updated option: " << option;
   // apply new option to active segment
@@ -133,61 +125,67 @@ void ConcreteEngine::OnOptionUpdate(Context* ctx, const std::string& option) {
   }
   // notification
   bool option_is_on = ctx->get_option(option);
-  std::string msg(option_is_on ? option : "!" + option);
+  string msg(option_is_on ? option : "!" + option);
   message_sink_("option", msg);
 }
 
 void ConcreteEngine::Compose(Context* ctx) {
   if (!ctx) return;
-  Composition* comp = ctx->composition();
-  std::string active_input(ctx->input().substr(0, ctx->caret_pos()));
+  Composition& comp = ctx->composition();
+  const string active_input = ctx->input().substr(0, ctx->caret_pos());
   DLOG(INFO) << "active input: " << active_input;
-  comp->Reset(active_input);
-  CalculateSegmentation(comp);
-  TranslateSegments(comp);
-  DLOG(INFO) << "composition: " << comp->GetDebugText();
-  ctx->set_composition(comp);
+  comp.Reset(active_input);
+  if (ctx->caret_pos() < ctx->input().length() &&
+      ctx->caret_pos() == comp.GetConfirmedPosition()) {
+    // translate one segment past caret pos.
+    comp.Reset(ctx->input());
+  }
+  CalculateSegmentation(&comp);
+  TranslateSegments(&comp);
+  DLOG(INFO) << "composition: " << comp.GetDebugText();
 }
 
-void ConcreteEngine::CalculateSegmentation(Composition* comp) {
-  while (!comp->HasFinishedSegmentation()) {
-    size_t start_pos = comp->GetCurrentStartPosition();
-    size_t end_pos = comp->GetCurrentEndPosition();
+void ConcreteEngine::CalculateSegmentation(Segmentation* segments) {
+  while (!segments->HasFinishedSegmentation()) {
+    size_t start_pos = segments->GetCurrentStartPosition();
+    size_t end_pos = segments->GetCurrentEndPosition();
     DLOG(INFO) << "start pos: " << start_pos;
     DLOG(INFO) << "end pos: " << end_pos;
     // recognize a segment by calling the segmentors in turn
     for (auto& segmentor : segmentors_) {
-      if (!segmentor->Proceed(comp))
+      if (!segmentor->Proceed(segments))
         break;
     }
-    DLOG(INFO) << "segmentation: " << *comp;
+    DLOG(INFO) << "segmentation: " << *segments;
     // no advancement
-    if (start_pos == comp->GetCurrentEndPosition())
+    if (start_pos == segments->GetCurrentEndPosition())
+      break;
+    // only one segment is allowed past caret pos, which is the segment
+    // immediately after the caret.
+    if (start_pos >= context_->caret_pos())
       break;
     // move onto the next segment...
-    if (!comp->HasFinishedSegmentation())
-      comp->Forward();
+    if (!segments->HasFinishedSegmentation())
+      segments->Forward();
   }
   // start an empty segment only at the end of a confirmed composition.
-  comp->Trim();
-  if (!comp->empty() && comp->back().status >= Segment::kSelected)
-    comp->Forward();
+  segments->Trim();
+  if (!segments->empty() && segments->back().status >= Segment::kSelected)
+    segments->Forward();
 }
 
-void ConcreteEngine::TranslateSegments(Composition* comp) {
-  for (Segment& segment : *comp) {
+void ConcreteEngine::TranslateSegments(Segmentation* segments) {
+  for (Segment& segment : *segments) {
     if (segment.status >= Segment::kGuess)
       continue;
     size_t len = segment.end - segment.start;
     if (len == 0)
       continue;
-    std::string input = comp->input().substr(segment.start, len);
+    string input = segments->input().substr(segment.start, len);
     DLOG(INFO) << "translating segment: " << input;
-    Menu::CandidateFilter cand_filter(
-        std::bind(&ConcreteEngine::FilterCandidates, this, &segment, _1, _2));
-    auto menu = New<Menu>(cand_filter);
+    auto menu = New<Menu>();
     for (auto& translator : translators_) {
-      auto translation = translator->Query(input, segment, &segment.prompt);
+      auto translation = translator->Query(input, segment);
       if (!translation)
         continue;
       if (translation->exhausted()) {
@@ -196,26 +194,18 @@ void ConcreteEngine::TranslateSegments(Composition* comp) {
       }
       menu->AddTranslation(translation);
     }
+    for (auto& filter : filters_) {
+      if (filter->AppliesToSegment(&segment)) {
+        menu->AddFilter(filter.get());
+      }
+    }
     segment.status = Segment::kGuess;
     segment.menu = menu;
     segment.selected_index = 0;
   }
 }
 
-void ConcreteEngine::FilterCandidates(Segment* segment,
-                                      CandidateList* recruited,
-                                      CandidateList* candidates) {
-  if (filters_.empty())
-    return;
-  DLOG(INFO) << "applying filters.";
-  for (auto& filter : filters_) {
-    if (filter->AppliesToSegment(segment)) {
-      filter->Apply(recruited, candidates);
-    }
-  }
-}
-
-void ConcreteEngine::FormatText(std::string* text) {
+void ConcreteEngine::FormatText(string* text) {
   if (formatters_.empty())
     return;
   DLOG(INFO) << "applying formatters.";
@@ -224,7 +214,7 @@ void ConcreteEngine::FormatText(std::string* text) {
   }
 }
 
-void ConcreteEngine::CommitText(std::string text) {
+void ConcreteEngine::CommitText(string text) {
   context_->commit_history().Push(CommitRecord{"raw", text});
   FormatText(&text);
   DLOG(INFO) << "committing text: " << text;
@@ -232,21 +222,16 @@ void ConcreteEngine::CommitText(std::string text) {
 }
 
 void ConcreteEngine::OnCommit(Context* ctx) {
-  context_->commit_history().Push(*ctx->composition(), ctx->input());
-  std::string text = ctx->GetCommitText();
+  context_->commit_history().Push(ctx->composition(), ctx->input());
+  string text = ctx->GetCommitText();
   FormatText(&text);
   DLOG(INFO) << "committing composition: " << text;
   sink_(text);
 }
 
 void ConcreteEngine::OnSelect(Context* ctx) {
-  Segment& seg(ctx->composition()->back());
-  auto cand =seg.GetSelectedCandidate();
-  if (cand && cand->end() < seg.end) {
-    // having selected a partially matched candidate, split it into 2 segments
-    seg.end = cand->end();
-    seg.tags.insert("partial");
-  }
+  Segment& seg(ctx->composition().back());
+  seg.Close();
   if (seg.end == ctx->input().length()) {
     // composition has finished
     seg.status = Segment::kConfirmed;
@@ -255,10 +240,10 @@ void ConcreteEngine::OnSelect(Context* ctx) {
     if (ctx->get_option("_auto_commit"))
       ctx->Commit();
     else
-      ctx->composition()->Forward();
+      ctx->composition().Forward();
   }
   else {
-    ctx->composition()->Forward();
+    ctx->composition().Forward();
     if (seg.end >= ctx->caret_pos()) {
       // finished converting current segment
       // move caret to the end of input
@@ -308,7 +293,7 @@ void ConcreteEngine::InitializeComponents() {
         continue;
       Ticket ticket{this, "processor", prescription->str()};
       if (auto c = Processor::Require(ticket.klass)) {
-        shared_ptr<Processor> p(c->Create(ticket));
+        an<Processor> p(c->Create(ticket));
         processors_.push_back(p);
       }
       else {
@@ -325,7 +310,7 @@ void ConcreteEngine::InitializeComponents() {
         continue;
       Ticket ticket{this, "segmentor", prescription->str()};
       if (auto c = Segmentor::Require(ticket.klass)) {
-        shared_ptr<Segmentor> s(c->Create(ticket));
+        an<Segmentor> s(c->Create(ticket));
         segmentors_.push_back(s);
       }
       else {
@@ -342,7 +327,7 @@ void ConcreteEngine::InitializeComponents() {
         continue;
       Ticket ticket{this, "translator", prescription->str()};
       if (auto c = Translator::Require(ticket.klass)) {
-        shared_ptr<Translator> t(c->Create(ticket));
+        an<Translator> t(c->Create(ticket));
         translators_.push_back(t);
       }
       else {
@@ -359,7 +344,7 @@ void ConcreteEngine::InitializeComponents() {
         continue;
       Ticket ticket{this, "filter", prescription->str()};
       if (auto c = Filter::Require(ticket.klass)) {
-        shared_ptr<Filter> f(c->Create(ticket));
+        an<Filter> f(c->Create(ticket));
         filters_.push_back(f);
       }
       else {
@@ -369,7 +354,7 @@ void ConcreteEngine::InitializeComponents() {
   }
   // create formatters
   if (auto c = Formatter::Require("shape_formatter")) {
-    shared_ptr<Formatter> f(c->Create(Ticket(this)));
+    an<Formatter> f(c->Create(Ticket(this)));
     formatters_.push_back(f);
   }
   else {
@@ -377,7 +362,7 @@ void ConcreteEngine::InitializeComponents() {
   }
   // create post-processors
   if (auto c = Processor::Require("shape_processor")) {
-    shared_ptr<Processor> p(c->Create(Ticket(this)));
+    an<Processor> p(c->Create(Ticket(this)));
     post_processors_.push_back(p);
   }
   else {

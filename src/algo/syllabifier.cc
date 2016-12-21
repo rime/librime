@@ -1,25 +1,23 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-07-12 Zou Xu <zouivex@gmail.com>
 // 2012-02-11 GONG Chen <chen.sst@gmail.com>
 //
 #include <queue>
-#include <utility>
-#include <vector>
 #include <boost/range/adaptor/reversed.hpp>
 #include <rime/dict/prism.h>
 #include <rime/algo/syllabifier.h>
 
 namespace rime {
 
-using Vertex = std::pair<size_t, SpellingType>;
+using Vertex = pair<size_t, SpellingType>;
 using VertexQueue = std::priority_queue<Vertex,
-                                        std::vector<Vertex>,
+                                        vector<Vertex>,
                                         std::greater<Vertex>>;
 
-int Syllabifier::BuildSyllableGraph(const std::string &input,
+int Syllabifier::BuildSyllableGraph(const string &input,
                                     Prism &prism,
                                     SyllableGraph *graph) {
   if (input.empty())
@@ -45,7 +43,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input,
     DLOG(INFO) << "current_pos: " << current_pos;
 
     // see where we can go by advancing a syllable
-    std::vector<Prism::Match> matches;
+    vector<Prism::Match> matches;
     prism.CommonPrefixSearch(input.substr(current_pos), &matches);
     if (!matches.empty()) {
       auto& end_vertices(graph->edges[current_pos]);
@@ -54,7 +52,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input,
         size_t end_pos = current_pos + m.length;
         // consume trailing delimiters
         while (end_pos < input.length() &&
-               delimiters_.find(input[end_pos]) != std::string::npos)
+               delimiters_.find(input[end_pos]) != string::npos)
           ++end_pos;
         DLOG(INFO) << "end_pos: " << end_pos;
         bool matches_input = (current_pos == 0 && end_pos == input.length());
@@ -104,7 +102,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input,
   }
 
   DLOG(INFO) << "remove stale vertices and edges";
-  std::set<int> good;
+  set<int> good;
   good.insert(farthest);
   // fuzzy spellings are immune to invalidation by normal spellings
   SpellingType last_type = (std::max)(graph->vertices[farthest],
@@ -154,7 +152,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input,
   if (enable_completion_ && farthest < input.length()) {
     DLOG(INFO) << "completion enabled";
     const size_t kExpandSearchLimit = 512;
-    std::vector<Prism::Match> keys;
+    vector<Prism::Match> keys;
     prism.ExpandSearch(input.substr(farthest), &keys, kExpandSearchLimit);
     if (!keys.empty()) {
       size_t current_pos = farthest;
@@ -206,7 +204,7 @@ int Syllabifier::BuildSyllableGraph(const std::string &input,
 
 void Syllabifier::CheckOverlappedSpellings(SyllableGraph *graph,
                                            size_t start, size_t end) {
-  // TODO: more cases to handle...
+  const double kPenaltyForAmbiguousSyllable = 1e-10;
   if (!graph || graph->edges.find(start) == graph->edges.end())
     return;
   // if "Z" = "YX", mark the vertex between Y and X an ambiguous syllable joint
@@ -219,9 +217,14 @@ void Syllabifier::CheckOverlappedSpellings(SyllableGraph *graph,
     if (graph->edges.find(joint) == graph->edges.end())
       continue;
     auto& x_end_vertices(graph->edges[joint]);
-    for (const auto& x : x_end_vertices) {
+    for (auto& x : x_end_vertices) {
       if (x.first < end) continue;
       if (x.first == end) {
+        // discourage syllables at an ambiguous joint
+        // bad cases include pinyin syllabification "niju'ede"
+        for (auto& spelling : x.second) {
+          spelling.second.credibility *= kPenaltyForAmbiguousSyllable;
+        }
         graph->vertices[joint] = kAmbiguousSpelling;
         DLOG(INFO) << "ambiguous syllable joint at position " << joint << ".";
       }

@@ -1,13 +1,12 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-11-21 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_PUNCTUATOR_H_
 #define RIME_PUNCTUATOR_H_
 
-#include <map>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/config.h>
@@ -22,13 +21,13 @@ class Engine;
 class PunctConfig {
  public:
   void LoadConfig(Engine* engine, bool load_symbols = false);
-  ConfigItemPtr GetPunctDefinition(const std::string key);
+  an<ConfigItem> GetPunctDefinition(const string key);
  protected:
-  ConfigMapPtr mapping_;
-  ConfigMapPtr preset_mapping_;
-  std::string shape_;
-  ConfigMapPtr symbols_;
-  ConfigMapPtr preset_symbols_;
+  an<ConfigMap> mapping_;
+  an<ConfigMap> preset_mapping_;
+  string shape_;
+  an<ConfigMap> symbols_;
+  an<ConfigMap> preset_symbols_;
 };
 
 class Punctuator : public Processor {
@@ -37,14 +36,14 @@ class Punctuator : public Processor {
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:
-  bool ConfirmUniquePunct(const ConfigItemPtr& definition);
-  bool AlternatePunct(const std::string& key, const ConfigItemPtr& definition);
-  bool AutoCommitPunct(const ConfigItemPtr& definition);
-  bool PairPunct(const ConfigItemPtr& definition);
+  bool ConfirmUniquePunct(const an<ConfigItem>& definition);
+  bool AlternatePunct(const string& key, const an<ConfigItem>& definition);
+  bool AutoCommitPunct(const an<ConfigItem>& definition);
+  bool PairPunct(const an<ConfigItem>& definition);
 
   PunctConfig config_;
   bool use_space_ = false;
-  std::map<ConfigItemPtr, int> oddness_;
+  map<an<ConfigItem>, int> oddness_;
 };
 
 class PunctSegmentor : public Segmentor {
@@ -59,27 +58,26 @@ class PunctSegmentor : public Segmentor {
 class PunctTranslator : public Translator {
  public:
   PunctTranslator(const Ticket& ticket);
-  virtual shared_ptr<Translation> Query(const std::string& input,
-                                        const Segment& segment,
-                                        std::string* prompt);
+  virtual an<Translation> Query(const string& input,
+                                        const Segment& segment);
 
  protected:
-  shared_ptr<Translation>
-  TranslateUniquePunct(const std::string& key,
+  an<Translation>
+  TranslateUniquePunct(const string& key,
                        const Segment& segment,
-                       const ConfigValuePtr& definition);
-  shared_ptr<Translation>
-  TranslateAlternatingPunct(const std::string& key,
+                       const an<ConfigValue>& definition);
+  an<Translation>
+  TranslateAlternatingPunct(const string& key,
                             const Segment& segment,
-                            const ConfigListPtr& definition);
-  shared_ptr<Translation>
-  TranslateAutoCommitPunct(const std::string& key,
+                            const an<ConfigList>& definition);
+  an<Translation>
+  TranslateAutoCommitPunct(const string& key,
                            const Segment& segment,
-                           const ConfigMapPtr& definition);
-  shared_ptr<Translation>
-  TranslatePairedPunct(const std::string& key,
+                           const an<ConfigMap>& definition);
+  an<Translation>
+  TranslatePairedPunct(const string& key,
                        const Segment& segment,
-                       const ConfigMapPtr& definition);
+                       const an<ConfigMap>& definition);
 
   PunctConfig config_;
 };

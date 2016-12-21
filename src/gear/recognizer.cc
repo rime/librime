@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2012-01-01 GONG Chen <chen.sst@gmail.com>
 //
@@ -15,7 +15,7 @@
 
 namespace rime {
 
-static void load_patterns(RecognizerPatterns* patterns, ConfigMapPtr map) {
+static void load_patterns(RecognizerPatterns* patterns, an<ConfigMap> map) {
   if (!patterns || !map)
     return;
   for (auto it = map->begin(); it != map->end(); ++it) {
@@ -27,10 +27,10 @@ static void load_patterns(RecognizerPatterns* patterns, ConfigMapPtr map) {
 }
 
 void RecognizerPatterns::LoadConfig(Config* config) {
-  ConfigMapPtr pattern_map;
-  std::string preset;
+  an<ConfigMap> pattern_map;
+  string preset;
   if (config->GetString("recognizer/import_preset", &preset)) {
-    unique_ptr<Config> preset_config(
+    the<Config> preset_config(
         Config::Require("config")->Create(preset));
     if (!preset_config) {
       LOG(ERROR) << "Error importing preset patterns '" << preset << "'.";
@@ -44,11 +44,11 @@ void RecognizerPatterns::LoadConfig(Config* config) {
 }
 
 RecognizerMatch
-RecognizerPatterns::GetMatch(const std::string& input,
-                             Segmentation* segmentation) const {
-  size_t j = segmentation->GetCurrentEndPosition();
-  size_t k = segmentation->GetConfirmedPosition();
-  std::string active_input = input.substr(k);
+RecognizerPatterns::GetMatch(const string& input,
+                             const Segmentation& segmentation) const {
+  size_t j = segmentation.GetCurrentEndPosition();
+  size_t k = segmentation.GetConfirmedPosition();
+  string active_input = input.substr(k);
   DLOG(INFO) << "matching active input '" << active_input << "' at pos " << k;
   for (const auto& v : *this) {
     boost::smatch m;
@@ -62,7 +62,7 @@ RecognizerPatterns::GetMatch(const std::string& input,
                    << m.str() << "' matches pattern: " << v.first;
         return {v.first, start, end};
       }
-      for (const Segment& seg : *segmentation) {
+      for (const Segment& seg : segmentation) {
         if (start < seg.start)
           break;
         if (start == seg.start) {
@@ -81,6 +81,7 @@ Recognizer::Recognizer(const Ticket& ticket) : Processor(ticket) {
     return;
   if (Config* config = ticket.schema->config()) {
     patterns_.LoadConfig(config);
+    config->GetBool("recognizer/use_space", &use_space_);
   }
 }
 
@@ -90,10 +91,11 @@ ProcessResult Recognizer::ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   }
   int ch = key_event.keycode();
-  if (ch >= 0x20 && ch < 0x80) {
+  if ((use_space_ && ch == ' ') ||
+      (ch > 0x20 && ch < 0x80)) {
     // pattern matching against the input string plus the incoming character
     Context* ctx = engine_->context();
-    std::string input = ctx->input();
+    string input = ctx->input();
     input += ch;
     auto match = patterns_.GetMatch(input, ctx->composition());
     if (match.found()) {

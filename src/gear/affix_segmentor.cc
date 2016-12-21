@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-10-30 GONG Chen <chen.sst@gmail.com>
 //
@@ -52,7 +52,7 @@ bool AffixSegmentor::Proceed(Segmentation* segmentation) {
   }
   size_t j = segmentation->GetCurrentStartPosition();
   size_t k = segmentation->GetCurrentEndPosition();
-  std::string active_input(segmentation->input().substr(j, k - j));
+  string active_input(segmentation->input().substr(j, k - j));
   if (prefix_.empty() || !boost::starts_with(active_input, prefix_)) {
     return true;
   }
@@ -81,7 +81,7 @@ bool AffixSegmentor::Proceed(Segmentation* segmentation) {
   j += prefix_.length();
   Segment code_segment(j, k);
   code_segment.tags.insert(tag_);
-  for (const std::string& tag : extra_tags_) {
+  for (const string& tag : extra_tags_) {
     code_segment.tags.insert(tag);
   }
   segmentation->Forward();

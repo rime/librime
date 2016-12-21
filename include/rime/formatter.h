@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-07-02 GONG Chen <chen.sst@gmail.com>
 //
@@ -22,11 +22,11 @@ class Formatter : public Class<Formatter, const Ticket&> {
       : engine_(ticket.engine), name_space_(ticket.name_space) {}
   virtual ~Formatter() = default;
 
-  virtual void Format(std::string* text) = 0;
+  virtual void Format(string* text) = 0;
 
  protected:
   Engine* engine_;
-  std::string name_space_;
+  string name_space_;
 };
 
 }  // namespace rime

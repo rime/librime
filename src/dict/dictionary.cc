@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
@@ -103,7 +103,7 @@ void DictEntryIterator::PrepareEntry() {
   }
 }
 
-shared_ptr<DictEntry> DictEntryIterator::Peek() {
+an<DictEntry> DictEntryIterator::Peek() {
   while (!entry_ && !empty()) {
     PrepareEntry();
     if (filter_ && !filter_(entry_)) {
@@ -145,9 +145,9 @@ bool DictEntryIterator::Skip(size_t num_entries) {
 
 // Dictionary members
 
-Dictionary::Dictionary(const std::string& name,
-                       const shared_ptr<Table>& table,
-                       const shared_ptr<Prism>& prism)
+Dictionary::Dictionary(const string& name,
+                       const an<Table>& table,
+                       const an<Prism>& prism)
     : name_(name), table_(table), prism_(prism) {
 }
 
@@ -155,7 +155,7 @@ Dictionary::~Dictionary() {
   // should not close shared table and prism objects
 }
 
-shared_ptr<DictEntryCollector>
+an<DictEntryCollector>
 Dictionary::Lookup(const SyllableGraph& syllable_graph,
                    size_t start_pos,
                    double initial_credibility) {
@@ -194,13 +194,13 @@ Dictionary::Lookup(const SyllableGraph& syllable_graph,
 }
 
 size_t Dictionary::LookupWords(DictEntryIterator* result,
-                               const std::string& str_code,
+                               const string& str_code,
                                bool predictive,
                                size_t expand_search_limit) {
   DLOG(INFO) << "lookup: " << str_code;
   if (!loaded())
     return 0;
-  std::vector<Prism::Match> keys;
+  vector<Prism::Match> keys;
   if (predictive) {
     prism_->ExpandSearch(str_code, &keys, expand_search_limit);
   }
@@ -219,9 +219,9 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
       SpellingType type = accessor.properties().type;
       accessor.Next();
       if (type > kNormalSpelling) continue;
-      std::string remaining_code;
+      string remaining_code;
       if (match.length > code_length) {
-        std::string syllable = table_->GetSyllableById(syllable_id);
+        string syllable = table_->GetSyllableById(syllable_id);
         if (syllable.length() > code_length)
           remaining_code = syllable.substr(code_length);
       }
@@ -235,12 +235,12 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
   return keys.size();
 }
 
-bool Dictionary::Decode(const Code& code, std::vector<std::string>* result) {
+bool Dictionary::Decode(const Code& code, vector<string>* result) {
   if (!result || !table_)
     return false;
   result->clear();
   for (SyllableId c : code) {
-    std::string s = table_->GetSyllableById(c);
+    string s = table_->GetSyllableById(c);
     if (s.empty())
       return false;
     result->push_back(s);
@@ -285,7 +285,7 @@ DictionaryComponent::DictionaryComponent() {
 Dictionary* DictionaryComponent::Create(const Ticket& ticket) {
   if (!ticket.schema) return NULL;
   Config* config = ticket.schema->config();
-  std::string dict_name;
+  string dict_name;
   if (!config->GetString(ticket.name_space + "/dictionary", &dict_name)) {
     LOG(ERROR) << ticket.name_space << "/dictionary not specified in schema '"
                << ticket.schema->schema_id() << "'.";
@@ -294,7 +294,7 @@ Dictionary* DictionaryComponent::Create(const Ticket& ticket) {
   if (dict_name.empty()) {
     return NULL;  // not requiring static dictionary
   }
-  std::string prism_name;
+  string prism_name;
   if (!config->GetString(ticket.name_space + "/prism", &prism_name)) {
     prism_name = dict_name;
   }
@@ -302,8 +302,8 @@ Dictionary* DictionaryComponent::Create(const Ticket& ticket) {
 }
 
 Dictionary*
-DictionaryComponent::CreateDictionaryWithName(const std::string& dict_name,
-                                              const std::string& prism_name) {
+DictionaryComponent::CreateDictionaryWithName(const string& dict_name,
+                                              const string& prism_name) {
   // obtain prism and table objects
   boost::filesystem::path path(Service::instance().deployer().user_data_dir);
   auto table = table_map_[dict_name].lock();

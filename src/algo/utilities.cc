@@ -1,21 +1,20 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-01-30 GONG Chen <chen.sst@gmail.com>
 //
 #include <fstream>
-#include <vector>
 #include <boost/algorithm/string.hpp>
 #include <rime/algo/utilities.h>
 
 namespace rime {
 
-int CompareVersionString(const std::string& x, const std::string& y) {
+int CompareVersionString(const string& x, const string& y) {
   if (x.empty() && y.empty()) return 0;
   if (x.empty()) return -1;
   if (y.empty()) return 1;
-  std::vector<std::string> xx, yy;
+  vector<string> xx, yy;
   boost::split(xx, x, boost::is_any_of("."));
   boost::split(yy, y, boost::is_any_of("."));
   size_t i = 0;
@@ -31,9 +30,9 @@ int CompareVersionString(const std::string& x, const std::string& y) {
   return 0;
 }
 
-void ChecksumComputer::ProcessFile(const std::string& file_name) {
+void ChecksumComputer::ProcessFile(const string& file_name) {
   std::ifstream fin(file_name.c_str());
-  std::string file_content((std::istreambuf_iterator<char>(fin)),
+  string file_content((std::istreambuf_iterator<char>(fin)),
                            std::istreambuf_iterator<char>());
   crc_.process_bytes(file_content.data(), file_content.length());
 }

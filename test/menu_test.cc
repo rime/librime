@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-05-29 GONG Chen <chen.sst@gmail.com>
 //
@@ -21,7 +21,7 @@ class TranslationAlpha : public Translation {
     set_exhausted(true);
     return true;
   }
-  shared_ptr<Candidate> Peek() {
+  an<Candidate> Peek() {
     if (exhausted())
       return nullptr;
     return New<SimpleCandidate>("alpha", 0, 5, "Alpha");
@@ -44,14 +44,14 @@ class TranslationBeta : public Translation {
     return true;
   }
 
-  shared_ptr<Candidate> Peek() {
+  an<Candidate> Peek() {
     if (exhausted())
       return nullptr;
     return candies_[cursor_];
   }
 
  private:
-  std::vector<shared_ptr<Candidate>> candies_;
+  vector<of<Candidate>> candies_;
   size_t cursor_;
 };
 
@@ -63,7 +63,7 @@ TEST(RimeMenuTest, RecipeAlphaBeta) {
   menu.AddTranslation(beta);
   // explicit call to Menu::Prepare() is not necessary
   menu.Prepare(2);
-  unique_ptr<Page> page(menu.CreatePage(5, 0));
+  the<Page> page(menu.CreatePage(5, 0));
   ASSERT_TRUE(bool(page));
   EXPECT_EQ(5, page->page_size);
   EXPECT_EQ(0, page->page_no);
@@ -74,6 +74,6 @@ TEST(RimeMenuTest, RecipeAlphaBeta) {
   EXPECT_EQ("beta", page->candidates[1]->type());
   EXPECT_EQ("Beta-1", page->candidates[1]->text());
   EXPECT_EQ("Beta-3", page->candidates[3]->text());
-  unique_ptr<Page> no_more_page(menu.CreatePage(5, 1));
+  the<Page> no_more_page(menu.CreatePage(5, 1));
   EXPECT_FALSE(bool(no_more_page));
 }

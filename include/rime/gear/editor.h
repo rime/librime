@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-10-23 GONG Chen <chen.sst@gmail.com>
 //
@@ -9,6 +9,7 @@
 
 #include <rime/common.h>
 #include <rime/component.h>
+#include <rime/key_event.h>
 #include <rime/processor.h>
 
 namespace rime {
@@ -19,47 +20,46 @@ class Editor : public Processor {
  public:
   typedef void Handler(Context* ctx);
   typedef ProcessResult CharHandler(Context* ctx, int ch);
+  using HandlerPtr = void (Editor::*)(Context* ctx);
+  using CharHandlerPtr = ProcessResult (Editor::*)(Context* ctx, int ch);
+  using KeyBindings = map<KeyEvent, HandlerPtr>;
 
   Editor(const Ticket& ticket, bool auto_commit);
   ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
-  virtual Handler OnSpace;
-  virtual Handler OnBackSpace;
-  Handler OnShiftBackSpace;
-  virtual Handler OnReturn;
-  Handler OnShiftReturn;
-  Handler OnDelete;
-  Handler OnShiftDelete;
-  Handler OnEscape;
-  virtual CharHandler OnChar;
-
- protected:
-  bool WorkWithCtrl(int ch);
   Handler Confirm;
+  Handler ToggleSelection;
+  Handler CommitComment;
   Handler CommitScriptText;
   Handler CommitRawInput;
   Handler CommitComposition;
-  Handler RevertLastAction;
-  Handler RevertToPreviousInput;
-  Handler DropPreviousSyllable;
-  Handler DeleteHighlightedPhrase;
+  Handler RevertLastEdit;
+  Handler BackToPreviousInput;
+  Handler BackToPreviousSyllable;
+  Handler DeleteCandidate;
   Handler DeleteChar;
   Handler CancelComposition;
+
   CharHandler DirectCommit;
   CharHandler AddToInput;
+
+ protected:
+  bool Accept(const KeyEvent& key_event);
+  void Bind(KeyEvent key_event, HandlerPtr action);
+  void LoadConfig();
+
+  KeyBindings key_bindings_;
+  CharHandlerPtr char_handler_ = nullptr;
 };
 
-class FluencyEditor : public Editor {
+class FluidEditor : public Editor {
  public:
-  FluencyEditor(const Ticket& ticket);
+  FluidEditor(const Ticket& ticket);
 };
 
 class ExpressEditor : public Editor {
  public:
   ExpressEditor(const Ticket& ticket);
-  Handler OnBackSpace;
-  Handler OnReturn;
-  CharHandler OnChar;
 };
 
 }  // namespace rime

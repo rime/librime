@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2014-07-04 GONG Chen <chen.sst@gmail.com>
 //
@@ -16,13 +16,13 @@ StringTable::StringTable(const char* ptr, size_t size) {
   trie_.map(ptr, size);
 }
 
-bool StringTable::HasKey(const std::string& key) {
+bool StringTable::HasKey(const string& key) {
   marisa::Agent agent;
   agent.set_query(key.c_str());
   return trie_.lookup(agent);
 }
 
-StringId StringTable::Lookup(const std::string& key) {
+StringId StringTable::Lookup(const string& key) {
   marisa::Agent agent;
   agent.set_query(key.c_str());
   if(trie_.lookup(agent)) {
@@ -33,8 +33,8 @@ StringId StringTable::Lookup(const std::string& key) {
   }
 }
 
-void StringTable::CommonPrefixMatch(const std::string& query,
-                                    std::vector<StringId>* result) {
+void StringTable::CommonPrefixMatch(const string& query,
+                                    vector<StringId>* result) {
   marisa::Agent agent;
   agent.set_query(query.c_str());
   result->clear();
@@ -43,8 +43,8 @@ void StringTable::CommonPrefixMatch(const std::string& query,
   }
 }
 
-void StringTable::Predict(const std::string& query,
-                          std::vector<StringId>* result) {
+void StringTable::Predict(const string& query,
+                          vector<StringId>* result) {
   marisa::Agent agent;
   agent.set_query(query.c_str());
   result->clear();
@@ -53,17 +53,17 @@ void StringTable::Predict(const std::string& query,
   }
 }
 
-std::string StringTable::GetString(StringId string_id) {
+string StringTable::GetString(StringId string_id) {
   marisa::Agent agent;
   agent.set_query(string_id);
   try {
     trie_.reverse_lookup(agent);
   }
-  catch (const marisa::Exception& ex) {
+  catch (const marisa::Exception& /*ex*/) {
     LOG(ERROR) << "invalid id for string table: " << string_id;
-    return std::string();
+    return string();
   }
-  return std::string(agent.key().ptr(), agent.key().length());
+  return string(agent.key().ptr(), agent.key().length());
 }
 
 size_t StringTable::NumKeys() const {
@@ -74,7 +74,7 @@ size_t StringTable::BinarySize() const {
   return trie_.io_size();
 }
 
-void StringTableBuilder::Add(const std::string& key,
+void StringTableBuilder::Add(const string& key,
                              double weight,
                              StringId* reference) {
   keys_.push_back(key.c_str(), key.length(), (float)weight);

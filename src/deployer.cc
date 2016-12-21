@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-12-01 GONG Chen <chen.sst@gmail.com>
 //
@@ -22,19 +22,19 @@ Deployer::~Deployer() {
   JoinWorkThread();
 }
 
-std::string Deployer::user_data_sync_dir() const {
+string Deployer::user_data_sync_dir() const {
   boost::filesystem::path p(sync_dir);
   p /= user_id;
   return p.string();
 }
 
-bool Deployer::RunTask(const std::string& task_name, TaskInitializer arg) {
+bool Deployer::RunTask(const string& task_name, TaskInitializer arg) {
   auto c = DeploymentTask::Require(task_name);
   if (!c) {
     LOG(ERROR) << "unknown deployment task: " << task_name;
     return false;
   }
-  unique_ptr<DeploymentTask> t(c->Create(arg));
+  the<DeploymentTask> t(c->Create(arg));
   if (!t) {
     LOG(ERROR) << "error creating deployment task: " << task_name;
     return false;
@@ -42,13 +42,13 @@ bool Deployer::RunTask(const std::string& task_name, TaskInitializer arg) {
   return t->Run(this);
 }
 
-bool Deployer::ScheduleTask(const std::string& task_name, TaskInitializer arg) {
+bool Deployer::ScheduleTask(const string& task_name, TaskInitializer arg) {
   auto c = DeploymentTask::Require(task_name);
   if (!c) {
     LOG(ERROR) << "unknown deployment task: " << task_name;
     return false;
   }
-  shared_ptr<DeploymentTask> t(c->Create(arg));
+  an<DeploymentTask> t(c->Create(arg));
   if (!t) {
     LOG(ERROR) << "error creating deployment task: " << task_name;
     return false;
@@ -57,12 +57,12 @@ bool Deployer::ScheduleTask(const std::string& task_name, TaskInitializer arg) {
   return true;
 }
 
-void Deployer::ScheduleTask(shared_ptr<DeploymentTask> task) {
+void Deployer::ScheduleTask(an<DeploymentTask> task) {
   std::lock_guard<std::mutex> lock(mutex_);
   pending_tasks_.push(task);
 }
 
-shared_ptr<DeploymentTask> Deployer::NextTask() {
+an<DeploymentTask> Deployer::NextTask() {
   std::lock_guard<std::mutex> lock(mutex_);
   if (!pending_tasks_.empty()) {
     auto result = pending_tasks_.front();

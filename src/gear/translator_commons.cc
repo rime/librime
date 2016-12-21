@@ -1,10 +1,11 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2012-04-22 GONG Chen <chen.sst@gmail.com>
 //
-#include <utf8.h>
+#include <algorithm>
+#include <boost/range/adaptor/reversed.hpp>
 #include <rime/config.h>
 #include <rime/schema.h>
 #include <rime/ticket.h>
@@ -12,11 +13,9 @@
 
 namespace rime {
 
-bool contains_extended_cjk(const std::string &text);
-
 // Patterns
 
-bool Patterns::Load(ConfigListPtr patterns) {
+bool Patterns::Load(an<ConfigList> patterns) {
   clear();
   if (!patterns)
     return false;
@@ -26,6 +25,64 @@ bool Patterns::Load(ConfigListPtr patterns) {
     }
   }
   return true;
+}
+
+// Spans
+
+void Spans::AddVertex(size_t vertex) {
+  if (vertices_.empty() || vertices_.back() < vertex) {
+    vertices_.push_back(vertex);
+    return;
+  }
+  auto lb = std::lower_bound(vertices_.begin(), vertices_.end(), vertex);
+  if (*lb != vertex) {
+    vertices_.insert(lb, vertex);
+  }
+}
+
+void Spans::AddSpan(size_t start, size_t end) {
+  AddVertex(start);
+  AddVertex(end);
+}
+
+void Spans::AddSpans(const Spans& spans) {
+  for (auto vertex : spans.vertices_) {
+    AddVertex(vertex);
+  }
+}
+
+void Spans::Clear() {
+  vertices_.clear();
+}
+
+size_t Spans::PreviousStop(size_t caret_pos) const {
+  for (auto x : boost::adaptors::reverse(vertices_)) {
+    if (x < caret_pos)
+      return x;
+  }
+  return caret_pos;
+}
+
+size_t Spans::NextStop(size_t caret_pos) const {
+  for (auto x : vertices_) {
+    if (x > caret_pos)
+      return x;
+  }
+  return caret_pos;
+}
+
+size_t Spans::Count(size_t start_pos, size_t end_pos) const {
+  size_t count = 0;
+  for (auto v : vertices_) {
+    if (v <= start_pos) continue;
+    else if (v > end_pos) break;
+    else ++count;
+  }
+  return count;
+}
+
+bool Spans::HasVertex(size_t vertex) const {
+  return std::binary_search(vertices_.begin(), vertices_.end(), vertex);
 }
 
 // Sentence
@@ -47,97 +104,6 @@ void Sentence::Extend(const DictEntry& entry, size_t end_pos) {
 void Sentence::Offset(size_t offset) {
   set_start(start() + offset);
   set_end(end() + offset);
-}
-
-// CacheTranslation
-
-CacheTranslation::CacheTranslation(shared_ptr<Translation> translation)
-    : translation_(translation) {
-  set_exhausted(!translation_ || translation_->exhausted());
-}
-
-bool CacheTranslation::Next() {
-  if (exhausted())
-    return false;
-  cache_.reset();
-  translation_->Next();
-  if (translation_->exhausted()) {
-    set_exhausted(true);
-    return false;
-  }
-  return true;
-}
-
-shared_ptr<Candidate> CacheTranslation::Peek() {
-  if (exhausted())
-    return nullptr;
-  if (!cache_) {
-    cache_ = translation_->Peek();
-  }
-  return cache_;
-}
-
-// CharsetFilter
-
-CharsetFilter::CharsetFilter(shared_ptr<Translation> translation)
-    : translation_(translation) {
-  LocateNextCandidate();
-}
-
-bool CharsetFilter::Next() {
-  if (exhausted())
-    return false;
-  if (!translation_->Next()) {
-    set_exhausted(true);
-    return false;
-  }
-  return LocateNextCandidate();
-}
-
-shared_ptr<Candidate> CharsetFilter::Peek() {
-  return translation_->Peek();
-}
-
-bool CharsetFilter::LocateNextCandidate() {
-  while (!translation_->exhausted()) {
-    auto cand = translation_->Peek();
-    if (cand && FilterText(cand->text()))
-      return true;
-    translation_->Next();
-  }
-  set_exhausted(true);
-  return false;
-}
-
-bool CharsetFilter::FilterText(const std::string& text) {
-  return !contains_extended_cjk(text);
-}
-
-bool CharsetFilter::FilterDictEntry(shared_ptr<DictEntry> entry) {
-  return entry && FilterText(entry->text);
-}
-
-// UniqueFilter
-
-UniqueFilter::UniqueFilter(shared_ptr<Translation> translation)
-    : CacheTranslation(translation) {
-}
-
-bool UniqueFilter::Next() {
-  if (exhausted())
-    return false;
-  // skip duplicate candidates
-  do {
-    candidate_set_.insert(Peek()->text());
-    CacheTranslation::Next();
-  }
-  while (!exhausted() &&
-         AlreadyHas(Peek()->text()));
-  return !exhausted();
-}
-
-bool UniqueFilter::AlreadyHas(const std::string& text) const {
-  return candidate_set_.find(text) != candidate_set_.end();
 }
 
 // TranslatorOptions
@@ -168,7 +134,7 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket) {
   }
 }
 
-bool TranslatorOptions::IsUserDictDisabledFor(const std::string& input) const {
+bool TranslatorOptions::IsUserDictDisabledFor(const string& input) const {
   if (user_dict_disabling_patterns_.empty())
     return false;
   for (const auto& pattern : user_dict_disabling_patterns_) {

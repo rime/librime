@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2012-07-21 GONG Chen <chen.sst@gmail.com>
 //
@@ -63,7 +63,7 @@ TEST(RimeEncoderTest, Encode) {
   rime::RawCode c0, c1;
   c0.FromString("abc def");
   c1.FromString("abc def ghi");
-  std::string result;
+  rime::string result;
   // case 1
   config["encoder"]["rules"][0]["length_equal"] = 2;
   config["encoder"]["rules"][0]["formula"] = "AaAbBaBb";
@@ -111,7 +111,7 @@ TEST(RimeEncoderTest, TailAnchor) {
   config["encoder"]["tail_anchor"] = "'";
   rime::RawCode c;
   c.FromString("zyx'wvu'tsr qpo'nmlk'jih gfedcba");
-  std::string result;
+  rime::string result;
   // case 1
   config["encoder"]["rules"][0]["formula"] = "AaAzBaBzCaCz";
   encoder.LoadSettings(&config);

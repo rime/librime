@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2012-01-17 GONG Chen <chen.sst@gmail.com>
 //
@@ -17,7 +17,7 @@ static const char* kAbbreviation = "abbrev/^([zcs]h).*$/$1/";
 
 TEST(RimeCalculusTest, Transliteration) {
   rime::Calculus calc;
-  rime::unique_ptr<rime::Calculation> c(calc.Parse(kTransliteration));
+  rime::the<rime::Calculation> c(calc.Parse(kTransliteration));
   ASSERT_TRUE(bool(c));
   rime::Spelling s("abracadabra");
   EXPECT_TRUE(c->Apply(&s));
@@ -26,7 +26,7 @@ TEST(RimeCalculusTest, Transliteration) {
 
 TEST(RimeCalculusTest, Transformation) {
   rime::Calculus calc;
-  rime::unique_ptr<rime::Calculation> c(calc.Parse(kTransformation));
+  rime::the<rime::Calculation> c(calc.Parse(kTransformation));
   ASSERT_TRUE(bool(c));
   rime::Spelling s("shang");
   EXPECT_TRUE(c->Apply(&s));
@@ -38,7 +38,7 @@ TEST(RimeCalculusTest, Transformation) {
 
 TEST(RimeCalculusTest, Erasion) {
   rime::Calculus calc;
-  rime::unique_ptr<rime::Calculation> c(calc.Parse(kErasion));
+  rime::the<rime::Calculation> c(calc.Parse(kErasion));
   ASSERT_TRUE(bool(c));
   EXPECT_FALSE(c->addition());
   EXPECT_TRUE(c->deletion());
@@ -52,7 +52,7 @@ TEST(RimeCalculusTest, Erasion) {
 
 TEST(RimeCalculusTest, Derivation) {
   rime::Calculus calc;
-  rime::unique_ptr<rime::Calculation> c(calc.Parse(kDerivation));
+  rime::the<rime::Calculation> c(calc.Parse(kDerivation));
   ASSERT_TRUE(bool(c));
   EXPECT_TRUE(c->addition());
   EXPECT_FALSE(c->deletion());
@@ -66,7 +66,7 @@ TEST(RimeCalculusTest, Derivation) {
 
 TEST(RimeCalculusTest, Abbreviation) {
   rime::Calculus calc;
-  rime::unique_ptr<rime::Calculation> c(calc.Parse(kAbbreviation));
+  rime::the<rime::Calculation> c(calc.Parse(kAbbreviation));
   ASSERT_TRUE(bool(c));
   EXPECT_TRUE(c->addition());
   EXPECT_FALSE(c->deletion());

@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-10-17 GONG Chen <chen.sst@gmail.com>
 //
@@ -13,6 +13,7 @@
 #include <rime/gear/affix_segmentor.h>
 #include <rime/gear/ascii_composer.h>
 #include <rime/gear/ascii_segmentor.h>
+#include <rime/gear/charset_filter.h>
 #include <rime/gear/chord_composer.h>
 #include <rime/gear/echo_translator.h>
 #include <rime/gear/editor.h>
@@ -25,6 +26,7 @@
 #include <rime/gear/recognizer.h>
 #include <rime/gear/selector.h>
 #include <rime/gear/simplifier.h>
+#include <rime/gear/single_char_filter.h>
 #include <rime/gear/shape.h>
 #include <rime/gear/speller.h>
 #include <rime/gear/reverse_lookup_filter.h>
@@ -33,7 +35,8 @@
 #include <rime/gear/switch_translator.h>
 #include <rime/gear/table_translator.h>
 #include <rime/gear/uniquifier.h>
-#include <rime/gear/cjk_minifier.h>
+#include <rime/gear/codepoint_translator.h>
+#include <rime/gear/history_translator.h>
 
 static void rime_gears_initialize() {
   using namespace rime;
@@ -45,7 +48,8 @@ static void rime_gears_initialize() {
   r.Register("ascii_composer", new Component<AsciiComposer>);
   r.Register("chord_composer", new Component<ChordComposer>);
   r.Register("express_editor", new Component<ExpressEditor>);
-  r.Register("fluency_editor", new Component<FluencyEditor>);
+  r.Register("fluid_editor", new Component<FluidEditor>);
+  r.Register("fluency_editor", new Component<FluidEditor>);  // alias
   r.Register("key_binder", new Component<KeyBinder>);
   r.Register("navigator", new Component<Navigator>);
   r.Register("punctuator", new Component<Punctuator>);
@@ -72,12 +76,16 @@ static void rime_gears_initialize() {
              new Component<ReverseLookupTranslator>);
   r.Register("schema_list_translator", new Component<SchemaListTranslator>);
   r.Register("switch_translator", new Component<SwitchTranslator>);
+  r.Register("codepoint_translator", new Component<CodepointTranslator>);
+  r.Register("history_translator", new Component<HistoryTranslator>);
 
   // filters
   r.Register("simplifier", new Component<Simplifier>);
   r.Register("uniquifier", new Component<Uniquifier>);
-  r.Register("cjk_minifier", new Component<CJKMinifier>);
+  r.Register("charset_filter", new Component<CharsetFilter>);
+  r.Register("cjk_minifier", new Component<CharsetFilter>);  // alias
   r.Register("reverse_lookup_filter", new Component<ReverseLookupFilter>);
+  r.Register("single_char_filter", new Component<SingleCharFilter>);
 
   // formatters
   r.Register("shape_formatter", new Component<ShapeFormatter>);

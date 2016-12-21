@@ -1,22 +1,16 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-05-08 GONG Chen <chen.sst@gmail.com>
 //
+#include <utility>
 #include <rime/candidate.h>
 #include <rime/context.h>
-#include <rime/composition.h>
 #include <rime/menu.h>
 #include <rime/segmentation.h>
 
 namespace rime {
-
-Context::Context() : composition_(new Composition) {
-}
-
-Context::~Context() {
-}
 
 bool Context::Commit() {
   if (!IsComposing())
@@ -28,28 +22,24 @@ bool Context::Commit() {
   return true;
 }
 
-std::string Context::GetCommitText() const {
+string Context::GetCommitText() const {
   if (get_option("dumb"))
-    return std::string();
-  return composition_->GetCommitText();
+    return string();
+  return composition_.GetCommitText();
 }
 
-std::string Context::GetScriptText() const {
-  return composition_->GetScriptText();
+string Context::GetScriptText() const {
+  return composition_.GetScriptText();
 }
 
-void Context::GetPreedit(Preedit* preedit, bool soft_cursor) const {
-  composition_->GetPreedit(preedit);
-  preedit->caret_pos = preedit->text.length();
-  if (IsComposing()) {
-    if (soft_cursor) {
-      const std::string caret("\xe2\x80\xba");
-      preedit->text.append(caret);
-    }
-    if (caret_pos_ < input_.length()) {
-      preedit->text.append(input_.substr(caret_pos_));
-    }
-  }
+static const string kCaretSymbol("\xe2\x80\xb8");
+
+string Context::GetSoftCursor() const {
+  return get_option("soft_cursor") ? kCaretSymbol : string();
+}
+
+Preedit Context::GetPreedit() const {
+  return composition_.GetPreedit(input_, caret_pos_, GetSoftCursor());
 }
 
 bool Context::IsComposing() const {
@@ -57,10 +47,16 @@ bool Context::IsComposing() const {
 }
 
 bool Context::HasMenu() const {
-  if (composition_->empty())
+  if (composition_.empty())
     return false;
-  const auto& menu(composition_->back().menu);
+  const auto& menu(composition_.back().menu);
   return menu && !menu->empty();
+}
+
+an<Candidate> Context::GetSelectedCandidate() const {
+  if (composition_.empty())
+    return nullptr;
+  return composition_.back().GetSelectedCandidate();
 }
 
 bool Context::PushInput(char ch) {
@@ -76,7 +72,7 @@ bool Context::PushInput(char ch) {
   return true;
 }
 
-bool Context::PushInput(const std::string& str) {
+bool Context::PushInput(const string& str) {
   if (caret_pos_ >= input_.length()) {
     input_ += str;
     caret_pos_ = input_.length();
@@ -109,14 +105,14 @@ bool Context::DeleteInput(size_t len) {
 void Context::Clear() {
   input_.clear();
   caret_pos_ = 0;
-  composition_->clear();
+  composition_.clear();
   update_notifier_(this);
 }
 
 bool Context::Select(size_t index) {
-  if (composition_->empty())
+  if (composition_.empty())
     return false;
-  Segment& seg(composition_->back());
+  Segment& seg(composition_.back());
   if (auto cand = seg.GetCandidateAt(index)) {
     seg.selected_index = index;
     seg.status = Segment::kSelected;
@@ -128,9 +124,9 @@ bool Context::Select(size_t index) {
 }
 
 bool Context::DeleteCurrentSelection() {
-  if (composition_->empty())
+  if (composition_.empty())
     return false;
-  Segment& seg(composition_->back());
+  Segment& seg(composition_.back());
   if (auto cand = seg.GetSelectedCandidate()) {
     DLOG(INFO) << "Deleting: '" << cand->text()
                << "', selected_index = " << seg.selected_index;
@@ -141,9 +137,9 @@ bool Context::DeleteCurrentSelection() {
 }
 
 bool Context::ConfirmCurrentSelection() {
-  if (composition_->empty())
+  if (composition_.empty())
     return false;
-  Segment& seg(composition_->back());
+  Segment& seg(composition_.back());
   seg.status = Segment::kSelected;
   if (auto cand = seg.GetSelectedCandidate()) {
     DLOG(INFO) << "Confirmed: '" << cand->text()
@@ -151,7 +147,7 @@ bool Context::ConfirmCurrentSelection() {
   }
   else {
     if (seg.end == seg.start) {
-      // fluency editor will confirm the whole sentence
+      // fluid_editor will confirm the whole sentence
       return false;
     }
     // confirm raw input
@@ -161,7 +157,7 @@ bool Context::ConfirmCurrentSelection() {
 }
 
 bool Context::ConfirmPreviousSelection() {
-  for (auto it = composition_->rbegin(); it != composition_->rend(); ++it) {
+  for (auto it = composition_.rbegin(); it != composition_.rend(); ++it) {
     if (it->status > Segment::kSelected) {
       return false;
     }
@@ -174,10 +170,10 @@ bool Context::ConfirmPreviousSelection() {
 }
 
 bool Context::ReopenPreviousSegment() {
-  if (composition_->Trim()) {
-    if (!composition_->empty() &&
-        composition_->back().status >= Segment::kSelected) {
-      composition_->back().status = Segment::kVoid;
+  if (composition_.Trim()) {
+    if (!composition_.empty() &&
+        composition_.back().status >= Segment::kSelected) {
+      composition_.back().Reopen(caret_pos());
     }
     update_notifier_(this);
     return true;
@@ -186,9 +182,9 @@ bool Context::ReopenPreviousSegment() {
 }
 
 bool Context::ClearPreviousSegment() {
-  if (composition_->empty())
+  if (composition_.empty())
     return false;
-  size_t where = composition_->back().start;
+  size_t where = composition_.back().start;
   if (where >= input_.length())
     return false;
   set_input(input_.substr(0, where));
@@ -196,14 +192,14 @@ bool Context::ClearPreviousSegment() {
 }
 
 bool Context::ReopenPreviousSelection() {
-  for (auto it = composition_->rbegin(); it != composition_->rend(); ++it) {
+  for (auto it = composition_.rbegin(); it != composition_.rend(); ++it) {
     if (it->status > Segment::kSelected)
       return false;
     if (it->status == Segment::kSelected) {
-      it->status = Segment::kVoid;
-      while (it != composition_->rbegin()) {
-        composition_->pop_back();
+      while (it != composition_.rbegin()) {
+        composition_.pop_back();
       }
+      it->Reopen(caret_pos());
       update_notifier_(this);
       return true;
     }
@@ -213,14 +209,14 @@ bool Context::ReopenPreviousSelection() {
 
 bool Context::ClearNonConfirmedComposition() {
   bool reverted = false;
-  while (!composition_->empty() &&
-         composition_->back().status < Segment::kSelected) {
-    composition_->pop_back();
+  while (!composition_.empty() &&
+         composition_.back().status < Segment::kSelected) {
+    composition_.pop_back();
     reverted = true;
   }
   if (reverted) {
-    composition_->Forward();
-    DLOG(INFO) << "composition: " << composition_->GetDebugText();
+    composition_.Forward();
+    DLOG(INFO) << "composition: " << composition_.GetDebugText();
   }
   return reverted;
 }
@@ -241,32 +237,22 @@ void Context::set_caret_pos(size_t caret_pos) {
   update_notifier_(this);
 }
 
-void Context::set_composition(Composition* comp) {
-  if (composition_.get() != comp)
-    composition_.reset(comp);
-  // TODO: notification
+void Context::set_composition(Composition&& comp) {
+  composition_ = std::move(comp);
 }
 
-void Context::set_input(const std::string& value) {
+void Context::set_input(const string& value) {
   input_ = value;
   caret_pos_ = input_.length();
   update_notifier_(this);
 }
 
-Composition* Context::composition() {
-  return composition_.get();
-}
-
-const Composition* Context::composition() const {
-  return composition_.get();
-}
-
-void Context::set_option(const std::string& name, bool value) {
+void Context::set_option(const string& name, bool value) {
   options_[name] = value;
   option_update_notifier_(this, name);
 }
 
-bool Context::get_option(const std::string& name) const {
+bool Context::get_option(const string& name) const {
   auto it = options_.find(name);
   if (it != options_.end())
     return it->second;
@@ -274,17 +260,17 @@ bool Context::get_option(const std::string& name) const {
     return false;
 }
 
-void Context::set_property(const std::string& name,
-                           const std::string& value) {
+void Context::set_property(const string& name,
+                           const string& value) {
   properties_[name] = value;
 }
 
-std::string Context::get_property(const std::string& name) const {
+string Context::get_property(const string& name) const {
   auto it = properties_.find(name);
   if (it != properties_.end())
     return it->second;
   else
-    return std::string();
+    return string();
 }
 
 void Context::ClearTransientOptions() {

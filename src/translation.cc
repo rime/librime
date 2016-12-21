@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2011-05-21 GONG Chen <chen.sst@gmail.com>
 //
@@ -9,7 +9,7 @@
 
 namespace rime {
 
-int Translation::Compare(shared_ptr<Translation> other,
+int Translation::Compare(an<Translation> other,
                          const CandidateList& candidates) {
   if (!other || other->exhausted())
     return -1;
@@ -43,7 +43,7 @@ bool UniqueTranslation::Next() {
   return true;
 }
 
-shared_ptr<Candidate> UniqueTranslation::Peek() {
+an<Candidate> UniqueTranslation::Peek() {
   if (exhausted())
     return nullptr;
   return candidate_;
@@ -61,13 +61,13 @@ bool FifoTranslation::Next() {
   return true;
 }
 
-shared_ptr<Candidate> FifoTranslation::Peek() {
+an<Candidate> FifoTranslation::Peek() {
   if (exhausted())
     return nullptr;
   return candies_[cursor_];
 }
 
-void FifoTranslation::Append(const shared_ptr<Candidate>& candy) {
+void FifoTranslation::Append(an<Candidate> candy) {
   candies_.push_back(candy);
   set_exhausted(false);
 }
@@ -89,13 +89,13 @@ bool UnionTranslation::Next() {
   return true;
 }
 
-shared_ptr<Candidate> UnionTranslation::Peek() {
+an<Candidate> UnionTranslation::Peek() {
   if (exhausted())
     return nullptr;
   return translations_.front()->Peek();
 }
 
-UnionTranslation& UnionTranslation::operator+= (shared_ptr<Translation> t) {
+UnionTranslation& UnionTranslation::operator+= (an<Translation> t) {
   if (t && !t->exhausted()) {
     translations_.push_back(t);
     set_exhausted(false);
@@ -103,12 +103,159 @@ UnionTranslation& UnionTranslation::operator+= (shared_ptr<Translation> t) {
   return *this;
 }
 
-shared_ptr<UnionTranslation> operator+ (shared_ptr<Translation> a,
-                                        shared_ptr<Translation> b) {
-  auto c = New<UnionTranslation>();
-  *c += a;
-  *c += b;
-  return c->exhausted() ? nullptr : c;
+an<UnionTranslation> operator+ (an<Translation> x, an<Translation> y) {
+  auto z = New<UnionTranslation>();
+  *z += x;
+  *z += y;
+  return z->exhausted() ? nullptr : z;
+}
+
+// MergedTranslation
+
+MergedTranslation::MergedTranslation(const CandidateList& candidates)
+    : previous_candidates_(candidates) {
+  set_exhausted(true);
+}
+
+bool MergedTranslation::Next() {
+  if (exhausted()) {
+    return false;
+  }
+  translations_[elected_]->Next();
+  if (translations_[elected_]->exhausted()) {
+    DLOG(INFO) << "translation #" << elected_ << " has been exhausted.";
+    translations_.erase(translations_.begin() + elected_);
+  }
+  Elect();
+  return !exhausted();
+}
+
+an<Candidate> MergedTranslation::Peek() {
+  if (exhausted()) {
+    return nullptr;
+  }
+  return translations_[elected_]->Peek();
+}
+
+void MergedTranslation::Elect() {
+  if (translations_.empty()) {
+    set_exhausted(true);
+    return;
+  }
+  size_t k = 0;
+  for (; k < translations_.size(); ++k) {
+    const auto& current = translations_[k];
+    const auto& next = k + 1 < translations_.size() ?
+                               translations_[k + 1] : nullptr;
+    if (current->Compare(next, previous_candidates_) <= 0) {
+      if (current->exhausted()) {
+        translations_.erase(translations_.begin() + k);
+        k = 0;
+        continue;
+      }
+      break;
+    }
+  }
+  elected_ = k;
+  if (k >= translations_.size()) {
+    DLOG(WARNING) << "failed to elect a winner translation.";
+    set_exhausted(true);
+  }
+  else {
+    set_exhausted(false);
+  }
+}
+
+MergedTranslation& MergedTranslation::operator+= (an<Translation> t) {
+  if (t && !t->exhausted()) {
+    translations_.push_back(t);
+    Elect();
+  }
+  return *this;
+}
+
+// CacheTranslation
+
+CacheTranslation::CacheTranslation(an<Translation> translation)
+    : translation_(translation) {
+  set_exhausted(!translation_ || translation_->exhausted());
+}
+
+bool CacheTranslation::Next() {
+  if (exhausted())
+    return false;
+  cache_.reset();
+  translation_->Next();
+  if (translation_->exhausted()) {
+    set_exhausted(true);
+  }
+  return true;
+}
+
+an<Candidate> CacheTranslation::Peek() {
+  if (exhausted())
+    return nullptr;
+  if (!cache_) {
+    cache_ = translation_->Peek();
+  }
+  return cache_;
+}
+
+// DistinctTranslation
+
+DistinctTranslation::DistinctTranslation(an<Translation> translation)
+    : CacheTranslation(translation) {
+}
+
+bool DistinctTranslation::Next() {
+  if (exhausted())
+    return false;
+  candidate_set_.insert(Peek()->text());
+  do {
+    CacheTranslation::Next();
+  }
+  while (!exhausted() &&
+         AlreadyHas(Peek()->text()));  // skip duplicate candidates
+  return true;
+}
+
+bool DistinctTranslation::AlreadyHas(const string& text) const {
+  return candidate_set_.find(text) != candidate_set_.end();
+}
+
+// PrefetchTranslation
+
+PrefetchTranslation::PrefetchTranslation(an<Translation> translation)
+    : translation_(translation) {
+  set_exhausted(!translation_ || translation_->exhausted());
+}
+
+bool PrefetchTranslation::Next() {
+  if (exhausted()) {
+    return false;
+  }
+  if (!cache_.empty()) {
+    cache_.pop_front();
+  }
+  else {
+    translation_->Next();
+  }
+  if (cache_.empty() && translation_->exhausted()) {
+    set_exhausted(true);
+  }
+  return true;
+}
+
+an<Candidate> PrefetchTranslation::Peek() {
+  if (exhausted()) {
+    return nullptr;
+  }
+  if (!cache_.empty() || Replenish()) {
+    return cache_.front();
+  }
+  else {
+    return translation_->Peek();
+  }
 }
 
 }  // namespace rime

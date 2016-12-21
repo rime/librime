@@ -1,22 +1,25 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2012-03-24 GONG Chen <chen.sst@gmail.com>
 //
 #include <iostream>
-#include <string>
 #include <rime/config.h>
 #include <rime/deployer.h>
 #include <rime/service.h>
 #include <rime/setup.h>
+#include <rime/dict/level_db.h>
+#include <rime/dict/user_db.h>
 #include <rime/lever/user_dict_manager.h>
 
-int main(int argc, char *argv[]) {
-  rime::SetupLogging("rime.tools");
+using namespace rime;
 
-  std::string option;
-  std::string arg1, arg2;
+int main(int argc, char *argv[]) {
+  SetupLogging("rime.tools");
+
+  string option;
+  string arg1, arg2;
   if (argc >= 2) option = argv[1];
   if (argc >= 3) arg1 = argv[2];
   if (argc >= 4) arg2 = argv[3];
@@ -26,30 +29,31 @@ int main(int argc, char *argv[]) {
               << "\t-s|--sync" << std::endl
               << "\t-b|--backup dict_name" << std::endl
               << "\t-r|--restore xxx.userdb.txt" << std::endl
-              << "\t-r|--restore xxx.userdb.kct.snapshot" << std::endl
               << "\t-e|--export dict_name export.txt" << std::endl
               << "\t-i|--import dict_name import.txt" << std::endl
         ;
     return 0;
   }
 
-  rime::Deployer& deployer(rime::Service::instance().deployer());
+  Registry& registry = Registry::instance();
+  registry.Register("userdb", new UserDbComponent<LevelDb>);
+  Deployer& deployer(Service::instance().deployer());
   {
-    rime::Config config;
+    Config config;
     if (config.LoadFromFile("installation.yaml")) {
       config.GetString("installation_id", &deployer.user_id);
       config.GetString("sync_dir", &deployer.sync_dir);
     }
   }
-  rime::UserDictManager mgr(&deployer);
+  UserDictManager mgr(&deployer);
   if (argc == 2 && (option == "-l" || option == "--list")) {
-    rime::UserDictList list;
+    UserDictList list;
     mgr.GetUserDictList(&list);
     if (list.empty()) {
       std::cerr << "no user dictionary is found." << std::endl;
       return 0;
     }
-    for (const std::string& e : list) {
+    for (const string& e : list) {
       std::cout << e << std::endl;
     }
     return 0;

@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-07-17 GONG Chen <chen.sst@gmail.com>
 //
@@ -8,17 +8,14 @@
 #ifndef RIME_ENCODER_H_
 #define RIME_ENCODER_H_
 
-#include <set>
-#include <string>
-#include <vector>
 #include <boost/regex.hpp>
 
 namespace rime {
 
-class RawCode : public std::vector<std::string> {
+class RawCode : public vector<string> {
  public:
-  std::string ToString() const;
-  void FromString(const std::string &code_str);
+  string ToString() const;
+  void FromString(const string &code_str);
 };
 
 class PhraseCollector {
@@ -26,12 +23,12 @@ class PhraseCollector {
   PhraseCollector() = default;
   virtual ~PhraseCollector() = default;
 
-  virtual void CreateEntry(const std::string& phrase,
-                           const std::string& code_str,
-                           const std::string& value) = 0;
+  virtual void CreateEntry(const string& phrase,
+                           const string& code_str,
+                           const string& value) = 0;
   // return a list of alternative code for the given word
-  virtual bool TranslateWord(const std::string& word,
-                             std::vector<std::string>* code) = 0;
+  virtual bool TranslateWord(const string& word,
+                             vector<string>* code) = 0;
 };
 
 class Config;
@@ -45,8 +42,8 @@ class Encoder {
     return false;
   }
 
-  virtual bool EncodePhrase(const std::string& phrase,
-                            const std::string& value) = 0;
+  virtual bool EncodePhrase(const string& phrase,
+                            const string& value) = 0;
 
   void set_collector(PhraseCollector* collector) { collector_ = collector; }
 
@@ -65,7 +62,7 @@ struct CodeCoords {
 struct TableEncodingRule {
   int min_word_length;
   int max_word_length;
-  std::vector<CodeCoords> coords;
+  vector<CodeCoords> coords;
 };
 
 // for rule-based phrase encoding
@@ -75,28 +72,28 @@ class TableEncoder : public Encoder {
 
   bool LoadSettings(Config* config);
 
-  bool Encode(const RawCode& code, std::string* result);
-  bool EncodePhrase(const std::string& phrase, const std::string& value);
+  bool Encode(const RawCode& code, string* result);
+  bool EncodePhrase(const string& phrase, const string& value);
 
-  bool IsCodeExcluded(const std::string& code);
+  bool IsCodeExcluded(const string& code);
 
   bool loaded() const { return loaded_; }
-  const std::vector<TableEncodingRule>& encoding_rules() const {
+  const vector<TableEncodingRule>& encoding_rules() const {
     return encoding_rules_;
   }
-  const std::string& tail_anchor() const { return tail_anchor_; }
+  const string& tail_anchor() const { return tail_anchor_; }
 
  protected:
-  bool ParseFormula(const std::string& formula, TableEncodingRule* rule);
-  int CalculateCodeIndex(const std::string& code, int index, int start);
-  bool DfsEncode(const std::string& phrase, const std::string& value,
+  bool ParseFormula(const string& formula, TableEncodingRule* rule);
+  int CalculateCodeIndex(const string& code, int index, int start);
+  bool DfsEncode(const string& phrase, const string& value,
                  size_t start_pos, RawCode* code, int* limit);
 
   bool loaded_;
   // settings
-  std::vector<TableEncodingRule> encoding_rules_;
-  std::vector<boost::regex> exclude_patterns_;
-  std::string tail_anchor_;
+  vector<TableEncodingRule> encoding_rules_;
+  vector<boost::regex> exclude_patterns_;
+  string tail_anchor_;
   // for optimization
   int max_phrase_length_;
 };
@@ -106,10 +103,10 @@ class ScriptEncoder : public Encoder {
  public:
   ScriptEncoder(PhraseCollector* collector);
 
-  bool EncodePhrase(const std::string& phrase, const std::string& value);
+  bool EncodePhrase(const string& phrase, const string& value);
 
  private:
-  bool DfsEncode(const std::string& phrase, const std::string& value,
+  bool DfsEncode(const string& phrase, const string& value,
                  size_t start_pos, RawCode* code, int* limit);
 };
 

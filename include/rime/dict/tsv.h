@@ -1,26 +1,23 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-04-16 GONG Chen <chen.sst@gmail.com>
 //
 #ifndef RIME_TSV_H_
 #define RIME_TSV_H_
 
-#include <functional>
-#include <string>
-#include <vector>
 
 namespace rime {
 
-using Tsv = std::vector<std::string>;
+using Tsv = vector<string>;
 
-using TsvParser = std::function<bool (const Tsv& row,
-                                      std::string* key,
-                                      std::string* value)>;
+using TsvParser = function<bool (const Tsv& row,
+                                      string* key,
+                                      string* value)>;
 
-using TsvFormatter = std::function<bool (const std::string& key,
-                                         const std::string& value,
+using TsvFormatter = function<bool (const string& key,
+                                         const string& value,
                                          Tsv* row)>;
 
 class Sink;
@@ -28,28 +25,28 @@ class Source;
 
 class TsvReader {
  public:
-  TsvReader(const std::string& path, TsvParser parser)
+  TsvReader(const string& path, TsvParser parser)
       : path_(path), parser_(parser) {
   }
   // return number of records read
   int operator() (Sink* sink);
  protected:
-  std::string path_;
+  string path_;
   TsvParser parser_;
 };
 
 class TsvWriter {
  public:
-  TsvWriter(const std::string& path, TsvFormatter formatter)
+  TsvWriter(const string& path, TsvFormatter formatter)
       : path_(path), formatter_(formatter) {
   }
   // return number of records written
   int operator() (Source* source);
  protected:
-  std::string path_;
+  string path_;
   TsvFormatter formatter_;
  public:
-  std::string file_description;
+  string file_description;
 };
 
 template <class SinkType>

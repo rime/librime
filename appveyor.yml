@@ -1,0 +1,45 @@
+skip_tags: true
+clone_depth: 1
+pull_requests:
+  do_not_increment_build_number: true
+
+version: '{branch} build {build}'
+image: Visual Studio 2015
+
+environment:
+  BOOST_ROOT: C:\Libraries\libboost
+
+cache:
+  - thirdparty.cached -> appveyor.install.bat
+  - thirdparty\bin -> appveyor.install.bat
+  - thirdparty\data -> appveyor.install.bat
+  - thirdparty\include -> appveyor.install.bat
+  - thirdparty\lib -> appveyor.install.bat
+  - C:\Libraries\libboost -> appveyor.install.bat
+
+init:
+  - git --version
+  - cmake --version
+  - msbuild /version
+  - git config --global core.autocrlf true
+
+install:
+  - .\appveyor.install.bat
+
+build_script:
+  - .\build.bat test
+
+after_build:
+  - 7z a rime.zip build\bin build\lib include thirdparty\data\opencc
+  - dir build /s
+
+before_test:
+  - copy /y build\lib\Release\rime.dll build\bin
+
+test_script:
+  - cd build\bin
+  - echo "congmingdeRime{space}shurufa" | Release\rime_api_console.exe
+
+artifacts:
+  - path: rime.zip
+    name: Binaries, includes and OpenCC data

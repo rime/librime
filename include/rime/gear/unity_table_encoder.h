@@ -1,6 +1,6 @@
 //
-// Copyleft RIME Developers
-// License: GPLv3
+// Copyright RIME Developers
+// Distributed under the BSD License
 //
 // 2013-08-31 GONG Chen <chen.sst@gmail.com>
 //
@@ -23,25 +23,25 @@ class UnityTableEncoder : public TableEncoder, public PhraseCollector {
 
   bool Load(const Ticket& ticket);
 
-  void CreateEntry(const std::string& word,
-                   const std::string& code_str,
-                   const std::string& weight_str);
-  bool TranslateWord(const std::string& word,
-                     std::vector<std::string>* code);
+  void CreateEntry(const string& word,
+                   const string& code_str,
+                   const string& weight_str);
+  bool TranslateWord(const string& word,
+                     vector<string>* code);
 
   size_t LookupPhrases(UserDictEntryIterator* result,
-                       const std::string& input,
+                       const string& input,
                        bool predictive,
                        size_t limit = 0,
-                       std::string* resume_key = NULL);
+                       string* resume_key = NULL);
 
-  static bool HasPrefix(const std::string& key);
-  static bool AddPrefix(std::string* key);
-  static bool RemovePrefix(std::string* key);
+  static bool HasPrefix(const string& key);
+  static bool AddPrefix(string* key);
+  static bool RemovePrefix(string* key);
 
  protected:
   UserDictionary* user_dict_;
-  unique_ptr<ReverseLookupDictionary> rev_dict_;
+  the<ReverseLookupDictionary> rev_dict_;
 };
 
 }  // namespace rime
