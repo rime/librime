@@ -194,16 +194,19 @@ void Simplifier::PushBack(const an<Candidate>& original,
                          CandidateQueue* result, const string& simplified) {
   string tips;
   string text;
+  size_t length = utf8::unchecked::distance(original->text().c_str(),
+                                            original->text().c_str()
+                                            + original->text().length());
+  bool show_tips = (tips_level_ == kTipsChar && length == 1) || tips_level_ == kTipsAll;
   if (show_in_comment_) {
     text = original->text();
-    tips = simplified;
-    comment_formatter_.Apply(&tips);
+    if (show_tips) {
+      tips = simplified;
+      comment_formatter_.Apply(&tips);
+    }
   } else {
-    size_t length = utf8::unchecked::distance(original->text().c_str(),
-                                              original->text().c_str()
-                                              + original->text().length());
     text = simplified;
-    if ((tips_level_ == kTipsChar && length == 1) || tips_level_ == kTipsAll) {
+    if (show_tips) {
       tips = original->text();
       bool modified = comment_formatter_.Apply(&tips);
       if (!modified) {
