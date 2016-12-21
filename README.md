@@ -24,8 +24,8 @@ Features
 Install
 ===
 Follow the instructions to build librime on platforms other than Linux:
-  - [Mac OS X](https://github.com/rime/librime/tree/develop/README-mac.md)
-  - [Windows](https://github.com/rime/librime/tree/develop/README-windows.md)
+  - [Mac OS X](https://github.com/rime/librime/tree/master/README-mac.md)
+  - [Windows](https://github.com/rime/librime/tree/master/README-windows.md)
 
 Build dependencies
 ---
