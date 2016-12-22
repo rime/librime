@@ -9,6 +9,7 @@
 
 #include <rime/common.h>
 #include <rime/component.h>
+#include <rime/key_event.h>
 #include <rime/processor.h>
 #include <rime/algo/algebra.h>
 
@@ -30,17 +31,17 @@ class ChordComposer : public Processor {
   void OnContextUpdate(Context* ctx);
   void OnUnhandledKey(Context* ctx, const KeyEvent& key);
 
-  string alphabet_;
+  KeySequence chording_keys_;
   string delimiter_;
   Projection algebra_;
   Projection output_format_;
   Projection prompt_format_;
 
-  set<char> pressed_;
-  set<char> chord_;
+  set<int> pressed_;
+  set<int> chord_;
   bool pass_thru_ = false;
   bool composing_ = false;
-  string sequence_;
+  string raw_sequence_;
   connection update_connection_;
   connection unhandled_key_connection_;
 };

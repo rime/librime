@@ -23,7 +23,9 @@ ChordComposer::ChordComposer(const Ticket& ticket) : Processor(ticket) {
   if (!engine_)
     return;
   if (Config* config = engine_->schema()->config()) {
-    config->GetString("chord_composer/alphabet", &alphabet_);
+    string alphabet;
+    config->GetString("chord_composer/alphabet", &alphabet);
+    chording_keys_.Parse(alphabet);
     config->GetString("speller/delimiter", &delimiter_);
     algebra_.Load(config->GetList("chord_composer/algebra"));
     output_format_.Load(config->GetList("chord_composer/output_format"));
@@ -54,18 +56,18 @@ ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   int ch = key_event.keycode();
   Context* ctx = engine_->context();
   if (!is_key_up && ch == XK_Return) {
-    if (!sequence_.empty()) {
+    if (!raw_sequence_.empty()) {
       // commit raw input
-      ctx->set_input(sequence_);
+      ctx->set_input(raw_sequence_);
       // then the sequence should not be used again
-      sequence_.clear();
+      raw_sequence_.clear();
     }
     ClearChord();
     return kNoop;
   }
   if (!is_key_up && ch == XK_BackSpace) {
-    // invalidate sequence
-    sequence_.clear();
+    // invalidate raw sequence
+    raw_sequence_.clear();
     ClearChord();
     if (DeleteLastSyllable()) {
       return kAccepted;
@@ -73,19 +75,21 @@ ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   }
   if (!is_key_up && ch == XK_Escape) {
-    // to clear a sequence made of invalid combos
-    sequence_.clear();
+    // clear the raw sequence
+    raw_sequence_.clear();
     ClearChord();
     return kNoop;
   }
   if (!is_key_up && ch >= 0x20 && ch <= 0x7e) {
     // save raw input
-    if (!ctx->IsComposing() || !sequence_.empty()) {
-      sequence_.push_back(ch);
-      DLOG(INFO) << "update sequence: " << sequence_;
+    if (!ctx->IsComposing() || !raw_sequence_.empty()) {
+      raw_sequence_.push_back(ch);
+      DLOG(INFO) << "update raw sequence: " << raw_sequence_;
     }
   }
-  if (alphabet_.find(ch) == string::npos) {
+  if (std::find(chording_keys_.begin(),
+                chording_keys_.end(),
+                KeyEvent{ch, 0}) == chording_keys_.end()) {
     return chording ? kAccepted : kNoop;
   }
   // in alphabet
@@ -104,11 +108,12 @@ ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
 }
 
 string ChordComposer::SerializeChord() {
-  string code;
-  for (char ch : alphabet_) {
-    if (chord_.find(ch) != chord_.end())
-      code.push_back(ch);
+  KeySequence key_sequence;
+  for (KeyEvent key : chording_keys_) {
+    if (chord_.find(key.keycode()) != chord_.end())
+      key_sequence.push_back(key);
   }
+  string code = key_sequence.repr();
   algebra_.Apply(&code);
   return code;
 }
@@ -142,15 +147,15 @@ void ChordComposer::FinishChord() {
   output_format_.Apply(&code);
   ClearChord();
 
-  KeySequence sequence;
-  if (sequence.Parse(code) && !sequence.empty()) {
+  KeySequence key_sequence;
+  if (key_sequence.Parse(code) && !key_sequence.empty()) {
     pass_thru_ = true;
-    for (const KeyEvent& key : sequence) {
+    for (const KeyEvent& key : key_sequence) {
       if (!engine_->ProcessKey(key)) {
         // direct commit
         engine_->CommitText(string(1, key.keycode()));
-        // exclude the character (eg. space) from the following sequence
-        sequence_.clear();
+        // exclude the character (eg. space) from the raw sequence
+        raw_sequence_.clear();
       }
     }
     pass_thru_ = false;
@@ -202,18 +207,18 @@ void ChordComposer::OnContextUpdate(Context* ctx) {
   }
   else if (composing_) {
     composing_ = false;
-    sequence_.clear();
+    raw_sequence_.clear();
     DLOG(INFO) << "clear sequence.";
   }
 }
 
 void ChordComposer::OnUnhandledKey(Context* ctx, const KeyEvent& key) {
-  // directly committed ascii should not be captured into the sequence
+  // directly committed ascii should not be captured into the raw sequence
   // test case:
   // 3.14{Return} should not commit an extra sequence '14'
   if ((key.modifier() & ~kShiftMask) == 0 &&
       key.keycode() >= 0x20 && key.keycode() <= 0x7e) {
-    sequence_.clear();
+    raw_sequence_.clear();
     DLOG(INFO) << "clear sequence.";
   }
 }
