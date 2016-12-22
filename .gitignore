@@ -3,10 +3,8 @@ build-static/
 debug-build/
 xbuild/
 xdebug/
+build.log
 data/*
-data/preset
-data/supplement
-data/extra
 thirdparty/include/*
 thirdparty/lib/*
 thirdparty/bin/*
@@ -15,4 +13,3 @@ thirdparty/src/*/*
 env.bat
 *~
 .*.swp
-.ycm_extra_conf.pyc
