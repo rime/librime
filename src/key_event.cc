@@ -89,6 +89,13 @@ KeySequence::KeySequence(const string& repr) {
     clear();
 }
 
+static bool is_unescaped_character(const KeyEvent& key_event) {
+  int ch = key_event.keycode();
+  return key_event.modifier() == 0 &&
+    ch >= 0x20 && ch <= 0x7e &&
+    ch != '{' && ch != '}';
+}
+
 string KeySequence::repr() const {
   std::ostringstream result;
   string k;
@@ -96,6 +103,9 @@ string KeySequence::repr() const {
     k = it->repr();
     if (k.size() == 1) {
       result << k;
+    }
+    else if (is_unescaped_character(*it)) {
+      result << char(it->keycode());
     }
     else {
       result << '{' << k << '}';
