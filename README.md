@@ -6,11 +6,11 @@ rimes with your keystrokes.
 
 Project home
 ---
-[rime.im](http://rime.im)
+[RIME | 中州韻輸入法引擎](http://rime.im)
 
 License
 ---
-BSD 3-Clause License
+[The 3-Clause BSD License](https://opensource.org/licenses/BSD-3-Clause)
 
 Features
 ===
@@ -24,7 +24,7 @@ Features
 Install
 ===
 Follow the instructions to build librime on platforms other than Linux:
-  - [Mac OS X](https://github.com/rime/librime/tree/master/README-mac.md)
+  - [macOS](https://github.com/rime/librime/tree/master/README-mac.md)
   - [Windows](https://github.com/rime/librime/tree/master/README-windows.md)
 
 Build dependencies
@@ -57,12 +57,14 @@ sudo make install
 
 Frontends
 ===
+  - [Weasel](https://github.com/rime/weasel): frontend for Windows
+  - [PIME](https://github.com/EasyIME/PIME): another Rime frontend for Windows
+  - [Squirrel](https://github.com/rime/squirrel): frontend for macOS
+  - [XIME](https://github.com/stackia/XIME): yet another Rime frontend for macOS
+  - [Trime](https://github.com/osfans/trime): frontend for Android
+  - [iRime](https://itunes.apple.com/cn/app/irime-shu-ru-fa/id1142623977?mt=8): frontend for iOS(**source code can't find**)
   - [fcitx-rime](https://github.com/fcitx/fcitx-rime): Fcitx frontend for Linux
   - [ibus-rime](https://github.com/rime/ibus-rime): IBus frontend for Linux
-  - [Squirrel](https://github.com/rime/squirrel): frontend for Mac OS X
-  - [Weasel](https://github.com/rime/weasel): frontend for Windows
-  - [XIME](https://github.com/stackia/XIME): yet another Rime frontend for Mac OS X
-  - [trime](https://github.com/osfans/trime): frontend for Android
 
 Plugins
 ===
@@ -81,9 +83,9 @@ Credits
 We are grateful to the makers of the following open source libraries:
 
   - [Boost C++ Libraries](http://www.boost.org/) (Boost Software License)
-  - [google-glog](https://github.com/google/glog) (BSD 3-Clause License)
-  - [Google Test](https://github.com/google/googletest) (BSD 3-Clause License)
-  - [LevelDB](https://github.com/google/leveldb) (BSD 3-Clause License)
+  - [google-glog](https://github.com/google/glog) (The 3-Clause BSD License)
+  - [Google Test](https://github.com/google/googletest) (The 3-Clause BSD License)
+  - [LevelDB](https://github.com/google/leveldb) (The 3-Clause BSD License)
   - [marisa-trie](https://github.com/s-yata/marisa-trie) (BSD 2-Clause License, LGPL 2.1)
   - [OpenCC](https://github.com/BYVoid/OpenCC) (Apache License 2.0)
   - [yaml-cpp](https://github.com/jbeder/yaml-cpp) (MIT License)
