@@ -18,7 +18,6 @@ static const char* kZeroWidthSpace = "\xef\xbb\xbf";  //"\xe2\x80\x8b";
 
 namespace rime {
 
-
 ChordComposer::ChordComposer(const Ticket& ticket) : Processor(ticket) {
   if (!engine_)
     return;
@@ -44,9 +43,35 @@ ChordComposer::~ChordComposer() {
   unhandled_key_connection_.disconnect();
 }
 
-ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
-  if (pass_thru_)
+ProcessResult ChordComposer::ProcessFunctionKey(const KeyEvent& key_event) {
+  if (key_event.release()) {
     return kNoop;
+  }
+  int ch = key_event.keycode();
+  if (ch == XK_Return) {
+    if (!raw_sequence_.empty()) {
+      // commit raw input
+      engine_->context()->set_input(raw_sequence_);
+      // then the sequence should not be used again
+      raw_sequence_.clear();
+    }
+    ClearChord();
+  } else if (ch == XK_BackSpace) {
+    // invalidate raw sequence
+    raw_sequence_.clear();
+    ClearChord();
+    if (DeleteLastSyllable()) {
+      return kAccepted;
+    }
+  } else if (ch == XK_Escape) {
+    // clear the raw sequence
+    raw_sequence_.clear();
+    ClearChord();
+  }
+  return kNoop;
+}
+
+ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
   bool chording = !chord_.empty();
   if (key_event.shift() || key_event.ctrl() || key_event.alt()) {
     ClearChord();
@@ -54,45 +79,13 @@ ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   }
   bool is_key_up = key_event.release();
   int ch = key_event.keycode();
-  Context* ctx = engine_->context();
-  if (!is_key_up && ch == XK_Return) {
-    if (!raw_sequence_.empty()) {
-      // commit raw input
-      ctx->set_input(raw_sequence_);
-      // then the sequence should not be used again
-      raw_sequence_.clear();
-    }
-    ClearChord();
-    return kNoop;
-  }
-  if (!is_key_up && ch == XK_BackSpace) {
-    // invalidate raw sequence
-    raw_sequence_.clear();
-    ClearChord();
-    if (DeleteLastSyllable()) {
-      return kAccepted;
-    }
-    return kNoop;
-  }
-  if (!is_key_up && ch == XK_Escape) {
-    // clear the raw sequence
-    raw_sequence_.clear();
-    ClearChord();
-    return kNoop;
-  }
-  if (!is_key_up && ch >= 0x20 && ch <= 0x7e) {
-    // save raw input
-    if (!ctx->IsComposing() || !raw_sequence_.empty()) {
-      raw_sequence_.push_back(ch);
-      DLOG(INFO) << "update raw sequence: " << raw_sequence_;
-    }
-  }
+  // non chording key
   if (std::find(chording_keys_.begin(),
                 chording_keys_.end(),
                 KeyEvent{ch, 0}) == chording_keys_.end()) {
     return chording ? kAccepted : kNoop;
   }
-  // in alphabet
+  // chording key
   if (is_key_up) {
     if (pressed_.erase(ch) != 0 && pressed_.empty()) {
       FinishChord();
@@ -105,6 +98,26 @@ ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
       UpdateChord();
   }
   return kAccepted;
+}
+
+ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
+  if (pass_thru_) {
+    return ProcessFunctionKey(key_event);
+  }
+  bool is_key_up = key_event.release();
+  int ch = key_event.keycode();
+  if (!is_key_up && ch >= 0x20 && ch <= 0x7e) {
+    // save raw input
+    if (!engine_->context()->IsComposing() || !raw_sequence_.empty()) {
+      raw_sequence_.push_back(ch);
+      DLOG(INFO) << "update raw sequence: " << raw_sequence_;
+    }
+  }
+  auto result = ProcessChordingKey(key_event);
+  if (result != kNoop) {
+    return result;
+  }
+  return ProcessFunctionKey(key_event);
 }
 
 string ChordComposer::SerializeChord() {
@@ -208,7 +221,7 @@ void ChordComposer::OnContextUpdate(Context* ctx) {
   else if (composing_) {
     composing_ = false;
     raw_sequence_.clear();
-    DLOG(INFO) << "clear sequence.";
+    DLOG(INFO) << "clear raw sequence.";
   }
 }
 
@@ -219,7 +232,7 @@ void ChordComposer::OnUnhandledKey(Context* ctx, const KeyEvent& key) {
   if ((key.modifier() & ~kShiftMask) == 0 &&
       key.keycode() >= 0x20 && key.keycode() <= 0x7e) {
     raw_sequence_.clear();
-    DLOG(INFO) << "clear sequence.";
+    DLOG(INFO) << "clear raw sequence.";
   }
 }
 

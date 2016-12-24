@@ -23,6 +23,8 @@ class ChordComposer : public Processor {
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:
+  ProcessResult ProcessChordingKey(const KeyEvent& key_event);
+  ProcessResult ProcessFunctionKey(const KeyEvent& key_event);
   string SerializeChord();
   void UpdateChord();
   void FinishChord();
