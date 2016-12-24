@@ -6,7 +6,7 @@ rimes with your keystrokes.
 
 Project home
 ---
-[RIME | 中州韻輸入法引擎](http://rime.im)
+[rime.im](http://rime.im)
 
 License
 ---
@@ -57,14 +57,15 @@ sudo make install
 
 Frontends
 ===
-  - [Weasel](https://github.com/rime/weasel): frontend for Windows
-  - [PIME](https://github.com/EasyIME/PIME): another Rime frontend for Windows
+  Official:
   - [Squirrel](https://github.com/rime/squirrel): frontend for macOS
-  - [XIME](https://github.com/stackia/XIME): yet another Rime frontend for macOS
-  - [Trime](https://github.com/osfans/trime): frontend for Android
-  - [iRime](https://itunes.apple.com/cn/app/irime-shu-ru-fa/id1142623977?mt=8): frontend for iOS(**source code can't find**)
+  - [Weasel](https://github.com/rime/weasel): frontend for Windows
+  Third party:
   - [fcitx-rime](https://github.com/fcitx/fcitx-rime): Fcitx frontend for Linux
   - [ibus-rime](https://github.com/rime/ibus-rime): IBus frontend for Linux
+  - [PIME](https://github.com/EasyIME/PIME): frontend for Windows
+  - [Trime](https://github.com/osfans/trime): frontend for Android
+  - [XIME](https://github.com/stackia/XIME): frontend for macOS
 
 Plugins
 ===
