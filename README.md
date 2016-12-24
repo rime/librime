@@ -60,7 +60,8 @@ Frontends
   Official:
   - [Squirrel](https://github.com/rime/squirrel): frontend for macOS
   - [Weasel](https://github.com/rime/weasel): frontend for Windows
-  Third party:
+
+  Third-party:
   - [fcitx-rime](https://github.com/fcitx/fcitx-rime): Fcitx frontend for Linux
   - [ibus-rime](https://github.com/rime/ibus-rime): IBus frontend for Linux
   - [PIME](https://github.com/EasyIME/PIME): frontend for Windows
