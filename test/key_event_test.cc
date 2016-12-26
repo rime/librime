@@ -121,7 +121,7 @@ TEST(RimeKeySequenceTest, Stringification) {
   ASSERT_TRUE(ks.Parse("z y,x."));
   ks.push_back(KeyEvent("{"));
   ks.push_back(KeyEvent("}"));
-  EXPECT_STREQ("z{space}y{comma}x{period}{braceleft}{braceright}",
+  EXPECT_STREQ("z y,x.{braceleft}{braceright}",
                ks.repr().c_str());
 }
 
@@ -129,5 +129,5 @@ TEST(RimeKeySequenceTest, Serialization) {
   KeySequence ks("abc, defg.");
   std::ostringstream out;
   out << ks;
-  EXPECT_STREQ("abc{comma}{space}defg{period}", out.str().c_str());
+  EXPECT_STREQ("abc, defg.", out.str().c_str());
 }
