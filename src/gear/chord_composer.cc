@@ -74,6 +74,7 @@ ProcessResult ChordComposer::ProcessFunctionKey(const KeyEvent& key_event) {
 ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
   bool chording = !chord_.empty();
   if (key_event.shift() || key_event.ctrl() || key_event.alt()) {
+    raw_sequence_.clear();
     ClearChord();
     return chording ? kAccepted : kNoop;
   }
