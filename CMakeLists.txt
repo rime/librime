@@ -110,7 +110,7 @@ else(X11Keysym)
   message(WARNING "X11/keysym.h not found.")
 endif(X11Keysym)
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/thirdparty/include)
 link_directories(${PROJECT_SOURCE_DIR}/thirdparty/lib)
 if(MSVC)
@@ -157,7 +157,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
       ${PROJECT_SOURCE_DIR}/rime.pc.in
       ${PROJECT_BINARY_DIR}/rime.pc
       @ONLY)
-  install(FILES include/rime_api.h DESTINATION include)
+  install(FILES src/rime_api.h DESTINATION include)
   install(FILES ${PROJECT_BINARY_DIR}/rime.pc DESTINATION ${LIB_INSTALL_DIR}/pkgconfig)
   install(FILES cmake/RimeConfig.cmake DESTINATION share/cmake/rime)
   if(BUILD_DATA)
