@@ -65,6 +65,7 @@ Official:
 
 Third-party:
   - [fcitx-rime](https://github.com/fcitx/fcitx-rime): Fcitx frontend for Linux
+  - [iRime](https://github.com/jimmy54/iRime): iRime for iOS
   - [PIME](https://github.com/EasyIME/PIME): frontend for Windows
   - [Trime](https://github.com/osfans/trime): frontend for Android
   - [XIME](https://github.com/stackia/XIME): frontend for macOS
