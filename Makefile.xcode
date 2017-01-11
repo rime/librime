@@ -1,7 +1,7 @@
 RIME_ROOT = $(CURDIR)
 RIME_COMPILER_OPTIONS = CC=clang CXX=clang++ CXXFLAGS="-stdlib=libc++" LDFLAGS="-stdlib=libc++"
 
-.PHONY: all release debug clean thirdparty
+.PHONY: all release debug clean test thirdparty
 
 all: release
 
@@ -10,7 +10,7 @@ release:
 	cmake --build xbuild --config Release | grep -v setenv | tee build.log
 
 debug:
-	cmake . -Bxdebug -GXcode -DBUILD_STATIC=ON -DBUILD_TEST=ON -DBUILD_SEPARATE_LIBS=ON
+	cmake . -Bxdebug -GXcode -DBUILD_STATIC=ON -DBUILD_SEPARATE_LIBS=ON
 	cmake --build xdebug --config Debug | grep -v setenv | tee build.log
 
 clean:
@@ -19,6 +19,9 @@ clean:
 	rm build.log > /dev/null 2>&1 || true
 	rm -f thirdparty/lib/* > /dev/null 2>&1 || true
 	make -f Makefile.thirdparty clean-src
+
+test: release
+	(cd xbuild/test; LD_LIBRARY_PATH=../lib/Release Release/rime_test)
 
 thirdparty:
 	$(RIME_COMPILER_OPTIONS) make -f Makefile.thirdparty
