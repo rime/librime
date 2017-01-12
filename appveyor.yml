@@ -30,7 +30,9 @@ build_script:
   - .\build.bat test
 
 after_build:
-  - 7z a rime.zip build\bin build\lib include thirdparty\data\opencc
+  - md build\include
+  - copy /y src\*.h build\include
+  - 7z a rime.zip build\bin build\lib build\include thirdparty\data\opencc
   - dir build /s
 
 before_test:
