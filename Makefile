@@ -3,16 +3,9 @@ RIME_ROOT = $(CURDIR)
 sharedir = $(DESTDIR)/usr/share
 bindir = $(DESTDIR)/usr/bin
 
-.PHONY: all install uninstall thirdparty clean librime-static librime debug
+.PHONY: all thirdparty clean librime librime-static install-librime uninstall-librime release install uninstall debug install-debug uninstall-debug test
 
-all: librime
-	@echo ':)'
-
-install: install-librime
-	@echo ':)'
-
-uninstall: uninstall-librime
-	@echo ':)'
+all: release
 
 thirdparty:
 	make -f Makefile.thirdparty
@@ -23,22 +16,26 @@ thirdparty/%:
 clean:
 	rm -Rf build build-static debug-build
 
+librime: release
+install-librime: install
+uninstall-librime: uninstall
+
 librime-static:
 	cmake . -Bbuild-static -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC=ON -DBUILD_SHARED_LIBS=OFF
 	cmake --build build-static
 
-librime:
+release:
 	cmake . -Bbuild -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release
 	cmake --build build
 
-install-librime:
+install:
 	cmake --build build --target install
 
-uninstall-librime:
+uninstall:
 	cmake --build build --target uninstall
 
 debug:
-	cmake . -Bdebug-build -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug -DBUILD_TEST=ON
+	cmake . -Bdebug-build -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug
 	cmake --build debug-build
 
 install-debug:
@@ -46,3 +43,7 @@ install-debug:
 
 uninstall-debug:
 	cmake --build debug-build --target uninstall
+
+test: release
+	(cd build/test; ./rime_test)
+
