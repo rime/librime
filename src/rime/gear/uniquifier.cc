@@ -31,23 +31,35 @@ bool UniquifiedTranslation::Next() {
   return CacheTranslation::Next() && Uniquify();
 }
 
-bool UniquifiedTranslation::Uniquify() {
-  if (exhausted()) {
-    return false;
-  }
-  auto next = Peek();
-  for (auto& c : *candidates_) {
-    if (c->text() == next->text()) {
-      auto u = As<UniquifiedCandidate>(c);
-      if (!u) {
-        u = New<UniquifiedCandidate>(c, "uniquified");
-        c = u;
-      }
-      u->Append(next);
-      return CacheTranslation::Next();
+static CandidateList::iterator find_text_match(const an<Candidate>& target,
+                                               CandidateList::iterator begin,
+                                               CandidateList::iterator end) {
+  for (auto iter = begin; iter != end; ++iter) {
+    if ((*iter)->text() == target->text()) {
+      return iter;
     }
   }
-  return true;
+  return end;
+}
+
+bool UniquifiedTranslation::Uniquify() {
+  while (!exhausted()) {
+    auto next = Peek();
+    CandidateList::iterator previous = find_text_match(
+        next, candidates_->begin(), candidates_->end());
+    if (previous == candidates_->end()) {
+      // Encountered a unique candidate.
+      return true;
+    }
+    auto uniquified = As<UniquifiedCandidate>(*previous);
+    if (!uniquified) {
+      *previous = uniquified =
+          New<UniquifiedCandidate>(*previous, "uniquified");
+    }
+    uniquified->Append(next);
+    CacheTranslation::Next();
+  }
+  return false;
 }
 
 // Uniquifier
