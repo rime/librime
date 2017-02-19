@@ -56,14 +56,7 @@ ProcessResult ChordComposer::ProcessFunctionKey(const KeyEvent& key_event) {
       raw_sequence_.clear();
     }
     ClearChord();
-  } else if (ch == XK_BackSpace) {
-    // invalidate raw sequence
-    raw_sequence_.clear();
-    ClearChord();
-    if (DeleteLastSyllable()) {
-      return kAccepted;
-    }
-  } else if (ch == XK_Escape) {
+  } else if (ch == XK_BackSpace || ch == XK_Escape) {
     // clear the raw sequence
     raw_sequence_.clear();
     ClearChord();
@@ -193,26 +186,6 @@ void ChordComposer::ClearChord() {
     comp.back().prompt.clear();
     comp.back().tags.erase("chord_prompt");
   }
-}
-
-bool ChordComposer::DeleteLastSyllable() {
-  if (!engine_)
-    return false;
-  Context* ctx = engine_->context();
-  Composition& comp = ctx->composition();
-  const string& input(ctx->input());
-  size_t start = comp.empty() ? 0 : comp.back().start;
-  size_t caret_pos = ctx->caret_pos();
-  if (input.empty() || caret_pos <= start)
-    return false;
-  size_t deleted = 0;
-  for (; caret_pos > start; --caret_pos, ++deleted) {
-    if (deleted > 0 &&
-        delimiter_.find(input[caret_pos - 1]) != string::npos)
-      break;
-  }
-  ctx->PopInput(deleted);
-  return true;
 }
 
 void ChordComposer::OnContextUpdate(Context* ctx) {
