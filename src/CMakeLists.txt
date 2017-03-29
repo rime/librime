@@ -1,63 +1,86 @@
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
-aux_source_directory(. LIBRIME_SRC_API)
-aux_source_directory(rime LIBRIME_SRC_BASE)
-aux_source_directory(rime/algo LIBRIME_SRC_ALGO)
-aux_source_directory(rime/dict LIBRIME_SRC_DICT)
-aux_source_directory(rime/gear LIBRIME_SRC_GEAR)
-aux_source_directory(rime/lever LIBRIME_SRC_LEVER)
+aux_source_directory(. rime_src_api)
+aux_source_directory(rime rime_src_base)
+aux_source_directory(rime/algo rime_src_algo)
+aux_source_directory(rime/dict rime_src_dict)
+aux_source_directory(rime/gear rime_src_gear)
+aux_source_directory(rime/lever rime_src_lever)
 
 if(BUILD_SEPARATE_LIBS)
-  set(LIBRIME_SRC ${LIBRIME_SRC_API} ${LIBRIME_SRC_BASE})
-  set(LIBRIME_GEARS_SRC ${LIBRIME_SRC_ALGO} ${LIBRIME_SRC_DICT} ${LIBRIME_SRC_GEAR} ${LIBRIME_SRC_LEVER})
-else(BUILD_SEPARATE_LIBS)
-  set(LIBRIME_SRC ${LIBRIME_SRC_API} ${LIBRIME_SRC_BASE} ${LIBRIME_SRC_ALGO} ${LIBRIME_SRC_DICT} ${LIBRIME_SRC_GEAR} ${LIBRIME_SRC_LEVER})
-endif(BUILD_SEPARATE_LIBS)
+  set(rime_src
+      ${rime_src_api}
+      ${rime_src_base}
+      ${rime_src_config})
+  set(librime_gears_src
+      ${rime_src_algo}
+      ${rime_src_dict}
+      ${rime_src_gear}
+      ${rime_src_lever})
+else()
+  set(rime_src
+      ${rime_src_api}
+      ${rime_src_base}
+      ${rime_src_algo}
+      ${rime_src_config}
+      ${rime_src_dict}
+      ${rime_src_gear}
+      ${rime_src_lever})
+endif()
 
-set(RIME_OPTIONAL_DEPS "")
+set(rime_optional_deps "")
 if(Gflags_FOUND)
-  set(RIME_OPTIONAL_DEPS ${RIME_OPTIONAL_DEPS} ${Gflags_LIBRARY})
-endif(Gflags_FOUND)
+  set(rime_optional_deps ${rime_optional_deps} ${Gflags_LIBRARY})
+endif()
 
-set(RIME_CORE_DEPS ${Boost_LIBRARIES} ${Glog_LIBRARY} ${YamlCpp_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${RIME_OPTIONAL_DEPS})
-set(RIME_EXTRA_DEPS ${ICONV_LIBRARIES} ${LevelDb_LIBRARY} ${Marisa_LIBRARY} ${Opencc_LIBRARY})
+set(rime_core_deps
+    ${Boost_LIBRARIES}
+    ${Glog_LIBRARY}
+    ${YamlCpp_LIBRARY}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${rime_optional_deps})
+set(rime_extra_deps
+    ${ICONV_LIBRARIES}
+    ${LevelDb_LIBRARY}
+    ${Marisa_LIBRARY}
+    ${Opencc_LIBRARY})
 
 if(BUILD_SEPARATE_LIBS)
-  set(RIME_DEPS ${RIME_CORE_DEPS})
-  set(RIME_GEARS_DEPS ${RIME_LIBRARY} ${RIME_EXTRA_DEPS})
-else(BUILD_SEPARATE_LIBS)
-  set(RIME_DEPS ${RIME_CORE_DEPS} ${RIME_EXTRA_DEPS})
-endif(BUILD_SEPARATE_LIBS)
+  set(rime_deps ${rime_core_deps})
+  set(rime_gears_deps ${rime_library} ${rime_extra_deps})
+else()
+  set(rime_deps ${rime_core_deps} ${rime_extra_deps})
+endif()
 
 if(BUILD_SHARED_LIBS)
-  add_library(rime ${LIBRIME_SRC})
-  target_link_libraries(rime ${RIME_DEPS})
+  add_library(rime ${rime_src})
+  target_link_libraries(rime ${rime_deps})
   set_target_properties(rime PROPERTIES DEFINE_SYMBOL "RIME_EXPORTS")
-  set_target_properties(rime PROPERTIES VERSION ${LIBRIME_VERSION} SOVERSION ${LIBRIME_SOVERSION})
+  set_target_properties(rime PROPERTIES VERSION ${rime_version} SOVERSION ${rime_soversion})
   if(XCODE_VERSION)
     set_target_properties(rime PROPERTIES INSTALL_NAME_DIR "@rpath")
-  endif(XCODE_VERSION)
+  endif()
   install(TARGETS rime DESTINATION ${LIB_INSTALL_DIR})
   if(BUILD_SEPARATE_LIBS)
-    add_library(rime-gears ${LIBRIME_GEARS_SRC})
-    target_link_libraries(rime-gears ${RIME_GEARS_DEPS})
-    add_dependencies(rime-gears ${RIME_LIBRARY})
-    set_target_properties(rime-gears PROPERTIES VERSION ${LIBRIME_VERSION} SOVERSION ${LIBRIME_SOVERSION})
+    add_library(rime-gears ${librime_gears_src})
+    target_link_libraries(rime-gears ${rime_gears_deps})
+    add_dependencies(rime-gears ${rime_library})
+    set_target_properties(rime-gears PROPERTIES VERSION ${rime_version} SOVERSION ${rime_soversion})
     if(XCODE_VERSION)
       set_target_properties(rime-gears PROPERTIES INSTALL_NAME_DIR "@rpath")
-    endif(XCODE_VERSION)
+    endif()
     install(TARGETS rime-gears DESTINATION ${LIB_INSTALL_DIR})
-  endif(BUILD_SEPARATE_LIBS)
-else(BUILD_SHARED_LIBS)
-  add_library(rime-static STATIC ${LIBRIME_SRC})
-  target_link_libraries(rime-static ${RIME_DEPS})
+  endif()
+else()
+  add_library(rime-static STATIC ${rime_src})
+  target_link_libraries(rime-static ${rime_deps})
   set_target_properties(rime-static PROPERTIES OUTPUT_NAME "rime" PREFIX "lib")
   install(TARGETS rime-static DESTINATION ${LIB_INSTALL_DIR})
   if(BUILD_SEPARATE_LIBS)
-    add_library(rime-gears-static STATIC ${LIBRIME_GEARS_SRC})
-    target_link_libraries(rime-gears-static ${RIME_GEARS_DEPS})
-    add_dependencies(rime-gears-static ${RIME_LIBRARY})
+    add_library(rime-gears-static STATIC ${librime_gears_src})
+    target_link_libraries(rime-gears-static ${rime_gears_deps})
+    add_dependencies(rime-gears-static ${rime_library})
     set_target_properties(rime-gears-static PROPERTIES OUTPUT_NAME "rime-gears" PREFIX "lib")
     install(TARGETS rime-gears-static DESTINATION ${LIB_INSTALL_DIR})
-  endif(BUILD_SEPARATE_LIBS)
-endif(BUILD_SHARED_LIBS)
+  endif()
+endif()
