@@ -1,37 +1,37 @@
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
-set(RIME_API_CONSOLE_SRC "rime_api_console.cc")
-add_executable(rime_api_console ${RIME_API_CONSOLE_SRC})
-target_link_libraries(rime_api_console ${RIME_LIBRARY} ${RIME_GEARS_LIBRARY})
-add_dependencies(rime_api_console ${RIME_LIBRARY} ${RIME_GEARS_LIBRARY})
+set(rime_api_console_src "rime_api_console.cc")
+add_executable(rime_api_console ${rime_api_console_src})
+target_link_libraries(rime_api_console ${rime_library} ${rime_gears_library})
+add_dependencies(rime_api_console ${rime_library} ${rime_gears_library})
 
-set(RIME_PATCH_SRC "rime_patch.cc")
-add_executable(rime_patch ${RIME_PATCH_SRC})
-target_link_libraries(rime_patch ${RIME_LIBRARY} ${RIME_GEARS_LIBRARY})
-add_dependencies(rime_patch ${RIME_LIBRARY} ${RIME_GEARS_LIBRARY})
+set(rime_patch_src "rime_patch.cc")
+add_executable(rime_patch ${rime_patch_src})
+target_link_libraries(rime_patch ${rime_library} ${rime_gears_library})
+add_dependencies(rime_patch ${rime_library} ${rime_gears_library})
 
 # msvc doesn't export all symbols
 if(NOT (MSVC AND BUILD_SHARED_LIBS))
 
-set(RIME_CONSOLE_SRC "rime_console.cc")
-add_executable(rime_console ${RIME_CONSOLE_SRC})
-target_link_libraries(rime_console ${RIME_LIBRARY} ${RIME_GEARS_LIBRARY})
-add_dependencies(rime_console ${RIME_LIBRARY} ${RIME_GEARS_LIBRARY})
+set(rime_console_src "rime_console.cc")
+add_executable(rime_console ${rime_console_src})
+target_link_libraries(rime_console ${rime_library} ${rime_gears_library})
+add_dependencies(rime_console ${rime_library} ${rime_gears_library})
 
-set(RIME_DICT_MANAGER_SRC "rime_dict_manager.cc")
-add_executable(rime_dict_manager ${RIME_DICT_MANAGER_SRC})
-target_link_libraries(rime_dict_manager ${RIME_LIBRARY} ${RIME_GEARS_LIBRARY})
-add_dependencies(rime_dict_manager ${RIME_LIBRARY} ${RIME_GEARS_LIBRARY})
+set(rime_dict_manager_src "rime_dict_manager.cc")
+add_executable(rime_dict_manager ${rime_dict_manager_src})
+target_link_libraries(rime_dict_manager ${rime_library} ${rime_gears_library})
+add_dependencies(rime_dict_manager ${rime_library} ${rime_gears_library})
 
-set(RIME_DEPLOYER_SRC "rime_deployer.cc")
-add_executable(rime_deployer ${RIME_DEPLOYER_SRC})
-target_link_libraries(rime_deployer ${RIME_LIBRARY} ${RIME_GEARS_LIBRARY})
-add_dependencies(rime_deployer ${RIME_LIBRARY} ${RIME_GEARS_LIBRARY})
+set(rime_deployer_src "rime_deployer.cc")
+add_executable(rime_deployer ${rime_deployer_src})
+target_link_libraries(rime_deployer ${rime_library} ${rime_gears_library})
+add_dependencies(rime_deployer ${rime_library} ${rime_gears_library})
 
 install(TARGETS rime_dict_manager DESTINATION ${BIN_INSTALL_DIR})
 install(TARGETS rime_deployer DESTINATION ${BIN_INSTALL_DIR})
 
-endif(NOT (MSVC AND BUILD_SHARED_LIBS))
+endif()
 
 file(COPY ${PROJECT_SOURCE_DIR}/data/minimal/default.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})

@@ -5,6 +5,6 @@ includedir=@includedir@
 
 Name: Rime
 Description: Rime Input Method Engine
-Version: @LIBRIME_VERSION@
+Version: @rime_version@
 Cflags: -I${includedir}
 Libs: -L${libdir} -lrime
