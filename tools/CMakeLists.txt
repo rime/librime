@@ -11,7 +11,7 @@ target_link_libraries(rime_patch ${rime_library} ${rime_gears_library})
 add_dependencies(rime_patch ${rime_library} ${rime_gears_library})
 
 # msvc doesn't export all symbols
-if(NOT (MSVC AND BUILD_SHARED_LIBS))
+if(NOT (WIN32 AND BUILD_SHARED_LIBS))
 
 set(rime_console_src "rime_console.cc")
 add_executable(rime_console ${rime_console_src})

@@ -1,4 +1,4 @@
-if(NOT (MSVC AND BUILD_SHARED_LIBS))
+if(NOT (WIN32 AND BUILD_SHARED_LIBS))
 
 aux_source_directory(. rime_test_src)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/test)

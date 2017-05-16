@@ -45,6 +45,10 @@ set(rime_extra_deps
     ${Marisa_LIBRARY}
     ${Opencc_LIBRARY})
 
+if(MINGW)
+  set(rime_core_deps ${rime_core_deps} wsock32 ws2_32)
+endif()
+
 if(BUILD_SEPARATE_LIBS)
   set(rime_deps ${rime_core_deps})
   set(rime_gears_deps ${rime_library} ${rime_extra_deps})
