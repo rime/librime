@@ -23,6 +23,9 @@ clean:
 test: release
 	(cd xbuild/test; LD_LIBRARY_PATH=../lib/Release Release/rime_test)
 
+test-debug: debug
+	(cd xdebug/test; Debug/rime_test)
+
 thirdparty:
 	$(RIME_COMPILER_OPTIONS) make -f Makefile.thirdparty
 
