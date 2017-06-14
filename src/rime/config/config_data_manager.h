@@ -15,7 +15,6 @@ class ConfigData;
 class ConfigDataManager : public map<string, weak<ConfigData>> {
  public:
   an<ConfigData> GetConfigData(const string& config_file_path);
-  bool ReloadConfigData(const string& config_file_path);
 
   static ConfigDataManager& instance();
 

@@ -96,6 +96,20 @@ class ConfigMap : public ConfigItem {
   Map map_;
 };
 
+namespace {
+
+template <class T>
+an<ConfigItem> AsConfigItem(const T& x, const std::false_type&) {
+  return New<ConfigValue>(x);
+};
+
+template <class T>
+an<ConfigItem> AsConfigItem(const T& x, const std::true_type&) {
+  return x;
+};
+
+}  // namespace
+
 class ConfigData;
 class ConfigListEntryRef;
 class ConfigMapEntryRef;
@@ -104,8 +118,15 @@ class ConfigItemRef {
  public:
   ConfigItemRef(const an<ConfigData>& data) : data_(data) {
   }
+  virtual ~ConfigItemRef() {
+  }
   operator an<ConfigItem> () const {
     return GetItem();
+  }
+  template <class T>
+  ConfigItemRef& operator= (const T& x) {
+    SetItem(AsConfigItem(x, std::is_convertible<T, an<ConfigItem>>()));
+    return *this;
   }
   ConfigListEntryRef operator[] (size_t index);
   ConfigMapEntryRef operator[] (const string& key);
@@ -140,31 +161,13 @@ class ConfigItemRef {
   an<ConfigData> data_;
 };
 
-namespace {
-
-template <class T>
-an<ConfigItem> AsConfigItem(const T& x, const std::false_type&) {
-  return New<ConfigValue>(x);
-};
-
-template <class T>
-an<ConfigItem> AsConfigItem(const T& x, const std::true_type&) {
-  return x;
-};
-
-}  // namespace
-
 class ConfigListEntryRef : public ConfigItemRef {
  public:
   ConfigListEntryRef(an<ConfigData> data,
                      an<ConfigList> list, size_t index)
       : ConfigItemRef(data), list_(list), index_(index) {
   }
-  template <class T>
-  ConfigListEntryRef& operator= (const T& x) {
-    SetItem(AsConfigItem(x, std::is_convertible<T, an<ConfigItem>>()));
-    return *this;
-  }
+  using ConfigItemRef::operator=;
  protected:
   an<ConfigItem> GetItem() const {
     return list_->GetAt(index_);
@@ -184,11 +187,7 @@ class ConfigMapEntryRef : public ConfigItemRef {
                     an<ConfigMap> map, const string& key)
       : ConfigItemRef(data), map_(map), key_(key) {
   }
-  template <class T>
-  ConfigMapEntryRef& operator= (const T& x) {
-    SetItem(AsConfigItem(x, std::is_convertible<T, an<ConfigItem>>()));
-    return *this;
-  }
+  using ConfigItemRef::operator=;
  protected:
   an<ConfigItem> GetItem() const {
     return map_->Get(key_);

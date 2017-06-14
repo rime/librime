@@ -5,6 +5,8 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
+#include <rime/config/config_compiler.h>
 #include <rime/config/config_data.h>
 #include <rime/config/config_types.h>
 
@@ -22,7 +24,7 @@ bool ConfigData::LoadFromStream(std::istream& stream) {
   }
   try {
     YAML::Node doc = YAML::Load(stream);
-    root = ConvertFromYaml(doc);
+    root = ConvertFromYaml(doc, nullptr);
   }
   catch (YAML::Exception& e) {
     LOG(ERROR) << "Error parsing YAML: " << e.what();
@@ -47,7 +49,8 @@ bool ConfigData::SaveToStream(std::ostream& stream) {
   return true;
 }
 
-bool ConfigData::LoadFromFile(const string& file_name) {
+bool ConfigData::LoadFromFile(const string& file_name,
+                              ConfigCompiler* compiler) {
   // update status
   file_name_ = file_name;
   modified_ = false;
@@ -59,7 +62,7 @@ bool ConfigData::LoadFromFile(const string& file_name) {
   LOG(INFO) << "loading config file '" << file_name << "'.";
   try {
     YAML::Node doc = YAML::LoadFile(file_name);
-    root = ConvertFromYaml(doc);
+    root = ConvertFromYaml(doc, compiler);
   }
   catch (YAML::Exception& e) {
     LOG(ERROR) << "Error parsing YAML: " << e.what();
@@ -82,23 +85,28 @@ bool ConfigData::SaveToFile(const string& file_name) {
   return SaveToStream(out);
 }
 
-static inline bool IsListItemReference(const string& key) {
+bool ConfigData::IsListItemReference(const string& key) {
   return !key.empty() && key[0] == '@';
 }
 
-static size_t ResolveListIndex(an<ConfigItem> p, const string& key,
-                               bool read_only = false) {
-  //if (!IsListItemReference(key)) {
-  //  return 0;
-  //}
-  an<ConfigList> list = As<ConfigList>(p);
+string ConfigData::FormatListIndex(size_t index) {
+  return boost::str(boost::format("@%u") % index);
+}
+
+static const string kAfter("after");
+static const string kBefore("before");
+static const string kLast("last");
+static const string kNext("next");
+
+size_t ConfigData::ResolveListIndex(an<ConfigItem> item, const string& key,
+                                    bool read_only) {
+  if (!IsListItemReference(key)) {
+    return 0;
+  }
+  an<ConfigList> list = As<ConfigList>(item);
   if (!list) {
     return 0;
   }
-  const string kAfter("after");
-  const string kBefore("before");
-  const string kLast("last");
-  const string kNext("next");
   size_t cursor = 1;
   unsigned int index = 0;
   bool will_insert = false;
@@ -134,51 +142,50 @@ static size_t ResolveListIndex(an<ConfigItem> p, const string& key,
   return index;
 }
 
-bool ConfigData::TraverseWrite(const string& key, an<ConfigItem> item) {
-  LOG(INFO) << "write: " << key;
-  if (key.empty() || key == "/") {
+class ConfigDataRootRef : public ConfigItemRef {
+ public:
+  ConfigDataRootRef(ConfigData* data) : ConfigItemRef(nullptr), data_(data) {
+  }
+  an<ConfigItem> GetItem() const override {
+    return data_->root;
+  }
+  void SetItem(an<ConfigItem> item) override {
+    data_->root = item;
+  }
+ private:
+  ConfigData* data_;
+};
+
+bool TraverseWriteFrom(ConfigItemRef& root, const string& path,
+                       an<ConfigItem> item) {
+  if (path.empty() || path == "/") {
     root = item;
-    set_modified();
     return true;
   }
-  if (!root) {
-    root = New<ConfigMap>();
-  }
-  an<ConfigItem> p(root);
-  vector<string> keys;
-  boost::split(keys, key, boost::is_any_of("/"));
+  an<ConfigItem> p = root;
+  vector<string> keys = ConfigData::SplitPath(path);
   size_t k = keys.size() - 1;
   for (size_t i = 0; i <= k; ++i) {
-    ConfigItem::ValueType node_type = ConfigItem::kMap;
-    size_t list_index = 0;
-    if (IsListItemReference(keys[i])) {
-      node_type = ConfigItem::kList;
-      list_index = ResolveListIndex(p, keys[i]);
-      DLOG(INFO) << "list index " << keys[i] << " == " << list_index;
-    }
-    if (!p || p->type() != node_type) {
+    bool is_list = ConfigData::IsListItemReference(keys[i]);
+    auto node_type = is_list ? ConfigItem::kList : ConfigItem::kMap;
+    if (p && p->type() != node_type) {
       return false;
     }
-    if (i == k) {
-      if (node_type == ConfigItem::kList) {
-        As<ConfigList>(p)->SetAt(list_index, item);
+    if (i == 0 && !p) {
+      if (is_list) {
+        p = New<ConfigList>();
+      } else {
+        p = New<ConfigMap>();
       }
-      else {
-        As<ConfigMap>(p)->Set(keys[i], item);
-      }
-      set_modified();
-      return true;
+      root = p;
     }
-    else {
-      an<ConfigItem> next;
-      if (node_type == ConfigItem::kList) {
-        next = As<ConfigList>(p)->GetAt(list_index);
-      }
-      else {
-        next = As<ConfigMap>(p)->Get(keys[i]);
-      }
+    size_t list_index = is_list ? ConfigData::ResolveListIndex(p, keys[i]) : 0;
+    if (i < k) {
+      an<ConfigItem> next = is_list ?
+          As<ConfigList>(p)->GetAt(list_index) :
+          As<ConfigMap>(p)->Get(keys[i]);
       if (!next) {
-        if (IsListItemReference(keys[i + 1])) {
+        if (ConfigData::IsListItemReference(keys[i + 1])) {
           DLOG(INFO) << "creating list node for key: " << keys[i + 1];
           next = New<ConfigList>();
         }
@@ -186,7 +193,7 @@ bool ConfigData::TraverseWrite(const string& key, an<ConfigItem> item) {
           DLOG(INFO) << "creating map node for key: " << keys[i + 1];
           next = New<ConfigMap>();
         }
-        if (node_type == ConfigItem::kList) {
+        if (is_list) {
           As<ConfigList>(p)->SetAt(list_index, next);
         }
         else {
@@ -194,18 +201,45 @@ bool ConfigData::TraverseWrite(const string& key, an<ConfigItem> item) {
         }
       }
       p = next;
+    } else {
+      if (is_list) {
+        As<ConfigList>(p)->SetAt(list_index, item);
+      } else {
+        As<ConfigMap>(p)->Set(keys[i], item);
+      }
     }
   }
-  return false;
+  return true;
 }
 
-an<ConfigItem> ConfigData::Traverse(const string& key) {
-  DLOG(INFO) << "traverse: " << key;
-  if (key.empty() || key == "/") {
+bool ConfigData::TraverseWrite(const string& path, an<ConfigItem> item) {
+  LOG(INFO) << "write: " << path;
+  ConfigDataRootRef root(this);
+  bool result = TraverseWriteFrom(root, path, item);
+  if (result) {
+    set_modified();
+  }
+  return result;
+}
+
+vector<string> ConfigData::SplitPath(const string& path) {
+  vector<string> keys;
+  auto is_separator = boost::is_any_of("/");
+  auto trimmed_path = boost::trim_left_copy_if(path, is_separator);
+  boost::split(keys, trimmed_path, is_separator);
+  return keys;
+}
+
+string ConfigData::JoinPath(const vector<string>& keys) {
+  return boost::join(keys, "/");
+}
+
+an<ConfigItem> ConfigData::Traverse(const string& path) {
+  DLOG(INFO) << "traverse: " << path;
+  if (path.empty() || path == "/") {
     return root;
   }
-  vector<string> keys;
-  boost::split(keys, key, boost::is_any_of("/"));
+  vector<string> keys = SplitPath(path);
   // find the YAML::Node, and wrap it!
   an<ConfigItem> p = root;
   for (auto it = keys.begin(), end = keys.end(); it != end; ++it) {
@@ -228,7 +262,8 @@ an<ConfigItem> ConfigData::Traverse(const string& key) {
   return p;
 }
 
-an<ConfigItem> ConfigData::ConvertFromYaml(const YAML::Node& node) {
+an<ConfigItem> ConfigData::ConvertFromYaml(
+    const YAML::Node& node, ConfigCompiler* compiler) {
   if (YAML::NodeType::Null == node.Type()) {
     return nullptr;
   }
@@ -238,7 +273,13 @@ an<ConfigItem> ConfigData::ConvertFromYaml(const YAML::Node& node) {
   if (YAML::NodeType::Sequence == node.Type()) {
     auto config_list = New<ConfigList>();
     for (auto it = node.begin(), end = node.end(); it != end; ++it) {
-      config_list->Append(ConvertFromYaml(*it));
+      if (compiler) {
+        compiler->Push(config_list, config_list->size());
+      }
+      config_list->Append(ConvertFromYaml(*it, compiler));
+      if (compiler) {
+        compiler->Pop();
+      }
     }
     return config_list;
   }
@@ -246,7 +287,16 @@ an<ConfigItem> ConfigData::ConvertFromYaml(const YAML::Node& node) {
     auto config_map = New<ConfigMap>();
     for (auto it = node.begin(), end = node.end(); it != end; ++it) {
       string key = it->first.as<string>();
-      config_map->Set(key, ConvertFromYaml(it->second));
+      if (compiler) {
+        compiler->Push(config_map, key);
+      }
+      auto value = ConvertFromYaml(it->second, compiler);
+      if (compiler) {
+        compiler->Pop();
+      }
+      if (!compiler || !compiler->Parse(key, value)) {
+        config_map->Set(key, value);
+      }
     }
     return config_map;
   }
