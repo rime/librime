@@ -93,12 +93,26 @@ TEST_F(RimeConfigCompilerTest, PatchList) {
   EXPECT_TRUE(config_->IsNull(prefix + "protoss/__patch"));
   EXPECT_EQ(8, config_->GetListSize(prefix + "protoss/ground_units"));
   string unit;
-  config_->GetString(prefix + "protoss/ground_units/@6", &unit);
+  EXPECT_TRUE(config_->GetString(prefix + "protoss/ground_units/@6", &unit));
   EXPECT_EQ("dark templar", unit);
-  config_->GetString(prefix + "protoss/ground_units/@7", &unit);
+  EXPECT_TRUE(config_->GetString(prefix + "protoss/ground_units/@7", &unit));
   EXPECT_EQ("dark archon", unit);
   // assert that we patched on a copy of the included node
   EXPECT_EQ(6, config_->GetListSize("starcraft/protoss/ground_units"));
+}
+
+TEST_F(RimeConfigCompilerTest, DependencyChaining) {
+  const string& prefix = "dependency_chaining/";
+  EXPECT_TRUE(config_->IsNull(prefix + "alpha/__include"));
+  EXPECT_TRUE(config_->IsNull(prefix + "beta/__include"));
+  EXPECT_TRUE(config_->IsNull(prefix + "delta/__include"));
+  string value;
+  EXPECT_TRUE(config_->GetString(prefix + "alpha", &value));
+  EXPECT_EQ("success", value);
+  EXPECT_TRUE(config_->GetString(prefix + "beta", &value));
+  EXPECT_EQ("success", value);
+  EXPECT_TRUE(config_->GetString(prefix + "delta", &value));
+  EXPECT_EQ("success", value);
 }
 
 // TODO: test failure cases

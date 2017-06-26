@@ -127,7 +127,7 @@ Reference::Reference(const string& qualified_path,
 }
 
 bool PendingChild::Resolve(ConfigCompiler* compiler) {
-  return compiler->ResolveDependencies(child_path, child_ref);
+  return compiler->ResolveDependencies(child_path);
 }
 
 static an<ConfigItem> ResolveReference(ConfigCompiler* compiler,
@@ -248,42 +248,60 @@ static inline an<ConfigItem> if_resolved(ConfigCompiler* compiler,
   return item && compiler->resolved(path) ? item : nullptr;
 }
 
+static bool ResolveBlockingDependencies(ConfigCompiler* compiler,
+                                        const string& path) {
+  if (!compiler->blocking(path)) {
+    return true;
+  }
+  LOG(INFO) << "blocking node: " << path;
+  if (compiler->ResolveDependencies(path)) {
+    LOG(INFO) << "resolved blocking node:" << path;
+    return true;
+  }
+  return false;
+}
+
 static an<ConfigItem> GetResolvedItem(ConfigCompiler* compiler,
                                       an<ConfigResource> resource,
                                       const string& path) {
-  if (!resource || compiler->blocking(resource->name + ":")) {
+  LOG(INFO) << "GetResolvedItem(" << resource->name << ":/" << path << ")";
+  string node_path = resource->name + ":";
+  if (!resource || compiler->blocking(node_path)) {
     return nullptr;
   }
-  LOG(INFO) << "GetResolvedItem(" << resource->name << ":/" << path << ")";
   an<ConfigItem> result = *resource;
   if (path.empty() || path == "/") {
-    return if_resolved(compiler, result, resource->name + ":");
+    return if_resolved(compiler, result, node_path);
   }
-  vector<string> normalized_keys = {resource->name + ":"};
   vector<string> keys = ConfigData::SplitPath(path);
   for (const auto& key : keys) {
     if (Is<ConfigList>(result)) {
       if (ConfigData::IsListItemReference(key)) {
         size_t index = ConfigData::ResolveListIndex(result, key, true);
+        (node_path += "/") += ConfigData::FormatListIndex(index);
+        if (!ResolveBlockingDependencies(compiler, node_path)) {
+          return nullptr;
+        }
         result = As<ConfigList>(result)->GetAt(index);
-        normalized_keys.push_back(ConfigData::FormatListIndex(index));
       } else {
         result.reset();
       }
     } else if (Is<ConfigMap>(result)) {
       LOG(INFO) << "advance with key: " << key;
+      (node_path += "/") += key;
+      if (!ResolveBlockingDependencies(compiler, node_path)) {
+        return nullptr;
+      }
       result = As<ConfigMap>(result)->Get(key);
-      normalized_keys.push_back(key);
     } else {
       result.reset();
     }
-    auto node_path = ConfigData::JoinPath(normalized_keys);
-    if (!result || compiler->blocking(node_path)) {
-      LOG(INFO) << (result ? "blocking: " : "missing: ") << node_path;
+    if (!result) {
+      LOG(INFO) << "missing node: " << node_path;
       return nullptr;
     }
   }
-  return if_resolved(compiler, result, ConfigData::JoinPath(normalized_keys));
+  return if_resolved(compiler, result, node_path);
 }
 
 bool ConfigCompiler::blocking(const string& full_path) const {
@@ -382,11 +400,10 @@ bool ConfigCompiler::Link(an<ConfigResource> target) {
     LOG(INFO) << "resource not found: " << target->name;
     return false;
   }
-  return ResolveDependencies(found->first + ":", found->second);
+  return ResolveDependencies(found->first + ":");
 }
 
-bool ConfigCompiler::ResolveDependencies(const string& path,
-                                         an<ConfigItemRef> target) {
+bool ConfigCompiler::ResolveDependencies(const string& path) {
   LOG(INFO) << "ResolveDependencies(" << path << ")";
   auto& deps = graph_->deps[path];
   for (auto iter = deps.begin(); iter != deps.end(); ) {

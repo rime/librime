@@ -48,7 +48,7 @@ class ConfigCompiler {
   bool blocking(const string& full_path) const;
   bool pending(const string& full_path) const;
   bool resolved(const string& full_path) const;
-  bool ResolveDependencies(const string& path, an<ConfigItemRef> target);
+  bool ResolveDependencies(const string& path);
 
  private:
   the<ConfigDependencyGraph> graph_;
