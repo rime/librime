@@ -158,7 +158,7 @@ bool PatchReference::Resolve(ConfigCompiler* compiler) {
 }
 
 // defined in config_data.cc
-bool TraverseWriteFrom(ConfigItemRef& root, const string& path,
+bool TraverseWriteFrom(an<ConfigItemRef> root, const string& path,
                        an<ConfigItem> item);
 
 bool PatchLiteral::Resolve(ConfigCompiler* compiler) {
@@ -166,7 +166,7 @@ bool PatchLiteral::Resolve(ConfigCompiler* compiler) {
   for (const auto& entry : *patch) {
     const auto& path = entry.first;
     const auto& value = entry.second;
-    if (!TraverseWriteFrom(*target, path, value)) {
+    if (!TraverseWriteFrom(target, path, value)) {
       LOG(ERROR) << "error applying patch to " << path;
       success = false;
     }

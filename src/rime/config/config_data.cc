@@ -156,65 +156,59 @@ class ConfigDataRootRef : public ConfigItemRef {
   ConfigData* data_;
 };
 
-bool TraverseWriteFrom(ConfigItemRef& root, const string& path,
+static an<ConfigItem> CopyOnWrite(const an<ConfigItem>& item,
+                                  const string& key,
+                                  bool is_list) {
+  if (!item) {
+    LOG(INFO) << "creating node: " << key;
+    if (is_list)
+      return New<ConfigList>();
+    else
+      return New<ConfigMap>();
+  }
+  auto expected_node_type = is_list ? ConfigItem::kList : ConfigItem::kMap;
+  if (item->type() != expected_node_type) {
+    LOG(ERROR) << "copy on write failed; incompatible node type: " << key;
+    return nullptr;
+  }
+  DLOG(INFO) << "copy on write: " << key;
+  if (is_list)
+    return New<ConfigList>(*As<ConfigList>(item));
+  else
+    return New<ConfigMap>(*As<ConfigMap>(item));
+}
+
+bool TraverseWriteFrom(an<ConfigItemRef> root, const string& path,
                        an<ConfigItem> item) {
   if (path.empty() || path == "/") {
-    root = item;
+    *root = item;
     return true;
   }
-  an<ConfigItem> p = root;
+  an<ConfigItemRef> head = root;
   vector<string> keys = ConfigData::SplitPath(path);
-  size_t k = keys.size() - 1;
-  for (size_t i = 0; i <= k; ++i) {
-    bool is_list = ConfigData::IsListItemReference(keys[i]);
-    auto node_type = is_list ? ConfigItem::kList : ConfigItem::kMap;
-    if (p && p->type() != node_type) {
+  size_t n = keys.size();
+  for (size_t i = 0; i < n; ++i) {
+    const auto& key = keys[i];
+    bool is_list = ConfigData::IsListItemReference(key);
+    auto copy = CopyOnWrite(*head, key, is_list);
+    if (!copy) {
       return false;
     }
-    if (i == 0 && !p) {
-      if (is_list) {
-        p = New<ConfigList>();
-      } else {
-        p = New<ConfigMap>();
-      }
-      root = p;
-    }
-    size_t list_index = is_list ? ConfigData::ResolveListIndex(p, keys[i]) : 0;
-    if (i < k) {
-      an<ConfigItem> next = is_list ?
-          As<ConfigList>(p)->GetAt(list_index) :
-          As<ConfigMap>(p)->Get(keys[i]);
-      if (!next) {
-        if (ConfigData::IsListItemReference(keys[i + 1])) {
-          DLOG(INFO) << "creating list node for key: " << keys[i + 1];
-          next = New<ConfigList>();
-        }
-        else {
-          DLOG(INFO) << "creating map node for key: " << keys[i + 1];
-          next = New<ConfigMap>();
-        }
-        if (is_list) {
-          As<ConfigList>(p)->SetAt(list_index, next);
-        }
-        else {
-          As<ConfigMap>(p)->Set(keys[i], next);
-        }
-      }
-      p = next;
+    *head = copy;
+    if (is_list) {
+      head = New<ConfigListEntryRef>(nullptr, As<ConfigList>(copy),
+                                     ConfigData::ResolveListIndex(copy, key));
     } else {
-      if (is_list) {
-        As<ConfigList>(p)->SetAt(list_index, item);
-      } else {
-        As<ConfigMap>(p)->Set(keys[i], item);
-      }
+      head = New<ConfigMapEntryRef>(nullptr, As<ConfigMap>(copy), key);
     }
   }
+  *head = item;
   return true;
 }
 
 bool ConfigData::TraverseWrite(const string& path, an<ConfigItem> item) {
   LOG(INFO) << "write: " << path;
-  ConfigDataRootRef root(this);
+  auto root = New<ConfigDataRootRef>(this);
   bool result = TraverseWriteFrom(root, path, item);
   if (result) {
     set_modified();
