@@ -156,30 +156,57 @@ class ConfigDataRootRef : public ConfigItemRef {
   ConfigData* data_;
 };
 
-static an<ConfigItem> CopyOnWrite(const an<ConfigItem>& item,
-                                  const string& key,
-                                  bool is_list) {
-  if (!item) {
+template <class T>
+static an<T> Cow(const an<T>& container, const string& key) {
+  if (!container) {
     LOG(INFO) << "creating node: " << key;
-    if (is_list)
-      return New<ConfigList>();
-    else
-      return New<ConfigMap>();
-  }
-  auto expected_node_type = is_list ? ConfigItem::kList : ConfigItem::kMap;
-  if (item->type() != expected_node_type) {
-    LOG(ERROR) << "copy on write failed; incompatible node type: " << key;
-    return nullptr;
+    return New<T>();
   }
   DLOG(INFO) << "copy on write: " << key;
-  if (is_list)
-    return New<ConfigList>(*As<ConfigList>(item));
-  else
-    return New<ConfigMap>(*As<ConfigMap>(item));
+  return New<T>(*container);
 }
 
-bool TraverseWriteFrom(an<ConfigItemRef> root, const string& path,
-                       an<ConfigItem> item) {
+class ConfigMapEntryCowRef : public ConfigItemRef {
+ public:
+  ConfigMapEntryCowRef(an<ConfigItemRef> parent, string key)
+      : ConfigItemRef(nullptr), parent_(parent), key_(key) {
+  }
+  an<ConfigItem> GetItem() const override {
+    auto map = As<ConfigMap>(**parent_);
+    return map ? map->Get(key_) : nullptr;
+  }
+  void SetItem(an<ConfigItem> item) override {
+    auto copy = Cow(As<ConfigMap>(**parent_), key_);
+    copy->Set(key_, item);
+    *parent_ = copy;
+  }
+ protected:
+  an<ConfigItemRef> parent_;
+  string key_;
+};
+
+class ConfigListEntryCowRef : public ConfigMapEntryCowRef {
+ public:
+  ConfigListEntryCowRef(an<ConfigItemRef> parent, string key)
+      : ConfigMapEntryCowRef(parent, key) {
+  }
+  an<ConfigItem> GetItem() const override {
+    auto list = As<ConfigList>(**parent_);
+    return list ? list->GetAt(index(list, true)) : nullptr;
+  }
+  void SetItem(an<ConfigItem> item) override {
+    auto copy = Cow(As<ConfigList>(**parent_), key_);
+    copy->SetAt(index(copy, false), item);
+    *parent_ = copy;
+  }
+ private:
+  size_t index(an<ConfigList> list, bool read_only) const {
+    return ConfigData::ResolveListIndex(list, key_, read_only);
+  }
+};
+
+bool TraverseCopyOnWrite(an<ConfigItemRef> root, const string& path,
+                         an<ConfigItem> item) {
   if (path.empty() || path == "/") {
     *root = item;
     return true;
@@ -190,16 +217,16 @@ bool TraverseWriteFrom(an<ConfigItemRef> root, const string& path,
   for (size_t i = 0; i < n; ++i) {
     const auto& key = keys[i];
     bool is_list = ConfigData::IsListItemReference(key);
-    auto copy = CopyOnWrite(*head, key, is_list);
-    if (!copy) {
+    auto expected_node_type = is_list ? ConfigItem::kList : ConfigItem::kMap;
+    an<ConfigItem> existing_node = *head;
+    if (existing_node && existing_node->type() != expected_node_type) {
+      LOG(ERROR) << "copy on write failed; incompatible node type: " << key;
       return false;
     }
-    *head = copy;
     if (is_list) {
-      head = New<ConfigListEntryRef>(nullptr, As<ConfigList>(copy),
-                                     ConfigData::ResolveListIndex(copy, key));
+      head = New<ConfigListEntryCowRef>(head, key);
     } else {
-      head = New<ConfigMapEntryRef>(nullptr, As<ConfigMap>(copy), key);
+      head = New<ConfigMapEntryCowRef>(head, key);
     }
   }
   *head = item;
@@ -209,7 +236,7 @@ bool TraverseWriteFrom(an<ConfigItemRef> root, const string& path,
 bool ConfigData::TraverseWrite(const string& path, an<ConfigItem> item) {
   LOG(INFO) << "write: " << path;
   auto root = New<ConfigDataRootRef>(this);
-  bool result = TraverseWriteFrom(root, path, item);
+  bool result = TraverseCopyOnWrite(root, path, item);
   if (result) {
     set_modified();
   }

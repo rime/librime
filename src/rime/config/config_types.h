@@ -123,6 +123,9 @@ class ConfigItemRef {
   operator an<ConfigItem> () const {
     return GetItem();
   }
+  an<ConfigItem> operator* () const {
+    return GetItem();
+  }
   template <class T>
   ConfigItemRef& operator= (const T& x) {
     SetItem(AsConfigItem(x, std::is_convertible<T, an<ConfigItem>>()));
