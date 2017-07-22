@@ -58,7 +58,7 @@ static bool expecting_an_initial(Context* ctx,
   return belongs_to(previous_char, finals) ||
          !belongs_to(previous_char, alphabet);
 }
-// 声笔飞码专用==========================================================
+// 声笔飞码专用-start==========================================================
 static bool back2(Context* ctx, const string& bb) {
   const string& back(ctx->GetScriptText());
   char previous_char = back[back.length() - 2];
