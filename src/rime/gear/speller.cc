@@ -58,7 +58,16 @@ static bool expecting_an_initial(Context* ctx,
   return belongs_to(previous_char, finals) ||
          !belongs_to(previous_char, alphabet);
 }
-
+// 声笔飞码专用-start==========================================================
+static bool back2(Context* ctx, const string& bb) {
+  const string& back(ctx->GetScriptText());
+  char previous_char = back[back.length() - 2];
+  LOG(INFO) << "CommitText:"<< ctx->GetCommitText() << ";";
+  LOG(INFO) << "char:"<< back << ";";
+  LOG(INFO) << "scriptText:"<< previous_char << ";";
+  return belongs_to(previous_char, bb);
+}
+// 声笔飞码专用-end=========================================================
 Speller::Speller(const Ticket& ticket) : Processor(ticket),
                                          alphabet_(kRimeAlphabet) {
   if (Config* config = engine_->schema()->config()) {
@@ -66,6 +75,8 @@ Speller::Speller(const Ticket& ticket) : Processor(ticket),
     config->GetString("speller/delimiter", &delimiters_);
     config->GetString("speller/initials", &initials_);
     config->GetString("speller/finals", &finals_);
+    config->GetString("speller/refinals", &refinals_);
+    config->GetString("speller/two", &two_);
     config->GetInt("speller/max_code_length", &max_code_length_);
     config->GetBool("speller/auto_select", &auto_select_);
     config->GetBool("speller/use_space", &use_space_);
@@ -101,6 +112,12 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
       expecting_an_initial(ctx, alphabet_, finals_)) {
     return kNoop;
   }
+  // 声笔飞码专用==================================================
+  bool is_refinal = belongs_to(ch, refinals_);
+  if(back2(ctx, two_) && !is_initial && !is_refinal){
+        return kNoop;
+  }
+  // 声笔飞码专用-end==========================================================
   // handles input beyond max_code_length when auto_select is false.
   if (is_initial && AutoSelectAtMaxCodeLength(ctx)) {
     DLOG(INFO) << "auto-select at max code length.";
