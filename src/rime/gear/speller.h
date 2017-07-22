@@ -36,6 +36,8 @@ class Speller : public Processor {
   string delimiters_;
   string initials_;
   string finals_;
+  string refinals_;
+  string two_;
   int max_code_length_ = 0;
   bool auto_select_ = false;
   bool use_space_ = false;
