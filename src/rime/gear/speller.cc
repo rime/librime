@@ -59,13 +59,10 @@ static bool expecting_an_initial(Context* ctx,
          !belongs_to(previous_char, alphabet);
 }
 // 声笔飞码专用-start==========================================================
-static bool back2(Context* ctx, const string& bb) {
+static bool back2(Context* ctx, const string& twos) {
   const string& back(ctx->GetScriptText());
   char previous_char = back[back.length() - 2];
-  LOG(INFO) << "CommitText:"<< ctx->GetCommitText() << ";";
-  LOG(INFO) << "char:"<< back << ";";
-  LOG(INFO) << "scriptText:"<< previous_char << ";";
-  return belongs_to(previous_char, bb);
+  return belongs_to(previous_char, twos);
 }
 // 声笔飞码专用-end=========================================================
 Speller::Speller(const Ticket& ticket) : Processor(ticket),
