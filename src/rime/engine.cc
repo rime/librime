@@ -43,6 +43,7 @@ class ConcreteEngine : public Engine {
   void OnSelect(Context* ctx);
   void OnContextUpdate(Context* ctx);
   void OnOptionUpdate(Context* ctx, const string& option);
+  void OnPropertyUpdate(Context* ctx, const string& property);
 
   vector<of<Processor>> processors_;
   vector<of<Segmentor>> segmentors_;
@@ -78,6 +79,10 @@ ConcreteEngine::ConcreteEngine() {
   context_->option_update_notifier().connect(
       [this](Context* ctx, const string& option) {
         OnOptionUpdate(ctx, option);
+      });
+  context_->property_update_notifier().connect(
+      [this](Context* ctx, const string& property) {
+        OnPropertyUpdate(ctx, property);
       });
   InitializeComponents();
   InitializeOptions();
@@ -127,6 +132,15 @@ void ConcreteEngine::OnOptionUpdate(Context* ctx, const string& option) {
   bool option_is_on = ctx->get_option(option);
   string msg(option_is_on ? option : "!" + option);
   message_sink_("option", msg);
+}
+
+void ConcreteEngine::OnPropertyUpdate(Context* ctx, const string& property) {
+  if (!ctx) return;
+  LOG(INFO) << "updated property: " << property;
+  // notification
+  string value = ctx->get_property(property);
+  string msg(property + "=" + value);
+  message_sink_("property", msg);
 }
 
 void ConcreteEngine::Compose(Context* ctx) {
