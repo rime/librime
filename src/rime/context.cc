@@ -263,6 +263,7 @@ bool Context::get_option(const string& name) const {
 void Context::set_property(const string& name,
                            const string& value) {
   properties_[name] = value;
+  property_update_notifier_(this, name);
 }
 
 string Context::get_property(const string& name) const {

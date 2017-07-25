@@ -21,6 +21,8 @@ class Context {
   using Notifier = signal<void (Context* ctx)>;
   using OptionUpdateNotifier =
       signal<void (Context* ctx, const string& option)>;
+  using PropertyUpdateNotifier =
+      signal<void (Context* ctx, const string& property)>;
   using KeyEventNotifier =
       signal<void (Context* ctx, const KeyEvent& key_event)>;
 
@@ -81,6 +83,9 @@ class Context {
   OptionUpdateNotifier& option_update_notifier() {
     return option_update_notifier_;
   }
+  PropertyUpdateNotifier& property_update_notifier() {
+    return property_update_notifier_;
+  }
   KeyEventNotifier& unhandled_key_notifier() {
     return unhandled_key_notifier_;
   }
@@ -100,6 +105,7 @@ class Context {
   Notifier update_notifier_;
   Notifier delete_notifier_;
   OptionUpdateNotifier option_update_notifier_;
+  PropertyUpdateNotifier property_update_notifier_;
   KeyEventNotifier unhandled_key_notifier_;
 };
 
