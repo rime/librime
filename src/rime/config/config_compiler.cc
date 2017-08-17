@@ -26,16 +26,9 @@ struct PendingChild : Dependency {
   bool Resolve(ConfigCompiler* compiler) override;
 };
 
-struct Reference {
-  string resource_name;
-  string local_path;
-
-  Reference(const string& qualified_path, ConfigDependencyGraph* graph);
-};
-
 template <class StreamT>
 StreamT& operator<< (StreamT& stream, const Reference& reference) {
-  return stream << reference.resource_name << ":" << reference.local_path;
+  return stream << reference.resource_id << ":" << reference.local_path;
 }
 
 struct IncludeReference : Dependency {
@@ -89,42 +82,11 @@ struct ConfigDependencyGraph {
     key_stack.pop_back();
   }
 
-  string current_resource_name() const {
+  string current_resource_id() const {
     return key_stack.empty() ? string()
         : boost::trim_right_copy_if(key_stack.front(), boost::is_any_of(":"));
   }
 };
-
-// TODO: create a ResourceResolver component.
-
-static string FilePathToResource(const string& file_path) {
-  if (boost::ends_with(file_path, ".yaml")) {
-    return boost::erase_last_copy(file_path, ".yaml");
-  }
-  return file_path;
-}
-
-static string ResourceToFilePath(const string& resource_name) {
-  if (boost::ends_with(resource_name, ".yaml")) {
-    return resource_name;
-  }
-  return resource_name + ".yaml";
-}
-
-Reference::Reference(const string& qualified_path,
-                     ConfigDependencyGraph* graph) {
-  auto separator = qualified_path.find_first_of(":");
-  if (separator == string::npos || separator == 0) {
-    resource_name = graph->current_resource_name();
-  } else {
-    resource_name = FilePathToResource(qualified_path.substr(0, separator));
-  }
-  if (separator == string::npos) {
-    local_path = qualified_path;
-  } else {
-    local_path = qualified_path.substr(separator + 1);
-  }
-}
 
 bool PendingChild::Resolve(ConfigCompiler* compiler) {
   return compiler->ResolveDependencies(child_path);
@@ -202,11 +164,33 @@ void ConfigDependencyGraph::Add(an<Dependency> dependency) {
   }
 }
 
+static const ResourceType kConfigResourceType = {
+  "config",
+  "",
+  ".yaml",
+};
+
 ConfigCompiler::ConfigCompiler()
-    : graph_(new ConfigDependencyGraph) {
+    : resource_resolver_(kConfigResourceType),
+      graph_(new ConfigDependencyGraph) {
 }
 
 ConfigCompiler::~ConfigCompiler() {
+}
+
+Reference ConfigCompiler::CreateReference(const string& qualified_path) {
+  auto separator = qualified_path.find_first_of(":");
+  string resource_id = (separator == string::npos || separator == 0) ?
+      graph_->current_resource_id() :
+      resource_resolver_.ToResourceId(qualified_path.substr(0, separator));
+  string local_path = (separator == string::npos) ?
+      qualified_path :
+      qualified_path.substr(separator + 1);
+  return Reference{resource_id, local_path};
+}
+
+void ConfigCompiler::AddDependency(an<Dependency> dependency) {
+  graph_->Add(dependency);
 }
 
 void ConfigCompiler::Push(an<ConfigList> config_list, size_t index) {
@@ -226,16 +210,17 @@ void ConfigCompiler::Pop() {
 }
 
 an<ConfigResource> ConfigCompiler::GetCompiledResource(
-    const string& resource_name) const {
-  return graph_->resources[resource_name];
+    const string& resource_id) const {
+  return graph_->resources[resource_id];
 }
 
 an<ConfigResource> ConfigCompiler::Compile(const string& file_path) {
-  auto resource_name = FilePathToResource(file_path);
-  auto resource = New<ConfigResource>(resource_name, New<ConfigData>());
-  graph_->resources[resource_name] = resource;
-  graph_->Push(resource, resource_name + ":");
-  if (!resource->data->LoadFromFile(ResourceToFilePath(resource_name), this)) {
+  auto resource_id = resource_resolver_.ToResourceId(file_path);
+  auto resource = New<ConfigResource>(resource_id, New<ConfigData>());
+  graph_->resources[resource_id] = resource;
+  graph_->Push(resource, resource_id + ":");
+  if (!resource->data->LoadFromFile(
+          resource_resolver_.ToFilePath(resource_id), this)) {
     resource.reset();
   }
   graph_->Pop();
@@ -264,8 +249,8 @@ static bool ResolveBlockingDependencies(ConfigCompiler* compiler,
 static an<ConfigItem> GetResolvedItem(ConfigCompiler* compiler,
                                       an<ConfigResource> resource,
                                       const string& path) {
-  LOG(INFO) << "GetResolvedItem(" << resource->name << ":/" << path << ")";
-  string node_path = resource->name + ":";
+  LOG(INFO) << "GetResolvedItem(" << resource->resource_id << ":/" << path << ")";
+  string node_path = resource->resource_id + ":";
   if (!resource || compiler->blocking(node_path)) {
     return nullptr;
   }
@@ -321,10 +306,10 @@ bool ConfigCompiler::resolved(const string& full_path) const {
 
 static an<ConfigItem> ResolveReference(ConfigCompiler* compiler,
                                        const Reference& reference) {
-  auto resource = compiler->GetCompiledResource(reference.resource_name);
+  auto resource = compiler->GetCompiledResource(reference.resource_id);
   if (!resource) {
-    LOG(INFO) << "resource not found, compiling: " << reference.resource_name;
-    resource = compiler->Compile(reference.resource_name);
+    LOG(INFO) << "resource not found, compiling: " << reference.resource_id;
+    resource = compiler->Compile(reference.resource_id);
   }
   return GetResolvedItem(compiler, resource, reference.local_path);
 }
@@ -332,12 +317,13 @@ static an<ConfigItem> ResolveReference(ConfigCompiler* compiler,
 // Includes contents of nodes at specified paths.
 // __include: path/to/local/node
 // __include: filename[.yaml]:/path/to/external/node
-static bool ParseInclude(ConfigDependencyGraph* graph,
+static bool ParseInclude(ConfigCompiler* compiler,
                          const an<ConfigItem>& item) {
   if (Is<ConfigValue>(item)) {
     auto path = As<ConfigValue>(item)->str();
     LOG(INFO) << "ParseInclude(" << path << ")";
-    graph->Add(New<IncludeReference>(Reference{path, graph}));
+    compiler->AddDependency(
+        New<IncludeReference>(compiler->CreateReference(path)));
     return true;
   }
   return false;
@@ -346,37 +332,37 @@ static bool ParseInclude(ConfigDependencyGraph* graph,
 // Applies `parser` to every list element if `item` is a list.
 // __patch: [ first/patch, filename:/second/patch ]
 // __patch: [{list/@next: 1}, {list/@next: 2}]
-static bool ParseList(bool (*parser)(ConfigDependencyGraph*,
-                                     const an<ConfigItem>&),
-                      ConfigDependencyGraph* graph,
+static bool ParseList(bool (*parser)(ConfigCompiler*, const an<ConfigItem>&),
+                      ConfigCompiler* compiler,
                       const an<ConfigItem>& item) {
   if (Is<ConfigList>(item)) {
     for (auto list_item : *As<ConfigList>(item)) {
-      if (!parser(graph, list_item)) {
+      if (!parser(compiler, list_item)) {
         return false;
       }
     }
     return true;
   }
   // not a list
-  return parser(graph, item);
+  return parser(compiler, item);
 }
 
 // Modifies subnodes or list elements at specified paths.
 // __patch: path/to/node
 // __patch: filename[.yaml]:/path/to/node
 // __patch: { key/alpha: value, key/beta: value }
-static bool ParsePatch(ConfigDependencyGraph* graph,
+static bool ParsePatch(ConfigCompiler* compiler,
                        const an<ConfigItem>& item) {
   if (Is<ConfigValue>(item)) {
     auto path = As<ConfigValue>(item)->str();
     LOG(INFO) << "ParsePatch(" << path << ")";
-    graph->Add(New<PatchReference>(Reference{path, graph}));
+    compiler->AddDependency(
+        New<PatchReference>(compiler->CreateReference(path)));
     return true;
   }
   if (Is<ConfigMap>(item)) {
     LOG(INFO) << "ParsePatch(<literal>)";
-    graph->Add(New<PatchLiteral>(As<ConfigMap>(item)));
+    compiler->AddDependency(New<PatchLiteral>(As<ConfigMap>(item)));
     return true;
   }
   return false;
@@ -385,19 +371,19 @@ static bool ParsePatch(ConfigDependencyGraph* graph,
 bool ConfigCompiler::Parse(const string& key, const an<ConfigItem>& item) {
   LOG(INFO) << "ConfigCompiler::Parse(" << key << ")";
   if (key == INCLUDE_DIRECTIVE) {
-    return ParseInclude(graph_.get(), item);
+    return ParseInclude(this, item);
   }
   if (key == PATCH_DIRECTIVE) {
-    return ParseList(ParsePatch, graph_.get(), item);
+    return ParseList(ParsePatch, this, item);
   }
   return false;
 }
 
 bool ConfigCompiler::Link(an<ConfigResource> target) {
-  LOG(INFO) << "Link(" << target->name << ")";
-  auto found = graph_->resources.find(target->name);
+  LOG(INFO) << "Link(" << target->resource_id << ")";
+  auto found = graph_->resources.find(target->resource_id);
   if (found == graph_->resources.end()) {
-    LOG(INFO) << "resource not found: " << target->name;
+    LOG(INFO) << "resource not found: " << target->resource_id;
     return false;
   }
   return ResolveDependencies(found->first + ":");

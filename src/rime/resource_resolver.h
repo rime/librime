@@ -26,6 +26,8 @@ class ResourceResolver {
   virtual ~ResourceResolver() {
   }
   virtual boost::filesystem::path ResolvePath(const string& resource_id);
+  string ToResourceId(const string& file_path) const;
+  string ToFilePath(const string& resource_id) const;
   void set_root_path(const boost::filesystem::path& root_path) {
     root_path_ = root_path;
   }

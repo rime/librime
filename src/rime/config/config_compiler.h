@@ -6,17 +6,18 @@
 #define RIME_CONFIG_COMPILER_H_
 
 #include <rime/common.h>
+#include <rime/resource_resolver.h>
 #include <rime/config/config_data.h>
 #include <rime/config/config_types.h>
 
 namespace rime {
 
 struct ConfigResource : ConfigItemRef {
-  string name;
+  string resource_id;
   an<ConfigData> data;
 
-  ConfigResource(const string& _name, an<ConfigData> _data)
-      : ConfigItemRef(nullptr), name(_name), data(_data) {
+  ConfigResource(const string& _id, an<ConfigData> _data)
+      : ConfigItemRef(nullptr), resource_id(_id), data(_data) {
   }
   an<ConfigItem> GetItem() const override {
     return data->root;
@@ -26,6 +27,12 @@ struct ConfigResource : ConfigItemRef {
   }
 };
 
+struct Reference {
+  string resource_id;
+  string local_path;
+};
+
+struct Dependency;
 struct ConfigDependencyGraph;
 
 class ConfigCompiler {
@@ -36,13 +43,15 @@ class ConfigCompiler {
   ConfigCompiler();
   virtual ~ConfigCompiler();
 
+  Reference CreateReference(const string& qualified_path);
+  void AddDependency(an<Dependency> dependency);
   void Push(an<ConfigList> config_list, size_t index);
   void Push(an<ConfigMap> config_map, const string& key);
   bool Parse(const string& key, const an<ConfigItem>& item);
   void Pop();
 
-  an<ConfigResource> GetCompiledResource(const string& resource_name) const;
-  an<ConfigResource> Compile(const string& resource_name);
+  an<ConfigResource> GetCompiledResource(const string& resource_id) const;
+  an<ConfigResource> Compile(const string& resource_id);
   bool Link(an<ConfigResource> target);
 
   bool blocking(const string& full_path) const;
@@ -51,6 +60,7 @@ class ConfigCompiler {
   bool ResolveDependencies(const string& path);
 
  private:
+  ResourceResolver resource_resolver_;
   the<ConfigDependencyGraph> graph_;
 };
 
