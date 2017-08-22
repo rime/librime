@@ -195,8 +195,8 @@ bool DictCompiler::BuildPrism(const string &schema_file,
   Script script;
   if (!schema_file.empty()) {
     Projection p;
-    Config config(schema_file);
-    auto algebra = config.GetList("speller/algebra");
+    the<Config> config(Config::Require("config")->Create(schema_file));
+    auto algebra = config->GetList("speller/algebra");
     if (algebra && p.Load(algebra)) {
       for (const auto& x : syllabary) {
         script.AddSyllable(x);

@@ -3,8 +3,8 @@
 // Distributed under the BSD License
 //
 
-#ifndef RIME_RESOURCE_RESOLVER_H_
-#define RIME_RESOURCE_RESOLVER_H_
+#ifndef RIME_RESOURCE_H_
+#define RIME_RESOURCE_H_
 
 #include <boost/filesystem.hpp>
 #include <rime/common.h>
@@ -55,4 +55,4 @@ class FallbackResourceResolver : public ResourceResolver {
 
 }  // namespace rime
 
-#endif  // RIME_RESOURCE_RESOLVER_H_
+#endif  // RIME_RESOURCE_H_

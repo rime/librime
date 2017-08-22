@@ -5,7 +5,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <rime/resource_resolver.h>
+#include <rime/resource.h>
 
 namespace rime {
 
@@ -22,9 +22,7 @@ string ResourceResolver::ToFilePath(const string& resource_id) const {
   boost::filesystem::path file_path(resource_id);
   bool missing_prefix = !file_path.has_parent_path() &&
       !boost::starts_with(resource_id, type_.prefix);
-  bool missing_suffix = boost::starts_with(type_.prefix, ".") ?
-      !file_path.has_extension() :
-      !boost::ends_with(resource_id, type_.suffix);
+  bool missing_suffix = !boost::ends_with(resource_id, type_.suffix);
   return (missing_prefix ? type_.prefix : "") + resource_id +
       (missing_suffix ? type_.suffix : "");
 }

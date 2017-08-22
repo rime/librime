@@ -16,7 +16,7 @@ class RimeConfigTest : public ::testing::Test {
   RimeConfigTest() = default;
 
   virtual void SetUp() {
-    component_.reset(new ConfigComponent("%s.yaml"));
+    component_.reset(new ConfigComponent);
     config_.reset(component_->Create("config_test"));
   }
 
@@ -30,11 +30,11 @@ class RimeConfigTest : public ::testing::Test {
 TEST(RimeConfigComponentTest, RealCreationWorkflow) {
   // registration
   Registry& r = Registry::instance();
-  r.Register("test_config", new ConfigComponent("%s.yaml"));
-  // finding component
+  r.Register("test_config", new ConfigComponent);
+  // find component
   Config::Component* cc = Config::Require("test_config");
   ASSERT_TRUE(cc != NULL);
-  // creation
+  // create Config with id
   the<Config> config(cc->Create("config_test"));
   EXPECT_TRUE(bool(config));
   r.Unregister("test_config");

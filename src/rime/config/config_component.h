@@ -15,15 +15,17 @@
 
 namespace rime {
 
+class ConfigData;
+
 class Config : public Class<Config, const string&>, public ConfigItemRef {
  public:
   // CAVEAT: Config instances created without argument will NOT
   // be managed by ConfigComponent
   Config();
   virtual ~Config();
-  // instances of Config with identical file_name share a copy of config data
-  // that could be reloaded by ConfigComponent once notified changes to the file
-  explicit Config(const string& file_name);
+  // instances of Config with identical config id share a copy of config data
+  // in the ConfigComponent
+  explicit Config(an<ConfigData> data);
 
   bool LoadFromStream(std::istream& stream);
   bool SaveToStream(std::ostream& stream);
@@ -61,15 +63,18 @@ class Config : public Class<Config, const string&>, public ConfigItemRef {
   void SetItem(an<ConfigItem> item);
 };
 
+class ResourceResolver;
+
 class ConfigComponent : public Config::Component {
  public:
-  ConfigComponent(const string& pattern) : pattern_(pattern) {}
-  Config* Create(const string& config_id);
-  string GetConfigFilePath(const string& config_id);
-  const string& pattern() const { return pattern_; }
+  ConfigComponent();
+  ~ConfigComponent();
+  Config* Create(const string& file_name);
 
- private:
-  string pattern_;
+private:
+  an<ConfigData> GetConfigData(const string& file_name);
+  map<string, weak<ConfigData>> cache_;
+  the<ResourceResolver> resource_resolver_;
 };
 
 }  // namespace rime

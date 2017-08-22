@@ -1,5 +1,6 @@
 #include <boost/algorithm/string.hpp>
 #include <rime/common.h>
+#include <rime/resource.h>
 #include <rime/config/config_compiler.h>
 #include <rime/config/config_data.h>
 #include <rime/config/config_types.h>
@@ -164,14 +165,8 @@ void ConfigDependencyGraph::Add(an<Dependency> dependency) {
   }
 }
 
-static const ResourceType kConfigResourceType = {
-  "config",
-  "",
-  ".yaml",
-};
-
-ConfigCompiler::ConfigCompiler()
-    : resource_resolver_(kConfigResourceType),
+ConfigCompiler::ConfigCompiler(ResourceResolver* resource_resolver)
+    : resource_resolver_(resource_resolver),
       graph_(new ConfigDependencyGraph) {
 }
 
@@ -180,9 +175,9 @@ ConfigCompiler::~ConfigCompiler() {
 
 Reference ConfigCompiler::CreateReference(const string& qualified_path) {
   auto separator = qualified_path.find_first_of(":");
-  string resource_id = (separator == string::npos || separator == 0) ?
-      graph_->current_resource_id() :
-      resource_resolver_.ToResourceId(qualified_path.substr(0, separator));
+  string resource_id = resource_resolver_->ToResourceId(
+      (separator == string::npos || separator == 0) ?
+      graph_->current_resource_id() : qualified_path.substr(0, separator));
   string local_path = (separator == string::npos) ?
       qualified_path :
       qualified_path.substr(separator + 1);
@@ -214,13 +209,13 @@ an<ConfigResource> ConfigCompiler::GetCompiledResource(
   return graph_->resources[resource_id];
 }
 
-an<ConfigResource> ConfigCompiler::Compile(const string& file_path) {
-  auto resource_id = resource_resolver_.ToResourceId(file_path);
+an<ConfigResource> ConfigCompiler::Compile(const string& file_name) {
+  auto resource_id = resource_resolver_->ToResourceId(file_name);
   auto resource = New<ConfigResource>(resource_id, New<ConfigData>());
   graph_->resources[resource_id] = resource;
   graph_->Push(resource, resource_id + ":");
   if (!resource->data->LoadFromFile(
-          resource_resolver_.ToFilePath(resource_id), this)) {
+          resource_resolver_->ResolvePath(resource_id).string(), this)) {
     resource.reset();
   }
   graph_->Pop();

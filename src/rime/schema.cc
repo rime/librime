@@ -17,12 +17,9 @@ Schema::Schema()
 
 Schema::Schema(const string& schema_id)
     : schema_id_(schema_id) {
-  if (boost::starts_with(schema_id_, L".")) {
-    config_.reset(Config::Require("config")->Create(schema_id.substr(1)));
-  }
-  else {
-    config_.reset(Config::Require("schema_config")->Create(schema_id));
-  }
+  config_.reset(Config::Require("config")->Create(
+      boost::starts_with(schema_id_, L".") ?
+      schema_id.substr(1) : schema_id + ".schema"));
   FetchUsefulConfigItems();
 }
 

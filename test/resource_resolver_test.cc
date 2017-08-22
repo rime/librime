@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <rime/resource_resolver.h>
+#include <rime/resource.h>
 
 using namespace rime;
 

@@ -15,7 +15,7 @@ class RimeConfigCompilerTest : public ::testing::Test {
   RimeConfigCompilerTest() = default;
 
   virtual void SetUp() {
-    component_.reset(new ConfigComponent("%s.yaml"));
+    component_.reset(new ConfigComponent);
     config_.reset(component_->Create("config_compiler_test"));
   }
 

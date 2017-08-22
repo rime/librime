@@ -6,7 +6,6 @@
 #define RIME_CONFIG_COMPILER_H_
 
 #include <rime/common.h>
-#include <rime/resource_resolver.h>
 #include <rime/config/config_data.h>
 #include <rime/config/config_types.h>
 
@@ -32,6 +31,7 @@ struct Reference {
   string local_path;
 };
 
+class ResourceResolver;
 struct Dependency;
 struct ConfigDependencyGraph;
 
@@ -40,7 +40,7 @@ class ConfigCompiler {
   static constexpr const char* INCLUDE_DIRECTIVE = "__include";
   static constexpr const char* PATCH_DIRECTIVE = "__patch";
 
-  ConfigCompiler();
+  explicit ConfigCompiler(ResourceResolver* resource_resolver);
   virtual ~ConfigCompiler();
 
   Reference CreateReference(const string& qualified_path);
@@ -51,7 +51,7 @@ class ConfigCompiler {
   void Pop();
 
   an<ConfigResource> GetCompiledResource(const string& resource_id) const;
-  an<ConfigResource> Compile(const string& resource_id);
+  an<ConfigResource> Compile(const string& file_name);
   bool Link(an<ConfigResource> target);
 
   bool blocking(const string& full_path) const;
@@ -60,7 +60,7 @@ class ConfigCompiler {
   bool ResolveDependencies(const string& path);
 
  private:
-  ResourceResolver resource_resolver_;
+  ResourceResolver* resource_resolver_;
   the<ConfigDependencyGraph> graph_;
 };
 

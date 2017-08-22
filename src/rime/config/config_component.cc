@@ -4,13 +4,12 @@
 //
 // 2011-04-06 Zou Xu <zouivex@gmail.com>
 //
-#include <cstdlib>
-#include <fstream>
-#include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
+
+#include <rime/resource.h>
+#include <rime/service.h>
 #include <rime/config/config_component.h>
+#include <rime/config/config_compiler.h>
 #include <rime/config/config_data.h>
-#include <rime/config/config_data_manager.h>
 #include <rime/config/config_types.h>
 
 namespace rime {
@@ -21,8 +20,7 @@ Config::Config() : ConfigItemRef(New<ConfigData>()) {
 Config::~Config() {
 }
 
-Config::Config(const string& file_name)
-    : ConfigItemRef(ConfigDataManager::instance().GetConfigData(file_name)) {
+Config::Config(an<ConfigData> data) : ConfigItemRef(data) {
 }
 
 bool Config::LoadFromStream(std::istream& stream) {
@@ -144,14 +142,42 @@ void Config::SetItem(an<ConfigItem> item) {
   set_modified();
 }
 
-string ConfigComponent::GetConfigFilePath(const string& config_id) {
-  return boost::str(boost::format(pattern_) % config_id);
+static const ResourceType kConfigResourceType = {
+  "config",
+  "",
+  ".yaml",
+};
+
+ConfigComponent::ConfigComponent()
+    : resource_resolver_(
+          Service::instance().CreateResourceResolver(kConfigResourceType)) {
 }
 
-Config* ConfigComponent::Create(const string& config_id) {
-  string file_path(GetConfigFilePath(config_id));
-  DLOG(INFO) << "config file path: " << file_path;
-  return new Config(file_path);
+ConfigComponent::~ConfigComponent() {
+}
+
+Config* ConfigComponent::Create(const string& file_name) {
+  return new Config(GetConfigData(file_name));
+}
+
+an<ConfigData> ConfigComponent::GetConfigData(const string& file_name) {
+  auto config_id = resource_resolver_->ToResourceId(file_name);
+  // keep a weak reference to the shared config data in the component
+  weak<ConfigData>& wp(cache_[config_id]);
+  if (wp.expired()) {  // create a new copy and load it
+    ConfigCompiler compiler(resource_resolver_.get());
+    auto resource = compiler.Compile(file_name);
+    if (!resource || !compiler.Link(resource)) {
+      LOG(ERROR) << "error loading config from: " << file_name;
+    }
+    if (!resource) {
+      return New<ConfigData>();
+    }
+    wp = resource->data;
+    return resource->data;
+  }
+  // obtain the shared copy
+  return wp.lock();
 }
 
 }  // namespace rime

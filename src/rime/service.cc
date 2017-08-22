@@ -6,6 +6,7 @@
 //
 #include <rime/context.h>
 #include <rime/engine.h>
+#include <rime/resource.h>
 #include <rime/schema.h>
 #include <rime/service.h>
 
@@ -166,6 +167,13 @@ void Service::Notify(SessionId session_id,
                           message_type.c_str(),
                           message_value.c_str());
   }
+}
+
+ResourceResolver* Service::CreateResourceResolver(const ResourceType& type) {
+  the<FallbackResourceResolver> resolver(new FallbackResourceResolver(type));
+  resolver->set_root_path(deployer().user_data_dir);
+  resolver->set_fallback_root_path(deployer().shared_data_dir);
+  return resolver.release();
 }
 
 Service& Service::instance() {
