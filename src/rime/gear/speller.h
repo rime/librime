@@ -39,6 +39,7 @@ class Speller : public Processor {
   int max_code_length_ = 0;
   bool auto_select_ = false;
   bool use_space_ = false;
+  bool only_2_space_ = false;
   boost::regex auto_select_pattern_;
   AutoClearMethod auto_clear_ = kClearNone;
 };

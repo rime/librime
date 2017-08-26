@@ -69,6 +69,7 @@ Speller::Speller(const Ticket& ticket) : Processor(ticket),
     config->GetInt("speller/max_code_length", &max_code_length_);
     config->GetBool("speller/auto_select", &auto_select_);
     config->GetBool("speller/use_space", &use_space_);
+    config->GetBool("speller/only_2_space", &only_2_space_);
     string pattern;
     if (config->GetString("speller/auto_select_pattern", &pattern)) {
       auto_select_pattern_ = pattern;
@@ -96,6 +97,16 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
   if (!belongs_to(ch, alphabet_) && !belongs_to(ch, delimiters_))
     return kNoop;
   Context* ctx = engine_->context();
+
+  string PreeditText = ctx->GetPreedit().text;
+  // 不知道为什么真正的字符串长度是str.size() - 3
+  // 所以后退两码是PreeditText.size() - 5
+  if (PreeditText.rfind(delimiters_) != (PreeditText.size() - 5) && belongs_to(ch, " " ) && only_2_space_) {
+    // ctx->GetPreedit().text 倒数第二个字符是分隔符且当前输入码是空格且开关被打开
+    return kNoop;
+
+  };
+
   bool is_initial = belongs_to(ch, initials_);
   if (!is_initial &&
       expecting_an_initial(ctx, alphabet_, finals_)) {
