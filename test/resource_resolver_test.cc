@@ -1,3 +1,5 @@
+#include <fstream>
+#include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
 #include <rime/resource.h>
 
@@ -26,14 +28,14 @@ TEST(RimeResourceResolverTest, FallbackRootPath) {
     boost::filesystem::path nonexistent_default = "not_present.minerals";
     boost::filesystem::remove(nonexistent_default);
     auto fallback = boost::filesystem::absolute("fallback/not_present.minerals");
-    boost::filesystem::ofstream(fallback).close();
+    std::ofstream(fallback.string()).close();
     auto actual = rr.ResolvePath("present");
     EXPECT_TRUE(fallback == actual);
     boost::filesystem::remove(fallback);
   }
   {
     auto existent_default = boost::filesystem::absolute("not_falling_back.minerals");
-    boost::filesystem::ofstream(existent_default).close();
+    std::ofstream(existent_default.string()).close();
     auto actual = rr.ResolvePath("falling_back");
     EXPECT_TRUE(existent_default == actual);
     boost::filesystem::remove(existent_default);

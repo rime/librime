@@ -2,7 +2,7 @@
 // Copyright RIME Developers
 // Distributed under the BSD License
 //
-
+#include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
