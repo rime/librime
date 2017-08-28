@@ -69,6 +69,8 @@ Speller::Speller(const Ticket& ticket) : Processor(ticket),
     config->GetInt("speller/max_code_length", &max_code_length_);
     config->GetBool("speller/auto_select", &auto_select_);
     config->GetBool("speller/use_space", &use_space_);
+    config->GetString("speller/only", &only_);
+    config->GetInt("speller/only_n", &only_n_);
     string pattern;
     if (config->GetString("speller/auto_select_pattern", &pattern)) {
       auto_select_pattern_ = pattern;
@@ -96,6 +98,13 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
   if (!belongs_to(ch, alphabet_) && !belongs_to(ch, delimiters_))
     return kNoop;
   Context* ctx = engine_->context();
+  string PreeditText = ctx->GetPreedit().text;
+  // 不知道为什么真正的字符串长度是str.size() - 3
+  if ( only_n_ != 0 && belongs_to(ch, only_ ) && (PreeditText.rfind(delimiters_) != (PreeditText.size() - (3 + only_n_)))) {
+    // only_n_ != 0且当前输入码是only_且ctx->GetPreedit().text的倒数第n个字符不是分隔符
+    return kNoop;
+  };
+
   bool is_initial = belongs_to(ch, initials_);
   if (!is_initial &&
       expecting_an_initial(ctx, alphabet_, finals_)) {
