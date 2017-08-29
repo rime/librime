@@ -69,6 +69,8 @@ Speller::Speller(const Ticket& ticket) : Processor(ticket),
     config->GetInt("speller/max_code_length", &max_code_length_);
     config->GetBool("speller/auto_select", &auto_select_);
     config->GetBool("speller/use_space", &use_space_);
+    config->GetString("speller/only", &only_);
+    config->GetInt("speller/only_n", &only_n_);
     string pattern;
     if (config->GetString("speller/auto_select_pattern", &pattern)) {
       auto_select_pattern_ = pattern;
@@ -96,6 +98,16 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
   if (!belongs_to(ch, alphabet_) && !belongs_to(ch, delimiters_))
     return kNoop;
   Context* ctx = engine_->context();
+
+  if ( only_n_ > 0 && belongs_to(ch, only_ )) {
+    if (ctx->GetPreedit().caret_pos < (only_n_ -1)){
+      return kNoop;
+    };
+    if (ctx->GetPreedit().caret_pos - only_n_ != ctx->GetPreedit().text.rfind(delimiters_)){
+      return kNoop;
+    };
+  };
+
   bool is_initial = belongs_to(ch, initials_);
   if (!is_initial &&
       expecting_an_initial(ctx, alphabet_, finals_)) {
