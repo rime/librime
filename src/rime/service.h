@@ -53,6 +53,9 @@ class Session {
   string commit_text_;
 };
 
+class ResourceResolver;
+struct ResourceType;
+
 class Service {
  public:
   ~Service();
@@ -71,6 +74,8 @@ class Service {
   void Notify(SessionId session_id,
               const string& message_type,
               const string& message_value);
+
+  ResourceResolver* CreateResourceResolver(const ResourceType& type);
 
   Deployer& deployer() { return deployer_; }
   bool disabled() { return !started_ || deployer_.IsMaintenanceMode(); }

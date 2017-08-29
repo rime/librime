@@ -1,0 +1,68 @@
+# tests for ConfigCompiler features
+
+include_local_reference:
+  - __include: starcraft
+  - __include: /starcraft
+  - __include: :starcraft
+  - __include: :/starcraft
+
+include_external_reference:
+  terrans:
+    __include: config_test:/terrans
+
+include_external_file:
+  __include: config_test:/
+
+patch_reference:
+  __patch: /local/patch
+  battlefields:
+    - lost temple
+    - luna
+    - hunters
+
+patch_literal:
+  __patch:
+    zerg/ground_units/@next: lurker
+  zerg:
+    __include: /starcraft/zerg
+
+patch_list:
+  protoss:
+    __include: /starcraft/protoss
+  __patch:
+    - protoss/ground_units/@next: dark templar
+    - protoss/ground_units/@next: dark archon
+
+dependency_chaining:
+  alpha:
+    __include: /dependency_chaining/beta
+  beta:
+    __include: /dependency_chaining/epsilon
+  delta:
+    __include: /dependency_chaining/beta
+  epsilon: success
+
+local:
+  patch:
+    battlefields/@next: match point
+
+starcraft:
+  terrans:
+    player: slayers_boxer
+  protoss:
+    ground_units:
+      - probe
+      - zealot
+      - dragoon
+      - high templar
+      - archon
+      - reaver
+    player: grrrr
+  zerg:
+    ground_units:
+      - drone
+      - zergling
+      - hydralisk
+      - ultralisk
+      - defiler
+    player: yellow

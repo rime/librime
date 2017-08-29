@@ -10,6 +10,8 @@ add_dependencies(rime_test ${rime_library} ${rime_gears_library})
 
 file(COPY ${PROJECT_SOURCE_DIR}/data/test/config_test.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
+file(COPY ${PROJECT_SOURCE_DIR}/data/test/config_compiler_test.yaml
+     DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 file(COPY ${PROJECT_SOURCE_DIR}/data/test/dictionary_test.dict.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 

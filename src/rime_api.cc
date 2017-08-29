@@ -9,6 +9,7 @@
 #include <boost/format.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
+#include <rime/config.h>
 #include <rime/context.h>
 #include <rime/deployer.h>
 #include <rime/key_event.h>
