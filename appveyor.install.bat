@@ -7,7 +7,7 @@ if not exist %BOOST_ROOT% set nocache=1
 
 if %nocache% == 1 (
 	pushd C:\Libraries
-	appveyor DownloadFile http://superb-sea2.dl.sourceforge.net/project/boost/boost/1.61.0/boost_1_61_0.7z
+	appveyor DownloadFile http://cfhcable.dl.sourceforge.net/project/boost/boost/1.61.0/boost_1_61_0.7z
 	7z x boost_1_61_0.7z | find "ing archive"
 	cd boost_1_61_0
 	call .\bootstrap.bat
