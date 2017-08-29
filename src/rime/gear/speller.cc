@@ -100,10 +100,11 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
   Context* ctx = engine_->context();
 
   if ( only_n_ > 0 && belongs_to(ch, only_ )) {
-    if (ctx->GetPreedit().caret_pos < (only_n_ -1)){
+    int caret_pos = ctx->GetPreedit().caret_pos;
+    if (caret_pos < (only_n_ -1)){
       return kNoop;
     };
-    if (ctx->GetPreedit().caret_pos - only_n_ != ctx->GetPreedit().text.rfind(delimiters_)){
+    if (caret_pos - only_n_ != ctx->GetPreedit().text.rfind(delimiters_)){
       return kNoop;
     };
   };
