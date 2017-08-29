@@ -48,5 +48,5 @@ test: release
 	(cd build/test; ./rime_test)
 
 test-debug: release
-	(cd build/test; ./rime_test)
+	(cd debug-build/test; ./rime_test)
 

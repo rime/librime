@@ -34,14 +34,20 @@ class Opencc {
   Opencc(const string& config_path) {
     LOG(INFO) << "initilizing opencc: " << config_path;
     opencc::Config config;
-    converter_ = config.NewFromFile(config_path);
-    const list<opencc::ConversionPtr> conversions =
-      converter_->GetConversionChain()->GetConversions();
-    dict_ = conversions.front()->GetDict();
+    try {
+      converter_ = config.NewFromFile(config_path);
+      const list<opencc::ConversionPtr> conversions =
+        converter_->GetConversionChain()->GetConversions();
+      dict_ = conversions.front()->GetDict();
+    }
+    catch (...) {
+      LOG(ERROR) << "opencc config not found: " << config_path;
+    }
   }
 
   bool ConvertWord(const string& text,
                               vector<string>* forms) {
+    if (dict_ == nullptr) return false;
     opencc::Optional<const opencc::DictEntry*> item = dict_->Match(text);
     if (item.IsNull()) {
       // Match not found
@@ -57,6 +63,7 @@ class Opencc {
 
   bool RandomConvertText(const string& text,
                    string* simplified) {
+    if (dict_ == nullptr) return false;
     const char *phrase = text.c_str();
     std::ostringstream buffer;
     for (const char* pstr = phrase; *pstr != '\0';) {
@@ -78,6 +85,7 @@ class Opencc {
 
   bool ConvertText(const string& text,
                    string* simplified) {
+    if (converter_ == nullptr) return false;
     *simplified = converter_->Convert(text);
     return *simplified != text;
   }
