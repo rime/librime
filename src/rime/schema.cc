@@ -17,9 +17,9 @@ Schema::Schema()
 
 Schema::Schema(const string& schema_id)
     : schema_id_(schema_id) {
-  config_.reset(Config::Require("config")->Create(
-      boost::starts_with(schema_id_, L".") ?
-      schema_id.substr(1) : schema_id + ".schema"));
+  config_.reset(boost::starts_with(schema_id_, L".") ?
+                Config::Require("config")->Create(schema_id.substr(1)) :
+                Config::Require("schema")->Create(schema_id));
   FetchUsefulConfigItems();
 }
 
@@ -41,6 +41,10 @@ void Schema::FetchUsefulConfigItems() {
     }
   }
   config_->GetString("menu/alternative_select_keys", &select_keys_);
+}
+
+Config* SchemaComponent::Create(const string& schema_id) {
+  return config_component_->Create(schema_id + ".schema");
 }
 
 }  // namespace rime
