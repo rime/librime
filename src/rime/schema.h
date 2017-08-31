@@ -40,6 +40,19 @@ class Schema {
   string select_keys_;
 };
 
+class SchemaComponent : public Config::Component {
+ public:
+  SchemaComponent(ConfigComponent* config_component)
+      : config_component_(config_component) {
+  }
+  // NOTE: creates `Config` for the schema
+  Config* Create(const string& schema_id) override;
+ private:
+  // we do not own the ConfigComponent, do not try to deallocate it
+  // also be careful that there is no guarantee it will outlive us
+  ConfigComponent* config_component_;
+};
+
 }  // namespace rime
 
 #endif  // RIME_SCHEMA_H_

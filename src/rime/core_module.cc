@@ -11,6 +11,7 @@
 
 // built-in components
 #include <rime/config.h>
+#include <rime/schema.h>
 
 using namespace rime;
 
@@ -18,7 +19,9 @@ static void rime_core_initialize() {
   LOG(INFO) << "registering core components.";
   Registry& r = Registry::instance();
 
-  r.Register("config", new ConfigComponent);
+  auto config = new ConfigComponent;
+  r.Register("config", config);
+  r.Register("schema", new SchemaComponent(config));
 }
 
 static void rime_core_finalize() {
