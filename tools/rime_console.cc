@@ -81,7 +81,7 @@ class RimeConsole {
     for (const KeyEvent &key : keys) {
       engine_->ProcessKey(key);
     }
-    Context *ctx = engine_->context();
+    Context *ctx = engine_->active_context();
     if (interactive_) {
       PrintComposition(ctx);
     }
