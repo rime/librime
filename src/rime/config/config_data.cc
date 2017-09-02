@@ -207,6 +207,7 @@ class ConfigListEntryCowRef : public ConfigMapEntryCowRef {
 
 bool TraverseCopyOnWrite(an<ConfigItemRef> root, const string& path,
                          an<ConfigItem> item) {
+  LOG(INFO) << "TraverseCopyOnWrite(" << path << ")";
   if (path.empty() || path == "/") {
     *root = item;
     return true;

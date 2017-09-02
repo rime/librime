@@ -11,8 +11,14 @@ struct Dependency {
   an<ConfigItemRef> target;
 
   virtual bool blocking() const = 0;
+  virtual string repr() const = 0;
   virtual bool Resolve(ConfigCompiler* compiler) = 0;
 };
+
+template <class StreamT>
+StreamT& operator<< (StreamT& stream, const Dependency& dep) {
+  return stream << dep.repr() << (dep.blocking() ? "(blocking)" : "");
+}
 
 struct PendingChild : Dependency {
   string child_path;
@@ -24,12 +30,19 @@ struct PendingChild : Dependency {
   bool blocking() const override {
     return false;
   }
+  string repr() const override {
+    return "PendingChild(" + child_path + ")";
+  }
   bool Resolve(ConfigCompiler* compiler) override;
 };
 
+string Reference::repr() const {
+  return resource_id + ":" + local_path;
+}
+
 template <class StreamT>
 StreamT& operator<< (StreamT& stream, const Reference& reference) {
-  return stream << reference.resource_id << ":" << reference.local_path;
+  return stream << reference.repr();
 }
 
 struct IncludeReference : Dependency {
@@ -37,6 +50,9 @@ struct IncludeReference : Dependency {
   }
   bool blocking() const override {
     return true;
+  }
+  string repr() const override {
+    return "Include(" + reference.repr() + ")";
   }
   bool Resolve(ConfigCompiler* compiler) override;
 
@@ -48,6 +64,9 @@ struct PatchReference : Dependency {
   }
   bool blocking() const override {
     return true;
+  }
+  string repr() const override {
+    return "Patch(" + reference.repr() + ")";
   }
   bool Resolve(ConfigCompiler* compiler) override;
 
@@ -61,6 +80,9 @@ struct PatchLiteral : Dependency {
   }
   bool blocking() const override {
     return true;
+  }
+  string repr() const override {
+    return "Patch(<literal>)";
   }
   bool Resolve(ConfigCompiler* compiler) override;
 };
@@ -107,6 +129,7 @@ bool IncludeReference::Resolve(ConfigCompiler* compiler) {
 }
 
 bool PatchReference::Resolve(ConfigCompiler* compiler) {
+  LOG(INFO) << "PatchReference::Resolve(reference = " << reference << ")";
   auto item = ResolveReference(compiler, reference);
   if (!item) {
     return false;
@@ -125,10 +148,12 @@ bool TraverseCopyOnWrite(an<ConfigItemRef> root, const string& path,
                          an<ConfigItem> item);
 
 bool PatchLiteral::Resolve(ConfigCompiler* compiler) {
+  LOG(INFO) << "PatchLiteral::Resolve()";
   bool success = true;
   for (const auto& entry : *patch) {
     const auto& path = entry.first;
     const auto& value = entry.second;
+    LOG(INFO) << "patching " << path;
     if (!TraverseCopyOnWrite(target, path, value)) {
       LOG(ERROR) << "error applying patch to " << path;
       success = false;
@@ -143,25 +168,29 @@ void ConfigDependencyGraph::Add(an<Dependency> dependency) {
   const auto& target = node_stack.back();
   dependency->target = target;
   auto target_path = ConfigData::JoinPath(key_stack);
-  deps[target_path].push_back(dependency);
-  LOG(INFO) << "target_path = " << target_path << ", #deps = " << deps[target_path].size();
+  auto& target_deps = deps[target_path];
+  bool target_was_pending = !target_deps.empty();
+  target_deps.push_back(dependency);
+  LOG(INFO) << "target_path = " << target_path << ", #deps = " << target_deps.size();
+  if (target_was_pending ||  // so was all ancestors
+      key_stack.size() == 1) {  // this is the progenitor
+    return;
+  }
   // The current pending node becomes a prioritized dependency of parent node
-  auto child = target;
   auto keys = key_stack;
-  for (auto prev = node_stack.rbegin() + 1; prev != node_stack.rend(); ++prev) {
+  for (auto child = node_stack.rbegin(); child != node_stack.rend(); ++child) {
     auto last_key = keys.back();
     keys.pop_back();
     auto parent_path = ConfigData::JoinPath(keys);
     auto& parent_deps = deps[parent_path];
     bool parent_was_pending = !parent_deps.empty();
     // Pending children should be resolved before applying __include or __patch
-    parent_deps.push_front(New<PendingChild>(parent_path + "/" + last_key, child));
+    parent_deps.push_front(New<PendingChild>(parent_path + "/" + last_key, *child));
     LOG(INFO) << "parent_path = " << parent_path << ", #deps = " << parent_deps.size();
-    if (parent_was_pending) {
-      // so was all ancestors
-      break;
+    if (parent_was_pending ||  // so was all ancestors
+        keys.size() == 1) {  // this parent is the progenitor
+      return;
     }
-    child = *prev;
   }
 }
 
@@ -244,7 +273,7 @@ static bool ResolveBlockingDependencies(ConfigCompiler* compiler,
 static an<ConfigItem> GetResolvedItem(ConfigCompiler* compiler,
                                       an<ConfigResource> resource,
                                       const string& path) {
-  LOG(INFO) << "GetResolvedItem(" << resource->resource_id << ":/" << path << ")";
+  LOG(INFO) << "GetResolvedItem(" << resource->resource_id << ":" << path << ")";
   string node_path = resource->resource_id + ":";
   if (!resource || compiler->blocking(node_path)) {
     return nullptr;
@@ -364,7 +393,7 @@ static bool ParsePatch(ConfigCompiler* compiler,
 }
 
 bool ConfigCompiler::Parse(const string& key, const an<ConfigItem>& item) {
-  LOG(INFO) << "ConfigCompiler::Parse(" << key << ")";
+  DLOG(INFO) << "ConfigCompiler::Parse(" << key << ")";
   if (key == INCLUDE_DIRECTIVE) {
     return ParseInclude(this, item);
   }
@@ -389,10 +418,10 @@ bool ConfigCompiler::ResolveDependencies(const string& path) {
   auto& deps = graph_->deps[path];
   for (auto iter = deps.begin(); iter != deps.end(); ) {
     if (!(*iter)->Resolve(this)) {
-      LOG(INFO) << "unesolved dependency!";
+      LOG(ERROR) << "unesolved dependency:" << **iter;
       return false;
     }
-    LOG(INFO) << "resolved.";
+    LOG(INFO) << "resolved " << **iter;
     iter = deps.erase(iter);
   }
   LOG(INFO) << "all dependencies resolved.";
