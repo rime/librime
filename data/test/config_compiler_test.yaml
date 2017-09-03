@@ -42,6 +42,16 @@ dependency_chaining:
     __include: /dependency_chaining/beta
   epsilon: success
 
+dependency_priorities:
+  terrans:
+    __include: /starcraft/terrans
+    __patch:
+      player: nada
+  protoss:
+    __patch:
+      player: bisu
+    __include: /starcraft/protoss
+
 local:
   patch:
     battlefields/@next: match point

@@ -115,4 +115,18 @@ TEST_F(RimeConfigCompilerTest, DependencyChaining) {
   EXPECT_EQ("success", value);
 }
 
+// Unit test for https://github.com/rime/librime/issues/141
+TEST_F(RimeConfigCompilerTest, DependencyPriorities) {
+  const string& prefix = "dependency_priorities/";
+  EXPECT_TRUE(config_->IsNull(prefix + "terrans/__include"));
+  EXPECT_TRUE(config_->IsNull(prefix + "terrans/__patch"));
+  EXPECT_TRUE(config_->IsNull(prefix + "protoss/__include"));
+  EXPECT_TRUE(config_->IsNull(prefix + "protoss/__patch"));
+  string player;
+  EXPECT_TRUE(config_->GetString(prefix + "terrans/player", &player));
+  EXPECT_EQ("nada", player);
+  EXPECT_TRUE(config_->GetString(prefix + "protoss/player", &player));
+  EXPECT_EQ("bisu", player);
+}
+
 // TODO: test failure cases

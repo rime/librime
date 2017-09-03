@@ -7,17 +7,26 @@
 
 namespace rime {
 
+enum DependencyPriority {
+  kPendingChild = 0,
+  kInclude = 1,
+  kPatch = 2,
+};
+
 struct Dependency {
   an<ConfigItemRef> target;
 
-  virtual bool blocking() const = 0;
+  virtual DependencyPriority priority() const = 0;
+  bool blocking() const {
+    return priority() > kPendingChild;
+  }
   virtual string repr() const = 0;
   virtual bool Resolve(ConfigCompiler* compiler) = 0;
 };
 
 template <class StreamT>
 StreamT& operator<< (StreamT& stream, const Dependency& dep) {
-  return stream << dep.repr() << (dep.blocking() ? "(blocking)" : "");
+  return stream << dep.repr();
 }
 
 struct PendingChild : Dependency {
@@ -27,8 +36,8 @@ struct PendingChild : Dependency {
   PendingChild(const string& path, const an<ConfigItemRef>& ref)
       : child_path(path), child_ref(ref) {
   }
-  bool blocking() const override {
-    return false;
+  DependencyPriority priority() const override {
+    return kPendingChild;
   }
   string repr() const override {
     return "PendingChild(" + child_path + ")";
@@ -48,8 +57,8 @@ StreamT& operator<< (StreamT& stream, const Reference& reference) {
 struct IncludeReference : Dependency {
   IncludeReference(const Reference& r) : reference(r) {
   }
-  bool blocking() const override {
-    return true;
+  DependencyPriority priority() const override {
+    return kInclude;
   }
   string repr() const override {
     return "Include(" + reference.repr() + ")";
@@ -62,8 +71,8 @@ struct IncludeReference : Dependency {
 struct PatchReference : Dependency {
   PatchReference(const Reference& r) : reference(r) {
   }
-  bool blocking() const override {
-    return true;
+  DependencyPriority priority() const override {
+    return kPatch;
   }
   string repr() const override {
     return "Patch(" + reference.repr() + ")";
@@ -78,8 +87,8 @@ struct PatchLiteral : Dependency {
 
   PatchLiteral(an<ConfigMap> map) : patch(map) {
   }
-  bool blocking() const override {
-    return true;
+  DependencyPriority priority() const override {
+    return kPatch;
   }
   string repr() const override {
     return "Patch(<literal>)";
@@ -91,7 +100,7 @@ struct ConfigDependencyGraph {
   map<string, of<ConfigResource>> resources;
   vector<of<ConfigItemRef>> node_stack;
   vector<string> key_stack;
-  map<string, list<of<Dependency>>> deps;
+  map<string, vector<of<Dependency>>> deps;
 
   void Add(an<Dependency> dependency);
 
@@ -162,21 +171,34 @@ bool PatchLiteral::Resolve(ConfigCompiler* compiler) {
   return success;
 }
 
+static void InsertByPriority(vector<of<Dependency>>& list,
+                             const an<Dependency>& value) {
+  auto upper = std::upper_bound(
+      list.begin(), list.end(), value,
+      [](const an<Dependency>& lhs, const an<Dependency>& rhs) {
+        return lhs->priority() < rhs->priority();
+      });
+  list.insert(upper, value);
+}
+
 void ConfigDependencyGraph::Add(an<Dependency> dependency) {
-  LOG(INFO) << "ConfigDependencyGraph::Add(), node_stack.size() = " << node_stack.size();
+  LOG(INFO) << "ConfigDependencyGraph::Add(), node_stack.size() = "
+            << node_stack.size();
   if (node_stack.empty()) return;
   const auto& target = node_stack.back();
   dependency->target = target;
   auto target_path = ConfigData::JoinPath(key_stack);
   auto& target_deps = deps[target_path];
   bool target_was_pending = !target_deps.empty();
-  target_deps.push_back(dependency);
-  LOG(INFO) << "target_path = " << target_path << ", #deps = " << target_deps.size();
+  InsertByPriority(target_deps, dependency);
+  LOG(INFO) << "target_path = " << target_path
+            << ", #deps = " << target_deps.size();
   if (target_was_pending ||  // so was all ancestors
       key_stack.size() == 1) {  // this is the progenitor
     return;
   }
-  // The current pending node becomes a prioritized dependency of parent node
+  // The current pending node becomes a prioritized non-blocking dependency of
+  // its parent node; spread the pending state to its non-pending ancestors
   auto keys = key_stack;
   for (auto child = node_stack.rbegin(); child != node_stack.rend(); ++child) {
     auto last_key = keys.back();
@@ -185,8 +207,10 @@ void ConfigDependencyGraph::Add(an<Dependency> dependency) {
     auto& parent_deps = deps[parent_path];
     bool parent_was_pending = !parent_deps.empty();
     // Pending children should be resolved before applying __include or __patch
-    parent_deps.push_front(New<PendingChild>(parent_path + "/" + last_key, *child));
-    LOG(INFO) << "parent_path = " << parent_path << ", #deps = " << parent_deps.size();
+    InsertByPriority(parent_deps,
+                     New<PendingChild>(parent_path + "/" + last_key, *child));
+    LOG(INFO) << "parent_path = " << parent_path
+              << ", #deps = " << parent_deps.size();
     if (parent_was_pending ||  // so was all ancestors
         keys.size() == 1) {  // this parent is the progenitor
       return;
@@ -418,10 +442,10 @@ bool ConfigCompiler::ResolveDependencies(const string& path) {
   auto& deps = graph_->deps[path];
   for (auto iter = deps.begin(); iter != deps.end(); ) {
     if (!(*iter)->Resolve(this)) {
-      LOG(ERROR) << "unesolved dependency:" << **iter;
+      LOG(ERROR) << "unresolved dependency: " << **iter;
       return false;
     }
-    LOG(INFO) << "resolved " << **iter;
+    LOG(INFO) << "resolved: " << **iter;
     iter = deps.erase(iter);
   }
   LOG(INFO) << "all dependencies resolved.";
