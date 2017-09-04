@@ -131,11 +131,7 @@ class MappedFile : boost::noncopyable {
 
 // member function definitions
 
-# if defined(__arm__)
 # define RIME_ALIGNED(size, T) ((size + alignof(T) - 1) & ~(alignof(T) - 1))
-# else
-# define RIME_ALIGNED(size, T) (size)
-# endif
 
 template <class T>
 T* MappedFile::Allocate(size_t count) {

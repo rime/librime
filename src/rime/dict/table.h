@@ -15,13 +15,13 @@
 #include <rime/dict/vocabulary.h>
 #include <rime/dict/string_table.h>
 
-#define RIME_TABLE_UNION(U, V, Ta, a, Tb, b) \
+#define RIME_TABLE_UNION(U, V, A, a, B, b) \
     struct U { \
       V value; \
-      const Ta& a() const { return *reinterpret_cast<const Ta*>(this); } \
-      const Tb& b() const { return *reinterpret_cast<const Tb*>(this); } \
-      Ta& a() { return *reinterpret_cast<Ta*>(this); } \
-      Tb& b() { return *reinterpret_cast<Tb*>(this); } \
+      const A& a() const { return *reinterpret_cast<const A*>(this); } \
+      const B& b() const { return *reinterpret_cast<const B*>(this); } \
+      A& a() { return *reinterpret_cast<A*>(this); } \
+      B& b() { return *reinterpret_cast<B*>(this); } \
     }
 
 namespace rime {
@@ -40,11 +40,7 @@ using Syllabary = Array<StringType>;
 
 using Code = List<SyllableId>;
 
-#if defined(__arm__)
 using Weight = double;
-#else
-using Weight = float;
-#endif
 
 struct Entry {
   StringType text;
@@ -75,7 +71,7 @@ using TrunkIndex = Array<TrunkIndexNode>;
 
 using TailIndex = Array<LongEntry>;
 
-//union Phraseindex {
+//union PhraseIndex {
 //  TrunkIndex trunk;
 //  TailIndex tail;
 //};
