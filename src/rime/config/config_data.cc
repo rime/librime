@@ -159,7 +159,7 @@ class ConfigDataRootRef : public ConfigItemRef {
 template <class T>
 static an<T> Cow(const an<T>& container, const string& key) {
   if (!container) {
-    LOG(INFO) << "creating node: " << key;
+    DLOG(INFO) << "creating node: " << key;
     return New<T>();
   }
   DLOG(INFO) << "copy on write: " << key;
@@ -207,6 +207,7 @@ class ConfigListEntryCowRef : public ConfigMapEntryCowRef {
 
 bool TraverseCopyOnWrite(an<ConfigItemRef> root, const string& path,
                          an<ConfigItem> item) {
+  DLOG(INFO) << "TraverseCopyOnWrite(" << path << ")";
   if (path.empty() || path == "/") {
     *root = item;
     return true;

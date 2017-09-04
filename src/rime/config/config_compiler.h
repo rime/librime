@@ -29,6 +29,8 @@ struct ConfigResource : ConfigItemRef {
 struct Reference {
   string resource_id;
   string local_path;
+
+  string repr() const;
 };
 
 class ResourceResolver;
