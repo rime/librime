@@ -128,7 +128,7 @@ static an<ConfigItem> ResolveReference(ConfigCompiler* compiler,
                                        const Reference& reference);
 
 bool IncludeReference::Resolve(ConfigCompiler* compiler) {
-  LOG(INFO) << "IncludeReference::Resolve(reference = " << reference << ")";
+  DLOG(INFO) << "IncludeReference::Resolve(reference = " << reference << ")";
   auto item = ResolveReference(compiler, reference);
   if (!item) {
     return false;
@@ -138,7 +138,7 @@ bool IncludeReference::Resolve(ConfigCompiler* compiler) {
 }
 
 bool PatchReference::Resolve(ConfigCompiler* compiler) {
-  LOG(INFO) << "PatchReference::Resolve(reference = " << reference << ")";
+  DLOG(INFO) << "PatchReference::Resolve(reference = " << reference << ")";
   auto item = ResolveReference(compiler, reference);
   if (!item) {
     return false;
@@ -157,7 +157,7 @@ bool TraverseCopyOnWrite(an<ConfigItemRef> root, const string& path,
                          an<ConfigItem> item);
 
 bool PatchLiteral::Resolve(ConfigCompiler* compiler) {
-  LOG(INFO) << "PatchLiteral::Resolve()";
+  DLOG(INFO) << "PatchLiteral::Resolve()";
   bool success = true;
   for (const auto& entry : *patch) {
     const auto& path = entry.first;
@@ -182,8 +182,8 @@ static void InsertByPriority(vector<of<Dependency>>& list,
 }
 
 void ConfigDependencyGraph::Add(an<Dependency> dependency) {
-  LOG(INFO) << "ConfigDependencyGraph::Add(), node_stack.size() = "
-            << node_stack.size();
+  DLOG(INFO) << "ConfigDependencyGraph::Add(), node_stack.size() = "
+             << node_stack.size();
   if (node_stack.empty()) return;
   const auto& target = node_stack.back();
   dependency->target = target;
@@ -191,8 +191,8 @@ void ConfigDependencyGraph::Add(an<Dependency> dependency) {
   auto& target_deps = deps[target_path];
   bool target_was_pending = !target_deps.empty();
   InsertByPriority(target_deps, dependency);
-  LOG(INFO) << "target_path = " << target_path
-            << ", #deps = " << target_deps.size();
+  DLOG(INFO) << "target_path = " << target_path
+             << ", #deps = " << target_deps.size();
   if (target_was_pending ||  // so was all ancestors
       key_stack.size() == 1) {  // this is the progenitor
     return;
@@ -209,8 +209,8 @@ void ConfigDependencyGraph::Add(an<Dependency> dependency) {
     // Pending children should be resolved before applying __include or __patch
     InsertByPriority(parent_deps,
                      New<PendingChild>(parent_path + "/" + last_key, *child));
-    LOG(INFO) << "parent_path = " << parent_path
-              << ", #deps = " << parent_deps.size();
+    DLOG(INFO) << "parent_path = " << parent_path
+               << ", #deps = " << parent_deps.size();
     if (parent_was_pending ||  // so was all ancestors
         keys.size() == 1) {  // this parent is the progenitor
       return;
@@ -286,9 +286,9 @@ static bool ResolveBlockingDependencies(ConfigCompiler* compiler,
   if (!compiler->blocking(path)) {
     return true;
   }
-  LOG(INFO) << "blocking node: " << path;
+  DLOG(INFO) << "blocking node: " << path;
   if (compiler->ResolveDependencies(path)) {
-    LOG(INFO) << "resolved blocking node:" << path;
+    DLOG(INFO) << "resolved blocking node:" << path;
     return true;
   }
   return false;
@@ -297,7 +297,7 @@ static bool ResolveBlockingDependencies(ConfigCompiler* compiler,
 static an<ConfigItem> GetResolvedItem(ConfigCompiler* compiler,
                                       an<ConfigResource> resource,
                                       const string& path) {
-  LOG(INFO) << "GetResolvedItem(" << resource->resource_id << ":" << path << ")";
+  DLOG(INFO) << "GetResolvedItem(" << resource->resource_id << ":" << path << ")";
   string node_path = resource->resource_id + ":";
   if (!resource || compiler->blocking(node_path)) {
     return nullptr;
@@ -320,7 +320,7 @@ static an<ConfigItem> GetResolvedItem(ConfigCompiler* compiler,
         result.reset();
       }
     } else if (Is<ConfigMap>(result)) {
-      LOG(INFO) << "advance with key: " << key;
+      DLOG(INFO) << "advance with key: " << key;
       (node_path += "/") += key;
       if (!ResolveBlockingDependencies(compiler, node_path)) {
         return nullptr;
@@ -356,7 +356,7 @@ static an<ConfigItem> ResolveReference(ConfigCompiler* compiler,
                                        const Reference& reference) {
   auto resource = compiler->GetCompiledResource(reference.resource_id);
   if (!resource) {
-    LOG(INFO) << "resource not found, compiling: " << reference.resource_id;
+    LOG(INFO) << "resource not loaded, compiling: " << reference.resource_id;
     resource = compiler->Compile(reference.resource_id);
   }
   return GetResolvedItem(compiler, resource, reference.local_path);
@@ -369,7 +369,7 @@ static bool ParseInclude(ConfigCompiler* compiler,
                          const an<ConfigItem>& item) {
   if (Is<ConfigValue>(item)) {
     auto path = As<ConfigValue>(item)->str();
-    LOG(INFO) << "ParseInclude(" << path << ")";
+    DLOG(INFO) << "ParseInclude(" << path << ")";
     compiler->AddDependency(
         New<IncludeReference>(compiler->CreateReference(path)));
     return true;
@@ -403,13 +403,13 @@ static bool ParsePatch(ConfigCompiler* compiler,
                        const an<ConfigItem>& item) {
   if (Is<ConfigValue>(item)) {
     auto path = As<ConfigValue>(item)->str();
-    LOG(INFO) << "ParsePatch(" << path << ")";
+    DLOG(INFO) << "ParsePatch(" << path << ")";
     compiler->AddDependency(
         New<PatchReference>(compiler->CreateReference(path)));
     return true;
   }
   if (Is<ConfigMap>(item)) {
-    LOG(INFO) << "ParsePatch(<literal>)";
+    DLOG(INFO) << "ParsePatch(<literal>)";
     compiler->AddDependency(New<PatchLiteral>(As<ConfigMap>(item)));
     return true;
   }
@@ -428,17 +428,17 @@ bool ConfigCompiler::Parse(const string& key, const an<ConfigItem>& item) {
 }
 
 bool ConfigCompiler::Link(an<ConfigResource> target) {
-  LOG(INFO) << "Link(" << target->resource_id << ")";
+  DLOG(INFO) << "Link(" << target->resource_id << ")";
   auto found = graph_->resources.find(target->resource_id);
   if (found == graph_->resources.end()) {
-    LOG(INFO) << "resource not found: " << target->resource_id;
+    LOG(ERROR) << "resource not found: " << target->resource_id;
     return false;
   }
   return ResolveDependencies(found->first + ":");
 }
 
 bool ConfigCompiler::ResolveDependencies(const string& path) {
-  LOG(INFO) << "ResolveDependencies(" << path << ")";
+  DLOG(INFO) << "ResolveDependencies(" << path << ")";
   auto& deps = graph_->deps[path];
   for (auto iter = deps.begin(); iter != deps.end(); ) {
     if (!(*iter)->Resolve(this)) {
