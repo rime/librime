@@ -30,6 +30,7 @@ struct ConfigResource : ConfigItemRef {
 struct Reference {
   string resource_id;
   string local_path;
+  bool optional;
 
   string repr() const;
 };

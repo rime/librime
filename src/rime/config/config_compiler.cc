@@ -46,7 +46,7 @@ struct PendingChild : Dependency {
 };
 
 string Reference::repr() const {
-  return resource_id + ":" + local_path;
+  return resource_id + ":" + local_path + (optional ? " <optional>" : "");
 }
 
 template <class StreamT>
@@ -131,7 +131,7 @@ bool IncludeReference::Resolve(ConfigCompiler* compiler) {
   DLOG(INFO) << "IncludeReference::Resolve(reference = " << reference << ")";
   auto item = ResolveReference(compiler, reference);
   if (!item) {
-    return false;
+    return reference.optional;
   }
   *target = item;
   return true;
@@ -141,7 +141,7 @@ bool PatchReference::Resolve(ConfigCompiler* compiler) {
   DLOG(INFO) << "PatchReference::Resolve(reference = " << reference << ")";
   auto item = ResolveReference(compiler, reference);
   if (!item) {
-    return false;
+    return reference.optional;
   }
   if (!Is<ConfigMap>(item)) {
     LOG(ERROR) << "invalid patch at " << reference;
@@ -227,14 +227,18 @@ ConfigCompiler::~ConfigCompiler() {
 }
 
 Reference ConfigCompiler::CreateReference(const string& qualified_path) {
+  auto end = qualified_path.find_last_of("?");
+  bool optional = end != string::npos;
   auto separator = qualified_path.find_first_of(":");
   string resource_id = resource_resolver_->ToResourceId(
       (separator == string::npos || separator == 0) ?
-      graph_->current_resource_id() : qualified_path.substr(0, separator));
+      graph_->current_resource_id() :
+      qualified_path.substr(0, separator));
   string local_path = (separator == string::npos) ?
-      qualified_path :
-      qualified_path.substr(separator + 1);
-  return Reference{resource_id, local_path};
+      qualified_path.substr(0, end) :
+      qualified_path.substr(separator + 1,
+                            optional ? end - separator - 1 : end);
+  return Reference{resource_id, local_path, optional};
 }
 
 void ConfigCompiler::AddDependency(an<Dependency> dependency) {
@@ -354,10 +358,14 @@ static an<ConfigItem> ResolveReference(ConfigCompiler* compiler,
                                        const Reference& reference) {
   auto resource = compiler->GetCompiledResource(reference.resource_id);
   if (!resource) {
-    LOG(INFO) << "resource not loaded, compiling: " << reference.resource_id;
+    DLOG(INFO) << "resource not loaded, compiling: " << reference.resource_id;
     resource = compiler->Compile(reference.resource_id);
     if (!resource->loaded) {
-      LOG(ERROR) << "resource could not be loaded: " << reference.resource_id;
+      if (reference.optional) {
+        LOG(INFO) << "optional resource not loaded: " << reference.resource_id;
+      } else {
+        LOG(ERROR) << "resource could not be loaded: " << reference.resource_id;
+      }
       return nullptr;
     }
   }

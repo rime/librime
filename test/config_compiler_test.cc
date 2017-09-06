@@ -129,4 +129,11 @@ TEST_F(RimeConfigCompilerTest, DependencyPriorities) {
   EXPECT_EQ("bisu", player);
 }
 
-// TODO: test failure cases
+TEST_F(RimeConfigCompilerTest, OptionalReference) {
+  const string& prefix = "optional_reference/";
+  EXPECT_TRUE(config_->IsNull(prefix + "__include"));
+  EXPECT_TRUE(config_->IsNull(prefix + "__patch"));
+  bool untouched;
+  EXPECT_TRUE(config_->GetBool(prefix + "untouched", &untouched));
+  EXPECT_TRUE(untouched);
+}
