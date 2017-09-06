@@ -99,12 +99,12 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   Context* ctx = engine_->context();
 
-  if ( only_n_ > 0 && belongs_to(ch, only_ )) {
+if ( only_n_ > 0 && belongs_to(ch, only_ )) {
     int caret_pos = ctx->GetPreedit().caret_pos;
-    if (caret_pos < (only_n_ -1)){
+    if (caret_pos < (only_n_ - 1)){
       return kNoop;
     };
-    if (caret_pos - only_n_ != ctx->GetPreedit().text.rfind(delimiters_)){
+    if (!belongs_to(ctx->GetPreedit().text[caret_pos - only_n_], delimiters_) && caret_pos >= only_n_){
       return kNoop;
     };
   };
