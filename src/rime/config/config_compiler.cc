@@ -267,10 +267,8 @@ an<ConfigResource> ConfigCompiler::Compile(const string& file_name) {
   auto resource = New<ConfigResource>(resource_id, New<ConfigData>());
   graph_->resources[resource_id] = resource;
   graph_->Push(resource, resource_id + ":");
-  if (!resource->data->LoadFromFile(
-          resource_resolver_->ResolvePath(resource_id).string(), this)) {
-    resource.reset();
-  }
+  resource->loaded = resource->data->LoadFromFile(
+      resource_resolver_->ResolvePath(resource_id).string(), this);
   graph_->Pop();
   return resource;
 }
@@ -358,6 +356,10 @@ static an<ConfigItem> ResolveReference(ConfigCompiler* compiler,
   if (!resource) {
     LOG(INFO) << "resource not loaded, compiling: " << reference.resource_id;
     resource = compiler->Compile(reference.resource_id);
+    if (!resource->loaded) {
+      LOG(ERROR) << "resource could not be loaded: " << reference.resource_id;
+      return nullptr;
+    }
   }
   return GetResolvedItem(compiler, resource, reference.local_path);
 }
@@ -439,6 +441,9 @@ bool ConfigCompiler::Link(an<ConfigResource> target) {
 
 bool ConfigCompiler::ResolveDependencies(const string& path) {
   DLOG(INFO) << "ResolveDependencies(" << path << ")";
+  if (!graph_->deps.count(path)) {
+    return true;
+  }
   auto& deps = graph_->deps[path];
   for (auto iter = deps.begin(); iter != deps.end(); ) {
     if (!(*iter)->Resolve(this)) {
@@ -448,7 +453,7 @@ bool ConfigCompiler::ResolveDependencies(const string& path) {
     LOG(INFO) << "resolved: " << **iter;
     iter = deps.erase(iter);
   }
-  LOG(INFO) << "all dependencies resolved.";
+  DLOG(INFO) << "all dependencies resolved.";
   return true;
 }
 

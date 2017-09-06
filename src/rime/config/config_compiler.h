@@ -14,6 +14,7 @@ namespace rime {
 struct ConfigResource : ConfigItemRef {
   string resource_id;
   an<ConfigData> data;
+  bool loaded = false;
 
   ConfigResource(const string& _id, an<ConfigData> _data)
       : ConfigItemRef(nullptr), resource_id(_id), data(_data) {

@@ -27,16 +27,27 @@ class RimeConfigTest : public ::testing::Test {
   the<Config> config_;
 };
 
-TEST(RimeConfigComponentTest, RealCreationWorkflow) {
+TEST(RimeConfigComponentTest, RoundTrip) {
   // registration
   Registry& r = Registry::instance();
   r.Register("test_config", new ConfigComponent);
   // find component
   Config::Component* cc = Config::Require("test_config");
   ASSERT_TRUE(cc != NULL);
-  // create Config with id
-  the<Config> config(cc->Create("config_test"));
-  EXPECT_TRUE(bool(config));
+  // create config and write modifications to file
+  {
+    the<Config> config(cc->Create("config_round_trip_test"));
+    EXPECT_TRUE(bool(config));
+    EXPECT_TRUE(config->SetString("key", "value"));
+  }
+  // read from file and verify contents
+  {
+    the<Config> config(cc->Create("config_round_trip_test"));
+    EXPECT_TRUE(bool(config));
+    string value;
+    EXPECT_TRUE(config->GetString("key", &value));
+    EXPECT_EQ("value", value);
+  }
   r.Unregister("test_config");
 }
 
