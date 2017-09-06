@@ -167,11 +167,8 @@ an<ConfigData> ConfigComponent::GetConfigData(const string& file_name) {
   if (wp.expired()) {  // create a new copy and load it
     ConfigCompiler compiler(resource_resolver_.get());
     auto resource = compiler.Compile(file_name);
-    if (!resource || !compiler.Link(resource)) {
+    if (resource->loaded && !compiler.Link(resource)) {
       LOG(ERROR) << "error loading config from: " << file_name;
-    }
-    if (!resource) {
-      return New<ConfigData>();
     }
     wp = resource->data;
     return resource->data;
