@@ -22,6 +22,10 @@ class ConfigItem {
 
   ValueType type() const { return type_; }
 
+  virtual bool empty() const {
+    return type_ == kNull;
+  }
+
  protected:
   ConfigItem(ValueType type) : type_(type) {}
 
@@ -50,6 +54,10 @@ class ConfigValue : public ConfigItem {
 
   const string& str() const { return value_; }
 
+  bool empty() const override {
+    return value_.empty();
+  }
+
  protected:
   string value_;
 };
@@ -72,6 +80,10 @@ class ConfigList : public ConfigItem {
   Iterator begin();
   Iterator end();
 
+  bool empty() const override {
+    return seq_.empty();
+  }
+
  protected:
   Sequence seq_;
 };
@@ -91,6 +103,10 @@ class ConfigMap : public ConfigItem {
 
   Iterator begin();
   Iterator end();
+
+  bool empty() const override {
+    return map_.empty();
+  }
 
  protected:
   Map map_;

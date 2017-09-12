@@ -127,13 +127,21 @@ bool PendingChild::Resolve(ConfigCompiler* compiler) {
 static an<ConfigItem> ResolveReference(ConfigCompiler* compiler,
                                        const Reference& reference);
 
+static bool MergeTree(an<ConfigItemRef> target, an<ConfigMap> map);
+
 bool IncludeReference::Resolve(ConfigCompiler* compiler) {
   DLOG(INFO) << "IncludeReference::Resolve(reference = " << reference << ")";
-  auto item = ResolveReference(compiler, reference);
-  if (!item) {
+  auto included = ResolveReference(compiler, reference);
+  if (!included) {
     return reference.optional;
   }
-  *target = item;
+  // merge literal key-values into the included map
+  auto overrides = As<ConfigMap>(**target);
+  *target = included;
+  if (overrides && !overrides->empty() && !MergeTree(target, overrides)) {
+    LOG(ERROR) << "failed to merge tree: " << reference;
+    return false;
+  }
   return true;
 }
 
@@ -152,19 +160,119 @@ bool PatchReference::Resolve(ConfigCompiler* compiler) {
   return patch.Resolve(compiler);
 }
 
+static bool AppendToString(an<ConfigItemRef> target, an<ConfigValue> value) {
+  if (!value)
+    return false;
+  auto existing_value = As<ConfigValue>(**target);
+  if (!existing_value) {
+    LOG(ERROR) << "trying to append string to non scalar";
+    return false;
+  }
+  *target = existing_value->str() + value->str();
+  return true;
+}
+
+static bool AppendToList(an<ConfigItemRef> target, an<ConfigList> list) {
+  if (!list)
+    return false;
+  auto existing_list = As<ConfigList>(**target);
+  if (!existing_list) {
+    LOG(ERROR) << "trying to append list to other value";
+    return false;
+  }
+  if (list->empty())
+    return true;
+  auto copy = New<ConfigList>(*existing_list);
+  for (ConfigList::Iterator iter = list->begin(); iter != list->end(); ++iter) {
+    if (!copy->Append(*iter))
+      return false;
+  }
+  *target = copy;
+  return true;
+}
+
+static bool EditNode(an<ConfigItemRef> target,
+                     const string& key,
+                     const an<ConfigItem>& value,
+                     bool merge_tree);
+
+static bool MergeTree(an<ConfigItemRef> target, an<ConfigMap> map) {
+  if (!map)
+    return false;
+  // NOTE: the referenced content of target can be any type
+  for (ConfigMap::Iterator iter = map->begin(); iter != map->end(); ++iter) {
+    const auto& key = iter->first;
+    const auto& value = iter->second;
+    if (!EditNode(target, key, value, true)) {
+      LOG(ERROR) << "error merging branch " << key;
+      return false;
+    }
+  }
+  return true;
+}
+
+static constexpr const char* ADD_SUFFIX_OPERATOR = "/+";
+static constexpr const char* EQU_SUFFIX_OPERATOR = "/=";
+
+inline static bool IsAppending(const string& key) {
+  return key == ConfigCompiler::APPEND_DIRECTIVE ||
+      boost::ends_with(key, ADD_SUFFIX_OPERATOR);
+}
+inline static bool IsMerging(const string& key,
+                             const an<ConfigItem>& value,
+                             bool merge_tree) {
+  return key == ConfigCompiler::MERGE_DIRECTIVE ||
+      boost::ends_with(key, ADD_SUFFIX_OPERATOR) ||
+      (merge_tree && Is<ConfigMap>(value) &&
+       !boost::ends_with(key, EQU_SUFFIX_OPERATOR));
+}
+
+inline static string StripOperator(const string& key, bool adding) {
+  return (key == ConfigCompiler::APPEND_DIRECTIVE ||
+          key == ConfigCompiler::MERGE_DIRECTIVE) ? "" :
+      boost::erase_last_copy(
+          key, adding ? ADD_SUFFIX_OPERATOR : EQU_SUFFIX_OPERATOR);
+}
+
 // defined in config_data.cc
 bool TraverseCopyOnWrite(an<ConfigItemRef> root, const string& path,
-                         an<ConfigItem> item);
+                         function<bool (an<ConfigItemRef> target)> writer);
+
+static bool EditNode(an<ConfigItemRef> target,
+                     const string& key,
+                     const an<ConfigItem>& value,
+                     bool merge_tree) {
+  DLOG(INFO) << "EditNode(" << key << "," << merge_tree << ")";
+  bool appending = IsAppending(key);
+  bool merging = IsMerging(key, value, merge_tree);
+  auto writer = [=](an<ConfigItemRef> target) {
+    if ((appending || merging) && **target) {
+      DLOG(INFO) << "writer: editing node";
+      return !value ||
+      (appending && (AppendToString(target, As<ConfigValue>(value)) ||
+                     AppendToList(target, As<ConfigList>(value)))) ||
+      (merging && MergeTree(target, As<ConfigMap>(value)));
+    } else {
+      DLOG(INFO) << "writer: overwriting node";
+      *target = value;
+      return true;
+    }
+  };
+  string path = StripOperator(key, appending || merging);
+  DLOG(INFO) << "appending: " << appending << ", merging: " << merging
+             << ", path: " << path;
+  return TraverseCopyOnWrite(target, path, writer);
+}
 
 bool PatchLiteral::Resolve(ConfigCompiler* compiler) {
   DLOG(INFO) << "PatchLiteral::Resolve()";
   bool success = true;
   for (const auto& entry : *patch) {
-    const auto& path = entry.first;
+    const auto& key = entry.first;
     const auto& value = entry.second;
-    LOG(INFO) << "patching " << path;
-    if (!TraverseCopyOnWrite(target, path, value)) {
-      LOG(ERROR) << "error applying patch to " << path;
+    LOG(INFO) << "patching " << key;
+    if (!EditNode(target, key, value, false)) {
+      LOG(ERROR) << "error applying patch to " << key;
       success = false;
     }
   }
