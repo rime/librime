@@ -1,0 +1,8 @@
+# tests for ConfigCompiler features
+
+__include: nonexistent.yaml:/?
+__patch:
+  - local/nonexistent_patch?
+  - config_test:/nonexistent_patch?
+  - nonexistent:/patch?
+untouched: true
