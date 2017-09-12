@@ -43,6 +43,8 @@ class ConfigCompiler {
  public:
   static constexpr const char* INCLUDE_DIRECTIVE = "__include";
   static constexpr const char* PATCH_DIRECTIVE = "__patch";
+  static constexpr const char* APPEND_DIRECTIVE = "__append";
+  static constexpr const char* MERGE_DIRECTIVE = "__merge";
 
   explicit ConfigCompiler(ResourceResolver* resource_resolver);
   virtual ~ConfigCompiler();
