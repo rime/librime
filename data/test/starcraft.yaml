@@ -1,0 +1,22 @@
+# incomplete knowledge base of starcraft, for testing the config component
+# no special syntax, internal/external references
+
+terrans:
+  player: slayers_boxer
+protoss:
+  ground_units:
+    - probe
+    - zealot
+    - dragoon
+    - high templar
+    - archon
+    - reaver
+  player: grrrr
+zerg:
+  ground_units:
+    - drone
+    - zergling
+    - hydralisk
+    - ultralisk
+    - defiler
+  player: yellow

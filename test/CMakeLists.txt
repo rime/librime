@@ -8,12 +8,8 @@ target_link_libraries(rime_test
                       ${GTEST_LIBRARIES})
 add_dependencies(rime_test ${rime_library} ${rime_gears_library})
 
-file(COPY ${PROJECT_SOURCE_DIR}/data/test/config_test.yaml
-     DESTINATION ${EXECUTABLE_OUTPUT_PATH})
-file(COPY ${PROJECT_SOURCE_DIR}/data/test/config_compiler_test.yaml
-     DESTINATION ${EXECUTABLE_OUTPUT_PATH})
-file(COPY ${PROJECT_SOURCE_DIR}/data/test/dictionary_test.dict.yaml
-     DESTINATION ${EXECUTABLE_OUTPUT_PATH})
+file(GLOB test_data_files ${PROJECT_SOURCE_DIR}/data/test/*.yaml)
+file(COPY ${test_data_files} DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 
 set(rime_test_executable ${EXECUTABLE_OUTPUT_PATH}/rime_test${ext})
 add_test(rime_test ${rime_test_executable})

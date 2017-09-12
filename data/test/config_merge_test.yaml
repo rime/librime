@@ -1,0 +1,48 @@
+# tests for ConfigCompiler features
+
+starcraft:
+  __include: starcraft:/
+
+append_with_include:
+  list:
+    __include: starcraft/protoss/ground_units
+    __append:
+      - dark templar
+      - dark archon
+
+append_with_patch:
+  __include: starcraft
+  __patch:
+    # append to string
+    terrans/player/+: ', nada'
+    # append to empty list
+    terrans/air_units/+:
+      - wraith
+      - battlecruiser
+    # append to existing list
+    protoss/ground_units/+:
+      - dark templar
+      - dark archon
+
+merge_tree:
+  __include: starcraft
+  # merge tree triggered by `__include`
+  terrans:
+    ground_units:
+      - scv
+      - marine
+      - firebat
+      - vulture
+      - tank
+    # patch `/merge_tree/terrans` before merging
+    __patch:
+      # append with `__patch`
+      ground_units/+:
+      - medic
+      - goliath
+  protoss:
+    # append to exising list, alternative syntax
+    ground_units: {__append: [dark templar, dark archon]}
+  zerg:
+    # overwrite existing list
+    ground_units: []

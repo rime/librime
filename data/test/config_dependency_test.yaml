@@ -1,0 +1,20 @@
+# tests for ConfigCompiler features
+
+dependency_chaining:
+  alpha:
+    __include: /dependency_chaining/beta
+  beta:
+    __include: /dependency_chaining/epsilon
+  delta:
+    __include: /dependency_chaining/beta
+  epsilon: success
+
+dependency_priorities:
+  terrans:
+    __include: starcraft:/terrans
+    __patch:
+      player: nada
+  protoss:
+    __patch:
+      player: bisu
+    __include: starcraft:/protoss
