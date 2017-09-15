@@ -140,7 +140,7 @@ inline static bool IsMerging(const string& key,
                              bool merge_tree) {
   return key == ConfigCompiler::MERGE_DIRECTIVE ||
       boost::ends_with(key, ADD_SUFFIX_OPERATOR) ||
-      (merge_tree && Is<ConfigMap>(value) &&
+      (merge_tree && (!value || Is<ConfigMap>(value)) &&
        !boost::ends_with(key, EQU_SUFFIX_OPERATOR));
 }
 
