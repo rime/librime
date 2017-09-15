@@ -212,19 +212,6 @@ void KeyBinder::LoadConfig() {
   if (!engine_)
     return;
   Config* config = engine_->schema()->config();
-  string preset;
-  if (config->GetString("key_binder/import_preset", &preset)) {
-    the<Config> preset_config(Config::Require("config")->Create(preset));
-    if (!preset_config) {
-      LOG(ERROR) << "Error importing preset key bindings '" << preset << "'.";
-      return;
-    }
-    if (auto bindings = preset_config->GetList("key_binder/bindings"))
-      key_bindings_->LoadBindings(bindings);
-    else
-      LOG(WARNING) << "missing preset key bindings.";
-  }
-  // per schema configuration, overriding preset bindings
   if (auto bindings = config->GetList("key_binder/bindings"))
     key_bindings_->LoadBindings(bindings);
 }
