@@ -51,6 +51,7 @@ class ConfigCompiler {
 
   Reference CreateReference(const string& qualified_path);
   void AddDependency(an<Dependency> dependency);
+  void Push(an<ConfigResource> resource);
   void Push(an<ConfigList> config_list, size_t index);
   void Push(an<ConfigMap> config_map, const string& key);
   bool Parse(const string& key, const an<ConfigItem>& item);
@@ -63,6 +64,7 @@ class ConfigCompiler {
   bool blocking(const string& full_path) const;
   bool pending(const string& full_path) const;
   bool resolved(const string& full_path) const;
+  vector<of<Dependency>> GetDependencies(const string& path);
   bool ResolveDependencies(const string& path);
 
  private:

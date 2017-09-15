@@ -2,99 +2,11 @@
 #include <rime/common.h>
 #include <rime/resource.h>
 #include <rime/config/config_compiler.h>
+#include <rime/config/config_compiler_impl.h>
 #include <rime/config/config_data.h>
 #include <rime/config/config_types.h>
 
 namespace rime {
-
-enum DependencyPriority {
-  kPendingChild = 0,
-  kInclude = 1,
-  kPatch = 2,
-};
-
-struct Dependency {
-  an<ConfigItemRef> target;
-
-  virtual DependencyPriority priority() const = 0;
-  bool blocking() const {
-    return priority() > kPendingChild;
-  }
-  virtual string repr() const = 0;
-  virtual bool Resolve(ConfigCompiler* compiler) = 0;
-};
-
-template <class StreamT>
-StreamT& operator<< (StreamT& stream, const Dependency& dep) {
-  return stream << dep.repr();
-}
-
-struct PendingChild : Dependency {
-  string child_path;
-  an<ConfigItemRef> child_ref;
-
-  PendingChild(const string& path, const an<ConfigItemRef>& ref)
-      : child_path(path), child_ref(ref) {
-  }
-  DependencyPriority priority() const override {
-    return kPendingChild;
-  }
-  string repr() const override {
-    return "PendingChild(" + child_path + ")";
-  }
-  bool Resolve(ConfigCompiler* compiler) override;
-};
-
-string Reference::repr() const {
-  return resource_id + ":" + local_path + (optional ? " <optional>" : "");
-}
-
-template <class StreamT>
-StreamT& operator<< (StreamT& stream, const Reference& reference) {
-  return stream << reference.repr();
-}
-
-struct IncludeReference : Dependency {
-  IncludeReference(const Reference& r) : reference(r) {
-  }
-  DependencyPriority priority() const override {
-    return kInclude;
-  }
-  string repr() const override {
-    return "Include(" + reference.repr() + ")";
-  }
-  bool Resolve(ConfigCompiler* compiler) override;
-
-  Reference reference;
-};
-
-struct PatchReference : Dependency {
-  PatchReference(const Reference& r) : reference(r) {
-  }
-  DependencyPriority priority() const override {
-    return kPatch;
-  }
-  string repr() const override {
-    return "Patch(" + reference.repr() + ")";
-  }
-  bool Resolve(ConfigCompiler* compiler) override;
-
-  Reference reference;
-};
-
-struct PatchLiteral : Dependency {
-  an<ConfigMap> patch;
-
-  PatchLiteral(an<ConfigMap> map) : patch(map) {
-  }
-  DependencyPriority priority() const override {
-    return kPatch;
-  }
-  string repr() const override {
-    return "Patch(<literal>)";
-  }
-  bool Resolve(ConfigCompiler* compiler) override;
-};
 
 struct ConfigDependencyGraph {
   map<string, of<ConfigResource>> resources;
@@ -114,11 +26,17 @@ struct ConfigDependencyGraph {
     key_stack.pop_back();
   }
 
-  string current_resource_id() const {
-    return key_stack.empty() ? string()
-        : boost::trim_right_copy_if(key_stack.front(), boost::is_any_of(":"));
-  }
+  string current_resource_id() const;
 };
+
+string ConfigDependencyGraph::current_resource_id() const {
+  return key_stack.empty() ? string()
+      : boost::trim_right_copy_if(key_stack.front(), boost::is_any_of(":"));
+}
+
+string Reference::repr() const {
+  return resource_id + ":" + local_path + (optional ? " <optional>" : "");
+}
 
 bool PendingChild::Resolve(ConfigCompiler* compiler) {
   return compiler->ResolveDependencies(child_path);
@@ -156,8 +74,7 @@ bool PatchReference::Resolve(ConfigCompiler* compiler) {
     return false;
   }
   PatchLiteral patch{As<ConfigMap>(item)};
-  patch.target = target;
-  return patch.Resolve(compiler);
+  return patch.TargetedAt(target).Resolve(compiler);
 }
 
 static bool AppendToString(an<ConfigItemRef> target, an<ConfigValue> value) {
@@ -294,7 +211,7 @@ void ConfigDependencyGraph::Add(an<Dependency> dependency) {
              << node_stack.size();
   if (node_stack.empty()) return;
   const auto& target = node_stack.back();
-  dependency->target = target;
+  dependency->TargetedAt(target);
   auto target_path = ConfigData::JoinPath(key_stack);
   auto& target_deps = deps[target_path];
   bool target_was_pending = !target_deps.empty();
@@ -353,6 +270,10 @@ void ConfigCompiler::AddDependency(an<Dependency> dependency) {
   graph_->Add(dependency);
 }
 
+void ConfigCompiler::Push(an<ConfigResource> resource) {
+  graph_->Push(resource, resource->resource_id + ":");
+}
+
 void ConfigCompiler::Push(an<ConfigList> config_list, size_t index) {
   graph_->Push(
       New<ConfigListEntryRef>(nullptr, config_list, index),
@@ -378,10 +299,10 @@ an<ConfigResource> ConfigCompiler::Compile(const string& file_name) {
   auto resource_id = resource_resolver_->ToResourceId(file_name);
   auto resource = New<ConfigResource>(resource_id, New<ConfigData>());
   graph_->resources[resource_id] = resource;
-  graph_->Push(resource, resource_id + ":");
+  Push(resource);
   resource->loaded = resource->data->LoadFromFile(
       resource_resolver_->ResolvePath(resource_id).string(), this);
-  graph_->Pop();
+  Pop();
   return resource;
 }
 
@@ -460,6 +381,11 @@ bool ConfigCompiler::pending(const string& full_path) const {
 bool ConfigCompiler::resolved(const string& full_path) const {
   auto found = graph_->deps.find(full_path);
   return found == graph_->deps.end() || found->second.empty();
+}
+
+vector<of<Dependency>> ConfigCompiler::GetDependencies(const string& path) {
+  auto found = graph_->deps.find(path);
+  return found == graph_->deps.end() ? vector<of<Dependency>>() : found->second;
 }
 
 static an<ConfigItem> ResolveReference(ConfigCompiler* compiler,
