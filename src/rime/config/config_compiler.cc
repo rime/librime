@@ -468,6 +468,11 @@ static an<ConfigItem> ResolveReference(ConfigCompiler* compiler,
   if (!resource) {
     DLOG(INFO) << "resource not loaded, compiling: " << reference.resource_id;
     resource = compiler->Compile(reference.resource_id);
+    // dependency doesn't require full resolution, this allows non conflicting
+    // mutual references between config files.
+    // this call is made even if resource is not loaded because plugins can
+    // edit the empty config data, adding new dependencies.
+    ResolveBlockingDependencies(compiler, reference.resource_id + ":");
     if (!resource->loaded) {
       if (reference.optional) {
         LOG(INFO) << "optional resource not loaded: " << reference.resource_id;
@@ -557,10 +562,11 @@ bool ConfigCompiler::Link(an<ConfigResource> target) {
 
 bool ConfigCompiler::ResolveDependencies(const string& path) {
   DLOG(INFO) << "ResolveDependencies(" << path << ")";
-  if (!graph_->deps.count(path)) {
+  auto found = graph_->deps.find(path);
+  if (found == graph_->deps.end()) {
     return true;
   }
-  auto& deps = graph_->deps[path];
+  auto& deps = found->second;
   for (auto iter = deps.begin(); iter != deps.end(); ) {
     if (!(*iter)->Resolve(this)) {
       LOG(ERROR) << "unresolved dependency: " << **iter;
