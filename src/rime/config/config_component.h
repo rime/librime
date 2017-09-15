@@ -63,18 +63,24 @@ class Config : public Class<Config, const string&>, public ConfigItemRef {
   void SetItem(an<ConfigItem> item);
 };
 
+class ConfigCompiler;
+class ConfigCompilerPlugin;
 class ResourceResolver;
+struct ConfigResource;
 
 class ConfigComponent : public Config::Component {
  public:
   ConfigComponent();
   ~ConfigComponent();
   Config* Create(const string& file_name);
+  void InstallPlugin(ConfigCompilerPlugin *plugin);
+  bool ApplyPlugins(ConfigCompiler* compiler, an<ConfigResource> resource);
 
 private:
   an<ConfigData> GetConfigData(const string& file_name);
   map<string, weak<ConfigData>> cache_;
   the<ResourceResolver> resource_resolver_;
+  vector<the<ConfigCompilerPlugin>> plugins_;
 };
 
 }  // namespace rime

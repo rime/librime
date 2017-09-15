@@ -11,6 +11,7 @@
 
 // built-in components
 #include <rime/config.h>
+#include <rime/config/plugins.h>
 #include <rime/schema.h>
 
 using namespace rime;
@@ -20,6 +21,9 @@ static void rime_core_initialize() {
   Registry& r = Registry::instance();
 
   auto config = new ConfigComponent;
+  config->InstallPlugin(new AutoPatchConfigPlugin);
+  config->InstallPlugin(new LegacyPresetConfigPlugin);
+  config->InstallPlugin(new LegacyDictionaryConfigPlugin);
   r.Register("config", config);
   r.Register("schema", new SchemaComponent(config));
 }

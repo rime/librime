@@ -5,6 +5,7 @@
 #include <rime/config/config_compiler_impl.h>
 #include <rime/config/config_data.h>
 #include <rime/config/config_types.h>
+#include <rime/config/plugins.h>
 
 namespace rime {
 
@@ -243,8 +244,10 @@ void ConfigDependencyGraph::Add(an<Dependency> dependency) {
   }
 }
 
-ConfigCompiler::ConfigCompiler(ResourceResolver* resource_resolver)
+ConfigCompiler::ConfigCompiler(ResourceResolver* resource_resolver,
+                               ConfigCompilerPlugin* plugin)
     : resource_resolver_(resource_resolver),
+      plugin_(plugin),
       graph_(new ConfigDependencyGraph) {
 }
 
@@ -303,6 +306,8 @@ an<ConfigResource> ConfigCompiler::Compile(const string& file_name) {
   resource->loaded = resource->data->LoadFromFile(
       resource_resolver_->ResolvePath(resource_id).string(), this);
   Pop();
+  if (plugin_)
+    plugin_->ReviewCompileOutput(this, resource);
   return resource;
 }
 
@@ -483,7 +488,8 @@ bool ConfigCompiler::Link(an<ConfigResource> target) {
     LOG(ERROR) << "resource not found: " << target->resource_id;
     return false;
   }
-  return ResolveDependencies(found->first + ":");
+  return ResolveDependencies(found->first + ":") &&
+      (plugin_ ? plugin_->ReviewLinkOutput(this, target) : true);
 }
 
 bool ConfigCompiler::ResolveDependencies(const string& path) {

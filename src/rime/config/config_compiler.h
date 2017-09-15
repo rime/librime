@@ -35,6 +35,7 @@ struct Reference {
   string repr() const;
 };
 
+class ConfigCompilerPlugin;
 class ResourceResolver;
 struct Dependency;
 struct ConfigDependencyGraph;
@@ -46,7 +47,8 @@ class ConfigCompiler {
   static constexpr const char* APPEND_DIRECTIVE = "__append";
   static constexpr const char* MERGE_DIRECTIVE = "__merge";
 
-  explicit ConfigCompiler(ResourceResolver* resource_resolver);
+  ConfigCompiler(ResourceResolver* resource_resolver,
+                 ConfigCompilerPlugin* plugin);
   virtual ~ConfigCompiler();
 
   Reference CreateReference(const string& qualified_path);
@@ -69,6 +71,7 @@ class ConfigCompiler {
 
  private:
   ResourceResolver* resource_resolver_;
+  ConfigCompilerPlugin* plugin_;
   the<ConfigDependencyGraph> graph_;
 };
 
