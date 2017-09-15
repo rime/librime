@@ -2,8 +2,6 @@
 // Copyright RIME Developers
 // Distributed under the BSD License
 //
-// 2012-02-12 GONG Chen <chen.sst@gmail.com>
-//
 #ifndef RIME_CUSTOMIZER_H_
 #define RIME_CUSTOMIZER_H_
 
@@ -20,7 +18,10 @@ class Customizer {
         dest_path_(dest_path),
         version_key_(version_key) {}
 
+  // DEPRECATED: in favor of auto-patch config compiler plugin
   bool UpdateConfigFile();
+
+  bool TrashCustomizedCopy();
 
  protected:
   boost::filesystem::path source_path_;

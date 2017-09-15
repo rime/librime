@@ -268,8 +268,8 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   fs::path user_data_path(deployer->user_data_dir);
   fs::path destination_path(user_data_path / (schema_id + ".schema.yaml"));
   Customizer customizer(source_path, destination_path, "schema/version");
-  if (customizer.UpdateConfigFile()) {
-    LOG(INFO) << "schema '" << schema_id << "' is updated.";
+  if (customizer.TrashCustomizedCopy()) {
+    LOG(INFO) << "patched copy of schema '" << schema_id << "' is moved to trash";
   }
 
   Schema schema(schema_id, new Config);
@@ -327,7 +327,8 @@ bool ConfigFileUpdate::Run(Deployer* deployer) {
     source_config_path = dest_config_path;
   }
   Customizer customizer(source_config_path, dest_config_path, version_key_);
-  return customizer.UpdateConfigFile();
+  customizer.TrashCustomizedCopy();
+  return true;
 }
 
 bool PrebuildAllSchemas::Run(Deployer* deployer) {

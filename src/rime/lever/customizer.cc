@@ -28,6 +28,7 @@ namespace rime {
 // 1.0    X      2.0.custom.X (up-to-date)
 // 1.0    Y      1.0.custom.X  --> Update: 1.0.custom.Y
 //
+// DEPRECATED: in favor of auto-patch config compiler plugin
 bool Customizer::UpdateConfigFile() {
   bool need_update = false;
   bool redistribute = false;
@@ -144,6 +145,11 @@ bool Customizer::UpdateConfigFile() {
   }
 
   return true;
+}
+
+bool Customizer::TrashCustomizedCopy() {
+  // TODO: unimplemented
+  return false;
 }
 
 }  // namespace rime
