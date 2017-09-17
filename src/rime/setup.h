@@ -7,9 +7,11 @@
 #ifndef RIME_SETUP_H_
 #define RIME_SETUP_H_
 
+#include <rime_api.h>
+
 namespace rime {
 
-extern const char* kDefaultModules[];
+RIME_API extern const char* kDefaultModules[];
 extern const char* kDeployerModules[];
 extern const char* kLegacyModules[];
 

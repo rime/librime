@@ -94,7 +94,7 @@ if %build_thirdparty% == 1 (
   echo building leveldb.
   cd %THIRDPARTY%\src\leveldb-windows
   echo BOOST_ROOT=%BOOST_ROOT%
-  msbuild.exe leveldb.sln /p:Configuration=Release
+  msbuild.exe leveldb.sln /p:Configuration=Release /p:Platform=Win32
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
   xcopy /S /I /Y include\leveldb %THIRDPARTY%\include\leveldb\
@@ -128,7 +128,7 @@ if %build_thirdparty% == 1 (
 
   echo building marisa.
   cd %THIRDPARTY%\src\marisa-trie\vs2015
-  msbuild.exe vs2015.sln /p:Configuration=Release
+  msbuild.exe vs2015.sln /p:Configuration=Release /p:Platform=Win32
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
   xcopy /S /I /Y ..\lib\marisa %THIRDPARTY%\include\marisa\
@@ -169,6 +169,10 @@ if %build_thirdparty% == 1 (
 if %build_librime% == 0 goto EXIT
 
 set RIME_CMAKE_FLAGS=-DBUILD_STATIC=ON -DBUILD_SHARED_LIBS=%build_shared% -DBUILD_TEST=%build_test% -DENABLE_LOGGING=%enable_logging% -DBOOST_USE_CXX11=ON -DCMAKE_CONFIGURATION_TYPES="Release"
+
+if "%build_shared%" == "ON" (
+  set RIME_CMAKE_FLAGS=%RIME_CMAKE_FLAGS% -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=TRUE
+)
 
 cd /d %RIME_ROOT%
 echo cmake %RIME_ROOT% -B%build% -G%CMAKE_GENERATOR% -T%CMAKE_TOOLSET% %RIME_CMAKE_FLAGS%
