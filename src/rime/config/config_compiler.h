@@ -35,6 +35,7 @@ struct Reference {
   string repr() const;
 };
 
+class ConfigCompilerPlugin;
 class ResourceResolver;
 struct Dependency;
 struct ConfigDependencyGraph;
@@ -46,11 +47,13 @@ class ConfigCompiler {
   static constexpr const char* APPEND_DIRECTIVE = "__append";
   static constexpr const char* MERGE_DIRECTIVE = "__merge";
 
-  explicit ConfigCompiler(ResourceResolver* resource_resolver);
+  ConfigCompiler(ResourceResolver* resource_resolver,
+                 ConfigCompilerPlugin* plugin);
   virtual ~ConfigCompiler();
 
   Reference CreateReference(const string& qualified_path);
   void AddDependency(an<Dependency> dependency);
+  void Push(an<ConfigResource> resource);
   void Push(an<ConfigList> config_list, size_t index);
   void Push(an<ConfigMap> config_map, const string& key);
   bool Parse(const string& key, const an<ConfigItem>& item);
@@ -63,10 +66,12 @@ class ConfigCompiler {
   bool blocking(const string& full_path) const;
   bool pending(const string& full_path) const;
   bool resolved(const string& full_path) const;
+  vector<of<Dependency>> GetDependencies(const string& path);
   bool ResolveDependencies(const string& path);
 
  private:
   ResourceResolver* resource_resolver_;
+  ConfigCompilerPlugin* plugin_;
   the<ConfigDependencyGraph> graph_;
 };
 

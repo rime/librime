@@ -27,24 +27,8 @@ void PunctConfig::LoadConfig(Engine* engine, bool load_symbols) {
     return;
   shape_ = shape;
   Config* config = engine->schema()->config();
-  string preset;
-  if (config->GetString("punctuator/import_preset", &preset)) {
-    the<Config> preset_config(
-        Config::Require("config")->Create(preset));
-    if (!preset_config) {
-      LOG(ERROR) << "Error importing preset punctuation '" << preset << "'.";
-      return;
-    }
-    preset_mapping_ = preset_config->GetMap("punctuator/" + shape);
-    if (!preset_mapping_) {
-      LOG(WARNING) << "missing preset punctuation mapping.";
-    }
-    if (load_symbols && !preset_symbols_) {
-      preset_symbols_ = preset_config->GetMap("punctuator/symbols");
-    }
-  }
   mapping_ = config->GetMap("punctuator/" + shape);
-  if (!mapping_ && !preset_mapping_) {
+  if (!mapping_) {
     LOG(WARNING) << "missing punctuation mapping.";
   }
   if (load_symbols) {
@@ -53,25 +37,8 @@ void PunctConfig::LoadConfig(Engine* engine, bool load_symbols) {
 }
 
 an<ConfigItem> PunctConfig::GetPunctDefinition(const string key) {
-  an<ConfigItem> punct_definition;
-  if (mapping_)
-    punct_definition = mapping_->Get(key);
-  if (punct_definition)
-    return punct_definition;
-
-  if (preset_mapping_)
-    punct_definition = preset_mapping_->Get(key);
-  if (punct_definition)
-    return punct_definition;
-
-  if (symbols_)
-    punct_definition = symbols_->Get(key);
-  if (punct_definition)
-    return punct_definition;
-
-  if (preset_symbols_)
-    punct_definition = preset_symbols_->Get(key);
-  return punct_definition;
+  an<ConfigItem> result = mapping_ ? mapping_->Get(key) : nullptr;
+  return result ? result : symbols_ ? symbols_->Get(key) : nullptr;
 }
 
 Punctuator::Punctuator(const Ticket& ticket) : Processor(ticket) {

@@ -27,20 +27,7 @@ static void load_patterns(RecognizerPatterns* patterns, an<ConfigMap> map) {
 }
 
 void RecognizerPatterns::LoadConfig(Config* config) {
-  an<ConfigMap> pattern_map;
-  string preset;
-  if (config->GetString("recognizer/import_preset", &preset)) {
-    the<Config> preset_config(
-        Config::Require("config")->Create(preset));
-    if (!preset_config) {
-      LOG(ERROR) << "Error importing preset patterns '" << preset << "'.";
-      return;
-    }
-    pattern_map = preset_config->GetMap("recognizer/patterns");
-    load_patterns(this, pattern_map);
-  }
-  pattern_map = config->GetMap("recognizer/patterns");
-  load_patterns(this, pattern_map);
+  load_patterns(this, config->GetMap("recognizer/patterns"));
 }
 
 RecognizerMatch

@@ -7,6 +7,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <rime/config/config_compiler.h>
+#include <rime/config/config_cow_ref.h>
 #include <rime/config/config_data.h>
 #include <rime/config/config_types.h>
 
@@ -156,62 +157,6 @@ class ConfigDataRootRef : public ConfigItemRef {
   ConfigData* data_;
 };
 
-template <class T>
-static an<T> Cow(const an<T>& container, const string& key) {
-  if (!container) {
-    DLOG(INFO) << "creating node: " << key;
-    return New<T>();
-  }
-  DLOG(INFO) << "copy on write: " << key;
-  return New<T>(*container);
-}
-
-class ConfigMapEntryCowRef : public ConfigItemRef {
- public:
-  ConfigMapEntryCowRef(an<ConfigItemRef> parent, string key)
-      : ConfigItemRef(nullptr), parent_(parent), key_(key) {
-  }
-  an<ConfigItem> GetItem() const override {
-    auto map = As<ConfigMap>(**parent_);
-    return map ? map->Get(key_) : nullptr;
-  }
-  void SetItem(an<ConfigItem> item) override {
-    auto map = As<ConfigMap>(**parent_);
-    if (!copied_) {
-      *parent_ = map = Cow(map, key_);
-      copied_ = true;
-    }
-    map->Set(key_, item);
-  }
- protected:
-  an<ConfigItemRef> parent_;
-  string key_;
-  bool copied_ = false;
-};
-
-class ConfigListEntryCowRef : public ConfigMapEntryCowRef {
- public:
-  ConfigListEntryCowRef(an<ConfigItemRef> parent, string key)
-      : ConfigMapEntryCowRef(parent, key) {
-  }
-  an<ConfigItem> GetItem() const override {
-    auto list = As<ConfigList>(**parent_);
-    return list ? list->GetAt(index(list, true)) : nullptr;
-  }
-  void SetItem(an<ConfigItem> item) override {
-    auto list = As<ConfigList>(**parent_);
-    if (!copied_) {
-      *parent_ = list = Cow(list, key_);
-      copied_ = true;
-    }
-    list->SetAt(index(list, false), item);
-  }
- private:
-  size_t index(an<ConfigList> list, bool read_only) const {
-    return ConfigData::ResolveListIndex(list, key_, read_only);
-  }
-};
-
 bool TraverseCopyOnWrite(an<ConfigItemRef> root, const string& path,
                          function<bool (an<ConfigItemRef> target)> writer) {
   DLOG(INFO) << "TraverseCopyOnWrite(" << path << ")";
@@ -230,11 +175,7 @@ bool TraverseCopyOnWrite(an<ConfigItemRef> root, const string& path,
       LOG(ERROR) << "copy on write failed; incompatible node type: " << key;
       return false;
     }
-    if (is_list) {
-      head = New<ConfigListEntryCowRef>(head, key);
-    } else {
-      head = New<ConfigMapEntryCowRef>(head, key);
-    }
+    head = Cow(head, key);
   }
   return writer(head);
 }

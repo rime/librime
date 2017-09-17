@@ -11,6 +11,7 @@
 #include <rime/config/config_compiler.h>
 #include <rime/config/config_data.h>
 #include <rime/config/config_types.h>
+#include <rime/config/plugins.h>
 
 namespace rime {
 
@@ -160,12 +161,53 @@ Config* ConfigComponent::Create(const string& file_name) {
   return new Config(GetConfigData(file_name));
 }
 
+void ConfigComponent::InstallPlugin(ConfigCompilerPlugin* plugin) {
+  plugins_.push_back(the<ConfigCompilerPlugin>(plugin));
+}
+
+template <class Container>
+struct MultiplePlugins : ConfigCompilerPlugin {
+  Container& plugins;
+
+  MultiplePlugins(Container& _plugins)
+      : plugins(_plugins) {
+  }
+  bool ReviewCompileOutput(ConfigCompiler* compiler,
+                           an<ConfigResource> resource) override {
+    return ReviewedByAll(&ConfigCompilerPlugin::ReviewCompileOutput,
+                         compiler, resource);
+  }
+  bool ReviewLinkOutput(ConfigCompiler* compiler,
+                        an<ConfigResource> resource) override {
+    return ReviewedByAll(&ConfigCompilerPlugin::ReviewLinkOutput,
+                         compiler, resource);
+  }
+
+  typedef bool (ConfigCompilerPlugin::*Reviewer)(ConfigCompiler* compiler,
+                                                 an<ConfigResource> resource);
+  bool ReviewedByAll(Reviewer reviewer,
+                     ConfigCompiler* compiler,
+                     an<ConfigResource> resource);
+};
+
+template <class Container>
+bool MultiplePlugins<Container>::ReviewedByAll(Reviewer reviewer,
+                                               ConfigCompiler* compiler,
+                                               an<ConfigResource> resource) {
+  for (const auto& plugin : plugins) {
+    if(!((*plugin).*reviewer)(compiler, resource))
+      return false;
+  }
+  return true;
+}
+
 an<ConfigData> ConfigComponent::GetConfigData(const string& file_name) {
   auto config_id = resource_resolver_->ToResourceId(file_name);
   // keep a weak reference to the shared config data in the component
   weak<ConfigData>& wp(cache_[config_id]);
   if (wp.expired()) {  // create a new copy and load it
-    ConfigCompiler compiler(resource_resolver_.get());
+    MultiplePlugins<decltype(plugins_)> multiple_plugins(plugins_);
+    ConfigCompiler compiler(resource_resolver_.get(), &multiple_plugins);
     auto resource = compiler.Compile(file_name);
     if (resource->loaded && !compiler.Link(resource)) {
       LOG(ERROR) << "error loading config from: " << file_name;

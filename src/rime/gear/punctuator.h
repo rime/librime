@@ -23,11 +23,9 @@ class PunctConfig {
   void LoadConfig(Engine* engine, bool load_symbols = false);
   an<ConfigItem> GetPunctDefinition(const string key);
  protected:
-  an<ConfigMap> mapping_;
-  an<ConfigMap> preset_mapping_;
   string shape_;
+  an<ConfigMap> mapping_;
   an<ConfigMap> symbols_;
-  an<ConfigMap> preset_symbols_;
 };
 
 class Punctuator : public Processor {
