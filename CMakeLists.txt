@@ -2,7 +2,11 @@ set(CMAKE_USER_MAKE_RULES_OVERRIDE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/c_flag_over
 set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_flag_overrides.cmake)
 
 project(rime)
-cmake_minimum_required(VERSION 3.4)
+if(WIN32)
+  cmake_minimum_required(VERSION 3.4)
+else(WIN32)
+  cmake_minimum_required(VERSION 2.8)
+endif(WIN32)
 
 set(rime_version 1.2.9)
 set(rime_soversion 1)
