@@ -112,12 +112,12 @@ class TableAccessor {
   TableAccessor(const Code& index_code, const table::TailIndex* code_map,
                 double credibility = 1.0);
 
-  bool Next();
+  RIME_API bool Next();
 
-  bool exhausted() const;
-  size_t remaining() const;
-  const table::Entry* entry() const;
-  const table::Code* extra_code() const;
+  RIME_API bool exhausted() const;
+  RIME_API size_t remaining() const;
+  RIME_API const table::Entry* entry() const;
+  RIME_API const table::Code* extra_code() const;
   const Code& index_code() const { return index_code_; }
   Code code() const;
   double credibility() const { return credibility_; }
@@ -138,24 +138,24 @@ class TableQuery;
 
 class Table : public MappedFile {
  public:
-  Table(const string& file_name);
+  RIME_API Table(const string& file_name);
   virtual ~Table();
 
-  bool Load();
-  bool Save();
-  bool Build(const Syllabary& syllabary,
-             const Vocabulary& vocabulary,
-             size_t num_entries,
-             uint32_t dict_file_checksum = 0);
+  RIME_API bool Load();
+  RIME_API bool Save();
+  RIME_API bool Build(const Syllabary& syllabary,
+                      const Vocabulary& vocabulary,
+                      size_t num_entries,
+                      uint32_t dict_file_checksum = 0);
 
   bool GetSyllabary(Syllabary* syllabary);
-  string GetSyllableById(int syllable_id);
-  TableAccessor QueryWords(int syllable_id);
-  TableAccessor QueryPhrases(const Code& code);
-  bool Query(const SyllableGraph& syll_graph,
-             size_t start_pos,
-             TableQueryResult* result);
-  string GetEntryText(const table::Entry& entry);
+  RIME_API string GetSyllableById(int syllable_id);
+  RIME_API TableAccessor QueryWords(int syllable_id);
+  RIME_API TableAccessor QueryPhrases(const Code& code);
+  RIME_API bool Query(const SyllableGraph& syll_graph,
+                      size_t start_pos,
+                      TableQueryResult* result);
+  RIME_API string GetEntryText(const table::Entry& entry);
 
   uint32_t dict_file_checksum() const;
 

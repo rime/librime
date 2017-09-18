@@ -19,7 +19,7 @@ class KeyEvent {
   KeyEvent() = default;
   KeyEvent(int keycode, int modifier)
       : keycode_(keycode), modifier_(modifier) {}
-  KeyEvent(const string& repr);
+  RIME_API KeyEvent(const string& repr);
 
   int keycode() const { return keycode_; }
   void keycode(int value) { keycode_ = value; }
@@ -35,10 +35,10 @@ class KeyEvent {
   // 按鍵表示為形如「狀態+鍵名」的文字
   // 若無鍵名，則以四位或六位十六进制数形式的文字來標識
   // 形如 "0x12ab", "0xfffffe"
-  string repr() const;
+  RIME_API string repr() const;
 
   // 解析文字表示的按鍵
-  bool Parse(const string& repr);
+  RIME_API bool Parse(const string& repr);
 
   bool operator== (const KeyEvent& other) const {
     return keycode_ == other.keycode_ && modifier_ == other.modifier_;
@@ -59,15 +59,15 @@ class KeyEvent {
 class KeySequence : public vector<KeyEvent> {
  public:
   KeySequence() = default;
-  KeySequence(const string& repr);
+  RIME_API KeySequence(const string& repr);
 
   // 可表示為一串文字
   // 若其中包含不產生可打印字符的按鍵，以 {鍵名} 來標記
   // 組合鍵也用 {組合鍵狀態+鍵名} 來標記
-  string repr() const;
+  RIME_API string repr() const;
 
   // 解析按鍵序列描述文字
-  bool Parse(const string& repr);
+  RIME_API bool Parse(const string& repr);
 };
 
 inline std::ostream& operator<< (std::ostream& out, const KeyEvent& key_event) {

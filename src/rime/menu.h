@@ -7,6 +7,7 @@
 #ifndef RIME_MENU_H_
 #define RIME_MENU_H_
 
+#include <rime_api.h>
 #include <rime/candidate.h>
 #include <rime/common.h>
 
@@ -25,13 +26,13 @@ class Translation;
 
 class Menu {
  public:
-  Menu();
+  RIME_API Menu();
 
-  void AddTranslation(an<Translation> translation);
+  RIME_API void AddTranslation(an<Translation> translation);
   void AddFilter(Filter* filter);
 
-  size_t Prepare(size_t candidate_count);
-  Page* CreatePage(size_t page_size, size_t page_no);
+  RIME_API size_t Prepare(size_t candidate_count);
+  RIME_API Page* CreatePage(size_t page_size, size_t page_no);
   an<Candidate> GetCandidateAt(size_t index);
 
   // CAVEAT: returns the number of candidates currently obtained,

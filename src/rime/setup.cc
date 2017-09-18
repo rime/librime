@@ -14,11 +14,11 @@
 
 namespace rime {
 
-RIME_MODULE_LIST(kDefaultModules, "default");
+RIME_API RIME_MODULE_LIST(kDefaultModules, "default");
 RIME_MODULE_LIST(kDeployerModules, "deployer");
 RIME_MODULE_LIST(kLegacyModules, "legacy");
 
-void LoadModules(const char* module_names[]) {
+RIME_API void LoadModules(const char* module_names[]) {
   ModuleManager& mm(ModuleManager::instance());
   for (const char** m = module_names; *m; ++m) {
     if (RimeModule* module = mm.Find(*m)) {
@@ -27,7 +27,7 @@ void LoadModules(const char* module_names[]) {
   }
 }
 
-void SetupLogging(const char* app_name) {
+RIME_API void SetupLogging(const char* app_name) {
 #ifdef RIME_ENABLE_LOGGING
   google::InitGoogleLogging(app_name);
 #endif  // RIME_ENABLE_LOGGING

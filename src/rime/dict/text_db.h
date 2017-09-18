@@ -42,11 +42,11 @@ class TextDb : public Db {
   TextDb(const string& name,
          const string& db_type,
          TextFormat format);
-  virtual ~TextDb();
+  RIME_API virtual ~TextDb();
 
-  virtual bool Open();
+  RIME_API virtual bool Open();
   virtual bool OpenReadOnly();
-  virtual bool Close();
+  RIME_API virtual bool Close();
 
   virtual bool Backup(const string& snapshot_file);
   virtual bool Restore(const string& snapshot_file);
@@ -57,10 +57,10 @@ class TextDb : public Db {
 
   virtual an<DbAccessor> QueryMetadata();
   virtual an<DbAccessor> QueryAll();
-  virtual an<DbAccessor> Query(const string& key);
-  virtual bool Fetch(const string& key, string* value);
-  virtual bool Update(const string& key, const string& value);
-  virtual bool Erase(const string& key);
+  RIME_API virtual an<DbAccessor> Query(const string& key);
+  RIME_API virtual bool Fetch(const string& key, string* value);
+  RIME_API virtual bool Update(const string& key, const string& value);
+  RIME_API virtual bool Erase(const string& key);
 
  protected:
   void Clear();

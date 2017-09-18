@@ -7,6 +7,7 @@
 #ifndef RIME_DICT_COMPILER_H_
 #define RIME_DICT_COMPILER_H_
 
+#include <rime_api.h>
 #include <rime/common.h>
 
 namespace rime {
@@ -30,10 +31,10 @@ class DictCompiler {
     kDump = 4,
   };
 
-  DictCompiler(Dictionary *dictionary,
-               DictFileFinder finder = NULL);
+  RIME_API DictCompiler(Dictionary *dictionary,
+                        DictFileFinder finder = NULL);
 
-  bool Compile(const string &schema_file);
+  RIME_API bool Compile(const string &schema_file);
   void set_options(int options) { options_ = options; }
 
  private:

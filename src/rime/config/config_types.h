@@ -8,6 +8,7 @@
 #define RIME_CONFIG_TYPES_H_
 
 #include <type_traits>
+#include <rime_api.h>
 #include <rime/common.h>
 
 namespace rime {
@@ -35,17 +36,17 @@ class ConfigItem {
 class ConfigValue : public ConfigItem {
  public:
   ConfigValue() : ConfigItem(kScalar) {}
-  ConfigValue(bool value);
-  ConfigValue(int value);
+  RIME_API ConfigValue(bool value);
+  RIME_API ConfigValue(int value);
   ConfigValue(double value);
-  ConfigValue(const char* value);
+  RIME_API ConfigValue(const char* value);
   ConfigValue(const string& value);
 
   // schalar value accessors
   bool GetBool(bool* value) const;
-  bool GetInt(int* value) const;
+  RIME_API bool GetInt(int* value) const;
   bool GetDouble(double* value) const;
-  bool GetString(string* value) const;
+  RIME_API bool GetString(string* value) const;
   bool SetBool(bool value);
   bool SetInt(int value);
   bool SetDouble(double value);
@@ -68,14 +69,14 @@ class ConfigList : public ConfigItem {
   using Iterator = Sequence::iterator;
 
   ConfigList() : ConfigItem(kList) {}
-  an<ConfigItem> GetAt(size_t i) const;
-  an<ConfigValue> GetValueAt(size_t i) const;
-  bool SetAt(size_t i, an<ConfigItem> element);
+  RIME_API an<ConfigItem> GetAt(size_t i) const;
+  RIME_API an<ConfigValue> GetValueAt(size_t i) const;
+  RIME_API bool SetAt(size_t i, an<ConfigItem> element);
   bool Insert(size_t i, an<ConfigItem> element);
-  bool Append(an<ConfigItem> element);
+  RIME_API bool Append(an<ConfigItem> element);
   bool Resize(size_t size);
-  bool Clear();
-  size_t size() const;
+  RIME_API bool Clear();
+  RIME_API size_t size() const;
 
   Iterator begin();
   Iterator end();
@@ -95,10 +96,10 @@ class ConfigMap : public ConfigItem {
   using Iterator = Map::iterator;
 
   ConfigMap() : ConfigItem(kMap) {}
-  bool HasKey(const string& key) const;
-  an<ConfigItem> Get(const string& key) const;
-  an<ConfigValue> GetValue(const string& key) const;
-  bool Set(const string& key, an<ConfigItem> element);
+  RIME_API bool HasKey(const string& key) const;
+  RIME_API an<ConfigItem> Get(const string& key) const;
+  RIME_API an<ConfigValue> GetValue(const string& key) const;
+  RIME_API bool Set(const string& key, an<ConfigItem> element);
   bool Clear();
 
   Iterator begin();
@@ -150,28 +151,28 @@ class ConfigItemRef {
   ConfigListEntryRef operator[] (size_t index);
   ConfigMapEntryRef operator[] (const string& key);
 
-  bool IsNull() const;
+  RIME_API bool IsNull() const;
   bool IsValue() const;
-  bool IsList() const;
+  RIME_API bool IsList() const;
   bool IsMap() const;
 
-  bool ToBool() const;
-  int ToInt() const;
+  RIME_API bool ToBool() const;
+  RIME_API int ToInt() const;
   double ToDouble() const;
-  string ToString() const;
+  RIME_API string ToString() const;
 
-  an<ConfigList> AsList();
-  an<ConfigMap> AsMap();
-  void Clear();
+  RIME_API an<ConfigList> AsList();
+  RIME_API an<ConfigMap> AsMap();
+  RIME_API void Clear();
 
   // list
-  bool Append(an<ConfigItem> item);
-  size_t size() const;
+  RIME_API bool Append(an<ConfigItem> item);
+  RIME_API size_t size() const;
   // map
   bool HasKey(const string& key) const;
 
-  bool modified() const;
-  void set_modified();
+  RIME_API bool modified() const;
+  RIME_API void set_modified();
 
  protected:
   virtual an<ConfigItem> GetItem() const = 0;

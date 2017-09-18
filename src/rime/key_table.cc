@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <X11/keysym.h>
+#include <rime_api.h>
 
 static const char *modifier_name[] = {
   "Shift",    // 0
@@ -3959,7 +3960,7 @@ static const key_entry keys_by_name[] = {
   { 0x0001be, 1449 }
 };
 
-int RimeGetModifierByName(const char *name) {
+RIME_API int RimeGetModifierByName(const char *name) {
   const int n = sizeof(modifier_name) / sizeof(const char*);
   if (!name)
     return 0;
@@ -3971,7 +3972,7 @@ int RimeGetModifierByName(const char *name) {
   return 0;
 }
 
-const char* RimeGetModifierName(int modifier) {
+RIME_API const char* RimeGetModifierName(int modifier) {
   const int n = sizeof(modifier_name) / sizeof(const char*);
   for (int i = 0; i < n && modifier != 0; ++i) {
     if ((modifier & 1) != 0) {
@@ -3982,7 +3983,7 @@ const char* RimeGetModifierName(int modifier) {
   return NULL;
 }
 
-int RimeGetKeycodeByName(const char *name) {
+RIME_API int RimeGetKeycodeByName(const char *name) {
   for (const key_entry *p = keys_by_keyval; p->keyval != XK_VoidSymbol; ++p) {
     if (!strcmp(name, key_names + p->offset)) {
       return p->keyval;
@@ -3991,7 +3992,7 @@ int RimeGetKeycodeByName(const char *name) {
   return XK_VoidSymbol;
 }
 
-const char* RimeGetKeyName(int keycode) {
+RIME_API const char* RimeGetKeyName(int keycode) {
   const int n = sizeof(keys_by_name) / sizeof(const key_entry);
   for (int i = 0; i < n; ++i) {
     if (keycode == keys_by_name[i].keyval) {

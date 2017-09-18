@@ -8,6 +8,7 @@
 #ifndef RIME_TRANSLATION_H_
 #define RIME_TRANSLATION_H_
 
+#include <rime_api.h>
 #include <rime/candidate.h>
 #include <rime/common.h>
 
@@ -26,8 +27,8 @@ class Translation {
 
   // should it provide the next candidate (negative value, zero) or
   // should it give up the chance for other translations (positive)?
-  virtual int Compare(an<Translation> other,
-                      const CandidateList& candidates);
+  RIME_API virtual int Compare(an<Translation> other,
+                               const CandidateList& candidates);
 
   bool exhausted() const { return exhausted_; }
 
