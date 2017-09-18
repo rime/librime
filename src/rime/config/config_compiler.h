@@ -35,6 +35,11 @@ struct Reference {
   string repr() const;
 };
 
+template <class StreamT>
+StreamT& operator<< (StreamT& stream, const Reference& reference) {
+  return stream << reference.repr();
+}
+
 class ConfigCompilerPlugin;
 class ResourceResolver;
 struct Dependency;

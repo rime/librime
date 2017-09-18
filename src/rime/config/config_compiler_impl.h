@@ -32,9 +32,9 @@ struct Dependency {
   virtual bool Resolve(ConfigCompiler* compiler) = 0;
 };
 
-template <class StreamT, class RepresentableT>
-StreamT& operator<< (StreamT& stream, const RepresentableT& representable) {
-  return stream << representable.repr();
+template <class StreamT>
+StreamT& operator<< (StreamT& stream, const Dependency& dependency) {
+  return stream << dependency.repr();
 }
 
 struct PendingChild : Dependency {
