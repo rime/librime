@@ -94,7 +94,7 @@ if %build_thirdparty% == 1 (
   echo building leveldb.
   cd %THIRDPARTY%\src\leveldb-windows
   echo BOOST_ROOT=%BOOST_ROOT%
-  msbuild.exe leveldb.sln /p:Configuration=Release
+  msbuild.exe leveldb.sln /p:Configuration=Release /p:Platform=Win32
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
   xcopy /S /I /Y include\leveldb %THIRDPARTY%\include\leveldb\
@@ -128,7 +128,7 @@ if %build_thirdparty% == 1 (
 
   echo building marisa.
   cd %THIRDPARTY%\src\marisa-trie\vs2015
-  msbuild.exe vs2015.sln /p:Configuration=Release
+  msbuild.exe vs2015.sln /p:Configuration=Release /p:Platform=Win32
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
   xcopy /S /I /Y ..\lib\marisa %THIRDPARTY%\include\marisa\
