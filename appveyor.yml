@@ -36,11 +36,11 @@ after_build:
   - dir build /s
 
 before_test:
-  - copy /y build\lib\Release\rime.dll build\bin
+  - copy /y build\lib\Release\rime.dll build\test\Release
 
 test_script:
-  - cd build\bin
-  - echo "congmingdeRime{space}shurufa" | Release\rime_api_console.exe
+  - cd build\test
+  - .\Release\rime_test.exe
 
 artifacts:
   - path: rime.zip
