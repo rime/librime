@@ -15,7 +15,7 @@ TEST(RimeResourceResolverTest, ResolvePath) {
   ResourceResolver rr(kMineralsType);
   rr.set_root_path("/starcraft");
   auto actual = rr.ResolvePath("enough");
-  boost::filesystem::path expected = "/starcraft/not_enough.minerals";
+  boost::filesystem::path expected = boost::filesystem::system_complete(boost::filesystem::current_path()).root_name().string() + "/starcraft/not_enough.minerals";
   EXPECT_TRUE(actual.is_absolute());
   EXPECT_TRUE(expected == actual);
 }
