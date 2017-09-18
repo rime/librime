@@ -81,7 +81,7 @@ class UserDbHelper {
 template <class BaseDb>
 class UserDbWrapper : public BaseDb {
  public:
-  UserDbWrapper(const string& db_name);
+  RIME_API UserDbWrapper(const string& db_name);
 
   virtual bool CreateMetadata() {
     return BaseDb::CreateMetadata() &&

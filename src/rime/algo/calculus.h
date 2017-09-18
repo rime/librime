@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include <boost/regex.hpp>
+#include <rime_api.h>
 #include <rime/common.h>
 #include "spelling.h"
 
@@ -28,9 +29,9 @@ class Calculation {
 
 class Calculus {
  public:
-  Calculus();
+  RIME_API Calculus();
   void Register(const string& token, Calculation::Factory* factory);
-  Calculation* Parse(const string& defintion);
+  RIME_API Calculation* Parse(const string& defintion);
 
  private:
   map<string, Calculation::Factory*> factories_;

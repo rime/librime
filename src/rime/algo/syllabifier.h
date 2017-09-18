@@ -9,6 +9,7 @@
 #define RIME_SYLLABIFIER_H_
 
 #include <stdint.h>
+#include <rime_api.h>
 #include "spelling.h"
 
 namespace rime {
@@ -45,9 +46,9 @@ class Syllabifier {
         strict_spelling_(strict_spelling) {
   }
 
-  int BuildSyllableGraph(const string &input,
-                         Prism &prism,
-                         SyllableGraph *graph);
+  RIME_API int BuildSyllableGraph(const string &input,
+                                  Prism &prism,
+                                  SyllableGraph *graph);
 
  protected:
   void CheckOverlappedSpellings(SyllableGraph *graph,

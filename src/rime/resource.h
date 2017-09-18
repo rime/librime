@@ -7,6 +7,7 @@
 #define RIME_RESOURCE_H_
 
 #include <boost/filesystem.hpp>
+#include <rime_api.h>
 #include <rime/common.h>
 
 namespace rime {
@@ -25,7 +26,7 @@ class ResourceResolver {
   }
   virtual ~ResourceResolver() {
   }
-  virtual boost::filesystem::path ResolvePath(const string& resource_id);
+  RIME_API virtual boost::filesystem::path ResolvePath(const string& resource_id);
   string ToResourceId(const string& file_path) const;
   string ToFilePath(const string& resource_id) const;
   void set_root_path(const boost::filesystem::path& root_path) {
@@ -45,7 +46,7 @@ class FallbackResourceResolver : public ResourceResolver {
   explicit FallbackResourceResolver(const ResourceType& type)
       : ResourceResolver(type) {
   }
-  boost::filesystem::path ResolvePath(const string& resource_id) override;
+  RIME_API boost::filesystem::path ResolvePath(const string& resource_id) override;
   void set_fallback_root_path(const boost::filesystem::path& fallback_root_path) {
     fallback_root_path_ = fallback_root_path;
   }

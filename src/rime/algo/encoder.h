@@ -9,13 +9,14 @@
 #define RIME_ENCODER_H_
 
 #include <boost/regex.hpp>
+#include <rime_api.h>
 
 namespace rime {
 
 class RawCode : public vector<string> {
  public:
-  string ToString() const;
-  void FromString(const string &code_str);
+  RIME_API string ToString() const;
+  RIME_API void FromString(const string &code_str);
 };
 
 class PhraseCollector {
@@ -68,14 +69,14 @@ struct TableEncodingRule {
 // for rule-based phrase encoding
 class TableEncoder : public Encoder {
  public:
-  TableEncoder(PhraseCollector* collector = NULL);
+  RIME_API TableEncoder(PhraseCollector* collector = NULL);
 
-  bool LoadSettings(Config* config);
+  RIME_API bool LoadSettings(Config* config);
 
-  bool Encode(const RawCode& code, string* result);
+  RIME_API bool Encode(const RawCode& code, string* result);
   bool EncodePhrase(const string& phrase, const string& value);
 
-  bool IsCodeExcluded(const string& code);
+  RIME_API bool IsCodeExcluded(const string& code);
 
   bool loaded() const { return loaded_; }
   const vector<TableEncodingRule>& encoding_rules() const {

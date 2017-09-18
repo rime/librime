@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <cstring>
 #include <boost/utility.hpp>
+#include <rime_api.h>
 #include <rime/common.h>
 
 namespace rime {
@@ -89,7 +90,7 @@ class MappedFileImpl;
 class MappedFile : boost::noncopyable {
  protected:
   explicit MappedFile(const string& file_name);
-  virtual ~MappedFile();
+  RIME_API virtual ~MappedFile();
 
   bool Create(size_t capacity);
   bool OpenReadOnly();
@@ -113,8 +114,8 @@ class MappedFile : boost::noncopyable {
  public:
   bool Exists() const;
   bool IsOpen() const;
-  void Close();
-  bool Remove();
+  RIME_API void Close();
+  RIME_API bool Remove();
 
   template <class T>
   T* Find(size_t offset);

@@ -7,6 +7,7 @@
 #ifndef RIME_DB_H_
 #define RIME_DB_H_
 
+#include <rime_api.h>
 #include <rime/common.h>
 #include <rime/component.h>
 
@@ -35,8 +36,8 @@ class Db : public Class<Db, const string&> {
   explicit Db(const string& name);
   virtual ~Db() = default;
 
-  bool Exists() const;
-  virtual bool Remove();
+  RIME_API bool Exists() const;
+  RIME_API virtual bool Remove();
 
   virtual bool Open() = 0;
   virtual bool OpenReadOnly() = 0;

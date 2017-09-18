@@ -7,6 +7,7 @@
 #ifndef RIME_TICKET_H_
 #define RIME_TICKET_H_
 
+#include <rime_api.h>
 
 namespace rime {
 
@@ -23,8 +24,8 @@ struct Ticket {
   Ticket(Schema* s, const string& ns);
   // prescription: in the form of "klass" or "klass@alias"
   // where alias, if given, will override default name space
-  Ticket(Engine* e, const string& ns = "",
-         const string& prescription = "");
+  RIME_API Ticket(Engine* e, const string& ns = "",
+                  const string& prescription = "");
 };
 
 }  // namespace rime

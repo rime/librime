@@ -7,6 +7,7 @@
 #ifndef RIME_ENGINE_H_
 #define RIME_ENGINE_H_
 
+#include <rime_api.h>
 #include <rime/common.h>
 #include <rime/messenger.h>
 
@@ -37,7 +38,7 @@ class Engine : public Messenger {
     active_context_ = context;
   }
 
-  static Engine* Create();
+  RIME_API static Engine* Create();
 
  protected:
   Engine();

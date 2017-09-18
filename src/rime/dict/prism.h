@@ -65,22 +65,22 @@ class Prism : public MappedFile {
  public:
   using Match = Darts::DoubleArray::result_pair_type;
 
-  explicit Prism(const string& file_name);
+  RIME_API explicit Prism(const string& file_name);
 
-  bool Load();
-  bool Save();
-  bool Build(const Syllabary& syllabary,
-             const Script* script = NULL,
-             uint32_t dict_file_checksum = 0,
-             uint32_t schema_file_checksum = 0);
+  RIME_API bool Load();
+  RIME_API bool Save();
+  RIME_API bool Build(const Syllabary& syllabary,
+                      const Script* script = NULL,
+                      uint32_t dict_file_checksum = 0,
+                      uint32_t schema_file_checksum = 0);
 
-  bool HasKey(const string& key);
-  bool GetValue(const string& key, int* value);
-  void CommonPrefixSearch(const string& key, vector<Match>* result);
-  void ExpandSearch(const string& key, vector<Match>* result, size_t limit);
+  RIME_API bool HasKey(const string& key);
+  RIME_API bool GetValue(const string& key, int* value);
+  RIME_API void CommonPrefixSearch(const string& key, vector<Match>* result);
+  RIME_API void ExpandSearch(const string& key, vector<Match>* result, size_t limit);
   SpellingAccessor QuerySpelling(SyllableId spelling_id);
 
-  size_t array_size() const;
+  RIME_API size_t array_size() const;
 
   uint32_t dict_file_checksum() const;
   uint32_t schema_file_checksum() const;

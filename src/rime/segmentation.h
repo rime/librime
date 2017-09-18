@@ -7,6 +7,7 @@
 #ifndef RIME_SEGMENTATION_H_
 #define RIME_SEGMENTATION_H_
 
+#include <rime_api.h>
 #include <rime/common.h>
 
 namespace rime {
@@ -57,15 +58,15 @@ struct Segment {
 
 class Segmentation : public vector<Segment> {
  public:
-  Segmentation();
+  RIME_API Segmentation();
   virtual ~Segmentation() {}
-  void Reset(const string& input);
+  RIME_API void Reset(const string& input);
   void Reset(size_t num_segments);
   bool AddSegment(Segment segment);
 
   bool Forward();
   bool Trim();
-  bool HasFinishedSegmentation() const;
+  RIME_API bool HasFinishedSegmentation() const;
   size_t GetCurrentStartPosition() const;
   size_t GetCurrentEndPosition() const;
   size_t GetCurrentSegmentLength() const;

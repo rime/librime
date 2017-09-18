@@ -44,16 +44,16 @@ class DictEntryIterator : protected list<dictionary::Chunk>,
  public:
   using Base = list<dictionary::Chunk>;
 
-  DictEntryIterator();
-  DictEntryIterator(const DictEntryIterator& other);
+  RIME_API DictEntryIterator();
+  RIME_API DictEntryIterator(const DictEntryIterator& other);
   DictEntryIterator& operator= (DictEntryIterator& other);
 
   void AddChunk(dictionary::Chunk&& chunk, Table* table);
   void Sort();
-  an<DictEntry> Peek();
-  bool Next();
+  RIME_API an<DictEntry> Peek();
+  RIME_API bool Next();
   bool Skip(size_t num_entries);
-  bool exhausted() const;
+  RIME_API bool exhausted() const;
   size_t entry_count() const { return entry_count_; }
 
  protected:
@@ -75,29 +75,29 @@ struct Ticket;
 
 class Dictionary : public Class<Dictionary, const Ticket&> {
  public:
-  Dictionary(const string& name,
-             const an<Table>& table,
-             const an<Prism>& prism);
+  RIME_API Dictionary(const string& name,
+                      const an<Table>& table,
+                      const an<Prism>& prism);
   virtual ~Dictionary();
 
   bool Exists() const;
-  bool Remove();
-  bool Load();
+  RIME_API bool Remove();
+  RIME_API bool Load();
 
-  an<DictEntryCollector> Lookup(const SyllableGraph& syllable_graph,
-                                        size_t start_pos,
-                                        double initial_credibility = 1.0);
+  RIME_API an<DictEntryCollector> Lookup(const SyllableGraph& syllable_graph,
+                                         size_t start_pos,
+                                         double initial_credibility = 1.0);
   // if predictive is true, do an expand search with limit,
   // otherwise do an exact match.
   // return num of matching keys.
-  size_t LookupWords(DictEntryIterator* result,
-                     const string& str_code,
-                     bool predictive, size_t limit = 0);
+  RIME_API size_t LookupWords(DictEntryIterator* result,
+                              const string& str_code,
+                              bool predictive, size_t limit = 0);
   // translate syllable id sequence to string code
-  bool Decode(const Code& code, vector<string>* result);
+  RIME_API bool Decode(const Code& code, vector<string>* result);
 
   const string& name() const { return name_; }
-  bool loaded() const;
+  RIME_API bool loaded() const;
 
   an<Table> table() { return table_; }
   an<Prism> prism() { return prism_; }
@@ -122,4 +122,4 @@ class DictionaryComponent : public Dictionary::Component {
 
 }  // namespace rime
 
-#endif  // RIME_DICTIONRAY_H_
+#endif  // RIME_DICTIONARY_H_

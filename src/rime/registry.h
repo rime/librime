@@ -7,6 +7,7 @@
 #ifndef RIME_REGISTRY_H_
 #define RIME_REGISTRY_H_
 
+#include <rime_api.h>
 #include <rime/common.h>
 
 namespace rime {
@@ -17,12 +18,12 @@ class Registry {
  public:
   using ComponentMap = map<string, ComponentBase*>;
 
-  ComponentBase* Find(const string& name);
-  void Register(const string& name, ComponentBase* component);
-  void Unregister(const string& name);
+  RIME_API ComponentBase* Find(const string& name);
+  RIME_API void Register(const string& name, ComponentBase* component);
+  RIME_API void Unregister(const string& name);
   void Clear();
 
-  static Registry& instance();
+  RIME_API static Registry& instance();
 
  private:
   Registry() = default;
