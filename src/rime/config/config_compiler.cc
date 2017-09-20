@@ -14,6 +14,8 @@ struct ConfigDependencyGraph {
   vector<of<ConfigItemRef>> node_stack;
   vector<string> key_stack;
   map<string, vector<of<Dependency>>> deps;
+  // paths for checking circular dependencies
+  vector<string> resolve_chain;
 
   void Add(an<Dependency> dependency);
 
@@ -311,12 +313,6 @@ an<ConfigResource> ConfigCompiler::Compile(const string& file_name) {
   return resource;
 }
 
-static inline an<ConfigItem> if_resolved(ConfigCompiler* compiler,
-                                         an<ConfigItem> item,
-                                         const string& path) {
-  return item && compiler->resolved(path) ? item : nullptr;
-}
-
 static bool ResolveBlockingDependencies(ConfigCompiler* compiler,
                                         const string& path) {
   if (!compiler->blocking(path)) {
@@ -335,42 +331,42 @@ static an<ConfigItem> GetResolvedItem(ConfigCompiler* compiler,
                                       const string& path) {
   DLOG(INFO) << "GetResolvedItem(" << resource->resource_id << ":" << path << ")";
   string node_path = resource->resource_id + ":";
-  if (!resource || compiler->blocking(node_path)) {
-    return nullptr;
-  }
-  an<ConfigItem> result = *resource;
+  an<ConfigItemRef> node = resource;
   if (path.empty() || path == "/") {
-    return if_resolved(compiler, result, node_path);
+    return compiler->ResolveDependencies(node_path) ? **node : nullptr;
   }
   vector<string> keys = ConfigData::SplitPath(path);
   for (const auto& key : keys) {
-    if (Is<ConfigList>(result)) {
+    if (!ResolveBlockingDependencies(compiler, node_path)) {
+      LOG(WARNING) << "accessing blocking node with unresolved dependencies: "
+                   << node_path;
+      // CAVEAT: continuing accessing subtree with this failure may result in
+      // referencing outdated data - sometimes an expected behavior.
+      // relaxing this requires checking for circular dependencies.
+      //return nullptr;
+    }
+    an<ConfigItem> item = **node;
+    if (Is<ConfigList>(item)) {
       if (ConfigData::IsListItemReference(key)) {
-        size_t index = ConfigData::ResolveListIndex(result, key, true);
+        size_t index = ConfigData::ResolveListIndex(item, key, true);
         (node_path += "/") += ConfigData::FormatListIndex(index);
-        if (!ResolveBlockingDependencies(compiler, node_path)) {
-          return nullptr;
-        }
-        result = As<ConfigList>(result)->GetAt(index);
+        node = New<ConfigListEntryRef>(nullptr, As<ConfigList>(item), index);
       } else {
-        result.reset();
+        node.reset();
       }
-    } else if (Is<ConfigMap>(result)) {
+    } else if (Is<ConfigMap>(item)) {
       DLOG(INFO) << "advance with key: " << key;
       (node_path += "/") += key;
-      if (!ResolveBlockingDependencies(compiler, node_path)) {
-        return nullptr;
-      }
-      result = As<ConfigMap>(result)->Get(key);
+      node = New<ConfigMapEntryRef>(nullptr, As<ConfigMap>(item), key);
     } else {
-      result.reset();
+      node.reset();
     }
-    if (!result) {
-      LOG(INFO) << "missing node: " << node_path;
+    if (!node) {
+      LOG(WARNING) << "inaccessible node: " << node_path << "/" << key;
       return nullptr;
     }
   }
-  return if_resolved(compiler, result, node_path);
+  return compiler->ResolveDependencies(node_path) ? **node : nullptr;
 }
 
 bool ConfigCompiler::blocking(const string& full_path) const {
@@ -399,11 +395,6 @@ static an<ConfigItem> ResolveReference(ConfigCompiler* compiler,
   if (!resource) {
     DLOG(INFO) << "resource not loaded, compiling: " << reference.resource_id;
     resource = compiler->Compile(reference.resource_id);
-    // dependency doesn't require full resolution, this allows non conflicting
-    // mutual references between config files.
-    // this call is made even if resource is not loaded because plugins can
-    // edit the empty config data, adding new dependencies.
-    ResolveBlockingDependencies(compiler, reference.resource_id + ":");
     if (!resource->loaded) {
       if (reference.optional) {
         LOG(INFO) << "optional resource not loaded: " << reference.resource_id;
@@ -492,12 +483,27 @@ bool ConfigCompiler::Link(an<ConfigResource> target) {
       (plugin_ ? plugin_->ReviewLinkOutput(this, target) : true);
 }
 
+static bool HasCircularDependencies(ConfigDependencyGraph* graph,
+                                    const string& path) {
+  for (const auto& x : graph->resolve_chain) {
+    if (boost::starts_with(x, path) &&
+        (x.length() == path.length() || x[path.length()] == '/'))
+      return true;
+  }
+  return false;
+}
+
 bool ConfigCompiler::ResolveDependencies(const string& path) {
   DLOG(INFO) << "ResolveDependencies(" << path << ")";
   auto found = graph_->deps.find(path);
   if (found == graph_->deps.end()) {
     return true;
   }
+  if (HasCircularDependencies(graph_.get(), path)) {
+    LOG(WARNING) << "circular dependencies detected in " << path;
+    return false;
+  }
+  graph_->resolve_chain.push_back(path);
   auto& deps = found->second;
   for (auto iter = deps.begin(); iter != deps.end(); ) {
     if (!(*iter)->Resolve(this)) {
@@ -507,6 +513,7 @@ bool ConfigCompiler::ResolveDependencies(const string& path) {
     LOG(INFO) << "resolved: " << **iter;
     iter = deps.erase(iter);
   }
+  graph_->resolve_chain.pop_back();
   DLOG(INFO) << "all dependencies resolved.";
   return true;
 }

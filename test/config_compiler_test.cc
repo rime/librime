@@ -243,3 +243,19 @@ TEST_F(RimeConfigMergeTest, MergeTree) {
   EXPECT_EQ(6, config_->GetListSize("/starcraft/protoss/ground_units"));
   EXPECT_EQ(5, config_->GetListSize("/starcraft/zerg/ground_units"));
 }
+
+class RimeConfigCircularDependencyTest : public RimeConfigCompilerTestBase {
+ protected:
+  string test_config_id() const override {
+    return "config_circular_dependency_test";
+  }
+};
+
+TEST_F(RimeConfigCircularDependencyTest, BestEffortResolution) {
+  const string& prefix = "test/";
+  EXPECT_TRUE(config_->IsNull(prefix + "__include"));
+  EXPECT_TRUE(config_->IsNull(prefix + "work/__include"));
+  string work;
+  EXPECT_TRUE(config_->GetString(prefix + "work", &work));
+  EXPECT_EQ("excited", work);
+}
