@@ -1,8 +1,8 @@
 test:
-  __include: sometimes?
+  __patch: sometimes?
   home: excited
   work:
     __include: /test/home
 
 sometimes:
-  work: naive
+  home: naive

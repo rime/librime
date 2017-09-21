@@ -253,8 +253,11 @@ class RimeConfigCircularDependencyTest : public RimeConfigCompilerTestBase {
 
 TEST_F(RimeConfigCircularDependencyTest, BestEffortResolution) {
   const string& prefix = "test/";
-  EXPECT_TRUE(config_->IsNull(prefix + "__include"));
+  EXPECT_TRUE(config_->IsNull(prefix + "__patch"));
   EXPECT_TRUE(config_->IsNull(prefix + "work/__include"));
+  string home;
+  EXPECT_TRUE(config_->GetString(prefix + "home", &home));
+  EXPECT_EQ("naive", home);
   string work;
   EXPECT_TRUE(config_->GetString(prefix + "work", &work));
   EXPECT_EQ("excited", work);
