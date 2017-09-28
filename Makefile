@@ -47,6 +47,6 @@ uninstall-debug:
 test: release
 	(cd build/test; ./rime_test)
 
-test-debug: release
+test-debug: debug
 	(cd debug-build/test; ./rime_test)
 

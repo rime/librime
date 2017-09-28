@@ -7,11 +7,11 @@ all: release
 
 release:
 	cmake . -Bxbuild -GXcode -DBUILD_STATIC=ON -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
-	cmake --build xbuild --config Release | grep -v setenv | tee build.log
+	cmake --build xbuild --config Release
 
 debug:
 	cmake . -Bxdebug -GXcode -DBUILD_STATIC=ON -DBUILD_SEPARATE_LIBS=ON
-	cmake --build xdebug --config Debug | grep -v setenv | tee build.log
+	cmake --build xdebug --config Debug
 
 clean:
 	rm -rf xbuild > /dev/null 2>&1 || true
