@@ -18,10 +18,6 @@ class Table;
 class ReverseDb;
 class DictSettings;
 
-// return found dict file path, otherwize return empty string
-using DictFileFinder =
-    function<const string (const string& file_name)>;
-
 class DictCompiler {
  public:
   enum Options {
@@ -31,14 +27,12 @@ class DictCompiler {
     kDump = 4,
   };
 
-  RIME_API DictCompiler(Dictionary *dictionary,
-                        DictFileFinder finder = NULL);
+  RIME_API DictCompiler(Dictionary *dictionary);
 
   RIME_API bool Compile(const string &schema_file);
   void set_options(int options) { options_ = options; }
 
  private:
-  string FindDictFile(const string& dict_name);
   bool BuildTable(DictSettings* settings,
                   const vector<string>& dict_files,
                   uint32_t dict_file_checksum);
@@ -50,7 +44,6 @@ class DictCompiler {
   an<Prism> prism_;
   an<Table> table_;
   int options_ = 0;
-  DictFileFinder dict_file_finder_;
 };
 
 }  // namespace rime

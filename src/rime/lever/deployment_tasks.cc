@@ -233,20 +233,6 @@ SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
   }
 }
 
-static string find_dict_file(const string& dict_file_name,
-                                  const fs::path& shared_data_path,
-                                  const fs::path& user_data_path) {
-  fs::path dict_path(user_data_path / dict_file_name);
-  if (!fs::exists(dict_path)) {
-    dict_path = shared_data_path / dict_file_name;
-    if (!fs::exists(dict_path)) {
-      LOG(ERROR) << "source file '" << dict_file_name << "' does not exist.";
-      return string();
-    }
-  }
-  return dict_path.string();
-}
-
 bool SchemaUpdate::Run(Deployer* deployer) {
   fs::path source_path(schema_file_);
   if (!fs::exists(source_path)) {
@@ -291,9 +277,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     return false;
   }
   LOG(INFO) << "preparing dictionary '" << dict_name << "'.";
-  DictFileFinder finder = std::bind(&find_dict_file,
-                                    _1, shared_data_path, user_data_path);
-  DictCompiler dict_compiler(dict.get(), finder);
+  DictCompiler dict_compiler(dict.get());
   if (verbose_) {
     dict_compiler.set_options(DictCompiler::kRebuild | DictCompiler::kDump);
   }
