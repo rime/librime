@@ -7,11 +7,18 @@
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <utf8.h>
+#include <rime/resource.h>
 #include <rime/service.h>
 #include <rime/dict/preset_vocabulary.h>
 #include <rime/dict/text_db.h>
 
 namespace rime {
+
+static const ResourceType kVocabularyResourceType = {
+  "vocabulary", "", ".txt"
+};
+
+static const string kDefaultVocabulary = "essay";
 
 struct VocabularyDb : public TextDb {
   explicit VocabularyDb(const string& path);
@@ -20,7 +27,7 @@ struct VocabularyDb : public TextDb {
 };
 
 VocabularyDb::VocabularyDb(const string& path)
-    : TextDb(path, "vocabulary", VocabularyDb::format) {
+    : TextDb(path, kVocabularyResourceType.name, VocabularyDb::format) {
 }
 
 static bool rime_vocabulary_entry_parser(const Tsv& row,
@@ -50,14 +57,9 @@ const TextFormat VocabularyDb::format = {
 };
 
 string PresetVocabulary::DictFilePath() {
-  auto& deployer(Service::instance().deployer());
-  boost::filesystem::path path(deployer.user_data_dir);
-  path /= "essay.txt";
-  if (!boost::filesystem::exists(path)) {
-    path = deployer.shared_data_dir;
-    path /= "essay.txt";
-  }
-  return path.string();
+  the<ResourceResolver> resource_resolver(
+      Service::instance().CreateResourceResolver(kVocabularyResourceType));
+  return resource_resolver->ResolvePath(kDefaultVocabulary).string();
 }
 
 PresetVocabulary::PresetVocabulary() {

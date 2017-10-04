@@ -7,6 +7,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <rime/common.h>
+#include <rime/resource.h>
 #include <rime/service.h>
 #include <rime/dict/db.h>
 
@@ -20,15 +21,17 @@ bool DbAccessor::MatchesPrefix(const string& key) {
 
 // Db members
 
+static const ResourceType kDbResourceType = {
+  "db", "", ""
+};
+
 Db::Db(const string& name) : name_(name) {
-  boost::filesystem::path path(name);
-  if (path.has_parent_path()) {
-    file_name_ = name;
+  static ResourceResolver db_resource_resolver(kDbResourceType);
+  if (db_resource_resolver.root_path().empty()) {
+    db_resource_resolver.set_root_path(
+        Service::instance().deployer().user_data_dir);
   }
-  else {
-    boost::filesystem::path dir(Service::instance().deployer().user_data_dir);
-    file_name_ = (dir / path).string();
-  }
+  file_name_ = db_resource_resolver.ResolvePath(name).string();
 }
 
 bool Db::Exists() const {

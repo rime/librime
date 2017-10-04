@@ -108,9 +108,12 @@ class Dictionary : public Class<Dictionary, const Ticket&> {
   an<Prism> prism_;
 };
 
+class ResourceResolver;
+
 class DictionaryComponent : public Dictionary::Component {
  public:
   DictionaryComponent();
+  ~DictionaryComponent();
   Dictionary* Create(const Ticket& ticket);
   Dictionary* CreateDictionaryWithName(const string& dict_name,
                                        const string& prism_name);
@@ -118,6 +121,8 @@ class DictionaryComponent : public Dictionary::Component {
  private:
   map<string, weak<Prism>> prism_map_;
   map<string, weak<Table>> table_map_;
+  the<ResourceResolver> prism_resource_resolver_;
+  the<ResourceResolver> table_resource_resolver_;
 };
 
 }  // namespace rime
