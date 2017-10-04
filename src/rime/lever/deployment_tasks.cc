@@ -10,13 +10,14 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <rime/common.h>
+#include <rime/resource.h>
 #include <rime/schema.h>
+#include <rime/service.h>
 #include <rime/setup.h>
 #include <rime/ticket.h>
 #include <rime/algo/utilities.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
-#include <rime/lever/customizer.h>
 #include <rime/lever/deployment_tasks.h>
 #include <rime/lever/user_dict_manager.h>
 #ifdef _WIN32
@@ -115,22 +116,18 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     the<DeploymentTask> t;
     t.reset(new ConfigFileUpdate("default.yaml", "config_version"));
     t->Run(deployer);
-    // since brise 0.18
     t.reset(new ConfigFileUpdate("symbols.yaml", "config_version"));
     t->Run(deployer);
     t.reset(new SymlinkingPrebuiltDictionaries);
     t->Run(deployer);
   }
 
-  fs::path user_data_path(deployer->user_data_dir);
-  fs::path default_config_path(user_data_path / "default.yaml");
-  Config config;
-  if (!config.LoadFromFile(default_config_path.string())) {
-    LOG(ERROR) << "Error loading default config from '"
-               << default_config_path.string() << "'.";
+  the<Config> config(Config::Require("config")->Create("default"));
+  if (!config) {
+    LOG(ERROR) << "Error loading default config.";
     return false;
   }
-  auto schema_list = config.GetList("schema_list");
+  auto schema_list = config->GetList("schema_list");
   if (!schema_list) {
     LOG(WARNING) << "schema list not defined.";
     return false;
@@ -140,18 +137,17 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   int success = 0;
   int failure = 0;
   map<string, string> schemas;
-  for (auto it = schema_list->begin(); it != schema_list->end(); ++it) {
-    auto item = As<ConfigMap>(*it);
-    if (!item)
-      continue;
-    auto schema_property = item->GetValue("schema");
-    if (!schema_property)
-      continue;
-    const string& schema_id(schema_property->str());
+  the<ResourceResolver> resolver(
+      Service::instance().CreateResourceResolver({
+          "schema", "", ".schema.yaml"
+      }));
+  auto build_schema = [&](const string& schema_id) {
+    if (schemas.find(schema_id) != schemas.end())  // already built
+      return;
     LOG(INFO) << "schema: " << schema_id;
     string schema_path;
     if (schemas.find(schema_id) == schemas.end()) {
-      schema_path = GetSchemaPath(deployer, schema_id, true);
+      schema_path = resolver->ResolvePath(schema_id).string();
       schemas[schema_id] = schema_path;
     }
     else {
@@ -159,69 +155,40 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     }
     if (schema_path.empty()) {
       LOG(WARNING) << "missing schema file for '" << schema_id << "'.";
-      continue;
+      return;
     }
-    // build schema
     the<DeploymentTask> t(new SchemaUpdate(schema_path));
     if (t->Run(deployer))
       ++success;
     else
       ++failure;
-  }
-  // find dependencies
-  for (auto s = schemas.cbegin(); s != schemas.cend(); ++s) {
-    Config schema_config;
-    // user could have customized dependencies in the resulting schema
-    string user_schema_path = GetSchemaPath(deployer, s->first, false);
-    if (!schema_config.LoadFromFile(user_schema_path))
+  };
+  auto schema_component = Config::Require("schema");
+  for (auto it = schema_list->begin(); it != schema_list->end(); ++it) {
+    auto item = As<ConfigMap>(*it);
+    if (!item)
       continue;
-    auto dependencies = schema_config.GetList("schema/dependencies");
-    if (!dependencies)
+    auto schema_property = item->GetValue("schema");
+    if (!schema_property)
       continue;
-    for (auto d = dependencies->begin(); d != dependencies->end(); ++d) {
-      auto dependency = As<ConfigValue>(*d);
-      if (!dependency)
-        continue;
-      string dependency_id(dependency->str());
-      if (schemas.find(dependency_id) != schemas.end())  // already built
-        continue;
-      LOG(INFO) << "new dependency: " << dependency_id;
-      string dependency_path = GetSchemaPath(deployer, dependency_id, true);
-      schemas[dependency_id] = dependency_path;
-      if (dependency_path.empty()) {
-        LOG(WARNING) << "missing schema file for dependency '" << dependency_id << "'.";
-        continue;
+    const string& schema_id = schema_property->str();
+    build_schema(schema_id);
+    the<Config> schema_config(schema_component->Create(schema_id));
+    if (!schema_config)
+      continue;
+    if (auto dependencies = schema_config->GetList("schema/dependencies")) {
+      for (auto d = dependencies->begin(); d != dependencies->end(); ++d) {
+        auto dependency = As<ConfigValue>(*d);
+        if (!dependency)
+          continue;
+        const string& dependency_id = dependency->str();
+        build_schema(dependency_id);
       }
-      // build dependency
-      the<DeploymentTask> t(new SchemaUpdate(dependency_path));
-      if (t->Run(deployer))
-        ++success;
-      else
-        ++failure;
     }
   }
   LOG(INFO) << "finished updating schemas: "
             << success << " success, " << failure << " failure.";
   return failure == 0;
-}
-
-string WorkspaceUpdate::GetSchemaPath(Deployer* deployer,
-                                           const string& schema_id,
-                                           bool prefer_shared_copy) {
-  fs::path schema_path;
-  if (prefer_shared_copy) {
-    fs::path shared_data_path(deployer->shared_data_dir);
-    schema_path = shared_data_path / (schema_id + ".schema.yaml");
-    if (!fs::exists(schema_path))
-      schema_path.clear();
-  }
-  if (schema_path.empty()) {
-    fs::path user_data_path(deployer->user_data_dir);
-    schema_path = user_data_path / (schema_id + ".schema.yaml");
-    if (!fs::exists(schema_path))
-      schema_path.clear();
-  }
-  return schema_path.string();
 }
 
 SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
@@ -233,6 +200,43 @@ SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
   }
 }
 
+static bool IsCustomizedCopy(const string& file_name);
+
+static bool TrashCustomizedCopy(const fs::path& shared_copy,
+                                const fs::path& user_copy,
+                                const string& version_key,
+                                const fs::path& trash) {
+  if (fs::equivalent(shared_copy, user_copy))
+    return false;
+  if (IsCustomizedCopy(user_copy.string())) {
+    string shared_copy_version;
+    string user_copy_version;
+    Config shared_config;
+    if (shared_config.LoadFromFile(shared_copy.string())) {
+      shared_config.GetString(version_key, &shared_copy_version);
+    }
+    Config user_config;
+    if (user_config.LoadFromFile(user_copy.string()) &&
+        user_config.GetString(version_key, &user_copy_version)) {
+      size_t custom_version_suffix = user_copy_version.find(".custom.");
+      if (custom_version_suffix != string::npos) {
+        user_copy_version.erase(custom_version_suffix);
+      }
+    }
+    if (CompareVersionString(shared_copy_version, user_copy_version) >= 0) {
+      fs::path backup = trash / user_copy.filename();
+      boost::system::error_code ec;
+      fs::rename(user_copy, backup, ec);
+      if (ec) {
+        LOG(ERROR) << "error trashing file " << user_copy.string();
+        return false;
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
 bool SchemaUpdate::Run(Deployer* deployer) {
   fs::path source_path(schema_file_);
   if (!fs::exists(source_path)) {
@@ -241,37 +245,33 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     return false;
   }
   string schema_id;
-  {
-    Config source;
-    if (!source.LoadFromFile(schema_file_) ||
-        !source.GetString("schema/schema_id", &schema_id) ||
-        schema_id.empty()) {
-      LOG(ERROR) << "invalid schema definition in '" << schema_file_ << "'.";
-      return false;
-    }
+  the<Config> config(new Config);
+  if (!config->LoadFromFile(schema_file_) ||
+      !config->GetString("schema/schema_id", &schema_id) ||
+      schema_id.empty()) {
+    LOG(ERROR) << "invalid schema definition in '" << schema_file_ << "'.";
+    return false;
   }
   fs::path shared_data_path(deployer->shared_data_dir);
   fs::path user_data_path(deployer->user_data_dir);
   fs::path destination_path(user_data_path / (schema_id + ".schema.yaml"));
-  Customizer customizer(source_path, destination_path, "schema/version");
-  if (customizer.TrashCustomizedCopy()) {
-    LOG(INFO) << "patched copy of schema '" << schema_id << "' is moved to trash";
+  fs::path trash = user_data_path / "trash";
+  if (TrashCustomizedCopy(source_path,
+                          destination_path,
+                          "schema/version",
+                          trash)) {
+    LOG(INFO) << "patched copy of schema '" << schema_id
+              << "' is moved to trash";
   }
 
-  Schema schema(schema_id, new Config);
-  Config* config = schema.config();
-  if (!config || !config->LoadFromFile(destination_path.string())) {
-    LOG(ERROR) << "Error loading schema file '"
-               << destination_path.string() << "'.";
-    return false;
-  }
   string dict_name;
   if (!config->GetString("translator/dictionary", &dict_name)) {
     // not requiring a dictionary
     return true;
   }
-  DictionaryComponent component;
-  the<Dictionary> dict(component.Create({&schema, "translator"}));
+  Schema schema(schema_id, config.release());
+  the<Dictionary> dict(
+      Dictionary::Require("dictionary")->Create({&schema, "translator"}));
   if (!dict) {
     LOG(ERROR) << "Error creating dictionary '" << dict_name << "'.";
     return false;
@@ -281,7 +281,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   if (verbose_) {
     dict_compiler.set_options(DictCompiler::kRebuild | DictCompiler::kDump);
   }
-  if (!dict_compiler.Compile(destination_path.string())) {
+  if (!dict_compiler.Compile(schema_file_)) {
     LOG(ERROR) << "dictionary '" << dict_name << "' failed to compile.";
     return false;
   }
@@ -305,13 +305,18 @@ bool ConfigFileUpdate::Run(Deployer* deployer) {
   fs::path user_data_path(deployer->user_data_dir);
   fs::path source_config_path(shared_data_path / file_name_);
   fs::path dest_config_path(user_data_path / file_name_);
+  fs::path trash = user_data_path / "trash";
   if (!fs::exists(source_config_path)) {
     LOG(WARNING) << "'" << file_name_
                  << "' is missing from shared data directory.";
-    source_config_path = dest_config_path;
+    return false;
   }
-  Customizer customizer(source_config_path, dest_config_path, version_key_);
-  customizer.TrashCustomizedCopy();
+  if (TrashCustomizedCopy(source_config_path,
+                          dest_config_path,
+                          version_key_,
+                          trash)) {
+    LOG(INFO) << "patched copy of '" << file_name_ << "' is moved to trash.";
+  }
   return true;
 }
 
@@ -341,15 +346,16 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
       fs::equivalent(shared_data_path, user_data_path))
     return false;
   bool success = false;
-  // test existing link
+  // remove symlinks to shared data files created by previous version
   for (fs::directory_iterator test(user_data_path), end;
        test != end; ++test) {
     fs::path entry(test->path());
-    if (fs::is_symlink(entry) && entry.extension().string() == ".bin") {
+    if (fs::is_symlink(entry)) {
       try {
-        if (!fs::exists(entry)) {
-          LOG(INFO) << "removing dangling symlink: "
-                    << entry.filename().string();
+        auto target_path = fs::canonical(entry);
+        if (target_path.has_parent_path() &&
+            fs::equivalent(shared_data_path, target_path.parent_path())) {
+          LOG(INFO) << "removing symlink: " << entry.filename().string();
           fs::remove(entry);
         }
       }
@@ -357,24 +363,6 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
         LOG(ERROR) << ex.what();
         success = false;
       }
-    }
-  }
-  // create link
-  for (fs::directory_iterator iter(shared_data_path), end;
-       iter != end; ++iter) {
-    fs::path entry(iter->path());
-    fs::path link(user_data_path / entry.filename());
-    try {
-      if (fs::is_regular_file(entry) &&
-          entry.extension().string() == ".bin" &&
-          !fs::exists(link)) {
-        LOG(INFO) << "symlinking '" << entry.filename().string() << "'.";
-        fs::create_symlink(entry, link);
-      }
-    }
-    catch (const fs::filesystem_error& ex) {
-      LOG(ERROR) << ex.what();
-      success = false;
     }
   }
   return success;
@@ -400,6 +388,19 @@ bool UserDictUpgrade::Run(Deployer* deployer) {
 bool UserDictSync::Run(Deployer* deployer) {
   UserDictManager mgr(deployer);
   return mgr.SynchronizeAll();
+}
+
+static bool IsCustomizedCopy(const string& file_name) {
+  if (boost::ends_with(file_name, ".yaml") &&
+      !boost::ends_with(file_name, ".custom.yaml")) {
+    Config config;
+    string checksum;
+    if (config.LoadFromFile(file_name) &&
+        config.GetString("customization", &checksum)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool BackupConfigFiles::Run(Deployer* deployer) {
@@ -433,14 +434,9 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
       ++latest;  // already up-to-date
       continue;
     }
-    if (is_yaml_file && !boost::ends_with(entry.string(), ".custom.yaml")) {
-      Config config;
-      string checksum;
-      if (config.LoadFromFile(entry.string()) &&
-          config.GetString("customization", &checksum)) {
-        ++skipped;  // customized copy
-        continue;
-      }
+    if (is_yaml_file && IsCustomizedCopy(entry.string())) {
+      ++skipped;  // customized copy
+      continue;
     }
     boost::system::error_code ec;
     fs::copy_file(entry, backup, fs::copy_option::overwrite_if_exists, ec);
