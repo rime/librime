@@ -17,7 +17,7 @@
 
 namespace rime {
 
-const char kReverseFormat[] = "Rime::Reverse/1.0";
+const char kReverseFormat[] = "Rime::Reverse/2.0";
 
 const char kReverseFormatPrefix[] = "Rime::Reverse/";
 const size_t kReverseFormatPrefixLen = sizeof(kReverseFormatPrefix) - 1;

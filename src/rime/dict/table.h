@@ -170,38 +170,18 @@ class Table : public MappedFile {
   bool BuildEntryList(const DictEntryList& src, List<table::Entry>* dest);
   bool BuildEntry(const DictEntry& dict_entry, table::Entry* entry);
 
-  string GetString_v1(const table::StringType& x);
-  bool AddString_v1(const string& src, table::StringType* dest,
+  string GetString(const table::StringType& x);
+  bool AddString(const string& src, table::StringType* dest,
                     double weight);
-
-  // v2
-  string GetString_v2(const table::StringType& x);
-  bool AddString_v2(const string& src, table::StringType* dest,
-                    double weight);
-  bool OnBuildStart_v2();
-  bool OnBuildFinish_v2();
-  bool OnLoad_v2();
-
-  void SelectTableFormat(double format_version);
+  bool OnBuildStart();
+  bool OnBuildFinish();
+  bool OnLoad();
 
  protected:
   table::Metadata* metadata_ = nullptr;
   table::Syllabary* syllabary_ = nullptr;
   table::Index* index_ = nullptr;
 
-  struct TableFormat {
-    const char* format_name;
-
-    string (Table::*GetString)(const table::StringType& x);
-    bool (Table::*AddString)(const string& src, table::StringType* dest,
-                             double weight);
-
-    bool (Table::*OnBuildStart)();
-    bool (Table::*OnBuildFinish)();
-    bool (Table::*OnLoad)();
-  } format_;
-
-  // v2
   the<StringTable> string_table_;
   the<StringTableBuilder> string_table_builder_;
 };
