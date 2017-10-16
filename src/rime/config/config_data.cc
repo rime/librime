@@ -2,6 +2,8 @@
 // Copyright RIME Developers
 // Distributed under the BSD License
 //
+#include <cctype>
+#include <cstdlib>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -87,7 +89,7 @@ bool ConfigData::SaveToFile(const string& file_name) {
 }
 
 bool ConfigData::IsListItemReference(const string& key) {
-  return !key.empty() && key[0] == '@';
+  return key.length() > 1 && key[0] == '@' && std::isalnum(key[1]);
 }
 
 string ConfigData::FormatListIndex(size_t index) {
