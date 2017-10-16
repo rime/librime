@@ -107,8 +107,9 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   }
   // other keys
   shift_key_pressed_ = ctrl_key_pressed_ = false;
-  if (key_event.ctrl()) {
-    return kNoop;  // possible key binding Control+x
+  // possible key binding: Control+x, Shift+space
+  if (key_event.ctrl() || (key_event.shift() && ch == XK_space)) {
+    return kNoop;
   }
   Context* ctx = engine_->context();
   bool ascii_mode = ctx->get_option("ascii_mode");
