@@ -27,6 +27,12 @@ class AutoPatchConfigPlugin : public ConfigCompilerPlugin {
   Review ReviewLinkOutput;
 };
 
+class DefaultConfigPlugin : public ConfigCompilerPlugin {
+ public:
+  Review ReviewCompileOutput;
+  Review ReviewLinkOutput;
+};
+
 class LegacyPresetConfigPlugin : public ConfigCompilerPlugin {
  public:
   Review ReviewCompileOutput;

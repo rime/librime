@@ -31,15 +31,7 @@ void Schema::FetchUsefulConfigItems() {
   if (!config_->GetString("schema/name", &schema_name_)) {
     schema_name_ = schema_id_;
   }
-  if (!config_->GetInt("menu/page_size", &page_size_) &&
-      schema_id_ != ".default") {
-    // not defined in schema, use default setting
-    the<Config> default_config(
-        Config::Require("config")->Create("default"));
-    if (default_config) {
-      default_config->GetInt("menu/page_size", &page_size_);
-    }
-  }
+  config_->GetInt("menu/page_size", &page_size_);
   config_->GetString("menu/alternative_select_keys", &select_keys_);
 }
 

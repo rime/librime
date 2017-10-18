@@ -22,6 +22,7 @@ static void rime_core_initialize() {
 
   auto config = new ConfigComponent;
   config->InstallPlugin(new AutoPatchConfigPlugin);
+  config->InstallPlugin(new DefaultConfigPlugin);
   config->InstallPlugin(new LegacyPresetConfigPlugin);
   config->InstallPlugin(new LegacyDictionaryConfigPlugin);
   r.Register("config", config);
