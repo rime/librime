@@ -9,6 +9,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
+#include <rime/resource.h>
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/ticket.h>
@@ -17,20 +18,15 @@
 
 namespace rime {
 
-const char kReverseFormat[] = "Rime::Reverse/1.0";
+const char kReverseFormat[] = "Rime::Reverse/2.0";
 
 const char kReverseFormatPrefix[] = "Rime::Reverse/";
 const size_t kReverseFormatPrefixLen = sizeof(kReverseFormatPrefix) - 1;
 
 static const char* kStemKeySuffix = "\x1fstem";
 
-static string reverse_db_file_name(const string& dict_name) {
-  boost::filesystem::path dir(Service::instance().deployer().user_data_dir);
-  return (dir / dict_name).string() + ".reverse.bin";
-}
-
-ReverseDb::ReverseDb(const string& dict_name)
-    : MappedFile(reverse_db_file_name(dict_name)) {
+ReverseDb::ReverseDb(const string& file_name)
+    : MappedFile(file_name) {
 }
 
 bool ReverseDb::Load() {
@@ -200,10 +196,6 @@ ReverseLookupDictionary::ReverseLookupDictionary(an<ReverseDb> db)
     : db_(db) {
 }
 
-ReverseLookupDictionary::ReverseLookupDictionary(const string& dict_name)
-    : db_(new ReverseDb(dict_name)) {
-}
-
 bool ReverseLookupDictionary::Load() {
   return db_ && (db_->IsOpen() || db_->Load());
 }
@@ -233,7 +225,13 @@ an<DictSettings> ReverseLookupDictionary::GetDictSettings() {
   return settings;
 }
 
-ReverseLookupDictionaryComponent::ReverseLookupDictionaryComponent() {
+static const ResourceType kReverseDbResourceType = {
+  "reverse_db", "", ".reverse.bin"
+};
+
+ReverseLookupDictionaryComponent::ReverseLookupDictionaryComponent()
+    : resource_resolver_(
+          Service::instance().CreateResourceResolver(kReverseDbResourceType)) {
 }
 
 ReverseLookupDictionary*
@@ -248,7 +246,8 @@ ReverseLookupDictionaryComponent::Create(const Ticket& ticket) {
   }
   auto db = db_pool_[dict_name].lock();
   if (!db) {
-    db = New<ReverseDb>(dict_name);
+    auto file_path = resource_resolver_->ResolvePath(dict_name).string();
+    db = New<ReverseDb>(file_path);
     db_pool_[dict_name] = db;
   }
   return new ReverseLookupDictionary(db);

@@ -19,10 +19,12 @@ namespace rime {
 
 namespace prism {
 
+using Credibility = float;
+
 struct SpellingDescriptor {
   SyllableId syllable_id;
   int32_t type;
-  double credibility;
+  Credibility credibility;
   String tips;
 };
 

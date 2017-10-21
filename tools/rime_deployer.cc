@@ -91,6 +91,7 @@ int main(int argc, char* argv[]) {
   if (argc >= 0 && argc <= 2 && option == "--build") {
     Deployer& deployer(Service::instance().deployer());
     configure_deployer(&deployer, argc, argv);
+    LoadModules(kDeployerModules);
     WorkspaceUpdate update;
     return update.Run(&deployer) ? 0 : 1;
   }
@@ -106,6 +107,7 @@ int main(int argc, char* argv[]) {
   if (argc >= 1 && option == "--compile") {
     Deployer& deployer(Service::instance().deployer());
     configure_deployer(&deployer, argc - 1, argv + 1);
+    LoadModules(kDeployerModules);
     string schema_file(argv[0]);
     SchemaUpdate update(schema_file);
     update.set_verbose(true);

@@ -15,8 +15,8 @@
 
 namespace rime {
 
-const char kTableFormat_v1[] = "Rime::Table/1.0";
-const char kTableFormat_v2[] = "Rime::Table/2.0";
+const char kTableFormatLatest[] = "Rime::Table/3.0";
+int kTableFormatLowestCompatible = 3.0;
 
 const char kTableFormatPrefix[] = "Rime::Table/";
 const size_t kTableFormatPrefixLen = sizeof(kTableFormatPrefix) - 1;
@@ -244,31 +244,31 @@ TableAccessor TableQuery::Access(SyllableId syllable_id,
   return TableAccessor();
 }
 
-string Table::GetString_v1(const table::StringType& x) {
- return x.str().c_str();
-}
+// string Table::GetString_v1(const table::StringType& x) {
+//  return x.str().c_str();
+// }
 
-bool Table::AddString_v1(const string& src, table::StringType* dest,
-                         double /*weight*/) {
-  return CopyString(src, &dest->str());
-}
+// bool Table::AddString_v1(const string& src, table::StringType* dest,
+//                          double /*weight*/) {
+//   return CopyString(src, &dest->str());
+// }
 
-string Table::GetString_v2(const table::StringType& x) {
+string Table::GetString(const table::StringType& x) {
   return string_table_->GetString(x.str_id());
 }
 
-bool Table::AddString_v2(const string& src, table::StringType* dest,
-                         double weight) {
+bool Table::AddString(const string& src, table::StringType* dest,
+                      double weight) {
   string_table_builder_->Add(src, weight, &dest->str_id());
   return true;
 }
 
-bool Table::OnBuildStart_v2() {
+bool Table::OnBuildStart() {
   string_table_builder_.reset(new StringTableBuilder);
   return true;
 }
 
-bool Table::OnBuildFinish_v2() {
+bool Table::OnBuildFinish() {
   string_table_builder_->Build();
   // saving string table image
   size_t image_size = string_table_builder_->BinarySize();
@@ -283,29 +283,10 @@ bool Table::OnBuildFinish_v2() {
   return true;
 }
 
-bool Table::OnLoad_v2() {
+bool Table::OnLoad() {
   string_table_.reset(new StringTable(metadata_->string_table.get(),
                                       metadata_->string_table_size));
   return true;
-}
-
-void Table::SelectTableFormat(double format_version) {
-  if (format_version > 2.0 - DBL_EPSILON) {
-    format_.format_name = kTableFormat_v2;
-    format_.GetString = &Table::GetString_v2;
-    format_.AddString = &Table::AddString_v2;
-    format_.OnBuildStart = &Table::OnBuildStart_v2;
-    format_.OnBuildFinish = &Table::OnBuildFinish_v2;
-    format_.OnLoad = &Table::OnLoad_v2;
-  }
-  else {
-    format_.format_name = kTableFormat_v1;
-    format_.GetString = &Table::GetString_v1;
-    format_.AddString = &Table::AddString_v1;
-    format_.OnBuildStart = nullptr;
-    format_.OnBuildFinish = nullptr;
-    format_.OnLoad = nullptr;
-  }
 }
 
 Table::Table(const string& file_name) : MappedFile(file_name) {
@@ -337,8 +318,12 @@ bool Table::Load() {
     return false;
   }
   double format_version = atof(&metadata_->format[kTableFormatPrefixLen]);
-  SelectTableFormat(format_version);
-  format_.format_name = metadata_->format;
+  if (format_version < kTableFormatLowestCompatible - DBL_EPSILON) {
+    LOG(ERROR) << "table format version " << format_version
+               << " is no longer supported. please upgrade to version "
+               << kTableFormatLatest;
+    return false;
+  }
 
   syllabary_ = metadata_->syllabary.get();
   if (!syllabary_) {
@@ -353,10 +338,7 @@ bool Table::Load() {
     return false;
   }
 
-  if (format_.OnLoad && !RIME_THIS_CALL(format_.OnLoad)()) {
-    return false;
-  }
-  return true;
+  return OnLoad();
 }
 
 bool Table::Save() {
@@ -376,8 +358,6 @@ uint32_t Table::dict_file_checksum() const {
 
 bool Table::Build(const Syllabary& syllabary, const Vocabulary& vocabulary,
                   size_t num_entries, uint32_t dict_file_checksum) {
-  SelectTableFormat(2.0);
-
   const size_t kReservedSize = 4096;
   size_t num_syllables = syllabary.size();
   size_t estimated_file_size = kReservedSize + 32 * num_syllables + 64 * num_entries;
@@ -400,7 +380,7 @@ bool Table::Build(const Syllabary& syllabary, const Vocabulary& vocabulary,
   metadata_->num_syllables = num_syllables;
   metadata_->num_entries = num_entries;
 
-  if (format_.OnBuildStart && !RIME_THIS_CALL(format_.OnBuildStart)()) {
+  if (!OnBuildStart()) {
     return false;
   }
 
@@ -413,7 +393,7 @@ bool Table::Build(const Syllabary& syllabary, const Vocabulary& vocabulary,
   else {
     size_t i = 0;
     for (const string& syllable : syllabary) {
-      RIME_THIS_CALL(format_.AddString)(syllable, &syllabary_->at[i++], 0.0);
+      AddString(syllable, &syllabary_->at[i++], 0.0);
     }
   }
   metadata_->syllabary = syllabary_;
@@ -426,12 +406,12 @@ bool Table::Build(const Syllabary& syllabary, const Vocabulary& vocabulary,
   }
   metadata_->index = index_;
 
-  if (format_.OnBuildFinish && !RIME_THIS_CALL(format_.OnBuildFinish)()) {
+  if (!OnBuildFinish()) {
     return false;
   }
 
   // at last, complete the metadata
-  std::strncpy(metadata_->format, format_.format_name,
+  std::strncpy(metadata_->format, kTableFormatLatest,
                table::Metadata::kFormatMaxLength);
   return true;
 }
@@ -572,8 +552,7 @@ bool Table::BuildEntryList(const DictEntryList& src,
 bool Table::BuildEntry(const DictEntry& dict_entry, table::Entry* entry) {
   if (!entry)
     return false;
-  if (!RIME_THIS_CALL(format_.AddString)(dict_entry.text, &entry->text,
-                                         dict_entry.weight)) {
+  if (!AddString(dict_entry.text, &entry->text, dict_entry.weight)) {
     LOG(ERROR) << "Error creating table entry '" << dict_entry.text
                << "'; file size: " << file_size();
     return false;
@@ -595,7 +574,7 @@ string Table::GetSyllableById(SyllableId syllable_id) {
       syllable_id < 0 ||
       syllable_id >= static_cast<SyllableId>(syllabary_->size))
     return string();
-  return RIME_THIS_CALL(format_.GetString)(syllabary_->at[syllable_id]);
+  return GetString(syllabary_->at[syllable_id]);
 }
 
 TableAccessor Table::QueryWords(SyllableId syllable_id) {
@@ -661,7 +640,7 @@ bool Table::Query(const SyllableGraph& syll_graph, size_t start_pos,
 }
 
 string Table::GetEntryText(const table::Entry& entry) {
-  return RIME_THIS_CALL(format_.GetString)(entry.text);
+  return GetString(entry.text);
 }
 
 }  // namespace rime

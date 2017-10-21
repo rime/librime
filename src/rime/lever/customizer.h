@@ -21,8 +21,6 @@ class Customizer {
   // DEPRECATED: in favor of auto-patch config compiler plugin
   bool UpdateConfigFile();
 
-  bool TrashCustomizedCopy();
-
  protected:
   boost::filesystem::path source_path_;
   boost::filesystem::path dest_path_;

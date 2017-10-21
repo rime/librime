@@ -7,6 +7,7 @@
 #include <utility>
 #include <boost/filesystem.hpp>
 #include <rime/common.h>
+#include <rime/resource.h>
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/ticket.h>
@@ -279,7 +280,22 @@ bool Dictionary::loaded() const {
 
 // DictionaryComponent members
 
-DictionaryComponent::DictionaryComponent() {
+static const ResourceType kPrismResourceType = {
+  "prism", "", ".prism.bin"
+};
+
+static const ResourceType kTableResourceType = {
+  "table", "", ".table.bin"
+};
+
+DictionaryComponent::DictionaryComponent()
+    : prism_resource_resolver_(
+          Service::instance().CreateResourceResolver(kPrismResourceType)),
+      table_resource_resolver_(
+          Service::instance().CreateResourceResolver(kTableResourceType)) {
+}
+
+DictionaryComponent::~DictionaryComponent() {
 }
 
 Dictionary* DictionaryComponent::Create(const Ticket& ticket) {
@@ -308,13 +324,13 @@ DictionaryComponent::CreateDictionaryWithName(const string& dict_name,
   boost::filesystem::path path(Service::instance().deployer().user_data_dir);
   auto table = table_map_[dict_name].lock();
   if (!table) {
-    table = New<Table>((path / dict_name).string() + ".table.bin");
-    table_map_[dict_name] = table;
+    auto file_path = table_resource_resolver_->ResolvePath(dict_name).string();
+    table_map_[dict_name] = table = New<Table>(file_path);
   }
   auto prism = prism_map_[prism_name].lock();
   if (!prism) {
-    prism = New<Prism>((path / prism_name).string() + ".prism.bin");
-    prism_map_[prism_name] = prism;
+    auto file_path = prism_resource_resolver_->ResolvePath(prism_name).string();
+    prism_map_[prism_name] = prism = New<Prism>(file_path);
   }
   return new Dictionary(dict_name, table, prism);
 }

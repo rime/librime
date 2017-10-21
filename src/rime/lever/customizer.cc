@@ -147,9 +147,4 @@ bool Customizer::UpdateConfigFile() {
   return true;
 }
 
-bool Customizer::TrashCustomizedCopy() {
-  // TODO: unimplemented
-  return false;
-}
-
 }  // namespace rime

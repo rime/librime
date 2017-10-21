@@ -6,6 +6,8 @@
 //
 #include <fstream>
 #include <boost/filesystem.hpp>
+#include <rime/resource.h>
+#include <rime/service.h>
 #include <rime/algo/algebra.h>
 #include <rime/algo/utilities.h>
 #include <rime/dict/dictionary.h>
@@ -19,19 +21,25 @@
 
 namespace rime {
 
-DictCompiler::DictCompiler(Dictionary *dictionary, DictFileFinder finder)
+DictCompiler::DictCompiler(Dictionary *dictionary)
     : dict_name_(dictionary->name()),
       prism_(dictionary->prism()),
-      table_(dictionary->table()),
-      dict_file_finder_(finder) {
+      table_(dictionary->table()) {
+}
+
+static string LocateFile(const string& file_name) {
+  the<ResourceResolver> resolver(
+      Service::instance().CreateResourceResolver({"", "", ""}));
+  return resolver->ResolvePath(file_name).string();
 }
 
 bool DictCompiler::Compile(const string &schema_file) {
   LOG(INFO) << "compiling:";
   bool build_table_from_source = true;
   DictSettings settings;
-  string dict_file(FindDictFile(dict_name_));
-  if (dict_file.empty()) {
+  string dict_file = LocateFile(dict_name_ + ".dict.yaml");
+  if (!boost::filesystem::exists(dict_file)) {
+    LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
     build_table_from_source = false;
   }
   else {
@@ -49,9 +57,12 @@ bool DictCompiler::Compile(const string &schema_file) {
   for(auto it = tables->begin(); it != tables->end(); ++it) {
     if (!Is<ConfigValue>(*it))
       continue;
-    string dict_file(FindDictFile(As<ConfigValue>(*it)->str()));
-    if (dict_file.empty())
+    string dict_name = As<ConfigValue>(*it)->str();
+    string dict_file = LocateFile(dict_name + ".dict.yaml");
+    if (!boost::filesystem::exists(dict_file)) {
+      LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
       return false;
+    }
     dict_files.push_back(dict_file);
   }
   uint32_t dict_file_checksum = 0;
@@ -95,7 +106,9 @@ bool DictCompiler::Compile(const string &schema_file) {
             << " (" << dict_file_checksum << ")";
   LOG(INFO) << schema_file << " (" << schema_file_checksum << ")";
   {
-    ReverseDb reverse_db(dict_name_);
+    the<ResourceResolver> resolver(
+        Service::instance().CreateResourceResolver({"", "", ".reverse.bin"}));
+    ReverseDb reverse_db(resolver->ResolvePath(dict_name_).string());
     if (!reverse_db.Exists() ||
         !reverse_db.Load() ||
         reverse_db.dict_file_checksum() != dict_file_checksum) {
@@ -117,18 +130,19 @@ bool DictCompiler::Compile(const string &schema_file) {
   return true;
 }
 
-string DictCompiler::FindDictFile(const string& dict_name) {
-  string dict_file(dict_name + ".dict.yaml");
-  if (dict_file_finder_) {
-    dict_file = dict_file_finder_(dict_file);
-  }
-  return dict_file;
+static string RelocateToUserDirectory(const string& file_name) {
+  ResourceResolver resolver(ResourceType{"", "", ""});
+  resolver.set_root_path(Service::instance().deployer().user_data_dir);
+  auto resource_id = boost::filesystem::path(file_name).filename().string();
+  return resolver.ResolvePath(resource_id).string();
 }
 
 bool DictCompiler::BuildTable(DictSettings* settings,
                               const vector<string>& dict_files,
                               uint32_t dict_file_checksum) {
   LOG(INFO) << "building table...";
+  table_ = New<Table>(RelocateToUserDirectory(table_->file_name()));
+
   EntryCollector collector;
   collector.Configure(settings);
   collector.Collect(dict_files);
@@ -172,7 +186,7 @@ bool DictCompiler::BuildTable(DictSettings* settings,
     }
   }
   // build .reverse.bin
-  ReverseDb reverse_db(dict_name_);
+  ReverseDb reverse_db(RelocateToUserDirectory(dict_name_ + ".reverse.bin"));
   if (!reverse_db.Build(settings,
                         collector.syllabary,
                         vocabulary,
@@ -187,6 +201,8 @@ bool DictCompiler::BuildTable(DictSettings* settings,
 bool DictCompiler::BuildPrism(const string &schema_file,
                               uint32_t dict_file_checksum, uint32_t schema_file_checksum) {
   LOG(INFO) << "building prism...";
+  prism_ = New<Prism>(RelocateToUserDirectory(prism_->file_name()));
+
   // get syllabary from table
   Syllabary syllabary;
   if (!table_->Load() || !table_->GetSyllabary(&syllabary) || syllabary.empty())

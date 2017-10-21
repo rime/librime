@@ -38,7 +38,7 @@ class DictSettings;
 
 class ReverseDb : public MappedFile {
  public:
-  explicit ReverseDb(const string& dict_name);
+  explicit ReverseDb(const string& file_name);
 
   bool Load();
   bool Lookup(const string& text, string* result);
@@ -62,7 +62,6 @@ class ReverseLookupDictionary
     : public Class<ReverseLookupDictionary, const Ticket&> {
  public:
   explicit ReverseLookupDictionary(an<ReverseDb> db);
-  explicit ReverseLookupDictionary(const string& dict_name);
   bool Load();
   bool ReverseLookup(const string& text, string* result);
   bool LookupStems(const string& text, string* result);
@@ -72,6 +71,8 @@ class ReverseLookupDictionary
   an<ReverseDb> db_;
 };
 
+class ResourceResolver;
+
 class ReverseLookupDictionaryComponent
     : public ReverseLookupDictionary::Component {
  public:
@@ -79,6 +80,7 @@ class ReverseLookupDictionaryComponent
   ReverseLookupDictionary* Create(const Ticket& ticket);
  private:
   map<string, weak<ReverseDb>> db_pool_;
+  the<ResourceResolver> resource_resolver_;
 };
 
 }  // namespace rime
