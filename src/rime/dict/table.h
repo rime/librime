@@ -40,7 +40,7 @@ using Syllabary = Array<StringType>;
 
 using Code = List<SyllableId>;
 
-using Weight = double;
+using Weight = float;
 
 struct Entry {
   StringType text;
