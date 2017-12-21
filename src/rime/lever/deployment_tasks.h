@@ -7,11 +7,23 @@
 #ifndef RIME_DEPLOYMENT_TASKS_H_
 #define RIME_DEPLOYMENT_TASKS_H_
 
+#include <rime/common.h>
 #include <rime/deployer.h>
 
 namespace rime {
 
-// initialize/update installation.yaml, default.yaml
+// detects changes in either user configuration or upgraded shared data
+class DetectModifications : public DeploymentTask {
+ public:
+  DetectModifications(TaskInitializer arg = TaskInitializer());
+  // Unlike other tasks, its return value indicates whether modifications
+  // has been detected and workspace needs update.
+  bool Run(Deployer* deployer);
+ protected:
+  vector<string> data_dirs_;
+};
+
+// initialize/update installation.yaml
 class InstallationUpdate : public DeploymentTask {
  public:
   InstallationUpdate(TaskInitializer arg = TaskInitializer()) {}
