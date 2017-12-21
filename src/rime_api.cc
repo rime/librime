@@ -105,8 +105,9 @@ RIME_API Bool RimeStartMaintenance(Bool full_check) {
   }
   if (!full_check) {
     TaskInitializer args{
-        make_pair<string, string>("default.yaml", "config_version")};
-    if (!deployer.RunTask("config_file_update", args)) {
+      vector<string>{deployer.user_data_dir, deployer.shared_data_dir}
+    };
+    if (!deployer.RunTask("detect_modifications", args)) {
       return False;
     }
     LOG(INFO) << "changes detected; starting maintenance.";

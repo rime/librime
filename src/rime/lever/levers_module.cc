@@ -24,6 +24,7 @@ static void rime_levers_initialize() {
   Registry& r = Registry::instance();
 
   // deployment tools
+  r.Register("detect_modifications", new Component<DetectModifications>);
   r.Register("installation_update", new Component<InstallationUpdate>);
   r.Register("workspace_update", new Component<WorkspaceUpdate>);
   r.Register("schema_update", new Component<SchemaUpdate>);
