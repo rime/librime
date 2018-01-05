@@ -66,6 +66,7 @@ Speller::Speller(const Ticket& ticket) : Processor(ticket),
     config->GetString("speller/delimiter", &delimiters_);
     config->GetString("speller/initials", &initials_);
     config->GetString("speller/finals", &finals_);
+    config->GetString("speller/submit_keys", &submit_keys_);
     config->GetInt("speller/max_code_length", &max_code_length_);
     config->GetBool("speller/auto_select", &auto_select_);
     config->GetBool("speller/use_space", &use_space_);
@@ -78,6 +79,10 @@ Speller::Speller(const Ticket& ticket) : Processor(ticket),
       if (auto_clear == "auto") auto_clear_ = kClearAuto;
       else if (auto_clear == "manual") auto_clear_ = kClearManual;
       else if (auto_clear == "max_length") auto_clear_ = kClearMaxLength;
+    }
+    string submit_regex;
+    if (config->GetString("speller/submit_regex", &submit_regex)) {
+      submit_regex_ = submit_regex;
     }
   }
   if (initials_.empty()) {
@@ -96,6 +101,9 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
   if (!belongs_to(ch, alphabet_) && !belongs_to(ch, delimiters_))
     return kNoop;
   Context* ctx = engine_->context();
+  if (belongs_to(ch, submit_keys_) && boost::regex_match(ctx->GetScriptText(), submit_regex_)) {
+    return kNoop;
+  }
   bool is_initial = belongs_to(ch, initials_);
   if (!is_initial &&
       expecting_an_initial(ctx, alphabet_, finals_)) {
