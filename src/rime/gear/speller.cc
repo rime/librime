@@ -101,7 +101,7 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
   if (!belongs_to(ch, alphabet_) && !belongs_to(ch, delimiters_))
     return kNoop;
   Context* ctx = engine_->context();
-  if (belongs_to(ch, submit_keys_) && boost::regex_match(ctx->GetPreedit().text, submit_regex_)) {
+  if (belongs_to(ch, submit_keys_) && boost::regex_match(ctx->GetScriptText(), submit_regex_)) {
     return kNoop;
   }
   bool is_initial = belongs_to(ch, initials_);
