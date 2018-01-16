@@ -7,8 +7,12 @@
 #include <boost/algorithm/string.hpp>
 #include <utf8.h>
 #include <rime/algo/calculus.h>
+#include <rime/common.h>
 
 namespace rime {
+
+const double kAbbreviationPenalty = 0.5;
+const double kFuzzySpellingPenalty = 0.5;
 
 Calculus::Calculus() {
   Register("xlit", &Transliteration::Parse);
@@ -33,8 +37,7 @@ Calculation* Calculus::Parse(const string& definition) {
                boost::is_from_range(definition[sep], definition[sep]));
   if (args.empty())
     return NULL;
-  map<string,
-           Calculation::Factory*>::iterator it = factories_.find(args[0]);
+  auto it = factories_.find(args[0]);
   if (it == factories_.end())
     return NULL;
   Calculation* result = (*it->second)(args);
@@ -58,9 +61,9 @@ Calculation* Transliteration::Parse(const vector<string>& args) {
     char_map[cl] = cr;
   }
   if (cl == 0 && cr == 0) {
-    Transliteration* x = new Transliteration;
+    the<Transliteration> x(new Transliteration);
     x->char_map_.swap(char_map);
-    return x;
+    return x.release();
   }
   return NULL;
 }
@@ -101,17 +104,17 @@ Calculation* Transformation::Parse(const vector<string>& args) {
   const string& right(args[2]);
   if (left.empty())
     return NULL;
-  Transformation* x = new Transformation;
+  the<Transformation> x(new Transformation);
   x->pattern_.assign(left);
   x->replacement_.assign(right);
-  return x;
+  return x.release();
 }
 
 bool Transformation::Apply(Spelling* spelling) {
   if (!spelling || spelling->str.empty())
     return false;
-  string result(boost::regex_replace(spelling->str,
-                                          pattern_, replacement_));
+  string result = boost::regex_replace(spelling->str,
+                                       pattern_, replacement_);
   if (result == spelling->str)
     return false;
   spelling->str.swap(result);
@@ -126,9 +129,9 @@ Calculation* Erasion::Parse(const vector<string>& args) {
   const string& pattern(args[1]);
   if (pattern.empty())
     return NULL;
-  Erasion* x = new Erasion;
+  the<Erasion> x(new Erasion);
   x->pattern_.assign(pattern);
-  return x;
+  return x.release();
 }
 
 bool Erasion::Apply(Spelling* spelling) {
@@ -149,10 +152,10 @@ Calculation* Derivation::Parse(const vector<string>& args) {
   const string& right(args[2]);
   if (left.empty())
     return NULL;
-  Derivation* x = new Derivation;
+  the<Derivation> x(new Derivation);
   x->pattern_.assign(left);
   x->replacement_.assign(right);
-  return x;
+  return x.release();
 }
 
 // Fuzzing
@@ -164,17 +167,17 @@ Calculation* Fuzzing::Parse(const vector<string>& args) {
   const string& right(args[2]);
   if (left.empty())
     return NULL;
-  Fuzzing* x = new Fuzzing;
+  the<Fuzzing> x(new Fuzzing);
   x->pattern_.assign(left);
   x->replacement_.assign(right);
-  return x;
+  return x.release();
 }
 
 bool Fuzzing::Apply(Spelling* spelling) {
   bool result = Transformation::Apply(spelling);
   if (result) {
     spelling->properties.type = kFuzzySpelling;
-    spelling->properties.credibility *= 0.5;
+    spelling->properties.credibility *= kFuzzySpellingPenalty;
   }
   return result;
 }
@@ -188,17 +191,17 @@ Calculation* Abbreviation::Parse(const vector<string>& args) {
   const string& right(args[2]);
   if (left.empty())
     return NULL;
-  Abbreviation* x = new Abbreviation;
+  the<Abbreviation> x(new Abbreviation);
   x->pattern_.assign(left);
   x->replacement_.assign(right);
-  return x;
+  return x.release();
 }
 
 bool Abbreviation::Apply(Spelling* spelling) {
   bool result = Transformation::Apply(spelling);
   if (result) {
     spelling->properties.type = kAbbreviation;
-    spelling->properties.credibility *= 0.5;
+    spelling->properties.credibility *= kAbbreviationPenalty;
   }
   return result;
 }
