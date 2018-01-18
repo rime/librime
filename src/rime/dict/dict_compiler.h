@@ -27,7 +27,7 @@ class DictCompiler {
     kDump = 4,
   };
 
-  RIME_API DictCompiler(Dictionary *dictionary);
+  RIME_API DictCompiler(Dictionary *dictionary, const string& prefix = "");
 
   RIME_API bool Compile(const string &schema_file);
   void set_options(int options) { options_ = options; }
@@ -37,13 +37,15 @@ class DictCompiler {
                   const vector<string>& dict_files,
                   uint32_t dict_file_checksum);
   bool BuildPrism(const string& schema_file,
-                  uint32_t dict_file_checksum, uint32_t schema_file_checksum);
+                  uint32_t dict_file_checksum,
+                  uint32_t schema_file_checksum);
   bool BuildReverseLookupDict(ReverseDb* db, uint32_t dict_file_checksum);
 
   string dict_name_;
   an<Prism> prism_;
   an<Table> table_;
   int options_ = 0;
+  string prefix_;
 };
 
 }  // namespace rime

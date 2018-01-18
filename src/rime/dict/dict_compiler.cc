@@ -21,15 +21,16 @@
 
 namespace rime {
 
-DictCompiler::DictCompiler(Dictionary *dictionary)
+DictCompiler::DictCompiler(Dictionary *dictionary, const string& prefix)
     : dict_name_(dictionary->name()),
       prism_(dictionary->prism()),
-      table_(dictionary->table()) {
+      table_(dictionary->table()),
+      prefix_(prefix) {
 }
 
 static string LocateFile(const string& file_name) {
   the<ResourceResolver> resolver(
-      Service::instance().CreateResourceResolver({"", "", ""}));
+      Service::instance().CreateResourceResolver({"build_source", "", ""}));
   return resolver->ResolvePath(file_name).string();
 }
 
@@ -107,7 +108,8 @@ bool DictCompiler::Compile(const string &schema_file) {
   LOG(INFO) << schema_file << " (" << schema_file_checksum << ")";
   {
     the<ResourceResolver> resolver(
-        Service::instance().CreateResourceResolver({"", "", ".reverse.bin"}));
+        Service::instance().CreateResourceResolver(
+            {"find_reverse_db", prefix_, ".reverse.bin"}));
     ReverseDb reverse_db(resolver->ResolvePath(dict_name_).string());
     if (!reverse_db.Exists() ||
         !reverse_db.Load() ||
@@ -130,8 +132,9 @@ bool DictCompiler::Compile(const string &schema_file) {
   return true;
 }
 
-static string RelocateToUserDirectory(const string& file_name) {
-  ResourceResolver resolver(ResourceType{"", "", ""});
+static string RelocateToUserDirectory(const string& prefix,
+                                      const string& file_name) {
+  ResourceResolver resolver(ResourceType{"build_target", prefix, ""});
   resolver.set_root_path(Service::instance().deployer().user_data_dir);
   auto resource_id = boost::filesystem::path(file_name).filename().string();
   return resolver.ResolvePath(resource_id).string();
@@ -141,7 +144,7 @@ bool DictCompiler::BuildTable(DictSettings* settings,
                               const vector<string>& dict_files,
                               uint32_t dict_file_checksum) {
   LOG(INFO) << "building table...";
-  table_ = New<Table>(RelocateToUserDirectory(table_->file_name()));
+  table_ = New<Table>(RelocateToUserDirectory(prefix_, table_->file_name()));
 
   EntryCollector collector;
   collector.Configure(settings);
@@ -186,7 +189,8 @@ bool DictCompiler::BuildTable(DictSettings* settings,
     }
   }
   // build .reverse.bin
-  ReverseDb reverse_db(RelocateToUserDirectory(dict_name_ + ".reverse.bin"));
+  ReverseDb reverse_db(RelocateToUserDirectory(prefix_,
+                                               dict_name_ + ".reverse.bin"));
   if (!reverse_db.Build(settings,
                         collector.syllabary,
                         vocabulary,
@@ -199,9 +203,10 @@ bool DictCompiler::BuildTable(DictSettings* settings,
 }
 
 bool DictCompiler::BuildPrism(const string &schema_file,
-                              uint32_t dict_file_checksum, uint32_t schema_file_checksum) {
+                              uint32_t dict_file_checksum,
+                              uint32_t schema_file_checksum) {
   LOG(INFO) << "building prism...";
-  prism_ = New<Prism>(RelocateToUserDirectory(prism_->file_name()));
+  prism_ = New<Prism>(RelocateToUserDirectory(prefix_, prism_->file_name()));
 
   // get syllabary from table
   Syllabary syllabary;

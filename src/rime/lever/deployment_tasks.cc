@@ -288,6 +288,17 @@ static bool TrashCustomizedCopy(const fs::path& shared_copy,
   return false;
 }
 
+static bool MaybeCreateDirectory(fs::path dir) {
+  if (!fs::exists(dir)) {
+    boost::system::error_code ec;
+    if (!fs::create_directories(dir, ec)) {
+      LOG(ERROR) << "error creating directory '" << dir.string() << "'.";
+      return false;
+    }
+  }
+  return true;
+}
+
 bool SchemaUpdate::Run(Deployer* deployer) {
   fs::path source_path(schema_file_);
   if (!fs::exists(source_path)) {
@@ -314,6 +325,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     LOG(INFO) << "patched copy of schema '" << schema_id
               << "' is moved to trash";
   }
+
   // TODO: compile the config file if needs update
 
   string dict_name;
@@ -329,7 +341,10 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     return false;
   }
   LOG(INFO) << "preparing dictionary '" << dict_name << "'.";
-  DictCompiler dict_compiler(dict.get());
+  if (!MaybeCreateDirectory(user_data_path / "build")) {
+    return false;
+  }
+  DictCompiler dict_compiler(dict.get(), "build/");
   if (verbose_) {
     dict_compiler.set_options(DictCompiler::kRebuild | DictCompiler::kDump);
   }

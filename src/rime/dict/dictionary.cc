@@ -281,11 +281,11 @@ bool Dictionary::loaded() const {
 // DictionaryComponent members
 
 static const ResourceType kPrismResourceType = {
-  "prism", "", ".prism.bin"
+  "prism", "build/", ".prism.bin"
 };
 
 static const ResourceType kTableResourceType = {
-  "table", "", ".table.bin"
+  "table", "build/", ".table.bin"
 };
 
 DictionaryComponent::DictionaryComponent()
@@ -321,7 +321,6 @@ Dictionary*
 DictionaryComponent::CreateDictionaryWithName(const string& dict_name,
                                               const string& prism_name) {
   // obtain prism and table objects
-  boost::filesystem::path path(Service::instance().deployer().user_data_dir);
   auto table = table_map_[dict_name].lock();
   if (!table) {
     auto file_path = table_resource_resolver_->ResolvePath(dict_name).string();
