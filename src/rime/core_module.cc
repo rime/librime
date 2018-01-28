@@ -25,6 +25,7 @@ static void rime_core_initialize() {
   config->InstallPlugin(new DefaultConfigPlugin);
   config->InstallPlugin(new LegacyPresetConfigPlugin);
   config->InstallPlugin(new LegacyDictionaryConfigPlugin);
+  config->InstallPlugin(new BuildInfoPlugin);
   r.Register("config", config);
   r.Register("schema", new SchemaComponent(config));
 }

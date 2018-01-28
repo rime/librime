@@ -295,6 +295,13 @@ void ConfigCompiler::Pop() {
   graph_->Pop();
 }
 
+void ConfigCompiler::EnumerateResources(
+    function<void (an<ConfigResource> resource)> process_resource) {
+  for (const auto& r : graph_->resources) {
+    process_resource(r.second);
+  }
+}
+
 an<ConfigResource> ConfigCompiler::GetCompiledResource(
     const string& resource_id) const {
   return graph_->resources[resource_id];

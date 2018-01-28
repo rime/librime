@@ -45,6 +45,12 @@ class LegacyDictionaryConfigPlugin : public ConfigCompilerPlugin {
   Review ReviewLinkOutput;
 };
 
+class BuildInfoPlugin : public ConfigCompilerPlugin {
+ public:
+  Review ReviewCompileOutput;
+  Review ReviewLinkOutput;
+};
+
 }  // namespace rime
 
 #endif  // RIME_CONFIG_PLUGINS_H_
