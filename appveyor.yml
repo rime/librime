@@ -8,6 +8,7 @@ image: Visual Studio 2015
 
 environment:
   BOOST_ROOT: C:\Libraries\libboost
+  CL: /Zc:threadSafeInit-
 
 cache:
   - thirdparty.cached -> appveyor.install.bat
