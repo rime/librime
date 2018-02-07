@@ -3,7 +3,7 @@
 RIME: Rime Input Method Engine
 ===
 [![Build Status](https://travis-ci.org/rime/librime.svg)](https://travis-ci.org/rime/librime)
-[![Build status](https://ci.appveyor.com/api/projects/status/github/rime/librime?svg=true)](https://ci.appveyor.com/project/lotem/librime)
+[![Build status](https://ci.appveyor.com/api/projects/status/github/rime/librime?svg=true)](https://ci.appveyor.com/project/rime/librime)
 
 rimes with your keystrokes.
 
