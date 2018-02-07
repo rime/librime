@@ -22,7 +22,13 @@ static void load_patterns(RecognizerPatterns* patterns, an<ConfigMap> map) {
     auto value = As<ConfigValue>(it->second);
     if (!value)
       continue;
-    (*patterns)[it->first] = value->str();
+    try {
+      boost::regex pattern(value->str());
+      (*patterns)[it->first] = pattern;
+    } catch (boost::regex_error& e) {
+      LOG(ERROR) << "error parsing pattern /" << value->str() << "/: "
+                 << e.what();
+    }
   }
 }
 
