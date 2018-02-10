@@ -143,25 +143,51 @@ void Config::SetItem(an<ConfigItem> item) {
   set_modified();
 }
 
-static const ResourceType kConfigResourceType = {
+const ResourceType ConfigComponentBase::kConfigResourceType = {
   "config",
   "",
   ".yaml",
 };
 
-ConfigComponent::ConfigComponent()
+ConfigComponentBase::ConfigComponentBase(const ResourceType& resource_type)
     : resource_resolver_(
-          Service::instance().CreateResourceResolver(kConfigResourceType)) {
+          Service::instance().CreateResourceResolver(resource_type)) {
 }
 
-ConfigComponent::~ConfigComponent() {
+ConfigComponentBase::~ConfigComponentBase() {
 }
 
-Config* ConfigComponent::Create(const string& file_name) {
+Config* ConfigComponentBase::Create(const string& file_name) {
   return new Config(GetConfigData(file_name));
 }
 
-void ConfigComponent::InstallPlugin(ConfigCompilerPlugin* plugin) {
+an<ConfigData> ConfigComponentBase::GetConfigData(const string& file_name) {
+  auto config_id = resource_resolver_->ToResourceId(file_name);
+  // keep a weak reference to the shared config data in the component
+  weak<ConfigData>& wp(cache_[config_id]);
+  if (wp.expired()) {  // create a new copy and load it
+    auto data = LoadConfig(config_id);
+    wp = data;
+    return data;
+  }
+  // obtain the shared copy
+  return wp.lock();
+}
+
+an<ConfigData> ConfigLoader::LoadConfig(ResourceResolver* resource_resolver,
+                                        const string& config_id) {
+  auto data = New<ConfigData>();
+  data->LoadFromFile(
+      resource_resolver->ResolvePath(config_id).string(), nullptr);
+  data->set_auto_save(auto_save_);
+  return data;
+}
+
+ConfigBuilder::ConfigBuilder() {}
+
+ConfigBuilder::~ConfigBuilder() {}
+
+void ConfigBuilder::InstallPlugin(ConfigCompilerPlugin* plugin) {
   plugins_.push_back(the<ConfigCompilerPlugin>(plugin));
 }
 
@@ -182,7 +208,6 @@ struct MultiplePlugins : ConfigCompilerPlugin {
     return ReviewedByAll(&ConfigCompilerPlugin::ReviewLinkOutput,
                          compiler, resource);
   }
-
   typedef bool (ConfigCompilerPlugin::*Reviewer)(ConfigCompiler* compiler,
                                                  an<ConfigResource> resource);
   bool ReviewedByAll(Reviewer reviewer,
@@ -201,22 +226,15 @@ bool MultiplePlugins<Container>::ReviewedByAll(Reviewer reviewer,
   return true;
 }
 
-an<ConfigData> ConfigComponent::GetConfigData(const string& file_name) {
-  auto config_id = resource_resolver_->ToResourceId(file_name);
-  // keep a weak reference to the shared config data in the component
-  weak<ConfigData>& wp(cache_[config_id]);
-  if (wp.expired()) {  // create a new copy and load it
-    MultiplePlugins<decltype(plugins_)> multiple_plugins(plugins_);
-    ConfigCompiler compiler(resource_resolver_.get(), &multiple_plugins);
-    auto resource = compiler.Compile(file_name);
-    if (resource->loaded && !compiler.Link(resource)) {
-      LOG(ERROR) << "error loading config from: " << file_name;
-    }
-    wp = resource->data;
-    return resource->data;
+an<ConfigData> ConfigBuilder::LoadConfig(ResourceResolver* resource_resolver,
+                                         const string& config_id) {
+  MultiplePlugins<decltype(plugins_)> multiple_plugins(plugins_);
+  ConfigCompiler compiler(resource_resolver, &multiple_plugins);
+  auto resource = compiler.Compile(config_id);
+  if (resource->loaded && !compiler.Link(resource)) {
+    LOG(ERROR) << "error building config: " << config_id;
   }
-  // obtain the shared copy
-  return wp.lock();
+  return resource->data;
 }
 
 }  // namespace rime

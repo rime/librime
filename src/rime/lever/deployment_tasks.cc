@@ -66,7 +66,7 @@ bool DetectModifications::Run(Deployer* deployer) {
   // TODO: store as 64-bit number to avoid the year 2038 problem
   int last_build_time = 0;
   {
-    the<Config> user_config(Config::Require("config")->Create("user"));
+    the<Config> user_config(Config::Require("user_config")->Create("user"));
     user_config->GetInt("var/last_build_time", &last_build_time);
   }
   if (last_modified > (time_t)last_build_time) {
@@ -235,7 +235,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "finished updating schemas: "
             << success << " success, " << failure << " failure.";
 
-  the<Config> user_config(Config::Require("config")->Create("user"));
+  the<Config> user_config(Config::Require("user_config")->Create("user"));
   // TODO: store as 64-bit number to avoid the year 2038 problem
   user_config->SetInt("var/last_build_time", (int)time(NULL));
 

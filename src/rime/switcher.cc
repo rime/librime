@@ -27,7 +27,7 @@ Switcher::Switcher(const Ticket& ticket) : Processor(ticket) {
   context_->select_notifier().connect(
       [this](Context* ctx) { OnSelect(ctx); });
 
-  user_config_.reset(Config::Require("config")->Create("user"));
+  user_config_.reset(Config::Require("user_config")->Create("user"));
   InitializeComponents();
   LoadSettings();
   RestoreSavedOptions();
