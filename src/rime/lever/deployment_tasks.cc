@@ -314,20 +314,14 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     LOG(ERROR) << "invalid schema definition in '" << schema_file_ << "'.";
     return false;
   }
-  fs::path shared_data_path(deployer->shared_data_dir);
-  fs::path user_data_path(deployer->user_data_dir);
-  fs::path destination_path(user_data_path / (schema_id + ".schema.yaml"));
-  fs::path trash = user_data_path / "trash";
-  if (TrashCustomizedCopy(source_path,
-                          destination_path,
-                          "schema/version",
-                          trash)) {
-    LOG(INFO) << "patched copy of schema '" << schema_id
-              << "' is moved to trash";
+
+  the<DeploymentTask> config_file_update(
+      new ConfigFileUpdate(schema_id + ".schema.yaml", "schema/version"));
+  if (!config_file_update->Run(deployer)) {
+    return false;
   }
-
-  // TODO: compile the config file if needs update
-
+  // reload compiled config
+  config.reset(Config::Require("schema")->Create(schema_id));
   string dict_name;
   if (!config->GetString("translator/dictionary", &dict_name)) {
     // not requiring a dictionary
@@ -340,7 +334,9 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     LOG(ERROR) << "Error creating dictionary '" << dict_name << "'.";
     return false;
   }
+
   LOG(INFO) << "preparing dictionary '" << dict_name << "'.";
+  fs::path user_data_path(deployer->user_data_dir);
   if (!MaybeCreateDirectory(user_data_path / "build")) {
     return false;
   }
@@ -348,8 +344,10 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   if (verbose_) {
     dict_compiler.set_options(DictCompiler::kRebuild | DictCompiler::kDump);
   }
-  // TODO: use compiled schema instead of the YAML file alone
-  if (!dict_compiler.Compile(schema_file_)) {
+  ResourceResolver resolver({"compiled_schema", "build/", ".schema.yaml"});
+  resolver.set_root_path(user_data_path);
+  auto compiled_schema = resolver.ResolvePath(schema_id).string();
+  if (!dict_compiler.Compile(compiled_schema)) {
     LOG(ERROR) << "dictionary '" << dict_name << "' failed to compile.";
     return false;
   }
@@ -366,6 +364,38 @@ ConfigFileUpdate::ConfigFileUpdate(TaskInitializer arg) {
   catch (const boost::bad_any_cast&) {
     LOG(ERROR) << "ConfigFileUpdate: invalid arguments.";
   }
+}
+
+static bool ConfigNeedsUpdate(Config* config) {
+  auto build_info = (*config)["__build_info"];
+  if (!build_info.IsMap()) {
+    LOG(INFO) << "missing build info";
+    return true;
+  }
+  auto timestamps = build_info["timestamps"];
+  if (!timestamps.IsMap()) {
+    LOG(INFO) << "missing timestamps";
+    return true;
+  }
+  the<ResourceResolver> resolver(
+      Service::instance().CreateResourceResolver({
+          "config_source_file", "", ".yaml"
+      }));
+  for (auto entry : *timestamps.AsMap()) {
+    fs::path source_file_path = resolver->ResolvePath(entry.first);
+    if (!fs::exists(source_file_path)) {
+      LOG(INFO) << "source file not exists: " << source_file_path.string();
+      return true;
+    }
+    auto value = As<ConfigValue>(entry.second);
+    int recorded_time = 0;
+    if (!value || !value->GetInt(&recorded_time) ||
+        recorded_time != (int) fs::last_write_time(source_file_path)) {
+      LOG(INFO) << "timestamp mismatch: " << source_file_path.string();
+      return true;
+    }
+  }
+  return false;
 }
 
 bool ConfigFileUpdate::Run(Deployer* deployer) {
@@ -385,7 +415,14 @@ bool ConfigFileUpdate::Run(Deployer* deployer) {
                           trash)) {
     LOG(INFO) << "patched copy of '" << file_name_ << "' is moved to trash.";
   }
-  // TODO: compile the config file if needs update
+  // build the config file if needs update
+  the<Config> config(Config::Require("config")->Create(file_name_));
+  if (ConfigNeedsUpdate(config.get())) {
+    if (!MaybeCreateDirectory(user_data_path / "build")) {
+      return false;
+    }
+    config.reset(Config::Require("config_builder")->Create(file_name_));
+  }
   return true;
 }
 
