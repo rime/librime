@@ -16,7 +16,7 @@ class RimeConfigTest : public ::testing::Test {
   RimeConfigTest() = default;
 
   virtual void SetUp() {
-    component_.reset(new ConfigComponent);
+    component_.reset(new ConfigComponent<ConfigLoader>);
     config_.reset(component_->Create("config_test"));
   }
 
@@ -30,7 +30,10 @@ class RimeConfigTest : public ::testing::Test {
 TEST(RimeConfigComponentTest, RoundTrip) {
   // registration
   Registry& r = Registry::instance();
-  r.Register("test_config", new ConfigComponent);
+  r.Register("test_config", new ConfigComponent<ConfigLoader>(
+      [](ConfigLoader* loader) {
+        loader->set_auto_save(true);
+      }));
   // find component
   Config::Component* cc = Config::Require("test_config");
   ASSERT_TRUE(cc != NULL);

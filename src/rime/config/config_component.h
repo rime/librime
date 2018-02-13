@@ -12,6 +12,7 @@
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/config/config_types.h>
+#include <rime/resource.h>
 
 namespace rime {
 
@@ -65,21 +66,58 @@ class Config : public Class<Config, const string&>, public ConfigItemRef {
 
 class ConfigCompiler;
 class ConfigCompilerPlugin;
-class ResourceResolver;
 struct ConfigResource;
 
-class ConfigComponent : public Config::Component {
+class ConfigComponentBase : public Config::Component {
  public:
-  RIME_API ConfigComponent();
-  ~ConfigComponent();
-  Config* Create(const string& file_name);
-  void InstallPlugin(ConfigCompilerPlugin *plugin);
-  bool ApplyPlugins(ConfigCompiler* compiler, an<ConfigResource> resource);
+  RIME_API static const ResourceType kConfigResourceType;
+  RIME_API ConfigComponentBase(const ResourceType& resource_type);
+  RIME_API ~ConfigComponentBase();
+  RIME_API Config* Create(const string& file_name);
 
-private:
+ protected:
+  virtual an<ConfigData> LoadConfig(const string& config_id) = 0;
+  the<ResourceResolver> resource_resolver_;
+
+ private:
   an<ConfigData> GetConfigData(const string& file_name);
   map<string, weak<ConfigData>> cache_;
-  the<ResourceResolver> resource_resolver_;
+};
+
+template <class Loader>
+    class ConfigComponent : public ConfigComponentBase {
+ public:
+  ConfigComponent(const ResourceType& resource_type = kConfigResourceType)
+      : ConfigComponentBase(resource_type) {}
+  ConfigComponent(function<void (Loader* loader)> setup)
+      : ConfigComponentBase(kConfigResourceType) {
+    setup(&loader_);
+  }
+ private:
+  an<ConfigData> LoadConfig(const string& config_id) override {
+    return loader_.LoadConfig(resource_resolver_.get(), config_id);
+  }
+  Loader loader_;
+};
+
+class ConfigLoader {
+ public:
+  RIME_API an<ConfigData> LoadConfig(ResourceResolver* resource_resolver,
+                                     const string& config_id);
+  void set_auto_save(bool auto_save) { auto_save_ = auto_save; }
+ private:
+  bool auto_save_ = false;
+};
+
+class ConfigBuilder {
+ public:
+  RIME_API ConfigBuilder();
+  RIME_API virtual ~ConfigBuilder();
+  RIME_API an<ConfigData> LoadConfig(ResourceResolver* resource_resolver,
+                                     const string& config_id);
+  void InstallPlugin(ConfigCompilerPlugin *plugin);
+  bool ApplyPlugins(ConfigCompiler* compiler, an<ConfigResource> resource);
+ private:
   vector<the<ConfigCompilerPlugin>> plugins_;
 };
 

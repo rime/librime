@@ -17,7 +17,7 @@ class RimeConfigCompilerTestBase : public ::testing::Test {
   virtual string test_config_id() const = 0;
 
   virtual void SetUp() {
-    component_.reset(new ConfigComponent);
+    component_.reset(new ConfigComponent<ConfigBuilder>);
     config_.reset(component_->Create(test_config_id()));
   }
 

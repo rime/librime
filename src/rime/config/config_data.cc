@@ -16,7 +16,7 @@
 namespace rime {
 
 ConfigData::~ConfigData() {
-  if (modified_ && !file_name_.empty())
+  if (auto_save_ && modified_ && !file_name_.empty())
     SaveToFile(file_name_);
 }
 

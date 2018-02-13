@@ -64,6 +64,8 @@ class ConfigCompiler {
   bool Parse(const string& key, const an<ConfigItem>& item);
   void Pop();
 
+  void EnumerateResources(
+      function<void (an<ConfigResource> resource)> process_resource);
   an<ConfigResource> GetCompiledResource(const string& resource_id) const;
   an<ConfigResource> Compile(const string& file_name);
   bool Link(an<ConfigResource> target);

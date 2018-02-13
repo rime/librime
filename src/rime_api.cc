@@ -105,8 +105,9 @@ RIME_API Bool RimeStartMaintenance(Bool full_check) {
   }
   if (!full_check) {
     TaskInitializer args{
-        make_pair<string, string>("default.yaml", "config_version")};
-    if (!deployer.RunTask("config_file_update", args)) {
+      vector<string>{deployer.user_data_dir, deployer.shared_data_dir}
+    };
+    if (!deployer.RunTask("detect_modifications", args)) {
       return False;
     }
     LOG(INFO) << "changes detected; starting maintenance.";
@@ -541,24 +542,28 @@ RIME_API Bool RimeSelectSchema(RimeSessionId session_id, const char* schema_id) 
 
 // config
 
-RIME_API Bool RimeSchemaOpen(const char *schema_id, RimeConfig* config) {
-  if (!schema_id || !config) return False;
-  Config::Component* cc = Config::Require("schema");
-  if (!cc) return False;
-  Config* c = cc->Create(schema_id);
-  if (!c) return False;
-  config->ptr = (void*)c;
-  return True;
-}
-
-RIME_API Bool RimeConfigOpen(const char *config_id, RimeConfig* config) {
+static Bool open_config_in_component(const char* config_component,
+                                     const char* config_id,
+                                     RimeConfig* config) {
   if (!config_id || !config) return False;
-  Config::Component* cc = Config::Require("config");
+  Config::Component* cc = Config::Require(config_component);
   if (!cc) return False;
   Config* c = cc->Create(config_id);
   if (!c) return False;
   config->ptr = (void*)c;
   return True;
+}
+
+RIME_API Bool RimeSchemaOpen(const char *schema_id, RimeConfig* config) {
+  return open_config_in_component("schema", schema_id, config);
+}
+
+RIME_API Bool RimeConfigOpen(const char *config_id, RimeConfig* config) {
+  return open_config_in_component("config", config_id, config);
+}
+
+RIME_API Bool RimeUserConfigOpen(const char* config_id, RimeConfig* config) {
+  return open_config_in_component("user_config", config_id, config);
 }
 
 RIME_API Bool RimeConfigClose(RimeConfig *config) {
@@ -1007,6 +1012,7 @@ RIME_API RimeApi* rime_get_api() {
     s_api.select_schema = &RimeSelectSchema;
     s_api.schema_open = &RimeSchemaOpen;
     s_api.config_open = &RimeConfigOpen;
+    s_api.user_config_open = &RimeUserConfigOpen;
     s_api.config_close = &RimeConfigClose;
     s_api.config_get_bool = &RimeConfigGetBool;
     s_api.config_get_int = &RimeConfigGetInt;

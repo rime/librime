@@ -37,6 +37,7 @@ class ConfigData {
   const string& file_name() const { return file_name_; }
   bool modified() const { return modified_; }
   void set_modified() { modified_ = true; }
+  void set_auto_save(bool auto_save) { auto_save_ = auto_save; }
 
   an<ConfigItem> root;
 
@@ -51,6 +52,7 @@ class ConfigData {
 
   string file_name_;
   bool modified_ = false;
+  bool auto_save_ = false;
 };
 
 }  // namespace rime

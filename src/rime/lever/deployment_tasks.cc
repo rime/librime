@@ -4,6 +4,7 @@
 //
 // 2011-12-10 GONG Chen <chen.sst@gmail.com>
 //
+#include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/uuid/random_generator.hpp>
@@ -29,6 +30,51 @@ using namespace std::placeholders;
 namespace fs = boost::filesystem;
 
 namespace rime {
+
+DetectModifications::DetectModifications(TaskInitializer arg) {
+  try {
+    data_dirs_ = boost::any_cast<vector<string>>(arg);
+  }
+  catch (const boost::bad_any_cast&) {
+    LOG(ERROR) << "DetectModifications: invalid arguments.";
+  }
+}
+
+bool DetectModifications::Run(Deployer* deployer) {
+  time_t last_modified = 0;
+  try {
+    for (auto dir : data_dirs_) {
+      fs::path p = fs::canonical(dir);
+      last_modified = (std::max)(last_modified, fs::last_write_time(p));
+      if (fs::is_directory(p)) {
+        for (fs::directory_iterator iter(p), end; iter != end; ++iter) {
+          fs::path entry(iter->path());
+          if (fs::is_regular_file(fs::canonical(entry)) &&
+              entry.extension().string() == ".yaml" &&
+              entry.filename().string() != "user.yaml") {
+            last_modified =
+                (std::max)(last_modified, fs::last_write_time(entry));
+          }
+        }
+      }
+    }
+  } catch(const fs::filesystem_error& ex) {
+    LOG(ERROR) << "Error reading file information: " << ex.what();
+    return true;
+  }
+
+  // TODO: store as 64-bit number to avoid the year 2038 problem
+  int last_build_time = 0;
+  {
+    the<Config> user_config(Config::Require("user_config")->Create("user"));
+    user_config->GetInt("var/last_build_time", &last_build_time);
+  }
+  if (last_modified > (time_t)last_build_time) {
+    LOG(INFO) << "modifications detected. workspace needs update.";
+    return true;
+  }
+  return false;
+}
 
 bool InstallationUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating rime installation info.";
@@ -188,6 +234,11 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   }
   LOG(INFO) << "finished updating schemas: "
             << success << " success, " << failure << " failure.";
+
+  the<Config> user_config(Config::Require("user_config")->Create("user"));
+  // TODO: store as 64-bit number to avoid the year 2038 problem
+  user_config->SetInt("var/last_build_time", (int)time(NULL));
+
   return failure == 0;
 }
 
@@ -237,6 +288,17 @@ static bool TrashCustomizedCopy(const fs::path& shared_copy,
   return false;
 }
 
+static bool MaybeCreateDirectory(fs::path dir) {
+  if (!fs::exists(dir)) {
+    boost::system::error_code ec;
+    if (!fs::create_directories(dir, ec)) {
+      LOG(ERROR) << "error creating directory '" << dir.string() << "'.";
+      return false;
+    }
+  }
+  return true;
+}
+
 bool SchemaUpdate::Run(Deployer* deployer) {
   fs::path source_path(schema_file_);
   if (!fs::exists(source_path)) {
@@ -252,18 +314,14 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     LOG(ERROR) << "invalid schema definition in '" << schema_file_ << "'.";
     return false;
   }
-  fs::path shared_data_path(deployer->shared_data_dir);
-  fs::path user_data_path(deployer->user_data_dir);
-  fs::path destination_path(user_data_path / (schema_id + ".schema.yaml"));
-  fs::path trash = user_data_path / "trash";
-  if (TrashCustomizedCopy(source_path,
-                          destination_path,
-                          "schema/version",
-                          trash)) {
-    LOG(INFO) << "patched copy of schema '" << schema_id
-              << "' is moved to trash";
-  }
 
+  the<DeploymentTask> config_file_update(
+      new ConfigFileUpdate(schema_id + ".schema.yaml", "schema/version"));
+  if (!config_file_update->Run(deployer)) {
+    return false;
+  }
+  // reload compiled config
+  config.reset(Config::Require("schema")->Create(schema_id));
   string dict_name;
   if (!config->GetString("translator/dictionary", &dict_name)) {
     // not requiring a dictionary
@@ -276,12 +334,20 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     LOG(ERROR) << "Error creating dictionary '" << dict_name << "'.";
     return false;
   }
+
   LOG(INFO) << "preparing dictionary '" << dict_name << "'.";
-  DictCompiler dict_compiler(dict.get());
+  fs::path user_data_path(deployer->user_data_dir);
+  if (!MaybeCreateDirectory(user_data_path / "build")) {
+    return false;
+  }
+  DictCompiler dict_compiler(dict.get(), "build/");
   if (verbose_) {
     dict_compiler.set_options(DictCompiler::kRebuild | DictCompiler::kDump);
   }
-  if (!dict_compiler.Compile(schema_file_)) {
+  ResourceResolver resolver({"compiled_schema", "build/", ".schema.yaml"});
+  resolver.set_root_path(user_data_path);
+  auto compiled_schema = resolver.ResolvePath(schema_id).string();
+  if (!dict_compiler.Compile(compiled_schema)) {
     LOG(ERROR) << "dictionary '" << dict_name << "' failed to compile.";
     return false;
   }
@@ -300,6 +366,38 @@ ConfigFileUpdate::ConfigFileUpdate(TaskInitializer arg) {
   }
 }
 
+static bool ConfigNeedsUpdate(Config* config) {
+  auto build_info = (*config)["__build_info"];
+  if (!build_info.IsMap()) {
+    LOG(INFO) << "missing build info";
+    return true;
+  }
+  auto timestamps = build_info["timestamps"];
+  if (!timestamps.IsMap()) {
+    LOG(INFO) << "missing timestamps";
+    return true;
+  }
+  the<ResourceResolver> resolver(
+      Service::instance().CreateResourceResolver({
+          "config_source_file", "", ".yaml"
+      }));
+  for (auto entry : *timestamps.AsMap()) {
+    fs::path source_file_path = resolver->ResolvePath(entry.first);
+    if (!fs::exists(source_file_path)) {
+      LOG(INFO) << "source file not exists: " << source_file_path.string();
+      return true;
+    }
+    auto value = As<ConfigValue>(entry.second);
+    int recorded_time = 0;
+    if (!value || !value->GetInt(&recorded_time) ||
+        recorded_time != (int) fs::last_write_time(source_file_path)) {
+      LOG(INFO) << "timestamp mismatch: " << source_file_path.string();
+      return true;
+    }
+  }
+  return false;
+}
+
 bool ConfigFileUpdate::Run(Deployer* deployer) {
   fs::path shared_data_path(deployer->shared_data_dir);
   fs::path user_data_path(deployer->user_data_dir);
@@ -316,6 +414,14 @@ bool ConfigFileUpdate::Run(Deployer* deployer) {
                           version_key_,
                           trash)) {
     LOG(INFO) << "patched copy of '" << file_name_ << "' is moved to trash.";
+  }
+  // build the config file if needs update
+  the<Config> config(Config::Require("config")->Create(file_name_));
+  if (ConfigNeedsUpdate(config.get())) {
+    if (!MaybeCreateDirectory(user_data_path / "build")) {
+      return false;
+    }
+    config.reset(Config::Require("config_builder")->Create(file_name_));
   }
   return true;
 }
@@ -469,6 +575,7 @@ bool CleanupTrash::Run(Deployer* deployer) {
       continue;
     auto filename = entry.filename().string();
     if (filename == "rime.log" ||
+        boost::ends_with(filename, ".bin") ||
         boost::ends_with(filename, ".reverse.kct") ||
         boost::ends_with(filename, ".userdb.kct.old") ||
         boost::ends_with(filename, ".userdb.kct.snapshot")) {

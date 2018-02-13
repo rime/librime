@@ -20,13 +20,27 @@ static void rime_core_initialize() {
   LOG(INFO) << "registering core components.";
   Registry& r = Registry::instance();
 
-  auto config = new ConfigComponent;
-  config->InstallPlugin(new AutoPatchConfigPlugin);
-  config->InstallPlugin(new DefaultConfigPlugin);
-  config->InstallPlugin(new LegacyPresetConfigPlugin);
-  config->InstallPlugin(new LegacyDictionaryConfigPlugin);
-  r.Register("config", config);
-  r.Register("schema", new SchemaComponent(config));
+  const ResourceType build_output{"config", "build/", ".yaml"};
+  auto config_builder = new ConfigComponent<ConfigBuilder>(
+      [&](ConfigBuilder* builder) {
+        builder->InstallPlugin(new AutoPatchConfigPlugin);
+        builder->InstallPlugin(new DefaultConfigPlugin);
+        builder->InstallPlugin(new LegacyPresetConfigPlugin);
+        builder->InstallPlugin(new LegacyDictionaryConfigPlugin);
+        builder->InstallPlugin(new BuildInfoPlugin);
+        builder->InstallPlugin(new SaveOutputPlugin(build_output));
+      });
+  r.Register("config_builder", config_builder);
+
+  auto config_loader = new ConfigComponent<ConfigLoader>(build_output);
+  r.Register("config", config_loader);
+  r.Register("schema", new SchemaComponent(config_loader));
+
+  auto user_config = new ConfigComponent<ConfigLoader>(
+      [](ConfigLoader* loader) {
+        loader->set_auto_save(true);
+      });
+  r.Register("user_config", user_config);
 }
 
 static void rime_core_finalize() {

@@ -283,6 +283,8 @@ RIME_API Bool RimeSelectSchema(RimeSessionId session_id, const char* schema_id);
 RIME_API Bool RimeSchemaOpen(const char* schema_id, RimeConfig* config);
 // <config_id>.yaml
 RIME_API Bool RimeConfigOpen(const char* config_id, RimeConfig* config);
+// access config files in user data directory, eg. user.yaml and installation.yaml
+RIME_API Bool RimeUserConfigOpen(const char* config_id, RimeConfig* config);
 RIME_API Bool RimeConfigClose(RimeConfig* config);
 RIME_API Bool RimeConfigInit(RimeConfig* config);
 RIME_API Bool RimeConfigLoadString(RimeConfig* config, const char* yaml);
@@ -512,6 +514,9 @@ typedef struct rime_api_t {
   Bool (*candidate_list_begin)(RimeSessionId session_id, RimeCandidateListIterator* iterator);
   Bool (*candidate_list_next)(RimeCandidateListIterator* iterator);
   void (*candidate_list_end)(RimeCandidateListIterator* iterator);
+
+  // access config files in user data directory, eg. user.yaml and installation.yaml
+  Bool (*user_config_open)(const char *config_id, RimeConfig* config);
 
 } RimeApi;
 

@@ -45,6 +45,27 @@ class LegacyDictionaryConfigPlugin : public ConfigCompilerPlugin {
   Review ReviewLinkOutput;
 };
 
+class BuildInfoPlugin : public ConfigCompilerPlugin {
+ public:
+  Review ReviewCompileOutput;
+  Review ReviewLinkOutput;
+};
+
+class ResourceResolver;
+struct ResourceType;
+
+class SaveOutputPlugin : public ConfigCompilerPlugin {
+ public:
+  SaveOutputPlugin(const ResourceType& output_resource);
+  ~SaveOutputPlugin();
+
+  Review ReviewCompileOutput;
+  Review ReviewLinkOutput;
+
+ private:
+  the<ResourceResolver> resource_resolver_;
+};
+
 }  // namespace rime
 
 #endif  // RIME_CONFIG_PLUGINS_H_
