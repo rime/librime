@@ -26,7 +26,7 @@ CustomSettings::CustomSettings(Deployer* deployer,
 bool CustomSettings::Load() {
   fs::path user_data_path(deployer_->user_data_dir);
   fs::path shared_data_path(deployer_->shared_data_dir);
-  fs::path config_path(user_data_path / (config_id_ + ".yaml"));
+  fs::path config_path(user_data_path / "build" / (config_id_ + ".yaml"));
   if (!config_.LoadFromFile(config_path.string())) {
     config_path = shared_data_path / (config_id_ + ".yaml");
     if (!config_.LoadFromFile(config_path.string())) {
