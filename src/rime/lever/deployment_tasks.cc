@@ -162,8 +162,9 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     the<DeploymentTask> t;
     t.reset(new ConfigFileUpdate("default.yaml", "config_version"));
     t->Run(deployer);
-    t.reset(new ConfigFileUpdate("symbols.yaml", "config_version"));
-    t->Run(deployer);
+    // Deprecated: symbols.yaml is only used as source file
+    //t.reset(new ConfigFileUpdate("symbols.yaml", "config_version"));
+    //t->Run(deployer);
     t.reset(new SymlinkingPrebuiltDictionaries);
     t->Run(deployer);
   }
