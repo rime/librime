@@ -7,10 +7,12 @@ librime is tested to work on Windows with the following build tools and librarie
   - Visual Studio 2015
   - [Boost](http://www.boost.org/)>=1.60
   - [cmake](http://www.cmake.org/)>=2.8
+  
+[Python](https://python.org)>=2.7 is needed to build opencc dictionaries.
 
 You may need to update Boost when using a higher version of VS.
 
-You can also build third-party libraries manually without them, by following instructions in the build script.
+You can also build third-party libraries manually, by following instructions in the build script.
 
 Get the code
 ---
@@ -21,11 +23,12 @@ or [download from GitHub](https://github.com/rime/librime).
 
 Setup a build environment
 ---
-Copy `env.bat` from `env.bat.template` and edit the script according to your setup.
-Specifically, make sure `BOOST_ROOT` is set to the path where you extracted Boost source;
-modify `*_INSTALL_PATH` if you've installed build tools in a custom location.
+Copy `env.bat.template` to `env.bat` and edit the script according to your setup.
+Specifically, make sure `BOOST_ROOT` is set to the path to Boost source directory;
+modify `CMAKE_GENERATOR` and `PLATFORM_TOOLSET` if using a different version of Visual Studio;
+set `DEVTOOLS_PATH` for build tools installed to a custom location.
 
-When finished, run `shell.bat` to complete the following steps in a prepared command prompt.
+When prepared, run the following commands in a Developer Command Prompt window.
 
 Build Boost
 ---
