@@ -22,11 +22,15 @@ bool BuildInfoPlugin::ReviewLinkOutput(
   auto timestamps = build_info["timestamps"];
   compiler->EnumerateResources([&](an<ConfigResource> resource) {
     if (!resource->loaded) {
-      LOG(WARNING) << "resource '" << resource->resource_id << "' not loaded.";
+      LOG(INFO) << "resource '" << resource->resource_id << "' not loaded.";
+      timestamps[resource->resource_id] = 0;
       return;
     }
     auto file_name = resource->data->file_name();
     if (file_name.empty()) {
+      LOG(WARNING) << "resource '" << resource->resource_id
+                   << "' is not persisted.";
+      timestamps[resource->resource_id] = 0;
       return;
     }
     // TODO: store as 64-bit number to avoid the year 2038 problem

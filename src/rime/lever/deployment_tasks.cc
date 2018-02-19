@@ -385,14 +385,14 @@ static bool ConfigNeedsUpdate(Config* config) {
   for (auto entry : *timestamps.AsMap()) {
     fs::path source_file_path = resolver->ResolvePath(entry.first);
     if (!fs::exists(source_file_path)) {
-      LOG(INFO) << "source file not exists: " << source_file_path.string();
+      LOG(INFO) << "source file no longer exists: " << source_file_path.string();
       return true;
     }
     auto value = As<ConfigValue>(entry.second);
     int recorded_time = 0;
     if (!value || !value->GetInt(&recorded_time) ||
         recorded_time != (int) fs::last_write_time(source_file_path)) {
-      LOG(INFO) << "timestamp mismatch: " << source_file_path.string();
+      LOG(INFO) << "source file changed: " << source_file_path.string();
       return true;
     }
   }
