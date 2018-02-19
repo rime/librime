@@ -1,0 +1,24 @@
+{
+  "name": "librime",
+  "version": "1.2.10",
+  "description": "Rime Input Method Engine",
+  "main": "index.js",
+  "directories": {
+    "doc": "doc",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "version": "conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rime/librime.git"
+  },
+  "author": "lotem",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/rime/librime/issues"
+  },
+  "homepage": "https://github.com/rime/librime#readme"
+}

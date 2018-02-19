@@ -1,3 +1,69 @@
+<a name="1.2.10"></a>
+## 1.2.10 (2018-02-21)
+
+
+### Bug Fixes
+
+* **config_compiler:** linking failure on blocking root node of a dependency resource ([ecf3397](https://github.com/rime/librime/commit/ecf3397))
+* table_translator not making sentence if table entry is hidden by charset filter. ([77eb12e](https://github.com/rime/librime/commit/77eb12e))
+* **appveyor.install.bat:** switch to a more stable download server for libboost ([bcc4d10](https://github.com/rime/librime/commit/bcc4d10))
+* **appveyor.yml:** archive header files ([c8b1e67](https://github.com/rime/librime/commit/c8b1e67))
+* **ascii_composer:** support key binding Shift+space in ascii mode ([7077389](https://github.com/rime/librime/commit/7077389))
+* **build.bat:** fix build errors with VS2015 build tools ([ec940c6](https://github.com/rime/librime/commit/ec940c6))
+* **calculus, recognizer:** memory leak due to unchecked regex error ([19ddc1e](https://github.com/rime/librime/commit/19ddc1e)), closes [#171](https://github.com/rime/librime/issues/171)
+* **chord_composer:** allow editor to define BackSpace key behavior ([7f41f65](https://github.com/rime/librime/commit/7f41f65))
+* **chord_composer:** letters with modifier keys should not be committed by a following enter key ([aab5eb8](https://github.com/rime/librime/commit/aab5eb8))
+* **ci:** call cmake under /usr/local with sudo by passing $PATH environment variable ([a0e6d2f](https://github.com/rime/librime/commit/a0e6d2f))
+* **cmake:** fix build break for mingw ([939893c](https://github.com/rime/librime/commit/939893c))
+* **config:** auto save modified config data; fixes [#144](https://github.com/rime/librime/issues/144) ([2736f4b](https://github.com/rime/librime/commit/2736f4b))
+* **config:** treat "@" as map key rather than list index ([a1df9c5](https://github.com/rime/librime/commit/a1df9c5))
+* **config_compiler:** duplicate PendingChild dependencies happen from multiple commands on the same node ([25c28f8](https://github.com/rime/librime/commit/25c28f8))
+* **config_compiler:** enforce dependency priorities ([69a6f3e](https://github.com/rime/librime/commit/69a6f3e))
+* **config_compiler:** null value should not overwrite a normal key in a merged tree ([4ecae44](https://github.com/rime/librime/commit/4ecae44))
+* **config_compiler:** template operator overload had compile error with NDK ([71817a0](https://github.com/rime/librime/commit/71817a0))
+* **config/build_info_plugin:** referenced but unavailable resources should also be recorded ([cd46f7a](https://github.com/rime/librime/commit/cd46f7a))
+* **ConfigFileUpdate:** should succeed if shared copy does not exist ([8a3e25c](https://github.com/rime/librime/commit/8a3e25c))
+* **custom_settings:** fall back to $shared_data_dir/build when loading config ([caf8ebb](https://github.com/rime/librime/commit/caf8ebb))
+* **custom_settings:** load built settings from $user_data_dir/build directory ([463dc09](https://github.com/rime/librime/commit/463dc09))
+* **deployment_tasks:** symbols.yaml is no longer a build target ([f920e4f](https://github.com/rime/librime/commit/f920e4f))
+* **dict_compiler:** prism should load compiled schema ([c2fd0cf](https://github.com/rime/librime/commit/c2fd0cf)), closes [#176](https://github.com/rime/librime/issues/176)
+* **key_event:** KeySequence::repr() prefer unescaped punctuation characters ([aa43e5e](https://github.com/rime/librime/commit/aa43e5e))
+* **levers:** update deployment tasks for copy-free resource resolution ([1f86413](https://github.com/rime/librime/commit/1f86413))
+* **Makefile:** make install-debug; do return error code on mac ([1177142](https://github.com/rime/librime/commit/1177142))
+* **rime_api:** use user_config_open() to access user.yaml ([4e4a491](https://github.com/rime/librime/commit/4e4a491))
+* **rime_console:** not showing switcher's context ([632cf4b](https://github.com/rime/librime/commit/632cf4b))
+* **schema:** create a "schema" component that opens Config by schema_id ([555f990](https://github.com/rime/librime/commit/555f990))
+* **simplifier:** fix crash if no opencc file ([091cb9d](https://github.com/rime/librime/commit/091cb9d))
+* **simplifier:** tips option for show_in_comment simplifier ([e7bb757](https://github.com/rime/librime/commit/e7bb757))
+* **uniquifier:** half of the duplicate candidates remain after dedup [Closes [#114](https://github.com/rime/librime/issues/114)] ([2ab76bc](https://github.com/rime/librime/commit/2ab76bc))
+
+
+### Features
+
+* **build.bat:** customize build settings via environment variables ([#178](https://github.com/rime/librime/issues/178)) ([1678b75](https://github.com/rime/librime/commit/1678b75))
+* **chord_composer:** accept escaped chording keys ([79a32b2](https://github.com/rime/librime/commit/79a32b2))
+* **chord_composer:** support chording with function keys ([48424d3](https://github.com/rime/librime/commit/48424d3))
+* **config:** add config compiler plugin that includes default:/menu into schema ([b51dda8](https://github.com/rime/librime/commit/b51dda8))
+* **config:** best effort resolution for circurlar dependencies ([2e52d54](https://github.com/rime/librime/commit/2e52d54))
+* **config:** build config files if source files changed ([0d79712](https://github.com/rime/librime/commit/0d79712))
+* **config:** config compiler plugins that port legacy features to the new YAML syntax ([a7d253e](https://github.com/rime/librime/commit/a7d253e))
+* **config:** config_builder saves output to $rime_user_dir/build/ ([e596155](https://github.com/rime/librime/commit/e596155))
+* **config:** references to optional config resources, ending with "?" ([14ec858](https://github.com/rime/librime/commit/14ec858))
+* **config:** save __build_info in compiled config ([45a7337](https://github.com/rime/librime/commit/45a7337))
+* **config:** separate out config_builder and user_config components ([9e9493b](https://github.com/rime/librime/commit/9e9493b))
+* **config:** support append and merge syntax ([04dcf42](https://github.com/rime/librime/commit/04dcf42))
+* **customizer:** disable saving patched config files ([88f5a0c](https://github.com/rime/librime/commit/88f5a0c))
+* **detect_modifications:** quick test based on last write time of files ([285fbcc](https://github.com/rime/librime/commit/285fbcc))
+* **dict:** no conditional compilation on arm ([85b945f](https://github.com/rime/librime/commit/85b945f))
+* **dict:** relocate binary files to $user_data_dir/build ([bc66a47](https://github.com/rime/librime/commit/bc66a47))
+* **dict:** use resource resolver to find dictionary files ([8ea08b3](https://github.com/rime/librime/commit/8ea08b3))
+* add property notifier ([fa7b5a5](https://github.com/rime/librime/commit/fa7b5a5))
+* **resource_resolver:** add class and unit test ([03ee8b4](https://github.com/rime/librime/commit/03ee8b4))
+* **resource_resolver:** fallback root path ([02151da](https://github.com/rime/librime/commit/02151da))
+* **translator:** add history_translator ([#115](https://github.com/rime/librime/issues/115)) ([ae13354](https://github.com/rime/librime/commit/ae13354))
+
+
+
 2014-12-14  GONG Chen  <chen.sst@gmail.com>
 
 	* CMakeLists.txt: bump version to 1.2.9.
