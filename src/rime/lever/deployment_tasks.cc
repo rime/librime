@@ -162,8 +162,9 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     the<DeploymentTask> t;
     t.reset(new ConfigFileUpdate("default.yaml", "config_version"));
     t->Run(deployer);
-    t.reset(new ConfigFileUpdate("symbols.yaml", "config_version"));
-    t->Run(deployer);
+    // Deprecated: symbols.yaml is only used as source file
+    //t.reset(new ConfigFileUpdate("symbols.yaml", "config_version"));
+    //t->Run(deployer);
     t.reset(new SymlinkingPrebuiltDictionaries);
     t->Run(deployer);
   }
@@ -257,8 +258,11 @@ static bool TrashCustomizedCopy(const fs::path& shared_copy,
                                 const fs::path& user_copy,
                                 const string& version_key,
                                 const fs::path& trash) {
-  if (fs::equivalent(shared_copy, user_copy))
+  if (!fs::exists(shared_copy) ||
+      !fs::exists(user_copy) ||
+      fs::equivalent(shared_copy, user_copy)) {
     return false;
+  }
   if (IsCustomizedCopy(user_copy.string())) {
     string shared_copy_version;
     string user_copy_version;
@@ -384,14 +388,14 @@ static bool ConfigNeedsUpdate(Config* config) {
   for (auto entry : *timestamps.AsMap()) {
     fs::path source_file_path = resolver->ResolvePath(entry.first);
     if (!fs::exists(source_file_path)) {
-      LOG(INFO) << "source file not exists: " << source_file_path.string();
+      LOG(INFO) << "source file no longer exists: " << source_file_path.string();
       return true;
     }
     auto value = As<ConfigValue>(entry.second);
     int recorded_time = 0;
     if (!value || !value->GetInt(&recorded_time) ||
         recorded_time != (int) fs::last_write_time(source_file_path)) {
-      LOG(INFO) << "timestamp mismatch: " << source_file_path.string();
+      LOG(INFO) << "source file changed: " << source_file_path.string();
       return true;
     }
   }
@@ -401,19 +405,16 @@ static bool ConfigNeedsUpdate(Config* config) {
 bool ConfigFileUpdate::Run(Deployer* deployer) {
   fs::path shared_data_path(deployer->shared_data_dir);
   fs::path user_data_path(deployer->user_data_dir);
+  // trash depecated user copy created by an older version of Rime
   fs::path source_config_path(shared_data_path / file_name_);
   fs::path dest_config_path(user_data_path / file_name_);
   fs::path trash = user_data_path / "trash";
-  if (!fs::exists(source_config_path)) {
-    LOG(WARNING) << "'" << file_name_
-                 << "' is missing from shared data directory.";
-    return false;
-  }
   if (TrashCustomizedCopy(source_config_path,
                           dest_config_path,
                           version_key_,
                           trash)) {
-    LOG(INFO) << "patched copy of '" << file_name_ << "' is moved to trash.";
+    LOG(INFO) << "deprecated user copy of '" << file_name_
+              << "' is moved to " << trash;
   }
   // build the config file if needs update
   the<Config> config(Config::Require("config")->Create(file_name_));

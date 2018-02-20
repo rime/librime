@@ -35,7 +35,7 @@ static string LocateFile(const string& file_name) {
 }
 
 bool DictCompiler::Compile(const string &schema_file) {
-  LOG(INFO) << "compiling:";
+  LOG(INFO) << "compiling dictionary for " << schema_file;
   bool build_table_from_source = true;
   DictSettings settings;
   string dict_file = LocateFile(dict_name_ + ".dict.yaml");
@@ -215,9 +215,13 @@ bool DictCompiler::BuildPrism(const string &schema_file,
   // apply spelling algebra
   Script script;
   if (!schema_file.empty()) {
+    Config config;
+    if (!config.LoadFromFile(schema_file)) {
+      LOG(ERROR) << "error loading prism definition from " << schema_file;
+      return false;
+    }
     Projection p;
-    the<Config> config(Config::Require("config")->Create(schema_file));
-    auto algebra = config->GetList("speller/algebra");
+    auto algebra = config.GetList("speller/algebra");
     if (algebra && p.Load(algebra)) {
       for (const auto& x : syllabary) {
         script.AddSyllable(x);
