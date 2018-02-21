@@ -96,24 +96,27 @@ set BOOST_COMPILED_LIBS=--with-date_time^
  --with-system^
  --with-thread
 
-set BJAM_OPTIONS=toolset=%BJAM_TOOLSET%^
+set BJAM_OPTIONS_COMMON=toolset=%BJAM_TOOLSET%^
  variant=release^
  link=static^
  threading=multi^
  runtime-link=static^
- define=BOOST_USE_WINAPI_VERSION=0x0501^
  cxxflags="/Zc:threadSafeInit- "
 
-set BJAM_OPTIONS_X64=%BJAM_OPTIONS%^
+set BJAM_OPTIONS_X86=%BJAM_OPTIONS_COMMON%^
+ define=BOOST_USE_WINAPI_VERSION=0x0501
+
+set BJAM_OPTIONS_X64=%BJAM_OPTIONS_COMMON%^
+ define=BOOST_USE_WINAPI_VERSION=0x0502^
  address-model=64^
- --stagedir=stage_x64^
+ --stagedir=stage_x64
 
 if %build_boost% == 1 (
   cd /d %BOOST_ROOT%
   if not exist bjam.exe call bootstrap.bat
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
-  bjam %BJAM_OPTIONS% stage %BOOST_COMPILED_LIBS%
+  bjam %BJAM_OPTIONS_X86% stage %BOOST_COMPILED_LIBS%
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
   if %build_boost_x64% == 1 (
