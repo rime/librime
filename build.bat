@@ -7,6 +7,9 @@ set BACK=%CD%
 
 if exist env.bat call env.bat
 
+rem for Windows XP compatibility (Visual Studio 2015+)
+set CL=/Zc:threadSafeInit-
+
 set OLD_PATH=%PATH%
 if defined DEVTOOLS_PATH set PATH=%OLD_PATH%;%DEVTOOLS_PATH%
 path
@@ -37,7 +40,7 @@ if not defined PLATFORM_TOOLSET (
   set PLATFORM_TOOLSET=v140_xp
 )
 
-rem used when building merisa
+rem used when building marisa
 set VS_LATEST=vs2015
 
 set build=build
@@ -96,11 +99,15 @@ set BJAM_OPTIONS=toolset=%BJAM_TOOLSET%^
  variant=release^
  link=static^
  threading=multi^
- runtime-link=static
+ runtime-link=static^
+ define=BOOST_USE_WINAPI_VERSION=0x0501^
+ cxxflags="/Zc:threadSafeInit- "
 
 set BJAM_OPTIONS_X64=%BJAM_OPTIONS%^
  address-model=64^
- --stagedir=stage_x64
+ --stagedir=stage_x64^
+ define=BOOST_USE_WINAPI_VERSION=0x0501^
+ cxxflags="/Zc:threadSafeInit- "
 
 if %build_boost% == 1 (
   cd /d %BOOST_ROOT%

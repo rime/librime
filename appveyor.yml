@@ -21,7 +21,6 @@ cache:
 init:
   - git --version
   - cmake --version
-  - msbuild /version
   - git config --global core.autocrlf true
 
 install:
