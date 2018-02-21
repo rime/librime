@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/rime/librime/issues"
   },
-  "homepage": "https://github.com/rime/librime#readme"
+  "homepage": "https://github.com/rime/librime#readme",
+  "devDependencies": {
+    "conventional-changelog-cli": "^1.3.14"
+  }
 }
