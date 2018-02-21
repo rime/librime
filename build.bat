@@ -106,8 +106,6 @@ set BJAM_OPTIONS=toolset=%BJAM_TOOLSET%^
 set BJAM_OPTIONS_X64=%BJAM_OPTIONS%^
  address-model=64^
  --stagedir=stage_x64^
- define=BOOST_USE_WINAPI_VERSION=0x0501^
- cxxflags="/Zc:threadSafeInit- "
 
 if %build_boost% == 1 (
   cd /d %BOOST_ROOT%
