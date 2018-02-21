@@ -64,251 +64,249 @@
 
 
 
-2014-12-14  GONG Chen  <chen.sst@gmail.com>
+# 1.2.9 (2014-12-14)
 
-	* CMakeLists.txt: bump version to 1.2.9.
-	* Makefile: add make targets 'thirdparty/*' to build individual libraries.
-	* include/rime_api.h: add RIME_MODULE_LIST, RIME_REGISTER_MODULE_GROUP.
-	* legacy/src/legacy_module.cc: plugin module 'rime-legacy' for GPL'd code,
-	providing component 'legacy_userdb' for user dictionary upgrade.
-	* src/setup.cc: define module groups "default" and "deployer", to avoid
-	naming a list of built-bin modules in RimeTraits::modules.
-	* test/table_test.cc: fix random segment faults when run shuffled.
-	* thirdparty/src/leveldb: new dependency LevelDB, replacing Kyoto Cabinet.
-	* dict/level_db: userdb implementation based on LevelDB, replacing treeDb.
-	* dict/tree_db: moved to legacy/src/.
-	* dict/user_db: refactored and modularized to ease adding implementations.
-	* gear/memory: save cached phrases as soon as the next composition begins.
-	* gear/recognizer: match space iff set recognizer/use_space: true.
-	* gear/simplifier: catch and log OpenCC exceptions when loading.
-	* gear/single_char_filter: bring single character candidates to the front.
-	* lever/deployment_tasks: update and rename task 'user_dict_upgrade'.
 
-2014-11-02  LEO Yoon-Tsaw  <lyc20041@gmail.com>
+* **rime_api.h:** add `RIME_MODULE_LIST`, `RIME_REGISTER_MODULE_GROUP`.
+* **Makefile:** add make targets `thirdparty/*` to build individual libraries.
+* **legacy/src/legacy_module.cc:** plugin module `rime-legacy` for GPL code,
+  providing component `legacy_userdb` for user dictionary upgrade.
+* **src/setup.cc:** define module groups `"default"` and `"deployer"`, to avoid
+	naming a list of built-bin modules in `RimeTraits::modules`.
+* **test/table_test.cc:** fix random segment faults when run shuffled.
+* **thirdparty/src/leveldb:** new dependency LevelDB, replacing Kyoto Cabinet.
+* **dict/level_db:** userdb implementation based on LevelDB, replacing treeDb.
+* **dict/tree_db:** moved to `legacy/src/`.
+* **dict/user_db:** refactored and modularized to ease adding implementations.
+* **gear/cjk_minifier:** support CJK Extension E.
+* **gear/memory:** save cached phrases as soon as the next composition begins.
+* **gear/recognizer:** match space iff set `recognizer/use_space: true`.
+* **gear/simplifier:** catch and log OpenCC exceptions when loading.
+* **gear/single_char_filter:** bring single character candidates to the front.
+* **gear/simplifier:** adapt to OpenCC 1.0 API.
+* **thirdparty/src/opencc:** update OpenCC to v1.0.2 (incompatible with v0.4).
+* **lever/deployment_tasks:** update and rename task `user_dict_upgrade`.
 
-	* gear/cjk_minifier: support CJK Extension E.
 
-2014-10-20  Carbo Kuo  <byvoid@byvoid.com>
-	* gear/simplifier: adapt to OpenCC 1.0 API.
-	* thirdparty/src/opencc: update OpenCC to v1.0.2 (incompatible with v0.4).
 
-2014-07-15  GONG Chen  <chen.sst@gmail.com>
+# 1.2 (2014-07-15)
 
-	* config: support references to list elements in key paths.
-	eg. 'schema_list/@0/schema' is the id of the first schema in schema list.
-	* rime_api: add API functions to access complex structures in config;
-	add API to get the raw input and cursor position, or to select a candidate.
-	* switcher: enable folding IME options in the switcher menu.
-	* dict_compiler: also detect changes in essay when updating a dictionary;
-	support updating prism without the source file of the dictionary.
-	* preset_vocabulary: load 'essay.txt' instead of 'essay.kct'.
-	* reverse_lookup_dictionary: adopt a new file format with 50% space saving.
-	* table: add support for a new binary format with 20% space saving;
-	fix alignment on ARM.
-	* ascii_composer: do not toggle IME states when long pressing Shift key;
-	support discarding unfinished input when switching to ASCII mode.
-	* affix_segmentor: fix issues with selecting a partial-match candidate.
-	* chord_composer: commit raw input composed with original key strokes.
-	* navigator: do not use BackSpace to revert selecting a candidate but to
-	edit the input after moving the cursor left or right.
-	* punctuator: support 'ascii_punct' option for switching between Chinese and
-	Western (ASCII) punctuations.
-	* speller: auto-select candidates by pattern matching against the code;
-	fix issues to cooperate with punctuator.
-	* CMakeLists.txt: add options ENABLE_LOGGING and BOOST_USE_CXX11;
-	introduce a new dependency: libmarisa.
-	* cmake/FindYamlCpp.cmake: check the availability of the new (v0.5) API.
-	* sample: the directory containing a sample plug-in module.
-	* tools/rime_patch.cc: a command line tool to create patches.
-	* thirdparty: include source code of third-party libraries to ease
-	building librime on Windows and Mac.
 
-	- Release: 1.2
+* **rime_api:** add API functions to access complex structures in config;
+  add API to get the raw input and cursor position, or to select a candidate.
+* **config:** support references to list elements in key paths.
+  eg. `schema_list/@0/schema` is the id of the first schema in schema list.
+* **switcher:** enable folding IME options in the switcher menu.
+* **dict_compiler:** also detect changes in essay when updating a dictionary;
+  support updating prism without the source file of the dictionary.
+* **preset_vocabulary:** load `essay.txt` instead of `essay.kct`.
+* **reverse_lookup_dictionary:** adopt a new file format with 50% space saving.
+* **table:** add support for a new binary format with 20% space saving;
+  fix alignment on ARM.
+* **ascii_composer:** do not toggle IME states when long pressing `Shift` key;
+  support discarding unfinished input when switching to ASCII mode.
+* **affix_segmentor:** fix issues with selecting a partial-match candidate.
+* **chord_composer:** commit raw input composed with original key strokes.
+* **cjk_minifier:** a filter to hide characters in CJK extension set, works
+  with `script_translator`.
+* **navigator:** do not use `BackSpace` to revert selecting a candidate but to
+  edit the input after moving the cursor left or right.
+* **punctuator:** support `ascii_punct` option for switching between Chinese and
+  Western (ASCII) punctuations.
+* **speller:** auto-select candidates by pattern matching against the code;
+  fix issues to cooperate with punctuator.
+* **CMakeLists.txt:** add options `ENABLE_LOGGING` and `BOOST_USE_CXX11`;
+  introduce a new dependency: `libmarisa`.
+* **cmake/FindYamlCpp.cmake:** check the availability of the new (v0.5) API.
+* **sample:** the directory containing a sample plug-in module.
+* **tools/rime_patch.cc:** a command line tool to create patches.
+* **thirdparty:** include source code of third-party libraries to ease
+  building librime on Windows and Mac.
 
-2014-03-31  Chongyu Zhu  <i@lembacon.com>
 
-	* cjk_minifier: a filter to hide characters in CJK extension set, works
-	with script_translator.
 
-2013-12-26  GONG Chen  <chen.sst@gmail.com>
+# 1.1 (2013-12-26)
 
-	* new build dependency: compiler with C++11 support.
-	tested with GCC 4.8.2, Apple LLVM version 5.0, MSVC 12 (2013).
-	* encoder: disable warnings for phrase encode failures in log output;
-	limit the number of results in encoding a phrase with multiple solutions.
-	* punctuator: fixed a bug in matching nested "pairs of 'symbols'".
-	* speller: better support for auto-committing, allowing users of table
-	based input schemata to omit explicitly selecting candidates in many cases.
-	* schema_list_translator: option for static schema list order.
-	* table_translator: fixed the range of CJK-D in charset filter.
 
-	- Release: 1.1
+* **new build dependency:** compiler with C++11 support.
+  tested with GCC 4.8.2, Apple LLVM version 5.0, MSVC 12 (2013).
+* **encoder:** disable warnings for phrase encode failures in log output;
+  limit the number of results in encoding a phrase with multiple solutions.
+* **punctuator:** fixed a bug in matching nested "pairs of 'symbols'".
+* **speller:** better support for auto-committing, allowing users of table
+  based input schema to omit explicitly selecting candidates in many cases.
+* **schema_list_translator:** option for static schema list order.
+* **table_translator:** fixed the range of CJK-D in charset filter.
 
-2013-11-10  GONG Chen  <chen.sst@gmail.com>
 
-	* rime_api: version 1.0 breaks ABI compatiblility.
 
-	the minimum changes in code required to migrate from rime 0.9 api is
-	to initialize RimeTraits with either RIME_STRUCT or RIME_STRUCT_INIT macro.
+# 1.0 (2013-11-10)
 
-	while source code compatibility is largely maintained with the exception
-	of the aforementioned RimeTraits structure, rime 1.0 introduces a version
-	controlled RimeApi structure which provides all the api functions.
 
-	* module: suppport adding modules; modulize 'gears' and 'levers'.
-	* ticket: used to instantiate compnents and to associate the instance with
-	a name space in the configuration.
-	* encoder: encode new phrases for table_translator and script_translator
-	using different rules.
-	* affix_segmentor: strip optional prefix and suffix from a code segment.
-	* reverse_lookup_filter: lookup candidate text for code in a specified
-	dictonary.
-	* shape: add full-shape support.
-	* key_binder: switch input schemata and toggle options with hotkeys.
-	* switcher: list input schemata ordered by recency; support radio options.
-	* tsv: fix reading user dict snapshot files with DOS line endings.
-	* entry_collector: support custom order of table columns in *.dict.yaml.
-	* CMakeLists.txt: add options BUILD_TEST and BUILD_SEPARATE_LIBS.
+* **rime_api:** version 1.0 breaks ABI compatiblility.
 
-	- Release: 1.0
+  the minimum changes in code required to migrate from rime 0.9 api is to
+  initialize `RimeTraits` with either `RIME_STRUCT` or `RIME_STRUCT_INIT` macro.
 
-2013-05-05  GONG Chen  <chen.sst@gmail.com>
+  while source code compatibility is largely maintained with the exception
+  of the aforementioned `RimeTraits` structure, rime 1.0 introduces a version
+  controlled `RimeApi` structure which provides all the api functions.
 
-	* config: update yaml-cpp to version 0.5 (with new API);
-	emit prettier yaml.
-	* deployer: introduce a work thread for ordinary background tasks.
-	* algo/calculus: 'fuzz' calculation, to create lower quality spellings.
-	* dict/dict_compiler: importing external table files into *.dict.yaml.
-	* dict/entry_collector: support '# no comment' directive in *.dict.yaml.
-	* dict/table_db: 'tabledb' and 'stabledb' to support custom phrase.
-	* dict/user_db: implement 'plain_userdb', in plain text files.
-	* dict/user_dictionary: recover damaged userdb in work thread.
-	* gear/ascii_composer: fix unexpected mode switching with Caps Lock.
-	* gear/editor: delete previous syllable with Control+BackSpace.
-	* gear/*_translator: support multiple translator instances in a engine.
-	* gear/script_translator: rename r10n_translator to script_translator.
-	* lever/user_dict_manager: create snapshots in plain userdb format.
-	* rime_deployer: with command line option '--compile',
-	dump table/prism contents into text files while compiling a dictionary.
+* **module:** suppport adding modules; modularize `gears` and `levers`.
+* **ticket:** used to instantiate compnents and to associate the instance with
+  a name space in the configuration.
+* **encoder:** encode new phrases for `table_translator` and `script_translator`
+  using different rules.
+* **affix_segmentor:** strip optional prefix and suffix from a code segment.
+* **reverse_lookup_filter:** lookup candidate text for code in a specified
+  dictonary.
+* **shape:** add full-shape support.
+* **key_binder:** switch input schemata and toggle options with hotkeys.
+* **switcher:** list input schemata ordered by recency; support radio options.
+* **tsv:** fix reading user dict snapshot files with DOS line endings.
+* **entry_collector:** support custom order of table columns in `*.dict.yaml`.
+* **CMakeLists.txt:** add options `BUILD_TEST` and `BUILD_SEPARATE_LIBS`.
 
-	- Release: 0.9.9
 
-2013-02-02  GONG Chen  <chen.sst@gmail.com>
 
-	* ascii_composer: support customizing Caps Lock behavior.
+# 0.9.9 (2013-05-05)
 
-	* speller: support auto-selecting unique candidates.
-	add options 'speller/use_space' and 'speller/finals' for bopomofo.
 
-	* punctuator: display half-shape, full-shape labels.
-	support committing a phrase with a trailing space character.
-	support inputting special characters with mnemonics such as '/ts'.
+* **config:** update yaml-cpp to version 0.5 (with new API); emit prettier yaml.
+* **deployer:** introduce a work thread for ordinary background tasks.
+* **algo/calculus:** `fuzz` calculation, to create lower quality spellings.
+* **dict/dict_compiler:** importing external table files into `*.dict.yaml`.
+* **dict/entry_collector:** support `# no comment` directive in `*.dict.yaml`.
+* **dict/table_db:** `tabledb` and `stabledb` to support custom phrase.
+* **dict/user_db:** implement `plain_userdb`, in plain text files.
+* **dict/user_dictionary:** recover damaged userdb in work thread.
+* **gear/ascii_composer:** fix unexpected mode switching with Caps Lock.
+* **gear/editor:** delete previous syllable with `Control+BackSpace`.
+* **gear/*_translator:** support multiple translator instances in a engine.
+* **gear/script_translator:** rename `r10n_translator` to `script_translator`.
+* **lever/user_dict_manager:** create snapshots in plain userdb format.
+* **rime_deployer:** with command line option `--compile`,
+  dump table/prism contents into text files while compiling a dictionary.
 
-	* user_dictionary: fix abnormal records introduced by a bug in merging.
-	* prism, table: avoid creating / loading incomplete dictionary files.
 
-	* context: clear transient options (whose names start with '_') and
-	properties when loading a different schema.
-	chord_composer sets '_chord_typing' so that the input method program would
-	know that a chord-typing schema is in use.
 
-	* deployment_tasks.cc(BackupConfigFiles::Run): while synching user data,
-	backup user created / modified YAML files.
+## 0.9.8 (2013-02-02)
 
-	* deployer.cc(Deployer::JoinMaintenanceThread): fix a boost-related crash.
 
-	- Release: 0.9.8
+* **ascii_composer:** support customizing Caps Lock behavior.
 
-2013-01-16  GONG Chen  <chen.sst@gmail.com>
+* **speller:** support auto-selecting unique candidates.
+  add options `speller/use_space` and `speller/finals` for bopomofo.
 
-	* ascii_composer: support changing conversion mode with Caps Lock.
-	fixed Control + letter key in temporary ascii mode.
-	pressing Command/Super + Shift shouldn't toggle ascii mode.
+* **punctuator:** display half-shape, full-shape labels.
+  support committing a phrase with a trailing space character.
+  support inputting special characters with mnemonics such as `/ts`.
 
-	* user_dictionary(UserDictionary::FetchTickCount):
-	tick was reset to zero when I/O error is encountered,
-	messing up order of user dict entries.
+* **user_dictionary:** fix abnormal records introduced by a bug in merging.
+* **prism, table:** avoid creating / loading incomplete dictionary files.
 
-	* user_dict_manager(UserDictManager::Restore):
-	used to favor imported entries too much while merging snapshots.
+* **context:** clear transient options (whose names start with `_`) and
+  properties when loading a different schema.
+  `chord_composer` sets `_chord_typing` so that the input method program would
+  know that a chord-typing schema is in use.
 
-	- Release: 0.9.7
+* **deployment_tasks.cc(BackupConfigFiles::Run):** while synching user data,
+  backup user created / modified YAML files.
 
-2013-01-12  GONG Chen  <chen.sst@gmail.com>
+* **deployer.cc(Deployer::JoinMaintenanceThread):** fix a boost-related crash.
 
-	* rime_deployer:
-	manipulate user's schema list with command line options
-	--add-schema, --set-active-schema
 
-	* rime_dict_manager: add command line option --sync
 
-	* rime_api.h (RimeSyncUserData):
-	add API function to start a data synching task in maintenance thread.
+## 0.9.7 (2013-01-16)
 
-	* rime_api.h (RimeSetNotificationHandler):
-	setup a callback function to receive notifcations from librime.
-	* rime_api.h (RimeGetProperty, RimeSetProperty):
-	add API functions to access session specific string properties.
 
-	* config: support subscript, assignment operators
-	and simplified value accessors.
+* **ascii_composer:** support changing conversion mode with Caps Lock.
+  fixed Control + letter key in temporary ascii mode.
+  pressing Command/Super + Shift shouldn't toggle ascii mode.
 
-	* user_db: optimize user_db for space efficiency;
-	avoid blocking user input when the database file needs repair.
+* **user_dictionary(UserDictionary::FetchTickCount):**
+  tick was reset to zero when I/O error is encountered,
+  messing up order of user dict entries.
 
-	* user_dictionary: add transaction support.
-	* memory: cancel memorizing newly committed phrases that has been
-	immediately erased with BackSpace key.
+* **user_dict_manager(UserDictManager::Restore):**
+  used to favor imported entries too much while merging snapshots.
 
-	* navigator: move caret left by syllable in phonetic input schemas.
 
-	* express_editor: fix problem memorizing phrases committed with return key.
-	* table_translator: add option 'translator/enable_sentence'.
-	* reverse_lookup_translator:
-	a reverse lookup segment can be suffixed by a delimiter.
-	phonetic abbreviations now come after completion results in a mixed input scenario.
 
-	- Release: 0.9.6
+## 0.9.6 (2013-01-12)
 
-2012-09-26  GONG Chen  <chen.sst@gmail.com>
 
-	* new dependency: 'google-glog'.
-	* CMakeLists.txt: fix x64 build.
+* **rime_deployer:** manipulate user's schema list with command line options
+  `--add-schema`, `--set-active-schema`
 
-	- Release: 0.9.4-1
+* **rime_dict_manager:** add command line option `--sync`
 
-2012-09-25  GONG Chen  <chen.sst@gmail.com>
+* **rime_api.h (RimeSyncUserData):**
+  add API function to start a data synching task in maintenance thread.
 
-	* table_translator: add user dictionary.
-	* deployment_tasks: automatically build schema dependencies.
-	* logging: adopt google-glog.
-	* brise: install data files from a separate package.
-	* new API: accessing schema list.
-	* new API: enabling/disabling soft cursor in preedit string.
+* **rime_api.h (RimeSetNotificationHandler):**
+  setup a callback function to receive notifcations from librime.
+* **rime_api.h (RimeGetProperty, RimeSetProperty):**
+  add API functions to access session specific string properties.
 
-	- Release: 0.9.3
+* **config:** support subscript, assignment operators and simplified value accessors.
 
-2012-07-08  GONG Chen  <chen.sst@gmail.com>
+* **user_db:** optimize `user_db` for space efficiency;
+  avoid blocking user input when the database file needs repair.
 
-	* chord_composer: combine multiple keys to compose a syllable at once.
-	* configuration: global page_size setting.
-	* API: extend the API to support inline mode.
-	* table_translator: add option to filter candidates by character set.
-	* user_dictionary: automatic recovery for corrupted databases.
-	* user_dictionary: fixed a bug that was responsible for missing user phrases.
+* **user_dictionary:** add transaction support.
+* **memory:** cancel memorizing newly committed phrases that has been
+  immediately erased with `BackSpace` key.
 
-	* rime_deployer: a utility program to prepare Rime's workspace.
-	* rime_dict_manager: a utility program to import/export user dictionaries.
+* **navigator:** move caret left by syllable in phonetic input schemas.
 
-	* librime: include 'brise', a collection of preset schemata in the package.
-	* new schema: Middle Chinese Phonetic Transcription.
-	* new schema: IPA input method in X-SAMPA.
+* **express_editor:** fix problem memorizing phrases committed with return key.
+* **table_translator:** add option `translator/enable_sentence`.
+* **reverse_lookup_translator:**
+  a reverse lookup segment can be suffixed by a delimiter.
+  phonetic abbreviations now come after completion results in a mixed input scenario.
 
-	- Release: 0.9.2-1
 
-2012-05-06  GONG Chen  <chen.sst@gmail.com>
 
-	- Revised API.
+## 0.9.4-1 (2012-09-26)
 
-	- Release: 0.9.1-1
+
+* **new dependency:** 'google-glog'.
+* **CMakeLists.txt:** fix x64 build.
+
+
+
+## 0.9.3 (2012-09-25)
+
+
+* **table_translator:** add user dictionary.
+* **deployment_tasks:** automatically build schema dependencies.
+* **logging:** adopt google-glog.
+* **brise:** install data files from a separate package.
+* **new API:** accessing schema list.
+* **new API:** enabling/disabling soft cursor in preedit string.
+
+
+
+## 0.9.2-1 (2012-07-08)
+
+
+* **chord_composer:** combine multiple keys to compose a syllable at once.
+* **configuration:** global `page_size` setting.
+* **API:** extend the API to support inline mode.
+* **table_translator:** add option to filter candidates by character set.
+* **user_dictionary:** automatic recovery for corrupted databases.
+* **user_dictionary:** fixed a bug that was responsible for missing user phrases.
+* **rime_deployer:** a utility program to prepare Rime's workspace.
+* **rime_dict_manager:** a utility program to import/export user dictionaries.
+* **librime:** include `brise`, a collection of preset schemata in the package.
+* **new schema:** Middle Chinese Phonetic Transcription.
+* **new schema:** IPA input method in X-SAMPA.
+
+
+
+## 0.9.1-1 (2012-05-06)
+
+
+* Revised API.
 
