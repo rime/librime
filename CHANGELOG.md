@@ -63,8 +63,8 @@
 * **translator:** add history_translator ([#115](https://github.com/rime/librime/issues/115)) ([ae13354](https://github.com/rime/librime/commit/ae13354))
 
 
-
-# 1.2.9 (2014-12-14)
+<a name="1.2.9"></a>
+## 1.2.9 (2014-12-14)
 
 
 * **rime_api.h:** add `RIME_MODULE_LIST`, `RIME_REGISTER_MODULE_GROUP`.
@@ -88,8 +88,8 @@
 * **lever/deployment_tasks:** update and rename task `user_dict_upgrade`.
 
 
-
-# 1.2 (2014-07-15)
+<a name="1.2"></a>
+## 1.2 (2014-07-15)
 
 
 * **rime_api:** add API functions to access complex structures in config;
@@ -124,8 +124,8 @@
   building librime on Windows and Mac.
 
 
-
-# 1.1 (2013-12-26)
+<a name="1.1"></a>
+## 1.1 (2013-12-26)
 
 
 * **new build dependency:** compiler with C++11 support.
@@ -139,8 +139,8 @@
 * **table_translator:** fixed the range of CJK-D in charset filter.
 
 
-
-# 1.0 (2013-11-10)
+<a name="1.0"></a>
+## 1.0 (2013-11-10)
 
 
 * **rime_api:** version 1.0 breaks ABI compatiblility.
@@ -151,7 +151,6 @@
   while source code compatibility is largely maintained with the exception
   of the aforementioned `RimeTraits` structure, rime 1.0 introduces a version
   controlled `RimeApi` structure which provides all the api functions.
-
 * **module:** suppport adding modules; modularize `gears` and `levers`.
 * **ticket:** used to instantiate compnents and to associate the instance with
   a name space in the configuration.
@@ -168,8 +167,8 @@
 * **CMakeLists.txt:** add options `BUILD_TEST` and `BUILD_SEPARATE_LIBS`.
 
 
-
-# 0.9.9 (2013-05-05)
+<a name="0.9.9"></a>
+## 0.9.9 (2013-05-05)
 
 
 * **config:** update yaml-cpp to version 0.5 (with new API); emit prettier yaml.
@@ -189,77 +188,61 @@
   dump table/prism contents into text files while compiling a dictionary.
 
 
-
+<a name="0.9.8"></a>
 ## 0.9.8 (2013-02-02)
 
 
 * **ascii_composer:** support customizing Caps Lock behavior.
-
 * **speller:** support auto-selecting unique candidates.
   add options `speller/use_space` and `speller/finals` for bopomofo.
-
 * **punctuator:** display half-shape, full-shape labels.
   support committing a phrase with a trailing space character.
   support inputting special characters with mnemonics such as `/ts`.
-
 * **user_dictionary:** fix abnormal records introduced by a bug in merging.
 * **prism, table:** avoid creating / loading incomplete dictionary files.
-
 * **context:** clear transient options (whose names start with `_`) and
   properties when loading a different schema.
   `chord_composer` sets `_chord_typing` so that the input method program would
   know that a chord-typing schema is in use.
-
 * **deployment_tasks.cc(BackupConfigFiles::Run):** while synching user data,
   backup user created / modified YAML files.
-
 * **deployer.cc(Deployer::JoinMaintenanceThread):** fix a boost-related crash.
 
 
-
+<a name="0.9.7"></a>
 ## 0.9.7 (2013-01-16)
 
 
 * **ascii_composer:** support changing conversion mode with Caps Lock.
   fixed Control + letter key in temporary ascii mode.
   pressing Command/Super + Shift shouldn't toggle ascii mode.
-
 * **user_dictionary(UserDictionary::FetchTickCount):**
   tick was reset to zero when I/O error is encountered,
   messing up order of user dict entries.
-
 * **user_dict_manager(UserDictManager::Restore):**
   used to favor imported entries too much while merging snapshots.
 
 
-
+<a name="0.9.6"></a>
 ## 0.9.6 (2013-01-12)
 
 
 * **rime_deployer:** manipulate user's schema list with command line options
   `--add-schema`, `--set-active-schema`
-
 * **rime_dict_manager:** add command line option `--sync`
-
 * **rime_api.h (RimeSyncUserData):**
   add API function to start a data synching task in maintenance thread.
-
 * **rime_api.h (RimeSetNotificationHandler):**
   setup a callback function to receive notifcations from librime.
 * **rime_api.h (RimeGetProperty, RimeSetProperty):**
   add API functions to access session specific string properties.
-
 * **config:** support subscript, assignment operators and simplified value accessors.
-
 * **user_db:** optimize `user_db` for space efficiency;
   avoid blocking user input when the database file needs repair.
-
 * **user_dictionary:** add transaction support.
 * **memory:** cancel memorizing newly committed phrases that has been
   immediately erased with `BackSpace` key.
-
 * **navigator:** move caret left by syllable in phonetic input schemas.
-
 * **express_editor:** fix problem memorizing phrases committed with return key.
 * **table_translator:** add option `translator/enable_sentence`.
 * **reverse_lookup_translator:**
@@ -267,7 +250,7 @@
   phonetic abbreviations now come after completion results in a mixed input scenario.
 
 
-
+<a name="0.9.4-1"></a>
 ## 0.9.4-1 (2012-09-26)
 
 
@@ -275,7 +258,7 @@
 * **CMakeLists.txt:** fix x64 build.
 
 
-
+<a name="0.9.3"></a>
 ## 0.9.3 (2012-09-25)
 
 
@@ -287,7 +270,7 @@
 * **new API:** enabling/disabling soft cursor in preedit string.
 
 
-
+<a name="0.9.2-1"></a>
 ## 0.9.2-1 (2012-07-08)
 
 
@@ -304,7 +287,7 @@
 * **new schema:** IPA input method in X-SAMPA.
 
 
-
+<a name="0.9.1-1"></a>
 ## 0.9.1-1 (2012-05-06)
 
 
