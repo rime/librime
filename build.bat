@@ -1,14 +1,17 @@
 @echo off
 rem Rime build script for msvc toolchain.
-rem 2014-12-30  Chen Gong <chen.sst@gmail.com>
+rem Maintainer: Chen Gong <chen.sst@gmail.com>
 
 setlocal
 set BACK=%CD%
 
 if exist env.bat call env.bat
 
+rem for Windows XP compatibility (Visual Studio 2015+)
+set CL=/Zc:threadSafeInit-
+
 set OLD_PATH=%PATH%
-if defined DEV_PATH set PATH=%OLD_PATH%;%DEV_PATH%
+if defined DEVTOOLS_PATH set PATH=%OLD_PATH%;%DEVTOOLS_PATH%
 path
 echo.
 
@@ -16,16 +19,34 @@ if not defined RIME_ROOT set RIME_ROOT=%CD%
 echo RIME_ROOT=%RIME_ROOT%
 echo.
 
+if defined BOOST_ROOT (
+  if exist "%BOOST_ROOT%\boost" goto boost_found
+)
+echo Error: Boost not found! Please set BOOST_ROOT in env.bat.
+exit /b 1
+:boost_found
 echo BOOST_ROOT=%BOOST_ROOT%
 echo.
 
-if defined CMAKE_INSTALL_PATH set PATH=%PATH%;%CMAKE_INSTALL_PATH%
+if not defined BJAM_TOOLSET (
+  rem the number actually means platform toolset, not %VisualStudioVersion%
+  set BJAM_TOOLSET=msvc-14.0
+)
 
-set CMAKE_GENERATOR="Visual Studio 14 2015"
-set CMAKE_TOOLSET="v140_xp"
+if not defined CMAKE_GENERATOR (
+  set CMAKE_GENERATOR="Visual Studio 14 2015"
+)
+
+if not defined PLATFORM_TOOLSET (
+  set PLATFORM_TOOLSET=v140_xp
+)
+
+rem used when building marisa
+set VS_LATEST=vs2015
 
 set build=build
 set build_boost=0
+set build_boost_x64=0
 set build_thirdparty=0
 set build_librime=0
 set build_shared=ON
@@ -37,6 +58,7 @@ if "%1" == "" set build_librime=1
 :parse_cmdline_options
 if "%1" == "" goto end_parsing_cmdline_options
 if "%1" == "boost" set build_boost=1
+if "%1" == "boost_x64" set build_boost_x64=1
 if "%1" == "thirdparty" set build_thirdparty=1
 if "%1" == "librime" set build_librime=1
 if "%1" == "static" (
@@ -66,14 +88,41 @@ set THIRDPARTY="%RIME_ROOT%"\thirdparty
 rem set CURL=%THIRDPARTY%\bin\curl.exe
 rem set DOWNLOAD="%CURL%" --remote-name-all
 
+set BOOST_COMPILED_LIBS=--with-date_time^
+ --with-filesystem^
+ --with-locale^
+ --with-regex^
+ --with-signals^
+ --with-system^
+ --with-thread
+
+set BJAM_OPTIONS_COMMON=toolset=%BJAM_TOOLSET%^
+ variant=release^
+ link=static^
+ threading=multi^
+ runtime-link=static^
+ cxxflags="/Zc:threadSafeInit- "
+
+set BJAM_OPTIONS_X86=%BJAM_OPTIONS_COMMON%^
+ define=BOOST_USE_WINAPI_VERSION=0x0501
+
+set BJAM_OPTIONS_X64=%BJAM_OPTIONS_COMMON%^
+ define=BOOST_USE_WINAPI_VERSION=0x0502^
+ address-model=64^
+ --stagedir=stage_x64
+
 if %build_boost% == 1 (
   cd /d %BOOST_ROOT%
   if not exist bjam.exe call bootstrap.bat
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  bjam toolset=msvc-14.0 variant=release link=static threading=multi runtime-link=static stage --with-date_time --with-filesystem --with-locale --with-regex --with-signals --with-system --with-thread
+
+  bjam %BJAM_OPTIONS_X86% stage %BOOST_COMPILED_LIBS%
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  rem bjam toolset=msvc-14.0 variant=release link=static threading=multi runtime-link=static address-model=64 --stagedir=stage_x64 stage --with-date_time --with-filesystem --with-locale --with-regex --with-signals --with-system --with-thread
-  rem if %ERRORLEVEL% NEQ 0 goto ERROR
+
+  if %build_boost_x64% == 1 (
+    bjam %BJAM_OPTIONS_X64% stage %BOOST_COMPILED_LIBS%
+    if %ERRORLEVEL% NEQ 0 goto ERROR
+  )
 )
 
 if %build_thirdparty% == 1 (
@@ -81,7 +130,7 @@ if %build_thirdparty% == 1 (
 
   echo building glog.
   cd %THIRDPARTY%\src\glog
-  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%CMAKE_TOOLSET% -DWITH_GFLAGS=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
+  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% -DWITH_GFLAGS=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
   if %ERRORLEVEL% NEQ 0 goto ERROR
   cmake --build build --config Release --target glog
   if %ERRORLEVEL% NEQ 0 goto ERROR
@@ -104,7 +153,7 @@ if %build_thirdparty% == 1 (
 
   echo building yaml-cpp.
   cd %THIRDPARTY%\src\yaml-cpp
-  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%CMAKE_TOOLSET% -DMSVC_SHARED_RT=OFF -DYAML_CPP_BUILD_TOOLS=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
+  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% -DMSVC_SHARED_RT=OFF -DYAML_CPP_BUILD_TOOLS=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
   if %ERRORLEVEL% NEQ 0 goto ERROR
   cmake --build build --config Release --target yaml-cpp
   if %ERRORLEVEL% NEQ 0 goto ERROR
@@ -116,7 +165,7 @@ if %build_thirdparty% == 1 (
 
   echo building gtest.
   cd %THIRDPARTY%\src\gtest
-  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%CMAKE_TOOLSET% -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
+  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
   if %ERRORLEVEL% NEQ 0 goto ERROR
   cmake --build build --config Release
   if %ERRORLEVEL% NEQ 0 goto ERROR
@@ -127,8 +176,8 @@ if %build_thirdparty% == 1 (
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
   echo building marisa.
-  cd %THIRDPARTY%\src\marisa-trie\vs2015
-  msbuild.exe vs2015.sln /p:Configuration=Release /p:Platform=Win32
+  cd %THIRDPARTY%\src\marisa-trie\%VS_LATEST%
+  msbuild.exe %VS_LATEST%.sln /p:Configuration=Release /p:Platform=Win32
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
   xcopy /S /I /Y ..\lib\marisa %THIRDPARTY%\include\marisa\
@@ -141,7 +190,7 @@ if %build_thirdparty% == 1 (
 
   echo building opencc.
   cd %THIRDPARTY%\src\opencc
-  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%CMAKE_TOOLSET% -DCMAKE_INSTALL_PREFIX="" -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
+  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% -DCMAKE_INSTALL_PREFIX="" -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
   if %ERRORLEVEL% NEQ 0 goto ERROR
   cmake --build build --config Release --target libopencc
   if %ERRORLEVEL% NEQ 0 goto ERROR
@@ -168,11 +217,16 @@ if %build_thirdparty% == 1 (
 
 if %build_librime% == 0 goto EXIT
 
-set RIME_CMAKE_FLAGS=-DBUILD_STATIC=ON -DBUILD_SHARED_LIBS=%build_shared% -DBUILD_TEST=%build_test% -DENABLE_LOGGING=%enable_logging% -DBOOST_USE_CXX11=ON -DCMAKE_CONFIGURATION_TYPES="Release"
+set RIME_CMAKE_FLAGS=-DBUILD_STATIC=ON^
+ -DBUILD_SHARED_LIBS=%build_shared%^
+ -DBUILD_TEST=%build_test%^
+ -DENABLE_LOGGING=%enable_logging%^
+ -DBOOST_USE_CXX11=ON^
+ -DCMAKE_CONFIGURATION_TYPES="Release"
 
 cd /d %RIME_ROOT%
-echo cmake %RIME_ROOT% -B%build% -G%CMAKE_GENERATOR% -T%CMAKE_TOOLSET% %RIME_CMAKE_FLAGS%
-call cmake %RIME_ROOT% -B%build% -G%CMAKE_GENERATOR% -T%CMAKE_TOOLSET% %RIME_CMAKE_FLAGS%
+echo cmake %RIME_ROOT% -B%build% -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% %RIME_CMAKE_FLAGS%
+call cmake %RIME_ROOT% -B%build% -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% %RIME_CMAKE_FLAGS%
 if %ERRORLEVEL% NEQ 0 goto ERROR
 
 echo.
