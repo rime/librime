@@ -29,7 +29,8 @@ echo BOOST_ROOT=%BOOST_ROOT%
 echo.
 
 if not defined BJAM_TOOLSET (
-  set BJAM_TOOLSET=msvc-%VisualStudioVersion%
+  rem the number actually means platform toolset, not %VisualStudioVersion%
+  set BJAM_TOOLSET=msvc-14.0
 )
 
 if not defined CMAKE_GENERATOR (
