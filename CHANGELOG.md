@@ -63,9 +63,9 @@
 * **translator:** add history_translator ([#115](https://github.com/rime/librime/issues/115)) ([ae13354](https://github.com/rime/librime/commit/ae13354))
 
 
+
 <a name="1.2.9"></a>
 ## 1.2.9 (2014-12-14)
-
 
 * **rime_api.h:** add `RIME_MODULE_LIST`, `RIME_REGISTER_MODULE_GROUP`.
 * **Makefile:** add make targets `thirdparty/*` to build individual libraries.
@@ -88,9 +88,9 @@
 * **lever/deployment_tasks:** update and rename task `user_dict_upgrade`.
 
 
+
 <a name="1.2"></a>
 ## 1.2 (2014-07-15)
-
 
 * **rime_api:** add API functions to access complex structures in config;
   add API to get the raw input and cursor position, or to select a candidate.
@@ -124,9 +124,9 @@
   building librime on Windows and Mac.
 
 
+
 <a name="1.1"></a>
 ## 1.1 (2013-12-26)
-
 
 * **new build dependency:** compiler with C++11 support.
   tested with GCC 4.8.2, Apple LLVM version 5.0, MSVC 12 (2013).
@@ -139,9 +139,9 @@
 * **table_translator:** fixed the range of CJK-D in charset filter.
 
 
+
 <a name="1.0"></a>
 ## 1.0 (2013-11-10)
-
 
 * **rime_api:** version 1.0 breaks ABI compatiblility.
 
@@ -167,9 +167,9 @@
 * **CMakeLists.txt:** add options `BUILD_TEST` and `BUILD_SEPARATE_LIBS`.
 
 
+
 <a name="0.9.9"></a>
 ## 0.9.9 (2013-05-05)
-
 
 * **config:** update yaml-cpp to version 0.5 (with new API); emit prettier yaml.
 * **deployer:** introduce a work thread for ordinary background tasks.
@@ -188,9 +188,9 @@
   dump table/prism contents into text files while compiling a dictionary.
 
 
+
 <a name="0.9.8"></a>
 ## 0.9.8 (2013-02-02)
-
 
 * **ascii_composer:** support customizing Caps Lock behavior.
 * **speller:** support auto-selecting unique candidates.
@@ -209,9 +209,9 @@
 * **deployer.cc(Deployer::JoinMaintenanceThread):** fix a boost-related crash.
 
 
+
 <a name="0.9.7"></a>
 ## 0.9.7 (2013-01-16)
-
 
 * **ascii_composer:** support changing conversion mode with Caps Lock.
   fixed Control + letter key in temporary ascii mode.
@@ -223,9 +223,9 @@
   used to favor imported entries too much while merging snapshots.
 
 
+
 <a name="0.9.6"></a>
 ## 0.9.6 (2013-01-12)
-
 
 * **rime_deployer:** manipulate user's schema list with command line options
   `--add-schema`, `--set-active-schema`
@@ -250,17 +250,17 @@
   phonetic abbreviations now come after completion results in a mixed input scenario.
 
 
+
 <a name="0.9.4-1"></a>
 ## 0.9.4-1 (2012-09-26)
-
 
 * **new dependency:** 'google-glog'.
 * **CMakeLists.txt:** fix x64 build.
 
 
+
 <a name="0.9.3"></a>
 ## 0.9.3 (2012-09-25)
-
 
 * **table_translator:** add user dictionary.
 * **deployment_tasks:** automatically build schema dependencies.
@@ -270,9 +270,9 @@
 * **new API:** enabling/disabling soft cursor in preedit string.
 
 
+
 <a name="0.9.2-1"></a>
 ## 0.9.2-1 (2012-07-08)
-
 
 * **chord_composer:** combine multiple keys to compose a syllable at once.
 * **configuration:** global `page_size` setting.
@@ -287,9 +287,8 @@
 * **new schema:** IPA input method in X-SAMPA.
 
 
+
 <a name="0.9.1-1"></a>
 ## 0.9.1-1 (2012-05-06)
 
-
 * Revised API.
-
