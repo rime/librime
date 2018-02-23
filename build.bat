@@ -234,6 +234,9 @@ echo building librime.
 cmake --build build --config Release
 if %ERRORLEVEL% NEQ 0 goto ERROR
 
+mkdir build\include
+copy /y src\*.h build\include
+
 echo.
 echo ready.
 echo.

@@ -161,7 +161,8 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly")
       ${PROJECT_SOURCE_DIR}/rime.pc.in
       ${PROJECT_BINARY_DIR}/rime.pc
       @ONLY)
-  install(FILES src/rime_api.h DESTINATION include)
+  file(GLOB installed_header_files ${PROJECT_SOURCE_DIR}/src/*.h)
+  install(FILES ${installed_header_files} DESTINATION include)
   install(FILES ${PROJECT_BINARY_DIR}/rime.pc DESTINATION ${LIB_INSTALL_DIR}/pkgconfig)
   install(FILES cmake/RimeConfig.cmake DESTINATION share/cmake/rime)
 
