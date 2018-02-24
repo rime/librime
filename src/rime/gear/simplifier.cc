@@ -32,7 +32,7 @@ namespace rime {
 class Opencc {
  public:
   Opencc(const string& config_path) {
-    LOG(INFO) << "initilizing opencc: " << config_path;
+    LOG(INFO) << "initializing opencc: " << config_path;
     opencc::Config config;
     try {
       converter_ = config.NewFromFile(config_path);
