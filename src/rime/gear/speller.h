@@ -36,10 +36,12 @@ class Speller : public Processor {
   string delimiters_;
   string initials_;
   string finals_;
+  string submit_keys_;
   int max_code_length_ = 0;
   bool auto_select_ = false;
   bool use_space_ = false;
   boost::regex auto_select_pattern_;
+  boost::regex submit_regex_;
   AutoClearMethod auto_clear_ = kClearNone;
 };
 
