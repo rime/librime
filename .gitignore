@@ -12,6 +12,5 @@ thirdparty/data/*
 thirdparty/src/*/*
 env.bat
 node_modules/
-package-lock.json
 *~
 .*.swp
