@@ -99,27 +99,16 @@ class UserDbWrapper : public BaseDb {
   }
 };
 
-/// Provides information of the db file format by its base class.
-template <class BaseDb>
-struct UserDbFormat {
-  static const string extension;
-  static const string snapshot_extension;
-};
-
 /// Implements a component that serves as a factory for a user db class.
 template <class BaseDb>
 class UserDbComponent : public UserDb::Component {
  public:
-  virtual Db* Create(const string& name) {
+  Db* Create(const string& name) override {
     return new UserDbWrapper<BaseDb>(name + extension());
   }
 
-  virtual string extension() const {
-    return UserDbFormat<BaseDb>::extension;
-  }
-  virtual string snapshot_extension() const {
-    return UserDbFormat<BaseDb>::snapshot_extension;
-  }
+  string extension() const override;
+  string snapshot_extension() const override;
 };
 
 class UserDbMerger : public Sink {

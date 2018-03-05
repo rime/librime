@@ -53,11 +53,17 @@ bool UserDbValue::Unpack(const string& value) {
   return true;
 }
 
-template <>
-const string UserDbFormat<TextDb>::extension(".userdb.txt");
+static const string plain_userdb_extension(".userdb.txt");
 
 template <>
-const string UserDbFormat<TextDb>::snapshot_extension(".userdb.txt");
+string UserDbComponent<TextDb>::extension() const {
+  return plain_userdb_extension;
+}
+
+template <>
+string UserDbComponent<TextDb>::snapshot_extension() const {
+  return plain_userdb_extension;
+}
 
 // key ::= code <space> <Tab> phrase
 
@@ -110,8 +116,7 @@ bool UserDbHelper::UpdateUserInfo() {
 }
 
 bool UserDbHelper::IsUniformFormat(const string& file_name) {
-  return boost::ends_with(file_name,
-                          UserDbFormat<TextDb>::snapshot_extension);
+  return boost::ends_with(file_name, plain_userdb_extension);
 }
 
 bool UserDbHelper::UniformBackup(const string& snapshot_file) {
