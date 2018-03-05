@@ -345,10 +345,14 @@ bool LevelDb::CommitTransaction() {
 }
 
 template <>
-const string UserDbFormat<LevelDb>::extension(".userdb");
+string UserDbComponent<LevelDb>::extension() const {
+  return ".userdb";
+}
 
 template <>
-const string UserDbFormat<LevelDb>::snapshot_extension(".userdb.txt");
+string UserDbComponent<LevelDb>::snapshot_extension() const {
+  return ".userdb.txt";
+}
 
 template <>
 UserDbWrapper<LevelDb>::UserDbWrapper(const string& db_name)
