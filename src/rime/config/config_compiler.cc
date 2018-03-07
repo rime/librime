@@ -155,17 +155,22 @@ inline static string StripOperator(const string& key, bool adding) {
 }
 
 // defined in config_data.cc
-bool TraverseCopyOnWrite(an<ConfigItemRef> root, const string& path,
-                         function<bool (an<ConfigItemRef> target)> writer);
+an<ConfigItemRef> TypeCheckedCopyOnWrite(an<ConfigItemRef> parent,
+                                         const string& key);
+an<ConfigItemRef> TraverseCopyOnWrite(an<ConfigItemRef> root,
+                                      const string& path);
 
 static bool EditNode(an<ConfigItemRef> target,
                      const string& key,
                      const an<ConfigItem>& value,
                      bool merge_tree) {
-  DLOG(INFO) << "EditNode(" << key << "," << merge_tree << ")";
+  DLOG(INFO) << "edit node: " << key << ", merge_tree: " << merge_tree;
   bool appending = IsAppending(key);
   bool merging = IsMerging(key, value, merge_tree);
   auto writer = [=](an<ConfigItemRef> target) {
+    if (!target) {
+      return false;
+    }
     if ((appending || merging) && **target) {
       DLOG(INFO) << "writer: editing node";
       return !value ||
@@ -181,7 +186,8 @@ static bool EditNode(an<ConfigItemRef> target,
   string path = StripOperator(key, appending || merging);
   DLOG(INFO) << "appending: " << appending << ", merging: " << merging
              << ", path: " << path;
-  return TraverseCopyOnWrite(target, path, writer);
+  auto cow_node = merge_tree ? &TypeCheckedCopyOnWrite : &TraverseCopyOnWrite;
+  return writer(cow_node(target, path));
 }
 
 bool PatchLiteral::Resolve(ConfigCompiler* compiler) {

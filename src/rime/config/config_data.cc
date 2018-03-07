@@ -159,37 +159,53 @@ class ConfigDataRootRef : public ConfigItemRef {
   ConfigData* data_;
 };
 
-bool TraverseCopyOnWrite(an<ConfigItemRef> root, const string& path,
-                         function<bool (an<ConfigItemRef> target)> writer) {
+an<ConfigItemRef> TypeCheckedCopyOnWrite(an<ConfigItemRef> parent,
+                                         const string& key) {
+  // special case to allow editing current node by __append: __merge: /+: /=:
+  if (key.empty()) {
+    return parent;
+  }
+  bool is_list = ConfigData::IsListItemReference(key);
+  auto expected_node_type = is_list ? ConfigItem::kList : ConfigItem::kMap;
+  an<ConfigItem> existing_node = *parent;
+  if (existing_node && existing_node->type() != expected_node_type) {
+    LOG(ERROR) << "copy on write failed; incompatible node type: " << key;
+    return nullptr;
+  }
+  return Cow(parent, key);
+}
+
+an<ConfigItemRef> TraverseCopyOnWrite(an<ConfigItemRef> root,
+                                      const string& path) {
   DLOG(INFO) << "TraverseCopyOnWrite(" << path << ")";
   if (path.empty() || path == "/") {
-    return writer(root);
+    return root;
   }
   an<ConfigItemRef> head = root;
   vector<string> keys = ConfigData::SplitPath(path);
   size_t n = keys.size();
   for (size_t i = 0; i < n; ++i) {
     const auto& key = keys[i];
-    bool is_list = ConfigData::IsListItemReference(key);
-    auto expected_node_type = is_list ? ConfigItem::kList : ConfigItem::kMap;
-    an<ConfigItem> existing_node = *head;
-    if (existing_node && existing_node->type() != expected_node_type) {
-      LOG(ERROR) << "copy on write failed; incompatible node type: " << key;
-      return false;
+    if (auto child = TypeCheckedCopyOnWrite(head, key)) {
+      head = child;
+    } else {
+      LOG(ERROR) << "while writing to " << path;
+      return nullptr;
     }
-    head = Cow(head, key);
   }
-  return writer(head);
+  return head;
 }
 
 bool ConfigData::TraverseWrite(const string& path, an<ConfigItem> item) {
   LOG(INFO) << "write: " << path;
   auto root = New<ConfigDataRootRef>(this);
-  return TraverseCopyOnWrite(root, path, [=](an<ConfigItemRef> target) {
+  if (auto target = TraverseCopyOnWrite(root, path)) {
     *target = item;
     set_modified();
     return true;
-  });
+  } else {
+    return false;
+  }
 }
 
 vector<string> ConfigData::SplitPath(const string& path) {
