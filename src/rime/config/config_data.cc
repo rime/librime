@@ -175,13 +175,12 @@ an<ConfigItemRef> TypeCheckedCopyOnWrite(an<ConfigItemRef> parent,
   return Cow(parent, key);
 }
 
-an<ConfigItemRef> TraverseCopyOnWrite(an<ConfigItemRef> root,
+an<ConfigItemRef> TraverseCopyOnWrite(an<ConfigItemRef> head,
                                       const string& path) {
   DLOG(INFO) << "TraverseCopyOnWrite(" << path << ")";
   if (path.empty() || path == "/") {
-    return root;
+    return head;
   }
-  an<ConfigItemRef> head = root;
   vector<string> keys = ConfigData::SplitPath(path);
   size_t n = keys.size();
   for (size_t i = 0; i < n; ++i) {
