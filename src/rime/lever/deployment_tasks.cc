@@ -185,9 +185,8 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   int failure = 0;
   map<string, string> schemas;
   the<ResourceResolver> resolver(
-      Service::instance().CreateResourceResolver({
-          "schema", "", ".schema.yaml"
-      }));
+      Service::instance().CreateResourceResolver(
+          {"schema", "", ".schema.yaml"}));
   auto build_schema = [&](const string& schema_id) {
     if (schemas.find(schema_id) != schemas.end())  // already built
       return;
@@ -348,9 +347,11 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   if (verbose_) {
     dict_compiler.set_options(DictCompiler::kRebuild | DictCompiler::kDump);
   }
-  ResourceResolver resolver({"compiled_schema", "build/", ".schema.yaml"});
-  resolver.set_root_path(user_data_path);
-  auto compiled_schema = resolver.ResolvePath(schema_id).string();
+  the<ResourceResolver> resolver(
+      Service::instance().CreateResourceResolver(
+          {"compiled_schema", "build/", ".schema.yaml"}));
+  resolver->set_root_path(user_data_path);
+  auto compiled_schema = resolver->ResolvePath(schema_id).string();
   if (!dict_compiler.Compile(compiled_schema)) {
     LOG(ERROR) << "dictionary '" << dict_name << "' failed to compile.";
     return false;
@@ -382,9 +383,8 @@ static bool ConfigNeedsUpdate(Config* config) {
     return true;
   }
   the<ResourceResolver> resolver(
-      Service::instance().CreateResourceResolver({
-          "config_source_file", "", ".yaml"
-      }));
+      Service::instance().CreateResourceResolver(
+          {"config_source_file", "", ".yaml"}));
   for (auto entry : *timestamps.AsMap()) {
     auto value = As<ConfigValue>(entry.second);
     int recorded_time = 0;
