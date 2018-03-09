@@ -1,3 +1,28 @@
+<a name="1.3.0"></a>
+# 1.3.0 (2018-03-09)
+
+
+### Bug Fixes
+
+* **CMakeLists.txt, build.bat:** install header files (public API) ([06c9e86](https://github.com/rime/librime/commit/06c9e86))
+* **config_compiler:** "/" mistaken as path separator in merged map key ([#192](https://github.com/rime/librime/issues/192)) ([831ffba](https://github.com/rime/librime/commit/831ffba)), closes [#190](https://github.com/rime/librime/issues/190)
+* **ConfigFileUpdate:** no need to create user build if shared build is up-to-date ([cafd5c4](https://github.com/rime/librime/commit/cafd5c4))
+* **SchemaUpdate:** read compiled schema from shared build if there is no user build ([45a04dd](https://github.com/rime/librime/commit/45a04dd))
+* **simplifier:** fix typo ([9e1114e](https://github.com/rime/librime/commit/9e1114e)), closes [#183](https://github.com/rime/librime/issues/183)
+* **user_db:** unwanted implicit instantiation of UserDbFormat template ([3cbc9cb](https://github.com/rime/librime/commit/3cbc9cb)), closes [#188](https://github.com/rime/librime/issues/188)
+
+
+### Chores
+
+* **release tag:** deprecating tag name prefix 'rime-' in favor of conventional 'v' ([3d28bf6](https://github.com/rime/librime/commit/3d28bf6))
+
+
+### BREAKING CHANGES
+
+* **release tag:** After 1.3.0 release, we'll no longer be creating tags in the format 'rime-X.Y.Z'. Downstream packagers please change automated scripts accordingly.
+
+
+
 <a name="1.2.10"></a>
 ## 1.2.10 (2018-02-21)
 
