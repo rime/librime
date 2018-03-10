@@ -14,7 +14,7 @@
 
 ### Chores
 
-* **release tag:** deprecating tag name prefix 'rime-' in favor of conventional 'v' ([3d28bf6](https://github.com/rime/librime/commit/3d28bf6))
+* **release tag:** deprecating tag name prefix 'rime-' in favor of semver 'X.Y.Z'
 
 
 ### BREAKING CHANGES
