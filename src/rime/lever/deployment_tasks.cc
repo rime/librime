@@ -251,6 +251,17 @@ SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
   }
 }
 
+static bool MaybeCreateDirectory(fs::path dir) {
+  if (!fs::exists(dir)) {
+    boost::system::error_code ec;
+    if (!fs::create_directories(dir, ec)) {
+      LOG(ERROR) << "error creating directory '" << dir.string() << "'.";
+      return false;
+    }
+  }
+  return true;
+}
+
 static bool TrashDeprecatedUserCopy(const fs::path& shared_copy,
                                     const fs::path& user_copy,
                                     const string& version_key,
@@ -277,7 +288,13 @@ static bool TrashDeprecatedUserCopy(const fs::path& shared_copy,
     }
   }
   int cmp = CompareVersionString(shared_copy_version, user_copy_version);
+  LOG(INFO) << shared_copy.string() << ':' << shared_copy_version
+            << (cmp == 0 ? '=' : cmp > 0 ? '>' : '<')
+            << user_copy_version << ':' << user_copy.string();
   if (cmp > 0 || (cmp == 0 && is_customized_copy)) {
+    if (!MaybeCreateDirectory(trash)) {
+      return false;
+    }
     fs::path backup = trash / user_copy.filename();
     boost::system::error_code ec;
     fs::rename(user_copy, backup, ec);
@@ -288,17 +305,6 @@ static bool TrashDeprecatedUserCopy(const fs::path& shared_copy,
     return true;
   }
   return false;
-}
-
-static bool MaybeCreateDirectory(fs::path dir) {
-  if (!fs::exists(dir)) {
-    boost::system::error_code ec;
-    if (!fs::create_directories(dir, ec)) {
-      LOG(ERROR) << "error creating directory '" << dir.string() << "'.";
-      return false;
-    }
-  }
-  return true;
 }
 
 bool SchemaUpdate::Run(Deployer* deployer) {
@@ -522,13 +528,8 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
   if (!fs::exists(user_data_path))
     return false;
   fs::path backup_dir(deployer->user_data_sync_dir());
-  if (!fs::exists(backup_dir)) {
-    boost::system::error_code ec;
-    if (!fs::create_directories(backup_dir, ec)) {
-      LOG(ERROR) << "error creating directory '"
-                 << backup_dir.string() << "'.";
-      return false;
-    }
+  if (!MaybeCreateDirectory(backup_dir)) {
+    return false;
   }
   int success = 0, failure = 0, latest = 0, skipped = 0;
   for (fs::directory_iterator iter(user_data_path), end;
@@ -586,12 +587,8 @@ bool CleanupTrash::Run(Deployer* deployer) {
         boost::ends_with(filename, ".reverse.kct") ||
         boost::ends_with(filename, ".userdb.kct.old") ||
         boost::ends_with(filename, ".userdb.kct.snapshot")) {
-      if (!success && !failure && !fs::exists(trash)) {
-        boost::system::error_code ec;
-        if (!fs::create_directories(trash, ec)) {
-          LOG(ERROR) << "error creating directory '" << trash.string() << "'.";
-          return false;
-        }
+      if (!success && !MaybeCreateDirectory(trash)) {
+        return false;
       }
       fs::path backup = trash / entry.filename();
       boost::system::error_code ec;
