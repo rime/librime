@@ -251,42 +251,41 @@ SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
   }
 }
 
-static bool IsCustomizedCopy(const string& file_name);
-
-static bool TrashCustomizedCopy(const fs::path& shared_copy,
-                                const fs::path& user_copy,
-                                const string& version_key,
-                                const fs::path& trash) {
+static bool TrashDeprecatedUserCopy(const fs::path& shared_copy,
+                                    const fs::path& user_copy,
+                                    const string& version_key,
+                                    const fs::path& trash) {
   if (!fs::exists(shared_copy) ||
       !fs::exists(user_copy) ||
       fs::equivalent(shared_copy, user_copy)) {
     return false;
   }
-  if (IsCustomizedCopy(user_copy.string())) {
-    string shared_copy_version;
-    string user_copy_version;
-    Config shared_config;
-    if (shared_config.LoadFromFile(shared_copy.string())) {
-      shared_config.GetString(version_key, &shared_copy_version);
+  string shared_copy_version;
+  string user_copy_version;
+  Config shared_config;
+  if (shared_config.LoadFromFile(shared_copy.string())) {
+    shared_config.GetString(version_key, &shared_copy_version);
+  }
+  bool is_customized_copy = false;
+  Config user_config;
+  if (user_config.LoadFromFile(user_copy.string()) &&
+      user_config.GetString(version_key, &user_copy_version)) {
+    size_t custom_version_suffix = user_copy_version.find(".custom.");
+    if (custom_version_suffix != string::npos) {
+      user_copy_version.erase(custom_version_suffix);
+      is_customized_copy = true;
     }
-    Config user_config;
-    if (user_config.LoadFromFile(user_copy.string()) &&
-        user_config.GetString(version_key, &user_copy_version)) {
-      size_t custom_version_suffix = user_copy_version.find(".custom.");
-      if (custom_version_suffix != string::npos) {
-        user_copy_version.erase(custom_version_suffix);
-      }
+  }
+  int cmp = CompareVersionString(shared_copy_version, user_copy_version);
+  if (cmp > 0 || (cmp == 0 && is_customized_copy)) {
+    fs::path backup = trash / user_copy.filename();
+    boost::system::error_code ec;
+    fs::rename(user_copy, backup, ec);
+    if (ec) {
+      LOG(ERROR) << "error trashing file " << user_copy.string();
+      return false;
     }
-    if (CompareVersionString(shared_copy_version, user_copy_version) >= 0) {
-      fs::path backup = trash / user_copy.filename();
-      boost::system::error_code ec;
-      fs::rename(user_copy, backup, ec);
-      if (ec) {
-        LOG(ERROR) << "error trashing file " << user_copy.string();
-        return false;
-      }
-      return true;
-    }
+    return true;
   }
   return false;
 }
@@ -416,10 +415,10 @@ bool ConfigFileUpdate::Run(Deployer* deployer) {
   fs::path source_config_path(shared_data_path / file_name_);
   fs::path dest_config_path(user_data_path / file_name_);
   fs::path trash = user_data_path / "trash";
-  if (TrashCustomizedCopy(source_config_path,
-                          dest_config_path,
-                          version_key_,
-                          trash)) {
+  if (TrashDeprecatedUserCopy(source_config_path,
+                              dest_config_path,
+                              version_key_,
+                              trash)) {
     LOG(INFO) << "deprecated user copy of '" << file_name_
               << "' is moved to " << trash;
   }
