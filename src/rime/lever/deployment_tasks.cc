@@ -262,6 +262,15 @@ static bool MaybeCreateDirectory(fs::path dir) {
   return true;
 }
 
+static bool RemoveVersionSuffix(string* version, const string& suffix) {
+    size_t suffix_pos = version->find(suffix);
+    if (suffix_pos != string::npos) {
+      version->erase(suffix_pos);
+      return true;
+    }
+    return false;
+}
+
 static bool TrashDeprecatedUserCopy(const fs::path& shared_copy,
                                     const fs::path& user_copy,
                                     const string& version_key,
@@ -276,22 +285,19 @@ static bool TrashDeprecatedUserCopy(const fs::path& shared_copy,
   Config shared_config;
   if (shared_config.LoadFromFile(shared_copy.string())) {
     shared_config.GetString(version_key, &shared_copy_version);
+    // treat "X.Y.minimal" as equal to (not greater than) "X.Y"
+    // to avoid trashing the user installed full version
+    RemoveVersionSuffix(&shared_copy_version, ".minimal");
   }
-  bool is_customized_copy = false;
   Config user_config;
-  if (user_config.LoadFromFile(user_copy.string()) &&
-      user_config.GetString(version_key, &user_copy_version)) {
-    size_t custom_version_suffix = user_copy_version.find(".custom.");
-    if (custom_version_suffix != string::npos) {
-      user_copy_version.erase(custom_version_suffix);
-      is_customized_copy = true;
-    }
-  }
+  bool is_customized_user_copy =
+      user_config.LoadFromFile(user_copy.string()) &&
+      user_config.GetString(version_key, &user_copy_version) &&
+      RemoveVersionSuffix(&user_copy_version, ".custom.");
   int cmp = CompareVersionString(shared_copy_version, user_copy_version);
-  LOG(INFO) << shared_copy.string() << ':' << shared_copy_version
-            << (cmp == 0 ? '=' : cmp > 0 ? '>' : '<')
-            << user_copy_version << ':' << user_copy.string();
-  if (cmp > 0 || (cmp == 0 && is_customized_copy)) {
+  // rime-installed user copy of the same version should be kept for integrity.
+  // also it could have been manually edited by user.
+  if (cmp > 0 || (cmp == 0 && is_customized_user_copy)) {
     if (!MaybeCreateDirectory(trash)) {
       return false;
     }
