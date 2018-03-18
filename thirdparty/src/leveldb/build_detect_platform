@@ -190,6 +190,11 @@ EOF
         COMMON_FLAGS="$COMMON_FLAGS -DLEVELDB_PLATFORM_POSIX"
     fi
 
+<<COMMENT
+# Disable snappy if statically linked to librime.
+# Work around https://github.com/rime/squirrel/pull/188
+# Otherwise librime may accidentally link to the snappy library in system search path.
+
     # Test whether Snappy library is installed
     # http://code.google.com/p/snappy/
     $CXX $CXXFLAGS -x c++ - -o $CXXOUTPUT 2>/dev/null  <<EOF
@@ -200,6 +205,7 @@ EOF
         COMMON_FLAGS="$COMMON_FLAGS -DSNAPPY"
         PLATFORM_LIBS="$PLATFORM_LIBS -lsnappy"
     fi
+COMMENT
 
     # Test whether tcmalloc is available
     $CXX $CXXFLAGS -x c++ - -o $CXXOUTPUT -ltcmalloc 2>/dev/null  <<EOF
