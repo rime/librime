@@ -54,6 +54,7 @@ Try it in the console
 ---
 ``` batch
 copy /Y build\lib\Release\rime.dll build\bin
+copy /Y thirdparty\bin\zlib1.dll build\bin
 cd build\bin
 echo "congmingdeRime{space}shurufa" | Release\rime_api_console.exe > output.txt
 ```
