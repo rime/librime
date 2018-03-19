@@ -40,7 +40,7 @@ if(KyotoCabinet_FOUND)
   include_directories(${KyotoCabinet_INCLUDE_PATH})
 endif(KyotoCabinet_FOUND)
 
-include_directories(${RIME_SOURCE_DIR}/include)
+include_directories(${RIME_SOURCE_DIR}/src)
 include_directories(${RIME_SOURCE_DIR}/thirdparty/include)
 link_directories(${RIME_SOURCE_DIR}/thirdparty/lib)
 if(UNIX)

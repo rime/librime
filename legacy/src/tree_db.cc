@@ -31,7 +31,7 @@ struct TreeDbCursor {
       : kcursor(cursor) {
   }
 
-  unique_ptr<kyotocabinet::DB::Cursor> kcursor;
+  std::unique_ptr<kyotocabinet::DB::Cursor> kcursor;
 };
 
 struct TreeDbWrapper {
@@ -108,18 +108,18 @@ void TreeDb::Initialize() {
   db_.reset(new TreeDbWrapper);
 }
 
-shared_ptr<DbAccessor> TreeDb::QueryMetadata() {
+std::shared_ptr<DbAccessor> TreeDb::QueryMetadata() {
   return Query(kMetaCharacter);
 }
 
-shared_ptr<DbAccessor> TreeDb::QueryAll() {
-  shared_ptr<DbAccessor> all = Query("");
+std::shared_ptr<DbAccessor> TreeDb::QueryAll() {
+  std::shared_ptr<DbAccessor> all = Query("");
   if (all)
     all->Jump(" ");  // skip metadata
   return all;
 }
 
-shared_ptr<DbAccessor> TreeDb::Query(const std::string& key) {
+std::shared_ptr<DbAccessor> TreeDb::Query(const std::string& key) {
   if (!loaded())
     return nullptr;
   return New<TreeDbAccessor>(db_->CreateCursor(), key);
@@ -269,10 +269,14 @@ bool TreeDb::CommitTransaction() {
 }  // namespace legacy
 
 template <>
-const std::string UserDbFormat<legacy::TreeDb>::extension(".userdb.kct");
+std::string UserDbComponent<legacy::TreeDb>::extension() const {
+  return ".userdb.kct";
+}
 
 template <>
-const std::string UserDbFormat<legacy::TreeDb>::snapshot_extension(".userdb.kcss");
+std::string UserDbComponent<legacy::TreeDb>::snapshot_extension() const {
+  return ".userdb.kcss";
+}
 
 template <>
 UserDbWrapper<legacy::TreeDb>::UserDbWrapper(const std::string& db_name)

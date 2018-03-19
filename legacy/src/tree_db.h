@@ -10,7 +10,7 @@
 #ifndef RIME_LEGACY_TREE_DB_H_
 #define RIME_LEGACY_TREE_DB_H_
 
-#include <string>
+#include <rime/common.h>
 #include <rime/dict/db.h>
 
 namespace rime {
@@ -34,7 +34,7 @@ class TreeDbAccessor : public DbAccessor {
   virtual bool exhausted();
 
  private:
-  unique_ptr<TreeDbCursor> cursor_;
+  std::unique_ptr<TreeDbCursor> cursor_;
   bool is_metadata_query_ = false;
 };
 
@@ -56,9 +56,9 @@ class TreeDb : public Db,
   virtual bool MetaFetch(const std::string& key, std::string* value);
   virtual bool MetaUpdate(const std::string& key, const std::string& value);
 
-  virtual shared_ptr<DbAccessor> QueryMetadata();
-  virtual shared_ptr<DbAccessor> QueryAll();
-  virtual shared_ptr<DbAccessor> Query(const std::string& key);
+  virtual std::shared_ptr<DbAccessor> QueryMetadata();
+  virtual std::shared_ptr<DbAccessor> QueryAll();
+  virtual std::shared_ptr<DbAccessor> Query(const std::string& key);
   virtual bool Fetch(const std::string& key, std::string* value);
   virtual bool Update(const std::string& key, const std::string& value);
   virtual bool Erase(const std::string& key);
@@ -74,7 +74,7 @@ class TreeDb : public Db,
  private:
   void Initialize();
 
-  unique_ptr<TreeDbWrapper> db_;
+  std::unique_ptr<TreeDbWrapper> db_;
   std::string db_type_;
 };
 
