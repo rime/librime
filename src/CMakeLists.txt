@@ -7,6 +7,7 @@ aux_source_directory(rime/config rime_src_config)
 aux_source_directory(rime/dict rime_src_dict)
 aux_source_directory(rime/gear rime_src_gear)
 aux_source_directory(rime/lever rime_src_lever)
+aux_source_directory(../legacy/src rime_src_legacy)
 
 if(BUILD_SEPARATE_LIBS)
   set(rime_src
@@ -17,7 +18,8 @@ if(BUILD_SEPARATE_LIBS)
       ${rime_src_algo}
       ${rime_src_dict}
       ${rime_src_gear}
-      ${rime_src_lever})
+      ${rime_src_lever}
+      ${rime_src_legacy})
 else()
   set(rime_src
       ${rime_src_api}
@@ -26,7 +28,8 @@ else()
       ${rime_src_config}
       ${rime_src_dict}
       ${rime_src_gear}
-      ${rime_src_lever})
+      ${rime_src_lever}
+      ${rime_src_legacy})
 endif()
 
 set(rime_optional_deps "")
@@ -42,9 +45,11 @@ set(rime_core_deps
     ${rime_optional_deps})
 set(rime_extra_deps
     ${ICONV_LIBRARIES}
+    ${KyotoCabinet_LIBRARY}
     ${LevelDb_LIBRARY}
     ${Marisa_LIBRARY}
-    ${Opencc_LIBRARY})
+    ${Opencc_LIBRARY}
+    ${ZLIB_LIBRARY})
 
 if(MINGW)
   set(rime_core_deps ${rime_core_deps} wsock32 ws2_32)

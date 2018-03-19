@@ -13,7 +13,7 @@ Project home
 
 License
 ---
-[The 3-Clause BSD License](https://opensource.org/licenses/BSD-3-Clause)
+GPLv3 for `legacy` branch.
 
 Features
 ===
@@ -36,6 +36,7 @@ Build dependencies
   - cmake>=2.8
   - libboost>=1.46
   - libglog (optional)
+  - libkyotocabinet
   - libleveldb
   - libmarisa
   - libopencc>=1.0.2
@@ -46,6 +47,7 @@ Runtime dependencies
 ---
   - libboost
   - libglog (optional)
+  - libkyotocabinet
   - libleveldb
   - libmarisa
   - libopencc
@@ -92,6 +94,7 @@ We are grateful to the makers of the following open source libraries:
   - [Boost C++ Libraries](http://www.boost.org/) (Boost Software License)
   - [google-glog](https://github.com/google/glog) (The 3-Clause BSD License)
   - [Google Test](https://github.com/google/googletest) (The 3-Clause BSD License)
+  - [Kyoto Cabinet](http://fallabs.com/kyotocabinet/) (GNU General Public License)
   - [LevelDB](https://github.com/google/leveldb) (The 3-Clause BSD License)
   - [marisa-trie](https://github.com/s-yata/marisa-trie) (BSD 2-Clause License, LGPL 2.1)
   - [OpenCC](https://github.com/BYVoid/OpenCC) (Apache License 2.0)

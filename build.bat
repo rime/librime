@@ -140,6 +140,20 @@ if %build_thirdparty% == 1 (
   copy /Y build\Release\glog.lib %THIRDPARTY%\lib\
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
+  echo building kyotocabinet.
+  cd "%RIME_ROOT%"\thirdparty\src\kyotocabinet
+  nmake -f VC12makefile
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+  nmake -f VC12makefile binpkg
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+  echo built. copying artifacts.
+  copy /Y output\include\*.h "%RIME_ROOT%"\thirdparty\include\
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+  copy /Y output\lib\*.lib "%RIME_ROOT%"\thirdparty\lib\
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+  copy /Y output\bin\*.* "%RIME_ROOT%"\thirdparty\bin\
+  if %ERRORLEVEL% NEQ 0 goto ERROR
+
   echo building leveldb.
   cd %THIRDPARTY%\src\leveldb-windows
   echo BOOST_ROOT=%BOOST_ROOT%

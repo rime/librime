@@ -16,7 +16,7 @@
     "url": "git+https://github.com/rime/librime.git"
   },
   "author": "lotem",
-  "license": "BSD-3-Clause",
+  "license": "GPLv3",
   "bugs": {
     "url": "https://github.com/rime/librime/issues"
   },
