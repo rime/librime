@@ -21,6 +21,7 @@ if %nocache% == 1 (
 	popd
 	if %ERRORLEVEL% NEQ 0 goto ERROR
 
+        call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
 	call .\build.bat thirdparty
 	if %ERRORLEVEL% NEQ 0 goto ERROR
 
