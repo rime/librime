@@ -2,7 +2,12 @@ setlocal
 
 set nocache=0
 
-if not exist thirdparty.cached set nocache=1
+if exist thirdparty.cached (
+  rem the most recent cache is from main branch, need to rebuild thirdparty
+  del /q thirdparty.cached
+  set nocache=1
+)
+if not exist thirdparty-legacy.cached set nocache=1
 if not exist %BOOST_ROOT% set nocache=1
 
 if %nocache% == 1 (
@@ -19,7 +24,7 @@ if %nocache% == 1 (
 	call .\build.bat thirdparty
 	if %ERRORLEVEL% NEQ 0 goto ERROR
 
-	date /t > thirdparty.cached & time /t >> thirdparty.cached
+	date /t > thirdparty-legacy.cached & time /t >> thirdparty-legacy.cached
 	echo.
 	echo Thirdparty libraries installed.
 	echo.
@@ -27,7 +32,7 @@ if %nocache% == 1 (
 ) else (
 	echo.
 	echo Last build date of cache is
-	type thirdparty.cached
+	type thirdparty-legacy.cached
 	echo.
 	goto EXIT
 )

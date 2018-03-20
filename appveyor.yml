@@ -11,7 +11,7 @@ environment:
   CL: /Zc:threadSafeInit-
 
 cache:
-  - thirdparty.cached -> appveyor.install.bat
+  - thirdparty-legacy.cached -> appveyor.install.bat
   - thirdparty\bin -> appveyor.install.bat
   - thirdparty\data -> appveyor.install.bat
   - thirdparty\include -> appveyor.install.bat
