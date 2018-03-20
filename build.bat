@@ -142,9 +142,9 @@ if %build_thirdparty% == 1 (
 
   echo building kyotocabinet.
   cd "%RIME_ROOT%"\thirdparty\src\kyotocabinet
-  nmake -f VC12makefile
+  nmake -f VC14makefile
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  nmake -f VC12makefile binpkg
+  nmake -f VC14makefile binpkg
   if %ERRORLEVEL% NEQ 0 goto ERROR
   echo built. copying artifacts.
   copy /Y output\include\*.h "%RIME_ROOT%"\thirdparty\include\
