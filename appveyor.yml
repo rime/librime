@@ -30,11 +30,12 @@ build_script:
   - .\build.bat test
 
 after_build:
-  - 7z a rime.zip build\bin build\lib build\include thirdparty\data\opencc
+  - 7z a rime.zip build\bin build\lib build\include thirdparty\data\opencc thirdparty\bin\zlib1.dll
   - dir build /s
 
 before_test:
   - copy /y build\lib\Release\rime.dll build\test\Release
+  - copy /y thirdparty\bin\zlib1.dll build\test\Release
 
 test_script:
   - cd build\test
