@@ -1,3 +1,14 @@
+<a name="1.3.1"></a>
+## [1.3.1](https://github.com/rime/librime/compare/1.3.0...1.3.1) (2018-04-01)
+
+
+### Bug Fixes
+
+* **config_file_update:** clean up deprecated user copy ([#193](https://github.com/rime/librime/issues/193)) ([8d8d2e6](https://github.com/rime/librime/commit/8d8d2e6))
+* **thirdparty/src/leveldb:** do not link to snappy library ([6f6056a](https://github.com/rime/librime/commit/6f6056a))
+
+
+
 <a name="1.3.0"></a>
 # 1.3.0 (2018-03-09)
 
