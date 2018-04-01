@@ -4,7 +4,7 @@ set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_fla
 project(rime)
 cmake_minimum_required(VERSION 2.8.11)
 
-set(rime_version 1.3.0)
+set(rime_version 1.3.1)
 set(rime_soversion 1)
 
 add_definitions(-DRIME_VERSION="${rime_version}")
