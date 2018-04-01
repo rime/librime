@@ -79,10 +79,9 @@ Plugins
 
 Related works
 ===
-  - [brise](https://github.com/rime/brise): Rime schema repository
-  - Combo Pinyin: an innovative chord-typing practice to input Pinyin
+  - [plum](https://github.com/rime/plum): Rime configuration manager and input schema repository
+  - [Combo Pinyin](https://github.com/rime/home/wiki/ComboPinyin): an innovative chord-typing practice to input Pinyin
   - essay: the vocabulary and language model for Rime
-  - [rimekit](https://github.com/lotem/rimekit): configuration tools for Rime (under construction)
   - [SCU](https://github.com/neolee/SCU/): Squirrel Configuration Utilities
 
 Credits
