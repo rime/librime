@@ -4,9 +4,9 @@ add_executable(rime_test ${rime_test_src})
 target_link_libraries(rime_test
                       ${rime_library} ${rime_gears_library}
                       ${GTEST_LIBRARIES})
-if(BUILD_SHARED_LIBS)
+if(BUILD_SHARED)
   target_compile_definitions(rime_test PRIVATE RIME_IMPORTS)
-endif(BUILD_SHARED_LIBS)
+endif(BUILD_SHARED)
 add_dependencies(rime_test ${rime_library} ${rime_gears_library})
 
 file(GLOB test_data_files ${PROJECT_SOURCE_DIR}/data/test/*.yaml)
