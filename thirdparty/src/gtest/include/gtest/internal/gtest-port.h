@@ -629,6 +629,14 @@ struct _RTL_CRITICAL_SECTION;
 # if GTEST_OS_LINUX_ANDROID && defined(_STLPORT_MAJOR)
 // STLport, provided with the Android NDK, has neither <tr1/tuple> or <tuple>.
 #  define GTEST_HAS_TR1_TUPLE 0
+# elif defined(_MSC_VER) && (_MSC_VER >= 1910)
+// Prevent `warning C4996: 'std::tr1': warning STL4002:
+// The non-Standard std::tr1 namespace and TR1-only machinery
+// are deprecated and will be REMOVED.`
+#  define GTEST_HAS_TR1_TUPLE 0
+# elif GTEST_LANG_CXX11 && defined(_LIBCPP_VERSION)
+// libc++ doesn't support TR1.
+#  define GTEST_HAS_TR1_TUPLE 0
 # else
 // The user didn't tell us not to do it, so we assume it's OK.
 #  define GTEST_HAS_TR1_TUPLE 1
