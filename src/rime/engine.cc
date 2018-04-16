@@ -257,8 +257,9 @@ void ConcreteEngine::OnSelect(Context* ctx) {
       ctx->composition().Forward();
   }
   else {
+    bool updateCaret = (seg.end >= ctx->caret_pos());
     ctx->composition().Forward();
-    if (seg.end >= ctx->caret_pos()) {
+    if (updateCaret) {
       // finished converting current segment
       // move caret to the end of input
       ctx->set_caret_pos(ctx->input().length());
