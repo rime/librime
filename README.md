@@ -34,7 +34,7 @@ Build dependencies
 ---
   - compiler with C++11 support
   - cmake>=2.8
-  - libboost>=1.46
+  - libboost>=1.48
   - libglog (optional)
   - libleveldb
   - libmarisa
