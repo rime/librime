@@ -46,3 +46,11 @@ merge_tree:
   zerg:
     # overwrite existing list
     ground_units: []
+
+create_list_with_inplace_patch:
+  # map node without data key-value (exclude compiler directives) can be converted to list
+  all_ground_units:
+    __patch:
+      - __append: [scv, marine, firebat, vulture, tank]
+      - __append: {__include: starcraft/protoss/ground_units}
+      - __append: {__include: starcraft/zerg/ground_units}

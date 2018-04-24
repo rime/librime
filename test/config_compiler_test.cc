@@ -251,6 +251,12 @@ class RimeConfigCircularDependencyTest : public RimeConfigCompilerTestBase {
   }
 };
 
+TEST_F(RimeConfigMergeTest, CreateListWithInplacePatch) {
+  const string& prefix = "create_list_with_inplace_patch/";
+  EXPECT_TRUE(config_->IsList(prefix + "all_ground_units"));
+  EXPECT_EQ(16, config_->GetListSize(prefix + "all_ground_units"));
+}
+
 TEST_F(RimeConfigCircularDependencyTest, BestEffortResolution) {
   const string& prefix = "test/";
   EXPECT_TRUE(config_->IsNull(prefix + "__patch"));
