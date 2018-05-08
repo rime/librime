@@ -196,8 +196,11 @@ else()
 endif()
 
 add_subdirectory(src)
-add_subdirectory(tools)
 
-if(GTEST_FOUND)
-  add_subdirectory(test)
+if(BUILD_SHARED_LIBS)
+  add_subdirectory(tools)
+
+  if(GTEST_FOUND)
+    add_subdirectory(test)
+  endif()
 endif()
