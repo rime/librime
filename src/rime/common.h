@@ -35,6 +35,8 @@
 // call a pointer to member function on this
 #define RIME_THIS_CALL(f) (this->*(f))
 
+#define RIME_THIS_CALL_AS(T, f) ((T*)this->*(f))
+
 namespace rime {
 
 using std::function;

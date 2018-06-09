@@ -4,23 +4,19 @@
 //
 // 2011-10-23 GONG Chen <chen.sst@gmail.com>
 //
-#include <cctype>
 #include <rime/common.h>
-#include <rime/composition.h>
 #include <rime/config.h>
 #include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/key_table.h>
 #include <rime/gear/editor.h>
+#include <rime/gear/key_binding_processor.h>
 #include <rime/gear/translator_commons.h>
 
 namespace rime {
 
-static struct EditorActionDef {
-  const char* name;
-  Editor::HandlerPtr action;
-} editor_action_definitions[] = {
+static Editor::ActionDef editor_action_definitions[] = {
   { "confirm",  &Editor::Confirm },
   { "toggle_selection",  &Editor::ToggleSelection },
   { "commit_comment", &Editor::CommitComment },
@@ -33,7 +29,7 @@ static struct EditorActionDef {
   { "delete_candidate", &Editor::DeleteCandidate },
   { "delete", &Editor::DeleteChar },
   { "cancel", &Editor::CancelComposition },
-  { "noop", nullptr }
+  Editor::kActionNoop
 };
 
 static struct EditorCharHandlerDef {
@@ -45,7 +41,8 @@ static struct EditorCharHandlerDef {
   { "noop", nullptr }
 };
 
-Editor::Editor(const Ticket& ticket, bool auto_commit) : Processor(ticket) {
+Editor::Editor(const Ticket& ticket, bool auto_commit)
+    : Processor(ticket), KeyBindingProcessor(editor_action_definitions) {
   engine_->context()->set_option("_auto_commit", auto_commit);
 }
 
@@ -55,27 +52,9 @@ ProcessResult Editor::ProcessKeyEvent(const KeyEvent& key_event) {
   int ch = key_event.keycode();
   Context* ctx = engine_->context();
   if (ctx->IsComposing()) {
-    if (Accept(key_event)) {
-      return kAccepted;
-    }
-    if (key_event.ctrl() || key_event.alt()) {
-      return kNoop;
-    }
-    if (key_event.shift()) {
-      KeyEvent shift_as_ctrl{
-          key_event.keycode(),
-          (key_event.modifier() & ~kShiftMask) | kControlMask
-      };
-      if (Accept(shift_as_ctrl)) {
-        return kAccepted;
-      }
-      KeyEvent remove_shift{
-          key_event.keycode(),
-          key_event.modifier() & ~kShiftMask
-      };
-      if (Accept(remove_shift)) {
-        return kAccepted;
-      }
+    auto result = KeyBindingProcessor::ProcessKeyEvent(key_event, ctx);
+    if (result != kNoop) {
+      return result;
     }
   }
   if (char_handler_ &&
@@ -89,53 +68,12 @@ ProcessResult Editor::ProcessKeyEvent(const KeyEvent& key_event) {
   return kNoop;
 }
 
-bool Editor::Accept(const KeyEvent& key_event) {
-  auto binding = key_bindings_.find(key_event);
-  if (binding != key_bindings_.end()) {
-    auto action = binding->second;
-    RIME_THIS_CALL(action)(engine_->context());
-    DLOG(INFO) << "editor action key accepted: " << key_event.repr();
-    return true;
-  }
-  return false;
-}
-
-void Editor::Bind(KeyEvent key_event, HandlerPtr action) {
-  if (action) {
-    key_bindings_[key_event] = action;
-  }
-  else {
-    key_bindings_.erase(key_event);
-  }
-}
-
 void Editor::LoadConfig() {
   if (!engine_) {
     return;
   }
   Config* config = engine_->schema()->config();
-  if (auto bindings = config->GetMap("editor/bindings")) {
-    for (auto it = bindings->begin(); it != bindings->end(); ++it) {
-      auto value = As<ConfigValue>(it->second);
-      if (!value) {
-        continue;
-      }
-      auto* p = editor_action_definitions;
-      while (p->action && p->name != value->str()) {
-        ++p;
-      }
-      if (!p->action && p->name != value->str()) {
-        LOG(WARNING) << "invalid editor action: " << value->str();
-        continue;
-      }
-      KeyEvent ke;
-      if (!ke.Parse(it->first)) {
-        LOG(WARNING) << "invalid edit key: " << it->first;
-        continue;
-      }
-      Bind(ke, p->action);
-    }
-  }
+  KeyBindingProcessor::LoadConfig(config, "editor");
   if (auto value = config->GetValue("editor/char_handler")) {
     auto* p = editor_char_handler_definitions;
     while (p->action && p->name != value->str()) {

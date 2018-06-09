@@ -11,18 +11,16 @@
 #include <rime/component.h>
 #include <rime/key_event.h>
 #include <rime/processor.h>
+#include <rime/gear/key_binding_processor.h>
 
 namespace rime {
 
 class Context;
 
-class Editor : public Processor {
+class Editor : public Processor, public KeyBindingProcessor<Editor> {
  public:
-  typedef void Handler(Context* ctx);
   typedef ProcessResult CharHandler(Context* ctx, int ch);
-  using HandlerPtr = void (Editor::*)(Context* ctx);
   using CharHandlerPtr = ProcessResult (Editor::*)(Context* ctx, int ch);
-  using KeyBindings = map<KeyEvent, HandlerPtr>;
 
   Editor(const Ticket& ticket, bool auto_commit);
   ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
@@ -44,11 +42,8 @@ class Editor : public Processor {
   CharHandler AddToInput;
 
  protected:
-  bool Accept(const KeyEvent& key_event);
-  void Bind(KeyEvent key_event, HandlerPtr action);
   void LoadConfig();
 
-  KeyBindings key_bindings_;
   CharHandlerPtr char_handler_ = nullptr;
 };
 
