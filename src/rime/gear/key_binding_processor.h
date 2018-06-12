@@ -6,13 +6,12 @@
 #define RIME_KEY_BINDING_PROCESSOR_H_
 
 #include <rime/common.h>
+#include <rime/config.h>
+#include <rime/context.h>
 #include <rime/key_event.h>
 #include <rime/processor.h>
 
 namespace rime {
-
-class Config;
-class Context;
 
 template <class T>
 class KeyBindingProcessor {

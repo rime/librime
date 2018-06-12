@@ -10,24 +10,33 @@
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/processor.h>
+#include <rime/gear/key_binding_processor.h>
 #include <rime/gear/translator_commons.h>
 
 namespace rime {
 
-class Navigator : public Processor {
+class Navigator : public Processor, public KeyBindingProcessor<Navigator> {
  public:
-  Navigator(const Ticket& ticket) : Processor(ticket) {}
+  explicit Navigator(const Ticket& ticket);
 
-  virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
+  ProcessResult ProcessKeyEvent(const KeyEvent& key_event) override;
+
+  Handler Rewind;
+  Handler LeftByChar;
+  Handler RightByChar;
+  Handler LeftBySyllable;
+  Handler RightBySyllable;
+  Handler Home;
+  Handler End;
 
  private:
   void BeginMove(Context* ctx);
   bool JumpLeft(Context* ctx, size_t start_pos = 0);
   bool JumpRight(Context* ctx, size_t start_pos = 0);
-  bool Left(Context* ctx);
-  bool Right(Context* ctx);
-  bool Home(Context* ctx);
-  bool End(Context* ctx);
+  bool MoveLeft(Context* ctx);
+  bool MoveRight(Context* ctx);
+  bool GoHome(Context* ctx);
+  bool GoToEnd(Context* ctx);
 
   string input_;
   Spans spans_;
