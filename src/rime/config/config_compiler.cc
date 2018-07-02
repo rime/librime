@@ -9,6 +9,14 @@
 
 namespace rime {
 
+std::ostream& operator<< (std::ostream& stream, const Reference& reference) {
+  return stream << reference.repr();
+}
+
+std::ostream& operator<< (std::ostream& stream, const Dependency& dependency) {
+  return stream << dependency.repr();
+}
+
 struct ConfigDependencyGraph {
   map<string, of<ConfigResource>> resources;
   vector<of<ConfigItemRef>> node_stack;

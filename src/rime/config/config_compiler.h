@@ -5,6 +5,7 @@
 #ifndef RIME_CONFIG_COMPILER_H_
 #define RIME_CONFIG_COMPILER_H_
 
+#include <ostream>
 #include <rime/common.h>
 #include <rime/config/config_data.h>
 #include <rime/config/config_types.h>
@@ -35,10 +36,7 @@ struct Reference {
   string repr() const;
 };
 
-template <class StreamT>
-StreamT& operator<< (StreamT& stream, const Reference& reference) {
-  return stream << reference.repr();
-}
+std::ostream& operator<< (std::ostream& stream, const Reference& reference);
 
 class ConfigCompilerPlugin;
 class ResourceResolver;

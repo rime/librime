@@ -5,6 +5,7 @@
 #ifndef RIME_CONFIG_COMPILER_IMPL_H_
 #define RIME_CONFIG_COMPILER_IMPL_H_
 
+#include <ostream>
 #include <rime/common.h>
 #include <rime/config/config_compiler.h>
 #include <rime/config/config_types.h>
@@ -32,10 +33,7 @@ struct Dependency {
   virtual bool Resolve(ConfigCompiler* compiler) = 0;
 };
 
-template <class StreamT>
-StreamT& operator<< (StreamT& stream, const Dependency& dependency) {
-  return stream << dependency.repr();
-}
+std::ostream& operator<< (std::ostream& stream, const Dependency& dependency);
 
 struct PendingChild : Dependency {
   string child_path;
