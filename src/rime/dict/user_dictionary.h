@@ -10,6 +10,7 @@
 #include <time.h>
 #include <rime/common.h>
 #include <rime/component.h>
+#include <rime/language.h>
 #include <rime/dict/user_db.h>
 #include <rime/dict/vocabulary.h>
 
@@ -50,7 +51,7 @@ struct Ticket;
 
 class UserDictionary : public Class<UserDictionary, const Ticket&> {
  public:
-  explicit UserDictionary(const an<Db>& db);
+  UserDictionary(Language language, an<Db> db);
   virtual ~UserDictionary();
 
   void Attach(const an<Table>& table, const an<Prism>& prism);
@@ -76,7 +77,7 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
   bool RevertRecentTransaction();
   bool CommitPendingTransaction();
 
-  const string& name() const { return name_; }
+  const Language* language() const { return &language_; }
   TickCount tick() const { return tick_; }
 
   static an<DictEntry> CreateDictEntry(const string& key,
@@ -94,7 +95,7 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
                  DfsState* state);
 
  private:
-  string name_;
+  const Language language_;
   an<Db> db_;
   an<Table> table_;
   an<Prism> prism_;

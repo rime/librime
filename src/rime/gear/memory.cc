@@ -92,6 +92,10 @@ bool Memory::DiscardSession() {
   return user_dict_ && user_dict_->RevertRecentTransaction();
 }
 
+const Language* Memory::language() const {
+  return user_dict_ ? user_dict_->language() : nullptr;
+}
+
 void Memory::OnCommit(Context* ctx) {
   if (!user_dict_|| user_dict_->readonly())
     return;
@@ -100,7 +104,7 @@ void Memory::OnCommit(Context* ctx) {
   for (auto& seg : ctx->composition()) {
     auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(
             seg.GetSelectedCandidate()));
-    bool recognized = phrase && phrase->language() == language();
+    bool recognized = Language::intelligible(phrase, this);
     if (recognized) {
       commit_entry.AppendPhrase(phrase);
     }
@@ -119,8 +123,7 @@ void Memory::OnDeleteEntry(Context* ctx) {
     return;
   auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(
           ctx->GetSelectedCandidate()));
-  bool recognized = phrase && phrase->language() == language();
-  if (recognized) {
+  if (Language::intelligible(phrase, this)) {
     const DictEntry& entry(phrase->entry());
     LOG(INFO) << "deleting entry: '" << entry.text << "'.";
     user_dict_->UpdateEntry(entry, -1);  // mark as deleted in user dict

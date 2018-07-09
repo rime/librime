@@ -116,8 +116,8 @@ bool UserDictEntryIterator::Next() {
 
 // UserDictionary members
 
-UserDictionary::UserDictionary(const an<Db>& db)
-    : db_(db) {
+UserDictionary::UserDictionary(Language language, an<Db> db)
+    : language_(language), db_(db) {
 }
 
 UserDictionary::~UserDictionary() {
@@ -519,7 +519,7 @@ UserDictionary* UserDictionaryComponent::Create(const Ticket& ticket) {
     db.reset(component->Create(dict_name));
     db_pool_[dict_name] = db;
   }
-  return new UserDictionary(db);
+  return new UserDictionary(Language{dict_name}, db);
 }
 
 }  // namespace rime

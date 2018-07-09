@@ -50,13 +50,13 @@ class TableTranslator : public Translator,
 class TableTranslation : public Translation {
  public:
 
-  TableTranslation(TranslatorOptions* options, Language* language,
-                   const string& input, size_t start, size_t end,
-                   const string& preedit);
-  TableTranslation(TranslatorOptions* options, Language* language,
-                   const string& input, size_t start, size_t end,
+  TableTranslation(TranslatorOptions* options,
+                   const Language* language,
+                   const string& input,
+                   size_t start,
+                   size_t end,
                    const string& preedit,
-                   const DictEntryIterator& iter,
+                   const DictEntryIterator& iter = DictEntryIterator(),
                    const UserDictEntryIterator& uter = UserDictEntryIterator());
 
   virtual bool Next();
@@ -74,7 +74,7 @@ class TableTranslation : public Translation {
   }
 
   TranslatorOptions* options_;
-  Language* language_;
+  const Language* language_;
   string input_;
   size_t start_;
   size_t end_;
