@@ -46,7 +46,7 @@ class Memory {
   Dictionary* dict() const { return dict_.get(); }
   UserDictionary* user_dict() const { return user_dict_.get(); }
 
-  const Language* language() const;
+  const Language* language() const { return language_.get(); }
 
  protected:
   void OnCommit(Context* ctx);
@@ -55,6 +55,7 @@ class Memory {
 
   the<Dictionary> dict_;
   the<UserDictionary> user_dict_;
+  the<Language> language_;
 
  private:
   connection commit_connection_;

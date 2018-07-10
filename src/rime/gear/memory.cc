@@ -9,6 +9,7 @@
 #include <rime/composition.h>
 #include <rime/engine.h>
 #include <rime/key_event.h>
+#include <rime/language.h>
 #include <rime/schema.h>
 #include <rime/ticket.h>
 #include <rime/dict/dictionary.h>
@@ -65,6 +66,13 @@ Memory::Memory(const Ticket& ticket) {
     }
   }
 
+  // user dictionary is named after language; dictionary name may have an
+  // optional suffix separated from the language component by dot.
+  language_.reset(new Language{
+    user_dict_ ? user_dict_->name() :
+    Language::get_language_component(dict_->name())
+  });
+
   Context* ctx = ticket.engine->context();
   commit_connection_ = ctx->commit_notifier().connect(
       [this](Context* ctx) { OnCommit(ctx); });
@@ -90,10 +98,6 @@ bool Memory::FinishSession() {
 
 bool Memory::DiscardSession() {
   return user_dict_ && user_dict_->RevertRecentTransaction();
-}
-
-const Language* Memory::language() const {
-  return user_dict_ ? user_dict_->language() : nullptr;
 }
 
 void Memory::OnCommit(Context* ctx) {
