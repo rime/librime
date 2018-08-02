@@ -9,6 +9,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/scope_exit.hpp>
 #include <rime/common.h>
+#include <rime/language.h>
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/ticket.h>
@@ -116,8 +117,8 @@ bool UserDictEntryIterator::Next() {
 
 // UserDictionary members
 
-UserDictionary::UserDictionary(const an<Db>& db)
-    : db_(db) {
+UserDictionary::UserDictionary(const string& name, an<Db> db)
+    : name_(name), db_(db) {
 }
 
 UserDictionary::~UserDictionary() {
@@ -494,10 +495,8 @@ UserDictionary* UserDictionaryComponent::Create(const Ticket& ticket) {
     // user specified name
   }
   else if (config->GetString(ticket.name_space + "/dictionary", &dict_name)) {
-    // {dictionary: lunapinyin.extra} implies {user_dict: luna_pinyin}
-    size_t dot = dict_name.find('.');
-    if (dot != string::npos && dot != 0)
-      dict_name.resize(dot);
+    // {dictionary: luna_pinyin.extra} implies {user_dict: luna_pinyin}
+    dict_name = Language::get_language_component(dict_name);
   }
   else {
     LOG(ERROR) << ticket.name_space << "/dictionary not specified in schema '"
@@ -519,7 +518,7 @@ UserDictionary* UserDictionaryComponent::Create(const Ticket& ticket) {
     db.reset(component->Create(dict_name));
     db_pool_[dict_name] = db;
   }
-  return new UserDictionary(db);
+  return new UserDictionary(dict_name, db);
 }
 
 }  // namespace rime

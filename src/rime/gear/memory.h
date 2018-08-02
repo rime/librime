@@ -17,6 +17,7 @@ class Context;
 class Engine;
 class Dictionary;
 class UserDictionary;
+class Language;
 class Phrase;
 class Memory;
 
@@ -31,9 +32,6 @@ struct CommitEntry : DictEntry {
   bool Save() const;
 };
 
-class Language {
-};
-
 class Memory {
  public:
   Memory(const Ticket& ticket);
@@ -45,10 +43,10 @@ class Memory {
   bool FinishSession();
   bool DiscardSession();
 
-  Language* language() { return &language_; }
-
   Dictionary* dict() const { return dict_.get(); }
   UserDictionary* user_dict() const { return user_dict_.get(); }
+
+  const Language* language() const { return language_.get(); }
 
  protected:
   void OnCommit(Context* ctx);
@@ -57,12 +55,12 @@ class Memory {
 
   the<Dictionary> dict_;
   the<UserDictionary> user_dict_;
+  the<Language> language_;
 
  private:
   connection commit_connection_;
   connection delete_connection_;
   connection unhandled_key_connection_;
-  Language language_;
 };
 
 }  // namespace rime

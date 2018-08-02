@@ -70,7 +70,7 @@ class Language;
 
 class Phrase : public Candidate {
  public:
-  Phrase(Language* language,
+  Phrase(const Language* language,
          const string& type, size_t start, size_t end,
          const an<DictEntry>& entry)
       : Candidate(type, start, end),
@@ -93,14 +93,14 @@ class Phrase : public Candidate {
   double weight() const { return entry_->weight; }
   Code& code() const { return entry_->code; }
   const DictEntry& entry() const { return *entry_; }
-  Language* language() const { return language_; }
+  const Language* language() const { return language_; }
   Spans spans() {
     return syllabifier_ ? syllabifier_->Syllabify(this)
                         : Spans();
   }
 
  protected:
-  Language* language_;
+  const Language* language_;
   an<DictEntry> entry_;
   an<PhraseSyllabifier> syllabifier_;
 };
@@ -109,7 +109,7 @@ class Phrase : public Candidate {
 
 class Sentence : public Phrase {
  public:
-  Sentence(Language* language)
+  Sentence(const Language* language)
       : Phrase(language, "sentence", 0, 0, New<DictEntry>()) {
     entry_->weight = 1.0;
   }

@@ -50,7 +50,7 @@ struct Ticket;
 
 class UserDictionary : public Class<UserDictionary, const Ticket&> {
  public:
-  explicit UserDictionary(const an<Db>& db);
+  UserDictionary(const string& name, an<Db> db);
   virtual ~UserDictionary();
 
   void Attach(const an<Table>& table, const an<Prism>& prism);

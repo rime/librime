@@ -21,12 +21,12 @@ class Language;
 
 class Poet {
  public:
-  Poet(Language* language) : language_(language) {}
+  Poet(const Language* language) : language_(language) {}
 
-  an<Sentence> MakeSentence(const WordGraph& graph,
-                                    size_t total_length);
+  an<Sentence> MakeSentence(const WordGraph& graph, size_t total_length);
+
  protected:
-  Language* language_;
+  const Language* language_;
 };
 
 }  // namespace rime

@@ -9,6 +9,7 @@
 #include <rime/composition.h>
 #include <rime/engine.h>
 #include <rime/key_event.h>
+#include <rime/language.h>
 #include <rime/schema.h>
 #include <rime/ticket.h>
 #include <rime/dict/dictionary.h>
@@ -65,6 +66,13 @@ Memory::Memory(const Ticket& ticket) {
     }
   }
 
+  // user dictionary is named after language; dictionary name may have an
+  // optional suffix separated from the language component by dot.
+  language_.reset(new Language{
+    user_dict_ ? user_dict_->name() :
+    Language::get_language_component(dict_->name())
+  });
+
   Context* ctx = ticket.engine->context();
   commit_connection_ = ctx->commit_notifier().connect(
       [this](Context* ctx) { OnCommit(ctx); });
@@ -100,7 +108,7 @@ void Memory::OnCommit(Context* ctx) {
   for (auto& seg : ctx->composition()) {
     auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(
             seg.GetSelectedCandidate()));
-    bool recognized = phrase && phrase->language() == language();
+    bool recognized = Language::intelligible(phrase, this);
     if (recognized) {
       commit_entry.AppendPhrase(phrase);
     }
@@ -119,8 +127,7 @@ void Memory::OnDeleteEntry(Context* ctx) {
     return;
   auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(
           ctx->GetSelectedCandidate()));
-  bool recognized = phrase && phrase->language() == language();
-  if (recognized) {
+  if (Language::intelligible(phrase, this)) {
     const DictEntry& entry(phrase->entry());
     LOG(INFO) << "deleting entry: '" << entry.text << "'.";
     user_dict_->UpdateEntry(entry, -1);  // mark as deleted in user dict

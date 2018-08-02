@@ -28,21 +28,10 @@ static const char* kUnitySymbol = " \xe2\x98\xaf ";
 // TableTranslation
 
 TableTranslation::TableTranslation(TranslatorOptions* options,
-                                   Language* language,
+                                   const Language* language,
                                    const string& input,
-                                   size_t start, size_t end,
-                                   const string& preedit)
-    : options_(options), language_(language),
-      input_(input), start_(start), end_(end), preedit_(preedit) {
-  if (options_)
-    options_->preedit_formatter().Apply(&preedit_);
-  set_exhausted(true);
-}
-
-TableTranslation::TableTranslation(TranslatorOptions* options,
-                                   Language* language,
-                                   const string& input,
-                                   size_t start, size_t end,
+                                   size_t start,
+                                   size_t end,
                                    const string& preedit,
                                    const DictEntryIterator& iter,
                                    const UserDictEntryIterator& uter)
