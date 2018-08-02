@@ -108,7 +108,7 @@ void Memory::OnCommit(Context* ctx) {
   for (auto& seg : ctx->composition()) {
     auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(
             seg.GetSelectedCandidate()));
-    bool recognized = phrase != nullptr && Language::intelligible(phrase, this);
+    bool recognized = Language::intelligible(phrase, this);
     if (recognized) {
       commit_entry.AppendPhrase(phrase);
     }

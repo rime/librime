@@ -22,7 +22,8 @@ class Language {
 
   template <class T, class U>
   static bool intelligible(const T& t, const U& u) {
-    return t->language() && u->language() && *t->language() == *u->language();
+    return t && t->language() && u && u->language() &&
+        *t->language() == *u->language();
   }
 
   static string get_language_component(const string& name);
