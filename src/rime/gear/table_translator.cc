@@ -335,7 +335,7 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
         }
         string phrase;
         for (; it != history.rend(); ++it) {
-          if (it->type != "table" && it->type != "sentence")
+          if (it->type != "table" && it->type != "sentence" && it->type != "uniquified")
             break;
           if (phrase.empty()) {
             phrase = it->text;  // last word
