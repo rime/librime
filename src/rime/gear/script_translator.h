@@ -38,9 +38,11 @@ class ScriptTranslator : public Translator,
 
   // options
   int spelling_hints() const { return spelling_hints_; }
+  bool always_show_comments() const { return always_show_comments_; }
 
  protected:
   int spelling_hints_ = 0;
+  bool always_show_comments_ = false;
 };
 
 }  // namespace rime

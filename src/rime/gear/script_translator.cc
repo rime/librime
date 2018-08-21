@@ -130,6 +130,7 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
     return;
   if (Config* config = engine_->schema()->config()) {
     config->GetInt(name_space_ + "/spelling_hints", &spelling_hints_);
+    config->GetBool(name_space_ + "/always_show_comments", &always_show_comments_);
   }
 }
 
@@ -345,7 +346,8 @@ an<Candidate> ScriptTranslation::Peek() {
     }
     if (sentence_->comment().empty()) {
       auto spelling = syllabifier_->GetOriginalSpelling(*sentence_);
-      if (!spelling.empty() && spelling != sentence_->preedit()) {
+      if (!spelling.empty() && (translator_->always_show_comments() ||
+          spelling != sentence_->preedit())) {
         sentence_->set_comment(/*quote_left + */spelling/* + quote_right*/);
       }
     }
