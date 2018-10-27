@@ -49,7 +49,20 @@ set(Boost_USE_MULTITHREADED ON)
 if(MSVC)
   set(Boost_USE_STATIC_RUNTIME ON)
 endif()
-find_package(Boost 1.46.0 REQUIRED COMPONENTS filesystem regex signals system locale)
+
+if(NOT BOOST_USE_CXX11)
+  add_definitions("-DBOOST_NO_CXX11_SCOPED_ENUMS")
+endif()
+
+set(BOOST_COMPONENTS filesystem regex system locale)
+
+if(BOOST_USE_SIGNALS2)
+  add_definitions("-DBOOST_SIGNALS2")
+else()
+  set(BOOST_COMPONENTS ${BOOST_COMPONENTS} singals)
+endif()
+
+find_package(Boost 1.46.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
   link_directories(${Boost_LIBRARY_DIRS})
@@ -134,14 +147,6 @@ endif()
 
 if(UNIX)
   add_definitions("-std=c++11")
-endif()
-
-if(NOT BOOST_USE_CXX11)
-  add_definitions("-DBOOST_NO_CXX11_SCOPED_ENUMS")
-endif()
-
-if(BOOST_USE_SIGNALS2)
-  add_definitions("-DBOOST_SIGNALS2")
 endif()
 
 if(NOT DEFINED LIB_INSTALL_DIR)
