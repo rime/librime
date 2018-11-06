@@ -12442,6 +12442,8 @@ use_preset_vocabulary: true
 涊	nian
 涋	tu
 涌	yong
+涌	yong	99%
+涌	chong	1%
 涍	xiao
 涎	xian
 涎	yan
@@ -26353,6 +26355,7 @@ use_preset_vocabulary: true
 隗	wei
 隘	ai
 隘	e
+隘	ga
 隙	qi
 隙	xi
 隚	tang
@@ -28073,7 +28076,8 @@ use_preset_vocabulary: true
 鰀	huan
 鰀	wan
 鰁	quan
-鰂	ze
+鰂	zei	99%
+鰂	ze	1%
 鰃	wei
 鰄	wei
 鰅	yu
