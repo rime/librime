@@ -1,3 +1,22 @@
+## [1.3.2](https://github.com/rime/librime/compare/1.3.1...1.3.2) (2018-11-12)
+
+
+### Bug Fixes
+
+* **CMakeLists.txt:** do not link binaries when building static library ([99573e3](https://github.com/rime/librime/commit/99573e3))
+* **CMakeLists.txt:** do not require boost::signals, which will be deprecated in Boost 1.69 ([8a9ef3b](https://github.com/rime/librime/commit/8a9ef3b)), closes [#225](https://github.com/rime/librime/issues/225)
+* **config_compiler:** ambiguous operator overload with cmake option ENABLE_LOGGING=OFF ([b86b647](https://github.com/rime/librime/commit/b86b647)), closes [#211](https://github.com/rime/librime/issues/211)
+* **config_compiler:** support creating list in-place by __patch and __merge ([0784eb0](https://github.com/rime/librime/commit/0784eb0))
+* **table_translator:** enable encoding uniquified commit history ([74e31bc](https://github.com/rime/librime/commit/74e31bc))
+
+
+### Features
+
+* **language:** shared user dictionary per language (Closes [#184](https://github.com/rime/librime/issues/184)) ([#214](https://github.com/rime/librime/issues/214)) ([9f774e7](https://github.com/rime/librime/commit/9f774e7))
+* always_show_comments option ([#220](https://github.com/rime/librime/issues/220)) ([19cea07](https://github.com/rime/librime/commit/19cea07))
+
+
+
 <a name="1.3.1"></a>
 ## [1.3.1](https://github.com/rime/librime/compare/1.3.0...1.3.1) (2018-04-01)
 
