@@ -18,6 +18,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <boost/optional>
 #define BOOST_BIND_NO_PLACEHOLDERS
 #ifdef BOOST_SIGNALS2
 #include <boost/signals2/connection.hpp>
@@ -47,6 +48,7 @@ using std::pair;
 using std::set;
 using std::string;
 using std::vector;
+using boost::optional;
 
 template <class Key, class T>
 using hash_map = std::unordered_map<Key, T>;

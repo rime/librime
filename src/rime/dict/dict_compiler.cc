@@ -9,6 +9,7 @@
 #include <rime/resource.h>
 #include <rime/service.h>
 #include <rime/algo/algebra.h>
+#include <rime/algo/corrector.h>
 #include <rime/algo/utilities.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
@@ -212,7 +213,7 @@ bool DictCompiler::BuildPrism(const string &schema_file,
   Syllabary syllabary;
   if (!table_->Load() || !table_->GetSyllabary(&syllabary) || syllabary.empty())
     return false;
-  // apply spelling algebra
+  // apply spelling algebra and prepare corrections (if enabled)
   Script script;
   if (!schema_file.empty()) {
     Config config;
@@ -230,6 +231,30 @@ bool DictCompiler::BuildPrism(const string &schema_file,
         script.clear();
       }
     }
+
+    // build corrector
+    int correction_level = 0;
+    if (config.GetInt("speller/correction_level", &correction_level) &&
+        correction_level > 0) {
+
+      Syllabary correct_syllabary;
+      if (!script.empty()) {
+        for (auto &v : script) {
+          correct_syllabary.insert(v.first);
+        }
+      } else {
+        correct_syllabary = syllabary;
+      }
+
+      CorrectionCollector collector(correct_syllabary);
+      auto correction_script = collector.Collect((size_t)correction_level);
+      correction_->Remove();
+      if (!correction_->Build(syllabary, &correction_script,
+                         dict_file_checksum, schema_file_checksum) ||
+          !correction_->Save()) {
+        return false;
+      }
+    }
   }
   if ((options_ & kDump) && !script.empty()) {
     boost::filesystem::path path(prism_->file_name());
@@ -239,12 +264,13 @@ bool DictCompiler::BuildPrism(const string &schema_file,
   // build .prism.bin
   {
     prism_->Remove();
-    if (!prism_->Build(syllabary, script.empty() ? NULL : &script,
+    if (!prism_->Build(syllabary, script.empty() ? nullptr : &script,
                        dict_file_checksum, schema_file_checksum) ||
         !prism_->Save()) {
       return false;
     }
   }
+
   return true;
 }
 

@@ -43,6 +43,7 @@ class DictCompiler {
 
   string dict_name_;
   an<Prism> prism_;
+  an<Prism> correction_;
   an<Table> table_;
   int options_ = 0;
   string prefix_;

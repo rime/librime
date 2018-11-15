@@ -283,6 +283,12 @@ class DoubleArrayImpl {
       std::size_t max_num_results, std::size_t length = 0,
       std::size_t node_pos = 0) const;
 
+  // Performs commonPrefixSearch() for every possible one-element-deleted `key`.
+  template <class U>
+  inline std::size_t commonPrefixDeletedSearch(const key_type *key, U *results,
+                                        std::size_t max_num_results, std::size_t length = 0,
+                                        std::size_t node_pos = 0) const;
+
   // In Darts-clone, a dictionary is a deterministic finite-state automaton
   // (DFA) and traverse() tests transitions on the DFA. The initial state is
   // `node_pos' and traverse() chooses transitions labeled key[key_pos],
@@ -439,6 +445,54 @@ inline U DoubleArrayImpl<A, B, T, C>::exactMatchSearch(const key_type *key,
 template <typename A, typename B, typename T, typename C>
 template <typename U>
 inline std::size_t DoubleArrayImpl<A, B, T, C>::commonPrefixSearch(
+    const key_type *key, U *results, std::size_t max_num_results,
+    std::size_t length, std::size_t node_pos) const {
+  std::size_t num_results = 0;
+
+  unit_type unit = array_[node_pos];
+  node_pos ^= unit.offset();
+  if (length != 0) {
+    for (std::size_t i = 0; i < length; ++i) {
+      node_pos ^= static_cast<uchar_type>(key[i]);
+      unit = array_[node_pos];
+      if (unit.label() != static_cast<uchar_type>(key[i])) {
+        return num_results;
+      }
+
+      node_pos ^= unit.offset();
+      if (unit.has_leaf()) {
+        if (num_results < max_num_results) {
+          set_result(&results[num_results], static_cast<value_type>(
+              array_[node_pos].value()), i + 1);
+        }
+        ++num_results;
+      }
+    }
+  } else {
+    for ( ; key[length] != '\0'; ++length) {
+      node_pos ^= static_cast<uchar_type>(key[length]);
+      unit = array_[node_pos];
+      if (unit.label() != static_cast<uchar_type>(key[length])) {
+        return num_results;
+      }
+
+      node_pos ^= unit.offset();
+      if (unit.has_leaf()) {
+        if (num_results < max_num_results) {
+          set_result(&results[num_results], static_cast<value_type>(
+              array_[node_pos].value()), length + 1);
+        }
+        ++num_results;
+      }
+    }
+  }
+
+  return num_results;
+}
+
+template <typename A, typename B, typename T, typename C>
+template <typename U>
+inline std::size_t DoubleArrayImpl<A, B, T, C>::commonPrefixDeletedSearch(
     const key_type *key, U *results, std::size_t max_num_results,
     std::size_t length, std::size_t node_pos) const {
   std::size_t num_results = 0;

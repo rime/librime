@@ -48,7 +48,8 @@ class Syllabifier {
 
   RIME_API int BuildSyllableGraph(const string &input,
                                   Prism &prism,
-                                  SyllableGraph *graph);
+                                  SyllableGraph *graph,
+                                  optional<Prism&> corretion);
 
  protected:
   void CheckOverlappedSpellings(SyllableGraph *graph,

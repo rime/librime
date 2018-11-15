@@ -58,7 +58,7 @@ else()
 endif()
 
 if(BUILD_SHARED_LIBS)
-  add_library(rime ${rime_src})
+  add_library(rime ${rime_src} rime/algo/corrector.h rime/algo/corrector.cc)
   target_link_libraries(rime ${rime_deps})
   set_target_properties(rime PROPERTIES DEFINE_SYMBOL "RIME_EXPORTS")
   set_target_properties(rime PROPERTIES VERSION ${rime_version} SOVERSION ${rime_soversion})

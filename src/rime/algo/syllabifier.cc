@@ -19,7 +19,8 @@ using VertexQueue = std::priority_queue<Vertex,
 
 int Syllabifier::BuildSyllableGraph(const string &input,
                                     Prism &prism,
-                                    SyllableGraph *graph) {
+                                    SyllableGraph *graph,
+                                    optional<Prism&> corretion) {
   if (input.empty())
     return 0;
 
