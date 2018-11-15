@@ -12,6 +12,7 @@ using namespace rime;
 void DFSCollect(const string &origin, const string &deleted, size_t ed, Script &result);
 
 Script CorrectionCollector::Collect(size_t edit_distance) {
+  // TODO: specifically for 1 length str
   Script script;
 
   for (auto &v : syllabary_) {

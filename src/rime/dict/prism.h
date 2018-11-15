@@ -87,11 +87,22 @@ class Prism : public MappedFile {
   uint32_t dict_file_checksum() const;
   uint32_t schema_file_checksum() const;
 
- private:
+ protected:
   the<Darts::DoubleArray> trie_;
+ private:
   prism::Metadata* metadata_ = nullptr;
   prism::SpellingMap* spelling_map_ = nullptr;
   double format_ = 0.0;
+};
+
+class CorrectionPrism : public Prism {
+ public:
+  using Correction = struct {
+    char deleted;
+    SyllableId syllableId;
+  };
+  using Corrections = vector<Correction>;
+  RIME_API optional<Corrections> SymDeletePrefixSearch(const string& key);
 };
 
 }  // namespace rime

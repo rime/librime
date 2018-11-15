@@ -10,6 +10,7 @@
 #include <queue>
 #include <rime/algo/algebra.h>
 #include <rime/dict/prism.h>
+#include "prism.h"
 
 namespace rime {
 
@@ -324,4 +325,39 @@ uint32_t Prism::schema_file_checksum() const {
   return metadata_ ? metadata_->schema_file_checksum : 0;
 }
 
+optional<CorrectionPrism::Corrections> CorrectionPrism::SymDeletePrefixSearch(const string& key) {
+  if (key.empty())
+    return boost::none;
+  size_t key_len = key.length();
+  size_t prepared_size = key_len * (key_len - 1);
+
+  Corrections result;
+  result.reserve(prepared_size);
+  vector<size_t> jump_pos(key_len);
+
+  // pass through origin key, cache trie nodes
+  size_t max_match = 0;
+  for (size_t traverse_node = 0; max_match < key_len;) {
+    jump_pos[max_match] = traverse_node;
+    auto res_val = trie_->traverse(key.c_str(), traverse_node, max_match, max_match + 1);
+    if (res_val == -2) break;
+    if (res_val >= 0) {
+      result.push_back({ -1, res_val.value });
+    }
+  }
+
+  // start at the next position of deleted char
+  for (size_t del_pos = 0; del_pos < max_match; del_pos++) {
+    size_t traverse_node = jump_pos[del_pos];
+    for (size_t key_point = del_pos + 1; key_point < key_len;) {
+      auto res_val = trie_->traverse(key.c_str(), traverse_node, key_point, key_point + 1);
+      if (res_val == -2) break;
+      if (res_val >= 0) {
+        result.push_back({ key[del_pos], res_val.value });
+      }
+    }
+  }
+
+  return result;
+}
 }  // namespace rime
