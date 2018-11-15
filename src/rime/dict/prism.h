@@ -71,7 +71,7 @@ class Prism : public MappedFile {
 
   RIME_API bool Load();
   RIME_API bool Save();
-  RIME_API virtual bool Build(const Syllabary& syllabary,
+  RIME_API bool Build(const Syllabary& syllabary,
                       const Script* script = NULL,
                       uint32_t dict_file_checksum = 0,
                       uint32_t schema_file_checksum = 0);
@@ -102,7 +102,7 @@ class CorrectionPrism : public Prism {
     SyllableId syllableId;
   };
   using Corrections = vector<Correction>;
-  RIME_API optional<Corrections> SymDeletePrefixSearch(const string& key);
+  optional<Corrections> SymDeletePrefixSearch(const string& key);
 };
 
 }  // namespace rime

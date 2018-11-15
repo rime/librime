@@ -24,8 +24,6 @@ class Script : public map<string, vector<Spelling>> {
              const SpellingProperties& sp,
              const vector<Spelling>& v);
   void Dump(const string& file_name) const;
-
-
 };
 
 class Projection {

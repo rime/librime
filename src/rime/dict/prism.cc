@@ -10,7 +10,6 @@
 #include <queue>
 #include <rime/algo/algebra.h>
 #include <rime/dict/prism.h>
-#include "prism.h"
 
 namespace rime {
 
