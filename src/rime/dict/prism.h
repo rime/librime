@@ -95,16 +95,6 @@ class Prism : public MappedFile {
   double format_ = 0.0;
 };
 
-class CorrectionPrism : public Prism {
- public:
-  using Correction = struct {
-    char deleted;
-    SyllableId syllableId;
-  };
-  using Corrections = vector<Correction>;
-  optional<Corrections> SymDeletePrefixSearch(const string& key);
-};
-
 }  // namespace rime
 
 #endif  // RIME_PRISM_H_

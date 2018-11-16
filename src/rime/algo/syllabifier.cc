@@ -9,6 +9,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <rime/dict/prism.h>
 #include <rime/algo/syllabifier.h>
+#include <rime/algo/corrector.h>
 
 namespace rime {
 
@@ -20,7 +21,7 @@ using VertexQueue = std::priority_queue<Vertex,
 int Syllabifier::BuildSyllableGraph(const string &input,
                                     Prism &prism,
                                     SyllableGraph *graph,
-                                    optional<Prism&> corretion) {
+                                    optional<Corrector&> corrector) {
   if (input.empty())
     return 0;
 
@@ -45,7 +46,14 @@ int Syllabifier::BuildSyllableGraph(const string &input,
 
     // see where we can go by advancing a syllable
     vector<Prism::Match> matches;
-    prism.CommonPrefixSearch(input.substr(current_pos), &matches);
+    auto current_input = input.substr(current_pos);
+    prism.CommonPrefixSearch(current_input, &matches);
+    if (corrector) {
+      auto corrections = corrector->SymDeletePrefixSearch(current_input);
+      if (corrections && !corrections->empty()) {
+
+      }
+    }
     if (!matches.empty()) {
       auto& end_vertices(graph->edges[current_pos]);
       for (const auto& m : matches) {

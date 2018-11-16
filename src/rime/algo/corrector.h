@@ -28,9 +28,14 @@ class CorrectionCollector {
 
 class Corrector : public Prism {
  public:
+  using Correction = struct {
+    uint16_t distance;
+    SyllableId syllableId;
+  };
+  using Corrections = vector<Correction>;
 
+  optional<Corrections> SymDeletePrefixSearch(const string& key);
 };
-
 
 } // namespace rime
 

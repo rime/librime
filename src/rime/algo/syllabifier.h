@@ -15,6 +15,7 @@
 namespace rime {
 
 class Prism;
+class Corrector;
 
 using SyllableId = int32_t;
 
@@ -49,7 +50,7 @@ class Syllabifier {
   RIME_API int BuildSyllableGraph(const string &input,
                                   Prism &prism,
                                   SyllableGraph *graph,
-                                  optional<Prism&> corretion);
+                                  optional<Corrector&> corrector = boost::none);
 
  protected:
   void CheckOverlappedSpellings(SyllableGraph *graph,
