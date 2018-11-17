@@ -18,7 +18,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include <boost/optional>
+#include <boost/optional.hpp>
 #define BOOST_BIND_NO_PLACEHOLDERS
 #ifdef BOOST_SIGNALS2
 #include <boost/signals2/connection.hpp>

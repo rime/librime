@@ -50,8 +50,20 @@ int Syllabifier::BuildSyllableGraph(const string &input,
     prism.CommonPrefixSearch(current_input, &matches);
     if (corrector) {
       auto corrections = corrector->SymDeletePrefixSearch(current_input);
-      for (auto &m : corrections) {
+      for (Prism::Match &m : corrections) {
+        SpellingAccessor accessor(corrector->QuerySpelling(m.value));
+        while (!accessor.exhausted()) {
+          auto origin = accessor.properties().tips;
+          auto key = current_input.substr(0, m.length);
+          if (corrector->RestrictedDistance(origin, key) > 2) // discard this terrible typo
+            continue;
 
+          SyllableId corrected;
+          if (prism.GetValue(origin, &corrected)) {
+            matches.push_back({ corrected, m.length });
+            // TODO: How to mark it as a correction??
+          }
+        }
       }
     }
     if (!matches.empty()) {

@@ -11,8 +11,6 @@
 using namespace rime;
 
 void DFSCollect(const string &origin, const string &current, size_t ed, Script &result);
-uint8_t LevenshteinDistance(const std::string &s1, const std::string &s2);
-uint8_t RestrictedDistance(const std::string& s1, const std::string& s2);
 
 Script CorrectionCollector::Collect(size_t edit_distance) {
   // TODO: specifically for 1 length str
@@ -48,11 +46,11 @@ vector<Prism::Match> Corrector::SymDeletePrefixSearch(const string& key) {
   result.reserve(prepared_size);
   vector<size_t> jump_pos(key_len);
 
-  auto match_next = [&](size_t &node, size_t &point, function<void(SyllableId)> success) -> bool {
+  auto match_next = [&](size_t &node, size_t &point) -> bool {
     auto res_val = trie_->traverse(key.c_str(), node, point, point + 1);
     if (res_val == -2) return false;
     if (res_val >= 0) {
-      success(res_val);
+      result.push_back({ res_val, point });
     }
     return true;
   };
@@ -61,18 +59,14 @@ vector<Prism::Match> Corrector::SymDeletePrefixSearch(const string& key) {
   size_t max_match = 0;
   for (size_t next_node = 0; max_match < key_len;) {
     jump_pos[max_match] = next_node;
-    if (!match_next(next_node, max_match, [&](SyllableId res) {
-      result.push_back({ 1, res });
-    })) break;
+    if (!match_next(next_node, max_match)) break;
   }
 
   // start at the next position of deleted char
   for (size_t del_pos = 0; del_pos < max_match; del_pos++) {
     size_t next_node = jump_pos[del_pos];
     for (size_t key_point = del_pos + 1; key_point < key_len;) {
-      if (!match_next(next_node, key_point, [&](SyllableId res) {
-        result.push_back({ res, key_point });
-      })) break;
+      if (!match_next(next_node, key_point)) break;
     }
   }
 
@@ -133,12 +127,12 @@ inline uint8_t SubstCost(char left, char right) {
   if (keyboard_map[left].find(right) != keyboard_map[left].end()) {
     return 1;
   }
-  return 2;
+  return 3;
 }
 
 // This nice O(min(m, n)) implementation is from
 // https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#C++
-uint8_t LevenshteinDistance(const std::string &s1, const std::string &s2) {
+uint8_t Corrector::LevenshteinDistance(const std::string &s1, const std::string &s2) {
   // To change the type this function manipulates and returns, change
   // the return type and the types of the two variables below.
   auto s1len = (size_t)s1.size();
@@ -170,7 +164,7 @@ uint8_t LevenshteinDistance(const std::string &s1, const std::string &s2) {
 }
 
 // L's distance with transposition allowed
-uint8_t RestrictedDistance(const std::string& s1, const std::string& s2)
+uint8_t Corrector::RestrictedDistance(const std::string& s1, const std::string& s2)
 {
   const auto len1 = s1.size(), len2 = s2.size();
   size_t d[len1 + 1][len2 + 1];

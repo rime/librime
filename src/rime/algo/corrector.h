@@ -28,7 +28,10 @@ class CorrectionCollector {
 
 class Corrector : public Prism {
  public:
+  using Distance = uint8_t;
   vector<Match> SymDeletePrefixSearch(const string& key);
+  static Distance LevenshteinDistance(const std::string &s1, const std::string &s2);
+  static Distance RestrictedDistance(const std::string& s1, const std::string& s2);
 };
 
 } // namespace rime
