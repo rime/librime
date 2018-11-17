@@ -50,7 +50,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
     prism.CommonPrefixSearch(current_input, &matches);
     if (corrector) {
       auto corrections = corrector->SymDeletePrefixSearch(current_input);
-      if (corrections && !corrections->empty()) {
+      for (auto &m : corrections) {
 
       }
     }

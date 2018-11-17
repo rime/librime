@@ -10,8 +10,9 @@
 
 using namespace rime;
 
-void DFSCollect(const string &origin, const string &deleted, size_t ed, Script &result);
-uint16_t LevenshteinDistance(const std::string &s1, const std::string &s2);
+void DFSCollect(const string &origin, const string &current, size_t ed, Script &result);
+uint8_t LevenshteinDistance(const std::string &s1, const std::string &s2);
+uint8_t RestrictedDistance(const std::string& s1, const std::string& s2);
 
 Script CorrectionCollector::Collect(size_t edit_distance) {
   // TODO: specifically for 1 length str
@@ -37,13 +38,13 @@ void DFSCollect(const string &origin, const string &current, size_t ed, Script &
   }
 }
 
-optional<Corrector::Corrections> Corrector::SymDeletePrefixSearch(const string& key) {
+vector<Prism::Match> Corrector::SymDeletePrefixSearch(const string& key) {
   if (key.empty())
-    return boost::none;
+    return {};
   size_t key_len = key.length();
   size_t prepared_size = key_len * (key_len - 1);
 
-  Corrections result;
+  vector<Match> result;
   result.reserve(prepared_size);
   vector<size_t> jump_pos(key_len);
 
@@ -70,11 +71,7 @@ optional<Corrector::Corrections> Corrector::SymDeletePrefixSearch(const string& 
     size_t next_node = jump_pos[del_pos];
     for (size_t key_point = del_pos + 1; key_point < key_len;) {
       if (!match_next(next_node, key_point, [&](SyllableId res) {
-        auto distance = LevenshteinDistance(
-            key.substr(0, key_point),
-            key.substr(0, del_pos) + key.substr(del_pos + 1, key_point - del_pos - 1)
-          );
-        result.push_back({ distance, res });
+        result.push_back({ res, key_point });
       })) break;
     }
   }
@@ -82,13 +79,70 @@ optional<Corrector::Corrections> Corrector::SymDeletePrefixSearch(const string& 
   return result;
 }
 
+
+inline uint8_t SubstCost(char left, char right) {
+  static hash_map<char, hash_set<char>> keyboard_map = {
+      {'1', {'2', 'q', 'w'}},
+      {'2', {'1', '3', 'q', 'w', 'e'}},
+      {'3', {'2', '4', 'w', 'e', 'r'}},
+      {'4', {'3', '5', 'e', 'r', 't'}},
+      {'5', {'4', '6', 'r', 't', 'y'}},
+      {'6', {'5', '7', 't', 'y', 'u'}},
+      {'7', {'6', '8', 'y', 'u', 'i'}},
+      {'8', {'7', '9', 'u', 'i', 'o'}},
+      {'9', {'8', '0', 'i', 'o', 'p'}},
+      {'0', {'9', '-', 'o', 'p', '['}},
+      {'-', {'0', '=', 'p', '[', ']'}},
+      {'=', {'-', '[', ']', '\\'}},
+      {'q', {'1', '2', 'w', 'a', 's'}},
+      {'w', {'1', '2', '3', 'q', 'e', 'a', 's', 'd'}},
+      {'e', {'2', '3', '4', 'w', 'r', 's', 'd', 'f'}},
+      {'r', {'3', '4', '5', 'e', 't', 'd', 'f', 'g'}},
+      {'t', {'4', '5', '6', 'r', 'y', 'f', 'g', 'h'}},
+      {'y', {'5', '6', '7', 't', 'u', 'g', 'h', 'j'}},
+      {'u', {'6', '7', '8', 'y', 'i', 'h', 'j', 'k'}},
+      {'i', {'7', '8', '9', 'u', 'o', 'j', 'k', 'l'}},
+      {'o', {'8', '9', '0', 'i', 'p', 'k', 'l', ';'}},
+      {'p', {'9', '0', '-', 'o', '[', 'l', ';', '\''}},
+      {'[', {'0', '-', '=', 'p', ']', ';', '\''}},
+      {']', {'-', '=', '[', '\\', '\''}},
+      {'\\', {'=', ']'}},
+      {'a', {'q', 'w', 's', 'z'}},
+      {'s', {'q', 'w', 'e', 'a', 'd', 'z', 'x'}},
+      {'d', {'w', 'e', 'r', 's', 'f', 'z', 'x', 'c'}},
+      {'f', {'e', 'r', 't', 'd', 'g', 'x', 'c', 'v'}},
+      {'g', {'r', 't', 'y', 'f', 'h', 'c', 'v', 'b'}},
+      {'h', {'t', 'y', 'u', 'g', 'j', 'v', 'b', 'n'}},
+      {'j', {'y', 'u', 'i', 'h', 'k', 'b', 'n', 'm'}},
+      {'k', {'u', 'i', 'o', 'j', 'l', 'n', 'm', ','}},
+      {'l', {'i', 'o', 'p', 'k', ';', 'm', ',', '.'}},
+      {';', {'o', 'p', '[', 'l', '\'', ',', '.', '/'}},
+      {'\'', {'p', '[', ']', ';', '.', '/'}},
+      {'z', {'a', 's', 'd', 'x'}},
+      {'x', {'s', 'd', 'f', 'z', 'c'}},
+      {'c', {'d', 'f', 'g', 'x', 'v'}},
+      {'v', {'f', 'g', 'h', 'c', 'b'}},
+      {'b', {'g', 'h', 'j', 'v', 'n'}},
+      {'n', {'h', 'j', 'k', 'b', 'm'}},
+      {'m', {'j', 'k', 'l', 'n', ','}},
+      {',', {'k', 'l', ';', 'm', '.'}},
+      {'.', {'l', ';', '\'', ',', '/'}},
+      {'/', {';', '\'', '.'}}
+  };
+  if (left == right) return 0;
+  if (keyboard_map[left].find(right) != keyboard_map[left].end()) {
+    return 1;
+  }
+  return 2;
+}
+
 // This nice O(min(m, n)) implementation is from
 // https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#C++
-uint16_t LevenshteinDistance(const std::string &s1, const std::string &s2) {
+uint8_t LevenshteinDistance(const std::string &s1, const std::string &s2) {
   // To change the type this function manipulates and returns, change
   // the return type and the types of the two variables below.
-  auto s1len = (uint16_t)s1.size();
-  auto s2len = (uint16_t)s2.size();
+  auto s1len = (size_t)s1.size();
+  auto s2len = (size_t)s2.size();
 
   auto column_start = (decltype(s1len))1;
 
@@ -103,8 +157,9 @@ uint16_t LevenshteinDistance(const std::string &s1, const std::string &s2) {
       auto possibilities = {
           column[y] + 1,
           column[y - 1] + 1,
-          last_diagonal + (s1[y - 1] == s2[x - 1]? 0 : 1)
+          last_diagonal + SubstCost(s1[y - 1], s2[x - 1])
       };
+
       column[y] = std::min(possibilities);
       last_diagonal = old_diagonal;
     }
@@ -113,3 +168,28 @@ uint16_t LevenshteinDistance(const std::string &s1, const std::string &s2) {
   delete[] column;
   return result;
 }
+
+// L's distance with transposition allowed
+uint8_t RestrictedDistance(const std::string& s1, const std::string& s2)
+{
+  const auto len1 = s1.size(), len2 = s2.size();
+  size_t d[len1 + 1][len2 + 1];
+
+  d[0][0] = 0;
+  for(size_t i = 1; i <= len1; ++i) d[i][0] = i;
+  for(size_t i = 1; i <= len2; ++i) d[0][i] = i;
+
+  for(size_t i = 1; i <= len1; ++i)
+    for(size_t j = 1; j <= len2; ++j) {
+      d[i][j] = std::min({
+                              d[i - 1][j] + 1,
+                              d[i][j - 1] + 1,
+                              d[i - 1][j - 1] + SubstCost(s1[i - 1], s2[j - 1])
+                          });
+      if (i > 1 && j > 1 && s1[i - 2] == s2[j - 1] && s1[i - 1] == s2[j - 2]) {
+        d[i][j] = std::min(d[i][j], d[i - 2][j - 2] + 1);
+      }
+    }
+  return (uint8_t)d[len1][len2];
+}
+
