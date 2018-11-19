@@ -132,6 +132,10 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
     config->GetInt(name_space_ + "/spelling_hints", &spelling_hints_);
     config->GetBool(name_space_ + "/always_show_comments",
                     &always_show_comments_);
+    if (config->GetBool("speller/enable_correction", &enable_correction_) &&
+        enable_correction_) {
+
+    }
   }
 }
 

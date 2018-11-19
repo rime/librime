@@ -233,23 +233,17 @@ bool DictCompiler::BuildPrism(const string &schema_file,
     }
 
     // build corrector
-    int correction_level = 0;
-    if (config.GetInt("speller/correction_level", &correction_level) &&
-        correction_level > 0) {
-
-      Syllabary correct_syllabary;
-      if (!script.empty()) {
-        for (auto &v : script) {
-          correct_syllabary.insert(v.first);
-        }
-      } else {
-        correct_syllabary = syllabary;
+    if (bool enable_correction;
+        config.GetBool("speller/enable_correction", &enable_correction) &&
+        enable_correction) {
+      boost::filesystem::path corrector_path(prism_->file_name());
+      corrector_path.replace_extension("");
+      corrector_path.replace_extension(".correction.bin");
+      correction_ = New<Corrector>(RelocateToUserDirectory(prefix_, corrector_path.string()));
+      if (correction_->Exists()) {
+        correction_->Remove();
       }
-
-      CorrectionCollector collector(correct_syllabary);
-      auto correction_script = collector.Collect((size_t)correction_level);
-      correction_->Remove();
-      if (!correction_->Build(syllabary, &correction_script,
+      if (!correction_->Build(syllabary, &script,
                          dict_file_checksum, schema_file_checksum) ||
           !correction_->Save()) {
         return false;

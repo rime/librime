@@ -21,6 +21,7 @@ struct DictEntry;
 struct DictEntryCollector;
 class Dictionary;
 class UserDictionary;
+class Corrector;
 struct SyllableGraph;
 
 class ScriptTranslator : public Translator,
@@ -43,6 +44,7 @@ class ScriptTranslator : public Translator,
  protected:
   int spelling_hints_ = 0;
   bool always_show_comments_ = false;
+  an<Corrector> corrector_ = nullptr;
 };
 
 }  // namespace rime

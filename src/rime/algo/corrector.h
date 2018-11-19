@@ -16,6 +16,8 @@
 
 namespace rime {
 
+class Ticket;
+
 class CorrectionCollector {
  public:
   explicit CorrectionCollector(const Syllabary& syllabary): syllabary_(syllabary) {}
@@ -28,10 +30,23 @@ class CorrectionCollector {
 
 class Corrector : public Prism {
  public:
+//  explicit Corrector(Ticket &ticket);
   using Distance = uint8_t;
+
+  RIME_API bool Build(const Syllabary& syllabary,
+                      const Script* script,
+                      uint32_t dict_file_checksum,
+                      uint32_t schema_file_checksum) override;
+
   vector<Match> SymDeletePrefixSearch(const string& key);
   static Distance LevenshteinDistance(const std::string &s1, const std::string &s2);
   static Distance RestrictedDistance(const std::string& s1, const std::string& s2);
+
+  static Corrector *Create(Ticket &ticket);
+
+ private:
+  static map<string, weak<Corrector>> corrector_map_;
+
 };
 
 } // namespace rime

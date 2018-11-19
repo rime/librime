@@ -122,7 +122,18 @@ bool Prism::Save() {
   }
   return ShrinkToFit();
 }
-
+bool Prism::Build(const Syllabary& syllabary) {
+  return Build(syllabary, nullptr, 0, 0);
+}
+bool Prism::Build(const Syllabary& syllabary,
+                  const Script* script) {
+  return Build(syllabary, script, 0, 0);
+}
+bool Prism::Build(const Syllabary& syllabary,
+                  const Script* script,
+                  uint32_t dict_file_checksum) {
+  return Build(syllabary, script, dict_file_checksum, 0);
+}
 bool Prism::Build(const Syllabary& syllabary,
                   const Script* script,
                   uint32_t dict_file_checksum,

@@ -21,7 +21,7 @@ using VertexQueue = std::priority_queue<Vertex,
 int Syllabifier::BuildSyllableGraph(const string &input,
                                     Prism &prism,
                                     SyllableGraph *graph,
-                                    optional<Corrector&> corrector) {
+                                    Corrector *corrector) {
   if (input.empty())
     return 0;
 
@@ -50,7 +50,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
     prism.CommonPrefixSearch(current_input, &matches);
     if (corrector) {
       auto corrections = corrector->SymDeletePrefixSearch(current_input);
-      for (Prism::Match &m : corrections) {
+      for (const auto &m : corrections) {
         SpellingAccessor accessor(corrector->QuerySpelling(m.value));
         while (!accessor.exhausted()) {
           auto origin = accessor.properties().tips;

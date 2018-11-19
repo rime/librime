@@ -186,4 +186,22 @@ uint8_t Corrector::RestrictedDistance(const std::string& s1, const std::string& 
     }
   return (uint8_t)d[len1][len2];
 }
+bool Corrector::Build(const Syllabary &syllabary,
+                      const Script *script,
+                      uint32_t dict_file_checksum,
+                      uint32_t schema_file_checksum) {
+  Syllabary correct_syllabary;
+  if (script && !script->empty()) {
+    for (auto &v : *script) {
+      correct_syllabary.insert(v.first);
+    }
+  } else {
+    correct_syllabary = syllabary;
+  }
+
+  CorrectionCollector collector(correct_syllabary);
+  auto correction_script = collector.Collect((size_t)1);
+
+  return Prism::Build(syllabary, &correction_script, dict_file_checksum, schema_file_checksum);
+}
 

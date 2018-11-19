@@ -50,7 +50,7 @@ class Syllabifier {
   RIME_API int BuildSyllableGraph(const string &input,
                                   Prism &prism,
                                   SyllableGraph *graph,
-                                  optional<Corrector&> corrector = boost::none);
+                                  Corrector *corrector = nullptr);
 
  protected:
   void CheckOverlappedSpellings(SyllableGraph *graph,

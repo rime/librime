@@ -71,10 +71,13 @@ class Prism : public MappedFile {
 
   RIME_API bool Load();
   RIME_API bool Save();
-  RIME_API bool Build(const Syllabary& syllabary,
-                      const Script* script = NULL,
-                      uint32_t dict_file_checksum = 0,
-                      uint32_t schema_file_checksum = 0);
+  RIME_API bool Build(const Syllabary& syllabary);
+  RIME_API bool Build(const Syllabary& syllabary, const Script* script);
+  RIME_API bool Build(const Syllabary& syllabary, const Script* script, uint32_t dict_file_checksum);
+  RIME_API virtual bool Build(const Syllabary& syllabary,
+                      const Script* script,
+                      uint32_t dict_file_checksum,
+                      uint32_t schema_file_checksum);
 
   RIME_API bool HasKey(const string& key);
   RIME_API bool GetValue(const string& key, int* value);
