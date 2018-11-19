@@ -55,7 +55,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
         while (!accessor.exhausted()) {
           auto origin = accessor.properties().tips;
           auto key = current_input.substr(0, m.length);
-          if (corrector->RestrictedDistance(origin, key) > 2) // discard this terrible typo
+          if (Corrector::RestrictedDistance(origin, key) > 2) // discard this terrible typo
             continue;
 
           SyllableId corrected;

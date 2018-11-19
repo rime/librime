@@ -41,12 +41,6 @@ class Corrector : public Prism {
   vector<Match> SymDeletePrefixSearch(const string& key);
   static Distance LevenshteinDistance(const std::string &s1, const std::string &s2);
   static Distance RestrictedDistance(const std::string& s1, const std::string& s2);
-
-  static Corrector *Create(Ticket &ticket);
-
- private:
-  static map<string, weak<Corrector>> corrector_map_;
-
 };
 
 } // namespace rime

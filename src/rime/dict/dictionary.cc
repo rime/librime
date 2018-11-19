@@ -13,6 +13,7 @@
 #include <rime/ticket.h>
 #include <rime/dict/dictionary.h>
 #include <rime/algo/syllabifier.h>
+#include <rime/algo/corrector.h>
 
 namespace rime {
 
@@ -147,9 +148,10 @@ bool DictEntryIterator::Skip(size_t num_entries) {
 // Dictionary members
 
 Dictionary::Dictionary(const string& name,
-                       const an<Table>& table,
-                       const an<Prism>& prism)
-    : name_(name), table_(table), prism_(prism) {
+                       an<Table> table,
+                       an<Prism> prism,
+                       an<Corrector> corrector)
+    : name_(name), table_(std::move(table)), prism_(std::move(prism)), corrector_(std::move(corrector)) {
 }
 
 Dictionary::~Dictionary() {
@@ -271,6 +273,12 @@ bool Dictionary::Load() {
     LOG(ERROR) << "Error loading prism for dictionary '" << name_ << "'.";
     return false;
   }
+  if (corrector_) {
+    if (!corrector_->IsOpen() && !corrector_->Load()) {
+      LOG(ERROR) << "Error loading corrector for dictionary '" << name_ << "'.";
+      return false;
+    }
+  }
   return true;
 }
 
@@ -288,38 +296,47 @@ static const ResourceType kTableResourceType = {
   "table", "build/", ".table.bin"
 };
 
+static const ResourceType kCorrectorResourceType = {
+    "correction", "build/", ".correction.bin"
+};
+
 DictionaryComponent::DictionaryComponent()
     : prism_resource_resolver_(
           Service::instance().CreateResourceResolver(kPrismResourceType)),
       table_resource_resolver_(
-          Service::instance().CreateResourceResolver(kTableResourceType)) {
+          Service::instance().CreateResourceResolver(kTableResourceType)),
+      corrector_resource_resolver_(
+          Service::instance().CreateResourceResolver(kCorrectorResourceType)) {
 }
 
 DictionaryComponent::~DictionaryComponent() {
 }
 
 Dictionary* DictionaryComponent::Create(const Ticket& ticket) {
-  if (!ticket.schema) return NULL;
+  if (!ticket.schema) return nullptr;
   Config* config = ticket.schema->config();
   string dict_name;
   if (!config->GetString(ticket.name_space + "/dictionary", &dict_name)) {
     LOG(ERROR) << ticket.name_space << "/dictionary not specified in schema '"
                << ticket.schema->schema_id() << "'.";
-    return NULL;
+    return nullptr;
   }
   if (dict_name.empty()) {
-    return NULL;  // not requiring static dictionary
+    return nullptr;  // not requiring static dictionary
   }
   string prism_name;
   if (!config->GetString(ticket.name_space + "/prism", &prism_name)) {
     prism_name = dict_name;
   }
-  return CreateDictionaryWithName(dict_name, prism_name);
+  bool correction_enabled = false;
+  config->GetBool("speller/enable_correction", &correction_enabled);
+  return CreateDictionaryWithName(dict_name, prism_name, correction_enabled);
 }
 
 Dictionary*
 DictionaryComponent::CreateDictionaryWithName(const string& dict_name,
-                                              const string& prism_name) {
+                                              const string& prism_name,
+                                              bool correction_enabled) {
   // obtain prism and table objects
   auto table = table_map_[dict_name].lock();
   if (!table) {
@@ -331,7 +348,13 @@ DictionaryComponent::CreateDictionaryWithName(const string& dict_name,
     auto file_path = prism_resource_resolver_->ResolvePath(prism_name).string();
     prism_map_[prism_name] = prism = New<Prism>(file_path);
   }
-  return new Dictionary(dict_name, table, prism);
+  an<Corrector> corrector = nullptr;
+  if (correction_enabled) {
+    corrector = corrector_map_[prism_name].lock();
+    auto file_path = corrector_resource_resolver_->ResolvePath(prism_name).string();
+    corrector_map_[prism_name] = corrector = New<Corrector>(file_path);
+  }
+  return new Dictionary(dict_name, table, prism, corrector);
 }
 
 }  // namespace rime

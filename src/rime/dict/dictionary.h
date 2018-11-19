@@ -70,14 +70,16 @@ struct DictEntryCollector : map<size_t, DictEntryIterator> {
 
 class Config;
 class Schema;
+class Corrector;
 struct SyllableGraph;
 struct Ticket;
 
 class Dictionary : public Class<Dictionary, const Ticket&> {
  public:
   RIME_API Dictionary(const string& name,
-                      const an<Table>& table,
-                      const an<Prism>& prism);
+                      an<Table> table,
+                      an<Prism> prism,
+                      an<Corrector> corrector = nullptr);
   virtual ~Dictionary();
 
   bool Exists() const;
@@ -101,11 +103,13 @@ class Dictionary : public Class<Dictionary, const Ticket&> {
 
   an<Table> table() { return table_; }
   an<Prism> prism() { return prism_; }
+  an<Corrector> corrector() { return corrector_; }
 
  private:
   string name_;
   an<Table> table_;
   an<Prism> prism_;
+  an<Corrector> corrector_ = nullptr;
 };
 
 class ResourceResolver;
@@ -113,16 +117,19 @@ class ResourceResolver;
 class DictionaryComponent : public Dictionary::Component {
  public:
   DictionaryComponent();
-  ~DictionaryComponent();
-  Dictionary* Create(const Ticket& ticket);
+  ~DictionaryComponent() override;
+  Dictionary* Create(const Ticket& ticket) override;
   Dictionary* CreateDictionaryWithName(const string& dict_name,
-                                       const string& prism_name);
+                                       const string& prism_name,
+                                       bool correction_enabled = false);
 
  private:
   map<string, weak<Prism>> prism_map_;
   map<string, weak<Table>> table_map_;
+  map<string, weak<Corrector>> corrector_map_;
   the<ResourceResolver> prism_resource_resolver_;
   the<ResourceResolver> table_resource_resolver_;
+  the<ResourceResolver> corrector_resource_resolver_;
 };
 
 }  // namespace rime
