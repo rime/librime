@@ -76,7 +76,7 @@ class ScriptSyllabifier : public PhraseSyllabifier {
   }
 
   virtual Spans Syllabify(const Phrase* phrase);
-  size_t BuildSyllableGraph(Prism& prism);
+  size_t BuildSyllableGraph(Prism& prism, Corrector *corrector =nullptr);
   string GetPreeditString(const Phrase& cand) const;
   string GetOriginalSpelling(const Phrase& cand) const;
 
@@ -132,10 +132,7 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
     config->GetInt(name_space_ + "/spelling_hints", &spelling_hints_);
     config->GetBool(name_space_ + "/always_show_comments",
                     &always_show_comments_);
-    if (config->GetBool("speller/enable_correction", &enable_correction_) &&
-        enable_correction_) {
-
-    }
+    config->GetBool("speller/enable_correction", &enable_correction_);
   }
 }
 
@@ -225,13 +222,15 @@ Spans ScriptSyllabifier::Syllabify(const Phrase* phrase) {
   return result;
 }
 
-size_t ScriptSyllabifier::BuildSyllableGraph(Prism& prism) {
+size_t ScriptSyllabifier::BuildSyllableGraph(Prism& prism, Corrector *corrector) {
   Syllabifier syllabifier(translator_->delimiters(),
                           translator_->enable_completion(),
                           translator_->strict_spelling());
-  size_t consumed = syllabifier.BuildSyllableGraph(input_,
+  auto consumed = (size_t)syllabifier.BuildSyllableGraph(input_,
                                                    prism,
-                                                   &syllable_graph_);
+                                                   &syllable_graph_,
+                                                   corrector);
+
   return consumed;
 }
 
@@ -277,7 +276,7 @@ string ScriptSyllabifier::GetOriginalSpelling(const Phrase& cand) const {
 // ScriptTranslation implementation
 
 bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
-  size_t consumed = syllabifier_->BuildSyllableGraph(*dict->prism());
+  size_t consumed = syllabifier_->BuildSyllableGraph(*dict->prism(), dict->corrector().get());
   const auto& syllable_graph = syllabifier_->syllable_graph();
 
   phrase_ = dict->Lookup(syllable_graph, 0);

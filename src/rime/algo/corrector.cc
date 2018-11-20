@@ -6,6 +6,7 @@
 //
 
 #include <numeric>
+#include <algorithm>
 #include "corrector.h"
 
 using namespace rime;
@@ -166,7 +167,7 @@ uint8_t Corrector::LevenshteinDistance(const std::string &s1, const std::string 
 // L's distance with transposition allowed
 uint8_t Corrector::RestrictedDistance(const std::string& s1, const std::string& s2)
 {
-  const auto len1 = s1.size(), len2 = s2.size();
+  auto len1 = s1.size(), len2 = s2.size();
   size_t d[len1 + 1][len2 + 1];
 
   d[0][0] = 0;

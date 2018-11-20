@@ -233,8 +233,8 @@ bool DictCompiler::BuildPrism(const string &schema_file,
     }
 
     // build corrector
-    if (bool enable_correction;
-        config.GetBool("speller/enable_correction", &enable_correction) &&
+    bool enable_correction = false; // Avoid if initializer to comfort compilers
+    if (config.GetBool("speller/enable_correction", &enable_correction) &&
         enable_correction) {
       boost::filesystem::path corrector_path(prism_->file_name());
       corrector_path.replace_extension("");
