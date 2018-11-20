@@ -30,8 +30,9 @@ class CorrectionCollector {
 
 class Corrector : public Prism {
  public:
-//  explicit Corrector(Ticket &ticket);
   using Distance = uint8_t;
+
+  RIME_API explicit Corrector(const string& file_name) : Prism(file_name) {}
 
   RIME_API bool Build(const Syllabary& syllabary,
                       const Script* script,
