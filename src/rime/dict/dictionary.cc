@@ -273,10 +273,11 @@ bool Dictionary::Load() {
     LOG(ERROR) << "Error loading prism for dictionary '" << name_ << "'.";
     return false;
   }
-  if (corrector_) {
+  if (corrector_ && corrector_->Exists()) {
     if (!corrector_->IsOpen() && !corrector_->Load()) {
-      LOG(ERROR) << "Error loading corrector for dictionary '" << name_ << "'.";
-      return false;
+//      LOG(ERROR) << "Error loading corrector for dictionary '" << name_ << "'.";
+//      return false;
+      // Only load existed file
     }
   }
   return true;

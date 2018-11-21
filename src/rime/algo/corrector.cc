@@ -168,24 +168,29 @@ uint8_t Corrector::LevenshteinDistance(const std::string &s1, const std::string 
 uint8_t Corrector::RestrictedDistance(const std::string& s1, const std::string& s2)
 {
   auto len1 = s1.size(), len2 = s2.size();
-  size_t d[len1 + 1][len2 + 1];
+  vector<size_t> d((len1 + 1) * (len2 + 1));
+//  size_t d[len1 + 1][len2 + 1];
 
-  d[0][0] = 0;
-  for(size_t i = 1; i <= len1; ++i) d[i][0] = i;
-  for(size_t i = 1; i <= len2; ++i) d[0][i] = i;
+  auto index = [len1, len2](size_t i, size_t j) {
+    return i * (len2 + 1) + j;
+  };
+
+  d[0] = 0;
+  for(size_t i = 1; i <= len1; ++i) d[index(i, 0)] = i;
+  for(size_t i = 1; i <= len2; ++i) d[index(0, i)] = i;
 
   for(size_t i = 1; i <= len1; ++i)
     for(size_t j = 1; j <= len2; ++j) {
-      d[i][j] = std::min({
-                              d[i - 1][j] + 1,
-                              d[i][j - 1] + 1,
-                              d[i - 1][j - 1] + SubstCost(s1[i - 1], s2[j - 1])
+      d[index(i, j)] = std::min({
+                              d[index(i - 1, j)] + 1,
+                              d[index(i, j - 1)] + 1,
+                              d[index(i - 1, j - 1)] + SubstCost(s1[i - 1], s2[j - 1])
                           });
       if (i > 1 && j > 1 && s1[i - 2] == s2[j - 1] && s1[i - 1] == s2[j - 2]) {
-        d[i][j] = std::min(d[i][j], d[i - 2][j - 2] + 1);
+        d[index(i, j)] = std::min(d[index(i, j)], d[index(i - 2, j - 2)] + 1);
       }
     }
-  return (uint8_t)d[len1][len2];
+  return (uint8_t)d[index(len1, len2)];
 }
 bool Corrector::Build(const Syllabary &syllabary,
                       const Script *script,

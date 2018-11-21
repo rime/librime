@@ -16,8 +16,6 @@
 
 namespace rime {
 
-class Ticket;
-
 class CorrectionCollector {
  public:
   explicit CorrectionCollector(const Syllabary& syllabary): syllabary_(syllabary) {}
