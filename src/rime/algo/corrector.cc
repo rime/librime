@@ -64,7 +64,7 @@ vector<Prism::Match> Corrector::SymDeletePrefixSearch(const string& key) {
   }
 
   // start at the next position of deleted char
-  for (size_t del_pos = 0; del_pos < max_match; del_pos++) {
+  for (size_t del_pos = 0; del_pos <= max_match; del_pos++) {
     size_t next_node = jump_pos[del_pos];
     for (size_t key_point = del_pos + 1; key_point < key_len;) {
       if (!match_next(next_node, key_point)) break;
@@ -128,7 +128,7 @@ inline uint8_t SubstCost(char left, char right) {
   if (keyboard_map[left].find(right) != keyboard_map[left].end()) {
     return 1;
   }
-  return 3;
+  return 4;
 }
 
 // This nice O(min(m, n)) implementation is from
@@ -176,18 +176,18 @@ uint8_t Corrector::RestrictedDistance(const std::string& s1, const std::string& 
   };
 
   d[0] = 0;
-  for(size_t i = 1; i <= len1; ++i) d[index(i, 0)] = i;
-  for(size_t i = 1; i <= len2; ++i) d[index(0, i)] = i;
+  for(size_t i = 1; i <= len1; ++i) d[index(i, 0)] = i * 2;
+  for(size_t i = 1; i <= len2; ++i) d[index(0, i)] = i * 2;
 
   for(size_t i = 1; i <= len1; ++i)
     for(size_t j = 1; j <= len2; ++j) {
       d[index(i, j)] = std::min({
-                              d[index(i - 1, j)] + 1,
-                              d[index(i, j - 1)] + 1,
+                              d[index(i - 1, j)] + 2,
+                              d[index(i, j - 1)] + 2,
                               d[index(i - 1, j - 1)] + SubstCost(s1[i - 1], s2[j - 1])
                           });
       if (i > 1 && j > 1 && s1[i - 2] == s2[j - 1] && s1[i - 1] == s2[j - 2]) {
-        d[index(i, j)] = std::min(d[index(i, j)], d[index(i - 2, j - 2)] + 1);
+        d[index(i, j)] = std::min(d[index(i, j)], d[index(i - 2, j - 2)] + 2);
       }
     }
   return (uint8_t)d[index(len1, len2)];

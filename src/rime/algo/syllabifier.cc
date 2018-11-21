@@ -46,8 +46,12 @@ int Syllabifier::BuildSyllableGraph(const string &input,
 
     // see where we can go by advancing a syllable
     vector<Prism::Match> matches;
+    set<SyllableId> matches_set;
     auto current_input = input.substr(current_pos);
     prism.CommonPrefixSearch(current_input, &matches);
+    for (auto &m : matches) {
+      matches_set.insert(m.value);
+    }
     if (corrector) {
       auto corrections = corrector->SymDeletePrefixSearch(current_input);
       for (const auto &m : corrections) {
@@ -55,14 +59,17 @@ int Syllabifier::BuildSyllableGraph(const string &input,
         while (!accessor.exhausted()) {
           auto origin = accessor.properties().tips;
           auto key = current_input.substr(0, m.length);
-          if (Corrector::RestrictedDistance(origin, key) > 2) // discard this terrible typo
+          if (Corrector::RestrictedDistance(origin, key) > 3) {// discard this terrible typo
+            accessor.Next();
             continue;
+          }
 
           SyllableId corrected;
           if (prism.GetValue(origin, &corrected)) {
             matches.push_back({ corrected, m.length });
             // TODO: How to mark it as a correction??
           }
+          accessor.Next();
         }
       }
     }
@@ -95,6 +102,9 @@ int Syllabifier::BuildSyllableGraph(const string &input,
             props.end_pos = end_pos;
             // add a syllable with properties to the edge's
             // spelling-to-syllable map
+            if (matches_set.find(syllable_id) == matches_set.end()) {
+              props.type = kCorrection;
+            }
             spellings.insert({syllable_id, props});
             // let end_vertex_type be the best (smaller) type of spelling
             // that ends at the vertex
