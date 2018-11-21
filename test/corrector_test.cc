@@ -10,7 +10,34 @@
 #include <rime/dict/prism.h>
 #include <rime/algo/syllabifier.h>
 #include <rime/algo/corrector.h>
-#include <iostream>
+#include <memory>
+
+ class RimeCorrectorSearchTest : public ::testing::Test {
+ public:
+  void SetUp() override {
+    rime::vector<rime::string> syllables;
+    syllables.emplace_back("chang");  // 0
+    syllables.emplace_back("tuan");   // 1
+    std::sort(syllables.begin(), syllables.end());
+    for (size_t i = 0; i < syllables.size(); ++i) {
+      syllable_id_[syllables[i]] = i;
+    }
+
+    prism_.reset(new rime::Prism("corrector_simple_test.prism.bin"));
+    corrector_.reset(new rime::Corrector("corrector_simple_test.corrector.bin"));
+    rime::set<rime::string> keyset;
+    std::copy(syllables.begin(), syllables.end(),
+              std::inserter(keyset, keyset.begin()));
+    prism_->Build(keyset);
+    corrector_->Build(keyset, nullptr, 0, 0);
+
+  }
+  void TearDown() override {}
+  protected:
+   rime::map<rime::string, rime::SyllableId> syllable_id_;
+   rime::the<rime::Prism> prism_;
+   rime::the<rime::Corrector> corrector_;
+};
 
 class RimeCorrectorTest : public ::testing::Test {
  public:
@@ -32,8 +59,8 @@ class RimeCorrectorTest : public ::testing::Test {
       syllable_id_[syllables[i]] = i;
     }
 
-    prism_ = std::make_unique<rime::Prism>("corrector_test.prism.bin");
-    corrector_ = std::make_unique<rime::Corrector>("corrector_test.corrector.bin");
+    prism_.reset(new rime::Prism("corrector_test.prism.bin"));
+    corrector_.reset(new rime::Corrector("corrector_test.corrector.bin"));
     rime::set<rime::string> keyset;
     std::copy(syllables.begin(), syllables.end(),
               std::inserter(keyset, keyset.begin()));
@@ -50,20 +77,62 @@ class RimeCorrectorTest : public ::testing::Test {
   rime::the<rime::Corrector> corrector_;
 };
 
-TEST_F(RimeCorrectorTest, CaseChun) {
+TEST_F(RimeCorrectorSearchTest, CaseNearSubstitute) {
   rime::Syllabifier s;
   rime::SyllableGraph g;
-  const rime::string input("chun");
+  const rime::string input("chsng");
   s.BuildSyllableGraph(input, *prism_, &g, corrector_.get());
-  std::cout << g.input_length << std::endl;
   EXPECT_EQ(input.length(), g.input_length);
   EXPECT_EQ(input.length(), g.interpreted_length);
   EXPECT_EQ(2, g.vertices.size());
-  ASSERT_FALSE(g.vertices.end() == g.vertices.find(1));
-  EXPECT_EQ(rime::kNormalSpelling, g.vertices[1]);
-  rime::SpellingMap& sp(g.edges[0][1]);
+  ASSERT_FALSE(g.vertices.end() == g.vertices.find(5));
+  EXPECT_EQ(rime::kCorrection, g.vertices[5]);
+  rime::SpellingMap& sp(g.edges[0][5]);
   EXPECT_EQ(1, sp.size());
-  ASSERT_FALSE(sp.end() == sp.find(syllable_id_["chan"]));
-  EXPECT_EQ(rime::kNormalSpelling, sp[0].type);
-  EXPECT_EQ(1.0, sp[0].credibility);
+  ASSERT_FALSE(sp.end() == sp.find(syllable_id_["chang"]));
+  EXPECT_EQ(rime::kCorrection, sp[0].type);
+}
+TEST_F(RimeCorrectorSearchTest, CaseFarSubstitute) {
+  rime::Syllabifier s;
+  rime::SyllableGraph g;
+  const rime::string input("chpng");
+  s.BuildSyllableGraph(input, *prism_, &g, corrector_.get());
+  EXPECT_EQ(input.length(), g.input_length);
+  EXPECT_EQ(0, g.interpreted_length);
+  EXPECT_EQ(1, g.vertices.size());
+  ASSERT_TRUE(g.vertices.end() == g.vertices.find(5));
+}
+TEST_F(RimeCorrectorSearchTest, CaseTranspose) {
+  rime::Syllabifier s;
+  rime::SyllableGraph g;
+  const rime::string input("cahng");
+  s.BuildSyllableGraph(input, *prism_, &g, corrector_.get());
+  EXPECT_EQ(input.length(), g.input_length);
+  EXPECT_EQ(input.length(), g.interpreted_length);
+  EXPECT_EQ(2, g.vertices.size());
+  ASSERT_FALSE(g.vertices.end() == g.vertices.find(5));
+  EXPECT_EQ(rime::kCorrection, g.vertices[5]);
+  rime::SpellingMap& sp(g.edges[0][5]);
+  EXPECT_EQ(1, sp.size());
+  ASSERT_FALSE(sp.end() == sp.find(syllable_id_["chang"]));
+  EXPECT_EQ(rime::kCorrection, sp[0].type);
+}
+
+TEST_F(RimeCorrectorSearchTest, CaseCorrectionSyllabify) {
+  rime::Syllabifier s;
+  rime::SyllableGraph g;
+  const rime::string input("chabgtyan");
+  s.BuildSyllableGraph(input, *prism_, &g, corrector_.get());
+  EXPECT_EQ(input.length(), g.input_length);
+  EXPECT_EQ(input.length(), g.interpreted_length);
+  EXPECT_EQ(3, g.vertices.size());
+  ASSERT_FALSE(g.vertices.end() == g.vertices.find(9));
+  rime::SpellingMap& sp1(g.edges[0][5]);
+  EXPECT_EQ(1, sp1.size());
+  ASSERT_FALSE(sp1.end() == sp1.find(syllable_id_["chang"]));
+  EXPECT_EQ(rime::kCorrection, sp1[0].type);
+  rime::SpellingMap& sp2(g.edges[5][9]);
+  EXPECT_EQ(1, sp2.size());
+  ASSERT_FALSE(sp2.end() == sp2.find(syllable_id_["tuan"]));
+  EXPECT_EQ(rime::kCorrection, sp2[1].type);
 }
