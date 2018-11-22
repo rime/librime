@@ -63,11 +63,9 @@ int Syllabifier::BuildSyllableGraph(const string &input,
             accessor.Next();
             continue;
           }
-
           SyllableId corrected;
           if (prism.GetValue(origin, &corrected)) {
             matches.push_back({ corrected, m.length });
-            // TODO: How to mark it as a correction??
           }
           accessor.Next();
         }

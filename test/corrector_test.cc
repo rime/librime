@@ -136,3 +136,20 @@ TEST_F(RimeCorrectorSearchTest, CaseCorrectionSyllabify) {
   ASSERT_FALSE(sp2.end() == sp2.find(syllable_id_["tuan"]));
   EXPECT_EQ(rime::kCorrection, sp2[1].type);
 }
+
+TEST_F(RimeCorrectorTest, CaseMultipleEdges) {
+  rime::Syllabifier s;
+  rime::SyllableGraph g;
+  const rime::string input("changtu"); // chang'tu; correction: hang'tu
+  s.BuildSyllableGraph(input, *prism_, &g, corrector_.get());
+  EXPECT_EQ(input.length(), g.input_length);
+  EXPECT_EQ(input.length(), g.interpreted_length);
+  EXPECT_EQ(3, g.vertices.size());
+  rime::SpellingMap& sp1(g.edges[0][5]);
+  EXPECT_EQ(2, sp1.size());
+  ASSERT_FALSE(sp1.end() == sp1.find(syllable_id_["chang"]));
+  ASSERT_FALSE(sp1.end() == sp1.find(syllable_id_["hang"]));
+  rime::SpellingMap& sp2(g.edges[5][7]);
+  EXPECT_EQ(1, sp2.size());
+  ASSERT_FALSE(sp2.end() == sp2.find(syllable_id_["tu"]));
+}
