@@ -43,17 +43,11 @@ class RimeCorrectorTest : public ::testing::Test {
  public:
   void SetUp() override {
     rime::vector<rime::string> syllables;
-    syllables.emplace_back("a");      // 0 == id
-    syllables.emplace_back("an");     // 1
-    syllables.emplace_back("cha");    // 2
-    syllables.emplace_back("chan");   // 3
-    syllables.emplace_back("chang");  // 4
-    syllables.emplace_back("gan");    // 5
-    syllables.emplace_back("han");    // 6
-    syllables.emplace_back("hang");   // 7
-    syllables.emplace_back("na");     // 8
-    syllables.emplace_back("tu");     // 9
-    syllables.emplace_back("tuan");   // 10
+    syllables.emplace_back("j");      // 0 == id
+    syllables.emplace_back("ji");     // 1
+    syllables.emplace_back("jie");    // 2
+    syllables.emplace_back("ju");     // 3
+    syllables.emplace_back("jue");    // 4
     std::sort(syllables.begin(), syllables.end());
     for (size_t i = 0; i < syllables.size(); ++i) {
       syllable_id_[syllables[i]] = i;
@@ -140,16 +134,16 @@ TEST_F(RimeCorrectorSearchTest, CaseCorrectionSyllabify) {
 TEST_F(RimeCorrectorTest, CaseMultipleEdges) {
   rime::Syllabifier s;
   rime::SyllableGraph g;
-  const rime::string input("changtu"); // chang'tu; correction: hang'tu
+  const rime::string input("jiejue"); // jie'jue jie'jie jue'jue jue'jie
   s.BuildSyllableGraph(input, *prism_, &g, corrector_.get());
   EXPECT_EQ(input.length(), g.input_length);
   EXPECT_EQ(input.length(), g.interpreted_length);
-  EXPECT_EQ(3, g.vertices.size());
-  rime::SpellingMap& sp1(g.edges[0][5]);
+  rime::SpellingMap& sp1(g.edges[0][3]);
   EXPECT_EQ(2, sp1.size());
-  ASSERT_FALSE(sp1.end() == sp1.find(syllable_id_["chang"]));
-  ASSERT_FALSE(sp1.end() == sp1.find(syllable_id_["hang"]));
-  rime::SpellingMap& sp2(g.edges[5][7]);
-  EXPECT_EQ(1, sp2.size());
-  ASSERT_FALSE(sp2.end() == sp2.find(syllable_id_["tu"]));
+  ASSERT_FALSE(sp1.end() == sp1.find(syllable_id_["jie"]));
+  ASSERT_FALSE(sp1.end() == sp1.find(syllable_id_["jue"]));
+  rime::SpellingMap& sp2(g.edges[3][6]);
+  EXPECT_EQ(2, sp2.size());
+  ASSERT_FALSE(sp2.end() == sp2.find(syllable_id_["jie"]));
+  ASSERT_FALSE(sp2.end() == sp2.find(syllable_id_["jue"]));
 }

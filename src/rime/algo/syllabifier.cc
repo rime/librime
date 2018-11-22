@@ -18,7 +18,7 @@ using VertexQueue = std::priority_queue<Vertex,
                                         vector<Vertex>,
                                         std::greater<Vertex>>;
 
-int Syllabifier::BuildSyllableGraph(const string &input,
+        int Syllabifier::BuildSyllableGraph(const string &input,
                                     Prism &prism,
                                     SyllableGraph *graph,
                                     Corrector *corrector) {
@@ -37,8 +37,10 @@ int Syllabifier::BuildSyllableGraph(const string &input,
     // record a visit to the vertex
     if (graph->vertices.find(current_pos) == graph->vertices.end())
       graph->vertices.insert(vertex);  // preferred spelling type comes first
-    else
+    else {
+      graph->vertices[current_pos] = std::max(vertex.second, graph->vertices[current_pos]);
       continue;  // discard worse spelling types
+    }
 
     if (current_pos > farthest)
       farthest = current_pos;
@@ -59,18 +61,22 @@ int Syllabifier::BuildSyllableGraph(const string &input,
         while (!accessor.exhausted()) {
           auto origin = accessor.properties().tips;
           auto key = current_input.substr(0, m.length);
-          if (Corrector::RestrictedDistance(origin, key) > 3) {// discard this terrible typo
-            accessor.Next();
-            continue;
-          }
-          SyllableId corrected;
-          if (prism.GetValue(origin, &corrected)) {
-            matches.push_back({ corrected, m.length });
+
+          auto distance = Corrector::RestrictedDistance(origin, key);
+          if (distance > 0 && distance <= 3) { // Only trace near words
+            SyllableId corrected;
+            if (prism.GetValue(origin, &corrected)) {
+              matches.push_back({ corrected, m.length });
+            }
           }
           accessor.Next();
         }
       }
     }
+//    std::sort(matches.begin(), matches.end(), [](Prism::Match &l, Prism::Match &r) {
+//      return l.length > r.length;
+//    });
+
     if (!matches.empty()) {
       auto& end_vertices(graph->edges[current_pos]);
       for (const auto& m : matches) {
@@ -82,7 +88,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
           ++end_pos;
         DLOG(INFO) << "end_pos: " << end_pos;
         bool matches_input = (current_pos == 0 && end_pos == input.length());
-        SpellingMap spellings;
+        SpellingMap& spellings(end_vertices[end_pos]);
         SpellingType end_vertex_type = kInvalidSpelling;
         // when spelling algebra is enabled,
         // a spelling evaluates to a set of syllables;
@@ -103,7 +109,12 @@ int Syllabifier::BuildSyllableGraph(const string &input,
             if (matches_set.find(syllable_id) == matches_set.end()) {
               props.type = kCorrection;
             }
-            spellings.insert({syllable_id, props});
+            auto it = spellings.find(syllable_id);
+            if (it == spellings.end()) {
+              spellings.insert({syllable_id, props});
+            } else {
+              it->second.type = std::min(it->second.type, props.type);
+            }
             // let end_vertex_type be the best (smaller) type of spelling
             // that ends at the vertex
             if (end_vertex_type > props.type) {
@@ -114,9 +125,10 @@ int Syllabifier::BuildSyllableGraph(const string &input,
         }
         if (spellings.empty()) {
           DLOG(INFO) << "not spelt.";
+          end_vertices.erase(end_pos);
           continue;
         }
-        end_vertices[end_pos].swap(spellings);
+//        end_vertices[end_pos].swap(spellings);
         // find the best common type in a path up to the end vertex
         // eg. pinyin "shurfa" has vertex type kNormalSpelling at position 3,
         // kAbbreviation at position 4 and kAbbreviation at position 6
@@ -135,7 +147,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
   good.insert(farthest);
   // fuzzy spellings are immune to invalidation by normal spellings
   SpellingType last_type = (std::max)(graph->vertices[farthest],
-                                      kFuzzySpelling);
+                                      kCorrection);
   for (int i = farthest - 1; i >= 0; --i) {
     if (graph->vertices.find(i) == graph->vertices.end())
       continue;
