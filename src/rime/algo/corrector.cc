@@ -234,9 +234,10 @@ NearSearchCorrector::ToleranceSearch(const Prism& prism, const string &key, size
   for (; !queue.empty(); queue.pop()) {
     auto &rec = queue.front();
     char ch = rec.ch;
-    std::swap(ch, const_cast<char *>(key.c_str())[rec.idx]);
+    char &exchange(const_cast<char *>(key.c_str())[rec.idx]);
+    std::swap(ch, exchange);
     auto val = prism.trie().traverse(key.c_str(), rec.node_pos, rec.idx, rec.idx + 1);
-    std::swap(ch, const_cast<char *>(key.c_str())[rec.idx - 1]);
+    std::swap(ch, exchange);
 
     if (val == -2) continue;
     if (val >= 0) {
