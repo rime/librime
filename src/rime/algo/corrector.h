@@ -26,6 +26,14 @@ class CorrectionCollector {
   const Syllabary& syllabary_;
 };
 
+//class Corrector {
+// public:
+//  RIME_API virtual bool Build(const Syllabary& syllabary,
+//                      const Script* script,
+//                      uint32_t dict_file_checksum,
+//                      uint32_t schema_file_checksum) = 0;
+//};
+
 class Corrector : public Prism {
  public:
   using Distance = uint8_t;
@@ -40,6 +48,17 @@ class Corrector : public Prism {
   vector<Match> SymDeletePrefixSearch(const string& key);
   static Distance LevenshteinDistance(const std::string &s1, const std::string &s2);
   static Distance RestrictedDistance(const std::string& s1, const std::string& s2);
+};
+
+class NearSearchCorrector {
+ public:
+  using Correction = struct {
+    size_t distance;
+    SyllableId syllable;
+    size_t length;
+  };
+  NearSearchCorrector() = default;
+  RIME_API vector<Correction> ToleranceSearch(const Prism& prism, const string& key, size_t tolerance = 5);
 };
 
 } // namespace rime

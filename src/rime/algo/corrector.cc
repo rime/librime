@@ -7,9 +7,59 @@
 
 #include <numeric>
 #include <algorithm>
+#include <queue>
 #include "corrector.h"
 
 using namespace rime;
+
+static hash_map<char, hash_set<char>> keyboard_map = {
+    {'1', {'2', 'q', 'w'}},
+    {'2', {'1', '3', 'q', 'w', 'e'}},
+    {'3', {'2', '4', 'w', 'e', 'r'}},
+    {'4', {'3', '5', 'e', 'r', 't'}},
+    {'5', {'4', '6', 'r', 't', 'y'}},
+    {'6', {'5', '7', 't', 'y', 'u'}},
+    {'7', {'6', '8', 'y', 'u', 'i'}},
+    {'8', {'7', '9', 'u', 'i', 'o'}},
+    {'9', {'8', '0', 'i', 'o', 'p'}},
+    {'0', {'9', '-', 'o', 'p', '['}},
+    {'-', {'0', '=', 'p', '[', ']'}},
+    {'=', {'-', '[', ']', '\\'}},
+    {'q', {'w'}},
+    {'w', {'q', 'e'}},
+    {'e', {'w', 'r'}},
+    {'r', {'e', 't'}},
+    {'t', {'r', 'y'}},
+    {'y', {'t', 'u'}},
+    {'u', {'y', 'i'}},
+    {'i', {'u', 'o'}},
+    {'o', {'i', 'p'}},
+    {'p', {'o', '['}},
+    {'[', {'p', ']'}},
+    {']', {'[', '\\'}},
+    {'\\', {']'}},
+    {'a', {'s'}},
+    {'s', {'a', 'd'}},
+    {'d', {'s', 'f'}},
+    {'f', {'d', 'g'}},
+    {'g', {'f', 'h'}},
+    {'h', {'g', 'j'}},
+    {'j', {'h', 'k'}},
+    {'k', {'j', 'l'}},
+    {'l', {'k', ';'}},
+    {';', {'l', '\''}},
+    {'\'', {';'}},
+    {'z', {'x'}},
+    {'x', {'z', 'c'}},
+    {'c', {'x', 'v'}},
+    {'v', {'c', 'b'}},
+    {'b', {'v', 'n'}},
+    {'n', {'b', 'm'}},
+    {'m', {'n', ','}},
+    {',', {'m', '.'}},
+    {'.', {',', '/'}},
+    {'/', {'.'}},
+};
 
 void DFSCollect(const string &origin, const string &current, size_t ed, Script &result);
 
@@ -76,54 +126,6 @@ vector<Prism::Match> Corrector::SymDeletePrefixSearch(const string& key) {
 
 
 inline uint8_t SubstCost(char left, char right) {
-  static hash_map<char, hash_set<char>> keyboard_map = {
-      {'1', {'2', 'q', 'w'}},
-      {'2', {'1', '3', 'q', 'w', 'e'}},
-      {'3', {'2', '4', 'w', 'e', 'r'}},
-      {'4', {'3', '5', 'e', 'r', 't'}},
-      {'5', {'4', '6', 'r', 't', 'y'}},
-      {'6', {'5', '7', 't', 'y', 'u'}},
-      {'7', {'6', '8', 'y', 'u', 'i'}},
-      {'8', {'7', '9', 'u', 'i', 'o'}},
-      {'9', {'8', '0', 'i', 'o', 'p'}},
-      {'0', {'9', '-', 'o', 'p', '['}},
-      {'-', {'0', '=', 'p', '[', ']'}},
-      {'=', {'-', '[', ']', '\\'}},
-      {'q', {'1', '2', 'w', 'a', 's'}},
-      {'w', {'1', '2', '3', 'q', 'e', 'a', 's', 'd'}},
-      {'e', {'2', '3', '4', 'w', 'r', 's', 'd', 'f'}},
-      {'r', {'3', '4', '5', 'e', 't', 'd', 'f', 'g'}},
-      {'t', {'4', '5', '6', 'r', 'y', 'f', 'g', 'h'}},
-      {'y', {'5', '6', '7', 't', 'u', 'g', 'h', 'j'}},
-      {'u', {'6', '7', '8', 'y', 'i', 'h', 'j', 'k'}},
-      {'i', {'7', '8', '9', 'u', 'o', 'j', 'k', 'l'}},
-      {'o', {'8', '9', '0', 'i', 'p', 'k', 'l', ';'}},
-      {'p', {'9', '0', '-', 'o', '[', 'l', ';', '\''}},
-      {'[', {'0', '-', '=', 'p', ']', ';', '\''}},
-      {']', {'-', '=', '[', '\\', '\''}},
-      {'\\', {'=', ']'}},
-      {'a', {'q', 'w', 's', 'z'}},
-      {'s', {'q', 'w', 'e', 'a', 'd', 'z', 'x'}},
-      {'d', {'w', 'e', 'r', 's', 'f', 'z', 'x', 'c'}},
-      {'f', {'e', 'r', 't', 'd', 'g', 'x', 'c', 'v'}},
-      {'g', {'r', 't', 'y', 'f', 'h', 'c', 'v', 'b'}},
-      {'h', {'t', 'y', 'u', 'g', 'j', 'v', 'b', 'n'}},
-      {'j', {'y', 'u', 'i', 'h', 'k', 'b', 'n', 'm'}},
-      {'k', {'u', 'i', 'o', 'j', 'l', 'n', 'm', ','}},
-      {'l', {'i', 'o', 'p', 'k', ';', 'm', ',', '.'}},
-      {';', {'o', 'p', '[', 'l', '\'', ',', '.', '/'}},
-      {'\'', {'p', '[', ']', ';', '.', '/'}},
-      {'z', {'a', 's', 'd', 'x'}},
-      {'x', {'s', 'd', 'f', 'z', 'c'}},
-      {'c', {'d', 'f', 'g', 'x', 'v'}},
-      {'v', {'f', 'g', 'h', 'c', 'b'}},
-      {'b', {'g', 'h', 'j', 'v', 'n'}},
-      {'n', {'h', 'j', 'k', 'b', 'm'}},
-      {'m', {'j', 'k', 'l', 'n', ','}},
-      {',', {'k', 'l', ';', 'm', '.'}},
-      {'.', {'l', ';', '\'', ',', '/'}},
-      {'/', {';', '\'', '.'}}
-  };
   if (left == right) return 0;
   if (keyboard_map[left].find(right) != keyboard_map[left].end()) {
     return 1;
@@ -211,3 +213,43 @@ bool Corrector::Build(const Syllabary &syllabary,
   return Prism::Build(syllabary, &correction_script, dict_file_checksum, schema_file_checksum);
 }
 
+vector<NearSearchCorrector::Correction>
+NearSearchCorrector::ToleranceSearch(const Prism& prism, const string &key, size_t tolerance) {
+  vector<Correction> result;
+  if (key.empty())
+    return result;
+
+  using record = struct {
+    size_t node_pos;
+    size_t idx;
+    size_t distance;
+    char ch;
+  };
+
+  std::queue<record> queue;
+  queue.push({ 0, 0, 0, key[0] });
+  for (auto subst : keyboard_map[key[0]]) {
+    queue.push({ 0, 0, 1, subst });
+  }
+  for (; !queue.empty(); queue.pop()) {
+    auto &rec = queue.front();
+    char ch = rec.ch;
+    std::swap(ch, const_cast<char *>(key.c_str())[rec.idx]);
+    auto val = prism.trie().traverse(key.c_str(), rec.node_pos, rec.idx, rec.idx + 1);
+    std::swap(ch, const_cast<char *>(key.c_str())[rec.idx - 1]);
+
+    if (val == -2) continue;
+    if (val >= 0) {
+      result.push_back({ rec.distance, val, rec.idx });
+    }
+    if (rec.idx < key.size()) {
+      queue.push({ rec.node_pos, rec.idx, rec.distance, key[rec.idx] });
+      if (rec.distance < tolerance) {
+        for (auto subst : keyboard_map[key[rec.idx]]) {
+          queue.push({ rec.node_pos, rec.idx, rec.distance + 1, subst });
+        }
+      }
+    }
+  }
+  return result;
+}

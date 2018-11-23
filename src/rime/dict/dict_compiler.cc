@@ -233,22 +233,22 @@ bool DictCompiler::BuildPrism(const string &schema_file,
     }
 
     // build corrector
-    bool enable_correction = false; // Avoid if initializer to comfort compilers
-    if (config.GetBool("speller/enable_correction", &enable_correction) &&
-        enable_correction) {
-      boost::filesystem::path corrector_path(prism_->file_name());
-      corrector_path.replace_extension("");
-      corrector_path.replace_extension(".correction.bin");
-      correction_ = New<Corrector>(RelocateToUserDirectory(prefix_, corrector_path.string()));
-      if (correction_->Exists()) {
-        correction_->Remove();
-      }
-      if (!correction_->Build(syllabary, &script,
-                         dict_file_checksum, schema_file_checksum) ||
-          !correction_->Save()) {
-        return false;
-      }
-    }
+//    bool enable_correction = false; // Avoid if initializer to comfort compilers
+//    if (config.GetBool("speller/enable_correction", &enable_correction) &&
+//        enable_correction) {
+//      boost::filesystem::path corrector_path(prism_->file_name());
+//      corrector_path.replace_extension("");
+//      corrector_path.replace_extension(".correction.bin");
+//      correction_ = New<Corrector>(RelocateToUserDirectory(prefix_, corrector_path.string()));
+//      if (correction_->Exists()) {
+//        correction_->Remove();
+//      }
+//      if (!correction_->Build(syllabary, &script,
+//                         dict_file_checksum, schema_file_checksum) ||
+//          !correction_->Save()) {
+//        return false;
+//      }
+//    }
   }
   if ((options_ & kDump) && !script.empty()) {
     boost::filesystem::path path(prism_->file_name());

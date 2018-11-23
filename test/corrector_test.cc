@@ -24,19 +24,16 @@
     }
 
     prism_.reset(new rime::Prism("corrector_simple_test.prism.bin"));
-    corrector_.reset(new rime::Corrector("corrector_simple_test.corrector.bin"));
     rime::set<rime::string> keyset;
     std::copy(syllables.begin(), syllables.end(),
               std::inserter(keyset, keyset.begin()));
     prism_->Build(keyset);
-    corrector_->Build(keyset, nullptr, 0, 0);
 
   }
   void TearDown() override {}
   protected:
    rime::map<rime::string, rime::SyllableId> syllable_id_;
    rime::the<rime::Prism> prism_;
-   rime::the<rime::Corrector> corrector_;
 };
 
 class RimeCorrectorTest : public ::testing::Test {
@@ -54,12 +51,10 @@ class RimeCorrectorTest : public ::testing::Test {
     }
 
     prism_.reset(new rime::Prism("corrector_test.prism.bin"));
-    corrector_.reset(new rime::Corrector("corrector_test.corrector.bin"));
     rime::set<rime::string> keyset;
     std::copy(syllables.begin(), syllables.end(),
               std::inserter(keyset, keyset.begin()));
     prism_->Build(keyset);
-    corrector_->Build(keyset, nullptr, 0, 0);
   }
 
   virtual void TearDown() {
@@ -68,14 +63,13 @@ class RimeCorrectorTest : public ::testing::Test {
  protected:
   rime::map<rime::string, rime::SyllableId> syllable_id_;
   rime::the<rime::Prism> prism_;
-  rime::the<rime::Corrector> corrector_;
 };
 
 TEST_F(RimeCorrectorSearchTest, CaseNearSubstitute) {
   rime::Syllabifier s;
   rime::SyllableGraph g;
   const rime::string input("chsng");
-  s.BuildSyllableGraph(input, *prism_, &g, corrector_.get());
+  s.BuildSyllableGraph(input, *prism_, &g, true);
   EXPECT_EQ(input.length(), g.input_length);
   EXPECT_EQ(input.length(), g.interpreted_length);
   EXPECT_EQ(2, g.vertices.size());
@@ -90,7 +84,7 @@ TEST_F(RimeCorrectorSearchTest, CaseFarSubstitute) {
   rime::Syllabifier s;
   rime::SyllableGraph g;
   const rime::string input("chpng");
-  s.BuildSyllableGraph(input, *prism_, &g, corrector_.get());
+  s.BuildSyllableGraph(input, *prism_, &g, true);
   EXPECT_EQ(input.length(), g.input_length);
   EXPECT_EQ(0, g.interpreted_length);
   EXPECT_EQ(1, g.vertices.size());
@@ -100,7 +94,7 @@ TEST_F(RimeCorrectorSearchTest, CaseTranspose) {
   rime::Syllabifier s;
   rime::SyllableGraph g;
   const rime::string input("cahng");
-  s.BuildSyllableGraph(input, *prism_, &g, corrector_.get());
+  s.BuildSyllableGraph(input, *prism_, &g, true);
   EXPECT_EQ(input.length(), g.input_length);
   EXPECT_EQ(input.length(), g.interpreted_length);
   EXPECT_EQ(2, g.vertices.size());
@@ -116,7 +110,7 @@ TEST_F(RimeCorrectorSearchTest, CaseCorrectionSyllabify) {
   rime::Syllabifier s;
   rime::SyllableGraph g;
   const rime::string input("chabgtyan");
-  s.BuildSyllableGraph(input, *prism_, &g, corrector_.get());
+  s.BuildSyllableGraph(input, *prism_, &g, true);
   EXPECT_EQ(input.length(), g.input_length);
   EXPECT_EQ(input.length(), g.interpreted_length);
   EXPECT_EQ(3, g.vertices.size());
@@ -135,7 +129,7 @@ TEST_F(RimeCorrectorTest, CaseMultipleEdges) {
   rime::Syllabifier s;
   rime::SyllableGraph g;
   const rime::string input("jiejue"); // jie'jue jie'jie jue'jue jue'jie
-  s.BuildSyllableGraph(input, *prism_, &g, corrector_.get());
+  s.BuildSyllableGraph(input, *prism_, &g, true);
   EXPECT_EQ(input.length(), g.input_length);
   EXPECT_EQ(input.length(), g.interpreted_length);
   rime::SpellingMap& sp1(g.edges[0][3]);

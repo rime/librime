@@ -18,10 +18,10 @@ using VertexQueue = std::priority_queue<Vertex,
                                         vector<Vertex>,
                                         std::greater<Vertex>>;
 
-        int Syllabifier::BuildSyllableGraph(const string &input,
-                                    Prism &prism,
-                                    SyllableGraph *graph,
-                                    Corrector *corrector) {
+int Syllabifier::BuildSyllableGraph(const string &input,
+                            Prism &prism,
+                            SyllableGraph *graph,
+                            bool correction) {
   if (input.empty())
     return 0;
 
@@ -54,21 +54,22 @@ using VertexQueue = std::priority_queue<Vertex,
     for (auto &m : matches) {
       matches_set.insert(m.value);
     }
-    if (corrector) {
-      auto corrections = corrector->SymDeletePrefixSearch(current_input);
+    if (correction) {
+      NearSearchCorrector corrector;
+      auto corrections = corrector.ToleranceSearch(prism, current_input);
       for (const auto &m : corrections) {
-        SpellingAccessor accessor(corrector->QuerySpelling(m.value));
+        SpellingAccessor accessor(prism.QuerySpelling(m.syllable));
         while (!accessor.exhausted()) {
           auto origin = accessor.properties().tips;
           auto key = current_input.substr(0, m.length);
-
-          auto distance = Corrector::RestrictedDistance(origin, key);
-          if (distance > 0 && distance <= 3) { // Only trace near words
-            SyllableId corrected;
-            if (prism.GetValue(origin, &corrected)) {
-              matches.push_back({ corrected, m.length });
-            }
-          }
+          matches.push_back({ m.syllable, m.length });
+//          auto distance = Corrector::RestrictedDistance(origin, key);
+//          if (distance > 0 && distance <= 3) { // Only trace near words
+//            SyllableId corrected;
+//            if (prism.GetValue(origin, &corrected)) {
+//              matches.push_back({ corrected, m.length });
+//            }
+//          }
           accessor.Next();
         }
       }
@@ -108,6 +109,7 @@ using VertexQueue = std::priority_queue<Vertex,
             // spelling-to-syllable map
             if (matches_set.find(syllable_id) == matches_set.end()) {
               props.type = kCorrection;
+              props.credibility = 0.5;
             }
             auto it = spellings.find(syllable_id);
             if (it == spellings.end()) {

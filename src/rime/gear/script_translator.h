@@ -40,6 +40,7 @@ class ScriptTranslator : public Translator,
   // options
   int spelling_hints() const { return spelling_hints_; }
   bool always_show_comments() const { return always_show_comments_; }
+  bool enable_correction() const { return enable_correction_; }
 
  protected:
   int spelling_hints_ = 0;

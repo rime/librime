@@ -17,6 +17,8 @@
 
 namespace rime {
 
+class NearSearchCorrector;
+
 namespace prism {
 
 using Credibility = float;
@@ -63,6 +65,8 @@ class SpellingAccessor {
 
 class Script;
 
+class PrismDetector {};
+
 class Prism : public MappedFile {
  public:
   using Match = Darts::DoubleArray::result_pair_type;
@@ -89,10 +93,10 @@ class Prism : public MappedFile {
 
   uint32_t dict_file_checksum() const;
   uint32_t schema_file_checksum() const;
+  Darts::DoubleArray& trie() const { return *trie_; }
 
  protected:
   the<Darts::DoubleArray> trie_;
- private:
   prism::Metadata* metadata_ = nullptr;
   prism::SpellingMap* spelling_map_ = nullptr;
   double format_ = 0.0;
