@@ -45,6 +45,7 @@ class RimeCorrectorTest : public ::testing::Test {
     syllables.emplace_back("jie");    // 2
     syllables.emplace_back("ju");     // 3
     syllables.emplace_back("jue");    // 4
+    syllables.emplace_back("shen");   // 5
     std::sort(syllables.begin(), syllables.end());
     for (size_t i = 0; i < syllables.size(); ++i) {
       syllable_id_[syllables[i]] = i;
@@ -125,7 +126,7 @@ TEST_F(RimeCorrectorSearchTest, CaseCorrectionSyllabify) {
   EXPECT_EQ(rime::kCorrection, sp2[1].type);
 }
 
-TEST_F(RimeCorrectorTest, CaseMultipleEdges) {
+TEST_F(RimeCorrectorTest, CaseMultipleEdges1) {
   rime::Syllabifier s;
   rime::SyllableGraph g;
   const rime::string input("jiejue"); // jie'jue jie'jie jue'jue jue'jie

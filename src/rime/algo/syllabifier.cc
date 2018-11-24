@@ -109,7 +109,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
             // spelling-to-syllable map
             if (matches_set.find(m.value) == matches_set.end()) {
               props.type = kCorrection;
-              props.credibility = 0.1;
+              props.credibility = 0.01;
             }
             auto it = spellings.find(syllable_id);
             if (it == spellings.end()) {
