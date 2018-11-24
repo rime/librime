@@ -135,9 +135,13 @@ TEST_F(RimeCorrectorTest, CaseMultipleEdges) {
   rime::SpellingMap& sp1(g.edges[0][3]);
   EXPECT_EQ(2, sp1.size());
   ASSERT_FALSE(sp1.end() == sp1.find(syllable_id_["jie"]));
+  ASSERT_TRUE(sp1[syllable_id_["jie"]].type == rime::kNormalSpelling);
   ASSERT_FALSE(sp1.end() == sp1.find(syllable_id_["jue"]));
+  ASSERT_TRUE(sp1[syllable_id_["jue"]].type == rime::kCorrection);
   rime::SpellingMap& sp2(g.edges[3][6]);
   EXPECT_EQ(2, sp2.size());
   ASSERT_FALSE(sp2.end() == sp2.find(syllable_id_["jie"]));
+  ASSERT_TRUE(sp2[syllable_id_["jie"]].type == rime::kCorrection);
   ASSERT_FALSE(sp2.end() == sp2.find(syllable_id_["jue"]));
+  ASSERT_TRUE(sp2[syllable_id_["jue"]].type == rime::kNormalSpelling);
 }

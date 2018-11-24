@@ -58,11 +58,11 @@ int Syllabifier::BuildSyllableGraph(const string &input,
       NearSearchCorrector corrector;
       auto corrections = corrector.ToleranceSearch(prism, current_input);
       for (const auto &m : corrections) {
-        SpellingAccessor accessor(prism.QuerySpelling(m.syllable));
-        while (!accessor.exhausted()) {
-          auto origin = accessor.properties().tips;
-          auto key = current_input.substr(0, m.length);
-          matches.push_back({ m.syllable, m.length });
+        matches.push_back({ m.syllable, m.length });
+//        SpellingAccessor accessor(prism.QuerySpelling(m.syllable));
+//        while (!accessor.exhausted()) {
+//          auto origin = accessor.properties().tips;
+//          auto key = current_input.substr(0, m.length);
 //          auto distance = Corrector::RestrictedDistance(origin, key);
 //          if (distance > 0 && distance <= 3) { // Only trace near words
 //            SyllableId corrected;
@@ -70,8 +70,8 @@ int Syllabifier::BuildSyllableGraph(const string &input,
 //              matches.push_back({ corrected, m.length });
 //            }
 //          }
-          accessor.Next();
-        }
+//          accessor.Next();
+//        }
       }
     }
 //    std::sort(matches.begin(), matches.end(), [](Prism::Match &l, Prism::Match &r) {
@@ -107,9 +107,9 @@ int Syllabifier::BuildSyllableGraph(const string &input,
             props.end_pos = end_pos;
             // add a syllable with properties to the edge's
             // spelling-to-syllable map
-            if (matches_set.find(syllable_id) == matches_set.end()) {
+            if (matches_set.find(m.value) == matches_set.end()) {
               props.type = kCorrection;
-              props.credibility = 0.5;
+              props.credibility = 0.1;
             }
             auto it = spellings.find(syllable_id);
             if (it == spellings.end()) {
