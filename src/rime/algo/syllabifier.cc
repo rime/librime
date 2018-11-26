@@ -58,7 +58,14 @@ int Syllabifier::BuildSyllableGraph(const string &input,
       NearSearchCorrector corrector;
       auto corrections = corrector.ToleranceSearch(prism, current_input);
       for (const auto &m : corrections) {
-        matches.push_back({ m.syllable, m.length });
+        SpellingAccessor accessor(prism.QuerySpelling(m.syllable));
+        while (!accessor.exhausted()) {
+          if (accessor.properties().type == kNormalSpelling) {
+            matches.push_back({ m.syllable, m.length });
+            break;
+          }
+          accessor.Next();
+        }
 //        SpellingAccessor accessor(prism.QuerySpelling(m.syllable));
 //        while (!accessor.exhausted()) {
 //          auto origin = accessor.properties().tips;
