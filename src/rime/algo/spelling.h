@@ -12,7 +12,7 @@
 
 namespace rime {
 
-enum SpellingType { kNormalSpelling, kCorrection, kFuzzySpelling,
+enum SpellingType { kNormalSpelling, kFuzzySpelling,
                     kAbbreviation, kCompletion, kAmbiguousSpelling,
                     kInvalidSpelling };
 

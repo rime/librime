@@ -80,7 +80,7 @@ void DFSCollect(const string &origin, const string &current, size_t ed, Script &
     string temp = current;
     temp.erase(i, 1);
     Spelling spelling(origin);
-    spelling.properties.type = kCorrection;
+//    spelling.properties.type = kCorrection;
     spelling.properties.tips = origin;
     result[temp].push_back(spelling);
     DFSCollect(origin, temp, ed - 1, result);

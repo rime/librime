@@ -264,7 +264,7 @@ bool ScriptSyllabifier::IsCandidateCorrection(const rime::Phrase &cand) const {
         if (it_e != it_s->second.end()) {
           auto it_type = it_e->second.find(id);
           if (it_type != it_e->second.end()) {
-            results.push(it_type->second.type == kCorrection);
+            results.push(it_type->second.is_correction);
             return;
           }
         }
@@ -405,7 +405,8 @@ bool ScriptTranslation::IsNormalSpelling() const {
 }
 
 an<Candidate> ScriptTranslation::Peek() {
-  if (!candidate_ && !(PrepareCandidate(), candidate_)) {
+  PrepareCandidate();
+  if (!candidate_) {
     return nullptr;
   }
   if (candidate_->preedit().empty()) {

@@ -38,7 +38,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
     if (graph->vertices.find(current_pos) == graph->vertices.end())
       graph->vertices.insert(vertex);  // preferred spelling type comes first
     else {
-      graph->vertices[current_pos] = std::max(vertex.second, graph->vertices[current_pos]);
+//      graph->vertices[current_pos] = std::min(vertex.second, graph->vertices[current_pos]);
       continue;  // discard worse spelling types
     }
 
@@ -81,9 +81,6 @@ int Syllabifier::BuildSyllableGraph(const string &input,
 //        }
       }
     }
-//    std::sort(matches.begin(), matches.end(), [](Prism::Match &l, Prism::Match &r) {
-//      return l.length > r.length;
-//    });
 
     if (!matches.empty()) {
       auto& end_vertices(graph->edges[current_pos]);
@@ -104,7 +101,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
         SpellingAccessor accessor(prism.QuerySpelling(m.value));
         while (!accessor.exhausted()) {
           SyllableId syllable_id = accessor.syllable_id();
-          SpellingProperties props = accessor.properties();
+          EdgeProperties props(accessor.properties());
           if (strict_spelling_ &&
               matches_input &&
               props.type != kNormalSpelling) {
@@ -115,7 +112,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
             // add a syllable with properties to the edge's
             // spelling-to-syllable map
             if (matches_set.find(m.value) == matches_set.end()) {
-              props.type = kCorrection;
+              props.is_correction = true;
               props.credibility = 0.01;
             }
             auto it = spellings.find(syllable_id);
@@ -126,7 +123,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
             }
             // let end_vertex_type be the best (smaller) type of spelling
             // that ends at the vertex
-            if (end_vertex_type > props.type) {
+            if (end_vertex_type > props.type && !props.is_correction) {
               end_vertex_type = props.type;
             }
           }
@@ -156,7 +153,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
   good.insert(farthest);
   // fuzzy spellings are immune to invalidation by normal spellings
   SpellingType last_type = (std::max)(graph->vertices[farthest],
-                                      kCorrection);
+                                      kFuzzySpelling);
   for (int i = farthest - 1; i >= 0; --i) {
     if (graph->vertices.find(i) == graph->vertices.end())
       continue;
@@ -171,6 +168,10 @@ int Syllabifier::BuildSyllableGraph(const string &input,
       // when there is a path of more favored type
       SpellingType edge_type = kInvalidSpelling;
       for (auto k = j->second.begin(); k != j->second.end(); ) {
+        if (k->second.is_correction) {
+          ++k;
+          continue; // Don't care correction edges
+        }
         if (k->second.type > last_type) {
           j->second.erase(k++);
         }

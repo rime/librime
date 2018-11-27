@@ -15,16 +15,20 @@
 namespace rime {
 
 class Prism;
-class Corrector;
 
 using SyllableId = int32_t;
 
-using SpellingMap = map<SyllableId, SpellingProperties>;
+struct EdgeProperties : SpellingProperties {
+  EdgeProperties(SpellingProperties sup): SpellingProperties(sup) {};
+  bool is_correction = false;
+};
+
+using SpellingMap = map<SyllableId, EdgeProperties>;
 using VertexMap = map<size_t, SpellingType>;
 using EndVertexMap = map<size_t, SpellingMap>;
 using EdgeMap = map<size_t, EndVertexMap>;
 
-using SpellingPropertiesList = vector<const SpellingProperties*>;
+using SpellingPropertiesList = vector<const EdgeProperties*>;
 using SpellingIndex = map<SyllableId, SpellingPropertiesList>;
 using SpellingIndices = map<size_t, SpellingIndex>;
 
