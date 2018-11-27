@@ -15,11 +15,13 @@
 namespace rime {
 
 class Prism;
+class Corrector;
 
 using SyllableId = int32_t;
 
 struct EdgeProperties : SpellingProperties {
   EdgeProperties(SpellingProperties sup): SpellingProperties(sup) {};
+  EdgeProperties() = default;
   bool is_correction = false;
 };
 
@@ -53,8 +55,8 @@ class Syllabifier {
 
   RIME_API int BuildSyllableGraph(const string &input,
                                   Prism &prism,
-                                  SyllableGraph *graph,
-                                  bool correction = false);
+                                  SyllableGraph *graph);
+  RIME_API void EnableCorrection(an<Corrector> corrector);
 
  protected:
   void CheckOverlappedSpellings(SyllableGraph *graph,
@@ -64,6 +66,8 @@ class Syllabifier {
   string delimiters_;
   bool enable_completion_ = false;
   bool strict_spelling_ = false;
+  an<Corrector> corrector_ = nullptr;
+  bool enable_correction_ = false;
 };
 
 }  // namespace rime

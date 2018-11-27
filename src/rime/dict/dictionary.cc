@@ -13,7 +13,7 @@
 #include <rime/ticket.h>
 #include <rime/dict/dictionary.h>
 #include <rime/algo/syllabifier.h>
-#include <rime/algo/corrector.h>
+#include <rime/gear/corrector.h>
 
 namespace rime {
 

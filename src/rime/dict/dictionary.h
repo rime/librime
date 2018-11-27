@@ -70,7 +70,7 @@ struct DictEntryCollector : map<size_t, DictEntryIterator> {
 
 class Config;
 class Schema;
-class Corrector;
+class EditDistanceCorrector;
 struct SyllableGraph;
 struct Ticket;
 

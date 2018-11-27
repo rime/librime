@@ -17,8 +17,6 @@
 
 namespace rime {
 
-class NearSearchCorrector;
-
 namespace prism {
 
 using Credibility = float;
@@ -65,8 +63,6 @@ class SpellingAccessor {
 
 class Script;
 
-class PrismDetector {};
-
 class Prism : public MappedFile {
  public:
   using Match = Darts::DoubleArray::result_pair_type;
@@ -75,16 +71,13 @@ class Prism : public MappedFile {
 
   RIME_API bool Load();
   RIME_API bool Save();
-  RIME_API bool Build(const Syllabary& syllabary);
-  RIME_API bool Build(const Syllabary& syllabary, const Script* script);
-  RIME_API bool Build(const Syllabary& syllabary, const Script* script, uint32_t dict_file_checksum);
-  RIME_API virtual bool Build(const Syllabary& syllabary,
-                      const Script* script,
-                      uint32_t dict_file_checksum,
-                      uint32_t schema_file_checksum);
+  RIME_API bool Build(const Syllabary& syllabary,
+                      const Script* script = nullptr,
+                      uint32_t dict_file_checksum = 0,
+                      uint32_t schema_file_checksum = 0);
 
   RIME_API bool HasKey(const string& key);
-  RIME_API bool GetValue(const string& key, int* value);
+  RIME_API bool GetValue(const string& key, int* value) const;
   RIME_API void CommonPrefixSearch(const string& key, vector<Match>* result);
   RIME_API void ExpandSearch(const string& key, vector<Match>* result, size_t limit);
   SpellingAccessor QuerySpelling(SyllableId spelling_id);

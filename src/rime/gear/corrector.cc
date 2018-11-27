@@ -8,9 +8,13 @@
 #include <numeric>
 #include <algorithm>
 #include <queue>
-#include "corrector.h"
+#include <rime/service.h>
+#include <rime/ticket.h>
+#include <rime/schema.h>
+#include "rime/gear/corrector.h"
 
 using namespace rime;
+using namespace corrector;
 
 static hash_map<char, hash_set<char>> keyboard_map = {
     {'1', {'2', 'q', 'w'}},
@@ -63,7 +67,7 @@ static hash_map<char, hash_set<char>> keyboard_map = {
 
 void DFSCollect(const string &origin, const string &current, size_t ed, Script &result);
 
-Script CorrectionCollector::Collect(size_t edit_distance) {
+Script SymDeleteCollector::Collect(size_t edit_distance) {
   // TODO: specifically for 1 length str
   Script script;
 
@@ -80,28 +84,41 @@ void DFSCollect(const string &origin, const string &current, size_t ed, Script &
     string temp = current;
     temp.erase(i, 1);
     Spelling spelling(origin);
-//    spelling.properties.type = kCorrection;
     spelling.properties.tips = origin;
     result[temp].push_back(spelling);
     DFSCollect(origin, temp, ed - 1, result);
   }
 }
 
-vector<Prism::Match> Corrector::SymDeletePrefixSearch(const string& key) {
+void EditDistanceCorrector::ToleranceSearch(const Prism &prism,
+                                            const string &key,
+                                            Corrections *results,
+                                            size_t threshold) {
   if (key.empty())
-    return {};
+    return;
   size_t key_len = key.length();
-  size_t prepared_size = key_len * (key_len - 1);
 
-  vector<Match> result;
-  result.reserve(prepared_size);
   vector<size_t> jump_pos(key_len);
 
   auto match_next = [&](size_t &node, size_t &point) -> bool {
     auto res_val = trie_->traverse(key.c_str(), node, point, point + 1);
     if (res_val == -2) return false;
     if (res_val >= 0) {
-      result.push_back({ res_val, point });
+      for (auto accessor = QuerySpelling(res_val); !accessor.exhausted(); accessor.Next()) {
+        auto origin = accessor.properties().tips;
+        auto current_input = key.substr(0, point);
+        if (origin == current_input) {
+          continue; // early termination: this comparision is O(n)
+        }
+        auto distance = RestrictedDistance(origin, current_input, threshold);
+        if (distance <= threshold) { // only trace near words
+          SyllableId corrected;
+          if (prism.GetValue(origin, &corrected)) {
+            results->Alter(corrected, { distance, corrected, point });
+          }
+        }
+
+      }
     }
     return true;
   };
@@ -120,8 +137,6 @@ vector<Prism::Match> Corrector::SymDeletePrefixSearch(const string& key) {
       if (!match_next(next_node, key_point)) break;
     }
   }
-
-  return result;
 }
 
 
@@ -135,7 +150,7 @@ inline uint8_t SubstCost(char left, char right) {
 
 // This nice O(min(m, n)) implementation is from
 // https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#C++
-uint8_t Corrector::LevenshteinDistance(const std::string &s1, const std::string &s2) {
+Distance EditDistanceCorrector::LevenshteinDistance(const std::string &s1, const std::string &s2) {
   // To change the type this function manipulates and returns, change
   // the return type and the types of the two variables below.
   auto s1len = (size_t)s1.size();
@@ -167,11 +182,11 @@ uint8_t Corrector::LevenshteinDistance(const std::string &s1, const std::string 
 }
 
 // L's distance with transposition allowed
-uint8_t Corrector::RestrictedDistance(const std::string& s1, const std::string& s2)
-{
+Distance EditDistanceCorrector::RestrictedDistance(const std::string& s1,
+                                                              const std::string& s2,
+                                                              Distance threshold) {
   auto len1 = s1.size(), len2 = s2.size();
   vector<size_t> d((len1 + 1) * (len2 + 1));
-//  size_t d[len1 + 1][len2 + 1];
 
   auto index = [len1, len2](size_t i, size_t j) {
     return i * (len2 + 1) + j;
@@ -181,23 +196,29 @@ uint8_t Corrector::RestrictedDistance(const std::string& s1, const std::string& 
   for(size_t i = 1; i <= len1; ++i) d[index(i, 0)] = i * 2;
   for(size_t i = 1; i <= len2; ++i) d[index(0, i)] = i * 2;
 
-  for(size_t i = 1; i <= len1; ++i)
+  for(size_t i = 1; i <= len1; ++i) {
+    auto min_d = threshold + 1;
     for(size_t j = 1; j <= len2; ++j) {
       d[index(i, j)] = std::min({
-                              d[index(i - 1, j)] + 2,
-                              d[index(i, j - 1)] + 2,
-                              d[index(i - 1, j - 1)] + SubstCost(s1[i - 1], s2[j - 1])
-                          });
+                                    d[index(i - 1, j)] + 2,
+                                    d[index(i, j - 1)] + 2,
+                                    d[index(i - 1, j - 1)] + SubstCost(s1[i - 1], s2[j - 1])
+                                });
       if (i > 1 && j > 1 && s1[i - 2] == s2[j - 1] && s1[i - 1] == s2[j - 2]) {
         d[index(i, j)] = std::min(d[index(i, j)], d[index(i - 2, j - 2)] + 2);
       }
+      min_d = std::min(min_d, d[index(i, j)]);
     }
+    // early termination: do not continue if too far
+    if (min_d > threshold)
+      return min_d;
+  }
   return (uint8_t)d[index(len1, len2)];
 }
-bool Corrector::Build(const Syllabary &syllabary,
-                      const Script *script,
-                      uint32_t dict_file_checksum,
-                      uint32_t schema_file_checksum) {
+bool EditDistanceCorrector::Build(const Syllabary &syllabary,
+                                  const Script *script,
+                                  uint32_t dict_file_checksum,
+                                  uint32_t schema_file_checksum) {
   Syllabary correct_syllabary;
   if (script && !script->empty()) {
     for (auto &v : *script) {
@@ -207,17 +228,20 @@ bool Corrector::Build(const Syllabary &syllabary,
     correct_syllabary = syllabary;
   }
 
-  CorrectionCollector collector(correct_syllabary);
+  SymDeleteCollector collector(correct_syllabary);
   auto correction_script = collector.Collect((size_t)1);
 
   return Prism::Build(syllabary, &correction_script, dict_file_checksum, schema_file_checksum);
 }
+EditDistanceCorrector::EditDistanceCorrector(const string &file_name) : Prism(file_name) {}
 
-vector<NearSearchCorrector::Correction>
-NearSearchCorrector::ToleranceSearch(const Prism& prism, const string &key, size_t tolerance) {
-  vector<Correction> result;
+void
+NearSearchCorrector::ToleranceSearch(const Prism &prism,
+                                     const string &key,
+                                     Corrections *results,
+                                     size_t threshold) {
   if (key.empty())
-    return result;
+    return ;
 
   using record = struct {
     size_t node_pos;
@@ -241,16 +265,49 @@ NearSearchCorrector::ToleranceSearch(const Prism& prism, const string &key, size
 
     if (val == -2) continue;
     if (val >= 0) {
-      result.push_back({ rec.distance, val, rec.idx });
+      results->Alter(val, { rec.distance, val, rec.idx });
     }
     if (rec.idx < key.size()) {
       queue.push({ rec.node_pos, rec.idx, rec.distance, key[rec.idx] });
-      if (rec.distance < tolerance) {
+      if (rec.distance < threshold) {
         for (auto subst : keyboard_map[key[rec.idx]]) {
           queue.push({ rec.node_pos, rec.idx, rec.distance + 1, subst });
         }
       }
     }
   }
-  return result;
+}
+void CorrectorComponent::Unified::ToleranceSearch(const Prism &prism,
+                                                  const string &key,
+                                                  Corrections *results,
+                                                  size_t tolerance) {
+  for (auto &c : contents) {
+    c->ToleranceSearch(prism, key, results, tolerance);
+  }
+}
+CorrectorComponent::CorrectorComponent()
+  : resolver_(Service::instance().CreateResourceResolver({ "corrector", "build/", ".correction.bin" })) {
+}
+
+Corrector *CorrectorComponent::Create(const Ticket &ticket) noexcept {
+  // Don't use edit distance based correction for now.
+#if 0
+  if (!ticket.schema) return nullptr;
+  Config* config = ticket.schema->config();
+  string prism_name;
+  if (!config->GetString(ticket.name_space + "/prism", &prism_name)) {
+    config->GetString(ticket.name_space + "/dictionary", &prism_name);
+  }
+
+  auto file_name = resolver_->ResolvePath(prism_name).string();
+
+  auto edCorrector = New<EditDistanceCorrector>(file_name);
+  if (edCorrector->Load()) {
+    return Combine(New<NearSearchCorrector>(), edCorrector);
+  } else {
+    return new NearSearchCorrector();
+  }
+#endif
+  return new NearSearchCorrector();
+
 }

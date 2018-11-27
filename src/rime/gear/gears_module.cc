@@ -15,6 +15,7 @@
 #include <rime/gear/ascii_segmentor.h>
 #include <rime/gear/charset_filter.h>
 #include <rime/gear/chord_composer.h>
+#include <rime/gear/corrector.h>
 #include <rime/gear/echo_translator.h>
 #include <rime/gear/editor.h>
 #include <rime/gear/fallback_segmentor.h>
@@ -89,6 +90,8 @@ static void rime_gears_initialize() {
 
   // formatters
   r.Register("shape_formatter", new Component<ShapeFormatter>);
+
+  r.Register("corrector", new CorrectorComponent);
 }
 
 static void rime_gears_finalize() {

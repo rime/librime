@@ -9,9 +9,11 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <rime/dict/prism.h>
 #include <rime/algo/syllabifier.h>
-#include <rime/algo/corrector.h>
+#include <rime/gear/corrector.h>
+#include "syllabifier.h"
 
 namespace rime {
+using namespace corrector;
 
 using Vertex = pair<size_t, SpellingType>;
 using VertexQueue = std::priority_queue<Vertex,
@@ -19,9 +21,8 @@ using VertexQueue = std::priority_queue<Vertex,
                                         std::greater<Vertex>>;
 
 int Syllabifier::BuildSyllableGraph(const string &input,
-                            Prism &prism,
-                            SyllableGraph *graph,
-                            bool correction) {
+                                    Prism &prism,
+                                    SyllableGraph *graph) {
   if (input.empty())
     return 0;
 
@@ -54,31 +55,17 @@ int Syllabifier::BuildSyllableGraph(const string &input,
     for (auto &m : matches) {
       matches_set.insert(m.value);
     }
-    if (correction) {
-      NearSearchCorrector corrector;
-      auto corrections = corrector.ToleranceSearch(prism, current_input);
+    if (enable_correction_) {
+//      NearSearchCorrector corrector;
+      Corrections corrections;
+      corrector_->ToleranceSearch(prism, current_input, &corrections, 5);
       for (const auto &m : corrections) {
-        SpellingAccessor accessor(prism.QuerySpelling(m.syllable));
-        while (!accessor.exhausted()) {
+        for (auto accessor = prism.QuerySpelling(m.first); !accessor.exhausted(); accessor.Next()) {
           if (accessor.properties().type == kNormalSpelling) {
-            matches.push_back({ m.syllable, m.length });
+            matches.push_back({ m.first, m.second.length });
             break;
           }
-          accessor.Next();
         }
-//        SpellingAccessor accessor(prism.QuerySpelling(m.syllable));
-//        while (!accessor.exhausted()) {
-//          auto origin = accessor.properties().tips;
-//          auto key = current_input.substr(0, m.length);
-//          auto distance = Corrector::RestrictedDistance(origin, key);
-//          if (distance > 0 && distance <= 3) { // Only trace near words
-//            SyllableId corrected;
-//            if (prism.GetValue(origin, &corrected)) {
-//              matches.push_back({ corrected, m.length });
-//            }
-//          }
-//          accessor.Next();
-//        }
       }
     }
 
@@ -294,6 +281,11 @@ void Syllabifier::Transpose(SyllableGraph* graph) {
       }
     }
   }
+}
+
+void Syllabifier::EnableCorrection(an<Corrector> corrector) {
+  enable_correction_ = true;
+  corrector_ = std::move(corrector);
 }
 
 }  // namespace rime

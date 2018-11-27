@@ -19,6 +19,7 @@
 #include <rime/translation.h>
 #include <rime/dict/dictionary.h>
 #include <rime/algo/syllabifier.h>
+#include <rime/gear/corrector.h>
 #include <rime/gear/poet.h>
 #include <rime/gear/script_translator.h>
 #include <rime/gear/translator_commons.h>
@@ -76,7 +77,7 @@ class ScriptSyllabifier : public PhraseSyllabifier {
   }
 
   virtual Spans Syllabify(const Phrase* phrase);
-  size_t BuildSyllableGraph(Prism& prism, bool correction = false);
+  size_t BuildSyllableGraph(Prism& prism);
   string GetPreeditString(const Phrase& cand) const;
   string GetOriginalSpelling(const Phrase& cand) const;
   bool IsCandidateCorrection(const Phrase& cand) const;
@@ -144,6 +145,10 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
     config->GetBool(name_space_ + "/always_show_comments",
                     &always_show_comments_);
     config->GetBool(name_space_ + "/enable_correction", &enable_correction_);
+  }
+  if (enable_correction_) {
+    auto corrector = Corrector::Require("corrector");
+    corrector_.reset(corrector->Create(ticket));
   }
 }
 
@@ -233,14 +238,16 @@ Spans ScriptSyllabifier::Syllabify(const Phrase* phrase) {
   return result;
 }
 
-size_t ScriptSyllabifier::BuildSyllableGraph(Prism& prism, bool correction) {
+size_t ScriptSyllabifier::BuildSyllableGraph(Prism& prism) {
   Syllabifier syllabifier(translator_->delimiters(),
                           translator_->enable_completion(),
                           translator_->strict_spelling());
+  if (translator_->enable_correction()) {
+    syllabifier.EnableCorrection(translator_->corrector());
+  }
   auto consumed = (size_t)syllabifier.BuildSyllableGraph(input_,
                                                    prism,
-                                                   &syllable_graph_,
-                                                   correction);
+                                                   &syllable_graph_);
 
   return consumed;
 }
@@ -269,6 +276,7 @@ bool ScriptSyllabifier::IsCandidateCorrection(const rime::Phrase &cand) const {
           }
         }
       }
+      results.push(false);
     },
     [&](SyllabifyTask* task, size_t depth) {
       results.pop();
@@ -325,7 +333,7 @@ string ScriptSyllabifier::GetOriginalSpelling(const Phrase& cand) const {
 // ScriptTranslation implementation
 
 bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
-  size_t consumed = syllabifier_->BuildSyllableGraph(*dict->prism(), translator_->enable_correction());
+  size_t consumed = syllabifier_->BuildSyllableGraph(*dict->prism());
   const auto& syllable_graph = syllabifier_->syllable_graph();
 
   phrase_ = dict->Lookup(syllable_graph, 0);
