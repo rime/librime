@@ -301,9 +301,9 @@ Corrector *CorrectorComponent::Create(const Ticket &ticket) noexcept {
 
   auto file_name = resolver_->ResolvePath(prism_name).string();
 
-  auto edCorrector = New<EditDistanceCorrector>(file_name);
+  auto ed_corrector = New<EditDistanceCorrector>(file_name);
   if (edCorrector->Load()) {
-    return Combine(New<NearSearchCorrector>(), edCorrector);
+    return Combine(New<NearSearchCorrector>(), ed_corrector);
   } else {
     return new NearSearchCorrector();
   }

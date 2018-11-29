@@ -49,14 +49,13 @@ int Syllabifier::BuildSyllableGraph(const string &input,
 
     // see where we can go by advancing a syllable
     vector<Prism::Match> matches;
-    set<SyllableId> matches_set;
+    set<SyllableId> match_set;
     auto current_input = input.substr(current_pos);
     prism.CommonPrefixSearch(current_input, &matches);
     for (auto &m : matches) {
-      matches_set.insert(m.value);
+      match_set.insert(m.value);
     }
     if (enable_correction_) {
-//      NearSearchCorrector corrector;
       Corrections corrections;
       corrector_->ToleranceSearch(prism, current_input, &corrections, 5);
       for (const auto &m : corrections) {
@@ -98,7 +97,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
             props.end_pos = end_pos;
             // add a syllable with properties to the edge's
             // spelling-to-syllable map
-            if (matches_set.find(m.value) == matches_set.end()) {
+            if (match_set.find(m.value) == match_set.end()) {
               props.is_correction = true;
               props.credibility = 0.01;
             }
@@ -121,7 +120,6 @@ int Syllabifier::BuildSyllableGraph(const string &input,
           end_vertices.erase(end_pos);
           continue;
         }
-//        end_vertices[end_pos].swap(spellings);
         // find the best common type in a path up to the end vertex
         // eg. pinyin "shurfa" has vertex type kNormalSpelling at position 3,
         // kAbbreviation at position 4 and kAbbreviation at position 6

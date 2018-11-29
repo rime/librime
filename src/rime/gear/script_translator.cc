@@ -127,7 +127,7 @@ class ScriptTranslation : public Translation {
   size_t user_phrase_index_ = 0;
 
   size_t max_corrections_ = 4;
-  size_t corrections_count_ = 0;
+  size_t correction_count_ = 0;
 
   bool enable_correction_;
 };
@@ -400,9 +400,12 @@ bool ScriptTranslation::Next() {
       is_correction = syllabifier_->IsCandidateCorrection(*candidate_);
     }
   } while ( // limit the number of correction candidates
-      enable_correction_ && is_correction &&
-      corrections_count_ > max_corrections_);
-  if (is_correction) corrections_count_++;
+      enable_correction_ &&
+      is_correction &&
+      correction_count_ > max_corrections_);
+  if (is_correction) {
+    ++correction_count_;
+  }
   return !CheckEmpty();
 }
 
