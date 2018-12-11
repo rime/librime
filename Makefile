@@ -14,7 +14,9 @@ thirdparty/%:
 	make -f Makefile.thirdparty $(@:thirdparty/%=%)
 
 clean:
-	rm -Rf build build-static debug-build
+	rm -Rf build build-static debug-build xbuild
+	rm -Rf thirdparty/src/*/build
+	rm thirdparty/src/leveldb/build_config.mk thirdparty/src/marisa-trie/tools/Makefile thirdparty/src/marisa-trie/tools/marisa-dump thirdparty/src/marisa-trie/tools/marisa-lookup thirdparty/src/marisa-trie/tools/marisa-reverse-lookup thirdparty/src/marisa-trie/tools/marisa-common-prefix-search thirdparty/src/marisa-trie/tools/marisa-build thirdparty/src/marisa-trie/tools/marisa-benchmark thirdparty/src/marisa-trie/tools/marisa-predictive-search thirdparty/src/marisa-trie/Makefile thirdparty/src/marisa-trie/tests/Makefile thirdparty/src/marisa-trie/config.status thirdparty/src/marisa-trie/lib/Makefile thirdparty/src/marisa-trie/config.log
 
 librime: release
 install-librime: install
