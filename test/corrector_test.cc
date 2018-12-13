@@ -5,14 +5,14 @@
 // Created by nameoverflow on 2018/11/21.
 //
 #include <algorithm>
-#include <utility>
-#include <gtest/gtest.h>
-#include <rime/dict/prism.h>
-#include <rime/algo/syllabifier.h>
-#include <rime/gear/corrector.h>
 #include <memory>
+#include <gtest/gtest.h>
+#include <rime/algo/syllabifier.h>
+#include <rime/dict/prism.h>
+#include <rime/gear/corrector.h>
+#include <utility>
 
- class RimeCorrectorSearchTest : public ::testing::Test {
+class RimeCorrectorSearchTest : public ::testing::Test {
  public:
   void SetUp() override {
     rime::vector<rime::string> syllables;
@@ -31,9 +31,9 @@
 
   }
   void TearDown() override {}
-  protected:
-   rime::map<rime::string, rime::SyllableId> syllable_id_;
-   rime::the<rime::Prism> prism_;
+ protected:
+  rime::map<rime::string, rime::SyllableId> syllable_id_;
+  rime::the<rime::Prism> prism_;
 };
 
 class RimeCorrectorTest : public ::testing::Test {
@@ -80,6 +80,7 @@ TEST_F(RimeCorrectorSearchTest, CaseNearSubstitute) {
   EXPECT_EQ(1, sp.size());
   ASSERT_FALSE(sp.end() == sp.find(syllable_id_["chang"]));
 }
+
 TEST_F(RimeCorrectorSearchTest, CaseFarSubstitute) {
   rime::Syllabifier s;
   s.EnableCorrection(std::make_shared<rime::NearSearchCorrector>());
@@ -91,20 +92,21 @@ TEST_F(RimeCorrectorSearchTest, CaseFarSubstitute) {
   EXPECT_EQ(1, g.vertices.size());
   ASSERT_TRUE(g.vertices.end() == g.vertices.find(5));
 }
-//TEST_F(RimeCorrectorSearchTest, CaseTranspose) {
-//  rime::Syllabifier s;
-//  s.EnableCorrection(std::make_shared<rime::NearSearchCorrector>());
-//  rime::SyllableGraph g;
-//  const rime::string input("cahng");
-//  s.BuildSyllableGraph(input, *prism_, &g);
-//  EXPECT_EQ(input.length(), g.input_length);
-//  EXPECT_EQ(input.length(), g.interpreted_length);
-//  EXPECT_EQ(2, g.vertices.size());
-//  ASSERT_FALSE(g.vertices.end() == g.vertices.find(5));
-//  rime::SpellingMap& sp(g.edges[0][5]);
-//  EXPECT_EQ(1, sp.size());
-//  ASSERT_FALSE(sp.end() == sp.find(syllable_id_["chang"]));
-//}
+
+TEST_F(RimeCorrectorSearchTest, DISABLED_CaseTranspose) {
+  rime::Syllabifier s;
+  s.EnableCorrection(std::make_shared<rime::NearSearchCorrector>());
+  rime::SyllableGraph g;
+  const rime::string input("cahng");
+  s.BuildSyllableGraph(input, *prism_, &g);
+  EXPECT_EQ(input.length(), g.input_length);
+  EXPECT_EQ(input.length(), g.interpreted_length);
+  EXPECT_EQ(2, g.vertices.size());
+  ASSERT_FALSE(g.vertices.end() == g.vertices.find(5));
+  rime::SpellingMap& sp(g.edges[0][5]);
+  EXPECT_EQ(1, sp.size());
+  ASSERT_FALSE(sp.end() == sp.find(syllable_id_["chang"]));
+}
 
 TEST_F(RimeCorrectorSearchTest, CaseCorrectionSyllabify) {
   rime::Syllabifier s;
