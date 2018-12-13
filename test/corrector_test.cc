@@ -8,8 +8,8 @@
 #include <memory>
 #include <gtest/gtest.h>
 #include <rime/algo/syllabifier.h>
+#include <rime/dict/corrector.h>
 #include <rime/dict/prism.h>
-#include <rime/gear/corrector.h>
 #include <utility>
 
 class RimeCorrectorSearchTest : public ::testing::Test {

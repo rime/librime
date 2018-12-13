@@ -17,9 +17,9 @@
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/translation.h>
-#include <rime/dict/dictionary.h>
 #include <rime/algo/syllabifier.h>
-#include <rime/gear/corrector.h>
+#include <rime/dict/corrector.h>
+#include <rime/dict/dictionary.h>
 #include <rime/gear/poet.h>
 #include <rime/gear/script_translator.h>
 #include <rime/gear/translator_commons.h>

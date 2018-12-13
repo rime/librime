@@ -4,16 +4,15 @@
 //
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
-#include <utility>
 #include <boost/filesystem.hpp>
+#include <rime/algo/syllabifier.h>
 #include <rime/common.h>
+#include <rime/dict/dictionary.h>
 #include <rime/resource.h>
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/ticket.h>
-#include <rime/dict/dictionary.h>
-#include <rime/algo/syllabifier.h>
-#include <rime/gear/corrector.h>
+#include <utility>
 
 namespace rime {
 

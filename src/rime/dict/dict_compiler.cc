@@ -4,21 +4,21 @@
 //
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
-#include <fstream>
 #include <boost/filesystem.hpp>
-#include <rime/resource.h>
-#include <rime/service.h>
+#include <fstream>
 #include <rime/algo/algebra.h>
-#include <rime/gear/corrector.h>
 #include <rime/algo/utilities.h>
-#include <rime/dict/dictionary.h>
+#include <rime/dict/corrector.h>
 #include <rime/dict/dict_compiler.h>
 #include <rime/dict/dict_settings.h>
+#include <rime/dict/dictionary.h>
 #include <rime/dict/entry_collector.h>
 #include <rime/dict/preset_vocabulary.h>
 #include <rime/dict/prism.h>
-#include <rime/dict/table.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
+#include <rime/dict/table.h>
+#include <rime/resource.h>
+#include <rime/service.h>
 
 namespace rime {
 

@@ -7,9 +7,9 @@
 //
 #include <queue>
 #include <boost/range/adaptor/reversed.hpp>
-#include <rime/dict/prism.h>
 #include <rime/algo/syllabifier.h>
-#include <rime/gear/corrector.h>
+#include <rime/dict/corrector.h>
+#include <rime/dict/prism.h>
 #include "syllabifier.h"
 
 namespace rime {

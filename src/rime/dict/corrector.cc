@@ -5,13 +5,13 @@
 // Created by nameoverflow on 2018/11/14.
 //
 
-#include <numeric>
+#include "corrector.h"
 #include <algorithm>
+#include <numeric>
 #include <queue>
+#include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/ticket.h>
-#include <rime/schema.h>
-#include "rime/gear/corrector.h"
 
 using namespace rime;
 using namespace corrector;

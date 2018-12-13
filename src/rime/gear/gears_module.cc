@@ -5,39 +5,37 @@
 // 2013-10-17 GONG Chen <chen.sst@gmail.com>
 //
 
-#include <rime_api.h>
 #include <rime/common.h>
-#include <rime/registry.h>
-
 #include <rime/gear/abc_segmentor.h>
 #include <rime/gear/affix_segmentor.h>
 #include <rime/gear/ascii_composer.h>
 #include <rime/gear/ascii_segmentor.h>
 #include <rime/gear/charset_filter.h>
 #include <rime/gear/chord_composer.h>
-#include <rime/gear/corrector.h>
+#include <rime/gear/codepoint_translator.h>
 #include <rime/gear/echo_translator.h>
 #include <rime/gear/editor.h>
 #include <rime/gear/fallback_segmentor.h>
+#include <rime/gear/history_translator.h>
+#include <rime/gear/key_binder.h>
 #include <rime/gear/matcher.h>
 #include <rime/gear/navigator.h>
-#include <rime/gear/key_binder.h>
 #include <rime/gear/punctuator.h>
-#include <rime/gear/script_translator.h>
 #include <rime/gear/recognizer.h>
-#include <rime/gear/selector.h>
-#include <rime/gear/simplifier.h>
-#include <rime/gear/single_char_filter.h>
-#include <rime/gear/shape.h>
-#include <rime/gear/speller.h>
 #include <rime/gear/reverse_lookup_filter.h>
 #include <rime/gear/reverse_lookup_translator.h>
 #include <rime/gear/schema_list_translator.h>
+#include <rime/gear/script_translator.h>
+#include <rime/gear/selector.h>
+#include <rime/gear/shape.h>
+#include <rime/gear/simplifier.h>
+#include <rime/gear/single_char_filter.h>
+#include <rime/gear/speller.h>
 #include <rime/gear/switch_translator.h>
 #include <rime/gear/table_translator.h>
 #include <rime/gear/uniquifier.h>
-#include <rime/gear/codepoint_translator.h>
-#include <rime/gear/history_translator.h>
+#include <rime/registry.h>
+#include <rime_api.h>
 
 static void rime_gears_initialize() {
   using namespace rime;
@@ -90,8 +88,6 @@ static void rime_gears_initialize() {
 
   // formatters
   r.Register("shape_formatter", new Component<ShapeFormatter>);
-
-  r.Register("corrector", new CorrectorComponent);
 }
 
 static void rime_gears_finalize() {
