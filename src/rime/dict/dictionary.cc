@@ -4,15 +4,15 @@
 //
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
-#include <utility>
 #include <boost/filesystem.hpp>
+#include <rime/algo/syllabifier.h>
 #include <rime/common.h>
+#include <rime/dict/dictionary.h>
 #include <rime/resource.h>
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/ticket.h>
-#include <rime/dict/dictionary.h>
-#include <rime/algo/syllabifier.h>
+#include <utility>
 
 namespace rime {
 
@@ -147,9 +147,9 @@ bool DictEntryIterator::Skip(size_t num_entries) {
 // Dictionary members
 
 Dictionary::Dictionary(const string& name,
-                       const an<Table>& table,
-                       const an<Prism>& prism)
-    : name_(name), table_(table), prism_(prism) {
+                       an<Table> table,
+                       an<Prism> prism)
+    : name_(name), table_(std::move(table)), prism_(std::move(prism)) {
 }
 
 Dictionary::~Dictionary() {
@@ -292,23 +292,22 @@ DictionaryComponent::DictionaryComponent()
     : prism_resource_resolver_(
           Service::instance().CreateResourceResolver(kPrismResourceType)),
       table_resource_resolver_(
-          Service::instance().CreateResourceResolver(kTableResourceType)) {
-}
+          Service::instance().CreateResourceResolver(kTableResourceType)) {}
 
 DictionaryComponent::~DictionaryComponent() {
 }
 
 Dictionary* DictionaryComponent::Create(const Ticket& ticket) {
-  if (!ticket.schema) return NULL;
+  if (!ticket.schema) return nullptr;
   Config* config = ticket.schema->config();
   string dict_name;
   if (!config->GetString(ticket.name_space + "/dictionary", &dict_name)) {
     LOG(ERROR) << ticket.name_space << "/dictionary not specified in schema '"
                << ticket.schema->schema_id() << "'.";
-    return NULL;
+    return nullptr;
   }
   if (dict_name.empty()) {
-    return NULL;  // not requiring static dictionary
+    return nullptr;  // not requiring static dictionary
   }
   string prism_name;
   if (!config->GetString(ticket.name_space + "/prism", &prism_name)) {

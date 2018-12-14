@@ -15,15 +15,22 @@
 namespace rime {
 
 class Prism;
+class Corrector;
 
 using SyllableId = int32_t;
 
-using SpellingMap = map<SyllableId, SpellingProperties>;
+struct EdgeProperties : SpellingProperties {
+  EdgeProperties(SpellingProperties sup): SpellingProperties(sup) {};
+  EdgeProperties() = default;
+  bool is_correction = false;
+};
+
+using SpellingMap = map<SyllableId, EdgeProperties>;
 using VertexMap = map<size_t, SpellingType>;
 using EndVertexMap = map<size_t, SpellingMap>;
 using EdgeMap = map<size_t, EndVertexMap>;
 
-using SpellingPropertiesList = vector<const SpellingProperties*>;
+using SpellingPropertiesList = vector<const EdgeProperties*>;
 using SpellingIndex = map<SyllableId, SpellingPropertiesList>;
 using SpellingIndices = map<size_t, SpellingIndex>;
 
@@ -49,6 +56,7 @@ class Syllabifier {
   RIME_API int BuildSyllableGraph(const string &input,
                                   Prism &prism,
                                   SyllableGraph *graph);
+  RIME_API void EnableCorrection(an<Corrector> corrector);
 
  protected:
   void CheckOverlappedSpellings(SyllableGraph *graph,
@@ -58,6 +66,8 @@ class Syllabifier {
   string delimiters_;
   bool enable_completion_ = false;
   bool strict_spelling_ = false;
+  an<Corrector> corrector_ = nullptr;
+  bool enable_correction_ = false;
 };
 
 }  // namespace rime

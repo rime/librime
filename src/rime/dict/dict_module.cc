@@ -13,6 +13,7 @@
 #include <rime/dict/table_db.h>
 #include <rime/dict/text_db.h>
 #include <rime/dict/user_db.h>
+#include <rime/dict/corrector.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 #include <rime/dict/user_dictionary.h>
@@ -31,6 +32,8 @@ static void rime_dict_initialize() {
   // NOTE: register a legacy_userdb component in your plugin if you wish to
   // upgrade userdbs from an old file format (eg. TreeDb) during maintenance.
   //r.Register("legacy_userdb", ...);
+
+  r.Register("corrector", new CorrectorComponent);
 
   r.Register("dictionary", new DictionaryComponent);
   r.Register("reverse_lookup_dictionary",

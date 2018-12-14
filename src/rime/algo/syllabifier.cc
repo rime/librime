@@ -7,10 +7,13 @@
 //
 #include <queue>
 #include <boost/range/adaptor/reversed.hpp>
-#include <rime/dict/prism.h>
 #include <rime/algo/syllabifier.h>
+#include <rime/dict/corrector.h>
+#include <rime/dict/prism.h>
+#include "syllabifier.h"
 
 namespace rime {
+using namespace corrector;
 
 using Vertex = pair<size_t, SpellingType>;
 using VertexQueue = std::priority_queue<Vertex,
@@ -35,8 +38,10 @@ int Syllabifier::BuildSyllableGraph(const string &input,
     // record a visit to the vertex
     if (graph->vertices.find(current_pos) == graph->vertices.end())
       graph->vertices.insert(vertex);  // preferred spelling type comes first
-    else
+    else {
+//      graph->vertices[current_pos] = std::min(vertex.second, graph->vertices[current_pos]);
       continue;  // discard worse spelling types
+    }
 
     if (current_pos > farthest)
       farthest = current_pos;
@@ -44,7 +49,25 @@ int Syllabifier::BuildSyllableGraph(const string &input,
 
     // see where we can go by advancing a syllable
     vector<Prism::Match> matches;
-    prism.CommonPrefixSearch(input.substr(current_pos), &matches);
+    set<SyllableId> match_set;
+    auto current_input = input.substr(current_pos);
+    prism.CommonPrefixSearch(current_input, &matches);
+    for (auto &m : matches) {
+      match_set.insert(m.value);
+    }
+    if (enable_correction_) {
+      Corrections corrections;
+      corrector_->ToleranceSearch(prism, current_input, &corrections, 5);
+      for (const auto &m : corrections) {
+        for (auto accessor = prism.QuerySpelling(m.first); !accessor.exhausted(); accessor.Next()) {
+          if (accessor.properties().type == kNormalSpelling) {
+            matches.push_back({ m.first, m.second.length });
+            break;
+          }
+        }
+      }
+    }
+
     if (!matches.empty()) {
       auto& end_vertices(graph->edges[current_pos]);
       for (const auto& m : matches) {
@@ -56,7 +79,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
           ++end_pos;
         DLOG(INFO) << "end_pos: " << end_pos;
         bool matches_input = (current_pos == 0 && end_pos == input.length());
-        SpellingMap spellings;
+        SpellingMap& spellings(end_vertices[end_pos]);
         SpellingType end_vertex_type = kInvalidSpelling;
         // when spelling algebra is enabled,
         // a spelling evaluates to a set of syllables;
@@ -64,7 +87,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
         SpellingAccessor accessor(prism.QuerySpelling(m.value));
         while (!accessor.exhausted()) {
           SyllableId syllable_id = accessor.syllable_id();
-          SpellingProperties props = accessor.properties();
+          EdgeProperties props(accessor.properties());
           if (strict_spelling_ &&
               matches_input &&
               props.type != kNormalSpelling) {
@@ -74,10 +97,19 @@ int Syllabifier::BuildSyllableGraph(const string &input,
             props.end_pos = end_pos;
             // add a syllable with properties to the edge's
             // spelling-to-syllable map
-            spellings.insert({syllable_id, props});
+            if (match_set.find(m.value) == match_set.end()) {
+              props.is_correction = true;
+              props.credibility = 0.01;
+            }
+            auto it = spellings.find(syllable_id);
+            if (it == spellings.end()) {
+              spellings.insert({syllable_id, props});
+            } else {
+              it->second.type = std::min(it->second.type, props.type);
+            }
             // let end_vertex_type be the best (smaller) type of spelling
             // that ends at the vertex
-            if (end_vertex_type > props.type) {
+            if (end_vertex_type > props.type && !props.is_correction) {
               end_vertex_type = props.type;
             }
           }
@@ -85,9 +117,9 @@ int Syllabifier::BuildSyllableGraph(const string &input,
         }
         if (spellings.empty()) {
           DLOG(INFO) << "not spelt.";
+          end_vertices.erase(end_pos);
           continue;
         }
-        end_vertices[end_pos].swap(spellings);
         // find the best common type in a path up to the end vertex
         // eg. pinyin "shurfa" has vertex type kNormalSpelling at position 3,
         // kAbbreviation at position 4 and kAbbreviation at position 6
@@ -121,6 +153,10 @@ int Syllabifier::BuildSyllableGraph(const string &input,
       // when there is a path of more favored type
       SpellingType edge_type = kInvalidSpelling;
       for (auto k = j->second.begin(); k != j->second.end(); ) {
+        if (k->second.is_correction) {
+          ++k;
+          continue; // Don't care correction edges
+        }
         if (k->second.type > last_type) {
           j->second.erase(k++);
         }
@@ -243,6 +279,11 @@ void Syllabifier::Transpose(SyllableGraph* graph) {
       }
     }
   }
+}
+
+void Syllabifier::EnableCorrection(an<Corrector> corrector) {
+  enable_correction_ = true;
+  corrector_ = std::move(corrector);
 }
 
 }  // namespace rime

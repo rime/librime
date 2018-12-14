@@ -70,14 +70,15 @@ struct DictEntryCollector : map<size_t, DictEntryIterator> {
 
 class Config;
 class Schema;
+class EditDistanceCorrector;
 struct SyllableGraph;
 struct Ticket;
 
 class Dictionary : public Class<Dictionary, const Ticket&> {
  public:
   RIME_API Dictionary(const string& name,
-                      const an<Table>& table,
-                      const an<Prism>& prism);
+                      an<Table> table,
+                      an<Prism> prism);
   virtual ~Dictionary();
 
   bool Exists() const;
@@ -113,8 +114,8 @@ class ResourceResolver;
 class DictionaryComponent : public Dictionary::Component {
  public:
   DictionaryComponent();
-  ~DictionaryComponent();
-  Dictionary* Create(const Ticket& ticket);
+  ~DictionaryComponent() override;
+  Dictionary* Create(const Ticket& ticket) override;
   Dictionary* CreateDictionaryWithName(const string& dict_name,
                                        const string& prism_name);
 

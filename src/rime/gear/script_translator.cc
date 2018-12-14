@@ -17,8 +17,9 @@
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/translation.h>
-#include <rime/dict/dictionary.h>
 #include <rime/algo/syllabifier.h>
+#include <rime/dict/corrector.h>
+#include <rime/dict/dictionary.h>
 #include <rime/gear/poet.h>
 #include <rime/gear/script_translator.h>
 #include <rime/gear/translator_commons.h>
@@ -79,6 +80,7 @@ class ScriptSyllabifier : public PhraseSyllabifier {
   size_t BuildSyllableGraph(Prism& prism);
   string GetPreeditString(const Phrase& cand) const;
   string GetOriginalSpelling(const Phrase& cand) const;
+  bool IsCandidateCorrection(const Phrase& cand) const;
 
   const SyllableGraph& syllable_graph() const { return syllable_graph_; }
 
@@ -92,9 +94,11 @@ class ScriptSyllabifier : public PhraseSyllabifier {
 class ScriptTranslation : public Translation {
  public:
   ScriptTranslation(ScriptTranslator* translator,
-                    const string& input, size_t start)
+                    const string& input, size_t start,
+                    bool enable_correction = false)
       : translator_(translator), start_(start),
-        syllabifier_(New<ScriptSyllabifier>(translator, input, start)) {
+        syllabifier_(New<ScriptSyllabifier>(translator, input, start)),
+        enable_correction_(enable_correction) {
     set_exhausted(true);
   }
   bool Evaluate(Dictionary* dict, UserDictionary* user_dict);
@@ -106,6 +110,7 @@ class ScriptTranslation : public Translation {
   bool IsNormalSpelling() const;
   an<Sentence> MakeSentence(Dictionary* dict,
                                     UserDictionary* user_dict);
+  void PrepareCandidate();
 
   ScriptTranslator* translator_;
   size_t start_;
@@ -115,9 +120,16 @@ class ScriptTranslation : public Translation {
   an<UserDictEntryCollector> user_phrase_;
   an<Sentence> sentence_;
 
+  an<Phrase> candidate_ = nullptr;
+
   DictEntryCollector::reverse_iterator phrase_iter_;
   UserDictEntryCollector::reverse_iterator user_phrase_iter_;
   size_t user_phrase_index_ = 0;
+
+  size_t max_corrections_ = 4;
+  size_t correction_count_ = 0;
+
+  bool enable_correction_;
 };
 
 // ScriptTranslator implementation
@@ -132,6 +144,11 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
     config->GetInt(name_space_ + "/spelling_hints", &spelling_hints_);
     config->GetBool(name_space_ + "/always_show_comments",
                     &always_show_comments_);
+    config->GetBool(name_space_ + "/enable_correction", &enable_correction_);
+  }
+  if (enable_correction_) {
+    auto corrector = Corrector::Require("corrector");
+    corrector_.reset(corrector->Create(ticket));
   }
 }
 
@@ -150,7 +167,7 @@ an<Translation> ScriptTranslator::Query(const string& input,
       !IsUserDictDisabledFor(input);
 
   // the translator should survive translations it creates
-  auto result = New<ScriptTranslation>(this, input, segment.start);
+  auto result = New<ScriptTranslation>(this, input, segment.start, enable_correction_);
   if (!result ||
       !result->Evaluate(dict_.get(),
                         enable_user_dict ? user_dict_.get() : NULL)) {
@@ -225,10 +242,53 @@ size_t ScriptSyllabifier::BuildSyllableGraph(Prism& prism) {
   Syllabifier syllabifier(translator_->delimiters(),
                           translator_->enable_completion(),
                           translator_->strict_spelling());
-  size_t consumed = syllabifier.BuildSyllableGraph(input_,
+  if (translator_->enable_correction()) {
+    syllabifier.EnableCorrection(translator_->corrector());
+  }
+  auto consumed = (size_t)syllabifier.BuildSyllableGraph(input_,
                                                    prism,
                                                    &syllable_graph_);
+
   return consumed;
+}
+
+bool ScriptSyllabifier::IsCandidateCorrection(const rime::Phrase &cand) const {
+  std::stack<bool> results;
+  bool result = false;
+  // Perform DFS on syllable graph to find whether this candidate is a correction
+  SyllabifyTask task {
+    cand.code(),
+    syllable_graph_,
+    cand.end() - start_,
+    [&](SyllabifyTask* task, size_t depth,
+        size_t current_pos, size_t next_pos) {
+      auto id = cand.code()[depth];
+      auto it_s = syllable_graph_.edges.find(current_pos);
+      // C++ prohibit operator [] of const map
+      // if (syllable_graph_.edges[current_pos][next_pos][id].type == kCorrection)
+      if (it_s != syllable_graph_.edges.end()) {
+        auto it_e = it_s->second.find(next_pos);
+        if (it_e != it_s->second.end()) {
+          auto it_type = it_e->second.find(id);
+          if (it_type != it_e->second.end()) {
+            results.push(it_type->second.is_correction);
+            return;
+          }
+        }
+      }
+      results.push(false);
+    },
+    [&](SyllabifyTask* task, size_t depth) {
+      results.pop();
+    }
+  };
+  if (syllabify_dfs(&task, 0, cand.start() - start_)) {
+    for (; !results.empty(); results.pop()) {
+      if (results.top())
+        return results.top();
+    }
+  }
+  return false;
 }
 
 string ScriptSyllabifier::GetPreeditString(const Phrase& cand) const {
@@ -301,33 +361,50 @@ bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
 }
 
 bool ScriptTranslation::Next() {
-  if (exhausted())
-    return false;
-  if (sentence_) {
-    sentence_.reset();
-    return !CheckEmpty();
-  }
-  int user_phrase_code_length = 0;
-  if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
-    user_phrase_code_length = user_phrase_iter_->first;
-  }
-  int phrase_code_length = 0;
-  if (phrase_ && phrase_iter_ != phrase_->rend()) {
-    phrase_code_length = phrase_iter_->first;
-  }
-  if (user_phrase_code_length > 0 &&
-      user_phrase_code_length >= phrase_code_length) {
-    DictEntryList& entries(user_phrase_iter_->second);
-    if (++user_phrase_index_ >= entries.size()) {
-      ++user_phrase_iter_;
-      user_phrase_index_ = 0;
+  bool is_correction;
+  do {
+    is_correction = false;
+    if (exhausted())
+      return false;
+    if (sentence_) {
+      sentence_.reset();
+      return !CheckEmpty();
     }
-  }
-  else if (phrase_code_length > 0) {
-    DictEntryIterator& iter(phrase_iter_->second);
-    if (!iter.Next()) {
-      ++phrase_iter_;
+    int user_phrase_code_length = 0;
+    if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
+      user_phrase_code_length = user_phrase_iter_->first;
     }
+    int phrase_code_length = 0;
+    if (phrase_ && phrase_iter_ != phrase_->rend()) {
+      phrase_code_length = phrase_iter_->first;
+    }
+    if (user_phrase_code_length > 0 &&
+        user_phrase_code_length >= phrase_code_length) {
+      DictEntryList& entries(user_phrase_iter_->second);
+      if (++user_phrase_index_ >= entries.size()) {
+        ++user_phrase_iter_;
+        user_phrase_index_ = 0;
+      }
+    }
+    else if (phrase_code_length > 0) {
+      DictEntryIterator& iter(phrase_iter_->second);
+      if (!iter.Next()) {
+        ++phrase_iter_;
+      }
+    }
+    if (enable_correction_) {
+      PrepareCandidate();
+      if (!candidate_) {
+        break;
+      }
+      is_correction = syllabifier_->IsCandidateCorrection(*candidate_);
+    }
+  } while ( // limit the number of correction candidates
+      enable_correction_ &&
+      is_correction &&
+      correction_count_ > max_corrections_);
+  if (is_correction) {
+    ++correction_count_;
   }
   return !CheckEmpty();
 }
@@ -339,8 +416,28 @@ bool ScriptTranslation::IsNormalSpelling() const {
 }
 
 an<Candidate> ScriptTranslation::Peek() {
-  if (exhausted())
+  PrepareCandidate();
+  if (!candidate_) {
     return nullptr;
+  }
+  if (candidate_->preedit().empty()) {
+    candidate_->set_preedit(syllabifier_->GetPreeditString(*candidate_));
+  }
+  if (candidate_->comment().empty()) {
+    auto spelling = syllabifier_->GetOriginalSpelling(*candidate_);
+    if (!spelling.empty() && spelling != candidate_->preedit()) {
+      candidate_->set_comment(/*quote_left + */spelling/* + quote_right*/);
+    }
+  }
+  candidate_->set_syllabifier(syllabifier_);
+  return candidate_;
+}
+
+void ScriptTranslation::PrepareCandidate() {
+  if (exhausted()) {
+    candidate_ = nullptr;
+    return;
+  }
   if (sentence_) {
     if (sentence_->preedit().empty()) {
       sentence_->set_preedit(syllabifier_->GetPreeditString(*sentence_));
@@ -349,11 +446,12 @@ an<Candidate> ScriptTranslation::Peek() {
       auto spelling = syllabifier_->GetOriginalSpelling(*sentence_);
       if (!spelling.empty() &&
           (translator_->always_show_comments() ||
-           spelling != sentence_->preedit())) {
+              spelling != sentence_->preedit())) {
         sentence_->set_comment(/*quote_left + */spelling/* + quote_right*/);
       }
     }
-    return sentence_;
+    candidate_ = sentence_;
+    return;
   }
   size_t user_phrase_code_length = 0;
   if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
@@ -376,8 +474,8 @@ an<Candidate> ScriptTranslation::Peek() {
                        start_ + user_phrase_code_length,
                        entry);
     cand->set_quality(entry->weight +
-                      translator_->initial_quality() +
-                      (IsNormalSpelling() ? 0.5 : -0.5));
+        translator_->initial_quality() +
+        (IsNormalSpelling() ? 0.5 : -0.5));
   }
   else if (phrase_code_length > 0) {
     DictEntryIterator& iter(phrase_iter_->second);
@@ -390,20 +488,10 @@ an<Candidate> ScriptTranslation::Peek() {
                        start_ + phrase_code_length,
                        entry);
     cand->set_quality(entry->weight +
-                      translator_->initial_quality() +
-                      (IsNormalSpelling() ? 0 : -1));
+        translator_->initial_quality() +
+        (IsNormalSpelling() ? 0 : -1));
   }
-  if (cand->preedit().empty()) {
-    cand->set_preedit(syllabifier_->GetPreeditString(*cand));
-  }
-  if (cand->comment().empty()) {
-    auto spelling = syllabifier_->GetOriginalSpelling(*cand);
-    if (!spelling.empty() && spelling != cand->preedit()) {
-      cand->set_comment(/*quote_left + */spelling/* + quote_right*/);
-    }
-  }
-  cand->set_syllabifier(syllabifier_);
-  return cand;
+  candidate_ = cand;
 }
 
 bool ScriptTranslation::CheckEmpty() {

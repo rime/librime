@@ -72,12 +72,12 @@ class Prism : public MappedFile {
   RIME_API bool Load();
   RIME_API bool Save();
   RIME_API bool Build(const Syllabary& syllabary,
-                      const Script* script = NULL,
+                      const Script* script = nullptr,
                       uint32_t dict_file_checksum = 0,
                       uint32_t schema_file_checksum = 0);
 
   RIME_API bool HasKey(const string& key);
-  RIME_API bool GetValue(const string& key, int* value);
+  RIME_API bool GetValue(const string& key, int* value) const;
   RIME_API void CommonPrefixSearch(const string& key, vector<Match>* result);
   RIME_API void ExpandSearch(const string& key, vector<Match>* result, size_t limit);
   SpellingAccessor QuerySpelling(SyllableId spelling_id);
@@ -86,8 +86,9 @@ class Prism : public MappedFile {
 
   uint32_t dict_file_checksum() const;
   uint32_t schema_file_checksum() const;
+  Darts::DoubleArray& trie() const { return *trie_; }
 
- private:
+ protected:
   the<Darts::DoubleArray> trie_;
   prism::Metadata* metadata_ = nullptr;
   prism::SpellingMap* spelling_map_ = nullptr;

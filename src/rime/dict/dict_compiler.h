@@ -17,6 +17,7 @@ class Prism;
 class Table;
 class ReverseDb;
 class DictSettings;
+class EditDistanceCorrector;
 
 class DictCompiler {
  public:
@@ -43,6 +44,7 @@ class DictCompiler {
 
   string dict_name_;
   an<Prism> prism_;
+  an<EditDistanceCorrector> correction_;
   an<Table> table_;
   int options_ = 0;
   string prefix_;
