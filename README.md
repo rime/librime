@@ -4,6 +4,8 @@ RIME: Rime Input Method Engine
 ===
 [![Build Status](https://travis-ci.org/rime/librime.svg)](https://travis-ci.org/rime/librime)
 [![Build status](https://ci.appveyor.com/api/projects/status/github/rime/librime?svg=true)](https://ci.appveyor.com/project/rime/librime)
+[![GitHub release](https://img.shields.io/github/release/rime/librime.svg)](https://github.com/rime/librime/releases)
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 rimes with your keystrokes.
 
