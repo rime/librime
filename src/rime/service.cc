@@ -176,6 +176,13 @@ ResourceResolver* Service::CreateResourceResolver(const ResourceType& type) {
   return resolver.release();
 }
 
+ResourceResolver* Service::CreateUserSpecificResourceResolver(
+    const ResourceType& type) {
+  the<ResourceResolver> resolver(new ResourceResolver(type));
+  resolver->set_root_path(deployer().user_data_dir);
+  return resolver.release();
+}
+
 Service& Service::instance() {
   static the<Service> s_instance;
   if (!s_instance) {

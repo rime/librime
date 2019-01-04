@@ -36,10 +36,11 @@ static void rime_core_initialize() {
   r.Register("config", config_loader);
   r.Register("schema", new SchemaComponent(config_loader));
 
-  auto user_config = new ConfigComponent<ConfigLoader>(
-      [](ConfigLoader* loader) {
-        loader->set_auto_save(true);
-      });
+  auto user_config =
+      new ConfigComponent<ConfigLoader, UserConfigResourceProvider>(
+          [](ConfigLoader* loader) {
+            loader->set_auto_save(true);
+          });
   r.Register("user_config", user_config);
 }
 

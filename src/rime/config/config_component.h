@@ -68,11 +68,22 @@ class ConfigCompiler;
 class ConfigCompilerPlugin;
 struct ConfigResource;
 
+struct ConfigResourceProvider {
+  RIME_API static const ResourceType kDefaultResourceType;
+  RIME_API static ResourceResolver*
+  CreateResourceResolver(const ResourceType& resource_type);
+};
+
+struct UserConfigResourceProvider {
+  RIME_API static const ResourceType kDefaultResourceType;
+  RIME_API static ResourceResolver*
+  CreateResourceResolver(const ResourceType& resource_type);
+};
+
 class ConfigComponentBase : public Config::Component {
  public:
-  RIME_API static const ResourceType kConfigResourceType;
-  RIME_API ConfigComponentBase(const ResourceType& resource_type);
-  RIME_API ~ConfigComponentBase();
+  RIME_API ConfigComponentBase(ResourceResolver* resource_resolver);
+  RIME_API virtual ~ConfigComponentBase();
   RIME_API Config* Create(const string& file_name);
 
  protected:
@@ -84,13 +95,17 @@ class ConfigComponentBase : public Config::Component {
   map<string, weak<ConfigData>> cache_;
 };
 
-template <class Loader>
+template <class Loader, class ResourceProvider = ConfigResourceProvider>
     class ConfigComponent : public ConfigComponentBase {
  public:
-  ConfigComponent(const ResourceType& resource_type = kConfigResourceType)
-      : ConfigComponentBase(resource_type) {}
+  ConfigComponent(const ResourceType& resource_type =
+                  ResourceProvider::kDefaultResourceType)
+      : ConfigComponentBase(
+            ResourceProvider::CreateResourceResolver(resource_type)) {}
   ConfigComponent(function<void (Loader* loader)> setup)
-      : ConfigComponentBase(kConfigResourceType) {
+      : ConfigComponentBase(
+            ResourceProvider::CreateResourceResolver(
+                ResourceProvider::kDefaultResourceType)) {
     setup(&loader_);
   }
  private:

@@ -30,10 +30,12 @@ class RimeConfigTest : public ::testing::Test {
 TEST(RimeConfigComponentTest, RoundTrip) {
   // registration
   Registry& r = Registry::instance();
-  r.Register("test_config", new ConfigComponent<ConfigLoader>(
-      [](ConfigLoader* loader) {
-        loader->set_auto_save(true);
-      }));
+  r.Register(
+      "test_config",
+      new ConfigComponent<ConfigLoader, UserConfigResourceProvider>(
+          [](ConfigLoader* loader) {
+            loader->set_auto_save(true);
+          }));
   // find component
   Config::Component* cc = Config::Require("test_config");
   ASSERT_TRUE(cc != NULL);

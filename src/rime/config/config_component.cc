@@ -143,15 +143,30 @@ void Config::SetItem(an<ConfigItem> item) {
   set_modified();
 }
 
-const ResourceType ConfigComponentBase::kConfigResourceType = {
+const ResourceType ConfigResourceProvider::kDefaultResourceType = {
   "config",
   "",
   ".yaml",
 };
 
-ConfigComponentBase::ConfigComponentBase(const ResourceType& resource_type)
-    : resource_resolver_(
-          Service::instance().CreateResourceResolver(resource_type)) {
+ResourceResolver* ConfigResourceProvider::CreateResourceResolver(
+    const ResourceType& resource_type) {
+  return Service::instance().CreateResourceResolver(resource_type);
+}
+
+const ResourceType UserConfigResourceProvider::kDefaultResourceType = {
+  "user_config",
+  "",
+  ".yaml",
+};
+
+ResourceResolver* UserConfigResourceProvider::CreateResourceResolver(
+    const ResourceType& resource_type) {
+  return Service::instance().CreateUserSpecificResourceResolver(resource_type);
+}
+
+ConfigComponentBase::ConfigComponentBase(ResourceResolver* resource_resolver)
+    : resource_resolver_(resource_resolver) {
 }
 
 ConfigComponentBase::~ConfigComponentBase() {
