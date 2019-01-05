@@ -478,21 +478,20 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
     if (fs::is_symlink(entry)) {
       try {
         // a symlink becomes dangling if the target file is no longer provided
-        bool symlink_valid = fs::status_known(fs::symlink_status(entry));
-        bool linked_to_shared_data = false;
-        if (symlink_valid) {
-          auto target_path = fs::canonical(entry);
-          linked_to_shared_data =
-              target_path.has_parent_path() &&
-              fs::equivalent(shared_data_path, target_path.parent_path());
-        }
-        if (!symlink_valid || linked_to_shared_data) {
+        boost::system::error_code ec;
+        auto target_path = fs::canonical(entry, ec);
+        bool bad_link = bool(ec);
+        bool linked_to_shared_data =
+            !bad_link &&
+            target_path.has_parent_path() &&
+            fs::equivalent(shared_data_path, target_path.parent_path());
+        if (bad_link || linked_to_shared_data) {
           LOG(INFO) << "removing symlink: " << entry.filename().string();
           fs::remove(entry);
         }
       }
       catch (const fs::filesystem_error& ex) {
-        LOG(ERROR) << ex.what();
+        LOG(ERROR) << entry << ": " << ex.what();
         success = false;
       }
     }
