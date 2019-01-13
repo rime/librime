@@ -92,7 +92,6 @@ set BOOST_COMPILED_LIBS=--with-date_time^
  --with-filesystem^
  --with-locale^
  --with-regex^
- --with-signals^
  --with-system^
  --with-thread
 
