@@ -1,3 +1,21 @@
+<a name="1.4.0"></a>
+# [1.4.0](https://github.com/rime/librime/compare/1.3.2...1.4.0) (2019-01-16)
+
+
+### Bug Fixes
+
+* **config:** user_config should not fall back to shared data ([68c8a34](https://github.com/rime/librime/commit/68c8a34)), closes [#271](https://github.com/rime/librime/issues/271)
+* **SymlinkingPrebuiltDictionaries:** remove dangling symlinks ([5ad333d](https://github.com/rime/librime/commit/5ad333d)), closes [#241](https://github.com/rime/librime/issues/241)
+* **SymlinkingPrebuiltDictionaries:** remove dangling symlinks ([f8e4ebf](https://github.com/rime/librime/commit/f8e4ebf)), closes [#241](https://github.com/rime/librime/issues/241)
+
+
+### Features
+
+* spelling correction ([#228](https://github.com/rime/librime/issues/228)) ([ad3638a](https://github.com/rime/librime/commit/ad3638a))
+* **Dockerfile:** for build ([#246](https://github.com/rime/librime/issues/246)) ([cafd0d5](https://github.com/rime/librime/commit/cafd0d5))
+
+
+
 ## [1.3.2](https://github.com/rime/librime/compare/1.3.1...1.3.2) (2018-11-12)
 
 
