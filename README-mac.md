@@ -17,7 +17,20 @@ Install Boost:
 brew install boost
 ```
 
-You can also manually download and build Boost libraries from source code, then set `BOOST_ROOT` to the path of its top level directory prior to building librime.
+> **Notice:**
+>
+> Starting from version 1.68, homebrewed `boost` libraries depends on `icu4c`,
+> which is not provided by macOS.
+>
+> The [`with-icu` branch](https://github.com/rime/librime/tree/with-icu) adds
+> support for linking to ICU libraries but the built app cannot run on machines
+> without ICU libraries installed.
+>
+> To make the build portable, either install an earlier version of `boost` via
+> homebrew, or build from source with bootstrap option `--without-icu`.
+
+When you manually download and build Boost libraries from source code, set shell
+variable `BOOST_ROOT` to its top level directory prior to building librime.
 
 Get the code
 ---
