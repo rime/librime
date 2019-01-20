@@ -22,9 +22,8 @@ brew link --force boost@1.60
 > Starting from version 1.68, homebrewed `boost` libraries depends on `icu4c`,
 > which is not provided by macOS.
 >
-> The [`with-icu` branch](https://github.com/rime/librime/tree/with-icu) adds
-> support for linking to ICU libraries but the built app cannot run on machines
-> without ICU libraries installed.
+> The make target `xcode/release-with-icu` tells cmake to link to ICU libraries
+> but the built app cannot run on machines without ICU libraries installed.
 >
 > To make the build portable, either install an earlier version of `boost` via
 > homebrew, or build from source with bootstrap option `--without-icu`.

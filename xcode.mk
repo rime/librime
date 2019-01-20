@@ -16,10 +16,27 @@ release:
 	-DCMAKE_INSTALL_PREFIX="$(RIME_DIST_DIR)"
 	cmake --build build --config Release
 
+release-with-icu:
+	cmake . -Bbuild -GXcode \
+	-DBUILD_STATIC=ON \
+	-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
+	-DCMAKE_INSTALL_PREFIX="$(RIME_DIST_DIR)" \
+	-DBUILD_WITH_ICU=ON \
+	-DCMAKE_PREFIX_PATH=/usr/local/opt/icu4c
+	cmake --build build --config Release
+
 debug:
 	cmake . -Bdebug -GXcode \
 	-DBUILD_STATIC=ON \
 	-DBUILD_SEPARATE_LIBS=ON
+	cmake --build debug --config Debug
+
+debug-with-icu:
+	cmake . -Bdebug -GXcode \
+	-DBUILD_STATIC=ON \
+	-DBUILD_SEPARATE_LIBS=ON \
+	-DBUILD_WITH_ICU=ON \
+	-DCMAKE_PREFIX_PATH=/usr/local/opt/icu4c
 	cmake --build debug --config Debug
 
 clean:
