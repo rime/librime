@@ -11,7 +11,7 @@ rimes with your keystrokes.
 
 Project home
 ---
-[rime.im](http://rime.im)
+[rime.im](https://rime.im)
 
 License
 ---
