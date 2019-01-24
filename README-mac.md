@@ -14,10 +14,11 @@ brew install git
 
 Install Boost:
 ``` sh
-brew install boost
+brew install boost@1.60
+brew link --force boost@1.60
 ```
 
-> **Notice:**
+> **Note:**
 >
 > Starting from version 1.68, homebrewed `boost` libraries depends on `icu4c`,
 > which is not provided by macOS.
