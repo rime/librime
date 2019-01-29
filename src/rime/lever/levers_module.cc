@@ -63,8 +63,8 @@ static Bool rime_levers_save_settings(RimeCustomSettings* settings) {
 }
 
 static Bool rime_levers_customize_bool(RimeCustomSettings* settings,
-                                       const char* key, bool value) {
-  an<ConfigItem> item = New<ConfigValue>(value);
+                                       const char* key, Bool value) {
+  an<ConfigItem> item = New<ConfigValue>(bool(value));
   auto custom_settings = reinterpret_cast<CustomSettings*>(settings);
   return custom_settings->Customize(key, item);
 }

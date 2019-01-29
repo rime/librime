@@ -32,7 +32,7 @@ typedef struct rime_levers_api_t {
   void (*custom_settings_destroy)(RimeCustomSettings* settings);
   Bool (*load_settings)(RimeCustomSettings* settings);
   Bool (*save_settings)(RimeCustomSettings* settings);
-  Bool (*customize_bool)(RimeCustomSettings* settings, const char* key, bool value);
+  Bool (*customize_bool)(RimeCustomSettings* settings, const char* key, Bool value);
   Bool (*customize_int)(RimeCustomSettings* settings, const char* key, int value);
   Bool (*customize_double)(RimeCustomSettings* settings, const char* key, double value);
   Bool (*customize_string)(RimeCustomSettings* settings, const char* key, const char* value);
