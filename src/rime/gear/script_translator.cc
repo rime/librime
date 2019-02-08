@@ -254,7 +254,6 @@ size_t ScriptSyllabifier::BuildSyllableGraph(Prism& prism) {
 
 bool ScriptSyllabifier::IsCandidateCorrection(const rime::Phrase &cand) const {
   std::stack<bool> results;
-  bool result = false;
   // Perform DFS on syllable graph to find whether this candidate is a correction
   SyllabifyTask task {
     cand.code(),
