@@ -32,9 +32,10 @@ class ReverseLookupTranslation : public TableTranslation {
                            const string& input,
                            size_t start, size_t end,
                            const string& preedit,
-                           const DictEntryIterator& iter,
+                           DictEntryIterator&& iter,
                            bool quality)
-      : TableTranslation(options, NULL, input, start, end, preedit, iter),
+      : TableTranslation(
+            options, NULL, input, start, end, preedit, std::move(iter)),
         dict_(dict), options_(options), quality_(quality) {
   }
   virtual an<Candidate> Peek();
@@ -185,7 +186,7 @@ an<Translation> ReverseLookupTranslator::Query(const string& input,
         auto collector = dict_->Lookup(graph, 0);
         if (collector && !collector->empty() &&
             collector->rbegin()->first == consumed) {
-          iter = collector->rbegin()->second;
+          iter = std::move(collector->rbegin()->second);
           quality = !graph.vertices.empty() &&
               (graph.vertices.rbegin()->second == kNormalSpelling);
         }
@@ -199,7 +200,8 @@ an<Translation> ReverseLookupTranslator::Query(const string& input,
                                             segment.start,
                                             segment.end,
                                             preedit,
-                                            iter, quality);
+                                            std::move(iter),
+                                            quality);
   }
   return nullptr;
 }

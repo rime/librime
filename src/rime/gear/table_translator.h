@@ -56,8 +56,8 @@ class TableTranslation : public Translation {
                    size_t start,
                    size_t end,
                    const string& preedit,
-                   const DictEntryIterator& iter = DictEntryIterator(),
-                   const UserDictEntryIterator& uter = UserDictEntryIterator());
+                   DictEntryIterator&& iter = {},
+                   UserDictEntryIterator&& uter = {});
 
   virtual bool Next();
   virtual an<Candidate> Peek();

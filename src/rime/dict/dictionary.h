@@ -39,30 +39,29 @@ bool compare_chunk_by_leading_element(const Chunk& a, const Chunk& b);
 
 }  // namespace dictionary
 
-class DictEntryIterator : protected list<dictionary::Chunk>,
-                          public DictEntryFilterBinder {
+class DictEntryIterator : public DictEntryFilterBinder {
  public:
-  using Base = list<dictionary::Chunk>;
-
-  RIME_API DictEntryIterator();
-  RIME_API DictEntryIterator(const DictEntryIterator& other);
-  DictEntryIterator& operator= (DictEntryIterator& other);
+  DictEntryIterator() = default;
+  DictEntryIterator(DictEntryIterator&& other) = default;
+  DictEntryIterator& operator= (DictEntryIterator&& other) = default;
 
   void AddChunk(dictionary::Chunk&& chunk, Table* table);
   void Sort();
   RIME_API an<DictEntry> Peek();
   RIME_API bool Next();
   bool Skip(size_t num_entries);
-  RIME_API bool exhausted() const;
+  bool exhausted() const { return chunk_index_ == chunks_.size(); }
   size_t entry_count() const { return entry_count_; }
 
  protected:
   void PrepareEntry();
 
  private:
-  Table* table_;
-  an<DictEntry> entry_;
-  size_t entry_count_;
+  vector<dictionary::Chunk> chunks_;
+  size_t chunk_index_ = 0;
+  Table* table_ = nullptr;
+  an<DictEntry> entry_ = nullptr;
+  size_t entry_count_ = 0;
 };
 
 struct DictEntryCollector : map<size_t, DictEntryIterator> {

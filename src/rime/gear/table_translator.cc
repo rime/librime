@@ -33,11 +33,11 @@ TableTranslation::TableTranslation(TranslatorOptions* options,
                                    size_t start,
                                    size_t end,
                                    const string& preedit,
-                                   const DictEntryIterator& iter,
-                                   const UserDictEntryIterator& uter)
+                                   DictEntryIterator&& iter,
+                                   UserDictEntryIterator&& uter)
     : options_(options), language_(language),
       input_(input), start_(start), end_(end), preedit_(preedit),
-      iter_(iter), uter_(uter) {
+      iter_(std::move(iter)), uter_(std::move(uter)) {
   if (options_)
     options_->preedit_formatter().Apply(&preedit_);
   CheckEmpty();
@@ -190,7 +190,7 @@ bool LazyTableTranslation::FetchMoreTableEntries() {
   }
   if (more.entry_count() > previous_entry_count) {
     more.Skip(previous_entry_count);
-    iter_ = more;
+    iter_ = std::move(more);
   }
   return true;
 }
@@ -276,8 +276,8 @@ an<Translation> TableTranslator::Query(const string& input,
           segment.start,
           segment.start + input.length(),
           preedit,
-          iter,
-          uter);
+          std::move(iter),
+          std::move(uter));
   }
   if (translation) {
     bool filter_by_charset = enable_charset_filter_ &&
@@ -618,7 +618,7 @@ TableTranslator::MakeSentence(const string& input, size_t start,
         entries[consumed_length] = iter.Peek();
         if (start_pos == 0 && !iter.exhausted()) {
           // also provide words for manual composition
-          collector[consumed_length] = iter;
+          collector[consumed_length] = std::move(iter);
           DLOG(INFO) << "table[" << consumed_length << "]: "
                      << collector[consumed_length].entry_count();
         }
