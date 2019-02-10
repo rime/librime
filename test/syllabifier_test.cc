@@ -59,7 +59,7 @@ TEST_F(RimeSyllabifierTest, CaseAlpha) {
   EXPECT_EQ(1, sp.size());
   ASSERT_FALSE(sp.end() == sp.find(syllable_id_["a"]));
   EXPECT_EQ(rime::kNormalSpelling, sp[0].type);
-  EXPECT_EQ(1.0, sp[0].credibility);
+  EXPECT_EQ(0.0, sp[0].credibility);
 }
 
 TEST_F(RimeSyllabifierTest, CaseFailure) {

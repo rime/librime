@@ -24,14 +24,14 @@ struct Chunk {
   size_t size = 0;
   size_t cursor = 0;
   string remaining_code;  // for predictive queries
-  double credibility = 1.0;
+  double credibility = 0.0;
 
   Chunk() = default;
-  Chunk(const Code& c, const table::Entry* e, double cr = 1.0)
+  Chunk(const Code& c, const table::Entry* e, double cr = 0.0)
       : code(c), entries(e), size(1), cursor(0), credibility(cr) {}
-  Chunk(const TableAccessor& a, double cr = 1.0)
+  Chunk(const TableAccessor& a, double cr = 0.0)
       : Chunk(a, string(), cr) {}
-  Chunk(const TableAccessor& a, const string& r, double cr = 1.0)
+  Chunk(const TableAccessor& a, const string& r, double cr = 0.0)
       : code(a.index_code()), entries(a.entry()),
         size(a.remaining()), cursor(0), remaining_code(r), credibility(cr) {}
 };
@@ -88,7 +88,7 @@ class Dictionary : public Class<Dictionary, const Ticket&> {
 
   RIME_API an<DictEntryCollector> Lookup(const SyllableGraph& syllable_graph,
                                          size_t start_pos,
-                                         double initial_credibility = 1.0);
+                                         double initial_credibility = 0.0);
   // if predictive is true, do an expand search with limit,
   // otherwise do an exact match.
   // return num of matching keys.

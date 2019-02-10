@@ -80,7 +80,7 @@ an<Candidate> TableTranslation::Peek() {
     phrase->set_comment(comment);
     phrase->set_preedit(preedit_);
     bool incomplete = e->remaining_code_length != 0;
-    phrase->set_quality(e->weight +
+    phrase->set_quality(exp(e->weight) +
                         options_->initial_quality() +
                         (incomplete ? -1 : 0) +
                         (is_user_phrase ? 0.5 : 0));

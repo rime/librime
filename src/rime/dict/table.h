@@ -102,11 +102,11 @@ class TableAccessor {
  public:
   TableAccessor() = default;
   TableAccessor(const Code& index_code, const List<table::Entry>* entries,
-                double credibility = 1.0);
+                double credibility = 0.0);
   TableAccessor(const Code& index_code, const Array<table::Entry>* entries,
-                double credibility = 1.0);
+                double credibility = 0.0);
   TableAccessor(const Code& index_code, const table::TailIndex* code_map,
-                double credibility = 1.0);
+                double credibility = 0.0);
 
   RIME_API bool Next();
 
@@ -124,7 +124,7 @@ class TableAccessor {
   const table::LongEntry* long_entries_ = nullptr;
   size_t size_ = 0;
   size_t cursor_ = 0;
-  double credibility_ = 1.0;
+  double credibility_ = 0.0;
 };
 
 using TableQueryResult = map<int, vector<TableAccessor>>;

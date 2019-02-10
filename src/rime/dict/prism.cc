@@ -22,7 +22,7 @@ struct node_t {
 
 }  // namespace
 
-const char kPrismFormat[] = "Rime::Prism/2.0";
+const char kPrismFormat[] = "Rime::Prism/3.0";
 
 const char kPrismFormatPrefix[] = "Rime::Prism/";
 const size_t kPrismFormatPrefixLen = sizeof(kPrismFormatPrefix) - 1;

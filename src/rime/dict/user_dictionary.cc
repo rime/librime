@@ -5,6 +5,7 @@
 // 2011-10-30 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
+#include <cfloat>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/scope_exit.hpp>
@@ -225,7 +226,7 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
       if (i > 0 && props->type >= kAbbreviation)
         continue;
       state->credibility.push_back(
-          state->credibility.back() * props->credibility);
+          state->credibility.back() + props->credibility);
       BOOST_SCOPE_EXIT( (&state) ) {
         state->credibility.pop_back();
       }
@@ -479,10 +480,11 @@ an<DictEntry> UserDictionary::CreateDictEntry(const string& key,
   e->text = key.substr(separator_pos + 1);
   e->commit_count = v.commits;
   // TODO: argument s not defined...
-  e->weight = algo::formula_p(0,
-                              (double)v.commits / present_tick,
-                              (double)present_tick,
-                              v.dee) * credibility;
+  double weight = algo::formula_p(0,
+                                  (double)v.commits / present_tick,
+                                  (double)present_tick,
+                                  v.dee);
+  e->weight = log(weight > 0 ? weight : DBL_EPSILON) + credibility;
   if (full_code) {
     *full_code = key.substr(0, separator_pos);
   }

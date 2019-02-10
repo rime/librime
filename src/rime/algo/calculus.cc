@@ -11,8 +11,8 @@
 
 namespace rime {
 
-const double kAbbreviationPenalty = 0.5;
-const double kFuzzySpellingPenalty = 0.5;
+const double kAbbreviationPenalty = -0.6931471805599453; // log(0.5)
+const double kFuzzySpellingPenalty = -0.6931471805599453; // log(0.5)
 
 Calculus::Calculus() {
   Register("xlit", &Transliteration::Parse);
@@ -177,7 +177,7 @@ bool Fuzzing::Apply(Spelling* spelling) {
   bool result = Transformation::Apply(spelling);
   if (result) {
     spelling->properties.type = kFuzzySpelling;
-    spelling->properties.credibility *= kFuzzySpellingPenalty;
+    spelling->properties.credibility += kFuzzySpellingPenalty;
   }
   return result;
 }
@@ -201,7 +201,7 @@ bool Abbreviation::Apply(Spelling* spelling) {
   bool result = Transformation::Apply(spelling);
   if (result) {
     spelling->properties.type = kAbbreviation;
-    spelling->properties.credibility *= kAbbreviationPenalty;
+    spelling->properties.credibility += kAbbreviationPenalty;
   }
   return result;
 }

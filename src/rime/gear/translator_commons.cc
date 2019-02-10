@@ -88,12 +88,11 @@ bool Spans::HasVertex(size_t vertex) const {
 // Sentence
 
 void Sentence::Extend(const DictEntry& entry, size_t end_pos) {
-  const double kEpsilon = 1e-200;
-  const double kPenalty = 1e-8;
+  const double kPenalty = -18.420680743952367; // log(1e-8)
   entry_->code.insert(entry_->code.end(),
                      entry.code.begin(), entry.code.end());
   entry_->text.append(entry.text);
-  entry_->weight *= (std::max)(entry.weight, kEpsilon) * kPenalty;
+  entry_->weight += entry.weight + kPenalty;
   components_.push_back(entry);
   syllable_lengths_.push_back(end_pos - end());
   set_end(end_pos);

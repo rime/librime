@@ -29,7 +29,7 @@ void Script::Merge(const string& s,
     {
       if (sp.type > yy.type)
         yy.type = sp.type;
-      yy.credibility *= sp.credibility;
+      yy.credibility += sp.credibility;
       if (!sp.tips.empty())
         yy.tips = sp.tips;
     }

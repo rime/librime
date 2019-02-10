@@ -62,9 +62,9 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
   bool readonly() const;
 
   an<UserDictEntryCollector> Lookup(const SyllableGraph& syllable_graph,
-                                            size_t start_pos,
-                                            size_t depth_limit = 0,
-                                            double initial_credibility = 1.0);
+                                    size_t start_pos,
+                                    size_t depth_limit = 0,
+                                    double initial_credibility = 0.0);
   size_t LookupWords(UserDictEntryIterator* result,
                      const string& input,
                      bool predictive,
@@ -83,10 +83,10 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
   TickCount tick() const { return tick_; }
 
   static an<DictEntry> CreateDictEntry(const string& key,
-                                               const string& value,
-                                               TickCount present_tick,
-                                               double credibility = 1.0,
-                                               string* full_code = NULL);
+                                       const string& value,
+                                       TickCount present_tick,
+                                       double credibility = 0.0,
+                                       string* full_code = NULL);
 
  protected:
   bool Initialize();

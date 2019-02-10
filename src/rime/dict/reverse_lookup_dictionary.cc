@@ -18,7 +18,7 @@
 
 namespace rime {
 
-const char kReverseFormat[] = "Rime::Reverse/2.0";
+const char kReverseFormat[] = "Rime::Reverse/3.0";
 
 const char kReverseFormatPrefix[] = "Rime::Reverse/";
 const size_t kReverseFormatPrefixLen = sizeof(kReverseFormatPrefix) - 1;
@@ -102,16 +102,16 @@ bool ReverseDb::Build(DictSettings* settings,
   for (const auto& v : rev_table) {
     const string& key(v.first);
     string value(boost::algorithm::join(v.second, " "));
-    key_trie_builder.Add(key, 1.0, &key_ids[i]);
-    value_trie_builder.Add(value, 1.0, &value_ids[i]);
+    key_trie_builder.Add(key, 0.0, &key_ids[i]);
+    value_trie_builder.Add(value, 0.0, &value_ids[i]);
     ++i;
   }
   // save stems
   for (const auto& v : stems) {
     string key(v.first + kStemKeySuffix);
     string value(boost::algorithm::join(v.second, " "));
-    key_trie_builder.Add(key, 1.0, &key_ids[i]);
-    value_trie_builder.Add(value, 1.0, &value_ids[i]);
+    key_trie_builder.Add(key, 0.0, &key_ids[i]);
+    value_trie_builder.Add(value, 0.0, &value_ids[i]);
     ++i;
   }
   key_trie_builder.Build();

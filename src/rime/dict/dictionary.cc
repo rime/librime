@@ -23,8 +23,8 @@ bool compare_chunk_by_head_element(const Chunk& a, const Chunk& b) {
   if (!b.entries || b.cursor >= b.size) return true;
   if (a.remaining_code.length() != b.remaining_code.length())
     return a.remaining_code.length() < b.remaining_code.length();
-  return a.credibility * a.entries[a.cursor].weight >
-         b.credibility * b.entries[b.cursor].weight;  // by weight desc
+  return a.credibility + a.entries[a.cursor].weight >
+         b.credibility + b.entries[b.cursor].weight;  // by weight desc
 }
 
 size_t match_extra_code(const table::Code* extra_code, size_t depth,
@@ -87,8 +87,8 @@ an<DictEntry> DictEntryIterator::Peek() {
     entry_ = New<DictEntry>();
     entry_->code = chunk.code;
     entry_->text = table_->GetEntryText(e);
-    const double kS = 1e8;
-    entry_->weight = (e.weight + 1) / kS * chunk.credibility;
+    const double kS = 18.420680743952367; // log(1e8)
+    entry_->weight = e.weight - kS + chunk.credibility;
     if (!chunk.remaining_code.empty()) {
       entry_->comment = "~" + chunk.remaining_code;
       entry_->remaining_code_length = chunk.remaining_code.length();
@@ -167,7 +167,7 @@ Dictionary::Lookup(const SyllableGraph& syllable_graph,
   for (auto& v : result) {
     size_t end_pos = v.first;
     for (TableAccessor& a : v.second) {
-      double cr = initial_credibility * a.credibility();
+      double cr = initial_credibility + a.credibility();
       if (a.extra_code()) {
         do {
           size_t actual_end_pos = dictionary::match_extra_code(

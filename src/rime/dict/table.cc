@@ -15,8 +15,8 @@
 
 namespace rime {
 
-const char kTableFormatLatest[] = "Rime::Table/3.0";
-int kTableFormatLowestCompatible = 3.0;
+const char kTableFormatLatest[] = "Rime::Table/4.0";
+int kTableFormatLowestCompatible = 4.0;
 
 const char kTableFormatPrefix[] = "Rime::Table/";
 const size_t kTableFormatPrefixLen = sizeof(kTableFormatPrefix) - 1;
@@ -28,10 +28,10 @@ class TableQuery {
   }
 
   TableAccessor Access(SyllableId syllable_id,
-                       double credibility = 1.0) const;
+                       double credibility = 0.0) const;
 
   // down to next level
-  bool Advance(SyllableId syllable_id, double credibility = 1.0);
+  bool Advance(SyllableId syllable_id, double credibility = 0.0);
 
   // up one level
   bool Backdate();
@@ -136,7 +136,7 @@ bool TableQuery::Advance(SyllableId syllable_id, double credibility) {
   }
   ++level_;
   index_code_.push_back(syllable_id);
-  credibility_.push_back(credibility_.back() * credibility);
+  credibility_.push_back(credibility_.back() + credibility);
   return true;
 }
 
@@ -155,7 +155,7 @@ void TableQuery::Reset() {
   level_ = 0;
   index_code_.clear();
   credibility_.clear();
-  credibility_.push_back(1.0);
+  credibility_.push_back(0.0);
 }
 
 inline static bool node_less(const table::TrunkIndexNode& a,
@@ -216,7 +216,7 @@ inline static Code add_syllable(Code code, SyllableId syllable_id) {
 
 TableAccessor TableQuery::Access(SyllableId syllable_id,
                                  double credibility) const {
-  credibility *= credibility_.back();
+  credibility += credibility_.back();
   if (level_ == 0) {
     if (!lv1_index_ ||
         syllable_id < 0 ||

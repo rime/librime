@@ -19,7 +19,7 @@ enum SpellingType { kNormalSpelling, kFuzzySpelling,
 struct SpellingProperties {
   SpellingType type = kNormalSpelling;
   size_t end_pos = 0;
-  double credibility = 1.0;
+  double credibility = 0.0;
   string tips;
 };
 

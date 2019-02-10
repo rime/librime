@@ -111,7 +111,7 @@ class Sentence : public Phrase {
  public:
   Sentence(const Language* language)
       : Phrase(language, "sentence", 0, 0, New<DictEntry>()) {
-    entry_->weight = 1.0;
+    entry_->weight = 0.0;
   }
   Sentence(const Sentence& other)
       : Phrase(other),
