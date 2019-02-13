@@ -96,23 +96,40 @@ bool UserDictEntryIterator::Release(DictEntryList* receiver) {
   return true;
 }
 
-an<DictEntry> UserDictEntryIterator::Peek() {
-  an<DictEntry> result;
-  while (!result && !exhausted()) {
-    result = (*entries_)[index_];
-    if (filter_ && !filter_(result)) {
-      ++index_;
-      result.reset();
-    }
+void UserDictEntryIterator::AddFilter(DictEntryFilter filter) {
+  DictEntryFilterBinder::AddFilter(filter);
+  // the introduced filter could invalidate the current or even all the
+  // remaining entries
+  while (!exhausted() && !filter_(Peek())) {
+    FindNextEntry();
   }
-  return result;
+}
+
+an<DictEntry> UserDictEntryIterator::Peek() {
+  if (exhausted()) {
+    return nullptr;
+  }
+  return (*entries_)[index_];
+}
+
+bool UserDictEntryIterator::FindNextEntry() {
+  if (exhausted()) {
+    return false;
+  }
+  ++index_;
+  return !exhausted();
 }
 
 bool UserDictEntryIterator::Next() {
-  if (exhausted())
+  if (!FindNextEntry()) {
     return false;
-  ++index_;
-  return exhausted();
+  }
+  while (filter_ && !filter_(Peek())) {
+    if (!FindNextEntry()) {
+      return false;
+    }
+  }
+  return true;
 }
 
 // UserDictionary members

@@ -47,14 +47,15 @@ class DictEntryIterator : public DictEntryFilterBinder {
 
   void AddChunk(dictionary::Chunk&& chunk, Table* table);
   void Sort();
+  void AddFilter(DictEntryFilter filter) override;
   RIME_API an<DictEntry> Peek();
   RIME_API bool Next();
   bool Skip(size_t num_entries);
-  bool exhausted() const { return chunk_index_ == chunks_.size(); }
+  bool exhausted() const { return chunk_index_ >= chunks_.size(); }
   size_t entry_count() const { return entry_count_; }
 
  protected:
-  void PrepareEntry();
+  bool FindNextEntry();
 
  private:
   vector<dictionary::Chunk> chunks_;

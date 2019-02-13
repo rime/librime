@@ -67,7 +67,7 @@ an<Candidate> TableTranslation::Peek() {
   if (exhausted())
     return nullptr;
   bool is_user_phrase = PreferUserPhrase();
-  auto e = PreferedEntry(is_user_phrase);
+  auto e = PreferredEntry(is_user_phrase);
   string comment(is_constructed(e.get()) ? kUnitySymbol : e->comment);
   if (options_) {
     options_->comment_formatter().Apply(&comment);
@@ -559,12 +559,14 @@ TableTranslator::MakeSentence(const string& input, size_t start,
         if (filter_by_charset) {
           uter.AddFilter(CharsetFilter::FilterDictEntry);
         }
-        entries[consumed_length] = uter.Peek();
-        if (start_pos == 0 && !uter.exhausted()) {
-          // also provide words for manual composition
-          uter.Release(&user_phrase_collector[consumed_length]);
-          DLOG(INFO) << "user phrase[" << consumed_length << "]: "
-                     << user_phrase_collector[consumed_length].size();
+        if (!uter.exhausted()) {
+          entries[consumed_length] = uter.Peek();
+          if (start_pos == 0) {
+            // also provide words for manual composition
+            uter.Release(&user_phrase_collector[consumed_length]);
+            DLOG(INFO) << "user phrase[" << consumed_length << "]: "
+                       << user_phrase_collector[consumed_length].size();
+          }
         }
         if (resume_key > active_key &&
             !boost::starts_with(resume_key, active_key))
@@ -586,12 +588,14 @@ TableTranslator::MakeSentence(const string& input, size_t start,
         if (filter_by_charset) {
           uter.AddFilter(CharsetFilter::FilterDictEntry);
         }
-        entries[consumed_length] = uter.Peek();
-        if (start_pos == 0 && !uter.exhausted()) {
-          // also provide words for manual composition
-          uter.Release(&user_phrase_collector[consumed_length]);
-          DLOG(INFO) << "unity phrase[" << consumed_length << "]: "
-                     << user_phrase_collector[consumed_length].size();
+        if (!uter.exhausted()) {
+          entries[consumed_length] = uter.Peek();
+          if (start_pos == 0) {
+            // also provide words for manual composition
+            uter.Release(&user_phrase_collector[consumed_length]);
+            DLOG(INFO) << "unity phrase[" << consumed_length << "]: "
+                       << user_phrase_collector[consumed_length].size();
+          }
         }
         if (resume_key > active_key &&
             !boost::starts_with(resume_key, active_key))
@@ -615,12 +619,14 @@ TableTranslator::MakeSentence(const string& input, size_t start,
         if (filter_by_charset) {
           iter.AddFilter(CharsetFilter::FilterDictEntry);
         }
-        entries[consumed_length] = iter.Peek();
-        if (start_pos == 0 && !iter.exhausted()) {
-          // also provide words for manual composition
-          collector[consumed_length] = std::move(iter);
-          DLOG(INFO) << "table[" << consumed_length << "]: "
-                     << collector[consumed_length].entry_count();
+        if (!iter.exhausted()) {
+          entries[consumed_length] = iter.Peek();
+          if (start_pos == 0) {
+            // also provide words for manual composition
+            collector[consumed_length] = std::move(iter);
+            DLOG(INFO) << "table[" << consumed_length << "]: "
+                       << collector[consumed_length].entry_count();
+          }
         }
       }
     }

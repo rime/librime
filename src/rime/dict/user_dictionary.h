@@ -26,6 +26,7 @@ class UserDictEntryIterator : public DictEntryFilterBinder {
   void SortRange(size_t start, size_t count);
   bool Release(DictEntryList* receiver);
 
+  void AddFilter(DictEntryFilter filter) override;
   an<DictEntry> Peek();
   bool Next();
   bool exhausted() const {
@@ -36,6 +37,8 @@ class UserDictEntryIterator : public DictEntryFilterBinder {
   }
 
  protected:
+  bool FindNextEntry();
+
   an<DictEntryList> entries_;
   size_t index_ = 0;
 };

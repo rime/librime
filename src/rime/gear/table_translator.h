@@ -69,7 +69,7 @@ class TableTranslation : public Translation {
   bool CheckEmpty();
   bool PreferUserPhrase();
 
-  an<DictEntry> PreferedEntry(bool prefer_user_phrase) {
+  an<DictEntry> PreferredEntry(bool prefer_user_phrase) {
     return prefer_user_phrase ? uter_.Peek() : iter_.Peek();
   }
 

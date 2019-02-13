@@ -68,37 +68,36 @@ void DictEntryIterator::Sort() {
       dictionary::compare_chunk_by_head_element);
 }
 
-void DictEntryIterator::PrepareEntry() {
-  if (exhausted() || !table_) {
-    return;
-  }
-  const auto& chunk(chunks_[chunk_index_]);
-  entry_ = New<DictEntry>();
-  const auto& e(chunk.entries[chunk.cursor]);
-  DLOG(INFO) << "creating temporary dict entry '"
-             << table_->GetEntryText(e) << "'.";
-  entry_->code = chunk.code;
-  entry_->text = table_->GetEntryText(e);
-  const double kS = 1e8;
-  entry_->weight = (e.weight + 1) / kS * chunk.credibility;
-  if (!chunk.remaining_code.empty()) {
-    entry_->comment = "~" + chunk.remaining_code;
-    entry_->remaining_code_length = chunk.remaining_code.length();
+void DictEntryIterator::AddFilter(DictEntryFilter filter) {
+  DictEntryFilterBinder::AddFilter(filter);
+  // the introduced filter could invalidate the current or even all the
+  // remaining entries
+  while (!exhausted() && !filter_(Peek())) {
+    FindNextEntry();
   }
 }
 
 an<DictEntry> DictEntryIterator::Peek() {
-  while (!entry_ && !exhausted()) {
-    PrepareEntry();
-    if (filter_ && !filter_(entry_)) {
-      Next();
+  if (!entry_ && !exhausted() && table_) {
+    // get next entry from current chunk
+    const auto& chunk(chunks_[chunk_index_]);
+    const auto& e(chunk.entries[chunk.cursor]);
+    DLOG(INFO) << "creating temporary dict entry '"
+               << table_->GetEntryText(e) << "'.";
+    entry_ = New<DictEntry>();
+    entry_->code = chunk.code;
+    entry_->text = table_->GetEntryText(e);
+    const double kS = 1e8;
+    entry_->weight = (e.weight + 1) / kS * chunk.credibility;
+    if (!chunk.remaining_code.empty()) {
+      entry_->comment = "~" + chunk.remaining_code;
+      entry_->remaining_code_length = chunk.remaining_code.length();
     }
   }
   return entry_;
 }
 
-bool DictEntryIterator::Next() {
-  entry_.reset();
+bool DictEntryIterator::FindNextEntry() {
   if (exhausted()) {
     return false;
   }
@@ -113,6 +112,20 @@ bool DictEntryIterator::Next() {
   return !exhausted();
 }
 
+bool DictEntryIterator::Next() {
+  entry_.reset();
+  if (!FindNextEntry()) {
+    return false;
+  }
+  while (filter_ && !filter_(Peek())) {
+    if (!FindNextEntry()) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Note: does not apply filters
 bool DictEntryIterator::Skip(size_t num_entries) {
   while (num_entries > 0) {
     if (exhausted()) return false;

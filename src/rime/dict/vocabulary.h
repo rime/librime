@@ -53,7 +53,8 @@ using DictEntryFilter = function<bool (an<DictEntry> entry)>;
 
 class DictEntryFilterBinder {
  public:
-  void AddFilter(DictEntryFilter filter);
+  virtual ~DictEntryFilterBinder() = default;
+  virtual void AddFilter(DictEntryFilter filter);
 
  protected:
   DictEntryFilter filter_;
