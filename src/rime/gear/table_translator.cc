@@ -380,9 +380,9 @@ Spans SentenceSyllabifier::Syllabify(const Phrase* phrase) {
 class SentenceTranslation : public Translation {
  public:
   SentenceTranslation(TableTranslator* translator,
-                      an<Sentence> sentence,
-                      DictEntryCollector* collector,
-                      UserDictEntryCollector* ucollector,
+                      an<Sentence>&& sentence,
+                      DictEntryCollector&& collector,
+                      UserDictEntryCollector&& ucollector,
                       const string& input,
                       size_t start);
   virtual bool Next();
@@ -403,17 +403,17 @@ class SentenceTranslation : public Translation {
 };
 
 SentenceTranslation::SentenceTranslation(TableTranslator* translator,
-                                         an<Sentence> sentence,
-                                         DictEntryCollector* collector,
-                                         UserDictEntryCollector* ucollector,
+                                         an<Sentence>&& sentence,
+                                         DictEntryCollector&& collector,
+                                         UserDictEntryCollector&& ucollector,
                                          const string& input,
                                          size_t start)
-    : translator_(translator), input_(input), start_(start) {
-  sentence_.swap(sentence);
-  if (collector)
-    collector_.swap(*collector);
-  if (ucollector)
-    user_phrase_collector_.swap(*ucollector);
+    : translator_(translator),
+      sentence_(std::move(sentence)),
+      collector_(std::move(collector)),
+      user_phrase_collector_(std::move(ucollector)),
+      input_(input),
+      start_(start) {
   PrepareSentence();
   CheckEmpty();
 }
@@ -634,7 +634,7 @@ TableTranslator::MakeSentence(const string& input, size_t start,
       // compare and update sentences
       if (sentences.find(end_pos) == sentences.end() ||
           sentences[end_pos]->weight() <= new_sentence->weight()) {
-        sentences[end_pos] = new_sentence;
+        sentences[end_pos] = std::move(new_sentence);
       }
     }
   }
@@ -642,9 +642,9 @@ TableTranslator::MakeSentence(const string& input, size_t start,
   if (sentences.find(input.length()) != sentences.end()) {
     result = Cached<SentenceTranslation>(
         this,
-        sentences[input.length()],
-        include_prefix_phrases ? &collector : NULL,
-        include_prefix_phrases ? &user_phrase_collector : NULL,
+        std::move(sentences[input.length()]),
+        include_prefix_phrases ? std::move(collector) : DictEntryCollector(),
+        include_prefix_phrases ? std::move(user_phrase_collector) : UserDictEntryCollector(),
         input,
         start);
     if (result && filter_by_charset) {
