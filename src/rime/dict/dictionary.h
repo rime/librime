@@ -7,6 +7,7 @@
 #ifndef RIME_DICTIONARY_H_
 #define RIME_DICTIONARY_H_
 
+#include <rime_api.h>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/dict/prism.h>
@@ -47,7 +48,7 @@ class DictEntryIterator : public DictEntryFilterBinder {
 
   void AddChunk(dictionary::Chunk&& chunk, Table* table);
   void Sort();
-  void AddFilter(DictEntryFilter filter) override;
+  RIME_API void AddFilter(DictEntryFilter filter) override;
   RIME_API an<DictEntry> Peek();
   RIME_API bool Next();
   bool Skip(size_t num_entries);
