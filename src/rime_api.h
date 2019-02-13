@@ -259,7 +259,8 @@ RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status);
 RIME_API Bool RimeFreeStatus(RimeStatus* status);
 
 // Accessing candidate list
-
+RIME_API Bool RimeCandidateListBeginWithIndex(int index, RimeSessionId session_id,
+                                                  RimeCandidateListIterator* iterator);
 RIME_API Bool RimeCandidateListBegin(RimeSessionId session_id, RimeCandidateListIterator* iterator);
 RIME_API Bool RimeCandidateListNext(RimeCandidateListIterator* iterator);
 RIME_API void RimeCandidateListEnd(RimeCandidateListIterator* iterator);
@@ -318,6 +319,10 @@ RIME_API Bool RimeConfigUpdateSignature(RimeConfig* config, const char* signer);
 RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence);
 
 // Module
+    
+    
+    //user dict manager
+RIME_API Bool RimeImportUserDict(const char *schema_id, const char *dict_file);
 
 /*!
  *  Extend the structure to publish custom data/functions in your specific module
@@ -511,12 +516,16 @@ typedef struct rime_api_t {
   Bool (*select_candidate_on_current_page)(RimeSessionId session_id, size_t index);
 
   // access candidate list.
+  
+  Bool (*candidate_list_begin_with_index)(int index, RimeSessionId session_id, RimeCandidateListIterator* iterator);
   Bool (*candidate_list_begin)(RimeSessionId session_id, RimeCandidateListIterator* iterator);
   Bool (*candidate_list_next)(RimeCandidateListIterator* iterator);
   void (*candidate_list_end)(RimeCandidateListIterator* iterator);
 
   // access config files in user data directory, eg. user.yaml and installation.yaml
   Bool (*user_config_open)(const char *config_id, RimeConfig* config);
+  
+  Bool (*import_user_dict)(const char *schema_id, const char *dict_file);
 
 } RimeApi;
 

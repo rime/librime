@@ -21,6 +21,9 @@
 #include <rime/setup.h>
 #include <rime/signature.h>
 #include <rime_api.h>
+#include <rime/dict/level_db.h>
+#include <rime/dict/user_db.h>
+#include <rime/lever/user_dict_manager.h>
 
 using namespace rime;
 using namespace std::placeholders;
@@ -388,6 +391,22 @@ RIME_API Bool RimeFreeStatus(RimeStatus* status) {
 }
 
 // Accessing candidate list
+
+RIME_API Bool RimeCandidateListBeginWithIndex(int index, RimeSessionId session_id,
+                                     RimeCandidateListIterator* iterator) {
+    if (!iterator)
+        return False;
+    an<Session> session(Service::instance().GetSession(session_id));
+    if (!session)
+        return False;
+    Context *ctx = session->context();
+    if (!ctx || !ctx->HasMenu())
+        return False;
+    memset(iterator, 0, sizeof(RimeCandidateListIterator));
+    iterator->ptr = ctx->composition().back().menu.get();
+    iterator->index = index;
+    return True;
+}
 
 RIME_API Bool RimeCandidateListBegin(RimeSessionId session_id,
                                      RimeCandidateListIterator* iterator) {
@@ -971,6 +990,30 @@ void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos) {
   return ctx->set_caret_pos(caret_pos);
 }
 
+
+//rime dict manager
+RIME_API Bool RimeImportUserDict(const char *schema_id, const char *dict_file)
+{
+    Registry& registry = Registry::instance();
+    registry.Register("userdb", new UserDbComponent<LevelDb>);
+    Deployer& deployer(Service::instance().deployer());
+    {
+        Config config;
+        string installPath(deployer.user_data_dir);
+        installPath.append("/installation.yaml");
+        if (config.LoadFromFile(installPath)) {
+            config.GetString("installation_id", &deployer.user_id);
+            config.GetString("sync_dir", &deployer.sync_dir);
+        }
+    }
+    UserDictManager mgr(&deployer);
+    
+    int n = mgr.Import(schema_id, dict_file);
+    if (n == -1) return false;
+    std::cout << "imported " << n << " entries." << std::endl;
+    return true;
+}
+
 RIME_API RimeApi* rime_get_api() {
   static RimeApi s_api = {0};
   if (!s_api.data_size) {
@@ -1051,9 +1094,12 @@ RIME_API RimeApi* rime_get_api() {
     s_api.get_version = &RimeGetVersion;
     s_api.set_caret_pos = &RimeSetCaretPos;
     s_api.select_candidate_on_current_page = &RimeSelectCandidateOnCurrentPage;
+    s_api.candidate_list_begin_with_index = &RimeCandidateListBeginWithIndex;
     s_api.candidate_list_begin = &RimeCandidateListBegin;
     s_api.candidate_list_next = &RimeCandidateListNext;
     s_api.candidate_list_end = &RimeCandidateListEnd;
+    s_api.import_user_dict = &RimeImportUserDict;
+    
   }
   return &s_api;
 }
