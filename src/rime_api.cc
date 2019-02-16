@@ -389,8 +389,9 @@ RIME_API Bool RimeFreeStatus(RimeStatus* status) {
 
 // Accessing candidate list
 
-RIME_API Bool RimeCandidateListBegin(RimeSessionId session_id,
-                                     RimeCandidateListIterator* iterator) {
+RIME_API Bool RimeCandidateListFromIndex(RimeSessionId session_id,
+                                         RimeCandidateListIterator* iterator,
+                                         int index) {
   if (!iterator)
     return False;
   an<Session> session(Service::instance().GetSession(session_id));
@@ -401,8 +402,13 @@ RIME_API Bool RimeCandidateListBegin(RimeSessionId session_id,
     return False;
   memset(iterator, 0, sizeof(RimeCandidateListIterator));
   iterator->ptr = ctx->composition().back().menu.get();
-  iterator->index = -1;
+  iterator->index = index - 1;
   return True;
+}
+
+RIME_API Bool RimeCandidateListBegin(RimeSessionId session_id,
+                                     RimeCandidateListIterator* iterator) {
+  return RimeCandidateListFromIndex(session_id, iterator, 0);
 }
 
 RIME_API Bool RimeCandidateListNext(RimeCandidateListIterator* iterator) {
@@ -1054,6 +1060,7 @@ RIME_API RimeApi* rime_get_api() {
     s_api.candidate_list_begin = &RimeCandidateListBegin;
     s_api.candidate_list_next = &RimeCandidateListNext;
     s_api.candidate_list_end = &RimeCandidateListEnd;
+    s_api.candidate_list_from_index = &RimeCandidateListFromIndex;
   }
   return &s_api;
 }
