@@ -29,11 +29,13 @@ class RimeCorrectorSearchTest : public ::testing::Test {
               std::inserter(keyset, keyset.begin()));
     prism_->Build(keyset);
 
+    corrector_.reset(new rime::NearSearchCorrector);
   }
   void TearDown() override {}
  protected:
   rime::map<rime::string, rime::SyllableId> syllable_id_;
   rime::the<rime::Prism> prism_;
+  rime::the<rime::Corrector> corrector_;
 };
 
 class RimeCorrectorTest : public ::testing::Test {
@@ -56,6 +58,8 @@ class RimeCorrectorTest : public ::testing::Test {
     std::copy(syllables.begin(), syllables.end(),
               std::inserter(keyset, keyset.begin()));
     prism_->Build(keyset);
+
+    corrector_.reset(new rime::NearSearchCorrector);
   }
 
   virtual void TearDown() {
@@ -64,11 +68,12 @@ class RimeCorrectorTest : public ::testing::Test {
  protected:
   rime::map<rime::string, rime::SyllableId> syllable_id_;
   rime::the<rime::Prism> prism_;
+  rime::the<rime::Corrector> corrector_;
 };
 
 TEST_F(RimeCorrectorSearchTest, CaseNearSubstitute) {
   rime::Syllabifier s;
-  s.EnableCorrection(std::make_shared<rime::NearSearchCorrector>());
+  s.EnableCorrection(corrector_.get());
   rime::SyllableGraph g;
   const rime::string input("chsng");
   s.BuildSyllableGraph(input, *prism_, &g);
@@ -83,7 +88,7 @@ TEST_F(RimeCorrectorSearchTest, CaseNearSubstitute) {
 
 TEST_F(RimeCorrectorSearchTest, CaseFarSubstitute) {
   rime::Syllabifier s;
-  s.EnableCorrection(std::make_shared<rime::NearSearchCorrector>());
+  s.EnableCorrection(corrector_.get());
   rime::SyllableGraph g;
   const rime::string input("chpng");
   s.BuildSyllableGraph(input, *prism_, &g);
@@ -95,7 +100,7 @@ TEST_F(RimeCorrectorSearchTest, CaseFarSubstitute) {
 
 TEST_F(RimeCorrectorSearchTest, DISABLED_CaseTranspose) {
   rime::Syllabifier s;
-  s.EnableCorrection(std::make_shared<rime::NearSearchCorrector>());
+  s.EnableCorrection(corrector_.get());
   rime::SyllableGraph g;
   const rime::string input("cahng");
   s.BuildSyllableGraph(input, *prism_, &g);
@@ -110,7 +115,7 @@ TEST_F(RimeCorrectorSearchTest, DISABLED_CaseTranspose) {
 
 TEST_F(RimeCorrectorSearchTest, CaseCorrectionSyllabify) {
   rime::Syllabifier s;
-  s.EnableCorrection(std::make_shared<rime::NearSearchCorrector>());
+  s.EnableCorrection(corrector_.get());
   rime::SyllableGraph g;
   const rime::string input("chabgtyan");
   s.BuildSyllableGraph(input, *prism_, &g);
@@ -130,7 +135,7 @@ TEST_F(RimeCorrectorSearchTest, CaseCorrectionSyllabify) {
 
 TEST_F(RimeCorrectorTest, CaseMultipleEdges1) {
   rime::Syllabifier s;
-  s.EnableCorrection(std::make_shared<rime::NearSearchCorrector>());
+  s.EnableCorrection(corrector_.get());
   rime::SyllableGraph g;
   const rime::string input("jiejue"); // jie'jue jie'jie jue'jue jue'jie
   s.BuildSyllableGraph(input, *prism_, &g);

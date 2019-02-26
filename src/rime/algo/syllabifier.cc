@@ -58,7 +58,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
     for (auto &m : matches) {
       match_set.insert(m.value);
     }
-    if (enable_correction_) {
+    if (corrector_) {
       Corrections corrections;
       corrector_->ToleranceSearch(prism, current_input, &corrections, 5);
       for (const auto &m : corrections) {
@@ -188,7 +188,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
     good.insert(i);
   }
 
-  if (enable_completion_ && farthest < input.length()) {
+  if (corrector_ && farthest < input.length()) {
     DLOG(INFO) << "completion enabled";
     const size_t kExpandSearchLimit = 512;
     vector<Prism::Match> keys;
@@ -284,9 +284,8 @@ void Syllabifier::Transpose(SyllableGraph* graph) {
   }
 }
 
-void Syllabifier::EnableCorrection(an<Corrector> corrector) {
-  enable_correction_ = true;
-  corrector_ = std::move(corrector);
+void Syllabifier::EnableCorrection(Corrector* corrector) {
+  corrector_ = corrector;
 }
 
 }  // namespace rime

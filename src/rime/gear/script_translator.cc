@@ -71,9 +71,16 @@ static bool syllabify_dfs(SyllabifyTask* task,
 class ScriptSyllabifier : public PhraseSyllabifier {
  public:
   ScriptSyllabifier(ScriptTranslator* translator,
+                    Corrector* corrector,
                     const string& input,
                     size_t start)
-      : translator_(translator), input_(input), start_(start) {
+      : translator_(translator), input_(input), start_(start),
+        syllabifier_(translator->delimiters(),
+                     translator->enable_completion(),
+                     translator->strict_spelling()) {
+    if (corrector) {
+      syllabifier_.EnableCorrection(corrector);
+    }
   }
 
   virtual Spans Syllabify(const Phrase* phrase);
@@ -88,17 +95,21 @@ class ScriptSyllabifier : public PhraseSyllabifier {
   ScriptTranslator* translator_;
   string input_;
   size_t start_;
+  Syllabifier syllabifier_;
   SyllableGraph syllable_graph_;
 };
 
 class ScriptTranslation : public Translation {
  public:
   ScriptTranslation(ScriptTranslator* translator,
-                    const string& input, size_t start,
-                    bool enable_correction = false)
-      : translator_(translator), start_(start),
-        syllabifier_(New<ScriptSyllabifier>(translator, input, start)),
-        enable_correction_(enable_correction) {
+                    Corrector* corrector,
+                    const string& input,
+                    size_t start)
+      : translator_(translator),
+        start_(start),
+        syllabifier_(New<ScriptSyllabifier>(
+            translator, corrector, input, start)),
+        enable_correction_(corrector) {
     set_exhausted(true);
   }
   bool Evaluate(Dictionary* dict, UserDictionary* user_dict);
@@ -147,13 +158,14 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
     config->GetBool(name_space_ + "/enable_correction", &enable_correction_);
   }
   if (enable_correction_) {
-    auto corrector = Corrector::Require("corrector");
-    corrector_.reset(corrector->Create(ticket));
+    if (auto* corrector = Corrector::Require("corrector")) {
+      corrector_.reset(corrector->Create(ticket));
+    }
   }
 }
 
 an<Translation> ScriptTranslator::Query(const string& input,
-                                                const Segment& segment) {
+                                        const Segment& segment) {
   if (!dict_ || !dict_->loaded())
     return nullptr;
   if (!segment.HasTag(tag_))
@@ -167,7 +179,10 @@ an<Translation> ScriptTranslator::Query(const string& input,
       !IsUserDictDisabledFor(input);
 
   // the translator should survive translations it creates
-  auto result = New<ScriptTranslation>(this, input, segment.start, enable_correction_);
+  auto result = New<ScriptTranslation>(this,
+                                       corrector_.get(),
+                                       input,
+                                       segment.start);
   if (!result ||
       !result->Evaluate(dict_.get(),
                         enable_user_dict ? user_dict_.get() : NULL)) {
@@ -239,17 +254,9 @@ Spans ScriptSyllabifier::Syllabify(const Phrase* phrase) {
 }
 
 size_t ScriptSyllabifier::BuildSyllableGraph(Prism& prism) {
-  Syllabifier syllabifier(translator_->delimiters(),
-                          translator_->enable_completion(),
-                          translator_->strict_spelling());
-  if (translator_->enable_correction()) {
-    syllabifier.EnableCorrection(translator_->corrector());
-  }
-  auto consumed = (size_t)syllabifier.BuildSyllableGraph(input_,
-                                                   prism,
-                                                   &syllable_graph_);
-
-  return consumed;
+  return (size_t)syllabifier_.BuildSyllableGraph(input_,
+                                                 prism,
+                                                 &syllable_graph_);
 }
 
 bool ScriptSyllabifier::IsCandidateCorrection(const rime::Phrase &cand) const {
@@ -499,8 +506,8 @@ bool ScriptTranslation::CheckEmpty() {
   return exhausted();
 }
 
-an<Sentence>
-ScriptTranslation::MakeSentence(Dictionary* dict, UserDictionary* user_dict) {
+an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
+                                             UserDictionary* user_dict) {
   const int kMaxSyllablesForUserPhraseQuery = 5;
   const auto& syllable_graph = syllabifier_->syllable_graph();
   WordGraph graph;

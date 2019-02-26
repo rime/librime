@@ -56,7 +56,7 @@ class Syllabifier {
   RIME_API int BuildSyllableGraph(const string &input,
                                   Prism &prism,
                                   SyllableGraph *graph);
-  RIME_API void EnableCorrection(an<Corrector> corrector);
+  RIME_API void EnableCorrection(Corrector* corrector);
 
  protected:
   void CheckOverlappedSpellings(SyllableGraph *graph,
@@ -66,8 +66,7 @@ class Syllabifier {
   string delimiters_;
   bool enable_completion_ = false;
   bool strict_spelling_ = false;
-  an<Corrector> corrector_ = nullptr;
-  bool enable_correction_ = false;
+  Corrector* corrector_ = nullptr;
 };
 
 }  // namespace rime
