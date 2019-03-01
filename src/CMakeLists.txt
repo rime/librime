@@ -39,7 +39,8 @@ set(rime_core_deps
     ${Glog_LIBRARY}
     ${YamlCpp_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
-    ${rime_optional_deps})
+    ${rime_optional_deps}
+    ${rime_plugins_deps})
 set(rime_extra_deps
     ${ICONV_LIBRARIES}
     ${LevelDb_LIBRARY}
@@ -58,7 +59,7 @@ else()
 endif()
 
 if(BUILD_SHARED_LIBS)
-  add_library(rime ${rime_src})
+  add_library(rime ${rime_plugins_objs} ${rime_src})
   target_link_libraries(rime ${rime_deps})
   set_target_properties(rime PROPERTIES DEFINE_SYMBOL "RIME_EXPORTS")
   set_target_properties(rime PROPERTIES VERSION ${rime_version} SOVERSION ${rime_soversion})
@@ -77,7 +78,7 @@ if(BUILD_SHARED_LIBS)
     install(TARGETS rime-gears DESTINATION ${LIB_INSTALL_DIR})
   endif()
 else()
-  add_library(rime-static STATIC ${rime_src})
+  add_library(rime-static STATIC ${rime_plugins_objs} ${rime_src})
   target_link_libraries(rime-static ${rime_deps})
   set_target_properties(rime-static PROPERTIES OUTPUT_NAME "rime" PREFIX "lib")
   install(TARGETS rime-static DESTINATION ${LIB_INSTALL_DIR})

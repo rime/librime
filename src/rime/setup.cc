@@ -13,8 +13,9 @@
 #include <rime/module.h>
 
 namespace rime {
-
-RIME_API RIME_MODULE_LIST(kDefaultModules, "default");
+#define Q(x) #x
+RIME_API RIME_MODULE_LIST(kDefaultModules, "default" RIME_EXTRA_DEFAULT_MODULES);
+#undef Q
 RIME_MODULE_LIST(kDeployerModules, "deployer");
 RIME_MODULE_LIST(kLegacyModules, "legacy");
 
