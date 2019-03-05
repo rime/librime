@@ -6,6 +6,7 @@
 //
 #include <algorithm>
 #include <cfloat>
+#include <cmath>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/scope_exit.hpp>

@@ -6,6 +6,7 @@
 //
 #include <boost/filesystem.hpp>
 #include <cfloat>
+#include <cmath>
 #include <fstream>
 #include <rime/algo/algebra.h>
 #include <rime/algo/utilities.h>
