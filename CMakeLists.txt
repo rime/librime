@@ -195,7 +195,7 @@ set(list "")
 foreach(mod ${rime_default_modules})
   set(list "${list},Q(${mod})")
 endforeach()
-add_definitions(-DRIME_EXTRA_DEFAULT_MODULES=${list})
+add_definitions(-DRIME_EXTRA_MODULES=${list})
 
 if(BUILD_SHARED_LIBS)
   add_definitions(-DRIME_BUILD_SHARED_LIBS)
