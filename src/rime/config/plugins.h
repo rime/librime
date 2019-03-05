@@ -17,6 +17,8 @@ class ConfigCompilerPlugin {
   typedef bool Review(ConfigCompiler* compiler,
                       an<ConfigResource> resource);
 
+  virtual ~ConfigCompilerPlugin() = default;
+
   virtual Review ReviewCompileOutput = 0;
   virtual Review ReviewLinkOutput = 0;
 };
@@ -57,7 +59,7 @@ struct ResourceType;
 class SaveOutputPlugin : public ConfigCompilerPlugin {
  public:
   SaveOutputPlugin(const ResourceType& output_resource);
-  ~SaveOutputPlugin();
+  virtual ~SaveOutputPlugin();
 
   Review ReviewCompileOutput;
   Review ReviewLinkOutput;
