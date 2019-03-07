@@ -10,7 +10,7 @@ release:
 	cmake --build xbuild --config Release
 
 debug:
-	cmake . -Bxdebug -GXcode -DBUILD_STATIC=ON
+	cmake . -Bxdebug -GXcode -DBUILD_STATIC=ON -DBUILD_SEPARATE_LIBS=ON
 	cmake --build xdebug --config Debug
 
 clean:
