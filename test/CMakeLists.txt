@@ -9,10 +9,6 @@ target_link_libraries(rime_test
 if(BUILD_SHARED_LIBS)
   target_compile_definitions(rime_test PRIVATE RIME_IMPORTS)
 endif(BUILD_SHARED_LIBS)
-add_dependencies(rime_test
-  ${rime_library}
-  ${rime_dict_library}
-  ${rime_gears_library})
 
 file(GLOB test_data_files ${PROJECT_SOURCE_DIR}/data/test/*.yaml)
 file(COPY ${test_data_files} DESTINATION ${EXECUTABLE_OUTPUT_PATH})
