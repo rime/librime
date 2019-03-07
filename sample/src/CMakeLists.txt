@@ -1,8 +1,0 @@
-set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
-aux_source_directory(. SAMPLE_SRC)
-add_library(rime-sample ${SAMPLE_SRC})
-target_link_libraries(rime-sample ${Rime_LIBRARIES})
-set_target_properties(rime-sample PROPERTIES VERSION ${SAMPLE_VERSION} SOVERSION ${SAMPLE_SOVERSION})
-if(XCODE_VERSION)
-  set_target_properties(rime-sample PROPERTIES INSTALL_NAME_DIR "@rpath")
-endif(XCODE_VERSION)

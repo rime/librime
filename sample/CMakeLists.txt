@@ -4,52 +4,45 @@ cmake_minimum_required(VERSION 2.8)
 set(SAMPLE_VERSION 1.0.0)
 set(SAMPLE_SOVERSION 1)
 
-option(BUILD_SHARED_LIBS "Build Rime as shared library" ON)
-option(BUILD_STATIC "Build sample using static libraries" OFF)
-option(BUILD_TEST "Build and run tests" ON)
+aux_source_directory(src sample_src)
 
-if(WIN32)
-  message(FATAL_ERROR "Plugins are not supported under Windows.")
-endif(WIN32)
+set(sample_library rime-sample)
+set(sample_deps ${rime_library})
+set(sample_modules "sample")
 
-set(RIME_SOURCE_DIR ${PROJECT_SOURCE_DIR}/..)
-set(CMAKE_MODULE_PATH ${RIME_SOURCE_DIR}/cmake)
+if(BUILD_SAMPLE)
+  # to build the sample plugin, console app and tests, set BUILD_SAMPLE=ON
+  set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
-set(Gflags_STATIC ${BUILD_STATIC})
-set(Glog_STATIC ${BUILD_STATIC})
+  message(STATUS "${sample_library} provides modules: ${sample_modules}")
+  add_library(${sample_library} ${sample_src})
+  target_link_libraries(${sample_library} ${sample_deps})
+  set_target_properties(${sample_library}
+    PROPERTIES
+    VERSION ${SAMPLE_VERSION}
+    SOVERSION ${SAMPLE_SOVERSION})
+  if(XCODE_VERSION)
+    set_target_properties(${sample_library}
+      PROPERTIES
+      INSTALL_NAME_DIR "@rpath")
+  endif(XCODE_VERSION)
+  install(TARGETS ${sample_library} DESTINATION ${LIB_INSTALL_DIR})
 
-find_package(Rime REQUIRED)
-if(Rime_FOUND)
-  include_directories(${Rime_INCLUDE_DIR})
-endif(Rime_FOUND)
+  add_subdirectory(tools)
+  if(BUILD_TEST)
+    add_subdirectory(test)
+  endif()
+else()
+  # to build as a standard Rime plugin, link or copy the directory to plugins/
+  add_library(rime-sample-objs OBJECT ${sample_src})
+  if(BUILD_SHARED_LIBS)
+    set_target_properties(rime-sample-objs
+      PROPERTIES
+      POSITION_INDEPENDENT_CODE ON)
+  endif()
 
-find_package(Gflags)
-if(Gflags_FOUND)
-  include_directories(${Gflags_INCLUDE_PATH})
-endif(Gflags_FOUND)
-
-find_package(Glog REQUIRED)
-if(Glog_FOUND)
-  include_directories(${Glog_INCLUDE_PATH})
-endif(Glog_FOUND)
-
-if(BUILD_TEST)
-  find_package(GTest REQUIRED)
-if(GTEST_FOUND)
-  enable_testing()
-  include_directories(${GTEST_INCLUDE_DIRS})
-endif(GTEST_FOUND)
-endif(BUILD_TEST)
-
-include_directories(${RIME_SOURCE_DIR}/include)
-#include_directories(${RIME_SOURCE_DIR}/thirdparty/include)
-#link_directories(${RIME_SOURCE_DIR}/thirdparty/lib)
-if(UNIX)
-  add_definitions("-std=c++11")
-endif(UNIX)
-
-add_subdirectory(src)
-add_subdirectory(tools)
-if(GTEST_FOUND)
-  add_subdirectory(test)
-endif(GTEST_FOUND)
+  set(plugin_name ${sample_library} PARENT_SCOPE)
+  set(plugin_objs $<TARGET_OBJECTS:rime-sample-objs> PARENT_SCOPE)
+  set(plugin_deps ${sample_deps} PARENT_SCOPE)
+  set(plugin_modules ${sample_modules} PARENT_SCOPE)
+endif()
