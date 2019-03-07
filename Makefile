@@ -25,7 +25,11 @@ librime-static:
 	cmake --build build-static
 
 release:
-	cmake . -Bbuild -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release
+	cmake . -Bbuild -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DBUILD_MERGED_PLUGINS=OFF
+	cmake --build build
+
+merged-plugins:
+	cmake . -Bbuild -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DBUILD_MERGED_PLUGINS=ON
 	cmake --build build
 
 debug:
@@ -49,4 +53,3 @@ test: release
 
 test-debug: debug
 	(cd debug-build/test; ./rime_test)
-
