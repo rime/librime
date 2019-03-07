@@ -6,12 +6,14 @@ target_link_libraries(rime_api_console
   ${rime_library}
   ${rime_dict_library}
   ${rime_gears_library}
-  ${rime_levers_library})
+  ${rime_levers_library}
+  ${rime_plugins_library})
 add_dependencies(rime_api_console
   ${rime_library}
   ${rime_dict_library}
   ${rime_gears_library}
-  ${rime_levers_library})
+  ${rime_levers_library}
+  ${rime_plugins_library})
 
 set(rime_patch_src "rime_patch.cc")
 add_executable(rime_patch ${rime_patch_src})
@@ -31,12 +33,14 @@ target_link_libraries(rime_console
   ${rime_library}
   ${rime_dict_library}
   ${rime_gears_library}
-  ${rime_levers_library})
+  ${rime_levers_library}
+  ${rime_plugins_library})
 add_dependencies(rime_console
   ${rime_library}
   ${rime_dict_library}
   ${rime_gears_library}
-  ${rime_levers_library})
+  ${rime_levers_library}
+  ${rime_plugins_library})
 
 set(rime_dict_manager_src "rime_dict_manager.cc")
 add_executable(rime_dict_manager ${rime_dict_manager_src})
