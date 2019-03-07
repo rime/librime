@@ -42,14 +42,10 @@ set(rime_core_deps
     ${CMAKE_THREAD_LIBS_INIT}
     ${rime_optional_deps})
 set(rime_dict_deps
-    ${ICONV_LIBRARIES}
     ${LevelDb_LIBRARY}
-    ${Marisa_LIBRARY}
-    ${Opencc_LIBRARY})
+    ${Marisa_LIBRARY})
 set(rime_gears_deps
     ${ICONV_LIBRARIES}
-    ${LevelDb_LIBRARY}
-    ${Marisa_LIBRARY}
     ${Opencc_LIBRARY})
 set(rime_levers_deps "")
 
