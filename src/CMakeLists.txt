@@ -7,6 +7,9 @@ aux_source_directory(rime/config rime_config_src)
 aux_source_directory(rime/dict rime_dict_src)
 aux_source_directory(rime/gear rime_gears_src)
 aux_source_directory(rime/lever rime_levers_src)
+if(rime_plugins_library)
+  aux_source_directory(../plugins rime_plugins_src)
+endif()
 
 set(rime_core_module_src
   ${rime_api_src}
@@ -15,9 +18,6 @@ set(rime_core_module_src
 set(rime_dict_module_src
   ${rime_algo_src}
   ${rime_dict_src})
-set(rime_plugins_src
-  "../plugins/plugins.cc"
-  ${rime_plugins_objs})
 
 if(BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS)
   set(rime_src ${rime_core_module_src})
@@ -27,7 +27,8 @@ else()
       ${rime_dict_module_src}
       ${rime_gears_src}
       ${rime_levers_src}
-      ${rime_plugins_src})
+      ${rime_plugins_src}
+      ${rime_plugins_objs})
 endif()
 
 set(rime_optional_deps "")
@@ -122,8 +123,10 @@ if(BUILD_SHARED_LIBS)
     endif()
     install(TARGETS rime-levers DESTINATION ${LIB_INSTALL_DIR})
 
-    if(rime_plugins_src)
-      add_library(rime-plugins ${rime_plugins_src})
+    if(rime_plugins_library)
+      add_library(rime-plugins
+        ${rime_plugins_src}
+        ${rime_plugins_objs})
       target_link_libraries(rime-plugins
         ${rime_plugins_deps}
         ${rime_library}
