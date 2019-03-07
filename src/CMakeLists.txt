@@ -16,6 +16,7 @@ set(rime_dict_module_src
   ${rime_algo_src}
   ${rime_dict_src})
 set(rime_plugins_src
+  "../plugins/plugins.cc"
   ${rime_plugins_objs})
 
 if(BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS)
