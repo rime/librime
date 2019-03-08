@@ -1,6 +1,9 @@
 set(RIME_SOURCE_DIR ${PROJECT_SOURCE_DIR})
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
+# work around CMake build issues on macOS
+aux_source_directory(. rime_plugins_src)
+
 unset(plugins_objs)
 unset(plugins_deps)
 unset(plugins_modules)
@@ -19,7 +22,7 @@ foreach(file ${plugin_files})
       set(plugins_modules ${plugins_modules} ${plugin_modules})
     else()
       message(STATUS "Plugin ${plugin_name} provides modules: ${plugin_modules}")
-      add_library(${plugin_name} ${plugin_objs})
+      add_library(${plugin_name} ${rime_plugins_src} ${plugin_objs})
       target_link_libraries(${plugin_name} ${plugin_deps})
       if(XCODE_VERSION)
 	set_target_properties(${plugin_name} PROPERTIES INSTALL_NAME_DIR "@rpath")
