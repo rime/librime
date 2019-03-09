@@ -7,7 +7,7 @@ RIME: Rime Input Method Engine
 [![GitHub release](https://img.shields.io/github/release/rime/librime.svg)](https://github.com/rime/librime/releases)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-rimes with your keystrokes.
+Rime with your keystrokes.
 
 Project home
 ---
@@ -19,11 +19,16 @@ License
 
 Features
 ===
-  - A modular, extensible input method engine in cross-platform C++ code, built on top of open-source technologies
-  - Covering features found in a large variety of Chinese input methods, either shape-based or phonetic-based
-  - Built with native support for Traditional Chinese, conversion to Simplified Chinese and other regional standards via OpenCC
-  - Rime input schema, a DSL in YAML syntax for fast trying out innovative ideas of input method design
-  - Spelling Algebra, a mechanism to create variant spelling, especially useful for Chinese dialects
+  - A modular, extensible input method engine in cross-platform C++ code,
+    built on top of open-source technologies
+  - Covering features found in a large variety of Chinese input methods,
+    either shape-based or phonetic-based
+  - Built with native support for Traditional Chinese, conversion to Simplified
+    Chinese and other regional standards via OpenCC
+  - Rime input schema, a DSL in YAML syntax for fast trying out innovative ideas
+    of input method design
+  - Spelling Algebra, a mechanism to create variant spelling, especially useful
+    for Chinese dialects
   - Support for chord-typing with a generic Qwerty keyboard
 
 Install
@@ -77,14 +82,17 @@ Third-party:
 
 Plugins
 ===
-  - [librime-legacy](https://github.com/rime/librime-legacy) Legacy module with GPL-licensed code
+  - [librime-legacy](https://github.com/rime/librime-legacy) Legacy module with
+    GPL-licensed code
 
 Related works
 ===
-  - [plum](https://github.com/rime/plum): Rime configuration manager and input schema repository
-  - [Combo Pinyin](https://github.com/rime/home/wiki/ComboPinyin): an innovative chord-typing practice to input Pinyin
+  - [plum](https://github.com/rime/plum): Rime configuration manager and input
+    schema repository
+  - [Combo Pinyin](https://github.com/rime/home/wiki/ComboPinyin): an innovative
+    chord-typing practice to input Pinyin
   - essay: the vocabulary and language model for Rime
-  - [SCU](https://github.com/neolee/SCU/): Squirrel Configuration Utilities
+  - [SCU](https://github.com/neolee/SCU): Squirrel Configuration Utilities
 
 Credits
 ===

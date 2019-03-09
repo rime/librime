@@ -1,8 +1,6 @@
 build/
 build-static/
-debug-build/
-xbuild/
-xdebug/
+debug/
 build.log
 data/*
 thirdparty/include/*
