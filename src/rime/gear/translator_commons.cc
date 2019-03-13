@@ -9,6 +9,7 @@
 #include <rime/config.h>
 #include <rime/schema.h>
 #include <rime/ticket.h>
+#include <rime/gear/grammar.h>
 #include <rime/gear/translator_commons.h>
 
 namespace rime {
@@ -87,12 +88,15 @@ bool Spans::HasVertex(size_t vertex) const {
 
 // Sentence
 
-void Sentence::Extend(const DictEntry& entry, size_t end_pos) {
-  const double kPenalty = -18.420680743952367; // log(1e-8)
-  entry_->code.insert(entry_->code.end(),
-                     entry.code.begin(), entry.code.end());
+void Sentence::Extend(const DictEntry& entry,
+                      size_t end_pos,
+                      bool is_rear,
+                      Grammar* grammar) {
+  entry_->weight += Grammar::Evaluate(entry_->text, entry, is_rear, grammar);
   entry_->text.append(entry.text);
-  entry_->weight += entry.weight + kPenalty;
+  entry_->code.insert(entry_->code.end(),
+                      entry.code.begin(),
+                      entry.code.end());
   components_.push_back(entry);
   syllable_lengths_.push_back(end_pos - end());
   set_end(end_pos);

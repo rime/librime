@@ -21,6 +21,7 @@ class Corrector;
 struct DictEntry;
 struct DictEntryCollector;
 class Dictionary;
+class Poet;
 class UserDictionary;
 struct SyllableGraph;
 
@@ -38,14 +39,17 @@ class ScriptTranslator : public Translator,
   string Spell(const Code& code);
 
   // options
+  int max_homophones() const { return max_homophones_; }
   int spelling_hints() const { return spelling_hints_; }
   bool always_show_comments() const { return always_show_comments_; }
 
  protected:
+  int max_homophones_ = 1;
   int spelling_hints_ = 0;
   bool always_show_comments_ = false;
   bool enable_correction_ = false;
   the<Corrector> corrector_;
+  the<Poet> poet_;
 };
 
 }  // namespace rime

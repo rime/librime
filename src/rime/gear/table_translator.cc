@@ -17,6 +17,7 @@
 #include <rime/dict/dictionary.h>
 #include <rime/dict/user_dictionary.h>
 #include <rime/gear/charset_filter.h>
+#include <rime/gear/grammar.h>
 #include <rime/gear/table_translator.h>
 #include <rime/gear/translator_commons.h>
 #include <rime/gear/unity_table_encoder.h>
@@ -216,6 +217,13 @@ TableTranslator::TableTranslator(const Ticket& ticket)
                     &encode_commit_history_);
     config->GetInt(name_space_ + "/max_phrase_length",
                    &max_phrase_length_);
+    config->GetInt(name_space_ + "/max_homographs",
+                   &max_homographs_);
+    if (enable_sentence_ || sentence_over_completion_) {
+      if (auto* grammar_component = Grammar::Require("grammar")) {
+        grammar_.reset(grammar_component->Create(config));
+      }
+    }
   }
   if (enable_encoder_ && user_dict_) {
     encoder_.reset(new UnityTableEncoder(user_dict_.get()));
@@ -231,7 +239,7 @@ static bool starts_with_completion(an<Translation> translation) {
 }
 
 an<Translation> TableTranslator::Query(const string& input,
-                                               const Segment& segment) {
+                                       const Segment& segment) {
   if (!segment.HasTag(tag_))
     return nullptr;
   DLOG(INFO) << "input = '" << input
@@ -519,7 +527,7 @@ bool SentenceTranslation::PreferUserPhrase() const {
   return false;
 }
 
-static size_t consume_trailing_delimiters(size_t pos,
+inline static size_t consume_trailing_delimiters(size_t pos,
                                           const string& input,
                                           const string& delimiters) {
   while (pos < input.length() &&
@@ -529,11 +537,25 @@ static size_t consume_trailing_delimiters(size_t pos,
   return pos;
 }
 
+template <class Iter>
+inline static void collect_entries(DictEntryList& dest,
+                                   Iter& iter,
+                                   int max_entries) {
+  if (dest.size() < max_entries && !iter.exhausted()) {
+    dest.push_back(iter.Peek());
+    // alters iter if collecting more than 1 entries
+    while (dest.size() < max_entries && iter.Next()) {
+      dest.push_back(iter.Peek());
+    }
+  }
+}
+
 an<Translation>
 TableTranslator::MakeSentence(const string& input, size_t start,
                               bool include_prefix_phrases) {
   bool filter_by_charset = enable_charset_filter_ &&
       !engine_->context()->get_option("extended_charset");
+  const int max_entries = max_homographs_;
   DictEntryCollector collector;
   UserDictEntryCollector user_phrase_collector;
   map<int, an<Sentence>> sentences;
@@ -543,13 +565,14 @@ TableTranslator::MakeSentence(const string& input, size_t start,
       continue;
     string active_input = input.substr(start_pos);
     string active_key = active_input + ' ';
-    vector<of<DictEntry>> entries(active_input.length() + 1);
+    UserDictEntryCollector collected_entries;
     // lookup dictionaries
     if (user_dict_ && user_dict_->loaded()) {
       for (size_t len = 1; len <= active_input.length(); ++len) {
         size_t consumed_length =
             consume_trailing_delimiters(len, active_input, delimiters_);
-        if (entries[consumed_length])
+        auto& dest(collected_entries[consumed_length]);
+        if (dest.size() >= max_entries)
           continue;
         DLOG(INFO) << "active input: " << active_input << "[0, " << len << ")";
         UserDictEntryIterator uter;
@@ -560,9 +583,15 @@ TableTranslator::MakeSentence(const string& input, size_t start,
           uter.AddFilter(CharsetFilter::FilterDictEntry);
         }
         if (!uter.exhausted()) {
-          entries[consumed_length] = uter.Peek();
+          if (start_pos == 0 && max_entries > 1) {
+            UserDictEntryIterator uter_copy(uter);
+            collect_entries(dest, uter_copy, max_entries);
+          } else {
+            collect_entries(dest, uter, max_entries);
+          }
           if (start_pos == 0) {
             // also provide words for manual composition
+            // uter must not be consumed
             uter.Release(&user_phrase_collector[consumed_length]);
             DLOG(INFO) << "user phrase[" << consumed_length << "]: "
                        << user_phrase_collector[consumed_length].size();
@@ -578,7 +607,8 @@ TableTranslator::MakeSentence(const string& input, size_t start,
       for (size_t len = 1; len <= active_input.length(); ++len) {
         size_t consumed_length =
             consume_trailing_delimiters(len, active_input, delimiters_);
-        if (entries[consumed_length])
+        auto& dest(collected_entries[consumed_length]);
+        if (!dest.empty())
           continue;
         DLOG(INFO) << "active input: " << active_input << "[0, " << len << ")";
         UserDictEntryIterator uter;
@@ -589,9 +619,15 @@ TableTranslator::MakeSentence(const string& input, size_t start,
           uter.AddFilter(CharsetFilter::FilterDictEntry);
         }
         if (!uter.exhausted()) {
-          entries[consumed_length] = uter.Peek();
+          if (start_pos == 0 && max_entries > 1) {
+            UserDictEntryIterator uter_copy(uter);
+            collect_entries(dest, uter_copy, max_entries);
+          } else {
+            collect_entries(dest, uter, max_entries);
+          }
           if (start_pos == 0) {
             // also provide words for manual composition
+            // uter must not be consumed
             uter.Release(&user_phrase_collector[consumed_length]);
             DLOG(INFO) << "unity phrase[" << consumed_length << "]: "
                        << user_phrase_collector[consumed_length].size();
@@ -612,7 +648,8 @@ TableTranslator::MakeSentence(const string& input, size_t start,
           continue;
         size_t consumed_length =
             consume_trailing_delimiters(m.length, active_input, delimiters_);
-        if (entries[consumed_length])
+        auto& dest(collected_entries[consumed_length]);
+        if (dest.size() >= max_entries)
           continue;
         DictEntryIterator iter;
         dict_->LookupWords(&iter, active_input.substr(0, m.length), false);
@@ -620,9 +657,15 @@ TableTranslator::MakeSentence(const string& input, size_t start,
           iter.AddFilter(CharsetFilter::FilterDictEntry);
         }
         if (!iter.exhausted()) {
-          entries[consumed_length] = iter.Peek();
+          if (start_pos == 0 && max_entries - dest.size() > 1) {
+            DictEntryIterator iter_copy = iter;
+            collect_entries(dest, iter_copy, max_entries);
+          } else {
+            collect_entries(dest, iter, max_entries);
+          }
           if (start_pos == 0) {
             // also provide words for manual composition
+            // iter must not be consumed
             collector[consumed_length] = std::move(iter);
             DLOG(INFO) << "table[" << consumed_length << "]: "
                        << collector[consumed_length].entry_count();
@@ -631,16 +674,20 @@ TableTranslator::MakeSentence(const string& input, size_t start,
       }
     }
     for (size_t len = 1; len <= active_input.length(); ++len) {
-      if (!entries[len])
+      const auto& entries(collected_entries[len]);
+      if (entries.empty())
         continue;
       size_t end_pos = start_pos + len;
-      // create a new sentence
-      auto new_sentence = New<Sentence>(*sentences[start_pos]);
-      new_sentence->Extend(*entries[len], end_pos);
-      // compare and update sentences
-      if (sentences.find(end_pos) == sentences.end() ||
-          sentences[end_pos]->weight() <= new_sentence->weight()) {
-        sentences[end_pos] = std::move(new_sentence);
+      bool is_rear = end_pos == input.length();
+      for (const auto& entry : entries) {
+        // create a new sentence
+        auto new_sentence = New<Sentence>(*sentences[start_pos]);
+        new_sentence->Extend(*entry, end_pos, is_rear, grammar_.get());
+        // compare and update sentences
+        if (sentences.find(end_pos) == sentences.end() ||
+            sentences[end_pos]->weight() <= new_sentence->weight()) {
+          sentences[end_pos] = std::move(new_sentence);
+        }
       }
     }
   }

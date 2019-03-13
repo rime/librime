@@ -45,6 +45,8 @@ class DictEntryIterator : public DictEntryFilterBinder {
   DictEntryIterator() = default;
   DictEntryIterator(DictEntryIterator&& other) = default;
   DictEntryIterator& operator= (DictEntryIterator&& other) = default;
+  DictEntryIterator(const DictEntryIterator& other) = default;
+  DictEntryIterator& operator= (const DictEntryIterator& other) = default;
 
   void AddChunk(dictionary::Chunk&& chunk, Table* table);
   void Sort();
