@@ -39,10 +39,11 @@ int Syllabifier::BuildSyllableGraph(const string &input,
     size_t current_pos = vertex.first;
 
     // record a visit to the vertex
-    if (graph->vertices.find(current_pos) == graph->vertices.end())
+    if (graph->vertices.find(current_pos) == graph->vertices.end()) {
       graph->vertices.insert(vertex);  // preferred spelling type comes first
-    else {
-//      graph->vertices[current_pos] = std::min(vertex.second, graph->vertices[current_pos]);
+    } else {
+//      graph->vertices[current_pos] =
+//          std::min(vertex.second, graph->vertices[current_pos]);
       continue;  // discard worse spelling types
     }
 
@@ -52,17 +53,19 @@ int Syllabifier::BuildSyllableGraph(const string &input,
 
     // see where we can go by advancing a syllable
     vector<Prism::Match> matches;
-    set<SyllableId> match_set;
+    set<SyllableId> exact_match_syllables;
     auto current_input = input.substr(current_pos);
     prism.CommonPrefixSearch(current_input, &matches);
-    for (auto &m : matches) {
-      match_set.insert(m.value);
-    }
     if (corrector_) {
+      for (auto &m : matches) {
+        exact_match_syllables.insert(m.value);
+      }
       Corrections corrections;
       corrector_->ToleranceSearch(prism, current_input, &corrections, 5);
       for (const auto &m : corrections) {
-        for (auto accessor = prism.QuerySpelling(m.first); !accessor.exhausted(); accessor.Next()) {
+        for (auto accessor = prism.QuerySpelling(m.first);
+             !accessor.exhausted();
+             accessor.Next()) {
           if (accessor.properties().type == kNormalSpelling) {
             matches.push_back({ m.first, m.second.length });
             break;
@@ -100,7 +103,9 @@ int Syllabifier::BuildSyllableGraph(const string &input,
             props.end_pos = end_pos;
             // add a syllable with properties to the edge's
             // spelling-to-syllable map
-            if (match_set.find(m.value) == match_set.end()) {
+            if (corrector_ &&
+                exact_match_syllables.find(m.value) ==
+                exact_match_syllables.end()) {
               props.is_correction = true;
               props.credibility = kCorrectionCredibility;
             }
@@ -119,7 +124,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
           accessor.Next();
         }
         if (spellings.empty()) {
-          DLOG(INFO) << "not spelt.";
+          DLOG(INFO) << "not spelled.";
           end_vertices.erase(end_pos);
           continue;
         }
