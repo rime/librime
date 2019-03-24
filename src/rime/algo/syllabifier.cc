@@ -188,7 +188,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
     good.insert(i);
   }
 
-  if (corrector_ && farthest < input.length()) {
+  if (enable_completion_ && farthest < input.length()) {
     DLOG(INFO) << "completion enabled";
     const size_t kExpandSearchLimit = 512;
     vector<Prism::Match> keys;
