@@ -76,7 +76,7 @@ bool DictCompiler::Compile(const string &schema_file) {
       cc.ProcessFile(file_name);
     }
     if (settings.use_preset_vocabulary()) {
-      cc.ProcessFile(PresetVocabulary::DictFilePath());
+      cc.ProcessFile(PresetVocabulary::DictFilePath(settings.vocabulary()));
     }
     dict_file_checksum = cc.Checksum();
   }

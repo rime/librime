@@ -18,8 +18,6 @@ static const ResourceType kVocabularyResourceType = {
   "vocabulary", "", ".txt"
 };
 
-static const string kDefaultVocabulary = "essay";
-
 struct VocabularyDb : public TextDb {
   explicit VocabularyDb(const string& path);
   an<DbAccessor> cursor;
@@ -56,14 +54,14 @@ const TextFormat VocabularyDb::format = {
   "Rime vocabulary",
 };
 
-string PresetVocabulary::DictFilePath() {
+string PresetVocabulary::DictFilePath(const string& vocabulary) {
   the<ResourceResolver> resource_resolver(
       Service::instance().CreateResourceResolver(kVocabularyResourceType));
-  return resource_resolver->ResolvePath(kDefaultVocabulary).string();
+  return resource_resolver->ResolvePath(vocabulary).string();
 }
 
-PresetVocabulary::PresetVocabulary() {
-  db_.reset(new VocabularyDb(DictFilePath()));
+PresetVocabulary::PresetVocabulary(const string& vocabulary) {
+  db_.reset(new VocabularyDb(DictFilePath(vocabulary)));
   if (db_ && db_->OpenReadOnly()) {
     db_->cursor = db_->QueryAll();
   }

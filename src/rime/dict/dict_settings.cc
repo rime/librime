@@ -50,7 +50,15 @@ string DictSettings::sort_order() {
 }
 
 bool DictSettings::use_preset_vocabulary() {
-  return (*this)["use_preset_vocabulary"].ToBool();
+  return (*this)["use_preset_vocabulary"].ToBool() ||
+      (*this)["vocabulary"].IsValue();
+}
+
+static const string kDefaultVocabulary = "essay";
+
+string DictSettings::vocabulary() {
+  string value = (*this)["vocabulary"].ToString();
+  return !value.empty() ? value : kDefaultVocabulary;
 }
 
 bool DictSettings::use_rule_based_encoder() {

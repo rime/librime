@@ -41,9 +41,10 @@ void EntryCollector::Collect(const vector<string>& dict_files) {
 }
 
 void EntryCollector::LoadPresetVocabulary(DictSettings* settings) {
-  LOG(INFO) << "loading preset vocabulary.";
-  preset_vocabulary.reset(new PresetVocabulary);
-  if (preset_vocabulary && settings) {
+  auto vocabulary = settings->vocabulary();
+  LOG(INFO) << "loading preset vocabulary: " << vocabulary;
+  preset_vocabulary.reset(new PresetVocabulary(vocabulary));
+  if (preset_vocabulary) {
     if (settings->max_phrase_length() > 0)
       preset_vocabulary->set_max_phrase_length(settings->max_phrase_length());
     if (settings->min_phrase_weight() > 0)
