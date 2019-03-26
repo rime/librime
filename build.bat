@@ -129,14 +129,9 @@ if %build_thirdparty% == 1 (
 
   echo building glog.
   cd %THIRDPARTY%\src\glog
-  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% -DWITH_GFLAGS=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
+  cmake . -Bcmake-build -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% -DBUILD_TESTING:BOOL=OFF -DWITH_GFLAGS:BOOL=OFF -DCMAKE_CONFIGURATION_TYPES:STRING="Release" -DCMAKE_CXX_FLAGS_RELEASE:STRING="/MT /O2 /Ob2 /DNDEBUG" -DCMAKE_INSTALL_PREFIX:PATH="%THIRDPARTY%"
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  cmake --build build --config Release --target glog
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  echo built. copying artifacts.
-  xcopy /S /I /Y src\windows\glog %THIRDPARTY%\include\glog\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y build\Release\glog.lib %THIRDPARTY%\lib\
+  cmake --build cmake-build --config Release --target INSTALL
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
   echo building leveldb.

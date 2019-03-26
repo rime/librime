@@ -1,10 +1,12 @@
 # a minimal build of third party libraries for static linking
 
-SRC_DIR = thirdparty/src
-INCLUDE_DIR = thirdparty/include
-LIB_DIR = thirdparty/lib
-BIN_DIR = thirdparty/bin
-DATA_DIR = thirdparty/data
+# assuming the Makefile is called from its directory using GNU Make
+THIRD_PARTY_DIR = $(CURDIR)/thirdparty
+SRC_DIR = $(THIRD_PARTY_DIR)/src
+INCLUDE_DIR = $(THIRD_PARTY_DIR)/include
+LIB_DIR = $(THIRD_PARTY_DIR)/lib
+BIN_DIR = $(THIRD_PARTY_DIR)/bin
+DATA_DIR = $(THIRD_PARTY_DIR)/data
 
 THIRD_PARTY_LIBS = glog leveldb marisa opencc yaml-cpp gtest
 
@@ -14,7 +16,7 @@ all: $(THIRD_PARTY_LIBS)
 
 # note: this won't clean output files under include/, lib/ and bin/.
 clean-src:
-	rm -r $(SRC_DIR)/glog/build || true
+	rm -r $(SRC_DIR)/glog/cmake-build || true
 	rm -r $(SRC_DIR)/gtest/build || true
 	cd $(SRC_DIR)/leveldb; make clean || true
 	cd $(SRC_DIR)/marisa-trie; make distclean || true
@@ -22,13 +24,13 @@ clean-src:
 	rm -r $(SRC_DIR)/yaml-cpp/build || true
 
 glog:
-	cd $(SRC_DIR)/glog; cmake \
-	. -Bbuild \
+	cd $(SRC_DIR)/glog; \
+	cmake . -Bcmake-build \
+	-DBUILD_TESTING:BOOL=OFF \
 	-DWITH_GFLAGS:BOOL=OFF \
-	&& cmake --build build
-	cp -R $(SRC_DIR)/glog/build/glog $(INCLUDE_DIR)/
-	cp $(SRC_DIR)/glog/src/glog/log_severity.h $(INCLUDE_DIR)/glog/
-	cp $(SRC_DIR)/glog/build/libglog.a $(LIB_DIR)/
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	&& cmake --build cmake-build --config Release --target install
 
 leveldb:
 	cd $(SRC_DIR)/leveldb; make
