@@ -1,3 +1,6 @@
 [submodule "thirdparty/src/glog"]
 	path = thirdparty/src/glog
 	url = https://github.com/google/glog.git
+[submodule "thirdparty/src/leveldb"]
+	path = thirdparty/src/leveldb
+	url = https://github.com/google/leveldb.git

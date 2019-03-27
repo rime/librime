@@ -18,7 +18,7 @@ all: $(THIRD_PARTY_LIBS)
 clean-src:
 	rm -r $(SRC_DIR)/glog/cmake-build || true
 	rm -r $(SRC_DIR)/gtest/build || true
-	cd $(SRC_DIR)/leveldb; make clean || true
+	rm -r $(SRC_DIR)/leveldb/build || true
 	cd $(SRC_DIR)/marisa-trie; make distclean || true
 	rm -r $(SRC_DIR)/opencc/build || true
 	rm -r $(SRC_DIR)/yaml-cpp/build || true
@@ -30,12 +30,16 @@ glog:
 	-DWITH_GFLAGS:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
 	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
-	&& cmake --build cmake-build --config Release --target install
+	&& cmake --build cmake-build --target install
 
 leveldb:
-	cd $(SRC_DIR)/leveldb; make
-	cp -R $(SRC_DIR)/leveldb/include/leveldb $(INCLUDE_DIR)/
-	cp $(SRC_DIR)/leveldb/libleveldb.a $(LIB_DIR)/
+	cd $(SRC_DIR)/leveldb; \
+	cmake . -Bbuild \
+	-DLEVELDB_BUILD_BENCHMARKS:BOOL=OFF \
+	-DLEVELDB_BUILD_TESTS:BOOL=OFF \
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	&& cmake --build build --target install
 
 marisa:
 	cd $(SRC_DIR)/marisa-trie; \

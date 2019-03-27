@@ -135,14 +135,10 @@ if %build_thirdparty% == 1 (
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
   echo building leveldb.
-  cd %THIRDPARTY%\src\leveldb-windows
-  echo BOOST_ROOT=%BOOST_ROOT%
-  msbuild.exe leveldb.sln /p:Configuration=Release /p:Platform=Win32
+  cd %THIRDPARTY%\src\leveldb
+  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% -DLEVELDB_BUILD_BENCHMARKS:BOOL=OFF -DLEVELDB_BUILD_TESTS:BOOL=OFF -DCMAKE_CONFIGURATION_TYPES:STRING="Release" -DCMAKE_CXX_FLAGS_RELEASE:STRING="/MT /O2 /Ob2 /DNDEBUG" -DCMAKE_INSTALL_PREFIX:PATH="%THIRDPARTY%"
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  echo built. copying artifacts.
-  xcopy /S /I /Y include\leveldb %THIRDPARTY%\include\leveldb\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y Release\leveldb.lib %THIRDPARTY%\lib\
+  cmake --build build --config Release --target INSTALL
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
   echo building yaml-cpp.
