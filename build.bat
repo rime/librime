@@ -149,15 +149,10 @@ if %build_thirdparty% == 1 (
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
   echo building gtest.
-  cd %THIRDPARTY%\src\gtest
-  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
+  cd %THIRDPARTY%\src\googletest
+  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% -DBUILD_GMOCK:BOOL=OFF -DCMAKE_CONFIGURATION_TYPES:STRING="Release" -DCMAKE_CXX_FLAGS_RELEASE:STRING="/MT /O2 /Ob2 /DNDEBUG" -DCMAKE_C_FLAGS_RELEASE:STRING="/MT /O2 /Ob2 /DNDEBUG" -DCMAKE_INSTALL_PREFIX:PATH="%THIRDPARTY%"
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  cmake --build build --config Release
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  echo built. copying artifacts.
-  xcopy /S /I /Y include\gtest %THIRDPARTY%\include\gtest\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y build\Release\gtest*.lib %THIRDPARTY%\lib\
+  cmake --build build --config Release --target INSTALL
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
   echo building marisa.

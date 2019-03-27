@@ -1,6 +1,5 @@
 # a minimal build of third party libraries for static linking
 
-# assuming the Makefile is called from its directory using GNU Make
 THIRD_PARTY_DIR = $(CURDIR)/thirdparty
 SRC_DIR = $(THIRD_PARTY_DIR)/src
 INCLUDE_DIR = $(THIRD_PARTY_DIR)/include
@@ -17,7 +16,7 @@ all: $(THIRD_PARTY_LIBS)
 # note: this won't clean output files under include/, lib/ and bin/.
 clean-src:
 	rm -r $(SRC_DIR)/glog/cmake-build || true
-	rm -r $(SRC_DIR)/gtest/build || true
+	rm -r $(SRC_DIR)/googletest/build || true
 	rm -r $(SRC_DIR)/leveldb/build || true
 	cd $(SRC_DIR)/marisa-trie; make distclean || true
 	rm -r $(SRC_DIR)/opencc/build || true
@@ -76,8 +75,9 @@ yaml-cpp:
 	&& cmake --build build --target install
 
 gtest:
-	cd $(SRC_DIR)/gtest; \
+	cd $(SRC_DIR)/googletest; \
 	cmake . -Bbuild \
-	&& cmake --build build
-	cp -R $(SRC_DIR)/gtest/include/gtest $(INCLUDE_DIR)/
-	cp $(SRC_DIR)/gtest/build/libgtest*.a $(LIB_DIR)/
+	-DBUILD_GMOCK:BOOL=OFF \
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	&& cmake --build build --target install

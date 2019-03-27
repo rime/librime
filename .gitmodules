@@ -7,3 +7,6 @@
 [submodule "thirdparty/src/yaml-cpp"]
 	path = thirdparty/src/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp.git
+[submodule "thirdparty/src/googletest"]
+	path = thirdparty/src/googletest
+	url = https://github.com/google/googletest.git
