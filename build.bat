@@ -143,14 +143,9 @@ if %build_thirdparty% == 1 (
 
   echo building yaml-cpp.
   cd %THIRDPARTY%\src\yaml-cpp
-  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% -DMSVC_SHARED_RT=OFF -DYAML_CPP_BUILD_TOOLS=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
+  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% -DMSVC_SHARED_RT:BOOL=OFF -DYAML_CPP_BUILD_CONTRIB:BOOL=OFF -DYAML_CPP_BUILD_TESTS:BOOL=OFF -DYAML_CPP_BUILD_TOOLS:BOOL=OFF -DCMAKE_CONFIGURATION_TYPES:STRING="Release" -DCMAKE_INSTALL_PREFIX:PATH="%THIRDPARTY%"
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  cmake --build build --config Release --target yaml-cpp
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  echo built. copying artifacts.
-  xcopy /S /I /Y include\yaml-cpp %THIRDPARTY%\include\yaml-cpp\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y build\Release\libyaml-cppmt.lib %THIRDPARTY%\lib\
+  cmake --build build --config Release --target INSTALL
   if %ERRORLEVEL% NEQ 0 goto ERROR
 
   echo building gtest.

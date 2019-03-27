@@ -4,3 +4,6 @@
 [submodule "thirdparty/src/leveldb"]
 	path = thirdparty/src/leveldb
 	url = https://github.com/google/leveldb.git
+[submodule "thirdparty/src/yaml-cpp"]
+	path = thirdparty/src/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp.git

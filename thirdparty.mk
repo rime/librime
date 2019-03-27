@@ -68,10 +68,12 @@ opencc:
 yaml-cpp:
 	cd $(SRC_DIR)/yaml-cpp; \
 	cmake . -Bbuild \
-	-DCMAKE_BUILD_TYPE=Release \
-	&& cmake --build build
-	cp -R $(SRC_DIR)/yaml-cpp/include/yaml-cpp $(INCLUDE_DIR)/
-	cp $(SRC_DIR)/yaml-cpp/build/libyaml-cpp.a $(LIB_DIR)/
+	-DYAML_CPP_BUILD_CONTRIB:BOOL=OFF \
+	-DYAML_CPP_BUILD_TESTS:BOOL=OFF \
+	-DYAML_CPP_BUILD_TOOLS:BOOL=OFF \
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	&& cmake --build build --target install
 
 gtest:
 	cd $(SRC_DIR)/gtest; \
