@@ -9,8 +9,8 @@ matrix:
       dist: trusty
       sudo: required
 
-before_install:
-  ./travis-before-install.sh
+install:
+  ./travis-install.sh
 
 script:
   ./travis-script.sh
