@@ -21,3 +21,8 @@ if [[ "$TRAVIS_OS_NAME" == linux ]]; then
 elif [[ "$TRAVIS_OS_NAME" == osx ]]; then
   make -f xcode.mk thirdparty
 fi
+
+if [[ -n "${RIME_PLUGINS}" ]]; then
+    # intentionally not quoted: ${RIME_PLUGIN} is a space separated list of slugs
+    bash ./travis-install-plugins.sh ${RIME_PLUGINS}
+fi
