@@ -70,6 +70,14 @@ and build script.
 To build the sample plugin as standard Rime plugin, link or copy the source code
 directory to `plugins/sample` and turn off cmake flag `BUILD_SAMPLE=OFF`.
 
+https://github.com/rime/librime-sample is the same sample plugin in its separate
+GitHub repository. You can checkout plugins (a list of slugs) with this command:
+
+``` shell
+cd librime
+bash install-plugins.sh rime/librime-sample # ...
+```
+
 The cmake option `BUILD_MERGED_PLUGINS` merges all detected plugins into the
 built `rime` library. Set the option off to build each plugin as a standalone
 (shared) library. In the latter case, the user needs to explicitly load the
