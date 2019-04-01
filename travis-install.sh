@@ -19,10 +19,15 @@ if [[ "$TRAVIS_OS_NAME" == linux ]]; then
   make -C thirdparty/src/opencc build
   sudo env "PATH=$PATH" make -C thirdparty/src/opencc install
 elif [[ "$TRAVIS_OS_NAME" == osx ]]; then
-  make -f xcode.mk thirdparty
+  make xcode/thirdparty
 fi
 
 if [[ -n "${RIME_PLUGINS}" ]]; then
-    # intentionally not quoted: ${RIME_PLUGIN} is a space separated list of slugs
-    bash ./travis-install-plugins.sh ${RIME_PLUGINS}
+    # intentionally unquoted: ${RIME_PLUGINS} is a space separated list of slugs
+    bash ./install-plugins.sh ${RIME_PLUGINS}
+    for plugin_dir in plugins/*; do
+        if [[ -e "${plugin_dir}/travis-install.sh" ]]; then
+	    bash "${plugin_dir}/travis-install.sh"
+        fi
+    done
 fi
