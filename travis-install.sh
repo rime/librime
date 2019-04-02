@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd "$(dirname "$0")"
+
 dep_packages=(
     doxygen
     libboost-filesystem-dev
@@ -27,7 +29,7 @@ if [[ -n "${RIME_PLUGINS}" ]]; then
     bash ./install-plugins.sh ${RIME_PLUGINS}
     for plugin_dir in plugins/*; do
         if [[ -e "${plugin_dir}/travis-install.sh" ]]; then
-	    bash "${plugin_dir}/travis-install.sh"
+	    (cd "${plugin_dir}"; bash ./travis-install.sh)
         fi
     done
 fi
