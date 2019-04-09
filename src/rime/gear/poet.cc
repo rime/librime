@@ -43,11 +43,10 @@ an<Sentence> Poet::MakeSentence(const WordGraph& graph,
       if (start_pos == 0 && end_pos == total_length)
         continue;  // exclude single words from the result
       DLOG(INFO) << "end pos: " << end_pos;
+      bool is_rear = end_pos == total_length;
       const DictEntryList& entries(x.second);
-      for (size_t i = 0; i < entries.size(); ++i) {
-        const auto& entry(entries[i]);
+      for (const auto& entry : entries) {
         auto new_sentence = New<Sentence>(*sentences[start_pos]);
-        bool is_rear = end_pos == total_length;
         new_sentence->Extend(*entry, end_pos, is_rear, grammar_.get());
         if (sentences.find(end_pos) == sentences.end() ||
             sentences[end_pos]->weight() < new_sentence->weight()) {
