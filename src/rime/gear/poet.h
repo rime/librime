@@ -23,14 +23,24 @@ class Language;
 
 class Poet {
  public:
-  Poet(const Language* language, Config* config);
+  // sentence "less", used to compare sentences of the same input range.
+  using Compare = function<bool (const Sentence&, const Sentence&)>;
+
+  static bool CompareWeight(const Sentence& one, const Sentence& other) {
+    return one.weight() < other.weight();
+  }
+  static bool LeftAssociateCompare(const Sentence& one, const Sentence& other);
+
+  Poet(const Language* language, Config* config,
+       Compare compare = CompareWeight);
   ~Poet();
 
   an<Sentence> MakeSentence(const WordGraph& graph, size_t total_length);
 
- protected:
+ private:
   const Language* language_;
   the<Grammar> grammar_;
+  Compare compare_;
 };
 
 }  // namespace rime

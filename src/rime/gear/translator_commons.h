@@ -71,7 +71,9 @@ class Language;
 class Phrase : public Candidate {
  public:
   Phrase(const Language* language,
-         const string& type, size_t start, size_t end,
+         const string& type,
+         size_t start,
+         size_t end,
          const an<DictEntry>& entry)
       : Candidate(type, start, end),
         language_(language),
@@ -112,9 +114,7 @@ class Grammar;
 class Sentence : public Phrase {
  public:
   Sentence(const Language* language)
-      : Phrase(language, "sentence", 0, 0, New<DictEntry>()) {
-    entry_->weight = 0.0;
-  }
+      : Phrase(language, "sentence", 0, 0, New<DictEntry>()) {}
   Sentence(const Sentence& other)
       : Phrase(other),
         components_(other.components_),
@@ -126,6 +126,14 @@ class Sentence : public Phrase {
               bool is_rear,
               Grammar* grammar);
   void Offset(size_t offset);
+
+  bool empty() const {
+    return components_.empty();
+  }
+
+  size_t size() const {
+    return components_.size();
+  }
 
   const vector<DictEntry>& components() const {
     return components_;

@@ -92,7 +92,7 @@ void Sentence::Extend(const DictEntry& entry,
                       size_t end_pos,
                       bool is_rear,
                       Grammar* grammar) {
-  entry_->weight += Grammar::Evaluate(entry_->text, entry, is_rear, grammar);
+  entry_->weight += Grammar::Evaluate(text(), entry, is_rear, grammar);
   entry_->text.append(entry.text);
   entry_->code.insert(entry_->code.end(),
                       entry.code.begin(),
@@ -101,7 +101,7 @@ void Sentence::Extend(const DictEntry& entry,
   syllable_lengths_.push_back(end_pos - end());
   set_end(end_pos);
   DLOG(INFO) << "extend sentence " << end_pos << ") "
-             << entry_->text << " : " << entry_->weight;
+             << text() << " weight: " << weight();
 }
 
 void Sentence::Offset(size_t offset) {

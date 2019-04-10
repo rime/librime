@@ -221,7 +221,7 @@ TableTranslator::TableTranslator(const Ticket& ticket)
     config->GetInt(name_space_ + "/max_homographs",
                    &max_homographs_);
     if (enable_sentence_ || sentence_over_completion_) {
-      poet_.reset(new Poet(language(), config));
+      poet_.reset(new Poet(language(), config, Poet::LeftAssociateCompare));
     }
   }
   if (enable_encoder_ && user_dict_) {
