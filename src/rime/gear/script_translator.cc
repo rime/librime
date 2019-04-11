@@ -214,6 +214,11 @@ string ScriptTranslator::Spell(const Code& code) {
   return result;
 }
 
+string ScriptTranslator::GetPrecedingText() const {
+  return contextual_suggestions_ ?
+      engine_->context()->commit_history().latest_text() : string();
+}
+
 bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
   bool update_elements = false;
   // avoid updating single character entries within a phrase which is
@@ -538,12 +543,14 @@ an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
       }
     }
   }
-  auto sentence = poet_->MakeSentence(graph, syllable_graph.interpreted_length);
-  if (sentence) {
+  if (auto sentence = poet_->MakeSentence(graph,
+                                          syllable_graph.interpreted_length,
+                                          translator_->GetPrecedingText())) {
     sentence->Offset(start_);
     sentence->set_syllabifier(syllabifier_);
+    return sentence;
   }
-  return sentence;
+  return nullptr;
 }
 
 }  // namespace rime

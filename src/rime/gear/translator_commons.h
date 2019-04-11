@@ -124,6 +124,7 @@ class Sentence : public Phrase {
   void Extend(const DictEntry& entry,
               size_t end_pos,
               bool is_rear,
+              const string& preceding_text,
               Grammar* grammar);
   void Offset(size_t offset);
 
@@ -159,6 +160,10 @@ class TranslatorOptions {
   const string& delimiters() const { return delimiters_; }
   const string& tag() const { return tag_; }
   void set_tag(const string& tag) { tag_ = tag; }
+  bool contextual_suggestions() const { return contextual_suggestions_; }
+  void set_contextual_suggestions(bool enabled) {
+    contextual_suggestions_ = enabled;
+  }
   bool enable_completion() const { return enable_completion_; }
   void set_enable_completion(bool enabled) { enable_completion_ = enabled; }
   bool strict_spelling() const { return strict_spelling_; }
@@ -171,6 +176,7 @@ class TranslatorOptions {
  protected:
   string delimiters_;
   string tag_ = "abc";
+  bool contextual_suggestions_ = false;
   bool enable_completion_ = true;
   bool strict_spelling_ = false;
   double initial_quality_ = 0.;

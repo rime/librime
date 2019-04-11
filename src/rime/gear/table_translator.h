@@ -35,7 +35,7 @@ class TableTranslator : public Translator,
   an<Translation> MakeSentence(const string& input,
                                        size_t start,
                                        bool include_prefix_phrases = false);
-
+  string GetPrecedingText() const;
   UnityTableEncoder* encoder() const { return encoder_.get(); }
 
  protected:

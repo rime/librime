@@ -35,7 +35,9 @@ class Poet {
        Compare compare = CompareWeight);
   ~Poet();
 
-  an<Sentence> MakeSentence(const WordGraph& graph, size_t total_length);
+  an<Sentence> MakeSentence(const WordGraph& graph,
+                            size_t total_length,
+                            const string& preceding_text);
 
  private:
   const Language* language_;

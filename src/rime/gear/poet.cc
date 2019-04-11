@@ -42,7 +42,8 @@ bool Poet::LeftAssociateCompare(const Sentence& one, const Sentence& other) {
 }
 
 an<Sentence> Poet::MakeSentence(const WordGraph& graph,
-                                size_t total_length) {
+                                size_t total_length,
+                                const string& preceding_text) {
   // TODO: save more intermediate sentence candidates
   map<int, an<Sentence>> sentences;
   sentences[0] = New<Sentence>(language_);
@@ -61,7 +62,8 @@ an<Sentence> Poet::MakeSentence(const WordGraph& graph,
       const DictEntryList& entries(x.second);
       for (const auto& entry : entries) {
         auto new_sentence = New<Sentence>(*sentences[start_pos]);
-        new_sentence->Extend(*entry, end_pos, is_rear, grammar_.get());
+        new_sentence->Extend(
+            *entry, end_pos, is_rear, preceding_text, grammar_.get());
         if (sentences.find(end_pos) == sentences.end() ||
             compare_(*sentences[end_pos], *new_sentence)) {
           DLOG(INFO) << "updated sentences " << end_pos << ") with "

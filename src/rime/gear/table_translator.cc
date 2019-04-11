@@ -342,7 +342,9 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
         }
         string phrase;
         for (; it != history.rend(); ++it) {
-          if (it->type != "table" && it->type != "sentence" && it->type != "uniquified")
+          if (it->type != "table" &&
+              it->type != "sentence" &&
+              it->type != "uniquified")
             break;
           if (phrase.empty()) {
             phrase = it->text;  // last word
@@ -360,6 +362,11 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
     }
   }
   return true;
+}
+
+string TableTranslator::GetPrecedingText() const {
+  return contextual_suggestions_ ?
+      engine_->context()->commit_history().latest_text() : string();
 }
 
 // SentenceSyllabifier
@@ -680,7 +687,9 @@ TableTranslator::MakeSentence(const string& input, size_t start,
       }
     }
   }
-  if (auto sentence = poet_->MakeSentence(graph, input.length())) {
+  if (auto sentence = poet_->MakeSentence(graph,
+                                          input.length(),
+                                          GetPrecedingText())) {
     auto result = Cached<SentenceTranslation>(
         this,
         std::move(sentence),
