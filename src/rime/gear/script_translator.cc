@@ -194,7 +194,11 @@ an<Translation> ScriptTranslator::Query(const string& input,
                         enable_user_dict ? user_dict_.get() : NULL)) {
     return nullptr;
   }
-  return New<DistinctTranslation>(result);
+  auto deduped = New<DistinctTranslation>(result);
+  if (contextual_suggestions_) {
+    return poet_->ContextualWeighted(deduped, input, this);
+  }
+  return deduped;
 }
 
 string ScriptTranslator::FormatPreedit(const string& preedit) {

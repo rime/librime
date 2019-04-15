@@ -11,8 +11,10 @@
 #define RIME_POET_H_
 
 #include <rime/common.h>
+#include <rime/translation.h>
 #include <rime/dict/user_dictionary.h>
 #include <rime/gear/translator_commons.h>
+#include <rime/gear/contextual_translation.h>
 
 namespace rime {
 
@@ -38,6 +40,19 @@ class Poet {
   an<Sentence> MakeSentence(const WordGraph& graph,
                             size_t total_length,
                             const string& preceding_text);
+
+  template <class TranslatorT>
+  an<Translation> ContextualWeighted(an<Translation> translation,
+                                     const string& input,
+                                     TranslatorT* translator) {
+    if (!translator->contextual_suggestions() || !grammar_) {
+      return translation;
+    }
+    return New<ContextualTranslation>(translation,
+                                      input,
+                                      translator->GetPrecedingText(),
+                                      grammar_.get());
+  }
 
  private:
   const Language* language_;

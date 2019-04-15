@@ -220,7 +220,8 @@ TableTranslator::TableTranslator(const Ticket& ticket)
                    &max_phrase_length_);
     config->GetInt(name_space_ + "/max_homographs",
                    &max_homographs_);
-    if (enable_sentence_ || sentence_over_completion_) {
+    if (enable_sentence_ || sentence_over_completion_ ||
+        contextual_suggestions_) {
       poet_.reset(new Poet(language(), config, Poet::LeftAssociateCompare));
     }
   }
@@ -306,11 +307,12 @@ an<Translation> TableTranslator::Query(const string& input,
       translation = sentence + translation;
     }
   }
-  if (translation) {
-    translation = New<DistinctTranslation>(translation);
-  }
   if (translation && translation->exhausted()) {
-    translation.reset();  // discard futile translation
+    return nullptr;
+  }
+  translation = New<DistinctTranslation>(translation);
+  if (contextual_suggestions_) {
+    return poet_->ContextualWeighted(translation, input, this);
   }
   return translation;
 }

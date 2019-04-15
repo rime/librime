@@ -91,8 +91,8 @@ class Phrase : public Candidate {
   void set_syllabifier(an<PhraseSyllabifier> syllabifier) {
     syllabifier_ = syllabifier;
   }
-
   double weight() const { return entry_->weight; }
+  void set_weight(double weight) { entry_->weight = weight; }
   Code& code() const { return entry_->code; }
   const DictEntry& entry() const { return *entry_; }
   const Language* language() const { return language_; }
