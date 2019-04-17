@@ -196,7 +196,7 @@ an<Translation> ScriptTranslator::Query(const string& input,
   }
   auto deduped = New<DistinctTranslation>(result);
   if (contextual_suggestions_) {
-    return poet_->ContextualWeighted(deduped, input, this);
+    return poet_->ContextualWeighted(deduped, input, segment.start, this);
   }
   return deduped;
 }
@@ -218,9 +218,10 @@ string ScriptTranslator::Spell(const Code& code) {
   return result;
 }
 
-string ScriptTranslator::GetPrecedingText() const {
-  return contextual_suggestions_ ?
-      engine_->context()->commit_history().latest_text() : string();
+string ScriptTranslator::GetPrecedingText(size_t start) const {
+  return !contextual_suggestions_ ? string() :
+      start > 0 ? engine_->context()->composition().GetTextBefore(start) :
+      engine_->context()->commit_history().latest_text();
 }
 
 bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
@@ -547,9 +548,10 @@ an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
       }
     }
   }
-  if (auto sentence = poet_->MakeSentence(graph,
-                                          syllable_graph.interpreted_length,
-                                          translator_->GetPrecedingText())) {
+  if (auto sentence =
+      poet_->MakeSentence(graph,
+                          syllable_graph.interpreted_length,
+                          translator_->GetPrecedingText(start_))) {
     sentence->Offset(start_);
     sentence->set_syllabifier(syllabifier_);
     return sentence;

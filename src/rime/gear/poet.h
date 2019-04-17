@@ -44,14 +44,17 @@ class Poet {
   template <class TranslatorT>
   an<Translation> ContextualWeighted(an<Translation> translation,
                                      const string& input,
+                                     size_t start,
                                      TranslatorT* translator) {
     if (!translator->contextual_suggestions() || !grammar_) {
       return translation;
     }
-    return New<ContextualTranslation>(translation,
-                                      input,
-                                      translator->GetPrecedingText(),
-                                      grammar_.get());
+    auto preceding_text = translator->GetPrecedingText(start);
+    if (preceding_text.empty()) {
+      return translation;
+    }
+    return New<ContextualTranslation>(
+        translation, input, preceding_text, grammar_.get());
   }
 
  private:

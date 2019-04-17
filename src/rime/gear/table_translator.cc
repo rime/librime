@@ -312,7 +312,7 @@ an<Translation> TableTranslator::Query(const string& input,
   }
   translation = New<DistinctTranslation>(translation);
   if (contextual_suggestions_) {
-    return poet_->ContextualWeighted(translation, input, this);
+    return poet_->ContextualWeighted(translation, input, segment.start, this);
   }
   return translation;
 }
@@ -366,9 +366,10 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
   return true;
 }
 
-string TableTranslator::GetPrecedingText() const {
-  return contextual_suggestions_ ?
-      engine_->context()->commit_history().latest_text() : string();
+string TableTranslator::GetPrecedingText(size_t start) const {
+  return !contextual_suggestions_ ? string() :
+      start > 0 ? engine_->context()->composition().GetTextBefore(start) :
+      engine_->context()->commit_history().latest_text();
 }
 
 // SentenceSyllabifier
@@ -691,7 +692,7 @@ TableTranslator::MakeSentence(const string& input, size_t start,
   }
   if (auto sentence = poet_->MakeSentence(graph,
                                           input.length(),
-                                          GetPrecedingText())) {
+                                          GetPrecedingText(start))) {
     auto result = Cached<SentenceTranslation>(
         this,
         std::move(sentence),

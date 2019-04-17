@@ -29,6 +29,8 @@ class Composition : public Segmentation {
   string GetCommitText() const;
   string GetScriptText() const;
   string GetDebugText() const;
+  // Returns text of the last segment before the given position.
+  string GetTextBefore(size_t pos) const;
 };
 
 }  // namespace rime
