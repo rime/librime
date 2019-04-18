@@ -194,7 +194,11 @@ an<Translation> ScriptTranslator::Query(const string& input,
                         enable_user_dict ? user_dict_.get() : NULL)) {
     return nullptr;
   }
-  return New<DistinctTranslation>(result);
+  auto deduped = New<DistinctTranslation>(result);
+  if (contextual_suggestions_) {
+    return poet_->ContextualWeighted(deduped, input, segment.start, this);
+  }
+  return deduped;
 }
 
 string ScriptTranslator::FormatPreedit(const string& preedit) {
@@ -212,6 +216,12 @@ string ScriptTranslator::Spell(const Code& code) {
                                    string(1, delimiters_.at(0)));
   comment_formatter_.Apply(&result);
   return result;
+}
+
+string ScriptTranslator::GetPrecedingText(size_t start) const {
+  return !contextual_suggestions_ ? string() :
+      start > 0 ? engine_->context()->composition().GetTextBefore(start) :
+      engine_->context()->commit_history().latest_text();
 }
 
 bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
@@ -538,12 +548,15 @@ an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
       }
     }
   }
-  auto sentence = poet_->MakeSentence(graph, syllable_graph.interpreted_length);
-  if (sentence) {
+  if (auto sentence =
+      poet_->MakeSentence(graph,
+                          syllable_graph.interpreted_length,
+                          translator_->GetPrecedingText(start_))) {
     sentence->Offset(start_);
     sentence->set_syllabifier(syllabifier_);
+    return sentence;
   }
-  return sentence;
+  return nullptr;
 }
 
 }  // namespace rime

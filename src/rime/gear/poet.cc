@@ -6,6 +6,8 @@
 //
 // 2011-10-06 GONG Chen <chen.sst@gmail.com>
 //
+#include <algorithm>
+#include <functional>
 #include <rime/candidate.h>
 #include <rime/config.h>
 #include <rime/dict/vocabulary.h>
@@ -21,14 +23,27 @@ inline static Grammar* create_grammar(Config* config) {
   return nullptr;
 }
 
-Poet::Poet(const Language* language, Config* config)
+Poet::Poet(const Language* language, Config* config, Compare compare)
     : language_(language),
-      grammar_(create_grammar(config)) {}
+      grammar_(create_grammar(config)),
+      compare_(compare) {}
 
 Poet::~Poet() {}
 
+bool Poet::LeftAssociateCompare(const Sentence& one, const Sentence& other) {
+  return one.weight() < other.weight() || (  // left associate if even
+      one.weight() == other.weight() && (
+          one.size() > other.size() || (  // less components is more favorable
+              one.size() == other.size() &&
+              std::lexicographical_compare(one.syllable_lengths().begin(),
+                                           one.syllable_lengths().end(),
+                                           other.syllable_lengths().begin(),
+                                           other.syllable_lengths().end()))));
+}
+
 an<Sentence> Poet::MakeSentence(const WordGraph& graph,
-                                size_t total_length) {
+                                size_t total_length,
+                                const string& preceding_text) {
   // TODO: save more intermediate sentence candidates
   map<int, an<Sentence>> sentences;
   sentences[0] = New<Sentence>(language_);
@@ -43,16 +58,17 @@ an<Sentence> Poet::MakeSentence(const WordGraph& graph,
       if (start_pos == 0 && end_pos == total_length)
         continue;  // exclude single words from the result
       DLOG(INFO) << "end pos: " << end_pos;
+      bool is_rear = end_pos == total_length;
       const DictEntryList& entries(x.second);
-      for (size_t i = 0; i < entries.size(); ++i) {
-        const auto& entry(entries[i]);
+      for (const auto& entry : entries) {
         auto new_sentence = New<Sentence>(*sentences[start_pos]);
-        bool is_rear = end_pos == total_length;
-        new_sentence->Extend(*entry, end_pos, is_rear, grammar_.get());
+        new_sentence->Extend(
+            *entry, end_pos, is_rear, preceding_text, grammar_.get());
         if (sentences.find(end_pos) == sentences.end() ||
-            sentences[end_pos]->weight() < new_sentence->weight()) {
-          DLOG(INFO) << "updated sentences " << end_pos << ") with '"
-                     << new_sentence->text() << "', " << new_sentence->weight();
+            compare_(*sentences[end_pos], *new_sentence)) {
+          DLOG(INFO) << "updated sentences " << end_pos << ") with "
+                     << new_sentence->text() << " weight: "
+                     << new_sentence->weight();
           sentences[end_pos] = std::move(new_sentence);
         }
       }

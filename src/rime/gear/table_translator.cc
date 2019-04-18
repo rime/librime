@@ -8,6 +8,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <utf8.h>
 #include <rime/candidate.h>
+#include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/config.h>
 #include <rime/context.h>
@@ -17,7 +18,7 @@
 #include <rime/dict/dictionary.h>
 #include <rime/dict/user_dictionary.h>
 #include <rime/gear/charset_filter.h>
-#include <rime/gear/grammar.h>
+#include <rime/gear/poet.h>
 #include <rime/gear/table_translator.h>
 #include <rime/gear/translator_commons.h>
 #include <rime/gear/unity_table_encoder.h>
@@ -219,10 +220,9 @@ TableTranslator::TableTranslator(const Ticket& ticket)
                    &max_phrase_length_);
     config->GetInt(name_space_ + "/max_homographs",
                    &max_homographs_);
-    if (enable_sentence_ || sentence_over_completion_) {
-      if (auto* grammar_component = Grammar::Require("grammar")) {
-        grammar_.reset(grammar_component->Create(config));
-      }
+    if (enable_sentence_ || sentence_over_completion_ ||
+        contextual_suggestions_) {
+      poet_.reset(new Poet(language(), config, Poet::LeftAssociateCompare));
     }
   }
   if (enable_encoder_ && user_dict_) {
@@ -307,11 +307,12 @@ an<Translation> TableTranslator::Query(const string& input,
       translation = sentence + translation;
     }
   }
-  if (translation) {
-    translation = New<DistinctTranslation>(translation);
-  }
   if (translation && translation->exhausted()) {
-    translation.reset();  // discard futile translation
+    return nullptr;
+  }
+  translation = New<DistinctTranslation>(translation);
+  if (contextual_suggestions_) {
+    return poet_->ContextualWeighted(translation, input, segment.start, this);
   }
   return translation;
 }
@@ -343,7 +344,9 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
         }
         string phrase;
         for (; it != history.rend(); ++it) {
-          if (it->type != "table" && it->type != "sentence" && it->type != "uniquified")
+          if (it->type != "table" &&
+              it->type != "sentence" &&
+              it->type != "uniquified")
             break;
           if (phrase.empty()) {
             phrase = it->text;  // last word
@@ -361,6 +364,12 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
     }
   }
   return true;
+}
+
+string TableTranslator::GetPrecedingText(size_t start) const {
+  return !contextual_suggestions_ ? string() :
+      start > 0 ? engine_->context()->composition().GetTextBefore(start) :
+      engine_->context()->commit_history().latest_text();
 }
 
 // SentenceSyllabifier
@@ -558,20 +567,22 @@ TableTranslator::MakeSentence(const string& input, size_t start,
   const int max_entries = max_homographs_;
   DictEntryCollector collector;
   UserDictEntryCollector user_phrase_collector;
-  map<int, an<Sentence>> sentences;
-  sentences[0] = New<Sentence>(language());
+  WordGraph graph;
+  hash_set<int> vertices = {0};
   for (size_t start_pos = 0; start_pos < input.length(); ++start_pos) {
-    if (sentences.find(start_pos) == sentences.end())
+    // find next reachable vertex in word graph
+    if (vertices.find(start_pos) == vertices.end())
       continue;
     string active_input = input.substr(start_pos);
     string active_key = active_input + ' ';
-    UserDictEntryCollector collected_entries;
+    UserDictEntryCollector& collected_entries(graph[start_pos]);
     // lookup dictionaries
     if (user_dict_ && user_dict_->loaded()) {
       for (size_t len = 1; len <= active_input.length(); ++len) {
         size_t consumed_length =
             consume_trailing_delimiters(len, active_input, delimiters_);
-        auto& dest(collected_entries[consumed_length]);
+        size_t end_pos = start_pos + consumed_length;
+        auto& dest(collected_entries[end_pos]);
         if (dest.size() >= max_entries)
           continue;
         DLOG(INFO) << "active input: " << active_input << "[0, " << len << ")";
@@ -583,13 +594,14 @@ TableTranslator::MakeSentence(const string& input, size_t start,
           uter.AddFilter(CharsetFilter::FilterDictEntry);
         }
         if (!uter.exhausted()) {
+          vertices.insert(end_pos);
           if (start_pos == 0 && max_entries > 1) {
             UserDictEntryIterator uter_copy(uter);
             collect_entries(dest, uter_copy, max_entries);
           } else {
             collect_entries(dest, uter, max_entries);
           }
-          if (start_pos == 0) {
+          if (include_prefix_phrases && start_pos == 0) {
             // also provide words for manual composition
             // uter must not be consumed
             uter.Release(&user_phrase_collector[consumed_length]);
@@ -607,7 +619,8 @@ TableTranslator::MakeSentence(const string& input, size_t start,
       for (size_t len = 1; len <= active_input.length(); ++len) {
         size_t consumed_length =
             consume_trailing_delimiters(len, active_input, delimiters_);
-        auto& dest(collected_entries[consumed_length]);
+        size_t end_pos = start_pos + consumed_length;
+        auto& dest(collected_entries[end_pos]);
         if (!dest.empty())
           continue;
         DLOG(INFO) << "active input: " << active_input << "[0, " << len << ")";
@@ -619,13 +632,14 @@ TableTranslator::MakeSentence(const string& input, size_t start,
           uter.AddFilter(CharsetFilter::FilterDictEntry);
         }
         if (!uter.exhausted()) {
+          vertices.insert(end_pos);
           if (start_pos == 0 && max_entries > 1) {
             UserDictEntryIterator uter_copy(uter);
             collect_entries(dest, uter_copy, max_entries);
           } else {
             collect_entries(dest, uter, max_entries);
           }
-          if (start_pos == 0) {
+          if (include_prefix_phrases && start_pos == 0) {
             // also provide words for manual composition
             // uter must not be consumed
             uter.Release(&user_phrase_collector[consumed_length]);
@@ -648,7 +662,8 @@ TableTranslator::MakeSentence(const string& input, size_t start,
           continue;
         size_t consumed_length =
             consume_trailing_delimiters(m.length, active_input, delimiters_);
-        auto& dest(collected_entries[consumed_length]);
+        size_t end_pos = start_pos + consumed_length;
+        auto& dest(collected_entries[end_pos]);
         if (dest.size() >= max_entries)
           continue;
         DictEntryIterator iter;
@@ -657,13 +672,14 @@ TableTranslator::MakeSentence(const string& input, size_t start,
           iter.AddFilter(CharsetFilter::FilterDictEntry);
         }
         if (!iter.exhausted()) {
+          vertices.insert(end_pos);
           if (start_pos == 0 && max_entries - dest.size() > 1) {
             DictEntryIterator iter_copy = iter;
             collect_entries(dest, iter_copy, max_entries);
           } else {
             collect_entries(dest, iter, max_entries);
           }
-          if (start_pos == 0) {
+          if (include_prefix_phrases && start_pos == 0) {
             // also provide words for manual composition
             // iter must not be consumed
             collector[consumed_length] = std::move(iter);
@@ -673,38 +689,23 @@ TableTranslator::MakeSentence(const string& input, size_t start,
         }
       }
     }
-    for (size_t len = 1; len <= active_input.length(); ++len) {
-      const auto& entries(collected_entries[len]);
-      if (entries.empty())
-        continue;
-      size_t end_pos = start_pos + len;
-      bool is_rear = end_pos == input.length();
-      for (const auto& entry : entries) {
-        // create a new sentence
-        auto new_sentence = New<Sentence>(*sentences[start_pos]);
-        new_sentence->Extend(*entry, end_pos, is_rear, grammar_.get());
-        // compare and update sentences
-        if (sentences.find(end_pos) == sentences.end() ||
-            sentences[end_pos]->weight() <= new_sentence->weight()) {
-          sentences[end_pos] = std::move(new_sentence);
-        }
-      }
-    }
   }
-  an<Translation> result;
-  if (sentences.find(input.length()) != sentences.end()) {
-    result = Cached<SentenceTranslation>(
+  if (auto sentence = poet_->MakeSentence(graph,
+                                          input.length(),
+                                          GetPrecedingText(start))) {
+    auto result = Cached<SentenceTranslation>(
         this,
-        std::move(sentences[input.length()]),
-        include_prefix_phrases ? std::move(collector) : DictEntryCollector(),
-        include_prefix_phrases ? std::move(user_phrase_collector) : UserDictEntryCollector(),
+        std::move(sentence),
+        std::move(collector),
+        std::move(user_phrase_collector),
         input,
         start);
     if (result && filter_by_charset) {
-      result = New<CharsetFilterTranslation>(result);
+      return New<CharsetFilterTranslation>(result);
     }
+    return result;
   }
-  return result;
+  return nullptr;
 }
 
 }  // namespace rime

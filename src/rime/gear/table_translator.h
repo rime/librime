@@ -19,7 +19,7 @@
 
 namespace rime {
 
-class Grammar;
+class Poet;
 class UnityTableEncoder;
 
 class TableTranslator : public Translator,
@@ -29,13 +29,13 @@ class TableTranslator : public Translator,
   TableTranslator(const Ticket& ticket);
 
   virtual an<Translation> Query(const string& input,
-                                        const Segment& segment);
+                                const Segment& segment);
   virtual bool Memorize(const CommitEntry& commit_entry);
 
   an<Translation> MakeSentence(const string& input,
-                                       size_t start,
-                                       bool include_prefix_phrases = false);
-
+                               size_t start,
+                               bool include_prefix_phrases = false);
+  string GetPrecedingText(size_t start) const;
   UnityTableEncoder* encoder() const { return encoder_.get(); }
 
  protected:
@@ -46,8 +46,8 @@ class TableTranslator : public Translator,
   bool encode_commit_history_ = true;
   int max_phrase_length_ = 5;
   int max_homographs_ = 1;
+  the<Poet> poet_;
   the<UnityTableEncoder> encoder_;
-  the<Grammar> grammar_;
 };
 
 class TableTranslation : public Translation {

@@ -71,7 +71,9 @@ class Language;
 class Phrase : public Candidate {
  public:
   Phrase(const Language* language,
-         const string& type, size_t start, size_t end,
+         const string& type,
+         size_t start,
+         size_t end,
          const an<DictEntry>& entry)
       : Candidate(type, start, end),
         language_(language),
@@ -89,8 +91,8 @@ class Phrase : public Candidate {
   void set_syllabifier(an<PhraseSyllabifier> syllabifier) {
     syllabifier_ = syllabifier;
   }
-
   double weight() const { return entry_->weight; }
+  void set_weight(double weight) { entry_->weight = weight; }
   Code& code() const { return entry_->code; }
   const DictEntry& entry() const { return *entry_; }
   const Language* language() const { return language_; }
@@ -112,9 +114,7 @@ class Grammar;
 class Sentence : public Phrase {
  public:
   Sentence(const Language* language)
-      : Phrase(language, "sentence", 0, 0, New<DictEntry>()) {
-    entry_->weight = 0.0;
-  }
+      : Phrase(language, "sentence", 0, 0, New<DictEntry>()) {}
   Sentence(const Sentence& other)
       : Phrase(other),
         components_(other.components_),
@@ -124,8 +124,17 @@ class Sentence : public Phrase {
   void Extend(const DictEntry& entry,
               size_t end_pos,
               bool is_rear,
+              const string& preceding_text,
               Grammar* grammar);
   void Offset(size_t offset);
+
+  bool empty() const {
+    return components_.empty();
+  }
+
+  size_t size() const {
+    return components_.size();
+  }
 
   const vector<DictEntry>& components() const {
     return components_;
@@ -151,6 +160,10 @@ class TranslatorOptions {
   const string& delimiters() const { return delimiters_; }
   const string& tag() const { return tag_; }
   void set_tag(const string& tag) { tag_ = tag; }
+  bool contextual_suggestions() const { return contextual_suggestions_; }
+  void set_contextual_suggestions(bool enabled) {
+    contextual_suggestions_ = enabled;
+  }
   bool enable_completion() const { return enable_completion_; }
   void set_enable_completion(bool enabled) { enable_completion_ = enabled; }
   bool strict_spelling() const { return strict_spelling_; }
@@ -163,6 +176,7 @@ class TranslatorOptions {
  protected:
   string delimiters_;
   string tag_ = "abc";
+  bool contextual_suggestions_ = false;
   bool enable_completion_ = true;
   bool strict_spelling_ = false;
   double initial_quality_ = 0.;

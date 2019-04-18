@@ -91,8 +91,10 @@ bool Spans::HasVertex(size_t vertex) const {
 void Sentence::Extend(const DictEntry& entry,
                       size_t end_pos,
                       bool is_rear,
+                      const string& preceding_text,
                       Grammar* grammar) {
-  entry_->weight += Grammar::Evaluate(entry_->text, entry, is_rear, grammar);
+  const string& context = empty() ? preceding_text : text();
+  entry_->weight += Grammar::Evaluate(context, entry, is_rear, grammar);
   entry_->text.append(entry.text);
   entry_->code.insert(entry_->code.end(),
                       entry.code.begin(),
@@ -101,7 +103,7 @@ void Sentence::Extend(const DictEntry& entry,
   syllable_lengths_.push_back(end_pos - end());
   set_end(end_pos);
   DLOG(INFO) << "extend sentence " << end_pos << ") "
-             << entry_->text << " : " << entry_->weight;
+             << text() << " weight: " << weight();
 }
 
 void Sentence::Offset(size_t offset) {
@@ -118,6 +120,8 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket) {
     config->GetString(ticket.name_space + "/delimiter", &delimiters_) ||
         config->GetString("speller/delimiter", &delimiters_);
     config->GetString(ticket.name_space + "/tag", &tag_);
+    config->GetBool(ticket.name_space + "/contextual_suggestions",
+                    &contextual_suggestions_);
     config->GetBool(ticket.name_space + "/enable_completion",
                     &enable_completion_);
     config->GetBool(ticket.name_space + "/strict_spelling",
