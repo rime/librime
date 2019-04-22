@@ -58,6 +58,11 @@ class Poet {
   }
 
  private:
+  template <class Strategy>
+  an<Sentence> MakeSentenceWithStrategy(const WordGraph& graph,
+                                        size_t total_length,
+                                        const string& preceding_text);
+
   const Language* language_;
   the<Grammar> grammar_;
   Compare compare_;
