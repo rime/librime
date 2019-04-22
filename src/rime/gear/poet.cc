@@ -62,8 +62,8 @@ static vector<of<Sentence>> find_top_candidates(
   return top;
 }
 
-an<Sentence> find_best_sentence(const SentenceCandidates& candidates,
-                                Poet::Compare compare) {
+static an<Sentence> find_best_sentence(const SentenceCandidates& candidates,
+                                       Poet::Compare compare) {
   an<Sentence> best = nullptr;
   for (const auto& candidate : candidates) {
     if (!best || compare(*best, *candidate.second)) {
@@ -167,7 +167,7 @@ an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
               }
             }
           };
-    Strategy::ForEachCandidate(source, compare_, extend_sentence_and_update);
+      Strategy::ForEachCandidate(source, compare_, extend_sentence_and_update);
     }
   }
   auto found = sentences.find(total_length);
