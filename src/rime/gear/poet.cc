@@ -141,18 +141,19 @@ an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
     if (sentences.find(start_pos) == sentences.end())
       continue;
     DLOG(INFO) << "start pos: " << start_pos;
-    for (const auto& x : w.second) {
-      size_t end_pos = x.first;
-      if (start_pos == 0 && end_pos == total_length)
-        continue;  // exclude single words from the result
-      DLOG(INFO) << "end pos: " << end_pos;
-      bool is_rear = end_pos == total_length;
-      // extend candidates with dict entries on a valid edge.
-      auto& target(sentences[end_pos]);
-      const auto& source(sentences[start_pos]);
-      const DictEntryList& entries(x.second);
-      auto extend_sentence_and_update =
-          [&](const an<Sentence>& candidate) {
+    const auto& source(sentences[start_pos]);
+    Strategy::ForEachCandidate(
+        source, compare_,
+        [&](const an<Sentence>& candidate) {
+          for (const auto& x : w.second) {
+            size_t end_pos = x.first;
+            if (start_pos == 0 && end_pos == total_length)
+              continue;  // exclude single words from the result
+            DLOG(INFO) << "end pos: " << end_pos;
+            bool is_rear = end_pos == total_length;
+            auto& target(sentences[end_pos]);
+            // extend candidates with dict entries on a valid edge.
+            const DictEntryList& entries(x.second);
             for (const auto& entry : entries) {
               auto new_sentence = New<Sentence>(*candidate);
               new_sentence->Extend(
@@ -166,9 +167,8 @@ an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
                 best_sentence = std::move(new_sentence);
               }
             }
-          };
-      Strategy::ForEachCandidate(source, compare_, extend_sentence_and_update);
-    }
+          }
+        });
   }
   auto found = sentences.find(total_length);
   if (found == sentences.end())
