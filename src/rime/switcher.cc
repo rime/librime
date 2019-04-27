@@ -189,13 +189,13 @@ void Switcher::Activate() {
   LOG(INFO) << "switcher is activated.";
   context_->set_option("_fold_options", fold_options_);
   RefreshMenu();
-  engine_->set_active_context(context_.get());
+  engine_->set_active_engine(this);
   active_ = true;
 }
 
 void Switcher::Deactivate() {
   context_->Clear();
-  engine_->set_active_context();
+  engine_->set_active_engine();
   active_ = false;
 }
 

@@ -53,7 +53,7 @@ class RimeConsole {
     const Segment &current(comp.back());
     if (!current.menu)
       return;
-    int page_size = engine_->schema()->page_size();
+    int page_size = engine_->active_engine()->schema()->page_size();
     int page_no = current.selected_index / page_size;
     the<Page> page(current.menu->CreatePage(page_size, page_no));
     if (!page)
@@ -81,7 +81,7 @@ class RimeConsole {
     for (const KeyEvent &key : keys) {
       engine_->ProcessKey(key);
     }
-    Context *ctx = engine_->active_context();
+    Context *ctx = engine_->active_engine()->context();
     if (interactive_) {
       PrintComposition(ctx);
     }

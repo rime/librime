@@ -31,11 +31,11 @@ class Engine : public Messenger {
   Context* context() const { return context_.get(); }
   CommitSink& sink() { return sink_; }
 
-  Context* active_context() const {
-    return active_context_ ? active_context_ : context_.get();
+  Engine* active_engine() {
+    return active_engine_ ? active_engine_ : this;
   }
-  void set_active_context(Context* context = nullptr) {
-    active_context_ = context;
+  void set_active_engine(Engine* engine = nullptr) {
+    active_engine_ = engine;
   }
 
   RIME_API static Engine* Create();
@@ -46,7 +46,7 @@ class Engine : public Messenger {
   the<Schema> schema_;
   the<Context> context_;
   CommitSink sink_;
-  Context* active_context_ = nullptr;
+  Engine* active_engine_ = nullptr;
 };
 
 }  // namespace rime

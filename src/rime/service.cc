@@ -56,11 +56,11 @@ void Session::OnCommit(const string& commit_text) {
 }
 
 Context* Session::context() const {
-  return engine_ ? engine_->active_context() : NULL;
+  return engine_ ? engine_->active_engine()->context() : NULL;
 }
 
 Schema* Session::schema() const {
-  return engine_ ? engine_->schema() : NULL;
+  return engine_ ? engine_->active_engine()->schema() : NULL;
 }
 
 Service::Service() {
