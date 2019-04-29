@@ -144,7 +144,7 @@ if(MSVC)
     # stdint.h is missing from VS2010
     include_directories(${PROJECT_SOURCE_DIR}/thirdparty/include/msvc)
   endif()
-  # Force Boost.Uuid to use wincrypt as random provider instead of bcrypt
+  # Force Boost.Uuid to use wincrypt as random provider instead of bcrypt for Windows XP compatibility
   add_definitions("/wd4244 /wd4996 /DBOOST_UUID_RANDOM_PROVIDER_FORCE_WINCRYPT")
 endif()
 
