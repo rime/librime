@@ -18,7 +18,7 @@ clean-src:
 	rm -r $(SRC_DIR)/glog/cmake-build || true
 	rm -r $(SRC_DIR)/googletest/build || true
 	rm -r $(SRC_DIR)/leveldb/build || true
-	cd $(SRC_DIR)/marisa-trie; make distclean || true
+	rm -r $(SRC_DIR)/marisa-trie/build || true
 	rm -r $(SRC_DIR)/opencc/build || true
 	rm -r $(SRC_DIR)/yaml-cpp/build || true
 
@@ -42,13 +42,10 @@ leveldb:
 
 marisa:
 	cd $(SRC_DIR)/marisa-trie; \
-	./configure --disable-debug \
-	--disable-dependency-tracking \
-	--enable-static \
-	&& make
-	cp -R $(SRC_DIR)/marisa-trie/lib/marisa $(INCLUDE_DIR)/
-	cp $(SRC_DIR)/marisa-trie/lib/marisa.h $(INCLUDE_DIR)/
-	cp $(SRC_DIR)/marisa-trie/lib/.libs/libmarisa.a $(LIB_DIR)/
+	cmake $(SRC_DIR) -Bbuild \
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	&& cmake --build build --target install
 
 opencc:
 	cd $(SRC_DIR)/opencc; \
