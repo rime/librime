@@ -9,7 +9,7 @@ cmake_minimum_required(VERSION 2.8)
 # so we define library target here
 
 if(UNIX)
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Weffc++ -Wextra")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Weffc++ -Wextra -Wconversion")
 endif()
 
 set(MARISA_ROOT ${CMAKE_HOME_DIRECTORY}/marisa-trie)
@@ -43,7 +43,7 @@ install(TARGETS marisa
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
 
-set(include_headers ${MARISA_ROOT}/lib/marisa.h)
-file(GLOB libmarisa_include_headers ${MARISA_ROOT}/lib/marisa/*.h)
+set(include_headers ${MARISA_ROOT}/include/marisa.h)
+file(GLOB libmarisa_include_headers ${MARISA_ROOT}/include/marisa/*.h)
 install(FILES ${include_headers} DESTINATION include)
 install(FILES ${libmarisa_include_headers} DESTINATION include/marisa)
