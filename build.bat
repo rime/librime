@@ -184,26 +184,7 @@ if %build_thirdparty% == 1 (
   -DBUILD_SHARED_LIBS=OFF^
   -DBUILD_TESTING=OFF
   if %ERRORLEVEL% NEQ 0 goto ERROR
-  cmake --build build --config Release --target libopencc
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  cmake --build build --config Release --target opencc
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  cmake --build build --config Release --target opencc_dict
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  cmake --build build --config Release --target Dictionaries
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  echo built. copying artifacts.
-  if not exist %THIRDPARTY%\include\opencc mkdir %THIRDPARTY%\include\opencc
-  copy /Y src\*.h* %THIRDPARTY%\include\opencc\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y build\src\Release\opencc.lib %THIRDPARTY%\lib
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y build\src\tools\Release\opencc.exe %THIRDPARTY%\bin
-  copy /Y build\src\tools\Release\opencc_dict.exe %THIRDPARTY%\bin
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  if not exist %THIRDPARTY%\data\opencc mkdir %THIRDPARTY%\data\opencc
-  copy /Y data\config\*.json %THIRDPARTY%\data\opencc
-  copy /Y build\data\*.ocd %THIRDPARTY%\data\opencc
+  cmake --build build --config Release --target INSTALL
   if %ERRORLEVEL% NEQ 0 goto ERROR
 )
 

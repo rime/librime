@@ -5,7 +5,7 @@ SRC_DIR = $(THIRD_PARTY_DIR)/src
 INCLUDE_DIR = $(THIRD_PARTY_DIR)/include
 LIB_DIR = $(THIRD_PARTY_DIR)/lib
 BIN_DIR = $(THIRD_PARTY_DIR)/bin
-DATA_DIR = $(THIRD_PARTY_DIR)/data
+SHARE_DIR = $(THIRD_PARTY_DIR)/share
 
 THIRD_PARTY_LIBS = glog leveldb marisa opencc yaml-cpp gtest
 
@@ -50,16 +50,10 @@ marisa:
 opencc:
 	cd $(SRC_DIR)/opencc; \
 	cmake . -Bbuild \
-	-DCMAKE_BUILD_TYPE=Release \
-	-DCMAKE_INSTALL_PREFIX=/usr \
 	-DBUILD_SHARED_LIBS:BOOL=OFF \
-	&& cmake --build build
-	mkdir -p $(INCLUDE_DIR)/opencc
-	cp $(SRC_DIR)/opencc/src/*.h* $(INCLUDE_DIR)/opencc/
-	cp $(SRC_DIR)/opencc/build/src/libopencc.a $(LIB_DIR)/
-	mkdir -p $(DATA_DIR)/opencc
-	cp $(SRC_DIR)/opencc/data/config/*.json $(DATA_DIR)/opencc/
-	cp $(SRC_DIR)/opencc/build/data/*.ocd $(DATA_DIR)/opencc/
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	&& cmake --build build --target install
 
 yaml-cpp:
 	cd $(SRC_DIR)/yaml-cpp; \
