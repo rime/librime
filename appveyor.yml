@@ -13,9 +13,9 @@ environment:
 cache:
   - thirdparty.cached -> appveyor.install.bat
   - thirdparty\bin -> appveyor.install.bat
-  - thirdparty\data -> appveyor.install.bat
   - thirdparty\include -> appveyor.install.bat
   - thirdparty\lib -> appveyor.install.bat
+  - thirdparty\share -> appveyor.install.bat
   - C:\Libraries\libboost -> appveyor.install.bat
 
 init:
@@ -30,11 +30,11 @@ build_script:
   - .\build.bat test
 
 after_build:
-  - 7z a rime.zip build\bin build\lib build\include thirdparty\data\opencc
-  - dir build /s
+  - 7z a rime.zip dist thirdparty\bin thirdparty\share
+  - dir dist /s
 
 before_test:
-  - copy /y build\lib\Release\rime.dll build\test\Release
+  - copy /y dist\lib\rime.dll build\test
 
 test_script:
   - cd build\test
@@ -42,4 +42,4 @@ test_script:
 
 artifacts:
   - path: rime.zip
-    name: Binaries, includes and OpenCC data
+    name: Distributables, including binaries and OpenCC data
