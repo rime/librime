@@ -83,7 +83,7 @@ shift
 goto parse_cmdline_options
 :end_parsing_cmdline_options
 
-set THIRDPARTY="%RIME_ROOT%"\thirdparty
+set THIRDPARTY=%RIME_ROOT%\thirdparty
 
 rem set CURL=%THIRDPARTY%\bin\curl.exe
 rem set DOWNLOAD="%CURL%" --remote-name-all
