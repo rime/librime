@@ -83,6 +83,7 @@ shift
 goto parse_cmdline_options
 :end_parsing_cmdline_options
 
+set DIST_DIR=%RIME_ROOT%\dist
 set THIRDPARTY=%RIME_ROOT%\thirdparty
 
 rem set CURL=%THIRDPARTY%\bin\curl.exe
@@ -197,7 +198,8 @@ set RIME_CMAKE_FLAGS=-G%CMAKE_GENERATOR%^
  -DBUILD_TEST=%build_test%^
  -DENABLE_LOGGING=%enable_logging%^
  -DBOOST_USE_CXX11=ON^
- -DCMAKE_CONFIGURATION_TYPES="Release"
+ -DCMAKE_CONFIGURATION_TYPES="Release"^
+ -DCMAKE_INSTALL_PREFIX:PATH="%DIST_DIR%"
 
 cd /d %RIME_ROOT%
 echo cmake %RIME_ROOT% -B%build% %RIME_CMAKE_FLAGS%
@@ -206,11 +208,8 @@ if %ERRORLEVEL% NEQ 0 goto ERROR
 
 echo.
 echo building librime.
-cmake --build build --config Release
+cmake --build build --config Release --target INSTALL
 if %ERRORLEVEL% NEQ 0 goto ERROR
-
-mkdir build\include
-copy /y src\*.h build\include
 
 echo.
 echo ready.
