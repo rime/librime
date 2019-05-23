@@ -160,15 +160,15 @@ if(NOT DEFINED BIN_INSTALL_DIR)
     set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
 endif()
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly")
-  # uninstall target
-  configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-    IMMEDIATE @ONLY)
-  add_custom_target(uninstall
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+# uninstall target
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+  IMMEDIATE @ONLY)
+add_custom_target(uninstall
+  COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly")
   set(prefix "${CMAKE_INSTALL_PREFIX}")
   set(exec_prefix "${CMAKE_INSTALL_PREFIX}")
   set(bindir "${exec_prefix}/bin")
@@ -179,15 +179,19 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly")
       ${PROJECT_SOURCE_DIR}/rime.pc.in
       ${PROJECT_BINARY_DIR}/rime.pc
       @ONLY)
-  file(GLOB installed_header_files ${PROJECT_SOURCE_DIR}/src/*.h)
-  install(FILES ${installed_header_files} DESTINATION include)
-  install(FILES ${PROJECT_BINARY_DIR}/rime.pc DESTINATION ${LIB_INSTALL_DIR}/pkgconfig)
-  install(FILES cmake/RimeConfig.cmake DESTINATION share/cmake/rime)
+  install(FILES ${PROJECT_BINARY_DIR}/rime.pc
+    DESTINATION ${LIB_INSTALL_DIR}/pkgconfig)
+endif()
 
-  if(BUILD_DATA)
-    file(GLOB preset_data_files ${PROJECT_SOURCE_DIR}/data/preset/*.yaml)
-    install(FILES ${preset_data_files} DESTINATION ${pkgdatadir})
-  endif()
+install(FILES cmake/RimeConfig.cmake DESTINATION share/cmake/rime)
+
+file(GLOB rime_public_header_files ${PROJECT_SOURCE_DIR}/src/*.h)
+install(FILES ${rime_public_header_files} DESTINATION include)
+
+if(BUILD_DATA)
+  file(GLOB rime_preset_data_files ${PROJECT_SOURCE_DIR}/data/preset/*.yaml)
+  install(FILES ${rime_preset_data_files}
+    DESTINATION ${CMAKE_INSTALL_PREFIX}${rime_data_dir})
 endif()
 
 if(BUILD_SHARED_LIBS)

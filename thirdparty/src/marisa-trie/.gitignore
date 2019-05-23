@@ -1,8 +1,0 @@
-vs*/*.suo
-vs*/*.sdf
-vs*/*.opensdf
-vs*/**/*.user
-vs*/Release/
-vs*/Debug/
-vs*/**/Release/
-vs*/**/Debug/

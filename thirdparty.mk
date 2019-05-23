@@ -1,10 +1,11 @@
 # a minimal build of third party libraries for static linking
 
-SRC_DIR = thirdparty/src
-INCLUDE_DIR = thirdparty/include
-LIB_DIR = thirdparty/lib
-BIN_DIR = thirdparty/bin
-DATA_DIR = thirdparty/data
+THIRD_PARTY_DIR = $(CURDIR)/thirdparty
+SRC_DIR = $(THIRD_PARTY_DIR)/src
+INCLUDE_DIR = $(THIRD_PARTY_DIR)/include
+LIB_DIR = $(THIRD_PARTY_DIR)/lib
+BIN_DIR = $(THIRD_PARTY_DIR)/bin
+SHARE_DIR = $(THIRD_PARTY_DIR)/share
 
 THIRD_PARTY_LIBS = glog leveldb marisa opencc yaml-cpp gtest
 
@@ -14,62 +15,60 @@ all: $(THIRD_PARTY_LIBS)
 
 # note: this won't clean output files under include/, lib/ and bin/.
 clean-src:
-	rm -r $(SRC_DIR)/glog/build || true
-	rm -r $(SRC_DIR)/gtest/build || true
-	cd $(SRC_DIR)/leveldb; make clean || true
-	cd $(SRC_DIR)/marisa-trie; make distclean || true
+	rm -r $(SRC_DIR)/glog/cmake-build || true
+	rm -r $(SRC_DIR)/googletest/build || true
+	rm -r $(SRC_DIR)/leveldb/build || true
+	rm -r $(SRC_DIR)/marisa-trie/build || true
 	rm -r $(SRC_DIR)/opencc/build || true
 	rm -r $(SRC_DIR)/yaml-cpp/build || true
 
 glog:
-	cd $(SRC_DIR)/glog; cmake \
-	. -Bbuild \
+	cd $(SRC_DIR)/glog; \
+	cmake . -Bcmake-build \
+	-DBUILD_TESTING:BOOL=OFF \
 	-DWITH_GFLAGS:BOOL=OFF \
-	&& cmake --build build
-	cp -R $(SRC_DIR)/glog/build/glog $(INCLUDE_DIR)/
-	cp $(SRC_DIR)/glog/src/glog/log_severity.h $(INCLUDE_DIR)/glog/
-	cp $(SRC_DIR)/glog/build/libglog.a $(LIB_DIR)/
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	&& cmake --build cmake-build --target install
 
 leveldb:
-	cd $(SRC_DIR)/leveldb; make
-	cp -R $(SRC_DIR)/leveldb/include/leveldb $(INCLUDE_DIR)/
-	cp $(SRC_DIR)/leveldb/libleveldb.a $(LIB_DIR)/
+	cd $(SRC_DIR)/leveldb; \
+	cmake . -Bbuild \
+	-DLEVELDB_BUILD_BENCHMARKS:BOOL=OFF \
+	-DLEVELDB_BUILD_TESTS:BOOL=OFF \
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	&& cmake --build build --target install
 
 marisa:
 	cd $(SRC_DIR)/marisa-trie; \
-	./configure --disable-debug \
-	--disable-dependency-tracking \
-	--enable-static \
-	&& make
-	cp -R $(SRC_DIR)/marisa-trie/lib/marisa $(INCLUDE_DIR)/
-	cp $(SRC_DIR)/marisa-trie/lib/marisa.h $(INCLUDE_DIR)/
-	cp $(SRC_DIR)/marisa-trie/lib/.libs/libmarisa.a $(LIB_DIR)/
+	cmake $(SRC_DIR) -Bbuild \
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	&& cmake --build build --target install
 
 opencc:
 	cd $(SRC_DIR)/opencc; \
 	cmake . -Bbuild \
-	-DCMAKE_BUILD_TYPE=Release \
-	-DCMAKE_INSTALL_PREFIX=/usr \
 	-DBUILD_SHARED_LIBS:BOOL=OFF \
-	&& cmake --build build
-	mkdir -p $(INCLUDE_DIR)/opencc
-	cp $(SRC_DIR)/opencc/src/*.h* $(INCLUDE_DIR)/opencc/
-	cp $(SRC_DIR)/opencc/build/src/libopencc.a $(LIB_DIR)/
-	mkdir -p $(DATA_DIR)/opencc
-	cp $(SRC_DIR)/opencc/data/config/*.json $(DATA_DIR)/opencc/
-	cp $(SRC_DIR)/opencc/build/data/*.ocd $(DATA_DIR)/opencc/
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	&& cmake --build build --target install
 
 yaml-cpp:
 	cd $(SRC_DIR)/yaml-cpp; \
 	cmake . -Bbuild \
-	-DCMAKE_BUILD_TYPE=Release \
-	&& cmake --build build
-	cp -R $(SRC_DIR)/yaml-cpp/include/yaml-cpp $(INCLUDE_DIR)/
-	cp $(SRC_DIR)/yaml-cpp/build/libyaml-cpp.a $(LIB_DIR)/
+	-DYAML_CPP_BUILD_CONTRIB:BOOL=OFF \
+	-DYAML_CPP_BUILD_TESTS:BOOL=OFF \
+	-DYAML_CPP_BUILD_TOOLS:BOOL=OFF \
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	&& cmake --build build --target install
 
 gtest:
-	cd $(SRC_DIR)/gtest; \
+	cd $(SRC_DIR)/googletest; \
 	cmake . -Bbuild \
-	&& cmake --build build
-	cp -R $(SRC_DIR)/gtest/include/gtest $(INCLUDE_DIR)/
-	cp $(SRC_DIR)/gtest/build/libgtest*.a $(LIB_DIR)/
+	-DBUILD_GMOCK:BOOL=OFF \
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	&& cmake --build build --target install

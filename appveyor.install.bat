@@ -19,6 +19,8 @@ set nocache=0
 if not exist thirdparty.cached set nocache=1
 if not exist %BOOST_ROOT% set nocache=1
 
+git submodule update --init
+
 if %nocache% == 1 (
 	pushd C:\Libraries
 	appveyor DownloadFile https://dl.bintray.com/boostorg/release/1.68.0/source/boost_1_68_0.7z
