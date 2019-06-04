@@ -1,6 +1,6 @@
 setlocal
 
-set boost_build_options=toolset=msvc-14.0^
+set boost_build_options=toolset=msvc-14.1^
  variant=release^
  link=static^
  threading=multi^
@@ -17,21 +17,16 @@ set boost_build_options=toolset=msvc-14.0^
 set nocache=0
 
 if not exist thirdparty.cached set nocache=1
-if not exist %BOOST_ROOT% set nocache=1
-
-git submodule update --init
+if not exist %BOOST_ROOT%\stage set nocache=1
 
 if %nocache% == 1 (
-	pushd C:\Libraries
-	appveyor DownloadFile https://dl.bintray.com/boostorg/release/1.68.0/source/boost_1_68_0.7z
-	7z x boost_1_68_0.7z | find "ing archive"
-	cd boost_1_68_0
+	pushd %BOOST_ROOT%
 	call .\bootstrap.bat
-	call .\b2.exe --prefix=%BOOST_ROOT% %boost_build_options% -q -d0 install
-	xcopy /e /i /y /q %BOOST_ROOT%\include\boost-1_68\boost %BOOST_ROOT%\boost
+	.\b2.exe %boost_build_options% -q -d0 stage
 	popd
 	if %ERRORLEVEL% NEQ 0 goto ERROR
 
+	git submodule update --init
 	call .\build.bat thirdparty
 	if %ERRORLEVEL% NEQ 0 goto ERROR
 

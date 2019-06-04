@@ -30,19 +30,16 @@ echo.
 
 if not defined BJAM_TOOLSET (
   rem the number actually means platform toolset, not %VisualStudioVersion%
-  set BJAM_TOOLSET=msvc-14.0
+  set BJAM_TOOLSET=msvc-14.1
 )
 
 if not defined CMAKE_GENERATOR (
-  set CMAKE_GENERATOR="Visual Studio 14 2015"
+  set CMAKE_GENERATOR="Visual Studio 15 2017"
 )
 
 if not defined PLATFORM_TOOLSET (
-  set PLATFORM_TOOLSET=v140_xp
+  set PLATFORM_TOOLSET=v141_xp
 )
-
-rem used when building marisa
-set VS_LATEST=vs2015
 
 set build=build
 set build_boost=0
