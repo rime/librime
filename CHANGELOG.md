@@ -1,3 +1,54 @@
+<a name="1.5.0"></a>
+# [1.5.0](https://github.com/rime/librime/compare/1.4.0...1.5.0) (2019-06-06)
+
+
+### Bug Fixes
+
+* **ci:** update build script ([84a1a1b](https://github.com/rime/librime/commit/84a1a1b))
+* **ci:** use submodules in AppVeyor CI build script ([7b515b4](https://github.com/rime/librime/commit/7b515b4))
+* **cmake:** libboost Windows XP compatibility fix ([#270](https://github.com/rime/librime/issues/270)) ([fecfe39](https://github.com/rime/librime/commit/fecfe39)), closes [rime/weasel#337](https://github.com/rime/weasel/issues/337)
+* **CMakeLists.txt:** install header files in all platforms ([821d563](https://github.com/rime/librime/commit/821d563))
+* **CMakeLists.txt:** set "-std=c++11" in CMAKE_CXX_FLAGS ([5d8a836](https://github.com/rime/librime/commit/5d8a836))
+* **config/plugins.h:** memory leak caused by non-virtual destructor ([316a659](https://github.com/rime/librime/commit/316a659)), closes [#259](https://github.com/rime/librime/issues/259)
+* **deploy:** treat schema dependencies as optional; do not report errors if missing ([ff3d5e9](https://github.com/rime/librime/commit/ff3d5e9))
+* **engine:** schema doesn't match the one used by switcher ([e41bb63](https://github.com/rime/librime/commit/e41bb63)), closes [#269](https://github.com/rime/librime/issues/269)
+* **rime_levers_api.h:** customize_bool() misused `bool` type ([42bacc5](https://github.com/rime/librime/commit/42bacc5))
+* **syllabifier:** enable_completion not working ([2714131](https://github.com/rime/librime/commit/2714131)), closes [#343](https://github.com/rime/librime/issues/343)
+* **table_translator:** null pointer exception when dict entries are filtered ([77438a9](https://github.com/rime/librime/commit/77438a9))
+* **test:** compile error in unit test ([7076d9e](https://github.com/rime/librime/commit/7076d9e))
+* **travis-install.sh:** working directory ([97220ce](https://github.com/rime/librime/commit/97220ce))
+
+
+### Features
+
+* **appveyor:** install RIME_PLUGINS  [skip travis] ([c7ce66f](https://github.com/rime/librime/commit/c7ce66f))
+* **CMakeList.txt:** add plugin build support ([#257](https://github.com/rime/librime/issues/257)) ([dfa341b](https://github.com/rime/librime/commit/dfa341b))
+* **contextual_translation:** weight and re-order phrases by context ([2390da3](https://github.com/rime/librime/commit/2390da3))
+* **dict:** specify vocabulary db name in dict settings ([dcdc301](https://github.com/rime/librime/commit/dcdc301))
+* **grammar:** compare homophones/homographs in sentence ([9248a6b](https://github.com/rime/librime/commit/9248a6b))
+* **install-plugins.sh:** git-clone or update plugins ([70483b4](https://github.com/rime/librime/commit/70483b4))
+* **poet:** find best sentence candidates ([b3f4005](https://github.com/rime/librime/commit/b3f4005))
+* **rime_api:** get candidate list from index ([c587900](https://github.com/rime/librime/commit/c587900))
+* **translator:** contextual suggestions in partially selected sentence ([12a7501](https://github.com/rime/librime/commit/12a7501))
+* **translator:** look at preceding text when making sentence ([6ae34de](https://github.com/rime/librime/commit/6ae34de))
+* **travis-ci:** install plugins specified in envvar RIME_PLUGINS ([c857639](https://github.com/rime/librime/commit/c857639))
+
+
+### Performance Improvements
+
+* **dictionary:** refactor DictEntryIterator and do partial sort ([0258c7f](https://github.com/rime/librime/commit/0258c7f))
+
+
+### BREAKING CHANGES
+
+* **rime_levers_api.h:** in signature of C API function `customize_bool()`,
+change type `bool` to `Bool` (alias of `int`).
+
+Impact: the changed function is not in use by any first party code,
+known to be in use by osfans/trime.
+
+
+
 <a name="1.4.0"></a>
 # [1.4.0](https://github.com/rime/librime/compare/1.3.2...1.4.0) (2019-01-16)
 
