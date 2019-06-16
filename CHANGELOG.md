@@ -1,3 +1,13 @@
+<a name="1.5.1"></a>
+## [1.5.1](https://github.com/rime/librime/compare/1.5.0...1.5.1) (2019-06-16)
+
+
+### Bug Fixes
+
+* **user_dictionary:** make user phrases comparable in weight to system words ([982f69d](https://github.com/rime/librime/commit/982f69d))
+
+
+
 <a name="1.5.0"></a>
 # [1.5.0](https://github.com/rime/librime/compare/1.4.0...1.5.0) (2019-06-06)
 
