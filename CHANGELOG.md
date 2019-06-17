@@ -1,3 +1,13 @@
+<a name="1.5.2"></a>
+## [1.5.2](https://github.com/rime/librime/compare/1.5.1...1.5.2) (2019-06-17)
+
+
+### Bug Fixes
+
+* **user_dictionary, contextual_translation:** fix user phrase quality; order contextual suggestions by type ([69d5c32](https://github.com/rime/librime/commit/69d5c32))
+
+
+
 <a name="1.5.1"></a>
 ## [1.5.1](https://github.com/rime/librime/compare/1.5.0...1.5.1) (2019-06-16)
 
