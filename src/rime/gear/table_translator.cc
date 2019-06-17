@@ -74,14 +74,12 @@ an<Candidate> TableTranslation::Peek() {
   if (options_) {
     options_->comment_formatter().Apply(&comment);
   }
-  auto phrase = New<Phrase>(
-      language_,
-      e->remaining_code_length == 0 ? "table" : "completion",
-      start_, end_, e);
+  bool incomplete = e->remaining_code_length != 0;
+  auto type = incomplete ? "completion" : is_user_phrase ? "user_table" : "table";
+  auto phrase = New<Phrase>(language_, type, start_, end_, e);
   if (phrase) {
     phrase->set_comment(comment);
     phrase->set_preedit(preedit_);
-    bool incomplete = e->remaining_code_length != 0;
     phrase->set_quality(exp(e->weight) +
                         options_->initial_quality() +
                         (incomplete ? -1 : 0) +
@@ -345,6 +343,7 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
         string phrase;
         for (; it != history.rend(); ++it) {
           if (it->type != "table" &&
+              it->type != "user_table" &&
               it->type != "sentence" &&
               it->type != "uniquified")
             break;
@@ -464,7 +463,8 @@ an<Candidate> SentenceTranslation::Peek() {
   }
   size_t code_length = 0;
   an<DictEntry> entry;
-  if (PreferUserPhrase()) {
+  bool is_user_phrase = PreferUserPhrase();
+  if (is_user_phrase) {
     auto r = user_phrase_collector_.rbegin();
     code_length = r->first;
     entry = r->second[user_phrase_index_];
@@ -476,7 +476,7 @@ an<Candidate> SentenceTranslation::Peek() {
   }
   auto result = New<Phrase>(
       translator_ ? translator_->language() : NULL,
-      "table",
+      is_user_phrase ? "user_table" : "table",
       start_,
       start_ + code_length,
       entry);

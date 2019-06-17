@@ -33,14 +33,18 @@ static bool reached_max_code_length(const an<Candidate>& cand,
   return code_length >= max_code_length;
 }
 
+static inline bool is_table_entry(const an<Candidate>& cand) {
+  const auto& type = Candidate::GetGenuineCandidate(cand)->type();
+  return type == "table" || type == "user_table";
+}
+
 static bool is_auto_selectable(const an<Candidate>& cand,
                                const string& input,
                                const string& delimiters) {
   return
       // reaches end of input
       cand->end() == input.length() &&
-      // is table entry
-      Candidate::GetGenuineCandidate(cand)->type() == "table" &&
+      is_table_entry(cand) &&
       // no delimiters
       input.find_first_of(delimiters, cand->start()) == string::npos;
 }

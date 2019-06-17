@@ -40,7 +40,7 @@ bool SingleCharFirstTranslation::Rearrange() {
   while (!translation_->exhausted()) {
     auto cand = translation_->Peek();
     auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
-    if (!phrase || phrase->type() != "table") {
+    if (!phrase || phrase->type() != "table" || phrase->type() != "user_table") {
       break;
     }
     if (unistrlen(cand->text()) == 1) {

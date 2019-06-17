@@ -10,14 +10,17 @@ const int kContextualSearchLimit = 32;
 bool ContextualTranslation::Replenish() {
   vector<of<Phrase>> queue;
   size_t end_pos = 0;
+  std::string last_type;
   while (!translation_->exhausted() &&
          cache_.size() + queue.size() < kContextualSearchLimit) {
     auto cand = translation_->Peek();
     DLOG(INFO) << cand->text() << " cache/queue: "
                << cache_.size() << "/" << queue.size();
-    if (cand->type() == "phrase" || cand->type() == "table") {
-      if (end_pos != cand->end()) {
+    if (cand->type() == "phrase" || cand->type() == "user_phrase" ||
+	cand->type() == "table" || cand->type() == "user_table") {
+      if (end_pos != cand->end() || last_type != cand->type()) {
         end_pos = cand->end();
+	last_type = cand->type();
         AppendToCache(queue);
       }
       queue.push_back(Evaluate(As<Phrase>(cand)));
