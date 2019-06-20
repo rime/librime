@@ -1,16 +1,31 @@
 language: cpp
-
 matrix:
   include:
-    - os: osx
-      compiler: clang
-    - os: linux
-      compiler: gcc
-      dist: trusty
-      sudo: required
-
-install:
-  ./travis-install.sh
-
-script:
-  ./travis-script.sh
+  - os: linux
+    compiler: gcc
+    dist: trusty
+    sudo: required
+    install: "./travis-install.sh"
+    script: make test
+  - os: osx
+    compiler: clang
+    install: "./travis-install.sh"
+    script: make xcode/test
+    before_deploy:
+    - make xcode/dist
+    - |
+      zip -r rime-${TRAVIS_TAG}-${TRAVIS_OS_NAME}.zip \
+      dist thirdparty/bin thirdparty/share \
+      -x '*/curl.exe'
+    deploy:
+      provider: releases
+      api_key:
+        secure: OXzu4Au7Uri/4pugRsQATYv2+QHNRfx64jRBSTdYUJ8ehdg67HHJrofxhUG2Q+lNZlm2VO51ihOsmp9c3gYtT+ohSxD3/y3z8VDw6k7a+5ihT+Svrr1fpHf30I2DupGe5bO1MFB9rltZ+kv/nERciT5n1jOO5ZxefNCRac2aylE=
+      file: rime-${TRAVIS_TAG}-${TRAVIS_OS_NAME}.zip
+      skip_cleanup: true
+      name: "librime ${TRAVIS_TAG}"
+      body: "chore(release): ${TRAVIS_TAG} :tada:"
+      draft: true
+      on:
+        repo: rime/librime
+        tags: true
