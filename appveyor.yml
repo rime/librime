@@ -25,12 +25,13 @@ for:
   skip_non_tags: true
 
 cache:
-  - thirdparty.cached -> appveyor.install.bat
-  - thirdparty\bin -> appveyor.install.bat
-  - thirdparty\include -> appveyor.install.bat
-  - thirdparty\lib -> appveyor.install.bat
-  - thirdparty\share -> appveyor.install.bat
-  - C:\Libraries\boost_1_69_0\stage -> appveyor.install.bat
+  - thirdparty.cached -> appveyor_build_thirdparty.bat
+  - thirdparty\bin -> appveyor_build_thirdparty.bat
+  - thirdparty\include -> appveyor_build_thirdparty.bat
+  - thirdparty\lib -> appveyor_build_thirdparty.bat
+  - thirdparty\share -> appveyor_build_thirdparty.bat
+  - boost.cached -> appveyor_build_boost.bat
+  - C:\Libraries\boost_1_69_0\stage -> appveyor_build_boost.bat
 
 init:
   - git --version
