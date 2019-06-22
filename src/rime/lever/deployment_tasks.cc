@@ -277,6 +277,15 @@ static bool RemoveVersionSuffix(string* version, const string& suffix) {
     return false;
 }
 
+static bool CheckConfigFileExists(const fs::path& source_config_path,
+                                  const fs::path& dest_config_path) {
+  if (!fs::exists(source_config_path) ||
+      !fs::exists(dest_config_path)) {
+    return false;
+  }
+  return true;
+}
+
 static bool TrashDeprecatedUserCopy(const fs::path& shared_copy,
                                     const fs::path& user_copy,
                                     const string& version_key,
@@ -433,6 +442,12 @@ bool ConfigFileUpdate::Run(Deployer* deployer) {
   fs::path source_config_path(shared_data_path / file_name_);
   fs::path dest_config_path(user_data_path / file_name_);
   fs::path trash = user_data_path / "trash";
+  if (!CheckConfigFileExists(source_config_path,
+                             dest_config_path)) {
+    LOG(ERROR) << "ConfigFileUpdate: invalid path.\n  source_config_path = " << source_config_path << 
+                  "\n  dest_config_path = " << dest_config_path << "\n\n  Please move to the working directory with config files.\n\n";
+    return false;
+  } 
   if (TrashDeprecatedUserCopy(source_config_path,
                               dest_config_path,
                               version_key_,

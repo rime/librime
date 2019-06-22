@@ -82,6 +82,8 @@ make xcode/test-debug
 
 ## Try it in the console
 
+Must move to the working directory with config files before using **rime_api_console**.
+
 ``` sh
 (
   cd debug/bin;
