@@ -1,3 +1,21 @@
+<a name="1.5.3"></a>
+## [1.5.3](https://github.com/rime/librime/compare/1.5.2...1.5.3) (2019-06-22)
+
+
+### Bug Fixes
+
+* **cmake, xcode.mk:** find optional dependency icu, while building xcode/release-with-icu target  [skip appveyor] ([17a80f8](https://github.com/rime/librime/commit/17a80f8))
+* **single_char_filter:** broken in librime 1.5.2 ([6948a62](https://github.com/rime/librime/commit/6948a62))
+
+
+### Features
+
+* **appveyor:** build variant "rime-with-plugins" for tagged commits  [skip travis] ([eef8c30](https://github.com/rime/librime/commit/eef8c30))
+* **travis-ci:** build variant "rime-with-plugins" for tagged commits  [skip appveyor] ([cf11c27](https://github.com/rime/librime/commit/cf11c27))
+* **travis-ci:** deploy artifacts for macOS to GitHub releases  [skip appveyor] ([3f03784](https://github.com/rime/librime/commit/3f03784))
+
+
+
 <a name="1.5.2"></a>
 ## [1.5.2](https://github.com/rime/librime/compare/1.5.1...1.5.2) (2019-06-17)
 
