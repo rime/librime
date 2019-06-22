@@ -49,6 +49,9 @@ clean:
 dist: release
 	cmake --build build --config Release --target install
 
+dist-with-icu: release-with-icu
+	cmake --build build --config Release --target install
+
 distclean: clean
 	rm -rf "$(RIME_DIST)" > /dev/null 2>&1 || true
 
