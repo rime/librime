@@ -7,7 +7,7 @@ if not exist thirdparty.cached set nocache=1
 if %nocache% == 1 (
 	git submodule update --init
 	call .\build.bat thirdparty
-	if %ERRORLEVEL% NEQ 0 goto ERROR
+	if errorlevel 1 goto error
 
 	date /t > thirdparty.cached & time /t >> thirdparty.cached
 	echo.
@@ -20,10 +20,10 @@ if %nocache% == 1 (
 	echo.
 )
 
-goto EXIT
+goto exit
 
-:ERROR
-set EXITCODE=%ERRORLEVEL%
+:error
+set exitcode=%errorlevel%
 
-:EXIT
-exit /b %EXITCODE%
+:exit
+exit /b %exitcode%

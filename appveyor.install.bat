@@ -1,22 +1,22 @@
 setlocal
 
 call appveyor_build_boost.bat
-if %ERRORLEVEL% NEQ 0 goto ERROR
+if errorlevel 1 goto error
 
 call appveyor_build_thirdparty.bat
-if %ERRORLEVEL% NEQ 0 goto ERROR
+if errorlevel 1 goto error
 
 if defined RIME_PLUGINS (
    for %%s in (%RIME_PLUGINS%) do call :install_plugin %%s
 )
 
-goto EXIT
+goto exit
 
-:ERROR
-set EXITCODE=%ERRORLEVEL%
+:error
+set exitcode=%errorlevel%
 
-:EXIT
-exit /b %EXITCODE%
+:exit
+exit /b %exitcode%
 
 :install_plugin
 set slug=%1

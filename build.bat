@@ -111,14 +111,14 @@ set BJAM_OPTIONS_X64=%BJAM_OPTIONS_COMMON%^
 if %build_boost% == 1 (
   cd /d %BOOST_ROOT%
   if not exist bjam.exe call bootstrap.bat
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  if errorlevel 1 goto error
 
   bjam %BJAM_OPTIONS_X86% stage %BOOST_COMPILED_LIBS%
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  if errorlevel 1 goto error
 
   if %build_boost_x64% == 1 (
     bjam %BJAM_OPTIONS_X64% stage %BOOST_COMPILED_LIBS%
-    if %ERRORLEVEL% NEQ 0 goto ERROR
+    if errorlevel 1 goto error
   )
 )
 
@@ -137,18 +137,18 @@ if %build_thirdparty% == 1 (
   cmake . -Bcmake-build %THIRDPARTY_COMMON_CMAKE_FLAGS%^
   -DBUILD_TESTING:BOOL=OFF^
   -DWITH_GFLAGS:BOOL=OFF
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  if errorlevel 1 goto error
   cmake --build cmake-build --config Release --target INSTALL
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  if errorlevel 1 goto error
 
   echo building leveldb.
   cd %THIRDPARTY%\src\leveldb
   cmake . -Bbuild %THIRDPARTY_COMMON_CMAKE_FLAGS%^
   -DLEVELDB_BUILD_BENCHMARKS:BOOL=OFF^
   -DLEVELDB_BUILD_TESTS:BOOL=OFF
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  if errorlevel 1 goto error
   cmake --build build --config Release --target INSTALL
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  if errorlevel 1 goto error
 
   echo building yaml-cpp.
   cd %THIRDPARTY%\src\yaml-cpp
@@ -157,36 +157,36 @@ if %build_thirdparty% == 1 (
   -DYAML_CPP_BUILD_CONTRIB:BOOL=OFF^
   -DYAML_CPP_BUILD_TESTS:BOOL=OFF^
   -DYAML_CPP_BUILD_TOOLS:BOOL=OFF
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  if errorlevel 1 goto error
   cmake --build build --config Release --target INSTALL
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  if errorlevel 1 goto error
 
   echo building gtest.
   cd %THIRDPARTY%\src\googletest
   cmake . -Bbuild %THIRDPARTY_COMMON_CMAKE_FLAGS%^
   -DBUILD_GMOCK:BOOL=OFF
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  if errorlevel 1 goto error
   cmake --build build --config Release --target INSTALL
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  if errorlevel 1 goto error
 
   echo building marisa.
   cd %THIRDPARTY%\src\marisa-trie
   cmake %THIRDPARTY%\src -Bbuild %THIRDPARTY_COMMON_CMAKE_FLAGS%
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  if errorlevel 1 goto error
   cmake --build build --config Release --target INSTALL
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  if errorlevel 1 goto error
 
   echo building opencc.
   cd %THIRDPARTY%\src\opencc
   cmake . -Bbuild %THIRDPARTY_COMMON_CMAKE_FLAGS%^
   -DBUILD_SHARED_LIBS=OFF^
   -DBUILD_TESTING=OFF
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  if errorlevel 1 goto error
   cmake --build build --config Release --target INSTALL
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  if errorlevel 1 goto error
 )
 
-if %build_librime% == 0 goto EXIT
+if %build_librime% == 0 goto exit
 
 set RIME_CMAKE_FLAGS=-G%CMAKE_GENERATOR%^
  -T%PLATFORM_TOOLSET%^
@@ -201,26 +201,25 @@ set RIME_CMAKE_FLAGS=-G%CMAKE_GENERATOR%^
 cd /d %RIME_ROOT%
 echo cmake %RIME_ROOT% -B%build% %RIME_CMAKE_FLAGS%
 call cmake %RIME_ROOT% -B%build% %RIME_CMAKE_FLAGS%
-if %ERRORLEVEL% NEQ 0 goto ERROR
+if errorlevel 1 goto error
 
 echo.
 echo building librime.
 cmake --build build --config Release --target INSTALL
-if %ERRORLEVEL% NEQ 0 goto ERROR
+if errorlevel 1 goto error
 
 echo.
 echo ready.
 echo.
-goto EXIT
+goto exit
 
-:ERROR
-set EXITCODE=%ERRORLEVEL%
+:error
+set exitcode=%errorlevel%
 echo.
 echo error building la rime.
 echo.
 
-:EXIT
+:exit
 set PATH=%OLD_PATH%
 cd /d %BACK%
-rem pause
-exit /b %EXITCODE%
+exit /b %exitcode%
