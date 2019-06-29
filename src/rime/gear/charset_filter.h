@@ -23,7 +23,7 @@ class CharsetFilterTranslation : public Translation {
   bool LocateNextCandidate();
 
   an<Translation> translation_;
-  string charset_;
+  string charset_with_parameter_;
 };
 
 struct DictEntry;
@@ -40,7 +40,7 @@ class CharsetFilter : public Filter, TagMatching {
   }
 
   // return true to accept, false to reject the tested item
-  static bool FilterText(const string& text, const string& charset = "");
+  static bool FilterText(const string& text, const string& charset_with_argument = "");
   static bool FilterDictEntry(an<DictEntry> entry);
 };
 
