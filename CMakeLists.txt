@@ -62,7 +62,7 @@ set(BOOST_COMPONENTS filesystem regex system locale)
 if(BOOST_USE_SIGNALS2)
   add_definitions("-DBOOST_SIGNALS2")
 else()
-  set(BOOST_COMPONENTS ${BOOST_COMPONENTS} singals)
+  set(BOOST_COMPONENTS ${BOOST_COMPONENTS} signals)
 endif()
 
 find_package(Boost 1.46.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
