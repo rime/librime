@@ -46,7 +46,7 @@ bool contains_extended_cjk(const string& text)
   return false;
 }
 
-bool is_emoji(uint32_t ch)
+static bool is_emoji(uint32_t ch)
 {
 
   if ((ch >= 0x0000 && ch <= 0x007F) || // C0 Controls and Basic Latin
@@ -81,7 +81,7 @@ bool is_emoji(uint32_t ch)
   return false;
 }
 
-bool is_all_emoji(const string& text)
+static bool is_all_emoji(const string& text)
 {
   const char *p = text.c_str();
   uint32_t ch;
@@ -99,7 +99,7 @@ bool is_all_emoji(const string& text)
 
 CharsetFilterTranslation::CharsetFilterTranslation(
     an<Translation> translation, const string& charset_with_parameter_)
-    : translation_(translation), charset_with_parameter_(charset_with_parameter_) { // XXX
+    : translation_(translation), charset_with_parameter_(charset_with_parameter_) {
   LocateNextCandidate();
 }
 
@@ -143,7 +143,7 @@ bool CharsetFilter::FilterText(const string& text, const string& charset_with_pa
   }
 
   try {
-    auto charset = charset_arguments_vector[0];
+    const auto& charset = charset_arguments_vector[0];
     boost::locale::conv::from_utf(text, charset, boost::locale::conv::method_type::stop);
   }
   catch(boost::locale::conv::conversion_error const& /*ex*/) {
