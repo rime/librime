@@ -13,6 +13,8 @@
 #include <rime/dict/vocabulary.h>
 #include <rime/gear/charset_filter.h>
 #include <boost/locale/encoding.hpp>
+#include <boost/algorithm/string.hpp>
+
 
 namespace rime {
 
@@ -44,11 +46,60 @@ bool contains_extended_cjk(const string& text)
   return false;
 }
 
+static bool is_emoji(uint32_t ch)
+{
+
+  if ((ch >= 0x0000 && ch <= 0x007F) || // C0 Controls and Basic Latin
+	  (ch >= 0x0080 && ch <= 0x00FF) || // C1 Controls and Latin-1 Supplement
+	  (ch >= 0x02B0 && ch <= 0x02FF) || // Spacing Modifier Letters
+	  (ch >= 0x0900 && ch <= 0x097F) || // Devanagari
+	  (ch >= 0x2000 && ch <= 0x203C) || // General Punctuation
+	  (ch >= 0x20A0 && ch <= 0x20CF) || // Currency Symbols
+	  (ch >= 0x2100 && ch <= 0x214F) || // Letterlike Symbols
+	  (ch >= 0x2150 && ch <= 0x218F) || // Number Forms
+	  (ch >= 0x2190 && ch <= 0x21FF) || // Arrows
+	  (ch >= 0x2200 && ch <= 0x22FF) || // Mathematical Operators
+	  (ch >= 0x2300 && ch <= 0x23FF) || // Miscellaneous Technical
+	  (ch >= 0x2460 && ch <= 0x24FF) || // Enclosed Alphanumerics
+	  (ch >= 0x25A0 && ch <= 0x25FF) || // Geometric Shapes
+	  (ch >= 0x2600 && ch <= 0x26FF) || // Miscellaneous Symbols
+	  (ch >= 0x2700 && ch <= 0x27BF) || // Dingbats
+	  (ch >= 0x2900 && ch <= 0x297F) || // Supplemental Arrows-B
+	  (ch >= 0x2B00 && ch <= 0x2BFF) || // Miscellaneous Symbols and Arrows
+	  (ch >= 0x3000 && ch <= 0x303F) || // CJK Symbols and Punctuation
+	  (ch >= 0x3200 && ch <= 0x32FF) || // Enclosed CJK Letters and Months
+	  (ch >= 0x1F100 && ch <= 0x1F1FF) || // Enclosed Alphanumeric Supplement
+	  (ch >= 0x1F200 && ch <= 0x1F2FF) || // Enclosed Ideographic Supplement
+	  (ch >= 0x1F000 && ch <= 0x1F02F) || // Mahjong Tiles
+	  (ch >= 0x1F0A0 && ch <= 0x1F0FF) || // Playing Cards
+	  (ch >= 0x1F300 && ch <= 0x1F5FF) || // Miscellaneous Symbols and Pictographs
+	  (ch >= 0x1F600 && ch <= 0x1F64F) || // Emoticons
+	  (ch >= 0x1F680 && ch <= 0x1F6FF) || // Transport and Map Symbols
+	  (ch >= 0x1F900 && ch <= 0x1F9FF)) // Supplemental Symbols and Pictographs)
+	return true;
+
+  return false;
+}
+
+static bool is_all_emoji(const string& text)
+{
+  const char *p = text.c_str();
+  uint32_t ch;
+
+  while ((ch = utf8::unchecked::next(p)) != 0) {
+    if (!is_emoji(ch)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // CharsetFilterTranslation
 
 CharsetFilterTranslation::CharsetFilterTranslation(
-    an<Translation> translation, const string& charset)
-    : translation_(translation), charset_(charset) {
+    an<Translation> translation, const string& charset_with_parameter_)
+    : translation_(translation), charset_with_parameter_(charset_with_parameter_) {
   LocateNextCandidate();
 }
 
@@ -69,7 +120,7 @@ an<Candidate> CharsetFilterTranslation::Peek() {
 bool CharsetFilterTranslation::LocateNextCandidate() {
   while (!translation_->exhausted()) {
     auto cand = translation_->Peek();
-    if (cand && CharsetFilter::FilterText(cand->text(), charset_))
+    if (cand && CharsetFilter::FilterText(cand->text(), charset_with_parameter_))
       return true;
     translation_->Next();
   }
@@ -79,9 +130,20 @@ bool CharsetFilterTranslation::LocateNextCandidate() {
 
 // CharsetFilter
 
-bool CharsetFilter::FilterText(const string& text, const string& charset) {
-  if (charset.empty()) return !contains_extended_cjk(text);
+bool CharsetFilter::FilterText(const string& text, const string& charset_with_parameter) {
+  if (charset_with_parameter.empty()) return !contains_extended_cjk(text);
+  vector<string> charset_arguments_vector;
+  boost::split(charset_arguments_vector, charset_with_parameter, boost::is_any_of("+"));
+  bool is_emoji_enabled = false;
+  if (std::find(charset_arguments_vector.begin(), charset_arguments_vector.end(), "emoji") != charset_arguments_vector.end()) {
+	is_emoji_enabled = true;
+  }
+  if (is_emoji_enabled && is_all_emoji(text)) {
+	return true;
+  }
+
   try {
+    const auto& charset = charset_arguments_vector[0];
     boost::locale::conv::from_utf(text, charset, boost::locale::conv::method_type::stop);
   }
   catch(boost::locale::conv::conversion_error const& /*ex*/) {
