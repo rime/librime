@@ -7,6 +7,7 @@
 #ifndef RIME_CHARSET_FILTER_H_
 #define RIME_CHARSET_FILTER_H_
 
+#include <rime_api.h>
 #include <rime/filter.h>
 #include <rime/translation.h>
 #include <rime/gear/filter_commons.h>
@@ -40,7 +41,7 @@ class CharsetFilter : public Filter, TagMatching {
   }
 
   // return true to accept, false to reject the tested item
-  static bool FilterText(const string& text, const string& charset_with_argument = "");
+  RIME_API static bool FilterText(const string& text, const string& charset_with_argument = "");
   static bool FilterDictEntry(an<DictEntry> entry);
 };
 
