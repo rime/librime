@@ -131,11 +131,9 @@ bool CharsetFilterTranslation::LocateNextCandidate() {
 // CharsetFilter
 
 bool CharsetFilter::FilterText(const string& text, const string& charset_with_parameter) {
+  if (charset_with_parameter.empty()) return !contains_extended_cjk(text);
   vector<string> charset_arguments_vector;
   boost::split(charset_arguments_vector, charset_with_parameter, boost::is_any_of("+"));
-  if (charset_arguments_vector.size() == 0) {
-    return !contains_extended_cjk(text);
-  }
   bool is_emoji_enabled = false;
   if (std::find(charset_arguments_vector.begin(), charset_arguments_vector.end(), "emoji") != charset_arguments_vector.end()) {
 	is_emoji_enabled = true;
@@ -145,7 +143,8 @@ bool CharsetFilter::FilterText(const string& text, const string& charset_with_pa
   }
 
   try {
-    boost::locale::conv::from_utf(text, charset_arguments_vector[0], boost::locale::conv::method_type::stop);
+    auto charset = charset_arguments_vector[0];
+    boost::locale::conv::from_utf(text, charset, boost::locale::conv::method_type::stop);
   }
   catch(boost::locale::conv::conversion_error const& /*ex*/) {
     return false;
