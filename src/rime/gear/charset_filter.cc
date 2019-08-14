@@ -20,13 +20,13 @@ namespace rime {
 
 bool is_extended_cjk(uint32_t ch)
 {
-  if ((ch >= 0x3400 && 0x4DBF) ||    // CJK Unified Ideographs Extension A
-      (ch >= 0x20000 && 0x2A6DF) ||  // CJK Unified Ideographs Extension B
-      (ch >= 0x2A700 && 0x2B73F) ||  // CJK Unified Ideographs Extension C
-      (ch >= 0x2B740 && 0x2B81F) ||  // CJK Unified Ideographs Extension D
-      (ch >= 0x2B820 && 0x2CEAF) ||  // CJK Unified Ideographs Extension E
-      (ch >= 0x2CEB0 && 0x2EBEF) ||  // CJK Unified Ideographs Extension F
-      (ch >= 0x2F800 && 0x2FA1F))    // CJK Compatibility Ideographs Supplement
+  if ((ch >= 0x3400 && ch <= 0x4DBF) ||    // CJK Unified Ideographs Extension A
+      (ch >= 0x20000 && ch <= 0x2A6DF) ||  // CJK Unified Ideographs Extension B
+      (ch >= 0x2A700 && ch <= 0x2B73F) ||  // CJK Unified Ideographs Extension C
+      (ch >= 0x2B740 && ch <= 0x2B81F) ||  // CJK Unified Ideographs Extension D
+      (ch >= 0x2B820 && ch <= 0x2CEAF) ||  // CJK Unified Ideographs Extension E
+      (ch >= 0x2CEB0 && ch <= 0x2EBEF) ||  // CJK Unified Ideographs Extension F
+      (ch >= 0x2F800 && ch <= 0x2FA1F))    // CJK Compatibility Ideographs Supplement
     return true;
 
   return false;
