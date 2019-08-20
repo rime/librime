@@ -26,6 +26,18 @@ bool is_extended_cjk(uint32_t ch)
       (ch >= 0x2B740 && ch <= 0x2B81F) ||  // CJK Unified Ideographs Extension D
       (ch >= 0x2B820 && ch <= 0x2CEAF) ||  // CJK Unified Ideographs Extension E
       (ch >= 0x2CEB0 && ch <= 0x2EBEF) ||  // CJK Unified Ideographs Extension F
+      (ch == 0xFA0E) ||                    // CJK Compatibility Ideographs (12 Unified)
+      (ch == 0xFA0F) ||
+      (ch == 0xFA11) ||
+      (ch == 0xFA13) ||
+      (ch == 0xFA14) ||
+      (ch == 0xFA1F) ||
+      (ch == 0xFA21) ||
+      (ch == 0xFA23) ||
+      (ch == 0xFA24) ||
+      (ch == 0xFA27) ||
+      (ch == 0xFA28) ||
+      (ch == 0xFA29) ||
       (ch >= 0x2F800 && ch <= 0x2FA1F))    // CJK Compatibility Ideographs Supplement
     return true;
 
