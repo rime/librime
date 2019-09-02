@@ -48,7 +48,7 @@ static KeyBindingCondition translate_condition(const string& str) {
 
 struct KeyBinding {
   KeyBindingCondition whence;
-  KeyEvent target;
+  KeySequence target;
   function<void (Engine* engine)> action;
 
   bool operator< (const KeyBinding& o) const {
@@ -118,8 +118,17 @@ void KeyBindings::LoadBindings(const an<ConfigList>& bindings) {
       continue;
     }
     if (auto target = map->GetValue("send")) {
-      if (!binding.target.Parse(target->str())) {
+      KeyEvent key;
+      if (key.Parse(target->str())) {
+        binding.target.push_back(std::move(key));
+      } else {
         LOG(WARNING) << "invalid key binding #" << i << ".";
+        continue;
+      }
+    }
+    else if (auto target = map->GetValue("send_sequence")) {
+      if (!binding.target.Parse(target->str())) {
+        LOG(WARNING) << "invalid key sequence #" << i << ".";
         continue;
       }
     }
@@ -203,7 +212,9 @@ void KeyBinder::PerformKeyBinding(const KeyBinding& binding) {
   }
   else {
     redirecting_ = true;
-    engine_->ProcessKey(binding.target);
+    for (const KeyEvent& key_event : binding.target) {
+      engine_->ProcessKey(key_event);
+    }
     redirecting_ = false;
   }
 }
