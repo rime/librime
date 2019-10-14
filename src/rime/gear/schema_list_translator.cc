@@ -98,9 +98,6 @@ void SchemaListTranslation::LoadSchemaList(Switcher* switcher) {
   Config* config = switcher->schema()->config();
   if (!config)
     return;
-  auto schema_list = config->GetList("schema_list");
-  if (!schema_list)
-    return;
   // current schema comes first
   Schema* current_schema = engine->schema();
   if (current_schema) {
@@ -110,27 +107,23 @@ void SchemaListTranslation::LoadSchemaList(Switcher* switcher) {
   size_t fixed = candies_.size();
   time_t now = time(NULL);
   // load the rest schema list
-  for (size_t i = 0; i < schema_list->size(); ++i) {
-    auto item = As<ConfigMap>(schema_list->GetAt(i));
-    if (!item)
-      continue;
-    auto schema_property = item->GetValue("schema");
-    if (!schema_property)
-      continue;
-    const string& schema_id(schema_property->str());
-    if (current_schema && schema_id == current_schema->schema_id())
-      continue;
-    Schema schema(schema_id);
-    auto cand = New<SchemaSelection>(&schema);
-    int timestamp = 0;
-    if (user_config &&
-        user_config->GetInt("var/schema_access_time/" + schema_id,
-                            &timestamp)) {
-      if (timestamp <= now)
-        cand->set_quality(timestamp);
-    }
-    Append(cand);
-  }
+  Switcher::ForEachSchemaListEntry(
+      config,
+      [this, current_schema, user_config, now](const string& schema_id) {
+        if (current_schema && schema_id == current_schema->schema_id())
+          return /* continue = */true;
+        Schema schema(schema_id);
+        auto cand = New<SchemaSelection>(&schema);
+        int timestamp = 0;
+        if (user_config &&
+            user_config->GetInt("var/schema_access_time/" + schema_id,
+                                &timestamp)) {
+          if (timestamp <= now)
+            cand->set_quality(timestamp);
+        }
+        Append(cand);
+        return /* continue = */true;
+      });
   DLOG(INFO) << "num schemata: " << candies_.size();
   bool fix_order = false;
   config->GetBool("switcher/fix_schema_list_order", &fix_order);

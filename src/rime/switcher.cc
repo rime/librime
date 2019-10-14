@@ -108,35 +108,88 @@ void Switcher::HighlightNextSchema() {
   return;
 }
 
+/*
+  Example configuration:
+
+  ```yaml
+  schema_list:
+  - case: [mode/wubi, mode/wubi_pinyin]
+  schema: wubi_pinyin
+  - case: [mode/wubi]
+  schema: wubi86
+  - case: [mode/default]
+  schema: pinyin
+
+  mode:
+  wubi: false
+  wubi_pinyin: false
+  default: true
+  ```
+*/
+
+static an<ConfigValue> ParseSchemaListEntry(Config* config,
+                                            an<ConfigMap> entry_map) {
+  if (!entry_map)
+    return nullptr;
+  auto schema_property = entry_map->GetValue("schema");
+  if (!schema_property)
+    return nullptr;
+  if (auto case_conditions = As<ConfigList>(entry_map->Get("case"))) {
+    for (auto iter = case_conditions->begin();
+         iter != case_conditions->end();
+         ++iter) {
+      if (auto condition_variable = As<ConfigValue>(*iter)) {
+        bool condition_met = false;
+        if (!config->GetBool(condition_variable->str(), &condition_met) ||
+            !condition_met) {
+          return nullptr;
+        }
+      }
+    }
+  }
+  return schema_property;
+}
+
+int Switcher::ForEachSchemaListEntry(
+    Config* config, function<bool (const string& schema_id)> process_entry) {
+  auto schema_list = config->GetList("schema_list");
+  if (!schema_list)
+    return 0;
+  int num_processed_entries = 0;
+  for (auto iter = schema_list->begin(); iter != schema_list->end(); ++iter) {
+    auto entry = ParseSchemaListEntry(config, As<ConfigMap>(*iter));
+    if (!entry)
+      continue;
+    const string& schema_id = entry->str();
+    ++num_processed_entries;
+    if (!process_entry(schema_id))
+      break;
+  }
+  return num_processed_entries;
+}
+
 Schema* Switcher::CreateSchema() {
   Config* config = schema_->config();
   if (!config)
-    return NULL;
-  auto schema_list = config->GetList("schema_list");
-  if (!schema_list)
-    return NULL;
+    return nullptr;
   string previous;
-  if (user_config_) {
+  if (user_config_ && !fix_schema_list_order_) {
     user_config_->GetString("var/previously_selected_schema", &previous);
   }
   string recent;
-  for (size_t i = 0; i < schema_list->size(); ++i) {
-    auto item = As<ConfigMap>(schema_list->GetAt(i));
-    if (!item)
-      continue;
-    auto schema_property = item->GetValue("schema");
-    if (!schema_property)
-      continue;
-    const string& schema_id(schema_property->str());
-    if (previous.empty() || previous == schema_id) {
-      recent = schema_id;
-      break;
-    }
-    if (recent.empty())
-      recent = schema_id;
-  }
+  ForEachSchemaListEntry(
+      config,
+      [&previous, &recent](const string& schema_id) {
+        if (previous.empty() || previous == schema_id) {
+          recent = schema_id;
+          return /* continue = */false;
+        }
+        if (recent.empty())
+          recent = schema_id;
+        return /* continue = */true;
+      });
   if (recent.empty())
-    return NULL;
+    return nullptr;
   else
     return new Schema(recent);
 }
@@ -225,6 +278,7 @@ void Switcher::LoadSettings() {
     }
   }
   config->GetBool("switcher/fold_options", &fold_options_);
+  config->GetBool("switcher/fix_schema_list_order", &fix_schema_list_order_);
 }
 
 void Switcher::InitializeComponents() {

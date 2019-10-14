@@ -27,6 +27,9 @@ class Switcher : public Processor, public Engine {
   }
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
+  static int ForEachSchemaListEntry(
+      Config* config, function<bool (const string& schema_id)> process_entry);
+
   Schema* CreateSchema();
   void SelectNextSchema();
   bool IsAutoSave(const string& option) const;
@@ -51,6 +54,7 @@ class Switcher : public Processor, public Engine {
   vector<KeyEvent> hotkeys_;
   set<string> save_options_;
   bool fold_options_ = false;
+  bool fix_schema_list_order_ = false;
 
   vector<of<Processor>> processors_;
   vector<of<Translator>> translators_;
