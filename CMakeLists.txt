@@ -145,6 +145,9 @@ include_directories(${PROJECT_SOURCE_DIR}/thirdparty/include)
 link_directories(${PROJECT_SOURCE_DIR}/thirdparty/lib)
 
 if(MSVC)
+  # https://stackoverflow.com/a/31264946
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
+  set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
   if(MSVC10)
     # stdint.h is missing from VS2010
     include_directories(${PROJECT_SOURCE_DIR}/thirdparty/include/msvc)
