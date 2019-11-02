@@ -40,11 +40,12 @@ bool CustomSettings::Load() {
     config_path = shared_data_path / "build" / (config_id_ + ".yaml");
     if (!config_.LoadFromFile(config_path.string())) {
       LOG(WARNING) << "cannot find '" << config_id_ << ".yaml'.";
-      return false;
     }
   }
   fs::path custom_config_path(user_data_path / custom_config_file(config_id_));
-  custom_config_.LoadFromFile(custom_config_path.string());
+  if (!custom_config_.LoadFromFile(custom_config_path.string())) {
+    return false;
+  }
   modified_ = false;
   return true;
 }
