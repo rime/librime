@@ -3,7 +3,7 @@ matrix:
   include:
   - os: linux
     compiler: gcc
-    dist: trusty
+    dist: xenial
     sudo: required
     install: "./travis-install.sh"
     script: make test
