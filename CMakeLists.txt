@@ -178,7 +178,7 @@ configure_file(
 add_custom_target(uninstall
   COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly|GNU")
   set(prefix "${CMAKE_INSTALL_PREFIX}")
   set(exec_prefix "${CMAKE_INSTALL_PREFIX}")
   set(bindir "${exec_prefix}/${BIN_INSTALL_DIR}")
