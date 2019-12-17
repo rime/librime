@@ -181,10 +181,10 @@ add_custom_target(uninstall
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly")
   set(prefix "${CMAKE_INSTALL_PREFIX}")
   set(exec_prefix "${CMAKE_INSTALL_PREFIX}")
-  set(bindir "${BIN_INSTALL_DIR}")
-  set(libdir "${LIB_INSTALL_DIR}")
+  set(bindir "${exec_prefix}/${BIN_INSTALL_DIR}")
+  set(libdir "${exec_prefix}/${LIB_INSTALL_DIR}")
   set(pkgdatadir "${prefix}${rime_data_dir}")
-  set(includedir "${CMAKE_INSTALL_INCLUDEDIR}")
+  set(includedir "${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
   configure_file(
       ${PROJECT_SOURCE_DIR}/rime.pc.in
       ${PROJECT_BINARY_DIR}/rime.pc
