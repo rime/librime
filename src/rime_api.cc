@@ -68,7 +68,11 @@ RIME_API void RimeSetup(RimeTraits *traits) {
 
   setup_deployer(traits);
   if (PROVIDED(traits, app_name)) {
-    SetupLogging(traits->app_name, traits->min_log_level, traits->log_dir);
+    if (PROVIDED(traits, min_log_level) && PROVIDED(traits, log_dir)) {
+      SetupLogging(traits->app_name, traits->min_log_level, traits->log_dir);
+    } else {
+      SetupLogging(traits->app_name);
+    }
   }
 }
 
