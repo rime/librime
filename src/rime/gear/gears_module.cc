@@ -79,7 +79,9 @@ static void rime_gears_initialize() {
   // filters
   r.Register("simplifier", new Component<Simplifier>);
   r.Register("uniquifier", new Component<Uniquifier>);
-  r.Register("charset_filter", new Component<CharsetFilter>);
+  if (!r.Find("charset_filter")) {  // allow improved implementation
+    r.Register("charset_filter", new Component<CharsetFilter>);
+  }
   r.Register("cjk_minifier", new Component<CharsetFilter>);  // alias
   r.Register("reverse_lookup_filter", new Component<ReverseLookupFilter>);
   r.Register("single_char_filter", new Component<SingleCharFilter>);
