@@ -153,7 +153,7 @@ void UserDictionary::Attach(const an<Table>& table,
 }
 
 bool UserDictionary::Load() {
-  if (!db_)
+  if (!db_ || db_->disabled())
     return false;
   if (!db_->loaded() && !db_->Open()) {
     // try to recover managed db in available work thread
@@ -165,9 +165,7 @@ bool UserDictionary::Load() {
     }
     return false;
   }
-  if (!FetchTickCount() && !Initialize())
-    return false;
-  return true;
+  return FetchTickCount() || Initialize();
 }
 
 bool UserDictionary::loaded() const {

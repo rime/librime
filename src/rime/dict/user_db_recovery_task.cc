@@ -30,14 +30,14 @@ bool UserDbRecoveryTask::Run(Deployer* deployer) {
     db_->enable();
   }
   BOOST_SCOPE_EXIT_END
-  //
-  auto r = As<Recoverable>(db_);
-  if (r && r->Recover()) {
-    return true;
-  }
+
   if (db_->loaded()) {
     LOG(WARNING) << "cannot recover loaded db '" << db_->name() << "'.";
     return false;
+  }
+  auto r = As<Recoverable>(db_);
+  if (r && r->Recover()) {
+    return true;
   }
   // repair didn't work on the damanged db file; remove and recreate it
   LOG(INFO) << "recreating db file.";

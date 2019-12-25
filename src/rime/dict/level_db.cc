@@ -234,10 +234,7 @@ bool LevelDb::Recover() {
   auto status = leveldb::RepairDB(file_name(), leveldb::Options());
   if (status.ok()) {
     LOG(INFO) << "repair finished.";
-    if (Close() && Open()) {
-      LOG(INFO) << "db recovery successful.";
-      return true;
-    }
+    return true;
   }
   LOG(ERROR) << "db recovery failed: " << status.ToString();
   return false;
