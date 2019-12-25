@@ -12,7 +12,6 @@
 #include <rime/gear/ascii_segmentor.h>
 #include <rime/gear/charset_filter.h>
 #include <rime/gear/chord_composer.h>
-#include <rime/gear/codepoint_translator.h>
 #include <rime/gear/echo_translator.h>
 #include <rime/gear/editor.h>
 #include <rime/gear/fallback_segmentor.h>
@@ -75,7 +74,6 @@ static void rime_gears_initialize() {
              new Component<ReverseLookupTranslator>);
   r.Register("schema_list_translator", new Component<SchemaListTranslator>);
   r.Register("switch_translator", new Component<SwitchTranslator>);
-  r.Register("codepoint_translator", new Component<CodepointTranslator>);
   r.Register("history_translator", new Component<HistoryTranslator>);
 
   // filters
