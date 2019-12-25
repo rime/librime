@@ -61,6 +61,10 @@ endif()
 
 set(BOOST_COMPONENTS filesystem regex system)
 
+if (BUILD_WITH_ICU)
+  set(BOOST_COMPONENTS ${BOOST_COMPONENTS} locale)
+endif()
+
 if(BOOST_USE_SIGNALS2)
   add_definitions("-DBOOST_SIGNALS2")
 else()
