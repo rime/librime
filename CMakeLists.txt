@@ -59,7 +59,7 @@ if(NOT BOOST_USE_CXX11)
   add_definitions("-DBOOST_NO_CXX11_SCOPED_ENUMS")
 endif()
 
-set(BOOST_COMPONENTS filesystem regex system locale)
+set(BOOST_COMPONENTS filesystem regex system)
 
 if(BOOST_USE_SIGNALS2)
   add_definitions("-DBOOST_SIGNALS2")
