@@ -82,6 +82,8 @@ Third-party:
 
 Plugins
 ===
+  - [librime-charcode](https://github.com/rime/librime-charcode) Module that
+    deals with character encoding; depends on boost::locale and ICU libraries
   - [librime-legacy](https://github.com/rime/librime-legacy) Legacy module with
     GPL-licensed code
 
