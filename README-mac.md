@@ -13,22 +13,27 @@ brew install cmake git
 Install Boost C++ libraries:
 
 ``` sh
-brew install boost@1.60
-brew link --force boost@1.60
+brew install boost
 ```
 
 > **Note:**
 >
-> Starting from version 1.68, homebrewed `boost` libraries depends on `icu4c`,
-> which is not provided by macOS.
+> Starting from version 1.68, `boost::locale` library from Homebrew depends on
+> `icu4c`, which is not provided by macOS.
 >
 > The make target `xcode/release-with-icu` tells cmake to link to ICU libraries
-> but the built app cannot run on machines without ICU libraries installed.
+>  installed locally with Homebrew. This is only required if building with the
+> `librime-charcode` plugin.
 >
-> To make the build portable, either install an earlier version of `boost` via
-> homebrew, or build from source with bootstrap option `--without-icu`.
+> To make a portable build with the plugin, install an earlier version of
+> `boost` via homebrew:
 
-When you manually download and build Boost libraries from source code, set shell
+``` sh
+brew install boost@1.60
+brew link --force boost@1.60
+```
+
+If you manually download and build Boost libraries from source code, set shell
 variable `BOOST_ROOT` to its top level directory prior to building librime.
 
 ## Get the code
@@ -36,7 +41,8 @@ variable `BOOST_ROOT` to its top level directory prior to building librime.
 ``` sh
 git clone --recursive https://github.com/rime/librime.git
 ```
-or [download from GitHub](https://github.com/rime/librime).
+or [download from GitHub](https://github.com/rime/librime), then get code for
+third party dependencies separately.
 
 ## Build third-party libraries
 

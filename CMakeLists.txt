@@ -22,7 +22,6 @@ option(ENABLE_LOGGING "Enable logging with google-glog library" ON)
 option(BOOST_USE_CXX11 "Boost has been built with C++11 support" OFF)
 option(BOOST_USE_SIGNALS2 "Boost use signals2 instead of signals" ON)
 option(ENABLE_ASAN "Enable Address Sanitizer (Unix Only)" OFF)
-option(BUILD_WITH_ICU "Build by explicitly linking to ICU libraries" OFF)
 
 set(rime_data_dir "/share/rime-data" CACHE STRING "Target directory for Rime data")
 
@@ -59,7 +58,7 @@ if(NOT BOOST_USE_CXX11)
   add_definitions("-DBOOST_NO_CXX11_SCOPED_ENUMS")
 endif()
 
-set(BOOST_COMPONENTS filesystem regex system locale)
+set(BOOST_COMPONENTS filesystem regex system)
 
 if(BOOST_USE_SIGNALS2)
   add_definitions("-DBOOST_SIGNALS2")
@@ -93,15 +92,6 @@ if(ENABLE_LOGGING)
 endif()
 
 find_package(Threads)
-
-if (BUILD_WITH_ICU)
-  find_package(ICU COMPONENTS uc)
-endif()
-
-find_package(Iconv)
-if (ICONV_FOUND)
-  include_directories(${ICONV_INCLUDE_DIRS})
-endif()
 
 if(BUILD_TEST)
   find_package(GTest REQUIRED)
