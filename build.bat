@@ -57,6 +57,15 @@ set enable_logging=ON
 
 :parse_cmdline_options
 if "%1" == "" goto end_parsing_cmdline_options
+if "%1" == "clean" (
+  rmdir /s /q build
+  rmdir /s /q thirdparty\src\opencc\build
+  rmdir /s /q thirdparty\src\marisa-trie\build
+  rmdir /s /q thirdparty\src\googletest\build
+  rmdir /s /q thirdparty\src\yaml-cpp\build
+  rmdir /s /q thirdparty\src\leveldb\build
+  rmdir /s /q thirdparty\src\glog\cmake-build
+)
 if "%1" == "boost" set build_boost=1
 if "%1" == "boost_x64" (
   set build_boost=1
