@@ -43,6 +43,7 @@ if not defined PLATFORM_TOOLSET (
   set PLATFORM_TOOLSET=v141_xp
 )
 
+set clean=0
 set build_dir_base=build
 set build_dir_suffix=
 set build_config=Release
@@ -57,6 +58,7 @@ set enable_logging=ON
 
 :parse_cmdline_options
 if "%1" == "" goto end_parsing_cmdline_options
+if "%1" == "clean" set clean=1
 if "%1" == "boost" set build_boost=1
 if "%1" == "boost_x64" (
   set build_boost=1
@@ -97,11 +99,23 @@ shift
 goto parse_cmdline_options
 :end_parsing_cmdline_options
 
+if %clean% == 0 (
 if %build_librime% == 0 (
 if %build_boost% == 0 (
 if %build_thirdparty% == 0 (
   set build_librime=1
-)))
+))))
+
+if %clean% == 1 (
+  rmdir /s /q build
+  rmdir /s /q thirdparty\src\capnproto\build
+  rmdir /s /q thirdparty\src\glog\cmake-build
+  rmdir /s /q thirdparty\src\googletest\build
+  rmdir /s /q thirdparty\src\leveldb\build
+  rmdir /s /q thirdparty\src\marisa-trie\build
+  rmdir /s /q thirdparty\src\opencc\build
+  rmdir /s /q thirdparty\src\yaml-cpp\build
+)
 
 set build_dir=%build_dir_base%%build_dir_suffix%
 
