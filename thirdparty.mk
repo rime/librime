@@ -7,6 +7,9 @@ LIB_DIR = $(THIRD_PARTY_DIR)/lib
 BIN_DIR = $(THIRD_PARTY_DIR)/bin
 SHARE_DIR = $(THIRD_PARTY_DIR)/share
 
+build = build
+glog: build = cmake-build
+
 THIRD_PARTY_LIBS = glog leveldb marisa opencc yaml-cpp gtest
 
 .PHONY: all clean-src $(THIRD_PARTY_LIBS)
@@ -24,12 +27,12 @@ clean-src:
 
 glog:
 	cd $(SRC_DIR)/glog; \
-	cmake . -Bcmake-build \
+	cmake . -B$(build) \
 	-DBUILD_TESTING:BOOL=OFF \
 	-DWITH_GFLAGS:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
 	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
-	&& cmake --build cmake-build --target install
+	&& cmake --build $(build) --target install
 
 leveldb:
 	cd $(SRC_DIR)/leveldb; \
@@ -67,8 +70,8 @@ yaml-cpp:
 
 gtest:
 	cd $(SRC_DIR)/googletest; \
-	cmake . -Bbuild \
+	cmake . -B$(build) \
 	-DBUILD_GMOCK:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
 	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
-	&& cmake --build build --target install
+	&& cmake --build $(build) --target install

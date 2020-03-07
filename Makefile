@@ -3,7 +3,11 @@ RIME_ROOT = $(CURDIR)
 sharedir = $(DESTDIR)/usr/share
 bindir = $(DESTDIR)/usr/bin
 
-.PHONY: all thirdparty xcode clean\
+build = build
+librime-static: build = build-static
+debug install-debug uninstall-debug test-debug: build = debug
+
+.PHONY: all thirdparty xcode clean \
 librime librime-static install-librime uninstall-librime \
 release debug test install uninstall install-debug uninstall-debug
 
@@ -29,47 +33,47 @@ install-librime: install
 uninstall-librime: uninstall
 
 librime-static:
-	cmake . -Bbuild-static \
+	cmake . -B$(build) \
 	-DCMAKE_INSTALL_PREFIX=/usr \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DBUILD_STATIC=ON \
 	-DBUILD_SHARED_LIBS=OFF
-	cmake --build build-static
+	cmake --build $(build)
 
 release:
-	cmake . -Bbuild \
+	cmake . -B$(build) \
 	-DCMAKE_INSTALL_PREFIX=/usr \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DBUILD_MERGED_PLUGINS=OFF
-	cmake --build build
+	cmake --build $(build)
 
 merged-plugins:
-	cmake . -Bbuild \
+	cmake . -B$(build) \
 	-DCMAKE_INSTALL_PREFIX=/usr \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DBUILD_MERGED_PLUGINS=ON
-	cmake --build build
+	cmake --build $(build)
 
 debug:
-	cmake . -Bdebug \
+	cmake . -B$(build) \
 	-DCMAKE_INSTALL_PREFIX=/usr \
 	-DCMAKE_BUILD_TYPE=Debug
-	cmake --build debug
+	cmake --build $(build)
 
 install:
-	cmake --build build --target install
+	cmake --build $(build) --target install
 
 install-debug:
-	cmake --build debug --target install
+	cmake --build $(build) --target install
 
 uninstall:
-	cmake --build build --target uninstall
+	cmake --build $(build) --target uninstall
 
 uninstall-debug:
-	cmake --build debug --target uninstall
+	cmake --build $(build) --target uninstall
 
 test: release
-	(cd build/test; ./rime_test)
+	(cd $(build)/test; ./rime_test)
 
 test-debug: debug
-	(cd debug/test; ./rime_test)
+	(cd $(build)/test; ./rime_test)
