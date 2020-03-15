@@ -29,6 +29,10 @@ void CommitEntry::AppendPhrase(const an<Phrase>& phrase) {
   text += phrase->text();
   code.insert(code.end(),
               phrase->code().begin(), phrase->code().end());
+  if (code.empty())
+    custom_code = phrase->entry().custom_code;
+  else
+    custom_code = "";
   if (auto sentence = As<Sentence>(phrase)) {
     for (const DictEntry& e : sentence->components()) {
       elements.push_back(&e);
