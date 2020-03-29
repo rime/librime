@@ -79,6 +79,7 @@ Third-party:
   - [PIME](https://github.com/EasyIME/PIME): frontend for Windows
   - [Trime](https://github.com/osfans/trime): frontend for Android
   - [XIME](https://github.com/stackia/XIME): frontend for macOS
+  - [emacs-rime](https://github.com/DogLooksGood/emacs-rime): frontend for Emacs
 
 Plugins
 ===
