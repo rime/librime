@@ -6,6 +6,7 @@
 //
 #include <algorithm>
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <rime/config.h>
 #include <rime/schema.h>
 #include <rime/ticket.h>
@@ -86,7 +87,73 @@ bool Spans::HasVertex(size_t vertex) const {
   return std::binary_search(vertices_.begin(), vertices_.end(), vertex);
 }
 
+bool BueKamLomaji(const string& text) {
+  const string pi[] = {
+    "a", "e", "i", "o", "u",
+    "A", "E", "I", "O", "U",
+    "á", "à", "â", "ǎ", "ā", "a", "̍", "a",
+    "̋", "é", "è", "ê", "ě", "ē", "e", "̍", "e",
+    "̋", "í", "ì", "î", "ǐ", "ī", "ı", "̍", "i", "̍",
+    "i", "̋", "ó", "ò", "ô", "ǒ", "ō", "o", "̍", "ő", "ó",
+    "͘", "ò", "͘", "ô", "͘", "ǒ", "͘", "ō", "͘", "o",
+    "̍", "͘", "ő", "͘", "ú", "ù", "û", "ǔ", "ū", "u",
+    "̍", "ű", "ḿ", "m", "̀", "m", "̂", "m", "̌", "m",
+    "̄", "m", "̍", "m", "̋", "ń", "ǹ", "n", "̂", "ň", "n",
+    "̄", "n", "̍", "n", "̋", "ⁿ"};
+  int len = sizeof(pi)/sizeof(pi[0]);
+  for(size_t i=0; i< len; i++) {
+    if (boost::algorithm::ends_with(text, pi[i])) {
+      return true;
+    }
+  }
+  // p, t, k, h, r, g
+  return isalpha(text.back());
+}
+
+
+bool ThauKamLomaji(const string& text) {
+  const string pi[] = {
+    "a", "e", "i", "o", "u",
+    "A", "E", "I", "O", "U",
+    "á", "à", "â", "ǎ", "ā", "a", "̍", "a",
+    "̋", "é", "è", "ê", "ě", "ē", "e", "̍", "e",
+    "̋", "í", "ì", "î", "ǐ", "ī", "ı", "̍", "i", "̍",
+    "i", "̋", "ó", "ò", "ô", "ǒ", "ō", "o", "̍", "ő", "ó",
+    "͘", "ò", "͘", "ô", "͘", "ǒ", "͘", "ō", "͘", "o",
+    "̍", "͘", "ő", "͘", "ú", "ù", "û", "ǔ", "ū", "u",
+    "̍", "ű", "ḿ", "m", "̀", "m", "̂", "m", "̌", "m",
+    "̄", "m", "̍", "m", "̋", "ń", "ǹ", "n", "̂", "ň", "n",
+    "̄", "n", "̍", "n", "̋", "ⁿ"};
+  int len = sizeof(pi)/sizeof(pi[0]);
+  for(size_t i=0; i< len; i++) {
+    if (boost::algorithm::starts_with(text, pi[i])) {
+      return true;
+    }
+  }
+  // Siann-bó
+  return isalpha(text.front());
+}
+
 // Sentence
+bool KamAiLianJiHu(const string& ting_text,
+                    const string& tsit_text) {
+  if (ting_text.empty() || ting_text == " ") {
+    return false;
+  }
+
+  bool phuann;
+  bool ting_kam_lomaji = BueKamLomaji(ting_text);
+  bool tsit_kam_lomaji = ThauKamLomaji(tsit_text);
+
+  phuann = ting_kam_lomaji && tsit_kam_lomaji;
+
+  LOG(ERROR) << "=====";
+  LOG(WARNING) << ting_text << " = bue";
+  LOG(WARNING) << ting_kam_lomaji << " = kam_ting_lomaji";
+  LOG(WARNING) << tsit_text << " = thau";
+  LOG(WARNING) << tsit_kam_lomaji << " = tsit_kam_lomaji";
+  return phuann;
+}
 
 void Sentence::Extend(const DictEntry& entry,
                       size_t end_pos,
@@ -95,6 +162,9 @@ void Sentence::Extend(const DictEntry& entry,
                       Grammar* grammar) {
   const string& context = empty() ? preceding_text : text();
   entry_->weight += Grammar::Evaluate(context, entry, is_rear, grammar);
+  if(KamAiLianJiHu(entry_->text, entry.text)) {
+    entry_->text.append("-");
+  }
   entry_->text.append(entry.text);
   entry_->code.insert(entry_->code.end(),
                       entry.code.begin(),
