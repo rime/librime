@@ -442,6 +442,16 @@ RIME_API void RimeCandidateListEnd(RimeCandidateListIterator* iterator) {
 
 // runtime options
 
+RIME_API void RimeToggleOption(RimeSessionId session_id, const char* option) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return;
+  Context *ctx = session->context();
+  if (!ctx)
+    return;
+  ctx->set_option(option, !ctx->get_option(option));
+}
+
 RIME_API void RimeSetOption(RimeSessionId session_id, const char* option, Bool value) {
   an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
@@ -1013,6 +1023,7 @@ RIME_API RimeApi* rime_get_api() {
     s_api.free_context = &RimeFreeContext;
     s_api.get_status =  &RimeGetStatus;
     s_api.free_status = &RimeFreeStatus;
+    s_api.toggle_option = &RimeToggleOption;
     s_api.set_option = &RimeSetOption;
     s_api.get_option = &RimeGetOption;
     s_api.set_property = &RimeSetProperty;

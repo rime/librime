@@ -278,6 +278,7 @@ RIME_API Bool RimeCandidateListFromIndex(RimeSessionId session_id,
 
 // Runtime options
 
+RIME_API void RimeToggleOption(RimeSessionId session_id, const char* option);
 RIME_API void RimeSetOption(RimeSessionId session_id, const char* option, Bool value);
 RIME_API Bool RimeGetOption(RimeSessionId session_id, const char* option);
 
