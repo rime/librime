@@ -31,7 +31,7 @@ bool BueKamLomaji(const std::string& text) {
     "̍", "͘",
     "ⁿ"
   };
-  int len = sizeof(pi)/sizeof(pi[0]);
+  size_t len = sizeof(pi)/sizeof(pi[0]);
   for(size_t i=0; i< len; i++) {
     if (boost::algorithm::ends_with(text, pi[i])) {
       return true;
@@ -70,7 +70,7 @@ bool ThauKamLomaji(const std::string& text) {
     "̍", "͘",
     "ⁿ"
   };
-  int len = sizeof(pi)/sizeof(pi[0]);
+  size_t len = sizeof(pi)/sizeof(pi[0]);
   for(size_t i=0; i< len; i++) {
     if (boost::algorithm::starts_with(text, pi[i])) {
       return true;
