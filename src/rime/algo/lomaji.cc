@@ -1,5 +1,4 @@
 #include <boost/algorithm/string/predicate.hpp>
-#include <glog/logging.h>
 
 namespace rime {
 
@@ -93,11 +92,6 @@ bool KamAiLianJiHu(const std::string& ting_text,
 
   phuann = ting_kam_lomaji && tsit_kam_lomaji;
 
-  LOG(ERROR) << "=====";
-  LOG(WARNING) << ting_text << " = bue";
-  LOG(WARNING) << ting_kam_lomaji << " = kam_ting_lomaji";
-  LOG(WARNING) << tsit_text << " = thau";
-  LOG(WARNING) << tsit_kam_lomaji << " = tsit_kam_lomaji";
   return phuann;
 }
 
