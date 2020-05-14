@@ -1,5 +1,4 @@
 #include <boost/algorithm/string/predicate.hpp>
-#include <glog/logging.h>
 
 namespace rime {
 
@@ -31,7 +30,7 @@ bool BueKamLomaji(const std::string& text) {
     "̍", "͘",
     "ⁿ"
   };
-  int len = sizeof(pi)/sizeof(pi[0]);
+  size_t len = sizeof(pi)/sizeof(pi[0]);
   for(size_t i=0; i< len; i++) {
     if (boost::algorithm::ends_with(text, pi[i])) {
       return true;
@@ -70,7 +69,7 @@ bool ThauKamLomaji(const std::string& text) {
     "̍", "͘",
     "ⁿ"
   };
-  int len = sizeof(pi)/sizeof(pi[0]);
+  size_t len = sizeof(pi)/sizeof(pi[0]);
   for(size_t i=0; i< len; i++) {
     if (boost::algorithm::starts_with(text, pi[i])) {
       return true;
@@ -93,11 +92,6 @@ bool KamAiLianJiHu(const std::string& ting_text,
 
   phuann = ting_kam_lomaji && tsit_kam_lomaji;
 
-  LOG(ERROR) << "=====";
-  LOG(WARNING) << ting_text << " = bue";
-  LOG(WARNING) << ting_kam_lomaji << " = kam_ting_lomaji";
-  LOG(WARNING) << tsit_text << " = thau";
-  LOG(WARNING) << tsit_kam_lomaji << " = tsit_kam_lomaji";
   return phuann;
 }
 
