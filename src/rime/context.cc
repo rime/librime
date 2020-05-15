@@ -118,6 +118,8 @@ bool Context::Select(size_t index) {
     seg.status = Segment::kSelected;
     DLOG(INFO) << "Selected: '" << cand->text() << "', index = " << index;
     select_notifier_(this);
+    if (!this->HasMenu())
+      this->Commit();
     return true;
   }
   return false;
