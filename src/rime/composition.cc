@@ -6,6 +6,7 @@
 //
 #include <boost/algorithm/string.hpp>
 #include <boost/range/adaptor/reversed.hpp>
+#include <rime/algo/lomaji.h>
 #include <rime/candidate.h>
 #include <rime/composition.h>
 #include <rime/menu.h>
@@ -39,6 +40,9 @@ Preedit Composition::GetPreedit(const string& full_input, size_t caret_pos,
     if (i < size() - 1) {  // converted
       if (cand) {
         end = cand->end();
+        if(KamAiLianJiHu(preedit.text, cand->text())){
+          preedit.text += "-";
+        }
         preedit.text += cand->text();
       }
       else {  // raw input
@@ -109,6 +113,9 @@ string Composition::GetCommitText() const {
   for (const Segment& seg : *this) {
     if (auto cand = seg.GetSelectedCandidate()) {
       end = cand->end();
+      if(KamAiLianJiHu(result, cand->text())) {
+        result += "-";
+      }
       result += cand->text();
     }
     else {
