@@ -217,6 +217,8 @@ echo Check rime.dll exists
 if exist dist\lib\rime.dll (
   echo rime.dll already exists
   goto exit
+) ELSE (
+  echo rime.dll doesn't exist
 )
 
 if %build_librime% == 0 goto exit
