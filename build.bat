@@ -213,6 +213,14 @@ if %build_thirdparty% == 1 (
   if errorlevel 1 goto error
 )
 
+echo Check rime.dll exists
+if exist dist\lib\rime.dll (
+  echo rime.dll already exists
+  goto exit
+) ELSE (
+  echo rime.dll doesn't exist
+)
+
 if %build_librime% == 0 goto exit
 
 set RIME_CMAKE_FLAGS=-G%CMAKE_GENERATOR%^
