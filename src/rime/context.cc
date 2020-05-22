@@ -172,7 +172,7 @@ bool Context::ConfirmPreviousSelection() {
 }
 
 bool Context::CommitNaKanNaRaw() {
-  if (!this->composition_.empty()) {
+  if (this->composition_.size() == 1) {
     if (this->composition_.back().HasTag("raw")) {
         this->Commit();
         return true;
