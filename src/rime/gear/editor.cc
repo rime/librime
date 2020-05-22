@@ -170,6 +170,7 @@ ProcessResult Editor::DirectCommit(Context* ctx, int ch) {
 ProcessResult Editor::AddToInput(Context* ctx, int ch) {
     ctx->PushInput(ch);
     ctx->ConfirmPreviousSelection();
+    ctx->CommitNaKanNaRaw();
     return kAccepted;
 }
 

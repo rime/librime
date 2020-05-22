@@ -171,6 +171,16 @@ bool Context::ConfirmPreviousSelection() {
   return false;
 }
 
+bool Context::CommitNaKanNaRaw() {
+  if (!this->composition_.empty()) {
+    if (this->composition_.back().HasTag("raw")) {
+        this->Commit();
+        return true;
+    }
+  }
+  return false;
+}
+
 bool Context::ReopenPreviousSegment() {
   if (composition_.Trim()) {
     if (!composition_.empty() &&
