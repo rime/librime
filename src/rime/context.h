@@ -50,6 +50,7 @@ class Context {
   bool DeleteCurrentSelection();
 
   bool ConfirmPreviousSelection();
+  bool CommitNaKanNaRaw();
   bool ReopenPreviousSegment();
   bool ClearPreviousSegment();
   bool ReopenPreviousSelection();
