@@ -44,6 +44,7 @@ class TableTranslator : public Translator,
   bool enable_sentence_ = true;
   bool sentence_over_completion_ = false;
   bool encode_commit_history_ = true;
+  int candidate_sort_by_ = 0;
   int max_phrase_length_ = 5;
   int max_homographs_ = 1;
   the<Poet> poet_;

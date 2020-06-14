@@ -218,6 +218,9 @@ TableTranslator::TableTranslator(const Ticket& ticket)
                    &max_phrase_length_);
     config->GetInt(name_space_ + "/max_homographs",
                    &max_homographs_);
+    config->GetInt(name_space_ + "/candidate_sort_by",
+                   &candidate_sort_by_);
+    user_dict_->set_lookup_sort_by((UserDictionary::SortBy)candidate_sort_by_);
     if (enable_sentence_ || sentence_over_completion_ ||
         contextual_suggestions_) {
       poet_.reset(new Poet(language(), config, Poet::LeftAssociateCompare));

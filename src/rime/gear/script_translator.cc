@@ -160,6 +160,8 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
                     &always_show_comments_);
     config->GetBool(name_space_ + "/enable_correction", &enable_correction_);
     config->GetInt(name_space_ + "/max_homophones", &max_homophones_);
+    config->GetInt(name_space_ + "/candidate_sort_by", &candidate_sort_by_);
+    user_dict_->set_lookup_sort_by((UserDictionary::SortBy)candidate_sort_by_);
     poet_.reset(new Poet(language(), config));
   }
   if (enable_correction_) {

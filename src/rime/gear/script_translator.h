@@ -49,8 +49,10 @@ class ScriptTranslator : public Translator,
   int spelling_hints_ = 0;
   bool always_show_comments_ = false;
   bool enable_correction_ = false;
+  int candidate_sort_by_ = 0;
   the<Corrector> corrector_;
   the<Poet> poet_;
+
 };
 
 }  // namespace rime

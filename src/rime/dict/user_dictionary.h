@@ -82,9 +82,16 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
   const string& name() const { return name_; }
   TickCount tick() const { return tick_; }
 
+  enum SortBy {
+    recency = 0,
+    commit = 1
+  };
+  void set_lookup_sort_by(SortBy sort_by){ lookup_sort_by_ = sort_by; }
+
   static an<DictEntry> CreateDictEntry(const string& key,
                                        const string& value,
                                        TickCount present_tick,
+                                       SortBy sort_by = recency,
                                        double credibility = 0.0,
                                        string* full_code = NULL);
 
@@ -103,6 +110,7 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
   an<Prism> prism_;
   TickCount tick_ = 0;
   time_t transaction_time_ = 0;
+  SortBy lookup_sort_by_ = recency;
 };
 
 class UserDictionaryComponent : public UserDictionary::Component {

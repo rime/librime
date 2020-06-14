@@ -129,7 +129,7 @@ void SchemaListTranslation::LoadSchemaList(Switcher* switcher) {
   config->GetBool("switcher/fix_schema_list_order", &fix_order);
   if (fix_order)
     return;
-  // reorder schema list by recency
+  // reorder schema list by recency default
   std::stable_sort(candies_.begin() + fixed, candies_.end(),
       [](const an<Candidate>& x, const an<Candidate>& y) {
         return x->quality() > y->quality();

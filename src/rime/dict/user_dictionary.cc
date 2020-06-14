@@ -32,6 +32,7 @@ struct DfsState {
   an<DbAccessor> accessor;
   string key;
   string value;
+  UserDictionary::SortBy lookup_sort_by;
 
   bool IsExactMatch(const string& prefix) {
     return boost::starts_with(key, prefix + '\t');
@@ -65,7 +66,7 @@ struct DfsState {
 };
 
 void DfsState::RecruitEntry(size_t pos) {
-  auto e = UserDictionary::CreateDictEntry(key, value, present_tick,
+  auto e = UserDictionary::CreateDictEntry(key, value, present_tick, lookup_sort_by,
                                            credibility.back());
   if (e) {
     e->code = code;
@@ -271,6 +272,7 @@ UserDictionary::Lookup(const SyllableGraph& syll_graph,
   state.collector = New<UserDictEntryCollector>();
   state.accessor = db_->Query("");
   state.accessor->Jump(" ");  // skip metadata
+  state.lookup_sort_by = lookup_sort_by_;
   string prefix;
   DfsLookup(syll_graph, start_pos, prefix, &state);
   if (state.collector->empty())
@@ -319,7 +321,7 @@ size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
       break;
     }
     last_key = key;
-    auto e = CreateDictEntry(key, value, present_tick, 1.0, &full_code);
+    auto e = CreateDictEntry(key, value, present_tick, lookup_sort_by_, 1.0, &full_code);
     if (!e)
       continue;
     e->custom_code = full_code;
@@ -461,6 +463,7 @@ bool UserDictionary::TranslateCodeToString(const Code& code,
 an<DictEntry> UserDictionary::CreateDictEntry(const string& key,
                                                       const string& value,
                                                       TickCount present_tick,
+                                                      SortBy sort_by,
                                                       double credibility,
                                                       string* full_code) {
   an<DictEntry> e;
@@ -479,10 +482,21 @@ an<DictEntry> UserDictionary::CreateDictEntry(const string& key,
   e->text = key.substr(separator_pos + 1);
   e->commit_count = v.commits;
   // TODO: argument s not defined...
-  double weight = algo::formula_p(0,
-                                  (double)v.commits / present_tick,
-                                  (double)present_tick,
-                                  v.dee);
+  double weight;
+  switch (sort_by) {
+    case recency:
+      weight = algo::formula_p(0,
+                                      (double)v.commits / present_tick,
+                                      (double)present_tick,
+                                      v.dee);
+      break;
+    case commit:
+      weight = (double)v.commits;
+      break;
+    default:
+      DLOG(INFO) << "Unknow sort_by = " << sort_by;
+      break;
+  }
   e->weight = log(weight > 0 ? weight : DBL_EPSILON) + credibility;
   if (full_code) {
     *full_code = key.substr(0, separator_pos);
