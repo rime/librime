@@ -31,7 +31,7 @@ static Navigator::ActionDef navigation_actions[] = {
 Navigator::Navigator(const Ticket& ticket)
     : Processor(ticket), KeyBindingProcessor<Navigator>(navigation_actions) {
   // Default key binding.
-  Bind({XK_Left, 0}, &Navigator::Rewind);
+  Bind({XK_Left, 0}, &Navigator::LeftByChar);
   Bind({XK_Left, kControlMask}, &Navigator::LeftBySyllable);
   Bind({XK_KP_Left, 0}, &Navigator::LeftByChar);
   Bind({XK_Right, 0}, &Navigator::RightByChar);
