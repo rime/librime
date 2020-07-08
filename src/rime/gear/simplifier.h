@@ -20,7 +20,7 @@ class Simplifier : public Filter, TagMatching {
   explicit Simplifier(const Ticket& ticket);
 
   virtual an<Translation> Apply(an<Translation> translation,
-                                        CandidateList* candidates);
+                                CandidateList* candidates);
 
 
   virtual bool AppliesToSegment(Segment* segment) {
@@ -35,7 +35,8 @@ class Simplifier : public Filter, TagMatching {
 
   void Initialize();
   void PushBack(const an<Candidate>& original,
-                         CandidateQueue* result, const string& simplified);
+                CandidateQueue* result,
+                const string& simplified);
 
   bool initialized_ = false;
   the<Opencc> opencc_;

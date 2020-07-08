@@ -8,6 +8,7 @@
 #include <boost/filesystem.hpp>
 #include <stdint.h>
 #include <utf8.h>
+#include <utility>
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/config.h>
@@ -45,8 +46,7 @@ class Opencc {
     }
   }
 
-  bool ConvertWord(const string& text,
-                              vector<string>* forms) {
+  bool ConvertWord(const string& text, vector<string>* forms) {
     if (dict_ == nullptr) return false;
     opencc::Optional<const opencc::DictEntry*> item = dict_->Match(text);
     if (item.IsNull()) {
@@ -54,15 +54,14 @@ class Opencc {
       return false;
     } else {
       const opencc::DictEntry* entry = item.Get();
-      for (const char* value : entry->Values()) {
-        forms->push_back(value);
+      for (auto&& value : entry->Values()) {
+        forms->push_back(std::move(value));
       }
       return forms->size() > 0;
     }
   }
 
-  bool RandomConvertText(const string& text,
-                   string* simplified) {
+  bool RandomConvertText(const string& text, string* simplified) {
     if (dict_ == nullptr) return false;
     const char *phrase = text.c_str();
     std::ostringstream buffer;
@@ -83,8 +82,7 @@ class Opencc {
     return *simplified != text;
   }
 
-  bool ConvertText(const string& text,
-                   string* simplified) {
+  bool ConvertText(const string& text, string* simplified) {
     if (converter_ == nullptr) return false;
     *simplified = converter_->Convert(text);
     return *simplified != text;

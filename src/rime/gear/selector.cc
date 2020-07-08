@@ -121,10 +121,16 @@ bool Selector::PageDown(Context* ctx) {
   int index = comp.back().selected_index + page_size;
   int page_start = (index / page_size) * page_size;
   int candidate_count = comp.back().menu->Prepare(page_start + page_size);
-  if (candidate_count <= page_start)
-    return false;
-  if (index >= candidate_count)
+  if (candidate_count <= page_start) {
+    bool page_down_cycle = engine_->schema()->page_down_cycle();
+    if (page_down_cycle) {// Cycle back to page 1 if true
+      index = 0;
+    } else {
+      return false;
+    }
+  } else if (index >= candidate_count) {
     index = candidate_count - 1;
+  }
   comp.back().selected_index = index;
   comp.back().tags.insert("paging");
   return true;
