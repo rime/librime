@@ -42,11 +42,13 @@ ProcessResult KeyBindingProcessor<T>::ProcessKeyEvent(
 
 template <class T>
 bool KeyBindingProcessor<T>::Accept(const KeyEvent& key_event, Context* ctx) {
-  auto binding = key_bindings_.find(key_event);
+  // 共Caps Lock pak掉
+  KeyEvent bo_caps_event = KeyEvent(key_event.keycode(), key_event.modifier() & ~kLockMask);
+  auto binding = key_bindings_.find(bo_caps_event);
   if (binding != key_bindings_.end()) {
     auto action = binding->second;
     RIME_THIS_CALL_AS(T, action)(ctx);
-    DLOG(INFO) << "action key accepted: " << key_event.repr();
+    DLOG(INFO) << "action key accepted: " << bo_caps_event.repr();
     return true;
   }
   return false;
