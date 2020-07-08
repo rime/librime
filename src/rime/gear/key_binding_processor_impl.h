@@ -42,6 +42,7 @@ ProcessResult KeyBindingProcessor<T>::ProcessKeyEvent(
 
 template <class T>
 bool KeyBindingProcessor<T>::Accept(const KeyEvent& key_event, Context* ctx) {
+  // 共Caps Lock pak掉
   KeyEvent bo_caps_event = KeyEvent(key_event.keycode(), key_event.modifier() & ~kLockMask);
   auto binding = key_bindings_.find(bo_caps_event);
   if (binding != key_bindings_.end()) {
