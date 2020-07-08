@@ -32,7 +32,7 @@ string Context::GetScriptText() const {
   return composition_.GetScriptText();
 }
 
-static const string kCaretSymbol("\xe2\x80\xb8");
+static const string kCaretSymbol("|");
 
 string Context::GetSoftCursor() const {
   return get_option("soft_cursor") ? kCaretSymbol : string();
