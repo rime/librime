@@ -88,19 +88,16 @@ bool Spans::HasVertex(size_t vertex) const {
 
 // Sentence
 
-void Sentence::Extend(const DictEntry& entry,
+void Sentence::Extend(const DictEntry& another,
                       size_t end_pos,
-                      bool is_rear,
-                      const string& preceding_text,
-                      Grammar* grammar) {
-  const string& context = empty() ? preceding_text : text();
-  entry_->weight += Grammar::Evaluate(context, entry, is_rear, grammar);
-  entry_->text.append(entry.text);
+                      double new_weight) {
+  entry_->weight = new_weight;
+  entry_->text.append(another.text);
   entry_->code.insert(entry_->code.end(),
-                      entry.code.begin(),
-                      entry.code.end());
-  components_.push_back(entry);
-  syllable_lengths_.push_back(end_pos - end());
+                      another.code.begin(),
+                      another.code.end());
+  components_.push_back(another);
+  word_lengths_.push_back(end_pos - end());
   set_end(end_pos);
   DLOG(INFO) << "extend sentence " << end_pos << ") "
              << text() << " weight: " << weight();

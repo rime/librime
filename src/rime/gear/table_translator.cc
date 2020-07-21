@@ -383,7 +383,7 @@ Spans SentenceSyllabifier::Syllabify(const Phrase* phrase) {
   if (auto sentence = dynamic_cast<const Sentence*>(phrase)) {
     size_t stop = sentence->start();
     result.AddVertex(stop);
-    for (size_t len : sentence->syllable_lengths()) {
+    for (size_t len : sentence->word_lengths()) {
       stop += len;
       result.AddVertex(stop);
     }
@@ -501,7 +501,7 @@ void SentenceTranslation::PrepareSentence() {
   const string& delimiters(translator_->delimiters());
   // split syllables
   size_t pos = 0;
-  for (int len : sentence_->syllable_lengths()) {
+  for (int len : sentence_->word_lengths()) {
     if (pos > 0 && delimiters.find(input_[pos - 1]) == string::npos) {
       preedit.insert(pos, 1, ' ');
       ++pos;

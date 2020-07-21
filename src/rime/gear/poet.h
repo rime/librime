@@ -22,16 +22,15 @@ using WordGraph = map<int, UserDictEntryCollector>;
 
 class Grammar;
 class Language;
+struct Line;
 
 class Poet {
  public:
-  // sentence "less", used to compare sentences of the same input range.
-  using Compare = function<bool (const Sentence&, const Sentence&)>;
+  // Line "less", used to compare composed line of the same input range.
+  using Compare = function<bool (const Line&, const Line&)>;
 
-  static bool CompareWeight(const Sentence& one, const Sentence& other) {
-    return one.weight() < other.weight();
-  }
-  static bool LeftAssociateCompare(const Sentence& one, const Sentence& other);
+  static bool CompareWeight(const Line& one, const Line& other);
+  static bool LeftAssociateCompare(const Line& one, const Line& other);
 
   Poet(const Language* language, Config* config,
        Compare compare = CompareWeight);

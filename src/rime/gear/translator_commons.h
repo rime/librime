@@ -109,8 +109,6 @@ class Phrase : public Candidate {
 
 //
 
-class Grammar;
-
 class Sentence : public Phrase {
  public:
   Sentence(const Language* language)
@@ -118,14 +116,10 @@ class Sentence : public Phrase {
   Sentence(const Sentence& other)
       : Phrase(other),
         components_(other.components_),
-        syllable_lengths_(other.syllable_lengths_) {
+        word_lengths_(other.word_lengths_) {
     entry_ = New<DictEntry>(other.entry());
   }
-  void Extend(const DictEntry& entry,
-              size_t end_pos,
-              bool is_rear,
-              const string& preceding_text,
-              Grammar* grammar);
+  void Extend(const DictEntry& another, size_t end_pos, double new_weight);
   void Offset(size_t offset);
 
   bool empty() const {
@@ -139,13 +133,13 @@ class Sentence : public Phrase {
   const vector<DictEntry>& components() const {
     return components_;
   }
-  const vector<size_t>& syllable_lengths() const {
-    return syllable_lengths_;
+  const vector<size_t>& word_lengths() const {
+    return word_lengths_;
   }
 
  protected:
   vector<DictEntry> components_;
-  vector<size_t> syllable_lengths_;
+  vector<size_t> word_lengths_;
 };
 
 //

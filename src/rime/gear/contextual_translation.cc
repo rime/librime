@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <iterator>
 #include <rime/gear/contextual_translation.h>
+#include <rime/gear/grammar.h>
 #include <rime/gear/translator_commons.h>
 
 namespace rime {
@@ -37,12 +38,13 @@ bool ContextualTranslation::Replenish() {
 }
 
 an<Phrase> ContextualTranslation::Evaluate(an<Phrase> phrase) {
-  auto sentence = New<Sentence>(phrase->language());
-  sentence->Offset(phrase->start());
   bool is_rear = phrase->end() == input_.length();
-  sentence->Extend(phrase->entry(), phrase->end(), is_rear, preceding_text_,
-                   grammar_);
-  phrase->set_weight(sentence->weight());
+  double weight = Grammar::Evaluate(preceding_text_,
+                                    phrase->text(),
+                                    phrase->weight(),
+                                    is_rear,
+                                    grammar_);
+  phrase->set_weight(weight);
   DLOG(INFO) << "contextual suggestion: " << phrase->text()
              << " weight: " << phrase->weight();
   return phrase;
