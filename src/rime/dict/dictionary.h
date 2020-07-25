@@ -19,6 +19,7 @@ namespace rime {
 namespace dictionary {
 
 struct Chunk {
+  Table* table = nullptr;
   Code code;
   const table::Entry* entries = nullptr;
   size_t size = 0;
@@ -27,12 +28,12 @@ struct Chunk {
   double credibility = 0.0;
 
   Chunk() = default;
-  Chunk(const Code& c, const table::Entry* e, double cr = 0.0)
-      : code(c), entries(e), size(1), cursor(0), credibility(cr) {}
-  Chunk(const TableAccessor& a, double cr = 0.0)
-      : Chunk(a, string(), cr) {}
-  Chunk(const TableAccessor& a, const string& r, double cr = 0.0)
-      : code(a.index_code()), entries(a.entry()),
+  Chunk(Table* t, const Code& c, const table::Entry* e, double cr = 0.0)
+      : table(t), code(c), entries(e), size(1), cursor(0), credibility(cr) {}
+  Chunk(Table* t, const TableAccessor& a, double cr = 0.0)
+      : Chunk(t, a, string(), cr) {}
+  Chunk(Table* t, const TableAccessor& a, const string& r, double cr = 0.0)
+      : table(t), code(a.index_code()), entries(a.entry()),
         size(a.remaining()), cursor(0), remaining_code(r), credibility(cr) {}
 };
 
@@ -48,7 +49,7 @@ class DictEntryIterator : public DictEntryFilterBinder {
   DictEntryIterator(const DictEntryIterator& other) = default;
   DictEntryIterator& operator= (const DictEntryIterator& other) = default;
 
-  void AddChunk(dictionary::Chunk&& chunk, Table* table);
+  void AddChunk(dictionary::Chunk&& chunk);
   void Sort();
   RIME_API void AddFilter(DictEntryFilter filter) override;
   RIME_API an<DictEntry> Peek();
@@ -63,7 +64,6 @@ class DictEntryIterator : public DictEntryFilterBinder {
  private:
   vector<dictionary::Chunk> chunks_;
   size_t chunk_index_ = 0;
-  Table* table_ = nullptr;
   an<DictEntry> entry_ = nullptr;
   size_t entry_count_ = 0;
 };

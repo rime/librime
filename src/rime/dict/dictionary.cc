@@ -53,10 +53,9 @@ size_t match_extra_code(const table::Code* extra_code, size_t depth,
 
 }  // namespace dictionary
 
-void DictEntryIterator::AddChunk(dictionary::Chunk&& chunk, Table* table) {
+void DictEntryIterator::AddChunk(dictionary::Chunk&& chunk) {
   chunks_.push_back(std::move(chunk));
   entry_count_ += chunk.size;
-  table_ = table;
 }
 
 void DictEntryIterator::Sort() {
@@ -78,15 +77,15 @@ void DictEntryIterator::AddFilter(DictEntryFilter filter) {
 }
 
 an<DictEntry> DictEntryIterator::Peek() {
-  if (!entry_ && !exhausted() && table_) {
+  if (!entry_ && !exhausted()) {
     // get next entry from current chunk
     const auto& chunk(chunks_[chunk_index_]);
     const auto& e(chunk.entries[chunk.cursor]);
     DLOG(INFO) << "creating temporary dict entry '"
-               << table_->GetEntryText(e) << "'.";
+               << chunk.table->GetEntryText(e) << "'.";
     entry_ = New<DictEntry>();
     entry_->code = chunk.code;
-    entry_->text = table_->GetEntryText(e);
+    entry_->text = chunk.table->GetEntryText(e);
     const double kS = 18.420680743952367; // log(1e8)
     entry_->weight = e.weight - kS + chunk.credibility;
     if (!chunk.remaining_code.empty()) {
@@ -174,12 +173,12 @@ Dictionary::Lookup(const SyllableGraph& syllable_graph,
               a.extra_code(), 0, syllable_graph, end_pos);
           if (actual_end_pos == 0) continue;
           (*collector)[actual_end_pos].AddChunk(
-              {a.code(), a.entry(), cr}, table_.get());
+              {table_.get(), a.code(), a.entry(), cr});
         }
         while (a.Next());
       }
       else {
-        (*collector)[end_pos].AddChunk({a, cr}, table_.get());
+        (*collector)[end_pos].AddChunk({table_.get(), a, cr});
       }
     }
   }
@@ -225,7 +224,7 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
       TableAccessor a(table_->QueryWords(syllable_id));
       if (!a.exhausted()) {
         DLOG(INFO) << "remaining code: " << remaining_code;
-        result->AddChunk({a, remaining_code}, table_.get());
+        result->AddChunk({table_.get(), a, remaining_code});
       }
     }
   }
