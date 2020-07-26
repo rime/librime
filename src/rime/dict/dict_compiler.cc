@@ -158,7 +158,6 @@ bool DictCompiler::Compile(const string &schema_file) {
   }
   if (rebuild_prism &&
       !BuildPrism(schema_file,
-                  syllabary,
                   dict_file_checksum,
                   schema_file_checksum)) {
     return false;
@@ -289,13 +288,19 @@ bool DictCompiler::BuildReverseDb(DictSettings* settings,
 }
 
 bool DictCompiler::BuildPrism(const string &schema_file,
-                              const Syllabary& syllabary,
                               uint32_t dict_file_checksum,
                               uint32_t schema_file_checksum) {
   LOG(INFO) << "building prism...";
   prism_ = New<Prism>(RelocateToUserDirectory(prefix_, prism_->file_name()));
 
-  // apply spelling algebra and prepare corrections (if enabled)
+  // get syllabary from primary table, which may not be rebuilt
+  Syllabary syllabary;
+  const auto& primary_table = tables_[0];
+  if (!primary_table->Load() ||
+      !primary_table->GetSyllabary(&syllabary) ||
+      syllabary.empty())
+    return false;
+ // apply spelling algebra and prepare corrections (if enabled)
   Script script;
   if (!schema_file.empty()) {
     Config config;
