@@ -79,8 +79,9 @@ struct Ticket;
 
 class Dictionary : public Class<Dictionary, const Ticket&> {
  public:
-  RIME_API Dictionary(const string& name,
-                      an<Table> table,
+  RIME_API Dictionary(string name,
+                      vector<string> packs,
+                      vector<of<Table>> tables,
                       an<Prism> prism);
   virtual ~Dictionary();
 
@@ -103,12 +104,15 @@ class Dictionary : public Class<Dictionary, const Ticket&> {
   const string& name() const { return name_; }
   RIME_API bool loaded() const;
 
-  an<Table> table() { return table_; }
-  an<Prism> prism() { return prism_; }
+  const vector<string>& packs() const { return packs_; }
+  const vector<of<Table>>& tables() const { return tables_; }
+  const an<Table>& primary_table() const { return tables_[0]; }
+  const an<Prism>& prism() const { return prism_; }
 
  private:
   string name_;
-  an<Table> table_;
+  vector<string> packs_;
+  vector<of<Table>> tables_;
   an<Prism> prism_;
 };
 
@@ -119,8 +123,9 @@ class DictionaryComponent : public Dictionary::Component {
   DictionaryComponent();
   ~DictionaryComponent() override;
   Dictionary* Create(const Ticket& ticket) override;
-  Dictionary* CreateDictionaryWithName(const string& dict_name,
-                                       const string& prism_name);
+  Dictionary* Create(string dict_name,
+                     string prism_name,
+                     vector<string> packs);
 
  private:
   map<string, weak<Prism>> prism_map_;

@@ -34,13 +34,15 @@ class DictSettings;
 class EntryCollector : public PhraseCollector {
  public:
   Syllabary syllabary;
+  bool build_syllabary = true;
   vector<RawDictEntry> entries;
   size_t num_entries = 0;
   ReverseLookupTable stems;
 
  public:
   EntryCollector();
-  ~EntryCollector();
+  explicit EntryCollector(Syllabary&& fixed_syllabary);
+  virtual ~EntryCollector();
 
   void Configure(DictSettings* settings);
   void Collect(const vector<string>& dict_files);

@@ -18,6 +18,7 @@ int CompareVersionString(const string& x,
 
 class ChecksumComputer {
  public:
+  explicit ChecksumComputer(uint32_t initial_remainder = 0);
   void ProcessFile(const string& file_name);
   uint32_t Checksum();
 

@@ -26,85 +26,103 @@ namespace rime {
 
 DictCompiler::DictCompiler(Dictionary *dictionary, const string& prefix)
     : dict_name_(dictionary->name()),
+      packs_(dictionary->packs()),
       prism_(dictionary->prism()),
-      table_(dictionary->table()),
+      tables_(dictionary->tables()),
       prefix_(prefix) {
 }
 
-static string LocateFile(const string& file_name) {
+static string locate_file(const string& file_name) {
   the<ResourceResolver> resolver(
       Service::instance().CreateResourceResolver({"build_source", "", ""}));
   return resolver->ResolvePath(file_name).string();
+}
+
+static bool load_dict_settings_from_file(DictSettings* settings,
+                                         const string& dict_file) {
+  std::ifstream fin(dict_file.c_str());
+  bool success = settings->LoadDictHeader(fin);
+  fin.close();
+  return success;
+}
+
+static bool get_dict_files_from_settings(vector<string>* dict_files,
+                                         DictSettings& settings) {
+  if (auto tables = settings.GetTables()) {
+    for(auto it = tables->begin(); it != tables->end(); ++it) {
+      string dict_name = As<ConfigValue>(*it)->str();
+      string dict_file = locate_file(dict_name + ".dict.yaml");
+      if (!boost::filesystem::exists(dict_file)) {
+        LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
+        return false;
+      }
+      dict_files->push_back(dict_file);
+    }
+  }
+  return true;
+}
+
+static uint32_t compute_dict_file_checksum(uint32_t initial_checksum,
+                                           const vector<string>& dict_files,
+                                           DictSettings& settings) {
+  if (dict_files.empty()) {
+    return initial_checksum;
+  }
+  ChecksumComputer cc(initial_checksum);
+  for (const auto& file_name : dict_files) {
+    cc.ProcessFile(file_name);
+  }
+  if (settings.use_preset_vocabulary()) {
+    cc.ProcessFile(PresetVocabulary::DictFilePath(settings.vocabulary()));
+  }
+  return cc.Checksum();
 }
 
 bool DictCompiler::Compile(const string &schema_file) {
   LOG(INFO) << "compiling dictionary for " << schema_file;
   bool build_table_from_source = true;
   DictSettings settings;
-  string dict_file = LocateFile(dict_name_ + ".dict.yaml");
+  string dict_file = locate_file(dict_name_ + ".dict.yaml");
   if (!boost::filesystem::exists(dict_file)) {
     LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
     build_table_from_source = false;
   }
-  else {
-    std::ifstream fin(dict_file.c_str());
-    if (!settings.LoadDictHeader(fin)) {
-      LOG(ERROR) << "failed to load settings from '" << dict_file << "'.";
-      return false;
-    }
-    fin.close();
-    LOG(INFO) << "dict name: " << settings.dict_name();
-    LOG(INFO) << "dict version: " << settings.dict_version();
+  else if (!load_dict_settings_from_file(&settings, dict_file)) {
+    LOG(ERROR) << "failed to load settings from '" << dict_file << "'.";
+    return false;
   }
   vector<string> dict_files;
-  auto tables = settings.GetTables();
-  for(auto it = tables->begin(); it != tables->end(); ++it) {
-    if (!Is<ConfigValue>(*it))
-      continue;
-    string dict_name = As<ConfigValue>(*it)->str();
-    string dict_file = LocateFile(dict_name + ".dict.yaml");
-    if (!boost::filesystem::exists(dict_file)) {
-      LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
-      return false;
-    }
-    dict_files.push_back(dict_file);
+  if (!get_dict_files_from_settings(&dict_files, settings)) {
+    return false;
   }
-  uint32_t dict_file_checksum = 0;
-  if (!dict_files.empty()) {
-    ChecksumComputer cc;
-    for (const auto& file_name : dict_files) {
-      cc.ProcessFile(file_name);
-    }
-    if (settings.use_preset_vocabulary()) {
-      cc.ProcessFile(PresetVocabulary::DictFilePath(settings.vocabulary()));
-    }
-    dict_file_checksum = cc.Checksum();
-  }
+  uint32_t dict_file_checksum =
+      compute_dict_file_checksum(0, dict_files, settings);
   uint32_t schema_file_checksum =
       schema_file.empty() ? 0 : Checksum(schema_file);
-  bool rebuild_table = true;
-  bool rebuild_prism = true;
-  if (table_->Exists() && table_->Load()) {
-    if (!build_table_from_source) {
-      dict_file_checksum = table_->dict_file_checksum();
-      LOG(INFO) << "reuse existing table: " << table_->file_name();
+  bool rebuild_table = false;
+  bool rebuild_prism = false;
+  const auto& primary_table = tables_[0];
+  if (primary_table->Exists() && primary_table->Load()) {
+    if (build_table_from_source) {
+      rebuild_table = primary_table->dict_file_checksum() != dict_file_checksum;
+    } else {
+      dict_file_checksum = primary_table->dict_file_checksum();
+      LOG(INFO) << "reuse existing table: " << primary_table->file_name();
     }
-    if (table_->dict_file_checksum() == dict_file_checksum) {
-      rebuild_table = false;
-    }
-    table_->Close();
-  }
-  else if (!build_table_from_source) {
+    primary_table->Close();
+  } else if (build_table_from_source) {
+    rebuild_table = true;
+  } else {
     LOG(ERROR) << "neither " << dict_name_ << ".dict.yaml nor "
         << dict_name_ << ".table.bin exists.";
     return false;
   }
   if (prism_->Exists() && prism_->Load()) {
-    if (prism_->dict_file_checksum() == dict_file_checksum &&
-        prism_->schema_file_checksum() == schema_file_checksum) {
-      rebuild_prism = false;
-    }
+    rebuild_prism = prism_->dict_file_checksum() != dict_file_checksum ||
+                    prism_->schema_file_checksum() != schema_file_checksum;
     prism_->Close();
+  } else {
+    rebuild_prism = true;
   }
   LOG(INFO) << dict_file << "[" << dict_files.size() << " file(s)]"
             << " (" << dict_file_checksum << ")";
@@ -126,11 +144,55 @@ bool DictCompiler::Compile(const string &schema_file) {
   if (options_ & kRebuildPrism) {
     rebuild_prism = true;
   }
-  if (rebuild_table && !BuildTable(&settings, dict_files, dict_file_checksum))
+  Syllabary syllabary;
+  if (rebuild_table) {
+    EntryCollector collector;
+    if (!BuildTable(0,
+                    collector,
+                    &settings,
+                    dict_files,
+                    dict_file_checksum)) {
+      return false;
+    }
+    syllabary = std::move(collector.syllabary);
+  }
+  if (rebuild_prism &&
+      !BuildPrism(schema_file,
+                  syllabary,
+                  dict_file_checksum,
+                  schema_file_checksum)) {
     return false;
-  if (rebuild_prism && !BuildPrism(schema_file,
-                                   dict_file_checksum, schema_file_checksum))
-    return false;
+  }
+  if (rebuild_table) {
+    for (int table_index = 1; table_index < tables_.size(); ++table_index) {
+      const auto& pack_name = packs_[table_index - 1];
+      EntryCollector collector(std::move(syllabary));
+      DictSettings settings;
+      string dict_file = locate_file(pack_name + ".dict.yaml");
+      if (!boost::filesystem::exists(dict_file)) {
+        LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
+        continue;
+      }
+      if (!load_dict_settings_from_file(&settings, dict_file)) {
+        LOG(ERROR) << "failed to load settings from '" << dict_file << "'.";
+        continue;
+      }
+      vector<string> dict_files;
+      if (!get_dict_files_from_settings(&dict_files, settings)) {
+        continue;
+      }
+      uint32_t pack_file_checksum =
+          compute_dict_file_checksum(dict_file_checksum, dict_files, settings);
+      if (!BuildTable(table_index,
+                      collector,
+                      &settings,
+                      dict_files,
+                      pack_file_checksum)) {
+        LOG(ERROR) << "failed to build pack: " << pack_name;
+      }
+      syllabary = std::move(collector.syllabary);
+    }
+  }
   // done!
   return true;
 }
@@ -143,17 +205,20 @@ static string RelocateToUserDirectory(const string& prefix,
   return resolver.ResolvePath(resource_id).string();
 }
 
-bool DictCompiler::BuildTable(DictSettings* settings,
+bool DictCompiler::BuildTable(int table_index,
+                              EntryCollector& collector,
+                              DictSettings* settings,
                               const vector<string>& dict_files,
                               uint32_t dict_file_checksum) {
-  LOG(INFO) << "building table...";
-  table_ = New<Table>(RelocateToUserDirectory(prefix_, table_->file_name()));
+  auto& table = tables_[table_index];
+  auto path = RelocateToUserDirectory(prefix_, table->file_name());
+  LOG(INFO) << "building table: " << path;
+  table = New<Table>(path);
 
-  EntryCollector collector;
   collector.Configure(settings);
   collector.Collect(dict_files);
   if (options_ & kDump) {
-    boost::filesystem::path path(table_->file_name());
+    boost::filesystem::path path(table->file_name());
     path.replace_extension(".txt");
     collector.Dump(path.string());
   }
@@ -184,16 +249,34 @@ bool DictCompiler::BuildTable(DictSettings* settings,
     if (settings->sort_order() != "original") {
       vocabulary.SortHomophones();
     }
-    table_->Remove();
-    if (!table_->Build(collector.syllabary, vocabulary, collector.num_entries,
-                       dict_file_checksum) ||
-        !table_->Save()) {
+    table->Remove();
+    if (!table->Build(collector.syllabary,
+                      vocabulary,
+                      collector.num_entries,
+                      dict_file_checksum) ||
+        !table->Save()) {
       return false;
     }
   }
+  // build reverse db for the primary table
+  if (table_index == 0 &&
+      !BuildReverseDb(settings,
+                      collector,
+                      vocabulary,
+                      dict_file_checksum)) {
+    return false;
+  }
+  return true;
+}
+
+bool DictCompiler::BuildReverseDb(DictSettings* settings,
+                                  const EntryCollector& collector,
+                                  const Vocabulary& vocabulary,
+                                  uint32_t dict_file_checksum) {
   // build .reverse.bin
-  ReverseDb reverse_db(RelocateToUserDirectory(prefix_,
-                                               dict_name_ + ".reverse.bin"));
+  auto path = RelocateToUserDirectory(prefix_,
+                                      dict_name_ + ".reverse.bin");
+  ReverseDb reverse_db(path);
   if (!reverse_db.Build(settings,
                         collector.syllabary,
                         vocabulary,
@@ -206,15 +289,12 @@ bool DictCompiler::BuildTable(DictSettings* settings,
 }
 
 bool DictCompiler::BuildPrism(const string &schema_file,
+                              const Syllabary& syllabary,
                               uint32_t dict_file_checksum,
                               uint32_t schema_file_checksum) {
   LOG(INFO) << "building prism...";
   prism_ = New<Prism>(RelocateToUserDirectory(prefix_, prism_->file_name()));
 
-  // get syllabary from table
-  Syllabary syllabary;
-  if (!table_->Load() || !table_->GetSyllabary(&syllabary) || syllabary.empty())
-    return false;
   // apply spelling algebra and prepare corrections (if enabled)
   Script script;
   if (!schema_file.empty()) {
