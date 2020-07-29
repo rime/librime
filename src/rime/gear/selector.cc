@@ -84,7 +84,7 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
   if (!select_keys.empty() &&
       !key_event.ctrl() &&
       ch >= 0x20 && ch < 0x7f) {
-    size_t pos = select_keys.find((char)ch);
+    size_t pos = select_keys.find((char)tolower(ch));
     if (pos != string::npos) {
       index = static_cast<int>(pos);
     }

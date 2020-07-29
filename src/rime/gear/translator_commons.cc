@@ -6,6 +6,7 @@
 //
 #include <algorithm>
 #include <boost/range/adaptor/reversed.hpp>
+#include <rime/algo/lomaji.h>
 #include <rime/config.h>
 #include <rime/schema.h>
 #include <rime/ticket.h>
@@ -86,8 +87,6 @@ bool Spans::HasVertex(size_t vertex) const {
   return std::binary_search(vertices_.begin(), vertices_.end(), vertex);
 }
 
-// Sentence
-
 void Sentence::Extend(const DictEntry& entry,
                       size_t end_pos,
                       bool is_rear,
@@ -95,6 +94,9 @@ void Sentence::Extend(const DictEntry& entry,
                       Grammar* grammar) {
   const string& context = empty() ? preceding_text : text();
   entry_->weight += Grammar::Evaluate(context, entry, is_rear, grammar);
+  if(KamAiLianJiHu(entry_->text, entry.text)) {
+    entry_->text.append("-");
+  }
   entry_->text.append(entry.text);
   entry_->code.insert(entry_->code.end(),
                       entry.code.begin(),

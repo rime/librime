@@ -32,7 +32,7 @@ string Context::GetScriptText() const {
   return composition_.GetScriptText();
 }
 
-static const string kCaretSymbol("\xe2\x80\xb8");
+static const string kCaretSymbol("|");
 
 string Context::GetSoftCursor() const {
   return get_option("soft_cursor") ? kCaretSymbol : string();
@@ -118,6 +118,8 @@ bool Context::Select(size_t index) {
     seg.status = Segment::kSelected;
     DLOG(INFO) << "Selected: '" << cand->text() << "', index = " << index;
     select_notifier_(this);
+    if (!this->HasMenu())
+      this->Commit();
     return true;
   }
   return false;
@@ -164,6 +166,16 @@ bool Context::ConfirmPreviousSelection() {
     if (it->status == Segment::kSelected) {
       it->status = Segment::kConfirmed;
       return true;
+    }
+  }
+  return false;
+}
+
+bool Context::CommitNaKanNaRaw() {
+  if (this->composition_.size() == 1) {
+    if (this->composition_.back().HasTag("raw")) {
+        this->Commit();
+        return true;
     }
   }
   return false;
