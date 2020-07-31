@@ -49,6 +49,7 @@ class ScriptTranslator : public Translator,
   int spelling_hints_ = 0;
   bool always_show_comments_ = false;
   bool enable_correction_ = false;
+  bool enable_charset_filter_ = false;
   the<Corrector> corrector_;
   the<Poet> poet_;
 };

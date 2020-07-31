@@ -23,7 +23,7 @@
 #include <rime/gear/poet.h>
 #include <rime/gear/script_translator.h>
 #include <rime/gear/translator_commons.h>
-
+#include <rime/gear/charset_filter.h>
 
 //static const char* quote_left = "\xef\xbc\x88";
 //static const char* quote_right = "\xef\xbc\x89";
@@ -160,6 +160,8 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
                     &always_show_comments_);
     config->GetBool(name_space_ + "/enable_correction", &enable_correction_);
     config->GetInt(name_space_ + "/max_homophones", &max_homophones_);
+    config->GetBool(name_space_ + "/enable_charset_filter",
+                    &enable_charset_filter_);
     poet_.reset(new Poet(language(), config));
   }
   if (enable_correction_) {
@@ -195,10 +197,20 @@ an<Translation> ScriptTranslator::Query(const string& input,
     return nullptr;
   }
   auto deduped = New<DistinctTranslation>(result);
+  bool filter_by_charset = enable_charset_filter_ &&
+                           !engine_->context()->get_option("extended_charset");
   if (contextual_suggestions_) {
-    return poet_->ContextualWeighted(deduped, input, segment.start, this);
+    if (filter_by_charset) {
+      return New<CharsetFilterTranslation>(poet_->ContextualWeighted(deduped, input, segment.start, this));
+    } else {
+      return poet_->ContextualWeighted(deduped, input, segment.start, this);
+    }
   }
-  return deduped;
+  if (filter_by_charset) {
+    return New<CharsetFilterTranslation>(deduped);
+  } else {
+    return deduped;
+  }
 }
 
 string ScriptTranslator::FormatPreedit(const string& preedit) {
