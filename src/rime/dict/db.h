@@ -33,7 +33,7 @@ class DbAccessor {
 
 class Db : public Class<Db, const string&> {
  public:
-  explicit Db(const string& name);
+  Db(const string& file_name, const string& name);
   virtual ~Db() = default;
 
   RIME_API bool Exists() const;
@@ -89,6 +89,30 @@ class Recoverable {
  public:
   virtual ~Recoverable() = default;
   virtual bool Recover() = 0;
+};
+
+class ResourceResolver;
+
+class DbComponentBase : virtual public ComponentBase {
+ public:
+  DbComponentBase();
+  virtual ~DbComponentBase();
+
+  string DbFilePath(const string& name, const string& extension) const;
+
+ protected:
+  the<ResourceResolver> db_resource_resolver_;
+};
+
+template <class DbClass>
+class DbComponent : public DbClass::Component,
+                    protected DbComponentBase {
+ public:
+  virtual string extension() const { return string(); }
+
+  DbClass* Create(const string& name) override {
+    return new DbClass(DbFilePath(name, extension()), name);
+  }
 };
 
 }  // namespace rime

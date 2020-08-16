@@ -81,7 +81,7 @@ class UserDbHelper {
 template <class BaseDb>
 class UserDbWrapper : public BaseDb {
  public:
-  RIME_API UserDbWrapper(const string& db_name);
+  RIME_API UserDbWrapper(const string& file_name, const string& db_name);
 
   virtual bool CreateMetadata() {
     return BaseDb::CreateMetadata() &&
@@ -101,10 +101,13 @@ class UserDbWrapper : public BaseDb {
 
 /// Implements a component that serves as a factory for a user db class.
 template <class BaseDb>
-class UserDbComponent : public UserDb::Component {
+class UserDbComponent : public UserDb::Component,
+                        protected DbComponent<UserDbWrapper<BaseDb>> {
  public:
-  Db* Create(const string& name) override {
-    return new UserDbWrapper<BaseDb>(name + extension());
+  using UserDbImpl = UserDbWrapper<BaseDb>;
+
+  UserDbImpl* Create(const string& name) override {
+    return DbComponent<UserDbImpl>::Create(name);
   }
 
   string extension() const override;

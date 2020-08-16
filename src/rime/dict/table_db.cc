@@ -65,14 +65,14 @@ const TextFormat TableDb::format = {
   "Rime table",
 };
 
-TableDb::TableDb(const string& name)
-    : TextDb(name + ".txt", "tabledb", TableDb::format) {
+TableDb::TableDb(const string& file_name, const string& db_name)
+    : TextDb(file_name, db_name, "tabledb", TableDb::format) {
 }
 
 // StableDb
 
-StableDb::StableDb(const string& name)
-    : TableDb(name) {}
+StableDb::StableDb(const string& file_name, const string& db_name)
+    : TableDb(file_name, db_name) {}
 
 bool StableDb::Open() {
   if (loaded()) return false;

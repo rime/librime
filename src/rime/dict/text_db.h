@@ -39,7 +39,8 @@ struct TextFormat {
 
 class TextDb : public Db {
  public:
-  TextDb(const string& name,
+  TextDb(const string& file_name,
+         const string& db_name,
          const string& db_type,
          TextFormat format);
   RIME_API virtual ~TextDb();
