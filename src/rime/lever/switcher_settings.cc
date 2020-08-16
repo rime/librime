@@ -22,13 +22,11 @@ SwitcherSettings::SwitcherSettings(Deployer* deployer)
 bool SwitcherSettings::Load() {
   if (!CustomSettings::Load())
     return false;
-  fs::path user_data_path(deployer_->user_data_dir);
-  fs::path shared_data_path(deployer_->shared_data_dir);
   available_.clear();
   selection_.clear();
   hotkeys_.clear();
-  GetAvailableSchemasFromDirectory(shared_data_path);
-  GetAvailableSchemasFromDirectory(user_data_path);
+  GetAvailableSchemasFromDirectory(deployer_->shared_data_dir);
+  GetAvailableSchemasFromDirectory(deployer_->user_data_dir);
   GetSelectedSchemasFromConfig();
   GetHotkeysFromConfig();
   return true;

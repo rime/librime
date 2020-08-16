@@ -315,18 +315,20 @@ bool Dictionary::loaded() const {
 // DictionaryComponent members
 
 static const ResourceType kPrismResourceType = {
-  "prism", "build/", ".prism.bin"
+  "prism", "", ".prism.bin"
 };
 
 static const ResourceType kTableResourceType = {
-  "table", "build/", ".table.bin"
+  "table", "", ".table.bin"
 };
 
 DictionaryComponent::DictionaryComponent()
     : prism_resource_resolver_(
-          Service::instance().CreateResourceResolver(kPrismResourceType)),
+          Service::instance().CreateDeployedResourceResolver(
+              kPrismResourceType)),
       table_resource_resolver_(
-          Service::instance().CreateResourceResolver(kTableResourceType)) {}
+          Service::instance().CreateDeployedResourceResolver(
+              kTableResourceType)) {}
 
 DictionaryComponent::~DictionaryComponent() {
 }

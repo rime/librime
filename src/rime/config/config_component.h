@@ -74,6 +74,12 @@ struct ConfigResourceProvider {
   CreateResourceResolver(const ResourceType& resource_type);
 };
 
+struct DeployedConfigResourceProvider {
+  RIME_API static const ResourceType kDefaultResourceType;
+  RIME_API static ResourceResolver*
+  CreateResourceResolver(const ResourceType& resource_type);
+};
+
 struct UserConfigResourceProvider {
   RIME_API static const ResourceType kDefaultResourceType;
   RIME_API static ResourceResolver*

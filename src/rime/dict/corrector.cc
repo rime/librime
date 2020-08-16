@@ -286,7 +286,9 @@ void CorrectorComponent::Unified::ToleranceSearch(const Prism &prism,
   }
 }
 CorrectorComponent::CorrectorComponent()
-  : resolver_(Service::instance().CreateResourceResolver({ "corrector", "build/", ".correction.bin" })) {
+    : resolver_(Service::instance().CreateDeployedResourceResolver({
+        "corrector", "", ".correction.bin"
+      })) {
 }
 
 Corrector *CorrectorComponent::Create(const Ticket &ticket) noexcept {

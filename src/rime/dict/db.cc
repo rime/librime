@@ -26,12 +26,10 @@ static const ResourceType kDbResourceType = {
 };
 
 Db::Db(const string& name) : name_(name) {
-  static ResourceResolver db_resource_resolver(kDbResourceType);
-  if (db_resource_resolver.root_path().empty()) {
-    db_resource_resolver.set_root_path(
-        Service::instance().deployer().user_data_dir);
-  }
-  file_name_ = db_resource_resolver.ResolvePath(name).string();
+  // TODO: avoid global object;  move the resousrce resolver to db components.
+  static the<ResourceResolver> db_resource_resolver(
+      Service::instance().CreateResourceResolver(kDbResourceType));
+  file_name_ = db_resource_resolver->ResolvePath(name).string();
 }
 
 bool Db::Exists() const {

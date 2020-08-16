@@ -22,41 +22,44 @@
 #include <rime/resource.h>
 #include <rime/service.h>
 
+namespace fs = boost::filesystem;
+
 namespace rime {
 
-DictCompiler::DictCompiler(Dictionary *dictionary, const string& prefix)
+DictCompiler::DictCompiler(Dictionary *dictionary)
     : dict_name_(dictionary->name()),
       packs_(dictionary->packs()),
       prism_(dictionary->prism()),
       tables_(dictionary->tables()),
-      prefix_(prefix) {
-}
+      source_resolver_(
+          Service::instance().CreateResourceResolver(
+              {"source_file", "", ""})),
+      target_resolver_(
+          Service::instance().CreateStagingResourceResolver(
+              {"target_file", "", ""})) {}
 
-static string locate_file(const string& file_name) {
-  the<ResourceResolver> resolver(
-      Service::instance().CreateResourceResolver({"build_source", "", ""}));
-  return resolver->ResolvePath(file_name).string();
-}
+DictCompiler::~DictCompiler() {}
 
 static bool load_dict_settings_from_file(DictSettings* settings,
-                                         const string& dict_file) {
-  std::ifstream fin(dict_file.c_str());
+                                         const fs::path& dict_file) {
+  std::ifstream fin(dict_file.string().c_str());
   bool success = settings->LoadDictHeader(fin);
   fin.close();
   return success;
 }
 
 static bool get_dict_files_from_settings(vector<string>* dict_files,
-                                         DictSettings& settings) {
+                                         DictSettings& settings,
+                                         ResourceResolver* source_resolver) {
   if (auto tables = settings.GetTables()) {
     for(auto it = tables->begin(); it != tables->end(); ++it) {
       string dict_name = As<ConfigValue>(*it)->str();
-      string dict_file = locate_file(dict_name + ".dict.yaml");
-      if (!boost::filesystem::exists(dict_file)) {
+      auto dict_file = source_resolver->ResolvePath(dict_name + ".dict.yaml");
+      if (!fs::exists(dict_file)) {
         LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
         return false;
       }
-      dict_files->push_back(dict_file);
+      dict_files->push_back(dict_file.string());
     }
   }
   return true;
@@ -82,7 +85,7 @@ bool DictCompiler::Compile(const string &schema_file) {
   LOG(INFO) << "compiling dictionary for " << schema_file;
   bool build_table_from_source = true;
   DictSettings settings;
-  string dict_file = locate_file(dict_name_ + ".dict.yaml");
+  auto dict_file = source_resolver_->ResolvePath(dict_name_ + ".dict.yaml");
   if (!boost::filesystem::exists(dict_file)) {
     LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
     build_table_from_source = false;
@@ -92,7 +95,9 @@ bool DictCompiler::Compile(const string &schema_file) {
     return false;
   }
   vector<string> dict_files;
-  if (!get_dict_files_from_settings(&dict_files, settings)) {
+  if (!get_dict_files_from_settings(&dict_files,
+                                    settings,
+                                    source_resolver_.get())) {
     return false;
   }
   uint32_t dict_file_checksum =
@@ -129,8 +134,9 @@ bool DictCompiler::Compile(const string &schema_file) {
   LOG(INFO) << schema_file << " (" << schema_file_checksum << ")";
   {
     the<ResourceResolver> resolver(
-        Service::instance().CreateResourceResolver(
-            {"find_reverse_db", prefix_, ".reverse.bin"}));
+        Service::instance().CreateDeployedResourceResolver({
+            "find_reverse_db", "", ".reverse.bin"
+          }));
     ReverseDb reverse_db(resolver->ResolvePath(dict_name_).string());
     if (!reverse_db.Exists() ||
         !reverse_db.Load() ||
@@ -167,8 +173,8 @@ bool DictCompiler::Compile(const string &schema_file) {
       const auto& pack_name = packs_[table_index - 1];
       EntryCollector collector(std::move(syllabary));
       DictSettings settings;
-      string dict_file = locate_file(pack_name + ".dict.yaml");
-      if (!boost::filesystem::exists(dict_file)) {
+      auto dict_file = source_resolver_->ResolvePath(pack_name + ".dict.yaml");
+      if (!fs::exists(dict_file)) {
         LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
         continue;
       }
@@ -177,7 +183,9 @@ bool DictCompiler::Compile(const string &schema_file) {
         continue;
       }
       vector<string> dict_files;
-      if (!get_dict_files_from_settings(&dict_files, settings)) {
+      if (!get_dict_files_from_settings(&dict_files,
+                                        settings,
+                                        source_resolver_.get())) {
         continue;
       }
       uint32_t pack_file_checksum =
@@ -196,12 +204,10 @@ bool DictCompiler::Compile(const string &schema_file) {
   return true;
 }
 
-static string RelocateToUserDirectory(const string& prefix,
-                                      const string& file_name) {
-  ResourceResolver resolver(ResourceType{"build_target", prefix, ""});
-  resolver.set_root_path(Service::instance().deployer().user_data_dir);
-  auto resource_id = boost::filesystem::path(file_name).filename().string();
-  return resolver.ResolvePath(resource_id).string();
+static fs::path relocate_target(const fs::path& source_path,
+                                ResourceResolver* target_resolver) {
+  auto resource_id = source_path.filename().string();
+  return target_resolver->ResolvePath(resource_id);
 }
 
 bool DictCompiler::BuildTable(int table_index,
@@ -210,16 +216,17 @@ bool DictCompiler::BuildTable(int table_index,
                               const vector<string>& dict_files,
                               uint32_t dict_file_checksum) {
   auto& table = tables_[table_index];
-  auto path = RelocateToUserDirectory(prefix_, table->file_name());
-  LOG(INFO) << "building table: " << path;
-  table = New<Table>(path);
+  auto target_path = relocate_target(table->file_name(),
+                                     target_resolver_.get());
+  LOG(INFO) << "building table: " << target_path;
+  table = New<Table>(target_path.string());
 
   collector.Configure(settings);
   collector.Collect(dict_files);
   if (options_ & kDump) {
-    boost::filesystem::path path(table->file_name());
-    path.replace_extension(".txt");
-    collector.Dump(path.string());
+    fs::path dump_path(table->file_name());
+    dump_path.replace_extension(".txt");
+    collector.Dump(dump_path.string());
   }
   Vocabulary vocabulary;
   // build .table.bin
@@ -273,9 +280,9 @@ bool DictCompiler::BuildReverseDb(DictSettings* settings,
                                   const Vocabulary& vocabulary,
                                   uint32_t dict_file_checksum) {
   // build .reverse.bin
-  auto path = RelocateToUserDirectory(prefix_,
-                                      dict_name_ + ".reverse.bin");
-  ReverseDb reverse_db(path);
+  auto target_path = relocate_target(dict_name_ + ".reverse.bin",
+                                     target_resolver_.get());
+  ReverseDb reverse_db(target_path.string());
   if (!reverse_db.Build(settings,
                         collector.syllabary,
                         vocabulary,
@@ -291,7 +298,9 @@ bool DictCompiler::BuildPrism(const string &schema_file,
                               uint32_t dict_file_checksum,
                               uint32_t schema_file_checksum) {
   LOG(INFO) << "building prism...";
-  prism_ = New<Prism>(RelocateToUserDirectory(prefix_, prism_->file_name()));
+  auto target_path = relocate_target(prism_->file_name(),
+                                     target_resolver_.get());
+  prism_ = New<Prism>(target_path.string());
 
   // get syllabary from primary table, which may not be rebuilt
   Syllabary syllabary;
@@ -324,10 +333,12 @@ bool DictCompiler::BuildPrism(const string &schema_file,
     bool enable_correction = false; // Avoid if initializer to comfort compilers
     if (config.GetBool("translator/enable_correction", &enable_correction) &&
         enable_correction) {
-      boost::filesystem::path corrector_path(prism_->file_name());
+      fs::path corrector_path(prism_->file_name());
       corrector_path.replace_extension("");
       corrector_path.replace_extension(".correction.bin");
-      correction_ = New<EditDistanceCorrector>(RelocateToUserDirectory(prefix_, corrector_path.string()));
+      auto target_path = relocate_target(corrector_path,
+                                         target_resolver_.get());
+      correction_ = New<EditDistanceCorrector>(target_path.string());
       if (correction_->Exists()) {
         correction_->Remove();
       }
@@ -340,7 +351,7 @@ bool DictCompiler::BuildPrism(const string &schema_file,
 #endif
   }
   if ((options_ & kDump) && !script.empty()) {
-    boost::filesystem::path path(prism_->file_name());
+    fs::path path(prism_->file_name());
     path.replace_extension(".txt");
     script.Dump(path.string());
   }

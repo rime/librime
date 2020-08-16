@@ -11,6 +11,7 @@
 #include <mutex>
 #include <queue>
 #include <boost/any.hpp>
+#include <boost/filesystem.hpp>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/messenger.h>
@@ -32,9 +33,11 @@ class DeploymentTask : public Class<DeploymentTask, TaskInitializer> {
 class Deployer : public Messenger {
  public:
   // read-only access after library initialization {
-  string shared_data_dir;
-  string user_data_dir;
-  string sync_dir;
+  boost::filesystem::path shared_data_dir;
+  boost::filesystem::path user_data_dir;
+  boost::filesystem::path prebuilt_data_dir;
+  boost::filesystem::path staging_dir;
+  boost::filesystem::path sync_dir;
   string user_id;
   string distribution_name;
   string distribution_code_name;
@@ -61,7 +64,9 @@ class Deployer : public Messenger {
   void JoinWorkThread();
   void JoinMaintenanceThread();
 
-  string user_data_sync_dir() const;
+  boost::filesystem::path user_data_sync_dir() const {
+    return sync_dir / user_id;
+  }
 
  private:
   std::queue<of<DeploymentTask>> pending_tasks_;

@@ -226,12 +226,13 @@ an<DictSettings> ReverseLookupDictionary::GetDictSettings() {
 }
 
 static const ResourceType kReverseDbResourceType = {
-  "reverse_db", "build/", ".reverse.bin"
+  "reverse_db", "", ".reverse.bin"
 };
 
 ReverseLookupDictionaryComponent::ReverseLookupDictionaryComponent()
     : resource_resolver_(
-          Service::instance().CreateResourceResolver(kReverseDbResourceType)) {
+          Service::instance().CreateDeployedResourceResolver(
+              kReverseDbResourceType)) {
 }
 
 ReverseLookupDictionary*

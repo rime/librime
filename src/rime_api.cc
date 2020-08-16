@@ -41,6 +41,14 @@ static void setup_deployer(RimeTraits *traits) {
     deployer.distribution_code_name = traits->distribution_code_name;
   if (PROVIDED(traits, distribution_version))
     deployer.distribution_version = traits->distribution_version;
+  if (PROVIDED(traits, prebuilt_data_dir))
+    deployer.prebuilt_data_dir = traits->prebuilt_data_dir;
+  else
+    deployer.prebuilt_data_dir = deployer.shared_data_dir / "build";
+  if (PROVIDED(traits, staging_dir))
+    deployer.staging_dir = traits->staging_dir;
+  else
+    deployer.staging_dir = deployer.user_data_dir / "build";
 }
 
 RIME_API void RimeSetupLogging(const char* app_name) {
@@ -110,7 +118,10 @@ RIME_API Bool RimeStartMaintenance(Bool full_check) {
   }
   if (!full_check) {
     TaskInitializer args{
-      vector<string>{deployer.user_data_dir, deployer.shared_data_dir}
+      vector<string>{
+        deployer.user_data_dir.string(),
+        deployer.shared_data_dir.string(),
+      },
     };
     if (!deployer.RunTask("detect_modifications", args)) {
       return False;
@@ -782,6 +793,16 @@ RIME_API const char* RimeGetUserDataDir() {
   return deployer.user_data_dir.c_str();
 }
 
+RIME_API const char* RimeGetPrebuiltDataDir() {
+  Deployer &deployer(Service::instance().deployer());
+  return deployer.prebuilt_data_dir.c_str();
+}
+
+RIME_API const char* RimeGetStagingDir() {
+  Deployer &deployer(Service::instance().deployer());
+  return deployer.staging_dir.c_str();
+}
+
 RIME_API const char* RimeGetSyncDir() {
   Deployer &deployer(Service::instance().deployer());
   return deployer.sync_dir.c_str();
@@ -1066,6 +1087,8 @@ RIME_API RimeApi* rime_get_api() {
     s_api.candidate_list_next = &RimeCandidateListNext;
     s_api.candidate_list_end = &RimeCandidateListEnd;
     s_api.candidate_list_from_index = &RimeCandidateListFromIndex;
+    s_api.get_prebuilt_data_dir = &RimeGetPrebuiltDataDir;
+    s_api.get_staging_dir = &RimeGetStagingDir;
   }
   return &s_api;
 }

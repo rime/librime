@@ -144,9 +144,7 @@ void Config::SetItem(an<ConfigItem> item) {
 }
 
 const ResourceType ConfigResourceProvider::kDefaultResourceType = {
-  "config",
-  "",
-  ".yaml",
+  "config", "", ".yaml"
 };
 
 ResourceResolver* ConfigResourceProvider::CreateResourceResolver(
@@ -154,10 +152,17 @@ ResourceResolver* ConfigResourceProvider::CreateResourceResolver(
   return Service::instance().CreateResourceResolver(resource_type);
 }
 
+const ResourceType DeployedConfigResourceProvider::kDefaultResourceType = {
+  "compiled_config", "", ".yaml"
+};
+
+ResourceResolver* DeployedConfigResourceProvider::CreateResourceResolver(
+    const ResourceType& resource_type) {
+  return Service::instance().CreateDeployedResourceResolver(resource_type);
+}
+
 const ResourceType UserConfigResourceProvider::kDefaultResourceType = {
-  "user_config",
-  "",
-  ".yaml",
+  "user_config", "", ".yaml"
 };
 
 ResourceResolver* UserConfigResourceProvider::CreateResourceResolver(
