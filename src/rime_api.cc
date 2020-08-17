@@ -815,7 +815,7 @@ RIME_API const char* RimeGetUserId() {
 
 RIME_API void RimeGetUserDataSyncDir(char* dir, size_t buffer_size) {
   Deployer &deployer(Service::instance().deployer());
-  strncpy(dir, deployer.user_data_sync_dir().c_str(), buffer_size);
+  strncpy(dir, deployer.user_data_sync_dir().string().c_str(), buffer_size);
 }
 
 RIME_API Bool RimeConfigInit(RimeConfig* config) {
