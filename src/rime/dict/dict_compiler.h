@@ -32,7 +32,7 @@ class DictCompiler {
   };
 
   RIME_API explicit DictCompiler(Dictionary *dictionary);
-  virtual ~DictCompiler();
+  RIME_API virtual ~DictCompiler();
 
   RIME_API bool Compile(const string &schema_file);
   void set_options(int options) { options_ = options; }
