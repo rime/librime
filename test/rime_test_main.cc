@@ -1,11 +1,19 @@
 #include <gtest/gtest.h>
+#include <rime_api.h>
 #include <rime/setup.h>
-#include <rime/service.h>
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
+
+  RIME_STRUCT(RimeTraits, traits);
+  // put all files in the working directory ($build/test).
+  traits.shared_data_dir =
+      traits.user_data_dir =
+          traits.prebuilt_data_dir =
+              traits.staging_dir = ".";
+  rime::SetupDeployer(&traits);
   rime::SetupLogging("rime.test");
-  rime::Service::instance().deployer().staging_dir = ".";
   rime::LoadModules(rime::kDefaultModules);
+
   return RUN_ALL_TESTS();
 }
