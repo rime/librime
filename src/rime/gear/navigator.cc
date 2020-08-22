@@ -52,6 +52,14 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
   Context* ctx = engine_->context();
   if (!ctx->IsComposing())
     return kNoop;
+  if (ctx->get_option("_vertical")) {
+    Bind({XK_Up, 0}, &Navigator::Rewind);
+    Bind({XK_Up, kControlMask}, &Navigator::LeftBySyllable);
+    Bind({XK_KP_Up, 0}, &Navigator::LeftByChar);
+    Bind({XK_Down, 0}, &Navigator::RightByChar);
+    Bind({XK_Down, kControlMask}, &Navigator::RightBySyllable);
+    Bind({XK_KP_Down, 0}, &Navigator::RightByChar);
+  }
   return KeyBindingProcessor::ProcessKeyEvent(key_event, ctx);
 }
 
