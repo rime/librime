@@ -82,18 +82,18 @@ inline static int get_base_layer_key_code(const KeyEvent& key_event) {
 }
 
 ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
-  bool chording = !chord_.empty();
   if (key_event.ctrl() || key_event.alt()) {
     raw_sequence_.clear();
     ClearChord();
-    return chording ? kAccepted : kNoop;
+    return kNoop;
   }
   int ch = get_base_layer_key_code(key_event);
   // non chording key
   if (std::find(chording_keys_.begin(),
                 chording_keys_.end(),
                 KeyEvent{ch, 0}) == chording_keys_.end()) {
-    return chording ? kAccepted : kNoop;
+    ClearChord();
+    return kNoop;
   }
   // chording key
   bool is_key_up = key_event.release();
@@ -111,6 +111,10 @@ ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
   return kAccepted;
 }
 
+inline static bool is_composing_text(Context* ctx) {
+  return ctx->IsComposing() && ctx->input() != kZeroWidthSpace;
+}
+
 ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   if (engine_->context()->get_option("ascii_mode")) {
     return kNoop;
@@ -122,7 +126,7 @@ ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   int ch = key_event.keycode();
   if (!is_key_up && ch >= 0x20 && ch <= 0x7e) {
     // save raw input
-    if (!engine_->context()->IsComposing() || !raw_sequence_.empty()) {
+    if (!is_composing_text(engine_->context()) || !raw_sequence_.empty()) {
       raw_sequence_.push_back(ch);
       DLOG(INFO) << "update raw sequence: " << raw_sequence_;
     }
@@ -209,7 +213,7 @@ void ChordComposer::ClearChord() {
 }
 
 void ChordComposer::OnContextUpdate(Context* ctx) {
-  if (ctx->IsComposing() && ctx->input() != kZeroWidthSpace) {
+  if (is_composing_text(ctx)) {
     composing_ = true;
   }
   else if (composing_) {
