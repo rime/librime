@@ -177,26 +177,26 @@ void AsciiComposer::LoadConfig(Schema* schema) {
   good_old_caps_lock_ = false;
   if (!schema)
     return;
-  the<Config> preset_config(
-      Config::Require("config")->Create("default"));
-  if (preset_config) {
-    preset_config->GetBool("ascii_composer/good_old_caps_lock",
-                           &good_old_caps_lock_);
-  }
   Config* config = schema->config();
-  auto bindings = config->GetMap("ascii_composer/switch_key");
-  if (!bindings) {
-    if (!preset_config) {
-      LOG(ERROR) << "Error importing preset ascii bindings.";
-      return;
-    }
-    bindings = preset_config->GetMap("ascii_composer/switch_key");
-    if (!bindings) {
-      LOG(WARNING) << "missing preset ascii bindings.";
-      return;
+  the<Config> preset_config(Config::Require("config")->Create("default"));
+  if (!config->GetBool("ascii_composer/good_old_caps_lock",
+                       &good_old_caps_lock_)) {
+    if (preset_config) {
+      preset_config->GetBool("ascii_composer/good_old_caps_lock",
+                             &good_old_caps_lock_);
     }
   }
-  load_bindings(bindings, &bindings_);
+  if (auto bindings = config->GetMap("ascii_composer/switch_key")) {
+    load_bindings(bindings, &bindings_);
+  }
+  else if (auto bindings = preset_config
+           ? preset_config->GetMap("ascii_composer/switch_key")
+           : nullptr) {
+    load_bindings(bindings, &bindings_);
+  } else {
+    LOG(ERROR) << "Missing ascii bindings.";
+    return;
+  }
   auto it = bindings_.find(XK_Caps_Lock);
   if (it != bindings_.end()) {
     caps_lock_switch_style_ = it->second;
