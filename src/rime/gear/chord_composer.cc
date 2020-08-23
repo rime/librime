@@ -64,15 +64,31 @@ ProcessResult ChordComposer::ProcessFunctionKey(const KeyEvent& key_event) {
   return kNoop;
 }
 
+// Note: QWERTY layout only.
+static const char map_to_base_layer[] = {
+  " 1'3457'908=,-./"
+  "0123456789;;,=./"
+  "2abcdefghijklmno"
+  "pqrstuvwxyz[\\]6-"
+  "`abcdefghijklmno"
+  "pqrstuvwxyz[\\]`"
+};
+
+inline static int get_base_layer_key_code(const KeyEvent& key_event) {
+  int ch = key_event.keycode();
+  bool is_shift = key_event.shift();
+  return (is_shift && ch >= 0x20 && ch <= 0x7e)
+      ? map_to_base_layer[ch - 0x20] : ch;
+}
+
 ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
   bool chording = !chord_.empty();
-  if (key_event.shift() || key_event.ctrl() || key_event.alt()) {
+  if (key_event.ctrl() || key_event.alt()) {
     raw_sequence_.clear();
     ClearChord();
     return chording ? kAccepted : kNoop;
   }
-  bool is_key_up = key_event.release();
-  int ch = key_event.keycode();
+  int ch = get_base_layer_key_code(key_event);
   // non chording key
   if (std::find(chording_keys_.begin(),
                 chording_keys_.end(),
@@ -80,6 +96,7 @@ ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
     return chording ? kAccepted : kNoop;
   }
   // chording key
+  bool is_key_up = key_event.release();
   if (is_key_up) {
     if (pressed_.erase(ch) != 0 && pressed_.empty()) {
       FinishChord();
@@ -95,6 +112,9 @@ ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
 }
 
 ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
+  if (engine_->context()->get_option("ascii_mode")) {
+    return kNoop;
+  }
   if (pass_thru_) {
     return ProcessFunctionKey(key_event);
   }
