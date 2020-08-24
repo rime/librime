@@ -90,7 +90,7 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
           ToggleAsciiModeWithKey(ch);
         }
         shift_key_pressed_ = ctrl_key_pressed_ = false;
-        return kRejected;
+        return kNoop;
       }
     }
     else if (!(shift_key_pressed_ || ctrl_key_pressed_)) {  // first key down
