@@ -93,7 +93,7 @@ class Recoverable {
 
 class ResourceResolver;
 
-class DbComponentBase : virtual public ComponentBase {
+class DbComponentBase {
  public:
   DbComponentBase();
   virtual ~DbComponentBase();
@@ -108,7 +108,7 @@ template <class DbClass>
 class DbComponent : public DbClass::Component,
                     protected DbComponentBase {
  public:
-  virtual string extension() const { return string(); }
+  virtual string extension() const;
 
   DbClass* Create(const string& name) override {
     return new DbClass(DbFilePath(name, extension()), name);

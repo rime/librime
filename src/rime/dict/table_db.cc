@@ -69,8 +69,6 @@ TableDb::TableDb(const string& file_name, const string& db_name)
     : TextDb(file_name, db_name, "tabledb", TableDb::format) {
 }
 
-// StableDb
-
 StableDb::StableDb(const string& file_name, const string& db_name)
     : TableDb(file_name, db_name) {}
 
@@ -81,6 +79,16 @@ bool StableDb::Open() {
     return false;
   }
   return TableDb::OpenReadOnly();
+}
+
+template <>
+string DbComponent<TableDb>::extension() const {
+  return ".txt";
+}
+
+template <>
+string DbComponent<StableDb>::extension() const {
+  return ".txt";
 }
 
 }  // namespace rime

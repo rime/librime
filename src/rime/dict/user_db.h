@@ -38,19 +38,21 @@ struct UserDbValue {
  */
 class UserDb {
  public:
+  static string snapshot_extension();
+
   /// Abstract class for a user db component.
   class Component : public Db::Component {
    public:
     virtual string extension() const = 0;
-    virtual string snapshot_extension() const = 0;
   };
 
   /// Requires a registered component for a user db class.
   static Component* Require(const string& name) {
-    return static_cast<Component*>(Db::Require(name));
+    return dynamic_cast<Component*>(Db::Require(name));
   }
 
   UserDb() = delete;
+
 };
 
 /// A helper class to provide extra functionalities related to user db.
@@ -102,16 +104,14 @@ class UserDbWrapper : public BaseDb {
 /// Implements a component that serves as a factory for a user db class.
 template <class BaseDb>
 class UserDbComponent : public UserDb::Component,
-                        protected DbComponent<UserDbWrapper<BaseDb>> {
+                        protected DbComponentBase {
  public:
   using UserDbImpl = UserDbWrapper<BaseDb>;
-
-  UserDbImpl* Create(const string& name) override {
-    return DbComponent<UserDbImpl>::Create(name);
+  Db* Create(const string& name) override {
+    return new UserDbImpl(DbFilePath(name, extension()), name);
   }
 
   string extension() const override;
-  string snapshot_extension() const override;
 };
 
 class UserDbMerger : public Sink {

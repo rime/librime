@@ -67,8 +67,7 @@ void UserDbRecoveryTask::RestoreUserDataFromSnapshot(Deployer* deployer) {
   // locate snapshot file
   boost::filesystem::path dir(deployer->user_data_sync_dir());
   // try *.userdb.txt
-  fs::path snapshot_path =
-      dir / (dict_name + component->snapshot_extension());
+  fs::path snapshot_path = dir / (dict_name + UserDb::snapshot_extension());
   if (!fs::exists(snapshot_path)) {
     // try *.userdb.*.snapshot
     string legacy_snapshot_file =

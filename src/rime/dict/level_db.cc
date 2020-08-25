@@ -350,11 +350,6 @@ string UserDbComponent<LevelDb>::extension() const {
 }
 
 template <>
-string UserDbComponent<LevelDb>::snapshot_extension() const {
-  return ".userdb.txt";
-}
-
-template <>
 UserDbWrapper<LevelDb>::UserDbWrapper(const string& file_name,
                                       const string& db_name)
     : LevelDb(file_name, db_name, "userdb") {

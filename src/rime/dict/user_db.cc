@@ -60,8 +60,7 @@ string UserDbComponent<TextDb>::extension() const {
   return plain_userdb_extension;
 }
 
-template <>
-string UserDbComponent<TextDb>::snapshot_extension() const {
+string UserDb::snapshot_extension() {
   return plain_userdb_extension;
 }
 
