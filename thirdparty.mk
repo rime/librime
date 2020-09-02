@@ -10,7 +10,7 @@ SHARE_DIR = $(THIRD_PARTY_DIR)/share
 build = build
 glog: build = cmake-build
 
-THIRD_PARTY_LIBS = glog leveldb marisa opencc yaml-cpp gtest
+THIRD_PARTY_LIBS = glog leveldb marisa yaml-cpp gtest
 
 .PHONY: all clean-src $(THIRD_PARTY_LIBS)
 
@@ -22,7 +22,6 @@ clean-src:
 	rm -r $(SRC_DIR)/googletest/build || true
 	rm -r $(SRC_DIR)/leveldb/build || true
 	rm -r $(SRC_DIR)/marisa-trie/build || true
-	rm -r $(SRC_DIR)/opencc/build || true
 	rm -r $(SRC_DIR)/yaml-cpp/build || true
 
 glog:
@@ -46,14 +45,6 @@ leveldb:
 marisa:
 	cd $(SRC_DIR)/marisa-trie; \
 	cmake $(SRC_DIR) -Bbuild \
-	-DCMAKE_BUILD_TYPE:STRING="Release" \
-	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
-	&& cmake --build build --target install
-
-opencc:
-	cd $(SRC_DIR)/opencc; \
-	cmake . -Bbuild \
-	-DBUILD_SHARED_LIBS:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
 	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
 	&& cmake --build build --target install
