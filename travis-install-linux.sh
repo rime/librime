@@ -15,5 +15,3 @@ dep_packages=(
 sudo apt-get update
 sudo apt-get install ${dep_packages[@]} -y
 make thirdparty/gtest
-make -C thirdparty/src/opencc build
-sudo env "PATH=$PATH" make -C thirdparty/src/opencc install
