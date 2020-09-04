@@ -6,6 +6,7 @@
 //
 #include <algorithm>
 #include <boost/range/adaptor/reversed.hpp>
+#include <rime/algo/lomaji.h>
 #include <rime/config.h>
 #include <rime/schema.h>
 #include <rime/ticket.h>
@@ -86,12 +87,16 @@ bool Spans::HasVertex(size_t vertex) const {
   return std::binary_search(vertices_.begin(), vertices_.end(), vertex);
 }
 
+<<<<<<< HEAD
 // Sentence
 
 void Sentence::Extend(const DictEntry& another,
                       size_t end_pos,
                       double new_weight) {
   entry_->weight = new_weight;
+  if(KamAiLianJiHu(entry_->text, another.text)) {
+    entry_->text.append("-");
+  }
   entry_->text.append(another.text);
   entry_->code.insert(entry_->code.end(),
                       another.code.begin(),

@@ -12,6 +12,7 @@
 #include <rime/language.h>
 #include <rime/schema.h>
 #include <rime/ticket.h>
+#include <rime/algo/lomaji.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/user_dictionary.h>
 #include <rime/gear/memory.h>
@@ -26,6 +27,9 @@ void CommitEntry::Clear() {
 }
 
 void CommitEntry::AppendPhrase(const an<Phrase>& phrase) {
+  if(KamAiLianJiHu(text, phrase->text())){
+    text += "-";
+  }
   text += phrase->text();
   code.insert(code.end(),
               phrase->code().begin(), phrase->code().end());

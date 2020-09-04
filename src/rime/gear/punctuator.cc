@@ -197,9 +197,9 @@ PunctTranslator::PunctTranslator(const Ticket& ticket)
 an<Candidate>
 CreatePunctCandidate(const string& punct, const Segment& segment) {
   const char half_shape[] =
-      "\xe3\x80\x94\xe5\x8d\x8a\xe8\xa7\x92\xe3\x80\x95";  // 〔半角〕
+      "\xe3\x80\x94\xe5\x8d\x8a\xe5\xbd\xa2\xe3\x80\x95";  // 〔半形〕
   const char full_shape[] =
-      "\xe3\x80\x94\xe5\x85\xa8\xe8\xa7\x92\xe3\x80\x95";  // 〔全角〕
+      "\xe3\x80\x94\xe5\x85\xa8\xe5\xbd\xa2\xe3\x80\x95";  // 〔全形〕
   bool is_half_shape = false;
   bool is_full_shape = false;
   const char* p = punct.c_str();
