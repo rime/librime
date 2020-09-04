@@ -202,15 +202,6 @@ if %build_thirdparty% == 1 (
   if errorlevel 1 goto error
   cmake --build %build_dir% --config %build_config% --target INSTALL
   if errorlevel 1 goto error
-
-  echo building opencc.
-  cd %THIRDPARTY%\src\opencc
-  cmake . -B%build_dir% %THIRDPARTY_COMMON_CMAKE_FLAGS%^
-  -DBUILD_SHARED_LIBS=OFF^
-  -DBUILD_TESTING=OFF
-  if errorlevel 1 goto error
-  cmake --build %build_dir% --config %build_config% --target INSTALL
-  if errorlevel 1 goto error
 )
 
 echo Check rime.dll exists

@@ -13,6 +13,3 @@
 [submodule "thirdparty/src/marisa-trie"]
 	path = thirdparty/src/marisa-trie
 	url = https://github.com/s-yata/marisa-trie.git
-[submodule "thirdparty/src/opencc"]
-	path = thirdparty/src/opencc
-	url = https://github.com/BYVoid/OpenCC.git
