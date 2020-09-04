@@ -47,8 +47,7 @@ set(rime_dict_deps
     ${Marisa_LIBRARY})
 set(rime_gears_deps
     ${ICONV_LIBRARIES}
-    ${ICU_LIBRARIES}
-    ${Opencc_LIBRARY})
+    ${ICU_LIBRARIES})
 set(rime_levers_deps "")
 
 if(MINGW)

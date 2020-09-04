@@ -175,12 +175,12 @@ ProcessResult Editor::AddToInput(Context* ctx, int ch) {
 }
 
 FluidEditor::FluidEditor(const Ticket& ticket) : Editor(ticket, false) {
-  Bind({XK_space, 0}, &Editor::CommitComposition);
+  Bind({XK_space, 0}, &Editor::Confirm);
   Bind({XK_BackSpace, 0}, &Editor::BackToPreviousInput);  //
   Bind({XK_BackSpace, kControlMask}, &Editor::BackToPreviousSyllable);
   Bind({XK_Return, 0}, &Editor::CommitComposition);  //
   Bind({XK_Return, kControlMask}, &Editor::CommitRawInput);  //
-  Bind({XK_Return, kShiftMask}, &Editor::CommitRawInput);  //
+  Bind({XK_Return, kShiftMask}, &Editor::CommitScriptText);  //
   Bind({XK_Return, kControlMask | kShiftMask}, &Editor::CommitComment);
   Bind({XK_Delete, 0}, &Editor::DeleteChar);
   Bind({XK_Delete, kControlMask}, &Editor::DeleteCandidate);
