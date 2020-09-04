@@ -16,3 +16,6 @@
 [submodule "thirdparty/src/opencc"]
 	path = thirdparty/src/opencc
 	url = https://github.com/BYVoid/OpenCC.git
+[submodule "thirdparty/src/capnproto"]
+	path = thirdparty/src/capnproto
+	url = https://github.com/capnproto/capnproto.git
