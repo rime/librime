@@ -1,5 +1,8 @@
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
+capnp_generate_cpp(CAPNP_SRCS CAPNP_HDRS rime_proto.capnp)
+message(STATUS "compiled capnproto schema: ${CAPNP_SRCS} ${CAPNP_HDRS}")
+
 aux_source_directory(. rime_api_src)
 aux_source_directory(rime rime_base_src)
 aux_source_directory(rime/algo rime_algo_src)
@@ -14,7 +17,8 @@ endif()
 set(rime_core_module_src
   ${rime_api_src}
   ${rime_base_src}
-  ${rime_config_src})
+  ${rime_config_src}
+  ${CAPNP_SRCS})
 set(rime_dict_module_src
   ${rime_algo_src}
   ${rime_dict_src})
@@ -38,6 +42,7 @@ endif()
 
 set(rime_core_deps
     ${Boost_LIBRARIES}
+    CapnProto::capnp
     ${Glog_LIBRARY}
     ${YamlCpp_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
@@ -69,6 +74,7 @@ endif()
 if(BUILD_SHARED_LIBS)
   add_library(rime ${rime_src})
   target_link_libraries(rime ${rime_deps})
+  target_include_directories(rime PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
   set_target_properties(rime PROPERTIES
     DEFINE_SYMBOL "RIME_EXPORTS"
     VERSION ${rime_version}

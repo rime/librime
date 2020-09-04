@@ -72,6 +72,8 @@ if(Boost_FOUND)
   link_directories(${Boost_LIBRARY_DIRS})
 endif()
 
+find_package(CapnProto REQUIRED)
+
 if(ENABLE_LOGGING)
 
   find_package(Gflags)
@@ -149,7 +151,7 @@ if(MSVC)
 endif()
 
 if(UNIX)
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 endif()
 
 if(NOT DEFINED LIB_INSTALL_DIR)
