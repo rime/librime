@@ -159,6 +159,15 @@ set THIRDPARTY_COMMON_CMAKE_FLAGS=-G%CMAKE_GENERATOR%^
 if %build_thirdparty% == 1 (
   cd /d %THIRDPARTY%
 
+  echo building capnproto.
+  cd %THIRDPARTY%\src\capnproto
+  cmake . -B%build_dir% %THIRDPARTY_COMMON_CMAKE_FLAGS%^
+	-DBUILD_SHARED_LIBS:BOOL=OFF^
+	-DBUILD_TESTING:BOOL=OFF
+  if errorlevel 1 goto error
+  cmake --build %build_dir% --config %build_config% --target INSTALL
+  if errorlevel 1 goto error
+
   echo building glog.
   cd %THIRDPARTY%\src\glog
   cmake . -Bcmake-%build_dir% %THIRDPARTY_COMMON_CMAKE_FLAGS%^
