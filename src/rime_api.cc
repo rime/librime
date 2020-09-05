@@ -322,6 +322,71 @@ RIME_API Bool RimeFreeContext(RimeContext* context) {
   return True;
 }
 
+void RimeContextProto(RimeSessionId session_id, RIME_PROTO_BUILDER* context_builder) {
+  an<Session> session = Service::instance().GetSession(session_id);
+  if (!session)
+    return;
+  Context *ctx = session->context();
+  if (!ctx)
+    return;
+  auto* context = (rime::proto::Context::Builder*)context_builder;
+  context->setInput(ctx->input());
+  context->setCaretPos(ctx->caret_pos());
+  if (ctx->IsComposing()) {
+    auto composition = context->getComposition();
+    Preedit preedit = ctx->GetPreedit();
+    composition.setLength(preedit.text.length());
+    composition.setPreedit(preedit.text);
+    composition.setCursorPos(preedit.caret_pos);
+    composition.setSelStart(preedit.sel_start);
+    composition.setSelEnd(preedit.sel_end);
+    string commit_text = ctx->GetCommitText();
+    if (!commit_text.empty()) {
+      composition.setCommitTextPreview(commit_text);
+    }
+  }
+  if (ctx->HasMenu()) {
+    auto menu = context->getMenu();
+    Segment &seg = ctx->composition().back();
+    Schema *schema = session->schema();
+    int page_size = schema ? schema->page_size() : 5;
+    int selected_index = seg.selected_index;
+    int page_number = selected_index / page_size;
+    the<Page> page(seg.menu->CreatePage(page_size, page_number));
+    if (page) {
+      menu.setPageSize(page_size);
+      menu.setPageNumber(page_number);
+      menu.setIsLastPage(page->is_last_page);
+      menu.setHighlightedCandidateIndex(selected_index % page_size);
+      auto dest_candidates = menu.initCandidates(page->candidates.size());
+      auto dest = dest_candidates.begin();
+      for (const an<Candidate> &src : page->candidates) {
+        dest->setText(src->text());
+        string comment = src->comment();
+        if (!comment.empty()) {
+          dest->setComment(comment);
+        }
+        ++dest;
+      }
+      if (schema) {
+        const string& select_keys = schema->select_keys();
+        if (!select_keys.empty()) {
+          menu.setSelectKeys(select_keys);
+        }
+        Config* config = schema->config();
+        an<ConfigList>  select_labels = config->GetList("menu/alternative_select_labels");
+        if (select_labels && (size_t)page_size <= select_labels->size()) {
+          auto dest_select_labels = menu.initSelectLabels(page_size);
+          for (size_t i = 0; i < (size_t)page_size; ++i) {
+            an<ConfigValue> value = select_labels->GetValueAt(i);
+            dest_select_labels.set(i, value->str());
+          }
+        }
+      }
+    }
+  }
+}
+
 RIME_API Bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit) {
   if (!commit)
     return False;
@@ -345,6 +410,18 @@ RIME_API Bool RimeFreeCommit(RimeCommit* commit) {
   delete[] commit->text;
   RIME_STRUCT_CLEAR(*commit);
   return True;
+}
+
+void RimeCommitProto(RimeSessionId session_id, RIME_PROTO_BUILDER* commit_builder) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return;
+  const string& commit_text(session->commit_text());
+  if (!commit_text.empty()) {
+    auto* commit = (rime::proto::Commit::Builder*)commit_builder;
+    commit->setText(commit_text);
+    session->ResetCommitText();
+  }
 }
 
 RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status) {
@@ -379,6 +456,26 @@ RIME_API Bool RimeFreeStatus(RimeStatus* status) {
   delete[] status->schema_name;
   RIME_STRUCT_CLEAR(*status);
   return True;
+}
+
+void RimeStatusProto(RimeSessionId session_id, RIME_PROTO_BUILDER* status_builder) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return;
+  Schema *schema = session->schema();
+  Context *ctx = session->context();
+  if (!schema || !ctx)
+    return;
+  auto* status = (rime::proto::Status::Builder*)status_builder;
+  status->setSchemaId(schema->schema_id());
+  status->setSchemaName(schema->schema_name());
+  status->setIsDisabled(Service::instance().disabled());
+  status->setIsComposing(ctx->IsComposing());
+  status->setIsAsciiMode(ctx->get_option("ascii_mode"));
+  status->setIsFullShape(ctx->get_option("full_shape"));
+  status->setIsSimplified(ctx->get_option("simplification"));
+  status->setIsTraditional(ctx->get_option("traditional"));
+  status->setIsAsciiPunct(ctx->get_option("ascii_punct"));
 }
 
 // Accessing candidate list
@@ -1067,6 +1164,9 @@ RIME_API RimeApi* rime_get_api() {
     s_api.candidate_list_from_index = &RimeCandidateListFromIndex;
     s_api.get_prebuilt_data_dir = &RimeGetPrebuiltDataDir;
     s_api.get_staging_dir = &RimeGetStagingDir;
+    s_api.commit_proto = &RimeCommitProto;
+    s_api.context_proto = &RimeContextProto;
+    s_api.status_proto = &RimeStatusProto;
   }
   return &s_api;
 }

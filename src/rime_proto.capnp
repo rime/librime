@@ -29,7 +29,7 @@ struct Context {
   struct Menu {
     # Menu of text candidates.
     pageSize @0 :Int32;
-    pageNo @1 :Int32;
+    pageNumber @1 :Int32;
     isLastPage @2 :Bool;
     highlightedCandidateIndex @3 :Int32;
     candidates @4 :List(Candidate);
@@ -39,6 +39,8 @@ struct Context {
 
   composition @0 :Composition;
   menu @1 :Menu;
+  input @2 :Text;
+  caretPos @3 :Int32;
 }
 
 struct Status {

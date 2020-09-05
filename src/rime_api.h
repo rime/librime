@@ -55,6 +55,9 @@ typedef int Bool;
 //! Define a variable of Type
 #define RIME_STRUCT(Type, var)  Type var = {0}; RIME_STRUCT_INIT(Type, var);
 
+//! For passing pointer to capnproto builder as opaque pointer through C API.
+#define RIME_PROTO_BUILDER void
+
 //! Rime traits structure
 /*!
  *  Should be initialized by calling RIME_STRUCT_INIT(Type, var)
@@ -542,6 +545,11 @@ typedef struct rime_api_t {
   const char* (*get_prebuilt_data_dir)();
   //! staging directory, stores data files deployed to a Rime client.
   const char* (*get_staging_dir)();
+
+  //! capnproto API.
+  void (*commit_proto)(RimeSessionId session_id, RIME_PROTO_BUILDER* commit_builder);
+  void (*context_proto)(RimeSessionId session_id, RIME_PROTO_BUILDER* context_builder);
+  void (*status_proto)(RimeSessionId session_id, RIME_PROTO_BUILDER* status_builder);
 } RimeApi;
 
 //! API entry
