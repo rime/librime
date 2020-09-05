@@ -21,6 +21,7 @@
 #include <rime/setup.h>
 #include <rime/signature.h>
 #include <rime_api.h>
+#include <rime_proto.capnp.h>
 
 using namespace rime;
 using namespace std::placeholders;

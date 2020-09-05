@@ -1,16 +1,19 @@
 @0xde912f558dde6b99;
 
-struct RimeCommit {
+using Cxx = import "/capnp/c++.capnp";
+$Cxx.namespace("rime::proto");
+
+struct Commit {
   # Text to commit to input field.
   text @0 :Text;
 }
 
-struct RimeCandidate {
+struct Candidate {
   text @0 :Text;
   comment @1 :Text;
 }
 
-struct RimeContext {
+struct Context {
   # Input context.
 
   struct Composition {
@@ -29,7 +32,7 @@ struct RimeContext {
     pageNo @1 :Int32;
     isLastPage @2 :Bool;
     highlightedCandidateIndex @3 :Int32;
-    candidates @4 :List(RimeCandidate);
+    candidates @4 :List(Candidate);
     selectKeys @5 :Text;
     selectLabels @6 :List(Text);
   }
@@ -38,7 +41,7 @@ struct RimeContext {
   menu @1 :Menu;
 }
 
-struct RimeStatus {
+struct Status {
   schemaId @0 :Text;
   schemaName @1 :Text;
   isDisabled @2 :Bool;
