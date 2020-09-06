@@ -39,9 +39,11 @@ Follow the instructions to build librime on platforms other than Linux:
 
 Build dependencies
 ---
-  - compiler with C++11 support
+  - compiler with C++14 support
   - cmake>=2.8
+  - capnproto>=0.8.0
   - libboost>=1.48
+  - libcapnp>=0.8.0
   - libglog (optional)
   - libleveldb
   - libmarisa
@@ -52,6 +54,7 @@ Build dependencies
 Runtime dependencies
 ---
   - libboost
+  - libcapnp
   - libglog (optional)
   - libleveldb
   - libmarisa

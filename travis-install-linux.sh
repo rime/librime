@@ -17,3 +17,10 @@ sudo apt-get install ${dep_packages[@]} -y
 make thirdparty/gtest
 make -C thirdparty/src/opencc build
 sudo env "PATH=$PATH" make -C thirdparty/src/opencc install
+(
+    cd thirdparty/src/capnproto/c++
+    autoreconf -i
+    ./configure
+    make -j3 check
+    sudo make install
+)
