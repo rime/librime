@@ -208,6 +208,9 @@ else()
   set(rime_library rime-static)
 endif()
 
+add_subdirectory(proto)
+include_directories(${RIME_PROTO_INCLUDE_DIR})
+
 add_subdirectory(plugins)
 message(STATUS "rime_plugins_libs: ${rime_plugins_deps}")
 message(STATUS "rime_plugins_modules: ${rime_plugins_modules}")
