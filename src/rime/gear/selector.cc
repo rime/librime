@@ -56,20 +56,30 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
   if (ch == XK_Left || ch == XK_KP_Left) {
     if (!key_event.ctrl() &&
         !key_event.shift() &&
-        ctx->caret_pos() == ctx->input().length() &&
-        ctx->get_option("_horizontal") &&
-        CursorUp(ctx)) {
-      return kAccepted;
+        ctx->caret_pos() == ctx->input().length()) {
+      if (ctx->get_option("_horizontal") &&
+          CursorUp(ctx)) {
+        return kAccepted;
+      }
+      if (ctx->get_option("_vertical")) {
+        CursorDown(ctx);
+        return kAccepted;
+      }
     }
     return kNoop;
   }
   if (ch == XK_Right || ch == XK_KP_Right) {
     if (!key_event.ctrl() &&
         !key_event.shift() &&
-        ctx->caret_pos() == ctx->input().length() &&
-        ctx->get_option("_horizontal")) {
-      CursorDown(ctx);
-      return kAccepted;
+        ctx->caret_pos() == ctx->input().length()) {
+      if (ctx->get_option("_horizontal")) {
+        CursorDown(ctx);
+        return kAccepted;
+      }
+      if (ctx->get_option("_vertical") &&
+          CursorUp(ctx)) {
+        return kAccepted;
+      }
     }
     return kNoop;
   }

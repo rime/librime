@@ -19,13 +19,13 @@ static const ResourceType kVocabularyResourceType = {
 };
 
 struct VocabularyDb : public TextDb {
-  explicit VocabularyDb(const string& path);
+  VocabularyDb(const string& path, const string& name);
   an<DbAccessor> cursor;
   static const TextFormat format;
 };
 
-VocabularyDb::VocabularyDb(const string& path)
-    : TextDb(path, kVocabularyResourceType.name, VocabularyDb::format) {
+VocabularyDb::VocabularyDb(const string& path, const string& name)
+    : TextDb(path, name, kVocabularyResourceType.name, VocabularyDb::format) {
 }
 
 static bool rime_vocabulary_entry_parser(const Tsv& row,
@@ -61,7 +61,7 @@ string PresetVocabulary::DictFilePath(const string& vocabulary) {
 }
 
 PresetVocabulary::PresetVocabulary(const string& vocabulary) {
-  db_.reset(new VocabularyDb(DictFilePath(vocabulary)));
+  db_.reset(new VocabularyDb(DictFilePath(vocabulary), vocabulary));
   if (db_ && db_->OpenReadOnly()) {
     db_->cursor = db_->QueryAll();
   }

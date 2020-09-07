@@ -8,7 +8,7 @@
 #include <rime_api.h>
 #include <rime/common.h>
 #include <rime/registry.h>
-
+#include <rime/dict/db.h>
 #include <rime/dict/level_db.h>
 #include <rime/dict/table_db.h>
 #include <rime/dict/text_db.h>
@@ -25,8 +25,8 @@ static void rime_dict_initialize() {
   LOG(INFO) << "registering components from module 'dict'.";
   Registry& r = Registry::instance();
 
-  r.Register("tabledb", new Component<TableDb>);
-  r.Register("stabledb", new Component<StableDb>);
+  r.Register("tabledb", new DbComponent<TableDb>);
+  r.Register("stabledb", new DbComponent<StableDb>);
   r.Register("plain_userdb", new UserDbComponent<TextDb>);
   r.Register("userdb", new UserDbComponent<LevelDb>);
   // NOTE: register a legacy_userdb component in your plugin if you wish to

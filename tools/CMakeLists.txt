@@ -41,10 +41,12 @@ target_link_libraries(rime_deployer
   ${rime_dict_library}
   ${rime_levers_library})
 
-install(TARGETS rime_dict_manager DESTINATION ${BIN_INSTALL_DIR})
 install(TARGETS rime_deployer DESTINATION ${BIN_INSTALL_DIR})
+install(TARGETS rime_dict_manager DESTINATION ${BIN_INSTALL_DIR})
 
 endif()
+
+install(TARGETS rime_patch DESTINATION ${BIN_INSTALL_DIR})
 
 file(COPY ${PROJECT_SOURCE_DIR}/data/minimal/default.yaml
      DESTINATION ${EXECUTABLE_OUTPUT_PATH})

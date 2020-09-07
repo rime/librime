@@ -21,7 +21,7 @@ template <class T, class Arg>
 struct Class {
   using Initializer = Arg;
 
-  class Component : public ComponentBase {
+  class Component : virtual public ComponentBase {
    public:
     virtual T* Create(Initializer arg) = 0;
   };

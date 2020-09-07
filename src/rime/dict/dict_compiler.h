@@ -18,6 +18,9 @@ class Table;
 class ReverseDb;
 class DictSettings;
 class EditDistanceCorrector;
+class EntryCollector;
+class Vocabulary;
+class ResourceResolver;
 
 class DictCompiler {
  public:
@@ -28,26 +31,34 @@ class DictCompiler {
     kDump = 4,
   };
 
-  RIME_API DictCompiler(Dictionary *dictionary, const string& prefix = "");
+  RIME_API explicit DictCompiler(Dictionary *dictionary);
+  RIME_API virtual ~DictCompiler();
 
   RIME_API bool Compile(const string &schema_file);
   void set_options(int options) { options_ = options; }
 
  private:
-  bool BuildTable(DictSettings* settings,
+  bool BuildTable(int table_index,
+                  EntryCollector& collector,
+                  DictSettings* settings,
                   const vector<string>& dict_files,
                   uint32_t dict_file_checksum);
   bool BuildPrism(const string& schema_file,
                   uint32_t dict_file_checksum,
                   uint32_t schema_file_checksum);
-  bool BuildReverseLookupDict(ReverseDb* db, uint32_t dict_file_checksum);
+  bool BuildReverseDb(DictSettings* settings,
+                      const EntryCollector& collector,
+                      const Vocabulary& vocabulary,
+                      uint32_t dict_file_checksum);
 
-  string dict_name_;
+  const string& dict_name_;
+  const vector<string>& packs_;
   an<Prism> prism_;
   an<EditDistanceCorrector> correction_;
-  an<Table> table_;
+  vector<of<Table>> tables_;
   int options_ = 0;
-  string prefix_;
+  the<ResourceResolver> source_resolver_;
+  the<ResourceResolver> target_resolver_;
 };
 
 }  // namespace rime

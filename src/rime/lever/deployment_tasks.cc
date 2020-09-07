@@ -78,8 +78,8 @@ bool DetectModifications::Run(Deployer* deployer) {
 
 bool InstallationUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating rime installation info.";
-  fs::path shared_data_path(deployer->shared_data_dir);
-  fs::path user_data_path(deployer->user_data_dir);
+  const fs::path& shared_data_path(deployer->shared_data_dir);
+  const fs::path& user_data_path(deployer->user_data_dir);
   if (!fs::exists(user_data_path)) {
     LOG(INFO) << "creating user data dir: " << user_data_path.string();
     boost::system::error_code ec;
@@ -100,8 +100,11 @@ bool InstallationUpdate::Run(Deployer* deployer) {
       // for now:
       deployer->user_id = installation_id;
     }
-    if (!config.GetString("sync_dir", &deployer->sync_dir)) {
-      deployer->sync_dir = (user_data_path / "sync").string();
+    string sync_dir;
+    if (config.GetString("sync_dir", &sync_dir)) {
+      deployer->sync_dir = sync_dir;
+    } else {
+      deployer->sync_dir = user_data_path / "sync";
     }
     LOG(INFO) << "sync dir: " << deployer->sync_dir;
     if (config.GetString("distribution_code_name", &last_distro_code_name)) {
@@ -186,7 +189,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   map<string, string> schemas;
   the<ResourceResolver> resolver(
       Service::instance().CreateResourceResolver(
-          {"schema", "", ".schema.yaml"}));
+          {"schema_source_file", "", ".schema.yaml"}));
   auto build_schema = [&](const string& schema_id, bool as_dependency = false) {
     if (schemas.find(schema_id) != schemas.end())  // already built
       return;
@@ -356,18 +359,18 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   }
 
   LOG(INFO) << "preparing dictionary '" << dict_name << "'.";
-  fs::path user_data_path(deployer->user_data_dir);
-  if (!MaybeCreateDirectory(user_data_path / "build")) {
+  const fs::path& user_data_path(deployer->user_data_dir);
+  if (!MaybeCreateDirectory(deployer->staging_dir)) {
     return false;
   }
-  DictCompiler dict_compiler(dict.get(), "build/");
+  DictCompiler dict_compiler(dict.get());
   if (verbose_) {
     dict_compiler.set_options(DictCompiler::kRebuild | DictCompiler::kDump);
   }
   the<ResourceResolver> resolver(
-      Service::instance().CreateResourceResolver(
-          {"compiled_schema", "build/", ".schema.yaml"}));
-  resolver->set_root_path(user_data_path);
+      Service::instance().CreateDeployedResourceResolver({
+          "compiled_schema", "", ".schema.yaml"
+        }));
   auto compiled_schema = resolver->ResolvePath(schema_id).string();
   if (!dict_compiler.Compile(compiled_schema)) {
     LOG(ERROR) << "dictionary '" << dict_name << "' failed to compile.";
@@ -427,8 +430,8 @@ static bool ConfigNeedsUpdate(Config* config) {
 }
 
 bool ConfigFileUpdate::Run(Deployer* deployer) {
-  fs::path shared_data_path(deployer->shared_data_dir);
-  fs::path user_data_path(deployer->user_data_dir);
+  const fs::path& shared_data_path(deployer->shared_data_dir);
+  const fs::path& user_data_path(deployer->user_data_dir);
   // trash depecated user copy created by an older version of Rime
   fs::path source_config_path(shared_data_path / file_name_);
   fs::path dest_config_path(user_data_path / file_name_);
@@ -443,7 +446,7 @@ bool ConfigFileUpdate::Run(Deployer* deployer) {
   // build the config file if needs update
   the<Config> config(Config::Require("config")->Create(file_name_));
   if (ConfigNeedsUpdate(config.get())) {
-    if (!MaybeCreateDirectory(user_data_path / "build")) {
+    if (!MaybeCreateDirectory(deployer->staging_dir)) {
       return false;
     }
     config.reset(Config::Require("config_builder")->Create(file_name_));
@@ -452,8 +455,8 @@ bool ConfigFileUpdate::Run(Deployer* deployer) {
 }
 
 bool PrebuildAllSchemas::Run(Deployer* deployer) {
-  fs::path shared_data_path(deployer->shared_data_dir);
-  fs::path user_data_path(deployer->user_data_dir);
+  const fs::path& shared_data_path(deployer->shared_data_dir);
+  const fs::path& user_data_path(deployer->user_data_dir);
   if (!fs::exists(shared_data_path) || !fs::is_directory(shared_data_path))
     return false;
   bool success = true;
@@ -470,8 +473,8 @@ bool PrebuildAllSchemas::Run(Deployer* deployer) {
 }
 
 bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
-  fs::path shared_data_path(deployer->shared_data_dir);
-  fs::path user_data_path(deployer->user_data_dir);
+  const fs::path& shared_data_path(deployer->shared_data_dir);
+  const fs::path& user_data_path(deployer->user_data_dir);
   if (!fs::exists(shared_data_path) || !fs::is_directory(shared_data_path) ||
       !fs::exists(user_data_path) || !fs::is_directory(user_data_path) ||
       fs::equivalent(shared_data_path, user_data_path))
@@ -542,7 +545,7 @@ static bool IsCustomizedCopy(const string& file_name) {
 
 bool BackupConfigFiles::Run(Deployer* deployer) {
   LOG(INFO) << "backing up config files.";
-  fs::path user_data_path(deployer->user_data_dir);
+  const fs::path& user_data_path(deployer->user_data_dir);
   if (!fs::exists(user_data_path))
     return false;
   fs::path backup_dir(deployer->user_data_sync_dir());
@@ -589,7 +592,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
 
 bool CleanupTrash::Run(Deployer* deployer) {
   LOG(INFO) << "clean up trash.";
-  fs::path user_data_path(deployer->user_data_dir);
+  const fs::path& user_data_path(deployer->user_data_dir);
   if (!fs::exists(user_data_path))
     return false;
   fs::path trash = user_data_path / "trash";

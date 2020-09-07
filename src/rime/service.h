@@ -77,6 +77,8 @@ class Service {
 
   ResourceResolver* CreateResourceResolver(const ResourceType& type);
   ResourceResolver* CreateUserSpecificResourceResolver(const ResourceType& type);
+  ResourceResolver* CreateDeployedResourceResolver(const ResourceType& type);
+  ResourceResolver* CreateStagingResourceResolver(const ResourceType& type);
 
   Deployer& deployer() { return deployer_; }
   bool disabled() { return !started_ || deployer_.IsMaintenanceMode(); }

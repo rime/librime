@@ -13,11 +13,13 @@
 
 namespace rime {
 
-EntryCollector::EntryCollector() {
-}
+EntryCollector::EntryCollector() {}
 
-EntryCollector::~EntryCollector() {
-}
+EntryCollector::EntryCollector(Syllabary&& fixed_syllabary)
+    : syllabary(std::move(fixed_syllabary)),
+      build_syllabary(false) {}
+
+EntryCollector::~EntryCollector() {}
 
 void EntryCollector::Configure(DictSettings* settings) {
   if (settings->use_preset_vocabulary()) {
@@ -181,10 +183,17 @@ void EntryCollector::CreateEntry(const string &word,
       e.weight = 0.0;
     }
   }
-  // learn new syllables
+  // learn new syllables, or check if syllables are in the fixed syllabary.
   for (const string& s : e.raw_code) {
-    if (syllabary.find(s) == syllabary.end())
-      syllabary.insert(s);
+    if (syllabary.find(s) == syllabary.end()) {
+      if (build_syllabary) {
+        syllabary.insert(s);
+      } else {
+        LOG(ERROR) << "dropping entry '" << e.text
+                   <<  "' with invalid syllable: " << s;
+        return;
+      }
+    }
   }
   // learn new word
   bool is_word = (e.raw_code.size() == 1);

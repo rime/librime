@@ -11,10 +11,13 @@
 
 namespace rime {
 
-SaveOutputPlugin::SaveOutputPlugin(const ResourceType& output_resource)
-    : resource_resolver_(new ResourceResolver(output_resource)) {
-  resource_resolver_->set_root_path(
-      Service::instance().deployer().user_data_dir);
+static const ResourceType kCompiledConfig = {
+  "compiled_config", "", ".yaml"
+};
+
+SaveOutputPlugin::SaveOutputPlugin()
+    : resource_resolver_(
+          Service::instance().CreateStagingResourceResolver(kCompiledConfig)) {
 }
 
 SaveOutputPlugin::~SaveOutputPlugin() {}

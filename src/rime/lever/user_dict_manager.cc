@@ -67,7 +67,7 @@ bool UserDictManager::Backup(const string& dict_name) {
       return false;
     }
   }
-  string snapshot_file = dict_name + user_db_component_->snapshot_extension();
+  string snapshot_file = dict_name + UserDb::snapshot_extension();
   return db->Backup((dir / snapshot_file).string());
 }
 
@@ -177,7 +177,7 @@ bool UserDictManager::UpgradeUserDict(const string& dict_name) {
       return false;
     }
   }
-  string snapshot_file = dict_name + user_db_component_->snapshot_extension();
+  string snapshot_file = dict_name + UserDb::snapshot_extension();
   fs::path snapshot_path = trash / snapshot_file;
   return legacy_db->Backup(snapshot_path.string()) &&
          legacy_db->Close() &&
@@ -197,7 +197,7 @@ bool UserDictManager::Synchronize(const string& dict_name) {
     }
   }
   // *.userdb.txt
-  string snapshot_file = dict_name + user_db_component_->snapshot_extension();
+  string snapshot_file = dict_name + UserDb::snapshot_extension();
   for (fs::directory_iterator it(sync_dir), end; it != end; ++it) {
     if (!fs::is_directory(it->path()))
       continue;

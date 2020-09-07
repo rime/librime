@@ -183,6 +183,21 @@ ResourceResolver* Service::CreateUserSpecificResourceResolver(
   return resolver.release();
 }
 
+ResourceResolver* Service::CreateDeployedResourceResolver(
+    const ResourceType& type) {
+  the<FallbackResourceResolver> resolver(new FallbackResourceResolver(type));
+  resolver->set_root_path(deployer().staging_dir);
+  resolver->set_fallback_root_path(deployer().prebuilt_data_dir);
+  return resolver.release();
+}
+
+ResourceResolver* Service::CreateStagingResourceResolver(
+    const ResourceType& type) {
+  the<ResourceResolver> resolver(new ResourceResolver(type));
+  resolver->set_root_path(deployer().staging_dir);
+  return resolver.release();
+}
+
 Service& Service::instance() {
   static the<Service> s_instance;
   if (!s_instance) {

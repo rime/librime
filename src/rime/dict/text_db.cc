@@ -45,10 +45,11 @@ bool TextDbAccessor::exhausted() {
 
 // TextDb members
 
-TextDb::TextDb(const string& name,
+TextDb::TextDb(const string& file_name,
+               const string& db_name,
                const string& db_type,
                TextFormat format)
-    : Db(name), db_type_(db_type), format_(format) {
+    : Db(file_name, db_name), db_type_(db_type), format_(format) {
 }
 
 TextDb::~TextDb() {
@@ -117,7 +118,7 @@ bool TextDb::Open() {
     }
   }
   else {
-    LOG(ERROR) << "Error opening db '" << name_ << "'.";
+    LOG(ERROR) << "Error opening db '" << name() << "'.";
   }
   modified_ = false;
   return loaded_;

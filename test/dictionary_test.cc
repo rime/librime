@@ -17,7 +17,8 @@ class RimeDictionaryTest : public ::testing::Test {
     if (!dict_) {
       dict_.reset(new rime::Dictionary(
           "dictionary_test",
-          rime::New<rime::Table>("dictionary_test.table.bin"),
+          {},
+          {rime::New<rime::Table>("dictionary_test.table.bin")},
           rime::New<rime::Prism>("dictionary_test.prism.bin")));
     }
     if (!rebuilt_) {

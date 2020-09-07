@@ -17,6 +17,7 @@ class DictSettings : public Config {
  public:
   DictSettings();
   bool LoadDictHeader(std::istream& stream);
+  bool empty();
   string dict_name();
   string dict_version();
   string sort_order();

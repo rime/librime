@@ -25,23 +25,8 @@
 using namespace rime;
 using namespace std::placeholders;
 
-// assuming member is a pointer in struct *p
+// assume member is a non-null pointer in struct *p.
 #define PROVIDED(p, member) ((p) && RIME_STRUCT_HAS_MEMBER(*(p), (p)->member) && (p)->member)
-
-static void setup_deployer(RimeTraits *traits) {
-  if (!traits) return;
-  Deployer &deployer(Service::instance().deployer());
-  if (PROVIDED(traits, shared_data_dir))
-    deployer.shared_data_dir = traits->shared_data_dir;
-  if (PROVIDED(traits, user_data_dir))
-    deployer.user_data_dir = traits->user_data_dir;
-  if (PROVIDED(traits, distribution_name))
-    deployer.distribution_name = traits->distribution_name;
-  if (PROVIDED(traits, distribution_code_name))
-    deployer.distribution_code_name = traits->distribution_code_name;
-  if (PROVIDED(traits, distribution_version))
-    deployer.distribution_version = traits->distribution_version;
-}
 
 RIME_API void RimeSetupLogging(const char* app_name) {
   SetupLogging(app_name);
@@ -66,7 +51,7 @@ static void rime_declare_module_dependencies() {
 RIME_API void RimeSetup(RimeTraits *traits) {
   rime_declare_module_dependencies();
 
-  setup_deployer(traits);
+  SetupDeployer(traits);
   if (PROVIDED(traits, app_name)) {
     if (RIME_STRUCT_HAS_MEMBER(*traits, traits->min_log_level) &&
         RIME_STRUCT_HAS_MEMBER(*traits, traits->log_dir)) {
@@ -89,7 +74,7 @@ RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
 }
 
 RIME_API void RimeInitialize(RimeTraits *traits) {
-  setup_deployer(traits);
+  SetupDeployer(traits);
   LoadModules(PROVIDED(traits, modules) ? traits->modules : kDefaultModules);
   Service::instance().StartService();
 }
@@ -110,7 +95,10 @@ RIME_API Bool RimeStartMaintenance(Bool full_check) {
   }
   if (!full_check) {
     TaskInitializer args{
-      vector<string>{deployer.user_data_dir, deployer.shared_data_dir}
+      vector<string>{
+        deployer.user_data_dir.string(),
+        deployer.shared_data_dir.string(),
+      },
     };
     if (!deployer.RunTask("detect_modifications", args)) {
       return False;
@@ -141,7 +129,7 @@ RIME_API void RimeJoinMaintenanceThread() {
 // deployment
 
 RIME_API void RimeDeployerInitialize(RimeTraits *traits) {
-  setup_deployer(traits);
+  SetupDeployer(traits);
   LoadModules(PROVIDED(traits, modules) ? traits->modules : kDeployerModules);
 }
 
@@ -774,17 +762,27 @@ RIME_API Bool RimeRunTask(const char* task_name) {
 
 RIME_API const char* RimeGetSharedDataDir() {
   Deployer &deployer(Service::instance().deployer());
-  return deployer.shared_data_dir.c_str();
+  return deployer.shared_data_dir.string().c_str();
 }
 
 RIME_API const char* RimeGetUserDataDir() {
   Deployer &deployer(Service::instance().deployer());
-  return deployer.user_data_dir.c_str();
+  return deployer.user_data_dir.string().c_str();
+}
+
+RIME_API const char* RimeGetPrebuiltDataDir() {
+  Deployer &deployer(Service::instance().deployer());
+  return deployer.prebuilt_data_dir.string().c_str();
+}
+
+RIME_API const char* RimeGetStagingDir() {
+  Deployer &deployer(Service::instance().deployer());
+  return deployer.staging_dir.string().c_str();
 }
 
 RIME_API const char* RimeGetSyncDir() {
   Deployer &deployer(Service::instance().deployer());
-  return deployer.sync_dir.c_str();
+  return deployer.sync_dir.string().c_str();
 }
 
 RIME_API const char* RimeGetUserId() {
@@ -794,7 +792,7 @@ RIME_API const char* RimeGetUserId() {
 
 RIME_API void RimeGetUserDataSyncDir(char* dir, size_t buffer_size) {
   Deployer &deployer(Service::instance().deployer());
-  strncpy(dir, deployer.user_data_sync_dir().c_str(), buffer_size);
+  strncpy(dir, deployer.user_data_sync_dir().string().c_str(), buffer_size);
 }
 
 RIME_API Bool RimeConfigInit(RimeConfig* config) {
@@ -1066,6 +1064,8 @@ RIME_API RimeApi* rime_get_api() {
     s_api.candidate_list_next = &RimeCandidateListNext;
     s_api.candidate_list_end = &RimeCandidateListEnd;
     s_api.candidate_list_from_index = &RimeCandidateListFromIndex;
+    s_api.get_prebuilt_data_dir = &RimeGetPrebuiltDataDir;
+    s_api.get_staging_dir = &RimeGetStagingDir;
   }
   return &s_api;
 }

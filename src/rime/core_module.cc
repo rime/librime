@@ -20,7 +20,6 @@ static void rime_core_initialize() {
   LOG(INFO) << "registering core components.";
   Registry& r = Registry::instance();
 
-  const ResourceType build_output{"config", "build/", ".yaml"};
   auto config_builder = new ConfigComponent<ConfigBuilder>(
       [&](ConfigBuilder* builder) {
         builder->InstallPlugin(new AutoPatchConfigPlugin);
@@ -28,11 +27,12 @@ static void rime_core_initialize() {
         builder->InstallPlugin(new LegacyPresetConfigPlugin);
         builder->InstallPlugin(new LegacyDictionaryConfigPlugin);
         builder->InstallPlugin(new BuildInfoPlugin);
-        builder->InstallPlugin(new SaveOutputPlugin(build_output));
+        builder->InstallPlugin(new SaveOutputPlugin);
       });
   r.Register("config_builder", config_builder);
 
-  auto config_loader = new ConfigComponent<ConfigLoader>(build_output);
+  auto config_loader =
+      new ConfigComponent<ConfigLoader, DeployedConfigResourceProvider>;
   r.Register("config", config_loader);
   r.Register("schema", new SchemaComponent(config_loader));
 

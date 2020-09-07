@@ -19,20 +19,28 @@ bool DbAccessor::MatchesPrefix(const string& key) {
   return boost::starts_with(key, prefix_);
 }
 
-// Db members
+// DbComponentBase
 
 static const ResourceType kDbResourceType = {
   "db", "", ""
 };
 
-Db::Db(const string& name) : name_(name) {
-  static ResourceResolver db_resource_resolver(kDbResourceType);
-  if (db_resource_resolver.root_path().empty()) {
-    db_resource_resolver.set_root_path(
-        Service::instance().deployer().user_data_dir);
-  }
-  file_name_ = db_resource_resolver.ResolvePath(name).string();
+DbComponentBase::DbComponentBase()
+    : db_resource_resolver_(
+          Service::instance().CreateResourceResolver(kDbResourceType)) {}
+
+DbComponentBase::~DbComponentBase() {}
+
+string DbComponentBase::DbFilePath(const string& name,
+                                   const string& extension) const {
+  return db_resource_resolver_->ResolvePath(name + extension).string();
 }
+
+// Db members
+
+Db::Db(const string& file_name, const string& name)
+    : name_(name),
+      file_name_(file_name) {}
 
 bool Db::Exists() const {
   return boost::filesystem::exists(file_name());

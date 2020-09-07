@@ -13,7 +13,7 @@ namespace rime {
 
 class TableDb : public TextDb {
  public:
-  explicit TableDb(const string& name);
+  TableDb(const string& file_name, const string& db_name);
 
   static const TextFormat format;
 };
@@ -21,7 +21,7 @@ class TableDb : public TextDb {
 // read-only tabledb
 class StableDb : public TableDb {
  public:
-  explicit StableDb(const string& name);
+  StableDb(const string& file_name, const string& db_name);
 
   virtual bool Open();
 };

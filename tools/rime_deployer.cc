@@ -57,17 +57,22 @@ int set_active_schema(const string& schema_id) {
   return 0;
 }
 
-static void configure_deployer(Deployer* deployer,
-                               int argc, char* argv[]) {
+static void setup_deployer(Deployer* deployer,
+                           int argc, char* argv[]) {
   if (argc > 0) {
     deployer->user_data_dir = argv[0];
-    if (argc > 1) {
-      deployer->shared_data_dir = argv[1];
-    }
-    else {
-      deployer->shared_data_dir = argv[0];
-    }
   }
+  if (argc > 1) {
+    deployer->shared_data_dir = argv[1];
+  } else if (argc > 0) {
+    deployer->shared_data_dir = argv[0];
+  }
+  if (argc > 2) {
+    deployer->staging_dir = argv[2];
+  } else {
+    deployer->staging_dir = deployer->user_data_dir / "build";
+  }
+  deployer->prebuilt_data_dir = deployer->shared_data_dir / "build";
 }
 
 int main(int argc, char* argv[]) {
@@ -75,10 +80,10 @@ int main(int argc, char* argv[]) {
 
   if (argc == 1) {
     std::cout << "options:" << std::endl
-              << "\t--build [dest_dir [shared_data_dir]]" << std::endl
+              << "\t--build [user_data_dir shared_data_dir staging_dir]" << std::endl
               << "\t--add-schema schema_id [...]" << std::endl
               << "\t--set-active-schema schema_id" << std::endl
-              << "\t--compile x.schema.yaml [dest_dir [shared_data_dir]]" << std::endl
+              << "\t--compile x.schema.yaml [user_data_dir shared_data_dir staging_dir]" << std::endl
         ;
     return 0;
   }
@@ -88,9 +93,9 @@ int main(int argc, char* argv[]) {
   // shift
   argc -= 2, argv += 2;
 
-  if (argc >= 0 && argc <= 2 && option == "--build") {
+  if (argc >= 0 && argc <= 3 && option == "--build") {
     Deployer& deployer(Service::instance().deployer());
-    configure_deployer(&deployer, argc, argv);
+    setup_deployer(&deployer, argc, argv);
     LoadModules(kDeployerModules);
     WorkspaceUpdate update;
     return update.Run(&deployer) ? 0 : 1;
@@ -106,7 +111,7 @@ int main(int argc, char* argv[]) {
 
   if (argc >= 1 && option == "--compile") {
     Deployer& deployer(Service::instance().deployer());
-    configure_deployer(&deployer, argc - 1, argv + 1);
+    setup_deployer(&deployer, argc - 1, argv + 1);
     LoadModules(kDeployerModules);
     string schema_file(argv[0]);
     SchemaUpdate update(schema_file);

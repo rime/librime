@@ -66,7 +66,7 @@ Memory::Memory(const Ticket& ticket) {
     if (user_dict_) {
       user_dict_->Load();
       if (dict_)
-        user_dict_->Attach(dict_->table(), dict_->prism());
+        user_dict_->Attach(dict_->primary_table(), dict_->prism());
     }
   }
 

@@ -37,6 +37,10 @@ bool DictSettings::LoadDictHeader(std::istream& stream) {
   return true;
 }
 
+bool DictSettings::empty() {
+  return (*this)["name"].IsNull();
+}
+
 string DictSettings::dict_name() {
   return (*this)["name"].ToString();
 }
@@ -74,6 +78,8 @@ double DictSettings::min_phrase_weight() {
 }
 
 an<ConfigList> DictSettings::GetTables() {
+  if (empty())
+    return nullptr;
   auto tables = New<ConfigList>();
   tables->Append((*this)["name"]);
   auto imports = (*this)["import_tables"].AsList();

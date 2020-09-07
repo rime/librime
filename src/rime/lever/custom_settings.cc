@@ -33,16 +33,15 @@ CustomSettings::CustomSettings(Deployer* deployer,
 }
 
 bool CustomSettings::Load() {
-  fs::path user_data_path(deployer_->user_data_dir);
-  fs::path shared_data_path(deployer_->shared_data_dir);
-  fs::path config_path(user_data_path / "build" / (config_id_ + ".yaml"));
+  fs::path config_path = deployer_->staging_dir / (config_id_ + ".yaml");
   if (!config_.LoadFromFile(config_path.string())) {
-    config_path = shared_data_path / "build" / (config_id_ + ".yaml");
+    config_path = deployer_->prebuilt_data_dir / (config_id_ + ".yaml");
     if (!config_.LoadFromFile(config_path.string())) {
       LOG(WARNING) << "cannot find '" << config_id_ << ".yaml'.";
     }
   }
-  fs::path custom_config_path(user_data_path / custom_config_file(config_id_));
+  fs::path custom_config_path =
+      deployer_->user_data_dir / custom_config_file(config_id_);
   if (!custom_config_.LoadFromFile(custom_config_path.string())) {
     return false;
   }

@@ -60,8 +60,7 @@ string UserDbComponent<TextDb>::extension() const {
   return plain_userdb_extension;
 }
 
-template <>
-string UserDbComponent<TextDb>::snapshot_extension() const {
+string UserDb::snapshot_extension() {
   return plain_userdb_extension;
 }
 
@@ -106,8 +105,9 @@ static TextFormat plain_userdb_format = {
 };
 
 template <>
-UserDbWrapper<TextDb>::UserDbWrapper(const string& db_name)
-    : TextDb(db_name, "userdb", plain_userdb_format) {
+UserDbWrapper<TextDb>::UserDbWrapper(const string& file_name,
+                                     const string& db_name)
+    : TextDb(file_name, db_name, "userdb", plain_userdb_format) {
 }
 
 bool UserDbHelper::UpdateUserInfo() {

@@ -154,8 +154,11 @@ bool LevelDbAccessor::exhausted() {
 
 // LevelDb members
 
-LevelDb::LevelDb(const string& name, const string& db_type)
-    : Db(name), db_type_(db_type) {
+LevelDb::LevelDb(const string& file_name,
+                 const string& db_name,
+                 const string& db_type)
+    : Db(file_name, db_name),
+      db_type_(db_type) {
 }
 
 LevelDb::~LevelDb() {
@@ -242,12 +245,12 @@ bool LevelDb::Recover() {
 
 bool LevelDb::Remove() {
   if (loaded()) {
-    LOG(ERROR) << "attempt to remove opened db '" << name_ << "'.";
+    LOG(ERROR) << "attempt to remove opened db '" << name() << "'.";
     return false;
   }
   auto status = leveldb::DestroyDB(file_name(), leveldb::Options());
   if (!status.ok()) {
-    LOG(ERROR) << "Error removing db '" << name_ << "': " << status.ToString();
+    LOG(ERROR) << "Error removing db '" << name() << "': " << status.ToString();
     return false;
   }
   return true;
@@ -271,7 +274,7 @@ bool LevelDb::Open() {
     }
   }
   else {
-    LOG(ERROR) << "Error opening db '" << name_ << "': " << status.ToString();
+    LOG(ERROR) << "Error opening db '" << name() << "': " << status.ToString();
   }
   return loaded_;
 }
@@ -285,7 +288,7 @@ bool LevelDb::OpenReadOnly() {
   loaded_ = status.ok();
 
   if (!loaded_) {
-    LOG(ERROR) << "Error opening db '" << name_ << "' read-only.";
+    LOG(ERROR) << "Error opening db '" << name() << "' read-only.";
   }
   return loaded_;
 }
@@ -296,7 +299,7 @@ bool LevelDb::Close() {
 
   db_->Release();
 
-  LOG(INFO) << "closed db '" << name_ << "'.";
+  LOG(INFO) << "closed db '" << name() << "'.";
   loaded_ = false;
   readonly_ = false;
   in_transaction_ = false;
@@ -347,13 +350,9 @@ string UserDbComponent<LevelDb>::extension() const {
 }
 
 template <>
-string UserDbComponent<LevelDb>::snapshot_extension() const {
-  return ".userdb.txt";
-}
-
-template <>
-UserDbWrapper<LevelDb>::UserDbWrapper(const string& db_name)
-    : LevelDb(db_name, "userdb") {
+UserDbWrapper<LevelDb>::UserDbWrapper(const string& file_name,
+                                      const string& db_name)
+    : LevelDb(file_name, db_name, "userdb") {
 }
 
 }  // namespace rime

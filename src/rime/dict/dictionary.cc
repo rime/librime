@@ -53,10 +53,9 @@ size_t match_extra_code(const table::Code* extra_code, size_t depth,
 
 }  // namespace dictionary
 
-void DictEntryIterator::AddChunk(dictionary::Chunk&& chunk, Table* table) {
+void DictEntryIterator::AddChunk(dictionary::Chunk&& chunk) {
   chunks_.push_back(std::move(chunk));
   entry_count_ += chunk.size;
-  table_ = table;
 }
 
 void DictEntryIterator::Sort() {
@@ -78,15 +77,15 @@ void DictEntryIterator::AddFilter(DictEntryFilter filter) {
 }
 
 an<DictEntry> DictEntryIterator::Peek() {
-  if (!entry_ && !exhausted() && table_) {
+  if (!entry_ && !exhausted()) {
     // get next entry from current chunk
     const auto& chunk(chunks_[chunk_index_]);
     const auto& e(chunk.entries[chunk.cursor]);
     DLOG(INFO) << "creating temporary dict entry '"
-               << table_->GetEntryText(e) << "'.";
+               << chunk.table->GetEntryText(e) << "'.";
     entry_ = New<DictEntry>();
     entry_->code = chunk.code;
-    entry_->text = table_->GetEntryText(e);
+    entry_->text = chunk.table->GetEntryText(e);
     const double kS = 18.420680743952367; // log(1e8)
     entry_->weight = e.weight - kS + chunk.credibility;
     if (!chunk.remaining_code.empty()) {
@@ -142,27 +141,28 @@ bool DictEntryIterator::Skip(size_t num_entries) {
 
 // Dictionary members
 
-Dictionary::Dictionary(const string& name,
-                       an<Table> table,
+Dictionary::Dictionary(string name,
+                       vector<string> packs,
+                       vector<of<Table>> tables,
                        an<Prism> prism)
-    : name_(name), table_(std::move(table)), prism_(std::move(prism)) {
-}
+    : name_(name),
+      packs_(std::move(packs)),
+      tables_(std::move(tables)),
+      prism_(std::move(prism)) {}
 
 Dictionary::~Dictionary() {
   // should not close shared table and prism objects
 }
 
-an<DictEntryCollector>
-Dictionary::Lookup(const SyllableGraph& syllable_graph,
-                   size_t start_pos,
-                   double initial_credibility) {
-  if (!loaded())
-    return nullptr;
+static void lookup_table(Table* table,
+                         DictEntryCollector* collector,
+                         const SyllableGraph& syllable_graph,
+                         size_t start_pos,
+                         double initial_credibility) {
   TableQueryResult result;
-  if (!table_->Query(syllable_graph, start_pos, &result)) {
-    return nullptr;
+  if (!table->Query(syllable_graph, start_pos, &result)) {
+    return;
   }
-  auto collector = New<DictEntryCollector>();
   // copy result
   for (auto& v : result) {
     size_t end_pos = v.first;
@@ -174,15 +174,32 @@ Dictionary::Lookup(const SyllableGraph& syllable_graph,
               a.extra_code(), 0, syllable_graph, end_pos);
           if (actual_end_pos == 0) continue;
           (*collector)[actual_end_pos].AddChunk(
-              {a.code(), a.entry(), cr}, table_.get());
+              {table, a.code(), a.entry(), cr});
         }
         while (a.Next());
       }
       else {
-        (*collector)[end_pos].AddChunk({a, cr}, table_.get());
+        (*collector)[end_pos].AddChunk({table, a, cr});
       }
     }
   }
+}
+
+an<DictEntryCollector>
+Dictionary::Lookup(const SyllableGraph& syllable_graph,
+                   size_t start_pos,
+                   double initial_credibility) {
+  if (!loaded())
+    return nullptr;
+  auto collector = New<DictEntryCollector>();
+  for (const auto& table : tables_) {
+    if (!table->IsOpen())
+      continue;
+    lookup_table(table.get(), collector.get(),
+                 syllable_graph, start_pos, initial_credibility);
+  }
+  if (collector->empty())
+    return nullptr;
   // sort each group of equal code length
   for (auto& v : *collector) {
     v.second.Sort();
@@ -218,14 +235,18 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
       if (type > kNormalSpelling) continue;
       string remaining_code;
       if (match.length > code_length) {
-        string syllable = table_->GetSyllableById(syllable_id);
+        string syllable = primary_table()->GetSyllableById(syllable_id);
         if (syllable.length() > code_length)
           remaining_code = syllable.substr(code_length);
       }
-      TableAccessor a(table_->QueryWords(syllable_id));
-      if (!a.exhausted()) {
-        DLOG(INFO) << "remaining code: " << remaining_code;
-        result->AddChunk({a, remaining_code}, table_.get());
+      for (const auto& table : tables_) {
+        if (!table->IsOpen())
+          continue;
+        TableAccessor a = table->QueryWords(syllable_id);
+        if (!a.exhausted()) {
+          DLOG(INFO) << "remaining code: " << remaining_code;
+          result->AddChunk({table.get(), a, remaining_code});
+        }
       }
     }
   }
@@ -233,11 +254,11 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
 }
 
 bool Dictionary::Decode(const Code& code, vector<string>* result) {
-  if (!result || !table_)
+  if (!result || tables_.empty())
     return false;
   result->clear();
   for (SyllableId c : code) {
-    string s = table_->GetSyllableById(c);
+    string s = primary_table()->GetSyllableById(c);
     if (s.empty())
       return false;
     result->push_back(s);
@@ -247,19 +268,28 @@ bool Dictionary::Decode(const Code& code, vector<string>* result) {
 
 bool Dictionary::Exists() const {
   return boost::filesystem::exists(prism_->file_name()) &&
-         boost::filesystem::exists(table_->file_name());
+      !tables_.empty() &&
+      boost::filesystem::exists(tables_[0]->file_name());
 }
 
 bool Dictionary::Remove() {
   if (loaded()) return false;
   prism_->Remove();
-  table_->Remove();
+  for (const auto& table : tables_) {
+    table->Remove();
+  }
   return true;
 }
 
 bool Dictionary::Load() {
   LOG(INFO) << "loading dictionary '" << name_ << "'.";
-  if (!table_ || (!table_->IsOpen() && !table_->Load())) {
+  if (tables_.empty()) {
+    LOG(ERROR) << "Cannnot load dictionary '" << name_
+               << "'; it contains no tables.";
+    return false;
+  }
+  auto& primary_table = tables_[0];
+  if (!primary_table || (!primary_table->IsOpen() && !primary_table->Load())) {
     LOG(ERROR) << "Error loading table for dictionary '" << name_ << "'.";
     return false;
   }
@@ -267,28 +297,38 @@ bool Dictionary::Load() {
     LOG(ERROR) << "Error loading prism for dictionary '" << name_ << "'.";
     return false;
   }
+  // packs are optional
+  for (int i = 1; i < tables_.size(); ++i) {
+    const auto& table = tables_[i];
+    if (!table->IsOpen() && table->Exists() && table->Load()) {
+      LOG(INFO) << "loaded pack: " << packs_[i - 1];
+    }
+  }
   return true;
 }
 
 bool Dictionary::loaded() const {
-  return table_ && table_->IsOpen() && prism_ && prism_->IsOpen();
+  return !tables_.empty() && tables_[0]->IsOpen() &&
+      prism_ && prism_->IsOpen();
 }
 
 // DictionaryComponent members
 
 static const ResourceType kPrismResourceType = {
-  "prism", "build/", ".prism.bin"
+  "prism", "", ".prism.bin"
 };
 
 static const ResourceType kTableResourceType = {
-  "table", "build/", ".table.bin"
+  "table", "", ".table.bin"
 };
 
 DictionaryComponent::DictionaryComponent()
     : prism_resource_resolver_(
-          Service::instance().CreateResourceResolver(kPrismResourceType)),
+          Service::instance().CreateDeployedResourceResolver(
+              kPrismResourceType)),
       table_resource_resolver_(
-          Service::instance().CreateResourceResolver(kTableResourceType)) {}
+          Service::instance().CreateDeployedResourceResolver(
+              kTableResourceType)) {}
 
 DictionaryComponent::~DictionaryComponent() {
 }
@@ -309,24 +349,46 @@ Dictionary* DictionaryComponent::Create(const Ticket& ticket) {
   if (!config->GetString(ticket.name_space + "/prism", &prism_name)) {
     prism_name = dict_name;
   }
-  return CreateDictionaryWithName(dict_name, prism_name);
+  vector<string> packs;
+  if (auto pack_list = config->GetList(ticket.name_space + "/packs")) {
+    for (const auto& item : *pack_list) {
+      if (auto value = As<ConfigValue>(item)) {
+        packs.push_back(value->str());
+      }
+    }
+  }
+  return Create(std::move(dict_name),
+                std::move(prism_name),
+                std::move(packs));
 }
 
-Dictionary*
-DictionaryComponent::CreateDictionaryWithName(const string& dict_name,
-                                              const string& prism_name) {
-  // obtain prism and table objects
-  auto table = table_map_[dict_name].lock();
-  if (!table) {
+Dictionary* DictionaryComponent::Create(string dict_name,
+                                        string prism_name,
+                                        vector<string> packs) {
+  // obtain prism and primary table objects
+  auto primary_table = table_map_[dict_name].lock();
+  if (!primary_table) {
     auto file_path = table_resource_resolver_->ResolvePath(dict_name).string();
-    table_map_[dict_name] = table = New<Table>(file_path);
+    table_map_[dict_name] = primary_table = New<Table>(file_path);
   }
   auto prism = prism_map_[prism_name].lock();
   if (!prism) {
     auto file_path = prism_resource_resolver_->ResolvePath(prism_name).string();
     prism_map_[prism_name] = prism = New<Prism>(file_path);
   }
-  return new Dictionary(dict_name, table, prism);
+  vector<of<Table>> tables = {std::move(primary_table)};
+  for (const auto& pack : packs) {
+    auto table = table_map_[pack].lock();
+    if (!table) {
+      auto file_path = table_resource_resolver_->ResolvePath(pack).string();
+      table_map_[pack] = table = New<Table>(file_path);
+    }
+    tables.push_back(std::move(table));
+  }
+  return new Dictionary(std::move(dict_name),
+                        std::move(packs),
+                        std::move(tables),
+                        std::move(prism));
 }
 
 }  // namespace rime

@@ -37,7 +37,9 @@ class LevelDb : public Db,
                 public Recoverable,
                 public Transactional {
  public:
-  LevelDb(const string& name, const string& db_type = "");
+  LevelDb(const string& file_name,
+          const string& db_name,
+          const string& db_type = "");
   virtual ~LevelDb();
 
   virtual bool Remove();
