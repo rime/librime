@@ -87,7 +87,6 @@ bool Spans::HasVertex(size_t vertex) const {
   return std::binary_search(vertices_.begin(), vertices_.end(), vertex);
 }
 
-<<<<<<< HEAD
 // Sentence
 
 void Sentence::Extend(const DictEntry& another,
