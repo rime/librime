@@ -11,6 +11,7 @@ struct Commit {
 struct Candidate {
   text @0 :Text;
   comment @1 :Text;
+  label @2 :Text;
 }
 
 struct Context {

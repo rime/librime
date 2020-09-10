@@ -358,30 +358,45 @@ void RimeContextProto(RimeSessionId session_id, RIME_PROTO_BUILDER* context_buil
       menu.setPageNumber(page_number);
       menu.setIsLastPage(page->is_last_page);
       menu.setHighlightedCandidateIndex(selected_index % page_size);
-      auto dest_candidates = menu.initCandidates(page->candidates.size());
-      auto dest = dest_candidates.begin();
-      for (const an<Candidate> &src : page->candidates) {
-        dest->setText(src->text());
-        string comment = src->comment();
-        if (!comment.empty()) {
-          dest->setComment(comment);
-        }
-        ++dest;
-      }
+      vector<string> labels;
       if (schema) {
         const string& select_keys = schema->select_keys();
         if (!select_keys.empty()) {
           menu.setSelectKeys(select_keys);
         }
         Config* config = schema->config();
-        an<ConfigList>  select_labels = config->GetList("menu/alternative_select_labels");
-        if (select_labels && (size_t)page_size <= select_labels->size()) {
-          auto dest_select_labels = menu.initSelectLabels(page_size);
+        auto src_labels = config->GetList("menu/alternative_select_labels");
+        if (src_labels && (size_t)page_size <= src_labels->size()) {
+          auto dest_labels = menu.initSelectLabels(page_size);
           for (size_t i = 0; i < (size_t)page_size; ++i) {
-            an<ConfigValue> value = select_labels->GetValueAt(i);
-            dest_select_labels.set(i, value->str());
+            if (an<ConfigValue> value = src_labels->GetValueAt(i)) {
+              dest_labels.set(i, value->str());
+              labels.push_back(value->str());
+            }
+          }
+        } else if (!select_keys.empty()) {
+          for (const char key : select_keys) {
+            labels.push_back(string(1, key));
+            if (labels.size() >= page_size)
+              break;
           }
         }
+      }
+      int num_candidates = page->candidates.size();
+      auto dest_candidates = menu.initCandidates(num_candidates);
+      auto dest = dest_candidates.begin();
+      int index = 0;
+      for (const an<Candidate> &src : page->candidates) {
+        dest->setText(src->text());
+        string comment = src->comment();
+        if (!comment.empty()) {
+          dest->setComment(comment);
+        }
+        string label = index < labels.size()
+                       ? labels[index]
+                       : std::to_string(index + 1);
+        dest->setLabel(label);
+        ++dest;
       }
     }
   }
