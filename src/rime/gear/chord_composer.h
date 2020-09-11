@@ -38,6 +38,9 @@ class ChordComposer : public Processor {
   Projection algebra_;
   Projection output_format_;
   Projection prompt_format_;
+  bool use_control_ = false;
+  bool use_alt_ = false;
+  bool use_shift_ = false;
 
   set<int> pressed_;
   set<int> chord_;
