@@ -10,7 +10,7 @@ SHARE_DIR = $(THIRD_PARTY_DIR)/share
 build = build
 glog: build = cmake-build
 
-THIRD_PARTY_LIBS = glog leveldb marisa opencc yaml-cpp gtest
+THIRD_PARTY_LIBS = capnproto glog gtest leveldb marisa opencc yaml-cpp
 
 .PHONY: all clean-src $(THIRD_PARTY_LIBS)
 
@@ -18,12 +18,22 @@ all: $(THIRD_PARTY_LIBS)
 
 # note: this won't clean output files under include/, lib/ and bin/.
 clean-src:
+	rm -r $(SRC_DIR)/capnproto/build || true
 	rm -r $(SRC_DIR)/glog/cmake-build || true
 	rm -r $(SRC_DIR)/googletest/build || true
 	rm -r $(SRC_DIR)/leveldb/build || true
 	rm -r $(SRC_DIR)/marisa-trie/build || true
 	rm -r $(SRC_DIR)/opencc/build || true
 	rm -r $(SRC_DIR)/yaml-cpp/build || true
+
+capnproto:
+	cd $(SRC_DIR)/capnproto; \
+	cmake . -B$(build) \
+	-DBUILD_SHARED_LIBS:BOOL=OFF \
+	-DBUILD_TESTING:BOOL=OFF \
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	&& cmake --build $(build) --target install
 
 glog:
 	cd $(SRC_DIR)/glog; \
@@ -34,44 +44,44 @@ glog:
 	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
 	&& cmake --build $(build) --target install
 
-leveldb:
-	cd $(SRC_DIR)/leveldb; \
-	cmake . -Bbuild \
-	-DLEVELDB_BUILD_BENCHMARKS:BOOL=OFF \
-	-DLEVELDB_BUILD_TESTS:BOOL=OFF \
-	-DCMAKE_BUILD_TYPE:STRING="Release" \
-	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
-	&& cmake --build build --target install
-
-marisa:
-	cd $(SRC_DIR)/marisa-trie; \
-	cmake $(SRC_DIR) -Bbuild \
-	-DCMAKE_BUILD_TYPE:STRING="Release" \
-	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
-	&& cmake --build build --target install
-
-opencc:
-	cd $(SRC_DIR)/opencc; \
-	cmake . -Bbuild \
-	-DBUILD_SHARED_LIBS:BOOL=OFF \
-	-DCMAKE_BUILD_TYPE:STRING="Release" \
-	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
-	&& cmake --build build --target install
-
-yaml-cpp:
-	cd $(SRC_DIR)/yaml-cpp; \
-	cmake . -Bbuild \
-	-DYAML_CPP_BUILD_CONTRIB:BOOL=OFF \
-	-DYAML_CPP_BUILD_TESTS:BOOL=OFF \
-	-DYAML_CPP_BUILD_TOOLS:BOOL=OFF \
-	-DCMAKE_BUILD_TYPE:STRING="Release" \
-	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
-	&& cmake --build build --target install
-
 gtest:
 	cd $(SRC_DIR)/googletest; \
 	cmake . -B$(build) \
 	-DBUILD_GMOCK:BOOL=OFF \
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	&& cmake --build $(build) --target install
+
+leveldb:
+	cd $(SRC_DIR)/leveldb; \
+	cmake . -B$(build) \
+	-DLEVELDB_BUILD_BENCHMARKS:BOOL=OFF \
+	-DLEVELDB_BUILD_TESTS:BOOL=OFF \
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	&& cmake --build $(build) --target install
+
+marisa:
+	cd $(SRC_DIR)/marisa-trie; \
+	cmake $(SRC_DIR) -B$(build) \
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	&& cmake --build $(build) --target install
+
+opencc:
+	cd $(SRC_DIR)/opencc; \
+	cmake . -B$(build) \
+	-DBUILD_SHARED_LIBS:BOOL=OFF \
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	&& cmake --build $(build) --target install
+
+yaml-cpp:
+	cd $(SRC_DIR)/yaml-cpp; \
+	cmake . -B$(build) \
+	-DYAML_CPP_BUILD_CONTRIB:BOOL=OFF \
+	-DYAML_CPP_BUILD_TESTS:BOOL=OFF \
+	-DYAML_CPP_BUILD_TOOLS:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
 	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
 	&& cmake --build $(build) --target install
