@@ -1,3 +1,49 @@
+<a name="1.6.0"></a>
+# [1.6.0](https://github.com/rime/librime/compare/1.5.3...1.6.0) (2020-09-20)
+
+
+### Bug Fixes
+
+* **ascii_composer:** do not comsume Shift key release ([debc2c0](https://github.com/rime/librime/commit/debc2c0))
+* **ascii_composer:** first read ascii_composer/good_old_caps_lock from schema config ([3fc56c4](https://github.com/rime/librime/commit/3fc56c4))
+* **chord_composer:** commit raw input with uppercase letters ([cc983d5](https://github.com/rime/librime/commit/cc983d5))
+* **CMakeLists.txt:** ensure paths in pkgconfig file are absolute ([0e96e51](https://github.com/rime/librime/commit/0e96e51))
+* **CMakeLists.txt:** would not use signals v1 due to a typo ([6662a28](https://github.com/rime/librime/commit/6662a28)), closes [#225](https://github.com/rime/librime/issues/225)
+* **custom_settings:** accept "*.schema" as config id ([604da0b](https://github.com/rime/librime/commit/604da0b))
+* **dict:** issues with user db recovery ([0f3d0df](https://github.com/rime/librime/commit/0f3d0df))
+* **dict_compiler:** build prism with loaded syllabary when not rebuilding primary table ([93fe827](https://github.com/rime/librime/commit/93fe827))
+* **plugins/CMakeLists.txt:** avoid rime_library linking to itself via rime_plugins_deps ([fe744db](https://github.com/rime/librime/commit/fe744db))
+* **rime_api.cc:** check struct has member of non-pointer type ([090dfa4](https://github.com/rime/librime/commit/090dfa4))
+* **rime_api.cc:** using unchecked fields introduced an ABI breakage ([62bbead](https://github.com/rime/librime/commit/62bbead)), closes [/github.com/rime/librime/pull/328#pullrequestreview-335125464](https://github.com//github.com/rime/librime/pull/328/issues/pullrequestreview-335125464)
+* **rime_test:** set data directories to working directory using rime::SetupDeployer API ([7c08a90](https://github.com/rime/librime/commit/7c08a90))
+* **simplifier:** opencc::DictEntry::Values() type change in opencc 1.1.0 ([beae5b1](https://github.com/rime/librime/commit/beae5b1)), closes [#367](https://github.com/rime/librime/issues/367)
+* **user_db:** pointer cast error caused by multiple inheritance ([2ed780b](https://github.com/rime/librime/commit/2ed780b))
+* use official emoji 12.0 data ([#304](https://github.com/rime/librime/issues/304)) ([75a60dc](https://github.com/rime/librime/commit/75a60dc))
+
+
+### Features
+
+* **api:** implement capnproto api ([873f648](https://github.com/rime/librime/commit/873f648))
+* **api:** include candidate labels in proto message ([aae7a0c](https://github.com/rime/librime/commit/aae7a0c))
+* **charset_filter:** support charset options with emoji ([#293](https://github.com/rime/librime/issues/293)) ([943c95b](https://github.com/rime/librime/commit/943c95b))
+* **charset_filter:** support CJK Unified Ideographs Extension G ([#393](https://github.com/rime/librime/issues/393)) ([0a1573d](https://github.com/rime/librime/commit/0a1573d))
+* **chord_composer:** support chording with Shift keys ([94cf479](https://github.com/rime/librime/commit/94cf479))
+* **chord_composer:** use Control, Alt, Shift to input chord ([f3a2ad0](https://github.com/rime/librime/commit/f3a2ad0))
+* **dictionary:** packs extends the dictionary with extra binary table files ([930074c](https://github.com/rime/librime/commit/930074c))
+* **key_binder:** bind key to a key sequence ([3b5dbf6](https://github.com/rime/librime/commit/3b5dbf6)), closes [#301](https://github.com/rime/librime/issues/301)
+* **logging:** setup min log level, log dir and set file mode to log files ([90839b0](https://github.com/rime/librime/commit/90839b0))
+* **selector:** support 4 combinations of horizontal/vertical text orientation and stacked/linear candidate list layout ([c498f71](https://github.com/rime/librime/commit/c498f71))
+* **selector:** support vertical UI ([dbb35c6](https://github.com/rime/librime/commit/dbb35c6))
+* **switcher:** enable schema in cases where conditions are met ([217c72b](https://github.com/rime/librime/commit/217c72b))
+* **tools/rime_proto_console:** demo for proto api ([d88ef9f](https://github.com/rime/librime/commit/d88ef9f))
+
+
+### Performance Improvements
+
+* **poet:** optimize for performance in making sentences (~40% faster) ([0853465](https://github.com/rime/librime/commit/0853465))
+
+
+
 <a name="1.5.3"></a>
 ## [1.5.3](https://github.com/rime/librime/compare/1.5.2...1.5.3) (2019-06-22)
 
