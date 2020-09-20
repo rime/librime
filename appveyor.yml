@@ -26,6 +26,7 @@ for:
 
 cache:
   - thirdparty.cached -> appveyor_build_thirdparty.bat
+  - thirdparty.submodule-status -> appveyor_build_thirdparty.bat
   - thirdparty\bin -> appveyor_build_thirdparty.bat
   - thirdparty\include -> appveyor_build_thirdparty.bat
   - thirdparty\lib -> appveyor_build_thirdparty.bat
