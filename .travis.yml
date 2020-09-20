@@ -21,11 +21,11 @@ matrix:
     deploy:
       provider: releases
       api_key:
-        secure: OXzu4Au7Uri/4pugRsQATYv2+QHNRfx64jRBSTdYUJ8ehdg67HHJrofxhUG2Q+lNZlm2VO51ihOsmp9c3gYtT+ohSxD3/y3z8VDw6k7a+5ihT+Svrr1fpHf30I2DupGe5bO1MFB9rltZ+kv/nERciT5n1jOO5ZxefNCRac2aylE=
-      file: ${RIME_VARIANT:-rime}-${TRAVIS_TAG}-${TRAVIS_OS_NAME}.zip
+        secure: Le2PfdrOqVmk5c1Eu/q9fvLGG1WZz5SuIXw0LVTqWn8cPCJvvsh9/RsjKx59uI0rxs/sJnbsCnPSaiveY5i51Jy7apkqtysUfglr+2CjgyXY5s7qBWiZ60/j2V5CDkk+Q/PSB/GXcVxHQWPh6X1M75GWa9b+4COKJX3Kh/FO0rM=
+      file: "${RIME_VARIANT:-rime}-${TRAVIS_TAG}-${TRAVIS_OS_NAME}.zip"
       skip_cleanup: true
-      name: "librime ${TRAVIS_TAG}"
-      body: "chore(release): ${TRAVIS_TAG} :tada:"
+      name: librime ${TRAVIS_TAG}
+      body: 'chore(release): ${TRAVIS_TAG} :tada:'
       draft: true
       on:
         repo: rime/librime
