@@ -12,7 +12,7 @@
 #include <rime/setup.h>
 #include <rime/lever/deployment_tasks.h>
 
-using namespace fs = boost::filesystem;
+namespace fs = boost::filesystem;
 
 using namespace rime;
 
