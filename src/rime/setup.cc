@@ -9,11 +9,14 @@
 #include <glog/logging.h>
 #endif  // RIME_ENABLE_LOGGING
 
+#include <boost/filesystem.hpp>
 #include <rime_api.h>
 #include <rime/deployer.h>
 #include <rime/module.h>
 #include <rime/service.h>
 #include <rime/setup.h>
+
+namespace fs = boost::filesystem;
 
 namespace rime {
 
@@ -54,11 +57,11 @@ RIME_API void SetupDeployer(RimeTraits *traits) {
   if (PROVIDED(traits, prebuilt_data_dir))
     deployer.prebuilt_data_dir = traits->prebuilt_data_dir;
   else
-    deployer.prebuilt_data_dir = deployer.shared_data_dir / "build";
+    deployer.prebuilt_data_dir = (fs::path(deployer.shared_data_dir) / "build").string();
   if (PROVIDED(traits, staging_dir))
     deployer.staging_dir = traits->staging_dir;
   else
-    deployer.staging_dir = deployer.user_data_dir / "build";
+    deployer.staging_dir = (fs::path(deployer.user_data_dir) / "build").string();
 }
 
 RIME_API void SetupLogging(const char* app_name, int min_log_level, const char* log_dir) {

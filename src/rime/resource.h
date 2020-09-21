@@ -29,7 +29,7 @@ class ResourceResolver {
   RIME_API virtual boost::filesystem::path ResolvePath(const string& resource_id);
   string ToResourceId(const string& file_path) const;
   string ToFilePath(const string& resource_id) const;
-  void set_root_path(const boost::filesystem::path& root_path) {
+  void set_root_path(boost::filesystem::path root_path) {
     root_path_ = root_path;
   }
   boost::filesystem::path root_path() const {
@@ -47,7 +47,7 @@ class FallbackResourceResolver : public ResourceResolver {
       : ResourceResolver(type) {
   }
   RIME_API boost::filesystem::path ResolvePath(const string& resource_id) override;
-  void set_fallback_root_path(const boost::filesystem::path& fallback_root_path) {
+  void set_fallback_root_path(boost::filesystem::path fallback_root_path) {
     fallback_root_path_ = fallback_root_path;
   }
  private:

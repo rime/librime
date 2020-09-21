@@ -78,8 +78,8 @@ bool DetectModifications::Run(Deployer* deployer) {
 
 bool InstallationUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating rime installation info.";
-  const fs::path& shared_data_path(deployer->shared_data_dir);
-  const fs::path& user_data_path(deployer->user_data_dir);
+  const fs::path shared_data_path(deployer->shared_data_dir);
+  const fs::path user_data_path(deployer->user_data_dir);
   if (!fs::exists(user_data_path)) {
     LOG(INFO) << "creating user data dir: " << user_data_path.string();
     boost::system::error_code ec;
@@ -104,7 +104,7 @@ bool InstallationUpdate::Run(Deployer* deployer) {
     if (config.GetString("sync_dir", &sync_dir)) {
       deployer->sync_dir = sync_dir;
     } else {
-      deployer->sync_dir = user_data_path / "sync";
+      deployer->sync_dir = (fs::path(user_data_path) / "sync").string();
     }
     LOG(INFO) << "sync dir: " << deployer->sync_dir;
     if (config.GetString("distribution_code_name", &last_distro_code_name)) {
@@ -359,7 +359,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   }
 
   LOG(INFO) << "preparing dictionary '" << dict_name << "'.";
-  const fs::path& user_data_path(deployer->user_data_dir);
+  const fs::path user_data_path(deployer->user_data_dir);
   if (!MaybeCreateDirectory(deployer->staging_dir)) {
     return false;
   }
@@ -430,8 +430,8 @@ static bool ConfigNeedsUpdate(Config* config) {
 }
 
 bool ConfigFileUpdate::Run(Deployer* deployer) {
-  const fs::path& shared_data_path(deployer->shared_data_dir);
-  const fs::path& user_data_path(deployer->user_data_dir);
+  const fs::path shared_data_path(deployer->shared_data_dir);
+  const fs::path user_data_path(deployer->user_data_dir);
   // trash depecated user copy created by an older version of Rime
   fs::path source_config_path(shared_data_path / file_name_);
   fs::path dest_config_path(user_data_path / file_name_);
@@ -455,8 +455,8 @@ bool ConfigFileUpdate::Run(Deployer* deployer) {
 }
 
 bool PrebuildAllSchemas::Run(Deployer* deployer) {
-  const fs::path& shared_data_path(deployer->shared_data_dir);
-  const fs::path& user_data_path(deployer->user_data_dir);
+  const fs::path shared_data_path(deployer->shared_data_dir);
+  const fs::path user_data_path(deployer->user_data_dir);
   if (!fs::exists(shared_data_path) || !fs::is_directory(shared_data_path))
     return false;
   bool success = true;
@@ -473,8 +473,8 @@ bool PrebuildAllSchemas::Run(Deployer* deployer) {
 }
 
 bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
-  const fs::path& shared_data_path(deployer->shared_data_dir);
-  const fs::path& user_data_path(deployer->user_data_dir);
+  const fs::path shared_data_path(deployer->shared_data_dir);
+  const fs::path user_data_path(deployer->user_data_dir);
   if (!fs::exists(shared_data_path) || !fs::is_directory(shared_data_path) ||
       !fs::exists(user_data_path) || !fs::is_directory(user_data_path) ||
       fs::equivalent(shared_data_path, user_data_path))
@@ -545,7 +545,7 @@ static bool IsCustomizedCopy(const string& file_name) {
 
 bool BackupConfigFiles::Run(Deployer* deployer) {
   LOG(INFO) << "backing up config files.";
-  const fs::path& user_data_path(deployer->user_data_dir);
+  const fs::path user_data_path(deployer->user_data_dir);
   if (!fs::exists(user_data_path))
     return false;
   fs::path backup_dir(deployer->user_data_sync_dir());
@@ -592,7 +592,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
 
 bool CleanupTrash::Run(Deployer* deployer) {
   LOG(INFO) << "clean up trash.";
-  const fs::path& user_data_path(deployer->user_data_dir);
+  const fs::path user_data_path(deployer->user_data_dir);
   if (!fs::exists(user_data_path))
     return false;
   fs::path trash = user_data_path / "trash";

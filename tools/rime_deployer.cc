@@ -5,11 +5,14 @@
 // 2012-07-07 GONG Chen <chen.sst@gmail.com>
 //
 #include <iostream>
+#include <boost/filesystem.hpp>
 #include <rime/config.h>
 #include <rime/deployer.h>
 #include <rime/service.h>
 #include <rime/setup.h>
 #include <rime/lever/deployment_tasks.h>
+
+using namespace fs = boost::filesystem;
 
 using namespace rime;
 
@@ -70,9 +73,9 @@ static void setup_deployer(Deployer* deployer,
   if (argc > 2) {
     deployer->staging_dir = argv[2];
   } else {
-    deployer->staging_dir = deployer->user_data_dir / "build";
+    deployer->staging_dir = (fs::path(deployer->user_data_dir) / "build").string();
   }
-  deployer->prebuilt_data_dir = deployer->shared_data_dir / "build";
+  deployer->prebuilt_data_dir = (fs::path(deployer->shared_data_dir) / "build").string();
 }
 
 int main(int argc, char* argv[]) {

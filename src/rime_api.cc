@@ -97,8 +97,8 @@ RIME_API Bool RimeStartMaintenance(Bool full_check) {
   if (!full_check) {
     TaskInitializer args{
       vector<string>{
-        deployer.user_data_dir.string(),
-        deployer.shared_data_dir.string(),
+        deployer.user_data_dir,
+        deployer.shared_data_dir,
       },
     };
     if (!deployer.RunTask("detect_modifications", args)) {
@@ -875,27 +875,27 @@ RIME_API Bool RimeRunTask(const char* task_name) {
 
 RIME_API const char* RimeGetSharedDataDir() {
   Deployer &deployer(Service::instance().deployer());
-  return deployer.shared_data_dir.string().c_str();
+  return deployer.shared_data_dir.c_str();
 }
 
 RIME_API const char* RimeGetUserDataDir() {
   Deployer &deployer(Service::instance().deployer());
-  return deployer.user_data_dir.string().c_str();
+  return deployer.user_data_dir.c_str();
 }
 
 RIME_API const char* RimeGetPrebuiltDataDir() {
   Deployer &deployer(Service::instance().deployer());
-  return deployer.prebuilt_data_dir.string().c_str();
+  return deployer.prebuilt_data_dir.c_str();
 }
 
 RIME_API const char* RimeGetStagingDir() {
   Deployer &deployer(Service::instance().deployer());
-  return deployer.staging_dir.string().c_str();
+  return deployer.staging_dir.c_str();
 }
 
 RIME_API const char* RimeGetSyncDir() {
   Deployer &deployer(Service::instance().deployer());
-  return deployer.sync_dir.string().c_str();
+  return deployer.sync_dir.c_str();
 }
 
 RIME_API const char* RimeGetUserId() {
@@ -905,7 +905,7 @@ RIME_API const char* RimeGetUserId() {
 
 RIME_API void RimeGetUserDataSyncDir(char* dir, size_t buffer_size) {
   Deployer &deployer(Service::instance().deployer());
-  strncpy(dir, deployer.user_data_sync_dir().string().c_str(), buffer_size);
+  strncpy(dir, deployer.user_data_sync_dir().c_str(), buffer_size);
 }
 
 RIME_API Bool RimeConfigInit(RimeConfig* config) {
