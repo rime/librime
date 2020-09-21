@@ -1,3 +1,13 @@
+<a name="1.6.1"></a>
+## [1.6.1](https://github.com/rime/librime/compare/1.6.0...1.6.1) (2020-09-21)
+
+
+### Bug Fixes
+
+* **rime_api.cc:** dangling pointer returned from RimeGetSharedDataDir ([78abaa8](https://github.com/rime/librime/commit/78abaa8))
+
+
+
 <a name="1.6.0"></a>
 # [1.6.0](https://github.com/rime/librime/compare/1.5.3...1.6.0) (2020-09-20)
 
