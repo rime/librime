@@ -528,20 +528,20 @@ an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
   const auto& syllable_graph = syllabifier_->syllable_graph();
   WordGraph graph;
   for (const auto& x : syllable_graph.edges) {
-    UserDictEntryCollector& dest(graph[x.first]);
+    auto& same_start_pos = graph[x.first];
     if (user_dict) {
       auto user_phrase = user_dict->Lookup(syllable_graph, x.first,
                                            kMaxSyllablesForUserPhraseQuery);
       if (user_phrase)
-        dest.swap(*user_phrase);
+        same_start_pos.swap(*user_phrase);
     }
     if (auto phrase = dict->Lookup(syllable_graph, x.first)) {
       // merge lookup results
       for (auto& y : *phrase) {
-        DictEntryList& entries(dest[y.first]);
-        while (entries.size() < translator_->max_homophones() &&
+        DictEntryList& homophones = same_start_pos[y.first];
+        while (homophones.size() < translator_->max_homophones() &&
                !y.second.exhausted()) {
-          entries.push_back(y.second.Peek());
+          homophones.push_back(y.second.Peek());
           if (!y.second.Next())
             break;
         }
