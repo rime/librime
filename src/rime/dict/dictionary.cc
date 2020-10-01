@@ -18,6 +18,29 @@ namespace rime {
 
 namespace dictionary {
 
+struct Chunk {
+  Table* table = nullptr;
+  Code code;
+  const table::Entry* entries = nullptr;
+  size_t size = 0;
+  size_t cursor = 0;
+  string remaining_code;  // for predictive queries
+  double credibility = 0.0;
+
+  Chunk() = default;
+  Chunk(Table* t, const Code& c, const table::Entry* e, double cr = 0.0)
+      : table(t), code(c), entries(e), size(1), cursor(0), credibility(cr) {}
+  Chunk(Table* t, const TableAccessor& a, double cr = 0.0)
+      : Chunk(t, a, string(), cr) {}
+  Chunk(Table* t, const TableAccessor& a, const string& r, double cr = 0.0)
+      : table(t), code(a.index_code()), entries(a.entry()),
+        size(a.remaining()), cursor(0), remaining_code(r), credibility(cr) {}
+};
+
+struct QueryResult {
+  vector<Chunk> chunks;
+};
+
 bool compare_chunk_by_head_element(const Chunk& a, const Chunk& b) {
   if (!a.entries || a.cursor >= a.size) return false;
   if (!b.entries || b.cursor >= b.size) return true;
@@ -53,17 +76,21 @@ size_t match_extra_code(const table::Code* extra_code, size_t depth,
 
 }  // namespace dictionary
 
+DictEntryIterator::DictEntryIterator()
+    : query_result_(New<dictionary::QueryResult>()) {}
+
 void DictEntryIterator::AddChunk(dictionary::Chunk&& chunk) {
-  chunks_.push_back(std::move(chunk));
+  query_result_->chunks.push_back(std::move(chunk));
   entry_count_ += chunk.size;
 }
 
 void DictEntryIterator::Sort() {
+  auto& chunks = query_result_->chunks;
   // partial-sort remaining chunks, move best match to chunk_index_
   std::partial_sort(
-      chunks_.begin() + chunk_index_,
-      chunks_.begin() + chunk_index_ + 1,
-      chunks_.end(),
+      chunks.begin() + chunk_index_,
+      chunks.begin() + chunk_index_ + 1,
+      chunks.end(),
       dictionary::compare_chunk_by_head_element);
 }
 
@@ -79,8 +106,8 @@ void DictEntryIterator::AddFilter(DictEntryFilter filter) {
 an<DictEntry> DictEntryIterator::Peek() {
   if (!entry_ && !exhausted()) {
     // get next entry from current chunk
-    const auto& chunk(chunks_[chunk_index_]);
-    const auto& e(chunk.entries[chunk.cursor]);
+    const auto& chunk = query_result_->chunks[chunk_index_];
+    const auto& e = chunk.entries[chunk.cursor];
     DLOG(INFO) << "creating temporary dict entry '"
                << chunk.table->GetEntryText(e) << "'.";
     entry_ = New<DictEntry>();
@@ -100,7 +127,7 @@ bool DictEntryIterator::FindNextEntry() {
   if (exhausted()) {
     return false;
   }
-  auto& chunk(chunks_[chunk_index_]);
+  auto& chunk = query_result_->chunks[chunk_index_];
   if (++chunk.cursor >= chunk.size) {
     ++chunk_index_;
   }
@@ -128,7 +155,7 @@ bool DictEntryIterator::Next() {
 bool DictEntryIterator::Skip(size_t num_entries) {
   while (num_entries > 0) {
     if (exhausted()) return false;
-    auto& chunk(chunks_[chunk_index_]);
+    auto& chunk = query_result_->chunks[chunk_index_];
     if (chunk.cursor + num_entries < chunk.size) {
       chunk.cursor += num_entries;
       return true;
@@ -138,6 +165,11 @@ bool DictEntryIterator::Skip(size_t num_entries) {
   }
   return true;
 }
+
+bool DictEntryIterator::exhausted() const {
+  return chunk_index_ >= query_result_->chunks.size();
+}
+
 
 // Dictionary members
 

@@ -18,36 +18,19 @@ namespace rime {
 
 namespace dictionary {
 
-struct Chunk {
-  Table* table = nullptr;
-  Code code;
-  const table::Entry* entries = nullptr;
-  size_t size = 0;
-  size_t cursor = 0;
-  string remaining_code;  // for predictive queries
-  double credibility = 0.0;
-
-  Chunk() = default;
-  Chunk(Table* t, const Code& c, const table::Entry* e, double cr = 0.0)
-      : table(t), code(c), entries(e), size(1), cursor(0), credibility(cr) {}
-  Chunk(Table* t, const TableAccessor& a, double cr = 0.0)
-      : Chunk(t, a, string(), cr) {}
-  Chunk(Table* t, const TableAccessor& a, const string& r, double cr = 0.0)
-      : table(t), code(a.index_code()), entries(a.entry()),
-        size(a.remaining()), cursor(0), remaining_code(r), credibility(cr) {}
-};
-
-bool compare_chunk_by_leading_element(const Chunk& a, const Chunk& b);
+struct Chunk;
+struct QueryResult;
 
 }  // namespace dictionary
 
 class DictEntryIterator : public DictEntryFilterBinder {
  public:
-  DictEntryIterator() = default;
-  DictEntryIterator(DictEntryIterator&& other) = default;
-  DictEntryIterator& operator= (DictEntryIterator&& other) = default;
+  DictEntryIterator();
+  virtual ~DictEntryIterator() = default;
   DictEntryIterator(const DictEntryIterator& other) = default;
   DictEntryIterator& operator= (const DictEntryIterator& other) = default;
+  DictEntryIterator(DictEntryIterator&& other) = default;
+  DictEntryIterator& operator= (DictEntryIterator&& other) = default;
 
   void AddChunk(dictionary::Chunk&& chunk);
   void Sort();
@@ -55,14 +38,14 @@ class DictEntryIterator : public DictEntryFilterBinder {
   RIME_API an<DictEntry> Peek();
   RIME_API bool Next();
   bool Skip(size_t num_entries);
-  bool exhausted() const { return chunk_index_ >= chunks_.size(); }
+  bool exhausted() const;
   size_t entry_count() const { return entry_count_; }
 
  protected:
   bool FindNextEntry();
 
  private:
-  vector<dictionary::Chunk> chunks_;
+  an<dictionary::QueryResult> query_result_;
   size_t chunk_index_ = 0;
   an<DictEntry> entry_ = nullptr;
   size_t entry_count_ = 0;
