@@ -19,7 +19,6 @@ namespace rime {
 class Code;
 class Corrector;
 struct DictEntry;
-struct DictEntryCollector;
 class Dictionary;
 class Poet;
 class UserDictionary;
