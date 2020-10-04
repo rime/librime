@@ -15,33 +15,32 @@
 
 namespace rime {
 
-struct UserDictEntryCollector : map<size_t, DictEntryList> {
-};
-
 class UserDictEntryIterator : public DictEntryFilterBinder {
  public:
   UserDictEntryIterator() = default;
 
-  void Add(const an<DictEntry>& entry);
+  void Add(an<DictEntry>&& entry);
+  void SetEntries(DictEntryList&& entries);
   void SortRange(size_t start, size_t count);
-  bool Release(DictEntryList* receiver);
 
   void AddFilter(DictEntryFilter filter) override;
   an<DictEntry> Peek();
   bool Next();
   bool exhausted() const {
-    return !entries_ || index_ >= entries_->size();
+    return index_ >= cache_.size();
   }
-  size_t size() const {
-    return entries_ ? entries_->size() : 0;
+  size_t cache_size() const {
+    return cache_.size();
   }
 
  protected:
   bool FindNextEntry();
 
-  an<DictEntryList> entries_;
+  DictEntryList cache_;
   size_t index_ = 0;
 };
+
+using UserDictEntryCollector = map<size_t, UserDictEntryIterator>;
 
 class Schema;
 class Table;

@@ -28,7 +28,7 @@ struct DfsState {
   TickCount present_tick;
   Code code;
   vector<double> credibility;
-  an<UserDictEntryCollector> collector;
+  map<int, DictEntryList> query_result;
   an<DbAccessor> accessor;
   string key;
   string value;
@@ -70,32 +70,22 @@ void DfsState::RecruitEntry(size_t pos) {
   if (e) {
     e->code = code;
     DLOG(INFO) << "add entry at pos " << pos;
-    (*collector)[pos].push_back(e);
+    query_result[pos].push_back(e);
   }
 }
 
 // UserDictEntryIterator members
 
-void UserDictEntryIterator::Add(const an<DictEntry>& entry) {
-  if (!entries_) {
-    entries_ = New<DictEntryList>();
-  }
-  entries_->push_back(entry);
+void UserDictEntryIterator::Add(an<DictEntry>&& entry) {
+  cache_.push_back(std::move(entry));
+}
+
+void UserDictEntryIterator::SetEntries(DictEntryList&& entries) {
+  cache_ = std::move(entries);
 }
 
 void UserDictEntryIterator::SortRange(size_t start, size_t count) {
-  if (entries_)
-    entries_->SortRange(start, count);
-}
-
-bool UserDictEntryIterator::Release(DictEntryList* receiver) {
-  if (!entries_)
-    return false;
-  if (receiver)
-    entries_->swap(*receiver);
-  entries_.reset();
-  index_ = 0;
-  return true;
+  cache_.SortRange(start, count);
 }
 
 void UserDictEntryIterator::AddFilter(DictEntryFilter filter) {
@@ -111,7 +101,7 @@ an<DictEntry> UserDictEntryIterator::Peek() {
   if (exhausted()) {
     return nullptr;
   }
-  return (*entries_)[index_];
+  return cache_[index_];
 }
 
 bool UserDictEntryIterator::FindNextEntry() {
@@ -255,6 +245,14 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
   }
 }
 
+static an<UserDictEntryCollector> collect(map<int, DictEntryList>* source) {
+  auto result = New<UserDictEntryCollector>();
+  for (auto& x : *source) {
+    (*result)[x.first].SetEntries(std::move(x.second));
+  }
+  return result;
+}
+
 an<UserDictEntryCollector>
 UserDictionary::Lookup(const SyllableGraph& syll_graph,
                        size_t start_pos,
@@ -268,18 +266,17 @@ UserDictionary::Lookup(const SyllableGraph& syll_graph,
   FetchTickCount();
   state.present_tick = tick_ + 1;
   state.credibility.push_back(initial_credibility);
-  state.collector = New<UserDictEntryCollector>();
   state.accessor = db_->Query("");
   state.accessor->Jump(" ");  // skip metadata
   string prefix;
   DfsLookup(syll_graph, start_pos, prefix, &state);
-  if (state.collector->empty())
+  if (state.query_result.empty())
     return nullptr;
   // sort each group of homophones by weight
-  for (auto& v : *state.collector) {
+  for (auto& v : state.query_result) {
     v.second.Sort();
   }
-  return state.collector;
+  return collect(&state.query_result);
 }
 
 size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
@@ -289,7 +286,7 @@ size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
                                    string* resume_key) {
   TickCount present_tick = tick_ + 1;
   size_t len = input.length();
-  size_t start = result->size();
+  size_t start = result->cache_size();
   size_t count = 0;
   size_t exact_match_count = 0;
   const string kEnd = "\xff";
@@ -328,7 +325,7 @@ size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
       e->comment = "~" + full_code.substr(len);
       e->remaining_code_length = full_code.length() - len;
     }
-    result->Add(e);
+    result->Add(std::move(e));
     ++count;
     if (is_exact_match)
       ++exact_match_count;

@@ -413,7 +413,6 @@ class SentenceTranslation : public Translation {
   an<Sentence> sentence_;
   DictEntryCollector collector_;
   UserDictEntryCollector user_phrase_collector_;
-  size_t user_phrase_index_ = 0;
   string input_;
   size_t start_;
 };
@@ -441,9 +440,8 @@ bool SentenceTranslation::Next() {
   }
   if (PreferUserPhrase()) {
     auto r = user_phrase_collector_.rbegin();
-    if (++user_phrase_index_ >= r->second.size()) {
+    if (!r->second.Next()) {
       user_phrase_collector_.erase(r->first);
-      user_phrase_index_ = 0;
     }
   }
   else {
@@ -467,7 +465,7 @@ an<Candidate> SentenceTranslation::Peek() {
   if (is_user_phrase) {
     auto r = user_phrase_collector_.rbegin();
     code_length = r->first;
-    entry = r->second[user_phrase_index_];
+    entry = r->second.Peek();
   }
   else {
     auto r = collector_.rbegin();
@@ -603,9 +601,9 @@ TableTranslator::MakeSentence(const string& input, size_t start,
           if (include_prefix_phrases && start_pos == 0) {
             // also provide words for manual composition
             // uter must not be consumed
-            uter.Release(&user_phrase_collector[consumed_length]);
-            DLOG(INFO) << "user phrase[" << consumed_length << "]: "
-                       << user_phrase_collector[consumed_length].size();
+            user_phrase_collector[consumed_length] = std::move(uter);
+            DLOG(INFO) << "user phrase[" << consumed_length << "] cached: "
+                       << user_phrase_collector[consumed_length].cache_size();
           }
         }
         if (resume_key > active_key &&
@@ -641,9 +639,9 @@ TableTranslator::MakeSentence(const string& input, size_t start,
           if (include_prefix_phrases && start_pos == 0) {
             // also provide words for manual composition
             // uter must not be consumed
-            uter.Release(&user_phrase_collector[consumed_length]);
-            DLOG(INFO) << "unity phrase[" << consumed_length << "]: "
-                       << user_phrase_collector[consumed_length].size();
+            user_phrase_collector[consumed_length] = std::move(uter);
+            DLOG(INFO) << "unity phrase[" << consumed_length << "] cached: "
+                       << user_phrase_collector[consumed_length].cache_size();
           }
         }
         if (resume_key > active_key &&

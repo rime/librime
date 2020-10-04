@@ -12,13 +12,12 @@
 
 #include <rime/common.h>
 #include <rime/translation.h>
-#include <rime/dict/user_dictionary.h>
 #include <rime/gear/translator_commons.h>
 #include <rime/gear/contextual_translation.h>
 
 namespace rime {
 
-using WordGraph = map<int, UserDictEntryCollector>;
+using WordGraph = map<int, map<int, DictEntryList>>;
 
 class Grammar;
 class Language;
