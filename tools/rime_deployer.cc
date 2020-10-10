@@ -82,12 +82,24 @@ int main(int argc, char* argv[]) {
   SetupLogging("rime.tools");
 
   if (argc == 1) {
-    std::cout << "options:" << std::endl
-              << "\t--build [user_data_dir shared_data_dir staging_dir]" << std::endl
-              << "\t--add-schema schema_id [...]" << std::endl
-              << "\t--set-active-schema schema_id" << std::endl
-              << "\t--compile x.schema.yaml [user_data_dir shared_data_dir staging_dir]" << std::endl
-        ;
+    std::cout << "Usage: " << std::endl
+              << "\t--add-schema [schema_id] ..." << std::endl
+              << "\t\tAdd one or more schema_id to the schema_list in default.custom.yaml" << std::endl
+              << std::endl
+              << "\t-build [user_data_dir] [shared_data_dir] [built_target_dir]" << std::endl
+              << "\t\tManually build & deploy, the dirs have to be specified." << std::endl
+              << "\t\tFor linux, the default dirs are " << std::endl
+              << "\t\t[user_data_dir]     ~/.config/ibus/rime/" << std::endl
+              << "\t\t[shared_data_dir]   /usr/share/rime-data/" << std::endl
+              << "\t\t[built_target_dir]  ~/.config/ibus/rime/build" << std::endl
+              << std::endl
+              << "\t--compile [x.schema.yaml] <user_data_dir> <shared_data_dir> <built_target_dir>" << std::endl
+              << "\t\tManually compile a schema's .dict file." << std::endl
+              << std::endl
+              << "\t--set-active-schema [schema_id]" << std::endl
+              << "\t\tModify previously_selected_schema in user.yaml" << std::endl
+      ;
+
     return 0;
   }
 
