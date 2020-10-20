@@ -1,5 +1,4 @@
 FROM ubuntu:18.04
-MAINTAINER a8568730
 
 RUN apt update
 RUN apt install -y \
@@ -11,6 +10,14 @@ libgtest-dev \
 libyaml-cpp-dev \
 libleveldb-dev \
 libmarisa-dev
+
+# install capnproto
+RUN curl -O https://capnproto.org/capnproto-c++-0.8.0.tar.gz
+RUN tar zxf capnproto-c++-0.8.0.tar.gz
+WORKDIR capnproto-c++-0.8.0/
+RUN ./configure
+RUN make -j2 check
+RUN make install
 
 RUN apt install -y git
 
