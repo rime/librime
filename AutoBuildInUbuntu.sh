@@ -23,21 +23,17 @@ make install
 
 apt install -y git
 
-# Manually install libopencc
 git clone https://github.com/BYVoid/OpenCC.git
 cd OpenCC/
 apt install -y doxygen
 make
 make install
 
-# Fix libgtest problem during compiling
 cd /usr/src/gtest
 cmake CMakeLists.txt
 make
-#copy or symlink libgtest.a and libgtest_main.a to your /usr/lib folder
 cp *.a /usr/lib
 
-# Build librime
 cd /
 git clone https://github.com/rime/librime.git
 cd librime/
