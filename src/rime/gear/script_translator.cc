@@ -447,7 +447,9 @@ an<Candidate> ScriptTranslation::Peek() {
   }
   if (candidate_->comment().empty()) {
     auto spelling = syllabifier_->GetOriginalSpelling(*candidate_);
-    if (!spelling.empty() && spelling != candidate_->preedit()) {
+    if (!spelling.empty() &&
+        (translator_->always_show_comments() ||
+          spelling != candidate_->preedit())) {
       candidate_->set_comment(/*quote_left + */spelling/* + quote_right*/);
     }
   }
