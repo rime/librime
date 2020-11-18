@@ -448,7 +448,9 @@ an<Candidate> ScriptTranslation::Peek() {
   }
   if (candidate_->comment().empty()) {
     auto spelling = syllabifier_->GetOriginalSpelling(*candidate_);
-    if (!spelling.empty() && spelling != candidate_->preedit()) {
+    if (!spelling.empty() &&
+        (translator_->always_show_comments() ||
+          spelling != candidate_->preedit())) {
       candidate_->set_comment(/*quote_left + */spelling/* + quote_right*/);
     }
   }
@@ -462,17 +464,6 @@ void ScriptTranslation::PrepareCandidate() {
     return;
   }
   if (sentence_) {
-    if (sentence_->preedit().empty()) {
-      sentence_->set_preedit(syllabifier_->GetPreeditString(*sentence_));
-    }
-    if (sentence_->comment().empty()) {
-      auto spelling = syllabifier_->GetOriginalSpelling(*sentence_);
-      if (!spelling.empty() &&
-          (translator_->always_show_comments() ||
-              spelling != sentence_->preedit())) {
-        sentence_->set_comment(/*quote_left + */spelling/* + quote_right*/);
-      }
-    }
     candidate_ = sentence_;
     return;
   }
