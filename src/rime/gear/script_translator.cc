@@ -469,10 +469,6 @@ an<Candidate> ScriptTranslation::Peek() {
   if (candidate_->comment().empty()) {
     auto spelling = syllabifier_->GetOriginalSpelling(*candidate_);
     bool sichoanlosu = SiChoanLoSu(candidate_->text(), spelling);
-    LOG(ERROR) << "spelling=" << spelling;
-    LOG(ERROR) << "candidate_->preedit()=" << candidate_->preedit();
-    LOG(ERROR) << "candidate_->text()=" << candidate_->text();
-    LOG(ERROR) << "sichoanlosu=" << sichoanlosu;
     if (!spelling.empty() && !sichoanlosu) {
       candidate_->set_comment(/*quote_left + */spelling/* + quote_right*/);
     }
