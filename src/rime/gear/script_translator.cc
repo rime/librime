@@ -471,7 +471,7 @@ void ScriptTranslation::PrepareCandidate() {
       if (!spelling.empty() &&
           (translator_->always_show_comments() ||
               spelling != sentence_->preedit())) {
-        sentence_->set_comment(/*quote_left + */spelling/* + quote_right*/);
+        // sentence_->set_comment(/*quote_left + */spelling/* + quote_right*/);
       }
     }
     candidate_ = sentence_;
