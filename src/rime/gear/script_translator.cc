@@ -214,7 +214,7 @@ string ScriptTranslator::Spell(const Code& code) {
   if (!dict_ || !dict_->Decode(code, &syllables) || syllables.empty())
     return result;
   result =  boost::algorithm::join(syllables,
-                                   string(1, delimiters_.at(0)));
+                                   "-");
   comment_formatter_.Apply(&result);
   return result;
 }
