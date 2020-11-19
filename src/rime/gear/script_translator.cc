@@ -115,6 +115,7 @@ class ScriptTranslation : public Translation {
     set_exhausted(true);
   }
   bool Evaluate(Dictionary* dict, UserDictionary* user_dict);
+  bool SiChoanLoSu(const string& cand_text, const string& spelling);
   virtual bool Next();
   virtual an<Candidate> Peek();
 
@@ -437,6 +438,26 @@ bool ScriptTranslation::IsNormalSpelling() const {
       (syllable_graph.vertices.rbegin()->second == kNormalSpelling);
 }
 
+bool ScriptTranslation::SiChoanLoSu(
+  const string& cand_text, const string& spelling) {
+  bool penn_tng = (cand_text.length() == spelling.length()) ? true: false;
+
+  if(penn_tng) {
+    size_t text_len = cand_text.length();
+    for(size_t ui = 0; ui <= text_len; ui++) {
+      if(cand_text[ui] == '-' && spelling[ui] == ' ') {
+        continue;
+      }
+      else if(cand_text[ui] != spelling[ui]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  return false;
+}
+
 an<Candidate> ScriptTranslation::Peek() {
   PrepareCandidate();
   if (!candidate_) {
@@ -447,9 +468,12 @@ an<Candidate> ScriptTranslation::Peek() {
   }
   if (candidate_->comment().empty()) {
     auto spelling = syllabifier_->GetOriginalSpelling(*candidate_);
-    if (!spelling.empty() &&
-        (translator_->always_show_comments() ||
-          spelling != candidate_->preedit())) {
+    bool sichoanlosu = SiChoanLoSu(candidate_->text(), spelling);
+    LOG(ERROR) << "spelling=" << spelling;
+    LOG(ERROR) << "candidate_->preedit()=" << candidate_->preedit();
+    LOG(ERROR) << "candidate_->text()=" << candidate_->text();
+    LOG(ERROR) << "sichoanlosu=" << sichoanlosu;
+    if (!spelling.empty() && !sichoanlosu) {
       candidate_->set_comment(/*quote_left + */spelling/* + quote_right*/);
     }
   }
