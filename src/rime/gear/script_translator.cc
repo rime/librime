@@ -492,9 +492,8 @@ void ScriptTranslation::PrepareCandidate() {
     }
     if (sentence_->comment().empty()) {
       auto spelling = syllabifier_->GetOriginalSpelling(*sentence_);
-      if (!spelling.empty() &&
-          (translator_->always_show_comments() ||
-              spelling != sentence_->preedit())) {
+      bool sichoanlo = SiChoanLoSu(sentence_->text(), spelling);
+      if (!spelling.empty() && !sichoanlo) {
         sentence_->set_comment(/*quote_left + */spelling/* + quote_right*/);
       }
     }
