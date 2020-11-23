@@ -210,12 +210,13 @@ DistinctTranslation::DistinctTranslation(an<Translation> translation)
 bool DistinctTranslation::Next() {
   if (exhausted())
     return false;
-  candidate_set_.insert(Peek()->text());
+  string peek = Peek()->text() + Peek()->comment(); // jī + im
+  candidate_set_.insert(peek);
   do {
     CacheTranslation::Next();
   }
   while (!exhausted() &&
-         AlreadyHas(Peek()->text()));  // skip duplicate candidates
+         AlreadyHas(Peek()->text() + Peek()->comment()));  // skip duplicate candidates
   return true;
 }
 
