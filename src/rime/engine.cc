@@ -90,9 +90,6 @@ ConcreteEngine::ConcreteEngine() {
 
 ConcreteEngine::~ConcreteEngine() {
   LOG(INFO) << "engine disposed.";
-  processors_.clear();
-  segmentors_.clear();
-  translators_.clear();
 }
 
 bool ConcreteEngine::ProcessKey(const KeyEvent& key_event) {
