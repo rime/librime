@@ -57,7 +57,8 @@ merged-plugins:
 debug:
 	cmake . -B$(build) \
 	-DCMAKE_INSTALL_PREFIX=/usr \
-	-DCMAKE_BUILD_TYPE=Debug
+	-DCMAKE_BUILD_TYPE=Debug \
+	-DBUILD_MERGED_PLUGINS=OFF
 	cmake --build $(build)
 
 install:
