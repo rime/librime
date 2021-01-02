@@ -25,7 +25,7 @@ struct QueryResult;
 
 class DictEntryIterator : public DictEntryFilterBinder {
  public:
-  DictEntryIterator();
+  RIME_API DictEntryIterator();
   virtual ~DictEntryIterator() = default;
   DictEntryIterator(const DictEntryIterator& other) = default;
   DictEntryIterator& operator= (const DictEntryIterator& other) = default;
@@ -38,7 +38,7 @@ class DictEntryIterator : public DictEntryFilterBinder {
   RIME_API an<DictEntry> Peek();
   RIME_API bool Next();
   bool Skip(size_t num_entries);
-  bool exhausted() const;
+  RIME_API bool exhausted() const;
   size_t entry_count() const { return entry_count_; }
 
  protected:
