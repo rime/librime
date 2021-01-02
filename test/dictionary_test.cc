@@ -79,7 +79,7 @@ TEST_F(RimeDictionaryTest, ScriptLookup) {
   ASSERT_TRUE(bool(c));
 
   ASSERT_TRUE(c->find(3) != c->end());
-  rime::DictEntryIterator& d3((*c)[3]);
+  rime::DictEntryIterator d3((*c)[3]);
   EXPECT_FALSE(d3.exhausted());
   auto e1 = d3.Peek();
   ASSERT_TRUE(bool(e1));
@@ -88,14 +88,14 @@ TEST_F(RimeDictionaryTest, ScriptLookup) {
   EXPECT_TRUE(d3.Next());
 
   ASSERT_TRUE(c->find(5) != c->end());
-  rime::DictEntryIterator& d5((*c)[5]);
+  rime::DictEntryIterator d5((*c)[5]);
   EXPECT_FALSE(d5.exhausted());
   auto e2 = d5.Peek();
   ASSERT_TRUE(bool(e2));
   EXPECT_EQ(2, e2->code.size());
 
   ASSERT_TRUE(c->find(7) != c->end());
-  rime::DictEntryIterator& d7((*c)[7]);
+  rime::DictEntryIterator d7((*c)[7]);
   EXPECT_FALSE(d7.exhausted());
   auto e3 = d7.Peek();
   ASSERT_TRUE(bool(e3));
