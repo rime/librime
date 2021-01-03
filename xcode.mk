@@ -5,6 +5,8 @@ RIME_DIST_DIR = $(RIME_ROOT)/dist
 RIME_COMPILER_OPTIONS = CC=clang CXX=clang++ \
 CXXFLAGS="-stdlib=libc++" LDFLAGS="-stdlib=libc++"
 
+ICU_PREFIX = $(shell brew --prefix)/opt/icu4c
+
 build = build
 debug debug-with-icu test-debug: build = debug
 
@@ -26,7 +28,7 @@ release-with-icu:
 	-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
 	-DCMAKE_INSTALL_PREFIX="$(RIME_DIST_DIR)" \
 	-DBUILD_WITH_ICU=ON \
-	-DCMAKE_PREFIX_PATH=/usr/local/opt/icu4c
+	-DCMAKE_PREFIX_PATH=$(ICU_PREFIX)
 	cmake --build $(build) --config Release
 
 debug:
@@ -40,7 +42,7 @@ debug-with-icu:
 	-DBUILD_STATIC=ON \
 	-DBUILD_SEPARATE_LIBS=ON \
 	-DBUILD_WITH_ICU=ON \
-	-DCMAKE_PREFIX_PATH=/usr/local/opt/icu4c
+	-DCMAKE_PREFIX_PATH=$(ICU_PREFIX)
 	cmake --build $(build) --config Debug
 
 clean:
