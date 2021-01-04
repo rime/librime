@@ -2,8 +2,14 @@ RIME_ROOT = $(CURDIR)
 
 RIME_DIST_DIR = $(RIME_ROOT)/dist
 
-RIME_COMPILER_OPTIONS = CC=clang CXX=clang++ \
-CXXFLAGS="-stdlib=libc++" LDFLAGS="-stdlib=libc++"
+ifdef BOOST_ROOT
+CMAKE_BOOST_OPTIONS = -DBoost_NO_BOOST_CMAKE=TRUE \
+	-DBOOST_ROOT="$(BOOST_ROOT)"
+endif
+
+ifdef BUILD_UNIVERSAL
+export CMAKE_OSX_ARCHS = -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+endif
 
 ICU_PREFIX = $(shell brew --prefix)/opt/icu4c
 
@@ -19,22 +25,27 @@ release:
 	cmake . -B$(build) -GXcode \
 	-DBUILD_STATIC=ON \
 	-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
-	-DCMAKE_INSTALL_PREFIX="$(RIME_DIST_DIR)"
+	-DCMAKE_INSTALL_PREFIX="$(RIME_DIST_DIR)" \
+	$(CMAKE_BOOST_OPTIONS) \
+	$(CMAKE_OSX_ARCHS)
 	cmake --build $(build) --config Release
 
 release-with-icu:
 	cmake . -B$(build) -GXcode \
 	-DBUILD_STATIC=ON \
+	-DBUILD_WITH_ICU=ON \
 	-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
 	-DCMAKE_INSTALL_PREFIX="$(RIME_DIST_DIR)" \
-	-DBUILD_WITH_ICU=ON \
-	-DCMAKE_PREFIX_PATH=$(ICU_PREFIX)
+	-DCMAKE_PREFIX_PATH="$(ICU_PREFIX)" \
+	$(CMAKE_BOOST_OPTIONS) \
+	$(CMAKE_OSX_ARCHS)
 	cmake --build $(build) --config Release
 
 debug:
 	cmake . -B$(build) -GXcode \
 	-DBUILD_STATIC=ON \
-	-DBUILD_SEPARATE_LIBS=ON
+	-DBUILD_SEPARATE_LIBS=ON \
+	$(CMAKE_BOOST_OPTIONS)
 	cmake --build $(build) --config Debug
 
 debug-with-icu:
@@ -42,7 +53,8 @@ debug-with-icu:
 	-DBUILD_STATIC=ON \
 	-DBUILD_SEPARATE_LIBS=ON \
 	-DBUILD_WITH_ICU=ON \
-	-DCMAKE_PREFIX_PATH=$(ICU_PREFIX)
+	-DCMAKE_PREFIX_PATH="$(ICU_PREFIX)" \
+	$(CMAKE_BOOST_OPTIONS)
 	cmake --build $(build) --config Debug
 
 clean:
@@ -68,7 +80,7 @@ test-debug: debug
 	(cd $(build)/test; Debug/rime_test)
 
 thirdparty:
-	$(RIME_COMPILER_OPTIONS) make -f thirdparty.mk
+	make -f thirdparty.mk
 
 thirdparty/%:
-	$(RIME_COMPILER_OPTIONS) make -f thirdparty.mk $(@:thirdparty/%=%)
+	make -f thirdparty.mk $(@:thirdparty/%=%)
