@@ -500,7 +500,7 @@ void SentenceTranslation::PrepareSentence() {
   // split syllables
   size_t pos = 0;
   for (int len : sentence_->word_lengths()) {
-    if (pos > 0 && delimiters.find(input_[pos - 1]) == string::npos) {
+    if (pos > 0 && delimiters.find(preedit[pos - 1]) == string::npos) {
       preedit.insert(pos, 1, ' ');
       ++pos;
     }
