@@ -499,10 +499,11 @@ void SentenceTranslation::PrepareSentence() {
   const string& delimiters(translator_->delimiters());
   // split syllables
   size_t pos = 0;
+  size_t blank = 0;
   for (int len : sentence_->word_lengths()) {
     if (pos > 0 && delimiters.find(input_[pos - 1]) == string::npos) {
-      preedit.insert(pos, 1, ' ');
-      ++pos;
+      preedit.insert(pos + blank, 1, ' ');
+      ++blank;
     }
     pos += len;
   }
