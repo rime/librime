@@ -33,6 +33,7 @@ capnproto:
 	-DBUILD_TESTING:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
 	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	$(CMAKE_OSX_ARCHS) \
 	&& cmake --build $(build) --target install
 
 glog:
@@ -42,6 +43,7 @@ glog:
 	-DWITH_GFLAGS:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
 	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	$(CMAKE_OSX_ARCHS) \
 	&& cmake --build $(build) --target install
 
 gtest:
@@ -50,6 +52,7 @@ gtest:
 	-DBUILD_GMOCK:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
 	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	$(CMAKE_OSX_ARCHS) \
 	&& cmake --build $(build) --target install
 
 leveldb:
@@ -59,6 +62,7 @@ leveldb:
 	-DLEVELDB_BUILD_TESTS:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
 	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	$(CMAKE_OSX_ARCHS) \
 	&& cmake --build $(build) --target install
 
 marisa:
@@ -66,6 +70,7 @@ marisa:
 	cmake $(SRC_DIR) -B$(build) \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
 	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	$(CMAKE_OSX_ARCHS) \
 	&& cmake --build $(build) --target install
 
 opencc:
@@ -74,6 +79,7 @@ opencc:
 	-DBUILD_SHARED_LIBS:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
 	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	$(CMAKE_OSX_ARCHS) \
 	&& cmake --build $(build) --target install
 
 yaml-cpp:
@@ -84,4 +90,5 @@ yaml-cpp:
 	-DYAML_CPP_BUILD_TOOLS:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
 	-DCMAKE_INSTALL_PREFIX:PATH="$(THIRD_PARTY_DIR)" \
+	$(CMAKE_OSX_ARCHS) \
 	&& cmake --build $(build) --target install
