@@ -154,6 +154,7 @@ if(UNIX)
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 endif()
 
+# keep these variables lest some Rime plugin's cmake file is still using them {
 if(NOT DEFINED LIB_INSTALL_DIR)
     set(LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR})
 endif()
@@ -161,6 +162,7 @@ endif()
 if(NOT DEFINED BIN_INSTALL_DIR)
     set(BIN_INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
 endif()
+# }
 
 # uninstall target
 configure_file(
@@ -173,22 +175,24 @@ add_custom_target(uninstall
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly|GNU")
   set(prefix "${CMAKE_INSTALL_PREFIX}")
   set(exec_prefix "${CMAKE_INSTALL_PREFIX}")
-  set(bindir "${exec_prefix}/${BIN_INSTALL_DIR}")
-  set(libdir "${exec_prefix}/${LIB_INSTALL_DIR}")
-  set(pkgdatadir "${prefix}${rime_data_dir}")
-  set(includedir "${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+  set(bindir "${CMAKE_INSTALL_FULL_BINDIR}")
+  set(libdir "${CMAKE_INSTALL_FULL_LIBDIR}")
+  set(pkgdatadir "${CMAKE_INSTALL_PREFIX}${rime_data_dir}")
+  set(includedir "${CMAKE_INSTALL_FULL_INCLUDEDIR}")
   configure_file(
       ${PROJECT_SOURCE_DIR}/rime.pc.in
       ${PROJECT_BINARY_DIR}/rime.pc
       @ONLY)
   install(FILES ${PROJECT_BINARY_DIR}/rime.pc
-    DESTINATION ${LIB_INSTALL_DIR}/pkgconfig)
+    DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/pkgconfig)
 endif()
 
-install(FILES cmake/RimeConfig.cmake DESTINATION share/cmake/rime)
+install(FILES cmake/RimeConfig.cmake
+  DESTINATION ${CMAKE_INSTALL_FULL_DATADIR}/cmake/rime)
 
 file(GLOB rime_public_header_files ${PROJECT_SOURCE_DIR}/src/*.h)
-install(FILES ${rime_public_header_files} DESTINATION include)
+install(FILES ${rime_public_header_files}
+  DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR})
 
 if(BUILD_DATA)
   file(GLOB rime_preset_data_files ${PROJECT_SOURCE_DIR}/data/preset/*.yaml)

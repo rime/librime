@@ -43,7 +43,7 @@ foreach(plugin ${plugins})
     if(XCODE_VERSION)
       set_target_properties(${plugin_name} PROPERTIES INSTALL_NAME_DIR "@rpath")
     endif(XCODE_VERSION)
-    install(TARGETS ${plugin_name} DESTINATION ${LIB_INSTALL_DIR})
+    install(TARGETS ${plugin_name} DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
   endif()
 endforeach(plugin)
 

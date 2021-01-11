@@ -26,7 +26,7 @@ if(BUILD_SAMPLE)
       PROPERTIES
       INSTALL_NAME_DIR "@rpath")
   endif(XCODE_VERSION)
-  install(TARGETS ${sample_library} DESTINATION ${LIB_INSTALL_DIR})
+  install(TARGETS ${sample_library} DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
 
   add_subdirectory(tools)
   if(BUILD_TEST)
