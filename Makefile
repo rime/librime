@@ -42,21 +42,24 @@ release:
 	cmake . -B$(build) \
 	-DCMAKE_INSTALL_PREFIX=$(prefix) \
 	-DCMAKE_BUILD_TYPE=Release \
-	-DBUILD_MERGED_PLUGINS=OFF
+	-DBUILD_MERGED_PLUGINS=OFF \
+	-DENABLE_EXTERNAL_PLUGINS=ON
 	cmake --build $(build)
 
 merged-plugins:
 	cmake . -B$(build) \
 	-DCMAKE_INSTALL_PREFIX=$(prefix) \
 	-DCMAKE_BUILD_TYPE=Release \
-	-DBUILD_MERGED_PLUGINS=ON
+	-DBUILD_MERGED_PLUGINS=ON \
+	-DENABLE_EXTERNAL_PLUGINS=OFF
 	cmake --build $(build)
 
 debug:
 	cmake . -B$(build) \
 	-DCMAKE_INSTALL_PREFIX=$(prefix) \
 	-DCMAKE_BUILD_TYPE=Debug \
-	-DBUILD_MERGED_PLUGINS=OFF
+	-DBUILD_MERGED_PLUGINS=OFF \
+	-DENABLE_EXTERNAL_PLUGINS=ON
 	cmake --build $(build)
 
 install:

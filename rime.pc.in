@@ -3,6 +3,7 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 pkgdatadir=@pkgdatadir@
+pluginsdir=@pluginsdir@
 
 Name: Rime
 Description: Rime Input Method Engine

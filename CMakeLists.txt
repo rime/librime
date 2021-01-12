@@ -22,8 +22,11 @@ option(ENABLE_LOGGING "Enable logging with google-glog library" ON)
 option(BOOST_USE_CXX11 "Boost has been built with C++11 support" OFF)
 option(BOOST_USE_SIGNALS2 "Boost use signals2 instead of signals" ON)
 option(ENABLE_ASAN "Enable Address Sanitizer (Unix Only)" OFF)
+option(INSTALL_PRIVATE_HEADERS "Install private headers (usually needed for externally built Rime plugins)" OFF)
+option(ENABLE_EXTERNAL_PLUGINS "Enable loading of externally built Rime plugins (from directory set by RIME_PLUGINS_DIR variable)" OFF)
 
 set(RIME_DATA_DIR "${CMAKE_INSTALL_FULL_DATADIR}/rime-data" CACHE STRING "Target directory for Rime data")
+set(RIME_PLUGINS_DIR "${CMAKE_INSTALL_FULL_LIBDIR}/rime-plugins" CACHE STRING "Target directory for externally built Rime plugins")
 
 if(WIN32)
   set(ext ".exe")
@@ -183,6 +186,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly|GNU")
   set(bindir "${CMAKE_INSTALL_FULL_BINDIR}")
   set(libdir "${CMAKE_INSTALL_FULL_LIBDIR}")
   set(pkgdatadir "${RIME_DATA_DIR}")
+  set(pluginsdir "${RIME_PLUGINS_DIR}")
   set(includedir "${CMAKE_INSTALL_FULL_INCLUDEDIR}")
   configure_file(
       ${PROJECT_SOURCE_DIR}/rime.pc.in
@@ -198,6 +202,19 @@ install(FILES cmake/RimeConfig.cmake
 file(GLOB rime_public_header_files ${PROJECT_SOURCE_DIR}/src/*.h)
 install(FILES ${rime_public_header_files}
   DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR})
+if(INSTALL_PRIVATE_HEADERS)
+  file(GLOB rime_private_header_files
+    ${PROJECT_SOURCE_DIR}/src/rime/*.h
+    ${PROJECT_BINARY_DIR}/src/rime/*.h)
+  install(FILES ${rime_private_header_files}
+    DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR}/rime)
+  foreach(rime_private_header_files_dir algo config dict gear lever)
+    file(GLOB rime_private_header_files
+      ${PROJECT_SOURCE_DIR}/src/rime/${rime_private_header_files_dir}/*.h)
+    install(FILES ${rime_private_header_files}
+      DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR}/rime/${rime_private_header_files_dir})
+  endforeach()
+endif()
 
 if(BUILD_DATA)
   file(GLOB rime_preset_data_files ${PROJECT_SOURCE_DIR}/data/preset/*.yaml)

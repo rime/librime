@@ -8,4 +8,7 @@
 #cmakedefine RIME_BOOST_SIGNALS2
 #cmakedefine RIME_ENABLE_LOGGING
 
+#cmakedefine RIME_DATA_DIR "@RIME_DATA_DIR@"
+#cmakedefine RIME_PLUGINS_DIR "@RIME_PLUGINS_DIR@"
+
 #endif  // RIME_BUILD_CONFIG_H_
