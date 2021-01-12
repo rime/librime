@@ -23,7 +23,7 @@ option(BOOST_USE_CXX11 "Boost has been built with C++11 support" OFF)
 option(BOOST_USE_SIGNALS2 "Boost use signals2 instead of signals" ON)
 option(ENABLE_ASAN "Enable Address Sanitizer (Unix Only)" OFF)
 
-set(rime_data_dir "/share/rime-data" CACHE STRING "Target directory for Rime data")
+set(RIME_DATA_DIR "${CMAKE_INSTALL_FULL_DATADIR}/rime-data" CACHE STRING "Target directory for Rime data")
 
 if(WIN32)
   set(ext ".exe")
@@ -177,7 +177,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly|GNU")
   set(exec_prefix "${CMAKE_INSTALL_PREFIX}")
   set(bindir "${CMAKE_INSTALL_FULL_BINDIR}")
   set(libdir "${CMAKE_INSTALL_FULL_LIBDIR}")
-  set(pkgdatadir "${CMAKE_INSTALL_PREFIX}${rime_data_dir}")
+  set(pkgdatadir "${RIME_DATA_DIR}")
   set(includedir "${CMAKE_INSTALL_FULL_INCLUDEDIR}")
   configure_file(
       ${PROJECT_SOURCE_DIR}/rime.pc.in
@@ -196,8 +196,7 @@ install(FILES ${rime_public_header_files}
 
 if(BUILD_DATA)
   file(GLOB rime_preset_data_files ${PROJECT_SOURCE_DIR}/data/preset/*.yaml)
-  install(FILES ${rime_preset_data_files}
-    DESTINATION ${CMAKE_INSTALL_PREFIX}${rime_data_dir})
+  install(FILES ${rime_preset_data_files} DESTINATION ${RIME_DATA_DIR})
 endif()
 
 if(BUILD_SHARED_LIBS)
