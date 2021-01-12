@@ -4,6 +4,9 @@
 //
 // 2011-12-10 GONG Chen <chen.sst@gmail.com>
 //
+
+#include <rime/build_config.h>
+
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>

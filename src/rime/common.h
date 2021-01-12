@@ -7,6 +7,8 @@
 #ifndef RIME_COMMON_H_
 #define RIME_COMMON_H_
 
+#include <rime/build_config.h>
+
 #include <functional>
 #include <list>
 #include <map>
@@ -20,7 +22,7 @@
 #include <vector>
 #include <boost/optional.hpp>
 #define BOOST_BIND_NO_PLACEHOLDERS
-#ifdef BOOST_SIGNALS2
+#ifdef RIME_BOOST_SIGNALS2
 #include <boost/signals2/connection.hpp>
 #include <boost/signals2/signal.hpp>
 #else
@@ -79,7 +81,7 @@ inline an<T> New(Args&&... args) {
   return std::make_shared<T>(std::forward<Args>(args)...);
 }
 
-#ifdef BOOST_SIGNALS2
+#ifdef RIME_BOOST_SIGNALS2
 using boost::signals2::connection;
 using boost::signals2::signal;
 #else

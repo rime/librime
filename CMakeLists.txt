@@ -61,7 +61,7 @@ endif()
 set(BOOST_COMPONENTS filesystem regex system)
 
 if(BOOST_USE_SIGNALS2)
-  add_definitions("-DBOOST_SIGNALS2")
+  set(RIME_BOOST_SIGNALS2 1)
 else()
   set(BOOST_COMPONENTS ${BOOST_COMPONENTS} signals)
 endif()
@@ -89,7 +89,7 @@ if(ENABLE_LOGGING)
     add_definitions(-DGOOGLE_GLOG_DLL_DECL=)
   endif()
 
-  add_definitions(-DRIME_ENABLE_LOGGING)
+  set(RIME_ENABLE_LOGGING 1)
 
 endif()
 
@@ -134,6 +134,11 @@ else()
   message(WARNING "X11/keysym.h not found.")
 endif()
 
+configure_file(
+  "${PROJECT_SOURCE_DIR}/src/rime/build_config.h.in"
+  "${PROJECT_BINARY_DIR}/src/rime/build_config.h")
+
+include_directories(${PROJECT_BINARY_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/thirdparty/include)
 link_directories(${PROJECT_SOURCE_DIR}/thirdparty/lib)

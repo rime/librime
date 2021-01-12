@@ -5,6 +5,8 @@
 // 2011-10-02 GONG Chen <chen.sst@gmail.com>
 //
 
+#include <rime/build_config.h>
+
 #ifdef RIME_ENABLE_LOGGING
 #include <glog/logging.h>
 #endif  // RIME_ENABLE_LOGGING

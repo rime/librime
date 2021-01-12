@@ -1,0 +1,11 @@
+//
+// Copyright RIME Developers
+// Distributed under the BSD License
+//
+#ifndef RIME_BUILD_CONFIG_H_
+#define RIME_BUILD_CONFIG_H_
+
+#cmakedefine RIME_BOOST_SIGNALS2
+#cmakedefine RIME_ENABLE_LOGGING
+
+#endif  // RIME_BUILD_CONFIG_H_
