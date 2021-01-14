@@ -7,8 +7,15 @@ CMAKE_BOOST_OPTIONS = -DBoost_NO_BOOST_CMAKE=TRUE \
 	-DBOOST_ROOT="$(BOOST_ROOT)"
 endif
 
+# https://cmake.org/cmake/help/latest/variable/CMAKE_OSX_SYSROOT.html
+export SDKROOT ?= $(shell xcrun --sdk macosx --show-sdk-path)
+
+# https://cmake.org/cmake/help/latest/envvar/MACOSX_DEPLOYMENT_TARGET.html
+export MACOSX_DEPLOYMENT_TARGET ?= 10.9
+
 ifdef BUILD_UNIVERSAL
-export CMAKE_OSX_ARCHS = -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+# https://cmake.org/cmake/help/latest/envvar/CMAKE_OSX_ARCHITECTURES.html
+export CMAKE_OSX_ARCHITECTURES = arm64;x86_64
 endif
 
 ICU_PREFIX = $(shell brew --prefix)/opt/icu4c
@@ -26,8 +33,7 @@ release:
 	-DBUILD_STATIC=ON \
 	-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
 	-DCMAKE_INSTALL_PREFIX="$(RIME_DIST_DIR)" \
-	$(CMAKE_BOOST_OPTIONS) \
-	$(CMAKE_OSX_ARCHS)
+	$(CMAKE_BOOST_OPTIONS)
 	cmake --build $(build) --config Release
 
 release-with-icu:
@@ -37,8 +43,7 @@ release-with-icu:
 	-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
 	-DCMAKE_INSTALL_PREFIX="$(RIME_DIST_DIR)" \
 	-DCMAKE_PREFIX_PATH="$(ICU_PREFIX)" \
-	$(CMAKE_BOOST_OPTIONS) \
-	$(CMAKE_OSX_ARCHS)
+	$(CMAKE_BOOST_OPTIONS)
 	cmake --build $(build) --config Release
 
 debug:
