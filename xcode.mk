@@ -7,9 +7,21 @@ CMAKE_BOOST_OPTIONS = -DBoost_NO_BOOST_CMAKE=TRUE \
 	-DBOOST_ROOT="$(BOOST_ROOT)"
 endif
 
+export OSX_SDK_PATH = $(shell xcrun --sdk macosx --show-sdk-path)
+
+# https://cmake.org/cmake/help/latest/envvar/MACOSX_DEPLOYMENT_TARGET.html
+# Make sure librime has the same deployment target with Squirrel
+# This prevent warnings like: `xxx was built for newer macOS version (xx) than being linked (xx)`
+export MACOSX_DEPLOYMENT_TARGET = 10.9
+
+CMAKE_OSX_OPTIONS = -DCMAKE_OSX_DEPLOYMENT_TARGET="$(MACOSX_DEPLOYMENT_TARGET)"
+
 ifdef BUILD_UNIVERSAL
-export CMAKE_OSX_ARCHS = -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+CMAKE_OSX_OPTIONS += \
+	-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
 endif
+
+export CMAKE_OSX_OPTIONS
 
 ICU_PREFIX = $(shell brew --prefix)/opt/icu4c
 
@@ -27,7 +39,7 @@ release:
 	-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
 	-DCMAKE_INSTALL_PREFIX="$(RIME_DIST_DIR)" \
 	$(CMAKE_BOOST_OPTIONS) \
-	$(CMAKE_OSX_ARCHS)
+	$(CMAKE_OSX_OPTIONS)
 	cmake --build $(build) --config Release
 
 release-with-icu:
@@ -38,14 +50,15 @@ release-with-icu:
 	-DCMAKE_INSTALL_PREFIX="$(RIME_DIST_DIR)" \
 	-DCMAKE_PREFIX_PATH="$(ICU_PREFIX)" \
 	$(CMAKE_BOOST_OPTIONS) \
-	$(CMAKE_OSX_ARCHS)
+	$(CMAKE_OSX_OPTIONS)
 	cmake --build $(build) --config Release
 
 debug:
 	cmake . -B$(build) -GXcode \
 	-DBUILD_STATIC=ON \
 	-DBUILD_SEPARATE_LIBS=ON \
-	$(CMAKE_BOOST_OPTIONS)
+	$(CMAKE_BOOST_OPTIONS) \
+	$(CMAKE_OSX_OPTIONS)
 	cmake --build $(build) --config Debug
 
 debug-with-icu:
@@ -54,7 +67,8 @@ debug-with-icu:
 	-DBUILD_SEPARATE_LIBS=ON \
 	-DBUILD_WITH_ICU=ON \
 	-DCMAKE_PREFIX_PATH="$(ICU_PREFIX)" \
-	$(CMAKE_BOOST_OPTIONS)
+	$(CMAKE_BOOST_OPTIONS) \
+	$(CMAKE_OSX_OPTIONS)
 	cmake --build $(build) --config Debug
 
 clean:
