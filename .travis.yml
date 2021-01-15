@@ -18,7 +18,7 @@ matrix:
       BUILD_UNIVERSAL=1
       RIME_PLUGINS="${RIME_BUNDLED_PLUGINS}"
     os: osx
-    osx_image: xcode12u
+    osx_image: xcode12.3
     compiler: clang
     install: "./travis-install.sh"
     script:
