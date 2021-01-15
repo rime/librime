@@ -24,12 +24,12 @@ download_boost_source() {
 }
 
 boost_libs="${boost_libs=filesystem,regex,system}"
-boost_cxxflags='-arch arm64 -arch x86_64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk'
+boost_cxxflags='-arch arm64 -arch x86_64'
 
 build_boost_macos() {
     cd "${BOOST_ROOT}"
-    ./bootstrap.sh --with-libraries="${boost_libs}"
-    ./b2 -q -a toolset=darwin link=static cxxflags="${boost_cxxflags}" stage
+    ./bootstrap.sh --with-toolset=clang-darwin --with-libraries="${boost_libs}"
+    ./b2 -q -a link=static architecture=combined cxxflags="${boost_cxxflags}" stage
 }
 
 if [[ "$OSTYPE" =~ 'darwin' ]]; then
