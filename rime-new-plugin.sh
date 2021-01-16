@@ -18,7 +18,7 @@ mkdir -p "${plugin_dir}"
 
 cat >> "${plugin_dir}/CMakeLists.txt" << //EOF
 project(rime-${plugin_name})
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.10)
 
 aux_source_directory(src ${plugin_module}_src)
 
