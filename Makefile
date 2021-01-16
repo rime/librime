@@ -1,11 +1,9 @@
-RIME_ROOT = $(CURDIR)
+RIME_ROOT ?= $(CURDIR)
 
-sharedir = $(DESTDIR)/usr/share
-bindir = $(DESTDIR)/usr/bin
+prefix ?= $(DESTDIR)/usr
 
-build = build
-librime-static: build = build-static
-debug install-debug uninstall-debug test-debug: build = debug
+debug install-debug uninstall-debug test-debug: build ?= debug
+build ?= build
 
 .PHONY: all thirdparty xcode clean \
 librime librime-static install-librime uninstall-librime \
@@ -26,7 +24,7 @@ xcode/%:
 	make -f xcode.mk $(@:xcode/%=%)
 
 clean:
-	rm -Rf build build-static debug
+	rm -Rf build debug
 
 librime: release
 install-librime: install
@@ -34,7 +32,7 @@ uninstall-librime: uninstall
 
 librime-static:
 	cmake . -B$(build) \
-	-DCMAKE_INSTALL_PREFIX=/usr \
+	-DCMAKE_INSTALL_PREFIX=$(prefix) \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DBUILD_STATIC=ON \
 	-DBUILD_SHARED_LIBS=OFF
@@ -42,21 +40,21 @@ librime-static:
 
 release:
 	cmake . -B$(build) \
-	-DCMAKE_INSTALL_PREFIX=/usr \
+	-DCMAKE_INSTALL_PREFIX=$(prefix) \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DBUILD_MERGED_PLUGINS=OFF
 	cmake --build $(build)
 
 merged-plugins:
 	cmake . -B$(build) \
-	-DCMAKE_INSTALL_PREFIX=/usr \
+	-DCMAKE_INSTALL_PREFIX=$(prefix) \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DBUILD_MERGED_PLUGINS=ON
 	cmake --build $(build)
 
 debug:
 	cmake . -B$(build) \
-	-DCMAKE_INSTALL_PREFIX=/usr \
+	-DCMAKE_INSTALL_PREFIX=$(prefix) \
 	-DCMAKE_BUILD_TYPE=Debug \
 	-DBUILD_MERGED_PLUGINS=OFF
 	cmake --build $(build)

@@ -1,6 +1,6 @@
 RIME_ROOT = $(CURDIR)
 
-RIME_DIST_DIR = $(RIME_ROOT)/dist
+dist_dir = $(RIME_ROOT)/dist
 
 ifdef BOOST_ROOT
 CMAKE_BOOST_OPTIONS = -DBoost_NO_BOOST_CMAKE=TRUE \
@@ -18,12 +18,13 @@ ifdef BUILD_UNIVERSAL
 export CMAKE_OSX_ARCHITECTURES = arm64;x86_64
 endif
 
-ICU_PREFIX = $(shell brew --prefix)/opt/icu4c
+# boost::locale library from homebrew links to homebrewed icu4c libraries
+icu_prefix = $(shell brew --prefix)/opt/icu4c
 
-build = build
-debug debug-with-icu test-debug: build = debug
+debug debug-with-icu test-debug: build ?= debug
+build ?= build
 
-.PHONY: all release debug clean distclean test test-debug thirdparty \
+.PHONY: all release debug clean dist distclean test test-debug thirdparty \
 release-with-icu debug-with-icu dist-with-icu
 
 all: release
@@ -32,7 +33,7 @@ release:
 	cmake . -B$(build) -GXcode \
 	-DBUILD_STATIC=ON \
 	-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
-	-DCMAKE_INSTALL_PREFIX="$(RIME_DIST_DIR)" \
+	-DCMAKE_INSTALL_PREFIX="$(dist_dir)" \
 	$(CMAKE_BOOST_OPTIONS)
 	cmake --build $(build) --config Release
 
@@ -41,8 +42,8 @@ release-with-icu:
 	-DBUILD_STATIC=ON \
 	-DBUILD_WITH_ICU=ON \
 	-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
-	-DCMAKE_INSTALL_PREFIX="$(RIME_DIST_DIR)" \
-	-DCMAKE_PREFIX_PATH="$(ICU_PREFIX)" \
+	-DCMAKE_INSTALL_PREFIX="$(dist_dir)" \
+	-DCMAKE_PREFIX_PATH="$(icu_prefix)" \
 	$(CMAKE_BOOST_OPTIONS)
 	cmake --build $(build) --config Release
 
@@ -58,7 +59,7 @@ debug-with-icu:
 	-DBUILD_STATIC=ON \
 	-DBUILD_SEPARATE_LIBS=ON \
 	-DBUILD_WITH_ICU=ON \
-	-DCMAKE_PREFIX_PATH="$(ICU_PREFIX)" \
+	-DCMAKE_PREFIX_PATH="$(icu_prefix)" \
 	$(CMAKE_BOOST_OPTIONS)
 	cmake --build $(build) --config Debug
 
@@ -76,7 +77,7 @@ dist-with-icu: release-with-icu
 	cmake --build $(build) --config Release --target install
 
 distclean: clean
-	rm -rf "$(RIME_DIST_DIR)" > /dev/null 2>&1 || true
+	rm -rf "$(dist_dir)" > /dev/null 2>&1 || true
 
 test: release
 	(cd $(build)/test; LD_LIBRARY_PATH=../lib/Release Release/rime_test)
