@@ -1,3 +1,23 @@
+<a name="1.7.0"></a>
+# [1.7.0](https://github.com/rime/librime/compare/1.6.1...1.7.0) (2021-01-17)
+
+
+### Bug Fixes
+
+* **chord_composer:** more safely handle the placeholder ZWSP ([025d9fb](https://github.com/rime/librime/commit/025d9fb))
+* **cmake:** use full paths defined by GNUInstallDirs ([bb8c263](https://github.com/rime/librime/commit/bb8c263)), closes [#424](https://github.com/rime/librime/issues/424)
+* **opencc:** update submodule to fix [#425](https://github.com/rime/librime/issues/425) ([3fa1571](https://github.com/rime/librime/commit/3fa1571))
+* **script_translator:** always_show_comments also applies to phrases ([440a97c](https://github.com/rime/librime/commit/440a97c)), closes [#272](https://github.com/rime/librime/issues/272) [#419](https://github.com/rime/librime/issues/419)
+* **table_translator:** index out of bound access in string ([ff7acdc](https://github.com/rime/librime/commit/ff7acdc))
+
+
+### Features
+
+* **chareset_filter:** add CJK Compatibility Ideographs in is_extended_cjk() ([3cb1128](https://github.com/rime/librime/commit/3cb1128)), closes [#305](https://github.com/rime/librime/issues/305)
+* **setup:** find and load external RIME plugins as shared libs [#431](https://github.com/rime/librime/issues/431) ([b2abd09](https://github.com/rime/librime/commit/b2abd09))
+
+
+
 <a name="1.6.1"></a>
 ## [1.6.1](https://github.com/rime/librime/compare/1.6.0...1.6.1) (2020-09-21)
 
