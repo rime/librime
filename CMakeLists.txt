@@ -6,6 +6,7 @@ cmake_minimum_required(VERSION 3.10)
 
 set(rime_version 1.7.0)
 set(rime_soversion 1)
+set(CMAKE_XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME YES)
 
 add_definitions(-DRIME_VERSION="${rime_version}")
 
