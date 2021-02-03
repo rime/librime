@@ -126,7 +126,7 @@ ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   if (engine_->context()->get_option("ascii_mode")) {
     return kNoop;
   }
-  if (pass_thru_) {
+  if (sending_chord_) {
     return ProcessFunctionKey(key_event);
   }
   bool is_key_up = key_event.release();
@@ -180,13 +180,13 @@ void ChordComposer::UpdateChord() {
 void ChordComposer::FinishChord() {
   if (!engine_)
     return;
+  sending_chord_ = true;
   string code = SerializeChord();
   output_format_.Apply(&code);
   ClearChord();
 
   KeySequence key_sequence;
   if (key_sequence.Parse(code) && !key_sequence.empty()) {
-    pass_thru_ = true;
     for (const KeyEvent& key : key_sequence) {
       if (!engine_->ProcessKey(key)) {
         // direct commit
@@ -195,8 +195,8 @@ void ChordComposer::FinishChord() {
         raw_sequence_.clear();
       }
     }
-    pass_thru_ = false;
   }
+  sending_chord_ = false;
 }
 
 void ChordComposer::ClearChord() {
@@ -224,8 +224,10 @@ void ChordComposer::OnContextUpdate(Context* ctx) {
   }
   else if (composing_) {
     composing_ = false;
-    raw_sequence_.clear();
-    DLOG(INFO) << "clear raw sequence.";
+    if (!sending_chord_) {
+      raw_sequence_.clear();
+      DLOG(INFO) << "clear raw sequence.";
+    }
   }
 }
 
