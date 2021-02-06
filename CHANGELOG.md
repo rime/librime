@@ -1,3 +1,13 @@
+<a name="1.7.1"></a>
+## [1.7.1](https://github.com/rime/librime/compare/1.7.0...1.7.1) (2021-02-06)
+
+
+### Bug Fixes
+
+* **chord_composer:** press Return key to commit raw key sequence ([2b25861](https://github.com/rime/librime/commit/2b25861))
+
+
+
 <a name="1.7.0"></a>
 # [1.7.0](https://github.com/rime/librime/compare/1.6.1...1.7.0) (2021-01-17)
 
