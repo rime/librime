@@ -44,6 +44,7 @@ class ChordComposer : public Processor {
 
   set<int> pressed_;
   set<int> chord_;
+  bool editing_chord_ = false;
   bool sending_chord_ = false;
   bool composing_ = false;
   string raw_sequence_;

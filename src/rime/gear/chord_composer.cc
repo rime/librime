@@ -102,6 +102,7 @@ ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
     return kNoop;
   }
   // chording key
+  editing_chord_ = true;
   bool is_key_up = key_event.release();
   if (is_key_up) {
     if (pressed_.erase(ch) != 0 && pressed_.empty()) {
@@ -114,6 +115,7 @@ ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
     if (updated)
       UpdateChord();
   }
+  editing_chord_ = false;
   return kAccepted;
 }
 
@@ -180,13 +182,13 @@ void ChordComposer::UpdateChord() {
 void ChordComposer::FinishChord() {
   if (!engine_)
     return;
-  sending_chord_ = true;
   string code = SerializeChord();
   output_format_.Apply(&code);
   ClearChord();
 
   KeySequence key_sequence;
   if (key_sequence.Parse(code) && !key_sequence.empty()) {
+    sending_chord_ = true;
     for (const KeyEvent& key : key_sequence) {
       if (!engine_->ProcessKey(key)) {
         // direct commit
@@ -195,8 +197,8 @@ void ChordComposer::FinishChord() {
         raw_sequence_.clear();
       }
     }
+    sending_chord_ = false;
   }
-  sending_chord_ = false;
 }
 
 void ChordComposer::ClearChord() {
@@ -224,7 +226,7 @@ void ChordComposer::OnContextUpdate(Context* ctx) {
   }
   else if (composing_) {
     composing_ = false;
-    if (!sending_chord_) {
+    if (!editing_chord_ || sending_chord_) {
       raw_sequence_.clear();
       DLOG(INFO) << "clear raw sequence.";
     }
