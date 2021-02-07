@@ -1,3 +1,13 @@
+<a name="1.7.2"></a>
+## [1.7.2](https://github.com/rime/librime/compare/1.7.1...1.7.2) (2021-02-07)
+
+
+### Bug Fixes
+
+* **chord_composer:** should clear raw input after committing text ([79b34ab](https://github.com/rime/librime/commit/79b34ab))
+
+
+
 <a name="1.7.1"></a>
 ## [1.7.1](https://github.com/rime/librime/compare/1.7.0...1.7.1) (2021-02-06)
 
