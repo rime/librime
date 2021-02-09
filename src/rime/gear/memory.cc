@@ -68,10 +68,10 @@ Memory::Memory(const Ticket& ticket) {
 
   // user dictionary is named after language; dictionary name may have an
   // optional suffix separated from the language component by dot.
-  language_.reset(new Language{
-    user_dict_ ? user_dict_->name() :
-    Language::get_language_component(dict_->name())
-  });
+  language_.reset(
+      user_dict_ ? new Language{user_dict_->name()} :
+      dict_ ? new Language{Language::get_language_component(dict_->name())} :
+      nullptr);
 
   Context* ctx = ticket.engine->context();
   commit_connection_ = ctx->commit_notifier().connect(
