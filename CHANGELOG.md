@@ -1,3 +1,14 @@
+<a name="1.7.3"></a>
+## [1.7.3](https://github.com/rime/librime/compare/1.7.2...1.7.3) (2021-02-11)
+
+
+### Bug Fixes
+
+* **memory:** possibly dereferencing null pointer ([1c2644d](https://github.com/rime/librime/commit/1c2644d)), closes [#441](https://github.com/rime/librime/issues/441)
+* **plugins:** buffer overflow in plugin lotem/librime-octagram ([b0b435b](https://github.com/rime/librime/commit/b0b435b)), closes [rime/squirrel#512](https://github.com/rime/squirrel/issues/512)
+
+
+
 <a name="1.7.2"></a>
 ## [1.7.2](https://github.com/rime/librime/compare/1.7.1...1.7.2) (2021-02-07)
 
