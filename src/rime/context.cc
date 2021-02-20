@@ -247,9 +247,30 @@ void Context::set_input(const string& value) {
   update_notifier_(this);
 }
 
+void Context::set_option_state(const string& name, int order, const string& value) {
+  option_states_[name][order] = value;
+}
+
+string Context::get_option_state(const string& name, int order) {
+  if (option_states_.count(name) > 0) {
+    auto states = option_states_[name];
+    if (states.size() == 1) {
+      return states[1];
+    } else if (states.size() == 2) {
+      if ((order <= 1) && (order >= 0)) {
+        return states[order];
+      }
+    }
+  }
+  return "";
+}
+
 void Context::set_option(const string& name, bool value) {
   options_[name] = value;
-  option_update_notifier_(this, name);
+  const string& state = get_option_state(name, int(value));
+  if (state != "") {
+    option_update_notifier_(this, state);
+  }
 }
 
 bool Context::get_option(const string& name) const {

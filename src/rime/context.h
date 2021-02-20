@@ -69,6 +69,8 @@ class Context {
   const CommitHistory& commit_history() const { return commit_history_; }
 
   void set_option(const string& name, bool value);
+  void set_option_state(const string& name, int order, const string& value);
+  string get_option_state(const string& name, int order);
   bool get_option(const string& name) const;
   void set_property(const string& name, const string& value);
   string get_property(const string& name) const;
@@ -98,6 +100,7 @@ class Context {
   Composition composition_;
   CommitHistory commit_history_;
   map<string, bool> options_;
+  map<string, map<int, string>> option_states_;
   map<string, string> properties_;
 
   Notifier commit_notifier_;
