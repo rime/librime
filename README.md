@@ -44,12 +44,12 @@ Build dependencies
   - cmake>=2.8
   - libboost>=1.48
   - libcapnp>=0.7.0
-  - libglog (optional)
+  - libglog
   - libleveldb
   - libmarisa
   - libopencc>=1.0.2
   - libyaml-cpp>=0.5
-  - libgtest (optional)
+  - libgtest
 
 Runtime dependencies
 ---
