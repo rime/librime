@@ -48,6 +48,7 @@ class ReverseDb : public MappedFile {
              const Vocabulary& vocabulary,
              const ReverseLookupTable& stems,
              uint32_t dict_file_checksum);
+  bool Save();
 
   uint32_t dict_file_checksum() const;
   reverse::Metadata* metadata() const { return metadata_; }

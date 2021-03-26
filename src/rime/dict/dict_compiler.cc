@@ -287,7 +287,8 @@ bool DictCompiler::BuildReverseDb(DictSettings* settings,
                         collector.syllabary,
                         vocabulary,
                         collector.stems,
-                        dict_file_checksum)) {
+                        dict_file_checksum) ||
+      !reverse_db.Save()) {
     LOG(ERROR) << "error building reversedb.";
     return false;
   }

@@ -188,6 +188,11 @@ bool ReverseDb::Build(DictSettings* settings,
   return true;
 }
 
+bool ReverseDb::Save() {
+  LOG(INFO) << "saving reverse file: " << file_name();
+  return ShrinkToFit();
+}
+
 uint32_t ReverseDb::dict_file_checksum() const {
   return metadata_ ? metadata_->dict_file_checksum : 0;
 }
