@@ -5,6 +5,8 @@
 // 2012-01-05 GONG Chen <chen.sst@gmail.com>
 // 2014-07-06 GONG Chen <chen.sst@gmail.com> redesigned binary file format.
 //
+#include <cfloat>
+#include <cstdlib>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -18,7 +20,8 @@
 
 namespace rime {
 
-const char kReverseFormat[] = "Rime::Reverse/3.0";
+const char kReverseFormat[] = "Rime::Reverse/3.1";
+const double kReverseFormatCompatible = 3.0;
 
 const char kReverseFormatPrefix[] = "Rime::Reverse/";
 const size_t kReverseFormatPrefixLen = sizeof(kReverseFormatPrefix) - 1;
@@ -52,7 +55,13 @@ bool ReverseDb::Load() {
     Close();
     return false;
   }
-  //double format = atof(&metadata_->format[kReverseFormatPrefixLen]);
+  double format = std::atof(&metadata_->format[kReverseFormatPrefixLen]);
+  if (format - kReverseFormatCompatible < 0.0 - DBL_EPSILON ||
+      format - kReverseFormatCompatible > 1.0 + DBL_EPSILON) {
+    LOG(ERROR) << "incompatible reversedb format.";
+    Close();
+    return false;
+  }
 
   key_trie_.reset(new StringTable(metadata_->key_trie.get(),
                                   metadata_->key_trie_size));

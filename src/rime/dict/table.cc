@@ -16,7 +16,7 @@
 namespace rime {
 
 const char kTableFormatLatest[] = "Rime::Table/4.0";
-int kTableFormatLowestCompatible = 4.0;
+const int kTableFormatLowestCompatible = 4.0;
 
 const char kTableFormatPrefix[] = "Rime::Table/";
 const size_t kTableFormatPrefixLen = sizeof(kTableFormatPrefix) - 1;
