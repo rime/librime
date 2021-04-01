@@ -173,7 +173,7 @@ bool ReverseDb::Build(DictSettings* settings,
   metadata_->key_trie_size = key_trie_image_size;
 
   // save value trie image
-  char* value_trie_image = Allocate<char>();
+  char* value_trie_image = Allocate<char>(value_trie_image_size);
   if (!value_trie_image) {
     LOG(ERROR) << "Error creating value trie image.";
     return false;
