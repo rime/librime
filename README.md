@@ -98,7 +98,7 @@ Related works
     schema repository
   - [Combo Pinyin](https://github.com/rime/home/wiki/ComboPinyin): an innovative
     chord-typing practice to input Pinyin
-  - essay: the vocabulary and language model for Rime
+  - [rime-essay](https://github.com/rime/rime-essay): the vocabulary and language model for Rime
   - [SCU](https://github.com/neolee/SCU): Squirrel Configuration Utilities
 
 Credits
