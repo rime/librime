@@ -8,6 +8,7 @@
 //
 #include <algorithm>
 #include <stack>
+#include <cmath>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <rime/composition.h>

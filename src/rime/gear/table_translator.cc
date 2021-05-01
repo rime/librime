@@ -6,6 +6,7 @@
 //
 #include <boost/algorithm/string.hpp>
 #include <boost/range/adaptor/reversed.hpp>
+#include <cmath>
 #include <utf8.h>
 #include <rime/candidate.h>
 #include <rime/common.h>
