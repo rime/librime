@@ -9,7 +9,7 @@ boost_x_y_z="${boost_version//./_}"
 BOOST_ROOT="${BOOST_ROOT=${RIME_ROOT}/thirdparty/src/boost_${boost_x_y_z}}"
 
 boost_tarball="boost_${boost_x_y_z}.tar.bz2"
-download_url="https://dl.bintray.com/boostorg/release/${boost_version}/source/${boost_tarball}"
+download_url="https://boostorg.jfrog.io/artifactory/main/release/${boost_version}/source/${boost_tarball}"
 boost_tarball_sha256sum_1_75_0='953db31e016db7bb207f11432bef7df100516eeb746843fa0486a222e3fd49cb  boost_1_75_0.tar.bz2'
 boost_tarball_sha256sum="${boost_tarball_sha256sum=${boost_tarball_sha256sum_1_75_0}}"
 
