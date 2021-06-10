@@ -52,7 +52,42 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
   Context* ctx = engine_->context();
   if (!ctx->IsComposing())
     return kNoop;
-  return KeyBindingProcessor::ProcessKeyEvent(key_event, ctx);
+  if (ctx->get_option("_vertical")) {
+    int ch = key_event.keycode();
+    const int mod = key_event.modifier();
+    switch (ch) {
+      case XK_Up:
+        ch = XK_Left;
+        break;
+      case XK_KP_Up:
+        ch = XK_KP_Left;
+        break;
+      case XK_Down:
+        ch = XK_Right;
+        break;
+      case XK_KP_Down:
+        ch = XK_KP_Right;
+        break;
+      case XK_Left:
+        ch = XK_Down;
+        break;
+      case XK_KP_Left:
+        ch = XK_KP_Down;
+        break;
+      case XK_Right:
+        ch = XK_Up;
+        break;
+      case XK_KP_Right:
+        ch = XK_KP_Up;
+        break;
+      default:
+        break;
+    }
+    const KeyEvent key_event_mod = KeyEvent(ch, mod);
+    return KeyBindingProcessor::ProcessKeyEvent(key_event_mod, ctx);
+  } else {
+    return KeyBindingProcessor::ProcessKeyEvent(key_event, ctx);
+  }
 }
 
 void Navigator::LeftBySyllable(Context* ctx) {

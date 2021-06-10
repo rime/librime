@@ -16,14 +16,6 @@
 
 namespace rime {
 
-// Direction of candidate list.
-using Direction = int;
-constexpr Direction kDirectionVoid = -1;
-constexpr Direction kDirectionDown = 0;
-constexpr Direction kDirectionLeft = 1;
-constexpr Direction kDirectionUp = 2;
-constexpr Direction kDirectionRight = 3;
-
 Selector::Selector(const Ticket& ticket) : Processor(ticket) {
 }
 
@@ -40,22 +32,39 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
   bool is_vertical_text = ctx->get_option("_vertical");
   // Deprecated. equivalent to {_linear: true, _vertical: false}
   bool is_horizontal_layout = ctx->get_option("_horizontal");
-  Direction next_candidate = kDirectionDown;
-  Direction next_page = kDirectionDown;
-  if (is_vertical_text) {
-    // +90 degrees
-    next_candidate = (next_candidate + 1) % 4;
-    next_page = (next_page + 1) % 4;
-  }
-  if (is_linear_candidate_list || is_horizontal_layout) {
-    // -90 degrees
-    next_candidate = (next_candidate + 3) % 4;
-  }
-  if (next_page == next_candidate) {
-    // this is no-op. just to clarify that arrow keys don't change page.
-    next_page = kDirectionVoid;
-  }
+  is_linear_candidate_list = is_horizontal_layout || is_linear_candidate_list;
+
   int ch = key_event.keycode();
+  if (is_vertical_text) {
+    switch (ch) {
+      case XK_Up:
+        ch = XK_Left;
+        break;
+      case XK_KP_Up:
+        ch = XK_KP_Left;
+        break;
+      case XK_Down:
+        ch = XK_Right;
+        break;
+      case XK_KP_Down:
+        ch = XK_KP_Right;
+        break;
+      case XK_Left:
+        ch = XK_Down;
+        break;
+      case XK_KP_Left:
+        ch = XK_KP_Down;
+        break;
+      case XK_Right:
+        ch = XK_Up;
+        break;
+      case XK_KP_Right:
+        ch = XK_KP_Up;
+        break;
+      default:
+        break;
+    }
+  }
   if (ch == XK_Prior || ch == XK_KP_Prior) {
     PageUp(ctx);
     return kAccepted;
@@ -65,56 +74,38 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
     return kAccepted;
   }
   if (ch == XK_Up || ch == XK_KP_Up) {
-    if (next_candidate == kDirectionDown) {
-      CursorUp(ctx);
-    } else if (next_page == kDirectionDown) {
+    if (is_linear_candidate_list) {
       PageUp(ctx);
+    } else {
+      CursorUp(ctx);
     }
     return kAccepted;
   }
   if (ch == XK_Down || ch == XK_KP_Down) {
-    if (next_candidate == kDirectionDown) {
-      CursorDown(ctx);
-    } else if (next_page == kDirectionDown) {
+    if (is_linear_candidate_list) {
       PageDown(ctx);
+    } else {
+      CursorDown(ctx);
     }
     return kAccepted;
   }
   if (ch == XK_Left || ch == XK_KP_Left) {
     if (!key_event.ctrl() &&
         !key_event.shift() &&
-        ctx->caret_pos() == ctx->input().length()) {
-      if (next_candidate == kDirectionRight &&
-          CursorUp(ctx)) {
-        return kAccepted;
-      }
-      if (next_candidate == kDirectionLeft) {
-        CursorDown(ctx);
-        return kAccepted;
-      }
-      if (next_page == kDirectionLeft) {
-        PageDown(ctx);
-        return kAccepted;
-      }
+        ctx->caret_pos() == ctx->input().length() &&
+        is_linear_candidate_list &&
+        CursorUp(ctx)) {
+      return kAccepted;
     }
     return kNoop;
   }
   if (ch == XK_Right || ch == XK_KP_Right) {
     if (!key_event.ctrl() &&
         !key_event.shift() &&
-        ctx->caret_pos() == ctx->input().length()) {
-      if (next_candidate == kDirectionRight) {
-        CursorDown(ctx);
-        return kAccepted;
-      }
-      if (next_candidate == kDirectionLeft) {
-        CursorUp(ctx);
-        return kAccepted;
-      }
-      if (next_page == kDirectionLeft) {
-        PageUp(ctx);
-        return kAccepted;
-      }
+        ctx->caret_pos() == ctx->input().length() &&
+        is_linear_candidate_list) {
+      CursorDown(ctx);
+      return kAccepted;
     }
     return kNoop;
   }
