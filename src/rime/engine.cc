@@ -395,14 +395,18 @@ void ConcreteEngine::InitializeOptions() {
         continue;
       int value = 0;
       reset_value->GetInt(&value);
+      auto states = As<ConfigList>(item->Get("states"));
       if (auto option_name = item->GetValue("name")) {
         // toggle
+        context_->set_option_state(option_name->str(), 0, states->GetValueAt(0)->str());
+        context_->set_option_state(option_name->str(), 1, states->GetValueAt(1)->str());
         context_->set_option(option_name->str(), (value != 0));
       }
       else if (auto options = As<ConfigList>(item->Get("options"))) {
         // radio
         for (size_t i = 0; i < options->size(); ++i) {
           if (auto option_name = options->GetValueAt(i)) {
+            context_->set_option_state(option_name->str(), 1, states->GetValueAt(i)->str());
             context_->set_option(option_name->str(),
                                  static_cast<int>(i) == value);
           }
