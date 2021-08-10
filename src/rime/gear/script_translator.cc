@@ -32,6 +32,8 @@
 
 namespace rime {
 
+using std::exp;
+
 namespace {
 
 struct SyllabifyTask {

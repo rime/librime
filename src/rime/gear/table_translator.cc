@@ -26,6 +26,8 @@
 
 namespace rime {
 
+using std::exp;
+
 static const char* kUnitySymbol = " \xe2\x98\xaf ";
 
 // TableTranslation
