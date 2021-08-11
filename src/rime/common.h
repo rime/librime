@@ -46,6 +46,7 @@ namespace rime {
 using std::function;
 using std::list;
 using std::make_pair;
+using std::make_unique;
 using std::map;
 using std::pair;
 using std::set;
