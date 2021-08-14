@@ -34,6 +34,7 @@ capnproto:
 glog:
 	cd $(src_dir)/glog; \
 	cmake . -B$(build) \
+	-DBUILD_SHARED_LIBS:BOOL=OFF \
 	-DBUILD_TESTING:BOOL=OFF \
 	-DWITH_GFLAGS:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
