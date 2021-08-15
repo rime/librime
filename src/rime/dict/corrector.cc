@@ -311,5 +311,4 @@ Corrector *CorrectorComponent::Create(const Ticket &ticket) noexcept {
   }
 #endif
   return new NearSearchCorrector();
-
 }

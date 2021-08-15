@@ -69,7 +69,6 @@ class CorrectorComponent : public Corrector::Component {
   template<class ...Cs>
   static Corrector *Combine(Cs ...args);
 
-  map<string, weak<Corrector>> correctors_;
   the<ResourceResolver> resolver_;
 
   class Unified : public Corrector {
@@ -88,7 +87,6 @@ class CorrectorComponent : public Corrector::Component {
     vector<of<Corrector>> contents = {};
   };
 };
-
 
 class EditDistanceCorrector : public Corrector,
                               public Prism {
