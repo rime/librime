@@ -159,7 +159,15 @@ if(MSVC)
 endif()
 
 if(UNIX)
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+endif()
+
+if (NOT CMAKE_BUILD_PARALLEL_LEVEL)
+  include(ProcessorCount)
+  ProcessorCount(N)
+  if (NOT N EQUAL 0)
+    set(CMAKE_BUILD_PARALLEL_LEVEL ${N})
+  endif()
 endif()
 
 # keep these variables lest some Rime plugin's cmake file is still using them {
