@@ -8,12 +8,18 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+#include <yaml-cpp/yaml.h>
 #include <rime/config/config_compiler.h>
 #include <rime/config/config_cow_ref.h>
 #include <rime/config/config_data.h>
 #include <rime/config/config_types.h>
 
 namespace rime {
+
+an<ConfigItem> ConvertFromYaml(const YAML::Node& yaml_node,
+                               ConfigCompiler* compiler);
+
+void EmitYaml(an<ConfigItem> node, YAML::Emitter* emitter, int depth);
 
 ConfigData::~ConfigData() {
   if (auto_save_ && modified_ && !file_name_.empty())
@@ -247,7 +253,7 @@ an<ConfigItem> ConfigData::Traverse(const string& path) {
   return p;
 }
 
-an<ConfigItem> ConfigData::ConvertFromYaml(
+an<ConfigItem> ConvertFromYaml(
     const YAML::Node& node, ConfigCompiler* compiler) {
   if (YAML::NodeType::Null == node.Type()) {
     return nullptr;
@@ -288,8 +294,7 @@ an<ConfigItem> ConfigData::ConvertFromYaml(
   return nullptr;
 }
 
-void ConfigData::EmitScalar(const string& str_value,
-                            YAML::Emitter* emitter) {
+void EmitScalar(const string& str_value, YAML::Emitter* emitter) {
   if (str_value.find_first_of("\r\n") != string::npos) {
     *emitter << YAML::Literal;
   }
@@ -301,9 +306,7 @@ void ConfigData::EmitScalar(const string& str_value,
   *emitter << str_value;
 }
 
-void ConfigData::EmitYaml(an<ConfigItem> node,
-                          YAML::Emitter* emitter,
-                          int depth) {
+void EmitYaml(an<ConfigItem> node, YAML::Emitter* emitter, int depth) {
   if (!node || !emitter) return;
   if (node->type() == ConfigItem::kScalar) {
     auto value = As<ConfigValue>(node);

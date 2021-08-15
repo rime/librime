@@ -7,7 +7,6 @@
 #define RIME_CONFIG_DATA_H_
 
 #include <iostream>
-#include <yaml-cpp/yaml.h>
 #include <rime/common.h>
 
 namespace rime {
@@ -42,14 +41,6 @@ class ConfigData {
   an<ConfigItem> root;
 
  protected:
-  static an<ConfigItem> ConvertFromYaml(const YAML::Node& yaml_node,
-                                        ConfigCompiler* compiler);
-  static void EmitYaml(an<ConfigItem> node,
-                       YAML::Emitter* emitter,
-                       int depth);
-  static void EmitScalar(const string& str_value,
-                         YAML::Emitter* emitter);
-
   string file_name_;
   bool modified_ = false;
   bool auto_save_ = false;
