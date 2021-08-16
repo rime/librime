@@ -62,6 +62,8 @@ class Config : public Class<Config, const string&>, public ConfigItemRef {
  protected:
   an<ConfigItem> GetItem() const;
   void SetItem(an<ConfigItem> item);
+
+  an<ConfigData> data_;
 };
 
 class ConfigCompiler;

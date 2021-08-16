@@ -15,14 +15,13 @@
 
 namespace rime {
 
-Config::Config() : ConfigItemRef(New<ConfigData>()) {
+Config::Config() : ConfigItemRef(nullptr), data_(New<ConfigData>()) {
+  ConfigItemRef::data_ = data_.get();
 }
 
-Config::~Config() {
-}
+Config::~Config() {}
 
-Config::Config(an<ConfigData> data) : ConfigItemRef(data) {
-}
+Config::Config(an<ConfigData> data) : ConfigItemRef(data.get()), data_(data) {}
 
 bool Config::LoadFromStream(std::istream& stream) {
   return data_->LoadFromStream(stream);

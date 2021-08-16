@@ -133,10 +133,8 @@ class ConfigMapEntryRef;
 
 class ConfigItemRef {
  public:
-  ConfigItemRef(const an<ConfigData>& data) : data_(data) {
-  }
-  virtual ~ConfigItemRef() {
-  }
+  ConfigItemRef(ConfigData* data) : data_(data) {}
+  virtual ~ConfigItemRef() = default;
   operator an<ConfigItem> () const {
     return GetItem();
   }
@@ -178,15 +176,13 @@ class ConfigItemRef {
   virtual an<ConfigItem> GetItem() const = 0;
   virtual void SetItem(an<ConfigItem> item) = 0;
 
-  an<ConfigData> data_;
+  ConfigData* data_;
 };
 
 class ConfigListEntryRef : public ConfigItemRef {
  public:
-  ConfigListEntryRef(an<ConfigData> data,
-                     an<ConfigList> list, size_t index)
-      : ConfigItemRef(data), list_(list), index_(index) {
-  }
+  ConfigListEntryRef(ConfigData* data, an<ConfigList> list, size_t index)
+      : ConfigItemRef(data), list_(list), index_(index) {}
   using ConfigItemRef::operator=;
  protected:
   an<ConfigItem> GetItem() const {
@@ -203,10 +199,8 @@ class ConfigListEntryRef : public ConfigItemRef {
 
 class ConfigMapEntryRef : public ConfigItemRef {
  public:
-  ConfigMapEntryRef(an<ConfigData> data,
-                    an<ConfigMap> map, const string& key)
-      : ConfigItemRef(data), map_(map), key_(key) {
-  }
+  ConfigMapEntryRef(ConfigData* data, an<ConfigMap> map, const string& key)
+      : ConfigItemRef(data), map_(map), key_(key) {}
   using ConfigItemRef::operator=;
  protected:
   an<ConfigItem> GetItem() const {
