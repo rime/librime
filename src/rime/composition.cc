@@ -41,7 +41,7 @@ Preedit Composition::GetPreedit(const string& full_input, size_t caret_pos,
       if (cand) {
         end = cand->end();
         if(KamAiLianJiHu(preedit.text, cand->text())){
-          preedit.text += "-";
+          preedit.text += " ";
         }
         preedit.text += cand->text();
       }
@@ -114,7 +114,7 @@ string Composition::GetCommitText() const {
     if (auto cand = seg.GetSelectedCandidate()) {
       end = cand->end();
       if(KamAiLianJiHu(result, cand->text())) {
-        result += "-";
+        result += " ";
       }
       result += cand->text();
     }
