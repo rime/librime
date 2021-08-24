@@ -17,6 +17,9 @@ thirdparty:
 thirdparty/%:
 	make -f thirdparty.mk $(@:thirdparty/%=%)
 
+thirdparty-debug:
+	make -f thirdparty.mk build=debug cmake_build_type=Debug
+
 xcode:
 	make -f xcode.mk
 
