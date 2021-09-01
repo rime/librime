@@ -18,7 +18,7 @@ bool BueKamLomaji(const std::string& text) {
 
 
 bool ThauKamLomaji(const std::string& text) {
-  const std::string pi[] = {
+  // const std::string pi[] = {
   //   "ˊ", "ˋ", "ˇ", "^", "+",
   // };
   // size_t len = sizeof(pi)/sizeof(pi[0]);
