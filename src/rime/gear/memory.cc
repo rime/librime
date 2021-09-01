@@ -28,7 +28,7 @@ void CommitEntry::Clear() {
 
 void CommitEntry::AppendPhrase(const an<Phrase>& phrase) {
   if(KamAiLianJiHu(text, phrase->text())){
-    text += "-";
+    text += " ";
   }
   text += phrase->text();
   code.insert(code.end(),
