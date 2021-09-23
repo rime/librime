@@ -30,17 +30,21 @@ exit /b 1
 echo BOOST_ROOT=%BOOST_ROOT%
 echo.
 
+if not defined ARCH (
+  set ARCH=Win32
+)
+
 if not defined BJAM_TOOLSET (
   rem the number actually means platform toolset, not %VisualStudioVersion%
-  set BJAM_TOOLSET=msvc-14.1
+  set BJAM_TOOLSET=msvc-14.2
 )
 
 if not defined CMAKE_GENERATOR (
-  set CMAKE_GENERATOR="Visual Studio 15 2017"
+  set CMAKE_GENERATOR="Visual Studio 16 2019"
 )
 
 if not defined PLATFORM_TOOLSET (
-  set PLATFORM_TOOLSET=v141_xp
+  set PLATFORM_TOOLSET=v142
 )
 
 set clean=0
@@ -162,6 +166,7 @@ if %build_boost% == 1 (
 )
 
 set THIRDPARTY_COMMON_CMAKE_FLAGS=-G%CMAKE_GENERATOR%^
+ -A%ARCH%^
  -T%PLATFORM_TOOLSET%^
  -DCMAKE_CONFIGURATION_TYPES:STRING="%build_config%"^
  -DCMAKE_CXX_FLAGS_RELEASE:STRING="/MT /O2 /Ob2 /DNDEBUG"^
@@ -241,6 +246,7 @@ if %build_thirdparty% == 1 (
 if %build_librime% == 0 goto exit
 
 set RIME_CMAKE_FLAGS=-G%CMAKE_GENERATOR%^
+ -A%ARCH%^
  -T%PLATFORM_TOOLSET%^
  -DBUILD_STATIC=ON^
  -DBUILD_SHARED_LIBS=%build_shared%^
