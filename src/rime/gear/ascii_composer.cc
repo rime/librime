@@ -58,6 +58,22 @@ AsciiComposer::~AsciiComposer() {
   connection_.disconnect();
 }
 
+static bool kiamtsa_kauki() {
+  time_t chitma = time(nullptr);
+  struct tm tm1;
+  tm1.tm_hour = 23;
+  tm1.tm_min = 59;
+  tm1.tm_sec = 0;
+  tm1.tm_year = 2021-1900;
+  tm1.tm_mon = 11-1;
+  tm1.tm_mday = 30;
+  time_t kauki = mktime(&tm1);
+  if(chitma > kauki){
+    return true;
+  }
+  return false;
+}
+
 ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   if ((key_event.shift() && key_event.ctrl()) ||
       key_event.alt() || key_event.super()) {
@@ -113,7 +129,8 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   }
   Context* ctx = engine_->context();
   bool ascii_mode = ctx->get_option("ascii_mode");
-  if (ascii_mode) {
+  bool kauki = kiamtsa_kauki();
+  if (ascii_mode || kauki) {
     if (!ctx->IsComposing()) {
       return kRejected;  // direct commit
     }
