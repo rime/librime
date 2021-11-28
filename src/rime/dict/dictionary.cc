@@ -131,11 +131,12 @@ bool DictEntryIterator::FindNextEntry() {
   if (++chunk.cursor >= chunk.size) {
     ++chunk_index_;
   }
-  else {
-    // reorder chunks since the current chunk has got a new head element
-    Sort();
+  if (exhausted()) {
+    return false;
   }
-  return !exhausted();
+  // reorder chunks to move the one with the best entry to head
+  Sort();
+  return true;
 }
 
 bool DictEntryIterator::Next() {
