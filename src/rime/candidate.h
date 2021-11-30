@@ -14,7 +14,7 @@ namespace rime {
 class Candidate {
  public:
   Candidate() = default;
-  Candidate(const string type,
+  Candidate(const string& type,
             size_t start,
             size_t end,
             double quality = 0.)
@@ -60,7 +60,7 @@ using CandidateList = vector<of<Candidate>>;
 class SimpleCandidate : public Candidate {
  public:
   SimpleCandidate() = default;
-  SimpleCandidate(const string type,
+  SimpleCandidate(const string& type,
                   size_t start,
                   size_t end,
                   const string& text,
