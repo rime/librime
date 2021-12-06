@@ -24,9 +24,6 @@ bool Composition::HasFinishedComposition() const {
 Preedit Composition::GetPreedit(const string& full_input, size_t caret_pos,
                                 const string& caret) const {
   Preedit preedit;
-  if (empty()) {
-    return preedit;
-  }
   preedit.caret_pos = string::npos;
   size_t start = 0;
   size_t end = 0;

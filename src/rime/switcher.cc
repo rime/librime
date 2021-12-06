@@ -114,17 +114,17 @@ void Switcher::HighlightNextSchema() {
   ```yaml
   schema_list:
   - case: [mode/wubi, mode/wubi_pinyin]
-  schema: wubi_pinyin
+    schema: wubi_pinyin
   - case: [mode/wubi]
-  schema: wubi86
-  - case: [mode/default]
-  schema: pinyin
+    schema: wubi86
+    - case: [mode/default]
+    schema: pinyin
 
-  mode:
-  wubi: false
-  wubi_pinyin: false
-  default: true
-  ```
+    mode:
+    wubi: false
+    wubi_pinyin: false
+    default: true
+    ```
 */
 
 static an<ConfigValue> ParseSchemaListEntry(Config* config,
@@ -224,7 +224,8 @@ void Switcher::OnSelect(Context* ctx) {
 void Switcher::RefreshMenu() {
   Composition& comp = context_->composition();
   if (comp.empty()) {
-    context_->set_input(" ");  // make context_->IsComposing() == true
+    // no longer need this to make context_->IsComposing() == true
+    // context_->set_input(" ");
     Segment seg(0, 0);         // empty range
     seg.prompt = caption_;
     comp.AddSegment(seg);

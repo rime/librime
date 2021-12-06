@@ -32,7 +32,7 @@ string Context::GetScriptText() const {
   return composition_.GetScriptText();
 }
 
-static const string kCaretSymbol("\xe2\x80\xb8");
+static const string kCaretSymbol("\xe2\x80\xb8");  // U+2038 ‸ CARET
 
 string Context::GetSoftCursor() const {
   return get_option("soft_cursor") ? kCaretSymbol : string();
@@ -43,7 +43,7 @@ Preedit Context::GetPreedit() const {
 }
 
 bool Context::IsComposing() const {
-  return !input_.empty();
+  return !input_.empty() || !composition_.empty();
 }
 
 bool Context::HasMenu() const {
