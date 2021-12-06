@@ -13,8 +13,6 @@
 #include <rime/schema.h>
 #include <rime/gear/chord_composer.h>
 
-static const char* kZeroWidthSpace = "\xe2\x80\x8b";  // U+200B
-
 namespace rime {
 
 ChordComposer::ChordComposer(const Ticket& ticket) : Processor(ticket) {
@@ -108,8 +106,7 @@ ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
     if (pressed_.erase(ch) != 0 && pressed_.empty()) {
       FinishChord();
     }
-  }
-  else {  // key down
+  } else {  // key down
     pressed_.insert(ch);
     bool updated = chord_.insert(ch).second;
     if (updated)
@@ -117,11 +114,6 @@ ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
   }
   editing_chord_ = false;
   return kAccepted;
-}
-
-inline static bool is_composing(Context* ctx) {
-  return !ctx->composition().empty() &&
-      !ctx->composition().back().HasTag("phony");
 }
 
 ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
@@ -135,7 +127,7 @@ ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   int ch = key_event.keycode();
   if (!is_key_up && ch >= 0x20 && ch <= 0x7e) {
     // save raw input
-    if (!is_composing(engine_->context()) || !raw_sequence_.empty()) {
+    if (engine_->context()->IsComposing() || !raw_sequence_.empty()) {
       raw_sequence_.push_back(ch);
       DLOG(INFO) << "update raw sequence: " << raw_sequence_;
     }
@@ -169,7 +161,6 @@ void ChordComposer::UpdateChord() {
     // add a placeholder segment
     // 1. to cheat ctx->IsComposing() == true
     // 2. to attach chord prompt to while chording
-    ctx->set_input(kZeroWidthSpace);
     Segment placeholder(0, ctx->input().length());
     placeholder.tags.insert("phony");
     ctx->composition().AddSegment(placeholder);
@@ -213,18 +204,16 @@ void ChordComposer::ClearChord() {
   auto& last_segment = comp.back();
   if (comp.size() == 1 && last_segment.HasTag("phony")) {
     ctx->Clear();
-  }
-  else if (last_segment.HasTag("chord_prompt")) {
+  } else if (last_segment.HasTag("chord_prompt")) {
     last_segment.prompt.clear();
     last_segment.tags.erase("chord_prompt");
   }
 }
 
 void ChordComposer::OnContextUpdate(Context* ctx) {
-  if (is_composing(ctx)) {
+  if (ctx->IsComposing()) {
     composing_ = true;
-  }
-  else if (composing_) {
+  } else if (composing_) {
     composing_ = false;
     if (!editing_chord_ || sending_chord_) {
       raw_sequence_.clear();
