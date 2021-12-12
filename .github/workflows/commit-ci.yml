@@ -33,3 +33,17 @@ jobs:
 
       - name: Unit test
         run: make xcode/test
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout last commit
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: "recursive"
+
+      - name: Install dependency
+        run: .\action-install-windows.bat
+
+      - name: Unit test
+        run: .\build.bat test
