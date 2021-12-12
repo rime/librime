@@ -1,4 +1,10 @@
 setlocal
+set boost_version=1_76_0
+aria2c https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_%boost_version%.7z -d C:\Libraries
+pushd C:\Libraries
+7z x boost_%boost_version%.7z
+popd C:\Libraries
+set BOOST_ROOT=C:\Libraries\boost_%boost_version%
 
 call action-build-boost.bat
 if errorlevel 1 goto error
