@@ -1,0 +1,35 @@
+name: commit ci
+on: [push]
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [g++, clang]
+    steps:
+      - name: Checkout last commit
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: "recursive"
+
+      - name: Install dependency
+        run: ./action-install-linux.sh
+
+      - name: Unit test
+        run: make test
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout last commit
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: "recursive"
+
+      - name: Install dependency
+        run: ./action-install-macos.sh
+
+      - name: Unit test
+        run: make xcode/test
