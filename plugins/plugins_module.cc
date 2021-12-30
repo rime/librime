@@ -32,7 +32,6 @@ class PluginManager {
 };
 
 void PluginManager::LoadPlugins(fs::path plugins_dir) {
-  const fs::perms exe_perms = (fs::owner_exe | fs::group_exe | fs::others_exe);
   ModuleManager& mm = ModuleManager::instance();
   if (!fs::is_directory(plugins_dir)) {
     return;
@@ -42,8 +41,7 @@ void PluginManager::LoadPlugins(fs::path plugins_dir) {
     fs::path plugin_file = iter->path();
     if (plugin_file.extension() == boost::dll::shared_library::suffix()) {
       fs::file_status plugin_file_status = fs::status(plugin_file);
-      if (fs::is_regular_file(plugin_file_status) &&
-          fs::status(plugin_file).permissions() & exe_perms) {
+      if (fs::is_regular_file(plugin_file_status)) {
         DLOG(INFO) << "found plugin: " << plugin_file;
         string plugin_name = plugin_name_of(plugin_file);
         if (plugin_libs_.find(plugin_name) == plugin_libs_.end()) {
