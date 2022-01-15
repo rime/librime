@@ -38,7 +38,7 @@ jobs:
         run: ./action-install-macos.sh
 
       - name: Unit test
-        run: make xcode/test
+        run: make xcode/test xcode/dist
 
       - name: Upload artifactory
         run: echo TODO
