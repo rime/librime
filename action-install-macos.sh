@@ -1,9 +1,14 @@
 #!/bin/bash
 
+export boost_version="${boost_version=1.75.0}"
+boost_x_y_z="${boost_version//./_}"
+
+export BOOST_ROOT="${BOOST_ROOT=$(pwd)/thirdparty/src/boost_${boost_x_y_z}}"
+
+# TODO: cache dependencies
+
 # install and build boost
 make xcode/thirdparty/boost
-
-export BOOST_ROOT="$(pwd)/thirdparty/src/boost_1_75_0"
 
 make xcode/thirdparty
 
