@@ -133,20 +133,26 @@ void Editor::BackToPreviousInput(Context* ctx) {
       ctx->PopInput();
 }
 
-void Editor::BackToPreviousSyllable(Context* ctx) {
+static bool pop_input_by_syllable(Context* ctx) {
   size_t caret_pos = ctx->caret_pos();
   if (caret_pos == 0)
-    return;
+    return false;
   if (auto cand = ctx->GetSelectedCandidate()) {
     if (auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand))) {
       size_t stop = phrase->spans().PreviousStop(caret_pos);
       if (stop != caret_pos) {
         ctx->PopInput(caret_pos - stop);
-        return;
+        return true;
       }
     }
   }
-  ctx->PopInput();
+  return false;
+}
+
+void Editor::BackToPreviousSyllable(Context* ctx) {
+  ctx->ReopenPreviousSelection() ||
+      ((pop_input_by_syllable(ctx) || ctx->PopInput()) &&
+       ctx->ReopenPreviousSegment());
 }
 
 void Editor::DeleteCandidate(Context* ctx) {
