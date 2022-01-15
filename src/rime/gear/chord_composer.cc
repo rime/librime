@@ -127,7 +127,7 @@ ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   int ch = key_event.keycode();
   if (!is_key_up && ch >= 0x20 && ch <= 0x7e) {
     // save raw input
-    if (engine_->context()->IsComposing() || !raw_sequence_.empty()) {
+    if (!engine_->context()->IsComposing() || !raw_sequence_.empty()) {
       raw_sequence_.push_back(ch);
       DLOG(INFO) << "update raw sequence: " << raw_sequence_;
     }
