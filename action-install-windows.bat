@@ -6,10 +6,10 @@ pushd C:\Libraries
 popd C:\Libraries
 set BOOST_ROOT=C:\Libraries\boost_%boost_version%
 
-call action-build-boost.bat
+call build.bat boost
 if errorlevel 1 goto error
 
-call action-build-thirdparty.bat
+call build.bat thirdparty
 if errorlevel 1 goto error
 
 if defined RIME_PLUGINS (
