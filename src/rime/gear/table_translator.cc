@@ -81,10 +81,10 @@ an<Candidate> TableTranslation::Peek() {
   if (phrase) {
     phrase->set_comment(comment);
     phrase->set_preedit(preedit_);
-    phrase->set_quality(exp(e->weight) +
-                        options_->initial_quality() +
-                        (incomplete ? -1 : 0) +
-                        (is_user_phrase ? 0.5 : 0));
+    phrase->set_quality(std::exp(e->weight) +
+                       options_->initial_quality() +
+                       (incomplete ? -1 : 0) +
+                       (is_user_phrase ? 0.5 : 0));
   }
   return phrase;
 }

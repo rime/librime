@@ -488,9 +488,9 @@ void ScriptTranslation::PrepareCandidate() {
                        start_,
                        start_ + user_phrase_code_length,
                        entry);
-    cand->set_quality(exp(entry->weight) +
-                      translator_->initial_quality() +
-                      (IsNormalSpelling() ? 0.5 : -0.5));
+    cand->set_quality(std::exp(entry->weight) +
+                     translator_->initial_quality() +
+                     (IsNormalSpelling() ? 0.5 : -0.5));
   }
   else if (phrase_code_length > 0) {
     DictEntryIterator& iter = phrase_iter_->second;
@@ -502,9 +502,9 @@ void ScriptTranslation::PrepareCandidate() {
                        start_,
                        start_ + phrase_code_length,
                        entry);
-    cand->set_quality(exp(entry->weight) +
-                      translator_->initial_quality() +
-                      (IsNormalSpelling() ? 0 : -1));
+    cand->set_quality(std::exp(entry->weight) +
+                     translator_->initial_quality() +
+                     (IsNormalSpelling() ? 0 : -1));
   }
   candidate_ = cand;
 }
