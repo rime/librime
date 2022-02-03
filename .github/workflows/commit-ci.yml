@@ -1,5 +1,5 @@
 name: commit ci
-on: [push]
+on: [push, pull_request]
 jobs:
   linux:
     runs-on: ubuntu-latest
@@ -21,6 +21,9 @@ jobs:
         run: make test
   macos:
     runs-on: macos-latest
+    env:
+      boost_version: 1.75.0
+      BOOST_ROOT: ${{ github.workspace }}/thirdparty/src/boost_1_75_0
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v2
@@ -28,13 +31,45 @@ jobs:
           fetch-depth: 0
           submodules: "recursive"
 
-      - name: Install dependency
-        run: ./action-install-macos.sh
+      - name: Cache Boost
+        id: cache-boost
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.BOOST_ROOT }}
+          key: ${{ runner.os }}-build-cache-boost-${{ env.boost_version }}
+
+      - name: Install Boost
+        if: steps.cache-boost.outputs.cache-hit != 'true'
+        run: make xcode/thirdparty/boost
+
+      - name: Check submodules
+        run: git submodule > submodule-status
+
+      - name: Cache thirdparty
+        id: cache-thirdparty
+        uses: actions/cache@v2
+        with:
+          path: |
+            thirdparty/bin
+            thirdparty/include
+            thirdparty/lib
+            thirdparty/share
+          key: ${{ runner.os }}-build-cache-thirdparty-${{ hashFiles('submodule-status') }}
+
+      - name: Build thirdparty
+        if: steps.cache-thirdparty.outputs.cache-hit != 'true'
+        run: make xcode/thirdparty
+
+      - name: Install Rime plugins
+        run: ./action-install-plugins-macos.sh
 
       - name: Unit test
         run: make xcode/test
   windows:
     runs-on: windows-latest
+    env:
+      boost_version: 1.76.0
+      BOOST_ROOT: ${{ github.workspace }}/thirdparty/src/boost_1_76_0
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v2
@@ -42,8 +77,37 @@ jobs:
           fetch-depth: 0
           submodules: "recursive"
 
-      - name: Install dependency
-        run: .\action-install-windows.bat
+      - name: Cache Boost
+        id: cache-boost
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.BOOST_ROOT }}
+          key: ${{ runner.os }}-build-cache-boost-${{ env.boost_version }}
+
+      - name: Install Boost
+        if: steps.cache-boost.outputs.cache-hit != 'true'
+        run: .\install-boost.bat
+
+      - name: Check submodules
+        run: git submodule > submodule-status
+
+      - name: Cache thirdparty
+        id: cache-thirdparty
+        uses: actions/cache@v2
+        with:
+          path: |
+            thirdparty/bin
+            thirdparty/include
+            thirdparty/lib
+            thirdparty/share
+          key: ${{ runner.os }}-build-cache-thirdparty-${{ hashFiles('submodule-status') }}
+
+      - name: Build thirdparty
+        if: steps.cache-thirdparty.outputs.cache-hit != 'true'
+        run: .\build.bat thirdparty
+
+      - name: Install Rime plugins
+        run: .\action-install-plugins-windows.bat
 
       - name: Unit test
         run: .\build.bat test
