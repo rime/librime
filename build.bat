@@ -3,7 +3,6 @@ rem Rime build script for msvc toolchain.
 rem Maintainer: Chen Gong <chen.sst@gmail.com>
 
 setlocal
-set BACK=%CD%
 
 if not exist env.bat copy env.bat.template env.bat
 
@@ -123,49 +122,47 @@ if %clean% == 1 (
 
 set build_dir=%build_dir_base%%build_dir_suffix%
 
-set DIST_DIR=%RIME_ROOT%\dist
-set THIRDPARTY=%RIME_ROOT%\thirdparty
+rem set curl=%RIME_ROOT%\thirdparty\bin\curl.exe
+rem set download="%curl%" --remote-name-all
 
-rem set CURL=%THIRDPARTY%\bin\curl.exe
-rem set DOWNLOAD="%CURL%" --remote-name-all
-
-set BOOST_COMPILED_LIBS=--with-date_time^
+set boost_compiled_libs=--with-date_time^
  --with-filesystem^
  --with-locale^
  --with-regex^
  --with-system^
  --with-thread
 
-set BJAM_OPTIONS_COMMON=toolset=%BJAM_TOOLSET%^
+set bjam_options_common=toolset=%BJAM_TOOLSET%^
  variant=%boost_build_variant%^
  link=static^
  threading=multi^
  runtime-link=static^
  cxxflags="/Zc:threadSafeInit- "
 
-set BJAM_OPTIONS_X86=%BJAM_OPTIONS_COMMON%^
+set bjam_options_x86=%bjam_options_common%^
  define=BOOST_USE_WINAPI_VERSION=0x0501
 
-set BJAM_OPTIONS_X64=%BJAM_OPTIONS_COMMON%^
+set bjam_options_x64=%bjam_options_common%^
  define=BOOST_USE_WINAPI_VERSION=0x0502^
  address-model=64^
  --stagedir=stage_x64
 
 if %build_boost% == 1 (
-  cd /d %BOOST_ROOT%
+  pushd %BOOST_ROOT%
   if not exist b2.exe call bootstrap.bat
   if errorlevel 1 goto error
 
-  b2 %BJAM_OPTIONS_X86% stage %BOOST_COMPILED_LIBS%
+  b2 %bjam_options_x86% stage %boost_compiled_libs%
   if errorlevel 1 goto error
 
   if %build_boost_x64% == 1 (
-    b2 %BJAM_OPTIONS_X64% stage %BOOST_COMPILED_LIBS%
+    b2 %bjam_options_x64% stage %boost_compiled_libs%
     if errorlevel 1 goto error
   )
+  popd
 )
 
-set THIRDPARTY_COMMON_CMAKE_FLAGS=-G%CMAKE_GENERATOR%^
+set thirdparty_common_cmake_flags=-G%CMAKE_GENERATOR%^
  -A%ARCH%^
  -T%PLATFORM_TOOLSET%^
  -DCMAKE_CONFIGURATION_TYPES:STRING="%build_config%"^
@@ -173,42 +170,43 @@ set THIRDPARTY_COMMON_CMAKE_FLAGS=-G%CMAKE_GENERATOR%^
  -DCMAKE_C_FLAGS_RELEASE:STRING="/MT /O2 /Ob2 /DNDEBUG"^
  -DCMAKE_CXX_FLAGS_DEBUG:STRING="/MTd /Od"^
  -DCMAKE_C_FLAGS_DEBUG:STRING="/MTd /Od"^
- -DCMAKE_INSTALL_PREFIX:PATH="%THIRDPARTY%"
+ -DCMAKE_INSTALL_PREFIX:PATH="%RIME_ROOT%\thirdparty"
 
 if %build_thirdparty% == 1 (
-  cd /d %THIRDPARTY%
-
   echo building capnproto.
-  cd %THIRDPARTY%\src\capnproto
-  cmake . -B%build_dir% %THIRDPARTY_COMMON_CMAKE_FLAGS%^
+  pushd thirdparty\src\capnproto
+  cmake . -B%build_dir% %thirdparty_common_cmake_flags%^
 	-DBUILD_SHARED_LIBS:BOOL=OFF^
 	-DBUILD_TESTING:BOOL=OFF
   if errorlevel 1 goto error
   cmake --build %build_dir% --config %build_config% --target INSTALL
   if errorlevel 1 goto error
+  popd
 
   echo building glog.
-  cd %THIRDPARTY%\src\glog
-  cmake . -Bcmake-%build_dir% %THIRDPARTY_COMMON_CMAKE_FLAGS%^
+  pushd thirdparty\src\glog
+  cmake . -Bcmake-%build_dir% %thirdparty_common_cmake_flags%^
   -DBUILD_SHARED_LIBS:BOOL=OFF^
   -DBUILD_TESTING:BOOL=OFF^
   -DWITH_GFLAGS:BOOL=OFF
   if errorlevel 1 goto error
   cmake --build cmake-%build_dir% --config %build_config% --target INSTALL
   if errorlevel 1 goto error
+  popd
 
   echo building leveldb.
-  cd %THIRDPARTY%\src\leveldb
-  cmake . -B%build_dir% %THIRDPARTY_COMMON_CMAKE_FLAGS%^
+  pushd thirdparty\src\leveldb
+  cmake . -B%build_dir% %thirdparty_common_cmake_flags%^
   -DLEVELDB_BUILD_BENCHMARKS:BOOL=OFF^
   -DLEVELDB_BUILD_TESTS:BOOL=OFF
   if errorlevel 1 goto error
   cmake --build %build_dir% --config %build_config% --target INSTALL
   if errorlevel 1 goto error
+  popd
 
   echo building yaml-cpp.
-  cd %THIRDPARTY%\src\yaml-cpp
-  cmake . -B%build_dir% %THIRDPARTY_COMMON_CMAKE_FLAGS%^
+  pushd thirdparty\src\yaml-cpp
+  cmake . -B%build_dir% %thirdparty_common_cmake_flags%^
   -DMSVC_SHARED_RT:BOOL=OFF^
   -DYAML_MSVC_SHARED_RT:BOOL=OFF^
   -DYAML_CPP_BUILD_CONTRIB:BOOL=OFF^
@@ -217,35 +215,39 @@ if %build_thirdparty% == 1 (
   if errorlevel 1 goto error
   cmake --build %build_dir% --config %build_config% --target INSTALL
   if errorlevel 1 goto error
+  popd
 
   echo building gtest.
-  cd %THIRDPARTY%\src\googletest
-  cmake . -B%build_dir% %THIRDPARTY_COMMON_CMAKE_FLAGS%^
+  pushd thirdparty\src\googletest
+  cmake . -B%build_dir% %thirdparty_common_cmake_flags%^
   -DBUILD_GMOCK:BOOL=OFF
   if errorlevel 1 goto error
   cmake --build %build_dir% --config %build_config% --target INSTALL
   if errorlevel 1 goto error
+  popd
 
   echo building marisa.
-  cd %THIRDPARTY%\src\marisa-trie
-  cmake %THIRDPARTY%\src -B%build_dir% %THIRDPARTY_COMMON_CMAKE_FLAGS%
+  pushd thirdparty\src\marisa-trie
+  cmake .. -B%build_dir% %thirdparty_common_cmake_flags%
   if errorlevel 1 goto error
   cmake --build %build_dir% --config %build_config% --target INSTALL
   if errorlevel 1 goto error
+  popd
 
   echo building opencc.
-  cd %THIRDPARTY%\src\opencc
-  cmake . -B%build_dir% %THIRDPARTY_COMMON_CMAKE_FLAGS%^
+  pushd thirdparty\src\opencc
+  cmake . -B%build_dir% %thirdparty_common_cmake_flags%^
   -DBUILD_SHARED_LIBS=OFF^
   -DBUILD_TESTING=OFF
   if errorlevel 1 goto error
   cmake --build %build_dir% --config %build_config% --target INSTALL
   if errorlevel 1 goto error
+  popd
 )
 
 if %build_librime% == 0 goto exit
 
-set RIME_CMAKE_FLAGS=-G%CMAKE_GENERATOR%^
+set rime_cmake_flags=-G%CMAKE_GENERATOR%^
  -A%ARCH%^
  -T%PLATFORM_TOOLSET%^
  -DBUILD_STATIC=ON^
@@ -254,17 +256,27 @@ set RIME_CMAKE_FLAGS=-G%CMAKE_GENERATOR%^
  -DENABLE_LOGGING=%enable_logging%^
  -DBOOST_USE_CXX11=ON^
  -DCMAKE_CONFIGURATION_TYPES="%build_config%"^
- -DCMAKE_INSTALL_PREFIX:PATH="%DIST_DIR%"
+ -DCMAKE_INSTALL_PREFIX:PATH="%RIME_ROOT%\dist"
 
-cd /d %RIME_ROOT%
-echo cmake %RIME_ROOT% -B%build_dir% %RIME_CMAKE_FLAGS%
-call cmake %RIME_ROOT% -B%build_dir% %RIME_CMAKE_FLAGS%
+echo on
+call cmake . -B%build_dir% %rime_cmake_flags%
+@echo off
 if errorlevel 1 goto error
 
 echo.
 echo building librime.
+echo.
+echo on
 cmake --build %build_dir% --config %build_config% --target INSTALL
+@echo off
 if errorlevel 1 goto error
+
+if "%build_test%" == "ON" (
+  copy /y dist\lib\rime.dll build\test
+  pushd build\test
+  .\Release\rime_test.exe || goto error
+  popd
+)
 
 echo.
 echo ready.
@@ -279,5 +291,4 @@ echo.
 
 :exit
 set PATH=%OLD_PATH%
-cd /d %BACK%
 exit /b %exitcode%
