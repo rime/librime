@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ev
+set -ex
 
 RIME_ROOT="$(cd "$(dirname "$0")"; pwd)"
 
@@ -32,9 +32,15 @@ build_boost_macos() {
     ./b2 -q -a link=static architecture=combined cxxflags="${boost_cxxflags}" stage
 }
 
-if [[ "$OSTYPE" =~ 'darwin' ]]; then
-   if ! [[ -f "${BOOST_ROOT}/bootstrap.sh" ]]; then
-       download_boost_source
-   fi
-   build_boost_macos
+if [[ $# -eq 0 || " $* " =~ ' --download ' ]]; then
+    if [[ ! -f "${BOOST_ROOT}/bootstrap.sh" ]]; then
+        download_boost_source
+    else
+        echo "found boost at ${BOOST_ROOT}"
+    fi
+fi
+if [[ $# -eq 0 || " $* " =~ ' --build ' ]]; then
+    if [[ "$OSTYPE" =~ 'darwin' ]]; then
+        build_boost_macos
+    fi
 fi

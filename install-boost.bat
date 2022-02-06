@@ -16,4 +16,4 @@ pushd %src_dir%
 popd
 :boost_found
 
-build.bat boost
+call .\build.bat boost

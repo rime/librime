@@ -6,7 +6,7 @@ setlocal
 
 if not exist env.bat copy env.bat.template env.bat
 
-if exist env.bat call env.bat
+if exist env.bat call .\env.bat
 
 rem for Windows XP compatibility (Visual Studio 2015+)
 set CL=/Zc:threadSafeInit-
@@ -149,7 +149,7 @@ set bjam_options_x64=%bjam_options_common%^
 
 if %build_boost% == 1 (
   pushd %BOOST_ROOT%
-  if not exist b2.exe call bootstrap.bat
+  if not exist b2.exe call .\bootstrap.bat
   if errorlevel 1 goto error
 
   b2 %bjam_options_x86% stage %boost_compiled_libs%
