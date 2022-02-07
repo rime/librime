@@ -20,13 +20,15 @@ jobs:
       - name: Install dependency
         run: ./action-install-linux.sh
 
-      - name: Unit test
+      - name: Build and test
         run: make test
   macos:
     runs-on: macos-latest
     env:
       boost_version: 1.78.0
       BOOST_ROOT: ${{ github.workspace }}/deps/boost_1_78_0
+      BUILD_UNIVERSAL: 1
+      build_variant: "-universal"
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v3
@@ -66,7 +68,7 @@ jobs:
             include
             lib
             share
-          key: ${{ runner.os }}-deps-${{ hashFiles('submodule-status') }}
+          key: ${{ runner.os }}${{ env.build_variant }}-deps-${{ hashFiles('submodule-status') }}
 
       - name: Build dependencies
         if: steps.cache-deps.outputs.cache-hit != 'true'
@@ -75,13 +77,31 @@ jobs:
       - name: Install Rime plugins
         run: ./action-install-plugins-macos.sh
 
-      - name: Unit test
+      - name: Build and test
         run: make xcode/test
 
-      - name: Upload artifactory
-        run: |
-          make xcode/dist
-          echo TODO
+      - name: Make distributable
+        run: make xcode/dist
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: rime-${{ github.ref_name }}-${{ runner.os }}${{ env.build_variant }}
+          path: |
+            dist
+            version-info.txt
+
+      - name: Upload artifact from dependencies
+        uses: actions/upload-artifact@v3
+        with:
+          name: rime-deps-${{ github.ref_name }}-${{ runner.os }}${{ env.build_variant }}
+          path: |
+            bin
+            include
+            lib
+            share
+            !*/.placeholder
+
   windows:
     runs-on: windows-latest
     env:
@@ -138,8 +158,25 @@ jobs:
       - name: Install Rime plugins
         run: .\action-install-plugins-windows.bat
 
-      - name: Unit test
+      - name: Build and test
         run: .\build.bat test
 
-      - name: Upload artifactory
-        run: echo TODO
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: rime-${{ github.ref_name }}-${{ runner.os }}
+          path: |
+            dist
+            version-info.txt
+
+      - name: Upload artifact from dependencies
+        uses: actions/upload-artifact@v3
+        with:
+          name: rime-deps-${{ github.ref_name }}-${{ runner.os }}
+          path: |
+            bin
+            include
+            lib
+            share
+            !*/.placeholder
+
