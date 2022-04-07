@@ -255,7 +255,11 @@ string Context::get_option_state(const string& name, int order) {
   if (option_states_.count(name) > 0) {
     auto states = option_states_[name];
     if (states.size() == 1) {
-      return states[1];
+        if (order == 1) {
+            return states[0];
+        } else {
+            return "";
+        }
     } else if (states.size() == 2) {
       if ((order <= 1) && (order >= 0)) {
         return states[order];

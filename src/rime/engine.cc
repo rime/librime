@@ -406,7 +406,7 @@ void ConcreteEngine::InitializeOptions() {
         // radio
         for (size_t i = 0; i < options->size(); ++i) {
           if (auto option_name = options->GetValueAt(i)) {
-            context_->set_option_state(option_name->str(), 1, states->GetValueAt(i)->str());
+            context_->set_option_state(option_name->str(), 0, states->GetValueAt(i)->str());
             context_->set_option(option_name->str(),
                                  static_cast<int>(i) == value);
           }
