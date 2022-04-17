@@ -77,14 +77,17 @@ jobs:
   windows:
     runs-on: windows-latest
     env:
-      boost_version: 1.76.0
-      BOOST_ROOT: ${{ github.workspace }}\thirdparty\src\boost_1_76_0
+      boost_version: 1.78.0
+      BOOST_ROOT: ${{ github.workspace }}\thirdparty\src\boost_1_78_0
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
           submodules: "recursive"
+
+      - name: Configure build environment
+        run: copy env.vs2022.bat env.bat
 
       - name: Cache Boost
         id: cache-boost
