@@ -22,8 +22,8 @@ jobs:
   macos:
     runs-on: macos-latest
     env:
-      boost_version: 1.75.0
-      BOOST_ROOT: ${{ github.workspace }}/thirdparty/src/boost_1_75_0
+      boost_version: 1.78.0
+      BOOST_ROOT: ${{ github.workspace }}/thirdparty/src/boost_1_78_0
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v2
