@@ -9,7 +9,7 @@ jobs:
         compiler: [g++, clang]
     steps:
       - name: Checkout last commit
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: "recursive"
@@ -26,14 +26,14 @@ jobs:
       BOOST_ROOT: ${{ github.workspace }}/thirdparty/src/boost_1_78_0
     steps:
       - name: Checkout last commit
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: "recursive"
 
       - name: Cache Boost
         id: cache-boost
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ${{ env.BOOST_ROOT }}.tar.bz2
@@ -56,7 +56,7 @@ jobs:
 
       - name: Cache thirdparty
         id: cache-thirdparty
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             thirdparty/bin
@@ -81,7 +81,7 @@ jobs:
       BOOST_ROOT: ${{ github.workspace }}\thirdparty\src\boost_1_78_0
     steps:
       - name: Checkout last commit
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: "recursive"
@@ -91,7 +91,7 @@ jobs:
 
       - name: Cache Boost
         id: cache-boost
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ${{ env.BOOST_ROOT }}.7z
@@ -114,7 +114,7 @@ jobs:
 
       - name: Cache thirdparty
         id: cache-thirdparty
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             thirdparty\bin
