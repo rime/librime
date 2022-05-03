@@ -76,8 +76,6 @@ if(Boost_FOUND)
   link_directories(${Boost_LIBRARY_DIRS})
 endif()
 
-find_package(CapnProto REQUIRED)
-
 if(ENABLE_LOGGING)
 
   find_package(Gflags)
@@ -241,9 +239,6 @@ if(BUILD_SHARED_LIBS)
 else()
   set(rime_library rime-static)
 endif()
-
-add_subdirectory(proto)
-include_directories(${RIME_PROTO_INCLUDE_DIR})
 
 add_subdirectory(plugins)
 message(STATUS "rime_plugins_libs: ${rime_plugins_deps}")

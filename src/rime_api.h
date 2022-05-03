@@ -546,7 +546,7 @@ typedef struct rime_api_t {
   //! staging directory, stores data files deployed to a Rime client.
   const char* (*get_staging_dir)();
 
-  //! capnproto API.
+  //! Deprecated: for capnproto API, use "proto" module from librime-proto plugin.
   void (*commit_proto)(RimeSessionId session_id, RIME_PROTO_BUILDER* commit_builder);
   void (*context_proto)(RimeSessionId session_id, RIME_PROTO_BUILDER* context_builder);
   void (*status_proto)(RimeSessionId session_id, RIME_PROTO_BUILDER* status_builder);
