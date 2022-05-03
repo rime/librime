@@ -11,10 +11,13 @@ exit /b
 set slug=%1
 echo "plugin: %slug%"
 set plugin_project=%slug:*/=%
-set plugin_dir=plugins/%plugin_project:librime-=%
+set plugin_dir=plugins\%plugin_project:librime-=%
 git clone --depth 1 "https://github.com/%slug%.git" %plugin_dir%
 if errorlevel 1 exit /b
 if exist %plugin_dir%\action-install.bat (
-  call %plugin_dir%\action-install.bat
+  pushd %plugin_dir%
+  call action-install.bat
+  if errorlevel 1 exit /b
+  popd
 )
 exit /b
