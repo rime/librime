@@ -111,7 +111,6 @@ if %build_thirdparty% == 0 (
 
 if %clean% == 1 (
   rmdir /s /q build
-  rmdir /s /q thirdparty\src\capnproto\build
   rmdir /s /q thirdparty\src\glog\cmake-build
   rmdir /s /q thirdparty\src\googletest\build
   rmdir /s /q thirdparty\src\leveldb\build
@@ -173,16 +172,6 @@ set thirdparty_common_cmake_flags=-G%CMAKE_GENERATOR%^
  -DCMAKE_INSTALL_PREFIX:PATH="%RIME_ROOT%\thirdparty"
 
 if %build_thirdparty% == 1 (
-  echo building capnproto.
-  pushd thirdparty\src\capnproto
-  cmake . -B%build_dir% %thirdparty_common_cmake_flags%^
-	-DBUILD_SHARED_LIBS:BOOL=OFF^
-	-DBUILD_TESTING:BOOL=OFF
-  if errorlevel 1 goto error
-  cmake --build %build_dir% --config %build_config% --target INSTALL
-  if errorlevel 1 goto error
-  popd
-
   echo building glog.
   pushd thirdparty\src\glog
   cmake . -Bcmake-%build_dir% %thirdparty_common_cmake_flags%^

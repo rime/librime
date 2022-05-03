@@ -6,7 +6,7 @@ src_dir = $(third_party_dir)/src
 glog: build ?= cmake-build
 build ?= build
 
-third_party_libs = capnproto glog gtest leveldb marisa opencc yaml-cpp
+third_party_libs = glog gtest leveldb marisa opencc yaml-cpp
 
 .PHONY: all clean-src $(third_party_libs)
 
@@ -14,22 +14,12 @@ all: $(third_party_libs)
 
 # note: this won't clean output files under include/, lib/ and bin/.
 clean-src:
-	rm -r $(src_dir)/capnproto/build || true
 	rm -r $(src_dir)/glog/cmake-build || true
 	rm -r $(src_dir)/googletest/build || true
 	rm -r $(src_dir)/leveldb/build || true
 	rm -r $(src_dir)/marisa-trie/build || true
 	rm -r $(src_dir)/opencc/build || true
 	rm -r $(src_dir)/yaml-cpp/build || true
-
-capnproto:
-	cd $(src_dir)/capnproto; \
-	cmake . -B$(build) \
-	-DBUILD_SHARED_LIBS:BOOL=OFF \
-	-DBUILD_TESTING:BOOL=OFF \
-	-DCMAKE_BUILD_TYPE:STRING="Release" \
-	-DCMAKE_INSTALL_PREFIX:PATH="$(third_party_dir)" \
-	&& cmake --build $(build) --target install
 
 glog:
 	cd $(src_dir)/glog; \

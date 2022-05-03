@@ -1,13 +1,11 @@
 #!/bin/bash
 
 dep_packages=(
-    capnproto
     doxygen
     libboost-filesystem-dev
     libboost-locale-dev
     libboost-regex-dev
     libboost-system-dev
-    libcapnp-dev
     libgoogle-glog-dev
     libleveldb-dev
     libmarisa-dev
