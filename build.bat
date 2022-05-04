@@ -29,23 +29,6 @@ exit /b 1
 echo BOOST_ROOT=%BOOST_ROOT%
 echo.
 
-if not defined ARCH (
-  set ARCH=Win32
-)
-
-if not defined BJAM_TOOLSET (
-  rem the number actually means platform toolset, not %VisualStudioVersion%
-  set BJAM_TOOLSET=msvc-14.2
-)
-
-if not defined CMAKE_GENERATOR (
-  set CMAKE_GENERATOR="Visual Studio 16 2019"
-)
-
-if not defined PLATFORM_TOOLSET (
-  set PLATFORM_TOOLSET=v142
-)
-
 set clean=0
 set build_dir_base=build
 set build_dir_suffix=
@@ -131,17 +114,22 @@ set boost_compiled_libs=--with-date_time^
  --with-system^
  --with-thread
 
-set bjam_options_common=toolset=%BJAM_TOOLSET%^
+rem the number actually means platform toolset, not %VisualStudioVersion%
+rem eg. BJAM_TOOLSET=msvc-14.2 corresponds to PLATFORM_TOOLSET=v142
+if defined BJAM_TOOLSET (
+  set bjam_options=toolset=%BJAM_TOOLSET%
+)
+set bjam_options=%bjam_options%^
  variant=%boost_build_variant%^
  link=static^
  threading=multi^
  runtime-link=static^
  cxxflags="/Zc:threadSafeInit- "
 
-set bjam_options_x86=%bjam_options_common%^
+set bjam_options_x86=%bjam_options%^
  define=BOOST_USE_WINAPI_VERSION=0x0501
 
-set bjam_options_x64=%bjam_options_common%^
+set bjam_options_x64=%bjam_options%^
  define=BOOST_USE_WINAPI_VERSION=0x0502^
  address-model=64^
  --stagedir=stage_x64
@@ -161,9 +149,16 @@ if %build_boost% == 1 (
   popd
 )
 
-set thirdparty_common_cmake_flags=-G%CMAKE_GENERATOR%^
- -A%ARCH%^
- -T%PLATFORM_TOOLSET%^
+if defined CMAKE_GENERATOR (
+  set common_cmake_flags=%common_cmake_flags% -G%CMAKE_GENERATOR%
+)
+if defined ARCH (
+  set common_cmake_flags=%common_cmake_flags% -A%ARCH%
+)
+if defined PLATFORM_TOOLSET (
+  set common_cmake_flags=%common_cmake_flags% -T%PLATFORM_TOOLSET%
+)
+set thirdparty_cmake_flags=%common_cmake_flags%^
  -DCMAKE_CONFIGURATION_TYPES:STRING="%build_config%"^
  -DCMAKE_CXX_FLAGS_RELEASE:STRING="/MT /O2 /Ob2 /DNDEBUG"^
  -DCMAKE_C_FLAGS_RELEASE:STRING="/MT /O2 /Ob2 /DNDEBUG"^
@@ -174,7 +169,7 @@ set thirdparty_common_cmake_flags=-G%CMAKE_GENERATOR%^
 if %build_thirdparty% == 1 (
   echo building glog.
   pushd thirdparty\src\glog
-  cmake . -Bcmake-%build_dir% %thirdparty_common_cmake_flags%^
+  cmake . -Bcmake-%build_dir% %thirdparty_cmake_flags%^
   -DBUILD_SHARED_LIBS:BOOL=OFF^
   -DBUILD_TESTING:BOOL=OFF^
   -DWITH_GFLAGS:BOOL=OFF
@@ -185,7 +180,7 @@ if %build_thirdparty% == 1 (
 
   echo building leveldb.
   pushd thirdparty\src\leveldb
-  cmake . -B%build_dir% %thirdparty_common_cmake_flags%^
+  cmake . -B%build_dir% %thirdparty_cmake_flags%^
   -DLEVELDB_BUILD_BENCHMARKS:BOOL=OFF^
   -DLEVELDB_BUILD_TESTS:BOOL=OFF
   if errorlevel 1 goto error
@@ -195,7 +190,7 @@ if %build_thirdparty% == 1 (
 
   echo building yaml-cpp.
   pushd thirdparty\src\yaml-cpp
-  cmake . -B%build_dir% %thirdparty_common_cmake_flags%^
+  cmake . -B%build_dir% %thirdparty_cmake_flags%^
   -DMSVC_SHARED_RT:BOOL=OFF^
   -DYAML_MSVC_SHARED_RT:BOOL=OFF^
   -DYAML_CPP_BUILD_CONTRIB:BOOL=OFF^
@@ -208,7 +203,7 @@ if %build_thirdparty% == 1 (
 
   echo building gtest.
   pushd thirdparty\src\googletest
-  cmake . -B%build_dir% %thirdparty_common_cmake_flags%^
+  cmake . -B%build_dir% %thirdparty_cmake_flags%^
   -DBUILD_GMOCK:BOOL=OFF
   if errorlevel 1 goto error
   cmake --build %build_dir% --config %build_config% --target INSTALL
@@ -217,7 +212,7 @@ if %build_thirdparty% == 1 (
 
   echo building marisa.
   pushd thirdparty\src\marisa-trie
-  cmake .. -B%build_dir% %thirdparty_common_cmake_flags%
+  cmake .. -B%build_dir% %thirdparty_cmake_flags%
   if errorlevel 1 goto error
   cmake --build %build_dir% --config %build_config% --target INSTALL
   if errorlevel 1 goto error
@@ -225,7 +220,7 @@ if %build_thirdparty% == 1 (
 
   echo building opencc.
   pushd thirdparty\src\opencc
-  cmake . -B%build_dir% %thirdparty_common_cmake_flags%^
+  cmake . -B%build_dir% %thirdparty_cmake_flags%^
   -DBUILD_SHARED_LIBS=OFF^
   -DBUILD_TESTING=OFF
   if errorlevel 1 goto error
@@ -236,9 +231,7 @@ if %build_thirdparty% == 1 (
 
 if %build_librime% == 0 goto exit
 
-set rime_cmake_flags=-G%CMAKE_GENERATOR%^
- -A%ARCH%^
- -T%PLATFORM_TOOLSET%^
+set rime_cmake_flags=%common_cmake_flags%^
  -DBUILD_STATIC=ON^
  -DBUILD_SHARED_LIBS=%build_shared%^
  -DBUILD_TEST=%build_test%^
