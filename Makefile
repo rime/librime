@@ -5,23 +5,27 @@ prefix ?= $(DESTDIR)/usr
 debug install-debug uninstall-debug test-debug: build ?= debug
 build ?= build
 
-.PHONY: all thirdparty xcode clean \
+.PHONY: all deps thirdparty xcode clean \
 librime librime-static install-librime uninstall-librime \
 release debug test install uninstall install-debug uninstall-debug
 
 all: release
 
-thirdparty:
-	make -f thirdparty.mk
+# `thirdparty` is deprecated in favor of `deps`
+deps thirdparty:
+	$(MAKE) -f deps.mk
+
+deps/%:
+	$(MAKE) -f deps.mk $(@:deps/%=%)
 
 thirdparty/%:
-	make -f thirdparty.mk $(@:thirdparty/%=%)
+	$(MAKE) -f deps.mk $(@:thirdparty/%=%)
 
 xcode:
-	make -f xcode.mk
+	$(MAKE) -f xcode.mk
 
 xcode/%:
-	make -f xcode.mk $(@:xcode/%=%)
+	$(MAKE) -f xcode.mk $(@:xcode/%=%)
 
 clean:
 	rm -Rf build debug

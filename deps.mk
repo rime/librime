@@ -1,16 +1,16 @@
 # a minimal build of third party libraries for static linking
 
-third_party_dir = $(CURDIR)/thirdparty
-src_dir = $(third_party_dir)/src
+rime_root = $(CURDIR)
+src_dir = $(rime_root)/deps
 
 glog: build ?= cmake-build
 build ?= build
 
-third_party_libs = glog gtest leveldb marisa opencc yaml-cpp
+rime_deps = glog gtest leveldb marisa opencc yaml-cpp
 
-.PHONY: all clean-src $(third_party_libs)
+.PHONY: all clean-src $(rime_deps)
 
-all: $(third_party_libs)
+all: $(rime_deps)
 
 # note: this won't clean output files under include/, lib/ and bin/.
 clean-src:
@@ -28,7 +28,7 @@ glog:
 	-DBUILD_TESTING:BOOL=OFF \
 	-DWITH_GFLAGS:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
-	-DCMAKE_INSTALL_PREFIX:PATH="$(third_party_dir)" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(rime_root)" \
 	&& cmake --build $(build) --target install
 
 gtest:
@@ -36,7 +36,7 @@ gtest:
 	cmake . -B$(build) \
 	-DBUILD_GMOCK:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
-	-DCMAKE_INSTALL_PREFIX:PATH="$(third_party_dir)" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(rime_root)" \
 	&& cmake --build $(build) --target install
 
 leveldb:
@@ -45,14 +45,14 @@ leveldb:
 	-DLEVELDB_BUILD_BENCHMARKS:BOOL=OFF \
 	-DLEVELDB_BUILD_TESTS:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
-	-DCMAKE_INSTALL_PREFIX:PATH="$(third_party_dir)" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(rime_root)" \
 	&& cmake --build $(build) --target install
 
 marisa:
 	cd $(src_dir)/marisa-trie; \
 	cmake $(src_dir) -B$(build) \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
-	-DCMAKE_INSTALL_PREFIX:PATH="$(third_party_dir)" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(rime_root)" \
 	&& cmake --build $(build) --target install
 
 opencc:
@@ -60,7 +60,7 @@ opencc:
 	cmake . -B$(build) \
 	-DBUILD_SHARED_LIBS:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
-	-DCMAKE_INSTALL_PREFIX:PATH="$(third_party_dir)" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(rime_root)" \
 	&& cmake --build $(build) --target install
 
 yaml-cpp:
@@ -70,5 +70,5 @@ yaml-cpp:
 	-DYAML_CPP_BUILD_TESTS:BOOL=OFF \
 	-DYAML_CPP_BUILD_TOOLS:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
-	-DCMAKE_INSTALL_PREFIX:PATH="$(third_party_dir)" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(rime_root)" \
 	&& cmake --build $(build) --target install

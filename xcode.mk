@@ -24,7 +24,7 @@ icu_prefix = $(shell brew --prefix)/opt/icu4c
 debug debug-with-icu test-debug: build ?= debug
 build ?= build
 
-.PHONY: all release debug clean dist distclean test test-debug thirdparty \
+.PHONY: all release debug clean dist distclean test test-debug deps thirdparty \
 release-with-icu debug-with-icu dist-with-icu
 
 all: release
@@ -67,8 +67,8 @@ clean:
 	rm -rf build > /dev/null 2>&1 || true
 	rm -rf debug > /dev/null 2>&1 || true
 	rm build.log > /dev/null 2>&1 || true
-	rm -f thirdparty/lib/* > /dev/null 2>&1 || true
-	make -f thirdparty.mk clean-src
+	rm -f lib/* > /dev/null 2>&1 || true
+	$(MAKE) -f deps.mk clean-src
 
 dist: release
 	cmake --build $(build) --config Release --target install
@@ -85,11 +85,15 @@ test: release
 test-debug: debug
 	(cd $(build)/test; Debug/rime_test)
 
-thirdparty:
-	make -f thirdparty.mk
+# `thirdparty` is deprecated in favor of `deps`
+deps thirdparty:
+	$(MAKE) -f deps.mk
 
-thirdparty/boost:
+deps/boost thirdparty/boost:
 	./install-boost.sh
 
+deps/%:
+	$(MAKE) -f deps.mk $(@:deps/%=%)
+
 thirdparty/%:
-	make -f thirdparty.mk $(@:thirdparty/%=%)
+	$(MAKE) -f deps.mk $(@:thirdparty/%=%)

@@ -16,7 +16,7 @@ brew install cmake git
 git clone --recursive https://github.com/rime/librime.git
 ```
 or [download from GitHub](https://github.com/rime/librime), then get code for
-third party dependencies separately.
+third-party dependencies separately.
 
 ## Install Boost C++ libraries
 
@@ -27,18 +27,18 @@ These dependencies include a few compiled (non-header-only) Boost libraries.
 
 ``` sh
 cd librime
-make xcode/thirdparty/boost
+make xcode/deps/boost
 ```
 
 The make script will download Boost source tarball, extract it to
-`librime/thirdparty/src/boost_<version>` and create needed static libraries
+`librime/deps/boost_<version>` and create needed static libraries
 for building macOS uinversal binary.
 
 Set shell variable `BOOST_ROOT` to the path to `boost_<version>` directory prior
 to building librime.
 
 ``` sh
-export BOOST_ROOT="$(pwd)/thirdparty/src/boost_1_78_0"
+export BOOST_ROOT="$(pwd)/deps/boost_1_78_0"
 ```
 
 **Option 2:** Install Boost libraries from Homebrew.
@@ -79,19 +79,19 @@ Required third-party libraries other than Boost are included as git submodules:
 ``` sh
 # cd librime
 
-# if you haven't checked out the submodules with git clone --recursive ..., do:
+# if you didn't checked out the submodules with git clone --recursive, now do:
 # git submodule update --init
 
-make xcode/thirdparty
+make xcode/deps
 ```
 
-This builds libraries located at `thirdparty/src/*`, and installs the build
-artifacts to `thirdparty/include`, `thirdparty/lib` and `thirdparty/bin`.
+This builds libraries located at `librime/deps/*`, and installs the build
+artifacts to `librime/include`, `librime/lib` and `librime/bin`.
 
 You can also build an individual library, eg. `opencc`, with:
 
 ``` sh
-make xcode/thirdparty/opencc
+make xcode/deps/opencc
 ```
 
 ## Build librime

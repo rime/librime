@@ -45,10 +45,10 @@ build.bat boost
 ## Build third-party libraries
 
 ``` batch
-build.bat thirdparty
+build.bat deps
 ```
-This builds dependent libraries in `thirdparty\src\*`, and copies artifacts to
-`thirdparty\lib` and `thirdparty\bin`.
+This builds dependent libraries in `librime\deps\*`, and copies artifacts to
+`librime\include`, `librime\lib` and `librime\bin`.
 
 ## Build librime
 

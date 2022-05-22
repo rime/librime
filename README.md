@@ -73,7 +73,7 @@ Official:
   - [Squirrel](https://github.com/rime/squirrel): frontend for macOS
   - [Weasel](https://github.com/rime/weasel): frontend for Windows
 
-Third-party:
+Community:
   - [emacs-rime](https://github.com/DogLooksGood/emacs-rime): frontend for Emacs
   - [fcitx-rime](https://github.com/fcitx/fcitx-rime): Fcitx frontend for Linux
   - [fcitx5-rime](https://github.com/fcitx/fcitx5-rime): Fcitx5 frontend for Linux

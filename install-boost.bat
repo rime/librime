@@ -5,7 +5,7 @@ if not defined RIME_ROOT set RIME_ROOT=%CD%
 if not defined boost_version set boost_version=1.76.0
 set boost_x_y_z=%boost_version:.=_%
 
-if not defined BOOST_ROOT set BOOST_ROOT=%RIME_ROOT%\thirdparty\src\boost_%boost_x_y_z%
+if not defined BOOST_ROOT set BOOST_ROOT=%RIME_ROOT%\deps\boost_%boost_x_y_z%
 
 if exist "%BOOST_ROOT%\boost" goto boost_found
 for %%I in ("%BOOST_ROOT%\.") do set src_dir=%%~dpI

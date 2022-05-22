@@ -3,7 +3,7 @@ rem Customize your build environment and save the modified copy to env.bat
 set RIME_ROOT=%CD%
 
 rem REQUIRED: path to Boost source directory
-if not defined BOOST_ROOT set BOOST_ROOT=%RIME_ROOT%\thirdparty\src\boost_1_76_0
+if not defined BOOST_ROOT set BOOST_ROOT=%RIME_ROOT%\deps\boost_1_76_0
 
 rem OPTIONAL: architecture, Visual Studio version and platform toolset
 set ARCH=Win32

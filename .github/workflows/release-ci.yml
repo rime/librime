@@ -26,7 +26,7 @@ jobs:
     runs-on: macos-latest
     env:
       boost_version: 1.78.0
-      BOOST_ROOT: ${{ github.workspace }}/thirdparty/src/boost_1_78_0
+      BOOST_ROOT: ${{ github.workspace }}/deps/boost_1_78_0
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v3
@@ -46,7 +46,7 @@ jobs:
       - name: Extract Boost source tarball
         if: steps.cache-boost.outputs.cache-hit == 'true'
         run: |
-          pushd thirdparty/src
+          pushd deps
           tar --bzip2 -xf ${{ env.BOOST_ROOT }}.tar.bz2
           popd
 
@@ -57,20 +57,20 @@ jobs:
       - name: Check submodules
         run: git submodule > submodule-status
 
-      - name: Cache thirdparty
-        id: cache-thirdparty
+      - name: Cache dependencies
+        id: cache-deps
         uses: actions/cache@v3
         with:
           path: |
-            thirdparty/bin
-            thirdparty/include
-            thirdparty/lib
-            thirdparty/share
-          key: ${{ runner.os }}-thirdparty-${{ hashFiles('submodule-status') }}
+            bin
+            include
+            lib
+            share
+          key: ${{ runner.os }}-deps-${{ hashFiles('submodule-status') }}
 
-      - name: Build thirdparty
-        if: steps.cache-thirdparty.outputs.cache-hit != 'true'
-        run: make xcode/thirdparty
+      - name: Build dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: make xcode/deps
 
       - name: Install Rime plugins
         run: ./action-install-plugins-macos.sh
@@ -86,7 +86,7 @@ jobs:
     runs-on: windows-latest
     env:
       boost_version: 1.78.0
-      BOOST_ROOT: ${{ github.workspace }}\thirdparty\src\boost_1_78_0
+      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_78_0
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v3
@@ -109,7 +109,7 @@ jobs:
       - name: Extract Boost source tarball
         if: steps.cache-boost.outputs.cache-hit == 'true'
         run: |
-          pushd thirdparty\src
+          pushd deps
           7z x ${{ env.BOOST_ROOT }}.7z
           popd
 
@@ -120,20 +120,20 @@ jobs:
       - name: Check submodules
         run: git submodule > submodule-status
 
-      - name: Cache thirdparty
-        id: cache-thirdparty
+      - name: Cache dependencies
+        id: cache-deps
         uses: actions/cache@v3
         with:
           path: |
-            thirdparty\bin
-            thirdparty\include
-            thirdparty\lib
-            thirdparty\share
-          key: ${{ runner.os }}-thirdparty-${{ hashFiles('submodule-status') }}
+            bin
+            include
+            lib
+            share
+          key: ${{ runner.os }}-deps-${{ hashFiles('submodule-status') }}
 
-      - name: Build thirdparty
-        if: steps.cache-thirdparty.outputs.cache-hit != 'true'
-        run: .\build.bat thirdparty
+      - name: Build dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: .\build.bat deps
 
       - name: Install Rime plugins
         run: .\action-install-plugins-windows.bat
