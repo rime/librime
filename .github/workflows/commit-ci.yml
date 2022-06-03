@@ -1,134 +1,18 @@
-name: commit ci
-on: [push, pull_request]
+name: Commit CI
+
+on:
+  push:
+    branches:
+    tags-ignore:
+      - '[0-9]+.*'
+  pull_request:
+
 jobs:
   linux:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        compiler: [g++, clang]
-    steps:
-      - name: Checkout last commit
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          submodules: "recursive"
+    uses: ./.github/workflows/linux-build.yml
 
-      - name: Install dependency
-        run: ./action-install-linux.sh
-
-      - name: Unit test
-        run: make test
   macos:
-    runs-on: macos-latest
-    env:
-      boost_version: 1.78.0
-      BOOST_ROOT: ${{ github.workspace }}/deps/boost_1_78_0
-    steps:
-      - name: Checkout last commit
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          submodules: "recursive"
+    uses: ./.github/workflows/macos-build.yml
 
-      - name: Cache Boost
-        id: cache-boost
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{ env.BOOST_ROOT }}.tar.bz2
-            ${{ env.BOOST_ROOT }}/stage
-          key: ${{ runner.os }}-boost-${{ env.boost_version }}
-
-      - name: Extract Boost source tarball
-        if: steps.cache-boost.outputs.cache-hit == 'true'
-        run: |
-          pushd deps
-          tar --bzip2 -xf ${{ env.BOOST_ROOT }}.tar.bz2
-          popd
-
-      - name: Install Boost
-        if: steps.cache-boost.outputs.cache-hit != 'true'
-        run: ./install-boost.sh
-
-      - name: Check submodules
-        run: git submodule > submodule-status
-
-      - name: Cache dependencies
-        id: cache-deps
-        uses: actions/cache@v3
-        with:
-          path: |
-            bin
-            include
-            lib
-            share
-          key: ${{ runner.os }}-deps-${{ hashFiles('submodule-status') }}
-
-      - name: Build dependencies
-        if: steps.cache-deps.outputs.cache-hit != 'true'
-        run: make xcode/deps
-
-      - name: Install Rime plugins
-        run: ./action-install-plugins-macos.sh
-
-      - name: Unit test
-        run: make xcode/test
   windows:
-    runs-on: windows-latest
-    env:
-      boost_version: 1.78.0
-      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_78_0
-    steps:
-      - name: Checkout last commit
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          submodules: "recursive"
-
-      - name: Configure build environment
-        run: copy env.vs2022.bat env.bat
-
-      - name: Cache Boost
-        id: cache-boost
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{ env.BOOST_ROOT }}.7z
-            ${{ env.BOOST_ROOT }}\stage
-          key: ${{ runner.os }}-boost-${{ env.boost_version }}
-
-      - name: Extract Boost source tarball
-        if: steps.cache-boost.outputs.cache-hit == 'true'
-        run: |
-          pushd deps
-          7z x ${{ env.BOOST_ROOT }}.7z
-          popd
-
-      - name: Install Boost
-        if: steps.cache-boost.outputs.cache-hit != 'true'
-        run: .\install-boost.bat
-
-      - name: Check submodules
-        run: git submodule > submodule-status
-
-      - name: Cache dependencies
-        id: cache-deps
-        uses: actions/cache@v3
-        with:
-          path: |
-            bin
-            include
-            lib
-            share
-          key: ${{ runner.os }}-deps-${{ hashFiles('submodule-status') }}
-
-      - name: Build dependencies
-        if: steps.cache-deps.outputs.cache-hit != 'true'
-        run: .\build.bat deps
-
-      - name: Install Rime plugins
-        run: .\action-install-plugins-windows.bat
-
-      - name: Unit test
-        run: .\build.bat test
+    uses: ./.github/workflows/windows-build.yml

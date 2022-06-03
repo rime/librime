@@ -1,0 +1,88 @@
+name: macOS build
+on:
+  workflow_call:
+    inputs:
+      build_variant:
+        required: false
+        type: string
+      rime_plugins:
+        required: false
+        type: string
+jobs:
+  build:
+    runs-on: macos-latest
+    env:
+      boost_version: 1.78.0
+      BOOST_ROOT: ${{ github.workspace }}/deps/boost_1_78_0
+      RIME_PLUGINS: ${{ inputs.rime_plugins }}
+    steps:
+      - name: Checkout last commit
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Configure build environment
+        if: contains(inputs.build_variant, '-universal')
+        run: |
+          echo BUILD_UNIVERSAL=1 >> $GITHUB_ENV
+
+      - name: Cache Boost
+        id: cache-boost
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env.BOOST_ROOT }}.tar.bz2
+            ${{ env.BOOST_ROOT }}/stage
+          key: ${{ runner.os }}-boost-${{ env.boost_version }}
+
+      - name: Extract Boost source tarball
+        if: steps.cache-boost.outputs.cache-hit == 'true'
+        run: |
+          pushd deps
+          tar --bzip2 -xf ${{ env.BOOST_ROOT }}.tar.bz2
+          popd
+
+      - name: Install Boost
+        if: steps.cache-boost.outputs.cache-hit != 'true'
+        run: ./install-boost.sh
+
+      - name: Check submodules
+        run: git submodule > submodule-status
+
+      - name: Cache dependencies
+        id: cache-deps
+        uses: actions/cache@v3
+        with:
+          path: |
+            bin
+            include
+            lib
+            share
+          key: ${{ runner.os }}${{ inputs.build_variant }}-deps-${{ hashFiles('submodule-status') }}
+
+      - name: Build dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: make xcode/deps
+
+      - name: Install Rime plugins
+        run: ./action-install-plugins-macos.sh
+
+      - name: Build and test
+        run: make xcode/test
+
+      - name: Create distributable
+        run: |
+          make xcode/dist
+          tar -cjf rime-${{ github.ref_name }}-${{ runner.os }}.tar.bz2 \
+          dist version-info.txt
+          tar -cjf rime-deps-${{ github.ref_name }}-${{ runner.os }}.tar.bz2 \
+          --exclude '*/.placeholder' \
+          bin include lib share
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          path: |
+            rime-${{ github.ref_name }}-${{ runner.os }}.tar.bz2
+            rime-deps-${{ github.ref_name }}-${{ runner.os }}.tar.bz2
