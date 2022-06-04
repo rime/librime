@@ -2,6 +2,10 @@ name: macOS build
 on:
   workflow_call:
     inputs:
+      repository:
+        default: ${{ github.repository }}
+        required: false
+        type: string
       build_variant:
         required: false
         type: string
@@ -19,6 +23,7 @@ jobs:
       - name: Checkout last commit
         uses: actions/checkout@v3
         with:
+          repository: ${{ inputs.repository }}
           submodules: recursive
 
       - name: Configure build environment
