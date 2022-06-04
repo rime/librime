@@ -1,4 +1,0 @@
-" a.vim configuration
-let g:alternateSearchPath = '../src,../../src,../include,../include/rime,reg:|\([/\\]\)include\1rime\1\([^/\\]*\)|\1src\1\2|,reg:|\([/\\]\)src\1\([^/\\]*\)|\1include\1rime\1\2|'
-let g:syntastic_cpp_include_dirs = [ 'thirdparty/include' ]
-let g:syntastic_cpp_compiler_options = '-std=c++11'
