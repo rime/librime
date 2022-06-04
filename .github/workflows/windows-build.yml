@@ -20,7 +20,10 @@ jobs:
           submodules: recursive
 
       - name: Configure build environment
-        run: copy env.vs2022.bat env.bat
+        run: |
+          copy env.vs2022.bat env.bat
+          $git_ref_name = git describe --always
+          echo "git_ref_name=$git_ref_name" >> $env:GITHUB_ENV
 
       - name: Cache Boost
         id: cache-boost
@@ -68,14 +71,14 @@ jobs:
 
       - name: Create distributable
         run: |
-          7z a rime-${{ github.ref_name }}-${{ runner.os }}.7z `
+          7z a rime-${{ env.git_ref_name }}-${{ runner.os }}.7z `
           dist version-info.txt
-          7z a -x'!*/.placeholder' rime-deps-${{ github.ref_name }}-${{ runner.os }}.7z `
+          7z a -x'!*/.placeholder' rime-deps-${{ env.git_ref_name }}-${{ runner.os }}.7z `
           bin include lib share
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           path: |
-            rime-${{ github.ref_name }}-${{ runner.os }}.7z
-            rime-deps-${{ github.ref_name }}-${{ runner.os }}.7z
+            rime-${{ env.git_ref_name }}-${{ runner.os }}.7z
+            rime-deps-${{ env.git_ref_name }}-${{ runner.os }}.7z
