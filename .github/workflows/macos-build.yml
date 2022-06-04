@@ -23,6 +23,10 @@ jobs:
           submodules: recursive
 
       - name: Configure build environment
+        run: |
+          echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV
+
+      - name: Configure build variant
         if: contains(inputs.build_variant, '-universal')
         run: |
           echo BUILD_UNIVERSAL=1 >> $GITHUB_ENV
@@ -74,9 +78,9 @@ jobs:
       - name: Create distributable
         run: |
           make xcode/dist
-          tar -cjf rime-${{ github.ref_name }}-${{ runner.os }}.tar.bz2 \
+          tar -cjvf rime-${{ env.git_ref_name }}-${{ runner.os }}.tar.bz2 \
           dist version-info.txt
-          tar -cjf rime-deps-${{ github.ref_name }}-${{ runner.os }}.tar.bz2 \
+          tar -cjvf rime-deps-${{ env.git_ref_name }}-${{ runner.os }}.tar.bz2 \
           --exclude '*/.placeholder' \
           bin include lib share
 
@@ -84,5 +88,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: |
-            rime-${{ github.ref_name }}-${{ runner.os }}.tar.bz2
-            rime-deps-${{ github.ref_name }}-${{ runner.os }}.tar.bz2
+            rime-${{ env.git_ref_name }}-${{ runner.os }}.tar.bz2
+            rime-deps-${{ env.git_ref_name }}-${{ runner.os }}.tar.bz2
