@@ -89,16 +89,16 @@ class ShadowCandidate : public Candidate {
                   const string& type,
                   const string& text = string(),
                   const string& comment = string(),
-                  const bool allow_erase_comment = false)
+                  const bool overwrite_comment = false)
       : Candidate(type, item->start(), item->end(), item->quality()),
         text_(text), comment_(comment),
-        item_(item), allow_erase_comment_(allow_erase_comment) {}
+        item_(item), overwrite_comment_(overwrite_comment) {}
 
   const string& text() const {
     return text_.empty() ? item_->text() : text_;
   }
   string comment() const {
-    if (allow_erase_comment_) {
+    if (overwrite_comment_) {
       return comment_;
     } else {
       return comment_.empty() ? item_->comment() : comment_;
@@ -114,7 +114,7 @@ class ShadowCandidate : public Candidate {
   string text_;
   string comment_;
   an<Candidate> item_;
-  bool allow_erase_comment_;
+  bool overwrite_comment_;
 };
 
 class UniquifiedCandidate : public Candidate {
