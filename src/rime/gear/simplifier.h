@@ -46,7 +46,7 @@ class Simplifier : public Filter, TagMatching {
   string opencc_config_;
   set<string> excluded_types_;
   bool show_in_comment_ = false;
-  bool allow_erase_comment_ = false;
+  bool overwrite_comment_ = false;
   Projection comment_formatter_;
   bool random_ = false;
 };
