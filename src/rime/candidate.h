@@ -89,20 +89,16 @@ class ShadowCandidate : public Candidate {
                   const string& type,
                   const string& text = string(),
                   const string& comment = string(),
-                  const bool overwrite_comment = false)
+                  const bool inherit_comment = true)
       : Candidate(type, item->start(), item->end(), item->quality()),
         text_(text), comment_(comment),
-        item_(item), overwrite_comment_(overwrite_comment) {}
+        item_(item), inherit_comment_(inherit_comment) {}
 
   const string& text() const {
     return text_.empty() ? item_->text() : text_;
   }
   string comment() const {
-    if (overwrite_comment_) {
-      return comment_;
-    } else {
-      return comment_.empty() ? item_->comment() : comment_;
-    }
+    return inherit_comment_ && comment_.empty() ? item_->comment() : comment_;
   }
   string preedit() const {
     return item_->preedit();
@@ -114,7 +110,7 @@ class ShadowCandidate : public Candidate {
   string text_;
   string comment_;
   an<Candidate> item_;
-  bool overwrite_comment_;
+  bool inherit_comment_;
 };
 
 class UniquifiedCandidate : public Candidate {
