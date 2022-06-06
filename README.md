@@ -2,6 +2,7 @@
 
 RIME: Rime Input Method Engine
 ===
+![build status](https://github.com/rime/librime/actions/workflows/commit-ci.yml/badge.svg)
 [![GitHub release](https://img.shields.io/github/release/rime/librime.svg)](https://github.com/rime/librime/releases)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
