@@ -1,18 +1,18 @@
-[submodule "thirdparty/src/glog"]
+[submodule "glog"]
 	path = deps/glog
 	url = https://github.com/google/glog.git
-[submodule "thirdparty/src/leveldb"]
+[submodule "leveldb"]
 	path = deps/leveldb
 	url = https://github.com/google/leveldb.git
-[submodule "thirdparty/src/yaml-cpp"]
+[submodule "yaml-cpp"]
 	path = deps/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp.git
-[submodule "thirdparty/src/googletest"]
+[submodule "googletest"]
 	path = deps/googletest
 	url = https://github.com/google/googletest.git
-[submodule "thirdparty/src/marisa-trie"]
+[submodule "marisa-trie"]
 	path = deps/marisa-trie
 	url = https://github.com/s-yata/marisa-trie.git
-[submodule "thirdparty/src/opencc"]
+[submodule "opencc"]
 	path = deps/opencc
 	url = https://github.com/BYVoid/OpenCC.git
