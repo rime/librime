@@ -108,6 +108,7 @@ Simplifier::Simplifier(const Ticket& ticket) : Filter(ticket),
                     (tips == "char") ? kTipsChar : kTipsNone;
     }
     config->GetBool(name_space_ + "/show_in_comment", &show_in_comment_);
+    config->GetBool(name_space_ + "/inherit_comment", &inherit_comment_);
     comment_formatter_.Load(config->GetList(name_space_ + "/comment_format"));
     config->GetBool(name_space_ + "/random", &random_);
     config->GetString(name_space_ + "/option_name", &option_name_);
@@ -225,7 +226,8 @@ void Simplifier::PushBack(const an<Candidate>& original,
           original,
           "simplified",
           text,
-          tips));
+          tips,
+          inherit_comment_));
 }
 
 bool Simplifier::Convert(const an<Candidate>& original,
