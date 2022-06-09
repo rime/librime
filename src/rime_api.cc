@@ -980,95 +980,141 @@ void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos) {
   return ctx->set_caret_pos(caret_pos);
 }
 
-RIME_API RimeApi* rime_get_api() {
-    static RimeApi s_api = {0};
-    if (!s_api.data_size) {
-        RIME_STRUCT_INIT(RimeApi, s_api);
-        s_api.setup = &RimeSetup;
-        s_api.set_notification_handler = &RimeSetNotificationHandler;
-        s_api.initialize = &RimeInitialize;
-        s_api.finalize = &RimeFinalize;
-        s_api.start_maintenance = &RimeStartMaintenance;
-        s_api.is_maintenance_mode = &RimeIsMaintenancing;
-        s_api.join_maintenance_thread = &RimeJoinMaintenanceThread;
-        s_api.deployer_initialize = &RimeDeployerInitialize;
-        s_api.prebuild = &RimePrebuildAllSchemas;
-        s_api.deploy = &RimeDeployWorkspace;
-        s_api.deploy_schema = &RimeDeploySchema;
-        s_api.deploy_config_file = &RimeDeployConfigFile;
-        s_api.sync_user_data = &RimeSyncUserData;
-        s_api.create_session = &RimeCreateSession;
-        s_api.find_session = &RimeFindSession;
-        s_api.destroy_session = &RimeDestroySession;
-        s_api.cleanup_stale_sessions = &RimeCleanupStaleSessions;
-        s_api.cleanup_all_sessions = &RimeCleanupAllSessions;
-        s_api.process_key = &RimeProcessKey;
-        s_api.commit_composition = &RimeCommitComposition;
-        s_api.clear_composition = &RimeClearComposition;
-        s_api.get_commit = &RimeGetCommit;
-        s_api.free_commit = &RimeFreeCommit;
-        s_api.get_context = &RimeGetContext;
-        s_api.free_context = &RimeFreeContext;
-        s_api.get_status =  &RimeGetStatus;
-        s_api.free_status = &RimeFreeStatus;
-        s_api.set_option = &RimeSetOption;
-        s_api.get_option = &RimeGetOption;
-        s_api.set_property = &RimeSetProperty;
-        s_api.get_property = &RimeGetProperty;
-        s_api.get_schema_list = &RimeGetSchemaList;
-        s_api.free_schema_list = &RimeFreeSchemaList;
-        s_api.get_current_schema = &RimeGetCurrentSchema;
-        s_api.select_schema = &RimeSelectSchema;
-        s_api.schema_open = &RimeSchemaOpen;
-        s_api.config_open = &RimeConfigOpen;
-        s_api.user_config_open = &RimeUserConfigOpen;
-        s_api.config_close = &RimeConfigClose;
-        s_api.config_get_bool = &RimeConfigGetBool;
-        s_api.config_get_int = &RimeConfigGetInt;
-        s_api.config_get_double = &RimeConfigGetDouble;
-        s_api.config_get_string = &RimeConfigGetString;
-        s_api.config_get_cstring = &RimeConfigGetCString;
-        s_api.config_update_signature = &RimeConfigUpdateSignature;
-        s_api.config_begin_map = &RimeConfigBeginMap;
-        s_api.config_next = &RimeConfigNext;
-        s_api.config_end = &RimeConfigEnd;
-        s_api.simulate_key_sequence = &RimeSimulateKeySequence;
-        s_api.register_module = &RimeRegisterModule;
-        s_api.find_module = &RimeFindModule;
-        s_api.run_task = &RimeRunTask;
-        s_api.get_shared_data_dir = &RimeGetSharedDataDir;
-        s_api.get_user_data_dir = &RimeGetUserDataDir;
-        s_api.get_sync_dir = &RimeGetSyncDir;
-        s_api.get_user_id = &RimeGetUserId;
-        s_api.get_user_data_sync_dir = &RimeGetUserDataSyncDir;
-        s_api.config_init = &RimeConfigInit;
-        s_api.config_load_string = &RimeConfigLoadString;
-        s_api.config_set_bool = &RimeConfigSetBool;
-        s_api.config_set_int = &RimeConfigSetInt;
-        s_api.config_set_double = &RimeConfigSetDouble;
-        s_api.config_set_string = &RimeConfigSetString;
-        s_api.config_get_item = &RimeConfigGetItem;
-        s_api.config_set_item = &RimeConfigSetItem;
-        s_api.config_clear = &RimeConfigClear;
-        s_api.config_create_list = &RimeConfigCreateList;
-        s_api.config_create_map = &RimeConfigCreateMap;
-        s_api.config_list_size = &RimeConfigListSize;
-        s_api.config_begin_list = &RimeConfigBeginList;
-        s_api.get_input = &RimeGetInput;
-        s_api.get_caret_pos = &RimeGetCaretPos;
-        s_api.select_candidate = &RimeSelectCandidate;
-        s_api.get_version = &RimeGetVersion;
-        s_api.set_caret_pos = &RimeSetCaretPos;
-        s_api.select_candidate_on_current_page = &RimeSelectCandidateOnCurrentPage;
-        s_api.candidate_list_begin = &RimeCandidateListBegin;
-        s_api.candidate_list_next = &RimeCandidateListNext;
-        s_api.candidate_list_end = &RimeCandidateListEnd;
-        s_api.candidate_list_from_index = &RimeCandidateListFromIndex;
-        s_api.get_prebuilt_data_dir = &RimeGetPrebuiltDataDir;
-        s_api.get_staging_dir = &RimeGetStagingDir;
-        s_api.commit_proto = nullptr;
-        s_api.context_proto = nullptr;
-        s_api.status_proto = nullptr;
+const char* RimeGetStateLabel(RimeSessionId session_id,
+                              const char* option_name,
+                              Bool state) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return nullptr;
+  Config* config = session->schema()->config();
+  if (!config)
+    return nullptr;
+  auto switches = (*config)["switches"];
+  if (!switches.IsList())
+    return nullptr;
+  string query = option_name;
+  for (size_t i = 0; i < switches.size(); ++i) {
+    auto item = switches[i];
+    if (!item.IsMap())
+      continue;
+    auto states = item["states"];
+    if (!states.IsList())
+      continue;
+    auto name = item["name"];
+    if (name.IsValue() && name.ToString() == query) {
+      size_t j = static_cast<size_t>(state);
+      return states.size() > j
+          ? As<ConfigValue>(*states[j])->str().c_str()
+          : nullptr;
     }
-    return &s_api;
+    auto options = item["options"];
+    if (options.IsList()) {
+      // if the query is a deselected option among the radio group, do not
+      // display its state label; only show the selected option.
+      if (!state)
+        return nullptr;
+      for (size_t j = 0; j < options.size(); ++j) {
+        if (options[j].IsValue() && options[j].ToString() == query) {
+          return states.size() > j
+              ? As<ConfigValue>(*states[j])->str().c_str()
+              : nullptr;
+        }
+      }
+    }
+  }
+  return nullptr;
+}
+
+RIME_API RimeApi* rime_get_api() {
+  static RimeApi s_api = {0};
+  if (!s_api.data_size) {
+    RIME_STRUCT_INIT(RimeApi, s_api);
+    s_api.setup = &RimeSetup;
+    s_api.set_notification_handler = &RimeSetNotificationHandler;
+    s_api.initialize = &RimeInitialize;
+    s_api.finalize = &RimeFinalize;
+    s_api.start_maintenance = &RimeStartMaintenance;
+    s_api.is_maintenance_mode = &RimeIsMaintenancing;
+    s_api.join_maintenance_thread = &RimeJoinMaintenanceThread;
+    s_api.deployer_initialize = &RimeDeployerInitialize;
+    s_api.prebuild = &RimePrebuildAllSchemas;
+    s_api.deploy = &RimeDeployWorkspace;
+    s_api.deploy_schema = &RimeDeploySchema;
+    s_api.deploy_config_file = &RimeDeployConfigFile;
+    s_api.sync_user_data = &RimeSyncUserData;
+    s_api.create_session = &RimeCreateSession;
+    s_api.find_session = &RimeFindSession;
+    s_api.destroy_session = &RimeDestroySession;
+    s_api.cleanup_stale_sessions = &RimeCleanupStaleSessions;
+    s_api.cleanup_all_sessions = &RimeCleanupAllSessions;
+    s_api.process_key = &RimeProcessKey;
+    s_api.commit_composition = &RimeCommitComposition;
+    s_api.clear_composition = &RimeClearComposition;
+    s_api.get_commit = &RimeGetCommit;
+    s_api.free_commit = &RimeFreeCommit;
+    s_api.get_context = &RimeGetContext;
+    s_api.free_context = &RimeFreeContext;
+    s_api.get_status =  &RimeGetStatus;
+    s_api.free_status = &RimeFreeStatus;
+    s_api.set_option = &RimeSetOption;
+    s_api.get_option = &RimeGetOption;
+    s_api.set_property = &RimeSetProperty;
+    s_api.get_property = &RimeGetProperty;
+    s_api.get_schema_list = &RimeGetSchemaList;
+    s_api.free_schema_list = &RimeFreeSchemaList;
+    s_api.get_current_schema = &RimeGetCurrentSchema;
+    s_api.select_schema = &RimeSelectSchema;
+    s_api.schema_open = &RimeSchemaOpen;
+    s_api.config_open = &RimeConfigOpen;
+    s_api.user_config_open = &RimeUserConfigOpen;
+    s_api.config_close = &RimeConfigClose;
+    s_api.config_get_bool = &RimeConfigGetBool;
+    s_api.config_get_int = &RimeConfigGetInt;
+    s_api.config_get_double = &RimeConfigGetDouble;
+    s_api.config_get_string = &RimeConfigGetString;
+    s_api.config_get_cstring = &RimeConfigGetCString;
+    s_api.config_update_signature = &RimeConfigUpdateSignature;
+    s_api.config_begin_map = &RimeConfigBeginMap;
+    s_api.config_next = &RimeConfigNext;
+    s_api.config_end = &RimeConfigEnd;
+    s_api.simulate_key_sequence = &RimeSimulateKeySequence;
+    s_api.register_module = &RimeRegisterModule;
+    s_api.find_module = &RimeFindModule;
+    s_api.run_task = &RimeRunTask;
+    s_api.get_shared_data_dir = &RimeGetSharedDataDir;
+    s_api.get_user_data_dir = &RimeGetUserDataDir;
+    s_api.get_sync_dir = &RimeGetSyncDir;
+    s_api.get_user_id = &RimeGetUserId;
+    s_api.get_user_data_sync_dir = &RimeGetUserDataSyncDir;
+    s_api.config_init = &RimeConfigInit;
+    s_api.config_load_string = &RimeConfigLoadString;
+    s_api.config_set_bool = &RimeConfigSetBool;
+    s_api.config_set_int = &RimeConfigSetInt;
+    s_api.config_set_double = &RimeConfigSetDouble;
+    s_api.config_set_string = &RimeConfigSetString;
+    s_api.config_get_item = &RimeConfigGetItem;
+    s_api.config_set_item = &RimeConfigSetItem;
+    s_api.config_clear = &RimeConfigClear;
+    s_api.config_create_list = &RimeConfigCreateList;
+    s_api.config_create_map = &RimeConfigCreateMap;
+    s_api.config_list_size = &RimeConfigListSize;
+    s_api.config_begin_list = &RimeConfigBeginList;
+    s_api.get_input = &RimeGetInput;
+    s_api.get_caret_pos = &RimeGetCaretPos;
+    s_api.select_candidate = &RimeSelectCandidate;
+    s_api.get_version = &RimeGetVersion;
+    s_api.set_caret_pos = &RimeSetCaretPos;
+    s_api.select_candidate_on_current_page = &RimeSelectCandidateOnCurrentPage;
+    s_api.candidate_list_begin = &RimeCandidateListBegin;
+    s_api.candidate_list_next = &RimeCandidateListNext;
+    s_api.candidate_list_end = &RimeCandidateListEnd;
+    s_api.candidate_list_from_index = &RimeCandidateListFromIndex;
+    s_api.get_prebuilt_data_dir = &RimeGetPrebuiltDataDir;
+    s_api.get_staging_dir = &RimeGetStagingDir;
+    s_api.commit_proto = nullptr;
+    s_api.context_proto = nullptr;
+    s_api.status_proto = nullptr;
+    s_api.get_state_label = &RimeGetStateLabel;
+  }
+  return &s_api;
 }
