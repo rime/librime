@@ -550,6 +550,8 @@ typedef struct rime_api_t {
   void (*commit_proto)(RimeSessionId session_id, RIME_PROTO_BUILDER* commit_builder);
   void (*context_proto)(RimeSessionId session_id, RIME_PROTO_BUILDER* context_builder);
   void (*status_proto)(RimeSessionId session_id, RIME_PROTO_BUILDER* status_builder);
+
+  const char* (*get_state_label)(RimeSessionId session_id, const char *option_name, Bool state);
 } RimeApi;
 
 //! API entry
