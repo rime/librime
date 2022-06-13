@@ -62,8 +62,7 @@ class RimeCorrectorTest : public ::testing::Test {
     corrector_.reset(new rime::NearSearchCorrector);
   }
 
-  virtual void TearDown() {
-  }
+  void TearDown() override {}
 
  protected:
   rime::map<rime::string, rime::SyllableId> syllable_id_;
