@@ -20,6 +20,7 @@
 #include <rime/service.h>
 #include <rime/setup.h>
 #include <rime/signature.h>
+#include <rime/switches.h>
 #include <rime_api.h>
 
 using namespace rime;
@@ -1010,40 +1011,9 @@ const char* RimeGetStateLabel(RimeSessionId session_id,
   Config* config = session->schema()->config();
   if (!config)
     return nullptr;
-  auto switches = (*config)["switches"];
-  if (!switches.IsList())
-    return nullptr;
-  string query = option_name;
-  for (size_t i = 0; i < switches.size(); ++i) {
-    auto item = switches[i];
-    if (!item.IsMap())
-      continue;
-    auto states = item["states"];
-    if (!states.IsList())
-      continue;
-    auto name = item["name"];
-    if (name.IsValue() && name.ToString() == query) {
-      size_t j = static_cast<size_t>(state);
-      return states.size() > j
-          ? As<ConfigValue>(*states[j])->str().c_str()
-          : nullptr;
-    }
-    auto options = item["options"];
-    if (options.IsList()) {
-      // if the query is a deselected option among the radio group, do not
-      // display its state label; only show the selected option.
-      if (!state)
-        return nullptr;
-      for (size_t j = 0; j < options.size(); ++j) {
-        if (options[j].IsValue() && options[j].ToString() == query) {
-          return states.size() > j
-              ? As<ConfigValue>(*states[j])->str().c_str()
-              : nullptr;
-        }
-      }
-    }
-  }
-  return nullptr;
+  Switches switches(config);
+  an<ConfigValue> label = switches.GetStateLabel(option_name, state);
+  return label ? label->str().c_str() : nullptr;
 }
 
 RIME_API RimeApi* rime_get_api() {
