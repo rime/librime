@@ -18,6 +18,7 @@
 #include <rime/segmentation.h>
 #include <rime/segmentor.h>
 #include <rime/switcher.h>
+#include <rime/switches.h>
 #include <rime/ticket.h>
 #include <rime/translation.h>
 #include <rime/translator.h>
@@ -385,31 +386,19 @@ void ConcreteEngine::InitializeComponents() {
 void ConcreteEngine::InitializeOptions() {
   // reset custom switches
   Config* config = schema_->config();
-  if (auto switches = config->GetList("switches")) {
-    for (size_t i = 0; i < switches->size(); ++i) {
-      auto item = As<ConfigMap>(switches->GetAt(i));
-      if (!item)
-        continue;
-      auto reset_value = item->GetValue("reset");
-      if (!reset_value)
-        continue;
-      int value = 0;
-      reset_value->GetInt(&value);
-      if (auto option_name = item->GetValue("name")) {
-        // toggle
-        context_->set_option(option_name->str(), (value != 0));
-      }
-      else if (auto options = As<ConfigList>(item->Get("options"))) {
-        // radio
-        for (size_t i = 0; i < options->size(); ++i) {
-          if (auto option_name = options->GetValueAt(i)) {
-            context_->set_option(option_name->str(),
-                                 static_cast<int>(i) == value);
-          }
-        }
-      }
+  Switches switches(config);
+  switches.ForEachOption([this](Switches::SwitchOption option) {
+    if (option.reset_value < 0)  // unspecified
+      return;
+    if (option.type == Switches::kToggleOption) {
+      context_->set_option(option.option_name, (option.reset_value != 0));
     }
-  }
+    else if (option.type == Switches::kRadioGroup) {
+      context_->set_option(
+          option.option_name,
+          static_cast<int>(option.option_index) == option.reset_value);
+    }
+  });
 }
 
 }  // namespace rime
