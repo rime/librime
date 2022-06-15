@@ -13,6 +13,7 @@
 #include <rime/key_table.h>
 #include <rime/schema.h>
 #include <rime/switcher.h>
+#include <rime/switches.h>
 #include <rime/gear/key_binder.h>
 
 using namespace std::placeholders;
@@ -57,29 +58,83 @@ struct KeyBinding {
 };
 
 class KeyBindings : public map<KeyEvent,
-                                    vector<KeyBinding>> {
+                             vector<KeyBinding>> {
  public:
   void LoadBindings(const an<ConfigList>& bindings);
   void Bind(const KeyEvent& key, const KeyBinding& binding);
 };
 
+static void radio_select_option(Context* ctx,
+                                const Switches::SwitchOption& the_option) {
+  Switches::FindRadioGroupOption(
+      the_option.the_switch,
+      [ctx, &the_option](Switches::SwitchOption option) {
+        bool value = (option.option_index == the_option.option_index);
+        if (ctx->get_option(option.option_name) != value) {
+          ctx->set_option(option.option_name, value);
+        }
+        return Switches::kContinue;
+      });
+}
+
 static void toggle_option(Engine* engine, const string& option) {
   if (!engine)
     return;
   Context* ctx = engine->context();
-  ctx->set_option(option, !ctx->get_option(option));
+  Switches switches(engine->schema()->config());
+  auto the_option = switches.OptionByName(option);
+  if (the_option.found() && the_option.type == Switches::kRadioGroup) {
+    auto selected_option = switches.FindRadioGroupOption(
+        the_option.the_switch,
+        [ctx](Switches::SwitchOption option) {
+          return ctx->get_option(option.option_name)
+              ? Switches::kFound
+              : Switches::kContinue;
+        });
+    if (!selected_option.found()) {
+      // invalid state: none is selected. select the given option.
+      radio_select_option(ctx, the_option);
+      return;
+    }
+    // cycle through the ratio group and select the next option.
+    auto next_option = Switches::Cycle(selected_option);
+    if (next_option.found()) {
+      radio_select_option(ctx, next_option);
+    }
+  } else {  // toggle
+    ctx->set_option(option, !ctx->get_option(option));
+  }
 }
+
 static void set_option(Engine* engine, const string& option) {
   if (!engine)
     return;
   Context* ctx = engine->context();
-  ctx->set_option(option, 1);
+  Switches switches(engine->schema()->config());
+  auto the_option = switches.OptionByName(option);
+  if (the_option.found() && the_option.type == Switches::kRadioGroup) {
+    radio_select_option(ctx, the_option);
+  } else {
+    ctx->set_option(option, 1);
+  }
 }
+
 static void unset_option(Engine* engine, const string& option) {
   if (!engine)
     return;
   Context* ctx = engine->context();
-  ctx->set_option(option, 0);
+  Switches switches(engine->schema()->config());
+  auto the_option = switches.OptionByName(option);
+  if (the_option.found() && the_option.type == Switches::kRadioGroup) {
+    if (ctx->get_option(option)) {
+      auto default_option = Switches::Reset(the_option);
+      if (default_option.found()) {
+        radio_select_option(ctx, default_option);
+      }
+    }
+  } else {
+    ctx->set_option(option, 0);
+  }
 }
 
 static void select_schema(Engine* engine, const string& schema) {

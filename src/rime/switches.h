@@ -34,14 +34,28 @@ public:
     }
   };
 
-  void ForEachOption(function<void (SwitchOption option)> callback);
+  enum FindResult {
+    kContinue,
+    kFound,
+  };
+
+  SwitchOption FindOption(function<FindResult (SwitchOption option)> callback);
 
   SwitchOption OptionByName(const string& option_name);
 
   an<ConfigMap> ByIndex(size_t switch_index);
 
+  static SwitchOption Cycle(const SwitchOption& option);
+
+  static SwitchOption Reset(const SwitchOption& option);
+
+  static SwitchOption FindRadioGroupOption(
+      an<ConfigMap> the_switch,
+      function<FindResult (SwitchOption option)> callback);
+
   static an<ConfigValue> GetStateLabel(
       an<ConfigMap> the_switch, size_t state_index);
+
   an<ConfigValue> GetStateLabel(const string& option_name, int state);
 
  private:
