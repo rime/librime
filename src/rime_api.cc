@@ -1051,17 +1051,17 @@ size_t RimeGetCaretPos(RimeSessionId session_id) {
   return ctx->caret_pos();
 }
 
-Bool RimeSelectCandidate(RimeSessionId session_id, size_t index) {
+static bool do_with_candidate(RimeSessionId session_id, size_t index, bool (Context::* verb)(size_t index)) {
   an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return False;
   Context *ctx = session->context();
   if (!ctx)
     return False;
-  return Bool(ctx->Select(index));
+  return Bool(ctx->*verb(index));
 }
 
-Bool RimeSelectCandidateOnCurrentPage(RimeSessionId session_id, size_t index) {
+static bool do_with_candidate_on_current_page(RimeSessionId session_id, size_t index, bool (Context::* verb)(size_t index)) {
   an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return False;
@@ -1076,11 +1076,27 @@ Bool RimeSelectCandidateOnCurrentPage(RimeSessionId session_id, size_t index) {
     return False;
   const auto& seg(ctx->composition().back());
   size_t page_start = seg.selected_index / page_size * page_size;
-  return Bool(ctx->Select(page_start + index));
+  return (ctx->*verb)(page_start + index);
+}
+
+Bool RimeSelectCandidate(RimeSessionId session_id, size_t index) {
+  return do_with_candidate(session_id, index, Select);
+}
+
+Bool RimeSelectCandidateOnCurrentPage(RimeSessionId session_id, size_t index) {
+  return do_with_candidate_on_current_page(session_id, index, Select);
 }
 
 const char* RimeGetVersion() {
   return RIME_VERSION;
+}
+
+Bool RimeDeleteCandidate(RimeSessionId session_id, size_t index) {
+  return do_with_candidate(session_id, index, DeleteCandidate);
+}
+
+Bool RimeDeleteCandidateOnCurrentPage(RimeSessionId session_id, size_t index) {
+  return do_with_candidate_on_current_page(session_id, index, DeleteCandidate);
 }
 
 void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos) {
@@ -1170,9 +1186,11 @@ RIME_API RimeApi* rime_get_api() {
     s_api.get_input = &RimeGetInput;
     s_api.get_caret_pos = &RimeGetCaretPos;
     s_api.select_candidate = &RimeSelectCandidate;
+    s_api.delete_candidate = &RimeDeleteCandidate;
     s_api.get_version = &RimeGetVersion;
     s_api.set_caret_pos = &RimeSetCaretPos;
     s_api.select_candidate_on_current_page = &RimeSelectCandidateOnCurrentPage;
+    s_api.delete_candidate_on_current_page = &RimeDeleteCandidateOnCurrentPage;
     s_api.candidate_list_begin = &RimeCandidateListBegin;
     s_api.candidate_list_next = &RimeCandidateListNext;
     s_api.candidate_list_end = &RimeCandidateListEnd;
