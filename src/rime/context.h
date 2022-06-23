@@ -45,6 +45,7 @@ class Context {
 
   // return false if there is no candidate at index
   bool Select(size_t index);
+  bool DeleteCandidate(size_t index);
   // return false if there's no candidate for current segment
   bool ConfirmCurrentSelection();
   bool DeleteCurrentSelection();
@@ -107,6 +108,8 @@ class Context {
   OptionUpdateNotifier option_update_notifier_;
   PropertyUpdateNotifier property_update_notifier_;
   KeyEventNotifier unhandled_key_notifier_;
+
+  bool DeleteCandidate(function<an<Candidate>(Segment& seg)>, size_t);
 };
 
 }  // namespace rime

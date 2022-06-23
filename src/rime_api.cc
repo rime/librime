@@ -938,36 +938,53 @@ size_t RimeGetCaretPos(RimeSessionId session_id) {
   return ctx->caret_pos();
 }
 
+static bool do_with_candidate(RimeSessionId session_id, size_t index, bool (Context::* verb)(size_t index)) {
+    an<Session> session(Service::instance().GetSession(session_id));
+    if (!session)
+        return False;
+    Context *ctx = session->context();
+    if (!ctx)
+        return False;
+    return (ctx->*verb)(index);
+}
+
+static bool do_with_candidate_on_current_page(RimeSessionId session_id, size_t index, bool (Context::* verb)(size_t index)) {
+    an<Session> session(Service::instance().GetSession(session_id));
+    if (!session)
+        return False;
+    Context *ctx = session->context();
+    if (!ctx || !ctx->HasMenu())
+        return False;
+    Schema *schema = session->schema();
+    if (!schema)
+        return False;
+    size_t page_size = (size_t)schema->page_size();
+    if (index >= page_size)
+        return False;
+    const auto& seg(ctx->composition().back());
+    size_t page_start = seg.selected_index / page_size * page_size;
+    return (ctx->*verb)(page_start + index);
+}
+
+
 Bool RimeSelectCandidate(RimeSessionId session_id, size_t index) {
-  an<Session> session(Service::instance().GetSession(session_id));
-  if (!session)
-    return False;
-  Context *ctx = session->context();
-  if (!ctx)
-    return False;
-  return Bool(ctx->Select(index));
+    return do_with_candidate(session_id, index, &Context::Select);
 }
 
 Bool RimeSelectCandidateOnCurrentPage(RimeSessionId session_id, size_t index) {
-  an<Session> session(Service::instance().GetSession(session_id));
-  if (!session)
-    return False;
-  Context *ctx = session->context();
-  if (!ctx || !ctx->HasMenu())
-    return False;
-  Schema *schema = session->schema();
-  if (!schema)
-    return False;
-  size_t page_size = (size_t)schema->page_size();
-  if (index >= page_size)
-    return False;
-  const auto& seg(ctx->composition().back());
-  size_t page_start = seg.selected_index / page_size * page_size;
-  return Bool(ctx->Select(page_start + index));
+  return do_with_candidate_on_current_page(session_id, index, &Context::Select);
 }
 
 const char* RimeGetVersion() {
   return RIME_VERSION;
+}
+
+Bool RimeDeleteCandidate(RimeSessionId session_id, size_t index) {
+    return do_with_candidate(session_id, index, &Context::DeleteCandidate);
+}
+
+Bool RimeDeleteCandidateOnCurrentPage(RimeSessionId session_id, size_t index) {
+    return do_with_candidate_on_current_page(session_id, index, &Context::DeleteCandidate);
 }
 
 void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos) {
@@ -1115,6 +1132,8 @@ RIME_API RimeApi* rime_get_api() {
     s_api.context_proto = nullptr;
     s_api.status_proto = nullptr;
     s_api.get_state_label = &RimeGetStateLabel;
+    s_api.delete_candidate = &RimeDeleteCandidate;
+    s_api.delete_candidate_on_current_page = &RimeDeleteCandidateOnCurrentPage;
   }
   return &s_api;
 }
