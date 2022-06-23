@@ -5,6 +5,7 @@
 // 2011-11-23 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
+#include <boost/lexical_cast.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -77,12 +78,27 @@ static void radio_select_option(Context* ctx,
       });
 }
 
+inline static bool is_switch_index(const string& option) {
+  return !option.empty() && option.front() == '@';
+}
+
+static Switches::SwitchOption switch_by_index(Switches& switches,
+                                              const string& option) {
+  try {
+    size_t index = boost::lexical_cast<size_t>(option.substr(1));
+    return switches.ByIndex(index);
+  } catch (...) {}
+  return {};
+}
+
 static void toggle_option(Engine* engine, const string& option) {
   if (!engine)
     return;
   Context* ctx = engine->context();
   Switches switches(engine->schema()->config());
-  auto the_option = switches.OptionByName(option);
+  auto the_option = is_switch_index(option)
+                    ? switch_by_index(switches, option)
+                    : switches.OptionByName(option);
   if (the_option.found() && the_option.type == Switches::kRadioGroup) {
     auto selected_option = switches.FindRadioGroupOption(
         the_option.the_switch,
@@ -102,7 +118,10 @@ static void toggle_option(Engine* engine, const string& option) {
       radio_select_option(ctx, next_option);
     }
   } else {  // toggle
-    ctx->set_option(option, !ctx->get_option(option));
+    // option can be an index. use the found option name, or an arbitrary
+    // option name specified by caller.
+    auto option_name = the_option.found() ? the_option.option_name : option;
+    ctx->set_option(option_name, !ctx->get_option(option_name));
   }
 }
 

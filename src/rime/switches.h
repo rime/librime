@@ -6,6 +6,7 @@
 namespace rime {
 
 class Config;
+class ConfigItemRef;
 class ConfigMap;
 class ConfigValue;
 
@@ -43,7 +44,9 @@ public:
 
   SwitchOption OptionByName(const string& option_name);
 
-  an<ConfigMap> ByIndex(size_t switch_index);
+  // Returns the switch option defined at switch_index.
+  // If the swtich is a radio group, return the first option in the group.
+  SwitchOption ByIndex(size_t switch_index);
 
   static SwitchOption Cycle(const SwitchOption& option);
 
@@ -59,6 +62,11 @@ public:
   an<ConfigValue> GetStateLabel(const string& option_name, int state);
 
  private:
+  SwitchOption FindOptionFromConfigItem(
+      ConfigItemRef& item,
+      size_t switch_index,
+      function<FindResult (SwitchOption option)> callback);
+
   Config* config_;
 };
 

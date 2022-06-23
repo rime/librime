@@ -3,46 +3,59 @@
 
 namespace rime {
 
+inline static int reset_value(ConfigItemRef& item) {
+  auto reset = item["reset"];
+  return reset.IsValue() ? reset.ToInt() : -1;
+}
+
+Switches::SwitchOption Switches::FindOptionFromConfigItem(
+    ConfigItemRef& item,
+    size_t switch_index,
+    function<FindResult (SwitchOption option)> callback) {
+  auto the_switch = As<ConfigMap>(*item);
+  auto name = item["name"];
+  auto options = item["options"];
+  if (name.IsValue()) {
+    SwitchOption option{
+      the_switch,
+      kToggleOption,
+      name.ToString(),
+      reset_value(item),
+      switch_index,
+    };
+    if (callback(option) == kFound)
+      return option;
+  } else if (options.IsList()) {
+    for (size_t option_index = 0; option_index < options.size();
+         ++option_index) {
+      SwitchOption option{
+        the_switch,
+        kRadioGroup,
+        options[option_index].ToString(),
+        reset_value(item),
+        switch_index,
+        option_index,
+      };
+      if (callback(option) == kFound)
+        return option;
+    }
+  }
+  return {};
+}
+
 Switches::SwitchOption Switches::FindOption(
     function<FindResult (SwitchOption option)> callback) {
   auto switches = (*config_)["switches"];
   if (!switches.IsList())
     return {};
-  for (size_t i = 0; i < switches.size(); ++i) {
-    auto item = switches[i];
+  for (size_t switch_index = 0; switch_index < switches.size();
+       ++switch_index) {
+    auto item = switches[switch_index];
     if (!item.IsMap())
       continue;
-    auto the_switch = As<ConfigMap>(*item);
-    auto reset = item["reset"];
-    int reset_value = reset.IsValue() ? reset.ToInt() : -1;
-    auto name = item["name"];
-    if (name.IsValue()) {
-      SwitchOption option{
-        the_switch,
-        kToggleOption,
-        name.ToString(),
-        reset_value,
-        i,
-      };
-      if (callback(option) == kFound)
-        return option;
-      continue;
-    }
-    auto options = item["options"];
-    if (options.IsList()) {
-      for (size_t j = 0; j < options.size(); ++j) {
-        SwitchOption option{
-          the_switch,
-          kRadioGroup,
-          options[j].ToString(),
-          reset_value,
-          i,
-          j,
-        };
-        if (callback(option) == kFound)
-          return option;
-      }
-    }
+    auto option = FindOptionFromConfigItem(item, switch_index, callback);
+    if (option.found())
+      return option;
   }
   return {};
 }
@@ -53,14 +66,20 @@ Switches::SwitchOption Switches::OptionByName(const string& option_name) {
   });
 }
 
-an<ConfigMap> Switches::ByIndex(size_t switch_index) {
+Switches::SwitchOption Switches::ByIndex(size_t switch_index) {
   auto switches = (*config_)["switches"];
   if (!switches.IsList())
-    return nullptr;
+    return {};
   if (switches.size() <= switch_index)
-    return nullptr;
+    return {};
   auto item = switches[switch_index];
-  return As<ConfigMap>(*item);
+  return FindOptionFromConfigItem(
+      item,
+      switch_index,
+      // return the very first found option.
+      [](SwitchOption option) {
+        return kFound;
+      });
 }
 
 Switches::SwitchOption Switches::Cycle(const SwitchOption& current) {
