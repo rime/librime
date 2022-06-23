@@ -123,17 +123,31 @@ bool Context::Select(size_t index) {
   return false;
 }
 
-bool Context::DeleteCurrentSelection() {
+bool Context::DeleteCandidate(
+    function<an<Candidate> (Segment& seg)> get_candidate) {
   if (composition_.empty())
     return false;
   Segment& seg(composition_.back());
-  if (auto cand = seg.GetSelectedCandidate()) {
-    DLOG(INFO) << "Deleting: '" << cand->text()
-               << "', selected_index = " << seg.selected_index;
+  if (auto cand = get_candidate(seg)) {
+    DLOG(INFO) << "Deleting candidate: '" << cand->text();
     delete_notifier_(this);
     return true;  // CAVEAT: this doesn't mean anything is deleted for sure
   }
   return false;
+}
+
+bool Context::DeleteCandidate(size_t index) {
+  return DeleteCandidate(
+      [index](Segment& seg) {
+        return seg.GetCandidateAt(index);
+      });
+}
+
+bool Context::DeleteCurrentSelection() {
+  return DeleteCandidate(
+      [](Segment& seg) {
+        return seg.GetSelectedCandidate();
+      });
 }
 
 bool Context::ConfirmCurrentSelection() {

@@ -45,6 +45,7 @@ class Context {
 
   // return false if there is no candidate at index
   bool Select(size_t index);
+  bool DeleteCandidate(size_t index);
   // return false if there's no candidate for current segment
   bool ConfirmCurrentSelection();
   bool DeleteCurrentSelection();
@@ -92,6 +93,7 @@ class Context {
 
  private:
   string GetSoftCursor() const;
+  bool DeleteCandidate(function<an<Candidate>(Segment& seg)> get_candidate);
 
   string input_;
   size_t caret_pos_ = 0;

@@ -552,6 +552,10 @@ typedef struct rime_api_t {
   void (*status_proto)(RimeSessionId session_id, RIME_PROTO_BUILDER* status_builder);
 
   const char* (*get_state_label)(RimeSessionId session_id, const char *option_name, Bool state);
+  //! delete a candidate at the given index in candidate list.
+  Bool (*delete_candidate)(RimeSessionId session_id, size_t index);
+  //! delete a candidate from current page.
+  Bool (*delete_candidate_on_current_page)(RimeSessionId session_id, size_t index);
 } RimeApi;
 
 //! API entry
