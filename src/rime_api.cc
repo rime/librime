@@ -938,9 +938,10 @@ size_t RimeGetCaretPos(RimeSessionId session_id) {
   return ctx->caret_pos();
 }
 
-static bool do_with_candidate(RimeSessionId session_id, size_t index, bool (Context::* verb)(size_t index)) {
-    an<Session> session(Service::instance().GetSession(session_id));
-    if (!session)
+static bool do_with_candidate(RimeSessionId session_id, size_t index,
+                              bool (Context::* verb)(size_t index)) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
         return False;
     Context *ctx = session->context();
     if (!ctx)
@@ -948,9 +949,11 @@ static bool do_with_candidate(RimeSessionId session_id, size_t index, bool (Cont
     return (ctx->*verb)(index);
 }
 
-static bool do_with_candidate_on_current_page(RimeSessionId session_id, size_t index, bool (Context::* verb)(size_t index)) {
-    an<Session> session(Service::instance().GetSession(session_id));
-    if (!session)
+static bool do_with_candidate_on_current_page(
+    RimeSessionId session_id, size_t index,
+    bool (Context::* verb)(size_t index)) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
         return False;
     Context *ctx = session->context();
     if (!ctx || !ctx->HasMenu())
@@ -968,7 +971,7 @@ static bool do_with_candidate_on_current_page(RimeSessionId session_id, size_t i
 
 
 Bool RimeSelectCandidate(RimeSessionId session_id, size_t index) {
-    return do_with_candidate(session_id, index, &Context::Select);
+  return do_with_candidate(session_id, index, &Context::Select);
 }
 
 Bool RimeSelectCandidateOnCurrentPage(RimeSessionId session_id, size_t index) {
@@ -980,11 +983,12 @@ const char* RimeGetVersion() {
 }
 
 Bool RimeDeleteCandidate(RimeSessionId session_id, size_t index) {
-    return do_with_candidate(session_id, index, &Context::DeleteCandidate);
+  return do_with_candidate(session_id, index, &Context::DeleteCandidate);
 }
 
 Bool RimeDeleteCandidateOnCurrentPage(RimeSessionId session_id, size_t index) {
-    return do_with_candidate_on_current_page(session_id, index, &Context::DeleteCandidate);
+  return do_with_candidate_on_current_page(
+      session_id, index, &Context::DeleteCandidate);
 }
 
 void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos) {

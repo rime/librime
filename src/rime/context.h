@@ -93,6 +93,7 @@ class Context {
 
  private:
   string GetSoftCursor() const;
+  bool DeleteCandidate(function<an<Candidate>(Segment& seg)> get_candidate);
 
   string input_;
   size_t caret_pos_ = 0;
@@ -108,8 +109,6 @@ class Context {
   OptionUpdateNotifier option_update_notifier_;
   PropertyUpdateNotifier property_update_notifier_;
   KeyEventNotifier unhandled_key_notifier_;
-
-  bool DeleteCandidate(function<an<Candidate>(Segment& seg)>, size_t);
 };
 
 }  // namespace rime
