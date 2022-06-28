@@ -230,32 +230,32 @@ RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
 // Entry and exit
 
 RIME_API void RimeInitialize(RimeTraits *traits);
-RIME_API void RimeFinalize();
+RIME_API void RimeFinalize(void);
 
 RIME_API Bool RimeStartMaintenance(Bool full_check);
 
 //! \deprecated Use RimeStartMaintenance(full_check = False) instead.
-RIME_API Bool RimeStartMaintenanceOnWorkspaceChange();
-RIME_API Bool RimeIsMaintenancing();
-RIME_API void RimeJoinMaintenanceThread();
+RIME_API Bool RimeStartMaintenanceOnWorkspaceChange(void);
+RIME_API Bool RimeIsMaintenancing(void);
+RIME_API void RimeJoinMaintenanceThread(void);
 
 // Deployment
 
 RIME_API void RimeDeployerInitialize(RimeTraits *traits);
-RIME_API Bool RimePrebuildAllSchemas();
-RIME_API Bool RimeDeployWorkspace();
+RIME_API Bool RimePrebuildAllSchemas(void);
+RIME_API Bool RimeDeployWorkspace(void);
 RIME_API Bool RimeDeploySchema(const char *schema_file);
 RIME_API Bool RimeDeployConfigFile(const char *file_name, const char *version_key);
 
-RIME_API Bool RimeSyncUserData();
+RIME_API Bool RimeSyncUserData(void);
 
 // Session management
 
-RIME_API RimeSessionId RimeCreateSession();
+RIME_API RimeSessionId RimeCreateSession(void);
 RIME_API Bool RimeFindSession(RimeSessionId session_id);
 RIME_API Bool RimeDestroySession(RimeSessionId session_id);
-RIME_API void RimeCleanupStaleSessions();
-RIME_API void RimeCleanupAllSessions();
+RIME_API void RimeCleanupStaleSessions(void);
+RIME_API void RimeCleanupAllSessions(void);
 
 // Input
 
@@ -349,9 +349,9 @@ typedef struct rime_module_t {
   int data_size;
 
   const char* module_name;
-  void (*initialize)();
-  void (*finalize)();
-  RimeCustomApi* (*get_api)();
+  void (*initialize)(void);
+  void (*finalize)(void);
+  RimeCustomApi* (*get_api)(void);
 } RimeModule;
 
 RIME_API Bool RimeRegisterModule(RimeModule* module);
@@ -360,10 +360,10 @@ RIME_API RimeModule* RimeFindModule(const char* module_name);
 //! Run a registered task
 RIME_API Bool RimeRunTask(const char* task_name);
 
-RIME_API const char* RimeGetSharedDataDir();
-RIME_API const char* RimeGetUserDataDir();
-RIME_API const char* RimeGetSyncDir();
-RIME_API const char* RimeGetUserId();
+RIME_API const char* RimeGetSharedDataDir(void);
+RIME_API const char* RimeGetUserDataDir(void);
+RIME_API const char* RimeGetSyncDir(void);
+RIME_API const char* RimeGetUserId(void);
 
 /*! The API structure
  *  RimeApi is for rime v1.0+
@@ -398,29 +398,29 @@ typedef struct rime_api_t {
   // entry and exit
 
   void (*initialize)(RimeTraits *traits);
-  void (*finalize)();
+  void (*finalize)(void);
 
   Bool (*start_maintenance)(Bool full_check);
-  Bool (*is_maintenance_mode)();
-  void (*join_maintenance_thread)();
+  Bool (*is_maintenance_mode)(void);
+  void (*join_maintenance_thread)(void);
 
   // deployment
 
   void (*deployer_initialize)(RimeTraits *traits);
-  Bool (*prebuild)();
-  Bool (*deploy)();
+  Bool (*prebuild)(void);
+  Bool (*deploy)(void);
   Bool (*deploy_schema)(const char *schema_file);
   Bool (*deploy_config_file)(const char *file_name, const char *version_key);
 
-  Bool (*sync_user_data)();
+  Bool (*sync_user_data)(void);
 
   // session management
 
-  RimeSessionId (*create_session)();
+  RimeSessionId (*create_session)(void);
   Bool (*find_session)(RimeSessionId session_id);
   Bool (*destroy_session)(RimeSessionId session_id);
-  void (*cleanup_stale_sessions)();
-  void (*cleanup_all_sessions)();
+  void (*cleanup_stale_sessions)(void);
+  void (*cleanup_all_sessions)(void);
 
   // input
 
@@ -478,10 +478,10 @@ typedef struct rime_api_t {
   RimeModule* (*find_module)(const char* module_name);
 
   Bool (*run_task)(const char* task_name);
-  const char* (*get_shared_data_dir)();
-  const char* (*get_user_data_dir)();
-  const char* (*get_sync_dir)();
-  const char* (*get_user_id)();
+  const char* (*get_shared_data_dir)(void);
+  const char* (*get_user_data_dir)(void);
+  const char* (*get_sync_dir)(void);
+  const char* (*get_user_id)(void);
   void (*get_user_data_sync_dir)(char* dir, size_t buffer_size);
 
   //! initialize an empty config object
@@ -521,7 +521,7 @@ typedef struct rime_api_t {
   Bool (*select_candidate)(RimeSessionId session_id, size_t index);
 
   //! get the version of librime
-  const char* (*get_version)();
+  const char* (*get_version)(void);
 
   //! set caret posistion in terms of raw input
   void (*set_caret_pos)(RimeSessionId session_id, size_t caret_pos);
@@ -542,9 +542,9 @@ typedef struct rime_api_t {
                                     int index);
 
   //! prebuilt data directory.
-  const char* (*get_prebuilt_data_dir)();
+  const char* (*get_prebuilt_data_dir)(void);
   //! staging directory, stores data files deployed to a Rime client.
-  const char* (*get_staging_dir)();
+  const char* (*get_staging_dir)(void);
 
   //! Deprecated: for capnproto API, use "proto" module from librime-proto plugin.
   void (*commit_proto)(RimeSessionId session_id, RIME_PROTO_BUILDER* commit_builder);
@@ -562,7 +562,7 @@ typedef struct rime_api_t {
 /*!
  *  Acquire the version controlled RimeApi structure.
  */
-RIME_API RimeApi* rime_get_api();
+RIME_API RimeApi* rime_get_api(void);
 
 //! Clients should test if an api function is available in the current version before calling it.
 #define RIME_API_AVAILABLE(api, func) (RIME_STRUCT_HAS_MEMBER(*(api), (api)->func) && (api)->func)
