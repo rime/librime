@@ -496,6 +496,7 @@ an<DictEntry> UserDictionary::CreateDictEntry(const string& key,
 
 UserDictionaryComponent::UserDictionaryComponent() {
 }
+
 UserDictionary* UserDictionaryComponent::Create(const string& dict_name, const string& db_class) {
   auto db = db_pool_[dict_name].lock();
   if (!db) {
@@ -509,6 +510,7 @@ UserDictionary* UserDictionaryComponent::Create(const string& dict_name, const s
   }
   return new UserDictionary(dict_name, db);
 }
+
 UserDictionary* UserDictionaryComponent::Create(const Ticket& ticket) {
   if (!ticket.schema)
     return NULL;
