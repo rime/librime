@@ -73,9 +73,6 @@ bool ReverseDb::Load() {
 
 bool ReverseDb::Lookup(const string& text, string* result) {
   if (!key_trie_ || !value_trie_ || !metadata_->index.size) {
-    // trace
-
-    std::cout <<( (key_trie_) ? "key_trie_" : "false") << "---" << ((value_trie_) ? "value_trie_" : "fales")  << "----" << ((metadata_) ? "metadata_" : "false") << "\n" ;
     return false;
   }
   StringId key_id = key_trie_->Lookup(text);
