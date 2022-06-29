@@ -497,6 +497,20 @@ an<DictEntry> UserDictionary::CreateDictEntry(const string& key,
 UserDictionaryComponent::UserDictionaryComponent() {
 }
 
+UserDictionary* UserDictionaryComponent::Create(const string& dict_name, const string& db_class) {
+  auto db = db_pool_[dict_name].lock();
+  if (!db) {
+    auto component = Db::Require(db_class);
+    if (!component) {
+      LOG(ERROR) << "undefined db class '" << db_class << "'.";
+      return NULL;
+    }
+    db.reset(component->Create(dict_name));
+    db_pool_[dict_name] = db;
+  }
+  return new UserDictionary(dict_name, db);
+}
+
 UserDictionary* UserDictionaryComponent::Create(const Ticket& ticket) {
   if (!ticket.schema)
     return NULL;
@@ -523,17 +537,7 @@ UserDictionary* UserDictionaryComponent::Create(const Ticket& ticket) {
     // user specified db class
   }
   // obtain userdb object
-  auto db = db_pool_[dict_name].lock();
-  if (!db) {
-    auto component = Db::Require(db_class);
-    if (!component) {
-      LOG(ERROR) << "undefined db class '" << db_class << "'.";
-      return NULL;
-    }
-    db.reset(component->Create(dict_name));
-    db_pool_[dict_name] = db;
-  }
-  return new UserDictionary(dict_name, db);
+  return Create(dict_name, db_class);
 }
 
 }  // namespace rime

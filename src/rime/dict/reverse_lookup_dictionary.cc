@@ -250,6 +250,17 @@ ReverseLookupDictionaryComponent::ReverseLookupDictionaryComponent()
 }
 
 ReverseLookupDictionary*
+ReverseLookupDictionaryComponent::Create(const string& dict_name) {
+  auto db = db_pool_[dict_name].lock();
+  if (!db) {
+    auto file_path = resource_resolver_->ResolvePath(dict_name).string();
+    db = New<ReverseDb>(file_path);
+    db_pool_[dict_name] = db;
+  }
+  return new ReverseLookupDictionary(db);
+};
+
+ReverseLookupDictionary*
 ReverseLookupDictionaryComponent::Create(const Ticket& ticket) {
   if (!ticket.schema) return NULL;
   Config* config = ticket.schema->config();
@@ -259,13 +270,7 @@ ReverseLookupDictionaryComponent::Create(const Ticket& ticket) {
     // missing!
     return NULL;
   }
-  auto db = db_pool_[dict_name].lock();
-  if (!db) {
-    auto file_path = resource_resolver_->ResolvePath(dict_name).string();
-    db = New<ReverseDb>(file_path);
-    db_pool_[dict_name] = db;
-  }
-  return new ReverseLookupDictionary(db);
+  return Create(dict_name);
 }
 
 }  // namespace rime
