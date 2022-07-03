@@ -114,6 +114,7 @@ Switches::SwitchOption Switches::Reset(const SwitchOption& current) {
       default_state,
     };
   }
+  return {};
 }
 
 Switches::SwitchOption Switches::FindRadioGroupOption(
