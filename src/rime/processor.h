@@ -31,6 +31,8 @@ class Processor : public Class<Processor, const Ticket&> {
     return kNoop;
   }
 
+  string name_space() const { return name_space_; }
+  
  protected:
   Engine* engine_;
   string name_space_;
