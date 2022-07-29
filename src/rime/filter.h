@@ -31,7 +31,9 @@ class Filter : public Class<Filter, const Ticket&> {
   virtual bool AppliesToSegment(Segment* segment) {
     return true;
   }
-
+ 
+  string name_space() const { return name_space_; }
+ 
  protected:
   Engine* engine_;
   string name_space_;
