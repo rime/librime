@@ -48,6 +48,14 @@ Build dependencies
   - libyaml-cpp>=0.5
   - libgtest (optional)
 
+Build on Debian/Deepin
+---
+```bash
+sudo apt install build-essential cmake libboost1.74-all-dev libgoogle-glog-dev libleveldb-dev libmarisa-dev libopencc-dev libgtest-dev libyaml-cpp-dev
+mkdir build && cd build
+cmake .. && make -j4
+```
+
 Runtime dependencies
 ---
   - libboost
