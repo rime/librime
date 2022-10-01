@@ -467,7 +467,10 @@ typedef struct rime_api_t {
   Bool (*config_begin_map)(RimeConfigIterator* iterator, RimeConfig* config, const char* key);
   Bool (*config_next)(RimeConfigIterator* iterator);
   void (*config_end)(RimeConfigIterator* iterator);
-
+  
+  // Utilities
+  void (*set_page_size)(RimeSessionId session_id, int page_size);
+  
   // testing
 
   Bool (*simulate_key_sequence)(RimeSessionId session_id, const char *key_sequence);
