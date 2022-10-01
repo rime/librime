@@ -26,6 +26,7 @@ class Schema {
   void set_config(Config* config) { config_.reset(config); }
 
   int page_size() const { return page_size_; }
+  void set_page_size(int page_size) { page_size_ = page_size ; }
   bool page_down_cycle() const { return page_down_cycle_; }
   const string& select_keys() const { return select_keys_; }
   void set_select_keys(const string& keys) { select_keys_ = keys; }
