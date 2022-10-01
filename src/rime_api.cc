@@ -620,7 +620,7 @@ RIME_API const char* RimeConfigGetCString(RimeConfig *config, const char *key) {
   return NULL;
 }
 
-RIME_API Bool RimConfigUpdateSignature(RimeConfig *config, const char* signer) {
+RIME_API Bool RimeConfigUpdateSignature(RimeConfig *config, const char* signer) {
   if (!config || !signer) return False;
   Config *c = reinterpret_cast<Config*>(config->ptr);
   Deployer &deployer(Service::instance().deployer());
