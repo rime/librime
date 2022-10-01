@@ -620,7 +620,7 @@ RIME_API const char* RimeConfigGetCString(RimeConfig *config, const char *key) {
   return NULL;
 }
 
-RIME_API Bool RimeConfigUpdateSignature(RimeConfig *config, const char* signer) {
+RIME_API Bool RimConfigUpdateSignature(RimeConfig *config, const char* signer) {
   if (!config || !signer) return False;
   Config *c = reinterpret_cast<Config*>(config->ptr);
   Deployer &deployer(Service::instance().deployer());
@@ -1016,6 +1016,13 @@ const char* RimeGetStateLabel(RimeSessionId session_id,
   return label ? label->str().c_str() : nullptr;
 }
 
+void RimeSetPageSize(RimeSessionId session_id,int page_size) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return;
+  session->schema()->set_page_size(page_size);
+}
+
 RIME_API RimeApi* rime_get_api() {
   static RimeApi s_api = {0};
   if (!s_api.data_size) {
@@ -1065,6 +1072,7 @@ RIME_API RimeApi* rime_get_api() {
     s_api.config_get_string = &RimeConfigGetString;
     s_api.config_get_cstring = &RimeConfigGetCString;
     s_api.config_update_signature = &RimeConfigUpdateSignature;
+    s_api.set_page_size = &RimeSetPageSize;
     s_api.config_begin_map = &RimeConfigBeginMap;
     s_api.config_next = &RimeConfigNext;
     s_api.config_end = &RimeConfigEnd;
