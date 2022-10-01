@@ -331,7 +331,7 @@ RIME_API Bool RimeConfigNext(RimeConfigIterator* iterator);
 RIME_API void RimeConfigEnd(RimeConfigIterator* iterator);
 // Utilities
 RIME_API Bool RimeConfigUpdateSignature(RimeConfig* config, const char* signer);
-RIME_API void RIMESetPageSize(int page_size);
+RIME_API void RIMESetPageSize(RimeSessionId session_id,int page_size);
 // Testing
 
 RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id, const char *key_sequence);
