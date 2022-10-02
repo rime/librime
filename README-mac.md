@@ -45,8 +45,8 @@ export BOOST_ROOT="$(pwd)/deps/boost_1_78_0"
 
 ``` sh
 brew install boost
-# if you want build with icu4c, you should add icu4c path to the LIBRARY_PATH
-export LIBRARY_PATH=${LIBRARY_PATH}:/usr/local/opt/icu4c/lib
+# to build with icu4c, add the icu4c install path to LIBRARY_PATH
+export LIBRARY_PATH=${LIBRARY_PATH}:/opt/homebrew/opt/icu4c/lib:/usr/local/opt/icu4c/lib
 ```
 
 This is a time-saving option if you are building and installing Rime only for your
