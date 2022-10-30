@@ -8,6 +8,9 @@
 #include <rime/build_config.h>
 
 #ifdef RIME_ENABLE_LOGGING
+#ifdef _WIN32
+#define GLOG_NO_ABBREVIATED_SEVERITIES
+#endif // _WIN32
 #include <glog/logging.h>
 #endif  // RIME_ENABLE_LOGGING
 
