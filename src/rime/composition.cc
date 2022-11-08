@@ -9,6 +9,7 @@
 #include <rime/candidate.h>
 #include <rime/composition.h>
 #include <rime/menu.h>
+#include <iostream>
 
 namespace rime {
 
@@ -119,7 +120,7 @@ string Composition::GetCommitText() const {
   return result;
 }
 
-string Composition::GetScriptText() const {
+string Composition::GetScriptText(bool keep_selection) const {
   string result;
   size_t start = 0;
   size_t end = 0;
@@ -127,7 +128,9 @@ string Composition::GetScriptText() const {
     auto cand = seg.GetSelectedCandidate();
     start = end;
     end = cand ? cand->end() : seg.end;
-    if (cand && !cand->preedit().empty())
+    if (keep_selection && cand && !cand->text().empty() && seg.status >= Segment::kSelected)
+      result += cand->text();
+    else if (cand && !cand->preedit().empty())
       result += boost::erase_first_copy(cand->preedit(), "\t");
     else
       result += input_.substr(start, end - start);
