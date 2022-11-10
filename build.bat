@@ -174,7 +174,8 @@ if %build_deps% == 1 (
   cmake . -Bcmake-%build_dir% %deps_cmake_flags%^
   -DBUILD_SHARED_LIBS:BOOL=OFF^
   -DBUILD_TESTING:BOOL=OFF^
-  -DWITH_GFLAGS:BOOL=OFF
+  -DWITH_GFLAGS:BOOL=OFF^
+  -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"
   if errorlevel 1 goto error
   cmake --build cmake-%build_dir% --config %build_config% --target INSTALL
   if errorlevel 1 goto error
