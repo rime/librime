@@ -113,7 +113,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
             if (it == spellings.end()) {
               spellings.insert({syllable_id, props});
             } else {
-              it->second.type = std::min(it->second.type, props.type);
+              it->second.type = (std::min)(it->second.type, props.type);
             }
             // let end_vertex_type be the best (smaller) type of spelling
             // that ends at the vertex
