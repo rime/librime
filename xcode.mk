@@ -80,7 +80,7 @@ distclean: clean
 	rm -rf "$(dist_dir)" > /dev/null 2>&1 || true
 
 test: release
-	(cd $(build)/test; LD_LIBRARY_PATH=../lib/Release Release/rime_test)
+	(cd $(build)/test; DYLD_LIBRARY_PATH=../lib/Release Release/rime_test)
 
 test-debug: debug
 	(cd $(build)/test; Debug/rime_test)
