@@ -469,8 +469,7 @@ typedef struct rime_api_t {
   void (*config_end)(RimeConfigIterator* iterator);
   
   // Utilities
-  void (*set_page_size)(RimeSessionId session_id, int page_size);
-  
+   
   // testing
 
   Bool (*simulate_key_sequence)(RimeSessionId session_id, const char *key_sequence);
@@ -559,6 +558,7 @@ typedef struct rime_api_t {
   Bool (*delete_candidate)(RimeSessionId session_id, size_t index);
   //! delete a candidate from current page.
   Bool (*delete_candidate_on_current_page)(RimeSessionId session_id, size_t index);
+  void (*set_page_size)(RimeSessionId session_id, int page_size);
 } RimeApi;
 
 //! API entry
