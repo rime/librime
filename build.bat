@@ -35,6 +35,7 @@ set build_dir_suffix=
 set build_config=Release
 set build_boost=0
 set build_boost_x64=0
+set build_boost_arm64=0
 set boost_build_variant=release
 set build_deps=0
 set build_librime=0
@@ -49,6 +50,10 @@ if "%1" == "boost" set build_boost=1
 if "%1" == "boost_x64" (
   set build_boost=1
   set build_boost_x64=1
+)
+if "%1" == "boost_arm64" (
+  set build_boost=1
+  set build_boost_arm64=1
 )
 if "%1" == "deps" set build_deps=1
 rem `thirdparty` is deprecated in favor of `deps`
@@ -136,12 +141,21 @@ set bjam_options_x64=%bjam_options%^
  address-model=64^
  --stagedir=stage_x64
 
+set bjam_options_arm64=%bjam_options%^
+ define=BOOST_USE_WINAPI_VERSION=0x0A00^
+ architecture=arm^
+ address-model=64
+
 if %build_boost% == 1 (
   pushd %BOOST_ROOT%
   if not exist b2.exe call .\bootstrap.bat
   if errorlevel 1 goto error
 
-  b2 %bjam_options_x86% stage %boost_compiled_libs%
+  if %build_boost_arm64% == 1 (
+    b2 %bjam_options_arm64% stage %boost_compiled_libs%
+  ) else (
+    b2 %bjam_options_x86% stage %boost_compiled_libs%
+  )
   if errorlevel 1 goto error
 
   if %build_boost_x64% == 1 (
