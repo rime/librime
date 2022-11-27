@@ -41,7 +41,7 @@ class ReverseLookupFilter : public Filter, TagMatching {
   bool overwrite_comment_ = false;
   Projection comment_formatter_;
   bool enable_option_ = false;
-  string option_name_ = "";
+  string option_name_;
 };
 
 }  // namespace rime

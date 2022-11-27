@@ -41,14 +41,15 @@ ReverseLookupFilter::ReverseLookupFilter(const Ticket& ticket)
     name_space_ = "reverse_lookup";
   }
   if (Config* config = engine_->schema()->config()) {
-   config->GetBool(name_space_ + "/enable_option", &enable_option_);
-   config->GetString(name_space_ + "/option_name", &option_name_);
-   if (option_name_.empty())
-     option_name_ = name_space_;
+    config->GetBool(name_space_ + "/enable_option", &enable_option_);
+    if (enable_option_) {
+      option_name_ = name_space_;
+      config->GetString(name_space_ + "/option_name", &option_name_);
+    }
   }
 }
 
-bool ReverseLookupFilter::get_option(){
+bool ReverseLookupFilter::get_option() {
   return enable_option_ && engine_->context()->get_option(option_name_);
 }
 
