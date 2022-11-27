@@ -24,10 +24,13 @@ class ReverseLookupFilter : public Filter, TagMatching {
                                         CandidateList* candidates);
 
   virtual bool AppliesToSegment(Segment* segment) {
-    return TagsMatch(segment);
+    return TagsMatch(segment)
+      && ( !enable_option_ or get_option() );
   }
 
   void Process(const an<Candidate>& cand);
+  bool get_option();
+
 
  protected:
   void Initialize();
@@ -37,6 +40,8 @@ class ReverseLookupFilter : public Filter, TagMatching {
   // settings
   bool overwrite_comment_ = false;
   Projection comment_formatter_;
+  bool enable_option_ = false;
+  string option_name_ = "";
 };
 
 }  // namespace rime

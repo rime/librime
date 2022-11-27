@@ -7,6 +7,7 @@
 #include <rime/candidate.h>
 #include <rime/engine.h>
 #include <rime/schema.h>
+#include <rime/context.h>
 #include <rime/translation.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 #include <rime/gear/reverse_lookup_filter.h>
@@ -39,6 +40,16 @@ ReverseLookupFilter::ReverseLookupFilter(const Ticket& ticket)
   if (ticket.name_space == "filter") {
     name_space_ = "reverse_lookup";
   }
+  if (Config* config = engine_->schema()->config()) {
+   config->GetBool(name_space_ + "/enable_option", &enable_option_);
+   config->GetString(name_space_ + "/option_name", &option_name_);
+   if (option_name_.empty())
+     option_name_ = name_space_;
+  }
+}
+
+bool ReverseLookupFilter::get_option(){
+  return enable_option_ && engine_->context()->get_option(option_name_);
 }
 
 void ReverseLookupFilter::Initialize() {
