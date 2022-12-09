@@ -208,9 +208,16 @@ CreatePunctCandidate(const string& punct, const Segment& segment) {
     bool is_ascii = (ch >= 0x20 && ch < 0x7F);
     bool is_ideographic_space = (ch == 0x3000);
     bool is_full_shape_ascii = (ch >= 0xFF01 && ch <= 0xFF5E);
-    bool is_half_shape_kana = (ch >= 0xFF65 && ch <= 0xFFDC);
-    is_half_shape = is_ascii || is_half_shape_kana;
-    is_full_shape = is_ideographic_space || is_full_shape_ascii;
+    bool is_kana = ((ch >= 0x30A1 && ch <= 0x30FC) || ch == 0x3001 || ch == 0x3002 || ch == 0x300C || ch == 0x300D || ch == 0x309B || ch == 0x309C);
+    bool is_half_shape_kana = (ch >= 0xFF61 && ch <= 0xFF9F);
+    bool is_hangul = (ch >= 0x3131 && ch <= 0x3164); 
+    bool is_half_shape_hangul = (ch >= 0xFFA0 && ch <= 0xFFDC);
+    bool is_full_shape_narrow_symbol = (ch == 0xFF5F || ch == 0xFF60 || (ch >= 0xFFE0 && ch <= 0xFFE6));
+    bool is_narrow_symbol = (ch == 0x00A2 || ch == 0x00A3 || ch == 0x00A5 || ch == 0x00A6 || ch == 0x00AC || ch == 0x00AF || ch == 0x2985 || ch == 0x2986);
+    bool is_half_shape_wide_symbol = (ch >= 0xFFE8 && ch <= 0xFFEE);
+    bool is_wide_symbol = ((ch >= 0x2190 && ch <= 0x2193) || ch == 0x2502 || ch == 0x25A0 || ch == 0x25CB);
+    is_half_shape = is_ascii || is_half_shape_kana || is_half_shape_hangul || is_narrow_symbol || is_half_shape_wide_symbol;
+    is_full_shape = is_ideographic_space || is_full_shape_ascii || is_kana || is_hangul || is_full_shape_narrow_symbol || is_wide_symbol;
   }
   bool one_key = (segment.end - segment.start == 1);
   return New<SimpleCandidate>("punct",
