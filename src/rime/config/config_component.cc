@@ -83,10 +83,10 @@ bool Config::GetString(const string& path, string* value) {
   return p && p->GetString(value);
 }
 
-size_t Config::GetListSize(const string& path) {
+int Config::GetListSize(const string& path) {
   DLOG(INFO) << "read: " << path;
   auto list = GetList(path);
-  return list ? list->size() : 0;
+  return list ? list->size() : -1;
 }
 
 an<ConfigItem> Config::GetItem(const string& path) {

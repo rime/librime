@@ -42,7 +42,7 @@ class Config : public Class<Config, const string&>, public ConfigItemRef {
   RIME_API bool GetInt(const string& path, int* value);
   RIME_API bool GetDouble(const string& path, double* value);
   RIME_API bool GetString(const string& path, string* value);
-  RIME_API size_t GetListSize(const string& path);
+  RIME_API int GetListSize(const string& path);
 
   an<ConfigItem> GetItem(const string& path);
   an<ConfigValue> GetValue(const string& path);
