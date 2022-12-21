@@ -12,8 +12,12 @@ dep_packages=(
     libyaml-cpp-dev
 )
 
-sudo apt-get update
-sudo apt-get install ${dep_packages[@]} -y
+sudo apt update -y
+# fix a package dependency bug in Ubuntu 22.04
+# https://bugs.launchpad.net/ubuntu/+source/google-glog/+bug/1991919
+# https://github.com/kadalu-tech/pkgs/pull/2/files#r1001042597
+sudo apt install -y libunwind-dev
+sudo apt install -y ${dep_packages[@]}
 make deps/gtest
 make -C deps/opencc build
 sudo env "PATH=$PATH" make -C deps/opencc install
