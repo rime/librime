@@ -5,15 +5,16 @@
 
 namespace rime {
 
-template <class T>
-const typename KeyBindingProcessor<T>::ActionDef
-    KeyBindingProcessor<T>::kActionNoop = { "noop", nullptr };
+template <class T, int N>
+const typename KeyBindingProcessor<T, N>::ActionDef
+    KeyBindingProcessor<T, N>::kActionNoop = { "noop", nullptr };
 
-template <class T>
-ProcessResult KeyBindingProcessor<T>::ProcessKeyEvent(
-    const KeyEvent& key_event, Context* ctx) {
+template <class T, int N>
+ProcessResult KeyBindingProcessor<T, N>::ProcessKeyEvent(
+    const KeyEvent& key_event, Context* ctx, int keymap_selector) {
+  auto& keymap = get_keymap(keymap_selector);
   // exact match
-  if (Accept(key_event, ctx)) {
+  if (Accept(key_event, ctx, keymap)) {
     return kAccepted;
   }
   // fallback: compatible modifiers
@@ -25,14 +26,14 @@ ProcessResult KeyBindingProcessor<T>::ProcessKeyEvent(
       key_event.keycode(),
       (key_event.modifier() & ~kShiftMask) | kControlMask
     };
-    if (Accept(shift_as_ctrl, ctx)) {
+    if (Accept(shift_as_ctrl, ctx, keymap)) {
       return kAccepted;
     }
     KeyEvent ignore_shift{
       key_event.keycode(),
       key_event.modifier() & ~kShiftMask
     };
-    if (Accept(ignore_shift, ctx)) {
+    if (Accept(ignore_shift, ctx, keymap)) {
       return kAccepted;
     }
   }
@@ -40,30 +41,44 @@ ProcessResult KeyBindingProcessor<T>::ProcessKeyEvent(
   return kNoop;
 }
 
-template <class T>
-bool KeyBindingProcessor<T>::Accept(const KeyEvent& key_event, Context* ctx) {
-  auto binding = key_bindings_.find(key_event);
-  if (binding != key_bindings_.end()) {
+template <class T, int N>
+typename KeyBindingProcessor<T, N>::Keymap&
+KeyBindingProcessor<T, N>::get_keymap(int keymap_selector) {
+  DCHECK_LT(keymap_selector, N);
+  return keymaps_[keymap_selector];
+}
+
+template <class T, int N>
+bool KeyBindingProcessor<T, N>::Accept(const KeyEvent& key_event,
+                                       Context* ctx,
+                                       Keymap& keymap) {
+  auto binding = keymap.find(key_event);
+  if (binding != keymap.end()) {
     auto action = binding->second;
-    RIME_THIS_CALL_AS(T, action)(ctx);
-    DLOG(INFO) << "action key accepted: " << key_event.repr();
-    return true;
+    if (RIME_THIS_CALL_AS(T, action)(ctx)) {
+      DLOG(INFO) << "action key accepted: " << key_event.repr();
+      return true;
+    }
   }
   return false;
 }
 
-template <class T>
-void KeyBindingProcessor<T>::Bind(KeyEvent key_event, HandlerPtr action) {
+template <class T, int N>
+void KeyBindingProcessor<T, N>::Keymap::Bind(KeyEvent key_event,
+                                             HandlerPtr action) {
   if (action) {
-    key_bindings_[key_event] = action;
+    (*this)[key_event] = action;
   }
   else {
-    key_bindings_.erase(key_event);
+    this->erase(key_event);
   }
 }
 
-template <class T>
-void KeyBindingProcessor<T>::LoadConfig(Config* config, const string& section) {
+template <class T, int N>
+void KeyBindingProcessor<T, N>::LoadConfig(Config* config,
+                                           const string& section,
+                                           int keymap_selector) {
+  auto& keymap = get_keymap(keymap_selector);
   if (auto bindings = config->GetMap(section + "/bindings")) {
     for (auto it = bindings->begin(); it != bindings->end(); ++it) {
       auto value = As<ConfigValue>(it->second);
@@ -83,7 +98,7 @@ void KeyBindingProcessor<T>::LoadConfig(Config* config, const string& section) {
         LOG(WARNING) << "[" << section << "] invalid key: " << it->first;
         continue;
       }
-      Bind(ke, p->action);
+      keymap.Bind(ke, p->action);
     }
   }
 }
