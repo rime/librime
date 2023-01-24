@@ -4,6 +4,7 @@
 //
 // 2013-07-17 GONG Chen <chen.sst@gmail.com>
 //
+#include "rime/utils/stringutils.h"
 #include <boost/algorithm/string.hpp>
 #include <utf8.h>
 #include <rime/config.h>
@@ -19,10 +20,7 @@ string RawCode::ToString() const {
 }
 
 void RawCode::FromString(const string &code_str) {
-  boost::split(*dynamic_cast<vector<string> *>(this),
-               code_str,
-               boost::algorithm::is_space(),
-               boost::algorithm::token_compress_on);
+  *dynamic_cast<vector<string> *>(this) = stringutils::split(code_str, " ");
 }
 
 TableEncoder::TableEncoder(PhraseCollector* collector)
