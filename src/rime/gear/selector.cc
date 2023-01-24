@@ -118,8 +118,14 @@ inline static bool is_linear_layout(Context* ctx) {
 }
 
 ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
-  if (key_event.release() || key_event.alt())
+  if (key_event.release()) {
+    last_key_ = 0;
+    key_repeat_ = 0;
     return kNoop;
+  }
+  if (key_event.alt() || key_event.super())
+    return kNoop;
+
   Context* ctx = engine_->context();
   if (ctx->composition().empty())
     return kNoop;
@@ -133,11 +139,18 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
     is_linear_layout(ctx) ? Linear : Stacked;
   auto result = KeyBindingProcessor::ProcessKeyEvent(
     key_event, ctx, text_orientation | candidate_list_layout);
+
+  int ch = key_event.keycode();
   if (result != kNoop) {
+    if (last_key_ == ch) {
+      ++key_repeat_;
+    } else {
+      last_key_ = ch;
+      key_repeat_ = 1;
+    }
     return result;
   }
 
-  int ch = key_event.keycode();
   int index = -1;
   const string& select_keys(engine_->schema()->select_keys());
   if (!select_keys.empty() &&
@@ -210,8 +223,9 @@ bool Selector::PreviousCandidate(Context* ctx) {
     return false;
   int index = comp.back().selected_index;
   if (index <= 0) {
-    // in case of linear layout, fall back to navigator
-    return !is_linear_layout(ctx);
+    // in case of linear layout, fall back to navigator;
+    // repeated key press should be handled by the same processor.
+    return !is_linear_layout(ctx) || key_repeat_ > 0;
   }
   comp.back().selected_index = index - 1;
   comp.back().tags.insert("paging");
@@ -255,7 +269,6 @@ bool Selector::End(Context* ctx) {
   // this is cool:
   return Home(ctx);
 }
-
 
 bool Selector::SelectCandidateAt(Context* ctx, int index) {
   Composition& comp = ctx->composition();
