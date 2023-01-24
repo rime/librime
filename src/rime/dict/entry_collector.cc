@@ -215,7 +215,7 @@ bool EntryCollector::TranslateWord(const string& word,
   ReverseLookupTable::const_iterator s = stems.find(word);
   if (s != stems.end()) {
     for (const string& stem : s->second) {
-      result->push_back(stem);
+      result->emplace_back(stem);
     }
     return true;
   }
@@ -226,7 +226,7 @@ bool EntryCollector::TranslateWord(const string& word,
       double min_weight = total_weight[word] * kMinimalWeight;
       if (v.second < min_weight)
         continue;
-      result->push_back(v.first);
+      result->emplace_back(v.first);
     }
     return true;
   }
