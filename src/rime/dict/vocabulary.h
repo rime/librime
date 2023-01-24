@@ -14,7 +14,7 @@
 
 namespace rime {
 
-using Syllabary = set<string>;
+using Syllabary = hash_set<string>;
 
 using SyllableId = int32_t;
 

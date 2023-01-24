@@ -6,7 +6,6 @@
 //
 #include <fstream>
 #include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
 #include <rime/dict/dict_settings.h>
 #include <rime/dict/entry_collector.h>
 #include <rime/dict/preset_vocabulary.h>
@@ -165,7 +164,7 @@ void EntryCollector::CreateEntry(const string &word,
   if (scaled) {
     double percentage = 100.0;
     try {
-      percentage = boost::lexical_cast<double>(
+      percentage = std::stod(
           weight_str.substr(0, weight_str.length() - 1));
     }
     catch (...) {
@@ -176,7 +175,7 @@ void EntryCollector::CreateEntry(const string &word,
   }
   else if (!weight_str.empty()) {  // absolute weight
     try {
-      e.weight = boost::lexical_cast<double>(weight_str);
+      e.weight = std::stod(weight_str);
     }
     catch (...) {
       LOG(WARNING) << "invalid entry definition at #" << num_entries << ".";
@@ -206,7 +205,7 @@ void EntryCollector::CreateEntry(const string &word,
     words[e.text][code_str] += e.weight;
     total_weight[e.text] += e.weight;
   }
-  entries.push_back(e);
+  entries.emplace_back(e);
   ++num_entries;
 }
 

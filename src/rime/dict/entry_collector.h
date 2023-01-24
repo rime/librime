@@ -66,7 +66,7 @@ class EntryCollector : public PhraseCollector {
   the<PresetVocabulary> preset_vocabulary;
   the<Encoder> encoder;
   EncodeQueue encode_queue;
-  set<string/* word */> collection;
+  hash_set<string/* word */> collection;
   WordMap words;
   WeightMap total_weight;
 };

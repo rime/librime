@@ -287,7 +287,7 @@ bool TableEncoder::DfsEncode(const string& phrase,
       if (IsCodeExcluded(x)) {
         continue;
       }
-      code->push_back(x);
+      code->emplace_back(x);
       bool ok = DfsEncode(phrase, value, start_pos + word_len, code, limit);
       ret = ret || ok;
       code->pop_back();
@@ -333,7 +333,7 @@ bool ScriptEncoder::DfsEncode(const string& phrase,
     vector<string> translations;
     if (collector_->TranslateWord(word, &translations)) {
       for (const string& x : translations) {
-        code->push_back(x);
+        code->emplace_back(x);
         bool ok = DfsEncode(phrase, value, start_pos + k, code, limit);
         ret = ret || ok;
         code->pop_back();
