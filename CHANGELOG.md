@@ -1,3 +1,13 @@
+<a name="1.8.3"></a>
+## [1.8.3](https://github.com/rime/librime/compare/1.8.2...1.8.3) (2023-01-25)
+
+
+### Bug Fixes
+
+* skip key combos with super modifier ([80bef8f](https://github.com/rime/librime/commit/80bef8f)), closes [#458](https://github.com/rime/librime/issues/458)
+
+
+
 <a name="1.8.2"></a>
 ## [1.8.2](https://github.com/rime/librime/compare/1.8.1...1.8.2) (2023-01-25)
 
