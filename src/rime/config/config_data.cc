@@ -222,7 +222,7 @@ vector<string> ConfigData::SplitPath(const string& path) {
 }
 
 string ConfigData::JoinPath(const vector<string>& keys) {
-  return boost::join(keys, "/");
+  return stringutils::join(keys, "/");
 }
 
 an<ConfigItem> ConfigData::Traverse(const string& path) {

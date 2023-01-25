@@ -4,11 +4,11 @@
 //
 // 2013-07-17 GONG Chen <chen.sst@gmail.com>
 //
-#include "rime/utils/stringutils.h"
 #include <boost/algorithm/string.hpp>
 #include <utf8.h>
 #include <rime/config.h>
 #include <rime/algo/encoder.h>
+#include <rime/utils/stringutils.h>
 
 namespace rime {
 
@@ -16,7 +16,7 @@ static const int kEncoderDfsLimit = 32;
 static const int kMaxPhraseLength = 32;
 
 string RawCode::ToString() const {
-  return boost::join(*this, " ");
+  return stringutils::join(*this, " ");
 }
 
 void RawCode::FromString(const string &code_str) {

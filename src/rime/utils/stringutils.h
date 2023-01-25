@@ -42,6 +42,34 @@ inline vector<string> split(const string& str, const string& delimiter) {
   return split(str, delimiter, true);
 }
 
+/// \brief Join a range of string with delim.
+template <typename Iter, typename T>
+inline string join(Iter start, Iter end, T&& delim) {
+    string result;
+    if (start != end) {
+        result += (*start);
+        start++;
+    }
+    for (; start != end; start++) {
+        result += (delim);
+        result += (*start);
+    }
+    return result;
+}
+
+/// \brief Join a set of string with delim.
+template <typename C, typename T>
+inline string join(C&& container, T&& delim) {
+    return join(std::begin(container), std::end(container), delim);
+}
+
+/// \brief Join the strings with delim.
+template <typename C, typename T>
+inline string join(std::initializer_list<C>&& container, T&& delim) {
+    return join(std::begin(container), std::end(container), delim);
+}
+
+
 } // namespace StringUtils
 } // namespace rime
 

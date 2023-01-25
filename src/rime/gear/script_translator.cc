@@ -6,6 +6,7 @@
 //
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
+#include "rime/utils/stringutils.h"
 #include <algorithm>
 #include <stack>
 #include <cmath>
@@ -215,7 +216,7 @@ string ScriptTranslator::Spell(const Code& code) {
   vector<string> syllables;
   if (!dict_ || !dict_->Decode(code, &syllables) || syllables.empty())
     return result;
-  result =  boost::algorithm::join(syllables,
+  result =  stringutils::join(syllables,
                                    string(1, delimiters_.at(0)));
   comment_formatter_.Apply(&result);
   return result;
