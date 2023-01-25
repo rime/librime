@@ -148,7 +148,7 @@ bool ConfigList::Insert(size_t i, an<ConfigItem> element) {
 }
 
 bool ConfigList::Append(an<ConfigItem> element) {
-  seq_.push_back(element);
+  seq_.emplace_back(element);
   return true;
 }
 

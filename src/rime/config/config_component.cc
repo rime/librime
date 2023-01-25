@@ -207,7 +207,7 @@ ConfigBuilder::ConfigBuilder() {}
 ConfigBuilder::~ConfigBuilder() {}
 
 void ConfigBuilder::InstallPlugin(ConfigCompilerPlugin* plugin) {
-  plugins_.push_back(the<ConfigCompilerPlugin>(plugin));
+  plugins_.emplace_back(the<ConfigCompilerPlugin>(plugin));
 }
 
 template <class Container>

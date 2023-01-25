@@ -92,7 +92,7 @@ class ConfigList : public ConfigItem {
 // limitation: map keys have to be strings, preferably alphanumeric
 class ConfigMap : public ConfigItem {
  public:
-  using Map = map<string, an<ConfigItem>>;
+  using Map = hash_map<string, an<ConfigItem>>;
   using Iterator = Map::iterator;
 
   ConfigMap() : ConfigItem(kMap) {}

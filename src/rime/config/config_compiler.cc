@@ -18,18 +18,18 @@ std::ostream& operator<< (std::ostream& stream, const Dependency& dependency) {
 }
 
 struct ConfigDependencyGraph {
-  map<string, of<ConfigResource>> resources;
+  hash_map<string, of<ConfigResource>> resources;
   vector<of<ConfigItemRef>> node_stack;
   vector<string> key_stack;
-  map<string, vector<of<Dependency>>> deps;
+  hash_map<string, vector<of<Dependency>>> deps;
   // paths for checking circular dependencies
   vector<string> resolve_chain;
 
   void Add(an<Dependency> dependency);
 
   void Push(an<ConfigItemRef> item, const string& key) {
-    node_stack.push_back(item);
-    key_stack.push_back(key);
+    node_stack.emplace_back(item);
+    key_stack.emplace_back(key);
   }
 
   void Pop() {
@@ -529,7 +529,7 @@ bool ConfigCompiler::ResolveDependencies(const string& path) {
     LOG(WARNING) << "circular dependencies detected in " << path;
     return false;
   }
-  graph_->resolve_chain.push_back(path);
+  graph_->resolve_chain.emplace_back(path);
   auto& deps = found->second;
   for (auto iter = deps.begin(); iter != deps.end(); ) {
     if (!(*iter)->Resolve(this)) {

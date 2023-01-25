@@ -100,7 +100,7 @@ class ConfigComponentBase : public Config::Component {
 
  private:
   an<ConfigData> GetConfigData(const string& file_name);
-  map<string, weak<ConfigData>> cache_;
+  hash_map<string, weak<ConfigData>> cache_;
 };
 
 template <class Loader, class ResourceProvider = ConfigResourceProvider>
