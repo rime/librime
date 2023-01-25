@@ -59,7 +59,7 @@ static bool get_dict_files_from_settings(vector<string>* dict_files,
         LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
         return false;
       }
-      dict_files->push_back(dict_file.string());
+      dict_files->emplace_back(dict_file.string());
     }
   }
   return true;
@@ -231,7 +231,7 @@ bool DictCompiler::BuildTable(int table_index,
   Vocabulary vocabulary;
   // build .table.bin
   {
-    map<string, SyllableId> syllable_to_id;
+    hash_map<string, SyllableId> syllable_to_id;
     SyllableId syllable_id = 0;
     for (const auto& s : collector.syllabary) {
       syllable_to_id[s] = syllable_id++;
@@ -239,7 +239,7 @@ bool DictCompiler::BuildTable(int table_index,
     for (RawDictEntry& r : collector.entries) {
       Code code;
       for (const auto& s : r.raw_code) {
-        code.push_back(syllable_to_id[s]);
+        code.emplace_back(syllable_to_id[s]);
       }
       DictEntryList* ls = vocabulary.LocateEntries(code);
       if (!ls) {
@@ -250,7 +250,7 @@ bool DictCompiler::BuildTable(int table_index,
       e->code.swap(code);
       e->text.swap(r.text);
       e->weight = log(r.weight > 0 ? r.weight : DBL_EPSILON);
-      ls->push_back(e);
+      ls->emplace_back(e);
     }
     if (settings->sort_order() != "original") {
       vocabulary.SortHomophones();

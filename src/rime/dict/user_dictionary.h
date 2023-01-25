@@ -110,7 +110,7 @@ class UserDictionaryComponent : public UserDictionary::Component {
   UserDictionary* Create(const Ticket& ticket);
   UserDictionary* Create(const string& dict_name, const string& db_class);
  private:
-  map<string, weak<Db>> db_pool_;
+  hash_map<string, weak<Db>> db_pool_;
 };
 
 }  // namespace rime

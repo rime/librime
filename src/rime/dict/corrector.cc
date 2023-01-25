@@ -85,7 +85,7 @@ void DFSCollect(const string &origin, const string &current, size_t ed, Script &
     temp.erase(i, 1);
     Spelling spelling(origin);
     spelling.properties.tips = origin;
-    result[temp].push_back(spelling);
+    result[temp].emplace_back(spelling);
     DFSCollect(origin, temp, ed - 1, result);
   }
 }

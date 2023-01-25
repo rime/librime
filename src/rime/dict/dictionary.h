@@ -110,8 +110,8 @@ class DictionaryComponent : public Dictionary::Component {
                      vector<string> packs);
 
  private:
-  map<string, weak<Prism>> prism_map_;
-  map<string, weak<Table>> table_map_;
+  hash_map<string, weak<Prism>> prism_map_;
+  hash_map<string, weak<Table>> table_map_;
   the<ResourceResolver> prism_resource_resolver_;
   the<ResourceResolver> table_resource_resolver_;
 };

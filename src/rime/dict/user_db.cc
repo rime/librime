@@ -93,7 +93,7 @@ static bool userdb_entry_formatter(const string& key,
   if (row.size() != 2 ||
       row[0].empty() || row[1].empty())
     return false;
-  row.push_back(value);
+  row.emplace_back(value);
   return true;
 }
 

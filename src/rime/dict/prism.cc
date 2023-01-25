@@ -192,7 +192,7 @@ bool Prism::Build(const Syllabary& syllabary,
   metadata->double_array_size = array_size;
   // building spelling map
   if (script) {
-    map<string, SyllableId> syllable_to_id;
+    hash_map<string, SyllableId> syllable_to_id;
     SyllableId syll_id = 0;
     for (auto it = syllabary.begin(); it != syllabary.end(); ++it) {
       syllable_to_id[*it] = syll_id++;
@@ -275,7 +275,7 @@ void Prism::ExpandSearch(const string& key,
   if (ret == -2)
     return;
   if (ret != -1) {
-    result->push_back(Match{ret, key_pos});
+    result->emplace_back(Match{ret, key_pos});
     if (limit && ++count >= limit)
       return;
   }
@@ -299,7 +299,7 @@ void Prism::ExpandSearch(const string& key,
       }
       else {
         q.push({k, n_pos});
-        result->push_back(Match{ret, k_pos});
+        result->emplace_back(Match{ret, k_pos});
         if (limit && ++count >= limit)
           return;
       }

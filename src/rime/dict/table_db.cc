@@ -55,7 +55,7 @@ static bool rime_table_entry_formatter(const string& key,
     return false;
   boost::algorithm::trim(row[0]);  // remove trailing space
   row[0].swap(row[1]);
-  row.push_back(boost::lexical_cast<string>(v.commits));
+  row.emplace_back(boost::lexical_cast<string>(v.commits));
   return true;
 }
 

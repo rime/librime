@@ -39,7 +39,7 @@ void StringTable::CommonPrefixMatch(const string& query,
   agent.set_query(query.c_str());
   result->clear();
   while (trie_.common_prefix_search(agent)) {
-    result->push_back(agent.key().id());
+    result->emplace_back(agent.key().id());
   }
 }
 
@@ -49,7 +49,7 @@ void StringTable::Predict(const string& query,
   agent.set_query(query.c_str());
   result->clear();
   while (trie_.predictive_search(agent)) {
-    result->push_back(agent.key().id());
+    result->emplace_back(agent.key().id());
   }
 }
 
@@ -78,7 +78,7 @@ void StringTableBuilder::Add(const string& key,
                              double weight,
                              StringId* reference) {
   keys_.push_back(key.c_str(), key.length(), (float)weight);
-  references_.push_back(reference);
+  references_.emplace_back(reference);
 }
 
 void StringTableBuilder::Clear() {

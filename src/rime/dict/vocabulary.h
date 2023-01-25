@@ -68,7 +68,7 @@ struct VocabularyPage {
   an<Vocabulary> next_level;
 };
 
-class Vocabulary : public map<int, VocabularyPage> {
+class Vocabulary : public hash_map<int, VocabularyPage> {
  public:
   DictEntryList* LocateEntries(const Code& code);
   void SortHomophones();

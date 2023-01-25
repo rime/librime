@@ -127,7 +127,7 @@ class TableAccessor {
   double credibility_ = 0.0;
 };
 
-using TableQueryResult = map<int, vector<TableAccessor>>;
+using TableQueryResult = hash_map<int, vector<TableAccessor>>;
 
 struct SyllableGraph;
 class TableQuery;
@@ -165,7 +165,7 @@ class Table : public MappedFile {
   table::TailIndex* BuildTailIndex(const Code& prefix,
                                    const Vocabulary& vocabulary);
   bool BuildPhraseIndex(Code code, const Vocabulary& vocabulary,
-                        map<string, int>* index_data);
+                        hash_map<string, int>* index_data);
   Array<table::Entry>* BuildEntryArray(const DictEntryList& entries);
   bool BuildEntryList(const DictEntryList& src, List<table::Entry>* dest);
   bool BuildEntry(const DictEntry& dict_entry, table::Entry* entry);

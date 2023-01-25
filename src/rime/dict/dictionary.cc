@@ -80,7 +80,7 @@ DictEntryIterator::DictEntryIterator()
     : query_result_(New<dictionary::QueryResult>()) {}
 
 void DictEntryIterator::AddChunk(dictionary::Chunk&& chunk) {
-  query_result_->chunks.push_back(std::move(chunk));
+  query_result_->chunks.emplace_back(std::move(chunk));
   entry_count_ += chunk.size;
 }
 
@@ -254,7 +254,7 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
   else {
     Prism::Match match{0, 0};
     if (prism_->GetValue(str_code, &match.value)) {
-      keys.push_back(match);
+      keys.emplace_back(match);
     }
   }
   DLOG(INFO) << "found " << keys.size() << " matching keys thru the prism.";
@@ -294,7 +294,7 @@ bool Dictionary::Decode(const Code& code, vector<string>* result) {
     string s = primary_table()->GetSyllableById(c);
     if (s.empty())
       return false;
-    result->push_back(s);
+    result->emplace_back(s);
   }
   return true;
 }
@@ -386,7 +386,7 @@ Dictionary* DictionaryComponent::Create(const Ticket& ticket) {
   if (auto pack_list = config->GetList(ticket.name_space + "/packs")) {
     for (const auto& item : *pack_list) {
       if (auto value = As<ConfigValue>(item)) {
-        packs.push_back(value->str());
+        packs.emplace_back(value->str());
       }
     }
   }
@@ -416,7 +416,7 @@ Dictionary* DictionaryComponent::Create(string dict_name,
       auto file_path = table_resource_resolver_->ResolvePath(pack).string();
       table_map_[pack] = table = New<Table>(file_path);
     }
-    tables.push_back(std::move(table));
+    tables.emplace_back(std::move(table));
   }
   return new Dictionary(std::move(dict_name),
                         std::move(packs),

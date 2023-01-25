@@ -28,7 +28,7 @@ struct DfsState {
   TickCount present_tick;
   Code code;
   vector<double> credibility;
-  map<int, DictEntryList> query_result;
+  hash_map<int, DictEntryList> query_result;
   an<DbAccessor> accessor;
   string key;
   string value;
@@ -70,14 +70,14 @@ void DfsState::RecruitEntry(size_t pos) {
   if (e) {
     e->code = code;
     DLOG(INFO) << "add entry at pos " << pos;
-    query_result[pos].push_back(e);
+    query_result[pos].emplace_back(e);
   }
 }
 
 // UserDictEntryIterator members
 
 void UserDictEntryIterator::Add(an<DictEntry>&& entry) {
-  cache_.push_back(std::move(entry));
+  cache_.emplace_back(std::move(entry));
 }
 
 void UserDictEntryIterator::SetEntries(DictEntryList&& entries) {
@@ -203,7 +203,7 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
     DLOG(INFO) << "prefix: '" << current_prefix << "'"
                << ", syll_id: " << spelling.first
                << ", num_spellings: " << spelling.second.size();
-    state->code.push_back(spelling.first);
+    state->code.emplace_back(spelling.first);
     BOOST_SCOPE_EXIT( (&state) ) {
       state->code.pop_back();
     }
@@ -214,7 +214,7 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
       auto props = spelling.second[i];
       if (i > 0 && props->type >= kAbbreviation)
         continue;
-      state->credibility.push_back(
+      state->credibility.emplace_back(
           state->credibility.back() + props->credibility);
       BOOST_SCOPE_EXIT( (&state) ) {
         state->credibility.pop_back();
@@ -245,7 +245,7 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
   }
 }
 
-static an<UserDictEntryCollector> collect(map<int, DictEntryList>* source) {
+static an<UserDictEntryCollector> collect(hash_map<int, DictEntryList>* source) {
   auto result = New<UserDictEntryCollector>();
   for (auto& x : *source) {
     (*result)[x.first].SetEntries(std::move(x.second));
@@ -265,7 +265,7 @@ UserDictionary::Lookup(const SyllableGraph& syll_graph,
   state.depth_limit = depth_limit;
   FetchTickCount();
   state.present_tick = tick_ + 1;
-  state.credibility.push_back(initial_credibility);
+  state.credibility.emplace_back(initial_credibility);
   state.accessor = db_->Query("");
   state.accessor->Jump(" ");  // skip metadata
   string prefix;

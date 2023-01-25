@@ -81,7 +81,7 @@ class ReverseLookupDictionaryComponent
   ReverseLookupDictionary* Create(const Ticket& ticket);
   ReverseLookupDictionary* Create(const string& dict_name);
  private:
-  map<string, weak<ReverseDb>> db_pool_;
+  hash_map<string, weak<ReverseDb>> db_pool_;
   the<ResourceResolver> resource_resolver_;
 };
 

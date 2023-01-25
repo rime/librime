@@ -118,7 +118,7 @@ Code TableAccessor::code() const {
   }
   Code code(index_code());
   for (auto p = extra->begin(); p != extra->end(); ++p) {
-    code.push_back(*p);
+    code.emplace_back(*p);
   }
   return code;
 }
@@ -135,8 +135,8 @@ bool TableQuery::Advance(SyllableId syllable_id, double credibility) {
     return false;
   }
   ++level_;
-  index_code_.push_back(syllable_id);
-  credibility_.push_back(credibility_.back() + credibility);
+  index_code_.emplace_back(syllable_id);
+  credibility_.emplace_back(credibility_.back() + credibility);
   return true;
 }
 
@@ -155,7 +155,7 @@ void TableQuery::Reset() {
   level_ = 0;
   index_code_.clear();
   credibility_.clear();
-  credibility_.push_back(0.0);
+  credibility_.emplace_back(0.0);
 }
 
 inline static bool node_less(const table::TrunkIndexNode& a,
@@ -210,7 +210,7 @@ bool TableQuery::Walk(SyllableId syllable_id) {
 }
 
 inline static Code add_syllable(Code code, SyllableId syllable_id) {
-  code.push_back(syllable_id);
+  code.emplace_back(syllable_id);
   return code;
 }
 
@@ -437,7 +437,7 @@ table::HeadIndex* Table::BuildHeadIndex(const Vocabulary& vocabulary,
     }
     if (v.second.next_level) {
       Code code;
-      code.push_back(syllable_id);
+      code.emplace_back(syllable_id);
       auto next_level_index = BuildTrunkIndex(code, *v.second.next_level);
       if (!next_level_index) {
         return NULL;
@@ -465,7 +465,7 @@ table::TrunkIndex* Table::BuildTrunkIndex(const Code& prefix,
     }
     if (v.second.next_level) {
       Code code(prefix);
-      code.push_back(syllable_id);
+      code.emplace_back(syllable_id);
       if (code.size() < Code::kIndexCodeMaxLength) {
         auto next_level_index = BuildTrunkIndex(code, *v.second.next_level);
         if (!next_level_index) {
@@ -616,7 +616,7 @@ bool Table::Query(const SyllableGraph& syll_graph, size_t start_pos,
     if (query.level() == Code::kIndexCodeMaxLength) {
       TableAccessor accessor(query.Access(-1));
       if (!accessor.exhausted()) {
-        (*result)[current_pos].push_back(accessor);
+        (*result)[current_pos].emplace_back(accessor);
       }
       continue;
     }
@@ -626,7 +626,7 @@ bool Table::Query(const SyllableGraph& syll_graph, size_t start_pos,
       for (auto props : spellings.second) {
         size_t end_pos = props->end_pos;
         if (!accessor.exhausted()) {
-          (*result)[end_pos].push_back(accessor);
+          (*result)[end_pos].emplace_back(accessor);
         }
         if (end_pos < syll_graph.interpreted_length &&
             query.Advance(syll_id, props->credibility)) {
