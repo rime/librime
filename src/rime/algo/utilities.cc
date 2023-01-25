@@ -7,6 +7,7 @@
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <rime/algo/utilities.h>
+#include <rime/utils/stringutils.h>
 
 namespace rime {
 
@@ -14,9 +15,8 @@ int CompareVersionString(const string& x, const string& y) {
   if (x.empty() && y.empty()) return 0;
   if (x.empty()) return -1;
   if (y.empty()) return 1;
-  vector<string> xx, yy;
-  boost::split(xx, x, boost::is_any_of("."));
-  boost::split(yy, y, boost::is_any_of("."));
+  vector<string> xx = stringutils::split(x, ".");
+  vector<string> yy = stringutils::split(y, ".");
   size_t i = 0;
   for (; i < xx.size() && i < yy.size(); ++i) {
     int dx = atoi(xx[i].c_str());

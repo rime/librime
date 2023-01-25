@@ -13,6 +13,7 @@
 #include <rime/config/config_cow_ref.h>
 #include <rime/config/config_data.h>
 #include <rime/config/config_types.h>
+#include <rime/utils/stringutils.h>
 
 namespace rime {
 
@@ -214,10 +215,9 @@ bool ConfigData::TraverseWrite(const string& path, an<ConfigItem> item) {
 }
 
 vector<string> ConfigData::SplitPath(const string& path) {
-  vector<string> keys;
   auto is_separator = boost::is_any_of("/");
   auto trimmed_path = boost::trim_left_copy_if(path, is_separator);
-  boost::split(keys, trimmed_path, is_separator);
+  vector<string> keys = stringutils::split(trimmed_path, "/");
   return keys;
 }
 

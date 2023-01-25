@@ -12,6 +12,7 @@
 #include <rime/algo/dynamics.h>
 #include <rime/dict/text_db.h>
 #include <rime/dict/user_db.h>
+#include <rime/utils/stringutils.h>
 
 namespace rime {
 
@@ -25,8 +26,7 @@ string UserDbValue::Pack() const {
 }
 
 bool UserDbValue::Unpack(const string& value) {
-  vector<string> kv;
-  boost::split(kv, value, boost::is_any_of(" "));
+  vector<string> kv = stringutils::split(value, " ");
   for (const string& k_eq_v : kv) {
     size_t eq = k_eq_v.find('=');
     if (eq == string::npos)
@@ -89,8 +89,7 @@ static bool userdb_entry_formatter(const string& key,
                                    const string& value,
                                    Tsv* tsv) {
   Tsv& row(*tsv);
-  boost::algorithm::split(row, key,
-                          boost::algorithm::is_any_of("\t"));
+  row = stringutils::split(key, "\t");
   if (row.size() != 2 ||
       row[0].empty() || row[1].empty())
     return false;

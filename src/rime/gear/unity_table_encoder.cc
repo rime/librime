@@ -9,6 +9,7 @@
 #include <rime/dict/user_dictionary.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 #include <rime/gear/unity_table_encoder.h>
+#include <rime/utils/stringutils.h>
 
 namespace rime {
 
@@ -61,7 +62,7 @@ bool UnityTableEncoder::TranslateWord(const string& word,
   string str_list;
   if (rev_dict_->LookupStems(word, &str_list) ||
       rev_dict_->ReverseLookup(word, &str_list)) {
-    boost::split(*code, str_list, boost::is_any_of(" "));
+    *code = stringutils::split(str_list, " ");
     return !code->empty();
   }
   return false;
