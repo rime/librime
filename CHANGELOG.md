@@ -1,3 +1,66 @@
+<a name="1.8.3"></a>
+## [1.8.3](https://github.com/rime/librime/compare/1.8.2...1.8.3) (2023-01-25)
+
+
+### Bug Fixes
+
+* skip key combos with super modifier ([80bef8f](https://github.com/rime/librime/commit/80bef8f)), closes [#458](https://github.com/rime/librime/issues/458)
+
+
+
+<a name="1.8.2"></a>
+## [1.8.2](https://github.com/rime/librime/compare/1.8.1...1.8.2) (2023-01-25)
+
+
+
+<a name="1.8.1"></a>
+## [1.8.1](https://github.com/rime/librime/compare/1.8.0...1.8.1) (2023-01-25)
+
+
+
+<a name="1.8.0"></a>
+# [1.8.0](https://github.com/rime/librime/compare/1.7.3...1.8.0) (2023-01-25)
+
+
+### Bug Fixes
+
+* **algo, dict:** add an extra set of parenthesis to std::min ... ([f66d330](https://github.com/rime/librime/commit/f66d330))
+* **charset_filter:** Update `is_extended_cjk` to compatible with Unicode 15 ([946e852](https://github.com/rime/librime/commit/946e852))
+* **chord_composer:** first key missing from raw input ([33d85ad](https://github.com/rime/librime/commit/33d85ad))
+* **chord_composer:** invisible placeholder char prepended to output ([0ec7a2d](https://github.com/rime/librime/commit/0ec7a2d))
+* **ci:** download and extract boost ([200e3ec](https://github.com/rime/librime/commit/200e3ec))
+* **ci:** install Rime plugins' dependencies ([7677dae](https://github.com/rime/librime/commit/7677dae))
+* **ci:** no hardcoded boost version in ci scripts ([3ae72a3](https://github.com/rime/librime/commit/3ae72a3))
+* **dict_compiler:** shrink .reverse.bin file to fit after build ([2af37e0](https://github.com/rime/librime/commit/2af37e0))
+* **reverse_lookup_dictionary:** writing data to overflow buffer ([46e3066](https://github.com/rime/librime/commit/46e3066)), closes [#456](https://github.com/rime/librime/issues/456)
+* **setup:** avoid glog log macros conflict with macros of Windows ([24e1612](https://github.com/rime/librime/commit/24e1612))
+* fix missing control paths issue ([87e4c73](https://github.com/rime/librime/commit/87e4c73))
+* qualify std::exp after including <cmath> ([bc589fd](https://github.com/rime/librime/commit/bc589fd)), closes [#462](https://github.com/rime/librime/issues/462) [#476](https://github.com/rime/librime/issues/476)
+* **ci:** update ci script for windows ([0358a21](https://github.com/rime/librime/commit/0358a21))
+* **dictionary:** had unsorted chunks after the previous chunk ended ([dd6af3d](https://github.com/rime/librime/commit/dd6af3d)), closes [#507](https://github.com/rime/librime/issues/507)
+* **editor:** `back_syllable` should reopen selected words ([a3fdad8](https://github.com/rime/librime/commit/a3fdad8))
+* replace bintry mirror with jfrog ([a1203fc](https://github.com/rime/librime/commit/a1203fc))
+
+
+### Features
+
+* **api:** get_state_label returns the state label for UI display ([8f9e9c7](https://github.com/rime/librime/commit/8f9e9c7)), closes [#447](https://github.com/rime/librime/issues/447)
+* **ci:** add GitHub action ci support ([56e9d2a](https://github.com/rime/librime/commit/56e9d2a))
+* **ci:** add pull request ci ([94bb5d5](https://github.com/rime/librime/commit/94bb5d5))
+* **ci:** add tag release ci ([aafe5a3](https://github.com/rime/librime/commit/aafe5a3))
+* **context:** allow composing with zero input ([8e2826a](https://github.com/rime/librime/commit/8e2826a))
+* **key_binder:** single select a radio group option ([5e8aca2](https://github.com/rime/librime/commit/5e8aca2))
+* **key_binder:** toggle the switch defined at index `toggle: '@n'` ([6ca7803](https://github.com/rime/librime/commit/6ca7803)), closes [#554](https://github.com/rime/librime/issues/554)
+* **navigator,selector:** vertical navigation ([d79f6b3](https://github.com/rime/librime/commit/d79f6b3)), closes [#543](https://github.com/rime/librime/issues/543)
+* **plugins:** support plugin specs in slug@branch format ([7d11455](https://github.com/rime/librime/commit/7d11455))
+* **selector:** handle repeated key until release ([8d93e9f](https://github.com/rime/librime/commit/8d93e9f))
+* add windows ci job ([14ee47a](https://github.com/rime/librime/commit/14ee47a))
+* delete selected candidate ([#557](https://github.com/rime/librime/issues/557)) ([43023e1](https://github.com/rime/librime/commit/43023e1))
+* half/full-shape labels for more characters ([f2c7e40](https://github.com/rime/librime/commit/f2c7e40)), closes [#594](https://github.com/rime/librime/issues/594)
+* **simplifier:** can be configured to return empty comment ([#541](https://github.com/rime/librime/issues/541)) ([2368034](https://github.com/rime/librime/commit/2368034))
+
+
+
 <a name="1.7.3"></a>
 ## [1.7.3](https://github.com/rime/librime/compare/1.7.2...1.7.3) (2021-02-11)
 

@@ -58,7 +58,7 @@ ProcessResult Editor::ProcessKeyEvent(const KeyEvent& key_event) {
     }
   }
   if (char_handler_ &&
-      !key_event.ctrl() && !key_event.alt() &&
+      !key_event.ctrl() && !key_event.alt() && !key_event.super() &&
       ch > 0x20 && ch < 0x7f) {
     DLOG(INFO) << "input char: '" << (char)ch << "', " << ch
                << ", '" << key_event.repr() << "'";
@@ -88,49 +88,57 @@ void Editor::LoadConfig() {
   }
 }
 
-void Editor::Confirm(Context* ctx) {
+bool Editor::Confirm(Context* ctx) {
   ctx->ConfirmCurrentSelection() || ctx->Commit();
+  return true;
 }
 
-void Editor::ToggleSelection(Context* ctx) {
+bool Editor::ToggleSelection(Context* ctx) {
   ctx->ReopenPreviousSegment() ||
       ctx->ConfirmCurrentSelection();
+  return true;
 }
 
-void Editor::CommitComment(Context* ctx) {
+bool Editor::CommitComment(Context* ctx) {
   if (auto cand = ctx->GetSelectedCandidate()) {
     if (!cand->comment().empty()) {
       engine_->sink()(cand->comment());
       ctx->Clear();
     }
   }
+  return true;
 }
 
-void Editor::CommitScriptText(Context* ctx) {
+bool Editor::CommitScriptText(Context* ctx) {
   engine_->sink()(ctx->GetScriptText());
   ctx->Clear();
+  return true;
 }
 
-void Editor::CommitRawInput(Context* ctx) {
+bool Editor::CommitRawInput(Context* ctx) {
   ctx->ClearNonConfirmedComposition();
   ctx->Commit();
+  return true;
 }
 
-void Editor::CommitComposition(Context* ctx) {
+bool Editor::CommitComposition(Context* ctx) {
   if (!ctx->ConfirmCurrentSelection() || !ctx->HasMenu())
     ctx->Commit();
+  return true;
 }
 
-void Editor::RevertLastEdit(Context* ctx) {
+bool Editor::RevertLastEdit(Context* ctx) {
   // different behavior in regard to previous operation type
   ctx->ReopenPreviousSelection() ||
       (ctx->PopInput() && ctx->ReopenPreviousSegment());
+  return true;
 }
 
-void Editor::BackToPreviousInput(Context* ctx) {
+bool Editor::BackToPreviousInput(Context* ctx) {
   ctx->ReopenPreviousSegment() ||
       ctx->ReopenPreviousSelection() ||
       ctx->PopInput();
+  return true;
 }
 
 static bool pop_input_by_syllable(Context* ctx) {
@@ -149,23 +157,27 @@ static bool pop_input_by_syllable(Context* ctx) {
   return false;
 }
 
-void Editor::BackToPreviousSyllable(Context* ctx) {
+bool Editor::BackToPreviousSyllable(Context* ctx) {
   ctx->ReopenPreviousSelection() ||
       ((pop_input_by_syllable(ctx) || ctx->PopInput()) &&
        ctx->ReopenPreviousSegment());
+  return true;
 }
 
-void Editor::DeleteCandidate(Context* ctx) {
+bool Editor::DeleteCandidate(Context* ctx) {
   ctx->DeleteCurrentSelection();
+  return true;
 }
 
-void Editor::DeleteChar(Context* ctx) {
+bool Editor::DeleteChar(Context* ctx) {
   ctx->DeleteInput();
+  return true;
 }
 
-void Editor::CancelComposition(Context* ctx) {
+bool Editor::CancelComposition(Context* ctx) {
   if (!ctx->ClearPreviousSegment())
     ctx->Clear();
+  return true;
 }
 
 ProcessResult Editor::DirectCommit(Context* ctx, int ch) {
@@ -180,30 +192,32 @@ ProcessResult Editor::AddToInput(Context* ctx, int ch) {
 }
 
 FluidEditor::FluidEditor(const Ticket& ticket) : Editor(ticket, false) {
-  Bind({XK_space, 0}, &Editor::Confirm);
-  Bind({XK_BackSpace, 0}, &Editor::BackToPreviousInput);  //
-  Bind({XK_BackSpace, kControlMask}, &Editor::BackToPreviousSyllable);
-  Bind({XK_Return, 0}, &Editor::CommitComposition);  //
-  Bind({XK_Return, kControlMask}, &Editor::CommitRawInput);  //
-  Bind({XK_Return, kShiftMask}, &Editor::CommitScriptText);  //
-  Bind({XK_Return, kControlMask | kShiftMask}, &Editor::CommitComment);
-  Bind({XK_Delete, 0}, &Editor::DeleteChar);
-  Bind({XK_Delete, kControlMask}, &Editor::DeleteCandidate);
-  Bind({XK_Escape, 0}, &Editor::CancelComposition);
+  auto& keymap = get_keymap();
+  keymap.Bind({XK_space, 0}, &Editor::Confirm);
+  keymap.Bind({XK_BackSpace, 0}, &Editor::BackToPreviousInput);  //
+  keymap.Bind({XK_BackSpace, kControlMask}, &Editor::BackToPreviousSyllable);
+  keymap.Bind({XK_Return, 0}, &Editor::CommitComposition);  //
+  keymap.Bind({XK_Return, kControlMask}, &Editor::CommitRawInput);  //
+  keymap.Bind({XK_Return, kShiftMask}, &Editor::CommitScriptText);  //
+  keymap.Bind({XK_Return, kControlMask | kShiftMask}, &Editor::CommitComment);
+  keymap.Bind({XK_Delete, 0}, &Editor::DeleteChar);
+  keymap.Bind({XK_Delete, kControlMask}, &Editor::DeleteCandidate);
+  keymap.Bind({XK_Escape, 0}, &Editor::CancelComposition);
   char_handler_ = &Editor::AddToInput;  //
   LoadConfig();
 }
 
 ExpressEditor::ExpressEditor(const Ticket& ticket) : Editor(ticket, true) {
-  Bind({XK_space, 0}, &Editor::Confirm);
-  Bind({XK_BackSpace, 0}, &Editor::RevertLastEdit);  //
-  Bind({XK_BackSpace, kControlMask}, &Editor::BackToPreviousSyllable);
-  Bind({XK_Return, 0}, &Editor::CommitRawInput);  //
-  Bind({XK_Return, kControlMask}, &Editor::CommitScriptText);  //
-  Bind({XK_Return, kControlMask | kShiftMask}, &Editor::CommitComment);
-  Bind({XK_Delete, 0}, &Editor::DeleteChar);
-  Bind({XK_Delete, kControlMask}, &Editor::DeleteCandidate);
-  Bind({XK_Escape, 0}, &Editor::CancelComposition);
+  auto& keymap = get_keymap();
+  keymap.Bind({XK_space, 0}, &Editor::Confirm);
+  keymap.Bind({XK_BackSpace, 0}, &Editor::RevertLastEdit);  //
+  keymap.Bind({XK_BackSpace, kControlMask}, &Editor::BackToPreviousSyllable);
+  keymap.Bind({XK_Return, 0}, &Editor::CommitRawInput);  //
+  keymap.Bind({XK_Return, kControlMask}, &Editor::CommitScriptText);  //
+  keymap.Bind({XK_Return, kControlMask | kShiftMask}, &Editor::CommitComment);
+  keymap.Bind({XK_Delete, 0}, &Editor::DeleteChar);
+  keymap.Bind({XK_Delete, kControlMask}, &Editor::DeleteCandidate);
+  keymap.Bind({XK_Escape, 0}, &Editor::CancelComposition);
   char_handler_ = &Editor::DirectCommit;  //
   LoadConfig();
 }

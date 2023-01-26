@@ -13,11 +13,12 @@
 
 namespace rime {
 
-template <class T>
+template <class T, int N = 1>
 class KeyBindingProcessor {
  public:
-  typedef void Handler(Context* ctx);
-  using HandlerPtr = void (T::*)(Context* ctx);
+  typedef bool Handler(Context* ctx);
+  using HandlerPtr = bool (T::*)(Context* ctx);
+
   struct ActionDef {
     const char* name;
     HandlerPtr action;
@@ -25,18 +26,28 @@ class KeyBindingProcessor {
 
   static const ActionDef kActionNoop;
 
-  KeyBindingProcessor(ActionDef* action_definitions)
+  explicit KeyBindingProcessor(ActionDef* action_definitions)
       : action_definitions_(action_definitions) {}
-  ProcessResult ProcessKeyEvent(const KeyEvent& key_event, Context* ctx);
-  bool Accept(const KeyEvent& key_event, Context* ctx);
-  void Bind(KeyEvent key_event, HandlerPtr action);
-  void LoadConfig(Config* config, const string& section);
+
+  ProcessResult ProcessKeyEvent(const KeyEvent& key_event,
+                                Context* ctx,
+                                int keymap_selector = 0);
+  void LoadConfig(Config* config,
+                  const string& section,
+                  int kemap_selector = 0);
+
+ protected:
+  struct Keymap : map<KeyEvent, HandlerPtr> {
+    void Bind(KeyEvent key_event, HandlerPtr action);
+  };
+
+  Keymap& get_keymap(int keymap_selector = 0);
+
+  bool Accept(const KeyEvent& key_event, Context* ctx, Keymap& keymap);
 
  private:
   ActionDef* action_definitions_;
-
-  using KeyBindingMap = map<KeyEvent, HandlerPtr>;
-  KeyBindingMap key_bindings_;
+  Keymap keymaps_[N];
 };
 
 }  // namespace rime

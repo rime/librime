@@ -29,21 +29,40 @@ static Navigator::ActionDef navigation_actions[] = {
 };
 
 Navigator::Navigator(const Ticket& ticket)
-    : Processor(ticket), KeyBindingProcessor<Navigator>(navigation_actions) {
-  // Default key binding.
-  Bind({XK_Left, 0}, &Navigator::Rewind);
-  Bind({XK_Left, kControlMask}, &Navigator::LeftBySyllable);
-  Bind({XK_KP_Left, 0}, &Navigator::LeftByChar);
-  Bind({XK_Right, 0}, &Navigator::RightByChar);
-  Bind({XK_Right, kControlMask}, &Navigator::RightBySyllable);
-  Bind({XK_KP_Right, 0}, &Navigator::RightByChar);
-  Bind({XK_Home, 0}, &Navigator::Home);
-  Bind({XK_KP_Home, 0}, &Navigator::Home);
-  Bind({XK_End, 0}, &Navigator::End);
-  Bind({XK_KP_End, 0}, &Navigator::End);
+    : Processor(ticket),
+      KeyBindingProcessor(navigation_actions)
+{
+  // default key bindings
+  {
+    auto& keymap = get_keymap(Horizontal);
+    keymap.Bind({XK_Left, 0}, &Navigator::Rewind);
+    keymap.Bind({XK_Left, kControlMask}, &Navigator::LeftBySyllable);
+    keymap.Bind({XK_KP_Left, 0}, &Navigator::LeftByChar);
+    keymap.Bind({XK_Right, 0}, &Navigator::RightByChar);
+    keymap.Bind({XK_Right, kControlMask}, &Navigator::RightBySyllable);
+    keymap.Bind({XK_KP_Right, 0}, &Navigator::RightByChar);
+    keymap.Bind({XK_Home, 0}, &Navigator::Home);
+    keymap.Bind({XK_KP_Home, 0}, &Navigator::Home);
+    keymap.Bind({XK_End, 0}, &Navigator::End);
+    keymap.Bind({XK_KP_End, 0}, &Navigator::End);
+  }
+  {
+    auto& keymap = get_keymap(Vertical);
+    keymap.Bind({XK_Up, 0}, &Navigator::Rewind);
+    keymap.Bind({XK_Up, kControlMask}, &Navigator::LeftBySyllable);
+    keymap.Bind({XK_KP_Up, 0}, &Navigator::LeftByChar);
+    keymap.Bind({XK_Down, 0}, &Navigator::RightByChar);
+    keymap.Bind({XK_Down, kControlMask}, &Navigator::RightBySyllable);
+    keymap.Bind({XK_KP_Down, 0}, &Navigator::RightByChar);
+    keymap.Bind({XK_Home, 0}, &Navigator::Home);
+    keymap.Bind({XK_KP_Home, 0}, &Navigator::Home);
+    keymap.Bind({XK_End, 0}, &Navigator::End);
+    keymap.Bind({XK_KP_End, 0}, &Navigator::End);
+  }
 
   Config* config = engine_->schema()->config();
-  KeyBindingProcessor::LoadConfig(config, "navigator");
+  LoadConfig(config, "navigator", Horizontal);
+  LoadConfig(config, "navigator/vertical", Vertical);
 }
 
 ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
@@ -52,21 +71,25 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
   Context* ctx = engine_->context();
   if (!ctx->IsComposing())
     return kNoop;
-  return KeyBindingProcessor::ProcessKeyEvent(key_event, ctx);
+  TextOrientation text_orientation =
+    ctx->get_option("_vertical") ? Vertical : Horizontal;
+  return KeyBindingProcessor::ProcessKeyEvent(key_event, ctx, text_orientation);
 }
 
-void Navigator::LeftBySyllable(Context* ctx) {
+bool Navigator::LeftBySyllable(Context* ctx) {
   BeginMove(ctx);
   size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
   JumpLeft(ctx, confirmed_pos) || GoToEnd(ctx);
+  return true;
 }
 
-void Navigator::LeftByChar(Context* ctx) {
+bool Navigator::LeftByChar(Context* ctx) {
   BeginMove(ctx);
   MoveLeft(ctx) || GoToEnd(ctx);
+  return true;
 }
 
-void Navigator::Rewind(Context* ctx) {
+bool Navigator::Rewind(Context* ctx) {
   BeginMove(ctx);
   // take a jump leftwards when there are multiple spans,
   // but not from the middle of a span.
@@ -74,27 +97,32 @@ void Navigator::Rewind(Context* ctx) {
       spans_.Count() > 1 && spans_.HasVertex(ctx->caret_pos())
       ? JumpLeft(ctx) : MoveLeft(ctx)
   ) || GoToEnd(ctx);
+  return true;
 }
 
-void Navigator::RightBySyllable(Context* ctx) {
+bool Navigator::RightBySyllable(Context* ctx) {
   BeginMove(ctx);
   size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
   JumpRight(ctx, confirmed_pos) || GoToEnd(ctx);
+  return true;
 }
 
-void Navigator::RightByChar(Context* ctx) {
+bool Navigator::RightByChar(Context* ctx) {
   BeginMove(ctx);
   MoveRight(ctx) || GoHome(ctx);
+  return true;
 }
 
-void Navigator::Home(Context* ctx) {
+bool Navigator::Home(Context* ctx) {
   BeginMove(ctx);
   GoHome(ctx);
+  return true;
 }
 
-void Navigator::End(Context* ctx) {
+bool Navigator::End(Context* ctx) {
   BeginMove(ctx);
   GoToEnd(ctx);
+  return true;
 }
 
 void Navigator::BeginMove(Context* ctx) {
