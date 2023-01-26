@@ -7,8 +7,8 @@
 #include <boost/algorithm/string.hpp>
 #include <utf8.h>
 #include <rime/algo/calculus.h>
+#include <rime/algo/utilities.h>
 #include <rime/common.h>
-#include <rime/utils/stringutils.h>
 
 namespace rime {
 
@@ -33,7 +33,7 @@ Calculation* Calculus::Parse(const string& definition) {
   size_t sep = definition.find_first_not_of("zyxwvutsrqponmlkjihgfedcba");
   if (sep == string::npos)
     return NULL;
-  vector<string> args = stringutils::split(definition, 
+  vector<string> args = StringUtils::Split(definition, 
           string(1, definition[sep]), false);
   if (args.empty())
     return NULL;

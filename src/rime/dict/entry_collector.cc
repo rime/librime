@@ -6,10 +6,10 @@
 //
 #include <fstream>
 #include <boost/algorithm/string.hpp>
+#include <rime/algo/utilities.h>
 #include <rime/dict/dict_settings.h>
 #include <rime/dict/entry_collector.h>
 #include <rime/dict/preset_vocabulary.h>
-#include <rime/utils/stringutils.h>
 
 namespace rime {
 
@@ -86,7 +86,7 @@ void EntryCollector::Collect(const string& dict_file) {
       continue;
     }
     // read a dict entry
-    vector<string> row = stringutils::split(line, "\t");
+    vector<string> row = StringUtils::Split(line, "\t");
     int num_columns = static_cast<int>(row.size());
     if (num_columns <= text_column || row[text_column].empty()) {
       LOG(WARNING) << "Missing entry text at #" << num_entries << ".";

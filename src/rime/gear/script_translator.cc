@@ -6,7 +6,6 @@
 //
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
-#include "rime/utils/stringutils.h"
 #include <algorithm>
 #include <stack>
 #include <cmath>
@@ -20,6 +19,7 @@
 #include <rime/schema.h>
 #include <rime/translation.h>
 #include <rime/algo/syllabifier.h>
+#include <rime/algo/utilities.h>
 #include <rime/dict/corrector.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/user_dictionary.h>
@@ -216,7 +216,7 @@ string ScriptTranslator::Spell(const Code& code) {
   vector<string> syllables;
   if (!dict_ || !dict_->Decode(code, &syllables) || syllables.empty())
     return result;
-  result =  stringutils::join(syllables,
+  result =  StringUtils::Join(syllables,
                                    string(1, delimiters_.at(0)));
   comment_formatter_.Apply(&result);
   return result;

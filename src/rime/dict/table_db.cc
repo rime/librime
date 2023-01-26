@@ -6,9 +6,9 @@
 //
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+#include <rime/algo/utilities.h>
 #include <rime/dict/table_db.h>
 #include <rime/dict/user_db.h>
-#include <rime/utils/stringutils.h>
 
 // Rime table entry format:
 // phrase <Tab> code [ <Tab> weight ]
@@ -46,7 +46,7 @@ static bool rime_table_entry_formatter(const string& key,
                                        Tsv* tsv) {
   Tsv& row(*tsv);
   // key ::= code <space> <Tab> phrase
-  row = stringutils::split(key, "\t");
+  row = StringUtils::Split(key, "\t");
   if (row.size() != 2 ||
       row[0].empty() || row[1].empty())
     return false;

@@ -14,9 +14,9 @@
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/ticket.h>
+#include <rime/algo/utilities.h>
 #include <rime/dict/dict_settings.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
-#include <rime/utils/stringutils.h>
 
 namespace rime {
 
@@ -110,7 +110,7 @@ bool ReverseDb::Build(DictSettings* settings,
   // save reverse lookup entries
   for (const auto& v : rev_table) {
     const string& key(v.first);
-    string value(stringutils::join(v.second, " "));
+    string value(StringUtils::Join(v.second, " "));
     key_trie_builder.Add(key, 0.0, &key_ids[i]);
     value_trie_builder.Add(value, 0.0, &value_ids[i]);
     ++i;
@@ -118,7 +118,7 @@ bool ReverseDb::Build(DictSettings* settings,
   // save stems
   for (const auto& v : stems) {
     string key(v.first + kStemKeySuffix);
-    string value(stringutils::join(v.second, " "));
+    string value(StringUtils::Join(v.second, " "));
     key_trie_builder.Add(key, 0.0, &key_ids[i]);
     value_trie_builder.Add(value, 0.0, &value_ids[i]);
     ++i;

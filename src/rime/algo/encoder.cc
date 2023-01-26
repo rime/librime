@@ -8,7 +8,7 @@
 #include <utf8.h>
 #include <rime/config.h>
 #include <rime/algo/encoder.h>
-#include <rime/utils/stringutils.h>
+#include <rime/algo/utilities.h>
 
 namespace rime {
 
@@ -16,11 +16,11 @@ static const int kEncoderDfsLimit = 32;
 static const int kMaxPhraseLength = 32;
 
 string RawCode::ToString() const {
-  return stringutils::join(*this, " ");
+  return StringUtils::Join(*this, " ");
 }
 
 void RawCode::FromString(const string &code_str) {
-  *dynamic_cast<vector<string> *>(this) = stringutils::split(code_str, " ");
+  *dynamic_cast<vector<string> *>(this) = StringUtils::Split(code_str, " ");
 }
 
 TableEncoder::TableEncoder(PhraseCollector* collector)

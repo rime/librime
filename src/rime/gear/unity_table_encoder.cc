@@ -5,11 +5,11 @@
 // 2013-08-31 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
+#include <rime/algo/utilities.h>
 #include <rime/dict/dict_settings.h>
 #include <rime/dict/user_dictionary.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 #include <rime/gear/unity_table_encoder.h>
-#include <rime/utils/stringutils.h>
 
 namespace rime {
 
@@ -62,7 +62,7 @@ bool UnityTableEncoder::TranslateWord(const string& word,
   string str_list;
   if (rev_dict_->LookupStems(word, &str_list) ||
       rev_dict_->ReverseLookup(word, &str_list)) {
-    *code = stringutils::split(str_list, " ");
+    *code = StringUtils::Split(str_list, " ");
     return !code->empty();
   }
   return false;

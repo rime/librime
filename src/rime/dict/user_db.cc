@@ -10,9 +10,9 @@
 #include <boost/lexical_cast.hpp>
 #include <rime/service.h>
 #include <rime/algo/dynamics.h>
+#include <rime/algo/utilities.h>
 #include <rime/dict/text_db.h>
 #include <rime/dict/user_db.h>
-#include <rime/utils/stringutils.h>
 
 namespace rime {
 
@@ -26,7 +26,7 @@ string UserDbValue::Pack() const {
 }
 
 bool UserDbValue::Unpack(const string& value) {
-  vector<string> kv = stringutils::split(value, " ");
+  vector<string> kv = StringUtils::Split(value, " ");
   for (const string& k_eq_v : kv) {
     size_t eq = k_eq_v.find('=');
     if (eq == string::npos)
@@ -89,7 +89,7 @@ static bool userdb_entry_formatter(const string& key,
                                    const string& value,
                                    Tsv* tsv) {
   Tsv& row(*tsv);
-  row = stringutils::split(key, "\t");
+  row = StringUtils::Split(key, "\t");
   if (row.size() != 2 ||
       row[0].empty() || row[1].empty())
     return false;
