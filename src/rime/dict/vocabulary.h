@@ -14,7 +14,7 @@
 
 namespace rime {
 
-using Syllabary = hash_set<string>;
+using Syllabary = set<string>;
 
 using SyllableId = int32_t;
 
@@ -68,7 +68,7 @@ struct VocabularyPage {
   an<Vocabulary> next_level;
 };
 
-class Vocabulary : public hash_map<int, VocabularyPage> {
+class Vocabulary : public map<int, VocabularyPage> {
  public:
   DictEntryList* LocateEntries(const Code& code);
   void SortHomophones();

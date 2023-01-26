@@ -33,7 +33,7 @@ class RimeCorrectorSearchTest : public ::testing::Test {
   }
   void TearDown() override {}
  protected:
-  rime::map<rime::string, rime::SyllableId> syllable_id_;
+  rime::hash_map<rime::string, rime::SyllableId> syllable_id_;
   rime::the<rime::Prism> prism_;
   rime::the<rime::Corrector> corrector_;
 };
@@ -65,7 +65,7 @@ class RimeCorrectorTest : public ::testing::Test {
   void TearDown() override {}
 
  protected:
-  rime::map<rime::string, rime::SyllableId> syllable_id_;
+  rime::hash_map<rime::string, rime::SyllableId> syllable_id_;
   rime::the<rime::Prism> prism_;
   rime::the<rime::Corrector> corrector_;
 };

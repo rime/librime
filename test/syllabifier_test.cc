@@ -41,7 +41,7 @@ class RimeSyllabifierTest : public ::testing::Test {
   }
 
  protected:
-  rime::map<rime::string, rime::SyllableId> syllable_id_;
+  rime::hash_map<rime::string, rime::SyllableId> syllable_id_;
   rime::the<rime::Prism> prism_;
 };
 
