@@ -1,3 +1,8 @@
+<a name="1.8.4"></a>
+## [1.8.4](https://github.com/rime/librime/compare/1.8.3...1.8.4) (2023-01-30)
+
+
+
 <a name="1.8.3"></a>
 ## [1.8.3](https://github.com/rime/librime/compare/1.8.2...1.8.3) (2023-01-25)
 
