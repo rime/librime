@@ -118,7 +118,8 @@ inline static bool is_linear_layout(Context* ctx) {
 }
 
 ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
-  if (key_event.release() || key_event.alt())
+  if (key_event.release() ||
+      key_event.alt() || key_event.super())
     return kNoop;
   Context* ctx = engine_->context();
   if (ctx->composition().empty())
@@ -255,7 +256,6 @@ bool Selector::End(Context* ctx) {
   // this is cool:
   return Home(ctx);
 }
-
 
 bool Selector::SelectCandidateAt(Context* ctx, int index) {
   Composition& comp = ctx->composition();
