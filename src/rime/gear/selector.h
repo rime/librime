@@ -37,10 +37,6 @@ class Selector : public Processor, public KeyBindingProcessor<Selector, 4> {
   Handler End;
 
   bool SelectCandidateAt(Context* ctx, int index);
-
- private:
-  int last_key_ = 0;
-  int key_repeat_ = 0;
 };
 
 }  // namespace rime
