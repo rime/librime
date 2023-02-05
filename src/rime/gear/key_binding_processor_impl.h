@@ -11,30 +11,37 @@ const typename KeyBindingProcessor<T, N>::ActionDef
 
 template <class T, int N>
 ProcessResult KeyBindingProcessor<T, N>::ProcessKeyEvent(
-    const KeyEvent& key_event, Context* ctx, int keymap_selector) {
+    const KeyEvent& key_event,
+    Context* ctx,
+    int keymap_selector,
+    int fallback_options) {
   auto& keymap = get_keymap(keymap_selector);
   // exact match
   if (Accept(key_event, ctx, keymap)) {
     return kAccepted;
   }
-  // fallback: compatible modifiers
+  // try to match the fallback options
   if (key_event.ctrl() || key_event.alt()) {
     return kNoop;
   }
   if (key_event.shift()) {
-    KeyEvent shift_as_ctrl{
-      key_event.keycode(),
-      (key_event.modifier() & ~kShiftMask) | kControlMask
-    };
-    if (Accept(shift_as_ctrl, ctx, keymap)) {
-      return kAccepted;
+    if ((fallback_options & ShiftAsControl) != 0) {
+      KeyEvent shift_as_control{
+        key_event.keycode(),
+        (key_event.modifier() & ~kShiftMask) | kControlMask
+      };
+      if (Accept(shift_as_control, ctx, keymap)) {
+        return kAccepted;
+      }
     }
-    KeyEvent ignore_shift{
-      key_event.keycode(),
-      key_event.modifier() & ~kShiftMask
-    };
-    if (Accept(ignore_shift, ctx, keymap)) {
-      return kAccepted;
+    if ((fallback_options & IgnoreShift) != 0) {
+      KeyEvent ignore_shift{
+        key_event.keycode(),
+        key_event.modifier() & ~kShiftMask
+      };
+      if (Accept(ignore_shift, ctx, keymap)) {
+        return kAccepted;
+      }
     }
   }
   // not handled

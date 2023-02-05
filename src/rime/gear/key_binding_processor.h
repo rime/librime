@@ -19,6 +19,13 @@ class KeyBindingProcessor {
   typedef bool Handler(Context* ctx);
   using HandlerPtr = bool (T::*)(Context* ctx);
 
+  enum FallbackOptions {
+    None = 0,
+    ShiftAsControl = (1 << 0),
+    IgnoreShift = (1 << 1),
+    All = ShiftAsControl | IgnoreShift,
+  };
+
   struct ActionDef {
     const char* name;
     HandlerPtr action;
@@ -31,7 +38,8 @@ class KeyBindingProcessor {
 
   ProcessResult ProcessKeyEvent(const KeyEvent& key_event,
                                 Context* ctx,
-                                int keymap_selector = 0);
+                                int keymap_selector = 0,
+                                int fallback_options = FallbackOptions::None);
   void LoadConfig(Config* config,
                   const string& section,
                   int kemap_selector = 0);
