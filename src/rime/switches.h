@@ -10,6 +10,15 @@ class ConfigItemRef;
 class ConfigMap;
 class ConfigValue;
 
+struct StringSlice {
+  const char* str;
+  size_t length;
+
+  operator string() const {
+    return str && length ? string(str, length) : string();
+  }
+};
+
 class Switches {
 public:
   explicit Switches(Config* config) : config_(config) {}
@@ -56,10 +65,12 @@ public:
       an<ConfigMap> the_switch,
       function<FindResult (SwitchOption option)> callback);
 
-  static an<ConfigValue> GetStateLabel(
-      an<ConfigMap> the_switch, size_t state_index);
+  static StringSlice GetStateLabel(
+      an<ConfigMap> the_switch, size_t state_index, bool abbreviated);
 
-  an<ConfigValue> GetStateLabel(const string& option_name, int state);
+  StringSlice GetStateLabel(const string& option_name,
+                            int state,
+                            bool abbreviated);
 
  private:
   SwitchOption FindOptionFromConfigItem(

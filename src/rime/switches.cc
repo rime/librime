@@ -1,3 +1,4 @@
+#include <utf8.h>
 #include <rime/config.h>
 #include <rime/switches.h>
 
@@ -26,7 +27,8 @@ Switches::SwitchOption Switches::FindOptionFromConfigItem(
     if (callback(option) == kFound)
       return option;
   } else if (options.IsList()) {
-    for (size_t option_index = 0; option_index < options.size();
+    for (size_t option_index = 0;
+         option_index < options.size();
          ++option_index) {
       SwitchOption option{
         the_switch,
@@ -137,32 +139,61 @@ Switches::SwitchOption Switches::FindRadioGroupOption(
   return {};
 }
 
-an<ConfigValue> Switches::GetStateLabel(an<ConfigMap> the_switch,
-                                        size_t state_index) {
-  if (!the_switch)
-    return nullptr;
-  auto states = As<ConfigList>(the_switch->Get("states"));
-  if (!states)
-    return nullptr;
-  return states->GetValueAt(state_index);
+inline static size_t first_unicode_byte_length(const string& str) {
+  if (str.empty()) {
+    return 0;
+  }
+  const char* start = str.c_str();
+  const char* end = start;
+  utf8::unchecked::next(end);
+  return end - start;
 }
 
-an<ConfigValue> Switches::GetStateLabel(const string& option_name, int state) {
+StringSlice Switches::GetStateLabel(an<ConfigMap> the_switch,
+                                    size_t state_index,
+                                    bool abbreviated) {
+  if (!the_switch)
+    return {nullptr, 0};
+  auto states = As<ConfigList>(the_switch->Get("states"));
+  if (!states || states->size() <= state_index) {
+    return {nullptr, 0};
+  }
+  if (abbreviated) {
+    auto abbrev = As<ConfigList>(the_switch->Get("abbrev"));
+    if (abbrev && abbrev->size() > state_index) {
+      auto value = abbrev->GetValueAt(state_index);
+      return {value->str().c_str(), value->str().length()};
+    } else {
+      auto value = states->GetValueAt(state_index);
+      return {value->str().c_str(), first_unicode_byte_length(value->str())};
+    }
+  } else {
+    auto value = states->GetValueAt(state_index);
+    return {value->str().c_str(), value->str().length()};
+  }
+}
+
+StringSlice Switches::GetStateLabel(const string& option_name,
+                                    int state,
+                                    bool abbreviated) {
   auto the_option = OptionByName(option_name);
-  if (!the_option.found())
-    return nullptr;
+  if (!the_option.found()) {
+    return {nullptr, 0};
+  }
   if (the_option.type == kToggleOption) {
     size_t state_index = static_cast<size_t>(state);
-    return GetStateLabel(the_option.the_switch, state_index);
+    return GetStateLabel(the_option.the_switch, state_index, abbreviated);
   }
   if (the_option.type == kRadioGroup) {
     // if the query is a deselected option among the radio group, do not
     // display its state label; only show the selected option.
     return state
-        ? GetStateLabel(the_option.the_switch, the_option.option_index)
-        : nullptr;
+      ? GetStateLabel(the_option.the_switch,
+                      the_option.option_index,
+                      abbreviated)
+      : StringSlice{nullptr, 0};
   }
-  return nullptr;
+  return {nullptr, 0};
 }
 
 }  // namespace rime

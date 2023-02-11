@@ -1002,18 +1002,26 @@ void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos) {
   return ctx->set_caret_pos(caret_pos);
 }
 
+RimeStringSlice RimeGetStateLabelAbbreviated(RimeSessionId session_id,
+                                             const char* option_name,
+                                             Bool state,
+                                             Bool abbreviated) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return {nullptr, 0};
+  Config* config = session->schema()->config();
+  if (!config)
+    return {nullptr, 0};
+  Switches switches(config);
+  StringSlice label =
+      switches.GetStateLabel(option_name, state, abbreviated);
+  return {label.str, label.length};
+}
+
 const char* RimeGetStateLabel(RimeSessionId session_id,
                               const char* option_name,
                               Bool state) {
-  an<Session> session(Service::instance().GetSession(session_id));
-  if (!session)
-    return nullptr;
-  Config* config = session->schema()->config();
-  if (!config)
-    return nullptr;
-  Switches switches(config);
-  an<ConfigValue> label = switches.GetStateLabel(option_name, state);
-  return label ? label->str().c_str() : nullptr;
+  return RimeGetStateLabelAbbreviated(session_id, option_name, state, False).str;
 }
 
 RIME_API RimeApi* rime_get_api() {
@@ -1108,6 +1116,7 @@ RIME_API RimeApi* rime_get_api() {
     s_api.get_state_label = &RimeGetStateLabel;
     s_api.delete_candidate = &RimeDeleteCandidate;
     s_api.delete_candidate_on_current_page = &RimeDeleteCandidateOnCurrentPage;
+    s_api.get_state_label_abbreviated = &RimeGetStateLabelAbbreviated;
   }
   return &s_api;
 }
