@@ -6,7 +6,7 @@ src_dir = $(rime_root)/deps
 glog: build ?= cmake-build
 build ?= build
 
-rime_deps = glog gtest leveldb marisa opencc yaml-cpp
+rime_deps = gtest glog leveldb marisa opencc yaml-cpp
 
 .PHONY: all clean-src $(rime_deps)
 

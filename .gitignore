@@ -1,3 +1,4 @@
+plugins/librime-*
 build/
 build-static/
 debug/
@@ -12,3 +13,4 @@ env.bat
 node_modules/
 *~
 .*.swp
+.DS_Store
