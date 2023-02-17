@@ -128,6 +128,12 @@ if(Opencc_STATIC)
   add_definitions(-DOpencc_BUILT_AS_STATIC)
 endif()
 
+find_package(fmt REQUIRED)
+if(fmt_FOUND)
+  find_library(fmt_LIBRARY NAMES fmt)
+  message(STATUS "Found fmt: ${fmt_LIBRARY}")
+endif()
+
 find_path(X11Keysym X11/keysym.h)
 if(X11Keysym)
   message(STATUS "Found X11/keysym.h at ${X11Keysym}")

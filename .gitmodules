@@ -16,3 +16,6 @@
 [submodule "opencc"]
 	path = deps/opencc
 	url = https://github.com/BYVoid/OpenCC.git
+[submodule "fmt"]
+	path = deps/fmt
+	url = https://github.com/fmtlib/fmt

@@ -43,6 +43,7 @@ set(rime_core_deps
     ${Boost_LIBRARIES}
     ${Glog_LIBRARY}
     ${YamlCpp_LIBRARY}
+    ${fmt_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     ${rime_optional_deps})
 set(rime_dict_deps
