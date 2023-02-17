@@ -4,10 +4,10 @@
 //
 #include <cctype>
 #include <cstdlib>
+#include <fmt/core.h>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/format.hpp>
 #include <yaml-cpp/yaml.h>
 #include <rime/config/config_compiler.h>
 #include <rime/config/config_cow_ref.h>
@@ -99,7 +99,7 @@ bool ConfigData::IsListItemReference(const string& key) {
 }
 
 string ConfigData::FormatListIndex(size_t index) {
-  return boost::str(boost::format("@%u") % index);
+  return fmt::format("@{:d}", index);
 }
 
 static const string kAfter("after");

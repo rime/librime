@@ -5,7 +5,7 @@
 // 2011-04-20 GONG Chen <chen.sst@gmail.com>
 //
 #include <sstream>
-#include <boost/format.hpp>
+#include <fmt/core.h>
 #include <rime/key_event.h>
 #include <rime/key_table.h>
 
@@ -38,10 +38,10 @@ string KeyEvent::repr() const {
   // no name :-| return its hex value
   string value;
   if (keycode_ <= 0xffff) {
-    value = boost::str(boost::format("0x%4x") % keycode_);
+    value = fmt::format("0x{:4x}", keycode_);
   }
   else if (keycode_ <= 0xffffff) {
-    value = boost::str(boost::format("0x%6x") % keycode_);
+    value = fmt::format("0x{:6x}", keycode_);
   }
   else {
     return "(unknown)";  // invalid keycode

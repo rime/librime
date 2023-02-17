@@ -6,8 +6,8 @@
 //
 #include <cstdlib>
 #include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
+#include <fmt/core.h>
 #include <rime/service.h>
 #include <rime/algo/dynamics.h>
 #include <rime/dict/text_db.h>
@@ -20,8 +20,7 @@ UserDbValue::UserDbValue(const string& value) {
 }
 
 string UserDbValue::Pack() const {
-  return boost::str(boost::format("c=%1% d=%2% t=%3%") %
-                    commits % dee % tick);
+  return fmt::format("c={0} d={1} t={2}", commits, dee, tick);
 }
 
 bool UserDbValue::Unpack(const string& value) {
