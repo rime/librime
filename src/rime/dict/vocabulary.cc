@@ -5,6 +5,8 @@
 // 2011-07-24 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
+#include <fmt/core.h>
+#include <fmt/format.h>
 #include <sstream>
 #include <utility>
 #include <rime/dict/vocabulary.h>
@@ -45,18 +47,7 @@ void Code::CreateIndex(Code* index_code) {
 }
 
 string Code::ToString() const {
-  std::stringstream stream;
-  bool first = true;
-  for (SyllableId syllable_id : *this) {
-    if (first) {
-      first = false;
-    }
-    else {
-      stream << ",";
-    }
-    stream << syllable_id;
-  }
-  return stream.str();
+  return fmt::format("{}", fmt::join(*this, ","));
 }
 
 bool DictEntry::operator< (const DictEntry& other) const {

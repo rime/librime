@@ -5,6 +5,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <fmt/core.h>
+#include <fmt/format.h>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -222,7 +223,7 @@ vector<string> ConfigData::SplitPath(const string& path) {
 }
 
 string ConfigData::JoinPath(const vector<string>& keys) {
-  return boost::join(keys, "/");
+  return fmt::format("{}", fmt::join(keys, "/"));
 }
 
 an<ConfigItem> ConfigData::Traverse(const string& path) {
