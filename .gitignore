@@ -12,3 +12,4 @@ env.bat
 node_modules/
 *~
 .*.swp
+.cache
