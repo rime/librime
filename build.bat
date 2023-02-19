@@ -107,6 +107,7 @@ if %clean% == 1 (
   rmdir /s /q deps\marisa-trie\build
   rmdir /s /q deps\opencc\build
   rmdir /s /q deps\yaml-cpp\build
+  rmdir /s /q deps\fmt\build
 )
 
 set build_dir=%build_dir_base%%build_dir_suffix%
@@ -240,6 +241,19 @@ if %build_deps% == 1 (
   cmake . -B%build_dir% %deps_cmake_flags%^
   -DBUILD_SHARED_LIBS=OFF^
   -DBUILD_TESTING=OFF
+  if errorlevel 1 goto error
+  cmake --build %build_dir% --config %build_config% --target INSTALL
+  if errorlevel 1 goto error
+  popd
+
+  echo building fmt.
+  pushd deps\fmt
+  cmake . -B%build_dir% %deps_cmake_flags%^
+  -DFMT_TEST=OFF^
+  -DFMT_DOC=OFF^
+  -DBUILD_SHARED_LIBS=OFF^
+  -DCMAKE_POSITION_INDEPENDENT_CODE=ON^
+  -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"
   if errorlevel 1 goto error
   cmake --build %build_dir% --config %build_config% --target INSTALL
   if errorlevel 1 goto error

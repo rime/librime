@@ -10,6 +10,7 @@ dep_packages=(
     libleveldb-dev
     libmarisa-dev
     libyaml-cpp-dev
+    libfmt-dev
 )
 
 sudo apt update -y

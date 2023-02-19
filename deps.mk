@@ -6,7 +6,7 @@ src_dir = $(rime_root)/deps
 glog: build ?= cmake-build
 build ?= build
 
-rime_deps = glog gtest leveldb marisa opencc yaml-cpp
+rime_deps = glog gtest leveldb marisa opencc yaml-cpp fmt
 
 .PHONY: all clean-src $(rime_deps)
 
@@ -20,6 +20,7 @@ clean-src:
 	rm -r $(src_dir)/marisa-trie/build || true
 	rm -r $(src_dir)/opencc/build || true
 	rm -r $(src_dir)/yaml-cpp/build || true
+	rm -r $(src_dir)/fmt/build || true
 
 glog:
 	cd $(src_dir)/glog; \
@@ -70,5 +71,16 @@ yaml-cpp:
 	-DYAML_CPP_BUILD_TESTS:BOOL=OFF \
 	-DYAML_CPP_BUILD_TOOLS:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_INSTALL_PREFIX:PATH="$(rime_root)" \
+	&& cmake --build $(build) --target install
+
+fmt:
+	cd $(src_dir)/fmt; \
+	cmake . -B$(build) \
+	-DFMT_TEST:BOOL=OFF \
+	-DFMT_DOC:BOOL=OFF \
+	-DBUILD_SHARED_LIBS:BOOL=OFF \
+	-DCMAKE_BUILD_TYPE:STRING="Release" \
+	-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=TRUE \
 	-DCMAKE_INSTALL_PREFIX:PATH="$(rime_root)" \
 	&& cmake --build $(build) --target install
