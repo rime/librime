@@ -52,7 +52,8 @@ ProcessResult Editor::ProcessKeyEvent(const KeyEvent& key_event) {
   int ch = key_event.keycode();
   Context* ctx = engine_->context();
   if (ctx->IsComposing()) {
-    auto result = KeyBindingProcessor::ProcessKeyEvent(key_event, ctx);
+    auto result = KeyBindingProcessor::ProcessKeyEvent(
+      key_event, ctx, 0, FallbackOptions::All);
     if (result != kNoop) {
       return result;
     }

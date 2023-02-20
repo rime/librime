@@ -117,14 +117,14 @@ void Switcher::HighlightNextSchema() {
     schema: wubi_pinyin
   - case: [mode/wubi]
     schema: wubi86
-    - case: [mode/default]
+  - case: [mode/default]
     schema: pinyin
 
-    mode:
+  mode:
     wubi: false
     wubi_pinyin: false
     default: true
-    ```
+  ```
 */
 
 static an<ConfigValue> ParseSchemaListEntry(Config* config,

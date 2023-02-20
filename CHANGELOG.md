@@ -1,3 +1,13 @@
+<a name="1.8.5"></a>
+## [1.8.5](https://github.com/rime/librime/compare/1.8.4...1.8.5) (2023-02-05)
+
+
+### Bug Fixes
+
+* **selector:** do not match fallback modifier ([21adf97](https://github.com/rime/librime/commit/21adf97)), closes [#609](https://github.com/rime/librime/issues/609)
+
+
+
 <a name="1.8.4"></a>
 ## [1.8.4](https://github.com/rime/librime/compare/1.8.3...1.8.4) (2023-01-30)
 

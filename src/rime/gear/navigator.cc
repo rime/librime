@@ -73,7 +73,8 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   TextOrientation text_orientation =
     ctx->get_option("_vertical") ? Vertical : Horizontal;
-  return KeyBindingProcessor::ProcessKeyEvent(key_event, ctx, text_orientation);
+  return KeyBindingProcessor::ProcessKeyEvent(
+    key_event, ctx, text_orientation, FallbackOptions::All);
 }
 
 bool Navigator::LeftBySyllable(Context* ctx) {

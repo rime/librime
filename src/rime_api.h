@@ -193,6 +193,11 @@ typedef void (*RimeNotificationHandler)(void* context_object,
                                         const char* message_type,
                                         const char* message_value);
 
+typedef struct rime_string_slice_t {
+  const char* str;
+  size_t length;
+} RimeStringSlice;
+
 // Setup
 
 /*!
@@ -552,10 +557,16 @@ typedef struct rime_api_t {
   void (*status_proto)(RimeSessionId session_id, RIME_PROTO_BUILDER* status_builder);
 
   const char* (*get_state_label)(RimeSessionId session_id, const char *option_name, Bool state);
+
   //! delete a candidate at the given index in candidate list.
   Bool (*delete_candidate)(RimeSessionId session_id, size_t index);
   //! delete a candidate from current page.
   Bool (*delete_candidate_on_current_page)(RimeSessionId session_id, size_t index);
+
+  RimeStringSlice (*get_state_label_abbreviated)(RimeSessionId session_id,
+                                                 const char *option_name,
+                                                 Bool state,
+                                                 Bool abbreviated);
 } RimeApi;
 
 //! API entry

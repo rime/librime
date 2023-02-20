@@ -133,7 +133,10 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
   CandidateListLayout candidate_list_layout =
     is_linear_layout(ctx) ? Linear : Stacked;
   auto result = KeyBindingProcessor::ProcessKeyEvent(
-    key_event, ctx, text_orientation | candidate_list_layout);
+    key_event,
+    ctx,
+    text_orientation | candidate_list_layout,
+    FallbackOptions::None);
   if (result != kNoop) {
     return result;
   }

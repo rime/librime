@@ -4,7 +4,7 @@
 schema:
   schema_id: luna_pinyin
   name: 朙月拼音
-  version: "0.14.test"
+  version: "0.15.test"
   author:
     - 佛振 <chen.sst@gmail.com>
   description: |
@@ -18,19 +18,23 @@ schema:
 switches:
   - name: ascii_mode
     reset: 0
-    states: [ 中文, 西文 ]
+    states: [ 中文, ABC ]
+    abbrev: [ 中, Ａ ]
   - name: full_shape
-    states: [ 半角, 全角 ]
-  - name: ascii_punct
-    states: [ 句讀, 符號 ]
+    states: [ 半寬文字, 全寬文字 ]
 #  - name: simplification
-#    states: [ 漢字, 汉字 ]
-  - options: [ zh_trad, zh_tw, zh_simp ]
+#    states: [ 傳統漢字, 简化字 ]
+#    abbrev: [ 繁, 简 ]
+  - options: [ zh_trad, zh_simp, zh_hk, zh_tw ]
     states:
       - 傳統漢字
-      - 臺灣正體
-      - 簡化字
-    reset: 0
+      - 简化字
+      - 香港字形
+      - 臺灣字形
+    abbrev: [ 繁, 简, 港, 臺 ]
+  - name: ascii_punct
+    states: [ 中文標點, 西文標點 ]
+    abbrev: [ '。', '．' ]
 
 engine:
   processors:

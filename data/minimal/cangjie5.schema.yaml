@@ -4,7 +4,7 @@
 schema:
   schema_id: cangjie5
   name: 倉頡五代
-  version: "1.1.test"
+  version: "1.2.test"
   author:
     - 發明人 朱邦復先生
   description: |
@@ -17,13 +17,18 @@ schema:
 switches:
   - name: ascii_mode
     reset: 0
-    states: [ 中文, 西文 ]
+    states: [ 中文, ABC ]
+    abbrev: [ 中, Ａ ]
   - name: full_shape
-    states: [ 半角, 全角 ]
+    states: [ 半寬文字, 全寬文字 ]
   - name: simplification
-    states: [ 漢字, 汉字 ]
+    states: [ 傳統漢字, 简化字 ]
+    abbrev: [ 繁, 简 ]
   - name: extended_charset
-    states: [ 通用, 增廣 ]
+    states: [ 常用字彙, 增廣字彙 ]
+  - name: ascii_punct
+    states: [ 中文標點, 西文標點 ]
+    abbrev: [ '。', '．' ]
 
 engine:
   processors:
