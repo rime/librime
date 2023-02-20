@@ -112,6 +112,7 @@ void Context::Clear() {
 bool Context::Select(size_t index) {
   bool result = Peek(index);
   if (result)
+    composition_.back().status = Segment::kSelected;
     select_notifier_(this);
   return result;
 }
