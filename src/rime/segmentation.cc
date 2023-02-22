@@ -159,26 +159,4 @@ size_t Segmentation::GetConfirmedPosition() const {
   return k;
 }
 
-std::ostream& operator<< (std::ostream& out,
-                          const Segmentation& segmentation) {
-  out << "[" << segmentation.input();
-  for (const Segment& segment : segmentation) {
-    out << "|" << segment.start << "," << segment.end;
-    if (!segment.tags.empty()) {
-      out << "{";
-      bool first = true;
-      for (const string& tag : segment.tags) {
-        if (first)
-          first = false;
-        else
-          out << ",";
-        out << tag;
-      }
-      out << "}";
-    }
-  }
-  out << "]";
-  return out;
-}
-
 }  // namespace rime

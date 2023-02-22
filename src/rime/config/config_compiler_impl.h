@@ -6,6 +6,8 @@
 #define RIME_CONFIG_COMPILER_IMPL_H_
 
 #include <ostream>
+#include <fmt/core.h>
+#include <fmt/ostream.h>
 #include <rime/common.h>
 #include <rime/config/config_compiler.h>
 #include <rime/config/config_types.h>
@@ -31,9 +33,11 @@ struct Dependency {
     return *this;
   }
   virtual bool Resolve(ConfigCompiler* compiler) = 0;
-};
 
-std::ostream& operator<< (std::ostream& stream, const Dependency& dependency);
+  friend std::ostream& operator<< (std::ostream& stream, const Dependency& dependency) {
+    return stream << dependency.repr();
+  }
+};
 
 struct PendingChild : Dependency {
   string child_path;
@@ -94,5 +98,10 @@ struct PatchLiteral : Dependency {
 };
 
 }  // namespace rime
+
+#if FMT_VERSION >= 90000
+template <>
+struct fmt::formatter<rime::Dependency> : ostream_formatter {};
+#endif
 
 #endif  // RIME_CONFIG_COMPILER_IMPL_H_

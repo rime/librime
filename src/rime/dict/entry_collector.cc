@@ -5,6 +5,8 @@
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
 #include <fstream>
+#include <fmt/format.h>
+#include <fmt/os.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <rime/dict/dict_settings.h>
@@ -234,16 +236,14 @@ bool EntryCollector::TranslateWord(const string& word,
 }
 
 void EntryCollector::Dump(const string& file_name) const {
-  std::ofstream out(file_name.c_str());
-  out << "# syllabary:" << std::endl;
+  auto out = fmt::output_file(file_name);
+  out.print("# syllabary:\n");
   for (const string& syllable : syllabary) {
-    out << "# - " << syllable << std::endl;
+    out.print("# - {}\n", syllable);
   }
-  out << std::endl;
+  out.print("\n");
   for (const RawDictEntry& e : entries) {
-    out << e.text << '\t'
-        << e.raw_code.ToString() << '\t'
-        << e.weight << std::endl;
+    out.print("{}\t{}\t{}\n", e.text, e.raw_code.ToString(), e.weight);
   }
   out.close();
 }

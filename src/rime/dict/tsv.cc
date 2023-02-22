@@ -4,6 +4,8 @@
 //
 // 2013-04-14 GONG Chen <chen.sst@gmail.com>
 //
+#include <fmt/format.h>
+#include <fmt/os.h>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <rime/common.h>
@@ -60,25 +62,20 @@ int TsvReader::operator() (Sink* sink) {
 int TsvWriter::operator() (Source* source) {
   if (!source) return 0;
   LOG(INFO) << "writing tsv file: " << path_;
-  std::ofstream fout(path_.c_str());
+  auto fout = fmt::output_file(path_);
   if (!file_description.empty()) {
-    fout << "# " << file_description << std::endl;
+    fout.print("# {}\n", file_description);
   }
   string key, value;
   while (source->MetaGet(&key, &value)) {
-    fout << "#@" << key << '\t' << value << std::endl;
+    fout.print("#@{}\t{}\n", key, value);
   }
   Tsv row;
   int num_entries = 0;
   while (source->Get(&key, &value)) {
     row.clear();
     if (formatter_(key, value, &row) && !row.empty()) {
-      for (auto it = row.cbegin(); it != row.cend(); ++it) {
-        if (it != row.cbegin())
-          fout << '\t';
-        fout << *it;
-      }
-      fout << std::endl;
+      fout.print("{}\n", fmt::join(row, "\t"));
       ++num_entries;
     }
   }

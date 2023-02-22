@@ -6,6 +6,8 @@
 #define RIME_CONFIG_COMPILER_H_
 
 #include <ostream>
+#include <fmt/core.h>
+#include <fmt/ostream.h>
 #include <rime/common.h>
 #include <rime/config/config_data.h>
 #include <rime/config/config_types.h>
@@ -34,9 +36,11 @@ struct Reference {
   bool optional;
 
   string repr() const;
-};
 
-std::ostream& operator<< (std::ostream& stream, const Reference& reference);
+  friend std::ostream& operator<< (std::ostream& stream, const Reference& reference) {
+    return stream << reference.repr();
+  }
+};
 
 class ConfigCompilerPlugin;
 class ResourceResolver;
@@ -81,5 +85,10 @@ class ConfigCompiler {
 };
 
 }  // namespace rime
+
+#if FMT_VERSION >= 90000
+template <>
+struct fmt::formatter<rime::Reference> : ostream_formatter {};
+#endif
 
 #endif  // RIME_CONFIG_COMPILER_H_

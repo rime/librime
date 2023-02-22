@@ -4,7 +4,7 @@
 //
 // 2011-04-07 GONG Chen <chen.sst@gmail.com>
 //
-#include <sstream>
+#include <fmt/core.h>
 #include <gtest/gtest.h>
 #include <rime/key_event.h>
 
@@ -71,9 +71,8 @@ TEST(RimeKeyEventTest, Equality) {
 
 TEST(RimeKeyEventTest, Serialization) {
   KeyEvent ke(XK_comma, kControlMask);
-  std::ostringstream out;
-  out << ke;
-  EXPECT_STREQ("Control+comma", out.str().c_str());
+  string ke_str = fmt::format("{}", ke);
+  EXPECT_STREQ("Control+comma", ke_str.c_str());
 }
 
 TEST(RimeKeySequenceTest, PlainString) {
@@ -127,7 +126,6 @@ TEST(RimeKeySequenceTest, Stringification) {
 
 TEST(RimeKeySequenceTest, Serialization) {
   KeySequence ks("abc, defg.");
-  std::ostringstream out;
-  out << ks;
-  EXPECT_STREQ("abc, defg.", out.str().c_str());
+  string ks_str = fmt::format("{}", ks);
+  EXPECT_STREQ("abc, defg.", ks_str.c_str());
 }

@@ -9,6 +9,8 @@
 #define RIME_KEY_EVENT_H_
 
 #include <iostream>
+#include <fmt/format.h>
+#include <fmt/ostream.h>
 #include <rime/common.h>
 #include <rime/key_table.h>
 
@@ -50,6 +52,10 @@ class KeyEvent {
     return modifier_ < other.modifier_;
   }
 
+  friend std::ostream& operator<< (std::ostream& out, const KeyEvent& key_event) {
+    return out << key_event.repr();
+  }
+
  private:
   int keycode_ = 0;
   int modifier_ = 0;
@@ -68,18 +74,22 @@ class KeySequence : public vector<KeyEvent> {
 
   // 解析按鍵序列描述文字
   RIME_API bool Parse(const string& repr);
+
+  friend std::ostream& operator<< (std::ostream& out, const KeySequence& key_seq) {
+    return out << key_seq.repr();
+  }
 };
 
-inline std::ostream& operator<< (std::ostream& out, const KeyEvent& key_event) {
-  out << key_event.repr();
-  return out;
-}
-
-inline std::ostream& operator<< (std::ostream& out, const KeySequence& key_seq) {
-  out << key_seq.repr();
-  return out;
-}
-
 }  // namespace rime
+
+#if FMT_VERSION >= 90000
+template <>
+struct fmt::formatter<rime::KeyEvent> : ostream_formatter {};
+#endif
+
+#if FMT_VERSION >= 90000
+template <>
+struct fmt::formatter<rime::KeySequence> : ostream_formatter {};
+#endif
 
 #endif  // RIME_KEY_EVENT_H_

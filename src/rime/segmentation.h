@@ -9,6 +9,8 @@
 
 #include <rime_api.h>
 #include <rime/common.h>
+#include <fmt/format.h>
+#include <fmt/ostream.h>
 
 namespace rime {
 
@@ -74,13 +76,28 @@ class Segmentation : public vector<Segment> {
 
   const string& input() const { return input_; }
 
+  friend std::ostream& operator<< (std::ostream& out,
+                                   const Segmentation& segmentation) {
+    fmt::print(out, "[{}", segmentation.input());
+    for (const auto& segement : segmentation) {
+      fmt::print(out, "|{},{}", segement.start, segement.end);
+      if (!segement.tags.empty()) {
+        fmt::print(out, "{{{}}}", fmt::join(segement.tags, ","));
+      }
+    }
+    fmt::print(out, "]");
+    return out;
+  }
+
  protected:
   string input_;
 };
 
-std::ostream& operator<< (std::ostream& out,
-                          const Segmentation& segmentation);
-
 }  // namespace rime
+
+#if FMT_VERSION >= 90000
+template <>
+struct fmt::formatter<rime::Segment> : ostream_formatter {};
+#endif
 
 #endif  // RIME_SEGMENTATION_H_

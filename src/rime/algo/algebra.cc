@@ -5,7 +5,7 @@
 // 2012-01-19 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
-#include <fstream>
+#include <fmt/os.h>
 #include <rime/algo/algebra.h>
 #include <rime/algo/calculus.h>
 
@@ -49,15 +49,16 @@ void Script::Merge(const string& s,
 }
 
 void Script::Dump(const string& file_name) const {
-  std::ofstream out(file_name.c_str());
-  for (const value_type& v : *this) {
+  auto out = fmt::output_file(file_name);
+  for (const auto& v : *this) {
     bool first = true;
-    for (const Spelling& s : v.second) {
-      out << (first ? v.first : "") << '\t'
-          << s.str << '\t'
-          << "-ac?!"[s.properties.type] << '\t'
-          << s.properties.credibility << '\t'
-          << s.properties.tips << std::endl;
+    for (const auto& s : v.second /* spellings */) {
+      out.print("{}\t{}\t{}\t{}\t{}\n",
+                (first ? v.first /* syllable */ : ""),
+                s.str,
+                "-ac>!"[s.properties.type],
+                s.properties.credibility,
+                s.properties.tips);
       first = false;
     }
   }
