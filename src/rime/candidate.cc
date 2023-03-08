@@ -34,4 +34,24 @@ Candidate::GetGenuineCandidates(const an<Candidate>& cand) {
   return result;
 }
 
+int Candidate::compare(const an<Candidate>& other) {
+  if (! other )
+    return -1;
+  int k = 0;
+  // the one nearer to the beginning of segment comes first
+  k = start() - other->start();
+  if (k != 0)
+    return k;
+  // then the longer comes first
+  k = end() - other->end();
+  if (k != 0)
+    return -k;
+  // compare quality
+  double qdiff = quality() - other->quality();
+  if (qdiff != 0.)
+    return (qdiff > 0.) ? -1 : 1;
+  // draw
+  return 0;
+}
+
 }  // namespace rime

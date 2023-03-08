@@ -25,6 +25,7 @@ class Candidate {
   GetGenuineCandidate(const an<Candidate>& cand);
   static vector<of<Candidate>>
   GetGenuineCandidates(const an<Candidate>& cand);
+  int compare(const an<Candidate>& other);
 
   // recognized by translators in learning phase
   const string& type() const { return type_; }
