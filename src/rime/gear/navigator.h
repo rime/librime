@@ -15,8 +15,13 @@
 
 namespace rime {
 
-class Navigator : public Processor, public KeyBindingProcessor<Navigator> {
+class Navigator : public Processor, public KeyBindingProcessor<Navigator, 2> {
  public:
+  enum TextOrientation {
+    Horizontal = 0,
+    Vertical = 1,
+  };
+
   explicit Navigator(const Ticket& ticket);
 
   ProcessResult ProcessKeyEvent(const KeyEvent& key_event) override;

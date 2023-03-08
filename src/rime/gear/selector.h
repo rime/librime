@@ -10,22 +10,32 @@
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/processor.h>
+#include <rime/gear/key_binding_processor.h>
 
 namespace rime {
 
-class Selector : public Processor {
+class Selector : public Processor, public KeyBindingProcessor<Selector, 4> {
  public:
-  Selector(const Ticket& ticket);
+  enum TextOrientation {
+    Horizontal = 0,
+    Vertical = 1,
+  };
+  enum CandidateListLayout {
+    Stacked = 0,
+    Linear = 2,
+  };
 
-  virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
+  explicit Selector(const Ticket& ticket);
 
- protected:
-  bool PageUp(Context* ctx);
-  bool PageDown(Context* ctx);
-  bool CursorUp(Context* ctx);
-  bool CursorDown(Context* ctx);
-  bool Home(Context* ctx);
-  bool End(Context* ctx);
+  ProcessResult ProcessKeyEvent(const KeyEvent& key_event) override;
+
+  Handler PreviousCandidate;
+  Handler NextCandidate;
+  Handler PreviousPage;
+  Handler NextPage;
+  Handler Home;
+  Handler End;
+
   bool SelectCandidateAt(Context* ctx, int index);
 };
 

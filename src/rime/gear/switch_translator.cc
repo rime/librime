@@ -4,13 +4,14 @@
 //
 // 2013-05-26 GONG Chen <chen.sst@gmail.com>
 //
-#include <utf8.h>
+#include <boost/algorithm/string.hpp>
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/config.h>
 #include <rime/context.h>
 #include <rime/schema.h>
 #include <rime/switcher.h>
+#include <rime/switches.h>
 #include <rime/translation.h>
 #include <rime/gear/switch_translator.h>
 
@@ -20,20 +21,30 @@ static const char* kRadioSelected = " \xe2\x9c\x93";  // U+2713 CHECK MARK
 
 namespace rime {
 
+using SwitchOption = Switches::SwitchOption;
+
+inline static string get_state_label(const SwitchOption& option,
+                                     size_t state_index,
+                                     bool abbreviate = false) {
+  return string(Switches::GetStateLabel(option.the_switch,
+                                        state_index,
+                                        abbreviate));
+}
+
 class Switch : public SimpleCandidate, public SwitcherCommand {
  public:
-  Switch(const string& current_state_label,
-         const string& next_state_label,
-         const string& option_name,
+  Switch(const SwitchOption& option,
          bool current_state,
          bool auto_save)
       : SimpleCandidate("switch", 0, 0,
-                        current_state_label, kRightArrow + next_state_label),
-        SwitcherCommand(option_name),
+                        get_state_label(option, current_state),
+                        kRightArrow +
+                        get_state_label(option, 1 - current_state)),
+        SwitcherCommand(option.option_name),
         target_state_(!current_state),
         auto_save_(auto_save) {
   }
-  virtual void Apply(Switcher* switcher);
+  void Apply(Switcher* switcher) override;
 
  protected:
   bool target_state_;
@@ -59,8 +70,8 @@ class RadioGroup : public std::enable_shared_from_this<RadioGroup> {
   RadioGroup(Context* context, Switcher* switcher)
       : context_(context), switcher_(switcher) {
   }
-  an<RadioOption> CreateOption(const string& state_label,
-                                       const string& option_name);
+  an<RadioOption> CreateOption(const SwitchOption& option,
+                               size_t option_index);
   void SelectOption(RadioOption* option);
   RadioOption* GetSelectedOption() const;
 
@@ -79,7 +90,7 @@ class RadioOption : public SimpleCandidate, public SwitcherCommand {
         SwitcherCommand(option_name),
         group_(group) {
   }
-  virtual void Apply(Switcher* switcher);
+  void Apply(Switcher* switcher) override;
   void UpdateState(bool selected);
   bool selected() const { return selected_; }
 
@@ -99,13 +110,12 @@ void RadioOption::UpdateState(bool selected) {
 }
 
 an<RadioOption>
-RadioGroup::CreateOption(const string& state_label,
-                         const string& option_name) {
-  auto option = New<RadioOption>(shared_from_this(),
-                                 state_label,
-                                 option_name);
-  options_.push_back(option.get());
-  return option;
+RadioGroup::CreateOption(const SwitchOption& option, size_t option_index) {
+  auto radio_option = New<RadioOption>(shared_from_this(),
+                                       get_state_label(option, option_index),
+                                       option.option_name);
+  options_.push_back(radio_option.get());
+  return radio_option;
 }
 
 void RadioGroup::SelectOption(RadioOption* option) {
@@ -142,14 +152,13 @@ class FoldedOptions : public SimpleCandidate, public SwitcherCommand {
         SwitcherCommand("_fold_options") {
     LoadConfig(config);
   }
-  virtual void Apply(Switcher* switcher);
-  void Append(const string& label) {
-    labels_.push_back(label);
-  }
+  void Apply(Switcher* switcher) override;
+  void Append(const SwitchOption& option, size_t state_index);
+  void Finish();
+
   size_t size() const {
     return labels_.size();
   }
-  void Finish();
 
  private:
   void LoadConfig(Config* config);
@@ -178,30 +187,13 @@ void FoldedOptions::Apply(Switcher* switcher) {
   switcher->RefreshMenu();
 }
 
-static string FirstCharOf(const string& str) {
-  if (str.empty()) {
-    return str;
-  }
-  string first_char;
-  const char* start = str.c_str();
-  const char* end = start;
-  utf8::unchecked::next(end);
-  return string(start, end - start);
+void FoldedOptions::Append(const SwitchOption& option, size_t state_index) {
+  labels_.push_back(
+    get_state_label(option, state_index, abbreviate_options_));
 }
 
 void FoldedOptions::Finish() {
-  text_ = prefix_;
-  bool first = true;
-  for (const auto& label : labels_) {
-    if (first) {
-      first = false;
-    }
-    else {
-      text_ += separator_;
-    }
-    text_ += abbreviate_options_ ? FirstCharOf(label) : label;
-  }
-  text_ += suffix_;
+  text_ = prefix_ + boost::algorithm::join(labels_, separator_) + suffix_;
 }
 
 class SwitchTranslation : public FifoTranslation {
@@ -220,54 +212,49 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
   Config* config = engine->schema()->config();
   if (!config)
     return;
-  auto switches = config->GetList("switches");
-  if (!switches)
-    return;
   Context* context = engine->context();
-  for (size_t i = 0; i < switches->size(); ++i) {
-    auto item = As<ConfigMap>(switches->GetAt(i));
-    if (!item)
-      continue;
-    auto states = As<ConfigList>(item->Get("states"));
-    if (!states)
-      continue;
-    if (auto option_name = item->GetValue("name")) {
-      // toggle
-      if (states->size() != 2)
-        continue;
-      bool current_state = context->get_option(option_name->str());
-      Append(New<Switch>(
-          states->GetValueAt(current_state)->str(),
-          states->GetValueAt(1 - current_state)->str(),
-          option_name->str(),
-          current_state,
-          switcher->IsAutoSave(option_name->str())));
-    }
-    else if (auto options = As<ConfigList>(item->Get("options"))) {
-      // radio
-      if (states->size() < 2)
-        continue;
-      if (states->size() != options->size())
-        continue;
-      auto group = New<RadioGroup>(context, switcher);
-      for (size_t i = 0; i < options->size(); ++i) {
-        auto option_name = options->GetValueAt(i);
-        auto state_label = states->GetValueAt(i);
-        if (!option_name || !state_label)
-          continue;
-        Append(group->CreateOption(state_label->str(), option_name->str()));
+  vector<an<RadioGroup>> groups;
+  Switches switches(config);
+  switches.FindOption(
+    [this, switcher, context, &groups]
+    (Switches::SwitchOption option) -> Switches::FindResult {
+      if (option.type == Switches::kToggleOption) {
+        bool current_state = context->get_option(option.option_name);
+        Append(
+          New<Switch>(option,
+                      current_state,
+                      switcher->IsAutoSave(option.option_name)));
+      } else if (option.type == Switches::kRadioGroup) {
+        an<RadioGroup> group;
+        if (option.option_index == 0) {
+          group = New<RadioGroup>(context, switcher);
+          groups.push_back(group);
+        } else {
+          group = groups.back();
+        }
+        Append(
+          group->CreateOption(option, option.option_index));
       }
-      group->SelectOption(group->GetSelectedOption());
-    }
+      return Switches::kContinue;
+    });
+  for (auto& group : groups) {
+    group->SelectOption(group->GetSelectedOption());
   }
   if (switcher->context()->get_option("_fold_options")) {
     auto folded_options = New<FoldedOptions>(switcher->schema()->config());
-    for (auto x : candies_) {
-      if (Is<Switch>(x) ||
-          (Is<RadioOption>(x) && As<RadioOption>(x)->selected())) {
-        folded_options->Append(x->text());
-      }
-    }
+    switches.FindOption(
+      [context, &folded_options]
+      (Switches::SwitchOption option) -> Switches::FindResult {
+        bool current_state = context->get_option(option.option_name);
+        if (option.type == Switches::kToggleOption) {
+          folded_options->Append(option, current_state);
+        } else if (option.type == Switches::kRadioGroup) {
+          if (current_state) {
+            folded_options->Append(option, option.option_index);
+          }
+        }
+        return Switches::kContinue;
+      });
     if (folded_options->size() > 1) {
       folded_options->Finish();
       candies_.clear();
