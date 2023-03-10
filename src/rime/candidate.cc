@@ -39,15 +39,15 @@ int Candidate::compare(const an<Candidate>& other) {
     return -1;
   int k = 0;
   // the one nearer to the beginning of segment comes first
-  k = start() - other->start();
+  k = start_ - other->start_;
   if (k != 0)
     return k;
   // then the longer comes first
-  k = end() - other->end();
+  k = end_ - other->end_;
   if (k != 0)
     return -k;
   // compare quality
-  double qdiff = quality() - other->quality();
+  double qdiff = quality_ - other->quality_;
   if (qdiff != 0.)
     return (qdiff > 0.) ? -1 : 1;
   // draw
