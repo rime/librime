@@ -63,6 +63,14 @@ Navigator::Navigator(const Ticket& ticket)
   Config* config = engine_->schema()->config();
   LoadConfig(config, "navigator", Horizontal);
   LoadConfig(config, "navigator/vertical", Vertical);
+  property_update_connection_ = engine_->context()->property_update_notifier().connect(
+      [this](Context* ctx, const string& property) {
+      OnPropertyUpdate(ctx, property);
+      });
+}
+
+Navigator::~Navigator() {
+  property_update_connection_.disconnect();
 }
 
 ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
@@ -221,6 +229,38 @@ bool Navigator::GoToEnd(Context* ctx) {
     return true;
   }
   return false;
+}
+
+void Navigator::OnPropertyUpdate(Context *ctx, const string &property) {
+  if (!ctx->IsComposing())
+    return;
+
+  if (property == "move_by_syllable") {
+    int num= stoi( ctx->get_property(property) );
+    if (num >0)
+      for (int i=0; i<num; i++)
+        RightBySyllable(ctx);
+    else if (num <0)
+      for (int i=0; i>num; i--)
+        LeftBySyllable(ctx);
+  }
+  else if (property == "_navigator") {
+    string cmd = ctx->get_property(property);
+    if (cmd == "rewind")
+      Rewind(ctx);
+    else if (cmd == "left_by_char")
+      LeftByChar(ctx);
+    else if (cmd == "right_by_char")
+      RightByChar(ctx);
+    else if (cmd == "left_by_syllable")
+      LeftBySyllable(ctx);
+    else if (cmd == "right_by_syllable")
+      RightBySyllable(ctx);
+    else if (cmd == "home")
+      Home(ctx);
+    else if (cmd == "end")
+      End(ctx);
+  }
 }
 
 }  // namespace rime
