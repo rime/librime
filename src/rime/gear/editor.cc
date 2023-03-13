@@ -58,8 +58,8 @@ ProcessResult Editor::ProcessKeyEvent(const KeyEvent& key_event) {
       return result;
     }
   }
-  if (char_handler_ &&
-      !key_event.ctrl() && !key_event.alt() && !key_event.super() &&
+  if (char_handler_ && !key_event.ctrl() && !key_event.alt() &&
+      !key_event.super() && !key_event.hyper() &&
       ch > 0x20 && ch < 0x7f) {
     DLOG(INFO) << "input char: '" << (char)ch << "', " << ch
                << ", '" << key_event.repr() << "'";
