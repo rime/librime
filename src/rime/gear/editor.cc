@@ -204,6 +204,7 @@ FluidEditor::FluidEditor(const Ticket& ticket) : Editor(ticket, false) {
   keymap.Bind({XK_Delete, 0}, &Editor::DeleteChar);
   keymap.Bind({XK_Delete, kControlMask}, &Editor::DeleteCandidate);
   keymap.Bind({XK_Escape, 0}, &Editor::CancelComposition);
+  keymap.Bind({XK_Clear, 0}, &Editor::CommitRawInput);
   char_handler_ = &Editor::AddToInput;  //
   LoadConfig();
 }
@@ -219,6 +220,7 @@ ExpressEditor::ExpressEditor(const Ticket& ticket) : Editor(ticket, true) {
   keymap.Bind({XK_Delete, 0}, &Editor::DeleteChar);
   keymap.Bind({XK_Delete, kControlMask}, &Editor::DeleteCandidate);
   keymap.Bind({XK_Escape, 0}, &Editor::CancelComposition);
+  keymap.Bind({XK_Clear, 0}, &Editor::CommitRawInput);
   char_handler_ = &Editor::DirectCommit;  //
   LoadConfig();
 }
