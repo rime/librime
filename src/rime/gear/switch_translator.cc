@@ -218,24 +218,26 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
   switches.FindOption(
     [this, switcher, context, &groups]
     (Switches::SwitchOption option) -> Switches::FindResult {
-      if (option.type == Switches::kToggleOption) {
-        bool current_state = context->get_option(option.option_name);
-        Append(
-          New<Switch>(option,
-                      current_state,
-                      switcher->IsAutoSave(option.option_name)));
-      } else if (option.type == Switches::kRadioGroup) {
-        an<RadioGroup> group;
-        if (option.option_index == 0) {
-          group = New<RadioGroup>(context, switcher);
-          groups.push_back(group);
-        } else {
-          group = groups.back();
+      if (!get_state_label(option, 0).empty()) {
+        if (option.type == Switches::kToggleOption) {
+          bool current_state = context->get_option(option.option_name);
+          Append(
+                 New<Switch>(option,
+                             current_state,
+                             switcher->IsAutoSave(option.option_name)));
+        } else if (option.type == Switches::kRadioGroup) {
+          an<RadioGroup> group;
+          if (option.option_index == 0) {
+            group = New<RadioGroup>(context, switcher);
+            groups.push_back(group);
+          } else {
+            group = groups.back();
+          }
+          Append(
+                 group->CreateOption(option, option.option_index));
         }
-        Append(
-          group->CreateOption(option, option.option_index));
+        return Switches::kContinue;
       }
-      return Switches::kContinue;
     });
   for (auto& group : groups) {
     group->SelectOption(group->GetSelectedOption());
@@ -247,9 +249,11 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
       (Switches::SwitchOption option) -> Switches::FindResult {
         bool current_state = context->get_option(option.option_name);
         if (option.type == Switches::kToggleOption) {
-          folded_options->Append(option, current_state);
+          if (!get_state_label(option, current_state).empty()) {
+            folded_options->Append(option, current_state);
+          }
         } else if (option.type == Switches::kRadioGroup) {
-          if (current_state) {
+          if (current_state && !get_state_label(option, option.option_index).empty()) {
             folded_options->Append(option, option.option_index);
           }
         }
