@@ -80,6 +80,7 @@ Community:
   - [PIME](https://github.com/EasyIME/PIME): frontend for Windows
   - [Trime](https://github.com/osfans/trime): frontend for Android
   - [XIME](https://github.com/stackia/XIME): frontend for macOS
+  - [My RIME](https://github.com/LibreService/my_rime): frontend for web
 
 Plugins
 ===
