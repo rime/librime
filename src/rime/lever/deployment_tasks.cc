@@ -435,7 +435,7 @@ static bool ConfigNeedsUpdate(Config* config) {
 bool ConfigFileUpdate::Run(Deployer* deployer) {
   const fs::path shared_data_path(deployer->shared_data_dir);
   const fs::path user_data_path(deployer->user_data_dir);
-  // trash depecated user copy created by an older version of Rime
+  // trash deprecated user copy created by an older version of Rime
   fs::path source_config_path(shared_data_path / file_name_);
   fs::path dest_config_path(user_data_path / file_name_);
   fs::path trash = user_data_path / "trash";

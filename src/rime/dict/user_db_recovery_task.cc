@@ -39,7 +39,7 @@ bool UserDbRecoveryTask::Run(Deployer* deployer) {
   if (r && r->Recover()) {
     return true;
   }
-  // repair didn't work on the damanged db file; remove and recreate it
+  // repair didn't work on the damaged db file; remove and recreate it
   LOG(INFO) << "recreating db file.";
   if (db_->Exists()) {
     boost::system::error_code ec;

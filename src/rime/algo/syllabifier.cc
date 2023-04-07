@@ -189,7 +189,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
       graph->edges.erase(i);
       continue;
     }
-    // keep the valid vetex
+    // keep the valid vertex
     good.insert(i);
   }
 

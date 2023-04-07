@@ -519,7 +519,7 @@ typedef struct rime_api_t {
    */
   const char* (*get_input)(RimeSessionId session_id);
 
-  //! caret posistion in terms of raw input
+  //! caret position in terms of raw input
   size_t (*get_caret_pos)(RimeSessionId session_id);
 
   //! select a candidate at the given index in candidate list.
@@ -528,7 +528,7 @@ typedef struct rime_api_t {
   //! get the version of librime
   const char* (*get_version)(void);
 
-  //! set caret posistion in terms of raw input
+  //! set caret position in terms of raw input
   void (*set_caret_pos)(RimeSessionId session_id, size_t caret_pos);
 
   //! select a candidate from current page.
