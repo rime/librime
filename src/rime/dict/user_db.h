@@ -108,10 +108,19 @@ class UserDbComponent : public UserDb::Component,
  public:
   using UserDbImpl = UserDbWrapper<BaseDb>;
   Db* Create(const string& name) override {
-    return new UserDbImpl(DbFilePath(name, extension()), name);
+    string  db_key= name + extension();
+    auto db = db_pool_[db_key];
+    if ( ! db ) {
+      db.reset( new UserDbImpl( DbFilePath(name, extension() ), name) ) ;
+      LOG(INFO) << "Create UserDb: " << db_key ;
+      db_pool_[db_key] = db;
+    }
+    return db.get();
   }
 
   string extension() const override;
+ private:
+  map<string, an<Db>> db_pool_;
 };
 
 class UserDbMerger : public Sink {

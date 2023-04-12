@@ -498,17 +498,14 @@ UserDictionaryComponent::UserDictionaryComponent() {
 }
 
 UserDictionary* UserDictionaryComponent::Create(const string& dict_name, const string& db_class) {
-  auto db = db_pool_[dict_name].lock();
-  if (!db) {
-    auto component = Db::Require(db_class);
-    if (!component) {
-      LOG(ERROR) << "undefined db class '" << db_class << "'.";
-      return NULL;
+  if (auto component = Db::Require(db_class)) {
+    if ( an<Db> db =
+        std::shared_ptr<Db>(component->Create(dict_name) ) ){
+      return new UserDictionary(dict_name, db);
     }
-    db.reset(component->Create(dict_name));
-    db_pool_[dict_name] = db;
   }
-  return new UserDictionary(dict_name, db);
+  LOG(ERROR) << "undefind db class '" << db_class << "'.";
+  return NULL;
 }
 
 UserDictionary* UserDictionaryComponent::Create(const Ticket& ticket) {
