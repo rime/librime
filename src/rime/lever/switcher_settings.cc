@@ -20,8 +20,10 @@ SwitcherSettings::SwitcherSettings(Deployer* deployer)
 }
 
 bool SwitcherSettings::Load() {
-  if (!CustomSettings::Load())
+CustomSettings::Load();
+  if (config_.AsMap()->empty()) {
     return false;
+  }
   available_.clear();
   selection_.clear();
   hotkeys_.clear();
