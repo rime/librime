@@ -6,7 +6,6 @@ RUN apt update && apt install -y \
   cmake \
   ninja-build \
   libboost-dev \
-  libboost-filesystem-dev \
   libboost-regex-dev \
   libboost-locale-dev \
   libgoogle-glog-dev \
