@@ -970,9 +970,41 @@ static bool do_with_candidate_on_current_page(
     return (ctx->*verb)(page_start + index);
 }
 
+Bool RimeChangePage(RimeSessionId session_id, Bool previous) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  Context *ctx = session->context();
+  if (!ctx || !ctx->HasMenu())
+    return False;
+  Schema *schema = session->schema();
+  if (!schema)
+    return False;
+  size_t page_size = (size_t)schema->page_size();
+  const auto& seg(ctx->composition().back());
+  size_t selected_index = seg.selected_index;
+  ctx->composition().back().tags.insert("paging");
+  if (previous) {
+    size_t index = selected_index <= page_size ? 0 : selected_index - page_size;
+    DLOG(INFO) << "Current selection: " << selected_index << ", Previous page, Peek at " << index;
+    return ctx->Peek(index);
+  } else {
+    size_t index = selected_index + page_size;
+    DLOG(INFO) << "Current selection: " << selected_index << ", Next page, Peek at " << index;
+    return ctx->Peek(index);
+  }
+}
+
+Bool RimePeekCandidate(RimeSessionId session_id, size_t index) {
+  return do_with_candidate(session_id, index, &Context::Peek);
+}
 
 Bool RimeSelectCandidate(RimeSessionId session_id, size_t index) {
   return do_with_candidate(session_id, index, &Context::Select);
+}
+
+Bool RimePeekCandidateOnCurrentPage(RimeSessionId session_id, size_t index) {
+  return do_with_candidate_on_current_page(session_id, index, &Context::Peek);
 }
 
 Bool RimeSelectCandidateOnCurrentPage(RimeSessionId session_id, size_t index) {
@@ -1116,6 +1148,9 @@ RIME_API RimeApi* rime_get_api() {
     s_api.get_state_label = &RimeGetStateLabel;
     s_api.delete_candidate = &RimeDeleteCandidate;
     s_api.delete_candidate_on_current_page = &RimeDeleteCandidateOnCurrentPage;
+    s_api.peek_candidate = &RimePeekCandidate;
+    s_api.peek_candidate_on_current_page = &RimePeekCandidateOnCurrentPage;
+    s_api.change_page = &RimeChangePage;
     s_api.get_state_label_abbreviated = &RimeGetStateLabelAbbreviated;
   }
   return &s_api;

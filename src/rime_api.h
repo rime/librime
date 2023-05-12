@@ -524,6 +524,8 @@ typedef struct rime_api_t {
 
   //! select a candidate at the given index in candidate list.
   Bool (*select_candidate)(RimeSessionId session_id, size_t index);
+  //! peek a selection without commiting to it
+  Bool (*peek_candidate)(RimeSessionId session_id, size_t index);
 
   //! get the version of librime
   const char* (*get_version)(void);
@@ -533,6 +535,10 @@ typedef struct rime_api_t {
 
   //! select a candidate from current page.
   Bool (*select_candidate_on_current_page)(RimeSessionId session_id, size_t index);
+  //! peek a selection without commiting to it
+  Bool (*peek_candidate_on_current_page)(RimeSessionId session_id, size_t index);
+    
+  Bool (*change_page)(RimeSessionId session_id, Bool previous);
 
   //! access candidate list.
   Bool (*candidate_list_begin)(RimeSessionId session_id, RimeCandidateListIterator* iterator);

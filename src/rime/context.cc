@@ -110,17 +110,34 @@ void Context::Clear() {
 }
 
 bool Context::Select(size_t index) {
-  if (composition_.empty())
+  bool result = Peek(index);
+  if (result)
+    composition_.back().status = Segment::kSelected;
+    select_notifier_(this);
+  return result;
+}
+
+bool Context::Peek(size_t index) {
+  if (composition_.empty() || !composition_.back().menu)
     return false;
   Segment& seg(composition_.back());
-  if (auto cand = seg.GetCandidateAt(index)) {
-    seg.selected_index = index;
-    seg.status = Segment::kSelected;
-    DLOG(INFO) << "Selected: '" << cand->text() << "', index = " << index;
-    select_notifier_(this);
-    return true;
+  size_t new_index = index;
+  if (index < 0) {
+    DLOG(INFO) << "selection index < 0, fallback to 0";
+    new_index = 0;
+  } else {
+    size_t candidate_count = seg.menu->Prepare(index + 1);
+    if (index >= candidate_count) {
+      DLOG(INFO) << "selection index exceed candidate pool, fallback to last";
+      new_index = candidate_count - 1;
+    }
   }
-  return false;
+  size_t previous_index = seg.selected_index;
+  seg.selected_index = new_index;
+  update_notifier_(this);
+    
+  DLOG(INFO) << "Selection changed from: " << previous_index << " to: " << new_index;
+  return true;
 }
 
 bool Context::DeleteCandidate(

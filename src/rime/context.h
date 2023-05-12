@@ -45,6 +45,7 @@ class Context {
 
   // return false if there is no candidate at index
   bool Select(size_t index);
+  bool Peek(size_t index);
   bool DeleteCandidate(size_t index);
   // return false if there's no candidate for current segment
   bool ConfirmCurrentSelection();
