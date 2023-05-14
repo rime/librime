@@ -116,7 +116,7 @@ inline static bool is_linear_layout(Context* ctx) {
 }
 
 ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
-  if (key_event.release() || key_event.alt() || key_event.super())
+  if (key_event.release() || key_event.super())
     return kNoop;
   Context* ctx = engine_->context();
   if (ctx->composition().empty())
@@ -149,7 +149,8 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
   else if (ch >= XK_KP_0 && ch <= XK_KP_9)
     index = ((ch - XK_KP_0) + 9) % 10;
   if (index >= 0) {
-    SelectCandidateAt(ctx, index);
+    key_event.alt() ? ChooseCandidateAt(ctx, index)
+                    : SelectCandidateAt(ctx, index);
     return kAccepted;
   }
   // not handled
@@ -250,6 +251,19 @@ bool Selector::End(Context* ctx) {
   }
   // this is cool:
   return Home(ctx);
+}
+
+bool Selector::ChooseCandidateAt(Context* ctx, int index) {
+  Composition& comp = ctx->composition();
+  if (comp.empty())
+    return false;
+  int page_size = engine_->schema()->page_size();
+  if (index >= page_size)
+    return false;
+  int selected_index = comp.back().selected_index;
+  int page_start = (selected_index / page_size) * page_size;
+  comp.back().tags.insert("paging");
+  return ctx->Choose(page_start + index);
 }
 
 bool Selector::SelectCandidateAt(Context* ctx, int index) {

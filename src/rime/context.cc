@@ -121,6 +121,26 @@ bool Context::Select(size_t index) {
   return false;
 }
 
+bool Context::Choose(size_t index) {
+  if (composition_.empty())
+    return false;
+  Segment& seg(composition_.back());
+  if (auto cand = seg.GetCandidateAt(index)) {
+    int selected_index = seg.selected_index;
+    if (selected_index == index) {
+      seg.status = Segment::kSelected;
+      DLOG(INFO) << "Selected: '" << cand->text() << "', index = " << index;
+      select_notifier_(this);
+    } else {
+      seg.selected_index = index;
+      DLOG(INFO) << "Chosen: '" << cand->text() << "', index = " << index;
+      update_notifier_(this);
+    }
+    return true;
+  }
+  return false;
+}
+
 bool Context::DeleteCandidate(
     function<an<Candidate>(Segment& seg)> get_candidate) {
   if (composition_.empty())

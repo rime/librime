@@ -299,6 +299,9 @@ RIME_API Bool RimeCandidateListFromIndex(RimeSessionId session_id,
 RIME_API Bool RimeSelectCandidate(RimeSessionId session_id, size_t index);
 RIME_API Bool RimeSelectCandidateOnCurrentPage(RimeSessionId session_id,
                                                size_t index);
+RIME_API Bool RimeChooseCandidate(RimeSessionId session_id, size_t index);
+RIME_API Bool RimeChooseCandidateOnCurrentPage(RimeSessionId session_id,
+                                               size_t index);
 RIME_API Bool RimeDeleteCandidate(RimeSessionId session_id, size_t index);
 RIME_API Bool RimeDeleteCandidateOnCurrentPage(RimeSessionId session_id,
                                                size_t index);
@@ -591,6 +594,8 @@ typedef struct rime_api_t {
 
   //! select a candidate at the given index in candidate list.
   Bool (*select_candidate)(RimeSessionId session_id, size_t index);
+  //! choose a candidate (select_candidate w/o confirmation or committance)
+  Bool (*choose_candidate)(RimeSessionId session_id, size_t index);
 
   //! get the version of librime
   const char* (*get_version)(void);
@@ -600,6 +605,9 @@ typedef struct rime_api_t {
 
   //! select a candidate from current page.
   Bool (*select_candidate_on_current_page)(RimeSessionId session_id,
+                                           size_t index);
+  //! choose a candidate from current page w/o confirmation or committance
+  Bool (*choose_candidate_on_current_page)(RimeSessionId session_id,
                                            size_t index);
 
   //! access candidate list.
