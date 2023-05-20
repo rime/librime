@@ -24,6 +24,7 @@
 #include <opencc/ConversionChain.hpp>
 #include <opencc/Dict.hpp>
 #include <opencc/DictEntry.hpp>
+#include <Windows.h>
 
 static const char* quote_left = "\xe3\x80\x94";  //"\xef\xbc\x88";
 static const char* quote_right = "\xe3\x80\x95";  //"\xef\xbc\x89";
@@ -36,7 +37,17 @@ class Opencc {
     LOG(INFO) << "initializing opencc: " << config_path;
     opencc::Config config;
     try {
-      converter_ = config.NewFromFile(config_path);
+      // 将多字节转换为宽字节
+      auto len = MultiByteToWideChar(CP_ACP, 0, config_path.data(), -1, nullptr, 0);
+      std::wstring buffer(len, 0);
+      MultiByteToWideChar(CP_ACP, 0, config_path.data(), -1, &buffer[0], len);
+
+      // 将宽字节转换为UTF8
+      len = WideCharToMultiByte(CP_UTF8, 0, buffer.data(), -1, nullptr, 0, nullptr, nullptr);
+      std::string path(len, 0);
+      WideCharToMultiByte(CP_UTF8, 0, buffer.data(), -1, &path[0], len, 0, 0);
+     
+      converter_ = config.NewFromFile(path);
       const list<opencc::ConversionPtr> conversions =
         converter_->GetConversionChain()->GetConversions();
       dict_ = conversions.front()->GetDict();
