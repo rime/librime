@@ -30,7 +30,7 @@ extern "C" {
 #define RIME_API
 #endif  /* _WIN32 */
 
-typedef uintptr_t RimeSessionId;
+typedef uintptr_t RimeSessionId; // 编译时此处不变。引用到项目时，建议将其修改为「using RimeSessionId = UINT64;」
 
 typedef int Bool;
 
