@@ -250,7 +250,13 @@ bool Simplifier::Convert(const an<Candidate>& original,
         if (forms[i] == original->text()) {
           result->push_back(original);
         } else {
-          PushBack(original, result, forms[i]);
+          string simplified;
+          success = opencc_->ConvertText(forms[i], &simplified);
+          if (success && original->text().compare(simplified) != 0) {
+            PushBack(original, result, simplified);
+          } else {
+            PushBack(original, result, forms[i]);
+          }
         }
       }
     } else {
