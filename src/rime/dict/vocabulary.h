@@ -34,10 +34,10 @@ struct DictEntry {
   string text;
   string comment;
   string preedit;
-  double weight = 0.0;
-  int commit_count = 0;
   Code code;  // multi-syllable code from prism
   string custom_code;  // user defined code
+  double weight = 0.0;
+  int commit_count = 0;
   int remaining_code_length = 0;
 
   DictEntry() = default;
