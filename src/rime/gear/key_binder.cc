@@ -309,7 +309,7 @@ bool KeyBinder::ReinterpretPagingKey(const KeyEvent& key_event) {
   // reinterpret period key followed by alphabetic keys
   // unless period/comma key has been used multiple times
   if (ch == '.' && (last_key_ == '.' || last_key_ == ',')) {
-    last_key_ = 0;
+    last_key_ = ',';
     return ret;
   }
   if (last_key_ == '.' && ch >= 'a' && ch <= 'z') {
