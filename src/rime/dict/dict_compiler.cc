@@ -241,12 +241,12 @@ bool DictCompiler::BuildTable(int table_index,
       for (const auto& s : r->raw_code) {
         code.push_back(syllable_to_id[s]);
       }
-      DictEntryList* ls = vocabulary.LocateEntries(code);
+      auto ls = vocabulary.LocateEntries(code);
       if (!ls) {
         LOG(ERROR) << "Error locating entries in vocabulary.";
         continue;
       }
-      auto e = New<DictEntry>();
+      auto e = New<ShortDictEntry>();
       e->code.swap(code);
       e->text.swap(r->text);
       e->weight = log(r->weight > 0 ? r->weight : DBL_EPSILON);
