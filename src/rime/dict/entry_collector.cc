@@ -206,7 +206,7 @@ void EntryCollector::CreateEntry(const string &word,
     words[e.text][code_str] += e.weight;
     total_weight[e.text] += e.weight;
   }
-  entries.push_back(e);
+  entries.emplace_back(New<RawDictEntry>(e));
   ++num_entries;
 }
 
@@ -240,10 +240,10 @@ void EntryCollector::Dump(const string& file_name) const {
     out << "# - " << syllable << std::endl;
   }
   out << std::endl;
-  for (const RawDictEntry& e : entries) {
-    out << e.text << '\t'
-        << e.raw_code.ToString() << '\t'
-        << e.weight << std::endl;
+  for (const auto &e : entries) {
+    out << e->text << '\t'
+        << e->raw_code.ToString() << '\t'
+        << e->weight << std::endl;
   }
   out.close();
 }

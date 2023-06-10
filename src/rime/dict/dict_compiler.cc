@@ -236,9 +236,9 @@ bool DictCompiler::BuildTable(int table_index,
     for (const auto& s : collector.syllabary) {
       syllable_to_id[s] = syllable_id++;
     }
-    for (RawDictEntry& r : collector.entries) {
+    for (auto r : collector.entries) {
       Code code;
-      for (const auto& s : r.raw_code) {
+      for (const auto& s : r->raw_code) {
         code.push_back(syllable_to_id[s]);
       }
       DictEntryList* ls = vocabulary.LocateEntries(code);
@@ -248,10 +248,12 @@ bool DictCompiler::BuildTable(int table_index,
       }
       auto e = New<DictEntry>();
       e->code.swap(code);
-      e->text.swap(r.text);
-      e->weight = log(r.weight > 0 ? r.weight : DBL_EPSILON);
+      e->text.swap(r->text);
+      e->weight = log(r->weight > 0 ? r->weight : DBL_EPSILON);
       ls->push_back(e);
     }
+    // release memory in time to reduce peak memory usage
+    vector<of<RawDictEntry>>().swap(collector.entries);
     if (settings->sort_order() != "original") {
       vocabulary.SortHomophones();
     }
