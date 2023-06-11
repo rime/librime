@@ -35,7 +35,7 @@ class EntryCollector : public PhraseCollector {
  public:
   Syllabary syllabary;
   bool build_syllabary = true;
-  vector<RawDictEntry> entries;
+  vector<of<RawDictEntry>> entries;
   size_t num_entries = 0;
   ReverseLookupTable stems;
 

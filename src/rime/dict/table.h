@@ -166,9 +166,9 @@ class Table : public MappedFile {
                                    const Vocabulary& vocabulary);
   bool BuildPhraseIndex(Code code, const Vocabulary& vocabulary,
                         map<string, int>* index_data);
-  Array<table::Entry>* BuildEntryArray(const DictEntryList& entries);
-  bool BuildEntryList(const DictEntryList& src, List<table::Entry>* dest);
-  bool BuildEntry(const DictEntry& dict_entry, table::Entry* entry);
+  Array<table::Entry>* BuildEntryArray(const ShortDictEntryList& entries);
+  bool BuildEntryList(const ShortDictEntryList& src, List<table::Entry>* dest);
+  bool BuildEntry(const ShortDictEntry& dict_entry, table::Entry* entry);
 
   string GetString(const table::StringType& x);
   bool AddString(const string& src, table::StringType* dest,

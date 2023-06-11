@@ -518,7 +518,7 @@ table::TailIndex* Table::BuildTailIndex(const Code& prefix,
   return index;
 }
 
-Array<table::Entry>* Table::BuildEntryArray(const DictEntryList& entries) {
+Array<table::Entry>* Table::BuildEntryArray(const ShortDictEntryList& entries) {
   auto array = CreateArray<table::Entry>(entries.size());
   if (!array) {
     return NULL;
@@ -531,7 +531,7 @@ Array<table::Entry>* Table::BuildEntryArray(const DictEntryList& entries) {
   return array;
 }
 
-bool Table::BuildEntryList(const DictEntryList& src,
+bool Table::BuildEntryList(const ShortDictEntryList& src,
                            List<table::Entry>* dest) {
   if (!dest)
     return false;
@@ -549,7 +549,7 @@ bool Table::BuildEntryList(const DictEntryList& src,
   return true;
 }
 
-bool Table::BuildEntry(const DictEntry& dict_entry, table::Entry* entry) {
+bool Table::BuildEntry(const ShortDictEntry& dict_entry, table::Entry* entry) {
   if (!entry)
     return false;
   if (!AddString(dict_entry.text, &entry->text, dict_entry.weight)) {

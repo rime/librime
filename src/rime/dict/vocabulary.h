@@ -30,18 +30,34 @@ class Code : public vector<SyllableId> {
   string ToString() const;
 };
 
+struct ShortDictEntry {
+  string text;
+  Code code;  // multi-syllable code from prism
+  double weight = 0.0;
+
+  ShortDictEntry() = default;
+  bool operator< (const ShortDictEntry& other) const;
+};
+
 struct DictEntry {
   string text;
   string comment;
   string preedit;
-  double weight = 0.0;
-  int commit_count = 0;
   Code code;  // multi-syllable code from prism
   string custom_code;  // user defined code
+  double weight = 0.0;
+  int commit_count = 0;
   int remaining_code_length = 0;
 
   DictEntry() = default;
+  ShortDictEntry ToShort() const;
   bool operator< (const DictEntry& other) const;
+};
+
+class ShortDictEntryList : public vector<of<ShortDictEntry>> {
+ public:
+  void Sort();
+  void SortRange(size_t start, size_t count);
 };
 
 class DictEntryList : public vector<of<DictEntry>> {
@@ -64,13 +80,13 @@ class DictEntryFilterBinder {
 class Vocabulary;
 
 struct VocabularyPage {
-  DictEntryList entries;
+  ShortDictEntryList entries;
   an<Vocabulary> next_level;
 };
 
 class Vocabulary : public map<int, VocabularyPage> {
  public:
-  DictEntryList* LocateEntries(const Code& code);
+  ShortDictEntryList* LocateEntries(const Code& code);
   void SortHomophones();
 };
 
