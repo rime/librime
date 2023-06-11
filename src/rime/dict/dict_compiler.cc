@@ -236,7 +236,7 @@ bool DictCompiler::BuildTable(int table_index,
     for (const auto& s : collector.syllabary) {
       syllable_to_id[s] = syllable_id++;
     }
-    for (auto r : collector.entries) {
+    for (const auto& r : collector.entries) {
       Code code;
       for (const auto& s : r->raw_code) {
         code.push_back(syllable_to_id[s]);
