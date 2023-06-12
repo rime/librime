@@ -43,12 +43,7 @@ bool CustomSettings::Load() {
   fs::path custom_config_path =
       fs::path(deployer_->user_data_dir) / custom_config_file(config_id_);
   if (!custom_config_.LoadFromFile(custom_config_path.string())) {
-#ifdef WIN32    
-    LOG(INFO) << "creating new file '" << custom_config_file(config_id_).c_str() << "'.";
-    std::ofstream out{ custom_config_path.string(), std::ios::app };
-#else    
-    return false;
-#endif    
+    return false; 
   }
   modified_ = false;
   return true;
