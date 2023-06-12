@@ -43,13 +43,22 @@ class Opencc {
  #ifdef WIN32
       // 将多字节转换为宽字节
       auto len = MultiByteToWideChar(CP_ACP, 0, config_path.data(), -1, nullptr, 0);
-      std::wstring buffer(len, 0);
-      MultiByteToWideChar(CP_ACP, 0, config_path.data(), -1, &buffer[0], len);
+      std::wstring buffer;
+      if (len > 0)
+      {
+        buffer.resize(len);
+        MultiByteToWideChar(CP_ACP, 0, config_path.data(), -1, &buffer[0], len);
+        buffer = &buffer[0];
+      }
 
       // 将宽字节转换为UTF8
       len = WideCharToMultiByte(CP_UTF8, 0, buffer.data(), -1, nullptr, 0, nullptr, nullptr);
-      std::string path(len, 0);
-      WideCharToMultiByte(CP_UTF8, 0, buffer.data(), -1, &path[0], len, 0, 0);
+      std::string path;
+      if (len > 0)
+      {
+        WideCharToMultiByte(CP_UTF8, 0, buffer.data(), -1, &path[0], len, 0, 0);
+        path = &path[0];
+      }
      
       converter_ = config.NewFromFile(path);
 #else
