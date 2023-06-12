@@ -59,8 +59,15 @@ class Opencc {
         WideCharToMultiByte(CP_UTF8, 0, buffer.data(), -1, &path[0], len, 0, 0);
         path = &path[0];
       }
-     
-      converter_ = config.NewFromFile(path);
+ 
+     if (len > 0)
+     {
+       converter_ = config.NewFromFile(path);
+     }
+     else
+     {
+       converter_ = config.NewFromFile(config_path);
+     }
 #else
       converter_ = config.NewFromFile(config_path);
 #endif
