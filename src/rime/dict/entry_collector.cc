@@ -165,7 +165,7 @@ void EntryCollector::CreateEntry(const string &word,
   if (scaled) {
     double percentage = 100.0;
     try {
-      percentage = boost::lexical_cast<double>(
+      percentage = std::stod(
           weight_str.substr(0, weight_str.length() - 1));
     }
     catch (...) {
@@ -176,7 +176,7 @@ void EntryCollector::CreateEntry(const string &word,
   }
   else if (!weight_str.empty()) {  // absolute weight
     try {
-      e.weight = boost::lexical_cast<double>(weight_str);
+      e.weight = std::stod(weight_str);
     }
     catch (...) {
       LOG(WARNING) << "invalid entry definition at #" << num_entries << ".";
@@ -212,16 +212,16 @@ void EntryCollector::CreateEntry(const string &word,
 
 bool EntryCollector::TranslateWord(const string& word,
                                    vector<string>* result) {
-  ReverseLookupTable::const_iterator s = stems.find(word);
+  const auto& s = stems.find(word);
   if (s != stems.end()) {
     for (const string& stem : s->second) {
       result->push_back(stem);
     }
     return true;
   }
-  WordMap::const_iterator w = words.find(word);
+  const auto& w = words.find(word);
   if (w != words.end()) {
-    for (const auto& v : w->second) {
+    for (const auto& v : w->second) {  
       const double kMinimalWeight = 0.05;  // 5%
       double min_weight = total_weight[word] * kMinimalWeight;
       if (v.second < min_weight)
