@@ -5,6 +5,7 @@
 // 2013-01-30 GONG Chen <chen.sst@gmail.com>
 //
 #include <fstream>
+#include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <rime/algo/utilities.h>
 
@@ -35,8 +36,9 @@ ChecksumComputer::ChecksumComputer(uint32_t initial_remainder)
 
 void ChecksumComputer::ProcessFile(const string& file_name) {
   std::ifstream fin(file_name.c_str());
-  string file_content((std::istreambuf_iterator<char>(fin)),
-                           std::istreambuf_iterator<char>());
+  std::stringstream buffer;
+  buffer << fin.rdbuf();
+  const auto& file_content(buffer.str());
   crc_.process_bytes(file_content.data(), file_content.length());
 }
 
