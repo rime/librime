@@ -971,11 +971,11 @@ static bool do_with_candidate_on_current_page(
 }
 
 
-Bool RimeSelectCandidate(RimeSessionId session_id, size_t index) {
+RIME_API Bool RimeSelectCandidate(RimeSessionId session_id, size_t index) {
   return do_with_candidate(session_id, index, &Context::Select);
 }
 
-Bool RimeSelectCandidateOnCurrentPage(RimeSessionId session_id, size_t index) {
+RIME_API Bool RimeSelectCandidateOnCurrentPage(RimeSessionId session_id, size_t index) {
   return do_with_candidate_on_current_page(session_id, index, &Context::Select);
 }
 
@@ -983,11 +983,11 @@ const char* RimeGetVersion() {
   return RIME_VERSION;
 }
 
-Bool RimeDeleteCandidate(RimeSessionId session_id, size_t index) {
+RIME_API Bool RimeDeleteCandidate(RimeSessionId session_id, size_t index) {
   return do_with_candidate(session_id, index, &Context::DeleteCandidate);
 }
 
-Bool RimeDeleteCandidateOnCurrentPage(RimeSessionId session_id, size_t index) {
+RIME_API Bool RimeDeleteCandidateOnCurrentPage(RimeSessionId session_id, size_t index) {
   return do_with_candidate_on_current_page(
       session_id, index, &Context::DeleteCandidate);
 }

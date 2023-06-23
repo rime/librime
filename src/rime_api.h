@@ -287,6 +287,10 @@ RIME_API void RimeCandidateListEnd(RimeCandidateListIterator* iterator);
 RIME_API Bool RimeCandidateListFromIndex(RimeSessionId session_id,
                                          RimeCandidateListIterator* iterator,
                                          int index);
+RIME_API Bool RimeSelectCandidate(RimeSessionId session_id, size_t index);
+RIME_API Bool RimeSelectCandidateOnCurrentPage(RimeSessionId session_id, size_t index);
+RIME_API Bool RimeDeleteCandidate(RimeSessionId session_id, size_t index);
+RIME_API Bool RimeDeleteCandidateOnCurrentPage(RimeSessionId session_id, size_t index);
 
 // Runtime options
 
