@@ -25,7 +25,6 @@ vector<string> split(const string& str, const string& delim, SplitBehavior behav
     }
         pos = str.find_first_of(delim, lastPos);
     }
-
     return strings;
 };
 

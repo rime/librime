@@ -1,7 +1,6 @@
 #ifndef RIME_STRINGS_H_
 #define RIME_STRINGS_H_
 
-#include <rime_api.h>
 #include <rime/common.h>
 #include <initializer_list>
 
@@ -10,12 +9,12 @@ namespace strings {
 
 enum class SplitBehavior { KeepEmpty, SkipEmpty };
 
-RIME_API vector<string> split(const string& str, const string& delim, SplitBehavior behavior);
+vector<string> split(const string& str, const string& delim, SplitBehavior behavior);
 
-RIME_API vector<string> split(const string& str, const string& delim);
+vector<string> split(const string& str, const string& delim);
 
 template <typename Iter, typename T>
-RIME_API string join(Iter start, Iter end, T &&delim) {
+string join(Iter start, Iter end, T &&delim) {
     string result;
     if (start != end) {
         result += (*start);
