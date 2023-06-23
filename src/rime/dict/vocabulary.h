@@ -91,7 +91,7 @@ class Vocabulary : public map<int, VocabularyPage> {
 };
 
 // word -> { code, ... }
-using ReverseLookupTable = map<string, set<string>>;
+using ReverseLookupTable = hash_map<string, set<string>>;
 
 }  // namespace rime
 
