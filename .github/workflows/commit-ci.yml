@@ -9,11 +9,24 @@ on:
   pull_request:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout last commit
+        uses: actions/checkout@v3
+      - name: Install clang-format
+        run: sudo apt install -y clang-format
+      - name: Lint
+        run: find src -name '*.cc' -o -name '*.h' | xargs clang-format -Werror --dry-run || { echo Please lint your code by '"'"find src -name '*.cc' -o -name '*.h' | xargs clang-format -i"'"'.; false; }
+
   linux:
+    needs: lint
     uses: ./.github/workflows/linux-build.yml
 
   macos:
+    needs: lint
     uses: ./.github/workflows/macos-build.yml
 
   windows:
+    needs: lint
     uses: ./.github/workflows/windows-build.yml
