@@ -14,9 +14,7 @@
 
 namespace rime {
 
-static const ResourceType kVocabularyResourceType = {
-  "vocabulary", "", ".txt"
-};
+static const ResourceType kVocabularyResourceType = {"vocabulary", "", ".txt"};
 
 struct VocabularyDb : public TextDb {
   VocabularyDb(const string& path, const string& name);
@@ -25,8 +23,7 @@ struct VocabularyDb : public TextDb {
 };
 
 VocabularyDb::VocabularyDb(const string& path, const string& name)
-    : TextDb(path, name, kVocabularyResourceType.name, VocabularyDb::format) {
-}
+    : TextDb(path, name, kVocabularyResourceType.name, VocabularyDb::format) {}
 
 static bool rime_vocabulary_entry_parser(const Tsv& row,
                                          string* key,
@@ -42,16 +39,16 @@ static bool rime_vocabulary_entry_parser(const Tsv& row,
 static bool rime_vocabulary_entry_formatter(const string& key,
                                             const string& value,
                                             Tsv* tsv) {
-  //Tsv& row(*tsv);
-  //row.push_back(key);
-  //row.push_back(value);
+  // Tsv& row(*tsv);
+  // row.push_back(key);
+  // row.push_back(value);
   return true;
 }
 
 const TextFormat VocabularyDb::format = {
-  rime_vocabulary_entry_parser,
-  rime_vocabulary_entry_formatter,
-  "Rime vocabulary",
+    rime_vocabulary_entry_parser,
+    rime_vocabulary_entry_formatter,
+    "Rime vocabulary",
 };
 
 string PresetVocabulary::DictFilePath(const string& vocabulary) {
@@ -72,14 +69,13 @@ PresetVocabulary::~PresetVocabulary() {
     db_->Close();
 }
 
-bool PresetVocabulary::GetWeightForEntry(const string &key, double *weight) {
+bool PresetVocabulary::GetWeightForEntry(const string& key, double* weight) {
   string weight_str;
   if (!db_ || !db_->Fetch(key, &weight_str))
     return false;
   try {
     *weight = boost::lexical_cast<double>(weight_str);
-  }
-  catch (...) {
+  } catch (...) {
     return false;
   }
   return true;
@@ -90,14 +86,13 @@ void PresetVocabulary::Reset() {
     db_->cursor->Reset();
 }
 
-bool PresetVocabulary::GetNextEntry(string *key, string *value) {
+bool PresetVocabulary::GetNextEntry(string* key, string* value) {
   if (!db_ || !db_->cursor)
     return false;
   bool got = false;
   do {
     got = db_->cursor->GetNextRecord(key, value);
-  }
-  while (got && !IsQualifiedPhrase(*key, *value));
+  } while (got && !IsQualifiedPhrase(*key, *value));
   return got;
 }
 

@@ -10,13 +10,13 @@
 
 namespace rime {
 
-bool BuildInfoPlugin::ReviewCompileOutput(
-    ConfigCompiler* compiler, an<ConfigResource> resource) {
+bool BuildInfoPlugin::ReviewCompileOutput(ConfigCompiler* compiler,
+                                          an<ConfigResource> resource) {
   return true;
 }
 
-bool BuildInfoPlugin::ReviewLinkOutput(
-    ConfigCompiler* compiler, an<ConfigResource> resource) {
+bool BuildInfoPlugin::ReviewLinkOutput(ConfigCompiler* compiler,
+                                       an<ConfigResource> resource) {
   auto build_info = (*resource)["__build_info"];
   build_info["rime_version"] = RIME_VERSION;
   auto timestamps = build_info["timestamps"];
@@ -35,7 +35,7 @@ bool BuildInfoPlugin::ReviewLinkOutput(
     }
     // TODO: store as 64-bit number to avoid the year 2038 problem
     timestamps[resource->resource_id] =
-        (int) boost::filesystem::last_write_time(file_name);
+        (int)boost::filesystem::last_write_time(file_name);
   });
   return true;
 }

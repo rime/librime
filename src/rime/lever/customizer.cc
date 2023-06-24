@@ -42,20 +42,17 @@ bool Customizer::UpdateConfigFile() {
     dest_config.GetString(version_key_, &dest_version);
     dest_config.GetString("customization", &applied_customization);
   }
-  if (fs::exists(source_path_) &&
-      fs::exists(dest_path_) &&
+  if (fs::exists(source_path_) && fs::exists(dest_path_) &&
       fs::equivalent(source_path_, dest_path_)) {
     missing_original_copy = true;
     source_version = dest_version;
-  }
-  else {
+  } else {
     Config source_config;
     if (source_config.LoadFromFile(source_path_.string())) {
       source_config.GetString(version_key_, &source_version);
-    }
-    else {
-      LOG(ERROR) << "Error loading config from '"
-                 << source_path_.string() << "'.";
+    } else {
+      LOG(ERROR) << "Error loading config from '" << source_path_.string()
+                 << "'.";
       return false;
     }
     if (CompareVersionString(source_version, dest_version) > 0) {
@@ -63,12 +60,11 @@ bool Customizer::UpdateConfigFile() {
       redistribute = true;
     }
   }
-  
+
   fs::path custom_path(dest_path_);
   if (custom_path.extension() != ".yaml") {
     custom_path.clear();
-  }
-  else {
+  } else {
     custom_path.replace_extension();
     if (custom_path.extension() == ".schema") {
       custom_path.replace_extension();
@@ -77,8 +73,7 @@ bool Customizer::UpdateConfigFile() {
   }
   string customization;
   if (!custom_path.empty() && fs::exists(custom_path)) {
-    customization = boost::lexical_cast<string>(
-        Checksum(custom_path.string()));
+    customization = boost::lexical_cast<string>(Checksum(custom_path.string()));
   }
   if (applied_customization != customization) {
     need_update = true;
@@ -95,17 +90,16 @@ bool Customizer::UpdateConfigFile() {
     try {
       fs::copy_file(source_path_, dest_path_,
                     fs::copy_option::overwrite_if_exists);
-    }
-    catch (...) {
-      LOG(ERROR) << "Error copying config file '"
-                 << source_path_.string() << "' to user directory.";
+    } catch (...) {
+      LOG(ERROR) << "Error copying config file '" << source_path_.string()
+                 << "' to user directory.";
       return false;
     }
   }
   if (!customization.empty()) {
     if (missing_original_copy) {
       LOG(WARNING) << "patching user config without a shared original copy "
-          "is discouraged.";
+                      "is discouraged.";
     }
     LOG(INFO) << "applying customization file: " << custom_path.string();
     if (!dest_config.LoadFromFile(dest_path_.string())) {
@@ -125,8 +119,7 @@ bool Customizer::UpdateConfigFile() {
           return false;
         }
       }
-    }
-    else {
+    } else {
       LOG(WARNING) << "'patch' not found in customization file.";
     }
     // update config version

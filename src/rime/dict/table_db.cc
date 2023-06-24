@@ -19,8 +19,7 @@ namespace rime {
 static bool rime_table_entry_parser(const Tsv& row,
                                     string* key,
                                     string* value) {
-  if (row.size() < 2 ||
-      row[0].empty() || row[1].empty()) {
+  if (row.size() < 2 || row[0].empty() || row[1].empty()) {
     return false;
   }
   string code(row[1]);
@@ -32,8 +31,7 @@ static bool rime_table_entry_parser(const Tsv& row,
       v.commits = boost::lexical_cast<int>(row[2]);
       const double kS = 1e8;
       v.dee = (v.commits + 1) / kS;
-    }
-    catch (...) {
+    } catch (...) {
     }
   }
   *value = v.Pack();
@@ -45,10 +43,8 @@ static bool rime_table_entry_formatter(const string& key,
                                        Tsv* tsv) {
   Tsv& row(*tsv);
   // key ::= code <space> <Tab> phrase
-  boost::algorithm::split(row, key,
-                          boost::algorithm::is_any_of("\t"));
-  if (row.size() != 2 ||
-      row[0].empty() || row[1].empty())
+  boost::algorithm::split(row, key, boost::algorithm::is_any_of("\t"));
+  if (row.size() != 2 || row[0].empty() || row[1].empty())
     return false;
   UserDbValue v(value);
   if (v.commits < 0)  // deleted entry
@@ -60,20 +56,20 @@ static bool rime_table_entry_formatter(const string& key,
 }
 
 const TextFormat TableDb::format = {
-  rime_table_entry_parser,
-  rime_table_entry_formatter,
-  "Rime table",
+    rime_table_entry_parser,
+    rime_table_entry_formatter,
+    "Rime table",
 };
 
 TableDb::TableDb(const string& file_name, const string& db_name)
-    : TextDb(file_name, db_name, "tabledb", TableDb::format) {
-}
+    : TextDb(file_name, db_name, "tabledb", TableDb::format) {}
 
 StableDb::StableDb(const string& file_name, const string& db_name)
     : TableDb(file_name, db_name) {}
 
 bool StableDb::Open() {
-  if (loaded()) return false;
+  if (loaded())
+    return false;
   if (!Exists()) {
     LOG(INFO) << "stabledb '" << name() << "' does not exist.";
     return false;

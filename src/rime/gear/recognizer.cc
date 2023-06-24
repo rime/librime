@@ -26,8 +26,8 @@ static void load_patterns(RecognizerPatterns* patterns, an<ConfigMap> map) {
       boost::regex pattern(value->str());
       (*patterns)[it->first] = pattern;
     } catch (boost::regex_error& e) {
-      LOG(ERROR) << "error parsing pattern /" << value->str() << "/: "
-                 << e.what();
+      LOG(ERROR) << "error parsing pattern /" << value->str()
+                 << "/: " << e.what();
     }
   }
 }
@@ -36,9 +36,9 @@ void RecognizerPatterns::LoadConfig(Config* config) {
   load_patterns(this, config->GetMap("recognizer/patterns"));
 }
 
-RecognizerMatch
-RecognizerPatterns::GetMatch(const string& input,
-                             const Segmentation& segmentation) const {
+RecognizerMatch RecognizerPatterns::GetMatch(
+    const string& input,
+    const Segmentation& segmentation) const {
   size_t j = segmentation.GetCurrentEndPosition();
   size_t k = segmentation.GetConfirmedPosition();
   string active_input = input.substr(k);
@@ -51,16 +51,16 @@ RecognizerPatterns::GetMatch(const string& input,
       if (end != input.length())
         continue;
       if (start == j) {
-        DLOG(INFO) << "input [" << start << ", " << end << ") '"
-                   << m.str() << "' matches pattern: " << v.first;
+        DLOG(INFO) << "input [" << start << ", " << end << ") '" << m.str()
+                   << "' matches pattern: " << v.first;
         return {v.first, start, end};
       }
       for (const Segment& seg : segmentation) {
         if (start < seg.start)
           break;
         if (start == seg.start) {
-          DLOG(INFO) << "input [" << start << ", " << end << ") '"
-                     << m.str() << "' matches pattern: " << v.first;
+          DLOG(INFO) << "input [" << start << ", " << end << ") '" << m.str()
+                     << "' matches pattern: " << v.first;
           return {v.first, start, end};
         }
       }
@@ -79,14 +79,12 @@ Recognizer::Recognizer(const Ticket& ticket) : Processor(ticket) {
 }
 
 ProcessResult Recognizer::ProcessKeyEvent(const KeyEvent& key_event) {
-  if (patterns_.empty() ||
-      key_event.ctrl() || key_event.alt() || key_event.super() ||
-      key_event.release()) {
+  if (patterns_.empty() || key_event.ctrl() || key_event.alt() ||
+      key_event.super() || key_event.release()) {
     return kNoop;
   }
   int ch = key_event.keycode();
-  if ((use_space_ && ch == ' ') ||
-      (ch > 0x20 && ch < 0x80)) {
+  if ((use_space_ && ch == ' ') || (ch > 0x20 && ch < 0x80)) {
     // pattern matching against the input string plus the incoming character
     Context* ctx = engine_->context();
     string input = ctx->input();

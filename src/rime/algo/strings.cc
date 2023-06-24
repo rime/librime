@@ -3,7 +3,9 @@
 namespace rime {
 namespace strings {
 
-vector<string> split(const string& str, const string& delim, SplitBehavior behavior) {
+vector<string> split(const string& str,
+                     const string& delim,
+                     SplitBehavior behavior) {
   vector<string> strings;
   size_t lastPos, pos;
   if (behavior == SplitBehavior::SkipEmpty) {
@@ -16,22 +18,21 @@ vector<string> split(const string& str, const string& delim, SplitBehavior behav
   while (std::string::npos != pos || std::string::npos != lastPos) {
     strings.emplace_back(str.substr(lastPos, pos - lastPos));
     if (behavior == SplitBehavior::SkipEmpty) {
-        lastPos = str.find_first_not_of(delim, pos);
+      lastPos = str.find_first_not_of(delim, pos);
     } else {
-        if (pos == std::string::npos) {
-            break;
-        }
-        lastPos = pos + 1;
+      if (pos == std::string::npos) {
+        break;
+      }
+      lastPos = pos + 1;
     }
-        pos = str.find_first_of(delim, lastPos);
-    }
-    return strings;
+    pos = str.find_first_of(delim, lastPos);
+  }
+  return strings;
 };
 
 vector<string> split(const string& str, const string& delim) {
-    return split(str, delim, SplitBehavior::SkipEmpty);
+  return split(str, delim, SplitBehavior::SkipEmpty);
 };
 
-} // namespace strings
-} // namespace rime
-
+}  // namespace strings
+}  // namespace rime

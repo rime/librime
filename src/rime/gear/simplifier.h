@@ -22,13 +22,9 @@ class Simplifier : public Filter, TagMatching {
   virtual an<Translation> Apply(an<Translation> translation,
                                 CandidateList* candidates);
 
+  virtual bool AppliesToSegment(Segment* segment) { return TagsMatch(segment); }
 
-  virtual bool AppliesToSegment(Segment* segment) {
-    return TagsMatch(segment);
-  }
-
-  bool Convert(const an<Candidate>& original,
-               CandidateQueue* result);
+  bool Convert(const an<Candidate>& original, CandidateQueue* result);
 
  protected:
   enum TipsLevel { kTipsNone, kTipsChar, kTipsAll };
@@ -41,7 +37,7 @@ class Simplifier : public Filter, TagMatching {
   bool initialized_ = false;
   the<Opencc> opencc_;
   // settings
-  TipsLevel tips_level_ =  kTipsNone;
+  TipsLevel tips_level_ = kTipsNone;
   string option_name_;
   string opencc_config_;
   set<string> excluded_types_;

@@ -14,8 +14,7 @@ struct ConfigResource;
 
 class ConfigCompilerPlugin {
  public:
-  typedef bool Review(ConfigCompiler* compiler,
-                      an<ConfigResource> resource);
+  typedef bool Review(ConfigCompiler* compiler, an<ConfigResource> resource);
 
   virtual ~ConfigCompilerPlugin() = default;
 

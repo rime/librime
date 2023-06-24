@@ -25,8 +25,7 @@ enum AsciiModeSwitchStyle {
   kAsciiModeSwitchClear,
 };
 
-using AsciiModeSwitchKeyBindings = map<int /* keycode */,
-                                            AsciiModeSwitchStyle>;
+using AsciiModeSwitchKeyBindings = map<int /* keycode */, AsciiModeSwitchStyle>;
 
 class AsciiComposer : public Processor {
  public:
