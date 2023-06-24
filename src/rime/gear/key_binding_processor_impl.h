@@ -7,7 +7,7 @@ namespace rime {
 
 template <class T, int N>
 const typename KeyBindingProcessor<T, N>::ActionDef
-    KeyBindingProcessor<T, N>::kActionNoop = { "noop", nullptr };
+    KeyBindingProcessor<T, N>::kActionNoop = {"noop", nullptr};
 
 template <class T, int N>
 ProcessResult KeyBindingProcessor<T, N>::ProcessKeyEvent(
@@ -27,18 +27,15 @@ ProcessResult KeyBindingProcessor<T, N>::ProcessKeyEvent(
   if (key_event.shift()) {
     if ((fallback_options & ShiftAsControl) != 0) {
       KeyEvent shift_as_control{
-        key_event.keycode(),
-        (key_event.modifier() & ~kShiftMask) | kControlMask
-      };
+          key_event.keycode(),
+          (key_event.modifier() & ~kShiftMask) | kControlMask};
       if (Accept(shift_as_control, ctx, keymap)) {
         return kAccepted;
       }
     }
     if ((fallback_options & IgnoreShift) != 0) {
-      KeyEvent ignore_shift{
-        key_event.keycode(),
-        key_event.modifier() & ~kShiftMask
-      };
+      KeyEvent ignore_shift{key_event.keycode(),
+                            key_event.modifier() & ~kShiftMask};
       if (Accept(ignore_shift, ctx, keymap)) {
         return kAccepted;
       }
@@ -75,8 +72,7 @@ void KeyBindingProcessor<T, N>::Keymap::Bind(KeyEvent key_event,
                                              HandlerPtr action) {
   if (action) {
     (*this)[key_event] = action;
-  }
-  else {
+  } else {
     this->erase(key_event);
   }
 }

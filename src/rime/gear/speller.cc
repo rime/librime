@@ -43,8 +43,7 @@ static bool is_auto_selectable(const an<Candidate>& cand,
                                const string& delimiters) {
   return
       // reaches end of input
-      cand->end() == input.length() &&
-      is_table_entry(cand) &&
+      cand->end() == input.length() && is_table_entry(cand) &&
       // no delimiters
       input.find_first_of(delimiters, cand->start()) == string::npos;
 }
@@ -63,8 +62,8 @@ static bool expecting_an_initial(Context* ctx,
          !belongs_to(previous_char, alphabet);
 }
 
-Speller::Speller(const Ticket& ticket) : Processor(ticket),
-                                         alphabet_(kRimeAlphabet) {
+Speller::Speller(const Ticket& ticket)
+    : Processor(ticket), alphabet_(kRimeAlphabet) {
   if (Config* config = engine_->schema()->config()) {
     config->GetString("speller/alphabet", &alphabet_);
     config->GetString("speller/delimiter", &delimiters_);
@@ -79,9 +78,12 @@ Speller::Speller(const Ticket& ticket) : Processor(ticket),
     }
     string auto_clear;
     if (config->GetString("speller/auto_clear", &auto_clear)) {
-      if (auto_clear == "auto") auto_clear_ = kClearAuto;
-      else if (auto_clear == "manual") auto_clear_ = kClearManual;
-      else if (auto_clear == "max_length") auto_clear_ = kClearMaxLength;
+      if (auto_clear == "auto")
+        auto_clear_ = kClearAuto;
+      else if (auto_clear == "manual")
+        auto_clear_ = kClearManual;
+      else if (auto_clear == "max_length")
+        auto_clear_ = kClearMaxLength;
     }
   }
   if (initials_.empty()) {
@@ -90,8 +92,8 @@ Speller::Speller(const Ticket& ticket) : Processor(ticket),
 }
 
 ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
-  if (key_event.release() ||
-      key_event.ctrl() || key_event.alt() || key_event.super())
+  if (key_event.release() || key_event.ctrl() || key_event.alt() ||
+      key_event.super())
     return kNoop;
   int ch = key_event.keycode();
   if (ch < 0x20 || ch >= 0x7f)  // not a valid key for spelling
@@ -102,15 +104,14 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   Context* ctx = engine_->context();
   bool is_initial = belongs_to(ch, initials_);
-  if (!is_initial &&
-      expecting_an_initial(ctx, alphabet_, finals_)) {
+  if (!is_initial && expecting_an_initial(ctx, alphabet_, finals_)) {
     return kNoop;
   }
   // handles input beyond max_code_length when auto_select is false.
   if (is_initial && AutoSelectAtMaxCodeLength(ctx)) {
     DLOG(INFO) << "auto-select at max code length.";
-  }
-  else if ((auto_clear_ == kClearMaxLength || auto_clear_ == kClearManual) && AutoClear(ctx)) {
+  } else if ((auto_clear_ == kClearMaxLength || auto_clear_ == kClearManual) &&
+             AutoClear(ctx)) {
     DLOG(INFO) << "auto-clear at max code when no candidate.";
   }
   // make a backup of previous conversion before modifying input
@@ -133,8 +134,7 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
   }
   if (AutoSelectUniqueCandidate(ctx)) {
     DLOG(INFO) << "auto-select unique candidate.";
-  }
-  else if (auto_clear_ == kClearAuto && AutoClear(ctx)) {
+  } else if (auto_clear_ == kClearAuto && AutoClear(ctx)) {
     DLOG(INFO) << "auto-clear when no candidate.";
   }
   return kAccepted;
@@ -146,8 +146,7 @@ bool Speller::AutoSelectAtMaxCodeLength(Context* ctx) {
   if (!ctx->HasMenu())
     return false;
   auto cand = ctx->GetSelectedCandidate();
-  if (cand &&
-      reached_max_code_length(cand, max_code_length_) &&
+  if (cand && reached_max_code_length(cand, max_code_length_) &&
       is_auto_selectable(cand, ctx->input(), delimiters_)) {
     ctx->ConfirmCurrentSelection();
     return true;
@@ -171,21 +170,18 @@ bool Speller::AutoSelectUniqueCandidate(Context* ctx) {
     matches_input_pattern =
         max_code_length_ == 0 ||  // match any length if not set
         reached_max_code_length(cand, max_code_length_);
-  }
-  else {
+  } else {
     string code(input.substr(cand->start(), cand->end()));
     matches_input_pattern = boost::regex_match(code, auto_select_pattern_);
   }
-  if (matches_input_pattern &&
-      is_auto_selectable(cand, input, delimiters_)) {
+  if (matches_input_pattern && is_auto_selectable(cand, input, delimiters_)) {
     ctx->ConfirmCurrentSelection();
     return true;
   }
   return false;
 }
 
-bool Speller::AutoSelectPreviousMatch(Context* ctx,
-                                      Segment* previous_segment) {
+bool Speller::AutoSelectPreviousMatch(Context* ctx, Segment* previous_segment) {
   if (!auto_select_)
     return false;
   if (max_code_length_ > 0 || !auto_select_pattern_.empty())
@@ -198,8 +194,8 @@ bool Speller::AutoSelectPreviousMatch(Context* ctx,
   size_t end = previous_segment->end;
   string input = ctx->input();
   string converted = input.substr(0, end);
-  if (is_auto_selectable(previous_segment->GetSelectedCandidate(),
-                         converted, delimiters_)) {
+  if (is_auto_selectable(previous_segment->GetSelectedCandidate(), converted,
+                         delimiters_)) {
     // reuse previous match
     ctx->composition().pop_back();
     ctx->composition().push_back(std::move(*previous_segment));
@@ -212,7 +208,7 @@ bool Speller::AutoSelectPreviousMatch(Context* ctx,
     }
     return true;
   }
-  return FindEarlierMatch(ctx, start ,end);
+  return FindEarlierMatch(ctx, start, end);
 }
 
 bool Speller::AutoClear(Context* ctx) {
@@ -236,16 +232,15 @@ bool Speller::FindEarlierMatch(Context* ctx, size_t start, size_t end) {
     if (!ctx->HasMenu())
       break;
     const Segment& segment(ctx->composition().back());
-    if (is_auto_selectable(segment.GetSelectedCandidate(),
-                           converted, delimiters_)) {
+    if (is_auto_selectable(segment.GetSelectedCandidate(), converted,
+                           delimiters_)) {
       // select previous match
       if (ctx->get_option("_auto_commit")) {
         ctx->Commit();
         string rest = input.substr(end);
         ctx->set_input(rest);
         end = 0;
-      }
-      else {
+      } else {
         ctx->ConfirmCurrentSelection();
         ctx->set_input(input);
       }

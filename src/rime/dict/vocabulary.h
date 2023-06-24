@@ -22,8 +22,8 @@ class Code : public vector<SyllableId> {
  public:
   static const size_t kIndexCodeMaxLength = 3;
 
-  bool operator< (const Code& other) const;
-  bool operator== (const Code& other) const;
+  bool operator<(const Code& other) const;
+  bool operator==(const Code& other) const;
 
   void CreateIndex(Code* index_code);
 
@@ -36,14 +36,14 @@ struct ShortDictEntry {
   double weight = 0.0;
 
   ShortDictEntry() = default;
-  bool operator< (const ShortDictEntry& other) const;
+  bool operator<(const ShortDictEntry& other) const;
 };
 
 struct DictEntry {
   string text;
   string comment;
   string preedit;
-  Code code;  // multi-syllable code from prism
+  Code code;           // multi-syllable code from prism
   string custom_code;  // user defined code
   double weight = 0.0;
   int commit_count = 0;
@@ -51,7 +51,7 @@ struct DictEntry {
 
   DictEntry() = default;
   ShortDictEntry ToShort() const;
-  bool operator< (const DictEntry& other) const;
+  bool operator<(const DictEntry& other) const;
 };
 
 class ShortDictEntryList : public vector<of<ShortDictEntry>> {
@@ -66,7 +66,7 @@ class DictEntryList : public vector<of<DictEntry>> {
   void SortRange(size_t start, size_t count);
 };
 
-using DictEntryFilter = function<bool (an<DictEntry> entry)>;
+using DictEntryFilter = function<bool(an<DictEntry> entry)>;
 
 class DictEntryFilterBinder {
  public:
