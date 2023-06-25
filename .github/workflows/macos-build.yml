@@ -74,17 +74,21 @@ jobs:
 
       - name: Build dependencies
         if: steps.cache-deps.outputs.cache-hit != 'true'
-        run: make xcode/deps
+        run: |
+          export CMAKE_GENERATOR=Ninja
+          make deps
 
       - name: Install Rime plugins
         run: ./action-install-plugins-macos.sh
 
       - name: Build and test
-        run: make xcode/test
+        run: |
+          export CMAKE_GENERATOR=Ninja
+          make test
 
       - name: Create distributable
         run: |
-          make xcode/dist
+          make install
           tar -cjvf rime-${{ env.git_ref_name }}-${{ runner.os }}.tar.bz2 \
           dist version-info.txt
           tar -cjvf rime-deps-${{ env.git_ref_name }}-${{ runner.os }}.tar.bz2 \
