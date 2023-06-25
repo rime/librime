@@ -83,26 +83,22 @@ void Service::StopService() {
 
 SessionId Service::CreateSession() {
   SessionId id = kInvalidSessionId;
-  if (disabled()) return id;
+  if (disabled())
+    return id;
   try {
     auto session = New<Session>();
     session->Activate();
     id = reinterpret_cast<uintptr_t>(session.get());
     sessions_[id] = session;
-  }
-  catch (const std::exception& ex) {
+  } catch (const std::exception& ex) {
     LOG(ERROR) << "Error creating session: " << ex.what();
-  }
-  catch (const string& ex) {
+  } catch (const string& ex) {
     LOG(ERROR) << "Error creating session: " << ex;
-  }
-  catch (const char* ex) {
+  } catch (const char* ex) {
     LOG(ERROR) << "Error creating session: " << ex;
-  }
-  catch (int ex) {
+  } catch (int ex) {
     LOG(ERROR) << "Error creating session: " << ex;
-  }
-  catch (...) {
+  } catch (...) {
     LOG(ERROR) << "Error creating session.";
   }
   return id;
@@ -131,13 +127,12 @@ bool Service::DestroySession(SessionId session_id) {
 void Service::CleanupStaleSessions() {
   time_t now = time(NULL);
   int count = 0;
-  for (auto it = sessions_.begin(); it != sessions_.end(); ) {
+  for (auto it = sessions_.begin(); it != sessions_.end();) {
     if (it->second &&
         it->second->last_active_time() < now - Session::kLifeSpan) {
       sessions_.erase(it++);
       ++count;
-    }
-    else {
+    } else {
       ++it;
     }
   }
@@ -163,8 +158,7 @@ void Service::Notify(SessionId session_id,
                      const string& message_value) {
   if (notification_handler_) {
     std::lock_guard<std::mutex> lock(mutex_);
-    notification_handler_(session_id,
-                          message_type.c_str(),
+    notification_handler_(session_id, message_type.c_str(),
                           message_value.c_str());
   }
 }

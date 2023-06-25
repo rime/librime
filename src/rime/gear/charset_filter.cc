@@ -4,7 +4,7 @@
 //
 // 2014-03-31 Chongyu Zhu <i@lembacon.com>
 //
-#include <stdint.h> // for uint32_t
+#include <stdint.h>  // for uint32_t
 #include <utf8.h>
 #include <rime/candidate.h>
 #include <rime/common.h>
@@ -13,11 +13,9 @@
 #include <rime/dict/vocabulary.h>
 #include <rime/gear/charset_filter.h>
 
-
 namespace rime {
 
-bool is_extended_cjk(uint32_t ch)
-{
+bool is_extended_cjk(uint32_t ch) {
   if ((ch >= 0x3400 && ch <= 0x4DBF) ||    // CJK Unified Ideographs Extension A
       (ch >= 0x20000 && ch <= 0x2A6DF) ||  // CJK Unified Ideographs Extension B
       (ch >= 0x2A700 && ch <= 0x2B73F) ||  // CJK Unified Ideographs Extension C
@@ -29,15 +27,15 @@ bool is_extended_cjk(uint32_t ch)
       (ch >= 0x3300 && ch <= 0x33FF) ||    // CJK Compatibility
       (ch >= 0xFE30 && ch <= 0xFE4F) ||    // CJK Compatibility Forms
       (ch >= 0xF900 && ch <= 0xFAFF) ||    // CJK Compatibility Ideographs
-      (ch >= 0x2F800 && ch <= 0x2FA1F))    // CJK Compatibility Ideographs Supplement
+      (ch >= 0x2F800 &&
+       ch <= 0x2FA1F))  // CJK Compatibility Ideographs Supplement
     return true;
 
   return false;
 }
 
-bool contains_extended_cjk(const string& text)
-{
-  const char *p = text.c_str();
+bool contains_extended_cjk(const string& text) {
+  const char* p = text.c_str();
   uint32_t ch;
 
   while ((ch = utf8::unchecked::next(p)) != 0) {
@@ -96,11 +94,10 @@ bool CharsetFilter::FilterDictEntry(an<DictEntry> entry) {
 }
 
 CharsetFilter::CharsetFilter(const Ticket& ticket)
-    : Filter(ticket), TagMatching(ticket) {
-}
+    : Filter(ticket), TagMatching(ticket) {}
 
-an<Translation> CharsetFilter::Apply(
-    an<Translation> translation, CandidateList* candidates) {
+an<Translation> CharsetFilter::Apply(an<Translation> translation,
+                                     CandidateList* candidates) {
   if (name_space_.empty() &&
       !engine_->context()->get_option("extended_charset")) {
     return New<CharsetFilterTranslation>(translation);

@@ -37,8 +37,7 @@ namespace rime {
 DetectModifications::DetectModifications(TaskInitializer arg) {
   try {
     data_dirs_ = boost::any_cast<vector<string>>(arg);
-  }
-  catch (const boost::bad_any_cast&) {
+  } catch (const boost::bad_any_cast&) {
     LOG(ERROR) << "DetectModifications: invalid arguments.";
   }
 }
@@ -61,7 +60,7 @@ bool DetectModifications::Run(Deployer* deployer) {
         }
       }
     }
-  } catch(const fs::filesystem_error& ex) {
+  } catch (const fs::filesystem_error& ex) {
     LOG(ERROR) << "Error reading file information: " << ex.what();
     return true;
   }
@@ -138,8 +137,7 @@ bool InstallationUpdate::Run(Deployer* deployer) {
     deployer->user_id = installation_id;
     config.SetString("installation_id", installation_id);
     config.SetString("install_time", time_str);
-  }
-  else {
+  } else {
     config.SetString("update_time", time_str);
   }
   if (!deployer->distribution_name.empty()) {
@@ -149,12 +147,10 @@ bool InstallationUpdate::Run(Deployer* deployer) {
   if (!deployer->distribution_code_name.empty()) {
     config.SetString("distribution_code_name",
                      deployer->distribution_code_name);
-    LOG(INFO) << "distribution code name: "
-              << deployer->distribution_code_name;
+    LOG(INFO) << "distribution code name: " << deployer->distribution_code_name;
   }
   if (!deployer->distribution_version.empty()) {
-    config.SetString("distribution_version",
-                     deployer->distribution_version);
+    config.SetString("distribution_version", deployer->distribution_version);
     LOG(INFO) << "distribution version: " << deployer->distribution_version;
   }
   config.SetString("rime_version", RIME_VERSION);
@@ -169,8 +165,8 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     t.reset(new ConfigFileUpdate("default.yaml", "config_version"));
     t->Run(deployer);
     // Deprecated: symbols.yaml is only used as source file
-    //t.reset(new ConfigFileUpdate("symbols.yaml", "config_version"));
-    //t->Run(deployer);
+    // t.reset(new ConfigFileUpdate("symbols.yaml", "config_version"));
+    // t->Run(deployer);
     t.reset(new SymlinkingPrebuiltDictionaries);
     t->Run(deployer);
   }
@@ -190,9 +186,8 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   int success = 0;
   int failure = 0;
   map<string, string> schemas;
-  the<ResourceResolver> resolver(
-      Service::instance().CreateResourceResolver(
-          {"schema_source_file", "", ".schema.yaml"}));
+  the<ResourceResolver> resolver(Service::instance().CreateResourceResolver(
+      {"schema_source_file", "", ".schema.yaml"}));
   auto build_schema = [&](const string& schema_id, bool as_dependency = false) {
     if (schemas.find(schema_id) != schemas.end())  // already built
       return;
@@ -201,13 +196,13 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     if (schemas.find(schema_id) == schemas.end()) {
       schema_path = resolver->ResolvePath(schema_id).string();
       schemas[schema_id] = schema_path;
-    }
-    else {
+    } else {
       schema_path = schemas[schema_id];
     }
     if (schema_path.empty() || !fs::exists(schema_path)) {
       if (as_dependency) {
-        LOG(WARNING) << "missing input schema; skipped unsatisfied dependency: " << schema_id;
+        LOG(WARNING) << "missing input schema; skipped unsatisfied dependency: "
+                     << schema_id;
       } else {
         LOG(ERROR) << "missing input schema: " << schema_id;
         ++failure;
@@ -244,8 +239,8 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
       }
     }
   }
-  LOG(INFO) << "finished updating schemas: "
-            << success << " success, " << failure << " failure.";
+  LOG(INFO) << "finished updating schemas: " << success << " success, "
+            << failure << " failure.";
 
   the<Config> user_config(Config::Require("user_config")->Create("user"));
   // TODO: store as 64-bit number to avoid the year 2038 problem
@@ -257,8 +252,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
 SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
   try {
     schema_file_ = boost::any_cast<string>(arg);
-  }
-  catch (const boost::bad_any_cast&) {
+  } catch (const boost::bad_any_cast&) {
     LOG(ERROR) << "SchemaUpdate: invalid arguments.";
   }
 }
@@ -275,20 +269,19 @@ static bool MaybeCreateDirectory(fs::path dir) {
 }
 
 static bool RemoveVersionSuffix(string* version, const string& suffix) {
-    size_t suffix_pos = version->find(suffix);
-    if (suffix_pos != string::npos) {
-      version->erase(suffix_pos);
-      return true;
-    }
-    return false;
+  size_t suffix_pos = version->find(suffix);
+  if (suffix_pos != string::npos) {
+    version->erase(suffix_pos);
+    return true;
+  }
+  return false;
 }
 
 static bool TrashDeprecatedUserCopy(const fs::path& shared_copy,
                                     const fs::path& user_copy,
                                     const string& version_key,
                                     const fs::path& trash) {
-  if (!fs::exists(shared_copy) ||
-      !fs::exists(user_copy) ||
+  if (!fs::exists(shared_copy) || !fs::exists(user_copy) ||
       fs::equivalent(shared_copy, user_copy)) {
     return false;
   }
@@ -328,15 +321,14 @@ static bool TrashDeprecatedUserCopy(const fs::path& shared_copy,
 bool SchemaUpdate::Run(Deployer* deployer) {
   fs::path source_path(schema_file_);
   if (!fs::exists(source_path)) {
-    LOG(ERROR) << "Error updating schema: nonexistent file '"
-               << schema_file_ << "'.";
+    LOG(ERROR) << "Error updating schema: nonexistent file '" << schema_file_
+               << "'.";
     return false;
   }
   string schema_id;
   the<Config> config(new Config);
   if (!config->LoadFromFile(schema_file_) ||
-      !config->GetString("schema/schema_id", &schema_id) ||
-      schema_id.empty()) {
+      !config->GetString("schema/schema_id", &schema_id) || schema_id.empty()) {
     LOG(ERROR) << "invalid schema definition in '" << schema_file_ << "'.";
     return false;
   }
@@ -371,9 +363,8 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     dict_compiler.set_options(DictCompiler::kRebuild | DictCompiler::kDump);
   }
   the<ResourceResolver> resolver(
-      Service::instance().CreateDeployedResourceResolver({
-          "compiled_schema", "", ".schema.yaml"
-        }));
+      Service::instance().CreateDeployedResourceResolver(
+          {"compiled_schema", "", ".schema.yaml"}));
   auto compiled_schema = resolver->ResolvePath(schema_id).string();
   if (!dict_compiler.Compile(compiled_schema)) {
     LOG(ERROR) << "dictionary '" << dict_name << "' failed to compile.";
@@ -388,8 +379,7 @@ ConfigFileUpdate::ConfigFileUpdate(TaskInitializer arg) {
     auto p = boost::any_cast<pair<string, string>>(arg);
     file_name_ = p.first;
     version_key_ = p.second;
-  }
-  catch (const boost::bad_any_cast&) {
+  } catch (const boost::bad_any_cast&) {
     LOG(ERROR) << "ConfigFileUpdate: invalid arguments.";
   }
 }
@@ -405,9 +395,8 @@ static bool ConfigNeedsUpdate(Config* config) {
     LOG(INFO) << "missing timestamps";
     return true;
   }
-  the<ResourceResolver> resolver(
-      Service::instance().CreateResourceResolver(
-          {"config_source_file", "", ".yaml"}));
+  the<ResourceResolver> resolver(Service::instance().CreateResourceResolver(
+      {"config_source_file", "", ".yaml"}));
   for (auto entry : *timestamps.AsMap()) {
     auto value = As<ConfigValue>(entry.second);
     int recorded_time = 0;
@@ -423,7 +412,7 @@ static bool ConfigNeedsUpdate(Config* config) {
       }
       continue;
     }
-    if (recorded_time != (int) fs::last_write_time(source_file)) {
+    if (recorded_time != (int)fs::last_write_time(source_file)) {
       LOG(INFO) << "source file " << (recorded_time ? "changed: " : "added: ")
                 << source_file.string();
       return true;
@@ -439,12 +428,10 @@ bool ConfigFileUpdate::Run(Deployer* deployer) {
   fs::path source_config_path(shared_data_path / file_name_);
   fs::path dest_config_path(user_data_path / file_name_);
   fs::path trash = user_data_path / "trash";
-  if (TrashDeprecatedUserCopy(source_config_path,
-                              dest_config_path,
-                              version_key_,
-                              trash)) {
-    LOG(INFO) << "deprecated user copy of '" << file_name_
-              << "' is moved to " << trash;
+  if (TrashDeprecatedUserCopy(source_config_path, dest_config_path,
+                              version_key_, trash)) {
+    LOG(INFO) << "deprecated user copy of '" << file_name_ << "' is moved to "
+              << trash;
   }
   // build the config file if needs update
   the<Config> config(Config::Require("config")->Create(file_name_));
@@ -463,8 +450,8 @@ bool PrebuildAllSchemas::Run(Deployer* deployer) {
   if (!fs::exists(shared_data_path) || !fs::is_directory(shared_data_path))
     return false;
   bool success = true;
-  for (fs::directory_iterator iter(shared_data_path), end;
-       iter != end; ++iter) {
+  for (fs::directory_iterator iter(shared_data_path), end; iter != end;
+       ++iter) {
     fs::path entry(iter->path());
     if (boost::ends_with(entry.string(), ".schema.yaml")) {
       the<DeploymentTask> t(new SchemaUpdate(entry.string()));
@@ -484,8 +471,7 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
     return false;
   bool success = false;
   // remove symlinks to shared data files created by previous version
-  for (fs::directory_iterator test(user_data_path), end;
-       test != end; ++test) {
+  for (fs::directory_iterator test(user_data_path), end; test != end; ++test) {
     fs::path entry(test->path());
     if (fs::is_symlink(entry)) {
       try {
@@ -494,15 +480,13 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
         auto target_path = fs::canonical(entry, ec);
         bool bad_link = bool(ec);
         bool linked_to_shared_data =
-            !bad_link &&
-            target_path.has_parent_path() &&
+            !bad_link && target_path.has_parent_path() &&
             fs::equivalent(shared_data_path, target_path.parent_path());
         if (bad_link || linked_to_shared_data) {
           LOG(INFO) << "removing symlink: " << entry.filename().string();
           fs::remove(entry);
         }
-      }
-      catch (const fs::filesystem_error& ex) {
+      } catch (const fs::filesystem_error& ex) {
         LOG(ERROR) << entry << ": " << ex.what();
         success = false;
       }
@@ -556,8 +540,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
     return false;
   }
   int success = 0, failure = 0, latest = 0, skipped = 0;
-  for (fs::directory_iterator iter(user_data_path), end;
-       iter != end; ++iter) {
+  for (fs::directory_iterator iter(user_data_path), end; iter != end; ++iter) {
     fs::path entry(iter->path());
     if (!fs::is_regular_file(entry))
       continue;
@@ -581,15 +564,13 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
     if (ec) {
       LOG(ERROR) << "error backing up file " << backup.string();
       ++failure;
-    }
-    else {
+    } else {
       ++success;
     }
   }
   LOG(INFO) << "backed up " << success << " config files to "
-            << backup_dir.string() << ", " << failure << " failed, "
-            << latest << " up-to-date, "
-            << skipped << " skipped.";
+            << backup_dir.string() << ", " << failure << " failed, " << latest
+            << " up-to-date, " << skipped << " skipped.";
   return !failure;
 }
 
@@ -600,14 +581,12 @@ bool CleanupTrash::Run(Deployer* deployer) {
     return false;
   fs::path trash = user_data_path / "trash";
   int success = 0, failure = 0;
-  for (fs::directory_iterator iter(user_data_path), end;
-       iter != end; ++iter) {
+  for (fs::directory_iterator iter(user_data_path), end; iter != end; ++iter) {
     fs::path entry(iter->path());
     if (!fs::is_regular_file(entry))
       continue;
     auto filename = entry.filename().string();
-    if (filename == "rime.log" ||
-        boost::ends_with(filename, ".bin") ||
+    if (filename == "rime.log" || boost::ends_with(filename, ".bin") ||
         boost::ends_with(filename, ".reverse.kct") ||
         boost::ends_with(filename, ".userdb.kct.old") ||
         boost::ends_with(filename, ".userdb.kct.snapshot")) {
@@ -620,8 +599,7 @@ bool CleanupTrash::Run(Deployer* deployer) {
       if (ec) {
         LOG(ERROR) << "error clean up file " << entry.string();
         ++failure;
-      }
-      else {
+      } else {
         ++success;
       }
     }
@@ -660,16 +638,14 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
       fs::path entry(j->path());
       string file_name(entry.filename().string());
       try {
-        if (fs::is_regular_file(entry) &&
-            !fs::is_symlink(entry) &&
+        if (fs::is_regular_file(entry) && !fs::is_symlink(entry) &&
             boost::starts_with(file_name, "rime.") &&
             !boost::contains(file_name, today)) {
           DLOG(INFO) << "removing log file '" << file_name << "'.";
           fs::remove(entry);
           ++removed;
         }
-      }
-      catch (const fs::filesystem_error& ex) {
+      } catch (const fs::filesystem_error& ex) {
         LOG(ERROR) << ex.what();
         success = false;
       }

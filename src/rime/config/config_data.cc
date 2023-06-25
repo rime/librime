@@ -34,8 +34,7 @@ bool ConfigData::LoadFromStream(std::istream& stream) {
   try {
     YAML::Node doc = YAML::Load(stream);
     root = ConvertFromYaml(doc, nullptr);
-  }
-  catch (YAML::Exception& e) {
+  } catch (YAML::Exception& e) {
     LOG(ERROR) << "Error parsing YAML: " << e.what();
     return false;
   }
@@ -50,8 +49,7 @@ bool ConfigData::SaveToStream(std::ostream& stream) {
   try {
     YAML::Emitter emitter(stream);
     EmitYaml(root, &emitter, 0);
-  }
-  catch (YAML::Exception& e) {
+  } catch (YAML::Exception& e) {
     LOG(ERROR) << "Error emitting YAML: " << e.what();
     return false;
   }
@@ -72,8 +70,7 @@ bool ConfigData::LoadFromFile(const string& file_name,
   try {
     YAML::Node doc = YAML::LoadFile(file_name);
     root = ConvertFromYaml(doc, compiler);
-  }
-  catch (YAML::Exception& e) {
+  } catch (YAML::Exception& e) {
     LOG(ERROR) << "Error parsing YAML: " << e.what();
     return false;
   }
@@ -107,7 +104,8 @@ static const string kBefore("before");
 static const string kLast("last");
 static const string kNext("next");
 
-size_t ConfigData::ResolveListIndex(an<ConfigItem> item, const string& key,
+size_t ConfigData::ResolveListIndex(an<ConfigItem> item,
+                                    const string& key,
                                     bool read_only) {
   if (!IsListItemReference(key)) {
     return 0;
@@ -122,12 +120,10 @@ size_t ConfigData::ResolveListIndex(an<ConfigItem> item, const string& key,
   if (key.compare(cursor, kNext.length(), kNext) == 0) {
     cursor += kNext.length();
     index = list->size();
-  }
-  else if (key.compare(cursor, kBefore.length(), kBefore) == 0) {
+  } else if (key.compare(cursor, kBefore.length(), kBefore) == 0) {
     cursor += kBefore.length();
     will_insert = true;
-  }
-  else if (key.compare(cursor, kAfter.length(), kAfter) == 0) {
+  } else if (key.compare(cursor, kAfter.length(), kAfter) == 0) {
     cursor += kAfter.length();
     index += 1;  // after i == before i+1
     will_insert = true;
@@ -141,8 +137,7 @@ size_t ConfigData::ResolveListIndex(an<ConfigItem> item, const string& key,
     if (index != 0) {  // when list is empty, (before|after) last == 0
       --index;
     }
-  }
-  else {
+  } else {
     index += std::strtoul(key.c_str() + cursor, NULL, 10);
   }
   if (will_insert && !read_only) {
@@ -153,14 +148,10 @@ size_t ConfigData::ResolveListIndex(an<ConfigItem> item, const string& key,
 
 class ConfigDataRootRef : public ConfigItemRef {
  public:
-  ConfigDataRootRef(ConfigData* data) : ConfigItemRef(nullptr), data_(data) {
-  }
-  an<ConfigItem> GetItem() const override {
-    return data_->root;
-  }
-  void SetItem(an<ConfigItem> item) override {
-    data_->root = item;
-  }
+  ConfigDataRootRef(ConfigData* data) : ConfigItemRef(nullptr), data_(data) {}
+  an<ConfigItem> GetItem() const override { return data_->root; }
+  void SetItem(an<ConfigItem> item) override { data_->root = item; }
+
  private:
   ConfigData* data_;
 };
@@ -245,16 +236,15 @@ an<ConfigItem> ConfigData::Traverse(const string& path) {
     }
     if (node_type == ConfigItem::kList) {
       p = As<ConfigList>(p)->GetAt(list_index);
-    }
-    else {
+    } else {
       p = As<ConfigMap>(p)->Get(*it);
     }
   }
   return p;
 }
 
-an<ConfigItem> ConvertFromYaml(
-    const YAML::Node& node, ConfigCompiler* compiler) {
+an<ConfigItem> ConvertFromYaml(const YAML::Node& node,
+                               ConfigCompiler* compiler) {
   if (YAML::NodeType::Null == node.Type()) {
     return nullptr;
   }
@@ -273,8 +263,7 @@ an<ConfigItem> ConvertFromYaml(
       }
     }
     return config_list;
-  }
-  else if (YAML::NodeType::Map == node.Type()) {
+  } else if (YAML::NodeType::Map == node.Type()) {
     auto config_map = New<ConfigMap>();
     for (auto it = node.begin(), end = node.end(); it != end; ++it) {
       string key = it->first.as<string>();
@@ -297,22 +286,21 @@ an<ConfigItem> ConvertFromYaml(
 void EmitScalar(const string& str_value, YAML::Emitter* emitter) {
   if (str_value.find_first_of("\r\n") != string::npos) {
     *emitter << YAML::Literal;
-  }
-  else if (!boost::algorithm::all(str_value,
-                             boost::algorithm::is_alnum() ||
-                             boost::algorithm::is_any_of("_."))) {
+  } else if (!boost::algorithm::all(str_value,
+                                    boost::algorithm::is_alnum() ||
+                                        boost::algorithm::is_any_of("_."))) {
     *emitter << YAML::DoubleQuoted;
   }
   *emitter << str_value;
 }
 
 void EmitYaml(an<ConfigItem> node, YAML::Emitter* emitter, int depth) {
-  if (!node || !emitter) return;
+  if (!node || !emitter)
+    return;
   if (node->type() == ConfigItem::kScalar) {
     auto value = As<ConfigValue>(node);
     EmitScalar(value->str(), emitter);
-  }
-  else if (node->type() == ConfigItem::kList) {
+  } else if (node->type() == ConfigItem::kList) {
     if (depth >= 3) {
       *emitter << YAML::Flow;
     }
@@ -322,8 +310,7 @@ void EmitYaml(an<ConfigItem> node, YAML::Emitter* emitter, int depth) {
       EmitYaml(*it, emitter, depth + 1);
     }
     *emitter << YAML::EndSeq;
-  }
-  else if (node->type() == ConfigItem::kMap) {
+  } else if (node->type() == ConfigItem::kMap) {
     if (depth >= 3) {
       *emitter << YAML::Flow;
     }

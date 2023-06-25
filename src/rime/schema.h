@@ -45,10 +45,10 @@ class Schema {
 class SchemaComponent : public Config::Component {
  public:
   SchemaComponent(Config::Component* config_component)
-      : config_component_(config_component) {
-  }
+      : config_component_(config_component) {}
   // NOTE: creates `Config` for the schema
   Config* Create(const string& schema_id) override;
+
  private:
   // we do not own the config component, do not try to deallocate it
   // also be careful that there is no guarantee it will outlive us

@@ -66,35 +66,32 @@ ProcessResult ChordComposer::ProcessFunctionKey(const KeyEvent& key_event) {
 
 // Note: QWERTY layout only.
 static const char map_to_base_layer[] = {
-  " 1'3457'908=,-./"
-  "0123456789;;,=./"
-  "2abcdefghijklmno"
-  "pqrstuvwxyz[\\]6-"
-  "`abcdefghijklmno"
-  "pqrstuvwxyz[\\]`"
-};
+    " 1'3457'908=,-./"
+    "0123456789;;,=./"
+    "2abcdefghijklmno"
+    "pqrstuvwxyz[\\]6-"
+    "`abcdefghijklmno"
+    "pqrstuvwxyz[\\]`"};
 
 inline static int get_base_layer_key_code(const KeyEvent& key_event) {
   int ch = key_event.keycode();
   bool is_shift = key_event.shift();
-  return (is_shift && ch >= 0x20 && ch <= 0x7e)
-      ? map_to_base_layer[ch - 0x20] : ch;
+  return (is_shift && ch >= 0x20 && ch <= 0x7e) ? map_to_base_layer[ch - 0x20]
+                                                : ch;
 }
 
 ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
   if (key_event.ctrl() || key_event.alt()) {
     raw_sequence_.clear();
   }
-  if ((key_event.ctrl() && !use_control_) ||
-      (key_event.alt() && !use_alt_) ||
+  if ((key_event.ctrl() && !use_control_) || (key_event.alt() && !use_alt_) ||
       (key_event.shift() && !use_shift_)) {
     ClearChord();
     return kNoop;
   }
   int ch = get_base_layer_key_code(key_event);
   // non chording key
-  if (std::find(chording_keys_.begin(),
-                chording_keys_.end(),
+  if (std::find(chording_keys_.begin(), chording_keys_.end(),
                 KeyEvent{ch, 0}) == chording_keys_.end()) {
     ClearChord();
     return kNoop;
@@ -226,8 +223,8 @@ void ChordComposer::OnUnhandledKey(Context* ctx, const KeyEvent& key) {
   // directly committed ascii should not be captured into the raw sequence
   // test case:
   // 3.14{Return} should not commit an extra sequence '14'
-  if ((key.modifier() & ~kShiftMask) == 0 &&
-      key.keycode() >= 0x20 && key.keycode() <= 0x7e) {
+  if ((key.modifier() & ~kShiftMask) == 0 && key.keycode() >= 0x20 &&
+      key.keycode() <= 0x7e) {
     raw_sequence_.clear();
     DLOG(INFO) << "clear raw sequence.";
   }

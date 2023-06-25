@@ -38,9 +38,7 @@ class CharsetFilter : public Filter, TagMatching {
   virtual an<Translation> Apply(an<Translation> translation,
                                 CandidateList* candidates);
 
-  virtual bool AppliesToSegment(Segment* segment) {
-    return TagsMatch(segment);
-  }
+  virtual bool AppliesToSegment(Segment* segment) { return TagsMatch(segment); }
 
   // return true to accept, false to reject the tested item
   static bool FilterText(const string& text);

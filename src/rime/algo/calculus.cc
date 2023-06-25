@@ -11,8 +11,8 @@
 
 namespace rime {
 
-const double kAbbreviationPenalty = -0.6931471805599453; // log(0.5)
-const double kFuzzySpellingPenalty = -0.6931471805599453; // log(0.5)
+const double kAbbreviationPenalty = -0.6931471805599453;   // log(0.5)
+const double kFuzzySpellingPenalty = -0.6931471805599453;  // log(0.5)
 
 Calculus::Calculus() {
   Register("xlit", &Transliteration::Parse);
@@ -23,8 +23,7 @@ Calculus::Calculus() {
   Register("abbrev", &Abbreviation::Parse);
 }
 
-void Calculus::Register(const string& token,
-                        Calculation::Factory* factory) {
+void Calculus::Register(const string& token, Calculation::Factory* factory) {
   factories_[token] = factory;
 }
 
@@ -55,8 +54,7 @@ Calculation* Transliteration::Parse(const vector<string>& args) {
   const char* pr = right.c_str();
   uint32_t cl, cr;
   map<uint32_t, uint32_t> char_map;
-  while ((cl = utf8::unchecked::next(pl)),
-         (cr = utf8::unchecked::next(pr)),
+  while ((cl = utf8::unchecked::next(pl)), (cr = utf8::unchecked::next(pr)),
          cl && cr) {
     char_map[cl] = cr;
   }
@@ -113,8 +111,7 @@ Calculation* Transformation::Parse(const vector<string>& args) {
 bool Transformation::Apply(Spelling* spelling) {
   if (!spelling || spelling->str.empty())
     return false;
-  string result = boost::regex_replace(spelling->str,
-                                       pattern_, replacement_);
+  string result = boost::regex_replace(spelling->str, pattern_, replacement_);
   if (result == spelling->str)
     return false;
   spelling->str.swap(result);

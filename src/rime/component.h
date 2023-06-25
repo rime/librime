@@ -34,9 +34,7 @@ struct Class {
 template <class T>
 struct Component : public T::Component {
  public:
-  T* Create(typename T::Initializer arg) {
-    return new T(arg);
-  }
+  T* Create(typename T::Initializer arg) { return new T(arg); }
 };
 
 }  // namespace rime

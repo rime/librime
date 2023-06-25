@@ -12,13 +12,13 @@
 
 namespace rime {
 
-Deployer::Deployer() : shared_data_dir("."),
-                       user_data_dir("."),
-                       prebuilt_data_dir("build"),
-                       staging_dir("build"),
-                       sync_dir("sync"),
-                       user_id("unknown") {
-}
+Deployer::Deployer()
+    : shared_data_dir("."),
+      user_data_dir("."),
+      prebuilt_data_dir("build"),
+      staging_dir("build"),
+      sync_dir("sync"),
+      user_id("unknown") {}
 
 Deployer::~Deployer() {
   JoinWorkThread();
@@ -86,15 +86,14 @@ bool Deployer::Run() {
         ++success;
       else
         ++failure;
-      //boost::this_thread::interruption_point();
+      // boost::this_thread::interruption_point();
     }
-    LOG(INFO) << success + failure << " tasks ran: "
-              << success << " success, " << failure << " failure.";
+    LOG(INFO) << success + failure << " tasks ran: " << success << " success, "
+              << failure << " failure.";
     message_sink_("deploy", !failure ? "success" : "failure");
     // new tasks could have been enqueued while we were sending the message.
     // before quitting, double check if there is nothing left to do.
-  }
-  while (HasPendingTasks());
+  } while (HasPendingTasks());
   return !failure;
 }
 
@@ -107,8 +106,8 @@ bool Deployer::StartWork(bool maintenance_mode) {
   if (pending_tasks_.empty()) {
     return false;
   }
-  LOG(INFO) << "starting work thread for "
-            << pending_tasks_.size() << " tasks.";
+  LOG(INFO) << "starting work thread for " << pending_tasks_.size()
+            << " tasks.";
   work_ = std::async(std::launch::async, [this] { Run(); });
   return work_.valid();
 }

@@ -27,14 +27,12 @@ void CommitEntry::Clear() {
 
 void CommitEntry::AppendPhrase(const an<Phrase>& phrase) {
   text += phrase->text();
-  code.insert(code.end(),
-              phrase->code().begin(), phrase->code().end());
+  code.insert(code.end(), phrase->code().begin(), phrase->code().end());
   if (auto sentence = As<Sentence>(phrase)) {
     for (const DictEntry& e : sentence->components()) {
       elements.push_back(&e);
     }
-  }
-  else {
+  } else {
     elements.push_back(&phrase->entry());
   }
 }
@@ -69,13 +67,13 @@ Memory::Memory(const Ticket& ticket) {
   // user dictionary is named after language; dictionary name may have an
   // optional suffix separated from the language component by dot.
   language_.reset(
-      user_dict_ ? new Language{user_dict_->name()} :
-      dict_ ? new Language{Language::get_language_component(dict_->name())} :
-      nullptr);
+      user_dict_ ? new Language{user_dict_->name()}
+      : dict_    ? new Language{Language::get_language_component(dict_->name())}
+                 : nullptr);
 
   Context* ctx = ticket.engine->context();
-  commit_connection_ = ctx->commit_notifier().connect(
-      [this](Context* ctx) { OnCommit(ctx); });
+  commit_connection_ =
+      ctx->commit_notifier().connect([this](Context* ctx) { OnCommit(ctx); });
   delete_connection_ = ctx->delete_notifier().connect(
       [this](Context* ctx) { OnDeleteEntry(ctx); });
   unhandled_key_connection_ = ctx->unhandled_key_notifier().connect(
@@ -101,13 +99,13 @@ bool Memory::DiscardSession() {
 }
 
 void Memory::OnCommit(Context* ctx) {
-  if (!user_dict_|| user_dict_->readonly())
+  if (!user_dict_ || user_dict_->readonly())
     return;
   StartSession();
   CommitEntry commit_entry(this);
   for (auto& seg : ctx->composition()) {
-    auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(
-            seg.GetSelectedCandidate()));
+    auto phrase =
+        As<Phrase>(Candidate::GetGenuineCandidate(seg.GetSelectedCandidate()));
     bool recognized = Language::intelligible(phrase, this);
     if (recognized) {
       commit_entry.AppendPhrase(phrase);
@@ -120,13 +118,10 @@ void Memory::OnCommit(Context* ctx) {
 }
 
 void Memory::OnDeleteEntry(Context* ctx) {
-  if (!user_dict_ ||
-      user_dict_->readonly() ||
-      !ctx ||
-      !ctx->HasMenu())
+  if (!user_dict_ || user_dict_->readonly() || !ctx || !ctx->HasMenu())
     return;
-  auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(
-          ctx->GetSelectedCandidate()));
+  auto phrase =
+      As<Phrase>(Candidate::GetGenuineCandidate(ctx->GetSelectedCandidate()));
   if (Language::intelligible(phrase, this)) {
     const DictEntry& entry(phrase->entry());
     LOG(INFO) << "deleting entry: '" << entry.text << "'.";

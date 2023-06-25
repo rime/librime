@@ -20,7 +20,8 @@ struct Ticket;
 
 class SymDeleteCollector {
  public:
-  explicit SymDeleteCollector(const Syllabary& syllabary): syllabary_(syllabary) {}
+  explicit SymDeleteCollector(const Syllabary& syllabary)
+      : syllabary_(syllabary) {}
 
   Script Collect(size_t edit_distance);
 
@@ -41,12 +42,13 @@ class Corrections : public hash_map<SyllableId, Correction> {
   /// \param syllable
   /// \param correction
   inline void Alter(SyllableId syllable, Correction correction) {
-    if (find(syllable) == end() || correction.distance < (*this)[syllable].distance) {
+    if (find(syllable) == end() ||
+        correction.distance < (*this)[syllable].distance) {
       (*this)[syllable] = correction;
     }
   };
 };
-} // namespace corrector
+}  // namespace corrector
 
 /**
  * The unify interface of correctors
@@ -54,9 +56,9 @@ class Corrections : public hash_map<SyllableId, Correction> {
 class Corrector : public Class<Corrector, const Ticket&> {
  public:
   virtual ~Corrector() = default;
-  RIME_API virtual void ToleranceSearch(const Prism &prism,
-                                        const string &key,
-                                        corrector::Corrections *results,
+  RIME_API virtual void ToleranceSearch(const Prism& prism,
+                                        const string& key,
+                                        corrector::Corrections* results,
                                         size_t tolerance) = 0;
 };
 
@@ -64,23 +66,24 @@ class CorrectorComponent : public Corrector::Component {
  public:
   CorrectorComponent();
   ~CorrectorComponent() override = default;
-  Corrector *Create(const Ticket& ticket) noexcept override;
+  Corrector* Create(const Ticket& ticket) noexcept override;
+
  private:
-  template<class ...Cs>
-  static Corrector *Combine(Cs ...args);
+  template <class... Cs>
+  static Corrector* Combine(Cs... args);
 
   the<ResourceResolver> resolver_;
 
   class Unified : public Corrector {
    public:
     Unified() = default;
-    RIME_API void ToleranceSearch(const Prism &prism,
-                                  const string &key,
-                                  corrector::Corrections *results,
+    RIME_API void ToleranceSearch(const Prism& prism,
+                                  const string& key,
+                                  corrector::Corrections* results,
                                   size_t tolerance) override;
-    template<class ...Cs>
-    void Add(Cs ...args) {
-      contents = { args... };
+    template <class... Cs>
+    void Add(Cs... args) {
+      contents = {args...};
     }
 
    private:
@@ -88,8 +91,7 @@ class CorrectorComponent : public Corrector::Component {
   };
 };
 
-class EditDistanceCorrector : public Corrector,
-                              public Prism {
+class EditDistanceCorrector : public Corrector, public Prism {
  public:
   ~EditDistanceCorrector() override = default;
   RIME_API explicit EditDistanceCorrector(const string& file_name);
@@ -99,31 +101,34 @@ class EditDistanceCorrector : public Corrector,
                       uint32_t dict_file_checksum = 0,
                       uint32_t schema_file_checksum = 0);
 
-  RIME_API void ToleranceSearch(const Prism &prism,
-                                const string &key,
-                                corrector::Corrections *results,
+  RIME_API void ToleranceSearch(const Prism& prism,
+                                const string& key,
+                                corrector::Corrections* results,
                                 size_t tolerance) override;
-  corrector::Distance LevenshteinDistance(const std::string &s1, const std::string &s2);
-  corrector::Distance RestrictedDistance(const std::string& s1, const std::string& s2, corrector::Distance threshold);
+  corrector::Distance LevenshteinDistance(const std::string& s1,
+                                          const std::string& s2);
+  corrector::Distance RestrictedDistance(const std::string& s1,
+                                         const std::string& s2,
+                                         corrector::Distance threshold);
 };
 
 class NearSearchCorrector : public Corrector {
  public:
   NearSearchCorrector() = default;
   ~NearSearchCorrector() override = default;
-  RIME_API void ToleranceSearch(const Prism &prism,
-                                const string &key,
-                                corrector::Corrections *results,
+  RIME_API void ToleranceSearch(const Prism& prism,
+                                const string& key,
+                                corrector::Corrections* results,
                                 size_t tolerance) override;
 };
 
-template<class... Cs>
-Corrector *CorrectorComponent::Combine(Cs ...args) {
+template <class... Cs>
+Corrector* CorrectorComponent::Combine(Cs... args) {
   auto u = new Unified();
   u->Add(args...);
   return u;
 }
 
-} // namespace rime
+}  // namespace rime
 
-#endif //RIME_CORRECTOR_H
+#endif  // RIME_CORRECTOR_H

@@ -19,6 +19,7 @@ class DetectModifications : public DeploymentTask {
   // Unlike other tasks, its return value indicates whether modifications
   // has been detected and workspace needs update.
   bool Run(Deployer* deployer);
+
  protected:
   vector<string> data_dirs_;
 };
@@ -38,8 +39,8 @@ class WorkspaceUpdate : public DeploymentTask {
 
  protected:
   string GetSchemaPath(Deployer* deployer,
-                            const string& schema_id,
-                            bool prefer_shared_copy);
+                       const string& schema_id,
+                       bool prefer_shared_copy);
 };
 
 // update a specific schema, build corresponding dictionary
@@ -59,8 +60,7 @@ class SchemaUpdate : public DeploymentTask {
 // update a specific config file
 class ConfigFileUpdate : public DeploymentTask {
  public:
-  ConfigFileUpdate(const string& file_name,
-                   const string& version_key)
+  ConfigFileUpdate(const string& file_name, const string& version_key)
       : file_name_(file_name), version_key_(version_key) {}
   ConfigFileUpdate(TaskInitializer arg);
   bool Run(Deployer* deployer);
