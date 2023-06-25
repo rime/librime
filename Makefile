@@ -52,6 +52,12 @@ librime: release
 install-librime: install
 uninstall-librime: uninstall
 
+ifdef NOPARALLEL
+export MAKEFLAGS+=" -j1 "
+else
+export MAKEFLAGS+=" -j$(( $(nproc) + 1)) "
+endif
+
 librime-static:
 	cmake . -B$(build) \
 	-DCMAKE_INSTALL_PREFIX=$(prefix) \
