@@ -69,6 +69,9 @@ jobs:
             share
           key: ${{ runner.os }}${{ inputs.build_variant }}-deps-${{ hashFiles('submodule-status') }}
 
+      - name: Install ninja-build tool
+        uses: seanmiddleditch/gha-setup-ninja@v3
+
       - name: Build dependencies
         if: steps.cache-deps.outputs.cache-hit != 'true'
         run: make xcode/deps
