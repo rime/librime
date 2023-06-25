@@ -25,4 +25,6 @@ jobs:
         run: ./action-install-linux.sh
 
       - name: Build and test
-        run: make test
+        run: |
+          export CMAKE_GENERATOR=Ninja
+          make test
