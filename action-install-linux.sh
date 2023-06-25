@@ -17,6 +17,7 @@ sudo apt update -y
 # https://bugs.launchpad.net/ubuntu/+source/google-glog/+bug/1991919
 # https://github.com/kadalu-tech/pkgs/pull/2/files#r1001042597
 sudo apt install -y libunwind-dev
+sudo apt install -y ninja-build
 sudo apt install -y ${dep_packages[@]}
 make deps/gtest
 make -C deps/opencc build
