@@ -23,11 +23,15 @@ jobs:
           repository: ${{ inputs.repository }}
           submodules: recursive
 
+      - name: Install ninja-build tool
+        uses: seanmiddleditch/gha-setup-ninja@v3
+
       - name: Configure build environment
         run: |
           copy env.vs2022.bat env.bat
           $git_ref_name = git describe --always
           echo "git_ref_name=$git_ref_name" >> $env:GITHUB_ENV
+          echo "CMAKE_GENERATOR=Ninja" >> $env:GITHUB_ENV
 
       - name: Cache Boost
         id: cache-boost
