@@ -194,6 +194,7 @@ if defined PLATFORM_TOOLSET (
 )
 set deps_cmake_flags=%common_cmake_flags%^
  -DCMAKE_CONFIGURATION_TYPES:STRING="%build_config%"^
+ -DCMAKE_BUILD_TYPE:STRING="%build_config%"^
  -DCMAKE_CXX_FLAGS_RELEASE:STRING="/MT /O2 /Ob2 /DNDEBUG"^
  -DCMAKE_C_FLAGS_RELEASE:STRING="/MT /O2 /Ob2 /DNDEBUG"^
  -DCMAKE_CXX_FLAGS_DEBUG:STRING="/MTd /Od"^
@@ -273,6 +274,7 @@ set rime_cmake_flags=%common_cmake_flags%^
  -DENABLE_LOGGING=%enable_logging%^
  -DBOOST_USE_CXX11=ON^
  -DCMAKE_CONFIGURATION_TYPES="%build_config%"^
+ -DCMAKE_BUILD_TYPE="%build_config%"^
  -DCMAKE_INSTALL_PREFIX:PATH="%RIME_ROOT%\dist"
 
 echo on
