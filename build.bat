@@ -293,7 +293,7 @@ if errorlevel 1 goto error
 if "%build_test%" == "ON" (
   copy /y dist\lib\rime.dll build\test
   pushd build\test
-  .\Release\rime_test.exe || goto error
+  .\Release\rime_test.exe || .\rime_test.exe || goto error
   popd
 )
 
