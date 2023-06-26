@@ -209,7 +209,7 @@ if %build_deps% == 1 (
   -DWITH_GFLAGS:BOOL=OFF^
   -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"
   if errorlevel 1 goto error
-  cmake --build cmake-%build_dir% --config %build_config% --target INSTALL
+  cmake --build cmake-%build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
   popd
 
@@ -219,7 +219,7 @@ if %build_deps% == 1 (
   -DLEVELDB_BUILD_BENCHMARKS:BOOL=OFF^
   -DLEVELDB_BUILD_TESTS:BOOL=OFF
   if errorlevel 1 goto error
-  cmake --build %build_dir% --config %build_config% --target INSTALL
+  cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
   popd
 
@@ -232,7 +232,7 @@ if %build_deps% == 1 (
   -DYAML_CPP_BUILD_TESTS:BOOL=OFF^
   -DYAML_CPP_BUILD_TOOLS:BOOL=OFF
   if errorlevel 1 goto error
-  cmake --build %build_dir% --config %build_config% --target INSTALL
+  cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
   popd
 
@@ -241,7 +241,7 @@ if %build_deps% == 1 (
   cmake . -B%build_dir% %deps_cmake_flags%^
   -DBUILD_GMOCK:BOOL=OFF
   if errorlevel 1 goto error
-  cmake --build %build_dir% --config %build_config% --target INSTALL
+  cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
   popd
 
@@ -249,7 +249,7 @@ if %build_deps% == 1 (
   pushd deps\marisa-trie
   cmake .. -B%build_dir% %deps_cmake_flags%
   if errorlevel 1 goto error
-  cmake --build %build_dir% --config %build_config% --target INSTALL
+  cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
   popd
 
@@ -259,7 +259,7 @@ if %build_deps% == 1 (
   -DBUILD_SHARED_LIBS=OFF^
   -DBUILD_TESTING=OFF
   if errorlevel 1 goto error
-  cmake --build %build_dir% --config %build_config% --target INSTALL
+  cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
   popd
 )
@@ -284,7 +284,7 @@ echo.
 echo building librime.
 echo.
 echo on
-cmake --build %build_dir% --config %build_config% --target INSTALL
+cmake --build %build_dir% --config %build_config% --target install
 @echo off
 if errorlevel 1 goto error
 
