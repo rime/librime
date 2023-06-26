@@ -29,6 +29,9 @@ jobs:
           $git_ref_name = git describe --always
           echo "git_ref_name=$git_ref_name" >> $env:GITHUB_ENV
 
+      - name: Install ninja-build tool
+        uses: seanmiddleditch/gha-setup-ninja@v3
+
       - name: Cache Boost
         id: cache-boost
         uses: actions/cache@v3
@@ -65,12 +68,16 @@ jobs:
 
       - name: Build dependencies
         if: steps.cache-deps.outputs.cache-hit != 'true'
+        env:
+          CMAKE_GENERATOR: Ninja
         run: .\build.bat deps
 
       - name: Install Rime plugins
         run: .\action-install-plugins-windows.bat
 
       - name: Build and test
+        env:
+          CMAKE_GENERATOR: Ninja
         run: .\build.bat test
 
       - name: Create distributable
