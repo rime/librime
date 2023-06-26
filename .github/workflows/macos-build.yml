@@ -26,9 +26,13 @@ jobs:
           repository: ${{ inputs.repository }}
           submodules: recursive
 
+      - name: Install ninja-build tool
+        uses: seanmiddleditch/gha-setup-ninja@v3
+
       - name: Configure build environment
         run: |
           echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV
+          echo CMAKE_GENERATOR="Ninja" >> $GITHUB_ENV
 
       - name: Configure build variant
         if: contains(inputs.build_variant, '-universal')
@@ -69,22 +73,15 @@ jobs:
             share
           key: ${{ runner.os }}${{ inputs.build_variant }}-deps-${{ hashFiles('submodule-status') }}
 
-      - name: Install ninja-build tool
-        uses: seanmiddleditch/gha-setup-ninja@v3
-
       - name: Build dependencies
         if: steps.cache-deps.outputs.cache-hit != 'true'
-        run: |
-          export CMAKE_GENERATOR=Ninja
-          make deps
+        run: make deps
 
       - name: Install Rime plugins
         run: ./action-install-plugins-macos.sh
 
       - name: Build and test
-        run: |
-          export CMAKE_GENERATOR=Ninja
-          make test
+        run: make test
 
       - name: Create distributable
         run: |
