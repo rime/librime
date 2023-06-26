@@ -6,10 +6,18 @@ rem REQUIRED: path to Boost source directory
 if not defined BOOST_ROOT set BOOST_ROOT=%RIME_ROOT%\deps\boost_1_78_0
 
 rem architecture, Visual Studio version and platform toolset
-set ARCH=Win32
-set BJAM_TOOLSET=msvc-14.3
-set CMAKE_GENERATOR="Visual Studio 17 2022"
-set PLATFORM_TOOLSET=v143
+if not defined CMAKE_GENERATOR (
+    set ARCH=Win32
+    set BJAM_TOOLSET=msvc-14.3
+    set CMAKE_GENERATOR="Visual Studio 17 2022"
+    set PLATFORM_TOOLSET=v143
+) else (
+    set "VSVEROPT=-version [17.0^,18.0^)"
+    call ./env.vswhere.bat x86
+    set VSVEROPT=
+    set CXX=cl
+    set CC=cl
+)
 
 rem OPTIONAL: path to additional build tools
 rem set DEVTOOLS_PATH=%ProgramFiles%\Git\cmd;%ProgramFiles%\CMake\bin;C:\Python27;
