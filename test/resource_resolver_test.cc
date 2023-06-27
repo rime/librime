@@ -1,9 +1,9 @@
 #include <fstream>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <gtest/gtest.h>
 #include <rime/resource.h>
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 using namespace rime;
 
 static const ResourceType kMineralsType = ResourceType{
@@ -17,7 +17,7 @@ TEST(RimeResourceResolverTest, ResolvePath) {
   rr.set_root_path("/starcraft");
   auto actual = rr.ResolvePath("enough");
   fs::path expected =
-      fs::system_complete(fs::current_path()).root_name().string() +
+      fs::absolute(fs::current_path()).root_name().string() +
       "/starcraft/not_enough.minerals";
   EXPECT_TRUE(actual.is_absolute());
   EXPECT_TRUE(expected == actual);

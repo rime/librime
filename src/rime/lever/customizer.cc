@@ -11,7 +11,7 @@
 #include <rime/algo/utilities.h>
 #include <rime/lever/customizer.h>
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 namespace rime {
 
