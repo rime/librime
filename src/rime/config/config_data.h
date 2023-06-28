@@ -30,7 +30,8 @@ class ConfigData {
   static string JoinPath(const vector<string>& keys);
   static bool IsListItemReference(const string& key);
   static string FormatListIndex(size_t index);
-  static size_t ResolveListIndex(an<ConfigItem> list, const string& key,
+  static size_t ResolveListIndex(an<ConfigItem> list,
+                                 const string& key,
                                  bool read_only = false);
 
   const string& file_name() const { return file_name_; }

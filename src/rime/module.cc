@@ -10,8 +10,7 @@
 
 namespace rime {
 
-void ModuleManager::Register(const string& name,
-                              RimeModule* module) {
+void ModuleManager::Register(const string& name, RimeModule* module) {
   map_[name] = module;
 }
 
@@ -24,16 +23,14 @@ RimeModule* ModuleManager::Find(const string& name) {
 }
 
 void ModuleManager::LoadModule(RimeModule* module) {
-  if (!module ||
-      loaded_.find(module) != loaded_.end()) {
+  if (!module || loaded_.find(module) != loaded_.end()) {
     return;
   }
   DLOG(INFO) << "loading module: " << module;
   loaded_.insert(module);
   if (module->initialize != NULL) {
     module->initialize();
-  }
-  else {
+  } else {
     LOG(WARNING) << "missing initialize() function in module: " << module;
   }
 }

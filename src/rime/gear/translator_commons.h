@@ -37,19 +37,11 @@ class Spans {
   size_t PreviousStop(size_t caret_pos) const;
   size_t NextStop(size_t caret_pos) const;
   size_t Count(size_t start_pos, size_t end_pos) const;
-  size_t Count() const {
-    return vertices_.empty() ? 0 : vertices_.size() - 1;
-  }
-  size_t start() const {
-    return vertices_.empty() ? 0 : vertices_.front();
-  }
-  size_t end() const {
-    return vertices_.empty() ? 0 : vertices_.back();
-  }
+  size_t Count() const { return vertices_.empty() ? 0 : vertices_.size() - 1; }
+  size_t start() const { return vertices_.empty() ? 0 : vertices_.front(); }
+  size_t end() const { return vertices_.empty() ? 0 : vertices_.back(); }
   bool HasVertex(size_t vertex) const;
-  void set_vertices(vector<size_t>&& vertices) {
-    vertices_ = vertices;
-  }
+  void set_vertices(vector<size_t>&& vertices) { vertices_ = vertices; }
 
  private:
   vector<size_t> vertices_;
@@ -75,19 +67,12 @@ class Phrase : public Candidate {
          size_t start,
          size_t end,
          const an<DictEntry>& entry)
-      : Candidate(type, start, end),
-        language_(language),
-        entry_(entry) {
-  }
+      : Candidate(type, start, end), language_(language), entry_(entry) {}
   const string& text() const { return entry_->text; }
   string comment() const { return entry_->comment; }
   string preedit() const { return entry_->preedit; }
-  void set_comment(const string& comment) {
-    entry_->comment = comment;
-  }
-  void set_preedit(const string& preedit) {
-    entry_->preedit = preedit;
-  }
+  void set_comment(const string& comment) { entry_->comment = comment; }
+  void set_preedit(const string& preedit) { entry_->preedit = preedit; }
   void set_syllabifier(an<PhraseSyllabifier> syllabifier) {
     syllabifier_ = syllabifier;
   }
@@ -97,8 +82,7 @@ class Phrase : public Candidate {
   const DictEntry& entry() const { return *entry_; }
   const Language* language() const { return language_; }
   Spans spans() {
-    return syllabifier_ ? syllabifier_->Syllabify(this)
-                        : Spans();
+    return syllabifier_ ? syllabifier_->Syllabify(this) : Spans();
   }
 
  protected:
@@ -122,20 +106,12 @@ class Sentence : public Phrase {
   void Extend(const DictEntry& another, size_t end_pos, double new_weight);
   void Offset(size_t offset);
 
-  bool empty() const {
-    return components_.empty();
-  }
+  bool empty() const { return components_.empty(); }
 
-  size_t size() const {
-    return components_.size();
-  }
+  size_t size() const { return components_.size(); }
 
-  const vector<DictEntry>& components() const {
-    return components_;
-  }
-  const vector<size_t>& word_lengths() const {
-    return word_lengths_;
-  }
+  const vector<DictEntry>& components() const { return components_; }
+  const vector<size_t>& word_lengths() const { return word_lengths_; }
 
  protected:
   vector<DictEntry> components_;

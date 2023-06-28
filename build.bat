@@ -34,6 +34,7 @@ set build_dir_base=build
 set build_dir_suffix=
 set build_config=Release
 set build_boost=0
+set build_boost_x86=0
 set build_boost_x64=0
 set build_boost_arm64=0
 set boost_build_variant=release
@@ -47,6 +48,10 @@ set enable_logging=ON
 if "%1" == "" goto end_parsing_cmdline_options
 if "%1" == "clean" set clean=1
 if "%1" == "boost" set build_boost=1
+if "%1" == "boost_x86" (
+  set build_boost=1
+  set build_boost_x86=1
+)
 if "%1" == "boost_x64" (
   set build_boost=1
   set build_boost_x64=1
@@ -134,12 +139,14 @@ set bjam_options=%bjam_options%^
  cxxflags="/Zc:threadSafeInit- "
 
 set bjam_options_x86=%bjam_options%^
- define=BOOST_USE_WINAPI_VERSION=0x0501
+ define=BOOST_USE_WINAPI_VERSION=0x0501^
+ architecture=x86^
+ address-model=32
 
 set bjam_options_x64=%bjam_options%^
  define=BOOST_USE_WINAPI_VERSION=0x0502^
- address-model=64^
- --stagedir=stage_x64
+ architecture=x86^
+ address-model=64
 
 set bjam_options_arm64=%bjam_options%^
  define=BOOST_USE_WINAPI_VERSION=0x0A00^
@@ -147,19 +154,30 @@ set bjam_options_arm64=%bjam_options%^
  address-model=64
 
 if %build_boost% == 1 (
+if %build_boost_x86% == 0 (
+if %build_boost_x64% == 0 (
+if %build_boost_arm64% == 0 (
+  rem default architecture
+  set build_boost_x86=1
+))))
+
+if %build_boost% == 1 (
   pushd %BOOST_ROOT%
   if not exist b2.exe call .\bootstrap.bat
   if errorlevel 1 goto error
 
-  if %build_boost_arm64% == 1 (
-    b2 %bjam_options_arm64% stage %boost_compiled_libs%
-  ) else (
+  if %build_boost_x86% == 1 (
     b2 %bjam_options_x86% stage %boost_compiled_libs%
+    if errorlevel 1 goto error
   )
-  if errorlevel 1 goto error
 
   if %build_boost_x64% == 1 (
     b2 %bjam_options_x64% stage %boost_compiled_libs%
+    if errorlevel 1 goto error
+  )
+
+  if %build_boost_arm64% == 1 (
+    b2 %bjam_options_arm64% stage %boost_compiled_libs%
     if errorlevel 1 goto error
   )
   popd

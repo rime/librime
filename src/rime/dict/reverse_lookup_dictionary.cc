@@ -28,9 +28,7 @@ const size_t kReverseFormatPrefixLen = sizeof(kReverseFormatPrefix) - 1;
 
 static const char* kStemKeySuffix = "\x1fstem";
 
-ReverseDb::ReverseDb(const string& file_name)
-    : MappedFile(file_name) {
-}
+ReverseDb::ReverseDb(const string& file_name) : MappedFile(file_name) {}
 
 bool ReverseDb::Load() {
   LOG(INFO) << "loading reversedb: " << file_name();
@@ -49,8 +47,8 @@ bool ReverseDb::Load() {
     Close();
     return false;
   }
-  if (strncmp(metadata_->format,
-              kReverseFormatPrefix, kReverseFormatPrefixLen)) {
+  if (strncmp(metadata_->format, kReverseFormatPrefix,
+              kReverseFormatPrefixLen)) {
     LOG(ERROR) << "invalid metadata.";
     Close();
     return false;
@@ -63,10 +61,10 @@ bool ReverseDb::Load() {
     return false;
   }
 
-  key_trie_.reset(new StringTable(metadata_->key_trie.get(),
-                                  metadata_->key_trie_size));
-  value_trie_.reset(new StringTable(metadata_->value_trie.get(),
-                                    metadata_->value_trie_size));
+  key_trie_.reset(
+      new StringTable(metadata_->key_trie.get(), metadata_->key_trie_size));
+  value_trie_.reset(
+      new StringTable(metadata_->value_trie.get(), metadata_->value_trie_size));
 
   return true;
 }
@@ -138,10 +136,9 @@ bool ReverseDb::Build(DictSettings* settings,
   const size_t kReservedSize = 1024;
   size_t key_trie_image_size = key_trie_builder.BinarySize();
   size_t value_trie_image_size = value_trie_builder.BinarySize();
-  size_t estimated_data_size = kReservedSize +
-      dict_settings.length() +
-      entry_count * sizeof(StringId) +
-      key_trie_image_size + value_trie_image_size;
+  size_t estimated_data_size = kReservedSize + dict_settings.length() +
+                               entry_count * sizeof(StringId) +
+                               key_trie_image_size + value_trie_image_size;
   if (!Create(estimated_data_size)) {
     LOG(ERROR) << "Error creating prism file '" << file_name() << "'.";
     return false;
@@ -155,7 +152,7 @@ bool ReverseDb::Build(DictSettings* settings,
   }
   metadata_->dict_file_checksum = dict_file_checksum;
   if (!dict_settings.empty()) {
-    if(!CopyString(dict_settings, &metadata_->dict_settings)) {
+    if (!CopyString(dict_settings, &metadata_->dict_settings)) {
       LOG(ERROR) << "Error saving dict settings.";
       return false;
     }
@@ -206,9 +203,7 @@ uint32_t ReverseDb::dict_file_checksum() const {
   return metadata_ ? metadata_->dict_file_checksum : 0;
 }
 
-ReverseLookupDictionary::ReverseLookupDictionary(an<ReverseDb> db)
-    : db_(db) {
-}
+ReverseLookupDictionary::ReverseLookupDictionary(an<ReverseDb> db) : db_(db) {}
 
 bool ReverseLookupDictionary::Load() {
   return db_ && (db_->IsOpen() || db_->Load());
@@ -217,11 +212,9 @@ bool ReverseLookupDictionary::Load() {
 bool ReverseLookupDictionary::ReverseLookup(const string& text,
                                             string* result) {
   return db_->Lookup(text, result);
-
 }
 
-bool ReverseLookupDictionary::LookupStems(const string& text,
-                                          string* result) {
+bool ReverseLookupDictionary::LookupStems(const string& text, string* result) {
   return db_->Lookup(text + kStemKeySuffix, result);
 }
 
@@ -239,18 +232,15 @@ an<DictSettings> ReverseLookupDictionary::GetDictSettings() {
   return settings;
 }
 
-static const ResourceType kReverseDbResourceType = {
-  "reverse_db", "", ".reverse.bin"
-};
+static const ResourceType kReverseDbResourceType = {"reverse_db", "",
+                                                    ".reverse.bin"};
 
 ReverseLookupDictionaryComponent::ReverseLookupDictionaryComponent()
-    : resource_resolver_(
-          Service::instance().CreateDeployedResourceResolver(
-              kReverseDbResourceType)) {
-}
+    : resource_resolver_(Service::instance().CreateDeployedResourceResolver(
+          kReverseDbResourceType)) {}
 
-ReverseLookupDictionary*
-ReverseLookupDictionaryComponent::Create(const string& dict_name) {
+ReverseLookupDictionary* ReverseLookupDictionaryComponent::Create(
+    const string& dict_name) {
   auto db = db_pool_[dict_name].lock();
   if (!db) {
     auto file_path = resource_resolver_->ResolvePath(dict_name).string();
@@ -260,13 +250,13 @@ ReverseLookupDictionaryComponent::Create(const string& dict_name) {
   return new ReverseLookupDictionary(db);
 };
 
-ReverseLookupDictionary*
-ReverseLookupDictionaryComponent::Create(const Ticket& ticket) {
-  if (!ticket.schema) return NULL;
+ReverseLookupDictionary* ReverseLookupDictionaryComponent::Create(
+    const Ticket& ticket) {
+  if (!ticket.schema)
+    return NULL;
   Config* config = ticket.schema->config();
   string dict_name;
-  if (!config->GetString(ticket.name_space + "/dictionary",
-                         &dict_name)) {
+  if (!config->GetString(ticket.name_space + "/dictionary", &dict_name)) {
     // missing!
     return NULL;
   }

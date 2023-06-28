@@ -36,8 +36,7 @@ bool Segment::Reopen(size_t caret_pos) {
       tags.erase(kPartialSelectionTag);
     }
     status = kGuess;
-  }
-  else {
+  } else {
     status = kVoid;
   }
   return true;
@@ -53,15 +52,13 @@ an<Candidate> Segment::GetSelectedCandidate() const {
   return GetCandidateAt(selected_index);
 }
 
-Segmentation::Segmentation() {
-}
+Segmentation::Segmentation() {}
 
 void Segmentation::Reset(const string& new_input) {
   DLOG(INFO) << "reset to " << size() << " segments.";
   // mark redo segmentation, while keeping user confirmed segments
   size_t diff_pos = 0;
-  while (diff_pos < input_.length() &&
-         diff_pos < new_input.length() &&
+  while (diff_pos < input_.length() && diff_pos < new_input.length() &&
          input_[diff_pos] == new_input[diff_pos])
     ++diff_pos;
   DLOG(INFO) << "diff pos: " << diff_pos;
@@ -100,17 +97,14 @@ bool Segmentation::AddSegment(Segment segment) {
   Segment& last = back();
   if (last.end > segment.end) {
     // rule two: always prefer the longer segment...
-  }
-  else if (last.end < segment.end) {
+  } else if (last.end < segment.end) {
     // ...and overwrite the shorter one
     last = segment;
-  }
-  else {
+  } else {
     // rule three: with segments equal in length, merge their tags
     set<string> result;
-    set_union(last.tags.begin(), last.tags.end(),
-                   segment.tags.begin(), segment.tags.end(),
-                   std::inserter(result, result.begin()));
+    set_union(last.tags.begin(), last.tags.end(), segment.tags.begin(),
+              segment.tags.end(), std::inserter(result, result.begin()));
     last.tags.swap(result);
   }
   return true;
@@ -159,8 +153,7 @@ size_t Segmentation::GetConfirmedPosition() const {
   return k;
 }
 
-std::ostream& operator<< (std::ostream& out,
-                          const Segmentation& segmentation) {
+std::ostream& operator<<(std::ostream& out, const Segmentation& segmentation) {
   out << "[" << segmentation.input();
   for (const Segment& segment : segmentation) {
     out << "|" << segment.start << "," << segment.end;

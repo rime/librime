@@ -23,9 +23,7 @@ class ConfigItem {
 
   ValueType type() const { return type_; }
 
-  virtual bool empty() const {
-    return type_ == kNull;
-  }
+  virtual bool empty() const { return type_ == kNull; }
 
  protected:
   ConfigItem(ValueType type) : type_(type) {}
@@ -55,9 +53,7 @@ class ConfigValue : public ConfigItem {
 
   const string& str() const { return value_; }
 
-  bool empty() const override {
-    return value_.empty();
-  }
+  bool empty() const override { return value_.empty(); }
 
  protected:
   string value_;
@@ -81,9 +77,7 @@ class ConfigList : public ConfigItem {
   Iterator begin();
   Iterator end();
 
-  bool empty() const override {
-    return seq_.empty();
-  }
+  bool empty() const override { return seq_.empty(); }
 
  protected:
   Sequence seq_;
@@ -105,9 +99,7 @@ class ConfigMap : public ConfigItem {
   Iterator begin();
   Iterator end();
 
-  bool empty() const override {
-    return map_.empty();
-  }
+  bool empty() const override { return map_.empty(); }
 
  protected:
   Map map_;
@@ -135,19 +127,15 @@ class ConfigItemRef {
  public:
   ConfigItemRef(ConfigData* data) : data_(data) {}
   virtual ~ConfigItemRef() = default;
-  operator an<ConfigItem> () const {
-    return GetItem();
-  }
-  an<ConfigItem> operator* () const {
-    return GetItem();
-  }
+  operator an<ConfigItem>() const { return GetItem(); }
+  an<ConfigItem> operator*() const { return GetItem(); }
   template <class T>
-  ConfigItemRef& operator= (const T& x) {
+  ConfigItemRef& operator=(const T& x) {
     SetItem(AsConfigItem(x, std::is_convertible<T, an<ConfigItem>>()));
     return *this;
   }
-  ConfigListEntryRef operator[] (size_t index);
-  ConfigMapEntryRef operator[] (const string& key);
+  ConfigListEntryRef operator[](size_t index);
+  ConfigMapEntryRef operator[](const string& key);
 
   RIME_API bool IsNull() const;
   bool IsValue() const;
@@ -184,14 +172,14 @@ class ConfigListEntryRef : public ConfigItemRef {
   ConfigListEntryRef(ConfigData* data, an<ConfigList> list, size_t index)
       : ConfigItemRef(data), list_(list), index_(index) {}
   using ConfigItemRef::operator=;
+
  protected:
-  an<ConfigItem> GetItem() const {
-    return list_->GetAt(index_);
-  }
+  an<ConfigItem> GetItem() const { return list_->GetAt(index_); }
   void SetItem(an<ConfigItem> item) {
     list_->SetAt(index_, item);
     set_modified();
   }
+
  private:
   an<ConfigList> list_;
   size_t index_;
@@ -202,24 +190,24 @@ class ConfigMapEntryRef : public ConfigItemRef {
   ConfigMapEntryRef(ConfigData* data, an<ConfigMap> map, const string& key)
       : ConfigItemRef(data), map_(map), key_(key) {}
   using ConfigItemRef::operator=;
+
  protected:
-  an<ConfigItem> GetItem() const {
-    return map_->Get(key_);
-  }
+  an<ConfigItem> GetItem() const { return map_->Get(key_); }
   void SetItem(an<ConfigItem> item) {
     map_->Set(key_, item);
     set_modified();
   }
+
  private:
   an<ConfigMap> map_;
   string key_;
 };
 
-inline ConfigListEntryRef ConfigItemRef::operator[] (size_t index) {
+inline ConfigListEntryRef ConfigItemRef::operator[](size_t index) {
   return ConfigListEntryRef(data_, AsList(), index);
 }
 
-inline ConfigMapEntryRef ConfigItemRef::operator[] (const string& key) {
+inline ConfigMapEntryRef ConfigItemRef::operator[](const string& key) {
   return ConfigMapEntryRef(data_, AsMap(), key);
 }
 

@@ -63,8 +63,7 @@ bool Context::PushInput(char ch) {
   if (caret_pos_ >= input_.length()) {
     input_.push_back(ch);
     caret_pos_ = input_.length();
-  }
-  else {
+  } else {
     input_.insert(caret_pos_, 1, ch);
     ++caret_pos_;
   }
@@ -76,8 +75,7 @@ bool Context::PushInput(const string& str) {
   if (caret_pos_ >= input_.length()) {
     input_ += str;
     caret_pos_ = input_.length();
-  }
-  else {
+  } else {
     input_.insert(caret_pos_, str);
     caret_pos_ += str.length();
   }
@@ -124,7 +122,7 @@ bool Context::Select(size_t index) {
 }
 
 bool Context::DeleteCandidate(
-    function<an<Candidate> (Segment& seg)> get_candidate) {
+    function<an<Candidate>(Segment& seg)> get_candidate) {
   if (composition_.empty())
     return false;
   Segment& seg(composition_.back());
@@ -138,16 +136,12 @@ bool Context::DeleteCandidate(
 
 bool Context::DeleteCandidate(size_t index) {
   return DeleteCandidate(
-      [index](Segment& seg) {
-        return seg.GetCandidateAt(index);
-      });
+      [index](Segment& seg) { return seg.GetCandidateAt(index); });
 }
 
 bool Context::DeleteCurrentSelection() {
   return DeleteCandidate(
-      [](Segment& seg) {
-        return seg.GetSelectedCandidate();
-      });
+      [](Segment& seg) { return seg.GetSelectedCandidate(); });
 }
 
 bool Context::ConfirmCurrentSelection() {
@@ -158,8 +152,7 @@ bool Context::ConfirmCurrentSelection() {
   if (auto cand = seg.GetSelectedCandidate()) {
     DLOG(INFO) << "Confirmed: '" << cand->text()
                << "', selected_index = " << seg.selected_index;
-  }
-  else {
+  } else {
     if (seg.end == seg.start) {
       // fluid_editor will confirm the whole sentence
       return false;
@@ -274,8 +267,7 @@ bool Context::get_option(const string& name) const {
     return false;
 }
 
-void Context::set_property(const string& name,
-                           const string& value) {
+void Context::set_property(const string& name, const string& value) {
   properties_[name] = value;
   property_update_notifier_(this, name);
 }
@@ -290,13 +282,12 @@ string Context::get_property(const string& name) const {
 
 void Context::ClearTransientOptions() {
   auto opt = options_.lower_bound("_");
-  while (opt != options_.end() &&
-         !opt->first.empty() && opt->first[0] == '_') {
+  while (opt != options_.end() && !opt->first.empty() && opt->first[0] == '_') {
     options_.erase(opt++);
   }
   auto prop = properties_.lower_bound("_");
-  while (prop != properties_.end() &&
-         !prop->first.empty() && prop->first[0] == '_') {
+  while (prop != properties_.end() && !prop->first.empty() &&
+         prop->first[0] == '_') {
     properties_.erase(prop++);
   }
 }

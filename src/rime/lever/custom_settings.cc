@@ -16,8 +16,9 @@ namespace fs = boost::filesystem;
 namespace rime {
 
 static string remove_suffix(const string& input, const string& suffix) {
-  return boost::ends_with(input, suffix) ?
-      input.substr(0, input.length() - suffix.length()) : input;
+  return boost::ends_with(input, suffix)
+             ? input.substr(0, input.length() - suffix.length())
+             : input;
 }
 
 static string custom_config_file(const string& config_id) {
@@ -27,15 +28,14 @@ static string custom_config_file(const string& config_id) {
 CustomSettings::CustomSettings(Deployer* deployer,
                                const string& config_id,
                                const string& generator_id)
-    : deployer_(deployer),
-      config_id_(config_id),
-      generator_id_(generator_id) {
-}
+    : deployer_(deployer), config_id_(config_id), generator_id_(generator_id) {}
 
 bool CustomSettings::Load() {
-  fs::path config_path = fs::path(deployer_->staging_dir) / (config_id_ + ".yaml");
+  fs::path config_path =
+      fs::path(deployer_->staging_dir) / (config_id_ + ".yaml");
   if (!config_.LoadFromFile(config_path.string())) {
-    config_path = fs::path(deployer_->prebuilt_data_dir) / (config_id_ + ".yaml");
+    config_path =
+        fs::path(deployer_->prebuilt_data_dir) / (config_id_ + ".yaml");
     if (!config_.LoadFromFile(config_path.string())) {
       LOG(WARNING) << "cannot find '" << config_id_ << ".yaml'.";
     }
@@ -73,8 +73,7 @@ an<ConfigMap> CustomSettings::GetMap(const string& key) {
   return config_.GetMap(key);
 }
 
-bool CustomSettings::Customize(const string& key,
-                               const an<ConfigItem>& item) {
+bool CustomSettings::Customize(const string& key, const an<ConfigItem>& item) {
   auto patch = custom_config_.GetMap("patch");
   if (!patch) {
     patch = New<ConfigMap>();

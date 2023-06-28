@@ -18,8 +18,7 @@ class ReverseLookupFilterTranslation : public CacheTranslation {
  public:
   ReverseLookupFilterTranslation(an<Translation> translation,
                                  ReverseLookupFilter* filter)
-      : CacheTranslation(translation), filter_(filter) {
-  }
+      : CacheTranslation(translation), filter_(filter) {}
   virtual an<Candidate> Peek();
 
  protected:
@@ -58,8 +57,8 @@ void ReverseLookupFilter::Initialize() {
   }
 }
 
-an<Translation> ReverseLookupFilter::Apply(
-    an<Translation> translation, CandidateList* candidates) {
+an<Translation> ReverseLookupFilter::Apply(an<Translation> translation,
+                                           CandidateList* candidates) {
   if (!initialized_) {
     Initialize();
   }

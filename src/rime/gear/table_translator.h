@@ -28,8 +28,7 @@ class TableTranslator : public Translator,
  public:
   TableTranslator(const Ticket& ticket);
 
-  virtual an<Translation> Query(const string& input,
-                                const Segment& segment);
+  virtual an<Translation> Query(const string& input, const Segment& segment);
   virtual bool Memorize(const CommitEntry& commit_entry);
 
   an<Translation> MakeSentence(const string& input,
@@ -52,7 +51,6 @@ class TableTranslator : public Translator,
 
 class TableTranslation : public Translation {
  public:
-
   TableTranslation(TranslatorOptions* options,
                    const Language* language,
                    const string& input,

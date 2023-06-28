@@ -29,22 +29,17 @@ struct Line {
 
   static const Line kEmpty;
 
-  bool empty() const {
-    return !predecessor && !entry;
-  }
+  bool empty() const { return !predecessor && !entry; }
 
-  string last_word() const {
-    return entry ? entry->text : string();
-  }
+  string last_word() const { return entry ? entry->text : string(); }
 
   struct Components {
     vector<const Line*> lines;
 
     Components(const Line* line) {
-      for (const Line* cursor = line;
-           !cursor->empty();
+      for (const Line* cursor = line; !cursor->empty();
            cursor = cursor->predecessor) {
-          lines.push_back(cursor);
+        lines.push_back(cursor);
       }
     }
 
@@ -56,9 +51,10 @@ struct Line {
 
   string context() const {
     // look back 2 words
-    return empty() ? string() :
-        !predecessor || predecessor->empty() ? last_word() :
-        predecessor->last_word() + last_word();
+    return empty() ? string()
+           : !predecessor || predecessor->empty()
+               ? last_word()
+               : predecessor->last_word() + last_word();
   }
 
   vector<size_t> word_lengths() const {
@@ -94,16 +90,18 @@ bool Poet::CompareWeight(const Line& one, const Line& other) {
 
 // returns true if one is less than other.
 bool Poet::LeftAssociateCompare(const Line& one, const Line& other) {
-  if (one.weight < other.weight) return true;
+  if (one.weight < other.weight)
+    return true;
   if (one.weight == other.weight) {
     auto one_word_lens = one.word_lengths();
     auto other_word_lens = other.word_lengths();
     // less words is more favorable
-    if (one_word_lens.size() > other_word_lens.size()) return true;
+    if (one_word_lens.size() > other_word_lens.size())
+      return true;
     if (one_word_lens.size() == other_word_lens.size()) {
       return std::lexicographical_compare(
-          one_word_lens.begin(), one_word_lens.end(),
-          other_word_lens.begin(), other_word_lens.end());
+          one_word_lens.begin(), one_word_lens.end(), other_word_lens.begin(),
+          other_word_lens.end());
     }
   }
   return false;
@@ -113,22 +111,24 @@ bool Poet::LeftAssociateCompare(const Line& one, const Line& other) {
 using LineCandidates = hash_map<string, Line>;
 
 template <int N>
-static vector<const Line*> find_top_candidates(
-    const LineCandidates& candidates, Poet::Compare compare) {
+static vector<const Line*> find_top_candidates(const LineCandidates& candidates,
+                                               Poet::Compare compare) {
   vector<const Line*> top;
   top.reserve(N + 1);
   for (const auto& candidate : candidates) {
     auto pos = std::upper_bound(
         top.begin(), top.end(), &candidate.second,
-        [&](const Line* a, const Line* b) { return compare(*b, *a); }); // desc
-    if (pos - top.begin() >= N) continue;
+        [&](const Line* a, const Line* b) { return compare(*b, *a); });  // desc
+    if (pos - top.begin() >= N)
+      continue;
     top.insert(pos, &candidate.second);
-    if (top.size() > N) top.pop_back();
+    if (top.size() > N)
+      top.pop_back();
   }
   return top;
 }
 
-using UpdateLineCandidate = function<void (const Line& candidate)>;
+using UpdateLineCandidate = function<void(const Line& candidate)>;
 
 struct BeamSearch {
   using State = LineCandidates;
@@ -169,9 +169,7 @@ struct BeamSearch {
 struct DynamicProgramming {
   using State = Line;
 
-  static void Initiate(State& initial_state) {
-    initial_state = Line::kEmpty;
-  }
+  static void Initiate(State& initial_state) { initial_state = Line::kEmpty; }
 
   static void ForEachCandidate(const State& state,
                                Poet::Compare compare,
@@ -201,38 +199,34 @@ an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
       continue;
     DLOG(INFO) << "start pos: " << start_pos;
     const auto& source_state = states[start_pos];
-    const auto update =
-        [this, &states, &sv, start_pos, total_length, &preceding_text]
-        (const Line& candidate) {
-          for (const auto& ev : sv.second) {
-            size_t end_pos = ev.first;
-            if (start_pos == 0 && end_pos == total_length)
-              continue;  // exclude single word from the result
-            DLOG(INFO) << "end pos: " << end_pos;
-            bool is_rear = end_pos == total_length;
-            auto& target_state = states[end_pos];
-            // extend candidates with dict entries on a valid edge.
-            const DictEntryList& entries = ev.second;
-            for (const auto& entry : entries) {
-              const string& context =
-                  candidate.empty() ? preceding_text : candidate.context();
-              double weight = candidate.weight +
-                              Grammar::Evaluate(context,
-                                                entry->text,
-                                                entry->weight,
-                                                is_rear,
-                                                grammar_.get());
-              Line new_line{&candidate, entry.get(), end_pos, weight};
-              Line& best = Strategy::BestLineToUpdate(target_state, new_line);
-              if (best.empty() || compare_(best, new_line)) {
-                DLOG(INFO) << "updated line ending at " << end_pos
-                           << " with text: ..." << new_line.last_word()
-                           << " weight: " << new_line.weight;
-                best = new_line;
-              }
-            }
+    const auto update = [this, &states, &sv, start_pos, total_length,
+                         &preceding_text](const Line& candidate) {
+      for (const auto& ev : sv.second) {
+        size_t end_pos = ev.first;
+        if (start_pos == 0 && end_pos == total_length)
+          continue;  // exclude single word from the result
+        DLOG(INFO) << "end pos: " << end_pos;
+        bool is_rear = end_pos == total_length;
+        auto& target_state = states[end_pos];
+        // extend candidates with dict entries on a valid edge.
+        const DictEntryList& entries = ev.second;
+        for (const auto& entry : entries) {
+          const string& context =
+              candidate.empty() ? preceding_text : candidate.context();
+          double weight = candidate.weight +
+                          Grammar::Evaluate(context, entry->text, entry->weight,
+                                            is_rear, grammar_.get());
+          Line new_line{&candidate, entry.get(), end_pos, weight};
+          Line& best = Strategy::BestLineToUpdate(target_state, new_line);
+          if (best.empty() || compare_(best, new_line)) {
+            DLOG(INFO) << "updated line ending at " << end_pos
+                       << " with text: ..." << new_line.last_word()
+                       << " weight: " << new_line.weight;
+            best = new_line;
           }
-        };
+        }
+      }
+    };
     Strategy::ForEachCandidate(source_state, compare_, update);
   }
   auto found = states.find(total_length);
@@ -241,7 +235,8 @@ an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
   const Line& best = Strategy::BestLineInState(found->second, compare_);
   auto sentence = New<Sentence>(language_);
   for (const auto* c : best.components()) {
-    if (!c->entry) continue;
+    if (!c->entry)
+      continue;
     sentence->Extend(*c->entry, c->end_pos, c->weight);
   }
   return sentence;
@@ -250,11 +245,10 @@ an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
 an<Sentence> Poet::MakeSentence(const WordGraph& graph,
                                 size_t total_length,
                                 const string& preceding_text) {
-  return grammar_ ?
-      MakeSentenceWithStrategy<BeamSearch>(
-          graph, total_length, preceding_text) :
-      MakeSentenceWithStrategy<DynamicProgramming>(
-          graph, total_length, preceding_text);
+  return grammar_ ? MakeSentenceWithStrategy<BeamSearch>(graph, total_length,
+                                                         preceding_text)
+                  : MakeSentenceWithStrategy<DynamicProgramming>(
+                        graph, total_length, preceding_text);
 }
 
 }  // namespace rime

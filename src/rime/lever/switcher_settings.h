@@ -26,12 +26,12 @@ class SwitcherSettings : public CustomSettings {
   using SchemaList = vector<SchemaInfo>;
   // a list of schema_ids
   using Selection = vector<string>;
-  
+
   explicit SwitcherSettings(Deployer* deployer);
   bool Load();
   bool Select(Selection selection);
   bool SetHotkeys(const string& hotkeys);
-  
+
   const SchemaList& available() const { return available_; }
   const Selection& selection() const { return selection_; }
   const string& hotkeys() const { return hotkeys_; }

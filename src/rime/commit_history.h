@@ -29,9 +29,7 @@ class CommitHistory : public list<CommitRecord> {
   void Push(const KeyEvent& key_event);
   void Push(const Composition& composition, const string& input);
   string repr() const;
-  string latest_text() const {
-    return empty() ? string() : back().text;
-  }
+  string latest_text() const { return empty() ? string() : back().text; }
 };
 
 }  // Namespace rime
