@@ -26,7 +26,8 @@
 #include <opencc/DictEntry.hpp>
 
 #ifdef WIN32
-#include <Windows.h>
+#include <opencc/UTF8Util.hpp>
+namespace fs = boost::filesystem;
 #endif
 
 static const char* quote_left = "\xe3\x80\x94";  //"\xef\xbc\x88";
@@ -40,34 +41,9 @@ class Opencc {
     LOG(INFO) << "initializing opencc: " << config_path;
     opencc::Config config;
     try {
- #ifdef WIN32
-      // 将多字节转换为宽字节
-      auto len = MultiByteToWideChar(CP_ACP, 0, config_path.data(), -1, nullptr, 0);
-      std::wstring buffer;
-      if (len > 0)
-      {
-        buffer.resize(len);
-        MultiByteToWideChar(CP_ACP, 0, config_path.data(), -1, &buffer[0], len);
-        buffer = &buffer[0];
-      }
-
-      // 将宽字节转换为UTF8
-      len = WideCharToMultiByte(CP_UTF8, 0, buffer.data(), -1, nullptr, 0, nullptr, nullptr);
-      std::string path;
-      if (len > 0)
-      {
-        WideCharToMultiByte(CP_UTF8, 0, buffer.data(), -1, &path[0], len, 0, 0);
-        path = &path[0];
-      }
- 
-     if (len > 0)
-     {
-       converter_ = config.NewFromFile(path);
-     }
-     else
-     {
-       converter_ = config.NewFromFile(config_path);
-     }
+#ifdef WIN32
+      fs::path path{ config_path };
+      converter_ = config.NewFromFile(opencc::UTF8Util::U16ToU8(path.wstring()));
 #else
       converter_ = config.NewFromFile(config_path);
 #endif
