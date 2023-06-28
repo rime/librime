@@ -43,7 +43,7 @@ bool CustomSettings::Load() {
   fs::path custom_config_path =
       fs::path(deployer_->user_data_dir) / custom_config_file(config_id_);
   if (!custom_config_.LoadFromFile(custom_config_path.string())) {
-    return false; 
+    return false;
   }
   modified_ = false;
   return true;
