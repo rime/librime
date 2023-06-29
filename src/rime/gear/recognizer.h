@@ -29,12 +29,12 @@ struct RecognizerMatch {
 
 class RecognizerPatterns : public map<string, boost::regex> {
  public:
-  void LoadConfig(Config* config, const string &path="recognizer/patterns");
+  void LoadConfig(Config* config, const string& path = "recognizer/patterns");
   RecognizerMatch GetMatch(const string& input,
                            const Segmentation& segmentation) const;
 };
 
-class RecognizerPatternsOfVector : public vector<RecognizerPatterns>  {
+class RecognizerPatternsOfVector : public vector<RecognizerPatterns> {
  public:
   void LoadConfig(Config* config);
   RecognizerMatch GetMatch(const string& input,
