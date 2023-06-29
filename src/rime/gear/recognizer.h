@@ -29,11 +29,17 @@ struct RecognizerMatch {
 
 class RecognizerPatterns : public map<string, boost::regex> {
  public:
-  void LoadConfig(Config* config);
+  void LoadConfig(Config* config, const string &path="recognizer/patterns");
   RecognizerMatch GetMatch(const string& input,
                            const Segmentation& segmentation) const;
 };
 
+class RecognizerPatternsOfVector : public vector<RecognizerPatterns>  {
+ public:
+  void LoadConfig(Config* config);
+  RecognizerMatch GetMatch(const string& input,
+                           const Segmentation& segmentation) const;
+};
 class Recognizer : public Processor {
  public:
   Recognizer(const Ticket& ticket);
@@ -41,7 +47,7 @@ class Recognizer : public Processor {
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:
-  RecognizerPatterns patterns_;
+  RecognizerPatternsOfVector patterns_;
   bool use_space_ = false;
 };
 
