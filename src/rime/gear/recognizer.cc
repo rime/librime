@@ -12,7 +12,6 @@
 #include <rime/key_event.h>
 #include <rime/schema.h>
 #include <rime/gear/recognizer.h>
-#include <iterator>
 
 namespace rime {
 
