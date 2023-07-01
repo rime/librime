@@ -225,6 +225,8 @@ bool DictCompiler::BuildTable(int table_index,
       for (const auto& s : r->raw_code) {
         code.push_back(syllable_to_id[s]);
       }
+      // release memory in time to reduce memory usage
+      RawCode().swap(r->raw_code);
       auto ls = vocabulary.LocateEntries(code);
       if (!ls) {
         LOG(ERROR) << "Error locating entries in vocabulary.";
@@ -236,7 +238,7 @@ bool DictCompiler::BuildTable(int table_index,
       e->weight = log(r->weight > 0 ? r->weight : DBL_EPSILON);
       ls->push_back(e);
     }
-    // release memory in time to reduce peak memory usage
+    // release memory in time to reduce memory usage
     vector<of<RawDictEntry>>().swap(collector.entries);
     if (settings->sort_order() != "original") {
       vocabulary.SortHomophones();

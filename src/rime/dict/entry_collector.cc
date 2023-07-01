@@ -151,13 +151,13 @@ void EntryCollector::Finish() {
 void EntryCollector::CreateEntry(const string& word,
                                  const string& code_str,
                                  const string& weight_str) {
-  RawDictEntry e;
-  e.raw_code.FromString(code_str);
-  e.text = word;
-  e.weight = 0.0;
+  an<RawDictEntry> e = New<RawDictEntry>();
+  e->raw_code.FromString(code_str);
+  e->text = word;
+  e->weight = 0.0;
   bool scaled = boost::ends_with(weight_str, "%");
   if ((weight_str.empty() || scaled) && preset_vocabulary) {
-    preset_vocabulary->GetWeightForEntry(e.text, &e.weight);
+    preset_vocabulary->GetWeightForEntry(e->text, &e->weight);
   }
   if (scaled) {
     double percentage = 100.0;
@@ -167,39 +167,40 @@ void EntryCollector::CreateEntry(const string& word,
       LOG(WARNING) << "invalid entry definition at #" << num_entries << ".";
       percentage = 100.0;
     }
-    e.weight *= percentage / 100.0;
+    e->weight *= percentage / 100.0;
   } else if (!weight_str.empty()) {  // absolute weight
     try {
-      e.weight = std::stod(weight_str);
+      e->weight = std::stod(weight_str);
     } catch (...) {
       LOG(WARNING) << "invalid entry definition at #" << num_entries << ".";
-      e.weight = 0.0;
+      e->weight = 0.0;
     }
   }
   // learn new syllables, or check if syllables are in the fixed syllabary.
-  for (const string& s : e.raw_code) {
+  for (const string& s : e->raw_code) {
     if (syllabary.find(s) == syllabary.end()) {
       if (build_syllabary) {
         syllabary.insert(s);
       } else {
-        LOG(ERROR) << "dropping entry '" << e.text
+        LOG(ERROR) << "dropping entry '" << e->text
                    << "' with invalid syllable: " << s;
         return;
       }
     }
   }
   // learn new word
-  bool is_word = (e.raw_code.size() == 1);
+  bool is_word = (e->raw_code.size() == 1);
   if (is_word) {
-    if (words[e.text].find(code_str) != words[e.text].end()) {
-      LOG(WARNING) << "duplicate word definition '" << e.text << "': ["
+    auto& weights = words[e->text];
+    if (weights.find(code_str) != weights.end()) {
+      LOG(WARNING) << "duplicate word definition '" << e->text << "': ["
                    << code_str << "].";
       return;
     }
-    words[e.text][code_str] += e.weight;
-    total_weight[e.text] += e.weight;
+    weights[code_str] += e->weight;
+    total_weight[e->text] += e->weight;
   }
-  entries.emplace_back(New<RawDictEntry>(e));
+  entries.emplace_back(std::move(e));
   ++num_entries;
 }
 
