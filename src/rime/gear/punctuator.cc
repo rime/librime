@@ -72,7 +72,8 @@ ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
   if (!use_space_ && ch == XK_space && ctx->IsComposing()) {
     return kNoop;
   }
-  if (ch == '.' || ch == ':') {  // 3.14, 12:30
+  if ((ch == '.' || ch == ':' || ch == ',' || ch == '\'') &&
+      !(ctx->IsComposing())) {  // 3.14  12:30  4'999,95
     const CommitHistory& history(ctx->commit_history());
     if (!history.empty()) {
       const CommitRecord& cr(history.back());
