@@ -25,6 +25,7 @@ option(BOOST_USE_SIGNALS2 "Boost use signals2 instead of signals" ON)
 option(ENABLE_ASAN "Enable Address Sanitizer (Unix Only)" OFF)
 option(INSTALL_PRIVATE_HEADERS "Install private headers (usually needed for externally built Rime plugins)" OFF)
 option(ENABLE_EXTERNAL_PLUGINS "Enable loading of externally built Rime plugins (from directory set by RIME_PLUGINS_DIR variable)" OFF)
+option(ENABLE_THREADING "Enable threading for deployer" ON)
 
 set(RIME_DATA_DIR "${CMAKE_INSTALL_FULL_DATADIR}/rime-data" CACHE STRING "Target directory for Rime data")
 set(RIME_PLUGINS_DIR "${CMAKE_INSTALL_FULL_LIBDIR}/rime-plugins" CACHE STRING "Target directory for externally built Rime plugins")
@@ -96,6 +97,10 @@ if(ENABLE_LOGGING)
 endif()
 
 find_package(Threads)
+
+if(NOT ENABLE_THREADING)
+  add_definitions(-DRIME_NO_THREADING)
+endif()
 
 if(BUILD_TEST)
   find_package(GTest REQUIRED)
