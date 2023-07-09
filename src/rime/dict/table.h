@@ -9,7 +9,6 @@
 #define RIME_TABLE_H_
 
 #include <cstring>
-#include <darts.h>
 #include <rime/common.h>
 #include <rime/dict/mapped_file.h>
 #include <rime/dict/vocabulary.h>
