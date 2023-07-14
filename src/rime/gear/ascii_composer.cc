@@ -213,6 +213,7 @@ void AsciiComposer::SwitchAsciiMode(bool ascii_mode,
                                     AsciiModeSwitchStyle style) {
   DLOG(INFO) << "ascii mode: " << ascii_mode << ", switch style: " << style;
   Context* ctx = engine_->context();
+  the<Config> user_config(Config::Require("user_config")->Create("user"));
   if (ctx->IsComposing()) {
     connection_.disconnect();
     // temporary ascii mode in desired manner
@@ -234,6 +235,9 @@ void AsciiComposer::SwitchAsciiMode(bool ascii_mode,
   }
   // refresh non-confirmed composition with new mode
   ctx->set_option("ascii_mode", ascii_mode);
+  if (!user_config->IsNull("var/option/ascii_mode")) {
+    user_config->SetBool("var/option/ascii_mode", ascii_mode);
+  }
 }
 
 void AsciiComposer::OnContextUpdate(Context* ctx) {
@@ -241,6 +245,10 @@ void AsciiComposer::OnContextUpdate(Context* ctx) {
     connection_.disconnect();
     // quit temporary ascii mode
     ctx->set_option("ascii_mode", false);
+    the<Config> user_config(Config::Require("user_config")->Create("user"));
+    if (!user_config->IsNull("var/option/ascii_mode")) {
+      user_config->SetBool("var/option/ascii_mode", false);
+    }
   }
 }
 

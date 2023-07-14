@@ -91,6 +91,7 @@ static void toggle_option(Engine* engine, const string& option) {
     return;
   Context* ctx = engine->context();
   Switches switches(engine->schema()->config());
+  the<Config> user_config(Config::Require("user_config")->Create("user"));
   auto the_option = is_switch_index(option) ? switch_by_index(switches, option)
                                             : switches.OptionByName(option);
   if (the_option.found() && the_option.type == Switches::kRadioGroup) {
@@ -102,18 +103,36 @@ static void toggle_option(Engine* engine, const string& option) {
     if (!selected_option.found()) {
       // invalid state: none is selected. select the given option.
       radio_select_option(ctx, the_option);
+      if (!user_config->IsNull("var/option/" + the_option.option_name)) {
+        user_config->SetBool("var/option/" + the_option.option_name, true);
+      }
       return;
     }
     // cycle through the ratio group and select the next option.
     auto next_option = Switches::Cycle(selected_option);
     if (next_option.found()) {
       radio_select_option(ctx, next_option);
+      if (!user_config->IsNull("var/option/" + the_option.option_name)) {
+        auto options = As<ConfigList>(the_option.the_switch->Get("options"));
+        for (size_t j = 0; j < options->size(); ++j) {
+          bool value = (j == next_option.option_index);
+          const string& opt_name(options->GetValueAt(j)->str());
+          user_config->SetBool("var/option/" + opt_name, value);
+        }
+      }
+      if (!user_config->IsNull("var/option/" + next_option.option_name)) {
+        user_config->SetBool("var/option/" + next_option.option_name, true);
+      }
     }
   } else {  // toggle
     // option can be an index. use the found option name, or an arbitrary
     // option name specified by caller.
     auto option_name = the_option.found() ? the_option.option_name : option;
     ctx->set_option(option_name, !ctx->get_option(option_name));
+    if (!user_config->IsNull("var/option/" + option_name)) {
+      user_config->SetBool("var/option/" + option_name,
+                           ctx->get_option(option_name));
+    }
   }
 }
 
@@ -122,11 +141,18 @@ static void set_option(Engine* engine, const string& option) {
     return;
   Context* ctx = engine->context();
   Switches switches(engine->schema()->config());
+  the<Config> user_config(Config::Require("user_config")->Create("user"));
   auto the_option = switches.OptionByName(option);
   if (the_option.found() && the_option.type == Switches::kRadioGroup) {
     radio_select_option(ctx, the_option);
+    if (!user_config->IsNull("var/option/" + option)) {
+      user_config->SetBool("var/option/" + option, true);
+    }
   } else {
     ctx->set_option(option, 1);
+    if (!user_config->IsNull("var/option/" + option)) {
+      user_config->SetBool("var/option/" + option, true);
+    }
   }
 }
 
@@ -135,16 +161,25 @@ static void unset_option(Engine* engine, const string& option) {
     return;
   Context* ctx = engine->context();
   Switches switches(engine->schema()->config());
+  the<Config> user_config(Config::Require("user_config")->Create("user"));
   auto the_option = switches.OptionByName(option);
   if (the_option.found() && the_option.type == Switches::kRadioGroup) {
     if (ctx->get_option(option)) {
       auto default_option = Switches::Reset(the_option);
       if (default_option.found()) {
         radio_select_option(ctx, default_option);
+        if (!user_config->IsNull("var/option/" + option)) {
+          user_config->SetBool("var/option/" + option, false);
+          user_config->SetBool("var/option/" + default_option.option_name,
+                               true);
+        }
       }
     }
   } else {
     ctx->set_option(option, 0);
+    if (!user_config->IsNull("var/option/" + option)) {
+      user_config->SetBool("var/option/" + option, false);
+    }
   }
 }
 
