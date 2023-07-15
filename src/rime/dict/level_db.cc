@@ -26,21 +26,13 @@ struct LevelDbCursor {
     iterator = db->NewIterator(options);
   }
 
-  bool IsValid() const {
-    return iterator && iterator->Valid();
-  }
+  bool IsValid() const { return iterator && iterator->Valid(); }
 
-  string GetKey() const {
-    return iterator->key().ToString();
-  }
+  string GetKey() const { return iterator->key().ToString(); }
 
-  string GetValue() const {
-    return iterator->value().ToString();
-  }
+  string GetValue() const { return iterator->value().ToString(); }
 
-  void Next() {
-    iterator->Next();
-  }
+  void Next() { iterator->Next(); }
 
   bool Jump(const string& key) {
     if (!iterator) {
@@ -71,9 +63,7 @@ struct LevelDbWrapper {
     ptr = nullptr;
   }
 
-  LevelDbCursor* CreateCursor() {
-    return new LevelDbCursor(ptr);
-  }
+  LevelDbCursor* CreateCursor() { return new LevelDbCursor(ptr); }
 
   bool Fetch(const string& key, string* value) {
     auto status = ptr->Get(leveldb::ReadOptions(), key, value);
@@ -98,25 +88,21 @@ struct LevelDbWrapper {
     return status.ok();
   }
 
-  void ClearBatch() {
-    batch.Clear();
-  }
+  void ClearBatch() { batch.Clear(); }
 
   bool CommitBatch() {
     auto status = ptr->Write(leveldb::WriteOptions(), &batch);
     return status.ok();
   }
-
 };
 
 // LevelDbAccessor memebers
 
-LevelDbAccessor::LevelDbAccessor() {
-}
+LevelDbAccessor::LevelDbAccessor() {}
 
-LevelDbAccessor::LevelDbAccessor(LevelDbCursor* cursor,
-                                 const string& prefix)
-    : DbAccessor(prefix), cursor_(cursor),
+LevelDbAccessor::LevelDbAccessor(LevelDbCursor* cursor, const string& prefix)
+    : DbAccessor(prefix),
+      cursor_(cursor),
       is_metadata_query_(prefix == kMetaCharacter) {
   Reset();
 }
@@ -157,9 +143,7 @@ bool LevelDbAccessor::exhausted() {
 LevelDb::LevelDb(const string& file_name,
                  const string& db_name,
                  const string& db_type)
-    : Db(file_name, db_name),
-      db_type_(db_type) {
-}
+    : Db(file_name, db_name), db_type_(db_type) {}
 
 LevelDb::~LevelDb() {
   if (loaded())
@@ -226,8 +210,8 @@ bool LevelDb::Restore(const string& snapshot_file) {
   // TODO(chen): suppose we only use this method for user dbs.
   bool success = UserDbHelper(this).UniformRestore(snapshot_file);
   if (!success) {
-    LOG(ERROR) << "failed to restore db '" << name()
-               << "' from '" << snapshot_file << "'.";
+    LOG(ERROR) << "failed to restore db '" << name() << "' from '"
+               << snapshot_file << "'.";
   }
   return success;
 }
@@ -272,8 +256,7 @@ bool LevelDb::Open() {
         Close();
       }
     }
-  }
-  else {
+  } else {
     LOG(ERROR) << "Error opening db '" << name() << "': " << status.ToString();
   }
   return loaded_;
@@ -307,8 +290,7 @@ bool LevelDb::Close() {
 }
 
 bool LevelDb::CreateMetadata() {
-  return Db::CreateMetadata() &&
-      MetaUpdate("/db_type", db_type_);
+  return Db::CreateMetadata() && MetaUpdate("/db_type", db_type_);
 }
 
 bool LevelDb::MetaFetch(const string& key, string* value) {
@@ -352,7 +334,6 @@ string UserDbComponent<LevelDb>::extension() const {
 template <>
 UserDbWrapper<LevelDb>::UserDbWrapper(const string& file_name,
                                       const string& db_name)
-    : LevelDb(file_name, db_name, "userdb") {
-}
+    : LevelDb(file_name, db_name, "userdb") {}
 
 }  // namespace rime

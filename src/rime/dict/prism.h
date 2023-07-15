@@ -79,7 +79,9 @@ class Prism : public MappedFile {
   RIME_API bool HasKey(const string& key);
   RIME_API bool GetValue(const string& key, int* value) const;
   RIME_API void CommonPrefixSearch(const string& key, vector<Match>* result);
-  RIME_API void ExpandSearch(const string& key, vector<Match>* result, size_t limit);
+  RIME_API void ExpandSearch(const string& key,
+                             vector<Match>* result,
+                             size_t limit);
   SpellingAccessor QuerySpelling(SyllableId spelling_id);
 
   RIME_API size_t array_size() const;

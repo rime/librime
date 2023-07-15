@@ -15,13 +15,13 @@ bool ContextualTranslation::Replenish() {
   while (!translation_->exhausted() &&
          cache_.size() + queue.size() < kContextualSearchLimit) {
     auto cand = translation_->Peek();
-    DLOG(INFO) << cand->text() << " cache/queue: "
-               << cache_.size() << "/" << queue.size();
+    DLOG(INFO) << cand->text() << " cache/queue: " << cache_.size() << "/"
+               << queue.size();
     if (cand->type() == "phrase" || cand->type() == "user_phrase" ||
-	cand->type() == "table" || cand->type() == "user_table") {
+        cand->type() == "table" || cand->type() == "user_table") {
       if (end_pos != cand->end() || last_type != cand->type()) {
         end_pos = cand->end();
-	last_type = cand->type();
+        last_type = cand->type();
         AppendToCache(queue);
       }
       queue.push_back(Evaluate(As<Phrase>(cand)));
@@ -39,11 +39,8 @@ bool ContextualTranslation::Replenish() {
 
 an<Phrase> ContextualTranslation::Evaluate(an<Phrase> phrase) {
   bool is_rear = phrase->end() == input_.length();
-  double weight = Grammar::Evaluate(preceding_text_,
-                                    phrase->text(),
-                                    phrase->weight(),
-                                    is_rear,
-                                    grammar_);
+  double weight = Grammar::Evaluate(preceding_text_, phrase->text(),
+                                    phrase->weight(), is_rear, grammar_);
   phrase->set_weight(weight);
   DLOG(INFO) << "contextual suggestion: " << phrase->text()
              << " weight: " << phrase->weight();
@@ -55,7 +52,8 @@ static bool compare_by_weight_desc(const an<Phrase>& a, const an<Phrase>& b) {
 }
 
 void ContextualTranslation::AppendToCache(vector<of<Phrase>>& queue) {
-  if (queue.empty()) return;
+  if (queue.empty())
+    return;
   DLOG(INFO) << "appending to cache " << queue.size() << " candidates.";
   std::sort(queue.begin(), queue.end(), compare_by_weight_desc);
   std::copy(queue.begin(), queue.end(), std::back_inserter(cache_));

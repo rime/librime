@@ -10,8 +10,7 @@
 
 namespace rime {
 
-DictSettings::DictSettings() {
-}
+DictSettings::DictSettings() {}
 
 bool DictSettings::LoadDictHeader(std::istream& stream) {
   if (!stream.good()) {
@@ -55,7 +54,7 @@ string DictSettings::sort_order() {
 
 bool DictSettings::use_preset_vocabulary() {
   return (*this)["use_preset_vocabulary"].ToBool() ||
-      (*this)["vocabulary"].IsValue();
+         (*this)["vocabulary"].IsValue();
 }
 
 static const string kDefaultVocabulary = "essay";
@@ -99,9 +98,12 @@ an<ConfigList> DictSettings::GetTables() {
 int DictSettings::GetColumnIndex(const string& column_label) {
   if ((*this)["columns"].IsNull()) {
     // default
-    if (column_label == "text") return 0;
-    if (column_label == "code") return 1;
-    if (column_label == "weight") return 2;
+    if (column_label == "text")
+      return 0;
+    if (column_label == "code")
+      return 1;
+    if (column_label == "weight")
+      return 2;
     return -1;
   }
   auto columns = (*this)["columns"].AsList();

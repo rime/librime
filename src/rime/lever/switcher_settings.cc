@@ -16,8 +16,7 @@ namespace fs = boost::filesystem;
 namespace rime {
 
 SwitcherSettings::SwitcherSettings(Deployer* deployer)
-    : CustomSettings(deployer, "default", "Rime::SwitcherSettings") {
-}
+    : CustomSettings(deployer, "default", "Rime::SwitcherSettings") {}
 
 bool SwitcherSettings::Load() {
   if (!CustomSettings::Load())
@@ -53,8 +52,7 @@ void SwitcherSettings::GetAvailableSchemasFromDirectory(const fs::path& dir) {
     LOG(INFO) << "directory '" << dir.string() << "' does not exist.";
     return;
   }
-  for (fs::directory_iterator it(dir), end;
-       it != end; ++it) {
+  for (fs::directory_iterator it(dir), end; it != end; ++it) {
     string file_path(it->path().string());
     if (boost::ends_with(file_path, ".schema.yaml")) {
       Config config;

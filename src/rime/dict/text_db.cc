@@ -11,14 +11,12 @@ namespace rime {
 
 // TextDbAccessor memebers
 
-TextDbAccessor::TextDbAccessor(const TextDbData& data,
-                               const string& prefix)
+TextDbAccessor::TextDbAccessor(const TextDbData& data, const string& prefix)
     : DbAccessor(prefix), data_(data) {
   Reset();
 }
 
-TextDbAccessor::~TextDbAccessor() {
-}
+TextDbAccessor::~TextDbAccessor() {}
 
 bool TextDbAccessor::Reset() {
   iter_ = prefix_.empty() ? data_.begin() : data_.lower_bound(prefix_);
@@ -49,8 +47,7 @@ TextDb::TextDb(const string& file_name,
                const string& db_name,
                const string& db_type,
                TextFormat format)
-    : Db(file_name, db_name), db_type_(db_type), format_(format) {
-}
+    : Db(file_name, db_name), db_type_(db_type), format_(format) {}
 
 TextDb::~TextDb() {
   if (loaded())
@@ -116,8 +113,7 @@ bool TextDb::Open() {
         Close();
       }
     }
-  }
-  else {
+  } else {
     LOG(ERROR) << "Error opening db '" << name() << "'.";
   }
   modified_ = false;
@@ -132,8 +128,7 @@ bool TextDb::OpenReadOnly() {
   loaded_ = Exists() && LoadFromFile(file_name());
   if (loaded_) {
     readonly_ = true;
-  }
-  else {
+  } else {
     LOG(ERROR) << "Error opening db '" << name_ << "' read-only.";
   }
   modified_ = false;
@@ -141,7 +136,8 @@ bool TextDb::OpenReadOnly() {
 }
 
 bool TextDb::Close() {
-  if (!loaded()) return false;
+  if (!loaded())
+    return false;
   if (modified_ && !SaveToFile(file_name())) {
     return false;
   }
@@ -173,8 +169,8 @@ bool TextDb::Restore(const string& snapshot_file) {
   if (!loaded() || readonly())
     return false;
   if (!LoadFromFile(snapshot_file)) {
-    LOG(ERROR) << "failed to restore db '" << name()
-               << "' from '" << snapshot_file << "'.";
+    LOG(ERROR) << "failed to restore db '" << name() << "' from '"
+               << snapshot_file << "'.";
     return false;
   }
   modified_ = false;
@@ -182,8 +178,7 @@ bool TextDb::Restore(const string& snapshot_file) {
 }
 
 bool TextDb::CreateMetadata() {
-  return Db::CreateMetadata() &&
-      MetaUpdate("/db_type", db_type_);
+  return Db::CreateMetadata() && MetaUpdate("/db_type", db_type_);
 }
 
 bool TextDb::MetaFetch(const string& key, string* value) {
@@ -212,8 +207,7 @@ bool TextDb::LoadFromFile(const string& file) {
   int entries = 0;
   try {
     entries = reader >> sink;
-  }
-  catch (std::exception& ex) {
+  } catch (std::exception& ex) {
     LOG(ERROR) << ex.what();
     return false;
   }
@@ -228,8 +222,7 @@ bool TextDb::SaveToFile(const string& file) {
   int entries = 0;
   try {
     entries = writer << source;
-  }
-  catch (std::exception& ex) {
+  } catch (std::exception& ex) {
     LOG(ERROR) << ex.what();
     return false;
   }

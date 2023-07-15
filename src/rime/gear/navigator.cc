@@ -18,20 +18,17 @@
 namespace rime {
 
 static Navigator::ActionDef navigation_actions[] = {
-  { "rewind", &Navigator::Rewind },
-  { "left_by_char", &Navigator::LeftByChar },
-  { "right_by_char", &Navigator::RightByChar },
-  { "left_by_syllable", &Navigator::LeftBySyllable },
-  { "right_by_syllable", &Navigator::RightBySyllable },
-  { "home", &Navigator::Home },
-  { "end", &Navigator::End },
-  Navigator::kActionNoop
-};
+    {"rewind", &Navigator::Rewind},
+    {"left_by_char", &Navigator::LeftByChar},
+    {"right_by_char", &Navigator::RightByChar},
+    {"left_by_syllable", &Navigator::LeftBySyllable},
+    {"right_by_syllable", &Navigator::RightBySyllable},
+    {"home", &Navigator::Home},
+    {"end", &Navigator::End},
+    Navigator::kActionNoop};
 
 Navigator::Navigator(const Ticket& ticket)
-    : Processor(ticket),
-      KeyBindingProcessor(navigation_actions)
-{
+    : Processor(ticket), KeyBindingProcessor(navigation_actions) {
   // default key bindings
   {
     auto& keymap = get_keymap(Horizontal);
@@ -72,9 +69,9 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
   if (!ctx->IsComposing())
     return kNoop;
   TextOrientation text_orientation =
-    ctx->get_option("_vertical") ? Vertical : Horizontal;
-  return KeyBindingProcessor::ProcessKeyEvent(
-    key_event, ctx, text_orientation, FallbackOptions::All);
+      ctx->get_option("_vertical") ? Vertical : Horizontal;
+  return KeyBindingProcessor::ProcessKeyEvent(key_event, ctx, text_orientation,
+                                              FallbackOptions::All);
 }
 
 bool Navigator::LeftBySyllable(Context* ctx) {
@@ -94,10 +91,9 @@ bool Navigator::Rewind(Context* ctx) {
   BeginMove(ctx);
   // take a jump leftwards when there are multiple spans,
   // but not from the middle of a span.
-  (
-      spans_.Count() > 1 && spans_.HasVertex(ctx->caret_pos())
-      ? JumpLeft(ctx) : MoveLeft(ctx)
-  ) || GoToEnd(ctx);
+  (spans_.Count() > 1 && spans_.HasVertex(ctx->caret_pos()) ? JumpLeft(ctx)
+                                                            : MoveLeft(ctx)) ||
+      GoToEnd(ctx);
   return true;
 }
 
@@ -132,10 +128,9 @@ void Navigator::BeginMove(Context* ctx) {
   if (input_ != ctx->input() || ctx->caret_pos() > spans_.end()) {
     input_ = ctx->input();
     spans_.Clear();
-    for (const auto &seg : ctx->composition()) {
+    for (const auto& seg : ctx->composition()) {
       if (auto phrase = As<Phrase>(
-              Candidate::GetGenuineCandidate(
-                  seg.GetSelectedCandidate()))) {
+              Candidate::GetGenuineCandidate(seg.GetSelectedCandidate()))) {
         spans_.AddSpans(phrase->spans());
       }
       spans_.AddSpan(seg.start, seg.end);
