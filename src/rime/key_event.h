@@ -15,7 +15,7 @@
 namespace rime {
 
 class KeyEvent {
- public:
+public:
   KeyEvent() = default;
   KeyEvent(int keycode, int modifier)
       : keycode_(keycode), modifier_(modifier) {}
@@ -51,14 +51,14 @@ class KeyEvent {
     return modifier_ < other.modifier_;
   }
 
- private:
+private:
   int keycode_ = 0;
   int modifier_ = 0;
 };
 
 // 按鍵序列
 class KeySequence : public vector<KeyEvent> {
- public:
+public:
   KeySequence() = default;
   RIME_API KeySequence(const string& repr);
 
