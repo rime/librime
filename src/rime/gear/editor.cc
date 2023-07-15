@@ -56,10 +56,9 @@ ProcessResult Editor::ProcessKeyEvent(const KeyEvent& key_event) {
     }
   }
   if (char_handler_ && !key_event.ctrl() && !key_event.alt() &&
-      !key_event.super() && !key_event.hyper() &&
-      ch > 0x20 && ch < 0x7f) {
-    DLOG(INFO) << "input char: '" << (char)ch << "', " << ch
-               << ", '" << key_event.repr() << "'";
+      !key_event.super() && !key_event.hyper() && ch > 0x20 && ch < 0x7f) {
+    DLOG(INFO) << "input char: '" << (char)ch << "', " << ch << ", '"
+               << key_event.repr() << "'";
     return RIME_THIS_CALL(char_handler_)(ctx, ch);
   }
   // not handled

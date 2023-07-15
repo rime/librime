@@ -56,8 +56,8 @@ AsciiComposer::~AsciiComposer() {
 }
 
 ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
-  if ((key_event.shift() && key_event.ctrl()) ||
-      key_event.alt() || key_event.hyper() || key_event.super()) {
+  if ((key_event.shift() && key_event.ctrl()) || key_event.alt() ||
+      key_event.hyper() || key_event.super()) {
     shift_key_pressed_ = ctrl_key_pressed_ = false;
     return kNoop;
   }

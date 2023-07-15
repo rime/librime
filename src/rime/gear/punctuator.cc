@@ -72,7 +72,8 @@ ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
   if (!use_space_ && ch == XK_space && ctx->IsComposing()) {
     return kNoop;
   }
-  if (ch == '.' || ch == ':' || ch == ',' || ch == '\'') {  // 3.14 12:30 4'999,95
+  if (ch == '.' || ch == ':' || ch == ',' ||
+      ch == '\'') {  // 3.14 12:30 4'999,95
     const CommitHistory& history(ctx->commit_history());
     if (!history.empty()) {
       const CommitRecord& cr(history.back());
@@ -210,8 +211,13 @@ an<Candidate> CreatePunctCandidate(const string& punct,
     bool is_half_shape_kana = (ch >= 0xFF61 && ch <= 0xFF9F);
     bool is_hangul = (ch >= 0x3131 && ch <= 0x3164);
     bool is_half_shape_hangul = (ch >= 0xFFA0 && ch <= 0xFFDC);
-    bool is_full_shape_narrow_symbol = ((ch >= 0x3008 && ch <= 0x300B) || (ch >= 0x3018 && ch <= 0x301B) || ch == 0xFF5F || ch == 0xFF60 || (ch >= 0xFFE0 && ch <= 0xFFE6));
-    bool is_narrow_symbol = (ch == 0x00A2 || ch == 0x00A3 || ch == 0x00A5 || ch == 0x00A6 || ch == 0x00AC || ch == 0x00AF || ch == 0x20A9 || (ch >= 0x27E6 && ch <= 0x27ED) || ch == 0x2985 || ch == 0x2986);
+    bool is_full_shape_narrow_symbol =
+        ((ch >= 0x3008 && ch <= 0x300B) || (ch >= 0x3018 && ch <= 0x301B) ||
+         ch == 0xFF5F || ch == 0xFF60 || (ch >= 0xFFE0 && ch <= 0xFFE6));
+    bool is_narrow_symbol =
+        (ch == 0x00A2 || ch == 0x00A3 || ch == 0x00A5 || ch == 0x00A6 ||
+         ch == 0x00AC || ch == 0x00AF || ch == 0x20A9 ||
+         (ch >= 0x27E6 && ch <= 0x27ED) || ch == 0x2985 || ch == 0x2986);
     bool is_half_shape_wide_symbol = (ch >= 0xFFE8 && ch <= 0xFFEE);
     bool is_wide_symbol = ((ch >= 0x2190 && ch <= 0x2193) || ch == 0x2502 ||
                            ch == 0x25A0 || ch == 0x25CB);
