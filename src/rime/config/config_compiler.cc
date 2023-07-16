@@ -9,11 +9,11 @@
 
 namespace rime {
 
-std::ostream& operator<< (std::ostream& stream, const Reference& reference) {
+std::ostream& operator<<(std::ostream& stream, const Reference& reference) {
   return stream << reference.repr();
 }
 
-std::ostream& operator<< (std::ostream& stream, const Dependency& dependency) {
+std::ostream& operator<<(std::ostream& stream, const Dependency& dependency) {
   return stream << dependency.repr();
 }
 
@@ -42,7 +42,8 @@ struct ConfigDependencyGraph {
 
 string ConfigDependencyGraph::current_resource_id() const {
   return key_stack.empty() ? string()
-      : boost::trim_right_copy_if(key_stack.front(), boost::is_any_of(":"));
+                           : boost::trim_right_copy_if(key_stack.front(),
+                                                       boost::is_any_of(":"));
 }
 
 string Reference::repr() const {
@@ -149,22 +150,23 @@ static constexpr const char* EQU_SUFFIX_OPERATOR = "/=";
 
 inline static bool IsAppending(const string& key) {
   return key == ConfigCompiler::APPEND_DIRECTIVE ||
-      boost::ends_with(key, ADD_SUFFIX_OPERATOR);
+         boost::ends_with(key, ADD_SUFFIX_OPERATOR);
 }
 inline static bool IsMerging(const string& key,
                              const an<ConfigItem>& value,
                              bool merge_tree) {
   return key == ConfigCompiler::MERGE_DIRECTIVE ||
-      boost::ends_with(key, ADD_SUFFIX_OPERATOR) ||
-      (merge_tree && (!value || Is<ConfigMap>(value)) &&
-       !boost::ends_with(key, EQU_SUFFIX_OPERATOR));
+         boost::ends_with(key, ADD_SUFFIX_OPERATOR) ||
+         (merge_tree && (!value || Is<ConfigMap>(value)) &&
+          !boost::ends_with(key, EQU_SUFFIX_OPERATOR));
 }
 
 inline static string StripOperator(const string& key, bool adding) {
   return (key == ConfigCompiler::APPEND_DIRECTIVE ||
-          key == ConfigCompiler::MERGE_DIRECTIVE) ? "" :
-      boost::erase_last_copy(
-          key, adding ? ADD_SUFFIX_OPERATOR : EQU_SUFFIX_OPERATOR);
+          key == ConfigCompiler::MERGE_DIRECTIVE)
+             ? ""
+             : boost::erase_last_copy(
+                   key, adding ? ADD_SUFFIX_OPERATOR : EQU_SUFFIX_OPERATOR);
 }
 
 // defined in config_data.cc
@@ -193,9 +195,9 @@ static bool EditNode(an<ConfigItemRef> head,
   if ((appending || merging) && **target) {
     DLOG(INFO) << "writer: editing node";
     return !value ||  // no-op
-        (appending && (AppendToString(target, As<ConfigValue>(value)) ||
-                       AppendToList(target, As<ConfigList>(value)))) ||
-        (merging && MergeTree(target, As<ConfigMap>(value)));
+           (appending && (AppendToString(target, As<ConfigValue>(value)) ||
+                          AppendToList(target, As<ConfigList>(value)))) ||
+           (merging && MergeTree(target, As<ConfigMap>(value)));
   } else {
     DLOG(INFO) << "writer: overwriting node";
     *target = value;
@@ -231,7 +233,8 @@ static void InsertByPriority(vector<of<Dependency>>& list,
 void ConfigDependencyGraph::Add(an<Dependency> dependency) {
   DLOG(INFO) << "ConfigDependencyGraph::Add(), node_stack.size() = "
              << node_stack.size();
-  if (node_stack.empty()) return;
+  if (node_stack.empty())
+    return;
   const auto& target = node_stack.back();
   dependency->TargetedAt(target);
   auto target_path = ConfigData::JoinPath(key_stack);
@@ -240,7 +243,7 @@ void ConfigDependencyGraph::Add(an<Dependency> dependency) {
   InsertByPriority(target_deps, dependency);
   DLOG(INFO) << "target_path = " << target_path
              << ", #deps = " << target_deps.size();
-  if (target_was_pending ||  // so was all ancestors
+  if (target_was_pending ||     // so was all ancestors
       key_stack.size() == 1) {  // this is the progenitor
     return;
   }
@@ -259,7 +262,7 @@ void ConfigDependencyGraph::Add(an<Dependency> dependency) {
     DLOG(INFO) << "parent_path = " << parent_path
                << ", #deps = " << parent_deps.size();
     if (parent_was_pending ||  // so was all ancestors
-        keys.size() == 1) {  // this parent is the progenitor
+        keys.size() == 1) {    // this parent is the progenitor
       return;
     }
   }
@@ -269,24 +272,23 @@ ConfigCompiler::ConfigCompiler(ResourceResolver* resource_resolver,
                                ConfigCompilerPlugin* plugin)
     : resource_resolver_(resource_resolver),
       plugin_(plugin),
-      graph_(new ConfigDependencyGraph) {
-}
+      graph_(new ConfigDependencyGraph) {}
 
-ConfigCompiler::~ConfigCompiler() {
-}
+ConfigCompiler::~ConfigCompiler() {}
 
 Reference ConfigCompiler::CreateReference(const string& qualified_path) {
   auto end = qualified_path.find_last_of("?");
   bool optional = end != string::npos;
   auto separator = qualified_path.find_first_of(":");
   string resource_id = resource_resolver_->ToResourceId(
-      (separator == string::npos || separator == 0) ?
-      graph_->current_resource_id() :
-      qualified_path.substr(0, separator));
-  string local_path = (separator == string::npos) ?
-      qualified_path.substr(0, end) :
-      qualified_path.substr(separator + 1,
-                            optional ? end - separator - 1 : end);
+      (separator == string::npos || separator == 0)
+          ? graph_->current_resource_id()
+          : qualified_path.substr(0, separator));
+  string local_path =
+      (separator == string::npos)
+          ? qualified_path.substr(0, end)
+          : qualified_path.substr(separator + 1,
+                                  optional ? end - separator - 1 : end);
   return Reference{resource_id, local_path, optional};
 }
 
@@ -299,15 +301,12 @@ void ConfigCompiler::Push(an<ConfigResource> resource) {
 }
 
 void ConfigCompiler::Push(an<ConfigList> config_list, size_t index) {
-  graph_->Push(
-      New<ConfigListEntryRef>(nullptr, config_list, index),
-      ConfigData::FormatListIndex(index));
+  graph_->Push(New<ConfigListEntryRef>(nullptr, config_list, index),
+               ConfigData::FormatListIndex(index));
 }
 
 void ConfigCompiler::Push(an<ConfigMap> config_map, const string& key) {
-  graph_->Push(
-      New<ConfigMapEntryRef>(nullptr, config_map, key),
-      key);
+  graph_->Push(New<ConfigMapEntryRef>(nullptr, config_map, key), key);
 }
 
 void ConfigCompiler::Pop() {
@@ -315,7 +314,7 @@ void ConfigCompiler::Pop() {
 }
 
 void ConfigCompiler::EnumerateResources(
-    function<void (an<ConfigResource> resource)> process_resource) {
+    function<void(an<ConfigResource> resource)> process_resource) {
   for (const auto& r : graph_->resources) {
     process_resource(r.second);
   }
@@ -355,7 +354,8 @@ static bool ResolveBlockingDependencies(ConfigCompiler* compiler,
 static an<ConfigItem> GetResolvedItem(ConfigCompiler* compiler,
                                       an<ConfigResource> resource,
                                       const string& path) {
-  DLOG(INFO) << "GetResolvedItem(" << resource->resource_id << ":" << path << ")";
+  DLOG(INFO) << "GetResolvedItem(" << resource->resource_id << ":" << path
+             << ")";
   string node_path = resource->resource_id + ":";
   an<ConfigItemRef> node = resource;
   if (path.empty() || path == "/") {
@@ -369,7 +369,7 @@ static an<ConfigItem> GetResolvedItem(ConfigCompiler* compiler,
       // CAVEAT: continuing accessing subtree with this failure may result in
       // referencing outdated data - sometimes an expected behavior.
       // relaxing this requires checking for circular dependencies.
-      //return nullptr;
+      // return nullptr;
     }
     an<ConfigItem> item = **node;
     if (Is<ConfigList>(item)) {
@@ -397,8 +397,8 @@ static an<ConfigItem> GetResolvedItem(ConfigCompiler* compiler,
 
 bool ConfigCompiler::blocking(const string& full_path) const {
   auto found = graph_->deps.find(full_path);
-  return found != graph_->deps.end() && !found->second.empty()
-      && found->second.back()->blocking();
+  return found != graph_->deps.end() && !found->second.empty() &&
+         found->second.back()->blocking();
 }
 
 bool ConfigCompiler::pending(const string& full_path) const {
@@ -436,8 +436,7 @@ static an<ConfigItem> ResolveReference(ConfigCompiler* compiler,
 // Includes contents of nodes at specified paths.
 // __include: path/to/local/node
 // __include: filename[.yaml]:/path/to/external/node
-static bool ParseInclude(ConfigCompiler* compiler,
-                         const an<ConfigItem>& item) {
+static bool ParseInclude(ConfigCompiler* compiler, const an<ConfigItem>& item) {
   if (Is<ConfigValue>(item)) {
     auto path = As<ConfigValue>(item)->str();
     DLOG(INFO) << "ParseInclude(" << path << ")";
@@ -470,8 +469,7 @@ static bool ParseList(bool (*parser)(ConfigCompiler*, const an<ConfigItem>&),
 // __patch: path/to/node
 // __patch: filename[.yaml]:/path/to/node
 // __patch: { key/alpha: value, key/beta: value }
-static bool ParsePatch(ConfigCompiler* compiler,
-                       const an<ConfigItem>& item) {
+static bool ParsePatch(ConfigCompiler* compiler, const an<ConfigItem>& item) {
   if (Is<ConfigValue>(item)) {
     auto path = As<ConfigValue>(item)->str();
     DLOG(INFO) << "ParsePatch(" << path << ")";
@@ -506,7 +504,7 @@ bool ConfigCompiler::Link(an<ConfigResource> target) {
     return false;
   }
   return ResolveDependencies(found->first + ":") &&
-      (plugin_ ? plugin_->ReviewLinkOutput(this, target) : true);
+         (plugin_ ? plugin_->ReviewLinkOutput(this, target) : true);
 }
 
 static bool HasCircularDependencies(ConfigDependencyGraph* graph,
@@ -531,7 +529,7 @@ bool ConfigCompiler::ResolveDependencies(const string& path) {
   }
   graph_->resolve_chain.push_back(path);
   auto& deps = found->second;
-  for (auto iter = deps.begin(); iter != deps.end(); ) {
+  for (auto iter = deps.begin(); iter != deps.end();) {
     if (!(*iter)->Resolve(this)) {
       LOG(ERROR) << "unresolved dependency: " << **iter;
       return false;

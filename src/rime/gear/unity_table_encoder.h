@@ -26,8 +26,7 @@ class UnityTableEncoder : public TableEncoder, public PhraseCollector {
   void CreateEntry(const string& word,
                    const string& code_str,
                    const string& weight_str);
-  bool TranslateWord(const string& word,
-                     vector<string>* code);
+  bool TranslateWord(const string& word, vector<string>* code);
 
   size_t LookupPhrases(UserDictEntryIterator* result,
                        const string& input,

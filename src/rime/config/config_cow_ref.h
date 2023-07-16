@@ -16,8 +16,7 @@ template <class T>
 class ConfigCowRef : public ConfigItemRef {
  public:
   ConfigCowRef(an<ConfigItemRef> parent, string key)
-      : ConfigItemRef(nullptr), parent_(parent), key_(key) {
-  }
+      : ConfigItemRef(nullptr), parent_(parent), key_(key) {}
   an<ConfigItem> GetItem() const override {
     auto container = As<T>(**parent_);
     return container ? Read(container, key_) : nullptr;
@@ -30,6 +29,7 @@ class ConfigCowRef : public ConfigItemRef {
     }
     Write(container, key_, item);
   }
+
  protected:
   static an<T> CopyOnWrite(const an<T>& container, const string& key);
   static an<ConfigItem> Read(const an<T>& container, const string& key);

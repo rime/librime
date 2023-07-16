@@ -26,10 +26,8 @@ class StringTable {
 
   bool HasKey(const string& key);
   StringId Lookup(const string& key);
-  void CommonPrefixMatch(const string& query,
-                         vector<StringId>* result);
-  void Predict(const string& query,
-               vector<StringId>* result);
+  void CommonPrefixMatch(const string& query, vector<StringId>* result);
+  void Predict(const string& query, vector<StringId>* result);
   string GetString(StringId string_id);
 
   size_t NumKeys() const;
@@ -39,9 +37,10 @@ class StringTable {
   marisa::Trie trie_;
 };
 
-class StringTableBuilder: public StringTable {
+class StringTableBuilder : public StringTable {
  public:
-  void Add(const string& key, double weight = 1.0,
+  void Add(const string& key,
+           double weight = 1.0,
            StringId* reference = nullptr);
   void Clear();
   void Build();

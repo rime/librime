@@ -28,7 +28,8 @@ class Switcher : public Processor, public Engine {
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
   static int ForEachSchemaListEntry(
-      Config* config, function<bool (const string& schema_id)> process_entry);
+      Config* config,
+      function<bool(const string& schema_id)> process_entry);
 
   Schema* CreateSchema();
   void SelectNextSchema();
@@ -63,9 +64,7 @@ class Switcher : public Processor, public Engine {
 
 class SwitcherCommand {
  public:
-  SwitcherCommand(const string& keyword)
-      : keyword_(keyword) {
-  }
+  SwitcherCommand(const string& keyword) : keyword_(keyword) {}
   virtual void Apply(Switcher* switcher) = 0;
   const string& keyword() const { return keyword_; }
 

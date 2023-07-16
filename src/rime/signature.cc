@@ -13,7 +13,8 @@
 namespace rime {
 
 bool Signature::Sign(Config* config, Deployer* deployer) {
-  if (!config) return false;
+  if (!config)
+    return false;
   config->SetString(key_ + "/generator", generator_);
   time_t now = time(NULL);
   string time_str(ctime(&now));

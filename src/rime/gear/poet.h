@@ -26,12 +26,13 @@ struct Line;
 class Poet {
  public:
   // Line "less", used to compare composed line of the same input range.
-  using Compare = function<bool (const Line&, const Line&)>;
+  using Compare = function<bool(const Line&, const Line&)>;
 
   static bool CompareWeight(const Line& one, const Line& other);
   static bool LeftAssociateCompare(const Line& one, const Line& other);
 
-  Poet(const Language* language, Config* config,
+  Poet(const Language* language,
+       Config* config,
        Compare compare = CompareWeight);
   ~Poet();
 
@@ -51,8 +52,8 @@ class Poet {
     if (preceding_text.empty()) {
       return translation;
     }
-    return New<ContextualTranslation>(
-        translation, input, preceding_text, grammar_.get());
+    return New<ContextualTranslation>(translation, input, preceding_text,
+                                      grammar_.get());
   }
 
  private:

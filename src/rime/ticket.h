@@ -24,7 +24,8 @@ struct Ticket {
   Ticket(Schema* s, const string& ns);
   // prescription: in the form of "klass" or "klass@alias"
   // where alias, if given, will override default name space
-  RIME_API Ticket(Engine* e, const string& ns = "",
+  RIME_API Ticket(Engine* e,
+                  const string& ns = "",
                   const string& prescription = "");
 };
 

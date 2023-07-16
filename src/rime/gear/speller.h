@@ -24,7 +24,12 @@ class Speller : public Processor {
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:
-  enum AutoClearMethod { kClearNone, kClearAuto, kClearManual, kClearMaxLength };
+  enum AutoClearMethod {
+    kClearNone,
+    kClearAuto,
+    kClearManual,
+    kClearMaxLength
+  };
 
   bool AutoSelectAtMaxCodeLength(Context* ctx);
   bool AutoSelectUniqueCandidate(Context* ctx);
