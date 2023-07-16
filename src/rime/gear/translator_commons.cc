@@ -75,9 +75,12 @@ size_t Spans::NextStop(size_t caret_pos) const {
 size_t Spans::Count(size_t start_pos, size_t end_pos) const {
   size_t count = 0;
   for (auto v : vertices_) {
-    if (v <= start_pos) continue;
-    else if (v > end_pos) break;
-    else ++count;
+    if (v <= start_pos)
+      continue;
+    else if (v > end_pos)
+      break;
+    else
+      ++count;
   }
   return count;
 }
@@ -93,14 +96,13 @@ void Sentence::Extend(const DictEntry& another,
                       double new_weight) {
   entry_->weight = new_weight;
   entry_->text.append(another.text);
-  entry_->code.insert(entry_->code.end(),
-                      another.code.begin(),
+  entry_->code.insert(entry_->code.end(), another.code.begin(),
                       another.code.end());
   components_.push_back(another);
   word_lengths_.push_back(end_pos - end());
   set_end(end_pos);
-  DLOG(INFO) << "extend sentence " << end_pos << ") "
-             << text() << " weight: " << weight();
+  DLOG(INFO) << "extend sentence " << end_pos << ") " << text()
+             << " weight: " << weight();
 }
 
 void Sentence::Offset(size_t offset) {
@@ -113,7 +115,7 @@ void Sentence::Offset(size_t offset) {
 TranslatorOptions::TranslatorOptions(const Ticket& ticket) {
   if (!ticket.schema)
     return;
-  if (Config *config = ticket.schema->config()) {
+  if (Config* config = ticket.schema->config()) {
     config->GetString(ticket.name_space + "/delimiter", &delimiters_) ||
         config->GetString("speller/delimiter", &delimiters_);
     config->GetString(ticket.name_space + "/tag", &tag_);
@@ -121,8 +123,7 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket) {
                     &contextual_suggestions_);
     config->GetBool(ticket.name_space + "/enable_completion",
                     &enable_completion_);
-    config->GetBool(ticket.name_space + "/strict_spelling",
-                    &strict_spelling_);
+    config->GetBool(ticket.name_space + "/strict_spelling", &strict_spelling_);
     config->GetDouble(ticket.name_space + "/initial_quality",
                       &initial_quality_);
     preedit_formatter_.Load(
@@ -130,8 +131,7 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket) {
     comment_formatter_.Load(
         config->GetList(ticket.name_space + "/comment_format"));
     user_dict_disabling_patterns_.Load(
-        config->GetList(
-            ticket.name_space + "/disable_user_dict_for_patterns"));
+        config->GetList(ticket.name_space + "/disable_user_dict_for_patterns"));
   }
   if (delimiters_.empty()) {
     delimiters_ = " ";

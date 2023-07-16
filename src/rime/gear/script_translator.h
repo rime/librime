@@ -30,8 +30,7 @@ class ScriptTranslator : public Translator,
  public:
   ScriptTranslator(const Ticket& ticket);
 
-  virtual an<Translation> Query(const string& input,
-                                const Segment& segment);
+  virtual an<Translation> Query(const string& input, const Segment& segment);
   virtual bool Memorize(const CommitEntry& commit_entry);
 
   string FormatPreedit(const string& preedit);

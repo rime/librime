@@ -20,8 +20,8 @@ static void rime_core_initialize() {
   LOG(INFO) << "registering core components.";
   Registry& r = Registry::instance();
 
-  auto config_builder = new ConfigComponent<ConfigBuilder>(
-      [&](ConfigBuilder* builder) {
+  auto config_builder =
+      new ConfigComponent<ConfigBuilder>([&](ConfigBuilder* builder) {
         builder->InstallPlugin(new AutoPatchConfigPlugin);
         builder->InstallPlugin(new DefaultConfigPlugin);
         builder->InstallPlugin(new LegacyPresetConfigPlugin);
@@ -38,9 +38,7 @@ static void rime_core_initialize() {
 
   auto user_config =
       new ConfigComponent<ConfigLoader, UserConfigResourceProvider>(
-          [](ConfigLoader* loader) {
-            loader->set_auto_save(true);
-          });
+          [](ConfigLoader* loader) { loader->set_auto_save(true); });
   r.Register("user_config", user_config);
 }
 

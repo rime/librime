@@ -22,19 +22,17 @@ struct ResourceType {
 
 class ResourceResolver {
  public:
-  explicit ResourceResolver(const ResourceType type) : type_(type) {
-  }
-  virtual ~ResourceResolver() {
-  }
-  RIME_API virtual boost::filesystem::path ResolvePath(const string& resource_id);
+  explicit ResourceResolver(const ResourceType type) : type_(type) {}
+  virtual ~ResourceResolver() {}
+  RIME_API virtual boost::filesystem::path ResolvePath(
+      const string& resource_id);
   string ToResourceId(const string& file_path) const;
   string ToFilePath(const string& resource_id) const;
   void set_root_path(boost::filesystem::path root_path) {
     root_path_ = root_path;
   }
-  boost::filesystem::path root_path() const {
-    return root_path_;
-  }
+  boost::filesystem::path root_path() const { return root_path_; }
+
  protected:
   const ResourceType type_;
   boost::filesystem::path root_path_;
@@ -44,12 +42,13 @@ class ResourceResolver {
 class FallbackResourceResolver : public ResourceResolver {
  public:
   explicit FallbackResourceResolver(const ResourceType& type)
-      : ResourceResolver(type) {
-  }
-  RIME_API boost::filesystem::path ResolvePath(const string& resource_id) override;
+      : ResourceResolver(type) {}
+  RIME_API boost::filesystem::path ResolvePath(
+      const string& resource_id) override;
   void set_fallback_root_path(boost::filesystem::path fallback_root_path) {
     fallback_root_path_ = fallback_root_path;
   }
+
  private:
   boost::filesystem::path fallback_root_path_;
 };

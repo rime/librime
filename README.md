@@ -76,10 +76,11 @@ Community:
   - [emacs-rime](https://github.com/DogLooksGood/emacs-rime): frontend for Emacs
   - [fcitx-rime](https://github.com/fcitx/fcitx-rime): Fcitx frontend for Linux
   - [fcitx5-rime](https://github.com/fcitx/fcitx5-rime): Fcitx5 frontend for Linux
-  - [iRime](https://github.com/jimmy54/iRime): frontend for iOS
+  - [Hamster](https://github.com/imfuxiao/Hamster): frontend for iOS
   - [PIME](https://github.com/EasyIME/PIME): frontend for Windows
   - [Trime](https://github.com/osfans/trime): frontend for Android
   - [XIME](https://github.com/stackia/XIME): frontend for macOS
+  - [My RIME](https://github.com/LibreService/my_rime): frontend for web
 
 Plugins
 ===

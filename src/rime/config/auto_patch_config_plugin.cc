@@ -9,8 +9,9 @@
 namespace rime {
 
 static string remove_suffix(const string& input, const string& suffix) {
-  return boost::ends_with(input, suffix) ?
-      input.substr(0, input.length() - suffix.length()) : input;
+  return boost::ends_with(input, suffix)
+             ? input.substr(0, input.length() - suffix.length())
+             : input;
 }
 
 // auto-patch applies to all loaded config resources, including dependencies.
@@ -25,8 +26,8 @@ bool AutoPatchConfigPlugin::ReviewCompileOutput(ConfigCompiler* compiler,
     return true;
   auto patch_resource_id =
       remove_suffix(resource->resource_id, ".schema") + ".custom";
-  LOG(INFO) << "auto-patch " << resource->resource_id << ":/__patch: "
-            << patch_resource_id << ":/patch?";
+  LOG(INFO) << "auto-patch " << resource->resource_id
+            << ":/__patch: " << patch_resource_id << ":/patch?";
   compiler->Push(resource);
   compiler->AddDependency(
       New<PatchReference>(Reference{patch_resource_id, "patch", true}));

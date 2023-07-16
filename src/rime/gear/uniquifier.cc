@@ -13,8 +13,7 @@ namespace rime {
 
 class UniquifiedTranslation : public CacheTranslation {
  public:
-  UniquifiedTranslation(an<Translation> translation,
-                        CandidateList* candidates)
+  UniquifiedTranslation(an<Translation> translation, CandidateList* candidates)
       : CacheTranslation(translation), candidates_(candidates) {
     Uniquify();
   }
@@ -45,8 +44,8 @@ static CandidateList::iterator find_text_match(const an<Candidate>& target,
 bool UniquifiedTranslation::Uniquify() {
   while (!exhausted()) {
     auto next = Peek();
-    CandidateList::iterator previous = find_text_match(
-        next, candidates_->begin(), candidates_->end());
+    CandidateList::iterator previous =
+        find_text_match(next, candidates_->begin(), candidates_->end());
     if (previous == candidates_->end()) {
       // Encountered a unique candidate.
       return true;
@@ -64,11 +63,10 @@ bool UniquifiedTranslation::Uniquify() {
 
 // Uniquifier
 
-Uniquifier::Uniquifier(const Ticket& ticket) : Filter(ticket) {
-}
+Uniquifier::Uniquifier(const Ticket& ticket) : Filter(ticket) {}
 
 an<Translation> Uniquifier::Apply(an<Translation> translation,
-                                          CandidateList* candidates) {
+                                  CandidateList* candidates) {
   return New<UniquifiedTranslation>(translation, candidates);
 }
 

@@ -32,7 +32,7 @@ class Processor : public Class<Processor, const Ticket&> {
   }
 
   string name_space() const { return name_space_; }
-  
+
  protected:
   Engine* engine_;
   string name_space_;

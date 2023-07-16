@@ -8,6 +8,7 @@
 #include <utf8.h>
 #include <rime/config.h>
 #include <rime/algo/encoder.h>
+#include <rime/algo/strings.h>
 
 namespace rime {
 
@@ -15,19 +16,15 @@ static const int kEncoderDfsLimit = 32;
 static const int kMaxPhraseLength = 32;
 
 string RawCode::ToString() const {
-  return boost::join(*this, " ");
+  return strings::join(*this, " ");
 }
 
-void RawCode::FromString(const string &code_str) {
-  boost::split(*dynamic_cast<vector<string> *>(this),
-               code_str,
-               boost::algorithm::is_space(),
-               boost::algorithm::token_compress_on);
+void RawCode::FromString(const string& code_str) {
+  *dynamic_cast<vector<string>*>(this) = strings::split(code_str, " ");
 }
 
 TableEncoder::TableEncoder(PhraseCollector* collector)
-    : Encoder(collector), loaded_(false), max_phrase_length_(0) {
-}
+    : Encoder(collector), loaded_(false), max_phrase_length_(0) {}
 
 /*
   # sample encoder configuration (from cangjie5.dict.yaml)
@@ -51,7 +48,8 @@ bool TableEncoder::LoadSettings(Config* config) {
   exclude_patterns_.clear();
   tail_anchor_.clear();
 
-  if (!config) return false;
+  if (!config)
+    return false;
 
   if (auto rules = config->GetList("encoder/rules")) {
     for (auto it = rules->begin(); it != rules->end(); ++it) {
@@ -73,10 +71,8 @@ bool TableEncoder::LoadSettings(Config* config) {
         if (max_phrase_length_ < length) {
           max_phrase_length_ = length;
         }
-      }
-      else if (auto range = As<ConfigList>(rule->Get("length_in_range"))) {
-        if (range->size() != 2 ||
-            !range->GetValueAt(0) ||
+      } else if (auto range = As<ConfigList>(rule->Get("length_in_range"))) {
+        if (range->size() != 2 || !range->GetValueAt(0) ||
             !range->GetValueAt(1) ||
             !range->GetValueAt(0)->GetInt(&r.min_word_length) ||
             !range->GetValueAt(1)->GetInt(&r.max_word_length) ||
@@ -114,7 +110,7 @@ bool TableEncoder::ParseFormula(const string& formula,
     LOG(ERROR) << "bad formula: '%s'" << formula;
     return false;
   }
-  for (auto it = formula.cbegin(), end = formula.cend(); it != end; ) {
+  for (auto it = formula.cbegin(), end = formula.cend(); it != end;) {
     CodeCoords c;
     if (*it < 'A' || *it > 'Z') {
       LOG(ERROR) << "invalid character index in formula: '%s'" << formula;
@@ -162,8 +158,7 @@ bool TableEncoder::Encode(const RawCode& code, string* result) {
       if (c.char_index < 0) {
         continue;  // 'abc def' ~ 'Xa'
       }
-      if (current.char_index < 0 &&
-          c.char_index < encoded.char_index) {
+      if (current.char_index < 0 && c.char_index < encoded.char_index) {
         continue;  // 'abc def' ~ '(AaBa)Ya'
         // 'abc def' ~ '(AaBa)Aa' is OK
       }
@@ -171,8 +166,8 @@ bool TableEncoder::Encode(const RawCode& code, string* result) {
       if (c.char_index == encoded.char_index) {
         start_index = encoded.code_index + 1;
       }
-      c.code_index = CalculateCodeIndex(code[c.char_index],  c.code_index,
-                                        start_index);
+      c.code_index =
+          CalculateCodeIndex(code[c.char_index], c.code_index, start_index);
       if (c.code_index >= static_cast<int>(code[c.char_index].length())) {
         continue;  // 'abc def' ~ 'Ad'
       }
@@ -208,10 +203,9 @@ bool TableEncoder::Encode(const RawCode& code, string* result) {
 //        beyond `start` is used to locate the encoding character at index -1.
 // returns string index in `code` for the character at virtual `index`.
 // may return a negative number if `index` does not exist in `code`.
-int TableEncoder::CalculateCodeIndex(const string& code, int index,
-                                     int start) {
-  DLOG(INFO) << "code = " << code
-             << ", index = " << index << ", start = " << start;
+int TableEncoder::CalculateCodeIndex(const string& code, int index, int start) {
+  DLOG(INFO) << "code = " << code << ", index = " << index
+             << ", start = " << start;
   // tail_anchor = '|'
   const int n = static_cast<int>(code.length());
   int k = 0;
@@ -225,24 +219,20 @@ int TableEncoder::CalculateCodeIndex(const string& code, int index,
       k = static_cast<int>(tail) - 1;
     }
     while (++index < 0) {
-      while (--k >= 0 &&
-             tail_anchor_.find(code[k]) != string::npos) {
+      while (--k >= 0 && tail_anchor_.find(code[k]) != string::npos) {
       }
     }
-  }
-  else {
+  } else {
     // 'ab|cd|ef|g' ~ '(AaAb)Ac' -> 'abc'; index = 2
     while (index-- > 0) {
-      while (++k < n &&
-             tail_anchor_.find(code[k]) != string::npos) {
+      while (++k < n && tail_anchor_.find(code[k]) != string::npos) {
       }
     }
   }
   return k;
 }
 
-bool TableEncoder::EncodePhrase(const string& phrase,
-                                const string& value) {
+bool TableEncoder::EncodePhrase(const string& phrase, const string& value) {
   size_t phrase_length = utf8::unchecked::distance(
       phrase.c_str(), phrase.c_str() + phrase.length());
   if (static_cast<int>(phrase_length) > max_phrase_length_)
@@ -268,8 +258,7 @@ bool TableEncoder::DfsEncode(const string& phrase,
                  << "[" << code->ToString() << "] -> [" << encoded << "]";
       collector_->CreateEntry(phrase, encoded, value);
       return true;
-    }
-    else {
+    } else {
       DLOG(WARNING) << "failed to encode '" << phrase << "': "
                     << "[" << code->ToString() << "]";
       return false;
@@ -299,12 +288,9 @@ bool TableEncoder::DfsEncode(const string& phrase,
   return ret;
 }
 
-ScriptEncoder::ScriptEncoder(PhraseCollector* collector)
-    : Encoder(collector) {
-}
+ScriptEncoder::ScriptEncoder(PhraseCollector* collector) : Encoder(collector) {}
 
-bool ScriptEncoder::EncodePhrase(const string& phrase,
-                                 const string& value) {
+bool ScriptEncoder::EncodePhrase(const string& phrase, const string& value) {
   size_t phrase_length = utf8::unchecked::distance(
       phrase.c_str(), phrase.c_str() + phrase.length());
   if (static_cast<int>(phrase_length) > kMaxPhraseLength)

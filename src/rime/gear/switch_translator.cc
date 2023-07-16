@@ -16,7 +16,7 @@
 #include <rime/gear/switch_translator.h>
 
 static const char* kRightArrow = "\xe2\x86\x92 ";
-//static const char* kRadioSelected = " \xe2\x97\x89";  // U+25C9 FISHEYE
+// static const char* kRadioSelected = " \xe2\x97\x89";  // U+25C9 FISHEYE
 static const char* kRadioSelected = " \xe2\x9c\x93";  // U+2713 CHECK MARK
 
 namespace rime {
@@ -26,24 +26,22 @@ using SwitchOption = Switches::SwitchOption;
 inline static string get_state_label(const SwitchOption& option,
                                      size_t state_index,
                                      bool abbreviate = false) {
-  return string(Switches::GetStateLabel(option.the_switch,
-                                        state_index,
-                                        abbreviate));
+  return string(
+      Switches::GetStateLabel(option.the_switch, state_index, abbreviate));
 }
 
 class Switch : public SimpleCandidate, public SwitcherCommand {
  public:
-  Switch(const SwitchOption& option,
-         bool current_state,
-         bool auto_save)
-      : SimpleCandidate("switch", 0, 0,
-                        get_state_label(option, current_state),
-                        kRightArrow +
-                        get_state_label(option, 1 - current_state)),
+  Switch(const SwitchOption& option, bool current_state, bool auto_save)
+      : SimpleCandidate(
+            "switch",
+            0,
+            0,
+            get_state_label(option, current_state),
+            kRightArrow + get_state_label(option, 1 - current_state)),
         SwitcherCommand(option.option_name),
         target_state_(!current_state),
-        auto_save_(auto_save) {
-  }
+        auto_save_(auto_save) {}
   void Apply(Switcher* switcher) override;
 
  protected:
@@ -68,10 +66,8 @@ class RadioOption;
 class RadioGroup : public std::enable_shared_from_this<RadioGroup> {
  public:
   RadioGroup(Context* context, Switcher* switcher)
-      : context_(context), switcher_(switcher) {
-  }
-  an<RadioOption> CreateOption(const SwitchOption& option,
-                               size_t option_index);
+      : context_(context), switcher_(switcher) {}
+  an<RadioOption> CreateOption(const SwitchOption& option, size_t option_index);
   void SelectOption(RadioOption* option);
   RadioOption* GetSelectedOption() const;
 
@@ -88,8 +84,7 @@ class RadioOption : public SimpleCandidate, public SwitcherCommand {
               const string& option_name)
       : SimpleCandidate("switch", 0, 0, state_label),
         SwitcherCommand(option_name),
-        group_(group) {
-  }
+        group_(group) {}
   void Apply(Switcher* switcher) override;
   void UpdateState(bool selected);
   bool selected() const { return selected_; }
@@ -109,8 +104,8 @@ void RadioOption::UpdateState(bool selected) {
   set_comment(selected ? kRadioSelected : "");
 }
 
-an<RadioOption>
-RadioGroup::CreateOption(const SwitchOption& option, size_t option_index) {
+an<RadioOption> RadioGroup::CreateOption(const SwitchOption& option,
+                                         size_t option_index) {
   auto radio_option = New<RadioOption>(shared_from_this(),
                                        get_state_label(option, option_index),
                                        option.option_name);
@@ -148,17 +143,14 @@ RadioOption* RadioGroup::GetSelectedOption() const {
 class FoldedOptions : public SimpleCandidate, public SwitcherCommand {
  public:
   FoldedOptions(Config* config)
-      : SimpleCandidate("unfold", 0, 0, ""),
-        SwitcherCommand("_fold_options") {
+      : SimpleCandidate("unfold", 0, 0, ""), SwitcherCommand("_fold_options") {
     LoadConfig(config);
   }
   void Apply(Switcher* switcher) override;
   void Append(const SwitchOption& option, size_t state_index);
   void Finish();
 
-  size_t size() const {
-    return labels_.size();
-  }
+  size_t size() const { return labels_.size(); }
 
  private:
   void LoadConfig(Config* config);
@@ -188,8 +180,7 @@ void FoldedOptions::Apply(Switcher* switcher) {
 }
 
 void FoldedOptions::Append(const SwitchOption& option, size_t state_index) {
-  labels_.push_back(
-    get_state_label(option, state_index, abbreviate_options_));
+  labels_.push_back(get_state_label(option, state_index, abbreviate_options_));
 }
 
 void FoldedOptions::Finish() {
@@ -198,9 +189,8 @@ void FoldedOptions::Finish() {
 
 class SwitchTranslation : public FifoTranslation {
  public:
-  SwitchTranslation(Switcher* switcher) {
-    LoadSwitches(switcher);
-  }
+  SwitchTranslation(Switcher* switcher) { LoadSwitches(switcher); }
+
  protected:
   void LoadSwitches(Switcher* switcher);
 };
@@ -256,9 +246,8 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
           if (current_state && !get_state_label(option, option.option_index).empty()) {
             folded_options->Append(option, option.option_index);
           }
-        }
-        return Switches::kContinue;
-      });
+          return Switches::kContinue;
+        });
     if (folded_options->size() > 1) {
       folded_options->Finish();
       candies_.clear();
@@ -268,12 +257,10 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
   DLOG(INFO) << "num switches: " << candies_.size();
 }
 
-SwitchTranslator::SwitchTranslator(const Ticket& ticket)
-    : Translator(ticket) {
-}
+SwitchTranslator::SwitchTranslator(const Ticket& ticket) : Translator(ticket) {}
 
 an<Translation> SwitchTranslator::Query(const string& input,
-                                                const Segment& segment) {
+                                        const Segment& segment) {
   auto switcher = dynamic_cast<Switcher*>(engine_);
   if (!switcher) {
     return nullptr;

@@ -24,8 +24,7 @@ Switcher::Switcher(const Ticket& ticket) : Processor(ticket) {
   context_->set_option("dumb", true);  // not going to commit anything
 
   // receive context notifications
-  context_->select_notifier().connect(
-      [this](Context* ctx) { OnSelect(ctx); });
+  context_->select_notifier().connect([this](Context* ctx) { OnSelect(ctx); });
 
   user_config_.reset(Config::Require("user_config")->Create("user"));
   InitializeComponents();
@@ -55,8 +54,7 @@ ProcessResult Switcher::ProcessKeyEvent(const KeyEvent& key_event) {
     if (key_event == hotkey) {
       if (!active_ && engine_) {
         Activate();
-      }
-      else if (active_) {
+      } else if (active_) {
         HighlightNextSchema();
       }
       return kAccepted;
@@ -75,8 +73,7 @@ ProcessResult Switcher::ProcessKeyEvent(const KeyEvent& key_event) {
     int ch = key_event.keycode();
     if (ch == XK_space || ch == XK_Return) {
       context_->ConfirmCurrentSelection();
-    }
-    else if (ch == XK_Escape) {
+    } else if (ch == XK_Escape) {
       Deactivate();
     }
     return kAccepted;
@@ -97,12 +94,10 @@ void Switcher::HighlightNextSchema() {
     if (candidate_count <= index) {
       index = 0;  // passed the end; rewind
       break;
-    }
-    else {
+    } else {
       option = seg.GetCandidateAt(index);
     }
-  }
-  while (!option || option->type() != "schema");
+  } while (!option || option->type() != "schema");
   seg.selected_index = index;
   seg.tags.insert("paging");
   return;
@@ -135,8 +130,7 @@ static an<ConfigValue> ParseSchemaListEntry(Config* config,
   if (!schema_property)
     return nullptr;
   if (auto case_conditions = As<ConfigList>(entry_map->Get("case"))) {
-    for (auto iter = case_conditions->begin();
-         iter != case_conditions->end();
+    for (auto iter = case_conditions->begin(); iter != case_conditions->end();
          ++iter) {
       if (auto condition_variable = As<ConfigValue>(*iter)) {
         bool condition_met = false;
@@ -151,7 +145,8 @@ static an<ConfigValue> ParseSchemaListEntry(Config* config,
 }
 
 int Switcher::ForEachSchemaListEntry(
-    Config* config, function<bool (const string& schema_id)> process_entry) {
+    Config* config,
+    function<bool(const string& schema_id)> process_entry) {
   auto schema_list = config->GetList("schema_list");
   if (!schema_list)
     return 0;
@@ -177,17 +172,15 @@ Schema* Switcher::CreateSchema() {
     user_config_->GetString("var/previously_selected_schema", &previous);
   }
   string recent;
-  ForEachSchemaListEntry(
-      config,
-      [&previous, &recent](const string& schema_id) {
-        if (previous.empty() || previous == schema_id) {
-          recent = schema_id;
-          return /* continue = */false;
-        }
-        if (recent.empty())
-          recent = schema_id;
-        return /* continue = */true;
-      });
+  ForEachSchemaListEntry(config, [&previous, &recent](const string& schema_id) {
+    if (previous.empty() || previous == schema_id) {
+      recent = schema_id;
+      return /* continue = */ false;
+    }
+    if (recent.empty())
+      recent = schema_id;
+    return /* continue = */ true;
+  });
   if (recent.empty())
     return nullptr;
   else
@@ -226,7 +219,7 @@ void Switcher::RefreshMenu() {
   if (comp.empty()) {
     // no longer need this to make context_->IsComposing() == true
     // context_->set_input(" ");
-    Segment seg(0, 0);         // empty range
+    Segment seg(0, 0);  // empty range
     seg.prompt = caption_;
     comp.AddSegment(seg);
   }
@@ -288,30 +281,26 @@ void Switcher::InitializeComponents() {
   if (auto c = Processor::Require("key_binder")) {
     an<Processor> p(c->Create(Ticket(this)));
     processors_.push_back(p);
-  }
-  else {
+  } else {
     LOG(WARNING) << "key_binder not available.";
   }
   if (auto c = Processor::Require("selector")) {
     an<Processor> p(c->Create(Ticket(this)));
     processors_.push_back(p);
-  }
-  else {
+  } else {
     LOG(WARNING) << "selector not available.";
   }
   DLOG(INFO) << "num processors: " << processors_.size();
   if (auto c = Translator::Require("schema_list_translator")) {
     an<Translator> t(c->Create(Ticket(this)));
     translators_.push_back(t);
-  }
-  else {
+  } else {
     LOG(WARNING) << "schema_list_translator not available.";
   }
   if (auto c = Translator::Require("switch_translator")) {
     an<Translator> t(c->Create(Ticket(this)));
     translators_.push_back(t);
-  }
-  else {
+  } else {
     LOG(WARNING) << "switch_translator not available.";
   }
   DLOG(INFO) << "num translators: " << translators_.size();

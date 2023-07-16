@@ -34,8 +34,7 @@ struct Segment {
   Segment() = default;
 
   Segment(int start_pos, int end_pos)
-      : start(start_pos), end(end_pos), length(end_pos - start_pos) {
-  }
+      : start(start_pos), end(end_pos), length(end_pos - start_pos) {}
 
   void Clear() {
     status = kVoid;
@@ -48,9 +47,7 @@ struct Segment {
   void Close();
   bool Reopen(size_t caret_pos);
 
-  bool HasTag(const string& tag) const {
-    return tags.find(tag) != tags.end();
-  }
+  bool HasTag(const string& tag) const { return tags.find(tag) != tags.end(); }
 
   an<Candidate> GetCandidateAt(size_t index) const;
   an<Candidate> GetSelectedCandidate() const;
@@ -78,8 +75,7 @@ class Segmentation : public vector<Segment> {
   string input_;
 };
 
-std::ostream& operator<< (std::ostream& out,
-                          const Segmentation& segmentation);
+std::ostream& operator<<(std::ostream& out, const Segmentation& segmentation);
 
 }  // namespace rime
 
