@@ -108,15 +108,17 @@ void Context::Clear() {
 }
 
 bool Context::Select(size_t index) {
-  bool result = Peek(index);
-  if (result)
-    composition_.back().status = Segment::kSelected;
-  select_notifier_(this);
-  return result;
-}
-DLOG(INFO) << "Selection changed from: " << previous_index
-           << " to: " << new_index;
-return true;
+  if (composition_.empty())
+    return false;
+  Segment& seg(composition_.back());
+  if (auto cand = seg.GetCandidateAt(index)) {
+    seg.selected_index = index;
+    seg.status = Segment::kSelected;
+    DLOG(INFO) << "Selected: '" << cand->text() << "', index = " << index;
+    select_notifier_(this);
+    return true;
+  }
+  return false;
 }
 
 bool Context::DeleteCandidate(
