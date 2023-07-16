@@ -16,13 +16,12 @@ namespace rime {
 class DbAccessor {
  public:
   DbAccessor() = default;
-  explicit DbAccessor(const string& prefix)
-      : prefix_(prefix) {}
+  explicit DbAccessor(const string& prefix) : prefix_(prefix) {}
   virtual ~DbAccessor() = default;
 
   virtual bool Reset() = 0;
-  virtual bool Jump(const string &key) = 0;
-  virtual bool GetNextRecord(string *key, string *value) = 0;
+  virtual bool Jump(const string& key) = 0;
+  virtual bool GetNextRecord(string* key, string* value) = 0;
   virtual bool exhausted() = 0;
 
  protected:
@@ -52,10 +51,10 @@ class Db : public Class<Db, const string&> {
 
   virtual an<DbAccessor> QueryMetadata() = 0;
   virtual an<DbAccessor> QueryAll() = 0;
-  virtual an<DbAccessor> Query(const string &key) = 0;
-  virtual bool Fetch(const string &key, string *value) = 0;
-  virtual bool Update(const string &key, const string &value) = 0;
-  virtual bool Erase(const string &key) = 0;
+  virtual an<DbAccessor> Query(const string& key) = 0;
+  virtual bool Fetch(const string& key, string* value) = 0;
+  virtual bool Update(const string& key, const string& value) = 0;
+  virtual bool Erase(const string& key) = 0;
 
   const string& name() const { return name_; }
   const string& file_name() const { return file_name_; }
@@ -81,6 +80,7 @@ class Transactional {
   virtual bool AbortTransaction() { return false; }
   virtual bool CommitTransaction() { return false; }
   bool in_transaction() const { return in_transaction_; }
+
  protected:
   bool in_transaction_ = false;
 };
@@ -105,8 +105,7 @@ class DbComponentBase {
 };
 
 template <class DbClass>
-class DbComponent : public DbClass::Component,
-                    protected DbComponentBase {
+class DbComponent : public DbClass::Component, protected DbComponentBase {
  public:
   virtual string extension() const;
 

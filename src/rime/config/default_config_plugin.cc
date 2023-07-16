@@ -9,19 +9,18 @@
 
 namespace rime {
 
-bool DefaultConfigPlugin::ReviewCompileOutput(
-    ConfigCompiler* compiler, an<ConfigResource> resource) {
+bool DefaultConfigPlugin::ReviewCompileOutput(ConfigCompiler* compiler,
+                                              an<ConfigResource> resource) {
   return true;
 }
 
-bool DefaultConfigPlugin::ReviewLinkOutput(
-    ConfigCompiler* compiler, an<ConfigResource> resource) {
+bool DefaultConfigPlugin::ReviewLinkOutput(ConfigCompiler* compiler,
+                                           an<ConfigResource> resource) {
   if (!boost::ends_with(resource->resource_id, ".schema"))
     return true;
   auto target = Cow(resource, "menu");
   Reference reference{"default", "menu", true};
-  if (!IncludeReference{reference}
-        .TargetedAt(target).Resolve(compiler)) {
+  if (!IncludeReference{reference}.TargetedAt(target).Resolve(compiler)) {
     LOG(ERROR) << "failed to include section " << reference;
     return false;
   }

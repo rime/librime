@@ -31,10 +31,10 @@ class DictCompiler {
     kDump = 4,
   };
 
-  RIME_API explicit DictCompiler(Dictionary *dictionary);
+  RIME_API explicit DictCompiler(Dictionary* dictionary);
   RIME_API virtual ~DictCompiler();
 
-  RIME_API bool Compile(const string &schema_file);
+  RIME_API bool Compile(const string& schema_file);
   void set_options(int options) { options_ = options; }
 
  private:

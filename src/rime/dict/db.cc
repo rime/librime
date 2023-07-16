@@ -21,9 +21,7 @@ bool DbAccessor::MatchesPrefix(const string& key) {
 
 // DbComponentBase
 
-static const ResourceType kDbResourceType = {
-  "db", "", ""
-};
+static const ResourceType kDbResourceType = {"db", "", ""};
 
 DbComponentBase::DbComponentBase()
     : db_resource_resolver_(
@@ -39,8 +37,7 @@ string DbComponentBase::DbFilePath(const string& name,
 // Db members
 
 Db::Db(const string& file_name, const string& name)
-    : name_(name),
-      file_name_(file_name) {}
+    : name_(name), file_name_(file_name) {}
 
 bool Db::Exists() const {
   return boost::filesystem::exists(file_name());
@@ -57,7 +54,7 @@ bool Db::Remove() {
 bool Db::CreateMetadata() {
   LOG(INFO) << "creating metadata for db '" << name_ << "'.";
   return MetaUpdate("/db_name", name_) &&
-      MetaUpdate("/rime_version", RIME_VERSION);
+         MetaUpdate("/rime_version", RIME_VERSION);
 }
 
 }  // namespace rime

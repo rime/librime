@@ -33,6 +33,7 @@ class Projection {
   RIME_API bool Apply(string* value);
   // {z, y, x} -> {a, b, c, d}
   RIME_API bool Apply(Script* value);
+
  protected:
   vector<of<Calculation>> calculation_;
 };

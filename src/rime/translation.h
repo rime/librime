@@ -41,8 +41,7 @@ class Translation {
 
 class UniqueTranslation : public Translation {
  public:
-  UniqueTranslation(an<Candidate> candidate)
-      : candidate_(candidate) {
+  UniqueTranslation(an<Candidate> candidate) : candidate_(candidate) {
     set_exhausted(!candidate);
   }
 
@@ -62,9 +61,7 @@ class FifoTranslation : public Translation {
 
   void Append(an<Candidate> candy);
 
-  size_t size() const {
-    return candies_.size() - cursor_;
-  }
+  size_t size() const { return candies_.size() - cursor_; }
 
  protected:
   CandidateList candies_;
@@ -78,13 +75,13 @@ class UnionTranslation : public Translation {
   bool Next();
   an<Candidate> Peek();
 
-  UnionTranslation& operator+= (an<Translation> t);
+  UnionTranslation& operator+=(an<Translation> t);
 
  protected:
   list<of<Translation>> translations_;
 };
 
-an<UnionTranslation> operator+ (an<Translation> x, an<Translation> y);
+an<UnionTranslation> operator+(an<Translation> x, an<Translation> y);
 
 class MergedTranslation : public Translation {
  public:
@@ -93,7 +90,7 @@ class MergedTranslation : public Translation {
   bool Next();
   an<Candidate> Peek();
 
-  MergedTranslation& operator+= (an<Translation> t);
+  MergedTranslation& operator+=(an<Translation> t);
 
   size_t size() const { return translations_.size(); }
 
@@ -147,6 +144,6 @@ class PrefetchTranslation : public Translation {
   CandidateQueue cache_;
 };
 
-} // namespace rime
+}  // namespace rime
 
 #endif  // RIME_TRANSLATION_H_

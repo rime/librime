@@ -11,8 +11,7 @@
 namespace rime {
 
 FallbackSegmentor::FallbackSegmentor(const Ticket& ticket)
-    : Segmentor(ticket) {
-}
+    : Segmentor(ticket) {}
 
 bool FallbackSegmentor::Proceed(Segmentation* segmentation) {
   int len = segmentation->GetCurrentSegmentLength();
@@ -37,8 +36,8 @@ bool FallbackSegmentor::Proceed(Segmentation* segmentation) {
     // append one character to the last raw segment
     if (last.HasTag("raw")) {
       last.end = k + 1;
-      DLOG(INFO) << "extend previous raw segment to ["
-                 << last.start << ", " << last.end << ")";
+      DLOG(INFO) << "extend previous raw segment to [" << last.start << ", "
+                 << last.end << ")";
       // mark redo translation (in case it's been previously translated)
       last.Clear();
       last.tags.insert("raw");
@@ -47,8 +46,8 @@ bool FallbackSegmentor::Proceed(Segmentation* segmentation) {
   }
   {
     Segment segment(k, k + 1);
-    DLOG(INFO) << "add a raw segment ["
-               << segment.start << ", " << segment.end << ")";
+    DLOG(INFO) << "add a raw segment [" << segment.start << ", " << segment.end
+               << ")";
     segment.tags.insert("raw");
     segmentation->Forward();
     segmentation->AddSegment(segment);

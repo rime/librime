@@ -24,7 +24,7 @@ struct RawDictEntry {
 // code -> weight
 using WeightMap = map<string, double>;
 // word -> { code -> weight }
-using WordMap = map<string, WeightMap>;
+using WordMap = hash_map<string, WeightMap>;
 // [ (word, weight), ... ]
 using EncodeQueue = std::queue<pair<string, string>>;
 
@@ -35,7 +35,7 @@ class EntryCollector : public PhraseCollector {
  public:
   Syllabary syllabary;
   bool build_syllabary = true;
-  vector<RawDictEntry> entries;
+  vector<of<RawDictEntry>> entries;
   size_t num_entries = 0;
   ReverseLookupTable stems;
 
@@ -50,15 +50,15 @@ class EntryCollector : public PhraseCollector {
   // export contents of table and prism to text files
   void Dump(const string& file_name) const;
 
-  void CreateEntry(const string &word,
-                   const string &code_str,
-                   const string &weight_str);
-  bool TranslateWord(const string& word,
-                     vector<string>* code);
+  void CreateEntry(const string& word,
+                   const string& code_str,
+                   const string& weight_str);
+  bool TranslateWord(const string& word, vector<string>* code);
+
  protected:
   void LoadPresetVocabulary(DictSettings* settings);
   // call Collect() multiple times for all required tables
-  void Collect(const string &dict_file);
+  void Collect(const string& dict_file);
   // encode all collected entries
   void Finish();
 
@@ -66,7 +66,7 @@ class EntryCollector : public PhraseCollector {
   the<PresetVocabulary> preset_vocabulary;
   the<Encoder> encoder;
   EncodeQueue encode_queue;
-  set<string/* word */> collection;
+  set<string /* word */> collection;
   WordMap words;
   WeightMap total_weight;
 };

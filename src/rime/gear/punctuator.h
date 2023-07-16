@@ -22,6 +22,7 @@ class PunctConfig {
  public:
   void LoadConfig(Engine* engine, bool load_symbols = false);
   an<ConfigItem> GetPunctDefinition(const string key);
+
  protected:
   string shape_;
   an<ConfigMap> mapping_;
@@ -56,26 +57,21 @@ class PunctSegmentor : public Segmentor {
 class PunctTranslator : public Translator {
  public:
   PunctTranslator(const Ticket& ticket);
-  virtual an<Translation> Query(const string& input,
-                                        const Segment& segment);
+  virtual an<Translation> Query(const string& input, const Segment& segment);
 
  protected:
-  an<Translation>
-  TranslateUniquePunct(const string& key,
-                       const Segment& segment,
-                       const an<ConfigValue>& definition);
-  an<Translation>
-  TranslateAlternatingPunct(const string& key,
-                            const Segment& segment,
-                            const an<ConfigList>& definition);
-  an<Translation>
-  TranslateAutoCommitPunct(const string& key,
-                           const Segment& segment,
-                           const an<ConfigMap>& definition);
-  an<Translation>
-  TranslatePairedPunct(const string& key,
-                       const Segment& segment,
-                       const an<ConfigMap>& definition);
+  an<Translation> TranslateUniquePunct(const string& key,
+                                       const Segment& segment,
+                                       const an<ConfigValue>& definition);
+  an<Translation> TranslateAlternatingPunct(const string& key,
+                                            const Segment& segment,
+                                            const an<ConfigList>& definition);
+  an<Translation> TranslateAutoCommitPunct(const string& key,
+                                           const Segment& segment,
+                                           const an<ConfigMap>& definition);
+  an<Translation> TranslatePairedPunct(const string& key,
+                                       const Segment& segment,
+                                       const an<ConfigMap>& definition);
 
   PunctConfig config_;
 };

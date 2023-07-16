@@ -20,8 +20,7 @@ UserDbValue::UserDbValue(const string& value) {
 }
 
 string UserDbValue::Pack() const {
-  return boost::str(boost::format("c=%1% d=%2% t=%3%") %
-                    commits % dee % tick);
+  return boost::str(boost::format("c=%1% d=%2% t=%3%") % commits % dee % tick);
 }
 
 bool UserDbValue::Unpack(const string& value) {
@@ -36,17 +35,14 @@ bool UserDbValue::Unpack(const string& value) {
     try {
       if (k == "c") {
         commits = boost::lexical_cast<int>(v);
-      }
-      else if (k == "d") {
+      } else if (k == "d") {
         dee = (std::min)(10000.0, boost::lexical_cast<double>(v));
-      }
-      else if (k == "t") {
+      } else if (k == "t") {
         tick = boost::lexical_cast<TickCount>(v);
       }
-    }
-    catch (...) {
-      LOG(ERROR) << "failed in parsing key-value from userdb entry '"
-                 << k_eq_v << "'.";
+    } catch (...) {
+      LOG(ERROR) << "failed in parsing key-value from userdb entry '" << k_eq_v
+                 << "'.";
       return false;
     }
   }
@@ -66,11 +62,8 @@ string UserDb::snapshot_extension() {
 
 // key ::= code <space> <Tab> phrase
 
-static bool userdb_entry_parser(const Tsv& row,
-                                string* key,
-                                string* value) {
-  if (row.size() < 2 ||
-      row[0].empty() || row[1].empty()) {
+static bool userdb_entry_parser(const Tsv& row, string* key, string* value) {
+  if (row.size() < 2 || row[0].empty() || row[1].empty()) {
     return false;
   }
   string code(row[0]);
@@ -89,26 +82,23 @@ static bool userdb_entry_formatter(const string& key,
                                    const string& value,
                                    Tsv* tsv) {
   Tsv& row(*tsv);
-  boost::algorithm::split(row, key,
-                          boost::algorithm::is_any_of("\t"));
-  if (row.size() != 2 ||
-      row[0].empty() || row[1].empty())
+  boost::algorithm::split(row, key, boost::algorithm::is_any_of("\t"));
+  if (row.size() != 2 || row[0].empty() || row[1].empty())
     return false;
   row.push_back(value);
   return true;
 }
 
 static TextFormat plain_userdb_format = {
-  userdb_entry_parser,
-  userdb_entry_formatter,
-  "Rime user dictionary",
+    userdb_entry_parser,
+    userdb_entry_formatter,
+    "Rime user dictionary",
 };
 
 template <>
 UserDbWrapper<TextDb>::UserDbWrapper(const string& file_name,
                                      const string& db_name)
-    : TextDb(file_name, db_name, "userdb", plain_userdb_format) {
-}
+    : TextDb(file_name, db_name, "userdb", plain_userdb_format) {}
 
 bool UserDbHelper::UpdateUserInfo() {
   Deployer& deployer(Service::instance().deployer());
@@ -120,15 +110,13 @@ bool UserDbHelper::IsUniformFormat(const string& file_name) {
 }
 
 bool UserDbHelper::UniformBackup(const string& snapshot_file) {
-  LOG(INFO) << "backing up userdb '" << db_->name() << "' to "
-            << snapshot_file;
+  LOG(INFO) << "backing up userdb '" << db_->name() << "' to " << snapshot_file;
   TsvWriter writer(snapshot_file, plain_userdb_format.formatter);
   writer.file_description = plain_userdb_format.file_description;
   DbSource source(db_);
   try {
     writer << source;
-  }
-  catch (std::exception& ex) {
+  } catch (std::exception& ex) {
     LOG(ERROR) << ex.what();
     return false;
   }
@@ -142,8 +130,7 @@ bool UserDbHelper::UniformRestore(const string& snapshot_file) {
   DbSink sink(db_);
   try {
     reader >> sink;
-  }
-  catch (std::exception& ex) {
+  } catch (std::exception& ex) {
     LOG(ERROR) << ex.what();
     return false;
   }
@@ -184,8 +171,7 @@ static TickCount get_tick_count(Db* db) {
   if (db && db->MetaFetch("/tick", &tick)) {
     try {
       return boost::lexical_cast<TickCount>(tick);
-    }
-    catch (...) {
+    } catch (...) {
     }
   }
   return 1;
@@ -206,15 +192,15 @@ bool UserDbMerger::MetaPut(const string& key, const string& value) {
     try {
       their_tick_ = boost::lexical_cast<TickCount>(value);
       max_tick_ = (std::max)(our_tick_, their_tick_);
-    }
-    catch (...) {
+    } catch (...) {
     }
   }
   return true;
 }
 
 bool UserDbMerger::Put(const string& key, const string& value) {
-  if (!db_) return false;
+  if (!db_)
+    return false;
   UserDbValue v(value);
   if (v.tick < their_tick_) {
     v.dee = algo::formula_d(0, (double)their_tick_, v.dee, (double)v.tick);
@@ -228,7 +214,7 @@ bool UserDbMerger::Put(const string& key, const string& value) {
     o.dee = algo::formula_d(0, (double)our_tick_, o.dee, (double)o.tick);
   }
   if (std::abs(o.commits) < std::abs(v.commits))
-      o.commits = v.commits;
+    o.commits = v.commits;
   o.dee = (std::max)(o.dee, v.dee);
   o.tick = max_tick_;
   return db_->Update(key, o.Pack()) && ++merged_entries_;
@@ -241,26 +227,24 @@ void UserDbMerger::CloseMerge() {
   try {
     db_->MetaUpdate("/tick", boost::lexical_cast<string>(max_tick_));
     db_->MetaUpdate("/user_id", deployer.user_id);
-  }
-  catch (...) {
+  } catch (...) {
     LOG(ERROR) << "failed to update tick count.";
     return;
   }
-  LOG(INFO) << "total " << merged_entries_ << " entries merged, tick = "
-            << max_tick_;
+  LOG(INFO) << "total " << merged_entries_
+            << " entries merged, tick = " << max_tick_;
   merged_entries_ = 0;
 }
 
-UserDbImporter::UserDbImporter(Db* db)
-    : db_(db) {
-}
+UserDbImporter::UserDbImporter(Db* db) : db_(db) {}
 
 bool UserDbImporter::MetaPut(const string& key, const string& value) {
   return true;
 }
 
 bool UserDbImporter::Put(const string& key, const string& value) {
-  if (!db_) return false;
+  if (!db_)
+    return false;
   UserDbValue v(value);
   UserDbValue o;
   string old_value;
@@ -270,8 +254,7 @@ bool UserDbImporter::Put(const string& key, const string& value) {
   if (v.commits > 0) {
     o.commits = (std::max)(o.commits, v.commits);
     o.dee = (std::max)(o.dee, v.dee);
-  }
-  else if (v.commits < 0) {  // mark as deleted
+  } else if (v.commits < 0) {  // mark as deleted
     o.commits = (std::min)(v.commits, -std::abs(o.commits));
   }
   return db_->Update(key, o.Pack());
