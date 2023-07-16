@@ -111,11 +111,12 @@ bool Context::Select(size_t index) {
   bool result = Peek(index);
   if (result)
     composition_.back().status = Segment::kSelected;
-    select_notifier_(this);
+  select_notifier_(this);
   return result;
 }
-  DLOG(INFO) << "Selection changed from: " << previous_index << " to: " << new_index;
-  return true;
+DLOG(INFO) << "Selection changed from: " << previous_index
+           << " to: " << new_index;
+return true;
 }
 
 bool Context::DeleteCandidate(

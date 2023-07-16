@@ -15,13 +15,21 @@
 #include <rime/dict/vocabulary.h>
 #include <rime/dict/string_table.h>
 
-#define RIME_TABLE_UNION(U, V, A, a, B, b)                           \
-  struct U {                                                         \
-    V value;                                                         \
-    const A& a() const { return *reinterpret_cast<const A*>(this); } \
-    const B& b() const { return *reinterpret_cast<const B*>(this); } \
-    A& a() { return *reinterpret_cast<A*>(this); }                   \
-    B& b() { return *reinterpret_cast<B*>(this); }                   \
+#define RIME_TABLE_UNION(U, V, A, a, B, b)      \
+  struct U {                                    \
+    V value;                                    \
+    const A& a() const {                        \
+      return *reinterpret_cast<const A*>(this); \
+    }                                           \
+    const B& b() const {                        \
+      return *reinterpret_cast<const B*>(this); \
+    }                                           \
+    A& a() {                                    \
+      return *reinterpret_cast<A*>(this);       \
+    }                                           \
+    B& b() {                                    \
+      return *reinterpret_cast<B*>(this);       \
+    }                                           \
   }
 
 namespace rime {
