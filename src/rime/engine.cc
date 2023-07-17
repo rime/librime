@@ -60,8 +60,7 @@ Engine* Engine::Create() {
   return new ConcreteEngine;
 }
 
-Engine::Engine() : schema_(new Schema), context_(new Context) {
-}
+Engine::Engine() : schema_(new Schema), context_(new Context) {}
 
 Engine::~Engine() {
   context_.reset();
@@ -71,10 +70,8 @@ Engine::~Engine() {
 ConcreteEngine::ConcreteEngine() {
   LOG(INFO) << "starting engine.";
   // receive context notifications
-  context_->commit_notifier().connect(
-      [this](Context* ctx) { OnCommit(ctx); });
-  context_->select_notifier().connect(
-      [this](Context* ctx) { OnSelect(ctx); });
+  context_->commit_notifier().connect([this](Context* ctx) { OnCommit(ctx); });
+  context_->select_notifier().connect([this](Context* ctx) { OnSelect(ctx); });
   context_->update_notifier().connect(
       [this](Context* ctx) { OnContextUpdate(ctx); });
   context_->option_update_notifier().connect(
@@ -98,16 +95,20 @@ bool ConcreteEngine::ProcessKey(const KeyEvent& key_event) {
   ProcessResult ret = kNoop;
   for (auto& processor : processors_) {
     ret = processor->ProcessKeyEvent(key_event);
-    if (ret == kRejected) break;
-    if (ret == kAccepted) return true;
+    if (ret == kRejected)
+      break;
+    if (ret == kAccepted)
+      return true;
   }
   // record unhandled keys, eg. spaces, numbers, bksp's.
   context_->commit_history().Push(key_event);
   // post-processing
   for (auto& processor : post_processors_) {
     ret = processor->ProcessKeyEvent(key_event);
-    if (ret == kRejected) break;
-    if (ret == kAccepted) return true;
+    if (ret == kRejected)
+      break;
+    if (ret == kAccepted)
+      return true;
   }
   // notify interested parties
   context_->unhandled_key_notifier()(context_.get(), key_event);
@@ -115,12 +116,14 @@ bool ConcreteEngine::ProcessKey(const KeyEvent& key_event) {
 }
 
 void ConcreteEngine::OnContextUpdate(Context* ctx) {
-  if (!ctx) return;
+  if (!ctx)
+    return;
   Compose(ctx);
 }
 
 void ConcreteEngine::OnOptionUpdate(Context* ctx, const string& option) {
-  if (!ctx) return;
+  if (!ctx)
+    return;
   LOG(INFO) << "updated option: " << option;
   // apply new option to active segment
   if (ctx->IsComposing()) {
@@ -133,7 +136,8 @@ void ConcreteEngine::OnOptionUpdate(Context* ctx, const string& option) {
 }
 
 void ConcreteEngine::OnPropertyUpdate(Context* ctx, const string& property) {
-  if (!ctx) return;
+  if (!ctx)
+    return;
   LOG(INFO) << "updated property: " << property;
   // notification
   string value = ctx->get_property(property);
@@ -142,7 +146,8 @@ void ConcreteEngine::OnPropertyUpdate(Context* ctx, const string& property) {
 }
 
 void ConcreteEngine::Compose(Context* ctx) {
-  if (!ctx) return;
+  if (!ctx)
+    return;
   Composition& comp = ctx->composition();
   const string active_input = ctx->input().substr(0, ctx->caret_pos());
   DLOG(INFO) << "active input: " << active_input;
@@ -253,16 +258,14 @@ void ConcreteEngine::OnSelect(Context* ctx) {
       ctx->Commit();
     else
       ctx->composition().Forward();
-  }
-  else {
+  } else {
     bool reached_caret_pos = (seg.end >= ctx->caret_pos());
     ctx->composition().Forward();
     if (reached_caret_pos) {
       // finished converting current segment
       // move caret to the end of input
       ctx->set_caret_pos(ctx->input().length());
-    }
-    else {
+    } else {
       Compose(ctx);
     }
   }
@@ -308,8 +311,7 @@ void ConcreteEngine::InitializeComponents() {
       if (auto c = Processor::Require(ticket.klass)) {
         an<Processor> p(c->Create(ticket));
         processors_.push_back(p);
-      }
-      else {
+      } else {
         LOG(ERROR) << "error creating processor: '" << ticket.klass << "'";
       }
     }
@@ -325,8 +327,7 @@ void ConcreteEngine::InitializeComponents() {
       if (auto c = Segmentor::Require(ticket.klass)) {
         an<Segmentor> s(c->Create(ticket));
         segmentors_.push_back(s);
-      }
-      else {
+      } else {
         LOG(ERROR) << "error creating segmentor: '" << ticket.klass << "'";
       }
     }
@@ -342,8 +343,7 @@ void ConcreteEngine::InitializeComponents() {
       if (auto c = Translator::Require(ticket.klass)) {
         an<Translator> t(c->Create(ticket));
         translators_.push_back(t);
-      }
-      else {
+      } else {
         LOG(ERROR) << "error creating translator: '" << ticket.klass << "'";
       }
     }
@@ -359,8 +359,7 @@ void ConcreteEngine::InitializeComponents() {
       if (auto c = Filter::Require(ticket.klass)) {
         an<Filter> f(c->Create(ticket));
         filters_.push_back(f);
-      }
-      else {
+      } else {
         LOG(ERROR) << "error creating filter: '" << ticket.klass << "'";
       }
     }
@@ -369,16 +368,14 @@ void ConcreteEngine::InitializeComponents() {
   if (auto c = Formatter::Require("shape_formatter")) {
     an<Formatter> f(c->Create(Ticket(this)));
     formatters_.push_back(f);
-  }
-  else {
+  } else {
     LOG(WARNING) << "shape_formatter not available.";
   }
   // create post-processors
   if (auto c = Processor::Require("shape_processor")) {
     an<Processor> p(c->Create(Ticket(this)));
     post_processors_.push_back(p);
-  }
-  else {
+  } else {
     LOG(WARNING) << "shape_processor not available.";
   }
 }

@@ -9,12 +9,9 @@
 
 namespace rime {
 
-Ticket::Ticket(Schema* s, const string& ns)
-    : schema(s), name_space(ns) {
-}
+Ticket::Ticket(Schema* s, const string& ns) : schema(s), name_space(ns) {}
 
-Ticket::Ticket(Engine* e, const string& ns,
-               const string& prescription)
+Ticket::Ticket(Engine* e, const string& ns, const string& prescription)
     : engine(e),
       schema(e ? e->schema() : NULL),
       name_space(ns),

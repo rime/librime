@@ -16,7 +16,7 @@ namespace rime {
 class RawCode : public vector<string> {
  public:
   RIME_API string ToString() const;
-  RIME_API void FromString(const string &code_str);
+  RIME_API void FromString(const string& code_str);
 };
 
 class PhraseCollector {
@@ -28,8 +28,7 @@ class PhraseCollector {
                            const string& code_str,
                            const string& value) = 0;
   // return a list of alternative code for the given word
-  virtual bool TranslateWord(const string& word,
-                             vector<string>* code) = 0;
+  virtual bool TranslateWord(const string& word, vector<string>* code) = 0;
 };
 
 class Config;
@@ -39,12 +38,9 @@ class Encoder {
   Encoder(PhraseCollector* collector) : collector_(collector) {}
   virtual ~Encoder() = default;
 
-  virtual bool LoadSettings(Config* config) {
-    return false;
-  }
+  virtual bool LoadSettings(Config* config) { return false; }
 
-  virtual bool EncodePhrase(const string& phrase,
-                            const string& value) = 0;
+  virtual bool EncodePhrase(const string& phrase, const string& value) = 0;
 
   void set_collector(PhraseCollector* collector) { collector_ = collector; }
 
@@ -87,8 +83,11 @@ class TableEncoder : public Encoder {
  protected:
   bool ParseFormula(const string& formula, TableEncodingRule* rule);
   int CalculateCodeIndex(const string& code, int index, int start);
-  bool DfsEncode(const string& phrase, const string& value,
-                 size_t start_pos, RawCode* code, int* limit);
+  bool DfsEncode(const string& phrase,
+                 const string& value,
+                 size_t start_pos,
+                 RawCode* code,
+                 int* limit);
 
   bool loaded_;
   // settings
@@ -107,8 +106,11 @@ class ScriptEncoder : public Encoder {
   bool EncodePhrase(const string& phrase, const string& value);
 
  private:
-  bool DfsEncode(const string& phrase, const string& value,
-                 size_t start_pos, RawCode* code, int* limit);
+  bool DfsEncode(const string& phrase,
+                 const string& value,
+                 size_t start_pos,
+                 RawCode* code,
+                 int* limit);
 };
 
 }  // namespace rime

@@ -72,20 +72,20 @@ struct ConfigResource;
 
 struct ConfigResourceProvider {
   RIME_API static const ResourceType kDefaultResourceType;
-  RIME_API static ResourceResolver*
-  CreateResourceResolver(const ResourceType& resource_type);
+  RIME_API static ResourceResolver* CreateResourceResolver(
+      const ResourceType& resource_type);
 };
 
 struct DeployedConfigResourceProvider {
   RIME_API static const ResourceType kDefaultResourceType;
-  RIME_API static ResourceResolver*
-  CreateResourceResolver(const ResourceType& resource_type);
+  RIME_API static ResourceResolver* CreateResourceResolver(
+      const ResourceType& resource_type);
 };
 
 struct UserConfigResourceProvider {
   RIME_API static const ResourceType kDefaultResourceType;
-  RIME_API static ResourceResolver*
-  CreateResourceResolver(const ResourceType& resource_type);
+  RIME_API static ResourceResolver* CreateResourceResolver(
+      const ResourceType& resource_type);
 };
 
 class ConfigComponentBase : public Config::Component {
@@ -104,18 +104,18 @@ class ConfigComponentBase : public Config::Component {
 };
 
 template <class Loader, class ResourceProvider = ConfigResourceProvider>
-    class ConfigComponent : public ConfigComponentBase {
+class ConfigComponent : public ConfigComponentBase {
  public:
   ConfigComponent(const ResourceType& resource_type =
-                  ResourceProvider::kDefaultResourceType)
+                      ResourceProvider::kDefaultResourceType)
       : ConfigComponentBase(
             ResourceProvider::CreateResourceResolver(resource_type)) {}
-  ConfigComponent(function<void (Loader* loader)> setup)
-      : ConfigComponentBase(
-            ResourceProvider::CreateResourceResolver(
-                ResourceProvider::kDefaultResourceType)) {
+  ConfigComponent(function<void(Loader* loader)> setup)
+      : ConfigComponentBase(ResourceProvider::CreateResourceResolver(
+            ResourceProvider::kDefaultResourceType)) {
     setup(&loader_);
   }
+
  private:
   an<ConfigData> LoadConfig(const string& config_id) override {
     return loader_.LoadConfig(resource_resolver_.get(), config_id);
@@ -128,6 +128,7 @@ class ConfigLoader {
   RIME_API an<ConfigData> LoadConfig(ResourceResolver* resource_resolver,
                                      const string& config_id);
   void set_auto_save(bool auto_save) { auto_save_ = auto_save; }
+
  private:
   bool auto_save_ = false;
 };
@@ -138,8 +139,9 @@ class ConfigBuilder {
   RIME_API virtual ~ConfigBuilder();
   RIME_API an<ConfigData> LoadConfig(ResourceResolver* resource_resolver,
                                      const string& config_id);
-  void InstallPlugin(ConfigCompilerPlugin *plugin);
+  void InstallPlugin(ConfigCompilerPlugin* plugin);
   bool ApplyPlugins(ConfigCompiler* compiler, an<ConfigResource> resource);
+
  private:
   vector<the<ConfigCompilerPlugin>> plugins_;
 };

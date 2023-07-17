@@ -19,8 +19,7 @@ class LevelDb;
 class LevelDbAccessor : public DbAccessor {
  public:
   LevelDbAccessor();
-  LevelDbAccessor(LevelDbCursor* cursor,
-                 const string& prefix);
+  LevelDbAccessor(LevelDbCursor* cursor, const string& prefix);
   virtual ~LevelDbAccessor();
 
   virtual bool Reset();
@@ -33,9 +32,7 @@ class LevelDbAccessor : public DbAccessor {
   bool is_metadata_query_ = false;
 };
 
-class LevelDb : public Db,
-                public Recoverable,
-                public Transactional {
+class LevelDb : public Db, public Recoverable, public Transactional {
  public:
   LevelDb(const string& file_name,
           const string& db_name,

@@ -24,12 +24,10 @@ void ShapeFormatter::Format(string* text) {
   for (char ch : *text) {
     if (ch == 0x20) {
       oss << "\xe3\x80\x80";
-    }
-    else if (ch > 0x20 && ch <= 0x7e) {
+    } else if (ch > 0x20 && ch <= 0x7e) {
       ch -= 0x20;
-      oss << '\xef' << char('\xbc' + ch / 0x40) <<  char('\x80' + ch % 0x40);
-    }
-    else {
+      oss << '\xef' << char('\xbc' + ch / 0x40) << char('\x80' + ch % 0x40);
+    } else {
       oss << ch;
     }
   }

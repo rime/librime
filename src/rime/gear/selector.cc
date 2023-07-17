@@ -17,19 +17,17 @@
 namespace rime {
 
 static Selector::ActionDef selector_actions[] = {
-  { "previous_candidate", &Selector::PreviousCandidate },
-  { "next_candidate", &Selector::NextCandidate },
-  { "previous_page", &Selector::PreviousPage },
-  { "next_page", &Selector::NextPage },
-  { "home", &Selector::Home },
-  { "end", &Selector::End },
-  Selector::kActionNoop,
+    {"previous_candidate", &Selector::PreviousCandidate},
+    {"next_candidate", &Selector::NextCandidate},
+    {"previous_page", &Selector::PreviousPage},
+    {"next_page", &Selector::NextPage},
+    {"home", &Selector::Home},
+    {"end", &Selector::End},
+    Selector::kActionNoop,
 };
 
 Selector::Selector(const Ticket& ticket)
-  : Processor(ticket),
-    KeyBindingProcessor(selector_actions)
-{
+    : Processor(ticket), KeyBindingProcessor(selector_actions) {
   // default key bindings
   {
     auto& keymap = get_keymap(Horizontal | Stacked);
@@ -113,13 +111,12 @@ inline static bool is_vertical_text(Context* ctx) {
 
 inline static bool is_linear_layout(Context* ctx) {
   return ctx->get_option("_linear") ||
-    // Deprecated. equivalent to {_linear: true, _vertical: false}
-    ctx->get_option("_horizontal");
+         // Deprecated. equivalent to {_linear: true, _vertical: false}
+         ctx->get_option("_horizontal");
 }
 
 ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
-  if (key_event.release() ||
-      key_event.alt() || key_event.super())
+  if (key_event.release() || key_event.alt() || key_event.super())
     return kNoop;
   Context* ctx = engine_->context();
   if (ctx->composition().empty())
@@ -129,14 +126,12 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
 
   TextOrientation text_orientation =
-    is_vertical_text(ctx) ? Vertical : Horizontal;
+      is_vertical_text(ctx) ? Vertical : Horizontal;
   CandidateListLayout candidate_list_layout =
-    is_linear_layout(ctx) ? Linear : Stacked;
+      is_linear_layout(ctx) ? Linear : Stacked;
   auto result = KeyBindingProcessor::ProcessKeyEvent(
-    key_event,
-    ctx,
-    text_orientation | candidate_list_layout,
-    FallbackOptions::None);
+      key_event, ctx, text_orientation | candidate_list_layout,
+      FallbackOptions::None);
   if (result != kNoop) {
     return result;
   }
@@ -144,15 +139,12 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
   int ch = key_event.keycode();
   int index = -1;
   const string& select_keys(engine_->schema()->select_keys());
-  if (!select_keys.empty() &&
-      !key_event.ctrl() &&
-      ch >= 0x20 && ch < 0x7f) {
+  if (!select_keys.empty() && !key_event.ctrl() && ch >= 0x20 && ch < 0x7f) {
     size_t pos = select_keys.find((char)ch);
     if (pos != string::npos) {
       index = static_cast<int>(pos);
     }
-  }
-  else if (ch >= XK_0 && ch <= XK_9)
+  } else if (ch >= XK_0 && ch <= XK_9)
     index = ((ch - XK_0) + 9) % 10;
   else if (ch >= XK_KP_0 && ch <= XK_KP_9)
     index = ((ch - XK_KP_0) + 9) % 10;
@@ -186,7 +178,7 @@ bool Selector::NextPage(Context* ctx) {
   int candidate_count = comp.back().menu->Prepare(page_start + page_size);
   if (candidate_count <= page_start) {
     bool page_down_cycle = engine_->schema()->page_down_cycle();
-    if (page_down_cycle) {// Cycle back to page 1 if true
+    if (page_down_cycle) {  // Cycle back to page 1 if true
       index = 0;
     } else {
       // no-op; consume the key event so that page down is not sent to the app.

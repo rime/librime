@@ -18,14 +18,9 @@ struct ConfigResource : ConfigItemRef {
   bool loaded = false;
 
   ConfigResource(const string& _id, an<ConfigData> _data)
-      : ConfigItemRef(nullptr), resource_id(_id), data(_data) {
-  }
-  an<ConfigItem> GetItem() const override {
-    return data->root;
-  }
-  void SetItem(an<ConfigItem> item) override {
-    data->root = item;
-  }
+      : ConfigItemRef(nullptr), resource_id(_id), data(_data) {}
+  an<ConfigItem> GetItem() const override { return data->root; }
+  void SetItem(an<ConfigItem> item) override { data->root = item; }
 };
 
 struct Reference {
@@ -36,7 +31,7 @@ struct Reference {
   string repr() const;
 };
 
-std::ostream& operator<< (std::ostream& stream, const Reference& reference);
+std::ostream& operator<<(std::ostream& stream, const Reference& reference);
 
 class ConfigCompilerPlugin;
 class ResourceResolver;
@@ -63,7 +58,7 @@ class ConfigCompiler {
   void Pop();
 
   void EnumerateResources(
-      function<void (an<ConfigResource> resource)> process_resource);
+      function<void(an<ConfigResource> resource)> process_resource);
   an<ConfigResource> GetCompiledResource(const string& resource_id) const;
   an<ConfigResource> Compile(const string& file_name);
   bool Link(an<ConfigResource> target);

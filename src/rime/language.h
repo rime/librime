@@ -16,14 +16,12 @@ class Language {
   Language(const string& name) : name_(name) {}
   string name() const { return name_; }
 
-  bool operator== (const Language& other) const {
-    return name_ == other.name_;
-  }
+  bool operator==(const Language& other) const { return name_ == other.name_; }
 
   template <class T, class U>
   static bool intelligible(const T& t, const U& u) {
     return t && t->language() && u && u->language() &&
-        *t->language() == *u->language();
+           *t->language() == *u->language();
   }
 
   static string get_language_component(const string& name);
