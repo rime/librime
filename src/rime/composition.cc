@@ -78,9 +78,10 @@ Preedit Composition::GetPreedit(const string& full_input,
   if (preedit.caret_pos == string::npos) {
     preedit.caret_pos = preedit.text.length();
   }
+  /*disabled for cangjie
   if (end < full_input.length()) {
     preedit.text += full_input.substr(end);
-  }
+  }*/
   // insert soft cursor and prompt string.
   auto prompt = caret + GetPrompt();
   if (!prompt.empty()) {
