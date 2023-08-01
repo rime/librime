@@ -239,6 +239,12 @@ RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context) {
   if (!ctx)
     return False;
   if (ctx->IsComposing()) {
+    Schema* schema = session->schema();
+    if (schema) {
+      Config* config = schema->config();
+      an<ConfigList> preedit_format = config->GetList("input/preedit_format");
+      ctx->SetPreeditFormat(preedit_format);
+    }
     Preedit preedit = ctx->GetPreedit();
     context->composition.length = preedit.text.length();
     context->composition.preedit = new char[preedit.text.length() + 1];

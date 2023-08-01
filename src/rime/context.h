@@ -88,6 +88,8 @@ class Context {
   }
   KeyEventNotifier& unhandled_key_notifier() { return unhandled_key_notifier_; }
 
+  void SetPreeditFormat(an<ConfigList> patterns);
+
  private:
   string GetSoftCursor() const;
   bool DeleteCandidate(function<an<Candidate>(Segment& seg)> get_candidate);

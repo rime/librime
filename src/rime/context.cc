@@ -292,4 +292,8 @@ void Context::ClearTransientOptions() {
   }
 }
 
+void Context::SetPreeditFormat(an<ConfigList> patterns) {
+  composition_.set_preedit_format(patterns);
+}
+
 }  // namespace rime
