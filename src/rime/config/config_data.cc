@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/regex.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <yaml-cpp/yaml.h>
@@ -208,12 +209,22 @@ vector<string> ConfigData::SplitPath(const string& path) {
   vector<string> keys;
   auto is_separator = boost::is_any_of("/");
   auto trimmed_path = boost::trim_left_copy_if(path, is_separator);
-  boost::split(keys, trimmed_path, is_separator);
+  boost::regex re("(?<!\\\\)/");
+  boost::algorithm::split_regex(keys, trimmed_path, re);
+  boost::regex pattern("^\\\\(?=/)");
+  for (auto i = 0; i < keys.size(); i++) {
+    keys.at(i) = boost::regex_replace(keys.at(i), pattern, "");
+  }
   return keys;
 }
 
 string ConfigData::JoinPath(const vector<string>& keys) {
-  return boost::join(keys, "/");
+  std::vector<std::string> _keys(keys);
+  for (auto i = 0; i < _keys.size(); i++) {
+    _keys.at(i) =
+        boost::regex_replace(_keys.at(i), boost::regex("^/"), "\\\\/");
+  }
+  return boost::join(_keys, "/");
 }
 
 an<ConfigItem> ConfigData::Traverse(const string& path) {
