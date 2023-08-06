@@ -19,7 +19,6 @@
 using namespace rime;
 
 static void rime_levers_initialize() {
-
   LOG(INFO) << "registering components from module 'levers'.";
   Registry& r = Registry::instance();
 
@@ -37,17 +36,15 @@ static void rime_levers_initialize() {
   r.Register("clean_old_log_files", new Component<CleanOldLogFiles>);
 }
 
-static void rime_levers_finalize() {
-}
+static void rime_levers_finalize() {}
 
 // implementation of levers api
 
-static RimeCustomSettings*
-rime_levers_custom_settings_init(const char* config_id,
-                                 const char* generator_id) {
-  return reinterpret_cast<RimeCustomSettings*>(
-      new CustomSettings(&Service::instance().deployer(),
-                         config_id, generator_id));
+static RimeCustomSettings* rime_levers_custom_settings_init(
+    const char* config_id,
+    const char* generator_id) {
+  return reinterpret_cast<RimeCustomSettings*>(new CustomSettings(
+      &Service::instance().deployer(), config_id, generator_id));
 }
 
 static void rime_levers_custom_settings_destroy(RimeCustomSettings* settings) {
@@ -63,35 +60,40 @@ static Bool rime_levers_save_settings(RimeCustomSettings* settings) {
 }
 
 static Bool rime_levers_customize_bool(RimeCustomSettings* settings,
-                                       const char* key, Bool value) {
+                                       const char* key,
+                                       Bool value) {
   an<ConfigItem> item = New<ConfigValue>(bool(value));
   auto custom_settings = reinterpret_cast<CustomSettings*>(settings);
   return custom_settings->Customize(key, item);
 }
 
 static Bool rime_levers_customize_int(RimeCustomSettings* settings,
-                                      const char* key, int value) {
+                                      const char* key,
+                                      int value) {
   an<ConfigItem> item = New<ConfigValue>(value);
   auto custom_settings = reinterpret_cast<CustomSettings*>(settings);
   return custom_settings->Customize(key, item);
 }
 
 static Bool rime_levers_customize_double(RimeCustomSettings* settings,
-                                         const char* key, double value) {
+                                         const char* key,
+                                         double value) {
   an<ConfigItem> item = New<ConfigValue>(value);
   auto custom_settings = reinterpret_cast<CustomSettings*>(settings);
   return custom_settings->Customize(key, item);
 }
 
 static Bool rime_levers_customize_string(RimeCustomSettings* settings,
-                                         const char* key, const char* value) {
+                                         const char* key,
+                                         const char* value) {
   an<ConfigItem> item = New<ConfigValue>(value);
   auto custom_settings = reinterpret_cast<CustomSettings*>(settings);
   return custom_settings->Customize(key, item);
 }
 
 static Bool rime_levers_customize_item(RimeCustomSettings* settings,
-                                       const char* key, RimeConfig* value) {
+                                       const char* key,
+                                       RimeConfig* value) {
   an<ConfigItem> item;
   if (value) {
     if (Config* v = reinterpret_cast<Config*>(value->ptr)) {
@@ -123,9 +125,9 @@ static RimeSwitcherSettings* rime_levers_switcher_settings_init() {
       new SwitcherSettings(&Service::instance().deployer()));
 }
 
-static Bool
-rime_levers_get_available_schema_list(RimeSwitcherSettings* settings,
-                                      RimeSchemaList* list) {
+static Bool rime_levers_get_available_schema_list(
+    RimeSwitcherSettings* settings,
+    RimeSchemaList* list) {
   auto ss = reinterpret_cast<SwitcherSettings*>(settings);
   list->size = 0;
   list->list = NULL;
@@ -143,9 +145,8 @@ rime_levers_get_available_schema_list(RimeSwitcherSettings* settings,
   return True;
 }
 
-static Bool
-rime_levers_get_selected_schema_list(RimeSwitcherSettings* settings,
-                                     RimeSchemaList* list) {
+static Bool rime_levers_get_selected_schema_list(RimeSwitcherSettings* settings,
+                                                 RimeSchemaList* list) {
   auto ss = reinterpret_cast<SwitcherSettings*>(settings);
   list->size = 0;
   list->list = NULL;

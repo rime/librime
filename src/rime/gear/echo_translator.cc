@@ -16,10 +16,8 @@ namespace rime {
 class EchoTranslation : public UniqueTranslation {
  public:
   EchoTranslation(const an<Candidate>& candidate)
-      : UniqueTranslation(candidate) {
-  }
-  virtual int Compare(an<Translation> other,
-                      const CandidateList& candidates) {
+      : UniqueTranslation(candidate) {}
+  virtual int Compare(an<Translation> other, const CandidateList& candidates) {
     if (!candidates.empty() || (other && !other->exhausted())) {
       set_exhausted(true);
     }
@@ -27,18 +25,14 @@ class EchoTranslation : public UniqueTranslation {
   }
 };
 
-EchoTranslator::EchoTranslator(const Ticket& ticket)
-    : Translator(ticket) {
-}
+EchoTranslator::EchoTranslator(const Ticket& ticket) : Translator(ticket) {}
 
 an<Translation> EchoTranslator::Query(const string& input,
                                       const Segment& segment) {
-  DLOG(INFO) << "input = '" << input
-             << "', [" << segment.start << ", " << segment.end << ")";
-  auto candidate = New<SimpleCandidate>("raw",
-                                        segment.start,
-                                        segment.end,
-                                        input);
+  DLOG(INFO) << "input = '" << input << "', [" << segment.start << ", "
+             << segment.end << ")";
+  auto candidate =
+      New<SimpleCandidate>("raw", segment.start, segment.end, input);
   if (candidate) {
     candidate->set_quality(-100);  // lowest priority
   }

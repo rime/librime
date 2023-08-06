@@ -40,11 +40,11 @@ class KeyEvent {
   // 解析文字表示的按鍵
   RIME_API bool Parse(const string& repr);
 
-  bool operator== (const KeyEvent& other) const {
+  bool operator==(const KeyEvent& other) const {
     return keycode_ == other.keycode_ && modifier_ == other.modifier_;
   }
 
-  bool operator< (const KeyEvent& other) const {
+  bool operator<(const KeyEvent& other) const {
     if (keycode_ != other.keycode_)
       return keycode_ < other.keycode_;
     return modifier_ < other.modifier_;
@@ -70,12 +70,12 @@ class KeySequence : public vector<KeyEvent> {
   RIME_API bool Parse(const string& repr);
 };
 
-inline std::ostream& operator<< (std::ostream& out, const KeyEvent& key_event) {
+inline std::ostream& operator<<(std::ostream& out, const KeyEvent& key_event) {
   out << key_event.repr();
   return out;
 }
 
-inline std::ostream& operator<< (std::ostream& out, const KeySequence& key_seq) {
+inline std::ostream& operator<<(std::ostream& out, const KeySequence& key_seq) {
   out << key_seq.repr();
   return out;
 }

@@ -18,13 +18,11 @@ namespace rime {
 static struct AsciiModeSwitchStyleDefinition {
   const char* repr;
   AsciiModeSwitchStyle style;
-} ascii_mode_switch_styles[] = {
-  { "inline_ascii", kAsciiModeSwitchInline },
-  { "commit_text", kAsciiModeSwitchCommitText },
-  { "commit_code", kAsciiModeSwitchCommitCode },
-  { "clear", kAsciiModeSwitchClear },
-  { NULL, kAsciiModeSwitchNoop }
-};
+} ascii_mode_switch_styles[] = {{"inline_ascii", kAsciiModeSwitchInline},
+                                {"commit_text", kAsciiModeSwitchCommitText},
+                                {"commit_code", kAsciiModeSwitchCommitCode},
+                                {"clear", kAsciiModeSwitchClear},
+                                {NULL, kAsciiModeSwitchNoop}};
 
 static void load_bindings(const an<ConfigMap>& src,
                           AsciiModeSwitchKeyBindings* dest) {
@@ -49,8 +47,7 @@ static void load_bindings(const an<ConfigMap>& src,
   }
 }
 
-AsciiComposer::AsciiComposer(const Ticket& ticket)
-    : Processor(ticket) {
+AsciiComposer::AsciiComposer(const Ticket& ticket) : Processor(ticket) {
   LoadConfig(ticket.schema);
 }
 
@@ -59,8 +56,8 @@ AsciiComposer::~AsciiComposer() {
 }
 
 ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
-  if ((key_event.shift() && key_event.ctrl()) ||
-      key_event.alt() || key_event.super()) {
+  if ((key_event.shift() && key_event.ctrl()) || key_event.alt() ||
+      key_event.super()) {
     shift_key_pressed_ = ctrl_key_pressed_ = false;
     return kNoop;
   }
@@ -75,8 +72,7 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
       shift_key_pressed_ = ctrl_key_pressed_ = false;
       ToggleAsciiModeWithKey(ch);
       return kAccepted;
-    }
-    else {
+    } else {
       return kRejected;
     }
   }
@@ -92,8 +88,7 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
         shift_key_pressed_ = ctrl_key_pressed_ = false;
         return kNoop;
       }
-    }
-    else if (!(shift_key_pressed_ || ctrl_key_pressed_)) {  // first key down
+    } else if (!(shift_key_pressed_ || ctrl_key_pressed_)) {  // first key down
       if (is_shift)
         shift_key_pressed_ = true;
       else
@@ -101,7 +96,7 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
       // will not toggle unless the toggle key is released shortly
       const auto toggle_duration_limit = std::chrono::milliseconds(500);
       auto now = std::chrono::steady_clock::now();
-      toggle_expired_= now + toggle_duration_limit;
+      toggle_expired_ = now + toggle_duration_limit;
     }
     return kNoop;
   }
@@ -147,14 +142,12 @@ ProcessResult AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
       // here we assume IBus' behavior and invert caps with ! operation.
       SwitchAsciiMode(!key_event.caps(), caps_lock_switch_style_);
       return kAccepted;
-    }
-    else {
+    } else {
       return kRejected;
     }
   }
   if (key_event.caps()) {
-    if (!good_old_caps_lock_ &&
-        !key_event.release() && !key_event.ctrl() &&
+    if (!good_old_caps_lock_ && !key_event.release() && !key_event.ctrl() &&
         isascii(ch) && isalpha(ch)) {
       // output ascii characters ignoring Caps Lock
       if (islower(ch))
@@ -163,8 +156,7 @@ ProcessResult AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
         ch = tolower(ch);
       engine_->CommitText(string(1, ch));
       return kAccepted;
-    }
-    else {
+    } else {
       return kRejected;
     }
   }
@@ -188,10 +180,9 @@ void AsciiComposer::LoadConfig(Schema* schema) {
   }
   if (auto bindings = config->GetMap("ascii_composer/switch_key")) {
     load_bindings(bindings, &bindings_);
-  }
-  else if (auto bindings = preset_config
-           ? preset_config->GetMap("ascii_composer/switch_key")
-           : nullptr) {
+  } else if (auto bindings = preset_config ? preset_config->GetMap(
+                                                 "ascii_composer/switch_key")
+                                           : nullptr) {
     load_bindings(bindings, &bindings_);
   } else {
     LOG(ERROR) << "Missing ascii bindings.";
@@ -232,15 +223,12 @@ void AsciiComposer::SwitchAsciiMode(bool ascii_mode,
         connection_ = ctx->update_notifier().connect(
             [this](Context* ctx) { OnContextUpdate(ctx); });
       }
-    }
-    else if (style == kAsciiModeSwitchCommitText) {
+    } else if (style == kAsciiModeSwitchCommitText) {
       ctx->ConfirmCurrentSelection();
-    }
-    else if (style == kAsciiModeSwitchCommitCode) {
+    } else if (style == kAsciiModeSwitchCommitCode) {
       ctx->ClearNonConfirmedComposition();
       ctx->Commit();
-    }
-    else if (style == kAsciiModeSwitchClear) {
+    } else if (style == kAsciiModeSwitchClear) {
       ctx->Clear();
     }
   }

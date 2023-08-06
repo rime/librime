@@ -127,8 +127,7 @@ bool UserDictEntryIterator::Next() {
 // UserDictionary members
 
 UserDictionary::UserDictionary(const string& name, an<Db> db)
-    : name_(name), db_(db) {
-}
+    : name_(name), db_(db) {}
 
 UserDictionary::~UserDictionary() {
   if (loaded()) {
@@ -136,8 +135,7 @@ UserDictionary::~UserDictionary() {
   }
 }
 
-void UserDictionary::Attach(const an<Table>& table,
-                            const an<Prism>& prism) {
+void UserDictionary::Attach(const an<Table>& table, const an<Prism>& prism) {
   table_ = table;
   prism_ = prism;
 }
@@ -204,7 +202,7 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
                << ", syll_id: " << spelling.first
                << ", num_spellings: " << spelling.second.size();
     state->code.push_back(spelling.first);
-    BOOST_SCOPE_EXIT( (&state) ) {
+    BOOST_SCOPE_EXIT((&state)) {
       state->code.pop_back();
     }
     BOOST_SCOPE_EXIT_END
@@ -214,9 +212,9 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
       auto props = spelling.second[i];
       if (i > 0 && props->type >= kAbbreviation)
         continue;
-      state->credibility.push_back(
-          state->credibility.back() + props->credibility);
-      BOOST_SCOPE_EXIT( (&state) ) {
+      state->credibility.push_back(state->credibility.back() +
+                                   props->credibility);
+      BOOST_SCOPE_EXIT((&state)) {
         state->credibility.pop_back();
       }
       BOOST_SCOPE_EXIT_END
@@ -253,11 +251,11 @@ static an<UserDictEntryCollector> collect(map<int, DictEntryList>* source) {
   return result;
 }
 
-an<UserDictEntryCollector>
-UserDictionary::Lookup(const SyllableGraph& syll_graph,
-                       size_t start_pos,
-                       size_t depth_limit,
-                       double initial_credibility) {
+an<UserDictEntryCollector> UserDictionary::Lookup(
+    const SyllableGraph& syll_graph,
+    size_t start_pos,
+    size_t depth_limit,
+    double initial_credibility) {
   if (!table_ || !prism_ || !loaded() ||
       start_pos >= syll_graph.interpreted_length)
     return nullptr;
@@ -346,7 +344,8 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry, int commits) {
   return UpdateEntry(entry, commits, "");
 }
 
-bool UserDictionary::UpdateEntry(const DictEntry& entry, int commits,
+bool UserDictionary::UpdateEntry(const DictEntry& entry,
+                                 int commits,
                                  const string& new_entry_prefix) {
   string code_str(entry.custom_code);
   if (code_str.empty() && !TranslateCodeToString(entry.code, &code_str))
@@ -359,8 +358,7 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry, int commits,
     if (v.tick > tick_) {
       v.tick = tick_;  // fix abnormal timestamp
     }
-  }
-  else if (!new_entry_prefix.empty()) {
+  } else if (!new_entry_prefix.empty()) {
     key.insert(0, new_entry_prefix);
   }
   if (commits > 0) {
@@ -369,12 +367,10 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry, int commits,
     v.commits += commits;
     UpdateTickCount(1);
     v.dee = algo::formula_d(commits, (double)tick_, v.dee, (double)v.tick);
-  }
-  else if (commits == 0) {
+  } else if (commits == 0) {
     const double k = 0.1;
     v.dee = algo::formula_d(k, (double)tick_, v.dee, (double)v.tick);
-  }
-  else if (commits < 0) {  // mark as deleted
+  } else if (commits < 0) {  // mark as deleted
     v.commits = (std::min)(-1, -v.commits);
     v.dee = algo::formula_d(0.0, (double)tick_, v.dee, (double)v.tick);
   }
@@ -386,8 +382,7 @@ bool UserDictionary::UpdateTickCount(TickCount increment) {
   tick_ += increment;
   try {
     return db_->MetaUpdate("/tick", boost::lexical_cast<string>(tick_));
-  }
-  catch (...) {
+  } catch (...) {
     return false;
   }
 }
@@ -400,14 +395,12 @@ bool UserDictionary::FetchTickCount() {
   string value;
   try {
     // an earlier version mistakenly wrote tick count into an empty key
-    if (!db_->MetaFetch("/tick", &value) &&
-        !db_->Fetch("", &value))
+    if (!db_->MetaFetch("/tick", &value) && !db_->Fetch("", &value))
       return false;
     tick_ = boost::lexical_cast<TickCount>(value);
     return true;
-  }
-  catch (...) {
-    //tick_ = 0;
+  } catch (...) {
+    // tick_ = 0;
     return false;
   }
 }
@@ -425,7 +418,7 @@ bool UserDictionary::RevertRecentTransaction() {
   auto db = As<Transactional>(db_);
   if (!db || !db->in_transaction())
     return false;
-  if (time(NULL) - transaction_time_ > 3/*seconds*/)
+  if (time(NULL) - transaction_time_ > 3 /*seconds*/)
     return false;
   return db->AbortTransaction();
 }
@@ -438,9 +431,9 @@ bool UserDictionary::CommitPendingTransaction() {
   return false;
 }
 
-bool UserDictionary::TranslateCodeToString(const Code& code,
-                                           string* result) {
-  if (!table_ || !result) return false;
+bool UserDictionary::TranslateCodeToString(const Code& code, string* result) {
+  if (!table_ || !result)
+    return false;
   result->clear();
   for (const SyllableId& syllable_id : code) {
     string spelling = table_->GetSyllableById(syllable_id);
@@ -456,10 +449,10 @@ bool UserDictionary::TranslateCodeToString(const Code& code,
 }
 
 an<DictEntry> UserDictionary::CreateDictEntry(const string& key,
-                                                      const string& value,
-                                                      TickCount present_tick,
-                                                      double credibility,
-                                                      string* full_code) {
+                                              const string& value,
+                                              TickCount present_tick,
+                                              double credibility,
+                                              string* full_code) {
   an<DictEntry> e;
   size_t separator_pos = key.find('\t');
   if (separator_pos == string::npos)
@@ -476,16 +469,13 @@ an<DictEntry> UserDictionary::CreateDictEntry(const string& key,
   e->text = key.substr(separator_pos + 1);
   e->commit_count = v.commits;
   // TODO: argument s not defined...
-  double weight = algo::formula_p(0,
-                                  (double)v.commits / present_tick,
-                                  (double)present_tick,
-                                  v.dee);
+  double weight = algo::formula_p(0, (double)v.commits / present_tick,
+                                  (double)present_tick, v.dee);
   e->weight = log(weight > 0 ? weight : DBL_EPSILON) + credibility;
   if (full_code) {
     *full_code = key.substr(0, separator_pos);
   }
-  DLOG(INFO) << "text = '" << e->text
-             << "', code_len = " << e->code.size()
+  DLOG(INFO) << "text = '" << e->text << "', code_len = " << e->code.size()
              << ", weight = " << e->weight
              << ", commit_count = " << e->commit_count
              << ", present_tick = " << present_tick;
@@ -494,10 +484,10 @@ an<DictEntry> UserDictionary::CreateDictEntry(const string& key,
 
 // UserDictionaryComponent members
 
-UserDictionaryComponent::UserDictionaryComponent() {
-}
+UserDictionaryComponent::UserDictionaryComponent() {}
 
-UserDictionary* UserDictionaryComponent::Create(const string& dict_name, const string& db_class) {
+UserDictionary* UserDictionaryComponent::Create(const string& dict_name,
+                                                const string& db_class) {
   auto db = db_pool_[dict_name].lock();
   if (!db) {
     auto component = Db::Require(db_class);
@@ -522,12 +512,10 @@ UserDictionary* UserDictionaryComponent::Create(const Ticket& ticket) {
   string dict_name;
   if (config->GetString(ticket.name_space + "/user_dict", &dict_name)) {
     // user specified name
-  }
-  else if (config->GetString(ticket.name_space + "/dictionary", &dict_name)) {
+  } else if (config->GetString(ticket.name_space + "/dictionary", &dict_name)) {
     // {dictionary: luna_pinyin.extra} implies {user_dict: luna_pinyin}
     dict_name = Language::get_language_component(dict_name);
-  }
-  else {
+  } else {
     LOG(ERROR) << ticket.name_space << "/dictionary not specified in schema '"
                << ticket.schema->schema_id() << "'.";
     return NULL;

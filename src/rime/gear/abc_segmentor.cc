@@ -44,8 +44,7 @@ bool AbcSegmentor::Proceed(Segmentation* segmentation) {
   bool expecting_an_initial = true;
   for (; k < input.length(); ++k) {
     bool is_letter = alphabet_.find(input[k]) != string::npos;
-    bool is_delimiter =
-        (k != j) && (delimiter_.find(input[k]) != string::npos);
+    bool is_delimiter = (k != j) && (delimiter_.find(input[k]) != string::npos);
     if (!is_letter && !is_delimiter)
       break;
     bool is_initial = initials_.find(input[k]) != string::npos;

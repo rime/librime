@@ -18,7 +18,7 @@ namespace rime {
 
 class Calculation {
  public:
-  using Factory = Calculation* (const vector<string>& args);
+  using Factory = Calculation*(const vector<string>& args);
 
   Calculation() = default;
   virtual ~Calculation() = default;

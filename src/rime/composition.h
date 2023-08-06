@@ -23,7 +23,8 @@ class Composition : public Segmentation {
   Composition() = default;
 
   bool HasFinishedComposition() const;
-  Preedit GetPreedit(const string& full_input, size_t caret_pos,
+  Preedit GetPreedit(const string& full_input,
+                     size_t caret_pos,
                      const string& caret) const;
   string GetPrompt() const;
   string GetCommitText() const;

@@ -10,12 +10,13 @@
 namespace rime {
 
 bool LegacyPresetConfigPlugin::ReviewCompileOutput(
-    ConfigCompiler* compiler, an<ConfigResource> resource) {
+    ConfigCompiler* compiler,
+    an<ConfigResource> resource) {
   return true;
 }
 
-bool LegacyPresetConfigPlugin::ReviewLinkOutput(
-    ConfigCompiler* compiler, an<ConfigResource> resource) {
+bool LegacyPresetConfigPlugin::ReviewLinkOutput(ConfigCompiler* compiler,
+                                                an<ConfigResource> resource) {
   if (!boost::ends_with(resource->resource_id, ".schema"))
     return true;
   if (auto preset = resource->data->Traverse("key_binder/import_preset")) {
@@ -33,8 +34,7 @@ bool LegacyPresetConfigPlugin::ReviewLinkOutput(
       (*target)["bindings"] = nullptr;
     }
     Reference reference{preset_config_id, "key_binder", false};
-    if (!IncludeReference{reference}
-        .TargetedAt(target).Resolve(compiler)) {
+    if (!IncludeReference{reference}.TargetedAt(target).Resolve(compiler)) {
       LOG(ERROR) << "failed to include section " << reference;
       return false;
     }
@@ -52,7 +52,8 @@ bool LegacyPresetConfigPlugin::ReviewLinkOutput(
     LOG(INFO) << "interpreting punctuator/import_preset: " << preset_config_id;
     Reference reference{preset_config_id, "punctuator", false};
     if (!IncludeReference{reference}
-        .TargetedAt(Cow(resource, "punctuator")).Resolve(compiler)) {
+             .TargetedAt(Cow(resource, "punctuator"))
+             .Resolve(compiler)) {
       LOG(ERROR) << "failed to include section " << reference;
       return false;
     }
@@ -64,7 +65,8 @@ bool LegacyPresetConfigPlugin::ReviewLinkOutput(
     LOG(INFO) << "interpreting recognizer/import_preset: " << preset_config_id;
     Reference reference{preset_config_id, "recognizer", false};
     if (!IncludeReference{reference}
-        .TargetedAt(Cow(resource, "recognizer")).Resolve(compiler)) {
+             .TargetedAt(Cow(resource, "recognizer"))
+             .Resolve(compiler)) {
       LOG(ERROR) << "failed to include section " << reference;
       return false;
     }

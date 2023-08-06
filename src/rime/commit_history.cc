@@ -22,16 +22,14 @@ void CommitHistory::Push(const KeyEvent& key_event) {
     if (key_event.keycode() == XK_BackSpace ||
         key_event.keycode() == XK_Return) {
       clear();
-    }
-    else if (key_event.keycode() >= 0x20 && key_event.keycode() <= 0x7e) {
+    } else if (key_event.keycode() >= 0x20 && key_event.keycode() <= 0x7e) {
       // printable ascii character
       Push(CommitRecord(key_event.keycode()));
     }
   }
 }
 
-void CommitHistory::Push(const Composition& composition,
-                         const string& input) {
+void CommitHistory::Push(const Composition& composition, const string& input) {
   CommitRecord* last = NULL;
   size_t end = 0;
   for (const Segment& seg : composition) {
@@ -39,8 +37,7 @@ void CommitHistory::Push(const Composition& composition,
       if (last && last->type == cand->type()) {
         // join adjacent text of same type
         last->text += cand->text();
-      }
-      else {
+      } else {
         // new record
         Push({cand->type(), cand->text()});
         last = &back();
@@ -50,8 +47,7 @@ void CommitHistory::Push(const Composition& composition,
         last = NULL;
       }
       end = cand->end();
-    }
-    else {
+    } else {
       // no translation for the segment
       Push({"raw", input.substr(seg.start, seg.end - seg.start)});
       end = seg.end;

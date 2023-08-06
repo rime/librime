@@ -14,8 +14,7 @@
 
 namespace rime {
 
-AsciiSegmentor::AsciiSegmentor(const Ticket& ticket) : Segmentor(ticket) {
-}
+AsciiSegmentor::AsciiSegmentor(const Ticket& ticket) : Segmentor(ticket) {}
 
 bool AsciiSegmentor::Proceed(Segmentation* segmentation) {
   if (!engine_->context()->get_option("ascii_mode"))

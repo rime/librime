@@ -14,28 +14,23 @@ namespace rime {
 
 // ConfigValue members
 
-ConfigValue::ConfigValue(bool value)
-    : ConfigItem(kScalar) {
+ConfigValue::ConfigValue(bool value) : ConfigItem(kScalar) {
   SetBool(value);
 }
 
-ConfigValue::ConfigValue(int value)
-    : ConfigItem(kScalar) {
+ConfigValue::ConfigValue(int value) : ConfigItem(kScalar) {
   SetInt(value);
 }
 
-ConfigValue::ConfigValue(double value)
-    : ConfigItem(kScalar) {
+ConfigValue::ConfigValue(double value) : ConfigItem(kScalar) {
   SetDouble(value);
 }
 
 ConfigValue::ConfigValue(const char* value)
-    : ConfigItem(kScalar), value_(value) {
-}
+    : ConfigItem(kScalar), value_(value) {}
 
 ConfigValue::ConfigValue(const string& value)
-    : ConfigItem(kScalar), value_(value) {
-}
+    : ConfigItem(kScalar), value_(value) {}
 
 bool ConfigValue::GetBool(bool* value) const {
   if (!value || value_.empty())
@@ -45,12 +40,10 @@ bool ConfigValue::GetBool(bool* value) const {
   if ("true" == bstr) {
     *value = true;
     return true;
-  }
-  else if ("false" == bstr) {
+  } else if ("false" == bstr) {
     *value = false;
     return true;
-  }
-  else
+  } else
     return false;
 }
 
@@ -69,8 +62,7 @@ bool ConfigValue::GetInt(int* value) const {
   // decimal
   try {
     *value = boost::lexical_cast<int>(value_);
-  }
-  catch (...) {
+  } catch (...) {
     return false;
   }
   return true;
@@ -81,15 +73,15 @@ bool ConfigValue::GetDouble(double* value) const {
     return false;
   try {
     *value = boost::lexical_cast<double>(value_);
-  }
-  catch (...) {
+  } catch (...) {
     return false;
   }
   return true;
 }
 
 bool ConfigValue::GetString(string* value) const {
-  if (!value) return false;
+  if (!value)
+    return false;
   *value = value_;
   return true;
 }
