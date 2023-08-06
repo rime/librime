@@ -323,7 +323,7 @@ bool Dictionary::Remove() {
 bool Dictionary::Load() {
   LOG(INFO) << "loading dictionary '" << name_ << "'.";
   if (tables_.empty()) {
-    LOG(ERROR) << "Cannnot load dictionary '" << name_
+    LOG(ERROR) << "Cannot load dictionary '" << name_
                << "'; it contains no tables.";
     return false;
   }

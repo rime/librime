@@ -171,7 +171,7 @@ bool UserDictionary::readonly() const {
 // there may be multiple edges that start at current_pos, and ends at different
 // positions after current_pos. on each edge, there can be multiple syllables
 // the spelling on the edge maps to.
-// in order to enable forward scaning and to avoid backdating, our strategy is:
+// in order to enable forward scanning and to avoid backdating, our strategy is:
 // sort all those syllables from edges that starts at current_pos, so that
 // the syllables are in the same alphabetical order as the user db's.
 // this having been done by transposing the syllable graph into

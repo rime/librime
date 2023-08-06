@@ -9,7 +9,7 @@
 
 namespace rime {
 
-// TextDbAccessor memebers
+// TextDbAccessor members
 
 TextDbAccessor::TextDbAccessor(const TextDbData& data, const string& prefix)
     : DbAccessor(prefix), data_(data) {
