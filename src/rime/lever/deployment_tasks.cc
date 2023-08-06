@@ -258,14 +258,16 @@ SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
 }
 
 static bool MaybeCreateDirectory(fs::path dir) {
-  if (!fs::exists(dir)) {
-    boost::system::error_code ec;
-    if (!fs::create_directories(dir, ec)) {
-      LOG(ERROR) << "error creating directory '" << dir.string() << "'.";
-      return false;
-    }
+  boost::system::error_code ec;
+  if (fs::create_directories(dir, ec)) {
+    return true;
   }
-  return true;
+
+  if (fs::exists(dir)) {
+    return true;
+  }
+  LOG(ERROR) << "error creating directory '" << dir.string() << "'.";
+  return false;
 }
 
 static bool RemoveVersionSuffix(string* version, const string& suffix) {
