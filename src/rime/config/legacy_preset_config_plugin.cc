@@ -42,7 +42,7 @@ bool LegacyPresetConfigPlugin::ReviewLinkOutput(ConfigCompiler* compiler,
   // NOTE: in the following cases, Cow() is not strictly necessary because
   // we know for sure that no other ConfigResource is going to reference the
   // root map node that will be modified. But other than the root node of the
-  // resource being linked, it's possbile a map or list has multiple references
+  // resource being linked, it's possible a map or list has multiple references
   // in the node tree, therefore Cow() is recommended to make sure the
   // modifications only happen to one place.
   if (auto preset = resource->data->Traverse("punctuator/import_preset")) {

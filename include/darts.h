@@ -62,7 +62,7 @@ class DoubleArrayUnit {
     return static_cast<value_type>(unit_ & ((1U << 31) - 1));
   }
 
-  // label() returns the label associted with the unit. Note that a leaf unit
+  // label() returns the label associated with the unit. Note that a leaf unit
   // always returns an invalid label. For this feature, leaf unit's label()
   // returns an <id_type> that has the MSB of 1.
   id_type label() const {

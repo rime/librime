@@ -117,7 +117,7 @@ void EditDistanceCorrector::ToleranceSearch(const Prism& prism,
         auto origin = accessor.properties().tips;
         auto current_input = key.substr(0, point);
         if (origin == current_input) {
-          continue;  // early termination: this comparision is O(n)
+          continue;  // early termination: this comparison is O(n)
         }
         auto distance = RestrictedDistance(origin, current_input, threshold);
         if (distance <= threshold) {  // only trace near words

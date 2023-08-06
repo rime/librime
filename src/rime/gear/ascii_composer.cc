@@ -126,7 +126,7 @@ ProcessResult AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
   if (ch == XK_Caps_Lock) {
     if (!key_event.release()) {
       shift_key_pressed_ = ctrl_key_pressed_ = false;
-      // temprarily disable good-old (uppercase) Caps Lock as mode switch key
+      // temporarily disable good-old (uppercase) Caps Lock as mode switch key
       // in case the user switched to ascii mode with other keys, eg. with Shift
       if (good_old_caps_lock_ && !toggle_with_caps_) {
         Context* ctx = engine_->context();

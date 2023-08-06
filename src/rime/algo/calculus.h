@@ -31,7 +31,7 @@ class Calculus {
  public:
   RIME_API Calculus();
   void Register(const string& token, Calculation::Factory* factory);
-  RIME_API Calculation* Parse(const string& defintion);
+  RIME_API Calculation* Parse(const string& definition);
 
  private:
   map<string, Calculation::Factory*> factories_;
