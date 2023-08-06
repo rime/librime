@@ -262,7 +262,7 @@ static bool MaybeCreateDirectory(fs::path dir) {
   if (fs::create_directories(dir, ec)) {
     return true;
   }
-  
+
   if (fs::exists(dir)) {
     return true;
   }
