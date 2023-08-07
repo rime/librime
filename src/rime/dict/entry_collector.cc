@@ -4,7 +4,9 @@
 //
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
+#include <algorithm>
 #include <fstream>
+#include <utility>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <rime/algo/strings.h>
@@ -192,12 +194,14 @@ void EntryCollector::CreateEntry(const string& word,
   bool is_word = (e->raw_code.size() == 1);
   if (is_word) {
     auto& weights = words[e->text];
-    if (weights.find(code_str) != weights.end()) {
+    if (std::find_if(weights.begin(), weights.end(), [&](const auto& p) {
+          return p.first == code_str;
+        }) != weights.end()) {
       LOG(WARNING) << "duplicate word definition '" << e->text << "': ["
                    << code_str << "].";
       return;
     }
-    weights[code_str] += e->weight;
+    weights.push_back(std::make_pair(code_str, e->weight));
     total_weight[e->text] += e->weight;
   }
   entries.emplace_back(std::move(e));
@@ -214,6 +218,8 @@ bool EntryCollector::TranslateWord(const string& word, vector<string>* result) {
   }
   const auto& w = words.find(word);
   if (w != words.end()) {
+    std::sort(w->second.begin(), w->second.end(),
+              [](const auto& a, const auto& b) { return a.first < b.first; });
     for (const auto& v : w->second) {
       const double kMinimalWeight = 0.05;  // 5%
       double min_weight = total_weight[word] * kMinimalWeight;
