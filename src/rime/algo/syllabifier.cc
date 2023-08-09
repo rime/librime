@@ -16,16 +16,15 @@ namespace rime {
 using namespace corrector;
 
 using Vertex = pair<size_t, SpellingType>;
-using VertexQueue = std::priority_queue<Vertex,
-                                        vector<Vertex>,
-                                        std::greater<Vertex>>;
+using VertexQueue =
+    std::priority_queue<Vertex, vector<Vertex>, std::greater<Vertex>>;
 
-const double kCompletionPenalty = -0.6931471805599453; // log(0.5)
-const double kCorrectionCredibility = -4.605170185988091; // log(0.01)
+const double kCompletionPenalty = -0.6931471805599453;     // log(0.5)
+const double kCorrectionCredibility = -4.605170185988091;  // log(0.01)
 
-int Syllabifier::BuildSyllableGraph(const string &input,
-                                    Prism &prism,
-                                    SyllableGraph *graph) {
+int Syllabifier::BuildSyllableGraph(const string& input,
+                                    Prism& prism,
+                                    SyllableGraph* graph) {
   if (input.empty())
     return 0;
 
@@ -42,8 +41,8 @@ int Syllabifier::BuildSyllableGraph(const string &input,
     if (graph->vertices.find(current_pos) == graph->vertices.end()) {
       graph->vertices.insert(vertex);  // preferred spelling type comes first
     } else {
-//      graph->vertices[current_pos] =
-//          std::min(vertex.second, graph->vertices[current_pos]);
+      //      graph->vertices[current_pos] =
+      //          std::min(vertex.second, graph->vertices[current_pos]);
       continue;  // discard worse spelling types
     }
 
@@ -57,17 +56,16 @@ int Syllabifier::BuildSyllableGraph(const string &input,
     auto current_input = input.substr(current_pos);
     prism.CommonPrefixSearch(current_input, &matches);
     if (corrector_) {
-      for (auto &m : matches) {
+      for (auto& m : matches) {
         exact_match_syllables.insert(m.value);
       }
       Corrections corrections;
       corrector_->ToleranceSearch(prism, current_input, &corrections, 5);
-      for (const auto &m : corrections) {
+      for (const auto& m : corrections) {
         for (auto accessor = prism.QuerySpelling(m.first);
-             !accessor.exhausted();
-             accessor.Next()) {
+             !accessor.exhausted(); accessor.Next()) {
           if (accessor.properties().type == kNormalSpelling) {
-            matches.push_back({ m.first, m.second.length });
+            matches.push_back({m.first, m.second.length});
             break;
           }
         }
@@ -77,7 +75,8 @@ int Syllabifier::BuildSyllableGraph(const string &input,
     if (!matches.empty()) {
       auto& end_vertices(graph->edges[current_pos]);
       for (const auto& m : matches) {
-        if (m.length == 0) continue;
+        if (m.length == 0)
+          continue;
         size_t end_pos = current_pos + m.length;
         // consume trailing delimiters
         while (end_pos < input.length() &&
@@ -94,18 +93,15 @@ int Syllabifier::BuildSyllableGraph(const string &input,
         while (!accessor.exhausted()) {
           SyllableId syllable_id = accessor.syllable_id();
           EdgeProperties props(accessor.properties());
-          if (strict_spelling_ &&
-              matches_input &&
+          if (strict_spelling_ && matches_input &&
               props.type != kNormalSpelling) {
             // disqualify fuzzy spelling or abbreviation as single word
-          }
-          else {
+          } else {
             props.end_pos = end_pos;
             // add a syllable with properties to the edge's
             // spelling-to-syllable map
-            if (corrector_ &&
-                exact_match_syllables.find(m.value) ==
-                exact_match_syllables.end()) {
+            if (corrector_ && exact_match_syllables.find(m.value) ==
+                                  exact_match_syllables.end()) {
               props.is_correction = true;
               props.credibility = kCorrectionCredibility;
             }
@@ -135,8 +131,8 @@ int Syllabifier::BuildSyllableGraph(const string &input,
           end_vertex_type = vertex.second;
         }
         queue.push(Vertex{end_pos, end_vertex_type});
-        DLOG(INFO) << "added to syllable graph, edge: ["
-                   << current_pos << ", " << end_pos << ")";
+        DLOG(INFO) << "added to syllable graph, edge: [" << current_pos << ", "
+                   << end_pos << ")";
       }
     }
   }
@@ -145,13 +141,13 @@ int Syllabifier::BuildSyllableGraph(const string &input,
   set<int> good;
   good.insert(farthest);
   // fuzzy spellings are immune to invalidation by normal spellings
-  SpellingType last_type = (std::max)(graph->vertices[farthest],
-                                      kFuzzySpelling);
+  SpellingType last_type =
+      (std::max)(graph->vertices[farthest], kFuzzySpelling);
   for (int i = farthest - 1; i >= 0; --i) {
     if (graph->vertices.find(i) == graph->vertices.end())
       continue;
     // remove stale edges
-    for (auto j = graph->edges[i].begin(); j != graph->edges[i].end(); ) {
+    for (auto j = graph->edges[i].begin(); j != graph->edges[i].end();) {
       if (good.find(j->first) == good.end()) {
         // not connected
         graph->edges[i].erase(j++);
@@ -160,15 +156,14 @@ int Syllabifier::BuildSyllableGraph(const string &input,
       // remove disqualified syllables (eg. matching abbreviated spellings)
       // when there is a path of more favored type
       SpellingType edge_type = kInvalidSpelling;
-      for (auto k = j->second.begin(); k != j->second.end(); ) {
+      for (auto k = j->second.begin(); k != j->second.end();) {
         if (k->second.is_correction) {
           ++k;
-          continue; // Don't care correction edges
+          continue;  // Don't care correction edges
         }
         if (k->second.type > last_type) {
           j->second.erase(k++);
-        }
-        else {
+        } else {
           if (k->second.type < edge_type)
             edge_type = k->second.type;
           ++k;
@@ -176,8 +171,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
       }
       if (j->second.empty()) {
         graph->edges[i].erase(j++);
-      }
-      else {
+      } else {
         if (edge_type < kAbbreviation)
           CheckOverlappedSpellings(graph, i, j->first);
         ++j;
@@ -189,7 +183,7 @@ int Syllabifier::BuildSyllableGraph(const string &input,
       graph->edges.erase(i);
       continue;
     }
-    // keep the valid vetex
+    // keep the valid vertex
     good.insert(i);
   }
 
@@ -205,7 +199,8 @@ int Syllabifier::BuildSyllableGraph(const string &input,
       auto& end_vertices(graph->edges[current_pos]);
       auto& spellings(end_vertices[end_pos]);
       for (const auto& m : keys) {
-        if (m.length < code_length) continue;
+        if (m.length < code_length)
+          continue;
         // when spelling algebra is enabled,
         // a spelling evaluates to a set of syllables;
         // otherwise, it resembles exactly the syllable itself.
@@ -227,10 +222,9 @@ int Syllabifier::BuildSyllableGraph(const string &input,
       if (spellings.empty()) {
         DLOG(INFO) << "no completion could be made.";
         end_vertices.erase(end_pos);
-      }
-      else {
-        DLOG(INFO) << "added to syllable graph, completion: ["
-                   << current_pos << ", " << end_pos << ")";
+      } else {
+        DLOG(INFO) << "added to syllable graph, completion: [" << current_pos
+                   << ", " << end_pos << ")";
         farthest = end_pos;
       }
     }
@@ -246,9 +240,11 @@ int Syllabifier::BuildSyllableGraph(const string &input,
   return farthest;
 }
 
-void Syllabifier::CheckOverlappedSpellings(SyllableGraph *graph,
-                                           size_t start, size_t end) {
-  const double kPenaltyForAmbiguousSyllable = -23.025850929940457; // log(1e-10)
+void Syllabifier::CheckOverlappedSpellings(SyllableGraph* graph,
+                                           size_t start,
+                                           size_t end) {
+  const double kPenaltyForAmbiguousSyllable =
+      -23.025850929940457;  // log(1e-10)
   if (!graph || graph->edges.find(start) == graph->edges.end())
     return;
   // if "Z" = "YX", mark the vertex between Y and X an ambiguous syllable joint
@@ -256,13 +252,15 @@ void Syllabifier::CheckOverlappedSpellings(SyllableGraph *graph,
   // enumerate Ys
   for (const auto& y : y_end_vertices) {
     size_t joint = y.first;
-    if (joint >= end) break;
+    if (joint >= end)
+      break;
     // test X
     if (graph->edges.find(joint) == graph->edges.end())
       continue;
     auto& x_end_vertices(graph->edges[joint]);
     for (auto& x : x_end_vertices) {
-      if (x.first < end) continue;
+      if (x.first < end)
+        continue;
       if (x.first == end) {
         // discourage syllables at an ambiguous joint
         // bad cases include pinyin syllabification "niju'ede"

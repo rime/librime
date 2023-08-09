@@ -52,18 +52,14 @@ class UserDb {
   }
 
   UserDb() = delete;
-
 };
 
 /// A helper class to provide extra functionalities related to user db.
 class UserDbHelper {
  public:
-  UserDbHelper(Db* db) : db_(db) {
-  }
-  UserDbHelper(const the<Db>& db) : db_(db.get()) {
-  }
-  UserDbHelper(const an<Db>& db) : db_(db.get()) {
-  }
+  UserDbHelper(Db* db) : db_(db) {}
+  UserDbHelper(const the<Db>& db) : db_(db.get()) {}
+  UserDbHelper(const an<Db>& db) : db_(db.get()) {}
 
   bool UpdateUserInfo();
   static bool IsUniformFormat(const string& name);
@@ -86,25 +82,23 @@ class UserDbWrapper : public BaseDb {
   RIME_API UserDbWrapper(const string& file_name, const string& db_name);
 
   virtual bool CreateMetadata() {
-    return BaseDb::CreateMetadata() &&
-        UserDbHelper(this).UpdateUserInfo();
+    return BaseDb::CreateMetadata() && UserDbHelper(this).UpdateUserInfo();
   }
   virtual bool Backup(const string& snapshot_file) {
-    return UserDbHelper::IsUniformFormat(snapshot_file) ?
-        UserDbHelper(this).UniformBackup(snapshot_file) :
-        BaseDb::Backup(snapshot_file);
+    return UserDbHelper::IsUniformFormat(snapshot_file)
+               ? UserDbHelper(this).UniformBackup(snapshot_file)
+               : BaseDb::Backup(snapshot_file);
   }
   virtual bool Restore(const string& snapshot_file) {
-    return UserDbHelper::IsUniformFormat(snapshot_file) ?
-        UserDbHelper(this).UniformRestore(snapshot_file) :
-        BaseDb::Restore(snapshot_file);
+    return UserDbHelper::IsUniformFormat(snapshot_file)
+               ? UserDbHelper(this).UniformRestore(snapshot_file)
+               : BaseDb::Restore(snapshot_file);
   }
 };
 
 /// Implements a component that serves as a factory for a user db class.
 template <class BaseDb>
-class UserDbComponent : public UserDb::Component,
-                        protected DbComponentBase {
+class UserDbComponent : public UserDb::Component, protected DbComponentBase {
  public:
   using UserDbImpl = UserDbWrapper<BaseDb>;
   Db* Create(const string& name) override {

@@ -7,7 +7,6 @@
 #ifndef RIME_SIGNATURE_H_
 #define RIME_SIGNATURE_H_
 
-
 namespace rime {
 
 class Config;

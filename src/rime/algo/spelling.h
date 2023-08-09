@@ -12,9 +12,14 @@
 
 namespace rime {
 
-enum SpellingType { kNormalSpelling, kFuzzySpelling,
-                    kAbbreviation, kCompletion, kAmbiguousSpelling,
-                    kInvalidSpelling };
+enum SpellingType {
+  kNormalSpelling,
+  kFuzzySpelling,
+  kAbbreviation,
+  kCompletion,
+  kAmbiguousSpelling,
+  kInvalidSpelling
+};
 
 struct SpellingProperties {
   SpellingType type = kNormalSpelling;
@@ -30,8 +35,8 @@ struct Spelling {
   Spelling() = default;
   Spelling(const string& _str) : str(_str) {}
 
-  bool operator== (const Spelling& other) { return str == other.str; }
-  bool operator< (const Spelling& other) { return str < other.str; }
+  bool operator==(const Spelling& other) { return str == other.str; }
+  bool operator<(const Spelling& other) { return str < other.str; }
 };
 
 }  // namespace rime

@@ -19,9 +19,9 @@ using SessionId = uintptr_t;
 
 static const SessionId kInvalidSessionId = 0;
 
-using NotificationHandler = function<void (SessionId session_id,
-                                                const char* message_type,
-                                                const char* message_value)>;
+using NotificationHandler = function<void(SessionId session_id,
+                                          const char* message_type,
+                                          const char* message_value)>;
 
 class Context;
 class Engine;
@@ -76,7 +76,8 @@ class Service {
               const string& message_value);
 
   ResourceResolver* CreateResourceResolver(const ResourceType& type);
-  ResourceResolver* CreateUserSpecificResourceResolver(const ResourceType& type);
+  ResourceResolver* CreateUserSpecificResourceResolver(
+      const ResourceType& type);
   ResourceResolver* CreateDeployedResourceResolver(const ResourceType& type);
   ResourceResolver* CreateStagingResourceResolver(const ResourceType& type);
 

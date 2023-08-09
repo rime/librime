@@ -90,7 +90,6 @@ static void rime_gears_initialize() {
   r.Register("shape_formatter", new Component<ShapeFormatter>);
 }
 
-static void rime_gears_finalize() {
-}
+static void rime_gears_finalize() {}
 
 RIME_REGISTER_MODULE(gears)

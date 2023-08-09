@@ -20,7 +20,7 @@ class Corrector;
 using SyllableId = int32_t;
 
 struct EdgeProperties : SpellingProperties {
-  EdgeProperties(SpellingProperties sup): SpellingProperties(sup) {};
+  EdgeProperties(SpellingProperties sup) : SpellingProperties(sup){};
   EdgeProperties() = default;
   bool is_correction = false;
 };
@@ -45,22 +45,20 @@ struct SyllableGraph {
 class Syllabifier {
  public:
   Syllabifier() = default;
-  explicit Syllabifier(const string &delimiters,
+  explicit Syllabifier(const string& delimiters,
                        bool enable_completion = false,
                        bool strict_spelling = false)
       : delimiters_(delimiters),
         enable_completion_(enable_completion),
-        strict_spelling_(strict_spelling) {
-  }
+        strict_spelling_(strict_spelling) {}
 
-  RIME_API int BuildSyllableGraph(const string &input,
-                                  Prism &prism,
-                                  SyllableGraph *graph);
+  RIME_API int BuildSyllableGraph(const string& input,
+                                  Prism& prism,
+                                  SyllableGraph* graph);
   RIME_API void EnableCorrection(Corrector* corrector);
 
  protected:
-  void CheckOverlappedSpellings(SyllableGraph *graph,
-                                size_t start, size_t end);
+  void CheckOverlappedSpellings(SyllableGraph* graph, size_t start, size_t end);
   void Transpose(SyllableGraph* graph);
 
   string delimiters_;

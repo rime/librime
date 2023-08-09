@@ -38,8 +38,7 @@ bool AffixSegmentor::Proceed(Segmentation* segmentation) {
   if (!segmentation->back().HasTag(tag_)) {
     if (segmentation->size() >= 2) {
       Segment& previous_segment(*(segmentation->rbegin() + 1));
-      if (previous_segment.HasTag("partial") &&
-          previous_segment.HasTag(tag_)) {
+      if (previous_segment.HasTag("partial") && previous_segment.HasTag(tag_)) {
         // the remaining part of a partial selection should inherit the tag
         segmentation->back().tags.insert(tag_);
         // without adding new tag "abc"
@@ -92,8 +91,7 @@ bool AffixSegmentor::Proceed(Segmentation* segmentation) {
     k -= suffix_.length();
     if (k == segmentation->back().start) {
       segmentation->pop_back();  // code is empty
-    }
-    else {
+    } else {
       segmentation->back().end = k;
     }
     Segment suffix_segment(k, k + suffix_.length());

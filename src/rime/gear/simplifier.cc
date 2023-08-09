@@ -18,14 +18,14 @@
 #include <rime/service.h>
 #include <rime/translation.h>
 #include <rime/gear/simplifier.h>
-#include <opencc/Config.hpp> // Place OpenCC #includes here to avoid VS2015 compilation errors
+#include <opencc/Config.hpp>  // Place OpenCC #includes here to avoid VS2015 compilation errors
 #include <opencc/Converter.hpp>
 #include <opencc/Conversion.hpp>
 #include <opencc/ConversionChain.hpp>
 #include <opencc/Dict.hpp>
 #include <opencc/DictEntry.hpp>
 
-static const char* quote_left = "\xe3\x80\x94";  //"\xef\xbc\x88";
+static const char* quote_left = "\xe3\x80\x94";   //"\xef\xbc\x88";
 static const char* quote_right = "\xe3\x80\x95";  //"\xef\xbc\x89";
 
 namespace rime {
@@ -38,16 +38,16 @@ class Opencc {
     try {
       converter_ = config.NewFromFile(config_path);
       const list<opencc::ConversionPtr> conversions =
-        converter_->GetConversionChain()->GetConversions();
+          converter_->GetConversionChain()->GetConversions();
       dict_ = conversions.front()->GetDict();
-    }
-    catch (...) {
+    } catch (...) {
       LOG(ERROR) << "opencc config not found: " << config_path;
     }
   }
 
   bool ConvertWord(const string& text, vector<string>* forms) {
-    if (dict_ == nullptr) return false;
+    if (dict_ == nullptr)
+      return false;
     opencc::Optional<const opencc::DictEntry*> item = dict_->Match(text);
     if (item.IsNull()) {
       // Match not found
@@ -62,11 +62,13 @@ class Opencc {
   }
 
   bool RandomConvertText(const string& text, string* simplified) {
-    if (dict_ == nullptr) return false;
-    const char *phrase = text.c_str();
+    if (dict_ == nullptr)
+      return false;
+    const char* phrase = text.c_str();
     std::ostringstream buffer;
     for (const char* pstr = phrase; *pstr != '\0';) {
-      opencc::Optional<const opencc::DictEntry*> matched = dict_->MatchPrefix(pstr);
+      opencc::Optional<const opencc::DictEntry*> matched =
+          dict_->MatchPrefix(pstr);
       size_t matchedLength;
       if (matched.IsNull()) {
         matchedLength = opencc::UTF8Util::NextCharLength(pstr);
@@ -83,20 +85,21 @@ class Opencc {
   }
 
   bool ConvertText(const string& text, string* simplified) {
-    if (converter_ == nullptr) return false;
+    if (converter_ == nullptr)
+      return false;
     *simplified = converter_->Convert(text);
     return *simplified != text;
   }
 
  private:
-   opencc::ConverterPtr converter_;
-   opencc::DictPtr dict_;
+  opencc::ConverterPtr converter_;
+  opencc::DictPtr dict_;
 };
 
 // Simplifier
 
-Simplifier::Simplifier(const Ticket& ticket) : Filter(ticket),
-                                               TagMatching(ticket) {
+Simplifier::Simplifier(const Ticket& ticket)
+    : Filter(ticket), TagMatching(ticket) {
   if (name_space_ == "filter") {
     name_space_ = "simplifier";
   }
@@ -104,8 +107,9 @@ Simplifier::Simplifier(const Ticket& ticket) : Filter(ticket),
     string tips;
     if (config->GetString(name_space_ + "/tips", &tips) ||
         config->GetString(name_space_ + "/tip", &tips)) {
-      tips_level_ = (tips == "all") ? kTipsAll :
-                    (tips == "char") ? kTipsChar : kTipsNone;
+      tips_level_ = (tips == "all")    ? kTipsAll
+                    : (tips == "char") ? kTipsChar
+                                       : kTipsNone;
     }
     config->GetBool(name_space_ + "/show_in_comment", &show_in_comment_);
     config->GetBool(name_space_ + "/inherit_comment", &inherit_comment_);
@@ -147,32 +151,27 @@ void Simplifier::Initialize() {
     (shared_config_path /= "opencc") /= opencc_config_path;
     if (exists(user_config_path)) {
       opencc_config_path = user_config_path;
-    }
-    else if (exists(shared_config_path)) {
+    } else if (exists(shared_config_path)) {
       opencc_config_path = shared_config_path;
     }
   }
   try {
     opencc_.reset(new Opencc(opencc_config_path.string()));
-  }
-  catch (opencc::Exception& e) {
+  } catch (opencc::Exception& e) {
     LOG(ERROR) << "Error initializing opencc: " << e.what();
   }
 }
 
 class SimplifiedTranslation : public PrefetchTranslation {
  public:
-  SimplifiedTranslation(an<Translation> translation,
-                        Simplifier* simplifier)
-      : PrefetchTranslation(translation), simplifier_(simplifier) {
-  }
+  SimplifiedTranslation(an<Translation> translation, Simplifier* simplifier)
+      : PrefetchTranslation(translation), simplifier_(simplifier) {}
 
  protected:
   virtual bool Replenish();
 
   Simplifier* simplifier_;
 };
-
 
 bool SimplifiedTranslation::Replenish() {
   auto next = translation_->Peek();
@@ -184,7 +183,7 @@ bool SimplifiedTranslation::Replenish() {
 }
 
 an<Translation> Simplifier::Apply(an<Translation> translation,
-                                          CandidateList* candidates) {
+                                  CandidateList* candidates) {
   if (!engine_->context()->get_option(option_name_)) {  // off
     return translation;
   }
@@ -198,13 +197,15 @@ an<Translation> Simplifier::Apply(an<Translation> translation,
 }
 
 void Simplifier::PushBack(const an<Candidate>& original,
-                         CandidateQueue* result, const string& simplified) {
+                          CandidateQueue* result,
+                          const string& simplified) {
   string tips;
   string text;
-  size_t length = utf8::unchecked::distance(original->text().c_str(),
-                                            original->text().c_str()
-                                            + original->text().length());
-  bool show_tips = (tips_level_ == kTipsChar && length == 1) || tips_level_ == kTipsAll;
+  size_t length = utf8::unchecked::distance(
+      original->text().c_str(),
+      original->text().c_str() + original->text().length());
+  bool show_tips =
+      (tips_level_ == kTipsChar && length == 1) || tips_level_ == kTipsAll;
   if (show_in_comment_) {
     text = original->text();
     if (show_tips) {
@@ -221,13 +222,8 @@ void Simplifier::PushBack(const an<Candidate>& original,
       }
     }
   }
-  result->push_back(
-      New<ShadowCandidate>(
-          original,
-          "simplified",
-          text,
-          tips,
-          inherit_comment_));
+  result->push_back(New<ShadowCandidate>(original, "simplified", text, tips,
+                                         inherit_comment_));
 }
 
 bool Simplifier::Convert(const an<Candidate>& original,
@@ -242,7 +238,7 @@ bool Simplifier::Convert(const an<Candidate>& original,
     if (success) {
       PushBack(original, result, simplified);
     }
-  } else { //!random_
+  } else {  //! random_
     vector<string> forms;
     success = opencc_->ConvertWord(original->text(), &forms);
     if (success) {

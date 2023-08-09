@@ -20,8 +20,7 @@ class SchemaSelection : public SimpleCandidate, public SwitcherCommand {
  public:
   SchemaSelection(Schema* schema)
       : SimpleCandidate("schema", 0, 0, schema->schema_name()),
-        SwitcherCommand(schema->schema_id()) {
-  }
+        SwitcherCommand(schema->schema_id()) {}
   virtual void Apply(Switcher* switcher);
 };
 
@@ -40,12 +39,10 @@ void SchemaSelection::Apply(Switcher* switcher) {
 
 class SchemaAction : public ShadowCandidate, public SwitcherCommand {
  public:
-  SchemaAction(an<Candidate> schema,
-               an<Candidate> command)
+  SchemaAction(an<Candidate> schema, an<Candidate> command)
       : ShadowCandidate(schema, command->type()),
         SwitcherCommand(As<SwitcherCommand>(schema)->keyword()),
-        command_(As<SwitcherCommand>(command)) {
-  }
+        command_(As<SwitcherCommand>(command)) {}
   virtual void Apply(Switcher* switcher);
 
  private:
@@ -60,11 +57,8 @@ void SchemaAction::Apply(Switcher* switcher) {
 
 class SchemaListTranslation : public FifoTranslation {
  public:
-  SchemaListTranslation(Switcher* switcher) {
-    LoadSchemaList(switcher);
-  }
-  virtual int Compare(an<Translation> other,
-                      const CandidateList& candidates);
+  SchemaListTranslation(Switcher* switcher) { LoadSchemaList(switcher); }
+  virtual int Compare(an<Translation> other, const CandidateList& candidates);
 
  protected:
   void LoadSchemaList(Switcher* switcher);
@@ -107,23 +101,21 @@ void SchemaListTranslation::LoadSchemaList(Switcher* switcher) {
   size_t fixed = candies_.size();
   time_t now = time(NULL);
   // load the rest schema list
-  Switcher::ForEachSchemaListEntry(
-      config,
-      [this, current_schema, user_config, now](const string& schema_id) {
-        if (current_schema && schema_id == current_schema->schema_id())
-          return /* continue = */true;
-        Schema schema(schema_id);
-        auto cand = New<SchemaSelection>(&schema);
-        int timestamp = 0;
-        if (user_config &&
-            user_config->GetInt("var/schema_access_time/" + schema_id,
-                                &timestamp)) {
-          if (timestamp <= now)
-            cand->set_quality(timestamp);
-        }
-        Append(cand);
-        return /* continue = */true;
-      });
+  Switcher::ForEachSchemaListEntry(config, [this, current_schema, user_config,
+                                            now](const string& schema_id) {
+    if (current_schema && schema_id == current_schema->schema_id())
+      return /* continue = */ true;
+    Schema schema(schema_id);
+    auto cand = New<SchemaSelection>(&schema);
+    int timestamp = 0;
+    if (user_config && user_config->GetInt(
+                           "var/schema_access_time/" + schema_id, &timestamp)) {
+      if (timestamp <= now)
+        cand->set_quality(timestamp);
+    }
+    Append(cand);
+    return /* continue = */ true;
+  });
   DLOG(INFO) << "num schemata: " << candies_.size();
   bool fix_order = false;
   config->GetBool("switcher/fix_schema_list_order", &fix_order);
@@ -131,17 +123,16 @@ void SchemaListTranslation::LoadSchemaList(Switcher* switcher) {
     return;
   // reorder schema list by recency
   std::stable_sort(candies_.begin() + fixed, candies_.end(),
-      [](const an<Candidate>& x, const an<Candidate>& y) {
-        return x->quality() > y->quality();
-      });
+                   [](const an<Candidate>& x, const an<Candidate>& y) {
+                     return x->quality() > y->quality();
+                   });
 }
 
 SchemaListTranslator::SchemaListTranslator(const Ticket& ticket)
-    : Translator(ticket) {
-}
+    : Translator(ticket) {}
 
 an<Translation> SchemaListTranslator::Query(const string& input,
-                                                    const Segment& segment) {
+                                            const Segment& segment) {
   auto switcher = dynamic_cast<Switcher*>(engine_);
   if (!switcher) {
     return nullptr;

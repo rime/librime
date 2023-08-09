@@ -12,10 +12,7 @@
 
 namespace rime {
 
-Menu::Menu()
-    : merged_(new MergedTranslation(candidates_)),
-      result_(merged_) {
-}
+Menu::Menu() : merged_(new MergedTranslation(candidates_)), result_(merged_) {}
 
 void Menu::AddTranslation(an<Translation> translation) {
   *merged_ += translation;
@@ -55,15 +52,13 @@ Page* Menu::CreatePage(size_t page_size, size_t page_no) {
   page->page_size = page_size;
   page->page_no = page_no;
   page->is_last_page = result_->exhausted() && (end_pos == candidates_.size());
-  std::copy(candidates_.begin() + start_pos,
-            candidates_.begin() + end_pos,
+  std::copy(candidates_.begin() + start_pos, candidates_.begin() + end_pos,
             std::back_inserter(page->candidates));
   return page;
 }
 
 an<Candidate> Menu::GetCandidateAt(size_t index) {
-  if (index >= candidates_.size() &&
-      index >= Prepare(index + 1)) {
+  if (index >= candidates_.size() && index >= Prepare(index + 1)) {
     return nullptr;
   }
   return candidates_[index];

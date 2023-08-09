@@ -13,8 +13,7 @@
 
 namespace rime {
 
-int CompareVersionString(const string& x,
-                         const string& y);
+int CompareVersionString(const string& x, const string& y);
 
 class ChecksumComputer {
  public:
