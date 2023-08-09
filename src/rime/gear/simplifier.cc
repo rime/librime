@@ -249,7 +249,7 @@ bool Simplifier::Convert(const an<Candidate>& original,
           string simplified;
           const bool success_converted =
               opencc_->ConvertText(original->text(), &simplified);
-          if (success_converted && original->text().compare(simplified) != 0) {
+          if (success_converted && original->text() != simplified) {
             PushBack(original, result, simplified);
           } else {
             PushBack(original, result, forms[i]);
