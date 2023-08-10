@@ -23,7 +23,7 @@ class KeyEvent {
 
   int keycode() const { return keycode_; }
   void keycode(int value) { keycode_ = value; }
-  int modifier() const { return modifier_; }
+  int modifier() const { return (modifier_ & ~kLockMask); }
   void modifier(int value) { modifier_ = value; }
 
   bool shift() const { return (modifier_ & kShiftMask) != 0; }
@@ -41,13 +41,14 @@ class KeyEvent {
   RIME_API bool Parse(const string& repr);
 
   bool operator==(const KeyEvent& other) const {
-    return keycode_ == other.keycode_ && modifier_ == other.modifier_;
+    return (keycode_ == other.keycode_) &&
+           ((modifier_ & ~kLockMask) == (other.modifier_ & ~kLockMask));
   }
 
   bool operator<(const KeyEvent& other) const {
     if (keycode_ != other.keycode_)
       return keycode_ < other.keycode_;
-    return modifier_ < other.modifier_;
+    return (modifier_ & ~kLockMask) < (other.modifier_ & ~kLockMask);
   }
 
  private:
