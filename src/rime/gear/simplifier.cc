@@ -25,6 +25,11 @@
 #include <opencc/Dict.hpp>
 #include <opencc/DictEntry.hpp>
 
+#ifdef WIN32
+#include <opencc/UTF8Util.hpp>
+namespace fs = boost::filesystem;
+#endif
+
 static const char* quote_left = "\xe3\x80\x94";   //"\xef\xbc\x88";
 static const char* quote_right = "\xe3\x80\x95";  //"\xef\xbc\x89";
 
@@ -36,7 +41,14 @@ class Opencc {
     LOG(INFO) << "initializing opencc: " << config_path;
     opencc::Config config;
     try {
+      // windows config_path in CP_ACP, convert it to UTF-8
+#ifdef WIN32
+      fs::path path{config_path};
+      converter_ =
+          config.NewFromFile(opencc::UTF8Util::U16ToU8(path.wstring()));
+#else
       converter_ = config.NewFromFile(config_path);
+#endif /*  WIN32 */
       const list<opencc::ConversionPtr> conversions =
           converter_->GetConversionChain()->GetConversions();
       dict_ = conversions.front()->GetDict();
