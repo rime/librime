@@ -52,6 +52,7 @@ class Opencc {
     const list<opencc::ConversionPtr> conversions =
         converter_->GetConversionChain()->GetConversions();
     vector<string> original_words{text};
+    bool matched = false;
     for (auto conversion : conversions) {
       opencc::DictPtr dict = conversion->GetDict();
       if (dict == nullptr) {
@@ -63,8 +64,13 @@ class Opencc {
         opencc::Optional<const opencc::DictEntry*> item =
             dict->Match(original_word);
         if (item.IsNull()) {
+          // Current dictionary doesn't convert the word. We need to keep it for
+          // other dicts in the chain. e.g. s2t.json expands 里 to 里 and 裏,
+          // then t2tw.json passes 里 as-is and converts 裏 to 裡.
+          converted_words.push_back(original_word);
           continue;
         }
+        matched = true;
         const opencc::DictEntry* entry = item.Get();
         for (const auto& converted_word : entry->Values()) {
           if (word_set.insert(converted_word).second) {
@@ -73,6 +79,10 @@ class Opencc {
         }
       }
       original_words.swap(converted_words);
+    }
+    if (!matched) {
+      // No dictionary contains the word
+      return false;
     }
     *forms = std::move(original_words);
     return forms->size() > 0;
