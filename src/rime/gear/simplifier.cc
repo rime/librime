@@ -67,7 +67,9 @@ class Opencc {
           // Current dictionary doesn't convert the word. We need to keep it for
           // other dicts in the chain. e.g. s2t.json expands 里 to 里 and 裏,
           // then t2tw.json passes 里 as-is and converts 裏 to 裡.
-          converted_words.push_back(original_word);
+          if (word_set.insert(original_word).second) {
+            converted_words.push_back(original_word);
+          }
           continue;
         }
         matched = true;
