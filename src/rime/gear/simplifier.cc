@@ -58,19 +58,48 @@ class Opencc {
   }
 
   bool ConvertWord(const string& text, vector<string>* forms) {
-    if (dict_ == nullptr)
+    if (converter_ == nullptr) {
       return false;
-    opencc::Optional<const opencc::DictEntry*> item = dict_->Match(text);
-    if (item.IsNull()) {
-      // Match not found
-      return false;
-    } else {
-      const opencc::DictEntry* entry = item.Get();
-      for (auto&& value : entry->Values()) {
-        forms->push_back(std::move(value));
-      }
-      return forms->size() > 0;
     }
+    const list<opencc::ConversionPtr> conversions =
+        converter_->GetConversionChain()->GetConversions();
+    vector<string> original_words{text};
+    bool matched = false;
+    for (auto conversion : conversions) {
+      opencc::DictPtr dict = conversion->GetDict();
+      if (dict == nullptr) {
+        return false;
+      }
+      set<string> word_set;
+      vector<string> converted_words;
+      for (const auto& original_word : original_words) {
+        opencc::Optional<const opencc::DictEntry*> item =
+            dict->Match(original_word);
+        if (item.IsNull()) {
+          // Current dictionary doesn't convert the word. We need to keep it for
+          // other dicts in the chain. e.g. s2t.json expands 里 to 里 and 裏,
+          // then t2tw.json passes 里 as-is and converts 裏 to 裡.
+          if (word_set.insert(original_word).second) {
+            converted_words.push_back(original_word);
+          }
+          continue;
+        }
+        matched = true;
+        const opencc::DictEntry* entry = item.Get();
+        for (const auto& converted_word : entry->Values()) {
+          if (word_set.insert(converted_word).second) {
+            converted_words.push_back(converted_word);
+          }
+        }
+      }
+      original_words.swap(converted_words);
+    }
+    if (!matched) {
+      // No dictionary contains the word
+      return false;
+    }
+    *forms = std::move(original_words);
+    return forms->size() > 0;
   }
 
   bool RandomConvertText(const string& text, string* simplified) {
