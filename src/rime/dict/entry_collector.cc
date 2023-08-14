@@ -147,6 +147,9 @@ void EntryCollector::Finish() {
       }
     }
   }
+  decltype(collection)().swap(collection);
+  decltype(words)().swap(words);
+  decltype(total_weight)().swap(total_weight);
   LOG(INFO) << "Pass 3: total " << num_entries << " entries collected.";
 }
 
