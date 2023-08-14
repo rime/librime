@@ -106,10 +106,15 @@ bool Deployer::StartWork(bool maintenance_mode) {
   if (pending_tasks_.empty()) {
     return false;
   }
+#ifdef RIME_NO_THREADING
+  LOG(INFO) << "running " << pending_tasks_.size() << " tasks in main thread.";
+  return Run();
+#else
   LOG(INFO) << "starting work thread for " << pending_tasks_.size()
             << " tasks.";
   work_ = std::async(std::launch::async, [this] { Run(); });
   return work_.valid();
+#endif
 }
 
 bool Deployer::StartMaintenance() {

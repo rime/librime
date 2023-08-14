@@ -23,8 +23,10 @@ struct RawDictEntry {
 
 // code -> weight
 using WeightMap = map<string, double>;
-// word -> { code -> weight }
-using WordMap = hash_map<string, WeightMap>;
+// word -> [ { code, weight } ]
+// For the sake of memory usage, don't use word -> { code -> weight } as there
+// may be many words, but may not be many representations for a word
+using WordMap = hash_map<string, vector<pair<string, double>>>;
 // [ (word, weight), ... ]
 using EncodeQueue = std::queue<pair<string, string>>;
 

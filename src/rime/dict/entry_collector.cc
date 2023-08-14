@@ -4,7 +4,9 @@
 //
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
+#include <algorithm>
 #include <fstream>
+#include <utility>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <rime/algo/strings.h>
@@ -145,19 +147,22 @@ void EntryCollector::Finish() {
       }
     }
   }
+  decltype(collection)().swap(collection);
+  decltype(words)().swap(words);
+  decltype(total_weight)().swap(total_weight);
   LOG(INFO) << "Pass 3: total " << num_entries << " entries collected.";
 }
 
 void EntryCollector::CreateEntry(const string& word,
                                  const string& code_str,
                                  const string& weight_str) {
-  RawDictEntry e;
-  e.raw_code.FromString(code_str);
-  e.text = word;
-  e.weight = 0.0;
+  an<RawDictEntry> e = New<RawDictEntry>();
+  e->raw_code.FromString(code_str);
+  e->text = word;
+  e->weight = 0.0;
   bool scaled = boost::ends_with(weight_str, "%");
   if ((weight_str.empty() || scaled) && preset_vocabulary) {
-    preset_vocabulary->GetWeightForEntry(e.text, &e.weight);
+    preset_vocabulary->GetWeightForEntry(e->text, &e->weight);
   }
   if (scaled) {
     double percentage = 100.0;
@@ -167,39 +172,42 @@ void EntryCollector::CreateEntry(const string& word,
       LOG(WARNING) << "invalid entry definition at #" << num_entries << ".";
       percentage = 100.0;
     }
-    e.weight *= percentage / 100.0;
+    e->weight *= percentage / 100.0;
   } else if (!weight_str.empty()) {  // absolute weight
     try {
-      e.weight = std::stod(weight_str);
+      e->weight = std::stod(weight_str);
     } catch (...) {
       LOG(WARNING) << "invalid entry definition at #" << num_entries << ".";
-      e.weight = 0.0;
+      e->weight = 0.0;
     }
   }
   // learn new syllables, or check if syllables are in the fixed syllabary.
-  for (const string& s : e.raw_code) {
+  for (const string& s : e->raw_code) {
     if (syllabary.find(s) == syllabary.end()) {
       if (build_syllabary) {
         syllabary.insert(s);
       } else {
-        LOG(ERROR) << "dropping entry '" << e.text
+        LOG(ERROR) << "dropping entry '" << e->text
                    << "' with invalid syllable: " << s;
         return;
       }
     }
   }
   // learn new word
-  bool is_word = (e.raw_code.size() == 1);
+  bool is_word = (e->raw_code.size() == 1);
   if (is_word) {
-    if (words[e.text].find(code_str) != words[e.text].end()) {
-      LOG(WARNING) << "duplicate word definition '" << e.text << "': ["
+    auto& weights = words[e->text];
+    if (std::find_if(weights.begin(), weights.end(), [&](const auto& p) {
+          return p.first == code_str;
+        }) != weights.end()) {
+      LOG(WARNING) << "duplicate word definition '" << e->text << "': ["
                    << code_str << "].";
       return;
     }
-    words[e.text][code_str] += e.weight;
-    total_weight[e.text] += e.weight;
+    weights.push_back(std::make_pair(code_str, e->weight));
+    total_weight[e->text] += e->weight;
   }
-  entries.emplace_back(New<RawDictEntry>(e));
+  entries.emplace_back(std::move(e));
   ++num_entries;
 }
 
@@ -213,6 +221,8 @@ bool EntryCollector::TranslateWord(const string& word, vector<string>* result) {
   }
   const auto& w = words.find(word);
   if (w != words.end()) {
+    std::sort(w->second.begin(), w->second.end(),
+              [](const auto& a, const auto& b) { return a.first < b.first; });
     for (const auto& v : w->second) {
       const double kMinimalWeight = 0.05;  // 5%
       double min_weight = total_weight[word] * kMinimalWeight;

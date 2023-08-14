@@ -50,7 +50,7 @@ class Candidate {
 using CandidateQueue = list<of<Candidate>>;
 using CandidateList = vector<of<Candidate>>;
 
-// useful implimentations
+// useful implementations
 
 class SimpleCandidate : public Candidate {
  public:

@@ -96,7 +96,7 @@ struct LevelDbWrapper {
   }
 };
 
-// LevelDbAccessor memebers
+// LevelDbAccessor members
 
 LevelDbAccessor::LevelDbAccessor() {}
 

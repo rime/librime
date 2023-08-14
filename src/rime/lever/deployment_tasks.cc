@@ -258,14 +258,16 @@ SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
 }
 
 static bool MaybeCreateDirectory(fs::path dir) {
-  if (!fs::exists(dir)) {
-    boost::system::error_code ec;
-    if (!fs::create_directories(dir, ec)) {
-      LOG(ERROR) << "error creating directory '" << dir.string() << "'.";
-      return false;
-    }
+  boost::system::error_code ec;
+  if (fs::create_directories(dir, ec)) {
+    return true;
   }
-  return true;
+
+  if (fs::exists(dir)) {
+    return true;
+  }
+  LOG(ERROR) << "error creating directory '" << dir.string() << "'.";
+  return false;
 }
 
 static bool RemoveVersionSuffix(string* version, const string& suffix) {
@@ -424,7 +426,7 @@ static bool ConfigNeedsUpdate(Config* config) {
 bool ConfigFileUpdate::Run(Deployer* deployer) {
   const fs::path shared_data_path(deployer->shared_data_dir);
   const fs::path user_data_path(deployer->user_data_dir);
-  // trash depecated user copy created by an older version of Rime
+  // trash deprecated user copy created by an older version of Rime
   fs::path source_config_path(shared_data_path / file_name_);
   fs::path dest_config_path(user_data_path / file_name_);
   fs::path trash = user_data_path / "trash";
