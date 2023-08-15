@@ -32,8 +32,8 @@ static void load_patterns(RecognizerPatterns* patterns, an<ConfigMap> map) {
   }
 }
 
-void RecognizerPatterns::LoadConfig(Config* config) {
-  load_patterns(this, config->GetMap("recognizer/patterns"));
+void RecognizerPatterns::LoadConfig(Config* config, const string& name_space) {
+  load_patterns(this, config->GetMap(name_space + "/patterns"));
 }
 
 RecognizerMatch RecognizerPatterns::GetMatch(
@@ -72,9 +72,12 @@ RecognizerMatch RecognizerPatterns::GetMatch(
 Recognizer::Recognizer(const Ticket& ticket) : Processor(ticket) {
   if (!ticket.schema)
     return;
+  if (name_space_ == "processor" ) {
+    name_space_ = "recognizer";
+  }
   if (Config* config = ticket.schema->config()) {
-    patterns_.LoadConfig(config);
-    config->GetBool("recognizer/use_space", &use_space_);
+    patterns_.LoadConfig(config, name_space_);
+    config->GetBool(name_space_ + "/use_space", &use_space_);
   }
 }
 

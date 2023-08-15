@@ -16,8 +16,11 @@ Matcher::Matcher(const Ticket& ticket) : Segmentor(ticket) {
   // read schema settings
   if (!ticket.schema)
     return;
+  if (name_space_ == "segmentor") {
+    name_space_ = "recognizer";
+  }
   Config* config = ticket.schema->config();
-  patterns_.LoadConfig(config);
+  patterns_.LoadConfig(config, name_space_);
 }
 
 bool Matcher::Proceed(Segmentation* segmentation) {

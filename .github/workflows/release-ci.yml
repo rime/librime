@@ -21,7 +21,7 @@ jobs:
       rime_plugins: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
 
   release:
-    needs: [macos, windows, linux]
+    needs: [macos, windows]
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
