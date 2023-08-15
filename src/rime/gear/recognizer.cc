@@ -72,7 +72,7 @@ RecognizerMatch RecognizerPatterns::GetMatch(
 Recognizer::Recognizer(const Ticket& ticket) : Processor(ticket) {
   if (!ticket.schema)
     return;
-  if (name_space_ == "processor" ) {
+  if (name_space_ == "processor") {
     name_space_ = "recognizer";
   }
   if (Config* config = ticket.schema->config()) {
