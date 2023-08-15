@@ -88,7 +88,7 @@ ProcessResult Recognizer::ProcessKeyEvent(const KeyEvent& key_event) {
     // pattern matching against the input string plus the incoming character
     Context* ctx = engine_->context();
     string input = ctx->input();
-    input.insert(ctx->caret_pos(), 1, ch) ;
+    input.insert(ctx->caret_pos(), 1, ch);
     auto match = patterns_.GetMatch(input, ctx->composition());
     if (match.found()) {
       ctx->PushInput(ch);
