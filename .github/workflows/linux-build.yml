@@ -24,8 +24,8 @@ jobs:
       - name: Use clang
         if: ${{ matrix.compiler == 'clang' }}
         run: |
-          echo "export CC=/usr/bin/clang" >> $GITHUB_ENV
-          echo "export CXX=/usr/bin/clang++" >> $GITHUB_ENV
+          echo "CC=/usr/bin/clang" >> $GITHUB_ENV
+          echo "CXX=/usr/bin/clang++" >> $GITHUB_ENV
 
       - name: Install dependency
         run: ./action-install-linux.sh
