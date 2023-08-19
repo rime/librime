@@ -21,6 +21,12 @@ jobs:
           repository: ${{ inputs.repository }}
           submodules: recursive
 
+      - name: Use clang
+        if: ${{ matrix.compiler == 'clang' }}
+        run: |
+          echo "CC=/usr/bin/clang" >> $GITHUB_ENV
+          echo "CXX=/usr/bin/clang++" >> $GITHUB_ENV
+
       - name: Install dependency
         run: ./action-install-linux.sh
 
