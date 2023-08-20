@@ -1,8 +1,8 @@
 set(CMAKE_USER_MAKE_RULES_OVERRIDE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/c_flag_overrides.cmake)
 set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_flag_overrides.cmake)
 
-project(rime)
 cmake_minimum_required(VERSION 3.12)
+project(rime)
 set(CMAKE_CXX_STANDARD 14)
 
 set(rime_version 1.8.5)
@@ -20,7 +20,6 @@ option(BUILD_SAMPLE "Build sample Rime plugin" OFF)
 option(BUILD_TEST "Build and run tests" ON)
 option(BUILD_SEPARATE_LIBS "Build separate rime-* libraries" OFF)
 option(ENABLE_LOGGING "Enable logging with google-glog library" ON)
-option(BOOST_USE_CXX11 "Boost has been built with C++11 support" OFF)
 option(BOOST_USE_SIGNALS2 "Boost use signals2 instead of signals" ON)
 option(ENABLE_ASAN "Enable Address Sanitizer (Unix Only)" OFF)
 option(INSTALL_PRIVATE_HEADERS "Install private headers (usually needed for externally built Rime plugins)" OFF)
@@ -57,10 +56,6 @@ set(YamlCpp_STATIC ${BUILD_STATIC})
 set(Boost_USE_MULTITHREADED ON)
 if(MSVC)
   set(Boost_USE_STATIC_RUNTIME ON)
-endif()
-
-if(NOT BOOST_USE_CXX11)
-  add_definitions("-DBOOST_NO_CXX11_SCOPED_ENUMS")
 endif()
 
 set(BOOST_COMPONENTS filesystem regex system)
