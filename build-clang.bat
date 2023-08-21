@@ -148,7 +148,6 @@ if %build_librime% == 1 (
 )
 
 if "%build_test%" == "ON" (
-  echo 233
   copy /y dist\lib\rime.dll build\test
   pushd build\test
   .\rime_test.exe || exit
