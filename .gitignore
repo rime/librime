@@ -13,3 +13,4 @@ node_modules/
 *~
 .*.swp
 .cache/
+*.7z

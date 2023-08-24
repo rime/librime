@@ -12,9 +12,14 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [msvc, clang]
     env:
-      boost_version: 1.78.0
-      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_78_0
+      boost_version: 1.83.0
+      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_83_0
+      build_script: ${{ matrix.compiler == 'msvc' && './build.bat' || './build-clang.bat' }}
       RIME_PLUGINS: ${{ inputs.rime_plugins }}
     steps:
       - name: Checkout last commit
@@ -23,34 +28,53 @@ jobs:
           repository: ${{ inputs.repository }}
           submodules: recursive
 
-      - name: Configure build environment
+      - name: Configure MSVC
+        if: ${{ matrix.compiler == 'msvc' }}
         run: |
           copy env.vs2022.bat env.bat
+
+      - name: Configure clang
+        if: ${{ matrix.compiler == 'clang' }}
+        run: |
+          choco upgrade -y llvm
+          pip install ninja
+
+      - name: Configure build environment
+        run: |
           $git_ref_name = git describe --always
           echo "git_ref_name=$git_ref_name" >> $env:GITHUB_ENV
+          git submodule > submodule-status
 
-      - name: Cache Boost
-        id: cache-boost
+      - name: Cache Boost source
+        id: cache-boost-src
         uses: actions/cache@v3
         with:
           path: |
             ${{ env.BOOST_ROOT }}.7z
-            ${{ env.BOOST_ROOT }}\stage
-          key: ${{ runner.os }}-boost-${{ env.boost_version }}
+          key: ${{ runner.os }}-boost-${{ env.boost_version }}-${{ matrix.compiler }}-src
+
+      - name: Download Boost source
+        if: steps.cache-boost-src.outputs.cache-hit != 'true'
+        run: |
+          aria2c https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.7z -d deps
 
       - name: Extract Boost source tarball
-        if: steps.cache-boost.outputs.cache-hit == 'true'
         run: |
           pushd deps
           7z x ${{ env.BOOST_ROOT }}.7z
           popd
 
-      - name: Install Boost
-        if: steps.cache-boost.outputs.cache-hit != 'true'
-        run: .\install-boost.bat
+      - name: Cache Boost lib
+        id: cache-boost-lib
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env.BOOST_ROOT }}\stage
+          key: ${{ runner.os }}-boost-${{ env.boost_version }}-${{ matrix.compiler }}-lib
 
-      - name: Check submodules
-        run: git submodule > submodule-status
+      - name: Install Boost
+        if: steps.cache-boost-lib.outputs.cache-hit != 'true'
+        run: ${{ env.build_script }} boost
 
       - name: Cache dependencies
         id: cache-deps
@@ -61,19 +85,20 @@ jobs:
             include
             lib
             share
-          key: ${{ runner.os }}-deps-${{ hashFiles('submodule-status') }}
+          key: ${{ runner.os }}-${{ matrix.compiler }}-${{ hashFiles('submodule-status') }}
 
       - name: Build dependencies
         if: steps.cache-deps.outputs.cache-hit != 'true'
-        run: .\build.bat deps
+        run: ${{ env.build_script }} deps
 
       - name: Install Rime plugins
         run: .\action-install-plugins-windows.bat
 
       - name: Build and test
-        run: .\build.bat test
+        run: ${{ env.build_script }} test
 
       - name: Create distributable
+        if: ${{ matrix.compiler == 'msvc' }}
         run: |
           7z a rime-${{ env.git_ref_name }}-${{ runner.os }}.7z `
           dist version-info.txt
@@ -81,6 +106,7 @@ jobs:
           bin include lib share
 
       - name: Upload artifacts
+        if: ${{ matrix.compiler == 'msvc' }}
         uses: actions/upload-artifact@v3
         with:
           path: |

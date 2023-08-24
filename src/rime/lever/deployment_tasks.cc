@@ -562,7 +562,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
       continue;
     }
     boost::system::error_code ec;
-    fs::copy_file(entry, backup, fs::copy_option::overwrite_if_exists, ec);
+    fs::copy_file(entry, backup, fs::copy_options::overwrite_existing, ec);
     if (ec) {
       LOG(ERROR) << "error backing up file " << backup.string();
       ++failure;

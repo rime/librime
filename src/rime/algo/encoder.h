@@ -70,7 +70,7 @@ class TableEncoder : public Encoder {
   RIME_API bool LoadSettings(Config* config);
 
   RIME_API bool Encode(const RawCode& code, string* result);
-  bool EncodePhrase(const string& phrase, const string& value);
+  RIME_API bool EncodePhrase(const string& phrase, const string& value);
 
   RIME_API bool IsCodeExcluded(const string& code);
 
