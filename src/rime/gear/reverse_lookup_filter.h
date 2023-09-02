@@ -34,6 +34,7 @@ class ReverseLookupFilter : public Filter, TagMatching {
   the<ReverseLookupDictionary> rev_dict_;
   // settings
   bool overwrite_comment_ = false;
+  bool append_comment_ = false;
   Projection comment_formatter_;
 };
 
