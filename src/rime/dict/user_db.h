@@ -61,10 +61,10 @@ class UserDbHelper {
   UserDbHelper(const the<Db>& db) : db_(db.get()) {}
   UserDbHelper(const an<Db>& db) : db_(db.get()) {}
 
-  bool UpdateUserInfo();
-  static bool IsUniformFormat(const string& name);
-  bool UniformBackup(const string& snapshot_file);
-  bool UniformRestore(const string& snapshot_file);
+  RIME_API bool UpdateUserInfo();
+  RIME_API static bool IsUniformFormat(const string& name);
+  RIME_API bool UniformBackup(const string& snapshot_file);
+  RIME_API bool UniformRestore(const string& snapshot_file);
 
   bool IsUserDb();
   string GetDbName();

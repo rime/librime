@@ -25,7 +25,7 @@
 #include <opencc/Dict.hpp>
 #include <opencc/DictEntry.hpp>
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #include <opencc/UTF8Util.hpp>
 namespace fs = boost::filesystem;
 #endif
@@ -42,13 +42,13 @@ class Opencc {
     opencc::Config config;
     try {
       // windows config_path in CP_ACP, convert it to UTF-8
-#ifdef WIN32
+#ifdef _MSC_VER
       fs::path path{config_path};
       converter_ =
           config.NewFromFile(opencc::UTF8Util::U16ToU8(path.wstring()));
 #else
       converter_ = config.NewFromFile(config_path);
-#endif /*  WIN32 */
+#endif /*  _MSC_VER */
       const list<opencc::ConversionPtr> conversions =
           converter_->GetConversionChain()->GetConversions();
       dict_ = conversions.front()->GetDict();

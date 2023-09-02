@@ -16,7 +16,7 @@ class Deployer;
 
 using UserDictList = vector<string>;
 
-class UserDictManager {
+class RIME_API UserDictManager {
  public:
   UserDictManager(Deployer* deployer);
 
