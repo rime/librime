@@ -28,6 +28,8 @@ jobs:
 
       - name: Configure build environment
         run: |
+          brew install llvm
+          echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
           echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV
 
       - name: Configure build variant
