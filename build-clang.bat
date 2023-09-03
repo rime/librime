@@ -125,7 +125,7 @@ if %build_deps% == 1 (
   echo building opencc.
   pushd deps\opencc
   cmake . %deps_cmake_flags%^
-    -DCMAKE_CXX_FLAGS:PATH="-I %RIME_ROOT%\include -L %RIME_ROOT%\lib"^
+    -DCMAKE_CXX_FLAGS:STRING="-I %RIME_ROOT%\include -L %RIME_ROOT%\lib"^
     -DUSE_SYSTEM_MARISA:BOOL=ON || exit
   cmake --build build || exit
   cmake --install build || exit
@@ -141,7 +141,6 @@ set rime_cmake_flags=%common_cmake_flags%^
 
 if %build_librime% == 1 (
   echo building librime.
-  echo %rime_cmake_flags%
   cmake . %rime_cmake_flags% || exit
   cmake --build build || exit
   cmake --install build || exit

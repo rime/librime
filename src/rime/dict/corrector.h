@@ -112,14 +112,14 @@ class EditDistanceCorrector : public Corrector, public Prism {
                                          corrector::Distance threshold);
 };
 
-class NearSearchCorrector : public Corrector {
+class RIME_API NearSearchCorrector : public Corrector {
  public:
   NearSearchCorrector() = default;
   ~NearSearchCorrector() override = default;
-  RIME_API void ToleranceSearch(const Prism& prism,
-                                const string& key,
-                                corrector::Corrections* results,
-                                size_t tolerance) override;
+  void ToleranceSearch(const Prism& prism,
+                       const string& key,
+                       corrector::Corrections* results,
+                       size_t tolerance) override;
 };
 
 template <class... Cs>

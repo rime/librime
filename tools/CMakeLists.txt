@@ -17,11 +17,9 @@ target_link_libraries(rime_patch
   ${rime_library}
   ${rime_levers_library})
 
-# msvc doesn't export all symbols
-if(NOT (WIN32 AND BUILD_SHARED_LIBS))
-
 set(rime_console_src "rime_console.cc")
 add_executable(rime_console ${rime_console_src})
+target_compile_definitions(rime_console PRIVATE RIME_IMPORTS)
 target_link_libraries(rime_console ${rime_console_deps})
 
 set(rime_dict_manager_src "rime_dict_manager.cc")
@@ -33,6 +31,7 @@ target_link_libraries(rime_dict_manager
 
 set(rime_deployer_src "rime_deployer.cc")
 add_executable(rime_deployer ${rime_deployer_src})
+target_compile_definitions(rime_deployer PRIVATE RIME_IMPORTS)
 target_link_libraries(rime_deployer
   ${rime_library}
   ${rime_dict_library}
@@ -40,8 +39,6 @@ target_link_libraries(rime_deployer
 
 install(TARGETS rime_deployer DESTINATION ${BIN_INSTALL_DIR})
 install(TARGETS rime_dict_manager DESTINATION ${BIN_INSTALL_DIR})
-
-endif()
 
 install(TARGETS rime_patch DESTINATION ${BIN_INSTALL_DIR})
 

@@ -327,13 +327,13 @@ bool LevelDb::CommitTransaction() {
 }
 
 template <>
-string UserDbComponent<LevelDb>::extension() const {
+RIME_API string UserDbComponent<LevelDb>::extension() const {
   return ".userdb";
 }
 
 template <>
-UserDbWrapper<LevelDb>::UserDbWrapper(const string& file_name,
-                                      const string& db_name)
+RIME_API UserDbWrapper<LevelDb>::UserDbWrapper(const string& file_name,
+                                               const string& db_name)
     : LevelDb(file_name, db_name, "userdb") {}
 
 }  // namespace rime
