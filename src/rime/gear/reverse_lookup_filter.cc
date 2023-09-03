@@ -79,9 +79,9 @@ void ReverseLookupFilter::Process(const an<Candidate>& cand) {
   if (rev_dict_->ReverseLookup(phrase->text(), &codes)) {
     comment_formatter_.Apply(&codes);
     if (!codes.empty()) {
-      if (overwrite_comment_) {
+      if (overwrite_comment_ || cand->comment().empty()) {
         phrase->set_comment(codes);
-      } else if (append_comment_) {
+      } else {
         phrase->set_comment(cand->comment() + " " + codes);
       }
     }
