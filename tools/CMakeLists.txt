@@ -37,8 +37,21 @@ target_link_libraries(rime_deployer
   ${rime_dict_library}
   ${rime_levers_library})
 
+set(rime_table_decompiler_src 
+  "rime_table_decompiler.cc"
+  ${CMAKE_SOURCE_DIR}/src/rime/dict/table.cc
+  ${CMAKE_SOURCE_DIR}/src/rime/dict/mapped_file.cc
+  ${CMAKE_SOURCE_DIR}/src/rime/dict/string_table.cc
+  ${CMAKE_SOURCE_DIR}/src/rime/dict/vocabulary.cc
+  )
+add_executable(rime_table_decompiler ${rime_table_decompiler_src})
+target_link_libraries(rime_table_decompiler
+  ${rime_library}
+  ${rime_dict_library})
+
 install(TARGETS rime_deployer DESTINATION ${BIN_INSTALL_DIR})
 install(TARGETS rime_dict_manager DESTINATION ${BIN_INSTALL_DIR})
+install(TARGETS rime_table_decompiler DESTINATION ${BIN_INSTALL_DIR})
 
 install(TARGETS rime_patch DESTINATION ${BIN_INSTALL_DIR})
 

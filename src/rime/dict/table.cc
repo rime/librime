@@ -21,7 +21,6 @@ const int kTableFormatLowestCompatible = 4.0;
 const char kTableFormatPrefix[] = "Rime::Table/";
 const size_t kTableFormatPrefixLen = sizeof(kTableFormatPrefix) - 1;
 
-
 TableAccessor::TableAccessor(const Code& index_code,
                              const List<table::Entry>* list,
                              double credibility)
