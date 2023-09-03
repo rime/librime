@@ -36,9 +36,9 @@ class ConfigValue : public ConfigItem {
   ConfigValue() : ConfigItem(kScalar) {}
   RIME_API ConfigValue(bool value);
   RIME_API ConfigValue(int value);
-  ConfigValue(double value);
+  RIME_API ConfigValue(double value);
   RIME_API ConfigValue(const char* value);
-  ConfigValue(const string& value);
+  RIME_API ConfigValue(const string& value);
 
   // schalar value accessors
   bool GetBool(bool* value) const;
@@ -155,7 +155,7 @@ class ConfigItemRef {
   RIME_API bool Append(an<ConfigItem> item);
   RIME_API size_t size() const;
   // map
-  bool HasKey(const string& key) const;
+  RIME_API bool HasKey(const string& key) const;
 
   RIME_API bool modified() const;
   RIME_API void set_modified();

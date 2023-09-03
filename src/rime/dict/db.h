@@ -93,7 +93,7 @@ class Recoverable {
 
 class ResourceResolver;
 
-class DbComponentBase {
+class RIME_API DbComponentBase {
  public:
   DbComponentBase();
   virtual ~DbComponentBase();

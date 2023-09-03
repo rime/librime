@@ -96,8 +96,8 @@ static TextFormat plain_userdb_format = {
 };
 
 template <>
-UserDbWrapper<TextDb>::UserDbWrapper(const string& file_name,
-                                     const string& db_name)
+RIME_API UserDbWrapper<TextDb>::UserDbWrapper(const string& file_name,
+                                              const string& db_name)
     : TextDb(file_name, db_name, "userdb", plain_userdb_format) {}
 
 bool UserDbHelper::UpdateUserInfo() {

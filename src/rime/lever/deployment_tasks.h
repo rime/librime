@@ -25,14 +25,14 @@ class DetectModifications : public DeploymentTask {
 };
 
 // initialize/update installation.yaml
-class InstallationUpdate : public DeploymentTask {
+class RIME_API InstallationUpdate : public DeploymentTask {
  public:
   InstallationUpdate(TaskInitializer arg = TaskInitializer()) {}
   bool Run(Deployer* deployer);
 };
 
 // update distributed config files and preset schemas
-class WorkspaceUpdate : public DeploymentTask {
+class RIME_API WorkspaceUpdate : public DeploymentTask {
  public:
   WorkspaceUpdate(TaskInitializer arg = TaskInitializer()) {}
   bool Run(Deployer* deployer);
@@ -44,7 +44,7 @@ class WorkspaceUpdate : public DeploymentTask {
 };
 
 // update a specific schema, build corresponding dictionary
-class SchemaUpdate : public DeploymentTask {
+class RIME_API SchemaUpdate : public DeploymentTask {
  public:
   explicit SchemaUpdate(const string& schema_file)
       : schema_file_(schema_file) {}

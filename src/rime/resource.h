@@ -20,12 +20,11 @@ struct ResourceType {
   string suffix;
 };
 
-class ResourceResolver {
+class RIME_API ResourceResolver {
  public:
   explicit ResourceResolver(const ResourceType type) : type_(type) {}
   virtual ~ResourceResolver() {}
-  RIME_API virtual boost::filesystem::path ResolvePath(
-      const string& resource_id);
+  virtual boost::filesystem::path ResolvePath(const string& resource_id);
   string ToResourceId(const string& file_path) const;
   string ToFilePath(const string& resource_id) const;
   void set_root_path(boost::filesystem::path root_path) {
@@ -39,12 +38,11 @@ class ResourceResolver {
 };
 
 // try fallback path if target file doesn't exist in root path
-class FallbackResourceResolver : public ResourceResolver {
+class RIME_API FallbackResourceResolver : public ResourceResolver {
  public:
   explicit FallbackResourceResolver(const ResourceType& type)
       : ResourceResolver(type) {}
-  RIME_API boost::filesystem::path ResolvePath(
-      const string& resource_id) override;
+  boost::filesystem::path ResolvePath(const string& resource_id) override;
   void set_fallback_root_path(boost::filesystem::path fallback_root_path) {
     fallback_root_path_ = fallback_root_path;
   }
