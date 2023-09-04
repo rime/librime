@@ -109,6 +109,9 @@ find_package(YamlCpp REQUIRED)
 if(YamlCpp_FOUND)
   include_directories(${YamlCpp_INCLUDE_PATH})
 endif()
+if(YamlCpp_STATIC)
+  add_definitions(-DYAML_CPP_STATIC_DEFINE)
+endif()
 
 find_package(LevelDb REQUIRED)
 if(LevelDb_FOUND)
@@ -179,12 +182,12 @@ if(NOT DEFINED BIN_INSTALL_DIR)
 endif()
 # }
 
-# uninstall target
+# remove target
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
   "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
   IMMEDIATE @ONLY)
-add_custom_target(uninstall
+add_custom_target(remove
   COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly|GNU" OR MINGW)

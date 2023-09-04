@@ -73,10 +73,10 @@ install-debug:
 	cmake --build $(build) --target install
 
 uninstall:
-	cmake --build $(build) --target uninstall
+	cmake --build $(build) --target remove
 
 uninstall-debug:
-	cmake --build $(build) --target uninstall
+	cmake --build $(build) --target remove
 
 test: release
 	(cd $(build)/test; ./rime_test)
