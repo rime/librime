@@ -57,6 +57,7 @@ if %build_boost% == 1 (
     link=static^
     runtime-link=static^
     stage^
+    --with-locale^
     --with-filesystem^
     --with-system^
     --with-regex || exit
