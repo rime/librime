@@ -128,7 +128,37 @@ class TableAccessor {
 using TableQueryResult = map<int, vector<TableAccessor>>;
 
 struct SyllableGraph;
-class TableQuery;
+
+class TableQuery {
+ public:
+  TableQuery(table::Index* index) : lv1_index_(index) { Reset(); }
+
+  TableAccessor Access(SyllableId syllable_id, double credibility = 0.0) const;
+
+  // down to next level
+  bool Advance(SyllableId syllable_id, double credibility = 0.0);
+
+  // up one level
+  bool Backdate();
+
+  // back to root
+  void Reset();
+
+  size_t level() const { return level_; }
+
+ protected:
+  size_t level_ = 0;
+  Code index_code_;
+  vector<double> credibility_;
+
+ private:
+  bool Walk(SyllableId syllable_id);
+
+  table::HeadIndex* lv1_index_ = nullptr;
+  table::TrunkIndex* lv2_index_ = nullptr;
+  table::TrunkIndex* lv3_index_ = nullptr;
+  table::TailIndex* lv4_index_ = nullptr;
+};
 
 class Table : public MappedFile {
  public:
@@ -152,6 +182,7 @@ class Table : public MappedFile {
   RIME_API string GetEntryText(const table::Entry& entry);
 
   uint32_t dict_file_checksum() const;
+  table::Metadata* metadata() const { return metadata_; }
 
  private:
   table::Index* BuildIndex(const Vocabulary& vocabulary, size_t num_syllables);
