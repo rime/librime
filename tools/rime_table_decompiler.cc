@@ -76,7 +76,7 @@ void traversal(rime::Table* table, std::ofstream& fout) {
 }
 
 int main(int argc, char* argv[]) {
-  if (argc < 2) {
+  if (argc < 2 || argc > 3) {
     std::cout << "Usage: rime_table_decompiler <rime-table-file> [save-path]"
               << std::endl;
     std::cout << "Example: rime_table_decompiler pinyin.table.bin pinyin.dict.yaml"
@@ -112,13 +112,11 @@ int main(int argc, char* argv[]) {
   if (std::string::npos != last_slash_idx) {
     fileName.erase(0, last_slash_idx + 1);
   }
-  // clang-format off
   fout << "# Rime dictionary\n\n";
   fout << "---\n"
           "name: " << fileName << "\n"
           "version: \"1.0\"\n"
           "...\n\n";
-  // clang-format on
   traversal(&table, fout);
   std::cout << "Save to: " << outputName << std::endl;
   fout.close();
