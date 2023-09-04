@@ -6,12 +6,15 @@
 #include <iomanip>
 #include <ios>
 #include <iostream>
+#include <string>
 #include <rime/dict/table.h>
 
-using namespace std;
-ofstream fout;
+// usage:
+//   rime_table_decompiler <rime-table-file> [save-path]
+// example:
+//   rime_table_decompiler pinyin.table.bin pinyin.dict.yaml
 
-void outCode(rime::Table* table, const rime::Code code, ofstream& fout) {
+void outCode(rime::Table* table, const rime::Code code, std::ofstream& fout) {
   if (code.empty()) {
     return;
   }
@@ -25,7 +28,9 @@ void outCode(rime::Table* table, const rime::Code code, ofstream& fout) {
   return;
 }
 
-void access(rime::Table* table, rime::TableAccessor accessor) {
+void access(rime::Table* table,
+            rime::TableAccessor accessor,
+            std::ofstream& fout) {
   while (!accessor.exhausted()) {
     auto word = table->GetEntryText(*accessor.entry());
     fout << word << "\t";
@@ -35,61 +40,78 @@ void access(rime::Table* table, rime::TableAccessor accessor) {
     if (weight >= 0) {
       fout << "\t" << exp(weight);
     }
-    fout << endl;
+    fout << std::endl;
     accessor.Next();
   }
 }
 
-// 递归遍历
-void recursion(rime::Table* table, ofstream& fout, rime::TableQuery* query) {
+// recursively traverse table
+void recursion(rime::Table* table,
+               rime::TableQuery* query,
+               std::ofstream& fout) {
   for (int i = 0; i < table->metadata()->num_syllables; i++) {
     auto accessor = query->Access(i);
-    access(table, accessor);
+    access(table, accessor, fout);
     if (query->Advance(i)) {
       if (query->level() < 3) {
-        recursion(table, fout, query);
+        recursion(table, query, fout);
       } else {
         auto accessor = query->Access(0);
-        access(table, accessor);
+        access(table, accessor, fout);
       }
       query->Backdate();
     }
   }
 }
 
-void traversal(rime::Table* table, ofstream& fout) {
+void traversal(rime::Table* table, std::ofstream& fout) {
   auto metadata = table->metadata();
-  cout << "num_syllables: " << metadata->num_syllables << endl;
-  cout << "num_entries: " << metadata->num_entries << endl;
+  std::cout << "num_syllables: " << metadata->num_syllables << std::endl;
+  std::cout << "num_entries: " << metadata->num_entries << std::endl;
 
-  fout << fixed;
-  fout << setprecision(0);
+  fout << std::fixed;
+  fout << std::setprecision(0);
   rime::TableQuery query(table->metadata()->index.get());
-  recursion(table, fout, &query);
+  recursion(table, &query, fout);
 }
 
 int main(int argc, char* argv[]) {
-  string fileName(argv[1]);
+  if (argc < 2) {
+    std::cout << "Usage: rime_table_decompiler <rime-table-file> [save-path]"
+              << std::endl;
+    std::cout << "Example: rime_table_decompiler pinyin.table.bin pinyin.dict.yaml"
+              << std::endl;
+    return 0;
+  }
 
-  cout << "Read File: " << fileName << endl;
+  std::string fileName(argv[1]);
   rime::Table table(fileName);
-  table.Load();
+  bool success = table.Load();
+  if (!success) {
+    std::cerr << "Failed to load table." << std::endl;
+    return 1;
+  }
 
-  // Remove directory if present.
-  // Do this before extension removal incase directory has a period character.
+  // Remove the extension ".table.bin" if present.
+  const size_t table_bin_idx = fileName.rfind(".table.bin");
+  if (std::string::npos != table_bin_idx) {
+    fileName.erase(table_bin_idx);
+  }
+  const std::string outputName =
+      (argc == 3) ? argv[2]: fileName + ".yaml";
+
+  std::ofstream fout;
+  fout.open(outputName);
+  if (!fout.is_open()) {
+    std::cerr << "Failed to open file " << outputName << std::endl;
+    return 1;
+  }
+
+  // schema id
   const size_t last_slash_idx = fileName.find_last_of("\\/");
   if (std::string::npos != last_slash_idx) {
     fileName.erase(0, last_slash_idx + 1);
   }
-
-  // Remove extension if present.
-  const size_t period_idx = fileName.find('.');
-  if (std::string::npos != period_idx) {
-    fileName.erase(period_idx);
-  }
-
-  string outputName = fileName + ".txt";
-  fout.open(outputName);
   // clang-format off
   fout << "# Rime dictionary\n\n";
   fout << "---\n"
@@ -98,8 +120,7 @@ int main(int argc, char* argv[]) {
           "...\n\n";
   // clang-format on
   traversal(&table, fout);
-  cout << "Save To: " << outputName << endl
-       << endl;
+  std::cout << "Save to: " << outputName << std::endl;
   fout.close();
   return 0;
 }
