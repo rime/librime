@@ -39,8 +39,8 @@ Follow the instructions to build librime on platforms other than Linux:
 Build dependencies
 ---
   - compiler with C++14 support
-  - cmake>=2.8
-  - libboost>=1.48
+  - cmake>=3.10
+  - libboost>=1.74
   - libglog (optional)
   - libleveldb
   - libmarisa
@@ -126,3 +126,4 @@ Contributors
   - [jakwings](https://github.com/jakwings)
   - [Prcuvu](https://github.com/Prcuvu)
   - [hchunhui](https://github.com/hchunhui)
+  - [Qijia Liu](https://github.com/eagleoflqj)
