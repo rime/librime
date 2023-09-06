@@ -46,18 +46,18 @@ class TextDb : public Db {
   RIME_API virtual ~TextDb();
 
   RIME_API virtual bool Open();
-  virtual bool OpenReadOnly();
+  RIME_API virtual bool OpenReadOnly();
   RIME_API virtual bool Close();
 
-  virtual bool Backup(const string& snapshot_file);
-  virtual bool Restore(const string& snapshot_file);
+  RIME_API virtual bool Backup(const string& snapshot_file);
+  RIME_API virtual bool Restore(const string& snapshot_file);
 
-  virtual bool CreateMetadata();
-  virtual bool MetaFetch(const string& key, string* value);
-  virtual bool MetaUpdate(const string& key, const string& value);
+  RIME_API virtual bool CreateMetadata();
+  RIME_API virtual bool MetaFetch(const string& key, string* value);
+  RIME_API virtual bool MetaUpdate(const string& key, const string& value);
 
-  virtual an<DbAccessor> QueryMetadata();
-  virtual an<DbAccessor> QueryAll();
+  RIME_API virtual an<DbAccessor> QueryMetadata();
+  RIME_API virtual an<DbAccessor> QueryAll();
   RIME_API virtual an<DbAccessor> Query(const string& key);
   RIME_API virtual bool Fetch(const string& key, string* value);
   RIME_API virtual bool Update(const string& key, const string& value);

@@ -14,7 +14,7 @@
 
 namespace rime {
 
-class Translation {
+class RIME_API Translation {
  public:
   Translation() = default;
   virtual ~Translation() = default;
@@ -27,8 +27,7 @@ class Translation {
 
   // should it provide the next candidate (negative value, zero) or
   // should it give up the chance for other translations (positive)?
-  RIME_API virtual int Compare(an<Translation> other,
-                               const CandidateList& candidates);
+  virtual int Compare(an<Translation> other, const CandidateList& candidates);
 
   bool exhausted() const { return exhausted_; }
 

@@ -84,7 +84,7 @@ class Service {
   Deployer& deployer() { return deployer_; }
   bool disabled() { return !started_ || deployer_.IsMaintenanceMode(); }
 
-  static Service& instance();
+  RIME_API static Service& instance();
 
  private:
   Service();

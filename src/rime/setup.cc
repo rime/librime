@@ -28,7 +28,7 @@ namespace rime {
 #define Q(x) #x
 RIME_API RIME_MODULE_LIST(kDefaultModules, "default" RIME_EXTRA_MODULES);
 #undef Q
-RIME_MODULE_LIST(kDeployerModules, "deployer");
+RIME_API RIME_MODULE_LIST(kDeployerModules, "deployer");
 RIME_MODULE_LIST(kLegacyModules, "legacy");
 
 RIME_REGISTER_MODULE_GROUP(default, "core", "dict", "gears")

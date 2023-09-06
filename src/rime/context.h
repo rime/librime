@@ -28,11 +28,11 @@ class Context {
   Context() = default;
   ~Context() = default;
 
-  bool Commit();
+  RIME_API bool Commit();
   string GetCommitText() const;
   string GetScriptText() const;
   Preedit GetPreedit() const;
-  bool IsComposing() const;
+  RIME_API bool IsComposing() const;
   bool HasMenu() const;
   an<Candidate> GetSelectedCandidate() const;
 
