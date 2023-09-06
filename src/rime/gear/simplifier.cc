@@ -268,7 +268,8 @@ void Simplifier::PushBack(const an<Candidate>& original,
       }
     }
   }
-  result->push_back(New<ShadowCandidate>(original, "simplified", text, org_comment + " " + tips,
+  result->push_back(New<ShadowCandidate>(original, "simplified", text,
+                                         org_comment + " " + tips,
                                          inherit_comment_));
 }
 
