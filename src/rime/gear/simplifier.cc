@@ -153,6 +153,7 @@ Simplifier::Simplifier(const Ticket& ticket)
                                        : kTipsNone;
     }
     config->GetBool(name_space_ + "/show_in_comment", &show_in_comment_);
+    config->GetBool(name_space_ + "/append_in_comment", &append_in_comment_);
     config->GetBool(name_space_ + "/inherit_comment", &inherit_comment_);
     comment_formatter_.Load(config->GetList(name_space_ + "/comment_format"));
     config->GetBool(name_space_ + "/random", &random_);
@@ -247,11 +248,15 @@ void Simplifier::PushBack(const an<Candidate>& original,
       original->text().c_str() + original->text().length());
   bool show_tips =
       (tips_level_ == kTipsChar && length == 1) || tips_level_ == kTipsAll;
+  string org_comment;
   if (show_in_comment_) {
     text = original->text();
     if (show_tips) {
       tips = simplified;
       comment_formatter_.Apply(&tips);
+    }
+    if (append_in_comment_) {
+      org_comment = original->comment();
     }
   } else {
     text = simplified;
@@ -263,7 +268,7 @@ void Simplifier::PushBack(const an<Candidate>& original,
       }
     }
   }
-  result->push_back(New<ShadowCandidate>(original, "simplified", text, tips,
+  result->push_back(New<ShadowCandidate>(original, "simplified", text, org_comment +" " + tips,
                                          inherit_comment_));
 }
 
