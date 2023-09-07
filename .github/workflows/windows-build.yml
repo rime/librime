@@ -125,6 +125,8 @@ jobs:
 
       - name: Checkout last commit
         uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repository }}
 
       - name: Install dependencies
         run: |
