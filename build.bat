@@ -8,9 +8,6 @@ if not exist env.bat copy env.bat.template env.bat
 
 if exist env.bat call .\env.bat
 
-rem for Windows XP compatibility (Visual Studio 2015+)
-set CL=/Zc:threadSafeInit-
-
 set OLD_PATH=%PATH%
 if defined DEVTOOLS_PATH set PATH=%OLD_PATH%;%DEVTOOLS_PATH%
 path
