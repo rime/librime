@@ -140,6 +140,10 @@ jobs:
             mingw-w64-x86_64-marisa \
             mingw-w64-x86_64-opencc
 
+      - name: Configure build environment
+        run: |
+          echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV
+
       - name: Install Rime plugins
         run: ./action-install-plugins-macos.sh
 
