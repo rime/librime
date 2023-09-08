@@ -1,0 +1,14 @@
+name: Docker build
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - name: Checkout last commit
+      uses: actions/checkout@v4
+    - name: Build with plugins
+      run: docker build -t librime .

@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout last commit
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install clang-format
         run: sudo apt install -y clang-format
       - name: Lint
@@ -30,3 +30,7 @@ jobs:
   windows:
     needs: lint
     uses: ./.github/workflows/windows-build.yml
+
+  docker:
+    needs: lint
+    uses: ./.github/workflows/docker-build.yml
