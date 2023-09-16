@@ -1,6 +1,6 @@
 {
   "name": "librime",
-  "version": "1.8.5",
+  "version": "1.9.0",
   "description": "Rime Input Method Engine",
   "main": "index.js",
   "directories": {

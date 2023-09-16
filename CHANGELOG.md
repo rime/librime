@@ -1,3 +1,27 @@
+<a name="1.9.0"></a>
+# [1.9.0](https://github.com/rime/librime/compare/1.8.5...1.9.0) (2023-09-16)
+
+
+### Bug Fixes
+
+* avoid invalid page_size ([#679](https://github.com/rime/librime/issues/679)) ([53ce306](https://github.com/rime/librime/commit/53ce306))
+
+
+### Features
+
+* add `append_comment` option to `reverse_lookup_filter` ([#699](https://github.com/rime/librime/issues/699)) ([f079c3c](https://github.com/rime/librime/commit/f079c3c))
+* **dict:** shorten the data struct used by Vocabulary ([210ab6c](https://github.com/rime/librime/commit/210ab6c))
+* **switches:** abbreviate state labels ([45cd64b](https://github.com/rime/librime/commit/45cd64b))
+
+
+### Performance Improvements
+
+* release memory of temporary fields ([#690](https://github.com/rime/librime/issues/690)) ([43ae3a9](https://github.com/rime/librime/commit/43ae3a9))
+* replace rbtree with vector of pair ([#684](https://github.com/rime/librime/issues/684)) ([c515afb](https://github.com/rime/librime/commit/c515afb))
+* **dict:** improve dict complile performance ([#663](https://github.com/rime/librime/issues/663)) ([bd3c7c7](https://github.com/rime/librime/commit/bd3c7c7))
+
+
+
 <a name="1.8.5"></a>
 ## [1.8.5](https://github.com/rime/librime/compare/1.8.4...1.8.5) (2023-02-05)
 
