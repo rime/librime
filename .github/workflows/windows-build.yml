@@ -23,7 +23,7 @@ jobs:
       RIME_PLUGINS: ${{ inputs.rime_plugins }}
     steps:
       - name: Checkout last commit
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository }}
           submodules: recursive
@@ -98,23 +98,23 @@ jobs:
         run: ${{ env.build_script }} test
 
       - name: Create distributable
-        if: ${{ matrix.compiler == 'msvc' }}
         run: |
-          7z a rime-${{ env.git_ref_name }}-${{ runner.os }}.7z `
+          7z a rime-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}.7z `
           dist version-info.txt
-          7z a -x'!*/.placeholder' rime-deps-${{ env.git_ref_name }}-${{ runner.os }}.7z `
+          7z a -x'!*/.placeholder' rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}.7z `
           bin include lib share
 
       - name: Upload artifacts
-        if: ${{ matrix.compiler == 'msvc' }}
         uses: actions/upload-artifact@v3
         with:
           path: |
-            rime-${{ env.git_ref_name }}-${{ runner.os }}.7z
-            rime-deps-${{ env.git_ref_name }}-${{ runner.os }}.7z
+            rime-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}.7z
+            rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}.7z
 
   build-mingw:
     runs-on: windows-latest
+    env:
+      RIME_PLUGINS: ${{ inputs.rime_plugins }}
     defaults:
       run:
         shell: msys2 {0}
@@ -124,11 +124,13 @@ jobs:
         uses: msys2/setup-msys2@v2
 
       - name: Checkout last commit
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.repository }}
 
       - name: Install dependencies
         run: |
-          pacman -S --noconfirm base-devel mingw-w64-x86_64-toolchain ninja \
+          pacman -S --noconfirm git base-devel mingw-w64-x86_64-toolchain ninja \
             mingw64/mingw-w64-x86_64-cmake \
             mingw-w64-x86_64-boost \
             mingw-w64-x86_64-glog \
@@ -138,13 +140,36 @@ jobs:
             mingw-w64-x86_64-marisa \
             mingw-w64-x86_64-opencc
 
+      - name: Configure build environment
+        run: |
+          echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV
+
+      - name: Install Rime plugins
+        run: ./action-install-plugins-macos.sh
+
       - name: Build with mingw-w64
         run: |
           cmake -B build -G Ninja \
+            -DCMAKE_INSTALL_PREFIX:PATH=`pwd`/dist \
             -DCMAKE_BUILD_TYPE:STRING=Release \
             -DENABLE_LOGGING:BOOL=ON \
             -DBUILD_TEST:BOOL=ON \
             -DBUILD_STATIC:BOOL=ON \
             -DBUILD_SHARED_LIBS:BOOL=ON
           cmake --build build
+          cmake --install build
           cd build/test && cp ../lib/librime.dll . && ./rime_test
+
+      - name: Create distributable
+        run: |
+          tar -cjvf rime-${{ env.git_ref_name }}-${{ runner.os }}-mingw.tar.bz2 \
+          dist version-info.txt
+          tar -cjvf rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-mingw.tar.bz2 \
+          --exclude '*/.placeholder' \
+          bin include lib share
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          path: |
+            rime-${{ env.git_ref_name }}-${{ runner.os }}-mingw.tar.bz2

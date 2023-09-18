@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.12)
 project(rime)
 set(CMAKE_CXX_STANDARD 14)
 
-set(rime_version 1.8.5)
+set(rime_version 1.9.0)
 set(rime_soversion 1)
 
 add_definitions(-DRIME_VERSION="${rime_version}")
@@ -152,12 +152,7 @@ if(MSVC)
   # https://stackoverflow.com/a/31264946
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
   set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
-  if(MSVC10)
-    # stdint.h is missing from VS2010
-    include_directories(${PROJECT_SOURCE_DIR}/include/msvc)
-  endif()
-  # Force Boost.Uuid to use wincrypt as random provider instead of bcrypt for Windows XP compatibility
-  add_definitions("/wd4244 /wd4996 /DBOOST_UUID_RANDOM_PROVIDER_FORCE_WINCRYPT")
+  add_definitions("/wd4244 /wd4996")
 endif()
 
 if(UNIX)
