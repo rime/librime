@@ -12,7 +12,7 @@
 	url = https://github.com/google/googletest.git
 [submodule "marisa-trie"]
 	path = deps/marisa-trie
-	url = https://github.com/s-yata/marisa-trie.git
+	url = https://github.com/rime/marisa-trie.git
 [submodule "opencc"]
 	path = deps/opencc
 	url = https://github.com/BYVoid/OpenCC.git

@@ -244,7 +244,7 @@ if %build_deps% == 1 (
 
   echo building marisa.
   pushd deps\marisa-trie
-  cmake .. -B%build_dir% %deps_cmake_flags%
+  cmake . -B%build_dir% %deps_cmake_flags%
   if errorlevel 1 goto error
   cmake --build %build_dir% --config %build_config% --target INSTALL
   if errorlevel 1 goto error
