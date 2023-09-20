@@ -21,6 +21,7 @@ jobs:
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_83_0
       build_script: ${{ matrix.compiler == 'msvc' && './build.bat' || './build-clang.bat' }}
       RIME_PLUGINS: ${{ inputs.rime_plugins }}
+
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v4
@@ -32,12 +33,40 @@ jobs:
         if: ${{ matrix.compiler == 'msvc' }}
         run: |
           copy env.vs2022.bat env.bat
+          $file = ".\env.bat"
+          $content= Get-Content -Path $file
+          $content = $content | Where-Object {($_ -notlike "*set ARCH*") -and ($_ -notlike "*set CMAKE_GENERATOR*") -and ($_ -notlike "*TOOLSET*")} 
+          Set-Content -Path $file -Value $content
+          cat $file
+          $vcvarsall = Join-Path -Path (Get-CimInstance MSFT_VSInstance).InstallLocation -ChildPath "VC\Auxiliary\Build\vcvarsall.bat"
+          "CMAKE_GENERATOR=Ninja" >> $env:GITHUB_ENV
+          "CXX=cl" >> $env:GITHUB_ENV
+          "CC=cl" >> $env:GITHUB_ENV
+
+          
+          # Invokes a Cmd.exe shell script and updates the environment.
+          function Invoke-CmdScript {
+            param(
+              [String] $scriptName
+            )
+            $cmdLine = """$scriptName"" $args & set"
+            & $Env:SystemRoot\system32\cmd.exe /c $cmdLine |
+            select-string '^([^=]*)=(.*)$' | foreach-object {
+              $varName = $_.Matches[0].Groups[1].Value
+              $varValue = $_.Matches[0].Groups[2].Value
+              "$varName=$varValue" |  Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            }
+          }
+          
+          Invoke-CmdScript "$vcvarsall" x86 
+          
+
+      - name: Configure Ninja
+        run: pip install ninja
 
       - name: Configure clang
         if: ${{ matrix.compiler == 'clang' }}
-        run: |
-          choco upgrade -y llvm
-          pip install ninja
+        run: choco upgrade -y llvm
 
       - name: Configure build environment
         run: |
