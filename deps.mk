@@ -50,7 +50,7 @@ leveldb:
 
 marisa:
 	cd $(src_dir)/marisa-trie; \
-	cmake $(src_dir) -B$(build) \
+	cmake . -B$(build) \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
 	-DCMAKE_INSTALL_PREFIX:PATH="$(rime_root)" \
 	&& cmake --build $(build) --target install
