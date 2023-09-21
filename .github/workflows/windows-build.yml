@@ -32,17 +32,19 @@ jobs:
       - name: Configure MSVC
         if: ${{ matrix.compiler == 'msvc' }}
         run: |
-          copy env.vs2022.bat env.bat
-          $file = ".\env.bat"
-          $content= Get-Content -Path $file
-          $content = $content | Where-Object {($_ -notlike "*set ARCH*") -and ($_ -notlike "*set CMAKE_GENERATOR*") -and ($_ -notlike "*TOOLSET*")} 
-          Set-Content -Path $file -Value $content
-          cat $file
+          
+          $envfile = ".\env.bat"
+          $envcontent = @"
+            set RIME_ROOT=%CD%
+            if not defined BOOST_ROOT set BOOST_ROOT=%RIME_ROOT%\deps\boost_1_83_0
+            set CXX=cl
+            set CC=cl
+            set CMAKE_GENERATOR=Ninja
+          "@
+          Set-Content -Path $envfile -Value $envcontent
+          cat $envfile
+          
           $vcvarsall = Join-Path -Path (Get-CimInstance MSFT_VSInstance).InstallLocation -ChildPath "VC\Auxiliary\Build\vcvarsall.bat"
-          "CMAKE_GENERATOR=Ninja" >> $env:GITHUB_ENV
-          "CXX=cl" >> $env:GITHUB_ENV
-          "CC=cl" >> $env:GITHUB_ENV
-
           
           # Invokes a Cmd.exe shell script and updates the environment.
           function Invoke-CmdScript {
