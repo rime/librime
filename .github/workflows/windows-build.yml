@@ -29,7 +29,7 @@ jobs:
           repository: ${{ inputs.repository }}
           submodules: recursive
 
-      - name: Configure MSVC
+      - name: Create env.bat
         if: ${{ matrix.compiler == 'msvc' }}
         run: |
           
@@ -44,24 +44,11 @@ jobs:
           Set-Content -Path $envfile -Value $envcontent
           cat $envfile
           
-          $vcvarsall = Join-Path -Path (Get-CimInstance MSFT_VSInstance).InstallLocation -ChildPath "VC\Auxiliary\Build\vcvarsall.bat"
-          
-          # Invokes a Cmd.exe shell script and updates the environment.
-          function Invoke-CmdScript {
-            param(
-              [String] $scriptName
-            )
-            $cmdLine = """$scriptName"" $args & set"
-            & $Env:SystemRoot\system32\cmd.exe /c $cmdLine |
-            select-string '^([^=]*)=(.*)$' | foreach-object {
-              $varName = $_.Matches[0].Groups[1].Value
-              $varValue = $_.Matches[0].Groups[2].Value
-              "$varName=$varValue" |  Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-            }
-          }
-          
-          Invoke-CmdScript "$vcvarsall" x86 
-          
+      - name: Configure MSVC
+        if: ${{ matrix.compiler == 'msvc' }}
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x86
 
       - name: Configure Ninja
         run: pip install ninja
