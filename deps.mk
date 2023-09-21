@@ -3,6 +3,11 @@
 rime_root = $(CURDIR)
 src_dir = $(rime_root)/deps
 
+ifdef NOPARALLEL
+else
+export MAKEFLAGS+=" -j$(( $(nproc) + 1)) "
+endif
+
 glog: build ?= cmake-build
 build ?= build
 

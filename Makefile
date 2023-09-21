@@ -26,6 +26,11 @@ else # for Linux
 prefix ?= $(DESTDIR)/usr
 endif
 
+ifdef NOPARALLEL
+else
+export MAKEFLAGS+=" -j$(( $(nproc) + 1)) "
+endif
+
 debug install-debug uninstall-debug test-debug: build ?= debug
 build ?= build
 
