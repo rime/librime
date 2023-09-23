@@ -26,8 +26,7 @@ else # for Linux
 prefix ?= $(DESTDIR)/usr
 endif
 
-ifdef NOPARALLEL
-else
+ifndef NOPARALLEL
 export MAKEFLAGS+=" -j$(( $(nproc) + 1)) "
 endif
 

@@ -289,12 +289,10 @@ if errorlevel 1 goto error
 if "%build_test%" == "ON" (
   copy /y dist\lib\rime.dll build\test
   pushd build\test
-  if exist .\Release\rime_test.exe (
-    .\Release\rime_test.exe
-  ) else if exist .\rime_test.exe (
+  if %CMAKE_GENERATOR% == Ninja (
     .\rime_test.exe
   ) else (
-    goto error
+    .\Release\rime_test.exe
   )
   popd
 )

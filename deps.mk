@@ -3,8 +3,7 @@
 rime_root = $(CURDIR)
 src_dir = $(rime_root)/deps
 
-ifdef NOPARALLEL
-else
+ifndef NOPARALLEL
 export MAKEFLAGS+=" -j$(( $(nproc) + 1)) "
 endif
 
