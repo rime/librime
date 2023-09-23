@@ -191,6 +191,7 @@ if defined PLATFORM_TOOLSET (
 )
 set deps_cmake_flags=%common_cmake_flags%^
  -DCMAKE_CONFIGURATION_TYPES:STRING="%build_config%"^
+ -DCMAKE_BUILD_TYPE:STRING="%build_config%"^
  -DCMAKE_CXX_FLAGS_RELEASE:STRING="/MT /O2 /Ob2 /DNDEBUG"^
  -DCMAKE_C_FLAGS_RELEASE:STRING="/MT /O2 /Ob2 /DNDEBUG"^
  -DCMAKE_CXX_FLAGS_DEBUG:STRING="/MTd /Od"^
@@ -206,7 +207,7 @@ if %build_deps% == 1 (
   -DWITH_GFLAGS:BOOL=OFF^
   -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"
   if errorlevel 1 goto error
-  cmake --build cmake-%build_dir% --config %build_config% --target INSTALL
+  cmake --build cmake-%build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
   popd
 
@@ -216,7 +217,7 @@ if %build_deps% == 1 (
   -DLEVELDB_BUILD_BENCHMARKS:BOOL=OFF^
   -DLEVELDB_BUILD_TESTS:BOOL=OFF
   if errorlevel 1 goto error
-  cmake --build %build_dir% --config %build_config% --target INSTALL
+  cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
   popd
 
@@ -229,7 +230,7 @@ if %build_deps% == 1 (
   -DYAML_CPP_BUILD_TESTS:BOOL=OFF^
   -DYAML_CPP_BUILD_TOOLS:BOOL=OFF
   if errorlevel 1 goto error
-  cmake --build %build_dir% --config %build_config% --target INSTALL
+  cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
   popd
 
@@ -238,7 +239,7 @@ if %build_deps% == 1 (
   cmake . -B%build_dir% %deps_cmake_flags%^
   -DBUILD_GMOCK:BOOL=OFF
   if errorlevel 1 goto error
-  cmake --build %build_dir% --config %build_config% --target INSTALL
+  cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
   popd
 
@@ -246,7 +247,7 @@ if %build_deps% == 1 (
   pushd deps\marisa-trie
   cmake . -B%build_dir% %deps_cmake_flags%
   if errorlevel 1 goto error
-  cmake --build %build_dir% --config %build_config% --target INSTALL
+  cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
   popd
 
@@ -256,7 +257,7 @@ if %build_deps% == 1 (
   -DBUILD_SHARED_LIBS=OFF^
   -DBUILD_TESTING=OFF
   if errorlevel 1 goto error
-  cmake --build %build_dir% --config %build_config% --target INSTALL
+  cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
   popd
 )
@@ -269,6 +270,7 @@ set rime_cmake_flags=%common_cmake_flags%^
  -DBUILD_TEST=%build_test%^
  -DENABLE_LOGGING=%enable_logging%^
  -DCMAKE_CONFIGURATION_TYPES="%build_config%"^
+ -DCMAKE_BUILD_TYPE:STRING="%build_config%"^
  -DCMAKE_INSTALL_PREFIX:PATH="%RIME_ROOT%\dist"
 
 echo on
@@ -280,14 +282,18 @@ echo.
 echo building librime.
 echo.
 echo on
-cmake --build %build_dir% --config %build_config% --target INSTALL
+cmake --build %build_dir% --config %build_config% --target install
 @echo off
 if errorlevel 1 goto error
 
 if "%build_test%" == "ON" (
   copy /y dist\lib\rime.dll build\test
   pushd build\test
-  .\Release\rime_test.exe || goto error
+  if %CMAKE_GENERATOR% == Ninja (
+    .\rime_test.exe
+  ) else (
+    .\Release\rime_test.exe
+  )
   popd
 )
 
