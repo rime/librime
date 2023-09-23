@@ -206,7 +206,7 @@ void ConcreteEngine::TranslateSegments(Segmentation* segments) {
       if (!translation)
         continue;
       if (translation->exhausted()) {
-        LOG(INFO) << translator->name_space() << " made a futile translation.";
+        DLOG(INFO) << translator->name_space() << " made a futile translation.";
         continue;
       }
       menu->AddTranslation(translation);
