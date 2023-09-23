@@ -21,6 +21,7 @@ jobs:
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_83_0
       build_script: ${{ matrix.compiler == 'msvc' && './build.bat' || './build-clang.bat' }}
       RIME_PLUGINS: ${{ inputs.rime_plugins }}
+
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v4
@@ -28,16 +29,33 @@ jobs:
           repository: ${{ inputs.repository }}
           submodules: recursive
 
-      - name: Configure MSVC
+      - name: Create env.bat
         if: ${{ matrix.compiler == 'msvc' }}
         run: |
-          copy env.vs2022.bat env.bat
+          
+          $envfile = ".\env.bat"
+          $envcontent = @"
+            set RIME_ROOT=%CD%
+            if not defined BOOST_ROOT set BOOST_ROOT=%RIME_ROOT%\deps\boost_1_83_0
+            set CXX=cl
+            set CC=cl
+            set CMAKE_GENERATOR=Ninja
+          "@
+          Set-Content -Path $envfile -Value $envcontent
+          cat $envfile
+          
+      - name: Configure MSVC
+        if: ${{ matrix.compiler == 'msvc' }}
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x86
+
+      - name: Configure Ninja
+        run: pip install ninja
 
       - name: Configure clang
         if: ${{ matrix.compiler == 'clang' }}
-        run: |
-          choco upgrade -y llvm
-          pip install ninja
+        run: choco upgrade -y llvm
 
       - name: Configure build environment
         run: |
