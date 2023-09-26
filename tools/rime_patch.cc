@@ -5,6 +5,7 @@
 #include <rime_api.h>
 #include <rime_levers_api.h>
 #include <rime/common.h>
+#include "codepage.h"
 
 // usage:
 //   rime_patch config_id key [yaml]
@@ -17,7 +18,8 @@
 using namespace rime;
 
 int apply_patch(const string& config_id,
-                const string& key, const string& yaml) {
+                const string& key,
+                const string& yaml) {
   RimeApi* rime = rime_get_api();
   RimeModule* module = rime->find_module("levers");
   if (!module) {
@@ -30,7 +32,6 @@ int apply_patch(const string& config_id,
 
   RimeConfig value = {0};  // should be zero-initialized
   if (rime->config_load_string(&value, yaml.c_str())) {
-
     RimeCustomSettings* settings =
         levers->custom_settings_init(config_id.c_str(), "rime_patch");
     levers->load_settings(settings);
@@ -43,17 +44,18 @@ int apply_patch(const string& config_id,
 
     levers->custom_settings_destroy(settings);
     rime->config_close(&value);
-  }
-  else {
+  } else {
     std::cerr << "bad yaml document." << std::endl;
   }
 
   return ret;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
+  unsigned int codepage = SetConsoleOutputCodePage();
   if (argc < 3 || argc > 4) {
     std::cerr << "usage: " << argv[0] << " config_id key [yaml]" << std::endl;
+    SetConsoleOutputCodePage(codepage);
     return 1;
   }
 
@@ -70,8 +72,7 @@ int main(int argc, char *argv[]) {
   string yaml;
   if (argc > 3) {
     yaml.assign(argv[3]);
-  }
-  else {
+  } else {
     // read yaml string from stdin
     yaml.assign((std::istreambuf_iterator<char>(std::cin)),
                 std::istreambuf_iterator<char>());
@@ -80,5 +81,6 @@ int main(int argc, char *argv[]) {
 
   rime->finalize();
 
+  SetConsoleOutputCodePage(codepage);
   return ret;
 }
