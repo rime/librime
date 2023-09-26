@@ -19,8 +19,7 @@ int Translation::Compare(an<Translation> other,
   auto theirs = other->Peek();
   if (!ours || !theirs)
     return 1;
-
-  return ours->compare(theirs);
+  return ours->compare(*theirs);
 }
 
 bool UniqueTranslation::Next() {

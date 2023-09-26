@@ -31,20 +31,17 @@ vector<of<Candidate>> Candidate::GetGenuineCandidates(
   return result;
 }
 
-int Candidate::compare(const an<Candidate>& other) {
-  if (! other )
-    return -1;
-  int k = 0;
+int Candidate::compare(const Candidate& other) {
   // the one nearer to the beginning of segment comes first
-  k = start_ - other->start_;
+  int k = start_ - other.start_;
   if (k != 0)
     return k;
   // then the longer comes first
-  k = end_ - other->end_;
+  k = end_ - other.end_;
   if (k != 0)
     return -k;
   // compare quality
-  double qdiff = quality_ - other->quality_;
+  double qdiff = quality_ - other.quality_;
   if (qdiff != 0.)
     return (qdiff > 0.) ? -1 : 1;
   // draw
