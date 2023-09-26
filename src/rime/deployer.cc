@@ -5,6 +5,7 @@
 // 2011-12-01 GONG Chen <chen.sst@gmail.com>
 //
 #include <chrono>
+#include <exception>
 #include <utility>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/filesystem.hpp>
@@ -12,13 +13,13 @@
 
 namespace rime {
 
-Deployer::Deployer() : shared_data_dir("."),
-                       user_data_dir("."),
-                       prebuilt_data_dir("build"),
-                       staging_dir("build"),
-                       sync_dir("sync"),
-                       user_id("unknown") {
-}
+Deployer::Deployer()
+    : shared_data_dir("."),
+      user_data_dir("."),
+      prebuilt_data_dir("build"),
+      staging_dir("build"),
+      sync_dir("sync"),
+      user_id("unknown") {}
 
 Deployer::~Deployer() {
   JoinWorkThread();
@@ -82,19 +83,23 @@ bool Deployer::Run() {
   int failure = 0;
   do {
     while (auto task = NextTask()) {
-      if (task->Run(this))
-        ++success;
-      else
+      try {
+        if (task->Run(this))
+          ++success;
+        else
+          ++failure;
+      } catch (const std::exception& ex) {
         ++failure;
-      //boost::this_thread::interruption_point();
+        LOG(ERROR) << "Error deploying: " << ex.what();
+      }
+      // boost::this_thread::interruption_point();
     }
-    LOG(INFO) << success + failure << " tasks ran: "
-              << success << " success, " << failure << " failure.";
+    LOG(INFO) << success + failure << " tasks ran: " << success << " success, "
+              << failure << " failure.";
     message_sink_("deploy", !failure ? "success" : "failure");
     // new tasks could have been enqueued while we were sending the message.
     // before quitting, double check if there is nothing left to do.
-  }
-  while (HasPendingTasks());
+  } while (HasPendingTasks());
   return !failure;
 }
 
@@ -107,10 +112,15 @@ bool Deployer::StartWork(bool maintenance_mode) {
   if (pending_tasks_.empty()) {
     return false;
   }
-  LOG(INFO) << "starting work thread for "
-            << pending_tasks_.size() << " tasks.";
+#ifdef RIME_NO_THREADING
+  LOG(INFO) << "running " << pending_tasks_.size() << " tasks in main thread.";
+  return Run();
+#else
+  LOG(INFO) << "starting work thread for " << pending_tasks_.size()
+            << " tasks.";
   work_ = std::async(std::launch::async, [this] { Run(); });
   return work_.valid();
+#endif
 }
 
 bool Deployer::StartMaintenance() {

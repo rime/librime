@@ -26,7 +26,7 @@ bool UserDbRecoveryTask::Run(Deployer* deployer) {
   if (!db_) {
     return false;
   }
-  BOOST_SCOPE_EXIT( (&db_) ) {
+  BOOST_SCOPE_EXIT((&db_)) {
     db_->enable();
   }
   BOOST_SCOPE_EXIT_END
@@ -39,7 +39,7 @@ bool UserDbRecoveryTask::Run(Deployer* deployer) {
   if (r && r->Recover()) {
     return true;
   }
-  // repair didn't work on the damanged db file; remove and recreate it
+  // repair didn't work on the damaged db file; remove and recreate it
   LOG(INFO) << "recreating db file.";
   if (db_->Exists()) {
     boost::system::error_code ec;
@@ -87,8 +87,7 @@ UserDbRecoveryTask* UserDbRecoveryTaskComponent::Create(TaskInitializer arg) {
   try {
     auto db = boost::any_cast<an<Db>>(arg);
     return new UserDbRecoveryTask(db);
-  }
-  catch (const boost::bad_any_cast&) {
+  } catch (const boost::bad_any_cast&) {
     return NULL;
   }
 }

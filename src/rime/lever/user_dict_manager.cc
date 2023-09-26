@@ -21,8 +21,7 @@ namespace fs = boost::filesystem;
 namespace rime {
 
 UserDictManager::UserDictManager(Deployer* deployer)
-    : deployer_(deployer),
-      user_db_component_(UserDb::Require("userdb")) {
+    : deployer_(deployer), user_db_component_(UserDb::Require("userdb")) {
   if (deployer) {
     path_ = deployer->user_data_dir;
   }
@@ -77,8 +76,7 @@ bool UserDictManager::Restore(const string& snapshot_file) {
     temp->Remove();
   if (!temp->Open())
     return false;
-  BOOST_SCOPE_EXIT( (&temp) )
-  {
+  BOOST_SCOPE_EXIT((&temp)) {
     temp->Close();
     temp->Remove();
   }
@@ -93,26 +91,24 @@ bool UserDictManager::Restore(const string& snapshot_file) {
   the<Db> dest(user_db_component_->Create(db_name));
   if (!dest->Open())
     return false;
-  BOOST_SCOPE_EXIT( (&dest) )
-  {
+  BOOST_SCOPE_EXIT((&dest)) {
     dest->Close();
-  } BOOST_SCOPE_EXIT_END
-  LOG(INFO) << "merging '" << snapshot_file
-            << "' from " << UserDbHelper(temp).GetUserId()
-            << " into userdb '" << db_name << "'...";
+  }
+  BOOST_SCOPE_EXIT_END
+  LOG(INFO) << "merging '" << snapshot_file << "' from "
+            << UserDbHelper(temp).GetUserId() << " into userdb '" << db_name
+            << "'...";
   DbSource source(temp.get());
   UserDbMerger merger(dest.get());
   source >> merger;
   return true;
 }
 
-int UserDictManager::Export(const string& dict_name,
-                            const string& text_file) {
+int UserDictManager::Export(const string& dict_name, const string& text_file) {
   the<Db> db(user_db_component_->Create(dict_name));
   if (!db->OpenReadOnly())
     return -1;
-  BOOST_SCOPE_EXIT( (&db) )
-  {
+  BOOST_SCOPE_EXIT((&db)) {
     db->Close();
   }
   BOOST_SCOPE_EXIT_END
@@ -124,8 +120,7 @@ int UserDictManager::Export(const string& dict_name,
   int num_entries = 0;
   try {
     num_entries = writer << source;
-  }
-  catch (std::exception& ex) {
+  } catch (std::exception& ex) {
     LOG(ERROR) << ex.what();
     return -1;
   }
@@ -133,13 +128,11 @@ int UserDictManager::Export(const string& dict_name,
   return num_entries;
 }
 
-int UserDictManager::Import(const string& dict_name,
-                            const string& text_file) {
+int UserDictManager::Import(const string& dict_name, const string& text_file) {
   the<Db> db(user_db_component_->Create(dict_name));
   if (!db->Open())
     return -1;
-  BOOST_SCOPE_EXIT( (&db) )
-  {
+  BOOST_SCOPE_EXIT((&db)) {
     db->Close();
   }
   BOOST_SCOPE_EXIT_END
@@ -150,8 +143,7 @@ int UserDictManager::Import(const string& dict_name,
   int num_entries = 0;
   try {
     num_entries = reader >> importer;
-  }
-  catch (std::exception& ex) {
+  } catch (std::exception& ex) {
     LOG(ERROR) << ex.what();
     return -1;
   }
@@ -179,10 +171,8 @@ bool UserDictManager::UpgradeUserDict(const string& dict_name) {
   }
   string snapshot_file = dict_name + UserDb::snapshot_extension();
   fs::path snapshot_path = trash / snapshot_file;
-  return legacy_db->Backup(snapshot_path.string()) &&
-         legacy_db->Close() &&
-         legacy_db->Remove() &&
-         Restore(snapshot_path.string());
+  return legacy_db->Backup(snapshot_path.string()) && legacy_db->Close() &&
+         legacy_db->Remove() && Restore(snapshot_path.string());
 }
 
 bool UserDictManager::Synchronize(const string& dict_name) {
@@ -227,8 +217,8 @@ bool UserDictManager::SynchronizeAll() {
       ++failure;
   }
   if (failure) {
-    LOG(ERROR) << "failed synchronizing "
-               << failure << "/" << user_dicts.size() << " user dicts.";
+    LOG(ERROR) << "failed synchronizing " << failure << "/" << user_dicts.size()
+               << " user dicts.";
   }
   return !failure;
 }

@@ -5,15 +5,9 @@
 `librime` is tested to work on Windows with the following combinations of build
 tools and libraries:
 
-  - Visual Studio 2017
-  - [Boost](http://www.boost.org/)=1.64
-  - [cmake](http://www.cmake.org/)>=3.8
-
-and
-
-  - Visual Studio 2015
-  - [Boost](http://www.boost.org/)=1.60
-  - [cmake](http://www.cmake.org/)>=3.8
+  - Visual Studio 2022 or LLVM 16
+  - [Boost](http://www.boost.org/)=1.83
+  - [cmake](http://www.cmake.org/)>=3.10
 
 Boost and cmake versions need to match higher VS version.
 

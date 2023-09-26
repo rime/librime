@@ -16,18 +16,21 @@ jobs:
   build:
     runs-on: macos-latest
     env:
-      boost_version: 1.78.0
-      BOOST_ROOT: ${{ github.workspace }}/deps/boost_1_78_0
+      boost_version: 1.83.0
+      BOOST_ROOT: ${{ github.workspace }}/deps/boost_1_83_0
       RIME_PLUGINS: ${{ inputs.rime_plugins }}
     steps:
       - name: Checkout last commit
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository }}
           submodules: recursive
 
       - name: Configure build environment
         run: |
+          brew install llvm ninja
+          echo "CMAKE_GENERATOR=Ninja"  >> $GITHUB_ENV
+          echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
           echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV
 
       - name: Configure build variant
@@ -71,17 +74,17 @@ jobs:
 
       - name: Build dependencies
         if: steps.cache-deps.outputs.cache-hit != 'true'
-        run: make xcode/deps
+        run: make deps
 
       - name: Install Rime plugins
         run: ./action-install-plugins-macos.sh
 
       - name: Build and test
-        run: make xcode/test
+        run: make test
 
       - name: Create distributable
         run: |
-          make xcode/dist
+          make install
           tar -cjvf rime-${{ env.git_ref_name }}-${{ runner.os }}.tar.bz2 \
           dist version-info.txt
           tar -cjvf rime-deps-${{ env.git_ref_name }}-${{ runner.os }}.tar.bz2 \

@@ -31,19 +31,17 @@ static void rime_dict_initialize() {
   r.Register("userdb", new UserDbComponent<LevelDb>);
   // NOTE: register a legacy_userdb component in your plugin if you wish to
   // upgrade userdbs from an old file format (eg. TreeDb) during maintenance.
-  //r.Register("legacy_userdb", ...);
+  // r.Register("legacy_userdb", ...);
 
   r.Register("corrector", new CorrectorComponent);
 
   r.Register("dictionary", new DictionaryComponent);
-  r.Register("reverse_lookup_dictionary",
-             new ReverseLookupDictionaryComponent);
+  r.Register("reverse_lookup_dictionary", new ReverseLookupDictionaryComponent);
   r.Register("user_dictionary", new UserDictionaryComponent);
 
   r.Register("userdb_recovery_task", new UserDbRecoveryTaskComponent);
 }
 
-static void rime_dict_finalize() {
-}
+static void rime_dict_finalize() {}
 
 RIME_REGISTER_MODULE(dict)

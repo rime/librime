@@ -1,11 +1,11 @@
 set(CMAKE_USER_MAKE_RULES_OVERRIDE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/c_flag_overrides.cmake)
 set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_flag_overrides.cmake)
 
-project(rime)
 cmake_minimum_required(VERSION 3.12)
+project(rime)
 set(CMAKE_CXX_STANDARD 14)
 
-set(rime_version 1.8.5)
+set(rime_version 1.9.0)
 set(rime_soversion 1)
 
 add_definitions(-DRIME_VERSION="${rime_version}")
@@ -20,11 +20,12 @@ option(BUILD_SAMPLE "Build sample Rime plugin" OFF)
 option(BUILD_TEST "Build and run tests" ON)
 option(BUILD_SEPARATE_LIBS "Build separate rime-* libraries" OFF)
 option(ENABLE_LOGGING "Enable logging with google-glog library" ON)
-option(BOOST_USE_CXX11 "Boost has been built with C++11 support" OFF)
 option(BOOST_USE_SIGNALS2 "Boost use signals2 instead of signals" ON)
 option(ENABLE_ASAN "Enable Address Sanitizer (Unix Only)" OFF)
 option(INSTALL_PRIVATE_HEADERS "Install private headers (usually needed for externally built Rime plugins)" OFF)
 option(ENABLE_EXTERNAL_PLUGINS "Enable loading of externally built Rime plugins (from directory set by RIME_PLUGINS_DIR variable)" OFF)
+option(ENABLE_THREADING "Enable threading for deployer" ON)
+option(ENABLE_TIMESTAMP "Embed timestamp to schema artifacts" ON)
 
 set(RIME_DATA_DIR "${CMAKE_INSTALL_FULL_DATADIR}/rime-data" CACHE STRING "Target directory for Rime data")
 set(RIME_PLUGINS_DIR "${CMAKE_INSTALL_FULL_LIBDIR}/rime-plugins" CACHE STRING "Target directory for externally built Rime plugins")
@@ -58,10 +59,6 @@ if(MSVC)
   set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
-if(NOT BOOST_USE_CXX11)
-  add_definitions("-DBOOST_NO_CXX11_SCOPED_ENUMS")
-endif()
-
 set(BOOST_COMPONENTS filesystem regex system)
 
 if(BOOST_USE_SIGNALS2)
@@ -70,7 +67,7 @@ else()
   set(BOOST_COMPONENTS ${BOOST_COMPONENTS} signals)
 endif()
 
-find_package(Boost 1.46.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+find_package(Boost 1.74.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
   link_directories(${Boost_LIBRARY_DIRS})
@@ -97,6 +94,14 @@ endif()
 
 find_package(Threads)
 
+if(NOT ENABLE_THREADING)
+  add_definitions(-DRIME_NO_THREADING)
+endif()
+
+if(NOT ENABLE_TIMESTAMP)
+  add_definitions(-DRIME_NO_TIMESTAMP)
+endif()
+
 if(BUILD_TEST)
   find_package(GTest REQUIRED)
   if(GTEST_FOUND)
@@ -108,6 +113,9 @@ endif()
 find_package(YamlCpp REQUIRED)
 if(YamlCpp_FOUND)
   include_directories(${YamlCpp_INCLUDE_PATH})
+endif()
+if(YamlCpp_STATIC)
+  add_definitions(-DYAML_CPP_STATIC_DEFINE)
 endif()
 
 find_package(LevelDb REQUIRED)
@@ -149,12 +157,7 @@ if(MSVC)
   # https://stackoverflow.com/a/31264946
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
   set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
-  if(MSVC10)
-    # stdint.h is missing from VS2010
-    include_directories(${PROJECT_SOURCE_DIR}/include/msvc)
-  endif()
-  # Force Boost.Uuid to use wincrypt as random provider instead of bcrypt for Windows XP compatibility
-  add_definitions("/wd4244 /wd4996 /DBOOST_UUID_RANDOM_PROVIDER_FORCE_WINCRYPT")
+  add_definitions("/wd4244 /wd4996")
 endif()
 
 if(UNIX)
@@ -179,12 +182,12 @@ if(NOT DEFINED BIN_INSTALL_DIR)
 endif()
 # }
 
-# uninstall target
+# remove target
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
   "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
   IMMEDIATE @ONLY)
-add_custom_target(uninstall
+add_custom_target(remove
   COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly|GNU" OR MINGW)

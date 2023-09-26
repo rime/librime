@@ -20,7 +20,7 @@ struct StringSlice {
 };
 
 class Switches {
-public:
+ public:
   explicit Switches(Config* config) : config_(config) {}
 
   enum SwitchType {
@@ -39,9 +39,7 @@ public:
     // the index of the option in the radio group.
     size_t option_index = 0;
 
-    bool found() const {
-      return bool(the_switch);
-    }
+    bool found() const { return bool(the_switch); }
   };
 
   enum FindResult {
@@ -49,12 +47,12 @@ public:
     kFound,
   };
 
-  SwitchOption FindOption(function<FindResult (SwitchOption option)> callback);
+  SwitchOption FindOption(function<FindResult(SwitchOption option)> callback);
 
   SwitchOption OptionByName(const string& option_name);
 
   // Returns the switch option defined at switch_index.
-  // If the swtich is a radio group, return the first option in the group.
+  // If the switch is a radio group, return the first option in the group.
   SwitchOption ByIndex(size_t switch_index);
 
   static SwitchOption Cycle(const SwitchOption& option);
@@ -63,10 +61,11 @@ public:
 
   static SwitchOption FindRadioGroupOption(
       an<ConfigMap> the_switch,
-      function<FindResult (SwitchOption option)> callback);
+      function<FindResult(SwitchOption option)> callback);
 
-  static StringSlice GetStateLabel(
-      an<ConfigMap> the_switch, size_t state_index, bool abbreviated);
+  static StringSlice GetStateLabel(an<ConfigMap> the_switch,
+                                   size_t state_index,
+                                   bool abbreviated);
 
   StringSlice GetStateLabel(const string& option_name,
                             int state,
@@ -76,11 +75,11 @@ public:
   SwitchOption FindOptionFromConfigItem(
       ConfigItemRef& item,
       size_t switch_index,
-      function<FindResult (SwitchOption option)> callback);
+      function<FindResult(SwitchOption option)> callback);
 
   Config* config_;
 };
 
 }  // namespace rime
 
-#endif // RIME_SWITCHES_H_
+#endif  // RIME_SWITCHES_H_

@@ -21,8 +21,7 @@ class ReverseLookupTranslator : public Translator {
  public:
   ReverseLookupTranslator(const Ticket& ticket);
 
-  virtual an<Translation> Query(const string& input,
-                                        const Segment& segment);
+  virtual an<Translation> Query(const string& input, const Segment& segment);
 
  protected:
   void Initialize();

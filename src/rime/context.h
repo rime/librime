@@ -18,22 +18,21 @@ class KeyEvent;
 
 class Context {
  public:
-  using Notifier = signal<void (Context* ctx)>;
-  using OptionUpdateNotifier =
-      signal<void (Context* ctx, const string& option)>;
+  using Notifier = signal<void(Context* ctx)>;
+  using OptionUpdateNotifier = signal<void(Context* ctx, const string& option)>;
   using PropertyUpdateNotifier =
-      signal<void (Context* ctx, const string& property)>;
+      signal<void(Context* ctx, const string& property)>;
   using KeyEventNotifier =
-      signal<void (Context* ctx, const KeyEvent& key_event)>;
+      signal<void(Context* ctx, const KeyEvent& key_event)>;
 
   Context() = default;
   ~Context() = default;
 
-  bool Commit();
+  RIME_API bool Commit();
   string GetCommitText() const;
   string GetScriptText() const;
   Preedit GetPreedit() const;
-  bool IsComposing() const;
+  RIME_API bool IsComposing() const;
   bool HasMenu() const;
   an<Candidate> GetSelectedCandidate() const;
 
@@ -87,9 +86,7 @@ class Context {
   PropertyUpdateNotifier& property_update_notifier() {
     return property_update_notifier_;
   }
-  KeyEventNotifier& unhandled_key_notifier() {
-    return unhandled_key_notifier_;
-  }
+  KeyEventNotifier& unhandled_key_notifier() { return unhandled_key_notifier_; }
 
  private:
   string GetSoftCursor() const;

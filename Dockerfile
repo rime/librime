@@ -1,35 +1,37 @@
-FROM ubuntu:18.04
+FROM debian:12.1
 
-RUN apt update
-RUN apt install -y \
-cmake \
-libboost-dev \
-libboost-filesystem-dev libboost-regex-dev libboost-system-dev libboost-locale-dev \
-libgoogle-glog-dev \
-libgtest-dev \
-libyaml-cpp-dev \
-libleveldb-dev \
-libmarisa-dev
+RUN apt update && apt install -y \
+  git \
+  build-essential \
+  cmake \
+  ninja-build \
+  libboost-dev \
+  libboost-filesystem-dev \
+  libboost-regex-dev \
+  libboost-system-dev \
+  libboost-locale-dev \
+  libgoogle-glog-dev \
+  libgtest-dev \
+  libyaml-cpp-dev \
+  libleveldb-dev \
+  libmarisa-dev \
+  libopencc-dev \
+  liblua5.4-dev
 
-RUN apt install -y git
+COPY / /librime
+WORKDIR /librime/plugins
+RUN git clone https://github.com/rime/librime-charcode charcode && \
+  git clone https://github.com/hchunhui/librime-lua lua && \
+  git clone https://github.com/lotem/librime-octagram octagram
 
-# Manually install libopencc
-RUN git clone https://github.com/BYVoid/OpenCC.git
-WORKDIR OpenCC/
-RUN apt install -y doxygen
-RUN make
-RUN make install
+WORKDIR /librime
+RUN cmake -B build -G Ninja \
+  -DCMAKE_BUILD_TYPE:STRING=Release \
+  -DENABLE_LOGGING:BOOL=ON \
+  -DBUILD_TEST:BOOL=ON \
+  -DBUILD_STATIC:BOOL=OFF \
+  -DBUILD_SHARED_LIBS:BOOL=ON
+RUN cmake --build build
 
-# Fix libgtest problem during compiling
-WORKDIR /usr/src/gtest
-RUN cmake CMakeLists.txt
-RUN make
-#copy or symlink libgtest.a and libgtest_main.a to your /usr/lib folder
-RUN cp *.a /usr/lib
-
-# Build librime
-WORKDIR /
-RUN git clone https://github.com/rime/librime.git
-WORKDIR librime/
-RUN make
-RUN make install
+WORKDIR /librime/build
+RUN ctest

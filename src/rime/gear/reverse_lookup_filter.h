@@ -21,11 +21,9 @@ class ReverseLookupFilter : public Filter, TagMatching {
   explicit ReverseLookupFilter(const Ticket& ticket);
 
   virtual an<Translation> Apply(an<Translation> translation,
-                                        CandidateList* candidates);
+                                CandidateList* candidates);
 
-  virtual bool AppliesToSegment(Segment* segment) {
-    return TagsMatch(segment);
-  }
+  virtual bool AppliesToSegment(Segment* segment) { return TagsMatch(segment); }
 
   void Process(const an<Candidate>& cand);
 
@@ -36,6 +34,7 @@ class ReverseLookupFilter : public Filter, TagMatching {
   the<ReverseLookupDictionary> rev_dict_;
   // settings
   bool overwrite_comment_ = false;
+  bool append_comment_ = false;
   Projection comment_formatter_;
 };
 

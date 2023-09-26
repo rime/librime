@@ -44,14 +44,13 @@ bool AbcSegmentor::Proceed(Segmentation* segmentation) {
   bool expecting_an_initial = true;
   for (; k < input.length(); ++k) {
     bool is_letter = alphabet_.find(input[k]) != string::npos;
-    bool is_delimiter =
-        (k != j) && (delimiter_.find(input[k]) != string::npos);
+    bool is_delimiter = (k != j) && (delimiter_.find(input[k]) != string::npos);
     if (!is_letter && !is_delimiter)
       break;
     bool is_initial = initials_.find(input[k]) != string::npos;
     bool is_final = finals_.find(input[k]) != string::npos;
     if (expecting_an_initial && !is_initial && !is_delimiter) {
-      break;  // not a valid seplling.
+      break;  // not a valid spelling.
     }
     // for the next character.
     expecting_an_initial = is_final || is_delimiter;

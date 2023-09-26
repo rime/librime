@@ -12,14 +12,16 @@
 namespace rime {
 
 RIME_API extern const char* kDefaultModules[];
-extern const char* kDeployerModules[];
+RIME_API extern const char* kDeployerModules[];
 extern const char* kLegacyModules[];
 
 RIME_API void LoadModules(const char* module_names[]);
 
-RIME_API void SetupDeployer(RimeTraits *traits);
+RIME_API void SetupDeployer(RimeTraits* traits);
 
-RIME_API void SetupLogging(const char* app_name, int min_log_level, const char* log_dir);
+RIME_API void SetupLogging(const char* app_name,
+                           int min_log_level,
+                           const char* log_dir);
 RIME_API void SetupLogging(const char* app_name);
 
 }  // namespace rime

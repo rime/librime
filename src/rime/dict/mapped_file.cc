@@ -12,32 +12,6 @@
 #include <boost/interprocess/mapped_region.hpp>
 #include <rime/dict/mapped_file.h>
 
-#ifdef BOOST_RESIZE_FILE
-
-#define RESIZE_FILE boost::filesystem::resize_file
-
-#else
-
-#ifdef _WIN32
-#include <windows.h>
-#define RESIZE_FILE(P,SZ) (resize_file_api(P, SZ) != 0)
-static BOOL resize_file_api(const char* p, boost::uintmax_t size) {
-  HANDLE handle = CreateFileA(p, GENERIC_WRITE, 0, 0, OPEN_EXISTING,
-                              FILE_ATTRIBUTE_NORMAL, 0);
-  LARGE_INTEGER sz;
-  sz.QuadPart = size;
-  return handle != INVALID_HANDLE_VALUE
-    && ::SetFilePointerEx(handle, sz, 0, FILE_BEGIN)
-    && ::SetEndOfFile(handle)
-    && ::CloseHandle(handle);
-}
-#else
-#include <unistd.h>
-#define RESIZE_FILE(P,SZ) (::truncate(P, SZ) == 0)
-#endif  // _WIN32
-
-#endif  // BOOST_RESIZE_FILE
-
 namespace rime {
 
 class MappedFileImpl {
@@ -51,32 +25,25 @@ class MappedFileImpl {
     boost::interprocess::mode_t file_mapping_mode =
         (mode == kOpenReadOnly) ? boost::interprocess::read_only
                                 : boost::interprocess::read_write;
-    file_.reset(new boost::interprocess::file_mapping(file_name.c_str(), file_mapping_mode));
-    region_.reset(new boost::interprocess::mapped_region(*file_, file_mapping_mode));
+    file_.reset(new boost::interprocess::file_mapping(file_name.c_str(),
+                                                      file_mapping_mode));
+    region_.reset(
+        new boost::interprocess::mapped_region(*file_, file_mapping_mode));
   }
   ~MappedFileImpl() {
     region_.reset();
     file_.reset();
   }
-  bool Flush() {
-    return region_->flush();
-  }
-  void* get_address() const {
-    return region_->get_address();
-  }
-  size_t get_size() const {
-    return region_->get_size();
-  }
+  bool Flush() { return region_->flush(); }
+  void* get_address() const { return region_->get_address(); }
+  size_t get_size() const { return region_->get_size(); }
 
  private:
   the<boost::interprocess::file_mapping> file_;
   the<boost::interprocess::mapped_region> region_;
-
 };
 
-MappedFile::MappedFile(const string& file_name)
-    : file_name_(file_name) {
-}
+MappedFile::MappedFile(const string& file_name) : file_name_(file_name) {}
 
 MappedFile::~MappedFile() {
   if (file_) {
@@ -88,13 +55,12 @@ bool MappedFile::Create(size_t capacity) {
   if (Exists()) {
     LOG(INFO) << "overwriting file '" << file_name_ << "'.";
     Resize(capacity);
-  }
-  else {
+  } else {
     LOG(INFO) << "creating file '" << file_name_ << "'.";
     std::filebuf fbuf;
-    fbuf.open(file_name_.c_str(),
-              std::ios_base::in | std::ios_base::out |
-              std::ios_base::trunc | std::ios_base::binary);
+    fbuf.open(file_name_.c_str(), std::ios_base::in | std::ios_base::out |
+                                      std::ios_base::trunc |
+                                      std::ios_base::binary);
     if (capacity > 0) {
       fbuf.pubseekoff(capacity - 1, std::ios_base::beg);
       fbuf.sputc(0);
@@ -164,9 +130,8 @@ bool MappedFile::Resize(size_t capacity) {
   if (IsOpen())
     Close();
   try {
-    RESIZE_FILE(file_name_.c_str(), capacity);
-  }
-  catch (...) {
+    boost::filesystem::resize_file(file_name_.c_str(), capacity);
+  } catch (...) {
     return false;
   }
   return true;

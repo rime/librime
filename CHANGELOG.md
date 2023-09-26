@@ -1,3 +1,27 @@
+<a name="1.9.0"></a>
+# [1.9.0](https://github.com/rime/librime/compare/1.8.5...1.9.0) (2023-09-16)
+
+
+### Bug Fixes
+
+* avoid invalid page_size ([#679](https://github.com/rime/librime/issues/679)) ([53ce306](https://github.com/rime/librime/commit/53ce306))
+
+
+### Features
+
+* add `append_comment` option to `reverse_lookup_filter` ([#699](https://github.com/rime/librime/issues/699)) ([f079c3c](https://github.com/rime/librime/commit/f079c3c))
+* **dict:** shorten the data struct used by Vocabulary ([210ab6c](https://github.com/rime/librime/commit/210ab6c))
+* **switches:** abbreviate state labels ([45cd64b](https://github.com/rime/librime/commit/45cd64b))
+
+
+### Performance Improvements
+
+* release memory of temporary fields ([#690](https://github.com/rime/librime/issues/690)) ([43ae3a9](https://github.com/rime/librime/commit/43ae3a9))
+* replace rbtree with vector of pair ([#684](https://github.com/rime/librime/issues/684)) ([c515afb](https://github.com/rime/librime/commit/c515afb))
+* **dict:** improve dict complile performance ([#663](https://github.com/rime/librime/issues/663)) ([bd3c7c7](https://github.com/rime/librime/commit/bd3c7c7))
+
+
+
 <a name="1.8.5"></a>
 ## [1.8.5](https://github.com/rime/librime/compare/1.8.4...1.8.5) (2023-02-05)
 
@@ -143,7 +167,7 @@
 
 ### Bug Fixes
 
-* **ascii_composer:** do not comsume Shift key release ([debc2c0](https://github.com/rime/librime/commit/debc2c0))
+* **ascii_composer:** do not consume Shift key release ([debc2c0](https://github.com/rime/librime/commit/debc2c0))
 * **ascii_composer:** first read ascii_composer/good_old_caps_lock from schema config ([3fc56c4](https://github.com/rime/librime/commit/3fc56c4))
 * **chord_composer:** commit raw input with uppercase letters ([cc983d5](https://github.com/rime/librime/commit/cc983d5))
 * **CMakeLists.txt:** ensure paths in pkgconfig file are absolute ([0e96e51](https://github.com/rime/librime/commit/0e96e51))
@@ -498,14 +522,14 @@ known to be in use by osfans/trime.
   while source code compatibility is largely maintained with the exception
   of the aforementioned `RimeTraits` structure, rime 1.0 introduces a version
   controlled `RimeApi` structure which provides all the api functions.
-* **module:** suppport adding modules; modularize `gears` and `levers`.
-* **ticket:** used to instantiate compnents and to associate the instance with
+* **module:** support adding modules; modularize `gears` and `levers`.
+* **ticket:** used to instantiate components and to associate the instance with
   a name space in the configuration.
 * **encoder:** encode new phrases for `table_translator` and `script_translator`
   using different rules.
 * **affix_segmentor:** strip optional prefix and suffix from a code segment.
 * **reverse_lookup_filter:** lookup candidate text for code in a specified
-  dictonary.
+  dictionary.
 * **shape:** add full-shape support.
 * **key_binder:** switch input schemata and toggle options with hotkeys.
 * **switcher:** list input schemata ordered by recency; support radio options.
@@ -551,7 +575,7 @@ known to be in use by osfans/trime.
   properties when loading a different schema.
   `chord_composer` sets `_chord_typing` so that the input method program would
   know that a chord-typing schema is in use.
-* **deployment_tasks.cc(BackupConfigFiles::Run):** while synching user data,
+* **deployment_tasks.cc(BackupConfigFiles::Run):** while syncing user data,
   backup user created / modified YAML files.
 * **deployer.cc(Deployer::JoinMaintenanceThread):** fix a boost-related crash.
 
@@ -578,9 +602,9 @@ known to be in use by osfans/trime.
   `--add-schema`, `--set-active-schema`
 * **rime_dict_manager:** add command line option `--sync`
 * **rime_api.h (RimeSyncUserData):**
-  add API function to start a data synching task in maintenance thread.
+  add API function to start a data syncing task in maintenance thread.
 * **rime_api.h (RimeSetNotificationHandler):**
-  setup a callback function to receive notifcations from librime.
+  setup a callback function to receive notifications from librime.
 * **rime_api.h (RimeGetProperty, RimeSetProperty):**
   add API functions to access session specific string properties.
 * **config:** support subscript, assignment operators and simplified value accessors.

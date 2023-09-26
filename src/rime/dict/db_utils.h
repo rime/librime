@@ -18,7 +18,7 @@ class Sink {
   virtual bool Put(const string& key, const string& value) = 0;
 
   template <class SourceType>
-  int operator<< (SourceType& source);
+  int operator<<(SourceType& source);
 };
 
 class Source {
@@ -28,18 +28,18 @@ class Source {
   virtual bool Get(string* key, string* value) = 0;
 
   template <class SinkType>
-  int operator>> (SinkType& sink);
+  int operator>>(SinkType& sink);
 
   int Dump(Sink* sink);
 };
 
 template <class SourceType>
-int Sink::operator<< (SourceType& source) {
+int Sink::operator<<(SourceType& source) {
   return source.Dump(this);
 }
 
 template <class SinkType>
-int Source::operator>> (SinkType& sink) {
+int Source::operator>>(SinkType& sink) {
   return Dump(&sink);
 }
 

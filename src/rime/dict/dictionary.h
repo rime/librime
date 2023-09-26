@@ -23,22 +23,22 @@ struct QueryResult;
 
 }  // namespace dictionary
 
-class DictEntryIterator : public DictEntryFilterBinder {
+class RIME_API DictEntryIterator : public DictEntryFilterBinder {
  public:
-  RIME_API DictEntryIterator();
+  DictEntryIterator();
   virtual ~DictEntryIterator() = default;
   DictEntryIterator(const DictEntryIterator& other) = default;
-  DictEntryIterator& operator= (const DictEntryIterator& other) = default;
+  DictEntryIterator& operator=(const DictEntryIterator& other) = default;
   DictEntryIterator(DictEntryIterator&& other) = default;
-  DictEntryIterator& operator= (DictEntryIterator&& other) = default;
+  DictEntryIterator& operator=(DictEntryIterator&& other) = default;
 
   void AddChunk(dictionary::Chunk&& chunk);
   void Sort();
-  RIME_API void AddFilter(DictEntryFilter filter) override;
-  RIME_API an<DictEntry> Peek();
-  RIME_API bool Next();
+  void AddFilter(DictEntryFilter filter) override;
+  an<DictEntry> Peek();
+  bool Next();
   bool Skip(size_t num_entries);
-  RIME_API bool exhausted() const;
+  bool exhausted() const;
   size_t entry_count() const { return entry_count_; }
 
  protected:
@@ -79,7 +79,8 @@ class Dictionary : public Class<Dictionary, const Ticket&> {
   // return num of matching keys.
   RIME_API size_t LookupWords(DictEntryIterator* result,
                               const string& str_code,
-                              bool predictive, size_t limit = 0);
+                              bool predictive,
+                              size_t limit = 0);
   // translate syllable id sequence to string code
   RIME_API bool Decode(const Code& code, vector<string>* result);
 
@@ -105,9 +106,7 @@ class DictionaryComponent : public Dictionary::Component {
   DictionaryComponent();
   ~DictionaryComponent() override;
   Dictionary* Create(const Ticket& ticket) override;
-  Dictionary* Create(string dict_name,
-                     string prism_name,
-                     vector<string> packs);
+  Dictionary* Create(string dict_name, string prism_name, vector<string> packs);
 
  private:
   map<string, weak<Prism>> prism_map_;

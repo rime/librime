@@ -26,12 +26,8 @@ class UserDictEntryIterator : public DictEntryFilterBinder {
   void AddFilter(DictEntryFilter filter) override;
   an<DictEntry> Peek();
   bool Next();
-  bool exhausted() const {
-    return index_ >= cache_.size();
-  }
-  size_t cache_size() const {
-    return cache_.size();
-  }
+  bool exhausted() const { return index_ >= cache_.size(); }
+  size_t cache_size() const { return cache_.size(); }
 
  protected:
   bool FindNextEntry();
@@ -70,7 +66,8 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
                      size_t limit = 0,
                      string* resume_key = NULL);
   bool UpdateEntry(const DictEntry& entry, int commits);
-  bool UpdateEntry(const DictEntry& entry, int commits,
+  bool UpdateEntry(const DictEntry& entry,
+                   int commits,
                    const string& new_entry_prefix);
   bool UpdateTickCount(TickCount increment);
 
@@ -91,7 +88,8 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
   bool Initialize();
   bool FetchTickCount();
   bool TranslateCodeToString(const Code& code, string* result);
-  void DfsLookup(const SyllableGraph& syll_graph, size_t current_pos,
+  void DfsLookup(const SyllableGraph& syll_graph,
+                 size_t current_pos,
                  const string& current_prefix,
                  DfsState* state);
 
@@ -109,6 +107,7 @@ class UserDictionaryComponent : public UserDictionary::Component {
   UserDictionaryComponent();
   UserDictionary* Create(const Ticket& ticket);
   UserDictionary* Create(const string& dict_name, const string& db_class);
+
  private:
   map<string, weak<Db>> db_pool_;
 };

@@ -18,8 +18,7 @@ class ReverseLookupFilterTranslation : public CacheTranslation {
  public:
   ReverseLookupFilterTranslation(an<Translation> translation,
                                  ReverseLookupFilter* filter)
-      : CacheTranslation(translation), filter_(filter) {
-  }
+      : CacheTranslation(translation), filter_(filter) {}
   virtual an<Candidate> Peek();
 
  protected:
@@ -54,12 +53,13 @@ void ReverseLookupFilter::Initialize() {
   }
   if (Config* config = engine_->schema()->config()) {
     config->GetBool(name_space_ + "/overwrite_comment", &overwrite_comment_);
+    config->GetBool(name_space_ + "/append_comment", &append_comment_);
     comment_formatter_.Load(config->GetList(name_space_ + "/comment_format"));
   }
 }
 
-an<Translation> ReverseLookupFilter::Apply(
-    an<Translation> translation, CandidateList* candidates) {
+an<Translation> ReverseLookupFilter::Apply(an<Translation> translation,
+                                           CandidateList* candidates) {
   if (!initialized_) {
     Initialize();
   }
@@ -70,7 +70,7 @@ an<Translation> ReverseLookupFilter::Apply(
 }
 
 void ReverseLookupFilter::Process(const an<Candidate>& cand) {
-  if (!overwrite_comment_ && !cand->comment().empty())
+  if (!cand->comment().empty() && !(overwrite_comment_ || append_comment_))
     return;
   auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
   if (!phrase)
@@ -79,7 +79,11 @@ void ReverseLookupFilter::Process(const an<Candidate>& cand) {
   if (rev_dict_->ReverseLookup(phrase->text(), &codes)) {
     comment_formatter_.Apply(&codes);
     if (!codes.empty()) {
-      phrase->set_comment(codes);
+      if (overwrite_comment_ || cand->comment().empty()) {
+        phrase->set_comment(codes);
+      } else {
+        phrase->set_comment(cand->comment() + " " + codes);
+      }
     }
   }
 }

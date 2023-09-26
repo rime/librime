@@ -25,8 +25,7 @@ int Source::Dump(Sink* sink) {
   return num_entries;
 }
 
-DbSink::DbSink(Db* db) : db_(db) {
-}
+DbSink::DbSink(Db* db) : db_(db) {}
 
 bool DbSink::MetaPut(const string& key, const string& value) {
   return db_ && db_->MetaUpdate(key, value);
@@ -37,10 +36,7 @@ bool DbSink::Put(const string& key, const string& value) {
 }
 
 DbSource::DbSource(Db* db)
-    : db_(db),
-      metadata_(db->QueryMetadata()),
-      data_(db->QueryAll()) {
-}
+    : db_(db), metadata_(db->QueryMetadata()), data_(db->QueryAll()) {}
 
 bool DbSource::MetaGet(string* key, string* value) {
   return metadata_ && metadata_->GetNextRecord(key, value);
