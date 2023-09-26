@@ -19,21 +19,7 @@ int Translation::Compare(an<Translation> other,
   auto theirs = other->Peek();
   if (!ours || !theirs)
     return 1;
-  int k = 0;
-  // the one nearer to the beginning of segment comes first
-  k = ours->start() - theirs->start();
-  if (k != 0)
-    return k;
-  // then the longer comes first
-  k = ours->end() - theirs->end();
-  if (k != 0)
-    return -k;
-  // compare quality
-  double qdiff = ours->quality() - theirs->quality();
-  if (qdiff != 0.)
-    return (qdiff > 0.) ? -1 : 1;
-  // draw
-  return 0;
+  return ours->compare(*theirs);
 }
 
 bool UniqueTranslation::Next() {
