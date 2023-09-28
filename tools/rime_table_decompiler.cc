@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <rime/dict/table.h>
+#include "codepage.h"
 
 // usage:
 //   rime_table_decompiler <rime-table-file> [save-path]
@@ -76,11 +77,14 @@ void traversal(rime::Table* table, std::ofstream& fout) {
 }
 
 int main(int argc, char* argv[]) {
+  unsigned int codepage = SetConsoleOutputCodePage();
   if (argc < 2 || argc > 3) {
     std::cout << "Usage: rime_table_decompiler <rime-table-file> [save-path]"
               << std::endl;
-    std::cout << "Example: rime_table_decompiler pinyin.table.bin pinyin.dict.yaml"
-              << std::endl;
+    std::cout
+        << "Example: rime_table_decompiler pinyin.table.bin pinyin.dict.yaml"
+        << std::endl;
+    SetConsoleOutputCodePage(codepage);
     return 0;
   }
 
@@ -89,6 +93,7 @@ int main(int argc, char* argv[]) {
   bool success = table.Load();
   if (!success) {
     std::cerr << "Failed to load table." << std::endl;
+    SetConsoleOutputCodePage(codepage);
     return 1;
   }
 
@@ -97,13 +102,13 @@ int main(int argc, char* argv[]) {
   if (std::string::npos != table_bin_idx) {
     fileName.erase(table_bin_idx);
   }
-  const std::string outputName =
-      (argc == 3) ? argv[2]: fileName + ".yaml";
+  const std::string outputName = (argc == 3) ? argv[2] : fileName + ".yaml";
 
   std::ofstream fout;
   fout.open(outputName);
   if (!fout.is_open()) {
     std::cerr << "Failed to open file " << outputName << std::endl;
+    SetConsoleOutputCodePage(codepage);
     return 1;
   }
 
@@ -114,11 +119,14 @@ int main(int argc, char* argv[]) {
   }
   fout << "# Rime dictionary\n\n";
   fout << "---\n"
-          "name: " << fileName << "\n"
+          "name: "
+       << fileName
+       << "\n"
           "version: \"1.0\"\n"
           "...\n\n";
   traversal(&table, fout);
   std::cout << "Save to: " << outputName << std::endl;
   fout.close();
+  SetConsoleOutputCodePage(codepage);
   return 0;
 }
