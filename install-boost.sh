@@ -23,7 +23,7 @@ download_boost_source() {
     [[ -f "${BOOST_ROOT}/bootstrap.sh" ]]
 }
 
-boost_libs="${boost_libs=filesystem,regex,system}"
+boost_libs="${boost_libs=filesystem,regex}"
 boost_cxxflags='-arch arm64 -arch x86_64'
 
 build_boost_macos() {

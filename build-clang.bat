@@ -59,7 +59,6 @@ if %build_boost% == 1 (
     stage^
     --with-locale^
     --with-filesystem^
-    --with-system^
     --with-regex || exit
   popd
 )
