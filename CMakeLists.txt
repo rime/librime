@@ -71,6 +71,7 @@ find_package(Boost 1.74.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
   link_directories(${Boost_LIBRARY_DIRS})
+  add_definitions(-DBOOST_DLL_USE_STD_FS)
 endif()
 
 if(ENABLE_LOGGING)
