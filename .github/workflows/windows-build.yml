@@ -138,7 +138,7 @@ jobs:
         shell: msys2 {0}
 
     steps:
-      - name: Setup msys2 and install dependencies
+      - name: Install dependencies with MSYS2
         uses: msys2/setup-msys2@v2
         with:
           release: false
@@ -159,6 +159,7 @@ jobs:
             cmake:p
             ninja:p
 
+      - run: git config --global core.autocrlf input
       - name: Checkout last commit
         uses: actions/checkout@v4
         with:
