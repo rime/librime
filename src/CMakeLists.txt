@@ -55,7 +55,9 @@ set(rime_gears_deps
 set(rime_levers_deps "")
 
 if(MINGW)
-  set(rime_core_deps ${rime_core_deps} wsock32 ws2_32)
+  # fix: bcrypt for boost uuid issue
+  # https://github.com/boostorg/uuid/issues/68
+  set(rime_core_deps ${rime_core_deps} wsock32 ws2_32 bcrypt)
 endif()
 
 if(BUILD_SEPARATE_LIBS)
