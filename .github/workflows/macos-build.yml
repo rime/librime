@@ -28,7 +28,8 @@ jobs:
 
       - name: Configure build environment
         run: |
-          brew install llvm
+          brew install llvm ninja
+          echo "CMAKE_GENERATOR=Ninja"  >> $GITHUB_ENV
           echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
           echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV
 
@@ -73,17 +74,17 @@ jobs:
 
       - name: Build dependencies
         if: steps.cache-deps.outputs.cache-hit != 'true'
-        run: make xcode/deps
+        run: make deps
 
       - name: Install Rime plugins
         run: ./action-install-plugins-macos.sh
 
       - name: Build and test
-        run: make xcode/test
+        run: make test
 
       - name: Create distributable
         run: |
-          make xcode/dist
+          make install
           tar -cjvf rime-${{ env.git_ref_name }}-${{ runner.os }}.tar.bz2 \
           dist version-info.txt
           tar -cjvf rime-deps-${{ env.git_ref_name }}-${{ runner.os }}.tar.bz2 \

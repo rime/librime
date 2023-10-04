@@ -59,7 +59,6 @@ if %build_boost% == 1 (
     stage^
     --with-locale^
     --with-filesystem^
-    --with-system^
     --with-regex || exit
   popd
 )
@@ -118,7 +117,7 @@ if %build_deps% == 1 (
 
   echo building marisa.
   pushd deps\marisa-trie
-  cmake .. %deps_cmake_flags% || exit
+  cmake . %deps_cmake_flags% || exit
   cmake --build build || exit
   cmake --install build || exit
   popd

@@ -31,4 +31,21 @@ vector<of<Candidate>> Candidate::GetGenuineCandidates(
   return result;
 }
 
+int Candidate::compare(const Candidate& other) {
+  // the one nearer to the beginning of segment comes first
+  int k = start_ - other.start_;
+  if (k != 0)
+    return k;
+  // then the longer comes first
+  k = end_ - other.end_;
+  if (k != 0)
+    return -k;
+  // compare quality
+  double qdiff = quality_ - other.quality_;
+  if (qdiff != 0.)
+    return (qdiff > 0.) ? -1 : 1;
+  // draw
+  return 0;
+}
+
 }  // namespace rime
