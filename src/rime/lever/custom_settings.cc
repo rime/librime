@@ -5,13 +5,11 @@
 // 2012-02-26 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
 #include <rime/config.h>
 #include <rime/deployer.h>
 #include <rime/signature.h>
 #include <rime/lever/custom_settings.h>
 
-namespace fs = boost::filesystem;
 
 namespace rime {
 

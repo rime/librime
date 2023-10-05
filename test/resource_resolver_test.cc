@@ -1,9 +1,8 @@
 #include <fstream>
-#include <boost/filesystem.hpp>
+#include <rime/fs.h>
 #include <gtest/gtest.h>
 #include <rime/resource.h>
 
-namespace fs = boost::filesystem;
 using namespace rime;
 
 static const ResourceType kMineralsType = ResourceType{

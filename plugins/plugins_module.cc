@@ -5,7 +5,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/dll.hpp>
-#include <boost/filesystem.hpp>
+#include <rime/fs.h>
 #include <rime/build_config.h>
 #include <rime/common.h>
 #include <rime/component.h>
@@ -13,7 +13,6 @@
 #include <rime/registry.h>
 #include <rime_api.h>
 
-namespace fs = boost::filesystem;
 
 namespace rime {
 

@@ -9,7 +9,7 @@
 
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include <rime/fs.h>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -30,7 +30,6 @@
 
 using namespace std::placeholders;
 
-namespace fs = boost::filesystem;
 
 namespace rime {
 
@@ -84,7 +83,7 @@ bool InstallationUpdate::Run(Deployer* deployer) {
   const fs::path user_data_path(deployer->user_data_dir);
   if (!fs::exists(user_data_path)) {
     LOG(INFO) << "creating user data dir: " << user_data_path.string();
-    boost::system::error_code ec;
+    fs::system_error_code ec;
     if (!fs::create_directories(user_data_path, ec)) {
       LOG(ERROR) << "Error creating user data dir: " << user_data_path.string();
     }
@@ -258,7 +257,7 @@ SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
 }
 
 static bool MaybeCreateDirectory(fs::path dir) {
-  boost::system::error_code ec;
+  fs::system_error_code ec;
   if (fs::create_directories(dir, ec)) {
     return true;
   }
@@ -309,7 +308,7 @@ static bool TrashDeprecatedUserCopy(const fs::path& shared_copy,
       return false;
     }
     fs::path backup = trash / user_copy.filename();
-    boost::system::error_code ec;
+    fs::system_error_code ec;
     fs::rename(user_copy, backup, ec);
     if (ec) {
       LOG(ERROR) << "error trashing file " << user_copy.string();
@@ -478,7 +477,7 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
     if (fs::is_symlink(entry)) {
       try {
         // a symlink becomes dangling if the target file is no longer provided
-        boost::system::error_code ec;
+        fs::system_error_code ec;
         auto target_path = fs::canonical(entry, ec);
         bool bad_link = bool(ec);
         bool linked_to_shared_data =
@@ -561,7 +560,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
       ++skipped;  // customized copy
       continue;
     }
-    boost::system::error_code ec;
+    fs::system_error_code ec;
     fs::copy_file(entry, backup, fs::copy_options::overwrite_existing, ec);
     if (ec) {
       LOG(ERROR) << "error backing up file " << backup.string();
@@ -596,7 +595,7 @@ bool CleanupTrash::Run(Deployer* deployer) {
         return false;
       }
       fs::path backup = trash / entry.filename();
-      boost::system::error_code ec;
+      fs::system_error_code ec;
       fs::rename(entry, backup, ec);
       if (ec) {
         LOG(ERROR) << "error clean up file " << entry.string();

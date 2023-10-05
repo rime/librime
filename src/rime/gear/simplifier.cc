@@ -5,7 +5,6 @@
 // 2011-12-12 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
 #include <stdint.h>
 #include <utf8.h>
 #include <utility>
@@ -27,7 +26,6 @@
 
 #ifdef _MSC_VER
 #include <opencc/UTF8Util.hpp>
-namespace fs = boost::filesystem;
 #endif
 
 static const char* quote_left = "\xe3\x80\x94";   //"\xef\xbc\x88";
@@ -178,7 +176,7 @@ Simplifier::Simplifier(const Ticket& ticket)
 }
 
 void Simplifier::Initialize() {
-  using namespace boost::filesystem;
+  using namespace rime::fs;
   initialized_ = true;  // no retry
   path opencc_config_path = opencc_config_;
   if (opencc_config_path.extension().string() == ".ini") {

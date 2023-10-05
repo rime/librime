@@ -4,7 +4,6 @@
 //
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/filesystem.hpp>
 #include <cfloat>
 #include <cmath>
 #include <fstream>
@@ -22,7 +21,6 @@
 #include <rime/resource.h>
 #include <rime/service.h>
 
-namespace fs = boost::filesystem;
 
 namespace rime {
 
@@ -84,7 +82,7 @@ bool DictCompiler::Compile(const string& schema_file) {
   bool build_table_from_source = true;
   DictSettings settings;
   auto dict_file = source_resolver_->ResolvePath(dict_name_ + ".dict.yaml");
-  if (!boost::filesystem::exists(dict_file)) {
+  if (!fs::exists(dict_file)) {
     LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
     build_table_from_source = false;
   } else if (!load_dict_settings_from_file(&settings, dict_file)) {

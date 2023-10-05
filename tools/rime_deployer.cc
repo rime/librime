@@ -5,15 +5,13 @@
 // 2012-07-07 GONG Chen <chen.sst@gmail.com>
 //
 #include <iostream>
-#include <boost/filesystem.hpp>
+#include <rime/fs.h>
 #include <rime/config.h>
 #include <rime/deployer.h>
 #include <rime/service.h>
 #include <rime/setup.h>
 #include <rime/lever/deployment_tasks.h>
 #include "codepage.h"
-
-namespace fs = boost::filesystem;
 
 using namespace rime;
 

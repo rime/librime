@@ -5,14 +5,12 @@
 // 2013-04-22 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include <rime/fs.h>
 #include <boost/scope_exit.hpp>
 #include <rime/deployer.h>
 #include <rime/dict/db.h>
 #include <rime/dict/user_db.h>
 #include <rime/dict/user_db_recovery_task.h>
-
-namespace fs = boost::filesystem;
 
 namespace rime {
 
@@ -42,8 +40,8 @@ bool UserDbRecoveryTask::Run(Deployer* deployer) {
   // repair didn't work on the damaged db file; remove and recreate it
   LOG(INFO) << "recreating db file.";
   if (db_->Exists()) {
-    boost::system::error_code ec;
-    boost::filesystem::rename(db_->file_name(), db_->file_name() + ".old", ec);
+    fs::system_error_code ec;
+    fs::rename(db_->file_name(), db_->file_name() + ".old", ec);
     if (ec && !db_->Remove()) {
       LOG(ERROR) << "Error removing db file '" << db_->file_name() << "'.";
       return false;
@@ -65,7 +63,7 @@ void UserDbRecoveryTask::RestoreUserDataFromSnapshot(Deployer* deployer) {
   string dict_name(db_->name());
   boost::erase_last(dict_name, component->extension());
   // locate snapshot file
-  boost::filesystem::path dir(deployer->user_data_sync_dir());
+  fs::path dir(deployer->user_data_sync_dir());
   // try *.userdb.txt
   fs::path snapshot_path = dir / (dict_name + UserDb::snapshot_extension());
   if (!fs::exists(snapshot_path)) {

@@ -4,7 +4,6 @@
 //
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/filesystem.hpp>
 #include <rime/algo/syllabifier.h>
 #include <rime/common.h>
 #include <rime/dict/dictionary.h>
@@ -306,8 +305,8 @@ bool Dictionary::Decode(const Code& code, vector<string>* result) {
 }
 
 bool Dictionary::Exists() const {
-  return boost::filesystem::exists(prism_->file_name()) && !tables_.empty() &&
-         boost::filesystem::exists(tables_[0]->file_name());
+  return fs::exists(prism_->file_name()) && !tables_.empty() &&
+         fs::exists(tables_[0]->file_name());
 }
 
 bool Dictionary::Remove() {
