@@ -16,7 +16,6 @@
 #include <rime/dict/user_db.h>
 #include <rime/lever/user_dict_manager.h>
 
-
 namespace rime {
 
 UserDictManager::UserDictManager(Deployer* deployer)

@@ -5,7 +5,6 @@
 #ifndef RIME_CUSTOMIZER_H_
 #define RIME_CUSTOMIZER_H_
 
-
 namespace rime {
 
 class Customizer {

@@ -129,7 +129,7 @@ bool MappedFile::Resize(size_t capacity) {
   if (IsOpen())
     Close();
   try {
-     fs::resize_file(file_name_.c_str(), capacity);
+    fs::resize_file(file_name_.c_str(), capacity);
   } catch (...) {
     return false;
   }

@@ -36,7 +36,7 @@ bool BuildInfoPlugin::ReviewLinkOutput(ConfigCompiler* compiler,
     }
     // TODO: store as 64-bit number to avoid the year 2038 problem
     std::time_t ft = fs::last_write_time(file_name);
-    timestamps[resource->resource_id] = (int) ft;
+    timestamps[resource->resource_id] = (int)ft;
   });
 #endif
   return true;

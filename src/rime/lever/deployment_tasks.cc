@@ -30,7 +30,6 @@
 
 using namespace std::placeholders;
 
-
 namespace rime {
 
 DetectModifications::DetectModifications(TaskInitializer arg) {

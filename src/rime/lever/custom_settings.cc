@@ -10,7 +10,6 @@
 #include <rime/signature.h>
 #include <rime/lever/custom_settings.h>
 
-
 namespace rime {
 
 static string remove_suffix(const string& input, const string& suffix) {

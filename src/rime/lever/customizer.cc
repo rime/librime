@@ -11,7 +11,6 @@
 #include <rime/algo/utilities.h>
 #include <rime/lever/customizer.h>
 
-
 namespace rime {
 
 // update strategy:

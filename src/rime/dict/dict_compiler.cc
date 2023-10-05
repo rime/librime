@@ -21,7 +21,6 @@
 #include <rime/resource.h>
 #include <rime/service.h>
 
-
 namespace rime {
 
 DictCompiler::DictCompiler(Dictionary* dictionary)

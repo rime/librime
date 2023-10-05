@@ -10,7 +10,6 @@
 #include <rime/deployer.h>
 #include <rime/lever/switcher_settings.h>
 
-
 namespace rime {
 
 SwitcherSettings::SwitcherSettings(Deployer* deployer)

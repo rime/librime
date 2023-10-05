@@ -21,7 +21,6 @@
 #include <rime/service.h>
 #include <rime/setup.h>
 
-
 namespace rime {
 
 #define Q(x) #x

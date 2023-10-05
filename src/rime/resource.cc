@@ -27,20 +27,17 @@ string ResourceResolver::ToFilePath(const string& resource_id) const {
          (missing_suffix ? type_.suffix : "");
 }
 
-fs::path ResourceResolver::ResolvePath(
-    const string& resource_id) {
-  return fs::absolute(
-       fs::path(type_.prefix + resource_id + type_.suffix),
-      root_path_);
+fs::path ResourceResolver::ResolvePath(const string& resource_id) {
+  return fs::absolute(fs::path(type_.prefix + resource_id + type_.suffix),
+                      root_path_);
 }
 
-fs::path FallbackResourceResolver::ResolvePath(
-    const string& resource_id) {
+fs::path FallbackResourceResolver::ResolvePath(const string& resource_id) {
   auto default_path = ResourceResolver::ResolvePath(resource_id);
   if (!fs::exists(default_path)) {
-    auto fallback_path = fs::absolute(
-        fs::path(type_.prefix + resource_id + type_.suffix),
-        fallback_root_path_);
+    auto fallback_path =
+        fs::absolute(fs::path(type_.prefix + resource_id + type_.suffix),
+                     fallback_root_path_);
     if (fs::exists(fallback_path)) {
       return fallback_path;
     }

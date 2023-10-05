@@ -27,9 +27,7 @@ class RIME_API ResourceResolver {
   virtual fs::path ResolvePath(const string& resource_id);
   string ToResourceId(const string& file_path) const;
   string ToFilePath(const string& resource_id) const;
-  void set_root_path(fs::path root_path) {
-    root_path_ = root_path;
-  }
+  void set_root_path(fs::path root_path) { root_path_ = root_path; }
   fs::path root_path() const { return root_path_; }
 
  protected:
