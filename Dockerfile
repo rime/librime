@@ -6,7 +6,6 @@ RUN apt update && apt install -y \
   cmake \
   ninja-build \
   libboost-dev \
-  libboost-filesystem-dev \
   libboost-regex-dev \
   libboost-locale-dev \
   libgoogle-glog-dev \
@@ -22,6 +21,11 @@ WORKDIR /librime/plugins
 RUN git clone https://github.com/rime/librime-charcode charcode && \
   git clone https://github.com/hchunhui/librime-lua lua && \
   git clone https://github.com/lotem/librime-octagram octagram
+  
+WORKDIR /librime/plugins/lua
+RUN apt install -y curl
+RUN curl -LO https://github.com/hchunhui/librime-lua/pull/275.patch
+RUN git apply 275.patch
 
 WORKDIR /librime
 RUN cmake -B build -G Ninja \

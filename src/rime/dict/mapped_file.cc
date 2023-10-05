@@ -7,7 +7,7 @@
 // 2011-06-30 GONG Chen <chen.sst@gmail.com>
 //
 #include <fstream>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/interprocess/file_mapping.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <rime/dict/mapped_file.h>
@@ -101,7 +101,7 @@ void MappedFile::Close() {
 }
 
 bool MappedFile::Exists() const {
-  return boost::filesystem::exists(file_name_);
+  return std::filesystem::exists(file_name_);
 }
 
 bool MappedFile::IsOpen() const {
@@ -130,7 +130,7 @@ bool MappedFile::Resize(size_t capacity) {
   if (IsOpen())
     Close();
   try {
-    boost::filesystem::resize_file(file_name_.c_str(), capacity);
+    std::filesystem::resize_file(file_name_.c_str(), capacity);
   } catch (...) {
     return false;
   }

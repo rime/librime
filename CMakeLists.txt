@@ -3,7 +3,7 @@ set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_fla
 
 cmake_minimum_required(VERSION 3.12)
 project(rime)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 set(rime_version 1.9.0)
 set(rime_soversion 1)
@@ -59,7 +59,7 @@ if(MSVC)
   set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
-set(BOOST_COMPONENTS filesystem regex)
+set(BOOST_COMPONENTS regex)
 
 if(BOOST_USE_SIGNALS2)
   set(RIME_BOOST_SIGNALS2 1)
@@ -71,6 +71,7 @@ find_package(Boost 1.74.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
   link_directories(${Boost_LIBRARY_DIRS})
+  add_definitions(-DBOOST_DLL_USE_STD_FS)
 endif()
 
 if(ENABLE_LOGGING)
@@ -161,7 +162,7 @@ if(MSVC)
 endif()
 
 if(UNIX)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 endif()
 
 if (NOT CMAKE_BUILD_PARALLEL_LEVEL)

@@ -4,7 +4,7 @@
 //
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/lexical_cast.hpp>
 #include <utf8.h>
 #include <rime/resource.h>

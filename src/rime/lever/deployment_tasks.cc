@@ -9,7 +9,7 @@
 
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -19,6 +19,7 @@
 #include <rime/service.h>
 #include <rime/setup.h>
 #include <rime/ticket.h>
+#include <rime/algo/fs.h>
 #include <rime/algo/utilities.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
@@ -30,7 +31,7 @@
 
 using namespace std::placeholders;
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 namespace rime {
 
@@ -47,7 +48,8 @@ bool DetectModifications::Run(Deployer* deployer) {
   try {
     for (auto dir : data_dirs_) {
       fs::path p = fs::canonical(dir);
-      last_modified = (std::max)(last_modified, fs::last_write_time(p));
+      last_modified = (std::max)(last_modified,
+                                 filesystem::to_time_t(fs::last_write_time(p)));
       if (fs::is_directory(p)) {
         for (fs::directory_iterator iter(p), end; iter != end; ++iter) {
           fs::path entry(iter->path());
@@ -55,7 +57,8 @@ bool DetectModifications::Run(Deployer* deployer) {
               entry.extension().string() == ".yaml" &&
               entry.filename().string() != "user.yaml") {
             last_modified =
-                (std::max)(last_modified, fs::last_write_time(entry));
+                (std::max)(last_modified,
+                           filesystem::to_time_t(fs::last_write_time(entry)));
           }
         }
       }
@@ -84,7 +87,7 @@ bool InstallationUpdate::Run(Deployer* deployer) {
   const fs::path user_data_path(deployer->user_data_dir);
   if (!fs::exists(user_data_path)) {
     LOG(INFO) << "creating user data dir: " << user_data_path.string();
-    boost::system::error_code ec;
+    std::error_code ec;
     if (!fs::create_directories(user_data_path, ec)) {
       LOG(ERROR) << "Error creating user data dir: " << user_data_path.string();
     }
@@ -258,7 +261,7 @@ SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
 }
 
 static bool MaybeCreateDirectory(fs::path dir) {
-  boost::system::error_code ec;
+  std::error_code ec;
   if (fs::create_directories(dir, ec)) {
     return true;
   }
@@ -309,7 +312,7 @@ static bool TrashDeprecatedUserCopy(const fs::path& shared_copy,
       return false;
     }
     fs::path backup = trash / user_copy.filename();
-    boost::system::error_code ec;
+    std::error_code ec;
     fs::rename(user_copy, backup, ec);
     if (ec) {
       LOG(ERROR) << "error trashing file " << user_copy.string();
@@ -414,7 +417,8 @@ static bool ConfigNeedsUpdate(Config* config) {
       }
       continue;
     }
-    if (recorded_time != (int)fs::last_write_time(source_file)) {
+    if (recorded_time !=
+        (int)filesystem::to_time_t(fs::last_write_time(source_file))) {
       LOG(INFO) << "source file " << (recorded_time ? "changed: " : "added: ")
                 << source_file.string();
       return true;
@@ -478,7 +482,7 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
     if (fs::is_symlink(entry)) {
       try {
         // a symlink becomes dangling if the target file is no longer provided
-        boost::system::error_code ec;
+        std::error_code ec;
         auto target_path = fs::canonical(entry, ec);
         bool bad_link = bool(ec);
         bool linked_to_shared_data =
@@ -561,7 +565,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
       ++skipped;  // customized copy
       continue;
     }
-    boost::system::error_code ec;
+    std::error_code ec;
     fs::copy_file(entry, backup, fs::copy_options::overwrite_existing, ec);
     if (ec) {
       LOG(ERROR) << "error backing up file " << backup.string();
@@ -596,7 +600,7 @@ bool CleanupTrash::Run(Deployer* deployer) {
         return false;
       }
       fs::path backup = trash / entry.filename();
-      boost::system::error_code ec;
+      std::error_code ec;
       fs::rename(entry, backup, ec);
       if (ec) {
         LOG(ERROR) << "error clean up file " << entry.string();

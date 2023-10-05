@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/format.hpp>
 #include <yaml-cpp/yaml.h>
 #include <rime/config/config_compiler.h>
@@ -62,7 +62,7 @@ bool ConfigData::LoadFromFile(const string& file_name,
   file_name_ = file_name;
   modified_ = false;
   root.reset();
-  if (!boost::filesystem::exists(file_name)) {
+  if (!std::filesystem::exists(file_name)) {
     LOG(WARNING) << "nonexistent config file '" << file_name << "'.";
     return false;
   }

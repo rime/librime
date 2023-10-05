@@ -9,7 +9,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/lexical_cast.hpp>
 #include <rime/resource.h>
 #include <rime/schema.h>

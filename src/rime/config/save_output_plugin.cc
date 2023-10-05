@@ -2,7 +2,7 @@
 // Copyright RIME Developers
 // Distributed under the BSD License
 //
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <rime/resource.h>
 #include <rime/service.h>
 #include <rime/config/config_compiler.h>
