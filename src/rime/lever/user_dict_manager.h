@@ -7,7 +7,7 @@
 #ifndef RIME_USER_DICT_MANAGER_H_
 #define RIME_USER_DICT_MANAGER_H_
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <rime/dict/user_db.h>
 
 namespace rime {
@@ -38,7 +38,7 @@ class RIME_API UserDictManager {
 
  protected:
   Deployer* deployer_;
-  boost::filesystem::path path_;
+  std::filesystem::path path_;
   UserDb::Component* user_db_component_;
 };
 

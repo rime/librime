@@ -138,26 +138,33 @@ jobs:
         shell: msys2 {0}
 
     steps:
-      - name: Setup MSYS2
+      - name: Install dependencies with MSYS2
         uses: msys2/setup-msys2@v2
+        with:
+          release: false
+          update: true
+          msystem: UCRT64
+          install: >-
+            git
+            base-devel
+            mingw-w64-ucrt-x86_64-boost
+            mingw-w64-ucrt-x86_64-glog
+            mingw-w64-ucrt-x86_64-gtest
+            mingw-w64-ucrt-x86_64-yaml-cpp
+            mingw-w64-ucrt-x86_64-leveldb
+            mingw-w64-ucrt-x86_64-marisa
+            mingw-w64-ucrt-x86_64-opencc
+          pacboy: >-
+            toolchain:p
+            cmake:p
+            ninja:p
 
+      - run: git config --global core.autocrlf input
       - name: Checkout last commit
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository }}
-
-      - name: Install dependencies
-        run: |
-          pacman -S --noconfirm git base-devel mingw-w64-x86_64-toolchain ninja \
-            mingw64/mingw-w64-x86_64-cmake \
-            mingw-w64-x86_64-boost \
-            mingw-w64-x86_64-glog \
-            mingw-w64-x86_64-gtest \
-            mingw-w64-x86_64-yaml-cpp \
-            mingw-w64-x86_64-leveldb \
-            mingw-w64-x86_64-marisa \
-            mingw-w64-x86_64-opencc
-
+            
       - name: Configure build environment
         run: |
           echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV

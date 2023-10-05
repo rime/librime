@@ -2,7 +2,6 @@
 
 dep_packages=(
     doxygen
-    libboost-filesystem-dev
     libboost-locale-dev
     libboost-regex-dev
     libgoogle-glog-dev

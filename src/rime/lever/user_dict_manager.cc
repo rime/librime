@@ -6,7 +6,7 @@
 //
 #include <fstream>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/scope_exit.hpp>
 #include <rime/common.h>
 #include <rime/deployer.h>
@@ -16,7 +16,7 @@
 #include <rime/dict/user_db.h>
 #include <rime/lever/user_dict_manager.h>
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 namespace rime {
 
@@ -59,9 +59,9 @@ bool UserDictManager::Backup(const string& dict_name) {
       return false;
     }
   }
-  boost::filesystem::path dir(deployer_->user_data_sync_dir());
-  if (!boost::filesystem::exists(dir)) {
-    if (!boost::filesystem::create_directories(dir)) {
+  std::filesystem::path dir(deployer_->user_data_sync_dir());
+  if (!std::filesystem::exists(dir)) {
+    if (!std::filesystem::create_directories(dir)) {
       LOG(ERROR) << "error creating directory '" << dir.string() << "'.";
       return false;
     }
@@ -163,7 +163,7 @@ bool UserDictManager::UpgradeUserDict(const string& dict_name) {
   LOG(INFO) << "upgrading user dict '" << dict_name << "'.";
   fs::path trash = fs::path(deployer_->user_data_dir) / "trash";
   if (!fs::exists(trash)) {
-    boost::system::error_code ec;
+    std::error_code ec;
     if (!fs::create_directories(trash, ec)) {
       LOG(ERROR) << "error creating directory '" << trash.string() << "'.";
       return false;
@@ -180,7 +180,7 @@ bool UserDictManager::Synchronize(const string& dict_name) {
   bool success = true;
   fs::path sync_dir(deployer_->sync_dir);
   if (!fs::exists(sync_dir)) {
-    boost::system::error_code ec;
+    std::error_code ec;
     if (!fs::create_directories(sync_dir, ec)) {
       LOG(ERROR) << "error creating directory '" << sync_dir.string() << "'.";
       return false;

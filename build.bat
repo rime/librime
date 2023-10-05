@@ -117,7 +117,6 @@ rem set curl=%RIME_ROOT%\bin\curl.exe
 rem set download="%curl%" --remote-name-all
 
 set boost_compiled_libs=--with-date_time^
- --with-filesystem^
  --with-locale^
  --with-regex^
  --with-thread

@@ -5,14 +5,14 @@
 #ifndef RIME_CUSTOMIZER_H_
 #define RIME_CUSTOMIZER_H_
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 namespace rime {
 
 class Customizer {
  public:
-  Customizer(const boost::filesystem::path& source_path,
-             const boost::filesystem::path& dest_path,
+  Customizer(const std::filesystem::path& source_path,
+             const std::filesystem::path& dest_path,
              const string& version_key)
       : source_path_(source_path),
         dest_path_(dest_path),
@@ -22,8 +22,8 @@ class Customizer {
   bool UpdateConfigFile();
 
  protected:
-  boost::filesystem::path source_path_;
-  boost::filesystem::path dest_path_;
+  std::filesystem::path source_path_;
+  std::filesystem::path dest_path_;
   string version_key_;
 };
 
