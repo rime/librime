@@ -101,7 +101,7 @@ uninstall-debug:
 	cmake --build $(build) --target remove
 
 test: release
-	(cd $(build)/test; ./rime_test)
+	(cd $(build); ctest --output-on-failure)
 
 test-debug: debug
-	(cd $(build)/test; ./rime_test)
+	(cd $(build); ctest --output-on-failure)

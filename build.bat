@@ -285,13 +285,8 @@ cmake --build %build_dir% --config %build_config% --target install
 if errorlevel 1 goto error
 
 if "%build_test%" == "ON" (
-  copy /y dist\lib\rime.dll build\test
-  pushd build\test
-  if %CMAKE_GENERATOR% == Ninja (
-    .\rime_test.exe
-  ) else (
-    .\Release\rime_test.exe
-  )
+  pushd %build_dir%
+  ctest --output-on-failure
   popd
 )
 

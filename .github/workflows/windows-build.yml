@@ -183,7 +183,8 @@ jobs:
             -DBUILD_SHARED_LIBS:BOOL=ON
           cmake --build build
           cmake --install build
-          cd build/test && cp ../lib/librime.dll . && ./rime_test
+          cd build && cp ./lib/librime.dll ./test
+          ctest --output-on-failure
 
       - name: Create distributable
         run: |
