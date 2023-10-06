@@ -38,8 +38,8 @@ Follow the instructions to build librime on platforms other than Linux:
 
 Build dependencies
 ---
-  - compiler with C++14 support
-  - cmake>=3.10
+  - compiler with C++17 support
+  - cmake>=3.12
   - libboost>=1.74
   - libglog (optional)
   - libleveldb
@@ -81,6 +81,7 @@ Community:
   - [Trime](https://github.com/osfans/trime): frontend for Android
   - [XIME](https://github.com/stackia/XIME): frontend for macOS
   - [My RIME](https://github.com/LibreService/my_rime): frontend for web
+  - [fcitx5-android](https://github.com/fcitx5-android/fcitx5-android): frontend for Android
 
 Plugins
 ===
