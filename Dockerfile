@@ -8,18 +8,14 @@ RUN apt update && apt install -y \
   libboost-dev \
   libboost-regex-dev \
   libboost-locale-dev \
-  libgoogle-glog-dev \
   libgtest-dev \
-  libyaml-cpp-dev \
   libleveldb-dev \
   libmarisa-dev \
-  libopencc-dev \
-  liblua5.4-dev
+  libopencc-dev
 
 COPY / /librime
 WORKDIR /librime/plugins
 RUN git clone https://github.com/rime/librime-charcode charcode && \
-  git clone https://github.com/hchunhui/librime-lua lua && \
   git clone https://github.com/lotem/librime-octagram octagram
 
 WORKDIR /librime
