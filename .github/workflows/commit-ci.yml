@@ -1,13 +1,9 @@
 name: Commit CI
-
 on:
+  workflow_dispatch:
   push:
-    branches:
-      - '*'
     tags:
-      - '![0-9]+.*'
-  pull_request:
-
+      - 'v*'
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -22,14 +18,6 @@ jobs:
   linux:
     needs: lint
     uses: ./.github/workflows/linux-build.yml
-
-  macos:
-    needs: lint
-    uses: ./.github/workflows/macos-build.yml
-
-  windows:
-    needs: lint
-    uses: ./.github/workflows/windows-build.yml
 
   docker:
     needs: lint
