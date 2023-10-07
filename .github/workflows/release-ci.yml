@@ -1,27 +1,18 @@
 name: Release CI
-
 on:
+  workflow_dispatch:
   push:
     tags:
-      - '[0-9]+.*'
-
+      - 'v*.0'
 jobs:
   linux:
     uses: ./.github/workflows/linux-build.yml
-
-  macos:
-    uses: ./.github/workflows/macos-build.yml
     with:
       build_variant: '-universal'
-      rime_plugins: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
-
-  windows:
-    uses: ./.github/workflows/windows-build.yml
-    with:
-      rime_plugins: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
+      rime_plugins: rime/librime-charcode lotem/librime-octagram
 
   release:
-    needs: [macos, windows]
+    needs: [linux]
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
