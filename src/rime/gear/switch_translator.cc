@@ -223,8 +223,8 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
             }
             Append(group->CreateOption(option, option.option_index));
           }
-          return Switches::kContinue;
         }
+        return Switches::kContinue;
       });
   for (auto& group : groups) {
     group->SelectOption(group->GetSelectedOption());
