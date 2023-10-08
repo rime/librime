@@ -147,8 +147,7 @@ if %build_librime% == 1 (
 )
 
 if "%build_test%" == "ON" (
-  copy /y dist\lib\rime.dll build\test
-  pushd build\test
-  .\rime_test.exe || exit
+  pushd build
+  ctest --output-on-failure
   popd
 )
