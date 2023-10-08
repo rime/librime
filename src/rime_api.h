@@ -94,6 +94,7 @@ typedef struct rime_traits_t {
   int min_log_level;
   /*! Directory of log files.
    *  Value is passed to Glog library using FLAGS_log_dir variable.
+   *  NULL means temporary directory, and "" means only writing to stderr.
    */
   const char* log_dir;
   //! prebuilt data directory. defaults to ${shared_data_dir}/build
