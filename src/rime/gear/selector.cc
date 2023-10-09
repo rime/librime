@@ -116,7 +116,7 @@ inline static bool is_linear_layout(Context* ctx) {
 }
 
 ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
-  if (key_event.release() || key_event.alt() || key_event.hyper() ||
+  if (key_event.release() || key_event.alt() || key_event.hypershift() ||
       key_event.super())
     return kNoop;
   Context* ctx = engine_->context();

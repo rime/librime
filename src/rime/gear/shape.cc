@@ -39,7 +39,7 @@ ProcessResult ShapeProcessor::ProcessKeyEvent(const KeyEvent& key_event) {
   if (!engine_->context()->get_option("full_shape")) {
     return kNoop;
   }
-  if (key_event.ctrl() || key_event.alt() || key_event.hyper() ||
+  if (key_event.ctrl() || key_event.alt() || key_event.hypershift() ||
       key_event.super() || key_event.release()) {
     return kNoop;
   }

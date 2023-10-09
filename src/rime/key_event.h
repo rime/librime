@@ -1,4 +1,4 @@
-﻿// encoding: utf-8
+// encoding: utf-8
 //
 // Copyright RIME Developers
 // Distributed under the BSD License
@@ -31,7 +31,7 @@ class KeyEvent {
   bool alt() const { return (modifier_ & kAltMask) != 0; }
   bool caps() const { return (modifier_ & kLockMask) != 0; }
   bool super() const { return (modifier_ & kSuperMask) != 0; }
-  bool hyper() const { return (modifier_ & kHyperMask) != 0; }
+  bool hypershift() const { return (modifier_ & kHyperMask) != 0; }
   bool release() const { return (modifier_ & kReleaseMask) != 0; }
   // 按鍵表示為形如「狀態+鍵名」的文字
   // 若無鍵名，則以四位或六位十六进制数形式的文字來標識

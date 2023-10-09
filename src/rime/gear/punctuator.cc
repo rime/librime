@@ -1,4 +1,4 @@
-﻿// encoding: utf-8
+// encoding: utf-8
 //
 // Copyright RIME Developers
 // Distributed under the BSD License
@@ -60,7 +60,7 @@ static bool punctuation_is_translated(Context* ctx) {
 
 ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
   if (key_event.release() || key_event.ctrl() || key_event.alt() ||
-      key_event.hyper() || key_event.super())
+      key_event.hypershift() || key_event.super())
     return kNoop;
   int ch = key_event.keycode();
   if (ch < 0x20 || ch >= 0x7f)
