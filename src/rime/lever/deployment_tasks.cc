@@ -629,7 +629,15 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
   string today(ymd);
   DLOG(INFO) << "today: " << today;
 
-  vector<string> dirs = google::GetLoggingDirectories();
+  vector<string> dirs;
+  // Don't call GetLoggingDirectories as it contains current directory,
+  // which causes permission issue on Android
+  // https://github.com/google/glog/blob/b58718f37cf58fa17f48bf1d576974d133d89839/src/logging.cc#L2410
+  if (FLAGS_log_dir.empty()) {
+    google::GetExistingTempDirectories(&dirs);
+  } else {
+    dirs.push_back(FLAGS_log_dir);
+  }
   DLOG(INFO) << "scanning " << dirs.size() << " temp directory for log files.";
 
   int removed = 0;
