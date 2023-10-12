@@ -19,7 +19,7 @@ class Matcher : public Segmentor {
   virtual bool Proceed(Segmentation* segmentation);
 
  protected:
-  RecognizerPatterns patterns_;
+  RecognizerPatternsOfVector patterns_;
 };
 
 }  // namespace rime
