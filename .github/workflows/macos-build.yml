@@ -44,7 +44,6 @@ jobs:
         with:
           path: |
             ${{ env.BOOST_ROOT }}.tar.bz2
-            ${{ env.BOOST_ROOT }}/stage
           key: ${{ runner.os }}-boost-${{ env.boost_version }}
 
       - name: Extract Boost source tarball
