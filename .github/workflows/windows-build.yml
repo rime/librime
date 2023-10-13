@@ -82,18 +82,6 @@ jobs:
           7z x ${{ env.BOOST_ROOT }}.7z
           popd
 
-      - name: Cache Boost lib
-        id: cache-boost-lib
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{ env.BOOST_ROOT }}\stage
-          key: ${{ runner.os }}-boost-${{ env.boost_version }}-${{ matrix.compiler }}-lib
-
-      - name: Install Boost
-        if: steps.cache-boost-lib.outputs.cache-hit != 'true'
-        run: ${{ env.build_script }} boost
-
       - name: Cache dependencies
         id: cache-deps
         uses: actions/cache@v3
