@@ -85,9 +85,9 @@ void UserDbRecoveryTask::RestoreUserDataFromSnapshot(Deployer* deployer) {
 
 UserDbRecoveryTask* UserDbRecoveryTaskComponent::Create(TaskInitializer arg) {
   try {
-    auto db = boost::any_cast<an<Db>>(arg);
+    auto db = std::any_cast<an<Db>>(arg);
     return new UserDbRecoveryTask(db);
-  } catch (const boost::bad_any_cast&) {
+  } catch (const std::bad_any_cast&) {
     return NULL;
   }
 }

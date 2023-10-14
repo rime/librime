@@ -37,8 +37,8 @@ namespace rime {
 
 DetectModifications::DetectModifications(TaskInitializer arg) {
   try {
-    data_dirs_ = boost::any_cast<vector<string>>(arg);
-  } catch (const boost::bad_any_cast&) {
+    data_dirs_ = std::any_cast<vector<string>>(arg);
+  } catch (const std::bad_any_cast&) {
     LOG(ERROR) << "DetectModifications: invalid arguments.";
   }
 }
@@ -254,8 +254,8 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
 
 SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
   try {
-    schema_file_ = boost::any_cast<string>(arg);
-  } catch (const boost::bad_any_cast&) {
+    schema_file_ = std::any_cast<string>(arg);
+  } catch (const std::bad_any_cast&) {
     LOG(ERROR) << "SchemaUpdate: invalid arguments.";
   }
 }
@@ -381,10 +381,10 @@ bool SchemaUpdate::Run(Deployer* deployer) {
 
 ConfigFileUpdate::ConfigFileUpdate(TaskInitializer arg) {
   try {
-    auto p = boost::any_cast<pair<string, string>>(arg);
+    auto p = std::any_cast<pair<string, string>>(arg);
     file_name_ = p.first;
     version_key_ = p.second;
-  } catch (const boost::bad_any_cast&) {
+  } catch (const std::bad_any_cast&) {
     LOG(ERROR) << "ConfigFileUpdate: invalid arguments.";
   }
 }
