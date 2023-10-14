@@ -10,7 +10,6 @@
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <filesystem>
-#include <boost/lexical_cast.hpp>
 #include <rime/resource.h>
 #include <rime/schema.h>
 #include <rime/service.h>
