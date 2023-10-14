@@ -26,10 +26,6 @@ class SchemaSelection : public SimpleCandidate, public SwitcherCommand {
 
 void SchemaSelection::Apply(Switcher* switcher) {
   switcher->Deactivate();
-  if (Config* user_config = switcher->user_config()) {
-    user_config->SetString("var/previously_selected_schema", keyword_);
-    user_config->SetInt("var/schema_access_time/" + keyword_, time(NULL));
-  }
   if (Engine* engine = switcher->attached_engine()) {
     if (keyword_ != engine->schema()->schema_id()) {
       engine->ApplySchema(new Schema(keyword_));
