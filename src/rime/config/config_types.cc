@@ -6,7 +6,6 @@
 //
 #include <cstdlib>
 #include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
 #include <rime/config/config_data.h>
 #include <rime/config/config_types.h>
 
@@ -61,7 +60,7 @@ bool ConfigValue::GetInt(int* value) const {
   }
   // decimal
   try {
-    *value = boost::lexical_cast<int>(value_);
+    *value = std::stoi(value_);
   } catch (...) {
     return false;
   }
@@ -72,7 +71,7 @@ bool ConfigValue::GetDouble(double* value) const {
   if (!value || value_.empty())
     return false;
   try {
-    *value = boost::lexical_cast<double>(value_);
+    *value = std::stod(value_);
   } catch (...) {
     return false;
   }
@@ -92,12 +91,12 @@ bool ConfigValue::SetBool(bool value) {
 }
 
 bool ConfigValue::SetInt(int value) {
-  value_ = boost::lexical_cast<string>(value);
+  value_ = std::to_string(value);
   return true;
 }
 
 bool ConfigValue::SetDouble(double value) {
-  value_ = boost::lexical_cast<string>(value);
+  value_ = std::to_string(value);
   return true;
 }
 
