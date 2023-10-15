@@ -81,7 +81,7 @@ if %build_deps% == 0 (
 
 if %clean% == 1 (
   rmdir /s /q build
-  rmdir /s /q deps\glog\cmake-build
+  rmdir /s /q deps\glog\build
   rmdir /s /q deps\googletest\build
   rmdir /s /q deps\leveldb\build
   rmdir /s /q deps\marisa-trie\build
@@ -112,13 +112,13 @@ set deps_cmake_flags=%common_cmake_flags%^
 if %build_deps% == 1 (
   echo building glog.
   pushd deps\glog
-  cmake . -Bcmake-%build_dir% %deps_cmake_flags%^
+  cmake . -B%build_dir% %deps_cmake_flags%^
   -DBUILD_SHARED_LIBS:BOOL=OFF^
   -DBUILD_TESTING:BOOL=OFF^
   -DWITH_GFLAGS:BOOL=OFF^
   -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"
   if errorlevel 1 goto error
-  cmake --build cmake-%build_dir% --config %build_config% --target install
+  cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
   popd
 
