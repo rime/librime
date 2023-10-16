@@ -1,5 +1,5 @@
 @echo off
-rem Rime build script for msvc toolchain.
+rem Rime build script for Windows platform.
 rem Maintainer: Chen Gong <chen.sst@gmail.com>
 
 setlocal
@@ -100,23 +100,25 @@ if defined ARCH (
 if defined PLATFORM_TOOLSET (
   set common_cmake_flags=%common_cmake_flags% -T%PLATFORM_TOOLSET%
 )
+
+set common_cmake_flags=%common_cmake_flags%^
+  -DCMAKE_CONFIGURATION_TYPES:STRING="%build_config%"^
+  -DCMAKE_BUILD_TYPE:STRING="%build_config%"^
+  -DCMAKE_USER_MAKE_RULES_OVERRIDE:PATH="%RIME_ROOT%\cmake\c_flag_overrides.cmake"^
+  -DCMAKE_USER_MAKE_RULES_OVERRIDE_CXX:PATH="%RIME_ROOT%\cmake\cxx_flag_overrides.cmake"^
+  -DCMAKE_EXE_LINKER_FLAGS_INIT:STRING="-llibcmt"^
+  -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"
+
 set deps_cmake_flags=%common_cmake_flags%^
- -DCMAKE_CONFIGURATION_TYPES:STRING="%build_config%"^
- -DCMAKE_BUILD_TYPE:STRING="%build_config%"^
- -DCMAKE_CXX_FLAGS_RELEASE:STRING="/MT /O2 /Ob2 /DNDEBUG"^
- -DCMAKE_C_FLAGS_RELEASE:STRING="/MT /O2 /Ob2 /DNDEBUG"^
- -DCMAKE_CXX_FLAGS_DEBUG:STRING="/MTd /Od"^
- -DCMAKE_C_FLAGS_DEBUG:STRING="/MTd /Od"^
- -DCMAKE_INSTALL_PREFIX:PATH="%RIME_ROOT%"
+  -DBUILD_SHARED_LIBS:BOOL=OFF^
+  -DCMAKE_INSTALL_PREFIX:PATH="%RIME_ROOT%"
 
 if %build_deps% == 1 (
   echo building glog.
   pushd deps\glog
   cmake . -B%build_dir% %deps_cmake_flags%^
-  -DBUILD_SHARED_LIBS:BOOL=OFF^
   -DBUILD_TESTING:BOOL=OFF^
-  -DWITH_GFLAGS:BOOL=OFF^
-  -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"
+  -DWITH_GFLAGS:BOOL=OFF
   if errorlevel 1 goto error
   cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
@@ -165,8 +167,8 @@ if %build_deps% == 1 (
   echo building opencc.
   pushd deps\opencc
   cmake . -B%build_dir% %deps_cmake_flags%^
-  -DBUILD_SHARED_LIBS=OFF^
-  -DBUILD_TESTING=OFF
+  -DBUILD_TESTING=OFF^
+  -DUSE_SYSTEM_MARISA=ON
   if errorlevel 1 goto error
   cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
@@ -180,8 +182,6 @@ set rime_cmake_flags=%common_cmake_flags%^
  -DBUILD_SHARED_LIBS=%build_shared%^
  -DBUILD_TEST=%build_test%^
  -DENABLE_LOGGING=%enable_logging%^
- -DCMAKE_CONFIGURATION_TYPES="%build_config%"^
- -DCMAKE_BUILD_TYPE:STRING="%build_config%"^
  -DCMAKE_INSTALL_PREFIX:PATH="%RIME_ROOT%\dist"
 
 echo on
