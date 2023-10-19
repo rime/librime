@@ -12,7 +12,6 @@ set arch=x86
 if "%PROCESSOR_ARCHITECTURE%" == "ARM64" set arch=arm
 
 set clean=0
-set build_boost=0
 set build_deps=0
 set build_librime=0
 set build_test=OFF
@@ -20,7 +19,6 @@ set build_test=OFF
 :parse_cmdline_options
 if "%1" == "" goto end_parsing_cmdline_options
 if "%1" == "clean" set clean=1
-if "%1" == "boost" set build_boost=1
 if "%1" == "deps" set build_deps=1
 if "%1" == "librime" set build_librime=1
 if "%1" == "test" (
@@ -32,10 +30,9 @@ goto parse_cmdline_options
 :end_parsing_cmdline_options
 
 if %clean% == 0 (
-if %build_boost% == 0 (
 if %build_deps% == 0 (
   set build_librime=1
-)))
+))
 
 if %clean% == 1 (
   rmdir /s /q build
@@ -45,22 +42,6 @@ if %clean% == 1 (
   rmdir /s /q deps\marisa-trie\build
   rmdir /s /q deps\opencc\build
   rmdir /s /q deps\yaml-cpp\build
-)
-
-if %build_boost% == 1 (
-  pushd %BOOST_ROOT% || exit
-  if not exist b2.exe call .\bootstrap.bat || exit
-  b2 toolset=clang-win^
-    architecture=%arch%^
-    address-model=64^
-    variant=release^
-    link=static^
-    runtime-link=static^
-    stage^
-    --with-locale^
-    --with-filesystem^
-    --with-regex || exit
-  popd
 )
 
 set common_cmake_flags=-B build^
@@ -147,8 +128,7 @@ if %build_librime% == 1 (
 )
 
 if "%build_test%" == "ON" (
-  copy /y dist\lib\rime.dll build\test
-  pushd build\test
-  .\rime_test.exe || exit
+  pushd build
+  ctest --output-on-failure
   popd
 )

@@ -617,6 +617,12 @@ bool CleanupTrash::Run(Deployer* deployer) {
 }
 
 bool CleanOldLogFiles::Run(Deployer* deployer) {
+  bool success = true;
+#ifdef RIME_ENABLE_LOGGING
+  if (FLAGS_logtostderr) {
+    return success;
+  }
+
   char ymd[12] = {0};
   time_t now = time(NULL);
   strftime(ymd, sizeof(ymd), ".%Y%m%d", localtime(&now));
@@ -624,19 +630,16 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
   DLOG(INFO) << "today: " << today;
 
   vector<string> dirs;
-#ifdef RIME_ENABLE_LOGGING
-#ifdef _WIN32
-  // work-around: google::GetExistingTempDirectories crashes on windows 7
-  char tmp[MAX_PATH];
-  if (GetTempPathA(MAX_PATH, tmp))
-    dirs.push_back(tmp);
-#else
-  google::GetExistingTempDirectories(&dirs);
-#endif  // _WIN32
-#endif  // RIME_ENABLE_LOGGING
+  // Don't call GetLoggingDirectories as it contains current directory,
+  // which causes permission issue on Android
+  // https://github.com/google/glog/blob/b58718f37cf58fa17f48bf1d576974d133d89839/src/logging.cc#L2410
+  if (FLAGS_log_dir.empty()) {
+    google::GetExistingTempDirectories(&dirs);
+  } else {
+    dirs.push_back(FLAGS_log_dir);
+  }
   DLOG(INFO) << "scanning " << dirs.size() << " temp directory for log files.";
 
-  bool success = true;
   int removed = 0;
   for (auto i = dirs.cbegin(); i != dirs.cend(); ++i) {
     DLOG(INFO) << "temp directory: " << *i;
@@ -660,6 +663,7 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
   if (removed != 0) {
     LOG(INFO) << "cleaned " << removed << " log files.";
   }
+#endif  // RIME_ENABLE_LOGGING
   return success;
 }
 

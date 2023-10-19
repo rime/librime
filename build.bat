@@ -30,11 +30,6 @@ set clean=0
 set build_dir_base=build
 set build_dir_suffix=
 set build_config=Release
-set build_boost=0
-set build_boost_x86=0
-set build_boost_x64=0
-set build_boost_arm64=0
-set boost_build_variant=release
 set build_deps=0
 set build_librime=0
 set build_shared=ON
@@ -44,19 +39,6 @@ set enable_logging=ON
 :parse_cmdline_options
 if "%1" == "" goto end_parsing_cmdline_options
 if "%1" == "clean" set clean=1
-if "%1" == "boost" set build_boost=1
-if "%1" == "boost_x86" (
-  set build_boost=1
-  set build_boost_x86=1
-)
-if "%1" == "boost_x64" (
-  set build_boost=1
-  set build_boost_x64=1
-)
-if "%1" == "boost_arm64" (
-  set build_boost=1
-  set build_boost_arm64=1
-)
 if "%1" == "deps" set build_deps=1
 rem `thirdparty` is deprecated in favor of `deps`
 if "%1" == "thirdparty" set build_deps=1
@@ -76,13 +58,10 @@ if "%1" == "test" (
 if "%1" == "debug" (
   set build_dir_base=debug
   set build_config=Debug
-  set boost_build_variant=debug
 )
 if "%1" == "release" (
   set build_dir_base=build
   set build_config=Release
-  set boost_build_variant=release
-
 )
 if "%1" == "logging" (
   set enable_logging=ON
@@ -96,14 +75,13 @@ goto parse_cmdline_options
 
 if %clean% == 0 (
 if %build_librime% == 0 (
-if %build_boost% == 0 (
 if %build_deps% == 0 (
   set build_librime=1
-))))
+)))
 
 if %clean% == 1 (
   rmdir /s /q build
-  rmdir /s /q deps\glog\cmake-build
+  rmdir /s /q deps\glog\build
   rmdir /s /q deps\googletest\build
   rmdir /s /q deps\leveldb\build
   rmdir /s /q deps\marisa-trie\build
@@ -112,71 +90,6 @@ if %clean% == 1 (
 )
 
 set build_dir=%build_dir_base%%build_dir_suffix%
-
-rem set curl=%RIME_ROOT%\bin\curl.exe
-rem set download="%curl%" --remote-name-all
-
-set boost_compiled_libs=--with-date_time^
- --with-locale^
- --with-regex^
- --with-thread
-
-rem the number actually means platform toolset, not %VisualStudioVersion%
-rem eg. BJAM_TOOLSET=msvc-14.2 corresponds to PLATFORM_TOOLSET=v142
-if defined BJAM_TOOLSET (
-  set bjam_options=toolset=%BJAM_TOOLSET%
-)
-set bjam_options=%bjam_options%^
- variant=%boost_build_variant%^
- link=static^
- threading=multi^
- runtime-link=static^
- cxxflags="/Zc:threadSafeInit- "
-
-set bjam_options_x86=%bjam_options%^
- define=BOOST_USE_WINAPI_VERSION=0x0501^
- architecture=x86^
- address-model=32
-
-set bjam_options_x64=%bjam_options%^
- define=BOOST_USE_WINAPI_VERSION=0x0502^
- architecture=x86^
- address-model=64
-
-set bjam_options_arm64=%bjam_options%^
- define=BOOST_USE_WINAPI_VERSION=0x0A00^
- architecture=arm^
- address-model=64
-
-if %build_boost% == 1 (
-if %build_boost_x86% == 0 (
-if %build_boost_x64% == 0 (
-if %build_boost_arm64% == 0 (
-  rem default architecture
-  set build_boost_x86=1
-))))
-
-if %build_boost% == 1 (
-  pushd %BOOST_ROOT%
-  if not exist b2.exe call .\bootstrap.bat
-  if errorlevel 1 goto error
-
-  if %build_boost_x86% == 1 (
-    b2 %bjam_options_x86% stage %boost_compiled_libs%
-    if errorlevel 1 goto error
-  )
-
-  if %build_boost_x64% == 1 (
-    b2 %bjam_options_x64% stage %boost_compiled_libs%
-    if errorlevel 1 goto error
-  )
-
-  if %build_boost_arm64% == 1 (
-    b2 %bjam_options_arm64% stage %boost_compiled_libs%
-    if errorlevel 1 goto error
-  )
-  popd
-)
 
 if defined CMAKE_GENERATOR (
   set common_cmake_flags=%common_cmake_flags% -G%CMAKE_GENERATOR%
@@ -199,13 +112,13 @@ set deps_cmake_flags=%common_cmake_flags%^
 if %build_deps% == 1 (
   echo building glog.
   pushd deps\glog
-  cmake . -Bcmake-%build_dir% %deps_cmake_flags%^
+  cmake . -B%build_dir% %deps_cmake_flags%^
   -DBUILD_SHARED_LIBS:BOOL=OFF^
   -DBUILD_TESTING:BOOL=OFF^
   -DWITH_GFLAGS:BOOL=OFF^
   -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"
   if errorlevel 1 goto error
-  cmake --build cmake-%build_dir% --config %build_config% --target install
+  cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
   popd
 
@@ -285,13 +198,8 @@ cmake --build %build_dir% --config %build_config% --target install
 if errorlevel 1 goto error
 
 if "%build_test%" == "ON" (
-  copy /y dist\lib\rime.dll build\test
-  pushd build\test
-  if %CMAKE_GENERATOR% == Ninja (
-    .\rime_test.exe
-  ) else (
-    .\Release\rime_test.exe
-  )
+  pushd %build_dir%
+  ctest --output-on-failure
   popd
 )
 

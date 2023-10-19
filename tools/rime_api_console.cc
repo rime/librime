@@ -195,6 +195,7 @@ int main(int argc, char* argv[]) {
   rime->set_notification_handler(&on_message, NULL);
 
   fprintf(stderr, "initializing...\n");
+reload:
   rime->initialize(NULL);
   Bool full_check = True;
   if (rime->start_maintenance(full_check))
@@ -219,6 +220,11 @@ int main(int argc, char* argv[]) {
     }
     if (!strcmp(line, "exit"))
       break;
+    else if (!strcmp(line, "reload")) {
+      rime->destroy_session(session_id);
+      rime->finalize();
+      goto reload;
+    }
     if (execute_special_command(line, session_id))
       continue;
     if (rime->simulate_key_sequence(session_id, line)) {

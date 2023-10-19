@@ -13,12 +13,12 @@ jobs:
     uses: ./.github/workflows/macos-build.yml
     with:
       build_variant: '-universal'
-      rime_plugins: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
+      rime_plugins: hchunhui/librime-lua lotem/librime-octagram
 
   windows:
     uses: ./.github/workflows/windows-build.yml
     with:
-      rime_plugins: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
+      rime_plugins: hchunhui/librime-lua lotem/librime-octagram
 
   release:
     needs: [macos, windows, linux]

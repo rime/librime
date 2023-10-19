@@ -7,7 +7,6 @@ ifndef NOPARALLEL
 export MAKEFLAGS+=" -j$(( $(nproc) + 1)) "
 endif
 
-glog: build ?= cmake-build
 build ?= build
 
 rime_deps = glog gtest leveldb marisa opencc yaml-cpp
@@ -18,7 +17,7 @@ all: $(rime_deps)
 
 # note: this won't clean output files under include/, lib/ and bin/.
 clean-src:
-	rm -r $(src_dir)/glog/cmake-build || true
+	rm -r $(src_dir)/glog/build || true
 	rm -r $(src_dir)/googletest/build || true
 	rm -r $(src_dir)/leveldb/build || true
 	rm -r $(src_dir)/marisa-trie/build || true

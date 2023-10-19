@@ -52,6 +52,9 @@ class ConcreteEngine : public Engine {
   vector<of<Filter>> filters_;
   vector<of<Formatter>> formatters_;
   vector<of<Processor>> post_processors_;
+  // To make sure dumping user.yaml when processors_.clear(),
+  // switcher is owned by processors_[0]
+  weak<Switcher> switcher_;
 };
 
 // implementations
@@ -274,6 +277,14 @@ void ConcreteEngine::OnSelect(Context* ctx) {
 void ConcreteEngine::ApplySchema(Schema* schema) {
   if (!schema)
     return;
+  if (auto switcher = switcher_.lock()) {
+    if (Config* user_config = switcher->user_config()) {
+      user_config->SetString("var/previously_selected_schema",
+                             schema->schema_id());
+      user_config->SetInt("var/schema_access_time/" + schema->schema_id(),
+                          time(NULL));
+    }
+  }
   schema_.reset(schema);
   context_->Clear();
   context_->ClearTransientOptions();
@@ -289,6 +300,7 @@ void ConcreteEngine::InitializeComponents() {
   filters_.clear();
 
   if (auto switcher = New<Switcher>(this)) {
+    switcher_ = switcher;
     processors_.push_back(switcher);
     if (schema_->schema_id() == ".default") {
       if (Schema* schema = switcher->CreateSchema()) {
