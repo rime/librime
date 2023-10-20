@@ -166,9 +166,12 @@ if %build_deps% == 1 (
 
   echo building opencc.
   pushd deps\opencc
+  powershell -NoProfile -c "$Content = gc CMakeLists.txt; if ($Content[212] -match '  find_library\(LIBMARISA NAMES marisa\)') { $Content[212] = '  find_package(marisa)', '  set(LIBMARISA marisa)'; } sc CMakeLists.txt $Content"
   cmake . -B%build_dir% %deps_cmake_flags%^
   -DBUILD_TESTING=OFF^
-  -DUSE_SYSTEM_MARISA=ON
+  -DUSE_SYSTEM_MARISA=ON^
+  -Dmarisa_DIR="%RIME_ROOT%\lib\cmake\marisa"^
+  -DCMAKE_CXX_FLAGS="-I%RIME_ROOT%\include"
   if errorlevel 1 goto error
   cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
