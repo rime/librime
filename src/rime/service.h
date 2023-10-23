@@ -56,7 +56,7 @@ class Session {
 class ResourceResolver;
 struct ResourceType;
 
-class Service {
+class RIME_API Service {
  public:
   ~Service();
 
@@ -84,7 +84,7 @@ class Service {
   Deployer& deployer() { return deployer_; }
   bool disabled() { return !started_ || deployer_.IsMaintenanceMode(); }
 
-  RIME_API static Service& instance();
+  static Service& instance();
 
  private:
   Service();

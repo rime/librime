@@ -51,7 +51,7 @@ class UniqueTranslation : public Translation {
   an<Candidate> candidate_;
 };
 
-class FifoTranslation : public Translation {
+class RIME_API FifoTranslation : public Translation {
  public:
   FifoTranslation();
 
