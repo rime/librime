@@ -10,6 +10,7 @@
 
 #include <utility>
 #include <marisa.h>
+#include <rime_api.h>
 #include <rime/common.h>
 
 namespace rime {
@@ -18,7 +19,7 @@ using StringId = marisa::UInt32;
 
 const StringId kInvalidStringId = (StringId)(-1);
 
-class StringTable {
+class RIME_API StringTable {
  public:
   StringTable() = default;
   virtual ~StringTable() = default;
@@ -37,7 +38,7 @@ class StringTable {
   marisa::Trie trie_;
 };
 
-class StringTableBuilder : public StringTable {
+class RIME_API StringTableBuilder : public StringTable {
  public:
   void Add(const string& key,
            double weight = 1.0,
