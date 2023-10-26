@@ -85,12 +85,13 @@ Community:
 
 Plugins
 ===
-  - [librime-charcode](https://github.com/rime/librime-charcode) Module that
+  - [librime-charcode](https://github.com/rime/librime-charcode) (Deprecated) Module that
     deals with character encoding; depends on boost::locale and ICU libraries
-  - [librime-legacy](https://github.com/rime/librime-legacy) Legacy module with
+  - [librime-legacy](https://github.com/rime/librime-legacy) (Deprecated) Legacy module with
     GPL-licensed code
   - [librime-lua](https://github.com/hchunhui/librime-lua) Lua scripting
   - [librime-octagram](https://github.com/lotem/librime-octagram) Language model
+  - [librime-predict](https://github.com/rime/librime-predict) Predict next word
   - [librime-proto](https://github.com/lotem/librime-proto) IPC using CapnProto
 
 Related works
