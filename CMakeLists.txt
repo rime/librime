@@ -60,22 +60,14 @@ if(Boost_FOUND)
 endif()
 
 if(ENABLE_LOGGING)
+  find_package(GFlags)
+  find_package(GLog REQUIRED)
 
-  find_package(Gflags)
-  if(Gflags_FOUND)
-    include_directories(${Gflags_INCLUDE_PATH})
-  endif()
-
-  find_package(Glog REQUIRED)
-  if(Glog_FOUND)
-    include_directories(${Glog_INCLUDE_PATH})
-  endif()
   if(WITH_STATIC_DEPS)
     add_definitions(-DGOOGLE_GLOG_DLL_DECL=)
   endif()
-
+  
   set(RIME_ENABLE_LOGGING 1)
-
 endif()
 
 find_package(Threads)
@@ -97,27 +89,14 @@ if(BUILD_TEST)
 endif()
 
 find_package(YamlCpp REQUIRED)
-if(YamlCpp_FOUND)
-  include_directories(${YamlCpp_INCLUDE_PATH})
-endif()
 if(WITH_STATIC_DEPS)
   add_definitions(-DYAML_CPP_STATIC_DEFINE)
 endif()
 
-find_package(LevelDb REQUIRED)
-if(LevelDb_FOUND)
-    include_directories(${LevelDb_INCLUDE_PATH})
-endif()
-
+find_package(LevelDB REQUIRED)
 find_package(Marisa REQUIRED)
-if(Marisa_FOUND)
-  include_directories(${Marisa_INCLUDE_PATH})
-endif()
 
-find_package(Opencc REQUIRED)
-if(Opencc_FOUND)
-include_directories(${Opencc_INCLUDE_PATH})
-endif()
+find_package(OpenCC REQUIRED)
 if(WITH_STATIC_DEPS)
   add_definitions(-DOpencc_BUILT_AS_STATIC)
 endif()

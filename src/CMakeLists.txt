@@ -32,7 +32,7 @@ else()
 endif()
 
 if(Gflags_FOUND)
-  list(APPEND rime_optional_deps ${Gflags_LIBRARY})
+  list(APPEND rime_optional_deps GFlags::GFlags)
 endif()
 if(ENABLE_EXTERNAL_PLUGINS)
   list(APPEND rime_optional_deps dl)
@@ -40,17 +40,17 @@ endif()
 
 set(rime_core_deps
     ${Boost_LIBRARIES}
-    ${Glog_LIBRARY}
-    ${YamlCpp_LIBRARY}
+    GLog::GLog
+    YamlCpp::YamlCpp
     ${CMAKE_THREAD_LIBS_INIT}
     ${rime_optional_deps})
 set(rime_dict_deps
-    ${LevelDb_LIBRARY}
-    ${Marisa_LIBRARY})
+    LevelDB::LevelDB
+    Marisa::Marisa)
 set(rime_gears_deps
     ${ICONV_LIBRARIES}
     ${ICU_LIBRARIES}
-    ${Opencc_LIBRARY})
+    OpenCC::OpenCC)
 set(rime_levers_deps "")
 
 if(MINGW)
