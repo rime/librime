@@ -167,7 +167,7 @@ jobs:
             -DCMAKE_BUILD_TYPE:STRING=Release \
             -DENABLE_LOGGING:BOOL=ON \
             -DBUILD_TEST:BOOL=ON \
-            -DBUILD_STATIC:BOOL=ON \
+            -DWITH_STATIC_DEPS:BOOL=ON \
             -DBUILD_SHARED_LIBS:BOOL=ON
           cmake --build build
           cmake --install build

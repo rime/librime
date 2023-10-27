@@ -176,7 +176,7 @@ if %build_deps% == 1 (
 if %build_librime% == 0 goto exit
 
 set rime_cmake_flags=%common_cmake_flags%^
- -DBUILD_STATIC=ON^
+ -DWITH_STATIC_DEPS=ON^
  -DBUILD_SHARED_LIBS=%build_shared%^
  -DBUILD_TEST=%build_test%^
  -DENABLE_LOGGING=%enable_logging%^
