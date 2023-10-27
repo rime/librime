@@ -712,7 +712,7 @@ RIME_API RimeApi* rime_get_api(void);
 /*!
  *  Defines a constant for a list of module names.
  */
-#define RIME_MODULE_LIST(var, ...) const char* var[] = {__VA_ARGS__, NULL}
+#define RIME_MODULE_LIST(var, ...) const char* var[] = {__VA_ARGS__}
 
 /*!
  *  Register a phony module which, when loaded, will load a list of modules.

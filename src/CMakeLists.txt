@@ -31,12 +31,11 @@ else()
       ${rime_plugins_objs})
 endif()
 
-set(rime_optional_deps "")
 if(Gflags_FOUND)
-  set(rime_optional_deps ${rime_optional_deps} ${Gflags_LIBRARY})
+  list(APPEND rime_optional_deps ${Gflags_LIBRARY})
 endif()
 if(ENABLE_EXTERNAL_PLUGINS)
-  set(rime_optional_deps ${rime_optional_deps} dl)
+  list(APPEND rime_optional_deps dl)
 endif()
 
 set(rime_core_deps
@@ -57,7 +56,7 @@ set(rime_levers_deps "")
 if(MINGW)
   # fix: bcrypt for boost uuid issue
   # https://github.com/boostorg/uuid/issues/68
-  set(rime_core_deps ${rime_core_deps} wsock32 ws2_32 bcrypt)
+  list(APPEND rime_core_deps wsock32 ws2_32 bcrypt)
 endif()
 
 if(BUILD_SEPARATE_LIBS)
