@@ -186,14 +186,8 @@ configure_file(
 add_custom_target(remove
   COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly|GNU" OR MINGW)
-  set(prefix "${CMAKE_INSTALL_PREFIX}")
-  set(exec_prefix "${CMAKE_INSTALL_PREFIX}")
-  set(bindir "${CMAKE_INSTALL_FULL_BINDIR}")
-  set(libdir "${CMAKE_INSTALL_FULL_LIBDIR}")
-  set(pkgdatadir "${RIME_DATA_DIR}")
-  set(pluginsdir "${RIME_PLUGINS_DIR}")
-  set(includedir "${CMAKE_INSTALL_FULL_INCLUDEDIR}")
+# Android doesn't support PkgConfig yet
+if(NOT ANDROID)
   configure_file(
       ${PROJECT_SOURCE_DIR}/rime.pc.in
       ${PROJECT_BINARY_DIR}/rime.pc

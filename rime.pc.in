@@ -1,9 +1,9 @@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-libdir=@libdir@
-includedir=@includedir@
-pkgdatadir=@pkgdatadir@
-pluginsdir=@pluginsdir@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=@CMAKE_INSTALL_PREFIX@
+libdir=@CMAKE_INSTALL_FULL_LIBDIR@
+includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
+pkgdatadir=@RIME_DATA_DIR@
+pluginsdir=@RIME_PLUGINS_DIR@
 
 Name: Rime
 Description: Rime Input Method Engine
