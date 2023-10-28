@@ -84,7 +84,6 @@ if(BUILD_TEST)
   find_package(GTest REQUIRED)
   if(GTEST_FOUND)
     enable_testing()
-    include_directories(${GTEST_INCLUDE_DIRS})
   endif()
 endif()
 

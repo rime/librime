@@ -171,7 +171,7 @@ jobs:
             -DBUILD_SHARED_LIBS:BOOL=ON
           cmake --build build
           cmake --install build
-          cd build && cp ./lib/librime.dll ./test
+          cd build
           ctest --output-on-failure
 
       - name: Create distributable
