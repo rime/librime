@@ -397,14 +397,13 @@ void ConcreteEngine::InitializeOptions() {
   Config* config = schema_->config();
   Switches switches(config);
   switches.FindOption([this](Switches::SwitchOption option) {
-    if (option.reset_value >= 0) {
-      if (option.type == Switches::kToggleOption) {
-        context_->set_option(option.option_name, (option.reset_value != 0));
-      } else if (option.type == Switches::kRadioGroup) {
-        context_->set_option(
-            option.option_name,
-            static_cast<int>(option.option_index) == option.reset_value);
-      }
+    int reset_value = option.reset_value >= 0 ? option.reset_value : 0;
+    if (option.type == Switches::kToggleOption) {
+      context_->set_option(option.option_name, reset_value != 0);
+    } else if (option.type == Switches::kRadioGroup) {
+      context_->set_option(
+          option.option_name,
+          static_cast<int>(option.option_index) == reset_value);
     }
     return Switches::kContinue;
   });
