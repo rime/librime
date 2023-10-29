@@ -69,7 +69,7 @@ class RIME_API Context {
   const CommitHistory& commit_history() const { return commit_history_; }
 
   void set_option(const string& name, bool value);
-  bool get_option(const string& name) const;
+  bool get_option(const string& name, bool default_value = false) const;
   void set_property(const string& name, const string& value);
   string get_property(const string& name) const;
   // options and properties starting with '_' are local to schema;

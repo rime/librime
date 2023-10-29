@@ -259,12 +259,11 @@ void Context::set_option(const string& name, bool value) {
   option_update_notifier_(this, name);
 }
 
-bool Context::get_option(const string& name) const {
+bool Context::get_option(const string& name, bool default_value) const {
   auto it = options_.find(name);
-  if (it != options_.end())
-    return it->second;
-  else
-    return false;
+  if (it == options_.end())
+    return default_value;
+  return it->second;
 }
 
 void Context::set_property(const string& name, const string& value) {
