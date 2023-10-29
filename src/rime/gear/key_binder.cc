@@ -22,6 +22,7 @@ namespace rime {
 
 enum KeyBindingCondition {
   kNever,
+  kWhenPredicting, // showing prediction candidates
   kWhenPaging,     // user has changed page
   kWhenHasMenu,    // at least one candidate
   kWhenComposing,  // input string is not empty
@@ -31,7 +32,8 @@ enum KeyBindingCondition {
 static struct KeyBindingConditionDef {
   KeyBindingCondition condition;
   const char* name;
-} condition_definitions[] = {{kWhenPaging, "paging"},
+} condition_definitions[] = {{kWhenPredicting, "predicting"},
+                             {kWhenPaging, "paging"},
                              {kWhenHasMenu, "has_menu"},
                              {kWhenComposing, "composing"},
                              {kAlways, "always"},
@@ -242,8 +244,14 @@ KeyBindingConditions::KeyBindingConditions(Context* ctx) {
   }
 
   Composition& comp = ctx->composition();
-  if (!comp.empty() && comp.back().HasTag("paging")) {
-    insert(kWhenPaging);
+  if (!comp.empty()) {
+    const Segment& last_seg = comp.back();
+    if (last_seg.HasTag("paging")) {
+      insert(kWhenPaging);
+    }
+    if (last_seg.HasTag("prediction")) {
+      insert(kWhenPredicting);
+    }
   }
 }
 
