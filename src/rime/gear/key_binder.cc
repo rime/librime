@@ -23,9 +23,9 @@ namespace rime {
 enum KeyBindingCondition {
   kNever,
   kWhenPredicting,  // showing prediction candidates
-  kWhenPaging,  // user has changed page
-  kWhenHasMenu,  // at least one candidate
-  kWhenComposing,  // input string is not empty
+  kWhenPaging,      // user has changed page
+  kWhenHasMenu,     // at least one candidate
+  kWhenComposing,   // input string is not empty
   kAlways,
 };
 
