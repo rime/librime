@@ -85,6 +85,7 @@ RIME_API void RimeFinalize() {
   Service::instance().StopService();
   Registry::instance().Clear();
   ModuleManager::instance().UnloadModules();
+  google::ShutdownGoogleLogging();
 }
 
 RIME_API Bool RimeStartMaintenance(Bool full_check) {
