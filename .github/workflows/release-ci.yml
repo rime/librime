@@ -2,8 +2,11 @@ name: Release CI
 
 on:
   push:
+    branches:
+      - master
     tags:
       - '[0-9]+.*'
+  workflow_dispatch:
 
 jobs:
   linux:
@@ -27,7 +30,19 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v3
 
-      - name: Create GitHub release
+      - name: Create Nightly release
+        if: ${{ github.ref == 'refs/heads/master' }}
+        uses: 'marvinpinto/action-automatic-releases@latest'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: latest
+          prerelease: true
+          title: "Nightly Build"
+          files: |
+            artifact/*
+
+      - name: Create Stable release
+        if: ${{ github.ref != 'refs/heads/master' }}
         uses: 'marvinpinto/action-automatic-releases@latest'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
