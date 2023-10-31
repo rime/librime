@@ -5,8 +5,8 @@
 // 2011-11-02 GONG Chen <chen.sst@gmail.com>
 //
 #include <cstdlib>
+#include <sstream>
 #include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
 #include <rime/service.h>
 #include <rime/algo/dynamics.h>
 #include <rime/dict/text_db.h>
@@ -19,7 +19,9 @@ UserDbValue::UserDbValue(const string& value) {
 }
 
 string UserDbValue::Pack() const {
-  return boost::str(boost::format("c=%1% d=%2% t=%3%") % commits % dee % tick);
+  std::ostringstream packed;
+  packed << "c=" << commits << " d=" << dee << " t=" << tick;
+  return packed.str();
 }
 
 bool UserDbValue::Unpack(const string& value) {
