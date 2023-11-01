@@ -288,9 +288,7 @@ an<ConfigItem> ConvertFromYaml(const YAML::Node& node,
 void EmitScalar(const string& str_value, YAML::Emitter* emitter) {
   if (str_value.find_first_of("\r\n") != string::npos) {
     *emitter << YAML::Literal;
-  } else if (!boost::algorithm::all(str_value,
-                                    boost::algorithm::is_alnum() ||
-                                        boost::algorithm::is_any_of("_."))) {
+  } else if (!std::all_of(str_value.cbegin(), str_value.cend(), [](auto ch) { return std::isalnum(ch) || ch == '_' || ch == '.'; })) {
     *emitter << YAML::DoubleQuoted;
   }
   *emitter << str_value;
