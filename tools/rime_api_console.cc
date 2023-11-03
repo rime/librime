@@ -10,6 +10,15 @@
 #include <rime_api.h>
 #include "codepage.h"
 
+#define XK_Left 0xff51      /* Move left, left arrow */
+#define XK_Up 0xff52        /* Move up, up arrow */
+#define XK_Right 0xff53     /* Move right, right arrow */
+#define XK_Down 0xff54      /* Move down, down arrow */
+#define XK_BackSpace 0xff08 /* Back space, back char */
+#define XK_Escape 0xff1b
+#define XK_Delete 0xffff /* Delete, rubout */
+#define XK_F4 0xffc1
+
 void print_status(RimeStatus* status) {
   printf("schema: %s / %s\n", status->schema_id, status->schema_name);
   printf("status: ");
@@ -121,6 +130,18 @@ bool execute_special_command(const char* line, RimeSessionId session_id) {
       printf("selected schema: [%s]\n", schema_id);
     }
     return true;
+  }
+  const char* kSpcKeys[8] = {"<left>", "<right>", "<up>",  "<down>",
+                             "<bs>",  "<del>",   "<esc>", "<f4>"};
+  const uint16_t keyCodes[8] = {XK_Left,      XK_Right,  XK_Up,     XK_Down,
+                                XK_BackSpace, XK_Delete, XK_Escape, XK_F4};
+  for (auto i = 0; i < 8; i++) {
+    if (!strncmp(line, kSpcKeys[i], command_length)) {
+      rime->process_key(session_id, keyCodes[i], 0);
+      printf("processed key %s\n", kSpcKeys[i]);
+      print(session_id);
+      return true;
+    }
   }
   const char* kSelectCandidateCommand = "select candidate ";
   command_length = strlen(kSelectCandidateCommand);
