@@ -108,7 +108,7 @@ class RIME_API MappedFile {
   // noncpyable
   MappedFile(const MappedFile&) = delete;
   MappedFile& operator=(const MappedFile&) = delete;
-  
+
   bool Exists() const;
   bool IsOpen() const;
   void Close();

@@ -20,8 +20,10 @@ int CompareVersionString(const string& x, const string& y) {
     while (j < n && y[j] != '.')
       v2 = v2 * 10 + (int)(y[j++] - '0');
     ++j;
-    if (v1 > v2) return 1;
-    if (v1 < v2) return -1;
+    if (v1 > v2)
+      return 1;
+    if (v1 < v2)
+      return -1;
   }
   return 0;
 }
