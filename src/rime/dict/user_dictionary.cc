@@ -8,7 +8,6 @@
 #include <cfloat>
 #include <cmath>
 #include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/scope_exit.hpp>
 #include <rime/common.h>
 #include <rime/language.h>
@@ -381,7 +380,7 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry,
 bool UserDictionary::UpdateTickCount(TickCount increment) {
   tick_ += increment;
   try {
-    return db_->MetaUpdate("/tick", boost::lexical_cast<string>(tick_));
+    return db_->MetaUpdate("/tick", std::to_string(tick_));
   } catch (...) {
     return false;
   }
@@ -397,7 +396,7 @@ bool UserDictionary::FetchTickCount() {
     // an earlier version mistakenly wrote tick count into an empty key
     if (!db_->MetaFetch("/tick", &value) && !db_->Fetch("", &value))
       return false;
-    tick_ = boost::lexical_cast<TickCount>(value);
+    tick_ = std::stoul(value);
     return true;
   } catch (...) {
     // tick_ = 0;

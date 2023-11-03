@@ -28,7 +28,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository }}
-          submodules: recursive
 
       - name: Install dependency
         run: ./action-install-linux.sh

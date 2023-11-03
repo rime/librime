@@ -20,7 +20,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include <boost/optional.hpp>
 #define BOOST_BIND_NO_PLACEHOLDERS
 #include <boost/signals2/connection.hpp>
 #include <boost/signals2/signal.hpp>
@@ -39,7 +38,6 @@
 
 namespace rime {
 
-using boost::optional;
 using std::function;
 using std::list;
 using std::make_pair;

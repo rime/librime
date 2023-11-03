@@ -81,10 +81,10 @@ struct List {
 
 class MappedFileImpl;
 
-class MappedFile : boost::noncopyable {
+class RIME_API MappedFile : boost::noncopyable {
  protected:
   explicit MappedFile(const string& file_name);
-  RIME_API virtual ~MappedFile();
+  virtual ~MappedFile();
 
   bool Create(size_t capacity);
   bool OpenReadOnly();
@@ -108,8 +108,8 @@ class MappedFile : boost::noncopyable {
  public:
   bool Exists() const;
   bool IsOpen() const;
-  RIME_API void Close();
-  RIME_API bool Remove();
+  void Close();
+  bool Remove();
 
   template <class T>
   T* Find(size_t offset);

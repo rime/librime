@@ -1,3 +1,4 @@
+plugins/*/
 build/
 build-static/
 debug/
@@ -14,3 +15,4 @@ node_modules/
 .*.swp
 .cache/
 *.7z
+*.bz2

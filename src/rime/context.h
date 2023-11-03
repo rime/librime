@@ -16,7 +16,7 @@ namespace rime {
 class Candidate;
 class KeyEvent;
 
-class Context {
+class RIME_API Context {
  public:
   using Notifier = signal<void(Context* ctx)>;
   using OptionUpdateNotifier = signal<void(Context* ctx, const string& option)>;
@@ -28,11 +28,11 @@ class Context {
   Context() = default;
   ~Context() = default;
 
-  RIME_API bool Commit();
+  bool Commit();
   string GetCommitText() const;
   string GetScriptText() const;
   Preedit GetPreedit() const;
-  RIME_API bool IsComposing() const;
+  bool IsComposing() const;
   bool HasMenu() const;
   an<Candidate> GetSelectedCandidate() const;
 

@@ -10,7 +10,7 @@
 #include <future>
 #include <mutex>
 #include <queue>
-#include <boost/any.hpp>
+#include <any>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/messenger.h>
@@ -19,7 +19,7 @@ namespace rime {
 
 class Deployer;
 
-using TaskInitializer = boost::any;
+using TaskInitializer = std::any;
 
 class DeploymentTask : public Class<DeploymentTask, TaskInitializer> {
  public:
