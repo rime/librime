@@ -31,33 +31,32 @@ else()
       ${rime_plugins_objs})
 endif()
 
-set(rime_optional_deps "")
 if(Gflags_FOUND)
-  set(rime_optional_deps ${rime_optional_deps} ${Gflags_LIBRARY})
+  list(APPEND rime_optional_deps GFlags::GFlags)
 endif()
 if(ENABLE_EXTERNAL_PLUGINS)
-  set(rime_optional_deps ${rime_optional_deps} dl)
+  list(APPEND rime_optional_deps dl)
 endif()
 
 set(rime_core_deps
     ${Boost_LIBRARIES}
-    ${Glog_LIBRARY}
-    ${YamlCpp_LIBRARY}
+    GLog::GLog
+    YamlCpp::YamlCpp
     ${CMAKE_THREAD_LIBS_INIT}
     ${rime_optional_deps})
 set(rime_dict_deps
-    ${LevelDb_LIBRARY}
-    ${Marisa_LIBRARY})
+    LevelDB::LevelDB
+    Marisa::Marisa)
 set(rime_gears_deps
     ${ICONV_LIBRARIES}
     ${ICU_LIBRARIES}
-    ${Opencc_LIBRARY})
+    OpenCC::OpenCC)
 set(rime_levers_deps "")
 
 if(MINGW)
   # fix: bcrypt for boost uuid issue
   # https://github.com/boostorg/uuid/issues/68
-  set(rime_core_deps ${rime_core_deps} wsock32 ws2_32 bcrypt)
+  list(APPEND rime_core_deps wsock32 ws2_32 bcrypt)
 endif()
 
 if(BUILD_SEPARATE_LIBS)

@@ -1,32 +1,21 @@
-set(_yamlcpp_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
+find_path(YAML_CPP_INCLUDE_DIR NAMES yaml-cpp/yaml.h)
 
-find_path(YamlCpp_INCLUDE_PATH yaml-cpp/yaml.h)
+# Find library
+find_library(YAML_CPP_LIBRARY NAMES yaml-cpp libyaml-cpp)
 
-find_path(YamlCpp_NEW_API yaml-cpp/node/node.h)
-if(YamlCpp_INCLUDE_PATH AND NOT YamlCpp_NEW_API)
-  message(FATAL_ERROR "The new yaml-cpp 0.5 API is not available.")
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(YamlCpp
+    DEFAULT_MSG YAML_CPP_LIBRARY YAML_CPP_INCLUDE_DIR
+)
+
+if(YAMLCPP_FOUND AND NOT TARGET YamlCpp::YamlCpp)
+    set(YAML_CPP_LIBRARIES ${YAML_CPP_LIBRARY})
+    add_library(YamlCpp::YamlCpp UNKNOWN IMPORTED)
+    set_target_properties(YamlCpp::YamlCpp PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+        IMPORTED_LOCATION "${YAML_CPP_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${YAML_CPP_INCLUDE_DIR}"
+    )
 endif()
 
-if (YamlCpp_STATIC)
-  if (WIN32)
-    set(CMAKE_FIND_LIBRARY_SUFFIXES .lib ${CMAKE_FIND_LIBRARY_SUFFIXES})
-  else (WIN32)
-    set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
-  endif (WIN32)
-endif (YamlCpp_STATIC)
-find_library(YamlCpp_LIBRARY NAMES libyaml-cppmt libyaml-cppmtd yaml-cpp)
-
-if(YamlCpp_INCLUDE_PATH AND YamlCpp_LIBRARY)
-  set(YamlCpp_FOUND TRUE)
-endif(YamlCpp_INCLUDE_PATH AND YamlCpp_LIBRARY)
-if(YamlCpp_FOUND)
-  if(NOT YamlCpp_FIND_QUIETLY)
-    message(STATUS "Found yaml-cpp: ${YamlCpp_LIBRARY}")
-  endif(NOT YamlCpp_FIND_QUIETLY)
-else(YamlCpp_FOUND)
-  if(YamlCpp_FIND_REQUIRED)
-    message(FATAL_ERROR "Could not find yaml-cpp library.")
-  endif(YamlCpp_FIND_REQUIRED)
-endif(YamlCpp_FOUND)
-
-set(CMAKE_FIND_LIBRARY_SUFFIXES ${_yamlcpp_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
+mark_as_advanced(YAML_CPP_INCLUDE_DIR YAML_CPP_LIBRARY)

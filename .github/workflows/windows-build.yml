@@ -167,20 +167,17 @@ jobs:
             -DCMAKE_BUILD_TYPE:STRING=Release \
             -DENABLE_LOGGING:BOOL=ON \
             -DBUILD_TEST:BOOL=ON \
-            -DBUILD_STATIC:BOOL=ON \
+            -DWITH_STATIC_DEPS:BOOL=ON \
             -DBUILD_SHARED_LIBS:BOOL=ON
           cmake --build build
           cmake --install build
-          cd build && cp ./lib/librime.dll ./test
+          cd build
           ctest --output-on-failure
 
       - name: Create distributable
         run: |
           tar -cjvf rime-${{ env.git_ref_name }}-${{ runner.os }}-mingw.tar.bz2 \
           dist version-info.txt
-          tar -cjvf rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-mingw.tar.bz2 \
-          --exclude '*/.placeholder' \
-          bin include lib share
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3

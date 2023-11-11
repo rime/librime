@@ -114,7 +114,7 @@ if %build_deps% == 1 (
 )
 
 set rime_cmake_flags=%common_cmake_flags%^
-  -DBUILD_STATIC:BOOL=ON^
+  -DWITH_STATIC_DEPS:BOOL=ON^
   -DBUILD_SHARED_LIBS:BOOL=ON^
   -DBUILD_TEST:BOOL="%build_test%"^
   -DENABLE_LOGGING:BOOL=ON^
