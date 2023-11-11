@@ -6,7 +6,6 @@
 //
 #include <cstring>
 #include <sstream>
-#include <boost/format.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/config.h>
@@ -737,7 +736,9 @@ RIME_API Bool RimeConfigNext(RimeConfigIterator* iterator) {
       ++p->iter;
     if (p->iter == p->end)
       return False;
-    p->key = boost::str(boost::format("@%1%") % iterator->index);
+    std::ostringstream key;
+    key << "@" << iterator->index;
+    p->key = key.str();
     p->path = p->prefix + p->key;
     iterator->key = p->key.c_str();
     iterator->path = p->path.c_str();
