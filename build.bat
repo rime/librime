@@ -170,8 +170,7 @@ if %build_deps% == 1 (
   cmake . -B%build_dir% %deps_cmake_flags%^
   -DBUILD_TESTING=OFF^
   -DUSE_SYSTEM_MARISA=ON^
-  -Dmarisa_DIR="%RIME_ROOT%\lib\cmake\marisa"^
-  -DCMAKE_CXX_FLAGS="-I%RIME_ROOT%\include"
+  -Dmarisa_DIR="%RIME_ROOT%\lib\cmake\marisa"
   if errorlevel 1 goto error
   cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
