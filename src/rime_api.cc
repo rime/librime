@@ -167,6 +167,11 @@ RIME_API Bool RimeSyncUserData() {
   return Bool(deployer.StartMaintenance());
 }
 
+RIME_API Bool RimeSyncUserDict() {
+  Deployer& deployer(Service::instance().deployer());
+  return Bool(deployer.ScheduleTask("user_dict_sync"));
+}
+
 // session management
 
 RIME_API RimeSessionId RimeCreateSession() {
@@ -1101,6 +1106,7 @@ RIME_API RimeApi* rime_get_api() {
     s_api.deploy_schema = &RimeDeploySchema;
     s_api.deploy_config_file = &RimeDeployConfigFile;
     s_api.sync_user_data = &RimeSyncUserData;
+    s_api.sync_user_dict = &RimeSyncUserDict;
     s_api.create_session = &RimeCreateSession;
     s_api.find_session = &RimeFindSession;
     s_api.destroy_session = &RimeDestroySession;

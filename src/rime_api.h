@@ -261,6 +261,7 @@ RIME_API Bool RimeDeployConfigFile(const char* file_name,
                                    const char* version_key);
 
 RIME_API Bool RimeSyncUserData(void);
+RIME_API Bool RimeSyncUserDict(void);
 
 // Session management
 
@@ -465,6 +466,7 @@ typedef struct rime_api_t {
   Bool (*deploy_config_file)(const char* file_name, const char* version_key);
 
   Bool (*sync_user_data)(void);
+  Bool (*sync_user_dict)(void);
 
   // session management
 
