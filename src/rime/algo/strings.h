@@ -7,7 +7,7 @@
 namespace rime {
 namespace strings {
 
-enum class SplitBehavior { KeepEmpty, SkipEmpty };
+enum class SplitBehavior { KeepToken, SkipToken };
 
 vector<string> split(const string& str,
                      const string& delim,
