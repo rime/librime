@@ -8,7 +8,7 @@ vector<string> split(const string& str,
                      SplitBehavior behavior) {
   vector<string> strings;
   size_t lastPos, pos;
-  if (behavior == SplitBehavior::SkipEmpty) {
+  if (behavior == SplitBehavior::SkipToken) {
     lastPos = str.find_first_not_of(delim, 0);
   } else {
     lastPos = 0;
@@ -17,7 +17,7 @@ vector<string> split(const string& str,
 
   while (std::string::npos != pos || std::string::npos != lastPos) {
     strings.emplace_back(str.substr(lastPos, pos - lastPos));
-    if (behavior == SplitBehavior::SkipEmpty) {
+    if (behavior == SplitBehavior::SkipToken) {
       lastPos = str.find_first_not_of(delim, pos);
     } else {
       if (pos == std::string::npos) {
@@ -31,7 +31,7 @@ vector<string> split(const string& str,
 };
 
 vector<string> split(const string& str, const string& delim) {
-  return split(str, delim, SplitBehavior::SkipEmpty);
+  return split(str, delim, SplitBehavior::KeepToken);
 };
 
 }  // namespace strings
