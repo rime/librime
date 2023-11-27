@@ -35,6 +35,32 @@ inline string join(std::initializer_list<C>&& container, T&& delim) {
   return join(std::begin(container), std::end(container), delim);
 }
 
+inline void trim_left(string& str) {
+  str.erase(str.begin(),
+            std::find_if(str.begin(), str.end(),
+                         [](unsigned char ch) { return !std::isspace(ch); }));
+}
+
+inline void trim_right(string& str) {
+  str.erase(std::find_if(str.rbegin(), str.rend(),
+                         [](unsigned char ch) { return !std::isspace(ch); })
+                .base(),
+            str.end());
+}
+
+inline void trim(string& str) {
+  trim_right(str);
+  trim_left(str);
+}
+
+inline bool starts_with(const string& str, const string& prefix) {
+  return str.rfind(prefix, 0) == 0;
+}
+
+inline bool ends_with(const string& str, const string& suffix) {
+  return str.find(suffix, str.length() - suffix.length()) != std::string::npos;
+}
+
 }  // namespace strings
 }  // namespace rime
 

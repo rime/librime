@@ -6,7 +6,7 @@
 //
 #include <cstdlib>
 #include <sstream>
-#include <boost/algorithm/string.hpp>
+#include <rime/algo/strings.h>
 #include <rime/service.h>
 #include <rime/algo/dynamics.h>
 #include <rime/dict/text_db.h>
@@ -25,8 +25,7 @@ string UserDbValue::Pack() const {
 }
 
 bool UserDbValue::Unpack(const string& value) {
-  vector<string> kv;
-  boost::split(kv, value, boost::is_any_of(" "));
+  vector<string> kv = strings::split(value, " ");
   for (const string& k_eq_v : kv) {
     size_t eq = k_eq_v.find('=');
     if (eq == string::npos)
@@ -83,7 +82,7 @@ static bool userdb_entry_formatter(const string& key,
                                    const string& value,
                                    Tsv* tsv) {
   Tsv& row(*tsv);
-  boost::algorithm::split(row, key, boost::algorithm::is_any_of("\t"));
+  row = strings::split(key, "\t");
   if (row.size() != 2 || row[0].empty() || row[1].empty())
     return false;
   row.push_back(value);
@@ -107,7 +106,7 @@ bool UserDbHelper::UpdateUserInfo() {
 }
 
 bool UserDbHelper::IsUniformFormat(const string& file_name) {
-  return boost::ends_with(file_name, plain_userdb_extension);
+  return strings::ends_with(file_name, plain_userdb_extension);
 }
 
 bool UserDbHelper::UniformBackup(const string& snapshot_file) {
@@ -147,10 +146,10 @@ string UserDbHelper::GetDbName() {
   string name;
   if (!db_->MetaFetch("/db_name", &name))
     return name;
-  auto ext = boost::find_last(name, ".userdb");
-  if (!ext.empty()) {
+  auto ext = name.rfind(".userdb");
+  if (ext != std::string::npos) {
     // remove ".userdb.*"
-    name.erase(ext.begin(), name.end());
+    name.erase(ext, name.length() - ext);
   }
   return name;
 }

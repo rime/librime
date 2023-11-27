@@ -4,7 +4,7 @@
 //
 // 2013-05-26 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/algorithm/string.hpp>
+#include <rime/algo/strings.h>
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/config.h>
@@ -184,7 +184,7 @@ void FoldedOptions::Append(const SwitchOption& option, size_t state_index) {
 }
 
 void FoldedOptions::Finish() {
-  text_ = prefix_ + boost::algorithm::join(labels_, separator_) + suffix_;
+  text_ = prefix_ + strings::join(labels_, separator_) + suffix_;
 }
 
 class SwitchTranslation : public FifoTranslation {

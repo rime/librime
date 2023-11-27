@@ -6,9 +6,9 @@
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
-#include <boost/algorithm/string.hpp>
 #include <filesystem>
 #include <yaml-cpp/yaml.h>
+#include <rime/algo/strings.h>
 #include <rime/config/config_compiler.h>
 #include <rime/config/config_cow_ref.h>
 #include <rime/config/config_data.h>
@@ -207,15 +207,13 @@ bool ConfigData::TraverseWrite(const string& path, an<ConfigItem> item) {
 }
 
 vector<string> ConfigData::SplitPath(const string& path) {
-  vector<string> keys;
-  auto is_separator = boost::is_any_of("/");
-  auto trimmed_path = boost::trim_left_copy_if(path, is_separator);
-  boost::split(keys, trimmed_path, is_separator);
+  auto trimmed_path = path.substr(strings::starts_with(path, "/"));
+  vector<string> keys = strings::split(trimmed_path, "/");
   return keys;
 }
 
 string ConfigData::JoinPath(const vector<string>& keys) {
-  return boost::join(keys, "/");
+  return strings::join(keys, "/");
 }
 
 an<ConfigItem> ConfigData::Traverse(const string& path) {

@@ -4,7 +4,7 @@
 //
 // 2013-04-18 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/algorithm/string.hpp>
+#include <rime/algo/strings.h>
 #include <rime/dict/table_db.h>
 #include <rime/dict/user_db.h>
 
@@ -22,7 +22,7 @@ static bool rime_table_entry_parser(const Tsv& row,
     return false;
   }
   string code(row[1]);
-  boost::algorithm::trim(code);
+  strings::trim(code);
   *key = code + " \t" + row[0];
   UserDbValue v;
   if (row.size() >= 3 && !row[2].empty()) {
@@ -42,13 +42,13 @@ static bool rime_table_entry_formatter(const string& key,
                                        Tsv* tsv) {
   Tsv& row(*tsv);
   // key ::= code <space> <Tab> phrase
-  boost::algorithm::split(row, key, boost::algorithm::is_any_of("\t"));
+  row = strings::split(key, "\t");
   if (row.size() != 2 || row[0].empty() || row[1].empty())
     return false;
   UserDbValue v(value);
   if (v.commits < 0)  // deleted entry
     return false;
-  boost::algorithm::trim(row[0]);  // remove trailing space
+  strings::trim(row[0]);  // remove trailing space
   row[0].swap(row[1]);
   row.push_back(std::to_string(v.commits));
   return true;

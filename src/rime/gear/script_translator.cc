@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <stack>
 #include <cmath>
-#include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <rime/composition.h>
 #include <rime/candidate.h>
@@ -18,6 +17,7 @@
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/translation.h>
+#include <rime/algo/strings.h>
 #include <rime/algo/syllabifier.h>
 #include <rime/dict/corrector.h>
 #include <rime/dict/dictionary.h>
@@ -214,7 +214,7 @@ string ScriptTranslator::Spell(const Code& code) {
   vector<string> syllables;
   if (!dict_ || !dict_->Decode(code, &syllables) || syllables.empty())
     return result;
-  result = boost::algorithm::join(syllables, string(1, delimiters_.at(0)));
+  result = strings::join(syllables, string(1, delimiters_.at(0)));
   comment_formatter_.Apply(&result);
   return result;
 }

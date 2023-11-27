@@ -4,9 +4,9 @@
 //
 // 2012-01-17 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/algorithm/string.hpp>
 #include <utf8.h>
 #include <rime/algo/calculus.h>
+#include <rime/algo/strings.h>
 #include <rime/common.h>
 
 namespace rime {
@@ -31,9 +31,8 @@ Calculation* Calculus::Parse(const string& definition) {
   size_t sep = definition.find_first_not_of("zyxwvutsrqponmlkjihgfedcba");
   if (sep == string::npos)
     return NULL;
-  vector<string> args;
-  boost::split(args, definition,
-               boost::is_from_range(definition[sep], definition[sep]));
+  const string& delim = definition.substr(sep, 1);
+  vector<string> args = strings::split(definition, delim);
   if (args.empty())
     return NULL;
   auto it = factories_.find(args[0]);

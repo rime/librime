@@ -8,12 +8,12 @@
 #include <cfloat>
 #include <cstdlib>
 #include <sstream>
-#include <boost/algorithm/string.hpp>
 #include <filesystem>
 #include <rime/resource.h>
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/ticket.h>
+#include <rime/algo/strings.h>
 #include <rime/dict/dict_settings.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 
@@ -107,7 +107,7 @@ bool ReverseDb::Build(DictSettings* settings,
   // save reverse lookup entries
   for (const auto& v : rev_table) {
     const string& key(v.first);
-    string value(boost::algorithm::join(v.second, " "));
+    string value(strings::join(v.second, " "));
     key_trie_builder.Add(key, 0.0, &key_ids[i]);
     value_trie_builder.Add(value, 0.0, &value_ids[i]);
     ++i;
@@ -115,7 +115,7 @@ bool ReverseDb::Build(DictSettings* settings,
   // save stems
   for (const auto& v : stems) {
     string key(v.first + kStemKeySuffix);
-    string value(boost::algorithm::join(v.second, " "));
+    string value(strings::join(v.second, " "));
     key_trie_builder.Add(key, 0.0, &key_ids[i]);
     value_trie_builder.Add(value, 0.0, &value_ids[i]);
     ++i;
