@@ -17,12 +17,8 @@ vector<string> split(const string& str, const string& delim);
 
 template <typename Iter, typename T>
 string join(Iter start, Iter end, T&& delim) {
-  string result;
-  if (start != end) {
-    result += (*start);
-    start++;
-  }
-  for (; start != end; start++) {
+  string result = (*start);
+  while (++start != end) {
     result += (delim);
     result += (*start);
   }

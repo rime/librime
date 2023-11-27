@@ -7,26 +7,16 @@ vector<string> split(const string& str,
                      const string& delim,
                      SplitBehavior behavior) {
   vector<string> strings;
-  size_t lastPos, pos;
-  if (behavior == SplitBehavior::SkipToken) {
-    lastPos = str.find_first_not_of(delim, 0);
-  } else {
-    lastPos = 0;
-  }
-  pos = str.find_first_of(delim, lastPos);
-
-  while (std::string::npos != pos || std::string::npos != lastPos) {
-    strings.emplace_back(str.substr(lastPos, pos - lastPos));
-    if (behavior == SplitBehavior::SkipToken) {
-      lastPos = str.find_first_not_of(delim, pos);
-    } else {
-      if (pos == std::string::npos) {
-        break;
-      }
-      lastPos = pos + 1;
+  size_t pos_start = 0, pos_end, delim_len = delim.length();
+  while ((pos_end = str.find(delim, pos_start)) != string::npos) {
+    if (pos_end != pos_start || behavior != SplitBehavior::SkipToken) {
+      string token = str.substr(pos_start, pos_end - pos_start);
+      strings.push_back(token);
     }
-    pos = str.find_first_of(delim, lastPos);
+    pos_start = pos_end + delim_len;
   }
+  if (pos_start != str.length() || behavior != SplitBehavior::SkipToken)
+    strings.push_back(str.substr(pos_start));
   return strings;
 };
 
