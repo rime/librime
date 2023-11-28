@@ -122,7 +122,7 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
   if (ctx->composition().empty())
     return kNoop;
   Segment& current_segment(ctx->composition().back());
-  if (!current_segment.menu || current_segment.HasTag("raw"))
+  if (current_segment.HasTag("raw"))
     return kNoop;
 
   TextOrientation text_orientation =
@@ -160,6 +160,10 @@ bool Selector::PreviousPage(Context* ctx) {
   Composition& comp = ctx->composition();
   if (comp.empty())
     return false;
+  if (!comp.back().menu) {
+    // no-op; consume the key event so that page down is not sent to the app.
+    return true;
+  }
   int page_size = engine_->schema()->page_size();
   int selected_index = comp.back().selected_index;
   int index = selected_index < page_size ? 0 : selected_index - page_size;
@@ -170,8 +174,11 @@ bool Selector::PreviousPage(Context* ctx) {
 
 bool Selector::NextPage(Context* ctx) {
   Composition& comp = ctx->composition();
-  if (comp.empty() || !comp.back().menu)
+  if (comp.empty())
     return false;
+  if (!comp.back().menu)
+    // no-op; consume the key event so that page down is not sent to the app.
+    return true;
   int page_size = engine_->schema()->page_size();
   int index = comp.back().selected_index + page_size;
   int page_start = (index / page_size) * page_size;
@@ -202,7 +209,7 @@ bool Selector::PreviousCandidate(Context* ctx) {
     return false;
   }
   Composition& comp = ctx->composition();
-  if (comp.empty())
+  if (comp.empty() || !comp.back().menu)
     return false;
   int index = comp.back().selected_index;
   if (index <= 0) {
