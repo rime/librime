@@ -273,6 +273,7 @@ RIME_API void RimeCleanupAllSessions(void);
 // Input
 
 RIME_API Bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask);
+
 /*!
  * return True if there is unread commit text
  */
@@ -387,6 +388,10 @@ RIME_API Bool RimeConfigUpdateSignature(RimeConfig* config, const char* signer);
 RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id,
                                       const char* key_sequence);
 
+RIME_API Bool RimeReplaceInput(RimeSessionId session_id,
+                               size_t pos,
+                               size_t count,
+                               const char* replace_char);
 // Module
 
 /*!
@@ -644,6 +649,11 @@ typedef struct rime_api_t {
                                                  const char* option_name,
                                                  Bool state,
                                                  Bool abbreviated);
+  //! modify the current input
+  Bool (*replace_input)(RimeSessionId session_id,
+                        size_t pos,
+                        size_t count,
+                        const char* replace_char);
 } RimeApi;
 
 //! API entry

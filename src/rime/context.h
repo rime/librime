@@ -58,6 +58,7 @@ class RIME_API Context {
 
   void set_input(const string& value);
   const string& input() const { return input_; }
+  void replace_input(size_t pos, size_t count, const string& value);
 
   void set_caret_pos(size_t caret_pos);
   size_t caret_pos() const { return caret_pos_; }

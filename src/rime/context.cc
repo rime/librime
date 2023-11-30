@@ -254,6 +254,12 @@ void Context::set_input(const string& value) {
   update_notifier_(this);
 }
 
+void Context::replace_input(size_t pos, size_t count, const string& value) {
+  input_.replace(pos, count, value);
+  caret_pos_ = input_.length();
+  update_notifier_(this);
+}
+
 void Context::set_option(const string& name, bool value) {
   options_[name] = value;
   option_update_notifier_(this, name);
