@@ -66,10 +66,10 @@ void print_menu(RimeMenu* menu) {
 void print_context(RimeContext* context) {
   if (context->composition.length > 0) {
     print_composition(&context->composition);
-    print_menu(&context->menu);
   } else {
     printf("(not composing)\n");
   }
+  print_menu(&context->menu);
 }
 
 void print(RimeSessionId session_id) {

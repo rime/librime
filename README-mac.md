@@ -27,7 +27,7 @@ These dependencies include a few compiled (non-header-only) Boost libraries.
 
 ``` sh
 cd librime
-make xcode/deps/boost
+bash install-boost.sh
 ```
 
 The make script will download Boost source tarball, extract it to
@@ -82,7 +82,7 @@ Required third-party libraries other than Boost are included as git submodules:
 # if you didn't checked out the submodules with git clone --recursive, now do:
 # git submodule update --init
 
-make xcode/deps
+make deps
 ```
 
 This builds libraries located at `librime/deps/*`, and installs the build
@@ -91,13 +91,13 @@ artifacts to `librime/include`, `librime/lib` and `librime/bin`.
 You can also build an individual library, eg. `opencc`, with:
 
 ``` sh
-make xcode/deps/opencc
+make deps/opencc
 ```
 
 ## Build librime
 
 ``` sh
-make xcode
+make
 ```
 This creates `build/lib/Release/librime*.dylib` and command line tools
 `build/bin/Release/rime_*`.
@@ -105,19 +105,19 @@ This creates `build/lib/Release/librime*.dylib` and command line tools
 Or, create a debug build:
 
 ``` sh
-make xcode/debug
+make debug
 ```
 
 ## Run unit tests
 
 ``` sh
-make xcode/test
+make test
 ```
 
 Or, test the debug build:
 
 ``` sh
-make xcode/test-debug
+make test-debug
 ```
 
 ## Try it in the console
