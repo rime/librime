@@ -14,6 +14,7 @@
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/ticket.h>
+#include <rime/dict/db_pool_impl.h>
 #include <rime/dict/dict_settings.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 
@@ -235,17 +236,13 @@ static const ResourceType kReverseDbResourceType = {"reverse_db", "",
                                                     ".reverse.bin"};
 
 ReverseLookupDictionaryComponent::ReverseLookupDictionaryComponent()
-    : resource_resolver_(Service::instance().CreateDeployedResourceResolver(
-          kReverseDbResourceType)) {}
+    : DbPool(the<ResourceResolver>(
+          Service::instance().CreateDeployedResourceResolver(
+              kReverseDbResourceType))) {}
 
 ReverseLookupDictionary* ReverseLookupDictionaryComponent::Create(
     const string& dict_name) {
-  auto db = db_pool_[dict_name].lock();
-  if (!db) {
-    auto file_path = resource_resolver_->ResolvePath(dict_name).string();
-    db = New<ReverseDb>(file_path);
-    db_pool_[dict_name] = db;
-  }
+  auto db = GetDb(dict_name);
   return new ReverseLookupDictionary(db);
 };
 
