@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <rime/common.h>
 #include <rime/component.h>
+#include <rime/dict/db_pool.h>
 #include <rime/dict/mapped_file.h>
 #include <rime/dict/string_table.h>
 #include <rime/dict/vocabulary.h>
@@ -75,15 +76,12 @@ class ReverseLookupDictionary
 class ResourceResolver;
 
 class ReverseLookupDictionaryComponent
-    : public ReverseLookupDictionary::Component {
+    : public ReverseLookupDictionary::Component,
+      protected DbPool<ReverseDb> {
  public:
   ReverseLookupDictionaryComponent();
   ReverseLookupDictionary* Create(const Ticket& ticket);
   ReverseLookupDictionary* Create(const string& dict_name);
-
- private:
-  map<string, weak<ReverseDb>> db_pool_;
-  the<ResourceResolver> resource_resolver_;
 };
 
 }  // namespace rime
