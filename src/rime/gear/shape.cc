@@ -18,7 +18,7 @@ void ShapeFormatter::Format(string* text) {
     return;
   }
   if (std::all_of(text->cbegin(), text->cend(),
-                  [](auto ch) { return (ch >= 0x20 && ch <= 0x7e); })) {
+                  [](auto ch) { return (ch < 0x20 || ch > 0x7e); })) {
     return;
   }
   std::ostringstream oss;
