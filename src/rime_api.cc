@@ -1084,6 +1084,17 @@ const char* RimeGetStateLabel(RimeSessionId session_id,
       .str;
 }
 
+RIME_API Bool RimeSetInput(RimeSessionId session_id, const char* input) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  Context* ctx = session->context();
+  if (!ctx)
+    return False;
+  ctx->set_input(input);
+  return True;
+}
+
 RIME_API RimeApi* rime_get_api() {
   static RimeApi s_api = {0};
   if (!s_api.data_size) {
@@ -1177,6 +1188,7 @@ RIME_API RimeApi* rime_get_api() {
     s_api.delete_candidate = &RimeDeleteCandidate;
     s_api.delete_candidate_on_current_page = &RimeDeleteCandidateOnCurrentPage;
     s_api.get_state_label_abbreviated = &RimeGetStateLabelAbbreviated;
+    s_api.set_input = &RimeSetInput;
   }
   return &s_api;
 }
