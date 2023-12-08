@@ -212,6 +212,46 @@ RIME_API void RimeClearComposition(RimeSessionId session_id) {
   session->ClearComposition();
 }
 
+RIME_API const char* RimeGetInput(RimeSessionId session_id) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return NULL;
+  Context* ctx = session->context();
+  if (!ctx)
+    return NULL;
+  return ctx->input().c_str();
+}
+
+RIME_API size_t RimeGetCaretPos(RimeSessionId session_id) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return 0;
+  Context* ctx = session->context();
+  if (!ctx)
+    return 0;
+  return ctx->caret_pos();
+}
+
+RIME_API void RimeSetInput(RimeSessionId session_id, const char* input) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return;
+  Context* ctx = session->context();
+  if (!ctx)
+    return;
+  return ctx->set_input(input);
+}
+
+RIME_API void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return;
+  Context* ctx = session->context();
+  if (!ctx)
+    return;
+  return ctx->set_caret_pos(caret_pos);
+}
+
 // output
 
 static void rime_candidate_copy(RimeCandidate* dest, const an<Candidate>& src) {
@@ -429,6 +469,58 @@ RIME_API void RimeCandidateListEnd(RimeCandidateListIterator* iterator) {
   memset(iterator, 0, sizeof(RimeCandidateListIterator));
 }
 
+static bool do_with_candidate(RimeSessionId session_id,
+                              size_t index,
+                              bool (Context::*verb)(size_t index)) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  Context* ctx = session->context();
+  if (!ctx)
+    return False;
+  return (ctx->*verb)(index);
+}
+
+static bool do_with_candidate_on_current_page(
+    RimeSessionId session_id,
+    size_t index,
+    bool (Context::*verb)(size_t index)) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  Context* ctx = session->context();
+  if (!ctx || !ctx->HasMenu())
+    return False;
+  Schema* schema = session->schema();
+  if (!schema)
+    return False;
+  size_t page_size = (size_t)schema->page_size();
+  if (index >= page_size)
+    return False;
+  const auto& seg(ctx->composition().back());
+  size_t page_start = seg.selected_index / page_size * page_size;
+  return (ctx->*verb)(page_start + index);
+}
+
+RIME_API Bool RimeSelectCandidate(RimeSessionId session_id, size_t index) {
+  return do_with_candidate(session_id, index, &Context::Select);
+}
+
+RIME_API Bool RimeSelectCandidateOnCurrentPage(RimeSessionId session_id,
+                                               size_t index) {
+  return do_with_candidate_on_current_page(session_id, index, &Context::Select);
+}
+
+RIME_API Bool RimeDeleteCandidate(RimeSessionId session_id, size_t index) {
+  return do_with_candidate(session_id, index, &Context::DeleteCandidate);
+}
+
+RIME_API Bool RimeDeleteCandidateOnCurrentPage(RimeSessionId session_id,
+                                               size_t index) {
+  return do_with_candidate_on_current_page(session_id, index,
+                                           &Context::DeleteCandidate);
+}
+
 // runtime options
 
 RIME_API void RimeSetOption(RimeSessionId session_id,
@@ -558,6 +650,28 @@ RIME_API Bool RimeSelectSchema(RimeSessionId session_id,
   return True;
 }
 
+RIME_API RimeStringSlice RimeGetStateLabelAbbreviated(RimeSessionId session_id,
+                                                      const char* option_name,
+                                                      Bool state,
+                                                      Bool abbreviated) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return {nullptr, 0};
+  Config* config = session->schema()->config();
+  if (!config)
+    return {nullptr, 0};
+  Switches switches(config);
+  StringSlice label = switches.GetStateLabel(option_name, state, abbreviated);
+  return {label.str, label.length};
+}
+
+RIME_API const char* RimeGetStateLabel(RimeSessionId session_id,
+                                       const char* option_name,
+                                       Bool state) {
+  return RimeGetStateLabelAbbreviated(session_id, option_name, state, False)
+      .str;
+}
+
 // config
 
 static Bool open_config_in_component(const char* config_component,
@@ -655,192 +769,6 @@ RIME_API const char* RimeConfigGetCString(RimeConfig* config, const char* key) {
     return v->str().c_str();
   }
   return NULL;
-}
-
-RIME_API Bool RimeConfigUpdateSignature(RimeConfig* config,
-                                        const char* signer) {
-  if (!config || !signer)
-    return False;
-  Config* c = reinterpret_cast<Config*>(config->ptr);
-  Deployer& deployer(Service::instance().deployer());
-  Signature sig(signer);
-  return Bool(sig.Sign(c, &deployer));
-}
-
-template <class T>
-struct RimeConfigIteratorImpl {
-  typename T::Iterator iter;
-  typename T::Iterator end;
-  string prefix;
-  string key;
-  string path;
-  RimeConfigIteratorImpl<T>(T& container, const string& root_path)
-      : iter(container.begin()), end(container.end()) {
-    if (root_path.empty() || root_path == "/") {
-      // prefix is empty
-    } else {
-      prefix = root_path + "/";
-    }
-  }
-};
-
-RIME_API Bool RimeConfigBeginList(RimeConfigIterator* iterator,
-                                  RimeConfig* config,
-                                  const char* key) {
-  if (!iterator || !config || !key)
-    return False;
-  iterator->list = NULL;
-  iterator->map = NULL;
-  iterator->index = -1;
-  iterator->key = NULL;
-  iterator->path = NULL;
-  Config* c = reinterpret_cast<Config*>(config->ptr);
-  if (!c)
-    return False;
-  an<ConfigList> list = c->GetList(key);
-  if (!list)
-    return False;
-  iterator->list = new RimeConfigIteratorImpl<ConfigList>(*list, key);
-  return True;
-}
-
-RIME_API Bool RimeConfigBeginMap(RimeConfigIterator* iterator,
-                                 RimeConfig* config,
-                                 const char* key) {
-  if (!iterator || !config || !key)
-    return False;
-  iterator->list = NULL;
-  iterator->map = NULL;
-  iterator->index = -1;
-  iterator->key = NULL;
-  iterator->path = NULL;
-  Config* c = reinterpret_cast<Config*>(config->ptr);
-  if (!c)
-    return False;
-  an<ConfigMap> m = c->GetMap(key);
-  if (!m)
-    return False;
-  iterator->map = new RimeConfigIteratorImpl<ConfigMap>(*m, key);
-  return True;
-}
-
-RIME_API Bool RimeConfigNext(RimeConfigIterator* iterator) {
-  if (!iterator->list && !iterator->map)
-    return False;
-  if (iterator->list) {
-    RimeConfigIteratorImpl<ConfigList>* p =
-        reinterpret_cast<RimeConfigIteratorImpl<ConfigList>*>(iterator->list);
-    if (!p)
-      return False;
-    if (++iterator->index > 0)
-      ++p->iter;
-    if (p->iter == p->end)
-      return False;
-    std::ostringstream key;
-    key << "@" << iterator->index;
-    p->key = key.str();
-    p->path = p->prefix + p->key;
-    iterator->key = p->key.c_str();
-    iterator->path = p->path.c_str();
-    return True;
-  }
-  if (iterator->map) {
-    RimeConfigIteratorImpl<ConfigMap>* p =
-        reinterpret_cast<RimeConfigIteratorImpl<ConfigMap>*>(iterator->map);
-    if (!p)
-      return False;
-    if (++iterator->index > 0)
-      ++p->iter;
-    if (p->iter == p->end)
-      return False;
-    p->key = p->iter->first;
-    p->path = p->prefix + p->key;
-    iterator->key = p->key.c_str();
-    iterator->path = p->path.c_str();
-    return True;
-  }
-  return False;
-}
-
-RIME_API void RimeConfigEnd(RimeConfigIterator* iterator) {
-  if (!iterator)
-    return;
-  if (iterator->list)
-    delete reinterpret_cast<RimeConfigIteratorImpl<ConfigList>*>(
-        iterator->list);
-  if (iterator->map)
-    delete reinterpret_cast<RimeConfigIteratorImpl<ConfigMap>*>(iterator->map);
-  memset(iterator, 0, sizeof(RimeConfigIterator));
-}
-
-RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id,
-                                      const char* key_sequence) {
-  LOG(INFO) << "simulate key sequence: " << key_sequence;
-  an<Session> session(Service::instance().GetSession(session_id));
-  if (!session)
-    return False;
-  KeySequence keys;
-  if (!keys.Parse(key_sequence)) {
-    LOG(ERROR) << "error parsing input: '" << key_sequence << "'";
-    return False;
-  }
-  for (const KeyEvent& key : keys) {
-    session->ProcessKey(key);
-  }
-  return True;
-}
-
-RIME_API Bool RimeRegisterModule(RimeModule* module) {
-  if (!module || !module->module_name)
-    return False;
-  ModuleManager::instance().Register(module->module_name, module);
-  return True;
-}
-
-RIME_API RimeModule* RimeFindModule(const char* module_name) {
-  return ModuleManager::instance().Find(module_name);
-}
-
-RIME_API Bool RimeRunTask(const char* task_name) {
-  if (!task_name)
-    return False;
-  Deployer& deployer(Service::instance().deployer());
-  return Bool(deployer.RunTask(task_name));
-}
-
-RIME_API const char* RimeGetSharedDataDir() {
-  Deployer& deployer(Service::instance().deployer());
-  return deployer.shared_data_dir.c_str();
-}
-
-RIME_API const char* RimeGetUserDataDir() {
-  Deployer& deployer(Service::instance().deployer());
-  return deployer.user_data_dir.c_str();
-}
-
-RIME_API const char* RimeGetPrebuiltDataDir() {
-  Deployer& deployer(Service::instance().deployer());
-  return deployer.prebuilt_data_dir.c_str();
-}
-
-RIME_API const char* RimeGetStagingDir() {
-  Deployer& deployer(Service::instance().deployer());
-  return deployer.staging_dir.c_str();
-}
-
-RIME_API const char* RimeGetSyncDir() {
-  Deployer& deployer(Service::instance().deployer());
-  return deployer.sync_dir.c_str();
-}
-
-RIME_API const char* RimeGetUserId() {
-  Deployer& deployer(Service::instance().deployer());
-  return deployer.user_id.c_str();
-}
-
-RIME_API void RimeGetUserDataSyncDir(char* dir, size_t buffer_size) {
-  Deployer& deployer(Service::instance().deployer());
-  strncpy(dir, deployer.user_data_sync_dir().c_str(), buffer_size);
 }
 
 RIME_API Bool RimeConfigInit(RimeConfig* config) {
@@ -976,112 +904,194 @@ RIME_API size_t RimeConfigListSize(RimeConfig* config, const char* key) {
   return 0;
 }
 
-const char* RimeGetInput(RimeSessionId session_id) {
+template <class T>
+struct RimeConfigIteratorImpl {
+  typename T::Iterator iter;
+  typename T::Iterator end;
+  string prefix;
+  string key;
+  string path;
+  RimeConfigIteratorImpl<T>(T& container, const string& root_path)
+      : iter(container.begin()), end(container.end()) {
+    if (root_path.empty() || root_path == "/") {
+      // prefix is empty
+    } else {
+      prefix = root_path + "/";
+    }
+  }
+};
+
+RIME_API Bool RimeConfigBeginList(RimeConfigIterator* iterator,
+                                  RimeConfig* config,
+                                  const char* key) {
+  if (!iterator || !config || !key)
+    return False;
+  iterator->list = NULL;
+  iterator->map = NULL;
+  iterator->index = -1;
+  iterator->key = NULL;
+  iterator->path = NULL;
+  Config* c = reinterpret_cast<Config*>(config->ptr);
+  if (!c)
+    return False;
+  an<ConfigList> list = c->GetList(key);
+  if (!list)
+    return False;
+  iterator->list = new RimeConfigIteratorImpl<ConfigList>(*list, key);
+  return True;
+}
+
+RIME_API Bool RimeConfigBeginMap(RimeConfigIterator* iterator,
+                                 RimeConfig* config,
+                                 const char* key) {
+  if (!iterator || !config || !key)
+    return False;
+  iterator->list = NULL;
+  iterator->map = NULL;
+  iterator->index = -1;
+  iterator->key = NULL;
+  iterator->path = NULL;
+  Config* c = reinterpret_cast<Config*>(config->ptr);
+  if (!c)
+    return False;
+  an<ConfigMap> m = c->GetMap(key);
+  if (!m)
+    return False;
+  iterator->map = new RimeConfigIteratorImpl<ConfigMap>(*m, key);
+  return True;
+}
+
+RIME_API Bool RimeConfigNext(RimeConfigIterator* iterator) {
+  if (!iterator->list && !iterator->map)
+    return False;
+  if (iterator->list) {
+    RimeConfigIteratorImpl<ConfigList>* p =
+        reinterpret_cast<RimeConfigIteratorImpl<ConfigList>*>(iterator->list);
+    if (!p)
+      return False;
+    if (++iterator->index > 0)
+      ++p->iter;
+    if (p->iter == p->end)
+      return False;
+    std::ostringstream key;
+    key << "@" << iterator->index;
+    p->key = key.str();
+    p->path = p->prefix + p->key;
+    iterator->key = p->key.c_str();
+    iterator->path = p->path.c_str();
+    return True;
+  }
+  if (iterator->map) {
+    RimeConfigIteratorImpl<ConfigMap>* p =
+        reinterpret_cast<RimeConfigIteratorImpl<ConfigMap>*>(iterator->map);
+    if (!p)
+      return False;
+    if (++iterator->index > 0)
+      ++p->iter;
+    if (p->iter == p->end)
+      return False;
+    p->key = p->iter->first;
+    p->path = p->prefix + p->key;
+    iterator->key = p->key.c_str();
+    iterator->path = p->path.c_str();
+    return True;
+  }
+  return False;
+}
+
+RIME_API void RimeConfigEnd(RimeConfigIterator* iterator) {
+  if (!iterator)
+    return;
+  if (iterator->list)
+    delete reinterpret_cast<RimeConfigIteratorImpl<ConfigList>*>(
+        iterator->list);
+  if (iterator->map)
+    delete reinterpret_cast<RimeConfigIteratorImpl<ConfigMap>*>(iterator->map);
+  memset(iterator, 0, sizeof(RimeConfigIterator));
+}
+
+RIME_API Bool RimeConfigUpdateSignature(RimeConfig* config,
+                                        const char* signer) {
+  if (!config || !signer)
+    return False;
+  Config* c = reinterpret_cast<Config*>(config->ptr);
+  Deployer& deployer(Service::instance().deployer());
+  Signature sig(signer);
+  return Bool(sig.Sign(c, &deployer));
+}
+
+RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id,
+                                      const char* key_sequence) {
+  LOG(INFO) << "simulate key sequence: " << key_sequence;
   an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
-    return NULL;
-  Context* ctx = session->context();
-  if (!ctx)
-    return NULL;
-  return ctx->input().c_str();
+    return False;
+  KeySequence keys;
+  if (!keys.Parse(key_sequence)) {
+    LOG(ERROR) << "error parsing input: '" << key_sequence << "'";
+    return False;
+  }
+  for (const KeyEvent& key : keys) {
+    session->ProcessKey(key);
+  }
+  return True;
 }
 
-size_t RimeGetCaretPos(RimeSessionId session_id) {
-  an<Session> session(Service::instance().GetSession(session_id));
-  if (!session)
-    return 0;
-  Context* ctx = session->context();
-  if (!ctx)
-    return 0;
-  return ctx->caret_pos();
+RIME_API Bool RimeRegisterModule(RimeModule* module) {
+  if (!module || !module->module_name)
+    return False;
+  ModuleManager::instance().Register(module->module_name, module);
+  return True;
 }
 
-static bool do_with_candidate(RimeSessionId session_id,
-                              size_t index,
-                              bool (Context::*verb)(size_t index)) {
-  an<Session> session(Service::instance().GetSession(session_id));
-  if (!session)
-    return False;
-  Context* ctx = session->context();
-  if (!ctx)
-    return False;
-  return (ctx->*verb)(index);
+RIME_API RimeModule* RimeFindModule(const char* module_name) {
+  return ModuleManager::instance().Find(module_name);
 }
 
-static bool do_with_candidate_on_current_page(
-    RimeSessionId session_id,
-    size_t index,
-    bool (Context::*verb)(size_t index)) {
-  an<Session> session(Service::instance().GetSession(session_id));
-  if (!session)
+RIME_API Bool RimeRunTask(const char* task_name) {
+  if (!task_name)
     return False;
-  Context* ctx = session->context();
-  if (!ctx || !ctx->HasMenu())
-    return False;
-  Schema* schema = session->schema();
-  if (!schema)
-    return False;
-  size_t page_size = (size_t)schema->page_size();
-  if (index >= page_size)
-    return False;
-  const auto& seg(ctx->composition().back());
-  size_t page_start = seg.selected_index / page_size * page_size;
-  return (ctx->*verb)(page_start + index);
+  Deployer& deployer(Service::instance().deployer());
+  return Bool(deployer.RunTask(task_name));
 }
 
-RIME_API Bool RimeSelectCandidate(RimeSessionId session_id, size_t index) {
-  return do_with_candidate(session_id, index, &Context::Select);
+RIME_API const char* RimeGetSharedDataDir() {
+  Deployer& deployer(Service::instance().deployer());
+  return deployer.shared_data_dir.c_str();
 }
 
-RIME_API Bool RimeSelectCandidateOnCurrentPage(RimeSessionId session_id,
-                                               size_t index) {
-  return do_with_candidate_on_current_page(session_id, index, &Context::Select);
+RIME_API const char* RimeGetUserDataDir() {
+  Deployer& deployer(Service::instance().deployer());
+  return deployer.user_data_dir.c_str();
+}
+
+RIME_API const char* RimeGetPrebuiltDataDir() {
+  Deployer& deployer(Service::instance().deployer());
+  return deployer.prebuilt_data_dir.c_str();
+}
+
+RIME_API const char* RimeGetStagingDir() {
+  Deployer& deployer(Service::instance().deployer());
+  return deployer.staging_dir.c_str();
+}
+
+RIME_API const char* RimeGetSyncDir() {
+  Deployer& deployer(Service::instance().deployer());
+  return deployer.sync_dir.c_str();
+}
+
+RIME_API const char* RimeGetUserId() {
+  Deployer& deployer(Service::instance().deployer());
+  return deployer.user_id.c_str();
+}
+
+RIME_API void RimeGetUserDataSyncDir(char* dir, size_t buffer_size) {
+  Deployer& deployer(Service::instance().deployer());
+  strncpy(dir, deployer.user_data_sync_dir().c_str(), buffer_size);
 }
 
 const char* RimeGetVersion() {
   return RIME_VERSION;
-}
-
-RIME_API Bool RimeDeleteCandidate(RimeSessionId session_id, size_t index) {
-  return do_with_candidate(session_id, index, &Context::DeleteCandidate);
-}
-
-RIME_API Bool RimeDeleteCandidateOnCurrentPage(RimeSessionId session_id,
-                                               size_t index) {
-  return do_with_candidate_on_current_page(session_id, index,
-                                           &Context::DeleteCandidate);
-}
-
-void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos) {
-  an<Session> session(Service::instance().GetSession(session_id));
-  if (!session)
-    return;
-  Context* ctx = session->context();
-  if (!ctx)
-    return;
-  return ctx->set_caret_pos(caret_pos);
-}
-
-RimeStringSlice RimeGetStateLabelAbbreviated(RimeSessionId session_id,
-                                             const char* option_name,
-                                             Bool state,
-                                             Bool abbreviated) {
-  an<Session> session(Service::instance().GetSession(session_id));
-  if (!session)
-    return {nullptr, 0};
-  Config* config = session->schema()->config();
-  if (!config)
-    return {nullptr, 0};
-  Switches switches(config);
-  StringSlice label = switches.GetStateLabel(option_name, state, abbreviated);
-  return {label.str, label.length};
-}
-
-const char* RimeGetStateLabel(RimeSessionId session_id,
-                              const char* option_name,
-                              Bool state) {
-  return RimeGetStateLabelAbbreviated(session_id, option_name, state, False)
-      .str;
 }
 
 RIME_API RimeApi* rime_get_api() {
@@ -1109,12 +1119,24 @@ RIME_API RimeApi* rime_get_api() {
     s_api.process_key = &RimeProcessKey;
     s_api.commit_composition = &RimeCommitComposition;
     s_api.clear_composition = &RimeClearComposition;
-    s_api.get_commit = &RimeGetCommit;
-    s_api.free_commit = &RimeFreeCommit;
+    s_api.get_input = &RimeGetInput;
+    s_api.get_caret_pos = &RimeGetCaretPos;
+    s_api.set_input = &RimeSetInput;
+    s_api.set_caret_pos = &RimeSetCaretPos;
     s_api.get_context = &RimeGetContext;
     s_api.free_context = &RimeFreeContext;
+    s_api.get_commit = &RimeGetCommit;
+    s_api.free_commit = &RimeFreeCommit;
     s_api.get_status = &RimeGetStatus;
     s_api.free_status = &RimeFreeStatus;
+    s_api.candidate_list_begin = &RimeCandidateListBegin;
+    s_api.candidate_list_next = &RimeCandidateListNext;
+    s_api.candidate_list_end = &RimeCandidateListEnd;
+    s_api.candidate_list_from_index = &RimeCandidateListFromIndex;
+    s_api.select_candidate = &RimeSelectCandidate;
+    s_api.select_candidate_on_current_page = &RimeSelectCandidateOnCurrentPage;
+    s_api.delete_candidate = &RimeDeleteCandidate;
+    s_api.delete_candidate_on_current_page = &RimeDeleteCandidateOnCurrentPage;
     s_api.set_option = &RimeSetOption;
     s_api.get_option = &RimeGetOption;
     s_api.set_property = &RimeSetProperty;
@@ -1123,30 +1145,19 @@ RIME_API RimeApi* rime_get_api() {
     s_api.free_schema_list = &RimeFreeSchemaList;
     s_api.get_current_schema = &RimeGetCurrentSchema;
     s_api.select_schema = &RimeSelectSchema;
+    s_api.get_state_label = &RimeGetStateLabel;
+    s_api.get_state_label_abbreviated = &RimeGetStateLabelAbbreviated;
     s_api.schema_open = &RimeSchemaOpen;
     s_api.config_open = &RimeConfigOpen;
     s_api.user_config_open = &RimeUserConfigOpen;
     s_api.config_close = &RimeConfigClose;
+    s_api.config_init = &RimeConfigInit;
+    s_api.config_load_string = &RimeConfigLoadString;
     s_api.config_get_bool = &RimeConfigGetBool;
     s_api.config_get_int = &RimeConfigGetInt;
     s_api.config_get_double = &RimeConfigGetDouble;
     s_api.config_get_string = &RimeConfigGetString;
     s_api.config_get_cstring = &RimeConfigGetCString;
-    s_api.config_update_signature = &RimeConfigUpdateSignature;
-    s_api.config_begin_map = &RimeConfigBeginMap;
-    s_api.config_next = &RimeConfigNext;
-    s_api.config_end = &RimeConfigEnd;
-    s_api.simulate_key_sequence = &RimeSimulateKeySequence;
-    s_api.register_module = &RimeRegisterModule;
-    s_api.find_module = &RimeFindModule;
-    s_api.run_task = &RimeRunTask;
-    s_api.get_shared_data_dir = &RimeGetSharedDataDir;
-    s_api.get_user_data_dir = &RimeGetUserDataDir;
-    s_api.get_sync_dir = &RimeGetSyncDir;
-    s_api.get_user_id = &RimeGetUserId;
-    s_api.get_user_data_sync_dir = &RimeGetUserDataSyncDir;
-    s_api.config_init = &RimeConfigInit;
-    s_api.config_load_string = &RimeConfigLoadString;
     s_api.config_set_bool = &RimeConfigSetBool;
     s_api.config_set_int = &RimeConfigSetInt;
     s_api.config_set_double = &RimeConfigSetDouble;
@@ -1158,25 +1169,25 @@ RIME_API RimeApi* rime_get_api() {
     s_api.config_create_map = &RimeConfigCreateMap;
     s_api.config_list_size = &RimeConfigListSize;
     s_api.config_begin_list = &RimeConfigBeginList;
-    s_api.get_input = &RimeGetInput;
-    s_api.get_caret_pos = &RimeGetCaretPos;
-    s_api.select_candidate = &RimeSelectCandidate;
-    s_api.get_version = &RimeGetVersion;
-    s_api.set_caret_pos = &RimeSetCaretPos;
-    s_api.select_candidate_on_current_page = &RimeSelectCandidateOnCurrentPage;
-    s_api.candidate_list_begin = &RimeCandidateListBegin;
-    s_api.candidate_list_next = &RimeCandidateListNext;
-    s_api.candidate_list_end = &RimeCandidateListEnd;
-    s_api.candidate_list_from_index = &RimeCandidateListFromIndex;
+    s_api.config_begin_map = &RimeConfigBeginMap;
+    s_api.config_next = &RimeConfigNext;
+    s_api.config_end = &RimeConfigEnd;
+    s_api.config_update_signature = &RimeConfigUpdateSignature;
+    s_api.simulate_key_sequence = &RimeSimulateKeySequence;
+    s_api.register_module = &RimeRegisterModule;
+    s_api.find_module = &RimeFindModule;
+    s_api.run_task = &RimeRunTask;
+    s_api.get_shared_data_dir = &RimeGetSharedDataDir;
+    s_api.get_user_data_dir = &RimeGetUserDataDir;
+    s_api.get_sync_dir = &RimeGetSyncDir;
+    s_api.get_user_id = &RimeGetUserId;
+    s_api.get_user_data_sync_dir = &RimeGetUserDataSyncDir;
     s_api.get_prebuilt_data_dir = &RimeGetPrebuiltDataDir;
     s_api.get_staging_dir = &RimeGetStagingDir;
+    s_api.get_version = &RimeGetVersion;
     s_api.commit_proto = nullptr;
     s_api.context_proto = nullptr;
     s_api.status_proto = nullptr;
-    s_api.get_state_label = &RimeGetStateLabel;
-    s_api.delete_candidate = &RimeDeleteCandidate;
-    s_api.delete_candidate_on_current_page = &RimeDeleteCandidateOnCurrentPage;
-    s_api.get_state_label_abbreviated = &RimeGetStateLabelAbbreviated;
   }
   return &s_api;
 }

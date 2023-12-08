@@ -66,7 +66,7 @@ typedef int Bool;
 
 //! Rime traits structure
 /*!
- *  Should be initialized by calling RIME_STRUCT_INIT(Type, var)
+ *  Should be initialized by calling `RIME_STRUCT_INIT(Type, var)`
  */
 typedef struct rime_traits_t {
   int data_size;
@@ -88,18 +88,18 @@ typedef struct rime_traits_t {
   const char** modules;
   // v1.6
   /*! Minimal level of logged messages.
-   *  Value is passed to Glog library using FLAGS_minloglevel variable.
+   *  Value is passed to Glog library using `FLAGS_minloglevel` variable.
    *  0 = INFO (default), 1 = WARNING, 2 = ERROR, 3 = FATAL
    */
   int min_log_level;
   /*! Directory of log files.
-   *  Value is passed to Glog library using FLAGS_log_dir variable.
+   *  Value is passed to Glog library using `FLAGS_log_dir` variable.
    *  NULL means temporary directory, and "" means only writing to stderr.
    */
   const char* log_dir;
-  //! prebuilt data directory. defaults to ${shared_data_dir}/build
+  //! prebuilt data directory. defaults to `${shared_data_dir}/build`
   const char* prebuilt_data_dir;
-  //! staging directory. defaults to ${user_data_dir}/build
+  //! staging directory. defaults to `${user_data_dir}/build`
   const char* staging_dir;
 } RimeTraits;
 
@@ -128,7 +128,7 @@ typedef struct {
 } RimeMenu;
 
 /*!
- *  Should be initialized by calling RIME_STRUCT_INIT(Type, var);
+ *  Should be initialized by calling `RIME_STRUCT_INIT(Type, var)`;
  */
 typedef struct rime_commit_t {
   int data_size;
@@ -137,7 +137,7 @@ typedef struct rime_commit_t {
 } RimeCommit;
 
 /*!
- *  Should be initialized by calling RIME_STRUCT_INIT(Type, var);
+ *  Should be initialized by calling `RIME_STRUCT_INIT(Type, var)`;
  */
 typedef struct rime_context_t {
   int data_size;
@@ -150,7 +150,7 @@ typedef struct rime_context_t {
 } RimeContext;
 
 /*!
- *  Should be initialized by calling RIME_STRUCT_INIT(Type, var);
+ *  Should be initialized by calling `RIME_STRUCT_INIT(Type, var)`;
  */
 typedef struct rime_status_t {
   int data_size;
@@ -232,8 +232,8 @@ RIME_API void RimeSetupLogging(const char* app_name);
  *   + session_id = 0, message_type="deploy", message_value="success"
  *   + session_id = 0, message_type="deploy", message_value="failure"
  *
- *   handler will be called with context_object as the first parameter
- *   every time an event occurs in librime, until RimeFinalize() is called.
+ *   handler will be called with `context_object` as the first parameter
+ *   every time an event occurs in librime, until `RimeFinalize()` is called.
  *   when handler is NULL, notification is disabled.
  */
 RIME_API void RimeSetNotificationHandler(RimeNotificationHandler handler,
@@ -246,7 +246,7 @@ RIME_API void RimeFinalize(void);
 
 RIME_API Bool RimeStartMaintenance(Bool full_check);
 
-//! \deprecated Use RimeStartMaintenance(full_check = False) instead.
+//! \deprecated Use `RimeStartMaintenance(full_check = False)` instead.
 RIME_API Bool RimeStartMaintenanceOnWorkspaceChange(void);
 RIME_API Bool RimeIsMaintenancing(void);
 RIME_API void RimeJoinMaintenanceThread(void);
@@ -278,13 +278,22 @@ RIME_API Bool RimeProcessKey(RimeSessionId session_id, int keycode, int mask);
  */
 RIME_API Bool RimeCommitComposition(RimeSessionId session_id);
 RIME_API void RimeClearComposition(RimeSessionId session_id);
+//! get raw input
+/*!
+ *  NULL is returned if session does not exist.
+ *  the returned pointer to input string will become invalid upon editing.
+ */
+RIME_API const char* RimeGetInput(RimeSessionId session_id);
+RIME_API size_t RimeGetCaretPos(RimeSessionId session_id);
+RIME_API void RimeSetInput(RimeSessionId session_id, const char* input);
+RIME_API void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos);
 
 // Output
 
-RIME_API Bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit);
-RIME_API Bool RimeFreeCommit(RimeCommit* commit);
 RIME_API Bool RimeGetContext(RimeSessionId session_id, RimeContext* context);
 RIME_API Bool RimeFreeContext(RimeContext* context);
+RIME_API Bool RimeGetCommit(RimeSessionId session_id, RimeCommit* commit);
+RIME_API Bool RimeFreeCommit(RimeCommit* commit);
 RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status);
 RIME_API Bool RimeFreeStatus(RimeStatus* status);
 
@@ -325,6 +334,14 @@ RIME_API Bool RimeGetCurrentSchema(RimeSessionId session_id,
                                    size_t buffer_size);
 RIME_API Bool RimeSelectSchema(RimeSessionId session_id, const char* schema_id);
 
+RIME_API const char* RimeGetStateLabel(RimeSessionId session_id,
+                                       const char* option_name,
+                                       Bool state);
+RIME_API RimeStringSlice RimeGetStateLabelAbbreviated(RimeSessionId session_id,
+                                                      const char* option_name,
+                                                      Bool state,
+                                                      Bool abbreviated);
+
 // Configuration
 
 // <schema_id>.schema.yaml
@@ -350,6 +367,7 @@ RIME_API Bool RimeConfigGetString(RimeConfig* config,
                                   char* value,
                                   size_t buffer_size);
 RIME_API const char* RimeConfigGetCString(RimeConfig* config, const char* key);
+// Set config values
 RIME_API Bool RimeConfigSetBool(RimeConfig* config,
                                 const char* key,
                                 Bool value);
@@ -416,6 +434,15 @@ RIME_API const char* RimeGetSharedDataDir(void);
 RIME_API const char* RimeGetUserDataDir(void);
 RIME_API const char* RimeGetSyncDir(void);
 RIME_API const char* RimeGetUserId(void);
+RIME_API const char* RimeGetUserDataSyncDir(void);
+
+//! prebuilt data directory.
+RIME_API const char* RimeGetPrebuiltDataDir(void);
+//! staging directory, stores data files deployed to a Rime client.
+RIME_API const char* RimeGetStagingDir(void);
+
+//! get the version of librime
+RIME_API const char* RimeGetVersion(void);
 
 /*! The API structure
  *  RimeApi is for rime v1.0+
@@ -440,8 +467,8 @@ typedef struct rime_api_t {
    *    + session_id = 0, message_type="deploy", message_value="success"
    *    + session_id = 0, message_type="deploy", message_value="failure"
    *
-   *  handler will be called with context_object as the first parameter
-   *  every time an event occurs in librime, until RimeFinalize() is called.
+   *  handler will be called with `context_object` as the first parameter
+   *  every time an event occurs in librime, until `RimeFinalize()` is called.
    *  when handler is NULL, notification is disabled.
    */
   void (*set_notification_handler)(RimeNotificationHandler handler,
@@ -480,15 +507,49 @@ typedef struct rime_api_t {
   // return True if there is unread commit text
   Bool (*commit_composition)(RimeSessionId session_id);
   void (*clear_composition)(RimeSessionId session_id);
+  //! get raw input
+  /*!
+   *  NULL is returned if session does not exist.
+   *  the returned pointer to input string will become invalid upon editing.
+   */
+  const char* (*get_input)(RimeSessionId session_id);
+  //! caret position in terms of raw input
+  size_t (*get_caret_pos)(RimeSessionId session_id);
+  //! set raw input
+  void (*set_input)(RimeSessionId session_id, const char* input);
+  //! set caret position in terms of raw input
+  void (*set_caret_pos)(RimeSessionId session_id, size_t caret_pos);
 
   // output
 
-  Bool (*get_commit)(RimeSessionId session_id, RimeCommit* commit);
-  Bool (*free_commit)(RimeCommit* commit);
   Bool (*get_context)(RimeSessionId session_id, RimeContext* context);
   Bool (*free_context)(RimeContext* ctx);
+  Bool (*get_commit)(RimeSessionId session_id, RimeCommit* commit);
+  Bool (*free_commit)(RimeCommit* commit);
   Bool (*get_status)(RimeSessionId session_id, RimeStatus* status);
   Bool (*free_status)(RimeStatus* status);
+
+  //! access candidate list.
+  Bool (*candidate_list_begin)(RimeSessionId session_id,
+                               RimeCandidateListIterator* iterator);
+  Bool (*candidate_list_next)(RimeCandidateListIterator* iterator);
+  void (*candidate_list_end)(RimeCandidateListIterator* iterator);
+
+  Bool (*candidate_list_from_index)(RimeSessionId session_id,
+                                    RimeCandidateListIterator* iterator,
+                                    int index);
+
+  //! select a candidate at the given index in candidate list.
+  Bool (*select_candidate)(RimeSessionId session_id, size_t index);
+  //! select a candidate from current page.
+  Bool (*select_candidate_on_current_page)(RimeSessionId session_id,
+                                           size_t index);
+
+  //! delete a candidate at the given index in candidate list.
+  Bool (*delete_candidate)(RimeSessionId session_id, size_t index);
+  //! delete a candidate from current page.
+  Bool (*delete_candidate_on_current_page)(RimeSessionId session_id,
+                                           size_t index);
 
   // runtime options
 
@@ -511,11 +572,30 @@ typedef struct rime_api_t {
                              size_t buffer_size);
   Bool (*select_schema)(RimeSessionId session_id, const char* schema_id);
 
+  const char* (*get_state_label)(RimeSessionId session_id,
+                                 const char* option_name,
+                                 Bool state);
+  RimeStringSlice (*get_state_label_abbreviated)(RimeSessionId session_id,
+                                                 const char* option_name,
+                                                 Bool state,
+                                                 Bool abbreviated);
+
   // configuration
 
   Bool (*schema_open)(const char* schema_id, RimeConfig* config);
   Bool (*config_open)(const char* config_id, RimeConfig* config);
+  //! access config files in user data directory, eg. user.yaml and
+  //! installation.yaml
+  Bool (*user_config_open)(const char* config_id, RimeConfig* config);
   Bool (*config_close)(RimeConfig* config);
+  //! initialize an empty config object
+  /*!
+   * should call `config_close()` to free the object
+   */
+  Bool (*config_init)(RimeConfig* config);
+  //! deserialize config from a yaml string
+  Bool (*config_load_string)(RimeConfig* config, const char* yaml);
+  // Access config values
   Bool (*config_get_bool)(RimeConfig* config, const char* key, Bool* value);
   Bool (*config_get_int)(RimeConfig* config, const char* key, int* value);
   Bool (*config_get_double)(RimeConfig* config, const char* key, double* value);
@@ -524,12 +604,34 @@ typedef struct rime_api_t {
                             char* value,
                             size_t buffer_size);
   const char* (*config_get_cstring)(RimeConfig* config, const char* key);
-  Bool (*config_update_signature)(RimeConfig* config, const char* signer);
+  // configuration: setters
+  Bool (*config_set_bool)(RimeConfig* config, const char* key, Bool value);
+  Bool (*config_set_int)(RimeConfig* config, const char* key, int value);
+  Bool (*config_set_double)(RimeConfig* config, const char* key, double value);
+  Bool (*config_set_string)(RimeConfig* config,
+                            const char* key,
+                            const char* value);
+  // configuration: manipulating complex structures
+  Bool (*config_get_item)(RimeConfig* config,
+                          const char* key,
+                          RimeConfig* value);
+  Bool (*config_set_item)(RimeConfig* config,
+                          const char* key,
+                          RimeConfig* value);
+  Bool (*config_clear)(RimeConfig* config, const char* key);
+  Bool (*config_create_list)(RimeConfig* config, const char* key);
+  Bool (*config_create_map)(RimeConfig* config, const char* key);
+  size_t (*config_list_size)(RimeConfig* config, const char* key);
+  Bool (*config_begin_list)(RimeConfigIterator* iterator,
+                            RimeConfig* config,
+                            const char* key);
   Bool (*config_begin_map)(RimeConfigIterator* iterator,
                            RimeConfig* config,
                            const char* key);
   Bool (*config_next)(RimeConfigIterator* iterator);
   void (*config_end)(RimeConfigIterator* iterator);
+  // utilities
+  Bool (*config_update_signature)(RimeConfig* config, const char* signer);
 
   // testing
 
@@ -548,78 +650,13 @@ typedef struct rime_api_t {
   const char* (*get_user_id)(void);
   void (*get_user_data_sync_dir)(char* dir, size_t buffer_size);
 
-  //! initialize an empty config object
-  /*!
-   * should call config_close() to free the object
-   */
-  Bool (*config_init)(RimeConfig* config);
-  //! deserialize config from a yaml string
-  Bool (*config_load_string)(RimeConfig* config, const char* yaml);
-
-  // configuration: setters
-  Bool (*config_set_bool)(RimeConfig* config, const char* key, Bool value);
-  Bool (*config_set_int)(RimeConfig* config, const char* key, int value);
-  Bool (*config_set_double)(RimeConfig* config, const char* key, double value);
-  Bool (*config_set_string)(RimeConfig* config,
-                            const char* key,
-                            const char* value);
-
-  // configuration: manipulating complex structures
-  Bool (*config_get_item)(RimeConfig* config,
-                          const char* key,
-                          RimeConfig* value);
-  Bool (*config_set_item)(RimeConfig* config,
-                          const char* key,
-                          RimeConfig* value);
-  Bool (*config_clear)(RimeConfig* config, const char* key);
-  Bool (*config_create_list)(RimeConfig* config, const char* key);
-  Bool (*config_create_map)(RimeConfig* config, const char* key);
-  size_t (*config_list_size)(RimeConfig* config, const char* key);
-  Bool (*config_begin_list)(RimeConfigIterator* iterator,
-                            RimeConfig* config,
-                            const char* key);
-
-  //! get raw input
-  /*!
-   *  NULL is returned if session does not exist.
-   *  the returned pointer to input string will become invalid upon editing.
-   */
-  const char* (*get_input)(RimeSessionId session_id);
-
-  //! caret position in terms of raw input
-  size_t (*get_caret_pos)(RimeSessionId session_id);
-
-  //! select a candidate at the given index in candidate list.
-  Bool (*select_candidate)(RimeSessionId session_id, size_t index);
-
-  //! get the version of librime
-  const char* (*get_version)(void);
-
-  //! set caret position in terms of raw input
-  void (*set_caret_pos)(RimeSessionId session_id, size_t caret_pos);
-
-  //! select a candidate from current page.
-  Bool (*select_candidate_on_current_page)(RimeSessionId session_id,
-                                           size_t index);
-
-  //! access candidate list.
-  Bool (*candidate_list_begin)(RimeSessionId session_id,
-                               RimeCandidateListIterator* iterator);
-  Bool (*candidate_list_next)(RimeCandidateListIterator* iterator);
-  void (*candidate_list_end)(RimeCandidateListIterator* iterator);
-
-  //! access config files in user data directory, eg. user.yaml and
-  //! installation.yaml
-  Bool (*user_config_open)(const char* config_id, RimeConfig* config);
-
-  Bool (*candidate_list_from_index)(RimeSessionId session_id,
-                                    RimeCandidateListIterator* iterator,
-                                    int index);
-
   //! prebuilt data directory.
   const char* (*get_prebuilt_data_dir)(void);
   //! staging directory, stores data files deployed to a Rime client.
   const char* (*get_staging_dir)(void);
+
+  //! get the version of librime
+  const char* (*get_version)(void);
 
   //! Deprecated: for capnproto API, use "proto" module from librime-proto
   //! plugin.
@@ -629,21 +666,6 @@ typedef struct rime_api_t {
                         RIME_PROTO_BUILDER* context_builder);
   void (*status_proto)(RimeSessionId session_id,
                        RIME_PROTO_BUILDER* status_builder);
-
-  const char* (*get_state_label)(RimeSessionId session_id,
-                                 const char* option_name,
-                                 Bool state);
-
-  //! delete a candidate at the given index in candidate list.
-  Bool (*delete_candidate)(RimeSessionId session_id, size_t index);
-  //! delete a candidate from current page.
-  Bool (*delete_candidate_on_current_page)(RimeSessionId session_id,
-                                           size_t index);
-
-  RimeStringSlice (*get_state_label_abbreviated)(RimeSessionId session_id,
-                                                 const char* option_name,
-                                                 Bool state,
-                                                 Bool abbreviated);
 } RimeApi;
 
 //! API entry
@@ -673,8 +695,8 @@ RIME_API RimeApi* rime_get_api(void);
 
 /*!
  *  Automatically register a rime module when the library is loaded.
- *  Clients should define functions called rime_<module_name>_initialize(),
- *  and rime_<module_name>_finalize().
+ *  Clients should define functions called `rime_<module_name>_initialize()`,
+ *  and `rime_<module_name>_finalize()`.
  *  \sa core_module.cc for an example.
  */
 #define RIME_REGISTER_MODULE(name)                       \
