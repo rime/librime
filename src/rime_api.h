@@ -302,6 +302,14 @@ RIME_API Bool RimeSelectCandidateOnCurrentPage(RimeSessionId session_id,
 RIME_API Bool RimeDeleteCandidate(RimeSessionId session_id, size_t index);
 RIME_API Bool RimeDeleteCandidateOnCurrentPage(RimeSessionId session_id,
                                                size_t index);
+//! get raw input
+/*!
+ *  NULL is returned if session does not exist.
+ *  the returned pointer to input string will become invalid upon editing.
+ */
+RIME_API const char* RimeGetInput(RimeSessionId session_id);
+RIME_API size_t RimeGetCaretPos(RimeSessionId session_id);
+RIME_API void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos);
 
 // Runtime options
 
@@ -324,6 +332,14 @@ RIME_API Bool RimeGetCurrentSchema(RimeSessionId session_id,
                                    char* schema_id,
                                    size_t buffer_size);
 RIME_API Bool RimeSelectSchema(RimeSessionId session_id, const char* schema_id);
+
+RIME_API const char* RimeGetStateLabel(RimeSessionId session_id,
+                                       const char* option_name,
+                                       Bool state);
+RIME_API RimeStringSlice RimeGetStateLabelAbbreviated(RimeSessionId session_id,
+                                                      const char* option_name,
+                                                      Bool state,
+                                                      Bool abbreviated);
 
 // Configuration
 
@@ -414,8 +430,14 @@ RIME_API Bool RimeRunTask(const char* task_name);
 
 RIME_API const char* RimeGetSharedDataDir(void);
 RIME_API const char* RimeGetUserDataDir(void);
+RIME_API const char* RimeGetPrebuiltDataDir(void);
+RIME_API const char* RimeGetStagingDir(void);
 RIME_API const char* RimeGetSyncDir(void);
 RIME_API const char* RimeGetUserId(void);
+RIME_API void RimeGetUserDataSyncDir(char* dir, size_t buffer_size);
+
+//! get the version of librime
+RIME_API const char* RimeGetVersion(void);
 
 /*! The API structure
  *  RimeApi is for rime v1.0+

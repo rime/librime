@@ -976,7 +976,7 @@ RIME_API size_t RimeConfigListSize(RimeConfig* config, const char* key) {
   return 0;
 }
 
-const char* RimeGetInput(RimeSessionId session_id) {
+RIME_API const char* RimeGetInput(RimeSessionId session_id) {
   an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return NULL;
@@ -986,7 +986,7 @@ const char* RimeGetInput(RimeSessionId session_id) {
   return ctx->input().c_str();
 }
 
-size_t RimeGetCaretPos(RimeSessionId session_id) {
+RIME_API size_t RimeGetCaretPos(RimeSessionId session_id) {
   an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return 0;
@@ -1038,7 +1038,7 @@ RIME_API Bool RimeSelectCandidateOnCurrentPage(RimeSessionId session_id,
   return do_with_candidate_on_current_page(session_id, index, &Context::Select);
 }
 
-const char* RimeGetVersion() {
+RIME_API const char* RimeGetVersion() {
   return RIME_VERSION;
 }
 
@@ -1052,7 +1052,7 @@ RIME_API Bool RimeDeleteCandidateOnCurrentPage(RimeSessionId session_id,
                                            &Context::DeleteCandidate);
 }
 
-void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos) {
+RIME_API void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos) {
   an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return;
@@ -1062,10 +1062,10 @@ void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos) {
   return ctx->set_caret_pos(caret_pos);
 }
 
-RimeStringSlice RimeGetStateLabelAbbreviated(RimeSessionId session_id,
-                                             const char* option_name,
-                                             Bool state,
-                                             Bool abbreviated) {
+RIME_API RimeStringSlice RimeGetStateLabelAbbreviated(RimeSessionId session_id,
+                                                      const char* option_name,
+                                                      Bool state,
+                                                      Bool abbreviated) {
   an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return {nullptr, 0};
@@ -1077,9 +1077,9 @@ RimeStringSlice RimeGetStateLabelAbbreviated(RimeSessionId session_id,
   return {label.str, label.length};
 }
 
-const char* RimeGetStateLabel(RimeSessionId session_id,
-                              const char* option_name,
-                              Bool state) {
+RIME_API const char* RimeGetStateLabel(RimeSessionId session_id,
+                                       const char* option_name,
+                                       Bool state) {
   return RimeGetStateLabelAbbreviated(session_id, option_name, state, False)
       .str;
 }
