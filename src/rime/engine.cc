@@ -162,10 +162,12 @@ void ConcreteEngine::Compose(Context* ctx) {
   }
   CalculateSegmentation(&comp);
   TranslateSegments(&comp);
-  DLOG(INFO) << "composition: " << comp.GetDebugText();
+  DLOG(INFO) << "composition: [" << comp.GetDebugText() << "]";
 }
 
 void ConcreteEngine::CalculateSegmentation(Segmentation* segments) {
+  DLOG(INFO) << "CalculateSegmentation, segments: " << segments->size()
+             << ", finished? " << segments->HasFinishedSegmentation();
   while (!segments->HasFinishedSegmentation()) {
     size_t start_pos = segments->GetCurrentStartPosition();
     size_t end_pos = segments->GetCurrentEndPosition();
@@ -189,20 +191,22 @@ void ConcreteEngine::CalculateSegmentation(Segmentation* segments) {
       segments->Forward();
   }
   // start an empty segment only at the end of a confirmed composition.
-  segments->Trim();
+  if (!segments->empty() && !segments->back().HasTag("placeholder"))
+    segments->Trim();
   if (!segments->empty() && segments->back().status >= Segment::kSelected)
     segments->Forward();
 }
 
 void ConcreteEngine::TranslateSegments(Segmentation* segments) {
+  DLOG(INFO) << "TranslateSegments: " << *segments;
   for (Segment& segment : *segments) {
+    DLOG(INFO) << "segment [" << segment.start << ", " << segment.end
+               << "), status: " << segment.status;
     if (segment.status >= Segment::kGuess)
       continue;
     size_t len = segment.end - segment.start;
-    if (len == 0)
-      continue;
     string input = segments->input().substr(segment.start, len);
-    DLOG(INFO) << "translating segment: " << input;
+    DLOG(INFO) << "translating segment: [" << input << "]";
     auto menu = New<Menu>();
     for (auto& translator : translators_) {
       auto translation = translator->Query(input, segment);
