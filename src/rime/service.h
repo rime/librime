@@ -85,6 +85,7 @@ class RIME_API Service {
   bool disabled() { return !started_ || deployer_.IsMaintenanceMode(); }
 
   static Service& instance();
+  const auto& session_map() { return sessions_; }
 
  private:
   Service();

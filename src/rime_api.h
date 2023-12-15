@@ -493,6 +493,7 @@ typedef struct rime_api_t {
   // runtime options
 
   void (*set_option)(RimeSessionId session_id, const char* option, Bool value);
+  void (*set_global_option)(const char* option, Bool value);
   Bool (*get_option)(RimeSessionId session_id, const char* option);
 
   void (*set_property)(RimeSessionId session_id,

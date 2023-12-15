@@ -443,6 +443,19 @@ RIME_API void RimeSetOption(RimeSessionId session_id,
   ctx->set_option(option, !!value);
 }
 
+RIME_API void RimeSetGlobalOption(const char* option, Bool value) {
+  auto& session_map = Service::instance().session_map();
+  for (auto& sm : session_map) {
+    auto session(sm.second);
+    if (!session)
+      continue;
+    Context* ctx = session->context();
+    if (!ctx)
+      continue;
+    ctx->set_option(option, !!value);
+  }
+}
+
 RIME_API Bool RimeGetOption(RimeSessionId session_id, const char* option) {
   an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
@@ -1116,6 +1129,7 @@ RIME_API RimeApi* rime_get_api() {
     s_api.get_status = &RimeGetStatus;
     s_api.free_status = &RimeFreeStatus;
     s_api.set_option = &RimeSetOption;
+    s_api.set_global_option = &RimeSetGlobalOption;
     s_api.get_option = &RimeGetOption;
     s_api.set_property = &RimeSetProperty;
     s_api.get_property = &RimeGetProperty;
