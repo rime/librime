@@ -24,7 +24,7 @@ jobs:
       rime_plugins: hchunhui/librime-lua lotem/librime-octagram rime/librime-predict
 
   release:
-    needs: [macos, windows, linux]
+    needs: [macos, windows]
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
