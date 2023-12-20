@@ -20,7 +20,8 @@ string RawCode::ToString() const {
 }
 
 void RawCode::FromString(const string& code_str) {
-  *dynamic_cast<vector<string>*>(this) = strings::split(code_str, " ");
+  *dynamic_cast<vector<string>*>(this) =
+      strings::split(code_str, " ", strings::SplitBehavior::SkipToken);
 }
 
 TableEncoder::TableEncoder(PhraseCollector* collector)

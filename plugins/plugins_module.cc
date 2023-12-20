@@ -3,6 +3,7 @@
 // Distributed under the BSD License
 //
 
+#include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/dll.hpp>
 #include <filesystem>
@@ -78,7 +79,7 @@ string PluginManager::plugin_name_of(fs::path plugin_file) {
   }
   // replace dash with underscore, for the plugin name is part of the module
   // initializer function name.
-  boost::replace_all(name, "-", "_");
+  std::replace(name.begin(), name.end(), '-', '_');
   return name;
 }
 

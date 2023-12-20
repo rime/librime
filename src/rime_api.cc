@@ -6,7 +6,6 @@
 //
 #include <cstring>
 #include <sstream>
-#include <boost/format.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/config.h>
@@ -737,7 +736,9 @@ RIME_API Bool RimeConfigNext(RimeConfigIterator* iterator) {
       ++p->iter;
     if (p->iter == p->end)
       return False;
-    p->key = boost::str(boost::format("@%1%") % iterator->index);
+    std::ostringstream key;
+    key << "@" << iterator->index;
+    p->key = key.str();
     p->path = p->prefix + p->key;
     iterator->key = p->key.c_str();
     iterator->path = p->path.c_str();
@@ -1092,6 +1093,17 @@ const char* RimeGetStateLabel(RimeSessionId session_id,
       .str;
 }
 
+RIME_API Bool RimeSetInput(RimeSessionId session_id, const char* input) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  Context* ctx = session->context();
+  if (!ctx)
+    return False;
+  ctx->set_input(input);
+  return True;
+}
+
 RIME_API RimeApi* rime_get_api() {
   static RimeApi s_api = {0};
   if (!s_api.data_size) {
@@ -1187,6 +1199,7 @@ RIME_API RimeApi* rime_get_api() {
     s_api.delete_candidate = &RimeDeleteCandidate;
     s_api.delete_candidate_on_current_page = &RimeDeleteCandidateOnCurrentPage;
     s_api.get_state_label_abbreviated = &RimeGetStateLabelAbbreviated;
+    s_api.set_input = &RimeSetInput;
   }
   return &s_api;
 }

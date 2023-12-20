@@ -64,7 +64,7 @@ void print_menu(RimeMenu* menu) {
 }
 
 void print_context(RimeContext* context) {
-  if (context->composition.length > 0) {
+  if (context->composition.length > 0 || context->menu.num_candidates > 0) {
     print_composition(&context->composition);
   } else {
     printf("(not composing)\n");

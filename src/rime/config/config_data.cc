@@ -5,9 +5,9 @@
 #include <cctype>
 #include <cstdlib>
 #include <fstream>
+#include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <filesystem>
-#include <boost/format.hpp>
 #include <yaml-cpp/yaml.h>
 #include <rime/config/config_compiler.h>
 #include <rime/config/config_cow_ref.h>
@@ -96,7 +96,9 @@ bool ConfigData::IsListItemReference(const string& key) {
 }
 
 string ConfigData::FormatListIndex(size_t index) {
-  return boost::str(boost::format("@%u") % index);
+  std::ostringstream formatted;
+  formatted << "@" << index;
+  return formatted.str();
 }
 
 static const string kAfter("after");
@@ -286,9 +288,9 @@ an<ConfigItem> ConvertFromYaml(const YAML::Node& node,
 void EmitScalar(const string& str_value, YAML::Emitter* emitter) {
   if (str_value.find_first_of("\r\n") != string::npos) {
     *emitter << YAML::Literal;
-  } else if (!boost::algorithm::all(str_value,
-                                    boost::algorithm::is_alnum() ||
-                                        boost::algorithm::is_any_of("_."))) {
+  } else if (!std::all_of(str_value.cbegin(), str_value.cend(), [](auto ch) {
+               return std::isalnum(ch) || ch == '_' || ch == '.';
+             })) {
     *emitter << YAML::DoubleQuoted;
   }
   *emitter << str_value;
