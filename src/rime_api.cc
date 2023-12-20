@@ -1037,13 +1037,13 @@ RIME_API Bool RimeSelectCandidateOnCurrentPage(RimeSessionId session_id,
   return do_with_candidate_on_current_page(session_id, index, &Context::Select);
 }
 
-RIME_API Bool RimeChooseCandidate(RimeSessionId session_id, size_t index) {
-  return do_with_candidate(session_id, index, &Context::Choose);
+RIME_API Bool RimeHiliteCandidate(RimeSessionId session_id, size_t index) {
+  return do_with_candidate(session_id, index, &Context::Hilite);
 }
 
-RIME_API Bool RimeChooseCandidateOnCurrentPage(RimeSessionId session_id,
+RIME_API Bool RimeHiliteCandidateOnCurrentPage(RimeSessionId session_id,
                                                size_t index) {
-  return do_with_candidate_on_current_page(session_id, index, &Context::Choose);
+  return do_with_candidate_on_current_page(session_id, index, &Context::Hilite);
 }
 
 const char* RimeGetVersion() {
@@ -1182,8 +1182,8 @@ RIME_API RimeApi* rime_get_api() {
     s_api.context_proto = nullptr;
     s_api.status_proto = nullptr;
     s_api.get_state_label = &RimeGetStateLabel;
-    s_api.choose_candidate = &RimeChooseCandidate;
-    s_api.choose_candidate_on_current_page = &RimeChooseCandidateOnCurrentPage;
+    s_api.hilite_candidate = &RimeHiliteCandidate;
+    s_api.hilite_candidate_on_current_page = &RimeHiliteCandidateOnCurrentPage;
     s_api.delete_candidate = &RimeDeleteCandidate;
     s_api.delete_candidate_on_current_page = &RimeDeleteCandidateOnCurrentPage;
     s_api.get_state_label_abbreviated = &RimeGetStateLabelAbbreviated;

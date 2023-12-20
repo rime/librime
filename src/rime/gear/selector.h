@@ -36,7 +36,7 @@ class Selector : public Processor, public KeyBindingProcessor<Selector, 4> {
   Handler Home;
   Handler End;
 
-  bool ChooseCandidateAt(Context* ctx, int index);
+  bool HiliteCandidateAt(Context* ctx, int index);
   bool SelectCandidateAt(Context* ctx, int index);
 };
 

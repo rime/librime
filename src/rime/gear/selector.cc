@@ -149,7 +149,7 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
   else if (ch >= XK_KP_0 && ch <= XK_KP_9)
     index = ((ch - XK_KP_0) + 9) % 10;
   if (index >= 0) {
-    key_event.alt() ? ChooseCandidateAt(ctx, index)
+    key_event.alt() ? HiliteCandidateAt(ctx, index)
                     : SelectCandidateAt(ctx, index);
     return kAccepted;
   }
@@ -253,7 +253,7 @@ bool Selector::End(Context* ctx) {
   return Home(ctx);
 }
 
-bool Selector::ChooseCandidateAt(Context* ctx, int index) {
+bool Selector::HiliteCandidateAt(Context* ctx, int index) {
   Composition& comp = ctx->composition();
   if (comp.empty())
     return false;
@@ -262,8 +262,12 @@ bool Selector::ChooseCandidateAt(Context* ctx, int index) {
     return false;
   int selected_index = comp.back().selected_index;
   int page_start = (selected_index / page_size) * page_size;
+  // hilite an already hilited candidate -> select this candidate
+  if (page_start + index == selected_index)
+    return ctx->Select(selected_index);
+  comp.back().selected_index = page_start + index;
   comp.back().tags.insert("paging");
-  return ctx->Choose(page_start + index);
+  return true;
 }
 
 bool Selector::SelectCandidateAt(Context* ctx, int index) {
