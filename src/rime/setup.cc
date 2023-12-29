@@ -73,15 +73,24 @@ RIME_API void SetupDeployer(RimeTraits* traits) {
         (fs::path(deployer.user_data_dir) / "build").string();
 }
 
+#ifndef GLOG_HAVE_IS_INITIALIZED
+static bool _g_rime_glog_intialized = false;
+#endif
 RIME_API void SetupLogging(const char* app_name,
                            int min_log_level,
                            const char* log_dir) {
 #ifdef RIME_ENABLE_LOGGING
   FLAGS_minloglevel = min_log_level;
   FLAGS_alsologtostderr = true;
+#ifdef GLOG_HAVE_IS_INITIALIZED
   if (google::IsGoogleLoggingInitialized()) {
     return;
   }
+#else
+  if (_g_rime_glog_intialized)
+    return;
+  _g_rime_glog_intialized = true;
+#endif
   if (log_dir) {
     if (log_dir[0] == '\0') {
       FLAGS_logtostderr = true;

@@ -84,6 +84,15 @@ if(ENABLE_LOGGING)
     add_definitions(-DGOOGLE_GLOG_DLL_DECL=)
   endif()
 
+  include(CheckCXXSymbolExists)
+  set(CMAKE_REQUIRED_INCLUDES ${Glog_INCLUDE_PATH})
+  set(CMAKE_REQUIRED_LIBRARIES ${Glog_LIBRARY})
+  check_cxx_symbol_exists(google::IsGoogleLoggingInitialized
+    "glog/logging.h" GLOG_HAVE_IS_INITIALIZED)
+  if(GLOG_HAVE_IS_INITIALIZED)
+    add_definitions(-DGLOG_HAVE_IS_INITIALIZED)
+  endif()
+
   set(RIME_ENABLE_LOGGING 1)
 
 endif()
