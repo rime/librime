@@ -16,8 +16,8 @@ jobs:
   build:
     runs-on: macos-latest
     env:
-      boost_version: 1.83.0
-      BOOST_ROOT: ${{ github.workspace }}/deps/boost_1_83_0
+      boost_version: 1.84.0
+      BOOST_ROOT: ${{ github.workspace }}/deps/boost_1_84_0
       RIME_PLUGINS: ${{ inputs.rime_plugins }}
     steps:
       - name: Checkout last commit
