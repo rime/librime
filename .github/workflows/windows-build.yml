@@ -36,6 +36,7 @@ jobs:
           $envfile = ".\env.bat"
           $envcontent = @"
             set RIME_ROOT=%CD%
+            if not defined BOOST_ROOT set BOOST_ROOT=%RIME_ROOT%\deps\boost-1.84.0
             set CXX=${{ matrix.cxx }}
             set CC=${{ matrix.cc }}
             set CMAKE_GENERATOR=Ninja
