@@ -18,7 +18,7 @@ echo RIME_ROOT=%RIME_ROOT%
 echo.
 
 if defined BOOST_ROOT (
-  if exist "%BOOST_ROOT%\boost" goto boost_found
+  if exist "%BOOST_ROOT%\libs" goto boost_found
 )
 echo Error: Boost not found! Please set BOOST_ROOT in env.bat.
 exit /b 1
