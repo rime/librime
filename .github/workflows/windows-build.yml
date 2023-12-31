@@ -73,7 +73,7 @@ jobs:
       - name: Download Boost source
         if: steps.cache-boost-src.outputs.cache-hit != 'true'
         run: |
-          aria2c https://github.com/boostorg/boost/releases/download/boost-${{ env.boost_version }}/boost-${{ env.boost_version }} -d deps
+          aria2c https://github.com/boostorg/boost/releases/download/boost-${{ env.boost_version }}/boost-${{ env.boost_version }}.7z -d deps
 
       - name: Extract Boost source tarball
         run: |
