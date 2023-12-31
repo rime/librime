@@ -36,7 +36,6 @@ jobs:
           $envfile = ".\env.bat"
           $envcontent = @"
             set RIME_ROOT=%CD%
-            if not defined BOOST_ROOT set BOOST_ROOT=%RIME_ROOT%\deps\boost-1.84.0
             set CXX=${{ matrix.cxx }}
             set CC=${{ matrix.cc }}
             set CMAKE_GENERATOR=Ninja
@@ -80,6 +79,9 @@ jobs:
         run: |
           pushd deps
           7z x ${{ env.BOOST_ROOT }}.7z
+          cd ${{ env.BOOST_ROOT }}
+          .\bootstrap.bat
+          .\b2 headers
           popd
 
       - name: Cache dependencies
