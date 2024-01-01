@@ -20,8 +20,8 @@ jobs:
           - { compiler: msvc, cc: cl, cxx: cl }
           - { compiler: clang, cc: clang, cxx: clang++ }
     env:
-      boost_version: 1.83.0
-      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_83_0
+      boost_version: 1.84.0
+      BOOST_ROOT: ${{ github.workspace }}\deps\boost-1.84.0
       RIME_PLUGINS: ${{ inputs.rime_plugins }}
 
     steps:
@@ -36,7 +36,6 @@ jobs:
           $envfile = ".\env.bat"
           $envcontent = @"
             set RIME_ROOT=%CD%
-            if not defined BOOST_ROOT set BOOST_ROOT=%RIME_ROOT%\deps\boost_1_83_0
             set CXX=${{ matrix.cxx }}
             set CC=${{ matrix.cc }}
             set CMAKE_GENERATOR=Ninja
@@ -74,12 +73,15 @@ jobs:
       - name: Download Boost source
         if: steps.cache-boost-src.outputs.cache-hit != 'true'
         run: |
-          aria2c https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.7z -d deps
+          aria2c https://github.com/boostorg/boost/releases/download/boost-${{ env.boost_version }}/boost-${{ env.boost_version }}.7z -d deps
 
       - name: Extract Boost source tarball
         run: |
           pushd deps
           7z x ${{ env.BOOST_ROOT }}.7z
+          cd ${{ env.BOOST_ROOT }}
+          .\bootstrap.bat
+          .\b2 headers
           popd
 
       - name: Cache dependencies
