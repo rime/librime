@@ -21,11 +21,18 @@ ProcessResult KeyBindingProcessor<T, N>::ProcessKeyEvent(
     return kAccepted;
   }
   // try to match the fallback options
-  if (key_event.ctrl() || key_event.alt()) {
+  if (key_event.ctrl() || key_event.super()) {
     return kNoop;
   }
+  if (key_event.alt() && (fallback_options & AltAsControl)) {
+    KeyEvent alt_as_control{key_event.keycode(),
+                            (key_event.modifier() & ~kAltMask) | kControlMask};
+    if (Accept(alt_as_control, ctx, keymap)) {
+      return kAccepted;
+    }
+  }
   if (key_event.shift()) {
-    if ((fallback_options & ShiftAsControl) != 0) {
+    if ((fallback_options & ShiftAsControl) && !key_event.alt()) {
       KeyEvent shift_as_control{
           key_event.keycode(),
           (key_event.modifier() & ~kShiftMask) | kControlMask};
