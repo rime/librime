@@ -51,6 +51,9 @@ jobs:
         run: |
           pushd deps
           tar -xJf ${{ env.BOOST_ROOT }}.tar.xz
+          cd ${{ env.BOOST_ROOT }}
+          ./bootstrap.sh
+          ./b2 headers
           popd
 
       - name: Install Boost
