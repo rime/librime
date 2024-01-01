@@ -12,6 +12,9 @@ rem download boost source
 aria2c https://github.com/boostorg/boost/releases/download/boost-%boost_version%/boost-%boost_version%.7z -d %src_dir%
 pushd %src_dir%
 7z x boost-%boost_version%.7z
+cd boost-%boost_version%
+.\bootstrap.bat
+.\b2 headers
 popd
 :boost_found
 
