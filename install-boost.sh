@@ -27,4 +27,7 @@ if [[ $# -eq 0 || " $* " =~ ' --download ' ]]; then
     else
         echo "found boost at ${BOOST_ROOT}"
     fi
+    cd "${BOOST_ROOT}"
+    ./bootstrap.sh
+    ./b2 headers
 fi
