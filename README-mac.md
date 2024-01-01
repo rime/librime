@@ -21,7 +21,7 @@ third-party dependencies separately.
 ## Install Boost C++ libraries
 
 Boost is a third-party library which librime code heavily depend on.
-These dependencies include a few compiled (non-header-only) Boost libraries.
+These dependencies include a few header-only Boost libraries.
 
 **Option 1 (recommended):** Download and build Boost from source.
 
@@ -31,14 +31,13 @@ bash install-boost.sh
 ```
 
 The make script will download Boost source tarball, extract it to
-`librime/deps/boost_<version>` and create needed static libraries
-for building macOS uinversal binary.
+`librime/deps/boost-<version>`.
 
-Set shell variable `BOOST_ROOT` to the path to `boost_<version>` directory prior
+Set shell variable `BOOST_ROOT` to the path to `boost-<version>` directory prior
 to building librime.
 
 ``` sh
-export BOOST_ROOT="$(pwd)/deps/boost_1_84_0"
+export BOOST_ROOT="$(pwd)/deps/boost-1.84.0"
 ```
 
 **Option 2:** Install Boost libraries from Homebrew.
