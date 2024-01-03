@@ -81,7 +81,7 @@ RIME_API void SetupLogging(const char* app_name,
   FLAGS_alsologtostderr = true;
   if (log_dir) {
     if (log_dir[0] == '\0') {
-      FLAGS_logtostderr = true;
+      google::LogToStderr();
     } else {
       FLAGS_log_dir = log_dir;
     }
