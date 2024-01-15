@@ -72,6 +72,8 @@ class RIME_API Context {
   bool get_option(const string& name) const;
   void set_property(const string& name, const string& value);
   string get_property(const string& name) const;
+  const map<string, bool>& options() const { return options_; }
+  const map<string, string>& properties() const { return properties_; }
   // options and properties starting with '_' are local to schema;
   // others are session scoped.
   void ClearTransientOptions();
