@@ -648,7 +648,7 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
     for (const auto& entry : fs::directory_iterator(dir)) {
       const string& file_name(entry.path().filename().string());
       if (entry.is_regular_file() && !entry.is_symlink() &&
-          boost::starts_with(file_name, "rime.*") &&
+          boost::starts_with(file_name, "rime.") &&
           !boost::contains(file_name, today)) {
         files.push_back(entry.path());
       }
