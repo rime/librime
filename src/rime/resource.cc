@@ -7,6 +7,10 @@
 #include <filesystem>
 #include <rime/resource.h>
 
+#ifdef _MSC_VER
+#include <opencc/UTF8Util.hpp>
+#endif
+
 namespace rime {
 
 string ResourceResolver::ToResourceId(const string& file_path) const {
@@ -27,19 +31,48 @@ string ResourceResolver::ToFilePath(const string& resource_id) const {
          (missing_suffix ? type_.suffix : "");
 }
 
+#ifdef _MSC_VER
+static std::string U16ToACP(const std::wstring& wstr) {
+  std::string ret;
+  int length = static_cast<int>(wstr.length());
+  int convcnt =
+      WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), length, NULL, 0, NULL, NULL);
+  if (convcnt > 0) {
+    ret.resize(convcnt);
+    WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), length, &ret[0], convcnt, NULL,
+                        NULL);
+  }
+  return ret;
+}
+#endif
+
 std::filesystem::path ResourceResolver::ResolvePath(const string& resource_id) {
+#ifdef _MSC_VER
+  std::wstring platform_id_wstr =
+      opencc::UTF8Util::GetPlatformString(resource_id);
+  std::string resource_id_ = U16ToACP(platform_id_wstr);
+#else
+  std::string resource_id_ = resource_id;
+#endif
   return std::filesystem::absolute(
       root_path_ /
-      std::filesystem::path(type_.prefix + resource_id + type_.suffix));
+      std::filesystem::path(type_.prefix + resource_id_ + type_.suffix));
 }
 
 std::filesystem::path FallbackResourceResolver::ResolvePath(
     const string& resource_id) {
-  auto default_path = ResourceResolver::ResolvePath(resource_id);
+#ifdef _MSC_VER
+  std::wstring platform_id_wstr =
+      opencc::UTF8Util::GetPlatformString(resource_id);
+  std::string resource_id_ = U16ToACP(platform_id_wstr);
+#else
+  std::string resource_id_ = resource_id;
+#endif
+  auto default_path = ResourceResolver::ResolvePath(resource_id_);
   if (!std::filesystem::exists(default_path)) {
     auto fallback_path = std::filesystem::absolute(
         fallback_root_path_ /
-        std::filesystem::path(type_.prefix + resource_id + type_.suffix));
+        std::filesystem::path(type_.prefix + resource_id_ + type_.suffix));
     if (std::filesystem::exists(fallback_path)) {
       return fallback_path;
     }
