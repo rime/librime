@@ -666,7 +666,6 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
         success = false;
       }
     }
-    vector<fs::path>().swap(files);
   }
   if (removed != 0) {
     LOG(INFO) << "cleaned " << removed << " log files.";
