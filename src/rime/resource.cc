@@ -28,18 +28,30 @@ string ResourceResolver::ToFilePath(const string& resource_id) const {
 }
 
 std::filesystem::path ResourceResolver::ResolvePath(const string& resource_id) {
+#ifdef _WIN32
+  return std::filesystem::absolute(
+      root_path_ /
+      std::filesystem::u8path(type_.prefix + resource_id + type_.suffix));
+#else
   return std::filesystem::absolute(
       root_path_ /
       std::filesystem::path(type_.prefix + resource_id + type_.suffix));
+#endif
 }
 
 std::filesystem::path FallbackResourceResolver::ResolvePath(
     const string& resource_id) {
   auto default_path = ResourceResolver::ResolvePath(resource_id);
   if (!std::filesystem::exists(default_path)) {
+#ifdef _WIN32
+    auto fallback_path = std::filesystem::absolute(
+        fallback_root_path_ /
+        std::filesystem::u8path(type_.prefix + resource_id + type_.suffix));
+#else
     auto fallback_path = std::filesystem::absolute(
         fallback_root_path_ /
         std::filesystem::path(type_.prefix + resource_id + type_.suffix));
+#endif
     if (std::filesystem::exists(fallback_path)) {
       return fallback_path;
     }
