@@ -641,19 +641,26 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
   DLOG(INFO) << "scanning " << dirs.size() << " temp directory for log files.";
 
   int removed = 0;
-  for (auto i = dirs.cbegin(); i != dirs.cend(); ++i) {
-    DLOG(INFO) << "temp directory: " << *i;
-    for (fs::directory_iterator j(*i), end; j != end; ++j) {
-      fs::path entry(j->path());
-      string file_name(entry.filename().string());
+  for (const auto& dir : dirs) {
+    vector<fs::path> files;
+    DLOG(INFO) << "temp directory: " << dir;
+    // preparing files
+    for (const auto& entry : fs::directory_iterator(dir)) {
+      const string& file_name(entry.path().filename().string());
+      if (entry.is_regular_file() && !entry.is_symlink() &&
+          boost::starts_with(file_name, "rime.") &&
+          !boost::contains(file_name, today)) {
+        files.push_back(entry.path());
+      }
+    }
+    // remove files
+    for (const auto& file : files) {
       try {
-        if (fs::is_regular_file(entry) && !fs::is_symlink(entry) &&
-            boost::starts_with(file_name, "rime.") &&
-            !boost::contains(file_name, today)) {
-          DLOG(INFO) << "removing log file '" << file_name << "'.";
-          fs::remove(entry);
-          ++removed;
-        }
+        DLOG(INFO) << "removing log file '" << file.filename() << "'.";
+        // ensure write permission
+        fs::permissions(file, fs::perms::owner_write);
+        fs::remove(file);
+        ++removed;
       } catch (const fs::filesystem_error& ex) {
         LOG(ERROR) << ex.what();
         success = false;
