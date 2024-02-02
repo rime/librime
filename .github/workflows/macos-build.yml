@@ -14,7 +14,11 @@ on:
         type: string
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-13, macos-14]
     env:
       boost_version: 1.84.0
       BOOST_ROOT: ${{ github.workspace }}/deps/boost-1.84.0
