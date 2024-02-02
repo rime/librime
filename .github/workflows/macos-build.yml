@@ -14,7 +14,11 @@ on:
         type: string
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-13, macos-14]
     env:
       boost_version: 1.84.0
       BOOST_ROOT: ${{ github.workspace }}/deps/boost-1.84.0
@@ -44,7 +48,7 @@ jobs:
         with:
           path: |
             ${{ env.BOOST_ROOT }}.tar.xz
-          key: ${{ runner.os }}-boost-${{ env.boost_version }}
+          key: ${{ matrix.os }}-boost-${{ env.boost_version }}
 
       - name: Extract Boost source tarball
         if: steps.cache-boost.outputs.cache-hit == 'true'
@@ -72,7 +76,7 @@ jobs:
             include
             lib
             share
-          key: ${{ runner.os }}${{ inputs.build_variant }}-deps-${{ hashFiles('submodule-status') }}
+          key: ${{ matrix.os }}${{ inputs.build_variant }}-deps-${{ hashFiles('submodule-status') }}
 
       - name: Build dependencies
         if: steps.cache-deps.outputs.cache-hit != 'true'
