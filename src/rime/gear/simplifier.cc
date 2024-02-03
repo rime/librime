@@ -5,7 +5,6 @@
 // 2011-12-12 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
-#include <filesystem>
 #include <stdint.h>
 #include <utf8.h>
 #include <utility>
@@ -25,11 +24,6 @@
 #include <opencc/Dict.hpp>
 #include <opencc/DictEntry.hpp>
 
-#ifdef _MSC_VER
-#include <opencc/UTF8Util.hpp>
-namespace fs = std::filesystem;
-#endif
-
 static const char* quote_left = "\xe3\x80\x94";   //"\xef\xbc\x88";
 static const char* quote_right = "\xe3\x80\x95";  //"\xef\xbc\x89";
 
@@ -41,14 +35,9 @@ class Opencc {
     LOG(INFO) << "initializing opencc: " << config_path;
     opencc::Config config;
     try {
-      // windows config_path in CP_ACP, convert it to UTF-8
-#ifdef _MSC_VER
-      fs::path path{config_path};
-      converter_ =
-          config.NewFromFile(opencc::UTF8Util::U16ToU8(path.wstring()));
-#else
-      converter_ = config.NewFromFile(config_path);
-#endif /*  _MSC_VER */
+      // opencc accepts UTF-8 path.
+      converter_ = config.NewFromFile(path(config_path).u8string());
+
       const list<opencc::ConversionPtr> conversions =
           converter_->GetConversionChain()->GetConversions();
       dict_ = conversions.front()->GetDict();
@@ -178,7 +167,6 @@ Simplifier::Simplifier(const Ticket& ticket)
 }
 
 void Simplifier::Initialize() {
-  using namespace std::filesystem;
   initialized_ = true;  // no retry
   path opencc_config_path = opencc_config_;
   if (opencc_config_path.extension().string() == ".ini") {

@@ -22,8 +22,6 @@
 #include <rime/resource.h>
 #include <rime/service.h>
 
-namespace fs = std::filesystem;
-
 namespace rime {
 
 DictCompiler::DictCompiler(Dictionary* dictionary)
@@ -39,7 +37,7 @@ DictCompiler::DictCompiler(Dictionary* dictionary)
 DictCompiler::~DictCompiler() {}
 
 static bool load_dict_settings_from_file(DictSettings* settings,
-                                         const fs::path& dict_file) {
+                                         const path& dict_file) {
   std::ifstream fin(dict_file.string().c_str());
   bool success = settings->LoadDictHeader(fin);
   fin.close();
@@ -53,7 +51,7 @@ static bool get_dict_files_from_settings(vector<string>* dict_files,
     for (auto it = tables->begin(); it != tables->end(); ++it) {
       string dict_name = As<ConfigValue>(*it)->str();
       auto dict_file = source_resolver->ResolvePath(dict_name + ".dict.yaml");
-      if (!fs::exists(dict_file)) {
+      if (!std::filesystem::exists(dict_file)) {
         LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
         return false;
       }
@@ -162,7 +160,7 @@ bool DictCompiler::Compile(const string& schema_file) {
       EntryCollector collector(std::move(syllabary));
       DictSettings settings;
       auto dict_file = source_resolver_->ResolvePath(pack_name + ".dict.yaml");
-      if (!fs::exists(dict_file)) {
+      if (!std::filesystem::exists(dict_file)) {
         LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
         continue;
       }
@@ -188,8 +186,8 @@ bool DictCompiler::Compile(const string& schema_file) {
   return true;
 }
 
-static fs::path relocate_target(const fs::path& source_path,
-                                ResourceResolver* target_resolver) {
+static path relocate_target(const path& source_path,
+                            ResourceResolver* target_resolver) {
   auto resource_id = source_path.filename().string();
   return target_resolver->ResolvePath(resource_id);
 }
@@ -208,7 +206,7 @@ bool DictCompiler::BuildTable(int table_index,
   collector.Configure(settings);
   collector.Collect(dict_files);
   if (options_ & kDump) {
-    fs::path dump_path(table->file_name());
+    path dump_path(table->file_name());
     dump_path.replace_extension(".txt");
     collector.Dump(dump_path.string());
   }
@@ -313,7 +311,7 @@ bool DictCompiler::BuildPrism(const string& schema_file,
     bool enable_correction = false; // Avoid if initializer to comfort compilers
     if (config.GetBool("translator/enable_correction", &enable_correction) &&
         enable_correction) {
-      fs::path corrector_path(prism_->file_name());
+      path corrector_path(prism_->file_name());
       corrector_path.replace_extension("");
       corrector_path.replace_extension(".correction.bin");
       auto target_path = relocate_target(corrector_path,
@@ -331,9 +329,9 @@ bool DictCompiler::BuildPrism(const string& schema_file,
 #endif
   }
   if ((options_ & kDump) && !script.empty()) {
-    fs::path path(prism_->file_name());
-    path.replace_extension(".txt");
-    script.Dump(path.string());
+    path dump_path(prism_->file_name());
+    dump_path.replace_extension(".txt");
+    script.Dump(dump_path.string());
   }
   // build .prism.bin
   {

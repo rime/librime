@@ -9,6 +9,7 @@
 
 #include <rime/build_config.h>
 
+#include <filesystem>
 #include <functional>
 #include <list>
 #include <map>
@@ -79,6 +80,24 @@ inline an<T> New(Args&&... args) {
 
 using boost::signals2::connection;
 using boost::signals2::signal;
+
+class path : public std::filesystem::path {
+  using fs_path = std::filesystem::path;
+
+ public:
+  path() : fs_path() {}
+  path(const fs_path& p) : fs_path(p) {}
+  path(fs_path&& p) : fs_path(std::move(p)) {}
+#ifdef _WIN32
+  // convert utf-8 string to native encoding path.
+  path(const std::string& utf8_path)
+      : fs_path(std::filesystem::u8path(utf8_path)) {}
+  path(const char* utf8_path) : fs_path(std::filesystem::u8path(utf8_path)) {}
+#else
+  path(const std::string& utf8_path) : fs_path(utf8_path) {}
+  path(const char* utf8_path) : fs_path(utf8_path) {}
+#endif
+};
 
 }  // namespace rime
 

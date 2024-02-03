@@ -47,12 +47,12 @@ bool DetectModifications::Run(Deployer* deployer) {
   time_t last_modified = 0;
   try {
     for (auto dir : data_dirs_) {
-      fs::path p = fs::canonical(dir);
+      path p = fs::canonical(dir);
       last_modified = (std::max)(last_modified,
                                  filesystem::to_time_t(fs::last_write_time(p)));
       if (fs::is_directory(p)) {
         for (fs::directory_iterator iter(p), end; iter != end; ++iter) {
-          fs::path entry(iter->path());
+          path entry(iter->path());
           if (fs::is_regular_file(fs::canonical(entry)) &&
               entry.extension().string() == ".yaml" &&
               entry.filename().string() != "user.yaml") {
@@ -83,8 +83,8 @@ bool DetectModifications::Run(Deployer* deployer) {
 
 bool InstallationUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating rime installation info.";
-  const fs::path shared_data_path(deployer->shared_data_dir);
-  const fs::path user_data_path(deployer->user_data_dir);
+  const path shared_data_path(deployer->shared_data_dir);
+  const path user_data_path(deployer->user_data_dir);
   if (!fs::exists(user_data_path)) {
     LOG(INFO) << "creating user data dir: " << user_data_path.string();
     std::error_code ec;
@@ -92,7 +92,7 @@ bool InstallationUpdate::Run(Deployer* deployer) {
       LOG(ERROR) << "Error creating user data dir: " << user_data_path.string();
     }
   }
-  fs::path installation_info(user_data_path / "installation.yaml");
+  path installation_info(user_data_path / "installation.yaml");
   Config config;
   string installation_id;
   string last_distro_code_name;
@@ -109,7 +109,7 @@ bool InstallationUpdate::Run(Deployer* deployer) {
     if (config.GetString("sync_dir", &sync_dir)) {
       deployer->sync_dir = sync_dir;
     } else {
-      deployer->sync_dir = (fs::path(user_data_path) / "sync").string();
+      deployer->sync_dir = (path(user_data_path) / "sync").string();
     }
     LOG(INFO) << "sync dir: " << deployer->sync_dir;
     if (config.GetString("distribution_code_name", &last_distro_code_name)) {
@@ -260,7 +260,7 @@ SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
   }
 }
 
-static bool MaybeCreateDirectory(fs::path dir) {
+static bool MaybeCreateDirectory(path dir) {
   std::error_code ec;
   if (fs::create_directories(dir, ec)) {
     return true;
@@ -282,10 +282,10 @@ static bool RemoveVersionSuffix(string* version, const string& suffix) {
   return false;
 }
 
-static bool TrashDeprecatedUserCopy(const fs::path& shared_copy,
-                                    const fs::path& user_copy,
+static bool TrashDeprecatedUserCopy(const path& shared_copy,
+                                    const path& user_copy,
                                     const string& version_key,
-                                    const fs::path& trash) {
+                                    const path& trash) {
   if (!fs::exists(shared_copy) || !fs::exists(user_copy) ||
       fs::equivalent(shared_copy, user_copy)) {
     return false;
@@ -311,7 +311,7 @@ static bool TrashDeprecatedUserCopy(const fs::path& shared_copy,
     if (!MaybeCreateDirectory(trash)) {
       return false;
     }
-    fs::path backup = trash / user_copy.filename();
+    path backup = trash / user_copy.filename();
     std::error_code ec;
     fs::rename(user_copy, backup, ec);
     if (ec) {
@@ -324,7 +324,7 @@ static bool TrashDeprecatedUserCopy(const fs::path& shared_copy,
 }
 
 bool SchemaUpdate::Run(Deployer* deployer) {
-  fs::path source_path(schema_file_);
+  path source_path(schema_file_);
   if (!fs::exists(source_path)) {
     LOG(ERROR) << "Error updating schema: nonexistent file '" << schema_file_
                << "'.";
@@ -359,7 +359,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   }
 
   LOG(INFO) << "preparing dictionary '" << dict_name << "'.";
-  const fs::path user_data_path(deployer->user_data_dir);
+  const path user_data_path(deployer->user_data_dir);
   if (!MaybeCreateDirectory(deployer->staging_dir)) {
     return false;
   }
@@ -409,7 +409,7 @@ static bool ConfigNeedsUpdate(Config* config) {
       LOG(WARNING) << "invalid timestamp for " << entry.first;
       return true;
     }
-    fs::path source_file = resolver->ResolvePath(entry.first);
+    path source_file = resolver->ResolvePath(entry.first);
     if (!fs::exists(source_file)) {
       if (recorded_time) {
         LOG(INFO) << "source file no longer exists: " << source_file.string();
@@ -428,12 +428,12 @@ static bool ConfigNeedsUpdate(Config* config) {
 }
 
 bool ConfigFileUpdate::Run(Deployer* deployer) {
-  const fs::path shared_data_path(deployer->shared_data_dir);
-  const fs::path user_data_path(deployer->user_data_dir);
+  const path shared_data_path(deployer->shared_data_dir);
+  const path user_data_path(deployer->user_data_dir);
   // trash deprecated user copy created by an older version of Rime
-  fs::path source_config_path(shared_data_path / file_name_);
-  fs::path dest_config_path(user_data_path / file_name_);
-  fs::path trash = user_data_path / "trash";
+  path source_config_path(shared_data_path / file_name_);
+  path dest_config_path(user_data_path / file_name_);
+  path trash = user_data_path / "trash";
   if (TrashDeprecatedUserCopy(source_config_path, dest_config_path,
                               version_key_, trash)) {
     LOG(INFO) << "deprecated user copy of '" << file_name_ << "' is moved to "
@@ -451,14 +451,14 @@ bool ConfigFileUpdate::Run(Deployer* deployer) {
 }
 
 bool PrebuildAllSchemas::Run(Deployer* deployer) {
-  const fs::path shared_data_path(deployer->shared_data_dir);
-  const fs::path user_data_path(deployer->user_data_dir);
+  const path shared_data_path(deployer->shared_data_dir);
+  const path user_data_path(deployer->user_data_dir);
   if (!fs::exists(shared_data_path) || !fs::is_directory(shared_data_path))
     return false;
   bool success = true;
   for (fs::directory_iterator iter(shared_data_path), end; iter != end;
        ++iter) {
-    fs::path entry(iter->path());
+    path entry(iter->path());
     if (boost::ends_with(entry.string(), ".schema.yaml")) {
       the<DeploymentTask> t(new SchemaUpdate(entry.string()));
       if (!t->Run(deployer))
@@ -469,8 +469,8 @@ bool PrebuildAllSchemas::Run(Deployer* deployer) {
 }
 
 bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
-  const fs::path shared_data_path(deployer->shared_data_dir);
-  const fs::path user_data_path(deployer->user_data_dir);
+  const path shared_data_path(deployer->shared_data_dir);
+  const path user_data_path(deployer->user_data_dir);
   if (!fs::exists(shared_data_path) || !fs::is_directory(shared_data_path) ||
       !fs::exists(user_data_path) || !fs::is_directory(user_data_path) ||
       fs::equivalent(shared_data_path, user_data_path))
@@ -478,7 +478,7 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
   bool success = false;
   // remove symlinks to shared data files created by previous version
   for (fs::directory_iterator test(user_data_path), end; test != end; ++test) {
-    fs::path entry(test->path());
+    path entry(test->path());
     if (fs::is_symlink(entry)) {
       try {
         // a symlink becomes dangling if the target file is no longer provided
@@ -538,16 +538,16 @@ static bool IsCustomizedCopy(const string& file_name) {
 
 bool BackupConfigFiles::Run(Deployer* deployer) {
   LOG(INFO) << "backing up config files.";
-  const fs::path user_data_path(deployer->user_data_dir);
+  const path user_data_path(deployer->user_data_dir);
   if (!fs::exists(user_data_path))
     return false;
-  fs::path backup_dir(deployer->user_data_sync_dir());
+  path backup_dir(deployer->user_data_sync_dir());
   if (!MaybeCreateDirectory(backup_dir)) {
     return false;
   }
   int success = 0, failure = 0, latest = 0, skipped = 0;
   for (fs::directory_iterator iter(user_data_path), end; iter != end; ++iter) {
-    fs::path entry(iter->path());
+    path entry(iter->path());
     if (!fs::is_regular_file(entry))
       continue;
     auto file_extension = entry.extension().string();
@@ -555,7 +555,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
     bool is_text_file = file_extension == ".txt";
     if (!is_yaml_file && !is_text_file)
       continue;
-    fs::path backup = backup_dir / entry.filename();
+    path backup = backup_dir / entry.filename();
     if (fs::exists(backup) &&
         Checksum(backup.string()) == Checksum(entry.string())) {
       ++latest;  // already up-to-date
@@ -582,13 +582,13 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
 
 bool CleanupTrash::Run(Deployer* deployer) {
   LOG(INFO) << "clean up trash.";
-  const fs::path user_data_path(deployer->user_data_dir);
+  const path user_data_path(deployer->user_data_dir);
   if (!fs::exists(user_data_path))
     return false;
-  fs::path trash = user_data_path / "trash";
+  path trash = user_data_path / "trash";
   int success = 0, failure = 0;
   for (fs::directory_iterator iter(user_data_path), end; iter != end; ++iter) {
-    fs::path entry(iter->path());
+    path entry(iter->path());
     if (!fs::is_regular_file(entry))
       continue;
     auto filename = entry.filename().string();
@@ -599,7 +599,7 @@ bool CleanupTrash::Run(Deployer* deployer) {
       if (!success && !MaybeCreateDirectory(trash)) {
         return false;
       }
-      fs::path backup = trash / entry.filename();
+      path backup = trash / entry.filename();
       std::error_code ec;
       fs::rename(entry, backup, ec);
       if (ec) {
@@ -642,7 +642,7 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
 
   int removed = 0;
   for (const auto& dir : dirs) {
-    vector<fs::path> files;
+    vector<path> files;
     DLOG(INFO) << "temp directory: " << dir;
     // preparing files
     for (const auto& entry : fs::directory_iterator(dir)) {

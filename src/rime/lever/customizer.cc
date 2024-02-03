@@ -4,6 +4,7 @@
 //
 // 2011-12-12 GONG Chen <chen.sst@gmail.com>
 //
+#include <filesystem>
 #include <stdint.h>
 #include <rime/common.h>
 #include <rime/config.h>
@@ -60,7 +61,7 @@ bool Customizer::UpdateConfigFile() {
     }
   }
 
-  fs::path custom_path(dest_path_);
+  path custom_path(dest_path_);
   if (custom_path.extension() != ".yaml") {
     custom_path.clear();
   } else {

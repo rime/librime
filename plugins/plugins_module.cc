@@ -20,9 +20,9 @@ namespace rime {
 
 class PluginManager {
  public:
-  void LoadPlugins(fs::path plugins_dir);
+  void LoadPlugins(path plugins_dir);
 
-  static string plugin_name_of(fs::path plugin_file);
+  static string plugin_name_of(path plugin_file);
 
   static PluginManager& instance();
 
@@ -32,14 +32,14 @@ class PluginManager {
   map<string, boost::dll::shared_library> plugin_libs_;
 };
 
-void PluginManager::LoadPlugins(fs::path plugins_dir) {
+void PluginManager::LoadPlugins(path plugins_dir) {
   ModuleManager& mm = ModuleManager::instance();
   if (!fs::is_directory(plugins_dir)) {
     return;
   }
   LOG(INFO) << "loading plugins from " << plugins_dir;
   for (fs::directory_iterator iter(plugins_dir), end; iter != end; ++iter) {
-    fs::path plugin_file = iter->path();
+    path plugin_file = iter->path();
     if (plugin_file.extension() == boost::dll::shared_library::suffix()) {
       fs::file_status plugin_file_status = fs::status(plugin_file);
       if (fs::is_regular_file(plugin_file_status)) {
@@ -69,7 +69,7 @@ void PluginManager::LoadPlugins(fs::path plugins_dir) {
   }
 }
 
-string PluginManager::plugin_name_of(fs::path plugin_file) {
+string PluginManager::plugin_name_of(path plugin_file) {
   string name = plugin_file.stem().string();
   // remove prefix "(lib)rime-"
   if (boost::starts_with(name, "librime-")) {

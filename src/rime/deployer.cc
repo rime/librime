@@ -7,7 +7,7 @@
 #include <chrono>
 #include <exception>
 #include <utility>
-#include <filesystem>
+#include <rime/common.h>
 #include <rime/deployer.h>
 
 namespace rime {
@@ -147,7 +147,7 @@ void Deployer::JoinMaintenanceThread() {
 }
 
 string Deployer::user_data_sync_dir() const {
-  return (std::filesystem::path(sync_dir) / user_id).string();
+  return (path(sync_dir) / user_id).string();
 }
 
 }  // namespace rime

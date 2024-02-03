@@ -5,13 +5,10 @@
 // 2012-02-26 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
-#include <filesystem>
 #include <rime/config.h>
 #include <rime/deployer.h>
 #include <rime/signature.h>
 #include <rime/lever/custom_settings.h>
-
-namespace fs = std::filesystem;
 
 namespace rime {
 
@@ -31,17 +28,15 @@ CustomSettings::CustomSettings(Deployer* deployer,
     : deployer_(deployer), config_id_(config_id), generator_id_(generator_id) {}
 
 bool CustomSettings::Load() {
-  fs::path config_path =
-      fs::path(deployer_->staging_dir) / (config_id_ + ".yaml");
+  path config_path = path(deployer_->staging_dir) / (config_id_ + ".yaml");
   if (!config_.LoadFromFile(config_path.string())) {
-    config_path =
-        fs::path(deployer_->prebuilt_data_dir) / (config_id_ + ".yaml");
+    config_path = path(deployer_->prebuilt_data_dir) / (config_id_ + ".yaml");
     if (!config_.LoadFromFile(config_path.string())) {
       LOG(WARNING) << "cannot find '" << config_id_ << ".yaml'.";
     }
   }
-  fs::path custom_config_path =
-      fs::path(deployer_->user_data_dir) / custom_config_file(config_id_);
+  path custom_config_path =
+      path(deployer_->user_data_dir) / custom_config_file(config_id_);
   if (!custom_config_.LoadFromFile(custom_config_path.string())) {
     return false;
   }
@@ -54,7 +49,7 @@ bool CustomSettings::Save() {
     return false;
   Signature signature(generator_id_, "customization");
   signature.Sign(&custom_config_, deployer_);
-  fs::path custom_config_path(deployer_->user_data_dir);
+  path custom_config_path(deployer_->user_data_dir);
   custom_config_path /= custom_config_file(config_id_);
   custom_config_.SaveToFile(custom_config_path.string());
   modified_ = false;
@@ -87,7 +82,7 @@ bool CustomSettings::Customize(const string& key, const an<ConfigItem>& item) {
 }
 
 bool CustomSettings::IsFirstRun() {
-  fs::path custom_config_path(deployer_->user_data_dir);
+  path custom_config_path(deployer_->user_data_dir);
   custom_config_path /= custom_config_file(config_id_);
   Config config;
   if (!config.LoadFromFile(custom_config_path.string()))

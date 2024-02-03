@@ -5,15 +5,12 @@
 // 2012-07-07 GONG Chen <chen.sst@gmail.com>
 //
 #include <iostream>
-#include <filesystem>
 #include <rime/config.h>
 #include <rime/deployer.h>
 #include <rime/service.h>
 #include <rime/setup.h>
 #include <rime/lever/deployment_tasks.h>
 #include "codepage.h"
-
-namespace fs = std::filesystem;
 
 using namespace rime;
 
@@ -75,10 +72,10 @@ static void setup_deployer(Deployer* deployer, int argc, char* argv[]) {
     deployer->staging_dir = argv[2];
   } else {
     deployer->staging_dir =
-        (fs::path(deployer->user_data_dir) / "build").string();
+        (path(deployer->user_data_dir) / "build").string();
   }
   deployer->prebuilt_data_dir =
-      (fs::path(deployer->shared_data_dir) / "build").string();
+      (path(deployer->shared_data_dir) / "build").string();
 }
 
 int main(int argc, char* argv[]) {

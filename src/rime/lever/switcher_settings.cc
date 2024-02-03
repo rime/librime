@@ -47,7 +47,7 @@ bool SwitcherSettings::SetHotkeys(const string& hotkeys) {
   return false;
 }
 
-void SwitcherSettings::GetAvailableSchemasFromDirectory(const fs::path& dir) {
+void SwitcherSettings::GetAvailableSchemasFromDirectory(const path& dir) {
   if (!fs::exists(dir) || !fs::is_directory(dir)) {
     LOG(INFO) << "directory '" << dir.string() << "' does not exist.";
     return;

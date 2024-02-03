@@ -59,9 +59,9 @@ bool UserDictManager::Backup(const string& dict_name) {
       return false;
     }
   }
-  std::filesystem::path dir(deployer_->user_data_sync_dir());
-  if (!std::filesystem::exists(dir)) {
-    if (!std::filesystem::create_directories(dir)) {
+  path dir(deployer_->user_data_sync_dir());
+  if (!fs::exists(dir)) {
+    if (!fs::create_directories(dir)) {
       LOG(ERROR) << "error creating directory '" << dir.string() << "'.";
       return false;
     }
@@ -161,7 +161,7 @@ bool UserDictManager::UpgradeUserDict(const string& dict_name) {
   if (!legacy_db->OpenReadOnly() || !UserDbHelper(legacy_db).IsUserDb())
     return false;
   LOG(INFO) << "upgrading user dict '" << dict_name << "'.";
-  fs::path trash = fs::path(deployer_->user_data_dir) / "trash";
+  path trash = path(deployer_->user_data_dir) / "trash";
   if (!fs::exists(trash)) {
     std::error_code ec;
     if (!fs::create_directories(trash, ec)) {
@@ -170,7 +170,7 @@ bool UserDictManager::UpgradeUserDict(const string& dict_name) {
     }
   }
   string snapshot_file = dict_name + UserDb::snapshot_extension();
-  fs::path snapshot_path = trash / snapshot_file;
+  path snapshot_path = trash / snapshot_file;
   return legacy_db->Backup(snapshot_path.string()) && legacy_db->Close() &&
          legacy_db->Remove() && Restore(snapshot_path.string());
 }
@@ -178,7 +178,7 @@ bool UserDictManager::UpgradeUserDict(const string& dict_name) {
 bool UserDictManager::Synchronize(const string& dict_name) {
   LOG(INFO) << "synchronize user dict '" << dict_name << "'.";
   bool success = true;
-  fs::path sync_dir(deployer_->sync_dir);
+  path sync_dir(deployer_->sync_dir);
   if (!fs::exists(sync_dir)) {
     std::error_code ec;
     if (!fs::create_directories(sync_dir, ec)) {
@@ -191,7 +191,7 @@ bool UserDictManager::Synchronize(const string& dict_name) {
   for (fs::directory_iterator it(sync_dir), end; it != end; ++it) {
     if (!fs::is_directory(it->path()))
       continue;
-    fs::path file_path = it->path() / snapshot_file;
+    path file_path = it->path() / snapshot_file;
     if (fs::exists(file_path)) {
       LOG(INFO) << "merging snapshot file: " << file_path.string();
       if (!Restore(file_path.string())) {

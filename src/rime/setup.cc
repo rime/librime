@@ -14,14 +14,11 @@
 #include <glog/logging.h>
 #endif  // RIME_ENABLE_LOGGING
 
-#include <filesystem>
 #include <rime_api.h>
 #include <rime/deployer.h>
 #include <rime/module.h>
 #include <rime/service.h>
 #include <rime/setup.h>
-
-namespace fs = std::filesystem;
 
 namespace rime {
 
@@ -65,12 +62,11 @@ RIME_API void SetupDeployer(RimeTraits* traits) {
     deployer.prebuilt_data_dir = traits->prebuilt_data_dir;
   else
     deployer.prebuilt_data_dir =
-        (fs::path(deployer.shared_data_dir) / "build").string();
+        (path(deployer.shared_data_dir) / "build").string();
   if (PROVIDED(traits, staging_dir))
     deployer.staging_dir = traits->staging_dir;
   else
-    deployer.staging_dir =
-        (fs::path(deployer.user_data_dir) / "build").string();
+    deployer.staging_dir = (path(deployer.user_data_dir) / "build").string();
 }
 
 RIME_API void SetupLogging(const char* app_name,

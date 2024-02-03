@@ -12,8 +12,6 @@
 #include <rime/dict/user_db.h>
 #include <rime/dict/user_db_recovery_task.h>
 
-namespace fs = std::filesystem;
-
 namespace rime {
 
 UserDbRecoveryTask::UserDbRecoveryTask(an<Db> db) : db_(db) {
@@ -65,15 +63,15 @@ void UserDbRecoveryTask::RestoreUserDataFromSnapshot(Deployer* deployer) {
   string dict_name(db_->name());
   boost::erase_last(dict_name, component->extension());
   // locate snapshot file
-  std::filesystem::path dir(deployer->user_data_sync_dir());
+  path dir(deployer->user_data_sync_dir());
   // try *.userdb.txt
-  fs::path snapshot_path = dir / (dict_name + UserDb::snapshot_extension());
-  if (!fs::exists(snapshot_path)) {
+  path snapshot_path = dir / (dict_name + UserDb::snapshot_extension());
+  if (!std::filesystem::exists(snapshot_path)) {
     // try *.userdb.*.snapshot
     string legacy_snapshot_file =
         dict_name + component->extension() + ".snapshot";
     snapshot_path = dir / legacy_snapshot_file;
-    if (!fs::exists(snapshot_path)) {
+    if (!std::filesystem::exists(snapshot_path)) {
       return;  // not found
     }
   }

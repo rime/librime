@@ -5,7 +5,6 @@
 // 2014-12-04 Chen Gong <chen.sst@gmail.com>
 //
 
-#include <filesystem>
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
 #include <rime/common.h>

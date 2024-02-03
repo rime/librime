@@ -4,7 +4,6 @@
 //
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
-#include <filesystem>
 #include <utf8.h>
 #include <rime/resource.h>
 #include <rime/service.h>
