@@ -69,7 +69,7 @@ bool Customizer::UpdateConfigFile() {
     if (custom_path.extension() == ".schema") {
       custom_path.replace_extension();
     }
-    custom_path = custom_path.string() + ".custom.yaml";
+    custom_path += path(".custom.yaml");
   }
   string customization;
   if (!custom_path.empty() && fs::exists(custom_path)) {
