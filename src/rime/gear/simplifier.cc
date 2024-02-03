@@ -31,12 +31,12 @@ namespace rime {
 
 class Opencc {
  public:
-  Opencc(const string& config_path) {
+  Opencc(const path& config_path) {
     LOG(INFO) << "initializing opencc: " << config_path;
     opencc::Config config;
     try {
-      // opencc accepts UTF-8 path.
-      converter_ = config.NewFromFile(path(config_path).u8string());
+      // opencc accepts file path encoded in UTF-8.
+      converter_ = config.NewFromFile(config_path.u8string());
 
       const list<opencc::ConversionPtr> conversions =
           converter_->GetConversionChain()->GetConversions();
@@ -168,7 +168,7 @@ Simplifier::Simplifier(const Ticket& ticket)
 
 void Simplifier::Initialize() {
   initialized_ = true;  // no retry
-  path opencc_config_path = opencc_config_;
+  path opencc_config_path = path(opencc_config_);
   if (opencc_config_path.extension().string() == ".ini") {
     LOG(ERROR) << "please upgrade opencc_config to an opencc 1.0 config file.";
     return;
@@ -185,7 +185,7 @@ void Simplifier::Initialize() {
     }
   }
   try {
-    opencc_.reset(new Opencc(opencc_config_path.string()));
+    opencc_.reset(new Opencc(opencc_config_path));
   } catch (opencc::Exception& e) {
     LOG(ERROR) << "Error initializing opencc: " << e.what();
   }
