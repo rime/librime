@@ -6,6 +6,11 @@
 #include <boost/algorithm/string.hpp>
 #include <filesystem>
 #include <rime/resource.h>
+#ifdef _WIN32
+#define PATH(x) std::filesystem::u8path(x)
+#else
+#define PATH(x) std::filesystem::path(x)
+#endif
 
 namespace rime {
 
@@ -28,30 +33,16 @@ string ResourceResolver::ToFilePath(const string& resource_id) const {
 }
 
 std::filesystem::path ResourceResolver::ResolvePath(const string& resource_id) {
-#ifdef _WIN32
   return std::filesystem::absolute(
-      root_path_ /
-      std::filesystem::u8path(type_.prefix + resource_id + type_.suffix));
-#else
-  return std::filesystem::absolute(
-      root_path_ /
-      std::filesystem::path(type_.prefix + resource_id + type_.suffix));
-#endif
+      root_path_ / PATH(type_.prefix + resource_id + type_.suffix));
 }
 
 std::filesystem::path FallbackResourceResolver::ResolvePath(
     const string& resource_id) {
   auto default_path = ResourceResolver::ResolvePath(resource_id);
   if (!std::filesystem::exists(default_path)) {
-#ifdef _WIN32
     auto fallback_path = std::filesystem::absolute(
-        fallback_root_path_ /
-        std::filesystem::u8path(type_.prefix + resource_id + type_.suffix));
-#else
-    auto fallback_path = std::filesystem::absolute(
-        fallback_root_path_ /
-        std::filesystem::path(type_.prefix + resource_id + type_.suffix));
-#endif
+        fallback_root_path_ / PATH(type_.prefix + resource_id + type_.suffix));
     if (std::filesystem::exists(fallback_path)) {
       return fallback_path;
     }
