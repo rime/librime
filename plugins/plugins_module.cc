@@ -94,7 +94,7 @@ PluginManager& PluginManager::instance() {
 }  // namespace rime
 
 static void rime_plugins_initialize() {
-  rime::PluginManager::instance().LoadPlugins(RIME_PLUGINS_DIR);
+  rime::PluginManager::instance().LoadPlugins(rime::path(RIME_PLUGINS_DIR));
 }
 
 static void rime_plugins_finalize() {}
