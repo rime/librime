@@ -49,10 +49,10 @@ const TextFormat VocabularyDb::format = {
     "Rime vocabulary",
 };
 
-string PresetVocabulary::DictFilePath(const string& vocabulary) {
+path PresetVocabulary::DictFilePath(const string& vocabulary) {
   the<ResourceResolver> resource_resolver(
       Service::instance().CreateResourceResolver(kVocabularyResourceType));
-  return resource_resolver->ResolvePath(vocabulary).string();
+  return resource_resolver->ResolvePath(vocabulary);
 }
 
 PresetVocabulary::PresetVocabulary(const string& vocabulary) {

@@ -61,21 +61,19 @@ int set_active_schema(const string& schema_id) {
 
 static void setup_deployer(Deployer* deployer, int argc, char* argv[]) {
   if (argc > 0) {
-    deployer->user_data_dir = argv[0];
+    deployer->user_data_dir = path(argv[0]);
   }
   if (argc > 1) {
-    deployer->shared_data_dir = argv[1];
+    deployer->shared_data_dir = path(argv[1]);
   } else if (argc > 0) {
-    deployer->shared_data_dir = argv[0];
+    deployer->shared_data_dir = path(argv[0]);
   }
   if (argc > 2) {
-    deployer->staging_dir = argv[2];
+    deployer->staging_dir = path(argv[2]);
   } else {
-    deployer->staging_dir =
-        (path(deployer->user_data_dir) / "build").string();
+    deployer->staging_dir = deployer->user_data_dir / "build";
   }
-  deployer->prebuilt_data_dir =
-      (path(deployer->shared_data_dir) / "build").string();
+  deployer->prebuilt_data_dir = deployer->shared_data_dir / "build";
 }
 
 int main(int argc, char* argv[]) {
@@ -146,7 +144,7 @@ int main(int argc, char* argv[]) {
     Deployer& deployer(Service::instance().deployer());
     setup_deployer(&deployer, argc - 1, argv + 1);
     LoadModules(kDeployerModules);
-    string schema_file(argv[0]);
+    path schema_file(argv[0]);
     SchemaUpdate update(schema_file);
     update.set_verbose(true);
     int res = update.Run(&deployer) ? 0 : 1;

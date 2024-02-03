@@ -83,13 +83,13 @@ bool DetectModifications::Run(Deployer* deployer) {
 
 bool InstallationUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating rime installation info.";
-  const path shared_data_path(deployer->shared_data_dir);
-  const path user_data_path(deployer->user_data_dir);
+  const path& shared_data_path(deployer->shared_data_dir);
+  const path& user_data_path(deployer->user_data_dir);
   if (!fs::exists(user_data_path)) {
-    LOG(INFO) << "creating user data dir: " << user_data_path.string();
+    LOG(INFO) << "creating user data dir: " << user_data_path;
     std::error_code ec;
     if (!fs::create_directories(user_data_path, ec)) {
-      LOG(ERROR) << "Error creating user data dir: " << user_data_path.string();
+      LOG(ERROR) << "Error creating user data dir: " << user_data_path;
     }
   }
   path installation_info(user_data_path / "installation.yaml");
@@ -107,9 +107,9 @@ bool InstallationUpdate::Run(Deployer* deployer) {
     }
     string sync_dir;
     if (config.GetString("sync_dir", &sync_dir)) {
-      deployer->sync_dir = sync_dir;
+      deployer->sync_dir = path(sync_dir);
     } else {
-      deployer->sync_dir = (path(user_data_path) / "sync").string();
+      deployer->sync_dir = user_data_path / "sync";
     }
     LOG(INFO) << "sync dir: " << deployer->sync_dir;
     if (config.GetString("distribution_code_name", &last_distro_code_name)) {
@@ -188,16 +188,16 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating schemas.";
   int success = 0;
   int failure = 0;
-  map<string, string> schemas;
+  map<string, path> schemas;
   the<ResourceResolver> resolver(Service::instance().CreateResourceResolver(
       {"schema_source_file", "", ".schema.yaml"}));
   auto build_schema = [&](const string& schema_id, bool as_dependency = false) {
     if (schemas.find(schema_id) != schemas.end())  // already built
       return;
     LOG(INFO) << "schema: " << schema_id;
-    string schema_path;
+    path schema_path;
     if (schemas.find(schema_id) == schemas.end()) {
-      schema_path = resolver->ResolvePath(schema_id).string();
+      schema_path = resolver->ResolvePath(schema_id);
       schemas[schema_id] = schema_path;
     } else {
       schema_path = schemas[schema_id];
@@ -254,7 +254,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
 
 SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
   try {
-    schema_file_ = std::any_cast<string>(arg);
+    source_path_ = std::any_cast<path>(arg);
   } catch (const std::bad_any_cast&) {
     LOG(ERROR) << "SchemaUpdate: invalid arguments.";
   }
@@ -269,7 +269,7 @@ static bool MaybeCreateDirectory(path dir) {
   if (fs::exists(dir)) {
     return true;
   }
-  LOG(ERROR) << "error creating directory '" << dir.string() << "'.";
+  LOG(ERROR) << "error creating directory '" << dir << "'.";
   return false;
 }
 
@@ -311,11 +311,11 @@ static bool TrashDeprecatedUserCopy(const path& shared_copy,
     if (!MaybeCreateDirectory(trash)) {
       return false;
     }
-    path backup = trash / user_copy.filename();
+    path backup = trash / user_copy.filename();  // TODO: convert path
     std::error_code ec;
     fs::rename(user_copy, backup, ec);
     if (ec) {
-      LOG(ERROR) << "error trashing file " << user_copy.string();
+      LOG(ERROR) << "error trashing file " << user_copy;
       return false;
     }
     return true;
@@ -324,17 +324,16 @@ static bool TrashDeprecatedUserCopy(const path& shared_copy,
 }
 
 bool SchemaUpdate::Run(Deployer* deployer) {
-  path source_path(schema_file_);
-  if (!fs::exists(source_path)) {
-    LOG(ERROR) << "Error updating schema: nonexistent file '" << schema_file_
+  if (!fs::exists(source_path_)) {
+    LOG(ERROR) << "Error updating schema: nonexistent file '" << source_path_
                << "'.";
     return false;
   }
   string schema_id;
   the<Config> config(new Config);
-  if (!config->LoadFromFile(schema_file_) ||
+  if (!config->LoadFromFile(source_path_.string()) ||
       !config->GetString("schema/schema_id", &schema_id) || schema_id.empty()) {
-    LOG(ERROR) << "invalid schema definition in '" << schema_file_ << "'.";
+    LOG(ERROR) << "invalid schema definition in '" << source_path_ << "'.";
     return false;
   }
 
@@ -359,7 +358,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   }
 
   LOG(INFO) << "preparing dictionary '" << dict_name << "'.";
-  const path user_data_path(deployer->user_data_dir);
+  const path& user_data_path(deployer->user_data_dir);
   if (!MaybeCreateDirectory(deployer->staging_dir)) {
     return false;
   }
@@ -370,7 +369,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   the<ResourceResolver> resolver(
       Service::instance().CreateDeployedResourceResolver(
           {"compiled_schema", "", ".schema.yaml"}));
-  auto compiled_schema = resolver->ResolvePath(schema_id).string();
+  auto compiled_schema = resolver->ResolvePath(schema_id);
   if (!dict_compiler.Compile(compiled_schema)) {
     LOG(ERROR) << "dictionary '" << dict_name << "' failed to compile.";
     return false;
@@ -412,7 +411,7 @@ static bool ConfigNeedsUpdate(Config* config) {
     path source_file = resolver->ResolvePath(entry.first);
     if (!fs::exists(source_file)) {
       if (recorded_time) {
-        LOG(INFO) << "source file no longer exists: " << source_file.string();
+        LOG(INFO) << "source file no longer exists: " << source_file;
         return true;
       }
       continue;
@@ -420,7 +419,7 @@ static bool ConfigNeedsUpdate(Config* config) {
     if (recorded_time !=
         (int)filesystem::to_time_t(fs::last_write_time(source_file))) {
       LOG(INFO) << "source file " << (recorded_time ? "changed: " : "added: ")
-                << source_file.string();
+                << source_file;
       return true;
     }
   }
@@ -460,7 +459,7 @@ bool PrebuildAllSchemas::Run(Deployer* deployer) {
        ++iter) {
     path entry(iter->path());
     if (boost::ends_with(entry.string(), ".schema.yaml")) {
-      the<DeploymentTask> t(new SchemaUpdate(entry.string()));
+      the<DeploymentTask> t(new SchemaUpdate(entry));
       if (!t->Run(deployer))
         success = false;
     }
@@ -489,7 +488,7 @@ bool SymlinkingPrebuiltDictionaries::Run(Deployer* deployer) {
             !bad_link && target_path.has_parent_path() &&
             fs::equivalent(shared_data_path, target_path.parent_path());
         if (bad_link || linked_to_shared_data) {
-          LOG(INFO) << "removing symlink: " << entry.filename().string();
+          LOG(INFO) << "removing symlink: " << entry.filename();
           fs::remove(entry);
         }
       } catch (const fs::filesystem_error& ex) {
@@ -555,9 +554,10 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
     bool is_text_file = file_extension == ".txt";
     if (!is_yaml_file && !is_text_file)
       continue;
-    path backup = backup_dir / entry.filename();
+    path backup = backup_dir /
+                  entry.filename();  // TODO: convert entry.filename() to path
     if (fs::exists(backup) &&
-        Checksum(backup.string()) == Checksum(entry.string())) {
+        Checksum(backup) == Checksum(entry)) {
       ++latest;  // already up-to-date
       continue;
     }
@@ -575,7 +575,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
     }
   }
   LOG(INFO) << "backed up " << success << " config files to "
-            << backup_dir.string() << ", " << failure << " failed, " << latest
+            << backup_dir << ", " << failure << " failed, " << latest
             << " up-to-date, " << skipped << " skipped.";
   return !failure;
 }
@@ -603,7 +603,7 @@ bool CleanupTrash::Run(Deployer* deployer) {
       std::error_code ec;
       fs::rename(entry, backup, ec);
       if (ec) {
-        LOG(ERROR) << "error clean up file " << entry.string();
+        LOG(ERROR) << "error clean up file " << entry;
         ++failure;
       } else {
         ++success;
@@ -611,7 +611,7 @@ bool CleanupTrash::Run(Deployer* deployer) {
     }
   }
   if (success) {
-    LOG(INFO) << "moved " << success << " files to " << trash.string();
+    LOG(INFO) << "moved " << success << " files to " << trash;
   }
   return !failure;
 }

@@ -49,9 +49,9 @@ RIME_API void SetupDeployer(RimeTraits* traits) {
     return;
   Deployer& deployer(Service::instance().deployer());
   if (PROVIDED(traits, shared_data_dir))
-    deployer.shared_data_dir = traits->shared_data_dir;
+    deployer.shared_data_dir = path(traits->shared_data_dir);
   if (PROVIDED(traits, user_data_dir))
-    deployer.user_data_dir = traits->user_data_dir;
+    deployer.user_data_dir = path(traits->user_data_dir);
   if (PROVIDED(traits, distribution_name))
     deployer.distribution_name = traits->distribution_name;
   if (PROVIDED(traits, distribution_code_name))
@@ -59,14 +59,13 @@ RIME_API void SetupDeployer(RimeTraits* traits) {
   if (PROVIDED(traits, distribution_version))
     deployer.distribution_version = traits->distribution_version;
   if (PROVIDED(traits, prebuilt_data_dir))
-    deployer.prebuilt_data_dir = traits->prebuilt_data_dir;
+    deployer.prebuilt_data_dir = path(traits->prebuilt_data_dir);
   else
-    deployer.prebuilt_data_dir =
-        (path(deployer.shared_data_dir) / "build").string();
+    deployer.prebuilt_data_dir = deployer.shared_data_dir / "build";
   if (PROVIDED(traits, staging_dir))
-    deployer.staging_dir = traits->staging_dir;
+    deployer.staging_dir = path(traits->staging_dir);
   else
-    deployer.staging_dir = (path(deployer.user_data_dir) / "build").string();
+    deployer.staging_dir = deployer.user_data_dir / "build";
 }
 
 RIME_API void SetupLogging(const char* app_name,

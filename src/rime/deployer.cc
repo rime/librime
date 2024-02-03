@@ -146,8 +146,8 @@ void Deployer::JoinMaintenanceThread() {
   JoinWorkThread();
 }
 
-string Deployer::user_data_sync_dir() const {
-  return (path(sync_dir) / user_id).string();
+path Deployer::user_data_sync_dir() const {
+  return sync_dir / path(user_id);
 }
 
 }  // namespace rime

@@ -47,7 +47,10 @@ int main(int argc, char* argv[]) {
     Config config;
     if (config.LoadFromFile("installation.yaml")) {
       config.GetString("installation_id", &deployer.user_id);
-      config.GetString("sync_dir", &deployer.sync_dir);
+      string sync_dir;
+      if (config.GetString("sync_dir", &sync_dir)) {
+        deployer.sync_dir = path(sync_dir);
+      }
     }
   }
   UserDictManager mgr(&deployer);
