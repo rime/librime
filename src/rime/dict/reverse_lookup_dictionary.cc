@@ -27,16 +27,16 @@ const size_t kReverseFormatPrefixLen = sizeof(kReverseFormatPrefix) - 1;
 
 static const char* kStemKeySuffix = "\x1fstem";
 
-ReverseDb::ReverseDb(const string& file_name) : MappedFile(file_name) {}
+ReverseDb::ReverseDb(const path& file_path) : MappedFile(file_path) {}
 
 bool ReverseDb::Load() {
-  LOG(INFO) << "loading reversedb: " << file_name();
+  LOG(INFO) << "loading reversedb: " << file_path();
 
   if (IsOpen())
     Close();
 
   if (!OpenReadOnly()) {
-    LOG(ERROR) << "Error opening reversedb '" << file_name() << "'.";
+    LOG(ERROR) << "Error opening reversedb '" << file_path() << "'.";
     return false;
   }
 
@@ -139,14 +139,14 @@ bool ReverseDb::Build(DictSettings* settings,
                                entry_count * sizeof(StringId) +
                                key_trie_image_size + value_trie_image_size;
   if (!Create(estimated_data_size)) {
-    LOG(ERROR) << "Error creating prism file '" << file_name() << "'.";
+    LOG(ERROR) << "Error creating prism file '" << file_path() << "'.";
     return false;
   }
 
   // create metadata
   metadata_ = Allocate<reverse::Metadata>();
   if (!metadata_) {
-    LOG(ERROR) << "Error creating metadata in file '" << file_name() << "'.";
+    LOG(ERROR) << "Error creating metadata in file '" << file_path() << "'.";
     return false;
   }
   metadata_->dict_file_checksum = dict_file_checksum;
@@ -194,7 +194,7 @@ bool ReverseDb::Build(DictSettings* settings,
 }
 
 bool ReverseDb::Save() {
-  LOG(INFO) << "saving reverse file: " << file_name();
+  LOG(INFO) << "saving reverse file: " << file_path();
   return ShrinkToFit();
 }
 

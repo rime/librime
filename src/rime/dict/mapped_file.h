@@ -82,7 +82,7 @@ class MappedFileImpl;
 
 class RIME_API MappedFile {
  protected:
-  explicit MappedFile(const string& file_name);
+  explicit MappedFile(const path& file_path);
   virtual ~MappedFile();
 
   bool Create(size_t capacity);
@@ -117,11 +117,11 @@ class RIME_API MappedFile {
   template <class T>
   T* Find(size_t offset);
 
-  const string& file_name() const { return file_name_; }
+  const path& file_path() const { return file_path_; }
   size_t file_size() const { return size_; }
 
  private:
-  string file_name_;
+  path file_path_;
   size_t size_ = 0;
   the<MappedFileImpl> file_;
 };

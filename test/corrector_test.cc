@@ -23,7 +23,8 @@ class RimeCorrectorSearchTest : public ::testing::Test {
       syllable_id_[syllables[i]] = i;
     }
 
-    prism_.reset(new rime::Prism("corrector_simple_test.prism.bin"));
+    rime::path file_path("corrector_simple_test.prism.bin");
+    prism_.reset(new rime::Prism(file_path));
     rime::set<rime::string> keyset;
     std::copy(syllables.begin(), syllables.end(),
               std::inserter(keyset, keyset.begin()));
@@ -53,7 +54,8 @@ class RimeCorrectorTest : public ::testing::Test {
       syllable_id_[syllables[i]] = i;
     }
 
-    prism_.reset(new rime::Prism("corrector_test.prism.bin"));
+    rime::path file_path("corrector_test.prism.bin");
+    prism_.reset(new rime::Prism(file_path));
     rime::set<rime::string> keyset;
     std::copy(syllables.begin(), syllables.end(),
               std::inserter(keyset, keyset.begin()));

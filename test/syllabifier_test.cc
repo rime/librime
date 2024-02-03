@@ -30,7 +30,8 @@ class RimeSyllabifierTest : public ::testing::Test {
       syllable_id_[syllables[i]] = i;
     }
 
-    prism_.reset(new rime::Prism("syllabifier_test.bin"));
+    rime::path file_path("syllabifier_test.bin");
+    prism_.reset(new rime::Prism(file_path));
     rime::set<rime::string> keyset;
     std::copy(syllables.begin(), syllables.end(),
               std::inserter(keyset, keyset.begin()));

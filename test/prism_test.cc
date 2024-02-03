@@ -15,7 +15,7 @@ class RimePrismTest : public ::testing::Test {
   RimePrismTest() {}
 
   virtual void SetUp() {
-    prism_.reset(new Prism("prism_test.bin"));
+    prism_.reset(new Prism(path("prism_test.bin")));
     prism_->Remove();
     
     set<string> keyset;
@@ -40,7 +40,7 @@ class RimePrismTest : public ::testing::Test {
 TEST_F(RimePrismTest, SaveAndLoad) {
   EXPECT_TRUE(prism_->Save());
 
-  Prism test(prism_->file_name());
+  Prism test(prism_->file_path());
   EXPECT_TRUE(test.Load());
 
   EXPECT_EQ(prism_->array_size(), test.array_size());
