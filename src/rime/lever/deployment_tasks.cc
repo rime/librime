@@ -556,8 +556,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
       continue;
     path backup = backup_dir /
                   entry.filename();  // TODO: convert entry.filename() to path
-    if (fs::exists(backup) &&
-        Checksum(backup) == Checksum(entry)) {
+    if (fs::exists(backup) && Checksum(backup) == Checksum(entry)) {
       ++latest;  // already up-to-date
       continue;
     }
@@ -574,9 +573,9 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
       ++success;
     }
   }
-  LOG(INFO) << "backed up " << success << " config files to "
-            << backup_dir << ", " << failure << " failed, " << latest
-            << " up-to-date, " << skipped << " skipped.";
+  LOG(INFO) << "backed up " << success << " config files to " << backup_dir
+            << ", " << failure << " failed, " << latest << " up-to-date, "
+            << skipped << " skipped.";
   return !failure;
 }
 

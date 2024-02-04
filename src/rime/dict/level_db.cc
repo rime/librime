@@ -51,10 +51,10 @@ struct LevelDbWrapper {
   leveldb::DB* ptr = nullptr;
   leveldb::WriteBatch batch;
 
-  leveldb::Status Open(const string& file_name, bool readonly) {
+  leveldb::Status Open(const path& file_path, bool readonly) {
     leveldb::Options options;
     options.create_if_missing = !readonly;
-    return leveldb::DB::Open(options, file_name, &ptr);
+    return leveldb::DB::Open(options, file_path.string(), &ptr);
   }
 
   void Release() {
@@ -139,10 +139,10 @@ bool LevelDbAccessor::exhausted() {
 
 // LevelDb members
 
-LevelDb::LevelDb(const string& file_name,
+LevelDb::LevelDb(const path& file_path,
                  const string& db_name,
                  const string& db_type)
-    : Db(file_name, db_name), db_type_(db_type) {}
+    : Db(file_path, db_name), db_type_(db_type) {}
 
 LevelDb::~LevelDb() {
   if (loaded())
@@ -190,7 +190,7 @@ bool LevelDb::Erase(const string& key) {
   return db_->Erase(key, in_transaction());
 }
 
-bool LevelDb::Backup(const string& snapshot_file) {
+bool LevelDb::Backup(const path& snapshot_file) {
   if (!loaded())
     return false;
   LOG(INFO) << "backing up db '" << name() << "' to " << snapshot_file;
@@ -203,7 +203,7 @@ bool LevelDb::Backup(const string& snapshot_file) {
   return success;
 }
 
-bool LevelDb::Restore(const string& snapshot_file) {
+bool LevelDb::Restore(const path& snapshot_file) {
   if (!loaded() || readonly())
     return false;
   // TODO(chen): suppose we only use this method for user dbs.
@@ -217,7 +217,7 @@ bool LevelDb::Restore(const string& snapshot_file) {
 
 bool LevelDb::Recover() {
   LOG(INFO) << "trying to recover db '" << name() << "'.";
-  auto status = leveldb::RepairDB(file_name(), leveldb::Options());
+  auto status = leveldb::RepairDB(file_path().string(), leveldb::Options());
   if (status.ok()) {
     LOG(INFO) << "repair finished.";
     return true;
@@ -231,7 +231,7 @@ bool LevelDb::Remove() {
     LOG(ERROR) << "attempt to remove opened db '" << name() << "'.";
     return false;
   }
-  auto status = leveldb::DestroyDB(file_name(), leveldb::Options());
+  auto status = leveldb::DestroyDB(file_path().string(), leveldb::Options());
   if (!status.ok()) {
     LOG(ERROR) << "Error removing db '" << name() << "': " << status.ToString();
     return false;
@@ -244,7 +244,7 @@ bool LevelDb::Open() {
     return false;
   Initialize();
   readonly_ = false;
-  auto status = db_->Open(file_name(), readonly_);
+  auto status = db_->Open(file_path(), readonly_);
   loaded_ = status.ok();
 
   if (loaded_) {
@@ -266,7 +266,7 @@ bool LevelDb::OpenReadOnly() {
     return false;
   Initialize();
   readonly_ = true;
-  auto status = db_->Open(file_name(), readonly_);
+  auto status = db_->Open(file_path(), readonly_);
   loaded_ = status.ok();
 
   if (!loaded_) {
@@ -331,8 +331,8 @@ RIME_API string UserDbComponent<LevelDb>::extension() const {
 }
 
 template <>
-RIME_API UserDbWrapper<LevelDb>::UserDbWrapper(const string& file_name,
+RIME_API UserDbWrapper<LevelDb>::UserDbWrapper(const path& file_path,
                                                const string& db_name)
-    : LevelDb(file_name, db_name, "userdb") {}
+    : LevelDb(file_path, db_name, "userdb") {}
 
 }  // namespace rime

@@ -26,12 +26,12 @@ class RIME_API UserDictManager {
 
   // CAVEAT: the user dict should be closed before the following operations
   bool Backup(const string& dict_name);
-  bool Restore(const string& snapshot_file);
+  bool Restore(const path& snapshot_file);
   bool UpgradeUserDict(const string& dict_name);
   // returns num of exported entries, -1 denotes failure
-  int Export(const string& dict_name, const string& text_file);
+  int Export(const string& dict_name, const path& text_file);
   // returns num of imported entries, -1 denotes failure
-  int Import(const string& dict_name, const string& text_file);
+  int Import(const string& dict_name, const path& text_file);
 
   bool Synchronize(const string& dict_name);
   bool SynchronizeAll();

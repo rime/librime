@@ -15,13 +15,16 @@ namespace rime {
 static const ResourceType kVocabularyResourceType = {"vocabulary", "", ".txt"};
 
 struct VocabularyDb : public TextDb {
-  VocabularyDb(const string& path, const string& name);
+  VocabularyDb(const path& file_path, const string& db_name);
   an<DbAccessor> cursor;
   static const TextFormat format;
 };
 
-VocabularyDb::VocabularyDb(const string& path, const string& name)
-    : TextDb(path, name, kVocabularyResourceType.name, VocabularyDb::format) {}
+VocabularyDb::VocabularyDb(const path& file_path, const string& db_name)
+    : TextDb(file_path,
+             db_name,
+             kVocabularyResourceType.name,
+             VocabularyDb::format) {}
 
 static bool rime_vocabulary_entry_parser(const Tsv& row,
                                          string* key,
