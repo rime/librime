@@ -311,7 +311,7 @@ static bool TrashDeprecatedUserCopy(const path& shared_copy,
     if (!MaybeCreateDirectory(trash)) {
       return false;
     }
-    path backup = trash / user_copy.filename();  // TODO: convert path
+    path backup = trash / user_copy.filename();
     std::error_code ec;
     fs::rename(user_copy, backup, ec);
     if (ec) {
@@ -554,8 +554,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
     bool is_text_file = file_extension == ".txt";
     if (!is_yaml_file && !is_text_file)
       continue;
-    path backup = backup_dir /
-                  entry.filename();  // TODO: convert entry.filename() to path
+    path backup = backup_dir / entry.filename();
     if (fs::exists(backup) && Checksum(backup) == Checksum(entry)) {
       ++latest;  // already up-to-date
       continue;
@@ -567,7 +566,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
     std::error_code ec;
     fs::copy_file(entry, backup, fs::copy_options::overwrite_existing, ec);
     if (ec) {
-      LOG(ERROR) << "error backing up file " << backup.string();
+      LOG(ERROR) << "error backing up file " << backup;
       ++failure;
     } else {
       ++success;

@@ -99,6 +99,43 @@ class path : public std::filesystem::path {
   explicit path(const std::string& utf8_path) : fs_path(utf8_path) {}
   explicit path(const char* utf8_path) : fs_path(utf8_path) {}
 #endif
+
+  path& operator/=(const path& p) {
+    return *this = fs_path::operator/=(p);
+  }
+  path& operator/=(const fs_path& p) {
+    return *this = fs_path::operator/=(p);
+  }
+  // convert UTF-8 encoded string to native encoding, then append.
+  path& operator/=(const std::string& p) {
+    return *this /= path(p);
+  }
+  path& operator/=(const char* p) {
+    return *this /= path(p);
+  }
+
+  friend path operator/(const path& lhs, const path& rhs) {
+    return path(lhs) /= rhs;
+  }
+  friend path operator/(const path& lhs, const fs_path& rhs) {
+    return path(lhs) /= rhs;
+  }
+  friend path operator/(const fs_path& lhs, const path& rhs) {
+    return path(lhs) /= rhs;
+  }
+  // convert UTF-8 encoded string to native encoding, then append.
+  friend path operator/(const path& lhs, const std::string& rhs) {
+    return path(lhs) /= path(rhs);
+  }
+  friend path operator/(const path& lhs, const char* rhs) {
+    return path(lhs) /= path(rhs);
+  }
+  friend path operator/(const fs_path& lhs, const std::string& rhs) {
+    return path(lhs) /= path(rhs);
+  }
+  friend path operator/(const fs_path& lhs, const char* rhs) {
+    return path(lhs) /= path(rhs);
+  }
 };
 
 }  // namespace rime

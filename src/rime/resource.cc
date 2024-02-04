@@ -28,15 +28,15 @@ string ResourceResolver::ToFilePath(const string& resource_id) const {
 }
 
 path ResourceResolver::ResolvePath(const string& resource_id) {
-  return std::filesystem::absolute(
-      root_path_ / path(type_.prefix + resource_id + type_.suffix));
+  return std::filesystem::absolute(root_path_ /
+                                   (type_.prefix + resource_id + type_.suffix));
 }
 
 path FallbackResourceResolver::ResolvePath(const string& resource_id) {
   auto default_path = ResourceResolver::ResolvePath(resource_id);
   if (!std::filesystem::exists(default_path)) {
     auto fallback_path = std::filesystem::absolute(
-        fallback_root_path_ / path(type_.prefix + resource_id + type_.suffix));
+        fallback_root_path_ / (type_.prefix + resource_id + type_.suffix));
     if (std::filesystem::exists(fallback_path)) {
       return fallback_path;
     }

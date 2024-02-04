@@ -66,7 +66,7 @@ bool UserDictManager::Backup(const string& dict_name) {
       return false;
     }
   }
-  path snapshot_file = path(dict_name + UserDb::snapshot_extension());
+  string snapshot_file = dict_name + UserDb::snapshot_extension();
   return db->Backup(dir / snapshot_file);
 }
 
@@ -161,7 +161,7 @@ bool UserDictManager::UpgradeUserDict(const string& dict_name) {
   if (!legacy_db->OpenReadOnly() || !UserDbHelper(legacy_db).IsUserDb())
     return false;
   LOG(INFO) << "upgrading user dict '" << dict_name << "'.";
-  path trash = path(deployer_->user_data_dir) / "trash";
+  path trash = deployer_->user_data_dir / "trash";
   if (!fs::exists(trash)) {
     std::error_code ec;
     if (!fs::create_directories(trash, ec)) {
@@ -169,7 +169,7 @@ bool UserDictManager::UpgradeUserDict(const string& dict_name) {
       return false;
     }
   }
-  path snapshot_file = path(dict_name + UserDb::snapshot_extension());
+  string snapshot_file = dict_name + UserDb::snapshot_extension();
   path snapshot_path = trash / snapshot_file;
   return legacy_db->Backup(snapshot_path) && legacy_db->Close() &&
          legacy_db->Remove() && Restore(snapshot_path);
@@ -187,11 +187,11 @@ bool UserDictManager::Synchronize(const string& dict_name) {
     }
   }
   // *.userdb.txt
-  path snapshot_file = path(dict_name + UserDb::snapshot_extension());
+  string snapshot_file = dict_name + UserDb::snapshot_extension();
   for (fs::directory_iterator it(sync_dir), end; it != end; ++it) {
     if (!fs::is_directory(it->path()))
       continue;
-    path file_path = it->path() / snapshot_file;
+    path file_path = path(it->path()) / snapshot_file;
     if (fs::exists(file_path)) {
       LOG(INFO) << "merging snapshot file: " << file_path;
       if (!Restore(file_path)) {

@@ -66,11 +66,11 @@ void UserDbRecoveryTask::RestoreUserDataFromSnapshot(Deployer* deployer) {
   // locate snapshot file
   const path& dir(deployer->user_data_sync_dir());
   // try *.userdb.txt
-  path snapshot_path = dir / path(dict_name + UserDb::snapshot_extension());
+  path snapshot_path = dir / (dict_name + UserDb::snapshot_extension());
   if (!std::filesystem::exists(snapshot_path)) {
     // try *.userdb.*.snapshot
-    path legacy_snapshot_file =
-        path(dict_name + component->extension() + ".snapshot");
+    string legacy_snapshot_file =
+        dict_name + component->extension() + ".snapshot";
     snapshot_path = dir / legacy_snapshot_file;
     if (!std::filesystem::exists(snapshot_path)) {
       return;  // not found

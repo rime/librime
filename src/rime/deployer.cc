@@ -147,7 +147,7 @@ void Deployer::JoinMaintenanceThread() {
 }
 
 path Deployer::user_data_sync_dir() const {
-  return sync_dir / path(user_id);
+  return sync_dir / user_id;
 }
 
 }  // namespace rime
