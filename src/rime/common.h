@@ -90,12 +90,14 @@ class path : public std::filesystem::path {
   path(fs_path&& p) : fs_path(std::move(p)) {}
 #ifdef _WIN32
   // convert utf-8 string to native encoding path.
-  path(const std::string& utf8_path)
+  explicit path(const std::string& utf8_path)
       : fs_path(std::filesystem::u8path(utf8_path)) {}
-  path(const char* utf8_path) : fs_path(std::filesystem::u8path(utf8_path)) {}
+  explicit path(const char* utf8_path)
+      : fs_path(std::filesystem::u8path(utf8_path)) {}
 #else
-  path(const std::string& utf8_path) : fs_path(utf8_path) {}
-  path(const char* utf8_path) : fs_path(utf8_path) {}
+  // disable implicit conversion from string to path for development purpose.
+  explicit path(const std::string& utf8_path) : fs_path(utf8_path) {}
+  explicit path(const char* utf8_path) : fs_path(utf8_path) {}
 #endif
 };
 
