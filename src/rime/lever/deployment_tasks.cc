@@ -37,7 +37,7 @@ namespace rime {
 
 DetectModifications::DetectModifications(TaskInitializer arg) {
   try {
-    data_dirs_ = std::any_cast<vector<string>>(arg);
+    data_dirs_ = std::any_cast<vector<path>>(arg);
   } catch (const std::bad_any_cast&) {
     LOG(ERROR) << "DetectModifications: invalid arguments.";
   }

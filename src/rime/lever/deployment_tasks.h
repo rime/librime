@@ -21,7 +21,7 @@ class DetectModifications : public DeploymentTask {
   bool Run(Deployer* deployer);
 
  protected:
-  vector<string> data_dirs_;
+  vector<path> data_dirs_;
 };
 
 // initialize/update installation.yaml

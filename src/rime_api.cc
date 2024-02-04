@@ -95,7 +95,7 @@ RIME_API Bool RimeStartMaintenance(Bool full_check) {
   }
   if (!full_check) {
     TaskInitializer args{
-        vector<string>{
+        vector<path>{
             deployer.user_data_dir,
             deployer.shared_data_dir,
         },
