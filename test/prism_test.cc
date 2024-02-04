@@ -15,7 +15,7 @@ class RimePrismTest : public ::testing::Test {
   RimePrismTest() {}
 
   virtual void SetUp() {
-    prism_.reset(new Prism(path("prism_test.bin")));
+    prism_.reset(new Prism(path{"prism_test.bin"}));
     prism_->Remove();
     
     set<string> keyset;

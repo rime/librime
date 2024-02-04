@@ -13,7 +13,7 @@ class RimeTableTest : public ::testing::Test {
  public:
   virtual void SetUp() {
     if (!table_) {
-      table_.reset(new rime::Table(rime::path("table_test.bin")));
+      table_.reset(new rime::Table(rime::path{"table_test.bin"}));
       table_->Remove();
       rime::Syllabary syll;
       rime::Vocabulary voc;
@@ -94,7 +94,7 @@ void RimeTableTest::PrepareSampleVocabulary(rime::Syllabary& syll,
 }
 
 TEST_F(RimeTableTest, IntegrityTest) {
-  table_.reset(new rime::Table(rime::path("table_test.bin")));
+  table_.reset(new rime::Table(rime::path{"table_test.bin"}));
   ASSERT_TRUE(bool(table_));
   ASSERT_TRUE(table_->Load());
 }

@@ -14,7 +14,7 @@ static const ResourceType kMineralsType = ResourceType{
 
 TEST(RimeResourceResolverTest, ResolvePath) {
   ResourceResolver rr(kMineralsType);
-  rr.set_root_path(path("/starcraft"));
+  rr.set_root_path(path{"/starcraft"});
   auto actual = rr.ResolvePath("enough");
   path expected = fs::absolute(fs::current_path())
       .root_name()
@@ -25,7 +25,7 @@ TEST(RimeResourceResolverTest, ResolvePath) {
 
 TEST(RimeResourceResolverTest, FallbackRootPath) {
   FallbackResourceResolver rr(kMineralsType);
-  rr.set_fallback_root_path(path("fallback"));
+  rr.set_fallback_root_path(path{"fallback"});
   fs::create_directory("fallback");
   {
     path nonexistent_default("not_present.minerals");
