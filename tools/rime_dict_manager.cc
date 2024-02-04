@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
   Deployer& deployer(Service::instance().deployer());
   {
     Config config;
-    if (config.LoadFromFile("installation.yaml")) {
+    if (config.LoadFromFile(path{"installation.yaml"})) {
       config.GetString("installation_id", &deployer.user_id);
       string sync_dir;
       if (config.GetString("sync_dir", &sync_dir)) {

@@ -38,7 +38,7 @@ bool Customizer::UpdateConfigFile() {
   string applied_customization;
 
   Config dest_config;
-  if (dest_config.LoadFromFile(dest_path_.string())) {
+  if (dest_config.LoadFromFile(dest_path_)) {
     dest_config.GetString(version_key_, &dest_version);
     dest_config.GetString("customization", &applied_customization);
   }
@@ -48,7 +48,7 @@ bool Customizer::UpdateConfigFile() {
     source_version = dest_version;
   } else {
     Config source_config;
-    if (source_config.LoadFromFile(source_path_.string())) {
+    if (source_config.LoadFromFile(source_path_)) {
       source_config.GetString(version_key_, &source_version);
     } else {
       LOG(ERROR) << "Error loading config from '" << source_path_ << "'.";
@@ -101,13 +101,13 @@ bool Customizer::UpdateConfigFile() {
                       "is discouraged.";
     }
     LOG(INFO) << "applying customization file: " << custom_path;
-    if (!dest_config.LoadFromFile(dest_path_.string())) {
+    if (!dest_config.LoadFromFile(dest_path_)) {
       LOG(ERROR) << "Error reloading destination config file.";
       return false;
     }
     // applying patch
     Config custom_config;
-    if (!custom_config.LoadFromFile(custom_path.string())) {
+    if (!custom_config.LoadFromFile(custom_path)) {
       LOG(ERROR) << "Error loading customization file.";
       return false;
     }
@@ -130,7 +130,7 @@ bool Customizer::UpdateConfigFile() {
     dest_version.append(".custom.").append(customization);
     dest_config.SetString(version_key_, dest_version);
     dest_config.SetString("customization", customization);
-    if (!dest_config.SaveToFile(dest_path_.string())) {
+    if (!dest_config.SaveToFile(dest_path_)) {
       LOG(ERROR) << "Error saving destination config file.";
       return false;
     }

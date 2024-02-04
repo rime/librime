@@ -98,7 +98,7 @@ bool InstallationUpdate::Run(Deployer* deployer) {
   string last_distro_code_name;
   string last_distro_version;
   string last_rime_version;
-  if (config.LoadFromFile(installation_info.string())) {
+  if (config.LoadFromFile(installation_info)) {
     if (config.GetString("installation_id", &installation_id)) {
       LOG(INFO) << "installation info exists. installation id: "
                 << installation_id;
@@ -158,7 +158,7 @@ bool InstallationUpdate::Run(Deployer* deployer) {
   }
   config.SetString("rime_version", RIME_VERSION);
   LOG(INFO) << "Rime version: " << RIME_VERSION;
-  return config.SaveToFile(installation_info.string());
+  return config.SaveToFile(installation_info);
 }
 
 bool WorkspaceUpdate::Run(Deployer* deployer) {
@@ -293,7 +293,7 @@ static bool TrashDeprecatedUserCopy(const path& shared_copy,
   string shared_copy_version;
   string user_copy_version;
   Config shared_config;
-  if (shared_config.LoadFromFile(shared_copy.string())) {
+  if (shared_config.LoadFromFile(shared_copy)) {
     shared_config.GetString(version_key, &shared_copy_version);
     // treat "X.Y.minimal" as equal to (not greater than) "X.Y"
     // to avoid trashing the user installed full version
@@ -301,7 +301,7 @@ static bool TrashDeprecatedUserCopy(const path& shared_copy,
   }
   Config user_config;
   bool is_customized_user_copy =
-      user_config.LoadFromFile(user_copy.string()) &&
+      user_config.LoadFromFile(user_copy) &&
       user_config.GetString(version_key, &user_copy_version) &&
       RemoveVersionSuffix(&user_copy_version, ".custom.");
   int cmp = CompareVersionString(shared_copy_version, user_copy_version);
@@ -331,7 +331,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   }
   string schema_id;
   the<Config> config(new Config);
-  if (!config->LoadFromFile(source_path_.string()) ||
+  if (!config->LoadFromFile(source_path_) ||
       !config->GetString("schema/schema_id", &schema_id) || schema_id.empty()) {
     LOG(ERROR) << "invalid schema definition in '" << source_path_ << "'.";
     return false;
@@ -458,7 +458,7 @@ bool PrebuildAllSchemas::Run(Deployer* deployer) {
   for (fs::directory_iterator iter(shared_data_path), end; iter != end;
        ++iter) {
     path entry(iter->path());
-    if (boost::ends_with(entry.string(), ".schema.yaml")) {
+    if (boost::ends_with(entry.filename().string(), ".schema.yaml")) {
       the<DeploymentTask> t(new SchemaUpdate(entry));
       if (!t->Run(deployer))
         success = false;
@@ -522,12 +522,13 @@ bool UserDictSync::Run(Deployer* deployer) {
   return mgr.SynchronizeAll();
 }
 
-static bool IsCustomizedCopy(const string& file_name) {
+static bool IsCustomizedCopy(const path& file_path) {
+  auto file_name = file_path.filename().string();
   if (boost::ends_with(file_name, ".yaml") &&
       !boost::ends_with(file_name, ".custom.yaml")) {
     Config config;
     string checksum;
-    if (config.LoadFromFile(file_name) &&
+    if (config.LoadFromFile(file_path) &&
         config.GetString("customization", &checksum)) {
       return true;
     }
@@ -559,7 +560,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
       ++latest;  // already up-to-date
       continue;
     }
-    if (is_yaml_file && IsCustomizedCopy(entry.string())) {
+    if (is_yaml_file && IsCustomizedCopy(entry)) {
       ++skipped;  // customized copy
       continue;
     }
@@ -589,11 +590,11 @@ bool CleanupTrash::Run(Deployer* deployer) {
     path entry(iter->path());
     if (!fs::is_regular_file(entry))
       continue;
-    auto filename = entry.filename().string();
-    if (filename == "rime.log" || boost::ends_with(filename, ".bin") ||
-        boost::ends_with(filename, ".reverse.kct") ||
-        boost::ends_with(filename, ".userdb.kct.old") ||
-        boost::ends_with(filename, ".userdb.kct.snapshot")) {
+    auto file_name = entry.filename().string();
+    if (file_name == "rime.log" || boost::ends_with(file_name, ".bin") ||
+        boost::ends_with(file_name, ".reverse.kct") ||
+        boost::ends_with(file_name, ".userdb.kct.old") ||
+        boost::ends_with(file_name, ".userdb.kct.snapshot")) {
       if (!success && !MaybeCreateDirectory(trash)) {
         return false;
       }

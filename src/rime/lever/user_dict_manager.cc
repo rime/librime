@@ -62,7 +62,7 @@ bool UserDictManager::Backup(const string& dict_name) {
   const path& dir(deployer_->user_data_sync_dir());
   if (!fs::exists(dir)) {
     if (!fs::create_directories(dir)) {
-      LOG(ERROR) << "error creating directory '" << dir.string() << "'.";
+      LOG(ERROR) << "error creating directory '" << dir << "'.";
       return false;
     }
   }
@@ -165,7 +165,7 @@ bool UserDictManager::UpgradeUserDict(const string& dict_name) {
   if (!fs::exists(trash)) {
     std::error_code ec;
     if (!fs::create_directories(trash, ec)) {
-      LOG(ERROR) << "error creating directory '" << trash.string() << "'.";
+      LOG(ERROR) << "error creating directory '" << trash << "'.";
       return false;
     }
   }
@@ -182,7 +182,7 @@ bool UserDictManager::Synchronize(const string& dict_name) {
   if (!fs::exists(sync_dir)) {
     std::error_code ec;
     if (!fs::create_directories(sync_dir, ec)) {
-      LOG(ERROR) << "error creating directory '" << sync_dir.string() << "'.";
+      LOG(ERROR) << "error creating directory '" << sync_dir << "'.";
       return false;
     }
   }

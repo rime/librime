@@ -31,12 +31,12 @@ bool Config::SaveToStream(std::ostream& stream) {
   return data_->SaveToStream(stream);
 }
 
-bool Config::LoadFromFile(const string& file_name) {
-  return data_->LoadFromFile(file_name, nullptr);
+bool Config::LoadFromFile(const path& file_path) {
+  return data_->LoadFromFile(file_path, nullptr);
 }
 
-bool Config::SaveToFile(const string& file_name) {
-  return data_->SaveToFile(file_name);
+bool Config::SaveToFile(const path& file_path) {
+  return data_->SaveToFile(file_path);
 }
 
 bool Config::IsNull(const string& path) {
@@ -191,8 +191,7 @@ an<ConfigData> ConfigComponentBase::GetConfigData(const string& file_name) {
 an<ConfigData> ConfigLoader::LoadConfig(ResourceResolver* resource_resolver,
                                         const string& config_id) {
   auto data = New<ConfigData>();
-  data->LoadFromFile(resource_resolver->ResolvePath(config_id).string(),
-                     nullptr);
+  data->LoadFromFile(resource_resolver->ResolvePath(config_id), nullptr);
   data->set_auto_save(auto_save_);
   return data;
 }

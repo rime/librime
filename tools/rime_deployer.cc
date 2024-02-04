@@ -16,7 +16,7 @@ using namespace rime;
 
 int add_schema(int count, char* schemas[]) {
   Config config;
-  if (!config.LoadFromFile("default.custom.yaml")) {
+  if (!config.LoadFromFile(path{"default.custom.yaml"})) {
     LOG(INFO) << "creating new file 'default.custom.yaml'.";
   }
   ConfigMapEntryRef schema_list(config["patch"]["schema_list"]);
@@ -39,7 +39,7 @@ int add_schema(int count, char* schemas[]) {
     schema_list[schema_list.size()]["schema"] = new_schema_id;
     LOG(INFO) << "added schema: " << new_schema_id;
   }
-  if (!config.SaveToFile("default.custom.yaml")) {
+  if (!config.SaveToFile(path{"default.custom.yaml"})) {
     LOG(ERROR) << "failed to save schema list.";
     return 1;
   }
@@ -48,11 +48,11 @@ int add_schema(int count, char* schemas[]) {
 
 int set_active_schema(const string& schema_id) {
   Config config;
-  if (!config.LoadFromFile("user.yaml")) {
+  if (!config.LoadFromFile(path{"user.yaml"})) {
     LOG(INFO) << "creating new file 'user.yaml'.";
   }
   config["var"]["previously_selected_schema"] = schema_id;
-  if (!config.SaveToFile("user.yaml")) {
+  if (!config.SaveToFile(path{"user.yaml"})) {
     LOG(ERROR) << "failed to set active schema: " << schema_id;
     return 1;
   }

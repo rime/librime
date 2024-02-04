@@ -29,15 +29,15 @@ CustomSettings::CustomSettings(Deployer* deployer,
 
 bool CustomSettings::Load() {
   path config_path = deployer_->staging_dir / (config_id_ + ".yaml");
-  if (!config_.LoadFromFile(config_path.string())) {
+  if (!config_.LoadFromFile(config_path)) {
     config_path = deployer_->prebuilt_data_dir / (config_id_ + ".yaml");
-    if (!config_.LoadFromFile(config_path.string())) {
+    if (!config_.LoadFromFile(config_path)) {
       LOG(WARNING) << "cannot find '" << config_id_ << ".yaml'.";
     }
   }
   path custom_config_path =
       deployer_->user_data_dir / custom_config_file(config_id_);
-  if (!custom_config_.LoadFromFile(custom_config_path.string())) {
+  if (!custom_config_.LoadFromFile(custom_config_path)) {
     return false;
   }
   modified_ = false;
@@ -51,7 +51,7 @@ bool CustomSettings::Save() {
   signature.Sign(&custom_config_, deployer_);
   path custom_config_path(deployer_->user_data_dir);
   custom_config_path /= custom_config_file(config_id_);
-  custom_config_.SaveToFile(custom_config_path.string());
+  custom_config_.SaveToFile(custom_config_path);
   modified_ = false;
   return true;
 }
@@ -85,7 +85,7 @@ bool CustomSettings::IsFirstRun() {
   path custom_config_path =
       deployer_->user_data_dir / custom_config_file(config_id_);
   Config config;
-  if (!config.LoadFromFile(custom_config_path.string()))
+  if (!config.LoadFromFile(custom_config_path))
     return true;
   return !config.GetMap("customization");
 }
