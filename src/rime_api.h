@@ -413,9 +413,13 @@ RIME_API RimeModule* RimeFindModule(const char* module_name);
 //! Run a registered task
 RIME_API Bool RimeRunTask(const char* task_name);
 
+//! \deprecated use RimeApi::get_shared_data_dir_s instead.
 RIME_API const char* RimeGetSharedDataDir(void);
+//! \deprecated use RimeApi::get_user_data_dir_s instead.
 RIME_API const char* RimeGetUserDataDir(void);
+//! \deprecated use RimeApi::get_sync_dir_s instead.
 RIME_API const char* RimeGetSyncDir(void);
+
 RIME_API const char* RimeGetUserId(void);
 
 /*! The API structure
@@ -543,9 +547,14 @@ typedef struct rime_api_t {
   RimeModule* (*find_module)(const char* module_name);
 
   Bool (*run_task)(const char* task_name);
+
+  //! \deprecated use get_shared_data_dir_s instead.
   const char* (*get_shared_data_dir)(void);
+  //! \deprecated use get_user_data_dir_s instead.
   const char* (*get_user_data_dir)(void);
+  //! \deprecated use get_sync_dir_s instead.
   const char* (*get_sync_dir)(void);
+
   const char* (*get_user_id)(void);
   void (*get_user_data_sync_dir)(char* dir, size_t buffer_size);
 
@@ -618,11 +627,13 @@ typedef struct rime_api_t {
                                     int index);
 
   //! prebuilt data directory.
+  //! \deprecated use get_prebuilt_data_dir_s instead.
   const char* (*get_prebuilt_data_dir)(void);
   //! staging directory, stores data files deployed to a Rime client.
+  //! \deprecated use get_staging_dir_s instead.
   const char* (*get_staging_dir)(void);
 
-  //! Deprecated: for capnproto API, use "proto" module from librime-proto
+  //! \deprecated for capnproto API, use "proto" module from librime-proto
   //! plugin.
   void (*commit_proto)(RimeSessionId session_id,
                        RIME_PROTO_BUILDER* commit_builder);
@@ -647,6 +658,12 @@ typedef struct rime_api_t {
                                                  Bool abbreviated);
 
   Bool (*set_input)(RimeSessionId session_id, const char* input);
+
+  void (*get_shared_data_dir_s)(char* dir, size_t buffer_size);
+  void (*get_user_data_dir_s)(char* dir, size_t buffer_size);
+  void (*get_prebuilt_data_dir_s)(char* dir, size_t buffer_size);
+  void (*get_staging_dir_s)(char* dir, size_t buffer_size);
+  void (*get_sync_dir_s)(char* dir, size_t buffer_size);
 } RimeApi;
 
 //! API entry
