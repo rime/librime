@@ -22,6 +22,8 @@ namespace rime {
 
 enum KeyBindingCondition {
   kNever,
+  kWhenAscii,
+  kWhenNotAscii,
   kWhenPredicting,  // showing prediction candidates
   kWhenPaging,      // user has changed page
   kWhenHasMenu,     // at least one candidate
@@ -33,6 +35,8 @@ static struct KeyBindingConditionDef {
   KeyBindingCondition condition;
   const char* name;
 } condition_definitions[] = {{kWhenPredicting, "predicting"},
+                             {kWhenAscii, "ascii_mode"},
+                             {kWhenNotAscii, "!ascii_mode"},
                              {kWhenPaging, "paging"},
                              {kWhenHasMenu, "has_menu"},
                              {kWhenComposing, "composing"},
@@ -160,6 +164,15 @@ static void select_schema(Engine* engine, const string& schema) {
   }
 }
 
+static void ascii_send(Engine* engine, const int ch) {
+  if (!engine)
+    return;
+  Context* ctx = engine->context();
+  ctx->PushInput(ch);
+  ctx->ClearNonConfirmedComposition();
+  ctx->Commit();
+}
+
 void KeyBindings::LoadBindings(const an<ConfigList>& bindings) {
   if (!bindings)
     return;
@@ -186,7 +199,10 @@ void KeyBindings::LoadBindings(const an<ConfigList>& bindings) {
     if (auto target = map->GetValue("send")) {
       KeyEvent key;
       if (key.Parse(target->str())) {
-        binding.target.push_back(std::move(key));
+        if (whence->str() != "ascii_mode")
+          binding.target.push_back(std::move(key));
+        else
+          binding.action = std::bind(&ascii_send, _1, key.keycode());
       } else {
         LOG(WARNING) << "invalid key binding #" << i << ".";
         continue;
@@ -238,6 +254,11 @@ KeyBindingConditions::KeyBindingConditions(Context* ctx) {
   if (ctx->IsComposing()) {
     insert(kWhenComposing);
   }
+
+  if (ctx->get_option("ascii_mode"))
+    insert(kWhenAscii);
+  else
+    insert(kWhenNotAscii);
 
   if (ctx->HasMenu() && !ctx->get_option("ascii_mode")) {
     insert(kWhenHasMenu);
