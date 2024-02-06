@@ -20,6 +20,7 @@ option(BUILD_SAMPLE "Build sample Rime plugin" OFF)
 option(BUILD_TEST "Build and run tests" ON)
 option(BUILD_SEPARATE_LIBS "Build separate rime-* libraries" OFF)
 option(ENABLE_LOGGING "Enable logging with google-glog library" ON)
+option(ALSO_LOG_TO_STDERR "Log to stderr as well as log file" OFF)
 option(ENABLE_ASAN "Enable Address Sanitizer (Unix Only)" OFF)
 option(INSTALL_PRIVATE_HEADERS "Install private headers (usually needed for externally built Rime plugins)" OFF)
 option(ENABLE_EXTERNAL_PLUGINS "Enable loading of externally built Rime plugins (from directory set by RIME_PLUGINS_DIR variable)" OFF)
@@ -86,6 +87,9 @@ if(ENABLE_LOGGING)
 
   set(RIME_ENABLE_LOGGING 1)
 
+  if (ALSO_LOG_TO_STDERR)
+     set(RIME_ALSO_LOG_TO_STDERR 1)
+  endif()
 endif()
 
 find_package(Threads)
