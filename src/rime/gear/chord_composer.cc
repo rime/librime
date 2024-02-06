@@ -25,6 +25,8 @@ ChordComposer::ChordComposer(const Ticket& ticket) : Processor(ticket) {
     config->GetBool("chord_composer/use_control", &use_control_);
     config->GetBool("chord_composer/use_alt", &use_alt_);
     config->GetBool("chord_composer/use_shift", &use_shift_);
+    config->GetBool("chord_composer/use_super", &use_super_);
+    config->GetBool("chord_composer/use_caps", &use_caps_);
     config->GetString("speller/delimiter", &delimiter_);
     algebra_.Load(config->GetList("chord_composer/algebra"));
     output_format_.Load(config->GetList("chord_composer/output_format"));
@@ -81,11 +83,12 @@ inline static int get_base_layer_key_code(const KeyEvent& key_event) {
 }
 
 ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
-  if (key_event.ctrl() || key_event.alt()) {
+  if (key_event.ctrl() || key_event.alt() || key_event.super() || key_event.caps()) {
     raw_sequence_.clear();
   }
   if ((key_event.ctrl() && !use_control_) || (key_event.alt() && !use_alt_) ||
-      (key_event.shift() && !use_shift_)) {
+      (key_event.shift() && !use_shift_) || (key_event.super() && !use_super_) ||
+      (key_event.caps() && !use_caps_)) {
     ClearChord();
     return kNoop;
   }
