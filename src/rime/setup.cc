@@ -73,7 +73,9 @@ RIME_API void SetupLogging(const char* app_name,
                            const char* log_dir) {
 #ifdef RIME_ENABLE_LOGGING
   FLAGS_minloglevel = min_log_level;
+#ifdef RIME_ALSO_LOG_TO_STDERR
   FLAGS_alsologtostderr = true;
+#endif  // RIME_ALSO_LOG_TO_STDERR
   if (log_dir) {
     if (log_dir[0] == '\0') {
       google::LogToStderr();
