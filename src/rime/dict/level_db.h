@@ -22,10 +22,10 @@ class LevelDbAccessor : public DbAccessor {
   LevelDbAccessor(LevelDbCursor* cursor, const string& prefix);
   virtual ~LevelDbAccessor();
 
-  virtual bool Reset();
-  virtual bool Jump(const string& key);
-  virtual bool GetNextRecord(string* key, string* value);
-  virtual bool exhausted();
+  bool Reset() override;
+  bool Jump(const string& key) override;
+  bool GetNextRecord(string* key, string* value) override;
+  bool exhausted() override;
 
  private:
   the<LevelDbCursor> cursor_;
@@ -34,37 +34,37 @@ class LevelDbAccessor : public DbAccessor {
 
 class LevelDb : public Db, public Recoverable, public Transactional {
  public:
-  LevelDb(const string& file_name,
+  LevelDb(const path& file_path,
           const string& db_name,
           const string& db_type = "");
   virtual ~LevelDb();
 
-  virtual bool Remove();
-  virtual bool Open();
-  virtual bool OpenReadOnly();
-  virtual bool Close();
+  bool Remove() override;
+  bool Open() override;
+  bool OpenReadOnly() override;
+  bool Close() override;
 
-  virtual bool Backup(const string& snapshot_file);
-  virtual bool Restore(const string& snapshot_file);
+  bool Backup(const path& snapshot_file) override;
+  bool Restore(const path& snapshot_file) override;
 
-  virtual bool CreateMetadata();
-  virtual bool MetaFetch(const string& key, string* value);
-  virtual bool MetaUpdate(const string& key, const string& value);
+  bool CreateMetadata() override;
+  bool MetaFetch(const string& key, string* value) override;
+  bool MetaUpdate(const string& key, const string& value) override;
 
-  virtual an<DbAccessor> QueryMetadata();
-  virtual an<DbAccessor> QueryAll();
-  virtual an<DbAccessor> Query(const string& key);
-  virtual bool Fetch(const string& key, string* value);
-  virtual bool Update(const string& key, const string& value);
-  virtual bool Erase(const string& key);
+  an<DbAccessor> QueryMetadata() override;
+  an<DbAccessor> QueryAll() override;
+  an<DbAccessor> Query(const string& key) override;
+  bool Fetch(const string& key, string* value) override;
+  bool Update(const string& key, const string& value) override;
+  bool Erase(const string& key) override;
 
   // Recoverable
-  virtual bool Recover();
+  bool Recover() override;
 
   // Transactional
-  virtual bool BeginTransaction();
-  virtual bool AbortTransaction();
-  virtual bool CommitTransaction();
+  bool BeginTransaction() override;
+  bool AbortTransaction() override;
+  bool CommitTransaction() override;
 
  private:
   void Initialize();

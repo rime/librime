@@ -97,20 +97,21 @@ static TextFormat plain_userdb_format = {
 };
 
 template <>
-RIME_API UserDbWrapper<TextDb>::UserDbWrapper(const string& file_name,
+RIME_API UserDbWrapper<TextDb>::UserDbWrapper(const path& file_path,
                                               const string& db_name)
-    : TextDb(file_name, db_name, "userdb", plain_userdb_format) {}
+    : TextDb(file_path, db_name, "userdb", plain_userdb_format) {}
 
 bool UserDbHelper::UpdateUserInfo() {
   Deployer& deployer(Service::instance().deployer());
   return db_->MetaUpdate("/user_id", deployer.user_id);
 }
 
-bool UserDbHelper::IsUniformFormat(const string& file_name) {
-  return boost::ends_with(file_name, plain_userdb_extension);
+bool UserDbHelper::IsUniformFormat(const path& file_path) {
+  return boost::ends_with(file_path.filename().u8string(),
+                          plain_userdb_extension);
 }
 
-bool UserDbHelper::UniformBackup(const string& snapshot_file) {
+bool UserDbHelper::UniformBackup(const path& snapshot_file) {
   LOG(INFO) << "backing up userdb '" << db_->name() << "' to " << snapshot_file;
   TsvWriter writer(snapshot_file, plain_userdb_format.formatter);
   writer.file_description = plain_userdb_format.file_description;
@@ -124,7 +125,7 @@ bool UserDbHelper::UniformBackup(const string& snapshot_file) {
   return true;
 }
 
-bool UserDbHelper::UniformRestore(const string& snapshot_file) {
+bool UserDbHelper::UniformRestore(const path& snapshot_file) {
   LOG(INFO) << "restoring userdb '" << db_->name() << "' from "
             << snapshot_file;
   TsvReader reader(snapshot_file, plain_userdb_format.parser);

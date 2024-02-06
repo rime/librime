@@ -5,7 +5,6 @@
 // 2012-07-07 GONG Chen <chen.sst@gmail.com>
 //
 #include <iostream>
-#include <filesystem>
 #include <rime/config.h>
 #include <rime/deployer.h>
 #include <rime/service.h>
@@ -13,13 +12,11 @@
 #include <rime/lever/deployment_tasks.h>
 #include "codepage.h"
 
-namespace fs = std::filesystem;
-
 using namespace rime;
 
 int add_schema(int count, char* schemas[]) {
   Config config;
-  if (!config.LoadFromFile("default.custom.yaml")) {
+  if (!config.LoadFromFile(path{"default.custom.yaml"})) {
     LOG(INFO) << "creating new file 'default.custom.yaml'.";
   }
   ConfigMapEntryRef schema_list(config["patch"]["schema_list"]);
@@ -42,7 +39,7 @@ int add_schema(int count, char* schemas[]) {
     schema_list[schema_list.size()]["schema"] = new_schema_id;
     LOG(INFO) << "added schema: " << new_schema_id;
   }
-  if (!config.SaveToFile("default.custom.yaml")) {
+  if (!config.SaveToFile(path{"default.custom.yaml"})) {
     LOG(ERROR) << "failed to save schema list.";
     return 1;
   }
@@ -51,11 +48,11 @@ int add_schema(int count, char* schemas[]) {
 
 int set_active_schema(const string& schema_id) {
   Config config;
-  if (!config.LoadFromFile("user.yaml")) {
+  if (!config.LoadFromFile(path{"user.yaml"})) {
     LOG(INFO) << "creating new file 'user.yaml'.";
   }
   config["var"]["previously_selected_schema"] = schema_id;
-  if (!config.SaveToFile("user.yaml")) {
+  if (!config.SaveToFile(path{"user.yaml"})) {
     LOG(ERROR) << "failed to set active schema: " << schema_id;
     return 1;
   }
@@ -64,21 +61,19 @@ int set_active_schema(const string& schema_id) {
 
 static void setup_deployer(Deployer* deployer, int argc, char* argv[]) {
   if (argc > 0) {
-    deployer->user_data_dir = argv[0];
+    deployer->user_data_dir = path(argv[0]);
   }
   if (argc > 1) {
-    deployer->shared_data_dir = argv[1];
+    deployer->shared_data_dir = path(argv[1]);
   } else if (argc > 0) {
-    deployer->shared_data_dir = argv[0];
+    deployer->shared_data_dir = path(argv[0]);
   }
   if (argc > 2) {
-    deployer->staging_dir = argv[2];
+    deployer->staging_dir = path(argv[2]);
   } else {
-    deployer->staging_dir =
-        (fs::path(deployer->user_data_dir) / "build").string();
+    deployer->staging_dir = deployer->user_data_dir / "build";
   }
-  deployer->prebuilt_data_dir =
-      (fs::path(deployer->shared_data_dir) / "build").string();
+  deployer->prebuilt_data_dir = deployer->shared_data_dir / "build";
 }
 
 int main(int argc, char* argv[]) {
@@ -149,7 +144,7 @@ int main(int argc, char* argv[]) {
     Deployer& deployer(Service::instance().deployer());
     setup_deployer(&deployer, argc - 1, argv + 1);
     LoadModules(kDeployerModules);
-    string schema_file(argv[0]);
+    path schema_file(argv[0]);
     SchemaUpdate update(schema_file);
     update.set_verbose(true);
     int res = update.Run(&deployer) ? 0 : 1;

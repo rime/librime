@@ -39,7 +39,7 @@ class DictSettings;
 
 class ReverseDb : public MappedFile {
  public:
-  explicit ReverseDb(const string& file_name);
+  explicit ReverseDb(const path& file_path);
 
   bool Load();
   bool Lookup(const string& text, string* result);

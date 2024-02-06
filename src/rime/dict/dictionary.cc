@@ -306,8 +306,8 @@ bool Dictionary::Decode(const Code& code, vector<string>* result) {
 }
 
 bool Dictionary::Exists() const {
-  return std::filesystem::exists(prism_->file_name()) && !tables_.empty() &&
-         std::filesystem::exists(tables_[0]->file_name());
+  return std::filesystem::exists(prism_->file_path()) && !tables_.empty() &&
+         std::filesystem::exists(tables_[0]->file_path());
 }
 
 bool Dictionary::Remove() {
@@ -400,19 +400,19 @@ Dictionary* DictionaryComponent::Create(string dict_name,
   // obtain prism and primary table objects
   auto primary_table = table_map_[dict_name].lock();
   if (!primary_table) {
-    auto file_path = table_resource_resolver_->ResolvePath(dict_name).string();
+    auto file_path = table_resource_resolver_->ResolvePath(dict_name);
     table_map_[dict_name] = primary_table = New<Table>(file_path);
   }
   auto prism = prism_map_[prism_name].lock();
   if (!prism) {
-    auto file_path = prism_resource_resolver_->ResolvePath(prism_name).string();
+    auto file_path = prism_resource_resolver_->ResolvePath(prism_name);
     prism_map_[prism_name] = prism = New<Prism>(file_path);
   }
   vector<of<Table>> tables = {std::move(primary_table)};
   for (const auto& pack : packs) {
     auto table = table_map_[pack].lock();
     if (!table) {
-      auto file_path = table_resource_resolver_->ResolvePath(pack).string();
+      auto file_path = table_resource_resolver_->ResolvePath(pack);
       table_map_[pack] = table = New<Table>(file_path);
     }
     tables.push_back(std::move(table));

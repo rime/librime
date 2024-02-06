@@ -2,7 +2,6 @@
 // Copyright RIME Developers
 // Distributed under the BSD License
 //
-#include <filesystem>
 #include <rime/resource.h>
 #include <rime/service.h>
 #include <rime/config/config_compiler.h>
@@ -27,7 +26,7 @@ bool SaveOutputPlugin::ReviewCompileOutput(ConfigCompiler* compiler,
 bool SaveOutputPlugin::ReviewLinkOutput(ConfigCompiler* compiler,
                                         an<ConfigResource> resource) {
   auto file_path = resource_resolver_->ResolvePath(resource->resource_id);
-  return resource->data->SaveToFile(file_path.string());
+  return resource->data->SaveToFile(file_path);
 }
 
 }  // namespace rime

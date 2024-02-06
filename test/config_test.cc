@@ -174,11 +174,11 @@ TEST(RimeConfigWriterTest, Greetings) {
   // will not create subkeys over an existing value node
   EXPECT_FALSE(config->SetItem("zergs/going/home", zerg_greetings));
   // saving
-  EXPECT_TRUE(config->SaveToFile("config_writer_test.yaml"));
+  EXPECT_TRUE(config->SaveToFile(path{"config_writer_test.yaml"}));
   // verify
   the<Config> config2(new Config);
   ASSERT_TRUE(bool(config2));
-  EXPECT_TRUE(config2->LoadFromFile("config_writer_test.yaml"));
+  EXPECT_TRUE(config2->LoadFromFile(path{"config_writer_test.yaml"}));
   string the_greetings;
   EXPECT_TRUE(config2->GetString("greetings", &the_greetings));
   EXPECT_EQ("Greetings, Terrans!", the_greetings);
@@ -195,11 +195,11 @@ TEST(RimeConfigWriterTest, Greetings) {
   EXPECT_TRUE(config2->SetInt("zergs/statistics/population", population / 2));
   EXPECT_TRUE(config2->SetString("protoss/residence", "Aiur"));
   EXPECT_TRUE(config2->SetItem("zergs/overmind", nullptr));
-  EXPECT_TRUE(config2->SaveToFile("config_rewriter_test.yaml"));
+  EXPECT_TRUE(config2->SaveToFile(path{"config_rewriter_test.yaml"}));
   // verify
   the<Config> config3(new Config);
   ASSERT_TRUE(bool(config3));
-  EXPECT_TRUE(config3->LoadFromFile("config_rewriter_test.yaml"));
+  EXPECT_TRUE(config3->LoadFromFile(path{"config_rewriter_test.yaml"}));
   EXPECT_TRUE(config3->GetInt("zergs/statistics/population", &population));
   EXPECT_EQ(500000, population);
   string value;
@@ -235,8 +235,8 @@ TEST(RimeConfigxxTest, Operations) {
   an<ConfigItem> v2(config["nested"]["greetings"]);
   EXPECT_EQ(v1, v2);
   EXPECT_TRUE(config.modified());
-  EXPECT_TRUE(config.SaveToFile("rime_configxx_test.yaml"));
-  EXPECT_TRUE(config.LoadFromFile("rime_configxx_test.yaml"));
+  EXPECT_TRUE(config.SaveToFile(path{"rime_configxx_test.yaml"}));
+  EXPECT_TRUE(config.LoadFromFile(path{"rime_configxx_test.yaml"}));
   EXPECT_TRUE(config["str"].IsNull());
   EXPECT_FALSE(config.modified());
   EXPECT_EQ("Hello!", config["nested"]["greetings"].ToString());

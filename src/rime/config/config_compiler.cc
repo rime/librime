@@ -331,7 +331,7 @@ an<ConfigResource> ConfigCompiler::Compile(const string& file_name) {
   graph_->resources[resource_id] = resource;
   Push(resource);
   resource->loaded = resource->data->LoadFromFile(
-      resource_resolver_->ResolvePath(resource_id).string(), this);
+      resource_resolver_->ResolvePath(resource_id), this);
   Pop();
   if (plugin_)
     plugin_->ReviewCompileOutput(this, resource);
