@@ -18,13 +18,13 @@ class RimeDictionaryTest : public ::testing::Test {
       dict_.reset(new rime::Dictionary(
           "dictionary_test",
           {},
-          {rime::New<rime::Table>("dictionary_test.table.bin")},
-          rime::New<rime::Prism>("dictionary_test.prism.bin")));
+          {rime::New<rime::Table>(rime::path{"dictionary_test.table.bin"})},
+          rime::New<rime::Prism>(rime::path{"dictionary_test.prism.bin"})));
     }
     if (!rebuilt_) {
       dict_->Remove();
       rime::DictCompiler dict_compiler(dict_.get());
-      dict_compiler.Compile("");  // no schema file
+      dict_compiler.Compile(rime::path());  // no schema file
       rebuilt_ = true;
     }
     dict_->Load();

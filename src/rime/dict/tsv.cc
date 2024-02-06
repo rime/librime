@@ -15,8 +15,8 @@ namespace rime {
 int TsvReader::operator()(Sink* sink) {
   if (!sink)
     return 0;
-  LOG(INFO) << "reading tsv file: " << path_;
-  std::ifstream fin(path_.c_str());
+  LOG(INFO) << "reading tsv file: " << file_path_;
+  std::ifstream fin(file_path_.c_str());
   string line, key, value;
   Tsv row;
   int line_no = 0;
@@ -57,8 +57,8 @@ int TsvReader::operator()(Sink* sink) {
 int TsvWriter::operator()(Source* source) {
   if (!source)
     return 0;
-  LOG(INFO) << "writing tsv file: " << path_;
-  std::ofstream fout(path_.c_str());
+  LOG(INFO) << "writing tsv file: " << file_path_;
+  std::ofstream fout(file_path_.c_str());
   if (!file_description.empty()) {
     fout << "# " << file_description << std::endl;
   }

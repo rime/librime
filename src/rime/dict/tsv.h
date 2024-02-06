@@ -7,6 +7,8 @@
 #ifndef RIME_TSV_H_
 #define RIME_TSV_H_
 
+#include <rime/common.h>
+
 namespace rime {
 
 using Tsv = vector<string>;
@@ -21,25 +23,25 @@ class Source;
 
 class TsvReader {
  public:
-  TsvReader(const string& path, TsvParser parser)
-      : path_(path), parser_(parser) {}
+  TsvReader(const path& file_path, TsvParser parser)
+      : file_path_(file_path), parser_(parser) {}
   // return number of records read
   int operator()(Sink* sink);
 
  protected:
-  string path_;
+  path file_path_;
   TsvParser parser_;
 };
 
 class TsvWriter {
  public:
-  TsvWriter(const string& path, TsvFormatter formatter)
-      : path_(path), formatter_(formatter) {}
+  TsvWriter(const path& file_path, TsvFormatter formatter)
+      : file_path_(file_path), formatter_(formatter) {}
   // return number of records written
   int operator()(Source* source);
 
  protected:
-  string path_;
+  path file_path_;
   TsvFormatter formatter_;
 
  public:

@@ -13,7 +13,7 @@ class RimeTableTest : public ::testing::Test {
  public:
   virtual void SetUp() {
     if (!table_) {
-      table_.reset(new rime::Table(file_name));
+      table_.reset(new rime::Table(rime::path{"table_test.bin"}));
       table_->Remove();
       rime::Syllabary syll;
       rime::Vocabulary voc;
@@ -28,7 +28,6 @@ class RimeTableTest : public ::testing::Test {
   }
  protected:
   static const int total_num_entries = 8;
-  static const char file_name[];
 
   static void PrepareSampleVocabulary(rime::Syllabary& syll,
                                       rime::Vocabulary& voc);
@@ -37,8 +36,6 @@ class RimeTableTest : public ::testing::Test {
   }
   static rime::the<rime::Table> table_;
 };
-
-const char RimeTableTest::file_name[] = "table_test.bin";
 
 rime::the<rime::Table> RimeTableTest::table_;
 
@@ -97,7 +94,7 @@ void RimeTableTest::PrepareSampleVocabulary(rime::Syllabary& syll,
 }
 
 TEST_F(RimeTableTest, IntegrityTest) {
-  table_.reset(new rime::Table(file_name));
+  table_.reset(new rime::Table(rime::path{"table_test.bin"}));
   ASSERT_TRUE(bool(table_));
   ASSERT_TRUE(table_->Load());
 }
