@@ -19,8 +19,7 @@ RUN apt update && apt install -y \
 COPY / /librime
 WORKDIR /librime/plugins
 RUN git clone https://github.com/rime/librime-charcode charcode && \
-  # fix it
-  # git clone https://github.com/hchunhui/librime-lua lua && \
+  git clone https://github.com/hchunhui/librime-lua lua && \
   git clone https://github.com/rime/librime-predict predict && \
   git clone https://github.com/lotem/librime-octagram octagram
 
