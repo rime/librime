@@ -1148,10 +1148,10 @@ RIME_API RimeApi* rime_get_api() {
     s_api.get_state_label = &RimeGetStateLabel;
     s_api.delete_candidate = &RimeDeleteCandidate;
     s_api.delete_candidate_on_current_page = &RimeDeleteCandidateOnCurrentPage;
+    s_api.get_state_label_abbreviated = &RimeGetStateLabelAbbreviated;
     s_api.peek_candidate = &RimePeekCandidate;
     s_api.peek_candidate_on_current_page = &RimePeekCandidateOnCurrentPage;
     s_api.change_page = &RimeChangePage;
-    s_api.get_state_label_abbreviated = &RimeGetStateLabelAbbreviated;
   }
   return &s_api;
 }
