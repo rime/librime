@@ -668,7 +668,8 @@ typedef struct rime_api_t {
   //! highlight a selection without committing
   Bool (*highlight_candidate)(RimeSessionId session_id, size_t index);
   //! highlight a selection without committing
-  Bool (*highlight_candidate_on_current_page)(RimeSessionId session_id, size_t index);
+  Bool (*highlight_candidate_on_current_page)(RimeSessionId session_id,
+                                              size_t index);
 
   Bool (*change_page)(RimeSessionId session_id, Bool backward);
 } RimeApi;
