@@ -202,6 +202,7 @@ if errorlevel 1 goto error
 if "%build_test%" == "ON" (
   pushd %build_dir%
   ctest --output-on-failure
+  if errorlevel 1 goto error
   popd
 )
 
