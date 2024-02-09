@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.12)
 project(rime)
 set(CMAKE_CXX_STANDARD 17)
 
-set(rime_version 1.9.0)
+set(rime_version 1.10.0)
 set(rime_soversion 1)
 
 add_definitions(-DRIME_VERSION="${rime_version}")

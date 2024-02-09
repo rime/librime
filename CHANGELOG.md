@@ -1,3 +1,53 @@
+<a name="1.10.0"></a>
+# [1.10.0](https://github.com/rime/librime/compare/1.9.0...1.10.0) (2024-02-09)
+
+
+### Bug Fixes
+
+* **chord_composer:** stop at super and caps by default ([8709a7a](https://github.com/rime/librime/commit/8709a7a))
+* **path:** convert to native encoding on Windows ([#806](https://github.com/rime/librime/issues/806)) ([6546689](https://github.com/rime/librime/commit/6546689)), closes [#804](https://github.com/rime/librime/issues/804) [rime/weasel#576](https://github.com/rime/weasel/issues/576) [rime/weasel#1080](https://github.com/rime/weasel/issues/1080)
+* don't compress the token during collecting dict entries ([#762](https://github.com/rime/librime/issues/762)) ([#768](https://github.com/rime/librime/issues/768)) ([767ebad](https://github.com/rime/librime/commit/767ebad))
+
+
+### Features
+
+* **api:** highlight_candidate*, change_page ([142902d](https://github.com/rime/librime/commit/142902d)), closes [#620](https://github.com/rime/librime/issues/620)
+* **engine:** translate zero-length prediction ([8f2e8d6](https://github.com/rime/librime/commit/8f2e8d6))
+* **key_binder:** add `when: predicting` condition ([#751](https://github.com/rime/librime/issues/751)) ([3bc65c9](https://github.com/rime/librime/commit/3bc65c9))
+* **rime_api:** add RimeApi::set_input ([#771](https://github.com/rime/librime/issues/771)) ([de12d6a](https://github.com/rime/librime/commit/de12d6a)), closes [#547](https://github.com/rime/librime/issues/547)
+* add reload command for rime_api_console ([#741](https://github.com/rime/librime/issues/741)) ([9b2689b](https://github.com/rime/librime/commit/9b2689b))
+
+
+### Performance Improvements
+
+* less nest in filesystem iteration When CleanOldLogFiles::Run ([#801](https://github.com/rime/librime/issues/801)) ([9ec1711](https://github.com/rime/librime/commit/9ec1711))
+
+
+### BREAKING CHANGES
+
+* **path:** Most `string` filenames in APIs are changed to `path`;
+`installation.yaml` should be UTF-8 encoded.
+
+Previouly on Windows, the file can be written in local encoding to
+enable paths with non-ASCII characters. It should be updated to UTF-8
+after this change.
+
+Details of the code refactor
+
+Wrap `std::filesystem::path` in a thin wrapper class `rime::path` which calls `std::filesystem::u8path` in the constructor on Windows.
+
+Operator `/=` and `/` are also overloaded to convert the right operand from UTF-8 string to native path.
+
+Follow these rules to apply correct conversion between `string` and `rime::path`:
+
+- construct `rime::path` with UTF-8 encoded string;
+- get native string by `path::u8string`;
+- to extract UTF-8 string from `path`, for example to find schema ID from file name, call `path::u8string`;
+- avoid implicit conversion from string, which results in `std::filesystem::path` without performing UTF-8 to native conversion;
+- explicitly construct `rime::path` from `std::filesystem::path` before append operation, to ensure the overloaded operator with string conversion is used.
+
+
+
 <a name="1.9.0"></a>
 # [1.9.0](https://github.com/rime/librime/compare/1.8.5...1.9.0) (2023-09-16)
 
