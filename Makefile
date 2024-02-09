@@ -19,9 +19,6 @@ ifdef BUILD_UNIVERSAL
 export CMAKE_OSX_ARCHITECTURES = arm64;x86_64
 endif
 
-# boost::locale library from homebrew links to homebrewed icu4c libraries
-icu_prefix = $(shell brew --prefix)/opt/icu4c
-
 else # for Linux
 prefix ?= $(DESTDIR)/usr
 endif
@@ -33,28 +30,23 @@ endif
 debug install-debug uninstall-debug test-debug: build ?= debug
 build ?= build
 
-.PHONY: all deps thirdparty xcode clean \
-librime librime-static install-librime uninstall-librime \
-release debug test install uninstall install-debug uninstall-debug
+.PHONY: all deps clean \
+librime librime-static \
+release debug test install uninstall \
+install-debug uninstall-debug
 
 all: release
 
-# `thirdparty` is deprecated in favor of `deps`
-deps thirdparty:
+deps:
 	$(MAKE) -f deps.mk
 
 deps/%:
 	$(MAKE) -f deps.mk $(@:deps/%=%)
 
-thirdparty/%:
-	$(MAKE) -f deps.mk $(@:thirdparty/%=%)
-
 clean:
 	rm -Rf build debug
 
 librime: release
-install-librime: install
-uninstall-librime: uninstall
 
 librime-static:
 	cmake . -B$(build) \
