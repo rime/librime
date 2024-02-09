@@ -83,15 +83,15 @@ class Opencc {
           for (const char* wstr = original_word.c_str(); *wstr != '\0';) {
             opencc::Optional<const opencc::DictEntry*> matched =
                 dict->MatchPrefix(wstr);
-            size_t matchedLength;
+            size_t matched_length;
             if (matched.IsNull()) {
-              matchedLength = opencc::UTF8Util::NextCharLength(wstr);
-              buffer << opencc::UTF8Util::FromSubstr(wstr, matchedLength);
+              matched_length = opencc::UTF8Util::NextCharLength(wstr);
+              buffer << opencc::UTF8Util::FromSubstr(wstr, matched_length);
             } else {
-              matchedLength = matched.Get()->KeyLength();
+              matched_length = matched.Get()->KeyLength();
               buffer << matched.Get()->GetDefault();
             }
-            wstr += matchedLength;
+            wstr += matched_length;
           }
           const string& converted_word = buffer.str();
           // Even if current dictionary doesn't convert the word
@@ -136,16 +136,16 @@ class Opencc {
       for (const char* pstr = phrase; *pstr != '\0';) {
         opencc::Optional<const opencc::DictEntry*> matched =
             dict->MatchPrefix(pstr);
-        size_t matchedLength;
+        size_t matched_length;
         if (matched.IsNull()) {
-          matchedLength = opencc::UTF8Util::NextCharLength(pstr);
-          buffer << opencc::UTF8Util::FromSubstr(pstr, matchedLength);
+          matched_length = opencc::UTF8Util::NextCharLength(pstr);
+          buffer << opencc::UTF8Util::FromSubstr(pstr, matched_length);
         } else {
-          matchedLength = matched.Get()->KeyLength();
+          matched_length = matched.Get()->KeyLength();
           size_t i = rand() % (matched.Get()->NumValues());
           buffer << matched.Get()->Values().at(i);
         }
-        pstr += matchedLength;
+        pstr += matched_length;
       }
       *simplified = buffer.str();
       phrase = simplified->c_str();
