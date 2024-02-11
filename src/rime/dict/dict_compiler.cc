@@ -150,10 +150,10 @@ bool DictCompiler::Compile(const path& schema_file) {
     }
     syllabary = std::move(collector.syllabary);
   } else if (packs_.size() > 0) {
-    primary_table->Load();
-    if (!tables_[0]->GetSyllabary(&syllabary))
+    if (primary_table->Load() && primary_table->GetSyllabary(&syllabary))
+      primary_table->Close();
+    else
       LOG(WARNING) << "couldn't load syllabary from '" << schema_file << "'";
-    primary_table->Close();
   }
   if (rebuild_prism &&
       !BuildPrism(schema_file, dict_file_checksum, schema_file_checksum)) {
