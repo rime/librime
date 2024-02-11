@@ -149,38 +149,59 @@ bool DictCompiler::Compile(const path& schema_file) {
       return false;
     }
     syllabary = std::move(collector.syllabary);
+  } else if (packs_.size() > 0) {
+    primary_table->Load();
+    if (!tables_[0]->GetSyllabary(&syllabary))
+      LOG(WARNING) << "couldn't load syllabary from '" << schema_file << "'";
+    primary_table->Close();
   }
   if (rebuild_prism &&
       !BuildPrism(schema_file, dict_file_checksum, schema_file_checksum)) {
     return false;
   }
-  if (rebuild_table) {
-    for (int table_index = 1; table_index < tables_.size(); ++table_index) {
-      const auto& pack_name = packs_[table_index - 1];
-      EntryCollector collector(std::move(syllabary));
-      DictSettings settings;
-      auto dict_file = source_resolver_->ResolvePath(pack_name + ".dict.yaml");
-      if (!std::filesystem::exists(dict_file)) {
-        LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
-        continue;
-      }
-      if (!load_dict_settings_from_file(&settings, dict_file)) {
-        LOG(ERROR) << "failed to load settings from '" << dict_file << "'.";
-        continue;
-      }
-      vector<path> dict_files;
-      if (!get_dict_files_from_settings(&dict_files, settings,
-                                        source_resolver_.get())) {
-        continue;
-      }
-      uint32_t pack_file_checksum =
-          compute_dict_file_checksum(dict_file_checksum, dict_files, settings);
+  for (int table_index = 1; table_index < tables_.size(); ++table_index) {
+    const auto& pack_name = packs_[table_index - 1];
+    auto pack_table = tables_[table_index];
+    EntryCollector collector(std::move(syllabary));
+    DictSettings settings;
+    auto dict_file = source_resolver_->ResolvePath(pack_name + ".dict.yaml");
+    if (!std::filesystem::exists(dict_file)) {
+      if (pack_table->Exists())
+        LOG(INFO) << "pack source file '" << dict_file
+                  << "' does not exist, using prebuilt table '"
+                  << pack_table->file_path() << "'";
+      else
+        LOG(ERROR) << "neither pack source file '" << dict_file
+                   << "' nor a prebuilt table exists";
+      continue;
+    }
+    if (!load_dict_settings_from_file(&settings, dict_file)) {
+      LOG(ERROR) << "failed to load settings from '" << dict_file << "'.";
+      continue;
+    }
+    vector<path> dict_files;
+    if (!get_dict_files_from_settings(&dict_files, settings,
+                                      source_resolver_.get())) {
+      continue;
+    }
+    uint32_t pack_file_checksum =
+        compute_dict_file_checksum(dict_file_checksum, dict_files, settings);
+    bool rebuild_pack = true;
+    if (pack_table->Exists() && pack_table->Load()) {
+      rebuild_pack = pack_table->dict_file_checksum() != pack_file_checksum;
+    }
+    if (rebuild_pack) {
+      LOG(INFO) << "rebuilding pack '" << pack_name << "'";
       if (!BuildTable(table_index, collector, &settings, dict_files,
                       pack_file_checksum)) {
         LOG(ERROR) << "failed to build pack: " << pack_name;
       }
-      syllabary = std::move(collector.syllabary);
+    } else {
+      LOG(INFO) << "pack '" << pack_name << "' reuses up-to-date table '"
+                << pack_table->file_path() << "'";
     }
+    syllabary = std::move(collector.syllabary);
+    pack_table->Close();
   }
   // done!
   return true;
