@@ -15,7 +15,7 @@
 
 using namespace rime;
 
-TEST(/*DISABLED_*/TrivialTranslatorTest, Query) {
+TEST(/*DISABLED_*/ TrivialTranslatorTest, Query) {
   // make sure the component has been registered
   auto component = Translator::Require("trivial_translator");
   ASSERT_TRUE(component != NULL);
@@ -26,13 +26,14 @@ TEST(/*DISABLED_*/TrivialTranslatorTest, Query) {
   // lookup test
   const string test_input("yiqianerbaisanshisi");
   // 一千二百三十四
-  const string expected_output("\xe4\xb8\x80"
-                               "\xe5\x8d\x83"
-                               "\xe4\xba\x8c"
-                               "\xe7\x99\xbe"
-                               "\xe4\xb8\x89"
-                               "\xe5\x8d\x81"
-                               "\xe5\x9b\x9b");
+  const string expected_output(
+      "\xe4\xb8\x80"
+      "\xe5\x8d\x83"
+      "\xe4\xba\x8c"
+      "\xe7\x99\xbe"
+      "\xe4\xb8\x89"
+      "\xe5\x8d\x81"
+      "\xe5\x9b\x9b");
   Segment segment(0, test_input.length());
   segment.tags.insert("abc");
   auto translation = translator->Query(test_input, segment);

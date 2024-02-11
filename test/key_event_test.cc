@@ -121,8 +121,7 @@ TEST(RimeKeySequenceTest, Stringification) {
   ASSERT_TRUE(ks.Parse("z y,x."));
   ks.push_back(KeyEvent("{"));
   ks.push_back(KeyEvent("}"));
-  EXPECT_STREQ("z y,x.{braceleft}{braceright}",
-               ks.repr().c_str());
+  EXPECT_STREQ("z y,x.{braceleft}{braceright}", ks.repr().c_str());
 }
 
 TEST(RimeKeySequenceTest, Serialization) {

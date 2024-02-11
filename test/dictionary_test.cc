@@ -16,8 +16,7 @@ class RimeDictionaryTest : public ::testing::Test {
   virtual void SetUp() {
     if (!dict_) {
       dict_.reset(new rime::Dictionary(
-          "dictionary_test",
-          {},
+          "dictionary_test", {},
           {rime::New<rime::Table>(rime::path{"dictionary_test.table.bin"})},
           rime::New<rime::Prism>(rime::path{"dictionary_test.prism.bin"})));
     }
@@ -29,9 +28,8 @@ class RimeDictionaryTest : public ::testing::Test {
     }
     dict_->Load();
   }
-  virtual void TearDown() {
-    dict_.reset();
-  }
+  virtual void TearDown() { dict_.reset(); }
+
  protected:
   static rime::the<rime::Dictionary> dict_;
   static bool rebuilt_;

@@ -20,8 +20,7 @@ class RimeConfigTest : public ::testing::Test {
     config_.reset(component_->Create("config_test"));
   }
 
-  virtual void TearDown() {
-  }
+  virtual void TearDown() {}
 
   the<Config::Component> component_;
   the<Config> config_;
@@ -30,12 +29,9 @@ class RimeConfigTest : public ::testing::Test {
 TEST(RimeConfigComponentTest, RoundTrip) {
   // registration
   Registry& r = Registry::instance();
-  r.Register(
-      "test_config",
-      new ConfigComponent<ConfigLoader, UserConfigResourceProvider>(
-          [](ConfigLoader* loader) {
-            loader->set_auto_save(true);
-          }));
+  r.Register("test_config",
+             new ConfigComponent<ConfigLoader, UserConfigResourceProvider>(
+                 [](ConfigLoader* loader) { loader->set_auto_save(true); }));
   // find component
   Config::Component* cc = Config::Require("test_config");
   ASSERT_TRUE(cc != NULL);
@@ -131,7 +127,6 @@ TEST_F(RimeConfigTest, Config_GetList) {
   ASSERT_TRUE(bool(element));
   ASSERT_TRUE(element->GetString(&value));
   EXPECT_EQ("arbiter", value);
-
 }
 
 TEST_F(RimeConfigTest, Config_GetMap) {
