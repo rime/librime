@@ -19,7 +19,6 @@ static void rime_sample_initialize() {
   r.Register("trivial_translator", new Component<sample::TrivialTranslator>);
 }
 
-static void rime_sample_finalize() {
-}
+static void rime_sample_finalize() {}
 
 RIME_REGISTER_MODULE(sample)

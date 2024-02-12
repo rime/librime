@@ -20,11 +20,9 @@ using HelloMessage = pair<string, string>;
 
 class Hello : public Greeting {
  public:
-  Hello(const HelloMessage& msg) : word_(msg.first), name_(msg.second) {
-  }
-  string Say() {
-    return word_ + ", " + name_ + "!";
-  }
+  Hello(const HelloMessage& msg) : word_(msg.first), name_(msg.second) {}
+  string Say() { return word_ + ", " + name_ + "!"; }
+
  private:
   string word_;
   string name_;
@@ -38,10 +36,10 @@ class HelloComponent : public Hello::Component {
   Hello* Create(const string& name) {
     return new Hello(make_pair(word_, name));
   }
+
  private:
   string word_;
 };
-
 
 TEST(RimeComponentTest, UsingComponent) {
   Registry& r = Registry::instance();

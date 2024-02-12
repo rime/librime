@@ -27,9 +27,7 @@ class RimeConfigCompilerTestBase : public ::testing::Test {
 
 class RimeConfigCompilerTest : public RimeConfigCompilerTestBase {
  protected:
-  string test_config_id() const override {
-    return "config_compiler_test";
-  }
+  string test_config_id() const override { return "config_compiler_test"; }
 };
 
 TEST_F(RimeConfigCompilerTest, IncludeLocalReference) {
@@ -111,9 +109,7 @@ TEST_F(RimeConfigCompilerTest, PatchList) {
 
 class RimeConfigDependencyTest : public RimeConfigCompilerTestBase {
  protected:
-  string test_config_id() const override {
-    return "config_dependency_test";
-  }
+  string test_config_id() const override { return "config_dependency_test"; }
 };
 
 TEST_F(RimeConfigDependencyTest, DependencyChaining) {
@@ -162,9 +158,7 @@ TEST_F(RimeConfigOptionalReferenceTest, OptionalReference) {
 
 class RimeConfigMergeTest : public RimeConfigCompilerTestBase {
  protected:
-  string test_config_id() const override {
-    return "config_merge_test";
-  }
+  string test_config_id() const override { return "config_merge_test"; }
 };
 
 TEST_F(RimeConfigMergeTest, AppendWithInclude) {

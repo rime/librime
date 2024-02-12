@@ -38,8 +38,7 @@ class RimeSyllabifierTest : public ::testing::Test {
     prism_->Build(keyset);
   }
 
-  virtual void TearDown() {
-  }
+  virtual void TearDown() {}
 
  protected:
   rime::map<rime::string, rime::SyllableId> syllable_id_;

@@ -46,8 +46,8 @@ void PluginManager::LoadPlugins(path plugins_dir) {
         DLOG(INFO) << "found plugin: " << plugin_file;
         string plugin_name = plugin_name_of(plugin_file);
         if (plugin_libs_.find(plugin_name) == plugin_libs_.end()) {
-          LOG(INFO) << "loading plugin '" << plugin_name
-                    << "' from " << plugin_file;
+          LOG(INFO) << "loading plugin '" << plugin_name << "' from "
+                    << plugin_file;
           try {
             auto plugin_lib = boost::dll::shared_library(plugin_file);
             plugin_libs_[plugin_name] = plugin_lib;
