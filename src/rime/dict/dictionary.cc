@@ -90,7 +90,7 @@ DictEntryIterator::DictEntryIterator()
     : query_result_(New<dictionary::QueryResult>()) {}
 
 void DictEntryIterator::AddChunk(dictionary::Chunk&& chunk) {
-  query_result_->chunks.push_back(std::move(chunk));
+  query_result_->chunks.emplace_back(std::move(chunk));
   entry_count_ += chunk.size;
 }
 

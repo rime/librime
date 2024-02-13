@@ -281,7 +281,7 @@ void Syllabifier::Transpose(SyllableGraph* graph) {
     for (const auto& end : boost::adaptors::reverse(start.second)) {
       for (const auto& spelling : end.second) {
         SyllableId syll_id = spelling.first;
-        index[syll_id].push_back(&spelling.second);
+        index[syll_id].emplace_back(&spelling.second);
       }
     }
   }
