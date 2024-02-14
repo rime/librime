@@ -200,9 +200,9 @@ cmake --build %build_dir% --config %build_config% --target install
 if errorlevel 1 goto error
 
 if "%build_test%" == "ON" (
-  pushd %build_dir%
-  ctest --output-on-failure
-  popd
+  copy /y dist\lib\rime.dll %build_dir%\test
+  ctest --test-dir %build_dir%\test -C %build_config%  --output-on-failure
+  if errorlevel 1 goto error
 )
 
 echo.

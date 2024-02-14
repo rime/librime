@@ -10,14 +10,14 @@ on:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v4
       - name: Install clang-format
-        run: sudo apt install -y clang-format
+        run: brew install clang-format
       - name: Lint
-        run: find src -name '*.cc' -o -name '*.h' | xargs clang-format -Werror --dry-run || { echo Please lint your code by '"'"find src -name '*.cc' -o -name '*.h' | xargs clang-format -i"'"'.; false; }
+        run: make clang-format-lint
 
   linux:
     needs: lint

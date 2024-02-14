@@ -7,9 +7,9 @@ namespace fs = std::filesystem;
 using namespace rime;
 
 static const ResourceType kMineralsType = ResourceType{
-  "minerals",
-  "not_",
-  ".minerals",
+    "minerals",
+    "not_",
+    ".minerals",
 };
 
 TEST(RimeResourceResolverTest, ResolvePath) {
@@ -17,8 +17,8 @@ TEST(RimeResourceResolverTest, ResolvePath) {
   rr.set_root_path(path{"/starcraft"});
   auto actual = rr.ResolvePath("enough");
   path expected = fs::absolute(fs::current_path())
-      .root_name()
-      .concat("/starcraft/not_enough.minerals");
+                      .root_name()
+                      .concat("/starcraft/not_enough.minerals");
   EXPECT_TRUE(actual.is_absolute());
   EXPECT_TRUE(expected == actual);
 }

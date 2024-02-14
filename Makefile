@@ -1,5 +1,7 @@
 RIME_ROOT ?= $(CURDIR)
 
+RIME_SOURCE_PATH = plugins sample src test tools
+
 ifeq ($(shell uname),Darwin) # for macOS
 prefix ?= $(RIME_ROOT)/dist
 
@@ -19,9 +21,6 @@ ifdef BUILD_UNIVERSAL
 export CMAKE_OSX_ARCHITECTURES = arm64;x86_64
 endif
 
-# boost::locale library from homebrew links to homebrewed icu4c libraries
-icu_prefix = $(shell brew --prefix)/opt/icu4c
-
 else # for Linux
 prefix ?= $(DESTDIR)/usr
 endif
@@ -33,28 +32,29 @@ endif
 debug install-debug uninstall-debug test-debug: build ?= debug
 build ?= build
 
-.PHONY: all deps thirdparty xcode clean \
-librime librime-static install-librime uninstall-librime \
-release debug test install uninstall install-debug uninstall-debug
+.PHONY: all deps clean \
+librime librime-static \
+release debug test install uninstall \
+install-debug uninstall-debug
 
 all: release
 
-# `thirdparty` is deprecated in favor of `deps`
-deps thirdparty:
+clang-format-lint:
+	find ${RIME_SOURCE_PATH} -name '*.cc' -o -name '*.h' | xargs clang-format -Werror --dry-run || { echo Please lint your code by '"'"make clang-format-apply"'"'.; false; }
+
+clang-format-apply:
+	find ${RIME_SOURCE_PATH} -name '*.cc' -o -name '*.h' | xargs clang-format --verbose -i
+
+deps:
 	$(MAKE) -f deps.mk
 
 deps/%:
 	$(MAKE) -f deps.mk $(@:deps/%=%)
 
-thirdparty/%:
-	$(MAKE) -f deps.mk $(@:thirdparty/%=%)
-
 clean:
 	rm -Rf build debug
 
 librime: release
-install-librime: install
-uninstall-librime: uninstall
 
 librime-static:
 	cmake . -B$(build) \
@@ -85,6 +85,7 @@ debug:
 	-DCMAKE_INSTALL_PREFIX=$(prefix) \
 	-DCMAKE_BUILD_TYPE=Debug \
 	-DBUILD_MERGED_PLUGINS=OFF \
+	-DALSO_LOG_TO_STDERR=ON \
 	-DENABLE_EXTERNAL_PLUGINS=ON
 	cmake --build $(build)
 

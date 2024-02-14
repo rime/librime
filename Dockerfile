@@ -17,12 +17,12 @@ RUN apt update && apt install -y \
   liblua5.4-dev
 
 COPY / /librime
-WORKDIR /librime/plugins
-RUN git clone https://github.com/rime/librime-charcode charcode && \
-  # fix it
-  # git clone https://github.com/hchunhui/librime-lua lua && \
-  git clone https://github.com/rime/librime-predict predict && \
-  git clone https://github.com/lotem/librime-octagram octagram
+WORKDIR /librime
+RUN bash install-plugins.sh \
+  rime/librime-charcode \
+  hchunhui/librime-lua \
+  lotem/librime-octagram \
+  rime/librime-predict
 
 WORKDIR /librime
 RUN cmake -B build -G Ninja \

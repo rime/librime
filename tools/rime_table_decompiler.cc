@@ -108,7 +108,7 @@ int main(int argc, char* argv[]) {
   }
 
   rime::path output_path =
-    (argc == 3) ? rime::path(argv[2]) : InferredOutputPath(file_path);
+      (argc == 3) ? rime::path(argv[2]) : InferredOutputPath(file_path);
 
   std::ofstream fout;
   fout.open(output_path.c_str());
