@@ -53,7 +53,7 @@ void Script::Dump(const path& file_path) const {
     bool first = true;
     for (const Spelling& s : v.second) {
       out << (first ? v.first : "") << '\t' << s.str << '\t'
-          << "-ac?!"[s.properties.type] << '\t' << s.properties.credibility
+          << "-fac?!"[s.properties.type] << '\t' << s.properties.credibility
           << '\t' << s.properties.tips << std::endl;
       first = false;
     }
