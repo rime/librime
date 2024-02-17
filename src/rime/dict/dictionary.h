@@ -77,6 +77,7 @@ class Dictionary : public Class<Dictionary, const Ticket&> {
   // if predictive is true, do an expand search with limit,
   // otherwise do an exact match.
   // return num of matching keys.
+  // kCompletion spellings are considered iff predictive=true.
   RIME_API size_t LookupWords(DictEntryIterator* result,
                               const string& str_code,
                               bool predictive,

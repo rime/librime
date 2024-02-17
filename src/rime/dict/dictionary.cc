@@ -269,11 +269,12 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
     while (!accessor.exhausted()) {
       SyllableId syllable_id = accessor.syllable_id();
       SpellingType type = accessor.properties().type;
+      bool is_sorted_completion = predictive && type == kCompletion;
       accessor.Next();
-      if (type > kNormalSpelling)
+      if (type > kNormalSpelling && !is_sorted_completion)
         continue;
       string remaining_code;
-      if (match.length > code_length) {
+      if (match.length > code_length || is_sorted_completion) {
         string syllable = primary_table()->GetSyllableById(syllable_id);
         if (syllable.length() > code_length)
           remaining_code = syllable.substr(code_length);

@@ -307,7 +307,8 @@ bool DictCompiler::BuildPrism(const path& schema_file,
   if (!primary_table->Load() || !primary_table->GetSyllabary(&syllabary) ||
       syllabary.empty())
     return false;
-  // apply spelling algebra and prepare corrections (if enabled)
+  // apply spelling algebra, precompute completions, and prepare corrections (if
+  // enabled)
   Script script;
   if (!schema_file.empty()) {
     Config config;
@@ -324,6 +325,27 @@ bool DictCompiler::BuildPrism(const path& schema_file,
       if (!p.Apply(&script)) {
         script.clear();
       }
+    }
+
+    bool sort_completions = false;
+    if (config.GetBool("translator/sort_completions", &sort_completions) &&
+        sort_completions) {
+      LOG(INFO) << "precomputing completions";
+      if (script.empty()) {
+        for (auto s : syllabary) {
+          script.AddSyllable(s);
+        }
+      }
+      Script temp;
+      for (auto [syll, spellings] : script) {
+        for (int len = syll.length(); len >= 1; --len) {
+          auto input = syll.substr(0, len);
+          SpellingProperties props;
+          props.type = kCompletion;
+          temp.Merge(input, props, spellings);
+        }
+      }
+      script.swap(temp);
     }
 
 #if 0
