@@ -123,6 +123,8 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket) {
                     &contextual_suggestions_);
     config->GetBool(ticket.name_space + "/enable_completion",
                     &enable_completion_);
+    config->GetBool(ticket.name_space + "/sort_completions",
+                    &sort_completions_);
     config->GetBool(ticket.name_space + "/strict_spelling", &strict_spelling_);
     config->GetDouble(ticket.name_space + "/initial_quality",
                       &initial_quality_);

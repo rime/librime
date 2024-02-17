@@ -148,6 +148,7 @@ class TranslatorOptions {
   string tag_ = "abc";
   bool contextual_suggestions_ = false;
   bool enable_completion_ = true;
+  bool sort_completions_ = false;
   bool strict_spelling_ = false;
   double initial_quality_ = 0.;
   Projection preedit_formatter_;

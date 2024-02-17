@@ -124,7 +124,8 @@ class LazyTableTranslation : public TableTranslation {
                        size_t start,
                        size_t end,
                        const string& preedit,
-                       bool enable_user_dict);
+                       bool enable_user_dict,
+                       bool sort_completions);
   bool FetchUserPhrases(TableTranslator* translator);
   virtual bool FetchMoreUserPhrases();
   virtual bool FetchMoreTableEntries();
@@ -135,6 +136,7 @@ class LazyTableTranslation : public TableTranslation {
   size_t limit_;
   size_t user_dict_limit_;
   string user_dict_key_;
+  bool sort_completions_;
 };
 
 LazyTableTranslation::LazyTableTranslation(TableTranslator* translator,
@@ -142,7 +144,8 @@ LazyTableTranslation::LazyTableTranslation(TableTranslator* translator,
                                            size_t start,
                                            size_t end,
                                            const string& preedit,
-                                           bool enable_user_dict)
+                                           bool enable_user_dict,
+                                           bool sort_completions)
     : TableTranslation(translator,
                        translator->language(),
                        input,
@@ -152,7 +155,8 @@ LazyTableTranslation::LazyTableTranslation(TableTranslator* translator,
       dict_(translator->dict()),
       user_dict_(enable_user_dict ? translator->user_dict() : NULL),
       limit_(kInitialSearchLimit),
-      user_dict_limit_(kInitialSearchLimit) {
+      user_dict_limit_(kInitialSearchLimit),
+      sort_completions_(sort_completions) {
   FetchUserPhrases(translator) || FetchMoreUserPhrases();
   FetchMoreTableEntries();
   CheckEmpty();
@@ -198,6 +202,10 @@ bool LazyTableTranslation::FetchMoreTableEntries() {
     limit_ *= kExpandingFactor;
   }
   if (more.entry_count() > previous_entry_count) {
+    if (sort_completions_) {
+      // make sure the first candidate is also ordered.
+      more.Sort();
+    }
     more.Skip(previous_entry_count);
     iter_ = std::move(more);
   }
@@ -257,9 +265,9 @@ an<Translation> TableTranslator::Query(const string& input,
 
   an<Translation> translation;
   if (enable_completion_) {
-    translation = Cached<LazyTableTranslation>(this, code, segment.start,
-                                               segment.start + input.length(),
-                                               preedit, enable_user_dict);
+    translation = Cached<LazyTableTranslation>(
+        this, code, segment.start, segment.start + input.length(), preedit,
+        enable_user_dict, sort_completions_);
   } else {
     DictEntryIterator iter;
     if (dict_ && dict_->loaded()) {
