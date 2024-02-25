@@ -26,7 +26,6 @@
 #include <boost/signals2/signal.hpp>
 
 #ifdef RIME_ENABLE_LOGGING
-#define GLOG_NO_ABBREVIATED_SEVERITIES
 #include <glog/logging.h>
 #else
 #include "no_logging.h"
