@@ -628,14 +628,15 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
   string today(ymd);
   DLOG(INFO) << "today: " << today;
 
+  // Make sure we have sufficient permissions on the scanned directories.
+  // E.g. on Android, there's no write permission on the cwd.
   vector<string> dirs;
-  // Don't call GetLoggingDirectories as it contains current directory,
-  // which causes permission issue on Android
-  // https://github.com/google/glog/blob/b58718f37cf58fa17f48bf1d576974d133d89839/src/logging.cc#L2410
-  if (FLAGS_log_dir.empty()) {
-    google::GetExistingTempDirectories(&dirs);
-  } else {
-    dirs.push_back(FLAGS_log_dir);
+  for (auto& dir : google::GetLoggingDirectories()) {
+    auto perms = fs::status(dir).permissions();
+    if ((perms & (fs::perms::owner_write | fs::perms::group_write |
+                  fs::perms::others_write)) != fs::perms::none) {
+      dirs.push_back(dir);
+    }
   }
   DLOG(INFO) << "scanning " << dirs.size() << " temp directory for log files.";
 
