@@ -29,7 +29,7 @@ struct RecognizerMatch {
 
 class RecognizerPatterns : public map<string, boost::regex> {
  public:
-  void LoadConfig(Config* config);
+  void LoadConfig(Config* config, const string& name_space);
   RecognizerMatch GetMatch(const string& input,
                            const Segmentation& segmentation) const;
 };
