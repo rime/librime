@@ -89,10 +89,10 @@ debug:
 	-DENABLE_EXTERNAL_PLUGINS=ON
 	cmake --build $(build)
 
-install:
+install: release
 	cmake --build $(build) --target install
 
-install-debug:
+install-debug: debug
 	cmake --build $(build) --target install
 
 uninstall:
