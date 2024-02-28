@@ -60,11 +60,14 @@ bool compare_chunk_by_head_element(const Chunk& a, const Chunk& b) {
 size_t match_extra_code(const table::Code* extra_code,
                         size_t depth,
                         const SyllableGraph& syll_graph,
-                        size_t current_pos) {
+                        size_t current_pos,
+                        bool predict_word) {
   if (!extra_code || depth >= extra_code->size)
     return current_pos;  // success
-  if (current_pos >= syll_graph.interpreted_length)
-    return 0;  // failure (possibly success for completion in the future)
+  if (current_pos >= syll_graph.interpreted_length) {
+    return predict_word ? syll_graph.interpreted_length  // word completion
+                        : 0;                             // failure
+  }
   auto index = syll_graph.indices.find(current_pos);
   if (index == syll_graph.indices.end())
     return 0;
@@ -74,8 +77,8 @@ size_t match_extra_code(const table::Code* extra_code,
     return 0;
   size_t best_match = 0;
   for (const SpellingProperties* props : spellings->second) {
-    size_t match_end_pos =
-        match_extra_code(extra_code, depth + 1, syll_graph, props->end_pos);
+    size_t match_end_pos = match_extra_code(extra_code, depth + 1, syll_graph,
+                                            props->end_pos, predict_word);
     if (!match_end_pos)
       continue;
     if (match_end_pos > best_match)
@@ -199,6 +202,7 @@ static void lookup_table(Table* table,
                          DictEntryCollector* collector,
                          const SyllableGraph& syllable_graph,
                          size_t start_pos,
+                         bool predict_word,
                          double initial_credibility) {
   TableQueryResult result;
   if (!table->Query(syllable_graph, start_pos, &result)) {
@@ -212,7 +216,7 @@ static void lookup_table(Table* table,
       if (a.extra_code()) {
         do {
           size_t actual_end_pos = dictionary::match_extra_code(
-              a.extra_code(), 0, syllable_graph, end_pos);
+              a.extra_code(), 0, syllable_graph, end_pos, predict_word);
           if (actual_end_pos == 0)
             continue;
           (*collector)[actual_end_pos].AddChunk(
@@ -227,6 +231,7 @@ static void lookup_table(Table* table,
 
 an<DictEntryCollector> Dictionary::Lookup(const SyllableGraph& syllable_graph,
                                           size_t start_pos,
+                                          bool predict_word,
                                           double initial_credibility) {
   if (!loaded())
     return nullptr;
@@ -235,7 +240,7 @@ an<DictEntryCollector> Dictionary::Lookup(const SyllableGraph& syllable_graph,
     if (!table->IsOpen())
       continue;
     lookup_table(table.get(), collector.get(), syllable_graph, start_pos,
-                 initial_credibility);
+                 predict_word, initial_credibility);
   }
   if (collector->empty())
     return nullptr;

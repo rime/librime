@@ -112,10 +112,12 @@ class ScriptTranslation : public Translation {
                     Corrector* corrector,
                     Poet* poet,
                     const string& input,
-                    size_t start)
+                    size_t start,
+                    size_t end_of_input)
       : translator_(translator),
         poet_(poet),
         start_(start),
+        end_of_input_(end_of_input),
         syllabifier_(
             New<ScriptSyllabifier>(translator, corrector, input, start)),
         enable_correction_(corrector) {
@@ -137,6 +139,7 @@ class ScriptTranslation : public Translation {
   ScriptTranslator* translator_;
   Poet* poet_;
   size_t start_;
+  size_t end_of_input_;
   an<ScriptSyllabifier> syllabifier_;
 
   an<DictEntryCollector> phrase_;
@@ -189,9 +192,10 @@ an<Translation> ScriptTranslator::Query(const string& input,
   bool enable_user_dict =
       user_dict_ && user_dict_->loaded() && !IsUserDictDisabledFor(input);
 
+  size_t end_of_input = engine_->context()->input().length();
   // the translator should survive translations it creates
   auto result = New<ScriptTranslation>(this, corrector_.get(), poet_.get(),
-                                       input, segment.start);
+                                       input, segment.start, end_of_input);
   if (!result || !result->Evaluate(
                      dict_.get(), enable_user_dict ? user_dict_.get() : NULL)) {
     return nullptr;
@@ -343,8 +347,9 @@ string ScriptSyllabifier::GetOriginalSpelling(const Phrase& cand) const {
 bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   size_t consumed = syllabifier_->BuildSyllableGraph(*dict->prism());
   const auto& syllable_graph = syllabifier_->syllable_graph();
+  bool predict_word = start_ + consumed == end_of_input_;
 
-  phrase_ = dict->Lookup(syllable_graph, 0);
+  phrase_ = dict->Lookup(syllable_graph, 0, predict_word);
   if (user_dict) {
     user_phrase_ = user_dict->Lookup(syllable_graph, 0);
   }
