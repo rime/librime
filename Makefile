@@ -52,7 +52,7 @@ deps/%:
 	$(MAKE) -f deps.mk $(@:deps/%=%)
 
 clean:
-	rm -Rf build debug
+	rm -r $(build) || true
 
 librime: release
 

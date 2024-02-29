@@ -9,7 +9,7 @@ endif
 
 build ?= build
 
-rime_deps = glog gtest leveldb marisa opencc yaml-cpp
+rime_deps = glog googletest leveldb marisa-trie opencc yaml-cpp
 
 .PHONY: all clean-src $(rime_deps)
 
@@ -17,12 +17,9 @@ all: $(rime_deps)
 
 # note: this won't clean output files under include/, lib/ and bin/.
 clean-src:
-	rm -r $(src_dir)/glog/build || true
-	rm -r $(src_dir)/googletest/build || true
-	rm -r $(src_dir)/leveldb/build || true
-	rm -r $(src_dir)/marisa-trie/build || true
-	rm -r $(src_dir)/opencc/build || true
-	rm -r $(src_dir)/yaml-cpp/build || true
+	for dep in $(rime_deps); do \
+		rm -r $(src_dir)/$${dep}/$(build) || true; \
+	done
 
 glog:
 	cd $(src_dir)/glog; \
@@ -34,7 +31,7 @@ glog:
 	-DCMAKE_INSTALL_PREFIX:PATH="$(rime_root)" \
 	&& cmake --build $(build) --target install
 
-gtest:
+googletest:
 	cd $(src_dir)/googletest; \
 	cmake . -B$(build) \
 	-DBUILD_GMOCK:BOOL=OFF \
@@ -51,7 +48,7 @@ leveldb:
 	-DCMAKE_INSTALL_PREFIX:PATH="$(rime_root)" \
 	&& cmake --build $(build) --target install
 
-marisa:
+marisa-trie:
 	cd $(src_dir)/marisa-trie; \
 	cmake . -B$(build) \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
