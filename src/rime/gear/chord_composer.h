@@ -43,6 +43,7 @@ class ChordComposer : public Processor {
   bool use_shift_ = false;
   bool use_super_ = false;
   bool use_caps_ = false;
+  bool finish_chord_on_first_key_release_ = false;
 
   set<int> pressed_;
   set<int> chord_;
