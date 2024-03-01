@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <rime_api.h>
+#include <rime/key_event.h>
 #include "codepage.h"
 
 void print_status(RimeStatus* status) {
@@ -227,7 +228,14 @@ reload:
     }
     if (execute_special_command(line, session_id))
       continue;
-    if (rime->simulate_key_sequence(session_id, line)) {
+    // simulate key down and up
+    if (line[1] && (line[0] == '>' || line[0] == '<')) {
+      std::string key_repr = std::string(&line[1]);
+      rime::KeyEvent key = rime::KeyEvent(key_repr);
+      key.modifier(line[0] == '>' ? 0 : kReleaseMask);
+      rime->process_key(session_id, key.keycode(), key.modifier());
+      print(session_id);
+    } else if (rime->simulate_key_sequence(session_id, line)) {
       print(session_id);
     } else {
       fprintf(stderr, "Error processing key sequence: %s\n", line);
