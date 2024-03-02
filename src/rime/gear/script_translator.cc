@@ -342,6 +342,11 @@ string ScriptSyllabifier::GetOriginalSpelling(const Phrase& cand) const {
   return string();
 }
 
+static bool is_exact_match_phrase(const an<DictEntry>& entry) {
+  return entry && entry->matching_code_size == 0 ||
+         entry->matching_code_size == entry->code.size();
+}
+
 // ScriptTranslation implementation
 
 bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
@@ -355,21 +360,24 @@ bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   }
   if (!phrase_ && !user_phrase_)
     return false;
-  // make sentences when there is no exact-matching phrase candidate
-  size_t translated_len = 0;
-  if (phrase_ && !phrase_->empty())
-    translated_len = (std::max)(translated_len, phrase_->rbegin()->first);
-  if (user_phrase_ && !user_phrase_->empty())
-    translated_len = (std::max)(translated_len, user_phrase_->rbegin()->first);
-  if (translated_len < consumed &&
-      syllable_graph.edges.size() > 1) {  // at least 2 syllables required
-    sentence_ = MakeSentence(dict, user_dict);
-  }
 
   if (phrase_)
     phrase_iter_ = phrase_->rbegin();
   if (user_phrase_)
     user_phrase_iter_ = user_phrase_->rbegin();
+
+  // make sentences when there is no exact-matching phrase candidate
+  bool has_exact_match_phrase =
+      phrase_ && phrase_iter_->first == consumed &&
+      is_exact_match_phrase(phrase_iter_->second.Peek());
+  bool has_exact_match_user_phrase =
+      user_phrase_ && user_phrase_iter_->first == consumed;
+  bool has_at_least_two_syllables = syllable_graph.edges.size() >= 2;
+  if (!has_exact_match_phrase && !has_exact_match_user_phrase &&
+      has_at_least_two_syllables) {
+    sentence_ = MakeSentence(dict, user_dict);
+  }
+
   return !CheckEmpty();
 }
 
