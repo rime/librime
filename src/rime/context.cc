@@ -12,6 +12,8 @@
 
 namespace rime {
 
+const string kSelectedBeforeEditing = "selected_before_editing";
+
 bool Context::Commit() {
   if (!IsComposing())
     return false;
@@ -185,16 +187,20 @@ bool Context::ConfirmCurrentSelection() {
   return true;
 }
 
-bool Context::ConfirmPreviousSelection() {
+void Context::BeginEditing() {
   for (auto it = composition_.rbegin(); it != composition_.rend(); ++it) {
     if (it->status > Segment::kSelected) {
-      return false;
+      return;
     }
     if (it->status == Segment::kSelected) {
-      it->status = Segment::kConfirmed;
-      return true;
+      it->tags.insert(kSelectedBeforeEditing);
+      return;
     }
   }
+}
+
+bool Context::ConfirmPreviousSelection() {
+  BeginEditing();
   return false;
 }
 
@@ -225,6 +231,10 @@ bool Context::ReopenPreviousSelection() {
     if (it->status > Segment::kSelected)
       return false;
     if (it->status == Segment::kSelected) {
+      // do not reopen the previous selection after editing input.
+      if (it->tags.count(kSelectedBeforeEditing) != 0) {
+        return false;
+      }
       while (it != composition_.rbegin()) {
         composition_.pop_back();
       }
