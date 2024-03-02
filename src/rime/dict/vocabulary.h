@@ -20,6 +20,10 @@ using SyllableId = int32_t;
 
 class Code : public vector<SyllableId> {
  public:
+  Code() = default;
+  Code(const Code::const_iterator& begin, const Code::const_iterator& end)
+      : vector<SyllableId>(begin, end) {}
+
   static const size_t kIndexCodeMaxLength = 3;
 
   bool operator<(const Code& other) const;
@@ -48,6 +52,7 @@ struct DictEntry {
   double weight = 0.0;
   int commit_count = 0;
   int remaining_code_length = 0;
+  int matching_code_size = 0;
 
   DictEntry() = default;
   ShortDictEntry ToShort() const;
