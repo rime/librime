@@ -25,11 +25,22 @@ struct Chunk {
   size_t size = 0;
   size_t cursor = 0;
   string remaining_code;  // for predictive queries
+  size_t matching_code_size = 0;
   double credibility = 0.0;
 
   Chunk() = default;
-  Chunk(Table* t, const Code& c, const table::Entry* e, double cr = 0.0)
-      : table(t), code(c), entries(e), size(1), cursor(0), credibility(cr) {}
+  Chunk(Table* t,
+        const Code& c,
+        const table::Entry* e,
+        size_t m,
+        double cr = 0.0)
+      : table(t),
+        code(c),
+        entries(e),
+        size(1),
+        cursor(0),
+        matching_code_size(m),
+        credibility(cr) {}
   Chunk(Table* t, const TableAccessor& a, double cr = 0.0)
       : Chunk(t, a, string(), cr) {}
   Chunk(Table* t, const TableAccessor& a, const string& r, double cr = 0.0)
@@ -39,7 +50,12 @@ struct Chunk {
         size(a.remaining()),
         cursor(0),
         remaining_code(r),
+        matching_code_size(a.index_code().size()),
         credibility(cr) {}
+
+  bool is_exact_match() const { return matching_code_size == code.size(); }
+
+  bool is_predictive_match() const { return matching_code_size < code.size(); }
 };
 
 struct QueryResult {
@@ -51,38 +67,49 @@ bool compare_chunk_by_head_element(const Chunk& a, const Chunk& b) {
     return false;
   if (!b.entries || b.cursor >= b.size)
     return true;
+  if (a.is_exact_match() != b.is_exact_match())
+    return a.is_exact_match() > b.is_exact_match();
   if (a.remaining_code.length() != b.remaining_code.length())
     return a.remaining_code.length() < b.remaining_code.length();
   return a.credibility + a.entries[a.cursor].weight >
          b.credibility + b.entries[b.cursor].weight;  // by weight desc
 }
 
-size_t match_extra_code(const table::Code* extra_code,
-                        size_t depth,
-                        const SyllableGraph& syll_graph,
-                        size_t current_pos,
-                        bool predict_word) {
+struct CodeMatch {
+  bool success;
+  size_t depth;
+  size_t end_pos;
+};
+
+CodeMatch match_extra_code(const table::Code* extra_code,
+                           size_t depth,
+                           const SyllableGraph& syll_graph,
+                           size_t current_pos,
+                           bool predict_word) {
+  const CodeMatch kFailed{false, 0, 0};
   if (!extra_code || depth >= extra_code->size)
-    return current_pos;  // success
+    return {true, depth, current_pos};
   if (current_pos >= syll_graph.interpreted_length) {
-    return predict_word ? syll_graph.interpreted_length  // word completion
-                        : 0;                             // failure
+    if (predict_word)
+      return {true, depth, syll_graph.interpreted_length};
+    else
+      return kFailed;
   }
   auto index = syll_graph.indices.find(current_pos);
   if (index == syll_graph.indices.end())
-    return 0;
+    return kFailed;
   SyllableId current_syll_id = extra_code->at[depth];
   auto spellings = index->second.find(current_syll_id);
   if (spellings == index->second.end())
-    return 0;
-  size_t best_match = 0;
+    return kFailed;
+  CodeMatch best_match = kFailed;
   for (const SpellingProperties* props : spellings->second) {
-    size_t match_end_pos = match_extra_code(extra_code, depth + 1, syll_graph,
-                                            props->end_pos, predict_word);
-    if (!match_end_pos)
+    CodeMatch match = match_extra_code(extra_code, depth + 1, syll_graph,
+                                       props->end_pos, predict_word);
+    if (!match.success)
       continue;
-    if (match_end_pos > best_match)
-      best_match = match_end_pos;
+    if (match.end_pos > best_match.end_pos)
+      best_match = match;
   }
   return best_match;
 }
@@ -129,6 +156,9 @@ an<DictEntry> DictEntryIterator::Peek() {
     if (!chunk.remaining_code.empty()) {
       entry_->comment = "~" + chunk.remaining_code;
       entry_->remaining_code_length = chunk.remaining_code.length();
+    }
+    if (chunk.is_predictive_match()) {
+      entry_->matching_code_size = chunk.matching_code_size;
     }
   }
   return entry_;
@@ -215,12 +245,13 @@ static void lookup_table(Table* table,
       double cr = initial_credibility + a.credibility();
       if (a.extra_code()) {
         do {
-          size_t actual_end_pos = dictionary::match_extra_code(
+          dictionary::CodeMatch match = dictionary::match_extra_code(
               a.extra_code(), 0, syllable_graph, end_pos, predict_word);
-          if (actual_end_pos == 0)
+          if (!match.success)
             continue;
-          (*collector)[actual_end_pos].AddChunk(
-              {table, a.code(), a.entry(), cr});
+          size_t matching_code_size = a.index_code().size() + match.depth;
+          (*collector)[match.end_pos].AddChunk(
+              {table, a.code(), a.entry(), matching_code_size, cr});
         } while (a.Next());
       } else {
         (*collector)[end_pos].AddChunk({table, a, cr});
