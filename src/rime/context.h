@@ -50,8 +50,8 @@ class RIME_API Context {
   // return false if there's no candidate for current segment
   bool ConfirmCurrentSelection();
   bool DeleteCurrentSelection();
-
-  bool ConfirmPreviousSelection();
+  void BeginEditing();
+  bool ConfirmPreviousSelection();  // deprecated
   bool ReopenPreviousSegment();
   bool ClearPreviousSegment();
   bool ReopenPreviousSelection();

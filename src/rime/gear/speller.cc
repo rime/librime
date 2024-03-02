@@ -121,8 +121,7 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
   }
   DLOG(INFO) << "add to input: '" << (char)ch << "', " << key_event.repr();
   ctx->PushInput(ch);
-  ctx->ConfirmPreviousSelection();  // so that next BackSpace won't revert
-                                    // previous selection
+  ctx->BeginEditing();
   if (AutoSelectPreviousMatch(ctx, &previous_segment)) {
     DLOG(INFO) << "auto-select previous match.";
     // after auto-selecting, if only the current non-initial key is left,
