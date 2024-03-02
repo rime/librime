@@ -311,7 +311,7 @@ string ScriptSyllabifier::GetPreeditString(const Phrase& cand) const {
   const auto& delimiters = translator_->delimiters();
   std::stack<size_t> lengths;
   string output;
-  SyllabifyTask task{cand.code(), syllable_graph_, cand.end() - start_,
+  SyllabifyTask task{cand.matching_code(), syllable_graph_, cand.end() - start_,
                      [&](SyllabifyTask* task, size_t depth, size_t current_pos,
                          size_t next_pos) {
                        size_t len = output.length();
