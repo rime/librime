@@ -81,6 +81,24 @@ class Phrase : public Candidate {
   Code& code() const { return entry_->code; }
   const DictEntry& entry() const { return *entry_; }
   const Language* language() const { return language_; }
+  size_t matching_code_size() const {
+    return entry_->matching_code_size != 0 ? entry_->matching_code_size
+                                           : entry_->code.size();
+  }
+  bool is_exact_match() const {
+    return entry_->matching_code_size == 0 ||
+           entry_->matching_code_size == entry_->code.size();
+  }
+  bool is_predicitve_match() const {
+    return entry_->matching_code_size != 0 &&
+           entry_->matching_code_size < entry_->code.size();
+  }
+  Code matching_code() const {
+    return entry_->matching_code_size == 0
+               ? entry_->code
+               : Code(entry_->code.begin(),
+                      entry_->code.begin() + entry_->matching_code_size);
+  }
   Spans spans() {
     return syllabifier_ ? syllabifier_->Syllabify(this) : Spans();
   }
