@@ -93,8 +93,35 @@ PluginManager& PluginManager::instance() {
 
 }  // namespace rime
 
+#ifdef _WIN32
+// TODO: implement this when ready to support DLL plugins on Windows.
+inline static rime::path current_module_path() {
+  return rime::path{};
+}
+#else
+#include <dlfcn.h>
+
+inline static rime::path symbol_location(const void* symbol) {
+  Dl_info info;
+  // Some of the libc headers miss `const` in `dladdr(const void*, Dl_info*)`
+  const int res = dladdr(const_cast<void*>(symbol), &info);
+  if (res) {
+    return rime::path{info.dli_fname};
+  } else {
+    return rime::path{};
+  }
+}
+
+inline static rime::path current_module_path() {
+  void rime_require_module_plugins();
+  return symbol_location(
+      reinterpret_cast<const void*>(&rime_require_module_plugins));
+}
+#endif
+
 static void rime_plugins_initialize() {
-  rime::PluginManager::instance().LoadPlugins(rime::path(RIME_PLUGINS_DIR));
+  rime::PluginManager::instance().LoadPlugins(
+      current_module_path().remove_filename() / RIME_PLUGINS_DIR);
 }
 
 static void rime_plugins_finalize() {}
