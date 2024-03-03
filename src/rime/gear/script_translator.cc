@@ -352,7 +352,8 @@ static bool is_exact_match_phrase(const an<DictEntry>& entry) {
 bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   size_t consumed = syllabifier_->BuildSyllableGraph(*dict->prism());
   const auto& syllable_graph = syllabifier_->syllable_graph();
-  bool predict_word = start_ + consumed == end_of_input_;
+  bool predict_word =
+      translator_->enable_completion() && start_ + consumed == end_of_input_;
 
   phrase_ = dict->Lookup(syllable_graph, 0, predict_word);
   if (user_dict) {
