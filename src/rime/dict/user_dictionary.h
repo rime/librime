@@ -59,6 +59,7 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
   an<UserDictEntryCollector> Lookup(const SyllableGraph& syllable_graph,
                                     size_t start_pos,
                                     size_t depth_limit = 0,
+                                    size_t predict_word_from_depth = 0,
                                     double initial_credibility = 0.0);
   size_t LookupWords(UserDictEntryIterator* result,
                      const string& input,
@@ -82,7 +83,7 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
                                        const string& value,
                                        TickCount present_tick,
                                        double credibility = 0.0,
-                                       string* full_code = NULL);
+                                       string* full_code = nullptr);
 
  protected:
   bool Initialize();
@@ -98,6 +99,7 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
   an<Db> db_;
   an<Table> table_;
   an<Prism> prism_;
+  map<string, SyllableId> syllabary_;
   TickCount tick_ = 0;
   time_t transaction_time_ = 0;
 };

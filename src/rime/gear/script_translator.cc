@@ -356,7 +356,11 @@ bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
 
   phrase_ = dict->Lookup(syllable_graph, 0, predict_word);
   if (user_dict) {
-    user_phrase_ = user_dict->Lookup(syllable_graph, 0);
+    const size_t kUnlimitedDepth = 0;
+    const size_t kNumSyllablesToPredictWord = 4;
+    user_phrase_ =
+        user_dict->Lookup(syllable_graph, 0, kUnlimitedDepth,
+                          predict_word ? kNumSyllablesToPredictWord : 0);
   }
   if (!phrase_ && !user_phrase_)
     return false;
@@ -371,7 +375,8 @@ bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
       phrase_ && phrase_iter_->first == consumed &&
       is_exact_match_phrase(phrase_iter_->second.Peek());
   bool has_exact_match_user_phrase =
-      user_phrase_ && user_phrase_iter_->first == consumed;
+      user_phrase_ && user_phrase_iter_->first == consumed &&
+      is_exact_match_phrase(user_phrase_iter_->second.Peek());
   bool has_at_least_two_syllables = syllable_graph.edges.size() >= 2;
   if (!has_exact_match_phrase && !has_exact_match_user_phrase &&
       has_at_least_two_syllables) {
