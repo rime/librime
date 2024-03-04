@@ -630,46 +630,39 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
 
   // Make sure we have sufficient permissions on the scanned directories.
   // E.g. on Android, there's no write permission on the cwd.
-  vector<string> dirs;
-  for (auto& dir : google::GetLoggingDirectories()) {
-    try {
-      auto perms = fs::status(dir).permissions();
-      if ((perms & (fs::perms::owner_write | fs::perms::group_write |
-                    fs::perms::others_write)) != fs::perms::none) {
-        dirs.push_back(dir);
-      }
-    }
-    catch (...) {
-        continue;
-    }
-  }
+  vector<string> dirs(google::GetLoggingDirectories());
+
   DLOG(INFO) << "scanning " << dirs.size() << " temp directory for log files.";
 
   int removed = 0;
   for (const auto& dir : dirs) {
     vector<path> files;
     DLOG(INFO) << "temp directory: " << dir;
-    // preparing files
-    for (const auto& entry : fs::directory_iterator(dir)) {
-      const string& file_name(entry.path().filename().string());
-      if (entry.is_regular_file() && !entry.is_symlink() &&
-          boost::starts_with(file_name, "rime.") &&
-          !boost::contains(file_name, today)) {
-        files.push_back(entry.path());
+    try {
+      // preparing files
+      for (const auto& entry : fs::directory_iterator(dir)) {
+        const string& file_name(entry.path().filename().string());
+        if (entry.is_regular_file() && !entry.is_symlink() &&
+            boost::starts_with(file_name, "rime.") &&
+            !boost::contains(file_name, today)) {
+          files.push_back(entry.path());
+        }
       }
-    }
-    // remove files
-    for (const auto& file : files) {
-      try {
-        DLOG(INFO) << "removing log file '" << file.filename() << "'.";
-        // ensure write permission
-        fs::permissions(file, fs::perms::owner_write);
-        fs::remove(file);
-        ++removed;
-      } catch (const fs::filesystem_error& ex) {
-        LOG(ERROR) << ex.what();
-        success = false;
+      // remove files
+      for (const auto& file : files) {
+        try {
+          DLOG(INFO) << "removing log file '" << file.filename() << "'.";
+          // ensure write permission
+          fs::permissions(file, fs::perms::owner_write);
+          fs::remove(file);
+          ++removed;
+        } catch (const fs::filesystem_error& ex) {
+          LOG(ERROR) << ex.what();
+          success = false;
+        }
       }
+    } catch (...) {
+      continue;
     }
   }
   if (removed != 0) {
