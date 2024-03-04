@@ -632,10 +632,15 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
   // E.g. on Android, there's no write permission on the cwd.
   vector<string> dirs;
   for (auto& dir : google::GetLoggingDirectories()) {
-    auto perms = fs::status(dir).permissions();
-    if ((perms & (fs::perms::owner_write | fs::perms::group_write |
-                  fs::perms::others_write)) != fs::perms::none) {
-      dirs.push_back(dir);
+    try {
+      auto perms = fs::status(dir).permissions();
+      if ((perms & (fs::perms::owner_write | fs::perms::group_write |
+                    fs::perms::others_write)) != fs::perms::none) {
+        dirs.push_back(dir);
+      }
+    }
+    catch (...) {
+        continue;
     }
   }
   DLOG(INFO) << "scanning " << dirs.size() << " temp directory for log files.";
