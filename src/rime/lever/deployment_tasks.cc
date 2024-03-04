@@ -648,8 +648,8 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
       }
     } catch (const fs::filesystem_error& ex) {
       // Catch error to skip up when we have no sufficient permissions.
-      // E.g. on Android, there's no write permission on the cwd.
-      LOG(ERROR) << ex.what();
+      // E.g. on Android, there's no read permission on the cwd.
+      LOG(WARNING) << "couldn't list directory '" << dir << "': " << ex.what();
       continue;
     }
     // remove files
