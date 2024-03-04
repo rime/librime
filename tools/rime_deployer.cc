@@ -10,6 +10,7 @@
 #include <rime/service.h>
 #include <rime/setup.h>
 #include <rime/lever/deployment_tasks.h>
+#include <glog/logging.h>
 #include "codepage.h"
 
 using namespace rime;
@@ -79,6 +80,11 @@ static void setup_deployer(Deployer* deployer, int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
   unsigned int codepage = SetConsoleOutputCodePage();
   SetupLogging("rime.tools");
+  // re enable alsologtostderr for rime deployer
+  FLAGS_alsologtostderr = true;
+  google::ShutdownGoogleLogging();
+  google::InitGoogleLogging("rime.tools");
+  // re enable alsologtostderr for rime deployer end
 
   if (argc == 1) {
     std::cout

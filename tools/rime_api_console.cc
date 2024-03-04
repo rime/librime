@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <rime_api.h>
+#include <glog/logging.h>
 #include "codepage.h"
 
 void print_status(RimeStatus* status) {
@@ -191,6 +192,11 @@ int main(int argc, char* argv[]) {
   RIME_STRUCT(RimeTraits, traits);
   traits.app_name = "rime.console";
   rime->setup(&traits);
+  // re enable alsologtostderr for rime api console
+  FLAGS_alsologtostderr = true;
+  google::ShutdownGoogleLogging();
+  google::InitGoogleLogging("rime.console");
+  // re enable alsologtostderr for rime api console end
 
   rime->set_notification_handler(&on_message, NULL);
 

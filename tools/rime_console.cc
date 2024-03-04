@@ -19,6 +19,7 @@
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
 #include <rime/lever/deployment_tasks.h>
+#include <glog/logging.h>
 #include "codepage.h"
 
 using namespace rime;
@@ -102,6 +103,11 @@ int main(int argc, char* argv[]) {
   // initialize la Rime
   SetupLogging("rime.console");
   LoadModules(kDefaultModules);
+  // re enable alsologtostderr for rime console
+  FLAGS_alsologtostderr = true;
+  google::ShutdownGoogleLogging();
+  google::InitGoogleLogging("rime.console");
+  // re enable alsologtostderr for rime console end
 
   Deployer deployer;
   InstallationUpdate installation;
