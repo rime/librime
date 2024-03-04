@@ -628,10 +628,6 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
   string today(ymd);
   DLOG(INFO) << "today: " << today;
 
-  // Make sure we have sufficient permissions on the scanned directories.
-  // E.g. on Android, there's no write permission on the cwd.
-  // update: Now it no longer actively detects directory permissions, 
-  // leaving it up to the try catch below to avoid permissions exceptions.
   vector<string> dirs(google::GetLoggingDirectories());
 
   DLOG(INFO) << "scanning " << dirs.size() << " temp directory for log files.";
@@ -651,6 +647,8 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
         }
       }
     } catch (const fs::filesystem_error& ex) {
+      // Catch error to skip up when we have no sufficient permissions.
+      // E.g. on Android, there's no write permission on the cwd.
       LOG(ERROR) << ex.what();
       continue;
     }
