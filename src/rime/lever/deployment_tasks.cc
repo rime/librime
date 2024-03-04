@@ -650,18 +650,15 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
       }
       // remove files
       for (const auto& file : files) {
-        try {
-          DLOG(INFO) << "removing log file '" << file.filename() << "'.";
-          // ensure write permission
-          fs::permissions(file, fs::perms::owner_write);
-          fs::remove(file);
-          ++removed;
-        } catch (const fs::filesystem_error& ex) {
-          LOG(ERROR) << ex.what();
-          success = false;
-        }
+        DLOG(INFO) << "removing log file '" << file.filename() << "'.";
+        // ensure write permission
+        fs::permissions(file, fs::perms::owner_write);
+        fs::remove(file);
+        ++removed;
       }
-    } catch (...) {
+    } catch (const fs::filesystem_error& ex) {
+      LOG(ERROR) << ex.what();
+      success = false;
       continue;
     }
   }
