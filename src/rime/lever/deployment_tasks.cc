@@ -630,6 +630,8 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
 
   // Make sure we have sufficient permissions on the scanned directories.
   // E.g. on Android, there's no write permission on the cwd.
+  // update: Now it no longer actively detects directory permissions, 
+  // leaving it up to the try catch below to avoid permissions exceptions.
   vector<string> dirs(google::GetLoggingDirectories());
 
   DLOG(INFO) << "scanning " << dirs.size() << " temp directory for log files.";
@@ -648,18 +650,22 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
           files.push_back(entry.path());
         }
       }
-      // remove files
-      for (const auto& file : files) {
+    } catch (const fs::filesystem_error& ex) {
+      LOG(ERROR) << ex.what();
+      continue;
+    }
+    // remove files
+    for (const auto& file : files) {
+      try {
         DLOG(INFO) << "removing log file '" << file.filename() << "'.";
         // ensure write permission
         fs::permissions(file, fs::perms::owner_write);
         fs::remove(file);
         ++removed;
+      } catch (const fs::filesystem_error& ex) {
+        LOG(ERROR) << ex.what();
+        success = false;
       }
-    } catch (const fs::filesystem_error& ex) {
-      LOG(ERROR) << ex.what();
-      success = false;
-      continue;
     }
   }
   if (removed != 0) {
