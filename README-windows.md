@@ -49,7 +49,7 @@ This builds dependent libraries in `librime\deps\*`, and copies artifacts to
 ``` batch
 build.bat librime
 ```
-This creates `build\lib\Release\rime.dll`.
+This creates `build\bin\Release\rime.dll`.
 
 Build artifacts - the shared library along with API headers and supporting files
 are gathered in `dist` directory.
@@ -60,7 +60,6 @@ are gathered in `dist` directory.
 is working.
 
 ``` batch
-copy /Y build\lib\Release\rime.dll build\bin
 cd build\bin
 echo congmingdeRime{space}shurufa | Release\rime_api_console.exe > output.txt
 ```
