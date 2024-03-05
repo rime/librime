@@ -634,6 +634,9 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
 
   int removed = 0;
   for (const auto& dir : dirs) {
+    // avoid iteration on non-existing directory, which may cause error
+    if (!fs::exists(fs::path(dir)))
+      continue;
     vector<path> files;
     DLOG(INFO) << "temp directory: " << dir;
     try {
