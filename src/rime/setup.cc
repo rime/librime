@@ -57,6 +57,8 @@ RIME_API void SetupDeployer(RimeTraits* traits) {
     deployer.distribution_code_name = traits->distribution_code_name;
   if (PROVIDED(traits, distribution_version))
     deployer.distribution_version = traits->distribution_version;
+  if (PROVIDED(traits, app_name))
+    deployer.app_name = traits->app_name;
   if (PROVIDED(traits, prebuilt_data_dir))
     deployer.prebuilt_data_dir = path(traits->prebuilt_data_dir);
   else
@@ -82,6 +84,7 @@ RIME_API void SetupLogging(const char* app_name,
       FLAGS_log_dir = log_dir;
     }
   }
+  google::SetLogFilenameExtension(".log");
   // Do not allow other users to read/write log files created by current
   // process.
   FLAGS_logfile_mode = 0600;
