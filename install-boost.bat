@@ -17,5 +17,3 @@ cd boost-%boost_version%
 .\b2 headers
 popd
 :boost_found
-
-call .\build.bat boost
