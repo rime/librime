@@ -27,6 +27,8 @@ ChordComposer::ChordComposer(const Ticket& ticket) : Processor(ticket) {
     config->GetBool("chord_composer/use_shift", &use_shift_);
     config->GetBool("chord_composer/use_super", &use_super_);
     config->GetBool("chord_composer/use_caps", &use_caps_);
+    config->GetBool("chord_composer/finish_chord_on_first_key_release",
+                    &finish_chord_on_first_key_release_);
     config->GetString("speller/delimiter", &delimiter_);
     algebra_.Load(config->GetList("chord_composer/algebra"));
     output_format_.Load(config->GetList("chord_composer/output_format"));
@@ -104,7 +106,12 @@ ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
   editing_chord_ = true;
   bool is_key_up = key_event.release();
   if (is_key_up) {
-    if (pressed_.erase(ch) != 0 && pressed_.empty()) {
+    if (finish_chord_on_first_key_release_) {
+      if (pressed_.find(ch) != pressed_.end()) {
+        FinishChord();
+        pressed_.clear();
+      }
+    } else if (pressed_.erase(ch) != 0 && pressed_.empty()) {
       FinishChord();
     }
   } else {  // key down
