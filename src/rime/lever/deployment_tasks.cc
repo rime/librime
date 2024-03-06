@@ -633,6 +633,7 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
   DLOG(INFO) << "scanning " << dirs.size() << " temp directory for log files.";
 
   int removed = 0;
+  const string& app_name = deployer->app_name;
   for (const auto& dir : dirs) {
     // avoid iteration on non-existing directory, which may cause error
     if (!fs::exists(fs::path(dir)))
@@ -644,7 +645,8 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
       for (const auto& entry : fs::directory_iterator(dir)) {
         const string& file_name(entry.path().filename().string());
         if (entry.is_regular_file() && !entry.is_symlink() &&
-            boost::starts_with(file_name, "rime.") &&
+            boost::starts_with(file_name, app_name) &&
+            boost::ends_with(file_name, ".log") &&
             !boost::contains(file_name, today)) {
           files.push_back(entry.path());
         }

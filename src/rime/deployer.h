@@ -39,6 +39,7 @@ class Deployer : public Messenger {
   path sync_dir;
   string user_id;
   string distribution_name;
+  string app_name;
   string distribution_code_name;
   string distribution_version;
   // }

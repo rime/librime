@@ -53,6 +53,8 @@ RIME_API void SetupDeployer(RimeTraits* traits) {
     deployer.user_data_dir = path(traits->user_data_dir);
   if (PROVIDED(traits, distribution_name))
     deployer.distribution_name = traits->distribution_name;
+  if (PROVIDED(traits, app_name))
+    deployer.app_name = traits->app_name;
   if (PROVIDED(traits, distribution_code_name))
     deployer.distribution_code_name = traits->distribution_code_name;
   if (PROVIDED(traits, distribution_version))
