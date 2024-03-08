@@ -15,7 +15,6 @@ jobs:
   macos:
     uses: ./.github/workflows/macos-build.yml
     with:
-      build_variant: universal
       rime_plugins: hchunhui/librime-lua lotem/librime-octagram rime/librime-predict
 
   windows:

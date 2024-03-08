@@ -6,9 +6,6 @@ on:
         default: ${{ github.repository }}
         required: false
         type: string
-      build_variant:
-        required: false
-        type: string
       rime_plugins:
         required: false
         type: string
@@ -21,9 +18,10 @@ jobs:
         runs-on: [macos-13, macos-14]
         include:
           - runs-on: macos-13
-            create-distributable: ${{ !inputs.build_variant }}
+            create-distributable: false
           - runs-on: macos-14
-            create-distributable: ${{ !inputs.build_variant || inputs.build_variant == 'universal' }}
+            create-distributable: true
+            build_variant: universal
     env:
       boost_version: 1.84.0
       BOOST_ROOT: ${{ github.workspace }}/deps/boost-1.84.0
@@ -43,7 +41,7 @@ jobs:
           echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV
 
       - name: Configure build variant
-        if: inputs.build_variant == 'universal'
+        if: matrix.build_variant == 'universal'
         run: |
           echo BUILD_UNIVERSAL=1 >> $GITHUB_ENV
 
@@ -62,7 +60,7 @@ jobs:
             include
             lib
             share
-          key: ${{ runner.os }}-${{ inputs.build_variant || runner.arch }}-deps-${{ hashFiles('submodule-status') }}
+          key: ${{ runner.os }}-${{ matrix.build_variant || runner.arch }}-deps-${{ hashFiles('submodule-status') }}
 
       - name: Build dependencies
         if: steps.cache-deps.outputs.cache-hit != 'true'
@@ -78,9 +76,9 @@ jobs:
         if: matrix.create-distributable
         run: |
           make install
-          tar -cjvf rime-${{ env.git_ref_name }}-${{ runner.os }}-${{ inputs.build_variant || runner.arch }}.tar.bz2 \
+          tar -cjvf rime-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.build_variant || runner.arch }}.tar.bz2 \
           dist version-info.txt
-          tar -cjvf rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-${{ inputs.build_variant || runner.arch }}.tar.bz2 \
+          tar -cjvf rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.build_variant || runner.arch }}.tar.bz2 \
           --exclude '*/.placeholder' \
           bin include lib share
 
@@ -88,7 +86,7 @@ jobs:
         if: matrix.create-distributable
         uses: actions/upload-artifact@v4
         with:
-          name: artifact-${{ runner.os }}-${{ inputs.build_variant || runner.arch }}
+          name: artifact-${{ runner.os }}-${{ matrix.build_variant || runner.arch }}
           path: |
-            rime-${{ env.git_ref_name }}-${{ runner.os }}-${{ inputs.build_variant || runner.arch }}.tar.bz2
-            rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-${{ inputs.build_variant || runner.arch }}.tar.bz2
+            rime-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.build_variant || runner.arch }}.tar.bz2
+            rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.build_variant || runner.arch }}.tar.bz2
