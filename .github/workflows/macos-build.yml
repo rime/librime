@@ -42,26 +42,7 @@ jobs:
         run: |
           echo BUILD_UNIVERSAL=1 >> $GITHUB_ENV
 
-      - name: Cache Boost
-        id: cache-boost
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.BOOST_ROOT }}.tar.xz
-          key: ${{ matrix.os }}-boost-${{ env.boost_version }}
-
-      - name: Extract Boost source tarball
-        if: steps.cache-boost.outputs.cache-hit == 'true'
-        run: |
-          pushd deps
-          tar -xJf ${{ env.BOOST_ROOT }}.tar.xz
-          cd ${{ env.BOOST_ROOT }}
-          ./bootstrap.sh
-          ./b2 headers
-          popd
-
       - name: Install Boost
-        if: steps.cache-boost.outputs.cache-hit != 'true'
         run: ./install-boost.sh
 
       - name: Check submodules

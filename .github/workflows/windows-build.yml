@@ -9,6 +9,7 @@ on:
       rime_plugins:
         required: false
         type: string
+
 jobs:
   build:
     runs-on: windows-latest
@@ -64,27 +65,8 @@ jobs:
           echo "git_ref_name=$git_ref_name" >> $env:GITHUB_ENV
           git submodule > submodule-status
 
-      - name: Cache Boost source
-        id: cache-boost-src
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.BOOST_ROOT }}.7z
-          key: ${{ runner.os }}-boost-${{ env.boost_version }}-src
-
-      - name: Download Boost source
-        if: steps.cache-boost-src.outputs.cache-hit != 'true'
-        run: |
-          aria2c https://github.com/boostorg/boost/releases/download/boost-${{ env.boost_version }}/boost-${{ env.boost_version }}.7z -d deps
-
-      - name: Extract Boost source tarball
-        run: |
-          pushd deps
-          7z x ${{ env.BOOST_ROOT }}.7z
-          cd ${{ env.BOOST_ROOT }}
-          .\bootstrap.bat
-          .\b2 headers
-          popd
+      - name: Install boost
+        run: .\install-boost.bat
 
       - name: Cache dependencies
         id: cache-deps
