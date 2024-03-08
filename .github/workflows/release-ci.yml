@@ -15,7 +15,7 @@ jobs:
   macos:
     uses: ./.github/workflows/macos-build.yml
     with:
-      build_variant: '-universal'
+      build_variant: universal
       rime_plugins: hchunhui/librime-lua lotem/librime-octagram rime/librime-predict
 
   windows:
@@ -28,7 +28,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
+        with:
+          path: artifact
+          merge-multiple: true
 
       - name: Create Nightly release
         if: ${{ github.ref == 'refs/heads/master' }}

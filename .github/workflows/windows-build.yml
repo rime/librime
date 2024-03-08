@@ -97,8 +97,9 @@ jobs:
           bin include lib share
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: artifact-${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.arch }}
           path: |
             rime-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.arch }}.7z
             rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.arch }}.7z
@@ -169,7 +170,8 @@ jobs:
           bin include lib share
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: artifact-${{ runner.os }}-mingw
           path: |
             rime-${{ env.git_ref_name }}-${{ runner.os }}-mingw.tar.bz2
