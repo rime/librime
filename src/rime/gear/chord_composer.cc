@@ -108,17 +108,28 @@ ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
   if (is_key_up) {
     if (finish_chord_on_first_key_release_) {
       if (pressed_.find(ch) != pressed_.end()) {
+        pressed_.erase(ch);
+        prev_pressed_ = pressed_;
         FinishChord();
         pressed_.clear();
+      } else if (prev_pressed_.find(ch) != prev_pressed_.end()) {
+        prev_pressed_.erase(ch);
       }
     } else if (pressed_.erase(ch) != 0 && pressed_.empty()) {
       FinishChord();
     }
   } else {  // key down
-    pressed_.insert(ch);
-    bool updated = chord_.insert(ch).second;
-    if (updated)
-      UpdateChord();
+    if (finish_chord_on_first_key_release_) {
+      // ignore the repeated keys inside prev_pressed_
+      if (prev_pressed_.find(ch) == prev_pressed_.end())
+        goto insert_;
+    } else {
+    insert_:
+      pressed_.insert(ch);
+      bool updated = chord_.insert(ch).second;
+      if (updated)
+        UpdateChord();
+    }
   }
   editing_chord_ = false;
   return kAccepted;

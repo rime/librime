@@ -46,6 +46,7 @@ class ChordComposer : public Processor {
   bool finish_chord_on_first_key_release_ = false;
 
   set<int> pressed_;
+  set<int> prev_pressed_;
   set<int> chord_;
   bool editing_chord_ = false;
   bool sending_chord_ = false;
