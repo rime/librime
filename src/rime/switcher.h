@@ -31,9 +31,11 @@ class Switcher : public Processor, public Engine {
       Config* config,
       function<bool(const string& schema_id)> process_entry);
 
+  void SetActiveSchema(const string& schema_id);
   Schema* CreateSchema();
   void SelectNextSchema();
   bool IsAutoSave(const string& option) const;
+  void RestoreSavedOptions();
 
   void RefreshMenu();
   void Activate();
@@ -46,7 +48,7 @@ class Switcher : public Processor, public Engine {
  protected:
   void InitializeComponents();
   void LoadSettings();
-  void RestoreSavedOptions();
+
   void HighlightNextSchema();
   void OnSelect(Context* ctx);
 

@@ -52,9 +52,7 @@ class ConcreteEngine : public Engine {
   vector<of<Filter>> filters_;
   vector<of<Formatter>> formatters_;
   vector<of<Processor>> post_processors_;
-  // To make sure dumping user.yaml when processors_.clear(),
-  // switcher is owned by processors_[0]
-  weak<Switcher> switcher_;
+  an<Switcher> switcher_;
 };
 
 // implementations
@@ -85,6 +83,11 @@ ConcreteEngine::ConcreteEngine() {
       [this](Context* ctx, const string& property) {
         OnPropertyUpdate(ctx, property);
       });
+
+  switcher_ = New<Switcher>(this);
+  // saved options should be loaded only once per input session
+  switcher_->RestoreSavedOptions();
+
   InitializeComponents();
   InitializeOptions();
 }
@@ -281,14 +284,7 @@ void ConcreteEngine::OnSelect(Context* ctx) {
 void ConcreteEngine::ApplySchema(Schema* schema) {
   if (!schema)
     return;
-  if (auto switcher = switcher_.lock()) {
-    if (Config* user_config = switcher->user_config()) {
-      user_config->SetString("var/previously_selected_schema",
-                             schema->schema_id());
-      user_config->SetInt("var/schema_access_time/" + schema->schema_id(),
-                          time(NULL));
-    }
-  }
+  switcher_->SetActiveSchema(schema->schema_id());
   schema_.reset(schema);
   context_->Clear();
   context_->ClearTransientOptions();
@@ -303,11 +299,10 @@ void ConcreteEngine::InitializeComponents() {
   translators_.clear();
   filters_.clear();
 
-  if (auto switcher = New<Switcher>(this)) {
-    switcher_ = switcher;
-    processors_.push_back(switcher);
+  if (switcher_) {
+    processors_.push_back(switcher_);
     if (schema_->schema_id() == ".default") {
-      if (Schema* schema = switcher->CreateSchema()) {
+      if (Schema* schema = switcher_->CreateSchema()) {
         schema_.reset(schema);
       }
     }
@@ -397,10 +392,13 @@ void ConcreteEngine::InitializeComponents() {
 }
 
 void ConcreteEngine::InitializeOptions() {
+  LOG(INFO) << "ConcreteEngine::InitializeOptions";
   // reset custom switches
   Config* config = schema_->config();
   Switches switches(config);
   switches.FindOption([this](Switches::SwitchOption option) {
+    LOG(INFO) << "found switch option: " << option.option_name
+              << ", reset: " << option.reset_value;
     if (option.reset_value >= 0) {
       if (option.type == Switches::kToggleOption) {
         context_->set_option(option.option_name, (option.reset_value != 0));
