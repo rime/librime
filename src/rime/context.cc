@@ -288,6 +288,7 @@ void Context::set_input(const string& value) {
 
 void Context::set_option(const string& name, bool value) {
   options_[name] = value;
+  DLOG(INFO) << "Context::set_option " << name << " = " << value;
   option_update_notifier_(this, name);
 }
 
@@ -313,8 +314,10 @@ string Context::get_property(const string& name) const {
 }
 
 void Context::ClearTransientOptions() {
+  DLOG(INFO) << "Context::ClearTransientOptions";
   auto opt = options_.lower_bound("_");
   while (opt != options_.end() && !opt->first.empty() && opt->first[0] == '_') {
+    DLOG(INFO) << "cleared opption: " << opt->first;
     options_.erase(opt++);
   }
   auto prop = properties_.lower_bound("_");
