@@ -22,8 +22,12 @@ an<ConfigItem> ConvertFromYaml(const YAML::Node& yaml_node,
 void EmitYaml(an<ConfigItem> node, YAML::Emitter* emitter, int depth);
 
 ConfigData::~ConfigData() {
-  if (auto_save_ && modified_ && !file_path_.empty())
-    SaveToFile(file_path_);
+  if (auto_save_)
+    Save();
+}
+
+bool ConfigData::Save() {
+  return modified_ && !file_path_.empty() && SaveToFile(file_path_);
 }
 
 bool ConfigData::LoadFromStream(std::istream& stream) {
