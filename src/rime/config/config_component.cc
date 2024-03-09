@@ -23,6 +23,10 @@ Config::~Config() {}
 
 Config::Config(an<ConfigData> data) : ConfigItemRef(data.get()), data_(data) {}
 
+bool Config::Save() {
+  return data_->Save();
+}
+
 bool Config::LoadFromStream(std::istream& stream) {
   return data_->LoadFromStream(stream);
 }
