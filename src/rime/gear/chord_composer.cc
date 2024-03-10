@@ -84,6 +84,16 @@ inline static int get_base_layer_key_code(const KeyEvent& key_event) {
                                                 : ch;
 }
 
+inline static bool finish_chord_on_all_keys_released(
+    const ChordingState& state) {
+  return state.pressed_keys.empty();
+}
+
+bool ChordComposer::FinishChordConditionIsMet() const {
+  return finish_chord_on_first_key_release_ ||
+         finish_chord_on_all_keys_released(state_);
+}
+
 ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
   if (key_event.ctrl() || key_event.alt() || key_event.super() ||
       key_event.caps()) {
@@ -106,19 +116,14 @@ ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
   editing_chord_ = true;
   bool is_key_up = key_event.release();
   if (is_key_up) {
-    if (finish_chord_on_first_key_release_) {
-      if (pressed_.find(ch) != pressed_.end()) {
-        FinishChord();
-        pressed_.clear();
-      }
-    } else if (pressed_.erase(ch) != 0 && pressed_.empty()) {
-      FinishChord();
+    if (state_.ReleaseKey(ch) && FinishChordConditionIsMet() &&
+        !state_.recognized_chord.empty()) {
+      FinishChord(state_.recognized_chord);
     }
-  } else {  // key down
-    pressed_.insert(ch);
-    bool updated = chord_.insert(ch).second;
-    if (updated)
-      UpdateChord();
+  } else {  // key down, ignore repeated key down events
+    if (state_.PressKey(ch) && state_.AddKeyToChord(ch)) {
+      UpdateChord(state_.recognized_chord);
+    }
   }
   editing_chord_ = false;
   return kAccepted;
@@ -147,10 +152,10 @@ ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   return ProcessFunctionKey(key_event);
 }
 
-string ChordComposer::SerializeChord() {
+string ChordComposer::SerializeChord(const Chord& chord) {
   KeySequence key_sequence;
   for (KeyEvent key : chording_keys_) {
-    if (chord_.find(key.keycode()) != chord_.end())
+    if (chord.find(key.keycode()) != chord.end())
       key_sequence.push_back(key);
   }
   string code = key_sequence.repr();
@@ -158,12 +163,12 @@ string ChordComposer::SerializeChord() {
   return code;
 }
 
-void ChordComposer::UpdateChord() {
+void ChordComposer::UpdateChord(const Chord& chord) {
   if (!engine_)
     return;
   Context* ctx = engine_->context();
   Composition& comp = ctx->composition();
-  string code = SerializeChord();
+  string code = SerializeChord(chord);
   prompt_format_.Apply(&code);
   if (comp.empty()) {
     // add a placeholder segment
@@ -178,10 +183,10 @@ void ChordComposer::UpdateChord() {
   last_segment.prompt = code;
 }
 
-void ChordComposer::FinishChord() {
+void ChordComposer::FinishChord(const Chord& chord) {
   if (!engine_)
     return;
-  string code = SerializeChord();
+  string code = SerializeChord(chord);
   output_format_.Apply(&code);
   ClearChord();
 
@@ -201,8 +206,7 @@ void ChordComposer::FinishChord() {
 }
 
 void ChordComposer::ClearChord() {
-  pressed_.clear();
-  chord_.clear();
+  state_.ClearChord();
   if (!engine_)
     return;
   Context* ctx = engine_->context();
