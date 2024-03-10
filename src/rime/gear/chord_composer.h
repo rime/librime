@@ -15,6 +15,25 @@
 
 namespace rime {
 
+using Chord = set<int>;
+
+struct ChordingState {
+  Chord pressed_keys;
+  Chord recognized_chord;
+
+  bool IsPressed(int ch) const {
+    return pressed_keys.find(ch) != pressed_keys.end();
+  }
+
+  bool PressKey(int ch) { return pressed_keys.insert(ch).second; }
+
+  bool ReleaseKey(int ch) { return pressed_keys.erase(ch) != 0; }
+
+  bool AddKeyToChord(int ch) { return recognized_chord.insert(ch).second; }
+
+  void ClearChord() { recognized_chord.clear(); }
+};
+
 class ChordComposer : public Processor {
  public:
   ChordComposer(const Ticket& ticket);
@@ -23,11 +42,12 @@ class ChordComposer : public Processor {
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
 
  protected:
+  bool FinishChordConditionIsMet() const;
   ProcessResult ProcessChordingKey(const KeyEvent& key_event);
   ProcessResult ProcessFunctionKey(const KeyEvent& key_event);
-  string SerializeChord();
-  void UpdateChord();
-  void FinishChord();
+  string SerializeChord(const Chord& chord);
+  void UpdateChord(const Chord& chord);
+  void FinishChord(const Chord& chord);
   void ClearChord();
   bool DeleteLastSyllable();
   void OnContextUpdate(Context* ctx);
@@ -45,9 +65,7 @@ class ChordComposer : public Processor {
   bool use_caps_ = false;
   bool finish_chord_on_first_key_release_ = false;
 
-  set<int> pressed_;
-  set<int> prev_pressed_;
-  set<int> chord_;
+  ChordingState state_;
   bool editing_chord_ = false;
   bool sending_chord_ = false;
   bool composing_ = false;
