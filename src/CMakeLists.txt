@@ -13,6 +13,12 @@ set(rime_core_module_src
   ${rime_api_src}
   ${rime_base_src}
   ${rime_config_src})
+
+# add rc info for windows MSVC build
+if(MSVC)
+  include(${CMAKE_SOURCE_DIR}/cmake/AddRCInfo.cmake)
+endif()
+
 set(rime_dict_module_src
   ${rime_algo_src}
   ${rime_dict_src})
