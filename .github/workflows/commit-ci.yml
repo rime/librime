@@ -14,9 +14,9 @@ jobs:
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v4
-      - name: Install clang-format
-        run: brew install clang-format
-      - name: Lint
+      - name: Install latest lang-format
+        run: brew update && brew install clang-format
+      - name: Code style lint
         run: make clang-format-lint
 
   linux:
