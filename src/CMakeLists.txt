@@ -13,6 +13,46 @@ set(rime_core_module_src
   ${rime_api_src}
   ${rime_base_src}
   ${rime_config_src})
+
+# add rc info for windows MSVC build
+if(MSVC)
+  # check if HEAD on master
+  execute_process(
+    COMMAND git rev-parse --abbrev-ref HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE git_branch
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if ("${git_branch}" STREQUAL "master")
+    set(build_release OFF)
+  else()
+    set(build_release ON)
+  endif()
+  # generate tag_suffix for nightly and release
+  if(build_release)
+    set(tag_suffix ".0")
+  else()
+    execute_process(
+      COMMAND git rev-parse --short HEAD
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      OUTPUT_VARIABLE git_commit
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+      set(arch_suffix "x64")
+    elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+      set(arch_suffix "Win32")
+    endif()
+    set(tag_suffix "-${git_commit} Nightly build ${arch_suffix}")
+  endif()
+  # set resource file
+  set(rime_resource_file "${CMAKE_CURRENT_SOURCE_DIR}/rime.rc")
+  # convert rime_version to comma separated format
+  string(REPLACE "." "," rime_version_comma_separated ${rime_version})
+  # configure resource file, make version info to actually value
+  configure_file(${rime_resource_file} ${CMAKE_CURRENT_BINARY_DIR}/rime.rc @ONLY)
+  # append resource file to source file list
+  list(APPEND rime_core_module_src ${CMAKE_CURRENT_BINARY_DIR}/rime.rc)
+endif()
+
 set(rime_dict_module_src
   ${rime_algo_src}
   ${rime_dict_src})
