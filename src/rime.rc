@@ -18,13 +18,14 @@ VS_VERSION_INFO VERSIONINFO
 BEGIN
   BLOCK "StringFileInfo"
   BEGIN
+#ifdef MSVC
     BLOCK "080404b0"
     BEGIN
       VALUE "CompanyName", "式恕堂"
       VALUE "FileDescription", "中州韵输入法引擎"
       VALUE "InternalName", "librime"
       VALUE "LegalCopyright", "式恕堂 版权所无"
-      VALUE "OriginalFilename", "rime.dll"
+      VALUE "OriginalFilename", "@original_filename@"
       VALUE "ProductName", "中州韵输入法引擎"
       VALUE "ProductVersion", "@rime_version@@tag_suffix@"
     END
@@ -34,25 +35,28 @@ BEGIN
       VALUE "FileDescription", "中州韻輸入法引擎"
       VALUE "InternalName", "librime"
       VALUE "LegalCopyright", "式恕堂 版權所無"
-      VALUE "OriginalFilename", "rime.dll"
+      VALUE "OriginalFilename", "@original_filename@"
       VALUE "ProductName", "中州韻輸入法引擎"
       VALUE "ProductVersion", "@rime_version@@tag_suffix@"
     END
+#endif
     BLOCK "040904E4"
     BEGIN
       VALUE "CompanyName", "Rime Developers"
       VALUE "FileDescription", "Rime Input Method Engine"
       VALUE "InternalName", "librime"
       VALUE "LegalCopyright", "Copyleft Rime Developers"
-      VALUE "OriginalFilename", "rime.dll"
+      VALUE "OriginalFilename", "@original_filename@"
       VALUE "ProductName", "Rime Input Method Engine"
       VALUE "ProductVersion", "@rime_version@@tag_suffix@"
     END
   END
   BLOCK "VarFileInfo"
   BEGIN
+#ifdef MSVC
     VALUE "Translation", 0x804, 1200
     VALUE "Translation", 0x409, 1200
+#endif
     VALUE "Translation", 0x409, 1252
   END
 END

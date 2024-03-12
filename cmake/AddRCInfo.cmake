@@ -30,6 +30,13 @@ if ("${git_branch}" STREQUAL "master")
 else()
   set(build_release ON)
 endif()
+set(original_filename "rime.dll")
+if(MSVC)
+  set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} -DMSVC")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU") # mingw
+  set(original_filename "librime.dll")
+endif()
+
 # generate tag_suffix for nightly and release
 if(build_release)
   set(tag_suffix ".0")
@@ -40,9 +47,26 @@ else(build_release)
   elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
     set(arch_suffix "Win32")
   endif()
+
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang") # clang
+    set(arch_suffix "${arch_suffix} clang")
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU") # mingw
+    set(arch_suffix "${arch_suffix} mingw")
+  endif()
   # set tag_suffix
   set(tag_suffix "-${git_commit} Nightly build ${arch_suffix}")
 endif(build_release)
+
+# if mingw env add -c 65001 to CMAKE_RC_FLAGS
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} -c 65001")
+endif()
+# if clang build, use llvm-rc to compile resource file
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(CMAKE_RC_COMPILER "llvm-rc")
+  set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} -finput-charset=UTF-8")
+endif()
+
 # set resource file
 set(rime_resource_file "${CMAKE_CURRENT_SOURCE_DIR}/rime.rc")
 # convert rime_version to comma separated format
