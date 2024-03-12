@@ -31,7 +31,10 @@ struct ChordingState {
 
   bool AddKeyToChord(int ch) { return recognized_chord.insert(ch).second; }
 
-  void ClearChord() { recognized_chord.clear(); }
+  void Clear() {
+    pressed_keys.clear();
+    recognized_chord.clear();
+  }
 };
 
 class ChordComposer : public Processor {

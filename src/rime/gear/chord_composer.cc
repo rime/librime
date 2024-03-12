@@ -60,10 +60,13 @@ ProcessResult ChordComposer::ProcessFunctionKey(const KeyEvent& key_event) {
       raw_sequence_.clear();
     }
     ClearChord();
+    state_.Clear();
+
   } else if (ch == XK_BackSpace || ch == XK_Escape) {
     // clear the raw sequence
     raw_sequence_.clear();
     ClearChord();
+    state_.Clear();
   }
   return kNoop;
 }
@@ -103,6 +106,7 @@ ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
       (key_event.shift() && !use_shift_) ||
       (key_event.super() && !use_super_) || (key_event.caps() && !use_caps_)) {
     ClearChord();
+    state_.Clear();
     return kNoop;
   }
   int ch = get_base_layer_key_code(key_event);
@@ -110,6 +114,7 @@ ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
   if (std::find(chording_keys_.begin(), chording_keys_.end(),
                 KeyEvent{ch, 0}) == chording_keys_.end()) {
     ClearChord();
+    state_.Clear();
     return kNoop;
   }
   // chording key
@@ -119,6 +124,7 @@ ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
     if (state_.ReleaseKey(ch) && FinishChordConditionIsMet() &&
         !state_.recognized_chord.empty()) {
       FinishChord(state_.recognized_chord);
+      state_.recognized_chord.clear();
     }
   } else {  // key down, ignore repeated key down events
     if (state_.PressKey(ch) && state_.AddKeyToChord(ch)) {
@@ -206,7 +212,6 @@ void ChordComposer::FinishChord(const Chord& chord) {
 }
 
 void ChordComposer::ClearChord() {
-  state_.ClearChord();
   if (!engine_)
     return;
   Context* ctx = engine_->context();
