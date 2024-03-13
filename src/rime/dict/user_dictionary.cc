@@ -325,6 +325,21 @@ an<UserDictEntryCollector> UserDictionary::Lookup(
   for (auto& v : state.query_result) {
     v.second.Sort();
   }
+  auto entries_with_word_completion =
+      state.query_result.find(state.predict_word_from_depth);
+  if (entries_with_word_completion != state.query_result.end()) {
+    auto& entries = entries_with_word_completion->second;
+    // if the top candidate is predictive match,
+    if (!entries.empty() && entries.front()->IsPredictiveMatch()) {
+      auto found =
+          std::find_if(entries.begin(), entries.end(),
+                       [](const auto& e) { return e->IsExactMatch(); });
+      if (found != entries.end()) {
+        // move the first exact match candidate to top.
+        std::rotate(entries.begin(), found, found + 1);
+      }
+    }
+  }
   return collect(&state.query_result);
 }
 

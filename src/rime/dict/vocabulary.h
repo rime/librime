@@ -55,7 +55,13 @@ struct DictEntry {
   int matching_code_size = 0;
 
   DictEntry() = default;
-  ShortDictEntry ToShort() const;
+  ShortDictEntry ToShort() const { return {text, code, weight}; }
+  bool IsExactMatch() const {
+    return matching_code_size == 0 || matching_code_size == code.size();
+  }
+  bool IsPredictiveMatch() const {
+    return matching_code_size != 0 && matching_code_size < code.size();
+  }
   bool operator<(const DictEntry& other) const;
 };
 
