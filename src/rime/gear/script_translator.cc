@@ -508,8 +508,10 @@ bool ScriptTranslation::PrepareCandidate() {
     DLOG(INFO) << "user phrase '" << entry->text
                << "', code length: " << user_phrase_code_length;
     candidate_source_ = kUserPhrase;
-    candidate_ = New<Phrase>(translator_->language(), "user_phrase", start_,
-                             start_ + user_phrase_code_length, entry);
+    candidate_ =
+        New<Phrase>(translator_->language(),
+                    entry->IsPredictiveMatch() ? "completion" : "user_phrase",
+                    start_, start_ + user_phrase_code_length, entry);
     candidate_->set_quality(std::exp(entry->weight) +
                             translator_->initial_quality() +
                             (IsNormalSpelling() ? 0.5 : -0.5));
@@ -519,8 +521,10 @@ bool ScriptTranslation::PrepareCandidate() {
     DLOG(INFO) << "phrase '" << entry->text
                << "', code length: " << phrase_code_length;
     candidate_source_ = kSysPhrase;
-    candidate_ = New<Phrase>(translator_->language(), "phrase", start_,
-                             start_ + phrase_code_length, entry);
+    candidate_ =
+        New<Phrase>(translator_->language(),
+                    entry->IsPredictiveMatch() ? "completion" : "phrase",
+                    start_, start_ + phrase_code_length, entry);
     candidate_->set_quality(std::exp(entry->weight) +
                             translator_->initial_quality() +
                             (IsNormalSpelling() ? 0 : -1));
