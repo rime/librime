@@ -19,6 +19,8 @@ class ConfigData {
   ConfigData() = default;
   ~ConfigData();
 
+  // returns whether actually saved to file.
+  bool Save();
   bool LoadFromStream(std::istream& stream);
   bool SaveToStream(std::ostream& stream);
   bool LoadFromFile(const path& file_path, ConfigCompiler* compiler);

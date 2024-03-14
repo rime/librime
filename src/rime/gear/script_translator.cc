@@ -112,10 +112,12 @@ class ScriptTranslation : public Translation {
                     Corrector* corrector,
                     Poet* poet,
                     const string& input,
-                    size_t start)
+                    size_t start,
+                    size_t end_of_input)
       : translator_(translator),
         poet_(poet),
         start_(start),
+        end_of_input_(end_of_input),
         syllabifier_(
             New<ScriptSyllabifier>(translator, corrector, input, start)),
         enable_correction_(corrector) {
@@ -128,7 +130,7 @@ class ScriptTranslation : public Translation {
  protected:
   bool CheckEmpty();
   bool IsNormalSpelling() const;
-  void PrepareCandidate();
+  bool PrepareCandidate();
   template <class QueryResult>
   void EnrollEntries(map<int, DictEntryList>& entries_by_end_pos,
                      const an<QueryResult>& query_result);
@@ -137,6 +139,7 @@ class ScriptTranslation : public Translation {
   ScriptTranslator* translator_;
   Poet* poet_;
   size_t start_;
+  size_t end_of_input_;
   an<ScriptSyllabifier> syllabifier_;
 
   an<DictEntryCollector> phrase_;
@@ -144,11 +147,19 @@ class ScriptTranslation : public Translation {
   an<Sentence> sentence_;
 
   an<Phrase> candidate_ = nullptr;
+  size_t candidate_index_ = 0;
+  enum CandidateSource {
+    kUninitialized,
+    kUserPhrase,
+    kSysPhrase,
+    kSentence,
+  };
+  CandidateSource candidate_source_ = kUninitialized;
 
   DictEntryCollector::reverse_iterator phrase_iter_;
   UserDictEntryCollector::reverse_iterator user_phrase_iter_;
 
-  size_t max_corrections_ = 4;
+  const size_t max_corrections_ = 4;
   size_t correction_count_ = 0;
 
   bool enable_correction_;
@@ -189,9 +200,10 @@ an<Translation> ScriptTranslator::Query(const string& input,
   bool enable_user_dict =
       user_dict_ && user_dict_->loaded() && !IsUserDictDisabledFor(input);
 
+  size_t end_of_input = engine_->context()->input().length();
   // the translator should survive translations it creates
   auto result = New<ScriptTranslation>(this, corrector_.get(), poet_.get(),
-                                       input, segment.start);
+                                       input, segment.start, end_of_input);
   if (!result || !result->Evaluate(
                      dict_.get(), enable_user_dict ? user_dict_.get() : NULL)) {
     return nullptr;
@@ -307,7 +319,7 @@ string ScriptSyllabifier::GetPreeditString(const Phrase& cand) const {
   const auto& delimiters = translator_->delimiters();
   std::stack<size_t> lengths;
   string output;
-  SyllabifyTask task{cand.code(), syllable_graph_, cand.end() - start_,
+  SyllabifyTask task{cand.matching_code(), syllable_graph_, cand.end() - start_,
                      [&](SyllabifyTask* task, size_t depth, size_t current_pos,
                          size_t next_pos) {
                        size_t len = output.length();
@@ -338,33 +350,44 @@ string ScriptSyllabifier::GetOriginalSpelling(const Phrase& cand) const {
   return string();
 }
 
+template <class Ptr, class Iter>
+static bool has_exact_match_phrase(Ptr ptr, Iter iter, size_t consumed) {
+  return ptr && iter->first == consumed && !iter->second.exhausted() &&
+         iter->second.Peek()->IsExactMatch();
+}
+
 // ScriptTranslation implementation
 
 bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   size_t consumed = syllabifier_->BuildSyllableGraph(*dict->prism());
   const auto& syllable_graph = syllabifier_->syllable_graph();
+  bool predict_word =
+      translator_->enable_completion() && start_ + consumed == end_of_input_;
 
-  phrase_ = dict->Lookup(syllable_graph, 0);
+  phrase_ = dict->Lookup(syllable_graph, 0, predict_word);
   if (user_dict) {
-    user_phrase_ = user_dict->Lookup(syllable_graph, 0);
+    const size_t kUnlimitedDepth = 0;
+    const size_t kNumSyllablesToPredictWord = 4;
+    user_phrase_ =
+        user_dict->Lookup(syllable_graph, 0, kUnlimitedDepth,
+                          predict_word ? kNumSyllablesToPredictWord : 0);
   }
   if (!phrase_ && !user_phrase_)
     return false;
-  // make sentences when there is no exact-matching phrase candidate
-  size_t translated_len = 0;
-  if (phrase_ && !phrase_->empty())
-    translated_len = (std::max)(translated_len, phrase_->rbegin()->first);
-  if (user_phrase_ && !user_phrase_->empty())
-    translated_len = (std::max)(translated_len, user_phrase_->rbegin()->first);
-  if (translated_len < consumed &&
-      syllable_graph.edges.size() > 1) {  // at least 2 syllables required
-    sentence_ = MakeSentence(dict, user_dict);
-  }
 
   if (phrase_)
     phrase_iter_ = phrase_->rbegin();
   if (user_phrase_)
     user_phrase_iter_ = user_phrase_->rbegin();
+
+  // make sentences when there is no exact-matching phrase candidate
+  bool has_at_least_two_syllables = syllable_graph.edges.size() >= 2;
+  if (has_at_least_two_syllables &&
+      !has_exact_match_phrase(phrase_, phrase_iter_, consumed) &&
+      !has_exact_match_phrase(user_phrase_, user_phrase_iter_, consumed)) {
+    sentence_ = MakeSentence(dict, user_dict);
+  }
+
   return !CheckEmpty();
 }
 
@@ -374,43 +397,42 @@ bool ScriptTranslation::Next() {
     is_correction = false;
     if (exhausted())
       return false;
-    if (sentence_) {
-      sentence_.reset();
-      return !CheckEmpty();
+    if (candidate_source_ == kUninitialized) {
+      PrepareCandidate();  // to determine candidate_source_
     }
-    int user_phrase_code_length = 0;
-    if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
-      user_phrase_code_length = user_phrase_iter_->first;
+    switch (candidate_source_) {
+      case kUninitialized:
+        break;
+      case kSentence:
+        sentence_.reset();
+        break;
+      case kUserPhrase: {
+        UserDictEntryIterator& uter(user_phrase_iter_->second);
+        if (!uter.Next()) {
+          ++user_phrase_iter_;
+        }
+      } break;
+      case kSysPhrase: {
+        DictEntryIterator& iter(phrase_iter_->second);
+        if (!iter.Next()) {
+          ++phrase_iter_;
+        }
+      } break;
     }
-    int phrase_code_length = 0;
-    if (phrase_ && phrase_iter_ != phrase_->rend()) {
-      phrase_code_length = phrase_iter_->first;
-    }
-    if (user_phrase_code_length > 0 &&
-        user_phrase_code_length >= phrase_code_length) {
-      UserDictEntryIterator& uter(user_phrase_iter_->second);
-      if (!uter.Next()) {
-        ++user_phrase_iter_;
-      }
-    } else if (phrase_code_length > 0) {
-      DictEntryIterator& iter(phrase_iter_->second);
-      if (!iter.Next()) {
-        ++phrase_iter_;
-      }
-    }
+    candidate_.reset();
+    candidate_source_ = kUninitialized;
     if (enable_correction_) {
-      PrepareCandidate();
-      if (!candidate_) {
+      // populate next candidate and skip it if it's a correction beyond max
+      // numbers.
+      if (!PrepareCandidate()) {
         break;
       }
-      is_correction = syllabifier_->IsCandidateCorrection(*candidate_);
     }
-  } while (  // limit the number of correction candidates
-      enable_correction_ && is_correction &&
-      correction_count_ > max_corrections_);
-  if (is_correction) {
-    ++correction_count_;
-  }
+  } while (enable_correction_ &&
+           syllabifier_->IsCandidateCorrection(*candidate_) &&
+           // limit the number of correction candidates
+           ++correction_count_ > max_corrections_);
+  ++candidate_index_;
   return !CheckEmpty();
 }
 
@@ -421,8 +443,7 @@ bool ScriptTranslation::IsNormalSpelling() const {
 }
 
 an<Candidate> ScriptTranslation::Peek() {
-  PrepareCandidate();
-  if (!candidate_) {
+  if (candidate_source_ == kUninitialized && !PrepareCandidate()) {
     return nullptr;
   }
   if (candidate_->preedit().empty()) {
@@ -439,14 +460,29 @@ an<Candidate> ScriptTranslation::Peek() {
   return candidate_;
 }
 
-void ScriptTranslation::PrepareCandidate() {
+static bool always_true() {
+  return true;
+}
+
+template <typename T>
+inline static bool prefer_user_phrase(
+    T user_phrase_weight,
+    T sys_phrase_weight,
+    function<bool()> compare_on_tie = always_true) {
+  return user_phrase_weight > sys_phrase_weight ||
+         (user_phrase_weight == sys_phrase_weight && compare_on_tie());
+}
+
+bool ScriptTranslation::PrepareCandidate() {
   if (exhausted()) {
+    candidate_source_ = kUninitialized;
     candidate_ = nullptr;
-    return;
+    return false;
   }
   if (sentence_) {
+    candidate_source_ = kSentence;
     candidate_ = sentence_;
-    return;
+    return true;
   }
   size_t user_phrase_code_length = 0;
   if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
@@ -456,28 +492,44 @@ void ScriptTranslation::PrepareCandidate() {
   if (phrase_ && phrase_iter_ != phrase_->rend()) {
     phrase_code_length = phrase_iter_->first;
   }
-  an<Phrase> cand;
   if (user_phrase_code_length > 0 &&
-      user_phrase_code_length >= phrase_code_length) {
+      prefer_user_phrase(user_phrase_code_length, phrase_code_length, [this]() {
+        const int kNumExactMatchOnTop = 1;
+        size_t full_code_length = end_of_input_ - start_;
+        return candidate_index_ >= kNumExactMatchOnTop ||
+               prefer_user_phrase(
+                   has_exact_match_phrase(user_phrase_, user_phrase_iter_,
+                                          full_code_length),
+                   has_exact_match_phrase(phrase_, phrase_iter_,
+                                          full_code_length));
+      })) {
     UserDictEntryIterator& uter = user_phrase_iter_->second;
     const auto& entry = uter.Peek();
     DLOG(INFO) << "user phrase '" << entry->text
                << "', code length: " << user_phrase_code_length;
-    cand = New<Phrase>(translator_->language(), "user_phrase", start_,
-                       start_ + user_phrase_code_length, entry);
-    cand->set_quality(std::exp(entry->weight) + translator_->initial_quality() +
-                      (IsNormalSpelling() ? 0.5 : -0.5));
+    candidate_source_ = kUserPhrase;
+    candidate_ =
+        New<Phrase>(translator_->language(),
+                    entry->IsPredictiveMatch() ? "completion" : "user_phrase",
+                    start_, start_ + user_phrase_code_length, entry);
+    candidate_->set_quality(std::exp(entry->weight) +
+                            translator_->initial_quality() +
+                            (IsNormalSpelling() ? 0.5 : -0.5));
   } else if (phrase_code_length > 0) {
     DictEntryIterator& iter = phrase_iter_->second;
     const auto& entry = iter.Peek();
     DLOG(INFO) << "phrase '" << entry->text
                << "', code length: " << phrase_code_length;
-    cand = New<Phrase>(translator_->language(), "phrase", start_,
-                       start_ + phrase_code_length, entry);
-    cand->set_quality(std::exp(entry->weight) + translator_->initial_quality() +
-                      (IsNormalSpelling() ? 0 : -1));
+    candidate_source_ = kSysPhrase;
+    candidate_ =
+        New<Phrase>(translator_->language(),
+                    entry->IsPredictiveMatch() ? "completion" : "phrase",
+                    start_, start_ + phrase_code_length, entry);
+    candidate_->set_quality(std::exp(entry->weight) +
+                            translator_->initial_quality() +
+                            (IsNormalSpelling() ? 0 : -1));
   }
-  candidate_ = cand;
+  return true;
 }
 
 bool ScriptTranslation::CheckEmpty() {

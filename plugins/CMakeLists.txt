@@ -1,5 +1,4 @@
 set(RIME_SOURCE_DIR ${PROJECT_SOURCE_DIR})
-set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 # work around CMake build issues on macOS
 set(rime_plugin_boilerplate_src "plugin.cc")
@@ -55,10 +54,14 @@ foreach(plugin ${plugins})
     message(STATUS "Plugin ${plugin_name} provides modules: ${plugin_modules}")
     add_library(${plugin_name} ${rime_plugin_boilerplate_src} ${plugin_objs})
     target_link_libraries(${plugin_name} ${plugin_deps})
+    set_target_properties(${plugin_name}
+      PROPERTIES
+      LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib/${RIME_PLUGINS_DIR}
+      RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin/${RIME_PLUGINS_DIR})
     if(XCODE_VERSION)
       set_target_properties(${plugin_name} PROPERTIES INSTALL_NAME_DIR "@rpath")
     endif(XCODE_VERSION)
-    install(TARGETS ${plugin_name} DESTINATION ${RIME_PLUGINS_DIR})
+    install(TARGETS ${plugin_name} DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/${RIME_PLUGINS_DIR})
   endif()
 endforeach(plugin)
 

@@ -628,30 +628,34 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
   string today(ymd);
   DLOG(INFO) << "today: " << today;
 
-  // Make sure we have sufficient permissions on the scanned directories.
-  // E.g. on Android, there's no write permission on the cwd.
-  vector<string> dirs;
-  for (auto& dir : google::GetLoggingDirectories()) {
-    auto perms = fs::status(dir).permissions();
-    if ((perms & (fs::perms::owner_write | fs::perms::group_write |
-                  fs::perms::others_write)) != fs::perms::none) {
-      dirs.push_back(dir);
-    }
-  }
+  vector<string> dirs(google::GetLoggingDirectories());
+
   DLOG(INFO) << "scanning " << dirs.size() << " temp directory for log files.";
 
   int removed = 0;
+  const string& app_name = deployer->app_name;
   for (const auto& dir : dirs) {
+    // avoid iteration on non-existing directory, which may cause error
+    if (!fs::exists(fs::path(dir)))
+      continue;
     vector<path> files;
     DLOG(INFO) << "temp directory: " << dir;
-    // preparing files
-    for (const auto& entry : fs::directory_iterator(dir)) {
-      const string& file_name(entry.path().filename().string());
-      if (entry.is_regular_file() && !entry.is_symlink() &&
-          boost::starts_with(file_name, "rime.") &&
-          !boost::contains(file_name, today)) {
-        files.push_back(entry.path());
+    try {
+      // preparing files
+      for (const auto& entry : fs::directory_iterator(dir)) {
+        const string& file_name(entry.path().filename().string());
+        if (entry.is_regular_file() && !entry.is_symlink() &&
+            boost::starts_with(file_name, app_name) &&
+            boost::ends_with(file_name, ".log") &&
+            !boost::contains(file_name, today)) {
+          files.push_back(entry.path());
+        }
       }
+    } catch (const fs::filesystem_error& ex) {
+      // Catch error to skip up when we have no sufficient permissions.
+      // E.g. on Android, there's no read permission on the cwd.
+      LOG(WARNING) << "couldn't list directory '" << dir << "': " << ex.what();
+      continue;
     }
     // remove files
     for (const auto& file : files) {

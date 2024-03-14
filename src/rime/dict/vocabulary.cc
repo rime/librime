@@ -57,10 +57,6 @@ string Code::ToString() const {
   return stream.str();
 }
 
-inline ShortDictEntry DictEntry::ToShort() const {
-  return {text, code, weight};
-}
-
 bool ShortDictEntry::operator<(const ShortDictEntry& other) const {
   // Sort different entries sharing the same code by weight desc.
   if (weight != other.weight)
