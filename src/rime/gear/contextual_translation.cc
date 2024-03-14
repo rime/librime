@@ -18,7 +18,8 @@ bool ContextualTranslation::Replenish() {
     DLOG(INFO) << cand->text() << " cache/queue: " << cache_.size() << "/"
                << queue.size();
     if (cand->type() == "phrase" || cand->type() == "user_phrase" ||
-        cand->type() == "table" || cand->type() == "user_table") {
+        cand->type() == "table" || cand->type() == "user_table" ||
+        cand->type() == "completion") {
       if (end_pos != cand->end() || last_type != cand->type()) {
         end_pos = cand->end();
         last_type = cand->type();
