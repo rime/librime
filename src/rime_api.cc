@@ -148,7 +148,7 @@ RIME_API Bool RimeDeployWorkspace() {
 
 RIME_API Bool RimeDeploySchema(const char* schema_file) {
   Deployer& deployer(Service::instance().deployer());
-  return Bool(deployer.RunTask("schema_update", string(schema_file)));
+  return Bool(deployer.RunTask("schema_update", path(schema_file)));
 }
 
 RIME_API Bool RimeDeployConfigFile(const char* file_name,
