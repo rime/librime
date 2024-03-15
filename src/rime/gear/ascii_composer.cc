@@ -178,6 +178,13 @@ void AsciiComposer::LoadConfig(Schema* schema) {
                              &good_old_caps_lock_);
     }
   }
+  if (!config->GetBool("ascii_composer/save_ascii_mode_state",
+                       &save_ascii_mode_state_)) {
+    if (preset_config) {
+      preset_config->GetBool("ascii_composer/save_ascii_mode_state",
+                             &save_ascii_mode_state_);
+    }
+  }
   if (auto bindings = config->GetMap("ascii_composer/switch_key")) {
     load_bindings(bindings, &bindings_);
   } else if (auto bindings = preset_config ? preset_config->GetMap(
@@ -234,6 +241,11 @@ void AsciiComposer::SwitchAsciiMode(bool ascii_mode,
   }
   // refresh non-confirmed composition with new mode
   ctx->set_option("ascii_mode", ascii_mode);
+  if (save_ascii_mode_state_ && style != kAsciiModeSwitchInline) {
+    the<Config> user_config(Config::Require("user_config")->Create("user"));
+    if (user_config)
+      user_config->SetBool("var/option/ascii_mode", ascii_mode);
+  }
 }
 
 void AsciiComposer::OnContextUpdate(Context* ctx) {
