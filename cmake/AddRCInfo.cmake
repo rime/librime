@@ -32,7 +32,7 @@ else()
 endif()
 set(original_filename "rime.dll")
 if(MSVC)
-  set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} -DMSVC")
+  set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} -DLOCALIZE_VERSION_INFO")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU") # mingw
   set(original_filename "librime.dll")
 endif()

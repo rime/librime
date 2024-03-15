@@ -1,5 +1,5 @@
 #include "winver.h"
-#ifdef MSVC
+#ifdef LOCALIZE_VERSION_INFO
   #pragma code_page (65001)
 #endif
 
@@ -18,7 +18,7 @@ VS_VERSION_INFO VERSIONINFO
 BEGIN
   BLOCK "StringFileInfo"
   BEGIN
-#ifdef MSVC
+#ifdef LOCALIZE_VERSION_INFO
     BLOCK "080404b0"
     BEGIN
       VALUE "CompanyName", "式恕堂"
@@ -53,7 +53,7 @@ BEGIN
   END
   BLOCK "VarFileInfo"
   BEGIN
-#ifdef MSVC
+#ifdef LOCALIZE_VERSION_INFO
     VALUE "Translation", 0x804, 1200
     VALUE "Translation", 0x409, 1200
 #endif
