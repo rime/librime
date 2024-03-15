@@ -30,19 +30,21 @@ tools installed to custom location.
 
 When prepared, do the following in a *Developer Command Prompt* window.
 
-## Build Boost
-
-``` batch
-build.bat boost
-```
-
 ## Build third-party libraries
+
+**Build it first**
 
 ``` batch
 build.bat deps
 ```
 This builds dependent libraries in `librime\deps\*`, and copies artifacts to
 `librime\include`, `librime\lib` and `librime\bin`.
+
+## Build Boost
+
+``` batch
+build.bat boost
+```
 
 ## Build librime
 
