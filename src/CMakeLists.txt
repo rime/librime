@@ -15,7 +15,7 @@ set(rime_core_module_src
   ${rime_config_src})
 
 # add rc info for windows MSVC build
-if(MSVC)
+if(WIN32)
   include(${CMAKE_SOURCE_DIR}/cmake/AddRCInfo.cmake)
 endif()
 
