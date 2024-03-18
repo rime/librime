@@ -449,6 +449,9 @@ RIME_API const char* RimeGetUserDataDir(void);
 //! \deprecated use RimeApi::get_sync_dir_s instead.
 RIME_API const char* RimeGetSyncDir(void);
 
+RIME_API const char* RimeGetPrebuiltDataDir();
+RIME_API const char* RimeGetStagingDir();
+
 RIME_API const char* RimeGetUserId(void);
 
 RIME_API void RimeGetSharedDataDirSecure(char* dir, size_t buffer_size);
