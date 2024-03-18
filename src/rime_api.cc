@@ -854,28 +854,28 @@ RIME_API void RimeGetUserDataSyncDir(char* dir, size_t buffer_size) {
   strncpy(dir, string_path.c_str(), buffer_size);
 }
 
-void RimeGetSharedDataDirSecure(char* dir, size_t buffer_size) {
+RIME_API void RimeGetSharedDataDirSecure(char* dir, size_t buffer_size) {
   string string_path = Service::instance().deployer().shared_data_dir.string();
   strncpy(dir, string_path.c_str(), buffer_size);
 }
 
-void RimeGetUserDataDirSecure(char* dir, size_t buffer_size) {
+RIME_API void RimeGetUserDataDirSecure(char* dir, size_t buffer_size) {
   string string_path = Service::instance().deployer().user_data_dir.string();
   strncpy(dir, string_path.c_str(), buffer_size);
 }
 
-void RimeGetPrebuiltDataDirSecure(char* dir, size_t buffer_size) {
+RIME_API void RimeGetPrebuiltDataDirSecure(char* dir, size_t buffer_size) {
   string string_path =
       Service::instance().deployer().prebuilt_data_dir.string();
   strncpy(dir, string_path.c_str(), buffer_size);
 }
 
-void RimeGetStagingDirSecure(char* dir, size_t buffer_size) {
+RIME_API void RimeGetStagingDirSecure(char* dir, size_t buffer_size) {
   string string_path = Service::instance().deployer().staging_dir.string();
   strncpy(dir, string_path.c_str(), buffer_size);
 }
 
-void RimeGetSyncDirSecure(char* dir, size_t buffer_size) {
+RIME_API void RimeGetSyncDirSecure(char* dir, size_t buffer_size) {
   string string_path = Service::instance().deployer().sync_dir.string();
   strncpy(dir, string_path.c_str(), buffer_size);
 }
@@ -1013,7 +1013,7 @@ RIME_API size_t RimeConfigListSize(RimeConfig* config, const char* key) {
   return 0;
 }
 
-const char* RimeGetInput(RimeSessionId session_id) {
+RIME_API const char* RimeGetInput(RimeSessionId session_id) {
   an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return NULL;
@@ -1023,7 +1023,7 @@ const char* RimeGetInput(RimeSessionId session_id) {
   return ctx->input().c_str();
 }
 
-size_t RimeGetCaretPos(RimeSessionId session_id) {
+RIME_API size_t RimeGetCaretPos(RimeSessionId session_id) {
   an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return 0;
@@ -1066,7 +1066,7 @@ static bool do_with_candidate_on_current_page(
   return (ctx->*verb)(page_start + index);
 }
 
-Bool RimeChangePage(RimeSessionId session_id, Bool backward) {
+RIME_API Bool RimeChangePage(RimeSessionId session_id, Bool backward) {
   an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return False;
@@ -1089,11 +1089,11 @@ Bool RimeChangePage(RimeSessionId session_id, Bool backward) {
   return ctx->Highlight(index);
 }
 
-Bool RimeHighlightCandidate(RimeSessionId session_id, size_t index) {
+RIME_API Bool RimeHighlightCandidate(RimeSessionId session_id, size_t index) {
   return do_with_candidate(session_id, index, &Context::Highlight);
 }
 
-Bool RimeHighlightCandidateOnCurrentPage(RimeSessionId session_id,
+RIME_API Bool RimeHighlightCandidateOnCurrentPage(RimeSessionId session_id,
                                          size_t index) {
   return do_with_candidate_on_current_page(session_id, index,
                                            &Context::Highlight);
@@ -1108,7 +1108,7 @@ RIME_API Bool RimeSelectCandidateOnCurrentPage(RimeSessionId session_id,
   return do_with_candidate_on_current_page(session_id, index, &Context::Select);
 }
 
-const char* RimeGetVersion() {
+RIME_API const char* RimeGetVersion() {
   return RIME_VERSION;
 }
 
@@ -1122,7 +1122,7 @@ RIME_API Bool RimeDeleteCandidateOnCurrentPage(RimeSessionId session_id,
                                            &Context::DeleteCandidate);
 }
 
-void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos) {
+RIME_API void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos) {
   an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return;
@@ -1132,7 +1132,7 @@ void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos) {
   return ctx->set_caret_pos(caret_pos);
 }
 
-RimeStringSlice RimeGetStateLabelAbbreviated(RimeSessionId session_id,
+RIME_API RimeStringSlice RimeGetStateLabelAbbreviated(RimeSessionId session_id,
                                              const char* option_name,
                                              Bool state,
                                              Bool abbreviated) {
@@ -1147,7 +1147,7 @@ RimeStringSlice RimeGetStateLabelAbbreviated(RimeSessionId session_id,
   return {label.str, label.length};
 }
 
-const char* RimeGetStateLabel(RimeSessionId session_id,
+RIME_API const char* RimeGetStateLabel(RimeSessionId session_id,
                               const char* option_name,
                               Bool state) {
   return RimeGetStateLabelAbbreviated(session_id, option_name, state, False)

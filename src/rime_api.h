@@ -388,6 +388,35 @@ RIME_API Bool RimeSimulateKeySequence(RimeSessionId session_id,
                                       const char* key_sequence);
 
 RIME_API Bool RimeSetInput(RimeSessionId session_id, const char* input);
+
+RIME_API const char* RimeGetInput(RimeSessionId session_id);
+
+// Pos
+
+RIME_API void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos);
+RIME_API size_t RimeGetCaretPos(RimeSessionId session_id);
+
+RIME_API Bool RimeChangePage(RimeSessionId session_id, Bool backward);
+
+// Highlight
+
+RIME_API Bool RimeHighlightCandidate(RimeSessionId session_id, size_t index);
+RIME_API Bool RimeHighlightCandidateOnCurrentPage(RimeSessionId session_id,
+                                         size_t index);
+
+// Label
+
+RIME_API RimeStringSlice RimeGetStateLabelAbbreviated(RimeSessionId session_id,
+                                             const char* option_name,
+                                             Bool state,
+                                             Bool abbreviated);
+
+RIME_API const char* RimeGetStateLabel(RimeSessionId session_id,
+                              const char* option_name,
+                              Bool state);
+
+RIME_API const char* RimeGetVersion();
+
 // Module
 
 /*!
@@ -421,6 +450,12 @@ RIME_API const char* RimeGetUserDataDir(void);
 RIME_API const char* RimeGetSyncDir(void);
 
 RIME_API const char* RimeGetUserId(void);
+
+RIME_API void RimeGetSharedDataDirSecure(char* dir, size_t buffer_size);
+RIME_API void RimeGetUserDataDirSecure(char* dir, size_t buffer_size);
+RIME_API void RimeGetPrebuiltDataDirSecure(char* dir, size_t buffer_size);
+RIME_API void RimeGetStagingDirSecure(char* dir, size_t buffer_size);
+RIME_API void RimeGetSyncDirSecure(char* dir, size_t buffer_size);
 
 /*! The API structure
  *  RimeApi is for rime v1.0+
