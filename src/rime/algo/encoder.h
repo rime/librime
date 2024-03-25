@@ -46,6 +46,9 @@ class Encoder {
 
  protected:
   PhraseCollector* collector_;
+
+  string StripPuncts(const string& phrase);
+  string free_puncts_;
 };
 
 // Aa : code at index 0 for character at index 0
@@ -102,6 +105,8 @@ class RIME_API TableEncoder : public Encoder {
 class ScriptEncoder : public Encoder {
  public:
   ScriptEncoder(PhraseCollector* collector);
+
+  bool LoadSettings(Config* config);
 
   bool EncodePhrase(const string& phrase, const string& value);
 
