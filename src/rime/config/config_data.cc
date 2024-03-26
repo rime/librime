@@ -71,14 +71,10 @@ bool ConfigData::LoadFromFile(const path& file_path, ConfigCompiler* compiler) {
   }
   LOG(INFO) << "loading config file '" << file_path.u8string() << "'.";
   try {
-#ifdef _WIN32
-    std::ifstream fin(file_path.wstring().c_str());
+    std::ifstream fin(file_path.c_str());
     if (!fin)
       return false;
     YAML::Node doc = YAML::Load(fin);
-#else
-    YAML::Node doc = YAML::LoadFile(file_path.string());
-#endif
     root = ConvertFromYaml(doc, compiler);
   } catch (YAML::Exception& e) {
     LOG(ERROR) << "Error parsing YAML: " << e.what();

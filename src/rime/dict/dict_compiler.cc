@@ -38,11 +38,7 @@ DictCompiler::~DictCompiler() {}
 
 static bool load_dict_settings_from_file(DictSettings* settings,
                                          const path& dict_file) {
-#ifdef _WIN32
-  std::ifstream fin(dict_file.wstring());
-#else
   std::ifstream fin(dict_file.c_str());
-#endif
   bool success = settings->LoadDictHeader(fin);
   fin.close();
   return success;
