@@ -32,7 +32,11 @@ ChecksumComputer::ChecksumComputer(uint32_t initial_remainder)
     : crc_(initial_remainder) {}
 
 void ChecksumComputer::ProcessFile(const path& file_path) {
+#ifdef _WIN32
+  std::ifstream fin(file_path.wstring());
+#else
   std::ifstream fin(file_path.c_str());
+#endif
   std::stringstream buffer;
   buffer << fin.rdbuf();
   const auto& file_content(buffer.str());

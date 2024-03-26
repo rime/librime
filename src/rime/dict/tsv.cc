@@ -15,8 +15,12 @@ namespace rime {
 int TsvReader::operator()(Sink* sink) {
   if (!sink)
     return 0;
-  LOG(INFO) << "reading tsv file: " << file_path_;
+  LOG(INFO) << "reading tsv file: " << file_path_.u8string();
+#ifdef _WIN32
+  std::ifstream fin(file_path_.wstring());
+#else
   std::ifstream fin(file_path_.c_str());
+#endif
   string line, key, value;
   Tsv row;
   int line_no = 0;

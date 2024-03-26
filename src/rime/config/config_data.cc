@@ -66,12 +66,19 @@ bool ConfigData::LoadFromFile(const path& file_path, ConfigCompiler* compiler) {
   modified_ = false;
   root.reset();
   if (!std::filesystem::exists(file_path)) {
-    LOG(WARNING) << "nonexistent config file '" << file_path << "'.";
+    LOG(WARNING) << "nonexistent config file '" << file_path.u8string() << "'.";
     return false;
   }
-  LOG(INFO) << "loading config file '" << file_path << "'.";
+  LOG(INFO) << "loading config file '" << file_path.u8string() << "'.";
   try {
+#ifdef _WIN32
+    std::ifstream fin(file_path.wstring().c_str());
+    if (!fin)
+      return false;
+    YAML::Node doc = YAML::Load(fin);
+#else
     YAML::Node doc = YAML::LoadFile(file_path.string());
+#endif
     root = ConvertFromYaml(doc, compiler);
   } catch (YAML::Exception& e) {
     LOG(ERROR) << "Error parsing YAML: " << e.what();
