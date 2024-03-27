@@ -127,6 +127,11 @@ class path : public std::filesystem::path {
   friend path operator/(const fs_path& lhs, const char* rhs) {
     return path(lhs) /= path(rhs);
   }
+#ifdef RIME_ENABLE_LOGGING
+  friend std::ostream& operator<<(std::ostream& os, const path& p) {
+    return os << p.u8string();
+  }
+#endif
 };
 
 }  // namespace rime

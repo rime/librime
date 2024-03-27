@@ -66,10 +66,10 @@ bool ConfigData::LoadFromFile(const path& file_path, ConfigCompiler* compiler) {
   modified_ = false;
   root.reset();
   if (!std::filesystem::exists(file_path)) {
-    LOG(WARNING) << "nonexistent config file '" << file_path.u8string() << "'.";
+    LOG(WARNING) << "nonexistent config file '" << file_path << "'.";
     return false;
   }
-  LOG(INFO) << "loading config file '" << file_path.u8string() << "'.";
+  LOG(INFO) << "loading config file '" << file_path << "'.";
   try {
     std::ifstream fin(file_path.c_str());
     if (!fin)
@@ -91,7 +91,7 @@ bool ConfigData::SaveToFile(const path& file_path) {
     // not really saving
     return false;
   }
-  LOG(INFO) << "saving config file '" << file_path.u8string() << "'.";
+  LOG(INFO) << "saving config file '" << file_path << "'.";
   // dump tree
   std::ofstream out(file_path.c_str());
   return SaveToStream(out);

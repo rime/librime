@@ -156,9 +156,9 @@ void TextDb::Clear() {
 bool TextDb::Backup(const path& snapshot_file) {
   if (!loaded())
     return false;
-  LOG(INFO) << "backing up db '" << name() << "' to " << snapshot_file.u8string();
+  LOG(INFO) << "backing up db '" << name() << "' to " << snapshot_file;
   if (!SaveToFile(snapshot_file)) {
-    LOG(ERROR) << "failed to create snapshot file '" << snapshot_file.u8string()
+    LOG(ERROR) << "failed to create snapshot file '" << snapshot_file
                << "' for db '" << name() << "'.";
     return false;
   }

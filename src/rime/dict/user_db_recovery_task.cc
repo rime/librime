@@ -44,7 +44,7 @@ bool UserDbRecoveryTask::Run(Deployer* deployer) {
     std::filesystem::rename(db_->file_path(),
                             path(db_->file_path()).concat(".old"), ec);
     if (ec && !db_->Remove()) {
-      LOG(ERROR) << "Error removing db file '" << db_->file_path().u8string() << "'.";
+      LOG(ERROR) << "Error removing db file '" << db_->file_path() << "'.";
       return false;
     }
   }

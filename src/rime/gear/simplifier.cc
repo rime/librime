@@ -32,7 +32,7 @@ namespace rime {
 class Opencc {
  public:
   Opencc(const path& config_path) {
-    LOG(INFO) << "initializing opencc: " << config_path.u8string();
+    LOG(INFO) << "initializing opencc: " << config_path;
     opencc::Config config;
     try {
       // opencc accepts file path encoded in UTF-8.
@@ -42,7 +42,7 @@ class Opencc {
           converter_->GetConversionChain()->GetConversions();
       dict_ = conversions.front()->GetDict();
     } catch (...) {
-      LOG(ERROR) << "opencc config not found: " << config_path.u8string();
+      LOG(ERROR) << "opencc config not found: " << config_path;
     }
   }
 

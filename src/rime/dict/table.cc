@@ -251,13 +251,13 @@ Table::Table(const path& file_path) : MappedFile(file_path) {}
 Table::~Table() {}
 
 bool Table::Load() {
-  LOG(INFO) << "loading table file: " << file_path().u8string();
+  LOG(INFO) << "loading table file: " << file_path();
 
   if (IsOpen())
     Close();
 
   if (!OpenReadOnly()) {
-    LOG(ERROR) << "Error opening table file '" << file_path().u8string() << "'.";
+    LOG(ERROR) << "Error opening table file '" << file_path() << "'.";
     return false;
   }
 
@@ -297,7 +297,7 @@ bool Table::Load() {
 }
 
 bool Table::Save() {
-  LOG(INFO) << "saving table file: " << file_path().u8string();
+  LOG(INFO) << "saving table file: " << file_path();
 
   if (!index_) {
     LOG(ERROR) << "the table has not been constructed!";
@@ -324,14 +324,14 @@ bool Table::Build(const Syllabary& syllabary,
   LOG(INFO) << "num entries: " << num_entries;
   LOG(INFO) << "estimated file size: " << estimated_file_size;
   if (!Create(estimated_file_size)) {
-    LOG(ERROR) << "Error creating table file '" << file_path().u8string() << "'.";
+    LOG(ERROR) << "Error creating table file '" << file_path() << "'.";
     return false;
   }
 
   LOG(INFO) << "creating metadata.";
   metadata_ = Allocate<table::Metadata>();
   if (!metadata_) {
-    LOG(ERROR) << "Error creating metadata in file '" << file_path().u8string() << "'.";
+    LOG(ERROR) << "Error creating metadata in file '" << file_path() << "'.";
     return false;
   }
   metadata_->dict_file_checksum = dict_file_checksum;

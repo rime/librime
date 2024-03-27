@@ -95,7 +95,7 @@ bool UserDictManager::Restore(const path& snapshot_file) {
     dest->Close();
   }
   BOOST_SCOPE_EXIT_END
-  LOG(INFO) << "merging '" << snapshot_file.u8string() << "' from "
+  LOG(INFO) << "merging '" << snapshot_file << "' from "
             << UserDbHelper(temp).GetUserId() << " into userdb '" << db_name
             << "'...";
   DbSource source(temp.get());
@@ -193,9 +193,9 @@ bool UserDictManager::Synchronize(const string& dict_name) {
       continue;
     path file_path = path(it->path()) / snapshot_file;
     if (fs::exists(file_path)) {
-      LOG(INFO) << "merging snapshot file: " << file_path.u8string();
+      LOG(INFO) << "merging snapshot file: " << file_path;
       if (!Restore(file_path)) {
-        LOG(ERROR) << "failed to merge snapshot file: " << file_path.u8string();
+        LOG(ERROR) << "failed to merge snapshot file: " << file_path;
         success = false;
       }
     }
