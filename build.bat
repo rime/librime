@@ -123,7 +123,9 @@ if %build_deps% == 1 (
   popd
 
   echo building leveldb.
+  copy /y leveldb_utf8.patch deps\leveldb\
   pushd deps\leveldb
+  git apply leveldb_utf8.patch
   cmake . -B%build_dir% %deps_cmake_flags%^
   -DLEVELDB_BUILD_BENCHMARKS:BOOL=OFF^
   -DLEVELDB_BUILD_TESTS:BOOL=OFF
