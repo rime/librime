@@ -91,7 +91,7 @@ bool ConfigData::SaveToFile(const path& file_path) {
     // not really saving
     return false;
   }
-  LOG(INFO) << "saving config file '" << file_path << "'.";
+  LOG(INFO) << "saving config file '" << file_path.u8string() << "'.";
   // dump tree
   std::ofstream out(file_path.c_str());
   return SaveToStream(out);

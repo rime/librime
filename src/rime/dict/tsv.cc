@@ -59,7 +59,7 @@ int TsvReader::operator()(Sink* sink) {
 int TsvWriter::operator()(Source* source) {
   if (!source)
     return 0;
-  LOG(INFO) << "writing tsv file: " << file_path_;
+  LOG(INFO) << "writing tsv file: " << file_path_.u8string();
   std::ofstream fout(file_path_.c_str());
   if (!file_description.empty()) {
     fout << "# " << file_description << std::endl;

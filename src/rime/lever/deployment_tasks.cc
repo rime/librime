@@ -315,7 +315,7 @@ static bool TrashDeprecatedUserCopy(const path& shared_copy,
     std::error_code ec;
     fs::rename(user_copy, backup, ec);
     if (ec) {
-      LOG(ERROR) << "error trashing file " << user_copy;
+      LOG(ERROR) << "error trashing file " << user_copy.u8string();
       return false;
     }
     return true;
@@ -411,7 +411,7 @@ static bool ConfigNeedsUpdate(Config* config) {
     path source_file = resolver->ResolvePath(entry.first);
     if (!fs::exists(source_file)) {
       if (recorded_time) {
-        LOG(INFO) << "source file no longer exists: " << source_file;
+        LOG(INFO) << "source file no longer exists: " << source_file.u8string();
         return true;
       }
       continue;
@@ -419,7 +419,7 @@ static bool ConfigNeedsUpdate(Config* config) {
     if (recorded_time !=
         (int)filesystem::to_time_t(fs::last_write_time(source_file))) {
       LOG(INFO) << "source file " << (recorded_time ? "changed: " : "added: ")
-                << source_file;
+                << source_file.u8string();
       return true;
     }
   }
@@ -436,7 +436,7 @@ bool ConfigFileUpdate::Run(Deployer* deployer) {
   if (TrashDeprecatedUserCopy(source_config_path, dest_config_path,
                               version_key_, trash)) {
     LOG(INFO) << "deprecated user copy of '" << file_name_ << "' is moved to "
-              << trash;
+              << trash.u8string();
   }
   // build the config file if needs update
   the<Config> config(Config::Require("config")->Create(file_name_));
@@ -567,13 +567,13 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
     std::error_code ec;
     fs::copy_file(entry, backup, fs::copy_options::overwrite_existing, ec);
     if (ec) {
-      LOG(ERROR) << "error backing up file " << backup;
+      LOG(ERROR) << "error backing up file " << backup.u8string();
       ++failure;
     } else {
       ++success;
     }
   }
-  LOG(INFO) << "backed up " << success << " config files to " << backup_dir
+  LOG(INFO) << "backed up " << success << " config files to " << backup_dir.u8string()
             << ", " << failure << " failed, " << latest << " up-to-date, "
             << skipped << " skipped.";
   return !failure;
@@ -602,7 +602,7 @@ bool CleanupTrash::Run(Deployer* deployer) {
       std::error_code ec;
       fs::rename(entry, backup, ec);
       if (ec) {
-        LOG(ERROR) << "error clean up file " << entry;
+        LOG(ERROR) << "error clean up file " << entry.u8string();
         ++failure;
       } else {
         ++success;
@@ -610,7 +610,7 @@ bool CleanupTrash::Run(Deployer* deployer) {
     }
   }
   if (success) {
-    LOG(INFO) << "moved " << success << " files to " << trash;
+    LOG(INFO) << "moved " << success << " files to " << trash.u8string();
   }
   return !failure;
 }

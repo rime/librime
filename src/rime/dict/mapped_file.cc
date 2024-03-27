@@ -53,10 +53,10 @@ MappedFile::~MappedFile() {
 
 bool MappedFile::Create(size_t capacity) {
   if (Exists()) {
-    LOG(INFO) << "overwriting file '" << file_path_ << "'.";
+    LOG(INFO) << "overwriting file '" << file_path_.u8string() << "'.";
     Resize(capacity);
   } else {
-    LOG(INFO) << "creating file '" << file_path_ << "'.";
+    LOG(INFO) << "creating file '" << file_path_.u8string() << "'.";
     std::filebuf fbuf;
     fbuf.open(file_path_.c_str(), std::ios_base::in | std::ios_base::out |
                                       std::ios_base::trunc |
@@ -75,7 +75,7 @@ bool MappedFile::Create(size_t capacity) {
 
 bool MappedFile::OpenReadOnly() {
   if (!Exists()) {
-    LOG(ERROR) << "attempt to open non-existent file '" << file_path_ << "'.";
+    LOG(ERROR) << "attempt to open non-existent file '" << file_path_.u8string() << "'.";
     return false;
   }
   file_.reset(new MappedFileImpl(file_path_, MappedFileImpl::kOpenReadOnly));
@@ -85,7 +85,7 @@ bool MappedFile::OpenReadOnly() {
 
 bool MappedFile::OpenReadWrite() {
   if (!Exists()) {
-    LOG(ERROR) << "attempt to open non-existent file '" << file_path_ << "'.";
+    LOG(ERROR) << "attempt to open non-existent file '" << file_path_.u8string() << "'.";
     return false;
   }
   file_.reset(new MappedFileImpl(file_path_, MappedFileImpl::kOpenReadWrite));

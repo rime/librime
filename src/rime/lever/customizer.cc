@@ -79,10 +79,10 @@ bool Customizer::UpdateConfigFile() {
   }
 
   if (!need_update) {
-    LOG(INFO) << "config file '" << dest_path_ << "' is up-to-date.";
+    LOG(INFO) << "config file '" << dest_path_.u8string() << "' is up-to-date.";
     return false;
   }
-  LOG(INFO) << "updating config file '" << dest_path_ << "'.";
+  LOG(INFO) << "updating config file '" << dest_path_.u8string() << "'.";
 
   bool is_dirty = !applied_customization.empty();
   if (redistribute || (is_dirty && !missing_original_copy)) {
@@ -90,7 +90,7 @@ bool Customizer::UpdateConfigFile() {
       fs::copy_file(source_path_, dest_path_,
                     fs::copy_options::overwrite_existing);
     } catch (...) {
-      LOG(ERROR) << "Error copying config file '" << source_path_
+      LOG(ERROR) << "Error copying config file '" << source_path_.u8string()
                  << "' to user directory.";
       return false;
     }
@@ -100,7 +100,7 @@ bool Customizer::UpdateConfigFile() {
       LOG(WARNING) << "patching user config without a shared original copy "
                       "is discouraged.";
     }
-    LOG(INFO) << "applying customization file: " << custom_path;
+    LOG(INFO) << "applying customization file: " << custom_path.u8string();
     if (!dest_config.LoadFromFile(dest_path_)) {
       LOG(ERROR) << "Error reloading destination config file.";
       return false;

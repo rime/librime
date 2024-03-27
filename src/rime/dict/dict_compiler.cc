@@ -52,7 +52,7 @@ static bool get_dict_files_from_settings(vector<path>* dict_files,
       string dict_name = As<ConfigValue>(*it)->str();
       auto dict_file = source_resolver->ResolvePath(dict_name + ".dict.yaml");
       if (!std::filesystem::exists(dict_file)) {
-        LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
+        LOG(ERROR) << "source file '" << dict_file.u8string() << "' does not exist.";
         return false;
       }
       dict_files->push_back(dict_file);
@@ -78,15 +78,15 @@ static uint32_t compute_dict_file_checksum(uint32_t initial_checksum,
 }
 
 bool DictCompiler::Compile(const path& schema_file) {
-  LOG(INFO) << "compiling dictionary for " << schema_file;
+  LOG(INFO) << "compiling dictionary for " << schema_file.u8string();
   bool build_table_from_source = true;
   DictSettings settings;
   auto dict_file = source_resolver_->ResolvePath(dict_name_ + ".dict.yaml");
   if (!std::filesystem::exists(dict_file)) {
-    LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
+    LOG(ERROR) << "source file '" << dict_file.u8string() << "' does not exist.";
     build_table_from_source = false;
   } else if (!load_dict_settings_from_file(&settings, dict_file)) {
-    LOG(ERROR) << "failed to load settings from '" << dict_file << "'.";
+    LOG(ERROR) << "failed to load settings from '" << dict_file.u8string() << "'.";
     return false;
   }
   vector<path> dict_files;
@@ -106,7 +106,7 @@ bool DictCompiler::Compile(const path& schema_file) {
       rebuild_table = primary_table->dict_file_checksum() != dict_file_checksum;
     } else {
       dict_file_checksum = primary_table->dict_file_checksum();
-      LOG(INFO) << "reuse existing table: " << primary_table->file_path();
+      LOG(INFO) << "reuse existing table: " << primary_table->file_path().u8string();
     }
     primary_table->Close();
   } else if (build_table_from_source) {
@@ -123,9 +123,9 @@ bool DictCompiler::Compile(const path& schema_file) {
   } else {
     rebuild_prism = true;
   }
-  LOG(INFO) << dict_file << "[" << dict_files.size() << " file(s)]"
+  LOG(INFO) << dict_file.u8string() << "[" << dict_files.size() << " file(s)]"
             << " (" << dict_file_checksum << ")";
-  LOG(INFO) << schema_file << " (" << schema_file_checksum << ")";
+  LOG(INFO) << schema_file.u8string() << " (" << schema_file_checksum << ")";
   {
     the<ResourceResolver> resolver(
         Service::instance().CreateDeployedResourceResolver(
@@ -153,7 +153,7 @@ bool DictCompiler::Compile(const path& schema_file) {
     if (primary_table->Load() && primary_table->GetSyllabary(&syllabary))
       primary_table->Close();
     else
-      LOG(WARNING) << "couldn't load syllabary from '" << schema_file << "'";
+      LOG(WARNING) << "couldn't load syllabary from '" << schema_file.u8string() << "'";
   }
   if (rebuild_prism &&
       !BuildPrism(schema_file, dict_file_checksum, schema_file_checksum)) {
@@ -167,16 +167,16 @@ bool DictCompiler::Compile(const path& schema_file) {
     auto dict_file = source_resolver_->ResolvePath(pack_name + ".dict.yaml");
     if (!std::filesystem::exists(dict_file)) {
       if (pack_table->Exists())
-        LOG(INFO) << "pack source file '" << dict_file
+        LOG(INFO) << "pack source file '" << dict_file.u8string()
                   << "' does not exist, using prebuilt table '"
                   << pack_table->file_path() << "'";
       else
-        LOG(ERROR) << "neither pack source file '" << dict_file
+        LOG(ERROR) << "neither pack source file '" << dict_file.u8string()
                    << "' nor a prebuilt table exists";
       continue;
     }
     if (!load_dict_settings_from_file(&settings, dict_file)) {
-      LOG(ERROR) << "failed to load settings from '" << dict_file << "'.";
+      LOG(ERROR) << "failed to load settings from '" << dict_file.u8string() << "'.";
       continue;
     }
     vector<path> dict_files;
@@ -221,7 +221,7 @@ bool DictCompiler::BuildTable(int table_index,
   auto& table = tables_[table_index];
   auto target_path =
       relocate_target(table->file_path(), target_resolver_.get());
-  LOG(INFO) << "building table: " << target_path;
+  LOG(INFO) << "building table: " << target_path.u8string();
   table = New<Table>(target_path);
 
   collector.Configure(settings);
@@ -312,7 +312,7 @@ bool DictCompiler::BuildPrism(const path& schema_file,
   if (!schema_file.empty()) {
     Config config;
     if (!config.LoadFromFile(schema_file)) {
-      LOG(ERROR) << "error loading prism definition from " << schema_file;
+      LOG(ERROR) << "error loading prism definition from " << schema_file.u8string();
       return false;
     }
     Projection p;
