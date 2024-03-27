@@ -40,10 +40,11 @@ install-debug uninstall-debug
 all: release
 
 clang-format-lint:
-	find ${RIME_SOURCE_PATH} -name '*.cc' -o -name '*.h' | xargs clang-format -Werror --dry-run || { echo Please lint your code by '"'"make clang-format-apply"'"'.; false; }
+	find ${RIME_SOURCE_PATH} \! -path 'plugins/*/*' -a \( -name '*.cc' -o -name '*.h' \) | \
+	xargs clang-format -Werror --dry-run || { echo Please lint your code by '"'"make clang-format-apply"'"'.; false; }
 
 clang-format-apply:
-	find ${RIME_SOURCE_PATH} -name '*.cc' -o -name '*.h' | xargs clang-format --verbose -i
+	find ${RIME_SOURCE_PATH} \! -path 'plugins/*/*' -a \( -name '*.cc' -o -name '*.h' \) | xargs clang-format --verbose -i
 
 deps:
 	$(MAKE) -f deps.mk
