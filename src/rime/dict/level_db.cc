@@ -54,7 +54,7 @@ struct LevelDbWrapper {
   leveldb::Status Open(const path& file_path, bool readonly) {
     leveldb::Options options;
     options.create_if_missing = !readonly;
-    return leveldb::DB::Open(options, file_path.string(), &ptr);
+    return leveldb::DB::Open(options, file_path.u8string(), &ptr);
   }
 
   void Release() {
@@ -217,7 +217,7 @@ bool LevelDb::Restore(const path& snapshot_file) {
 
 bool LevelDb::Recover() {
   LOG(INFO) << "trying to recover db '" << name() << "'.";
-  auto status = leveldb::RepairDB(file_path().string(), leveldb::Options());
+  auto status = leveldb::RepairDB(file_path().u8string(), leveldb::Options());
   if (status.ok()) {
     LOG(INFO) << "repair finished.";
     return true;
@@ -231,7 +231,7 @@ bool LevelDb::Remove() {
     LOG(ERROR) << "attempt to remove opened db '" << name() << "'.";
     return false;
   }
-  auto status = leveldb::DestroyDB(file_path().string(), leveldb::Options());
+  auto status = leveldb::DestroyDB(file_path().u8string(), leveldb::Options());
   if (!status.ok()) {
     LOG(ERROR) << "Error removing db '" << name() << "': " << status.ToString();
     return false;
