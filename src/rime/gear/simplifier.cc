@@ -197,7 +197,7 @@ Simplifier::Simplifier(const Ticket& ticket)
 void Simplifier::Initialize() {
   initialized_ = true;  // no retry
   path opencc_config_path = path(opencc_config_);
-  if (opencc_config_path.extension().string() == ".ini") {
+  if (opencc_config_path.extension().u8string() == ".ini") {
     LOG(ERROR) << "please upgrade opencc_config to an opencc 1.0 config file.";
     return;
   }
