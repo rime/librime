@@ -88,7 +88,7 @@ Preedit Composition::GetPreedit(const string& full_input,
     if (preedit.caret_pos < preedit.sel_end) {
       preedit.sel_start += prompt.length();
       preedit.sel_end += prompt.length();
-      preedit.caret_pos = preedit.sel_start;
+      preedit.caret_pos = preedit.sel_start - caret.length();
     }
   }
   return preedit;
