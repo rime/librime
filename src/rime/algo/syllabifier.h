@@ -20,7 +20,7 @@ class Corrector;
 using SyllableId = int32_t;
 
 struct EdgeProperties : SpellingProperties {
-  EdgeProperties(SpellingProperties sup) : SpellingProperties(sup){};
+  EdgeProperties(SpellingProperties sup) : SpellingProperties(sup) {};
   EdgeProperties() = default;
   bool is_correction = false;
 };
