@@ -392,9 +392,7 @@ bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
 }
 
 bool ScriptTranslation::Next() {
-  bool is_correction;
   do {
-    is_correction = false;
     if (exhausted())
       return false;
     if (candidate_source_ == kUninitialized) {
@@ -432,8 +430,11 @@ bool ScriptTranslation::Next() {
            syllabifier_->IsCandidateCorrection(*candidate_) &&
            // limit the number of correction candidates
            ++correction_count_ > max_corrections_);
-  ++candidate_index_;
-  return !CheckEmpty();
+  if (!CheckEmpty()) {
+    ++candidate_index_;
+    return true;
+  }
+  return false;
 }
 
 bool ScriptTranslation::IsNormalSpelling() const {
@@ -515,6 +516,7 @@ bool ScriptTranslation::PrepareCandidate() {
     candidate_->set_quality(std::exp(entry->weight) +
                             translator_->initial_quality() +
                             (IsNormalSpelling() ? 0.5 : -0.5));
+    return true;
   } else if (phrase_code_length > 0) {
     DictEntryIterator& iter = phrase_iter_->second;
     const auto& entry = iter.Peek();
@@ -528,10 +530,12 @@ bool ScriptTranslation::PrepareCandidate() {
     candidate_->set_quality(std::exp(entry->weight) +
                             translator_->initial_quality() +
                             (IsNormalSpelling() ? 0 : -1));
+    return true;
   } else {
+    candidate_source_ = kUninitialized;
+    candidate_ = nullptr;
     return false;
   }
-  return true;
 }
 
 bool ScriptTranslation::CheckEmpty() {
