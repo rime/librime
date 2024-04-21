@@ -431,7 +431,7 @@ bool ScriptTranslation::Next() {
   } while (enable_correction_ &&
            syllabifier_->IsCandidateCorrection(*candidate_) &&
            // limit the number of correction candidates
-           ++correction_count_ < max_corrections_);
+           ++correction_count_ > max_corrections_);
   ++candidate_index_;
   return !CheckEmpty();
 }
