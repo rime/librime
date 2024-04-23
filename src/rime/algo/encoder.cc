@@ -20,7 +20,8 @@ string RawCode::ToString() const {
 }
 
 void RawCode::FromString(const string& code_str) {
-  *dynamic_cast<vector<string>*>(this) = strings::split(code_str, " ");
+  *dynamic_cast<vector<string>*>(this) =
+      strings::split(code_str, " ", strings::SplitBehavior::SkipToken);
 }
 
 TableEncoder::TableEncoder(PhraseCollector* collector)
@@ -254,13 +255,13 @@ bool TableEncoder::DfsEncode(const string& phrase,
     }
     string encoded;
     if (Encode(*code, &encoded)) {
-      DLOG(INFO) << "encode '" << phrase << "': "
-                 << "[" << code->ToString() << "] -> [" << encoded << "]";
+      DLOG(INFO) << "encode '" << phrase << "': " << "[" << code->ToString()
+                 << "] -> [" << encoded << "]";
       collector_->CreateEntry(phrase, encoded, value);
       return true;
     } else {
-      DLOG(WARNING) << "failed to encode '" << phrase << "': "
-                    << "[" << code->ToString() << "]";
+      DLOG(WARNING) << "failed to encode '" << phrase << "': " << "["
+                    << code->ToString() << "]";
       return false;
     }
   }

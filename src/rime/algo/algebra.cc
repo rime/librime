@@ -47,8 +47,8 @@ void Script::Merge(const string& s,
   }
 }
 
-void Script::Dump(const string& file_name) const {
-  std::ofstream out(file_name.c_str());
+void Script::Dump(const path& file_path) const {
+  std::ofstream out(file_path.c_str());
   for (const value_type& v : *this) {
     bool first = true;
     for (const Spelling& s : v.second) {

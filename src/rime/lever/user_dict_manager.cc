@@ -6,7 +6,7 @@
 //
 #include <fstream>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/scope_exit.hpp>
 #include <rime/common.h>
 #include <rime/deployer.h>
@@ -16,7 +16,7 @@
 #include <rime/dict/user_db.h>
 #include <rime/lever/user_dict_manager.h>
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 namespace rime {
 
@@ -36,11 +36,11 @@ void UserDictManager::GetUserDictList(UserDictList* user_dict_list,
   }
   user_dict_list->clear();
   if (!fs::exists(path_) || !fs::is_directory(path_)) {
-    LOG(INFO) << "directory '" << path_.string() << "' does not exist.";
+    LOG(INFO) << "directory '" << path_ << "' does not exist.";
     return;
   }
   for (fs::directory_iterator it(path_), end; it != end; ++it) {
-    string name = it->path().filename().string();
+    string name = it->path().filename().u8string();
     if (boost::ends_with(name, component->extension())) {
       boost::erase_last(name, component->extension());
       user_dict_list->push_back(name);
@@ -59,18 +59,18 @@ bool UserDictManager::Backup(const string& dict_name) {
       return false;
     }
   }
-  boost::filesystem::path dir(deployer_->user_data_sync_dir());
-  if (!boost::filesystem::exists(dir)) {
-    if (!boost::filesystem::create_directories(dir)) {
-      LOG(ERROR) << "error creating directory '" << dir.string() << "'.";
+  const path& dir(deployer_->user_data_sync_dir());
+  if (!fs::exists(dir)) {
+    if (!fs::create_directories(dir)) {
+      LOG(ERROR) << "error creating directory '" << dir << "'.";
       return false;
     }
   }
   string snapshot_file = dict_name + UserDb::snapshot_extension();
-  return db->Backup((dir / snapshot_file).string());
+  return db->Backup(dir / snapshot_file);
 }
 
-bool UserDictManager::Restore(const string& snapshot_file) {
+bool UserDictManager::Restore(const path& snapshot_file) {
   the<Db> temp(user_db_component_->Create(".temp"));
   if (temp->Exists())
     temp->Remove();
@@ -104,7 +104,7 @@ bool UserDictManager::Restore(const string& snapshot_file) {
   return true;
 }
 
-int UserDictManager::Export(const string& dict_name, const string& text_file) {
+int UserDictManager::Export(const string& dict_name, const path& text_file) {
   the<Db> db(user_db_component_->Create(dict_name));
   if (!db->OpenReadOnly())
     return -1;
@@ -128,7 +128,7 @@ int UserDictManager::Export(const string& dict_name, const string& text_file) {
   return num_entries;
 }
 
-int UserDictManager::Import(const string& dict_name, const string& text_file) {
+int UserDictManager::Import(const string& dict_name, const path& text_file) {
   the<Db> db(user_db_component_->Create(dict_name));
   if (!db->Open())
     return -1;
@@ -161,28 +161,28 @@ bool UserDictManager::UpgradeUserDict(const string& dict_name) {
   if (!legacy_db->OpenReadOnly() || !UserDbHelper(legacy_db).IsUserDb())
     return false;
   LOG(INFO) << "upgrading user dict '" << dict_name << "'.";
-  fs::path trash = fs::path(deployer_->user_data_dir) / "trash";
+  path trash = deployer_->user_data_dir / "trash";
   if (!fs::exists(trash)) {
-    boost::system::error_code ec;
+    std::error_code ec;
     if (!fs::create_directories(trash, ec)) {
-      LOG(ERROR) << "error creating directory '" << trash.string() << "'.";
+      LOG(ERROR) << "error creating directory '" << trash << "'.";
       return false;
     }
   }
   string snapshot_file = dict_name + UserDb::snapshot_extension();
-  fs::path snapshot_path = trash / snapshot_file;
-  return legacy_db->Backup(snapshot_path.string()) && legacy_db->Close() &&
-         legacy_db->Remove() && Restore(snapshot_path.string());
+  path snapshot_path = trash / snapshot_file;
+  return legacy_db->Backup(snapshot_path) && legacy_db->Close() &&
+         legacy_db->Remove() && Restore(snapshot_path);
 }
 
 bool UserDictManager::Synchronize(const string& dict_name) {
   LOG(INFO) << "synchronize user dict '" << dict_name << "'.";
   bool success = true;
-  fs::path sync_dir(deployer_->sync_dir);
+  path sync_dir(deployer_->sync_dir);
   if (!fs::exists(sync_dir)) {
-    boost::system::error_code ec;
+    std::error_code ec;
     if (!fs::create_directories(sync_dir, ec)) {
-      LOG(ERROR) << "error creating directory '" << sync_dir.string() << "'.";
+      LOG(ERROR) << "error creating directory '" << sync_dir << "'.";
       return false;
     }
   }
@@ -191,11 +191,11 @@ bool UserDictManager::Synchronize(const string& dict_name) {
   for (fs::directory_iterator it(sync_dir), end; it != end; ++it) {
     if (!fs::is_directory(it->path()))
       continue;
-    fs::path file_path = it->path() / snapshot_file;
+    path file_path = path(it->path()) / snapshot_file;
     if (fs::exists(file_path)) {
-      LOG(INFO) << "merging snapshot file: " << file_path.string();
-      if (!Restore(file_path.string())) {
-        LOG(ERROR) << "failed to merge snapshot file: " << file_path.string();
+      LOG(INFO) << "merging snapshot file: " << file_path;
+      if (!Restore(file_path)) {
+        LOG(ERROR) << "failed to merge snapshot file: " << file_path;
         success = false;
       }
     }

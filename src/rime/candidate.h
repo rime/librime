@@ -20,6 +20,7 @@ class Candidate {
 
   static an<Candidate> GetGenuineCandidate(const an<Candidate>& cand);
   static vector<of<Candidate>> GetGenuineCandidates(const an<Candidate>& cand);
+  int compare(const Candidate& other);
 
   // recognized by translators in learning phase
   const string& type() const { return type_; }
@@ -50,7 +51,7 @@ class Candidate {
 using CandidateQueue = list<of<Candidate>>;
 using CandidateList = vector<of<Candidate>>;
 
-// useful implimentations
+// useful implementations
 
 class SimpleCandidate : public Candidate {
  public:

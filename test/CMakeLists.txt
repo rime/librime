@@ -13,5 +13,6 @@ endif(BUILD_SHARED_LIBS)
 file(GLOB test_data_files ${PROJECT_SOURCE_DIR}/data/test/*.yaml)
 file(COPY ${test_data_files} DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 
-set(rime_test_executable ${EXECUTABLE_OUTPUT_PATH}/rime_test${ext})
-add_test(rime_test ${rime_test_executable})
+add_test(NAME rime_test
+  COMMAND rime_test
+  WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})

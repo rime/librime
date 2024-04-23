@@ -5,7 +5,6 @@
 // 2013-04-18 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
 #include <rime/dict/table_db.h>
 #include <rime/dict/user_db.h>
 
@@ -28,7 +27,7 @@ static bool rime_table_entry_parser(const Tsv& row,
   UserDbValue v;
   if (row.size() >= 3 && !row[2].empty()) {
     try {
-      v.commits = boost::lexical_cast<int>(row[2]);
+      v.commits = std::stoi(row[2]);
       const double kS = 1e8;
       v.dee = (v.commits + 1) / kS;
     } catch (...) {
@@ -51,7 +50,7 @@ static bool rime_table_entry_formatter(const string& key,
     return false;
   boost::algorithm::trim(row[0]);  // remove trailing space
   row[0].swap(row[1]);
-  row.push_back(boost::lexical_cast<string>(v.commits));
+  row.push_back(std::to_string(v.commits));
   return true;
 }
 
@@ -61,11 +60,11 @@ const TextFormat TableDb::format = {
     "Rime table",
 };
 
-TableDb::TableDb(const string& file_name, const string& db_name)
-    : TextDb(file_name, db_name, "tabledb", TableDb::format) {}
+TableDb::TableDb(const path& file_path, const string& db_name)
+    : TextDb(file_path, db_name, "tabledb", TableDb::format) {}
 
-StableDb::StableDb(const string& file_name, const string& db_name)
-    : TableDb(file_name, db_name) {}
+StableDb::StableDb(const path& file_path, const string& db_name)
+    : TableDb(file_path, db_name) {}
 
 bool StableDb::Open() {
   if (loaded())

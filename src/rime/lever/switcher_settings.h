@@ -7,8 +7,8 @@
 #ifndef RIME_SWITCHER_SETTINGS_H_
 #define RIME_SWITCHER_SETTINGS_H_
 
-#include <boost/filesystem.hpp>
 #include "custom_settings.h"
+#include <rime/common.h>
 
 namespace rime {
 
@@ -37,7 +37,7 @@ class SwitcherSettings : public CustomSettings {
   const string& hotkeys() const { return hotkeys_; }
 
  private:
-  void GetAvailableSchemasFromDirectory(const boost::filesystem::path& dir);
+  void GetAvailableSchemasFromDirectory(const path& dir);
   void GetSelectedSchemasFromConfig();
   void GetHotkeysFromConfig();
 

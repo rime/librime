@@ -3,21 +3,21 @@ name: Commit CI
 on:
   push:
     branches:
-      - '*'
+      - '!master'
     tags:
       - '![0-9]+.*'
   pull_request:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     steps:
       - name: Checkout last commit
-        uses: actions/checkout@v3
-      - name: Install clang-format
-        run: sudo apt install -y clang-format
-      - name: Lint
-        run: find src -name '*.cc' -o -name '*.h' | xargs clang-format -Werror --dry-run || { echo Please lint your code by '"'"find src -name '*.cc' -o -name '*.h' | xargs clang-format -i"'"'.; false; }
+        uses: actions/checkout@v4
+      - name: Install latest lang-format
+        run: brew update && brew install clang-format
+      - name: Code style lint
+        run: make clang-format-lint
 
   linux:
     needs: lint
@@ -30,3 +30,7 @@ jobs:
   windows:
     needs: lint
     uses: ./.github/workflows/windows-build.yml
+
+  docker:
+    needs: lint
+    uses: ./.github/workflows/docker-build.yml

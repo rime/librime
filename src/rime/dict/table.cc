@@ -21,37 +21,6 @@ const int kTableFormatLowestCompatible = 4.0;
 const char kTableFormatPrefix[] = "Rime::Table/";
 const size_t kTableFormatPrefixLen = sizeof(kTableFormatPrefix) - 1;
 
-class TableQuery {
- public:
-  TableQuery(table::Index* index) : lv1_index_(index) { Reset(); }
-
-  TableAccessor Access(SyllableId syllable_id, double credibility = 0.0) const;
-
-  // down to next level
-  bool Advance(SyllableId syllable_id, double credibility = 0.0);
-
-  // up one level
-  bool Backdate();
-
-  // back to root
-  void Reset();
-
-  size_t level() const { return level_; }
-
- protected:
-  size_t level_ = 0;
-  Code index_code_;
-  vector<double> credibility_;
-
- private:
-  bool Walk(SyllableId syllable_id);
-
-  table::HeadIndex* lv1_index_ = nullptr;
-  table::TrunkIndex* lv2_index_ = nullptr;
-  table::TrunkIndex* lv3_index_ = nullptr;
-  table::TailIndex* lv4_index_ = nullptr;
-};
-
 TableAccessor::TableAccessor(const Code& index_code,
                              const List<table::Entry>* list,
                              double credibility)
@@ -277,18 +246,18 @@ bool Table::OnLoad() {
   return true;
 }
 
-Table::Table(const string& file_name) : MappedFile(file_name) {}
+Table::Table(const path& file_path) : MappedFile(file_path) {}
 
 Table::~Table() {}
 
 bool Table::Load() {
-  LOG(INFO) << "loading table file: " << file_name();
+  LOG(INFO) << "loading table file: " << file_path();
 
   if (IsOpen())
     Close();
 
   if (!OpenReadOnly()) {
-    LOG(ERROR) << "Error opening table file '" << file_name() << "'.";
+    LOG(ERROR) << "Error opening table file '" << file_path() << "'.";
     return false;
   }
 
@@ -328,7 +297,7 @@ bool Table::Load() {
 }
 
 bool Table::Save() {
-  LOG(INFO) << "saving table file: " << file_name();
+  LOG(INFO) << "saving table file: " << file_path();
 
   if (!index_) {
     LOG(ERROR) << "the table has not been constructed!";
@@ -355,14 +324,14 @@ bool Table::Build(const Syllabary& syllabary,
   LOG(INFO) << "num entries: " << num_entries;
   LOG(INFO) << "estimated file size: " << estimated_file_size;
   if (!Create(estimated_file_size)) {
-    LOG(ERROR) << "Error creating table file '" << file_name() << "'.";
+    LOG(ERROR) << "Error creating table file '" << file_path() << "'.";
     return false;
   }
 
   LOG(INFO) << "creating metadata.";
   metadata_ = Allocate<table::Metadata>();
   if (!metadata_) {
-    LOG(ERROR) << "Error creating metadata in file '" << file_name() << "'.";
+    LOG(ERROR) << "Error creating metadata in file '" << file_path() << "'.";
     return false;
   }
   metadata_->dict_file_checksum = dict_file_checksum;

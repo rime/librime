@@ -52,6 +52,7 @@ class ConcreteEngine : public Engine {
   vector<of<Filter>> filters_;
   vector<of<Formatter>> formatters_;
   vector<of<Processor>> post_processors_;
+  an<Switcher> switcher_;
 };
 
 // implementations
@@ -82,6 +83,11 @@ ConcreteEngine::ConcreteEngine() {
       [this](Context* ctx, const string& property) {
         OnPropertyUpdate(ctx, property);
       });
+
+  switcher_ = New<Switcher>(this);
+  // saved options should be loaded only once per input session
+  switcher_->RestoreSavedOptions();
+
   InitializeComponents();
   InitializeOptions();
 }
@@ -159,10 +165,12 @@ void ConcreteEngine::Compose(Context* ctx) {
   }
   CalculateSegmentation(&comp);
   TranslateSegments(&comp);
-  DLOG(INFO) << "composition: " << comp.GetDebugText();
+  DLOG(INFO) << "composition: [" << comp.GetDebugText() << "]";
 }
 
 void ConcreteEngine::CalculateSegmentation(Segmentation* segments) {
+  DLOG(INFO) << "CalculateSegmentation, segments: " << segments->size()
+             << ", finished? " << segments->HasFinishedSegmentation();
   while (!segments->HasFinishedSegmentation()) {
     size_t start_pos = segments->GetCurrentStartPosition();
     size_t end_pos = segments->GetCurrentEndPosition();
@@ -186,27 +194,29 @@ void ConcreteEngine::CalculateSegmentation(Segmentation* segments) {
       segments->Forward();
   }
   // start an empty segment only at the end of a confirmed composition.
-  segments->Trim();
+  if (!segments->empty() && !segments->back().HasTag("placeholder"))
+    segments->Trim();
   if (!segments->empty() && segments->back().status >= Segment::kSelected)
     segments->Forward();
 }
 
 void ConcreteEngine::TranslateSegments(Segmentation* segments) {
+  DLOG(INFO) << "TranslateSegments: " << *segments;
   for (Segment& segment : *segments) {
+    DLOG(INFO) << "segment [" << segment.start << ", " << segment.end
+               << "), status: " << segment.status;
     if (segment.status >= Segment::kGuess)
       continue;
     size_t len = segment.end - segment.start;
-    if (len == 0)
-      continue;
     string input = segments->input().substr(segment.start, len);
-    DLOG(INFO) << "translating segment: " << input;
+    DLOG(INFO) << "translating segment: [" << input << "]";
     auto menu = New<Menu>();
     for (auto& translator : translators_) {
       auto translation = translator->Query(input, segment);
       if (!translation)
         continue;
       if (translation->exhausted()) {
-        LOG(INFO) << translator->name_space() << " made a futile translation.";
+        DLOG(INFO) << translator->name_space() << " made a futile translation.";
         continue;
       }
       menu->AddTranslation(translation);
@@ -274,6 +284,7 @@ void ConcreteEngine::OnSelect(Context* ctx) {
 void ConcreteEngine::ApplySchema(Schema* schema) {
   if (!schema)
     return;
+  switcher_->SetActiveSchema(schema->schema_id());
   schema_.reset(schema);
   context_->Clear();
   context_->ClearTransientOptions();
@@ -288,10 +299,10 @@ void ConcreteEngine::InitializeComponents() {
   translators_.clear();
   filters_.clear();
 
-  if (auto switcher = New<Switcher>(this)) {
-    processors_.push_back(switcher);
+  if (switcher_) {
+    processors_.push_back(switcher_);
     if (schema_->schema_id() == ".default") {
-      if (Schema* schema = switcher->CreateSchema()) {
+      if (Schema* schema = switcher_->CreateSchema()) {
         schema_.reset(schema);
       }
     }
@@ -381,10 +392,13 @@ void ConcreteEngine::InitializeComponents() {
 }
 
 void ConcreteEngine::InitializeOptions() {
+  LOG(INFO) << "ConcreteEngine::InitializeOptions";
   // reset custom switches
   Config* config = schema_->config();
   Switches switches(config);
   switches.FindOption([this](Switches::SwitchOption option) {
+    LOG(INFO) << "found switch option: " << option.option_name
+              << ", reset: " << option.reset_value;
     if (option.reset_value >= 0) {
       if (option.type == Switches::kToggleOption) {
         context_->set_option(option.option_name, (option.reset_value != 0));

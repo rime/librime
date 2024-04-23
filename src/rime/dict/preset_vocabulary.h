@@ -28,7 +28,7 @@ class PresetVocabulary {
   void set_max_phrase_length(int length) { max_phrase_length_ = length; }
   void set_min_phrase_weight(double weight) { min_phrase_weight_ = weight; }
 
-  static string DictFilePath(const string& vacabulary);
+  static path DictFilePath(const string& vacabulary);
 
  protected:
   the<VocabularyDb> db_;

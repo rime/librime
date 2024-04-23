@@ -63,16 +63,16 @@ struct TableEncodingRule {
 };
 
 // for rule-based phrase encoding
-class TableEncoder : public Encoder {
+class RIME_API TableEncoder : public Encoder {
  public:
-  RIME_API TableEncoder(PhraseCollector* collector = NULL);
+  TableEncoder(PhraseCollector* collector = NULL);
 
-  RIME_API bool LoadSettings(Config* config);
+  bool LoadSettings(Config* config);
 
-  RIME_API bool Encode(const RawCode& code, string* result);
+  bool Encode(const RawCode& code, string* result);
   bool EncodePhrase(const string& phrase, const string& value);
 
-  RIME_API bool IsCodeExcluded(const string& code);
+  bool IsCodeExcluded(const string& code);
 
   bool loaded() const { return loaded_; }
   const vector<TableEncodingRule>& encoding_rules() const {

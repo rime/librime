@@ -5,15 +5,9 @@
 `librime` is tested to work on Windows with the following combinations of build
 tools and libraries:
 
-  - Visual Studio 2017
-  - [Boost](http://www.boost.org/)=1.64
-  - [cmake](http://www.cmake.org/)>=3.8
-
-and
-
-  - Visual Studio 2015
-  - [Boost](http://www.boost.org/)=1.60
-  - [cmake](http://www.cmake.org/)>=3.8
+  - Visual Studio 2022 or LLVM 16
+  - [Boost](http://www.boost.org/)>=1.83
+  - [cmake](http://www.cmake.org/)>=3.10
 
 Boost and cmake versions need to match higher VS version.
 
@@ -29,17 +23,21 @@ or [download from GitHub](https://github.com/rime/librime).
 ## Setup a build environment
 
 Copy `env.bat.template` to `env.bat` and edit the file according to your setup.
-Specifically, make sure `BOOST_ROOT` is set to the root directory of Boost
-source tree; modify `BJAM_TOOLSET`, `CMAKE_GENERATOR` and `PLATFORM_TOOLSET` if
-using a different version of Visual Studio; also set `DEVTOOLS_PATH` for build
-tools installed to custom location.
+If Boost libraries are available, set `BOOST_ROOT` to the root directory of
+Boost source tree; modify `BJAM_TOOLSET`, `CMAKE_GENERATOR` and
+`PLATFORM_TOOLSET` if using a different version of Visual Studio; also set
+`DEVTOOLS_PATH` for build tools installed to custom location.
 
 When prepared, do the following in a *Developer Command Prompt* window.
 
-## Build Boost
+## Install Boost
+
+This step downloads Boost libraries in librime's default search path.
+If you have installed Boost libraries elsewhere, skip this step and set
+the environment varialble `BOOST_ROOT` to the installed path.
 
 ``` batch
-build.bat boost
+install-boost.bat
 ```
 
 ## Build third-party libraries
@@ -55,10 +53,10 @@ This builds dependent libraries in `librime\deps\*`, and copies artifacts to
 ``` batch
 build.bat librime
 ```
-This creates `build\lib\Release\rime.dll`.
+This creates `build\bin\Release\rime.dll`.
 
-Build artifacts - the shared library along with API headers and supporting files
-are gathered in `dist` directory.
+Build artifacts: the shared library along with API headers and supporting files
+can be found in `dist` directory.
 
 ## Try it in the console
 
@@ -66,10 +64,7 @@ are gathered in `dist` directory.
 is working.
 
 ``` batch
-copy /Y build\lib\Release\rime.dll build\bin
 cd build\bin
-echo congmingdeRime{space}shurufa | Release\rime_api_console.exe > output.txt
+Release\rime_api_console.exe
+congmingdeRime shurufa
 ```
-
-Instead of redirecting output to a file, you can set appropriate code page
-(`chcp 65001`) and font in the console to work with the REPL interactively.

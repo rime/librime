@@ -5,7 +5,7 @@
 // 2011-04-20 GONG Chen <chen.sst@gmail.com>
 //
 #include <sstream>
-#include <boost/format.hpp>
+#include <iomanip>
 #include <rime/key_event.h>
 #include <rime/key_table.h>
 
@@ -36,15 +36,16 @@ string KeyEvent::repr() const {
     return modifiers.str() + name;
   }
   // no name :-| return its hex value
-  string value;
+  std::ostringstream value;
+  value << "0x" << std::setfill('0');
   if (keycode_ <= 0xffff) {
-    value = boost::str(boost::format("0x%4x") % keycode_);
+    value << std::setw(4) << std::hex << keycode_;
   } else if (keycode_ <= 0xffffff) {
-    value = boost::str(boost::format("0x%6x") % keycode_);
+    value << std::setw(6) << std::hex << keycode_;
   } else {
     return "(unknown)";  // invalid keycode
   }
-  return modifiers.str() + value;
+  return modifiers.str() + value.str();
 }
 
 bool KeyEvent::Parse(const string& repr) {

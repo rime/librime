@@ -31,6 +31,9 @@ an<Translation> EchoTranslator::Query(const string& input,
                                       const Segment& segment) {
   DLOG(INFO) << "input = '" << input << "', [" << segment.start << ", "
              << segment.end << ")";
+  if (input.empty()) {
+    return nullptr;
+  }
   auto candidate =
       New<SimpleCandidate>("raw", segment.start, segment.end, input);
   if (candidate) {

@@ -3,15 +3,13 @@ set -ex
 
 RIME_ROOT="$(cd "$(dirname "$0")"; pwd)"
 
-boost_version="${boost_version=1.78.0}"
-boost_x_y_z="${boost_version//./_}"
+boost_version="${boost_version=1.84.0}"
 
-BOOST_ROOT="${BOOST_ROOT=${RIME_ROOT}/deps/boost_${boost_x_y_z}}"
+BOOST_ROOT="${BOOST_ROOT=${RIME_ROOT}/deps/boost-${boost_version}}"
 
-boost_tarball="boost_${boost_x_y_z}.tar.bz2"
-download_url="https://boostorg.jfrog.io/artifactory/main/release/${boost_version}/source/${boost_tarball}"
-boost_tarball_sha256sum_1_78_0='8681f175d4bdb26c52222665793eef08490d7758529330f98d3b29dd0735bccc  boost_1_78_0.tar.bz2'
-boost_tarball_sha256sum="${boost_tarball_sha256sum=${boost_tarball_sha256sum_1_78_0}}"
+boost_tarball="boost-${boost_version}.tar.xz"
+download_url="https://github.com/boostorg/boost/releases/download/boost-${boost_version}/${boost_tarball}"
+boost_tarball_sha256sum="2e64e5d79a738d0fa6fb546c6e5c2bd28f88d268a2a080546f74e5ff98f29d0e  ${boost_tarball}"
 
 download_boost_source() {
     cd "${RIME_ROOT}/deps"
@@ -19,11 +17,10 @@ download_boost_source() {
         curl -LO "${download_url}"
     fi
     echo "${boost_tarball_sha256sum}" | shasum -a 256 -c
-    tar --bzip2 -xf "${boost_tarball}"
+    tar -xJf "${boost_tarball}"
     [[ -f "${BOOST_ROOT}/bootstrap.sh" ]]
 }
 
-boost_libs="${boost_libs=filesystem,regex,system}"
 boost_cxxflags='-arch arm64 -arch x86_64'
 
 build_boost_macos() {
@@ -41,8 +38,11 @@ if [[ $# -eq 0 || " $* " =~ ' --download ' ]]; then
     else
         echo "found boost at ${BOOST_ROOT}"
     fi
+    cd "${BOOST_ROOT}"
+    ./bootstrap.sh
+    ./b2 headers
 fi
-if [[ $# -eq 0 || " $* " =~ ' --build ' ]]; then
+if [[ ($# -eq 0 || " $* " =~ ' --build ') && -n "${boost_libs}" ]]; then
     if [[ "$OSTYPE" =~ 'darwin' ]]; then
         build_boost_macos
     fi

@@ -7,35 +7,10 @@
 // 2011-06-30 GONG Chen <chen.sst@gmail.com>
 //
 #include <fstream>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/interprocess/file_mapping.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <rime/dict/mapped_file.h>
-
-#ifdef BOOST_RESIZE_FILE
-
-#define RESIZE_FILE boost::filesystem::resize_file
-
-#else
-
-#ifdef _WIN32
-#include <windows.h>
-#define RESIZE_FILE(P, SZ) (resize_file_api(P, SZ) != 0)
-static BOOL resize_file_api(const char* p, boost::uintmax_t size) {
-  HANDLE handle = CreateFileA(p, GENERIC_WRITE, 0, 0, OPEN_EXISTING,
-                              FILE_ATTRIBUTE_NORMAL, 0);
-  LARGE_INTEGER sz;
-  sz.QuadPart = size;
-  return handle != INVALID_HANDLE_VALUE &&
-         ::SetFilePointerEx(handle, sz, 0, FILE_BEGIN) &&
-         ::SetEndOfFile(handle) && ::CloseHandle(handle);
-}
-#else
-#include <unistd.h>
-#define RESIZE_FILE(P, SZ) (::truncate(P, SZ) == 0)
-#endif  // _WIN32
-
-#endif  // BOOST_RESIZE_FILE
 
 namespace rime {
 
@@ -46,11 +21,11 @@ class MappedFileImpl {
     kOpenReadWrite,
   };
 
-  MappedFileImpl(const string& file_name, OpenMode mode) {
+  MappedFileImpl(const path& file_path, OpenMode mode) {
     boost::interprocess::mode_t file_mapping_mode =
         (mode == kOpenReadOnly) ? boost::interprocess::read_only
                                 : boost::interprocess::read_write;
-    file_.reset(new boost::interprocess::file_mapping(file_name.c_str(),
+    file_.reset(new boost::interprocess::file_mapping(file_path.c_str(),
                                                       file_mapping_mode));
     region_.reset(
         new boost::interprocess::mapped_region(*file_, file_mapping_mode));
@@ -68,7 +43,7 @@ class MappedFileImpl {
   the<boost::interprocess::mapped_region> region_;
 };
 
-MappedFile::MappedFile(const string& file_name) : file_name_(file_name) {}
+MappedFile::MappedFile(const path& file_path) : file_path_(file_path) {}
 
 MappedFile::~MappedFile() {
   if (file_) {
@@ -78,12 +53,12 @@ MappedFile::~MappedFile() {
 
 bool MappedFile::Create(size_t capacity) {
   if (Exists()) {
-    LOG(INFO) << "overwriting file '" << file_name_ << "'.";
+    LOG(INFO) << "overwriting file '" << file_path_ << "'.";
     Resize(capacity);
   } else {
-    LOG(INFO) << "creating file '" << file_name_ << "'.";
+    LOG(INFO) << "creating file '" << file_path_ << "'.";
     std::filebuf fbuf;
-    fbuf.open(file_name_.c_str(), std::ios_base::in | std::ios_base::out |
+    fbuf.open(file_path_.c_str(), std::ios_base::in | std::ios_base::out |
                                       std::ios_base::trunc |
                                       std::ios_base::binary);
     if (capacity > 0) {
@@ -93,27 +68,27 @@ bool MappedFile::Create(size_t capacity) {
     fbuf.close();
   }
   LOG(INFO) << "opening file for read/write access.";
-  file_.reset(new MappedFileImpl(file_name_, MappedFileImpl::kOpenReadWrite));
+  file_.reset(new MappedFileImpl(file_path_, MappedFileImpl::kOpenReadWrite));
   size_ = 0;
   return bool(file_);
 }
 
 bool MappedFile::OpenReadOnly() {
   if (!Exists()) {
-    LOG(ERROR) << "attempt to open non-existent file '" << file_name_ << "'.";
+    LOG(ERROR) << "attempt to open non-existent file '" << file_path_ << "'.";
     return false;
   }
-  file_.reset(new MappedFileImpl(file_name_, MappedFileImpl::kOpenReadOnly));
+  file_.reset(new MappedFileImpl(file_path_, MappedFileImpl::kOpenReadOnly));
   size_ = file_->get_size();
   return bool(file_);
 }
 
 bool MappedFile::OpenReadWrite() {
   if (!Exists()) {
-    LOG(ERROR) << "attempt to open non-existent file '" << file_name_ << "'.";
+    LOG(ERROR) << "attempt to open non-existent file '" << file_path_ << "'.";
     return false;
   }
-  file_.reset(new MappedFileImpl(file_name_, MappedFileImpl::kOpenReadWrite));
+  file_.reset(new MappedFileImpl(file_path_, MappedFileImpl::kOpenReadWrite));
   size_ = 0;
   return bool(file_);
 }
@@ -126,7 +101,7 @@ void MappedFile::Close() {
 }
 
 bool MappedFile::Exists() const {
-  return boost::filesystem::exists(file_name_);
+  return std::filesystem::exists(file_path_);
 }
 
 bool MappedFile::IsOpen() const {
@@ -147,7 +122,7 @@ bool MappedFile::ShrinkToFit() {
 bool MappedFile::Remove() {
   if (IsOpen())
     Close();
-  return boost::interprocess::file_mapping::remove(file_name_.c_str());
+  return boost::interprocess::file_mapping::remove(file_path_.c_str());
 }
 
 bool MappedFile::Resize(size_t capacity) {
@@ -155,7 +130,7 @@ bool MappedFile::Resize(size_t capacity) {
   if (IsOpen())
     Close();
   try {
-    RESIZE_FILE(file_name_.c_str(), capacity);
+    std::filesystem::resize_file(file_path_, capacity);
   } catch (...) {
     return false;
   }

@@ -10,7 +10,7 @@
 #include <future>
 #include <mutex>
 #include <queue>
-#include <boost/any.hpp>
+#include <any>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/messenger.h>
@@ -19,7 +19,7 @@ namespace rime {
 
 class Deployer;
 
-using TaskInitializer = boost::any;
+using TaskInitializer = std::any;
 
 class DeploymentTask : public Class<DeploymentTask, TaskInitializer> {
  public:
@@ -32,19 +32,20 @@ class DeploymentTask : public Class<DeploymentTask, TaskInitializer> {
 class Deployer : public Messenger {
  public:
   // read-only access after library initialization {
-  string shared_data_dir;
-  string user_data_dir;
-  string prebuilt_data_dir;
-  string staging_dir;
-  string sync_dir;
+  path shared_data_dir;
+  path user_data_dir;
+  path prebuilt_data_dir;
+  path staging_dir;
+  path sync_dir;
   string user_id;
   string distribution_name;
   string distribution_code_name;
   string distribution_version;
+  string app_name;
   // }
 
-  Deployer();
-  ~Deployer();
+  RIME_API Deployer();
+  RIME_API ~Deployer();
 
   bool RunTask(const string& task_name,
                TaskInitializer arg = TaskInitializer());
@@ -63,7 +64,7 @@ class Deployer : public Messenger {
   void JoinWorkThread();
   void JoinMaintenanceThread();
 
-  string user_data_sync_dir() const;
+  path user_data_sync_dir() const;
 
  private:
   std::queue<of<DeploymentTask>> pending_tasks_;

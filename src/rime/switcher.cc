@@ -29,7 +29,6 @@ Switcher::Switcher(const Ticket& ticket) : Processor(ticket) {
   user_config_.reset(Config::Require("user_config")->Create("user"));
   InitializeComponents();
   LoadSettings();
-  RestoreSavedOptions();
 }
 
 Switcher::~Switcher() {
@@ -161,6 +160,15 @@ int Switcher::ForEachSchemaListEntry(
       break;
   }
   return num_processed_entries;
+}
+
+void Switcher::SetActiveSchema(const string& schema_id) {
+  if (user_config_) {
+    user_config_->SetString("var/previously_selected_schema", schema_id);
+    user_config_->SetInt("var/schema_access_time/" + schema_id, time(NULL));
+    // persist recently used schema and options that have changed
+    user_config_->Save();
+  }
 }
 
 Schema* Switcher::CreateSchema() {

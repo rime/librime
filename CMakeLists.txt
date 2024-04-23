@@ -1,11 +1,11 @@
 set(CMAKE_USER_MAKE_RULES_OVERRIDE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/c_flag_overrides.cmake)
 set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_flag_overrides.cmake)
 
-project(rime)
 cmake_minimum_required(VERSION 3.12)
-set(CMAKE_CXX_STANDARD 14)
+project(rime)
+set(CMAKE_CXX_STANDARD 17)
 
-set(rime_version 1.8.5)
+set(rime_version 1.11.0)
 set(rime_soversion 1)
 
 add_definitions(-DRIME_VERSION="${rime_version}")
@@ -20,14 +20,15 @@ option(BUILD_SAMPLE "Build sample Rime plugin" OFF)
 option(BUILD_TEST "Build and run tests" ON)
 option(BUILD_SEPARATE_LIBS "Build separate rime-* libraries" OFF)
 option(ENABLE_LOGGING "Enable logging with google-glog library" ON)
-option(BOOST_USE_CXX11 "Boost has been built with C++11 support" OFF)
-option(BOOST_USE_SIGNALS2 "Boost use signals2 instead of signals" ON)
+option(ALSO_LOG_TO_STDERR "Log to stderr as well as log file" OFF)
 option(ENABLE_ASAN "Enable Address Sanitizer (Unix Only)" OFF)
 option(INSTALL_PRIVATE_HEADERS "Install private headers (usually needed for externally built Rime plugins)" OFF)
 option(ENABLE_EXTERNAL_PLUGINS "Enable loading of externally built Rime plugins (from directory set by RIME_PLUGINS_DIR variable)" OFF)
+option(ENABLE_THREADING "Enable threading for deployer" ON)
+option(ENABLE_TIMESTAMP "Embed timestamp to schema artifacts" ON)
 
-set(RIME_DATA_DIR "${CMAKE_INSTALL_FULL_DATADIR}/rime-data" CACHE STRING "Target directory for Rime data")
-set(RIME_PLUGINS_DIR "${CMAKE_INSTALL_FULL_LIBDIR}/rime-plugins" CACHE STRING "Target directory for externally built Rime plugins")
+set(RIME_DATA_DIR "rime-data" CACHE STRING "Target directory for Rime data")
+set(RIME_PLUGINS_DIR "rime-plugins" CACHE STRING "Target directory for externally built Rime plugins")
 
 if(WIN32)
   set(ext ".exe")
@@ -58,22 +59,15 @@ if(MSVC)
   set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
-if(NOT BOOST_USE_CXX11)
-  add_definitions("-DBOOST_NO_CXX11_SCOPED_ENUMS")
-endif()
-
-set(BOOST_COMPONENTS filesystem regex system)
-
-if(BOOST_USE_SIGNALS2)
-  set(RIME_BOOST_SIGNALS2 1)
+if(LINUX)
+  find_package(Boost 1.74.0 REQUIRED COMPONENTS regex)
 else()
-  set(BOOST_COMPONENTS ${BOOST_COMPONENTS} signals)
+  find_package(Boost 1.77.0)
 endif()
-
-find_package(Boost 1.46.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
   link_directories(${Boost_LIBRARY_DIRS})
+  add_definitions(-DBOOST_DLL_USE_STD_FS)
 endif()
 
 if(ENABLE_LOGGING)
@@ -86,16 +80,37 @@ if(ENABLE_LOGGING)
   find_package(Glog REQUIRED)
   if(Glog_FOUND)
     include_directories(${Glog_INCLUDE_PATH})
-  endif()
-  if(Glog_STATIC)
-    add_definitions(-DGOOGLE_GLOG_DLL_DECL=)
+    if(WIN32)
+      add_compile_definitions("GLOG_DEPRECATED=__declspec(deprecated)")
+      add_compile_definitions(GLOG_NO_ABBREVIATED_SEVERITIES)
+    else()
+      add_compile_definitions("GLOG_DEPRECATED=__attribute__((deprecated))")
+    endif()
+    if(Glog_STATIC)
+      add_compile_definitions(GLOG_EXPORT=)
+      add_compile_definitions(GLOG_NO_EXPORT=)
+    else()
+      add_compile_definitions("GLOG_EXPORT=__attribute__((visibility(\"default\")))")
+      add_compile_definitions("GLOG_NO_EXPORT=__attribute__((visibility(\"default\")))")
+    endif()
   endif()
 
   set(RIME_ENABLE_LOGGING 1)
 
+  if (ALSO_LOG_TO_STDERR)
+     set(RIME_ALSO_LOG_TO_STDERR 1)
+  endif()
 endif()
 
 find_package(Threads)
+
+if(NOT ENABLE_THREADING)
+  add_definitions(-DRIME_NO_THREADING)
+endif()
+
+if(NOT ENABLE_TIMESTAMP)
+  add_definitions(-DRIME_NO_TIMESTAMP)
+endif()
 
 if(BUILD_TEST)
   find_package(GTest REQUIRED)
@@ -108,6 +123,9 @@ endif()
 find_package(YamlCpp REQUIRED)
 if(YamlCpp_FOUND)
   include_directories(${YamlCpp_INCLUDE_PATH})
+endif()
+if(YamlCpp_STATIC)
+  add_definitions(-DYAML_CPP_STATIC_DEFINE)
 endif()
 
 find_package(LevelDb REQUIRED)
@@ -149,16 +167,15 @@ if(MSVC)
   # https://stackoverflow.com/a/31264946
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
   set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
-  if(MSVC10)
-    # stdint.h is missing from VS2010
-    include_directories(${PROJECT_SOURCE_DIR}/include/msvc)
-  endif()
-  # Force Boost.Uuid to use wincrypt as random provider instead of bcrypt for Windows XP compatibility
-  add_definitions("/wd4244 /wd4996 /DBOOST_UUID_RANDOM_PROVIDER_FORCE_WINCRYPT")
+  add_definitions("/wd4244 /wd4996")
+
+  # large address aware
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /LARGEADDRESSAWARE")
 endif()
 
 if(UNIX)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 endif()
 
 if (NOT CMAKE_BUILD_PARALLEL_LEVEL)
@@ -179,21 +196,21 @@ if(NOT DEFINED BIN_INSTALL_DIR)
 endif()
 # }
 
-# uninstall target
+# remove target
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
   "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
   IMMEDIATE @ONLY)
-add_custom_target(uninstall
+add_custom_target(remove
   COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly|GNU" OR MINGW)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly|GNU|Darwin" OR MINGW)
   set(prefix "${CMAKE_INSTALL_PREFIX}")
   set(exec_prefix "${CMAKE_INSTALL_PREFIX}")
   set(bindir "${CMAKE_INSTALL_FULL_BINDIR}")
   set(libdir "${CMAKE_INSTALL_FULL_LIBDIR}")
-  set(pkgdatadir "${RIME_DATA_DIR}")
-  set(pluginsdir "${RIME_PLUGINS_DIR}")
+  set(pkgdatadir "${CMAKE_INSTALL_FULL_DATADIR}/${RIME_DATA_DIR}")
+  set(pluginsdir "${CMAKE_INSTALL_FULL_LIBDIR}/${RIME_PLUGINS_DIR}")
   set(includedir "${CMAKE_INSTALL_FULL_INCLUDEDIR}")
   configure_file(
       ${PROJECT_SOURCE_DIR}/rime.pc.in
@@ -225,7 +242,7 @@ endif()
 
 if(BUILD_DATA)
   file(GLOB rime_preset_data_files ${PROJECT_SOURCE_DIR}/data/preset/*.yaml)
-  install(FILES ${rime_preset_data_files} DESTINATION ${RIME_DATA_DIR})
+  install(FILES ${rime_preset_data_files} DESTINATION ${CMAKE_INSTALL_FULL_DATADIR}/${RIME_DATA_DIR})
 endif()
 
 if(BUILD_SHARED_LIBS)

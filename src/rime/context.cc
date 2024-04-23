@@ -12,6 +12,8 @@
 
 namespace rime {
 
+const string kSelectedBeforeEditing = "selected_before_editing";
+
 bool Context::Commit() {
   if (!IsComposing())
     return false;
@@ -121,6 +123,28 @@ bool Context::Select(size_t index) {
   return false;
 }
 
+bool Context::Highlight(size_t index) {
+  if (composition_.empty() || !composition_.back().menu)
+    return false;
+  Segment& seg(composition_.back());
+  size_t new_index = index;
+  size_t candidate_count = seg.menu->Prepare(index + 1);
+  if (index >= candidate_count) {
+    DLOG(INFO) << "selection index exceeds candidate pool, fallback to last";
+    new_index = candidate_count - 1;
+  }
+  size_t previous_index = seg.selected_index;
+  if (previous_index == new_index) {
+    DLOG(INFO) << "selection has not changed, currently at " << new_index;
+    return false;
+  }
+  seg.selected_index = new_index;
+  update_notifier_(this);
+  DLOG(INFO) << "selection changed from: " << previous_index
+             << " to: " << new_index;
+  return true;
+}
+
 bool Context::DeleteCandidate(
     function<an<Candidate>(Segment& seg)> get_candidate) {
   if (composition_.empty())
@@ -163,16 +187,20 @@ bool Context::ConfirmCurrentSelection() {
   return true;
 }
 
-bool Context::ConfirmPreviousSelection() {
+void Context::BeginEditing() {
   for (auto it = composition_.rbegin(); it != composition_.rend(); ++it) {
     if (it->status > Segment::kSelected) {
-      return false;
+      return;
     }
     if (it->status == Segment::kSelected) {
-      it->status = Segment::kConfirmed;
-      return true;
+      it->tags.insert(kSelectedBeforeEditing);
+      return;
     }
   }
+}
+
+bool Context::ConfirmPreviousSelection() {
+  BeginEditing();
   return false;
 }
 
@@ -203,6 +231,10 @@ bool Context::ReopenPreviousSelection() {
     if (it->status > Segment::kSelected)
       return false;
     if (it->status == Segment::kSelected) {
+      // do not reopen the previous selection after editing input.
+      if (it->tags.count(kSelectedBeforeEditing) != 0) {
+        return false;
+      }
       while (it != composition_.rbegin()) {
         composition_.pop_back();
       }
@@ -256,6 +288,7 @@ void Context::set_input(const string& value) {
 
 void Context::set_option(const string& name, bool value) {
   options_[name] = value;
+  DLOG(INFO) << "Context::set_option " << name << " = " << value;
   option_update_notifier_(this, name);
 }
 
@@ -281,8 +314,10 @@ string Context::get_property(const string& name) const {
 }
 
 void Context::ClearTransientOptions() {
+  DLOG(INFO) << "Context::ClearTransientOptions";
   auto opt = options_.lower_bound("_");
   while (opt != options_.end() && !opt->first.empty() && opt->first[0] == '_') {
+    DLOG(INFO) << "cleared opption: " << opt->first;
     options_.erase(opt++);
   }
   auto prop = properties_.lower_bound("_");

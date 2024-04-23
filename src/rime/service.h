@@ -56,7 +56,7 @@ class Session {
 class ResourceResolver;
 struct ResourceType;
 
-class Service {
+class RIME_API Service {
  public:
   ~Service();
 

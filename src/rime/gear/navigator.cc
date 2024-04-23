@@ -123,7 +123,7 @@ bool Navigator::End(Context* ctx) {
 }
 
 void Navigator::BeginMove(Context* ctx) {
-  ctx->ConfirmPreviousSelection();
+  ctx->BeginEditing();
   // update spans
   if (input_ != ctx->input() || ctx->caret_pos() > spans_.end()) {
     input_ = ctx->input();

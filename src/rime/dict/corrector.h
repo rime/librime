@@ -94,7 +94,7 @@ class CorrectorComponent : public Corrector::Component {
 class EditDistanceCorrector : public Corrector, public Prism {
  public:
   ~EditDistanceCorrector() override = default;
-  RIME_API explicit EditDistanceCorrector(const string& file_name);
+  RIME_API explicit EditDistanceCorrector(const path& file_path);
 
   RIME_API bool Build(const Syllabary& syllabary,
                       const Script* script = nullptr,
@@ -112,14 +112,14 @@ class EditDistanceCorrector : public Corrector, public Prism {
                                          corrector::Distance threshold);
 };
 
-class NearSearchCorrector : public Corrector {
+class RIME_API NearSearchCorrector : public Corrector {
  public:
   NearSearchCorrector() = default;
   ~NearSearchCorrector() override = default;
-  RIME_API void ToleranceSearch(const Prism& prism,
-                                const string& key,
-                                corrector::Corrections* results,
-                                size_t tolerance) override;
+  void ToleranceSearch(const Prism& prism,
+                       const string& key,
+                       corrector::Corrections* results,
+                       size_t tolerance) override;
 };
 
 template <class... Cs>

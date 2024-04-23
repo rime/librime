@@ -34,16 +34,16 @@ class DictCompiler {
   RIME_API explicit DictCompiler(Dictionary* dictionary);
   RIME_API virtual ~DictCompiler();
 
-  RIME_API bool Compile(const string& schema_file);
+  RIME_API bool Compile(const path& schema_file);
   void set_options(int options) { options_ = options; }
 
  private:
   bool BuildTable(int table_index,
                   EntryCollector& collector,
                   DictSettings* settings,
-                  const vector<string>& dict_files,
+                  const vector<path>& dict_files,
                   uint32_t dict_file_checksum);
-  bool BuildPrism(const string& schema_file,
+  bool BuildPrism(const path& schema_file,
                   uint32_t dict_file_checksum,
                   uint32_t schema_file_checksum);
   bool BuildReverseDb(DictSettings* settings,

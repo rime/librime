@@ -3,7 +3,7 @@
 // Distributed under the BSD License
 //
 
-#include <boost/format.hpp>
+#include <sstream>
 #include <gtest/gtest.h>
 #include <rime/component.h>
 #include <rime/config.h>
@@ -27,14 +27,14 @@ class RimeConfigCompilerTestBase : public ::testing::Test {
 
 class RimeConfigCompilerTest : public RimeConfigCompilerTestBase {
  protected:
-  string test_config_id() const override {
-    return "config_compiler_test";
-  }
+  string test_config_id() const override { return "config_compiler_test"; }
 };
 
 TEST_F(RimeConfigCompilerTest, IncludeLocalReference) {
   for (size_t i = 0; i < 4; ++i) {
-    auto prefix = boost::str(boost::format("include_local_reference/@%u/") % i);
+    std::ostringstream oss;
+    oss << "include_local_reference/@" << i << "/";
+    const auto& prefix(oss.str());
     EXPECT_TRUE(config_->IsNull(prefix + "__include"));
     string actual;
     EXPECT_TRUE(config_->GetString(prefix + "terrans/player", &actual));
@@ -109,9 +109,7 @@ TEST_F(RimeConfigCompilerTest, PatchList) {
 
 class RimeConfigDependencyTest : public RimeConfigCompilerTestBase {
  protected:
-  string test_config_id() const override {
-    return "config_dependency_test";
-  }
+  string test_config_id() const override { return "config_dependency_test"; }
 };
 
 TEST_F(RimeConfigDependencyTest, DependencyChaining) {
@@ -160,9 +158,7 @@ TEST_F(RimeConfigOptionalReferenceTest, OptionalReference) {
 
 class RimeConfigMergeTest : public RimeConfigCompilerTestBase {
  protected:
-  string test_config_id() const override {
-    return "config_merge_test";
-  }
+  string test_config_id() const override { return "config_merge_test"; }
 };
 
 TEST_F(RimeConfigMergeTest, AppendWithInclude) {

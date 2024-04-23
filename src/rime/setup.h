@@ -12,7 +12,7 @@
 namespace rime {
 
 RIME_API extern const char* kDefaultModules[];
-extern const char* kDeployerModules[];
+RIME_API extern const char* kDeployerModules[];
 extern const char* kLegacyModules[];
 
 RIME_API void LoadModules(const char* module_names[]);

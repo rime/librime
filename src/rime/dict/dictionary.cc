@@ -4,7 +4,7 @@
 //
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <rime/algo/syllabifier.h>
 #include <rime/common.h>
 #include <rime/dict/dictionary.h>
@@ -25,11 +25,22 @@ struct Chunk {
   size_t size = 0;
   size_t cursor = 0;
   string remaining_code;  // for predictive queries
+  size_t matching_code_size = 0;
   double credibility = 0.0;
 
   Chunk() = default;
-  Chunk(Table* t, const Code& c, const table::Entry* e, double cr = 0.0)
-      : table(t), code(c), entries(e), size(1), cursor(0), credibility(cr) {}
+  Chunk(Table* t,
+        const Code& c,
+        const table::Entry* e,
+        size_t m,
+        double cr = 0.0)
+      : table(t),
+        code(c),
+        entries(e),
+        size(1),
+        cursor(0),
+        matching_code_size(m),
+        credibility(cr) {}
   Chunk(Table* t, const TableAccessor& a, double cr = 0.0)
       : Chunk(t, a, string(), cr) {}
   Chunk(Table* t, const TableAccessor& a, const string& r, double cr = 0.0)
@@ -39,7 +50,12 @@ struct Chunk {
         size(a.remaining()),
         cursor(0),
         remaining_code(r),
+        matching_code_size(a.index_code().size()),
         credibility(cr) {}
+
+  bool is_exact_match() const { return matching_code_size == code.size(); }
+
+  bool is_predictive_match() const { return matching_code_size < code.size(); }
 };
 
 struct QueryResult {
@@ -51,35 +67,49 @@ bool compare_chunk_by_head_element(const Chunk& a, const Chunk& b) {
     return false;
   if (!b.entries || b.cursor >= b.size)
     return true;
+  if (a.is_exact_match() != b.is_exact_match())
+    return a.is_exact_match() > b.is_exact_match();
   if (a.remaining_code.length() != b.remaining_code.length())
     return a.remaining_code.length() < b.remaining_code.length();
   return a.credibility + a.entries[a.cursor].weight >
          b.credibility + b.entries[b.cursor].weight;  // by weight desc
 }
 
-size_t match_extra_code(const table::Code* extra_code,
-                        size_t depth,
-                        const SyllableGraph& syll_graph,
-                        size_t current_pos) {
+struct CodeMatch {
+  bool success;
+  size_t depth;
+  size_t end_pos;
+};
+
+CodeMatch match_extra_code(const table::Code* extra_code,
+                           size_t depth,
+                           const SyllableGraph& syll_graph,
+                           size_t current_pos,
+                           bool predict_word) {
+  const CodeMatch kFailed{false, 0, 0};
   if (!extra_code || depth >= extra_code->size)
-    return current_pos;  // success
-  if (current_pos >= syll_graph.interpreted_length)
-    return 0;  // failure (possibly success for completion in the future)
+    return {true, depth, current_pos};
+  if (current_pos >= syll_graph.interpreted_length) {
+    if (predict_word)
+      return {true, depth, syll_graph.interpreted_length};
+    else
+      return kFailed;
+  }
   auto index = syll_graph.indices.find(current_pos);
   if (index == syll_graph.indices.end())
-    return 0;
+    return kFailed;
   SyllableId current_syll_id = extra_code->at[depth];
   auto spellings = index->second.find(current_syll_id);
   if (spellings == index->second.end())
-    return 0;
-  size_t best_match = 0;
+    return kFailed;
+  CodeMatch best_match = kFailed;
   for (const SpellingProperties* props : spellings->second) {
-    size_t match_end_pos =
-        match_extra_code(extra_code, depth + 1, syll_graph, props->end_pos);
-    if (!match_end_pos)
+    CodeMatch match = match_extra_code(extra_code, depth + 1, syll_graph,
+                                       props->end_pos, predict_word);
+    if (!match.success)
       continue;
-    if (match_end_pos > best_match)
-      best_match = match_end_pos;
+    if (match.end_pos > best_match.end_pos)
+      best_match = match;
   }
   return best_match;
 }
@@ -126,6 +156,9 @@ an<DictEntry> DictEntryIterator::Peek() {
     if (!chunk.remaining_code.empty()) {
       entry_->comment = "~" + chunk.remaining_code;
       entry_->remaining_code_length = chunk.remaining_code.length();
+    }
+    if (chunk.is_predictive_match()) {
+      entry_->matching_code_size = chunk.matching_code_size;
     }
   }
   return entry_;
@@ -199,6 +232,7 @@ static void lookup_table(Table* table,
                          DictEntryCollector* collector,
                          const SyllableGraph& syllable_graph,
                          size_t start_pos,
+                         bool predict_word,
                          double initial_credibility) {
   TableQueryResult result;
   if (!table->Query(syllable_graph, start_pos, &result)) {
@@ -211,12 +245,13 @@ static void lookup_table(Table* table,
       double cr = initial_credibility + a.credibility();
       if (a.extra_code()) {
         do {
-          size_t actual_end_pos = dictionary::match_extra_code(
-              a.extra_code(), 0, syllable_graph, end_pos);
-          if (actual_end_pos == 0)
+          dictionary::CodeMatch match = dictionary::match_extra_code(
+              a.extra_code(), 0, syllable_graph, end_pos, predict_word);
+          if (!match.success)
             continue;
-          (*collector)[actual_end_pos].AddChunk(
-              {table, a.code(), a.entry(), cr});
+          size_t matching_code_size = a.index_code().size() + match.depth;
+          (*collector)[match.end_pos].AddChunk(
+              {table, a.code(), a.entry(), matching_code_size, cr});
         } while (a.Next());
       } else {
         (*collector)[end_pos].AddChunk({table, a, cr});
@@ -227,6 +262,7 @@ static void lookup_table(Table* table,
 
 an<DictEntryCollector> Dictionary::Lookup(const SyllableGraph& syllable_graph,
                                           size_t start_pos,
+                                          bool predict_word,
                                           double initial_credibility) {
   if (!loaded())
     return nullptr;
@@ -235,7 +271,7 @@ an<DictEntryCollector> Dictionary::Lookup(const SyllableGraph& syllable_graph,
     if (!table->IsOpen())
       continue;
     lookup_table(table.get(), collector.get(), syllable_graph, start_pos,
-                 initial_credibility);
+                 predict_word, initial_credibility);
   }
   if (collector->empty())
     return nullptr;
@@ -306,8 +342,8 @@ bool Dictionary::Decode(const Code& code, vector<string>* result) {
 }
 
 bool Dictionary::Exists() const {
-  return boost::filesystem::exists(prism_->file_name()) && !tables_.empty() &&
-         boost::filesystem::exists(tables_[0]->file_name());
+  return std::filesystem::exists(prism_->file_path()) && !tables_.empty() &&
+         std::filesystem::exists(tables_[0]->file_path());
 }
 
 bool Dictionary::Remove() {
@@ -323,7 +359,7 @@ bool Dictionary::Remove() {
 bool Dictionary::Load() {
   LOG(INFO) << "loading dictionary '" << name_ << "'.";
   if (tables_.empty()) {
-    LOG(ERROR) << "Cannnot load dictionary '" << name_
+    LOG(ERROR) << "Cannot load dictionary '" << name_
                << "'; it contains no tables.";
     return false;
   }
@@ -400,19 +436,19 @@ Dictionary* DictionaryComponent::Create(string dict_name,
   // obtain prism and primary table objects
   auto primary_table = table_map_[dict_name].lock();
   if (!primary_table) {
-    auto file_path = table_resource_resolver_->ResolvePath(dict_name).string();
+    auto file_path = table_resource_resolver_->ResolvePath(dict_name);
     table_map_[dict_name] = primary_table = New<Table>(file_path);
   }
   auto prism = prism_map_[prism_name].lock();
   if (!prism) {
-    auto file_path = prism_resource_resolver_->ResolvePath(prism_name).string();
+    auto file_path = prism_resource_resolver_->ResolvePath(prism_name);
     prism_map_[prism_name] = prism = New<Prism>(file_path);
   }
   vector<of<Table>> tables = {std::move(primary_table)};
   for (const auto& pack : packs) {
     auto table = table_map_[pack].lock();
     if (!table) {
-      auto file_path = table_resource_resolver_->ResolvePath(pack).string();
+      auto file_path = table_resource_resolver_->ResolvePath(pack);
       table_map_[pack] = table = New<Table>(file_path);
     }
     tables.push_back(std::move(table));

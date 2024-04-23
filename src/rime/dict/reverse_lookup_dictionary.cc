@@ -9,12 +9,11 @@
 #include <cstdlib>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/lexical_cast.hpp>
 #include <rime/resource.h>
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/ticket.h>
+#include <rime/dict/db_pool_impl.h>
 #include <rime/dict/dict_settings.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 
@@ -28,16 +27,16 @@ const size_t kReverseFormatPrefixLen = sizeof(kReverseFormatPrefix) - 1;
 
 static const char* kStemKeySuffix = "\x1fstem";
 
-ReverseDb::ReverseDb(const string& file_name) : MappedFile(file_name) {}
+ReverseDb::ReverseDb(const path& file_path) : MappedFile(file_path) {}
 
 bool ReverseDb::Load() {
-  LOG(INFO) << "loading reversedb: " << file_name();
+  LOG(INFO) << "loading reversedb: " << file_path();
 
   if (IsOpen())
     Close();
 
   if (!OpenReadOnly()) {
-    LOG(ERROR) << "Error opening reversedb '" << file_name() << "'.";
+    LOG(ERROR) << "Error opening reversedb '" << file_path() << "'.";
     return false;
   }
 
@@ -140,14 +139,14 @@ bool ReverseDb::Build(DictSettings* settings,
                                entry_count * sizeof(StringId) +
                                key_trie_image_size + value_trie_image_size;
   if (!Create(estimated_data_size)) {
-    LOG(ERROR) << "Error creating prism file '" << file_name() << "'.";
+    LOG(ERROR) << "Error creating prism file '" << file_path() << "'.";
     return false;
   }
 
   // create metadata
   metadata_ = Allocate<reverse::Metadata>();
   if (!metadata_) {
-    LOG(ERROR) << "Error creating metadata in file '" << file_name() << "'.";
+    LOG(ERROR) << "Error creating metadata in file '" << file_path() << "'.";
     return false;
   }
   metadata_->dict_file_checksum = dict_file_checksum;
@@ -195,7 +194,7 @@ bool ReverseDb::Build(DictSettings* settings,
 }
 
 bool ReverseDb::Save() {
-  LOG(INFO) << "saving reverse file: " << file_name();
+  LOG(INFO) << "saving reverse file: " << file_path();
   return ShrinkToFit();
 }
 
@@ -236,17 +235,13 @@ static const ResourceType kReverseDbResourceType = {"reverse_db", "",
                                                     ".reverse.bin"};
 
 ReverseLookupDictionaryComponent::ReverseLookupDictionaryComponent()
-    : resource_resolver_(Service::instance().CreateDeployedResourceResolver(
-          kReverseDbResourceType)) {}
+    : DbPool(the<ResourceResolver>(
+          Service::instance().CreateDeployedResourceResolver(
+              kReverseDbResourceType))) {}
 
 ReverseLookupDictionary* ReverseLookupDictionaryComponent::Create(
     const string& dict_name) {
-  auto db = db_pool_[dict_name].lock();
-  if (!db) {
-    auto file_path = resource_resolver_->ResolvePath(dict_name).string();
-    db = New<ReverseDb>(file_path);
-    db_pool_[dict_name] = db;
-  }
+  auto db = GetDb(dict_name);
   return new ReverseLookupDictionary(db);
 };
 

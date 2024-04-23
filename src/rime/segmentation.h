@@ -53,17 +53,17 @@ struct Segment {
   an<Candidate> GetSelectedCandidate() const;
 };
 
-class Segmentation : public vector<Segment> {
+class RIME_API Segmentation : public vector<Segment> {
  public:
-  RIME_API Segmentation();
+  Segmentation();
   virtual ~Segmentation() {}
-  RIME_API void Reset(const string& input);
+  void Reset(const string& input);
   void Reset(size_t num_segments);
   bool AddSegment(Segment segment);
 
   bool Forward();
   bool Trim();
-  RIME_API bool HasFinishedSegmentation() const;
+  bool HasFinishedSegmentation() const;
   size_t GetCurrentStartPosition() const;
   size_t GetCurrentEndPosition() const;
   size_t GetCurrentSegmentLength() const;

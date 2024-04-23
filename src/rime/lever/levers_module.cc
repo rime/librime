@@ -255,19 +255,19 @@ static Bool rime_levers_backup_user_dict(const char* dict_name) {
 
 static Bool rime_levers_restore_user_dict(const char* snapshot_file) {
   UserDictManager mgr(&Service::instance().deployer());
-  return Bool(mgr.Restore(snapshot_file));
+  return Bool(mgr.Restore(path(snapshot_file)));
 }
 
 static int rime_levers_export_user_dict(const char* dict_name,
                                         const char* text_file) {
   UserDictManager mgr(&Service::instance().deployer());
-  return mgr.Export(dict_name, text_file);
+  return mgr.Export(dict_name, path(text_file));
 }
 
 static int rime_levers_import_user_dict(const char* dict_name,
                                         const char* text_file) {
   UserDictManager mgr(&Service::instance().deployer());
-  return mgr.Import(dict_name, text_file);
+  return mgr.Import(dict_name, path(text_file));
 }
 
 //

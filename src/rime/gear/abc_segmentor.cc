@@ -50,7 +50,7 @@ bool AbcSegmentor::Proceed(Segmentation* segmentation) {
     bool is_initial = initials_.find(input[k]) != string::npos;
     bool is_final = finals_.find(input[k]) != string::npos;
     if (expecting_an_initial && !is_initial && !is_delimiter) {
-      break;  // not a valid seplling.
+      break;  // not a valid spelling.
     }
     // for the next character.
     expecting_an_initial = is_final || is_delimiter;

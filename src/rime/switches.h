@@ -52,7 +52,7 @@ class Switches {
   SwitchOption OptionByName(const string& option_name);
 
   // Returns the switch option defined at switch_index.
-  // If the swtich is a radio group, return the first option in the group.
+  // If the switch is a radio group, return the first option in the group.
   SwitchOption ByIndex(size_t switch_index);
 
   static SwitchOption Cycle(const SwitchOption& option);

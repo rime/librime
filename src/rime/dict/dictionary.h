@@ -23,9 +23,9 @@ struct QueryResult;
 
 }  // namespace dictionary
 
-class DictEntryIterator : public DictEntryFilterBinder {
+class RIME_API DictEntryIterator : public DictEntryFilterBinder {
  public:
-  RIME_API DictEntryIterator();
+  DictEntryIterator();
   virtual ~DictEntryIterator() = default;
   DictEntryIterator(const DictEntryIterator& other) = default;
   DictEntryIterator& operator=(const DictEntryIterator& other) = default;
@@ -34,11 +34,11 @@ class DictEntryIterator : public DictEntryFilterBinder {
 
   void AddChunk(dictionary::Chunk&& chunk);
   void Sort();
-  RIME_API void AddFilter(DictEntryFilter filter) override;
-  RIME_API an<DictEntry> Peek();
-  RIME_API bool Next();
+  void AddFilter(DictEntryFilter filter) override;
+  an<DictEntry> Peek();
+  bool Next();
   bool Skip(size_t num_entries);
-  RIME_API bool exhausted() const;
+  bool exhausted() const;
   size_t entry_count() const { return entry_count_; }
 
  protected:
@@ -73,6 +73,7 @@ class Dictionary : public Class<Dictionary, const Ticket&> {
 
   RIME_API an<DictEntryCollector> Lookup(const SyllableGraph& syllable_graph,
                                          size_t start_pos,
+                                         bool predict_word = false,
                                          double initial_credibility = 0.0);
   // if predictive is true, do an expand search with limit,
   // otherwise do an exact match.

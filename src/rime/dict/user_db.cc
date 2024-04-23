@@ -5,9 +5,8 @@
 // 2011-11-02 GONG Chen <chen.sst@gmail.com>
 //
 #include <cstdlib>
+#include <sstream>
 #include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
 #include <rime/service.h>
 #include <rime/algo/dynamics.h>
 #include <rime/dict/text_db.h>
@@ -20,7 +19,9 @@ UserDbValue::UserDbValue(const string& value) {
 }
 
 string UserDbValue::Pack() const {
-  return boost::str(boost::format("c=%1% d=%2% t=%3%") % commits % dee % tick);
+  std::ostringstream packed;
+  packed << "c=" << commits << " d=" << dee << " t=" << tick;
+  return packed.str();
 }
 
 bool UserDbValue::Unpack(const string& value) {
@@ -34,11 +35,11 @@ bool UserDbValue::Unpack(const string& value) {
     string v(k_eq_v.substr(eq + 1));
     try {
       if (k == "c") {
-        commits = boost::lexical_cast<int>(v);
+        commits = std::stoi(v);
       } else if (k == "d") {
-        dee = (std::min)(10000.0, boost::lexical_cast<double>(v));
+        dee = (std::min)(10000.0, std::stod(v));
       } else if (k == "t") {
-        tick = boost::lexical_cast<TickCount>(v);
+        tick = std::stoul(v);
       }
     } catch (...) {
       LOG(ERROR) << "failed in parsing key-value from userdb entry '" << k_eq_v
@@ -96,20 +97,21 @@ static TextFormat plain_userdb_format = {
 };
 
 template <>
-UserDbWrapper<TextDb>::UserDbWrapper(const string& file_name,
-                                     const string& db_name)
-    : TextDb(file_name, db_name, "userdb", plain_userdb_format) {}
+RIME_API UserDbWrapper<TextDb>::UserDbWrapper(const path& file_path,
+                                              const string& db_name)
+    : TextDb(file_path, db_name, "userdb", plain_userdb_format) {}
 
 bool UserDbHelper::UpdateUserInfo() {
   Deployer& deployer(Service::instance().deployer());
   return db_->MetaUpdate("/user_id", deployer.user_id);
 }
 
-bool UserDbHelper::IsUniformFormat(const string& file_name) {
-  return boost::ends_with(file_name, plain_userdb_extension);
+bool UserDbHelper::IsUniformFormat(const path& file_path) {
+  return boost::ends_with(file_path.filename().u8string(),
+                          plain_userdb_extension);
 }
 
-bool UserDbHelper::UniformBackup(const string& snapshot_file) {
+bool UserDbHelper::UniformBackup(const path& snapshot_file) {
   LOG(INFO) << "backing up userdb '" << db_->name() << "' to " << snapshot_file;
   TsvWriter writer(snapshot_file, plain_userdb_format.formatter);
   writer.file_description = plain_userdb_format.file_description;
@@ -123,7 +125,7 @@ bool UserDbHelper::UniformBackup(const string& snapshot_file) {
   return true;
 }
 
-bool UserDbHelper::UniformRestore(const string& snapshot_file) {
+bool UserDbHelper::UniformRestore(const path& snapshot_file) {
   LOG(INFO) << "restoring userdb '" << db_->name() << "' from "
             << snapshot_file;
   TsvReader reader(snapshot_file, plain_userdb_format.parser);
@@ -170,7 +172,7 @@ static TickCount get_tick_count(Db* db) {
   string tick;
   if (db && db->MetaFetch("/tick", &tick)) {
     try {
-      return boost::lexical_cast<TickCount>(tick);
+      return std::stoul(tick);
     } catch (...) {
     }
   }
@@ -190,7 +192,7 @@ UserDbMerger::~UserDbMerger() {
 bool UserDbMerger::MetaPut(const string& key, const string& value) {
   if (key == "/tick") {
     try {
-      their_tick_ = boost::lexical_cast<TickCount>(value);
+      their_tick_ = std::stoul(value);
       max_tick_ = (std::max)(our_tick_, their_tick_);
     } catch (...) {
     }
@@ -225,7 +227,7 @@ void UserDbMerger::CloseMerge() {
     return;
   Deployer& deployer(Service::instance().deployer());
   try {
-    db_->MetaUpdate("/tick", boost::lexical_cast<string>(max_tick_));
+    db_->MetaUpdate("/tick", std::to_string(max_tick_));
     db_->MetaUpdate("/user_id", deployer.user_id);
   } catch (...) {
     LOG(ERROR) << "failed to update tick count.";

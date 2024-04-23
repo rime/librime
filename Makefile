@@ -1,38 +1,61 @@
 RIME_ROOT ?= $(CURDIR)
 
+RIME_SOURCE_PATH = plugins sample src test tools
+
+ifeq ($(shell uname),Darwin) # for macOS
+prefix ?= $(RIME_ROOT)/dist
+
+ifdef BOOST_ROOT
+CMAKE_BOOST_OPTIONS = -DBoost_NO_BOOST_CMAKE=TRUE \
+	-DBOOST_ROOT="$(BOOST_ROOT)"
+endif
+
+# https://cmake.org/cmake/help/latest/variable/CMAKE_OSX_SYSROOT.html
+export SDKROOT ?= $(shell xcrun --sdk macosx --show-sdk-path)
+
+# https://cmake.org/cmake/help/latest/envvar/MACOSX_DEPLOYMENT_TARGET.html
+export MACOSX_DEPLOYMENT_TARGET ?= 10.15
+
+ifdef BUILD_UNIVERSAL
+# https://cmake.org/cmake/help/latest/envvar/CMAKE_OSX_ARCHITECTURES.html
+export CMAKE_OSX_ARCHITECTURES = arm64;x86_64
+endif
+
+else # for Linux
 prefix ?= $(DESTDIR)/usr
+endif
+
+ifndef NOPARALLEL
+export MAKEFLAGS+=" -j$(( $(nproc) + 1)) "
+endif
 
 debug install-debug uninstall-debug test-debug: build ?= debug
 build ?= build
 
-.PHONY: all deps thirdparty xcode clean \
-librime librime-static install-librime uninstall-librime \
-release debug test install uninstall install-debug uninstall-debug
+.PHONY: all deps clean \
+librime librime-static \
+release debug test install uninstall \
+install-debug uninstall-debug
 
 all: release
 
-# `thirdparty` is deprecated in favor of `deps`
-deps thirdparty:
+clang-format-lint:
+	find ${RIME_SOURCE_PATH} \! -path 'plugins/*/*' -a \( -name '*.cc' -o -name '*.h' \) | \
+	xargs clang-format -Werror --dry-run || { echo Please lint your code by '"'"make clang-format-apply"'"'.; false; }
+
+clang-format-apply:
+	find ${RIME_SOURCE_PATH} \! -path 'plugins/*/*' -a \( -name '*.cc' -o -name '*.h' \) | xargs clang-format --verbose -i
+
+deps:
 	$(MAKE) -f deps.mk
 
 deps/%:
 	$(MAKE) -f deps.mk $(@:deps/%=%)
 
-thirdparty/%:
-	$(MAKE) -f deps.mk $(@:thirdparty/%=%)
-
-xcode:
-	$(MAKE) -f xcode.mk
-
-xcode/%:
-	$(MAKE) -f xcode.mk $(@:xcode/%=%)
-
 clean:
-	rm -Rf build debug
+	rm -r $(build) || true
 
 librime: release
-install-librime: install
-uninstall-librime: uninstall
 
 librime-static:
 	cmake . -B$(build) \
@@ -63,6 +86,7 @@ debug:
 	-DCMAKE_INSTALL_PREFIX=$(prefix) \
 	-DCMAKE_BUILD_TYPE=Debug \
 	-DBUILD_MERGED_PLUGINS=OFF \
+	-DALSO_LOG_TO_STDERR=ON \
 	-DENABLE_EXTERNAL_PLUGINS=ON
 	cmake --build $(build)
 
@@ -73,13 +97,13 @@ install-debug:
 	cmake --build $(build) --target install
 
 uninstall:
-	cmake --build $(build) --target uninstall
+	cmake --build $(build) --target remove
 
 uninstall-debug:
-	cmake --build $(build) --target uninstall
+	cmake --build $(build) --target remove
 
 test: release
-	(cd $(build)/test; ./rime_test)
+	(cd $(build); ctest --output-on-failure)
 
 test-debug: debug
-	(cd $(build)/test; ./rime_test)
+	(cd $(build); ctest --output-on-failure)

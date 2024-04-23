@@ -1,34 +1,34 @@
 #include <fstream>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <gtest/gtest.h>
 #include <rime/resource.h>
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 using namespace rime;
 
 static const ResourceType kMineralsType = ResourceType{
-  "minerals",
-  "not_",
-  ".minerals",
+    "minerals",
+    "not_",
+    ".minerals",
 };
 
 TEST(RimeResourceResolverTest, ResolvePath) {
   ResourceResolver rr(kMineralsType);
-  rr.set_root_path("/starcraft");
+  rr.set_root_path(path{"/starcraft"});
   auto actual = rr.ResolvePath("enough");
-  fs::path expected =
-      fs::system_complete(fs::current_path()).root_name().string() +
-      "/starcraft/not_enough.minerals";
+  path expected = fs::absolute(fs::current_path())
+                      .root_name()
+                      .concat("/starcraft/not_enough.minerals");
   EXPECT_TRUE(actual.is_absolute());
   EXPECT_TRUE(expected == actual);
 }
 
 TEST(RimeResourceResolverTest, FallbackRootPath) {
   FallbackResourceResolver rr(kMineralsType);
-  rr.set_fallback_root_path("fallback");
+  rr.set_fallback_root_path(path{"fallback"});
   fs::create_directory("fallback");
   {
-    fs::path nonexistent_default = "not_present.minerals";
+    path nonexistent_default("not_present.minerals");
     fs::remove(nonexistent_default);
     auto fallback = fs::absolute("fallback/not_present.minerals");
     std::ofstream(fallback.string()).close();

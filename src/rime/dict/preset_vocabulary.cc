@@ -4,8 +4,6 @@
 //
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/filesystem.hpp>
-#include <boost/lexical_cast.hpp>
 #include <utf8.h>
 #include <rime/resource.h>
 #include <rime/service.h>
@@ -17,13 +15,16 @@ namespace rime {
 static const ResourceType kVocabularyResourceType = {"vocabulary", "", ".txt"};
 
 struct VocabularyDb : public TextDb {
-  VocabularyDb(const string& path, const string& name);
+  VocabularyDb(const path& file_path, const string& db_name);
   an<DbAccessor> cursor;
   static const TextFormat format;
 };
 
-VocabularyDb::VocabularyDb(const string& path, const string& name)
-    : TextDb(path, name, kVocabularyResourceType.name, VocabularyDb::format) {}
+VocabularyDb::VocabularyDb(const path& file_path, const string& db_name)
+    : TextDb(file_path,
+             db_name,
+             kVocabularyResourceType.name,
+             VocabularyDb::format) {}
 
 static bool rime_vocabulary_entry_parser(const Tsv& row,
                                          string* key,
@@ -51,10 +52,10 @@ const TextFormat VocabularyDb::format = {
     "Rime vocabulary",
 };
 
-string PresetVocabulary::DictFilePath(const string& vocabulary) {
+path PresetVocabulary::DictFilePath(const string& vocabulary) {
   the<ResourceResolver> resource_resolver(
       Service::instance().CreateResourceResolver(kVocabularyResourceType));
-  return resource_resolver->ResolvePath(vocabulary).string();
+  return resource_resolver->ResolvePath(vocabulary);
 }
 
 PresetVocabulary::PresetVocabulary(const string& vocabulary) {
@@ -74,7 +75,7 @@ bool PresetVocabulary::GetWeightForEntry(const string& key, double* weight) {
   if (!db_ || !db_->Fetch(key, &weight_str))
     return false;
   try {
-    *weight = boost::lexical_cast<double>(weight_str);
+    *weight = std::stod(weight_str);
   } catch (...) {
     return false;
   }
@@ -105,7 +106,7 @@ bool PresetVocabulary::IsQualifiedPhrase(const string& phrase,
       return false;
   }
   if (min_phrase_weight_ > 0.0) {
-    double weight = boost::lexical_cast<double>(weight_str);
+    double weight = std::stod(weight_str);
     if (weight < min_phrase_weight_)
       return false;
   }

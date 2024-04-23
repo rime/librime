@@ -9,7 +9,6 @@
 
 #include <stdint.h>
 #include <cstring>
-#include <boost/utility.hpp>
 #include <rime_api.h>
 #include <rime/common.h>
 
@@ -81,10 +80,10 @@ struct List {
 
 class MappedFileImpl;
 
-class MappedFile : boost::noncopyable {
+class RIME_API MappedFile {
  protected:
-  explicit MappedFile(const string& file_name);
-  RIME_API virtual ~MappedFile();
+  explicit MappedFile(const path& file_path);
+  virtual ~MappedFile();
 
   bool Create(size_t capacity);
   bool OpenReadOnly();
@@ -106,19 +105,23 @@ class MappedFile : boost::noncopyable {
   char* address() const;
 
  public:
+  // noncpyable
+  MappedFile(const MappedFile&) = delete;
+  MappedFile& operator=(const MappedFile&) = delete;
+
   bool Exists() const;
   bool IsOpen() const;
-  RIME_API void Close();
-  RIME_API bool Remove();
+  void Close();
+  bool Remove();
 
   template <class T>
   T* Find(size_t offset);
 
-  const string& file_name() const { return file_name_; }
+  const path& file_path() const { return file_path_; }
   size_t file_size() const { return size_; }
 
  private:
-  string file_name_;
+  path file_path_;
   size_t size_ = 0;
   the<MappedFileImpl> file_;
 };

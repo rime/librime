@@ -9,7 +9,7 @@
 
 namespace rime {
 
-// TextDbAccessor memebers
+// TextDbAccessor members
 
 TextDbAccessor::TextDbAccessor(const TextDbData& data, const string& prefix)
     : DbAccessor(prefix), data_(data) {
@@ -43,11 +43,11 @@ bool TextDbAccessor::exhausted() {
 
 // TextDb members
 
-TextDb::TextDb(const string& file_name,
+TextDb::TextDb(const path& file_path,
                const string& db_name,
                const string& db_type,
                TextFormat format)
-    : Db(file_name, db_name), db_type_(db_type), format_(format) {}
+    : Db(file_path, db_name), db_type_(db_type), format_(format) {}
 
 TextDb::~TextDb() {
   if (loaded())
@@ -104,7 +104,7 @@ bool TextDb::Open() {
     return false;
   loaded_ = true;
   readonly_ = false;
-  loaded_ = !Exists() || LoadFromFile(file_name());
+  loaded_ = !Exists() || LoadFromFile(file_path());
   if (loaded_) {
     string db_name;
     if (!MetaFetch("/db_name", &db_name)) {
@@ -125,7 +125,7 @@ bool TextDb::OpenReadOnly() {
     return false;
   loaded_ = true;
   readonly_ = false;
-  loaded_ = Exists() && LoadFromFile(file_name());
+  loaded_ = Exists() && LoadFromFile(file_path());
   if (loaded_) {
     readonly_ = true;
   } else {
@@ -138,7 +138,7 @@ bool TextDb::OpenReadOnly() {
 bool TextDb::Close() {
   if (!loaded())
     return false;
-  if (modified_ && !SaveToFile(file_name())) {
+  if (modified_ && !SaveToFile(file_path())) {
     return false;
   }
   loaded_ = false;
@@ -153,7 +153,7 @@ void TextDb::Clear() {
   data_.clear();
 }
 
-bool TextDb::Backup(const string& snapshot_file) {
+bool TextDb::Backup(const path& snapshot_file) {
   if (!loaded())
     return false;
   LOG(INFO) << "backing up db '" << name() << "' to " << snapshot_file;
@@ -165,7 +165,7 @@ bool TextDb::Backup(const string& snapshot_file) {
   return true;
 }
 
-bool TextDb::Restore(const string& snapshot_file) {
+bool TextDb::Restore(const path& snapshot_file) {
   if (!loaded() || readonly())
     return false;
   if (!LoadFromFile(snapshot_file)) {
@@ -200,7 +200,7 @@ bool TextDb::MetaUpdate(const string& key, const string& value) {
   return true;
 }
 
-bool TextDb::LoadFromFile(const string& file) {
+bool TextDb::LoadFromFile(const path& file) {
   Clear();
   TsvReader reader(file, format_.parser);
   DbSink sink(this);
@@ -215,7 +215,7 @@ bool TextDb::LoadFromFile(const string& file) {
   return true;
 }
 
-bool TextDb::SaveToFile(const string& file) {
+bool TextDb::SaveToFile(const path& file) {
   TsvWriter writer(file, format_.formatter);
   writer.file_description = format_.file_description;
   DbSource source(this);

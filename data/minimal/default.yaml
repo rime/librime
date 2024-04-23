@@ -1,8 +1,7 @@
 # Rime default settings
-# vim: set sw=2 sts=2 et:
 # encoding: utf-8
 
-config_version: "0.15.minimal"
+config_version: "0.16.minimal"
 
 schema_list:
   - schema: luna_pinyin
@@ -118,6 +117,8 @@ key_binder:
     - { when: has_menu, accept: equal, send: Page_Down }
     - { when: paging, accept: comma, send: Page_Up }
     - { when: has_menu, accept: period, send: Page_Down }
+    - { when: predicting, accept: comma, send: comma }
+    - { when: predicting, accept: period, send: period }
     # hotkey switch
     - { when: always, accept: Control+Shift+1, select: .next }
     - { when: always, accept: Control+Shift+2, toggle: ascii_mode }

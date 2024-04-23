@@ -9,19 +9,26 @@
 #define RIME_TABLE_H_
 
 #include <cstring>
-#include <darts.h>
 #include <rime/common.h>
 #include <rime/dict/mapped_file.h>
 #include <rime/dict/vocabulary.h>
 #include <rime/dict/string_table.h>
 
-#define RIME_TABLE_UNION(U, V, A, a, B, b)                           \
-  struct U {                                                         \
-    V value;                                                         \
-    const A& a() const { return *reinterpret_cast<const A*>(this); } \
-    const B& b() const { return *reinterpret_cast<const B*>(this); } \
-    A& a() { return *reinterpret_cast<A*>(this); }                   \
-    B& b() { return *reinterpret_cast<B*>(this); }                   \
+#define RIME_TABLE_UNION(U, V, A, a, B, b)      \
+  struct U {                                    \
+    V value;                                    \
+    const A& a() const {                        \
+      return *reinterpret_cast<const A*>(this); \
+    }                                           \
+    const B& b() const {                        \
+      return *reinterpret_cast<const B*>(this); \
+    }                                           \
+    A& a() {                                    \
+      return *reinterpret_cast<A*>(this);       \
+    }                                           \
+    B& b() {                                    \
+      return *reinterpret_cast<B*>(this);       \
+    }                                           \
   }
 
 namespace rime {
@@ -129,11 +136,41 @@ class TableAccessor {
 using TableQueryResult = map<int, vector<TableAccessor>>;
 
 struct SyllableGraph;
-class TableQuery;
+
+class TableQuery {
+ public:
+  TableQuery(table::Index* index) : lv1_index_(index) { Reset(); }
+
+  TableAccessor Access(SyllableId syllable_id, double credibility = 0.0) const;
+
+  // down to next level
+  bool Advance(SyllableId syllable_id, double credibility = 0.0);
+
+  // up one level
+  bool Backdate();
+
+  // back to root
+  void Reset();
+
+  size_t level() const { return level_; }
+
+ protected:
+  size_t level_ = 0;
+  Code index_code_;
+  vector<double> credibility_;
+
+ private:
+  bool Walk(SyllableId syllable_id);
+
+  table::HeadIndex* lv1_index_ = nullptr;
+  table::TrunkIndex* lv2_index_ = nullptr;
+  table::TrunkIndex* lv3_index_ = nullptr;
+  table::TailIndex* lv4_index_ = nullptr;
+};
 
 class Table : public MappedFile {
  public:
-  RIME_API Table(const string& file_name);
+  RIME_API Table(const path& file_path);
   virtual ~Table();
 
   RIME_API bool Load();
@@ -153,6 +190,7 @@ class Table : public MappedFile {
   RIME_API string GetEntryText(const table::Entry& entry);
 
   uint32_t dict_file_checksum() const;
+  table::Metadata* metadata() const { return metadata_; }
 
  private:
   table::Index* BuildIndex(const Vocabulary& vocabulary, size_t num_syllables);

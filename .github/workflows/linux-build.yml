@@ -13,16 +13,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        compiler: [g++, clang]
+        compiler: [gcc, clang]
+        include:
+          - compiler: gcc
+            cxx_compiler: g++
+          - compiler: clang
+            cxx_compiler: clang++
+    env:
+      CC: ${{ matrix.compiler }}
+      CXX: ${{ matrix.cxx_compiler }}
+    
     steps:
       - name: Checkout last commit
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository }}
-          submodules: recursive
 
       - name: Install dependency
         run: ./action-install-linux.sh
 
       - name: Build and test
         run: make test
+        env:
+          CMAKE_GENERATOR: Ninja

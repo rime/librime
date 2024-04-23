@@ -61,10 +61,10 @@ class UserDbHelper {
   UserDbHelper(const the<Db>& db) : db_(db.get()) {}
   UserDbHelper(const an<Db>& db) : db_(db.get()) {}
 
-  bool UpdateUserInfo();
-  static bool IsUniformFormat(const string& name);
-  bool UniformBackup(const string& snapshot_file);
-  bool UniformRestore(const string& snapshot_file);
+  RIME_API bool UpdateUserInfo();
+  RIME_API static bool IsUniformFormat(const path& file_path);
+  RIME_API bool UniformBackup(const path& snapshot_file);
+  RIME_API bool UniformRestore(const path& snapshot_file);
 
   bool IsUserDb();
   string GetDbName();
@@ -79,17 +79,17 @@ class UserDbHelper {
 template <class BaseDb>
 class UserDbWrapper : public BaseDb {
  public:
-  RIME_API UserDbWrapper(const string& file_name, const string& db_name);
+  RIME_API UserDbWrapper(const path& file_path, const string& db_name);
 
   virtual bool CreateMetadata() {
     return BaseDb::CreateMetadata() && UserDbHelper(this).UpdateUserInfo();
   }
-  virtual bool Backup(const string& snapshot_file) {
+  virtual bool Backup(const path& snapshot_file) {
     return UserDbHelper::IsUniformFormat(snapshot_file)
                ? UserDbHelper(this).UniformBackup(snapshot_file)
                : BaseDb::Backup(snapshot_file);
   }
-  virtual bool Restore(const string& snapshot_file) {
+  virtual bool Restore(const path& snapshot_file) {
     return UserDbHelper::IsUniformFormat(snapshot_file)
                ? UserDbHelper(this).UniformRestore(snapshot_file)
                : BaseDb::Restore(snapshot_file);

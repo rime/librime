@@ -5,7 +5,6 @@
 // 2011-11-23 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
-#include <boost/lexical_cast.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -23,16 +22,18 @@ namespace rime {
 
 enum KeyBindingCondition {
   kNever,
-  kWhenPaging,     // user has changed page
-  kWhenHasMenu,    // at least one candidate
-  kWhenComposing,  // input string is not empty
+  kWhenPredicting,  // showing prediction candidates
+  kWhenPaging,      // user has changed page
+  kWhenHasMenu,     // at least one candidate
+  kWhenComposing,   // input string is not empty
   kAlways,
 };
 
 static struct KeyBindingConditionDef {
   KeyBindingCondition condition;
   const char* name;
-} condition_definitions[] = {{kWhenPaging, "paging"},
+} condition_definitions[] = {{kWhenPredicting, "predicting"},
+                             {kWhenPaging, "paging"},
                              {kWhenHasMenu, "has_menu"},
                              {kWhenComposing, "composing"},
                              {kAlways, "always"},
@@ -79,7 +80,7 @@ inline static bool is_switch_index(const string& option) {
 static Switches::SwitchOption switch_by_index(Switches& switches,
                                               const string& option) {
   try {
-    size_t index = boost::lexical_cast<size_t>(option.substr(1));
+    size_t index = std::stoul(option.substr(1));
     return switches.ByIndex(index);
   } catch (...) {
   }
@@ -243,8 +244,14 @@ KeyBindingConditions::KeyBindingConditions(Context* ctx) {
   }
 
   Composition& comp = ctx->composition();
-  if (!comp.empty() && comp.back().HasTag("paging")) {
-    insert(kWhenPaging);
+  if (!comp.empty()) {
+    const Segment& last_seg = comp.back();
+    if (last_seg.HasTag("paging")) {
+      insert(kWhenPaging);
+    }
+    if (last_seg.HasTag("prediction")) {
+      insert(kWhenPredicting);
+    }
   }
 }
 

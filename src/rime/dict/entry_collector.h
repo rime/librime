@@ -23,8 +23,10 @@ struct RawDictEntry {
 
 // code -> weight
 using WeightMap = map<string, double>;
-// word -> { code -> weight }
-using WordMap = hash_map<string, WeightMap>;
+// word -> [ { code, weight } ]
+// For the sake of memory usage, don't use word -> { code -> weight } as there
+// may be many words, but may not be many representations for a word
+using WordMap = hash_map<string, vector<pair<string, double>>>;
 // [ (word, weight), ... ]
 using EncodeQueue = std::queue<pair<string, string>>;
 
@@ -45,10 +47,10 @@ class EntryCollector : public PhraseCollector {
   virtual ~EntryCollector();
 
   void Configure(DictSettings* settings);
-  void Collect(const vector<string>& dict_files);
+  void Collect(const vector<path>& dict_files);
 
   // export contents of table and prism to text files
-  void Dump(const string& file_name) const;
+  void Dump(const path& file_path) const;
 
   void CreateEntry(const string& word,
                    const string& code_str,
@@ -58,7 +60,7 @@ class EntryCollector : public PhraseCollector {
  protected:
   void LoadPresetVocabulary(DictSettings* settings);
   // call Collect() multiple times for all required tables
-  void Collect(const string& dict_file);
+  void Collect(const path& dict_file);
   // encode all collected entries
   void Finish();
 

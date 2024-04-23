@@ -117,7 +117,7 @@ void EditDistanceCorrector::ToleranceSearch(const Prism& prism,
         auto origin = accessor.properties().tips;
         auto current_input = key.substr(0, point);
         if (origin == current_input) {
-          continue;  // early termination: this comparision is O(n)
+          continue;  // early termination: this comparison is O(n)
         }
         auto distance = RestrictedDistance(origin, current_input, threshold);
         if (distance <= threshold) {  // only trace near words
@@ -240,8 +240,8 @@ bool EditDistanceCorrector::Build(const Syllabary& syllabary,
   return Prism::Build(syllabary, &correction_script, dict_file_checksum,
                       schema_file_checksum);
 }
-EditDistanceCorrector::EditDistanceCorrector(const string& file_name)
-    : Prism(file_name) {}
+EditDistanceCorrector::EditDistanceCorrector(const path& file_path)
+    : Prism(file_path) {}
 
 void NearSearchCorrector::ToleranceSearch(const Prism& prism,
                                           const string& key,
@@ -308,10 +308,10 @@ Corrector* CorrectorComponent::Create(const Ticket& ticket) noexcept {
     config->GetString(ticket.name_space + "/dictionary", &prism_name);
   }
 
-  auto file_name = resolver_->ResolvePath(prism_name).string();
+  auto file_path = resolver_->ResolvePath(prism_name);
 
-  auto ed_corrector = New<EditDistanceCorrector>(file_name);
-  if (edCorrector->Load()) {
+  auto ed_corrector = New<EditDistanceCorrector>(file_path);
+  if (ed_corrector->Load()) {
     return Combine(New<NearSearchCorrector>(), ed_corrector);
   } else {
     return new NearSearchCorrector();
