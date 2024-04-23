@@ -44,12 +44,14 @@ class RIME_API Context {
 
   // return false if there is no candidate at index
   bool Select(size_t index);
+  // return false if the selected index has not changed
+  bool Highlight(size_t index);
   bool DeleteCandidate(size_t index);
   // return false if there's no candidate for current segment
   bool ConfirmCurrentSelection();
   bool DeleteCurrentSelection();
-
-  bool ConfirmPreviousSelection();
+  void BeginEditing();
+  bool ConfirmPreviousSelection();  // deprecated
   bool ReopenPreviousSegment();
   bool ClearPreviousSegment();
   bool ReopenPreviousSelection();

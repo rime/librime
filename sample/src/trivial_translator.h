@@ -22,8 +22,7 @@ class TrivialTranslator : public Translator {
  public:
   TrivialTranslator(const Ticket& ticket);
 
-  virtual an<Translation> Query(const string& input,
-                                const Segment& segment);
+  virtual an<Translation> Query(const string& input, const Segment& segment);
 
  private:
   string Translate(const string& input);

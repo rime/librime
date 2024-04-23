@@ -255,13 +255,13 @@ bool TableEncoder::DfsEncode(const string& phrase,
     }
     string encoded;
     if (Encode(*code, &encoded)) {
-      DLOG(INFO) << "encode '" << phrase << "': "
-                 << "[" << code->ToString() << "] -> [" << encoded << "]";
+      DLOG(INFO) << "encode '" << phrase << "': " << "[" << code->ToString()
+                 << "] -> [" << encoded << "]";
       collector_->CreateEntry(phrase, encoded, value);
       return true;
     } else {
-      DLOG(WARNING) << "failed to encode '" << phrase << "': "
-                    << "[" << code->ToString() << "]";
+      DLOG(WARNING) << "failed to encode '" << phrase << "': " << "["
+                    << code->ToString() << "]";
       return false;
     }
   }

@@ -23,7 +23,7 @@ class Script : public map<string, vector<Spelling>> {
   void Merge(const string& s,
              const SpellingProperties& sp,
              const vector<Spelling>& v);
-  void Dump(const string& file_name) const;
+  void Dump(const path& file_path) const;
 };
 
 class Projection {

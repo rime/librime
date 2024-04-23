@@ -8,12 +8,11 @@
 #include <rime/algo/syllabifier.h>
 #include <rime/dict/table.h>
 
-
 class RimeTableTest : public ::testing::Test {
  public:
   virtual void SetUp() {
     if (!table_) {
-      table_.reset(new rime::Table(file_name));
+      table_.reset(new rime::Table(rime::path{"table_test.bin"}));
       table_->Remove();
       rime::Syllabary syll;
       rime::Vocabulary voc;
@@ -23,12 +22,10 @@ class RimeTableTest : public ::testing::Test {
     }
     table_->Load();
   }
-  virtual void TearDown() {
-    table_->Close();
-  }
+  virtual void TearDown() { table_->Close(); }
+
  protected:
   static const int total_num_entries = 8;
-  static const char file_name[];
 
   static void PrepareSampleVocabulary(rime::Syllabary& syll,
                                       rime::Vocabulary& voc);
@@ -37,8 +34,6 @@ class RimeTableTest : public ::testing::Test {
   }
   static rime::the<rime::Table> table_;
 };
-
-const char RimeTableTest::file_name[] = "table_test.bin";
 
 rime::the<rime::Table> RimeTableTest::table_;
 
@@ -92,12 +87,12 @@ void RimeTableTest::PrepareSampleVocabulary(rime::Syllabary& syll,
   d->code.resize(3);
   d->code.push_back(2);
   d->code.push_back(1);
-  d->text  = "yi-er-san-er-yi";
+  d->text = "yi-er-san-er-yi";
   (*lv4)[-1].entries.push_back(d);
 }
 
 TEST_F(RimeTableTest, IntegrityTest) {
-  table_.reset(new rime::Table(file_name));
+  table_.reset(new rime::Table(rime::path{"table_test.bin"}));
   ASSERT_TRUE(bool(table_));
   ASSERT_TRUE(table_->Load());
 }

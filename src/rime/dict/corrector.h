@@ -94,7 +94,7 @@ class CorrectorComponent : public Corrector::Component {
 class EditDistanceCorrector : public Corrector, public Prism {
  public:
   ~EditDistanceCorrector() override = default;
-  RIME_API explicit EditDistanceCorrector(const string& file_name);
+  RIME_API explicit EditDistanceCorrector(const path& file_path);
 
   RIME_API bool Build(const Syllabary& syllabary,
                       const Script* script = nullptr,

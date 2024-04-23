@@ -14,7 +14,7 @@ if (YamlCpp_STATIC)
     set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
   endif (WIN32)
 endif (YamlCpp_STATIC)
-find_library(YamlCpp_LIBRARY NAMES libyaml-cppmt libyaml-cppmtd yaml-cpp)
+find_library(YamlCpp_LIBRARY NAMES libyaml-cppmt libyaml-cppmtd yaml-cpp yaml-cppd)
 
 if(YamlCpp_INCLUDE_PATH AND YamlCpp_LIBRARY)
   set(YamlCpp_FOUND TRUE)

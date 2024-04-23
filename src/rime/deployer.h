@@ -32,15 +32,16 @@ class DeploymentTask : public Class<DeploymentTask, TaskInitializer> {
 class Deployer : public Messenger {
  public:
   // read-only access after library initialization {
-  string shared_data_dir;
-  string user_data_dir;
-  string prebuilt_data_dir;
-  string staging_dir;
-  string sync_dir;
+  path shared_data_dir;
+  path user_data_dir;
+  path prebuilt_data_dir;
+  path staging_dir;
+  path sync_dir;
   string user_id;
   string distribution_name;
   string distribution_code_name;
   string distribution_version;
+  string app_name;
   // }
 
   RIME_API Deployer();
@@ -63,7 +64,7 @@ class Deployer : public Messenger {
   void JoinWorkThread();
   void JoinMaintenanceThread();
 
-  string user_data_sync_dir() const;
+  path user_data_sync_dir() const;
 
  private:
   std::queue<of<DeploymentTask>> pending_tasks_;

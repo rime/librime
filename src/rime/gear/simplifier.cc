@@ -5,7 +5,6 @@
 // 2011-12-12 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
-#include <filesystem>
 #include <stdint.h>
 #include <utf8.h>
 #include <utility>
@@ -25,11 +24,6 @@
 #include <opencc/Dict.hpp>
 #include <opencc/DictEntry.hpp>
 
-#ifdef _MSC_VER
-#include <opencc/UTF8Util.hpp>
-namespace fs = std::filesystem;
-#endif
-
 static const char* quote_left = "\xe3\x80\x94";   //"\xef\xbc\x88";
 static const char* quote_right = "\xe3\x80\x95";  //"\xef\xbc\x89";
 
@@ -37,18 +31,13 @@ namespace rime {
 
 class Opencc {
  public:
-  Opencc(const string& config_path) {
+  Opencc(const path& config_path) {
     LOG(INFO) << "initializing opencc: " << config_path;
     opencc::Config config;
     try {
-      // windows config_path in CP_ACP, convert it to UTF-8
-#ifdef _MSC_VER
-      fs::path path{config_path};
-      converter_ =
-          config.NewFromFile(opencc::UTF8Util::U16ToU8(path.wstring()));
-#else
-      converter_ = config.NewFromFile(config_path);
-#endif /*  _MSC_VER */
+      // opencc accepts file path encoded in UTF-8.
+      converter_ = config.NewFromFile(config_path.u8string());
+
       const list<opencc::ConversionPtr> conversions =
           converter_->GetConversionChain()->GetConversions();
       dict_ = conversions.front()->GetDict();
@@ -76,11 +65,30 @@ class Opencc {
         opencc::Optional<const opencc::DictEntry*> item =
             dict->Match(original_word);
         if (item.IsNull()) {
-          // Current dictionary doesn't convert the word. We need to keep it for
-          // other dicts in the chain. e.g. s2t.json expands 里 to 里 and 裏,
-          // then t2tw.json passes 里 as-is and converts 裏 to 裡.
-          if (word_set.insert(original_word).second) {
-            converted_words.push_back(original_word);
+          // There is no exact match, but still need to convert partially
+          // matched in a chain conversion. Here apply default (max. seg.)
+          // match to get the most probable conversion result
+          std::ostringstream buffer;
+          for (const char* wstr = original_word.c_str(); *wstr != '\0';) {
+            opencc::Optional<const opencc::DictEntry*> matched =
+                dict->MatchPrefix(wstr);
+            size_t matched_length;
+            if (matched.IsNull()) {
+              matched_length = opencc::UTF8Util::NextCharLength(wstr);
+              buffer << opencc::UTF8Util::FromSubstr(wstr, matched_length);
+            } else {
+              matched_length = matched.Get()->KeyLength();
+              buffer << matched.Get()->GetDefault();
+            }
+            wstr += matched_length;
+          }
+          const string& converted_word = buffer.str();
+          // Even if current dictionary doesn't convert the word
+          // (converted_word == original_word), we still need to keep it for
+          // subsequent dicts in the chain. e.g. s2t.json expands 里 to 里 and
+          // 裏, then t2tw.json passes 里 as-is and converts 裏 to 裡.
+          if (word_set.insert(converted_word).second) {
+            converted_words.push_back(converted_word);
           }
           continue;
         }
@@ -105,23 +113,32 @@ class Opencc {
   bool RandomConvertText(const string& text, string* simplified) {
     if (dict_ == nullptr)
       return false;
+    const list<opencc::ConversionPtr> conversions =
+        converter_->GetConversionChain()->GetConversions();
     const char* phrase = text.c_str();
-    std::ostringstream buffer;
-    for (const char* pstr = phrase; *pstr != '\0';) {
-      opencc::Optional<const opencc::DictEntry*> matched =
-          dict_->MatchPrefix(pstr);
-      size_t matchedLength;
-      if (matched.IsNull()) {
-        matchedLength = opencc::UTF8Util::NextCharLength(pstr);
-        buffer << opencc::UTF8Util::FromSubstr(pstr, matchedLength);
-      } else {
-        matchedLength = matched.Get()->KeyLength();
-        size_t i = rand() % (matched.Get()->NumValues());
-        buffer << matched.Get()->Values().at(i);
+    for (auto conversion : conversions) {
+      opencc::DictPtr dict = conversion->GetDict();
+      if (dict == nullptr) {
+        return false;
       }
-      pstr += matchedLength;
+      std::ostringstream buffer;
+      for (const char* pstr = phrase; *pstr != '\0';) {
+        opencc::Optional<const opencc::DictEntry*> matched =
+            dict->MatchPrefix(pstr);
+        size_t matched_length;
+        if (matched.IsNull()) {
+          matched_length = opencc::UTF8Util::NextCharLength(pstr);
+          buffer << opencc::UTF8Util::FromSubstr(pstr, matched_length);
+        } else {
+          matched_length = matched.Get()->KeyLength();
+          size_t i = rand() % (matched.Get()->NumValues());
+          buffer << matched.Get()->Values().at(i);
+        }
+        pstr += matched_length;
+      }
+      *simplified = buffer.str();
+      phrase = simplified->c_str();
     }
-    *simplified = buffer.str();
     return *simplified != text;
   }
 
@@ -178,10 +195,9 @@ Simplifier::Simplifier(const Ticket& ticket)
 }
 
 void Simplifier::Initialize() {
-  using namespace std::filesystem;
   initialized_ = true;  // no retry
-  path opencc_config_path = opencc_config_;
-  if (opencc_config_path.extension().string() == ".ini") {
+  path opencc_config_path = path(opencc_config_);
+  if (opencc_config_path.extension().u8string() == ".ini") {
     LOG(ERROR) << "please upgrade opencc_config to an opencc 1.0 config file.";
     return;
   }
@@ -197,7 +213,7 @@ void Simplifier::Initialize() {
     }
   }
   try {
-    opencc_.reset(new Opencc(opencc_config_path.string()));
+    opencc_.reset(new Opencc(opencc_config_path));
   } catch (opencc::Exception& e) {
     LOG(ERROR) << "Error initializing opencc: " << e.what();
   }

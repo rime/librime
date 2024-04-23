@@ -28,10 +28,12 @@ class Config : public Class<Config, const string&>, public ConfigItemRef {
   // in the ConfigComponent
   explicit Config(an<ConfigData> data);
 
+  // returns whether actually saved to file.
+  bool Save();
   bool LoadFromStream(std::istream& stream);
   bool SaveToStream(std::ostream& stream);
-  RIME_API bool LoadFromFile(const string& file_name);
-  RIME_API bool SaveToFile(const string& file_name);
+  RIME_API bool LoadFromFile(const path& file_path);
+  RIME_API bool SaveToFile(const path& file_path);
 
   // access a tree node of a particular type with "path/to/node"
   RIME_API bool IsNull(const string& path);

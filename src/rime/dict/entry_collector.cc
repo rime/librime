@@ -35,8 +35,8 @@ void EntryCollector::Configure(DictSettings* settings) {
   encoder->LoadSettings(settings);
 }
 
-void EntryCollector::Collect(const vector<string>& dict_files) {
-  for (const string& dict_file : dict_files) {
+void EntryCollector::Collect(const vector<path>& dict_files) {
+  for (const path& dict_file : dict_files) {
     Collect(dict_file);
   }
   Finish();
@@ -54,7 +54,7 @@ void EntryCollector::LoadPresetVocabulary(DictSettings* settings) {
   }
 }
 
-void EntryCollector::Collect(const string& dict_file) {
+void EntryCollector::Collect(const path& dict_file) {
   LOG(INFO) << "collecting entries from " << dict_file;
   // read table
   std::ifstream fin(dict_file.c_str());
@@ -114,8 +114,8 @@ void EntryCollector::Collect(const string& dict_file) {
       encode_queue.push({word, weight_str});
     }
     if (!stem_str.empty() && !code_str.empty()) {
-      DLOG(INFO) << "add stem '" << word << "': "
-                 << "[" << code_str << "] = [" << stem_str << "]";
+      DLOG(INFO) << "add stem '" << word << "': " << "[" << code_str << "] = ["
+                 << stem_str << "]";
       stems[word].insert(stem_str);
     }
   }
@@ -234,8 +234,8 @@ bool EntryCollector::TranslateWord(const string& word, vector<string>* result) {
   return false;
 }
 
-void EntryCollector::Dump(const string& file_name) const {
-  std::ofstream out(file_name.c_str());
+void EntryCollector::Dump(const path& file_path) const {
+  std::ofstream out(file_path.c_str());
   out << "# syllabary:" << std::endl;
   for (const string& syllable : syllabary) {
     out << "# - " << syllable << std::endl;

@@ -67,7 +67,7 @@ class Prism : public MappedFile {
  public:
   using Match = Darts::DoubleArray::result_pair_type;
 
-  RIME_API explicit Prism(const string& file_name);
+  RIME_API explicit Prism(const path& file_path);
 
   RIME_API bool Load();
   RIME_API bool Save();

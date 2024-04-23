@@ -95,7 +95,7 @@ RIME_API Bool RimeStartMaintenance(Bool full_check) {
   }
   if (!full_check) {
     TaskInitializer args{
-        vector<string>{
+        vector<path>{
             deployer.user_data_dir,
             deployer.shared_data_dir,
         },
@@ -148,7 +148,7 @@ RIME_API Bool RimeDeployWorkspace() {
 
 RIME_API Bool RimeDeploySchema(const char* schema_file) {
   Deployer& deployer(Service::instance().deployer());
-  return Bool(deployer.RunTask("schema_update", string(schema_file)));
+  return Bool(deployer.RunTask("schema_update", path(schema_file)));
 }
 
 RIME_API Bool RimeDeployConfigFile(const char* file_name,
@@ -810,27 +810,37 @@ RIME_API Bool RimeRunTask(const char* task_name) {
 
 RIME_API const char* RimeGetSharedDataDir() {
   Deployer& deployer(Service::instance().deployer());
-  return deployer.shared_data_dir.c_str();
+  static string string_path;
+  string_path = deployer.shared_data_dir.string();
+  return string_path.c_str();
 }
 
 RIME_API const char* RimeGetUserDataDir() {
   Deployer& deployer(Service::instance().deployer());
-  return deployer.user_data_dir.c_str();
+  static string string_path;
+  string_path = deployer.user_data_dir.string();
+  return string_path.c_str();
 }
 
 RIME_API const char* RimeGetPrebuiltDataDir() {
   Deployer& deployer(Service::instance().deployer());
-  return deployer.prebuilt_data_dir.c_str();
+  static string string_path;
+  string_path = deployer.prebuilt_data_dir.string();
+  return string_path.c_str();
 }
 
 RIME_API const char* RimeGetStagingDir() {
   Deployer& deployer(Service::instance().deployer());
-  return deployer.staging_dir.c_str();
+  static string string_path;
+  string_path = deployer.staging_dir.string();
+  return string_path.c_str();
 }
 
 RIME_API const char* RimeGetSyncDir() {
   Deployer& deployer(Service::instance().deployer());
-  return deployer.sync_dir.c_str();
+  static string string_path;
+  string_path = deployer.sync_dir.string();
+  return string_path.c_str();
 }
 
 RIME_API const char* RimeGetUserId() {
@@ -840,7 +850,34 @@ RIME_API const char* RimeGetUserId() {
 
 RIME_API void RimeGetUserDataSyncDir(char* dir, size_t buffer_size) {
   Deployer& deployer(Service::instance().deployer());
-  strncpy(dir, deployer.user_data_sync_dir().c_str(), buffer_size);
+  string string_path = deployer.user_data_sync_dir().string();
+  strncpy(dir, string_path.c_str(), buffer_size);
+}
+
+void RimeGetSharedDataDirSecure(char* dir, size_t buffer_size) {
+  string string_path = Service::instance().deployer().shared_data_dir.string();
+  strncpy(dir, string_path.c_str(), buffer_size);
+}
+
+void RimeGetUserDataDirSecure(char* dir, size_t buffer_size) {
+  string string_path = Service::instance().deployer().user_data_dir.string();
+  strncpy(dir, string_path.c_str(), buffer_size);
+}
+
+void RimeGetPrebuiltDataDirSecure(char* dir, size_t buffer_size) {
+  string string_path =
+      Service::instance().deployer().prebuilt_data_dir.string();
+  strncpy(dir, string_path.c_str(), buffer_size);
+}
+
+void RimeGetStagingDirSecure(char* dir, size_t buffer_size) {
+  string string_path = Service::instance().deployer().staging_dir.string();
+  strncpy(dir, string_path.c_str(), buffer_size);
+}
+
+void RimeGetSyncDirSecure(char* dir, size_t buffer_size) {
+  string string_path = Service::instance().deployer().sync_dir.string();
+  strncpy(dir, string_path.c_str(), buffer_size);
 }
 
 RIME_API Bool RimeConfigInit(RimeConfig* config) {
@@ -1029,6 +1066,39 @@ static bool do_with_candidate_on_current_page(
   return (ctx->*verb)(page_start + index);
 }
 
+Bool RimeChangePage(RimeSessionId session_id, Bool backward) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  Context* ctx = session->context();
+  if (!ctx || !ctx->HasMenu())
+    return False;
+  Schema* schema = session->schema();
+  if (!schema)
+    return False;
+  size_t page_size = (size_t)schema->page_size();
+  auto& seg(ctx->composition().back());
+  size_t current_index = seg.selected_index;
+  size_t index =
+      backward ? (current_index <= page_size ? 0 : current_index - page_size)
+               : (current_index + page_size);
+  DLOG(INFO) << "current selection: " << current_index << ", flipping "
+             << (backward ? "backward" : "forward") << ", new selection "
+             << index;
+  seg.tags.insert("paging");
+  return ctx->Highlight(index);
+}
+
+Bool RimeHighlightCandidate(RimeSessionId session_id, size_t index) {
+  return do_with_candidate(session_id, index, &Context::Highlight);
+}
+
+Bool RimeHighlightCandidateOnCurrentPage(RimeSessionId session_id,
+                                         size_t index) {
+  return do_with_candidate_on_current_page(session_id, index,
+                                           &Context::Highlight);
+}
+
 RIME_API Bool RimeSelectCandidate(RimeSessionId session_id, size_t index) {
   return do_with_candidate(session_id, index, &Context::Select);
 }
@@ -1082,6 +1152,17 @@ const char* RimeGetStateLabel(RimeSessionId session_id,
                               Bool state) {
   return RimeGetStateLabelAbbreviated(session_id, option_name, state, False)
       .str;
+}
+
+RIME_API Bool RimeSetInput(RimeSessionId session_id, const char* input) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  Context* ctx = session->context();
+  if (!ctx)
+    return False;
+  ctx->set_input(input);
+  return True;
 }
 
 RIME_API RimeApi* rime_get_api() {
@@ -1177,6 +1258,16 @@ RIME_API RimeApi* rime_get_api() {
     s_api.delete_candidate = &RimeDeleteCandidate;
     s_api.delete_candidate_on_current_page = &RimeDeleteCandidateOnCurrentPage;
     s_api.get_state_label_abbreviated = &RimeGetStateLabelAbbreviated;
+    s_api.set_input = &RimeSetInput;
+    s_api.get_shared_data_dir_s = &RimeGetSharedDataDirSecure;
+    s_api.get_user_data_dir_s = &RimeGetUserDataDirSecure;
+    s_api.get_prebuilt_data_dir_s = &RimeGetPrebuiltDataDirSecure;
+    s_api.get_staging_dir_s = &RimeGetStagingDirSecure;
+    s_api.get_sync_dir_s = &RimeGetSyncDirSecure;
+    s_api.highlight_candidate = &RimeHighlightCandidate;
+    s_api.highlight_candidate_on_current_page =
+        &RimeHighlightCandidateOnCurrentPage;
+    s_api.change_page = &RimeChangePage;
   }
   return &s_api;
 }

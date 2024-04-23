@@ -14,7 +14,7 @@ template <class T>
 an<T> DbPool<T>::GetDb(const string& db_name) {
   auto db = db_pool_[db_name].lock();
   if (!db) {
-    auto file_path = resource_resolver_->ResolvePath(db_name).string();
+    auto file_path = resource_resolver_->ResolvePath(db_name);
     db = New<T>(file_path);
     db_pool_[db_name] = db;
   }

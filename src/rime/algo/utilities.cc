@@ -31,8 +31,8 @@ int CompareVersionString(const string& x, const string& y) {
 ChecksumComputer::ChecksumComputer(uint32_t initial_remainder)
     : crc_(initial_remainder) {}
 
-void ChecksumComputer::ProcessFile(const string& file_name) {
-  std::ifstream fin(file_name.c_str());
+void ChecksumComputer::ProcessFile(const path& file_path) {
+  std::ifstream fin(file_path.c_str());
   std::stringstream buffer;
   buffer << fin.rdbuf();
   const auto& file_content(buffer.str());

@@ -28,8 +28,8 @@ bool BuildInfoPlugin::ReviewLinkOutput(ConfigCompiler* compiler,
       timestamps[resource->resource_id] = 0;
       return;
     }
-    auto file_name = resource->data->file_name();
-    if (file_name.empty()) {
+    const auto& file_path = resource->data->file_path();
+    if (file_path.empty()) {
       LOG(WARNING) << "resource '" << resource->resource_id
                    << "' is not persisted.";
       timestamps[resource->resource_id] = 0;
@@ -37,7 +37,7 @@ bool BuildInfoPlugin::ReviewLinkOutput(ConfigCompiler* compiler,
     }
     // TODO: store as 64-bit number to avoid the year 2038 problem
     timestamps[resource->resource_id] =
-        (int)filesystem::to_time_t(std::filesystem::last_write_time(file_name));
+        (int)filesystem::to_time_t(std::filesystem::last_write_time(file_path));
   });
 #endif
   return true;

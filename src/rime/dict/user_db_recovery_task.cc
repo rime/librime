@@ -12,8 +12,6 @@
 #include <rime/dict/user_db.h>
 #include <rime/dict/user_db_recovery_task.h>
 
-namespace fs = std::filesystem;
-
 namespace rime {
 
 UserDbRecoveryTask::UserDbRecoveryTask(an<Db> db) : db_(db) {
@@ -43,9 +41,10 @@ bool UserDbRecoveryTask::Run(Deployer* deployer) {
   LOG(INFO) << "recreating db file.";
   if (db_->Exists()) {
     std::error_code ec;
-    std::filesystem::rename(db_->file_name(), db_->file_name() + ".old", ec);
+    std::filesystem::rename(db_->file_path(),
+                            path(db_->file_path()).concat(".old"), ec);
     if (ec && !db_->Remove()) {
-      LOG(ERROR) << "Error removing db file '" << db_->file_name() << "'.";
+      LOG(ERROR) << "Error removing db file '" << db_->file_path() << "'.";
       return false;
     }
   }
@@ -65,20 +64,20 @@ void UserDbRecoveryTask::RestoreUserDataFromSnapshot(Deployer* deployer) {
   string dict_name(db_->name());
   boost::erase_last(dict_name, component->extension());
   // locate snapshot file
-  std::filesystem::path dir(deployer->user_data_sync_dir());
+  const path& dir(deployer->user_data_sync_dir());
   // try *.userdb.txt
-  fs::path snapshot_path = dir / (dict_name + UserDb::snapshot_extension());
-  if (!fs::exists(snapshot_path)) {
+  path snapshot_path = dir / (dict_name + UserDb::snapshot_extension());
+  if (!std::filesystem::exists(snapshot_path)) {
     // try *.userdb.*.snapshot
     string legacy_snapshot_file =
         dict_name + component->extension() + ".snapshot";
     snapshot_path = dir / legacy_snapshot_file;
-    if (!fs::exists(snapshot_path)) {
+    if (!std::filesystem::exists(snapshot_path)) {
       return;  // not found
     }
   }
   LOG(INFO) << "snapshot exists, trying to restore db '" << dict_name << "'.";
-  if (db_->Restore(snapshot_path.string())) {
+  if (db_->Restore(snapshot_path)) {
     LOG(INFO) << "restored db '" << dict_name << "' from snapshot.";
   }
 }

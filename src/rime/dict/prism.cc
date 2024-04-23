@@ -69,17 +69,17 @@ SpellingProperties SpellingAccessor::properties() const {
   return props;
 }
 
-Prism::Prism(const string& file_name)
-    : MappedFile(file_name), trie_(new Darts::DoubleArray) {}
+Prism::Prism(const path& file_path)
+    : MappedFile(file_path), trie_(new Darts::DoubleArray) {}
 
 bool Prism::Load() {
-  LOG(INFO) << "loading prism file: " << file_name();
+  LOG(INFO) << "loading prism file: " << file_path();
 
   if (IsOpen())
     Close();
 
   if (!OpenReadOnly()) {
-    LOG(ERROR) << "error opening prism file '" << file_name() << "'.";
+    LOG(ERROR) << "error opening prism file '" << file_path() << "'.";
     return false;
   }
 
@@ -114,7 +114,7 @@ bool Prism::Load() {
 }
 
 bool Prism::Save() {
-  LOG(INFO) << "saving prism file: " << file_name();
+  LOG(INFO) << "saving prism file: " << file_path();
   if (!trie_->total_size()) {
     LOG(ERROR) << "the trie has not been constructed!";
     return false;
@@ -154,13 +154,13 @@ bool Prism::Build(const Syllabary& syllabary,
       map_size * (4 + sizeof(prism::SpellingDescriptor) + kDescriptorExtraSize);
   const size_t kReservedSize = 1024;
   if (!Create(image_size + estimated_map_size + kReservedSize)) {
-    LOG(ERROR) << "Error creating prism file '" << file_name() << "'.";
+    LOG(ERROR) << "Error creating prism file '" << file_path() << "'.";
     return false;
   }
   // creating metadata
   auto metadata = Allocate<prism::Metadata>();
   if (!metadata) {
-    LOG(ERROR) << "Error creating metadata in file '" << file_name() << "'.";
+    LOG(ERROR) << "Error creating metadata in file '" << file_path() << "'.";
     return false;
   }
   metadata->dict_file_checksum = dict_file_checksum;

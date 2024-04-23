@@ -1,5 +1,3 @@
-set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
-
 aux_source_directory(. rime_api_src)
 aux_source_directory(rime rime_base_src)
 aux_source_directory(rime/algo rime_algo_src)
@@ -15,6 +13,12 @@ set(rime_core_module_src
   ${rime_api_src}
   ${rime_base_src}
   ${rime_config_src})
+
+# add rc info for windows MSVC build
+if(WIN32)
+  include(${CMAKE_SOURCE_DIR}/cmake/AddRCInfo.cmake)
+endif()
+
 set(rime_dict_module_src
   ${rime_algo_src}
   ${rime_dict_src})
@@ -54,6 +58,11 @@ set(rime_gears_deps
     ${Opencc_LIBRARY})
 set(rime_levers_deps "")
 
+if(Glog_FOUND AND WIN32)
+  # TODO: in glog v0.7.0, someone at Google forget to add dbghelp.lib to the linker library list.
+  set(rime_core_deps ${rime_core_deps} dbghelp)
+endif()
+
 if(MINGW)
   # fix: bcrypt for boost uuid issue
   # https://github.com/boostorg/uuid/issues/68
@@ -77,7 +86,9 @@ if(BUILD_SHARED_LIBS)
   set_target_properties(rime PROPERTIES
     DEFINE_SYMBOL "RIME_EXPORTS"
     VERSION ${rime_version}
-    SOVERSION ${rime_soversion})
+    SOVERSION ${rime_soversion}
+    LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
+    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
   if(XCODE_VERSION)
     set_target_properties(rime PROPERTIES INSTALL_NAME_DIR "@rpath")
   endif()
@@ -90,7 +101,9 @@ if(BUILD_SHARED_LIBS)
       ${rime_library})
     set_target_properties(rime-dict PROPERTIES
       VERSION ${rime_version}
-      SOVERSION ${rime_soversion})
+      SOVERSION ${rime_soversion}
+      LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
+      RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
     if(XCODE_VERSION)
       set_target_properties(rime-dict PROPERTIES INSTALL_NAME_DIR "@rpath")
     endif()
@@ -103,7 +116,9 @@ if(BUILD_SHARED_LIBS)
       ${rime_dict_library})
     set_target_properties(rime-gears PROPERTIES
       VERSION ${rime_version}
-      SOVERSION ${rime_soversion})
+      SOVERSION ${rime_soversion}
+      LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
+      RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
     if(XCODE_VERSION)
       set_target_properties(rime-gears PROPERTIES INSTALL_NAME_DIR "@rpath")
     endif()
@@ -116,7 +131,9 @@ if(BUILD_SHARED_LIBS)
       ${rime_dict_library})
     set_target_properties(rime-levers PROPERTIES
       VERSION ${rime_version}
-      SOVERSION ${rime_soversion})
+      SOVERSION ${rime_soversion}
+      LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
+      RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
     if(XCODE_VERSION)
       set_target_properties(rime-levers PROPERTIES INSTALL_NAME_DIR "@rpath")
     endif()
@@ -133,7 +150,9 @@ if(BUILD_SHARED_LIBS)
         ${rime_gears_library})
       set_target_properties(rime-plugins PROPERTIES
         VERSION ${rime_version}
-        SOVERSION ${rime_soversion})
+        SOVERSION ${rime_soversion}
+        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
+        RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
       if(XCODE_VERSION)
         set_target_properties(rime-plugins PROPERTIES INSTALL_NAME_DIR "@rpath")
       endif()
@@ -143,6 +162,8 @@ if(BUILD_SHARED_LIBS)
 else()
   add_library(rime-static STATIC ${rime_src})
   target_link_libraries(rime-static ${rime_deps})
-  set_target_properties(rime-static PROPERTIES OUTPUT_NAME "rime" PREFIX "lib")
+  set_target_properties(rime-static PROPERTIES
+    OUTPUT_NAME "rime" PREFIX "lib"
+    ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
   install(TARGETS rime-static DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
 endif()
