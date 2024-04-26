@@ -284,13 +284,13 @@ void ConcreteEngine::OnSelect(Context* ctx) {
 void ConcreteEngine::ApplySchema(Schema* schema) {
   if (!schema)
     return;
-  switcher_->SetActiveSchema(schema->schema_id());
   schema_.reset(schema);
   context_->Clear();
   context_->ClearTransientOptions();
   InitializeComponents();
   InitializeOptions();
-  message_sink_("schema", schema->schema_id() + "/" + schema->schema_name());
+  switcher_->SetActiveSchema(schema_->schema_id());
+  message_sink_("schema", schema_->schema_id() + "/" + schema_->schema_name());
 }
 
 void ConcreteEngine::InitializeComponents() {

@@ -1,3 +1,14 @@
+<a name="1.11.1"></a>
+## [1.11.1](https://github.com/rime/librime/compare/1.11.0...1.11.1) (2024-04-25)
+
+
+### Bug Fixes
+
+* crash on select_schema .default ([ef08da3](https://github.com/rime/librime/commit/ef08da3))
+* **script_translator:** correction can cause segfault ([#863](https://github.com/rime/librime/issues/863)) ([feec253](https://github.com/rime/librime/commit/feec253))
+
+
+
 # [1.11.0](https://github.com/rime/librime/compare/1.10.0...1.11.0) (2024-03-29)
 
 
