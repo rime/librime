@@ -1,3 +1,14 @@
+<a name="1.11.2"></a>
+## [1.11.2](https://github.com/rime/librime/compare/1.11.1...1.11.2) (2024-04-27)
+
+
+### Bug Fixes
+
+* caret_pos is before caret character ([f5df6cd](https://github.com/rime/librime/commit/f5df6cd)), closes [#860](https://github.com/rime/librime/issues/860)
+* **switch_translator:** skip switches with no state labels ([ce77835](https://github.com/rime/librime/commit/ce77835)), closes [#866](https://github.com/rime/librime/issues/866) [#640](https://github.com/rime/librime/issues/640)
+
+
+
 <a name="1.11.1"></a>
 ## [1.11.1](https://github.com/rime/librime/compare/1.11.0...1.11.1) (2024-04-25)
 
