@@ -17,6 +17,8 @@ struct StringSlice {
   operator string() const {
     return str && length ? string(str, length) : string();
   }
+
+  operator bool() const { return bool(str) && bool(length); }
 };
 
 class Switches {
