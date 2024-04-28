@@ -128,10 +128,15 @@ bool Context::Highlight(size_t index) {
     return false;
   Segment& seg(composition_.back());
   size_t new_index = index;
-  size_t candidate_count = seg.menu->Prepare(index + 1);
-  if (index >= candidate_count) {
-    DLOG(INFO) << "selection index exceeds candidate pool, fallback to last";
-    new_index = candidate_count - 1;
+  if (index < 0) {
+    DLOG(INFO) << "selection index < 0, fallback to 0";
+    new_index = 0;
+  } else {
+    size_t candidate_count = seg.menu->Prepare(index + 1);
+    if (index >= candidate_count) {
+      DLOG(INFO) << "selection index exceed candidate pool, fallback to last";
+      new_index = candidate_count - 1;
+    }
   }
   size_t previous_index = seg.selected_index;
   if (previous_index == new_index) {
