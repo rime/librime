@@ -14,5 +14,3 @@ node_modules/
 .*.swp
 .cache/
 *.7z
-*.DS_Store
-plugins/librime-*
