@@ -32,7 +32,12 @@ extern "C" {
 
 typedef uintptr_t RimeSessionId;
 
+#ifdef STDBOOL
+#include <stdbool.h>
+typedef bool Bool;
+#else
 typedef int Bool;
+#endif
 
 #ifndef False
 #define False 0
