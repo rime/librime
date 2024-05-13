@@ -56,7 +56,7 @@ void EntryCollector::LoadPresetVocabulary(DictSettings* settings) {
 
 void EntryCollector::Collect(const path& dict_file) {
   LOG(INFO) << "collecting entries from " << dict_file;
-  current_dict_file = dict_file.string();
+  current_dict_file = dict_file.u8string();
   line_number = 0;
   // read table
   std::ifstream fin(dict_file.c_str());
@@ -71,18 +71,18 @@ void EntryCollector::Collect(const path& dict_file) {
   int weight_column = settings.GetColumnIndex("weight");
   int stem_column = settings.GetColumnIndex("stem");
   if (text_column == -1) {
-    LOG(ERROR) << "missing text column definition in file: "
-               << current_dict_file << ".";
+    LOG(ERROR) << "missing text column definition in file: " << dict_file
+               << ".";
     return;
   }
   bool enable_comment = true;
   string line;
   while (getline(fin, line)) {
     boost::algorithm::trim_right(line);
+    line_number++;
     // skip empty lines and comments
     if (line.empty())
       continue;
-    line_number++;
     if (enable_comment && line[0] == '#') {
       if (line == "# no comment") {
         // a "# no comment" line disables further comments

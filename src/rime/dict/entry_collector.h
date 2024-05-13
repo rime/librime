@@ -73,7 +73,7 @@ class EntryCollector : public PhraseCollector {
   WeightMap total_weight;
 
  private:
-  std::string current_dict_file;
+  string current_dict_file;
   size_t line_number;
 };
 
