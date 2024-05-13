@@ -56,6 +56,8 @@ void EntryCollector::LoadPresetVocabulary(DictSettings* settings) {
 
 void EntryCollector::Collect(const path& dict_file) {
   LOG(INFO) << "collecting entries from " << dict_file;
+  current_dict_file = dict_file.string();
+  line_number = 0;
   // read table
   std::ifstream fin(dict_file.c_str());
   DictSettings settings;
@@ -69,7 +71,8 @@ void EntryCollector::Collect(const path& dict_file) {
   int weight_column = settings.GetColumnIndex("weight");
   int stem_column = settings.GetColumnIndex("stem");
   if (text_column == -1) {
-    LOG(ERROR) << "missing text column definition.";
+    LOG(ERROR) << "missing text column definition in file: "
+               << current_dict_file << ".";
     return;
   }
   bool enable_comment = true;
@@ -79,6 +82,7 @@ void EntryCollector::Collect(const path& dict_file) {
     // skip empty lines and comments
     if (line.empty())
       continue;
+    line_number++;
     if (enable_comment && line[0] == '#') {
       if (line == "# no comment") {
         // a "# no comment" line disables further comments
@@ -90,7 +94,9 @@ void EntryCollector::Collect(const path& dict_file) {
     auto row = strings::split(line, "\t");
     int num_columns = static_cast<int>(row.size());
     if (num_columns <= text_column || row[text_column].empty()) {
-      LOG(WARNING) << "Missing entry text at #" << num_entries << ".";
+      LOG(WARNING) << "Missing entry text at #" << num_entries
+                   << ", line: " << line_number
+                   << " of file: " << current_dict_file << ".";
       continue;
     }
     const auto& word(row[text_column]);
@@ -114,8 +120,8 @@ void EntryCollector::Collect(const path& dict_file) {
       encode_queue.push({word, weight_str});
     }
     if (!stem_str.empty() && !code_str.empty()) {
-      DLOG(INFO) << "add stem '" << word << "': " << "[" << code_str << "] = ["
-                 << stem_str << "]";
+      DLOG(INFO) << "add stem '" << word << "': "
+                 << "[" << code_str << "] = [" << stem_str << "]";
       stems[word].insert(stem_str);
     }
   }
@@ -168,7 +174,9 @@ void EntryCollector::CreateEntry(const string& word,
     try {
       percentage = std::stod(weight_str.substr(0, weight_str.length() - 1));
     } catch (...) {
-      LOG(WARNING) << "invalid entry definition at #" << num_entries << ".";
+      LOG(WARNING) << "invalid entry definition at #" << num_entries
+                   << ", line: " << line_number
+                   << " of file: " << current_dict_file << ".";
       percentage = 100.0;
     }
     e->weight *= percentage / 100.0;
@@ -176,7 +184,9 @@ void EntryCollector::CreateEntry(const string& word,
     try {
       e->weight = std::stod(weight_str);
     } catch (...) {
-      LOG(WARNING) << "invalid entry definition at #" << num_entries << ".";
+      LOG(WARNING) << "invalid entry definition at #" << num_entries
+                   << ", line: " << line_number
+                   << " of file: " << current_dict_file << ".";
       e->weight = 0.0;
     }
   }
