@@ -85,6 +85,9 @@ RIME_API void SetupLogging(const char* app_name,
     }
   }
   google::SetLogFilenameExtension(".log");
+  google::SetLogSymlink(0, app_name);
+  google::SetLogSymlink(1, app_name);
+  google::SetLogSymlink(2, app_name);
   // Do not allow other users to read/write log files created by current
   // process.
   FLAGS_logfile_mode = 0600;
