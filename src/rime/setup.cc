@@ -39,31 +39,27 @@ RIME_API void LoadModules(const char* module_names[]) {
   }
 }
 
-// assume member is a non-null pointer in struct *p.
-#define PROVIDED(p, member) \
-  ((p) && RIME_STRUCT_HAS_MEMBER(*(p), (p)->member) && (p)->member)
-
 RIME_API void SetupDeployer(RimeTraits* traits) {
   if (!traits)
     return;
   Deployer& deployer(Service::instance().deployer());
-  if (PROVIDED(traits, shared_data_dir))
+  if (RIME_PROVIDED(traits, shared_data_dir))
     deployer.shared_data_dir = path(traits->shared_data_dir);
-  if (PROVIDED(traits, user_data_dir))
+  if (RIME_PROVIDED(traits, user_data_dir))
     deployer.user_data_dir = path(traits->user_data_dir);
-  if (PROVIDED(traits, distribution_name))
+  if (RIME_PROVIDED(traits, distribution_name))
     deployer.distribution_name = traits->distribution_name;
-  if (PROVIDED(traits, distribution_code_name))
+  if (RIME_PROVIDED(traits, distribution_code_name))
     deployer.distribution_code_name = traits->distribution_code_name;
-  if (PROVIDED(traits, distribution_version))
+  if (RIME_PROVIDED(traits, distribution_version))
     deployer.distribution_version = traits->distribution_version;
-  if (PROVIDED(traits, app_name))
+  if (RIME_PROVIDED(traits, app_name))
     deployer.app_name = traits->app_name;
-  if (PROVIDED(traits, prebuilt_data_dir))
+  if (RIME_PROVIDED(traits, prebuilt_data_dir))
     deployer.prebuilt_data_dir = path(traits->prebuilt_data_dir);
   else
     deployer.prebuilt_data_dir = deployer.shared_data_dir / "build";
-  if (PROVIDED(traits, staging_dir))
+  if (RIME_PROVIDED(traits, staging_dir))
     deployer.staging_dir = path(traits->staging_dir);
   else
     deployer.staging_dir = deployer.user_data_dir / "build";
