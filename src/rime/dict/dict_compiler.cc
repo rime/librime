@@ -123,8 +123,8 @@ bool DictCompiler::Compile(const path& schema_file) {
   } else {
     rebuild_prism = true;
   }
-  LOG(INFO) << dict_file << "[" << dict_files.size() << " file(s)]" << " ("
-            << dict_file_checksum << ")";
+  LOG(INFO) << dict_file << "[" << dict_files.size() << " file(s)]"
+            << " (" << dict_file_checksum << ")";
   LOG(INFO) << schema_file << " (" << schema_file_checksum << ")";
   {
     the<ResourceResolver> resolver(
