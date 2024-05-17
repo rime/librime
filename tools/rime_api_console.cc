@@ -162,6 +162,9 @@ bool execute_special_command(const char* line, RimeSessionId session_id) {
     printf("%s set %s.\n", option, is_on ? "on" : "off");
     return true;
   }
+  if (!strcmp(line, "synchronize")) {
+    return rime->sync_user_data();
+  }
   return false;
 }
 
