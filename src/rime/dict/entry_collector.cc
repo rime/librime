@@ -114,8 +114,8 @@ void EntryCollector::Collect(const path& dict_file) {
       encode_queue.push({word, weight_str});
     }
     if (!stem_str.empty() && !code_str.empty()) {
-      DLOG(INFO) << "add stem '" << word << "': " << "[" << code_str << "] = ["
-                 << stem_str << "]";
+      DLOG(INFO) << "add stem '" << word << "': "
+                 << "[" << code_str << "] = [" << stem_str << "]";
       stems[word].insert(stem_str);
     }
   }

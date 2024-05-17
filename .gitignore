@@ -8,9 +8,11 @@ lib/*
 bin/*
 share/*
 deps/*/*
+plugins/*/
 env.bat
 node_modules/
 *~
 .*.swp
 .cache/
 *.7z
+.DS_Store
