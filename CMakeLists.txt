@@ -224,6 +224,7 @@ install(FILES cmake/RimeConfig.cmake
   DESTINATION ${CMAKE_INSTALL_FULL_DATADIR}/cmake/rime)
 
 file(GLOB rime_public_header_files ${PROJECT_SOURCE_DIR}/src/*.h)
+list(FILTER rime_public_header_files EXCLUDE REGEX .*_impl\.h$)
 install(FILES ${rime_public_header_files}
   DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR})
 if(INSTALL_PRIVATE_HEADERS)

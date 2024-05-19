@@ -30,7 +30,7 @@ typedef struct {
   size_t i;
 } RimeUserDictIterator;
 
-typedef struct rime_levers_api_t {
+typedef struct RIME_FLAVORED(rime_levers_api_t) {
   int data_size;
 
   RimeCustomSettings* (*custom_settings_init)(const char* config_id,
@@ -85,7 +85,7 @@ typedef struct rime_levers_api_t {
                          const char* key,
                          RimeConfig* value);
 
-} RimeLeversApi;
+} RIME_FLAVORED(RimeLeversApi);
 
 #ifdef __cplusplus
 }

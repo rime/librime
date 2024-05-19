@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <rime_api.h>
+#include <rime/service.h>
 #include <rime/setup.h>
 
 int main(int argc, char** argv) {
@@ -12,6 +13,7 @@ int main(int argc, char** argv) {
   rime::SetupDeployer(&traits);
   rime::SetupLogging("rime.test");
   rime::LoadModules(rime::kDefaultModules);
+  rime::Service::instance().StartService();
 
   return RUN_ALL_TESTS();
 }
