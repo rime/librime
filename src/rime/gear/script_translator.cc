@@ -171,7 +171,8 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
     : Translator(ticket), Memory(ticket), TranslatorOptions(ticket) {
   if (!engine_)
     return;
-  if (Config* config = engine_->schema()->config()) {
+  if (Config* config = ticket.schema->config()) {
+    DLOG(INFO) << "loading configuration from schema_id: " << ticket.schema->schema_id();
     config->GetInt(name_space_ + "/spelling_hints", &spelling_hints_);
     config->GetBool(name_space_ + "/always_show_comments",
                     &always_show_comments_);

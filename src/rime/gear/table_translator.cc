@@ -210,7 +210,8 @@ TableTranslator::TableTranslator(const Ticket& ticket)
     : Translator(ticket), Memory(ticket), TranslatorOptions(ticket) {
   if (!engine_)
     return;
-  if (Config* config = engine_->schema()->config()) {
+  if (Config* config = ticket.schema->config()) {
+    DLOG(INFO) << "loading configuration from schema_id: " << ticket.schema->schema_id();
     config->GetBool(name_space_ + "/enable_charset_filter",
                     &enable_charset_filter_);
     config->GetBool(name_space_ + "/enable_sentence", &enable_sentence_);
