@@ -6,6 +6,9 @@
 //
 #include <utf8.h>
 #include <rime/candidate.h>
+#include <rime/context.h>
+#include <rime/engine.h>
+#include <rime/schema.h>
 #include <rime/translation.h>
 #include <rime/gear/single_char_filter.h>
 #include <rime/gear/translator_commons.h>
@@ -55,11 +58,69 @@ bool SingleCharFirstTranslation::Rearrange() {
   return !cache_.empty();
 }
 
-SingleCharFilter::SingleCharFilter(const Ticket& ticket) : Filter(ticket) {}
+class SingleCharOnlyTranslation : public Translation {
+ public:
+  SingleCharOnlyTranslation(an<Translation> translation);
+
+  bool Next() override;
+  an<Candidate> Peek() override;
+
+ private:
+  an<Translation> translation_;
+  an<Candidate> current_;
+};
+
+SingleCharOnlyTranslation::SingleCharOnlyTranslation(
+    an<Translation> translation)
+    : translation_(translation) {}
+
+an<Candidate> SingleCharOnlyTranslation::Peek() {
+  return current_;
+}
+
+bool SingleCharOnlyTranslation::Next() {
+  if (exhausted())
+    return false;
+  while (true) {
+    if (translation_->exhausted() || !translation_->Next()) {
+      set_exhausted(true);
+      current_.reset();
+      return false;
+    }
+    current_ = translation_->Peek();
+    if (unistrlen(current_->text()) == 1) {
+      return true;
+    }
+  }
+  assert(false);  // unreachable
+}
+
+SingleCharFilter::SingleCharFilter(const Ticket& ticket) : Filter(ticket) {
+  if (name_space_ == "") {
+    name_space_ = "single_char_filter";
+  }
+  if (Config* config = engine_->schema()->config()) {
+    string type;
+    if (config->GetString(name_space_ + "/type", &type)) {
+      type_ = (type == "char_only") ? kCharOnly : kCharFirst;
+    } else {
+      type_ = kCharFirst;
+    }
+    config->GetString(name_space_ + "/option_name", &option_name_);
+  }
+}
 
 an<Translation> SingleCharFilter::Apply(an<Translation> translation,
                                         CandidateList* candidates) {
-  return New<SingleCharFirstTranslation>(translation);
+  // for backward compatibility, always enable filter if no option_name is given
+  if (option_name_ != "" && !engine_->context()->get_option(option_name_)) {
+    return translation;
+  }
+  if (type_ == kCharFirst) {
+    return New<SingleCharFirstTranslation>(translation);
+  } else {
+    return New<SingleCharOnlyTranslation>(translation);
+  }
 }
 
 }  // namespace rime

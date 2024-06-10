@@ -17,6 +17,13 @@ class SingleCharFilter : public Filter {
 
   virtual an<Translation> Apply(an<Translation> translation,
                                 CandidateList* candidates);
+
+ protected:
+  enum FilterType { kCharOnly, kCharFirst };
+
+  std::string name_space_;
+  std::string option_name_ = "";
+  FilterType type_ = kCharFirst;
 };
 
 }  // namespace rime
