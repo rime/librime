@@ -32,8 +32,8 @@ static void load_patterns(RecognizerPatterns* patterns, an<ConfigMap> map) {
   }
 }
 
-void RecognizerPatterns::LoadConfig(Config* config) {
-  load_patterns(this, config->GetMap("recognizer/patterns"));
+void RecognizerPatterns::LoadConfig(Config* config, const string& path) {
+  load_patterns(this, config->GetMap(path));
 }
 
 RecognizerMatch RecognizerPatterns::GetMatch(
@@ -64,6 +64,33 @@ RecognizerMatch RecognizerPatterns::GetMatch(
           return {v.first, start, end};
         }
       }
+    }
+  }
+  return RecognizerMatch();
+}
+
+void RecognizerPatternsOfVector::LoadConfig(Config* config) {
+  this->clear();
+  string path = "recognizer/patterns";
+  if (config->IsMap(path)) {
+    this->assign(1, RecognizerPatterns());
+    (*this)[0].LoadConfig(config, path);
+  } else if (config->IsList(path)) {
+    size_t size = config->GetListSize(path);
+    this->assign(size, RecognizerPatterns());
+    for (size_t i = 0; i < size; ++i) {
+      (*this)[i].LoadConfig(config, path + "/@" + std::to_string(i));
+    }
+  }
+}
+
+RecognizerMatch RecognizerPatternsOfVector::GetMatch(
+    const string& input,
+    const Segmentation& segmentation) const {
+  for (auto it : *this) {
+    auto res = it.GetMatch(input, segmentation);
+    if (res.found()) {
+      return res;
     }
   }
   return RecognizerMatch();
