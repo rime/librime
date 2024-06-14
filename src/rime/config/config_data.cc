@@ -74,7 +74,7 @@ bool ConfigData::LoadFromFile(const path& file_path, ConfigCompiler* compiler) {
     YAML::Node doc = YAML::LoadFile(file_path.string());
     root = ConvertFromYaml(doc, compiler);
   } catch (YAML::Exception& e) {
-    LOG(ERROR) << "Error parsing YAML: " << e.what();
+    LOG(ERROR) << "Error parsing YAML \"" << file_path << "\" : " << e.what();
     return false;
   }
   return true;
