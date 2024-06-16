@@ -38,12 +38,17 @@ static inline bool is_table_entry(const an<Candidate>& cand) {
   return type == "table" || type == "user_table";
 }
 
+static inline bool is_simple_candidate(const an<Candidate>& cand) {
+  return bool(As<SimpleCandidate>(cand));
+}
+
 static bool is_auto_selectable(const an<Candidate>& cand,
                                const string& input,
                                const string& delimiters) {
   return
       // reaches end of input
-      cand->end() == input.length() && is_table_entry(cand) &&
+      cand->end() == input.length() &&
+      (is_table_entry(cand) || is_simple_candidate(cand)) &&
       // no delimiters
       input.find_first_of(delimiters, cand->start()) == string::npos;
 }
