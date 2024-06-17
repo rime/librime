@@ -66,13 +66,30 @@ class SingleCharOnlyTranslation : public Translation {
   an<Candidate> Peek() override;
 
  private:
+  bool SkipToNextChar();
+
   an<Translation> translation_;
   an<Candidate> current_;
 };
 
 SingleCharOnlyTranslation::SingleCharOnlyTranslation(
     an<Translation> translation)
-    : translation_(translation) {}
+    : translation_(translation) {
+  SkipToNextChar();
+}
+
+bool SingleCharOnlyTranslation::SkipToNextChar() {
+  while (true) {
+    if (translation_->exhausted() || !translation_->Next()) {
+      set_exhausted(true);
+      current_.reset();
+      return false;
+    }
+    current_ = translation_->Peek();
+    if (unistrlen(current_->text()) == 1)
+      return true;
+  }
+}
 
 an<Candidate> SingleCharOnlyTranslation::Peek() {
   return current_;
@@ -81,18 +98,7 @@ an<Candidate> SingleCharOnlyTranslation::Peek() {
 bool SingleCharOnlyTranslation::Next() {
   if (exhausted())
     return false;
-  while (true) {
-    if (translation_->exhausted() || !translation_->Next()) {
-      set_exhausted(true);
-      current_.reset();
-      return false;
-    }
-    current_ = translation_->Peek();
-    if (unistrlen(current_->text()) == 1) {
-      return true;
-    }
-  }
-  assert(false);  // unreachable
+  return SkipToNextChar();
 }
 
 SingleCharFilter::SingleCharFilter(const Ticket& ticket) : Filter(ticket) {
