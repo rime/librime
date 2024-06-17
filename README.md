@@ -75,15 +75,21 @@ Official:
 Community:
   - [emacs-rime](https://github.com/DogLooksGood/emacs-rime): frontend for Emacs
   - [coc-rime](https://github.com/tonyfettes/coc-rime): frontend for Vim
+  - [rime.nvim](https://github.com/Freed-Wu/rime.nvim): frontend for Vim
+  - [fcitx5.nvim](https://github.com/tonyfettes/fcitx5.nvim): Fcitx5 frontend for Vim
+  - [fcitx5-ui.nvim](https://github.com/black-desk/fcitx5-ui.nvim): Fcitx5 frontend for Vim
   - [zsh-rime](https://github.com/Freed-Wu/zsh-rime): frontend for Zsh
+  - [pyrime](https://github.com/Freed-Wu/pyrime): frontend for Ptpython
   - [fcitx-rime](https://github.com/fcitx/fcitx-rime): Fcitx frontend for Linux
   - [fcitx5-rime](https://github.com/fcitx/fcitx5-rime): Fcitx5 frontend for Linux
-  - [Hamster](https://github.com/imfuxiao/Hamster): frontend for iOS
-  - [PIME](https://github.com/EasyIME/PIME): frontend for Windows
-  - [Trime](https://github.com/osfans/trime): frontend for Android
+  - [fcitx5-macos](https://github.com/fcitx-contrib/fcitx5-macos): Fcitx5 frontend for macOS
   - [XIME](https://github.com/stackia/XIME): frontend for macOS
-  - [My RIME](https://github.com/LibreService/my_rime): frontend for web
+  - [PIME](https://github.com/EasyIME/PIME): frontend for Windows
+  - [rabbit](https://github.com/amorphobia/rabbit): frontend for Windows
+  - [Trime](https://github.com/osfans/trime): frontend for Android
   - [fcitx5-android](https://github.com/fcitx5-android/fcitx5-android): frontend for Android
+  - [Hamster](https://github.com/imfuxiao/Hamster): frontend for iOS
+  - [My RIME](https://github.com/LibreService/my_rime): frontend for web
 
 Plugins
 ===
