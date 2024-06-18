@@ -71,6 +71,10 @@ class EntryCollector : public PhraseCollector {
   set<string /* word */> collection;
   WordMap words;
   WeightMap total_weight;
+
+ private:
+  string current_dict_file;
+  size_t line_number;
 };
 
 }  // namespace rime
