@@ -92,7 +92,7 @@ class RIME_API Context {
 
  private:
   string GetSoftCursor() const;
-  bool DeleteCandidate(function<an<Candidate>(Segment& seg)> get_candidate);
+  bool DeleteCandidate(std::optional<size_t> index);
 
   string input_;
   size_t caret_pos_ = 0;
