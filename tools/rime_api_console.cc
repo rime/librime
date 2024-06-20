@@ -165,6 +165,26 @@ bool execute_special_command(const char* line, RimeSessionId session_id) {
   if (!strcmp(line, "synchronize")) {
     return rime->sync_user_data();
   }
+  const char* kDeleteCandidateOnCurrentPage = "delete on current page ";
+  command_length = strlen(kDeleteCandidateOnCurrentPage);
+  if (!strncmp(line, kDeleteCandidateOnCurrentPage, command_length)) {
+    const char* index_str = line + command_length;
+    int index = atoi(index_str);
+    if (!rime->delete_candidate_on_current_page(session_id, index)) {
+      fprintf(stderr, "failed to delete\n");
+    }
+    return true;
+  }
+  const char* kDeleteCandidate = "delete ";
+  command_length = strlen(kDeleteCandidate);
+  if (!strncmp(line, kDeleteCandidate, command_length)) {
+    const char* index_str = line + command_length;
+    int index = atoi(index_str);
+    if (!rime->delete_candidate(session_id, index)) {
+      fprintf(stderr, "failed to delete\n");
+    }
+    return true;
+  }
   return false;
 }
 

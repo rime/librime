@@ -143,27 +143,27 @@ bool Context::Highlight(size_t index) {
   return true;
 }
 
-bool Context::DeleteCandidate(
-    function<an<Candidate>(Segment& seg)> get_candidate) {
+bool Context::DeleteCandidate(std::optional<size_t> index) {
   if (composition_.empty())
     return false;
   Segment& seg(composition_.back());
-  if (auto cand = get_candidate(seg)) {
-    DLOG(INFO) << "Deleting candidate: '" << cand->text();
-    delete_notifier_(this);
-    return true;  // CAVEAT: this doesn't mean anything is deleted for sure
+  auto cand = index ? seg.GetCandidateAt(*index) : seg.GetSelectedCandidate();
+  if (!cand)
+    return false;
+  DLOG(INFO) << "Deleting candidate: " << cand->text();
+  if (index) {
+    seg.selected_index = *index;
   }
-  return false;
+  delete_notifier_(this);
+  return true;  // CAVEAT: this doesn't mean anything is deleted for sure
 }
 
 bool Context::DeleteCandidate(size_t index) {
-  return DeleteCandidate(
-      [index](Segment& seg) { return seg.GetCandidateAt(index); });
+  return DeleteCandidate(std::optional{index});
 }
 
 bool Context::DeleteCurrentSelection() {
-  return DeleteCandidate(
-      [](Segment& seg) { return seg.GetSelectedCandidate(); });
+  return DeleteCandidate({});
 }
 
 bool Context::ConfirmCurrentSelection() {

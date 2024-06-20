@@ -41,7 +41,7 @@ Build dependencies
   - compiler with C++17 support
   - cmake>=3.12
   - libboost>=1.74
-  - libglog (optional)
+  - libglog>=0.7 (optional)
   - libleveldb
   - libmarisa
   - libopencc>=1.0.2
@@ -75,6 +75,7 @@ Official:
 Community:
   - [emacs-rime](https://github.com/DogLooksGood/emacs-rime): frontend for Emacs
   - [coc-rime](https://github.com/tonyfettes/coc-rime): frontend for Vim
+  - [zsh-rime](https://github.com/Freed-Wu/zsh-rime): frontend for Zsh
   - [fcitx-rime](https://github.com/fcitx/fcitx-rime): Fcitx frontend for Linux
   - [fcitx5-rime](https://github.com/fcitx/fcitx5-rime): Fcitx5 frontend for Linux
   - [Hamster](https://github.com/imfuxiao/Hamster): frontend for iOS
