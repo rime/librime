@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
+#include <rime/algo/strings.h>
 #include <rime/service.h>
 #include <rime/algo/dynamics.h>
 #include <rime/dict/text_db.h>
@@ -25,8 +26,7 @@ string UserDbValue::Pack() const {
 }
 
 bool UserDbValue::Unpack(const string& value) {
-  vector<string> kv;
-  boost::split(kv, value, boost::is_any_of(" "));
+  vector<string> kv = strings::split(value, " ");
   for (const string& k_eq_v : kv) {
     size_t eq = k_eq_v.find('=');
     if (eq == string::npos)

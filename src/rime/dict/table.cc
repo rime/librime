@@ -80,9 +80,8 @@ Code TableAccessor::code() const {
     return index_code();
   }
   Code code(index_code());
-  for (auto p = extra->begin(); p != extra->end(); ++p) {
-    code.push_back(*p);
-  }
+  code.reserve(code.size() + extra->size);
+  code.insert(code.end(), extra->begin(), extra->end());
   return code;
 }
 
@@ -98,8 +97,8 @@ bool TableQuery::Advance(SyllableId syllable_id, double credibility) {
     return false;
   }
   ++level_;
-  index_code_.push_back(syllable_id);
-  credibility_.push_back(credibility_.back() + credibility);
+  index_code_.emplace_back(syllable_id);
+  credibility_.emplace_back(credibility_.back() + credibility);
   return true;
 }
 
@@ -116,8 +115,8 @@ bool TableQuery::Backdate() {
 
 void TableQuery::Reset() {
   level_ = 0;
-  index_code_.clear();
-  credibility_.clear();
+  decltype(index_code_)().swap(index_code_);
+  decltype(credibility_)().swap(credibility_);
   credibility_.push_back(0.0);
 }
 
@@ -136,68 +135,80 @@ static table::TrunkIndexNode* find_node(table::TrunkIndexNode* first,
 }
 
 bool TableQuery::Walk(SyllableId syllable_id) {
-  if (level_ == 0) {
-    if (!lv1_index_ || syllable_id < 0 ||
-        syllable_id >= static_cast<SyllableId>(lv1_index_->size))
+  switch (level_) {
+    case 0: {
+      if (!lv1_index_ || syllable_id < 0 ||
+          syllable_id >= static_cast<SyllableId>(lv1_index_->size))
+        return false;
+      auto node = &lv1_index_->at[syllable_id];
+      if (!node->next_level)
+        return false;
+      lv2_index_ = &node->next_level->trunk();
+    } break;
+    case 1: {
+      if (!lv2_index_)
+        return false;
+      auto node =
+          find_node(lv2_index_->begin(), lv2_index_->end(), syllable_id);
+      if (node == lv2_index_->end())
+        return false;
+      if (!node->next_level)
+        return false;
+      lv3_index_ = &node->next_level->trunk();
+    } break;
+    case 2: {
+      if (!lv3_index_)
+        return false;
+      auto node =
+          find_node(lv3_index_->begin(), lv3_index_->end(), syllable_id);
+      if (node == lv3_index_->end())
+        return false;
+      if (!node->next_level)
+        return false;
+      lv4_index_ = &node->next_level->tail();
+    } break;
+    default:
       return false;
-    auto node = &lv1_index_->at[syllable_id];
-    if (!node->next_level)
-      return false;
-    lv2_index_ = &node->next_level->trunk();
-  } else if (level_ == 1) {
-    if (!lv2_index_)
-      return false;
-    auto node = find_node(lv2_index_->begin(), lv2_index_->end(), syllable_id);
-    if (node == lv2_index_->end())
-      return false;
-    if (!node->next_level)
-      return false;
-    lv3_index_ = &node->next_level->trunk();
-  } else if (level_ == 2) {
-    if (!lv3_index_)
-      return false;
-    auto node = find_node(lv3_index_->begin(), lv3_index_->end(), syllable_id);
-    if (node == lv3_index_->end())
-      return false;
-    if (!node->next_level)
-      return false;
-    lv4_index_ = &node->next_level->tail();
-  } else {
-    return false;
   }
   return true;
 }
 
 inline static Code add_syllable(Code code, SyllableId syllable_id) {
-  code.push_back(syllable_id);
+  code.emplace_back(syllable_id);
   return code;
 }
 
 TableAccessor TableQuery::Access(SyllableId syllable_id,
                                  double credibility) const {
   credibility += credibility_.back();
-  if (level_ == 0) {
-    if (!lv1_index_ || syllable_id < 0 ||
-        syllable_id >= static_cast<SyllableId>(lv1_index_->size))
+  switch (level_) {
+    case 0: {
+      if (!lv1_index_ || syllable_id < 0 ||
+          syllable_id >= static_cast<SyllableId>(lv1_index_->size))
+        return TableAccessor();
+      auto node = &lv1_index_->at[syllable_id];
+      return TableAccessor(add_syllable(index_code_, syllable_id),
+                           &node->entries, credibility);
+    }
+    case 1:
+    case 2: {
+      auto index = (level_ == 1) ? lv2_index_ : lv3_index_;
+      if (!index)
+        return TableAccessor();
+      auto node = find_node(index->begin(), index->end(), syllable_id);
+      if (node == index->end())
+        return TableAccessor();
+      return TableAccessor(add_syllable(index_code_, syllable_id),
+                           &node->entries, credibility);
+    }
+    case 3: {
+      if (!lv4_index_)
+        return TableAccessor();
+      return TableAccessor(index_code_, lv4_index_, credibility);
+    }
+    default:
       return TableAccessor();
-    auto node = &lv1_index_->at[syllable_id];
-    return TableAccessor(add_syllable(index_code_, syllable_id), &node->entries,
-                         credibility);
-  } else if (level_ == 1 || level_ == 2) {
-    auto index = (level_ == 1) ? lv2_index_ : lv3_index_;
-    if (!index)
-      return TableAccessor();
-    auto node = find_node(index->begin(), index->end(), syllable_id);
-    if (node == index->end())
-      return TableAccessor();
-    return TableAccessor(add_syllable(index_code_, syllable_id), &node->entries,
-                         credibility);
-  } else if (level_ == 3) {
-    if (!lv4_index_)
-      return TableAccessor();
-    return TableAccessor(index_code_, lv4_index_, credibility);
   }
-  return TableAccessor();
 }
 
 // string Table::GetString_v1(const table::StringType& x) {
@@ -562,14 +573,15 @@ bool Table::Query(const SyllableGraph& syll_graph,
     size_t current_pos = q.front().first;
     TableQuery query(q.front().second);
     q.pop();
-    auto index = syll_graph.indices.find(current_pos);
-    if (index == syll_graph.indices.end()) {
+    auto& indices = syll_graph.indices;
+    auto index = indices.find(current_pos);
+    if (index == indices.end()) {
       continue;
     }
     if (query.level() == Code::kIndexCodeMaxLength) {
       TableAccessor accessor(query.Access(-1));
       if (!accessor.exhausted()) {
-        (*result)[current_pos].push_back(accessor);
+        (*result)[current_pos].emplace_back(std::move(accessor));
       }
       continue;
     }
@@ -579,7 +591,7 @@ bool Table::Query(const SyllableGraph& syll_graph,
       for (auto props : spellings.second) {
         size_t end_pos = props->end_pos;
         if (!accessor.exhausted()) {
-          (*result)[end_pos].push_back(accessor);
+          (*result)[end_pos].emplace_back(std::move(accessor));
         }
         if (end_pos < syll_graph.interpreted_length &&
             query.Advance(syll_id, props->credibility)) {
