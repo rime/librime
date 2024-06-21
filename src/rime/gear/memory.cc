@@ -86,7 +86,7 @@ Memory::~Memory() {
   unhandled_key_connection_.disconnect();
 }
 
-void Memory::ResetUserDict() {
+void Memory::ReleaseUserDict() {
   user_dict_.reset();
 }
 

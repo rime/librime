@@ -47,7 +47,7 @@ class Memory {
   UserDictionary* user_dict() const { return user_dict_.get(); }
 
   const Language* language() const { return language_.get(); }
-  void ResetUserDict();
+  void ReleaseUserDict();
 
  protected:
   void OnCommit(Context* ctx);
