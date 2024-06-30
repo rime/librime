@@ -16,10 +16,11 @@ namespace rime {
 
 Session::Session() {
   engine_.reset(Engine::Create());
-  engine_->sink().connect(std::bind(&Session::OnCommit, this, _1));
+  engine_->sink().connect([this](auto text) { OnCommit(text); });
   SessionId session_id = reinterpret_cast<SessionId>(this);
-  engine_->message_sink().connect(
-      std::bind(&Service::Notify, &Service::instance(), session_id, _1, _2));
+  engine_->message_sink().connect([session_id](auto type, auto value) {
+    Service::instance().Notify(session_id, type, value);
+  });
 }
 
 bool Session::ProcessKey(const KeyEvent& key_event) {
@@ -65,7 +66,7 @@ Schema* Session::schema() const {
 
 Service::Service() {
   deployer_.message_sink().connect(
-      std::bind(&Service::Notify, this, 0, _1, _2));
+      [this](auto type, auto value) { Notify(0, type, value); });
 }
 
 Service::~Service() {

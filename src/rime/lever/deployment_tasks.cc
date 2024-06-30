@@ -29,8 +29,6 @@
 #include <windows.h>
 #endif
 
-using namespace std::placeholders;
-
 namespace fs = std::filesystem;
 
 namespace rime {
