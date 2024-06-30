@@ -163,7 +163,7 @@ bool Context::DeleteCandidate(size_t index) {
 }
 
 bool Context::DeleteCurrentSelection() {
-  return DeleteCandidate({});
+  return DeleteCandidate(std::nullopt);
 }
 
 bool Context::ConfirmCurrentSelection() {
