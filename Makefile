@@ -20,7 +20,8 @@ ifdef BUILD_UNIVERSAL
 # https://cmake.org/cmake/help/latest/envvar/CMAKE_OSX_ARCHITECTURES.html
 export CMAKE_OSX_ARCHITECTURES = arm64;x86_64
 endif
-
+else ifeq ($(shell test -n "$$PREFIX" && echo "$$PREFIX" | grep -q "/data/data/com.termux" && echo "termux"),termux)
+prefix ?= $(PREFIX)
 else # for Linux
 prefix ?= $(DESTDIR)/usr
 endif
