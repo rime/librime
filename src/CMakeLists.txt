@@ -93,7 +93,11 @@ if(BUILD_SHARED_LIBS)
     set_target_properties(rime PROPERTIES INSTALL_NAME_DIR "@rpath")
   endif()
   install(TARGETS rime DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
-
+  if(MSVC)
+    install(FILES $<TARGET_PDB_FILE:rime>
+      DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
+      OPTIONAL)
+  endif()
   if(BUILD_SEPARATE_LIBS)
     add_library(rime-dict ${rime_dict_module_src})
     target_link_libraries(rime-dict
