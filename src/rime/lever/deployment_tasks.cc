@@ -636,7 +636,8 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
     // avoid iteration on non-existing directory, which may cause error
     if (!fs::exists(fs::path(dir)))
       continue;
-    vector<path> files;
+    vector<path> files_to_remove;
+    set<path> files_in_use;
     DLOG(INFO) << "temp directory: " << dir;
     try {
       // preparing files
@@ -646,7 +647,14 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
             boost::starts_with(file_name, app_name) &&
             boost::ends_with(file_name, ".log") &&
             !boost::contains(file_name, today)) {
-          files.push_back(entry.path());
+          files_to_remove.push_back(entry.path());
+        } else if (entry.is_symlink()) {
+          auto target = fs::read_symlink(entry.path());
+          const string& target_file_name(target.filename().u8string());
+          if (boost::starts_with(target_file_name, app_name) &&
+              boost::ends_with(target_file_name, ".log")) {
+            files_in_use.insert(target);
+          }
         }
       }
     } catch (const fs::filesystem_error& ex) {
@@ -656,7 +664,9 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
       continue;
     }
     // remove files
-    for (const auto& file : files) {
+    for (const auto& file : files_to_remove) {
+      if (files_in_use.find(file.filename()) != files_in_use.end())
+        continue;
       try {
         DLOG(INFO) << "removing log file '" << file.filename() << "'.";
         // ensure write permission
