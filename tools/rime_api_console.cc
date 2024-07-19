@@ -162,6 +162,14 @@ bool execute_special_command(const char* line, RimeSessionId session_id) {
     printf("%s set %s.\n", option, is_on ? "on" : "off");
     return true;
   }
+
+  if (!strcmp(line, "switcher")) {
+    // 0xffc1 = f4
+    rime->process_key(session_id, 0xffc1, 0);
+    print(session_id);
+    return true;
+  }
+
   if (!strcmp(line, "synchronize")) {
     return rime->sync_user_data();
   }

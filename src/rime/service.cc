@@ -64,6 +64,10 @@ Schema* Session::schema() const {
   return engine_ ? engine_->active_engine()->schema() : NULL;
 }
 
+Schema* Session::engineSchema() const {
+  return engine_ ? engine_->schema() : NULL;
+}
+
 Service::Service() {
   deployer_.message_sink().connect(
       [this](auto type, auto value) { Notify(0, type, value); });

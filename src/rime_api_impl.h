@@ -1103,7 +1103,7 @@ static RimeStringSlice RimeGetStateLabelAbbreviated(RimeSessionId session_id,
   an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return {nullptr, 0};
-  Config* config = session->schema()->config();
+  Config* config = session->engineSchema()->config();
   if (!config)
     return {nullptr, 0};
   Switches switches(config);

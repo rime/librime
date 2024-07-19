@@ -42,6 +42,7 @@ class Session {
 
   Context* context() const;
   Schema* schema() const;
+  Schema* engineSchema() const;
   time_t last_active_time() const { return last_active_time_; }
   const string& commit_text() const { return commit_text_; }
 
