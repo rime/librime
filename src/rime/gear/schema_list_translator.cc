@@ -25,12 +25,13 @@ class SchemaSelection : public SimpleCandidate, public SwitcherCommand {
 };
 
 void SchemaSelection::Apply(Switcher* switcher) {
-  switcher->Deactivate();
-  if (Engine* engine = switcher->attached_engine()) {
-    if (keyword_ != engine->schema()->schema_id()) {
-      engine->ApplySchema(new Schema(keyword_));
+  switcher->DeactivateAndApply([this, switcher] {
+    if (Engine* engine = switcher->attached_engine()) {
+      if (keyword_ != engine->schema()->schema_id()) {
+        engine->ApplySchema(new Schema(keyword_));
+      }
     }
-  }
+  });
 }
 
 class SchemaAction : public ShadowCandidate, public SwitcherCommand {
