@@ -249,9 +249,16 @@ void Switcher::Activate() {
 }
 
 void Switcher::Deactivate() {
-  context_->Clear();
-  engine_->set_active_engine();
   active_ = false;
+  engine_->set_active_engine();
+  context_->Clear();
+}
+
+void Switcher::DeactivateAndApply(function<void()> apply) {
+  active_ = false;
+  engine_->set_active_engine();
+  apply();
+  context_->Clear();
 }
 
 void Switcher::LoadSettings() {
