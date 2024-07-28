@@ -39,7 +39,8 @@ static inline bool is_table_entry(const an<Candidate>& cand) {
 }
 
 static inline bool is_simple_candidate(const an<Candidate>& cand) {
-  return bool(As<SimpleCandidate>(cand));
+  auto genuine = Candidate::GetGenuineCandidate(cand);
+  return bool(As<SimpleCandidate>(genuine));
 }
 
 static bool is_auto_selectable(const an<Candidate>& cand,
