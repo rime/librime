@@ -176,6 +176,10 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
     config->GetBool(name_space_ + "/always_show_comments",
                     &always_show_comments_);
     config->GetBool(name_space_ + "/enable_correction", &enable_correction_);
+    if (!config->GetBool(name_space_ + "/enable_word_completion",
+                         &enable_word_completion_)) {
+      enable_word_completion_ = enable_completion_;
+    }
     config->GetInt(name_space_ + "/max_homophones", &max_homophones_);
     poet_.reset(new Poet(language(), config));
   }
@@ -361,8 +365,8 @@ static bool has_exact_match_phrase(Ptr ptr, Iter iter, size_t consumed) {
 bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   size_t consumed = syllabifier_->BuildSyllableGraph(*dict->prism());
   const auto& syllable_graph = syllabifier_->syllable_graph();
-  bool predict_word =
-      translator_->enable_completion() && start_ + consumed == end_of_input_;
+  bool predict_word = translator_->enable_word_completion() &&
+                      start_ + consumed == end_of_input_;
 
   phrase_ = dict->Lookup(syllable_graph, 0, predict_word);
   if (user_dict) {
