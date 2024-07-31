@@ -174,6 +174,11 @@ void ChordComposer::UpdateChord(const Chord& chord) {
     return;
   Context* ctx = engine_->context();
   Composition& comp = ctx->composition();
+  // do not show chord prompt if the chord is empty or only contains space.
+  if (chord.empty() || (chord.size() == 1 && chord.count(' ') > 0)) {
+    ClearChord();
+    return;
+  }
   string code = SerializeChord(chord);
   prompt_format_.Apply(&code);
   if (comp.empty()) {
