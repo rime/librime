@@ -178,7 +178,9 @@ void KeyBindings::LoadBindings(const an<ConfigList>& bindings) {
     }
     KeyEvent key;
     if (!key.Parse(pattern->str())) {
-      LOG(WARNING) << "invalid key binding #" << i << ".";
+      LOG(WARNING) << "invalid key binding #" << i
+                   << ", with invalid accept pattern: " << pattern->str()
+                   << ".";
       continue;
     }
     if (auto target = map->GetValue("send")) {
@@ -186,12 +188,15 @@ void KeyBindings::LoadBindings(const an<ConfigList>& bindings) {
       if (key.Parse(target->str())) {
         binding.target.push_back(std::move(key));
       } else {
-        LOG(WARNING) << "invalid key binding #" << i << ".";
+        LOG(WARNING) << "invalid key binding #" << i
+                     << ", with invalid send pattern: " << target->str() << ".";
         continue;
       }
     } else if (auto target = map->GetValue("send_sequence")) {
       if (!binding.target.Parse(target->str())) {
-        LOG(WARNING) << "invalid key sequence #" << i << ".";
+        LOG(WARNING) << "invalid key sequence #" << i
+                     << ", with invalid send_sequence pattern: "
+                     << target->str() << ".";
         continue;
       }
     } else if (auto option = map->GetValue("toggle")) {
@@ -211,7 +216,9 @@ void KeyBindings::LoadBindings(const an<ConfigList>& bindings) {
         select_schema(engine, schema->str());
       };
     } else {
-      LOG(WARNING) << "invalid key binding #" << i << ".";
+      LOG(WARNING) << "invalid key binding #" << i
+                   << ", accept: " << pattern->str()
+                   << ", when: " << whence->str() << ".";
       continue;
     }
     Bind(key, binding);
