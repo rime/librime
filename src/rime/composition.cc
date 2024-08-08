@@ -9,7 +9,6 @@
 #include <rime/candidate.h>
 #include <rime/composition.h>
 #include <rime/menu.h>
-#include <iostream>
 
 namespace rime {
 
