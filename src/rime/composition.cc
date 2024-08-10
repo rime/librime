@@ -127,7 +127,8 @@ string Composition::GetScriptText(bool keep_selection) const {
     auto cand = seg.GetSelectedCandidate();
     start = end;
     end = cand ? cand->end() : seg.end;
-    if (keep_selection && cand && !cand->text().empty() && seg.status >= Segment::kSelected)
+    if (keep_selection && cand && !cand->text().empty() &&
+        seg.status >= Segment::kSelected)
       result += cand->text();
     else if (cand && !cand->preedit().empty())
       result += boost::erase_first_copy(cand->preedit(), "\t");
