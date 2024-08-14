@@ -118,7 +118,6 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket) {
   if (Config* config = ticket.schema->config()) {
     config->GetString(ticket.name_space + "/delimiter", &delimiters_) ||
         config->GetString("speller/delimiter", &delimiters_);
-    config->GetString(ticket.name_space + "/tag", &tag_);
     config->GetBool(ticket.name_space + "/contextual_suggestions",
                     &contextual_suggestions_);
     config->GetBool(ticket.name_space + "/enable_completion",
@@ -132,6 +131,20 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket) {
         config->GetList(ticket.name_space + "/comment_format"));
     user_dict_disabling_patterns_.Load(
         config->GetList(ticket.name_space + "/disable_user_dict_for_patterns"));
+    string tag;
+    if (config->GetString(ticket.name_space + "/tag", &tag)) {
+      // replace the first tag, and understand /tags as extra tags
+      tags_[0] = tag;
+    } else {
+      // replace all of the default tags
+      tags_.clear();
+    }
+    if (auto list = config->GetList(ticket.name_space + "/tags"))
+      for (size_t i = 0; i < list->size(); ++i)
+        if (auto value = As<ConfigValue>(list->GetAt(i)))
+          tags_.push_back(value->str());
+    if (tags_.empty())
+      tags_.push_back("abc");
   }
   if (delimiters_.empty()) {
     delimiters_ = " ";
