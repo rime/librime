@@ -2,7 +2,8 @@ RIME_ROOT ?= $(CURDIR)
 
 RIME_SOURCE_PATH = plugins sample src test tools
 
-ifeq ($(shell uname),Darwin) # for macOS
+OS_NAME = $(shell uname)
+ifeq ($(OS_NAME),Darwin) # for macOS
 prefix ?= $(RIME_ROOT)/dist
 
 ifdef BOOST_ROOT
@@ -22,6 +23,10 @@ export CMAKE_OSX_ARCHITECTURES = arm64;x86_64
 endif
 else ifeq ($(shell test -n "$$PREFIX" && echo "$$PREFIX" | grep -q "/data/data/com.termux" && echo "termux"),termux)
 prefix ?= $(PREFIX)
+else ifeq ($(OS_NAME),FreeBSD)
+prefix ?= $(DESTDIR)/usr/local
+else ifeq ($(OS_NAME),OpenBSD)
+prefix ?= $(DESTDIR)/usr/local
 else # for Linux
 prefix ?= $(DESTDIR)/usr
 endif
