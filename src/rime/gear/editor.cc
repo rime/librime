@@ -23,8 +23,6 @@ static Editor::ActionDef editor_action_definitions[] = {
     {"commit_raw_input", &Editor::CommitRawInput},
     {"commit_script_text", &Editor::CommitScriptText},
     {"commit_composition", &Editor::CommitComposition},
-    {"commit_script_text_keep_selection",
-     &Editor::CommitScriptTextKeepSelection},
     {"revert", &Editor::RevertLastEdit},
     {"back", &Editor::BackToPreviousInput},
     {"back_syllable", &Editor::BackToPreviousSyllable},
@@ -108,12 +106,6 @@ bool Editor::CommitComment(Context* ctx) {
 
 bool Editor::CommitScriptText(Context* ctx) {
   engine_->sink()(ctx->GetScriptText());
-  ctx->Clear();
-  return true;
-}
-
-bool Editor::CommitScriptTextKeepSelection(Context* ctx) {
-  engine_->sink()(ctx->composition().GetScriptText(true));
   ctx->Clear();
   return true;
 }

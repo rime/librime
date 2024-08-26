@@ -29,7 +29,6 @@ class Editor : public Processor, public KeyBindingProcessor<Editor> {
   Handler ToggleSelection;
   Handler CommitComment;
   Handler CommitScriptText;
-  Handler CommitScriptTextKeepSelection;
   Handler CommitRawInput;
   Handler CommitComposition;
   Handler RevertLastEdit;

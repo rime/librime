@@ -28,8 +28,7 @@ class Composition : public Segmentation {
                      const string& caret) const;
   string GetPrompt() const;
   string GetCommitText() const;
-  string GetScriptText(bool keep_selection) const;
-  string GetScriptText() const { return GetScriptText(false); }
+  string GetScriptText(bool keep_selection = true) const;
   RIME_API string GetDebugText() const;
   // Returns text of the last segment before the given position.
   string GetTextBefore(size_t pos) const;
