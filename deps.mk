@@ -4,7 +4,7 @@ rime_root = $(CURDIR)
 src_dir = $(rime_root)/deps
 
 ifndef NOPARALLEL
-export MAKEFLAGS+=" -j$(( $(nproc) + 1)) "
+export MAKEFLAGS+=" -j$$(( $$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN 2>/dev/null || echo 8) + 1)) "
 endif
 
 build ?= build
