@@ -616,7 +616,7 @@ bool CleanupTrash::Run(Deployer* deployer) {
 bool CleanOldLogFiles::Run(Deployer* deployer) {
   bool success = true;
 #ifdef RIME_ENABLE_LOGGING
-  if (FLAGS_logtostderr) {
+  if (FLAGS_logtostderr || FLAGS_log_dir.empty()) {
     return success;
   }
 

@@ -55,15 +55,16 @@ class Switch : public SimpleCandidate, public SwitcherCommand {
 };
 
 void Switch::Apply(Switcher* switcher) {
-  if (Engine* engine = switcher->attached_engine()) {
-    engine->context()->set_option(keyword_, target_state_);
-  }
-  if (auto_save_) {
-    if (Config* user_config = switcher->user_config()) {
-      user_config->SetBool("var/option/" + keyword_, target_state_);
+  switcher->DeactivateAndApply([this, switcher] {
+    if (Engine* engine = switcher->attached_engine()) {
+      engine->context()->set_option(keyword_, target_state_);
     }
-  }
-  switcher->Deactivate();
+    if (auto_save_) {
+      if (Config* user_config = switcher->user_config()) {
+        user_config->SetBool("var/option/" + keyword_, target_state_);
+      }
+    }
+  });
 }
 
 class RadioOption;
@@ -100,8 +101,7 @@ class RadioOption : public SimpleCandidate, public SwitcherCommand {
 };
 
 void RadioOption::Apply(Switcher* switcher) {
-  group_->SelectOption(this);
-  switcher->Deactivate();
+  switcher->DeactivateAndApply([this] { group_->SelectOption(this); });
 }
 
 void RadioOption::UpdateState(bool selected) {

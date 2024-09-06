@@ -8,12 +8,12 @@
 #ifndef RIME_API_H_
 #define RIME_API_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stddef.h>
-#include <stdint.h>
 
 #if defined(_WIN32)
 #if defined(RIME_EXPORTS)
