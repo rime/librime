@@ -125,9 +125,19 @@ if %build_deps% == 1 (
   echo building rocksdb.
   pushd deps\rocksdb
   cmake . -B%build_dir% %deps_cmake_flags%^
+  -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=TRUE^
   -DROCKSDB_BUILD_SHARED:BOOL=OFF^
-	-DWITH_TESTS:BOOL=OFF^
-	-DWITH_BENCHMARK_TOOLS:BOOL=OFF
+  -DROCKSDB_INSTALL_ON_WINDOWS:BOOL=ON^
+  -DFAIL_ON_WARNINGS:BOOL=OFF^
+  -DWITH_TESTS:BOOL=OFF^
+  -DWITH_BENCHMARK:BOOL=OFF^
+  -DWITH_GFLAGS:BOOL=OFF^
+  -DWITH_TOOLS:BOOL=OFF^
+  -DWITH_CORE_TOOLS:BOOL=OFF^
+  -DWITH_BENCHMARK_TOOLS:BOOL=OFF^
+  -DWITH_MD_LIBRARY:BOOL=OFF^
+  -DUSE_RTTI:BOOL=ON^
+  -DPORTABLE:BOOL=ON
   if errorlevel 1 goto error
   cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
