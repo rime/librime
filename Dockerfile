@@ -12,6 +12,7 @@ RUN apt update && apt install -y \
   libgtest-dev \
   libyaml-cpp-dev \
   libleveldb-dev \
+  librocksdb-dev \
   libmarisa-dev \
   libopencc-dev \
   liblua5.4-dev

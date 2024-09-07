@@ -16,3 +16,6 @@
 [submodule "opencc"]
 	path = deps/opencc
 	url = https://github.com/BYVoid/OpenCC.git
+[submodule "rocksdb"]
+	path = deps/rocksdb
+	url = https://github.com/facebook/rocksdb.git

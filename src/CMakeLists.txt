@@ -51,6 +51,7 @@ set(rime_core_deps
     ${rime_optional_deps})
 set(rime_dict_deps
     ${LevelDb_LIBRARY}
+    ${RocksDb_LIBRARY}
     ${Marisa_LIBRARY})
 set(rime_gears_deps
     ${ICONV_LIBRARIES}

@@ -133,6 +133,12 @@ if(LevelDb_FOUND)
     include_directories(${LevelDb_INCLUDE_PATH})
 endif()
 
+find_package(RocksDb REQUIRED)
+if(RocksDb_FOUND)
+    include_directories(${RocksDb_INCLUDE_PATH})
+endif()
+
+
 find_package(Marisa REQUIRED)
 if(Marisa_FOUND)
   include_directories(${Marisa_INCLUDE_PATH})
