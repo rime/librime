@@ -10,7 +10,7 @@ endif
 build ?= build
 prefix ?= $(rime_root)
 
-rime_deps = glog googletest leveldb rocksdb marisa-trie opencc yaml-cpp
+rime_deps = glog googletest rocksdb marisa-trie opencc yaml-cpp
 
 .PHONY: all clean clean-dist clean-src $(rime_deps)
 
@@ -45,15 +45,6 @@ googletest:
 	cd $(src_dir)/googletest; \
 	cmake . -B$(build) \
 	-DBUILD_GMOCK:BOOL=OFF \
-	-DCMAKE_BUILD_TYPE:STRING="Release" \
-	-DCMAKE_INSTALL_PREFIX:PATH="$(prefix)" \
-	&& cmake --build $(build) --target install
-
-leveldb:
-	cd $(src_dir)/leveldb; \
-	cmake . -B$(build) \
-	-DLEVELDB_BUILD_BENCHMARKS:BOOL=OFF \
-	-DLEVELDB_BUILD_TESTS:BOOL=OFF \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
 	-DCMAKE_INSTALL_PREFIX:PATH="$(prefix)" \
 	&& cmake --build $(build) --target install

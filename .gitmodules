@@ -1,9 +1,6 @@
 [submodule "glog"]
 	path = deps/glog
 	url = https://github.com/google/glog.git
-[submodule "leveldb"]
-	path = deps/leveldb
-	url = https://github.com/google/leveldb.git
 [submodule "yaml-cpp"]
 	path = deps/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp.git

@@ -83,7 +83,6 @@ if %clean% == 1 (
  rmdir /s /q %build_dir%
   rmdir /s /q deps\glog\%build_dir%
   rmdir /s /q deps\googletest\%build_dir%
-  rmdir /s /q deps\leveldb\%build_dir%
   rmdir /s /q deps\rocksdb\%build_dir%
   rmdir /s /q deps\marisa-trie\%build_dir%
   rmdir /s /q deps\opencc\%build_dir%
@@ -118,16 +117,6 @@ if %build_deps% == 1 (
   cmake . -B%build_dir% %deps_cmake_flags%^
   -DBUILD_TESTING:BOOL=OFF^
   -DWITH_GFLAGS:BOOL=OFF
-  if errorlevel 1 goto error
-  cmake --build %build_dir% --config %build_config% --target install
-  if errorlevel 1 goto error
-  popd
-
-  echo building leveldb.
-  pushd deps\leveldb
-  cmake . -B%build_dir% %deps_cmake_flags%^
-  -DLEVELDB_BUILD_BENCHMARKS:BOOL=OFF^
-  -DLEVELDB_BUILD_TESTS:BOOL=OFF
   if errorlevel 1 goto error
   cmake --build %build_dir% --config %build_config% --target install
   if errorlevel 1 goto error
