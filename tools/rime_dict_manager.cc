@@ -9,7 +9,7 @@
 #include <rime/deployer.h>
 #include <rime/service.h>
 #include <rime/setup.h>
-#include <rime/dict/level_db.h>
+#include <rime/dict/rocks_db.h>
 #include <rime/dict/user_db.h>
 #include <rime/lever/user_dict_manager.h>
 #include "codepage.h"
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
   }
 
   Registry& registry = Registry::instance();
-  registry.Register("userdb", new UserDbComponent<LevelDb>);
+  registry.Register("userdb", new UserDbComponent<RocksDb>);
   Deployer& deployer(Service::instance().deployer());
   {
     Config config;

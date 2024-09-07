@@ -2,25 +2,25 @@
 // Copyright RIME Developers
 // Distributed under the BSD License
 //
-// 2014-12-04 Chen Gong <chen.sst@gmail.com>
+// 2024-09-07 WhiredPlanck <whiredplanck@outlook.com>
 //
-#ifndef RIME_LEVEL_DB_H_
-#define RIME_LEVEL_DB_H_
+#ifndef RIME_ROCKS_DB_H_
+#define RIME_ROCKS_DB_H_
 
 #include <rime/dict/db.h>
 
 namespace rime {
 
-struct LevelDbCursor;
-struct LevelDbWrapper;
+struct RocksDbCursor;
+struct RocksDbWrapper;
 
-class LevelDb;
+class RocksDb;
 
-class LevelDbAccessor : public DbAccessor {
+class RocksDbAccessor : public DbAccessor {
  public:
-  LevelDbAccessor();
-  LevelDbAccessor(LevelDbCursor* cursor, const string& prefix);
-  virtual ~LevelDbAccessor();
+  RocksDbAccessor();
+  RocksDbAccessor(RocksDbCursor* cursor, const string& prefix);
+  virtual ~RocksDbAccessor();
 
   bool Reset() override;
   bool Jump(const string& key) override;
@@ -28,16 +28,16 @@ class LevelDbAccessor : public DbAccessor {
   bool exhausted() override;
 
  private:
-  the<LevelDbCursor> cursor_;
+  the<RocksDbCursor> cursor_;
   bool is_metadata_query_ = false;
 };
 
-class LevelDb : public Db, public Recoverable, public Transactional {
+class RocksDb : public Db, public Recoverable, public Transactional {
  public:
-  LevelDb(const path& file_path,
+  RocksDb(const path& file_path,
           const string& db_name,
           const string& db_type = "");
-  virtual ~LevelDb();
+  virtual ~RocksDb();
 
   bool Remove() override;
   bool Open() override;
@@ -69,10 +69,10 @@ class LevelDb : public Db, public Recoverable, public Transactional {
  private:
   void Initialize();
 
-  the<LevelDbWrapper> db_;
+  the<RocksDbWrapper> db_;
   string db_type_;
 };
 
 }  // namespace rime
 
-#endif  // RIME_LEVEL_DB_H_
+#endif  // RIME_ROCKS_DB_H_

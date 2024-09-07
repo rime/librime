@@ -9,7 +9,7 @@
 #include <rime/common.h>
 #include <rime/registry.h>
 #include <rime/dict/db.h>
-#include <rime/dict/level_db.h>
+#include <rime/dict/rocks_db.h>
 #include <rime/dict/table_db.h>
 #include <rime/dict/text_db.h>
 #include <rime/dict/user_db.h>
@@ -28,7 +28,7 @@ static void rime_dict_initialize() {
   r.Register("tabledb", new DbComponent<TableDb>);
   r.Register("stabledb", new DbComponent<StableDb>);
   r.Register("plain_userdb", new UserDbComponent<TextDb>);
-  r.Register("userdb", new UserDbComponent<LevelDb>);
+  r.Register("userdb", new UserDbComponent<RocksDb>);
   // NOTE: register a legacy_userdb component in your plugin if you wish to
   // upgrade userdbs from an old file format (eg. TreeDb) during maintenance.
   // r.Register("legacy_userdb", ...);

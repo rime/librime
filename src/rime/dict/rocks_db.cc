@@ -2,25 +2,25 @@
 // Copyright RIME Developers
 // Distributed under the BSD License
 //
-// 2014-12-04 Chen Gong <chen.sst@gmail.com>
+// 2024-09-07 WhiredPlanck <whiredplanck@outlook.com>
 //
 
-#include <leveldb/db.h>
-#include <leveldb/write_batch.h>
+#include <rocksdb/db.h>
+#include <rocksdb/write_batch.h>
 #include <rime/common.h>
 #include <rime/service.h>
-#include <rime/dict/level_db.h>
+#include <rime/dict/rocks_db.h>
 #include <rime/dict/user_db.h>
 
 namespace rime {
 
-static const char* kMetaCharacter = "\x01";
+constexpr const char* kMetaCharacter = "\x01";
 
-struct LevelDbCursor {
-  leveldb::Iterator* iterator = nullptr;
+struct RocksDbCursor {
+  rocksdb::Iterator* iterator = nullptr;
 
-  LevelDbCursor(leveldb::DB* db) {
-    leveldb::ReadOptions options;
+  RocksDbCursor(rocksdb::DB* db) {
+    rocksdb::ReadOptions options;
     options.fill_cache = false;
     iterator = db->NewIterator(options);
   }
@@ -47,14 +47,14 @@ struct LevelDbCursor {
   }
 };
 
-struct LevelDbWrapper {
-  leveldb::DB* ptr = nullptr;
-  leveldb::WriteBatch batch;
+struct RocksDbWrapper {
+  rocksdb::DB* ptr = nullptr;
+  rocksdb::WriteBatch batch;
 
-  leveldb::Status Open(const path& file_path, bool readonly) {
-    leveldb::Options options;
+  rocksdb::Status Open(const path& file_path, bool readonly) {
+    rocksdb::Options options;
     options.create_if_missing = !readonly;
-    return leveldb::DB::Open(options, file_path.string(), &ptr);
+    return rocksdb::DB::Open(options, file_path.string(), &ptr);
   }
 
   void Release() {
@@ -62,10 +62,10 @@ struct LevelDbWrapper {
     ptr = nullptr;
   }
 
-  LevelDbCursor* CreateCursor() { return new LevelDbCursor(ptr); }
+  RocksDbCursor* CreateCursor() { return new RocksDbCursor(ptr); }
 
   bool Fetch(const string& key, string* value) {
-    auto status = ptr->Get(leveldb::ReadOptions(), key, value);
+    auto status = ptr->Get(rocksdb::ReadOptions(), key, value);
     return status.ok();
   }
 
@@ -74,7 +74,7 @@ struct LevelDbWrapper {
       batch.Put(key, value);
       return true;
     }
-    auto status = ptr->Put(leveldb::WriteOptions(), key, value);
+    auto status = ptr->Put(rocksdb::WriteOptions(), key, value);
     return status.ok();
   }
 
@@ -83,42 +83,42 @@ struct LevelDbWrapper {
       batch.Delete(key);
       return true;
     }
-    auto status = ptr->Delete(leveldb::WriteOptions(), key);
+    auto status = ptr->Delete(rocksdb::WriteOptions(), key);
     return status.ok();
   }
 
   void ClearBatch() { batch.Clear(); }
 
   bool CommitBatch() {
-    auto status = ptr->Write(leveldb::WriteOptions(), &batch);
+    auto status = ptr->Write(rocksdb::WriteOptions(), &batch);
     return status.ok();
   }
 };
 
-// LevelDbAccessor members
+// RocksDbAccessor members
 
-LevelDbAccessor::LevelDbAccessor() {}
+RocksDbAccessor::RocksDbAccessor() {}
 
-LevelDbAccessor::LevelDbAccessor(LevelDbCursor* cursor, const string& prefix)
+RocksDbAccessor::RocksDbAccessor(RocksDbCursor* cursor, const string& prefix)
     : DbAccessor(prefix),
       cursor_(cursor),
       is_metadata_query_(prefix == kMetaCharacter) {
   Reset();
 }
 
-LevelDbAccessor::~LevelDbAccessor() {
+RocksDbAccessor::~RocksDbAccessor() {
   cursor_->Release();
 }
 
-bool LevelDbAccessor::Reset() {
+bool RocksDbAccessor::Reset() {
   return cursor_->Jump(prefix_);
 }
 
-bool LevelDbAccessor::Jump(const string& key) {
+bool RocksDbAccessor::Jump(const string& key) {
   return cursor_->Jump(key);
 }
 
-bool LevelDbAccessor::GetNextRecord(string* key, string* value) {
+bool RocksDbAccessor::GetNextRecord(string* key, string* value) {
   if (!cursor_->IsValid() || !key || !value)
     return false;
   *key = cursor_->GetKey();
@@ -133,64 +133,64 @@ bool LevelDbAccessor::GetNextRecord(string* key, string* value) {
   return true;
 }
 
-bool LevelDbAccessor::exhausted() {
+bool RocksDbAccessor::exhausted() {
   return !cursor_->IsValid() || !MatchesPrefix(cursor_->GetKey());
 }
 
-// LevelDb members
+// RocksDb members
 
-LevelDb::LevelDb(const path& file_path,
+RocksDb::RocksDb(const path& file_path,
                  const string& db_name,
                  const string& db_type)
     : Db(file_path, db_name), db_type_(db_type) {}
 
-LevelDb::~LevelDb() {
+RocksDb::~RocksDb() {
   if (loaded())
     Close();
 }
 
-void LevelDb::Initialize() {
-  db_.reset(new LevelDbWrapper);
+void RocksDb::Initialize() {
+  db_.reset(new RocksDbWrapper);
 }
 
-an<DbAccessor> LevelDb::QueryMetadata() {
+an<DbAccessor> RocksDb::QueryMetadata() {
   return Query(kMetaCharacter);
 }
 
-an<DbAccessor> LevelDb::QueryAll() {
+an<DbAccessor> RocksDb::QueryAll() {
   an<DbAccessor> all = Query("");
   if (all)
     all->Jump(" ");  // skip metadata
   return all;
 }
 
-an<DbAccessor> LevelDb::Query(const string& key) {
+an<DbAccessor> RocksDb::Query(const string& key) {
   if (!loaded())
     return nullptr;
-  return New<LevelDbAccessor>(db_->CreateCursor(), key);
+  return New<RocksDbAccessor>(db_->CreateCursor(), key);
 }
 
-bool LevelDb::Fetch(const string& key, string* value) {
+bool RocksDb::Fetch(const string& key, string* value) {
   if (!value || !loaded())
     return false;
   return db_->Fetch(key, value);
 }
 
-bool LevelDb::Update(const string& key, const string& value) {
+bool RocksDb::Update(const string& key, const string& value) {
   if (!loaded() || readonly())
     return false;
   DLOG(INFO) << "update db entry: " << key << " => " << value;
   return db_->Update(key, value, in_transaction());
 }
 
-bool LevelDb::Erase(const string& key) {
+bool RocksDb::Erase(const string& key) {
   if (!loaded() || readonly())
     return false;
   DLOG(INFO) << "erase db entry: " << key;
   return db_->Erase(key, in_transaction());
 }
 
-bool LevelDb::Backup(const path& snapshot_file) {
+bool RocksDb::Backup(const path& snapshot_file) {
   if (!loaded())
     return false;
   LOG(INFO) << "backing up db '" << name() << "' to " << snapshot_file;
@@ -203,7 +203,7 @@ bool LevelDb::Backup(const path& snapshot_file) {
   return success;
 }
 
-bool LevelDb::Restore(const path& snapshot_file) {
+bool RocksDb::Restore(const path& snapshot_file) {
   if (!loaded() || readonly())
     return false;
   // TODO(chen): suppose we only use this method for user dbs.
@@ -215,9 +215,9 @@ bool LevelDb::Restore(const path& snapshot_file) {
   return success;
 }
 
-bool LevelDb::Recover() {
+bool RocksDb::Recover() {
   LOG(INFO) << "trying to recover db '" << name() << "'.";
-  auto status = leveldb::RepairDB(file_path().string(), leveldb::Options());
+  auto status = rocksdb::RepairDB(file_path().string(), rocksdb::Options());
   if (status.ok()) {
     LOG(INFO) << "repair finished.";
     return true;
@@ -226,12 +226,12 @@ bool LevelDb::Recover() {
   return false;
 }
 
-bool LevelDb::Remove() {
+bool RocksDb::Remove() {
   if (loaded()) {
     LOG(ERROR) << "attempt to remove opened db '" << name() << "'.";
     return false;
   }
-  auto status = leveldb::DestroyDB(file_path().string(), leveldb::Options());
+  auto status = rocksdb::DestroyDB(file_path().string(), rocksdb::Options());
   if (!status.ok()) {
     LOG(ERROR) << "Error removing db '" << name() << "': " << status.ToString();
     return false;
@@ -239,7 +239,7 @@ bool LevelDb::Remove() {
   return true;
 }
 
-bool LevelDb::Open() {
+bool RocksDb::Open() {
   if (loaded())
     return false;
   Initialize();
@@ -261,7 +261,7 @@ bool LevelDb::Open() {
   return loaded_;
 }
 
-bool LevelDb::OpenReadOnly() {
+bool RocksDb::OpenReadOnly() {
   if (loaded())
     return false;
   Initialize();
@@ -275,7 +275,7 @@ bool LevelDb::OpenReadOnly() {
   return loaded_;
 }
 
-bool LevelDb::Close() {
+bool RocksDb::Close() {
   if (!loaded())
     return false;
 
@@ -288,19 +288,19 @@ bool LevelDb::Close() {
   return true;
 }
 
-bool LevelDb::CreateMetadata() {
+bool RocksDb::CreateMetadata() {
   return Db::CreateMetadata() && MetaUpdate("/db_type", db_type_);
 }
 
-bool LevelDb::MetaFetch(const string& key, string* value) {
+bool RocksDb::MetaFetch(const string& key, string* value) {
   return Fetch(kMetaCharacter + key, value);
 }
 
-bool LevelDb::MetaUpdate(const string& key, const string& value) {
+bool RocksDb::MetaUpdate(const string& key, const string& value) {
   return Update(kMetaCharacter + key, value);
 }
 
-bool LevelDb::BeginTransaction() {
+bool RocksDb::BeginTransaction() {
   if (!loaded())
     return false;
   db_->ClearBatch();
@@ -308,7 +308,7 @@ bool LevelDb::BeginTransaction() {
   return true;
 }
 
-bool LevelDb::AbortTransaction() {
+bool RocksDb::AbortTransaction() {
   if (!loaded() || !in_transaction())
     return false;
   db_->ClearBatch();
@@ -316,7 +316,7 @@ bool LevelDb::AbortTransaction() {
   return true;
 }
 
-bool LevelDb::CommitTransaction() {
+bool RocksDb::CommitTransaction() {
   if (!loaded() || !in_transaction())
     return false;
   bool ok = db_->CommitBatch();
@@ -326,13 +326,13 @@ bool LevelDb::CommitTransaction() {
 }
 
 template <>
-RIME_API string UserDbComponent<LevelDb>::extension() const {
+RIME_API string UserDbComponent<RocksDb>::extension() const {
   return ".userdb";
 }
 
 template <>
-RIME_API UserDbWrapper<LevelDb>::UserDbWrapper(const path& file_path,
+RIME_API UserDbWrapper<RocksDb>::UserDbWrapper(const path& file_path,
                                                const string& db_name)
-    : LevelDb(file_path, db_name, "userdb") {}
+    : RocksDb(file_path, db_name, "userdb") {}
 
 }  // namespace rime
