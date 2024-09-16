@@ -82,7 +82,9 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
     if (key_event.release()) {
       if (shift_key_pressed_ || ctrl_key_pressed_) {
         auto now = std::chrono::steady_clock::now();
-        if (now < toggle_expired_) {
+        if (((is_shift && shift_key_pressed_) ||
+             (is_ctrl && ctrl_key_pressed_)) &&
+            now < toggle_expired_) {
           ToggleAsciiModeWithKey(ch);
         }
         shift_key_pressed_ = ctrl_key_pressed_ = false;
