@@ -146,8 +146,15 @@ class TranslatorOptions {
   bool IsUserDictDisabledFor(const string& input) const;
 
   const string& delimiters() const { return delimiters_; }
-  const string& tag() const { return tag_; }
-  void set_tag(const string& tag) { tag_ = tag; }
+  vector<string> tags() const { return tags_; }
+  void set_tags(const vector<string>& tags) {
+    tags_ = tags;
+    if (tags_.size() == 0) {
+      tags_.push_back("abc");
+    }
+  }
+  const string& tag() const { return tags_[0]; }
+  void set_tag(const string& tag) { tags_[0] = tag; }
   bool contextual_suggestions() const { return contextual_suggestions_; }
   void set_contextual_suggestions(bool enabled) {
     contextual_suggestions_ = enabled;
@@ -163,7 +170,7 @@ class TranslatorOptions {
 
  protected:
   string delimiters_;
-  string tag_ = "abc";
+  vector<string> tags_{"abc"};  // invariant: non-empty
   bool contextual_suggestions_ = false;
   bool enable_completion_ = true;
   bool strict_spelling_ = false;
