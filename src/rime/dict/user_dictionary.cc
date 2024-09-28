@@ -30,7 +30,7 @@ struct DfsState {
   TickCount present_tick;
   Code code;
   vector<double> credibility;
-  map<int, DictEntryList> query_result;
+  hash_map<int, DictEntryList> query_result;
   an<DbAccessor> accessor;
   string key;
   string value;
@@ -43,7 +43,8 @@ struct DfsState {
   bool IsPrefixMatch(const string& prefix) {
     return boost::starts_with(key, prefix);
   }
-  void RecruitEntry(size_t pos, map<string, SyllableId>* syllabary = nullptr);
+  void RecruitEntry(size_t pos,
+                    hash_map<string, SyllableId>* syllabary = nullptr);
   bool NextEntry() {
     if (!accessor->GetNextRecord(&key, &value)) {
       key.clear();
@@ -68,7 +69,8 @@ struct DfsState {
   }
 };
 
-void DfsState::RecruitEntry(size_t pos, map<string, SyllableId>* syllabary) {
+void DfsState::RecruitEntry(size_t pos,
+                            hash_map<string, SyllableId>* syllabary) {
   string full_code;
   auto e = UserDictionary::CreateDictEntry(key, value, present_tick,
                                            credibility.back(),
@@ -292,7 +294,8 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
   }
 }
 
-static an<UserDictEntryCollector> collect(map<int, DictEntryList>* source) {
+static an<UserDictEntryCollector> collect(
+    hash_map<int, DictEntryList>* source) {
   auto result = New<UserDictEntryCollector>();
   for (auto& x : *source) {
     (*result)[x.first].SetEntries(std::move(x.second));
@@ -502,7 +505,10 @@ bool UserDictionary::TranslateCodeToString(const Code& code, string* result) {
     return false;
   result->clear();
   for (const SyllableId& syllable_id : code) {
-    string spelling = table_->GetSyllableById(syllable_id);
+    string spelling = rev_syllabary_.count(syllable_id)
+                          ? rev_syllabary_[syllable_id]
+                          : (rev_syllabary_[syllable_id] =
+                                 table_->GetSyllableById(syllable_id));
     if (spelling.empty()) {
       LOG(ERROR) << "Error translating syllable_id '" << syllable_id << "'.";
       result->clear();
