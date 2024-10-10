@@ -16,13 +16,13 @@
 #include <memory>
 #include <set>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 #define BOOST_BIND_NO_PLACEHOLDERS
 #include <boost/signals2/connection.hpp>
 #include <boost/signals2/signal.hpp>
+#include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 
 #ifdef RIME_ENABLE_LOGGING
 #include <glog/logging.h>
@@ -48,9 +48,9 @@ using std::string;
 using std::vector;
 
 template <class Key, class T>
-using hash_map = std::unordered_map<Key, T>;
+using hash_map = boost::unordered_map<Key, T>;
 template <class T>
-using hash_set = std::unordered_set<T>;
+using hash_set = boost::unordered_set<T>;
 
 template <class T>
 using the = std::unique_ptr<T>;
