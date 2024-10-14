@@ -94,7 +94,6 @@ class RIME_API Context {
 
  private:
   string GetSoftCursor() const;
-  bool DeleteCandidate(an<Candidate> cand);
 
   string input_;
   size_t caret_pos_ = 0;
