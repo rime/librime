@@ -12,16 +12,25 @@
 #include <rime/key_event.h>
 #include <rime/schema.h>
 #include <rime/gear/chord_composer.h>
+#include <rime/gear/key_binding_processor.h>
 
 namespace rime {
 
-ChordComposer::ChordComposer(const Ticket& ticket) : Processor(ticket) {
+static ChordComposer::ActionDef action_definitions[] = {
+    {"commit_raw_input", &ChordComposer::CommitRawInput},
+    ChordComposer::kActionNoop,
+};
+
+ChordComposer::ChordComposer(const Ticket& ticket)
+    : Processor(ticket),
+      KeyBindingProcessor<ChordComposer>(action_definitions) {
   if (!engine_)
     return;
   if (Config* config = engine_->schema()->config()) {
     string alphabet;
     config->GetString("chord_composer/alphabet", &alphabet);
     chording_keys_.Parse(alphabet);
+    KeyBindingProcessor::LoadConfig(config, "chord_composer");
     config->GetBool("chord_composer/use_control", &use_control_);
     config->GetBool("chord_composer/use_alt", &use_alt_);
     config->GetBool("chord_composer/use_shift", &use_shift_);
@@ -47,26 +56,32 @@ ChordComposer::~ChordComposer() {
   unhandled_key_connection_.disconnect();
 }
 
-ProcessResult ChordComposer::ProcessFunctionKey(const KeyEvent& key_event) {
-  if (key_event.release()) {
-    return kNoop;
+bool ChordComposer::CommitRawInput(Context* ctx) {
+  if (raw_sequence_.empty()) {
+    return false;
   }
-  int ch = key_event.keycode();
-  if (ch == XK_Return) {
-    if (!raw_sequence_.empty()) {
-      // commit raw input
-      engine_->context()->set_input(raw_sequence_);
-      // then the sequence should not be used again
+  // commit raw input
+  engine_->context()->set_input(raw_sequence_);
+  // then the sequence should not be used again
+  raw_sequence_.clear();
+  // discard composition and commit input
+  ctx->ClearNonConfirmedComposition();
+  ctx->Commit();
+  return true;
+}
+
+ProcessResult ChordComposer::ProcessFunctionKey(const KeyEvent& key_event) {
+  Context* ctx = engine_->context();
+  auto result = KeyBindingProcessor::ProcessKeyEvent(key_event, ctx, 0);
+  if (result != kNoop) {
+    return result;
+  }
+  if (!key_event.release()) {
+    int ch = key_event.keycode();
+    if (ch == XK_BackSpace || ch == XK_Escape) {
+      // clear the raw sequence
       raw_sequence_.clear();
     }
-    ClearChord();
-    state_.Clear();
-
-  } else if (ch == XK_BackSpace || ch == XK_Escape) {
-    // clear the raw sequence
-    raw_sequence_.clear();
-    ClearChord();
-    state_.Clear();
   }
   return kNoop;
 }
