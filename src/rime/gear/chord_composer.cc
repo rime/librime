@@ -113,10 +113,6 @@ bool ChordComposer::FinishChordConditionIsMet() const {
 }
 
 ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
-  if (key_event.ctrl() || key_event.alt() || key_event.super() ||
-      key_event.caps()) {
-    raw_sequence_.clear();
-  }
   if ((key_event.ctrl() && !use_control_) || (key_event.alt() && !use_alt_) ||
       (key_event.shift() && !use_shift_) ||
       (key_event.super() && !use_super_) || (key_event.caps() && !use_caps_)) {
@@ -160,8 +156,12 @@ ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   bool is_key_up = key_event.release();
   int ch = key_event.keycode();
   if (!is_key_up && ch >= 0x20 && ch <= 0x7e) {
-    // save raw input
-    if (!engine_->context()->IsComposing() || !raw_sequence_.empty()) {
+    // a key combo potentially breaks the char sequence
+    if ((key_event.ctrl() || key_event.alt() || key_event.super() ||
+         key_event.caps())) {
+      raw_sequence_.clear();
+    } else if (!engine_->context()->IsComposing() || !raw_sequence_.empty()) {
+      // buffer raw input
       raw_sequence_.push_back(ch);
       DLOG(INFO) << "update raw sequence: " << raw_sequence_;
     }
