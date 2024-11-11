@@ -22,6 +22,23 @@ string ConcatPieces(
 
 }  // namespace details
 
+bool starts_with(string_view input, string_view prefix) {
+  if (input.size() < prefix.size()) {
+    return false;
+  }
+
+  return (input.compare(0, prefix.size(), prefix) == 0);
+}
+
+bool ends_with(string_view input, string_view suffix) {
+  if (input.size() < suffix.size()) {
+    return false;
+  }
+
+  return (input.compare(input.size() - suffix.size(), suffix.size(), suffix) ==
+          0);
+}
+
 vector<string> split(const string& str,
                      const string& delim,
                      SplitBehavior behavior) {

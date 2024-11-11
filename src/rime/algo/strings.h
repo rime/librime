@@ -110,6 +110,10 @@ string concat(const Args&... args) {
            .ToPair()...});
 }
 
+bool starts_with(string_view input, string_view prefix);
+
+bool ends_with(string_view input, string_view suffix);
+
 enum class SplitBehavior { KeepToken, SkipToken };
 
 vector<string> split(const string& str,
