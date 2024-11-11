@@ -326,20 +326,20 @@ an<UserDictEntryCollector> UserDictionary::Lookup(
     return nullptr;
   // sort each group of homophones by weight
   for (auto& v : state.query_result) {
-    v.second.Sort();
-  }
-  auto entries_with_word_completion =
-      state.query_result.find(state.predict_word_from_depth);
-  if (entries_with_word_completion != state.query_result.end()) {
-    auto& entries = entries_with_word_completion->second;
-    // if the top candidate is predictive match,
-    if (!entries.empty() && entries.front()->IsPredictiveMatch()) {
-      auto found =
-          std::find_if(entries.begin(), entries.end(),
-                       [](const auto& e) { return e->IsExactMatch(); });
-      if (found != entries.end()) {
-        // move the first exact match candidate to top.
-        std::rotate(entries.begin(), found, found + 1);
+    auto& entries = v.second;
+    entries.Sort();
+    if (state.predict_word_from_depth) {
+      if (!entries.empty() && entries.front()->IsPredictiveMatch()) {
+        DLOG(INFO) << "front entry is predictive match: "
+                   << entries.front()->text;
+        auto found =
+            std::find_if(entries.begin(), entries.end(),
+                         [](const auto& e) { return e->IsExactMatch(); });
+        if (found != entries.end()) {
+          DLOG(INFO) << "rotating exact match entry to front: "
+                     << (*found)->text;
+          std::rotate(entries.begin(), found, found + 1);
+        }
       }
     }
   }
