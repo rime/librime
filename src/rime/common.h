@@ -16,6 +16,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 #define BOOST_BIND_NO_PLACEHOLDERS
@@ -45,7 +46,10 @@ using std::map;
 using std::pair;
 using std::set;
 using std::string;
+using std::string_view;
 using std::vector;
+
+using namespace std::string_view_literals;
 
 template <class Key, class T>
 using hash_map = boost::unordered_map<Key, T>;
