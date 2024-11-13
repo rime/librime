@@ -39,8 +39,8 @@ bool ends_with(string_view input, string_view suffix) {
           0);
 }
 
-vector<string> split(const string& str,
-                     const string& delim,
+vector<string> split(string_view str,
+                     string_view delim,
                      SplitBehavior behavior) {
   vector<string> strings;
   size_t lastPos, pos;
@@ -66,7 +66,7 @@ vector<string> split(const string& str,
   return strings;
 };
 
-vector<string> split(const string& str, const string& delim) {
+vector<string> split(string_view str, string_view delim) {
   return split(str, delim, SplitBehavior::KeepToken);
 };
 
