@@ -9,6 +9,22 @@ namespace strings {
 
 namespace details {
 
+template <typename Char = char>
+struct string_hash {
+  using is_transparent = void;
+  using hash_type = std::hash<std::basic_string_view<Char>>;
+
+  size_t operator()(const Char* str) const { return hash_type{}(str); }
+
+  size_t operator()(const std::basic_string<Char>& str) const {
+    return hash_type{}(str);
+  }
+
+  size_t operator()(std::basic_string_view<Char> str) const {
+    return hash_type{}(str);
+  }
+};
+
 template <typename T>
 struct PieceTraits {
   static const T& forward(const T& t) { return t; }
