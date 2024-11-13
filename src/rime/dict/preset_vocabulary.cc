@@ -107,10 +107,8 @@ bool PresetVocabulary::IsQualifiedPhrase(string_view phrase,
       return false;
   }
   if (min_phrase_weight_ > 0.0) {
-    double weight = 0;
-    auto [ptr, ec] = std::from_chars(
-        weight_str.data(), weight_str.data() + weight_str.size(), weight);
-    if (ec == std::errc{} && weight < min_phrase_weight_)
+    double weight = std::stod(string{weight_str});
+    if (weight < min_phrase_weight_)
       return false;
   }
   return true;

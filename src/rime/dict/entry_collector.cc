@@ -167,17 +167,16 @@ void EntryCollector::CreateEntry(string_view word,
   e->raw_code.FromString(code_str);
   e->text = word;
   e->weight = 0.0;
-  bool scaled = boost::ends_with(weight_str, "%");
+  bool scaled = strings::ends_with(weight_str, "%");
   if ((weight_str.empty() || scaled) && preset_vocabulary) {
     preset_vocabulary->GetWeightForEntry(e->text, &e->weight);
   }
   if (scaled) {
     double percentage = 100.0;
-    auto scaled_weight = weight_str.substr(0, weight_str.length() - 1);
-    auto [ptr, ec] = std::from_chars(
-        scaled_weight.data(), scaled_weight.data() + scaled_weight.size(),
-        percentage);
-    if (ec != std::errc{}) {
+    try {
+      string scaled_weight{weight_str.substr(0, weight_str.length() - 1)};
+      percentage = std::stod(scaled_weight);
+    } catch (...) {
       LOG(WARNING) << "invalid entry definition at #" << num_entries
                    << ", line: " << line_number
                    << " of file: " << current_dict_file << ".";
@@ -185,9 +184,9 @@ void EntryCollector::CreateEntry(string_view word,
     }
     e->weight *= percentage / 100.0;
   } else if (!weight_str.empty()) {  // absolute weight
-    auto [ptr, ec] = std::from_chars(
-        weight_str.data(), weight_str.data() + weight_str.size(), e->weight);
-    if (ec != std::errc{}) {
+    try {
+      e->weight = std::stod(string{weight_str});
+    } catch (...) {
       LOG(WARNING) << "invalid entry definition at #" << num_entries
                    << ", line: " << line_number
                    << " of file: " << current_dict_file << ".";
