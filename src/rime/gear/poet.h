@@ -38,11 +38,11 @@ class Poet {
 
   an<Sentence> MakeSentence(const WordGraph& graph,
                             size_t total_length,
-                            const string& preceding_text);
+                            string_view preceding_text);
 
   template <class TranslatorT>
   an<Translation> ContextualWeighted(an<Translation> translation,
-                                     const string& input,
+                                     string_view input,
                                      size_t start,
                                      TranslatorT* translator) {
     if (!translator->contextual_suggestions() || !grammar_) {
@@ -60,7 +60,7 @@ class Poet {
   template <class Strategy>
   an<Sentence> MakeSentenceWithStrategy(const WordGraph& graph,
                                         size_t total_length,
-                                        const string& preceding_text);
+                                        string_view preceding_text);
 
   const Language* language_;
   the<Grammar> grammar_;

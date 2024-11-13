@@ -4,9 +4,11 @@
 //
 // 2011-11-02 GONG Chen <chen.sst@gmail.com>
 //
+#include <charconv>
 #include <cstdlib>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
+#include <rime/algo/strings.h>
 #include <rime/service.h>
 #include <rime/algo/dynamics.h>
 #include <rime/dict/text_db.h>
@@ -14,7 +16,7 @@
 
 namespace rime {
 
-UserDbValue::UserDbValue(const string& value) {
+UserDbValue::UserDbValue(string_view value) {
   Unpack(value);
 }
 
@@ -24,9 +26,8 @@ string UserDbValue::Pack() const {
   return packed.str();
 }
 
-bool UserDbValue::Unpack(const string& value) {
-  vector<string> kv;
-  boost::split(kv, value, boost::is_any_of(" "));
+bool UserDbValue::Unpack(string_view value) {
+  auto kv = strings::split(value, " ");
   for (const string& k_eq_v : kv) {
     size_t eq = k_eq_v.find('=');
     if (eq == string::npos)
@@ -79,14 +80,14 @@ static bool userdb_entry_parser(const Tsv& row, string* key, string* value) {
   return true;
 }
 
-static bool userdb_entry_formatter(const string& key,
-                                   const string& value,
+static bool userdb_entry_formatter(string_view key,
+                                   string_view value,
                                    Tsv* tsv) {
   Tsv& row(*tsv);
   boost::algorithm::split(row, key, boost::algorithm::is_any_of("\t"));
   if (row.size() != 2 || row[0].empty() || row[1].empty())
     return false;
-  row.push_back(value);
+  row.push_back(string{value});
   return true;
 }
 
@@ -98,7 +99,7 @@ static TextFormat plain_userdb_format = {
 
 template <>
 RIME_API UserDbWrapper<TextDb>::UserDbWrapper(const path& file_path,
-                                              const string& db_name)
+                                              string_view db_name)
     : TextDb(file_path, db_name, "userdb", plain_userdb_format) {}
 
 bool UserDbHelper::UpdateUserInfo() {
@@ -189,10 +190,10 @@ UserDbMerger::~UserDbMerger() {
   CloseMerge();
 }
 
-bool UserDbMerger::MetaPut(const string& key, const string& value) {
+bool UserDbMerger::MetaPut(string_view key, string_view value) {
   if (key == "/tick") {
     try {
-      their_tick_ = std::stoul(value);
+      std::from_chars(value.data(), value.data() + value.size(), their_tick_);
       max_tick_ = (std::max)(our_tick_, their_tick_);
     } catch (...) {
     }
@@ -200,7 +201,7 @@ bool UserDbMerger::MetaPut(const string& key, const string& value) {
   return true;
 }
 
-bool UserDbMerger::Put(const string& key, const string& value) {
+bool UserDbMerger::Put(string_view key, string_view value) {
   if (!db_)
     return false;
   UserDbValue v(value);
@@ -240,11 +241,11 @@ void UserDbMerger::CloseMerge() {
 
 UserDbImporter::UserDbImporter(Db* db) : db_(db) {}
 
-bool UserDbImporter::MetaPut(const string& key, const string& value) {
+bool UserDbImporter::MetaPut(string_view key, string_view value) {
   return true;
 }
 
-bool UserDbImporter::Put(const string& key, const string& value) {
+bool UserDbImporter::Put(string_view key, string_view value) {
   if (!db_)
     return false;
   UserDbValue v(value);

@@ -10,16 +10,16 @@
 
 namespace rime {
 
-void Registry::Register(const string& name, ComponentBase* component) {
+void Registry::Register(string_view name, ComponentBase* component) {
   LOG(INFO) << "registering component: " << name;
   if (ComponentBase* existing = Find(name)) {
     LOG(WARNING) << "replacing previously registered component: " << name;
     delete existing;
   }
-  map_[name] = component;
+  map_[string(name)] = component;
 }
 
-void Registry::Unregister(const string& name) {
+void Registry::Unregister(string_view name) {
   LOG(INFO) << "unregistering component: " << name;
   ComponentMap::iterator it = map_.find(name);
   if (it == map_.end())
@@ -36,7 +36,7 @@ void Registry::Clear() {
   }
 }
 
-ComponentBase* Registry::Find(const string& name) {
+ComponentBase* Registry::Find(string_view name) {
   ComponentMap::const_iterator it = map_.find(name);
   if (it != map_.end()) {
     return it->second;

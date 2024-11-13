@@ -6,6 +6,7 @@
 //
 
 #include <ctime>
+#include <rime/algo/strings.h>
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/config.h>
@@ -98,21 +99,23 @@ void SchemaListTranslation::LoadSchemaList(Switcher* switcher) {
   size_t fixed = candies_.size();
   time_t now = time(NULL);
   // load the rest schema list
-  Switcher::ForEachSchemaListEntry(config, [this, current_schema, user_config,
-                                            now](const string& schema_id) {
-    if (current_schema && schema_id == current_schema->schema_id())
-      return /* continue = */ true;
-    Schema schema(schema_id);
-    auto cand = New<SchemaSelection>(&schema);
-    int timestamp = 0;
-    if (user_config && user_config->GetInt(
-                           "var/schema_access_time/" + schema_id, &timestamp)) {
-      if (timestamp <= now)
-        cand->set_quality(timestamp);
-    }
-    Append(cand);
-    return /* continue = */ true;
-  });
+  Switcher::ForEachSchemaListEntry(
+      config, [this, current_schema, user_config, now](string_view schema_id) {
+        if (current_schema && schema_id == current_schema->schema_id())
+          return /* continue = */ true;
+        Schema schema(schema_id);
+        auto cand = New<SchemaSelection>(&schema);
+        int timestamp = 0;
+        if (user_config &&
+            user_config->GetInt(
+                strings::concat("var/schema_access_time/", schema_id),
+                &timestamp)) {
+          if (timestamp <= now)
+            cand->set_quality(timestamp);
+        }
+        Append(cand);
+        return /* continue = */ true;
+      });
   DLOG(INFO) << "num schemata: " << candies_.size();
   bool fix_order = false;
   config->GetBool("switcher/fix_schema_list_order", &fix_order);
@@ -128,7 +131,7 @@ void SchemaListTranslation::LoadSchemaList(Switcher* switcher) {
 SchemaListTranslator::SchemaListTranslator(const Ticket& ticket)
     : Translator(ticket) {}
 
-an<Translation> SchemaListTranslator::Query(const string& input,
+an<Translation> SchemaListTranslator::Query(string_view input,
                                             const Segment& segment) {
   auto switcher = dynamic_cast<Switcher*>(engine_);
   if (!switcher) {

@@ -4,14 +4,13 @@
 //
 // 2013-10-28 GONG Chen <chen.sst@gmail.com>
 //
-#include <rime/engine.h>
 #include <rime/ticket.h>
 
 namespace rime {
 
-Ticket::Ticket(Schema* s, const string& ns) : schema(s), name_space(ns) {}
+Ticket::Ticket(Schema* s, string_view ns) : schema(s), name_space(ns) {}
 
-Ticket::Ticket(Engine* e, const string& ns, const string& prescription)
+Ticket::Ticket(Engine* e, string_view ns, string_view prescription)
     : engine(e),
       schema(e ? e->schema() : NULL),
       name_space(ns),

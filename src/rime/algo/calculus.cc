@@ -5,6 +5,7 @@
 // 2012-01-17 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
+#include <rime/algo/strings.h>
 #include <utf8.h>
 #include <rime/algo/calculus.h>
 #include <rime/common.h>
@@ -13,6 +14,10 @@ namespace rime {
 
 const double kAbbreviationPenalty = -0.6931471805599453;   // log(0.5)
 const double kFuzzySpellingPenalty = -0.6931471805599453;  // log(0.5)
+
+inline static void regex_assign(boost::regex& re, string_view pattern) {
+  re.assign(pattern.data(), pattern.data() + pattern.size());
+}
 
 Calculus::Calculus() {
   Register("xlit", &Transliteration::Parse);
@@ -23,17 +28,15 @@ Calculus::Calculus() {
   Register("abbrev", &Abbreviation::Parse);
 }
 
-void Calculus::Register(const string& token, Calculation::Factory* factory) {
-  factories_[token] = factory;
+void Calculus::Register(string_view token, Calculation::Factory* factory) {
+  factories_[string{token}] = factory;
 }
 
-Calculation* Calculus::Parse(const string& definition) {
+Calculation* Calculus::Parse(string_view definition) {
   size_t sep = definition.find_first_not_of("zyxwvutsrqponmlkjihgfedcba");
   if (sep == string::npos)
     return NULL;
-  vector<string> args;
-  boost::split(args, definition,
-               boost::is_from_range(definition[sep], definition[sep]));
+  vector<string> args = strings::split(definition, string(1, definition[sep]));
   if (args.empty())
     return NULL;
   auto it = factories_.find(args[0]);
@@ -48,10 +51,10 @@ Calculation* Calculus::Parse(const string& definition) {
 Calculation* Transliteration::Parse(const vector<string>& args) {
   if (args.size() < 3)
     return NULL;
-  const string& left(args[1]);
-  const string& right(args[2]);
-  const char* pl = left.c_str();
-  const char* pr = right.c_str();
+  string_view left(args[1]);
+  string_view right(args[2]);
+  const char* pl = left.data();
+  const char* pr = right.data();
   uint32_t cl, cr;
   map<uint32_t, uint32_t> char_map;
   while ((cl = utf8::unchecked::next(pl)), (cr = utf8::unchecked::next(pr)),
@@ -98,12 +101,12 @@ bool Transliteration::Apply(Spelling* spelling) {
 Calculation* Transformation::Parse(const vector<string>& args) {
   if (args.size() < 3)
     return NULL;
-  const string& left(args[1]);
-  const string& right(args[2]);
+  string_view left(args[1]);
+  string_view right(args[2]);
   if (left.empty())
     return NULL;
   the<Transformation> x(new Transformation);
-  x->pattern_.assign(left);
+  regex_assign(x->pattern_, left);
   x->replacement_.assign(right);
   return x.release();
 }
@@ -123,11 +126,11 @@ bool Transformation::Apply(Spelling* spelling) {
 Calculation* Erasion::Parse(const vector<string>& args) {
   if (args.size() < 2)
     return NULL;
-  const string& pattern(args[1]);
+  string_view pattern(args[1]);
   if (pattern.empty())
     return NULL;
   the<Erasion> x(new Erasion);
-  x->pattern_.assign(pattern);
+  regex_assign(x->pattern_, pattern);
   return x.release();
 }
 
@@ -145,12 +148,12 @@ bool Erasion::Apply(Spelling* spelling) {
 Calculation* Derivation::Parse(const vector<string>& args) {
   if (args.size() < 3)
     return NULL;
-  const string& left(args[1]);
-  const string& right(args[2]);
+  string_view left(args[1]);
+  string_view right(args[2]);
   if (left.empty())
     return NULL;
   the<Derivation> x(new Derivation);
-  x->pattern_.assign(left);
+  regex_assign(x->pattern_, left);
   x->replacement_.assign(right);
   return x.release();
 }
@@ -160,12 +163,12 @@ Calculation* Derivation::Parse(const vector<string>& args) {
 Calculation* Fuzzing::Parse(const vector<string>& args) {
   if (args.size() < 3)
     return NULL;
-  const string& left(args[1]);
-  const string& right(args[2]);
+  string_view left(args[1]);
+  string_view right(args[2]);
   if (left.empty())
     return NULL;
   the<Fuzzing> x(new Fuzzing);
-  x->pattern_.assign(left);
+  regex_assign(x->pattern_, left);
   x->replacement_.assign(right);
   return x.release();
 }
@@ -184,12 +187,12 @@ bool Fuzzing::Apply(Spelling* spelling) {
 Calculation* Abbreviation::Parse(const vector<string>& args) {
   if (args.size() < 3)
     return NULL;
-  const string& left(args[1]);
-  const string& right(args[2]);
+  string_view left(args[1]);
+  string_view right(args[2]);
   if (left.empty())
     return NULL;
   the<Abbreviation> x(new Abbreviation);
-  x->pattern_.assign(left);
+  regex_assign(x->pattern_, left);
   x->replacement_.assign(right);
   return x.release();
 }

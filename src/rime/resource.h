@@ -23,9 +23,9 @@ class RIME_API ResourceResolver {
  public:
   explicit ResourceResolver(const ResourceType type) : type_(type) {}
   virtual ~ResourceResolver() {}
-  virtual path ResolvePath(const string& resource_id);
-  string ToResourceId(const string& file_path) const;
-  string ToFilePath(const string& resource_id) const;
+  virtual path ResolvePath(string_view resource_id);
+  string ToResourceId(string_view file_path) const;
+  string ToFilePath(string_view resource_id) const;
   void set_root_path(path root_path) { root_path_ = root_path; }
   path root_path() const { return root_path_; }
 
@@ -39,7 +39,7 @@ class RIME_API FallbackResourceResolver : public ResourceResolver {
  public:
   explicit FallbackResourceResolver(const ResourceType& type)
       : ResourceResolver(type) {}
-  path ResolvePath(const string& resource_id) override;
+  path ResolvePath(string_view resource_id) override;
   void set_fallback_root_path(path fallback_root_path) {
     fallback_root_path_ = fallback_root_path;
   }

@@ -14,15 +14,15 @@ namespace rime {
 
 class TextDb;
 
-using TextDbData = map<string, string>;
+using TextDbData = map<string, string, std::less<>>;
 
 class TextDbAccessor : public DbAccessor {
  public:
-  TextDbAccessor(const TextDbData& data, const string& prefix);
+  TextDbAccessor(const TextDbData& data, string_view prefix);
   virtual ~TextDbAccessor();
 
   virtual bool Reset();
-  virtual bool Jump(const string& key);
+  virtual bool Jump(string_view key);
   virtual bool GetNextRecord(string* key, string* value);
   virtual bool exhausted();
 
@@ -40,8 +40,8 @@ struct TextFormat {
 class TextDb : public Db {
  public:
   TextDb(const path& file_path,
-         const string& db_name,
-         const string& db_type,
+         string_view db_name,
+         string_view db_type,
          TextFormat format);
   RIME_API virtual ~TextDb();
 
@@ -53,15 +53,15 @@ class TextDb : public Db {
   RIME_API bool Restore(const path& snapshot_file) override;
 
   RIME_API bool CreateMetadata() override;
-  RIME_API bool MetaFetch(const string& key, string* value) override;
-  RIME_API bool MetaUpdate(const string& key, const string& value) override;
+  RIME_API bool MetaFetch(string_view key, string* value) override;
+  RIME_API bool MetaUpdate(string_view key, string_view value) override;
 
   RIME_API an<DbAccessor> QueryMetadata() override;
   RIME_API an<DbAccessor> QueryAll() override;
-  RIME_API an<DbAccessor> Query(const string& key) override;
-  RIME_API bool Fetch(const string& key, string* value) override;
-  RIME_API bool Update(const string& key, const string& value) override;
-  RIME_API bool Erase(const string& key) override;
+  RIME_API an<DbAccessor> Query(string_view key) override;
+  RIME_API bool Fetch(string_view key, string* value) override;
+  RIME_API bool Update(string_view key, string_view value) override;
+  RIME_API bool Erase(string_view key) override;
 
  protected:
   void Clear();

@@ -46,7 +46,7 @@ class Session {
   const string& commit_text() const { return commit_text_; }
 
  private:
-  void OnCommit(const string& commit_text);
+  void OnCommit(string_view commit_text);
 
   the<Engine> engine_;
   time_t last_active_time_ = 0;
@@ -72,8 +72,8 @@ class RIME_API Service {
   void SetNotificationHandler(const NotificationHandler& handler);
   void ClearNotificationHandler();
   void Notify(SessionId session_id,
-              const string& message_type,
-              const string& message_value);
+              string_view message_type,
+              string_view message_value);
 
   ResourceResolver* CreateResourceResolver(const ResourceType& type);
   ResourceResolver* CreateUserSpecificResourceResolver(

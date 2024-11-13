@@ -26,11 +26,11 @@ using namespace rime;
 class RimeConsole {
  public:
   RimeConsole() : interactive_(false), engine_(Engine::Create()) {
-    conn_ = engine_->sink().connect([this](const string& x) { OnCommit(x); });
+    conn_ = engine_->sink().connect([this](string_view x) { OnCommit(x); });
   }
   ~RimeConsole() { conn_.disconnect(); }
 
-  void OnCommit(const string& commit_text) {
+  void OnCommit(string_view commit_text) {
     if (interactive_) {
       std::cout << "commit : [" << commit_text << "]" << std::endl;
     } else {

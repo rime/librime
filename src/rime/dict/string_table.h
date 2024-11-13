@@ -25,10 +25,10 @@ class RIME_API StringTable {
   virtual ~StringTable() = default;
   StringTable(const char* ptr, size_t size);
 
-  bool HasKey(const string& key);
-  StringId Lookup(const string& key);
-  void CommonPrefixMatch(const string& query, vector<StringId>* result);
-  void Predict(const string& query, vector<StringId>* result);
+  bool HasKey(string_view key);
+  StringId Lookup(string_view key);
+  void CommonPrefixMatch(string_view query, vector<StringId>* result);
+  void Predict(string_view query, vector<StringId>* result);
   string GetString(StringId string_id);
 
   size_t NumKeys() const;
@@ -40,9 +40,7 @@ class RIME_API StringTable {
 
 class RIME_API StringTableBuilder : public StringTable {
  public:
-  void Add(const string& key,
-           double weight = 1.0,
-           StringId* reference = nullptr);
+  void Add(string_view key, double weight = 1.0, StringId* reference = nullptr);
   void Clear();
   void Build();
   void Dump(char* ptr, size_t size);

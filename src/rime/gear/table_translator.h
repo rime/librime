@@ -28,10 +28,10 @@ class TableTranslator : public Translator,
  public:
   TableTranslator(const Ticket& ticket);
 
-  virtual an<Translation> Query(const string& input, const Segment& segment);
+  virtual an<Translation> Query(string_view input, const Segment& segment);
   virtual bool Memorize(const CommitEntry& commit_entry);
 
-  an<Translation> MakeSentence(const string& input,
+  an<Translation> MakeSentence(string_view input,
                                size_t start,
                                bool include_prefix_phrases = false);
   string GetPrecedingText(size_t start) const;
@@ -53,10 +53,10 @@ class TableTranslation : public Translation {
  public:
   TableTranslation(TranslatorOptions* options,
                    const Language* language,
-                   const string& input,
+                   string_view input,
                    size_t start,
                    size_t end,
-                   const string& preedit,
+                   string_view preedit,
                    DictEntryIterator&& iter = {},
                    UserDictEntryIterator&& uter = {});
 

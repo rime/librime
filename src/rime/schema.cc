@@ -4,7 +4,7 @@
 //
 // 2011-05-08 GONG Chen <chen.sst@gmail.com>
 //
-#include <boost/algorithm/string.hpp>
+#include <rime/algo/strings.h>
 #include <rime/schema.h>
 
 namespace rime {
@@ -14,8 +14,8 @@ Schema::Schema() : schema_id_(".default") {
   FetchUsefulConfigItems();
 }
 
-Schema::Schema(const string& schema_id) : schema_id_(schema_id) {
-  config_.reset(boost::starts_with(schema_id_, ".")
+Schema::Schema(string_view schema_id) : schema_id_(schema_id) {
+  config_.reset(strings::starts_with(schema_id_, ".")
                     ? Config::Require("config")->Create(schema_id.substr(1))
                     : Config::Require("schema")->Create(schema_id));
   FetchUsefulConfigItems();
@@ -37,8 +37,8 @@ void Schema::FetchUsefulConfigItems() {
   config_->GetBool("menu/page_down_cycle", &page_down_cycle_);
 }
 
-Config* SchemaComponent::Create(const string& schema_id) {
-  return config_component_->Create(schema_id + ".schema");
+Config* SchemaComponent::Create(string_view schema_id) {
+  return config_component_->Create(strings::concat(schema_id, ".schema"));
 }
 
 }  // namespace rime

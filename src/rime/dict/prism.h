@@ -76,10 +76,10 @@ class Prism : public MappedFile {
                       uint32_t dict_file_checksum = 0,
                       uint32_t schema_file_checksum = 0);
 
-  RIME_API bool HasKey(const string& key);
-  RIME_API bool GetValue(const string& key, int* value) const;
-  RIME_API void CommonPrefixSearch(const string& key, vector<Match>* result);
-  RIME_API void ExpandSearch(const string& key,
+  RIME_API bool HasKey(string_view key);
+  RIME_API bool GetValue(string_view key, int* value) const;
+  RIME_API void CommonPrefixSearch(string_view key, vector<Match>* result);
+  RIME_API void ExpandSearch(string_view key,
                              vector<Match>* result,
                              size_t limit);
   SpellingAccessor QuerySpelling(SyllableId spelling_id);

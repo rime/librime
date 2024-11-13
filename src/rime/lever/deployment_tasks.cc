@@ -186,19 +186,19 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating schemas.";
   int success = 0;
   int failure = 0;
-  map<string, path> schemas;
+  map<string, path, std::less<>> schemas;
   the<ResourceResolver> resolver(Service::instance().CreateResourceResolver(
       {"schema_source_file", "", ".schema.yaml"}));
-  auto build_schema = [&](const string& schema_id, bool as_dependency = false) {
+  auto build_schema = [&](string_view schema_id, bool as_dependency = false) {
     if (schemas.find(schema_id) != schemas.end())  // already built
       return;
     LOG(INFO) << "schema: " << schema_id;
     path schema_path;
     if (schemas.find(schema_id) == schemas.end()) {
       schema_path = resolver->ResolvePath(schema_id);
-      schemas[schema_id] = schema_path;
+      schemas[string{schema_id}] = schema_path;
     } else {
-      schema_path = schemas[schema_id];
+      schema_path = schemas[string{schema_id}];
     }
     if (schema_path.empty() || !fs::exists(schema_path)) {
       if (as_dependency) {
@@ -224,7 +224,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     auto schema_property = item->GetValue("schema");
     if (!schema_property)
       continue;
-    const string& schema_id = schema_property->str();
+    string_view schema_id = schema_property->str();
     build_schema(schema_id);
     the<Config> schema_config(schema_component->Create(schema_id));
     if (!schema_config)
@@ -234,7 +234,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
         auto dependency = As<ConfigValue>(*d);
         if (!dependency)
           continue;
-        const string& dependency_id = dependency->str();
+        string_view dependency_id = dependency->str();
         bool as_dependency = true;
         build_schema(dependency_id, as_dependency);
       }
@@ -271,7 +271,7 @@ static bool MaybeCreateDirectory(path dir) {
   return false;
 }
 
-static bool RemoveVersionSuffix(string* version, const string& suffix) {
+static bool RemoveVersionSuffix(string* version, string_view suffix) {
   size_t suffix_pos = version->find(suffix);
   if (suffix_pos != string::npos) {
     version->erase(suffix_pos);
@@ -282,7 +282,7 @@ static bool RemoveVersionSuffix(string* version, const string& suffix) {
 
 static bool TrashDeprecatedUserCopy(const path& shared_copy,
                                     const path& user_copy,
-                                    const string& version_key,
+                                    string_view version_key,
                                     const path& trash) {
   if (!fs::exists(shared_copy) || !fs::exists(user_copy) ||
       fs::equivalent(shared_copy, user_copy)) {
@@ -623,7 +623,7 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
   char ymd[12] = {0};
   time_t now = time(NULL);
   strftime(ymd, sizeof(ymd), ".%Y%m%d", localtime(&now));
-  string today(ymd);
+  string_view today(ymd);
   DLOG(INFO) << "today: " << today;
 
   vector<string> dirs(google::GetLoggingDirectories());
@@ -631,7 +631,7 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
   DLOG(INFO) << "scanning " << dirs.size() << " temp directory for log files.";
 
   int removed = 0;
-  const string& app_name = deployer->app_name;
+  string_view app_name = deployer->app_name;
   for (const auto& dir : dirs) {
     // avoid iteration on non-existing directory, which may cause error
     if (!fs::exists(fs::path(dir)))
@@ -642,17 +642,17 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
     try {
       // preparing files
       for (const auto& entry : fs::directory_iterator(dir)) {
-        const string& file_name(entry.path().filename().u8string());
+        string_view file_name{entry.path().filename().u8string()};
         if (entry.is_regular_file() && !entry.is_symlink() &&
-            boost::starts_with(file_name, app_name) &&
-            boost::ends_with(file_name, ".log") &&
-            !boost::contains(file_name, today)) {
+            strings::starts_with(file_name, app_name) &&
+            strings::ends_with(file_name, ".log") &&
+            file_name.find(today) == string_view::npos) {
           files_to_remove.push_back(entry.path());
         } else if (entry.is_symlink()) {
           auto target = fs::read_symlink(entry.path());
-          const string& target_file_name(target.filename().u8string());
-          if (boost::starts_with(target_file_name, app_name) &&
-              boost::ends_with(target_file_name, ".log")) {
+          string_view target_file_name{target.filename().u8string()};
+          if (strings::starts_with(target_file_name, app_name) &&
+              strings::ends_with(target_file_name, ".log")) {
             files_in_use.insert(target);
           }
         }

@@ -21,7 +21,7 @@ struct RecognizerMatch {
   size_t start = 0, end = 0;
 
   RecognizerMatch() = default;
-  RecognizerMatch(const string& a_tag, size_t a_start, size_t an_end)
+  RecognizerMatch(string_view a_tag, size_t a_start, size_t an_end)
       : tag(a_tag), start(a_start), end(an_end) {}
 
   bool found() const { return start < end; }
@@ -29,8 +29,8 @@ struct RecognizerMatch {
 
 class RecognizerPatterns : public map<string, boost::regex> {
  public:
-  void LoadConfig(Config* config, const string& name_space);
-  RecognizerMatch GetMatch(const string& input,
+  void LoadConfig(Config* config, string_view name_space);
+  RecognizerMatch GetMatch(string_view input,
                            const Segmentation& segmentation) const;
 };
 

@@ -27,7 +27,7 @@ class EchoTranslation : public UniqueTranslation {
 
 EchoTranslator::EchoTranslator(const Ticket& ticket) : Translator(ticket) {}
 
-an<Translation> EchoTranslator::Query(const string& input,
+an<Translation> EchoTranslator::Query(string_view input,
                                       const Segment& segment) {
   DLOG(INFO) << "input = '" << input << "', [" << segment.start << ", "
              << segment.end << ")";

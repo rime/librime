@@ -6,6 +6,7 @@
 //
 #include <boost/algorithm/string.hpp>
 #include <filesystem>
+#include <rime/algo/strings.h>
 #include <rime/common.h>
 #include <rime/resource.h>
 #include <rime/service.h>
@@ -15,8 +16,8 @@ namespace rime {
 
 // DbAccessor members
 
-bool DbAccessor::MatchesPrefix(const string& key) {
-  return boost::starts_with(key, prefix_);
+bool DbAccessor::MatchesPrefix(string_view key) {
+  return strings::starts_with(key, prefix_);
 }
 
 // DbComponentBase
@@ -29,14 +30,14 @@ DbComponentBase::DbComponentBase()
 
 DbComponentBase::~DbComponentBase() {}
 
-path DbComponentBase::DbFilePath(const string& name,
-                                 const string& extension) const {
-  return db_resource_resolver_->ResolvePath(name + extension);
+path DbComponentBase::DbFilePath(string_view name,
+                                 string_view extension) const {
+  return db_resource_resolver_->ResolvePath(strings::concat(name, extension));
 }
 
 // Db members
 
-Db::Db(const path& file_path, const string& name)
+Db::Db(const path& file_path, string_view name)
     : name_(name), file_path_(file_path) {}
 
 bool Db::Exists() const {

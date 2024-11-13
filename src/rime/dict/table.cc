@@ -213,9 +213,7 @@ string Table::GetString(const table::StringType& x) {
   return string_table_->GetString(x.str_id());
 }
 
-bool Table::AddString(const string& src,
-                      table::StringType* dest,
-                      double weight) {
+bool Table::AddString(string_view src, table::StringType* dest, double weight) {
   string_table_builder_->Add(src, weight, &dest->str_id());
   return true;
 }

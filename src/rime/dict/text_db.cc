@@ -11,7 +11,7 @@ namespace rime {
 
 // TextDbAccessor members
 
-TextDbAccessor::TextDbAccessor(const TextDbData& data, const string& prefix)
+TextDbAccessor::TextDbAccessor(const TextDbData& data, string_view prefix)
     : DbAccessor(prefix), data_(data) {
   Reset();
 }
@@ -23,7 +23,7 @@ bool TextDbAccessor::Reset() {
   return iter_ != data_.end();
 }
 
-bool TextDbAccessor::Jump(const string& key) {
+bool TextDbAccessor::Jump(string_view key) {
   iter_ = data_.lower_bound(key);
   return iter_ != data_.end();
 }
@@ -44,8 +44,8 @@ bool TextDbAccessor::exhausted() {
 // TextDb members
 
 TextDb::TextDb(const path& file_path,
-               const string& db_name,
-               const string& db_type,
+               string_view db_name,
+               string_view db_type,
                TextFormat format)
     : Db(file_path, db_name), db_type_(db_type), format_(format) {}
 
@@ -64,13 +64,13 @@ an<DbAccessor> TextDb::QueryAll() {
   return Query("");
 }
 
-an<DbAccessor> TextDb::Query(const string& key) {
+an<DbAccessor> TextDb::Query(string_view key) {
   if (!loaded())
     return nullptr;
   return New<TextDbAccessor>(data_, key);
 }
 
-bool TextDb::Fetch(const string& key, string* value) {
+bool TextDb::Fetch(string_view key, string* value) {
   if (!value || !loaded())
     return false;
   TextDbData::const_iterator it = data_.find(key);
@@ -80,20 +80,20 @@ bool TextDb::Fetch(const string& key, string* value) {
   return true;
 }
 
-bool TextDb::Update(const string& key, const string& value) {
+bool TextDb::Update(string_view key, string_view value) {
   if (!loaded() || readonly())
     return false;
   DLOG(INFO) << "update db entry: " << key << " => " << value;
-  data_[key] = value;
+  data_[string{key}] = value;
   modified_ = true;
   return true;
 }
 
-bool TextDb::Erase(const string& key) {
+bool TextDb::Erase(string_view key) {
   if (!loaded() || readonly())
     return false;
   DLOG(INFO) << "erase db entry: " << key;
-  if (data_.erase(key) == 0)
+  if (data_.erase(string{key}) == 0)
     return false;
   modified_ = true;
   return true;
@@ -181,7 +181,7 @@ bool TextDb::CreateMetadata() {
   return Db::CreateMetadata() && MetaUpdate("/db_type", db_type_);
 }
 
-bool TextDb::MetaFetch(const string& key, string* value) {
+bool TextDb::MetaFetch(string_view key, string* value) {
   if (!value || !loaded())
     return false;
   TextDbData::const_iterator it = metadata_.find(key);
@@ -191,11 +191,11 @@ bool TextDb::MetaFetch(const string& key, string* value) {
   return true;
 }
 
-bool TextDb::MetaUpdate(const string& key, const string& value) {
+bool TextDb::MetaUpdate(string_view key, string_view value) {
   if (!loaded() || readonly())
     return false;
   DLOG(INFO) << "update db metadata: " << key << " => " << value;
-  metadata_[key] = value;
+  metadata_[string{key}] = value;
   modified_ = true;
   return true;
 }

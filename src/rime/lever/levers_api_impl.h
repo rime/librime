@@ -1,5 +1,6 @@
 // implementation of levers api
 
+#include <rime_levers_api.h>
 #include <rime/service.h>
 #include <rime/lever/custom_settings.h>
 #include <rime/lever/switcher_settings.h>

@@ -13,7 +13,7 @@ class Customizer {
  public:
   Customizer(const path& source_path,
              const path& dest_path,
-             const string& version_key)
+             string_view version_key)
       : source_path_(source_path),
         dest_path_(dest_path),
         version_key_(version_key) {}

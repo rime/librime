@@ -35,8 +35,8 @@ bool is_extended_cjk(uint32_t ch) {
   return false;
 }
 
-bool contains_extended_cjk(const string& text) {
-  const char* p = text.c_str();
+bool contains_extended_cjk(string_view text) {
+  const char* p = text.data();
   uint32_t ch;
 
   while ((ch = utf8::unchecked::next(p)) != 0) {
@@ -86,7 +86,7 @@ bool CharsetFilterTranslation::LocateNextCandidate() {
 
 // CharsetFilter
 
-bool CharsetFilter::FilterText(const string& text) {
+bool CharsetFilter::FilterText(string_view text) {
   return !contains_extended_cjk(text);
 }
 

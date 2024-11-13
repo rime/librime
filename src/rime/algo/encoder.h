@@ -10,13 +10,14 @@
 
 #include <boost/regex.hpp>
 #include <rime_api.h>
+#include <rime/common.h>
 
 namespace rime {
 
 class RawCode : public vector<string> {
  public:
   RIME_API string ToString() const;
-  RIME_API void FromString(const string& code_str);
+  RIME_API void FromString(string_view code_str);
 };
 
 class PhraseCollector {
@@ -24,11 +25,11 @@ class PhraseCollector {
   PhraseCollector() = default;
   virtual ~PhraseCollector() = default;
 
-  virtual void CreateEntry(const string& phrase,
-                           const string& code_str,
-                           const string& value) = 0;
+  virtual void CreateEntry(string_view phrase,
+                           string_view code_str,
+                           string_view value) = 0;
   // return a list of alternative code for the given word
-  virtual bool TranslateWord(const string& word, vector<string>* code) = 0;
+  virtual bool TranslateWord(string_view word, vector<string>* code) = 0;
 };
 
 class Config;
@@ -40,7 +41,7 @@ class Encoder {
 
   virtual bool LoadSettings(Config* config) { return false; }
 
-  virtual bool EncodePhrase(const string& phrase, const string& value) = 0;
+  virtual bool EncodePhrase(string_view phrase, string_view value) = 0;
 
   void set_collector(PhraseCollector* collector) { collector_ = collector; }
 
@@ -70,9 +71,9 @@ class RIME_API TableEncoder : public Encoder {
   bool LoadSettings(Config* config);
 
   bool Encode(const RawCode& code, string* result);
-  bool EncodePhrase(const string& phrase, const string& value);
+  bool EncodePhrase(string_view phrase, string_view value);
 
-  bool IsCodeExcluded(const string& code);
+  bool IsCodeExcluded(string_view code);
 
   bool loaded() const { return loaded_; }
   const vector<TableEncodingRule>& encoding_rules() const {
@@ -81,10 +82,10 @@ class RIME_API TableEncoder : public Encoder {
   const string& tail_anchor() const { return tail_anchor_; }
 
  protected:
-  bool ParseFormula(const string& formula, TableEncodingRule* rule);
-  int CalculateCodeIndex(const string& code, int index, int start);
-  bool DfsEncode(const string& phrase,
-                 const string& value,
+  bool ParseFormula(string_view formula, TableEncodingRule* rule);
+  int CalculateCodeIndex(string_view code, int index, int start);
+  bool DfsEncode(string_view phrase,
+                 string_view value,
                  size_t start_pos,
                  RawCode* code,
                  int* limit);
@@ -103,11 +104,11 @@ class ScriptEncoder : public Encoder {
  public:
   ScriptEncoder(PhraseCollector* collector);
 
-  bool EncodePhrase(const string& phrase, const string& value);
+  bool EncodePhrase(string_view phrase, string_view value);
 
  private:
-  bool DfsEncode(const string& phrase,
-                 const string& value,
+  bool DfsEncode(string_view phrase,
+                 string_view value,
                  size_t start_pos,
                  RawCode* code,
                  int* limit);

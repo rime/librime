@@ -8,6 +8,7 @@
 #define RIME_ENTRY_COLLECTOR_H_
 
 #include <queue>
+#include <rime/algo/strings.h>
 #include <rime/common.h>
 #include <rime/algo/encoder.h>
 #include <rime/dict/dictionary.h>
@@ -26,7 +27,10 @@ using WeightMap = map<string, double>;
 // word -> [ { code, weight } ]
 // For the sake of memory usage, don't use word -> { code -> weight } as there
 // may be many words, but may not be many representations for a word
-using WordMap = hash_map<string, vector<pair<string, double>>>;
+using WordMap = hash_map<string,
+                         vector<pair<string, double>>,
+                         strings::details::string_hash<>,
+                         std::equal_to<>>;
 // [ (word, weight), ... ]
 using EncodeQueue = std::queue<pair<string, string>>;
 
@@ -52,10 +56,10 @@ class EntryCollector : public PhraseCollector {
   // export contents of table and prism to text files
   void Dump(const path& file_path) const;
 
-  void CreateEntry(const string& word,
-                   const string& code_str,
-                   const string& weight_str);
-  bool TranslateWord(const string& word, vector<string>* code);
+  void CreateEntry(string_view word,
+                   string_view code_str,
+                   string_view weight_str);
+  bool TranslateWord(string_view word, vector<string>* code);
 
  protected:
   void LoadPresetVocabulary(DictSettings* settings);

@@ -43,97 +43,101 @@ bool Config::SaveToFile(const path& file_path) {
   return data_->SaveToFile(file_path);
 }
 
-bool Config::IsNull(const string& path) {
+bool Config::IsNull(string_view path) {
   auto p = data_->Traverse(path);
   return !p || p->type() == ConfigItem::kNull;
 }
 
-bool Config::IsValue(const string& path) {
+bool Config::IsValue(string_view path) {
   auto p = data_->Traverse(path);
   return !p || p->type() == ConfigItem::kScalar;
 }
 
-bool Config::IsList(const string& path) {
+bool Config::IsList(string_view path) {
   auto p = data_->Traverse(path);
   return !p || p->type() == ConfigItem::kList;
 }
 
-bool Config::IsMap(const string& path) {
+bool Config::IsMap(string_view path) {
   auto p = data_->Traverse(path);
   return !p || p->type() == ConfigItem::kMap;
 }
 
-bool Config::GetBool(const string& path, bool* value) {
+bool Config::GetBool(string_view path, bool* value) {
   DLOG(INFO) << "read: " << path;
   auto p = As<ConfigValue>(data_->Traverse(path));
   return p && p->GetBool(value);
 }
 
-bool Config::GetInt(const string& path, int* value) {
+bool Config::GetInt(string_view path, int* value) {
   DLOG(INFO) << "read: " << path;
   auto p = As<ConfigValue>(data_->Traverse(path));
   return p && p->GetInt(value);
 }
 
-bool Config::GetDouble(const string& path, double* value) {
+bool Config::GetDouble(string_view path, double* value) {
   DLOG(INFO) << "read: " << path;
   auto p = As<ConfigValue>(data_->Traverse(path));
   return p && p->GetDouble(value);
 }
 
-bool Config::GetString(const string& path, string* value) {
+bool Config::GetString(string_view path, string* value) {
   DLOG(INFO) << "read: " << path;
   auto p = As<ConfigValue>(data_->Traverse(path));
   return p && p->GetString(value);
 }
 
-size_t Config::GetListSize(const string& path) {
+size_t Config::GetListSize(string_view path) {
   DLOG(INFO) << "read: " << path;
   auto list = GetList(path);
   return list ? list->size() : 0;
 }
 
-an<ConfigItem> Config::GetItem(const string& path) {
+an<ConfigItem> Config::GetItem(string_view path) {
   DLOG(INFO) << "read: " << path;
   return data_->Traverse(path);
 }
 
-an<ConfigValue> Config::GetValue(const string& path) {
+an<ConfigValue> Config::GetValue(string_view path) {
   DLOG(INFO) << "read: " << path;
   return As<ConfigValue>(data_->Traverse(path));
 }
 
-an<ConfigList> Config::GetList(const string& path) {
+an<ConfigList> Config::GetList(string_view path) {
   DLOG(INFO) << "read: " << path;
   return As<ConfigList>(data_->Traverse(path));
 }
 
-an<ConfigMap> Config::GetMap(const string& path) {
+an<ConfigMap> Config::GetMap(string_view path) {
   DLOG(INFO) << "read: " << path;
   return As<ConfigMap>(data_->Traverse(path));
 }
 
-bool Config::SetBool(const string& path, bool value) {
+bool Config::SetBool(string_view path, bool value) {
   return SetItem(path, New<ConfigValue>(value));
 }
 
-bool Config::SetInt(const string& path, int value) {
+bool Config::SetInt(string_view path, int value) {
   return SetItem(path, New<ConfigValue>(value));
 }
 
-bool Config::SetDouble(const string& path, double value) {
+bool Config::SetDouble(string_view path, double value) {
   return SetItem(path, New<ConfigValue>(value));
 }
 
-bool Config::SetString(const string& path, const char* value) {
+bool Config::SetString(string_view path, const char* value) {
   return SetItem(path, New<ConfigValue>(value));
 }
 
-bool Config::SetString(const string& path, const string& value) {
+bool Config::SetString(string_view path, const string& value) {
   return SetItem(path, New<ConfigValue>(value));
 }
 
-bool Config::SetItem(const string& path, an<ConfigItem> item) {
+bool Config::SetString(string_view path, string_view value) {
+  return SetItem(path, New<ConfigValue>(value));
+}
+
+bool Config::SetItem(string_view path, an<ConfigItem> item) {
   return data_->TraverseWrite(path, item);
 }
 
@@ -175,11 +179,11 @@ ConfigComponentBase::ConfigComponentBase(ResourceResolver* resource_resolver)
 
 ConfigComponentBase::~ConfigComponentBase() {}
 
-Config* ConfigComponentBase::Create(const string& file_name) {
+Config* ConfigComponentBase::Create(string_view file_name) {
   return new Config(GetConfigData(file_name));
 }
 
-an<ConfigData> ConfigComponentBase::GetConfigData(const string& file_name) {
+an<ConfigData> ConfigComponentBase::GetConfigData(string_view file_name) {
   auto config_id = resource_resolver_->ToResourceId(file_name);
   // keep a weak reference to the shared config data in the component
   weak<ConfigData>& wp(cache_[config_id]);
@@ -193,7 +197,7 @@ an<ConfigData> ConfigComponentBase::GetConfigData(const string& file_name) {
 }
 
 an<ConfigData> ConfigLoader::LoadConfig(ResourceResolver* resource_resolver,
-                                        const string& config_id) {
+                                        string_view config_id) {
   auto data = New<ConfigData>();
   data->LoadFromFile(resource_resolver->ResolvePath(config_id), nullptr);
   data->set_auto_save(auto_save_);
@@ -242,7 +246,7 @@ bool MultiplePlugins<Container>::ReviewedByAll(Reviewer reviewer,
 }
 
 an<ConfigData> ConfigBuilder::LoadConfig(ResourceResolver* resource_resolver,
-                                         const string& config_id) {
+                                         string_view config_id) {
   MultiplePlugins<decltype(plugins_)> multiple_plugins(plugins_);
   ConfigCompiler compiler(resource_resolver, &multiple_plugins);
   auto resource = compiler.Compile(config_id);

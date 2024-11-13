@@ -14,7 +14,7 @@ namespace rime {
 struct CommitRecord {
   string type;
   string text;
-  CommitRecord(const string& a_type, const string& a_text)
+  CommitRecord(string_view a_type, string_view a_text)
       : type(a_type), text(a_text) {}
   CommitRecord(int keycode) : type("thru"), text(1, keycode) {}
 };
@@ -27,7 +27,7 @@ class CommitHistory : public list<CommitRecord> {
   static const size_t kMaxRecords = 20;
   void Push(const CommitRecord& record);
   void Push(const KeyEvent& key_event);
-  void Push(const Composition& composition, const string& input);
+  void Push(const Composition& composition, string_view input);
   string repr() const;
   string latest_text() const { return empty() ? string() : back().text; }
 };

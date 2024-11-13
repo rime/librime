@@ -16,16 +16,16 @@ class Deployer;
 class CustomSettings {
  public:
   CustomSettings(Deployer* deployer,
-                 const string& config_id,
-                 const string& generator_id);
+                 string_view config_id,
+                 string_view generator_id);
   virtual ~CustomSettings() = default;
 
   virtual bool Load();
   virtual bool Save();
-  an<ConfigValue> GetValue(const string& key);
-  an<ConfigList> GetList(const string& key);
-  an<ConfigMap> GetMap(const string& key);
-  bool Customize(const string& key, const an<ConfigItem>& item);
+  an<ConfigValue> GetValue(string_view key);
+  an<ConfigList> GetList(string_view key);
+  an<ConfigMap> GetMap(string_view key);
+  bool Customize(string_view key, const an<ConfigItem>& item);
   bool IsFirstRun();
   bool modified() const { return modified_; }
   Config* config() { return &config_; }

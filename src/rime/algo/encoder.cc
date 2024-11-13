@@ -19,7 +19,7 @@ string RawCode::ToString() const {
   return strings::join(*this, " ");
 }
 
-void RawCode::FromString(const string& code_str) {
+void RawCode::FromString(string_view code_str) {
   *dynamic_cast<vector<string>*>(this) =
       strings::split(code_str, " ", strings::SplitBehavior::SkipToken);
 }
@@ -105,8 +105,7 @@ bool TableEncoder::LoadSettings(Config* config) {
   return loaded_;
 }
 
-bool TableEncoder::ParseFormula(const string& formula,
-                                TableEncodingRule* rule) {
+bool TableEncoder::ParseFormula(string_view formula, TableEncodingRule* rule) {
   if (formula.length() % 2 != 0) {
     LOG(ERROR) << "bad formula: '%s'" << formula;
     return false;
@@ -130,9 +129,9 @@ bool TableEncoder::ParseFormula(const string& formula,
   return true;
 }
 
-bool TableEncoder::IsCodeExcluded(const string& code) {
+bool TableEncoder::IsCodeExcluded(string_view code) {
   for (const boost::regex& pattern : exclude_patterns_) {
-    if (boost::regex_match(code, pattern))
+    if (boost::regex_match(code.begin(), code.end(), pattern))
       return true;
   }
   return false;
@@ -204,7 +203,7 @@ bool TableEncoder::Encode(const RawCode& code, string* result) {
 //        beyond `start` is used to locate the encoding character at index -1.
 // returns string index in `code` for the character at virtual `index`.
 // may return a negative number if `index` does not exist in `code`.
-int TableEncoder::CalculateCodeIndex(const string& code, int index, int start) {
+int TableEncoder::CalculateCodeIndex(string_view code, int index, int start) {
   DLOG(INFO) << "code = " << code << ", index = " << index
              << ", start = " << start;
   // tail_anchor = '|'
@@ -233,9 +232,9 @@ int TableEncoder::CalculateCodeIndex(const string& code, int index, int start) {
   return k;
 }
 
-bool TableEncoder::EncodePhrase(const string& phrase, const string& value) {
-  size_t phrase_length = utf8::unchecked::distance(
-      phrase.c_str(), phrase.c_str() + phrase.length());
+bool TableEncoder::EncodePhrase(string_view phrase, string_view value) {
+  size_t phrase_length =
+      utf8::unchecked::distance(phrase.data(), phrase.data() + phrase.length());
   if (static_cast<int>(phrase_length) > max_phrase_length_)
     return false;
 
@@ -244,8 +243,8 @@ bool TableEncoder::EncodePhrase(const string& phrase, const string& value) {
   return DfsEncode(phrase, value, 0, &code, &limit);
 }
 
-bool TableEncoder::DfsEncode(const string& phrase,
-                             const string& value,
+bool TableEncoder::DfsEncode(string_view phrase,
+                             string_view value,
                              size_t start_pos,
                              RawCode* code,
                              int* limit) {
@@ -265,7 +264,7 @@ bool TableEncoder::DfsEncode(const string& phrase,
       return false;
     }
   }
-  const char* word_start = phrase.c_str() + start_pos;
+  const char* word_start = phrase.data() + start_pos;
   const char* word_end = word_start;
   utf8::unchecked::next(word_end);
   size_t word_len = word_end - word_start;
@@ -291,9 +290,9 @@ bool TableEncoder::DfsEncode(const string& phrase,
 
 ScriptEncoder::ScriptEncoder(PhraseCollector* collector) : Encoder(collector) {}
 
-bool ScriptEncoder::EncodePhrase(const string& phrase, const string& value) {
-  size_t phrase_length = utf8::unchecked::distance(
-      phrase.c_str(), phrase.c_str() + phrase.length());
+bool ScriptEncoder::EncodePhrase(string_view phrase, string_view value) {
+  size_t phrase_length =
+      utf8::unchecked::distance(phrase.data(), phrase.data() + phrase.length());
   if (static_cast<int>(phrase_length) > kMaxPhraseLength)
     return false;
 
@@ -302,8 +301,8 @@ bool ScriptEncoder::EncodePhrase(const string& phrase, const string& value) {
   return DfsEncode(phrase, value, 0, &code, &limit);
 }
 
-bool ScriptEncoder::DfsEncode(const string& phrase,
-                              const string& value,
+bool ScriptEncoder::DfsEncode(string_view phrase,
+                              string_view value,
                               size_t start_pos,
                               RawCode* code,
                               int* limit) {

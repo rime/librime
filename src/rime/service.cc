@@ -52,8 +52,8 @@ void Session::ApplySchema(Schema* schema) {
   engine_->ApplySchema(schema);
 }
 
-void Session::OnCommit(const string& commit_text) {
-  commit_text_ += commit_text;
+void Session::OnCommit(string_view commit_text) {
+  commit_text_.append(commit_text);
 }
 
 Context* Session::context() const {
@@ -155,12 +155,12 @@ void Service::ClearNotificationHandler() {
 }
 
 void Service::Notify(SessionId session_id,
-                     const string& message_type,
-                     const string& message_value) {
+                     string_view message_type,
+                     string_view message_value) {
   if (notification_handler_) {
     std::lock_guard<std::mutex> lock(mutex_);
-    notification_handler_(session_id, message_type.c_str(),
-                          message_value.c_str());
+    notification_handler_(session_id, message_type.data(),
+                          message_value.data());
   }
 }
 

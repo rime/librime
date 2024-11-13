@@ -37,7 +37,7 @@ AbcSegmentor::AbcSegmentor(const Ticket& ticket)
 }
 
 bool AbcSegmentor::Proceed(Segmentation* segmentation) {
-  const string& input(segmentation->input());
+  string_view input{segmentation->input()};
   DLOG(INFO) << "abc_segmentor: " << input;
   size_t j = segmentation->GetCurrentStartPosition();
   size_t k = j;

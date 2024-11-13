@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
+#include <rime/algo/strings.h>
 #include <rime/resource.h>
 #include <rime/schema.h>
 #include <rime/service.h>
@@ -68,7 +69,7 @@ bool ReverseDb::Load() {
   return true;
 }
 
-bool ReverseDb::Lookup(const string& text, string* result) {
+bool ReverseDb::Lookup(string_view text, string* result) {
   if (!key_trie_ || !value_trie_ || !metadata_->index.size) {
     return false;
   }
@@ -106,16 +107,16 @@ bool ReverseDb::Build(DictSettings* settings,
   int i = 0;
   // save reverse lookup entries
   for (const auto& v : rev_table) {
-    const string& key(v.first);
-    string value(boost::algorithm::join(v.second, " "));
+    string_view key{v.first};
+    string_view value{boost::algorithm::join(v.second, " ")};
     key_trie_builder.Add(key, 0.0, &key_ids[i]);
     value_trie_builder.Add(value, 0.0, &value_ids[i]);
     ++i;
   }
   // save stems
   for (const auto& v : stems) {
-    string key(v.first + kStemKeySuffix);
-    string value(boost::algorithm::join(v.second, " "));
+    string_view key{v.first + kStemKeySuffix};
+    string_view value{boost::algorithm::join(v.second, " ")};
     key_trie_builder.Add(key, 0.0, &key_ids[i]);
     value_trie_builder.Add(value, 0.0, &value_ids[i]);
     ++i;
@@ -208,13 +209,12 @@ bool ReverseLookupDictionary::Load() {
   return db_ && (db_->IsOpen() || db_->Load());
 }
 
-bool ReverseLookupDictionary::ReverseLookup(const string& text,
-                                            string* result) {
+bool ReverseLookupDictionary::ReverseLookup(string_view text, string* result) {
   return db_->Lookup(text, result);
 }
 
-bool ReverseLookupDictionary::LookupStems(const string& text, string* result) {
-  return db_->Lookup(text + kStemKeySuffix, result);
+bool ReverseLookupDictionary::LookupStems(string_view text, string* result) {
+  return db_->Lookup(strings::concat(text, kStemKeySuffix), result);
 }
 
 an<DictSettings> ReverseLookupDictionary::GetDictSettings() {
@@ -240,7 +240,7 @@ ReverseLookupDictionaryComponent::ReverseLookupDictionaryComponent()
               kReverseDbResourceType))) {}
 
 ReverseLookupDictionary* ReverseLookupDictionaryComponent::Create(
-    const string& dict_name) {
+    string_view dict_name) {
   auto db = GetDb(dict_name);
   return new ReverseLookupDictionary(db);
 };

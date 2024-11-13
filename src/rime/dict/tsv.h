@@ -16,7 +16,7 @@ using Tsv = vector<string>;
 using TsvParser = function<bool(const Tsv& row, string* key, string* value)>;
 
 using TsvFormatter =
-    function<bool(const string& key, const string& value, Tsv* row)>;
+    function<bool(string_view key, string_view value, Tsv* row)>;
 
 class Sink;
 class Source;

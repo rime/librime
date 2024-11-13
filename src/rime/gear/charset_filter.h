@@ -41,7 +41,7 @@ class CharsetFilter : public Filter, TagMatching {
   virtual bool AppliesToSegment(Segment* segment) { return TagsMatch(segment); }
 
   // return true to accept, false to reject the tested item
-  static bool FilterText(const string& text);
+  static bool FilterText(string_view text);
   static bool FilterDictEntry(an<DictEntry> entry);
 };
 

@@ -13,7 +13,7 @@ class Language {
   const string name_;
 
  public:
-  Language(const string& name) : name_(name) {}
+  Language(string_view name) : name_(name) {}
   string name() const { return name_; }
 
   bool operator==(const Language& other) const { return name_ == other.name_; }
@@ -24,7 +24,7 @@ class Language {
            *t->language() == *u->language();
   }
 
-  static string get_language_component(const string& name);
+  static string get_language_component(string_view name);
 };
 
 }  // namespace rime

@@ -23,10 +23,10 @@ struct UserDbValue {
   TickCount tick = 0;
 
   UserDbValue() = default;
-  UserDbValue(const string& value);
+  UserDbValue(string_view value);
 
   string Pack() const;
-  bool Unpack(const string& value);
+  bool Unpack(string_view value);
 };
 
 /**
@@ -47,7 +47,7 @@ class UserDb {
   };
 
   /// Requires a registered component for a user db class.
-  static Component* Require(const string& name) {
+  static Component* Require(string_view name) {
     return dynamic_cast<Component*>(Db::Require(name));
   }
 
@@ -79,7 +79,7 @@ class UserDbHelper {
 template <class BaseDb>
 class UserDbWrapper : public BaseDb {
  public:
-  RIME_API UserDbWrapper(const path& file_path, const string& db_name);
+  RIME_API UserDbWrapper(const path& file_path, string_view db_name);
 
   virtual bool CreateMetadata() {
     return BaseDb::CreateMetadata() && UserDbHelper(this).UpdateUserInfo();
@@ -101,7 +101,7 @@ template <class BaseDb>
 class UserDbComponent : public UserDb::Component, protected DbComponentBase {
  public:
   using UserDbImpl = UserDbWrapper<BaseDb>;
-  Db* Create(const string& name) override {
+  Db* Create(string_view name) override {
     return new UserDbImpl(DbFilePath(name, extension()), name);
   }
 
@@ -113,8 +113,8 @@ class UserDbMerger : public Sink {
   explicit UserDbMerger(Db* db);
   virtual ~UserDbMerger();
 
-  virtual bool MetaPut(const string& key, const string& value);
-  virtual bool Put(const string& key, const string& value);
+  virtual bool MetaPut(string_view key, string_view value);
+  virtual bool Put(string_view key, string_view value);
 
   void CloseMerge();
 
@@ -130,8 +130,8 @@ class UserDbImporter : public Sink {
  public:
   explicit UserDbImporter(Db* db);
 
-  virtual bool MetaPut(const string& key, const string& value);
-  virtual bool Put(const string& key, const string& value);
+  virtual bool MetaPut(string_view key, string_view value);
+  virtual bool Put(string_view key, string_view value);
 
  protected:
   Db* db_;

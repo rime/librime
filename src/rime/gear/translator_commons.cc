@@ -151,11 +151,11 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket) {
   }
 }
 
-bool TranslatorOptions::IsUserDictDisabledFor(const string& input) const {
+bool TranslatorOptions::IsUserDictDisabledFor(string_view input) const {
   if (user_dict_disabling_patterns_.empty())
     return false;
   for (const auto& pattern : user_dict_disabling_patterns_) {
-    if (boost::regex_match(input, pattern))
+    if (boost::regex_match(input.begin(), input.end(), pattern))
       return true;
   }
   return false;

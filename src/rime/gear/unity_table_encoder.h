@@ -9,6 +9,7 @@
 
 #include <rime/common.h>
 #include <rime/algo/encoder.h>
+#include <rime/dict/user_dictionary.h>
 
 namespace rime {
 
@@ -23,18 +24,18 @@ class UnityTableEncoder : public TableEncoder, public PhraseCollector {
 
   bool Load(const Ticket& ticket);
 
-  void CreateEntry(const string& word,
-                   const string& code_str,
-                   const string& weight_str);
-  bool TranslateWord(const string& word, vector<string>* code);
+  void CreateEntry(string_view word,
+                   string_view code_str,
+                   string_view weight_str);
+  bool TranslateWord(string_view word, vector<string>* code);
 
   size_t LookupPhrases(UserDictEntryIterator* result,
-                       const string& input,
+                       string_view input,
                        bool predictive,
                        size_t limit = 0,
                        string* resume_key = NULL);
 
-  static bool HasPrefix(const string& key);
+  static bool HasPrefix(string_view key);
   static bool AddPrefix(string* key);
   static bool RemovePrefix(string* key);
 

@@ -14,7 +14,7 @@ namespace rime {
 class Candidate {
  public:
   Candidate() = default;
-  Candidate(const string& type, size_t start, size_t end, double quality = 0.)
+  Candidate(string_view type, size_t start, size_t end, double quality = 0.)
       : type_(type), start_(start), end_(end), quality_(quality) {}
   virtual ~Candidate() = default;
 
@@ -36,7 +36,7 @@ class Candidate {
   // text shown in the preedit area, replacing input string (optional)
   virtual string preedit() const { return string(); }
 
-  void set_type(const string& type) { type_ = type; }
+  void set_type(string_view type) { type_ = type; }
   void set_start(size_t start) { start_ = start; }
   void set_end(size_t end) { end_ = end; }
   void set_quality(double quality) { quality_ = quality; }
@@ -56,12 +56,12 @@ using CandidateList = vector<of<Candidate>>;
 class SimpleCandidate : public Candidate {
  public:
   SimpleCandidate() = default;
-  SimpleCandidate(const string& type,
+  SimpleCandidate(string_view type,
                   size_t start,
                   size_t end,
-                  const string& text,
-                  const string& comment = string(),
-                  const string& preedit = string())
+                  string_view text,
+                  string_view comment = ""sv,
+                  string_view preedit = ""sv)
       : Candidate(type, start, end),
         text_(text),
         comment_(comment),
@@ -71,9 +71,9 @@ class SimpleCandidate : public Candidate {
   string comment() const { return comment_; }
   string preedit() const { return preedit_; }
 
-  void set_text(const string& text) { text_ = text; }
-  void set_comment(const string& comment) { comment_ = comment; }
-  void set_preedit(const string& preedit) { preedit_ = preedit; }
+  void set_text(string_view text) { text_ = text; }
+  void set_comment(string_view comment) { comment_ = comment; }
+  void set_preedit(string_view preedit) { preedit_ = preedit; }
 
  protected:
   string text_;
@@ -84,9 +84,9 @@ class SimpleCandidate : public Candidate {
 class ShadowCandidate : public Candidate {
  public:
   ShadowCandidate(const an<Candidate>& item,
-                  const string& type,
-                  const string& text = string(),
-                  const string& comment = string(),
+                  string_view type,
+                  string_view text = ""sv,
+                  string_view comment = ""sv,
                   const bool inherit_comment = true)
       : Candidate(type, item->start(), item->end(), item->quality()),
         text_(text),
@@ -112,9 +112,9 @@ class ShadowCandidate : public Candidate {
 class UniquifiedCandidate : public Candidate {
  public:
   UniquifiedCandidate(const an<Candidate>& item,
-                      const string& type,
-                      const string& text = string(),
-                      const string& comment = string())
+                      string_view type,
+                      string_view text = ""sv,
+                      string_view comment = ""sv)
       : Candidate(type, item->start(), item->end(), item->quality()),
         text_(text),
         comment_(comment) {

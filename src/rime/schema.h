@@ -15,8 +15,8 @@ namespace rime {
 class Schema {
  public:
   Schema();
-  explicit Schema(const string& schema_id);
-  Schema(const string& schema_id, Config* config)
+  explicit Schema(string_view schema_id);
+  Schema(string_view schema_id, Config* config)
       : schema_id_(schema_id), config_(config) {}
 
   const string& schema_id() const { return schema_id_; }
@@ -28,7 +28,7 @@ class Schema {
   int page_size() const { return page_size_; }
   bool page_down_cycle() const { return page_down_cycle_; }
   const string& select_keys() const { return select_keys_; }
-  void set_select_keys(const string& keys) { select_keys_ = keys; }
+  void set_select_keys(string_view keys) { select_keys_ = keys; }
 
  private:
   void FetchUsefulConfigItems();
@@ -47,7 +47,7 @@ class SchemaComponent : public Config::Component {
   SchemaComponent(Config::Component* config_component)
       : config_component_(config_component) {}
   // NOTE: creates `Config` for the schema
-  Config* Create(const string& schema_id) override;
+  Config* Create(string_view schema_id) override;
 
  private:
   // we do not own the config component, do not try to deallocate it

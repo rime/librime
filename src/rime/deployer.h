@@ -47,9 +47,8 @@ class Deployer : public Messenger {
   RIME_API Deployer();
   RIME_API ~Deployer();
 
-  bool RunTask(const string& task_name,
-               TaskInitializer arg = TaskInitializer());
-  bool ScheduleTask(const string& task_name,
+  bool RunTask(string_view task_name, TaskInitializer arg = TaskInitializer());
+  bool ScheduleTask(string_view task_name,
                     TaskInitializer arg = TaskInitializer());
   void ScheduleTask(an<DeploymentTask> task);
   an<DeploymentTask> NextTask();

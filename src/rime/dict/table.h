@@ -208,7 +208,7 @@ class Table : public MappedFile {
   bool BuildEntry(const ShortDictEntry& dict_entry, table::Entry* entry);
 
   string GetString(const table::StringType& x);
-  bool AddString(const string& src, table::StringType* dest, double weight);
+  bool AddString(string_view src, table::StringType* dest, double weight);
   bool OnBuildStart();
   bool OnBuildFinish();
   bool OnLoad();

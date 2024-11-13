@@ -190,7 +190,7 @@ struct DynamicProgramming {
 template <class Strategy>
 an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
                                             size_t total_length,
-                                            const string& preceding_text) {
+                                            string_view preceding_text) {
   map<int, typename Strategy::State> states;
   Strategy::Initiate(states[0]);
   for (const auto& sv : graph) {
@@ -211,8 +211,8 @@ an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
         // extend candidates with dict entries on a valid edge.
         const DictEntryList& entries = ev.second;
         for (const auto& entry : entries) {
-          const string& context =
-              candidate.empty() ? preceding_text : candidate.context();
+          string_view context{candidate.empty() ? preceding_text
+                                                : candidate.context()};
           double weight = candidate.weight +
                           Grammar::Evaluate(context, entry->text, entry->weight,
                                             is_rear, grammar_.get());
@@ -244,7 +244,7 @@ an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
 
 an<Sentence> Poet::MakeSentence(const WordGraph& graph,
                                 size_t total_length,
-                                const string& preceding_text) {
+                                string_view preceding_text) {
   return grammar_ ? MakeSentenceWithStrategy<BeamSearch>(graph, total_length,
                                                          preceding_text)
                   : MakeSentenceWithStrategy<DynamicProgramming>(

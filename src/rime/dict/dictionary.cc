@@ -43,7 +43,7 @@ struct Chunk {
         credibility(cr) {}
   Chunk(Table* t, const TableAccessor& a, double cr = 0.0)
       : Chunk(t, a, string(), cr) {}
-  Chunk(Table* t, const TableAccessor& a, const string& r, double cr = 0.0)
+  Chunk(Table* t, const TableAccessor& a, string_view r, double cr = 0.0)
       : table(t),
         code(a.index_code()),
         entries(a.entry()),
@@ -215,7 +215,7 @@ bool DictEntryIterator::exhausted() const {
 
 // Dictionary members
 
-Dictionary::Dictionary(string name,
+Dictionary::Dictionary(string_view name,
                        vector<string> packs,
                        vector<of<Table>> tables,
                        an<Prism> prism)
@@ -283,7 +283,7 @@ an<DictEntryCollector> Dictionary::Lookup(const SyllableGraph& syllable_graph,
 }
 
 size_t Dictionary::LookupWords(DictEntryIterator* result,
-                               const string& str_code,
+                               string_view str_code,
                                bool predictive,
                                size_t expand_search_limit) {
   DLOG(INFO) << "lookup: " << str_code;
@@ -430,19 +430,19 @@ Dictionary* DictionaryComponent::Create(const Ticket& ticket) {
   return Create(std::move(dict_name), std::move(prism_name), std::move(packs));
 }
 
-Dictionary* DictionaryComponent::Create(string dict_name,
-                                        string prism_name,
+Dictionary* DictionaryComponent::Create(string_view dict_name,
+                                        string_view prism_name,
                                         vector<string> packs) {
   // obtain prism and primary table objects
-  auto primary_table = table_map_[dict_name].lock();
+  auto primary_table = table_map_[string{dict_name}].lock();
   if (!primary_table) {
     auto file_path = table_resource_resolver_->ResolvePath(dict_name);
-    table_map_[dict_name] = primary_table = New<Table>(file_path);
+    table_map_[string{dict_name}] = primary_table = New<Table>(file_path);
   }
-  auto prism = prism_map_[prism_name].lock();
+  auto prism = prism_map_[string{prism_name}].lock();
   if (!prism) {
     auto file_path = prism_resource_resolver_->ResolvePath(prism_name);
-    prism_map_[prism_name] = prism = New<Prism>(file_path);
+    prism_map_[string{prism_name}] = prism = New<Prism>(file_path);
   }
   vector<of<Table>> tables = {std::move(primary_table)};
   for (const auto& pack : packs) {

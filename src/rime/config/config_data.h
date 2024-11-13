@@ -25,15 +25,15 @@ class ConfigData {
   bool SaveToStream(std::ostream& stream);
   bool LoadFromFile(const path& file_path, ConfigCompiler* compiler);
   bool SaveToFile(const path& file_path);
-  bool TraverseWrite(const string& path, an<ConfigItem> item);
-  an<ConfigItem> Traverse(const string& path);
+  bool TraverseWrite(string_view path, an<ConfigItem> item);
+  an<ConfigItem> Traverse(string_view path);
 
-  static vector<string> SplitPath(const string& path);
+  static vector<string> SplitPath(string_view path);
   static string JoinPath(const vector<string>& keys);
-  static bool IsListItemReference(const string& key);
+  static bool IsListItemReference(string_view key);
   static string FormatListIndex(size_t index);
   static size_t ResolveListIndex(an<ConfigItem> list,
-                                 const string& key,
+                                 string_view key,
                                  bool read_only = false);
 
   const path& file_path() const { return file_path_; }

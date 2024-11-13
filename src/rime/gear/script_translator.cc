@@ -77,7 +77,7 @@ class ScriptSyllabifier : public PhraseSyllabifier {
  public:
   ScriptSyllabifier(ScriptTranslator* translator,
                     Corrector* corrector,
-                    const string& input,
+                    string_view input,
                     size_t start)
       : translator_(translator),
         input_(input),
@@ -111,7 +111,7 @@ class ScriptTranslation : public Translation {
   ScriptTranslation(ScriptTranslator* translator,
                     Corrector* corrector,
                     Poet* poet,
-                    const string& input,
+                    string_view input,
                     size_t start,
                     size_t end_of_input)
       : translator_(translator),
@@ -190,7 +190,7 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
   }
 }
 
-an<Translation> ScriptTranslator::Query(const string& input,
+an<Translation> ScriptTranslator::Query(string_view input,
                                         const Segment& segment) {
   if (!dict_ || !dict_->loaded())
     return nullptr;
@@ -219,8 +219,8 @@ an<Translation> ScriptTranslator::Query(const string& input,
   return deduped;
 }
 
-string ScriptTranslator::FormatPreedit(const string& preedit) {
-  string result = preedit;
+string ScriptTranslator::FormatPreedit(string_view preedit) {
+  string result{preedit};
   preedit_formatter_.Apply(&result);
   return result;
 }

@@ -21,7 +21,7 @@ static const char kRimeAlphabet[] = "zyxwvutsrqponmlkjihgfedcba";
 
 namespace rime {
 
-static inline bool belongs_to(char ch, const string& charset) {
+static inline bool belongs_to(char ch, string_view charset) {
   return charset.find(ch) != string::npos;
 }
 
@@ -44,8 +44,8 @@ static inline bool is_simple_candidate(const an<Candidate>& cand) {
 }
 
 static bool is_auto_selectable(const an<Candidate>& cand,
-                               const string& input,
-                               const string& delimiters) {
+                               string_view input,
+                               string_view delimiters) {
   return
       // reaches end of input
       cand->end() == input.length() &&
@@ -55,14 +55,14 @@ static bool is_auto_selectable(const an<Candidate>& cand,
 }
 
 static bool expecting_an_initial(Context* ctx,
-                                 const string& alphabet,
-                                 const string& finals) {
+                                 string_view alphabet,
+                                 string_view finals) {
   size_t caret_pos = ctx->caret_pos();
   if (caret_pos == 0 ||
       caret_pos == ctx->composition().GetCurrentStartPosition()) {
     return true;
   }
-  const string& input(ctx->input());
+  string_view input{ctx->input()};
   char previous_char = input[caret_pos - 1];
   return belongs_to(previous_char, finals) ||
          !belongs_to(previous_char, alphabet);
@@ -168,7 +168,7 @@ bool Speller::AutoSelectUniqueCandidate(Context* ctx) {
   bool unique_candidate = seg.menu->Prepare(2) == 1;
   if (!unique_candidate)
     return false;
-  const string& input(ctx->input());
+  string_view input{ctx->input()};
   auto cand = seg.GetSelectedCandidate();
   bool matches_input_pattern = false;
   if (auto_select_pattern_.empty()) {
@@ -176,8 +176,9 @@ bool Speller::AutoSelectUniqueCandidate(Context* ctx) {
         max_code_length_ == 0 ||  // match any length if not set
         reached_max_code_length(cand, max_code_length_);
   } else {
-    string code(input.substr(cand->start(), cand->end()));
-    matches_input_pattern = boost::regex_match(code, auto_select_pattern_);
+    string_view code(input.substr(cand->start(), cand->end()));
+    matches_input_pattern =
+        boost::regex_match(code.begin(), code.end(), auto_select_pattern_);
   }
   if (matches_input_pattern && is_auto_selectable(cand, input, delimiters_)) {
     ctx->ConfirmCurrentSelection();
@@ -197,8 +198,8 @@ bool Speller::AutoSelectPreviousMatch(Context* ctx, Segment* previous_segment) {
     return false;
   size_t start = previous_segment->start;
   size_t end = previous_segment->end;
-  string input = ctx->input();
-  string converted = input.substr(0, end);
+  string_view input{ctx->input()};
+  string_view converted = input.substr(0, end);
   if (is_auto_selectable(previous_segment->GetSelectedCandidate(), converted,
                          delimiters_)) {
     // reuse previous match
@@ -208,7 +209,7 @@ bool Speller::AutoSelectPreviousMatch(Context* ctx, Segment* previous_segment) {
     if (ctx->get_option("_auto_commit")) {
       ctx->set_input(converted);
       ctx->Commit();
-      string rest = input.substr(end);
+      string_view rest = input.substr(end);
       ctx->set_input(rest);
     }
     return true;

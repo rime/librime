@@ -15,7 +15,7 @@ class EchoTranslator : public Translator {
  public:
   EchoTranslator(const Ticket& ticket);
 
-  virtual an<Translation> Query(const string& input, const Segment& segment);
+  virtual an<Translation> Query(string_view input, const Segment& segment);
 };
 
 }  // namespace rime

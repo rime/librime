@@ -17,15 +17,15 @@ StringTable::StringTable(const char* ptr, size_t size) {
   stream >> trie_;
 }
 
-bool StringTable::HasKey(const string& key) {
+bool StringTable::HasKey(string_view key) {
   marisa::Agent agent;
-  agent.set_query(key.c_str());
+  agent.set_query(key.data(), key.length());
   return trie_.lookup(agent);
 }
 
-StringId StringTable::Lookup(const string& key) {
+StringId StringTable::Lookup(string_view key) {
   marisa::Agent agent;
-  agent.set_query(key.c_str());
+  agent.set_query(key.data(), key.length());
   if (trie_.lookup(agent)) {
     return agent.key().id();
   } else {
@@ -33,19 +33,19 @@ StringId StringTable::Lookup(const string& key) {
   }
 }
 
-void StringTable::CommonPrefixMatch(const string& query,
+void StringTable::CommonPrefixMatch(string_view query,
                                     vector<StringId>* result) {
   marisa::Agent agent;
-  agent.set_query(query.c_str());
+  agent.set_query(query.data(), query.length());
   result->clear();
   while (trie_.common_prefix_search(agent)) {
     result->push_back(agent.key().id());
   }
 }
 
-void StringTable::Predict(const string& query, vector<StringId>* result) {
+void StringTable::Predict(string_view query, vector<StringId>* result) {
   marisa::Agent agent;
-  agent.set_query(query.c_str());
+  agent.set_query(query.data(), query.length());
   result->clear();
   while (trie_.predictive_search(agent)) {
     result->push_back(agent.key().id());
@@ -72,10 +72,10 @@ size_t StringTable::BinarySize() const {
   return trie_.io_size();
 }
 
-void StringTableBuilder::Add(const string& key,
+void StringTableBuilder::Add(string_view key,
                              double weight,
                              StringId* reference) {
-  keys_.push_back(key.c_str(), key.length(), (float)weight);
+  keys_.push_back(key.data(), key.length(), (float)weight);
   references_.push_back(reference);
 }
 

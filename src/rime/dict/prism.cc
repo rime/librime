@@ -8,6 +8,7 @@
 #include <cfloat>
 #include <cstring>
 #include <queue>
+#include <string_view>
 #include <rime/algo/algebra.h>
 #include <rime/dict/prism.h>
 
@@ -233,13 +234,13 @@ bool Prism::Build(const Syllabary& syllabary,
   return true;
 }
 
-bool Prism::HasKey(const string& key) {
-  int value = trie_->exactMatchSearch<int>(key.c_str());
+bool Prism::HasKey(string_view key) {
+  int value = trie_->exactMatchSearch<int>(key.data());
   return value != -1;
 }
 
-bool Prism::GetValue(const string& key, int* value) const {
-  int result = trie_->exactMatchSearch<int>(key.c_str());
+bool Prism::GetValue(string_view key, int* value) const {
+  int result = trie_->exactMatchSearch<int>(key.data());
   if (result == -1) {
     return false;
   }
@@ -249,26 +250,24 @@ bool Prism::GetValue(const string& key, int* value) const {
 
 // Given a key, search all the keys in the tree that share
 // a common prefix with that key.
-void Prism::CommonPrefixSearch(const string& key, vector<Match>* result) {
+void Prism::CommonPrefixSearch(string_view key, vector<Match>* result) {
   if (!result || key.empty())
     return;
   size_t len = key.length();
   result->resize(len);
   size_t num_results =
-      trie_->commonPrefixSearch(key.c_str(), &result->front(), len, len);
+      trie_->commonPrefixSearch(key.data(), &result->front(), len, len);
   result->resize(num_results);
 }
 
-void Prism::ExpandSearch(const string& key,
-                         vector<Match>* result,
-                         size_t limit) {
+void Prism::ExpandSearch(string_view key, vector<Match>* result, size_t limit) {
   if (!result)
     return;
   result->clear();
   size_t count = 0;
   size_t node_pos = 0;
   size_t key_pos = 0;
-  int ret = trie_->traverse(key.c_str(), node_pos, key_pos);
+  int ret = trie_->traverse(key.data(), node_pos, key_pos);
   // key is not a valid path
   if (ret == -2)
     return;
@@ -278,7 +277,7 @@ void Prism::ExpandSearch(const string& key,
       return;
   }
   std::queue<node_t> q;
-  q.push({key, node_pos});
+  q.push({string{key}, node_pos});
   while (!q.empty()) {
     node_t node = q.front();
     q.pop();

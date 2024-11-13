@@ -4,10 +4,10 @@
 //
 // 2012-03-23 GONG Chen <chen.sst@gmail.com>
 //
-#include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <filesystem>
 #include <boost/scope_exit.hpp>
+#include "rime/algo/strings.h"
 #include <rime/common.h>
 #include <rime/deployer.h>
 #include <rime/algo/utilities.h>
@@ -48,7 +48,7 @@ void UserDictManager::GetUserDictList(UserDictList* user_dict_list,
   }
 }
 
-bool UserDictManager::Backup(const string& dict_name) {
+bool UserDictManager::Backup(string_view dict_name) {
   the<Db> db(user_db_component_->Create(dict_name));
   if (!db->OpenReadOnly())
     return false;
@@ -66,7 +66,8 @@ bool UserDictManager::Backup(const string& dict_name) {
       return false;
     }
   }
-  string snapshot_file = dict_name + UserDb::snapshot_extension();
+  const auto& snapshot_file =
+      strings::concat(dict_name, UserDb::snapshot_extension());
   return db->Backup(dir / snapshot_file);
 }
 
@@ -104,7 +105,7 @@ bool UserDictManager::Restore(const path& snapshot_file) {
   return true;
 }
 
-int UserDictManager::Export(const string& dict_name, const path& text_file) {
+int UserDictManager::Export(string_view dict_name, const path& text_file) {
   the<Db> db(user_db_component_->Create(dict_name));
   if (!db->OpenReadOnly())
     return -1;
@@ -128,7 +129,7 @@ int UserDictManager::Export(const string& dict_name, const path& text_file) {
   return num_entries;
 }
 
-int UserDictManager::Import(const string& dict_name, const path& text_file) {
+int UserDictManager::Import(string_view dict_name, const path& text_file) {
   the<Db> db(user_db_component_->Create(dict_name));
   if (!db->Open())
     return -1;
@@ -151,7 +152,7 @@ int UserDictManager::Import(const string& dict_name, const path& text_file) {
   return num_entries;
 }
 
-bool UserDictManager::UpgradeUserDict(const string& dict_name) {
+bool UserDictManager::UpgradeUserDict(string_view dict_name) {
   UserDb::Component* legacy_component = UserDb::Require("legacy_userdb");
   if (!legacy_component)
     return true;
@@ -161,7 +162,7 @@ bool UserDictManager::UpgradeUserDict(const string& dict_name) {
   if (!legacy_db->OpenReadOnly() || !UserDbHelper(legacy_db).IsUserDb())
     return false;
   LOG(INFO) << "upgrading user dict '" << dict_name << "'.";
-  path trash = deployer_->user_data_dir / "trash";
+  const path& trash = deployer_->user_data_dir / "trash";
   if (!fs::exists(trash)) {
     std::error_code ec;
     if (!fs::create_directories(trash, ec)) {
@@ -169,16 +170,17 @@ bool UserDictManager::UpgradeUserDict(const string& dict_name) {
       return false;
     }
   }
-  string snapshot_file = dict_name + UserDb::snapshot_extension();
-  path snapshot_path = trash / snapshot_file;
+  const auto& snapshot_file =
+      strings::concat(dict_name, UserDb::snapshot_extension());
+  const path& snapshot_path = trash / snapshot_file;
   return legacy_db->Backup(snapshot_path) && legacy_db->Close() &&
          legacy_db->Remove() && Restore(snapshot_path);
 }
 
-bool UserDictManager::Synchronize(const string& dict_name) {
+bool UserDictManager::Synchronize(string_view dict_name) {
   LOG(INFO) << "synchronize user dict '" << dict_name << "'.";
   bool success = true;
-  path sync_dir(deployer_->sync_dir);
+  const path& sync_dir(deployer_->sync_dir);
   if (!fs::exists(sync_dir)) {
     std::error_code ec;
     if (!fs::create_directories(sync_dir, ec)) {
@@ -187,7 +189,8 @@ bool UserDictManager::Synchronize(const string& dict_name) {
     }
   }
   // *.userdb.txt
-  string snapshot_file = dict_name + UserDb::snapshot_extension();
+  const auto& snapshot_file =
+      strings::concat(dict_name, UserDb::snapshot_extension());
   for (fs::directory_iterator it(sync_dir), end; it != end; ++it) {
     if (!fs::is_directory(it->path()))
       continue;

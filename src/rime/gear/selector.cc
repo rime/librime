@@ -138,7 +138,7 @@ ProcessResult Selector::ProcessKeyEvent(const KeyEvent& key_event) {
 
   int ch = key_event.keycode();
   int index = -1;
-  const string& select_keys(engine_->schema()->select_keys());
+  string_view select_keys(engine_->schema()->select_keys());
   if (!select_keys.empty() && !key_event.ctrl() && ch >= 0x20 && ch < 0x7f) {
     size_t pos = select_keys.find((char)ch);
     if (pos != string::npos) {

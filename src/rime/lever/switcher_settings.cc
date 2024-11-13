@@ -42,7 +42,7 @@ bool SwitcherSettings::Select(Selection selection) {
   return Customize("schema_list", schema_list);
 }
 
-bool SwitcherSettings::SetHotkeys(const string& hotkeys) {
+bool SwitcherSettings::SetHotkeys(string_view hotkeys) {
   // TODO: not implemented; validation required
   return false;
 }

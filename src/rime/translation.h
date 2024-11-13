@@ -124,9 +124,9 @@ class DistinctTranslation : public CacheTranslation {
   virtual bool Next();
 
  protected:
-  bool AlreadyHas(const string& text) const;
+  bool AlreadyHas(string_view text) const;
 
-  set<string> candidate_set_;
+  set<string, std::less<>> candidate_set_;
 };
 
 class PrefetchTranslation : public Translation {

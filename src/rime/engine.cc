@@ -43,8 +43,8 @@ class ConcreteEngine : public Engine {
   void OnCommit(Context* ctx);
   void OnSelect(Context* ctx);
   void OnContextUpdate(Context* ctx);
-  void OnOptionUpdate(Context* ctx, const string& option);
-  void OnPropertyUpdate(Context* ctx, const string& property);
+  void OnOptionUpdate(Context* ctx, string_view option);
+  void OnPropertyUpdate(Context* ctx, string_view property);
 
   vector<of<Processor>> processors_;
   vector<of<Segmentor>> segmentors_;
@@ -76,11 +76,11 @@ ConcreteEngine::ConcreteEngine() {
   context_->update_notifier().connect(
       [this](Context* ctx) { OnContextUpdate(ctx); });
   context_->option_update_notifier().connect(
-      [this](Context* ctx, const string& option) {
+      [this](Context* ctx, string_view option) {
         OnOptionUpdate(ctx, option);
       });
   context_->property_update_notifier().connect(
-      [this](Context* ctx, const string& property) {
+      [this](Context* ctx, string_view property) {
         OnPropertyUpdate(ctx, property);
       });
 
@@ -127,7 +127,7 @@ void ConcreteEngine::OnContextUpdate(Context* ctx) {
   Compose(ctx);
 }
 
-void ConcreteEngine::OnOptionUpdate(Context* ctx, const string& option) {
+void ConcreteEngine::OnOptionUpdate(Context* ctx, string_view option) {
   if (!ctx)
     return;
   LOG(INFO) << "updated option: " << option;
@@ -137,17 +137,17 @@ void ConcreteEngine::OnOptionUpdate(Context* ctx, const string& option) {
   }
   // notification
   bool option_is_on = ctx->get_option(option);
-  string msg(option_is_on ? option : "!" + option);
+  string_view msg{option_is_on ? option : "!" + string{option}};
   message_sink_("option", msg);
 }
 
-void ConcreteEngine::OnPropertyUpdate(Context* ctx, const string& property) {
+void ConcreteEngine::OnPropertyUpdate(Context* ctx, string_view property) {
   if (!ctx)
     return;
   LOG(INFO) << "updated property: " << property;
   // notification
   string value = ctx->get_property(property);
-  string msg(property + "=" + value);
+  string_view msg{string{property} + "=" + value};
   message_sink_("property", msg);
 }
 

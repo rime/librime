@@ -7,6 +7,8 @@
 #ifndef RIME_FILTER_COMMONS_H_
 #define RIME_FILTER_COMMONS_H_
 
+#include <rime/common.h>
+
 namespace rime {
 
 struct Segment;

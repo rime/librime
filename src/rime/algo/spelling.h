@@ -33,7 +33,7 @@ struct Spelling {
   SpellingProperties properties;
 
   Spelling() = default;
-  Spelling(const string& _str) : str(_str) {}
+  Spelling(string_view _str) : str(_str) {}
 
   bool operator==(const Spelling& other) { return str == other.str; }
   bool operator<(const Spelling& other) { return str < other.str; }

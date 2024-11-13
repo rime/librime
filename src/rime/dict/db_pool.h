@@ -13,7 +13,7 @@ class DbPool {
  public:
   explicit DbPool(the<ResourceResolver> resource_resolver);
 
-  an<T> GetDb(const string& db_name);
+  an<T> GetDb(string_view db_name);
 
  protected:
   the<ResourceResolver> resource_resolver_;

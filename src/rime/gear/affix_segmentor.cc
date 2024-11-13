@@ -5,6 +5,7 @@
 // 2013-10-30 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
+#include <rime/algo/strings.h>
 #include <rime/common.h>
 #include <rime/schema.h>
 #include <rime/segmentation.h>
@@ -51,8 +52,8 @@ bool AffixSegmentor::Proceed(Segmentation* segmentation) {
   }
   size_t j = segmentation->GetCurrentStartPosition();
   size_t k = segmentation->GetCurrentEndPosition();
-  string active_input(segmentation->input().substr(j, k - j));
-  if (prefix_.empty() || !boost::starts_with(active_input, prefix_)) {
+  string_view active_input{segmentation->input().substr(j, k - j)};
+  if (prefix_.empty() || !strings::starts_with(active_input, prefix_)) {
     return true;
   }
   DLOG(INFO) << "affix_segmentor: " << active_input;
@@ -68,7 +69,7 @@ bool AffixSegmentor::Proceed(Segmentation* segmentation) {
     return true;
   }
   // prefix + code
-  active_input.erase(0, prefix_.length());
+  active_input.remove_prefix(prefix_.length());
   Segment prefix_segment(j, j + prefix_.length());
   prefix_segment.status = Segment::kGuess;
   prefix_segment.prompt = tips_;
@@ -87,7 +88,7 @@ bool AffixSegmentor::Proceed(Segmentation* segmentation) {
   segmentation->AddSegment(code_segment);
   DLOG(INFO) << "prefix+code: " << *segmentation;
   // has suffix?
-  if (!suffix_.empty() && boost::ends_with(active_input, suffix_)) {
+  if (!suffix_.empty() && strings::ends_with(active_input, suffix_)) {
     k -= suffix_.length();
     if (k == segmentation->back().start) {
       segmentation->pop_back();  // code is empty

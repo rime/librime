@@ -6,7 +6,6 @@
 //
 #include <chrono>
 #include <exception>
-#include <utility>
 #include <rime/common.h>
 #include <rime/deployer.h>
 
@@ -24,7 +23,7 @@ Deployer::~Deployer() {
   JoinWorkThread();
 }
 
-bool Deployer::RunTask(const string& task_name, TaskInitializer arg) {
+bool Deployer::RunTask(string_view task_name, TaskInitializer arg) {
   auto c = DeploymentTask::Require(task_name);
   if (!c) {
     LOG(ERROR) << "unknown deployment task: " << task_name;
@@ -38,7 +37,7 @@ bool Deployer::RunTask(const string& task_name, TaskInitializer arg) {
   return t->Run(this);
 }
 
-bool Deployer::ScheduleTask(const string& task_name, TaskInitializer arg) {
+bool Deployer::ScheduleTask(string_view task_name, TaskInitializer arg) {
   auto c = DeploymentTask::Require(task_name);
   if (!c) {
     LOG(ERROR) << "unknown deployment task: " << task_name;

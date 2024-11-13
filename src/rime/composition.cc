@@ -21,9 +21,9 @@ bool Composition::HasFinishedComposition() const {
   return at(k).status >= Segment::kSelected;
 }
 
-Preedit Composition::GetPreedit(const string& full_input,
+Preedit Composition::GetPreedit(string_view full_input,
                                 size_t caret_pos,
-                                const string& caret) const {
+                                string_view caret) const {
   Preedit preedit;
   preedit.caret_pos = string::npos;
   size_t start = 0;
@@ -82,7 +82,7 @@ Preedit Composition::GetPreedit(const string& full_input,
     preedit.text += full_input.substr(end);
   }
   // insert soft cursor and prompt string.
-  auto prompt = caret + GetPrompt();
+  const auto& prompt = string{caret} + GetPrompt();
   if (!prompt.empty()) {
     preedit.text.insert(preedit.caret_pos, prompt);
     if (preedit.caret_pos < preedit.sel_start) {

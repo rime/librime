@@ -98,8 +98,8 @@ class RIME_API MappedFile {
   template <class T>
   Array<T>* CreateArray(size_t array_size);
 
-  String* CreateString(const string& str);
-  bool CopyString(const string& src, String* dest);
+  String* CreateString(string_view str);
+  bool CopyString(string_view src, String* dest);
 
   size_t capacity() const;
   char* address() const;

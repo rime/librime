@@ -26,7 +26,7 @@ struct Class {
     virtual T* Create(Initializer arg) = 0;
   };
 
-  static Component* Require(const string& name) {
+  static Component* Require(string_view name) {
     return dynamic_cast<Component*>(Registry::instance().Find(name));
   }
 };

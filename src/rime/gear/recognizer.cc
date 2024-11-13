@@ -12,6 +12,7 @@
 #include <rime/key_event.h>
 #include <rime/schema.h>
 #include <rime/gear/recognizer.h>
+#include <rime/algo/strings.h>
 
 namespace rime {
 
@@ -32,20 +33,23 @@ static void load_patterns(RecognizerPatterns* patterns, an<ConfigMap> map) {
   }
 }
 
-void RecognizerPatterns::LoadConfig(Config* config, const string& name_space) {
-  load_patterns(this, config->GetMap(name_space + "/patterns"));
+void RecognizerPatterns::LoadConfig(Config* config, string_view name_space) {
+  load_patterns(this, config->GetMap(strings::concat(name_space, "/patterns")));
 }
 
+using svmatch = boost::match_results<std::string_view::const_iterator>;
+
 RecognizerMatch RecognizerPatterns::GetMatch(
-    const string& input,
+    string_view input,
     const Segmentation& segmentation) const {
   size_t j = segmentation.GetCurrentEndPosition();
   size_t k = segmentation.GetConfirmedPosition();
-  string active_input = input.substr(k);
+  string_view active_input = input.substr(k);
   DLOG(INFO) << "matching active input '" << active_input << "' at pos " << k;
   for (const auto& v : *this) {
-    boost::smatch m;
-    if (boost::regex_search(active_input, m, v.second)) {
+    svmatch m;
+    if (boost::regex_search(active_input.begin(), active_input.end(), m,
+                            v.second)) {
       size_t start = k + m.position();
       size_t end = start + m.length();
       if (end != input.length())

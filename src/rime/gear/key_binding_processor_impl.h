@@ -2,6 +2,7 @@
 // Copyright RIME Developers
 // Distributed under the BSD License
 //
+#include <rime/algo/strings.h>
 
 namespace rime {
 
@@ -79,10 +80,10 @@ void KeyBindingProcessor<T, N>::Keymap::Bind(KeyEvent key_event,
 
 template <class T, int N>
 void KeyBindingProcessor<T, N>::LoadConfig(Config* config,
-                                           const string& section,
+                                           string_view section,
                                            int keymap_selector) {
   auto& keymap = get_keymap(keymap_selector);
-  if (auto bindings = config->GetMap(section + "/bindings")) {
+  if (auto bindings = config->GetMap(strings::concat(section, "/bindings"))) {
     for (auto it = bindings->begin(); it != bindings->end(); ++it) {
       auto value = As<ConfigValue>(it->second);
       if (!value) {

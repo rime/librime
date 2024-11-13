@@ -39,6 +39,7 @@ class ConfigValue : public ConfigItem {
   RIME_API ConfigValue(double value);
   RIME_API ConfigValue(const char* value);
   RIME_API ConfigValue(const string& value);
+  RIME_API ConfigValue(string_view value);
 
   // schalar value accessors
   bool GetBool(bool* value) const;
@@ -50,6 +51,7 @@ class ConfigValue : public ConfigItem {
   bool SetDouble(double value);
   bool SetString(const char* value);
   bool SetString(const string& value);
+  bool SetString(string_view value);
 
   const string& str() const { return value_; }
 
@@ -86,14 +88,14 @@ class ConfigList : public ConfigItem {
 // limitation: map keys have to be strings, preferably alphanumeric
 class ConfigMap : public ConfigItem {
  public:
-  using Map = map<string, an<ConfigItem>>;
+  using Map = map<string, an<ConfigItem>, std::less<>>;
   using Iterator = Map::iterator;
 
   ConfigMap() : ConfigItem(kMap) {}
-  RIME_API bool HasKey(const string& key) const;
-  RIME_API an<ConfigItem> Get(const string& key) const;
-  RIME_API an<ConfigValue> GetValue(const string& key) const;
-  RIME_API bool Set(const string& key, an<ConfigItem> element);
+  RIME_API bool HasKey(string_view key) const;
+  RIME_API an<ConfigItem> Get(string_view key) const;
+  RIME_API an<ConfigValue> GetValue(string_view key) const;
+  RIME_API bool Set(string_view key, an<ConfigItem> element);
   bool Clear();
 
   Iterator begin();
@@ -135,7 +137,7 @@ class ConfigItemRef {
     return *this;
   }
   ConfigListEntryRef operator[](size_t index);
-  ConfigMapEntryRef operator[](const string& key);
+  ConfigMapEntryRef operator[](string_view key);
 
   RIME_API bool IsNull() const;
   bool IsValue() const;
@@ -155,7 +157,7 @@ class ConfigItemRef {
   RIME_API bool Append(an<ConfigItem> item);
   RIME_API size_t size() const;
   // map
-  RIME_API bool HasKey(const string& key) const;
+  RIME_API bool HasKey(string_view key) const;
 
   RIME_API bool modified() const;
   RIME_API void set_modified();
@@ -187,7 +189,7 @@ class ConfigListEntryRef : public ConfigItemRef {
 
 class ConfigMapEntryRef : public ConfigItemRef {
  public:
-  ConfigMapEntryRef(ConfigData* data, an<ConfigMap> map, const string& key)
+  ConfigMapEntryRef(ConfigData* data, an<ConfigMap> map, string_view key)
       : ConfigItemRef(data), map_(map), key_(key) {}
   using ConfigItemRef::operator=;
 
@@ -207,7 +209,7 @@ inline ConfigListEntryRef ConfigItemRef::operator[](size_t index) {
   return ConfigListEntryRef(data_, AsList(), index);
 }
 
-inline ConfigMapEntryRef ConfigItemRef::operator[](const string& key) {
+inline ConfigMapEntryRef ConfigItemRef::operator[](string_view key) {
   return ConfigMapEntryRef(data_, AsMap(), key);
 }
 

@@ -1,4 +1,5 @@
 #include <boost/algorithm/string.hpp>
+#include <rime/algo/strings.h>
 #include <rime/common.h>
 #include <rime/resource.h>
 #include <rime/config/config_compiler.h>
@@ -21,15 +22,15 @@ struct ConfigDependencyGraph {
   map<string, of<ConfigResource>> resources;
   vector<of<ConfigItemRef>> node_stack;
   vector<string> key_stack;
-  map<string, vector<of<Dependency>>> deps;
+  map<string, vector<of<Dependency>>, std::less<>> deps;
   // paths for checking circular dependencies
   vector<string> resolve_chain;
 
   void Add(an<Dependency> dependency);
 
-  void Push(an<ConfigItemRef> item, const string& key) {
+  void Push(an<ConfigItemRef> item, string_view key) {
     node_stack.push_back(item);
-    key_stack.push_back(key);
+    key_stack.push_back(string{key});
   }
 
   void Pop() {
@@ -126,7 +127,7 @@ static bool AppendToList(an<ConfigItemRef> target, an<ConfigList> list) {
 }
 
 static bool EditNode(an<ConfigItemRef> target,
-                     const string& key,
+                     string_view key,
                      const an<ConfigItem>& value,
                      bool merge_tree);
 
@@ -148,35 +149,40 @@ static bool MergeTree(an<ConfigItemRef> target, an<ConfigMap> map) {
 static constexpr const char* ADD_SUFFIX_OPERATOR = "/+";
 static constexpr const char* EQU_SUFFIX_OPERATOR = "/=";
 
-inline static bool IsAppending(const string& key) {
+inline static bool IsAppending(string_view key) {
   return key == ConfigCompiler::APPEND_DIRECTIVE ||
-         boost::ends_with(key, ADD_SUFFIX_OPERATOR);
+         strings::ends_with(key, ADD_SUFFIX_OPERATOR);
 }
-inline static bool IsMerging(const string& key,
+inline static bool IsMerging(string_view key,
                              const an<ConfigItem>& value,
                              bool merge_tree) {
   return key == ConfigCompiler::MERGE_DIRECTIVE ||
-         boost::ends_with(key, ADD_SUFFIX_OPERATOR) ||
+         strings::ends_with(key, ADD_SUFFIX_OPERATOR) ||
          (merge_tree && (!value || Is<ConfigMap>(value)) &&
-          !boost::ends_with(key, EQU_SUFFIX_OPERATOR));
+          !strings::ends_with(key, EQU_SUFFIX_OPERATOR));
 }
 
-inline static string StripOperator(const string& key, bool adding) {
+inline static string remove_suffix(string_view input, string_view suffix) {
+  return strings::ends_with(input, suffix)
+             ? string{input.data(), input.size() - suffix.size()}
+             : string{input};
+}
+
+inline static string StripOperator(string_view key, bool adding) {
   return (key == ConfigCompiler::APPEND_DIRECTIVE ||
           key == ConfigCompiler::MERGE_DIRECTIVE)
              ? ""
-             : boost::erase_last_copy(
+             : remove_suffix(
                    key, adding ? ADD_SUFFIX_OPERATOR : EQU_SUFFIX_OPERATOR);
 }
 
 // defined in config_data.cc
 an<ConfigItemRef> TypeCheckedCopyOnWrite(an<ConfigItemRef> parent,
-                                         const string& key);
-an<ConfigItemRef> TraverseCopyOnWrite(an<ConfigItemRef> head,
-                                      const string& path);
+                                         string_view key);
+an<ConfigItemRef> TraverseCopyOnWrite(an<ConfigItemRef> head, string_view path);
 
 static bool EditNode(an<ConfigItemRef> head,
-                     const string& key,
+                     string_view key,
                      const an<ConfigItem>& value,
                      bool merge_tree) {
   DLOG(INFO) << "edit node: " << key << ", merge_tree: " << merge_tree;
@@ -276,7 +282,7 @@ ConfigCompiler::ConfigCompiler(ResourceResolver* resource_resolver,
 
 ConfigCompiler::~ConfigCompiler() {}
 
-Reference ConfigCompiler::CreateReference(const string& qualified_path) {
+Reference ConfigCompiler::CreateReference(string_view qualified_path) {
   auto end = qualified_path.find_last_of("?");
   bool optional = end != string::npos;
   auto separator = qualified_path.find_first_of(":");
@@ -284,12 +290,12 @@ Reference ConfigCompiler::CreateReference(const string& qualified_path) {
       (separator == string::npos || separator == 0)
           ? graph_->current_resource_id()
           : qualified_path.substr(0, separator));
-  string local_path =
+  auto local_path =
       (separator == string::npos)
           ? qualified_path.substr(0, end)
           : qualified_path.substr(separator + 1,
                                   optional ? end - separator - 1 : end);
-  return Reference{resource_id, local_path, optional};
+  return Reference{resource_id, string{local_path}, optional};
 }
 
 void ConfigCompiler::AddDependency(an<Dependency> dependency) {
@@ -305,7 +311,7 @@ void ConfigCompiler::Push(an<ConfigList> config_list, size_t index) {
                ConfigData::FormatListIndex(index));
 }
 
-void ConfigCompiler::Push(an<ConfigMap> config_map, const string& key) {
+void ConfigCompiler::Push(an<ConfigMap> config_map, string_view key) {
   graph_->Push(New<ConfigMapEntryRef>(nullptr, config_map, key), key);
 }
 
@@ -321,12 +327,12 @@ void ConfigCompiler::EnumerateResources(
 }
 
 an<ConfigResource> ConfigCompiler::GetCompiledResource(
-    const string& resource_id) const {
-  return graph_->resources[resource_id];
+    string_view resource_id) const {
+  return graph_->resources[string{resource_id}];
 }
 
-an<ConfigResource> ConfigCompiler::Compile(const string& file_name) {
-  auto resource_id = resource_resolver_->ToResourceId(file_name);
+an<ConfigResource> ConfigCompiler::Compile(string_view file_name) {
+  const auto& resource_id = resource_resolver_->ToResourceId(file_name);
   auto resource = New<ConfigResource>(resource_id, New<ConfigData>());
   graph_->resources[resource_id] = resource;
   Push(resource);
@@ -339,7 +345,7 @@ an<ConfigResource> ConfigCompiler::Compile(const string& file_name) {
 }
 
 static bool ResolveBlockingDependencies(ConfigCompiler* compiler,
-                                        const string& path) {
+                                        string_view path) {
   if (!compiler->blocking(path)) {
     return true;
   }
@@ -353,7 +359,7 @@ static bool ResolveBlockingDependencies(ConfigCompiler* compiler,
 
 static an<ConfigItem> GetResolvedItem(ConfigCompiler* compiler,
                                       an<ConfigResource> resource,
-                                      const string& path) {
+                                      string_view path) {
   DLOG(INFO) << "GetResolvedItem(" << resource->resource_id << ":" << path
              << ")";
   string node_path = resource->resource_id + ":";
@@ -395,22 +401,22 @@ static an<ConfigItem> GetResolvedItem(ConfigCompiler* compiler,
   return compiler->ResolveDependencies(node_path) ? **node : nullptr;
 }
 
-bool ConfigCompiler::blocking(const string& full_path) const {
+bool ConfigCompiler::blocking(string_view full_path) const {
   auto found = graph_->deps.find(full_path);
   return found != graph_->deps.end() && !found->second.empty() &&
          found->second.back()->blocking();
 }
 
-bool ConfigCompiler::pending(const string& full_path) const {
+bool ConfigCompiler::pending(string_view full_path) const {
   return !resolved(full_path);
 }
 
-bool ConfigCompiler::resolved(const string& full_path) const {
+bool ConfigCompiler::resolved(string_view full_path) const {
   auto found = graph_->deps.find(full_path);
   return found == graph_->deps.end() || found->second.empty();
 }
 
-vector<of<Dependency>> ConfigCompiler::GetDependencies(const string& path) {
+vector<of<Dependency>> ConfigCompiler::GetDependencies(string_view path) {
   auto found = graph_->deps.find(path);
   return found == graph_->deps.end() ? vector<of<Dependency>>() : found->second;
 }
@@ -485,7 +491,7 @@ static bool ParsePatch(ConfigCompiler* compiler, const an<ConfigItem>& item) {
   return false;
 }
 
-bool ConfigCompiler::Parse(const string& key, const an<ConfigItem>& item) {
+bool ConfigCompiler::Parse(string_view key, const an<ConfigItem>& item) {
   DLOG(INFO) << "ConfigCompiler::Parse(" << key << ")";
   if (key == INCLUDE_DIRECTIVE) {
     return ParseInclude(this, item);
@@ -508,7 +514,7 @@ bool ConfigCompiler::Link(an<ConfigResource> target) {
 }
 
 static bool HasCircularDependencies(ConfigDependencyGraph* graph,
-                                    const string& path) {
+                                    string_view path) {
   for (const auto& x : graph->resolve_chain) {
     if (boost::starts_with(x, path) &&
         (x.length() == path.length() || x[path.length()] == '/'))
@@ -517,7 +523,7 @@ static bool HasCircularDependencies(ConfigDependencyGraph* graph,
   return false;
 }
 
-bool ConfigCompiler::ResolveDependencies(const string& path) {
+bool ConfigCompiler::ResolveDependencies(string_view path) {
   DLOG(INFO) << "ResolveDependencies(" << path << ")";
   auto found = graph_->deps.find(path);
   if (found == graph_->deps.end()) {
@@ -527,7 +533,7 @@ bool ConfigCompiler::ResolveDependencies(const string& path) {
     LOG(WARNING) << "circular dependencies detected in " << path;
     return false;
   }
-  graph_->resolve_chain.push_back(path);
+  graph_->resolve_chain.push_back(string{path});
   auto& deps = found->second;
   for (auto iter = deps.begin(); iter != deps.end();) {
     if (!(*iter)->Resolve(this)) {

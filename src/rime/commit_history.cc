@@ -29,7 +29,7 @@ void CommitHistory::Push(const KeyEvent& key_event) {
   }
 }
 
-void CommitHistory::Push(const Composition& composition, const string& input) {
+void CommitHistory::Push(const Composition& composition, string_view input) {
   CommitRecord* last = NULL;
   size_t end = 0;
   for (const Segment& seg : composition) {

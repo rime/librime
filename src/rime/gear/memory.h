@@ -8,6 +8,7 @@
 #define RIME_MEMORY_H_
 
 #include <rime/common.h>
+#include <rime/ticket.h>
 #include <rime/dict/vocabulary.h>
 
 namespace rime {

@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <rime_api.h>
 #include <rime/common.h>
+#include <rime/algo/strings.h>
 
 namespace rime {
 
@@ -102,7 +103,10 @@ class Vocabulary : public map<int, VocabularyPage> {
 };
 
 // word -> { code, ... }
-using ReverseLookupTable = hash_map<string, set<string>>;
+using ReverseLookupTable = hash_map<string,
+                                    set<string>,
+                                    strings::details::string_hash<>,
+                                    std::equal_to<>>;
 
 }  // namespace rime
 

@@ -19,11 +19,11 @@ class LevelDb;
 class LevelDbAccessor : public DbAccessor {
  public:
   LevelDbAccessor();
-  LevelDbAccessor(LevelDbCursor* cursor, const string& prefix);
+  LevelDbAccessor(LevelDbCursor* cursor, string_view prefix);
   virtual ~LevelDbAccessor();
 
   bool Reset() override;
-  bool Jump(const string& key) override;
+  bool Jump(string_view key) override;
   bool GetNextRecord(string* key, string* value) override;
   bool exhausted() override;
 
@@ -35,8 +35,8 @@ class LevelDbAccessor : public DbAccessor {
 class LevelDb : public Db, public Recoverable, public Transactional {
  public:
   LevelDb(const path& file_path,
-          const string& db_name,
-          const string& db_type = "");
+          string_view db_name,
+          string_view db_type = ""sv);
   virtual ~LevelDb();
 
   bool Remove() override;
@@ -48,15 +48,15 @@ class LevelDb : public Db, public Recoverable, public Transactional {
   bool Restore(const path& snapshot_file) override;
 
   bool CreateMetadata() override;
-  bool MetaFetch(const string& key, string* value) override;
-  bool MetaUpdate(const string& key, const string& value) override;
+  bool MetaFetch(string_view key, string* value) override;
+  bool MetaUpdate(string_view key, string_view value) override;
 
   an<DbAccessor> QueryMetadata() override;
   an<DbAccessor> QueryAll() override;
-  an<DbAccessor> Query(const string& key) override;
-  bool Fetch(const string& key, string* value) override;
-  bool Update(const string& key, const string& value) override;
-  bool Erase(const string& key) override;
+  an<DbAccessor> Query(string_view key) override;
+  bool Fetch(string_view key, string* value) override;
+  bool Update(string_view key, string_view value) override;
+  bool Erase(string_view key) override;
 
   // Recoverable
   bool Recover() override;

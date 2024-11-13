@@ -10,7 +10,7 @@
 
 namespace rime {
 
-int CompareVersionString(const string& x, const string& y) {
+int CompareVersionString(string_view x, string_view y) {
   size_t i = 0, j = 0, m = x.size(), n = y.size();
   while (i < m || j < n) {
     int v1 = 0, v2 = 0;

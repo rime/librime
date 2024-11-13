@@ -42,7 +42,7 @@ class ReverseDb : public MappedFile {
   explicit ReverseDb(const path& file_path);
 
   bool Load();
-  bool Lookup(const string& text, string* result);
+  bool Lookup(string_view text, string* result);
 
   bool Build(DictSettings* settings,
              const Syllabary& syllabary,
@@ -65,8 +65,8 @@ class ReverseLookupDictionary
  public:
   explicit ReverseLookupDictionary(an<ReverseDb> db);
   bool Load();
-  bool ReverseLookup(const string& text, string* result);
-  bool LookupStems(const string& text, string* result);
+  bool ReverseLookup(string_view text, string* result);
+  bool LookupStems(string_view text, string* result);
   an<DictSettings> GetDictSettings();
 
  protected:
@@ -81,7 +81,7 @@ class ReverseLookupDictionaryComponent
  public:
   ReverseLookupDictionaryComponent();
   ReverseLookupDictionary* Create(const Ticket& ticket);
-  ReverseLookupDictionary* Create(const string& dict_name);
+  ReverseLookupDictionary* Create(string_view dict_name);
 };
 
 }  // namespace rime

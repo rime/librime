@@ -5,6 +5,7 @@
 // 2013-04-18 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
+#include <rime/algo/strings.h>
 #include <rime/dict/table_db.h>
 #include <rime/dict/user_db.h>
 
@@ -37,12 +38,12 @@ static bool rime_table_entry_parser(const Tsv& row,
   return true;
 }
 
-static bool rime_table_entry_formatter(const string& key,
-                                       const string& value,
+static bool rime_table_entry_formatter(string_view key,
+                                       string_view value,
                                        Tsv* tsv) {
   Tsv& row(*tsv);
   // key ::= code <space> <Tab> phrase
-  boost::algorithm::split(row, key, boost::algorithm::is_any_of("\t"));
+  row = strings::split(key, "\t"sv);
   if (row.size() != 2 || row[0].empty() || row[1].empty())
     return false;
   UserDbValue v(value);
@@ -60,10 +61,10 @@ const TextFormat TableDb::format = {
     "Rime table",
 };
 
-TableDb::TableDb(const path& file_path, const string& db_name)
+TableDb::TableDb(const path& file_path, string_view db_name)
     : TextDb(file_path, db_name, "tabledb", TableDb::format) {}
 
-StableDb::StableDb(const path& file_path, const string& db_name)
+StableDb::StableDb(const path& file_path, string_view db_name)
     : TableDb(file_path, db_name) {}
 
 bool StableDb::Open() {

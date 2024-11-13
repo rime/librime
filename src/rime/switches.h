@@ -51,7 +51,7 @@ class Switches {
 
   SwitchOption FindOption(function<FindResult(SwitchOption option)> callback);
 
-  SwitchOption OptionByName(const string& option_name);
+  SwitchOption OptionByName(string_view option_name);
 
   // Returns the switch option defined at switch_index.
   // If the switch is a radio group, return the first option in the group.
@@ -69,7 +69,7 @@ class Switches {
                                    size_t state_index,
                                    bool abbreviated);
 
-  StringSlice GetStateLabel(const string& option_name,
+  StringSlice GetStateLabel(string_view option_name,
                             int state,
                             bool abbreviated);
 

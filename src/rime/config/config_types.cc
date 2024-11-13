@@ -31,6 +31,9 @@ ConfigValue::ConfigValue(const char* value)
 ConfigValue::ConfigValue(const string& value)
     : ConfigItem(kScalar), value_(value) {}
 
+ConfigValue::ConfigValue(string_view value)
+    : ConfigItem(kScalar), value_(value) {}
+
 bool ConfigValue::GetBool(bool* value) const {
   if (!value || value_.empty())
     return false;
@@ -110,6 +113,10 @@ bool ConfigValue::SetString(const string& value) {
   return true;
 }
 
+bool ConfigValue::SetString(string_view value) {
+  value_ = value;
+  return true;
+}
 // ConfigList members
 
 an<ConfigItem> ConfigList::GetAt(size_t i) const {
@@ -167,11 +174,11 @@ ConfigList::Iterator ConfigList::end() {
 
 // ConfigMap members
 
-bool ConfigMap::HasKey(const string& key) const {
+bool ConfigMap::HasKey(string_view key) const {
   return bool(Get(key));
 }
 
-an<ConfigItem> ConfigMap::Get(const string& key) const {
+an<ConfigItem> ConfigMap::Get(string_view key) const {
   auto it = map_.find(key);
   if (it == map_.end())
     return nullptr;
@@ -179,12 +186,12 @@ an<ConfigItem> ConfigMap::Get(const string& key) const {
     return it->second;
 }
 
-an<ConfigValue> ConfigMap::GetValue(const string& key) const {
+an<ConfigValue> ConfigMap::GetValue(string_view key) const {
   return As<ConfigValue>(Get(key));
 }
 
-bool ConfigMap::Set(const string& key, an<ConfigItem> element) {
-  map_[key] = element;
+bool ConfigMap::Set(string_view key, an<ConfigItem> element) {
+  map_[string{key}] = element;
   return true;
 }
 
@@ -286,7 +293,7 @@ size_t ConfigItemRef::size() const {
   return list ? list->size() : 0;
 }
 
-bool ConfigItemRef::HasKey(const string& key) const {
+bool ConfigItemRef::HasKey(string_view key) const {
   auto map = As<ConfigMap>(GetItem());
   return map ? map->HasKey(key) : false;
 }

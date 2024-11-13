@@ -21,7 +21,7 @@ class Engine;
 class PunctConfig {
  public:
   void LoadConfig(Engine* engine, bool load_symbols = false);
-  an<ConfigItem> GetPunctDefinition(const string key);
+  an<ConfigItem> GetPunctDefinition(string_view key);
 
  protected:
   string shape_;
@@ -36,7 +36,7 @@ class Punctuator : public Processor {
 
  protected:
   bool ConfirmUniquePunct(const an<ConfigItem>& definition);
-  bool AlternatePunct(const string& key, const an<ConfigItem>& definition);
+  bool AlternatePunct(string_view key, const an<ConfigItem>& definition);
   bool AutoCommitPunct(const an<ConfigItem>& definition);
   bool PairPunct(const an<ConfigItem>& definition);
 
@@ -57,19 +57,19 @@ class PunctSegmentor : public Segmentor {
 class PunctTranslator : public Translator {
  public:
   PunctTranslator(const Ticket& ticket);
-  virtual an<Translation> Query(const string& input, const Segment& segment);
+  virtual an<Translation> Query(string_view input, const Segment& segment);
 
  protected:
-  an<Translation> TranslateUniquePunct(const string& key,
+  an<Translation> TranslateUniquePunct(string_view key,
                                        const Segment& segment,
                                        const an<ConfigValue>& definition);
-  an<Translation> TranslateAlternatingPunct(const string& key,
+  an<Translation> TranslateAlternatingPunct(string_view key,
                                             const Segment& segment,
                                             const an<ConfigList>& definition);
-  an<Translation> TranslateAutoCommitPunct(const string& key,
+  an<Translation> TranslateAutoCommitPunct(string_view key,
                                            const Segment& segment,
                                            const an<ConfigMap>& definition);
-  an<Translation> TranslatePairedPunct(const string& key,
+  an<Translation> TranslatePairedPunct(string_view key,
                                        const Segment& segment,
                                        const an<ConfigMap>& definition);
 

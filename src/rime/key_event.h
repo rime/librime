@@ -19,7 +19,7 @@ class KeyEvent {
   KeyEvent() = default;
   KeyEvent(int keycode, int modifier)
       : keycode_(keycode), modifier_(modifier) {}
-  RIME_API KeyEvent(const string& repr);
+  RIME_API KeyEvent(string_view repr);
 
   int keycode() const { return keycode_; }
   void keycode(int value) { keycode_ = value; }
@@ -38,7 +38,7 @@ class KeyEvent {
   RIME_API string repr() const;
 
   // 解析文字表示的按鍵
-  RIME_API bool Parse(const string& repr);
+  RIME_API bool Parse(string_view repr);
 
   bool operator==(const KeyEvent& other) const {
     return keycode_ == other.keycode_ && modifier_ == other.modifier_;
@@ -59,7 +59,7 @@ class KeyEvent {
 class KeySequence : public vector<KeyEvent> {
  public:
   KeySequence() = default;
-  RIME_API KeySequence(const string& repr);
+  RIME_API KeySequence(string_view repr);
 
   // 可表示為一串文字
   // 若其中包含不產生可打印字符的按鍵，以 {鍵名} 來標記
@@ -67,7 +67,7 @@ class KeySequence : public vector<KeyEvent> {
   RIME_API string repr() const;
 
   // 解析按鍵序列描述文字
-  RIME_API bool Parse(const string& repr);
+  RIME_API bool Parse(string_view repr);
 };
 
 inline std::ostream& operator<<(std::ostream& out, const KeyEvent& key_event) {

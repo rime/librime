@@ -51,8 +51,11 @@ using std::vector;
 
 using namespace std::string_view_literals;
 
-template <class Key, class T>
-using hash_map = boost::unordered_map<Key, T>;
+template <class Key,
+          class T,
+          class Hash = boost::hash<Key>,
+          class P = std::equal_to<Key>>
+using hash_map = boost::unordered_map<Key, T, Hash, P>;
 template <class T>
 using hash_set = boost::unordered_set<T>;
 
@@ -100,6 +103,7 @@ class path : public std::filesystem::path {
   // disable implicit conversion from string to path for development purpose.
   explicit path(const std::string& utf8_path) : fs_path(utf8_path) {}
   explicit path(const char* utf8_path) : fs_path(utf8_path) {}
+  explicit path(string_view utf8_path) : fs_path(utf8_path) {}
 #endif
 
   path& operator/=(const path& p) { return *this = fs_path::operator/=(p); }
@@ -107,6 +111,7 @@ class path : public std::filesystem::path {
   // convert UTF-8 encoded string to native encoding, then append.
   path& operator/=(const std::string& p) { return *this /= path(p); }
   path& operator/=(const char* p) { return *this /= path(p); }
+  path& operator/=(string_view p) { return *this /= path(p); }
 
   friend path operator/(const path& lhs, const path& rhs) {
     return path(lhs) /= rhs;
@@ -124,10 +129,16 @@ class path : public std::filesystem::path {
   friend path operator/(const path& lhs, const char* rhs) {
     return path(lhs) /= path(rhs);
   }
+  friend path operator/(const path& lhs, string_view rhs) {
+    return path(lhs) /= path(rhs);
+  }
   friend path operator/(const fs_path& lhs, const std::string& rhs) {
     return path(lhs) /= path(rhs);
   }
   friend path operator/(const fs_path& lhs, const char* rhs) {
+    return path(lhs) /= path(rhs);
+  }
+  friend path operator/(const fs_path& lhs, string_view rhs) {
     return path(lhs) /= path(rhs);
   }
 #ifdef RIME_ENABLE_LOGGING

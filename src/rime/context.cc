@@ -74,7 +74,7 @@ bool Context::PushInput(char ch) {
   return true;
 }
 
-bool Context::PushInput(const string& str) {
+bool Context::PushInput(string_view str) {
   if (caret_pos_ >= input_.length()) {
     input_ += str;
     caret_pos_ = input_.length();
@@ -272,19 +272,19 @@ void Context::set_composition(Composition&& comp) {
   composition_ = std::move(comp);
 }
 
-void Context::set_input(const string& value) {
+void Context::set_input(string_view value) {
   input_ = value;
   caret_pos_ = input_.length();
   update_notifier_(this);
 }
 
-void Context::set_option(const string& name, bool value) {
-  options_[name] = value;
+void Context::set_option(string_view name, bool value) {
+  options_[string{name}] = value;
   DLOG(INFO) << "Context::set_option " << name << " = " << value;
   option_update_notifier_(this, name);
 }
 
-bool Context::get_option(const string& name) const {
+bool Context::get_option(string_view name) const {
   auto it = options_.find(name);
   if (it != options_.end())
     return it->second;
@@ -292,12 +292,12 @@ bool Context::get_option(const string& name) const {
     return false;
 }
 
-void Context::set_property(const string& name, const string& value) {
-  properties_[name] = value;
+void Context::set_property(string_view name, string_view value) {
+  properties_[string{name}] = value;
   property_update_notifier_(this, name);
 }
 
-string Context::get_property(const string& name) const {
+string Context::get_property(string_view name) const {
   auto it = properties_.find(name);
   if (it != properties_.end())
     return it->second;

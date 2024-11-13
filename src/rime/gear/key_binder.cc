@@ -5,6 +5,7 @@
 // 2011-11-23 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
+#include <charconv>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -37,7 +38,7 @@ static struct KeyBindingConditionDef {
                              {kAlways, "always"},
                              {kNever, NULL}};
 
-static KeyBindingCondition translate_condition(const string& str) {
+static KeyBindingCondition translate_condition(string_view str) {
   for (auto* d = condition_definitions; d->name; ++d) {
     if (str == d->name)
       return d->condition;
@@ -71,21 +72,22 @@ static void radio_select_option(Context* ctx,
       });
 }
 
-inline static bool is_switch_index(const string& option) {
+inline static bool is_switch_index(string_view option) {
   return !option.empty() && option.front() == '@';
 }
 
 static Switches::SwitchOption switch_by_index(Switches& switches,
-                                              const string& option) {
-  try {
-    size_t index = std::stoul(option.substr(1));
+                                              string_view option) {
+  size_t index;
+  auto option_str = option.substr(1);
+  auto [ptr, ec] = std::from_chars(
+      option_str.data(), option_str.data() + option_str.size(), index);
+  if (ec == std::errc{})
     return switches.ByIndex(index);
-  } catch (...) {
-  }
   return {};
 }
 
-static void toggle_option(Engine* engine, const string& option) {
+static void toggle_option(Engine* engine, string_view option) {
   if (!engine)
     return;
   Context* ctx = engine->context();
@@ -116,7 +118,7 @@ static void toggle_option(Engine* engine, const string& option) {
   }
 }
 
-static void set_option(Engine* engine, const string& option) {
+static void set_option(Engine* engine, string_view option) {
   if (!engine)
     return;
   Context* ctx = engine->context();
@@ -129,7 +131,7 @@ static void set_option(Engine* engine, const string& option) {
   }
 }
 
-static void unset_option(Engine* engine, const string& option) {
+static void unset_option(Engine* engine, string_view option) {
   if (!engine)
     return;
   Context* ctx = engine->context();
@@ -147,7 +149,7 @@ static void unset_option(Engine* engine, const string& option) {
   }
 }
 
-static void select_schema(Engine* engine, const string& schema) {
+static void select_schema(Engine* engine, string_view schema) {
   if (!engine)
     return;
   if (schema == ".next") {
@@ -319,7 +321,7 @@ bool KeyBinder::ReinterpretPagingKey(const KeyEvent& key_event) {
   }
   if (last_key_ == '.' && ch >= 'a' && ch <= 'z') {
     Context* ctx = engine_->context();
-    const string& input(ctx->input());
+    string_view input{ctx->input()};
     if (!input.empty() && input[input.length() - 1] != '.') {
       LOG(INFO) << "reinterpreted key: '" << last_key_ << "', successor: '"
                 << (char)ch << "'";

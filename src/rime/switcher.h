@@ -29,12 +29,12 @@ class Switcher : public Processor, public Engine {
 
   static int ForEachSchemaListEntry(
       Config* config,
-      function<bool(const string& schema_id)> process_entry);
+      function<bool(string_view schema_id)> process_entry);
 
-  void SetActiveSchema(const string& schema_id);
+  void SetActiveSchema(string_view schema_id);
   Schema* CreateSchema();
   void SelectNextSchema();
-  bool IsAutoSave(const string& option) const;
+  bool IsAutoSave(string_view option) const;
   void RestoreSavedOptions();
 
   void RefreshMenu();
@@ -56,7 +56,7 @@ class Switcher : public Processor, public Engine {
   the<Config> user_config_;
   string caption_;
   vector<KeyEvent> hotkeys_;
-  set<string> save_options_;
+  set<string, std::less<>> save_options_;
   bool fold_options_ = false;
   bool fix_schema_list_order_ = false;
 
@@ -67,7 +67,7 @@ class Switcher : public Processor, public Engine {
 
 class SwitcherCommand {
  public:
-  SwitcherCommand(const string& keyword) : keyword_(keyword) {}
+  SwitcherCommand(string_view keyword) : keyword_(keyword) {}
   virtual void Apply(Switcher* switcher) = 0;
   const string& keyword() const { return keyword_; }
 

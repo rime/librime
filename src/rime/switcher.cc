@@ -17,6 +17,7 @@
 #include <rime/ticket.h>
 #include <rime/translation.h>
 #include <rime/translator.h>
+#include <rime/algo/strings.h>
 
 namespace rime {
 
@@ -145,7 +146,7 @@ static an<ConfigValue> ParseSchemaListEntry(Config* config,
 
 int Switcher::ForEachSchemaListEntry(
     Config* config,
-    function<bool(const string& schema_id)> process_entry) {
+    function<bool(string_view schema_id)> process_entry) {
   auto schema_list = config->GetList("schema_list");
   if (!schema_list)
     return 0;
@@ -154,18 +155,19 @@ int Switcher::ForEachSchemaListEntry(
     auto entry = ParseSchemaListEntry(config, As<ConfigMap>(*iter));
     if (!entry)
       continue;
-    const string& schema_id = entry->str();
+    string_view schema_id{entry->str()};
     ++num_processed_entries;
-    if (!process_entry(schema_id))
+    if (!process_entry(string{schema_id}))
       break;
   }
   return num_processed_entries;
 }
 
-void Switcher::SetActiveSchema(const string& schema_id) {
+void Switcher::SetActiveSchema(string_view schema_id) {
   if (user_config_) {
     user_config_->SetString("var/previously_selected_schema", schema_id);
-    user_config_->SetInt("var/schema_access_time/" + schema_id, time(NULL));
+    user_config_->SetInt(strings::concat("var/schema_access_time/", schema_id),
+                         time(NULL));
     // persist recently used schema and options that have changed
     user_config_->Save();
   }
@@ -180,7 +182,7 @@ Schema* Switcher::CreateSchema() {
     user_config_->GetString("var/previously_selected_schema", &previous);
   }
   string recent;
-  ForEachSchemaListEntry(config, [&previous, &recent](const string& schema_id) {
+  ForEachSchemaListEntry(config, [&previous, &recent](string_view schema_id) {
     if (previous.empty() || previous == schema_id) {
       recent = schema_id;
       return /* continue = */ false;
@@ -211,7 +213,7 @@ void Switcher::SelectNextSchema() {
   command->Apply(this);
 }
 
-bool Switcher::IsAutoSave(const string& option) const {
+bool Switcher::IsAutoSave(string_view option) const {
   return save_options_.find(option) != save_options_.end();
 }
 

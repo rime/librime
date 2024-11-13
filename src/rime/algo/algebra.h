@@ -17,10 +17,10 @@ namespace rime {
 class Calculation;
 class Schema;
 
-class Script : public map<string, vector<Spelling>> {
+class Script : public map<string, vector<Spelling>, std::less<>> {
  public:
-  RIME_API bool AddSyllable(const string& syllable);
-  void Merge(const string& s,
+  RIME_API bool AddSyllable(string_view syllable);
+  void Merge(string_view s,
              const SpellingProperties& sp,
              const vector<Spelling>& v);
   void Dump(const path& file_path) const;

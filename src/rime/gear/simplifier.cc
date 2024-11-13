@@ -46,13 +46,13 @@ class Opencc {
     }
   }
 
-  bool ConvertWord(const string& text, vector<string>* forms) {
+  bool ConvertWord(string_view text, vector<string>* forms) {
     if (converter_ == nullptr) {
       return false;
     }
     const list<opencc::ConversionPtr> conversions =
         converter_->GetConversionChain()->GetConversions();
-    vector<string> original_words{text};
+    vector<string> original_words{string{text}};
     bool matched = false;
     for (auto conversion : conversions) {
       opencc::DictPtr dict = conversion->GetDict();
@@ -110,12 +110,12 @@ class Opencc {
     return forms->size() > 0;
   }
 
-  bool RandomConvertText(const string& text, string* simplified) {
+  bool RandomConvertText(string_view text, string* simplified) {
     if (dict_ == nullptr)
       return false;
     const list<opencc::ConversionPtr> conversions =
         converter_->GetConversionChain()->GetConversions();
-    const char* phrase = text.c_str();
+    const char* phrase = text.data();
     for (auto conversion : conversions) {
       opencc::DictPtr dict = conversion->GetDict();
       if (dict == nullptr) {
@@ -142,10 +142,10 @@ class Opencc {
     return *simplified != text;
   }
 
-  bool ConvertText(const string& text, string* simplified) {
+  bool ConvertText(string_view text, string* simplified) {
     if (converter_ == nullptr)
       return false;
-    *simplified = converter_->Convert(text);
+    converter_->Convert(text.data(), simplified->data());
     return *simplified != text;
   }
 
@@ -255,7 +255,7 @@ an<Translation> Simplifier::Apply(an<Translation> translation,
 
 void Simplifier::PushBack(const an<Candidate>& original,
                           CandidateQueue* result,
-                          const string& simplified) {
+                          string_view simplified) {
   string tips;
   string text;
   size_t length = utf8::unchecked::distance(

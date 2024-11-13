@@ -5,6 +5,7 @@
 // 2013-08-31 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
+#include "rime/algo/strings.h"
 #include <rime/dict/dict_settings.h>
 #include <rime/dict/user_dictionary.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
@@ -42,20 +43,19 @@ bool UnityTableEncoder::Load(const Ticket& ticket) {
   return LoadSettings(settings.get());
 }
 
-void UnityTableEncoder::CreateEntry(const string& word,
-                                    const string& code_str,
-                                    const string& weight_str) {
+void UnityTableEncoder::CreateEntry(string_view word,
+                                    string_view code_str,
+                                    string_view weight_str) {
   if (!user_dict_)
     return;
   DictEntry entry;
   entry.text = word;
-  entry.custom_code = code_str + ' ';
+  entry.custom_code = strings::concat(code_str, " ");
   int commits = (weight_str == "0") ? 0 : 1;
   user_dict_->UpdateEntry(entry, commits, kEncodedPrefix);
 }
 
-bool UnityTableEncoder::TranslateWord(const string& word,
-                                      vector<string>* code) {
+bool UnityTableEncoder::TranslateWord(string_view word, vector<string>* code) {
   if (!rev_dict_) {
     return false;
   }
@@ -69,18 +69,18 @@ bool UnityTableEncoder::TranslateWord(const string& word,
 }
 
 size_t UnityTableEncoder::LookupPhrases(UserDictEntryIterator* result,
-                                        const string& input,
+                                        string_view input,
                                         bool predictive,
                                         size_t limit,
                                         string* resume_key) {
   if (!user_dict_)
     return 0;
-  return user_dict_->LookupWords(result, kEncodedPrefix + input, predictive,
-                                 limit, resume_key);
+  return user_dict_->LookupWords(result, strings::concat(kEncodedPrefix, input),
+                                 predictive, limit, resume_key);
 }
 
-bool UnityTableEncoder::HasPrefix(const string& key) {
-  return boost::starts_with(key, kEncodedPrefix);
+bool UnityTableEncoder::HasPrefix(string_view key) {
+  return strings::starts_with(key, kEncodedPrefix);
 }
 
 bool UnityTableEncoder::AddPrefix(string* key) {

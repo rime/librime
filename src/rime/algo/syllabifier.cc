@@ -22,7 +22,7 @@ using VertexQueue =
 const double kCompletionPenalty = -0.6931471805599453;     // log(0.5)
 const double kCorrectionCredibility = -4.605170185988091;  // log(0.01)
 
-int Syllabifier::BuildSyllableGraph(const string& input,
+int Syllabifier::BuildSyllableGraph(string_view input,
                                     Prism& prism,
                                     SyllableGraph* graph) {
   if (input.empty())

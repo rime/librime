@@ -11,12 +11,10 @@ class Config;
 class Grammar : public Class<Grammar, Config*> {
  public:
   virtual ~Grammar() {}
-  virtual double Query(const string& context,
-                       const string& word,
-                       bool is_rear) = 0;
+  virtual double Query(string_view context, string_view word, bool is_rear) = 0;
 
-  inline static double Evaluate(const string& context,
-                                const string& entry_text,
+  inline static double Evaluate(string_view context,
+                                string_view entry_text,
                                 double entry_weight,
                                 bool is_rear,
                                 Grammar* grammar) {

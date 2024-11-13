@@ -65,8 +65,8 @@ static hash_map<char, hash_set<char>> keyboard_map = {
     {'/', {'.'}},
 };
 
-void DFSCollect(const string& origin,
-                const string& current,
+void DFSCollect(string_view origin,
+                string_view current,
                 size_t ed,
                 Script& result);
 
@@ -81,14 +81,14 @@ Script SymDeleteCollector::Collect(size_t edit_distance) {
   return script;
 }
 
-void DFSCollect(const string& origin,
-                const string& current,
+void DFSCollect(string_view origin,
+                string_view current,
                 size_t ed,
                 Script& result) {
   if (ed <= 0)
     return;
   for (size_t i = 0; i < current.size(); i++) {
-    string temp = current;
+    string temp{current};
     temp.erase(i, 1);
     Spelling spelling(origin);
     spelling.properties.tips = origin;
@@ -98,7 +98,7 @@ void DFSCollect(const string& origin,
 }
 
 void EditDistanceCorrector::ToleranceSearch(const Prism& prism,
-                                            const string& key,
+                                            string_view key,
                                             Corrections* results,
                                             size_t threshold) {
   if (key.empty())
@@ -108,7 +108,7 @@ void EditDistanceCorrector::ToleranceSearch(const Prism& prism,
   vector<size_t> jump_pos(key_len);
 
   auto match_next = [&](size_t& node, size_t& point) -> bool {
-    auto res_val = trie_->traverse(key.c_str(), node, point, point + 1);
+    auto res_val = trie_->traverse(key.data(), node, point, point + 1);
     if (res_val == -2)
       return false;
     if (res_val >= 0) {
@@ -160,8 +160,8 @@ inline uint8_t SubstCost(char left, char right) {
 
 // This nice O(min(m, n)) implementation is from
 // https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#C++
-Distance EditDistanceCorrector::LevenshteinDistance(const std::string& s1,
-                                                    const std::string& s2) {
+Distance EditDistanceCorrector::LevenshteinDistance(string_view s1,
+                                                    string_view s2) {
   // To change the type this function manipulates and returns, change
   // the return type and the types of the two variables below.
   auto s1len = (size_t)s1.size();
@@ -190,8 +190,8 @@ Distance EditDistanceCorrector::LevenshteinDistance(const std::string& s1,
 }
 
 // L's distance with transposition allowed
-Distance EditDistanceCorrector::RestrictedDistance(const std::string& s1,
-                                                   const std::string& s2,
+Distance EditDistanceCorrector::RestrictedDistance(string_view s1,
+                                                   string_view s2,
                                                    Distance threshold) {
   auto len1 = s1.size(), len2 = s2.size();
   vector<size_t> d((len1 + 1) * (len2 + 1));
@@ -244,7 +244,7 @@ EditDistanceCorrector::EditDistanceCorrector(const path& file_path)
     : Prism(file_path) {}
 
 void NearSearchCorrector::ToleranceSearch(const Prism& prism,
-                                          const string& key,
+                                          string_view key,
                                           Corrections* results,
                                           size_t threshold) {
   if (key.empty())
@@ -265,10 +265,10 @@ void NearSearchCorrector::ToleranceSearch(const Prism& prism,
   for (; !queue.empty(); queue.pop()) {
     auto& rec = queue.front();
     char ch = rec.ch;
-    char& exchange(const_cast<char*>(key.c_str())[rec.idx]);
+    char& exchange(const_cast<char*>(key.data())[rec.idx]);
     std::swap(ch, exchange);
     auto val =
-        prism.trie().traverse(key.c_str(), rec.node_pos, rec.idx, rec.idx + 1);
+        prism.trie().traverse(key.data(), rec.node_pos, rec.idx, rec.idx + 1);
     std::swap(ch, exchange);
 
     if (val == -2)
@@ -287,7 +287,7 @@ void NearSearchCorrector::ToleranceSearch(const Prism& prism,
   }
 }
 void CorrectorComponent::Unified::ToleranceSearch(const Prism& prism,
-                                                  const string& key,
+                                                  string_view key,
                                                   Corrections* results,
                                                   size_t tolerance) {
   for (auto& c : contents) {

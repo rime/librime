@@ -8,11 +8,11 @@
 namespace rime {
 
 // "luna_pinyin.extra" has language component "luna_pinyin".
-string Language::get_language_component(const string& name) {
+string Language::get_language_component(string_view name) {
   size_t dot = name.find('.');
   if (dot != string::npos && dot != 0)
-    return name.substr(0, dot);
-  return name;
+    return string(name.substr(0, dot));
+  return string(name);
 }
 
 }  // namespace rime

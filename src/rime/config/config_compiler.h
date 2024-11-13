@@ -17,7 +17,7 @@ struct ConfigResource : ConfigItemRef {
   an<ConfigData> data;
   bool loaded = false;
 
-  ConfigResource(const string& _id, an<ConfigData> _data)
+  ConfigResource(string_view _id, an<ConfigData> _data)
       : ConfigItemRef(nullptr), resource_id(_id), data(_data) {}
   an<ConfigItem> GetItem() const override { return data->root; }
   void SetItem(an<ConfigItem> item) override { data->root = item; }
@@ -49,25 +49,25 @@ class ConfigCompiler {
                  ConfigCompilerPlugin* plugin);
   virtual ~ConfigCompiler();
 
-  Reference CreateReference(const string& qualified_path);
+  Reference CreateReference(string_view qualified_path);
   void AddDependency(an<Dependency> dependency);
   void Push(an<ConfigResource> resource);
   void Push(an<ConfigList> config_list, size_t index);
-  void Push(an<ConfigMap> config_map, const string& key);
-  bool Parse(const string& key, const an<ConfigItem>& item);
+  void Push(an<ConfigMap> config_map, string_view key);
+  bool Parse(string_view key, const an<ConfigItem>& item);
   void Pop();
 
   void EnumerateResources(
       function<void(an<ConfigResource> resource)> process_resource);
-  an<ConfigResource> GetCompiledResource(const string& resource_id) const;
-  an<ConfigResource> Compile(const string& file_name);
+  an<ConfigResource> GetCompiledResource(string_view resource_id) const;
+  an<ConfigResource> Compile(string_view file_name);
   bool Link(an<ConfigResource> target);
 
-  bool blocking(const string& full_path) const;
-  bool pending(const string& full_path) const;
-  bool resolved(const string& full_path) const;
-  vector<of<Dependency>> GetDependencies(const string& path);
-  bool ResolveDependencies(const string& path);
+  bool blocking(string_view full_path) const;
+  bool pending(string_view full_path) const;
+  bool resolved(string_view full_path) const;
+  vector<of<Dependency>> GetDependencies(string_view path);
+  bool ResolveDependencies(string_view path);
 
  private:
   ResourceResolver* resource_resolver_;

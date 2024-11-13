@@ -54,8 +54,8 @@ Switches::SwitchOption Switches::FindOption(
   return {};
 }
 
-Switches::SwitchOption Switches::OptionByName(const string& option_name) {
-  return FindOption([&option_name](SwitchOption option) {
+Switches::SwitchOption Switches::OptionByName(string_view option_name) {
+  return FindOption([option_name](SwitchOption option) {
     return option.option_name == option_name ? kFound : kContinue;
   });
 }
@@ -125,11 +125,11 @@ Switches::SwitchOption Switches::FindRadioGroupOption(
   return {};
 }
 
-inline static size_t first_unicode_byte_length(const string& str) {
+inline static size_t first_unicode_byte_length(string_view str) {
   if (str.empty()) {
     return 0;
   }
-  const char* start = str.c_str();
+  const char* start = str.data();
   const char* end = start;
   utf8::unchecked::next(end);
   return end - start;
@@ -159,7 +159,7 @@ StringSlice Switches::GetStateLabel(an<ConfigMap> the_switch,
   }
 }
 
-StringSlice Switches::GetStateLabel(const string& option_name,
+StringSlice Switches::GetStateLabel(string_view option_name,
                                     int state,
                                     bool abbreviated) {
   auto the_option = OptionByName(option_name);

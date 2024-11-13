@@ -8,11 +8,9 @@
 #define RIME_TICKET_H_
 
 #include <rime_api.h>
+#include <rime/engine.h>
 
 namespace rime {
-
-class Engine;
-class Schema;
 
 struct Ticket {
   Engine* engine = nullptr;
@@ -21,12 +19,12 @@ struct Ticket {
   string klass;
 
   Ticket() = default;
-  Ticket(Schema* s, const string& ns);
+  Ticket(Schema* s, string_view ns);
   // prescription: in the form of "klass" or "klass@alias"
   // where alias, if given, will override default name space
   RIME_API Ticket(Engine* e,
-                  const string& ns = "",
-                  const string& prescription = "");
+                  string_view ns = ""sv,
+                  string_view prescription = ""sv);
 };
 
 }  // namespace rime

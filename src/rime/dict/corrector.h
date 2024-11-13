@@ -57,7 +57,7 @@ class Corrector : public Class<Corrector, const Ticket&> {
  public:
   virtual ~Corrector() = default;
   RIME_API virtual void ToleranceSearch(const Prism& prism,
-                                        const string& key,
+                                        string_view key,
                                         corrector::Corrections* results,
                                         size_t tolerance) = 0;
 };
@@ -78,7 +78,7 @@ class CorrectorComponent : public Corrector::Component {
    public:
     Unified() = default;
     RIME_API void ToleranceSearch(const Prism& prism,
-                                  const string& key,
+                                  string_view key,
                                   corrector::Corrections* results,
                                   size_t tolerance) override;
     template <class... Cs>
@@ -102,13 +102,12 @@ class EditDistanceCorrector : public Corrector, public Prism {
                       uint32_t schema_file_checksum = 0);
 
   RIME_API void ToleranceSearch(const Prism& prism,
-                                const string& key,
+                                string_view key,
                                 corrector::Corrections* results,
                                 size_t tolerance) override;
-  corrector::Distance LevenshteinDistance(const std::string& s1,
-                                          const std::string& s2);
-  corrector::Distance RestrictedDistance(const std::string& s1,
-                                         const std::string& s2,
+  corrector::Distance LevenshteinDistance(string_view s1, string_view s2);
+  corrector::Distance RestrictedDistance(string_view s1,
+                                         string_view s2,
                                          corrector::Distance threshold);
 };
 
@@ -117,7 +116,7 @@ class RIME_API NearSearchCorrector : public Corrector {
   NearSearchCorrector() = default;
   ~NearSearchCorrector() override = default;
   void ToleranceSearch(const Prism& prism,
-                       const string& key,
+                       string_view key,
                        corrector::Corrections* results,
                        size_t tolerance) override;
 };

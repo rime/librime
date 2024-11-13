@@ -39,7 +39,7 @@ class RIME_API WorkspaceUpdate : public DeploymentTask {
 
  protected:
   string GetSchemaPath(Deployer* deployer,
-                       const string& schema_id,
+                       string_view schema_id,
                        bool prefer_shared_copy);
 };
 
@@ -59,7 +59,7 @@ class RIME_API SchemaUpdate : public DeploymentTask {
 // update a specific config file
 class ConfigFileUpdate : public DeploymentTask {
  public:
-  ConfigFileUpdate(const string& file_name, const string& version_key)
+  ConfigFileUpdate(string_view file_name, string_view version_key)
       : file_name_(file_name), version_key_(version_key) {}
   ConfigFileUpdate(TaskInitializer arg);
   bool Run(Deployer* deployer);

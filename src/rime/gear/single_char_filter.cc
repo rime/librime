@@ -12,8 +12,8 @@
 
 namespace rime {
 
-static inline size_t unistrlen(const string& text) {
-  return utf8::unchecked::distance(text.c_str(), text.c_str() + text.length());
+static inline size_t unistrlen(string_view text) {
+  return utf8::unchecked::distance(text.data(), text.data() + text.length());
 }
 
 class SingleCharFirstTranslation : public PrefetchTranslation {

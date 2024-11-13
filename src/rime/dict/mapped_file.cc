@@ -137,7 +137,7 @@ bool MappedFile::Resize(size_t capacity) {
   return true;
 }
 
-String* MappedFile::CreateString(const string& str) {
+String* MappedFile::CreateString(string_view str) {
   String* ret = Allocate<String>();
   if (ret && !str.empty()) {
     CopyString(str, ret);
@@ -145,14 +145,14 @@ String* MappedFile::CreateString(const string& str) {
   return ret;
 }
 
-bool MappedFile::CopyString(const string& src, String* dest) {
+bool MappedFile::CopyString(string_view src, String* dest) {
   if (!dest)
     return false;
   size_t size = src.length() + 1;
   char* ptr = Allocate<char>(size);
   if (!ptr)
     return false;
-  std::strncpy(ptr, src.c_str(), size);
+  std::strncpy(ptr, src.data(), size);
   dest->data = ptr;
   return true;
 }

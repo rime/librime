@@ -32,7 +32,7 @@ class Simplifier : public Filter, TagMatching {
   void Initialize();
   void PushBack(const an<Candidate>& original,
                 CandidateQueue* result,
-                const string& simplified);
+                string_view simplified);
 
   bool initialized_ = false;
   the<Opencc> opencc_;

@@ -16,11 +16,11 @@ class ComponentBase;
 
 class Registry {
  public:
-  using ComponentMap = map<string, ComponentBase*>;
+  using ComponentMap = map<string, ComponentBase*, std::less<>>;
 
-  RIME_API ComponentBase* Find(const string& name);
-  RIME_API void Register(const string& name, ComponentBase* component);
-  RIME_API void Unregister(const string& name);
+  RIME_API ComponentBase* Find(string_view name);
+  RIME_API void Register(string_view name, ComponentBase* component);
+  RIME_API void Unregister(string_view name);
   void Clear();
 
   RIME_API static Registry& instance();

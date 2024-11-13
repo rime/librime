@@ -4,9 +4,11 @@
 //
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
+#include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <cmath>
+#include <rime/algo/strings.h>
 #include <utf8.h>
 #include <rime/candidate.h>
 #include <rime/common.h>
@@ -32,10 +34,10 @@ static const char* kUnitySymbol = " \xe2\x98\xaf ";
 
 TableTranslation::TableTranslation(TranslatorOptions* options,
                                    const Language* language,
-                                   const string& input,
+                                   string_view input,
                                    size_t start,
                                    size_t end,
-                                   const string& preedit,
+                                   string_view preedit,
                                    DictEntryIterator&& iter,
                                    UserDictEntryIterator&& uter)
     : options_(options),
@@ -120,10 +122,10 @@ class LazyTableTranslation : public TableTranslation {
   static const size_t kExpandingFactor = 10;
 
   LazyTableTranslation(TableTranslator* translator,
-                       const string& input,
+                       string_view input,
                        size_t start,
                        size_t end,
-                       const string& preedit,
+                       string_view preedit,
                        bool enable_user_dict);
   bool FetchUserPhrases(TableTranslator* translator);
   virtual bool FetchMoreUserPhrases();
@@ -138,10 +140,10 @@ class LazyTableTranslation : public TableTranslation {
 };
 
 LazyTableTranslation::LazyTableTranslation(TableTranslator* translator,
-                                           const string& input,
+                                           string_view input,
                                            size_t start,
                                            size_t end,
-                                           const string& preedit,
+                                           string_view preedit,
                                            bool enable_user_dict)
     : TableTranslation(translator,
                        translator->language(),
@@ -239,7 +241,7 @@ static bool starts_with_completion(an<Translation> translation) {
   return cand && cand->type() == "completion";
 }
 
-an<Translation> TableTranslator::Query(const string& input,
+an<Translation> TableTranslator::Query(string_view input,
                                        const Segment& segment) {
   if (!segment.HasAnyTagIn(tags_))
     return nullptr;
@@ -251,8 +253,8 @@ an<Translation> TableTranslator::Query(const string& input,
   bool enable_user_dict =
       user_dict_ && user_dict_->loaded() && !IsUserDictDisabledFor(input);
 
-  const string& preedit(input);
-  string code = input;
+  string_view preedit(input);
+  string code{input};
   boost::trim_right_if(code, boost::is_any_of(delimiters_));
 
   an<Translation> translation;
@@ -387,7 +389,7 @@ class SentenceTranslation : public Translation {
                       an<Sentence>&& sentence,
                       DictEntryCollector&& collector,
                       UserDictEntryCollector&& ucollector,
-                      const string& input,
+                      string_view input,
                       size_t start);
   virtual bool Next();
   virtual an<Candidate> Peek();
@@ -409,7 +411,7 @@ SentenceTranslation::SentenceTranslation(TableTranslator* translator,
                                          an<Sentence>&& sentence,
                                          DictEntryCollector&& collector,
                                          UserDictEntryCollector&& ucollector,
-                                         const string& input,
+                                         string_view input,
                                          size_t start)
     : translator_(translator),
       sentence_(std::move(sentence)),
@@ -479,7 +481,7 @@ void SentenceTranslation::PrepareSentence() {
   if (!translator_)
     return;
   string preedit = input_;
-  const string& delimiters(translator_->delimiters());
+  string_view delimiters(translator_->delimiters());
   // split syllables
   size_t pos = 0;
   for (int len : sentence_->word_lengths()) {
@@ -517,8 +519,8 @@ bool SentenceTranslation::PreferUserPhrase() const {
 }
 
 inline static size_t consume_trailing_delimiters(size_t pos,
-                                                 const string& input,
-                                                 const string& delimiters) {
+                                                 string_view input,
+                                                 string_view delimiters) {
   while (pos < input.length() && delimiters.find(input[pos]) != string::npos) {
     ++pos;
   }
@@ -538,7 +540,7 @@ inline static void collect_entries(DictEntryList& entries,
   }
 }
 
-an<Translation> TableTranslator::MakeSentence(const string& input,
+an<Translation> TableTranslator::MakeSentence(string_view input,
                                               size_t start,
                                               bool include_prefix_phrases) {
   bool filter_by_charset = enable_charset_filter_ &&
@@ -551,8 +553,8 @@ an<Translation> TableTranslator::MakeSentence(const string& input,
     // find next reachable vertex in word graph
     if (vertices.find(start_pos) == vertices.end())
       continue;
-    string active_input = input.substr(start_pos);
-    string active_key = active_input + ' ';
+    string_view active_input = input.substr(start_pos);
+    string active_key = strings::concat(active_input, " ");
     auto& same_start_pos = graph[start_pos];
     // lookup dictionaries
     if (user_dict_ && user_dict_->loaded()) {
@@ -566,7 +568,7 @@ an<Translation> TableTranslator::MakeSentence(const string& input,
         DLOG(INFO) << "active input: " << active_input << "[0, " << len << ")";
         UserDictEntryIterator uter;
         string resume_key;
-        string key = active_input.substr(0, len);
+        string_view key = active_input.substr(0, len);
         user_dict_->LookupWords(&uter, key, false, 0, &resume_key);
         if (filter_by_charset) {
           uter.AddFilter(CharsetFilter::FilterDictEntry);
@@ -604,7 +606,7 @@ an<Translation> TableTranslator::MakeSentence(const string& input,
         DLOG(INFO) << "active input: " << active_input << "[0, " << len << ")";
         UserDictEntryIterator uter;
         string resume_key;
-        string key = active_input.substr(0, len);
+        string_view key = active_input.substr(0, len);
         encoder_->LookupPhrases(&uter, key, false, 0, &resume_key);
         if (filter_by_charset) {
           uter.AddFilter(CharsetFilter::FilterDictEntry);

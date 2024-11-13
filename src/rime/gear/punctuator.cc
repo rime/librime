@@ -36,7 +36,7 @@ void PunctConfig::LoadConfig(Engine* engine, bool load_symbols) {
   }
 }
 
-an<ConfigItem> PunctConfig::GetPunctDefinition(const string key) {
+an<ConfigItem> PunctConfig::GetPunctDefinition(string_view key) {
   an<ConfigItem> result = mapping_ ? mapping_->Get(key) : nullptr;
   return result ? result : symbols_ ? symbols_->Get(key) : nullptr;
 }
@@ -95,7 +95,7 @@ ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
   return kAccepted;
 }
 
-bool Punctuator::AlternatePunct(const string& key,
+bool Punctuator::AlternatePunct(string_view key,
                                 const an<ConfigItem>& definition) {
   if (!As<ConfigList>(definition))
     return false;
@@ -163,7 +163,7 @@ PunctSegmentor::PunctSegmentor(const Ticket& ticket) : Segmentor(ticket) {
 }
 
 bool PunctSegmentor::Proceed(Segmentation* segmentation) {
-  const string& input = segmentation->input();
+  string_view input{segmentation->input()};
   int k = segmentation->GetCurrentStartPosition();
   if (k == input.length())
     return false;  // no chance for others too
@@ -190,15 +190,14 @@ PunctTranslator::PunctTranslator(const Ticket& ticket) : Translator(ticket) {
   config_.LoadConfig(engine_, load_symbols);
 }
 
-an<Candidate> CreatePunctCandidate(const string& punct,
-                                   const Segment& segment) {
+an<Candidate> CreatePunctCandidate(string_view punct, const Segment& segment) {
   const char half_shape[] =
       "\xe3\x80\x94\xe5\x8d\x8a\xe8\xa7\x92\xe3\x80\x95";  // 〔半角〕
   const char full_shape[] =
       "\xe3\x80\x94\xe5\x85\xa8\xe8\xa7\x92\xe3\x80\x95";  // 〔全角〕
   bool is_half_shape = false;
   bool is_full_shape = false;
-  const char* p = punct.c_str();
+  const char* p = punct.data();
   uint32_t ch = utf8::unchecked::next(p);
   if (*p == '\0') {  // length == 1 unicode character
     bool is_ascii = (ch >= 0x20 && ch < 0x7F);
@@ -231,7 +230,7 @@ an<Candidate> CreatePunctCandidate(const string& punct,
                               one_key ? punct : "");
 }
 
-an<Translation> PunctTranslator::Query(const string& input,
+an<Translation> PunctTranslator::Query(string_view input,
                                        const Segment& segment) {
   if (!segment.HasTag("punct"))
     return nullptr;
@@ -260,7 +259,7 @@ an<Translation> PunctTranslator::Query(const string& input,
 }
 
 an<Translation> PunctTranslator::TranslateUniquePunct(
-    const string& key,
+    string_view key,
     const Segment& segment,
     const an<ConfigValue>& definition) {
   if (!definition)
@@ -270,7 +269,7 @@ an<Translation> PunctTranslator::TranslateUniquePunct(
 }
 
 an<Translation> PunctTranslator::TranslateAlternatingPunct(
-    const string& key,
+    string_view key,
     const Segment& segment,
     const an<ConfigList>& definition) {
   if (!definition)
@@ -294,7 +293,7 @@ an<Translation> PunctTranslator::TranslateAlternatingPunct(
 }
 
 an<Translation> PunctTranslator::TranslateAutoCommitPunct(
-    const string& key,
+    string_view key,
     const Segment& segment,
     const an<ConfigMap>& definition) {
   if (!definition || !definition->HasKey("commit"))
@@ -308,7 +307,7 @@ an<Translation> PunctTranslator::TranslateAutoCommitPunct(
 }
 
 an<Translation> PunctTranslator::TranslatePairedPunct(
-    const string& key,
+    string_view key,
     const Segment& segment,
     const an<ConfigMap>& definition) {
   if (!definition || !definition->HasKey("pair"))

@@ -61,7 +61,7 @@ struct Ticket;
 
 class Dictionary : public Class<Dictionary, const Ticket&> {
  public:
-  RIME_API Dictionary(string name,
+  RIME_API Dictionary(string_view name,
                       vector<string> packs,
                       vector<of<Table>> tables,
                       an<Prism> prism);
@@ -79,7 +79,7 @@ class Dictionary : public Class<Dictionary, const Ticket&> {
   // otherwise do an exact match.
   // return num of matching keys.
   RIME_API size_t LookupWords(DictEntryIterator* result,
-                              const string& str_code,
+                              string_view str_code,
                               bool predictive,
                               size_t limit = 0);
   // translate syllable id sequence to string code
@@ -107,7 +107,9 @@ class DictionaryComponent : public Dictionary::Component {
   DictionaryComponent();
   ~DictionaryComponent() override;
   Dictionary* Create(const Ticket& ticket) override;
-  Dictionary* Create(string dict_name, string prism_name, vector<string> packs);
+  Dictionary* Create(string_view dict_name,
+                     string_view prism_name,
+                     vector<string> packs);
 
  private:
   map<string, weak<Prism>> prism_map_;

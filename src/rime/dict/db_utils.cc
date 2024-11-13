@@ -27,11 +27,11 @@ int Source::Dump(Sink* sink) {
 
 DbSink::DbSink(Db* db) : db_(db) {}
 
-bool DbSink::MetaPut(const string& key, const string& value) {
+bool DbSink::MetaPut(string_view key, string_view value) {
   return db_ && db_->MetaUpdate(key, value);
 }
 
-bool DbSink::Put(const string& key, const string& value) {
+bool DbSink::Put(string_view key, string_view value) {
   return db_ && db_->Update(key, value);
 }
 

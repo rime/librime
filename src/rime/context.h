@@ -19,9 +19,9 @@ class KeyEvent;
 class RIME_API Context {
  public:
   using Notifier = signal<void(Context* ctx)>;
-  using OptionUpdateNotifier = signal<void(Context* ctx, const string& option)>;
+  using OptionUpdateNotifier = signal<void(Context* ctx, string_view option)>;
   using PropertyUpdateNotifier =
-      signal<void(Context* ctx, const string& property)>;
+      signal<void(Context* ctx, string_view property)>;
   using KeyEventNotifier =
       signal<void(Context* ctx, const KeyEvent& key_event)>;
 
@@ -37,7 +37,7 @@ class RIME_API Context {
   an<Candidate> GetSelectedCandidate() const;
 
   bool PushInput(char ch);
-  bool PushInput(const string& str);
+  bool PushInput(string_view str);
   bool PopInput(size_t len = 1);
   bool DeleteInput(size_t len = 1);
   void Clear();
@@ -58,7 +58,7 @@ class RIME_API Context {
   bool ClearNonConfirmedComposition();
   bool RefreshNonConfirmedComposition();
 
-  void set_input(const string& value);
+  void set_input(string_view value);
   const string& input() const { return input_; }
 
   void set_caret_pos(size_t caret_pos);
@@ -70,12 +70,12 @@ class RIME_API Context {
   CommitHistory& commit_history() { return commit_history_; }
   const CommitHistory& commit_history() const { return commit_history_; }
 
-  void set_option(const string& name, bool value);
-  bool get_option(const string& name) const;
-  void set_property(const string& name, const string& value);
-  string get_property(const string& name) const;
-  const map<string, bool>& options() const { return options_; }
-  const map<string, string>& properties() const { return properties_; }
+  void set_option(string_view name, bool value);
+  bool get_option(string_view name) const;
+  void set_property(string_view name, string_view value);
+  string get_property(string_view name) const;
+  const auto& options() const { return options_; }
+  const auto& properties() const { return properties_; }
   // options and properties starting with '_' are local to schema;
   // others are session scoped.
   void ClearTransientOptions();
@@ -99,8 +99,8 @@ class RIME_API Context {
   size_t caret_pos_ = 0;
   Composition composition_;
   CommitHistory commit_history_;
-  map<string, bool> options_;
-  map<string, string> properties_;
+  map<string, bool, std::less<>> options_;
+  map<string, string, std::less<>> properties_;
 
   Notifier commit_notifier_;
   Notifier select_notifier_;

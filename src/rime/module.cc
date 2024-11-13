@@ -10,11 +10,11 @@
 
 namespace rime {
 
-void ModuleManager::Register(const string& name, RimeModule* module) {
-  map_[name] = module;
+void ModuleManager::Register(string_view name, RimeModule* module) {
+  map_[string{name}] = module;
 }
 
-RimeModule* ModuleManager::Find(const string& name) {
+RimeModule* ModuleManager::Find(string_view name) {
   ModuleMap::const_iterator it = map_.find(name);
   if (it != map_.end()) {
     return it->second;

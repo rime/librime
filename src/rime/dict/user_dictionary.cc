@@ -37,11 +37,11 @@ struct DfsState {
 
   size_t depth() const { return code.size(); }
 
-  bool IsExactMatch(const string& prefix) {
-    return boost::starts_with(key, prefix + '\t');
+  bool IsExactMatch(string_view prefix) {
+    return strings::starts_with(key, strings::concat(prefix, "\t"));
   }
-  bool IsPrefixMatch(const string& prefix) {
-    return boost::starts_with(key, prefix);
+  bool IsPrefixMatch(string_view prefix) {
+    return strings::starts_with(key, prefix);
   }
   void RecruitEntry(size_t pos,
                     hash_map<string, SyllableId>* syllabary = nullptr);
@@ -53,13 +53,13 @@ struct DfsState {
     }
     return true;
   }
-  bool ForwardScan(const string& prefix) {
+  bool ForwardScan(string_view prefix) {
     if (!accessor->Jump(prefix)) {
       return false;
     }
     return NextEntry();
   }
-  bool Backdate(const string& prefix) {
+  bool Backdate(string_view prefix) {
     DLOG(INFO) << "backdate; prefix: " << prefix;
     if (!accessor->Reset()) {
       LOG(WARNING) << "backdating failed for '" << prefix << "'.";
@@ -151,7 +151,7 @@ bool UserDictEntryIterator::Next() {
 
 // UserDictionary members
 
-UserDictionary::UserDictionary(const string& name, an<Db> db)
+UserDictionary::UserDictionary(string_view name, an<Db> db)
     : name_(name), db_(db) {}
 
 UserDictionary::~UserDictionary() {
@@ -214,7 +214,7 @@ bool UserDictionary::readonly() const {
 
 void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
                                size_t current_pos,
-                               const string& current_prefix,
+                               string_view current_prefix,
                                DfsState* state) {
   auto index = syll_graph.indices.find(current_pos);
   if (index == syll_graph.indices.end()) {
@@ -347,7 +347,7 @@ an<UserDictEntryCollector> UserDictionary::Lookup(
 }
 
 size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
-                                   const string& input,
+                                   string_view input,
                                    bool predictive,
                                    size_t limit,
                                    string* resume_key) {
@@ -415,7 +415,7 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry, int commits) {
 
 bool UserDictionary::UpdateEntry(const DictEntry& entry,
                                  int commits,
-                                 const string& new_entry_prefix) {
+                                 string_view new_entry_prefix) {
   string code_str(entry.custom_code);
   if (code_str.empty() && !TranslateCodeToString(entry.code, &code_str))
     return false;
@@ -520,8 +520,8 @@ bool UserDictionary::TranslateCodeToString(const Code& code, string* result) {
   return true;
 }
 
-an<DictEntry> UserDictionary::CreateDictEntry(const string& key,
-                                              const string& value,
+an<DictEntry> UserDictionary::CreateDictEntry(string_view key,
+                                              string_view value,
                                               TickCount present_tick,
                                               double credibility,
                                               string* full_code) {
@@ -558,9 +558,10 @@ an<DictEntry> UserDictionary::CreateDictEntry(const string& key,
 
 UserDictionaryComponent::UserDictionaryComponent() {}
 
-UserDictionary* UserDictionaryComponent::Create(const string& dict_name,
-                                                const string& db_class) {
-  auto db = db_pool_[dict_name].lock();
+UserDictionary* UserDictionaryComponent::Create(string_view dict_name,
+                                                string_view db_class) {
+  auto db_weak = db_pool_[string{dict_name}];
+  auto db = db_weak.lock();
   if (!db) {
     auto component = Db::Require(db_class);
     if (!component) {
@@ -568,7 +569,7 @@ UserDictionary* UserDictionaryComponent::Create(const string& dict_name,
       return NULL;
     }
     db.reset(component->Create(dict_name));
-    db_pool_[dict_name] = db;
+    db_weak = db;
   }
   return new UserDictionary(dict_name, db);
 }

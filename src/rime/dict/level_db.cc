@@ -11,10 +11,11 @@
 #include <rime/service.h>
 #include <rime/dict/level_db.h>
 #include <rime/dict/user_db.h>
+#include "rime/algo/strings.h"
 
 namespace rime {
 
-static const char* kMetaCharacter = "\x01";
+static constexpr string_view kMetaCharacter = "\x01";
 
 struct LevelDbCursor {
   leveldb::Iterator* iterator = nullptr;
@@ -33,11 +34,11 @@ struct LevelDbCursor {
 
   void Next() { iterator->Next(); }
 
-  bool Jump(const string& key) {
+  bool Jump(string_view key) {
     if (!iterator) {
       return false;
     }
-    iterator->Seek(key);
+    iterator->Seek(key.data());
     return true;
   }
 
@@ -64,26 +65,26 @@ struct LevelDbWrapper {
 
   LevelDbCursor* CreateCursor() { return new LevelDbCursor(ptr); }
 
-  bool Fetch(const string& key, string* value) {
-    auto status = ptr->Get(leveldb::ReadOptions(), key, value);
+  bool Fetch(string_view key, string* value) {
+    auto status = ptr->Get(leveldb::ReadOptions(), key.data(), value);
     return status.ok();
   }
 
-  bool Update(const string& key, const string& value, bool write_batch) {
+  bool Update(string_view key, string_view value, bool write_batch) {
     if (write_batch) {
-      batch.Put(key, value);
+      batch.Put(key.data(), value.data());
       return true;
     }
-    auto status = ptr->Put(leveldb::WriteOptions(), key, value);
+    auto status = ptr->Put(leveldb::WriteOptions(), key.data(), value.data());
     return status.ok();
   }
 
-  bool Erase(const string& key, bool write_batch) {
+  bool Erase(string_view key, bool write_batch) {
     if (write_batch) {
-      batch.Delete(key);
+      batch.Delete(key.data());
       return true;
     }
-    auto status = ptr->Delete(leveldb::WriteOptions(), key);
+    auto status = ptr->Delete(leveldb::WriteOptions(), key.data());
     return status.ok();
   }
 
@@ -99,7 +100,7 @@ struct LevelDbWrapper {
 
 LevelDbAccessor::LevelDbAccessor() {}
 
-LevelDbAccessor::LevelDbAccessor(LevelDbCursor* cursor, const string& prefix)
+LevelDbAccessor::LevelDbAccessor(LevelDbCursor* cursor, string_view prefix)
     : DbAccessor(prefix),
       cursor_(cursor),
       is_metadata_query_(prefix == kMetaCharacter) {
@@ -114,7 +115,7 @@ bool LevelDbAccessor::Reset() {
   return cursor_->Jump(prefix_);
 }
 
-bool LevelDbAccessor::Jump(const string& key) {
+bool LevelDbAccessor::Jump(string_view key) {
   return cursor_->Jump(key);
 }
 
@@ -140,8 +141,8 @@ bool LevelDbAccessor::exhausted() {
 // LevelDb members
 
 LevelDb::LevelDb(const path& file_path,
-                 const string& db_name,
-                 const string& db_type)
+                 string_view db_name,
+                 string_view db_type)
     : Db(file_path, db_name), db_type_(db_type) {}
 
 LevelDb::~LevelDb() {
@@ -164,26 +165,26 @@ an<DbAccessor> LevelDb::QueryAll() {
   return all;
 }
 
-an<DbAccessor> LevelDb::Query(const string& key) {
+an<DbAccessor> LevelDb::Query(string_view key) {
   if (!loaded())
     return nullptr;
   return New<LevelDbAccessor>(db_->CreateCursor(), key);
 }
 
-bool LevelDb::Fetch(const string& key, string* value) {
+bool LevelDb::Fetch(string_view key, string* value) {
   if (!value || !loaded())
     return false;
   return db_->Fetch(key, value);
 }
 
-bool LevelDb::Update(const string& key, const string& value) {
+bool LevelDb::Update(string_view key, string_view value) {
   if (!loaded() || readonly())
     return false;
   DLOG(INFO) << "update db entry: " << key << " => " << value;
   return db_->Update(key, value, in_transaction());
 }
 
-bool LevelDb::Erase(const string& key) {
+bool LevelDb::Erase(string_view key) {
   if (!loaded() || readonly())
     return false;
   DLOG(INFO) << "erase db entry: " << key;
@@ -292,12 +293,12 @@ bool LevelDb::CreateMetadata() {
   return Db::CreateMetadata() && MetaUpdate("/db_type", db_type_);
 }
 
-bool LevelDb::MetaFetch(const string& key, string* value) {
-  return Fetch(kMetaCharacter + key, value);
+bool LevelDb::MetaFetch(string_view key, string* value) {
+  return Fetch(strings::concat(kMetaCharacter, key), value);
 }
 
-bool LevelDb::MetaUpdate(const string& key, const string& value) {
-  return Update(kMetaCharacter + key, value);
+bool LevelDb::MetaUpdate(string_view key, string_view value) {
+  return Update(strings::concat(kMetaCharacter, key), value);
 }
 
 bool LevelDb::BeginTransaction() {
@@ -332,7 +333,7 @@ RIME_API string UserDbComponent<LevelDb>::extension() const {
 
 template <>
 RIME_API UserDbWrapper<LevelDb>::UserDbWrapper(const path& file_path,
-                                               const string& db_name)
+                                               string_view db_name)
     : LevelDb(file_path, db_name, "userdb") {}
 
 }  // namespace rime

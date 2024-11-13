@@ -27,7 +27,7 @@ class DictSettings : public Config {
   int max_phrase_length();
   double min_phrase_weight();
   an<ConfigList> GetTables();
-  int GetColumnIndex(const string& column_label);
+  int GetColumnIndex(string_view column_label);
 };
 
 }  // namespace rime

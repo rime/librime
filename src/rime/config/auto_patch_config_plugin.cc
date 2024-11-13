@@ -3,15 +3,16 @@
 // Distributed under the BSD License
 //
 #include <boost/algorithm/string.hpp>
+#include <rime/algo/strings.h>
 #include <rime/config/config_compiler_impl.h>
 #include <rime/config/plugins.h>
 
 namespace rime {
 
-static string remove_suffix(const string& input, const string& suffix) {
-  return boost::ends_with(input, suffix)
-             ? input.substr(0, input.length() - suffix.length())
-             : input;
+static string remove_suffix(string_view input, string_view suffix) {
+  return string{strings::ends_with(input, suffix)
+                    ? input.substr(0, input.length() - suffix.length())
+                    : input};
 }
 
 // auto-patch applies to all loaded config resources, including dependencies.

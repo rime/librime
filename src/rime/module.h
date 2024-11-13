@@ -18,8 +18,8 @@ namespace rime {
 class ModuleManager {
  public:
   // module is supposed to be a pointer to static variable
-  void Register(const string& name, RimeModule* module);
-  RimeModule* Find(const string& name);
+  void Register(string_view name, RimeModule* module);
+  RimeModule* Find(string_view name);
 
   void LoadModule(RimeModule* module);
   void UnloadModules();
@@ -30,7 +30,7 @@ class ModuleManager {
   ModuleManager() {}
 
   // module registry
-  using ModuleMap = map<string, RimeModule*>;
+  using ModuleMap = map<string, RimeModule*, std::less<>>;
   ModuleMap map_;
   // set of loaded modules
   std::unordered_set<RimeModule*> loaded_;

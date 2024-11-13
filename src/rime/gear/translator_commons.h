@@ -63,7 +63,7 @@ class Language;
 class Phrase : public Candidate {
  public:
   Phrase(const Language* language,
-         const string& type,
+         string_view type,
          size_t start,
          size_t end,
          const an<DictEntry>& entry)
@@ -71,8 +71,8 @@ class Phrase : public Candidate {
   const string& text() const { return entry_->text; }
   string comment() const { return entry_->comment; }
   string preedit() const { return entry_->preedit; }
-  void set_comment(const string& comment) { entry_->comment = comment; }
-  void set_preedit(const string& preedit) { entry_->preedit = preedit; }
+  void set_comment(string_view comment) { entry_->comment = comment; }
+  void set_preedit(string_view preedit) { entry_->preedit = preedit; }
   void set_syllabifier(an<PhraseSyllabifier> syllabifier) {
     syllabifier_ = syllabifier;
   }
@@ -143,7 +143,7 @@ struct Ticket;
 class TranslatorOptions {
  public:
   TranslatorOptions(const Ticket& ticket);
-  bool IsUserDictDisabledFor(const string& input) const;
+  bool IsUserDictDisabledFor(string_view input) const;
 
   const string& delimiters() const { return delimiters_; }
   vector<string> tags() const { return tags_; }
@@ -154,7 +154,7 @@ class TranslatorOptions {
     }
   }
   const string& tag() const { return tags_[0]; }
-  void set_tag(const string& tag) { tags_[0] = tag; }
+  void set_tag(string_view tag) { tags_[0] = tag; }
   bool contextual_suggestions() const { return contextual_suggestions_; }
   void set_contextual_suggestions(bool enabled) {
     contextual_suggestions_ = enabled;

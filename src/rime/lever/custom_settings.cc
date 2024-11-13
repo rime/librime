@@ -5,6 +5,7 @@
 // 2012-02-26 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
+#include <rime/algo/strings.h>
 #include <rime/config.h>
 #include <rime/deployer.h>
 #include <rime/signature.h>
@@ -12,19 +13,19 @@
 
 namespace rime {
 
-static string remove_suffix(const string& input, const string& suffix) {
-  return boost::ends_with(input, suffix)
-             ? input.substr(0, input.length() - suffix.length())
-             : input;
+static string remove_suffix(string_view input, string_view suffix) {
+  return string{strings::ends_with(input, suffix)
+                    ? input.substr(0, input.length() - suffix.length())
+                    : input};
 }
 
-static string custom_config_file(const string& config_id) {
+static string custom_config_file(string_view config_id) {
   return remove_suffix(config_id, ".schema") + ".custom.yaml";
 }
 
 CustomSettings::CustomSettings(Deployer* deployer,
-                               const string& config_id,
-                               const string& generator_id)
+                               string_view config_id,
+                               string_view generator_id)
     : deployer_(deployer), config_id_(config_id), generator_id_(generator_id) {}
 
 bool CustomSettings::Load() {
@@ -56,19 +57,19 @@ bool CustomSettings::Save() {
   return true;
 }
 
-an<ConfigValue> CustomSettings::GetValue(const string& key) {
+an<ConfigValue> CustomSettings::GetValue(string_view key) {
   return config_.GetValue(key);
 }
 
-an<ConfigList> CustomSettings::GetList(const string& key) {
+an<ConfigList> CustomSettings::GetList(string_view key) {
   return config_.GetList(key);
 }
 
-an<ConfigMap> CustomSettings::GetMap(const string& key) {
+an<ConfigMap> CustomSettings::GetMap(string_view key) {
   return config_.GetMap(key);
 }
 
-bool CustomSettings::Customize(const string& key, const an<ConfigItem>& item) {
+bool CustomSettings::Customize(string_view key, const an<ConfigItem>& item) {
   auto patch = custom_config_.GetMap("patch");
   if (!patch) {
     patch = New<ConfigMap>();

@@ -16,23 +16,23 @@ namespace rime {
 class DbAccessor {
  public:
   DbAccessor() = default;
-  explicit DbAccessor(const string& prefix) : prefix_(prefix) {}
+  explicit DbAccessor(string_view prefix) : prefix_(prefix) {}
   virtual ~DbAccessor() = default;
 
   virtual bool Reset() = 0;
-  virtual bool Jump(const string& key) = 0;
+  virtual bool Jump(string_view key) = 0;
   virtual bool GetNextRecord(string* key, string* value) = 0;
   virtual bool exhausted() = 0;
 
  protected:
-  bool MatchesPrefix(const string& key);
+  bool MatchesPrefix(string_view key);
 
   string prefix_;
 };
 
-class Db : public Class<Db, const string&> {
+class Db : public Class<Db, string_view> {
  public:
-  Db(const path& file_path, const string& name);
+  Db(const path& file_path, string_view name);
   virtual ~Db() = default;
 
   RIME_API bool Exists() const;
@@ -46,15 +46,15 @@ class Db : public Class<Db, const string&> {
   virtual bool Restore(const path& snapshot_file) = 0;
 
   virtual bool CreateMetadata();
-  virtual bool MetaFetch(const string& key, string* value) = 0;
-  virtual bool MetaUpdate(const string& key, const string& value) = 0;
+  virtual bool MetaFetch(string_view key, string* value) = 0;
+  virtual bool MetaUpdate(string_view key, string_view value) = 0;
 
   virtual an<DbAccessor> QueryMetadata() = 0;
   virtual an<DbAccessor> QueryAll() = 0;
-  virtual an<DbAccessor> Query(const string& key) = 0;
-  virtual bool Fetch(const string& key, string* value) = 0;
-  virtual bool Update(const string& key, const string& value) = 0;
-  virtual bool Erase(const string& key) = 0;
+  virtual an<DbAccessor> Query(string_view key) = 0;
+  virtual bool Fetch(string_view key, string* value) = 0;
+  virtual bool Update(string_view key, string_view value) = 0;
+  virtual bool Erase(string_view key) = 0;
 
   const string& name() const { return name_; }
   const path& file_path() const { return file_path_; }
@@ -98,7 +98,7 @@ class RIME_API DbComponentBase {
   DbComponentBase();
   virtual ~DbComponentBase();
 
-  path DbFilePath(const string& name, const string& extension) const;
+  path DbFilePath(string_view name, string_view extension) const;
 
  protected:
   the<ResourceResolver> db_resource_resolver_;
@@ -109,7 +109,7 @@ class DbComponent : public DbClass::Component, protected DbComponentBase {
  public:
   virtual string extension() const;
 
-  DbClass* Create(const string& name) override {
+  DbClass* Create(string_view name) override {
     return new DbClass(DbFilePath(name, extension()), name);
   }
 };

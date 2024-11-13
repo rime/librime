@@ -11,18 +11,18 @@
 
 namespace rime {
 
-bool Script::AddSyllable(const string& syllable) {
+bool Script::AddSyllable(string_view syllable) {
   if (find(syllable) != end())
     return false;
   Spelling spelling(syllable);
-  (*this)[syllable].push_back(spelling);
+  (*this)[string{syllable}].push_back(spelling);
   return true;
 }
 
-void Script::Merge(const string& s,
+void Script::Merge(string_view s,
                    const SpellingProperties& sp,
                    const vector<Spelling>& v) {
-  vector<Spelling>& m((*this)[s]);
+  vector<Spelling>& m((*this)[string{s}]);
   for (const Spelling& x : v) {
     Spelling y(x);
     SpellingProperties& yy(y.properties);
@@ -74,7 +74,7 @@ bool Projection::Load(an<ConfigList> settings) {
       success = false;
       break;
     }
-    const string& formula(v->str());
+    string_view formula{v->str()};
     an<Calculation> x;
     try {
       x.reset(calc.Parse(formula));

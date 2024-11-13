@@ -54,7 +54,7 @@ an<Candidate> Segment::GetSelectedCandidate() const {
 
 Segmentation::Segmentation() {}
 
-void Segmentation::Reset(const string& new_input) {
+void Segmentation::Reset(string_view new_input) {
   DLOG(INFO) << "reset to " << size() << " segments.";
   // mark redo segmentation, while keeping user confirmed segments
   size_t diff_pos = 0;
@@ -102,7 +102,7 @@ bool Segmentation::AddSegment(Segment segment) {
     last = segment;
   } else {
     // rule three: with segments equal in length, merge their tags
-    set<string> result;
+    set<string, std::less<>> result;
     set_union(last.tags.begin(), last.tags.end(), segment.tags.begin(),
               segment.tags.end(), std::inserter(result, result.begin()));
     last.tags.swap(result);

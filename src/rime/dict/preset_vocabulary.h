@@ -15,20 +15,20 @@ struct VocabularyDb;
 
 class PresetVocabulary {
  public:
-  explicit PresetVocabulary(const string& vocabulary);
+  explicit PresetVocabulary(string_view vocabulary);
   ~PresetVocabulary();
 
   // random access
-  bool GetWeightForEntry(const string& key, double* weight);
+  bool GetWeightForEntry(string_view key, double* weight);
   // traversing
   void Reset();
   bool GetNextEntry(string* key, string* value);
-  bool IsQualifiedPhrase(const string& phrase, const string& weight_str);
+  bool IsQualifiedPhrase(string_view phrase, string_view weight_str);
 
   void set_max_phrase_length(int length) { max_phrase_length_ = length; }
   void set_min_phrase_weight(double weight) { min_phrase_weight_ = weight; }
 
-  static path DictFilePath(const string& vacabulary);
+  static path DictFilePath(string_view vacabulary);
 
  protected:
   the<VocabularyDb> db_;

@@ -15,7 +15,7 @@ namespace rime {
 template <class T>
 class ConfigCowRef : public ConfigItemRef {
  public:
-  ConfigCowRef(an<ConfigItemRef> parent, string key)
+  ConfigCowRef(an<ConfigItemRef> parent, string_view key)
       : ConfigItemRef(nullptr), parent_(parent), key_(key) {}
   an<ConfigItem> GetItem() const override {
     auto container = As<T>(**parent_);
@@ -31,10 +31,10 @@ class ConfigCowRef : public ConfigItemRef {
   }
 
  protected:
-  static an<T> CopyOnWrite(const an<T>& container, const string& key);
-  static an<ConfigItem> Read(const an<T>& container, const string& key);
+  static an<T> CopyOnWrite(const an<T>& container, string_view key);
+  static an<ConfigItem> Read(const an<T>& container, string_view key);
   static void Write(const an<T>& container,
-                    const string& key,
+                    string_view key,
                     an<ConfigItem> value);
 
   an<ConfigItemRef> parent_;
@@ -44,7 +44,7 @@ class ConfigCowRef : public ConfigItemRef {
 
 template <class T>
 inline an<T> ConfigCowRef<T>::CopyOnWrite(const an<T>& container,
-                                          const string& key) {
+                                          string_view key) {
   if (!container) {
     DLOG(INFO) << "creating node: " << key;
     return New<T>();
@@ -55,31 +55,31 @@ inline an<T> ConfigCowRef<T>::CopyOnWrite(const an<T>& container,
 
 template <>
 inline an<ConfigItem> ConfigCowRef<ConfigMap>::Read(const an<ConfigMap>& map,
-                                                    const string& key) {
+                                                    string_view key) {
   return map->Get(key);
 }
 
 template <>
 inline void ConfigCowRef<ConfigMap>::Write(const an<ConfigMap>& map,
-                                           const string& key,
+                                           string_view key,
                                            an<ConfigItem> value) {
   map->Set(key, value);
 }
 
 template <>
 inline an<ConfigItem> ConfigCowRef<ConfigList>::Read(const an<ConfigList>& list,
-                                                     const string& key) {
+                                                     string_view key) {
   return list->GetAt(ConfigData::ResolveListIndex(list, key, true));
 }
 
 template <>
 inline void ConfigCowRef<ConfigList>::Write(const an<ConfigList>& list,
-                                            const string& key,
+                                            string_view key,
                                             an<ConfigItem> value) {
   list->SetAt(ConfigData::ResolveListIndex(list, key), value);
 }
 
-inline an<ConfigItemRef> Cow(an<ConfigItemRef> parent, string key) {
+inline an<ConfigItemRef> Cow(an<ConfigItemRef> parent, string_view key) {
   if (ConfigData::IsListItemReference(key))
     return New<ConfigCowRef<ConfigList>>(parent, key);
   else

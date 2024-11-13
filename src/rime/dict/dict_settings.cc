@@ -95,7 +95,7 @@ an<ConfigList> DictSettings::GetTables() {
   return tables;
 }
 
-int DictSettings::GetColumnIndex(const string& column_label) {
+int DictSettings::GetColumnIndex(string_view column_label) {
   if ((*this)["columns"].IsNull()) {
     // default
     if (column_label == "text")

@@ -5,6 +5,7 @@
 // 2012-01-03 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
+#include <rime/algo/strings.h>
 #include <rime/candidate.h>
 #include <rime/engine.h>
 #include <rime/schema.h>
@@ -28,10 +29,10 @@ class ReverseLookupTranslation : public TableTranslation {
  public:
   ReverseLookupTranslation(ReverseLookupDictionary* dict,
                            TranslatorOptions* options,
-                           const string& input,
+                           string_view input,
                            size_t start,
                            size_t end,
-                           const string& preedit,
+                           string_view preedit,
                            DictEntryIterator&& iter,
                            bool quality)
       : TableTranslation(options,
@@ -140,7 +141,7 @@ void ReverseLookupTranslator::Initialize() {
   }
 }
 
-an<Translation> ReverseLookupTranslator::Query(const string& input,
+an<Translation> ReverseLookupTranslator::Query(string_view input,
                                                const Segment& segment) {
   if (!segment.HasTag(tag_))
     return nullptr;
@@ -151,15 +152,15 @@ an<Translation> ReverseLookupTranslator::Query(const string& input,
   DLOG(INFO) << "input = '" << input << "', [" << segment.start << ", "
              << segment.end << ")";
 
-  const string& preedit(input);
+  string_view preedit{input};
 
   size_t start = 0;
-  if (!prefix_.empty() && boost::starts_with(input, prefix_)) {
+  if (!prefix_.empty() && strings::starts_with(input, prefix_)) {
     start = prefix_.length();
   }
-  string code = input.substr(start);
-  if (!suffix_.empty() && boost::ends_with(code, suffix_)) {
-    code.resize(code.length() - suffix_.length());
+  string_view code = input.substr(start);
+  if (!suffix_.empty() && strings::ends_with(code, suffix_)) {
+    code.remove_suffix(suffix_.length());
   }
 
   if (start > 0) {

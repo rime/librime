@@ -11,7 +11,7 @@
 
 namespace rime {
 
-KeyEvent::KeyEvent(const string& repr) {
+KeyEvent::KeyEvent(string_view repr) {
   if (!Parse(repr))
     keycode_ = modifier_ = 0;
 }
@@ -48,7 +48,7 @@ string KeyEvent::repr() const {
   return modifiers.str() + value.str();
 }
 
-bool KeyEvent::Parse(const string& repr) {
+bool KeyEvent::Parse(string_view repr) {
   keycode_ = modifier_ = 0;
   if (repr.empty()) {
     return false;
@@ -81,7 +81,7 @@ bool KeyEvent::Parse(const string& repr) {
   return true;
 }
 
-KeySequence::KeySequence(const string& repr) {
+KeySequence::KeySequence(string_view repr) {
   if (!Parse(repr))
     clear();
 }
@@ -108,7 +108,7 @@ string KeySequence::repr() const {
   return result.str();
 }
 
-bool KeySequence::Parse(const string& repr) {
+bool KeySequence::Parse(string_view repr) {
   clear();
   size_t n = repr.size();
   size_t start = 0;

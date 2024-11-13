@@ -37,7 +37,7 @@ struct PendingChild : Dependency {
   string child_path;
   an<ConfigItemRef> child_ref;
 
-  PendingChild(const string& path, const an<ConfigItemRef>& ref)
+  PendingChild(string_view path, const an<ConfigItemRef>& ref)
       : child_path(path), child_ref(ref) {}
   DependencyPriority priority() const override { return kPendingChild; }
   string repr() const override { return "PendingChild(" + child_path + ")"; }

@@ -29,7 +29,7 @@ HistoryTranslator::HistoryTranslator(const Ticket& ticket)
   config->GetDouble(name_space_ + "/initial_quality", &initial_quality_);
 }
 
-an<Translation> HistoryTranslator::Query(const string& input,
+an<Translation> HistoryTranslator::Query(string_view input,
                                          const Segment& segment) {
   if (!segment.HasTag(tag_))
     return nullptr;

@@ -5,6 +5,7 @@
 // 2013-05-26 GONG Chen <chen.sst@gmail.com>
 //
 #include <boost/algorithm/string.hpp>
+#include <rime/algo/strings.h>
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/config.h>
@@ -86,8 +87,8 @@ class RadioGroup : public std::enable_shared_from_this<RadioGroup> {
 class RadioOption : public SimpleCandidate, public SwitcherCommand {
  public:
   RadioOption(an<RadioGroup> group,
-              const string& state_label,
-              const string& option_name)
+              string_view state_label,
+              string_view option_name)
       : SimpleCandidate("switch", 0, 0, state_label),
         SwitcherCommand(option_name),
         group_(group) {}
@@ -125,11 +126,12 @@ void RadioGroup::SelectOption(RadioOption* option) {
   for (auto it = options_.begin(); it != options_.end(); ++it) {
     bool selected = (*it == option);
     (*it)->UpdateState(selected);
-    const string& option_name((*it)->keyword());
+    string_view option_name((*it)->keyword());
     if (context_->get_option(option_name) != selected) {
       context_->set_option(option_name, selected);
       if (user_config && switcher_->IsAutoSave(option_name)) {
-        user_config->SetBool("var/option/" + option_name, selected);
+        user_config->SetBool(strings::concat("var/option/", option_name),
+                             selected);
       }
     }
   }
@@ -263,7 +265,7 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
 
 SwitchTranslator::SwitchTranslator(const Ticket& ticket) : Translator(ticket) {}
 
-an<Translation> SwitchTranslator::Query(const string& input,
+an<Translation> SwitchTranslator::Query(string_view input,
                                         const Segment& segment) {
   auto switcher = dynamic_cast<Switcher*>(engine_);
   if (!switcher) {

@@ -5,7 +5,9 @@
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
+#include <charconv>
 #include <fstream>
+#include <system_error>
 #include <utility>
 #include <boost/algorithm/string.hpp>
 #include <rime/algo/strings.h>
@@ -113,7 +115,7 @@ void EntryCollector::Collect(const path& dict_file) {
         !row[stem_column].empty())
       stem_str = row[stem_column];
     // collect entry
-    collection.insert(word);
+    collection.emplace(word);
     if (!code_str.empty()) {
       CreateEntry(word, code_str, weight_str);
     } else {
@@ -133,8 +135,8 @@ void EntryCollector::Collect(const path& dict_file) {
 
 void EntryCollector::Finish() {
   while (!encode_queue.empty()) {
-    const auto& phrase(encode_queue.front().first);
-    const auto& weight_str(encode_queue.front().second);
+    string_view phrase(encode_queue.front().first);
+    string_view weight_str(encode_queue.front().second);
     if (!encoder->EncodePhrase(phrase, weight_str)) {
       LOG(ERROR) << "Encode failure: '" << phrase << "'.";
     }
@@ -158,9 +160,9 @@ void EntryCollector::Finish() {
   LOG(INFO) << "Pass 3: total " << num_entries << " entries collected.";
 }
 
-void EntryCollector::CreateEntry(const string& word,
-                                 const string& code_str,
-                                 const string& weight_str) {
+void EntryCollector::CreateEntry(string_view word,
+                                 string_view code_str,
+                                 string_view weight_str) {
   an<RawDictEntry> e = New<RawDictEntry>();
   e->raw_code.FromString(code_str);
   e->text = word;
@@ -171,9 +173,11 @@ void EntryCollector::CreateEntry(const string& word,
   }
   if (scaled) {
     double percentage = 100.0;
-    try {
-      percentage = std::stod(weight_str.substr(0, weight_str.length() - 1));
-    } catch (...) {
+    auto scaled_weight = weight_str.substr(0, weight_str.length() - 1);
+    auto [ptr, ec] = std::from_chars(
+        scaled_weight.data(), scaled_weight.data() + scaled_weight.size(),
+        percentage);
+    if (ec != std::errc{}) {
       LOG(WARNING) << "invalid entry definition at #" << num_entries
                    << ", line: " << line_number
                    << " of file: " << current_dict_file << ".";
@@ -181,9 +185,9 @@ void EntryCollector::CreateEntry(const string& word,
     }
     e->weight *= percentage / 100.0;
   } else if (!weight_str.empty()) {  // absolute weight
-    try {
-      e->weight = std::stod(weight_str);
-    } catch (...) {
+    auto [ptr, ec] = std::from_chars(
+        weight_str.data(), weight_str.data() + weight_str.size(), e->weight);
+    if (ec != std::errc{}) {
       LOG(WARNING) << "invalid entry definition at #" << num_entries
                    << ", line: " << line_number
                    << " of file: " << current_dict_file << ".";
@@ -213,14 +217,14 @@ void EntryCollector::CreateEntry(const string& word,
                    << code_str << "].";
       return;
     }
-    weights.push_back(std::make_pair(code_str, e->weight));
+    weights.push_back(std::make_pair(string{code_str}, e->weight));
     total_weight[e->text] += e->weight;
   }
   entries.emplace_back(std::move(e));
   ++num_entries;
 }
 
-bool EntryCollector::TranslateWord(const string& word, vector<string>* result) {
+bool EntryCollector::TranslateWord(string_view word, vector<string>* result) {
   const auto& s = stems.find(word);
   if (s != stems.end()) {
     for (const string& stem : s->second) {
@@ -234,7 +238,7 @@ bool EntryCollector::TranslateWord(const string& word, vector<string>* result) {
               [](const auto& a, const auto& b) { return a.first < b.first; });
     for (const auto& v : w->second) {
       const double kMinimalWeight = 0.05;  // 5%
-      double min_weight = total_weight[word] * kMinimalWeight;
+      double min_weight = total_weight[string{word}] * kMinimalWeight;
       if (v.second < min_weight)
         continue;
       result->push_back(v.first);

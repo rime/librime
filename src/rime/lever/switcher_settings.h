@@ -30,7 +30,7 @@ class SwitcherSettings : public CustomSettings {
   explicit SwitcherSettings(Deployer* deployer);
   bool Load();
   bool Select(Selection selection);
-  bool SetHotkeys(const string& hotkeys);
+  bool SetHotkeys(string_view hotkeys);
 
   const SchemaList& available() const { return available_; }
   const Selection& selection() const { return selection_; }

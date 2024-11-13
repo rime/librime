@@ -26,7 +26,7 @@ struct Segment {
   size_t start = 0;
   size_t end = 0;
   size_t length = 0;
-  set<string> tags;
+  set<string, std::less<>> tags;
   an<Menu> menu;
   size_t selected_index = 0;
   string prompt;
@@ -47,10 +47,10 @@ struct Segment {
   void Close();
   bool Reopen(size_t caret_pos);
 
-  bool HasTag(const string& tag) const { return tags.find(tag) != tags.end(); }
+  bool HasTag(string_view tag) const { return tags.find(tag) != tags.end(); }
   bool HasAnyTagIn(const vector<string>& tags) const {
     return std::any_of(tags.begin(), tags.end(),
-                       [this](const string& tag) { return HasTag(tag); });
+                       [this](string_view tag) { return HasTag(tag); });
   }
 
   an<Candidate> GetCandidateAt(size_t index) const;
@@ -61,7 +61,7 @@ class RIME_API Segmentation : public vector<Segment> {
  public:
   Segmentation();
   virtual ~Segmentation() {}
-  void Reset(const string& input);
+  void Reset(string_view input);
   void Reset(size_t num_segments);
   bool AddSegment(Segment segment);
 

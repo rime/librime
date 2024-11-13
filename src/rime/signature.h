@@ -7,14 +7,14 @@
 #ifndef RIME_SIGNATURE_H_
 #define RIME_SIGNATURE_H_
 
-namespace rime {
+#include <rime/config.h>
+#include <rime/deployer.h>
 
-class Config;
-class Deployer;
+namespace rime {
 
 class Signature {
  public:
-  Signature(const string& generator, const string& key = "signature")
+  Signature(string_view generator, string_view key = "signature"sv)
       : generator_(generator), key_(key) {}
 
   bool Sign(Config* config, Deployer* deployer);

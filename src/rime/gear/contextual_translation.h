@@ -15,8 +15,8 @@ class Phrase;
 class ContextualTranslation : public PrefetchTranslation {
  public:
   ContextualTranslation(an<Translation> translation,
-                        string input,
-                        string preceding_text,
+                        string_view input,
+                        string_view preceding_text,
                         Grammar* grammar)
       : PrefetchTranslation(translation),
         input_(input),

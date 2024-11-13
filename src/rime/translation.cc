@@ -202,7 +202,7 @@ bool DistinctTranslation::Next() {
   return true;
 }
 
-bool DistinctTranslation::AlreadyHas(const string& text) const {
+bool DistinctTranslation::AlreadyHas(string_view text) const {
   return candidate_set_.find(text) != candidate_set_.end();
 }
 

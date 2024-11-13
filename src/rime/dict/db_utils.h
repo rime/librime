@@ -14,8 +14,8 @@ namespace rime {
 class Sink {
  public:
   virtual ~Sink() = default;
-  virtual bool MetaPut(const string& key, const string& value) = 0;
-  virtual bool Put(const string& key, const string& value) = 0;
+  virtual bool MetaPut(string_view key, string_view value) = 0;
+  virtual bool Put(string_view key, string_view value) = 0;
 
   template <class SourceType>
   int operator<<(SourceType& source);
@@ -50,8 +50,8 @@ class DbSink : public Sink {
  public:
   explicit DbSink(Db* db);
 
-  virtual bool MetaPut(const string& key, const string& value);
-  virtual bool Put(const string& key, const string& value);
+  virtual bool MetaPut(string_view key, string_view value);
+  virtual bool Put(string_view key, string_view value);
 
  protected:
   Db* db_;

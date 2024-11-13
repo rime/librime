@@ -8,6 +8,7 @@
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <filesystem>
+#include "rime/algo/strings.h"
 #include <yaml-cpp/yaml.h>
 #include <rime/config/config_compiler.h>
 #include <rime/config/config_cow_ref.h>
@@ -95,7 +96,7 @@ bool ConfigData::SaveToFile(const path& file_path) {
   return SaveToStream(out);
 }
 
-bool ConfigData::IsListItemReference(const string& key) {
+bool ConfigData::IsListItemReference(string_view key) {
   return key.length() > 1 && key[0] == '@' && std::isalnum(key[1]);
 }
 
@@ -111,7 +112,7 @@ static const string kLast("last");
 static const string kNext("next");
 
 size_t ConfigData::ResolveListIndex(an<ConfigItem> item,
-                                    const string& key,
+                                    string_view key,
                                     bool read_only) {
   if (!IsListItemReference(key)) {
     return 0;
@@ -144,7 +145,7 @@ size_t ConfigData::ResolveListIndex(an<ConfigItem> item,
       --index;
     }
   } else {
-    index += std::strtoul(key.c_str() + cursor, NULL, 10);
+    index += std::strtoul(key.data() + cursor, NULL, 10);
   }
   if (will_insert && !read_only) {
     list->Insert(index, nullptr);
@@ -163,7 +164,7 @@ class ConfigDataRootRef : public ConfigItemRef {
 };
 
 an<ConfigItemRef> TypeCheckedCopyOnWrite(an<ConfigItemRef> parent,
-                                         const string& key) {
+                                         string_view key) {
   // special case to allow editing current node by __append: __merge: /+: /=:
   if (key.empty()) {
     return parent;
@@ -179,7 +180,7 @@ an<ConfigItemRef> TypeCheckedCopyOnWrite(an<ConfigItemRef> parent,
 }
 
 an<ConfigItemRef> TraverseCopyOnWrite(an<ConfigItemRef> head,
-                                      const string& node_path) {
+                                      string_view node_path) {
   DLOG(INFO) << "TraverseCopyOnWrite(" << node_path << ")";
   if (node_path.empty() || node_path == "/") {
     return head;
@@ -198,7 +199,7 @@ an<ConfigItemRef> TraverseCopyOnWrite(an<ConfigItemRef> head,
   return head;
 }
 
-bool ConfigData::TraverseWrite(const string& node_path, an<ConfigItem> item) {
+bool ConfigData::TraverseWrite(string_view node_path, an<ConfigItem> item) {
   LOG(INFO) << "write: " << node_path;
   auto root = New<ConfigDataRootRef>(this);
   if (auto target = TraverseCopyOnWrite(root, node_path)) {
@@ -210,19 +211,21 @@ bool ConfigData::TraverseWrite(const string& node_path, an<ConfigItem> item) {
   }
 }
 
-vector<string> ConfigData::SplitPath(const string& node_path) {
-  vector<string> keys;
-  auto is_separator = boost::is_any_of("/");
-  auto trimmed_path = boost::trim_left_copy_if(node_path, is_separator);
-  boost::split(keys, trimmed_path, is_separator);
-  return keys;
+vector<string> ConfigData::SplitPath(string_view node_path) {
+  string_view path;
+  if (!node_path.empty() && node_path.front() == '/') {
+    path = node_path.substr(1);
+  } else {
+    path = node_path;
+  }
+  return strings::split(path, "/");
 }
 
 string ConfigData::JoinPath(const vector<string>& keys) {
   return boost::join(keys, "/");
 }
 
-an<ConfigItem> ConfigData::Traverse(const string& node_path) {
+an<ConfigItem> ConfigData::Traverse(string_view node_path) {
   DLOG(INFO) << "traverse: " << node_path;
   if (node_path.empty() || node_path == "/") {
     return root;
@@ -289,7 +292,7 @@ an<ConfigItem> ConvertFromYaml(const YAML::Node& node,
   return nullptr;
 }
 
-void EmitScalar(const string& str_value, YAML::Emitter* emitter) {
+void EmitScalar(string_view str_value, YAML::Emitter* emitter) {
   if (str_value.find_first_of("\r\n") != string::npos) {
     *emitter << YAML::Literal;
   } else if (!std::all_of(str_value.cbegin(), str_value.cend(), [](auto ch) {
@@ -297,7 +300,7 @@ void EmitScalar(const string& str_value, YAML::Emitter* emitter) {
              })) {
     *emitter << YAML::DoubleQuoted;
   }
-  *emitter << str_value;
+  *emitter << str_value.data();
 }
 
 void EmitYaml(an<ConfigItem> node, YAML::Emitter* emitter, int depth) {

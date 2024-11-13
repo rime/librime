@@ -25,15 +25,15 @@ class RIME_API UserDictManager {
                        UserDb::Component* component = nullptr);
 
   // CAVEAT: the user dict should be closed before the following operations
-  bool Backup(const string& dict_name);
+  bool Backup(string_view dict_name);
   bool Restore(const path& snapshot_file);
-  bool UpgradeUserDict(const string& dict_name);
+  bool UpgradeUserDict(string_view dict_name);
   // returns num of exported entries, -1 denotes failure
-  int Export(const string& dict_name, const path& text_file);
+  int Export(string_view dict_name, const path& text_file);
   // returns num of imported entries, -1 denotes failure
-  int Import(const string& dict_name, const path& text_file);
+  int Import(string_view dict_name, const path& text_file);
 
-  bool Synchronize(const string& dict_name);
+  bool Synchronize(string_view dict_name);
   bool SynchronizeAll();
 
  protected:

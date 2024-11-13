@@ -45,14 +45,14 @@ struct SyllableGraph {
 class Syllabifier {
  public:
   Syllabifier() = default;
-  explicit Syllabifier(const string& delimiters,
+  explicit Syllabifier(string_view delimiters,
                        bool enable_completion = false,
                        bool strict_spelling = false)
       : delimiters_(delimiters),
         enable_completion_(enable_completion),
         strict_spelling_(strict_spelling) {}
 
-  RIME_API int BuildSyllableGraph(const string& input,
+  RIME_API int BuildSyllableGraph(string_view input,
                                   Prism& prism,
                                   SyllableGraph* graph);
   RIME_API void EnableCorrection(Corrector* corrector);
