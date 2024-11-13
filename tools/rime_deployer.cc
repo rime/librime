@@ -46,7 +46,7 @@ int add_schema(int count, char* schemas[]) {
   return 0;
 }
 
-int set_active_schema(const string& schema_id) {
+int set_active_schema(string_view schema_id) {
   Config config;
   if (!config.LoadFromFile(path{"user.yaml"})) {
     LOG(INFO) << "creating new file 'user.yaml'.";

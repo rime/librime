@@ -68,7 +68,7 @@ class RimeConsole {
     }
   }
 
-  void ProcessLine(const string& line) {
+  void ProcessLine(string_view line) {
     KeySequence keys;
     if (!keys.Parse(line)) {
       LOG(ERROR) << "error parsing input: '" << line << "'";

@@ -17,9 +17,7 @@
 
 using namespace rime;
 
-int apply_patch(const string& config_id,
-                const string& key,
-                const string& yaml) {
+int apply_patch(string_view config_id, string_view key, string_view yaml) {
   RimeApi* rime = rime_get_api();
   RimeModule* module = rime->find_module("levers");
   if (!module) {
@@ -31,12 +29,12 @@ int apply_patch(const string& config_id,
   int ret = 1;
 
   RimeConfig value = {0};  // should be zero-initialized
-  if (rime->config_load_string(&value, yaml.c_str())) {
+  if (rime->config_load_string(&value, yaml.data())) {
     RimeCustomSettings* settings =
-        levers->custom_settings_init(config_id.c_str(), "rime_patch");
+        levers->custom_settings_init(config_id.data(), "rime_patch");
     levers->load_settings(settings);
 
-    if (levers->customize_item(settings, key.c_str(), &value)) {
+    if (levers->customize_item(settings, key.data(), &value)) {
       levers->save_settings(settings);
       std::cerr << "patch applied." << std::endl;
       ret = 0;

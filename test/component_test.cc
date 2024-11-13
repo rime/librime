@@ -10,7 +10,7 @@
 
 using namespace rime;
 
-class Greeting : public Class<Greeting, const string&> {
+class Greeting : public Class<Greeting, string_view> {
  public:
   virtual string Say() = 0;
   virtual ~Greeting() = default;
@@ -31,10 +31,10 @@ class Hello : public Greeting {
 // customize a hello component with parameters
 class HelloComponent : public Hello::Component {
  public:
-  HelloComponent(const string& word) : word_(word) {}
+  HelloComponent(string_view word) : word_(word) {}
   // define a custom creator to provide an additional argument
-  Hello* Create(const string& name) {
-    return new Hello(make_pair(word_, name));
+  Hello* Create(string_view name) {
+    return new Hello(make_pair(word_, string{name}));
   }
 
  private:
