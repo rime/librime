@@ -12,6 +12,7 @@
 #include <rime/key_event.h>
 #include <rime/processor.h>
 #include <rime/algo/algebra.h>
+#include <rime/gear/key_binding_processor.h>
 
 namespace rime {
 
@@ -37,12 +38,15 @@ struct ChordingState {
   }
 };
 
-class ChordComposer : public Processor {
+class ChordComposer : public Processor,
+                      public KeyBindingProcessor<ChordComposer> {
  public:
   ChordComposer(const Ticket& ticket);
   ~ChordComposer();
 
   virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
+
+  Handler CommitRawInput;
 
  protected:
   bool FinishChordConditionIsMet() const;

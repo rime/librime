@@ -1,3 +1,37 @@
+<a name="1.12.0"></a>
+# [1.12.0](https://github.com/rime/librime/compare/1.11.2...1.12.0) (2024-11-11)
+
+
+### Bug Fixes
+
+* **api:** delete_candidate and delete_candidate_on_current_page ([#900](https://github.com/rime/librime/issues/900)) ([2f89098](https://github.com/rime/librime/commit/2f89098))
+* **build:** limit default parallelism to 8 cores ([#932](https://github.com/rime/librime/issues/932)) ([aea8154](https://github.com/rime/librime/commit/aea8154))
+* **chord_composer:** commit raw w/ Control+Return ([0cf0e63](https://github.com/rime/librime/commit/0cf0e63))
+* **context:** index out of range in Context::Highlight ([#867](https://github.com/rime/librime/issues/867)) ([a1c8144](https://github.com/rime/librime/commit/a1c8144))
+* **deployment_tasks:** do not clean up log when not specify log dir ([#921](https://github.com/rime/librime/issues/921)) ([cdab893](https://github.com/rime/librime/commit/cdab893))
+* **deployment_tasks:** do not remove log files in use ([#913](https://github.com/rime/librime/issues/913)) ([f6dd300](https://github.com/rime/librime/commit/f6dd300)), closes [#902](https://github.com/rime/librime/issues/902)
+* **speller:** consider genuine simple cands when auto select ([eaeb845](https://github.com/rime/librime/commit/eaeb845))
+* **speller:** make simple candidates auto-selectable ([3ecadd2](https://github.com/rime/librime/commit/3ecadd2))
+* **switcher:** deactivate before setting option ([f81c971](https://github.com/rime/librime/commit/f81c971)), closes [#918](https://github.com/rime/librime/issues/918)
+* **user_dictionary:** exact match phrase in front ([c067da2](https://github.com/rime/librime/commit/c067da2))
+* show module name in log instead of their address ([#890](https://github.com/rime/librime/issues/890)) ([a735e42](https://github.com/rime/librime/commit/a735e42))
+* unable to make install in termux, because of file system redirection ([#908](https://github.com/rime/librime/issues/908)) ([3bb4fe9](https://github.com/rime/librime/commit/3bb4fe9))
+
+
+### Features
+
+* **api:** provide a flavor of api using stdbool ([b1cbc30](https://github.com/rime/librime/commit/b1cbc30))
+* **composition:** commit script, keeping selected words  ([#924](https://github.com/rime/librime/issues/924)) ([72564a7](https://github.com/rime/librime/commit/72564a7))
+* **rime_levers_api:** stdbool flavor ([6b1b41f](https://github.com/rime/librime/commit/6b1b41f))
+* **translator_commons:** allow a translator to take multiple tags ([#926](https://github.com/rime/librime/issues/926)) ([d47a812](https://github.com/rime/librime/commit/d47a812))
+
+
+### Performance Improvements
+
+* **common:** replace std unordered container with boost's ([#937](https://github.com/rime/librime/issues/937)) ([b907d7d](https://github.com/rime/librime/commit/b907d7d))
+
+
+
 <a name="1.11.2"></a>
 ## [1.11.2](https://github.com/rime/librime/compare/1.11.1...1.11.2) (2024-04-27)
 
