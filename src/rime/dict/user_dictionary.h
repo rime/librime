@@ -99,7 +99,8 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
   an<Db> db_;
   an<Table> table_;
   an<Prism> prism_;
-  map<string, SyllableId> syllabary_;
+  hash_map<string, SyllableId> syllabary_;
+  hash_map<SyllableId, string> rev_syllabary_;
   TickCount tick_ = 0;
   time_t transaction_time_ = 0;
 };
@@ -111,7 +112,7 @@ class UserDictionaryComponent : public UserDictionary::Component {
   UserDictionary* Create(const string& dict_name, const string& db_class);
 
  private:
-  map<string, weak<Db>> db_pool_;
+  hash_map<string, weak<Db>> db_pool_;
 };
 
 }  // namespace rime
