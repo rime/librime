@@ -42,6 +42,7 @@ class Navigator : public Processor, public KeyBindingProcessor<Navigator, 2> {
   bool MoveRight(Context* ctx);
   bool GoHome(Context* ctx);
   bool GoToEnd(Context* ctx);
+  void OnSelect(Context*);
 
   string input_;
   Spans spans_;
