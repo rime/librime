@@ -60,6 +60,9 @@ Navigator::Navigator(const Ticket& ticket)
   Config* config = engine_->schema()->config();
   LoadConfig(config, "navigator", Horizontal);
   LoadConfig(config, "navigator/vertical", Vertical);
+
+  engine_->context()->select_notifier().connect(
+      [this](Context* ctx) { OnSelect(ctx); });
 }
 
 ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
@@ -72,6 +75,10 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
       ctx->get_option("_vertical") ? Vertical : Horizontal;
   return KeyBindingProcessor::ProcessKeyEvent(key_event, ctx, text_orientation,
                                               FallbackOptions::All);
+}
+
+void Navigator::OnSelect(Context* ctx) {
+  spans_.Clear();
 }
 
 bool Navigator::LeftBySyllable(Context* ctx) {
