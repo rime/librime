@@ -207,6 +207,15 @@ void on_message(void* context_object,
   }
 }
 
+bool ensure_session(RimeApi* rime, RimeSessionId& session_id) {
+  session_id = rime->create_session();
+  if (!session_id) {
+    fprintf(stderr, "Error creating rime session.\n");
+    return false;
+  }
+  return true;
+}
+
 int main(int argc, char* argv[]) {
   unsigned int codepage = SetConsoleOutputCodePage();
   RimeApi* rime = rime_get_api();
@@ -225,9 +234,8 @@ reload:
     rime->join_maintenance_thread();
   fprintf(stderr, "ready.\n");
 
-  RimeSessionId session_id = rime->create_session();
-  if (!session_id) {
-    fprintf(stderr, "Error creating rime session.\n");
+  RimeSessionId session_id;
+  if (!ensure_session(rime, session_id)) {
     SetConsoleOutputCodePage(codepage);
     return 1;
   }
@@ -240,6 +248,10 @@ reload:
         *p = '\0';
         break;
       }
+    }
+    if (!rime->find_session(session_id) && !ensure_session(rime, session_id)) {
+      SetConsoleOutputCodePage(codepage);
+      return 1;
     }
     if (!strcmp(line, "exit"))
       break;
