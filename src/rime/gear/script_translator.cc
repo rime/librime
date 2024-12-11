@@ -194,7 +194,7 @@ an<Translation> ScriptTranslator::Query(const string& input,
                                         const Segment& segment) {
   if (!dict_ || !dict_->loaded())
     return nullptr;
-  if (!segment.HasAnyTagIn(tags_))
+  if (!segment.HasAnyTagIn(tags_) || segment.HasAnyTagIn(exclude_tags_))
     return nullptr;
   DLOG(INFO) << "input = '" << input << "', [" << segment.start << ", "
              << segment.end << ")";
