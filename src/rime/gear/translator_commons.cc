@@ -145,6 +145,10 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket) {
           tags_.push_back(value->str());
     if (tags_.empty())
       tags_.push_back("abc");
+    if (auto list = config->GetList(ticket.name_space + "/exclude_tags"))
+      for (size_t i = 0; i < list->size(); ++i)
+        if (auto value = As<ConfigValue>(list->GetAt(i)))
+          exclude_tags_.push_back(value->str());
   }
   if (delimiters_.empty()) {
     delimiters_ = " ";

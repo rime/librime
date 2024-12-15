@@ -241,7 +241,7 @@ static bool starts_with_completion(an<Translation> translation) {
 
 an<Translation> TableTranslator::Query(const string& input,
                                        const Segment& segment) {
-  if (!segment.HasAnyTagIn(tags_))
+  if (!segment.HasAnyTagIn(tags_) || segment.HasAnyTagIn(exclude_tags_))
     return nullptr;
   DLOG(INFO) << "input = '" << input << "', [" << segment.start << ", "
              << segment.end << ")";
