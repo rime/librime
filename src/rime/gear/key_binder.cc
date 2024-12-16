@@ -15,6 +15,7 @@
 #include <rime/switcher.h>
 #include <rime/switches.h>
 #include <rime/gear/key_binder.h>
+#include <rime/menu.h>
 
 namespace rime {
 
@@ -24,6 +25,10 @@ enum KeyBindingCondition {
   kWhenPaging,      // user has changed page
   kWhenHasMenu,     // at least one candidate
   kWhenComposing,   // input string is not empty
+  kWhenFirstPage,
+  kWhenNotFirstPage,
+  kWhenLastPage,
+  kWhenNotLastPage,
   kAlways,
 };
 
@@ -34,6 +39,10 @@ static struct KeyBindingConditionDef {
                              {kWhenPaging, "paging"},
                              {kWhenHasMenu, "has_menu"},
                              {kWhenComposing, "composing"},
+                             {kWhenFirstPage, "first_page"},
+                             {kWhenNotFirstPage, "not_first_page"},
+                             {kWhenLastPage, "last_page"},
+                             {kWhenNotLastPage, "not_last_page"},
                              {kAlways, "always"},
                              {kNever, NULL}};
 
@@ -242,10 +251,11 @@ KeyBinder::KeyBinder(const Ticket& ticket)
 
 class KeyBindingConditions : public set<KeyBindingCondition> {
  public:
-  explicit KeyBindingConditions(Context* ctx);
+  explicit KeyBindingConditions(Engine* engine);
 };
 
-KeyBindingConditions::KeyBindingConditions(Context* ctx) {
+KeyBindingConditions::KeyBindingConditions(Engine* engine) {
+  Context* ctx = engine->context();
   insert(kAlways);
 
   if (ctx->IsComposing()) {
@@ -256,6 +266,22 @@ KeyBindingConditions::KeyBindingConditions(Context* ctx) {
     insert(kWhenHasMenu);
   }
 
+  if (ctx->HasMenu()) {
+    const auto& seg(ctx->composition().back());
+    int page_size = engine->schema()->page_size();
+    int page_no = seg.selected_index / page_size;
+    the<Page> page(seg.menu->CreatePage(page_size, page_no));
+    if (page) {
+      if (!page_no)
+        insert(kWhenFirstPage);  // first page
+      else
+        insert(kWhenNotFirstPage);
+      if (Bool(page->is_last_page))
+        insert(kWhenLastPage);  // last page
+      else
+        insert(kWhenNotLastPage);
+    }
+  }
   Composition& comp = ctx->composition();
   if (!comp.empty()) {
     const Segment& last_seg = comp.back();
@@ -275,7 +301,7 @@ ProcessResult KeyBinder::ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   if (key_bindings_->find(key_event) == key_bindings_->end())
     return kNoop;
-  KeyBindingConditions conditions(engine_->context());
+  KeyBindingConditions conditions(engine_);
   for (const KeyBinding& binding : (*key_bindings_)[key_event]) {
     if (conditions.find(binding.whence) == conditions.end())
       continue;
