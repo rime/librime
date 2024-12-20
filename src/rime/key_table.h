@@ -48,19 +48,19 @@ typedef enum {
 // 给定modifier文字，返回马赛克值
 // 例如 RimeGetModifierByName("Alt") == (1 << 3)
 // 如果不认得所给的键名，返回 0
-RIME_API int RimeGetModifierByName(const char* name);
+RIME_DLL int RimeGetModifierByName(const char* name);
 
 // 给一个数值，取得最低的非0位所对应的modifier文字
 // 例如 RimeGetModifierName(12) == "Control"
 // 取不到则返回 NULL
-RIME_API const char* RimeGetModifierName(int modifier);
+RIME_DLL const char* RimeGetModifierName(int modifier);
 
 // 由键名取得键值
 // 查无此键则返回 XK_VoidSymbol
-RIME_API int RimeGetKeycodeByName(const char* name);
+RIME_DLL int RimeGetKeycodeByName(const char* name);
 
 // 由键值取得键名
 // 不认得此键，则返回 NULL
-RIME_API const char* RimeGetKeyName(int keycode);
+RIME_DLL const char* RimeGetKeyName(int keycode);
 
 #endif  // RIME_KEY_TABLE_H_

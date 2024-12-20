@@ -34,7 +34,7 @@ class Engine : public Messenger {
   Engine* active_engine() { return active_engine_ ? active_engine_ : this; }
   void set_active_engine(Engine* engine = nullptr) { active_engine_ = engine; }
 
-  RIME_API static Engine* Create();
+  RIME_DLL static Engine* Create();
 
  protected:
   Engine();

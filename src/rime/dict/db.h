@@ -35,8 +35,8 @@ class Db : public Class<Db, const string&> {
   Db(const path& file_path, const string& name);
   virtual ~Db() = default;
 
-  RIME_API bool Exists() const;
-  RIME_API virtual bool Remove();
+  RIME_DLL bool Exists() const;
+  RIME_DLL virtual bool Remove();
 
   virtual bool Open() = 0;
   virtual bool OpenReadOnly() = 0;
@@ -93,7 +93,7 @@ class Recoverable {
 
 class ResourceResolver;
 
-class RIME_API DbComponentBase {
+class RIME_DLL DbComponentBase {
  public:
   DbComponentBase();
   virtual ~DbComponentBase();

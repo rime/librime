@@ -43,25 +43,25 @@ class TextDb : public Db {
          const string& db_name,
          const string& db_type,
          TextFormat format);
-  RIME_API virtual ~TextDb();
+  RIME_DLL virtual ~TextDb();
 
-  RIME_API bool Open() override;
-  RIME_API bool OpenReadOnly() override;
-  RIME_API bool Close() override;
+  RIME_DLL bool Open() override;
+  RIME_DLL bool OpenReadOnly() override;
+  RIME_DLL bool Close() override;
 
-  RIME_API bool Backup(const path& snapshot_file) override;
-  RIME_API bool Restore(const path& snapshot_file) override;
+  RIME_DLL bool Backup(const path& snapshot_file) override;
+  RIME_DLL bool Restore(const path& snapshot_file) override;
 
-  RIME_API bool CreateMetadata() override;
-  RIME_API bool MetaFetch(const string& key, string* value) override;
-  RIME_API bool MetaUpdate(const string& key, const string& value) override;
+  RIME_DLL bool CreateMetadata() override;
+  RIME_DLL bool MetaFetch(const string& key, string* value) override;
+  RIME_DLL bool MetaUpdate(const string& key, const string& value) override;
 
-  RIME_API an<DbAccessor> QueryMetadata() override;
-  RIME_API an<DbAccessor> QueryAll() override;
-  RIME_API an<DbAccessor> Query(const string& key) override;
-  RIME_API bool Fetch(const string& key, string* value) override;
-  RIME_API bool Update(const string& key, const string& value) override;
-  RIME_API bool Erase(const string& key) override;
+  RIME_DLL an<DbAccessor> QueryMetadata() override;
+  RIME_DLL an<DbAccessor> QueryAll() override;
+  RIME_DLL an<DbAccessor> Query(const string& key) override;
+  RIME_DLL bool Fetch(const string& key, string* value) override;
+  RIME_DLL bool Update(const string& key, const string& value) override;
+  RIME_DLL bool Erase(const string& key) override;
 
  protected:
   void Clear();

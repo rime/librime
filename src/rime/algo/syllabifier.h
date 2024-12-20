@@ -52,10 +52,10 @@ class Syllabifier {
         enable_completion_(enable_completion),
         strict_spelling_(strict_spelling) {}
 
-  RIME_API int BuildSyllableGraph(const string& input,
+  RIME_DLL int BuildSyllableGraph(const string& input,
                                   Prism& prism,
                                   SyllableGraph* graph);
-  RIME_API void EnableCorrection(Corrector* corrector);
+  RIME_DLL void EnableCorrection(Corrector* corrector);
 
  protected:
   void CheckOverlappedSpellings(SyllableGraph* graph, size_t start, size_t end);
