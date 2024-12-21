@@ -1,6 +1,16 @@
 # Rime with Mac
 
-## Preparation
+There are two ways to install librime on macOS:
+
+## 1. Using Homebrew (Recommended)
+
+```sh
+brew install librime
+```
+
+## 2. Manual Compilation
+
+### Preparation
 
 Install Xcode with command line tools.
 
@@ -10,7 +20,7 @@ Install other build tools:
 brew install cmake git
 ```
 
-## Get the code
+### Get the code
 
 ``` sh
 git clone --recursive https://github.com/rime/librime.git
@@ -18,7 +28,7 @@ git clone --recursive https://github.com/rime/librime.git
 or [download from GitHub](https://github.com/rime/librime), then get code for
 third-party dependencies separately.
 
-## Install Boost C++ libraries
+### Install Boost C++ libraries
 
 Boost is a third-party library which librime code heavily depend on.
 These dependencies include a few header-only Boost libraries.
@@ -71,7 +81,7 @@ brew install boost@1.60
 brew link --force boost@1.60
 ```
 
-## Build third-party libraries
+### Build third-party libraries
 
 Required third-party libraries other than Boost are included as git submodules:
 
@@ -93,7 +103,7 @@ You can also build an individual library, eg. `opencc`, with:
 make deps/opencc
 ```
 
-## Build librime
+### Build librime
 
 ``` sh
 make
@@ -107,7 +117,7 @@ Or, create a debug build:
 make debug
 ```
 
-## Run unit tests
+### Run unit tests
 
 ``` sh
 make test
@@ -119,7 +129,7 @@ Or, test the debug build:
 make test-debug
 ```
 
-## Try it in the console
+### Try it in the console
 
 ``` sh
 (
