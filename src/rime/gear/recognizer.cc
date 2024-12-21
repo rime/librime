@@ -83,7 +83,7 @@ Recognizer::Recognizer(const Ticket& ticket) : Processor(ticket) {
 
 ProcessResult Recognizer::ProcessKeyEvent(const KeyEvent& key_event) {
   if (patterns_.empty() || key_event.ctrl() || key_event.alt() ||
-      key_event.super() || key_event.release()) {
+      key_event.hypershift() || key_event.super() || key_event.release()) {
     return kNoop;
   }
   int ch = key_event.keycode();
