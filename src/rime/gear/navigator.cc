@@ -61,8 +61,12 @@ Navigator::Navigator(const Ticket& ticket)
   LoadConfig(config, "navigator", Horizontal);
   LoadConfig(config, "navigator/vertical", Vertical);
 
-  engine_->context()->select_notifier().connect(
+  select_connection_ = engine_->context()->select_notifier().connect(
       [this](Context* ctx) { OnSelect(ctx); });
+}
+
+Navigator::~Navigator() {
+  select_connection_.disconnect();
 }
 
 ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
