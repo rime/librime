@@ -99,7 +99,7 @@ Speller::Speller(const Ticket& ticket)
 
 ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
   if (key_event.release() || key_event.ctrl() || key_event.alt() ||
-      key_event.super())
+      key_event.hypershift() || key_event.super())
     return kNoop;
   int ch = key_event.keycode();
   if (ch < 0x20 || ch >= 0x7f)  // not a valid key for spelling
