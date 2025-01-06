@@ -22,8 +22,8 @@ class Config : public Class<Config, const string&>, public ConfigItemRef {
  public:
   // CAVEAT: Config instances created without argument will NOT
   // be managed by ConfigComponent
-  RIME_API Config();
-  RIME_API virtual ~Config();
+  RIME_DLL Config();
+  RIME_DLL virtual ~Config();
   // instances of Config with identical config id share a copy of config data
   // in the ConfigComponent
   explicit Config(an<ConfigData> data);
@@ -32,33 +32,33 @@ class Config : public Class<Config, const string&>, public ConfigItemRef {
   bool Save();
   bool LoadFromStream(std::istream& stream);
   bool SaveToStream(std::ostream& stream);
-  RIME_API bool LoadFromFile(const path& file_path);
-  RIME_API bool SaveToFile(const path& file_path);
+  RIME_DLL bool LoadFromFile(const path& file_path);
+  RIME_DLL bool SaveToFile(const path& file_path);
 
   // access a tree node of a particular type with "path/to/node"
-  RIME_API bool IsNull(const string& path);
+  RIME_DLL bool IsNull(const string& path);
   bool IsValue(const string& path);
-  RIME_API bool IsList(const string& path);
-  RIME_API bool IsMap(const string& path);
-  RIME_API bool GetBool(const string& path, bool* value);
-  RIME_API bool GetInt(const string& path, int* value);
-  RIME_API bool GetDouble(const string& path, double* value);
-  RIME_API bool GetString(const string& path, string* value);
-  RIME_API size_t GetListSize(const string& path);
+  RIME_DLL bool IsList(const string& path);
+  RIME_DLL bool IsMap(const string& path);
+  RIME_DLL bool GetBool(const string& path, bool* value);
+  RIME_DLL bool GetInt(const string& path, int* value);
+  RIME_DLL bool GetDouble(const string& path, double* value);
+  RIME_DLL bool GetString(const string& path, string* value);
+  RIME_DLL size_t GetListSize(const string& path);
 
   an<ConfigItem> GetItem(const string& path);
   an<ConfigValue> GetValue(const string& path);
-  RIME_API an<ConfigList> GetList(const string& path);
-  RIME_API an<ConfigMap> GetMap(const string& path);
+  RIME_DLL an<ConfigList> GetList(const string& path);
+  RIME_DLL an<ConfigMap> GetMap(const string& path);
 
   // setters
   bool SetBool(const string& path, bool value);
-  RIME_API bool SetInt(const string& path, int value);
+  RIME_DLL bool SetInt(const string& path, int value);
   bool SetDouble(const string& path, double value);
-  RIME_API bool SetString(const string& path, const char* value);
+  RIME_DLL bool SetString(const string& path, const char* value);
   bool SetString(const string& path, const string& value);
   // setter for adding or replacing items in the tree
-  RIME_API bool SetItem(const string& path, an<ConfigItem> item);
+  RIME_DLL bool SetItem(const string& path, an<ConfigItem> item);
   using ConfigItemRef::operator=;
 
  protected:
@@ -73,28 +73,28 @@ class ConfigCompilerPlugin;
 struct ConfigResource;
 
 struct ConfigResourceProvider {
-  RIME_API static const ResourceType kDefaultResourceType;
-  RIME_API static ResourceResolver* CreateResourceResolver(
+  RIME_DLL static const ResourceType kDefaultResourceType;
+  RIME_DLL static ResourceResolver* CreateResourceResolver(
       const ResourceType& resource_type);
 };
 
 struct DeployedConfigResourceProvider {
-  RIME_API static const ResourceType kDefaultResourceType;
-  RIME_API static ResourceResolver* CreateResourceResolver(
+  RIME_DLL static const ResourceType kDefaultResourceType;
+  RIME_DLL static ResourceResolver* CreateResourceResolver(
       const ResourceType& resource_type);
 };
 
 struct UserConfigResourceProvider {
-  RIME_API static const ResourceType kDefaultResourceType;
-  RIME_API static ResourceResolver* CreateResourceResolver(
+  RIME_DLL static const ResourceType kDefaultResourceType;
+  RIME_DLL static ResourceResolver* CreateResourceResolver(
       const ResourceType& resource_type);
 };
 
 class ConfigComponentBase : public Config::Component {
  public:
-  RIME_API ConfigComponentBase(ResourceResolver* resource_resolver);
-  RIME_API virtual ~ConfigComponentBase();
-  RIME_API Config* Create(const string& file_name);
+  RIME_DLL ConfigComponentBase(ResourceResolver* resource_resolver);
+  RIME_DLL virtual ~ConfigComponentBase();
+  RIME_DLL Config* Create(const string& file_name);
 
  protected:
   virtual an<ConfigData> LoadConfig(const string& config_id) = 0;
@@ -127,7 +127,7 @@ class ConfigComponent : public ConfigComponentBase {
 
 class ConfigLoader {
  public:
-  RIME_API an<ConfigData> LoadConfig(ResourceResolver* resource_resolver,
+  RIME_DLL an<ConfigData> LoadConfig(ResourceResolver* resource_resolver,
                                      const string& config_id);
   void set_auto_save(bool auto_save) { auto_save_ = auto_save; }
 
@@ -137,9 +137,9 @@ class ConfigLoader {
 
 class ConfigBuilder {
  public:
-  RIME_API ConfigBuilder();
-  RIME_API virtual ~ConfigBuilder();
-  RIME_API an<ConfigData> LoadConfig(ResourceResolver* resource_resolver,
+  RIME_DLL ConfigBuilder();
+  RIME_DLL virtual ~ConfigBuilder();
+  RIME_DLL an<ConfigData> LoadConfig(ResourceResolver* resource_resolver,
                                      const string& config_id);
   void InstallPlugin(ConfigCompilerPlugin* plugin);
   bool ApplyPlugins(ConfigCompiler* compiler, an<ConfigResource> resource);

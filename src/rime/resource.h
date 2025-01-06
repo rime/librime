@@ -19,7 +19,7 @@ struct ResourceType {
   string suffix;
 };
 
-class RIME_API ResourceResolver {
+class RIME_DLL ResourceResolver {
  public:
   explicit ResourceResolver(const ResourceType type) : type_(type) {}
   virtual ~ResourceResolver() {}
@@ -35,7 +35,7 @@ class RIME_API ResourceResolver {
 };
 
 // try fallback path if target file doesn't exist in root path
-class RIME_API FallbackResourceResolver : public ResourceResolver {
+class RIME_DLL FallbackResourceResolver : public ResourceResolver {
  public:
   explicit FallbackResourceResolver(const ResourceType& type)
       : ResourceResolver(type) {}

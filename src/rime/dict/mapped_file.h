@@ -80,7 +80,7 @@ struct List {
 
 class MappedFileImpl;
 
-class RIME_API MappedFile {
+class RIME_DLL MappedFile {
  protected:
   explicit MappedFile(const path& file_path);
   virtual ~MappedFile();

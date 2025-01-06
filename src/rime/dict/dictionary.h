@@ -23,7 +23,7 @@ struct QueryResult;
 
 }  // namespace dictionary
 
-class RIME_API DictEntryIterator : public DictEntryFilterBinder {
+class RIME_DLL DictEntryIterator : public DictEntryFilterBinder {
  public:
   DictEntryIterator();
   virtual ~DictEntryIterator() = default;
@@ -61,32 +61,32 @@ struct Ticket;
 
 class Dictionary : public Class<Dictionary, const Ticket&> {
  public:
-  RIME_API Dictionary(string name,
+  RIME_DLL Dictionary(string name,
                       vector<string> packs,
                       vector<of<Table>> tables,
                       an<Prism> prism);
   virtual ~Dictionary();
 
   bool Exists() const;
-  RIME_API bool Remove();
-  RIME_API bool Load();
+  RIME_DLL bool Remove();
+  RIME_DLL bool Load();
 
-  RIME_API an<DictEntryCollector> Lookup(const SyllableGraph& syllable_graph,
+  RIME_DLL an<DictEntryCollector> Lookup(const SyllableGraph& syllable_graph,
                                          size_t start_pos,
                                          bool predict_word = false,
                                          double initial_credibility = 0.0);
   // if predictive is true, do an expand search with limit,
   // otherwise do an exact match.
   // return num of matching keys.
-  RIME_API size_t LookupWords(DictEntryIterator* result,
+  RIME_DLL size_t LookupWords(DictEntryIterator* result,
                               const string& str_code,
                               bool predictive,
                               size_t limit = 0);
   // translate syllable id sequence to string code
-  RIME_API bool Decode(const Code& code, vector<string>* result);
+  RIME_DLL bool Decode(const Code& code, vector<string>* result);
 
   const string& name() const { return name_; }
-  RIME_API bool loaded() const;
+  RIME_DLL bool loaded() const;
 
   const vector<string>& packs() const { return packs_; }
   const vector<of<Table>>& tables() const { return tables_; }
