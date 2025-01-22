@@ -1,3 +1,21 @@
+<a name="1.13.0"></a>
+# [1.13.0](https://github.com/rime/librime/compare/1.12.0...1.13.0) (2025-01-22)
+
+
+### Bug Fixes
+
+* **api:** export librime 0.9 API as extern C ([2930c26](https://github.com/rime/librime/commit/2930c26)), closes [#964](https://github.com/rime/librime/issues/964)
+* **navigator:** disconnect notifier ([b34e4ac](https://github.com/rime/librime/commit/b34e4ac))
+* **navigator:** wrong spans after selection ([#952](https://github.com/rime/librime/issues/952)) ([0a983b4](https://github.com/rime/librime/commit/0a983b4))
+* **rime_api_console:** recreate session when necessary ([6f6f540](https://github.com/rime/librime/commit/6f6f540))
+
+
+### Features
+
+* **punctuator:** convert digit separators ([28a234f](https://github.com/rime/librime/commit/28a234f)), closes [#972](https://github.com/rime/librime/issues/972)
+
+
+
 <a name="1.12.0"></a>
 # [1.12.0](https://github.com/rime/librime/compare/1.11.2...1.12.0) (2024-11-11)
 
