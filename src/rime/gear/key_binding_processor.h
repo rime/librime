@@ -21,9 +21,10 @@ class KeyBindingProcessor {
 
   enum FallbackOptions {
     None = 0,
-    ShiftAsControl = (1 << 0),
-    IgnoreShift = (1 << 1),
-    All = ShiftAsControl | IgnoreShift,
+    AltAsControl = (1 << 0),
+    ShiftAsControl = (1 << 1),
+    IgnoreShift = (1 << 2),
+    All = AltAsControl | ShiftAsControl | IgnoreShift
   };
 
   struct ActionDef {
