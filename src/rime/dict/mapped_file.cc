@@ -11,6 +11,7 @@
 #include <boost/interprocess/file_mapping.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <rime/dict/mapped_file.h>
+#include <rime/config.h>
 
 namespace rime {
 
@@ -29,18 +30,53 @@ class MappedFileImpl {
                                                       file_mapping_mode));
     region_.reset(
         new boost::interprocess::mapped_region(*file_, file_mapping_mode));
+    // 如果是只读模式，立即读取整个文件到内存中，避免后期出现 IO 性能瓶颈
+    optimize_io_ = false;
+    if (mode == kOpenReadOnly) {
+      the<Config> config(Config::Require("config")->Create("default"));
+      if (config) {
+        auto experimental = config->GetMap("experimental");
+        if (experimental) {
+          auto optimizeio = experimental->GetValue("optimize_io");
+          if (optimizeio) {
+            optimizeio->GetBool(&optimize_io_);
+          }
+        }
+      }
+      if (optimize_io_) {
+        buffer_.resize(region_->get_size());
+        std::memcpy(buffer_.data(), region_->get_address(), buffer_.size());
+        region_.reset();
+        file_.reset();
+      }
+    }
   }
   ~MappedFileImpl() {
     region_.reset();
     file_.reset();
+    buffer_.clear();
   }
   bool Flush() { return region_->flush(); }
-  void* get_address() const { return region_->get_address(); }
-  size_t get_size() const { return region_->get_size(); }
+  void* get_address() const {
+    if (optimize_io_) {
+      return (void*)buffer_.data();
+    } else {
+      return region_->get_address();
+    }
+  }
+  size_t get_size() const {
+    if (optimize_io_) {
+      return buffer_.size();
+    } else {
+      return region_->get_size();
+    }
+  }
 
  private:
   the<boost::interprocess::file_mapping> file_;
   the<boost::interprocess::mapped_region> region_;
+  bool optimize_io_;
+  std::vector<uint8_t> buffer_;
 };
 
 MappedFile::MappedFile(const path& file_path) : file_path_(file_path) {}
