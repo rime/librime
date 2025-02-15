@@ -40,6 +40,12 @@ void PunctConfig::LoadConfig(Engine* engine, bool load_symbols) {
       digit_separators_ = configured;
     }
   }
+  {
+    string configured;
+    if (config->GetString("punctuator/digit_separator_action", &configured)) {
+      digit_separator_commit_ = (configured == "commit");
+    }
+  }
 }
 
 an<ConfigItem> PunctConfig::GetPunctDefinition(const string key) {
@@ -133,7 +139,8 @@ bool Punctuator::ConvertDigitSeparator(char ch) {
   if (ctx->composition().empty() && is_after_number(ctx)) {
     DLOG(INFO) << "convert punct in number: " << ch;
     ctx->PushInput(ch) && punctuation_is_translated(ctx, "punct_number") &&
-        ctx->composition().Forward();
+        (config_.digit_separator_commit() ? ctx->Commit()
+                                          : ctx->composition().Forward());
     return true;
   }
   return false;

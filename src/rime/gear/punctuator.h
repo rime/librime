@@ -28,6 +28,7 @@ class PunctConfig {
   bool is_digit_separator(char ch) const {
     return digit_separators_.find(ch) != string::npos;
   }
+  bool digit_separator_commit() const { return digit_separator_commit_; }
 
  protected:
   string shape_;
@@ -35,6 +36,7 @@ class PunctConfig {
   an<ConfigMap> symbols_;
 
   string digit_separators_ = ",.:'";
+  bool digit_separator_commit_ = false;
 };
 
 class Punctuator : public Processor {
