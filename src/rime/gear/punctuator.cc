@@ -96,12 +96,12 @@ ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
   if (ctx->get_option("ascii_punct")) {
     return kNoop;
   }
-  if (!use_space_ && ch == XK_space && ctx->IsComposing()) {
-    return kNoop;
-  }
-  if (isdigit(ch) && is_after_digit_separator(ctx)) {
+  if ((isdigit(ch) || ch == XK_space) && is_after_digit_separator(ctx)) {
     ctx->PushInput(ch) && ctx->Commit();
     return kAccepted;
+  }
+  if (!use_space_ && ch == XK_space && ctx->IsComposing()) {
+    return kNoop;
   }
   if (ConvertDigitSeparator(ch)) {
     return kAccepted;
