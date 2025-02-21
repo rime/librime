@@ -92,6 +92,12 @@ if(BUILD_SHARED_LIBS)
   if(XCODE_VERSION)
     set_target_properties(rime PROPERTIES INSTALL_NAME_DIR "@rpath")
   endif()
+  if(APPLE)
+    set_target_properties(rime PROPERTIES 
+    BUILD_WITH_INSTALL_RPATH TRUE 
+    INSTALL_RPATH "@loader_path"
+    INSTALL_RPATH_USE_LINK_PATH TRUE)
+  endif()
   install(TARGETS rime DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
   if(MSVC)
     install(FILES $<TARGET_PDB_FILE:rime>

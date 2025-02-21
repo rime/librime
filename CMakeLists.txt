@@ -283,3 +283,9 @@ if(BUILD_SHARED_LIBS)
     add_subdirectory(sample)
   endif()
 endif()
+
+# Copy glog dynamic library to the installation directory
+get_filename_component(GLOG_LIBRARY_DIR "${Glog_LIBRARY}" DIRECTORY)
+message(STATUS "Will copy glog from: ${GLOG_LIBRARY_DIR}")
+file(GLOB GLOG_REAL_LIB "${GLOG_LIBRARY_DIR}/libglog.*.dylib")
+install(FILES ${GLOG_REAL_LIB} DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}")
