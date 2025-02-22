@@ -77,7 +77,7 @@ static void rime_gears_initialize() {
   r.Register("history_translator", new Component<HistoryTranslator>);
 
   // filters
-  r.Register("simplifier", new Component<Simplifier>);
+  r.Register("simplifier", new SimplifierComponent);
   r.Register("uniquifier", new Component<Uniquifier>);
   if (!r.Find("charset_filter")) {  // allow improved implementation
     r.Register("charset_filter", new Component<CharsetFilter>);

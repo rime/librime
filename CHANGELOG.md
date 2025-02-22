@@ -1,3 +1,14 @@
+<a name="1.13.1"></a>
+## [1.13.1](https://github.com/rime/librime/compare/1.13.0...1.13.1) (2025-02-16)
+
+
+### Features
+
+* **punctuator:** add option to commit digit separator ([#981](https://github.com/rime/librime/issues/981)) ([4b90ff1](https://github.com/rime/librime/commit/4b90ff1)), closes [#972](https://github.com/rime/librime/issues/972)
+* **simplifier:** cache opencc ([#977](https://github.com/rime/librime/issues/977)) ([f9411ae](https://github.com/rime/librime/commit/f9411ae))
+
+
+
 <a name="1.13.0"></a>
 # [1.13.0](https://github.com/rime/librime/compare/1.12.0...1.13.0) (2025-01-22)
 
