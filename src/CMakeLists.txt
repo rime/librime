@@ -82,7 +82,7 @@ endif()
 
 if(BUILD_SHARED_LIBS)
   add_library(rime ${rime_src})
-  target_link_libraries(rime ${rime_deps})
+  target_link_libraries(rime PUBLIC ${rime_deps})
   set_target_properties(rime PROPERTIES
     DEFINE_SYMBOL "RIME_EXPORTS"
     VERSION ${rime_version}
@@ -165,7 +165,7 @@ if(BUILD_SHARED_LIBS)
   endif()
 else()
   add_library(rime-static STATIC ${rime_src})
-  target_link_libraries(rime-static ${rime_deps})
+  target_link_libraries(rime-static PUBLIC ${rime_deps})
   set_target_properties(rime-static PROPERTIES
     OUTPUT_NAME "rime" PREFIX "lib"
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)

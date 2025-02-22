@@ -33,6 +33,7 @@ clean-src:
 
 glog:
 	cd $(src_dir)/glog; \
+	sed -i.bak '/set.*VISIBILITY/d' CMakeLists.txt; \
 	cmake . -B$(build) \
 	-DBUILD_SHARED_LIBS:BOOL=OFF \
 	-DBUILD_TESTING:BOOL=OFF \

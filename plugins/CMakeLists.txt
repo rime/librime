@@ -39,6 +39,18 @@ else()
   endforeach(file)
 endif()
 
+function(remove_static_libs target)
+  get_target_property(libs ${target} LINK_LIBRARIES)
+  if(libs)
+    foreach(lib ${libs})
+      if(lib MATCHES ".*\.(a|lib)$")
+        list(REMOVE_ITEM libs ${lib})
+      endif()
+    endforeach()
+    set_target_properties(${target} PROPERTIES LINK_LIBRARIES "${libs}")
+  endif()
+endfunction()
+
 foreach(plugin ${plugins})
   unset(plugin_name)
   unset(plugin_objs)
@@ -54,6 +66,7 @@ foreach(plugin ${plugins})
     message(STATUS "Plugin ${plugin_name} provides modules: ${plugin_modules}")
     add_library(${plugin_name} ${rime_plugin_boilerplate_src} ${plugin_objs})
     target_link_libraries(${plugin_name} ${plugin_deps})
+    remove_static_libs(${plugin_name})  # HACK: prevent static libs from being linked
     set_target_properties(${plugin_name}
       PROPERTIES
       LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib/${RIME_PLUGINS_DIR}
