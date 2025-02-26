@@ -72,7 +72,7 @@ ProcessResult Switcher::ProcessKeyEvent(const KeyEvent& key_event) {
     int ch = key_event.keycode();
     if (ch == XK_space || ch == XK_Return) {
       context_->ConfirmCurrentSelection();
-    } else if (ch == XK_Escape) {
+    } else if (ch == XK_Escape || ch == XK_BackSpace) {
       Deactivate();
     }
     return kAccepted;
