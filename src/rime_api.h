@@ -168,6 +168,7 @@ typedef struct RIME_FLAVORED(rime_status_t) {
   char* schema_name;
   Bool is_disabled;
   Bool is_composing;
+  Bool is_predicting;
   Bool is_ascii_mode;
   Bool is_full_shape;
   Bool is_simplified;
