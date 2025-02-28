@@ -168,12 +168,12 @@ typedef struct RIME_FLAVORED(rime_status_t) {
   char* schema_name;
   Bool is_disabled;
   Bool is_composing;
-  Bool is_predicting;
   Bool is_ascii_mode;
   Bool is_full_shape;
   Bool is_simplified;
   Bool is_traditional;
   Bool is_ascii_punct;
+  Bool is_predicting;
 } RIME_FLAVORED(RimeStatus);
 
 typedef struct rime_candidate_list_iterator_t {
