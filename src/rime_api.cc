@@ -4,13 +4,14 @@
 //
 // 2011-08-09 GONG Chen <chen.sst@gmail.com>
 //
+
+#include "rime_api_impl.h"
+
 #include <cstring>
 #include <sstream>
 #include <rime/common.h>
 #include <rime/module.h>
 #include <rime/setup.h>
-
-#include "rime_api_impl.h"
 
 using namespace rime;
 

@@ -23,6 +23,7 @@ class Navigator : public Processor, public KeyBindingProcessor<Navigator, 2> {
   };
 
   explicit Navigator(const Ticket& ticket);
+  virtual ~Navigator();
 
   ProcessResult ProcessKeyEvent(const KeyEvent& key_event) override;
 
@@ -42,9 +43,12 @@ class Navigator : public Processor, public KeyBindingProcessor<Navigator, 2> {
   bool MoveRight(Context* ctx);
   bool GoHome(Context* ctx);
   bool GoToEnd(Context* ctx);
+  void OnSelect(Context*);
 
   string input_;
   Spans spans_;
+
+  connection select_connection_;
 };
 
 }  // namespace rime

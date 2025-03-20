@@ -32,7 +32,6 @@ static void rime_levers_initialize() {
 
 static void rime_levers_finalize() {}
 
-#include <rime_levers_api.h>
 // defines rime_levers_get_api()
 #include "levers_api_impl.h"
 

@@ -22,15 +22,15 @@
 namespace rime {
 
 #define Q(x) #x
-RIME_API RIME_MODULE_LIST(kDefaultModules, "default" RIME_EXTRA_MODULES);
+RIME_DLL RIME_MODULE_LIST(kDefaultModules, "default" RIME_EXTRA_MODULES);
 #undef Q
-RIME_API RIME_MODULE_LIST(kDeployerModules, "deployer");
+RIME_DLL RIME_MODULE_LIST(kDeployerModules, "deployer");
 RIME_MODULE_LIST(kLegacyModules, "legacy");
 
 RIME_REGISTER_MODULE_GROUP(default, "core", "dict", "gears")
 RIME_REGISTER_MODULE_GROUP(deployer, "core", "dict", "levers")
 
-RIME_API void LoadModules(const char* module_names[]) {
+RIME_DLL void LoadModules(const char* module_names[]) {
   ModuleManager& mm(ModuleManager::instance());
   for (const char** m = module_names; *m; ++m) {
     if (RimeModule* module = mm.Find(*m)) {
@@ -39,7 +39,7 @@ RIME_API void LoadModules(const char* module_names[]) {
   }
 }
 
-RIME_API void SetupDeployer(RimeTraits* traits) {
+RIME_DLL void SetupDeployer(RimeTraits* traits) {
   if (!traits)
     return;
   Deployer& deployer(Service::instance().deployer());
@@ -65,7 +65,7 @@ RIME_API void SetupDeployer(RimeTraits* traits) {
     deployer.staging_dir = deployer.user_data_dir / "build";
 }
 
-RIME_API void SetupLogging(const char* app_name,
+RIME_DLL void SetupLogging(const char* app_name,
                            int min_log_level,
                            const char* log_dir) {
 #ifdef RIME_ENABLE_LOGGING
@@ -95,7 +95,7 @@ RIME_API void SetupLogging(const char* app_name,
 #endif  // RIME_ENABLE_LOGGING
 }
 
-RIME_API void SetupLogging(const char* app_name) {
+RIME_DLL void SetupLogging(const char* app_name) {
   SetupLogging(app_name, 0, NULL);
 }
 

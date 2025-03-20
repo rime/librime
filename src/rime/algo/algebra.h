@@ -19,7 +19,7 @@ class Schema;
 
 class Script : public map<string, vector<Spelling>> {
  public:
-  RIME_API bool AddSyllable(const string& syllable);
+  RIME_DLL bool AddSyllable(const string& syllable);
   void Merge(const string& s,
              const SpellingProperties& sp,
              const vector<Spelling>& v);
@@ -28,11 +28,11 @@ class Script : public map<string, vector<Spelling>> {
 
 class Projection {
  public:
-  RIME_API bool Load(an<ConfigList> settings);
+  RIME_DLL bool Load(an<ConfigList> settings);
   // "spelling" -> "gnilleps"
-  RIME_API bool Apply(string* value);
+  RIME_DLL bool Apply(string* value);
   // {z, y, x} -> {a, b, c, d}
-  RIME_API bool Apply(Script* value);
+  RIME_DLL bool Apply(Script* value);
 
  protected:
   vector<of<Calculation>> calculation_;
