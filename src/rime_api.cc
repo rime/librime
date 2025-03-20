@@ -25,12 +25,20 @@ extern void rime_require_module_core();
 extern void rime_require_module_dict();
 extern void rime_require_module_gears();
 extern void rime_require_module_levers();
+extern void rime_require_module_lua();
+extern void rime_require_module_octagram();
+extern void rime_require_module_predict();
+extern void rime_require_module_tx();
 // link to default modules explicitly when building static library.
 void rime_declare_module_dependencies() {
   rime_require_module_core();
   rime_require_module_dict();
   rime_require_module_gears();
   rime_require_module_levers();
+  rime_require_module_lua();
+  rime_require_module_octagram();
+  rime_require_module_predict();
+  rime_require_module_tx();
 }
 #endif
 
