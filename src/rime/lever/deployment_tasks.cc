@@ -52,8 +52,8 @@ bool DetectModifications::Run(Deployer* deployer) {
         for (fs::directory_iterator iter(p), end; iter != end; ++iter) {
           path entry(iter->path());
           if (fs::is_regular_file(fs::canonical(entry)) &&
-              entry.extension().u8string() == ".yaml" &&
-              entry.filename().u8string() != "user.yaml") {
+              entry.extension().generic_string() == ".yaml" &&
+              entry.filename().generic_string() != "user.yaml") {
             last_modified =
                 (std::max)(last_modified,
                            filesystem::to_time_t(fs::last_write_time(entry)));
@@ -548,7 +548,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
     path entry(iter->path());
     if (!fs::is_regular_file(entry))
       continue;
-    auto file_extension = entry.extension().u8string();
+    auto file_extension = entry.extension().generic_string();
     bool is_yaml_file = file_extension == ".yaml";
     bool is_text_file = file_extension == ".txt";
     if (!is_yaml_file && !is_text_file)
@@ -588,7 +588,7 @@ bool CleanupTrash::Run(Deployer* deployer) {
     path entry(iter->path());
     if (!fs::is_regular_file(entry))
       continue;
-    auto file_name = entry.filename().u8string();
+    auto file_name = entry.filename().generic_string();
     if (file_name == "rime.log" || boost::ends_with(file_name, ".bin") ||
         boost::ends_with(file_name, ".reverse.kct") ||
         boost::ends_with(file_name, ".userdb.kct.old") ||
@@ -642,7 +642,7 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
     try {
       // preparing files
       for (const auto& entry : fs::directory_iterator(dir)) {
-        const string& file_name(entry.path().filename().u8string());
+        const string& file_name(entry.path().filename().generic_string());
         if (entry.is_regular_file() && !entry.is_symlink() &&
             boost::starts_with(file_name, app_name) &&
             boost::ends_with(file_name, ".log") &&
@@ -650,7 +650,7 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
           files_to_remove.push_back(entry.path());
         } else if (entry.is_symlink()) {
           auto target = fs::read_symlink(entry.path());
-          const string& target_file_name(target.filename().u8string());
+          const string& target_file_name(target.filename().generic_string());
           if (boost::starts_with(target_file_name, app_name) &&
               boost::ends_with(target_file_name, ".log")) {
             files_in_use.insert(target);
