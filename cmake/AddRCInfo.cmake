@@ -32,7 +32,33 @@ else()
 endif()
 set(original_filename "rime.dll")
 if(MSVC)
+  message(STATUS "MSVC is detected in AddRCINfo.cmake")
   set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} -DLOCALIZE_VERSION_INFO")
+
+  # Search for rc.exe in common Windows SDK locations
+  find_program(RC_COMPILER
+      NAMES rc.exe
+      PATHS
+      "C:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64"
+      "C:/Program Files (x86)/Windows Kits/10/bin/10.0.22000.0/x64"
+      "C:/Program Files (x86)/Windows Kits/10/bin/10.0.20348.0/x64"
+      "C:/Program Files (x86)/Windows Kits/10/bin/10.0.19041.0/x64"
+      "C:/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64"
+      "C:/Program Files (x86)/Windows Kits/10/bin/x64"
+      "C:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.8 Tools/x64"
+      "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64"
+      "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64"
+      NO_DEFAULT_PATH
+  )
+
+  if(RC_COMPILER)
+      message(STATUS "Found RC_COMPILER: ${RC_COMPILER}")
+      set(CMAKE_RC_COMPILER ${RC_COMPILER})
+      set(CMAKE_RC_COMPILER_INIT ${RC_COMPILER})
+      set(CMAKE_RC_FLAGS "/nologo")
+  else()
+      message(FATAL_ERROR "Could not find Microsoft RC compiler. Please install Windows SDK or Visual Studio with Windows SDK components.")
+  endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU") # mingw
   set(original_filename "librime.dll")
 endif()
