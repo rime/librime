@@ -6,6 +6,9 @@ on:
         default: ${{ github.repository }}
         required: false
         type: string
+      rime_plugins:
+        required: false
+        type: string
 
 jobs:
   build:
@@ -22,7 +25,7 @@ jobs:
     env:
       CC: ${{ matrix.compiler }}
       CXX: ${{ matrix.cxx_compiler }}
-    
+
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v4
@@ -31,6 +34,9 @@ jobs:
 
       - name: Install dependency
         run: ./action-install-linux.sh
+
+      - name: Install Rime plugins
+        run: ./action-install-plugins-linux.sh
 
       - name: Build and test
         run: make test
