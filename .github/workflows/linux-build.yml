@@ -22,7 +22,6 @@ jobs:
     env:
       CC: ${{ matrix.compiler }}
       CXX: ${{ matrix.cxx_compiler }}
-
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v4
