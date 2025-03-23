@@ -6,6 +6,13 @@ on:
         default: ${{ github.repository }}
         required: false
         type: string
+      ref:
+        default: ${{ github.ref_name }}
+        required: false
+        type: string
+      rime_plugins:
+        required: false
+        type: string
 
 jobs:
   build:
@@ -22,15 +29,21 @@ jobs:
     env:
       CC: ${{ matrix.compiler }}
       CXX: ${{ matrix.cxx_compiler }}
-    
+      RIME_PLUGINS: ${{ inputs.rime_plugins }}
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v4
         with:
-          repository: ${{ inputs.repository }}
+          # Repository to check out (format: owner/repo)
+          repository: ${{ inputs.repository }}   # optional, defaults to current repository
+          # The branch, tag or SHA to checkout
+          ref: ${{ inputs.ref }}                 # optional, defaults to the branch triggering the workflow
 
       - name: Install dependency
         run: ./action-install-linux.sh
+
+      - name: Install Rime plugins
+        run: ./action-install-plugins-linux.sh
 
       - name: Build and test
         run: make test
