@@ -7,7 +7,7 @@ on:
         required: false
         type: string
       ref:
-        default: ${{ github.ref_name }}
+        default: ${{ github.sha }} # This will use the actual commit SHA instead of the branch pattern
         required: false
         type: string
       rime_plugins:
