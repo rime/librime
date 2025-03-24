@@ -128,7 +128,7 @@ class path : public std::filesystem::path {
   }
 #ifdef RIME_ENABLE_LOGGING
   friend std::ostream& operator<<(std::ostream& os, const path& p) {
-    return os << p.u8string();
+    return os << p.generic_string();
   }
 #endif
 };
