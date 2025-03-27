@@ -20,6 +20,9 @@ TEST(RimeApiStdboolTest, GetContext) {
   RIME_STRUCT(RIME_FLAVORED(RimeStatus), status);
   ASSERT_TRUE(rime->get_status(test_session, &status));
   ASSERT_FALSE(status.is_composing);
+
+  ASSERT_TRUE(RIME_API_AVAILABLE(rime, free_status));
+  ASSERT_TRUE(rime->free_status(&status));
 }
 
 TEST(RimeLeversApiStdboolTest, CustomSettings) {
