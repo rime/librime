@@ -19,7 +19,7 @@ Deployer::Deployer()
       staging_dir("build"),
       sync_dir("sync"),
       user_id("unknown"),
-      backup_config_files(false) {}
+      backup_config_files(true) {}
 
 Deployer::~Deployer() {
   JoinWorkThread();
