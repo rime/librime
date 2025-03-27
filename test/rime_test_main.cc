@@ -5,14 +5,14 @@
 #include <rime/setup.h>
 
 class GlobalEnvironment : public testing::Environment {
-  public:
-    void TearDown() override {
-      rime::Service::instance().deployer().JoinMaintenanceThread();
-      rime::Service::instance().StopService();
-      rime::Registry::instance().Clear();
-      rime::ModuleManager::instance().UnloadModules();
-    }
-  };
+ public:
+  void TearDown() override {
+    rime::Service::instance().deployer().JoinMaintenanceThread();
+    rime::Service::instance().StopService();
+    rime::Registry::instance().Clear();
+    rime::ModuleManager::instance().UnloadModules();
+  }
+};
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
