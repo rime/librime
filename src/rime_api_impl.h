@@ -346,6 +346,7 @@ RIME_DEPRECATED Bool RimeGetStatus(RimeSessionId session_id,
   std::strcpy(status->schema_name, schema->schema_name().c_str());
   status->is_disabled = Bool(Service::instance().disabled());
   status->is_composing = Bool(ctx->IsComposing());
+  status->is_predicting = Bool(ctx->IsPredicting());
   status->is_ascii_mode = Bool(ctx->get_option("ascii_mode"));
   status->is_full_shape = Bool(ctx->get_option("full_shape"));
   status->is_simplified = Bool(ctx->get_option("simplification"));
