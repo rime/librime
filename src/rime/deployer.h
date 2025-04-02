@@ -42,6 +42,7 @@ class Deployer : public Messenger {
   string distribution_code_name;
   string distribution_version;
   string app_name;
+  bool backup_config_files;
   // }
 
   RIME_DLL Deployer();

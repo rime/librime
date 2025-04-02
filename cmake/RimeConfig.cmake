@@ -18,7 +18,7 @@ if(Rime_INCLUDE_DIR AND Rime_LIBRARIES)
     set(Rime_FIND_QUIETLY TRUE)
 endif(Rime_INCLUDE_DIR AND Rime_LIBRARIES)
 
-include(FindPkgConfig)
+find_package(PkgConfig)
 PKG_CHECK_MODULES(PC_Rime rime)
 
 find_path(Rime_INCLUDE_DIR
