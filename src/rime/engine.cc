@@ -293,6 +293,38 @@ void ConcreteEngine::ApplySchema(Schema* schema) {
   message_sink_("schema", schema_->schema_id() + "/" + schema_->schema_name());
 }
 
+// Helper template function to create components
+template <typename T>
+inline void CreateComponentsFromList(Engine* engine,
+                                     Config* config,
+                                     const string& config_key,
+                                     const string& component_type,
+                                     vector<an<T>>& target_collection) {
+  if (auto component_list = config->GetList(config_key)) {
+    size_t n = component_list->size();
+    for (size_t i = 0; i < n; ++i) {
+      auto prescription = As<ConfigValue>(component_list->GetAt(i));
+      if (!prescription)
+        continue;
+      Ticket ticket{engine, component_type, prescription->str()};
+      auto c = T::Require(ticket.klass);
+      if (!c) {
+        LOG(ERROR) << "error creating " << component_type << ": '"
+                   << ticket.klass << "'";
+        continue;
+      }
+      auto component = c->Create(ticket);
+      if (!component) {
+        LOG(ERROR) << "error creating " << component_type << " from ticket: '"
+                   << ticket.klass << "'";
+        continue;
+      }
+      an<T> instance(component);
+      target_collection.push_back(instance);
+    }
+  }
+}
+
 void ConcreteEngine::InitializeComponents() {
   processors_.clear();
   segmentors_.clear();
@@ -311,80 +343,28 @@ void ConcreteEngine::InitializeComponents() {
   Config* config = schema_->config();
   if (!config)
     return;
-  // create processors
-  if (auto processor_list = config->GetList("engine/processors")) {
-    size_t n = processor_list->size();
-    for (size_t i = 0; i < n; ++i) {
-      auto prescription = As<ConfigValue>(processor_list->GetAt(i));
-      if (!prescription)
-        continue;
-      Ticket ticket{this, "processor", prescription->str()};
-      if (auto c = Processor::Require(ticket.klass) && auto processor = c->Create(ticket)) {
-        an<Processor> p(processor);
-        processors_.push_back(p);
-      } else {
-        LOG(ERROR) << "error creating processor: '" << ticket.klass << "'";
-      }
-    }
-  }
-  // create segmentors
-  if (auto segmentor_list = config->GetList("engine/segmentors")) {
-    size_t n = segmentor_list->size();
-    for (size_t i = 0; i < n; ++i) {
-      auto prescription = As<ConfigValue>(segmentor_list->GetAt(i));
-      if (!prescription)
-        continue;
-      Ticket ticket{this, "segmentor", prescription->str()};
-      if (auto c = Segmentor::Require(ticket.klass) && auto segmentor = c->Create(ticket)) {
-        an<Segmentor> s(segmentor);
-        segmentors_.push_back(s);
-      } else {
-        LOG(ERROR) << "error creating segmentor: '" << ticket.klass << "'";
-      }
-    }
-  }
-  // create translators
-  if (auto translator_list = config->GetList("engine/translators")) {
-    size_t n = translator_list->size();
-    for (size_t i = 0; i < n; ++i) {
-      auto prescription = As<ConfigValue>(translator_list->GetAt(i));
-      if (!prescription)
-        continue;
-      Ticket ticket{this, "translator", prescription->str()};
-      if (auto c = Translator::Require(ticket.klass) && auto translator = c->Create(ticket)) {
-        an<Translator> t(translator);
-        translators_.push_back(t);
-      } else {
-        LOG(ERROR) << "error creating translator: '" << ticket.klass << "'";
-      }
-    }
-  }
-  // create filters
-  if (auto filter_list = config->GetList("engine/filters")) {
-    size_t n = filter_list->size();
-    for (size_t i = 0; i < n; ++i) {
-      auto prescription = As<ConfigValue>(filter_list->GetAt(i));
-      if (!prescription)
-        continue;
-      Ticket ticket{this, "filter", prescription->str()};
-      if (auto c = Filter::Require(ticket.klass) && auto filter = c->Create(ticket)) {
-        an<Filter> f(filter);
-        filters_.push_back(f);
-      } else {
-        LOG(ERROR) << "error creating filter: '" << ticket.klass << "'";
-      }
-    }
-  }
+
+  // Create components using inline template function
+  CreateComponentsFromList<Processor>(this, config, "engine/processors",
+                                      "processor", processors_);
+  CreateComponentsFromList<Segmentor>(this, config, "engine/segmentors",
+                                      "segmentor", segmentors_);
+  CreateComponentsFromList<Translator>(this, config, "engine/translators",
+                                       "translator", translators_);
+  CreateComponentsFromList<Filter>(this, config, "engine/filters", "filter",
+                                   filters_);
   // create formatters
-  if (auto c = Formatter::Require("shape_formatter")) {
-    an<Formatter> f(c->Create(Ticket(this)));
+  auto c_formatter = Formatter::Require("shape_formatter");
+  if (c_formatter) {
+    an<Formatter> f(c_formatter->Create(Ticket(this)));
     formatters_.push_back(f);
   } else {
     LOG(WARNING) << "shape_formatter not available.";
   }
   // create post-processors
-  if (auto c = Processor::Require("shape_processor")) {
-    an<Processor> p(c->Create(Ticket(this)));
+  auto c_processor = Processor::Require("shape_processor");
+  if (c_processor) {
+    an<Processor> p(c_processor->Create(Ticket(this)));
     post_processors_.push_back(p);
   } else {
     LOG(WARNING) << "shape_processor not available.";
