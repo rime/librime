@@ -97,7 +97,7 @@ static TextFormat plain_userdb_format = {
 };
 
 template <>
-RIME_API UserDbWrapper<TextDb>::UserDbWrapper(const path& file_path,
+RIME_DLL UserDbWrapper<TextDb>::UserDbWrapper(const path& file_path,
                                               const string& db_name)
     : TextDb(file_path, db_name, "userdb", plain_userdb_format) {}
 

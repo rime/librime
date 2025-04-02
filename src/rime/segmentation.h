@@ -57,7 +57,7 @@ struct Segment {
   an<Candidate> GetSelectedCandidate() const;
 };
 
-class RIME_API Segmentation : public vector<Segment> {
+class RIME_DLL Segmentation : public vector<Segment> {
  public:
   Segmentation();
   virtual ~Segmentation() {}

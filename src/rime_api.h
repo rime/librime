@@ -18,15 +18,19 @@ extern "C" {
 #if defined(_WIN32)
 #if defined(RIME_EXPORTS)
 /* DLL export */
-#define RIME_API __declspec(dllexport)
+#define RIME_DLL __declspec(dllexport)
+#define RIME_API extern "C" RIME_DLL
 #elif defined(RIME_IMPORTS)
 /* DLL import */
-#define RIME_API __declspec(dllimport)
+#define RIME_DLL __declspec(dllimport)
+#define RIME_API extern "C" RIME_DLL
 #else
 /* static library */
+#define RIME_DLL
 #define RIME_API
 #endif
 #else /* _WIN32 */
+#define RIME_DLL
 #define RIME_API
 #endif /* _WIN32 */
 

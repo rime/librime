@@ -26,13 +26,13 @@ class Translation;
 
 class Menu {
  public:
-  RIME_API Menu();
+  RIME_DLL Menu();
 
-  RIME_API void AddTranslation(an<Translation> translation);
+  RIME_DLL void AddTranslation(an<Translation> translation);
   void AddFilter(Filter* filter);
 
-  RIME_API size_t Prepare(size_t candidate_count);
-  RIME_API Page* CreatePage(size_t page_size, size_t page_no);
+  RIME_DLL size_t Prepare(size_t candidate_count);
+  RIME_DLL Page* CreatePage(size_t page_size, size_t page_no);
   an<Candidate> GetCandidateAt(size_t index);
 
   // CAVEAT: returns the number of candidates currently obtained,

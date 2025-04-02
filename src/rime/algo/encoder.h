@@ -15,8 +15,8 @@ namespace rime {
 
 class RawCode : public vector<string> {
  public:
-  RIME_API string ToString() const;
-  RIME_API void FromString(const string& code_str);
+  RIME_DLL string ToString() const;
+  RIME_DLL void FromString(const string& code_str);
 };
 
 class PhraseCollector {
@@ -63,7 +63,7 @@ struct TableEncodingRule {
 };
 
 // for rule-based phrase encoding
-class RIME_API TableEncoder : public Encoder {
+class RIME_DLL TableEncoder : public Encoder {
  public:
   TableEncoder(PhraseCollector* collector = NULL);
 

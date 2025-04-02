@@ -79,7 +79,7 @@ class DictEntryList : public vector<of<DictEntry>> {
 
 using DictEntryFilter = function<bool(an<DictEntry> entry)>;
 
-class RIME_API DictEntryFilterBinder {
+class RIME_DLL DictEntryFilterBinder {
  public:
   virtual ~DictEntryFilterBinder() = default;
   virtual void AddFilter(DictEntryFilter filter);
