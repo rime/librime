@@ -319,8 +319,8 @@ void ConcreteEngine::InitializeComponents() {
       if (!prescription)
         continue;
       Ticket ticket{this, "processor", prescription->str()};
-      if (auto c = Processor::Require(ticket.klass)) {
-        an<Processor> p(c->Create(ticket));
+      if (auto c = Processor::Require(ticket.klass) && auto processor = c->Create(ticket)) {
+        an<Processor> p(processor);
         processors_.push_back(p);
       } else {
         LOG(ERROR) << "error creating processor: '" << ticket.klass << "'";
@@ -335,8 +335,8 @@ void ConcreteEngine::InitializeComponents() {
       if (!prescription)
         continue;
       Ticket ticket{this, "segmentor", prescription->str()};
-      if (auto c = Segmentor::Require(ticket.klass)) {
-        an<Segmentor> s(c->Create(ticket));
+      if (auto c = Segmentor::Require(ticket.klass) && auto segmentor = c->Create(ticket)) {
+        an<Segmentor> s(segmentor);
         segmentors_.push_back(s);
       } else {
         LOG(ERROR) << "error creating segmentor: '" << ticket.klass << "'";
@@ -351,8 +351,8 @@ void ConcreteEngine::InitializeComponents() {
       if (!prescription)
         continue;
       Ticket ticket{this, "translator", prescription->str()};
-      if (auto c = Translator::Require(ticket.klass)) {
-        an<Translator> t(c->Create(ticket));
+      if (auto c = Translator::Require(ticket.klass) && auto translator = c->Create(ticket)) {
+        an<Translator> t(translator);
         translators_.push_back(t);
       } else {
         LOG(ERROR) << "error creating translator: '" << ticket.klass << "'";
@@ -367,8 +367,8 @@ void ConcreteEngine::InitializeComponents() {
       if (!prescription)
         continue;
       Ticket ticket{this, "filter", prescription->str()};
-      if (auto c = Filter::Require(ticket.klass)) {
-        an<Filter> f(c->Create(ticket));
+      if (auto c = Filter::Require(ticket.klass) && auto filter = c->Create(ticket)) {
+        an<Filter> f(filter);
         filters_.push_back(f);
       } else {
         LOG(ERROR) << "error creating filter: '" << ticket.klass << "'";
