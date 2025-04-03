@@ -19,7 +19,7 @@ using StringId = marisa::UInt32;
 
 const StringId kInvalidStringId = (StringId)(-1);
 
-class RIME_API StringTable {
+class RIME_DLL StringTable {
  public:
   StringTable() = default;
   virtual ~StringTable() = default;
@@ -38,7 +38,7 @@ class RIME_API StringTable {
   marisa::Trie trie_;
 };
 
-class RIME_API StringTableBuilder : public StringTable {
+class RIME_DLL StringTableBuilder : public StringTable {
  public:
   void Add(const string& key,
            double weight = 1.0,

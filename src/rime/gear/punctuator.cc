@@ -34,6 +34,18 @@ void PunctConfig::LoadConfig(Engine* engine, bool load_symbols) {
   if (load_symbols) {
     symbols_ = config->GetMap("punctuator/symbols");
   }
+  {
+    string configured;
+    if (config->GetString("punctuator/digit_separators", &configured)) {
+      digit_separators_ = configured;
+    }
+  }
+  {
+    string configured;
+    if (config->GetString("punctuator/digit_separator_action", &configured)) {
+      digit_separator_commit_ = (configured == "commit");
+    }
+  }
 }
 
 an<ConfigItem> PunctConfig::GetPunctDefinition(const string key) {
@@ -49,13 +61,34 @@ Punctuator::Punctuator(const Ticket& ticket) : Processor(ticket) {
   config_.LoadConfig(engine_);
 }
 
-static bool punctuation_is_translated(Context* ctx) {
+static bool punctuation_is_translated(Context* ctx, const string& tag) {
   Composition& comp = ctx->composition();
-  if (comp.empty() || !comp.back().HasTag("punct")) {
+  if (comp.empty() || !comp.back().HasTag(tag)) {
     return false;
   }
   auto cand = comp.back().GetSelectedCandidate();
   return cand && cand->type() == "punct";
+}
+
+inline static bool ends_with_digit(const string& text) {
+  auto len = text.length();
+  return len > 0 && isdigit(text[len - 1]);
+}
+
+// recognizes patterns like 3.14 12:30 1,000 1'000
+static bool is_after_number(Context* ctx) {
+  const CommitHistory& history = ctx->commit_history();
+  if (history.empty()) {
+    return false;
+  }
+  const CommitRecord& cr = history.back();
+  return ends_with_digit(cr.text) & (cr.type == "thru" || cr.type == "raw");
+}
+
+static bool is_after_digit_separator(Context* ctx) {
+  const auto& comp = ctx->composition();
+  return !comp.empty() && comp[0].HasTag("punct_number") &&
+         comp[0].length == ctx->input().length();
 }
 
 ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
@@ -69,30 +102,72 @@ ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
   if (ctx->get_option("ascii_punct")) {
     return kNoop;
   }
+  if ((isdigit(ch) || ch == XK_space) && is_after_digit_separator(ctx)) {
+    ctx->PushInput(ch) && ctx->Commit();
+    return kAccepted;
+  }
   if (!use_space_ && ch == XK_space && ctx->IsComposing()) {
     return kNoop;
   }
-  if (ch == '.' || ch == ':') {  // 3.14, 12:30
-    const CommitHistory& history(ctx->commit_history());
-    if (!history.empty()) {
-      const CommitRecord& cr(history.back());
-      if (cr.type == "thru" && cr.text.length() == 1 && isdigit(cr.text[0])) {
-        return kRejected;
-      }
-    }
+  if (ConvertDigitSeparator(ch)) {
+    return kAccepted;
   }
+  // sync with full_shape option
   config_.LoadConfig(engine_);
-  string punct_key(1, ch);
-  auto punct_definition = config_.GetPunctDefinition(punct_key);
+  string key(1, ch);
+  auto punct_definition = config_.GetPunctDefinition(key);
   if (!punct_definition)
     return kNoop;
-  DLOG(INFO) << "punct key: '" << punct_key << "'";
-  if (!AlternatePunct(punct_key, punct_definition)) {
-    ctx->PushInput(ch) && punctuation_is_translated(ctx) &&
-        (ConfirmUniquePunct(punct_definition) ||
-         AutoCommitPunct(punct_definition) || PairPunct(punct_definition));
+  DLOG(INFO) << "punct key: '" << key << "'";
+  if (AlternatePunct(key, punct_definition)) {
+    return kAccepted;
+  }
+  if (ReconvertDigitSeparatorAsPunct(key) || ctx->PushInput(ch)) {
+    if (punctuation_is_translated(ctx, "punct")) {
+      ConfirmUniquePunct(punct_definition) ||
+          AutoCommitPunct(punct_definition) || PairPunct(punct_definition);
+    }
   }
   return kAccepted;
+}
+
+bool Punctuator::ConvertDigitSeparator(char ch) {
+  if (!config_.is_digit_separator(ch)) {
+    return false;
+  }
+  Context* ctx = engine_->context();
+  if (ctx->composition().empty() && is_after_number(ctx)) {
+    DLOG(INFO) << "convert punct in number: " << ch;
+    ctx->PushInput(ch) && punctuation_is_translated(ctx, "punct_number") &&
+        (config_.digit_separator_commit() ? ctx->Commit()
+                                          : ctx->composition().Forward());
+    return true;
+  }
+  return false;
+}
+
+bool Punctuator::ReconvertDigitSeparatorAsPunct(const string& key) {
+  if (!config_.has_digit_separators()) {
+    return false;
+  }
+  Context* ctx = engine_->context();
+  // repeat the same punctuation key to access the original binding
+  if (ctx->input() != key) {
+    return false;
+  }
+  Composition& comp = ctx->composition();
+  if (!comp.empty()) {
+    Segment& segment = comp[0];
+    if (segment.HasTag("punct_number")) {
+      segment.tags.erase("punct_number");
+      segment.tags.insert("punct");
+      segment.status = Segment::kVoid;
+      DLOG(INFO) << "reconvert punct, key = " << key;
+      ctx->ReopenPreviousSegment();
+      return true;
+    }
+  }
+  return false;
 }
 
 bool Punctuator::AlternatePunct(const string& key,
@@ -170,22 +245,29 @@ bool PunctSegmentor::Proceed(Segmentation* segmentation) {
   char ch = input[k];
   if (ch < 0x20 || ch >= 0x7f)
     return true;
+  // sync with full_shape option
   config_.LoadConfig(engine_);
-  string punct_key(1, ch);
-  auto punct_definition = config_.GetPunctDefinition(punct_key);
+  string key(1, ch);
+  auto punct_definition = config_.GetPunctDefinition(key);
   if (!punct_definition)
     return true;
   {
     Segment segment(k, k + 1);
     DLOG(INFO) << "add a punctuation segment [" << segment.start << ", "
                << segment.end << ")";
-    segment.tags.insert("punct");
+    if (k == 0 && config_.is_digit_separator(ch) &&
+        is_after_number(engine_->context())) {
+      segment.tags.insert("punct_number");
+    } else {
+      segment.tags.insert("punct");
+    }
     segmentation->AddSegment(segment);
   }
   return false;  // exclusive
 }
 
-PunctTranslator::PunctTranslator(const Ticket& ticket) : Translator(ticket) {
+PunctTranslator::PunctTranslator(const Ticket& ticket)
+    : Translator(ticket), formatter_(ticket) {
   const bool load_symbols = true;
   config_.LoadConfig(engine_, load_symbols);
 }
@@ -233,8 +315,17 @@ an<Candidate> CreatePunctCandidate(const string& punct,
 
 an<Translation> PunctTranslator::Query(const string& input,
                                        const Segment& segment) {
+  if (segment.HasTag("punct_number")) {
+    if (!input.empty()) {
+      string punct = input;
+      formatter_.Format(&punct);
+      return New<UniqueTranslation>(CreatePunctCandidate(punct, segment));
+    }
+    return nullptr;
+  }
   if (!segment.HasTag("punct"))
     return nullptr;
+  // sync with full_shape option
   config_.LoadConfig(engine_);
   auto definition = config_.GetPunctDefinition(input);
   if (!definition)

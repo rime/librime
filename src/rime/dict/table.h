@@ -114,12 +114,12 @@ class TableAccessor {
                 const table::TailIndex* code_map,
                 double credibility = 0.0);
 
-  RIME_API bool Next();
+  RIME_DLL bool Next();
 
-  RIME_API bool exhausted() const;
-  RIME_API size_t remaining() const;
-  RIME_API const table::Entry* entry() const;
-  RIME_API const table::Code* extra_code() const;
+  RIME_DLL bool exhausted() const;
+  RIME_DLL size_t remaining() const;
+  RIME_DLL const table::Entry* entry() const;
+  RIME_DLL const table::Code* extra_code() const;
   const Code& index_code() const { return index_code_; }
   Code code() const;
   double credibility() const { return credibility_; }
@@ -170,24 +170,24 @@ class TableQuery {
 
 class Table : public MappedFile {
  public:
-  RIME_API Table(const path& file_path);
+  RIME_DLL Table(const path& file_path);
   virtual ~Table();
 
-  RIME_API bool Load();
-  RIME_API bool Save();
-  RIME_API bool Build(const Syllabary& syllabary,
+  RIME_DLL bool Load();
+  RIME_DLL bool Save();
+  RIME_DLL bool Build(const Syllabary& syllabary,
                       const Vocabulary& vocabulary,
                       size_t num_entries,
                       uint32_t dict_file_checksum = 0);
 
   bool GetSyllabary(Syllabary* syllabary);
-  RIME_API string GetSyllableById(int syllable_id);
-  RIME_API TableAccessor QueryWords(int syllable_id);
-  RIME_API TableAccessor QueryPhrases(const Code& code);
-  RIME_API bool Query(const SyllableGraph& syll_graph,
+  RIME_DLL string GetSyllableById(int syllable_id);
+  RIME_DLL TableAccessor QueryWords(int syllable_id);
+  RIME_DLL TableAccessor QueryPhrases(const Code& code);
+  RIME_DLL bool Query(const SyllableGraph& syll_graph,
                       size_t start_pos,
                       TableQueryResult* result);
-  RIME_API string GetEntryText(const table::Entry& entry);
+  RIME_DLL string GetEntryText(const table::Entry& entry);
 
   uint32_t dict_file_checksum() const;
   table::Metadata* metadata() const { return metadata_; }

@@ -16,7 +16,7 @@ namespace rime {
 class Candidate;
 class KeyEvent;
 
-class RIME_API Context {
+class RIME_DLL Context {
  public:
   using Notifier = signal<void(Context* ctx)>;
   using OptionUpdateNotifier = signal<void(Context* ctx, const string& option)>;

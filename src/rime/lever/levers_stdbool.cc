@@ -1,5 +1,4 @@
 #include <rime_api_stdbool.h>
-#include <rime_levers_api.h>
 // defines rime_levers_get_api_stdbool()
 #include "levers_api_impl.h"
 

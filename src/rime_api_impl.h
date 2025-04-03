@@ -1,6 +1,8 @@
 // intended to be included multiple times in c++ source files with different
 // RIME_FLAVORED macro definitions
 
+#include "rime_api.h"
+
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/config.h>
@@ -15,8 +17,6 @@
 #include <rime/setup.h>
 #include <rime/signature.h>
 #include <rime/switches.h>
-
-#include "rime_api.h"
 
 using namespace rime;
 

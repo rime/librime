@@ -156,8 +156,8 @@ class Opencc {
 
 // Simplifier
 
-Simplifier::Simplifier(const Ticket& ticket)
-    : Filter(ticket), TagMatching(ticket) {
+Simplifier::Simplifier(const Ticket& ticket, an<Opencc> opencc)
+    : Filter(ticket), TagMatching(ticket), opencc_(opencc) {
   if (name_space_ == "filter") {
     name_space_ = "simplifier";
   }
@@ -174,7 +174,6 @@ Simplifier::Simplifier(const Ticket& ticket)
     comment_formatter_.Load(config->GetList(name_space_ + "/comment_format"));
     config->GetBool(name_space_ + "/random", &random_);
     config->GetString(name_space_ + "/option_name", &option_name_);
-    config->GetString(name_space_ + "/opencc_config", &opencc_config_);
     if (auto types = config->GetList(name_space_ + "/excluded_types")) {
       for (auto it = types->begin(); it != types->end(); ++it) {
         if (auto value = As<ConfigValue>(*it)) {
@@ -186,36 +185,8 @@ Simplifier::Simplifier(const Ticket& ticket)
   if (option_name_.empty()) {
     option_name_ = "simplification";  // default switcher option
   }
-  if (opencc_config_.empty()) {
-    opencc_config_ = "t2s.json";  // default opencc config file
-  }
   if (random_) {
     srand((unsigned)time(NULL));
-  }
-}
-
-void Simplifier::Initialize() {
-  initialized_ = true;  // no retry
-  path opencc_config_path = path(opencc_config_);
-  if (opencc_config_path.extension().u8string() == ".ini") {
-    LOG(ERROR) << "please upgrade opencc_config to an opencc 1.0 config file.";
-    return;
-  }
-  if (opencc_config_path.is_relative()) {
-    path user_config_path = Service::instance().deployer().user_data_dir;
-    path shared_config_path = Service::instance().deployer().shared_data_dir;
-    (user_config_path /= "opencc") /= opencc_config_path;
-    (shared_config_path /= "opencc") /= opencc_config_path;
-    if (exists(user_config_path)) {
-      opencc_config_path = user_config_path;
-    } else if (exists(shared_config_path)) {
-      opencc_config_path = shared_config_path;
-    }
-  }
-  try {
-    opencc_.reset(new Opencc(opencc_config_path));
-  } catch (opencc::Exception& e) {
-    LOG(ERROR) << "Error initializing opencc: " << e.what();
   }
 }
 
@@ -243,9 +214,6 @@ an<Translation> Simplifier::Apply(an<Translation> translation,
                                   CandidateList* candidates) {
   if (!engine_->context()->get_option(option_name_)) {  // off
     return translation;
-  }
-  if (!initialized_) {
-    Initialize();
   }
   if (!opencc_) {
     return translation;
@@ -315,6 +283,51 @@ bool Simplifier::Convert(const an<Candidate>& original,
     }
   }
   return success;
+}
+
+SimplifierComponent::SimplifierComponent() {}
+
+Simplifier* SimplifierComponent::Create(const Ticket& ticket) {
+  string name_space = ticket.name_space;
+  if (name_space == "filter") {
+    name_space = "simplifier";
+  }
+  string opencc_config;
+  an<Opencc> opencc;
+  if (Config* config = ticket.engine->schema()->config()) {
+    config->GetString(name_space + "/opencc_config", &opencc_config);
+  }
+  if (opencc_config.empty()) {
+    opencc_config = "t2s.json";  // default opencc config file
+  }
+  opencc = opencc_map_[opencc_config].lock();
+  if (opencc) {
+    return new Simplifier(ticket, opencc);
+  }
+  path opencc_config_path = path(opencc_config);
+  if (opencc_config_path.extension().u8string() == ".ini") {
+    LOG(ERROR) << "please upgrade opencc_config to an opencc 1.0 config file.";
+    return nullptr;
+  }
+  if (opencc_config_path.is_relative()) {
+    path user_config_path = Service::instance().deployer().user_data_dir;
+    path shared_config_path = Service::instance().deployer().shared_data_dir;
+    (user_config_path /= "opencc") /= opencc_config_path;
+    (shared_config_path /= "opencc") /= opencc_config_path;
+    if (exists(user_config_path)) {
+      opencc_config_path = user_config_path;
+    } else if (exists(shared_config_path)) {
+      opencc_config_path = shared_config_path;
+    }
+  }
+  try {
+    opencc = New<Opencc>(opencc_config_path);
+    // 以原始配置中的文件路径作为 key，避免重复查找文件
+    opencc_map_[opencc_config] = opencc;
+  } catch (opencc::Exception& e) {
+    LOG(ERROR) << "Error initializing opencc: " << e.what();
+  }
+  return new Simplifier(ticket, opencc);
 }
 
 }  // namespace rime

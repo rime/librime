@@ -18,12 +18,12 @@ class Registry {
  public:
   using ComponentMap = map<string, ComponentBase*>;
 
-  RIME_API ComponentBase* Find(const string& name);
-  RIME_API void Register(const string& name, ComponentBase* component);
-  RIME_API void Unregister(const string& name);
+  RIME_DLL ComponentBase* Find(const string& name);
+  RIME_DLL void Register(const string& name, ComponentBase* component);
+  RIME_DLL void Unregister(const string& name);
   void Clear();
 
-  RIME_API static Registry& instance();
+  RIME_DLL static Registry& instance();
 
  private:
   Registry() = default;
