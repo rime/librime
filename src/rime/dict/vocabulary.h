@@ -40,6 +40,8 @@ struct ShortDictEntry {
   double weight = 0.0;
 
   ShortDictEntry() = default;
+  ShortDictEntry(const string& text, const Code& code, double weight)
+      : text(text), code(code), weight(weight) {}
   bool operator<(const ShortDictEntry& other) const;
 };
 

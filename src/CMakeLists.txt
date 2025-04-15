@@ -81,6 +81,12 @@ else()
 endif()
 
 if(BUILD_SHARED_LIBS)
+  # Export all symbols for Windows DLL build, to avoid undefined symbols in linking the executables.
+  # https://github.com/rime/librime/issues/479
+  if(WIN32)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+  endif()
+
   add_library(rime ${rime_src})
   target_link_libraries(rime ${rime_deps})
   set_target_properties(rime PROPERTIES
