@@ -326,6 +326,7 @@ Simplifier* SimplifierComponent::Create(const Ticket& ticket) {
     opencc_map_[opencc_config] = opencc;
   } catch (opencc::Exception& e) {
     LOG(ERROR) << "Error initializing opencc: " << e.what();
+    return nullptr;
   }
   return new Simplifier(ticket, opencc);
 }
