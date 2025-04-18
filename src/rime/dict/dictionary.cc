@@ -262,6 +262,7 @@ static void lookup_table(Table* table,
 
 an<DictEntryCollector> Dictionary::Lookup(const SyllableGraph& syllable_graph,
                                           size_t start_pos,
+                                          const hash_set<string>* blacklist,
                                           bool predict_word,
                                           double initial_credibility) {
   if (!loaded())
@@ -277,6 +278,11 @@ an<DictEntryCollector> Dictionary::Lookup(const SyllableGraph& syllable_graph,
     return nullptr;
   // sort each group of equal code length
   for (auto& v : *collector) {
+    if (blacklist && !blacklist->empty()) {
+      v.second.AddFilter([blacklist](an<DictEntry> entry) {
+        return blacklist->count(entry->text) == 0;
+      });
+    }
     v.second.Sort();
   }
   return collector;
@@ -285,7 +291,8 @@ an<DictEntryCollector> Dictionary::Lookup(const SyllableGraph& syllable_graph,
 size_t Dictionary::LookupWords(DictEntryIterator* result,
                                const string& str_code,
                                bool predictive,
-                               size_t expand_search_limit) {
+                               size_t expand_search_limit,
+                               const hash_set<string>* blacklist) {
   DLOG(INFO) << "lookup: " << str_code;
   if (!loaded())
     return 0;
@@ -324,6 +331,11 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
         }
       }
     }
+  }
+  if (blacklist && !blacklist->empty()) {
+    result->AddFilter([blacklist](an<DictEntry> entry) {
+      return blacklist->count(entry->text) == 0;
+    });
   }
   return keys.size();
 }
