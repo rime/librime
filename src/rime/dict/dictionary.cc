@@ -181,15 +181,12 @@ bool DictEntryIterator::FindNextEntry() {
 }
 
 bool DictEntryIterator::Next() {
-  entry_.reset();
-  if (!FindNextEntry()) {
-    return false;
-  }
-  while (filter_ && !filter_(Peek())) {
+  do {
+    entry_.reset();
     if (!FindNextEntry()) {
       return false;
     }
-  }
+  } while (filter_ && !filter_(Peek()));
   return true;
 }
 
@@ -276,14 +273,14 @@ an<DictEntryCollector> Dictionary::Lookup(const SyllableGraph& syllable_graph,
   }
   if (collector->empty())
     return nullptr;
-  // sort each group of equal code length
+  // for each group of equal code length, sort it and filter words
   for (auto& v : *collector) {
+    v.second.Sort();
     if (blacklist && !blacklist->empty()) {
       v.second.AddFilter([blacklist](an<DictEntry> entry) {
-        return blacklist->count(entry->text) == 0;
+        return entry && !blacklist->count(entry->text);
       });
     }
-    v.second.Sort();
   }
   return collector;
 }
@@ -334,7 +331,7 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
   }
   if (blacklist && !blacklist->empty()) {
     result->AddFilter([blacklist](an<DictEntry> entry) {
-      return blacklist->count(entry->text) == 0;
+      return entry && !blacklist->count(entry->text);
     });
   }
   return keys.size();
