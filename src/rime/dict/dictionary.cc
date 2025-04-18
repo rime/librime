@@ -137,6 +137,7 @@ void DictEntryIterator::AddFilter(DictEntryFilter filter) {
   // the introduced filter could invalidate the current or even all the
   // remaining entries
   while (!exhausted() && !filter_(Peek())) {
+    entry_.reset();
     FindNextEntry();
   }
 }
