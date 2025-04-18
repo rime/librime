@@ -167,6 +167,7 @@ class TranslatorOptions {
   void set_initial_quality(double quality) { initial_quality_ = quality; }
   Projection& preedit_formatter() { return preedit_formatter_; }
   Projection& comment_formatter() { return comment_formatter_; }
+  const hash_set<string>& blacklist() { return blacklist_; }
 
  protected:
   string delimiters_;
@@ -178,6 +179,7 @@ class TranslatorOptions {
   Projection preedit_formatter_;
   Projection comment_formatter_;
   Patterns user_dict_disabling_patterns_;
+  hash_set<string> blacklist_;
 };
 
 }  // namespace rime

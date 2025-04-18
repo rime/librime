@@ -137,6 +137,7 @@ void DictEntryIterator::AddFilter(DictEntryFilter filter) {
   // the introduced filter could invalidate the current or even all the
   // remaining entries
   while (!exhausted() && !filter_(Peek())) {
+    entry_.reset();
     FindNextEntry();
   }
 }
@@ -181,15 +182,12 @@ bool DictEntryIterator::FindNextEntry() {
 }
 
 bool DictEntryIterator::Next() {
-  entry_.reset();
-  if (!FindNextEntry()) {
-    return false;
-  }
-  while (filter_ && !filter_(Peek())) {
+  do {
+    entry_.reset();
     if (!FindNextEntry()) {
       return false;
     }
-  }
+  } while (filter_ && !filter_(Peek()));
   return true;
 }
 
@@ -262,6 +260,7 @@ static void lookup_table(Table* table,
 
 an<DictEntryCollector> Dictionary::Lookup(const SyllableGraph& syllable_graph,
                                           size_t start_pos,
+                                          const hash_set<string>* blacklist,
                                           bool predict_word,
                                           double initial_credibility) {
   if (!loaded())
@@ -275,9 +274,14 @@ an<DictEntryCollector> Dictionary::Lookup(const SyllableGraph& syllable_graph,
   }
   if (collector->empty())
     return nullptr;
-  // sort each group of equal code length
+  // for each group of equal code length, sort it and filter words
   for (auto& v : *collector) {
     v.second.Sort();
+    if (blacklist && !blacklist->empty()) {
+      v.second.AddFilter([blacklist](an<DictEntry> entry) {
+        return entry && !blacklist->count(entry->text);
+      });
+    }
   }
   return collector;
 }
@@ -285,7 +289,8 @@ an<DictEntryCollector> Dictionary::Lookup(const SyllableGraph& syllable_graph,
 size_t Dictionary::LookupWords(DictEntryIterator* result,
                                const string& str_code,
                                bool predictive,
-                               size_t expand_search_limit) {
+                               size_t expand_search_limit,
+                               const hash_set<string>* blacklist) {
   DLOG(INFO) << "lookup: " << str_code;
   if (!loaded())
     return 0;
@@ -324,6 +329,11 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
         }
       }
     }
+  }
+  if (blacklist && !blacklist->empty()) {
+    result->AddFilter([blacklist](an<DictEntry> entry) {
+      return entry && !blacklist->count(entry->text);
+    });
   }
   return keys.size();
 }

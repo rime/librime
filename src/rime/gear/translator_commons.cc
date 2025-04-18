@@ -145,6 +145,16 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket) {
           tags_.push_back(value->str());
     if (tags_.empty())
       tags_.push_back("abc");
+
+    // blacklist
+    if (auto blacklist =
+            config->GetList(ticket.name_space + "/dictionary_exclude")) {
+      for (auto it = blacklist->begin(); it != blacklist->end(); ++it) {
+        if (auto blackword = As<ConfigValue>(*it)) {
+          blacklist_.insert(blackword->str());
+        }
+      }
+    }
   }
   if (delimiters_.empty()) {
     delimiters_ = " ";
