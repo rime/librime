@@ -1,0 +1,2 @@
+RIME_PLUGINS=
+librime 148365e5
