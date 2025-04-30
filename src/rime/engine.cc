@@ -125,6 +125,7 @@ void ConcreteEngine::OnContextUpdate(Context* ctx) {
   if (!ctx)
     return;
   Compose(ctx);
+  message_sink_("context", "update");
 }
 
 void ConcreteEngine::OnOptionUpdate(Context* ctx, const string& option) {
@@ -246,6 +247,7 @@ void ConcreteEngine::CommitText(string text) {
   FormatText(&text);
   DLOG(INFO) << "committing text: " << text;
   sink_(text);
+  message_sink_("context", "commit");
 }
 
 void ConcreteEngine::OnCommit(Context* ctx) {
@@ -254,6 +256,7 @@ void ConcreteEngine::OnCommit(Context* ctx) {
   FormatText(&text);
   DLOG(INFO) << "committing composition: " << text;
   sink_(text);
+  message_sink_("context", "commit");
 }
 
 void ConcreteEngine::OnSelect(Context* ctx) {
@@ -279,6 +282,7 @@ void ConcreteEngine::OnSelect(Context* ctx) {
       Compose(ctx);
     }
   }
+  message_sink_("context", "select");
 }
 
 void ConcreteEngine::ApplySchema(Schema* schema) {
