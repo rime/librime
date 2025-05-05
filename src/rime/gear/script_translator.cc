@@ -6,11 +6,11 @@
 //
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
-#include <algorithm>
 #include <stack>
 #include <cmath>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/reversed.hpp>
+#include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/candidate.h>
 #include <rime/config.h>
@@ -368,7 +368,8 @@ bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   bool predict_word = translator_->enable_word_completion() &&
                       start_ + consumed == end_of_input_;
 
-  phrase_ = dict->Lookup(syllable_graph, 0, predict_word);
+  phrase_ =
+      dict->Lookup(syllable_graph, 0, &translator_->blacklist(), predict_word);
   if (user_dict) {
     const size_t kUnlimitedDepth = 0;
     const size_t kNumSyllablesToPredictWord = 4;
@@ -578,7 +579,8 @@ an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
                                       kMaxSyllablesForUserPhraseQuery));
     }
     // merge lookup results
-    EnrollEntries(same_start_pos, dict->Lookup(syllable_graph, x.first));
+    EnrollEntries(same_start_pos, dict->Lookup(syllable_graph, x.first,
+                                               &translator_->blacklist()));
   }
   if (auto sentence =
           poet_->MakeSentence(graph, syllable_graph.interpreted_length,
