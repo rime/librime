@@ -149,13 +149,17 @@ ProcessResult AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
     }
   }
   if (key_event.caps()) {
-    if (!good_old_caps_lock_ && !key_event.release() && !key_event.ctrl() &&
-        isascii(ch) && isalpha(ch)) {
-      // output ascii characters ignoring Caps Lock
-      if (islower(ch))
-        ch = toupper(ch);
-      else if (isupper(ch))
-        ch = tolower(ch);
+    if (!key_event.release() && !key_event.ctrl() && isascii(ch) &&
+        isalpha(ch)) {
+      // Apply case toggle only when good_old_caps_lock_ is false,
+      // preserving the legacy behavior of ignoring Caps Lock.
+      if (!good_old_caps_lock_) {
+        // output ascii characters ignoring Caps Lock
+        if (islower(ch))
+          ch = toupper(ch);
+        else if (isupper(ch))
+          ch = tolower(ch);
+      }
       engine_->CommitText(string(1, ch));
       return kAccepted;
     } else {
