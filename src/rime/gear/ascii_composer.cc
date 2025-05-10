@@ -143,7 +143,9 @@ ProcessResult AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
       // Caps Lock modifier has been set before we process VK_CAPITAL.
       // here we assume IBus' behavior and invert caps with ! operation.
       SwitchAsciiMode(!key_event.caps(), caps_lock_switch_style_);
-      return kAccepted;
+      // When good_old_caps_lock is enabled, allow the key event to pass
+      // through the input method to toggle the Caps Lock state.
+      return good_old_caps_lock_ ? kRejected : kAccepted;
     } else {
       return kRejected;
     }
