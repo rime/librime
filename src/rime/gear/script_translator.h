@@ -39,6 +39,7 @@ class ScriptTranslator : public Translator,
   string FormatPreedit(const string& preedit);
   string Spell(const Code& code);
   string GetPrecedingText(size_t start) const;
+  bool UpdateElements(const CommitEntry& commit_entry);
 
   // options
   int max_homophones() const { return max_homophones_; }

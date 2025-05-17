@@ -229,6 +229,7 @@ bool ScriptTranslator::ProcessSegmentOnCommit(CommitEntry& commit_entry,
   bool recognized = Language::intelligible(phrase, this);
   if (recognized) {
     if (commit_entry.Length() > max_word_length_) {
+      UpdateElements(commit_entry);
       commit_entry.Clear();
     }
 
@@ -243,6 +244,8 @@ bool ScriptTranslator::ProcessSegmentOnCommit(CommitEntry& commit_entry,
   if (!recognized || seg.status >= Segment::kConfirmed) {
     if (commit_entry.Length() <= max_word_length_) {
       commit_entry.Save();
+    } else {
+      UpdateElements(commit_entry);
     }
     commit_entry.Clear();
   }
@@ -272,7 +275,7 @@ string ScriptTranslator::GetPrecedingText(size_t start) const {
                      : engine_->context()->commit_history().latest_text();
 }
 
-bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
+bool ScriptTranslator::UpdateElements(const CommitEntry& commit_entry) {
   bool update_elements = false;
   // avoid updating single character entries within a phrase which is
   // composed with single characters only
@@ -289,6 +292,11 @@ bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
       user_dict_->UpdateEntry(*e, 0);
     }
   }
+  return true;
+}
+
+bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
+  UpdateElements(commit_entry);
   user_dict_->UpdateEntry(commit_entry, 1);
   return true;
 }
