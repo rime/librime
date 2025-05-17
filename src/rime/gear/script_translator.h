@@ -30,8 +30,11 @@ class ScriptTranslator : public Translator,
  public:
   ScriptTranslator(const Ticket& ticket);
 
-  virtual an<Translation> Query(const string& input, const Segment& segment);
-  virtual bool Memorize(const CommitEntry& commit_entry);
+  virtual an<Translation> Query(const string& input,
+                                const Segment& segment) override;
+  virtual bool Memorize(const CommitEntry& commit_entry) override;
+  virtual bool ProcessSegmentOnCommit(CommitEntry& commit_entry,
+                                      const Segment& seg) override;
 
   string FormatPreedit(const string& preedit);
   string Spell(const Code& code);
@@ -46,6 +49,8 @@ class ScriptTranslator : public Translator,
  protected:
   int max_homophones_ = 1;
   int spelling_hints_ = 0;
+  int max_word_length_ = 7;
+  int core_word_length_ = 4;
   bool always_show_comments_ = false;
   bool enable_correction_ = false;
   bool enable_word_completion_ = false;

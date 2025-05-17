@@ -16,6 +16,7 @@
 #include <rime/config.h>
 #include <rime/context.h>
 #include <rime/engine.h>
+#include <rime/language.h>
 #include <rime/schema.h>
 #include <rime/translation.h>
 #include <rime/algo/syllabifier.h>
@@ -173,6 +174,8 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
     return;
   if (Config* config = engine_->schema()->config()) {
     config->GetInt(name_space_ + "/spelling_hints", &spelling_hints_);
+    config->GetInt(name_space_ + "/max_word_length", &max_word_length_);
+    config->GetInt(name_space_ + "/core_word_length", &core_word_length_);
     config->GetBool(name_space_ + "/always_show_comments",
                     &always_show_comments_);
     config->GetBool(name_space_ + "/enable_correction", &enable_correction_);
@@ -217,6 +220,34 @@ an<Translation> ScriptTranslator::Query(const string& input,
     return poet_->ContextualWeighted(deduped, input, segment.start, this);
   }
   return deduped;
+}
+
+bool ScriptTranslator::ProcessSegmentOnCommit(CommitEntry& commit_entry,
+                                              const Segment& seg) {
+  auto phrase =
+      As<Phrase>(Candidate::GetGenuineCandidate(seg.GetSelectedCandidate()));
+  bool recognized = Language::intelligible(phrase, this);
+  if (recognized) {
+    if (commit_entry.Length() > max_word_length_) {
+      commit_entry.Clear();
+    }
+
+    if (commit_entry.Length() + phrase->code().size() > core_word_length_) {
+      commit_entry.Save();
+      commit_entry.Clear();
+    }
+
+    commit_entry.AppendPhrase(phrase);
+  }
+
+  if (!recognized || seg.status >= Segment::kConfirmed) {
+    if (commit_entry.Length() <= max_word_length_) {
+      commit_entry.Save();
+    }
+    commit_entry.Clear();
+  }
+
+  return true;
 }
 
 string ScriptTranslator::FormatPreedit(const string& preedit) {
