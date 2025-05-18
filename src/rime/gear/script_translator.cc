@@ -222,18 +222,33 @@ an<Translation> ScriptTranslator::Query(const string& input,
   return deduped;
 }
 
+int ScriptTranslator::core_word_length() const {
+  if (core_word_length_ <= 0) {
+    return max_word_length_;
+  }
+  if (max_word_length_ <= 0) {
+    return core_word_length_;
+  }
+  return std::min(core_word_length_, max_word_length_);
+}
+
+static bool exceed_upperlimit(int length, int upper_limit) {
+  return upper_limit > 0 && length > upper_limit;
+}
+
 bool ScriptTranslator::ProcessSegmentOnCommit(CommitEntry& commit_entry,
                                               const Segment& seg) {
   auto phrase =
       As<Phrase>(Candidate::GetGenuineCandidate(seg.GetSelectedCandidate()));
   bool recognized = Language::intelligible(phrase, this);
   if (recognized) {
-    if (commit_entry.Length() > max_word_length_) {
+    if (exceed_upperlimit(commit_entry.Length(), max_word_length())) {
       UpdateElements(commit_entry);
       commit_entry.Clear();
     }
 
-    if (commit_entry.Length() + phrase->code().size() > core_word_length_) {
+    if (exceed_upperlimit(commit_entry.Length() + phrase->code().size(),
+                            core_word_length())) {
       commit_entry.Save();
       commit_entry.Clear();
     }
@@ -242,10 +257,10 @@ bool ScriptTranslator::ProcessSegmentOnCommit(CommitEntry& commit_entry,
   }
 
   if (!recognized || seg.status >= Segment::kConfirmed) {
-    if (commit_entry.Length() <= max_word_length_) {
-      commit_entry.Save();
-    } else {
+    if (exceed_upperlimit(commit_entry.Length(), max_word_length())) {
       UpdateElements(commit_entry);
+    } else {
+      commit_entry.Save();
     }
     commit_entry.Clear();
   }

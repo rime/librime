@@ -46,12 +46,14 @@ class ScriptTranslator : public Translator,
   int spelling_hints() const { return spelling_hints_; }
   bool always_show_comments() const { return always_show_comments_; }
   bool enable_word_completion() const { return enable_word_completion_; }
+  int max_word_length() const { return max_word_length_; }
+  int core_word_length() const;
 
  protected:
   int max_homophones_ = 1;
   int spelling_hints_ = 0;
-  int max_word_length_ = 7;
-  int core_word_length_ = 4;
+  int max_word_length_ = 0;
+  int core_word_length_ = 0;
   bool always_show_comments_ = false;
   bool enable_correction_ = false;
   bool enable_word_completion_ = false;
