@@ -248,7 +248,7 @@ bool ScriptTranslator::ProcessSegmentOnCommit(CommitEntry& commit_entry,
     }
 
     if (exceed_upperlimit(commit_entry.Length() + phrase->code().size(),
-                            core_word_length())) {
+                          core_word_length())) {
       commit_entry.Save();
       commit_entry.Clear();
     }
