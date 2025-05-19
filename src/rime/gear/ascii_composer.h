@@ -51,6 +51,8 @@ class AsciiComposer : public Processor {
   bool toggle_with_caps_ = false;
   bool shift_key_pressed_ = false;
   bool ctrl_key_pressed_ = false;
+  bool alt_key_pressed_ = false;
+  bool super_key_pressed_ = false;
   using TimePoint = std::chrono::steady_clock::time_point;
   TimePoint toggle_expired_;
   connection connection_;

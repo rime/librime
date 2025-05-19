@@ -58,9 +58,11 @@ AsciiComposer::~AsciiComposer() {
 }
 
 ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
-  if ((key_event.shift() && key_event.ctrl()) || key_event.alt() ||
-      key_event.super()) {
-    shift_key_pressed_ = ctrl_key_pressed_ = false;
+  if (key_event.shift() + key_event.ctrl() + key_event.alt() +
+          key_event.super() >
+      1) {
+    shift_key_pressed_ = ctrl_key_pressed_ = alt_key_pressed_ =
+        super_key_pressed_ = false;
     return kNoop;
   }
   if (caps_lock_switch_style_ != kAsciiModeSwitchNoop) {
@@ -80,23 +82,34 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   }
   bool is_shift = (ch == XK_Shift_L || ch == XK_Shift_R);
   bool is_ctrl = (ch == XK_Control_L || ch == XK_Control_R);
-  if (is_shift || is_ctrl) {
+  bool is_alt = (ch == XK_Alt_L || ch == XK_Alt_R);
+  bool is_super = (ch == XK_Super_L || ch == XK_Super_R);
+  if (is_shift || is_ctrl || is_alt || is_super) {
     if (key_event.release()) {
-      if (shift_key_pressed_ || ctrl_key_pressed_) {
+      if (shift_key_pressed_ || ctrl_key_pressed_ || alt_key_pressed_ ||
+          super_key_pressed_) {
         auto now = std::chrono::steady_clock::now();
         if (((is_shift && shift_key_pressed_) ||
-             (is_ctrl && ctrl_key_pressed_)) &&
+             (is_ctrl && ctrl_key_pressed_) || (is_alt && alt_key_pressed_) ||
+             (is_super && super_key_pressed_)) &&
             now < toggle_expired_) {
           ToggleAsciiModeWithKey(ch);
         }
-        shift_key_pressed_ = ctrl_key_pressed_ = false;
+        shift_key_pressed_ = ctrl_key_pressed_ = alt_key_pressed_ =
+            super_key_pressed_ = false;
         return kNoop;
       }
-    } else if (!(shift_key_pressed_ || ctrl_key_pressed_)) {  // first key down
+    } else if (!(shift_key_pressed_ || ctrl_key_pressed_ || alt_key_pressed_ ||
+                 super_key_pressed_)) {
+      // first key down
       if (is_shift)
         shift_key_pressed_ = true;
-      else
+      else if (is_ctrl)
         ctrl_key_pressed_ = true;
+      else if (is_alt)
+        alt_key_pressed_ = true;
+      else if (is_super)
+        super_key_pressed_ = true;
       // will not toggle unless the toggle key is released shortly
       const auto toggle_duration_limit = std::chrono::milliseconds(500);
       auto now = std::chrono::steady_clock::now();
@@ -105,9 +118,11 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   }
   // other keys
-  shift_key_pressed_ = ctrl_key_pressed_ = false;
+  shift_key_pressed_ = ctrl_key_pressed_ = alt_key_pressed_ =
+      super_key_pressed_ = false;
   // possible key binding: Control+x, Shift+space
-  if (key_event.ctrl() || (key_event.shift() && ch == XK_space)) {
+  if (key_event.ctrl() || key_event.alt() || key_event.super() ||
+      (key_event.shift() && ch == XK_space)) {
     return kNoop;
   }
   Context* ctx = engine_->context();
@@ -129,7 +144,8 @@ ProcessResult AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
   int ch = key_event.keycode();
   if (ch == XK_Caps_Lock) {
     if (!key_event.release()) {
-      shift_key_pressed_ = ctrl_key_pressed_ = false;
+      shift_key_pressed_ = ctrl_key_pressed_ = alt_key_pressed_ =
+          super_key_pressed_ = false;
       // temporarily disable good-old (uppercase) Caps Lock as mode switch key
       // in case the user switched to ascii mode with other keys, eg. with Shift
       if (good_old_caps_lock_ && !toggle_with_caps_) {
@@ -152,7 +168,7 @@ ProcessResult AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
   }
   if (key_event.caps()) {
     if (!good_old_caps_lock_ && !key_event.release() && !key_event.ctrl() &&
-        isascii(ch) && isalpha(ch)) {
+        !key_event.alt() && !key_event.super() && isascii(ch) && isalpha(ch)) {
       // output ascii characters ignoring Caps Lock
       if (islower(ch))
         ch = toupper(ch);
