@@ -23,6 +23,8 @@ enum AsciiModeSwitchStyle {
   kAsciiModeSwitchCommitText,
   kAsciiModeSwitchCommitCode,
   kAsciiModeSwitchClear,
+  kAsciiModeSet,
+  kAsciiModeUnset,
 };
 
 using AsciiModeSwitchKeyBindings = map<int /* keycode */, AsciiModeSwitchStyle>;

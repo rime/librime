@@ -22,6 +22,8 @@ static struct AsciiModeSwitchStyleDefinition {
                                 {"commit_text", kAsciiModeSwitchCommitText},
                                 {"commit_code", kAsciiModeSwitchCommitCode},
                                 {"clear", kAsciiModeSwitchClear},
+                                {"set_ascii_mode", kAsciiModeSet},
+                                {"unset_ascii_mode", kAsciiModeUnset},
                                 {NULL, kAsciiModeSwitchNoop}};
 
 static void load_bindings(const an<ConfigMap>& src,
@@ -193,7 +195,10 @@ void AsciiComposer::LoadConfig(Schema* schema) {
   auto it = bindings_.find(XK_Caps_Lock);
   if (it != bindings_.end()) {
     caps_lock_switch_style_ = it->second;
-    if (caps_lock_switch_style_ == kAsciiModeSwitchInline) {  // can't do that
+    if (caps_lock_switch_style_ == kAsciiModeSwitchInline ||
+        caps_lock_switch_style_ == kAsciiModeSet ||
+        caps_lock_switch_style_ == kAsciiModeUnset) {
+      // can't do that
       caps_lock_switch_style_ = kAsciiModeSwitchClear;
     }
   }
@@ -205,8 +210,14 @@ bool AsciiComposer::ToggleAsciiModeWithKey(int key_code) {
     return false;
   AsciiModeSwitchStyle style = it->second;
   Context* ctx = engine_->context();
-  bool ascii_mode = !ctx->get_option("ascii_mode");
-  SwitchAsciiMode(ascii_mode, style);
+  bool old_mode = ctx->get_option("ascii_mode");
+  bool new_mode = (style == kAsciiModeSet)     ? true
+                  : (style == kAsciiModeUnset) ? false
+                                               : !old_mode;
+  if (old_mode == new_mode) {
+    return false;
+  }
+  SwitchAsciiMode(new_mode, style);
   toggle_with_caps_ = (key_code == XK_Caps_Lock);
   return true;
 }
@@ -230,7 +241,8 @@ void AsciiComposer::SwitchAsciiMode(bool ascii_mode,
     } else if (style == kAsciiModeSwitchCommitCode) {
       ctx->ClearNonConfirmedComposition();
       ctx->Commit();
-    } else if (style == kAsciiModeSwitchClear) {
+    } else if (style == kAsciiModeSwitchClear || style == kAsciiModeSet ||
+               style == kAsciiModeUnset) {
       ctx->Clear();
     }
   }
