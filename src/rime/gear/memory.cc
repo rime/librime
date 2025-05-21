@@ -45,6 +45,16 @@ bool CommitEntry::Save() const {
   return false;
 }
 
+int CommitEntry::Length() const {
+  int length = 0;
+  for (const DictEntry* e : elements) {
+    if (e) {
+      length += e->code.size();
+    }
+  }
+  return length;
+}
+
 Memory::Memory(const Ticket& ticket) {
   if (!ticket.engine)
     return;
@@ -98,22 +108,30 @@ bool Memory::DiscardSession() {
   return user_dict_ && user_dict_->RevertRecentTransaction();
 }
 
+bool Memory::ProcessSegmentOnCommit(CommitEntry& commit_entry,
+                                    const Segment& seg) {
+  auto phrase =
+      As<Phrase>(Candidate::GetGenuineCandidate(seg.GetSelectedCandidate()));
+  bool recognized = Language::intelligible(phrase, this);
+  if (recognized) {
+    commit_entry.AppendPhrase(phrase);
+  }
+
+  if (!recognized || seg.status >= Segment::kConfirmed) {
+    commit_entry.Save();
+    commit_entry.Clear();
+  }
+
+  return true;
+}
+
 void Memory::OnCommit(Context* ctx) {
   if (!user_dict_ || user_dict_->readonly())
     return;
   StartSession();
   CommitEntry commit_entry(this);
   for (auto& seg : ctx->composition()) {
-    auto phrase =
-        As<Phrase>(Candidate::GetGenuineCandidate(seg.GetSelectedCandidate()));
-    bool recognized = Language::intelligible(phrase, this);
-    if (recognized) {
-      commit_entry.AppendPhrase(phrase);
-    }
-    if (!recognized || seg.status >= Segment::kConfirmed) {
-      commit_entry.Save();
-      commit_entry.Clear();
-    }
+    ProcessSegmentOnCommit(commit_entry, seg);
   }
 }
 

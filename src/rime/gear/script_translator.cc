@@ -16,6 +16,7 @@
 #include <rime/config.h>
 #include <rime/context.h>
 #include <rime/engine.h>
+#include <rime/language.h>
 #include <rime/schema.h>
 #include <rime/translation.h>
 #include <rime/algo/syllabifier.h>
@@ -173,6 +174,8 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
     return;
   if (Config* config = engine_->schema()->config()) {
     config->GetInt(name_space_ + "/spelling_hints", &spelling_hints_);
+    config->GetInt(name_space_ + "/max_word_length", &max_word_length_);
+    config->GetInt(name_space_ + "/core_word_length", &core_word_length_);
     config->GetBool(name_space_ + "/always_show_comments",
                     &always_show_comments_);
     config->GetBool(name_space_ + "/enable_correction", &enable_correction_);
@@ -219,6 +222,52 @@ an<Translation> ScriptTranslator::Query(const string& input,
   return deduped;
 }
 
+int ScriptTranslator::core_word_length() const {
+  if (core_word_length_ <= 0) {
+    return max_word_length_;
+  }
+  if (max_word_length_ <= 0) {
+    return core_word_length_;
+  }
+  return std::min(core_word_length_, max_word_length_);
+}
+
+static bool exceed_upperlimit(int length, int upper_limit) {
+  return upper_limit > 0 && length > upper_limit;
+}
+
+bool ScriptTranslator::ProcessSegmentOnCommit(CommitEntry& commit_entry,
+                                              const Segment& seg) {
+  auto phrase =
+      As<Phrase>(Candidate::GetGenuineCandidate(seg.GetSelectedCandidate()));
+  bool recognized = Language::intelligible(phrase, this);
+  if (recognized) {
+    if (exceed_upperlimit(commit_entry.Length(), max_word_length())) {
+      UpdateElements(commit_entry);
+      commit_entry.Clear();
+    }
+
+    if (exceed_upperlimit(commit_entry.Length() + phrase->code().size(),
+                          core_word_length())) {
+      commit_entry.Save();
+      commit_entry.Clear();
+    }
+
+    commit_entry.AppendPhrase(phrase);
+  }
+
+  if (!recognized || seg.status >= Segment::kConfirmed) {
+    if (exceed_upperlimit(commit_entry.Length(), max_word_length())) {
+      UpdateElements(commit_entry);
+    } else {
+      commit_entry.Save();
+    }
+    commit_entry.Clear();
+  }
+
+  return true;
+}
+
 string ScriptTranslator::FormatPreedit(const string& preedit) {
   string result = preedit;
   preedit_formatter_.Apply(&result);
@@ -241,7 +290,7 @@ string ScriptTranslator::GetPrecedingText(size_t start) const {
                      : engine_->context()->commit_history().latest_text();
 }
 
-bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
+bool ScriptTranslator::UpdateElements(const CommitEntry& commit_entry) {
   bool update_elements = false;
   // avoid updating single character entries within a phrase which is
   // composed with single characters only
@@ -258,6 +307,11 @@ bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
       user_dict_->UpdateEntry(*e, 0);
     }
   }
+  return true;
+}
+
+bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
+  UpdateElements(commit_entry);
   user_dict_->UpdateEntry(commit_entry, 1);
   return true;
 }
