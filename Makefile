@@ -17,6 +17,10 @@ export SDKROOT ?= $(shell xcrun --sdk macosx --show-sdk-path)
 # https://cmake.org/cmake/help/latest/envvar/MACOSX_DEPLOYMENT_TARGET.html
 export MACOSX_DEPLOYMENT_TARGET ?= 10.15
 
+ifeq ($(shell uname -m),arm64)
+export CMAKE_OSX_ARCHITECTURES ?= arm64
+endif
+
 ifdef BUILD_UNIVERSAL
 # https://cmake.org/cmake/help/latest/envvar/CMAKE_OSX_ARCHITECTURES.html
 export CMAKE_OSX_ARCHITECTURES = arm64;x86_64

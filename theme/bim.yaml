@@ -1,0 +1,17 @@
+schema:
+  schema_id: bim
+  name: "Bim Test Schema"
+  version: "1.0"
+
+test_data:
+  theme_name: "bim"
+  theme_type: "test"
+  settings:
+    color: "blue"
+    size: 12
+    enabled: true
+
+test_list:
+  - item1
+  - item2
+  - item3 

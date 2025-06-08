@@ -37,6 +37,10 @@ endif(WIN32)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${PROJECT_SOURCE_DIR}")
 
+if(APPLE)
+  list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew")
+endif()
+
 if (ENABLE_ASAN)
   set(asan_cflags "-fsanitize=address -fno-omit-frame-pointer")
   set(asan_lflags "-fsanitize=address -lasan")

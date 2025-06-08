@@ -9,6 +9,13 @@
 #include <string.h>
 #include <rime_api.h>
 #include "codepage.h"
+#include <rime/config.h>
+#include <rime/config/plugins.h>
+#include <rime/schema.h>
+
+using namespace rime;
+
+
 
 void print_status(RimeStatus* status) {
   printf("schema: %s / %s\n", status->schema_id, status->schema_name);
@@ -221,6 +228,8 @@ int main(int argc, char* argv[]) {
 
   RIME_STRUCT(RimeTraits, traits);
   traits.app_name = "rime.console";
+  traits.log_dir = "/Users/jimmy54/Desktop/librime/cmake-build-debug/bin/log";
+  traits.min_log_level = 1;
   rime->setup(&traits);
 
   rime->set_notification_handler(&on_message, NULL);
@@ -231,7 +240,23 @@ reload:
   Bool full_check = True;
   if (rime->start_maintenance(full_check))
     rime->join_maintenance_thread();
+
+
+  auto config_builder =
+      new ConfigComponent<ConfigBuilder>([&](ConfigBuilder* builder) {
+        builder->InstallPlugin(new AutoPatchConfigPlugin);
+        builder->InstallPlugin(new DefaultConfigPlugin);
+        builder->InstallPlugin(new LegacyPresetConfigPlugin);
+        builder->InstallPlugin(new LegacyDictionaryConfigPlugin);
+        builder->InstallPlugin(new BuildInfoPlugin);
+        builder->InstallPlugin(new SaveOutputPlugin);
+      });
+  config_builder->Create("/theme/bim.yaml");
+
+
+//  rime->deploy_config_file("/theme/bim.yaml", "config_version");
   fprintf(stderr, "ready.\n");
+
 
   RimeSessionId session_id = 0;
   const int kMaxLength = 99;

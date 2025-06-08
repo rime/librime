@@ -2,6 +2,7 @@
 // Copyright RIME Developers
 // Distributed under the BSD License
 //
+#include <filesystem>
 #include <rime/resource.h>
 #include <rime/service.h>
 #include <rime/config/config_compiler.h>
@@ -14,19 +15,48 @@ static const ResourceType kCompiledConfig = {"compiled_config", "", ".yaml"};
 
 SaveOutputPlugin::SaveOutputPlugin()
     : resource_resolver_(
-          Service::instance().CreateStagingResourceResolver(kCompiledConfig)) {}
+          Service::instance().CreateStagingResourceResolver(kCompiledConfig)) {
+  LOG(INFO) << "SaveOutputPlugin created, staging dir: " 
+            << resource_resolver_->root_path();
+}
 
 SaveOutputPlugin::~SaveOutputPlugin() {}
 
 bool SaveOutputPlugin::ReviewCompileOutput(ConfigCompiler* compiler,
                                            an<ConfigResource> resource) {
+  LOG(INFO) << "SaveOutputPlugin::ReviewCompileOutput for resource: " 
+            << resource->resource_id;
   return true;
 }
 
 bool SaveOutputPlugin::ReviewLinkOutput(ConfigCompiler* compiler,
                                         an<ConfigResource> resource) {
+  LOG(INFO) << "SaveOutputPlugin::ReviewLinkOutput for resource: " 
+            << resource->resource_id;
+  
   auto file_path = resource_resolver_->ResolvePath(resource->resource_id);
-  return resource->data->SaveToFile(file_path);
+  LOG(INFO) << "Attempting to save to: " << file_path;
+  
+  // 确保目录存在
+  auto parent_dir = file_path.parent_path();
+  if (!std::filesystem::exists(parent_dir)) {
+    LOG(INFO) << "Creating directory: " << parent_dir;
+    try {
+      std::filesystem::create_directories(parent_dir);
+    } catch (const std::exception& e) {
+      LOG(ERROR) << "Failed to create directory " << parent_dir << ": " << e.what();
+      return false;
+    }
+  }
+  
+  bool result = resource->data->SaveToFile(file_path);
+  if (result) {
+    LOG(INFO) << "Successfully saved config to: " << file_path;
+  } else {
+    LOG(ERROR) << "Failed to save config to: " << file_path;
+  }
+  
+  return result;
 }
 
 }  // namespace rime
