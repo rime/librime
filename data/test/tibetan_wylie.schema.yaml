@@ -1,0 +1,56 @@
+schema:
+  schema_id: tibetan_wylie
+  name: "Tibetan (Wylie)"
+  version: "1.0"
+  author: "Your Name <your@email.com>"
+  description: "Tibetan input method based on Wylie transliteration"
+
+engine:
+  processors:
+    - ascii_composer
+    - recognizer
+    - key_binder
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - table_translator@tibetan_translator
+    - reverse_lookup_translator
+  filters:
+    - simplifier
+    - uniquifier
+
+tibetan_translator:
+  dictionary: tibetan
+  preedit_format:
+    - xform/([aeiou])r/\1ː/  # long vowels
+    - xform/ee/iː/
+    - xform/oo/uː/
+    - xform/AA/aː/
+  comment_format:
+    - xform/^([a-zA-Z']+)$/$1/  # show input code
+  rules:
+    - '> 0'  # forward matching
+
+speller:
+  alphabet: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  delimiter: " '"
+  initials: "'"
+
+punctuator:
+  full_shape:
+    " " : " "
+    "," : "་"
+    "." : "།"
+    "?" : "༔"
+    "!" : "༈"
+    ";" : "༑"
+    ":" : "༒"
