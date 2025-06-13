@@ -20,6 +20,10 @@ SaveOutputPlugin::SaveOutputPlugin()
             << resource_resolver_->root_path();
 }
 
+SaveOutputPlugin::SaveOutputPlugin(const string& output_dir):resource_resolver_(new ResourceResolver(kCompiledConfig)) {
+  resource_resolver_->set_root_path(path(output_dir));
+}
+
 SaveOutputPlugin::~SaveOutputPlugin() {}
 
 bool SaveOutputPlugin::ReviewCompileOutput(ConfigCompiler* compiler,
