@@ -17,6 +17,8 @@
 #include <rime/setup.h>
 #include <rime/signature.h>
 #include <rime/switches.h>
+#include <rime/config.h>
+#include <rime/config/plugins.h>
 
 using namespace rime;
 
@@ -133,6 +135,43 @@ RIME_DEPRECATED Bool RimeDeployConfigFile(const char* file_name,
   Deployer& deployer(Service::instance().deployer());
   TaskInitializer args(make_pair<string, string>(file_name, version_key));
   return Bool(deployer.RunTask("config_file_update", args));
+}
+
+RIME_DEPRECATED Bool RimeCompileConfigFile(const char* src_path, const char* dest_path, const char* file_name) {
+  // Ensure destination directory exists
+  std::filesystem::path dest_dir(dest_path);
+  if (!std::filesystem::exists(dest_dir)) {
+      std::filesystem::create_directories(dest_dir);
+      LOG(INFO) << "Created destination directory: " << dest_path;
+  }
+
+  // Create config builder
+  auto config_builder = new ConfigComponent<ConfigBuilder>([&](ConfigBuilder* builder) {
+      builder->InstallPlugin(new AutoPatchConfigPlugin);
+      builder->InstallPlugin(new DefaultConfigPlugin);
+      builder->InstallPlugin(new LegacyPresetConfigPlugin);
+      builder->InstallPlugin(new LegacyDictionaryConfigPlugin);
+      builder->InstallPlugin(new BuildInfoPlugin);
+      builder->InstallPlugin(new SaveOutputPlugin(dest_path));
+  }, src_path);
+
+  // Compile file
+  LOG(INFO) << "Compiling YAML file: " << file_name;
+  LOG(INFO) << "Source path: " << src_path;
+  LOG(INFO) << "Destination path: " << dest_path;
+  
+  Config* config = config_builder->Create(file_name);
+  bool result = (config != nullptr);
+  
+  if (result) {
+      LOG(INFO) << "✓ Compilation successful!";
+  } else {
+      LOG(ERROR) << "✗ Compilation failed!";
+  }
+  
+  delete config;        // 释放Config对象
+  delete config_builder; // 释放ConfigBuilder对象
+  return result;
 }
 
 RIME_DEPRECATED Bool RimeSyncUserData() {
@@ -1228,6 +1267,7 @@ RIME_API RIME_FLAVORED(RimeApi) * RIME_FLAVORED(rime_get_api)() {
     s_api.highlight_candidate_on_current_page =
         &RimeHighlightCandidateOnCurrentPage;
     s_api.change_page = &RimeChangePage;
+    s_api.compile_config_file = &RimeCompileConfigFile;
   }
   return &s_api;
 }
