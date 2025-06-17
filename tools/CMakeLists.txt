@@ -39,6 +39,9 @@ target_link_libraries(rime_patch
 
 set(rime_yaml_compiler_src "rime_yaml_compiler.cc")
 add_executable(rime_yaml_compiler ${rime_yaml_compiler_src})
+target_include_directories(rime_yaml_compiler BEFORE PRIVATE 
+  ${PROJECT_SOURCE_DIR}/src 
+  ${PROJECT_BINARY_DIR}/src)
 target_link_libraries(rime_yaml_compiler
   ${rime_library}
   ${rime_gears_library})

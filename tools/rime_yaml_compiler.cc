@@ -10,6 +10,7 @@
 #include <rime/config/plugins.h>
 #include <rime/schema.h>
 #include "codepage.h"
+#include <rime_api.h>
 
 using namespace rime;
 using namespace std;
@@ -25,48 +26,6 @@ void print_usage(const char* program_name) {
     cout << "  " << program_name << " theme/bim.yaml" << endl;
     cout << "  " << program_name << " -s /path/to/source -d /path/to/dest config.yaml" << endl;
 }
-
-bool compile_yaml_file(const string& src_path, const string& dest_path, const string& file_path) {
-    try {
-        // 确保目标目录存在
-        filesystem::path dest_dir(dest_path);
-        if (!filesystem::exists(dest_dir)) {
-            filesystem::create_directories(dest_dir);
-            cout << "创建目标目录: " << dest_path << endl;
-        }
-
-        // 创建配置构建器
-        auto config_builder = new ConfigComponent<ConfigBuilder>([&](ConfigBuilder* builder) {
-            builder->InstallPlugin(new AutoPatchConfigPlugin);
-            builder->InstallPlugin(new DefaultConfigPlugin);
-            builder->InstallPlugin(new LegacyPresetConfigPlugin);
-            builder->InstallPlugin(new LegacyDictionaryConfigPlugin);
-            builder->InstallPlugin(new BuildInfoPlugin);
-            builder->InstallPlugin(new SaveOutputPlugin(dest_path));
-        }, src_path);
-
-        // 编译文件
-        cout << "正在编译 YAML 文件: " << file_path << endl;
-        cout << "源路径: " << src_path << endl;
-        cout << "目标路径: " << dest_path << endl;
-        
-        bool result = config_builder->Create(file_path);
-        
-        if (result) {
-            cout << "✓ 编译成功!" << endl;
-        } else {
-            cerr << "✗ 编译失败!" << endl;
-        }
-        
-        delete config_builder;
-        return result;
-        
-    } catch (const exception& e) {
-        cerr << "错误: " << e.what() << endl;
-        return false;
-    }
-}
-
 int main(int argc, char* argv[]) {
     unsigned int codepage = SetConsoleOutputCodePage();
     
@@ -134,7 +93,17 @@ int main(int argc, char* argv[]) {
     cout << "=== RIME YAML 编译器 ===" << endl;
     
     // 编译文件
-    bool success = compile_yaml_file(src_path, dest_path, file_path);
+    // bool success = compile_yaml_file(src_path, dest_path, file_path);
+    RimeApi* rime = rime_get_api();
+    
+    // 检查API版本并验证compile_config_file函数是否可用
+    if (!RIME_API_AVAILABLE(rime, compile_config_file)) {
+        cerr << "错误: 当前版本的 librime 不支持 compile_config_file 函数" << endl;
+        SetConsoleOutputCodePage(codepage);
+        return 1;
+    }
+    
+    bool success = rime->compile_config_file(src_path.c_str(), dest_path.c_str(), file_path.c_str());
     
     SetConsoleOutputCodePage(codepage);
     return success ? 0 : 1;
