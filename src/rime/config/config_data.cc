@@ -90,13 +90,13 @@ bool ConfigData::SaveToFile(const path& file_path) {
     return false;
   }
   LOG(INFO) << "saving config file '" << file_path << "'.";
-  
+
   // check if root node exists
   if (!root) {
     LOG(WARNING) << "SaveToFile: root node is null, creating empty map";
     root = New<ConfigMap>();
   }
-  
+
   // ensure parent directory exists
   auto parent_dir = file_path.parent_path();
   if (!parent_dir.empty() && !std::filesystem::exists(parent_dir)) {
@@ -104,27 +104,28 @@ bool ConfigData::SaveToFile(const path& file_path) {
     try {
       std::filesystem::create_directories(parent_dir);
     } catch (const std::exception& e) {
-      LOG(ERROR) << "SaveToFile: failed to create directory " << parent_dir << ": " << e.what();
+      LOG(ERROR) << "SaveToFile: failed to create directory " << parent_dir
+                 << ": " << e.what();
       return false;
     }
   }
-  
+
   // try to open file
   std::ofstream out(file_path.c_str());
   if (!out.good()) {
     LOG(ERROR) << "SaveToFile: failed to open file for writing: " << file_path;
     return false;
   }
-  
+
   bool result = SaveToStream(out);
   out.close();
-  
+
   if (result) {
     LOG(INFO) << "SaveToFile: successfully saved to " << file_path;
   } else {
     LOG(ERROR) << "SaveToFile: failed to save to " << file_path;
   }
-  
+
   return result;
 }
 
