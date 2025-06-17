@@ -36,7 +36,7 @@ bool SaveOutputPlugin::ReviewLinkOutput(ConfigCompiler* compiler,
   auto file_path = resource_resolver_->ResolvePath(resource->resource_id);
   LOG(INFO) << "Attempting to save to: " << file_path;
   
-  // 确保目录存在
+  // ensure directory exists
   auto parent_dir = file_path.parent_path();
   if (!std::filesystem::exists(parent_dir)) {
     LOG(INFO) << "Creating directory: " << parent_dir;

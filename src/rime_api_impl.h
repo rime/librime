@@ -169,8 +169,8 @@ RIME_DEPRECATED Bool RimeCompileConfigFile(const char* src_path, const char* des
       LOG(ERROR) << "✗ Compilation failed!";
   }
   
-  delete config;        // 释放Config对象
-  delete config_builder; // 释放ConfigBuilder对象
+  delete config;        
+  delete config_builder; 
   return result;
 }
 
