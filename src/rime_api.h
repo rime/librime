@@ -506,7 +506,9 @@ typedef struct RIME_FLAVORED(rime_api_t) {
 
   Bool (*change_page)(RimeSessionId session_id, Bool backward);
 
-  Bool (*compile_config_file)(const char* src_path, const char* dest_path, const char* file_name);
+  Bool (*compile_config_file)(const char* src_path,
+                              const char* dest_path,
+                              const char* file_name);
 } RIME_FLAVORED(RimeApi);
 
 //! API entry

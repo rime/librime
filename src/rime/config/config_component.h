@@ -117,7 +117,8 @@ class ConfigComponent : public ConfigComponentBase {
             ResourceProvider::kDefaultResourceType)) {
     setup(&loader_);
   }
-  ConfigComponent(function<void(Loader* loader)> setup, const string& loader_dir)
+  ConfigComponent(function<void(Loader* loader)> setup,
+                  const string& loader_dir)
       : ConfigComponentBase(
             new ResourceResolver(ResourceProvider::kDefaultResourceType)) {
     resource_resolver_->set_root_path(path(loader_dir));

@@ -137,40 +137,44 @@ RIME_DEPRECATED Bool RimeDeployConfigFile(const char* file_name,
   return Bool(deployer.RunTask("config_file_update", args));
 }
 
-RIME_DEPRECATED Bool RimeCompileConfigFile(const char* src_path, const char* dest_path, const char* file_name) {
+RIME_DEPRECATED Bool RimeCompileConfigFile(const char* src_path,
+                                           const char* dest_path,
+                                           const char* file_name) {
   // Ensure destination directory exists
   std::filesystem::path dest_dir(dest_path);
   if (!std::filesystem::exists(dest_dir)) {
-      std::filesystem::create_directories(dest_dir);
-      LOG(INFO) << "Created destination directory: " << dest_path;
+    std::filesystem::create_directories(dest_dir);
+    LOG(INFO) << "Created destination directory: " << dest_path;
   }
 
   // Create config builder
-  auto config_builder = new ConfigComponent<ConfigBuilder>([&](ConfigBuilder* builder) {
-      builder->InstallPlugin(new AutoPatchConfigPlugin);
-      builder->InstallPlugin(new DefaultConfigPlugin);
-      builder->InstallPlugin(new LegacyPresetConfigPlugin);
-      builder->InstallPlugin(new LegacyDictionaryConfigPlugin);
-      builder->InstallPlugin(new BuildInfoPlugin);
-      builder->InstallPlugin(new SaveOutputPlugin(dest_path));
-  }, src_path);
+  auto config_builder = new ConfigComponent<ConfigBuilder>(
+      [&](ConfigBuilder* builder) {
+        builder->InstallPlugin(new AutoPatchConfigPlugin);
+        builder->InstallPlugin(new DefaultConfigPlugin);
+        builder->InstallPlugin(new LegacyPresetConfigPlugin);
+        builder->InstallPlugin(new LegacyDictionaryConfigPlugin);
+        builder->InstallPlugin(new BuildInfoPlugin);
+        builder->InstallPlugin(new SaveOutputPlugin(dest_path));
+      },
+      src_path);
 
   // Compile file
   LOG(INFO) << "Compiling YAML file: " << file_name;
   LOG(INFO) << "Source path: " << src_path;
   LOG(INFO) << "Destination path: " << dest_path;
-  
+
   Config* config = config_builder->Create(file_name);
   bool result = (config != nullptr);
-  
+
   if (result) {
-      LOG(INFO) << "✓ Compilation successful!";
+    LOG(INFO) << "✓ Compilation successful!";
   } else {
-      LOG(ERROR) << "✗ Compilation failed!";
+    LOG(ERROR) << "✗ Compilation failed!";
   }
-  
-  delete config;        
-  delete config_builder; 
+
+  delete config;
+  delete config_builder;
   return result;
 }
 
