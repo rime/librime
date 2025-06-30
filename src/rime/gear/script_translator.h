@@ -41,6 +41,10 @@ class ScriptTranslator : public Translator,
   string GetPrecedingText(size_t start) const;
   bool UpdateElements(const CommitEntry& commit_entry);
 
+  bool ConcatenatePhrases(CommitEntry& commit_entry,
+                          const vector<an<Phrase>>& phrases);
+  bool SaveCommitEntry(CommitEntry& commit_entry);
+
   // options
   int max_homophones() const { return max_homophones_; }
   int spelling_hints() const { return spelling_hints_; }
@@ -59,6 +63,7 @@ class ScriptTranslator : public Translator,
   bool enable_word_completion_ = false;
   the<Corrector> corrector_;
   the<Poet> poet_;
+  vector<an<Phrase>> queue_;
 };
 
 }  // namespace rime

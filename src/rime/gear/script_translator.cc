@@ -223,9 +223,6 @@ an<Translation> ScriptTranslator::Query(const string& input,
 }
 
 int ScriptTranslator::core_word_length() const {
-  if (core_word_length_ <= 0) {
-    return max_word_length_;
-  }
   if (max_word_length_ <= 0) {
     return core_word_length_;
   }
@@ -236,33 +233,53 @@ static bool exceed_upperlimit(int length, int upper_limit) {
   return upper_limit > 0 && length > upper_limit;
 }
 
+bool ScriptTranslator::SaveCommitEntry(CommitEntry& commit_entry) {
+  if (exceed_upperlimit(commit_entry.Length(), max_word_length())) {
+    UpdateElements(commit_entry);
+  } else {
+    commit_entry.Save();
+  }
+  return true;
+}
+
+bool ScriptTranslator::ConcatenatePhrases(CommitEntry& commit_entry,
+                                          const vector<an<Phrase>>& phrases) {
+  const int kCoreWordLength = core_word_length();
+  const int n = phrases.size();
+  for (int i = 0; i < n; ++i) {
+    int cur_len = 0;
+    int j = i;
+    for (; j < n; ++j) {
+      commit_entry.AppendPhrase(phrases.at(j));
+      cur_len += phrases.at(j)->code().size();
+      if (kCoreWordLength <= 0 || cur_len > kCoreWordLength) {
+        break;
+      }
+      SaveCommitEntry(commit_entry);
+    }
+    if (kCoreWordLength > 0) {
+      if (j == i) {
+        SaveCommitEntry(commit_entry);
+      }
+      commit_entry.Clear();
+    }
+  }
+  SaveCommitEntry(commit_entry);
+  commit_entry.Clear();
+}
+
 bool ScriptTranslator::ProcessSegmentOnCommit(CommitEntry& commit_entry,
                                               const Segment& seg) {
   auto phrase =
       As<Phrase>(Candidate::GetGenuineCandidate(seg.GetSelectedCandidate()));
   bool recognized = Language::intelligible(phrase, this);
   if (recognized) {
-    if (exceed_upperlimit(commit_entry.Length(), max_word_length())) {
-      UpdateElements(commit_entry);
-      commit_entry.Clear();
-    }
-
-    if (exceed_upperlimit(commit_entry.Length() + phrase->code().size(),
-                          core_word_length())) {
-      commit_entry.Save();
-      commit_entry.Clear();
-    }
-
-    commit_entry.AppendPhrase(phrase);
+    queue_.push_back(phrase);
   }
 
   if (!recognized || seg.status >= Segment::kConfirmed) {
-    if (exceed_upperlimit(commit_entry.Length(), max_word_length())) {
-      UpdateElements(commit_entry);
-    } else {
-      commit_entry.Save();
-    }
-    commit_entry.Clear();
+    ConcatenatePhrases(commit_entry, queue_);
+    queue_.clear();
   }
 
   return true;
