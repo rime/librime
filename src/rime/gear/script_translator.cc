@@ -266,6 +266,8 @@ bool ScriptTranslator::ConcatenatePhrases(CommitEntry& commit_entry,
   }
   SaveCommitEntry(commit_entry);
   commit_entry.Clear();
+
+  return true;
 }
 
 bool ScriptTranslator::ProcessSegmentOnCommit(CommitEntry& commit_entry,
