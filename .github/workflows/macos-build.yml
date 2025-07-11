@@ -15,11 +15,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [macos-13, macos-14]
+        runs-on: [macos-13, macos-15]
         include:
           - runs-on: macos-13
             create-distributable: false
-          - runs-on: macos-14
+          - runs-on: macos-15
             create-distributable: true
             build_variant: universal
     env:
