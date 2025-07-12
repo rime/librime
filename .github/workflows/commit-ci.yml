@@ -3,9 +3,9 @@ name: Commit CI
 on:
   push:
     branches:
-      - '!master'
-    tags:
-      - '![0-9]+.*'
+      - '**'
+    tags-ignore:
+      - '**'
   pull_request:
   workflow_dispatch:
 
