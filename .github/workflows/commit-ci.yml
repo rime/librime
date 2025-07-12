@@ -11,33 +11,15 @@ on:
 
 jobs:
   lint:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v4
-      - name: Install clang-format@18
-        shell: pwsh
+
+      - name: Install clang-format-18
         run: |
-          $version = ""
-          if (Get-Command "clang-format" -ErrorAction SilentlyContinue){
-            $version = clang-format --version
-            $pat = ".*\s+(\d+\.\d+\.\d+)"
-            if ($version -match $pat) {
-              $version = $matches[1]
-            }
-          }
-          if ($version -ne "") {
-            Write-Host "clang-format version：$version"
-            if ([version]$version -eq [version]"18.1.8") {
-              Write-Host "clang-format OK"
-            } else {
-              Write-Host "clang-format version does not meet"
-              choco install llvm --version=18.1.8 --force
-            }
-          } else {
-            Write-Host "clang-format not installed"
-            choco install llvm --version=18.1.8
-          }
+          ./action-install-clang-format.sh 18
+
       - name: Code style lint
         run: make clang-format-lint
 
