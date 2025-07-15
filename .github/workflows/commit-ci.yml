@@ -3,15 +3,15 @@ name: Commit CI
 on:
   push:
     branches:
-      - '!master'
-    tags:
-      - '![0-9]+.*'
+      - '**'
+    tags-ignore:
+      - '**'
   pull_request:
   workflow_dispatch:
 
 jobs:
   lint:
-    runs-on: windows-2019
+    runs-on: windows-latest
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v4
