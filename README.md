@@ -80,6 +80,7 @@ Community:
   - [fcitx5-ui.nvim](https://github.com/black-desk/fcitx5-ui.nvim): Fcitx5 frontend for Vim
   - [tmux-rime](https://github.com/Freed-Wu/tmux-rime): frontend for Tmux
   - [rl_custom_rime](https://github.com/Freed-Wu/rl_custom_rime): frontend for Readline
+  - [ARIF](https://www.nongnu.org/arif/): frontend for Readline
   - [zsh-rime](https://github.com/Freed-Wu/zsh-rime): frontend for Zsh
   - [pyrime](https://github.com/Freed-Wu/pyrime): frontend for Ptpython
   - [fcitx-rime](https://github.com/fcitx/fcitx-rime): Fcitx frontend for Linux
