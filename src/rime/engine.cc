@@ -96,13 +96,24 @@ ConcreteEngine::~ConcreteEngine() {
   LOG(INFO) << "engine disposed.";
 }
 
+bool Engine::IsAsciiPrintable(int keycode) {
+  return (keycode >= 0x41 && keycode <= 0x5A)      // A-Z
+         || (keycode >= 0x61 && keycode <= 0x7A);  // a-z
+}
+
 bool ConcreteEngine::ProcessKey(const KeyEvent& key_event) {
   DLOG(INFO) << "process key: " << key_event;
   ProcessResult ret = kNoop;
+
   for (auto& processor : processors_) {
     ret = processor->ProcessKeyEvent(key_event);
-    if (ret == kRejected)
+    if (ret == kRejected) {
+      // 临时修复 阻止漏字上屏
+      if (context_->IsComposing() && IsAsciiPrintable(key_event.keycode())) {
+        return true;
+      }
       break;
+    }
     if (ret == kAccepted)
       return true;
   }
@@ -111,11 +122,17 @@ bool ConcreteEngine::ProcessKey(const KeyEvent& key_event) {
   // post-processing
   for (auto& processor : post_processors_) {
     ret = processor->ProcessKeyEvent(key_event);
-    if (ret == kRejected)
+    if (ret == kRejected) {
+      // 临时修复 阻止漏字上屏
+      if (context_->IsComposing() && IsAsciiPrintable(key_event.keycode())) {
+        return true;
+      }
       break;
+    }
     if (ret == kAccepted)
       return true;
   }
+
   // notify interested parties
   context_->unhandled_key_notifier()(context_.get(), key_event);
   return false;

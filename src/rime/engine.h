@@ -27,6 +27,8 @@ class Engine : public Messenger {
   virtual void CommitText(string text) { sink_(text); }
   virtual void Compose(Context* ctx) {}
 
+  bool IsAsciiPrintable(int keycode);
+
   Schema* schema() const { return schema_.get(); }
   Context* context() const { return context_.get(); }
   CommitSink& sink() { return sink_; }
