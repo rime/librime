@@ -132,7 +132,7 @@ string Composition::GetScriptText(bool keep_selection) const {
       result += cand->text();
     else if (cand && !cand->preedit().empty())
       result += boost::erase_first_copy(cand->preedit(), "\t");
-    else
+    else if (!seg.HasTag("phony"))
       result += input_.substr(start, end - start);
   }
   if (input_.length() > end) {
