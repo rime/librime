@@ -191,6 +191,13 @@ RIME_DEPRECATED void RimeClearComposition(RimeSessionId session_id) {
   session->ClearComposition();
 }
 
+RIME_DEPRECATED void RimeEndComposition(RimeSessionId session_id) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return;
+  session->EndComposition();
+}
+
 // output
 
 static void rime_candidate_copy(RimeCandidate* dest, const an<Candidate>& src) {
@@ -1228,6 +1235,7 @@ RIME_API RIME_FLAVORED(RimeApi) * RIME_FLAVORED(rime_get_api)() {
     s_api.highlight_candidate_on_current_page =
         &RimeHighlightCandidateOnCurrentPage;
     s_api.change_page = &RimeChangePage;
+    s_api.end_composition = &RimeEndComposition;
   }
   return &s_api;
 }

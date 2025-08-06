@@ -41,6 +41,7 @@ class RIME_DLL Context {
   bool PopInput(size_t len = 1);
   bool DeleteInput(size_t len = 1);
   void Clear();
+  void EndComposition();
 
   // return false if there is no candidate at index
   bool Select(size_t index);

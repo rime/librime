@@ -48,6 +48,12 @@ void Session::ClearComposition() {
   engine_->context()->Clear();
 }
 
+void Session::EndComposition() {
+  if (!engine_)
+    return;
+  engine_->context()->EndComposition();
+}
+
 void Session::ApplySchema(Schema* schema) {
   engine_->ApplySchema(schema);
 }

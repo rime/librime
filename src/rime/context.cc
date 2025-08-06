@@ -104,10 +104,14 @@ bool Context::DeleteInput(size_t len) {
 }
 
 void Context::Clear() {
+  EndComposition();
+  update_notifier_(this);
+}
+
+void Context::EndComposition() {
   input_.clear();
   caret_pos_ = 0;
   composition_.clear();
-  update_notifier_(this);
 }
 
 bool Context::Select(size_t index) {
