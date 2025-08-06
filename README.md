@@ -64,6 +64,10 @@ make
 sudo make install
 ```
 
+Packaging status
+---
+[![Packaging status](https://repology.org/badge/vertical-allrepos/librime.svg?columns=4&minversion=1.10.0)](https://repology.org/project/librime/versions)
+
 Frontends
 ===
 
