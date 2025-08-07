@@ -79,11 +79,13 @@ class RIME_DLL Context {
   // options and properties starting with '_' are local to schema;
   // others are session scoped.
   void ClearTransientOptions();
+  void AbortCompositionNotification() { abort_notifier_(this); }
 
   Notifier& commit_notifier() { return commit_notifier_; }
   Notifier& select_notifier() { return select_notifier_; }
   Notifier& update_notifier() { return update_notifier_; }
   Notifier& delete_notifier() { return delete_notifier_; }
+  Notifier& abort_notifier() { return abort_notifier_; }
   OptionUpdateNotifier& option_update_notifier() {
     return option_update_notifier_;
   }
@@ -106,6 +108,7 @@ class RIME_DLL Context {
   Notifier select_notifier_;
   Notifier update_notifier_;
   Notifier delete_notifier_;
+  Notifier abort_notifier_;
   OptionUpdateNotifier option_update_notifier_;
   PropertyUpdateNotifier property_update_notifier_;
   KeyEventNotifier unhandled_key_notifier_;
