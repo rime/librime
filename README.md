@@ -57,7 +57,7 @@ Runtime dependencies
   - libopencc
   - libyaml-cpp
 
-Build and install librime on Linux
+Build and install on Linux
 ---
 ```
 make
