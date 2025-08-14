@@ -110,6 +110,11 @@ void Context::Clear() {
   update_notifier_(this);
 }
 
+void Context::AbortComposition() {
+  Clear();
+  abort_notifier_(this);
+}
+
 bool Context::Select(size_t index) {
   if (composition_.empty())
     return false;

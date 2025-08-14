@@ -41,6 +41,8 @@ class RIME_DLL Context {
   bool PopInput(size_t len = 1);
   bool DeleteInput(size_t len = 1);
   void Clear();
+  // Clear and notify abort
+  void AbortComposition();
 
   // return false if there is no candidate at index
   bool Select(size_t index);
@@ -79,7 +81,6 @@ class RIME_DLL Context {
   // options and properties starting with '_' are local to schema;
   // others are session scoped.
   void ClearTransientOptions();
-  void AbortCompositionNotification() { abort_notifier_(this); }
 
   Notifier& commit_notifier() { return commit_notifier_; }
   Notifier& select_notifier() { return select_notifier_; }

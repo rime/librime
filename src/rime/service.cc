@@ -45,8 +45,7 @@ bool Session::CommitComposition() {
 void Session::ClearComposition() {
   if (!engine_)
     return;
-  engine_->context()->Clear();
-  engine_->context()->AbortCompositionNotification();
+  engine_->context()->AbortComposition();
 }
 
 void Session::ApplySchema(Schema* schema) {
