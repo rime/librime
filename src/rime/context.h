@@ -41,6 +41,8 @@ class RIME_DLL Context {
   bool PopInput(size_t len = 1);
   bool DeleteInput(size_t len = 1);
   void Clear();
+  // Clear and notify abort
+  void AbortComposition();
 
   // return false if there is no candidate at index
   bool Select(size_t index);
@@ -84,6 +86,7 @@ class RIME_DLL Context {
   Notifier& select_notifier() { return select_notifier_; }
   Notifier& update_notifier() { return update_notifier_; }
   Notifier& delete_notifier() { return delete_notifier_; }
+  Notifier& abort_notifier() { return abort_notifier_; }
   OptionUpdateNotifier& option_update_notifier() {
     return option_update_notifier_;
   }
@@ -106,6 +109,7 @@ class RIME_DLL Context {
   Notifier select_notifier_;
   Notifier update_notifier_;
   Notifier delete_notifier_;
+  Notifier abort_notifier_;
   OptionUpdateNotifier option_update_notifier_;
   PropertyUpdateNotifier property_update_notifier_;
   KeyEventNotifier unhandled_key_notifier_;
