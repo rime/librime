@@ -63,6 +63,9 @@ marisa-trie:
 	cmake . -B$(build) \
 	-DCMAKE_BUILD_TYPE:STRING="Release" \
 	-DCMAKE_INSTALL_PREFIX:PATH="$(prefix)" \
+	-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON \
+	-DBUILD_TESTING:BOOL=OFF \
+	-DENABLE_TOOLS:BOOL=OFF \
 	&& cmake --build $(build) --target install
 
 opencc:
