@@ -1,3 +1,30 @@
+<a name="1.14.0"></a>
+# [1.14.0](https://github.com/rime/librime/compare/1.13.1...1.14.0) (2025-07-20)
+
+
+### Bug Fixes
+
+* fix non-void function does not return a value ([#1039](https://github.com/rime/librime/issues/1039)) ([3c1d6e7](https://github.com/rime/librime/commit/3c1d6e7))
+* **ascii_composer:** Fix good old caps lock behavior ([2c24811](https://github.com/rime/librime/commit/2c24811)), closes [rime/ibus-rime#171](https://github.com/rime/ibus-rime/issues/171)
+* **cmake:** replace include() with find_package() to avoid calling find_package_handle_standard_args() twice with different arguments ([#998](https://github.com/rime/librime/issues/998)) ([ceb3081](https://github.com/rime/librime/commit/ceb3081)), closes [rime/ibus-rime#199](https://github.com/rime/ibus-rime/issues/199)
+* **script_translator:** config max_word_length and core_word_length ([ac1b3fb](https://github.com/rime/librime/commit/ac1b3fb))
+* **simplifier:** return nullptr on error [#1002](https://github.com/rime/librime/issues/1002) ([6e46361](https://github.com/rime/librime/commit/6e46361))
+* crashes caused by creating empty components ([#1003](https://github.com/rime/librime/issues/1003)) ([fa43f3d](https://github.com/rime/librime/commit/fa43f3d))
+* **test:** memory leaks in unit tests ([#997](https://github.com/rime/librime/issues/997)) ([6bbb633](https://github.com/rime/librime/commit/6bbb633)), closes [#989](https://github.com/rime/librime/issues/989)
+
+
+### Features
+
+* **ascii_composer:** set/unset_ascii_mode ([37b3246](https://github.com/rime/librime/commit/37b3246))
+* **ascii_composer:** support alt, super key press ([2f24489](https://github.com/rime/librime/commit/2f24489))
+* **deployer:** allow disabling backup_config_files ([#991](https://github.com/rime/librime/issues/991)) ([8f5d5f9](https://github.com/rime/librime/commit/8f5d5f9))
+* **script_translator:** concatenate segments with a sliding window ([fee05a5](https://github.com/rime/librime/commit/fee05a5))
+* **script_translator:** learn new phrases automatically from segmentations ([1192d8f](https://github.com/rime/librime/commit/1192d8f))
+* **script_translator:** update elements of phrases which are longer than max_word_length ([b033bad](https://github.com/rime/librime/commit/b033bad))
+* **translator_commons:** add `dictionary_exclude` to exclude words ([#1008](https://github.com/rime/librime/issues/1008)) ([959937e](https://github.com/rime/librime/commit/959937e))
+
+
+
 <a name="1.13.1"></a>
 ## [1.13.1](https://github.com/rime/librime/compare/1.13.0...1.13.1) (2025-02-16)
 
