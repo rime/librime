@@ -33,6 +33,7 @@ class RIME_DLL Context {
   string GetScriptText() const;
   Preedit GetPreedit() const;
   bool IsComposing() const;
+  bool IsPredicting() const;
   bool HasMenu() const;
   an<Candidate> GetSelectedCandidate() const;
 

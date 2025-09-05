@@ -49,6 +49,10 @@ bool Context::IsComposing() const {
   return !input_.empty() || !composition_.empty();
 }
 
+bool Context::IsPredicting() const {
+  return !composition_.empty() && composition_.back().HasTag("prediction");
+}
+
 bool Context::HasMenu() const {
   if (composition_.empty())
     return false;
