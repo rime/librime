@@ -163,7 +163,7 @@ bool Selector::PreviousPage(Context* ctx) {
   int page_size = engine_->schema()->page_size();
   int selected_index = comp.back().selected_index;
   int index = selected_index < page_size ? 0 : selected_index - page_size;
-  comp.back().selected_index = index;
+  ctx->Highlight(index);
   comp.back().tags.insert("paging");
   return true;
 }
@@ -187,7 +187,7 @@ bool Selector::NextPage(Context* ctx) {
   } else if (index >= candidate_count) {
     index = candidate_count - 1;
   }
-  comp.back().selected_index = index;
+  ctx->Highlight(index);
   comp.back().tags.insert("paging");
   return true;
 }
@@ -209,7 +209,7 @@ bool Selector::PreviousCandidate(Context* ctx) {
     // in case of linear layout, fall back to navigator
     return !is_linear_layout(ctx);
   }
-  comp.back().selected_index = index - 1;
+  ctx->Highlight(index - 1);
   comp.back().tags.insert("paging");
   return true;
 }
@@ -226,7 +226,7 @@ bool Selector::NextCandidate(Context* ctx) {
   int candidate_count = comp.back().menu->Prepare(index + 1);
   if (candidate_count <= index)
     return true;
-  comp.back().selected_index = index;
+  ctx->Highlight(index);
   comp.back().tags.insert("paging");
   return true;
 }
@@ -236,7 +236,7 @@ bool Selector::Home(Context* ctx) {
     return false;
   Segment& seg(ctx->composition().back());
   if (seg.selected_index > 0) {
-    seg.selected_index = 0;
+    ctx->Highlight(0);
     return true;
   }
   // let navigator handle the key event.
