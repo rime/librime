@@ -117,7 +117,7 @@ bool ConcreteEngine::ProcessKey(const KeyEvent& key_event) {
       return true;
   }
   // notify interested parties
-  context_->unhandled_key_notifier()(context_.get(), key_event);
+  context_->unhandled_key_notify(key_event);
   return false;
 }
 
