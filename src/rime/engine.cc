@@ -330,6 +330,8 @@ void ConcreteEngine::InitializeComponents() {
   segmentors_.clear();
   translators_.clear();
   filters_.clear();
+  formatters_.clear();
+  post_processors_.clear();
 
   if (switcher_) {
     processors_.push_back(switcher_);
