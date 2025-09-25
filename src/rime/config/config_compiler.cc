@@ -187,7 +187,8 @@ static std::optional<size_t> ParseIndexedAppend(const string& key) {
 inline static bool IsAppending(const string& key,
                                const std::optional<size_t>& indexed_append) {
   return key == ConfigCompiler::APPEND_DIRECTIVE ||
-         boost::ends_with(key, ADD_SUFFIX_OPERATOR) || indexed_append.has_value();
+         boost::ends_with(key, ADD_SUFFIX_OPERATOR) ||
+         indexed_append.has_value();
 }
 inline static bool IsMerging(const string& key,
                              const an<ConfigItem>& value,
@@ -200,15 +201,17 @@ inline static bool IsMerging(const string& key,
           !boost::ends_with(key, EQU_SUFFIX_OPERATOR));
 }
 
-inline static string StripOperator(const string& key,
-                                   bool adding,
-                                   const std::optional<size_t>& indexed_append) {
+inline static string StripOperator(
+    const string& key,
+    bool adding,
+    const std::optional<size_t>& indexed_append) {
   if (key == ConfigCompiler::APPEND_DIRECTIVE ||
       key == ConfigCompiler::MERGE_DIRECTIVE) {
     return "";
   }
   if (indexed_append) {
-    auto suffix_with_slash = string("/") + std::to_string(*indexed_append) + "+";
+    auto suffix_with_slash =
+        string("/") + std::to_string(*indexed_append) + "+";
     if (boost::ends_with(key, suffix_with_slash)) {
       return key.substr(0, key.size() - suffix_with_slash.size());
     }
@@ -217,7 +220,8 @@ inline static string StripOperator(const string& key,
       return key.substr(0, key.size() - suffix_plain.size());
     }
   }
-  return boost::erase_last_copy(key, adding ? ADD_SUFFIX_OPERATOR : EQU_SUFFIX_OPERATOR);
+  return boost::erase_last_copy(
+      key, adding ? ADD_SUFFIX_OPERATOR : EQU_SUFFIX_OPERATOR);
 }
 
 // defined in config_data.cc
@@ -247,9 +251,9 @@ static bool EditNode(an<ConfigItemRef> head,
   if ((appending || merging) && **target) {
     DLOG(INFO) << "writer: editing node";
     return !value ||  // no-op
-           (appending && (AppendToString(target, As<ConfigValue>(value)) ||
-                          AppendToList(target, As<ConfigList>(value),
-                                       indexed_append))) ||
+           (appending &&
+            (AppendToString(target, As<ConfigValue>(value)) ||
+             AppendToList(target, As<ConfigList>(value), indexed_append))) ||
            (merging && MergeTree(target, As<ConfigMap>(value)));
   } else {
     DLOG(INFO) << "writer: overwriting node";
