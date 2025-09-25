@@ -8,6 +8,7 @@
 #ifndef RIME_STRING_TABLE_H_
 #define RIME_STRING_TABLE_H_
 
+#include <cstdint>
 #include <utility>
 #include <marisa.h>
 #include <rime_api.h>
@@ -15,7 +16,7 @@
 
 namespace rime {
 
-using StringId = marisa::UInt32;
+using StringId = std::uint32_t;
 
 const StringId kInvalidStringId = (StringId)(-1);
 
