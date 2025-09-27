@@ -47,7 +47,7 @@ Set shell variable `BOOST_ROOT` to the path to `boost-<version>` directory prior
 to building librime.
 
 ``` sh
-export BOOST_ROOT="$(pwd)/deps/boost-1.88.0"
+export BOOST_ROOT="$(pwd)/deps/boost-1.89.0"
 ```
 
 **Option 2:** Install Boost libraries from Homebrew.
