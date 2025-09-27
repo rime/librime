@@ -2,7 +2,7 @@ setlocal
 
 if not defined RIME_ROOT set RIME_ROOT=%CD%
 
-if not defined boost_version set boost_version=1.88.0
+if not defined boost_version set boost_version=1.89.0
 
 if not defined boost_tarball set boost_tarball=boost_%boost_version:.=_%
 

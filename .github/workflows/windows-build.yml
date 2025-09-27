@@ -23,8 +23,8 @@ jobs:
           - { compiler: clang, cc: clang, cxx: clang++ }
           - { compiler: msvc, arch: x86, cross_arch: x64_x86 }
     env:
-      boost_version: 1.88.0
-      BOOST_ROOT: ${{ github.workspace }}\deps\boost-1.88.0
+      boost_version: 1.89.0
+      BOOST_ROOT: ${{ github.workspace }}\deps\boost-1.89.0
       RIME_PLUGINS: ${{ inputs.rime_plugins }}
 
     steps:
