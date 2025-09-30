@@ -31,6 +31,7 @@ class ConcreteEngine : public Engine {
   virtual ~ConcreteEngine();
   virtual bool ProcessKey(const KeyEvent& key_event);
   virtual void ApplySchema(Schema* schema);
+  virtual void ApplyOption(const string& name, bool value);
   virtual void CommitText(string text);
   virtual void Compose(Context* ctx);
 
@@ -291,6 +292,15 @@ void ConcreteEngine::ApplySchema(Schema* schema) {
   InitializeOptions();
   switcher_->SetActiveSchema(schema_->schema_id());
   message_sink_("schema", schema_->schema_id() + "/" + schema_->schema_name());
+}
+
+void ConcreteEngine::ApplyOption(const string& name, bool value) {
+  context_->set_option(name, value);
+  if (switcher_->IsAutoSave(name)) {
+    if (auto user_config = switcher_->user_config()) {
+      user_config->SetBool("var/option/" + name, value);
+    }
+  }
 }
 
 // Helper template function to create components

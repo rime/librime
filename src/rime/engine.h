@@ -24,6 +24,7 @@ class Engine : public Messenger {
   virtual ~Engine();
   virtual bool ProcessKey(const KeyEvent& key_event) { return false; }
   virtual void ApplySchema(Schema* schema) {}
+  virtual void ApplyOption(const string& name, bool value) {}
   virtual void CommitText(string text) { sink_(text); }
   virtual void Compose(Context* ctx) {}
 

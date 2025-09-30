@@ -52,6 +52,10 @@ void Session::ApplySchema(Schema* schema) {
   engine_->ApplySchema(schema);
 }
 
+void Session::ApplyOption(const string& name, bool value) {
+  engine_->ApplyOption(name, value);
+}
+
 void Session::OnCommit(const string& commit_text) {
   commit_text_ += commit_text;
 }

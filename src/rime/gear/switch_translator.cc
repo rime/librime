@@ -37,7 +37,7 @@ inline static bool has_state_label(const SwitchOption& option,
 
 class Switch : public SimpleCandidate, public SwitcherCommand {
  public:
-  Switch(const SwitchOption& option, bool current_state, bool auto_save)
+  Switch(const SwitchOption& option, bool current_state)
       : SimpleCandidate(
             "switch",
             0,
@@ -45,24 +45,17 @@ class Switch : public SimpleCandidate, public SwitcherCommand {
             get_state_label(option, current_state),
             kRightArrow + get_state_label(option, 1 - current_state)),
         SwitcherCommand(option.option_name),
-        target_state_(!current_state),
-        auto_save_(auto_save) {}
+        target_state_(!current_state) {}
   void Apply(Switcher* switcher) override;
 
  protected:
   bool target_state_;
-  bool auto_save_;
 };
 
 void Switch::Apply(Switcher* switcher) {
   switcher->DeactivateAndApply([this, switcher] {
     if (Engine* engine = switcher->attached_engine()) {
-      engine->context()->set_option(keyword_, target_state_);
-    }
-    if (auto_save_) {
-      if (Config* user_config = switcher->user_config()) {
-        user_config->SetBool("var/option/" + keyword_, target_state_);
-      }
+      engine->ApplyOption(keyword_, target_state_);
     }
   });
 }
@@ -71,15 +64,12 @@ class RadioOption;
 
 class RadioGroup : public std::enable_shared_from_this<RadioGroup> {
  public:
-  RadioGroup(Context* context, Switcher* switcher)
-      : context_(context), switcher_(switcher) {}
+  RadioGroup() {}
   an<RadioOption> CreateOption(const SwitchOption& option, size_t option_index);
-  void SelectOption(RadioOption* option);
-  RadioOption* GetSelectedOption() const;
+  void SelectOption(Switcher* switcher, RadioOption* option);
+  RadioOption* GetSelectedOption(Switcher* switcher) const;
 
  private:
-  Context* context_;
-  Switcher* switcher_;
   vector<RadioOption*> options_;
 };
 
@@ -101,7 +91,8 @@ class RadioOption : public SimpleCandidate, public SwitcherCommand {
 };
 
 void RadioOption::Apply(Switcher* switcher) {
-  switcher->DeactivateAndApply([this] { group_->SelectOption(this); });
+  switcher->DeactivateAndApply(
+      [this, switcher] { group_->SelectOption(switcher, this); });
 }
 
 void RadioOption::UpdateState(bool selected) {
@@ -118,28 +109,30 @@ an<RadioOption> RadioGroup::CreateOption(const SwitchOption& option,
   return radio_option;
 }
 
-void RadioGroup::SelectOption(RadioOption* option) {
+void RadioGroup::SelectOption(Switcher* switcher, RadioOption* option) {
   if (!option)
     return;
-  Config* user_config = switcher_->user_config();
+  auto engine = switcher->attached_engine();
+  if (!engine)
+    return;
   for (auto it = options_.begin(); it != options_.end(); ++it) {
     bool selected = (*it == option);
     (*it)->UpdateState(selected);
     const string& option_name((*it)->keyword());
-    if (context_->get_option(option_name) != selected) {
-      context_->set_option(option_name, selected);
-      if (user_config && switcher_->IsAutoSave(option_name)) {
-        user_config->SetBool("var/option/" + option_name, selected);
-      }
+    if (engine->context()->get_option(option_name) != selected) {
+      engine->ApplyOption(option_name, selected);
     }
   }
 }
 
-RadioOption* RadioGroup::GetSelectedOption() const {
+RadioOption* RadioGroup::GetSelectedOption(Switcher* switcher) const {
   if (options_.empty())
-    return NULL;
+    return nullptr;
+  auto engine = switcher->attached_engine();
+  if (!engine)
+    return nullptr;
   for (auto it = options_.begin(); it != options_.end(); ++it) {
-    if (context_->get_option((*it)->keyword()))
+    if (engine->context()->get_option((*it)->keyword()))
       return *it;
   }
   return options_[0];
@@ -211,19 +204,18 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
   vector<an<RadioGroup>> groups;
   Switches switches(config);
   switches.FindOption(
-      [this, switcher, context,
+      [this, context,
        &groups](Switches::SwitchOption option) -> Switches::FindResult {
         if (!has_state_label(option, 0)) {
           return Switches::kContinue;
         }
         if (option.type == Switches::kToggleOption) {
           bool current_state = context->get_option(option.option_name);
-          Append(New<Switch>(option, current_state,
-                             switcher->IsAutoSave(option.option_name)));
+          Append(New<Switch>(option, current_state));
         } else if (option.type == Switches::kRadioGroup) {
           an<RadioGroup> group;
           if (option.option_index == 0) {
-            group = New<RadioGroup>(context, switcher);
+            group = New<RadioGroup>();
             groups.push_back(group);
           } else {
             group = groups.back();
@@ -233,7 +225,7 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
         return Switches::kContinue;
       });
   for (auto& group : groups) {
-    group->SelectOption(group->GetSelectedOption());
+    group->SelectOption(switcher, group->GetSelectedOption(switcher));
   }
   if (switcher->context()->get_option("_fold_options")) {
     auto folded_options = New<FoldedOptions>(switcher->schema()->config());

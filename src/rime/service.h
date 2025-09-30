@@ -39,6 +39,7 @@ class Session {
   bool CommitComposition();
   void ClearComposition();
   void ApplySchema(Schema* schema);
+  void ApplyOption(const string& name, bool value);
 
   Context* context() const;
   Schema* schema() const;

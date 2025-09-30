@@ -422,10 +422,7 @@ RIME_DEPRECATED void RimeSetOption(RimeSessionId session_id,
   an<Session> session(Service::instance().GetSession(session_id));
   if (!session)
     return;
-  Context* ctx = session->context();
-  if (!ctx)
-    return;
-  ctx->set_option(option, !!value);
+  session->ApplyOption(option, !!value);
 }
 
 RIME_DEPRECATED Bool RimeGetOption(RimeSessionId session_id,
