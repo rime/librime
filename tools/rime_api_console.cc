@@ -102,7 +102,7 @@ bool execute_special_command(const char* line, RimeSessionId session_id) {
     if (rime->get_schema_list(&list)) {
       printf("schema list:\n");
       for (size_t i = 0; i < list.size; ++i) {
-        printf("%lu. %s [%s]\n", (i + 1), list.list[i].name,
+        printf("%zu. %s [%s]\n", (i + 1), list.list[i].name,
                list.list[i].schema_id);
       }
       rime->free_schema_list(&list);
@@ -192,7 +192,7 @@ void on_message(void* context_object,
                 RimeSessionId session_id,
                 const char* message_type,
                 const char* message_value) {
-  printf("message: [%lu] [%s] %s\n", session_id, message_type, message_value);
+  printf("message: [%zu] [%s] %s\n", session_id, message_type, message_value);
   RimeApi* rime = rime_get_api();
   if (RIME_API_AVAILABLE(rime, get_state_label) &&
       !strcmp(message_type, "option")) {
