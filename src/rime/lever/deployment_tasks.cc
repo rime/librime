@@ -437,8 +437,8 @@ bool ConfigFileUpdate::Run(Deployer* deployer) {
   path trash = user_data_path / "trash";
   if (TrashDeprecatedUserCopy(source_config_path, dest_config_path,
                               version_key_, trash)) {
-    LOG(INFO) << "deprecated user copy of '" << file_name_ << "' is moved to "
-              << trash;
+    LOG(WARNING) << "deprecated user copy of '" << file_name_
+                 << "' is moved to " << trash;
   }
   // build the config file if needs update
   the<Config> config(Config::Require("config")->Create(file_name_));
