@@ -63,7 +63,7 @@ class Candidate {
   size_t start_ = 0;
   size_t end_ = 0;
   double quality_ = 0.;
-  hash_map<string, of<void>> data_;
+  hash_map<string, an<void>> data_;
 };
 
 using CandidateQueue = list<of<Candidate>>;
