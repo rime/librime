@@ -45,11 +45,11 @@ class Candidate {
   void set_data(const string& data_tag, an<void> datum = nullptr) {
     data_[data_tag] = datum;
   }
-  an<void> get_data(const string& data_tag) {
+  an<void> get_data(const string& data_tag) const {
     auto it = data_.find(data_tag);
     return it != data_.end() ? it->second : nullptr;
   }
-  vector<string> get_data_keys() {
+  vector<string> get_data_keys() const {
     vector<string> keys;
     for (const auto& pair : data_) {
       keys.push_back(pair.first);
