@@ -41,11 +41,19 @@ class Candidate {
   void set_end(size_t end) { end_ = end; }
   void set_quality(double quality) { quality_ = quality; }
 
+  // per-candidate data
+  void set_data(const string& data_tag, an<void> datum) { data_[data_tag] = datum; }
+  an<void> get_data(const string& data_tag) {
+    auto it = data_.find(data_tag);
+    return it != data_.end() ? it->second : nullptr;
+  }
+
  private:
   string type_;
   size_t start_ = 0;
   size_t end_ = 0;
   double quality_ = 0.;
+  hash_map<string, of<void>> data_;
 };
 
 using CandidateQueue = list<of<Candidate>>;
