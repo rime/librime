@@ -51,6 +51,7 @@ class Candidate {
   }
   vector<string> get_data_keys() const {
     vector<string> keys;
+    keys.reserve(data_.size());
     for (const auto& pair : data_) {
       keys.push_back(pair.first);
     }
