@@ -71,15 +71,15 @@ Engine::~Engine() {
 ConcreteEngine::ConcreteEngine() {
   LOG(INFO) << "starting engine.";
   // receive context notifications
-  context_->commit_notifier().connect([this](Context* ctx) { OnCommit(ctx); });
-  context_->select_notifier().connect([this](Context* ctx) { OnSelect(ctx); });
-  context_->update_notifier().connect(
+  context_->commit_notifier_connect([this](Context* ctx) { OnCommit(ctx); });
+  context_->select_notifier_connect([this](Context* ctx) { OnSelect(ctx); });
+  context_->update_notifier_connect(
       [this](Context* ctx) { OnContextUpdate(ctx); });
-  context_->option_update_notifier().connect(
+  context_->option_update_notifier_connect(
       [this](Context* ctx, const string& option) {
         OnOptionUpdate(ctx, option);
       });
-  context_->property_update_notifier().connect(
+  context_->property_update_notifier_connect(
       [this](Context* ctx, const string& property) {
         OnPropertyUpdate(ctx, property);
       });

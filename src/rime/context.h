@@ -28,6 +28,7 @@ class RIME_DLL Context {
       signal<void(Context* ctx, const string& property)>;
   using KeyEventNotifier =
       signal<void(Context* ctx, const KeyEvent& key_event)>;
+  using Connection = boost::signals2::connection;
 
   Context() = default;
   ~Context() = default;
@@ -108,7 +109,7 @@ class RIME_DLL Context {
   void property_update_notify(const string& property) {
     notify(property_update_notifier_, this, property);
   };
-  void unhandled_key_notify(const rime::KeyEvent& key_event) {
+  void unhandled_key_notify(const KeyEvent& key_event) {
     notify(unhandled_key_notifier_, this, key_event);
   };
 
@@ -125,7 +126,34 @@ class RIME_DLL Context {
   }
   KeyEventNotifier& unhandled_key_notifier() { return unhandled_key_notifier_; }
 
+  Connection commit_notifier_connect(std::function<void(Context*)> slot,
+                                     int group = -1);
+  Connection select_notifier_connect(std::function<void(Context*)> slot,
+                                     int group = -1);
+  Connection update_notifier_connect(std::function<void(Context*)> slot,
+                                     int group = -1);
+  Connection delete_notifier_connect(std::function<void(Context*)> slot,
+                                     int group = -1);
+  Connection abort_notifier_connect(std::function<void(Context*)> slot,
+                                    int group = -1);
+
+  Connection option_update_notifier_connect(
+      std::function<void(Context*, const string&)> slot,
+      int group = -1);
+  Connection property_update_notifier_connect(
+      std::function<void(Context*, const string&)> slot,
+      int group = -1);
+  Connection unhandled_key_notifier_connect(
+      std::function<void(Context*, const KeyEvent&)> slot,
+      int group = -1);
+
  private:
+  template <typename Notifier, typename Slot>
+  Connection connect_notifier(Notifier& notifier, Slot&& slot, int group) {
+    return (group < 0) ? notifier.connect(std::forward<Slot>(slot))
+                       : notifier.connect(group, std::forward<Slot>(slot));
+  };
+
   string GetSoftCursor() const;
 
   string input_;

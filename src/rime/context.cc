@@ -12,7 +12,6 @@
 #include <rime/segmentation.h>
 
 namespace rime {
-
 const string kSelectedBeforeEditing = "selected_before_editing";
 
 bool Context::Commit() {
@@ -322,6 +321,51 @@ void Context::ClearTransientOptions() {
          prop->first[0] == '_') {
     properties_.erase(prop++);
   }
+}
+
+using Connection = Context::Connection;
+
+Connection Context::commit_notifier_connect(std::function<void(Context*)> slot,
+                                            int group) {
+  return connect_notifier(commit_notifier_, slot, group);
+}
+
+Connection Context::select_notifier_connect(std::function<void(Context*)> slot,
+                                            int group) {
+  return connect_notifier(select_notifier_, slot, group);
+}
+
+Connection Context::update_notifier_connect(std::function<void(Context*)> slot,
+                                            int group) {
+  return connect_notifier(update_notifier_, slot, group);
+}
+
+Connection Context::delete_notifier_connect(std::function<void(Context*)> slot,
+                                            int group) {
+  return connect_notifier(delete_notifier_, slot, group);
+}
+
+Connection Context::abort_notifier_connect(std::function<void(Context*)> slot,
+                                           int group) {
+  return connect_notifier(abort_notifier_, slot, group);
+}
+
+Connection Context::option_update_notifier_connect(
+    std::function<void(Context*, const string&)> slot,
+    int group) {
+  return connect_notifier(option_update_notifier_, slot, group);
+}
+
+Connection Context::property_update_notifier_connect(
+    std::function<void(Context*, const string&)> slot,
+    int group) {
+  return connect_notifier(property_update_notifier_, slot, group);
+}
+
+Connection Context::unhandled_key_notifier_connect(
+    std::function<void(Context*, const KeyEvent&)> slot,
+    int group) {
+  return connect_notifier(unhandled_key_notifier_, slot, group);
 }
 
 }  // namespace rime
