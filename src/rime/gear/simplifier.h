@@ -17,7 +17,7 @@ class Opencc;
 
 class Simplifier : public Filter, TagMatching {
  public:
-  Simplifier(const Ticket& ticket, an<Opencc> opencc);
+  explicit Simplifier(const Ticket& ticket);
 
   virtual an<Translation> Apply(an<Translation> translation,
                                 CandidateList* candidates);
@@ -29,28 +29,22 @@ class Simplifier : public Filter, TagMatching {
  protected:
   enum TipsLevel { kTipsNone, kTipsChar, kTipsAll };
 
+  void Initialize();
   void PushBack(const an<Candidate>& original,
                 CandidateQueue* result,
                 const string& simplified);
 
-  an<Opencc> opencc_;
+  bool initialized_ = false;
+  the<Opencc> opencc_;
   // settings
   TipsLevel tips_level_ = kTipsNone;
   string option_name_;
+  string opencc_config_;
   set<string> excluded_types_;
   bool show_in_comment_ = false;
   bool inherit_comment_ = true;
   Projection comment_formatter_;
   bool random_ = false;
-};
-
-class SimplifierComponent : public Simplifier::Component {
- public:
-  SimplifierComponent();
-  Simplifier* Create(const Ticket& ticket);
-
- private:
-  hash_map<string, weak<Opencc>> opencc_map_;
 };
 
 }  // namespace rime
