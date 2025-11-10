@@ -7,7 +7,7 @@ set(rime_console_deps
   ${rime_levers_library}
   ${rime_plugins_library})
 
-set(rime_api_console_src "rime_api_console.cc")
+set(rime_api_console_src "rime_api_console.cc" "line_editor.cc")
 add_executable(rime_api_console ${rime_api_console_src})
 target_link_libraries(rime_api_console ${rime_console_deps})
 
