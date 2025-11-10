@@ -31,22 +31,28 @@ namespace rime {
 
 class Opencc {
  public:
-  Opencc(const path& config_path) {
-    LOG(INFO) << "initializing opencc: " << config_path;
+  Opencc(const path& config_path)
+      : initialized_(false), config_path_(config_path) {}
+
+  void Initialize() {
+    if (initialized_)
+      return;
+    initialized_ = true;
     opencc::Config config;
     try {
       // opencc accepts file path encoded in UTF-8.
-      converter_ = config.NewFromFile(config_path.u8string());
+      converter_ = config.NewFromFile(config_path_.u8string());
 
       const list<opencc::ConversionPtr> conversions =
           converter_->GetConversionChain()->GetConversions();
       dict_ = conversions.front()->GetDict();
     } catch (...) {
-      LOG(ERROR) << "opencc config not found: " << config_path;
+      LOG(ERROR) << "opencc config not found: " << config_path_;
     }
   }
 
   bool ConvertWord(const string& text, vector<string>* forms) {
+    Initialize();
     if (converter_ == nullptr) {
       return false;
     }
@@ -111,6 +117,7 @@ class Opencc {
   }
 
   bool RandomConvertText(const string& text, string* simplified) {
+    Initialize();
     if (dict_ == nullptr)
       return false;
     const list<opencc::ConversionPtr> conversions =
@@ -143,6 +150,7 @@ class Opencc {
   }
 
   bool ConvertText(const string& text, string* simplified) {
+    Initialize();
     if (converter_ == nullptr)
       return false;
     *simplified = converter_->Convert(text);
@@ -150,6 +158,8 @@ class Opencc {
   }
 
  private:
+  bool initialized_;
+  path config_path_;
   opencc::ConverterPtr converter_;
   opencc::DictPtr dict_;
 };
