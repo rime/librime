@@ -9,6 +9,7 @@
 #include <string.h>
 #include <rime_api.h>
 #include "codepage.h"
+#include "line_editor.h"
 
 void print_status(RimeStatus* status) {
   printf("schema: %s / %s\n", status->schema_id, status->schema_name);
@@ -235,32 +236,29 @@ reload:
 
   RimeSessionId session_id = 0;
   const int kMaxLength = 99;
-  char line[kMaxLength + 1] = {0};
-  while (fgets(line, kMaxLength, stdin) != NULL) {
-    for (char* p = line; *p; ++p) {
-      if (*p == '\r' || *p == '\n') {
-        *p = '\0';
-        break;
-      }
-    }
+  LineEditor editor(kMaxLength);
+  std::string line;
+  while (editor.ReadLine(&line)) {
+    if (line.empty())
+      line = "\r";
     if (!rime->find_session(session_id) &&
         !(session_id = ensure_session(rime))) {
       SetConsoleOutputCodePage(codepage);
       return 1;
     }
-    if (!strcmp(line, "exit"))
+    if (!strcmp(line.c_str(), "exit"))
       break;
-    else if (!strcmp(line, "reload")) {
+    else if (!strcmp(line.c_str(), "reload")) {
       rime->destroy_session(session_id);
       rime->finalize();
       goto reload;
     }
-    if (execute_special_command(line, session_id))
+    if (execute_special_command(line.c_str(), session_id))
       continue;
-    if (rime->simulate_key_sequence(session_id, line)) {
+    if (rime->simulate_key_sequence(session_id, line.c_str())) {
       print(session_id);
     } else {
-      fprintf(stderr, "Error processing key sequence: %s\n", line);
+      fprintf(stderr, "Error processing key sequence: %s\n", line.c_str());
     }
   }
 
