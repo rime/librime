@@ -35,7 +35,7 @@ class PunctConfig {
   an<ConfigMap> mapping_;
   an<ConfigMap> symbols_;
 
-  string digit_separators_ = ",.:'";
+  string digit_separators_ = ".:";
   bool digit_separator_commit_ = false;
 };
 
