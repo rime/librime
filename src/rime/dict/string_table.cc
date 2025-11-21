@@ -12,9 +12,7 @@
 namespace rime {
 
 StringTable::StringTable(const char* ptr, size_t size) {
-  std::stringstream stream;
-  stream.write(ptr, size);
-  stream >> trie_;
+  trie_.map(ptr, size);
 }
 
 bool StringTable::HasKey(const string& key) {
