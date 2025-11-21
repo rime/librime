@@ -5,7 +5,7 @@
 // 2013-01-30 GONG Chen <chen.sst@gmail.com>
 //
 #include <fstream>
-#include <sstream>
+#include <array>
 #include <rime/algo/utilities.h>
 
 namespace rime {
@@ -32,11 +32,18 @@ ChecksumComputer::ChecksumComputer(uint32_t initial_remainder)
     : crc_(initial_remainder) {}
 
 void ChecksumComputer::ProcessFile(const path& file_path) {
-  std::ifstream fin(file_path.c_str());
-  std::stringstream buffer;
-  buffer << fin.rdbuf();
-  const auto& file_content(buffer.str());
-  crc_.process_bytes(file_content.data(), file_content.length());
+  std::ifstream fin(file_path.c_str(), std::ios::binary);
+  if (!fin)
+    return;
+
+  std::array<char, buffer_size> buffer;
+  while (fin) {
+    fin.read(buffer.data(), buffer_size);
+    std::streamsize bytes_read = fin.gcount();
+    if (bytes_read > 0) {
+      crc_.process_bytes(buffer.data(), bytes_read);
+    }
+  }
 }
 
 uint32_t ChecksumComputer::Checksum() {

@@ -23,6 +23,7 @@ class ChecksumComputer {
 
  private:
   boost::crc_32_type crc_;
+  static constexpr size_t buffer_size = 64 * 1024;  // 64 KB
 };
 
 inline uint32_t Checksum(const path& file_path) {
