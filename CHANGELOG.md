@@ -1,3 +1,23 @@
+<a name="1.15.0"></a>
+# [1.15.0](https://github.com/rime/librime/compare/1.14.0...1.15.0) (2025-11-23)
+
+
+### Bug Fixes
+
+* **charset_filter:** Support Ext J ([#1098](https://github.com/rime/librime/issues/1098)) ([5a54a14](https://github.com/rime/librime/commit/5a54a14))
+* **simplifier:** Lazily initialize Opencc ([#1101](https://github.com/rime/librime/issues/1101)) ([6bd73d0](https://github.com/rime/librime/commit/6bd73d0))
+* navigation actions should trigger `update_notifier` ([eaa23f5](https://github.com/rime/librime/commit/eaa23f5))
+* **composition:** skip phony segments in GetScriptText ([#1051](https://github.com/rime/librime/issues/1051)) ([0a8a58f](https://github.com/rime/librime/commit/0a8a58f))
+* **engine:** clear formatters and post processors ([29dc787](https://github.com/rime/librime/commit/29dc787))
+* **vocabulary:** Homophones sorting should be stable ([#1079](https://github.com/rime/librime/issues/1079)) ([d6a9280](https://github.com/rime/librime/commit/d6a9280))
+
+
+### Features
+
+* clear composition with a abortcomposition notification ([#1054](https://github.com/rime/librime/issues/1054)) ([0ecfc9c](https://github.com/rime/librime/commit/0ecfc9c))
+
+
+
 <a name="1.14.0"></a>
 # [1.14.0](https://github.com/rime/librime/compare/1.13.1...1.14.0) (2025-07-20)
 
