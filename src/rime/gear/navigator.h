@@ -34,6 +34,10 @@ class Navigator : public Processor, public KeyBindingProcessor<Navigator, 2> {
   Handler RightBySyllable;
   Handler Home;
   Handler End;
+  Handler RewindNoLoop;
+  Handler LeftByCharNoLoop;
+  Handler RightByCharNoLoop;
+  Handler LeftBySyllableNoLoop;
 
  private:
   void BeginMove(Context* ctx);

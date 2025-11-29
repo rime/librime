@@ -25,6 +25,10 @@ static Navigator::ActionDef navigation_actions[] = {
     {"right_by_syllable", &Navigator::RightBySyllable},
     {"home", &Navigator::Home},
     {"end", &Navigator::End},
+    {"rewind_no_loop", &Navigator::RewindNoLoop},
+    {"left_by_char_no_loop", &Navigator::LeftByCharNoLoop},
+    {"right_by_char_no_loop", &Navigator::RightByCharNoLoop},
+    {"left_by_syllable_no_loop", &Navigator::LeftBySyllableNoLoop},
     Navigator::kActionNoop};
 
 Navigator::Navigator(const Ticket& ticket)
@@ -92,9 +96,22 @@ bool Navigator::LeftBySyllable(Context* ctx) {
   return true;
 }
 
+bool Navigator::LeftBySyllableNoLoop(Context* ctx) {
+  BeginMove(ctx);
+  size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
+  JumpLeft(ctx, confirmed_pos);
+  return true;
+}
+
 bool Navigator::LeftByChar(Context* ctx) {
   BeginMove(ctx);
   MoveLeft(ctx) || GoToEnd(ctx);
+  return true;
+}
+
+bool Navigator::LeftByCharNoLoop(Context* ctx) {
+  BeginMove(ctx);
+  MoveLeft(ctx);
   return true;
 }
 
@@ -108,6 +125,15 @@ bool Navigator::Rewind(Context* ctx) {
   return true;
 }
 
+bool Navigator::RewindNoLoop(Context* ctx) {
+  BeginMove(ctx);
+  // take a jump leftwards when there are multiple spans,
+  // but not from the middle of a span and not GoToEnd.
+  (spans_.Count() > 1 && spans_.HasVertex(ctx->caret_pos()) ? JumpLeft(ctx)
+                                                            : MoveLeft(ctx));
+  return true;
+}
+
 bool Navigator::RightBySyllable(Context* ctx) {
   BeginMove(ctx);
   size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
@@ -118,6 +144,12 @@ bool Navigator::RightBySyllable(Context* ctx) {
 bool Navigator::RightByChar(Context* ctx) {
   BeginMove(ctx);
   MoveRight(ctx) || GoHome(ctx);
+  return true;
+}
+
+bool Navigator::RightByCharNoLoop(Context* ctx) {
+  BeginMove(ctx);
+  MoveRight(ctx);
   return true;
 }
 
