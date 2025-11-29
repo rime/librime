@@ -35,11 +35,15 @@ class Navigator : public Processor, public KeyBindingProcessor<Navigator, 2> {
   Handler RightBySyllable;
   Handler Home;
   Handler End;
+  Handler LeftByCharNoLoop;
+  Handler RightByCharNoLoop;
+  Handler LeftBySyllableNoLoop;
+  Handler RightBySyllableNoLoop;
 
  private:
   void BeginMove(Context* ctx);
-  bool JumpLeft(Context* ctx, size_t start_pos = 0);
-  bool JumpRight(Context* ctx, size_t start_pos = 0);
+  bool JumpLeft(Context* ctx, size_t start_pos = 0, bool loop = false);
+  bool JumpRight(Context* ctx, size_t start_pos = 0, bool loop = false);
   bool MoveLeft(Context* ctx);
   bool MoveRight(Context* ctx);
   bool GoHome(Context* ctx);
