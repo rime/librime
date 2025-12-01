@@ -129,21 +129,24 @@ ProcessResult ChordComposer::ProcessChordingKey(const KeyEvent& key_event) {
     return kNoop;
   }
   // chording key
+  ProcessResult result = kAccepted;
   editing_chord_ = true;
   bool is_key_up = key_event.release();
   if (is_key_up) {
-    if (state_.ReleaseKey(ch) && FinishChordConditionIsMet() &&
+    bool chording_key_released = state_.ReleaseKey(ch);
+    if (chording_key_released && FinishChordConditionIsMet() &&
         !state_.recognized_chord.empty()) {
       FinishChord(state_.recognized_chord);
       state_.recognized_chord.clear();
     }
+    result = chording_key_released ? kAccepted : kRejected;
   } else {  // key down, ignore repeated key down events
     if (state_.PressKey(ch) && state_.AddKeyToChord(ch)) {
       UpdateChord(state_.recognized_chord);
     }
   }
   editing_chord_ = false;
-  return kAccepted;
+  return result;
 }
 
 ProcessResult ChordComposer::ProcessKeyEvent(const KeyEvent& key_event) {
