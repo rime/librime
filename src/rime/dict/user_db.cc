@@ -61,14 +61,11 @@ string UserDb::snapshot_extension() {
   return plain_userdb_extension;
 }
 
-// key ::= code <space> <Tab> phrase
-
 static bool userdb_entry_parser(const Tsv& row, string* key, string* value) {
   if (row.size() < 2 || row[0].empty() || row[1].empty()) {
     return false;
   }
   string code(row[0]);
-  // fix invalid keys created by a buggy version
   if (code[code.length() - 1] != ' ')
     code += ' ';
   *key = code + "\t" + row[1];
@@ -150,7 +147,6 @@ string UserDbHelper::GetDbName() {
     return name;
   auto ext = boost::find_last(name, ".userdb");
   if (!ext.empty()) {
-    // remove ".userdb.*"
     name.erase(ext.begin(), name.end());
   }
   return name;
@@ -200,9 +196,43 @@ bool UserDbMerger::MetaPut(const string& key, const string& value) {
   return true;
 }
 
+static unsigned long extract_stamp_force(const string& val) {
+  size_t pos = val.find("s=");
+  if (pos == string::npos) return 0;
+  try {
+    string temp = val.substr(pos + 2);
+    size_t space = temp.find(' '); 
+    if (space != string::npos) temp = temp.substr(0, space);
+    return std::stoul(temp);
+  } catch (...) {
+    return 0;
+  }
+}
+
+// Merger::Put
 bool UserDbMerger::Put(const string& key, const string& value) {
-  if (!db_)
-    return false;
+  if (!db_) return false;
+
+  // sequence 数据库专用逻辑
+  if (db_->name().find("sequence") != string::npos) {
+    string our_value;
+    
+    if (!db_->Fetch(key, &our_value)) {
+      return db_->Update(key, value) && ++merged_entries_;
+    }
+
+    unsigned long v_s = extract_stamp_force(value);
+    unsigned long o_s = extract_stamp_force(our_value);
+
+    // 比较物理时间戳：谁大谁赢
+    if (v_s > o_s) {
+      return db_->Update(key, value) && ++merged_entries_;
+    } else {
+      return ++merged_entries_;
+    }
+  }
+
+  // 普通数据库逻辑 (c/d/t)
   UserDbValue v(value);
   if (v.tick < their_tick_) {
     v.dee = algo::formula_d(0, (double)their_tick_, v.dee, (double)v.tick);
@@ -227,7 +257,11 @@ void UserDbMerger::CloseMerge() {
     return;
   Deployer& deployer(Service::instance().deployer());
   try {
-    db_->MetaUpdate("/tick", std::to_string(max_tick_));
+    // 只有当数据库名称不包含 "sequence" 时，才更新 /tick
+    if (db_->name().find("sequence") == string::npos) {
+      db_->MetaUpdate("/tick", std::to_string(max_tick_));
+    }
+    
     db_->MetaUpdate("/user_id", deployer.user_id);
   } catch (...) {
     LOG(ERROR) << "failed to update tick count.";
@@ -243,10 +277,30 @@ UserDbImporter::UserDbImporter(Db* db) : db_(db) {}
 bool UserDbImporter::MetaPut(const string& key, const string& value) {
   return true;
 }
-
+// Importer::Put
 bool UserDbImporter::Put(const string& key, const string& value) {
-  if (!db_)
-    return false;
+  if (!db_) return false;
+
+  // sequence 数据库专用逻辑
+  if (db_->name().find("sequence") != string::npos) {
+    string our_value;
+    
+    if (!db_->Fetch(key, &our_value)) {
+      return db_->Update(key, value);
+    }
+
+    unsigned long v_s = extract_stamp_force(value);
+    unsigned long o_s = extract_stamp_force(our_value);
+
+    // 严防旧数据覆盖新数据
+    if (v_s > o_s) {
+       return db_->Update(key, value);
+    }
+    
+    return true; 
+  }
+
+  // 普通数据库逻辑
   UserDbValue v(value);
   UserDbValue o;
   string old_value;
@@ -256,7 +310,7 @@ bool UserDbImporter::Put(const string& key, const string& value) {
   if (v.commits > 0) {
     o.commits = (std::max)(o.commits, v.commits);
     o.dee = (std::max)(o.dee, v.dee);
-  } else if (v.commits < 0) {  // mark as deleted
+  } else if (v.commits < 0) {
     o.commits = (std::min)(v.commits, -std::abs(o.commits));
   }
   return db_->Update(key, o.Pack());
