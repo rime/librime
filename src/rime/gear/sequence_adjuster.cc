@@ -1,3 +1,5 @@
+// src/rime/gear/sequence_adjuster.cc
+#include <rime/translation.h> 
 #include <rime/context.h>
 #include <rime/composition.h> 
 #include <rime/segmentation.h> 
@@ -6,7 +8,6 @@
 #include <rime/dict/db.h>
 #include <rime/dict/user_db.h>
 #include <rime/gear/sequence_adjuster.h> 
-#include <rime/translation.h>
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
 #include <vector>
@@ -20,7 +21,8 @@
 
 namespace rime {
 
-// 0. DB 单例
+// 0. DB 单例管理
+
 static std::weak_ptr<Db> g_shared_db;
 static std::mutex g_db_mutex;
 
@@ -58,12 +60,13 @@ class VectorTranslation : public Translation {
     return candidates_[cursor_];
   }
   bool exhausted() const { return cursor_ >= candidates_.size(); }
+  bool exhausted() { return cursor_ >= candidates_.size(); } 
  private:
   std::vector<an<Candidate>> candidates_;
   size_t cursor_ = 0;
 };
 
-// 2. SequenceDbValue 实现
+// 2. 数据结构与辅助函数
 std::string SequenceDbValue::Pack() const {
   std::ostringstream packed;
   packed << "p=" << position << " s=" << stamp;
@@ -89,22 +92,20 @@ SequenceDbValue SequenceDbValue::Unpack(const std::string& value) {
 
 static unsigned long GetPhysicalTimestamp() {
   auto now = std::chrono::system_clock::now();
-  auto duration = now.time_since_epoch();
+  auto duration = std::chrono::system_clock::now().time_since_epoch();
   return static_cast<unsigned long>(std::chrono::duration_cast<std::chrono::seconds>(duration).count());
 }
-
-// GetActiveCode: Input + Caret 逻辑
-static std::string GetActiveCode(Context* ctx) {
-  if (!ctx) return "";
+// 始终返回当前 Segment 的完整编码
+static std::string GetContextCode(Context* ctx) {
+  if (!ctx || ctx->composition().empty()) return "";
+  const auto& segment = ctx->composition().back();
+  size_t start = segment.start;
+  size_t end = segment.end;
   
-  size_t caret = ctx->caret_pos();
-  std::string full_input = ctx->input();
+  if (end > ctx->input().length()) end = ctx->input().length();
+  if (start >= end) return "";
   
-  if (caret > full_input.length()) {
-    caret = full_input.length();
-  }
-
-  std::string code = full_input.substr(0, caret);
+  std::string code = ctx->input().substr(start, end - start);
   boost::trim(code);
   return code;
 }
@@ -123,6 +124,7 @@ void SequenceAdjusterProcessor::LoadConfig() {
   config->GetBool("sequence_adjuster/enable", &module_enabled);
   if (!module_enabled) return;
 
+  // 硬编码 DB 名称
   db_name_ = "sequence";
   
   auto load_key = [&](const std::string& key_name, KeyEvent& key, const std::string& def) {
@@ -151,6 +153,7 @@ ProcessResult SequenceAdjusterProcessor::ProcessKeyEvent(const KeyEvent& key_eve
   if (!ctx->HasMenu()) return kNoop;
   if (key_event.release()) return kNoop;
   
+  // 处理按键
   std::string repr = key_event.repr();
   if (repr == "{Sequence_Up}" || key_event == key_up_)    return SaveAdjustment(ctx, 1, false, false) ? kAccepted : kNoop;
   if (repr == "{Sequence_Down}" || key_event == key_down_)  return SaveAdjustment(ctx, -1, false, false) ? kAccepted : kNoop;
@@ -161,20 +164,22 @@ ProcessResult SequenceAdjusterProcessor::ProcessKeyEvent(const KeyEvent& key_eve
 }
 
 bool SequenceAdjusterProcessor::SaveAdjustment(Context* ctx, int offset, bool is_pin, bool is_reset) {
+  // 1. 获取当前选中的候选词
   auto cand = ctx->GetSelectedCandidate();
   if (!cand) return false;
   
-  std::string code = GetActiveCode(ctx);
+  // 2. 获取 ContextCode (例如 "nihk")
+  std::string code = GetContextCode(ctx);
   if (code.empty()) return false;
   
+  // 生成 Key: nihk \t 拟
+  // 这保证了它只在 nihk 上下文中生效，不污染 ni 的上下文
   std::string key = MakeDbKey(code, cand->text());
   
-  int current_idx = 0;
-  if (!ctx->composition().empty()) {
-      current_idx = static_cast<int>(ctx->composition().back().selected_index);
-  }
-
+  auto& segment = ctx->composition().back(); 
+  int current_idx = static_cast<int>(segment.selected_index);
   int target_idx = 0;
+  
   if (is_pin) target_idx = 0;
   else if (is_reset) target_idx = -1;
   else {
@@ -182,6 +187,22 @@ bool SequenceAdjusterProcessor::SaveAdjustment(Context* ctx, int offset, bool is
     if (target_idx < 0) target_idx = 0;
   }
 
+  // 如果是普通移动，必须检查“我”和“目标位置的那个词”是不是同一类（编码长度相同）。
+  // 防止 ni (2码) 跳到 nihk (4码) 的区域去。
+  if (!is_pin && !is_reset && target_idx != current_idx) {
+      auto target_cand = segment.GetCandidateAt(target_idx);
+      // 如果目标位置有词，且 目标词的end != 我的end => 长度不同，禁止穿越！
+      if (target_cand && target_cand->end() != cand->end()) {
+          return true; // 拦截按键，不执行任何操作
+      }
+  }
+
+  // 4. 原地不动检查
+  if (target_idx == current_idx && !is_reset) {
+      return true; 
+  }
+
+  // 5. 更新 DB
   SequenceDbValue val;
   std::string val_str;
   if (user_db_->Fetch(key, &val_str)) val = SequenceDbValue::Unpack(val_str);
@@ -193,11 +214,16 @@ bool SequenceAdjusterProcessor::SaveAdjustment(Context* ctx, int offset, bool is
   val.position = target_idx;
 
   if (user_db_->Update(key, val.Pack())) {
+    // 刷新并锁定高亮
+    // Processor 确认可以移动后，立即更新高亮，让用户感觉“动了”。
+    // 随后 Filter 会根据 DB 真正移动词的位置。
     ctx->RefreshNonConfirmedComposition();
-    if (!is_reset && target_idx >= 0 && !ctx->composition().empty()) {
-      auto& segment = ctx->composition().back();
-      segment.selected_index = static_cast<size_t>(target_idx);
-      segment.status = Segment::kGuess; 
+    if (!ctx->composition().empty()) {
+       auto& seg_ref = ctx->composition().back();
+       if (!is_reset && target_idx >= 0) {
+          seg_ref.selected_index = static_cast<size_t>(target_idx);
+          seg_ref.status = Segment::kGuess;
+       }
     }
     return true;
   }
@@ -206,13 +232,14 @@ bool SequenceAdjusterProcessor::SaveAdjustment(Context* ctx, int offset, bool is
 
 // 4. Filter 实现
 SequenceAdjusterFilter::SequenceAdjusterFilter(const Ticket& ticket) : Filter(ticket) {
+  // 直接在构造函数里初始化，不调用 LoadConfig
   Config* config = engine_->schema()->config();
   bool module_enabled = true;
   config->GetBool("sequence_adjuster/enable", &module_enabled);
-  if (!module_enabled) return;
-  
-  db_name_ = "sequence";
-  if (!db_name_.empty()) user_db_ = GetSharedDb(db_name_);
+  if (module_enabled) {
+    db_name_ = "sequence";
+    if (!db_name_.empty()) user_db_ = GetSharedDb(db_name_);
+  }
 }
 SequenceAdjusterFilter::~SequenceAdjusterFilter() { user_db_.reset(); }
 
@@ -224,28 +251,24 @@ std::string SequenceAdjusterFilter::MakeDbKey(const std::string& code, const std
 
 an<Translation> SequenceAdjusterFilter::Apply(an<Translation> translation, CandidateList* candidates) {
   if (!user_db_ || !translation || translation->exhausted()) return translation;
-  
   Context* ctx = engine_->context();
-  std::string input_code = GetActiveCode(ctx);
+  
+  // 使用 ContextCode 作为 Key，实现上下文隔离
+  // 输入 nihk 时，只查 nihk 的记录。
+  std::string input_code = GetContextCode(ctx);
   if (input_code.empty()) return translation;
 
+  // 1. 读取 DB
+  std::map<std::string, SequenceDbValue> adjustments;
   std::string db_prefix = input_code;
-  if (db_prefix.empty() || db_prefix.back() != ' ') {
-    db_prefix += ' ';
-  }
+  if (db_prefix.empty() || db_prefix.back() != ' ') db_prefix += ' ';
   db_prefix += "\t"; 
 
-  // 1. 批量查询 (Batch Query)
-  std::map<std::string, SequenceDbValue> adjustments;
   auto accessor = user_db_->Query(db_prefix);
-  
   if (accessor && accessor->Jump(db_prefix)) {
     std::string key, val_str;
     while (accessor->GetNextRecord(&key, &val_str)) {
       if (!boost::starts_with(key, db_prefix)) break;
-
-      // 解析 Key: [Code] [\t] [Text]
-      // 这里的逻辑兼容了 DB 里的 "ribk\t" 和 "ribk \t"
       if (key.length() > db_prefix.length()) {
         std::string text = key.substr(db_prefix.length());
         SequenceDbValue val = SequenceDbValue::Unpack(val_str);
@@ -256,27 +279,25 @@ an<Translation> SequenceAdjusterFilter::Apply(an<Translation> translation, Candi
     }
   }
 
-  // 2. 候选词转换 + 去重 (Deduplication)
-  // 这里解决了同名候选词导致的移动 BUG
+  // 2. 全量读取 + 去重
   auto list = std::vector<an<Candidate>>();
-  // 使用 unordered_set 记录已存在的文本，实现 O(1) 查找
-  std::unordered_set<std::string> seen; 
-
+  std::unordered_set<std::string> seen_texts;
+  
   while (!translation->exhausted()) {
     auto cand = translation->Peek();
-    if (cand) {
-        // 如果这个词的文本还没出现过，才加入列表
-        if (seen.find(cand->text()) == seen.end()) {
+    if (cand && !cand->text().empty()) {
+        if (seen_texts.find(cand->text()) == seen_texts.end()) {
             list.push_back(cand);
-            seen.insert(cand->text());
+            seen_texts.insert(cand->text());
         }
     }
     translation->Next();
   }
+  
+  if (list.size() <= 1) return New<VectorTranslation>(std::move(list));
+  if (adjustments.empty()) return New<VectorTranslation>(std::move(list));
 
-  if (list.empty()) return New<VectorTranslation>(list);
-  if (adjustments.empty()) return New<VectorTranslation>(list);
-  // 3. 排序逻辑 (Sort & Apply)
+  // 3. 收集动作
   struct Action {
     std::string text;
     int target_index;  
@@ -287,11 +308,11 @@ an<Translation> SequenceAdjusterFilter::Apply(an<Translation> translation, Candi
   for (const auto& cand : list) {
     auto it = adjustments.find(cand->text());
     if (it != adjustments.end()) {
-      const auto& val = it->second;
-      actions.push_back({cand->text(), val.position, val.stamp});
+        actions.push_back({cand->text(), it->second.position, it->second.stamp});
     }
   }
 
+  // 4. 排序并移动
   std::sort(actions.begin(), actions.end(), [](const Action& a, const Action& b) {
     return a.stamp < b.stamp; 
   });
@@ -301,19 +322,23 @@ an<Translation> SequenceAdjusterFilter::Apply(an<Translation> translation, Candi
       return c->text() == action.text;
     });
     
-    // 这里的 it 绝对是唯一的，因为我们在上面已经去重了
     if (it != list.end()) {
-      auto cand = *it;
-      list.erase(it);
-      
+      int current_idx = std::distance(list.begin(), it);
       int target = action.target_index;
       if (target > (int)list.size()) target = (int)list.size();
       if (target < 0) target = 0;
+
+      if (current_idx == target) continue;
+
+      an<Candidate> cand = *it;
+      list.erase(it);
       
-      list.insert(list.begin() + target, cand);
+      if (target >= list.size()) list.push_back(cand);
+      else list.insert(list.begin() + target, cand);
     }
   }
-  return New<VectorTranslation>(list);
+
+  return New<VectorTranslation>(std::move(list));
 }
 
 }  // namespace rime
