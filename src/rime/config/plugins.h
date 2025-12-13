@@ -58,6 +58,7 @@ struct ResourceType;
 class SaveOutputPlugin : public ConfigCompilerPlugin {
  public:
   SaveOutputPlugin();
+  SaveOutputPlugin(const string& output_dir);
   virtual ~SaveOutputPlugin();
 
   Review ReviewCompileOutput;
