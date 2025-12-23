@@ -19,7 +19,11 @@ using Vertex = pair<size_t, SpellingType>;
 using VertexQueue =
     std::priority_queue<Vertex, vector<Vertex>, std::greater<Vertex>>;
 
-const double kCompletionPenalty = -0.6931471805599453;     // log(0.5)
+// 權重階梯：
+// 1. 全拼：用戶完整輸入了所有編碼。Penalty = 0
+// 2. 簡拼：用戶輸入了縮寫，明確希望匹配某個字。Penalty ≈ -2.3
+// 3. 補全 (Completion)：用戶還沒打完，算法瞎猜的。Penalty ≈ -3.0
+const double kCompletionPenalty = -2.995732273553991;      // log(0.05)
 const double kCorrectionCredibility = -4.605170185988091;  // log(0.01)
 
 int Syllabifier::BuildSyllableGraph(const string& input,
