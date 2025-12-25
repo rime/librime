@@ -515,12 +515,6 @@ bool ScriptTranslation::Next() {
   return false;
 }
 
-bool ScriptTranslation::IsNormalSpelling() const {
-  const auto& syllable_graph = syllabifier_->syllable_graph();
-  return !syllable_graph.vertices.empty() &&
-         (syllable_graph.vertices.rbegin()->second == kNormalSpelling);
-}
-
 an<Candidate> ScriptTranslation::Peek() {
   if (candidate_source_ == kUninitialized && !PrepareCandidate()) {
     return nullptr;
@@ -563,6 +557,7 @@ bool ScriptTranslation::PrepareCandidate() {
     candidate_ = sentence_;
     return true;
   }
+  const size_t full_code_length = end_of_input_ - start_;
   size_t user_phrase_code_length = 0;
   if (user_phrase_ && user_phrase_iter_ != user_phrase_->rend()) {
     user_phrase_code_length = user_phrase_iter_->first;
@@ -572,16 +567,17 @@ bool ScriptTranslation::PrepareCandidate() {
     phrase_code_length = phrase_iter_->first;
   }
   if (user_phrase_code_length > 0 &&
-      prefer_user_phrase(user_phrase_code_length, phrase_code_length, [this]() {
-        const int kNumExactMatchOnTop = 1;
-        size_t full_code_length = end_of_input_ - start_;
-        return candidate_index_ >= kNumExactMatchOnTop ||
-               prefer_user_phrase(
-                   has_exact_match_phrase(user_phrase_, user_phrase_iter_,
-                                          full_code_length),
-                   has_exact_match_phrase(phrase_, phrase_iter_,
-                                          full_code_length));
-      })) {
+      prefer_user_phrase(
+          user_phrase_code_length, phrase_code_length,
+          [this, full_code_length]() {
+            const int kNumExactMatchOnTop = 1;
+            return candidate_index_ >= kNumExactMatchOnTop ||
+                   prefer_user_phrase(
+                       has_exact_match_phrase(user_phrase_, user_phrase_iter_,
+                                              full_code_length),
+                       has_exact_match_phrase(phrase_, phrase_iter_,
+                                              full_code_length));
+          })) {
     UserDictEntryIterator& uter = user_phrase_iter_->second;
     const auto& entry = uter.Peek();
     DLOG(INFO) << "user phrase '" << entry->text
@@ -593,7 +589,7 @@ bool ScriptTranslation::PrepareCandidate() {
                     start_, start_ + user_phrase_code_length, entry);
     candidate_->set_quality(std::exp(entry->weight) +
                             translator_->initial_quality() +
-                            (IsNormalSpelling() ? 0.5 : -0.5));
+                            (entry->quality_len / full_code_length));
     return true;
   } else if (phrase_code_length > 0) {
     DictEntryIterator& iter = phrase_iter_->second;
@@ -607,7 +603,7 @@ bool ScriptTranslation::PrepareCandidate() {
                     start_, start_ + phrase_code_length, entry);
     candidate_->set_quality(std::exp(entry->weight) +
                             translator_->initial_quality() +
-                            (IsNormalSpelling() ? 0 : -1));
+                            (entry->quality_len / full_code_length));
     return true;
   } else {
     candidate_source_ = kUninitialized;
