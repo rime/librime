@@ -9,6 +9,7 @@
 #include <unistd.h>
 #endif
 #include <cstdio>
+#include <algorithm>
 
 LineEditor::LineEditor(size_t max_length) : max_length_(max_length) {}
 
@@ -68,8 +69,12 @@ bool LineEditor::ReadLine(std::string* out) {
           }
         }
         if (!whitespace_only) {
-          if (history_.empty() || history_.back() != *out) {
+          const auto it = std::find(history_.begin(), history_.end(), *out);
+          if (it == history_.end()) {
             history_.push_back(*out);
+          }
+          if (history_.size() > 4096) {
+            history_.erase(history_.begin());
           }
         }
       }
