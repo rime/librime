@@ -3,6 +3,7 @@
 #include <cctype>
 #ifdef _WIN32
 #include <conio.h>
+#include <windows.h>
 #else
 #include <termios.h>
 #include <unistd.h>
@@ -43,6 +44,7 @@ bool LineEditor::ReadLine(std::string* out) {
   history_position_ = history_.size();
   browsing_history_ = false;
   saved_line_.clear();
+  suggestion_.clear();
   last_rendered_length_ = 0;
   RefreshLine(line, cursor);
   while (true) {
@@ -71,6 +73,7 @@ bool LineEditor::ReadLine(std::string* out) {
           }
         }
       }
+      suggestion_.clear();
       last_rendered_length_ = 0;
       return true;
     }
@@ -88,9 +91,19 @@ bool LineEditor::ReadLine(std::string* out) {
       if (cursor > 0) {
         line.erase(cursor - 1, 1);
         --cursor;
+        UpdateSuggestion(line);
         RefreshLine(line, cursor);
       } else {
         EmitBell();
+      }
+      continue;
+    }
+    if (ch == 9) {  // Tab
+      if (!suggestion_.empty()) {
+        line.append(suggestion_);
+        cursor = line.size();
+        suggestion_.clear();
+        RefreshLine(line, cursor);
       }
       continue;
     }
@@ -103,6 +116,7 @@ bool LineEditor::ReadLine(std::string* out) {
       }
       line.insert(cursor, 1, static_cast<char>(ch));
       ++cursor;
+      UpdateSuggestion(line);
       RefreshLine(line, cursor);
       // editing after history recall should detach from history
       if (browsing_history_) {
@@ -128,6 +142,76 @@ int LineEditor::ReadChar() {
 #endif
 }
 
+void LineEditor::RefreshLine(const std::string& line, size_t cursor) {
+  // Carriage return to start of line
+  putchar('\r');
+  // Print current line content
+  fputs(line.c_str(), stdout);
+
+  // Print suggestion in dim color if available
+  if (!suggestion_.empty() && cursor == line.length()) {
+#ifdef _WIN32
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
+    GetConsoleScreenBufferInfo(hConsole, &consoleInfo);
+    WORD originalAttrs = consoleInfo.wAttributes;
+    // Use Dark Gray (Bright Black) for suggestion
+    // Preserve background
+    WORD bg = originalAttrs & (BACKGROUND_BLUE | BACKGROUND_GREEN |
+                               BACKGROUND_RED | BACKGROUND_INTENSITY);
+    SetConsoleTextAttribute(hConsole, bg | FOREGROUND_INTENSITY);
+    fputs(suggestion_.c_str(), stdout);
+    SetConsoleTextAttribute(hConsole, originalAttrs);
+#else
+    // ANSI escape code for dim text (usually gray)
+    fputs("\x1b[90m", stdout);
+    fputs(suggestion_.c_str(), stdout);
+    // Reset color
+    fputs("\x1b[0m", stdout);
+#endif
+  }
+
+  // Clear to end of line if previous line was longer
+  size_t current_length = line.length() + suggestion_.length();
+  if (current_length < last_rendered_length_) {
+#ifdef _WIN32
+    // Print spaces to clear
+    for (size_t i = current_length; i < last_rendered_length_; ++i) {
+      putchar(' ');
+    }
+    // Move cursor back to end of current content
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
+    GetConsoleScreenBufferInfo(hConsole, &consoleInfo);
+    COORD pos = consoleInfo.dwCursorPosition;
+    pos.X -= static_cast<SHORT>(last_rendered_length_ - current_length);
+    SetConsoleCursorPosition(hConsole, pos);
+#else
+    // ANSI escape code to clear from cursor to end of line
+    fputs("\x1b[K", stdout);
+#endif
+  }
+  last_rendered_length_ = current_length;
+
+  // Move cursor to correct position
+  // We are currently at the end of the printed content (line + suggestion)
+  // We need to move back by (line.length() - cursor) + suggestion.length()
+  size_t move_back = (line.length() - cursor) + suggestion_.length();
+  if (move_back > 0) {
+#ifdef _WIN32
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
+    GetConsoleScreenBufferInfo(hConsole, &consoleInfo);
+    COORD pos = consoleInfo.dwCursorPosition;
+    pos.X -= static_cast<SHORT>(move_back);
+    SetConsoleCursorPosition(hConsole, pos);
+#else
+    printf("\x1b[%zuD", move_back);
+#endif
+  }
+
+  fflush(stdout);
+}
 bool LineEditor::HandleEscapeSequence(int ch,
                                       std::string* line,
                                       size_t* cursor) {
@@ -154,6 +238,11 @@ bool LineEditor::HandleEscapeSequence(int ch,
       case 77:  // right
         if (*cursor < line->size()) {
           ++(*cursor);
+          RefreshLine(*line, *cursor);
+        } else if (!suggestion_.empty()) {
+          line->append(suggestion_);
+          *cursor = line->size();
+          suggestion_.clear();
           RefreshLine(*line, *cursor);
         } else {
           EmitBell();
@@ -182,6 +271,11 @@ bool LineEditor::HandleEscapeSequence(int ch,
         case 'C':
           if (*cursor < line->size()) {
             ++(*cursor);
+            RefreshLine(*line, *cursor);
+          } else if (!suggestion_.empty()) {
+            line->append(suggestion_);
+            *cursor = line->size();
+            suggestion_.clear();
             RefreshLine(*line, *cursor);
           } else {
             EmitBell();
@@ -212,48 +306,61 @@ void LineEditor::RecallHistory(int direction,
     EmitBell();
     return;
   }
+  suggestion_.clear();
   if (!browsing_history_) {
     browsing_history_ = true;
     saved_line_ = *line;
     history_position_ = history_.size();
   }
+
+  size_t pos = history_position_;
   if (direction < 0) {
-    if (history_position_ == 0) {
-      EmitBell();
-      return;
+    while (pos > 0) {
+      --pos;
+      if (history_[pos].compare(0, saved_line_.size(), saved_line_) == 0) {
+        history_position_ = pos;
+        *line = history_[history_position_];
+        *cursor = line->size();
+        RefreshLine(*line, *cursor);
+        return;
+      }
     }
-    --history_position_;
-    *line = history_[history_position_];
   } else {
-    if (history_position_ + 1 >= history_.size()) {
-      *line = saved_line_;
-      browsing_history_ = false;
-      history_position_ = history_.size();
-    } else {
-      ++history_position_;
-      *line = history_[history_position_];
+    while (pos < history_.size()) {
+      ++pos;
+      if (pos == history_.size()) {
+        *line = saved_line_;
+        browsing_history_ = false;
+        history_position_ = history_.size();
+        *cursor = line->size();
+        RefreshLine(*line, *cursor);
+        return;
+      }
+      if (history_[pos].compare(0, saved_line_.size(), saved_line_) == 0) {
+        history_position_ = pos;
+        *line = history_[history_position_];
+        *cursor = line->size();
+        RefreshLine(*line, *cursor);
+        return;
+      }
     }
   }
-  *cursor = line->size();
-  RefreshLine(*line, *cursor);
+  EmitBell();
 }
 
-void LineEditor::RefreshLine(const std::string& line, size_t cursor) {
-  printf("\r");
-  fwrite(line.data(), 1, line.size(), stdout);
-  size_t clear_width = 0;
-  if (last_rendered_length_ > line.size()) {
-    clear_width = last_rendered_length_ - line.size();
+void LineEditor::UpdateSuggestion(const std::string& line) {
+  suggestion_.clear();
+  if (line.empty()) {
+    return;
   }
-  for (size_t i = 0; i < clear_width; ++i) {
-    putchar(' ');
+
+  // Search history backwards for a match
+  for (auto it = history_.rbegin(); it != history_.rend(); ++it) {
+    if (it->length() > line.length() && it->substr(0, line.length()) == line) {
+      suggestion_ = it->substr(line.length());
+      return;
+    }
   }
-  printf("\r");
-  if (cursor > 0) {
-    fwrite(line.data(), 1, cursor, stdout);
-  }
-  fflush(stdout);
-  last_rendered_length_ = line.size();
 }
 
 bool LineEditor::IsPrintable(int ch) const {
