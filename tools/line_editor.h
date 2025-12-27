@@ -16,6 +16,7 @@ class LineEditor {
   bool HandleEscapeSequence(int ch, std::string* line, size_t* cursor);
   void RecallHistory(int direction, std::string* line, size_t* cursor);
   void RefreshLine(const std::string& line, size_t cursor);
+  void UpdateSuggestion(const std::string& line);
   bool IsPrintable(int ch) const;
   void EmitBell() const;
 
@@ -24,5 +25,6 @@ class LineEditor {
   size_t history_position_ = 0;
   bool browsing_history_ = false;
   std::string saved_line_;
+  std::string suggestion_;
   size_t last_rendered_length_ = 0;
 };
