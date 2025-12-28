@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include <rime_api.h>
+#include <rime/common.h>
 #include "spelling.h"
 
 namespace rime {
@@ -23,6 +24,8 @@ struct EdgeProperties : SpellingProperties {
   EdgeProperties(SpellingProperties sup) : SpellingProperties(sup) {};
   EdgeProperties() = default;
   bool is_correction = false;
+  // 切分歧義編碼段的起始位置
+  set<size_t> ambiguous_source_positions;
 };
 
 using SpellingMap = map<SyllableId, EdgeProperties>;

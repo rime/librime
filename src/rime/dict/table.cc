@@ -101,14 +101,16 @@ bool TableAccessor::Next() {
 
 bool TableQuery::Advance(SyllableId syllable_id,
                          double credibility,
-                         double quality_len) {
+                         double quality_len,
+                         size_t last_pos) {
   if (!Walk(syllable_id)) {
     return false;
   }
   ++level_;
   index_code_.push_back(syllable_id);
-  credibility_.push_back(credibility_.back() + credibility);
-  quality_len_.push_back(quality_len_.back() + quality_len);
+  credibility_.push_back(credibility_sum() + credibility);
+  quality_len_.push_back(quality_len_sum() + quality_len);
+  last_pos_.push_back(last_pos);
   return true;
 }
 
@@ -120,6 +122,7 @@ bool TableQuery::Backdate() {
     index_code_.pop_back();
     credibility_.pop_back();
     quality_len_.pop_back();
+    last_pos_.pop_back();
   }
   return true;
 }
@@ -128,9 +131,8 @@ void TableQuery::Reset() {
   level_ = 0;
   index_code_.clear();
   credibility_.clear();
-  credibility_.push_back(0.0);
   quality_len_.clear();
-  quality_len_.push_back(0.0);
+  last_pos_.clear();
 }
 
 inline static bool node_less(const table::TrunkIndexNode& a,
@@ -188,8 +190,8 @@ inline static Code add_syllable(Code code, SyllableId syllable_id) {
 TableAccessor TableQuery::Access(SyllableId syllable_id,
                                  double credibility,
                                  double quality_len) const {
-  credibility += credibility_.back();
-  quality_len += quality_len_.back();
+  credibility += credibility_sum();
+  quality_len += quality_len_sum();
   if (level_ == 0) {
     if (!lv1_index_ || syllable_id < 0 ||
         syllable_id >= static_cast<SyllableId>(lv1_index_->size))
@@ -563,6 +565,8 @@ TableAccessor Table::QueryPhrases(const Code& code) {
   return query.Access(-1);
 }
 
+const double kPenaltyForAmbiguousSyllable = -23.025850929940457;  // log(1e-10)
+
 bool Table::Query(const SyllableGraph& syll_graph,
                   size_t start_pos,
                   TableQueryResult* result) {
@@ -591,17 +595,28 @@ bool Table::Query(const SyllableGraph& syll_graph,
       SyllableId syll_id = spellings.first;
       for (auto props : spellings.second) {
         size_t end_pos = props->end_pos;
+
+        double penalty = 0.0;
+        size_t last_pos = query.last_pos();
+        if (props->ambiguous_source_positions.count(last_pos)) {
+          penalty = kPenaltyForAmbiguousSyllable;
+          DLOG(INFO) << "conditional penalty applied: ambiguous path ["
+                     << last_pos << ", " << end_pos << ")";
+        }
+        double next_credibility = props->credibility + penalty;
+
         // 全碼匹配長度積分
         bool is_normal_spelling = props->type == kNormalSpelling;
         double delta_quality_len =
             (is_normal_spelling ? 1.0 : 0.0) * (end_pos - current_pos);
         TableAccessor accessor =
-            query.Access(syll_id, props->credibility, delta_quality_len);
+            query.Access(syll_id, next_credibility, delta_quality_len);
         if (!accessor.exhausted()) {
           (*result)[end_pos].push_back(accessor);
         }
         if (end_pos < syll_graph.interpreted_length &&
-            query.Advance(syll_id, props->credibility, delta_quality_len)) {
+            query.Advance(syll_id, next_credibility, delta_quality_len,
+                          current_pos)) {
           q.push({end_pos, query});
           query.Backdate();
         }
