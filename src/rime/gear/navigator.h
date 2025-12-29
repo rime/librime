@@ -28,6 +28,7 @@ class Navigator : public Processor, public KeyBindingProcessor<Navigator, 2> {
   ProcessResult ProcessKeyEvent(const KeyEvent& key_event) override;
 
   Handler Rewind;
+  Handler Forward;
   Handler LeftByChar;
   Handler RightByChar;
   Handler LeftBySyllable;
