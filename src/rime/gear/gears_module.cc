@@ -35,7 +35,7 @@
 #include <rime/gear/uniquifier.h>
 #include <rime/registry.h>
 #include <rime_api.h>
-
+#include <rime/gear/sequence_adjuster.h>
 static void rime_gears_initialize() {
   using namespace rime;
 
@@ -55,7 +55,7 @@ static void rime_gears_initialize() {
   r.Register("selector", new Component<Selector>);
   r.Register("speller", new Component<Speller>);
   r.Register("shape_processor", new Component<ShapeProcessor>);
-
+  r.Register("sequence_adjuster_processor", new Component<SequenceAdjusterProcessor>);
   // segmentors
   r.Register("abc_segmentor", new Component<AbcSegmentor>);
   r.Register("affix_segmentor", new Component<AffixSegmentor>);
@@ -77,6 +77,7 @@ static void rime_gears_initialize() {
   r.Register("history_translator", new Component<HistoryTranslator>);
 
   // filters
+  r.Register("sequence_adjuster_filter", new Component<SequenceAdjusterFilter>);
   r.Register("simplifier", new SimplifierComponent);
   r.Register("uniquifier", new Component<Uniquifier>);
   if (!r.Find("charset_filter")) {  // allow improved implementation
