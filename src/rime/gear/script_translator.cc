@@ -461,11 +461,28 @@ bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   if (user_phrase_)
     user_phrase_iter_ = user_phrase_->rbegin();
 
-  // make sentences when there is no exact-matching phrase candidate
+  auto is_correction_match = [&](auto& iter_pair, size_t len) {
+    if (iter_pair.first != len || iter_pair.second.exhausted())
+      return false;
+    return syllabifier_->IsCorrection(iter_pair.second.Peek()->code, len);
+  };
+
+  bool has_reliable_phrase =
+      has_exact_match_phrase(phrase_, phrase_iter_, consumed) &&
+      !is_correction_match(*phrase_iter_, consumed);
+
+  bool has_reliable_user_phrase =
+      has_exact_match_phrase(user_phrase_, user_phrase_iter_, consumed) &&
+      !is_correction_match(*user_phrase_iter_, consumed);
+
   bool has_at_least_two_syllables = syllable_graph.edges.size() >= 2;
-  if (has_at_least_two_syllables &&
-      !has_exact_match_phrase(phrase_, phrase_iter_, consumed) &&
-      !has_exact_match_phrase(user_phrase_, user_phrase_iter_, consumed)) {
+  DLOG(INFO) << "consumed: " << consumed
+             << ", has_reliable_phrase: " << has_reliable_phrase
+             << ", has_reliable_user_phrase: " << has_reliable_user_phrase
+             << ", has_at_least_two_syllables: " << has_at_least_two_syllables;
+  // make sentences when there is no exact-matching phrase candidate
+  if (has_at_least_two_syllables && !has_reliable_phrase &&
+      !has_reliable_user_phrase) {
     sentence_ = MakeSentence(dict, user_dict);
   }
 
