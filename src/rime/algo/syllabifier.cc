@@ -68,7 +68,8 @@ int Syllabifier::BuildSyllableGraph(const string& input,
       for (const auto& m : corrections) {
         for (auto accessor = prism.QuerySpelling(m.first);
              !accessor.exhausted(); accessor.Next()) {
-          if (accessor.properties().type == kNormalSpelling) {
+          auto props = accessor.properties();
+          if (props.type == kNormalSpelling && !props.is_correction) {
             matches.push_back({m.first, m.second.length});
             break;
           }
