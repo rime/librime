@@ -41,7 +41,7 @@ Build dependencies
   - compiler with C++17 support
   - cmake>=3.12
   - libboost>=1.74
-  - libglog (optional)
+  - libglog>=0.7 (optional)
   - libleveldb
   - libmarisa
   - libopencc>=1.0.2
@@ -57,12 +57,16 @@ Runtime dependencies
   - libopencc
   - libyaml-cpp
 
-Build and install librime on Linux
+Build and install on Linux
 ---
 ```
 make
 sudo make install
 ```
+
+Packaging status
+---
+[![Packaging status](https://repology.org/badge/vertical-allrepos/librime.svg?columns=4&minversion=1.10.0)](https://repology.org/project/librime/versions)
 
 Frontends
 ===
@@ -72,16 +76,29 @@ Official:
   - [Squirrel](https://github.com/rime/squirrel): frontend for macOS
   - [Weasel](https://github.com/rime/weasel): frontend for Windows
 
+<!-- Sort in alphabetical order with :sort in vim -->
 Community:
-  - [emacs-rime](https://github.com/DogLooksGood/emacs-rime): frontend for Emacs
-  - [fcitx-rime](https://github.com/fcitx/fcitx-rime): Fcitx frontend for Linux
-  - [fcitx5-rime](https://github.com/fcitx/fcitx5-rime): Fcitx5 frontend for Linux
+  - [ARIF](https://www.nongnu.org/arif/): frontend for Readline
   - [Hamster](https://github.com/imfuxiao/Hamster): frontend for iOS
+  - [My RIME](https://github.com/LibreService/my_rime): frontend for web
   - [PIME](https://github.com/EasyIME/PIME): frontend for Windows
   - [Trime](https://github.com/osfans/trime): frontend for Android
   - [XIME](https://github.com/stackia/XIME): frontend for macOS
-  - [My RIME](https://github.com/LibreService/my_rime): frontend for web
+  - [YuyanIme](https://github.com/gurecn/YuyanIme): frontend for Android
+  - [coc-rime](https://github.com/tonyfettes/coc-rime): frontend for Vim
+  - [emacs-rime](https://github.com/DogLooksGood/emacs-rime): frontend for Emacs
+  - [fcitx-rime](https://github.com/fcitx/fcitx-rime): Fcitx frontend for Linux
   - [fcitx5-android](https://github.com/fcitx5-android/fcitx5-android): frontend for Android
+  - [fcitx5-macos](https://github.com/fcitx-contrib/fcitx5-macos): Fcitx5 frontend for macOS
+  - [fcitx5-rime](https://github.com/fcitx/fcitx5-rime): Fcitx5 frontend for Linux
+  - [fcitx5-ui.nvim](https://github.com/black-desk/fcitx5-ui.nvim): Fcitx5 frontend for Vim
+  - [fcitx5.nvim](https://github.com/tonyfettes/fcitx5.nvim): Fcitx5 frontend for Vim
+  - [pyrime](https://github.com/Freed-Wu/pyrime): frontend for Ptpython
+  - [rabbit](https://github.com/amorphobia/rabbit): frontend for Windows
+  - [rime.nvim](https://github.com/Freed-Wu/rime.nvim): frontend for Vim
+  - [rl_custom_rime](https://github.com/Freed-Wu/rl_custom_rime): frontend for Readline
+  - [tmux-rime](https://github.com/Freed-Wu/tmux-rime): frontend for Tmux
+  - [zsh-rime](https://github.com/Freed-Wu/zsh-rime): frontend for Zsh
 
 Plugins
 ===

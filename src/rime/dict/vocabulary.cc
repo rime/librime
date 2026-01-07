@@ -57,10 +57,6 @@ string Code::ToString() const {
   return stream.str();
 }
 
-inline ShortDictEntry DictEntry::ToShort() const {
-  return {text, code, weight};
-}
-
 bool ShortDictEntry::operator<(const ShortDictEntry& other) const {
   // Sort different entries sharing the same code by weight desc.
   if (weight != other.weight)
@@ -84,8 +80,8 @@ inline bool dereference_less(const T& a, const T& b) {
 
 template <typename C>
 inline void sort(C& container) {
-  std::sort(std::begin(container), std::end(container),
-            dereference_less<typename C::value_type>);
+  std::stable_sort(std::begin(container), std::end(container),
+                   dereference_less<typename C::value_type>);
 }
 
 template <typename C>
@@ -94,7 +90,7 @@ inline void sort_range(C& container, size_t start, size_t count) {
     return;
   auto i(std::begin(container) + start);
   auto j(start + count >= container.size() ? std::end(container) : i + count);
-  std::sort(i, j, dereference_less<typename C::value_type>);
+  std::stable_sort(i, j, dereference_less<typename C::value_type>);
 }
 
 void ShortDictEntryList::Sort() {

@@ -5,8 +5,8 @@
 // 2011-11-02 GONG Chen <chen.sst@gmail.com>
 //
 #include <cstdlib>
+#include <sstream>
 #include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
 #include <rime/service.h>
 #include <rime/algo/dynamics.h>
 #include <rime/dict/text_db.h>
@@ -19,7 +19,9 @@ UserDbValue::UserDbValue(const string& value) {
 }
 
 string UserDbValue::Pack() const {
-  return boost::str(boost::format("c=%1% d=%2% t=%3%") % commits % dee % tick);
+  std::ostringstream packed;
+  packed << "c=" << commits << " d=" << dee << " t=" << tick;
+  return packed.str();
 }
 
 bool UserDbValue::Unpack(const string& value) {
@@ -95,20 +97,21 @@ static TextFormat plain_userdb_format = {
 };
 
 template <>
-RIME_API UserDbWrapper<TextDb>::UserDbWrapper(const string& file_name,
+RIME_DLL UserDbWrapper<TextDb>::UserDbWrapper(const path& file_path,
                                               const string& db_name)
-    : TextDb(file_name, db_name, "userdb", plain_userdb_format) {}
+    : TextDb(file_path, db_name, "userdb", plain_userdb_format) {}
 
 bool UserDbHelper::UpdateUserInfo() {
   Deployer& deployer(Service::instance().deployer());
   return db_->MetaUpdate("/user_id", deployer.user_id);
 }
 
-bool UserDbHelper::IsUniformFormat(const string& file_name) {
-  return boost::ends_with(file_name, plain_userdb_extension);
+bool UserDbHelper::IsUniformFormat(const path& file_path) {
+  return boost::ends_with(file_path.filename().u8string(),
+                          plain_userdb_extension);
 }
 
-bool UserDbHelper::UniformBackup(const string& snapshot_file) {
+bool UserDbHelper::UniformBackup(const path& snapshot_file) {
   LOG(INFO) << "backing up userdb '" << db_->name() << "' to " << snapshot_file;
   TsvWriter writer(snapshot_file, plain_userdb_format.formatter);
   writer.file_description = plain_userdb_format.file_description;
@@ -122,7 +125,7 @@ bool UserDbHelper::UniformBackup(const string& snapshot_file) {
   return true;
 }
 
-bool UserDbHelper::UniformRestore(const string& snapshot_file) {
+bool UserDbHelper::UniformRestore(const path& snapshot_file) {
   LOG(INFO) << "restoring userdb '" << db_->name() << "' from "
             << snapshot_file;
   TsvReader reader(snapshot_file, plain_userdb_format.parser);

@@ -15,24 +15,23 @@ class RimePrismTest : public ::testing::Test {
   RimePrismTest() {}
 
   virtual void SetUp() {
-    prism_.reset(new Prism("prism_test.bin"));
+    prism_.reset(new Prism(path{"prism_test.bin"}));
     prism_->Remove();
-    
+
     set<string> keyset;
-    keyset.insert("google");     // 4
-    keyset.insert("good");       // 2
-    keyset.insert("goodbye");    // 3
+    keyset.insert("google");   // 4
+    keyset.insert("good");     // 2
+    keyset.insert("goodbye");  // 3
     keyset.insert("microsoft");
     keyset.insert("macrosoft");
-    keyset.insert("adobe");      // 0 == id
+    keyset.insert("adobe");  // 0 == id
     keyset.insert("yahoo");
-    keyset.insert("baidu");      // 1
+    keyset.insert("baidu");  // 1
 
     prism_->Build(keyset);
   }
 
-  virtual void TearDown() {
-  }
+  virtual void TearDown() {}
 
   the<Prism> prism_;
 };
@@ -40,7 +39,7 @@ class RimePrismTest : public ::testing::Test {
 TEST_F(RimePrismTest, SaveAndLoad) {
   EXPECT_TRUE(prism_->Save());
 
-  Prism test(prism_->file_name());
+  Prism test(prism_->file_path());
   EXPECT_TRUE(test.Load());
 
   EXPECT_EQ(prism_->array_size(), test.array_size());
@@ -68,11 +67,11 @@ TEST_F(RimePrismTest, CommonPrefixMatch) {
   vector<Prism::Match> result;
 
   prism_->CommonPrefixSearch("goodbye", &result);
-  //result is good and goodbye.
+  // result is good and goodbye.
   ASSERT_EQ(result.size(), 2);
-  EXPECT_EQ(result[0].value, 2);  // good
+  EXPECT_EQ(result[0].value, 2);   // good
   EXPECT_EQ(result[0].length, 4);  // good
-  EXPECT_EQ(result[1].value, 3);  // goodbye
+  EXPECT_EQ(result[1].value, 3);   // goodbye
   EXPECT_EQ(result[1].length, 7);  // goodbye
 }
 
@@ -80,12 +79,12 @@ TEST_F(RimePrismTest, ExpandSearch) {
   vector<Prism::Match> result;
 
   prism_->ExpandSearch("goo", &result, 10);
-  //result is good, google and goodbye (ordered by length asc).
+  // result is good, google and goodbye (ordered by length asc).
   ASSERT_EQ(result.size(), 3);
-  EXPECT_EQ(result[0].value, 2);  // good
+  EXPECT_EQ(result[0].value, 2);   // good
   EXPECT_EQ(result[0].length, 4);  // good
-  EXPECT_EQ(result[1].value, 4);  // google
+  EXPECT_EQ(result[1].value, 4);   // google
   EXPECT_EQ(result[1].length, 6);  // google
-  EXPECT_EQ(result[2].value, 3);  // goodbye
+  EXPECT_EQ(result[2].value, 3);   // goodbye
   EXPECT_EQ(result[2].length, 7);  // goodbye
 }

@@ -14,7 +14,7 @@
 
 namespace rime {
 
-class RIME_API Translation {
+class RIME_DLL Translation {
  public:
   Translation() = default;
   virtual ~Translation() = default;
@@ -51,7 +51,7 @@ class UniqueTranslation : public Translation {
   an<Candidate> candidate_;
 };
 
-class RIME_API FifoTranslation : public Translation {
+class RIME_DLL FifoTranslation : public Translation {
  public:
   FifoTranslation();
 

@@ -81,6 +81,24 @@ class Phrase : public Candidate {
   Code& code() const { return entry_->code; }
   const DictEntry& entry() const { return *entry_; }
   const Language* language() const { return language_; }
+  size_t matching_code_size() const {
+    return entry_->matching_code_size != 0 ? entry_->matching_code_size
+                                           : entry_->code.size();
+  }
+  bool is_exact_match() const {
+    return entry_->matching_code_size == 0 ||
+           entry_->matching_code_size == entry_->code.size();
+  }
+  bool is_predicitve_match() const {
+    return entry_->matching_code_size != 0 &&
+           entry_->matching_code_size < entry_->code.size();
+  }
+  Code matching_code() const {
+    return entry_->matching_code_size == 0
+               ? entry_->code
+               : Code(entry_->code.begin(),
+                      entry_->code.begin() + entry_->matching_code_size);
+  }
   Spans spans() {
     return syllabifier_ ? syllabifier_->Syllabify(this) : Spans();
   }
@@ -128,8 +146,15 @@ class TranslatorOptions {
   bool IsUserDictDisabledFor(const string& input) const;
 
   const string& delimiters() const { return delimiters_; }
-  const string& tag() const { return tag_; }
-  void set_tag(const string& tag) { tag_ = tag; }
+  vector<string> tags() const { return tags_; }
+  void set_tags(const vector<string>& tags) {
+    tags_ = tags;
+    if (tags_.size() == 0) {
+      tags_.push_back("abc");
+    }
+  }
+  const string& tag() const { return tags_[0]; }
+  void set_tag(const string& tag) { tags_[0] = tag; }
   bool contextual_suggestions() const { return contextual_suggestions_; }
   void set_contextual_suggestions(bool enabled) {
     contextual_suggestions_ = enabled;
@@ -142,10 +167,11 @@ class TranslatorOptions {
   void set_initial_quality(double quality) { initial_quality_ = quality; }
   Projection& preedit_formatter() { return preedit_formatter_; }
   Projection& comment_formatter() { return comment_formatter_; }
+  const hash_set<string>& blacklist() { return blacklist_; }
 
  protected:
   string delimiters_;
-  string tag_ = "abc";
+  vector<string> tags_{"abc"};  // invariant: non-empty
   bool contextual_suggestions_ = false;
   bool enable_completion_ = true;
   bool strict_spelling_ = false;
@@ -153,6 +179,7 @@ class TranslatorOptions {
   Projection preedit_formatter_;
   Projection comment_formatter_;
   Patterns user_dict_disabling_patterns_;
+  hash_set<string> blacklist_;
 };
 
 }  // namespace rime

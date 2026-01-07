@@ -4,6 +4,7 @@
 //
 // 2011-12-12 GONG Chen <chen.sst@gmail.com>
 //
+#include <filesystem>
 #include <stdint.h>
 #include <rime/common.h>
 #include <rime/config.h>
@@ -37,7 +38,7 @@ bool Customizer::UpdateConfigFile() {
   string applied_customization;
 
   Config dest_config;
-  if (dest_config.LoadFromFile(dest_path_.string())) {
+  if (dest_config.LoadFromFile(dest_path_)) {
     dest_config.GetString(version_key_, &dest_version);
     dest_config.GetString("customization", &applied_customization);
   }
@@ -47,11 +48,10 @@ bool Customizer::UpdateConfigFile() {
     source_version = dest_version;
   } else {
     Config source_config;
-    if (source_config.LoadFromFile(source_path_.string())) {
+    if (source_config.LoadFromFile(source_path_)) {
       source_config.GetString(version_key_, &source_version);
     } else {
-      LOG(ERROR) << "Error loading config from '" << source_path_.string()
-                 << "'.";
+      LOG(ERROR) << "Error loading config from '" << source_path_ << "'.";
       return false;
     }
     if (CompareVersionString(source_version, dest_version) > 0) {
@@ -60,7 +60,7 @@ bool Customizer::UpdateConfigFile() {
     }
   }
 
-  fs::path custom_path(dest_path_);
+  path custom_path(dest_path_);
   if (custom_path.extension() != ".yaml") {
     custom_path.clear();
   } else {
@@ -68,21 +68,21 @@ bool Customizer::UpdateConfigFile() {
     if (custom_path.extension() == ".schema") {
       custom_path.replace_extension();
     }
-    custom_path = custom_path.string() + ".custom.yaml";
+    custom_path += ".custom.yaml";
   }
   string customization;
   if (!custom_path.empty() && fs::exists(custom_path)) {
-    customization = std::to_string(Checksum(custom_path.string()));
+    customization = std::to_string(Checksum(custom_path));
   }
   if (applied_customization != customization) {
     need_update = true;
   }
 
   if (!need_update) {
-    LOG(INFO) << "config file '" << dest_path_.string() << "' is up-to-date.";
+    LOG(INFO) << "config file '" << dest_path_ << "' is up-to-date.";
     return false;
   }
-  LOG(INFO) << "updating config file '" << dest_path_.string() << "'.";
+  LOG(INFO) << "updating config file '" << dest_path_ << "'.";
 
   bool is_dirty = !applied_customization.empty();
   if (redistribute || (is_dirty && !missing_original_copy)) {
@@ -90,7 +90,7 @@ bool Customizer::UpdateConfigFile() {
       fs::copy_file(source_path_, dest_path_,
                     fs::copy_options::overwrite_existing);
     } catch (...) {
-      LOG(ERROR) << "Error copying config file '" << source_path_.string()
+      LOG(ERROR) << "Error copying config file '" << source_path_
                  << "' to user directory.";
       return false;
     }
@@ -100,14 +100,14 @@ bool Customizer::UpdateConfigFile() {
       LOG(WARNING) << "patching user config without a shared original copy "
                       "is discouraged.";
     }
-    LOG(INFO) << "applying customization file: " << custom_path.string();
-    if (!dest_config.LoadFromFile(dest_path_.string())) {
+    LOG(INFO) << "applying customization file: " << custom_path;
+    if (!dest_config.LoadFromFile(dest_path_)) {
       LOG(ERROR) << "Error reloading destination config file.";
       return false;
     }
     // applying patch
     Config custom_config;
-    if (!custom_config.LoadFromFile(custom_path.string())) {
+    if (!custom_config.LoadFromFile(custom_path)) {
       LOG(ERROR) << "Error loading customization file.";
       return false;
     }
@@ -130,7 +130,7 @@ bool Customizer::UpdateConfigFile() {
     dest_version.append(".custom.").append(customization);
     dest_config.SetString(version_key_, dest_version);
     dest_config.SetString("customization", customization);
-    if (!dest_config.SaveToFile(dest_path_.string())) {
+    if (!dest_config.SaveToFile(dest_path_)) {
       LOG(ERROR) << "Error saving destination config file.";
       return false;
     }

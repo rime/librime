@@ -1,3 +1,229 @@
+<a name="1.15.0"></a>
+# [1.15.0](https://github.com/rime/librime/compare/1.14.0...1.15.0) (2025-11-23)
+
+
+### Bug Fixes
+
+* **charset_filter:** Support Ext J ([#1098](https://github.com/rime/librime/issues/1098)) ([5a54a14](https://github.com/rime/librime/commit/5a54a14))
+* **simplifier:** Lazily initialize Opencc ([#1101](https://github.com/rime/librime/issues/1101)) ([6bd73d0](https://github.com/rime/librime/commit/6bd73d0))
+* navigation actions should trigger `update_notifier` ([eaa23f5](https://github.com/rime/librime/commit/eaa23f5))
+* **composition:** skip phony segments in GetScriptText ([#1051](https://github.com/rime/librime/issues/1051)) ([0a8a58f](https://github.com/rime/librime/commit/0a8a58f))
+* **engine:** clear formatters and post processors ([29dc787](https://github.com/rime/librime/commit/29dc787))
+* **vocabulary:** Homophones sorting should be stable ([#1079](https://github.com/rime/librime/issues/1079)) ([d6a9280](https://github.com/rime/librime/commit/d6a9280))
+
+
+### Features
+
+* clear composition with a abortcomposition notification ([#1054](https://github.com/rime/librime/issues/1054)) ([0ecfc9c](https://github.com/rime/librime/commit/0ecfc9c))
+
+
+
+<a name="1.14.0"></a>
+# [1.14.0](https://github.com/rime/librime/compare/1.13.1...1.14.0) (2025-07-20)
+
+
+### Bug Fixes
+
+* fix non-void function does not return a value ([#1039](https://github.com/rime/librime/issues/1039)) ([3c1d6e7](https://github.com/rime/librime/commit/3c1d6e7))
+* **ascii_composer:** Fix good old caps lock behavior ([2c24811](https://github.com/rime/librime/commit/2c24811)), closes [rime/ibus-rime#171](https://github.com/rime/ibus-rime/issues/171)
+* **cmake:** replace include() with find_package() to avoid calling find_package_handle_standard_args() twice with different arguments ([#998](https://github.com/rime/librime/issues/998)) ([ceb3081](https://github.com/rime/librime/commit/ceb3081)), closes [rime/ibus-rime#199](https://github.com/rime/ibus-rime/issues/199)
+* **script_translator:** config max_word_length and core_word_length ([ac1b3fb](https://github.com/rime/librime/commit/ac1b3fb))
+* **simplifier:** return nullptr on error [#1002](https://github.com/rime/librime/issues/1002) ([6e46361](https://github.com/rime/librime/commit/6e46361))
+* crashes caused by creating empty components ([#1003](https://github.com/rime/librime/issues/1003)) ([fa43f3d](https://github.com/rime/librime/commit/fa43f3d))
+* **test:** memory leaks in unit tests ([#997](https://github.com/rime/librime/issues/997)) ([6bbb633](https://github.com/rime/librime/commit/6bbb633)), closes [#989](https://github.com/rime/librime/issues/989)
+
+
+### Features
+
+* **ascii_composer:** set/unset_ascii_mode ([37b3246](https://github.com/rime/librime/commit/37b3246))
+* **ascii_composer:** support alt, super key press ([2f24489](https://github.com/rime/librime/commit/2f24489))
+* **deployer:** allow disabling backup_config_files ([#991](https://github.com/rime/librime/issues/991)) ([8f5d5f9](https://github.com/rime/librime/commit/8f5d5f9))
+* **script_translator:** concatenate segments with a sliding window ([fee05a5](https://github.com/rime/librime/commit/fee05a5))
+* **script_translator:** learn new phrases automatically from segmentations ([1192d8f](https://github.com/rime/librime/commit/1192d8f))
+* **script_translator:** update elements of phrases which are longer than max_word_length ([b033bad](https://github.com/rime/librime/commit/b033bad))
+* **translator_commons:** add `dictionary_exclude` to exclude words ([#1008](https://github.com/rime/librime/issues/1008)) ([959937e](https://github.com/rime/librime/commit/959937e))
+
+
+
+<a name="1.13.1"></a>
+## [1.13.1](https://github.com/rime/librime/compare/1.13.0...1.13.1) (2025-02-16)
+
+
+### Features
+
+* **punctuator:** add option to commit digit separator ([#981](https://github.com/rime/librime/issues/981)) ([4b90ff1](https://github.com/rime/librime/commit/4b90ff1)), closes [#972](https://github.com/rime/librime/issues/972)
+* **simplifier:** cache opencc ([#977](https://github.com/rime/librime/issues/977)) ([f9411ae](https://github.com/rime/librime/commit/f9411ae))
+
+
+
+<a name="1.13.0"></a>
+# [1.13.0](https://github.com/rime/librime/compare/1.12.0...1.13.0) (2025-01-22)
+
+
+### Bug Fixes
+
+* **api:** export librime 0.9 API as extern C ([2930c26](https://github.com/rime/librime/commit/2930c26)), closes [#964](https://github.com/rime/librime/issues/964)
+* **navigator:** disconnect notifier ([b34e4ac](https://github.com/rime/librime/commit/b34e4ac))
+* **navigator:** wrong spans after selection ([#952](https://github.com/rime/librime/issues/952)) ([0a983b4](https://github.com/rime/librime/commit/0a983b4))
+* **rime_api_console:** recreate session when necessary ([6f6f540](https://github.com/rime/librime/commit/6f6f540))
+
+
+### Features
+
+* **punctuator:** convert digit separators ([28a234f](https://github.com/rime/librime/commit/28a234f)), closes [#972](https://github.com/rime/librime/issues/972)
+
+
+
+<a name="1.12.0"></a>
+# [1.12.0](https://github.com/rime/librime/compare/1.11.2...1.12.0) (2024-11-11)
+
+
+### Bug Fixes
+
+* **api:** delete_candidate and delete_candidate_on_current_page ([#900](https://github.com/rime/librime/issues/900)) ([2f89098](https://github.com/rime/librime/commit/2f89098))
+* **build:** limit default parallelism to 8 cores ([#932](https://github.com/rime/librime/issues/932)) ([aea8154](https://github.com/rime/librime/commit/aea8154))
+* **chord_composer:** commit raw w/ Control+Return ([0cf0e63](https://github.com/rime/librime/commit/0cf0e63))
+* **context:** index out of range in Context::Highlight ([#867](https://github.com/rime/librime/issues/867)) ([a1c8144](https://github.com/rime/librime/commit/a1c8144))
+* **deployment_tasks:** do not clean up log when not specify log dir ([#921](https://github.com/rime/librime/issues/921)) ([cdab893](https://github.com/rime/librime/commit/cdab893))
+* **deployment_tasks:** do not remove log files in use ([#913](https://github.com/rime/librime/issues/913)) ([f6dd300](https://github.com/rime/librime/commit/f6dd300)), closes [#902](https://github.com/rime/librime/issues/902)
+* **speller:** consider genuine simple cands when auto select ([eaeb845](https://github.com/rime/librime/commit/eaeb845))
+* **speller:** make simple candidates auto-selectable ([3ecadd2](https://github.com/rime/librime/commit/3ecadd2))
+* **switcher:** deactivate before setting option ([f81c971](https://github.com/rime/librime/commit/f81c971)), closes [#918](https://github.com/rime/librime/issues/918)
+* **user_dictionary:** exact match phrase in front ([c067da2](https://github.com/rime/librime/commit/c067da2))
+* show module name in log instead of their address ([#890](https://github.com/rime/librime/issues/890)) ([a735e42](https://github.com/rime/librime/commit/a735e42))
+* unable to make install in termux, because of file system redirection ([#908](https://github.com/rime/librime/issues/908)) ([3bb4fe9](https://github.com/rime/librime/commit/3bb4fe9))
+
+
+### Features
+
+* **api:** provide a flavor of api using stdbool ([b1cbc30](https://github.com/rime/librime/commit/b1cbc30))
+* **composition:** commit script, keeping selected words  ([#924](https://github.com/rime/librime/issues/924)) ([72564a7](https://github.com/rime/librime/commit/72564a7))
+* **rime_levers_api:** stdbool flavor ([6b1b41f](https://github.com/rime/librime/commit/6b1b41f))
+* **translator_commons:** allow a translator to take multiple tags ([#926](https://github.com/rime/librime/issues/926)) ([d47a812](https://github.com/rime/librime/commit/d47a812))
+
+
+### Performance Improvements
+
+* **common:** replace std unordered container with boost's ([#937](https://github.com/rime/librime/issues/937)) ([b907d7d](https://github.com/rime/librime/commit/b907d7d))
+
+
+
+<a name="1.11.2"></a>
+## [1.11.2](https://github.com/rime/librime/compare/1.11.1...1.11.2) (2024-04-27)
+
+
+### Bug Fixes
+
+* caret_pos is before caret character ([f5df6cd](https://github.com/rime/librime/commit/f5df6cd)), closes [#860](https://github.com/rime/librime/issues/860)
+* **switch_translator:** skip switches with no state labels ([ce77835](https://github.com/rime/librime/commit/ce77835)), closes [#866](https://github.com/rime/librime/issues/866) [#640](https://github.com/rime/librime/issues/640)
+
+
+
+<a name="1.11.1"></a>
+## [1.11.1](https://github.com/rime/librime/compare/1.11.0...1.11.1) (2024-04-25)
+
+
+### Bug Fixes
+
+* crash on select_schema .default ([ef08da3](https://github.com/rime/librime/commit/ef08da3))
+* **script_translator:** correction can cause segfault ([#863](https://github.com/rime/librime/issues/863)) ([feec253](https://github.com/rime/librime/commit/feec253))
+
+
+
+# [1.11.0](https://github.com/rime/librime/compare/1.10.0...1.11.0) (2024-03-29)
+
+
+### Bug Fixes
+
+* **build.bat:** return error if unit test failed ([24fa8ae](https://github.com/rime/librime/commit/24fa8ae8a48b2e5e629cd55090c1537f2cf9e1ab))
+* **chord_composer:** ignore repeated keys ([#841](https://github.com/rime/librime/issues/841)) ([e554510](https://github.com/rime/librime/commit/e554510bf2adeafb2383a1208750dc3b03e1427f))
+* **context:** tag selected segment after editing ([8b7f6b7](https://github.com/rime/librime/commit/8b7f6b746b4f7790ade50f60c5d4b89488bc8f9d)), closes [#746](https://github.com/rime/librime/issues/746) [#830](https://github.com/rime/librime/issues/830)
+* crash by iteration on non-existing directory ([ec2d87d](https://github.com/rime/librime/commit/ec2d87df5a23aa03cef3e46d03c490d87b1e5234))
+* **echo_translator:** return null for empty query ([ec4bdfe](https://github.com/rime/librime/commit/ec4bdfe4b9937f790417e8a3aec006d4c5d6dd85))
+* format with clang-foramt 18.1 ([2f4c8f0](https://github.com/rime/librime/commit/2f4c8f0c9c4e4153f37206e28c19d9471849e86f))
+* **glog:** configure macros ([ab5d1d2](https://github.com/rime/librime/commit/ab5d1d2f74f2141e9c7c6635fddcfd7cc579a942))
+* **glog:** no read permission on the cwd on Android ([#835](https://github.com/rime/librime/issues/835)) ([edee320](https://github.com/rime/librime/commit/edee3204f6272fec7d90a09eff1a0336b00b60c3))
+* **glog:** replace deprecated API ([20fdcc1](https://github.com/rime/librime/commit/20fdcc19e65955f6f57f33497f3098aab00af34e))
+* **glog:** someone at google is to blame for linking error ([49c7298](https://github.com/rime/librime/commit/49c7298b22024dc1b84375ba8795adaf0be63f09))
+* **install-boost.bat:** quit without running b2 ([72c67af](https://github.com/rime/librime/commit/72c67aff8042b640cfd721245b11f6ea10831045))
+* **install-boost.sh:** exit code 0 ([8b7938b](https://github.com/rime/librime/commit/8b7938b7d0b6b524f16df05671d01359c2ec93bb))
+* log rime::path by operator overloading ([060555c](https://github.com/rime/librime/commit/060555c62c0dfbad02538e0fd96eb1a03540abb3))
+* **plugins:** load plugins in relative path ([a791879](https://github.com/rime/librime/commit/a79187966ee0328c3635a5c5f6ecb4cf1e3463ee))
+* **rime_api:** deploy_schema type cast failure ([51076a8](https://github.com/rime/librime/commit/51076a8ec9ccf227d10a900c95945b50ef3a7d48))
+* **switcher:** superfluously load saved options ([7892a4f](https://github.com/rime/librime/commit/7892a4f53d1a2f12706401b07cbd366eaf87596c))
+* **test:** copy rime.dll to test dir ([872cecf](https://github.com/rime/librime/commit/872cecf7f92b6afab7618a4b01e2d8c8f7f7bd7c))
+* **test:** ctest unable to find executable ([0061e24](https://github.com/rime/librime/commit/0061e24025e467826a3912f634c06fdb62f79e25))
+
+
+### Features
+
+* **chord_composer:** finish chord on first release ([#828](https://github.com/rime/librime/issues/828)) ([102d421](https://github.com/rime/librime/commit/102d42174c2b2d793096621efa571328525c2ed3))
+* **config:** Config::Save saves data if modified ([12f460f](https://github.com/rime/librime/commit/12f460f2d5b702bf0b2798b2e5ddcda72feeaf6b))
+* **dict_compiler:** rebuild packs on demand ([#816](https://github.com/rime/librime/issues/816)) ([28d1e7e](https://github.com/rime/librime/commit/28d1e7e22f2bfc02317e0cf308937934d9cd2d6e))
+* **dictionary:** predict word ([95cb5fe](https://github.com/rime/librime/commit/95cb5fe91967e28a25cfc7d5b91b343cc9c42fe2))
+* **dictionary:** sort predictive match words ([253e0bd](https://github.com/rime/librime/commit/253e0bd2e1e4536109fb43213dc751dbeb196095))
+* **script_translator:** preedit for predicted word ([f907369](https://github.com/rime/librime/commit/f90736938cbb3be6fac118b89082fa9f74394524))
+* **script_translator:** sentence over prediction ([729aa62](https://github.com/rime/librime/commit/729aa62b0126a5b59f26204fd6789d015bcbc50d))
+* **script_translator:** word completion from 2nd place ([#848](https://github.com/rime/librime/issues/848)) ([5c7fb64](https://github.com/rime/librime/commit/5c7fb64be01f4f43f62c8d7dc4bee5d0ac34fed5))
+* **user_dictionary:** predict word ([01affef](https://github.com/rime/librime/commit/01affefaafecfc61a3e275a72f7e05260c7f81ee))
+
+
+### Reverts
+
+* Revert "build(Makefile): fix install targets" ([33ce245](https://github.com/rime/librime/commit/33ce2459f82e2e99ac6232a11424d883a4119894))
+
+
+
+<a name="1.10.0"></a>
+# [1.10.0](https://github.com/rime/librime/compare/1.9.0...1.10.0) (2024-02-09)
+
+
+### Bug Fixes
+
+* **chord_composer:** stop at super and caps by default ([8709a7a](https://github.com/rime/librime/commit/8709a7a))
+* **path:** convert to native encoding on Windows ([#806](https://github.com/rime/librime/issues/806)) ([6546689](https://github.com/rime/librime/commit/6546689)), closes [#804](https://github.com/rime/librime/issues/804) [rime/weasel#576](https://github.com/rime/weasel/issues/576) [rime/weasel#1080](https://github.com/rime/weasel/issues/1080)
+* don't compress the token during collecting dict entries ([#762](https://github.com/rime/librime/issues/762)) ([#768](https://github.com/rime/librime/issues/768)) ([767ebad](https://github.com/rime/librime/commit/767ebad))
+
+
+### Features
+
+* **api:** highlight_candidate*, change_page ([142902d](https://github.com/rime/librime/commit/142902d)), closes [#620](https://github.com/rime/librime/issues/620)
+* **engine:** translate zero-length prediction ([8f2e8d6](https://github.com/rime/librime/commit/8f2e8d6))
+* **key_binder:** add `when: predicting` condition ([#751](https://github.com/rime/librime/issues/751)) ([3bc65c9](https://github.com/rime/librime/commit/3bc65c9))
+* **rime_api:** add RimeApi::set_input ([#771](https://github.com/rime/librime/issues/771)) ([de12d6a](https://github.com/rime/librime/commit/de12d6a)), closes [#547](https://github.com/rime/librime/issues/547)
+* add reload command for rime_api_console ([#741](https://github.com/rime/librime/issues/741)) ([9b2689b](https://github.com/rime/librime/commit/9b2689b))
+
+
+### Performance Improvements
+
+* less nest in filesystem iteration When CleanOldLogFiles::Run ([#801](https://github.com/rime/librime/issues/801)) ([9ec1711](https://github.com/rime/librime/commit/9ec1711))
+
+
+### BREAKING CHANGES
+
+* **path:** Most `string` filenames in APIs are changed to `path`;
+`installation.yaml` should be UTF-8 encoded.
+
+Previouly on Windows, the file can be written in local encoding to
+enable paths with non-ASCII characters. It should be updated to UTF-8
+after this change.
+
+Details of the code refactor
+
+Wrap `std::filesystem::path` in a thin wrapper class `rime::path` which calls `std::filesystem::u8path` in the constructor on Windows.
+
+Operator `/=` and `/` are also overloaded to convert the right operand from UTF-8 string to native path.
+
+Follow these rules to apply correct conversion between `string` and `rime::path`:
+
+- construct `rime::path` with UTF-8 encoded string;
+- get native string by `path::u8string`;
+- to extract UTF-8 string from `path`, for example to find schema ID from file name, call `path::u8string`;
+- avoid implicit conversion from string, which results in `std::filesystem::path` without performing UTF-8 to native conversion;
+- explicitly construct `rime::path` from `std::filesystem::path` before append operation, to ensure the overloaded operator with string conversion is used.
+
+
+
 <a name="1.9.0"></a>
 # [1.9.0](https://github.com/rime/librime/compare/1.8.5...1.9.0) (2023-09-16)
 

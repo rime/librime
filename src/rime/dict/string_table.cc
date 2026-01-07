@@ -5,8 +5,7 @@
 // 2014-07-04 GONG Chen <chen.sst@gmail.com>
 //
 
-#include <boost/iostreams/device/array.hpp>
-#include <boost/iostreams/stream.hpp>
+#include <sstream>
 #include <rime/common.h>
 #include <rime/dict/string_table.h>
 
@@ -106,10 +105,10 @@ void StringTableBuilder::Dump(char* ptr, size_t size) {
     LOG(ERROR) << "insufficient memory to dump string table.";
     return;
   }
-  namespace io = boost::iostreams;
-  io::basic_array_sink<char> sink(ptr, size);
-  io::stream<io::basic_array_sink<char>> stream(sink);
+
+  std::stringstream stream;
   stream << trie_;
+  stream.read(ptr, size);
 }
 
 }  // namespace rime

@@ -48,12 +48,16 @@ struct Segment {
   bool Reopen(size_t caret_pos);
 
   bool HasTag(const string& tag) const { return tags.find(tag) != tags.end(); }
+  bool HasAnyTagIn(const vector<string>& tags) const {
+    return std::any_of(tags.begin(), tags.end(),
+                       [this](const string& tag) { return HasTag(tag); });
+  }
 
   an<Candidate> GetCandidateAt(size_t index) const;
   an<Candidate> GetSelectedCandidate() const;
 };
 
-class RIME_API Segmentation : public vector<Segment> {
+class RIME_DLL Segmentation : public vector<Segment> {
  public:
   Segmentation();
   virtual ~Segmentation() {}

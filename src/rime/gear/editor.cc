@@ -123,7 +123,8 @@ bool Editor::CommitComposition(Context* ctx) {
 }
 
 bool Editor::RevertLastEdit(Context* ctx) {
-  // different behavior in regard to previous operation type
+  // revert last selection or delete last input character
+  // depending on recent operation type
   ctx->ReopenPreviousSelection() ||
       (ctx->PopInput() && ctx->ReopenPreviousSegment());
   return true;
@@ -181,7 +182,7 @@ ProcessResult Editor::DirectCommit(Context* ctx, int ch) {
 
 ProcessResult Editor::AddToInput(Context* ctx, int ch) {
   ctx->PushInput(ch);
-  ctx->ConfirmPreviousSelection();
+  ctx->BeginEditing();
   return kAccepted;
 }
 

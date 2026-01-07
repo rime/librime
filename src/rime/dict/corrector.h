@@ -56,7 +56,7 @@ class Corrections : public hash_map<SyllableId, Correction> {
 class Corrector : public Class<Corrector, const Ticket&> {
  public:
   virtual ~Corrector() = default;
-  RIME_API virtual void ToleranceSearch(const Prism& prism,
+  RIME_DLL virtual void ToleranceSearch(const Prism& prism,
                                         const string& key,
                                         corrector::Corrections* results,
                                         size_t tolerance) = 0;
@@ -77,7 +77,7 @@ class CorrectorComponent : public Corrector::Component {
   class Unified : public Corrector {
    public:
     Unified() = default;
-    RIME_API void ToleranceSearch(const Prism& prism,
+    RIME_DLL void ToleranceSearch(const Prism& prism,
                                   const string& key,
                                   corrector::Corrections* results,
                                   size_t tolerance) override;
@@ -94,14 +94,14 @@ class CorrectorComponent : public Corrector::Component {
 class EditDistanceCorrector : public Corrector, public Prism {
  public:
   ~EditDistanceCorrector() override = default;
-  RIME_API explicit EditDistanceCorrector(const string& file_name);
+  RIME_DLL explicit EditDistanceCorrector(const path& file_path);
 
-  RIME_API bool Build(const Syllabary& syllabary,
+  RIME_DLL bool Build(const Syllabary& syllabary,
                       const Script* script = nullptr,
                       uint32_t dict_file_checksum = 0,
                       uint32_t schema_file_checksum = 0);
 
-  RIME_API void ToleranceSearch(const Prism& prism,
+  RIME_DLL void ToleranceSearch(const Prism& prism,
                                 const string& key,
                                 corrector::Corrections* results,
                                 size_t tolerance) override;
@@ -112,7 +112,7 @@ class EditDistanceCorrector : public Corrector, public Prism {
                                          corrector::Distance threshold);
 };
 
-class RIME_API NearSearchCorrector : public Corrector {
+class RIME_DLL NearSearchCorrector : public Corrector {
  public:
   NearSearchCorrector() = default;
   ~NearSearchCorrector() override = default;

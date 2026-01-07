@@ -14,13 +14,21 @@
 #include <rime/dict/vocabulary.h>
 #include <rime/dict/string_table.h>
 
-#define RIME_TABLE_UNION(U, V, A, a, B, b)                           \
-  struct U {                                                         \
-    V value;                                                         \
-    const A& a() const { return *reinterpret_cast<const A*>(this); } \
-    const B& b() const { return *reinterpret_cast<const B*>(this); } \
-    A& a() { return *reinterpret_cast<A*>(this); }                   \
-    B& b() { return *reinterpret_cast<B*>(this); }                   \
+#define RIME_TABLE_UNION(U, V, A, a, B, b)      \
+  struct U {                                    \
+    V value;                                    \
+    const A& a() const {                        \
+      return *reinterpret_cast<const A*>(this); \
+    }                                           \
+    const B& b() const {                        \
+      return *reinterpret_cast<const B*>(this); \
+    }                                           \
+    A& a() {                                    \
+      return *reinterpret_cast<A*>(this);       \
+    }                                           \
+    B& b() {                                    \
+      return *reinterpret_cast<B*>(this);       \
+    }                                           \
   }
 
 namespace rime {
@@ -98,23 +106,27 @@ class TableAccessor {
   TableAccessor() = default;
   TableAccessor(const Code& index_code,
                 const List<table::Entry>* entries,
-                double credibility = 0.0);
+                double credibility = 0.0,
+                double quality_len = 0.0);
   TableAccessor(const Code& index_code,
                 const Array<table::Entry>* entries,
-                double credibility = 0.0);
+                double credibility = 0.0,
+                double quality_len = 0.0);
   TableAccessor(const Code& index_code,
                 const table::TailIndex* code_map,
-                double credibility = 0.0);
+                double credibility = 0.0,
+                double quality_len = 0.0);
 
-  RIME_API bool Next();
+  RIME_DLL bool Next();
 
-  RIME_API bool exhausted() const;
-  RIME_API size_t remaining() const;
-  RIME_API const table::Entry* entry() const;
-  RIME_API const table::Code* extra_code() const;
+  RIME_DLL bool exhausted() const;
+  RIME_DLL size_t remaining() const;
+  RIME_DLL const table::Entry* entry() const;
+  RIME_DLL const table::Code* extra_code() const;
   const Code& index_code() const { return index_code_; }
   Code code() const;
   double credibility() const { return credibility_; }
+  double quality_len() const { return quality_len_; }
 
  private:
   Code index_code_;
@@ -123,6 +135,7 @@ class TableAccessor {
   size_t size_ = 0;
   size_t cursor_ = 0;
   double credibility_ = 0.0;
+  double quality_len_ = 0.0;
 };
 
 using TableQueryResult = map<int, vector<TableAccessor>>;
@@ -133,10 +146,15 @@ class TableQuery {
  public:
   TableQuery(table::Index* index) : lv1_index_(index) { Reset(); }
 
-  TableAccessor Access(SyllableId syllable_id, double credibility = 0.0) const;
+  TableAccessor Access(SyllableId syllable_id,
+                       double credibility = 0.0,
+                       double quality_len = 0.0) const;
 
   // down to next level
-  bool Advance(SyllableId syllable_id, double credibility = 0.0);
+  bool Advance(SyllableId syllable_id,
+               double credibility = 0.0,
+               double quality_len = 0.0,
+               size_t last_pos = 0);
 
   // up one level
   bool Backdate();
@@ -146,10 +164,20 @@ class TableQuery {
 
   size_t level() const { return level_; }
 
+  double credibility_sum() const {
+    return credibility_.empty() ? 0 : credibility_.back();
+  }
+  double quality_len_sum() const {
+    return quality_len_.empty() ? 0 : quality_len_.back();
+  }
+  size_t last_pos() const { return last_pos_.empty() ? 0 : last_pos_.back(); }
+
  protected:
   size_t level_ = 0;
   Code index_code_;
   vector<double> credibility_;
+  vector<double> quality_len_;
+  vector<size_t> last_pos_;
 
  private:
   bool Walk(SyllableId syllable_id);
@@ -162,24 +190,24 @@ class TableQuery {
 
 class Table : public MappedFile {
  public:
-  RIME_API Table(const string& file_name);
+  RIME_DLL Table(const path& file_path);
   virtual ~Table();
 
-  RIME_API bool Load();
-  RIME_API bool Save();
-  RIME_API bool Build(const Syllabary& syllabary,
+  RIME_DLL bool Load();
+  RIME_DLL bool Save();
+  RIME_DLL bool Build(const Syllabary& syllabary,
                       const Vocabulary& vocabulary,
                       size_t num_entries,
                       uint32_t dict_file_checksum = 0);
 
   bool GetSyllabary(Syllabary* syllabary);
-  RIME_API string GetSyllableById(int syllable_id);
-  RIME_API TableAccessor QueryWords(int syllable_id);
-  RIME_API TableAccessor QueryPhrases(const Code& code);
-  RIME_API bool Query(const SyllableGraph& syll_graph,
+  RIME_DLL string GetSyllableById(int syllable_id);
+  RIME_DLL TableAccessor QueryWords(int syllable_id);
+  RIME_DLL TableAccessor QueryPhrases(const Code& code);
+  RIME_DLL bool Query(const SyllableGraph& syll_graph,
                       size_t start_pos,
                       TableQueryResult* result);
-  RIME_API string GetEntryText(const table::Entry& entry);
+  RIME_DLL string GetEntryText(const table::Entry& entry);
 
   uint32_t dict_file_checksum() const;
   table::Metadata* metadata() const { return metadata_; }

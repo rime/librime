@@ -38,12 +38,18 @@ static inline bool is_table_entry(const an<Candidate>& cand) {
   return type == "table" || type == "user_table";
 }
 
+static inline bool is_simple_candidate(const an<Candidate>& cand) {
+  auto genuine = Candidate::GetGenuineCandidate(cand);
+  return bool(As<SimpleCandidate>(genuine));
+}
+
 static bool is_auto_selectable(const an<Candidate>& cand,
                                const string& input,
                                const string& delimiters) {
   return
       // reaches end of input
-      cand->end() == input.length() && is_table_entry(cand) &&
+      cand->end() == input.length() &&
+      (is_table_entry(cand) || is_simple_candidate(cand)) &&
       // no delimiters
       input.find_first_of(delimiters, cand->start()) == string::npos;
 }
@@ -121,8 +127,7 @@ ProcessResult Speller::ProcessKeyEvent(const KeyEvent& key_event) {
   }
   DLOG(INFO) << "add to input: '" << (char)ch << "', " << key_event.repr();
   ctx->PushInput(ch);
-  ctx->ConfirmPreviousSelection();  // so that next BackSpace won't revert
-                                    // previous selection
+  ctx->BeginEditing();
   if (AutoSelectPreviousMatch(ctx, &previous_segment)) {
     DLOG(INFO) << "auto-select previous match.";
     // after auto-selecting, if only the current non-initial key is left,

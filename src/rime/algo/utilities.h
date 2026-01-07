@@ -18,16 +18,17 @@ int CompareVersionString(const string& x, const string& y);
 class ChecksumComputer {
  public:
   explicit ChecksumComputer(uint32_t initial_remainder = 0);
-  void ProcessFile(const string& file_name);
+  void ProcessFile(const path& file_path);
   uint32_t Checksum();
 
  private:
   boost::crc_32_type crc_;
+  static constexpr size_t buffer_size = 64 * 1024;  // 64 KB
 };
 
-inline uint32_t Checksum(const string& file_name) {
+inline uint32_t Checksum(const path& file_path) {
   ChecksumComputer c;
-  c.ProcessFile(file_name);
+  c.ProcessFile(file_path);
   return c.Checksum();
 }
 

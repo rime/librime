@@ -172,7 +172,7 @@ an<Translation> ReverseLookupTranslator::Query(const string& input,
   bool quality = false;
   if (start < input.length()) {
     if (options_ && options_->enable_completion()) {
-      dict_->LookupWords(&iter, code, true, 100);
+      dict_->LookupWords(&iter, code, true, 100, nullptr);
       quality = !iter.exhausted() && (iter.Peek()->remaining_code_length == 0);
     } else {
       // 2012-04-08 gongchen: fetch multi-syllable words from rev-lookup table

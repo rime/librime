@@ -1,6 +1,16 @@
 # Rime with Mac
 
-## Preparation
+There are two ways to install librime on macOS:
+
+## 1. Using Homebrew (Recommended)
+
+```sh
+brew install librime
+```
+
+## 2. Manual Compilation
+
+### Preparation
 
 Install Xcode with command line tools.
 
@@ -10,7 +20,7 @@ Install other build tools:
 brew install cmake git
 ```
 
-## Get the code
+### Get the code
 
 ``` sh
 git clone --recursive https://github.com/rime/librime.git
@@ -18,27 +28,26 @@ git clone --recursive https://github.com/rime/librime.git
 or [download from GitHub](https://github.com/rime/librime), then get code for
 third-party dependencies separately.
 
-## Install Boost C++ libraries
+### Install Boost C++ libraries
 
 Boost is a third-party library which librime code heavily depend on.
-These dependencies include a few compiled (non-header-only) Boost libraries.
+These dependencies include a few header-only Boost libraries.
 
 **Option 1 (recommended):** Download and build Boost from source.
 
 ``` sh
 cd librime
-make xcode/deps/boost
+bash install-boost.sh
 ```
 
 The make script will download Boost source tarball, extract it to
-`librime/deps/boost_<version>` and create needed static libraries
-for building macOS uinversal binary.
+`librime/deps/boost-<version>`.
 
-Set shell variable `BOOST_ROOT` to the path to `boost_<version>` directory prior
+Set shell variable `BOOST_ROOT` to the path to `boost-<version>` directory prior
 to building librime.
 
 ``` sh
-export BOOST_ROOT="$(pwd)/deps/boost_1_83_0"
+export BOOST_ROOT="$(pwd)/deps/boost-1.89.0"
 ```
 
 **Option 2:** Install Boost libraries from Homebrew.
@@ -72,7 +81,7 @@ brew install boost@1.60
 brew link --force boost@1.60
 ```
 
-## Build third-party libraries
+### Build third-party libraries
 
 Required third-party libraries other than Boost are included as git submodules:
 
@@ -82,7 +91,7 @@ Required third-party libraries other than Boost are included as git submodules:
 # if you didn't checked out the submodules with git clone --recursive, now do:
 # git submodule update --init
 
-make xcode/deps
+make deps
 ```
 
 This builds libraries located at `librime/deps/*`, and installs the build
@@ -91,13 +100,13 @@ artifacts to `librime/include`, `librime/lib` and `librime/bin`.
 You can also build an individual library, eg. `opencc`, with:
 
 ``` sh
-make xcode/deps/opencc
+make deps/opencc
 ```
 
-## Build librime
+### Build librime
 
 ``` sh
-make xcode
+make
 ```
 This creates `build/lib/Release/librime*.dylib` and command line tools
 `build/bin/Release/rime_*`.
@@ -105,22 +114,22 @@ This creates `build/lib/Release/librime*.dylib` and command line tools
 Or, create a debug build:
 
 ``` sh
-make xcode/debug
+make debug
 ```
 
-## Run unit tests
+### Run unit tests
 
 ``` sh
-make xcode/test
+make test
 ```
 
 Or, test the debug build:
 
 ``` sh
-make xcode/test-debug
+make test-debug
 ```
 
-## Try it in the console
+### Try it in the console
 
 ``` sh
 (

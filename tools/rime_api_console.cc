@@ -9,6 +9,7 @@
 #include <string.h>
 #include <rime_api.h>
 #include "codepage.h"
+#include "line_editor.h"
 
 void print_status(RimeStatus* status) {
   printf("schema: %s / %s\n", status->schema_id, status->schema_name);
@@ -64,7 +65,7 @@ void print_menu(RimeMenu* menu) {
 }
 
 void print_context(RimeContext* context) {
-  if (context->composition.length > 0) {
+  if (context->composition.length > 0 || context->menu.num_candidates > 0) {
     print_composition(&context->composition);
   } else {
     printf("(not composing)\n");
@@ -102,7 +103,7 @@ bool execute_special_command(const char* line, RimeSessionId session_id) {
     if (rime->get_schema_list(&list)) {
       printf("schema list:\n");
       for (size_t i = 0; i < list.size; ++i) {
-        printf("%lu. %s [%s]\n", (i + 1), list.list[i].name,
+        printf("%zu. %s [%s]\n", (i + 1), list.list[i].name,
                list.list[i].schema_id);
       }
       rime->free_schema_list(&list);
@@ -162,6 +163,29 @@ bool execute_special_command(const char* line, RimeSessionId session_id) {
     printf("%s set %s.\n", option, is_on ? "on" : "off");
     return true;
   }
+  if (!strcmp(line, "synchronize")) {
+    return rime->sync_user_data();
+  }
+  const char* kDeleteCandidateOnCurrentPage = "delete on current page ";
+  command_length = strlen(kDeleteCandidateOnCurrentPage);
+  if (!strncmp(line, kDeleteCandidateOnCurrentPage, command_length)) {
+    const char* index_str = line + command_length;
+    int index = atoi(index_str);
+    if (!rime->delete_candidate_on_current_page(session_id, index)) {
+      fprintf(stderr, "failed to delete\n");
+    }
+    return true;
+  }
+  const char* kDeleteCandidate = "delete ";
+  command_length = strlen(kDeleteCandidate);
+  if (!strncmp(line, kDeleteCandidate, command_length)) {
+    const char* index_str = line + command_length;
+    int index = atoi(index_str);
+    if (!rime->delete_candidate(session_id, index)) {
+      fprintf(stderr, "failed to delete\n");
+    }
+    return true;
+  }
   return false;
 }
 
@@ -169,7 +193,7 @@ void on_message(void* context_object,
                 RimeSessionId session_id,
                 const char* message_type,
                 const char* message_value) {
-  printf("message: [%lu] [%s] %s\n", session_id, message_type, message_value);
+  printf("message: [%zu] [%s] %s\n", session_id, message_type, message_value);
   RimeApi* rime = rime_get_api();
   if (RIME_API_AVAILABLE(rime, get_state_label) &&
       !strcmp(message_type, "option")) {
@@ -182,6 +206,14 @@ void on_message(void* context_object,
              state_label);
     }
   }
+}
+
+RimeSessionId ensure_session(RimeApi* rime) {
+  RimeSessionId id = rime->create_session();
+  if (!id) {
+    fprintf(stderr, "Error creating rime session.\n");
+  }
+  return id;
 }
 
 int main(int argc, char* argv[]) {
@@ -202,35 +234,31 @@ reload:
     rime->join_maintenance_thread();
   fprintf(stderr, "ready.\n");
 
-  RimeSessionId session_id = rime->create_session();
-  if (!session_id) {
-    fprintf(stderr, "Error creating rime session.\n");
-    SetConsoleOutputCodePage(codepage);
-    return 1;
-  }
-
+  RimeSessionId session_id = 0;
   const int kMaxLength = 99;
-  char line[kMaxLength + 1] = {0};
-  while (fgets(line, kMaxLength, stdin) != NULL) {
-    for (char* p = line; *p; ++p) {
-      if (*p == '\r' || *p == '\n') {
-        *p = '\0';
-        break;
-      }
+  LineEditor editor(kMaxLength);
+  std::string line;
+  while (editor.ReadLine(&line)) {
+    if (line.empty())
+      line = "\r";
+    if (!rime->find_session(session_id) &&
+        !(session_id = ensure_session(rime))) {
+      SetConsoleOutputCodePage(codepage);
+      return 1;
     }
-    if (!strcmp(line, "exit"))
+    if (!strcmp(line.c_str(), "exit"))
       break;
-    else if (!strcmp(line, "reload")) {
+    else if (!strcmp(line.c_str(), "reload")) {
       rime->destroy_session(session_id);
       rime->finalize();
       goto reload;
     }
-    if (execute_special_command(line, session_id))
+    if (execute_special_command(line.c_str(), session_id))
       continue;
-    if (rime->simulate_key_sequence(session_id, line)) {
+    if (rime->simulate_key_sequence(session_id, line.c_str())) {
       print(session_id);
     } else {
-      fprintf(stderr, "Error processing key sequence: %s\n", line);
+      fprintf(stderr, "Error processing key sequence: %s\n", line.c_str());
     }
   }
 

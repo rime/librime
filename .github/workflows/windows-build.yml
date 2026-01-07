@@ -9,6 +9,7 @@ on:
       rime_plugins:
         required: false
         type: string
+
 jobs:
   build:
     runs-on: windows-latest
@@ -16,29 +17,30 @@ jobs:
       fail-fast: false
       matrix:
         compiler: [msvc, clang]
+        arch: [x64]
+        include:
+          - { compiler: msvc, cc: cl, cxx: cl }
+          - { compiler: clang, cc: clang, cxx: clang++ }
+          - { compiler: msvc, arch: x86, cross_arch: x64_x86 }
     env:
-      boost_version: 1.83.0
-      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_83_0
-      build_script: ${{ matrix.compiler == 'msvc' && './build.bat' || './build-clang.bat' }}
+      boost_version: 1.89.0
+      BOOST_ROOT: ${{ github.workspace }}\deps\boost-1.89.0
       RIME_PLUGINS: ${{ inputs.rime_plugins }}
 
     steps:
       - name: Checkout last commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ inputs.repository }}
           submodules: recursive
 
       - name: Create env.bat
-        if: ${{ matrix.compiler == 'msvc' }}
         run: |
-          
           $envfile = ".\env.bat"
           $envcontent = @"
             set RIME_ROOT=%CD%
-            if not defined BOOST_ROOT set BOOST_ROOT=%RIME_ROOT%\deps\boost_1_83_0
-            set CXX=cl
-            set CC=cl
+            set CXX=${{ matrix.cxx }}
+            set CC=${{ matrix.cc }}
             set CMAKE_GENERATOR=Ninja
           "@
           Set-Content -Path $envfile -Value $envcontent
@@ -48,7 +50,7 @@ jobs:
         if: ${{ matrix.compiler == 'msvc' }}
         uses: ilammy/msvc-dev-cmd@v1
         with:
-          arch: x86
+          arch: ${{ matrix.cross_arch || matrix.arch }}
 
       - name: Configure Ninja
         run: pip install ninja
@@ -63,59 +65,44 @@ jobs:
           echo "git_ref_name=$git_ref_name" >> $env:GITHUB_ENV
           git submodule > submodule-status
 
-      - name: Cache Boost source
-        id: cache-boost-src
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{ env.BOOST_ROOT }}.7z
-          key: ${{ runner.os }}-boost-${{ env.boost_version }}-${{ matrix.compiler }}-src
-
-      - name: Download Boost source
-        if: steps.cache-boost-src.outputs.cache-hit != 'true'
-        run: |
-          aria2c https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.7z -d deps
-
-      - name: Extract Boost source tarball
-        run: |
-          pushd deps
-          7z x ${{ env.BOOST_ROOT }}.7z
-          popd
+      - name: Install boost
+        run: .\install-boost.bat
 
       - name: Cache dependencies
         id: cache-deps
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             bin
             include
             lib
             share
-          key: ${{ runner.os }}-${{ matrix.compiler }}-${{ hashFiles('submodule-status') }}
+          key: ${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.arch }}-${{ hashFiles('submodule-status') }}
 
       - name: Build dependencies
         if: steps.cache-deps.outputs.cache-hit != 'true'
-        run: ${{ env.build_script }} deps
+        run: .\build.bat deps
 
       - name: Install Rime plugins
         run: .\action-install-plugins-windows.bat
 
       - name: Build and test
-        run: ${{ env.build_script }} test
+        run: .\build.bat test
 
       - name: Create distributable
         run: |
-          7z a rime-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}.7z `
+          7z a rime-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.arch }}.7z `
           dist version-info.txt
-          7z a -x'!*/.placeholder' rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}.7z `
+          7z a -x'!*/.placeholder' rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.arch }}.7z `
           bin include lib share
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: artifact-${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.arch }}
           path: |
-            rime-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}.7z
-            rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}.7z
+            rime-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.arch }}.7z
+            rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.arch }}.7z
 
   build-mingw:
     runs-on: windows-latest
@@ -149,7 +136,7 @@ jobs:
 
       - run: git config --global core.autocrlf input
       - name: Checkout last commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ inputs.repository }}
             
@@ -171,8 +158,11 @@ jobs:
             -DBUILD_SHARED_LIBS:BOOL=ON
           cmake --build build
           cmake --install build
-          cd build
-          ctest --output-on-failure
+          # Temporarily disable test for mingw-w64
+          # due to msys2 glog package issue:
+          # https://github.com/msys2/MINGW-packages/issues/25344
+          # cd build && cp ./bin/librime.dll ./test
+          # ctest --output-on-failure
 
       - name: Create distributable
         run: |
@@ -180,7 +170,8 @@ jobs:
           dist version-info.txt
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: artifact-${{ runner.os }}-mingw
           path: |
             rime-${{ env.git_ref_name }}-${{ runner.os }}-mingw.tar.bz2

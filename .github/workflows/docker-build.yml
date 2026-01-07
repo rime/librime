@@ -9,6 +9,6 @@ jobs:
       fail-fast: false
     steps:
     - name: Checkout last commit
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     - name: Build with plugins
       run: docker build -t librime .
