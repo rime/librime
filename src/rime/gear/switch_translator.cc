@@ -30,6 +30,11 @@ inline static string get_state_label(const SwitchOption& option,
       Switches::GetStateLabel(option.the_switch, state_index, abbreviate));
 }
 
+inline static bool has_state_label(const SwitchOption& option,
+                                   size_t state_index) {
+  return bool(Switches::GetStateLabel(option.the_switch, state_index, false));
+}
+
 class Switch : public SimpleCandidate, public SwitcherCommand {
  public:
   Switch(const SwitchOption& option, bool current_state, bool auto_save)
@@ -50,15 +55,16 @@ class Switch : public SimpleCandidate, public SwitcherCommand {
 };
 
 void Switch::Apply(Switcher* switcher) {
-  if (Engine* engine = switcher->attached_engine()) {
-    engine->context()->set_option(keyword_, target_state_);
-  }
-  if (auto_save_) {
-    if (Config* user_config = switcher->user_config()) {
-      user_config->SetBool("var/option/" + keyword_, target_state_);
+  switcher->DeactivateAndApply([this, switcher] {
+    if (Engine* engine = switcher->attached_engine()) {
+      engine->context()->set_option(keyword_, target_state_);
     }
-  }
-  switcher->Deactivate();
+    if (auto_save_) {
+      if (Config* user_config = switcher->user_config()) {
+        user_config->SetBool("var/option/" + keyword_, target_state_);
+      }
+    }
+  });
 }
 
 class RadioOption;
@@ -95,8 +101,7 @@ class RadioOption : public SimpleCandidate, public SwitcherCommand {
 };
 
 void RadioOption::Apply(Switcher* switcher) {
-  group_->SelectOption(this);
-  switcher->Deactivate();
+  switcher->DeactivateAndApply([this] { group_->SelectOption(this); });
 }
 
 void RadioOption::UpdateState(bool selected) {
@@ -208,6 +213,9 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
   switches.FindOption(
       [this, switcher, context,
        &groups](Switches::SwitchOption option) -> Switches::FindResult {
+        if (!has_state_label(option, 0)) {
+          return Switches::kContinue;
+        }
         if (option.type == Switches::kToggleOption) {
           bool current_state = context->get_option(option.option_name);
           Append(New<Switch>(option, current_state,
@@ -234,9 +242,11 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
             Switches::SwitchOption option) -> Switches::FindResult {
           bool current_state = context->get_option(option.option_name);
           if (option.type == Switches::kToggleOption) {
-            folded_options->Append(option, current_state);
+            if (has_state_label(option, current_state)) {
+              folded_options->Append(option, current_state);
+            }
           } else if (option.type == Switches::kRadioGroup) {
-            if (current_state) {
+            if (current_state && has_state_label(option, option.option_index)) {
               folded_options->Append(option, option.option_index);
             }
           }

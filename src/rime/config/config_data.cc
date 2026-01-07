@@ -5,9 +5,9 @@
 #include <cctype>
 #include <cstdlib>
 #include <fstream>
+#include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <filesystem>
-#include <boost/format.hpp>
 #include <yaml-cpp/yaml.h>
 #include <rime/config/config_compiler.h>
 #include <rime/config/config_cow_ref.h>
@@ -22,8 +22,12 @@ an<ConfigItem> ConvertFromYaml(const YAML::Node& yaml_node,
 void EmitYaml(an<ConfigItem> node, YAML::Emitter* emitter, int depth);
 
 ConfigData::~ConfigData() {
-  if (auto_save_ && modified_ && !file_name_.empty())
-    SaveToFile(file_name_);
+  if (auto_save_)
+    Save();
+}
+
+bool ConfigData::Save() {
+  return modified_ && !file_path_.empty() && SaveToFile(file_path_);
 }
 
 bool ConfigData::LoadFromStream(std::istream& stream) {
@@ -56,38 +60,38 @@ bool ConfigData::SaveToStream(std::ostream& stream) {
   return true;
 }
 
-bool ConfigData::LoadFromFile(const string& file_name,
-                              ConfigCompiler* compiler) {
+bool ConfigData::LoadFromFile(const path& file_path, ConfigCompiler* compiler) {
   // update status
-  file_name_ = file_name;
+  file_path_ = file_path;
   modified_ = false;
   root.reset();
-  if (!std::filesystem::exists(file_name)) {
-    LOG(WARNING) << "nonexistent config file '" << file_name << "'.";
+  if (!std::filesystem::exists(file_path)) {
+    if (!boost::ends_with(file_path.u8string(), ".custom.yaml"))
+      LOG(WARNING) << "nonexistent config file '" << file_path << "'.";
     return false;
   }
-  LOG(INFO) << "loading config file '" << file_name << "'.";
+  LOG(INFO) << "loading config file '" << file_path << "'.";
   try {
-    YAML::Node doc = YAML::LoadFile(file_name);
+    YAML::Node doc = YAML::LoadFile(file_path.string());
     root = ConvertFromYaml(doc, compiler);
   } catch (YAML::Exception& e) {
-    LOG(ERROR) << "Error parsing YAML: " << e.what();
+    LOG(ERROR) << "Error parsing YAML \"" << file_path << "\" : " << e.what();
     return false;
   }
   return true;
 }
 
-bool ConfigData::SaveToFile(const string& file_name) {
+bool ConfigData::SaveToFile(const path& file_path) {
   // update status
-  file_name_ = file_name;
+  file_path_ = file_path;
   modified_ = false;
-  if (file_name.empty()) {
+  if (file_path.empty()) {
     // not really saving
     return false;
   }
-  LOG(INFO) << "saving config file '" << file_name << "'.";
+  LOG(INFO) << "saving config file '" << file_path << "'.";
   // dump tree
-  std::ofstream out(file_name.c_str());
+  std::ofstream out(file_path.c_str());
   return SaveToStream(out);
 }
 
@@ -96,7 +100,9 @@ bool ConfigData::IsListItemReference(const string& key) {
 }
 
 string ConfigData::FormatListIndex(size_t index) {
-  return boost::str(boost::format("@%u") % index);
+  std::ostringstream formatted;
+  formatted << "@" << index;
+  return formatted.str();
 }
 
 static const string kAfter("after");
@@ -173,29 +179,29 @@ an<ConfigItemRef> TypeCheckedCopyOnWrite(an<ConfigItemRef> parent,
 }
 
 an<ConfigItemRef> TraverseCopyOnWrite(an<ConfigItemRef> head,
-                                      const string& path) {
-  DLOG(INFO) << "TraverseCopyOnWrite(" << path << ")";
-  if (path.empty() || path == "/") {
+                                      const string& node_path) {
+  DLOG(INFO) << "TraverseCopyOnWrite(" << node_path << ")";
+  if (node_path.empty() || node_path == "/") {
     return head;
   }
-  vector<string> keys = ConfigData::SplitPath(path);
+  vector<string> keys = ConfigData::SplitPath(node_path);
   size_t n = keys.size();
   for (size_t i = 0; i < n; ++i) {
     const auto& key = keys[i];
     if (auto child = TypeCheckedCopyOnWrite(head, key)) {
       head = child;
     } else {
-      LOG(ERROR) << "while writing to " << path;
+      LOG(ERROR) << "while writing to " << node_path;
       return nullptr;
     }
   }
   return head;
 }
 
-bool ConfigData::TraverseWrite(const string& path, an<ConfigItem> item) {
-  LOG(INFO) << "write: " << path;
+bool ConfigData::TraverseWrite(const string& node_path, an<ConfigItem> item) {
+  LOG(INFO) << "write: " << node_path;
   auto root = New<ConfigDataRootRef>(this);
-  if (auto target = TraverseCopyOnWrite(root, path)) {
+  if (auto target = TraverseCopyOnWrite(root, node_path)) {
     *target = item;
     set_modified();
     return true;
@@ -204,10 +210,10 @@ bool ConfigData::TraverseWrite(const string& path, an<ConfigItem> item) {
   }
 }
 
-vector<string> ConfigData::SplitPath(const string& path) {
+vector<string> ConfigData::SplitPath(const string& node_path) {
   vector<string> keys;
   auto is_separator = boost::is_any_of("/");
-  auto trimmed_path = boost::trim_left_copy_if(path, is_separator);
+  auto trimmed_path = boost::trim_left_copy_if(node_path, is_separator);
   boost::split(keys, trimmed_path, is_separator);
   return keys;
 }
@@ -216,12 +222,12 @@ string ConfigData::JoinPath(const vector<string>& keys) {
   return boost::join(keys, "/");
 }
 
-an<ConfigItem> ConfigData::Traverse(const string& path) {
-  DLOG(INFO) << "traverse: " << path;
-  if (path.empty() || path == "/") {
+an<ConfigItem> ConfigData::Traverse(const string& node_path) {
+  DLOG(INFO) << "traverse: " << node_path;
+  if (node_path.empty() || node_path == "/") {
     return root;
   }
-  vector<string> keys = SplitPath(path);
+  vector<string> keys = SplitPath(node_path);
   // find the YAML::Node, and wrap it!
   an<ConfigItem> p = root;
   for (auto it = keys.begin(), end = keys.end(); it != end; ++it) {
@@ -286,9 +292,9 @@ an<ConfigItem> ConvertFromYaml(const YAML::Node& node,
 void EmitScalar(const string& str_value, YAML::Emitter* emitter) {
   if (str_value.find_first_of("\r\n") != string::npos) {
     *emitter << YAML::Literal;
-  } else if (!boost::algorithm::all(str_value,
-                                    boost::algorithm::is_alnum() ||
-                                        boost::algorithm::is_any_of("_."))) {
+  } else if (!std::all_of(str_value.cbegin(), str_value.cend(), [](auto ch) {
+               return std::isalnum(ch) || ch == '_' || ch == '.';
+             })) {
     *emitter << YAML::DoubleQuoted;
   }
   *emitter << str_value;

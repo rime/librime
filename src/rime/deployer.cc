@@ -7,8 +7,7 @@
 #include <chrono>
 #include <exception>
 #include <utility>
-#include <boost/date_time/posix_time/posix_time_types.hpp>
-#include <filesystem>
+#include <rime/common.h>
 #include <rime/deployer.h>
 
 namespace rime {
@@ -19,7 +18,8 @@ Deployer::Deployer()
       prebuilt_data_dir("build"),
       staging_dir("build"),
       sync_dir("sync"),
-      user_id("unknown") {}
+      user_id("unknown"),
+      backup_config_files(true) {}
 
 Deployer::~Deployer() {
   JoinWorkThread();
@@ -147,8 +147,8 @@ void Deployer::JoinMaintenanceThread() {
   JoinWorkThread();
 }
 
-string Deployer::user_data_sync_dir() const {
-  return (std::filesystem::path(sync_dir) / user_id).string();
+path Deployer::user_data_sync_dir() const {
+  return sync_dir / user_id;
 }
 
 }  // namespace rime

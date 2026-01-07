@@ -131,6 +131,7 @@ class LazyTableTranslation : public TableTranslation {
 
  private:
   Dictionary* dict_;
+  const hash_set<string>* blacklist_;
   UserDictionary* user_dict_;
   size_t limit_;
   size_t user_dict_limit_;
@@ -150,6 +151,7 @@ LazyTableTranslation::LazyTableTranslation(TableTranslator* translator,
                        end,
                        preedit),
       dict_(translator->dict()),
+      blacklist_(&translator->blacklist()),
       user_dict_(enable_user_dict ? translator->user_dict() : NULL),
       limit_(kInitialSearchLimit),
       user_dict_limit_(kInitialSearchLimit) {
@@ -191,7 +193,7 @@ bool LazyTableTranslation::FetchMoreTableEntries() {
   DLOG(INFO) << "fetching more table entries: limit = " << limit_
              << ", count = " << previous_entry_count;
   DictEntryIterator more;
-  if (dict_->LookupWords(&more, input_, true, limit_) < limit_) {
+  if (dict_->LookupWords(&more, input_, true, limit_, blacklist_) < limit_) {
     DLOG(INFO) << "all table entries obtained.";
     limit_ = 0;  // no more try
   } else {
@@ -241,7 +243,7 @@ static bool starts_with_completion(an<Translation> translation) {
 
 an<Translation> TableTranslator::Query(const string& input,
                                        const Segment& segment) {
-  if (!segment.HasTag(tag_))
+  if (!segment.HasAnyTagIn(tags_))
     return nullptr;
   DLOG(INFO) << "input = '" << input << "', [" << segment.start << ", "
              << segment.end << ")";
@@ -263,7 +265,7 @@ an<Translation> TableTranslator::Query(const string& input,
   } else {
     DictEntryIterator iter;
     if (dict_ && dict_->loaded()) {
-      dict_->LookupWords(&iter, code, false);
+      dict_->LookupWords(&iter, code, false, 0, &blacklist());
     }
     UserDictEntryIterator uter;
     if (enable_user_dict) {
@@ -645,7 +647,8 @@ an<Translation> TableTranslator::MakeSentence(const string& input,
         if (homographs.size() >= max_homographs_)
           continue;
         DictEntryIterator iter;
-        dict_->LookupWords(&iter, active_input.substr(0, m.length), false);
+        dict_->LookupWords(&iter, active_input.substr(0, m.length), false, 0,
+                           &blacklist());
         if (filter_by_charset) {
           iter.AddFilter(CharsetFilter::FilterDictEntry);
         }

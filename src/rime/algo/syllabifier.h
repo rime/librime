@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include <rime_api.h>
+#include <rime/common.h>
 #include "spelling.h"
 
 namespace rime {
@@ -20,9 +21,11 @@ class Corrector;
 using SyllableId = int32_t;
 
 struct EdgeProperties : SpellingProperties {
-  EdgeProperties(SpellingProperties sup) : SpellingProperties(sup){};
+  EdgeProperties(SpellingProperties sup) : SpellingProperties(sup) {};
   EdgeProperties() = default;
   bool is_correction = false;
+  // 切分歧義編碼段的起始位置
+  set<size_t> ambiguous_source_positions;
 };
 
 using SpellingMap = map<SyllableId, EdgeProperties>;
@@ -52,10 +55,10 @@ class Syllabifier {
         enable_completion_(enable_completion),
         strict_spelling_(strict_spelling) {}
 
-  RIME_API int BuildSyllableGraph(const string& input,
+  RIME_DLL int BuildSyllableGraph(const string& input,
                                   Prism& prism,
                                   SyllableGraph* graph);
-  RIME_API void EnableCorrection(Corrector* corrector);
+  RIME_DLL void EnableCorrection(Corrector* corrector);
 
  protected:
   void CheckOverlappedSpellings(SyllableGraph* graph, size_t start, size_t end);

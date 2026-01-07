@@ -4,8 +4,9 @@ set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_fla
 cmake_minimum_required(VERSION 3.12)
 project(rime)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(rime_version 1.9.0)
+set(rime_version 1.15.0)
 set(rime_soversion 1)
 
 add_definitions(-DRIME_VERSION="${rime_version}")
@@ -15,23 +16,29 @@ include(GNUInstallDirs)
 option(BUILD_SHARED_LIBS "Build Rime as shared library" ON)
 option(BUILD_MERGED_PLUGINS "Merge plugins into one Rime library" ON)
 option(WITH_STATIC_DEPS "Build with static dependency libraries" OFF)
+option(BUILD_DATA "Build data for Rime" OFF)
 option(BUILD_SAMPLE "Build sample Rime plugin" OFF)
 option(BUILD_TEST "Build and run tests" ON)
 option(BUILD_SEPARATE_LIBS "Build separate rime-* libraries" OFF)
 option(ENABLE_LOGGING "Enable logging with google-glog library" ON)
+option(ALSO_LOG_TO_STDERR "Log to stderr as well as log file" OFF)
 option(ENABLE_ASAN "Enable Address Sanitizer (Unix Only)" OFF)
 option(INSTALL_PRIVATE_HEADERS "Install private headers (usually needed for externally built Rime plugins)" OFF)
 option(ENABLE_EXTERNAL_PLUGINS "Enable loading of externally built Rime plugins (from directory set by RIME_PLUGINS_DIR variable)" OFF)
 option(ENABLE_THREADING "Enable threading for deployer" ON)
 option(ENABLE_TIMESTAMP "Embed timestamp to schema artifacts" ON)
 
-set(RIME_DATA_DIR "${CMAKE_INSTALL_FULL_DATADIR}/rime-data" CACHE STRING "Target directory for Rime data")
-set(RIME_PLUGINS_DIR "${CMAKE_INSTALL_FULL_LIBDIR}/rime-plugins" CACHE STRING "Target directory for externally built Rime plugins")
+set(RIME_DATA_DIR "rime-data" CACHE STRING "Target directory for Rime data")
+set(RIME_PLUGINS_DIR "rime-plugins" CACHE STRING "Target directory for externally built Rime plugins")
+
+if(WIN32)
+  set(ext ".exe")
+endif(WIN32)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${PROJECT_SOURCE_DIR}")
 
-if (ENABLE_ASAN)
+if(ENABLE_ASAN)
   add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
   add_link_options(-fsanitize=address -lasan)
 endif()
@@ -57,12 +64,32 @@ endif()
 if(ENABLE_LOGGING)
   find_package(GFlags)
   find_package(GLog REQUIRED)
+  if(Glog_FOUND)
+    include_directories(${Glog_INCLUDE_PATH})
+    if(WIN32)
+      add_compile_definitions("GLOG_DEPRECATED=__declspec(deprecated)")
+      add_compile_definitions(GLOG_NO_ABBREVIATED_SEVERITIES)
+    else()
+      add_compile_definitions("GLOG_DEPRECATED=__attribute__((deprecated))")
+    endif()
+    if(Glog_STATIC)
+      add_compile_definitions(GLOG_EXPORT=)
+      add_compile_definitions(GLOG_NO_EXPORT=)
+    else()
+      add_compile_definitions("GLOG_EXPORT=__attribute__((visibility(\"default\")))")
+      add_compile_definitions("GLOG_NO_EXPORT=__attribute__((visibility(\"default\")))")
+    endif()
 
-  if(WITH_STATIC_DEPS)
-    add_definitions(-DGOOGLE_GLOG_DLL_DECL=)
+    if(WITH_STATIC_DEPS)
+      add_definitions(-DGOOGLE_GLOG_DLL_DECL=)
+    endif()
+
+    set(RIME_ENABLE_LOGGING 1)
+
+    if(ALSO_LOG_TO_STDERR)
+      set(RIME_ALSO_LOG_TO_STDERR 1)
+    endif()
   endif()
-  
-  set(RIME_ENABLE_LOGGING 1)
 endif()
 
 find_package(Threads)
@@ -117,27 +144,27 @@ if(MSVC)
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
   set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
   add_definitions("/wd4244 /wd4996")
+
+  # large address aware
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /LARGEADDRESSAWARE")
 endif()
 
-if(UNIX)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-endif()
-
-if (NOT CMAKE_BUILD_PARALLEL_LEVEL)
+if(NOT CMAKE_BUILD_PARALLEL_LEVEL)
   include(ProcessorCount)
   ProcessorCount(N)
-  if (NOT N EQUAL 0)
+  if(NOT N EQUAL 0)
     set(CMAKE_BUILD_PARALLEL_LEVEL ${N})
   endif()
 endif()
 
 # keep these variables lest some Rime plugin's cmake file is still using them {
 if(NOT DEFINED LIB_INSTALL_DIR)
-    set(LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR})
+  set(LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR})
 endif()
 
 if(NOT DEFINED BIN_INSTALL_DIR)
-    set(BIN_INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
+  set(BIN_INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
 endif()
 # }
 
@@ -152,9 +179,9 @@ add_custom_target(remove
 # Android doesn't support PkgConfig yet
 if(NOT ANDROID)
   configure_file(
-      ${PROJECT_SOURCE_DIR}/rime.pc.in
-      ${PROJECT_BINARY_DIR}/rime.pc
-      @ONLY)
+    ${PROJECT_SOURCE_DIR}/rime.pc.in
+    ${PROJECT_BINARY_DIR}/rime.pc
+    @ONLY)
   install(FILES ${PROJECT_BINARY_DIR}/rime.pc
     DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/pkgconfig)
 endif()
@@ -163,6 +190,7 @@ install(FILES cmake/RimeConfig.cmake
   DESTINATION ${CMAKE_INSTALL_FULL_DATADIR}/cmake/rime)
 
 file(GLOB rime_public_header_files ${PROJECT_SOURCE_DIR}/src/*.h)
+list(FILTER rime_public_header_files EXCLUDE REGEX .*_impl\.h$)
 install(FILES ${rime_public_header_files}
   DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR})
 if(INSTALL_PRIVATE_HEADERS)
@@ -177,6 +205,11 @@ if(INSTALL_PRIVATE_HEADERS)
     install(FILES ${rime_private_header_files}
       DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR}/rime/${rime_private_header_files_dir})
   endforeach()
+endif()
+
+if(BUILD_DATA)
+  file(GLOB rime_preset_data_files ${PROJECT_SOURCE_DIR}/data/preset/*.yaml)
+  install(FILES ${rime_preset_data_files} DESTINATION ${CMAKE_INSTALL_FULL_DATADIR}/${RIME_DATA_DIR})
 endif()
 
 if(BUILD_SHARED_LIBS)
@@ -212,7 +245,7 @@ if(BUILD_SHARED_LIBS)
     add_subdirectory(test)
   endif()
 
-  if (BUILD_SAMPLE)
+  if(BUILD_SAMPLE)
     add_subdirectory(sample)
   endif()
 endif()

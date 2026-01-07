@@ -8,6 +8,7 @@
 #ifndef RIME_STRING_TABLE_H_
 #define RIME_STRING_TABLE_H_
 
+#include <cstdint>
 #include <utility>
 #include <marisa.h>
 #include <rime_api.h>
@@ -15,11 +16,11 @@
 
 namespace rime {
 
-using StringId = marisa::UInt32;
+using StringId = std::uint32_t;
 
 const StringId kInvalidStringId = (StringId)(-1);
 
-class RIME_API StringTable {
+class RIME_DLL StringTable {
  public:
   StringTable() = default;
   virtual ~StringTable() = default;
@@ -38,7 +39,7 @@ class RIME_API StringTable {
   marisa::Trie trie_;
 };
 
-class RIME_API StringTableBuilder : public StringTable {
+class RIME_DLL StringTableBuilder : public StringTable {
  public:
   void Add(const string& key,
            double weight = 1.0,

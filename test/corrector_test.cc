@@ -23,7 +23,8 @@ class RimeCorrectorSearchTest : public ::testing::Test {
       syllable_id_[syllables[i]] = i;
     }
 
-    prism_.reset(new rime::Prism("corrector_simple_test.prism.bin"));
+    rime::path file_path("corrector_simple_test.prism.bin");
+    prism_.reset(new rime::Prism(file_path));
     rime::set<rime::string> keyset;
     std::copy(syllables.begin(), syllables.end(),
               std::inserter(keyset, keyset.begin()));
@@ -32,6 +33,7 @@ class RimeCorrectorSearchTest : public ::testing::Test {
     corrector_.reset(new rime::NearSearchCorrector);
   }
   void TearDown() override {}
+
  protected:
   rime::map<rime::string, rime::SyllableId> syllable_id_;
   rime::the<rime::Prism> prism_;
@@ -42,18 +44,19 @@ class RimeCorrectorTest : public ::testing::Test {
  public:
   void SetUp() override {
     rime::vector<rime::string> syllables;
-    syllables.emplace_back("j");      // 0 == id
-    syllables.emplace_back("ji");     // 1
-    syllables.emplace_back("jie");    // 2
-    syllables.emplace_back("ju");     // 3
-    syllables.emplace_back("jue");    // 4
-    syllables.emplace_back("shen");   // 5
+    syllables.emplace_back("j");     // 0 == id
+    syllables.emplace_back("ji");    // 1
+    syllables.emplace_back("jie");   // 2
+    syllables.emplace_back("ju");    // 3
+    syllables.emplace_back("jue");   // 4
+    syllables.emplace_back("shen");  // 5
     std::sort(syllables.begin(), syllables.end());
     for (size_t i = 0; i < syllables.size(); ++i) {
       syllable_id_[syllables[i]] = i;
     }
 
-    prism_.reset(new rime::Prism("corrector_test.prism.bin"));
+    rime::path file_path("corrector_test.prism.bin");
+    prism_.reset(new rime::Prism(file_path));
     rime::set<rime::string> keyset;
     std::copy(syllables.begin(), syllables.end(),
               std::inserter(keyset, keyset.begin()));
@@ -136,7 +139,7 @@ TEST_F(RimeCorrectorTest, CaseMultipleEdges1) {
   rime::Syllabifier s;
   s.EnableCorrection(corrector_.get());
   rime::SyllableGraph g;
-  const rime::string input("jiejue"); // jie'jue jie'jie jue'jue jue'jie
+  const rime::string input("jiejue");  // jie'jue jie'jie jue'jue jue'jie
   s.BuildSyllableGraph(input, *prism_, &g);
   EXPECT_EQ(input.length(), g.input_length);
   EXPECT_EQ(input.length(), g.interpreted_length);

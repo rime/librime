@@ -4,7 +4,6 @@
 //
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
-#include <filesystem>
 #include <utf8.h>
 #include <rime/resource.h>
 #include <rime/service.h>
@@ -16,13 +15,16 @@ namespace rime {
 static const ResourceType kVocabularyResourceType = {"vocabulary", "", ".txt"};
 
 struct VocabularyDb : public TextDb {
-  VocabularyDb(const string& path, const string& name);
+  VocabularyDb(const path& file_path, const string& db_name);
   an<DbAccessor> cursor;
   static const TextFormat format;
 };
 
-VocabularyDb::VocabularyDb(const string& path, const string& name)
-    : TextDb(path, name, kVocabularyResourceType.name, VocabularyDb::format) {}
+VocabularyDb::VocabularyDb(const path& file_path, const string& db_name)
+    : TextDb(file_path,
+             db_name,
+             kVocabularyResourceType.name,
+             VocabularyDb::format) {}
 
 static bool rime_vocabulary_entry_parser(const Tsv& row,
                                          string* key,
@@ -50,10 +52,10 @@ const TextFormat VocabularyDb::format = {
     "Rime vocabulary",
 };
 
-string PresetVocabulary::DictFilePath(const string& vocabulary) {
+path PresetVocabulary::DictFilePath(const string& vocabulary) {
   the<ResourceResolver> resource_resolver(
       Service::instance().CreateResourceResolver(kVocabularyResourceType));
-  return resource_resolver->ResolvePath(vocabulary).string();
+  return resource_resolver->ResolvePath(vocabulary);
 }
 
 PresetVocabulary::PresetVocabulary(const string& vocabulary) {

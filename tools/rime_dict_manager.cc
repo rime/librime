@@ -45,9 +45,12 @@ int main(int argc, char* argv[]) {
   Deployer& deployer(Service::instance().deployer());
   {
     Config config;
-    if (config.LoadFromFile("installation.yaml")) {
+    if (config.LoadFromFile(path{"installation.yaml"})) {
       config.GetString("installation_id", &deployer.user_id);
-      config.GetString("sync_dir", &deployer.sync_dir);
+      string sync_dir;
+      if (config.GetString("sync_dir", &sync_dir)) {
+        deployer.sync_dir = path(sync_dir);
+      }
     }
   }
   UserDictManager mgr(&deployer);
@@ -83,13 +86,13 @@ int main(int argc, char* argv[]) {
   }
   if (argc == 3 && (option == "-r" || option == "--restore")) {
     SetConsoleOutputCodePage(codepage);
-    if (mgr.Restore(arg1))
+    if (mgr.Restore(path(arg1)))
       return 0;
     else
       return 1;
   }
   if (argc == 4 && (option == "-e" || option == "--export")) {
-    int n = mgr.Export(arg1, arg2);
+    int n = mgr.Export(arg1, path(arg2));
     SetConsoleOutputCodePage(codepage);
     if (n == -1)
       return 1;
@@ -97,7 +100,7 @@ int main(int argc, char* argv[]) {
     return 0;
   }
   if (argc == 4 && (option == "-i" || option == "--import")) {
-    int n = mgr.Import(arg1, arg2);
+    int n = mgr.Import(arg1, path(arg2));
     SetConsoleOutputCodePage(codepage);
     if (n == -1)
       return 1;

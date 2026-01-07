@@ -76,6 +76,16 @@ void traversal(rime::Table* table, std::ofstream& fout) {
   recursion(table, &query, fout);
 }
 
+rime::path InferredOutputPath(rime::path input_path) {
+  if (input_path.extension() == ".bin") {
+    input_path.replace_extension();
+    if (input_path.extension() == ".table") {
+      return input_path.replace_extension(".dict.yaml");
+    }
+  }
+  return input_path.concat(".yaml");
+}
+
 int main(int argc, char* argv[]) {
   unsigned int codepage = SetConsoleOutputCodePage();
   if (argc < 2 || argc > 3) {
@@ -88,8 +98,8 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
-  std::string fileName(argv[1]);
-  rime::Table table(fileName);
+  rime::path file_path(argv[1]);
+  rime::Table table(file_path);
   bool success = table.Load();
   if (!success) {
     std::cerr << "Failed to load table." << std::endl;
@@ -97,35 +107,27 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  // Remove the extension ".table.bin" if present.
-  const size_t table_bin_idx = fileName.rfind(".table.bin");
-  if (std::string::npos != table_bin_idx) {
-    fileName.erase(table_bin_idx);
-  }
-  const std::string outputName = (argc == 3) ? argv[2] : fileName + ".yaml";
+  rime::path output_path =
+      (argc == 3) ? rime::path(argv[2]) : InferredOutputPath(file_path);
 
   std::ofstream fout;
-  fout.open(outputName);
+  fout.open(output_path.c_str());
   if (!fout.is_open()) {
-    std::cerr << "Failed to open file " << outputName << std::endl;
+    std::cerr << "Failed to open file " << output_path << std::endl;
     SetConsoleOutputCodePage(codepage);
     return 1;
   }
 
   // schema id
-  const size_t last_slash_idx = fileName.find_last_of("\\/");
-  if (std::string::npos != last_slash_idx) {
-    fileName.erase(0, last_slash_idx + 1);
-  }
   fout << "# Rime dictionary\n\n";
   fout << "---\n"
           "name: "
-       << fileName
+       << file_path.stem().u8string()
        << "\n"
           "version: \"1.0\"\n"
           "...\n\n";
   traversal(&table, fout);
-  std::cout << "Save to: " << outputName << std::endl;
+  std::cout << "Save to: " << output_path << std::endl;
   fout.close();
   SetConsoleOutputCodePage(codepage);
   return 0;

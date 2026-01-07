@@ -14,7 +14,7 @@ using namespace rime;
 using TestDb = UserDbWrapper<TextDb>;
 
 TEST(RimeUserDbTest, AccessRecordByKey) {
-  TestDb db("user_db_test.txt", "user_db_test");
+  TestDb db(path{"user_db_test.txt"}, "user_db_test");
   if (db.Exists())
     db.Remove();
   ASSERT_FALSE(db.Exists());
@@ -41,7 +41,7 @@ TEST(RimeUserDbTest, AccessRecordByKey) {
 }
 
 TEST(RimeUserDbTest, Query) {
-  TestDb db("user_db_test.txt", "user_db_test");
+  TestDb db(path{"user_db_test.txt"}, "user_db_test");
   if (db.Exists())
     db.Remove();
   ASSERT_FALSE(db.Exists());

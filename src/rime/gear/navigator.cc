@@ -19,10 +19,15 @@ namespace rime {
 
 static Navigator::ActionDef navigation_actions[] = {
     {"rewind", &Navigator::Rewind},
+    {"forward", &Navigator::Forward},
     {"left_by_char", &Navigator::LeftByChar},
     {"right_by_char", &Navigator::RightByChar},
     {"left_by_syllable", &Navigator::LeftBySyllable},
     {"right_by_syllable", &Navigator::RightBySyllable},
+    {"left_by_char_no_loop", &Navigator::LeftByCharNoLoop},
+    {"right_by_char_no_loop", &Navigator::RightByCharNoLoop},
+    {"left_by_syllable_no_loop", &Navigator::LeftBySyllableNoLoop},
+    {"right_by_syllable_no_loop", &Navigator::RightBySyllableNoLoop},
     {"home", &Navigator::Home},
     {"end", &Navigator::End},
     Navigator::kActionNoop};
@@ -35,7 +40,7 @@ Navigator::Navigator(const Ticket& ticket)
     keymap.Bind({XK_Left, 0}, &Navigator::Rewind);
     keymap.Bind({XK_Left, kControlMask}, &Navigator::LeftBySyllable);
     keymap.Bind({XK_KP_Left, 0}, &Navigator::LeftByChar);
-    keymap.Bind({XK_Right, 0}, &Navigator::RightByChar);
+    keymap.Bind({XK_Right, 0}, &Navigator::Forward);
     keymap.Bind({XK_Right, kControlMask}, &Navigator::RightBySyllable);
     keymap.Bind({XK_KP_Right, 0}, &Navigator::RightByChar);
     keymap.Bind({XK_Home, 0}, &Navigator::Home);
@@ -48,7 +53,7 @@ Navigator::Navigator(const Ticket& ticket)
     keymap.Bind({XK_Up, 0}, &Navigator::Rewind);
     keymap.Bind({XK_Up, kControlMask}, &Navigator::LeftBySyllable);
     keymap.Bind({XK_KP_Up, 0}, &Navigator::LeftByChar);
-    keymap.Bind({XK_Down, 0}, &Navigator::RightByChar);
+    keymap.Bind({XK_Down, 0}, &Navigator::Forward);
     keymap.Bind({XK_Down, kControlMask}, &Navigator::RightBySyllable);
     keymap.Bind({XK_KP_Down, 0}, &Navigator::RightByChar);
     keymap.Bind({XK_Home, 0}, &Navigator::Home);
@@ -60,6 +65,13 @@ Navigator::Navigator(const Ticket& ticket)
   Config* config = engine_->schema()->config();
   LoadConfig(config, "navigator", Horizontal);
   LoadConfig(config, "navigator/vertical", Vertical);
+
+  select_connection_ = engine_->context()->select_notifier().connect(
+      [this](Context* ctx) { OnSelect(ctx); });
+}
+
+Navigator::~Navigator() {
+  select_connection_.disconnect();
 }
 
 ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
@@ -74,10 +86,21 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
                                               FallbackOptions::All);
 }
 
+void Navigator::OnSelect(Context* ctx) {
+  spans_.Clear();
+}
+
 bool Navigator::LeftBySyllable(Context* ctx) {
   BeginMove(ctx);
   size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
-  JumpLeft(ctx, confirmed_pos) || GoToEnd(ctx);
+  JumpLeft(ctx, confirmed_pos, true) || GoHome(ctx);
+  return true;
+}
+
+bool Navigator::LeftBySyllableNoLoop(Context* ctx) {
+  BeginMove(ctx);
+  size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
+  JumpLeft(ctx, confirmed_pos, false);
   return true;
 }
 
@@ -87,26 +110,58 @@ bool Navigator::LeftByChar(Context* ctx) {
   return true;
 }
 
+bool Navigator::LeftByCharNoLoop(Context* ctx) {
+  BeginMove(ctx);
+  MoveLeft(ctx);
+  return true;
+}
+
 bool Navigator::Rewind(Context* ctx) {
   BeginMove(ctx);
   // take a jump leftwards when there are multiple spans,
   // but not from the middle of a span.
-  (spans_.Count() > 1 && spans_.HasVertex(ctx->caret_pos()) ? JumpLeft(ctx)
-                                                            : MoveLeft(ctx)) ||
-      GoToEnd(ctx);
+  if (spans_.Count() > 1 && spans_.HasVertex(ctx->caret_pos())) {
+    size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
+    JumpLeft(ctx, confirmed_pos, true);
+  } else {
+    MoveLeft(ctx);
+  }
+  return true;
+}
+
+bool Navigator::Forward(Context* ctx) {
+  BeginMove(ctx);
+  if (spans_.Count() > 1 && spans_.HasVertex(ctx->caret_pos())) {
+    size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
+    JumpRight(ctx, confirmed_pos, true);
+  } else {
+    MoveRight(ctx);
+  }
   return true;
 }
 
 bool Navigator::RightBySyllable(Context* ctx) {
   BeginMove(ctx);
   size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
-  JumpRight(ctx, confirmed_pos) || GoToEnd(ctx);
+  JumpRight(ctx, confirmed_pos, true) || GoToEnd(ctx);
+  return true;
+}
+
+bool Navigator::RightBySyllableNoLoop(Context* ctx) {
+  BeginMove(ctx);
+  JumpRight(ctx, 0, false);
   return true;
 }
 
 bool Navigator::RightByChar(Context* ctx) {
   BeginMove(ctx);
   MoveRight(ctx) || GoHome(ctx);
+  return true;
+}
+
+bool Navigator::RightByCharNoLoop(Context* ctx) {
+  BeginMove(ctx);
+  MoveRight(ctx);
   return true;
 }
 
@@ -123,7 +178,7 @@ bool Navigator::End(Context* ctx) {
 }
 
 void Navigator::BeginMove(Context* ctx) {
-  ctx->ConfirmPreviousSelection();
+  ctx->BeginEditing();
   // update spans
   if (input_ != ctx->input() || ctx->caret_pos() > spans_.end()) {
     input_ = ctx->input();
@@ -138,12 +193,15 @@ void Navigator::BeginMove(Context* ctx) {
   }
 }
 
-bool Navigator::JumpLeft(Context* ctx, size_t start_pos) {
+bool Navigator::JumpLeft(Context* ctx, size_t start_pos, bool loop) {
   DLOG(INFO) << "jump left.";
   size_t caret_pos = ctx->caret_pos();
+  if (loop && caret_pos <= start_pos) {
+    caret_pos = ctx->input().length();
+  }
   size_t stop = spans_.PreviousStop(caret_pos);
   if (stop < start_pos) {
-    stop = ctx->input().length();  // rewind
+    stop = start_pos;
   }
   if (stop != caret_pos) {
     ctx->set_caret_pos(stop);
@@ -152,11 +210,11 @@ bool Navigator::JumpLeft(Context* ctx, size_t start_pos) {
   return false;
 }
 
-bool Navigator::JumpRight(Context* ctx, size_t start_pos) {
+bool Navigator::JumpRight(Context* ctx, size_t start_pos, bool loop) {
   DLOG(INFO) << "jump right.";
   size_t caret_pos = ctx->caret_pos();
-  if (caret_pos == ctx->input().length()) {
-    caret_pos = start_pos;  // rewind
+  if (loop && caret_pos == ctx->input().length()) {
+    caret_pos = start_pos;
   }
   size_t stop = spans_.NextStop(caret_pos);
   if (stop != caret_pos) {

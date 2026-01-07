@@ -52,9 +52,7 @@ class ConcreteEngine : public Engine {
   vector<of<Filter>> filters_;
   vector<of<Formatter>> formatters_;
   vector<of<Processor>> post_processors_;
-  // To make sure dumping user.yaml when processors_.clear(),
-  // switcher is owned by processors_[0]
-  weak<Switcher> switcher_;
+  an<Switcher> switcher_;
 };
 
 // implementations
@@ -85,6 +83,11 @@ ConcreteEngine::ConcreteEngine() {
       [this](Context* ctx, const string& property) {
         OnPropertyUpdate(ctx, property);
       });
+
+  switcher_ = New<Switcher>(this);
+  // saved options should be loaded only once per input session
+  switcher_->RestoreSavedOptions();
+
   InitializeComponents();
   InitializeOptions();
 }
@@ -162,10 +165,12 @@ void ConcreteEngine::Compose(Context* ctx) {
   }
   CalculateSegmentation(&comp);
   TranslateSegments(&comp);
-  DLOG(INFO) << "composition: " << comp.GetDebugText();
+  DLOG(INFO) << "composition: [" << comp.GetDebugText() << "]";
 }
 
 void ConcreteEngine::CalculateSegmentation(Segmentation* segments) {
+  DLOG(INFO) << "CalculateSegmentation, segments: " << segments->size()
+             << ", finished? " << segments->HasFinishedSegmentation();
   while (!segments->HasFinishedSegmentation()) {
     size_t start_pos = segments->GetCurrentStartPosition();
     size_t end_pos = segments->GetCurrentEndPosition();
@@ -189,20 +194,22 @@ void ConcreteEngine::CalculateSegmentation(Segmentation* segments) {
       segments->Forward();
   }
   // start an empty segment only at the end of a confirmed composition.
-  segments->Trim();
+  if (!segments->empty() && !segments->back().HasTag("placeholder"))
+    segments->Trim();
   if (!segments->empty() && segments->back().status >= Segment::kSelected)
     segments->Forward();
 }
 
 void ConcreteEngine::TranslateSegments(Segmentation* segments) {
+  DLOG(INFO) << "TranslateSegments: " << *segments;
   for (Segment& segment : *segments) {
+    DLOG(INFO) << "segment [" << segment.start << ", " << segment.end
+               << "), status: " << segment.status;
     if (segment.status >= Segment::kGuess)
       continue;
     size_t len = segment.end - segment.start;
-    if (len == 0)
-      continue;
     string input = segments->input().substr(segment.start, len);
-    DLOG(INFO) << "translating segment: " << input;
+    DLOG(INFO) << "translating segment: [" << input << "]";
     auto menu = New<Menu>();
     for (auto& translator : translators_) {
       auto translation = translator->Query(input, segment);
@@ -277,20 +284,45 @@ void ConcreteEngine::OnSelect(Context* ctx) {
 void ConcreteEngine::ApplySchema(Schema* schema) {
   if (!schema)
     return;
-  if (auto switcher = switcher_.lock()) {
-    if (Config* user_config = switcher->user_config()) {
-      user_config->SetString("var/previously_selected_schema",
-                             schema->schema_id());
-      user_config->SetInt("var/schema_access_time/" + schema->schema_id(),
-                          time(NULL));
-    }
-  }
   schema_.reset(schema);
   context_->Clear();
   context_->ClearTransientOptions();
   InitializeComponents();
   InitializeOptions();
-  message_sink_("schema", schema->schema_id() + "/" + schema->schema_name());
+  switcher_->SetActiveSchema(schema_->schema_id());
+  message_sink_("schema", schema_->schema_id() + "/" + schema_->schema_name());
+}
+
+// Helper template function to create components
+template <typename T>
+inline void CreateComponentsFromList(Engine* engine,
+                                     Config* config,
+                                     const string& config_key,
+                                     const string& component_type,
+                                     vector<an<T>>& target_collection) {
+  if (auto component_list = config->GetList(config_key)) {
+    size_t n = component_list->size();
+    for (size_t i = 0; i < n; ++i) {
+      auto prescription = As<ConfigValue>(component_list->GetAt(i));
+      if (!prescription)
+        continue;
+      Ticket ticket{engine, component_type, prescription->str()};
+      auto c = T::Require(ticket.klass);
+      if (!c) {
+        LOG(ERROR) << "error creating " << component_type << ": '"
+                   << ticket.klass << "'";
+        continue;
+      }
+      auto component = c->Create(ticket);
+      if (!component) {
+        LOG(ERROR) << "error creating " << component_type << " from ticket: '"
+                   << ticket.klass << "'";
+        continue;
+      }
+      an<T> instance(component);
+      target_collection.push_back(instance);
+    }
+  }
 }
 
 void ConcreteEngine::InitializeComponents() {
@@ -298,12 +330,13 @@ void ConcreteEngine::InitializeComponents() {
   segmentors_.clear();
   translators_.clear();
   filters_.clear();
+  formatters_.clear();
+  post_processors_.clear();
 
-  if (auto switcher = New<Switcher>(this)) {
-    switcher_ = switcher;
-    processors_.push_back(switcher);
+  if (switcher_) {
+    processors_.push_back(switcher_);
     if (schema_->schema_id() == ".default") {
-      if (Schema* schema = switcher->CreateSchema()) {
+      if (Schema* schema = switcher_->CreateSchema()) {
         schema_.reset(schema);
       }
     }
@@ -312,80 +345,28 @@ void ConcreteEngine::InitializeComponents() {
   Config* config = schema_->config();
   if (!config)
     return;
-  // create processors
-  if (auto processor_list = config->GetList("engine/processors")) {
-    size_t n = processor_list->size();
-    for (size_t i = 0; i < n; ++i) {
-      auto prescription = As<ConfigValue>(processor_list->GetAt(i));
-      if (!prescription)
-        continue;
-      Ticket ticket{this, "processor", prescription->str()};
-      if (auto c = Processor::Require(ticket.klass)) {
-        an<Processor> p(c->Create(ticket));
-        processors_.push_back(p);
-      } else {
-        LOG(ERROR) << "error creating processor: '" << ticket.klass << "'";
-      }
-    }
-  }
-  // create segmentors
-  if (auto segmentor_list = config->GetList("engine/segmentors")) {
-    size_t n = segmentor_list->size();
-    for (size_t i = 0; i < n; ++i) {
-      auto prescription = As<ConfigValue>(segmentor_list->GetAt(i));
-      if (!prescription)
-        continue;
-      Ticket ticket{this, "segmentor", prescription->str()};
-      if (auto c = Segmentor::Require(ticket.klass)) {
-        an<Segmentor> s(c->Create(ticket));
-        segmentors_.push_back(s);
-      } else {
-        LOG(ERROR) << "error creating segmentor: '" << ticket.klass << "'";
-      }
-    }
-  }
-  // create translators
-  if (auto translator_list = config->GetList("engine/translators")) {
-    size_t n = translator_list->size();
-    for (size_t i = 0; i < n; ++i) {
-      auto prescription = As<ConfigValue>(translator_list->GetAt(i));
-      if (!prescription)
-        continue;
-      Ticket ticket{this, "translator", prescription->str()};
-      if (auto c = Translator::Require(ticket.klass)) {
-        an<Translator> t(c->Create(ticket));
-        translators_.push_back(t);
-      } else {
-        LOG(ERROR) << "error creating translator: '" << ticket.klass << "'";
-      }
-    }
-  }
-  // create filters
-  if (auto filter_list = config->GetList("engine/filters")) {
-    size_t n = filter_list->size();
-    for (size_t i = 0; i < n; ++i) {
-      auto prescription = As<ConfigValue>(filter_list->GetAt(i));
-      if (!prescription)
-        continue;
-      Ticket ticket{this, "filter", prescription->str()};
-      if (auto c = Filter::Require(ticket.klass)) {
-        an<Filter> f(c->Create(ticket));
-        filters_.push_back(f);
-      } else {
-        LOG(ERROR) << "error creating filter: '" << ticket.klass << "'";
-      }
-    }
-  }
+
+  // Create components using inline template function
+  CreateComponentsFromList<Processor>(this, config, "engine/processors",
+                                      "processor", processors_);
+  CreateComponentsFromList<Segmentor>(this, config, "engine/segmentors",
+                                      "segmentor", segmentors_);
+  CreateComponentsFromList<Translator>(this, config, "engine/translators",
+                                       "translator", translators_);
+  CreateComponentsFromList<Filter>(this, config, "engine/filters", "filter",
+                                   filters_);
   // create formatters
-  if (auto c = Formatter::Require("shape_formatter")) {
-    an<Formatter> f(c->Create(Ticket(this)));
+  auto c_formatter = Formatter::Require("shape_formatter");
+  if (c_formatter) {
+    an<Formatter> f(c_formatter->Create(Ticket(this)));
     formatters_.push_back(f);
   } else {
     LOG(WARNING) << "shape_formatter not available.";
   }
   // create post-processors
-  if (auto c = Processor::Require("shape_processor")) {
-    an<Processor> p(c->Create(Ticket(this)));
+  auto c_processor = Processor::Require("shape_processor");
+  if (c_processor) {
+    an<Processor> p(c_processor->Create(Ticket(this)));
     post_processors_.push_back(p);
   } else {
     LOG(WARNING) << "shape_processor not available.";
@@ -393,10 +374,13 @@ void ConcreteEngine::InitializeComponents() {
 }
 
 void ConcreteEngine::InitializeOptions() {
+  LOG(INFO) << "ConcreteEngine::InitializeOptions";
   // reset custom switches
   Config* config = schema_->config();
   Switches switches(config);
   switches.FindOption([this](Switches::SwitchOption option) {
+    LOG(INFO) << "found switch option: " << option.option_name
+              << ", reset: " << option.reset_value;
     if (option.reset_value >= 0) {
       if (option.type == Switches::kToggleOption) {
         context_->set_option(option.option_name, (option.reset_value != 0));

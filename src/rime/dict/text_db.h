@@ -39,34 +39,34 @@ struct TextFormat {
 
 class TextDb : public Db {
  public:
-  TextDb(const string& file_name,
+  TextDb(const path& file_path,
          const string& db_name,
          const string& db_type,
          TextFormat format);
-  RIME_API virtual ~TextDb();
+  RIME_DLL virtual ~TextDb();
 
-  RIME_API virtual bool Open();
-  RIME_API virtual bool OpenReadOnly();
-  RIME_API virtual bool Close();
+  RIME_DLL bool Open() override;
+  RIME_DLL bool OpenReadOnly() override;
+  RIME_DLL bool Close() override;
 
-  RIME_API virtual bool Backup(const string& snapshot_file);
-  RIME_API virtual bool Restore(const string& snapshot_file);
+  RIME_DLL bool Backup(const path& snapshot_file) override;
+  RIME_DLL bool Restore(const path& snapshot_file) override;
 
-  RIME_API virtual bool CreateMetadata();
-  RIME_API virtual bool MetaFetch(const string& key, string* value);
-  RIME_API virtual bool MetaUpdate(const string& key, const string& value);
+  RIME_DLL bool CreateMetadata() override;
+  RIME_DLL bool MetaFetch(const string& key, string* value) override;
+  RIME_DLL bool MetaUpdate(const string& key, const string& value) override;
 
-  RIME_API virtual an<DbAccessor> QueryMetadata();
-  RIME_API virtual an<DbAccessor> QueryAll();
-  RIME_API virtual an<DbAccessor> Query(const string& key);
-  RIME_API virtual bool Fetch(const string& key, string* value);
-  RIME_API virtual bool Update(const string& key, const string& value);
-  RIME_API virtual bool Erase(const string& key);
+  RIME_DLL an<DbAccessor> QueryMetadata() override;
+  RIME_DLL an<DbAccessor> QueryAll() override;
+  RIME_DLL an<DbAccessor> Query(const string& key) override;
+  RIME_DLL bool Fetch(const string& key, string* value) override;
+  RIME_DLL bool Update(const string& key, const string& value) override;
+  RIME_DLL bool Erase(const string& key) override;
 
  protected:
   void Clear();
-  bool LoadFromFile(const string& file);
-  bool SaveToFile(const string& file);
+  bool LoadFromFile(const path& file);
+  bool SaveToFile(const path& file);
 
   string db_type_;
   TextFormat format_;
