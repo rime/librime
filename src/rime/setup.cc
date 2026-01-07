@@ -22,7 +22,7 @@
 namespace rime {
 
 #define Q(x) #x
-RIME_DLL RIME_MODULE_LIST(kDefaultModules, "default", RIME_EXTRA_MODULES);
+RIME_DLL RIME_MODULE_LIST(kDefaultModules, "default" RIME_EXTRA_MODULES);
 #undef Q
 RIME_DLL RIME_MODULE_LIST(kDeployerModules, "deployer");
 RIME_MODULE_LIST(kLegacyModules, "legacy");
