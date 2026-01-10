@@ -20,6 +20,7 @@ target_link_libraries(rime_test
   ${rime_library}
   ${rime_dict_library}
   ${rime_gears_library}
+  ${rime_levers_library}
   GTest::gtest
   GTest::gtest_main)
 if(BUILD_SHARED_LIBS)
