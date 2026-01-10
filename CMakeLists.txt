@@ -89,7 +89,7 @@ if(ENABLE_LOGGING)
   endif()
 endif()
 
-find_package(Iconv REQUIRED)
+find_package(Iconv)
 find_package(Threads)
 
 if(NOT ENABLE_THREADING)
