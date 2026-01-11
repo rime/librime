@@ -52,7 +52,7 @@ if(MSVC)
   set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
-find_package(Boost CONFIG 1.77.0 REQUIRED COMPONENTS regex)
+find_package(Boost CONFIG 1.74.0 REQUIRED COMPONENTS regex)
 add_definitions(-DBOOST_DLL_USE_STD_FS)
 
 if(ENABLE_LOGGING)
