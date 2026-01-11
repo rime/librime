@@ -32,6 +32,7 @@ function(rime_add_module name obj_target)
     VERSION ${rime_version}
     SOVERSION ${rime_soversion}
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
+    ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
   if(XCODE_VERSION)
     set_target_properties(${name} PROPERTIES INSTALL_NAME_DIR "@rpath")
@@ -127,6 +128,7 @@ set_target_properties(rime PROPERTIES
   VERSION ${rime_version}
   SOVERSION ${rime_soversion}
   LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
+  ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
   RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 if(XCODE_VERSION)
   set_target_properties(rime PROPERTIES INSTALL_NAME_DIR "@rpath")
