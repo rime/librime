@@ -27,7 +27,7 @@ if(BUILD_SHARED_LIBS)
   target_compile_definitions(rime_test PRIVATE RIME_IMPORTS)
 endif(BUILD_SHARED_LIBS)
 
-add_test(NAME rime_test COMMAND rime_test
+add_test(NAME rime_test COMMAND $<TARGET_FILE:rime_test>
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/data/test")
 if(WIN32)
   add_dependencies(rime_test copy_librime_to_test)

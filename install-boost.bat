@@ -9,6 +9,10 @@ if not defined boost_tarball set boost_tarball=boost_%boost_version:.=_%
 if not defined BOOST_ROOT set BOOST_ROOT=%RIME_ROOT%\deps\boost-%boost_version%
 if not defined BOOST_PREFIX set BOOST_PREFIX=%RIME_ROOT%
 if not defined boost_libs set boost_libs=regex,locale
+if not defined BOOST_TOOLSET (
+  echo ERROR: BOOST_TOOLSET is not set. Set BOOST_TOOLSET to msvc or clang-win.
+  exit /b 1
+)
 set BOOST_WITH_LIBS=
 for %%L in (%boost_libs:,= %) do (
   set BOOST_WITH_LIBS=!BOOST_WITH_LIBS! --with-%%L
@@ -27,14 +31,14 @@ pushd %src_dir%
 7z x %boost_tarball%.7z
 ren %boost_tarball% boost-%boost_version%
 cd boost-%boost_version%
-call .\bootstrap.bat --with-libraries=%boost_libs%
+call .\bootstrap.bat --with-libraries=%boost_libs% --with-toolset=%BOOST_TOOLSET%
 .\b2 headers
 popd
 :boost_found
 
 if %do_build%==1 (
   pushd %BOOST_ROOT%
-  call .\bootstrap.bat --with-libraries=%boost_libs%
-  .\b2 -q -a link=static %BOOST_WITH_LIBS% install --prefix="%BOOST_PREFIX%"
+  call .\bootstrap.bat --with-libraries=%boost_libs% --with-toolset=%BOOST_TOOLSET%
+  .\b2 -q -a link=static toolset=%BOOST_TOOLSET% %BOOST_WITH_LIBS% install --prefix="%BOOST_PREFIX%"
   popd
 )
