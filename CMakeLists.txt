@@ -45,16 +45,14 @@ if(ENABLE_ASAN)
   add_link_options(-fsanitize=address -lasan)
 endif()
 
-set(Boost_USE_STATIC_LIBS ${WITH_STATIC_DEPS})
 
-set(Boost_USE_MULTITHREADED ON)
-if(MSVC)
-  set(Boost_USE_STATIC_RUNTIME ON)
+if(DEFINED ENV{BOOST_ROOT})
+  list(PREPEND CMAKE_PREFIX_PATH "$ENV{BOOST_ROOT}")
 endif()
-
-cmake_policy(SET CMP0144 NEW)
 find_package(Boost CONFIG 1.74.0 REQUIRED COMPONENTS regex)
 add_definitions(-DBOOST_DLL_USE_STD_FS)
+set(Boost_USE_STATIC_LIBS ${WITH_STATIC_DEPS})
+set(Boost_USE_MULTITHREADED ON)
 
 if(ENABLE_LOGGING)
   find_package(GFlags)
