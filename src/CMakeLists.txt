@@ -89,7 +89,7 @@ target_link_libraries(rime-gears-obj PUBLIC
   OpenCC::OpenCC)
 target_link_libraries(rime-levers-obj PUBLIC Boost::boost)
 if(rime_plugins_library)
-  target_link_libraries(rime-plugins-obj PUBLIC ${rime_plugins_deps})
+  target_link_libraries(rime-plugins-obj PUBLIC Boost::boost ${rime_plugins_deps})
 endif()
 
 if(BUILD_SEPARATE_LIBS)
