@@ -85,6 +85,7 @@ endif()
 
 target_link_libraries(rime-dict-obj PUBLIC Boost::boost LevelDB::LevelDB Marisa::Marisa)
 target_link_libraries(rime-gears-obj PUBLIC
+  Boost::boost
   $<$<TARGET_EXISTS:Iconv::Iconv>:Iconv::Iconv>
   OpenCC::OpenCC)
 target_link_libraries(rime-levers-obj PUBLIC Boost::boost)
