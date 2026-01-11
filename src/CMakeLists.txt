@@ -83,7 +83,7 @@ if(MINGW)
   target_link_libraries(rime-core-obj PRIVATE wsock32 ws2_32 bcrypt)
 endif()
 
-target_link_libraries(rime-dict-obj PUBLIC Boost::boost LevelDB::LevelDB Marisa::Marisa)
+target_link_libraries(rime-dict-obj PUBLIC LevelDB::LevelDB Marisa::Marisa)
 target_link_libraries(rime-gears-obj PUBLIC
   $<$<TARGET_EXISTS:Iconv::Iconv>:Iconv::Iconv>
   OpenCC::OpenCC)
