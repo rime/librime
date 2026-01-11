@@ -52,6 +52,7 @@ if(MSVC)
   set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
+cmake_policy(CMP0144 NEW)
 find_package(Boost CONFIG 1.74.0 REQUIRED COMPONENTS regex)
 add_definitions(-DBOOST_DLL_USE_STD_FS)
 
