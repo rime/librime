@@ -30,9 +30,6 @@ build_boost_macos() {
     cd "${BOOST_ROOT}"
     ./bootstrap.sh --with-toolset=clang --with-libraries="${boost_libs}"
     ./b2 -q -a link=static architecture=arm cxxflags="${boost_cxxflags}" install --prefix="${BOOST_PREFIX}"
-    for lib in stage/lib/*.a; do
-        lipo $lib -info
-    done
 }
 
 if [[ $# -eq 0 || " $* " =~ ' --download ' ]]; then

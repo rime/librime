@@ -1,4 +1,4 @@
-setlocal
+setlocal EnableDelayedExpansion
 
 if not defined RIME_ROOT set RIME_ROOT=%CD%
 
@@ -9,6 +9,10 @@ if not defined boost_tarball set boost_tarball=boost_%boost_version:.=_%
 if not defined BOOST_ROOT set BOOST_ROOT=%RIME_ROOT%\deps\boost-%boost_version%
 if not defined BOOST_PREFIX set BOOST_PREFIX=%RIME_ROOT%
 if not defined boost_libs set boost_libs=regex,locale
+set BOOST_WITH_LIBS=
+for %%L in (%boost_libs:,= %) do (
+  set BOOST_WITH_LIBS=!BOOST_WITH_LIBS! --with-%%L
+)
 
 set do_build=0
 for %%A in (%*) do (
@@ -31,6 +35,6 @@ popd
 if %do_build%==1 (
   pushd %BOOST_ROOT%
   call .\bootstrap.bat --with-libraries=%boost_libs%
-  .\b2 -q -a link=static --with-libraries=%boost_libs% install --prefix="%BOOST_PREFIX%"
+  .\b2 -q -a link=static %BOOST_WITH_LIBS% install --prefix="%BOOST_PREFIX%"
   popd
 )
