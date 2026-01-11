@@ -58,9 +58,6 @@ if(BUILD_SHARED_LIBS)
   endif()
 endif()
 
-if(GFlags_FOUND)
-  target_link_libraries(rime-core-obj PUBLIC GFlags::GFlags)
-endif()
 if(ENABLE_EXTERNAL_PLUGINS)
   target_link_libraries(rime-core-obj PUBLIC dl)
 endif()
@@ -69,7 +66,7 @@ endif()
 target_link_libraries(rime-core-obj PUBLIC
   Boost::boost
   YamlCpp::YamlCpp
-  Threads::Threads
+  $<$<TARGET_EXISTS:Threads::Threads>:Threads::Threads>
 )
 
 if(Glog_FOUND AND WIN32)
@@ -87,7 +84,9 @@ if(MINGW)
 endif()
 
 target_link_libraries(rime-dict-obj PUBLIC LevelDB::LevelDB Marisa::Marisa)
-target_link_libraries(rime-gears-obj PUBLIC Iconv::Iconv OpenCC::OpenCC)
+target_link_libraries(rime-gears-obj PUBLIC
+  $<$<TARGET_EXISTS:Iconv::Iconv>:Iconv::Iconv>
+  OpenCC::OpenCC)
 target_link_libraries(rime-levers-obj PUBLIC Boost::boost)
 if(rime_plugins_library)
   target_link_libraries(rime-plugins-obj PUBLIC ${rime_plugins_deps})
