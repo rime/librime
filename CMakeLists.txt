@@ -52,10 +52,7 @@ if(MSVC)
   set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
-if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.30")
-  cmake_policy(SET CMP0167 NEW)
-endif()
-find_package(Boost 1.77.0 REQUIRED COMPONENTS regex)
+find_package(Boost CONFIG 1.77.0 REQUIRED COMPONENTS regex)
 add_definitions(-DBOOST_DLL_USE_STD_FS)
 
 if(ENABLE_LOGGING)
