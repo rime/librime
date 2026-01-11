@@ -66,7 +66,7 @@ jobs:
           git submodule > submodule-status
 
       - name: Install boost
-        run: .\install-boost.bat
+        run: .\install-boost.bat --build
 
       - name: Cache dependencies
         id: cache-deps
