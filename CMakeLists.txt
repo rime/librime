@@ -53,9 +53,9 @@ if(MSVC)
 endif()
 
 if(LINUX)
-  find_package(Boost 1.74.0 REQUIRED COMPONENTS regex)
+  find_package(Boost 1.77.0 REQUIRED COMPONENTS regex)
 else()
-  find_package(Boost 1.77.0 REQUIRED)
+  find_package(Boost 1.77.0 REQUIRED COMPONENTS regex)
 endif()
 add_definitions(-DBOOST_DLL_USE_STD_FS)
 

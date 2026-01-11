@@ -65,6 +65,7 @@ endif()
 
 target_link_libraries(rime-core-obj PUBLIC
   Boost::boost
+  Boost::regex
   YamlCpp::YamlCpp
   $<$<TARGET_EXISTS:Threads::Threads>:Threads::Threads>
 )
@@ -83,11 +84,18 @@ if(MINGW)
   target_link_libraries(rime-core-obj PRIVATE wsock32 ws2_32 bcrypt)
 endif()
 
-target_link_libraries(rime-dict-obj PUBLIC LevelDB::LevelDB Marisa::Marisa)
+target_link_libraries(rime-dict-obj PUBLIC
+  Boost::boost
+  LevelDB::LevelDB
+  Marisa::Marisa)
 target_link_libraries(rime-gears-obj PUBLIC
+  Boost::boost
+  Boost::regex
   $<$<TARGET_EXISTS:Iconv::Iconv>:Iconv::Iconv>
   OpenCC::OpenCC)
-target_link_libraries(rime-levers-obj PUBLIC Boost::boost)
+target_link_libraries(rime-levers-obj PUBLIC
+  Boost::boost)
+
 if(rime_plugins_library)
   target_link_libraries(rime-plugins-obj PUBLIC ${rime_plugins_deps})
 endif()

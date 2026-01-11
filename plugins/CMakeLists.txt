@@ -16,6 +16,7 @@ if(ENABLE_EXTERNAL_PLUGINS)
       PROPERTIES
       POSITION_INDEPENDENT_CODE ON)
   endif()
+  target_link_libraries(rime-plugins-objs PUBLIC Boost::boost)
 
   set(plugins_objs ${plugins_objs} $<TARGET_OBJECTS:rime-plugins-objs>)
   set(plugins_modules ${plugins_modules} "plugins")
