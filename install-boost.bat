@@ -13,6 +13,9 @@ if not defined BOOST_TOOLSET (
   echo ERROR: BOOST_TOOLSET is not set. Set BOOST_TOOLSET to msvc or clang-win.
   exit /b 1
 )
+set BOOST_CONFIG_DIR=%BOOST_PREFIX%\lib\cmake\Boost-%boost_version%
+set BOOST_CONFIG_FILE=%BOOST_CONFIG_DIR%\BoostConfig.cmake
+set boost_needs_build=1
 set BOOST_WITH_LIBS=
 for %%L in (%boost_libs:,= %) do (
   set BOOST_WITH_LIBS=!BOOST_WITH_LIBS! --with-%%L
@@ -37,8 +40,15 @@ popd
 :boost_found
 
 if %do_build%==1 (
-  pushd %BOOST_ROOT%
-  call .\bootstrap.bat --with-libraries=%boost_libs% --with-toolset=%BOOST_TOOLSET%
-  .\b2 -q -a link=static toolset=%BOOST_TOOLSET% %BOOST_WITH_LIBS% install --prefix="%BOOST_PREFIX%"
-  popd
+  if exist "%BOOST_CONFIG_FILE%" set boost_needs_build=0
+  if %boost_needs_build%==1 (
+    pushd %BOOST_ROOT%
+    if not exist b2.exe (
+      call .\bootstrap.bat --with-libraries=%boost_libs% --with-toolset=%BOOST_TOOLSET%
+    )
+    .\b2 -q -a link=static toolset=%BOOST_TOOLSET% %BOOST_WITH_LIBS% install --prefix="%BOOST_PREFIX%"
+    popd
+  ) else (
+    echo Boost already installed at "%BOOST_PREFIX%". Skipping build.
+  )
 )
