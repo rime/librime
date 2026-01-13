@@ -180,6 +180,7 @@ Simplifier::Simplifier(const Ticket& ticket, an<Opencc> opencc)
                                        : kTipsNone;
     }
     config->GetBool(name_space_ + "/show_in_comment", &show_in_comment_);
+    config->GetBool(name_space_ + "/append_comment", &append_comment_);
     config->GetBool(name_space_ + "/inherit_comment", &inherit_comment_);
     comment_formatter_.Load(config->GetList(name_space_ + "/comment_format"));
     config->GetBool(name_space_ + "/random", &random_);
@@ -246,6 +247,9 @@ void Simplifier::PushBack(const an<Candidate>& original,
     if (show_tips) {
       tips = simplified;
       comment_formatter_.Apply(&tips);
+    }
+    if (append_comment_) {
+      tips = original->comment() + tips;
     }
   } else {
     text = simplified;
