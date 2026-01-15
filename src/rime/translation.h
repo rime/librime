@@ -38,7 +38,7 @@ class RIME_DLL Translation {
   bool exhausted_ = false;
 };
 
-class UniqueTranslation : public Translation {
+class RIME_DLL UniqueTranslation : public Translation {
  public:
   UniqueTranslation(an<Candidate> candidate) : candidate_(candidate) {
     set_exhausted(!candidate);
