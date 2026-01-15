@@ -27,6 +27,7 @@ function(rime_add_module name obj_target)
   add_library(${name} $<TARGET_OBJECTS:${obj_target}>)
   target_link_libraries(${name}
     ${obj_target}
+    ${rime_core_library}
     ${ARGN})
   set_target_properties(${name} PROPERTIES
     VERSION ${rime_version}
@@ -128,35 +129,54 @@ else()
   endif()
 endif()
 
-add_library(rime ${rime_src})
-target_link_libraries(rime ${rime_obj_targets})
-set_target_properties(rime PROPERTIES
-  DEFINE_SYMBOL "RIME_EXPORTS"
-  VERSION ${rime_version}
-  SOVERSION ${rime_soversion}
-  LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
-  ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
-  RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-if(XCODE_VERSION)
-  set_target_properties(rime PROPERTIES INSTALL_NAME_DIR "@rpath")
-endif()
-install(TARGETS rime DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
-if(MSVC)
-  install(FILES $<TARGET_PDB_FILE:rime>
-    DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
-    OPTIONAL)
+if(BUILD_SHARED_LIBS)
+  add_library(${rime_core_library} ${rime_src})
+  target_link_libraries(${rime_core_library} ${rime_obj_targets})
+  set_target_properties(${rime_core_library} PROPERTIES
+    OUTPUT_NAME "rime"
+    DEFINE_SYMBOL "RIME_EXPORTS"
+    VERSION ${rime_version}
+    SOVERSION ${rime_soversion}
+    LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
+    ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
+    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+  if(XCODE_VERSION)
+    set_target_properties(${rime_core_library} PROPERTIES INSTALL_NAME_DIR "@rpath")
+  endif()
+  install(TARGETS ${rime_core_library} DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
+  if(MSVC)
+    install(FILES $<TARGET_PDB_FILE:${rime_core_library}>
+      DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
+      OPTIONAL)
+  endif()
+else()
+  add_library(${rime_core_library} STATIC ${rime_src})
+  target_link_libraries(${rime_core_library} ${rime_obj_targets})
+  set_target_properties(${rime_core_library} PROPERTIES
+    OUTPUT_NAME "rime"
+    ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+  install(TARGETS ${rime_core_library} DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
 endif()
 
-if(BUILD_SEPARATE_LIBS)
-  rime_add_module(rime-dict rime-dict-obj ${rime_library})
-  rime_add_module(rime-gears rime-gears-obj ${rime_library} ${rime_dict_library})
-  rime_add_module(rime-levers rime-levers-obj ${rime_library} ${rime_dict_library})
+# Aggregate target for consumers that want all modules.
+add_library(rime INTERFACE)
+target_link_libraries(rime INTERFACE ${rime_core_library})
+
+if(BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS)
+  rime_add_module(rime-dict rime-dict-obj)
+  rime_add_module(rime-gears rime-gears-obj ${rime_dict_library})
+  rime_add_module(rime-levers rime-levers-obj ${rime_dict_library})
 
   if(rime_plugins_library)
     rime_add_module(rime-plugins rime-plugins-obj
-      ${rime_library}
-      ${rime_dict_library}
-      ${rime_gears_library})
+      ${rime_library})
+  endif()
+
+  if(TARGET rime)
+    target_link_libraries(rime INTERFACE rime-dict rime-gears rime-levers)
+    if(rime_plugins_library)
+      target_link_libraries(rime INTERFACE rime-plugins)
+    endif()
   endif()
 endif()
 
