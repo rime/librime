@@ -6,6 +6,7 @@ dep_packages=(
     libgoogle-glog-dev
     libleveldb-dev
     libmarisa-dev
+    libsnappy-dev
     libyaml-cpp-dev
     libopencc-dev
     libgtest-dev

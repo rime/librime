@@ -113,7 +113,11 @@ if(NOT Marisa_FOUND)
   find_package(Marisa MODULE REQUIRED)
 endif()
 
-find_package(OpenCC CONFIG REQUIRED)
+# debian 12 used in docker CI do not have OpenCC cmake config file
+find_package(OpenCC CONFIG QUIET)
+if(NOT OpenCC_FOUND)
+  find_package(OpenCC MODULE REQUIRED)
+endif()
 if(WITH_STATIC_DEPS)
   add_definitions(-DOpencc_BUILT_AS_STATIC)
 endif()
