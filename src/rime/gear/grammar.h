@@ -20,7 +20,8 @@ class Grammar : public Class<Grammar, Config*> {
                                 double entry_weight,
                                 bool is_rear,
                                 Grammar* grammar) {
-    const double kPenalty = -18.420680743952367;  // log(1e-8)
+    // log(1e-6) ≈ -13.81
+    const double kPenalty = -13.815510557964274;
     return entry_weight +
            (grammar ? grammar->Query(context, entry_text, is_rear) : kPenalty);
   }

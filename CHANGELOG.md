@@ -1,3 +1,29 @@
+<a name="1.16.0"></a>
+# [1.16.0](https://github.com/rime/librime/compare/1.15.0...1.16.0) (2026-01-06)
+
+
+### Bug Fixes
+
+* **chord_composer:** do not consume orphan key release events ([65dad2c](https://github.com/rime/librime/commit/65dad2c))
+* **dict:** 禁用歧義切分路徑懲罰 ([aa0d71e](https://github.com/rime/librime/commit/aa0d71e))
+* **script_translator:** 用戶詞糾錯則取消優先權 ([21d0c69](https://github.com/rime/librime/commit/21d0c69)), closes [#1120](https://github.com/rime/librime/issues/1120)
+* **syllabifier:** 歧義切分路徑懲罰誤傷其他切分路徑 ([a97ec04](https://github.com/rime/librime/commit/a97ec04))
+
+
+### Features
+
+* **calculus:** 拼寫運算增設容錯規則 ([0bf8131](https://github.com/rime/librime/commit/0bf8131))
+* **config:** 自動引用 default:/{navigator,selector} ([82ba0b1](https://github.com/rime/librime/commit/82ba0b1))
+* **dictionary:** 全碼長度積分 ([f6756b3](https://github.com/rime/librime/commit/f6756b3))
+* **navigator:** 右方向鍵默認爲 forward 動作 ([fd4fa7e](https://github.com/rime/librime/commit/fd4fa7e))
+* **navigator:** add no looping navigation actions ([4703320](https://github.com/rime/librime/commit/4703320)), closes [#1106](https://github.com/rime/librime/issues/1106)
+* **script_translator:** 首選爲糾錯則啓動造句 ([fce47ee](https://github.com/rime/librime/commit/fce47ee)), closes [#1120](https://github.com/rime/librime/issues/1120)
+* **tool:** deduplicate input history and limit its total length ([da3321f](https://github.com/rime/librime/commit/da3321f))
+* **tool:** rime_api_console with autosuggestions feature like zsh-autosuggestions ([80cefba](https://github.com/rime/librime/commit/80cefba))
+* **tool:** rime_api_console with input feature histories switched by Up/Down ([34bfaf6](https://github.com/rime/librime/commit/34bfaf6))
+
+
+
 <a name="1.15.0"></a>
 # [1.15.0](https://github.com/rime/librime/compare/1.14.0...1.15.0) (2025-11-23)
 

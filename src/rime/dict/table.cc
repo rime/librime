@@ -565,7 +565,8 @@ TableAccessor Table::QueryPhrases(const Code& code) {
   return query.Access(-1);
 }
 
-const double kPenaltyForAmbiguousSyllable = -23.025850929940457;  // log(1e-10)
+// log(0.05) ≈ -3.0
+const double kPenaltyForAmbiguousSyllable = -2.995732274;
 
 bool Table::Query(const SyllableGraph& syll_graph,
                   size_t start_pos,
@@ -597,11 +598,13 @@ bool Table::Query(const SyllableGraph& syll_graph,
         size_t end_pos = props->end_pos;
 
         double penalty = 0.0;
-        size_t last_pos = query.last_pos();
-        if (props->ambiguous_source_positions.count(last_pos)) {
-          penalty = kPenaltyForAmbiguousSyllable;
-          DLOG(INFO) << "conditional penalty applied: ambiguous path ["
-                     << last_pos << ", " << end_pos << ")";
+        if (false) {
+          size_t last_pos = query.last_pos();
+          if (props->ambiguous_source_positions.count(last_pos)) {
+            penalty = kPenaltyForAmbiguousSyllable;
+            DLOG(INFO) << "conditional penalty applied: ambiguous path ["
+                       << last_pos << ", " << end_pos << ")";
+          }
         }
         double next_credibility = props->credibility + penalty;
 

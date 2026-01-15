@@ -95,7 +95,7 @@ class ScriptSyllabifier : public PhraseSyllabifier {
   size_t BuildSyllableGraph(Prism& prism);
   string GetPreeditString(const Phrase& cand) const;
   string GetOriginalSpelling(const Phrase& cand) const;
-  bool IsCandidateCorrection(const Phrase& cand) const;
+  bool IsCorrection(const Code& code, size_t code_length) const;
 
   const SyllableGraph& syllable_graph() const { return syllable_graph_; }
 
@@ -357,36 +357,39 @@ size_t ScriptSyllabifier::BuildSyllableGraph(Prism& prism) {
                                                  &syllable_graph_);
 }
 
-bool ScriptSyllabifier::IsCandidateCorrection(const rime::Phrase& cand) const {
-  std::stack<bool> results;
-  // Perform DFS on syllable graph to find whether this candidate is a
-  // correction
-  SyllabifyTask task{cand.code(), syllable_graph_, cand.end() - start_,
-                     [&](SyllabifyTask* task, size_t depth, size_t current_pos,
-                         size_t next_pos) {
-                       auto id = cand.code()[depth];
-                       auto it_s = syllable_graph_.edges.find(current_pos);
-                       // C++ prohibit operator [] of const map
-                       // if
-                       // (syllable_graph_.edges[current_pos][next_pos][id].type
-                       // == kCorrection)
-                       if (it_s != syllable_graph_.edges.end()) {
-                         auto it_e = it_s->second.find(next_pos);
-                         if (it_e != it_s->second.end()) {
-                           auto it_type = it_e->second.find(id);
-                           if (it_type != it_e->second.end()) {
-                             results.push(it_type->second.is_correction);
-                             return;
-                           }
-                         }
-                       }
-                       results.push(false);
-                     },
-                     [&](SyllabifyTask* task, size_t depth) { results.pop(); }};
-  if (syllabify_dfs(&task, 0, cand.start() - start_)) {
-    for (; !results.empty(); results.pop()) {
-      if (results.top())
-        return results.top();
+bool ScriptSyllabifier::IsCorrection(const Code& code,
+                                     size_t code_length) const {
+  vector<bool> path_attributes;
+  path_attributes.reserve(8);
+
+  SyllabifyTask task{
+      code, syllable_graph_, code_length,
+      // push
+      [&](SyllabifyTask* task, size_t depth, size_t current_pos,
+          size_t next_pos) {
+        auto id = task->code[depth];
+
+        auto start_iter = syllable_graph_.edges.find(current_pos);
+        if (start_iter != syllable_graph_.edges.end()) {
+          auto end_iter = start_iter->second.find(next_pos);
+          if (end_iter != start_iter->second.end()) {
+            auto prop_iter = end_iter->second.find(id);
+            if (prop_iter != end_iter->second.end()) {
+              path_attributes.push_back(prop_iter->second.is_correction);
+              return;
+            }
+          }
+        }
+        // edge not found
+        path_attributes.push_back(false);
+      },
+      // pop
+      [&](SyllabifyTask* task, size_t depth) { path_attributes.pop_back(); }};
+
+  if (syllabify_dfs(&task, 0, 0)) {
+    for (bool is_correction : path_attributes) {
+      if (is_correction)
+        return true;
     }
   }
   return false;
@@ -458,11 +461,28 @@ bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   if (user_phrase_)
     user_phrase_iter_ = user_phrase_->rbegin();
 
-  // make sentences when there is no exact-matching phrase candidate
+  auto is_correction_match = [&](auto& iter_pair, size_t len) {
+    if (iter_pair.first != len || iter_pair.second.exhausted())
+      return false;
+    return syllabifier_->IsCorrection(iter_pair.second.Peek()->code, len);
+  };
+
+  bool has_reliable_phrase =
+      has_exact_match_phrase(phrase_, phrase_iter_, consumed) &&
+      !is_correction_match(*phrase_iter_, consumed);
+
+  bool has_reliable_user_phrase =
+      has_exact_match_phrase(user_phrase_, user_phrase_iter_, consumed) &&
+      !is_correction_match(*user_phrase_iter_, consumed);
+
   bool has_at_least_two_syllables = syllable_graph.edges.size() >= 2;
-  if (has_at_least_two_syllables &&
-      !has_exact_match_phrase(phrase_, phrase_iter_, consumed) &&
-      !has_exact_match_phrase(user_phrase_, user_phrase_iter_, consumed)) {
+  DLOG(INFO) << "consumed: " << consumed
+             << ", has_reliable_phrase: " << has_reliable_phrase
+             << ", has_reliable_user_phrase: " << has_reliable_user_phrase
+             << ", has_at_least_two_syllables: " << has_at_least_two_syllables;
+  // make sentences when there is no exact-matching phrase candidate
+  if (has_at_least_two_syllables && !has_reliable_phrase &&
+      !has_reliable_user_phrase) {
     sentence_ = MakeSentence(dict, user_dict);
   }
 
@@ -505,7 +525,8 @@ bool ScriptTranslation::Next() {
       }
     }
   } while (enable_correction_ &&
-           syllabifier_->IsCandidateCorrection(*candidate_) &&
+           syllabifier_->IsCorrection(candidate_->code(),
+                                      candidate_->end() - start_) &&
            // limit the number of correction candidates
            ++correction_count_ > max_corrections_);
   if (!CheckEmpty()) {
@@ -569,7 +590,20 @@ bool ScriptTranslation::PrepareCandidate() {
   if (user_phrase_code_length > 0 &&
       prefer_user_phrase(
           user_phrase_code_length, phrase_code_length,
-          [this, full_code_length]() {
+          // 編碼長度相同時, 用戶詞優先
+          [this, full_code_length, phrase_code_length]() {
+            UserDictEntryIterator& uter = user_phrase_iter_->second;
+            DictEntryIterator& iter = phrase_iter_->second;
+            // 但若用戶詞爲糾錯結果, 則免去優先權, 回歸權重比較
+            bool user_is_correction = syllabifier_->IsCorrection(
+                uter.Peek()->code, phrase_code_length);
+            if (user_is_correction) {
+              // 因對糾錯候選施加了較大懲罰, 通常結果爲 系統原文 > 用戶糾錯
+              // 兩者皆糾錯時, 用戶詞的動態權重有助達成 用戶糾錯 > 系統糾錯
+              return uter.Peek()->weight >= iter.Peek()->weight;
+            }
+            // 長詞聯想之前須至少出一個嚴格匹配的候選
+            // 故確定首選之際, 系統嚴格匹配 > 用戶長詞聯想
             const int kNumExactMatchOnTop = 1;
             return candidate_index_ >= kNumExactMatchOnTop ||
                    prefer_user_phrase(

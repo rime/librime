@@ -25,24 +25,14 @@ void Script::Merge(const string& s,
   vector<Spelling>& m((*this)[s]);
   for (const Spelling& x : v) {
     Spelling y(x);
-    SpellingProperties& yy(y.properties);
-    {
-      if (sp.type > yy.type)
-        yy.type = sp.type;
-      yy.credibility += sp.credibility;
-      if (!sp.tips.empty())
-        yy.tips = sp.tips;
-    }
+    // 疊加運算結果
+    y.properties.Compose(sp);
     auto e = std::find(m.begin(), m.end(), x);
     if (e == m.end()) {
       m.push_back(y);
     } else {
-      SpellingProperties& zz(e->properties);
-      if (yy.type < zz.type)
-        zz.type = yy.type;
-      if (yy.credibility > zz.credibility)
-        zz.credibility = yy.credibility;
-      zz.tips.clear();
+      // 合併屬性
+      e->properties.Update(y.properties);
     }
   }
 }

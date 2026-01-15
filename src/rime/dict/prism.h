@@ -23,6 +23,7 @@ using Credibility = float;
 
 struct SpellingDescriptor {
   SyllableId syllable_id;
+  // bit 30: is_correction
   int32_t type;
   Credibility credibility;
   String tips;

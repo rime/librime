@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(rime_version 1.15.0)
+set(rime_version 1.16.0)
 set(rime_soversion 1)
 
 add_definitions(-DRIME_VERSION="${rime_version}")
