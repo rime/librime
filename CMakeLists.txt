@@ -106,7 +106,12 @@ if(WITH_STATIC_DEPS)
 endif()
 
 find_package(leveldb CONFIG REQUIRED)
-find_package(Marisa CONFIG REQUIRED)
+
+# debian 12 used in docker CI and ubuntu 24 Linux in CI do not have Marisa cmake config file
+find_package(Marisa CONFIG QUIET)
+if(NOT Marisa_FOUND)
+  find_package(Marisa MODULE REQUIRED)
+endif()
 
 find_package(OpenCC CONFIG REQUIRED)
 if(WITH_STATIC_DEPS)
