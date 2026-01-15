@@ -106,7 +106,7 @@ if(WITH_STATIC_DEPS)
 endif()
 
 find_package(leveldb REQUIRED)
-find_package(marisa REQUIRED)
+find_package(Marisa REQUIRED)
 
 find_package(OpenCC REQUIRED)
 if(WITH_STATIC_DEPS)
