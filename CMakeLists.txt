@@ -100,7 +100,7 @@ if(BUILD_TEST)
   endif()
 endif()
 
-find_package(YamlCpp REQUIRED)
+find_package(yaml-cpp REQUIRED)
 if(WITH_STATIC_DEPS)
   add_definitions(-DYAML_CPP_STATIC_DEFINE)
 endif()

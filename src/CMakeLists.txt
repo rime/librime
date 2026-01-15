@@ -74,7 +74,7 @@ endif()
 target_link_libraries(rime-core-obj PUBLIC
   Boost::boost
   Boost::regex
-  YamlCpp::YamlCpp
+  yaml-cpp::yaml-cpp
   $<$<TARGET_EXISTS:Threads::Threads>:Threads::Threads>
 )
 
@@ -94,8 +94,8 @@ endif()
 
 target_link_libraries(rime-dict-obj PUBLIC
   Boost::boost
-  LevelDB::LevelDB
-  Marisa::Marisa)
+  leveldb::leveldb
+  Marisa::marisa)
 target_link_libraries(rime-gears-obj PUBLIC
   Boost::boost
   Boost::regex
