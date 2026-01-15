@@ -105,8 +105,8 @@ if(WITH_STATIC_DEPS)
   add_definitions(-DYAML_CPP_STATIC_DEFINE)
 endif()
 
-find_package(LevelDB REQUIRED)
-find_package(Marisa REQUIRED)
+find_package(leveldb REQUIRED)
+find_package(marisa REQUIRED)
 
 find_package(OpenCC REQUIRED)
 if(WITH_STATIC_DEPS)
