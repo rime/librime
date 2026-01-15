@@ -10,6 +10,9 @@ set(rime_soversion 1)
 
 add_definitions(-DRIME_VERSION="${rime_version}")
 
+# generate compile_commands.json
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 include(GNUInstallDirs)
 
 option(BUILD_SHARED_LIBS "Build Rime as shared library" ON)
