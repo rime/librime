@@ -23,181 +23,170 @@ set(rime_dict_module_src
   ${rime_algo_src}
   ${rime_dict_src})
 
-function(rime_add_module name obj_target)
-  add_library(${name} $<TARGET_OBJECTS:${obj_target}>)
-  target_link_libraries(${name}
-    ${obj_target}
-    ${rime_core_library}
-    ${ARGN})
-  set_target_properties(${name} PROPERTIES
-    VERSION ${rime_version}
-    SOVERSION ${rime_soversion}
-    LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
-    ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
-    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-  if(XCODE_VERSION)
-    set_target_properties(${name} PROPERTIES INSTALL_NAME_DIR "@rpath")
+function(rime_add_module module_name)
+  set(options)
+  set(one_value_args)
+  set(multi_value_args SOURCES PUBLIC_DEPS PRIVATE_DEPS LIB_DEPS OBJ_TARGETS)
+  cmake_parse_arguments(MODULE "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
+
+  if(NOT MODULE_SOURCES)
+    message(FATAL_ERROR "rime_add_module(${module_name}) requires SOURCES")
   endif()
-  install(TARGETS ${name} DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
+
+  set(obj_target "rime-${module_name}-obj")
+  add_library(${obj_target} OBJECT ${MODULE_SOURCES})
+  if(BUILD_SHARED_LIBS)
+    set_target_properties(${obj_target} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    target_compile_definitions(${obj_target} PRIVATE RIME_EXPORTS)
+  endif()
+  if(MODULE_PUBLIC_DEPS)
+    target_link_libraries(${obj_target} PUBLIC ${MODULE_PUBLIC_DEPS})
+  endif()
+  if(MODULE_PRIVATE_DEPS)
+    target_link_libraries(${obj_target} PRIVATE ${MODULE_PRIVATE_DEPS})
+  endif()
+
+  if(MODULE_OBJ_TARGETS)
+    set(obj_targets ${MODULE_OBJ_TARGETS})
+  else()
+    set(obj_targets ${obj_target})
+  endif()
+
+  set(build_lib OFF)
+  if("${module_name}" STREQUAL "core")
+    set(build_lib ON)
+  elseif(BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS)
+    set(build_lib ON)
+  endif()
+
+  if(build_lib)
+    if("${module_name}" STREQUAL "core")
+      if(BUILD_SHARED_LIBS)
+        set(lib_target rime-core)
+      else()
+        set(lib_target rime)
+      endif()
+    else()
+      set(lib_target "rime-${module_name}")
+    endif()
+
+    set(lib_sources "")
+    foreach(target IN LISTS obj_targets)
+      list(APPEND lib_sources $<TARGET_OBJECTS:${target}>)
+    endforeach()
+    if("${module_name}" STREQUAL "core" AND NOT BUILD_SEPARATE_LIBS AND rime_plugins_objs AND NOT rime_plugins_library)
+      list(APPEND lib_sources ${rime_plugins_objs})
+    endif()
+
+    add_library(${lib_target} ${lib_sources})
+    target_link_libraries(${lib_target}
+      ${obj_targets}
+      ${MODULE_LIB_DEPS})
+    if(NOT "${module_name}" STREQUAL "core")
+      if(BUILD_SHARED_LIBS)
+        target_link_libraries(${lib_target} rime-core)
+      else()
+        target_link_libraries(${lib_target} rime)
+      endif()
+    endif()
+
+    set_target_properties(${lib_target} PROPERTIES
+      VERSION ${rime_version}
+      SOVERSION ${rime_soversion}
+      LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
+      ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
+      RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+    if("${module_name}" STREQUAL "core")
+      set_target_properties(${lib_target} PROPERTIES OUTPUT_NAME "rime")
+    endif()
+    if("${module_name}" STREQUAL "core" AND BUILD_SHARED_LIBS)
+      set_target_properties(${lib_target} PROPERTIES DEFINE_SYMBOL "RIME_EXPORTS")
+    endif()
+    if(XCODE_VERSION)
+      set_target_properties(${lib_target} PROPERTIES INSTALL_NAME_DIR "@rpath")
+    endif()
+    install(TARGETS ${lib_target} DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
+  endif()
+
 endfunction()
 
-add_library(rime-core-obj OBJECT ${rime_core_module_src})
-add_library(rime-dict-obj OBJECT ${rime_dict_module_src})
-add_library(rime-gears-obj OBJECT ${rime_gears_src})
-add_library(rime-levers-obj OBJECT ${rime_levers_src})
+set(rime_all_obj_targets
+  rime-core-obj
+  rime-dict-obj
+  rime-gears-obj
+  rime-levers-obj)
 if(rime_plugins_library)
-  add_library(rime-plugins-obj OBJECT ${rime_plugins_src} ${rime_plugins_objs})
-  set(rime_plugins_obj_list $<TARGET_OBJECTS:rime-plugins-obj>)
-else()
-  set(rime_plugins_obj_list ${rime_plugins_objs})
+  list(APPEND rime_all_obj_targets rime-plugins-obj)
 endif()
-
-if(BUILD_SHARED_LIBS)
-  set_target_properties(rime-core-obj rime-dict-obj rime-gears-obj rime-levers-obj
-    PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  if(rime_plugins_library)
-    set_target_properties(rime-plugins-obj PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  endif()
-  target_compile_definitions(rime-core-obj PRIVATE RIME_EXPORTS)
-  target_compile_definitions(rime-dict-obj PRIVATE RIME_EXPORTS)
-  target_compile_definitions(rime-gears-obj PRIVATE RIME_EXPORTS)
-  target_compile_definitions(rime-levers-obj PRIVATE RIME_EXPORTS)
-  if(rime_plugins_library)
-    target_compile_definitions(rime-plugins-obj PRIVATE RIME_EXPORTS)
-  endif()
+set(rime_core_obj_targets rime-core-obj)
+if(NOT BUILD_SEPARATE_LIBS)
+  set(rime_core_obj_targets ${rime_all_obj_targets})
 endif()
-
-if(ENABLE_EXTERNAL_PLUGINS)
-  target_link_libraries(rime-core-obj PUBLIC dl)
-endif()
-
-
-target_link_libraries(rime-core-obj PUBLIC
+set(rime_core_public_deps
   Boost::boost
   Boost::regex
   yaml-cpp::yaml-cpp
   $<$<TARGET_EXISTS:Threads::Threads>:Threads::Threads>
-)
+  $<$<BOOL:${ENABLE_EXTERNAL_PLUGINS}>:dl>
+  $<$<TARGET_EXISTS:Glog::Glog>:GLog::GLog>)
+set(rime_core_private_deps
+  $<$<TARGET_EXISTS:Glog::Glog>:dbghelp>
+  $<$<BOOL:${MINGW}>:wsock32>
+  $<$<BOOL:${MINGW}>:ws2_32>
+  $<$<BOOL:${MINGW}>:bcrypt>)
 
-if(Glog_FOUND AND WIN32)
-  target_link_libraries(rime-core-obj PUBLIC GLog::GLog)
-  if(WIN32)
-    # TODO: in glog v0.7.0, someone at Google forget to add dbghelp.lib to the linker library list.
-    target_link_libraries(rime-core-obj PRIVATE dbghelp)
-  endif()
-endif()
+rime_add_module(
+  core
+  SOURCES ${rime_core_module_src}
+  PUBLIC_DEPS ${rime_core_public_deps}
+  PRIVATE_DEPS ${rime_core_private_deps}
+  OBJ_TARGETS ${rime_core_obj_targets})
 
-if(MINGW)
-  # fix: bcrypt for boost uuid issue
-  # https://github.com/boostorg/uuid/issues/68
-  target_link_libraries(rime-core-obj PRIVATE wsock32 ws2_32 bcrypt)
-endif()
+rime_add_module(
+  dict
+  SOURCES ${rime_dict_module_src}
+  PUBLIC_DEPS Boost::boost leveldb::leveldb Marisa::marisa)
 
-target_link_libraries(rime-dict-obj PUBLIC
-  Boost::boost
-  leveldb::leveldb
-  Marisa::marisa)
-target_link_libraries(rime-gears-obj PUBLIC
-  Boost::boost
-  Boost::regex
-  $<$<TARGET_EXISTS:Iconv::Iconv>:Iconv::Iconv>
-  OpenCC::OpenCC)
-target_link_libraries(rime-levers-obj PUBLIC
-  Boost::boost)
+rime_add_module(
+  gears
+  SOURCES ${rime_gears_src}
+  PUBLIC_DEPS Boost::boost Boost::regex $<$<TARGET_EXISTS:Iconv::Iconv>:Iconv::Iconv> OpenCC::OpenCC
+  LIB_DEPS rime-dict)
+
+rime_add_module(
+  levers
+  SOURCES ${rime_levers_src}
+  PUBLIC_DEPS Boost::boost
+  LIB_DEPS rime-dict)
 
 if(rime_plugins_library)
-  target_link_libraries(rime-plugins-obj PUBLIC ${rime_plugins_deps})
+  rime_add_module(
+    plugins
+    SOURCES ${rime_plugins_src} ${rime_plugins_objs}
+    PUBLIC_DEPS ${rime_plugins_deps}
+    LIB_DEPS rime-dict rime-gears)
 endif()
 
-if(BUILD_SEPARATE_LIBS)
-  set(rime_src $<TARGET_OBJECTS:rime-core-obj>)
-  set(rime_obj_targets rime-core-obj)
-else()
-  set(rime_src
-    $<TARGET_OBJECTS:rime-core-obj>
-    $<TARGET_OBJECTS:rime-dict-obj>
-    $<TARGET_OBJECTS:rime-gears-obj>
-    $<TARGET_OBJECTS:rime-levers-obj>
-    ${rime_plugins_obj_list})
-  set(rime_obj_targets
-    rime-core-obj
-    rime-dict-obj
-    rime-gears-obj
-    rime-levers-obj)
-  if(rime_plugins_library)
-    list(APPEND rime_obj_targets rime-plugins-obj)
-  endif()
-endif()
-
-if(BUILD_SHARED_LIBS)
-  add_library(${rime_core_library} ${rime_src})
-  target_link_libraries(${rime_core_library} ${rime_obj_targets})
-  set_target_properties(${rime_core_library} PROPERTIES
-    OUTPUT_NAME "rime"
-    DEFINE_SYMBOL "RIME_EXPORTS"
-    VERSION ${rime_version}
-    SOVERSION ${rime_soversion}
-    LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
-    ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
-    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-  if(XCODE_VERSION)
-    set_target_properties(${rime_core_library} PROPERTIES INSTALL_NAME_DIR "@rpath")
-  endif()
-  install(TARGETS ${rime_core_library} DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
-  if(MSVC)
-    install(FILES $<TARGET_PDB_FILE:${rime_core_library}>
-      DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
-      OPTIONAL)
-  endif()
-else()
-  add_library(${rime_core_library} STATIC ${rime_src})
-  target_link_libraries(${rime_core_library} ${rime_obj_targets})
-  set_target_properties(${rime_core_library} PROPERTIES
-    OUTPUT_NAME "rime"
-    ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-  install(TARGETS ${rime_core_library} DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
+if(MSVC AND BUILD_SHARED_LIBS AND TARGET rime-core)
+  install(FILES $<TARGET_PDB_FILE:rime-core>
+    DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
+    OPTIONAL)
 endif()
 
 # Aggregate target for consumers that want all modules.
 add_library(rime INTERFACE)
-target_link_libraries(rime INTERFACE ${rime_core_library})
+if(BUILD_SHARED_LIBS)
+  target_link_libraries(rime INTERFACE rime-core)
+else()
+  target_link_libraries(rime INTERFACE rime)
+endif()
 
 if(BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS)
-  rime_add_module(rime-dict rime-dict-obj)
-  rime_add_module(rime-gears rime-gears-obj ${rime_dict_library})
-  rime_add_module(rime-levers rime-levers-obj ${rime_dict_library})
-
-  if(rime_plugins_library)
-    rime_add_module(rime-plugins rime-plugins-obj
-      ${rime_library})
-  endif()
-
   if(TARGET rime)
     target_link_libraries(rime INTERFACE rime-dict rime-gears rime-levers)
-    if(rime_plugins_library)
-      target_link_libraries(rime INTERFACE rime-plugins)
-    endif()
   endif()
 endif()
 
-if(BUILD_ALWAYS_STATIC_TARGET)
-  if(BUILD_SEPARATE_LIBS)
-    set(rime_static_src $<TARGET_OBJECTS:rime-core-obj>)
-  else()
-    set(rime_static_src
-      $<TARGET_OBJECTS:rime-core-obj>
-      $<TARGET_OBJECTS:rime-dict-obj>
-      $<TARGET_OBJECTS:rime-gears-obj>
-      $<TARGET_OBJECTS:rime-levers-obj>
-      ${rime_plugins_obj_list})
-  endif()
-  add_library(rime-static STATIC ${rime_static_src})
-  target_link_libraries(rime-static ${rime_obj_targets})
-  set_target_properties(rime-static PROPERTIES
-    OUTPUT_NAME "rime-static"
-    ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-  install(TARGETS rime-static DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
-endif()
 if(DEFINED RIME_SETUP_EXTRA_MODULES)
   set_property(SOURCE rime/setup.cc
     PROPERTY COMPILE_DEFINITIONS
