@@ -1,4 +1,4 @@
-FROM debian:12.1
+FROM debian:13.3
 
 RUN apt update && apt install -y \
   git \
