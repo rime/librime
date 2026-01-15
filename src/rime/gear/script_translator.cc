@@ -6,6 +6,7 @@
 //
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
+#include <algorithm>
 #include <stack>
 #include <cmath>
 #include <boost/algorithm/string/join.hpp>
@@ -226,7 +227,7 @@ int ScriptTranslator::core_word_length() const {
   if (max_word_length_ <= 0) {
     return core_word_length_;
   }
-  return std::min(core_word_length_, max_word_length_);
+  return (std::min)(core_word_length_, max_word_length_);
 }
 
 static bool exceed_upperlimit(int length, int upper_limit) {
