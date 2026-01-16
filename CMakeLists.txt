@@ -220,7 +220,7 @@ foreach(mod ${rime_plugins_modules})
   set(list "${list},Q(${mod})")
 endforeach()
 set(RIME_SETUP_EXTRA_MODULES "${list}")
-if(BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS AND rime_plugins_objs)
+if(BUILD_MERGED_PLUGINS AND BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS AND rime_plugins_objs)
   set(rime_plugins_library rime-plugins)
 endif()
 
