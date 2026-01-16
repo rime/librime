@@ -26,7 +26,7 @@ set(rime_dict_module_src
 function(rime_add_module module_name)
   set(options)
   set(one_value_args)
-  set(multi_value_args SOURCES PUBLIC_DEPS PRIVATE_DEPS LIB_DEPS OBJ_TARGETS)
+  set(multi_value_args SOURCES PUBLIC_DEPS PRIVATE_DEPS LIB_DEPS)
   cmake_parse_arguments(MODULE "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
   if(NOT MODULE_SOURCES)
@@ -46,11 +46,7 @@ function(rime_add_module module_name)
     target_link_libraries(${obj_target} PRIVATE ${MODULE_PRIVATE_DEPS})
   endif()
 
-  if(MODULE_OBJ_TARGETS)
-    set(obj_targets ${MODULE_OBJ_TARGETS})
-  else()
-    set(obj_targets ${obj_target})
-  endif()
+  set(obj_targets ${obj_target})
 
   set(build_lib OFF)
   if("${module_name}" STREQUAL "core")
@@ -63,12 +59,10 @@ function(rime_add_module module_name)
     set(lib_target "rime-${module_name}")
 
     set(lib_sources "")
-    foreach(target IN LISTS obj_targets)
-      list(APPEND lib_sources $<TARGET_OBJECTS:${target}>)
-    endforeach()
+    list(APPEND lib_sources $<TARGET_OBJECTS:${obj_target}>)
 
     add_library(${lib_target} ${lib_sources})
-    target_link_libraries(${lib_target} PRIVATE ${obj_targets})
+    target_link_libraries(${lib_target} PUBLIC ${obj_target})
     if(MODULE_LIB_DEPS)
       target_link_libraries(${lib_target} PUBLIC ${MODULE_LIB_DEPS})
     endif()
@@ -94,18 +88,6 @@ function(rime_add_module module_name)
 
 endfunction()
 
-set(rime_all_obj_targets
-  rime-core-obj
-  rime-dict-obj
-  rime-gears-obj
-  rime-levers-obj)
-if(rime_plugins_library)
-  list(APPEND rime_all_obj_targets rime-plugins-obj)
-endif()
-set(rime_core_obj_targets rime-core-obj)
-if(NOT BUILD_SEPARATE_LIBS)
-  set(rime_core_obj_targets ${rime_all_obj_targets})
-endif()
 set(rime_core_public_deps
   Boost::boost
   Boost::regex
@@ -123,8 +105,7 @@ rime_add_module(
   core
   SOURCES ${rime_core_module_src}
   PUBLIC_DEPS ${rime_core_public_deps}
-  PRIVATE_DEPS ${rime_core_private_deps}
-  OBJ_TARGETS ${rime_core_obj_targets})
+  PRIVATE_DEPS ${rime_core_private_deps})
 
 rime_add_module(
   dict
@@ -151,22 +132,38 @@ if(rime_plugins_library)
     LIB_DEPS rime-dict rime-gears)
 endif()
 
-if(TARGET rime-core)
-  set_target_properties(rime-core PROPERTIES OUTPUT_NAME "rime")
-  if(BUILD_SHARED_LIBS)
-    set_target_properties(rime-core PROPERTIES DEFINE_SYMBOL "RIME_EXPORTS")
-  endif()
-  if(NOT BUILD_SEPARATE_LIBS AND rime_plugins_objs AND NOT rime_plugins_library)
+set_target_properties(rime-core PROPERTIES OUTPUT_NAME "rime")
+if(BUILD_SHARED_LIBS)
+  set_target_properties(rime-core PROPERTIES DEFINE_SYMBOL "RIME_EXPORTS")
+endif()
+
+if(NOT BUILD_SEPARATE_LIBS)
+  target_sources(rime-core PRIVATE
+    $<TARGET_OBJECTS:rime-dict-obj>
+    $<TARGET_OBJECTS:rime-gears-obj>
+    $<TARGET_OBJECTS:rime-levers-obj>)
+  target_link_libraries(rime-core PUBLIC
+    rime-dict-obj
+    rime-gears-obj
+    rime-levers-obj)
+  if(rime_plugins_library)
+    target_sources(rime-core PRIVATE $<TARGET_OBJECTS:rime-plugins-obj>)
+    target_link_libraries(rime-core PUBLIC rime-plugins-obj)
+  elseif(rime_plugins_objs)
     target_sources(rime-core PRIVATE ${rime_plugins_objs})
   endif()
-  if(NOT BUILD_SEPARATE_LIBS AND rime_plugins_deps AND NOT rime_plugins_library)
-    target_link_libraries(rime-core PUBLIC ${rime_plugins_deps})
-  endif()
-  if(MSVC AND BUILD_SHARED_LIBS)
-    install(FILES $<TARGET_PDB_FILE:rime-core>
-      DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
-      OPTIONAL)
-  endif()
+endif()
+
+
+if(NOT BUILD_SEPARATE_LIBS AND rime_plugins_deps AND NOT rime_plugins_library)
+  target_link_libraries(rime-core PUBLIC ${rime_plugins_deps})
+endif()
+
+
+if(MSVC AND BUILD_SHARED_LIBS)
+  install(FILES $<TARGET_PDB_FILE:rime-core>
+    DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
+    OPTIONAL)
 endif()
 
 # Aggregate target for consumers that want all modules.
@@ -176,9 +173,7 @@ if(TARGET rime-core)
 endif()
 
 if(BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS)
-  if(TARGET rime)
-    target_link_libraries(rime INTERFACE rime-dict rime-gears rime-levers)
-  endif()
+  target_link_libraries(rime INTERFACE rime-dict rime-gears rime-levers)
 endif()
 
 if(DEFINED RIME_SETUP_EXTRA_MODULES)
