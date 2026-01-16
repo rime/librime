@@ -60,23 +60,12 @@ function(rime_add_module module_name)
   endif()
 
   if(build_lib)
-    if("${module_name}" STREQUAL "core")
-      if(BUILD_SHARED_LIBS)
-        set(lib_target rime-core)
-      else()
-        set(lib_target rime)
-      endif()
-    else()
-      set(lib_target "rime-${module_name}")
-    endif()
+    set(lib_target "rime-${module_name}")
 
     set(lib_sources "")
     foreach(target IN LISTS obj_targets)
       list(APPEND lib_sources $<TARGET_OBJECTS:${target}>)
     endforeach()
-    if("${module_name}" STREQUAL "core" AND NOT BUILD_SEPARATE_LIBS AND rime_plugins_objs AND NOT rime_plugins_library)
-      list(APPEND lib_sources ${rime_plugins_objs})
-    endif()
 
     add_library(${lib_target} ${lib_sources})
     target_link_libraries(${lib_target}
@@ -96,12 +85,6 @@ function(rime_add_module module_name)
       LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
       ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
       RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-    if("${module_name}" STREQUAL "core")
-      set_target_properties(${lib_target} PROPERTIES OUTPUT_NAME "rime")
-    endif()
-    if("${module_name}" STREQUAL "core" AND BUILD_SHARED_LIBS)
-      set_target_properties(${lib_target} PROPERTIES DEFINE_SYMBOL "RIME_EXPORTS")
-    endif()
     if(XCODE_VERSION)
       set_target_properties(${lib_target} PROPERTIES INSTALL_NAME_DIR "@rpath")
     endif()
@@ -167,18 +150,28 @@ if(rime_plugins_library)
     LIB_DEPS rime-dict rime-gears)
 endif()
 
-if(MSVC AND BUILD_SHARED_LIBS AND TARGET rime-core)
-  install(FILES $<TARGET_PDB_FILE:rime-core>
-    DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
-    OPTIONAL)
+if(TARGET rime-core)
+  set_target_properties(rime-core PROPERTIES OUTPUT_NAME "rime")
+  if(BUILD_SHARED_LIBS)
+    set_target_properties(rime-core PROPERTIES DEFINE_SYMBOL "RIME_EXPORTS")
+  endif()
+  if(NOT BUILD_SEPARATE_LIBS AND rime_plugins_objs AND NOT rime_plugins_library)
+    target_sources(rime-core PRIVATE ${rime_plugins_objs})
+  endif()
+  if(NOT BUILD_SEPARATE_LIBS AND rime_plugins_deps AND NOT rime_plugins_library)
+    target_link_libraries(rime-core PUBLIC ${rime_plugins_deps})
+  endif()
+  if(MSVC AND BUILD_SHARED_LIBS)
+    install(FILES $<TARGET_PDB_FILE:rime-core>
+      DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
+      OPTIONAL)
+  endif()
 endif()
 
 # Aggregate target for consumers that want all modules.
 add_library(rime INTERFACE)
-if(BUILD_SHARED_LIBS)
+if(TARGET rime-core)
   target_link_libraries(rime INTERFACE rime-core)
-else()
-  target_link_libraries(rime INTERFACE rime)
 endif()
 
 if(BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS)
