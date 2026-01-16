@@ -142,8 +142,13 @@ if(NOT BUILD_SEPARATE_LIBS)
     $<TARGET_OBJECTS:rime-dict-obj>
     $<TARGET_OBJECTS:rime-gears-obj>
     $<TARGET_OBJECTS:rime-levers-obj>)
+  target_link_libraries(rime-core PUBLIC
+    rime-dict-obj
+    rime-gears-obj
+    rime-levers-obj)
   if(rime_plugins_library)
     target_sources(rime-core PRIVATE $<TARGET_OBJECTS:rime-plugins-obj>)
+    target_link_libraries(rime-core PUBLIC rime-plugins-obj)
   elseif(rime_plugins_objs)
     target_sources(rime-core PRIVATE ${rime_plugins_objs})
   endif()
