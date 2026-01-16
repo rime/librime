@@ -68,14 +68,15 @@ function(rime_add_module module_name)
     endforeach()
 
     add_library(${lib_target} ${lib_sources})
-    target_link_libraries(${lib_target}
-      ${obj_targets}
-      ${MODULE_LIB_DEPS})
+    target_link_libraries(${lib_target} PRIVATE ${obj_targets})
+    if(MODULE_LIB_DEPS)
+      target_link_libraries(${lib_target} PUBLIC ${MODULE_LIB_DEPS})
+    endif()
     if(NOT "${module_name}" STREQUAL "core")
       if(BUILD_SHARED_LIBS)
-        target_link_libraries(${lib_target} rime-core)
+        target_link_libraries(${lib_target} PUBLIC rime-core)
       else()
-        target_link_libraries(${lib_target} rime)
+        target_link_libraries(${lib_target} PUBLIC rime)
       endif()
     endif()
 
