@@ -19,8 +19,7 @@ SwitcherSettings::SwitcherSettings(Deployer* deployer)
     : CustomSettings(deployer, "default", "Rime::SwitcherSettings") {}
 
 bool SwitcherSettings::Load() {
-  if (!CustomSettings::Load())
-    return false;
+  CustomSettings::Load();
   available_.clear();
   selection_.clear();
   hotkeys_.clear();
