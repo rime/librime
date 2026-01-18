@@ -103,6 +103,20 @@ set(rime_core_private_deps
   $<$<BOOL:${MINGW}>:ws2_32>
   $<$<BOOL:${MINGW}>:bcrypt>)
 
+set(rime_dict_public_deps
+  Boost::boost
+  leveldb::leveldb
+  Marisa::marisa)
+
+set(rime_gears_public_deps
+  Boost::boost
+  Boost::regex
+  $<$<TARGET_EXISTS:Iconv::Iconv>:Iconv::Iconv>
+  OpenCC::OpenCC)
+
+set(rime_levers_public_deps
+  Boost::boost)
+
 rime_add_module(
   core
   SOURCES ${rime_core_module_src}
@@ -128,18 +142,18 @@ install(TARGETS rime-core
 rime_add_module(
   dict
   SOURCES ${rime_dict_module_src}
-  PUBLIC_DEPS Boost::boost leveldb::leveldb Marisa::marisa)
+  PUBLIC_DEPS ${rime_dict_public_deps})
 
 rime_add_module(
   gears
   SOURCES ${rime_gears_src}
-  PUBLIC_DEPS Boost::boost Boost::regex $<$<TARGET_EXISTS:Iconv::Iconv>:Iconv::Iconv> OpenCC::OpenCC
+  PUBLIC_DEPS ${rime_gears_public_deps}
   LIB_DEPS rime-dict)
 
 rime_add_module(
   levers
   SOURCES ${rime_levers_src}
-  PUBLIC_DEPS Boost::boost
+  PUBLIC_DEPS ${rime_levers_public_deps}
   LIB_DEPS rime-dict)
 
 if(rime_plugins_library)
@@ -201,11 +215,17 @@ foreach(module_target ${rime_module_targets})
 endforeach()
 
 # Aggregate target for consumers that want all modules.
-add_library(rime-all INTERFACE)
-target_link_libraries(rime-all INTERFACE rime-core ${rime_module_targets})
-install(TARGETS rime-all EXPORT RimeTargets)
-add_library(Rime::all ALIAS rime-all)
-add_library(rime-internal-all ALIAS rime-all)
+if(NOT TARGET rime-internal-all)
+  add_library(rime-internal-all INTERFACE)
+endif()
+target_link_libraries(rime-internal-all INTERFACE
+  rime-core
+  ${rime_module_targets}
+  ${rime_core_public_deps}
+  ${rime_dict_public_deps}
+  ${rime_gears_public_deps}
+  ${rime_levers_public_deps}
+  ${rime_plugins_deps})
 
 if(DEFINED RIME_SETUP_EXTRA_MODULES)
   set_property(SOURCE rime/setup.cc
