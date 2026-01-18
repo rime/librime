@@ -19,7 +19,7 @@ SwitcherSettings::SwitcherSettings(Deployer* deployer)
     : CustomSettings(deployer, "default", "Rime::SwitcherSettings") {}
 
 bool SwitcherSettings::Load() {
-  CustomSettings::Load();
+  auto ret = CustomSettings::Load();
   available_.clear();
   selection_.clear();
   hotkeys_.clear();
@@ -27,7 +27,7 @@ bool SwitcherSettings::Load() {
   GetAvailableSchemasFromDirectory(deployer_->user_data_dir);
   GetSelectedSchemasFromConfig();
   GetHotkeysFromConfig();
-  return true;
+  return ret;
 }
 
 bool SwitcherSettings::Select(Selection selection) {
