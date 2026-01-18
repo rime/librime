@@ -169,7 +169,7 @@ if(NOT BUILD_SEPARATE_LIBS)
 endif()
 
 
-if(NOT BUILD_SEPARATE_LIBS AND rime_plugins_deps AND NOT rime_plugins_library)
+if(NOT BUILD_SEPARATE_LIBS AND rime_plugins_deps)
   target_link_libraries(rime-core PUBLIC ${rime_plugins_deps})
 endif()
 
