@@ -14,6 +14,7 @@ set(rime_soversion 1)
 add_definitions(-DRIME_VERSION="${rime_version}")
 
 include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 
 option(BUILD_SHARED_LIBS "Build Rime as shared library" ON)
 option(BUILD_MERGED_PLUGINS "Merge plugins into one Rime library" ON)
@@ -181,13 +182,29 @@ if(NOT ANDROID)
     DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/pkgconfig)
 endif()
 
-install(FILES cmake/RimeConfig.cmake
-  DESTINATION ${CMAKE_INSTALL_FULL_DATADIR}/cmake/rime)
+set(RIME_CMAKE_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/Rime")
+set(RIME_IS_LINUX 0)
+if(LINUX)
+  set(RIME_IS_LINUX 1)
+endif()
 
-file(GLOB rime_public_header_files ${PROJECT_SOURCE_DIR}/src/*.h)
-list(FILTER rime_public_header_files EXCLUDE REGEX .*_impl\.h$)
-install(FILES ${rime_public_header_files}
-  DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR})
+configure_package_config_file(
+  "${PROJECT_SOURCE_DIR}/cmake/RimeConfig.cmake.in"
+  "${PROJECT_BINARY_DIR}/RimeConfig.cmake"
+  INSTALL_DESTINATION "${RIME_CMAKE_INSTALL_DIR}")
+write_basic_package_version_file(
+  "${PROJECT_BINARY_DIR}/RimeConfigVersion.cmake"
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY SameMajorVersion)
+
+install(EXPORT RimeTargets
+  NAMESPACE Rime::
+  DESTINATION "${RIME_CMAKE_INSTALL_DIR}")
+install(FILES
+  "${PROJECT_BINARY_DIR}/RimeConfig.cmake"
+  "${PROJECT_BINARY_DIR}/RimeConfigVersion.cmake"
+  DESTINATION "${RIME_CMAKE_INSTALL_DIR}")
+
 if(INSTALL_PRIVATE_HEADERS)
   file(GLOB rime_private_header_files
     ${PROJECT_SOURCE_DIR}/src/rime/*.h
@@ -210,7 +227,19 @@ if(BUILD_SHARED_LIBS)
     set(rime_levers_library rime-levers)
   endif()
 endif()
-set(rime_library rime)
+if(NOT DEFINED rime_dict_library)
+  set(rime_dict_library rime-dict)
+endif()
+if(NOT DEFINED rime_gears_library)
+  set(rime_gears_library rime-gears)
+endif()
+if(NOT DEFINED rime_levers_library)
+  set(rime_levers_library rime-levers)
+endif()
+if(TARGET rime-plugins AND NOT DEFINED rime_plugins_library)
+  set(rime_plugins_library rime-plugins)
+endif()
+set(rime_library rime-all)
 
 add_subdirectory(plugins)
 message(STATUS "rime_plugins_libs: ${rime_plugins_deps}")
@@ -220,6 +249,9 @@ foreach(mod ${rime_plugins_modules})
   set(list "${list},Q(${mod})")
 endforeach()
 set(RIME_SETUP_EXTRA_MODULES "${list}")
+if(rime_plugins_objs AND NOT DEFINED rime_plugins_library)
+  set(rime_plugins_library rime-plugins)
+endif()
 if(BUILD_MERGED_PLUGINS AND BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS AND rime_plugins_objs)
   set(rime_plugins_library rime-plugins)
 endif()

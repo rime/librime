@@ -1,0 +1,15 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/RimeTargets.cmake")
+
+set(Rime_VERSION "@PROJECT_VERSION@")
+
+# Make the exported C API target non-transitive for downstreams.
+if(TARGET Rime::rime)
+  set_property(TARGET Rime::rime PROPERTY INTERFACE_LINK_LIBRARIES "")
+endif()
+
+# Provide a consistent aggregate target name for consumers.
+if(TARGET Rime::rime-all AND NOT TARGET Rime::all)
+  add_library(Rime::all ALIAS Rime::rime-all)
+endif()

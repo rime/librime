@@ -83,7 +83,9 @@ function(rime_add_module module_name)
     if(XCODE_VERSION)
       set_target_properties(${lib_target} PROPERTIES INSTALL_NAME_DIR "@rpath")
     endif()
-    install(TARGETS ${lib_target} DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
+    if(NOT "${module_name}" STREQUAL "core")
+      install(TARGETS ${lib_target} EXPORT RimeTargets DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
+    endif()
   endif()
 
 endfunction()
@@ -106,6 +108,22 @@ rime_add_module(
   SOURCES ${rime_core_module_src}
   PUBLIC_DEPS ${rime_core_public_deps}
   PRIVATE_DEPS ${rime_core_private_deps})
+
+target_include_directories(rime-core
+  PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
+  $<INSTALL_INTERFACE:include>)
+
+set_target_properties(rime-core PROPERTIES
+  OUTPUT_NAME "rime"
+  EXPORT_NAME "rime"
+  PUBLIC_HEADER "rime_api.h;rime_api_stdbool.h;rime_api_deprecated.h;rime_levers_api.h")
+install(TARGETS rime-core
+  EXPORT RimeTargets
+  DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
+  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR})
 
 rime_add_module(
   dict
@@ -132,24 +150,20 @@ if(rime_plugins_library)
     LIB_DEPS rime-dict rime-gears)
 endif()
 
-set_target_properties(rime-core PROPERTIES OUTPUT_NAME "rime")
+if(NOT TARGET Rime::rime)
+  add_library(Rime::rime ALIAS rime-core)
+endif()
+
 if(BUILD_SHARED_LIBS)
   set_target_properties(rime-core PROPERTIES DEFINE_SYMBOL "RIME_EXPORTS")
 endif()
 
 if(NOT BUILD_SEPARATE_LIBS)
-  target_sources(rime-core PRIVATE
-    $<TARGET_OBJECTS:rime-dict-obj>
-    $<TARGET_OBJECTS:rime-gears-obj>
-    $<TARGET_OBJECTS:rime-levers-obj>)
-  target_link_libraries(rime-core PUBLIC
+  target_link_libraries(rime-core PRIVATE
     rime-dict-obj
     rime-gears-obj
     rime-levers-obj)
-  if(rime_plugins_library)
-    target_sources(rime-core PRIVATE $<TARGET_OBJECTS:rime-plugins-obj>)
-    target_link_libraries(rime-core PUBLIC rime-plugins-obj)
-  elseif(rime_plugins_objs)
+  if(rime_plugins_objs)
     target_sources(rime-core PRIVATE ${rime_plugins_objs})
   endif()
 endif()
@@ -166,15 +180,32 @@ if(MSVC AND BUILD_SHARED_LIBS)
     OPTIONAL)
 endif()
 
-# Aggregate target for consumers that want all modules.
-add_library(rime INTERFACE)
-if(TARGET rime-core)
-  target_link_libraries(rime INTERFACE rime-core)
+# Ensure per-module targets always exist for plugins/consumers, even when merged.
+set(rime_module_targets rime-dict rime-gears rime-levers)
+if(rime_plugins_library OR rime_plugins_objs)
+  list(APPEND rime_module_targets rime-plugins)
 endif()
 
-if(BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS)
-  target_link_libraries(rime INTERFACE rime-dict rime-gears rime-levers)
-endif()
+foreach(module_target ${rime_module_targets})
+  if(NOT TARGET ${module_target})
+    add_library(${module_target} INTERFACE)
+    target_link_libraries(${module_target} INTERFACE rime-core)
+  endif()
+  if(NOT TARGET Rime::${module_target})
+    add_library(Rime::${module_target} ALIAS ${module_target})
+  endif()
+  get_target_property(_type ${module_target} TYPE)
+  if(_type STREQUAL "INTERFACE_LIBRARY")
+    install(TARGETS ${module_target} EXPORT RimeTargets)
+  endif()
+endforeach()
+
+# Aggregate target for consumers that want all modules.
+add_library(rime-all INTERFACE)
+target_link_libraries(rime-all INTERFACE rime-core ${rime_module_targets})
+install(TARGETS rime-all EXPORT RimeTargets)
+add_library(Rime::all ALIAS rime-all)
+add_library(rime-internal-all ALIAS rime-all)
 
 if(DEFINED RIME_SETUP_EXTRA_MODULES)
   set_property(SOURCE rime/setup.cc
