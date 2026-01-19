@@ -3,13 +3,14 @@ cmake_minimum_required(VERSION 3.13)
 set(CMAKE_USER_MAKE_RULES_OVERRIDE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/c_flag_overrides.cmake)
 set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_flag_overrides.cmake)
 
-project(rime VERSION 1.16.0)
+set(rime_version 1.16.0)
+set(rime_soversion 1)
+
+project(rime VERSION ${rime_version})
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-
-set(rime_version ${PROJECT_VERSION})
-set(rime_soversion 1)
 
 add_definitions(-DRIME_VERSION="${rime_version}")
 
