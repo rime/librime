@@ -180,7 +180,7 @@ if %build_librime% == 0 goto exit
 set rime_cmake_flags=%common_cmake_flags%^
  -DWITH_STATIC_DEPS=ON^
  -DBUILD_SHARED_LIBS=%build_shared%^
- -DBUILD_TEST=%build_test%^
+ -DBUILD_TESTING=%build_test%^
  -DENABLE_LOGGING=%enable_logging%^
  -DCMAKE_PREFIX_PATH:PATH="%deps_install_prefix%"^
  -DCMAKE_INSTALL_PREFIX:PATH="%rime_install_prefix%"
