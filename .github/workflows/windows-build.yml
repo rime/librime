@@ -24,6 +24,7 @@ jobs:
           - { compiler: msvc, arch: x86, cross_arch: x64_x86 }
     env:
       boost_version: 1.89.0
+      BOOST_TOOLSET: ${{ matrix.compiler == 'clang' && 'clang-win' || 'msvc' }}
       BOOST_ROOT: ${{ github.workspace }}\deps\boost-1.89.0
       RIME_PLUGINS: ${{ inputs.rime_plugins }}
 
@@ -66,7 +67,7 @@ jobs:
           git submodule > submodule-status
 
       - name: Install boost
-        run: .\install-boost.bat
+        run: .\install-boost.bat --build
 
       - name: Cache dependencies
         id: cache-deps
@@ -153,16 +154,12 @@ jobs:
             -DCMAKE_INSTALL_PREFIX:PATH=`pwd`/dist \
             -DCMAKE_BUILD_TYPE:STRING=Release \
             -DENABLE_LOGGING:BOOL=ON \
-            -DBUILD_TEST:BOOL=ON \
-            -DBUILD_STATIC:BOOL=ON \
+            -DBUILD_TESTING:BOOL=ON \
+            -DWITH_STATIC_DEPS:BOOL=ON \
             -DBUILD_SHARED_LIBS:BOOL=ON
           cmake --build build
           cmake --install build
-          # Temporarily disable test for mingw-w64
-          # due to msys2 glog package issue:
-          # https://github.com/msys2/MINGW-packages/issues/25344
-          # cd build && cp ./bin/librime.dll ./test
-          # ctest --output-on-failure
+          ctest --output-on-failure
 
       - name: Create distributable
         run: |

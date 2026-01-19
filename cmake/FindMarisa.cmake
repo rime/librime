@@ -1,26 +1,17 @@
-set(_marisa_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
+find_path(MARISA_INCLUDE_DIR NAMES marisa.h)
 
-find_path(Marisa_INCLUDE_PATH marisa.h)
+find_library(MARISA_LIBRARY NAMES marisa libmarisa)
 
-if (Marisa_STATIC)
-  if (WIN32)
-    set(CMAKE_FIND_LIBRARY_SUFFIXES .lib ${CMAKE_FIND_LIBRARY_SUFFIXES})
-  else (WIN32)
-    set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
-  endif (WIN32)
-endif (Marisa_STATIC)
-find_library(Marisa_LIBRARY NAMES marisa libmarisa)
-if(Marisa_INCLUDE_PATH AND Marisa_LIBRARY)
-  set(Marisa_FOUND TRUE)
-endif(Marisa_INCLUDE_PATH AND Marisa_LIBRARY)
-if(Marisa_FOUND)
-  if(NOT Marisa_FIND_QUIETLY)
-    message(STATUS "Found marisa: ${Marisa_LIBRARY}")
-  endif(NOT Marisa_FIND_QUIETLY)
-else(Marisa_FOUND)
-  if(Marisa_FIND_REQUIRED)
-    message(FATAL_ERROR "Could not find marisa library.")
-  endif(Marisa_FIND_REQUIRED)
-endif(Marisa_FOUND)
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(Marisa
+  DEFAULT_MSG MARISA_LIBRARY MARISA_INCLUDE_DIR
+)
+if(MARISA_FOUND AND NOT TARGET Marisa::marisa)
+  add_library(Marisa::marisa UNKNOWN IMPORTED)
+  set_target_properties(Marisa::marisa PROPERTIES
+    IMPORTED_LOCATION "${MARISA_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${MARISA_INCLUDE_DIR}"
+  )
+endif()
 
-set(CMAKE_FIND_LIBRARY_SUFFIXES ${_marisa_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
+mark_as_advanced(MARISA_INCLUDE_DIR MARISA_LIBRARY)

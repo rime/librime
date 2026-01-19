@@ -29,7 +29,7 @@ class DeploymentTask : public Class<DeploymentTask, TaskInitializer> {
   virtual bool Run(Deployer* deployer) = 0;
 };
 
-class Deployer : public Messenger {
+class RIME_DLL Deployer : public Messenger {
  public:
   // read-only access after library initialization {
   path shared_data_dir;
@@ -45,8 +45,8 @@ class Deployer : public Messenger {
   bool backup_config_files;
   // }
 
-  RIME_DLL Deployer();
-  RIME_DLL ~Deployer();
+  Deployer();
+  ~Deployer();
 
   bool RunTask(const string& task_name,
                TaskInitializer arg = TaskInitializer());

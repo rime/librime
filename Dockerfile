@@ -1,4 +1,4 @@
-FROM debian:12.1
+FROM debian:13.3
 
 RUN apt update && apt install -y \
   git \
@@ -12,6 +12,7 @@ RUN apt update && apt install -y \
   libgtest-dev \
   libyaml-cpp-dev \
   libleveldb-dev \
+  libsnappy-dev \
   libmarisa-dev \
   libopencc-dev \
   liblua5.4-dev
@@ -29,7 +30,7 @@ RUN cmake -B build -G Ninja \
   -DCMAKE_BUILD_TYPE:STRING=Release \
   -DENABLE_LOGGING:BOOL=ON \
   -DBUILD_TEST:BOOL=ON \
-  -DBUILD_STATIC:BOOL=OFF \
+  -DWITH_STATIC_DEPS:BOOL=OFF \
   -DBUILD_SHARED_LIBS:BOOL=ON
 RUN cmake --build build
 

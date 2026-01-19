@@ -45,7 +45,7 @@ jobs:
           echo BUILD_UNIVERSAL=1 >> $GITHUB_ENV
 
       - name: Install Boost
-        run: ./install-boost.sh
+        run: ./install-boost.sh --download --build
 
       - name: Check submodules
         run: git submodule > submodule-status

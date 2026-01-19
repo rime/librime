@@ -67,7 +67,7 @@ librime-static:
 	cmake . -B$(build) \
 	-DCMAKE_INSTALL_PREFIX=$(prefix) \
 	-DCMAKE_BUILD_TYPE=Release \
-	-DBUILD_STATIC=ON \
+	-DWITH_STATIC_DEPS=ON \
 	-DBUILD_SHARED_LIBS=OFF
 	cmake --build $(build)
 
