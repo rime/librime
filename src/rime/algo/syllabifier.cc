@@ -5,6 +5,7 @@
 // 2011-07-12 Zou Xu <zouivex@gmail.com>
 // 2012-02-11 GONG Chen <chen.sst@gmail.com>
 //
+#include <algorithm>
 #include <queue>
 #include <boost/range/adaptor/reversed.hpp>
 #include <rime/algo/syllabifier.h>

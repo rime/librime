@@ -14,6 +14,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_definitions(-DRIME_VERSION="${rime_version}")
 
+# generate compile_commands.json
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 

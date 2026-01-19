@@ -8,6 +8,7 @@
 #define RIME_MAPPED_FILE_H_
 
 #include <stdint.h>
+#include <algorithm>
 #include <cstring>
 #include <rime_api.h>
 #include <rime/common.h>

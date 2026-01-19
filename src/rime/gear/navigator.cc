@@ -4,6 +4,7 @@
 //
 // 2011-11-20 GONG Chen <chen.sst@gmail.com>
 //
+#include <algorithm>
 #include <boost/range/adaptor/reversed.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
@@ -93,7 +94,7 @@ void Navigator::OnSelect(Context* ctx) {
 bool Navigator::LeftBySyllable(Context* ctx) {
   BeginMove(ctx);
   size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
-  JumpLeft(ctx, confirmed_pos, true) || GoHome(ctx);
+  JumpLeft(ctx, confirmed_pos, true);
   return true;
 }
 
@@ -143,7 +144,7 @@ bool Navigator::Forward(Context* ctx) {
 bool Navigator::RightBySyllable(Context* ctx) {
   BeginMove(ctx);
   size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
-  JumpRight(ctx, confirmed_pos, true) || GoToEnd(ctx);
+  JumpRight(ctx, confirmed_pos, true);
   return true;
 }
 
@@ -196,15 +197,23 @@ void Navigator::BeginMove(Context* ctx) {
 bool Navigator::JumpLeft(Context* ctx, size_t start_pos, bool loop) {
   DLOG(INFO) << "jump left.";
   size_t caret_pos = ctx->caret_pos();
-  if (loop && caret_pos <= start_pos) {
-    caret_pos = ctx->input().length();
-  }
-  size_t stop = spans_.PreviousStop(caret_pos);
-  if (stop < start_pos) {
-    stop = start_pos;
-  }
-  if (stop != caret_pos) {
-    ctx->set_caret_pos(stop);
+  size_t end_of_translation = spans_.end();
+  size_t end_of_input = ctx->input().length();
+  size_t new_pos =
+      // 跳過未翻譯的輸入碼
+      (caret_pos > end_of_translation) ? end_of_translation
+      // 迴轉？
+      : (loop && caret_pos <= start_pos)
+          ?
+          // 若未翻譯完則須重譯，光標迴轉到結尾
+          (end_of_input > end_of_translation)
+              ? end_of_input
+              // 迴轉後向前找
+              : (std::max)(start_pos, spans_.PreviousStop(end_of_input))
+          // 跳至前一個切分點
+          : (std::max)(start_pos, spans_.PreviousStop(caret_pos));
+  if (new_pos != caret_pos) {
+    ctx->set_caret_pos(new_pos);
     return true;
   }
   return false;
@@ -213,12 +222,17 @@ bool Navigator::JumpLeft(Context* ctx, size_t start_pos, bool loop) {
 bool Navigator::JumpRight(Context* ctx, size_t start_pos, bool loop) {
   DLOG(INFO) << "jump right.";
   size_t caret_pos = ctx->caret_pos();
-  if (loop && caret_pos == ctx->input().length()) {
-    caret_pos = start_pos;
-  }
-  size_t stop = spans_.NextStop(caret_pos);
-  if (stop != caret_pos) {
-    ctx->set_caret_pos(stop);
+  size_t end_of_translation = spans_.end();
+  size_t end_of_input = ctx->input().length();
+  size_t new_pos =
+      // 已在結尾則從頭開始向後找
+      (loop && caret_pos == end_of_input) ? spans_.NextStop(start_pos)
+      // 跳過未翻譯的輸入碼
+      : (caret_pos >= end_of_translation) ? end_of_input
+                                          // 跳至後一個切分點
+                                          : spans_.NextStop(caret_pos);
+  if (new_pos != caret_pos) {
+    ctx->set_caret_pos(new_pos);
     return true;
   }
   return false;
