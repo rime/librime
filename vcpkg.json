@@ -1,0 +1,39 @@
+{
+  "name" : "rime",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "e93bf5796351d422408a2e3ebf88dce98151ae45",
+  "dependencies" : [ {
+    "name" : "gtest",
+    "version>=" : "1.17.0#2"
+  }, {
+    "name" : "glog",
+    "version>=" : "0.7.1"
+  }, {
+    "name" : "yaml-cpp",
+    "version>=" : "0.8.0#3"
+  }, {
+    "name" : "leveldb",
+    "version>=" : "1.23"
+  }, {
+    "name" : "opencc",
+    "version>=" : "1.1.9#1"
+  }, {
+    "name" : "boost-algorithm",
+    "version>=" : "1.89.0"
+  }, {
+    "name" : "boost-signals2",
+    "version>=" : "1.89.0"
+  }, {
+    "name" : "boost-crc",
+    "version>=" : "1.89.0"
+  }, {
+    "name" : "boost-interprocess",
+    "version>=" : "1.89.0"
+  }, {
+    "name" : "boost-scope-exit",
+    "version>=" : "1.89.0"
+  }, {
+    "name" : "boost-uuid",
+    "version>=" : "1.89.0"
+  } ]
+}
