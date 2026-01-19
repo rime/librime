@@ -165,6 +165,9 @@ jobs:
         run: |
           tar -cjvf rime-${{ env.git_ref_name }}-${{ runner.os }}-mingw.tar.bz2 \
           dist version-info.txt
+          tar -cjvf rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-mingw.tar.bz2 \
+          --exclude '*/.placeholder' \
+          bin include lib share
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
