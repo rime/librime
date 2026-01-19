@@ -159,11 +159,7 @@ jobs:
             -DBUILD_SHARED_LIBS:BOOL=ON
           cmake --build build
           cmake --install build
-          # Temporarily disable test for mingw-w64
-          # due to msys2 glog package issue:
-          # https://github.com/msys2/MINGW-packages/issues/25344
-          # cd build && cp ./bin/librime.dll ./test
-          # ctest --output-on-failure
+          ctest --output-on-failure
 
       - name: Create distributable
         run: |
