@@ -4,6 +4,12 @@ include("${CMAKE_CURRENT_LIST_DIR}/RimeTargets.cmake")
 
 set(Rime_VERSION "@PROJECT_VERSION@")
 
+# Backward-compatible variables for legacy users.
+set(Rime_INCLUDE_DIR "${PACKAGE_PREFIX_DIR}/include")
+set(Rime_INCLUDE_DIRS "${Rime_INCLUDE_DIR}")
+set(Rime_LIBRARIES Rime::rime)
+set(Rime_FOUND TRUE)
+
 # Make the exported C API target non-transitive for downstreams.
 if(TARGET Rime::rime)
   set_property(TARGET Rime::rime PROPERTY INTERFACE_LINK_LIBRARIES "")
