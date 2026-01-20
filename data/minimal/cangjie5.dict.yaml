@@ -20,7 +20,7 @@
 name: "cangjie5"
 version: "0.17"
 sort: by_weight
-use_preset_vocabulary: true
+use_preset_vocabulary: false #想輸入詞組的用者請自行改成true
 max_phrase_length: 7
 min_phrase_weight: 100
 columns:
