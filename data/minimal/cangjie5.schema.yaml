@@ -64,7 +64,7 @@ translator:
   dictionary: cangjie5
   enable_charset_filter: true
   enable_sentence: true
-  enable_encoder: true
+  enable_encoder: false #想輸入詞組的用者請自行改成true
   encode_commit_history: true
   max_phrase_length: 5
   preedit_format:
