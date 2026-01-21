@@ -24,7 +24,7 @@ Switcher::Switcher(const Ticket& ticket) : Processor(ticket) {
   context_->set_option("dumb", true);  // not going to commit anything
 
   // receive context notifications
-  context_->select_notifier().connect([this](Context* ctx) { OnSelect(ctx); });
+  context_->select_notifier_connect([this](Context* ctx) { OnSelect(ctx); });
 
   user_config_.reset(Config::Require("user_config")->Create("user"));
   InitializeComponents();

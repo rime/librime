@@ -12,9 +12,13 @@
 #include <rime/composition.h>
 
 namespace rime {
-
 class Candidate;
 class KeyEvent;
+
+class StopSlotException : public std::runtime_error {
+ public:
+  using std::runtime_error::runtime_error;
+};
 
 class RIME_DLL Context {
  public:
@@ -24,6 +28,7 @@ class RIME_DLL Context {
       signal<void(Context* ctx, const string& property)>;
   using KeyEventNotifier =
       signal<void(Context* ctx, const KeyEvent& key_event)>;
+  using Connection = boost::signals2::connection;
 
   Context() = default;
   ~Context() = default;
@@ -81,6 +86,32 @@ class RIME_DLL Context {
   // options and properties starting with '_' are local to schema;
   // others are session scoped.
   void ClearTransientOptions();
+  template <typename T, typename... I>
+  void notify(T& t, I&&... i) {
+    try {
+      t(i...);
+    } catch (const StopSlotException& e) {
+      LOG(INFO) << "stop slot " << e.what();
+    }
+  };
+  void commit_notify() { notify(commit_notifier_, this); };
+  void select_notify() {
+    if (this->composition().empty())
+      return;
+    notify(select_notifier_, this);
+  }
+  void update_notify() { notify(update_notifier_, this); };
+  void delete_notify() { notify(delete_notifier_, this); };
+  void abort_notify() { notify(abort_notifier_, this); };
+  void option_update_notify(const string& option) {
+    notify(option_update_notifier_, this, option);
+  };
+  void property_update_notify(const string& property) {
+    notify(property_update_notifier_, this, property);
+  };
+  void unhandled_key_notify(const KeyEvent& key_event) {
+    notify(unhandled_key_notifier_, this, key_event);
+  };
 
   Notifier& commit_notifier() { return commit_notifier_; }
   Notifier& select_notifier() { return select_notifier_; }
@@ -95,7 +126,34 @@ class RIME_DLL Context {
   }
   KeyEventNotifier& unhandled_key_notifier() { return unhandled_key_notifier_; }
 
+  Connection commit_notifier_connect(std::function<void(Context*)> slot,
+                                     int group = -1);
+  Connection select_notifier_connect(std::function<void(Context*)> slot,
+                                     int group = -1);
+  Connection update_notifier_connect(std::function<void(Context*)> slot,
+                                     int group = -1);
+  Connection delete_notifier_connect(std::function<void(Context*)> slot,
+                                     int group = -1);
+  Connection abort_notifier_connect(std::function<void(Context*)> slot,
+                                    int group = -1);
+
+  Connection option_update_notifier_connect(
+      std::function<void(Context*, const string&)> slot,
+      int group = -1);
+  Connection property_update_notifier_connect(
+      std::function<void(Context*, const string&)> slot,
+      int group = -1);
+  Connection unhandled_key_notifier_connect(
+      std::function<void(Context*, const KeyEvent&)> slot,
+      int group = -1);
+
  private:
+  template <typename Notifier, typename Slot>
+  Connection connect_notifier(Notifier& notifier, Slot&& slot, int group) {
+    return (group < 0) ? notifier.connect(std::forward<Slot>(slot))
+                       : notifier.connect(group, std::forward<Slot>(slot));
+  };
+
   string GetSoftCursor() const;
 
   string input_;
