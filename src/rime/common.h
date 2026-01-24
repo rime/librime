@@ -26,6 +26,10 @@
 
 #ifdef RIME_ENABLE_LOGGING
 #include <glog/logging.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #else
 #include "no_logging.h"
 #endif  // RIME_ENABLE_LOGGING
@@ -104,6 +108,26 @@ class path : public std::filesystem::path {
   path& operator/=(const std::string& p) { return *this /= path(p); }
   path& operator/=(const char* p) { return *this /= path(p); }
 
+  std::string utf8string() const {
+#ifdef _WIN32
+    // Use Windows API for UTF-16 -> UTF-8
+    auto wstr = this->wstring();
+    if (wstr.empty()) {
+      return std::string{};
+    }
+    int cb_utf8 = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, nullptr, 0,
+                                      nullptr, nullptr);
+    if (cb_utf8 <= 1) {  // only null terminator
+      return std::string{};
+    }
+    std::string result(cb_utf8 - 1, '\0');
+    WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, &result[0], cb_utf8,
+                        nullptr, nullptr);
+    return result;
+#else
+    return this->string();
+#endif
+  }
   friend path operator/(const path& lhs, const path& rhs) {
     return path(lhs) /= rhs;
   }
@@ -128,7 +152,7 @@ class path : public std::filesystem::path {
   }
 #ifdef RIME_ENABLE_LOGGING
   friend std::ostream& operator<<(std::ostream& os, const path& p) {
-    return os << p.u8string();
+    return os << p.utf8string();
   }
 #endif
 };
