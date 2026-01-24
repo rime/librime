@@ -26,10 +26,6 @@
 
 #ifdef RIME_ENABLE_LOGGING
 #include <glog/logging.h>
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 #else
 #include "no_logging.h"
 #endif  // RIME_ENABLE_LOGGING
@@ -108,24 +104,23 @@ class path : public std::filesystem::path {
   path& operator/=(const std::string& p) { return *this /= path(p); }
   path& operator/=(const char* p) { return *this /= path(p); }
 
+  path stem() const { return path(fs_path::stem()); }
+  path filename() const { return path(fs_path::filename()); }
+  path extension() const { return path(fs_path::extension()); }
   std::string utf8string() const {
-#ifdef _WIN32
-    // Use Windows API for UTF-16 -> UTF-8
-    auto wstr = this->wstring();
-    if (wstr.empty()) {
-      return std::string{};
-    }
-    int cb_utf8 = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, nullptr, 0,
-                                      nullptr, nullptr);
-    if (cb_utf8 <= 1) {  // only null terminator
-      return std::string{};
-    }
-    std::string result(cb_utf8 - 1, '\0');
-    WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, &result[0], cb_utf8,
-                        nullptr, nullptr);
-    return result;
+#if __cplusplus >= 202002L
+    const auto u8s = this->u8string();
+    return std::string(u8s.begin(), u8s.end());
 #else
-    return this->string();
+    return this->u8string();
+#endif
+  }
+  std::string generic_utf8string() const {
+#if __cplusplus >= 202002L
+    const auto u8s = this->generic_u8string();
+    return std::string(u8s.begin(), u8s.end());
+#else
+    return this->generic_u8string();
 #endif
   }
   friend path operator/(const path& lhs, const path& rhs) {
