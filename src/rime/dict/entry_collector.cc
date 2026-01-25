@@ -56,7 +56,7 @@ void EntryCollector::LoadPresetVocabulary(DictSettings* settings) {
 
 void EntryCollector::Collect(const path& dict_file) {
   LOG(INFO) << "collecting entries from " << dict_file;
-  current_dict_file = dict_file.utf8string();
+  current_dict_file = dict_file.string_utf8();
   line_number = 0;
   // read table
   std::ifstream fin(dict_file.c_str());
