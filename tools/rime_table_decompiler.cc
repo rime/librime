@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
   fout << "# Rime dictionary\n\n";
   fout << "---\n"
           "name: "
-       << rime::path(file_path).stem().utf8string()
+       << rime::path(file_path).stem().string_utf8()
        << "\n"
           "version: \"1.0\"\n"
           "...\n\n";

@@ -24,7 +24,7 @@ void Opencc::Initialize() {
   opencc::Config config;
   try {
     // opencc accepts file path encoded in UTF-8.
-    converter_ = config.NewFromFile(config_path_.utf8string());
+    converter_ = config.NewFromFile(config_path_.string_utf8());
 
     const list<opencc::ConversionPtr> conversions =
         converter_->GetConversionChain()->GetConversions();

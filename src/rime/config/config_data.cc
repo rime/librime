@@ -66,7 +66,7 @@ bool ConfigData::LoadFromFile(const path& file_path, ConfigCompiler* compiler) {
   modified_ = false;
   root.reset();
   if (!std::filesystem::exists(file_path)) {
-    if (!boost::ends_with(file_path.utf8string(), ".custom.yaml"))
+    if (!boost::ends_with(file_path.string_utf8(), ".custom.yaml"))
       LOG(WARNING) << "nonexistent config file '" << file_path << "'.";
     return false;
   }

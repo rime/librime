@@ -209,7 +209,7 @@ bool DictCompiler::Compile(const path& schema_file) {
 
 static path relocate_target(const path& source_path,
                             ResourceResolver* target_resolver) {
-  auto resource_id = source_path.filename().utf8string();
+  auto resource_id = source_path.filename().string_utf8();
   return target_resolver->ResolvePath(resource_id);
 }
 

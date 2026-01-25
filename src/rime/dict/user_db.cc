@@ -108,7 +108,7 @@ bool UserDbHelper::UpdateUserInfo() {
 }
 
 bool UserDbHelper::IsUniformFormat(const path& file_path) {
-  return boost::ends_with(file_path.filename().utf8string(),
+  return boost::ends_with(file_path.filename().string_utf8(),
                           plain_userdb_extension);
 }
 
