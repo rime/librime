@@ -10,7 +10,7 @@
 namespace rime {
 
 string ResourceResolver::ToResourceId(const string& file_path) const {
-  string string_path = path(file_path).generic_u8string();
+  string string_path = path(file_path).generic_string_utf8();
   bool has_prefix = boost::starts_with(string_path, type_.prefix);
   bool has_suffix = boost::ends_with(string_path, type_.suffix);
   size_t start = (has_prefix ? type_.prefix.length() : 0);
