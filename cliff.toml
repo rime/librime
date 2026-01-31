@@ -2,18 +2,22 @@
 [changelog]
 body = """
 <a name="{{ version }}"></a>
-## {{ version }} ({{ now() | date(format="%Y-%m-%d") }})
+# [{{ version }}]($REPO/compare/{{ previous.version }}...{{ version }}) ({{ now() | date(format="%Y-%m-%d") }})
 
 {% for group, commits in commits | group_by(attribute="group") -%}
 ### {{ group }}
-{% for commit in commits -%}
-- {{ commit.message }} ({{ commit.id | truncate(length=7, end="") }})
+{% for commit in commits
+| filter(attribute="scope")
+| sort(attribute="scope") -%}
+- **{{ commit.scope }}**: {{ commit.message }} ([{{ commit.id | truncate(length=7, end="") }}]($REPO/commit/{{ commit.id | truncate(length=7, end="") }}))
 {% endfor %}
 {% endfor -%}
-**Full Changelog**: https://github.com/rime/squirrel/compare/{{ previous.version }}...{{ version }}
 
 """
 trim = false
+postprocessors = [
+  { pattern = '\$REPO', replace = "https://github.com/rime/librime" },
+]
 
 [git]
 # 解析 commit 範圍
@@ -22,6 +26,9 @@ filter_unconventional = false
 split_commits = false
 filter_commits = false
 tag_pattern = "[0-9]+[.].*"
+commit_preprocessors = [
+  { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](https://github.com/rime/librime/issues/${2}))" },
+]
 
 # 提交分類映射
 # 根據 commit message 開頭關鍵詞自動分組
