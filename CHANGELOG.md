@@ -2,11 +2,11 @@
 # [1.16.1](https://github.com/rime/librime/compare/1.16.0...1.16.1) (2026-01-20)
 
 ### Bug 修復 | Bug Fixes
-- 插入輸入碼再向右移動 ([d65c46a](https://github.com/rime/librime/commit/d65c46a))
-- load schema list when default.custom.yaml is absent ([#1126](https://github.com/rime/librime/issues/1126)) ([58e51c5](https://github.com/rime/librime/commit/58e51c5))
+- **navigator:** 插入輸入碼再向右移動 ([d65c46a](https://github.com/rime/librime/commit/d65c46a))
+- **SwitcherSettings:** load schema list when default.custom.yaml is absent ([#1126](https://github.com/rime/librime/issues/1126)) ([58e51c5](https://github.com/rime/librime/commit/58e51c5))
 
 ### 構建 | Build
-- use git-cliff ([c7c3306](https://github.com/rime/librime/commit/c7c3306))
+- **bump_version.sh:** use git-cliff ([c7c3306](https://github.com/rime/librime/commit/c7c3306))
 
 ### 雜項 | Miscellaneous
 - include <algorithm> for std::{max,min} ([793b6a0](https://github.com/rime/librime/commit/793b6a0))
