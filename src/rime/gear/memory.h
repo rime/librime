@@ -30,7 +30,7 @@ struct CommitEntry : DictEntry {
   void Clear();
   void AppendPhrase(const an<Phrase>& phrase);
   bool Save() const;
-  int Length() const;
+  int TextLength() const;
 };
 
 class Memory {

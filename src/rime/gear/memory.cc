@@ -45,11 +45,16 @@ bool CommitEntry::Save() const {
   return false;
 }
 
-int CommitEntry::Length() const {
+int CommitEntry::TextLength() const {
   int length = 0;
   for (const DictEntry* e : elements) {
     if (e) {
-      length += e->code.size();
+      const char* it = e->text.c_str();
+      const char* end = e->text.c_str() + e->text.length();
+      while (it < end) {
+        length++;
+        utf8::unchecked::next(it);
+      }
     }
   }
   return length;

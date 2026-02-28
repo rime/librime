@@ -235,7 +235,7 @@ static bool exceed_upperlimit(int length, int upper_limit) {
 }
 
 bool ScriptTranslator::SaveCommitEntry(CommitEntry& commit_entry) {
-  if (exceed_upperlimit(commit_entry.Length(), max_word_length())) {
+  if (exceed_upperlimit(commit_entry.TextLength(), max_word_length())) {
     UpdateElements(commit_entry);
   } else {
     commit_entry.Save();
