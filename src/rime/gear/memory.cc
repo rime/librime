@@ -16,6 +16,7 @@
 #include <rime/dict/user_dictionary.h>
 #include <rime/gear/memory.h>
 #include <rime/gear/translator_commons.h>
+#include <utf8.h>
 
 namespace rime {
 
