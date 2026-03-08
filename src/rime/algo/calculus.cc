@@ -13,6 +13,7 @@ namespace rime {
 
 const double kAbbreviationPenalty = -0.6931471805599453;   // log(0.5)
 const double kFuzzySpellingPenalty = -0.6931471805599453;  // log(0.5)
+const double kCorrectionPenalty = -4.605170185988091;      // log(0.01)
 
 Calculus::Calculus() {
   Register("xlit", &Transliteration::Parse);
@@ -145,10 +146,38 @@ bool Erasion::Apply(Spelling* spelling) {
 Calculation* Derivation::Parse(const vector<string>& args) {
   if (args.size() < 3)
     return NULL;
+
   const string& left(args[1]);
   const string& right(args[2]);
   if (left.empty())
     return NULL;
+
+  if (args.size() > 3) {
+    const string& tag = args[3];
+    // 糾錯
+    if (tag == "correction") {
+      the<Correction> x(new Correction);
+      x->pattern_.assign(left);
+      x->replacement_.assign(right);
+      return x.release();
+    }
+    // 簡拼
+    if (tag == "abbrev") {
+      the<Abbreviation> x(new Abbreviation);
+      x->pattern_.assign(left);
+      x->replacement_.assign(right);
+      return x.release();
+    }
+    // 模糊音
+    if (tag == "fuzz") {
+      the<Fuzzing> x(new Fuzzing);
+      x->pattern_.assign(left);
+      x->replacement_.assign(right);
+      return x.release();
+    }
+    // tag 無法識別, 作爲普通 derive 處理
+  }
+
   the<Derivation> x(new Derivation);
   x->pattern_.assign(left);
   x->replacement_.assign(right);
@@ -199,6 +228,17 @@ bool Abbreviation::Apply(Spelling* spelling) {
   if (result) {
     spelling->properties.type = kAbbreviation;
     spelling->properties.credibility += kAbbreviationPenalty;
+  }
+  return result;
+}
+
+// Correction
+
+bool Correction::Apply(Spelling* spelling) {
+  bool result = Transformation::Apply(spelling);
+  if (result) {
+    spelling->properties.is_correction = true;
+    spelling->properties.credibility += kCorrectionPenalty;
   }
   return result;
 }

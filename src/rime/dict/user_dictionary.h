@@ -83,6 +83,7 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
                                        const string& value,
                                        TickCount present_tick,
                                        double credibility = 0.0,
+                                       double quality_len = 0.0,
                                        string* full_code = nullptr);
 
  protected:

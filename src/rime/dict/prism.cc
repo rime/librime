@@ -20,9 +20,14 @@ struct node_t {
   size_t node_pos;
 };
 
+// 在 SpellingDescriptor::type 的高位記錄 is_correction, 避開符號位
+const int32_t kTypeIsCorrectionMask = 1 << 30;
+const int32_t kSpellingTypeMask = ~kTypeIsCorrectionMask;
+
 }  // namespace
 
-const char kPrismFormat[] = "Rime::Prism/3.0";
+const char kPrismFormat[] = "Rime::Prism/4.0";
+const double kPrismFormatVersion = 4.0;
 
 const char kPrismFormatPrefix[] = "Rime::Prism/";
 const size_t kPrismFormatPrefixLen = sizeof(kPrismFormatPrefix) - 1;
@@ -61,7 +66,9 @@ SyllableId SpellingAccessor::syllable_id() const {
 SpellingProperties SpellingAccessor::properties() const {
   SpellingProperties props;
   if (iter_ && iter_ < end_) {
-    props.type = static_cast<SpellingType>(iter_->type);
+    int32_t packed_type = iter_->type;
+    props.type = static_cast<SpellingType>(packed_type & kSpellingTypeMask);
+    props.is_correction = (packed_type & kTypeIsCorrectionMask) != 0;
     props.credibility = iter_->credibility;
     if (!iter_->tips.empty())
       props.tips = iter_->tips.c_str();
@@ -95,6 +102,14 @@ bool Prism::Load() {
     return false;
   }
   format_ = atof(&metadata_->format[kPrismFormatPrefixLen]);
+
+  // 版本檢查: 強制重構舊版本
+  if (format_ < kPrismFormatVersion - DBL_EPSILON) {
+    LOG(INFO) << "prism format " << format_ << " is too old. upgrading to "
+              << kPrismFormatVersion;
+    Close();
+    return false;
+  }
 
   char* array = metadata_->double_array.get();
   if (!array) {
@@ -215,7 +230,12 @@ bool Prism::Build(const Syllabary& syllabary,
       auto desc = item->begin();
       for (; j != i->second.end(); ++j, ++desc) {
         desc->syllable_id = syllable_to_id[j->str];
-        desc->type = static_cast<int32_t>(j->properties.type);
+        // 打包寫入 type + is_correction
+        int32_t packed_type = static_cast<int32_t>(j->properties.type);
+        if (j->properties.is_correction) {
+          packed_type |= kTypeIsCorrectionMask;
+        }
+        desc->type = packed_type;
         desc->credibility = j->properties.credibility;
         if (!j->properties.tips.empty() &&
             !CopyString(j->properties.tips, &desc->tips)) {

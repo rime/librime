@@ -106,13 +106,16 @@ class TableAccessor {
   TableAccessor() = default;
   TableAccessor(const Code& index_code,
                 const List<table::Entry>* entries,
-                double credibility = 0.0);
+                double credibility = 0.0,
+                double quality_len = 0.0);
   TableAccessor(const Code& index_code,
                 const Array<table::Entry>* entries,
-                double credibility = 0.0);
+                double credibility = 0.0,
+                double quality_len = 0.0);
   TableAccessor(const Code& index_code,
                 const table::TailIndex* code_map,
-                double credibility = 0.0);
+                double credibility = 0.0,
+                double quality_len = 0.0);
 
   RIME_DLL bool Next();
 
@@ -123,6 +126,7 @@ class TableAccessor {
   const Code& index_code() const { return index_code_; }
   Code code() const;
   double credibility() const { return credibility_; }
+  double quality_len() const { return quality_len_; }
 
  private:
   Code index_code_;
@@ -131,6 +135,7 @@ class TableAccessor {
   size_t size_ = 0;
   size_t cursor_ = 0;
   double credibility_ = 0.0;
+  double quality_len_ = 0.0;
 };
 
 using TableQueryResult = map<int, vector<TableAccessor>>;
@@ -141,10 +146,15 @@ class TableQuery {
  public:
   TableQuery(table::Index* index) : lv1_index_(index) { Reset(); }
 
-  TableAccessor Access(SyllableId syllable_id, double credibility = 0.0) const;
+  TableAccessor Access(SyllableId syllable_id,
+                       double credibility = 0.0,
+                       double quality_len = 0.0) const;
 
   // down to next level
-  bool Advance(SyllableId syllable_id, double credibility = 0.0);
+  bool Advance(SyllableId syllable_id,
+               double credibility = 0.0,
+               double quality_len = 0.0,
+               size_t last_pos = 0);
 
   // up one level
   bool Backdate();
@@ -154,10 +164,20 @@ class TableQuery {
 
   size_t level() const { return level_; }
 
+  double credibility_sum() const {
+    return credibility_.empty() ? 0 : credibility_.back();
+  }
+  double quality_len_sum() const {
+    return quality_len_.empty() ? 0 : quality_len_.back();
+  }
+  size_t last_pos() const { return last_pos_.empty() ? 0 : last_pos_.back(); }
+
  protected:
   size_t level_ = 0;
   Code index_code_;
   vector<double> credibility_;
+  vector<double> quality_len_;
+  vector<size_t> last_pos_;
 
  private:
   bool Walk(SyllableId syllable_id);

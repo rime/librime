@@ -18,11 +18,29 @@ bool DefaultConfigPlugin::ReviewLinkOutput(ConfigCompiler* compiler,
                                            an<ConfigResource> resource) {
   if (!boost::ends_with(resource->resource_id, ".schema"))
     return true;
-  auto target = Cow(resource, "menu");
-  Reference reference{"default", "menu", true};
-  if (!IncludeReference{reference}.TargetedAt(target).Resolve(compiler)) {
-    LOG(ERROR) << "failed to include section " << reference;
-    return false;
+  {
+    auto target = Cow(resource, "menu");
+    Reference reference{"default", "menu", true};
+    if (!IncludeReference{reference}.TargetedAt(target).Resolve(compiler)) {
+      LOG(ERROR) << "failed to include section " << reference;
+      return false;
+    }
+  }
+  {
+    auto target = Cow(resource, "navigator");
+    Reference reference{"default", "navigator", true};
+    if (!IncludeReference{reference}.TargetedAt(target).Resolve(compiler)) {
+      LOG(ERROR) << "failed to include section " << reference;
+      return false;
+    }
+  }
+  {
+    auto target = Cow(resource, "selector");
+    Reference reference{"default", "selector", true};
+    if (!IncludeReference{reference}.TargetedAt(target).Resolve(compiler)) {
+      LOG(ERROR) << "failed to include section " << reference;
+      return false;
+    }
   }
   return true;
 }

@@ -30,6 +30,7 @@ struct DfsState {
   TickCount present_tick;
   Code code;
   vector<double> credibility;
+  vector<double> quality_len;
   hash_map<int, DictEntryList> query_result;
   an<DbAccessor> accessor;
   string key;
@@ -72,9 +73,9 @@ struct DfsState {
 void DfsState::RecruitEntry(size_t pos,
                             hash_map<string, SyllableId>* syllabary) {
   string full_code;
-  auto e = UserDictionary::CreateDictEntry(key, value, present_tick,
-                                           credibility.back(),
-                                           syllabary ? &full_code : nullptr);
+  auto e = UserDictionary::CreateDictEntry(
+      key, value, present_tick, credibility.back(), quality_len.back(),
+      syllabary ? &full_code : nullptr);
   if (e) {
     if (syllabary) {
       vector<string> syllables =
@@ -239,11 +240,18 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
         continue;
       state->credibility.push_back(state->credibility.back() +
                                    props->credibility);
+      size_t end_pos = props->end_pos;
+      // 全碼匹配長度積分
+      bool is_normal_spelling = props->type == kNormalSpelling;
+      double delta_quality_len =
+          (is_normal_spelling ? 1.0 : 0.0) * (end_pos - current_pos);
+      state->quality_len.push_back(state->quality_len.back() +
+                                   delta_quality_len);
       BOOST_SCOPE_EXIT((&state)) {
         state->credibility.pop_back();
+        state->quality_len.pop_back();
       }
       BOOST_SCOPE_EXIT_END
-      size_t end_pos = props->end_pos;
       DLOG(INFO) << "edge: [" << current_pos << ", " << end_pos << ")";
       if (prefix != state->key) {  // 'a b c |d ' > 'a b c \tabracadabra'
         DLOG(INFO) << "forward scanning for '" << prefix << "'.";
@@ -318,6 +326,7 @@ an<UserDictEntryCollector> UserDictionary::Lookup(
   FetchTickCount();
   state.present_tick = tick_ + 1;
   state.credibility.push_back(initial_credibility);
+  state.quality_len.push_back(0.0);
   state.accessor = db_->Query("");
   state.accessor->Jump(" ");  // skip metadata
   string prefix;
@@ -383,7 +392,7 @@ size_t UserDictionary::LookupWords(UserDictEntryIterator* result,
       break;
     }
     last_key = key;
-    auto e = CreateDictEntry(key, value, present_tick, 1.0, &full_code);
+    auto e = CreateDictEntry(key, value, present_tick, 1.0, len, &full_code);
     if (!e)
       continue;
     e->custom_code = full_code;
@@ -524,6 +533,7 @@ an<DictEntry> UserDictionary::CreateDictEntry(const string& key,
                                               const string& value,
                                               TickCount present_tick,
                                               double credibility,
+                                              double quality_len,
                                               string* full_code) {
   an<DictEntry> e;
   size_t separator_pos = key.find('\t');
@@ -544,11 +554,13 @@ an<DictEntry> UserDictionary::CreateDictEntry(const string& key,
   double weight = algo::formula_p(0, (double)v.commits / present_tick,
                                   (double)present_tick, v.dee);
   e->weight = log(weight > 0 ? weight : DBL_EPSILON) + credibility;
+  e->quality_len = quality_len;
   if (full_code) {
     *full_code = key.substr(0, separator_pos);
   }
   DLOG(INFO) << "text = '" << e->text << "', code_len = " << e->code.size()
              << ", weight = " << e->weight
+             << ", quality_len = " << e->quality_len
              << ", commit_count = " << e->commit_count
              << ", present_tick = " << present_tick;
   return e;

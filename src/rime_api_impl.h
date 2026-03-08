@@ -249,6 +249,10 @@ RIME_DEPRECATED Bool RimeGetContext(RimeSessionId session_id,
       context->menu.highlighted_candidate_index = selected_index % page_size;
       int i = 0;
       context->menu.num_candidates = page->candidates.size();
+      if (ctx->get_option("_hide_candidate")) {
+        context->menu.num_candidates = 0;
+        return True;
+      }
       context->menu.candidates = new RimeCandidate[page->candidates.size()];
       for (const an<Candidate>& cand : page->candidates) {
         RimeCandidate* dest = &context->menu.candidates[i++];

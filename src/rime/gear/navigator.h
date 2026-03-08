@@ -28,17 +28,22 @@ class Navigator : public Processor, public KeyBindingProcessor<Navigator, 2> {
   ProcessResult ProcessKeyEvent(const KeyEvent& key_event) override;
 
   Handler Rewind;
+  Handler Forward;
   Handler LeftByChar;
   Handler RightByChar;
   Handler LeftBySyllable;
   Handler RightBySyllable;
   Handler Home;
   Handler End;
+  Handler LeftByCharNoLoop;
+  Handler RightByCharNoLoop;
+  Handler LeftBySyllableNoLoop;
+  Handler RightBySyllableNoLoop;
 
  private:
   void BeginMove(Context* ctx);
-  bool JumpLeft(Context* ctx, size_t start_pos = 0);
-  bool JumpRight(Context* ctx, size_t start_pos = 0);
+  bool JumpLeft(Context* ctx, size_t start_pos = 0, bool loop = false);
+  bool JumpRight(Context* ctx, size_t start_pos = 0, bool loop = false);
   bool MoveLeft(Context* ctx);
   bool MoveRight(Context* ctx);
   bool GoHome(Context* ctx);

@@ -4,6 +4,7 @@
 //
 // 2011-11-02 GONG Chen <chen.sst@gmail.com>
 //
+#include <algorithm>
 #include <cstdlib>
 #include <sstream>
 #include <boost/algorithm/string.hpp>

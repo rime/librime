@@ -4,6 +4,7 @@
 //
 // 2011-11-20 GONG Chen <chen.sst@gmail.com>
 //
+#include <algorithm>
 #include <boost/range/adaptor/reversed.hpp>
 #include <rime/common.h>
 #include <rime/composition.h>
@@ -19,10 +20,15 @@ namespace rime {
 
 static Navigator::ActionDef navigation_actions[] = {
     {"rewind", &Navigator::Rewind},
+    {"forward", &Navigator::Forward},
     {"left_by_char", &Navigator::LeftByChar},
     {"right_by_char", &Navigator::RightByChar},
     {"left_by_syllable", &Navigator::LeftBySyllable},
     {"right_by_syllable", &Navigator::RightBySyllable},
+    {"left_by_char_no_loop", &Navigator::LeftByCharNoLoop},
+    {"right_by_char_no_loop", &Navigator::RightByCharNoLoop},
+    {"left_by_syllable_no_loop", &Navigator::LeftBySyllableNoLoop},
+    {"right_by_syllable_no_loop", &Navigator::RightBySyllableNoLoop},
     {"home", &Navigator::Home},
     {"end", &Navigator::End},
     Navigator::kActionNoop};
@@ -35,7 +41,7 @@ Navigator::Navigator(const Ticket& ticket)
     keymap.Bind({XK_Left, 0}, &Navigator::Rewind);
     keymap.Bind({XK_Left, kControlMask}, &Navigator::LeftBySyllable);
     keymap.Bind({XK_KP_Left, 0}, &Navigator::LeftByChar);
-    keymap.Bind({XK_Right, 0}, &Navigator::RightByChar);
+    keymap.Bind({XK_Right, 0}, &Navigator::Forward);
     keymap.Bind({XK_Right, kControlMask}, &Navigator::RightBySyllable);
     keymap.Bind({XK_KP_Right, 0}, &Navigator::RightByChar);
     keymap.Bind({XK_Home, 0}, &Navigator::Home);
@@ -48,7 +54,7 @@ Navigator::Navigator(const Ticket& ticket)
     keymap.Bind({XK_Up, 0}, &Navigator::Rewind);
     keymap.Bind({XK_Up, kControlMask}, &Navigator::LeftBySyllable);
     keymap.Bind({XK_KP_Up, 0}, &Navigator::LeftByChar);
-    keymap.Bind({XK_Down, 0}, &Navigator::RightByChar);
+    keymap.Bind({XK_Down, 0}, &Navigator::Forward);
     keymap.Bind({XK_Down, kControlMask}, &Navigator::RightBySyllable);
     keymap.Bind({XK_KP_Down, 0}, &Navigator::RightByChar);
     keymap.Bind({XK_Home, 0}, &Navigator::Home);
@@ -88,7 +94,14 @@ void Navigator::OnSelect(Context* ctx) {
 bool Navigator::LeftBySyllable(Context* ctx) {
   BeginMove(ctx);
   size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
-  JumpLeft(ctx, confirmed_pos) || GoToEnd(ctx);
+  JumpLeft(ctx, confirmed_pos, true);
+  return true;
+}
+
+bool Navigator::LeftBySyllableNoLoop(Context* ctx) {
+  BeginMove(ctx);
+  size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
+  JumpLeft(ctx, confirmed_pos, false);
   return true;
 }
 
@@ -98,26 +111,58 @@ bool Navigator::LeftByChar(Context* ctx) {
   return true;
 }
 
+bool Navigator::LeftByCharNoLoop(Context* ctx) {
+  BeginMove(ctx);
+  MoveLeft(ctx);
+  return true;
+}
+
 bool Navigator::Rewind(Context* ctx) {
   BeginMove(ctx);
   // take a jump leftwards when there are multiple spans,
   // but not from the middle of a span.
-  (spans_.Count() > 1 && spans_.HasVertex(ctx->caret_pos()) ? JumpLeft(ctx)
-                                                            : MoveLeft(ctx)) ||
-      GoToEnd(ctx);
+  if (spans_.Count() > 1 && spans_.HasVertex(ctx->caret_pos())) {
+    size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
+    JumpLeft(ctx, confirmed_pos, true);
+  } else {
+    MoveLeft(ctx);
+  }
+  return true;
+}
+
+bool Navigator::Forward(Context* ctx) {
+  BeginMove(ctx);
+  if (spans_.Count() > 1 && spans_.HasVertex(ctx->caret_pos())) {
+    size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
+    JumpRight(ctx, confirmed_pos, true);
+  } else {
+    MoveRight(ctx);
+  }
   return true;
 }
 
 bool Navigator::RightBySyllable(Context* ctx) {
   BeginMove(ctx);
   size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
-  JumpRight(ctx, confirmed_pos) || GoToEnd(ctx);
+  JumpRight(ctx, confirmed_pos, true);
+  return true;
+}
+
+bool Navigator::RightBySyllableNoLoop(Context* ctx) {
+  BeginMove(ctx);
+  JumpRight(ctx, 0, false);
   return true;
 }
 
 bool Navigator::RightByChar(Context* ctx) {
   BeginMove(ctx);
   MoveRight(ctx) || GoHome(ctx);
+  return true;
+}
+
+bool Navigator::RightByCharNoLoop(Context* ctx) {
+  BeginMove(ctx);
+  MoveRight(ctx);
   return true;
 }
 
@@ -149,29 +194,45 @@ void Navigator::BeginMove(Context* ctx) {
   }
 }
 
-bool Navigator::JumpLeft(Context* ctx, size_t start_pos) {
+bool Navigator::JumpLeft(Context* ctx, size_t start_pos, bool loop) {
   DLOG(INFO) << "jump left.";
   size_t caret_pos = ctx->caret_pos();
-  size_t stop = spans_.PreviousStop(caret_pos);
-  if (stop < start_pos) {
-    stop = ctx->input().length();  // rewind
-  }
-  if (stop != caret_pos) {
-    ctx->set_caret_pos(stop);
+  size_t end_of_translation = spans_.end();
+  size_t end_of_input = ctx->input().length();
+  size_t new_pos =
+      // 跳過未翻譯的輸入碼
+      (caret_pos > end_of_translation) ? end_of_translation
+      // 迴轉？
+      : (loop && caret_pos <= start_pos)
+          ?
+          // 若未翻譯完則須重譯，光標迴轉到結尾
+          (end_of_input > end_of_translation)
+              ? end_of_input
+              // 迴轉後向前找
+              : (std::max)(start_pos, spans_.PreviousStop(end_of_input))
+          // 跳至前一個切分點
+          : (std::max)(start_pos, spans_.PreviousStop(caret_pos));
+  if (new_pos != caret_pos) {
+    ctx->set_caret_pos(new_pos);
     return true;
   }
   return false;
 }
 
-bool Navigator::JumpRight(Context* ctx, size_t start_pos) {
+bool Navigator::JumpRight(Context* ctx, size_t start_pos, bool loop) {
   DLOG(INFO) << "jump right.";
   size_t caret_pos = ctx->caret_pos();
-  if (caret_pos == ctx->input().length()) {
-    caret_pos = start_pos;  // rewind
-  }
-  size_t stop = spans_.NextStop(caret_pos);
-  if (stop != caret_pos) {
-    ctx->set_caret_pos(stop);
+  size_t end_of_translation = spans_.end();
+  size_t end_of_input = ctx->input().length();
+  size_t new_pos =
+      // 已在結尾則從頭開始向後找
+      (loop && caret_pos == end_of_input) ? spans_.NextStop(start_pos)
+      // 跳過未翻譯的輸入碼
+      : (caret_pos >= end_of_translation) ? end_of_input
+                                          // 跳至後一個切分點
+                                          : spans_.NextStop(caret_pos);
+  if (new_pos != caret_pos) {
+    ctx->set_caret_pos(new_pos);
     return true;
   }
   return false;

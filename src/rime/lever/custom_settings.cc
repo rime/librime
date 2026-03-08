@@ -37,10 +37,12 @@ bool CustomSettings::Load() {
   }
   path custom_config_path =
       deployer_->user_data_dir / custom_config_file(config_id_);
+  modified_ = false;
   if (!custom_config_.LoadFromFile(custom_config_path)) {
+    LOG(WARNING) << "cannot find '" << config_id_ << ".custom.yaml'"
+                 << " in " << custom_config_path;
     return false;
   }
-  modified_ = false;
   return true;
 }
 
