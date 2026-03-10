@@ -6,56 +6,74 @@
 #include <string>
 #include <vector>
 #include <unordered_set>
+#include <memory>
+#include <map>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/filter.h>
 #include <rime/translation.h>
-#include <rime/dict/db.h>
 #include <rime/context.h>
 #include <rime/config.h>
 
+#include <boost/interprocess/file_mapping.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+
 namespace rime {
 
-// Representation of a single filter rule configured in YAML.
-struct SuperRule {
-    std::string name;
+struct SuperConfig {
     bool always_on = false;
     std::vector<std::string> options;
+    std::vector<std::string> tags;
 
-    std::string mode;         // Supported modes: append, replace, comment, abbrev
-    bool sentence = false;    // Enable FMM (Forward Maximum Matching) for long phrases
-
-    std::string prefix;
+    std::string mode = "append";
+    bool sentence = false;
     std::vector<std::string> files;
-
-    // 开启九宫格(T9)模式：构建词库时自动将编码转数字，并保留原编码为 preedit
     bool t9_mode = false;
 
     std::string cand_type = "derived";
-    std::string comment_mode; // Supported modes: none, text, append
-
-    // Injection parameters strictly for 'abbrev' mode
-    std::string order_type = "index"; // 'index' (absolute position) or 'quality' (score threshold)
+    std::string comment_mode = "none"; 
+    std::string order_type = "index"; 
     int order_value = 1;
     int always_qty = 1;
+
+    std::string delimiter = "|";
+    std::string comment_format = "〔%s〕";
 };
 
-// Wrapper for candidates that require forced injection at specific positions or quality thresholds.
 struct InjectCand {
     an<Candidate> cand;
     int value;
 };
 
-// The core translation class implementing lazy evaluation and stream processing.
+class SuperBinaryDb {
+public:
+    SuperBinaryDb(const std::string& bin_path);
+    ~SuperBinaryDb();
+
+    bool Open();
+    void Close();
+    bool Fetch(const std::string& key, std::string* value) const;
+    bool CheckSignature(const std::string& expected_sig) const;
+
+    static bool Build(const std::string& bin_path, const std::string& signature,
+                      const std::map<std::string, std::string>& data);
+
+private:
+    std::string bin_path_;
+    std::unique_ptr<boost::interprocess::file_mapping> mapping_;
+    std::unique_ptr<boost::interprocess::mapped_region> region_;
+    const char* data_ptr_ = nullptr;
+    size_t data_size_ = 0;
+    uint32_t record_count_ = 0;
+    const uint32_t* index_ptr_ = nullptr;
+};
+
 class SuperFilterTranslation : public Translation {
 public:
     SuperFilterTranslation(an<Translation> inner,
-                           const std::vector<SuperRule>& rules,
-                           an<Db> db,
-                           Context* ctx,
-                           const std::string& delimiter,
-                           const std::string& comment_format,
-                           bool is_chain);
+                           const SuperConfig& config,
+                           std::shared_ptr<SuperBinaryDb> db,
+                           Context* ctx);
 
     an<Candidate> Peek() override;
     bool Next() override;
@@ -65,19 +83,15 @@ private:
     void ProcessNextInner();
     void UpdateExhausted();
 
-    std::string SegmentConvert(const std::string& text, const std::string& prefix, bool sentence);
+    std::string SegmentConvert(const std::string& text, bool sentence);
 
     an<Translation> inner_;
-    std::vector<SuperRule> rules_;
-    an<Db> db_;
+    SuperConfig cfg_;
+    std::shared_ptr<SuperBinaryDb> db_;
     Context* ctx_;
-    std::string delimiter_;
-    std::string comment_format_;
-    bool is_chain_;
 
     int yield_count_ = 0;
 
-    // Priority queues for candidate distribution
     std::deque<InjectCand> index_cands_;
     std::deque<InjectCand> quality_cands_;
     std::deque<an<Candidate>> lazy_cands_;
@@ -85,27 +99,30 @@ private:
     std::unordered_set<std::string> abbrev_yielded_;
 };
 
-// Filter component responsible for parsing configurations and managing the global LevelDb connection.
 class SuperFilter : public Filter {
 public:
     explicit SuperFilter(const Ticket& ticket);
     virtual ~SuperFilter();
 
-    an<Translation> Apply(an<Translation> translation,
-                          CandidateList* candidates) override;
+    an<Translation> Apply(an<Translation> translation, CandidateList* candidates) override;
 
 private:
     void LoadConfig(Config* config);
-    void InitializeDb();
+    void InitializeBinaryDb();
     std::string GenerateFilesSignature();
     void RebuildDb();
 
-    std::vector<SuperRule> rules_;
-    an<Db> db_;
+    SuperConfig cfg_;
+    std::shared_ptr<SuperBinaryDb> db_;
     std::string db_name_;
-    std::string delimiter_;
-    std::string comment_format_;
-    bool chain_ = false;
+    std::string name_space_; 
+};
+
+class SuperFilterComponent : public SuperFilter::Component {
+public:
+    SuperFilter* Create(const Ticket& ticket) override {
+        return new SuperFilter(ticket);
+    }
 };
 
 } // namespace rime
