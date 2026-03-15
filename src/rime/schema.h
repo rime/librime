@@ -39,6 +39,7 @@ class Schema {
   // frequently used config items
   int page_size_ = 5;
   bool page_down_cycle_ = false;
+  bool hidden_ = false;
   string select_keys_;
 };
 
