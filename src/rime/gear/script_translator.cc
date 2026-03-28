@@ -569,6 +569,7 @@ inline static bool prefer_user_phrase(
 }
 
 bool ScriptTranslation::PrepareCandidate() {
+iter_incremented:
   if (exhausted()) {
     candidate_source_ = kUninitialized;
     candidate_ = nullptr;
@@ -628,6 +629,10 @@ bool ScriptTranslation::PrepareCandidate() {
     return true;
   } else if (phrase_code_length > 0) {
     DictEntryIterator& iter = phrase_iter_->second;
+    if (iter.exhausted()) {
+      ++phrase_iter_;
+      goto iter_incremented;
+    }
     const auto& entry = iter.Peek();
     DLOG(INFO) << "phrase '" << entry->text
                << "', code length: " << phrase_code_length;
