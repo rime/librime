@@ -67,7 +67,7 @@ Navigator::Navigator(const Ticket& ticket)
   LoadConfig(config, "navigator", Horizontal);
   LoadConfig(config, "navigator/vertical", Vertical);
 
-  select_connection_ = engine_->context()->select_notifier().connect(
+  select_connection_ = engine_->context()->select_notifier_connect(
       [this](Context* ctx) { OnSelect(ctx); });
 }
 
