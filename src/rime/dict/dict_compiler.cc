@@ -8,6 +8,9 @@
 #include <cfloat>
 #include <cmath>
 #include <fstream>
+#include <algorithm>
+#include <vector>
+#include <unordered_set>
 #include <rime/algo/algebra.h>
 #include <rime/algo/utilities.h>
 #include <rime/dict/corrector.h>
@@ -36,6 +39,23 @@ DictCompiler::DictCompiler(Dictionary* dictionary)
 
 DictCompiler::~DictCompiler() {}
 
+static string format_cycle_path(const vector<string>& stack,
+                                const string& repeated) {
+  auto it = std::find(stack.begin(), stack.end(), repeated);
+  if (it == stack.end())
+    return repeated;
+
+  string s;
+  for (auto p = it; p != stack.end(); ++p) {
+    if (!s.empty())
+      s += " -> ";
+    s += *p;
+  }
+  s += " -> ";
+  s += repeated;
+  return s;
+}
+
 static bool load_dict_settings_from_file(DictSettings* settings,
                                          const path& dict_file) {
   std::ifstream fin(dict_file.c_str());
@@ -44,20 +64,142 @@ static bool load_dict_settings_from_file(DictSettings* settings,
   return success;
 }
 
+static bool dict_imports_recursive(DictSettings& settings) {
+  bool recursive = false;
+  settings.GetBool("import_tables_recursive", &recursive);
+  return recursive;
+}
+
+static bool collect_import_closure(const string& dict_name,
+                                   bool recursive,
+                                   vector<path>* dict_files,
+                                   std::unordered_set<string>* visited,
+                                   std::unordered_set<string>* visiting,
+                                   vector<string>* stack,
+                                   ResourceResolver* source_resolver) {
+  if (visited->count(dict_name))
+    return true;
+
+  if (visiting->count(dict_name)) {
+    const string& root = stack->empty() ? dict_name : stack->front();
+    LOG(ERROR) << "cyclic import_tables detected while compiling '"
+               << root << "': "
+               << format_cycle_path(*stack, dict_name);
+    return false;
+  }
+
+  visiting->insert(dict_name);
+  stack->push_back(dict_name);
+
+  auto dict_file = source_resolver->ResolvePath(dict_name + ".dict.yaml");
+  if (!std::filesystem::exists(dict_file)) {
+    LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
+    stack->pop_back();
+    visiting->erase(dict_name);
+    return false;
+  }
+
+  DictSettings settings;
+  if (!load_dict_settings_from_file(&settings, dict_file)) {
+    LOG(ERROR) << "failed to load settings from '" << dict_file << "'.";
+    stack->pop_back();
+    visiting->erase(dict_name);
+    return false;
+  }
+
+  if (recursive) {
+    if (auto imports = settings.GetList("import_tables")) {
+      for (auto it = imports->begin(); it != imports->end(); ++it) {
+        if (!Is<ConfigValue>(*it))
+          continue;
+        string imported = As<ConfigValue>(*it)->str();
+        if (imported.empty())
+          continue;
+        if (imported == dict_name) {
+          LOG(WARNING) << "cannot import '" << imported << "' from itself.";
+          continue;
+        }
+        if (!collect_import_closure(imported, true, dict_files,
+                                    visited, visiting, stack,
+                                    source_resolver)) {
+          stack->pop_back();
+          visiting->erase(dict_name);
+          return false;
+        }
+      }
+    }
+  } else {
+    // Compatibility with old behavior: only expand one layer import_tables
+    if (auto tables = settings.GetTables()) {
+      bool skip_self = true;
+      for (auto it = tables->begin(); it != tables->end(); ++it) {
+        if (!Is<ConfigValue>(*it))
+          continue;
+        string table_name = As<ConfigValue>(*it)->str();
+        if (table_name.empty())
+          continue;
+        if (skip_self) {
+          skip_self = false;
+          continue;
+        }
+        if (table_name == dict_name) {
+          LOG(WARNING) << "cannot import '" << table_name << "' from itself.";
+          continue;
+        }
+        if (visited->count(table_name))
+          continue;
+        auto imported_file =
+            source_resolver->ResolvePath(table_name + ".dict.yaml");
+        if (!std::filesystem::exists(imported_file)) {
+          LOG(ERROR) << "source file '" << imported_file << "' does not exist.";
+          stack->pop_back();
+          visiting->erase(dict_name);
+          return false;
+        }
+        visited->insert(table_name);
+        dict_files->push_back(imported_file);
+      }
+    }
+  }
+
+  // Post-order: dependencies first, then the dictionary itself.
+  dict_files->push_back(dict_file);
+  stack->pop_back();
+  visiting->erase(dict_name);
+  visited->insert(dict_name);
+  return true;
+}
+
 static bool get_dict_files_from_settings(vector<path>* dict_files,
                                          DictSettings& settings,
                                          ResourceResolver* source_resolver) {
-  if (auto tables = settings.GetTables()) {
-    for (auto it = tables->begin(); it != tables->end(); ++it) {
-      string dict_name = As<ConfigValue>(*it)->str();
-      auto dict_file = source_resolver->ResolvePath(dict_name + ".dict.yaml");
-      if (!std::filesystem::exists(dict_file)) {
-        LOG(ERROR) << "source file '" << dict_file << "' does not exist.";
-        return false;
-      }
-      dict_files->push_back(dict_file);
-    }
+  dict_files->clear();
+
+  std::unordered_set<string> visited;
+  std::unordered_set<string> visiting;
+  vector<string> stack;
+
+  const bool recursive = dict_imports_recursive(settings);
+  const string root = settings.dict_name();
+
+  if (root.empty()) {
+    LOG(ERROR) << "missing dictionary name in settings.";
+    return false;
   }
+
+  const bool ok = collect_import_closure(root, recursive, dict_files,
+                                         &visited, &visiting, &stack,
+                                         source_resolver);
+  if (!ok)
+    return false;
+
+  LOG(INFO) << "resolved " << dict_files->size()
+            << " dict source file(s) for '" << root
+            << "', recursive=" << (recursive ? "true" : "false");
+  for (const auto& f : *dict_files) {
+    LOG(INFO) << "  dict source: " << f;
+  }
+
   return true;
 }
 
@@ -90,12 +232,15 @@ bool DictCompiler::Compile(const path& schema_file) {
     return false;
   }
   vector<path> dict_files;
-  if (!get_dict_files_from_settings(&dict_files, settings,
-                                    source_resolver_.get())) {
-    return false;
+  uint32_t dict_file_checksum = 0;
+  if (build_table_from_source) {
+    if (!get_dict_files_from_settings(&dict_files, settings,
+                                      source_resolver_.get())) {
+      return false;
+    }
+    dict_file_checksum =
+       compute_dict_file_checksum(0, dict_files, settings);
   }
-  uint32_t dict_file_checksum =
-      compute_dict_file_checksum(0, dict_files, settings);
   uint32_t schema_file_checksum =
       schema_file.empty() ? 0 : Checksum(schema_file);
   bool rebuild_table = false;

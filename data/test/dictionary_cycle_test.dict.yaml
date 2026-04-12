@@ -1,0 +1,10 @@
+---
+name: dictionary_cycle_test
+version: "1.0"
+sort: by_weight
+import_tables_recursive: true
+import_tables:
+  - dictionary_cycle_b
+...
+
+ca	ca	100

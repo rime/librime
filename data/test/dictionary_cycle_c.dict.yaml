@@ -1,0 +1,9 @@
+---
+name: dictionary_cycle_c
+version: "1.0"
+sort: by_weight
+import_tables:
+  - dictionary_cycle_test
+...
+
+cc	cc	100

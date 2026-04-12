@@ -1,0 +1,9 @@
+---
+name: dictionary_nonrecursive_test
+version: "1.0"
+sort: by_weight
+import_tables:
+  - dictionary_nonrecursive_b
+...
+
+na	na	100

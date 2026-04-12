@@ -1,0 +1,9 @@
+---
+name: dictionary_cycle_b
+version: "1.0"
+sort: by_weight
+import_tables:
+  - dictionary_cycle_c
+...
+
+cb	cb	100

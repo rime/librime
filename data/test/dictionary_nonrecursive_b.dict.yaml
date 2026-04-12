@@ -1,0 +1,9 @@
+---
+name: dictionary_nonrecursive_b
+version: "1.0"
+sort: by_weight
+import_tables:
+  - dictionary_nonrecursive_c
+...
+
+nb	nb	100
