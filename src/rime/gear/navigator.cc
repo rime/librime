@@ -119,10 +119,11 @@ bool Navigator::LeftByCharNoLoop(Context* ctx) {
 
 bool Navigator::Rewind(Context* ctx) {
   BeginMove(ctx);
-  // take a jump leftwards when there are multiple spans,
+  size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
+  // take a jump leftwards when there are multiple non-confirmed spans,
   // but not from the middle of a span.
-  if (spans_.Count() > 1 && spans_.HasVertex(ctx->caret_pos())) {
-    size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
+  if (spans_.Count(confirmed_pos, spans_.end()) > 1 &&
+      spans_.HasVertex(ctx->caret_pos())) {
     JumpLeft(ctx, confirmed_pos, true);
   } else {
     MoveLeft(ctx);
@@ -132,8 +133,10 @@ bool Navigator::Rewind(Context* ctx) {
 
 bool Navigator::Forward(Context* ctx) {
   BeginMove(ctx);
-  if (spans_.Count() > 1 && spans_.HasVertex(ctx->caret_pos())) {
-    size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
+  size_t confirmed_pos = ctx->composition().GetConfirmedPosition();
+  // when half-selected, count the rest spans.
+  if (spans_.Count(confirmed_pos, spans_.end()) > 1 &&
+      spans_.HasVertex(ctx->caret_pos())) {
     JumpRight(ctx, confirmed_pos, true);
   } else {
     MoveRight(ctx);
