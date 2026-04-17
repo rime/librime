@@ -1429,9 +1429,9 @@ class DoubleArrayBuilder {
   void clear();
 
  private:
-  enum { BLOCK_SIZE = 256 };
-  enum { NUM_EXTRA_BLOCKS = 16 };
-  enum { NUM_EXTRAS = BLOCK_SIZE * NUM_EXTRA_BLOCKS };
+  static const std::size_t BLOCK_SIZE = 256;
+  static const std::size_t NUM_EXTRA_BLOCKS = 16;
+  static const std::size_t NUM_EXTRAS = BLOCK_SIZE * NUM_EXTRA_BLOCKS;
 
   enum { UPPER_MASK = 0xFF << 21 };
   enum { LOWER_MASK = 0xFF };

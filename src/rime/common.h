@@ -104,6 +104,27 @@ class path : public std::filesystem::path {
   path& operator/=(const std::string& p) { return *this /= path(p); }
   path& operator/=(const char* p) { return *this /= path(p); }
 
+  path stem() const { return path(fs_path::stem()); }
+  path filename() const { return path(fs_path::filename()); }
+  path extension() const { return path(fs_path::extension()); }
+  // return UTF-8 encoded std::string
+  std::string string_utf8() const {
+#if __cplusplus >= 202002L
+    const auto u8s = this->u8string();
+    return std::string(u8s.begin(), u8s.end());
+#else
+    return this->u8string();
+#endif
+  }
+  // return UTF-8 encoded std::string of generic format
+  std::string generic_string_utf8() const {
+#if __cplusplus >= 202002L
+    const auto u8s = this->generic_u8string();
+    return std::string(u8s.begin(), u8s.end());
+#else
+    return this->generic_u8string();
+#endif
+  }
   friend path operator/(const path& lhs, const path& rhs) {
     return path(lhs) /= rhs;
   }
@@ -128,7 +149,7 @@ class path : public std::filesystem::path {
   }
 #ifdef RIME_ENABLE_LOGGING
   friend std::ostream& operator<<(std::ostream& os, const path& p) {
-    return os << p.u8string();
+    return os << p.string_utf8();
   }
 #endif
 };

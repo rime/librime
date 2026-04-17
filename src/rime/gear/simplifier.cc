@@ -41,7 +41,7 @@ class Opencc {
     opencc::Config config;
     try {
       // opencc accepts file path encoded in UTF-8.
-      converter_ = config.NewFromFile(config_path_.u8string());
+      converter_ = config.NewFromFile(config_path_.string_utf8());
 
       const list<opencc::ConversionPtr> conversions =
           converter_->GetConversionChain()->GetConversions();
@@ -315,7 +315,7 @@ Simplifier* SimplifierComponent::Create(const Ticket& ticket) {
     return new Simplifier(ticket, opencc);
   }
   path opencc_config_path = path(opencc_config);
-  if (opencc_config_path.extension().u8string() == ".ini") {
+  if (opencc_config_path.extension().string_utf8() == ".ini") {
     LOG(ERROR) << "please upgrade opencc_config to an opencc 1.0 config file.";
     return nullptr;
   }
