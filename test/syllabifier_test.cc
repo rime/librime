@@ -160,3 +160,54 @@ TEST_F(RimeSyllabifierTest, TransposedSyllableGraph) {
   ASSERT_FALSE(NULL == g.indices[0][syllable_id_["chan"]][0]);
   EXPECT_EQ(4, g.indices[0][syllable_id_["chan"]][0]->end_pos);
 }
+
+TEST_F(RimeSyllabifierTest, TrimLeadingDelimiters) {
+  rime::Syllabifier s(" '");
+  rime::SyllableGraph g;
+  const rime::string input("''a");
+  s.BuildSyllableGraph(input, *prism_, &g);
+  EXPECT_EQ(input.length(), g.input_length);
+  EXPECT_EQ(input.length(), g.interpreted_length);
+  EXPECT_EQ(2, g.vertices.size());
+  ASSERT_FALSE(g.vertices.end() == g.vertices.find(3));
+  EXPECT_EQ(rime::kNormalSpelling, g.vertices[1]);
+  rime::SpellingMap& sp(g.edges[0][3]);
+  EXPECT_EQ(1, sp.size());
+  ASSERT_FALSE(sp.end() == sp.find(syllable_id_["a"]));
+  EXPECT_EQ(rime::kNormalSpelling, sp[0].type);
+  EXPECT_EQ(0.0, sp[0].credibility);
+}
+
+TEST_F(RimeSyllabifierTest, TrimTrailingDelimiters) {
+  rime::Syllabifier s(" '");
+  rime::SyllableGraph g;
+  const rime::string input("a''");
+  s.BuildSyllableGraph(input, *prism_, &g);
+  EXPECT_EQ(input.length(), g.input_length);
+  EXPECT_EQ(input.length(), g.interpreted_length);
+  EXPECT_EQ(2, g.vertices.size());
+  ASSERT_FALSE(g.vertices.end() == g.vertices.find(3));
+  EXPECT_EQ(rime::kNormalSpelling, g.vertices[1]);
+  rime::SpellingMap& sp(g.edges[0][3]);
+  EXPECT_EQ(1, sp.size());
+  ASSERT_FALSE(sp.end() == sp.find(syllable_id_["a"]));
+  EXPECT_EQ(rime::kNormalSpelling, sp[0].type);
+  EXPECT_EQ(0.0, sp[0].credibility);
+}
+
+TEST_F(RimeSyllabifierTest, TrimBothLeadingAndTrailingDelimiters) {
+  rime::Syllabifier s(" '");
+  rime::SyllableGraph g;
+  const rime::string input("''a''");
+  s.BuildSyllableGraph(input, *prism_, &g);
+  EXPECT_EQ(input.length(), g.input_length);
+  EXPECT_EQ(input.length(), g.interpreted_length);
+  EXPECT_EQ(2, g.vertices.size());
+  ASSERT_FALSE(g.vertices.end() == g.vertices.find(5));
+  EXPECT_EQ(rime::kNormalSpelling, g.vertices[1]);
+  rime::SpellingMap& sp(g.edges[0][5]);
+  EXPECT_EQ(1, sp.size());
+  ASSERT_FALSE(sp.end() == sp.find(syllable_id_["a"]));
+  EXPECT_EQ(rime::kNormalSpelling, sp[0].type);
+  EXPECT_EQ(0.0, sp[0].credibility);
+}

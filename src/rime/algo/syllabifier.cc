@@ -53,12 +53,19 @@ int Syllabifier::BuildSyllableGraph(const string& input,
 
     if (current_pos > farthest)
       farthest = current_pos;
-    DLOG(INFO) << "current_pos: " << current_pos;
+
+    // consume leading delimiters
+    size_t begin_pos = current_pos;
+    while (begin_pos < input.length() &&
+           delimiters_.find(input[begin_pos]) != string::npos)
+      ++begin_pos;
+    DLOG(INFO) << "current_pos: " << current_pos
+               << ", begin_pos: " << begin_pos;
 
     // see where we can go by advancing a syllable
     vector<Prism::Match> matches;
     set<SyllableId> exact_match_syllables;
-    auto current_input = input.substr(current_pos);
+    auto current_input = input.substr(begin_pos);
     prism.CommonPrefixSearch(current_input, &matches);
     if (corrector_) {
       for (auto& m : matches) {
@@ -78,12 +85,13 @@ int Syllabifier::BuildSyllableGraph(const string& input,
       }
     }
 
+    size_t leading_gap = begin_pos - current_pos;
     if (!matches.empty()) {
       auto& end_vertices(graph->edges[current_pos]);
       for (const auto& m : matches) {
         if (m.length == 0)
           continue;
-        size_t end_pos = current_pos + m.length;
+        size_t end_pos = current_pos + leading_gap + m.length;
         // consume trailing delimiters
         while (end_pos < input.length() &&
                delimiters_.find(input[end_pos]) != string::npos)
