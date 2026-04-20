@@ -66,6 +66,16 @@ Navigator::Navigator(const Ticket& ticket)
   Config* config = engine_->schema()->config();
   LoadConfig(config, "navigator", Horizontal);
   LoadConfig(config, "navigator/vertical", Vertical);
+  config->GetString("speller/delimiter", &delimiters_);
+  string syllable_jump_position;
+  if (config->GetString("navigator/syllable_jump_position",
+                        &syllable_jump_position)) {
+    if (syllable_jump_position == "before_delimiter") {
+      syllable_jump_position_ = BeforeDelimiter;
+    } else {
+      syllable_jump_position_ = AfterDelimiter;
+    }
+  }
 
   select_connection_ = engine_->context()->select_notifier().connect(
       [this](Context* ctx) { OnSelect(ctx); });
@@ -202,11 +212,12 @@ bool Navigator::JumpLeft(Context* ctx, size_t start_pos, bool loop) {
   size_t caret_pos = ctx->caret_pos();
   size_t end_of_translation = spans_.end();
   size_t end_of_input = ctx->input().length();
+  size_t span_start_pos = ToSpanStart(caret_pos);
   size_t new_pos =
       // 跳過未翻譯的輸入碼
-      (caret_pos > end_of_translation) ? end_of_translation
+      (span_start_pos > end_of_translation) ? end_of_translation
       // 迴轉？
-      : (loop && caret_pos <= start_pos)
+      : (loop && span_start_pos <= start_pos)
           ?
           // 若未翻譯完則須重譯，光標迴轉到結尾
           (end_of_input > end_of_translation)
@@ -214,7 +225,9 @@ bool Navigator::JumpLeft(Context* ctx, size_t start_pos, bool loop) {
               // 迴轉後向前找
               : (std::max)(start_pos, spans_.PreviousStop(end_of_input))
           // 跳至前一個切分點
-          : (std::max)(start_pos, spans_.PreviousStop(caret_pos));
+          : (std::max)(start_pos, spans_.PreviousStop(span_start_pos));
+  if (syllable_jump_position_ == BeforeDelimiter)
+    new_pos = ToSyllableEnd(new_pos);
   if (new_pos != caret_pos) {
     ctx->set_caret_pos(new_pos);
     return true;
@@ -227,13 +240,16 @@ bool Navigator::JumpRight(Context* ctx, size_t start_pos, bool loop) {
   size_t caret_pos = ctx->caret_pos();
   size_t end_of_translation = spans_.end();
   size_t end_of_input = ctx->input().length();
+  size_t span_end_pos = ToSpanEnd(caret_pos);
   size_t new_pos =
       // 已在結尾則從頭開始向後找
-      (loop && caret_pos == end_of_input) ? spans_.NextStop(start_pos)
+      (loop && span_end_pos == end_of_input) ? spans_.NextStop(start_pos)
       // 跳過未翻譯的輸入碼
-      : (caret_pos >= end_of_translation) ? end_of_input
-                                          // 跳至後一個切分點
-                                          : spans_.NextStop(caret_pos);
+      : (span_end_pos >= end_of_translation) ? end_of_input
+                                             // 跳至後一個切分點
+                                             : spans_.NextStop(span_end_pos);
+  if (syllable_jump_position_ == BeforeDelimiter)
+    new_pos = ToSyllableEnd(new_pos);
   if (new_pos != caret_pos) {
     ctx->set_caret_pos(new_pos);
     return true;
@@ -291,6 +307,55 @@ bool Navigator::GoToEnd(Context* ctx) {
     return true;
   }
   return false;
+}
+
+// Considering delimiters (both leading and trailing), the span can consist of
+// four positions:
+//
+// [ '       '                    syll             '                 '        ']
+//   ^        ^                                    ^                           ^
+//   | start  |leading_delim_end                   |trailing_delim_start
+//   |trailing_delim_end=end
+//
+// Spans only consider start and end. To jump precisely, sometimes we
+// need to fix the current position to a semantic boundary.
+//
+// Find 'start' if pos in leading delimiters, i.e. [start, leading_delim_end].
+size_t Navigator::ToSpanStart(size_t pos) {
+  return SkipDelimiterBackward(pos);
+}
+
+// Find 'trailing_delim_end' or 'end' if pos in trailing delimiters,
+// i.e. [trailing_delim_start, end].
+size_t Navigator::ToSpanEnd(size_t pos) {
+  return SkipDelimiterForward(pos);
+}
+
+// Find 'leading_delim_end', or the start pos of the actual syllable,
+// if pos in leading delimiters, i.e. [start, leading_delim_end].
+size_t Navigator::ToSyllableStart(size_t pos) {
+  return SkipDelimiterForward(pos);
+}
+
+// Find 'trailing_delim_start', or the end pos of the actual syllable,
+// if pos in trailing delimiters, i.e. [trailing_delim_end, end].
+size_t Navigator::ToSyllableEnd(size_t pos) {
+  return SkipDelimiterBackward(pos);
+}
+
+// Move pos backward (decreasing pos), skipping any delimiter.
+size_t Navigator::SkipDelimiterBackward(size_t pos) {
+  while (pos > 0 && delimiters_.find(input_[pos - 1]) != string::npos)
+    pos--;
+  return pos;
+}
+
+// Move pos forward (increasing pos), skipping any delimiter.
+size_t Navigator::SkipDelimiterForward(size_t pos) {
+  while (pos < input_.length() - 1 &&
+         delimiters_.find(input_[pos]) != string::npos)
+    pos++;
+  return pos;
 }
 
 }  // namespace rime
