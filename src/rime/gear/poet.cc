@@ -258,7 +258,8 @@ an<Sentence> Poet::MakeSentence(const WordGraph& graph,
 deque<an<Sentence>> Poet::MakeSentences(const WordGraph& graph,
                                         size_t total_length,
                                         const string& preceding_text,
-                                        size_t max_sentences) {
+                                        size_t max_sentences,
+                                        double cutoff_threshold) {
   size_t beam_width =
       max_sentences * 3;  // allow more possibilities during search
   using State = std::list<Line>;
@@ -320,17 +321,24 @@ deque<an<Sentence>> Poet::MakeSentences(const WordGraph& graph,
     return {};
 
   deque<an<Sentence>> results;
-  size_t i = 0;
-  double last_weight = found->second.front().weight;
-  for (const auto& candidate : found->second) {
-    i++;
-    if (i > max_sentences)
-      break;
+  double last_weight;
+  double acceleration = 1.0 - 1.0 / (double)max_sentences;
+  auto iter = found->second.begin();
+  for (size_t i = 0; iter != found->second.end() && i < max_sentences;
+       ++i, ++iter) {
+    const auto& candidate = *iter;
     double cur_weight = candidate.weight;
-    // idea: if the current sentence is, on average, not too rare when
-    // compared to last sentence, we should consider it too
-    if (fabs(cur_weight - last_weight) / fabs(last_weight) > 0.05) {
-      break;
+    if (i > 0) {
+      // idea: if the current sentence is, on average, not too rare when
+      // compared to last sentence, we should consider it too
+      if (fabs(cur_weight - last_weight) / fabs(last_weight) >
+          cutoff_threshold) {
+        break;
+      }
+      // but don't deviate too far from the first weight by accelerating
+      // the cutoff threshold. cutoff_threshold becomes
+      // ~0.36*cutoff_threshold after N candidates are added.
+      cutoff_threshold *= acceleration;
     }
     last_weight = cur_weight;
     auto sentence = New<Sentence>(language_);

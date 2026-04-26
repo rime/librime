@@ -176,6 +176,8 @@ class TranslatorOptions {
   bool enable_completion_ = true;
   bool strict_spelling_ = false;
   double initial_quality_ = 0.;
+  int max_sentences_ = 1;
+  double sentence_cutoff_threshold_ = 0.1;
   Projection preedit_formatter_;
   Projection comment_formatter_;
   Patterns user_dict_disabling_patterns_;
