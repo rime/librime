@@ -18,6 +18,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <deque>
 #define BOOST_BIND_NO_PLACEHOLDERS
 #include <boost/signals2/connection.hpp>
 #include <boost/signals2/signal.hpp>
@@ -37,6 +38,7 @@
 
 namespace rime {
 
+using std::deque;
 using std::function;
 using std::list;
 using std::make_pair;

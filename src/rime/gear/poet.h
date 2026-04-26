@@ -39,6 +39,10 @@ class Poet {
   an<Sentence> MakeSentence(const WordGraph& graph,
                             size_t total_length,
                             const string& preceding_text);
+  deque<an<Sentence>> MakeSentences(const WordGraph& graph,
+                                    size_t total_length,
+                                    const string& preceding_text,
+                                    size_t count);
 
   template <class TranslatorT>
   an<Translation> ContextualWeighted(an<Translation> translation,
