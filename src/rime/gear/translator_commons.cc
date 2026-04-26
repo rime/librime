@@ -125,12 +125,18 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket) {
     config->GetBool(ticket.name_space + "/strict_spelling", &strict_spelling_);
     config->GetDouble(ticket.name_space + "/initial_quality",
                       &initial_quality_);
+    config->GetInt(ticket.name_space + "/max_sentences", &max_sentences_);
+    max_sentences_ = std::min(std::max(1, max_sentences_), 100);
+    config->GetDouble(ticket.name_space + "/sentence_cutoff_threshold",
+                      &sentence_cutoff_threshold_);
+
     preedit_formatter_.Load(
         config->GetList(ticket.name_space + "/preedit_format"));
     comment_formatter_.Load(
         config->GetList(ticket.name_space + "/comment_format"));
     user_dict_disabling_patterns_.Load(
         config->GetList(ticket.name_space + "/disable_user_dict_for_patterns"));
+
     string tag;
     if (config->GetString(ticket.name_space + "/tag", &tag)) {
       // replace the first tag, and understand /tags as extra tags

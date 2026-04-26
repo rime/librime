@@ -115,14 +115,18 @@ class ScriptTranslation : public Translation {
                     Poet* poet,
                     const string& input,
                     size_t start,
-                    size_t end_of_input)
+                    size_t end_of_input,
+                    int max_sentences,
+                    double sentence_cutoff_threshold)
       : translator_(translator),
         poet_(poet),
         start_(start),
         end_of_input_(end_of_input),
         syllabifier_(
             New<ScriptSyllabifier>(translator, corrector, input, start)),
-        enable_correction_(corrector) {
+        enable_correction_(corrector),
+        max_sentences_(max_sentences),
+        sentence_cutoff_threshold_(sentence_cutoff_threshold) {
     set_exhausted(true);
   }
   bool Evaluate(Dictionary* dict, UserDictionary* user_dict);
@@ -136,7 +140,11 @@ class ScriptTranslation : public Translation {
   template <class QueryResult>
   void EnrollEntries(map<int, DictEntryList>& entries_by_end_pos,
                      const an<QueryResult>& query_result);
+  WordGraph PrepareForMakingSentence(Dictionary* dict,
+                                     UserDictionary* user_dict);
   an<Sentence> MakeSentence(Dictionary* dict, UserDictionary* user_dict);
+  deque<an<Sentence>> MakeSentences(Dictionary* dict,
+                                    UserDictionary* user_dict);
 
   ScriptTranslator* translator_;
   Poet* poet_;
@@ -146,7 +154,7 @@ class ScriptTranslation : public Translation {
 
   an<DictEntryCollector> phrase_;
   an<UserDictEntryCollector> user_phrase_;
-  an<Sentence> sentence_;
+  deque<an<Sentence>> sentences_;
 
   an<Phrase> candidate_ = nullptr;
   size_t candidate_index_ = 0;
@@ -163,6 +171,8 @@ class ScriptTranslation : public Translation {
 
   const size_t max_corrections_ = 4;
   size_t correction_count_ = 0;
+  int max_sentences_ = 1;
+  double sentence_cutoff_threshold_ = 0.1;
 
   bool enable_correction_;
 };
@@ -210,8 +220,9 @@ an<Translation> ScriptTranslator::Query(const string& input,
 
   size_t end_of_input = engine_->context()->input().length();
   // the translator should survive translations it creates
-  auto result = New<ScriptTranslation>(this, corrector_.get(), poet_.get(),
-                                       input, segment.start, end_of_input);
+  auto result = New<ScriptTranslation>(
+      this, corrector_.get(), poet_.get(), input, segment.start, end_of_input,
+      max_sentences_, sentence_cutoff_threshold_);
   if (!result || !result->Evaluate(
                      dict_.get(), enable_user_dict ? user_dict_.get() : NULL)) {
     return nullptr;
@@ -484,7 +495,15 @@ bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   // make sentences when there is no exact-matching phrase candidate
   if (has_at_least_two_syllables && !has_reliable_phrase &&
       !has_reliable_user_phrase) {
-    sentence_ = MakeSentence(dict, user_dict);
+    if (max_sentences_ > 1)
+      sentences_ = MakeSentences(dict, user_dict);
+    else if (max_sentences_) {
+      auto sentence = MakeSentence(dict, user_dict);
+      if (sentence)
+        sentences_ = {sentence};
+      else
+        sentences_.clear();
+    }
   }
 
   return !CheckEmpty();
@@ -501,7 +520,8 @@ bool ScriptTranslation::Next() {
       case kUninitialized:
         break;
       case kSentence:
-        sentence_.reset();
+        if (!sentences_.empty())
+          sentences_.pop_front();
         break;
       case kUserPhrase: {
         UserDictEntryIterator& uter(user_phrase_iter_->second);
@@ -575,9 +595,9 @@ iter_incremented:
     candidate_ = nullptr;
     return false;
   }
-  if (sentence_) {
+  if (!sentences_.empty()) {
     candidate_source_ = kSentence;
-    candidate_ = sentence_;
+    candidate_ = sentences_[0];
     return true;
   }
   const size_t full_code_length = end_of_input_ - start_;
@@ -675,8 +695,9 @@ void ScriptTranslation::EnrollEntries(
   }
 }
 
-an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
-                                             UserDictionary* user_dict) {
+WordGraph ScriptTranslation::PrepareForMakingSentence(
+    Dictionary* dict,
+    UserDictionary* user_dict) {
   const int kMaxSyllablesForUserPhraseQuery = 5;
   const auto& syllable_graph = syllabifier_->syllable_graph();
   WordGraph graph;
@@ -691,6 +712,29 @@ an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
     EnrollEntries(same_start_pos, dict->Lookup(syllable_graph, x.first,
                                                &translator_->blacklist()));
   }
+  return graph;
+}
+
+deque<an<Sentence>> ScriptTranslation::MakeSentences(
+    Dictionary* dict,
+    UserDictionary* user_dict) {
+  const auto& syllable_graph = syllabifier_->syllable_graph();
+  WordGraph graph = PrepareForMakingSentence(dict, user_dict);
+  auto sentences =
+      poet_->MakeSentences(graph, syllable_graph.interpreted_length,
+                           translator_->GetPrecedingText(start_),
+                           max_sentences_, sentence_cutoff_threshold_);
+  for (auto& sentence : sentences) {
+    sentence->Offset(start_);
+    sentence->set_syllabifier(syllabifier_);
+  }
+  return sentences;
+}
+
+an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
+                                             UserDictionary* user_dict) {
+  const auto& syllable_graph = syllabifier_->syllable_graph();
+  WordGraph graph = PrepareForMakingSentence(dict, user_dict);
   if (auto sentence =
           poet_->MakeSentence(graph, syllable_graph.interpreted_length,
                               translator_->GetPrecedingText(start_))) {
