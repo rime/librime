@@ -54,7 +54,7 @@ class ScriptTranslator : public Translator,
   int core_word_length() const;
 
  protected:
-  int max_homophones_ = 1;
+  int max_homophones_ = 8;
   int spelling_hints_ = 0;
   int max_word_length_ = 0;
   int core_word_length_ = 0;
