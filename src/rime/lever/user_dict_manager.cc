@@ -40,7 +40,7 @@ void UserDictManager::GetUserDictList(UserDictList* user_dict_list,
     return;
   }
   for (fs::directory_iterator it(path_), end; it != end; ++it) {
-    string name = it->path().filename().u8string();
+    string name = path(it->path().filename()).string_utf8();
     if (boost::ends_with(name, component->extension())) {
       boost::erase_last(name, component->extension());
       user_dict_list->push_back(name);
