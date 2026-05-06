@@ -257,8 +257,47 @@ bool Table::OnBuildFinish() {
 }
 
 bool Table::OnLoad() {
-  string_table_.reset(new StringTable(metadata_->string_table.get(),
-                                      metadata_->string_table_size));
+  size_t sz = metadata_->string_table_size;
+  const char* ptr =
+      metadata_->string_table ? metadata_->string_table.get() : nullptr;
+
+  if (ptr) {
+    // 元数据已写入 string_table 相对偏移（正常构建）
+    string_table_.reset(new StringTable(ptr, sz));
+    return true;
+  }
+
+  // 以下兼容旧/混用构建产物：OffsetPtr 未写或 string_table_size 与真实布局不一致，
+  // 不可用语义「文件末尾减去元数据中的 size」（english.table.bin 等会指向错误区域）。
+  // marisa::grimoire::trie::Header 固定为 16 字节魔数（参见 deps/marisa-trie header.h）。
+  static constexpr char kMarisaTrieMagic[16] = {
+      'W', 'e', ' ', 'l', 'o', 'v', 'e', ' ',
+      'M', 'a', 'r', 'i', 's', 'a', '.', '\0'};
+  const char* base = address();
+  const size_t file_sz = file_size();
+  size_t magic_at = file_sz;
+  const size_t scan_begin = sizeof(table::Metadata);
+  for (size_t i = scan_begin; i + sizeof(kMarisaTrieMagic) <= file_sz; ++i) {
+    if (std::memcmp(base + i, kMarisaTrieMagic, sizeof(kMarisaTrieMagic)) == 0) {
+      magic_at = i;
+      break;
+    }
+  }
+
+  if (magic_at < file_sz) {
+    ptr = reinterpret_cast<const char*>(base + magic_at);
+    sz = file_sz - magic_at;
+  } else if (sz == 0) {
+    ptr = nullptr;
+    sz = 0;
+  } else {
+    LOG(ERROR) << "cannot find marisa string table magic with claimed string_table_size="
+               << sz << " in '" << file_path() << "'";
+    Close();
+    return false;
+  }
+
+  string_table_.reset(new StringTable(ptr, sz));
   return true;
 }
 

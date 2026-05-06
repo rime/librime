@@ -28,6 +28,8 @@ const int32_t kSpellingTypeMask = ~kTypeIsCorrectionMask;
 
 const char kPrismFormat[] = "Rime::Prism/4.0";
 const double kPrismFormatVersion = 4.0;
+// APK 预置词典常为 Prism/3.0，與當前 prism::Metadata 佈局兼容；Load 時允許讀取。
+const double kPrismMinimumLoadableFormat = 3.0;
 
 const char kPrismFormatPrefix[] = "Rime::Prism/";
 const size_t kPrismFormatPrefixLen = sizeof(kPrismFormatPrefix) - 1;
@@ -103,10 +105,10 @@ bool Prism::Load() {
   }
   format_ = atof(&metadata_->format[kPrismFormatPrefixLen]);
 
-  // 版本檢查: 強制重構舊版本
-  if (format_ < kPrismFormatVersion - DBL_EPSILON) {
-    LOG(INFO) << "prism format " << format_ << " is too old. upgrading to "
-              << kPrismFormatVersion;
+  // 版本檢查：過舊格式拒載；3.x 與當前結構兼容（預置 Prism/3.0）；Save 仍寫 4.0。
+  if (format_ < kPrismMinimumLoadableFormat - DBL_EPSILON) {
+    LOG(INFO) << "prism format " << format_ << " is too old (minimum "
+              << kPrismMinimumLoadableFormat << "). rebuild dictionary.";
     Close();
     return false;
   }
