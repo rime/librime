@@ -1,3 +1,21 @@
+<a name="1.17.0"></a>
+## 1.17.0 (2026-06-05)
+
+### Bug 修復 | Bug Fixes
+- excluded words cause crashes (#1152) (4218af0)
+- forward/rewind 步長視未選定編碼分節數而定 (3a0bafa)
+- commit ci should also build with plugins (#1160) (422ad2d)
+- space after digit separators shouldn't be translated (aa32d48)
+- 不過濾漢字以外的符號 (1300e56)
+
+### 主要功能更新 | Major Updates
+- trim leading delimiters (#1147) (4ff27f8)
+- 允許跳轉到分隔符之前 (#1142) (2b7ccf2)
+- make multiple sentences (d32cd32)
+- allow multiple sentence candidates (9422ca7)
+
+**Full Changelog**: https://github.com/rime/squirrel/compare/1.16.1...1.17.0
+
 <a name="1.16.1"></a>
 ## 1.16.1 (2026-01-20)
 
