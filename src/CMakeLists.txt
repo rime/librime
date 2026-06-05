@@ -172,7 +172,6 @@ else()
   install(TARGETS rime-static DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
 endif()
 if(DEFINED RIME_SETUP_EXTRA_MODULES)
-  set_property(SOURCE rime/setup.cc
-    PROPERTY COMPILE_DEFINITIONS
+  target_compile_definitions(${rime_library} PRIVATE
     "RIME_EXTRA_MODULES=${RIME_SETUP_EXTRA_MODULES}")
 endif()
