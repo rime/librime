@@ -255,7 +255,9 @@ void AsciiComposer::SwitchAsciiMode(bool ascii_mode,
             [this](Context* ctx) { OnContextUpdate(ctx); });
       }
     } else if (style == kAsciiModeSwitchCommitText) {
-      ctx->ConfirmCurrentSelection();
+      while (ctx->composition().back().end < ctx->input().length())
+        ctx->ConfirmCurrentSelection();
+      ctx->Commit();
     } else if (style == kAsciiModeSwitchCommitCode) {
       ctx->ClearNonConfirmedComposition();
       ctx->Commit();
