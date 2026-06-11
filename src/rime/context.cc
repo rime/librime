@@ -12,14 +12,13 @@
 #include <rime/segmentation.h>
 
 namespace rime {
-
 const string kSelectedBeforeEditing = "selected_before_editing";
 
 bool Context::Commit() {
   if (!IsComposing())
     return false;
   // notify the engine and interesting components
-  commit_notifier_(this);
+  commit_notify();
   // start over
   Clear();
   return true;
@@ -70,7 +69,7 @@ bool Context::PushInput(char ch) {
     input_.insert(caret_pos_, 1, ch);
     ++caret_pos_;
   }
-  update_notifier_(this);
+  update_notify();
   return true;
 }
 
@@ -82,7 +81,7 @@ bool Context::PushInput(const string& str) {
     input_.insert(caret_pos_, str);
     caret_pos_ += str.length();
   }
-  update_notifier_(this);
+  update_notify();
   return true;
 }
 
@@ -91,7 +90,7 @@ bool Context::PopInput(size_t len) {
     return false;
   caret_pos_ -= len;
   input_.erase(caret_pos_, len);
-  update_notifier_(this);
+  update_notify();
   return true;
 }
 
@@ -99,7 +98,7 @@ bool Context::DeleteInput(size_t len) {
   if (caret_pos_ + len > input_.length())
     return false;
   input_.erase(caret_pos_, len);
-  update_notifier_(this);
+  update_notify();
   return true;
 }
 
@@ -107,12 +106,12 @@ void Context::Clear() {
   input_.clear();
   caret_pos_ = 0;
   composition_.clear();
-  update_notifier_(this);
+  update_notify();
 }
 
 void Context::AbortComposition() {
   Clear();
-  abort_notifier_(this);
+  abort_notify();
 }
 
 bool Context::Select(size_t index) {
@@ -123,7 +122,7 @@ bool Context::Select(size_t index) {
     seg.selected_index = index;
     seg.status = Segment::kSelected;
     DLOG(INFO) << "Selected: '" << cand->text() << "', index = " << index;
-    select_notifier_(this);
+    select_notify();
     return true;
   }
   return false;
@@ -142,7 +141,7 @@ bool Context::Highlight(size_t index) {
     return false;
   }
   seg.selected_index = new_index;
-  update_notifier_(this);
+  update_notify();
   DLOG(INFO) << "selection changed from: " << previous_index
              << " to: " << new_index;
   return true;
@@ -154,7 +153,7 @@ bool Context::DeleteCandidate(size_t index) {
   Segment& seg(composition_.back());
   seg.selected_index = index;
   DLOG(INFO) << "Deleting candidate: " << seg.GetSelectedCandidate()->text();
-  delete_notifier_(this);
+  delete_notify();
   return true;  // CAVEAT: this doesn't mean anything is deleted for sure
 }
 
@@ -180,7 +179,7 @@ bool Context::ConfirmCurrentSelection() {
     }
     // confirm raw input
   }
-  select_notifier_(this);
+  select_notify();
   return true;
 }
 
@@ -207,7 +206,7 @@ bool Context::ReopenPreviousSegment() {
         composition_.back().status >= Segment::kSelected) {
       composition_.back().Reopen(caret_pos());
     }
-    update_notifier_(this);
+    update_notify();
     return true;
   }
   return false;
@@ -236,7 +235,7 @@ bool Context::ReopenPreviousSelection() {
         composition_.pop_back();
       }
       it->Reopen(caret_pos());
-      update_notifier_(this);
+      update_notify();
       return true;
     }
   }
@@ -259,7 +258,7 @@ bool Context::ClearNonConfirmedComposition() {
 
 bool Context::RefreshNonConfirmedComposition() {
   if (ClearNonConfirmedComposition()) {
-    update_notifier_(this);
+    update_notify();
     return true;
   }
   return false;
@@ -270,7 +269,7 @@ void Context::set_caret_pos(size_t caret_pos) {
     caret_pos_ = input_.length();
   else
     caret_pos_ = caret_pos;
-  update_notifier_(this);
+  update_notify();
 }
 
 void Context::set_composition(Composition&& comp) {
@@ -280,13 +279,13 @@ void Context::set_composition(Composition&& comp) {
 void Context::set_input(const string& value) {
   input_ = value;
   caret_pos_ = input_.length();
-  update_notifier_(this);
+  update_notify();
 }
 
 void Context::set_option(const string& name, bool value) {
   options_[name] = value;
   DLOG(INFO) << "Context::set_option " << name << " = " << value;
-  option_update_notifier_(this, name);
+  option_update_notify(name);
 }
 
 bool Context::get_option(const string& name) const {
@@ -299,7 +298,7 @@ bool Context::get_option(const string& name) const {
 
 void Context::set_property(const string& name, const string& value) {
   properties_[name] = value;
-  property_update_notifier_(this, name);
+  property_update_notify(name);
 }
 
 string Context::get_property(const string& name) const {
@@ -322,6 +321,51 @@ void Context::ClearTransientOptions() {
          prop->first[0] == '_') {
     properties_.erase(prop++);
   }
+}
+
+using Connection = Context::Connection;
+
+Connection Context::commit_notifier_connect(std::function<void(Context*)> slot,
+                                            int group) {
+  return connect_notifier(commit_notifier_, slot, group);
+}
+
+Connection Context::select_notifier_connect(std::function<void(Context*)> slot,
+                                            int group) {
+  return connect_notifier(select_notifier_, slot, group);
+}
+
+Connection Context::update_notifier_connect(std::function<void(Context*)> slot,
+                                            int group) {
+  return connect_notifier(update_notifier_, slot, group);
+}
+
+Connection Context::delete_notifier_connect(std::function<void(Context*)> slot,
+                                            int group) {
+  return connect_notifier(delete_notifier_, slot, group);
+}
+
+Connection Context::abort_notifier_connect(std::function<void(Context*)> slot,
+                                           int group) {
+  return connect_notifier(abort_notifier_, slot, group);
+}
+
+Connection Context::option_update_notifier_connect(
+    std::function<void(Context*, const string&)> slot,
+    int group) {
+  return connect_notifier(option_update_notifier_, slot, group);
+}
+
+Connection Context::property_update_notifier_connect(
+    std::function<void(Context*, const string&)> slot,
+    int group) {
+  return connect_notifier(property_update_notifier_, slot, group);
+}
+
+Connection Context::unhandled_key_notifier_connect(
+    std::function<void(Context*, const KeyEvent&)> slot,
+    int group) {
+  return connect_notifier(unhandled_key_notifier_, slot, group);
 }
 
 }  // namespace rime
