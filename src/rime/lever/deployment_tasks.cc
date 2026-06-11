@@ -52,8 +52,8 @@ bool DetectModifications::Run(Deployer* deployer) {
         for (fs::directory_iterator iter(p), end; iter != end; ++iter) {
           path entry(iter->path());
           if (fs::is_regular_file(fs::canonical(entry)) &&
-              entry.extension().u8string() == ".yaml" &&
-              entry.filename().u8string() != "user.yaml") {
+              entry.extension().string_utf8() == ".yaml" &&
+              entry.filename().string_utf8() != "user.yaml") {
             last_modified =
                 (std::max)(last_modified,
                            filesystem::to_time_t(fs::last_write_time(entry)));
@@ -460,7 +460,7 @@ bool PrebuildAllSchemas::Run(Deployer* deployer) {
   for (fs::directory_iterator iter(shared_data_path), end; iter != end;
        ++iter) {
     path entry(iter->path());
-    if (boost::ends_with(entry.filename().u8string(), ".schema.yaml")) {
+    if (boost::ends_with(entry.filename().string_utf8(), ".schema.yaml")) {
       the<DeploymentTask> t(new SchemaUpdate(entry));
       if (!t->Run(deployer))
         success = false;
@@ -525,7 +525,7 @@ bool UserDictSync::Run(Deployer* deployer) {
 }
 
 static bool IsCustomizedCopy(const path& file_path) {
-  auto file_name = file_path.filename().u8string();
+  auto file_name = file_path.filename().string_utf8();
   if (boost::ends_with(file_name, ".yaml") &&
       !boost::ends_with(file_name, ".custom.yaml")) {
     Config config;
@@ -556,7 +556,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
     path entry(iter->path());
     if (!fs::is_regular_file(entry))
       continue;
-    auto file_extension = entry.extension().u8string();
+    auto file_extension = entry.extension().string_utf8();
     bool is_yaml_file = file_extension == ".yaml";
     bool is_text_file = file_extension == ".txt";
     if (!is_yaml_file && !is_text_file)
@@ -596,7 +596,7 @@ bool CleanupTrash::Run(Deployer* deployer) {
     path entry(iter->path());
     if (!fs::is_regular_file(entry))
       continue;
-    auto file_name = entry.filename().u8string();
+    auto file_name = entry.filename().string_utf8();
     if (file_name == "rime.log" || boost::ends_with(file_name, ".bin") ||
         boost::ends_with(file_name, ".reverse.kct") ||
         boost::ends_with(file_name, ".userdb.kct.old") ||
@@ -650,7 +650,7 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
     try {
       // preparing files
       for (const auto& entry : fs::directory_iterator(dir)) {
-        const string& file_name(entry.path().filename().u8string());
+        const string& file_name(path(entry.path().filename()).string_utf8());
         if (entry.is_regular_file() && !entry.is_symlink() &&
             boost::starts_with(file_name, app_name) &&
             boost::ends_with(file_name, ".log") &&
@@ -658,7 +658,7 @@ bool CleanOldLogFiles::Run(Deployer* deployer) {
           files_to_remove.push_back(entry.path());
         } else if (entry.is_symlink()) {
           auto target = fs::read_symlink(entry.path());
-          const string& target_file_name(target.filename().u8string());
+          const string& target_file_name(path(target.filename()).string_utf8());
           if (boost::starts_with(target_file_name, app_name) &&
               boost::ends_with(target_file_name, ".log")) {
             files_in_use.insert(target);
