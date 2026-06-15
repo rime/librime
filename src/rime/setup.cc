@@ -21,9 +21,24 @@
 
 namespace rime {
 
-#define Q(x) #x
-RIME_DLL RIME_MODULE_LIST(kDefaultModules, "default" RIME_EXTRA_MODULES);
-#undef Q
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/seq/for_each.hpp>
+#include <boost/preprocessor/stringize.hpp>
+#include <boost/preprocessor/tuple/eat.hpp>
+#include <boost/vmd/is_empty.hpp>
+
+#define _RIME_SEQ_FOR_EACH(macro, data, seq)                   \
+  BOOST_PP_IIF(BOOST_VMD_IS_EMPTY(seq), BOOST_PP_TUPLE_EAT(3), \
+               BOOST_PP_SEQ_FOR_EACH)                          \
+  (macro, data, seq)
+
+#define _RIME_MODULE_STR(r, data, elem) , BOOST_PP_STRINGIZE(elem)
+RIME_DLL RIME_MODULE_LIST(kDefaultModules,
+                          "default" _RIME_SEQ_FOR_EACH(_RIME_MODULE_STR,
+                                                       ~,
+                                                       RIME_EXTRA_MODULES));
+#undef _RIME_MODULE_STR
+#undef _RIME_SEQ_FOR_EACH
 RIME_DLL RIME_MODULE_LIST(kDeployerModules, "deployer");
 RIME_MODULE_LIST(kLegacyModules, "legacy");
 

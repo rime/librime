@@ -103,7 +103,12 @@ ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
     return kNoop;
   }
   if ((isdigit(ch) || ch == XK_space) && is_after_digit_separator(ctx)) {
-    ctx->PushInput(ch) && ctx->Commit();
+    // pushing ch directly may cause ch to be translated
+    auto& comp = ctx->composition();
+    string s = ctx->input().substr(comp[0].start, comp[0].end) + char(ch);
+    ctx->AbortComposition();
+    ctx->PushInput(s);
+    ctx->Commit();
     return kAccepted;
   }
   if (!use_space_ && ch == XK_space && ctx->IsComposing()) {
@@ -253,14 +258,18 @@ bool PunctSegmentor::Proceed(Segmentation* segmentation) {
     return true;
   {
     Segment segment(k, k + 1);
-    DLOG(INFO) << "add a punctuation segment [" << segment.start << ", "
-               << segment.end << ")";
     if (k == 0 && config_.is_digit_separator(ch) &&
         is_after_number(engine_->context())) {
+      // space to be committed directly
+      if (input.length() > k + 1 && input[k + 1] == XK_space) {
+        segment.end += 1;
+      }
       segment.tags.insert("punct_number");
     } else {
       segment.tags.insert("punct");
     }
+    DLOG(INFO) << "add a punctuation segment [" << segment.start << ", "
+               << segment.end << ")";
     segmentation->AddSegment(segment);
   }
   return false;  // exclusive
