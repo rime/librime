@@ -56,8 +56,17 @@ void ContextualTranslation::AppendToCache(vector<of<Phrase>>& queue) {
   if (queue.empty())
     return;
   DLOG(INFO) << "appending to cache " << queue.size() << " candidates.";
-  std::sort(queue.begin(), queue.end(), compare_by_weight_desc);
-  std::copy(queue.begin(), queue.end(), std::back_inserter(cache_));
+
+  auto best_it = std::max_element(queue.begin(), queue.end(),
+      [](const an<Phrase>& a, const an<Phrase>& b) {
+        return a->weight() < b->weight();
+      });
+  cache_.push_back(*best_it);
+  for (auto it = queue.begin(); it != queue.end(); ++it) {
+    if (it != best_it) {
+      cache_.push_back(*it);
+    }
+  }
   queue.clear();
 }
 
