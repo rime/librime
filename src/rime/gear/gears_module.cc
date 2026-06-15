@@ -32,6 +32,7 @@
 #include <rime/gear/speller.h>
 #include <rime/gear/switch_translator.h>
 #include <rime/gear/table_translator.h>
+#include <rime/gear/super_filter.h>
 #include <rime/gear/uniquifier.h>
 #include <rime/registry.h>
 #include <rime_api.h>
@@ -85,7 +86,8 @@ static void rime_gears_initialize() {
   r.Register("cjk_minifier", new Component<CharsetFilter>);  // alias
   r.Register("reverse_lookup_filter", new Component<ReverseLookupFilter>);
   r.Register("single_char_filter", new Component<SingleCharFilter>);
-
+  r.Register("super_filter", new Component<SuperFilter>);
+  
   // formatters
   r.Register("shape_formatter", new Component<ShapeFormatter>);
 }
