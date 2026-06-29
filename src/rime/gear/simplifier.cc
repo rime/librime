@@ -43,8 +43,9 @@ class Opencc {
       // opencc accepts file path encoded in UTF-8.
       converter_ = config.NewFromFile(config_path_.u8string());
 
-      const list<opencc::ConversionPtr> conversions =
-          converter_->GetConversionChain()->GetConversions();
+      const list<opencc::ConversionPtr> conversions = GetConversions();
+      if (conversions.empty())
+        return;
       dict_ = conversions.front()->GetDict();
     } catch (...) {
       LOG(ERROR) << "opencc config not found: " << config_path_;
@@ -56,8 +57,9 @@ class Opencc {
     if (converter_ == nullptr) {
       return false;
     }
-    const list<opencc::ConversionPtr> conversions =
-        converter_->GetConversionChain()->GetConversions();
+    const list<opencc::ConversionPtr> conversions = GetConversions();
+    if (conversions.empty())
+      return false;
     vector<string> original_words{text};
     bool matched = false;
     for (auto conversion : conversions) {
@@ -120,8 +122,9 @@ class Opencc {
     Initialize();
     if (dict_ == nullptr)
       return false;
-    const list<opencc::ConversionPtr> conversions =
-        converter_->GetConversionChain()->GetConversions();
+    const list<opencc::ConversionPtr> conversions = GetConversions();
+    if (conversions.empty())
+      return false;
     const char* phrase = text.c_str();
     for (auto conversion : conversions) {
       opencc::DictPtr dict = conversion->GetDict();
@@ -158,6 +161,16 @@ class Opencc {
   }
 
  private:
+  list<opencc::ConversionPtr> GetConversions() const {
+    if (converter_ == nullptr)
+      return {};
+    opencc::ConversionChainPtr conversion_chain =
+        converter_->GetConversionChain();
+    if (conversion_chain == nullptr)
+      return {};
+    return conversion_chain->GetConversions();
+  }
+
   bool initialized_;
   path config_path_;
   opencc::ConverterPtr converter_;
