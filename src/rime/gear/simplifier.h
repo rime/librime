@@ -17,14 +17,14 @@ class Opencc;
 
 class Simplifier : public Filter, TagMatching {
  public:
-  Simplifier(const Ticket& ticket, an<Opencc> opencc);
+  RIME_DLL Simplifier(const Ticket& ticket, an<Opencc> opencc);
 
   virtual an<Translation> Apply(an<Translation> translation,
                                 CandidateList* candidates);
 
   virtual bool AppliesToSegment(Segment* segment) { return TagsMatch(segment); }
 
-  bool Convert(const an<Candidate>& original, CandidateQueue* result);
+  RIME_DLL bool Convert(const an<Candidate>& original, CandidateQueue* result);
 
  protected:
   enum TipsLevel { kTipsNone, kTipsChar, kTipsAll };
