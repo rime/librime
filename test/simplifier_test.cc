@@ -2,6 +2,7 @@
 // Copyright RIME Developers
 // Distributed under the BSD License
 //
+#include <algorithm>
 #include <gtest/gtest.h>
 #include <rime/candidate.h>
 #include <rime/common.h>
@@ -13,41 +14,81 @@
 using namespace rime;
 
 // ── OpenccTest ──────────────────────────────────────────────────────
-// Integration tests that exercise rime::Opencc against real dict files.
-// RIME_OPENCC_DICT_DIR is injected by CMake at compile time.
+// Integration tests exercising rime::Opencc with real dict files under
+// share/opencc/. These serve as a regression safety net for future OpenCC
+// upgrades. RIME_OPENCC_DICT_DIR is injected by CMake at compile time.
 
 static const path kOpenccDir{RIME_OPENCC_DICT_DIR};
 
-TEST(OpenccTest, ConvertText_TraditionalToSimplified) {
-  Opencc oc(kOpenccDir / "t2s.json");
-  string out;
-  EXPECT_TRUE(oc.ConvertText("裡", &out));
-  EXPECT_EQ("里", out);
+// Returns true if |forms| contains |s|.
+static bool Contains(const vector<string>& forms, const string& s) {
+  return std::find(forms.begin(), forms.end(), s) != forms.end();
 }
 
-TEST(OpenccTest, ConvertText_AlreadySimplified_ReturnsFalse) {
+TEST(OpenccTest, ConvertWord_ExactMatch) {
+  // 裡 (traditional "inside") maps to exactly one simplified form: 里.
   Opencc oc(kOpenccDir / "t2s.json");
-  string out;
-  // "里" is already simplified; t2s leaves it unchanged → returns false
-  EXPECT_FALSE(oc.ConvertText("里", &out));
+  vector<string> forms;
+  EXPECT_TRUE(oc.ConvertWord("裡", &forms));
+  ASSERT_EQ(1u, forms.size());
+  EXPECT_EQ("里", forms[0]);
 }
 
-TEST(OpenccTest, ConvertWord_ReturnsVariantForms) {
+TEST(OpenccTest, ConvertWord_MultipleValues) {
+  // 里 (simplified) expands to multiple traditional forms in s2t:
+  //   裏 (traditional "inside"), 里 (unit of distance), 哩 (phonetic).
   Opencc oc(kOpenccDir / "s2t.json");
   vector<string> forms;
-  // "里" has multiple traditional variants in the s2t dictionaries
   EXPECT_TRUE(oc.ConvertWord("里", &forms));
-  EXPECT_FALSE(forms.empty());
+  EXPECT_GE(forms.size(), 2u);
+  EXPECT_TRUE(Contains(forms, "裏"));
+  EXPECT_TRUE(Contains(forms, "里"));
 }
 
-TEST(OpenccTest, ConvertWord_NoExactDictMatch_ReturnsFalse) {
+TEST(OpenccTest, ConvertWord_NoMatch) {
+  // ASCII has no dict entry; ConvertWord returns false.
   Opencc oc(kOpenccDir / "t2s.json");
   vector<string> forms;
-  // ASCII characters have no entry in the t2s dictionary
   EXPECT_FALSE(oc.ConvertWord("abc", &forms));
 }
 
-TEST(OpenccTest, InvalidConfigPath_AllMethodsReturnFalse) {
+TEST(OpenccTest, ConvertWord_ChainExpansion) {
+  // s2twp chains STCharacters → TWVariants (among others).
+  //   STCharacters: 里 → {裏, 里, 哩}
+  //   TWVariants:   裏 → 裡   (Taiwan prefers 裡 over the mainland 裏)
+  // After the chain, 裡 is present and 裏 is gone — evidence that results
+  // accumulate correctly across dicts.
+  Opencc oc(kOpenccDir / "s2twp.json");
+  vector<string> forms;
+  EXPECT_TRUE(oc.ConvertWord("里", &forms));
+  EXPECT_TRUE(Contains(forms, "裡"));
+  EXPECT_FALSE(Contains(forms, "裏"));
+}
+
+TEST(OpenccTest, ConvertWord_NoChange_ReturnsFalse) {
+  // 里 is already simplified; t2s has no entry for it (t2s only maps
+  // traditional chars that need conversion) → returns false.
+  Opencc oc(kOpenccDir / "t2s.json");
+  vector<string> forms;
+  EXPECT_FALSE(oc.ConvertWord("里", &forms));
+}
+
+TEST(OpenccTest, ConvertText_FullSentence) {
+  Opencc oc(kOpenccDir / "t2s.json");
+  string out;
+  EXPECT_TRUE(oc.ConvertText("電話號碼", &out));
+  EXPECT_EQ("电话号码", out);
+}
+
+TEST(OpenccTest, ConvertText_NoChange_ReturnsFalse) {
+  Opencc oc(kOpenccDir / "t2s.json");
+  string out;
+  EXPECT_FALSE(oc.ConvertText("电话号码", &out));
+}
+
+TEST(OpenccTest, Initialize_InvalidConfigPath) {
+  // Bad path: Initialize() catches the exception, leaves converter_ null.
+  // All three public methods must return false without crashing.
   Opencc oc(path{"/nonexistent/invalid.json"});
   string out;
   EXPECT_FALSE(oc.ConvertText("裡", &out));
