@@ -32,7 +32,8 @@ Simplifier::Simplifier(const Ticket& ticket, an<Opencc> opencc)
   if (name_space_ == "filter") {
     name_space_ = "simplifier";
   }
-  if (Config* config = engine_->schema()->config()) {
+  Schema* schema = engine_ ? engine_->schema() : nullptr;
+  if (Config* config = schema ? schema->config() : nullptr) {
     string tips;
     if (config->GetString(name_space_ + "/tips", &tips) ||
         config->GetString(name_space_ + "/tip", &tips)) {

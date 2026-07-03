@@ -18,10 +18,11 @@ namespace rime {
 class Opencc {
  public:
   Opencc(const path& config_path);
+  virtual ~Opencc() = default;
 
-  bool ConvertWord(const string& text, vector<string>* forms);
-  bool RandomConvertText(const string& text, string* simplified);
-  bool ConvertText(const string& text, string* simplified);
+  virtual bool ConvertWord(const string& text, vector<string>* forms);
+  virtual bool RandomConvertText(const string& text, string* simplified);
+  virtual bool ConvertText(const string& text, string* simplified);
 
  private:
   void Initialize();
