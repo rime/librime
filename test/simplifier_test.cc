@@ -161,24 +161,21 @@ class FakeOpencc : public Opencc {
  public:
   FakeOpencc() : Opencc(path{}) {}
 
-  bool ConvertWord(const string& /*text*/,
-                   vector<string>* forms) override {
+  bool ConvertWord(const string& /*text*/, vector<string>* forms) override {
     if (word_forms_.empty())
       return false;
     *forms = word_forms_;
     return true;
   }
 
-  bool RandomConvertText(const string& /*text*/,
-                         string* simplified) override {
+  bool RandomConvertText(const string& /*text*/, string* simplified) override {
     if (random_result_.empty())
       return false;
     *simplified = random_result_;
     return true;
   }
 
-  bool ConvertText(const string& /*text*/,
-                   string* simplified) override {
+  bool ConvertText(const string& /*text*/, string* simplified) override {
     if (text_result_.empty())
       return false;
     *simplified = text_result_;
@@ -218,7 +215,8 @@ TEST_F(SimplifierConvertTest, ConvertWord_PushesConvertedForm) {
   EXPECT_EQ("里", result.front()->text());
 }
 
-TEST_F(SimplifierConvertTest, ConvertWord_UnchangedFormPushesOriginalCandidate) {
+TEST_F(SimplifierConvertTest,
+       ConvertWord_UnchangedFormPushesOriginalCandidate) {
   // First form matches original → original candidate pushed directly.
   // Second form differs → ShadowCandidate pushed.
   fake_->word_forms_ = {"裡", "里"};
@@ -235,7 +233,8 @@ TEST_F(SimplifierConvertTest, ConvertWord_UnchangedFormPushesOriginalCandidate) 
 }
 
 TEST_F(SimplifierConvertTest, ConvertWord_Fails_FallsBackToConvertText) {
-  // word_forms_ is empty → ConvertWord returns false → falls back to ConvertText.
+  // word_forms_ is empty → ConvertWord returns false → falls back to
+  // ConvertText.
   fake_->text_result_ = "里";
   auto c = New<SimpleCandidate>("word", 0, 1, "裡");
   CandidateQueue result;
