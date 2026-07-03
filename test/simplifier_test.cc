@@ -86,6 +86,64 @@ TEST(OpenccTest, ConvertText_NoChange_ReturnsFalse) {
   EXPECT_FALSE(oc.ConvertText("电话号码", &out));
 }
 
+// ── 内存 / 記憶體: phrase-level vs char-level across four configs ─────
+// These tests document the difference between configs with phrase
+// dictionaries (s2twp, tw2sp) and those without (s2tw, t2s).
+
+TEST(OpenccTest, ConvertWord_PhraseEntry_s2twp) {
+  // s2twp has a whole-phrase entry: 内存 → 記憶體
+  Opencc oc(kOpenccDir / "s2twp.json");
+  vector<string> forms;
+  EXPECT_TRUE(oc.ConvertWord("内存", &forms));
+  ASSERT_EQ(1u, forms.size());
+  EXPECT_EQ("記憶體", forms[0]);
+}
+
+TEST(OpenccTest, ConvertWord_NoPhraseEntry_s2tw) {
+  // s2tw has no phrase entry for 内存; only converts individual characters
+  Opencc oc(kOpenccDir / "s2tw.json");
+  vector<string> forms;
+  EXPECT_FALSE(oc.ConvertWord("内存", &forms));
+}
+
+TEST(OpenccTest, ConvertText_CharLevel_s2tw) {
+  // s2tw converts 内→內 char-by-char; 存 has no traditional variant
+  Opencc oc(kOpenccDir / "s2tw.json");
+  string out;
+  EXPECT_TRUE(oc.ConvertText("内存", &out));
+  EXPECT_EQ("內存", out);
+}
+
+TEST(OpenccTest, ConvertWord_PhraseEntry_tw2sp) {
+  // tw2sp has the reverse phrase entry: 記憶體 → 内存
+  Opencc oc(kOpenccDir / "tw2sp.json");
+  vector<string> forms;
+  EXPECT_TRUE(oc.ConvertWord("記憶體", &forms));
+  ASSERT_EQ(1u, forms.size());
+  EXPECT_EQ("内存", forms[0]);
+}
+
+TEST(OpenccTest, ConvertText_CharLevel_t2s) {
+  // t2s has no phrase entry for 記憶體; converts each char individually
+  Opencc oc(kOpenccDir / "t2s.json");
+  string out;
+  EXPECT_TRUE(oc.ConvertText("記憶體", &out));
+  EXPECT_EQ("记忆体", out);
+}
+
+TEST(OpenccTest, ConvertText_s2twp_NoMechanicalReplacement) {
+  // "内存" alone is correctly substituted → "記憶體" (RAM).
+  // Embedded in the classical line "海内存知己" (Wang Bo, 王勃), the same
+  // two characters mean "within the seas" — a different word entirely.
+  // OpenCC's segmentation must not mechanically replace it with "記憶體".
+  Opencc oc(kOpenccDir / "s2twp.json");
+  string out;
+  oc.ConvertText("内存", &out);
+  EXPECT_EQ("記憶體", out);
+  oc.ConvertText("海内存知己", &out);
+  EXPECT_EQ("海內存知己", out);
+}
+
 TEST(OpenccTest, Initialize_InvalidConfigPath) {
   // Bad path: Initialize() catches the exception, leaves converter_ null.
   // All three public methods must return false without crashing.
