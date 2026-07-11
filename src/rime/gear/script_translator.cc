@@ -85,7 +85,7 @@ class ScriptSyllabifier : public PhraseSyllabifier {
         input_(input),
         start_(start),
         syllabifier_(translator->delimiters(),
-                     translator->enable_completion(),
+                     translator->is_completion_enabled(input.length()),
                      translator->strict_spelling()) {
     if (corrector) {
       syllabifier_.EnableCorrection(corrector);
@@ -453,8 +453,10 @@ static bool has_exact_match_phrase(Ptr ptr, Iter iter, size_t consumed) {
 bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   size_t consumed = syllabifier_->BuildSyllableGraph(*dict->prism());
   const auto& syllable_graph = syllabifier_->syllable_graph();
-  bool predict_word = translator_->enable_word_completion() &&
-                      start_ + consumed == end_of_input_;
+  bool predict_word =
+      translator_->enable_word_completion() &&
+      start_ + consumed == end_of_input_ &&
+      consumed >= static_cast<size_t>(translator_->completion_min_length());
 
   phrase_ =
       dict->Lookup(syllable_graph, 0, &translator_->blacklist(), predict_word);

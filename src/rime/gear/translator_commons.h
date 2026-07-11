@@ -161,6 +161,15 @@ class TranslatorOptions {
   }
   bool enable_completion() const { return enable_completion_; }
   void set_enable_completion(bool enabled) { enable_completion_ = enabled; }
+  int completion_min_length() const { return completion_min_length_; }
+  void set_completion_min_length(int length) {
+    completion_min_length_ = length;
+  }
+  // completion is enabled only when the input code is long enough
+  bool is_completion_enabled(size_t input_length) const {
+    return enable_completion_ &&
+           input_length >= static_cast<size_t>(completion_min_length_);
+  }
   bool strict_spelling() const { return strict_spelling_; }
   void set_strict_spelling(bool is_strict) { strict_spelling_ = is_strict; }
   double initial_quality() const { return initial_quality_; }
@@ -174,6 +183,7 @@ class TranslatorOptions {
   vector<string> tags_{"abc"};  // invariant: non-empty
   bool contextual_suggestions_ = false;
   bool enable_completion_ = true;
+  int completion_min_length_ = 0;
   bool strict_spelling_ = false;
   double initial_quality_ = 0.;
   int max_sentences_ = 1;

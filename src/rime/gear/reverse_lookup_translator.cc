@@ -171,7 +171,7 @@ an<Translation> ReverseLookupTranslator::Query(const string& input,
   DictEntryIterator iter;
   bool quality = false;
   if (start < input.length()) {
-    if (options_ && options_->enable_completion()) {
+    if (options_ && options_->is_completion_enabled(code.length())) {
       dict_->LookupWords(&iter, code, true, 100, nullptr);
       quality = !iter.exhausted() && (iter.Peek()->remaining_code_length == 0);
     } else {

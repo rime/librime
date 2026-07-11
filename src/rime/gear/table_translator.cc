@@ -258,7 +258,7 @@ an<Translation> TableTranslator::Query(const string& input,
   boost::trim_right_if(code, boost::is_any_of(delimiters_));
 
   an<Translation> translation;
-  if (enable_completion_) {
+  if (is_completion_enabled(code.length())) {
     translation = Cached<LazyTableTranslation>(this, code, segment.start,
                                                segment.start + input.length(),
                                                preedit, enable_user_dict);

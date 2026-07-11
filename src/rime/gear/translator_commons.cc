@@ -122,6 +122,9 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket) {
                     &contextual_suggestions_);
     config->GetBool(ticket.name_space + "/enable_completion",
                     &enable_completion_);
+    config->GetInt(ticket.name_space + "/completion_min_length",
+                   &completion_min_length_);
+    completion_min_length_ = std::max(0, completion_min_length_);
     config->GetBool(ticket.name_space + "/strict_spelling", &strict_spelling_);
     config->GetDouble(ticket.name_space + "/initial_quality",
                       &initial_quality_);
