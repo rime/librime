@@ -184,6 +184,15 @@ class TranslatorOptions {
   hash_set<string> blacklist_;
 };
 
+// Shared utilities for tab disambiguation
+
+// Strip pinyin tone marks for case/tone-insensitive comparison
+string StripTones(const string& s);
+
+// Parse speller/algebra xlit and derive rules to build
+// a reverse mapping: digit → set of letters
+map<char, set<char>> ParseAlgebraReverseMapping(Config* config);
+
 }  // namespace rime
 
 #endif  // RIME_TRANSLATOR_COMMONS_H_

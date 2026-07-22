@@ -8,9 +8,13 @@
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
+#include <rime/dict/dictionary.h>
 #include <rime/engine.h>
 #include <rime/filter.h>
 #include <rime/formatter.h>
+#include <rime/gear/reverse_lookup_translator.h>
+#include <rime/gear/script_translator.h>
+#include <rime/gear/table_translator.h>
 #include <rime/key_event.h>
 #include <rime/menu.h>
 #include <rime/processor.h>
@@ -33,6 +37,9 @@ class ConcreteEngine : public Engine {
   virtual void ApplySchema(Schema* schema);
   virtual void CommitText(string text);
   virtual void Compose(Context* ctx);
+  virtual const vector<of<Translator>>& translators() const {
+    return translators_;
+  }
 
  protected:
   void InitializeComponents();
@@ -210,6 +217,7 @@ void ConcreteEngine::TranslateSegments(Segmentation* segments) {
     size_t len = segment.end - segment.start;
     string input = segments->input().substr(segment.start, len);
     DLOG(INFO) << "translating segment: [" << input << "]";
+
     auto menu = New<Menu>();
     for (auto& translator : translators_) {
       auto translation = translator->Query(input, segment);

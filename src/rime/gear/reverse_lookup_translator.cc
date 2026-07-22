@@ -6,6 +6,7 @@
 //
 #include <boost/algorithm/string.hpp>
 #include <rime/candidate.h>
+#include <rime/context.h>
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/segmentation.h>
@@ -141,23 +142,25 @@ void ReverseLookupTranslator::Initialize() {
 }
 
 an<Translation> ReverseLookupTranslator::Query(const string& input,
-                                               const Segment& segment) {
+                                                const Segment& segment) {
   if (!segment.HasTag(tag_))
     return nullptr;
   if (!initialized_)
     Initialize();  // load reverse dict at first use
   if (!dict_ || !dict_->loaded())
     return nullptr;
-  DLOG(INFO) << "input = '" << input << "', [" << segment.start << ", "
+  const string shadow_input =
+      engine_->context()->shadow_input().substr(segment.start, input.length());
+  DLOG(INFO) << "input = '" << shadow_input << "', [" << segment.start << ", "
              << segment.end << ")";
 
   const string& preedit(input);
 
   size_t start = 0;
-  if (!prefix_.empty() && boost::starts_with(input, prefix_)) {
+  if (!prefix_.empty() && boost::starts_with(shadow_input, prefix_)) {
     start = prefix_.length();
   }
-  string code = input.substr(start);
+  string code = shadow_input.substr(start);
   if (!suffix_.empty() && boost::ends_with(code, suffix_)) {
     code.resize(code.length() - suffix_.length());
   }
@@ -170,7 +173,7 @@ an<Translation> ReverseLookupTranslator::Query(const string& input,
 
   DictEntryIterator iter;
   bool quality = false;
-  if (start < input.length()) {
+  if (start < shadow_input.length()) {
     if (options_ && options_->enable_completion()) {
       dict_->LookupWords(&iter, code, true, 100, nullptr);
       quality = !iter.exhausted() && (iter.Peek()->remaining_code_length == 0);
@@ -197,6 +200,62 @@ an<Translation> ReverseLookupTranslator::Query(const string& input,
                                             preedit, std::move(iter), quality);
   }
   return nullptr;
+}
+
+void ReverseLookupTranslator::CollectReverseLookupTabs(
+    size_t start_pos, vector<InputTabEntry>* tabs) const {
+  if (!initialized_)
+    const_cast<ReverseLookupTranslator*>(this)->Initialize();
+  if (!dict_ || !dict_->loaded() || !engine_ || !engine_->context())
+    return;
+
+  const string& input = engine_->context()->input();
+  if (start_pos >= input.length())
+    return;
+
+  // Strip prefix if present
+  string code = input.substr(start_pos);
+  if (!prefix_.empty()) {
+    if (!boost::starts_with(code, prefix_))
+      return;
+    code = code.substr(prefix_.length());
+  }
+  if (!suffix_.empty() && boost::ends_with(code, suffix_)) {
+    code.resize(code.length() - suffix_.length());
+  }
+  if (code.empty())
+    return;
+
+  // Build SyllableGraph from the pinyin portion
+  SyllableGraph graph;
+  Syllabifier syllabifier("", true,
+                          options_ ? options_->strict_spelling() : false);
+  size_t consumed =
+      syllabifier.BuildSyllableGraph(code, *dict_->prism(), &graph);
+  if (consumed == 0)
+    return;
+
+  // Collect edges from position 0
+  auto it = graph.edges.find(0);
+  if (it == graph.edges.end())
+    return;
+
+  set<string> seen;
+  size_t prefix_len = prefix_.length();
+  for (const auto& [end_pos, syllable_map] : it->second) {
+    for (const auto& [syllable_id, props] : syllable_map) {
+      Code single_code;
+      single_code.push_back(syllable_id);
+      vector<string> decoded;
+      if (dict_->Decode(single_code, &decoded) && !decoded.empty()) {
+        const string& label = decoded[0];
+        if (!label.empty() && seen.insert(label).second) {
+          // span includes the prefix length
+          tabs->emplace_back(InputTabEntry{label, prefix_len + end_pos, InputTabEntry::kReverseLookup});
+        }
+      }
+    }
+  }
 }
 
 }  // namespace rime

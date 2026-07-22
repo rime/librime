@@ -16,6 +16,7 @@ namespace rime {
 class KeyEvent;
 class Schema;
 class Context;
+class Translator;
 
 class Engine : public Messenger {
  public:
@@ -26,6 +27,12 @@ class Engine : public Messenger {
   virtual void ApplySchema(Schema* schema) {}
   virtual void CommitText(string text) { sink_(text); }
   virtual void Compose(Context* ctx) {}
+
+  //! Access the translator collection (implemented by ConcreteEngine)
+  virtual const vector<of<Translator>>& translators() const {
+    static const vector<of<Translator>> empty;
+    return empty;
+  }
 
   Schema* schema() const { return schema_.get(); }
   Context* context() const { return context_.get(); }

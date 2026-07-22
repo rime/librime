@@ -17,6 +17,14 @@
 #include <rime/setup.h>
 #include <rime/signature.h>
 #include <rime/switches.h>
+#include <rime/engine.h>
+#include <rime/candidate.h>
+#include <rime/dict/dictionary.h>
+#include <rime/dict/reverse_lookup_dictionary.h>
+#include <rime/gear/script_translator.h>
+#include <rime/gear/table_translator.h>
+#include <rime/gear/reverse_lookup_translator.h>
+#include <rime/gear/translator_commons.h>
 
 using namespace rime;
 
@@ -1129,6 +1137,240 @@ void RimeGetStagingDirSecure(char* dir, size_t buffer_size);
 void RimeGetSyncDirSecure(char* dir, size_t buffer_size);
 const char* RimeGetVersion();
 
+// --- Input tab disambiguation API ---
+
+static Bool RimeGetInputTabs(RimeSessionId session_id,
+                             size_t position,
+                             char*** labels,
+                             size_t** spans,
+                             int** sources,
+                             size_t* count) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  Engine* engine = session->engine();
+  if (!engine)
+    return False;
+  Context* ctx = engine->context();
+  if (!ctx || ctx->composition().empty())
+    return False;
+
+  // Use provided position; 0 means "current cursor"
+  size_t start_pos = (position == 0) ? ctx->CurrentTabCursor() : position;
+  if (start_pos >= ctx->input().length()) {
+    if (position == 0) {
+      // Auto-computed position past input: all syllables selected, no tabs
+      *count = 0;
+      return False;
+    }
+    start_pos = ctx->composition().GetCurrentStartPosition();
+  }
+  auto collect_tabs = [&](size_t pos, vector<InputTabEntry>* out) {
+    for (auto& t : engine->translators()) {
+      if (auto* st = dynamic_cast<ScriptTranslator*>(t.get())) {
+        st->CollectSyllableTabs(pos, out);
+      }
+      if (auto* tt = dynamic_cast<TableTranslator*>(t.get())) {
+        tt->CollectTableTabs(pos, out);
+      }
+      if (auto* rlt = dynamic_cast<ReverseLookupTranslator*>(t.get())) {
+        rlt->CollectReverseLookupTabs(pos, out);
+      }
+    }
+  };
+
+  vector<InputTabEntry> tabs;
+  collect_tabs(start_pos, &tabs);
+  if (position == 0 && tabs.empty()) {
+    for (size_t try_pos = start_pos + 1; try_pos < ctx->input().length(); ++try_pos) {
+      collect_tabs(try_pos, &tabs);
+      if (!tabs.empty()) {
+        start_pos = try_pos;
+        break;
+      }
+    }
+  }
+
+  // Deduplicate by label (keep first occurrence)
+  vector<InputTabEntry> unique_tabs;
+  set<string> seen;
+  for (auto& tab : tabs) {
+    if (seen.insert(tab.label).second) {
+      unique_tabs.push_back(tab);
+    }
+  }
+
+  if (unique_tabs.empty())
+    return False;
+
+  *count = unique_tabs.size();
+  *labels = new char*[*count];
+  *spans = new size_t[*count];
+  *sources = new int[*count];
+  for (size_t i = 0; i < *count; ++i) {
+    const auto& [label, span, source] = unique_tabs[i];
+    (*labels)[i] = new char[label.length() + 1];
+    std::strcpy((*labels)[i], label.c_str());
+    (*spans)[i] = span;
+    (*sources)[i] = source;
+  }
+  return True;
+}
+
+static void RimeFreeInputTabs(char** labels, size_t* spans, int* sources,
+                              size_t count) {
+  if (labels) {
+    for (size_t i = 0; i < count; ++i)
+      delete[] labels[i];
+    delete[] labels;
+  }
+  delete[] spans;
+  delete[] sources;
+}
+
+static Bool RimeGetCandidateCode(RimeSessionId session_id,
+                                 size_t index,
+                                 char*** segments,
+                                 size_t* num_segments,
+                                 size_t* matching_segments) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  Engine* engine = session->engine();
+  if (!engine)
+    return False;
+  Context* ctx = engine->context();
+  if (!ctx || ctx->composition().empty())
+    return False;
+
+  auto& seg = ctx->composition().back();
+  if (!seg.menu)
+    return False;
+
+  auto cand = seg.menu->GetCandidateAt(index);
+  if (!cand)
+    return False;
+
+  auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
+  if (!phrase)
+    return False;
+
+  // Try to decode the code using the dictionary from any available translator
+  Dictionary* dict = nullptr;
+  for (auto& t : engine->translators()) {
+    if (auto* st = dynamic_cast<ScriptTranslator*>(t.get())) {
+      dict = st->dict();
+      if (dict && dict->loaded())
+        break;
+    }
+    if (auto* tt = dynamic_cast<TableTranslator*>(t.get())) {
+      dict = tt->dict();
+      if (dict && dict->loaded())
+        break;
+    }
+  }
+
+  if (!dict)
+    return False;
+
+  vector<string> decoded;
+  if (!dict->Decode(phrase->code(), &decoded) || decoded.empty())
+    return False;
+
+  *num_segments = decoded.size();
+  *matching_segments = phrase->matching_code_size();
+  if (*matching_segments == 0)
+    *matching_segments = decoded.size();
+
+  *segments = new char*[*num_segments];
+  for (size_t i = 0; i < *num_segments; ++i) {
+    (*segments)[i] = new char[decoded[i].length() + 1];
+    std::strcpy((*segments)[i], decoded[i].c_str());
+  }
+  return True;
+}
+
+static void RimeFreeCandidateCode(char** segments, size_t num_segments) {
+  if (segments) {
+    for (size_t i = 0; i < num_segments; ++i)
+      delete[] segments[i];
+    delete[] segments;
+  }
+}
+
+static Bool RimeGetReverseLookupPrefixes(RimeSessionId session_id,
+                                         char*** prefixes,
+                                         size_t* count) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  Engine* engine = session->engine();
+  if (!engine)
+    return False;
+
+  vector<string> result;
+  for (auto& t : engine->translators()) {
+    if (auto* rlt = dynamic_cast<ReverseLookupTranslator*>(t.get())) {
+      const string& pfx = rlt->reverse_lookup_prefix();
+      if (!pfx.empty()) {
+        result.push_back(pfx);
+      }
+    }
+  }
+
+  if (result.empty())
+    return False;
+
+  *count = result.size();
+  *prefixes = new char*[*count];
+  for (size_t i = 0; i < *count; ++i) {
+    (*prefixes)[i] = new char[result[i].length() + 1];
+    std::strcpy((*prefixes)[i], result[i].c_str());
+  }
+  return True;
+}
+
+static void RimeFreeReverseLookupPrefixes(char** prefixes, size_t count) {
+  if (prefixes) {
+    for (size_t i = 0; i < count; ++i)
+      delete[] prefixes[i];
+    delete[] prefixes;
+  }
+}
+
+static Bool RimeSelectTab(RimeSessionId session_id,
+                          size_t position,
+                          const char* label,
+                          size_t span) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session || !label)
+    return False;
+  Context* ctx = session->context();
+  if (!ctx)
+    return False;
+
+  // position=0 means auto-compute from current tree cursor
+  if (position == 0) {
+    position = ctx->CurrentTabCursor();
+  }
+
+  ctx->PushTabCursor(position + span);
+  ctx->AddTabConstraint(position, string(label), span);
+  return True;
+}
+
+static Bool RimeClearTabs(RimeSessionId session_id) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  Context* ctx = session->context();
+  if (!ctx)
+    return False;
+  ctx->ClearTabCursors();
+  ctx->ClearTabConstraints();
+  return True;
+}
+
 RIME_API RIME_FLAVORED(RimeApi) * RIME_FLAVORED(rime_get_api)() {
   static RIME_FLAVORED(RimeApi) s_api = {0};
   if (!s_api.data_size) {
@@ -1232,6 +1474,15 @@ RIME_API RIME_FLAVORED(RimeApi) * RIME_FLAVORED(rime_get_api)() {
     s_api.highlight_candidate_on_current_page =
         &RimeHighlightCandidateOnCurrentPage;
     s_api.change_page = &RimeChangePage;
+    // Input tab disambiguation API
+    s_api.get_input_tabs = &RimeGetInputTabs;
+    s_api.free_input_tabs = &RimeFreeInputTabs;
+    s_api.get_candidate_code = &RimeGetCandidateCode;
+    s_api.free_candidate_code = &RimeFreeCandidateCode;
+    s_api.get_reverse_lookup_prefixes = &RimeGetReverseLookupPrefixes;
+    s_api.free_reverse_lookup_prefixes = &RimeFreeReverseLookupPrefixes;
+    s_api.select_tab = &RimeSelectTab;
+    s_api.clear_tabs = &RimeClearTabs;
   }
   return &s_api;
 }

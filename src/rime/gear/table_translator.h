@@ -37,6 +37,10 @@ class TableTranslator : public Translator,
   string GetPrecedingText(size_t start) const;
   UnityTableEncoder* encoder() const { return encoder_.get(); }
 
+  //! Collect valid single-code-prefix tab entries from the table's syllabary
+  RIME_DLL void CollectTableTabs(size_t start_pos,
+                                vector<InputTabEntry>* tabs) const;
+
  protected:
   bool enable_charset_filter_ = false;
   bool enable_encoder_ = false;

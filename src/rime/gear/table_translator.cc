@@ -16,7 +16,9 @@
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/translation.h>
+#include <rime/algo/syllabifier.h>
 #include <rime/dict/dictionary.h>
+#include <rime/dict/table.h>
 #include <rime/dict/user_dictionary.h>
 #include <rime/gear/charset_filter.h>
 #include <rime/gear/poet.h>
@@ -245,7 +247,9 @@ an<Translation> TableTranslator::Query(const string& input,
                                        const Segment& segment) {
   if (!segment.HasAnyTagIn(tags_))
     return nullptr;
-  DLOG(INFO) << "input = '" << input << "', [" << segment.start << ", "
+  const string shadow_input =
+      engine_->context()->shadow_input().substr(segment.start, input.length());
+  DLOG(INFO) << "input = '" << shadow_input << "', [" << segment.start << ", "
              << segment.end << ")";
 
   FinishSession();
@@ -253,15 +257,15 @@ an<Translation> TableTranslator::Query(const string& input,
   bool enable_user_dict =
       user_dict_ && user_dict_->loaded() && !IsUserDictDisabledFor(input);
 
-  const string& preedit(input);
-  string code = input;
+  const string& preedit(shadow_input);
+  string code = shadow_input;
   boost::trim_right_if(code, boost::is_any_of(delimiters_));
 
   an<Translation> translation;
   if (enable_completion_) {
-    translation = Cached<LazyTableTranslation>(this, code, segment.start,
-                                               segment.start + input.length(),
-                                               preedit, enable_user_dict);
+    translation = Cached<LazyTableTranslation>(
+        this, code, segment.start, segment.start + shadow_input.length(),
+        preedit, enable_user_dict);
   } else {
     DictEntryIterator iter;
     if (dict_ && dict_->loaded()) {
@@ -276,8 +280,9 @@ an<Translation> TableTranslator::Query(const string& input,
     }
     if (!iter.exhausted() || !uter.exhausted())
       translation = Cached<TableTranslation>(
-          this, language(), code, segment.start, segment.start + input.length(),
-          preedit, std::move(iter), std::move(uter));
+          this, language(), code, segment.start,
+          segment.start + shadow_input.length(), preedit, std::move(iter),
+          std::move(uter));
   }
   if (translation) {
     bool filter_by_charset =
@@ -291,10 +296,10 @@ an<Translation> TableTranslator::Query(const string& input,
     translation.reset();  // discard futile translation
   }
   if (enable_sentence_ && !translation) {
-    translation = MakeSentence(input, segment.start,
+    translation = MakeSentence(shadow_input, segment.start,
                                /* include_prefix_phrases = */ true);
   } else if (sentence_over_completion_ && starts_with_completion(translation)) {
-    if (auto sentence = MakeSentence(input, segment.start)) {
+    if (auto sentence = MakeSentence(shadow_input, segment.start)) {
       translation = sentence + translation;
     }
   }
@@ -682,6 +687,80 @@ an<Translation> TableTranslator::MakeSentence(const string& input,
     return result;
   }
   return nullptr;
+}
+
+void TableTranslator::CollectTableTabs(
+    size_t start_pos, vector<InputTabEntry>* tabs) const {
+  if (!dict_ || !dict_->loaded() || !engine_ || !engine_->context())
+    return;
+
+  const string& input = engine_->context()->input();
+  if (start_pos >= input.length())
+    return;
+  string code = input.substr(start_pos);
+  if (code.empty())
+    return;
+
+  // Rebuild SyllableGraph from current input
+  SyllableGraph graph;
+  Syllabifier syllabifier("", false, false);  // table codes: no delimiters
+  syllabifier.BuildSyllableGraph(code, *dict_->prism(), &graph);
+  if (graph.edges.empty())
+    return;
+
+  // Collect all edges from position 0
+  auto it = graph.edges.find(0);
+  if (it == graph.edges.end())
+    return;
+
+  // Parse algebra rules to build reverse mapping
+  map<char, set<char>> key_reverse;
+  if (engine_ && engine_->schema() && engine_->schema()->config()) {
+    key_reverse =
+        ParseAlgebraReverseMapping(engine_->schema()->config());
+  }
+
+  set<string> seen;
+  bool has_single_span = false;
+  for (const auto& [end_pos, syllable_map] : it->second) {
+    if (end_pos == 1) {
+      has_single_span = true;
+      if (!key_reverse.empty() && key_reverse.count(code[0]))
+        continue;  // Skip span=1 noise when key mapping applies
+    }
+    for (const auto& [syllable_id, props] : syllable_map) {
+      // Decode syllable ID to code string
+      Code single_code;
+      single_code.push_back(syllable_id);
+      vector<string> decoded;
+      if (dict_->Decode(single_code, &decoded) && !decoded.empty()) {
+        string label = decoded[0];
+        // Strip tones (same logic as script translator)
+        label = StripTones(label);
+        if (!label.empty() && seen.insert(label).second) {
+          tabs->emplace_back(InputTabEntry{label, end_pos, InputTabEntry::kTableCode});
+        }
+      }
+    }
+  }
+
+  // Generate partial-match tabs from reverse key mapping
+  if ((!has_single_span || (key_reverse.count(code[0]) > 0)) && !code.empty()) {
+    auto rev_it = key_reverse.find(code[0]);
+    if (rev_it != key_reverse.end()) {
+      for (char c : rev_it->second) {
+        string label(1, c);
+        if (seen.insert(label).second) {
+          tabs->emplace_back(InputTabEntry{label, 1, InputTabEntry::kTableCode});
+        }
+      }
+      // Raw input character as a tab
+      string raw(1, code[0]);
+      if (seen.insert(raw).second) {
+        tabs->emplace_back(InputTabEntry{raw, 1, InputTabEntry::kRawInput});
+      }
+    }
+  }
 }
 
 }  // namespace rime

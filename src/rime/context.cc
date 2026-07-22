@@ -70,6 +70,8 @@ bool Context::PushInput(char ch) {
     input_.insert(caret_pos_, 1, ch);
     ++caret_pos_;
   }
+  tab_cursors_.clear();
+  tab_constraints_.clear();
   update_notifier_(this);
   return true;
 }
@@ -82,11 +84,26 @@ bool Context::PushInput(const string& str) {
     input_.insert(caret_pos_, str);
     caret_pos_ += str.length();
   }
+  tab_cursors_.clear();
+  tab_constraints_.clear();
   update_notifier_(this);
   return true;
 }
 
 bool Context::PopInput(size_t len) {
+  size_t undone = 0;
+  while (undone < len && (!tab_cursors_.empty() || !tab_constraints_.empty())) {
+    if (!tab_cursors_.empty()) {
+      PopTabCursor();
+    }
+    if (!tab_constraints_.empty()) {
+      UndoLastTabConstraint();
+    }
+    ++undone;
+  }
+  if (undone > 0)
+    return true;
+  // Normal pop
   if (caret_pos_ < len)
     return false;
   caret_pos_ -= len;
@@ -107,6 +124,8 @@ void Context::Clear() {
   input_.clear();
   caret_pos_ = 0;
   composition_.clear();
+  tab_cursors_.clear();
+  tab_constraints_.clear();
   update_notifier_(this);
 }
 
@@ -280,7 +299,24 @@ void Context::set_composition(Composition&& comp) {
 void Context::set_input(const string& value) {
   input_ = value;
   caret_pos_ = input_.length();
+  tab_cursors_.clear();
+  tab_constraints_.clear();
   update_notifier_(this);
+}
+
+string Context::shadow_input() const {
+  string shadow;
+  size_t raw_pos = 0;
+  for (const auto& constraint : tab_constraints_) {
+    if (constraint.position < raw_pos || constraint.position > input_.length())
+      continue;
+    shadow.append(input_, raw_pos, constraint.position - raw_pos);
+    shadow += constraint.label;
+    raw_pos = (std::min)(constraint.position + constraint.span,
+                         input_.length());
+  }
+  shadow.append(input_, raw_pos, string::npos);
+  return shadow;
 }
 
 void Context::set_option(const string& name, bool value) {
@@ -322,6 +358,55 @@ void Context::ClearTransientOptions() {
          prop->first[0] == '_') {
     properties_.erase(prop++);
   }
+}
+
+void Context::AddTabConstraint(size_t position, const string& label,
+                               size_t span) {
+  tab_constraints_.push_back({position, label, span});
+  RefreshNonConfirmedComposition();
+}
+
+void Context::ClearTabConstraints() {
+  if (!tab_constraints_.empty()) {
+    tab_constraints_.clear();
+    RefreshNonConfirmedComposition();
+  }
+}
+
+size_t Context::NextTabPosition() const {
+  if (!tab_cursors_.empty())
+    return tab_cursors_.back();
+  size_t pos = 0;
+  for (const auto& c : tab_constraints_) {
+    size_t next = c.position + c.span;
+    if (next > pos)
+      pos = next;
+  }
+  return pos;
+}
+
+void Context::PushTabCursor(size_t position) {
+  tab_cursors_.push_back(position);
+}
+
+void Context::PopTabCursor() {
+  if (!tab_cursors_.empty())
+    tab_cursors_.pop_back();
+}
+
+void Context::ClearTabCursors() {
+  tab_cursors_.clear();
+}
+
+size_t Context::CurrentTabCursor() const {
+  return tab_cursors_.empty() ? 0 : tab_cursors_.back();
+}
+
+void Context::UndoLastTabConstraint() {
+  if (tab_constraints_.empty())
+    return;
+  tab_constraints_.pop_back();
+  RefreshNonConfirmedComposition();
 }
 
 }  // namespace rime

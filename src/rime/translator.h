@@ -19,6 +19,14 @@ class Engine;
 class Translation;
 struct Segment;
 
+//! Tab entry for input disambiguation
+struct InputTabEntry {
+  enum Source { kSyllable, kTableCode, kReverseLookup, kRawInput };
+  std::string label;
+  size_t span;
+  int source;  // one of Source enum values
+};
+
 class Translator : public Class<Translator, const Ticket&> {
  public:
   explicit Translator(const Ticket& ticket)
