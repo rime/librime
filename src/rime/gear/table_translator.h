@@ -41,6 +41,14 @@ class TableTranslator : public Translator,
   RIME_DLL void CollectTableTabs(size_t start_pos,
                                 vector<InputTabEntry>* tabs) const;
 
+  // override Translator virtual methods
+  void CollectInputTabs(size_t position,
+                        vector<InputTabEntry>* tabs) const override {
+    CollectTableTabs(position, tabs);
+  }
+  Dictionary* primary_dictionary() const override { return dict(); }
+  string reverse_lookup_prefix() const override { return ""; }
+
  protected:
   bool enable_charset_filter_ = false;
   bool enable_encoder_ = false;

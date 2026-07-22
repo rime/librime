@@ -20,10 +20,6 @@
 #include <rime/engine.h>
 #include <rime/candidate.h>
 #include <rime/dict/dictionary.h>
-#include <rime/dict/reverse_lookup_dictionary.h>
-#include <rime/gear/script_translator.h>
-#include <rime/gear/table_translator.h>
-#include <rime/gear/reverse_lookup_translator.h>
 #include <rime/gear/translator_commons.h>
 
 using namespace rime;
@@ -1165,25 +1161,11 @@ static Bool RimeGetInputTabs(RimeSessionId session_id,
     }
     start_pos = ctx->composition().GetCurrentStartPosition();
   }
-  auto collect_tabs = [&](size_t pos, vector<InputTabEntry>* out) {
-    for (auto& t : engine->translators()) {
-      if (auto* st = dynamic_cast<ScriptTranslator*>(t.get())) {
-        st->CollectSyllableTabs(pos, out);
-      }
-      if (auto* tt = dynamic_cast<TableTranslator*>(t.get())) {
-        tt->CollectTableTabs(pos, out);
-      }
-      if (auto* rlt = dynamic_cast<ReverseLookupTranslator*>(t.get())) {
-        rlt->CollectReverseLookupTabs(pos, out);
-      }
-    }
-  };
-
   vector<InputTabEntry> tabs;
-  collect_tabs(start_pos, &tabs);
+  engine->CollectInputTabs(start_pos, &tabs);
   if (position == 0 && tabs.empty()) {
     for (size_t try_pos = start_pos + 1; try_pos < ctx->input().length(); ++try_pos) {
-      collect_tabs(try_pos, &tabs);
+      engine->CollectInputTabs(try_pos, &tabs);
       if (!tabs.empty()) {
         start_pos = try_pos;
         break;
@@ -1256,19 +1238,7 @@ static Bool RimeGetCandidateCode(RimeSessionId session_id,
     return False;
 
   // Try to decode the code using the dictionary from any available translator
-  Dictionary* dict = nullptr;
-  for (auto& t : engine->translators()) {
-    if (auto* st = dynamic_cast<ScriptTranslator*>(t.get())) {
-      dict = st->dict();
-      if (dict && dict->loaded())
-        break;
-    }
-    if (auto* tt = dynamic_cast<TableTranslator*>(t.get())) {
-      dict = tt->dict();
-      if (dict && dict->loaded())
-        break;
-    }
-  }
+  Dictionary* dict = engine->primary_dictionary();
 
   if (!dict)
     return False;
@@ -1309,14 +1279,7 @@ static Bool RimeGetReverseLookupPrefixes(RimeSessionId session_id,
     return False;
 
   vector<string> result;
-  for (auto& t : engine->translators()) {
-    if (auto* rlt = dynamic_cast<ReverseLookupTranslator*>(t.get())) {
-      const string& pfx = rlt->reverse_lookup_prefix();
-      if (!pfx.empty()) {
-        result.push_back(pfx);
-      }
-    }
-  }
+  engine->GetReverseLookupPrefixes(&result);
 
   if (result.empty())
     return False;

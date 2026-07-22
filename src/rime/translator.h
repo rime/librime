@@ -15,6 +15,7 @@
 namespace rime {
 
 class Context;
+class Dictionary;
 class Engine;
 class Translation;
 struct Segment;
@@ -35,6 +36,14 @@ class Translator : public Class<Translator, const Ticket&> {
 
   virtual an<Translation> Query(const string& input,
                                 const Segment& segment) = 0;
+
+  //! Override to collect tab entries for disambiguation at a position.
+  virtual void CollectInputTabs(size_t position,
+                                vector<InputTabEntry>* tabs) const {}
+  //! Override to return the primary dictionary for code lookup.
+  virtual Dictionary* primary_dictionary() const { return nullptr; }
+  //! Override to return the reverse lookup prefix, if any.
+  virtual string reverse_lookup_prefix() const { return ""; }
 
   string name_space() const { return name_space_; }
 

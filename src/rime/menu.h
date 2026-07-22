@@ -35,10 +35,6 @@ class Menu {
   RIME_DLL Page* CreatePage(size_t page_size, size_t page_no);
   an<Candidate> GetCandidateAt(size_t index);
 
-  void set_result(an<Translation> result) { result_ = result; }
-  an<Translation> result() const { return result_; }
-  void ClearCachedCandidates() { candidates_.clear(); }
-
   // CAVEAT: returns the number of candidates currently obtained,
   // rather than the total number of available candidates.
   size_t candidate_count() const { return candidates_.size(); }

@@ -12,9 +12,6 @@
 #include <rime/engine.h>
 #include <rime/filter.h>
 #include <rime/formatter.h>
-#include <rime/gear/reverse_lookup_translator.h>
-#include <rime/gear/script_translator.h>
-#include <rime/gear/table_translator.h>
 #include <rime/key_event.h>
 #include <rime/menu.h>
 #include <rime/processor.h>
@@ -37,8 +34,23 @@ class ConcreteEngine : public Engine {
   virtual void ApplySchema(Schema* schema);
   virtual void CommitText(string text);
   virtual void Compose(Context* ctx);
-  virtual const vector<of<Translator>>& translators() const {
-    return translators_;
+  virtual void CollectInputTabs(size_t pos, vector<InputTabEntry>* tabs) const {
+    for (auto& t : translators_)
+      t->CollectInputTabs(pos, tabs);
+  }
+  virtual Dictionary* primary_dictionary() const {
+    for (auto& t : translators_) {
+      if (auto* d = t->primary_dictionary(); d && d->loaded())
+        return d;
+    }
+    return nullptr;
+  }
+  virtual void GetReverseLookupPrefixes(vector<string>* prefixes) const {
+    for (auto& t : translators_) {
+      string pfx = t->reverse_lookup_prefix();
+      if (!pfx.empty())
+        prefixes->push_back(pfx);
+    }
   }
 
  protected:

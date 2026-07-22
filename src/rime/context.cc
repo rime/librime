@@ -91,18 +91,11 @@ bool Context::PushInput(const string& str) {
 }
 
 bool Context::PopInput(size_t len) {
-  size_t undone = 0;
-  while (undone < len && (!tab_cursors_.empty() || !tab_constraints_.empty())) {
-    if (!tab_cursors_.empty()) {
-      PopTabCursor();
-    }
-    if (!tab_constraints_.empty()) {
-      UndoLastTabConstraint();
-    }
-    ++undone;
-  }
-  if (undone > 0)
+  // Pop tab constraints first if they exist
+  if (!tab_constraints_.empty()) {
+    UndoLastTabConstraint();
     return true;
+  }
   // Normal pop
   if (caret_pos_ < len)
     return false;
