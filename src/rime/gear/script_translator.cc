@@ -478,7 +478,7 @@ void ScriptTranslator::CollectSyllableTabs(size_t start_pos,
   char first_input_char = input[start_pos];
   bool first_char_has_xlit = xlit_reverse.count(first_input_char) > 0;
 
-  set<string> seen;
+  map<string, size_t> seen;
   bool has_single_span = false;
   auto it = graph.edges.find(start_pos);
   if (it != graph.edges.end()) {
@@ -494,9 +494,15 @@ void ScriptTranslator::CollectSyllableTabs(size_t start_pos,
         vector<string> decoded;
         if (dict_->Decode(single_code, &decoded) && !decoded.empty()) {
           string label = NormalizeTabLabel(decoded[0]);
-          if (!label.empty() && seen.insert(label).second) {
-            tabs->emplace_back(InputTabEntry{label, end_pos - start_pos,
-                                             InputTabEntry::kSyllable});
+          if (!label.empty()) {
+            size_t span = end_pos - start_pos;
+            auto [it, inserted] = seen.emplace(label, tabs->size());
+            if (inserted) {
+              tabs->emplace_back(
+                  InputTabEntry{label, span, InputTabEntry::kSyllable});
+            } else if (span > (*tabs)[it->second].span) {
+              (*tabs)[it->second].span = span;
+            }
           }
         }
       }
