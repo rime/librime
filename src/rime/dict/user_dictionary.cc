@@ -348,6 +348,7 @@ bool UserDictionary::starts_with(const string& s, const string& prefix) const {
 
 void UserDictionary::RecruitCacheEntry(const CacheEntry& entry,
                                        size_t end_pos,
+                                       const Code& code,
                                        TickCount present_tick,
                                        double credibility,
                                        double quality_len,
@@ -355,6 +356,7 @@ void UserDictionary::RecruitCacheEntry(const CacheEntry& entry,
   auto e = New<DictEntry>();
   e->text = entry.text;
   e->commit_count = entry.commits;
+  e->code = code;
   double dee = entry.dee;
   if (entry.tick < present_tick)
     dee = algo::formula_d(0, (double)present_tick, dee, (double)entry.tick);
@@ -373,7 +375,7 @@ void UserDictionary::RecruitPredictiveEntry(
     double credibility,
     double quality_len,
     hash_map<int, DictEntryList>* result) {
-  RecruitCacheEntry(entry, end_pos, present_tick, credibility, quality_len,
+  RecruitCacheEntry(entry, end_pos, {}, present_tick, credibility, quality_len,
                     result);
   auto& entries = (*result)[end_pos];
   auto& e = entries.back();
@@ -441,7 +443,7 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
               // use updated entry from pending
               RecruitCacheEntry(
                   {p.code, p.text, p.dee, p.commits, p.tick}, end_pos,
-                  state->present_tick, state->credibility.back(),
+                  state->code, state->present_tick, state->credibility.back(),
                   state->quality_len.back(), &state->query_result);
               seen.insert(p.text);
               overridden = true;
@@ -450,7 +452,7 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
           }
         }
         if (!overridden) {
-          RecruitCacheEntry(*it, end_pos, state->present_tick,
+          RecruitCacheEntry(*it, end_pos, state->code, state->present_tick,
                             state->credibility.back(),
                             state->quality_len.back(), &state->query_result);
           seen.insert(it->text);
@@ -464,7 +466,8 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
              p.type == PendingUpdate::kUpdate) &&
             seen.find(p.text) == seen.end()) {
           RecruitCacheEntry({p.code, p.text, p.dee, p.commits, p.tick}, end_pos,
-                            state->present_tick, state->credibility.back(),
+                            state->code, state->present_tick,
+                            state->credibility.back(),
                             state->quality_len.back(), &state->query_result);
         }
       }
@@ -692,6 +695,7 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry,
   if (code_str.empty() && !TranslateCodeToString(entry.code, &code_str))
     return false;
   string key(code_str + '\t' + entry.text);
+  string code_key(code_str);
   string value;
   UserDbValue v;
   bool existed = db_->Fetch(key, &value);
@@ -702,6 +706,7 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry,
     }
   } else if (!new_entry_prefix.empty()) {
     key.insert(0, new_entry_prefix);
+    code_key = key.substr(0, key.find('\t'));
   }
   if (commits > 0) {
     if (v.commits < 0)
@@ -722,7 +727,7 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry,
 
   // track change in pending_ for cache consistency
   PendingUpdate pu;
-  pu.code = code_str;
+  pu.code = code_key;
   pu.text = entry.text;
   pu.dee = v.dee;
   pu.commits = v.commits;
