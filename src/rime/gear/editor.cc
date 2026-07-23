@@ -125,8 +125,13 @@ bool Editor::CommitComposition(Context* ctx) {
 bool Editor::RevertLastEdit(Context* ctx) {
   // revert last selection or delete last input character
   // depending on recent operation type
-  ctx->ReopenPreviousSelection() ||
-      (ctx->PopInput() && ctx->ReopenPreviousSegment());
+  if (!ctx->tab_constraints().empty()) {
+    ctx->PopInput();
+    ctx->ReopenPreviousSegment();
+  } else {
+    ctx->ReopenPreviousSelection() ||
+        (ctx->PopInput() && ctx->ReopenPreviousSegment());
+  }
   return true;
 }
 
