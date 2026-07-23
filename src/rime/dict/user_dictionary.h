@@ -76,6 +76,10 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
   bool RevertRecentTransaction();
   bool CommitPendingTransaction();
 
+  // Rebuild the in-memory cache from DB.
+  // Call this after any external DB modification (sync/merge/restore).
+  bool Reload();
+
   const string& name() const { return name_; }
   TickCount tick() const { return tick_; }
 
@@ -96,6 +100,24 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
                  DfsState* state);
 
  private:
+  struct CacheEntry {
+    string code;  // pinyin code like "ni hao"
+    string text;  // entry text
+    double dee;   // difficulty estimate
+    int commits;
+    TickCount tick;
+  };
+
+  struct PendingUpdate {
+    enum Type { kAdd, kUpdate, kDelete };
+    Type type;
+    string code;
+    string text;
+    double dee;
+    int commits;
+    TickCount tick;
+  };
+
   string name_;
   an<Db> db_;
   an<Table> table_;
@@ -104,6 +126,31 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
   hash_map<SyllableId, string> rev_syllabary_;
   TickCount tick_ = 0;
   time_t transaction_time_ = 0;
+
+  bool cache_built_ = false;
+  TickCount cache_built_tick_ = 0;
+  vector<CacheEntry> cache_;
+  vector<PendingUpdate> pending_;
+
+  bool BuildCache();
+  void CacheLookup(const SyllableGraph& syll_graph,
+                   size_t current_pos,
+                   const string& current_prefix,
+                   DfsState* state);
+  void RecruitCacheEntry(const CacheEntry& entry,
+                         size_t end_pos,
+                         TickCount present_tick,
+                         double credibility,
+                         double quality_len,
+                         hash_map<int, DictEntryList>* result);
+  void RecruitPredictiveEntry(const CacheEntry& entry,
+                              size_t end_pos,
+                              size_t matching_code_size,
+                              TickCount present_tick,
+                              double credibility,
+                              double quality_len,
+                              hash_map<int, DictEntryList>* result);
+  bool starts_with(const string& s, const string& prefix) const;
 };
 
 class UserDictionaryComponent : public UserDictionary::Component {
