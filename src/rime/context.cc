@@ -91,11 +91,19 @@ bool Context::PushInput(const string& str) {
 }
 
 bool Context::PopInput(size_t len) {
-  // Pop tab constraints first if they exist
-  if (!tab_constraints_.empty()) {
-    UndoLastTabConstraint();
-    return true;
+  size_t undone = 0;
+  while (undone < len &&
+         (!tab_cursors_.empty() || !tab_constraints_.empty())) {
+    if (!tab_cursors_.empty()) {
+      PopTabCursor();
+    }
+    if (!tab_constraints_.empty()) {
+      UndoLastTabConstraint();
+    }
+    ++undone;
   }
+  if (undone > 0)
+    return true;
   // Normal pop
   if (caret_pos_ < len)
     return false;
@@ -360,7 +368,8 @@ void Context::AddTabConstraint(size_t position, const string& label,
 }
 
 void Context::ClearTabConstraints() {
-  if (!tab_constraints_.empty()) {
+  if (!tab_cursors_.empty() || !tab_constraints_.empty()) {
+    tab_cursors_.clear();
     tab_constraints_.clear();
     RefreshNonConfirmedComposition();
   }
