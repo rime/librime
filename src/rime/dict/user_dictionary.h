@@ -139,6 +139,7 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
                    DfsState* state);
   void RecruitCacheEntry(const CacheEntry& entry,
                          size_t end_pos,
+                         const Code& code,
                          TickCount present_tick,
                          double credibility,
                          double quality_len,
