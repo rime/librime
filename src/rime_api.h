@@ -521,7 +521,9 @@ typedef struct RIME_FLAVORED(rime_api_t) {
                          size_t** spans,
                          int** sources,
                          size_t* count);
-  void (*free_input_tabs)(char** labels, size_t* spans, int* sources,
+  void (*free_input_tabs)(char** labels,
+                          size_t* spans,
+                          int* sources,
                           size_t count);
 
   //! Get the decoded code segments for a candidate at the given index.

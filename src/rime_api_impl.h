@@ -1164,7 +1164,8 @@ static Bool RimeGetInputTabs(RimeSessionId session_id,
   vector<InputTabEntry> tabs;
   engine->CollectInputTabs(start_pos, &tabs);
   if (position == 0 && tabs.empty()) {
-    for (size_t try_pos = start_pos + 1; try_pos < ctx->input().length(); ++try_pos) {
+    for (size_t try_pos = start_pos + 1; try_pos < ctx->input().length();
+         ++try_pos) {
       engine->CollectInputTabs(try_pos, &tabs);
       if (!tabs.empty()) {
         start_pos = try_pos;
@@ -1199,7 +1200,9 @@ static Bool RimeGetInputTabs(RimeSessionId session_id,
   return True;
 }
 
-static void RimeFreeInputTabs(char** labels, size_t* spans, int* sources,
+static void RimeFreeInputTabs(char** labels,
+                              size_t* spans,
+                              int* sources,
                               size_t count) {
   if (labels) {
     for (size_t i = 0; i < count; ++i)

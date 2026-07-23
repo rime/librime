@@ -232,9 +232,9 @@ bool ConstraintFilteredTranslation::MatchesConstraints(
 
   auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
   if (!phrase) {
-    LOG(INFO) << "MatchesConstraints: cand=[" << cand->text()
-              << "] NOT a Phrase, type=" << cand->type()
-              << " — filtering out (no code to check)";
+    DLOG(INFO) << "MatchesConstraints: cand=[" << cand->text()
+               << "] NOT a Phrase, type=" << cand->type()
+               << " — filtering out (no code to check)";
     return false;
   }
 
@@ -246,9 +246,9 @@ bool ConstraintFilteredTranslation::MatchesConstraints(
   if (!dict_ || !dict_->Decode(code, &decoded) || decoded.empty())
     return true;
 
-  LOG(INFO) << "MatchesConstraints: cand=[" << cand->text()
-            << "] decoded[0]=[" << decoded[0] << "]"
-            << " constraint[0]=[" << constraints_[0].label << "]";
+  DLOG(INFO) << "MatchesConstraints: cand=[" << cand->text() << "] decoded[0]=["
+             << decoded[0] << "]"
+             << " constraint[0]=[" << constraints_[0].label << "]";
 
   // Build flat concatenated string of all decoded segments (tone-stripped)
   string flat;
@@ -297,8 +297,8 @@ an<Translation> ScriptTranslator::Query(const string& input,
     return nullptr;
   const string shadow_input =
       engine_->context()->shadow_input().substr(segment.start, input.length());
-  LOG(INFO) << "ScriptTranslator::Query input='" << shadow_input
-            << "' [" << segment.start << ", " << segment.end << ")";
+  DLOG(INFO) << "ScriptTranslator::Query input='" << shadow_input << "' ["
+             << segment.start << ", " << segment.end << ")";
 
   FinishSession();
 
@@ -437,14 +437,13 @@ bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
 static string NormalizeTabLabel(const string& label) {
   string normalized = StripTones(label);
   for (char& ch : normalized) {
-    ch = static_cast<char>(
-        std::tolower(static_cast<unsigned char>(ch)));
+    ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
   }
   return normalized;
 }
 
-void ScriptTranslator::CollectSyllableTabs(
-    size_t start_pos, vector<InputTabEntry>* tabs) const {
+void ScriptTranslator::CollectSyllableTabs(size_t start_pos,
+                                           vector<InputTabEntry>* tabs) const {
   if (!dict_ || !dict_->loaded() || !engine_ || !engine_->context())
     return;
 
@@ -466,13 +465,13 @@ void ScriptTranslator::CollectSyllableTabs(
   }
   const auto& graph = syllabifier.syllable_graph();
 
-  // Parse xlit algebra rules to build reverse mapping: target_char → source_chars
-  // E.g. xlit/ABCDEFGHIJKLMNOPQRSTUVWXYZ/22233344455566677778889999/
+  // Parse xlit algebra rules to build reverse mapping: target_char →
+  // source_chars E.g.
+  // xlit/ABCDEFGHIJKLMNOPQRSTUVWXYZ/22233344455566677778889999/
   //   → '6' maps to {m, n, o}
   map<char, set<char>> xlit_reverse;
   if (engine_ && engine_->schema() && engine_->schema()->config()) {
-    xlit_reverse =
-        ParseAlgebraReverseMapping(engine_->schema()->config());
+    xlit_reverse = ParseAlgebraReverseMapping(engine_->schema()->config());
   }
 
   // Check if the input character at start_pos has an xlit/derive mapping
@@ -486,7 +485,8 @@ void ScriptTranslator::CollectSyllableTabs(
     for (const auto& [end_pos, syllable_map] : it->second) {
       if (end_pos == start_pos + 1) {
         has_single_span = true;
-        if (first_char_has_xlit) continue;  // Skip span=1 noise when mapping applies
+        if (first_char_has_xlit)
+          continue;  // Skip span=1 noise when mapping applies
       }
       for (const auto& [syllable_id, props] : syllable_map) {
         Code single_code;
@@ -495,7 +495,8 @@ void ScriptTranslator::CollectSyllableTabs(
         if (dict_->Decode(single_code, &decoded) && !decoded.empty()) {
           string label = NormalizeTabLabel(decoded[0]);
           if (!label.empty() && seen.insert(label).second) {
-            tabs->emplace_back(InputTabEntry{label, end_pos - start_pos, InputTabEntry::kSyllable});
+            tabs->emplace_back(InputTabEntry{label, end_pos - start_pos,
+                                             InputTabEntry::kSyllable});
           }
         }
       }
@@ -512,7 +513,8 @@ void ScriptTranslator::CollectSyllableTabs(
         tabs->emplace_back(InputTabEntry{label, 1, InputTabEntry::kSyllable});
       }
       string first_char(1, first_input_char);
-      tabs->emplace_back(InputTabEntry{first_char, 1, InputTabEntry::kRawInput});
+      tabs->emplace_back(
+          InputTabEntry{first_char, 1, InputTabEntry::kRawInput});
     }
   }
 }
@@ -541,7 +543,8 @@ size_t ScriptSyllabifier::BuildSyllableGraph(Prism& prism) {
 
 // Helper: decode a single SyllableId to string
 static string DecodeSyllableId(Dictionary* dict, SyllableId id) {
-  if (!dict) return "";
+  if (!dict)
+    return "";
   Code code;
   code.push_back(id);
   vector<string> decoded;
@@ -553,25 +556,26 @@ static string DecodeSyllableId(Dictionary* dict, SyllableId id) {
 void ScriptSyllabifier::ApplyTabConstraints(
     Dictionary* dict,
     const vector<Context::TabConstraint>& constraints) {
-  if (constraints.empty()) return;
-  LOG(INFO) << "ApplyTabConstraints: " << constraints.size()
-            << " constraints, start_=" << start_
-            << " input_length=" << syllable_graph_.input_length;
+  if (constraints.empty())
+    return;
+  DLOG(INFO) << "ApplyTabConstraints: " << constraints.size()
+             << " constraints, start_=" << start_
+             << " input_length=" << syllable_graph_.input_length;
 
   for (const auto& constraint : constraints) {
     size_t graph_pos = constraint.position - start_;
-    LOG(INFO) << "  constraint: pos=" << constraint.position
-              << " graph_pos=" << graph_pos
-              << " label=[" << constraint.label << "]"
-              << " span=" << constraint.span;
+    DLOG(INFO) << "  constraint: pos=" << constraint.position
+               << " graph_pos=" << graph_pos << " label=[" << constraint.label
+               << "]"
+               << " span=" << constraint.span;
     if (graph_pos >= syllable_graph_.input_length) {
-      LOG(INFO) << "  SKIP: graph_pos >= input_length";
+      DLOG(INFO) << "  SKIP: graph_pos >= input_length";
       continue;
     }
 
     auto edge_it = syllable_graph_.edges.find(graph_pos);
     if (edge_it == syllable_graph_.edges.end()) {
-      LOG(INFO) << "  SKIP: no edges at graph_pos=" << graph_pos;
+      DLOG(INFO) << "  SKIP: no edges at graph_pos=" << graph_pos;
       continue;
     }
 
@@ -579,25 +583,26 @@ void ScriptSyllabifier::ApplyTabConstraints(
     bool is_single_char = (constraint.span == 1);
 
     auto& end_map = edge_it->second;
-    LOG(INFO) << "  label_base=[" << label_base
-              << "] is_single=" << is_single_char
-              << " end_map_size=" << end_map.size();
+    DLOG(INFO) << "  label_base=[" << label_base
+               << "] is_single=" << is_single_char
+               << " end_map_size=" << end_map.size();
 
     size_t total_before = 0;
     for (const auto& [ep, sm] : end_map) {
       total_before += sm.size();
-      LOG(INFO) << "    end_pos=" << ep << " syllables=" << sm.size();
+      DLOG(INFO) << "    end_pos=" << ep << " syllables=" << sm.size();
     }
-    LOG(INFO) << "  total_syllables_before=" << total_before;
-    for (auto end_it = end_map.begin(); end_it != end_map.end(); ) {
+    DLOG(INFO) << "  total_syllables_before=" << total_before;
+    for (auto end_it = end_map.begin(); end_it != end_map.end();) {
       size_t end_pos = end_it->first;
       auto& spelling_map = end_it->second;  // map<SyllableId, EdgeProperties>
 
       // Determine which syllable segment index this edge represents
       size_t seg_index = 0;
-      for (size_t p = 0; p < graph_pos; ) {
+      for (size_t p = 0; p < graph_pos;) {
         auto prev_it = syllable_graph_.edges.find(p);
-        if (prev_it == syllable_graph_.edges.end()) break;
+        if (prev_it == syllable_graph_.edges.end())
+          break;
         // Find the edge that was kept (if any constraint was applied before)
         bool found = false;
         for (auto& [ep, sm] : prev_it->second) {
@@ -608,11 +613,12 @@ void ScriptSyllabifier::ApplyTabConstraints(
             break;
           }
         }
-        if (!found) break;
+        if (!found)
+          break;
       }
 
       // Filter syllables in this edge
-      for (auto syl_it = spelling_map.begin(); syl_it != spelling_map.end(); ) {
+      for (auto syl_it = spelling_map.begin(); syl_it != spelling_map.end();) {
         string decoded = DecodeSyllableId(dict, syl_it->first);
         string decoded_base = StripTones(decoded);
         bool keep = false;
@@ -630,10 +636,10 @@ void ScriptSyllabifier::ApplyTabConstraints(
           }
         }
 
-        LOG(INFO) << "      syl_id=" << syl_it->first
-                  << " decoded=[" << decoded << "]"
-                  << " base=[" << decoded_base << "]"
-                  << " keep=" << keep;
+        DLOG(INFO) << "      syl_id=" << syl_it->first << " decoded=["
+                   << decoded << "]"
+                   << " base=[" << decoded_base << "]"
+                   << " keep=" << keep;
 
         if (keep)
           ++syl_it;
@@ -648,9 +654,10 @@ void ScriptSyllabifier::ApplyTabConstraints(
         ++end_it;
     }
     size_t total_after = 0;
-    for (const auto& [ep, sm] : end_map) total_after += sm.size();
-    LOG(INFO) << "  total_syllables_after=" << total_after
-              << " end_map_size_after=" << end_map.size();
+    for (const auto& [ep, sm] : end_map)
+      total_after += sm.size();
+    DLOG(INFO) << "  total_syllables_after=" << total_after
+               << " end_map_size_after=" << end_map.size();
   }
 
   // Rebuild indices from filtered edges (Transpose)

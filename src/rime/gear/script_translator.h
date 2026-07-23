@@ -29,9 +29,10 @@ class UserDictionary;
 // whose decoded code doesn't match tab constraints (for 简拼 filtering)
 class ConstraintFilteredTranslation : public CacheTranslation {
  public:
-  ConstraintFilteredTranslation(an<Translation> translation,
-                                Dictionary* dict,
-                                const vector<Context::TabConstraint>& constraints);
+  ConstraintFilteredTranslation(
+      an<Translation> translation,
+      Dictionary* dict,
+      const vector<Context::TabConstraint>& constraints);
   virtual bool Next() override;
 
  protected:

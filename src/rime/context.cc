@@ -92,8 +92,7 @@ bool Context::PushInput(const string& str) {
 
 bool Context::PopInput(size_t len) {
   size_t undone = 0;
-  while (undone < len &&
-         (!tab_cursors_.empty() || !tab_constraints_.empty())) {
+  while (undone < len && (!tab_cursors_.empty() || !tab_constraints_.empty())) {
     if (!tab_cursors_.empty()) {
       PopTabCursor();
     }
@@ -313,8 +312,8 @@ string Context::shadow_input() const {
       continue;
     shadow.append(input_, raw_pos, constraint.position - raw_pos);
     shadow += constraint.label;
-    raw_pos = (std::min)(constraint.position + constraint.span,
-                         input_.length());
+    raw_pos =
+        (std::min)(constraint.position + constraint.span, input_.length());
   }
   shadow.append(input_, raw_pos, string::npos);
   return shadow;
@@ -361,7 +360,8 @@ void Context::ClearTransientOptions() {
   }
 }
 
-void Context::AddTabConstraint(size_t position, const string& label,
+void Context::AddTabConstraint(size_t position,
+                               const string& label,
                                size_t span) {
   tab_constraints_.push_back({position, label, span});
   RefreshNonConfirmedComposition();

@@ -98,9 +98,9 @@ class RIME_DLL Context {
 
   // Tab constraint for syllable disambiguation (简拼/T9)
   struct TabConstraint {
-    size_t position;    // input position where constraint applies
-    string label;       // selected tab label (e.g., "n", "cè")
-    size_t span;        // how many input chars this constraint consumes
+    size_t position;  // input position where constraint applies
+    string label;     // selected tab label (e.g., "n", "cè")
+    size_t span;      // how many input chars this constraint consumes
   };
   const vector<TabConstraint>& tab_constraints() const {
     return tab_constraints_;

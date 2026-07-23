@@ -142,7 +142,7 @@ void ReverseLookupTranslator::Initialize() {
 }
 
 an<Translation> ReverseLookupTranslator::Query(const string& input,
-                                                const Segment& segment) {
+                                               const Segment& segment) {
   if (!segment.HasTag(tag_))
     return nullptr;
   if (!initialized_)
@@ -203,7 +203,8 @@ an<Translation> ReverseLookupTranslator::Query(const string& input,
 }
 
 void ReverseLookupTranslator::CollectReverseLookupTabs(
-    size_t start_pos, vector<InputTabEntry>* tabs) const {
+    size_t start_pos,
+    vector<InputTabEntry>* tabs) const {
   if (!initialized_)
     const_cast<ReverseLookupTranslator*>(this)->Initialize();
   if (!dict_ || !dict_->loaded() || !engine_ || !engine_->context())
@@ -251,7 +252,8 @@ void ReverseLookupTranslator::CollectReverseLookupTabs(
         const string& label = decoded[0];
         if (!label.empty() && seen.insert(label).second) {
           // span includes the prefix length
-          tabs->emplace_back(InputTabEntry{label, prefix_len + end_pos, InputTabEntry::kReverseLookup});
+          tabs->emplace_back(InputTabEntry{label, prefix_len + end_pos,
+                                           InputTabEntry::kReverseLookup});
         }
       }
     }

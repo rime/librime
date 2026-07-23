@@ -39,7 +39,7 @@ class TableTranslator : public Translator,
 
   //! Collect valid single-code-prefix tab entries from the table's syllabary
   RIME_DLL void CollectTableTabs(size_t start_pos,
-                                vector<InputTabEntry>* tabs) const;
+                                 vector<InputTabEntry>* tabs) const;
 
   // override Translator virtual methods
   void CollectInputTabs(size_t position,

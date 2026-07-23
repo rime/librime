@@ -279,10 +279,10 @@ an<Translation> TableTranslator::Query(const string& input,
       }
     }
     if (!iter.exhausted() || !uter.exhausted())
-      translation = Cached<TableTranslation>(
-          this, language(), code, segment.start,
-          segment.start + shadow_input.length(), preedit, std::move(iter),
-          std::move(uter));
+      translation =
+          Cached<TableTranslation>(this, language(), code, segment.start,
+                                   segment.start + shadow_input.length(),
+                                   preedit, std::move(iter), std::move(uter));
   }
   if (translation) {
     bool filter_by_charset =
@@ -689,8 +689,8 @@ an<Translation> TableTranslator::MakeSentence(const string& input,
   return nullptr;
 }
 
-void TableTranslator::CollectTableTabs(
-    size_t start_pos, vector<InputTabEntry>* tabs) const {
+void TableTranslator::CollectTableTabs(size_t start_pos,
+                                       vector<InputTabEntry>* tabs) const {
   if (!dict_ || !dict_->loaded() || !engine_ || !engine_->context())
     return;
 
@@ -716,8 +716,7 @@ void TableTranslator::CollectTableTabs(
   // Parse algebra rules to build reverse mapping
   map<char, set<char>> key_reverse;
   if (engine_ && engine_->schema() && engine_->schema()->config()) {
-    key_reverse =
-        ParseAlgebraReverseMapping(engine_->schema()->config());
+    key_reverse = ParseAlgebraReverseMapping(engine_->schema()->config());
   }
 
   set<string> seen;
@@ -738,7 +737,8 @@ void TableTranslator::CollectTableTabs(
         // Strip tones (same logic as script translator)
         label = StripTones(label);
         if (!label.empty() && seen.insert(label).second) {
-          tabs->emplace_back(InputTabEntry{label, end_pos, InputTabEntry::kTableCode});
+          tabs->emplace_back(
+              InputTabEntry{label, end_pos, InputTabEntry::kTableCode});
         }
       }
     }
@@ -751,7 +751,8 @@ void TableTranslator::CollectTableTabs(
       for (char c : rev_it->second) {
         string label(1, c);
         if (seen.insert(label).second) {
-          tabs->emplace_back(InputTabEntry{label, 1, InputTabEntry::kTableCode});
+          tabs->emplace_back(
+              InputTabEntry{label, 1, InputTabEntry::kTableCode});
         }
       }
       // Raw input character as a tab
