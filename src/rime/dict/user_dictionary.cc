@@ -337,7 +337,8 @@ bool UserDictionary::BuildCache() {
 }
 
 bool UserDictionary::Reload() {
-  FetchTickCount();
+  if (!FetchTickCount())
+    return false;
   return BuildCache();
 }
 
@@ -435,20 +436,19 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
       hash_set<string> seen;
       while (it != cache_.end() && it->code == prefix) {
         bool overridden = false;
-        for (const auto& p : pending_) {
-          if (p.code == prefix && p.text == it->text) {
-            if (p.type == PendingUpdate::kDelete) {
-              overridden = true;
-            } else {
-              // use updated entry from pending
-              RecruitCacheEntry(
-                  {p.code, p.text, p.dee, p.commits, p.tick}, end_pos,
-                  state->code, state->present_tick, state->credibility.back(),
-                  state->quality_len.back(), &state->query_result);
-              seen.insert(p.text);
-              overridden = true;
-            }
-            break;
+        auto pit = pending_.find(prefix + '\t' + it->text);
+        if (pit != pending_.end()) {
+          const auto& p = pit->second;
+          if (p.type == PendingUpdate::kDelete) {
+            overridden = true;
+          } else {
+            // use updated entry from pending
+            RecruitCacheEntry({p.code, p.text, p.dee, p.commits, p.tick},
+                              end_pos, state->code, state->present_tick,
+                              state->credibility.back(),
+                              state->quality_len.back(), &state->query_result);
+            seen.insert(p.text);
+            overridden = true;
           }
         }
         if (!overridden) {
@@ -460,7 +460,8 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
         ++it;
       }
       // add new entries from pending_ that aren't in cache
-      for (const auto& p : pending_) {
+      for (const auto& kv : pending_) {
+        const auto& p = kv.second;
         if (p.code == prefix &&
             (p.type == PendingUpdate::kAdd ||
              p.type == PendingUpdate::kUpdate) &&
@@ -475,7 +476,8 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
       // recurse if longer codes exist (match or pending)
       bool has_longer = (it != cache_.end() && starts_with(it->code, prefix));
       if (!has_longer) {
-        for (const auto& p : pending_) {
+        for (const auto& kv : pending_) {
+          const auto& p = kv.second;
           if (p.code != prefix && starts_with(p.code, prefix)) {
             has_longer = true;
             break;
@@ -512,20 +514,19 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
           hash_set<string> seen_pred;
           while (pred != cache_.end() && starts_with(pred->code, prefix)) {
             bool overridden = false;
-            for (const auto& p : pending_) {
-              if (p.code == pred->code && p.text == pred->text) {
-                if (p.type == PendingUpdate::kDelete) {
-                  overridden = true;
-                } else {
-                  RecruitPredictiveEntry(
-                      {p.code, p.text, p.dee, p.commits, p.tick}, end_pos,
-                      state->depth(), state->present_tick,
-                      state->credibility.back(), state->quality_len.back(),
-                      &state->query_result);
-                  seen_pred.insert(p.text);
-                  overridden = true;
-                }
-                break;
+            auto pit = pending_.find(pred->code + '\t' + pred->text);
+            if (pit != pending_.end()) {
+              const auto& p = pit->second;
+              if (p.type == PendingUpdate::kDelete) {
+                overridden = true;
+              } else {
+                RecruitPredictiveEntry(
+                    {p.code, p.text, p.dee, p.commits, p.tick}, end_pos,
+                    state->depth(), state->present_tick,
+                    state->credibility.back(), state->quality_len.back(),
+                    &state->query_result);
+                seen_pred.insert(p.text);
+                overridden = true;
               }
             }
             if (!overridden) {
@@ -538,7 +539,8 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
             ++pred;
           }
           // predictive entries from pending_ not yet in cache
-          for (const auto& p : pending_) {
+          for (const auto& kv : pending_) {
+            const auto& p = kv.second;
             if (p.code != prefix && starts_with(p.code, prefix) &&
                 seen_pred.find(p.text) == seen_pred.end() &&
                 p.type != PendingUpdate::kDelete) {
@@ -586,12 +588,12 @@ an<UserDictEntryCollector> UserDictionary::Lookup(
   state.quality_len.push_back(0.0);
   state.accessor = db_->Query("");
   state.accessor->Jump(" ");  // skip metadata
-  // ensure cache is built; if BuildCache() was deferred (e.g., after
-  // RevertRecentTransaction or external modification), rebuild now.
+  string prefix;
+  // Rebuild only when deferred. Local changes are reflected by pending_.
+  // External sync, merge, and restore operations must call Reload().
   if (!cache_built_) {
     BuildCache();
   }
-  string prefix;
   if (cache_built_) {
     CacheLookup(syll_graph, start_pos, prefix, &state);
   } else {
@@ -740,16 +742,12 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry,
     pu.type = PendingUpdate::kUpdate;
   }
   // replace any existing pending update for the same key
-  bool replaced = false;
-  for (auto& p : pending_) {
-    if (p.code == pu.code && p.text == pu.text) {
-      p = pu;
-      replaced = true;
-      break;
-    }
+  auto it = pending_.find(pu.code + '\t' + pu.text);
+  if (it != pending_.end()) {
+    it->second = pu;
+  } else {
+    pending_[pu.code + '\t' + pu.text] = pu;
   }
-  if (!replaced)
-    pending_.push_back(pu);
   // periodically rebuild cache if pending_ grows too large
   if (pending_.size() > 1000)
     BuildCache();

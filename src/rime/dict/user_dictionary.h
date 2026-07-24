@@ -12,6 +12,7 @@
 #include <rime/component.h>
 #include <rime/dict/user_db.h>
 #include <rime/dict/vocabulary.h>
+#include <unordered_map>
 
 namespace rime {
 
@@ -130,7 +131,7 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
   bool cache_built_ = false;
   TickCount cache_built_tick_ = 0;
   vector<CacheEntry> cache_;
-  vector<PendingUpdate> pending_;
+  std::unordered_map<string, PendingUpdate> pending_;
 
   bool BuildCache();
   void CacheLookup(const SyllableGraph& syll_graph,
