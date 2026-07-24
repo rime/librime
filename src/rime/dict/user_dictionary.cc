@@ -370,7 +370,11 @@ bool UserDictionary::BuildCache() {
 bool UserDictionary::Reload() {
   if (!FetchTickCount())
     return false;
+#if RIME_USER_DICT_CACHE_ENABLED
   return BuildCache();
+#else
+  return true;
+#endif
 }
 
 bool UserDictionary::starts_with(std::string_view s,
@@ -643,6 +647,7 @@ an<UserDictEntryCollector> UserDictionary::Lookup(
   state.credibility.push_back(initial_credibility);
   state.quality_len.push_back(0.0);
   string prefix;
+#if RIME_USER_DICT_CACHE_ENABLED
   // Rebuild only when deferred. Local changes are reflected by pending_.
   // External sync, merge, and restore operations must call Reload().
   if (!cache_built_) {
@@ -656,6 +661,11 @@ an<UserDictEntryCollector> UserDictionary::Lookup(
     state.accessor->Jump(" ");  // skip metadata
     DfsLookup(syll_graph, start_pos, prefix, &state);
   }
+#else
+  state.accessor = db_->Query("");
+  state.accessor->Jump(" ");  // skip metadata
+  DfsLookup(syll_graph, start_pos, prefix, &state);
+#endif
   if (state.query_result.empty())
     return nullptr;
   // sort each group of homophones by weight
@@ -810,8 +820,10 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry,
     pending_[pu.code + '\t' + pu.text] = pu;
   }
   // periodically rebuild cache if pending_ grows too large
+#if RIME_USER_DICT_CACHE_ENABLED
   if (pending_.size() > 1000)
     BuildCache();
+#endif
   return true;
 }
 
@@ -861,7 +873,9 @@ bool UserDictionary::RevertRecentTransaction() {
     return false;
   // DB was rolled back; pending_ and cache_ are now inconsistent
   pending_.clear();
+#if RIME_USER_DICT_CACHE_ENABLED
   cache_built_ = false;
+#endif
   return true;
 }
 
