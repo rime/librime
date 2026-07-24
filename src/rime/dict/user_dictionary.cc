@@ -694,8 +694,12 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry,
                                  int commits,
                                  const string& new_entry_prefix) {
   string code_str(entry.custom_code);
-  if (code_str.empty() && !TranslateCodeToString(entry.code, &code_str))
-    return false;
+  if (code_str.empty()) {
+    if (!TranslateCodeToString(entry.code, &code_str))
+      return false;
+  } else if (code_str.back() != ' ') {
+    code_str += ' ';
+  }
   string key(code_str + '\t' + entry.text);
   string code_key(code_str);
   string value;
