@@ -28,6 +28,9 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#ifdef __GLIBC__
+#include <malloc.h>
+#endif
 
 namespace fs = std::filesystem;
 
@@ -244,6 +247,10 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
       }
     }
   }
+#ifdef __GLIBC__
+  // ask glibc to release memory used by DictCompiler during SchemaUpdate to OS
+  malloc_trim(0);
+#endif
   LOG(INFO) << "finished updating schemas: " << success << " success, "
             << failure << " failure.";
 
