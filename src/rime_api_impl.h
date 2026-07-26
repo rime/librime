@@ -1240,10 +1240,8 @@ static Bool RimeGetCandidateCode(RimeSessionId session_id,
   if (!phrase)
     return False;
 
-  // Try to decode the code using the dictionary from any available translator
-  Dictionary* dict = engine->primary_dictionary();
-
-  if (!dict)
+  Dictionary* dict = phrase->dictionary();
+  if (!dict || !dict->loaded())
     return False;
 
   vector<string> decoded;

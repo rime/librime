@@ -44,6 +44,10 @@ class Translator : public Class<Translator, const Ticket&> {
   virtual Dictionary* primary_dictionary() const { return nullptr; }
   //! Override to return the reverse lookup prefix, if any.
   virtual string reverse_lookup_prefix() const { return ""; }
+  //! Return whether this translator owns the given reverse lookup segment.
+  virtual bool IsReverseLookupSegment(const Segment& segment) const {
+    return false;
+  }
 
   string name_space() const { return name_space_; }
 

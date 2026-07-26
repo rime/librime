@@ -116,6 +116,8 @@ bool Context::DeleteInput(size_t len) {
   if (caret_pos_ + len > input_.length())
     return false;
   input_.erase(caret_pos_, len);
+  tab_cursors_.clear();
+  tab_constraints_.clear();
   update_notifier_(this);
   return true;
 }
@@ -305,17 +307,22 @@ void Context::set_input(const string& value) {
 }
 
 string Context::shadow_input() const {
+  return shadow_input(0, input_.length());
+}
+
+string Context::shadow_input(size_t start, size_t end) const {
+  start = (std::min)(start, input_.length());
+  end = (std::min)((std::max)(start, end), input_.length());
   string shadow;
-  size_t raw_pos = 0;
+  size_t raw_pos = start;
   for (const auto& constraint : tab_constraints_) {
-    if (constraint.position < raw_pos || constraint.position > input_.length())
+    if (constraint.position < raw_pos || constraint.position >= end)
       continue;
     shadow.append(input_, raw_pos, constraint.position - raw_pos);
     shadow += constraint.label;
-    raw_pos =
-        (std::min)(constraint.position + constraint.span, input_.length());
+    raw_pos = (std::min)(constraint.position + constraint.span, end);
   }
-  shadow.append(input_, raw_pos, string::npos);
+  shadow.append(input_, raw_pos, end - raw_pos);
   return shadow;
 }
 

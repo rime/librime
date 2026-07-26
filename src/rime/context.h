@@ -63,6 +63,7 @@ class RIME_DLL Context {
   void set_input(const string& value);
   const string& input() const { return input_; }
   string shadow_input() const;
+  string shadow_input(size_t start, size_t end) const;
 
   void set_caret_pos(size_t caret_pos);
   size_t caret_pos() const { return caret_pos_; }

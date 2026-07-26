@@ -65,6 +65,7 @@ class TableTranslation : public Translation {
  public:
   TableTranslation(TranslatorOptions* options,
                    const Language* language,
+                   Dictionary* dictionary,
                    const string& input,
                    size_t start,
                    size_t end,
@@ -88,6 +89,7 @@ class TableTranslation : public Translation {
 
   TranslatorOptions* options_;
   const Language* language_;
+  Dictionary* dictionary_;
   string input_;
   size_t start_;
   size_t end_;

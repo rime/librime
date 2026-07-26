@@ -25,18 +25,16 @@ class Dictionary;
 class Poet;
 class UserDictionary;
 
-// ConstraintFilteredTranslation: wraps a Translation and skips candidates
-// whose decoded code doesn't match tab constraints (for 简拼 filtering)
 class ConstraintFilteredTranslation : public CacheTranslation {
  public:
   ConstraintFilteredTranslation(
       an<Translation> translation,
       Dictionary* dict,
       const vector<Context::TabConstraint>& constraints);
-  virtual bool Next() override;
+  bool Next() override;
 
  protected:
-  bool MatchesConstraints(const an<Candidate>& cand);
+  bool MatchesConstraints(const an<Candidate>& candidate);
 
   Dictionary* dict_;
   vector<Context::TabConstraint> constraints_;

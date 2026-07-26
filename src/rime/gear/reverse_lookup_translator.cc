@@ -25,6 +25,86 @@
 
 namespace rime {
 
+namespace {
+
+void ApplyTabConstraints(SyllableGraph* graph,
+                         Dictionary* dict,
+                         const vector<Context::TabConstraint>& constraints,
+                         size_t segment_start,
+                         size_t segment_end,
+                         size_t code_start) {
+  bool changed = false;
+  size_t raw_pos = segment_start;
+  size_t shadow_pos = 0;
+  for (const auto& constraint : constraints) {
+    if (constraint.position < raw_pos)
+      continue;
+    if (constraint.position >= segment_end)
+      break;
+
+    shadow_pos += constraint.position - raw_pos;
+    raw_pos = (std::min)(constraint.position + constraint.span, segment_end);
+
+    if (shadow_pos < code_start) {
+      shadow_pos += constraint.label.length();
+      continue;
+    }
+    const size_t graph_pos = shadow_pos - code_start;
+    const size_t span = constraint.label.length();
+    shadow_pos += span;
+    if (graph_pos >= graph->input_length || span == 0)
+      continue;
+
+    auto edge_it = graph->edges.find(graph_pos);
+    if (edge_it == graph->edges.end())
+      continue;
+
+    const string label = StripTones(constraint.label);
+    auto& end_map = edge_it->second;
+    for (auto end_it = end_map.begin(); end_it != end_map.end();) {
+      if (end_it->first != graph_pos + span) {
+        end_it = end_map.erase(end_it);
+        changed = true;
+        continue;
+      }
+      auto& spelling_map = end_it->second;
+      for (auto spelling_it = spelling_map.begin();
+           spelling_it != spelling_map.end();) {
+        Code code;
+        code.push_back(spelling_it->first);
+        vector<string> decoded;
+        if (dict->Decode(code, &decoded) && !decoded.empty() &&
+            StripTones(decoded[0]) == label) {
+          ++spelling_it;
+        } else {
+          spelling_it = spelling_map.erase(spelling_it);
+          changed = true;
+        }
+      }
+      if (spelling_map.empty()) {
+        end_it = end_map.erase(end_it);
+        changed = true;
+      } else {
+        ++end_it;
+      }
+    }
+  }
+
+  if (!changed)
+    return;
+  graph->indices.clear();
+  for (const auto& [start, end_map] : graph->edges) {
+    auto& index = graph->indices[start];
+    for (const auto& [end, spelling_map] : end_map) {
+      for (const auto& [syllable_id, properties] : spelling_map) {
+        index[syllable_id].push_back(&properties);
+      }
+    }
+  }
+}
+
+}  // namespace
+
 class ReverseLookupTranslation : public TableTranslation {
  public:
   ReverseLookupTranslation(ReverseLookupDictionary* dict,
@@ -37,6 +117,7 @@ class ReverseLookupTranslation : public TableTranslation {
                            bool quality)
       : TableTranslation(options,
                          NULL,
+                         nullptr,
                          input,
                          start,
                          end,
@@ -101,6 +182,11 @@ ReverseLookupTranslator::ReverseLookupTranslator(const Ticket& ticket)
   config->GetString(name_space_ + "/tag", &tag_);
 }
 
+bool ReverseLookupTranslator::IsReverseLookupSegment(
+    const Segment& segment) const {
+  return segment.HasTag(tag_);
+}
+
 void ReverseLookupTranslator::Initialize() {
   initialized_ = true;  // no retry
   if (!engine_)
@@ -150,7 +236,7 @@ an<Translation> ReverseLookupTranslator::Query(const string& input,
   if (!dict_ || !dict_->loaded())
     return nullptr;
   const string shadow_input =
-      engine_->context()->shadow_input().substr(segment.start, input.length());
+      engine_->context()->shadow_input(segment.start, segment.end);
   DLOG(INFO) << "input = '" << shadow_input << "', [" << segment.start << ", "
              << segment.end << ")";
 
@@ -183,6 +269,9 @@ an<Translation> ReverseLookupTranslator::Query(const string& input,
       Syllabifier syllabifier("", true, options_->strict_spelling());
       size_t consumed =
           syllabifier.BuildSyllableGraph(code, *dict_->prism(), &graph);
+      ApplyTabConstraints(&graph, dict_.get(),
+                          engine_->context()->tab_constraints(), segment.start,
+                          segment.end, start);
       if (consumed == code.length()) {
         auto collector = dict_->Lookup(graph, 0);
         if (collector && !collector->empty() &&
@@ -214,12 +303,22 @@ void ReverseLookupTranslator::CollectReverseLookupTabs(
   if (start_pos >= input.length())
     return;
 
-  // Strip prefix if present
+  const size_t segment_start =
+      engine_->context()->composition().GetCurrentStartPosition();
+  if (start_pos < segment_start)
+    return;
+
   string code = input.substr(start_pos);
+  size_t prefix_len = 0;
   if (!prefix_.empty()) {
-    if (!boost::starts_with(code, prefix_))
+    if (input.compare(segment_start, prefix_.length(), prefix_) != 0)
       return;
-    code = code.substr(prefix_.length());
+    if (start_pos == segment_start) {
+      code = code.substr(prefix_.length());
+      prefix_len = prefix_.length();
+    } else if (start_pos < segment_start + prefix_.length()) {
+      return;
+    }
   }
   if (!suffix_.empty() && boost::ends_with(code, suffix_)) {
     code.resize(code.length() - suffix_.length());
@@ -240,9 +339,7 @@ void ReverseLookupTranslator::CollectReverseLookupTabs(
   auto it = graph.edges.find(0);
   if (it == graph.edges.end())
     return;
-
   set<string> seen;
-  size_t prefix_len = prefix_.length();
   for (const auto& [end_pos, syllable_map] : it->second) {
     for (const auto& [syllable_id, props] : syllable_map) {
       Code single_code;

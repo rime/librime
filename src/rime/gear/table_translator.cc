@@ -34,6 +34,7 @@ static const char* kUnitySymbol = " \xe2\x98\xaf ";
 
 TableTranslation::TableTranslation(TranslatorOptions* options,
                                    const Language* language,
+                                   Dictionary* dictionary,
                                    const string& input,
                                    size_t start,
                                    size_t end,
@@ -42,6 +43,7 @@ TableTranslation::TableTranslation(TranslatorOptions* options,
                                    UserDictEntryIterator&& uter)
     : options_(options),
       language_(language),
+      dictionary_(dictionary),
       input_(input),
       start_(start),
       end_(end),
@@ -87,6 +89,7 @@ an<Candidate> TableTranslation::Peek() {
                                : "table";
   auto phrase = New<Phrase>(language_, type, start_, end_, e);
   if (phrase) {
+    phrase->set_dictionary(dictionary_);
     phrase->set_comment(comment);
     phrase->set_preedit(preedit_);
     phrase->set_quality(std::exp(e->weight) + options_->initial_quality() +
@@ -148,6 +151,7 @@ LazyTableTranslation::LazyTableTranslation(TableTranslator* translator,
                                            bool enable_user_dict)
     : TableTranslation(translator,
                        translator->language(),
+                       translator->dict(),
                        input,
                        start,
                        end,
@@ -248,7 +252,7 @@ an<Translation> TableTranslator::Query(const string& input,
   if (!segment.HasAnyTagIn(tags_))
     return nullptr;
   const string shadow_input =
-      engine_->context()->shadow_input().substr(segment.start, input.length());
+      engine_->context()->shadow_input(segment.start, segment.end);
   DLOG(INFO) << "input = '" << shadow_input << "', [" << segment.start << ", "
              << segment.end << ")";
 
@@ -279,10 +283,10 @@ an<Translation> TableTranslator::Query(const string& input,
       }
     }
     if (!iter.exhausted() || !uter.exhausted())
-      translation =
-          Cached<TableTranslation>(this, language(), code, segment.start,
-                                   segment.start + shadow_input.length(),
-                                   preedit, std::move(iter), std::move(uter));
+      translation = Cached<TableTranslation>(
+          this, language(), dict(), code, segment.start,
+          segment.start + shadow_input.length(), preedit, std::move(iter),
+          std::move(uter));
   }
   if (translation) {
     bool filter_by_charset =
@@ -468,6 +472,7 @@ an<Candidate> SentenceTranslation::Peek() {
   auto result = New<Phrase>(translator_ ? translator_->language() : NULL,
                             is_user_phrase ? "user_table" : "table", start_,
                             start_ + code_length, entry);
+  result->set_dictionary(translator_->primary_dictionary());
   if (translator_) {
     string preedit = input_.substr(0, code_length);
     translator_->preedit_formatter().Apply(&preedit);
@@ -498,6 +503,7 @@ void SentenceTranslation::PrepareSentence() {
   }
   translator_->preedit_formatter().Apply(&preedit);
   sentence_->set_preedit(preedit);
+  sentence_->set_dictionary(translator_->primary_dictionary());
 }
 
 bool SentenceTranslation::CheckEmpty() {

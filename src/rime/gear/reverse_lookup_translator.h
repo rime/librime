@@ -43,6 +43,7 @@ class ReverseLookupTranslator : public Translator {
                         vector<InputTabEntry>* tabs) const override {
     CollectReverseLookupTabs(position, tabs);
   }
+  bool IsReverseLookupSegment(const Segment& segment) const override;
 
  protected:
   void Initialize();
