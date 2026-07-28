@@ -5,6 +5,7 @@
 // 2011-05-17 Zou xu <zouivex@gmail.com>
 //
 #include <algorithm>
+#include <string_view>
 #include <gtest/gtest.h>
 #include <rime/dict/prism.h>
 
@@ -17,7 +18,6 @@ class RimePrismTest : public ::testing::Test {
   virtual void SetUp() {
     prism_.reset(new Prism(path{"prism_test.bin"}));
     prism_->Remove();
-
     set<string> keyset;
     keyset.insert("google");   // 4
     keyset.insert("good");     // 2
@@ -38,7 +38,6 @@ class RimePrismTest : public ::testing::Test {
 
 TEST_F(RimePrismTest, SaveAndLoad) {
   EXPECT_TRUE(prism_->Save());
-
   Prism test(prism_->file_path());
   EXPECT_TRUE(test.Load());
 
@@ -57,7 +56,6 @@ TEST_F(RimePrismTest, GetValue) {
   int value = -1;
   EXPECT_TRUE(prism_->GetValue("adobe", &value));
   EXPECT_EQ(value, 0);
-
   value = -1;
   EXPECT_TRUE(prism_->GetValue("baidu", &value));
   EXPECT_EQ(value, 1);
@@ -74,7 +72,6 @@ TEST_F(RimePrismTest, CommonPrefixMatch) {
   EXPECT_EQ(result[1].value, 3);   // goodbye
   EXPECT_EQ(result[1].length, 7);  // goodbye
 }
-
 TEST_F(RimePrismTest, ExpandSearch) {
   vector<Prism::Match> result;
 
@@ -87,4 +84,40 @@ TEST_F(RimePrismTest, ExpandSearch) {
   EXPECT_EQ(result[1].length, 6);  // google
   EXPECT_EQ(result[2].value, 3);   // goodbye
   EXPECT_EQ(result[2].length, 7);  // goodbye
+}
+TEST_F(RimePrismTest, ExpandSearchLimit) {
+  vector<Prism::Match> result;
+  prism_->ExpandSearch("goo", &result, 2);
+  // result is good and google.
+
+  ASSERT_EQ(result.size(), 2);
+  EXPECT_EQ(result[0].value, 2);
+  EXPECT_EQ(result[0].length, 4);
+  EXPECT_EQ(result[1].value, 4);
+  EXPECT_EQ(result[1].length, 6);
+}
+
+TEST_F(RimePrismTest, CommonPrefixSearchWithLength) {
+  const string input("xxgoodbye");
+  vector<Prism::Match> result;
+
+  prism_->CommonPrefixSearch(std::string_view(input).substr(2, 4), &result);
+  ASSERT_EQ(result.size(), 1);
+  EXPECT_EQ(result[0].value, 2);
+  EXPECT_EQ(result[0].length, 4);
+}
+
+TEST_F(RimePrismTest, ExpandSearchWithLength) {
+  const string input("xxgoodbye");
+  vector<Prism::Match> result;
+
+  prism_->ExpandSearch(std::string_view(input).substr(2, 3), &result, 10);
+
+  ASSERT_EQ(result.size(), 3);
+  EXPECT_EQ(result[0].value, 2);
+  EXPECT_EQ(result[0].length, 4);
+  EXPECT_EQ(result[1].value, 4);
+  EXPECT_EQ(result[1].length, 6);
+  EXPECT_EQ(result[2].value, 3);
+  EXPECT_EQ(result[2].length, 7);
 }

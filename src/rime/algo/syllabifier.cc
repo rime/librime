@@ -7,6 +7,7 @@
 //
 #include <algorithm>
 #include <queue>
+#include <string_view>
 #include <boost/range/adaptor/reversed.hpp>
 #include <rime/algo/syllabifier.h>
 #include <rime/dict/corrector.h>
@@ -65,14 +66,16 @@ int Syllabifier::BuildSyllableGraph(const string& input,
     // see where we can go by advancing a syllable
     vector<Prism::Match> matches;
     set<SyllableId> exact_match_syllables;
-    auto current_input = input.substr(begin_pos);
+    std::string_view current_input(input.data() + begin_pos,
+                                   input.length() - begin_pos);
     prism.CommonPrefixSearch(current_input, &matches);
     if (corrector_) {
       for (auto& m : matches) {
         exact_match_syllables.insert(m.value);
       }
       Corrections corrections;
-      corrector_->ToleranceSearch(prism, current_input, &corrections, 5);
+      corrector_->ToleranceSearch(prism, string{current_input}, &corrections,
+                                  5);
       for (const auto& m : corrections) {
         for (auto accessor = prism.QuerySpelling(m.first);
              !accessor.exhausted(); accessor.Next()) {

@@ -9,6 +9,7 @@
 #ifndef RIME_PRISM_H_
 #define RIME_PRISM_H_
 
+#include <string_view>
 #include <darts.h>
 #include <rime/common.h>
 #include <rime/algo/spelling.h>
@@ -79,8 +80,8 @@ class Prism : public MappedFile {
 
   RIME_DLL bool HasKey(const string& key);
   RIME_DLL bool GetValue(const string& key, int* value) const;
-  RIME_DLL void CommonPrefixSearch(const string& key, vector<Match>* result);
-  RIME_DLL void ExpandSearch(const string& key,
+  RIME_DLL void CommonPrefixSearch(std::string_view key, vector<Match>* result);
+  RIME_DLL void ExpandSearch(std::string_view key,
                              vector<Match>* result,
                              size_t limit);
   SpellingAccessor QuerySpelling(SyllableId spelling_id);
