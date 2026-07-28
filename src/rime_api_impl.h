@@ -1153,6 +1153,13 @@ static Bool RimeGetInputTabs(RimeSessionId session_id,
 
   // Use provided position; 0 means "current cursor"
   size_t start_pos = (position == 0) ? ctx->CurrentTabCursor() : position;
+  // When auto-detecting position (position == 0), skip past confirmed segments
+  if (position == 0) {
+    size_t edit_pos = ctx->composition().GetCurrentStartPosition();
+    if (start_pos < edit_pos) {
+      start_pos = edit_pos;
+    }
+  }
   if (start_pos >= ctx->input().length()) {
     if (position == 0) {
       // Auto-computed position past input: all syllables selected, no tabs
@@ -1313,9 +1320,19 @@ static Bool RimeSelectTab(RimeSessionId session_id,
   if (!ctx)
     return False;
 
-  // position=0 means auto-compute from current tree cursor
+  // position=0 means auto-compute from current editing segment.
+  // Keep this aligned with RimeGetInputTabs(position=0), otherwise a tab that
+  // is shown to user may be applied to a stale cursor position.
   if (position == 0) {
     position = ctx->CurrentTabCursor();
+    size_t edit_pos = ctx->composition().GetCurrentStartPosition();
+    if (position < edit_pos) {
+      position = edit_pos;
+    }
+  }
+
+  if (position >= ctx->input().length()) {
+    return False;
   }
 
   ctx->PushTabCursor(position + span);

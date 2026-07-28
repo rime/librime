@@ -300,45 +300,71 @@ void ReverseLookupTranslator::CollectReverseLookupTabs(
     return;
 
   const string& input = engine_->context()->input();
-  if (start_pos >= input.length())
+  if (start_pos >= input.length()) {
     return;
+  }
 
-  const size_t segment_start =
-      engine_->context()->composition().GetCurrentStartPosition();
-  if (start_pos < segment_start)
+  // Find the segment containing start_pos
+  const auto& comp = engine_->context()->composition();
+  const Segment* seg = nullptr;
+  for (const auto& s : comp) {
+    if (start_pos >= s.start && start_pos < s.end) {
+      seg = &s;
+      break;
+    }
+  }
+  if (!seg) {
     return;
+  }
 
-  string code = input.substr(start_pos);
+  // Use shadow_input to get display text (pinyin for reverse lookup)
+  string shadow = engine_->context()->shadow_input(seg->start, seg->end);
+  size_t rel_pos = start_pos - seg->start;
+
+  if (rel_pos >= shadow.length()) {
+    return;
+  }
+
+  string code = shadow.substr(rel_pos);
   size_t prefix_len = 0;
   if (!prefix_.empty()) {
-    if (input.compare(segment_start, prefix_.length(), prefix_) != 0)
+    if (!boost::starts_with(shadow, prefix_)) {
       return;
-    if (start_pos == segment_start) {
-      code = code.substr(prefix_.length());
-      prefix_len = prefix_.length();
-    } else if (start_pos < segment_start + prefix_.length()) {
-      return;
+    }
+    if (rel_pos < prefix_.length()) {
+      code = shadow.substr(prefix_.length());
+      prefix_len = prefix_.length() - rel_pos;
+    } else {
+      prefix_len = 0;
     }
   }
   if (!suffix_.empty() && boost::ends_with(code, suffix_)) {
     code.resize(code.length() - suffix_.length());
   }
-  if (code.empty())
+  if (code.empty()) {
     return;
+  }
 
-  // Build SyllableGraph from the pinyin portion
+  // Build SyllableGraph from the code
   SyllableGraph graph;
   Syllabifier syllabifier("", true,
                           options_ ? options_->strict_spelling() : false);
   size_t consumed =
       syllabifier.BuildSyllableGraph(code, *dict_->prism(), &graph);
-  if (consumed == 0)
+  if (consumed == 0) {
     return;
+  }
+
+  // Apply tab constraints to filter the graph (same as Query)
+  ApplyTabConstraints(&graph, dict_.get(),
+                      engine_->context()->tab_constraints(), seg->start,
+                      seg->end, rel_pos + prefix_len);
 
   // Collect edges from position 0
   auto it = graph.edges.find(0);
-  if (it == graph.edges.end())
+  if (it == graph.edges.end()) {
     return;
+  }
   set<string> seen;
   for (const auto& [end_pos, syllable_map] : it->second) {
     for (const auto& [syllable_id, props] : syllable_map) {
@@ -348,7 +374,6 @@ void ReverseLookupTranslator::CollectReverseLookupTabs(
       if (dict_->Decode(single_code, &decoded) && !decoded.empty()) {
         const string& label = decoded[0];
         if (!label.empty() && seen.insert(label).second) {
-          // span includes the prefix length
           tabs->emplace_back(InputTabEntry{label, prefix_len + end_pos,
                                            InputTabEntry::kReverseLookup});
         }
