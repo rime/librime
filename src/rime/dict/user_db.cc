@@ -6,7 +6,9 @@
 //
 #include <algorithm>
 #include <cstdlib>
+#include <filesystem>
 #include <sstream>
+#include <system_error>
 #include <boost/algorithm/string.hpp>
 #include <rime/service.h>
 #include <rime/algo/dynamics.h>
@@ -101,6 +103,73 @@ template <>
 RIME_DLL UserDbWrapper<TextDb>::UserDbWrapper(const path& file_path,
                                               const string& db_name)
     : TextDb(file_path, db_name, "userdb", plain_userdb_format) {}
+
+static bool is_subpath(const path& file_path, const path& directory) {
+  auto file_iter = file_path.begin();
+  for (const auto& component : directory) {
+    if (file_iter == file_path.end() || *file_iter != component)
+      return false;
+    ++file_iter;
+  }
+  return file_iter != file_path.end();
+}
+
+bool UserDbHelper::IsUserDataPath(const path& file_path) {
+  std::error_code error;
+  const path user_data_dir = std::filesystem::weakly_canonical(
+      Service::instance().deployer().user_data_dir, error);
+  if (error) {
+    LOG(ERROR) << "failed to resolve user data directory: " << error.message();
+    return false;
+  }
+
+  error.clear();
+  const path resolved_file_path =
+      std::filesystem::weakly_canonical(file_path, error);
+  if (error) {
+    LOG(ERROR) << "failed to resolve userdb path '" << file_path
+               << "': " << error.message();
+    return false;
+  }
+
+  if (!is_subpath(resolved_file_path, user_data_dir)) {
+    LOG(ERROR) << "userdb path '" << resolved_file_path
+               << "' is outside user data directory '" << user_data_dir << "'.";
+    return false;
+  }
+  return true;
+}
+
+bool UserDbHelper::EnsureParentDirectory(const path& file_path) {
+  path parent_path(file_path.parent_path());
+  if (parent_path.empty())
+    return true;
+  std::error_code error;
+  if (std::filesystem::exists(parent_path, error)) {
+    if (std::filesystem::is_directory(parent_path, error))
+      return true;
+    if (error) {
+      LOG(ERROR) << "failed to inspect userdb directory '" << parent_path
+                 << "': " << error.message();
+    } else {
+      LOG(ERROR) << "userdb directory path '" << parent_path
+                 << "' is not a directory.";
+    }
+    return false;
+  }
+  if (error) {
+    LOG(ERROR) << "failed to inspect userdb directory '" << parent_path
+               << "': " << error.message();
+    return false;
+  }
+  std::filesystem::create_directories(parent_path, error);
+  if (error) {
+    LOG(ERROR) << "failed to create userdb directory '" << parent_path
+               << "': " << error.message();
+    return false;
+  }
+  return true;
+}
 
 bool UserDbHelper::UpdateUserInfo() {
   Deployer& deployer(Service::instance().deployer());
