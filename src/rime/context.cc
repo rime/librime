@@ -319,7 +319,57 @@ string Context::shadow_input(size_t start, size_t end) const {
     if (constraint.position < raw_pos || constraint.position >= end)
       continue;
     shadow.append(input_, raw_pos, constraint.position - raw_pos);
-    shadow += constraint.label;
+    // Strip trailing tone digits (1-5) from the label so it fits within
+    // the span.  Otherwise extra characters in the shadow input shift
+    // syllable-graph positions and break ApplyTabConstraints alignment.
+    string trimmed_label = constraint.label;
+    while (trimmed_label.length() > constraint.span && !trimmed_label.empty() &&
+           trimmed_label.back() >= '1' && trimmed_label.back() <= '5') {
+      trimmed_label.pop_back();
+    }
+    // Check whether the label and the original input use the same
+    // character system.  When neither is a substring of the other
+    // (after stripping digits) and the original is not pure digits
+    // (T9), keep the original substring.  ApplyTabConstraints still
+    // filters correctly by syllable ID.
+    string original_substr =
+        input_.substr(constraint.position, constraint.span);
+    string original_no_digits;
+    for (char c : original_substr) {
+      if (c < '0' || c > '9')
+        original_no_digits += c;
+    }
+    string label_no_digits;
+    for (char c : trimmed_label) {
+      if (c < '0' || c > '9')
+        label_no_digits += c;
+    }
+    // Labels and original input use the same character system only
+    // when they match exactly after digit stripping.  Single-char
+    // labels on pure-digit input are treated as T9 abbreviations.
+    bool same_system =
+        !label_no_digits.empty() && label_no_digits == original_no_digits;
+    bool digits_only = !original_substr.empty();
+    for (char c : original_substr) {
+      if (c < '0' || c > '9') {
+        digits_only = false;
+        break;
+      }
+    }
+    // T9-like digit input with single-char abbreviations.
+    // Multi-char labels on all-digit input are bopomofo encodings
+    // (e.g. "184" = ㄅㄚˋ → "ba"), not T9.
+    if (digits_only && label_no_digits.length() == 1)
+      same_system = true;
+    else if (digits_only && label_no_digits.length() >= 2)
+      same_system = false;
+    if (trimmed_label.length() > constraint.span ||
+        (!same_system && !digits_only) ||
+        (digits_only && label_no_digits.length() >= 2)) {
+      shadow.append(input_, constraint.position, constraint.span);
+    } else {
+      shadow += trimmed_label;
+    }
     raw_pos = (std::min)(constraint.position + constraint.span, end);
   }
   shadow.append(input_, raw_pos, end - raw_pos);
