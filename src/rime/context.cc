@@ -371,7 +371,9 @@ void Context::AddTabConstraint(size_t position,
                                const string& label,
                                size_t span) {
   tab_constraints_.push_back({position, label, span});
-  RefreshNonConfirmedComposition();
+  if (!RefreshNonConfirmedComposition()) {
+    update_notifier_(this);
+  }
 }
 
 void Context::ClearTabConstraints() {

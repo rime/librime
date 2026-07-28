@@ -118,6 +118,7 @@ class ScriptTranslation : public Translation {
                     const string& input,
                     size_t start,
                     size_t end_of_input,
+                    const vector<Context::TabConstraint>& constraints,
                     int max_sentences,
                     double sentence_cutoff_threshold)
       : translator_(translator),
@@ -126,6 +127,7 @@ class ScriptTranslation : public Translation {
         end_of_input_(end_of_input),
         syllabifier_(
             New<ScriptSyllabifier>(translator, corrector, input, start)),
+        constraints_(constraints),
         enable_correction_(corrector),
         max_sentences_(max_sentences),
         sentence_cutoff_threshold_(sentence_cutoff_threshold) {
@@ -153,6 +155,7 @@ class ScriptTranslation : public Translation {
   size_t start_;
   size_t end_of_input_;
   an<ScriptSyllabifier> syllabifier_;
+  vector<Context::TabConstraint> constraints_;
 
   an<DictEntryCollector> phrase_;
   an<UserDictEntryCollector> user_phrase_;
@@ -278,17 +281,13 @@ an<Translation> ScriptTranslator::Query(const string& input,
   // the translator should survive translations it creates
   auto result = New<ScriptTranslation>(
       this, corrector_.get(), poet_.get(), shadow_input, segment.start,
-      end_of_input, max_sentences_, sentence_cutoff_threshold_);
+      end_of_input, engine_->context()->tab_constraints(), max_sentences_,
+      sentence_cutoff_threshold_);
   if (!result || !result->Evaluate(
                      dict_.get(), enable_user_dict ? user_dict_.get() : NULL)) {
     return nullptr;
   }
   an<Translation> deduped = New<DistinctTranslation>(result);
-  const auto& constraints = engine_->context()->tab_constraints();
-  if (!constraints.empty()) {
-    deduped =
-        New<ConstraintFilteredTranslation>(deduped, dict_.get(), constraints);
-  }
   if (contextual_suggestions_) {
     return poet_->ContextualWeighted(deduped, input, segment.start, this);
   }
@@ -726,6 +725,9 @@ static bool has_exact_match_phrase(Ptr ptr, Iter iter, size_t consumed) {
 
 bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   size_t consumed = syllabifier_->BuildSyllableGraph(*dict->prism());
+  if (!constraints_.empty()) {
+    syllabifier_->ApplyTabConstraints(dict, constraints_);
+  }
 
   const auto& syllable_graph = syllabifier_->syllable_graph();
   bool predict_word = translator_->enable_word_completion() &&
