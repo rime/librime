@@ -273,11 +273,22 @@ bool Prism::GetValue(const string& key, int* value) const {
 // Given a key, search all the keys in the tree that share
 // a common prefix with that key.
 void Prism::CommonPrefixSearch(std::string_view key, vector<Match>* result) {
-  if (!result || key.empty())
+  if (!result) {
     return;
-  result->resize(key.length());
-  size_t num_results = trie_->commonPrefixSearch(key.data(), &result->front(),
-                                                 key.length(), key.length());
+  }
+  if (key.empty()) {
+    result->clear();
+    return;
+  }
+  size_t len = key.length();
+  // Reserve capacity to avoid repeated reallocation when the caller reuses
+  // the same vector across multiple calls (e.g., inside BuildSyllableGraph).
+  if (result->capacity() < len) {
+    result->reserve(len);
+  }
+  result->resize(len);
+  size_t num_results =
+      trie_->commonPrefixSearch(key.data(), &result->front(), len, len);
   result->resize(num_results);
 }
 

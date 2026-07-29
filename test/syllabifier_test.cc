@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <utility>
 #include <gtest/gtest.h>
+#include <rime/algo/algebra.h>
 #include <rime/dict/prism.h>
 #include <rime/algo/syllabifier.h>
 
@@ -38,7 +39,10 @@ class RimeSyllabifierTest : public ::testing::Test {
     prism_->Build(keyset);
   }
 
-  virtual void TearDown() {}
+  virtual void TearDown() {
+    std::error_code ec;
+    std::filesystem::remove("syllabifier_test.bin", ec);
+  }
 
  protected:
   rime::map<rime::string, rime::SyllableId> syllable_id_;
@@ -210,4 +214,117 @@ TEST_F(RimeSyllabifierTest, TrimBothLeadingAndTrailingDelimiters) {
   ASSERT_FALSE(sp.end() == sp.find(syllable_id_["a"]));
   EXPECT_EQ(rime::kNormalSpelling, sp[0].type);
   EXPECT_EQ(0.0, sp[0].credibility);
+}
+
+// Tests that the spelling cache is used correctly when the same spelling_id
+// is encountered from multiple BFS vertices (ambiguous parsing).
+// Builds a local syllabary that includes "n" as a standalone syllable to
+// exercise the deeper ambiguous path: a + n + a + na.
+// "a" spelling_id is queried at vertices 0 (miss) and 2,4 (hit).
+// "n" spelling_id is queried at vertices 1 (miss) and 3 (hit).
+TEST_F(RimeSyllabifierTest, AmbiguousCacheHit) {
+  rime::vector<rime::string> syllables;
+  syllables.push_back("a");
+  syllables.push_back("an");
+  syllables.push_back("n");
+  syllables.push_back("na");
+  std::sort(syllables.begin(), syllables.end());
+
+  rime::map<rime::string, rime::SyllableId> sid;
+  for (size_t i = 0; i < syllables.size(); ++i) {
+    sid[syllables[i]] = i;
+  }
+
+  rime::path file_path("syllabifier_cache_test.bin");
+  auto test_prism = rime::New<rime::Prism>(file_path);
+  test_prism->Remove();
+  rime::set<rime::string> keyset;
+  std::copy(syllables.begin(), syllables.end(),
+            std::inserter(keyset, keyset.begin()));
+  EXPECT_TRUE(test_prism->Build(keyset));
+
+  rime::Syllabifier s;
+  rime::SyllableGraph g;
+  const rime::string input("anana");
+  int result = s.BuildSyllableGraph(input, *test_prism, &g);
+  EXPECT_EQ(input.length(), result);
+  EXPECT_EQ(input.length(), g.interpreted_length);
+  EXPECT_EQ(input.length() + 1, g.vertices.size());
+
+  // Verify key vertices and edges for the a-n-a-na path
+  EXPECT_FALSE(g.edges.end() == g.edges.find(0));
+  EXPECT_FALSE(g.edges.end() == g.edges.find(1));
+  EXPECT_FALSE(g.edges.end() == g.edges.find(2));
+  EXPECT_FALSE(g.vertices.end() == g.vertices.find(1));
+  EXPECT_FALSE(g.vertices.end() == g.vertices.find(3));
+
+  // a@0→1
+  auto& e0 = g.edges[0];
+  EXPECT_FALSE(e0.end() == e0.find(1));
+  EXPECT_FALSE(e0[1].end() == e0[1].find(sid["a"]));
+  // n@1→2
+  auto& e1 = g.edges[1];
+  EXPECT_FALSE(e1.end() == e1.find(2));
+  EXPECT_FALSE(e1[2].end() == e1[2].find(sid["n"]));
+  // a@2→3
+  auto& e2 = g.edges[2];
+  EXPECT_FALSE(e2.end() == e2.find(3));
+  EXPECT_FALSE(e2[3].end() == e2[3].find(sid["a"]));
+  // na@3→5
+  auto& e3 = g.edges[3];
+  EXPECT_FALSE(e3.end() == e3.find(5));
+  EXPECT_FALSE(e3[5].end() == e3[5].find(sid["na"]));
+
+  test_prism->Remove();
+}
+
+// Test with spelling algebra (Script) to exercise the full cached
+// QuerySpelling path with a non-null spelling_map.
+TEST_F(RimeSyllabifierTest, SpellingAlgebraCache) {
+  rime::set<rime::string> keyset;
+  keyset.insert("zhi");
+  keyset.insert("li");
+  keyset.insert("shi");
+
+  rime::Script script;
+  {
+    rime::Spelling s("zhi");
+    s.properties.type = rime::kNormalSpelling;
+    script["zhi"].push_back(s);
+  }
+  {
+    rime::Spelling s("zhi");
+    s.properties.type = rime::kAbbreviation;
+    script["zh"].push_back(s);
+  }
+  {
+    rime::Spelling s("li");
+    s.properties.type = rime::kNormalSpelling;
+    script["li"].push_back(s);
+  }
+  {
+    rime::Spelling s("shi");
+    s.properties.type = rime::kNormalSpelling;
+    script["shi"].push_back(s);
+  }
+
+  rime::path file_path("syllabifier_algebra_test.bin");
+  auto test_prism = rime::New<rime::Prism>(file_path);
+  test_prism->Remove();
+  EXPECT_TRUE(test_prism->Build(keyset, &script));
+  EXPECT_TRUE(test_prism->Save());
+  EXPECT_TRUE(test_prism->Load());
+
+  rime::Syllabifier s;
+  rime::SyllableGraph g;
+  const rime::string input("zhili");
+  int result = s.BuildSyllableGraph(input, *test_prism, &g);
+  EXPECT_EQ(input.length(), result);
+  EXPECT_EQ(input.length(), g.interpreted_length);
+  EXPECT_FALSE(g.vertices.end() == g.vertices.find(3));
+  EXPECT_FALSE(g.vertices.end() == g.vertices.find(5));
+  EXPECT_FALSE(g.edges.end() == g.edges.find(3));
+  EXPECT_FALSE(g.edges[3].end() == g.edges[3].find(5));
+
+  test_prism->Remove();
 }

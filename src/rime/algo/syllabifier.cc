@@ -34,9 +34,29 @@ int Syllabifier::BuildSyllableGraph(const string& input,
   if (input.empty())
     return 0;
 
+  using CachedSpellingList = vector<pair<SyllableId, SpellingProperties>>;
+  hash_map<SyllableId, CachedSpellingList> spelling_cache;
+  auto get_cached_spellings =
+      [&](SyllableId spelling_id) -> const CachedSpellingList& {
+    auto it = spelling_cache.find(spelling_id);
+    if (it != spelling_cache.end())
+      return it->second;
+    auto& result = spelling_cache[spelling_id];
+    SpellingAccessor accessor(prism.QuerySpelling(spelling_id));
+    while (!accessor.exhausted()) {
+      result.emplace_back(accessor.syllable_id(), accessor.properties());
+      accessor.Next();
+    }
+    return result;
+  };
+
   size_t farthest = 0;
   VertexQueue queue;
   queue.push(Vertex{0, kNormalSpelling});  // start
+
+  // Reusable vector for prism matches; kept outside the loop to preserve
+  // capacity across iterations and avoid per-vertex reallocation.
+  vector<Prism::Match> matches;
 
   while (!queue.empty()) {
     Vertex vertex(queue.top());
@@ -64,7 +84,7 @@ int Syllabifier::BuildSyllableGraph(const string& input,
                << ", begin_pos: " << begin_pos;
 
     // see where we can go by advancing a syllable
-    vector<Prism::Match> matches;
+    matches.clear();
     set<SyllableId> exact_match_syllables;
     std::string_view current_input(input.data() + begin_pos,
                                    input.length() - begin_pos);
@@ -106,10 +126,11 @@ int Syllabifier::BuildSyllableGraph(const string& input,
         // when spelling algebra is enabled,
         // a spelling evaluates to a set of syllables;
         // otherwise, it resembles exactly the syllable itself.
-        SpellingAccessor accessor(prism.QuerySpelling(m.value));
-        while (!accessor.exhausted()) {
-          SyllableId syllable_id = accessor.syllable_id();
-          EdgeProperties props(accessor.properties());
+        // Use cached spelling list to avoid repeated QuerySpelling iteration
+        // when the same spelling_id appears from multiple vertices.
+        for (const auto& [syllable_id, raw_props] :
+             get_cached_spellings(m.value)) {
+          EdgeProperties props(raw_props);
           if (strict_spelling_ && matches_input &&
               props.type != kNormalSpelling) {
             // disqualify fuzzy spelling or abbreviation as single word
@@ -134,7 +155,6 @@ int Syllabifier::BuildSyllableGraph(const string& input,
               end_vertex_type = props.type;
             }
           }
-          accessor.Next();
         }
         if (spellings.empty()) {
           DLOG(INFO) << "not spelled.";
@@ -221,10 +241,9 @@ int Syllabifier::BuildSyllableGraph(const string& input,
         // when spelling algebra is enabled,
         // a spelling evaluates to a set of syllables;
         // otherwise, it resembles exactly the syllable itself.
-        SpellingAccessor accessor(prism.QuerySpelling(m.value));
-        while (!accessor.exhausted()) {
-          SyllableId syllable_id = accessor.syllable_id();
-          SpellingProperties props = accessor.properties();
+        for (const auto& [syllable_id, raw_props] :
+             get_cached_spellings(m.value)) {
+          SpellingProperties props = raw_props;
           if (props.type < kAbbreviation) {
             props.type = kCompletion;
             props.credibility += kCompletionPenalty;
@@ -233,7 +252,6 @@ int Syllabifier::BuildSyllableGraph(const string& input,
             // spelling-to-syllable map
             spellings.insert({syllable_id, props});
           }
-          accessor.Next();
         }
       }
       if (spellings.empty()) {

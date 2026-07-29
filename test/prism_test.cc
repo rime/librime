@@ -121,3 +121,31 @@ TEST_F(RimePrismTest, ExpandSearchWithLength) {
   EXPECT_EQ(result[2].value, 3);
   EXPECT_EQ(result[2].length, 7);
 }
+
+TEST_F(RimePrismTest, RepeatedCommonPrefixSearch) {
+  // Exercises the capacity-reuse path in CommonPrefixSearch.
+  // Reuses the same result vector across multiple calls of varying lengths.
+  vector<Prism::Match> result;
+
+  // First call: longer input
+  prism_->CommonPrefixSearch("goodbye", &result);
+  ASSERT_EQ(result.size(), 2);
+  EXPECT_EQ(result[0].value, 2);  // good
+  EXPECT_EQ(result[1].value, 3);  // goodbye
+
+  // Second call: shorter input (same vector, no reallocation expected)
+  result.clear();
+  prism_->CommonPrefixSearch("good", &result);
+  ASSERT_EQ(result.size(), 1);
+  EXPECT_EQ(result[0].value, 2);  // good
+
+  // Third call: longer input again (should reuse existing capacity)
+  prism_->CommonPrefixSearch("goodbye", &result);
+  ASSERT_EQ(result.size(), 2);
+  EXPECT_EQ(result[0].value, 2);  // good
+  EXPECT_EQ(result[1].value, 3);  // goodbye
+
+  // Empty key: should clear the result vector
+  prism_->CommonPrefixSearch("", &result);
+  EXPECT_TRUE(result.empty());
+}
