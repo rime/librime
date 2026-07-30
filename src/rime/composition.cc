@@ -25,6 +25,7 @@ Preedit Composition::GetPreedit(const string& full_input,
                                 size_t caret_pos,
                                 const string& caret) const {
   Preedit preedit;
+  preedit.text.reserve(full_input.length() * 3 + 32);
   preedit.caret_pos = string::npos;
   size_t start = 0;
   size_t end = 0;
@@ -41,7 +42,7 @@ Preedit Composition::GetPreedit(const string& full_input,
       } else {  // raw input
         end = at(i).end;
         if (!at(i).HasTag("phony")) {
-          preedit.text += input_.substr(start, end - start);
+          preedit.text.append(input_.data() + start, end - start);
         }
       }
     } else {  // highlighted
@@ -49,22 +50,24 @@ Preedit Composition::GetPreedit(const string& full_input,
       preedit.sel_end = string::npos;
       if (cand && !cand->preedit().empty()) {
         end = cand->end();
-        auto caret_placeholder = cand->preedit().find('\t');
+        const string preedit_str = cand->preedit();
+        auto caret_placeholder = preedit_str.find('\t');
         if (caret_placeholder != string::npos) {
-          preedit.text += cand->preedit().substr(0, caret_placeholder);
+          preedit.text.append(preedit_str.data(), caret_placeholder);
           // the part after caret is considered prompt string,
           // show it only when the caret is at the end of input.
           if (caret_pos == end && end == full_input.length()) {
             preedit.sel_end = preedit.sel_start + caret_placeholder;
             preedit.caret_pos = preedit.sel_end;
-            preedit.text += cand->preedit().substr(caret_placeholder + 1);
+            preedit.text.append(preedit_str.data() + caret_placeholder + 1,
+                                preedit_str.length() - caret_placeholder - 1);
           }
         } else {
-          preedit.text += cand->preedit();
+          preedit.text += preedit_str;
         }
       } else {
         end = at(i).end;
-        preedit.text += input_.substr(start, end - start);
+        preedit.text.append(input_.data() + start, end - start);
       }
       if (preedit.sel_end == string::npos) {
         preedit.sel_end = preedit.text.length();
@@ -72,14 +75,14 @@ Preedit Composition::GetPreedit(const string& full_input,
     }
   }
   if (end < input_.length()) {
-    preedit.text += input_.substr(end);
+    preedit.text.append(input_.data() + end, input_.length() - end);
     end = input_.length();
   }
   if (preedit.caret_pos == string::npos) {
     preedit.caret_pos = preedit.text.length();
   }
   if (end < full_input.length()) {
-    preedit.text += full_input.substr(end);
+    preedit.text.append(full_input.data() + end, full_input.length() - end);
   }
   // insert soft cursor and prompt string.
   auto prompt = caret + GetPrompt();
@@ -101,6 +104,7 @@ string Composition::GetPrompt() const {
 
 string Composition::GetCommitText() const {
   string result;
+  result.reserve(input_.length() * 3 + 16);
   size_t end = 0;
   for (const Segment& seg : *this) {
     if (auto cand = seg.GetSelectedCandidate()) {
@@ -109,18 +113,19 @@ string Composition::GetCommitText() const {
     } else {
       end = seg.end;
       if (!seg.HasTag("phony")) {
-        result += input_.substr(seg.start, seg.end - seg.start);
+        result.append(input_.data() + seg.start, seg.end - seg.start);
       }
     }
   }
   if (input_.length() > end) {
-    result += input_.substr(end);
+    result.append(input_.data() + end, input_.length() - end);
   }
   return result;
 }
 
 string Composition::GetScriptText(bool keep_selection) const {
   string result;
+  result.reserve(input_.length() * 3 + 16);
   size_t start = 0;
   size_t end = 0;
   for (const Segment& seg : *this) {
@@ -130,13 +135,14 @@ string Composition::GetScriptText(bool keep_selection) const {
     if (keep_selection && cand && !cand->text().empty() &&
         seg.status >= Segment::kSelected)
       result += cand->text();
-    else if (cand && !cand->preedit().empty())
-      result += boost::erase_first_copy(cand->preedit(), "\t");
-    else if (!seg.HasTag("phony"))
-      result += input_.substr(start, end - start);
+    else if (cand && !cand->preedit().empty()) {
+      const string preedit_str = cand->preedit();
+      result += boost::erase_first_copy(preedit_str, "\t");
+    } else if (!seg.HasTag("phony"))
+      result.append(input_.data() + start, end - start);
   }
   if (input_.length() > end) {
-    result += input_.substr(end);
+    result.append(input_.data() + end, input_.length() - end);
   }
   return result;
 }
