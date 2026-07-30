@@ -1276,39 +1276,6 @@ static void RimeFreeCandidateCode(char** segments, size_t num_segments) {
   }
 }
 
-static Bool RimeGetReverseLookupPrefixes(RimeSessionId session_id,
-                                         char*** prefixes,
-                                         size_t* count) {
-  an<Session> session(Service::instance().GetSession(session_id));
-  if (!session)
-    return False;
-  Engine* engine = session->engine();
-  if (!engine)
-    return False;
-
-  vector<string> result;
-  engine->GetReverseLookupPrefixes(&result);
-
-  if (result.empty())
-    return False;
-
-  *count = result.size();
-  *prefixes = new char*[*count];
-  for (size_t i = 0; i < *count; ++i) {
-    (*prefixes)[i] = new char[result[i].length() + 1];
-    std::strcpy((*prefixes)[i], result[i].c_str());
-  }
-  return True;
-}
-
-static void RimeFreeReverseLookupPrefixes(char** prefixes, size_t count) {
-  if (prefixes) {
-    for (size_t i = 0; i < count; ++i)
-      delete[] prefixes[i];
-    delete[] prefixes;
-  }
-}
-
 static Bool RimeSelectTab(RimeSessionId session_id,
                           size_t position,
                           const char* label,
@@ -1460,8 +1427,6 @@ RIME_API RIME_FLAVORED(RimeApi) * RIME_FLAVORED(rime_get_api)() {
     s_api.free_input_tabs = &RimeFreeInputTabs;
     s_api.get_candidate_code = &RimeGetCandidateCode;
     s_api.free_candidate_code = &RimeFreeCandidateCode;
-    s_api.get_reverse_lookup_prefixes = &RimeGetReverseLookupPrefixes;
-    s_api.free_reverse_lookup_prefixes = &RimeFreeReverseLookupPrefixes;
     s_api.select_tab = &RimeSelectTab;
     s_api.clear_tabs = &RimeClearTabs;
   }

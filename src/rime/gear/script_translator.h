@@ -79,7 +79,6 @@ class ScriptTranslator : public Translator,
     CollectSyllableTabs(position, tabs);
   }
   Dictionary* primary_dictionary() const override { return dict(); }
-  string reverse_lookup_prefix() const override { return ""; }
 
  protected:
   int max_homophones_ = 1;

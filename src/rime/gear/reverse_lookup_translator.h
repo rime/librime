@@ -24,14 +24,6 @@ class ReverseLookupTranslator : public Translator {
 
   virtual an<Translation> Query(const string& input, const Segment& segment);
 
-  //! Get the configured reverse lookup prefix (e.g. "z")
-  //! Triggers lazy initialization if not yet done.
-  RIME_DLL string reverse_lookup_prefix() const {
-    if (!initialized_)
-      const_cast<ReverseLookupTranslator*>(this)->Initialize();
-    return prefix_;
-  }
-
   //! Return the primary dictionary for code lookup (override).
   Dictionary* primary_dictionary() const override { return dict(); }
 
@@ -43,7 +35,6 @@ class ReverseLookupTranslator : public Translator {
                         vector<InputTabEntry>* tabs) const override {
     CollectReverseLookupTabs(position, tabs);
   }
-  bool IsReverseLookupSegment(const Segment& segment) const override;
 
  protected:
   void Initialize();

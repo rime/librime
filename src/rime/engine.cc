@@ -34,36 +34,10 @@ class ConcreteEngine : public Engine {
   virtual void ApplySchema(Schema* schema);
   virtual void CommitText(string text);
   virtual void Compose(Context* ctx);
-  bool IsReverseLookupSegment(const Segment& segment) const {
-    for (const auto& translator : translators_) {
-      if (translator->IsReverseLookupSegment(segment))
-        return true;
-    }
-    return false;
-  }
   virtual void CollectInputTabs(size_t pos, vector<InputTabEntry>* tabs) const {
-    bool reverse_lookup = false;
-    const Segment* active_segment = nullptr;
-    for (const Segment& segment : context_->composition()) {
-      if (pos >= segment.start && pos < segment.end) {
-        active_segment = &segment;
-        reverse_lookup = IsReverseLookupSegment(segment);
-        break;
-      }
-    }
     for (auto& t : translators_) {
-      if (reverse_lookup && !t->IsReverseLookupSegment(*active_segment))
-        continue;
       t->CollectInputTabs(pos, tabs);
     }
-  }
-  virtual bool IsReverseLookupPosition(size_t pos) const {
-    for (const Segment& segment : context_->composition()) {
-      if (pos < segment.start || pos >= segment.end)
-        continue;
-      return IsReverseLookupSegment(segment);
-    }
-    return false;
   }
   virtual Dictionary* primary_dictionary() const {
     for (auto& t : translators_) {
@@ -71,13 +45,6 @@ class ConcreteEngine : public Engine {
         return d;
     }
     return nullptr;
-  }
-  virtual void GetReverseLookupPrefixes(vector<string>* prefixes) const {
-    for (auto& t : translators_) {
-      string pfx = t->reverse_lookup_prefix();
-      if (!pfx.empty())
-        prefixes->push_back(pfx);
-    }
   }
 
  protected:
@@ -258,10 +225,7 @@ void ConcreteEngine::TranslateSegments(Segmentation* segments) {
     DLOG(INFO) << "translating segment: [" << input << "]";
 
     auto menu = New<Menu>();
-    const bool reverse_lookup = IsReverseLookupSegment(segment);
     for (auto& translator : translators_) {
-      if (reverse_lookup && !translator->IsReverseLookupSegment(segment))
-        continue;
       auto translation = translator->Query(input, segment);
       if (!translation)
         continue;

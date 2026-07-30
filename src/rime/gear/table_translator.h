@@ -47,7 +47,6 @@ class TableTranslator : public Translator,
     CollectTableTabs(position, tabs);
   }
   Dictionary* primary_dictionary() const override { return dict(); }
-  string reverse_lookup_prefix() const override { return ""; }
 
  protected:
   bool enable_charset_filter_ = false;

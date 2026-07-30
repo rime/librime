@@ -182,11 +182,6 @@ ReverseLookupTranslator::ReverseLookupTranslator(const Ticket& ticket)
   config->GetString(name_space_ + "/tag", &tag_);
 }
 
-bool ReverseLookupTranslator::IsReverseLookupSegment(
-    const Segment& segment) const {
-  return segment.HasTag(tag_);
-}
-
 void ReverseLookupTranslator::Initialize() {
   initialized_ = true;  // no retry
   if (!engine_)

@@ -32,12 +32,8 @@ class Engine : public Messenger {
   //! Access input tab entries from the translator collection.
   virtual void CollectInputTabs(size_t position,
                                 vector<InputTabEntry>* tabs) const {}
-  //! Return whether the input position belongs to a reverse lookup segment.
-  virtual bool IsReverseLookupPosition(size_t position) const { return false; }
   //! Get the first available translatordictionary for code lookup.
   virtual Dictionary* primary_dictionary() const { return nullptr; }
-  //! Collect reverse lookup prefixes from all translators.
-  virtual void GetReverseLookupPrefixes(vector<string>* prefixes) const {}
 
   Schema* schema() const { return schema_.get(); }
   Context* context() const { return context_.get(); }

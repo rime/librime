@@ -537,13 +537,6 @@ typedef struct RIME_FLAVORED(rime_api_t) {
                              size_t* matching_segments);
   void (*free_candidate_code)(char** segments, size_t num_segments);
 
-  //! Get configured reverse lookup prefix characters.
-  //! E.g. returns ["z"] for wubi schema with z-prefix reverse lookup.
-  Bool (*get_reverse_lookup_prefixes)(RimeSessionId session_id,
-                                      char*** prefixes,
-                                      size_t* count);
-  void (*free_reverse_lookup_prefixes)(char** prefixes, size_t count);
-
   //! Select a tab to constrain syllable disambiguation.
   //! Adds a constraint to Context and triggers re-composition.
   Bool (*select_tab)(RimeSessionId session_id,
