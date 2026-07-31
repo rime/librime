@@ -466,30 +466,42 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
 
       // collect exact-matching entries (code == prefix)
       hash_set<std::string_view> seen;
-      while (it != cache_.end() && it->code == prefix) {
-        bool overridden = false;
-        auto pit = pending_.find(prefix + '\t' + std::string(it->text));
-        if (pit != pending_.end()) {
-          const auto& p = pit->second;
-          if (p.type == PendingUpdate::kDelete) {
-            overridden = true;
-          } else {
-            // use updated entry from pending
-            RecruitCacheEntry({p.code, p.text, p.dee, p.commits, p.tick},
-                              end_pos, state->code, state->present_tick,
+      if (!pending_.empty()) {
+        // pending_ holds uncommitted writes; check each entry for overrides
+        while (it != cache_.end() && it->code == prefix) {
+          bool overridden = false;
+          auto pit = pending_.find(prefix + '\t' + std::string(it->text));
+          if (pit != pending_.end()) {
+            const auto& p = pit->second;
+            if (p.type == PendingUpdate::kDelete) {
+              overridden = true;
+            } else {
+              // use updated entry from pending
+              RecruitCacheEntry({p.code, p.text, p.dee, p.commits, p.tick},
+                                end_pos, state->code, state->present_tick,
+                                state->credibility.back(),
+                                state->quality_len.back(),
+                                &state->query_result);
+              seen.insert(p.text);
+              overridden = true;
+            }
+          }
+          if (!overridden) {
+            RecruitCacheEntry(*it, end_pos, state->code, state->present_tick,
                               state->credibility.back(),
                               state->quality_len.back(), &state->query_result);
-            seen.insert(p.text);
-            overridden = true;
+            seen.insert(it->text);
           }
+          ++it;
         }
-        if (!overridden) {
+      } else {
+        // fast path: no uncommitted writes; cache_ is authoritative
+        while (it != cache_.end() && it->code == prefix) {
           RecruitCacheEntry(*it, end_pos, state->code, state->present_tick,
                             state->credibility.back(),
                             state->quality_len.back(), &state->query_result);
-          seen.insert(it->text);
+          ++it;
         }
-        ++it;
       }
       // add new entries from pending_ that aren't in cache
       for (const auto& kv : pending_) {
@@ -544,33 +556,45 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
           while (pred != cache_.end() && pred->code == prefix)
             ++pred;
           hash_set<std::string_view> seen_pred;
-          while (pred != cache_.end() && starts_with(pred->code, prefix)) {
-            bool overridden = false;
-            auto pit =
-                pending_.find(std::string(pred->code) + '\t' +
-                              std::string(pred->text));
-            if (pit != pending_.end()) {
-              const auto& p = pit->second;
-              if (p.type == PendingUpdate::kDelete) {
-                overridden = true;
-              } else {
+          if (!pending_.empty()) {
+            // pending_ holds uncommitted writes; check each entry for overrides
+            while (pred != cache_.end() && starts_with(pred->code, prefix)) {
+              bool overridden = false;
+              auto pit =
+                  pending_.find(std::string(pred->code) + '\t' +
+                                std::string(pred->text));
+              if (pit != pending_.end()) {
+                const auto& p = pit->second;
+                if (p.type == PendingUpdate::kDelete) {
+                  overridden = true;
+                } else {
+                  RecruitPredictiveEntry(
+                      {p.code, p.text, p.dee, p.commits, p.tick}, end_pos,
+                      state->depth(), state->present_tick,
+                      state->credibility.back(), state->quality_len.back(),
+                      &state->query_result);
+                  seen_pred.insert(p.text);
+                  overridden = true;
+                }
+              }
+              if (!overridden) {
                 RecruitPredictiveEntry(
-                    {p.code, p.text, p.dee, p.commits, p.tick}, end_pos,
-                    state->depth(), state->present_tick,
+                    *pred, end_pos, state->depth(), state->present_tick,
                     state->credibility.back(), state->quality_len.back(),
                     &state->query_result);
-                seen_pred.insert(p.text);
-                overridden = true;
+                seen_pred.insert(pred->text);
               }
+              ++pred;
             }
-            if (!overridden) {
+          } else {
+            // fast path: no uncommitted writes; cache_ is authoritative
+            while (pred != cache_.end() && starts_with(pred->code, prefix)) {
               RecruitPredictiveEntry(
                   *pred, end_pos, state->depth(), state->present_tick,
                   state->credibility.back(), state->quality_len.back(),
                   &state->query_result);
-              seen_pred.insert(pred->text);
+              ++pred;
             }
-            ++pred;
           }
           // predictive entries from pending_ not yet in cache
           for (const auto& kv : pending_) {
@@ -620,8 +644,6 @@ an<UserDictEntryCollector> UserDictionary::Lookup(
   state.present_tick = tick_ + 1;
   state.credibility.push_back(initial_credibility);
   state.quality_len.push_back(0.0);
-  state.accessor = db_->Query("");
-  state.accessor->Jump(" ");  // skip metadata
   string prefix;
   // Rebuild only when deferred. Local changes are reflected by pending_.
   // External sync, merge, and restore operations must call Reload().
@@ -631,6 +653,9 @@ an<UserDictEntryCollector> UserDictionary::Lookup(
   if (cache_built_) {
     CacheLookup(syll_graph, start_pos, prefix, &state);
   } else {
+    // CacheLookup does not need the DB accessor; only DfsLookup scans the DB.
+    state.accessor = db_->Query("");
+    state.accessor->Jump(" ");  // skip metadata
     DfsLookup(syll_graph, start_pos, prefix, &state);
   }
   if (state.query_result.empty())
