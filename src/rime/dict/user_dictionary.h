@@ -7,6 +7,7 @@
 #ifndef RIME_USER_DICTIONARY_H_
 #define RIME_USER_DICTIONARY_H_
 
+#include <string_view>
 #include <time.h>
 #include <rime/common.h>
 #include <rime/component.h>
@@ -102,8 +103,8 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
 
  private:
   struct CacheEntry {
-    string code;  // pinyin code like "ni hao"
-    string text;  // entry text
+    std::string_view code;  // pinyin code like "ni hao"; points into cache_blob_
+    std::string_view text;  // entry text; points into cache_blob_
     double dee;   // difficulty estimate
     int commits;
     TickCount tick;
@@ -130,6 +131,7 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
 
   bool cache_built_ = false;
   TickCount cache_built_tick_ = 0;
+  std::string cache_blob_;  // backing storage for CacheEntry code/text views
   vector<CacheEntry> cache_;
   std::unordered_map<string, PendingUpdate> pending_;
 
@@ -152,7 +154,7 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
                               double credibility,
                               double quality_len,
                               hash_map<int, DictEntryList>* result);
-  bool starts_with(const string& s, const string& prefix) const;
+  bool starts_with(std::string_view s, const string& prefix) const;
 };
 
 class UserDictionaryComponent : public UserDictionary::Component {

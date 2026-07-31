@@ -308,9 +308,20 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
 // Build sorted cache from DB at load time.
 bool UserDictionary::BuildCache() {
   cache_.clear();
+  cache_blob_.clear();
   auto accessor = db_->Query("");
   if (!accessor || !accessor->Jump(" "))
     return false;
+  struct CacheEntryRecord {
+    size_t code_off;
+    size_t code_len;
+    size_t text_off;
+    size_t text_len;
+    double dee;
+    int commits;
+    TickCount tick;
+  };
+  vector<CacheEntryRecord> records;
   string key, value;
   while (accessor->GetNextRecord(&key, &value)) {
     size_t tab = key.find('\t');
@@ -321,8 +332,26 @@ bool UserDictionary::BuildCache() {
       continue;
     if (v.commits < 0)
       continue;
-    cache_.push_back(
-        {key.substr(0, tab), key.substr(tab + 1), v.dee, v.commits, v.tick});
+    CacheEntryRecord rec;
+    rec.code_off = cache_blob_.size();
+    rec.code_len = tab;
+    cache_blob_.append(key.data(), tab);
+    rec.text_off = cache_blob_.size();
+    rec.text_len = key.size() - tab - 1;
+    cache_blob_.append(key.data() + tab + 1, key.size() - tab - 1);
+    rec.dee = v.dee;
+    rec.commits = v.commits;
+    rec.tick = v.tick;
+    records.push_back(rec);
+  }
+  // views are only constructed after cache_blob_ is fully built, so they are
+  // not invalidated by any further reallocation.
+  cache_.reserve(records.size());
+  std::string_view blob(cache_blob_);
+  for (const auto& rec : records) {
+    cache_.push_back({blob.substr(rec.code_off, rec.code_len),
+                      blob.substr(rec.text_off, rec.text_len), rec.dee,
+                      rec.commits, rec.tick});
   }
   sort(cache_.begin(), cache_.end(),
        [](const CacheEntry& a, const CacheEntry& b) {
@@ -333,6 +362,8 @@ bool UserDictionary::BuildCache() {
   pending_.clear();
   cache_built_tick_ = tick_;
   cache_built_ = true;
+  LOG(INFO) << "user dict cache rebuilt: " << cache_.size() << " entries, "
+            << cache_blob_.size() << " bytes";
   return true;
 }
 
@@ -342,7 +373,8 @@ bool UserDictionary::Reload() {
   return BuildCache();
 }
 
-bool UserDictionary::starts_with(const string& s, const string& prefix) const {
+bool UserDictionary::starts_with(std::string_view s,
+                                 const string& prefix) const {
   return s.size() >= prefix.size() &&
          equal(prefix.begin(), prefix.end(), s.begin());
 }
@@ -381,8 +413,8 @@ void UserDictionary::RecruitPredictiveEntry(
   auto& entries = (*result)[end_pos];
   auto& e = entries.back();
   // convert code string to numeric syllable ids
-  vector<string> syllables =
-      strings::split(entry.code, " ", strings::SplitBehavior::SkipToken);
+  vector<string> syllables = strings::split(std::string(entry.code), " ",
+                                            strings::SplitBehavior::SkipToken);
   Code numeric_code;
   for (const auto& s : syllables) {
     auto found = syllabary_.find(s);
@@ -433,10 +465,10 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
           [](const CacheEntry& e, const string& p) { return e.code < p; });
 
       // collect exact-matching entries (code == prefix)
-      hash_set<string> seen;
+      hash_set<std::string_view> seen;
       while (it != cache_.end() && it->code == prefix) {
         bool overridden = false;
-        auto pit = pending_.find(prefix + '\t' + it->text);
+        auto pit = pending_.find(prefix + '\t' + std::string(it->text));
         if (pit != pending_.end()) {
           const auto& p = pit->second;
           if (p.type == PendingUpdate::kDelete) {
@@ -511,10 +543,12 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
               [](const CacheEntry& e, const string& p) { return e.code < p; });
           while (pred != cache_.end() && pred->code == prefix)
             ++pred;
-          hash_set<string> seen_pred;
+          hash_set<std::string_view> seen_pred;
           while (pred != cache_.end() && starts_with(pred->code, prefix)) {
             bool overridden = false;
-            auto pit = pending_.find(pred->code + '\t' + pred->text);
+            auto pit =
+                pending_.find(std::string(pred->code) + '\t' +
+                              std::string(pred->text));
             if (pit != pending_.end()) {
               const auto& p = pit->second;
               if (p.type == PendingUpdate::kDelete) {
