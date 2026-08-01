@@ -103,9 +103,10 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
 
  private:
   struct CacheEntry {
-    std::string_view code;  // pinyin code like "ni hao"; points into cache_blob_
+    std::string_view
+        code;  // pinyin code like "ni hao"; points into cache_blob_
     std::string_view text;  // entry text; points into cache_blob_
-    double dee;   // difficulty estimate
+    double dee;             // difficulty estimate
     int commits;
     TickCount tick;
   };
