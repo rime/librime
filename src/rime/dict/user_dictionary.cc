@@ -477,11 +477,10 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
               overridden = true;
             } else {
               // use updated entry from pending
-              RecruitCacheEntry({p.code, p.text, p.dee, p.commits, p.tick},
-                                end_pos, state->code, state->present_tick,
-                                state->credibility.back(),
-                                state->quality_len.back(),
-                                &state->query_result);
+              RecruitCacheEntry(
+                  {p.code, p.text, p.dee, p.commits, p.tick}, end_pos,
+                  state->code, state->present_tick, state->credibility.back(),
+                  state->quality_len.back(), &state->query_result);
               seen.insert(p.text);
               overridden = true;
             }
@@ -560,9 +559,8 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
             // pending_ holds uncommitted writes; check each entry for overrides
             while (pred != cache_.end() && starts_with(pred->code, prefix)) {
               bool overridden = false;
-              auto pit =
-                  pending_.find(std::string(pred->code) + '\t' +
-                                std::string(pred->text));
+              auto pit = pending_.find(std::string(pred->code) + '\t' +
+                                       std::string(pred->text));
               if (pit != pending_.end()) {
                 const auto& p = pit->second;
                 if (p.type == PendingUpdate::kDelete) {
