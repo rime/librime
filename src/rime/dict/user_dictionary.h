@@ -9,6 +9,11 @@
 
 #include <string_view>
 #include <time.h>
+
+#ifndef RIME_USER_DICT_CACHE_ENABLED
+#define RIME_USER_DICT_CACHE_ENABLED 1
+#endif  // RIME_USER_DICT_CACHE_ENABLED
+#include <rime_api.h>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/dict/user_db.h>
@@ -17,7 +22,7 @@
 
 namespace rime {
 
-class UserDictEntryIterator : public DictEntryFilterBinder {
+class RIME_DLL UserDictEntryIterator : public DictEntryFilterBinder {
  public:
   UserDictEntryIterator() = default;
 
@@ -50,37 +55,38 @@ struct Ticket;
 
 class UserDictionary : public Class<UserDictionary, const Ticket&> {
  public:
-  UserDictionary(const string& name, an<Db> db);
-  virtual ~UserDictionary();
+  RIME_DLL UserDictionary(const string& name, an<Db> db);
+  RIME_DLL virtual ~UserDictionary();
 
-  void Attach(const an<Table>& table, const an<Prism>& prism);
-  bool Load();
-  bool loaded() const;
-  bool readonly() const;
+  RIME_DLL void Attach(const an<Table>& table, const an<Prism>& prism);
+  RIME_DLL bool Load();
+  RIME_DLL bool loaded() const;
+  RIME_DLL bool readonly() const;
 
-  an<UserDictEntryCollector> Lookup(const SyllableGraph& syllable_graph,
-                                    size_t start_pos,
-                                    size_t depth_limit = 0,
-                                    size_t predict_word_from_depth = 0,
-                                    double initial_credibility = 0.0);
-  size_t LookupWords(UserDictEntryIterator* result,
-                     const string& input,
-                     bool predictive,
-                     size_t limit = 0,
-                     string* resume_key = NULL);
-  bool UpdateEntry(const DictEntry& entry, int commits);
-  bool UpdateEntry(const DictEntry& entry,
-                   int commits,
-                   const string& new_entry_prefix);
-  bool UpdateTickCount(TickCount increment);
+  RIME_DLL an<UserDictEntryCollector> Lookup(
+      const SyllableGraph& syllable_graph,
+      size_t start_pos,
+      size_t depth_limit = 0,
+      size_t predict_word_from_depth = 0,
+      double initial_credibility = 0.0);
+  RIME_DLL size_t LookupWords(UserDictEntryIterator* result,
+                              const string& input,
+                              bool predictive,
+                              size_t limit = 0,
+                              string* resume_key = NULL);
+  RIME_DLL bool UpdateEntry(const DictEntry& entry, int commits);
+  RIME_DLL bool UpdateEntry(const DictEntry& entry,
+                            int commits,
+                            const string& new_entry_prefix);
+  RIME_DLL bool UpdateTickCount(TickCount increment);
 
-  bool NewTransaction();
-  bool RevertRecentTransaction();
-  bool CommitPendingTransaction();
+  RIME_DLL bool NewTransaction();
+  RIME_DLL bool RevertRecentTransaction();
+  RIME_DLL bool CommitPendingTransaction();
 
   // Rebuild the in-memory cache from DB.
   // Call this after any external DB modification (sync/merge/restore).
-  bool Reload();
+  RIME_DLL bool Reload();
 
   const string& name() const { return name_; }
   TickCount tick() const { return tick_; }
