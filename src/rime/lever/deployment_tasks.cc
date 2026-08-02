@@ -293,14 +293,6 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
           ++failure;
           return;
         }
-        if (auto dependencies = schema_config->GetList("schema/dependencies")) {
-          for (auto d = dependencies->begin(); d != dependencies->end(); ++d) {
-            auto dependency = As<ConfigValue>(*d);
-            if (!dependency)
-              continue;
-            process_schema(dependency->str(), true);
-          }
-        }
         string dict_name;
         if (!schema_config->GetString("translator/dictionary", &dict_name)) {
           ++success;  // not requiring a dictionary
@@ -340,6 +332,20 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     if (!schema_property)
       continue;
     process_schema(schema_property->str(), false);
+    // compile the schema's own dictionary before its direct dependencies,
+    // matching the upstream serial build order (only one level; dependencies
+    // of dependencies are not compiled)
+    the<Config> schema_config(schema_component->Create(schema_property->str()));
+    if (!schema_config)
+      continue;
+    if (auto dependencies = schema_config->GetList("schema/dependencies")) {
+      for (auto d = dependencies->begin(); d != dependencies->end(); ++d) {
+        auto dependency = As<ConfigValue>(*d);
+        if (!dependency)
+          continue;
+        process_schema(dependency->str(), true);
+      }
+    }
   }
 
   // Phase 2: compile the dictionaries. Units that share output files (the same
