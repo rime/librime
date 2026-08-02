@@ -29,6 +29,8 @@
 #include <windows.h>
 #endif
 #ifdef __GLIBC__
+#include <cstdlib>
+#include <dlfcn.h>
 #include <malloc.h>
 #endif
 
@@ -248,8 +250,20 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     }
   }
 #ifdef __GLIBC__
-  // ask glibc to release memory used by DictCompiler during SchemaUpdate to OS
-  malloc_trim(0);
+  // ask glibc to release memory used by DictCompiler during SchemaUpdate to OS.
+  // skip if allocator is replaced (e.g. via LD_PRELOAD): detected by
+  // `malloc` and `malloc_trim` coming from the same file, excluding
+  // cases where library functions share it, to avoid rare false positives.
+  static const bool is_glibc = []() {
+    Dl_info info_alloc, info_trim, info_rime;
+    return dladdr((const void*)malloc, &info_alloc) &&
+           dladdr((const void*)malloc_trim, &info_trim) &&
+           dladdr((const void*)rime_get_api, &info_rime) &&
+           info_alloc.dli_fbase == info_trim.dli_fbase &&
+           info_alloc.dli_fbase != info_rime.dli_fbase;
+  }();
+  if (is_glibc)
+    malloc_trim(0);
 #endif
   LOG(INFO) << "finished updating schemas: " << success << " success, "
             << failure << " failure.";
