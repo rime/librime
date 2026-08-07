@@ -177,4 +177,69 @@ bool TranslatorOptions::IsUserDictDisabledFor(const string& input) const {
   return false;
 }
 
+string StripTones(const string& s) {
+  static const map<string, string> tone_map = {
+      {"ā", "a"}, {"á", "a"}, {"ǎ", "a"}, {"à", "a"}, {"ē", "e"}, {"é", "e"},
+      {"ě", "e"}, {"è", "e"}, {"ī", "i"}, {"í", "i"}, {"ǐ", "i"}, {"ì", "i"},
+      {"ō", "o"}, {"ó", "o"}, {"ǒ", "o"}, {"ò", "o"}, {"ū", "u"}, {"ú", "u"},
+      {"ǔ", "u"}, {"ù", "u"}, {"ǖ", "v"}, {"ǘ", "v"}, {"ǚ", "v"}, {"ǜ", "v"},
+      {"ń", "n"}, {"ň", "n"}, {"ǹ", "n"},
+  };
+  string result = s;
+  for (const auto& [toned, base] : tone_map) {
+    size_t pos = 0;
+    while ((pos = result.find(toned, pos)) != string::npos) {
+      result.replace(pos, toned.length(), base);
+      pos += base.length();
+    }
+  }
+  return result;
+}
+
+map<char, set<char>> ParseAlgebraReverseMapping(Config* config) {
+  map<char, set<char>> reverse_map;
+  if (!config)
+    return reverse_map;
+  auto algebra = config->GetList("speller/algebra");
+  if (!algebra)
+    return reverse_map;
+  for (size_t i = 0; i < algebra->size(); ++i) {
+    auto rule = As<ConfigValue>(algebra->GetAt(i));
+    if (!rule)
+      continue;
+    string s = rule->str();
+    if (s.substr(0, 5) == "xlit/") {
+      auto slash1 = s.find('/', 5);
+      if (slash1 == string::npos)
+        continue;
+      string from = s.substr(5, slash1 - 5);
+      string to = s.substr(slash1 + 1);
+      if (!to.empty() && to.back() == '/')
+        to.pop_back();
+      size_t len = std::min(from.size(), to.size());
+      for (size_t j = 0; j < len; ++j) {
+        reverse_map[to[j]].insert(from[j]);
+      }
+    } else if (s.substr(0, 8) == "derive/[") {
+      auto close_bracket = s.find(']', 8);
+      if (close_bracket == string::npos)
+        continue;
+      auto slash2 = s.find('/', close_bracket + 1);
+      if (slash2 == string::npos)
+        continue;
+      auto slash3 = s.find('/', slash2 + 1);
+      if (slash3 == string::npos)
+        continue;
+      string from = s.substr(8, close_bracket - 8);
+      string to = s.substr(slash2 + 1, slash3 - slash2 - 1);
+      if (to.size() == 1) {
+        for (char c : from) {
+          reverse_map[to[0]].insert(c);
+        }
+      }
+    }
+  }
+  return reverse_map;
+}
+
 }  // namespace rime

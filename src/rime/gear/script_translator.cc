@@ -94,6 +94,8 @@ class ScriptSyllabifier : public PhraseSyllabifier {
 
   virtual Spans Syllabify(const Phrase* phrase);
   size_t BuildSyllableGraph(Prism& prism);
+  void ApplyTabConstraints(Dictionary* dict,
+                           const vector<Context::TabConstraint>& constraints);
   string GetPreeditString(const Phrase& cand) const;
   string GetOriginalSpelling(const Phrase& cand) const;
   bool IsCorrection(const Code& code, size_t code_length) const;
@@ -116,6 +118,7 @@ class ScriptTranslation : public Translation {
                     const string& input,
                     size_t start,
                     size_t end_of_input,
+                    const vector<Context::TabConstraint>& constraints,
                     int max_sentences,
                     double sentence_cutoff_threshold)
       : translator_(translator),
@@ -124,6 +127,7 @@ class ScriptTranslation : public Translation {
         end_of_input_(end_of_input),
         syllabifier_(
             New<ScriptSyllabifier>(translator, corrector, input, start)),
+        constraints_(constraints),
         enable_correction_(corrector),
         max_sentences_(max_sentences),
         sentence_cutoff_threshold_(sentence_cutoff_threshold) {
@@ -151,6 +155,7 @@ class ScriptTranslation : public Translation {
   size_t start_;
   size_t end_of_input_;
   an<ScriptSyllabifier> syllabifier_;
+  vector<Context::TabConstraint> constraints_;
 
   an<DictEntryCollector> phrase_;
   an<UserDictEntryCollector> user_phrase_;
@@ -204,14 +209,68 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
   }
 }
 
+ConstraintFilteredTranslation::ConstraintFilteredTranslation(
+    an<Translation> translation,
+    Dictionary* dict,
+    const vector<Context::TabConstraint>& constraints)
+    : CacheTranslation(translation), dict_(dict), constraints_(constraints) {
+  if (!exhausted() && Peek() && !MatchesConstraints(Peek())) {
+    Next();
+  }
+}
+
+bool ConstraintFilteredTranslation::Next() {
+  if (exhausted())
+    return false;
+  do {
+    CacheTranslation::Next();
+  } while (!exhausted() && Peek() && !MatchesConstraints(Peek()));
+  return !exhausted();
+}
+
+bool ConstraintFilteredTranslation::MatchesConstraints(
+    const an<Candidate>& candidate) {
+  if (constraints_.empty())
+    return true;
+
+  auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(candidate));
+  if (!phrase)
+    return false;
+
+  vector<string> decoded;
+  if (!dict_ || !dict_->Decode(phrase->code(), &decoded) || decoded.empty())
+    return true;
+
+  size_t syllable_index = 0;
+  for (const auto& constraint : constraints_) {
+    if (syllable_index >= decoded.size())
+      return false;
+    const string syllable = StripTones(decoded[syllable_index++]);
+    const string label = StripTones(constraint.label);
+    if (syllable.empty() || label.empty())
+      return false;
+    if (constraint.span == 1) {
+      if (std::tolower(static_cast<unsigned char>(syllable[0])) !=
+          std::tolower(static_cast<unsigned char>(label[0]))) {
+        return false;
+      }
+    } else if (syllable != label) {
+      return false;
+    }
+  }
+  return true;
+}
+
 an<Translation> ScriptTranslator::Query(const string& input,
                                         const Segment& segment) {
   if (!dict_ || !dict_->loaded())
     return nullptr;
   if (!segment.HasAnyTagIn(tags_))
     return nullptr;
-  DLOG(INFO) << "input = '" << input << "', [" << segment.start << ", "
-             << segment.end << ")";
+  const string shadow_input =
+      engine_->context()->shadow_input(segment.start, segment.end);
+  DLOG(INFO) << "ScriptTranslator::Query input='" << shadow_input << "' ["
+             << segment.start << ", " << segment.end << ")";
 
   FinishSession();
 
@@ -221,13 +280,14 @@ an<Translation> ScriptTranslator::Query(const string& input,
   size_t end_of_input = engine_->context()->input().length();
   // the translator should survive translations it creates
   auto result = New<ScriptTranslation>(
-      this, corrector_.get(), poet_.get(), input, segment.start, end_of_input,
-      max_sentences_, sentence_cutoff_threshold_);
+      this, corrector_.get(), poet_.get(), shadow_input, segment.start,
+      end_of_input, engine_->context()->tab_constraints(), max_sentences_,
+      sentence_cutoff_threshold_);
   if (!result || !result->Evaluate(
                      dict_.get(), enable_user_dict ? user_dict_.get() : NULL)) {
     return nullptr;
   }
-  auto deduped = New<DistinctTranslation>(result);
+  an<Translation> deduped = New<DistinctTranslation>(result);
   if (contextual_suggestions_) {
     return poet_->ContextualWeighted(deduped, input, segment.start, this);
   }
@@ -347,6 +407,97 @@ bool ScriptTranslator::Memorize(const CommitEntry& commit_entry) {
   return true;
 }
 
+static string NormalizeTabLabel(const string& label) {
+  string normalized = StripTones(label);
+  for (char& ch : normalized) {
+    ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+  }
+  return normalized;
+}
+
+void ScriptTranslator::CollectSyllableTabs(size_t start_pos,
+                                           vector<InputTabEntry>* tabs) const {
+  if (!dict_ || !dict_->loaded() || !engine_ || !engine_->context())
+    return;
+
+  const string& input = engine_->context()->input();
+  if (start_pos >= input.length())
+    return;
+
+  // Build and prune the full graph against the current tab constraints, then
+  // inspect the node at start_pos. This keeps tree navigation aligned with the
+  // active selection path instead of exposing the raw unfiltered graph.
+  ScriptSyllabifier syllabifier(const_cast<ScriptTranslator*>(this),
+                                corrector_.get(), input, 0);
+  syllabifier.BuildSyllableGraph(*dict_->prism());
+  if (auto* ctx = engine_->context()) {
+    const auto& constraints = ctx->tab_constraints();
+    if (!constraints.empty()) {
+      syllabifier.ApplyTabConstraints(dict_.get(), constraints);
+    }
+  }
+  const auto& graph = syllabifier.syllable_graph();
+
+  // Parse xlit algebra rules to build reverse mapping: target_char →
+  // source_chars E.g.
+  // xlit/ABCDEFGHIJKLMNOPQRSTUVWXYZ/22233344455566677778889999/
+  //   → '6' maps to {m, n, o}
+  map<char, set<char>> xlit_reverse;
+  if (engine_ && engine_->schema() && engine_->schema()->config()) {
+    xlit_reverse = ParseAlgebraReverseMapping(engine_->schema()->config());
+  }
+
+  // Check if the input character at start_pos has an xlit/derive mapping
+  char first_input_char = input[start_pos];
+  bool first_char_has_xlit = xlit_reverse.count(first_input_char) > 0;
+
+  map<string, size_t> seen;
+  bool has_single_span = false;
+  auto it = graph.edges.find(start_pos);
+  if (it != graph.edges.end()) {
+    for (const auto& [end_pos, syllable_map] : it->second) {
+      if (end_pos == start_pos + 1) {
+        has_single_span = true;
+        if (first_char_has_xlit)
+          continue;  // Skip span=1 noise when mapping applies
+      }
+      for (const auto& [syllable_id, props] : syllable_map) {
+        Code single_code;
+        single_code.push_back(syllable_id);
+        vector<string> decoded;
+        if (dict_->Decode(single_code, &decoded) && !decoded.empty()) {
+          string label = NormalizeTabLabel(decoded[0]);
+          if (!label.empty()) {
+            size_t span = end_pos - start_pos;
+            auto [it, inserted] = seen.emplace(label, tabs->size());
+            if (inserted) {
+              tabs->emplace_back(
+                  InputTabEntry{label, span, InputTabEntry::kSyllable});
+            } else if (span > (*tabs)[it->second].span) {
+              (*tabs)[it->second].span = span;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Generate xlit partial-match tabs for 简拼 disambiguation
+  if ((!has_single_span || first_char_has_xlit) && first_char_has_xlit) {
+    auto xlit_it = xlit_reverse.find(first_input_char);
+    if (xlit_it != xlit_reverse.end()) {
+      for (char letter : xlit_it->second) {
+        string label(1, static_cast<char>(
+                            std::tolower(static_cast<unsigned char>(letter))));
+        tabs->emplace_back(InputTabEntry{label, 1, InputTabEntry::kSyllable});
+      }
+      string first_char(1, first_input_char);
+      tabs->emplace_back(
+          InputTabEntry{first_char, 1, InputTabEntry::kRawInput});
+    }
+  }
+}
+
 // ScriptSyllabifier implementation
 
 Spans ScriptSyllabifier::Syllabify(const Phrase* phrase) {
@@ -367,6 +518,128 @@ Spans ScriptSyllabifier::Syllabify(const Phrase* phrase) {
 size_t ScriptSyllabifier::BuildSyllableGraph(Prism& prism) {
   return (size_t)syllabifier_.BuildSyllableGraph(input_, prism,
                                                  &syllable_graph_);
+}
+
+// Helper: decode a single SyllableId to string
+static string DecodeSyllableId(Dictionary* dict, SyllableId id) {
+  if (!dict)
+    return "";
+  Code code;
+  code.push_back(id);
+  vector<string> decoded;
+  if (dict->Decode(code, &decoded) && !decoded.empty())
+    return decoded[0];
+  return "";
+}
+
+void ScriptSyllabifier::ApplyTabConstraints(
+    Dictionary* dict,
+    const vector<Context::TabConstraint>& constraints) {
+  if (constraints.empty())
+    return;
+  DLOG(INFO) << "ApplyTabConstraints: " << constraints.size()
+             << " constraints, start_=" << start_
+             << " input_length=" << syllable_graph_.input_length;
+
+  for (const auto& constraint : constraints) {
+    if (constraint.position < start_)
+      continue;
+    size_t graph_pos = constraint.position - start_;
+    DLOG(INFO) << "  constraint: pos=" << constraint.position
+               << " graph_pos=" << graph_pos << " label=[" << constraint.label
+               << "]"
+               << " span=" << constraint.span;
+    if (graph_pos >= syllable_graph_.input_length) {
+      DLOG(INFO) << "  SKIP: graph_pos >= input_length";
+      continue;
+    }
+
+    auto edge_it = syllable_graph_.edges.find(graph_pos);
+    if (edge_it == syllable_graph_.edges.end()) {
+      DLOG(INFO) << "  SKIP: no edges at graph_pos=" << graph_pos;
+      continue;
+    }
+
+    string label_base = StripTones(constraint.label);
+    bool is_single_char = (constraint.span == 1);
+
+    auto& end_map = edge_it->second;
+    DLOG(INFO) << "  label_base=[" << label_base
+               << "] is_single=" << is_single_char
+               << " end_map_size=" << end_map.size();
+
+    size_t total_before = 0;
+    for (const auto& [ep, sm] : end_map) {
+      total_before += sm.size();
+      DLOG(INFO) << "    end_pos=" << ep << " syllables=" << sm.size();
+    }
+    DLOG(INFO) << "  total_syllables_before=" << total_before;
+    for (auto end_it = end_map.begin(); end_it != end_map.end();) {
+      size_t end_pos = end_it->first;
+      auto& spelling_map = end_it->second;  // map<SyllableId, EdgeProperties>
+
+      // A single-key initial may represent a syllable spanning multiple input
+      // positions (for example, T9 "n" matches "ni"). Full syllables must
+      // still consume exactly the selected input span.
+      if (!is_single_char && end_pos != graph_pos + constraint.span) {
+        end_it = end_map.erase(end_it);
+        continue;
+      }
+
+      // Filter syllables in this edge
+      for (auto syl_it = spelling_map.begin(); syl_it != spelling_map.end();) {
+        string decoded = DecodeSyllableId(dict, syl_it->first);
+        string decoded_base = StripTones(decoded);
+        bool keep = false;
+
+        if (is_single_char) {
+          // 简拼: match first letter
+          if (!decoded_base.empty() &&
+              std::tolower(decoded_base[0]) == std::tolower(label_base[0])) {
+            keep = true;
+          }
+        } else {
+          // Full syllable: tone-insensitive match
+          if (decoded_base == label_base) {
+            keep = true;
+          }
+        }
+
+        DLOG(INFO) << "      syl_id=" << syl_it->first << " decoded=["
+                   << decoded << "]"
+                   << " base=[" << decoded_base << "]"
+                   << " keep=" << keep;
+
+        if (keep)
+          ++syl_it;
+        else
+          syl_it = spelling_map.erase(syl_it);
+      }
+
+      // If no syllables left in this edge, remove the edge
+      if (spelling_map.empty())
+        end_it = end_map.erase(end_it);
+      else
+        ++end_it;
+    }
+    size_t total_after = 0;
+    for (const auto& [ep, sm] : end_map)
+      total_after += sm.size();
+    DLOG(INFO) << "  total_syllables_after=" << total_after
+               << " end_map_size_after=" << end_map.size();
+  }
+
+  // Rebuild indices from filtered edges (Transpose)
+  syllable_graph_.indices.clear();
+  for (const auto& start : syllable_graph_.edges) {
+    auto& index(syllable_graph_.indices[start.first]);
+    for (const auto& end : start.second) {
+      for (const auto& spelling : end.second) {
+        SyllableId syll_id = spelling.first;
+        index[syll_id].push_back(&spelling.second);
+      }
+    }
+  }
 }
 
 bool ScriptSyllabifier::IsCorrection(const Code& code,
@@ -452,6 +725,10 @@ static bool has_exact_match_phrase(Ptr ptr, Iter iter, size_t consumed) {
 
 bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   size_t consumed = syllabifier_->BuildSyllableGraph(*dict->prism());
+  if (!constraints_.empty()) {
+    syllabifier_->ApplyTabConstraints(dict, constraints_);
+  }
+
   const auto& syllable_graph = syllabifier_->syllable_graph();
   bool predict_word = translator_->enable_word_completion() &&
                       start_ + consumed == end_of_input_;
@@ -643,6 +920,7 @@ iter_incremented:
         New<Phrase>(translator_->language(),
                     entry->IsPredictiveMatch() ? "completion" : "user_phrase",
                     start_, start_ + user_phrase_code_length, entry);
+    candidate_->set_dictionary(translator_->primary_dictionary());
     candidate_->set_quality(std::exp(entry->weight) +
                             translator_->initial_quality() +
                             (entry->quality_len / full_code_length));
@@ -661,6 +939,7 @@ iter_incremented:
         New<Phrase>(translator_->language(),
                     entry->IsPredictiveMatch() ? "completion" : "phrase",
                     start_, start_ + phrase_code_length, entry);
+    candidate_->set_dictionary(translator_->primary_dictionary());
     candidate_->set_quality(std::exp(entry->weight) +
                             translator_->initial_quality() +
                             (entry->quality_len / full_code_length));
@@ -727,6 +1006,7 @@ deque<an<Sentence>> ScriptTranslation::MakeSentences(
   for (auto& sentence : sentences) {
     sentence->Offset(start_);
     sentence->set_syllabifier(syllabifier_);
+    sentence->set_dictionary(dict);
   }
   return sentences;
 }
@@ -740,6 +1020,7 @@ an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
                               translator_->GetPrecedingText(start_))) {
     sentence->Offset(start_);
     sentence->set_syllabifier(syllabifier_);
+    sentence->set_dictionary(dict);
     return sentence;
   }
   return nullptr;

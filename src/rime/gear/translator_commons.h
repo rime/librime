@@ -59,6 +59,7 @@ class PhraseSyllabifier {
 //
 
 class Language;
+class Dictionary;
 
 class Phrase : public Candidate {
  public:
@@ -81,6 +82,8 @@ class Phrase : public Candidate {
   Code& code() const { return entry_->code; }
   const DictEntry& entry() const { return *entry_; }
   const Language* language() const { return language_; }
+  Dictionary* dictionary() const { return dictionary_; }
+  void set_dictionary(Dictionary* dictionary) { dictionary_ = dictionary; }
   size_t matching_code_size() const {
     return entry_->matching_code_size != 0 ? entry_->matching_code_size
                                            : entry_->code.size();
@@ -105,6 +108,7 @@ class Phrase : public Candidate {
 
  protected:
   const Language* language_;
+  Dictionary* dictionary_ = nullptr;
   an<DictEntry> entry_;
   an<PhraseSyllabifier> syllabifier_;
 };
@@ -183,6 +187,15 @@ class TranslatorOptions {
   Patterns user_dict_disabling_patterns_;
   hash_set<string> blacklist_;
 };
+
+// Shared utilities for tab disambiguation
+
+// Strip pinyin tone marks for case/tone-insensitive comparison
+string StripTones(const string& s);
+
+// Parse speller/algebra xlit and derive rules to build
+// a reverse mapping: digit → set of letters
+map<char, set<char>> ParseAlgebraReverseMapping(Config* config);
 
 }  // namespace rime
 

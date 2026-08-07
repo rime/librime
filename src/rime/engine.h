@@ -10,12 +10,14 @@
 #include <rime_api.h>
 #include <rime/common.h>
 #include <rime/messenger.h>
+#include <rime/translator.h>
 
 namespace rime {
 
 class KeyEvent;
 class Schema;
 class Context;
+class Dictionary;
 
 class Engine : public Messenger {
  public:
@@ -26,6 +28,12 @@ class Engine : public Messenger {
   virtual void ApplySchema(Schema* schema) {}
   virtual void CommitText(string text) { sink_(text); }
   virtual void Compose(Context* ctx) {}
+
+  //! Access input tab entries from the translator collection.
+  virtual void CollectInputTabs(size_t position,
+                                vector<InputTabEntry>* tabs) const {}
+  //! Get the first available translatordictionary for code lookup.
+  virtual Dictionary* primary_dictionary() const { return nullptr; }
 
   Schema* schema() const { return schema_.get(); }
   Context* context() const { return context_.get(); }

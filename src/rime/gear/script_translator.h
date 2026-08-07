@@ -11,6 +11,8 @@
 #include <rime/translation.h>
 #include <rime/translator.h>
 #include <rime/algo/algebra.h>
+#include <rime/algo/syllabifier.h>
+#include <rime/context.h>
 #include <rime/gear/memory.h>
 #include <rime/gear/translator_commons.h>
 
@@ -22,7 +24,21 @@ struct DictEntry;
 class Dictionary;
 class Poet;
 class UserDictionary;
-struct SyllableGraph;
+
+class ConstraintFilteredTranslation : public CacheTranslation {
+ public:
+  ConstraintFilteredTranslation(
+      an<Translation> translation,
+      Dictionary* dict,
+      const vector<Context::TabConstraint>& constraints);
+  bool Next() override;
+
+ protected:
+  bool MatchesConstraints(const an<Candidate>& candidate);
+
+  Dictionary* dict_;
+  vector<Context::TabConstraint> constraints_;
+};
 
 class ScriptTranslator : public Translator,
                          public Memory,
@@ -52,6 +68,17 @@ class ScriptTranslator : public Translator,
   bool enable_word_completion() const { return enable_word_completion_; }
   int max_word_length() const { return max_word_length_; }
   int core_word_length() const;
+
+  //! Collect possible tab entries from the SyllableGraph
+  RIME_DLL void CollectSyllableTabs(size_t start_pos,
+                                    vector<InputTabEntry>* tabs) const;
+
+  // override Translator virtual methods
+  void CollectInputTabs(size_t position,
+                        vector<InputTabEntry>* tabs) const override {
+    CollectSyllableTabs(position, tabs);
+  }
+  Dictionary* primary_dictionary() const override { return dict(); }
 
  protected:
   int max_homophones_ = 1;

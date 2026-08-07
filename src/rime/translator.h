@@ -15,9 +15,18 @@
 namespace rime {
 
 class Context;
+class Dictionary;
 class Engine;
 class Translation;
 struct Segment;
+
+//! Tab entry for input disambiguation
+struct InputTabEntry {
+  enum Source { kSyllable, kTableCode, kReverseLookup, kRawInput };
+  std::string label;
+  size_t span;
+  int source;  // one of Source enum values
+};
 
 class Translator : public Class<Translator, const Ticket&> {
  public:
@@ -27,6 +36,12 @@ class Translator : public Class<Translator, const Ticket&> {
 
   virtual an<Translation> Query(const string& input,
                                 const Segment& segment) = 0;
+
+  //! Override to collect tab entries for disambiguation at a position.
+  virtual void CollectInputTabs(size_t position,
+                                vector<InputTabEntry>* tabs) const {}
+  //! Override to return the primary dictionary for code lookup.
+  virtual Dictionary* primary_dictionary() const { return nullptr; }
 
   string name_space() const { return name_space_; }
 

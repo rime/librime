@@ -505,6 +505,47 @@ typedef struct RIME_FLAVORED(rime_api_t) {
                                               size_t index);
 
   Bool (*change_page)(RimeSessionId session_id, Bool backward);
+
+  // --- Input tab disambiguation API ---
+
+  //! Get possible input tab entries for disambiguation at the current
+  //! composition position. Merges data from all translators:
+  //!   ScriptTranslator: SyllableGraph edges (pinyin syllables)
+  //!   TableTranslator: valid code prefixes from table syllabary
+  //!   ReverseLookupTranslator: pinyin readings from reverse lookup
+  //! Returns True if tabs were found.
+  //! Caller must free with free_input_tabs().
+  Bool (*get_input_tabs)(RimeSessionId session_id,
+                         size_t position,
+                         char*** labels,
+                         size_t** spans,
+                         int** sources,
+                         size_t* count);
+  void (*free_input_tabs)(char** labels,
+                          size_t* spans,
+                          int* sources,
+                          size_t count);
+
+  //! Get the decoded code segments for a candidate at the given index.
+  //! E.g. pinyin "你好" → segments=["ni","hao"], matching_segments=2
+  //! Returns True if code info was found.
+  //! Caller must free with free_candidate_code().
+  Bool (*get_candidate_code)(RimeSessionId session_id,
+                             size_t index,
+                             char*** segments,
+                             size_t* num_segments,
+                             size_t* matching_segments);
+  void (*free_candidate_code)(char** segments, size_t num_segments);
+
+  //! Select a tab to constrain syllable disambiguation.
+  //! Adds a constraint to Context and triggers re-composition.
+  Bool (*select_tab)(RimeSessionId session_id,
+                     size_t position,
+                     const char* label,
+                     size_t span);
+
+  //! Clear all tab constraints and restore unconstrained candidates.
+  Bool (*clear_tabs)(RimeSessionId session_id);
 } RIME_FLAVORED(RimeApi);
 
 //! API entry

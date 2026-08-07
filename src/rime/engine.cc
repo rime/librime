@@ -8,6 +8,7 @@
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
+#include <rime/dict/dictionary.h>
 #include <rime/engine.h>
 #include <rime/filter.h>
 #include <rime/formatter.h>
@@ -33,6 +34,18 @@ class ConcreteEngine : public Engine {
   virtual void ApplySchema(Schema* schema);
   virtual void CommitText(string text);
   virtual void Compose(Context* ctx);
+  virtual void CollectInputTabs(size_t pos, vector<InputTabEntry>* tabs) const {
+    for (auto& t : translators_) {
+      t->CollectInputTabs(pos, tabs);
+    }
+  }
+  virtual Dictionary* primary_dictionary() const {
+    for (auto& t : translators_) {
+      if (auto* d = t->primary_dictionary(); d && d->loaded())
+        return d;
+    }
+    return nullptr;
+  }
 
  protected:
   void InitializeComponents();
@@ -210,6 +223,7 @@ void ConcreteEngine::TranslateSegments(Segmentation* segments) {
     size_t len = segment.end - segment.start;
     string input = segments->input().substr(segment.start, len);
     DLOG(INFO) << "translating segment: [" << input << "]";
+
     auto menu = New<Menu>();
     for (auto& translator : translators_) {
       auto translation = translator->Query(input, segment);

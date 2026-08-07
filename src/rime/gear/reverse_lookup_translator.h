@@ -10,6 +10,7 @@
 #include <rime/common.h>
 #include <rime/translator.h>
 #include <rime/algo/algebra.h>
+#include <rime/algo/syllabifier.h>
 
 namespace rime {
 
@@ -23,6 +24,18 @@ class ReverseLookupTranslator : public Translator {
 
   virtual an<Translation> Query(const string& input, const Segment& segment);
 
+  //! Return the primary dictionary for code lookup (override).
+  Dictionary* primary_dictionary() const override { return dict(); }
+
+  //! Collect possible tab entries from the reverse lookup SyllableGraph
+  RIME_DLL void CollectReverseLookupTabs(size_t start_pos,
+                                         vector<InputTabEntry>* tabs) const;
+
+  void CollectInputTabs(size_t position,
+                        vector<InputTabEntry>* tabs) const override {
+    CollectReverseLookupTabs(position, tabs);
+  }
+
  protected:
   void Initialize();
 
@@ -34,6 +47,13 @@ class ReverseLookupTranslator : public Translator {
   string prefix_;
   string suffix_;
   string tips_;
+
+  // expose dict() for virtual override
+  Dictionary* dict() const {
+    if (!initialized_)
+      const_cast<ReverseLookupTranslator*>(this)->Initialize();
+    return dict_.get();
+  }
 };
 
 }  // namespace rime

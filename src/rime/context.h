@@ -62,6 +62,8 @@ class RIME_DLL Context {
 
   void set_input(const string& value);
   const string& input() const { return input_; }
+  string shadow_input() const;
+  string shadow_input(size_t start, size_t end) const;
 
   void set_caret_pos(size_t caret_pos);
   size_t caret_pos() const { return caret_pos_; }
@@ -95,6 +97,24 @@ class RIME_DLL Context {
   }
   KeyEventNotifier& unhandled_key_notifier() { return unhandled_key_notifier_; }
 
+  // Tab constraint for syllable disambiguation (简拼/T9)
+  struct TabConstraint {
+    size_t position;  // input position where constraint applies
+    string label;     // selected tab label (e.g., "n", "cè")
+    size_t span;      // how many input chars this constraint consumes
+  };
+  const vector<TabConstraint>& tab_constraints() const {
+    return tab_constraints_;
+  }
+  size_t NextTabPosition() const;
+  void PushTabCursor(size_t position);
+  void PopTabCursor();
+  void ClearTabCursors();
+  size_t CurrentTabCursor() const;
+  void AddTabConstraint(size_t position, const string& label, size_t span);
+  void ClearTabConstraints();
+  void UndoLastTabConstraint();
+
  private:
   string GetSoftCursor() const;
 
@@ -104,6 +124,8 @@ class RIME_DLL Context {
   CommitHistory commit_history_;
   map<string, bool> options_;
   map<string, string> properties_;
+  vector<size_t> tab_cursors_;
+  vector<TabConstraint> tab_constraints_;
 
   Notifier commit_notifier_;
   Notifier select_notifier_;

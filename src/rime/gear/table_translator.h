@@ -37,6 +37,17 @@ class TableTranslator : public Translator,
   string GetPrecedingText(size_t start) const;
   UnityTableEncoder* encoder() const { return encoder_.get(); }
 
+  //! Collect valid single-code-prefix tab entries from the table's syllabary
+  RIME_DLL void CollectTableTabs(size_t start_pos,
+                                 vector<InputTabEntry>* tabs) const;
+
+  // override Translator virtual methods
+  void CollectInputTabs(size_t position,
+                        vector<InputTabEntry>* tabs) const override {
+    CollectTableTabs(position, tabs);
+  }
+  Dictionary* primary_dictionary() const override { return dict(); }
+
  protected:
   bool enable_charset_filter_ = false;
   bool enable_encoder_ = false;
@@ -53,6 +64,7 @@ class TableTranslation : public Translation {
  public:
   TableTranslation(TranslatorOptions* options,
                    const Language* language,
+                   Dictionary* dictionary,
                    const string& input,
                    size_t start,
                    size_t end,
@@ -76,6 +88,7 @@ class TableTranslation : public Translation {
 
   TranslatorOptions* options_;
   const Language* language_;
+  Dictionary* dictionary_;
   string input_;
   size_t start_;
   size_t end_;

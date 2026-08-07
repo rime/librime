@@ -70,6 +70,8 @@ bool Context::PushInput(char ch) {
     input_.insert(caret_pos_, 1, ch);
     ++caret_pos_;
   }
+  tab_cursors_.clear();
+  tab_constraints_.clear();
   update_notifier_(this);
   return true;
 }
@@ -82,11 +84,26 @@ bool Context::PushInput(const string& str) {
     input_.insert(caret_pos_, str);
     caret_pos_ += str.length();
   }
+  tab_cursors_.clear();
+  tab_constraints_.clear();
   update_notifier_(this);
   return true;
 }
 
 bool Context::PopInput(size_t len) {
+  size_t undone = 0;
+  while (undone < len && (!tab_cursors_.empty() || !tab_constraints_.empty())) {
+    if (!tab_cursors_.empty()) {
+      PopTabCursor();
+    }
+    if (!tab_constraints_.empty()) {
+      UndoLastTabConstraint();
+    }
+    ++undone;
+  }
+  if (undone > 0)
+    return true;
+  // Normal pop
   if (caret_pos_ < len)
     return false;
   caret_pos_ -= len;
@@ -99,6 +116,8 @@ bool Context::DeleteInput(size_t len) {
   if (caret_pos_ + len > input_.length())
     return false;
   input_.erase(caret_pos_, len);
+  tab_cursors_.clear();
+  tab_constraints_.clear();
   update_notifier_(this);
   return true;
 }
@@ -107,6 +126,8 @@ void Context::Clear() {
   input_.clear();
   caret_pos_ = 0;
   composition_.clear();
+  tab_cursors_.clear();
+  tab_constraints_.clear();
   update_notifier_(this);
 }
 
@@ -280,7 +301,79 @@ void Context::set_composition(Composition&& comp) {
 void Context::set_input(const string& value) {
   input_ = value;
   caret_pos_ = input_.length();
+  tab_cursors_.clear();
+  tab_constraints_.clear();
   update_notifier_(this);
+}
+
+string Context::shadow_input() const {
+  return shadow_input(0, input_.length());
+}
+
+string Context::shadow_input(size_t start, size_t end) const {
+  start = (std::min)(start, input_.length());
+  end = (std::min)((std::max)(start, end), input_.length());
+  string shadow;
+  size_t raw_pos = start;
+  for (const auto& constraint : tab_constraints_) {
+    if (constraint.position < raw_pos || constraint.position >= end)
+      continue;
+    shadow.append(input_, raw_pos, constraint.position - raw_pos);
+    // Strip trailing tone digits (1-5) from the label so it fits within
+    // the span.  Otherwise extra characters in the shadow input shift
+    // syllable-graph positions and break ApplyTabConstraints alignment.
+    string trimmed_label = constraint.label;
+    while (trimmed_label.length() > constraint.span && !trimmed_label.empty() &&
+           trimmed_label.back() >= '1' && trimmed_label.back() <= '5') {
+      trimmed_label.pop_back();
+    }
+    // Check whether the label and the original input use the same
+    // character system.  When neither is a substring of the other
+    // (after stripping digits) and the original is not pure digits
+    // (T9), keep the original substring.  ApplyTabConstraints still
+    // filters correctly by syllable ID.
+    string original_substr =
+        input_.substr(constraint.position, constraint.span);
+    string original_no_digits;
+    for (char c : original_substr) {
+      if (c < '0' || c > '9')
+        original_no_digits += c;
+    }
+    string label_no_digits;
+    for (char c : trimmed_label) {
+      if (c < '0' || c > '9')
+        label_no_digits += c;
+    }
+    // Labels and original input use the same character system only
+    // when they match exactly after digit stripping.  Single-char
+    // labels on pure-digit input are treated as T9 abbreviations.
+    bool same_system =
+        !label_no_digits.empty() && label_no_digits == original_no_digits;
+    bool digits_only = !original_substr.empty();
+    for (char c : original_substr) {
+      if (c < '0' || c > '9') {
+        digits_only = false;
+        break;
+      }
+    }
+    // T9-like digit input with single-char abbreviations.
+    // Multi-char labels on all-digit input are bopomofo encodings
+    // (e.g. "184" = ㄅㄚˋ → "ba"), not T9.
+    if (digits_only && label_no_digits.length() == 1)
+      same_system = true;
+    else if (digits_only && label_no_digits.length() >= 2)
+      same_system = false;
+    if (trimmed_label.length() > constraint.span ||
+        (!same_system && !digits_only) ||
+        (digits_only && label_no_digits.length() >= 2)) {
+      shadow.append(input_, constraint.position, constraint.span);
+    } else {
+      shadow += trimmed_label;
+    }
+    raw_pos = (std::min)(constraint.position + constraint.span, end);
+  }
+  shadow.append(input_, raw_pos, end - raw_pos);
+  return shadow;
 }
 
 void Context::set_option(const string& name, bool value) {
@@ -322,6 +415,59 @@ void Context::ClearTransientOptions() {
          prop->first[0] == '_') {
     properties_.erase(prop++);
   }
+}
+
+void Context::AddTabConstraint(size_t position,
+                               const string& label,
+                               size_t span) {
+  tab_constraints_.push_back({position, label, span});
+  if (!RefreshNonConfirmedComposition()) {
+    update_notifier_(this);
+  }
+}
+
+void Context::ClearTabConstraints() {
+  if (!tab_cursors_.empty() || !tab_constraints_.empty()) {
+    tab_cursors_.clear();
+    tab_constraints_.clear();
+    RefreshNonConfirmedComposition();
+  }
+}
+
+size_t Context::NextTabPosition() const {
+  if (!tab_cursors_.empty())
+    return tab_cursors_.back();
+  size_t pos = 0;
+  for (const auto& c : tab_constraints_) {
+    size_t next = c.position + c.span;
+    if (next > pos)
+      pos = next;
+  }
+  return pos;
+}
+
+void Context::PushTabCursor(size_t position) {
+  tab_cursors_.push_back(position);
+}
+
+void Context::PopTabCursor() {
+  if (!tab_cursors_.empty())
+    tab_cursors_.pop_back();
+}
+
+void Context::ClearTabCursors() {
+  tab_cursors_.clear();
+}
+
+size_t Context::CurrentTabCursor() const {
+  return tab_cursors_.empty() ? 0 : tab_cursors_.back();
+}
+
+void Context::UndoLastTabConstraint() {
+  if (tab_constraints_.empty())
+    return;
+  tab_constraints_.pop_back();
+  RefreshNonConfirmedComposition();
 }
 
 }  // namespace rime
