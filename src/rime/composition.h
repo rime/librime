@@ -32,6 +32,15 @@ class Composition : public Segmentation {
   RIME_DLL string GetDebugText() const;
   // Returns text of the last segment before the given position.
   string GetTextBefore(size_t pos) const;
+
+  struct CandidatePreview {
+    string text_before_selection;
+    string selected_text;
+    string text_after_selection;
+  };
+
+  CandidatePreview GetCandidatePreview(
+      const string& full_input = string()) const;
 };
 
 }  // namespace rime
