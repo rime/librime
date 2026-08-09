@@ -165,6 +165,16 @@ typedef struct RIME_FLAVORED(rime_context_t) {
 /*!
  *  Should be initialized by calling RIME_STRUCT_INIT(Type, var);
  */
+typedef struct rime_candidate_preview_t {
+  int data_size;
+  char* text_before_selection;
+  char* selected_text;
+  char* text_after_selection;
+} RimeCandidatePreview;
+
+/*!
+ *  Should be initialized by calling RIME_STRUCT_INIT(Type, var);
+ */
 typedef struct RIME_FLAVORED(rime_status_t) {
   int data_size;
   // v0.9
@@ -505,6 +515,12 @@ typedef struct RIME_FLAVORED(rime_api_t) {
                                               size_t index);
 
   Bool (*change_page)(RimeSessionId session_id, Bool backward);
+
+  //! get the preview of committing the highlighted candidate
+  Bool (*get_candidate_preview)(RimeSessionId session_id,
+                                RimeCandidatePreview* preview);
+  //! free a RimeCandidatePreview filled by get_candidate_preview
+  Bool (*free_candidate_preview)(RimeCandidatePreview* preview);
 } RIME_FLAVORED(RimeApi);
 
 //! API entry
