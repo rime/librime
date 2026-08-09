@@ -36,6 +36,8 @@ class RIME_DLL Context {
   bool HasMenu() const;
   an<Candidate> GetSelectedCandidate() const;
 
+  Composition::CandidatePreview GetCandidatePreview() const;
+
   bool PushInput(char ch);
   bool PushInput(const string& str);
   bool PopInput(size_t len = 1);

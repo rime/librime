@@ -324,4 +324,10 @@ void Context::ClearTransientOptions() {
   }
 }
 
+Composition::CandidatePreview Context::GetCandidatePreview() const {
+  // pass the un-truncated input_ so the preview can include chars past the
+  // caret
+  return composition_.GetCandidatePreview(input_);
+}
+
 }  // namespace rime
