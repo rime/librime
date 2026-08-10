@@ -528,6 +528,9 @@ typedef struct RIME_FLAVORED(rime_api_t) {
 
   //! Get the decoded code segments for a candidate at the given index.
   //! E.g. pinyin "你好" → segments=["ni","hao"], matching_segments=2
+  //! For wrapped/uniquified candidates, returns the first decodable
+  //! genuine candidate.
+  //! matching_segments corresponds to the returned genuine candidate.
   //! Returns True if code info was found.
   //! Caller must free with free_candidate_code().
   Bool (*get_candidate_code)(RimeSessionId session_id,

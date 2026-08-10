@@ -1170,22 +1170,13 @@ static Bool RimeGetInputTabs(RimeSessionId session_id,
   }
   vector<InputTabEntry> tabs;
   engine->CollectInputTabs(start_pos, &tabs);
-  if (position == 0 && tabs.empty()) {
-    for (size_t try_pos = start_pos + 1; try_pos < ctx->input().length();
-         ++try_pos) {
-      engine->CollectInputTabs(try_pos, &tabs);
-      if (!tabs.empty()) {
-        start_pos = try_pos;
-        break;
-      }
-    }
-  }
-
-  // Deduplicate by label (keep first occurrence)
+  // Deduplicate by (label, span, source), preserving the first occurrence.
   vector<InputTabEntry> unique_tabs;
   set<string> seen;
   for (auto& tab : tabs) {
-    if (seen.insert(tab.label).second) {
+    const string key = tab.label + "\t" + std::to_string(tab.span) + "\t" +
+                       std::to_string(tab.source);
+    if (seen.insert(key).second) {
       unique_tabs.push_back(tab);
     }
   }
@@ -1243,22 +1234,30 @@ static Bool RimeGetCandidateCode(RimeSessionId session_id,
   if (!cand)
     return False;
 
-  auto phrase = As<Phrase>(Candidate::GetGenuineCandidate(cand));
-  if (!phrase)
-    return False;
-
-  Dictionary* dict = phrase->dictionary();
-  if (!dict || !dict->loaded())
-    return False;
-
   vector<string> decoded;
-  if (!dict->Decode(phrase->code(), &decoded) || decoded.empty())
+  size_t resolved_matching_segments = 0;
+  bool found = false;
+  for (const auto& genuine : Candidate::GetGenuineCandidates(cand)) {
+    auto phrase = As<Phrase>(genuine);
+    if (!phrase)
+      continue;
+    Dictionary* dict = phrase->dictionary();
+    if (!dict || !dict->loaded())
+      continue;
+    decoded.clear();
+    if (!dict->Decode(phrase->code(), &decoded) || decoded.empty())
+      continue;
+    resolved_matching_segments = phrase->matching_code_size();
+    found = true;
+    break;
+  }
+  if (!found)
     return False;
 
   *num_segments = decoded.size();
-  *matching_segments = phrase->matching_code_size();
+  *matching_segments = resolved_matching_segments;
   if (*matching_segments == 0)
-    *matching_segments = decoded.size();
+    *matching_segments = *num_segments;
 
   *segments = new char*[*num_segments];
   for (size_t i = 0; i < *num_segments; ++i) {
@@ -1288,8 +1287,6 @@ static Bool RimeSelectTab(RimeSessionId session_id,
     return False;
 
   // position=0 means auto-compute from current editing segment.
-  // Keep this aligned with RimeGetInputTabs(position=0), otherwise a tab that
-  // is shown to user may be applied to a stale cursor position.
   if (position == 0) {
     position = ctx->CurrentTabCursor();
     size_t edit_pos = ctx->composition().GetCurrentStartPosition();
