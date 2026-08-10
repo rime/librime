@@ -70,27 +70,38 @@ Calculation* Transliteration::Parse(const vector<string>& args) {
 bool Transliteration::Apply(Spelling* spelling) {
   if (!spelling || spelling->str.empty())
     return false;
+
+  const char* const start = spelling->str.c_str();
+  const char* const end = start + spelling->str.size();
+
+  string result;
   bool modified = false;
-  const char* p = spelling->str.c_str();
-  const int buffer_len = 256;
-  char buffer[buffer_len] = "";
-  char* q = buffer;
-  uint32_t c;
-  while ((c = utf8::unchecked::next(p))) {
-    if (q - buffer > buffer_len - 7) {  // insufficient space
-      modified = false;
-      break;
+
+  const char* p = start;
+  while (p < end) {
+    const char* here = p;
+    uint32_t c = utf8::unchecked::next(p);
+
+    auto it = char_map_.find(c);
+    if (it != char_map_.end()) {
+      if (!modified) {
+        // allocate space and copy unmodified prefix up to this point
+        modified = true;
+        result.reserve(spelling->str.size());
+        result.assign(start, here - start);
+      }
+      c = it->second;  // replace character
     }
-    if (char_map_.find(c) != char_map_.end()) {
-      c = char_map_[c];
-      modified = true;
+
+    if (modified) {
+      utf8::unchecked::append(c, std::back_inserter(result));
     }
-    q = utf8::unchecked::append(c, q);
   }
+
   if (modified) {
-    *q = '\0';
-    spelling->str.assign(buffer);
+    spelling->str = std::move(result);
   }
+
   return modified;
 }
 
