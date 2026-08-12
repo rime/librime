@@ -96,6 +96,17 @@ class Correction : public Derivation {
   bool Apply(Spelling* spelling) override;
 };
 
+// reorder/zyx/dedup  ("xzxy" -> "zyx")
+class Reorder : public Calculation {
+ public:
+  static Factory Parse;
+  bool Apply(Spelling* spelling) override;
+
+ protected:
+  std::u32string order_;
+  bool dedup_;
+};
+
 }  // namespace rime
 
 #endif  // RIME_CALCULUS_H_
