@@ -549,7 +549,9 @@ an<DictEntry> UserDictionary::CreateDictEntry(const string& key,
     return e;
   if (v.tick < present_tick)
     v.dee = algo::formula_d(0, (double)present_tick, v.dee, (double)v.tick);
-  if (v.dee <= kDiscardThreshold)  // very old entry
+  // tick==0: table/stabledb phrases (custom_phrase.txt etc.) never entered
+  // userdb decay. Discard only aged user-history entries.
+  if (v.tick != 0 && v.dee <= kDiscardThreshold)
     return e;
   // create!
   e = New<DictEntry>();
