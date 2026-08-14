@@ -79,12 +79,12 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
   const string& name() const { return name_; }
   TickCount tick() const { return tick_; }
 
-  static an<DictEntry> CreateDictEntry(const string& key,
-                                       const string& value,
-                                       TickCount present_tick,
-                                       double credibility = 0.0,
-                                       double quality_len = 0.0,
-                                       string* full_code = nullptr);
+  RIME_DLL static an<DictEntry> CreateDictEntry(const string& key,
+                                                const string& value,
+                                                TickCount present_tick,
+                                                double credibility = 0.0,
+                                                double quality_len = 0.0,
+                                                string* full_code = nullptr);
 
  protected:
   bool Initialize();
