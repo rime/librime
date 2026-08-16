@@ -12,6 +12,7 @@
 #include <rime/translator.h>
 #include <rime/algo/algebra.h>
 #include <rime/gear/memory.h>
+#include <rime/gear/poet.h>
 #include <rime/gear/translator_commons.h>
 
 namespace rime {
@@ -53,6 +54,18 @@ class ScriptTranslator : public Translator,
   int max_word_length() const { return max_word_length_; }
   int core_word_length() const;
 
+  // incremental word-graph cache for sentence candidates; valid only when
+  // the input is appended at the tail, so previously covered vertices can be
+  // reused instead of querying the dictionaries from scratch on every key
+  struct SentenceCache {
+    bool valid = false;
+    size_t start = 0;
+    string input;
+    size_t covered_len = 0;
+    WordGraph graph;
+  };
+  SentenceCache& sentence_cache() { return sentence_cache_; }
+
  protected:
   int max_homophones_ = 1;
   int spelling_hints_ = 0;
@@ -64,6 +77,7 @@ class ScriptTranslator : public Translator,
   the<Corrector> corrector_;
   the<Poet> poet_;
   vector<an<Phrase>> queue_;
+  SentenceCache sentence_cache_;
 };
 
 }  // namespace rime

@@ -122,6 +122,7 @@ class ScriptTranslation : public Translation {
         poet_(poet),
         start_(start),
         end_of_input_(end_of_input),
+        input_(input),
         syllabifier_(
             New<ScriptSyllabifier>(translator, corrector, input, start)),
         enable_correction_(corrector),
@@ -150,6 +151,7 @@ class ScriptTranslation : public Translation {
   Poet* poet_;
   size_t start_;
   size_t end_of_input_;
+  string input_;
   an<ScriptSyllabifier> syllabifier_;
 
   an<DictEntryCollector> phrase_;
@@ -700,18 +702,36 @@ WordGraph ScriptTranslation::PrepareForMakingSentence(
     UserDictionary* user_dict) {
   const int kMaxSyllablesForUserPhraseQuery = 5;
   const auto& syllable_graph = syllabifier_->syllable_graph();
+  const size_t new_len = syllable_graph.interpreted_length;
+  auto& cache = translator_->sentence_cache();
+  // when the input is only appended at the tail, the syllable graph merely
+  // grows new edges from the previous tail, so previously covered vertices
+  // keep their dictionary results and only the new spans need a lookup
+  const bool append_only =
+      cache.valid && cache.start == start_ &&
+      cache.input == input_.substr(0, cache.input.size()) &&
+      new_len > cache.covered_len && start_ + new_len == end_of_input_;
   WordGraph graph;
+  if (append_only) {
+    graph = cache.graph;
+  }
+  const size_t covered_len = append_only ? cache.covered_len : 0;
   for (const auto& x : syllable_graph.edges) {
     auto& same_start_pos = graph[x.first];
+    bool is_covered = x.first < covered_len;
+    size_t end_bound = is_covered ? covered_len : 0;
     if (user_dict) {
-      EnrollEntries(same_start_pos,
-                    user_dict->Lookup(syllable_graph, x.first,
-                                      kMaxSyllablesForUserPhraseQuery));
+      EnrollEntries(
+          same_start_pos,
+          user_dict->Lookup(syllable_graph, x.first,
+                            kMaxSyllablesForUserPhraseQuery, 0, 0, end_bound));
     }
     // merge lookup results
-    EnrollEntries(same_start_pos, dict->Lookup(syllable_graph, x.first,
-                                               &translator_->blacklist()));
+    EnrollEntries(same_start_pos,
+                  dict->Lookup(syllable_graph, x.first,
+                               &translator_->blacklist(), false, 0, end_bound));
   }
+  cache = ScriptTranslator::SentenceCache{true, start_, input_, new_len, graph};
   return graph;
 }
 

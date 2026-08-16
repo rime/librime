@@ -216,7 +216,8 @@ bool UserDictionary::readonly() const {
 void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
                                size_t current_pos,
                                const string& current_prefix,
-                               DfsState* state) {
+                               DfsState* state,
+                               size_t end_bound) {
   auto index = syll_graph.indices.find(current_pos);
   if (index == syll_graph.indices.end()) {
     return;
@@ -258,11 +259,19 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
         if (!state->ForwardScan(prefix))  // reached the end of db
           continue;
       }
-      while (state->IsExactMatch(prefix)) {  // 'b |e ' vs. 'b e \tBe'
-        DLOG(INFO) << "match found for '" << prefix << "'.";
-        state->RecruitEntry(end_pos);
-        if (!state->NextEntry())  // reached the end of db
-          break;
+      if (end_pos <= end_bound) {
+        // entries ending at or before the bound are already cached
+        while (state->IsExactMatch(prefix)) {
+          if (!state->NextEntry())  // reached the end of db
+            break;
+        }
+      } else {
+        while (state->IsExactMatch(prefix)) {  // 'b |e ' vs. 'b e \tBe'
+          DLOG(INFO) << "match found for '" << prefix << "'.";
+          state->RecruitEntry(end_pos);
+          if (!state->NextEntry())  // reached the end of db
+            break;
+        }
       }
       auto next_index = syll_graph.indices.find(end_pos);
       if (next_index == syll_graph.indices.end()) {
@@ -292,7 +301,7 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
         // the caller can limit the number of syllables to look up
         if ((!state->depth_limit || state->depth() < state->depth_limit) &&
             state->IsPrefixMatch(prefix)) {  // 'b |e ' vs. 'b e f \tBefore'
-          DfsLookup(syll_graph, end_pos, prefix, state);
+          DfsLookup(syll_graph, end_pos, prefix, state, end_bound);
         }
       }
     }
@@ -316,7 +325,8 @@ an<UserDictEntryCollector> UserDictionary::Lookup(
     size_t start_pos,
     size_t depth_limit,
     size_t predict_word_from_depth,
-    double initial_credibility) {
+    double initial_credibility,
+    size_t end_bound) {
   if (!table_ || !prism_ || !loaded() ||
       start_pos >= syll_graph.interpreted_length)
     return nullptr;
@@ -330,7 +340,7 @@ an<UserDictEntryCollector> UserDictionary::Lookup(
   state.accessor = db_->Query("");
   state.accessor->Jump(" ");  // skip metadata
   string prefix;
-  DfsLookup(syll_graph, start_pos, prefix, &state);
+  DfsLookup(syll_graph, start_pos, prefix, &state, end_bound);
   if (state.query_result.empty())
     return nullptr;
   // sort each group of homophones by weight

@@ -206,7 +206,8 @@ class Table : public MappedFile {
   RIME_DLL TableAccessor QueryPhrases(const Code& code);
   RIME_DLL bool Query(const SyllableGraph& syll_graph,
                       size_t start_pos,
-                      TableQueryResult* result);
+                      TableQueryResult* result,
+                      size_t end_bound = 0);
   RIME_DLL string GetEntryText(const table::Entry& entry);
 
   uint32_t dict_file_checksum() const;

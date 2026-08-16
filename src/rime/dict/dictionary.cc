@@ -240,9 +240,10 @@ static void lookup_table(Table* table,
                          const SyllableGraph& syllable_graph,
                          size_t start_pos,
                          bool predict_word,
-                         double initial_credibility) {
+                         double initial_credibility,
+                         size_t end_bound = 0) {
   TableQueryResult result;
-  if (!table->Query(syllable_graph, start_pos, &result)) {
+  if (!table->Query(syllable_graph, start_pos, &result, end_bound)) {
     return;
   }
   // copy result
@@ -272,7 +273,8 @@ an<DictEntryCollector> Dictionary::Lookup(const SyllableGraph& syllable_graph,
                                           size_t start_pos,
                                           const hash_set<string>* blacklist,
                                           bool predict_word,
-                                          double initial_credibility) {
+                                          double initial_credibility,
+                                          size_t end_bound) {
   if (!loaded())
     return nullptr;
   auto collector = New<DictEntryCollector>();
@@ -280,10 +282,22 @@ an<DictEntryCollector> Dictionary::Lookup(const SyllableGraph& syllable_graph,
     if (!table->IsOpen())
       continue;
     lookup_table(table.get(), collector.get(), syllable_graph, start_pos,
-                 predict_word, initial_credibility);
+                 predict_word, initial_credibility, end_bound);
   }
   if (collector->empty())
     return nullptr;
+  // drop entries ending at or before the bound when a suffix is appended
+  if (end_bound > 0) {
+    for (auto it = collector->begin(); it != collector->end();) {
+      if (it->first <= end_bound) {
+        it = collector->erase(it);
+      } else {
+        ++it;
+      }
+    }
+    if (collector->empty())
+      return nullptr;
+  }
   // for each group of equal code length, sort it and filter words
   for (auto& v : *collector) {
     v.second.Sort();

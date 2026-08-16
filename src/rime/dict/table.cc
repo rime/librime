@@ -570,7 +570,8 @@ const double kPenaltyForAmbiguousSyllable = -2.995732274;
 
 bool Table::Query(const SyllableGraph& syll_graph,
                   size_t start_pos,
-                  TableQueryResult* result) {
+                  TableQueryResult* result,
+                  size_t end_bound) {
   if (!result || !index_ || start_pos >= syll_graph.interpreted_length)
     return false;
   result->clear();
@@ -614,7 +615,7 @@ bool Table::Query(const SyllableGraph& syll_graph,
             (is_normal_spelling ? 1.0 : 0.0) * (end_pos - current_pos);
         TableAccessor accessor =
             query.Access(syll_id, next_credibility, delta_quality_len);
-        if (!accessor.exhausted()) {
+        if (end_pos > end_bound && !accessor.exhausted()) {
           (*result)[end_pos].push_back(accessor);
         }
         if (end_pos < syll_graph.interpreted_length &&

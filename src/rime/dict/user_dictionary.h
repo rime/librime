@@ -60,7 +60,8 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
                                     size_t start_pos,
                                     size_t depth_limit = 0,
                                     size_t predict_word_from_depth = 0,
-                                    double initial_credibility = 0.0);
+                                    double initial_credibility = 0.0,
+                                    size_t end_bound = 0);
   size_t LookupWords(UserDictEntryIterator* result,
                      const string& input,
                      bool predictive,
@@ -93,7 +94,8 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
   void DfsLookup(const SyllableGraph& syll_graph,
                  size_t current_pos,
                  const string& current_prefix,
-                 DfsState* state);
+                 DfsState* state,
+                 size_t end_bound = 0);
 
  private:
   string name_;
