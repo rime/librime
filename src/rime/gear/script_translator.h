@@ -65,6 +65,7 @@ class ScriptTranslator : public Translator,
     WordGraph graph;
   };
   SentenceCache& sentence_cache() { return sentence_cache_; }
+  Poet::IncrementalStates& poet_states() { return poet_states_; }
 
  protected:
   int max_homophones_ = 1;
@@ -78,6 +79,7 @@ class ScriptTranslator : public Translator,
   the<Poet> poet_;
   vector<an<Phrase>> queue_;
   SentenceCache sentence_cache_;
+  Poet::IncrementalStates poet_states_;
 };
 
 }  // namespace rime

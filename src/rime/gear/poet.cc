@@ -16,59 +16,6 @@
 
 namespace rime {
 
-// internal data structure used during the sentence making process.
-// the output line of the algorithm is transformed to an<Sentence>.
-struct Line {
-  // be sure the pointer to predecessor Line object is stable. it works since
-  // pointer to values stored in std::map and std::unordered_map are stable.
-  const Line* predecessor;
-  // as long as the word graph lives, pointers to entries are valid.
-  const DictEntry* entry;
-  size_t end_pos;
-  double weight;
-  size_t text_hash;  // for dedup
-
-  static const Line kEmpty;
-
-  bool empty() const { return !predecessor && !entry; }
-
-  string last_word() const { return entry ? entry->text : string(); }
-
-  struct Components {
-    vector<const Line*> lines;
-
-    Components(const Line* line) {
-      for (const Line* cursor = line; !cursor->empty();
-           cursor = cursor->predecessor) {
-        lines.push_back(cursor);
-      }
-    }
-
-    decltype(lines.crbegin()) begin() const { return lines.crbegin(); }
-    decltype(lines.crend()) end() const { return lines.crend(); }
-  };
-
-  Components components() const { return Components(this); }
-
-  string context() const {
-    // look back 2 words
-    return empty() ? string()
-           : !predecessor || predecessor->empty()
-               ? last_word()
-               : predecessor->last_word() + last_word();
-  }
-
-  vector<size_t> word_lengths() const {
-    vector<size_t> lengths;
-    size_t last_end_pos = 0;
-    for (const auto* c : components()) {
-      lengths.push_back(c->end_pos - last_end_pos);
-      last_end_pos = c->end_pos;
-    }
-    return lengths;
-  }
-};
-
 const Line Line::kEmpty{nullptr, nullptr, 0, 0.0, 0};
 
 inline static Grammar* create_grammar(Config* config) {
@@ -107,9 +54,6 @@ bool Poet::LeftAssociateCompare(const Line& one, const Line& other) {
   }
   return false;
 }
-
-// keep the best line candidate per last phrase
-using LineCandidates = hash_map<string, Line>;
 
 template <int N>
 static vector<const Line*> find_top_candidates(const LineCandidates& candidates,
@@ -189,26 +133,32 @@ struct DynamicProgramming {
 };
 
 template <class Strategy>
-an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
-                                            size_t total_length,
-                                            const string& preceding_text) {
-  map<int, typename Strategy::State> states;
-  Strategy::Initiate(states[0]);
+an<Sentence> Poet::MakeSentenceWithStrategy(
+    const WordGraph& graph,
+    size_t total_length,
+    const string& preceding_text,
+    size_t covered_len,
+    map<int, typename Strategy::State>* states) {
+  map<int, typename Strategy::State> fresh_states;
+  if (!states)
+    states = &fresh_states;
+  if (states->empty())
+    Strategy::Initiate((*states)[0]);
   for (const auto& sv : graph) {
     size_t start_pos = sv.first;
-    if (states.find(start_pos) == states.end())
+    if (states->find(start_pos) == states->end())
       continue;
     DLOG(INFO) << "start pos: " << start_pos;
-    const auto& source_state = states[start_pos];
-    const auto update = [this, &states, &sv, start_pos, total_length,
-                         &preceding_text](const Line& candidate) {
+    const auto& source_state = (*states)[start_pos];
+    const auto update = [this, states, &sv, start_pos, total_length,
+                         covered_len, &preceding_text](const Line& candidate) {
       for (const auto& ev : sv.second) {
         size_t end_pos = ev.first;
-        if (start_pos == 0 && end_pos == total_length)
-          continue;  // exclude single word from the result
+        if (end_pos <= covered_len)
+          continue;  // already decoded in a previous round
         DLOG(INFO) << "end pos: " << end_pos;
         bool is_rear = end_pos == total_length;
-        auto& target_state = states[end_pos];
+        auto& target_state = (*states)[end_pos];
         // extend candidates with dict entries on a valid edge.
         const DictEntryList& entries = ev.second;
         for (const auto& entry : entries) {
@@ -217,7 +167,7 @@ an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
           double weight = candidate.weight +
                           Grammar::Evaluate(context, entry->text, entry->weight,
                                             is_rear, grammar_.get());
-          Line new_line{&candidate, entry.get(), end_pos, weight};
+          Line new_line{&candidate, entry, end_pos, weight};
           Line& best = Strategy::BestLineToUpdate(target_state, new_line);
           if (best.empty() || compare_(best, new_line)) {
             DLOG(INFO) << "updated line ending at " << end_pos
@@ -230,12 +180,28 @@ an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
     };
     Strategy::ForEachCandidate(source_state, compare_, update);
   }
-  auto found = states.find(total_length);
-  if (found == states.end() || found->second.empty())
+  auto found = states->find(total_length);
+  if (found == states->end() || found->second.empty())
     return nullptr;
-  const Line& best = Strategy::BestLineInState(found->second, compare_);
+  // the single-word covering of the whole input is handled by the word
+  // candidates, not the sentence; skipping it when building the states would
+  // tie the states to the input length, which breaks the incremental decode
+  // that reuses them across key presses
+  const Line* best = nullptr;
+  Strategy::ForEachCandidate(
+      found->second, compare_, [&](const Line& candidate) {
+        bool single_word = candidate.end_pos == total_length &&
+                           candidate.components().lines.size() == 1;
+        if (single_word)
+          return;
+        if (!best || compare_(*best, candidate)) {
+          best = &candidate;
+        }
+      });
+  if (!best)
+    return nullptr;
   auto sentence = New<Sentence>(language_);
-  for (const auto* c : best.components()) {
+  for (const auto* c : best->components()) {
     if (!c->entry)
       continue;
     sentence->Extend(*c->entry, c->end_pos, c->weight);
@@ -246,10 +212,27 @@ an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
 an<Sentence> Poet::MakeSentence(const WordGraph& graph,
                                 size_t total_length,
                                 const string& preceding_text) {
-  return grammar_ ? MakeSentenceWithStrategy<BeamSearch>(graph, total_length,
-                                                         preceding_text)
-                  : MakeSentenceWithStrategy<DynamicProgramming>(
-                        graph, total_length, preceding_text);
+  return MakeSentence(graph, total_length, preceding_text, 0, nullptr);
+}
+
+an<Sentence> Poet::MakeSentence(const WordGraph& graph,
+                                size_t total_length,
+                                const string& preceding_text,
+                                size_t covered_len,
+                                IncrementalStates* states) {
+  // without caller-provided states there is nothing to extend, and a
+  // non-zero covered_len would skip edges and silently drop candidates
+  if (!states) {
+    covered_len = 0;
+  }
+  if (grammar_) {
+    return MakeSentenceWithStrategy<BeamSearch>(
+        graph, total_length, preceding_text, covered_len,
+        states ? &states->beam : nullptr);
+  }
+  return MakeSentenceWithStrategy<DynamicProgramming>(
+      graph, total_length, preceding_text, covered_len,
+      states ? &states->dp : nullptr);
 }
 
 // Make `max_sentences` sentences using beam search and dp on word graph.
@@ -290,7 +273,7 @@ deque<an<Sentence>> Poet::MakeSentences(const WordGraph& graph,
           for (char c : entry->text) {
             new_hash = new_hash * 31 + c;
           }
-          Line new_line{&source_line, entry.get(), end_pos, weight, new_hash};
+          Line new_line{&source_line, entry, end_pos, weight, new_hash};
 
           // dedup by text hash
           auto dup = std::find_if(

@@ -754,10 +754,30 @@ deque<an<Sentence>> ScriptTranslation::MakeSentences(
 an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
                                              UserDictionary* user_dict) {
   const auto& syllable_graph = syllabifier_->syllable_graph();
+  const size_t new_len = syllable_graph.interpreted_length;
+  const auto& cache = translator_->sentence_cache();
+  // decide whether the decode can be extended before Prepare refreshes
+  // the cache
+  const bool append_only =
+      cache.valid && cache.start == start_ &&
+      cache.input == input_.substr(0, cache.input.size()) &&
+      new_len > cache.covered_len && start_ + new_len == end_of_input_;
+  const size_t covered_len = append_only ? cache.covered_len : 0;
   WordGraph graph = PrepareForMakingSentence(dict, user_dict);
-  if (auto sentence =
-          poet_->MakeSentence(graph, syllable_graph.interpreted_length,
-                              translator_->GetPrecedingText(start_))) {
+  auto& poet_states = translator_->poet_states();
+  // integrity check: the cached decode states must have covered exactly the
+  // length the cached word graph covered; a mismatch (e.g. the states lagging
+  // behind a cache refreshed elsewhere) means a partial decode would silently
+  // drop candidates, so fall back to a full decode
+  if (!append_only || !poet_states.valid ||
+      poet_states.covered_len != covered_len) {
+    poet_states = Poet::IncrementalStates{};
+  }
+  poet_states.valid = true;
+  poet_states.covered_len = new_len;
+  if (auto sentence = poet_->MakeSentence(graph, new_len,
+                                          translator_->GetPrecedingText(start_),
+                                          covered_len, &poet_states)) {
     sentence->Offset(start_);
     sentence->set_syllabifier(syllabifier_);
     return sentence;
