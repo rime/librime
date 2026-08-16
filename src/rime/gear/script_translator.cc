@@ -703,7 +703,7 @@ WordGraph ScriptTranslation::PrepareForMakingSentence(
   const int kMaxSyllablesForUserPhraseQuery = 5;
   const auto& syllable_graph = syllabifier_->syllable_graph();
   const size_t new_len = syllable_graph.interpreted_length;
-  auto& cache = translator_->sentence_cache();
+  auto& cache = translator_->sentence_cache(start_);
   // when the input is only appended at the tail, the syllable graph merely
   // grows new edges from the previous tail, so previously covered vertices
   // keep their dictionary results and only the new spans need a lookup
@@ -755,7 +755,7 @@ an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
                                              UserDictionary* user_dict) {
   const auto& syllable_graph = syllabifier_->syllable_graph();
   const size_t new_len = syllable_graph.interpreted_length;
-  const auto& cache = translator_->sentence_cache();
+  const auto& cache = translator_->sentence_cache(start_);
   // decide whether the decode can be extended before Prepare refreshes
   // the cache
   const bool append_only =
@@ -764,7 +764,7 @@ an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
       new_len > cache.covered_len && start_ + new_len == end_of_input_;
   const size_t covered_len = append_only ? cache.covered_len : 0;
   WordGraph graph = PrepareForMakingSentence(dict, user_dict);
-  auto& poet_states = translator_->poet_states();
+  auto& poet_states = translator_->poet_states(start_);
   // integrity check: the cached decode states must have covered exactly the
   // length the cached word graph covered; a mismatch (e.g. the states lagging
   // behind a cache refreshed elsewhere) means a partial decode would silently

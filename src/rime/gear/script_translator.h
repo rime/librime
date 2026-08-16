@@ -54,9 +54,11 @@ class ScriptTranslator : public Translator,
   int max_word_length() const { return max_word_length_; }
   int core_word_length() const;
 
-  // incremental word-graph cache for sentence candidates; valid only when
-  // the input is appended at the tail, so previously covered vertices can be
-  // reused instead of querying the dictionaries from scratch on every key
+  // incremental word-graph cache for sentence candidates, keyed by segment
+  // start; valid only when the input is appended at the tail, so previously
+  // covered vertices can be reused instead of querying the dictionaries from
+  // scratch on every key. the cache is per segment because a translator may
+  // serve multiple segments when the caret sits mid-input
   struct SentenceCache {
     bool valid = false;
     size_t start = 0;
@@ -64,8 +66,10 @@ class ScriptTranslator : public Translator,
     size_t covered_len = 0;
     WordGraph graph;
   };
-  SentenceCache& sentence_cache() { return sentence_cache_; }
-  Poet::IncrementalStates& poet_states() { return poet_states_; }
+  SentenceCache& sentence_cache(size_t start) { return sentence_cache_[start]; }
+  Poet::IncrementalStates& poet_states(size_t start) {
+    return poet_states_[start];
+  }
 
  protected:
   int max_homophones_ = 1;
@@ -78,8 +82,8 @@ class ScriptTranslator : public Translator,
   the<Corrector> corrector_;
   the<Poet> poet_;
   vector<an<Phrase>> queue_;
-  SentenceCache sentence_cache_;
-  Poet::IncrementalStates poet_states_;
+  map<size_t, SentenceCache> sentence_cache_;
+  map<size_t, Poet::IncrementalStates> poet_states_;
 };
 
 }  // namespace rime
