@@ -5,7 +5,10 @@
 // 2011-11-02 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
+#include <cerrno>
+#include <cmath>
 #include <cstdlib>
+#include <limits>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <rime/service.h>
@@ -21,7 +24,13 @@ UserDbValue::UserDbValue(const string& value) {
 
 string UserDbValue::Pack() const {
   std::ostringstream packed;
-  packed << "c=" << commits << " d=" << dee << " t=" << tick;
+  // Clamp denormal (and negative) dee to 0 before serialization.
+  // Denormals serialize to strings like "9.88131e-324" that std::stod cannot
+  // parse back, breaking the Pack/Unpack round-trip on long-lived entries
+  // whose decay weight has fallen below the normal-double floor.
+  constexpr double kMinNormal = std::numeric_limits<double>::min();
+  double safe_dee = (dee < kMinNormal) ? 0.0 : dee;
+  packed << "c=" << commits << " d=" << safe_dee << " t=" << tick;
   return packed.str();
 }
 
@@ -34,13 +43,39 @@ bool UserDbValue::Unpack(const string& value) {
       continue;
     string k(k_eq_v.substr(0, eq));
     string v(k_eq_v.substr(eq + 1));
+    // Use C-style strto* parsers: they accept denormal floats without
+    // throwing and give us a precise "no conversion performed" signal via
+    // the end-pointer. std::stod throws std::out_of_range on denormals,
+    // which used to make Unpack() reject the whole record on round-trip.
     try {
       if (k == "c") {
-        commits = std::stoi(v);
+        char* end = nullptr;
+        errno = 0;
+        long parsed = std::strtol(v.c_str(), &end, 10);
+        if (end == v.c_str() || errno == ERANGE) {
+          throw std::invalid_argument("bad commits");
+        }
+        commits = static_cast<int>(parsed);
       } else if (k == "d") {
-        dee = (std::min)(10000.0, std::stod(v));
+        char* end = nullptr;
+        errno = 0;
+        double parsed = std::strtod(v.c_str(), &end);
+        if (end == v.c_str()) {
+          throw std::invalid_argument("bad dee");
+        }
+        // strtod returns 0 on underflow and HUGE_VAL on overflow; either
+        // way, clamp to [0, 10000] which is the valid dee range.
+        if (parsed < 0.0 || std::isnan(parsed))
+          parsed = 0.0;
+        dee = (std::min)(10000.0, parsed);
       } else if (k == "t") {
-        tick = std::stoul(v);
+        char* end = nullptr;
+        errno = 0;
+        unsigned long parsed = std::strtoul(v.c_str(), &end, 10);
+        if (end == v.c_str() || errno == ERANGE) {
+          throw std::invalid_argument("bad tick");
+        }
+        tick = static_cast<TickCount>(parsed);
       }
     } catch (...) {
       LOG(ERROR) << "failed in parsing key-value from userdb entry '" << k_eq_v

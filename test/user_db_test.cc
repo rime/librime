@@ -5,6 +5,8 @@
 // 2011-07-03 GONG Chen <chen.sst@gmail.com>
 //
 #include <gtest/gtest.h>
+#include <cmath>
+#include <limits>
 #include <rime/algo/syllabifier.h>
 #include <rime/dict/text_db.h>
 #include <rime/dict/user_db.h>
@@ -88,4 +90,86 @@ TEST(RimeUserDbTest, Query) {
     EXPECT_FALSE(accessor->GetNextRecord(&key, &value));
   }
   db.Close();
+}
+
+TEST(RimeUserDbValueTest, PackUnpackRoundtripNormal) {
+  UserDbValue original;
+  original.commits = 42;
+  original.dee = 1.23456;
+  original.tick = 1000;
+
+  string packed = original.Pack();
+  EXPECT_EQ("c=42 d=1.23456 t=1000", packed);
+
+  UserDbValue restored(packed);
+  EXPECT_EQ(42, restored.commits);
+  EXPECT_DOUBLE_EQ(1.23456, restored.dee);
+  EXPECT_EQ(1000u, restored.tick);
+}
+
+TEST(RimeUserDbValueTest, PackUnpackRoundtripZero) {
+  UserDbValue original;
+  original.commits = 0;
+  original.dee = 0.0;
+  original.tick = 0;
+
+  string packed = original.Pack();
+  UserDbValue restored(packed);
+  EXPECT_EQ(0, restored.commits);
+  EXPECT_DOUBLE_EQ(0.0, restored.dee);
+  EXPECT_EQ(0u, restored.tick);
+}
+
+TEST(RimeUserDbValueTest, PackUnpackRoundtripSmallNormal) {
+  // A small but normal (non-denormal) positive value, just above min().
+  UserDbValue original;
+  original.commits = 7;
+  original.dee = 3e-300;
+  original.tick = 999;
+
+  string packed = original.Pack();
+  UserDbValue restored(packed);
+  EXPECT_EQ(7, restored.commits);
+  EXPECT_DOUBLE_EQ(3e-300, restored.dee);
+  EXPECT_EQ(999u, restored.tick);
+}
+
+TEST(RimeUserDbValueTest, UnpackSurvivesDenormal) {
+  // Simulate an entry written by a buggy older version that serialized a
+  // denormal float. Unpack MUST NOT fail; it should treat the denormal as
+  // effectively zero (below the representable normal range).
+  const string denormal_entry = "c=16 d=9.88131e-324 t=1449225";
+  UserDbValue v(denormal_entry);
+  EXPECT_EQ(16, v.commits);
+  EXPECT_EQ(1449225u, v.tick);
+  // dee should not throw or leave the field uninitialized; it must be
+  // representable as a normal non-negative double (0 is acceptable).
+  EXPECT_GE(v.dee, 0.0);
+  EXPECT_FALSE(std::isnan(v.dee));
+}
+
+TEST(RimeUserDbValueTest, PackThenUnpackDenormalIsClamped) {
+  // Setting dee to a denormal in memory and Pack()ing it must produce a
+  // string that Unpack() can parse back without error — the round-trip must
+  // not lose the record.
+  UserDbValue original;
+  original.commits = 5;
+  original.dee = std::numeric_limits<double>::denorm_min();  // ~4.94e-324
+  original.tick = 12345;
+
+  string packed = original.Pack();
+  UserDbValue restored;
+  ASSERT_TRUE(restored.Unpack(packed))
+      << "Unpack failed on packed string: " << packed;
+  EXPECT_EQ(5, restored.commits);
+  EXPECT_EQ(12345u, restored.tick);
+  EXPECT_GE(restored.dee, 0.0);
+  EXPECT_FALSE(std::isnan(restored.dee));
+}
+
+TEST(RimeUserDbValueTest, UnpackRejectsGarbage) {
+  // Fields that are not numbers at all should still be rejected (the
+  // Unpack() contract is not "accept anything").
+  UserDbValue v;
+  EXPECT_FALSE(v.Unpack("c=abc d=xyz t=qqq"));
 }
