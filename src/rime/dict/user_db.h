@@ -16,6 +16,14 @@ namespace rime {
 
 using TickCount = uint64_t;
 
+/// Entries whose decay weight `dee` has fallen to this value or below are
+/// considered aged out: they are discarded when loading the user dictionary
+/// (see UserDictionary::CreateDictEntry), and clamped to zero before being
+/// serialized by UserDbValue::Pack() so that the stored state matches the
+/// effective semantics.
+/// The value corresponds to log2(1/T)*200*ln(2) ticks in the decay formula.
+constexpr double kUserDbDiscardThreshold = 1e-200;
+
 /// Properties of a user db entry value.
 struct UserDbValue {
   int commits = 0;

@@ -121,17 +121,39 @@ TEST(RimeUserDbValueTest, PackUnpackRoundtripZero) {
 }
 
 TEST(RimeUserDbValueTest, PackUnpackRoundtripSmallNormal) {
-  // A small but normal (non-denormal) positive value, just above min().
+  // A small but normal (non-denormal) positive value that is still above
+  // kUserDbDiscardThreshold, so it must round-trip unchanged.
   UserDbValue original;
   original.commits = 7;
-  original.dee = 3e-300;
+  original.dee = 3e-150;
   original.tick = 999;
 
   string packed = original.Pack();
   UserDbValue restored(packed);
   EXPECT_EQ(7, restored.commits);
-  EXPECT_DOUBLE_EQ(3e-300, restored.dee);
+  EXPECT_DOUBLE_EQ(3e-150, restored.dee);
   EXPECT_EQ(999u, restored.tick);
+}
+
+TEST(RimeUserDbValueTest, PackClampsAgedOutDee) {
+  // Normal values at or below kUserDbDiscardThreshold are aged out (they
+  // would be discarded on load), so Pack() must serialize them as zero to
+  // keep the stored state consistent with the discard semantics.
+  UserDbValue aged;
+  aged.commits = 3;
+  aged.dee = 1e-250;  // normal, but below the discard threshold
+  aged.tick = 777;
+
+  string packed = aged.Pack();
+  EXPECT_EQ("c=3 d=0 t=777", packed);
+  UserDbValue restored(packed);
+  EXPECT_DOUBLE_EQ(0.0, restored.dee);
+
+  // The exact threshold value is discarded too (<= comparison).
+  UserDbValue at_threshold;
+  at_threshold.dee = kUserDbDiscardThreshold;
+  UserDbValue restored2(at_threshold.Pack());
+  EXPECT_DOUBLE_EQ(0.0, restored2.dee);
 }
 
 TEST(RimeUserDbValueTest, UnpackSurvivesDenormal) {
@@ -151,7 +173,8 @@ TEST(RimeUserDbValueTest, UnpackSurvivesDenormal) {
 TEST(RimeUserDbValueTest, PackThenUnpackDenormalIsClamped) {
   // Setting dee to a denormal in memory and Pack()ing it must produce a
   // string that Unpack() can parse back without error — the round-trip must
-  // not lose the record.
+  // not lose the record. Denormals fall below kUserDbDiscardThreshold and
+  // are therefore clamped to exactly zero.
   UserDbValue original;
   original.commits = 5;
   original.dee = std::numeric_limits<double>::denorm_min();  // ~4.94e-324
@@ -163,8 +186,7 @@ TEST(RimeUserDbValueTest, PackThenUnpackDenormalIsClamped) {
       << "Unpack failed on packed string: " << packed;
   EXPECT_EQ(5, restored.commits);
   EXPECT_EQ(12345u, restored.tick);
-  EXPECT_GE(restored.dee, 0.0);
-  EXPECT_FALSE(std::isnan(restored.dee));
+  EXPECT_DOUBLE_EQ(0.0, restored.dee);
 }
 
 TEST(RimeUserDbValueTest, UnpackRejectsGarbage) {

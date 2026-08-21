@@ -8,7 +8,6 @@
 #include <cerrno>
 #include <cmath>
 #include <cstdlib>
-#include <limits>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <rime/service.h>
@@ -24,12 +23,13 @@ UserDbValue::UserDbValue(const string& value) {
 
 string UserDbValue::Pack() const {
   std::ostringstream packed;
-  // Clamp denormal (and negative) dee to 0 before serialization.
-  // Denormals serialize to strings like "9.88131e-324" that std::stod cannot
-  // parse back, breaking the Pack/Unpack round-trip on long-lived entries
-  // whose decay weight has fallen below the normal-double floor.
-  constexpr double kMinNormal = std::numeric_limits<double>::min();
-  double safe_dee = (dee < kMinNormal) ? 0.0 : dee;
+  // Clamp aged-out (and denormal/negative) dee to 0 before serialization.
+  // Entries at or below kUserDbDiscardThreshold are discarded on load, so
+  // serializing them with their tiny weights would store a state that
+  // disagrees with their effective semantics. Denormals in particular
+  // serialize to strings like "9.88131e-324" that cannot be parsed back,
+  // breaking the Pack/Unpack round-trip.
+  double safe_dee = (dee <= kUserDbDiscardThreshold) ? 0.0 : dee;
   packed << "c=" << commits << " d=" << safe_dee << " t=" << tick;
   return packed.str();
 }
