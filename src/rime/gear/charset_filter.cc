@@ -100,11 +100,11 @@ CharsetFilter::CharsetFilter(const Ticket& ticket)
 
 an<Translation> CharsetFilter::Apply(an<Translation> translation,
                                      CandidateList* candidates) {
-  if (name_space_.empty() &&
-      !engine_->context()->get_option("extended_charset")) {
+  bool default_ns = name_space_.empty() || name_space_ == "filter";
+  if (default_ns && !engine_->context()->get_option("extended_charset")) {
     return New<CharsetFilterTranslation>(translation);
   }
-  if (!name_space_.empty()) {
+  if (!default_ns) {
     LOG(ERROR) << "charset parameter is unsupported by basic charset_filter";
   }
   return translation;
