@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <filesystem>
+#include <future>
+#include <thread>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -27,6 +29,12 @@
 #include <rime/lever/user_dict_manager.h>
 #ifdef _WIN32
 #include <windows.h>
+#endif
+#if defined(__APPLE__)
+#include <sys/sysctl.h>
+#include <unistd.h>
+#elif !defined(_WIN32)
+#include <unistd.h>
 #endif
 
 namespace fs = std::filesystem;
@@ -163,6 +171,62 @@ bool InstallationUpdate::Run(Deployer* deployer) {
   return config.SaveToFile(installation_info);
 }
 
+static uint64_t DetectTotalPhysicalMemory() {
+#ifdef _WIN32
+  MEMORYSTATUSEX status;
+  status.dwLength = sizeof(status);
+  if (GlobalMemoryStatusEx(&status)) {
+    return status.ullTotalPhys;
+  }
+#elif defined(__APPLE__)
+  int mib[2] = {CTL_HW, HW_MEMSIZE};
+  uint64_t memsize = 0;
+  size_t len = sizeof(memsize);
+  if (sysctl(mib, 2, &memsize, &len, nullptr, 0) == 0) {
+    return memsize;
+  }
+#else
+  long pages = sysconf(_SC_PHYS_PAGES);
+  long page_size = sysconf(_SC_PAGE_SIZE);
+  if (pages > 0 && page_size > 0) {
+    return (uint64_t)pages * (uint64_t)page_size;
+  }
+#endif
+  return 0;
+}
+
+static bool MaybeCreateDirectory(path dir) {
+  std::error_code ec;
+  if (fs::create_directories(dir, ec)) {
+    return true;
+  }
+
+  if (fs::exists(dir)) {
+    return true;
+  }
+  LOG(ERROR) << "error creating directory '" << dir << "'.";
+  return false;
+}
+
+// a dictionary to be compiled for a schema; multiple schemas may share one
+struct SchemaCompileUnit {
+  string schema_id;
+  string dict_name;
+  path compiled_schema_path;
+  vector<string> artifact_stems;  // output file names (without extension)
+  an<Dictionary> dict;
+};
+
+static bool CompileDictionary(Dictionary* dict,
+                              const path& compiled_schema_path,
+                              bool verbose = false) {
+  DictCompiler dict_compiler(dict);
+  if (verbose) {
+    dict_compiler.set_options(DictCompiler::kRebuild | DictCompiler::kDump);
+  }
+  return dict_compiler.Compile(compiled_schema_path);
+}
+
 bool WorkspaceUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating workspace.";
   {
@@ -190,37 +254,76 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating schemas.";
   int success = 0;
   int failure = 0;
-  map<string, path> schemas;
+
   the<ResourceResolver> resolver(Service::instance().CreateResourceResolver(
       {"schema_source_file", "", ".schema.yaml"}));
-  auto build_schema = [&](const string& schema_id, bool as_dependency = false) {
-    if (schemas.find(schema_id) != schemas.end())  // already built
-      return;
-    LOG(INFO) << "schema: " << schema_id;
-    path schema_path;
-    if (schemas.find(schema_id) == schemas.end()) {
-      schema_path = resolver->ResolvePath(schema_id);
-      schemas[schema_id] = schema_path;
-    } else {
-      schema_path = schemas[schema_id];
-    }
-    if (schema_path.empty() || !fs::exists(schema_path)) {
-      if (as_dependency) {
-        LOG(WARNING) << "missing input schema; skipped unsatisfied dependency: "
-                     << schema_id;
-      } else {
-        LOG(ERROR) << "missing input schema: " << schema_id;
-        ++failure;
-      }
-      return;
-    }
-    the<DeploymentTask> t(new SchemaUpdate(schema_path));
-    if (t->Run(deployer))
-      ++success;
-    else
-      ++failure;
-  };
   auto schema_component = Config::Require("schema");
+
+  // Phase 1 (serial): update schema config files, resolve the dictionaries to
+  // compile, and collect them into compile units. All accesses to the shared,
+  // non-thread-safe component caches happen in this phase.
+  vector<SchemaCompileUnit> units;
+  map<string, path> schemas;
+  std::function<void(const string&, bool)> process_schema =
+      [&](const string& schema_id, bool as_dependency) {
+        if (schemas.find(schema_id) != schemas.end())  // already processed
+          return;
+        LOG(INFO) << "schema: " << schema_id;
+        path schema_path = resolver->ResolvePath(schema_id);
+        schemas[schema_id] = schema_path;
+        if (schema_path.empty() || !fs::exists(schema_path)) {
+          if (as_dependency) {
+            LOG(WARNING)
+                << "missing input schema; skipped unsatisfied dependency: "
+                << schema_id;
+          } else {
+            LOG(ERROR) << "missing input schema: " << schema_id;
+            ++failure;
+          }
+          return;
+        }
+        the<DeploymentTask> config_file_update(
+            new ConfigFileUpdate(schema_id + ".schema.yaml", "schema/version"));
+        if (!config_file_update->Run(deployer)) {
+          ++failure;
+          return;
+        }
+        the<Config> schema_config(schema_component->Create(schema_id));
+        if (!schema_config) {
+          ++failure;
+          return;
+        }
+        string dict_name;
+        if (!schema_config->GetString("translator/dictionary", &dict_name)) {
+          ++success;  // not requiring a dictionary
+          return;
+        }
+        Schema schema(schema_id, schema_config.release());
+        the<Dictionary> dict(
+            Dictionary::Require("dictionary")->Create({&schema, "translator"}));
+        if (!dict) {
+          LOG(ERROR) << "Error creating dictionary '" << dict_name << "'.";
+          ++failure;
+          return;
+        }
+        SchemaCompileUnit unit;
+        unit.schema_id = schema_id;
+        unit.dict_name = dict_name;
+        the<ResourceResolver> compiled_resolver(
+            Service::instance().CreateDeployedResourceResolver(
+                {"compiled_schema", "", ".schema.yaml"}));
+        unit.compiled_schema_path = compiled_resolver->ResolvePath(schema_id);
+        // output files this unit may write; files shared by two units must not
+        // be written concurrently
+        for (const auto& table : dict->tables()) {
+          unit.artifact_stems.push_back(table->file_path().stem().u8string());
+        }
+        unit.artifact_stems.push_back(
+            dict->prism()->file_path().stem().u8string());
+        unit.artifact_stems.push_back(dict->name());  // reverse db
+        unit.dict = std::move(dict);
+        units.push_back(std::move(unit));
+      };
   for (auto it = schema_list->begin(); it != schema_list->end(); ++it) {
     auto item = As<ConfigMap>(*it);
     if (!item)
@@ -228,9 +331,11 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     auto schema_property = item->GetValue("schema");
     if (!schema_property)
       continue;
-    const string& schema_id = schema_property->str();
-    build_schema(schema_id);
-    the<Config> schema_config(schema_component->Create(schema_id));
+    process_schema(schema_property->str(), false);
+    // compile the schema's own dictionary before its direct dependencies,
+    // matching the upstream serial build order (only one level; dependencies
+    // of dependencies are not compiled)
+    the<Config> schema_config(schema_component->Create(schema_property->str()));
     if (!schema_config)
       continue;
     if (auto dependencies = schema_config->GetList("schema/dependencies")) {
@@ -238,12 +343,138 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
         auto dependency = As<ConfigValue>(*d);
         if (!dependency)
           continue;
-        const string& dependency_id = dependency->str();
-        bool as_dependency = true;
-        build_schema(dependency_id, as_dependency);
+        process_schema(dependency->str(), true);
       }
     }
   }
+
+  // Phase 2: compile the dictionaries. Units that share output files (the same
+  // dictionary, or a dictionary that is another schema's pack) are compiled
+  // serially; independent units may be compiled in parallel.
+  if (!MaybeCreateDirectory(deployer->staging_dir)) {
+    return false;
+  }
+  map<string, vector<size_t>> artifact_owners;
+  for (size_t i = 0; i < units.size(); ++i) {
+    for (const auto& artifact : units[i].artifact_stems) {
+      artifact_owners[artifact].push_back(i);
+    }
+  }
+  vector<bool> exclusive(units.size(), true);
+  for (const auto& entry : artifact_owners) {
+    if (entry.second.size() > 1) {
+      for (size_t i : entry.second) {
+        exclusive[i] = false;
+      }
+    }
+  }
+  vector<size_t> serial_units;
+  vector<size_t> parallel_units;
+  for (size_t i = 0; i < units.size(); ++i) {
+    if (exclusive[i]) {
+      parallel_units.push_back(i);
+    } else {
+      serial_units.push_back(i);
+    }
+  }
+  auto compile_unit = [&](size_t i) -> bool {
+    const auto& unit = units[i];
+    LOG(INFO) << "compiling dictionary '" << unit.dict_name << "'.";
+    try {
+      if (!CompileDictionary(unit.dict.get(), unit.compiled_schema_path)) {
+        LOG(ERROR) << "dictionary '" << unit.dict_name
+                   << "' failed to compile.";
+        return false;
+      }
+    } catch (const std::exception& ex) {
+      LOG(ERROR) << "dictionary '" << unit.dict_name
+                 << "' threw an exception: " << ex.what();
+      return false;
+    }
+    LOG(INFO) << "dictionary '" << unit.dict_name << "' is ready.";
+    return true;
+  };
+#ifndef RIME_NO_THREADING
+  // shared dictionaries first, so that later compilations reuse the built
+  // tables and only build their own prisms
+  for (size_t i : serial_units) {
+    if (compile_unit(i))
+      ++success;
+    else
+      ++failure;
+  }
+  if (!parallel_units.empty()) {
+    LOG(INFO) << "compiling " << parallel_units.size()
+              << " dictionaries in parallel.";
+    unsigned hw_concurrency =
+        (std::max)(1u, std::thread::hardware_concurrency());
+    const unsigned kMaxConcurrency = 8;
+    hw_concurrency = (std::min)(hw_concurrency, kMaxConcurrency);
+    // limit the memory used by one batch to a fraction of physical memory;
+    // dictionary compilation is memory heavy (entry collector + trie/prism
+    // building), so a conservative estimate per dictionary is used
+    uint64_t memory_budget = DetectTotalPhysicalMemory() / 4;
+    if (memory_budget == 0) {
+      memory_budget = (uint64_t)2 * 1024 * 1024 * 1024;  // fallback 2GB
+    }
+    const uint64_t kEstimatedBytesPerSourceByte = 16;
+    the<ResourceResolver> source_resolver(
+        Service::instance().CreateResourceResolver({"source_file", "", ""}));
+    vector<pair<uint64_t, size_t>> sized;
+    sized.reserve(parallel_units.size());
+    for (size_t i : parallel_units) {
+      path dict_file =
+          source_resolver->ResolvePath(units[i].dict_name + ".dict.yaml");
+      uint64_t size = 0;
+      std::error_code ec;
+      if (auto s = fs::file_size(dict_file, ec); !ec) {
+        size = (uint64_t)s;
+      }
+      sized.push_back({size * kEstimatedBytesPerSourceByte, i});
+    }
+    sort(sized.begin(), sized.end(),
+         [](const auto& a, const auto& b) { return a.first > b.first; });
+    size_t begin = 0;
+    while (begin < sized.size()) {
+      size_t end = begin;
+      uint64_t batch_memory = 0;
+      unsigned batch_count = 0;
+      while (end < sized.size() && batch_count < hw_concurrency) {
+        if (batch_memory + sized[end].first > memory_budget) {
+          break;
+        }
+        batch_memory += sized[end].first;
+        ++batch_count;
+        ++end;
+      }
+      if (end == begin) {
+        ++end;  // a single dictionary larger than the budget: compile alone
+      }
+      vector<std::future<bool>> futures;
+      futures.reserve(end - begin);
+      for (size_t k = begin; k < end; ++k) {
+        size_t i = sized[k].second;
+        futures.push_back(std::async(std::launch::async, [&compile_unit, i]() {
+          return compile_unit(i);
+        }));
+      }
+      for (auto& future : futures) {
+        if (future.get())
+          ++success;
+        else
+          ++failure;
+      }
+      begin = end;
+    }
+  }
+#else
+  for (size_t i = 0; i < units.size(); ++i) {
+    if (compile_unit(i))
+      ++success;
+    else
+      ++failure;
+  }
+#endif
   LOG(INFO) << "finished updating schemas: " << success << " success, "
             << failure << " failure.";
 
@@ -260,19 +491,6 @@ SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
   } catch (const std::bad_any_cast&) {
     LOG(ERROR) << "SchemaUpdate: invalid arguments.";
   }
-}
-
-static bool MaybeCreateDirectory(path dir) {
-  std::error_code ec;
-  if (fs::create_directories(dir, ec)) {
-    return true;
-  }
-
-  if (fs::exists(dir)) {
-    return true;
-  }
-  LOG(ERROR) << "error creating directory '" << dir << "'.";
-  return false;
 }
 
 static bool RemoveVersionSuffix(string* version, const string& suffix) {
@@ -364,15 +582,11 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   if (!MaybeCreateDirectory(deployer->staging_dir)) {
     return false;
   }
-  DictCompiler dict_compiler(dict.get());
-  if (verbose_) {
-    dict_compiler.set_options(DictCompiler::kRebuild | DictCompiler::kDump);
-  }
   the<ResourceResolver> resolver(
       Service::instance().CreateDeployedResourceResolver(
           {"compiled_schema", "", ".schema.yaml"}));
   auto compiled_schema = resolver->ResolvePath(schema_id);
-  if (!dict_compiler.Compile(compiled_schema)) {
+  if (!CompileDictionary(dict.get(), compiled_schema, verbose_)) {
     LOG(ERROR) << "dictionary '" << dict_name << "' failed to compile.";
     return false;
   }
