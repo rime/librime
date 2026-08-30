@@ -179,7 +179,10 @@ bool UserDictionary::Load() {
     }
     return false;
   }
-  return FetchTickCount() || Initialize();
+  if (!(FetchTickCount() || Initialize()))
+    return false;
+  BuildCache();
+  return true;
 }
 
 bool UserDictionary::loaded() const {
@@ -302,6 +305,322 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
   }
 }
 
+// Build sorted cache from DB at load time.
+bool UserDictionary::BuildCache() {
+  cache_.clear();
+  cache_blob_.clear();
+  auto accessor = db_->Query("");
+  if (!accessor || !accessor->Jump(" "))
+    return false;
+  struct CacheEntryRecord {
+    size_t code_off;
+    size_t code_len;
+    size_t text_off;
+    size_t text_len;
+    double dee;
+    int commits;
+    TickCount tick;
+  };
+  vector<CacheEntryRecord> records;
+  string key, value;
+  while (accessor->GetNextRecord(&key, &value)) {
+    size_t tab = key.find('\t');
+    if (tab == string::npos)
+      continue;
+    UserDbValue v;
+    if (!v.Unpack(value))
+      continue;
+    if (v.commits < 0)
+      continue;
+    CacheEntryRecord rec;
+    rec.code_off = cache_blob_.size();
+    rec.code_len = tab;
+    cache_blob_.append(key.data(), tab);
+    rec.text_off = cache_blob_.size();
+    rec.text_len = key.size() - tab - 1;
+    cache_blob_.append(key.data() + tab + 1, key.size() - tab - 1);
+    rec.dee = v.dee;
+    rec.commits = v.commits;
+    rec.tick = v.tick;
+    records.push_back(rec);
+  }
+  // views are only constructed after cache_blob_ is fully built, so they are
+  // not invalidated by any further reallocation.
+  cache_.reserve(records.size());
+  std::string_view blob(cache_blob_);
+  for (const auto& rec : records) {
+    cache_.push_back({blob.substr(rec.code_off, rec.code_len),
+                      blob.substr(rec.text_off, rec.text_len), rec.dee,
+                      rec.commits, rec.tick});
+  }
+  sort(cache_.begin(), cache_.end(),
+       [](const CacheEntry& a, const CacheEntry& b) {
+         if (a.code != b.code)
+           return a.code < b.code;
+         return a.text < b.text;
+       });
+  pending_.clear();
+  cache_built_tick_ = tick_;
+  cache_built_ = true;
+  LOG(INFO) << "user dict cache rebuilt: " << cache_.size() << " entries, "
+            << cache_blob_.size() << " bytes";
+  return true;
+}
+
+bool UserDictionary::Reload() {
+  if (!FetchTickCount())
+    return false;
+#if RIME_USER_DICT_CACHE_ENABLED
+  return BuildCache();
+#else
+  return true;
+#endif
+}
+
+bool UserDictionary::starts_with(std::string_view s,
+                                 const string& prefix) const {
+  return s.size() >= prefix.size() &&
+         equal(prefix.begin(), prefix.end(), s.begin());
+}
+
+void UserDictionary::RecruitCacheEntry(const CacheEntry& entry,
+                                       size_t end_pos,
+                                       const Code& code,
+                                       TickCount present_tick,
+                                       double credibility,
+                                       double quality_len,
+                                       hash_map<int, DictEntryList>* result) {
+  auto e = New<DictEntry>();
+  e->text = entry.text;
+  e->commit_count = entry.commits;
+  e->code = code;
+  double dee = entry.dee;
+  if (entry.tick < present_tick)
+    dee = algo::formula_d(0, (double)present_tick, dee, (double)entry.tick);
+  double weight = algo::formula_p(0, (double)entry.commits / present_tick,
+                                  (double)present_tick, dee);
+  e->weight = log(weight > 0 ? weight : DBL_EPSILON) + credibility;
+  e->quality_len = quality_len;
+  (*result)[end_pos].push_back(e);
+}
+
+void UserDictionary::RecruitPredictiveEntry(
+    const CacheEntry& entry,
+    size_t end_pos,
+    size_t matching_code_size,
+    TickCount present_tick,
+    double credibility,
+    double quality_len,
+    hash_map<int, DictEntryList>* result) {
+  RecruitCacheEntry(entry, end_pos, {}, present_tick, credibility, quality_len,
+                    result);
+  auto& entries = (*result)[end_pos];
+  auto& e = entries.back();
+  // convert code string to numeric syllable ids
+  vector<string> syllables = strings::split(std::string(entry.code), " ",
+                                            strings::SplitBehavior::SkipToken);
+  Code numeric_code;
+  for (const auto& s : syllables) {
+    auto found = syllabary_.find(s);
+    if (found == syllabary_.end()) {
+      LOG(ERROR) << "failed to recruit predictive entry '" << entry.text
+                 << "', unrecognized syllable: " << s;
+      entries.pop_back();
+      return;
+    }
+    numeric_code.push_back(found->second);
+  }
+  e->code = numeric_code;
+  e->matching_code_size = matching_code_size;
+}
+
+// CacheLookup replaces DfsLookup when cache is available.
+// Instead of ForwardScan (DB jump) for each prefix, it binary-searches
+// the sorted cache_ array — O(log N) instead of O(DB_I/O) per prefix.
+void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
+                                 size_t current_pos,
+                                 const string& current_prefix,
+                                 DfsState* state) {
+  auto index = syll_graph.indices.find(current_pos);
+  if (index == syll_graph.indices.end())
+    return;
+  string prefix;
+  for (const auto& spelling : index->second) {
+    state->code.push_back(spelling.first);
+    if (!TranslateCodeToString(state->code, &prefix)) {
+      state->code.pop_back();
+      continue;
+    }
+    for (size_t i = 0; i < spelling.second.size(); ++i) {
+      auto props = spelling.second[i];
+      if (i > 0 && props->type >= kAbbreviation)
+        continue;
+      size_t end_pos = props->end_pos;
+      state->credibility.push_back(state->credibility.back() +
+                                   props->credibility);
+      state->quality_len.push_back(
+          state->quality_len.back() +
+          (props->type == kNormalSpelling ? 1.0 : 0.0) *
+              (end_pos - current_pos));
+
+      // binary search in cache for prefix
+      auto it = lower_bound(
+          cache_.begin(), cache_.end(), prefix,
+          [](const CacheEntry& e, const string& p) { return e.code < p; });
+
+      // collect exact-matching entries (code == prefix)
+      hash_set<std::string_view> seen;
+      if (!pending_.empty()) {
+        // pending_ holds uncommitted writes; check each entry for overrides
+        while (it != cache_.end() && it->code == prefix) {
+          bool overridden = false;
+          auto pit = pending_.find(prefix + '\t' + std::string(it->text));
+          if (pit != pending_.end()) {
+            const auto& p = pit->second;
+            if (p.type == PendingUpdate::kDelete) {
+              overridden = true;
+            } else {
+              // use updated entry from pending
+              RecruitCacheEntry(
+                  {p.code, p.text, p.dee, p.commits, p.tick}, end_pos,
+                  state->code, state->present_tick, state->credibility.back(),
+                  state->quality_len.back(), &state->query_result);
+              seen.insert(p.text);
+              overridden = true;
+            }
+          }
+          if (!overridden) {
+            RecruitCacheEntry(*it, end_pos, state->code, state->present_tick,
+                              state->credibility.back(),
+                              state->quality_len.back(), &state->query_result);
+            seen.insert(it->text);
+          }
+          ++it;
+        }
+      } else {
+        // fast path: no uncommitted writes; cache_ is authoritative
+        while (it != cache_.end() && it->code == prefix) {
+          RecruitCacheEntry(*it, end_pos, state->code, state->present_tick,
+                            state->credibility.back(),
+                            state->quality_len.back(), &state->query_result);
+          ++it;
+        }
+      }
+      // add new entries from pending_ that aren't in cache
+      for (const auto& kv : pending_) {
+        const auto& p = kv.second;
+        if (p.code == prefix &&
+            (p.type == PendingUpdate::kAdd ||
+             p.type == PendingUpdate::kUpdate) &&
+            seen.find(p.text) == seen.end()) {
+          RecruitCacheEntry({p.code, p.text, p.dee, p.commits, p.tick}, end_pos,
+                            state->code, state->present_tick,
+                            state->credibility.back(),
+                            state->quality_len.back(), &state->query_result);
+        }
+      }
+
+      // recurse if longer codes exist (match or pending)
+      bool has_longer = (it != cache_.end() && starts_with(it->code, prefix));
+      if (!has_longer) {
+        for (const auto& kv : pending_) {
+          const auto& p = kv.second;
+          if (p.code != prefix && starts_with(p.code, prefix)) {
+            has_longer = true;
+            break;
+          }
+        }
+      }
+      auto next_index = syll_graph.indices.find(end_pos);
+      if (has_longer && next_index != syll_graph.indices.end() &&
+          (!state->depth_limit || state->depth() < state->depth_limit)) {
+        CacheLookup(syll_graph, end_pos, prefix, state);
+      }
+      // predict word at end of input
+      if (next_index == syll_graph.indices.end() &&
+          state->predict_word_from_depth != 0 &&
+          state->depth() >= state->predict_word_from_depth) {
+        if (syllabary_.empty()) {
+          Syllabary raw;
+          if (!table_->GetSyllabary(&raw)) {
+            LOG(ERROR) << "failed to get syllabary for user dict: " << name();
+          } else {
+            SyllableId sid = 0;
+            for (auto s = raw.begin(); s != raw.end(); ++s) {
+              syllabary_[*s] = sid++;
+            }
+          }
+        }
+        if (!syllabary_.empty()) {
+          // predictive entries from cache (longer codes only)
+          auto pred = lower_bound(
+              cache_.begin(), cache_.end(), prefix,
+              [](const CacheEntry& e, const string& p) { return e.code < p; });
+          while (pred != cache_.end() && pred->code == prefix)
+            ++pred;
+          hash_set<std::string_view> seen_pred;
+          if (!pending_.empty()) {
+            // pending_ holds uncommitted writes; check each entry for overrides
+            while (pred != cache_.end() && starts_with(pred->code, prefix)) {
+              bool overridden = false;
+              auto pit = pending_.find(std::string(pred->code) + '\t' +
+                                       std::string(pred->text));
+              if (pit != pending_.end()) {
+                const auto& p = pit->second;
+                if (p.type == PendingUpdate::kDelete) {
+                  overridden = true;
+                } else {
+                  RecruitPredictiveEntry(
+                      {p.code, p.text, p.dee, p.commits, p.tick}, end_pos,
+                      state->depth(), state->present_tick,
+                      state->credibility.back(), state->quality_len.back(),
+                      &state->query_result);
+                  seen_pred.insert(p.text);
+                  overridden = true;
+                }
+              }
+              if (!overridden) {
+                RecruitPredictiveEntry(
+                    *pred, end_pos, state->depth(), state->present_tick,
+                    state->credibility.back(), state->quality_len.back(),
+                    &state->query_result);
+                seen_pred.insert(pred->text);
+              }
+              ++pred;
+            }
+          } else {
+            // fast path: no uncommitted writes; cache_ is authoritative
+            while (pred != cache_.end() && starts_with(pred->code, prefix)) {
+              RecruitPredictiveEntry(
+                  *pred, end_pos, state->depth(), state->present_tick,
+                  state->credibility.back(), state->quality_len.back(),
+                  &state->query_result);
+              ++pred;
+            }
+          }
+          // predictive entries from pending_ not yet in cache
+          for (const auto& kv : pending_) {
+            const auto& p = kv.second;
+            if (p.code != prefix && starts_with(p.code, prefix) &&
+                seen_pred.find(p.text) == seen_pred.end() &&
+                p.type != PendingUpdate::kDelete) {
+              RecruitPredictiveEntry(
+                  {p.code, p.text, p.dee, p.commits, p.tick}, end_pos,
+                  state->depth(), state->present_tick,
+                  state->credibility.back(), state->quality_len.back(),
+                  &state->query_result);
+            }
+          }
+        }
+      }
+
+      state->credibility.pop_back();
+      state->quality_len.pop_back();
+    }
+    state->code.pop_back();
+  }
+}
+
 static an<UserDictEntryCollector> collect(
     hash_map<int, DictEntryList>* source) {
   auto result = New<UserDictEntryCollector>();
@@ -327,10 +646,26 @@ an<UserDictEntryCollector> UserDictionary::Lookup(
   state.present_tick = tick_ + 1;
   state.credibility.push_back(initial_credibility);
   state.quality_len.push_back(0.0);
+  string prefix;
+#if RIME_USER_DICT_CACHE_ENABLED
+  // Rebuild only when deferred. Local changes are reflected by pending_.
+  // External sync, merge, and restore operations must call Reload().
+  if (!cache_built_) {
+    BuildCache();
+  }
+  if (cache_built_) {
+    CacheLookup(syll_graph, start_pos, prefix, &state);
+  } else {
+    // CacheLookup does not need the DB accessor; only DfsLookup scans the DB.
+    state.accessor = db_->Query("");
+    state.accessor->Jump(" ");  // skip metadata
+    DfsLookup(syll_graph, start_pos, prefix, &state);
+  }
+#else
   state.accessor = db_->Query("");
   state.accessor->Jump(" ");  // skip metadata
-  string prefix;
   DfsLookup(syll_graph, start_pos, prefix, &state);
+#endif
   if (state.query_result.empty())
     return nullptr;
   // sort each group of homophones by weight
@@ -426,18 +761,25 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry,
                                  int commits,
                                  const string& new_entry_prefix) {
   string code_str(entry.custom_code);
-  if (code_str.empty() && !TranslateCodeToString(entry.code, &code_str))
-    return false;
+  if (code_str.empty()) {
+    if (!TranslateCodeToString(entry.code, &code_str))
+      return false;
+  } else if (code_str.back() != ' ') {
+    code_str += ' ';
+  }
   string key(code_str + '\t' + entry.text);
+  string code_key(code_str);
   string value;
   UserDbValue v;
-  if (db_->Fetch(key, &value)) {
+  bool existed = db_->Fetch(key, &value);
+  if (existed) {
     v.Unpack(value);
     if (v.tick > tick_) {
       v.tick = tick_;  // fix abnormal timestamp
     }
   } else if (!new_entry_prefix.empty()) {
     key.insert(0, new_entry_prefix);
+    code_key = key.substr(0, key.find('\t'));
   }
   if (commits > 0) {
     if (v.commits < 0)
@@ -453,7 +795,36 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry,
     v.dee = algo::formula_d(0.0, (double)tick_, v.dee, (double)v.tick);
   }
   v.tick = tick_;
-  return db_->Update(key, v.Pack());
+  if (!db_->Update(key, v.Pack()))
+    return false;
+
+  // track change in pending_ for cache consistency
+  PendingUpdate pu;
+  pu.code = code_key;
+  pu.text = entry.text;
+  pu.dee = v.dee;
+  pu.commits = v.commits;
+  pu.tick = v.tick;
+  if (v.commits < 0) {
+    pu.type = PendingUpdate::kDelete;
+  } else if (!existed) {
+    pu.type = PendingUpdate::kAdd;
+  } else {
+    pu.type = PendingUpdate::kUpdate;
+  }
+  // replace any existing pending update for the same key
+  auto it = pending_.find(pu.code + '\t' + pu.text);
+  if (it != pending_.end()) {
+    it->second = pu;
+  } else {
+    pending_[pu.code + '\t' + pu.text] = pu;
+  }
+  // periodically rebuild cache if pending_ grows too large
+#if RIME_USER_DICT_CACHE_ENABLED
+  if (pending_.size() > 1000)
+    BuildCache();
+#endif
+  return true;
 }
 
 bool UserDictionary::UpdateTickCount(TickCount increment) {
@@ -498,7 +869,14 @@ bool UserDictionary::RevertRecentTransaction() {
     return false;
   if (time(NULL) - transaction_time_ > 3 /*seconds*/)
     return false;
-  return db->AbortTransaction();
+  if (!db->AbortTransaction())
+    return false;
+  // DB was rolled back; pending_ and cache_ are now inconsistent
+  pending_.clear();
+#if RIME_USER_DICT_CACHE_ENABLED
+  cache_built_ = false;
+#endif
+  return true;
 }
 
 bool UserDictionary::CommitPendingTransaction() {
