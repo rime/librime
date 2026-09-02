@@ -15,8 +15,9 @@
 
 namespace rime {
 
-class Prism;
 class Corrector;
+class Prism;
+class Projection;
 
 using SyllableId = int32_t;
 
@@ -49,10 +50,12 @@ class Syllabifier {
   Syllabifier() = default;
   explicit Syllabifier(const string& delimiters,
                        bool enable_completion = false,
-                       bool strict_spelling = false)
+                       bool strict_spelling = false,
+                       Projection* canonicalizer = nullptr)
       : delimiters_(delimiters),
         enable_completion_(enable_completion),
-        strict_spelling_(strict_spelling) {}
+        strict_spelling_(strict_spelling),
+        canonicalizer_(canonicalizer) {}
 
   RIME_DLL int BuildSyllableGraph(const string& input,
                                   Prism& prism,
@@ -66,6 +69,7 @@ class Syllabifier {
   string delimiters_;
   bool enable_completion_ = false;
   bool strict_spelling_ = false;
+  Projection* canonicalizer_ = nullptr;
   Corrector* corrector_ = nullptr;
 };
 
