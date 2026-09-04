@@ -86,7 +86,8 @@ class ScriptSyllabifier : public PhraseSyllabifier {
         start_(start),
         syllabifier_(translator->delimiters(),
                      translator->enable_completion(),
-                     translator->strict_spelling()) {
+                     translator->strict_spelling(),
+                     translator->canonicalizer()) {
     if (corrector) {
       syllabifier_.EnableCorrection(corrector);
     }
@@ -196,6 +197,12 @@ ScriptTranslator::ScriptTranslator(const Ticket& ticket)
     }
     config->GetInt(name_space_ + "/max_homophones", &max_homophones_);
     poet_.reset(new Poet(language(), config));
+    if (an<ConfigList> rules = config->GetList(name_space_ + "/canonicalize")) {
+      the<Projection> canonicalizer(new Projection());
+      if (canonicalizer->Load(rules)) {
+        canonicalizer_ = std::move(canonicalizer);
+      }
+    }
   }
   if (enable_correction_) {
     if (auto* corrector = Corrector::Require("corrector")) {
