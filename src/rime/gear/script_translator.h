@@ -52,6 +52,7 @@ class ScriptTranslator : public Translator,
   bool enable_word_completion() const { return enable_word_completion_; }
   int max_word_length() const { return max_word_length_; }
   int core_word_length() const;
+  Projection* canonicalizer() const { return canonicalizer_.get(); }
 
  protected:
   int max_homophones_ = 1;
@@ -61,6 +62,7 @@ class ScriptTranslator : public Translator,
   bool always_show_comments_ = false;
   bool enable_correction_ = false;
   bool enable_word_completion_ = false;
+  the<Projection> canonicalizer_;
   the<Corrector> corrector_;
   the<Poet> poet_;
   vector<an<Phrase>> queue_;
