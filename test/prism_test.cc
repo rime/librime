@@ -44,6 +44,10 @@ TEST_F(RimePrismTest, SaveAndLoad) {
   EXPECT_EQ(prism_->array_size(), test.array_size());
 }
 
+TEST_F(RimePrismTest, Metadata) {
+  EXPECT_EQ(prism_->max_key_length(), 9);  // "macrosoft"
+}
+
 TEST_F(RimePrismTest, HasKey) {
   EXPECT_TRUE(prism_->HasKey("google"));
   EXPECT_FALSE(prism_->HasKey("googlesoft"));

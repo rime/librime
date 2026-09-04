@@ -45,6 +45,8 @@ struct Metadata {
   // v1.0
   OffsetPtr<SpellingMap> spelling_map;
   char alphabet[256];
+  // v5.0
+  uint32_t max_key_length;
 };
 
 }  // namespace prism
@@ -87,7 +89,7 @@ class Prism : public MappedFile {
   SpellingAccessor QuerySpelling(SyllableId spelling_id);
 
   RIME_DLL size_t array_size() const;
-
+  RIME_DLL size_t max_key_length() const;
   uint32_t dict_file_checksum() const;
   uint32_t schema_file_checksum() const;
   Darts::DoubleArray& trie() const { return *trie_; }
