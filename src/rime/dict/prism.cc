@@ -29,8 +29,8 @@ const int32_t kSpellingTypeMask = ~kTypeIsCorrectionMask;
 
 }  // namespace
 
-const char kPrismFormat[] = "Rime::Prism/4.0";
-const double kPrismFormatVersion = 4.0;
+const char kPrismFormat[] = "Rime::Prism/5.0";
+const double kPrismFormatVersion = 5.0;
 
 const char kPrismFormatPrefix[] = "Rime::Prism/";
 const size_t kPrismFormatPrefixLen = sizeof(kPrismFormatPrefix) - 1;
@@ -149,14 +149,17 @@ bool Prism::Build(const Syllabary& syllabary,
   vector<const char*> keys(num_spellings);
   size_t key_id = 0;
   size_t map_size = 0;
+  size_t max_key_length = 0;
   if (script) {
     for (auto it = script->begin(); it != script->end(); ++it, ++key_id) {
       keys[key_id] = it->first.c_str();
+      max_key_length = (std::max)(max_key_length, it->first.length());
       map_size += it->second.size();
     }
   } else {
     for (auto it = syllabary.begin(); it != syllabary.end(); ++it, ++key_id) {
       keys[key_id] = it->c_str();
+      max_key_length = (std::max)(max_key_length, it->length());
     }
   }
   if (0 != trie_->build(num_spellings, &keys[0])) {
@@ -185,6 +188,7 @@ bool Prism::Build(const Syllabary& syllabary,
   metadata->schema_file_checksum = schema_file_checksum;
   metadata->num_syllables = num_syllables;
   metadata->num_spellings = num_spellings;
+  metadata->max_key_length = max_key_length;
   metadata_ = metadata;
   // alphabet
   {
@@ -330,6 +334,10 @@ SpellingAccessor Prism::QuerySpelling(SyllableId spelling_id) {
 
 size_t Prism::array_size() const {
   return trie_->size();
+}
+
+size_t Prism::max_key_length() const {
+  return metadata_ ? metadata_->max_key_length : 0;
 }
 
 uint32_t Prism::dict_file_checksum() const {
