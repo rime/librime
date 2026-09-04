@@ -16,9 +16,9 @@ jobs:
       - name: Checkout last commit
         uses: actions/checkout@v5
 
-      - name: Install clang-format-18
+      - name: Install clang-format
         run: |
-          ./action-install-clang-format.sh 18
+          ./action-install-clang-format.sh 23
 
       - name: Code style lint
         run: make clang-format-lint

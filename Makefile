@@ -46,6 +46,7 @@ install-debug uninstall-debug
 all: release
 
 clang-format-lint:
+	clang-format --version
 	find ${RIME_SOURCE_PATH} \! -path 'plugins/*/*' -a \( -name '*.cc' -o -name '*.h' \) | \
 	xargs clang-format -Werror --dry-run || { echo Please lint your code by '"'"make clang-format-apply"'"'.; false; }
 

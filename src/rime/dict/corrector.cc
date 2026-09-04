@@ -207,9 +207,10 @@ Distance EditDistanceCorrector::RestrictedDistance(const std::string& s1,
   for (size_t i = 1; i <= len1; ++i) {
     auto min_d = threshold + 1;
     for (size_t j = 1; j <= len2; ++j) {
-      d[index(i, j)] = (std::min)(
-          {d[index(i - 1, j)] + 2, d[index(i, j - 1)] + 2,
-           d[index(i - 1, j - 1)] + SubstCost(s1[i - 1], s2[j - 1])});
+      d[index(i, j)] =
+          (std::min)({d[index(i - 1, j)] + 2, d[index(i, j - 1)] + 2,
+                      d[index(i - 1, j - 1)] +
+                          SubstCost(s1[i - 1], s2[j - 1])});
       if (i > 1 && j > 1 && s1[i - 2] == s2[j - 1] && s1[i - 1] == s2[j - 2]) {
         d[index(i, j)] = (std::min)(d[index(i, j)], d[index(i - 2, j - 2)] + 2);
       }
