@@ -78,8 +78,8 @@ class Prism : public MappedFile {
                       uint32_t dict_file_checksum = 0,
                       uint32_t schema_file_checksum = 0);
 
-  RIME_DLL bool HasKey(const string& key);
-  RIME_DLL bool GetValue(const string& key, int* value) const;
+  RIME_DLL bool HasKey(std::string_view key);
+  RIME_DLL bool GetValue(std::string_view key, int* value) const;
   RIME_DLL void CommonPrefixSearch(std::string_view key, vector<Match>* result);
   RIME_DLL void ExpandSearch(std::string_view key,
                              vector<Match>* result,
