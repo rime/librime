@@ -256,13 +256,13 @@ bool Prism::Build(const Syllabary& syllabary,
   return true;
 }
 
-bool Prism::HasKey(const string& key) {
-  int value = trie_->exactMatchSearch<int>(key.c_str());
+bool Prism::HasKey(std::string_view key) {
+  int value = trie_->exactMatchSearch<int>(key.data(), key.length());
   return value != -1;
 }
 
-bool Prism::GetValue(const string& key, int* value) const {
-  int result = trie_->exactMatchSearch<int>(key.c_str());
+bool Prism::GetValue(std::string_view key, int* value) const {
+  int result = trie_->exactMatchSearch<int>(key.data(), key.length());
   if (result == -1) {
     return false;
   }
