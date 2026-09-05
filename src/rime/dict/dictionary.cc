@@ -5,6 +5,7 @@
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
 #include <filesystem>
+#include <algorithm>
 #include <rime/algo/syllabifier.h>
 #include <rime/common.h>
 #include <rime/dict/dictionary.h>
@@ -345,13 +346,38 @@ map<int, an<DictEntryCollector>> Dictionary::LookupAll(
   map<int, an<DictEntryCollector>> result;
   if (!loaded() || start_positions.empty())
     return result;
+  // T9 增量（min_end_pos > 0）：新桶只可能由「索引 3 层可达范围」内的
+  // start 产生——3 层每层的边跨度 ≤ 图中观测到的最大跨度。
+  // 据此把 start 窗口和 advance 下限压到新桶附近，避免全图遍历。
+  size_t min_start_pos = 0;
+  vector<size_t> starts = start_positions;
+  if (min_end_pos != 0) {
+    size_t max_span = 0;
+    for (const auto& x : syllable_graph.edges) {
+      for (const auto& y : x.second) {
+        if (y.first > x.first && y.first - x.first > max_span)
+          max_span = y.first - x.first;
+      }
+    }
+    const size_t kReach = max_span * Code::kIndexCodeMaxLength;
+    min_start_pos = min_end_pos > kReach ? min_end_pos - kReach : 0;
+    if (min_start_pos != 0) {
+      starts.erase(std::remove_if(starts.begin(), starts.end(),
+                                  [&](size_t s) {
+                                    return s < min_start_pos;
+                                  }),
+                   starts.end());
+    }
+  }
+  if (starts.empty())
+    return result;
   // 每表一次多源 BFS（共享音节树遍历），chunk 归属需要表指针，按表收集
   for (const auto& table : tables_) {
     if (!table->IsOpen())
       continue;
     map<int, TableQueryResult> per_start;
-    if (!table->QueryMulti(syllable_graph, start_positions, &per_start,
-                           min_end_pos))
+    if (!table->QueryMulti(syllable_graph, starts, &per_start, min_end_pos,
+                           min_start_pos))
       continue;
     for (auto& sv : per_start) {
       auto& collector = result[sv.first];

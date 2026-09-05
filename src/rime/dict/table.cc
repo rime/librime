@@ -585,12 +585,15 @@ bool Table::Query(const SyllableGraph& syll_graph,
 bool Table::QueryMulti(const SyllableGraph& syll_graph,
                        const vector<size_t>& start_positions,
                        map<int, TableQueryResult>* result,
-                       size_t min_end_pos) {
+                       size_t min_end_pos,
+                       size_t min_start_pos) {
   if (!result || !index_ || start_positions.empty())
     return false;
   // 多起点 BFS：队列元素携带来源 start（结果分组键）与当前遍历位置。
-  // min_end_pos == 0 表示无下限（默认）；否则只收集 end >= min 的桶
-  // （T9 增量 compose），遍历不受影响。
+  // min_end_pos == 0 means no lower bound (default); otherwise only
+  // collect entries ending at or beyond it (T9 incremental compose).
+  // min_start_pos > 0 时（T9 增量），advance 只进入 >= min_start_pos
+  // 的位置：从更低位置出发即使走满 3 层索引也到不了新桶区域。
   struct QueueItem {
     size_t origin;       // 结果分组的来源 start
     size_t current_pos;  // BFS 当前位置
@@ -599,6 +602,8 @@ bool Table::QueryMulti(const SyllableGraph& syll_graph,
   std::queue<QueueItem> q;
   for (size_t start_pos : start_positions) {
     if (start_pos >= syll_graph.interpreted_length)
+      continue;
+    if (min_start_pos != 0 && start_pos < min_start_pos)
       continue;
     q.push(QueueItem{start_pos, start_pos, TableQuery(index_)});
   }
@@ -613,6 +618,8 @@ bool Table::QueryMulti(const SyllableGraph& syll_graph,
     if (index == syll_graph.indices.end()) {
       continue;
     }
+    // min_end_pos == 0 means no lower bound (default); otherwise only
+    // collect entries ending at or beyond it (T9 incremental compose).
     bool collect_here = min_end_pos == 0 || current_pos >= min_end_pos;
     if (query.level() == Code::kIndexCodeMaxLength) {
       if (collect_here) {
@@ -653,6 +660,7 @@ bool Table::QueryMulti(const SyllableGraph& syll_graph,
           }
         }
         if (end_pos < syll_graph.interpreted_length &&
+            (min_start_pos == 0 || end_pos >= min_start_pos) &&
             query.Advance(syll_id, next_credibility, delta_quality_len,
                           current_pos)) {
           q.push(QueueItem{item.origin, end_pos, query});

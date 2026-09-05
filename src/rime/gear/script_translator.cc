@@ -33,6 +33,32 @@
 
 namespace rime {
 
+// 增量命中/回退诊断日志直出 logcat（glog 未桥接 android log）
+#if defined(__ANDROID__)
+#include <android/log.h>
+#include <chrono>
+#define T9_INC_LOG(fmt, ...)                                         \
+  __android_log_print(ANDROID_LOG_INFO, "RimePerf", "[T9Inc] " fmt,   \
+                      ##__VA_ARGS__)
+// 作用域分解计时：析构时输出耗时，用于增量路径的瓶颈归因（只测不控）
+struct T9IncTimer {
+  const char* name;
+  std::chrono::steady_clock::time_point start;
+  explicit T9IncTimer(const char* n)
+      : name(n), start(std::chrono::steady_clock::now()) {}
+  ~T9IncTimer() {
+    auto us = std::chrono::duration_cast<std::chrono::microseconds>(
+                  std::chrono::steady_clock::now() - start)
+                  .count();
+    __android_log_print(ANDROID_LOG_INFO, "RimePerf", "[T9Inc] %s: %lld us",
+                        name, static_cast<long long>(us));
+  }
+};
+#else
+#define T9_INC_LOG(fmt, ...) do { } while (0)
+struct T9IncTimer { explicit T9IncTimer(const char*) {} };
+#endif
+
 namespace {
 
 struct SyllabifyTask {
@@ -362,6 +388,7 @@ Spans ScriptSyllabifier::Syllabify(const Phrase* phrase) {
 }
 
 size_t ScriptSyllabifier::BuildSyllableGraph(Prism& prism) {
+  T9IncTimer timer("stage-syllable-graph");
   // 音节图缓存由 translator（每 session 一份）持有；增量准入在
   // Syllabifier 内部判定（纯数字 + 无纠错 + 环境指纹），miss 自动全量。
   SyllableGraphCache* cache = nullptr;
@@ -460,14 +487,18 @@ bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   bool predict_word = translator_->enable_word_completion() &&
                       start_ + consumed == end_of_input_;
 
-  phrase_ =
-      dict->Lookup(syllable_graph, 0, &translator_->blacklist(), predict_word);
-  if (user_dict) {
-    const size_t kUnlimitedDepth = 0;
-    const size_t kNumSyllablesToPredictWord = 4;
-    user_phrase_ =
-        user_dict->Lookup(syllable_graph, 0, kUnlimitedDepth,
-                          predict_word ? kNumSyllablesToPredictWord : 0);
+  {
+    T9IncTimer pos0_timer("stage-eval-pos0");
+    phrase_ =
+        dict->Lookup(syllable_graph, 0, &translator_->blacklist(),
+                     predict_word);
+    if (user_dict) {
+      const size_t kUnlimitedDepth = 0;
+      const size_t kNumSyllablesToPredictWord = 4;
+      user_phrase_ =
+          user_dict->Lookup(syllable_graph, 0, kUnlimitedDepth,
+                            predict_word ? kNumSyllablesToPredictWord : 0);
+    }
   }
   if (!phrase_ && !user_phrase_)
     return false;
@@ -709,16 +740,6 @@ static bool IsAllDigitsInput(const string& s) {
   return true;
 }
 
-// 增量命中/回退诊断日志直出 logcat（glog 未桥接 android log）
-#if defined(__ANDROID__)
-#include <android/log.h>
-#define T9_INC_LOG(fmt, ...)                                         \
-  __android_log_print(ANDROID_LOG_INFO, "RimePerf", "[T9Inc] " fmt,   \
-                      ##__VA_ARGS__)
-#else
-#define T9_INC_LOG(fmt, ...) do { } while (0)
-#endif
-
 bool ScriptTranslator::TryBeginIncremental(const string& input,
                                            UserDictionary* user_dict,
                                            size_t* old_interpreted) {
@@ -810,9 +831,25 @@ an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
                << " -> " << interpreted;
     // 只查新桶（end > old_interpreted），追加进缓存的 WordGraph；
     // 旧桶（含未满的桶）由缓存复用，其内容与全量重跑一致。
-    // dict 部分用多源查询：一次 BFS 覆盖全部 start，避免 O(N²)
+    // user_dict 逐 start 查询同样按「词长可达窗口」过滤：深度限
+    // kMaxSyllablesForUserPhraseQuery 个音节，更远的 start 不可能
+    // 产生 end > old_interpreted 的桶。
     if (user_dict) {
+      T9IncTimer t("stage-inc-userdict");
+      size_t max_span = 0;
       for (const auto& x : syllable_graph.edges) {
+        for (const auto& y : x.second) {
+          if (y.first > x.first && y.first - x.first > max_span)
+            max_span = y.first - x.first;
+        }
+      }
+      const size_t kReach =
+          max_span * kMaxSyllablesForUserPhraseQuery;
+      const size_t min_start =
+          old_interpreted > kReach ? old_interpreted - kReach : 0;
+      for (const auto& x : syllable_graph.edges) {
+        if (min_start != 0 && x.first < min_start)
+          continue;
         EnrollEntries(inc->graph[x.first],
                       user_dict->Lookup(syllable_graph, x.first,
                                         kMaxSyllablesForUserPhraseQuery, 0,
@@ -820,6 +857,7 @@ an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
       }
     }
     {
+      T9IncTimer t("stage-inc-dict-lookupall");
       vector<size_t> starts;
       starts.reserve(syllable_graph.edges.size());
       for (const auto& x : syllable_graph.edges)
@@ -830,12 +868,16 @@ an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
       for (auto& kv : sys_buckets)
         EnrollEntries(inc->graph[kv.first], kv.second);
     }
-    an<Sentence> sentence = poet_->MakeSentenceIncremental(
-        inc->graph, interpreted, preceding, inc->lattice);
-    if (!sentence) {
-      // 增量前置校验失败 → 全量回退（inc->graph 已含全部桶）
-      sentence = poet_->MakeSentence(inc->graph, interpreted, preceding,
-                                     &inc->lattice);
+    an<Sentence> sentence;
+    {
+      T9IncTimer t("stage-inc-poet");
+      sentence = poet_->MakeSentenceIncremental(inc->graph, interpreted,
+                                                preceding, inc->lattice);
+      if (!sentence) {
+        // 增量前置校验失败 → 全量回退（inc->graph 已含全部桶）
+        sentence = poet_->MakeSentence(inc->graph, interpreted, preceding,
+                                       &inc->lattice);
+      }
     }
     if (sentence) {
       sentence->Offset(start_);
