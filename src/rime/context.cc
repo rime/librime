@@ -70,6 +70,7 @@ bool Context::PushInput(char ch) {
     input_.insert(caret_pos_, 1, ch);
     ++caret_pos_;
   }
+  BumpCompositionEpoch();
   update_notifier_(this);
   return true;
 }
@@ -82,6 +83,7 @@ bool Context::PushInput(const string& str) {
     input_.insert(caret_pos_, str);
     caret_pos_ += str.length();
   }
+  BumpCompositionEpoch();
   update_notifier_(this);
   return true;
 }
@@ -91,6 +93,7 @@ bool Context::PopInput(size_t len) {
     return false;
   caret_pos_ -= len;
   input_.erase(caret_pos_, len);
+  BumpCompositionEpoch();
   update_notifier_(this);
   return true;
 }
@@ -99,6 +102,7 @@ bool Context::DeleteInput(size_t len) {
   if (caret_pos_ + len > input_.length())
     return false;
   input_.erase(caret_pos_, len);
+  BumpCompositionEpoch();
   update_notifier_(this);
   return true;
 }
@@ -107,6 +111,7 @@ void Context::Clear() {
   input_.clear();
   caret_pos_ = 0;
   composition_.clear();
+  BumpCompositionEpoch();
   update_notifier_(this);
 }
 
@@ -278,12 +283,18 @@ void Context::set_composition(Composition&& comp) {
 }
 
 void Context::set_input(const string& value) {
+  // T9 增量 compose 依赖：严格追加不视为合成失效（不递增纪元）。
+  if (value.size() <= input_.size() ||
+      value.compare(0, input_.size(), input_) != 0) {
+    BumpCompositionEpoch();
+  }
   input_ = value;
   caret_pos_ = input_.length();
   update_notifier_(this);
 }
 
 void Context::set_option(const string& name, bool value) {
+  BumpCompositionEpoch();
   options_[name] = value;
   DLOG(INFO) << "Context::set_option " << name << " = " << value;
   option_update_notifier_(this, name);

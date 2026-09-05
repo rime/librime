@@ -60,7 +60,8 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
                                     size_t start_pos,
                                     size_t depth_limit = 0,
                                     size_t predict_word_from_depth = 0,
-                                    double initial_credibility = 0.0);
+                                    double initial_credibility = 0.0,
+                                    size_t min_end_pos = 0);
   size_t LookupWords(UserDictEntryIterator* result,
                      const string& input,
                      bool predictive,

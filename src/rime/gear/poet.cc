@@ -188,47 +188,57 @@ struct DynamicProgramming {
 };
 
 template <class Strategy>
-an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
-                                            size_t total_length,
-                                            const string& preceding_text) {
+struct Poet::TypedLattice : Poet::Lattice {
   map<int, typename Strategy::State> states;
-  Strategy::Initiate(states[0]);
-  for (const auto& sv : graph) {
-    size_t start_pos = sv.first;
-    if (states.find(start_pos) == states.end())
-      continue;
-    DLOG(INFO) << "start pos: " << start_pos;
-    const auto& source_state = states[start_pos];
-    const auto update = [this, &states, &sv, start_pos, total_length,
-                         &preceding_text](const Line& candidate) {
-      for (const auto& ev : sv.second) {
-        size_t end_pos = ev.first;
-        if (start_pos == 0 && end_pos == total_length)
-          continue;  // exclude single word from the result
-        DLOG(INFO) << "end pos: " << end_pos;
-        bool is_rear = end_pos == total_length;
-        auto& target_state = states[end_pos];
-        // extend candidates with dict entries on a valid edge.
-        const DictEntryList& entries = ev.second;
-        for (const auto& entry : entries) {
-          const string& context =
-              candidate.empty() ? preceding_text : candidate.context();
-          double weight = candidate.weight +
-                          Grammar::Evaluate(context, entry->text, entry->weight,
-                                            is_rear, grammar_.get());
-          Line new_line{&candidate, entry.get(), end_pos, weight};
-          Line& best = Strategy::BestLineToUpdate(target_state, new_line);
-          if (best.empty() || compare_(best, new_line)) {
-            DLOG(INFO) << "updated line ending at " << end_pos
-                       << " with text: ..." << new_line.last_word()
-                       << " weight: " << new_line.weight;
-            best = new_line;
-          }
+};
+
+template <class Strategy>
+void Poet::ExpandEdges(StateMap<Strategy>& states,
+                       size_t start_pos,
+                       const map<int, DictEntryList>& edges,
+                       size_t min_end_pos,
+                       size_t rear_end_pos,
+                       bool exclude_single_word,
+                       const string& preceding_text) {
+  const auto& source_state = states[start_pos];
+  const auto update = [this, &states, start_pos, rear_end_pos,
+                       &preceding_text, min_end_pos, exclude_single_word,
+                       &edges](const Line& candidate) {
+    for (const auto& ev : edges) {
+      size_t end_pos = ev.first;
+      // 增量模式跳过已固化的旧边（其效应已缓存在 states 里）
+      if (end_pos < min_end_pos)
+        continue;
+      if (exclude_single_word && start_pos == 0 && end_pos == rear_end_pos)
+        continue;  // exclude single word from the result
+      DLOG(INFO) << "end pos: " << end_pos;
+      bool is_rear = end_pos == rear_end_pos;
+      auto& target_state = states[end_pos];
+      // extend candidates with dict entries on a valid edge.
+      const DictEntryList& entries = ev.second;
+      for (const auto& entry : entries) {
+        const string& context =
+            candidate.empty() ? preceding_text : candidate.context();
+        double weight = candidate.weight +
+                        Grammar::Evaluate(context, entry->text, entry->weight,
+                                          is_rear, grammar_.get());
+        Line new_line{&candidate, entry.get(), end_pos, weight};
+        Line& best = Strategy::BestLineToUpdate(target_state, new_line);
+        if (best.empty() || compare_(best, new_line)) {
+          DLOG(INFO) << "updated line ending at " << end_pos
+                     << " with text: ..." << new_line.last_word()
+                     << " weight: " << new_line.weight;
+          best = new_line;
         }
       }
-    };
-    Strategy::ForEachCandidate(source_state, compare_, update);
-  }
+    }
+  };
+  Strategy::ForEachCandidate(source_state, compare_, update);
+}
+
+template <class Strategy>
+an<Sentence> Poet::ExtractBestSentence(const StateMap<Strategy>& states,
+                                       size_t total_length) const {
   auto found = states.find(total_length);
   if (found == states.end() || found->second.empty())
     return nullptr;
@@ -242,13 +252,128 @@ an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
   return sentence;
 }
 
+template <class Strategy>
+an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
+                                            size_t total_length,
+                                            const string& preceding_text,
+                                            an<Lattice>* lattice) {
+  auto data = New<TypedLattice<Strategy>>();
+  auto& states = data->states;
+  Strategy::Initiate(states[0]);
+  for (const auto& sv : graph) {
+    size_t start_pos = sv.first;
+    if (states.find(start_pos) == states.end())
+      continue;
+    DLOG(INFO) << "start pos: " << start_pos;
+    ExpandEdges<Strategy>(states, start_pos, sv.second, 0, total_length, true,
+                          preceding_text);
+  }
+  if (lattice) {
+    data->total_length = total_length;
+    *lattice = data;
+  }
+  return ExtractBestSentence<Strategy>(states, total_length);
+}
+
+// 增量造句。与全量 MakeSentenceWithStrategy 的逐位一致性依赖：
+// 1. 前向循环按 start pos 升序处理，states[p] 只依赖 q < p 的状态与出边；
+// 2. is_rear 只作用于落在终点上的边，旧位置状态与 total_length 无关；
+// 3. 缓存的 states[q]（q < old_total）与全量重跑在该前缀上的结果一致
+//    （归纳），旧终点 old_total 用 is_rear=false 重算一次，
+//    再只展开新桶（end > old_total）。
+template <class Strategy>
+an<Sentence> Poet::MakeSentenceIncrementalWithStrategy(
+    TypedLattice<Strategy>& lattice,
+    const WordGraph& graph,
+    size_t total_length,
+    const string& preceding_text) {
+  auto& states = lattice.states;
+  const size_t old_total = lattice.total_length;
+  if (old_total == 0 || total_length <= old_total)
+    return nullptr;
+  if (states.find(0) == states.end())
+    return nullptr;
+  // 缓存 WordGraph 中必须仍有指向旧终点的桶（重算其状态用）；
+  // 由调用方的守卫保证（旧桶缓存与 lattice 配套）。
+  bool has_edge_to_old_total = false;
+  for (const auto& sv : graph) {
+    if (static_cast<size_t>(sv.first) >= old_total)
+      break;
+    if (sv.second.count(static_cast<int>(old_total))) {
+      has_edge_to_old_total = true;
+      break;
+    }
+  }
+  if (!has_edge_to_old_total)
+    return nullptr;
+
+  DLOG(INFO) << "Poet incremental: " << old_total << " -> " << total_length;
+
+  // 1) 旧终点状态重算：全量重跑中它不再是终点（is_rear=false），且
+  //    0→old_total 的单词边不再被排除。入边桶全部来自缓存的 WordGraph。
+  if (states.find(old_total) != states.end()) {
+    states[old_total] = typename Strategy::State();  // 清空后重算
+  }
+  for (const auto& sv : graph) {
+    size_t start_pos = sv.first;
+    if (start_pos >= old_total)
+      break;
+    if (states.find(start_pos) == states.end())
+      continue;
+    auto edge = sv.second.find(static_cast<int>(old_total));
+    if (edge == sv.second.end())
+      continue;
+    // 只展开 end==old_total 的单条边；rear_end_pos 取最大值，
+    // 即所有边均按非句尾（is_rear=false）计算，与全量重跑一致。
+    map<int, DictEntryList> single_edge;
+    single_edge.emplace(edge->first, edge->second);  // 浅拷贝（an 共享）
+    ExpandEdges<Strategy>(states, start_pos, single_edge, 0, SIZE_MAX, false,
+                          preceding_text);
+  }
+
+  // 2) 展开新桶：end > old_total 的边（含从旧位置与新位置出发的）。
+  for (const auto& sv : graph) {
+    size_t start_pos = sv.first;
+    if (states.find(start_pos) == states.end())
+      continue;
+    if (start_pos >= total_length)
+      continue;
+    ExpandEdges<Strategy>(states, start_pos, sv.second, old_total + 1,
+                          total_length, true, preceding_text);
+  }
+
+  lattice.total_length = total_length;
+  return ExtractBestSentence<Strategy>(states, total_length);
+}
+
 an<Sentence> Poet::MakeSentence(const WordGraph& graph,
                                 size_t total_length,
-                                const string& preceding_text) {
-  return grammar_ ? MakeSentenceWithStrategy<BeamSearch>(graph, total_length,
-                                                         preceding_text)
+                                const string& preceding_text,
+                                an<Lattice>* lattice) {
+  return grammar_ ? MakeSentenceWithStrategy<BeamSearch>(
+                        graph, total_length, preceding_text, lattice)
                   : MakeSentenceWithStrategy<DynamicProgramming>(
-                        graph, total_length, preceding_text);
+                        graph, total_length, preceding_text, lattice);
+}
+
+an<Sentence> Poet::MakeSentenceIncremental(const WordGraph& graph,
+                                           size_t total_length,
+                                           const string& preceding_text,
+                                           an<Lattice>& lattice) {
+  if (!lattice)
+    return nullptr;
+  if (grammar_) {
+    auto* data = dynamic_cast<TypedLattice<BeamSearch>*>(lattice.get());
+    if (!data)
+      return nullptr;
+    return MakeSentenceIncrementalWithStrategy<BeamSearch>(
+        *data, graph, total_length, preceding_text);
+  }
+  auto* data = dynamic_cast<TypedLattice<DynamicProgramming>*>(lattice.get());
+  if (!data)
+    return nullptr;
+  return MakeSentenceIncrementalWithStrategy<DynamicProgramming>(
+      *data, graph, total_length, preceding_text);
 }
 
 }  // namespace rime

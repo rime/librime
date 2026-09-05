@@ -44,6 +44,27 @@ struct SyllableGraph {
   SpellingIndices indices;
 };
 
+// ── T9（九键）增量音节图缓存 ──
+// 纯数字输入逐位增长时（九键快速输入），音节图构建是
+// (input, prism, 选项) 的纯函数：BFS 阶段对旧前缀逐位复现一致。
+// 缓存保存「BFS 后、剪枝前」的图（BFS 输出即全量重跑在同一前缀上
+// 会得到的状态），下一次严格追加时把缓存全部顶点按缓存类型重新入队
+// 扩展，再全量重跑剪枝与补全，结果与整串全量重跑完全一致
+// （正确性要点见 syllabifier.cc 实现注释）。
+// 必须由调用方（ScriptTranslator，每 session 一个）持有并传入，
+// 禁止做成全局静态：不同 session/engine 的 prism 与选项不同，会互相污染。
+struct SyllableGraphCache {
+  string input;   // 缓存图对应的完整输入串
+  size_t farthest = 0;  // BFS 阶段（剪枝/补全前）的最远解释位置
+  bool valid = false;   // 缓存是否有效（构建环境受限时为 false）
+  uint32_t dict_checksum = 0;    // prism 内容指纹，防跨词典/重部署误用
+  uint32_t schema_checksum = 0;
+  string delimiters;
+  bool enable_completion = false;
+  bool strict_spelling = false;
+  SyllableGraph graph;  // 缓存图（indices 始终为空，扩展后由 Transpose 重建）
+};
+
 class Syllabifier {
  public:
   Syllabifier() = default;
@@ -57,9 +78,24 @@ class Syllabifier {
   RIME_DLL int BuildSyllableGraph(const string& input,
                                   Prism& prism,
                                   SyllableGraph* graph);
+  // 传入非空 cache 时，纯数字输入可复用上一轮的音节图做尾部增量扩展；
+  // cache 中的环境指纹不匹配或图不可扩展时自动回退全量路径并更新缓存。
+  RIME_DLL int BuildSyllableGraph(const string& input,
+                                  Prism& prism,
+                                  SyllableGraph* graph,
+                                  SyllableGraphCache* cache);
   RIME_DLL void EnableCorrection(Corrector* corrector);
 
  protected:
+  bool TryExtendSyllableGraph(const string& input,
+                              Prism& prism,
+                              SyllableGraph* graph,
+                              SyllableGraphCache* cache);
+  void StoreSyllableGraphCache(const string& input,
+                               Prism& prism,
+                               const SyllableGraph& graph,
+                               size_t farthest,
+                               SyllableGraphCache* cache);
   void CheckOverlappedSpellings(SyllableGraph* graph, size_t start, size_t end);
   void Transpose(SyllableGraph* graph);
 

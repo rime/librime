@@ -7,6 +7,8 @@
 #ifndef RIME_CONTEXT_H_
 #define RIME_CONTEXT_H_
 
+#include <stdint.h>
+
 #include <rime/common.h>
 #include <rime/commit_history.h>
 #include <rime/composition.h>
@@ -63,6 +65,10 @@ class RIME_DLL Context {
   void set_input(const string& value);
   const string& input() const { return input_; }
 
+  // 合成纪元：非追加式的输入变更（替换/清空/提交）或选项变更时递增。
+  // 用于 T9 增量 compose 等跨键缓存的失效判定；纯追加 set_input 不递增。
+  uint64_t composition_epoch() const { return composition_epoch_; }
+
   void set_caret_pos(size_t caret_pos);
   size_t caret_pos() const { return caret_pos_; }
 
@@ -97,6 +103,7 @@ class RIME_DLL Context {
 
  private:
   string GetSoftCursor() const;
+  void BumpCompositionEpoch() { ++composition_epoch_; }
 
   string input_;
   size_t caret_pos_ = 0;
@@ -104,6 +111,7 @@ class RIME_DLL Context {
   CommitHistory commit_history_;
   map<string, bool> options_;
   map<string, string> properties_;
+  uint64_t composition_epoch_ = 1;
 
   Notifier commit_notifier_;
   Notifier select_notifier_;

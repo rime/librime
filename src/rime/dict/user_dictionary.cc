@@ -28,6 +28,9 @@ struct DfsState {
   size_t depth_limit;
   size_t predict_word_from_depth;
   TickCount present_tick;
+  // 0 = no lower bound; otherwise only collect entries ending at or beyond
+  // it (T9 incremental compose). DFS recursion is unaffected.
+  size_t min_end_pos = 0;
   Code code;
   vector<double> credibility;
   vector<double> quality_len;
@@ -259,8 +262,9 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
           continue;
       }
       while (state->IsExactMatch(prefix)) {  // 'b |e ' vs. 'b e \tBe'
-        DLOG(INFO) << "match found for '" << prefix << "'.";
-        state->RecruitEntry(end_pos);
+        if (state->min_end_pos == 0 || end_pos >= state->min_end_pos) {
+          state->RecruitEntry(end_pos);
+        }
         if (!state->NextEntry())  // reached the end of db
           break;
       }
@@ -269,24 +273,26 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
         // reached the end of input, predict word if requested
         if (state->predict_word_from_depth != 0 &&
             state->depth() >= state->predict_word_from_depth) {
-          while (state->IsPrefixMatch(prefix)) {
-            DLOG(INFO) << "prefix match found for '" << prefix << "'.";
-            if (syllabary_.empty()) {
-              Syllabary syllabary;
-              if (!table_->GetSyllabary(&syllabary)) {
-                LOG(ERROR) << "failed to get syllabary for user dict: "
-                           << name();
+            while (state->IsPrefixMatch(prefix)) {
+              DLOG(INFO) << "prefix match found for '" << prefix << "'.";
+              if (syllabary_.empty()) {
+                Syllabary syllabary;
+                if (!table_->GetSyllabary(&syllabary)) {
+                  LOG(ERROR) << "failed to get syllabary for user dict: "
+                             << name();
+                  break;
+                }
+                SyllableId syllable_id = 0;
+                for (auto s = syllabary.begin(); s != syllabary.end(); ++s) {
+                  syllabary_[*s] = syllable_id++;
+                }
+              }
+              if (state->min_end_pos == 0 || end_pos >= state->min_end_pos) {
+                state->RecruitEntry(end_pos, &syllabary_);
+              }
+              if (!state->NextEntry())  // reached the end of db
                 break;
-              }
-              SyllableId syllable_id = 0;
-              for (auto s = syllabary.begin(); s != syllabary.end(); ++s) {
-                syllabary_[*s] = syllable_id++;
-              }
             }
-            state->RecruitEntry(end_pos, &syllabary_);
-            if (!state->NextEntry())  // reached the end of db
-              break;
-          }
         }
       } else {
         // the caller can limit the number of syllables to look up
@@ -316,13 +322,15 @@ an<UserDictEntryCollector> UserDictionary::Lookup(
     size_t start_pos,
     size_t depth_limit,
     size_t predict_word_from_depth,
-    double initial_credibility) {
+    double initial_credibility,
+    size_t min_end_pos) {
   if (!table_ || !prism_ || !loaded() ||
       start_pos >= syll_graph.interpreted_length)
     return nullptr;
   DfsState state;
   state.depth_limit = depth_limit;
   state.predict_word_from_depth = predict_word_from_depth;
+  state.min_end_pos = min_end_pos;
   FetchTickCount();
   state.present_tick = tick_ + 1;
   state.credibility.push_back(initial_credibility);

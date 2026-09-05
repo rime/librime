@@ -76,7 +76,17 @@ class Dictionary : public Class<Dictionary, const Ticket&> {
       size_t start_pos,
       const hash_set<string>* blacklist = nullptr,
       bool predict_word = false,
-      double initial_credibility = 0.0);
+      double initial_credibility = 0.0,
+      size_t min_end_pos = 0);
+  // 多起点查询：一次表查询覆盖全部 start（共享音节树 BFS），
+  // 结果按 start 分组。与逐 start 调 Lookup 的结果等价，但把
+  // T9 增量 compose 每键 O(N²) 的查询成本降为 O(N)。
+  RIME_DLL map<int, an<DictEntryCollector>> LookupAll(
+      const SyllableGraph& syllable_graph,
+      const vector<size_t>& start_positions,
+      const hash_set<string>* blacklist = nullptr,
+      bool predict_word = false,
+      size_t min_end_pos = 0);
   // if predictive is true, do an expand search with limit,
   // otherwise do an exact match.
   // return num of matching keys.
