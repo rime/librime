@@ -40,6 +40,8 @@ class Switches {
     size_t switch_index = 0;
     // the index of the option in the radio group.
     size_t option_index = 0;
+    // initial state value when the option is unset. -1 if unspecified.
+    int default_value = -1;
 
     bool found() const { return bool(the_switch); }
   };
