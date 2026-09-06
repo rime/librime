@@ -1,0 +1,290 @@
+# schema_id.schema.yaml
+
+schema:
+  name: string
+  schema_id: string
+  version: string
+  description: string
+  author:
+    - string
+  dependencies:
+    - dependency_id
+
+engine:
+  processors:
+    - ascii_composer
+    - chord_composer
+    - express_editor
+    - fluid_editor
+    - fluency_editor
+    - key_binder
+    - navigator
+    - punctuator
+    - recognizer
+    - selector
+    - speller
+    - shape_processor
+
+  segmentors:
+    - abc_segmentor
+    - affix_segmentor
+    - ascii_segmentor
+    - matcher
+    - punct_segmentor
+    - fallback_segmentor
+
+  translators:
+    - echo_translator
+    - punct_translator
+    - table_translator
+    - script_translator
+    - r10n_translator # alias for script_translator
+    - reverse_lookup_translator
+    - schema_list_translator
+    - switch_translator
+    - history_translator
+
+  filters:
+    - simplifier
+    - uniquifier
+    - charset_filter
+    - cjk_minifier # alias for charset_filter
+    - reverse_lookup_filter
+    - single_char_filter
+
+  formatters:
+    - shape_formatter
+
+# KeyName: src/rime/key_table.cc:32
+# KeyEvent: src/rime/key_event.h:54
+# KeySequence: src/rime/key_event.h:59
+# Projection = Calculation|[args|]: src/rime/algo/calculus.cc
+
+---
+
+# general settings for each component type
+
+[name_space]:
+  # recognizer, matcher
+  use_space: bool
+  patterns:
+    [string]: regex
+  # affix_segmentor
+  tag: string
+  prefix: string
+  suffix: string
+  tips: string
+  closing_tips: string
+  extra_tags:
+    - string
+  # table_translator
+  enable_charset_filter: bool
+  enable_sentence: bool
+  sentence_over_completion: bool
+  enable_encoder: bool
+  encode_commit_history: bool
+  max_phrase_length: int
+  max_homographs: int
+  # script_translator
+  spelling_hints: int
+  always_show_comments: bool
+  enable_correction: bool
+  enable_word_completion: bool
+  max_homophones: int
+  # reverse_lookup_translator
+  tag: string
+  prefix: string
+  suffix: string
+  tips: string
+  target: string
+  enable_completion: bool
+  # history_translator
+  tag: string
+  input: string
+  size: int
+  initial_quality: double
+  # simplifier
+  tip: TipsLevel # src/rime/gear/simplifier.h:30
+  tips: TipsLevel # alias for tip
+  show_in_comment: bool
+  inherit_comment: bool
+  comment_format:
+    - Projection
+  random: bool
+  option_name: string
+  excluded_types:
+    - string
+  opencc_config: string # See OpenCC GitHub repo for available configurations
+  # reverse_lookup_filter
+  overwrite_comment: bool
+  append_comment: bool
+  comment_format:
+    - Projection
+  # corrector (Not supported), dictionary
+  prism: string
+  dictionary: string # alias for prism
+  packs:
+    - string
+  enable_user_dict: bool
+  user_dict: string
+  db_class: string
+  # common
+  tags:
+    - string
+  delimiter: string # alias for speller/delimiter
+  contextual_suggestions: bool
+  strict_spelling: bool
+  preedit_format:
+    - Projection
+  output_format:
+    - Projection
+  disable_user_dict_for_patterns:
+    - regex
+  dictionary_exclude:
+    - string
+
+---
+
+# component config
+
+# The behavior of switching between ascii mode and composing mode
+ascii_composer:
+  # When good_old_caps_lock is enabled, allow the key event to pass
+  # through the input method to toggle the Caps Lock state.
+  good_old_caps_lock: bool
+
+  # Defines key bindings for ascii mode operations.
+  switch_key: # src/rime/gear/ascii_composer.cc:21
+    [KeyName]: AsciiModeSwitchStyle
+
+# A special technique that allows simultaneous key strokes.
+chord_composer:
+  algebra:
+    - Projection
+  # The set of valid characters for chord input
+  alphabet: string
+  finish_chord_on_first_key_release: boolean
+  output_format:
+    - Projection
+  prompt_format:
+    - Projection
+  use_alt: bool
+  use_caps: bool
+  use_control: bool
+  use_shift: bool
+  use_super: bool
+  bindings: # src/rime/gear/chord_composer.cc:19
+    [KeyEvent]: ChordComposer::ActionDef
+
+editor:
+  # src/rime/gear/editor.cc:34
+  # defaults to Editor::DirectCommit for ExpressEditor, Editor::AddToInput for FluidEditor
+  char_handler: EditorCharHandlerDef
+  bindings: # src/rime/gear/editor.cc:19
+    [KeyEvent]: Editor::ActionDef
+
+key_binder:
+  import_preset: resource_id
+  bindings:
+    - {
+      when: KeyBindingCondition, # src/rime/gear/key_binder.cc:21
+      accept: KeyEvent,
+      send: KeyEvent,
+      send_sequence: KeySequence,
+      toggle: string, # by option name or by index ('@n' where n is a number)
+      set_option: string, # only by option name
+      unset_option: string, # only by option name
+      select: string, # schema name or '.next'
+    }
+
+navigator: # src/rime/gear/navigator.cc:20
+  bindings:
+    [KeyEvent]: Navigator::ActionDef
+  vertical:
+    bindings:
+      [KeyEvent]: Navigator::ActionDef
+
+# punctuations
+punctuator:
+  import_preset: resource_id
+  digit_separator_action?: 'commit'
+  digit_separators: string
+  full_shape:
+    [string]: 'string | { commit: string } | string[] | { pair: string[2] }'
+  half_shape:
+    [string]: 'string | { commit: string } | string[] | { pair: string[2] }'
+  symbols: # Used for both cases
+    [string]: 'string | { commit: string } | string[] | { pair: string[2] }'
+  use_space: bool
+
+# each component type has its own pattern configuration
+recognizer:
+  import_preset: resource_id
+  use_space: bool
+  patterns:
+    [string]: regex
+
+selector:
+  bindings:
+    [KeyEvent]: Selector::ActionDef
+  linear:
+    bindings:
+      [KeyEvent]: Selector::ActionDef
+  vertical:
+    bindings:
+      [KeyEvent]: Selector::ActionDef
+    linear:
+      bindings:
+        [KeyEvent]: Selector::ActionDef
+
+speller:
+  alphabet: string
+  initials: string
+  finals: string
+  delimiter: string
+  use_space: bool
+  auto_clear: AutoClearMethod # src/rime/gear/speller.h:27
+  auto_select: bool
+  auto_select_pattern: regex
+  max_code_length: int
+  algebra:
+    - Projection
+
+abc_segmentor:
+  extra_tags:
+    - string
+
+translator:
+  dictionary: string # Path to the dictionary file
+  enable_correction: bool # Enable correction feature (currently is not supported)
+
+switcher:
+  caption: string
+  hotkeys:
+    - KeyEvent
+  save_options:
+    - option_name
+  fix_schema_list_order: bool
+  fold_options: bool
+  option_list_prefix: string
+  option_list_suffix: string
+  option_list_separator: string
+  abbreviate_options: bool
+
+encoder:
+  exclude_patterns:
+    - regex
+  rules:
+    - {
+      formula: string, # something like "AuBeKs"
+      length_equal: int,
+      length_in_range: [int, int],
+    }
+  tail_anchor: string
+
+menu:
+  page_down_cycle: bool
+  page_size: int
+  alternative_select_keys: string
+  alternative_select_labels:
+    - string
