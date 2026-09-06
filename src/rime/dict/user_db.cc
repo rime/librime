@@ -43,20 +43,14 @@ bool UserDbValue::Unpack(const string& value) {
       continue;
     string k(k_eq_v.substr(0, eq));
     string v(k_eq_v.substr(eq + 1));
-    // Use C-style strto* parsers: they accept denormal floats without
-    // throwing and give us a precise "no conversion performed" signal via
-    // the end-pointer. std::stod throws std::out_of_range on denormals,
-    // which used to make Unpack() reject the whole record on round-trip.
     try {
       if (k == "c") {
-        char* end = nullptr;
-        errno = 0;
-        long parsed = std::strtol(v.c_str(), &end, 10);
-        if (end == v.c_str() || errno == ERANGE) {
-          throw std::invalid_argument("bad commits");
-        }
-        commits = static_cast<int>(parsed);
+        commits = std::stoi(v);
       } else if (k == "d") {
+        // Use strtod instead of std::stod: denormal floats (which arise
+        // naturally from long-term decay) are a valid input, not an
+        // exceptional condition. strtod returns 0 on underflow without
+        // throwing, preserving the round-trip for aged-out entries.
         char* end = nullptr;
         errno = 0;
         double parsed = std::strtod(v.c_str(), &end);
@@ -69,13 +63,7 @@ bool UserDbValue::Unpack(const string& value) {
           parsed = 0.0;
         dee = (std::min)(10000.0, parsed);
       } else if (k == "t") {
-        char* end = nullptr;
-        errno = 0;
-        unsigned long parsed = std::strtoul(v.c_str(), &end, 10);
-        if (end == v.c_str() || errno == ERANGE) {
-          throw std::invalid_argument("bad tick");
-        }
-        tick = static_cast<TickCount>(parsed);
+        tick = std::stoul(v);
       }
     } catch (...) {
       LOG(ERROR) << "failed in parsing key-value from userdb entry '" << k_eq_v
