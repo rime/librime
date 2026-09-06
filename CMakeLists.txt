@@ -13,6 +13,7 @@ add_definitions(-DRIME_VERSION="${rime_version}")
 # generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+include(CheckSymbolExists)
 include(GNUInstallDirs)
 
 option(BUILD_SHARED_LIBS "Build Rime as shared library" ON)
@@ -180,6 +181,8 @@ endif()
 if(UNIX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 endif()
+
+check_symbol_exists(__GLIBC__ "features.h" IS_GLIBC)
 
 if (NOT CMAKE_BUILD_PARALLEL_LEVEL)
   include(ProcessorCount)
