@@ -96,6 +96,10 @@ Memory::~Memory() {
   unhandled_key_connection_.disconnect();
 }
 
+void Memory::ReleaseUserDict() {
+  user_dict_.reset();
+}
+
 bool Memory::StartSession() {
   return user_dict_ && user_dict_->NewTransaction();
 }
