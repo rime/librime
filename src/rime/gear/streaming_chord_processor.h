@@ -11,6 +11,8 @@
 
 namespace rime {
 
+class Projection;
+
 struct ChordKeyEvent {
   int keycode = 0;
   char32_t key = 0;
@@ -42,16 +44,19 @@ class StreamingChordProcessor : public Processor {
   void DisplayPendingSpace();
   // 清空暫存空格標記
   void ClearPendingSpace();
+  // 將已完成的並擊和弦更新爲定界的標準化和弦
+  void CanonicalizeCurrentChord();
 
   // 鍵位映射表: 物理鍵碼 -> 宮保代碼
   std::map<int, char32_t> key_map_;
 
   // 方案配置參數
-  std::u32string initial_keys_;  // 方案聲母/首部鍵集
-  std::u32string final_keys_;    // 方案韻母/尾部鍵集
-  int chord_timeout_ms_ = 120;   // 異音節連打切分超時 (ms)
-  int chord_duration_ms_ = 60;   // 同和弦雙手落鍵生理容差窗口 (ms)
-  char delimiter_ = '\'';        // 隔音符號
+  std::u32string initial_keys_;    // 方案聲母/首部鍵集
+  std::u32string final_keys_;      // 方案韻母/尾部鍵集
+  int chord_timeout_ms_ = 120;     // 異音節連打切分超時 (ms)
+  int chord_duration_ms_ = 60;     // 同和弦雙手落鍵生理容差窗口 (ms)
+  char delimiter_ = '\'';          // 隔音符號
+  the<Projection> canonicalizer_;  // 並擊和弦標準化運算
 
   // 時序狀態追蹤
   ChordKeyEvent last_key_event_;
@@ -59,7 +64,7 @@ class StreamingChordProcessor : public Processor {
 
   // 物理抬鍵追蹤狀態
   std::set<int> pressed_chord_keys_;  // 當前處於按下狀態的並擊鍵集合
-  bool chord_released_ = false;       // 標記上一並擊和弦是否已完全釋放
+  size_t current_chord_start_;        // 當前並擊和弦的編碼起始位置
 
   // 防遞歸標記
   bool is_replaying_ = false;

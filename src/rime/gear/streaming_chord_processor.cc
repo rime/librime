@@ -7,6 +7,7 @@
 #include <rime/key_table.h>
 #include <rime/schema.h>
 #include <rime/config.h>
+#include <rime/algo/algebra.h>
 
 // 一張機, 免除異步定時器:
 // 不開闢後台定時線程, 僅依靠新落鍵觸發舊音節前置結算.
@@ -71,7 +72,15 @@ StreamingChordProcessor::StreamingChordProcessor(const Ticket& ticket)
     }
   }
 
-  // 3. 聲明方案使用並擊特性 (啓用鼠鬚管抬鍵轉發通道)
+  // 3. 並擊和弦標準化運算
+  if (an<ConfigList> rules = config->GetList("streaming_chord/canonicalize")) {
+    the<Projection> canonicalizer(new Projection());
+    if (canonicalizer->Load(rules)) {
+      canonicalizer_ = std::move(canonicalizer);
+    }
+  }
+
+  // 聲明方案使用並擊特性 (啓用鼠鬚管抬鍵轉發通道)
   Context* ctx = engine_->context();
   ctx->set_option("_chord_typing", true);
 }
@@ -97,17 +106,19 @@ void StreamingChordProcessor::ResetTracking() {
   last_key_event_ = {};
   pending_space_ = {};
   pressed_chord_keys_.clear();
-  chord_released_ = false;
+  current_chord_start_ = 0;
 }
 
 void StreamingChordProcessor::FlushChordKey(ChordKeyEvent key_event) {
   string input_str;
   utf8::unchecked::append(key_event.key, std::back_inserter(input_str));
   Context* context = engine_->context();
+  if (pressed_chord_keys_.empty()) {
+    current_chord_start_ = context->input().length();
+  }
   context->PushInput(input_str);
   last_key_event_ = key_event;
   pressed_chord_keys_.insert(key_event.keycode);
-  chord_released_ = false;  // 新鍵落底, 和弦重回握持狀態
 }
 
 ProcessResult StreamingChordProcessor::HandleChordKey(ChordKeyEvent key_event) {
@@ -125,22 +136,19 @@ ProcessResult StreamingChordProcessor::HandleChordKey(ChordKeyEvent key_event) {
                        key_event.time - last_key_event_.time)
                        .count();
 
-    // 條件一 (物理硬邊界): 上一音節所有實體鍵已完全抬起 (有抬鍵環境專享)
-    bool is_chord_release = chord_released_;
-
-    // 條件二 (超時邊界): 連打思考停頓 / 同手同區連打超時切分
+    // 條件一 超時邊界: 連打思考停頓 / 同手同區連打超時切分
     bool is_timeout_boundary = (delta_t > chord_timeout_ms_);
 
-    // 條件三 (手系逆轉邊界): 右手韻母 -> 左手聲母 且超出微時差容差窗口
+    // 條件二 手系逆轉邊界: 右手韻母 -> 左手聲母 且超出微時差容差窗口
     bool is_phase_inversion = IsFinal(last_key_event_.key) && is_initial &&
                               (delta_t > chord_duration_ms_);
 
-    if (is_chord_release || is_timeout_boundary || is_phase_inversion) {
+    if (is_timeout_boundary || is_phase_inversion) {
       Context* context = engine_->context();
       context->PushInput(delimiter_);
-      chord_released_ = false;
       // 爲無抬鍵環境做防禦性清理, 避免集合只進不出
       pressed_chord_keys_.clear();
+      current_chord_start_ = 0;
     }
   }
 
@@ -203,6 +211,18 @@ void StreamingChordProcessor::ClearPendingSpace() {
   }
 }
 
+void StreamingChordProcessor::CanonicalizeCurrentChord() {
+  Context* context = engine_->context();
+  auto chord = context->input().substr(current_chord_start_);
+  if (chord.length() == 0)
+    return;
+  if (canonicalizer_) {
+    context->PopInput(chord.length());
+    canonicalizer_->Apply(&chord);
+    context->PushInput(chord);
+  }
+}
+
 ProcessResult StreamingChordProcessor::ProcessKeyEvent(
     const KeyEvent& key_event) {
   if (is_replaying_) {
@@ -225,9 +245,13 @@ ProcessResult StreamingChordProcessor::ProcessKeyEvent(
     auto it = pressed_chord_keys_.find(keycode);
     if (it != pressed_chord_keys_.end()) {
       pressed_chord_keys_.erase(it);
-      // 當所有握持鍵全數釋放, 且正在組詞, 確證上一物理和弦結束
-      if (pressed_chord_keys_.empty() && context->IsComposing()) {
-        chord_released_ = true;
+      // 當所有握持鍵全數釋放, 確證上一和弦結束
+      if (pressed_chord_keys_.empty()) {
+        if (canonicalizer_ && context->IsComposing()) {
+          // 將其更新爲定界的標準化和弦
+          CanonicalizeCurrentChord();
+        }
+        current_chord_start_ = 0;
       }
       return kAccepted;
     }
@@ -278,9 +302,9 @@ ProcessResult StreamingChordProcessor::ProcessKeyEvent(
                        now - pending_space_.time)
                        .count();
 
-    bool is_schema_chord_key = IsInitial(chord_key) || IsFinal(chord_key);
+    bool is_chord_key = IsInitial(chord_key) || IsFinal(chord_key);
 
-    if (is_schema_chord_key && delta_t <= chord_duration_ms_) {
+    if (is_chord_key && delta_t <= chord_duration_ms_) {
       // 拇指超前落鍵並擊 (如 Space -> D 並擊 da): 結算暫存空格爲 A
       ChordKeyEvent saved_space = pending_space_;
       pending_space_ = {};
