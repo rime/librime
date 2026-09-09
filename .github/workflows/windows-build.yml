@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Checkout last commit
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.repository }}
           submodules: recursive
@@ -70,7 +70,7 @@ jobs:
 
       - name: Cache dependencies
         id: cache-deps
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             bin
@@ -97,7 +97,7 @@ jobs:
           bin include lib share
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: artifact-${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.arch }}
           path: |
@@ -136,7 +136,7 @@ jobs:
 
       - run: git config --global core.autocrlf input
       - name: Checkout last commit
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.repository }}
             
@@ -173,7 +173,7 @@ jobs:
           bin include lib share
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: artifact-${{ runner.os }}-mingw
           path: |
