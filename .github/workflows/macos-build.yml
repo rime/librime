@@ -28,7 +28,7 @@ jobs:
       RIME_PLUGINS: ${{ inputs.rime_plugins }}
     steps:
       - name: Checkout last commit
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.repository }}
           submodules: recursive
@@ -52,7 +52,7 @@ jobs:
 
       - name: Cache dependencies
         id: cache-deps
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             bin
@@ -83,7 +83,7 @@ jobs:
 
       - name: Upload artifacts
         if: matrix.create-distributable
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: artifact-${{ runner.os }}-${{ matrix.build_variant || runner.arch }}
           path: |
