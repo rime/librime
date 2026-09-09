@@ -108,6 +108,37 @@ class UserDictionaryTest : public ::testing::Test {
   the<UserDictionary> ud;
 };
 
+TEST_F(UserDictionaryTest, RefreshCacheAcrossInstances) {
+  auto other = std::make_unique<UserDictionary>("user_dict_test", db);
+  other->Attach(sys_dict->primary_table(), sys_dict->prism());
+  ASSERT_TRUE(other->Load());
+
+  DictEntry entry;
+  entry.text = "泥";
+  entry.custom_code = "ni";
+  ASSERT_TRUE(ud->UpdateEntry(entry, 1));
+
+  SyllableGraph graph;
+  Syllabifier syllabifier;
+  ASSERT_GT(syllabifier.BuildSyllableGraph("ni", *sys_dict->prism(), &graph),
+            0);
+  auto result = other->Lookup(graph, 0);
+  ASSERT_NE(nullptr, result);
+  bool found = false;
+  for (auto& group : *result) {
+    auto& iter = group.second;
+    while (!iter.exhausted()) {
+      auto candidate = iter.Peek();
+      if (candidate && candidate->text == "泥") {
+        found = true;
+        break;
+      }
+      iter.Next();
+    }
+  }
+  EXPECT_TRUE(found);
+}
+
 TEST_F(UserDictionaryTest, ExactMatchFields) {
   AddEntry("ni", "你");
   ASSERT_TRUE(ud->Reload());
