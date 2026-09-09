@@ -643,9 +643,9 @@ an<UserDictEntryCollector> UserDictionary::Lookup(
   state.credibility.push_back(initial_credibility);
   state.quality_len.push_back(0.0);
   string prefix;
-  // Rebuild only when deferred. Local changes are reflected by pending_.
-  // External sync, merge, and restore operations must call Reload().
-  if (!cache_built_) {
+#if RIME_USER_DICT_CACHE_ENABLED
+  // Refresh when another UserDictionary instance changed the shared DB.
+  if (!cache_built_ || cache_built_tick_ != tick_) {
     BuildCache();
   }
   if (cache_built_) {
