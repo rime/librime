@@ -5,6 +5,8 @@
 // 2011-11-02 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
+#include <cerrno>
+#include <cmath>
 #include <cstdlib>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
@@ -21,7 +23,14 @@ UserDbValue::UserDbValue(const string& value) {
 
 string UserDbValue::Pack() const {
   std::ostringstream packed;
-  packed << "c=" << commits << " d=" << dee << " t=" << tick;
+  // Clamp aged-out (and denormal/negative) dee to 0 before serialization.
+  // Entries at or below kUserDbDiscardThreshold are discarded on load, so
+  // serializing them with their tiny weights would store a state that
+  // disagrees with their effective semantics. Denormals in particular
+  // serialize to strings like "9.88131e-324" that cannot be parsed back,
+  // breaking the Pack/Unpack round-trip.
+  double safe_dee = (dee <= kUserDbDiscardThreshold) ? 0.0 : dee;
+  packed << "c=" << commits << " d=" << safe_dee << " t=" << tick;
   return packed.str();
 }
 
@@ -38,7 +47,21 @@ bool UserDbValue::Unpack(const string& value) {
       if (k == "c") {
         commits = std::stoi(v);
       } else if (k == "d") {
-        dee = (std::min)(10000.0, std::stod(v));
+        // Use strtod instead of std::stod: denormal floats (which arise
+        // naturally from long-term decay) are a valid input, not an
+        // exceptional condition. strtod returns 0 on underflow without
+        // throwing, preserving the round-trip for aged-out entries.
+        char* end = nullptr;
+        errno = 0;
+        double parsed = std::strtod(v.c_str(), &end);
+        if (end == v.c_str()) {
+          throw std::invalid_argument("bad dee");
+        }
+        // strtod returns 0 on underflow and HUGE_VAL on overflow; either
+        // way, clamp to [0, 10000] which is the valid dee range.
+        if (parsed < 0.0 || std::isnan(parsed))
+          parsed = 0.0;
+        dee = (std::min)(10000.0, parsed);
       } else if (k == "t") {
         tick = std::stoul(v);
       }
