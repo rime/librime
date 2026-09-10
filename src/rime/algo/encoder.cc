@@ -15,6 +15,13 @@ namespace rime {
 static const int kEncoderDfsLimit = 32;
 static const int kMaxPhraseLength = 32;
 
+// U+00B7 MIDDLE DOT, U+2027 HYPHENATION POINT, U+2010 HYPHEN,
+// U+FF0D FULLWIDTH HYPHEN-MINUS, U+FF0C FULLWIDTH COMMA
+// U+FF08 FULLWIDTH LEFT PARENTHESIS, U+FF09 FULLWIDTH RIGHT PARENTHESIS
+static const string& kDefaultFreePuncts =
+    "\xc2\xb7\xe2\x80\xa7\xe2\x80\x90\xef\xbc\x8d\xef\xbc\x8c"
+    "\xef\xbc\x88\xef\xbc\x89";
+
 string RawCode::ToString() const {
   return strings::join(*this, " ");
 }
@@ -22,6 +29,29 @@ string RawCode::ToString() const {
 void RawCode::FromString(const string& code_str) {
   *dynamic_cast<vector<string>*>(this) =
       strings::split(code_str, " ", strings::SplitBehavior::SkipToken);
+}
+
+// strip certain "free punctuations" from the phrase, whose encoding is then
+// used in lieu of that of the original phrase; users get these punctuations
+// "for free"
+string Encoder::StripPuncts(const string& phrase) {
+  // in case phrase is one of the "free puncts", do not strip one off itself
+  if (free_puncts_.empty() || free_puncts_.find(phrase) != string::npos)
+    return phrase;
+
+  string stripped_phrase;
+  size_t start_pos = 0;
+  while (start_pos < phrase.length()) {
+    const char* grapheme_start = phrase.c_str() + start_pos;
+    const char* grapheme_end = grapheme_start;
+    utf8::unchecked::next(grapheme_end);
+    size_t grapheme_len = grapheme_end - grapheme_start;
+    string grapheme(grapheme_start, grapheme_len);
+    if (free_puncts_.find(grapheme) == string::npos)
+      stripped_phrase += grapheme;
+    start_pos += grapheme_len;
+  }
+  return stripped_phrase;
 }
 
 TableEncoder::TableEncoder(PhraseCollector* collector)
@@ -48,6 +78,7 @@ bool TableEncoder::LoadSettings(Config* config) {
   encoding_rules_.clear();
   exclude_patterns_.clear();
   tail_anchor_.clear();
+  free_puncts_.clear();
 
   if (!config)
     return false;
@@ -100,6 +131,13 @@ bool TableEncoder::LoadSettings(Config* config) {
     }
   }
   config->GetString("encoder/tail_anchor", &tail_anchor_);
+
+  // an empty string means no free puncts, or all characters must be encoded
+  // however, if no setting is found, adopts the default puncts
+  if (!config->GetString("encoder/free_puncts", &free_puncts_) ||
+      free_puncts_ == "default" || free_puncts_ == "preset") {
+    free_puncts_ = kDefaultFreePuncts;
+  }
 
   loaded_ = !encoding_rules_.empty();
   return loaded_;
@@ -234,8 +272,10 @@ int TableEncoder::CalculateCodeIndex(const string& code, int index, int start) {
 }
 
 bool TableEncoder::EncodePhrase(const string& phrase, const string& value) {
+  string stripped_phrase = TableEncoder::StripPuncts(phrase);
   size_t phrase_length = utf8::unchecked::distance(
-      phrase.c_str(), phrase.c_str() + phrase.length());
+      stripped_phrase.c_str(),
+      stripped_phrase.c_str() + stripped_phrase.length());
   if (static_cast<int>(phrase_length) > max_phrase_length_)
     return false;
 
@@ -249,7 +289,8 @@ bool TableEncoder::DfsEncode(const string& phrase,
                              size_t start_pos,
                              RawCode* code,
                              int* limit) {
-  if (start_pos == phrase.length()) {
+  string stripped_phrase = TableEncoder::StripPuncts(phrase);
+  if (start_pos == stripped_phrase.length()) {
     if (limit) {
       --*limit;
     }
@@ -265,7 +306,7 @@ bool TableEncoder::DfsEncode(const string& phrase,
       return false;
     }
   }
-  const char* word_start = phrase.c_str() + start_pos;
+  const char* word_start = stripped_phrase.c_str() + start_pos;
   const char* word_end = word_start;
   utf8::unchecked::next(word_end);
   size_t word_len = word_end - word_start;
@@ -291,9 +332,24 @@ bool TableEncoder::DfsEncode(const string& phrase,
 
 ScriptEncoder::ScriptEncoder(PhraseCollector* collector) : Encoder(collector) {}
 
+bool ScriptEncoder::LoadSettings(Config* config) {
+  free_puncts_.clear();
+
+  if (!config)
+    return false;
+
+  if (!config->GetString("encoder/free_puncts", &free_puncts_) ||
+      free_puncts_ == "default" || free_puncts_ == "preset") {
+    free_puncts_ = kDefaultFreePuncts;
+  }
+  return true;
+}
+
 bool ScriptEncoder::EncodePhrase(const string& phrase, const string& value) {
+  string stripped_phrase = ScriptEncoder::StripPuncts(phrase);
   size_t phrase_length = utf8::unchecked::distance(
-      phrase.c_str(), phrase.c_str() + phrase.length());
+      stripped_phrase.c_str(),
+      stripped_phrase.c_str() + stripped_phrase.length());
   if (static_cast<int>(phrase_length) > kMaxPhraseLength)
     return false;
 
@@ -307,7 +363,8 @@ bool ScriptEncoder::DfsEncode(const string& phrase,
                               size_t start_pos,
                               RawCode* code,
                               int* limit) {
-  if (start_pos == phrase.length()) {
+  string stripped_phrase = ScriptEncoder::StripPuncts(phrase);
+  if (start_pos == stripped_phrase.length()) {
     if (limit) {
       --*limit;
     }
@@ -315,8 +372,8 @@ bool ScriptEncoder::DfsEncode(const string& phrase,
     return true;
   }
   bool ret = false;
-  for (size_t k = phrase.length() - start_pos; k > 0; --k) {
-    string word(phrase.substr(start_pos, k));
+  for (size_t k = stripped_phrase.length() - start_pos; k > 0; --k) {
+    string word(stripped_phrase.substr(start_pos, k));
     vector<string> translations;
     if (collector_->TranslateWord(word, &translations)) {
       for (const string& x : translations) {
