@@ -48,7 +48,7 @@ jobs:
           
       - name: Configure MSVC
         if: ${{ matrix.compiler == 'msvc' }}
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: TheMrMilchmann/setup-msvc-dev@v4
         with:
           arch: ${{ matrix.cross_arch || matrix.arch }}
 
