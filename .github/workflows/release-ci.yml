@@ -32,24 +32,41 @@ jobs:
           path: artifact
           merge-multiple: true
 
+      - name: Checkout last commit
+        if: github.ref_type == 'tag'
+        uses: actions/checkout@v7
+
+      - name: Build changelog
+        if: github.ref_type == 'tag'
+        id: build_changelog
+        uses: mikepenz/release-changelog-builder-action@v6
+        with:
+          commitMode: true
+          configurationJson: |
+            {
+              "template": "Change log from #{{FROM_TAG}} to #{{TO_TAG}}: #{{RELEASE_DIFF}}\n#{{UNCATEGORIZED}}",
+              "pr_template": "- [#{{MERGE_SHA}}] - #{{TITLE}}"
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create Nightly release
         if: ${{ github.repository == 'rime/librime' && github.ref == 'refs/heads/master' }}
-        uses: 'marvinpinto/action-automatic-releases@latest'
+        uses: softprops/action-gh-release@v3
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: latest
+          name: "Nightly Build"
+          tag_name: latest
           prerelease: true
-          title: "Nightly Build"
           files: |
             artifact/*
 
       - name: Create Stable release
-        if: ${{ github.ref != 'refs/heads/master' }}
-        uses: 'marvinpinto/action-automatic-releases@latest'
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v3
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
+          name: librime ${{ github.ref_name }}
           prerelease: ${{ contains(github.ref_name, '-') }}
-          title: librime ${{ github.ref_name }}
+          body: ${{ steps.build_changelog.outputs.changelog }}
           files: |
             artifact/*
