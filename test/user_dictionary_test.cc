@@ -258,6 +258,66 @@ TEST_F(UserDictionaryTest, MultipleCodeSyllables) {
   EXPECT_EQ("你好", e->text);
 }
 
+// Simulate frontend delete-then-recommit: user forgets a phrase, then
+// re-inputs and selects it again. The entry should be revived.
+TEST_F(UserDictionaryTest, DeleteThenRecommitRevivesEntry) {
+  // 1. User selects "你好" → entry created with commits=1
+  DictEntry entry;
+  entry.text = "你好";
+  entry.custom_code = "ni hao";
+  ASSERT_TRUE(ud->UpdateEntry(entry, 1));
+  auto e1 = DoLookupWords("ni hao", "你好");
+  ASSERT_NE(nullptr, e1);
+  EXPECT_EQ(1, e1->commit_count);
+
+  // 2. User deletes candidate → entry soft-deleted (commits=-1)
+  DictEntry del;
+  del.text = "你好";
+  del.custom_code = "ni hao";
+  ASSERT_TRUE(ud->UpdateEntry(del, -1));
+  auto e2 = DoLookupWords("ni hao", "你好");
+  ASSERT_EQ(nullptr, e2) << "deleted entry should not appear";
+
+  // 3. User re-inputs and selects "你好" again → entry revived
+  DictEntry recommit;
+  recommit.text = "你好";
+  recommit.custom_code = "ni hao";
+  ASSERT_TRUE(ud->UpdateEntry(recommit, 1));
+  auto e3 = DoLookupWords("ni hao", "你好");
+  ASSERT_NE(nullptr, e3) << "revived entry should reappear";
+  EXPECT_EQ("你好", e3->text);
+  EXPECT_GE(e3->commit_count, 1);
+}
+
+TEST_F(UserDictionaryTest, DeleteFromAnotherInstanceInvalidatesCache) {
+  auto other = std::make_unique<UserDictionary>("user_dict_test", db);
+  other->Attach(sys_dict->primary_table(), sys_dict->prism());
+  ASSERT_TRUE(other->Load());
+
+  DictEntry entry;
+  entry.text = "你好";
+  entry.custom_code = "ni hao";
+  ASSERT_TRUE(ud->UpdateEntry(entry, 1));
+  ASSERT_NE(nullptr, DoLookupWords("ni hao", "你好"));
+
+  DictEntry del;
+  del.text = "你好";
+  del.custom_code = "ni hao";
+  ASSERT_TRUE(other->UpdateEntry(del, -1));
+
+  UserDictEntryIterator iter;
+  ud->LookupWords(&iter, "ni hao", false, 0, nullptr);
+  while (!iter.exhausted()) {
+    auto candidate = iter.Peek();
+    ASSERT_NE(nullptr, candidate);
+    EXPECT_NE("你好", candidate->text);
+    iter.Next();
+  }
+
+  ASSERT_TRUE(ud->UpdateEntry(entry, 1));
+  ASSERT_NE(nullptr, DoLookupWords("ni hao", "你好"));
+}
+
 TEST_F(UserDictionaryTest, UpdateEntryRoundTrip) {
   AddEntry("ren", "人");
   ASSERT_TRUE(ud->Reload());

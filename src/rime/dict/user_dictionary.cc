@@ -370,7 +370,11 @@ bool UserDictionary::BuildCache() {
 bool UserDictionary::Reload() {
   if (!FetchTickCount())
     return false;
+#if RIME_USER_DICT_CACHE_ENABLED
   return BuildCache();
+#else
+  return true;
+#endif
 }
 
 bool UserDictionary::starts_with(std::string_view s,
@@ -656,6 +660,11 @@ an<UserDictEntryCollector> UserDictionary::Lookup(
     state.accessor->Jump(" ");  // skip metadata
     DfsLookup(syll_graph, start_pos, prefix, &state);
   }
+#else
+  state.accessor = db_->Query("");
+  state.accessor->Jump(" ");  // skip metadata
+  DfsLookup(syll_graph, start_pos, prefix, &state);
+#endif
   if (state.query_result.empty())
     return nullptr;
   // sort each group of homophones by weight
@@ -761,6 +770,7 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry,
   string code_key(code_str);
   string value;
   UserDbValue v;
+  TickCount previous_tick = tick_;
   bool existed = db_->Fetch(key, &value);
   if (existed) {
     v.Unpack(value);
@@ -771,11 +781,14 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry,
     key.insert(0, new_entry_prefix);
     code_key = key.substr(0, key.find('\t'));
   }
+  // Every update changes the stored value, including dee-only updates.
+  bool advance_tick = true;
+  if (advance_tick)
+    ++tick_;
   if (commits > 0) {
     if (v.commits < 0)
       v.commits = -v.commits;  // revive a deleted item
     v.commits += commits;
-    UpdateTickCount(1);
     v.dee = algo::formula_d(commits, (double)tick_, v.dee, (double)v.tick);
   } else if (commits == 0) {
     const double k = 0.1;
@@ -785,8 +798,14 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry,
     v.dee = algo::formula_d(0.0, (double)tick_, v.dee, (double)v.tick);
   }
   v.tick = tick_;
-  if (!db_->Update(key, v.Pack()))
+  if (!db_->Update(key, v.Pack())) {
+    tick_ = previous_tick;
     return false;
+  }
+  if (advance_tick && !db_->MetaUpdate("/tick", std::to_string(tick_))) {
+    tick_ = previous_tick;
+    return false;
+  }
 
   // track change in pending_ for cache consistency
   PendingUpdate pu;
@@ -810,8 +829,10 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry,
     pending_[pu.code + '\t' + pu.text] = pu;
   }
   // periodically rebuild cache if pending_ grows too large
+#if RIME_USER_DICT_CACHE_ENABLED
   if (pending_.size() > 1000)
     BuildCache();
+#endif
   return true;
 }
 
@@ -861,7 +882,9 @@ bool UserDictionary::RevertRecentTransaction() {
     return false;
   // DB was rolled back; pending_ and cache_ are now inconsistent
   pending_.clear();
+#if RIME_USER_DICT_CACHE_ENABLED
   cache_built_ = false;
+#endif
   return true;
 }
 
