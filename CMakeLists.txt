@@ -62,7 +62,9 @@ if(MSVC)
   set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
-if(LINUX)
+# `LINUX` is only defined by CMake >= 3.25; use the portable check so
+# older CMake (e.g. Ubuntu 22.04) takes the regex-component branch.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   find_package(Boost 1.74.0 REQUIRED COMPONENTS regex)
 else()
   find_package(Boost 1.77.0)
