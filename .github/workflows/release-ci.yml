@@ -33,11 +33,10 @@ jobs:
           merge-multiple: true
 
       - name: Checkout last commit
-        if: github.ref_type == 'tag'
         uses: actions/checkout@v7
 
       - name: Build changelog
-        if: github.ref_type == 'tag'
+        if: ${{ github.ref_type == 'tag' }}
         id: build_changelog
         uses: mikepenz/release-changelog-builder-action@v6
         with:
@@ -50,6 +49,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Remove previous nightly release
+        if: ${{ github.ref_type != 'tag' }}
+        continue-on-error: true
+        run: |
+          gh release delete --yes --cleanup-tag latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create Nightly release
         if: ${{ github.repository == 'rime/librime' && github.ref == 'refs/heads/master' }}
         uses: softprops/action-gh-release@v3
@@ -61,7 +68,7 @@ jobs:
             artifact/*
 
       - name: Create Stable release
-        if: github.ref_type == 'tag'
+        if: ${{ github.ref_type == 'tag' }}
         uses: softprops/action-gh-release@v3
         with:
           draft: true
