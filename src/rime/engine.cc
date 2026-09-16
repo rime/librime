@@ -380,7 +380,8 @@ void ConcreteEngine::InitializeOptions() {
   Switches switches(config);
   switches.FindOption([this](Switches::SwitchOption option) {
     LOG(INFO) << "found switch option: " << option.option_name
-              << ", reset: " << option.reset_value;
+              << ", reset: " << option.reset_value
+              << ", default: " << option.default_value;
     if (option.reset_value >= 0) {
       if (option.type == Switches::kToggleOption) {
         context_->set_option(option.option_name, (option.reset_value != 0));
@@ -388,6 +389,16 @@ void ConcreteEngine::InitializeOptions() {
         context_->set_option(
             option.option_name,
             static_cast<int>(option.option_index) == option.reset_value);
+      }
+    } else if (option.default_value >= 0 &&
+               context_->options().find(option.option_name) ==
+                   context_->options().end()) {
+      if (option.type == Switches::kToggleOption) {
+        context_->set_option(option.option_name, (option.default_value != 0));
+      } else if (option.type == Switches::kRadioGroup) {
+        context_->set_option(
+            option.option_name,
+            static_cast<int>(option.option_index) == option.default_value);
       }
     }
     return Switches::kContinue;
