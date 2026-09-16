@@ -4,6 +4,10 @@ build*/
 debug/
 dist/
 deps/
+plugins/*/
+!plugins/CMakeLists.txt
+!plugins/plugin.cc
+!plugins/plugins_module.cc
 bin/*
 lib/*
 share/*
