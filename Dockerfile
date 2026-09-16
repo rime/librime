@@ -1,4 +1,4 @@
-FROM debian:13-slim
+FROM debian:12-slim
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
   && apt-get install -y --no-install-recommends \
