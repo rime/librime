@@ -13,6 +13,7 @@
 #include <rime/schema.h>
 #include <rime/gear/chord_composer.h>
 #include <rime/gear/key_binding_processor.h>
+#include <rime/gear/streaming_chord_processor.h>
 
 namespace rime {
 
@@ -271,6 +272,20 @@ void ChordComposer::OnUnhandledKey(Context* ctx, const KeyEvent& key) {
     raw_sequence_.clear();
     DLOG(INFO) << "clear raw sequence.";
   }
+}
+
+// 工廠分發模式
+
+Processor* ChordComposerComponent::Create(const Ticket& ticket) {
+  auto* config = ticket.schema->config();
+
+  // 分支依據：若配置中聲明了 streaming_chord 段，轉入新版流式並擊組件
+  if (config && config->HasKey("streaming_chord")) {
+    return new StreamingChordProcessor(ticket);
+  }
+
+  // 否則回退實例化經典版 chord_composer
+  return new ChordComposerLegacy(ticket);
 }
 
 }  // namespace rime

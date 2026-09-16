@@ -81,6 +81,13 @@ class ChordComposer : public Processor,
   connection unhandled_key_connection_;
 };
 
+class ChordComposerComponent : public Processor::Component {
+ public:
+  using ChordComposerLegacy = ChordComposer;
+  ChordComposerComponent() {}
+  Processor* Create(const Ticket& ticket) override;
+};
+
 }  // namespace rime
 
 #endif  // RIME_CHORD_COMPOSER_H_

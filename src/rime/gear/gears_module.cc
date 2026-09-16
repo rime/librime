@@ -45,7 +45,7 @@ static void rime_gears_initialize() {
 
   // processors
   r.Register("ascii_composer", new Component<AsciiComposer>);
-  r.Register("chord_composer", new Component<ChordComposer>);
+  r.Register("chord_composer", new ChordComposerComponent);
   r.Register("express_editor", new Component<ExpressEditor>);
   r.Register("fluid_editor", new Component<FluidEditor>);
   r.Register("fluency_editor", new Component<FluidEditor>);  // alias
