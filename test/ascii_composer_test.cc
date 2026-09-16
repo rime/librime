@@ -25,8 +25,8 @@ class AsciiComposerTestEngine : public Engine {
 struct ModifierKeyPair {
   const char* name;
   const char* bound_key_name;
-  int pressed_key;
-  int released_key;
+  int other_key;
+  int bound_key;
   int modifier;
 };
 
@@ -52,39 +52,39 @@ class AsciiComposerModifierKeyTest
 TEST_P(AsciiComposerModifierKeyTest, IgnoresReleaseFromAnotherPhysicalKey) {
   const auto& keys = GetParam();
   EXPECT_EQ(kNoop, composer_->ProcessKeyEvent(
-                       KeyEvent(keys.pressed_key, keys.modifier)));
-  EXPECT_EQ(kNoop, composer_->ProcessKeyEvent(KeyEvent(
-                       keys.released_key, keys.modifier | kReleaseMask)));
+                       KeyEvent(keys.other_key, keys.modifier)));
+  EXPECT_EQ(kNoop, composer_->ProcessKeyEvent(
+                       KeyEvent(keys.bound_key, keys.modifier | kReleaseMask)));
   EXPECT_FALSE(engine_.context()->get_option("ascii_mode"));
 }
 
 TEST_P(AsciiComposerModifierKeyTest, TogglesOnMatchingRelease) {
   const auto& keys = GetParam();
   EXPECT_EQ(kNoop, composer_->ProcessKeyEvent(
-                       KeyEvent(keys.released_key, keys.modifier)));
-  EXPECT_EQ(kNoop, composer_->ProcessKeyEvent(KeyEvent(
-                       keys.released_key, keys.modifier | kReleaseMask)));
+                       KeyEvent(keys.bound_key, keys.modifier)));
+  EXPECT_EQ(kNoop, composer_->ProcessKeyEvent(
+                       KeyEvent(keys.bound_key, keys.modifier | kReleaseMask)));
   EXPECT_TRUE(engine_.context()->get_option("ascii_mode"));
 }
 
 TEST_P(AsciiComposerModifierKeyTest, IgnoresSecondPhysicalModifierKey) {
   const auto& keys = GetParam();
   EXPECT_EQ(kNoop, composer_->ProcessKeyEvent(
-                       KeyEvent(keys.pressed_key, keys.modifier)));
+                       KeyEvent(keys.other_key, keys.modifier)));
   EXPECT_EQ(kNoop, composer_->ProcessKeyEvent(
-                       KeyEvent(keys.released_key, keys.modifier)));
-  EXPECT_EQ(kNoop, composer_->ProcessKeyEvent(KeyEvent(
-                       keys.released_key, keys.modifier | kReleaseMask)));
+                       KeyEvent(keys.bound_key, keys.modifier)));
+  EXPECT_EQ(kNoop, composer_->ProcessKeyEvent(
+                       KeyEvent(keys.bound_key, keys.modifier | kReleaseMask)));
   EXPECT_FALSE(engine_.context()->get_option("ascii_mode"));
 }
 
 TEST_P(AsciiComposerModifierKeyTest, IgnoresModifierUsedWithAnotherKey) {
   const auto& keys = GetParam();
   EXPECT_EQ(kNoop, composer_->ProcessKeyEvent(
-                       KeyEvent(keys.released_key, keys.modifier)));
+                       KeyEvent(keys.bound_key, keys.modifier)));
   EXPECT_EQ(kNoop, composer_->ProcessKeyEvent(KeyEvent('A', keys.modifier)));
-  EXPECT_EQ(kNoop, composer_->ProcessKeyEvent(KeyEvent(
-                       keys.released_key, keys.modifier | kReleaseMask)));
+  EXPECT_EQ(kNoop, composer_->ProcessKeyEvent(
+                       KeyEvent(keys.bound_key, keys.modifier | kReleaseMask)));
   EXPECT_FALSE(engine_.context()->get_option("ascii_mode"));
 }
 
