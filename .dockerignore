@@ -1,1 +1,14 @@
-build
+.git
+.codegraph
+build*/
+debug/
+dist/
+deps/
+bin/*
+lib/*
+share/*
+include/leveldb/
+include/marisa/
+include/marisa.h
+include/opencc/
+include/yaml-cpp/
