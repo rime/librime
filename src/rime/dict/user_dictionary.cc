@@ -529,9 +529,6 @@ bool UserDictionary::TranslateCodeToString(const Code& code, string* result) {
   return true;
 }
 
-// Corresponds to log2(1/T)*200*ln(2) ticks.
-constexpr double kDiscardThreshold = 1e-200;
-
 an<DictEntry> UserDictionary::CreateDictEntry(const string& key,
                                               const string& value,
                                               TickCount present_tick,
@@ -551,7 +548,7 @@ an<DictEntry> UserDictionary::CreateDictEntry(const string& key,
     v.dee = algo::formula_d(0, (double)present_tick, v.dee, (double)v.tick);
   // tick==0: table/stabledb phrases (custom_phrase.txt etc.) never entered
   // userdb decay. Discard only aged user-history entries.
-  if (v.tick != 0 && v.dee <= kDiscardThreshold)
+  if (v.tick != 0 && v.dee <= kUserDbDiscardThreshold)
     return e;
   // create!
   e = New<DictEntry>();

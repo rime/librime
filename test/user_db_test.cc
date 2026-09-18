@@ -5,6 +5,8 @@
 // 2011-07-03 GONG Chen <chen.sst@gmail.com>
 //
 #include <gtest/gtest.h>
+#include <cmath>
+#include <limits>
 #include <rime/algo/syllabifier.h>
 #include <rime/dict/text_db.h>
 #include <rime/dict/user_db.h>
@@ -88,4 +90,108 @@ TEST(RimeUserDbTest, Query) {
     EXPECT_FALSE(accessor->GetNextRecord(&key, &value));
   }
   db.Close();
+}
+
+TEST(RimeUserDbValueTest, PackUnpackRoundtripNormal) {
+  UserDbValue original;
+  original.commits = 42;
+  original.dee = 1.23456;
+  original.tick = 1000;
+
+  string packed = original.Pack();
+  EXPECT_EQ("c=42 d=1.23456 t=1000", packed);
+
+  UserDbValue restored(packed);
+  EXPECT_EQ(42, restored.commits);
+  EXPECT_DOUBLE_EQ(1.23456, restored.dee);
+  EXPECT_EQ(1000u, restored.tick);
+}
+
+TEST(RimeUserDbValueTest, PackUnpackRoundtripZero) {
+  UserDbValue original;
+  original.commits = 0;
+  original.dee = 0.0;
+  original.tick = 0;
+
+  string packed = original.Pack();
+  UserDbValue restored(packed);
+  EXPECT_EQ(0, restored.commits);
+  EXPECT_DOUBLE_EQ(0.0, restored.dee);
+  EXPECT_EQ(0u, restored.tick);
+}
+
+TEST(RimeUserDbValueTest, PackUnpackRoundtripSmallNormal) {
+  // A small but normal (non-denormal) positive value that is still above
+  // kUserDbDiscardThreshold, so it must round-trip unchanged.
+  UserDbValue original;
+  original.commits = 7;
+  original.dee = 3e-150;
+  original.tick = 999;
+
+  string packed = original.Pack();
+  UserDbValue restored(packed);
+  EXPECT_EQ(7, restored.commits);
+  EXPECT_DOUBLE_EQ(3e-150, restored.dee);
+  EXPECT_EQ(999u, restored.tick);
+}
+
+TEST(RimeUserDbValueTest, PackClampsAgedOutDee) {
+  // Normal values at or below kUserDbDiscardThreshold are aged out (they
+  // would be discarded on load), so Pack() must serialize them as zero to
+  // keep the stored state consistent with the discard semantics.
+  UserDbValue aged;
+  aged.commits = 3;
+  aged.dee = 1e-250;  // normal, but below the discard threshold
+  aged.tick = 777;
+
+  string packed = aged.Pack();
+  EXPECT_EQ("c=3 d=0 t=777", packed);
+  UserDbValue restored(packed);
+  EXPECT_DOUBLE_EQ(0.0, restored.dee);
+
+  // The exact threshold value is discarded too (<= comparison).
+  UserDbValue at_threshold;
+  at_threshold.dee = kUserDbDiscardThreshold;
+  UserDbValue restored2(at_threshold.Pack());
+  EXPECT_DOUBLE_EQ(0.0, restored2.dee);
+}
+
+TEST(RimeUserDbValueTest, UnpackSurvivesDenormal) {
+  // Simulate an entry written by a buggy older version that serialized a
+  // denormal float. Unpack MUST NOT fail; it should treat the denormal as
+  // effectively zero (below the representable normal range).
+  const string denormal_entry = "c=16 d=9.88131e-324 t=1449225";
+  UserDbValue v(denormal_entry);
+  EXPECT_EQ(16, v.commits);
+  EXPECT_EQ(1449225u, v.tick);
+  // dee should not throw or leave the field uninitialized; it must be
+  // representable as a normal non-negative double (0 is acceptable).
+  EXPECT_GE(v.dee, 0.0);
+  EXPECT_FALSE(std::isnan(v.dee));
+}
+
+TEST(RimeUserDbValueTest, PackThenUnpackDenormalIsClamped) {
+  // Setting dee to a denormal in memory and Pack()ing it must produce a
+  // string that Unpack() can parse back without error — the round-trip must
+  // not lose the record. Denormals fall below kUserDbDiscardThreshold and
+  // are therefore clamped to exactly zero.
+  UserDbValue original;
+  original.commits = 5;
+  original.dee = std::numeric_limits<double>::denorm_min();  // ~4.94e-324
+  original.tick = 12345;
+
+  string packed = original.Pack();
+  UserDbValue restored;
+  ASSERT_TRUE(restored.Unpack(packed))
+      << "Unpack failed on packed string: " << packed;
+  EXPECT_EQ(5, restored.commits);
+  EXPECT_EQ(12345u, restored.tick);
+  EXPECT_DOUBLE_EQ(0.0, restored.dee);
+}
+
+TEST(RimeUserDbValueTest, UnpackRejectsGarbage) {
+  // Fields that are not numbers at all should still be rejected (the
+  // Unpack() contract is not "accept anything").
+  UserDbValue v;
+  EXPECT_FALSE(v.Unpack("c=abc d=xyz t=qqq"));
 }
