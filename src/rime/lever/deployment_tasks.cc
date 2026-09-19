@@ -24,6 +24,7 @@
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
 #include <rime/lever/deployment_tasks.h>
+#include <rime/lever/rewrite_compiler.h>
 #include <rime/lever/user_dict_manager.h>
 #ifdef _WIN32
 #include <windows.h>
@@ -344,14 +345,33 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   if (!config_file_update->Run(deployer)) {
     return false;
   }
-  // reload compiled config
+  // Reload the compiled schema. Rewrite packs are deployment artifacts, so
+  // compile them here before the optional dictionary build. This also allows
+  // schemas without translator/dictionary to use rewriter.
   config.reset(Config::Require("schema")->Create(schema_id));
+  if (!config) {
+    LOG(ERROR) << "Error loading compiled schema '" << schema_id << "'.";
+    return false;
+  }
+
+  if (!MaybeCreateDirectory(deployer->staging_dir)) {
+    return false;
+  }
+
+  Schema schema(schema_id, config.release());
+  RewriteCompiler rewrite_compiler(&schema, deployer);
+  if (!rewrite_compiler.Compile()) {
+    LOG(ERROR) << "rewrite pack for schema '" << schema_id
+               << "' failed to compile.";
+    return false;
+  }
+
   string dict_name;
-  if (!config->GetString("translator/dictionary", &dict_name)) {
-    // not requiring a dictionary
+  if (!schema.config()->GetString("translator/dictionary", &dict_name)) {
+    // Not requiring a dictionary. The rewrite pack has already been built.
     return true;
   }
-  Schema schema(schema_id, config.release());
+
   the<Dictionary> dict(
       Dictionary::Require("dictionary")->Create({&schema, "translator"}));
   if (!dict) {
@@ -361,9 +381,6 @@ bool SchemaUpdate::Run(Deployer* deployer) {
 
   LOG(INFO) << "preparing dictionary '" << dict_name << "'.";
   const path& user_data_path(deployer->user_data_dir);
-  if (!MaybeCreateDirectory(deployer->staging_dir)) {
-    return false;
-  }
   DictCompiler dict_compiler(dict.get());
   if (verbose_) {
     dict_compiler.set_options(DictCompiler::kRebuild | DictCompiler::kDump);
