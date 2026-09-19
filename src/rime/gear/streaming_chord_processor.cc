@@ -64,15 +64,33 @@ StreamingChordProcessor::StreamingChordProcessor(const Ticket& ticket)
         keycode = ke.keycode();
       }
 
-      auto it_str = target_str.begin();
-      char32_t target_ch = utf8::unchecked::next(it_str);
       if (keycode != 0) {
+        auto it_str = target_str.begin();
+        char32_t target_ch = utf8::unchecked::next(it_str);
         key_map_[keycode] = target_ch;
+
+        // 非字母的並擊鍵 (空格、分號等)，自動註冊爲雙功能鍵
+        if (keycode >= 0x20 && keycode <= 0x7e && !std::isalpha(keycode)) {
+          dual_role_keys_.insert(keycode);
+        }
       }
     }
   }
 
-  // 3. 並擊和弦標準化運算
+  // 3. 額外配置補充 (可選，允許手動覆蓋或指定非 ASCII 功能鍵)
+  if (an<ConfigList> dual_list =
+          config->GetList("streaming_chord/dual_role_keys")) {
+    for (size_t i = 0; i < dual_list->size(); ++i) {
+      if (auto val = dual_list->GetValueAt(i)) {
+        KeyEvent ke;
+        if (ke.Parse(val->str()) && ke.keycode() != 0) {
+          dual_role_keys_.insert(ke.keycode());
+        }
+      }
+    }
+  }
+
+  // 4. 並擊和弦標準化運算
   if (an<ConfigList> rules = config->GetList("streaming_chord/canonicalize")) {
     the<Projection> canonicalizer(new Projection());
     if (canonicalizer->Load(rules)) {
@@ -93,18 +111,23 @@ bool StreamingChordProcessor::IsFinal(char32_t key) const {
   return final_keys_.find(key) != std::u32string::npos;
 }
 
+bool StreamingChordProcessor::IsDualRoleKey(int keycode) const {
+  // 必須「參與了並擊映射」且「登記在雙功能清單中」，二者缺一不可
+  return key_map_.find(keycode) != key_map_.end() &&
+         dual_role_keys_.find(keycode) != dual_role_keys_.end();
+}
+
 char32_t StreamingChordProcessor::ConvertToChordKey(int keycode) const {
   auto it = key_map_.find(keycode);
   if (it != key_map_.end()) {
     return it->second;
-  } else {
-    return static_cast<char32_t>(keycode);
   }
+  return static_cast<char32_t>(keycode);
 }
 
 void StreamingChordProcessor::ResetTracking() {
   last_key_event_ = {};
-  pending_space_ = {};
+  pending_solo_key_ = {};
   pressed_chord_keys_.clear();
   current_chord_start_ = 0;
 }
@@ -156,22 +179,29 @@ ProcessResult StreamingChordProcessor::HandleChordKey(ChordKeyEvent key_event) {
   return kAccepted;
 }
 
-void StreamingChordProcessor::ReplayPendingSpace() {
-  if (!pending_space_)
+void StreamingChordProcessor::ReplayPendingKey() {
+  if (!pending_solo_key_)
     return;
-  pending_space_ = {};
-  ClearPendingSpace();
+  int keycode = pending_solo_key_.keycode;
+  pending_solo_key_ = {};
+  ClearPendingPrompt();
 
   Context* context = engine_->context();
   is_replaying_ = true;
 
-  // 若處於組詞態, 重發空格交給 selector 確認第 1 候選上屏;
-  // 空閒態則向屏幕提交原生空格
+  // 將原始按鍵重新注入引擎流水線
+  KeyEvent raw_key(keycode, 0);
+
+  // 1. 組詞態下：交給 selector 選詞或 punctuator 上屏標點
   if (context->IsComposing() && !context->input().empty()) {
-    engine_->ProcessKey(KeyEvent(XK_space, 0));
+    engine_->ProcessKey(raw_key);
   } else {
-    if (!engine_->ProcessKey(KeyEvent(XK_space, 0))) {
-      engine_->CommitText(" ");
+    // 2. 空閒態下：若下游處理器未截獲，只要屬於可列印 ASCII
+    // 範圍，直接上屏原生字元
+    if (!engine_->ProcessKey(raw_key)) {
+      if (keycode >= 0x20 && keycode <= 0x7e) {
+        engine_->CommitText(string(1, static_cast<char>(keycode)));
+      }
     }
   }
 
@@ -180,32 +210,49 @@ void StreamingChordProcessor::ReplayPendingSpace() {
 
 static const string kSpaceSymbol = "␣";
 
-void StreamingChordProcessor::DisplayPendingSpace() {
+string StreamingChordProcessor::GetPendingPrompt(int keycode) const {
+  if (keycode == XK_space) {
+    return "␣";  // 空格使用專用標記符號
+  }
+  // 可列印 ASCII 標點鍵包裹方括號，明確提示「此鍵處於待判定狀態」
+  if (keycode >= 0x20 && keycode <= 0x7e) {
+    return "[" + string(1, static_cast<char>(keycode)) + "]";
+  }
+  return "·";
+}
+
+void StreamingChordProcessor::DisplayPendingPrompt(int keycode) {
   if (!engine_)
     return;
   Context* ctx = engine_->context();
   Composition& comp = ctx->composition();
+
+  // 若當前處於空閒態，構造一個長度爲 0 的 phony 切片承載提示符
   if (comp.empty()) {
     Segment placeholder(0, ctx->input().length());
     placeholder.tags.insert("phony");
     ctx->composition().AddSegment(placeholder);
   }
+
   auto& last_segment = comp.back();
   last_segment.tags.insert("chord_prompt");
-  last_segment.prompt = kSpaceSymbol;
+  last_segment.prompt = GetPendingPrompt(keycode);
 }
 
-void StreamingChordProcessor::ClearPendingSpace() {
+void StreamingChordProcessor::ClearPendingPrompt() {
   if (!engine_)
     return;
   Context* ctx = engine_->context();
   Composition& comp = ctx->composition();
   if (comp.empty())
     return;
+
   auto& last_segment = comp.back();
   if (comp.size() == 1 && last_segment.HasTag("phony")) {
+    // 若只有虛擬切片，徹底清空 context，使 emacs-rime 關閉浮動框
     ctx->Clear();
   } else if (last_segment.HasTag("chord_prompt")) {
+    // 若是在正常組詞中途暫存，僅抹去提示符文字與標籤
     last_segment.prompt.clear();
     last_segment.tags.erase("chord_prompt");
   }
@@ -230,14 +277,13 @@ ProcessResult StreamingChordProcessor::ProcessKeyEvent(
   }
 
   Context* context = engine_->context();
-
   int keycode = key_event.keycode();
 
   // 1. 抬鍵處理 (純被動監聽, 絕不阻斷)
   if (key_event.release()) {
-    // 孤立空格抬起, 確證爲單擊選詞/出真空格, 手指一抬即時結算
-    if (keycode == XK_space && pending_space_) {
-      ReplayPendingSpace();
+    // 孤立雙功能鍵抬起 (單擊空格出空/選詞, 單擊分號出分號), 手指一抬即時結算
+    if (pending_solo_key_ && keycode == pending_solo_key_.keycode) {
+      ReplayPendingKey();
       ResetTracking();
       return kAccepted;
     }
@@ -266,53 +312,56 @@ ProcessResult StreamingChordProcessor::ProcessKeyEvent(
   char32_t chord_key = ConvertToChordKey(keycode);
   auto now = std::chrono::steady_clock::now();
 
-  // 2. 處理空格鍵
-  if (keycode == XK_space) {
-    ChordKeyEvent space_key{keycode, chord_key, now};
+  // 2. 處理雙功能鍵 (空格、分號等)
+  if (IsDualRoleKey(keycode)) {
+    ChordKeyEvent solo_key{keycode, chord_key, now};
 
-    // 情況 A: 前次敲擊的空格尚在暫存中 -> 檢驗是否構成雙擊
-    if (pending_space_) {
-      // 雙擊空格: 結算第 1 記空格 (組詞態選詞/空閒態出真空格),
-      // 吞掉當前第 2 記空格
-      ReplayPendingSpace();
+    // 情況 A: 前次敲擊的同一個雙功能鍵尚在暫存中 -> 檢驗是否構成連擊
+    if (pending_solo_key_ && pending_solo_key_.keycode == keycode) {
+      // 連擊雙功能鍵: 結算第 1 記, 吞掉當前第 2 記
+      ReplayPendingKey();
       ResetTracking();
       return kAccepted;
     }
 
-    // 情況 B: 檢驗是否與前序按鍵構成同和弦並擊 (如聲母後落鍵打 da)
+    // 情況 B: 檢驗是否與前序按鍵構成同和弦並擊 (如聲母後落鍵打 da 或帶調音節)
     if (last_key_event_) {
       auto delta_t = std::chrono::duration_cast<std::chrono::milliseconds>(
                          now - last_key_event_.time)
                          .count();
       if (delta_t <= chord_duration_ms_) {
-        // 判定爲同音節並擊韻母 A, 立即推入緩衝區
-        return HandleChordKey(space_key);
+        // 判定爲同音節並擊成分 (A 或 Y), 立即推入緩衝區
+        return HandleChordKey(solo_key);
       }
     }
 
-    // 情況 C: 孤立空格落鍵, 暫存等待後續鍵裁決 (支持抬鍵即上屏)
-    pending_space_ = space_key;
-    DisplayPendingSpace();
+    // 情況 C: 孤立雙功能鍵落鍵, 暫存等待後續鍵裁決 (支持抬鍵即上屏)
+    // 若此前已有其他不同的暫存鍵, 先將舊鍵重發
+    if (pending_solo_key_) {
+      ReplayPendingKey();
+    }
+    pending_solo_key_ = solo_key;
+    DisplayPendingPrompt(keycode);
     return kAccepted;
   }
 
-  // 3. 結算孤立暫存空格 (後續按鍵到達)
-  if (pending_space_) {
+  // 3. 結算孤立暫存雙功能鍵 (後續按鍵到達)
+  if (pending_solo_key_) {
     auto delta_t = std::chrono::duration_cast<std::chrono::milliseconds>(
-                       now - pending_space_.time)
+                       now - pending_solo_key_.time)
                        .count();
 
     bool is_chord_key = IsInitial(chord_key) || IsFinal(chord_key);
 
     if (is_chord_key && delta_t <= chord_duration_ms_) {
-      // 拇指超前落鍵並擊 (如 Space -> D 並擊 da): 結算暫存空格爲 A
-      ChordKeyEvent saved_space = pending_space_;
-      pending_space_ = {};
-      ClearPendingSpace();
-      FlushChordKey(saved_space);
+      // 雙功能鍵超前落鍵並擊 (如 ; -> J 打帶調音節, 或 Space -> D 打 da)
+      ChordKeyEvent saved_key = pending_solo_key_;
+      pending_solo_key_ = {};
+      ClearPendingPrompt();
+      FlushChordKey(saved_key);
     } else {
-      // 超時或按下非並擊鍵: 先前空格確認爲獨立空格, 重發結算
-      ReplayPendingSpace();
+      // 超時或按下非並擊鍵: 確證爲獨立單擊, 重發結算
+      ReplayPendingKey();
     }
   }
 

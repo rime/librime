@@ -30,6 +30,7 @@ class StreamingChordProcessor : public Processor {
  protected:
   bool IsInitial(char32_t key) const;
   bool IsFinal(char32_t key) const;
+  bool IsDualRoleKey(int keycode) const;
   // 將實體按鍵轉換爲宮保代碼
   char32_t ConvertToChordKey(int keycode) const;
   // 重置按鍵時序追蹤
@@ -38,17 +39,22 @@ class StreamingChordProcessor : public Processor {
   void FlushChordKey(ChordKeyEvent key_event);
   // 常規按鍵時序與並擊邊界處理
   ProcessResult HandleChordKey(ChordKeyEvent key_event);
-  // 重發原生空格 (組詞態選詞, 空閒態輸出真空格)
-  void ReplayPendingSpace();
-  // 顯示暫存空格標記
-  void DisplayPendingSpace();
-  // 清空暫存空格標記
-  void ClearPendingSpace();
+  // 重發原生雙功能鍵 (組詞態選詞/符號上屏, 空閒態輸出真字符)
+  void ReplayPendingKey();
+  // 暫存按鍵標記，待判定的雙功能鍵顯示爲 [落鍵字符]，空格顯示 ␣
+  string GetPendingPrompt(int keycode) const;
+  // 顯示暫存按鍵標記
+  void DisplayPendingPrompt(int keycode);
+  // 清空暫存按鍵標記
+  void ClearPendingPrompt();
   // 將已完成的並擊和弦更新爲定界的標準化和弦
   void CanonicalizeCurrentChord();
 
   // 鍵位映射表: 物理鍵碼 -> 宮保代碼
-  std::map<int, char32_t> key_map_;
+  map<int, char32_t> key_map_;
+
+  // 雙功能鍵清單 (單擊回放原始鍵, 並擊充當和弦碼)
+  set<int> dual_role_keys_;
 
   // 方案配置參數
   std::u32string initial_keys_;    // 方案聲母/首部鍵集
@@ -60,11 +66,11 @@ class StreamingChordProcessor : public Processor {
 
   // 時序狀態追蹤
   ChordKeyEvent last_key_event_;
-  ChordKeyEvent pending_space_;  // 空閒態/孤立空格暫存
+  ChordKeyEvent pending_solo_key_;  // 空閒態/孤立雙功能鍵暫存 (空格/分號等)
 
   // 物理抬鍵追蹤狀態
-  std::set<int> pressed_chord_keys_;  // 當前處於按下狀態的並擊鍵集合
-  size_t current_chord_start_;        // 當前並擊和弦的編碼起始位置
+  set<int> pressed_chord_keys_;     // 當前處於按下狀態的並擊鍵集合
+  size_t current_chord_start_ = 0;  // 當前並擊和弦的編碼起始位置
 
   // 防遞歸標記
   bool is_replaying_ = false;
