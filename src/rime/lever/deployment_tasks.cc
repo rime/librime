@@ -386,6 +386,10 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
                    << "' failed to compile.";
         return false;
       }
+    } catch (const std::bad_alloc& ex) {
+      LOG(ERROR) << "dictionary '" << unit.dict_name
+                 << "' ran out of memory: " << ex.what();
+      return false;
     } catch (const std::exception& ex) {
       LOG(ERROR) << "dictionary '" << unit.dict_name
                  << "' threw an exception: " << ex.what();
@@ -408,16 +412,16 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
               << " dictionaries in parallel.";
     unsigned hw_concurrency =
         (std::max)(1u, std::thread::hardware_concurrency());
-    const unsigned kMaxConcurrency = 8;
+    const unsigned kMaxConcurrency = 4;
     hw_concurrency = (std::min)(hw_concurrency, kMaxConcurrency);
     // limit the memory used by one batch to a fraction of physical memory;
     // dictionary compilation is memory heavy (entry collector + trie/prism
     // building), so a conservative estimate per dictionary is used
-    uint64_t memory_budget = DetectTotalPhysicalMemory() / 4;
+    uint64_t memory_budget = DetectTotalPhysicalMemory() / 8;
     if (memory_budget == 0) {
-      memory_budget = (uint64_t)2 * 1024 * 1024 * 1024;  // fallback 2GB
+      memory_budget = (uint64_t)512 * 1024 * 1024;  // fallback 512MB
     }
-    const uint64_t kEstimatedBytesPerSourceByte = 16;
+    const uint64_t kEstimatedBytesPerSourceByte = 32;
     the<ResourceResolver> source_resolver(
         Service::instance().CreateResourceResolver({"source_file", "", ""}));
     vector<pair<uint64_t, size_t>> sized;
@@ -459,10 +463,15 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
         }));
       }
       for (auto& future : futures) {
-        if (future.get())
-          ++success;
-        else
+        try {
+          if (future.get())
+            ++success;
+          else
+            ++failure;
+        } catch (const std::exception& ex) {
+          LOG(ERROR) << "parallel compilation failed: " << ex.what();
           ++failure;
+        }
       }
       begin = end;
     }
