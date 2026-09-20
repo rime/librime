@@ -5,6 +5,7 @@
 // 2011-11-23 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
+#include <cctype>
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
@@ -233,10 +234,7 @@ void KeyBindings::Bind(const KeyEvent& key, const KeyBinding& binding) {
 }
 
 KeyBinder::KeyBinder(const Ticket& ticket)
-    : Processor(ticket),
-      key_bindings_(new KeyBindings),
-      redirecting_(false),
-      last_key_(0) {
+    : Processor(ticket), key_bindings_(new KeyBindings) {
   LoadConfig();
 }
 
@@ -271,18 +269,52 @@ KeyBindingConditions::KeyBindingConditions(Context* ctx) {
 ProcessResult KeyBinder::ProcessKeyEvent(const KeyEvent& key_event) {
   if (redirecting_ || !key_bindings_ || key_bindings_->empty())
     return kNoop;
+
+  // 1. 若上一鍵確實觸發了翻頁，且當前鍵是字母，則執行補償重釋
   if (ReinterpretPagingKey(key_event))
     return kNoop;
-  if (key_bindings_->find(key_event) == key_bindings_->end())
+
+  if (key_bindings_->find(key_event) == key_bindings_->end()) {
+    // 沒命中任何綁定，此鍵不是翻頁鍵，清除記錄
+    if (!key_event.release()) {
+      last_paging_key_ = 0;
+      paging_keystroke_count_ = 0;
+    }
     return kNoop;
+  }
+
   KeyBindingConditions conditions(engine_->context());
   for (const KeyBinding& binding : (*key_bindings_)[key_event]) {
     if (conditions.find(binding.whence) == conditions.end())
       continue;
+
+    // 1. 運行時檢查是否真正觸發了翻頁（不論上翻還是下翻）
+    bool is_paging = std::any_of(
+        binding.target.begin(), binding.target.end(), [](const KeyEvent& k) {
+          return k.keycode() == XK_Page_Down ||
+                 k.keycode() == XK_KP_Page_Down || k.keycode() == XK_Page_Up ||
+                 k.keycode() == XK_KP_Page_Up;
+        });
+
+    // 2. 只有運行時真正派發了翻頁動作，才記錄該鍵等待後續字母驗證重釋
+    if (is_paging) {
+      last_paging_key_ = key_event.keycode();
+      paging_keystroke_count_++;
+    } else {
+      last_paging_key_ = 0;
+      paging_keystroke_count_ = 0;
+    }
+
     PerformKeyBinding(binding);
+
     return kAccepted;
   }
-  // not handled
+
+  // 未執行綁定，清除記錄
+  if (!key_event.release()) {
+    last_paging_key_ = 0;
+    paging_keystroke_count_ = 0;
+  }
   return kNoop;
 }
 
@@ -307,28 +339,27 @@ void KeyBinder::LoadConfig() {
 }
 
 bool KeyBinder::ReinterpretPagingKey(const KeyEvent& key_event) {
-  if (key_event.release())
+  if (key_event.release() || key_event.modifier() != 0)
     return false;
-  bool ret = false;
-  int ch = (key_event.modifier() == 0) ? key_event.keycode() : 0;
-  // reinterpret period key followed by alphabetic keys
-  // unless period/comma key has been used multiple times
-  if (ch == '.' && (last_key_ == '.' || last_key_ == ',')) {
-    last_key_ = 0;
-    return ret;
-  }
-  if (last_key_ == '.' && ch >= 'a' && ch <= 'z') {
+
+  int ch = key_event.keycode();
+
+  // 只有恰好只按過一次翻頁鍵，且該鍵是 '.'，後接字母才算敲網址
+  if (paging_keystroke_count_ == 1 && last_paging_key_ == '.' &&
+      std::isalpha(ch)) {
     Context* ctx = engine_->context();
     const string& input(ctx->input());
-    if (!input.empty() && input[input.length() - 1] != '.') {
-      LOG(INFO) << "reinterpreted key: '" << last_key_ << "', successor: '"
-                << (char)ch << "'";
-      ctx->PushInput(last_key_);
-      ret = true;
+    if (!input.empty() && input.back() != '.') {
+      LOG(INFO) << "reinterpreted paging key: '" << (char)last_paging_key_
+                << "', successor: '" << (char)ch << "'";
+      ctx->PushInput(last_paging_key_);
+      last_paging_key_ = 0;
+      paging_keystroke_count_ = 0;
+      return true;
     }
   }
-  last_key_ = ch;
-  return ret;
+
+  return false;
 }
 
 }  // namespace rime

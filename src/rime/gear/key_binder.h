@@ -27,8 +27,10 @@ class KeyBinder : public Processor {
   void PerformKeyBinding(const KeyBinding& binding);
 
   the<KeyBindings> key_bindings_;
-  bool redirecting_;
-  int last_key_;
+  bool redirecting_ = false;
+  // 記錄上一記「真正執行了翻頁」的按鍵鍵碼（0 表示無待重釋鍵）
+  int last_paging_key_ = 0;
+  int paging_keystroke_count_ = 0;
 };
 
 }  // namespace rime
