@@ -37,15 +37,26 @@ StreamingChordProcessor::StreamingChordProcessor(const Ticket& ticket)
   config->GetInt("streaming_chord/chord_timeout_ms", &chord_timeout_ms_);
   config->GetInt("streaming_chord/chord_duration_ms", &chord_duration_ms_);
 
-  string delim = "'";
-  if (config->GetString("speller/delimiter", &delim) && !delim.empty()) {
-    delimiter_ = delim[0];
-  }
-
   utf8::unchecked::utf8to32(initials.begin(), initials.end(),
                             std::back_inserter(initial_keys_));
   utf8::unchecked::utf8to32(finals.begin(), finals.end(),
                             std::back_inserter(final_keys_));
+
+  // 讀取串流隔音符號：
+  // 優先讀取 streaming_chord/delimiter (允許手動設爲 "'" 或空字串 "")
+  // 若未專門配置，則自動向 speller/delimiter 索取第一個非空格字符 (通常是 ')
+  string chord_delim;
+  if (config->GetString("streaming_chord/delimiter", &chord_delim)) {
+    delimiter_ = chord_delim;
+  } else {
+    string speller_delim;
+    if (config->GetString("speller/delimiter", &speller_delim)) {
+      auto pos = speller_delim.find_first_not_of(' ');
+      if (pos != string::npos) {
+        delimiter_ = string(1, speller_delim[pos]);  // 精確提取到可見的單引號 '
+      }
+    }
+  }
 
   // 2. 載入鍵位映射配置 (物理鍵碼 -> 宮保字母)
   if (an<ConfigMap> key_map = config->GetMap("streaming_chord/key_map")) {
@@ -130,15 +141,20 @@ void StreamingChordProcessor::ResetTracking() {
   pending_solo_key_ = {};
   pressed_chord_keys_.clear();
   current_chord_start_ = 0;
+  is_chord_open_ = false;
 }
 
 void StreamingChordProcessor::FlushChordKey(ChordKeyEvent key_event) {
   string input_str;
   utf8::unchecked::append(key_event.key, std::back_inserter(input_str));
   Context* context = engine_->context();
-  if (pressed_chord_keys_.empty()) {
+
+  // 若當前和弦尚未開啟（前一個已閉合，或是全新輸入），錨定新起點
+  if (!is_chord_open_) {
     current_chord_start_ = context->input().length();
+    is_chord_open_ = true;
   }
+
   context->PushInput(input_str);
   last_key_event_ = key_event;
   pressed_chord_keys_.insert(key_event.keycode);
@@ -153,8 +169,8 @@ ProcessResult StreamingChordProcessor::HandleChordKey(ChordKeyEvent key_event) {
     return kNoop;
   }
 
-  // 時序、相位與物理邊界三重判定
-  if (last_key_event_) {
+  // 只有當「前一個和弦依然敞開」時，時序邊界才代表「音節切分」
+  if (is_chord_open_ && last_key_event_) {
     auto delta_t = std::chrono::duration_cast<std::chrono::milliseconds>(
                        key_event.time - last_key_event_.time)
                        .count();
@@ -166,11 +182,17 @@ ProcessResult StreamingChordProcessor::HandleChordKey(ChordKeyEvent key_event) {
     bool is_phase_inversion = IsFinal(last_key_event_.key) && is_initial &&
                               (delta_t > chord_duration_ms_);
 
+    // 命中邊界：代表無抬鍵平臺（Emacs）連打時前一音節結束
     if (is_timeout_boundary || is_phase_inversion) {
-      Context* context = engine_->context();
-      context->PushInput(delimiter_);
-      // 爲無抬鍵環境做防禦性清理, 避免集合只進不出
+      // 爲無抬鍵平臺注入可見隔音符 (如 "'")，輔助 Translator 分詞
+      if (!delimiter_.empty()) {
+        Context* context = engine_->context();
+        context->PushInput(delimiter_);
+      }
+
+      // 宣告前一和弦在流式時序上已被強制截斷，復位狀態
       pressed_chord_keys_.clear();
+      is_chord_open_ = false;
       current_chord_start_ = 0;
     }
   }
@@ -261,8 +283,9 @@ void StreamingChordProcessor::ClearPendingPrompt() {
 void StreamingChordProcessor::CanonicalizeCurrentChord() {
   Context* context = engine_->context();
   auto chord = context->input().substr(current_chord_start_);
-  if (chord.length() == 0)
+  if (chord.empty())
     return;
+  // 將生和弦交由 canonicalizer 替換爲標準閉包（如 [ZFURO] 或拼音）
   if (canonicalizer_) {
     context->PopInput(chord.length());
     canonicalizer_->Apply(&chord);
@@ -279,9 +302,9 @@ ProcessResult StreamingChordProcessor::ProcessKeyEvent(
   Context* context = engine_->context();
   int keycode = key_event.keycode();
 
-  // 1. 抬鍵處理 (純被動監聽, 絕不阻斷)
+  // 1. 抬鍵處理 (有 KeyUp 事件的 GUI 平臺)
   if (key_event.release()) {
-    // 孤立雙功能鍵抬起 (單擊空格出空/選詞, 單擊分號出分號), 手指一抬即時結算
+    // 孤立雙功能鍵抬起 (單擊空格出空格/選詞, 單擊分號出分號), 手指一抬即時結算
     if (pending_solo_key_ && keycode == pending_solo_key_.keycode) {
       ReplayPendingKey();
       ResetTracking();
@@ -291,12 +314,12 @@ ProcessResult StreamingChordProcessor::ProcessKeyEvent(
     auto it = pressed_chord_keys_.find(keycode);
     if (it != pressed_chord_keys_.end()) {
       pressed_chord_keys_.erase(it);
-      // 當所有握持鍵全數釋放, 確證上一和弦結束
+      // 當所有按下的並擊鍵盡數釋放，和弦閉合
       if (pressed_chord_keys_.empty()) {
-        if (canonicalizer_ && context->IsComposing()) {
-          // 將其更新爲定界的標準化和弦
+        if (context->IsComposing()) {
           CanonicalizeCurrentChord();
         }
+        is_chord_open_ = false;  // 抬手，自然關閉
         current_chord_start_ = 0;
       }
       return kAccepted;

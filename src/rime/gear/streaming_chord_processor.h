@@ -61,7 +61,7 @@ class StreamingChordProcessor : public Processor {
   std::u32string final_keys_;      // 方案韻母/尾部鍵集
   int chord_timeout_ms_ = 120;     // 異音節連打切分超時 (ms)
   int chord_duration_ms_ = 60;     // 同和弦雙手落鍵生理容差窗口 (ms)
-  char delimiter_ = '\'';          // 隔音符號
+  string delimiter_;               // 串流隔音符號
   the<Projection> canonicalizer_;  // 並擊和弦標準化運算
 
   // 時序狀態追蹤
@@ -71,6 +71,7 @@ class StreamingChordProcessor : public Processor {
   // 物理抬鍵追蹤狀態
   set<int> pressed_chord_keys_;     // 當前處於按下狀態的並擊鍵集合
   size_t current_chord_start_ = 0;  // 當前並擊和弦的編碼起始位置
+  bool is_chord_open_ = false;      // 當前是否處於未封閉的生和弦中
 
   // 防遞歸標記
   bool is_replaying_ = false;
