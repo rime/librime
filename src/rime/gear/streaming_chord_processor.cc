@@ -113,6 +113,26 @@ StreamingChordProcessor::StreamingChordProcessor(const Ticket& ticket)
     }
   }
 
+  // 5. 載入動作和弦後綴
+  if (an<ConfigMap> action_map = config->GetMap("streaming_chord/actions")) {
+    for (auto it = action_map->begin(); it != action_map->end(); ++it) {
+      string suffix_str = it->first;
+      auto val = As<ConfigValue>(it->second);
+      if (!val || suffix_str.empty())
+        continue;
+
+      KeyEvent target_key;
+      if (target_key.Parse(val->str())) {
+        action_suffixes_.push_back({suffix_str, target_key});
+      }
+    }
+    // 按後綴長度降冪排序，確保長後綴優先匹配（如 "u1s1" 優先於 "s1"）
+    std::sort(action_suffixes_.begin(), action_suffixes_.end(),
+              [](const auto& a, const auto& b) {
+                return a.first.length() > b.first.length();
+              });
+  }
+
   // 聲明方案使用並擊特性 (啓用鼠鬚管抬鍵轉發通道)
   Context* ctx = engine_->context();
   ctx->set_option("_chord_typing", true);
@@ -126,9 +146,13 @@ bool StreamingChordProcessor::IsFinal(char32_t key) const {
   return final_keys_.find(key) != std::u32string::npos;
 }
 
+bool StreamingChordProcessor::IsMappedKey(int keycode) const {
+  return key_map_.find(keycode) != key_map_.end();
+}
+
 bool StreamingChordProcessor::IsDualRoleKey(int keycode) const {
   // 必須「參與了並擊映射」且「登記在雙功能清單中」，二者缺一不可
-  return key_map_.find(keycode) != key_map_.end() &&
+  return IsMappedKey(keycode) &&
          dual_role_keys_.find(keycode) != dual_role_keys_.end();
 }
 
@@ -167,9 +191,8 @@ void StreamingChordProcessor::FlushChordKey(ChordKeyEvent key_event) {
 ProcessResult StreamingChordProcessor::HandleChordKey(ChordKeyEvent key_event) {
   bool is_initial = IsInitial(key_event.key);
   bool is_final = IsFinal(key_event.key);
-
   // 非並擊字母交給後續組件處理
-  if (!is_initial && !is_final) {
+  if (!is_initial && !is_final && !IsMappedKey(key_event.keycode)) {
     return kNoop;
   }
 
@@ -289,12 +312,42 @@ void StreamingChordProcessor::CanonicalizeCurrentChord() {
   auto chord = context->input().substr(current_chord_start_);
   if (chord.empty())
     return;
-  // 將生和弦交由 canonicalizer 替換爲標準閉包（如 [ZFURO] 或拼音）
+
+  // 將生和弦替換爲標準閉包（如 [ZFURO] 或拼音）
   if (canonicalizer_) {
     context->PopInput(chord.length());
     canonicalizer_->Apply(&chord);
+
+    // 彈出動作後綴，若有，此時 chord 已被還原爲純淨編碼
+    KeyEvent action = PopAction(&chord);
+
     context->PushInput(chord);
+
+    // 發射下游動作（如空格確認上屏）
+    if (action.keycode() != 0) {
+      is_replaying_ = true;
+      engine_->ProcessKey(action);
+      is_replaying_ = false;
+    }
   }
+}
+
+KeyEvent StreamingChordProcessor::PopAction(string* chord) {
+  if (!chord || chord->empty() || action_suffixes_.empty()) {
+    return {};
+  }
+
+  for (const auto& pair : action_suffixes_) {
+    const string& suffix = pair.first;
+    if (chord->length() >= suffix.length() &&
+        chord->compare(chord->length() - suffix.length(), suffix.length(),
+                       suffix) == 0) {
+      chord->erase(chord->length() - suffix.length());
+      return pair.second;  // 命中：精確剝離後綴，並返回對應按鍵動作
+    }
+  }
+
+  return {};  // 未命中動作後綴，返回空事件
 }
 
 ProcessResult StreamingChordProcessor::ProcessKeyEvent(

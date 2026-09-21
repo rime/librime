@@ -30,6 +30,7 @@ class StreamingChordProcessor : public Processor {
  protected:
   bool IsInitial(char32_t key) const;
   bool IsFinal(char32_t key) const;
+  bool IsMappedKey(int keycode) const;
   bool IsDualRoleKey(int keycode) const;
   // 將實體按鍵轉換爲宮保代碼
   char32_t ConvertToChordKey(int keycode) const;
@@ -49,6 +50,8 @@ class StreamingChordProcessor : public Processor {
   void ClearPendingPrompt();
   // 將已完成的並擊和弦更新爲定界的標準化和弦
   void CanonicalizeCurrentChord();
+  // 匹配並剔除和弦尾部的動作後綴標籤，返回待執行的按鍵事件
+  KeyEvent PopAction(string* chord);
 
   // 鍵位映射表: 物理鍵碼 -> 宮保代碼
   map<int, char32_t> key_map_;
@@ -63,6 +66,7 @@ class StreamingChordProcessor : public Processor {
   int chord_duration_ms_ = 60;     // 同和弦雙手落鍵生理容差窗口 (ms)
   string delimiter_;               // 串流隔音符號
   the<Projection> canonicalizer_;  // 並擊和弦標準化運算
+  vector<pair<string, KeyEvent>> action_suffixes_;  // 動作和弦後綴
 
   // 時序狀態追蹤
   ChordKeyEvent last_key_event_;
