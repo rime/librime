@@ -177,7 +177,8 @@ an<Translation> ReverseLookupTranslator::Query(const string& input,
     } else {
       // 2012-04-08 gongchen: fetch multi-syllable words from rev-lookup table
       SyllableGraph graph;
-      Syllabifier syllabifier(options_->delimiters(), true, options_->strict_spelling());
+      Syllabifier syllabifier(options_->delimiters(), true,
+                              options_->strict_spelling());
       size_t consumed =
           syllabifier.BuildSyllableGraph(code, *dict_->prism(), &graph);
       if (consumed == code.length()) {
