@@ -16,7 +16,7 @@ class StreamingChordDualRoleTest : public ::testing::Test {
     SetupLogging("rime.test");
     engine_.reset(Engine::Create());
 
-    auto* schema = new Schema;
+    auto* schema = engine_->schema();
     auto* config = schema->config();
     config->SetString("schema/schema_id", "test_chord");
     config->SetString("streaming_chord/initial_keys", "S");
@@ -33,6 +33,7 @@ class StreamingChordDualRoleTest : public ::testing::Test {
     processors->Append(New<ConfigValue>("streaming_chord_processor"));
     config->SetItem("engine/processors", processors);
 
+    // 引擎原有方案修改配置後原位重新加載
     engine_->ApplySchema(schema);
   }
 
