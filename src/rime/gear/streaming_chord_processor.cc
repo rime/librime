@@ -1,3 +1,8 @@
+//
+// StreamingChordProcessor: 流式並擊處理器
+// 詳見架構文檔: doc/chording.md 與配置指南: doc/chording_configuration.md
+//
+
 #include "streaming_chord_processor.h"
 #include <cctype>
 #include <utf8.h>
@@ -8,18 +13,6 @@
 #include <rime/schema.h>
 #include <rime/config.h>
 #include <rime/algo/algebra.h>
-
-// 一張機, 免除異步定時器:
-// 不開闢後台定時線程, 僅依靠新落鍵觸發舊音節前置結算.
-// 二張機, 雙手並發微時差保護:
-// 若右手韻母比左手聲母提早觸底 (如 A → S, Δt = 15ms < 35ms), 手系逆轉判定爲否,
-// 不加隔音符號, 交給 canonicalizer 規範化重排爲 SA.
-// 三張機, 緩衝區同步重置:
-// 退格或提交導致輸入爲空時最後按鍵自動歸零, 防止退格後重新輸入時誤加分隔符.
-// 四張機, 拇指空格雙模分流:
-// 孤立空格落鍵暫存, 抬鍵即時結算選詞/真空格; 無抬鍵時流式雙擊亦可兜底閉環.
-// 五張機, 雙全釋放見真章:
-// 抬鍵盡釋則音節斷, 物理爲憑, 與流式時序相輔相成, 毫秒無差.
 
 namespace rime {
 
