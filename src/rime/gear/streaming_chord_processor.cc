@@ -79,24 +79,28 @@ StreamingChordProcessor::StreamingChordProcessor(const Ticket& ticket)
         auto it_str = target_str.begin();
         char32_t target_ch = utf8::unchecked::next(it_str);
         key_map_[keycode] = target_ch;
-
-        // 非字母的並擊鍵 (空格、分號等)，自動註冊爲雙功能鍵
-        if (keycode >= 0x20 && keycode <= 0x7e && !std::isalpha(keycode)) {
-          dual_role_keys_.insert(keycode);
-        }
       }
     }
   }
 
-  // 3. 額外配置補充 (可選，允許手動覆蓋或指定非 ASCII 功能鍵)
+  // 3. 載入雙功能鍵：顯式聲明優先，未聲明時自動推導
   if (an<ConfigList> dual_list =
           config->GetList("streaming_chord/dual_role_keys")) {
+    // 用戶顯式指定了名單，完全以此名單爲準
     for (size_t i = 0; i < dual_list->size(); ++i) {
       if (auto val = dual_list->GetValueAt(i)) {
         KeyEvent ke;
         if (ke.Parse(val->str()) && ke.keycode() != 0) {
           dual_role_keys_.insert(ke.keycode());
         }
+      }
+    }
+  } else {
+    // 方案未指定時，非字母的並擊鍵 (空格、分號等)，自動註冊爲雙功能鍵
+    for (const auto& pair : key_map_) {
+      int keycode = pair.first;
+      if (keycode >= 0x20 && keycode <= 0x7e && !std::isalpha(keycode)) {
+        dual_role_keys_.insert(keycode);
       }
     }
   }
@@ -339,7 +343,7 @@ ProcessResult StreamingChordProcessor::ProcessKeyEvent(
   if (IsDualRoleKey(keycode)) {
     ChordKeyEvent solo_key{keycode, chord_key, now};
 
-    // 情況 A: 前次敲擊的同一個雙功能鍵尚在暫存中 -> 檢驗是否構成連擊
+    // 情況 A: 前次敲擊的同一個雙功能鍵尚在暫存中 -> 連擊判定
     if (pending_solo_key_ && pending_solo_key_.keycode == keycode) {
       // 連擊雙功能鍵: 結算第 1 記, 吞掉當前第 2 記
       ReplayPendingKey();
@@ -347,7 +351,23 @@ ProcessResult StreamingChordProcessor::ProcessKeyEvent(
       return kAccepted;
     }
 
-    // 情況 B: 檢驗是否與前序按鍵構成同和弦並擊 (如聲母後落鍵打 da 或帶調音節)
+    // 若前一個鍵也是雙功能鍵，且在微時差窗口內，二者構成並擊
+    if (pending_solo_key_) {
+      auto delta_t = std::chrono::duration_cast<std::chrono::milliseconds>(
+                         now - pending_solo_key_.time)
+                         .count();
+      if (delta_t <= chord_duration_ms_) {
+        // 解凍前一個雙功能鍵推入 input
+        ChordKeyEvent saved_key = pending_solo_key_;
+        pending_solo_key_ = {};
+        ClearPendingPrompt();
+        FlushChordKey(saved_key);
+        // 當前鍵也是並擊成分，緊接着推入
+        return HandleChordKey(solo_key);
+      }
+    }
+
+    // 情況 B: 檢驗是否與前序按鍵構成同和弦並擊
     if (last_key_event_) {
       auto delta_t = std::chrono::duration_cast<std::chrono::milliseconds>(
                          now - last_key_event_.time)
@@ -359,7 +379,6 @@ ProcessResult StreamingChordProcessor::ProcessKeyEvent(
     }
 
     // 情況 C: 孤立雙功能鍵落鍵, 暫存等待後續鍵裁決 (支持抬鍵即上屏)
-    // 若此前已有其他不同的暫存鍵, 先將舊鍵重發
     if (pending_solo_key_) {
       ReplayPendingKey();
     }
