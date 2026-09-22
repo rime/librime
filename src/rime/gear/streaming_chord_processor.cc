@@ -1,3 +1,8 @@
+//
+// StreamingChordProcessor: 流式並擊處理器
+// 詳見架構文檔: doc/chording.md 與配置指南: doc/chording_configuration.md
+//
+
 #include "streaming_chord_processor.h"
 #include <cctype>
 #include <utf8.h>
@@ -8,18 +13,6 @@
 #include <rime/schema.h>
 #include <rime/config.h>
 #include <rime/algo/algebra.h>
-
-// 一張機, 免除異步定時器:
-// 不開闢後台定時線程, 僅依靠新落鍵觸發舊音節前置結算.
-// 二張機, 雙手並發微時差保護:
-// 若右手韻母比左手聲母提早觸底 (如 A → S, Δt = 15ms < 35ms), 手系逆轉判定爲否,
-// 不加隔音符號, 交給 canonicalizer 規範化重排爲 SA.
-// 三張機, 緩衝區同步重置:
-// 退格或提交導致輸入爲空時最後按鍵自動歸零, 防止退格後重新輸入時誤加分隔符.
-// 四張機, 拇指空格雙模分流:
-// 孤立空格落鍵暫存, 抬鍵即時結算選詞/真空格; 無抬鍵時流式雙擊亦可兜底閉環.
-// 五張機, 雙全釋放見真章:
-// 抬鍵盡釋則音節斷, 物理爲憑, 與流式時序相輔相成, 毫秒無差.
 
 namespace rime {
 
@@ -79,24 +72,28 @@ StreamingChordProcessor::StreamingChordProcessor(const Ticket& ticket)
         auto it_str = target_str.begin();
         char32_t target_ch = utf8::unchecked::next(it_str);
         key_map_[keycode] = target_ch;
-
-        // 非字母的並擊鍵 (空格、分號等)，自動註冊爲雙功能鍵
-        if (keycode >= 0x20 && keycode <= 0x7e && !std::isalpha(keycode)) {
-          dual_role_keys_.insert(keycode);
-        }
       }
     }
   }
 
-  // 3. 額外配置補充 (可選，允許手動覆蓋或指定非 ASCII 功能鍵)
+  // 3. 載入雙功能鍵：顯式聲明優先，未聲明時自動推導
   if (an<ConfigList> dual_list =
           config->GetList("streaming_chord/dual_role_keys")) {
+    // 用戶顯式指定了名單，完全以此名單爲準
     for (size_t i = 0; i < dual_list->size(); ++i) {
       if (auto val = dual_list->GetValueAt(i)) {
         KeyEvent ke;
         if (ke.Parse(val->str()) && ke.keycode() != 0) {
           dual_role_keys_.insert(ke.keycode());
         }
+      }
+    }
+  } else {
+    // 方案未指定時，非字母的並擊鍵 (空格、分號等)，自動註冊爲雙功能鍵
+    for (const auto& pair : key_map_) {
+      int keycode = pair.first;
+      if (keycode >= 0x20 && keycode <= 0x7e && !std::isalpha(keycode)) {
+        dual_role_keys_.insert(keycode);
       }
     }
   }
@@ -107,6 +104,26 @@ StreamingChordProcessor::StreamingChordProcessor(const Ticket& ticket)
     if (canonicalizer->Load(rules)) {
       canonicalizer_ = std::move(canonicalizer);
     }
+  }
+
+  // 5. 載入動作和弦後綴
+  if (an<ConfigMap> action_map = config->GetMap("streaming_chord/actions")) {
+    for (auto it = action_map->begin(); it != action_map->end(); ++it) {
+      string suffix_str = it->first;
+      auto val = As<ConfigValue>(it->second);
+      if (!val || suffix_str.empty())
+        continue;
+
+      KeyEvent target_key;
+      if (target_key.Parse(val->str())) {
+        action_suffixes_.push_back({suffix_str, target_key});
+      }
+    }
+    // 按後綴長度降冪排序，確保長後綴優先匹配（如 "u1s1" 優先於 "s1"）
+    std::sort(action_suffixes_.begin(), action_suffixes_.end(),
+              [](const auto& a, const auto& b) {
+                return a.first.length() > b.first.length();
+              });
   }
 
   // 聲明方案使用並擊特性 (啓用鼠鬚管抬鍵轉發通道)
@@ -122,9 +139,13 @@ bool StreamingChordProcessor::IsFinal(char32_t key) const {
   return final_keys_.find(key) != std::u32string::npos;
 }
 
+bool StreamingChordProcessor::IsMappedKey(int keycode) const {
+  return key_map_.find(keycode) != key_map_.end();
+}
+
 bool StreamingChordProcessor::IsDualRoleKey(int keycode) const {
   // 必須「參與了並擊映射」且「登記在雙功能清單中」，二者缺一不可
-  return key_map_.find(keycode) != key_map_.end() &&
+  return IsMappedKey(keycode) &&
          dual_role_keys_.find(keycode) != dual_role_keys_.end();
 }
 
@@ -163,9 +184,8 @@ void StreamingChordProcessor::FlushChordKey(ChordKeyEvent key_event) {
 ProcessResult StreamingChordProcessor::HandleChordKey(ChordKeyEvent key_event) {
   bool is_initial = IsInitial(key_event.key);
   bool is_final = IsFinal(key_event.key);
-
   // 非並擊字母交給後續組件處理
-  if (!is_initial && !is_final) {
+  if (!is_initial && !is_final && !IsMappedKey(key_event.keycode)) {
     return kNoop;
   }
 
@@ -285,12 +305,42 @@ void StreamingChordProcessor::CanonicalizeCurrentChord() {
   auto chord = context->input().substr(current_chord_start_);
   if (chord.empty())
     return;
-  // 將生和弦交由 canonicalizer 替換爲標準閉包（如 [ZFURO] 或拼音）
+
+  // 將生和弦替換爲標準閉包（如 [ZFURO] 或拼音）
   if (canonicalizer_) {
     context->PopInput(chord.length());
     canonicalizer_->Apply(&chord);
+
+    // 彈出動作後綴，若有，此時 chord 已被還原爲純淨編碼
+    KeyEvent action = PopAction(&chord);
+
     context->PushInput(chord);
+
+    // 發射下游動作（如空格確認上屏）
+    if (action.keycode() != 0) {
+      is_replaying_ = true;
+      engine_->ProcessKey(action);
+      is_replaying_ = false;
+    }
   }
+}
+
+KeyEvent StreamingChordProcessor::PopAction(string* chord) {
+  if (!chord || chord->empty() || action_suffixes_.empty()) {
+    return {};
+  }
+
+  for (const auto& pair : action_suffixes_) {
+    const string& suffix = pair.first;
+    if (chord->length() >= suffix.length() &&
+        chord->compare(chord->length() - suffix.length(), suffix.length(),
+                       suffix) == 0) {
+      chord->erase(chord->length() - suffix.length());
+      return pair.second;  // 命中：精確剝離後綴，並返回對應按鍵動作
+    }
+  }
+
+  return {};  // 未命中動作後綴，返回空事件
 }
 
 ProcessResult StreamingChordProcessor::ProcessKeyEvent(
@@ -339,7 +389,7 @@ ProcessResult StreamingChordProcessor::ProcessKeyEvent(
   if (IsDualRoleKey(keycode)) {
     ChordKeyEvent solo_key{keycode, chord_key, now};
 
-    // 情況 A: 前次敲擊的同一個雙功能鍵尚在暫存中 -> 檢驗是否構成連擊
+    // 情況 A: 前次敲擊的同一個雙功能鍵尚在暫存中 -> 連擊判定
     if (pending_solo_key_ && pending_solo_key_.keycode == keycode) {
       // 連擊雙功能鍵: 結算第 1 記, 吞掉當前第 2 記
       ReplayPendingKey();
@@ -347,7 +397,23 @@ ProcessResult StreamingChordProcessor::ProcessKeyEvent(
       return kAccepted;
     }
 
-    // 情況 B: 檢驗是否與前序按鍵構成同和弦並擊 (如聲母後落鍵打 da 或帶調音節)
+    // 若前一個鍵也是雙功能鍵，且在微時差窗口內，二者構成並擊
+    if (pending_solo_key_) {
+      auto delta_t = std::chrono::duration_cast<std::chrono::milliseconds>(
+                         now - pending_solo_key_.time)
+                         .count();
+      if (delta_t <= chord_duration_ms_) {
+        // 解凍前一個雙功能鍵推入 input
+        ChordKeyEvent saved_key = pending_solo_key_;
+        pending_solo_key_ = {};
+        ClearPendingPrompt();
+        FlushChordKey(saved_key);
+        // 當前鍵也是並擊成分，緊接着推入
+        return HandleChordKey(solo_key);
+      }
+    }
+
+    // 情況 B: 檢驗是否與前序按鍵構成同和弦並擊
     if (last_key_event_) {
       auto delta_t = std::chrono::duration_cast<std::chrono::milliseconds>(
                          now - last_key_event_.time)
@@ -359,7 +425,6 @@ ProcessResult StreamingChordProcessor::ProcessKeyEvent(
     }
 
     // 情況 C: 孤立雙功能鍵落鍵, 暫存等待後續鍵裁決 (支持抬鍵即上屏)
-    // 若此前已有其他不同的暫存鍵, 先將舊鍵重發
     if (pending_solo_key_) {
       ReplayPendingKey();
     }

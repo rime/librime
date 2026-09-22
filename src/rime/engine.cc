@@ -284,7 +284,10 @@ void ConcreteEngine::OnSelect(Context* ctx) {
 void ConcreteEngine::ApplySchema(Schema* schema) {
   if (!schema)
     return;
-  schema_.reset(schema);
+  // 支持 this->schema() 原位重新加載
+  if (schema != schema_.get()) {
+    schema_.reset(schema);
+  }
   context_->Clear();
   context_->ClearTransientOptions();
   InitializeComponents();
