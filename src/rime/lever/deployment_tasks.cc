@@ -23,7 +23,9 @@
 #include <rime/algo/utilities.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
+#include <rime/gear/rewriter.h>
 #include <rime/lever/deployment_tasks.h>
+#include <rime/lever/rewrite_compiler.h>
 #include <rime/lever/user_dict_manager.h>
 #ifdef _WIN32
 #include <windows.h>
@@ -187,15 +189,20 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     return false;
   }
 
+  const bool rewrite_workspace_started =
+      RewriteCompiler::BeginWorkspace(deployer);
+
   LOG(INFO) << "updating schemas.";
   int success = 0;
   int failure = 0;
   map<string, path> schemas;
+  vector<string> active_schema_ids;
   the<ResourceResolver> resolver(Service::instance().CreateResourceResolver(
       {"schema_source_file", "", ".schema.yaml"}));
   auto build_schema = [&](const string& schema_id, bool as_dependency = false) {
     if (schemas.find(schema_id) != schemas.end())  // already built
       return;
+    active_schema_ids.push_back(schema_id);
     LOG(INFO) << "schema: " << schema_id;
     path schema_path;
     if (schemas.find(schema_id) == schemas.end()) {
@@ -244,6 +251,16 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
       }
     }
   }
+  if (rewrite_workspace_started) {
+    Rewriter::ReleaseStagesForDeployment();
+    if (!RewriteCompiler::FinalizeWorkspace(active_schema_ids, deployer)) {
+      LOG(WARNING) << "failed to finalize shared rewrite store.";
+      if (!RewriteCompiler::AbortWorkspace(deployer)) {
+        LOG(WARNING) << "failed to roll back shared rewrite store.";
+      }
+    }
+  }
+
   LOG(INFO) << "finished updating schemas: " << success << " success, "
             << failure << " failure.";
 
@@ -346,9 +363,20 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   }
   // reload compiled config
   config.reset(Config::Require("schema")->Create(schema_id));
+
+  auto compile_rewriter = [&]() {
+    the<Config> rewrite_config(Config::Require("schema")->Create(schema_id));
+    RewriteCompiler rewrite_compiler(schema_id, rewrite_config.get(), deployer);
+    if (!rewrite_compiler.Compile()) {
+      LOG(WARNING) << "rewrite data for schema '" << schema_id
+                   << "' was not updated.";
+    }
+  };
+
   string dict_name;
   if (!config->GetString("translator/dictionary", &dict_name)) {
     // not requiring a dictionary
+    compile_rewriter();
     return true;
   }
   Schema schema(schema_id, config.release());
@@ -377,6 +405,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     return false;
   }
   LOG(INFO) << "dictionary '" << dict_name << "' is ready.";
+  compile_rewriter();
   return true;
 }
 
