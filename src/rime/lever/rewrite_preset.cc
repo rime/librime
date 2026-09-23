@@ -5,6 +5,7 @@
 #include <rime/lever/rewrite_preset.h>
 
 #include <filesystem>
+#include <unordered_set>
 
 #include <rime/config.h>
 
@@ -122,12 +123,17 @@ bool RewritePresetCatalog::Resolve(const string& preset_name,
     RewritePresetStage stage;
     stage.name = stage_name;
     stage.files.reserve(file_names.size());
+    std::unordered_set<string> seen;
     for (const auto& file_name : file_names) {
       if (!IsSimpleFileName(file_name)) {
         LOG(ERROR) << "rewrite preset stage '" << stage_name
                    << "' contains invalid file name '" << file_name << "'.";
         return false;
       }
+      if (!seen.insert(file_name).second) {
+        continue;
+      }
+
       const path file_path = impl_->canonical_root / file_name;
       const path canonical_file = fs::canonical(file_path, ec);
       if (ec || !fs::is_regular_file(canonical_file, ec) || ec ||

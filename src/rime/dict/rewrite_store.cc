@@ -916,6 +916,7 @@ struct RewriteWorkspaceSnapshot {
   bool had_file = false;
   bool dirty = false;
   bool compact = false;
+  bool failed = false;
   uint64_t committed_size = 0;
   std::array<char, kStoreDataOffset> header{};
   StoreSnapshot working;
@@ -1143,6 +1144,21 @@ bool RewriteStoreWriter::AbortWorkspace() {
   return true;
 }
 
+void RewriteStoreWriter::MarkWorkspaceFailed() {
+  std::lock_guard<std::mutex> lock(RewriteWorkspaceMutex());
+  const auto found = RewriteWorkspaces().find(impl_->file_path.u8string());
+  if (found != RewriteWorkspaces().end() && found->second) {
+    found->second->failed = true;
+  }
+}
+
+bool RewriteStoreWriter::WorkspaceFailed() const {
+  std::lock_guard<std::mutex> lock(RewriteWorkspaceMutex());
+  const auto found = RewriteWorkspaces().find(impl_->file_path.u8string());
+  return found != RewriteWorkspaces().end() && found->second &&
+         found->second->failed;
+}
+
 bool RewriteStoreWriter::HasStage(const RewriteStageId& stage_id) const {
   if (!impl_->opened) {
     return false;
@@ -1327,6 +1343,11 @@ bool RewriteStoreWriter::RetainSchemas(const vector<string>& schema_ids) {
 
 bool RewriteStoreWriter::CommitWorkspace() {
   if (!impl_->opened || !impl_->workspace) {
+    return false;
+  }
+  if (WorkspaceFailed()) {
+    LOG(ERROR) << "shared rewrite-store transaction is marked failed; "
+                  "refusing to commit partial rewrite data.";
     return false;
   }
 

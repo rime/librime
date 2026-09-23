@@ -83,10 +83,14 @@ class RewriterTranslation : public PrefetchTranslation {
  public:
   RewriterTranslation(an<Translation> translation,
                       const Rewriter* rewriter,
-                      std::shared_ptr<const Rewriter::RuntimeState> state)
+                      std::shared_ptr<const Rewriter::RuntimeState> state,
+                      size_t segment_start,
+                      bool has_segment_range)
       : PrefetchTranslation(translation),
         rewriter_(rewriter),
-        state_(std::move(state)) {}
+        state_(std::move(state)),
+        segment_start_(segment_start),
+        has_segment_range_(has_segment_range) {}
 
  protected:
   bool Replenish() override {
@@ -95,7 +99,9 @@ class RewriterTranslation : public PrefetchTranslation {
     if (!candidate) {
       return false;
     }
-    if (!rewriter_->Transform(*state_, candidate, &cache_)) {
+    const size_t candidate_rank = candidate_rank_++;
+    if (!rewriter_->Transform(*state_, candidate, &cache_, candidate_rank,
+                              segment_start_, has_segment_range_)) {
       cache_.push_back(candidate);
     }
     return !cache_.empty();
@@ -104,6 +110,9 @@ class RewriterTranslation : public PrefetchTranslation {
  private:
   const Rewriter* rewriter_;
   std::shared_ptr<const Rewriter::RuntimeState> state_;
+  size_t segment_start_ = 0;
+  bool has_segment_range_ = false;
+  size_t candidate_rank_ = 0;
 };
 
 class RewriterAbbrevTranslation : public Translation {
@@ -280,11 +289,31 @@ Rewriter::Rewriter(const Ticket& ticket) : Filter(ticket), TagMatching(ticket) {
     schema_id_ = engine_->schema()->schema_id();
     store_path_ = ResolveStorePath();
   }
+
+  if (options_.enable_sentence && engine_ && engine_->context()) {
+    Context* context = engine_->context();
+    commit_connection_ = context->commit_notifier().connect(
+        [this](Context*) { ClearSentenceCache(); });
+    abort_connection_ = context->abort_notifier().connect(
+        [this](Context*) { ClearSentenceCache(); });
+    update_connection_ =
+        context->update_notifier().connect([this](Context* ctx) {
+          if (!ctx || ctx->input().empty() || !ctx->IsComposing()) {
+            ClearSentenceCache();
+          }
+        });
+  }
+
   std::lock_guard<std::mutex> lock(RewriterRegistryMutex());
   RewriterRegistry().insert(this);
 }
 
 Rewriter::~Rewriter() {
+  commit_connection_.disconnect();
+  abort_connection_.disconnect();
+  update_connection_.disconnect();
+  ClearSentenceCache();
+
   std::lock_guard<std::mutex> lock(RewriterRegistryMutex());
   RewriterRegistry().erase(this);
 }
@@ -454,9 +483,44 @@ std::shared_ptr<const Rewriter::RuntimeState> Rewriter::EnsureState() {
   return state;
 }
 
+void Rewriter::ClearSentenceCache() {
+  for (auto& lane : sentence_lanes_) {
+    lane.Reset();
+  }
+}
+
+Rewriter::SentenceLane* Rewriter::PrepareSentenceLane(
+    const RuntimeState& state,
+    size_t candidate_rank,
+    size_t segment_start,
+    bool has_segment_range) const {
+  if (!options_.enable_sentence || candidate_rank >= kSentenceCacheLanes ||
+      !state.store) {
+    return nullptr;
+  }
+
+  auto& lane = sentence_lanes_[candidate_rank];
+  const uint64_t generation = state.store->generation();
+  if (!lane.valid || lane.store_generation != generation ||
+      lane.has_segment_range != has_segment_range ||
+      (has_segment_range && lane.segment_start != segment_start) ||
+      lane.stages.size() != state.stages.size()) {
+    lane.Reset();
+    lane.valid = true;
+    lane.has_segment_range = has_segment_range;
+    lane.segment_start = segment_start;
+    lane.store_generation = generation;
+    lane.stages.resize(state.stages.size());
+  }
+  return &lane;
+}
+
 bool Rewriter::Rewrite(const RuntimeState& state,
                        std::string_view text,
-                       vector<string>* values) const {
+                       vector<string>* values,
+                       size_t candidate_rank,
+                       size_t segment_start,
+                       bool has_segment_range) const {
   if (!values) {
     return false;
   }
@@ -466,21 +530,49 @@ bool Rewriter::Rewrite(const RuntimeState& state,
   }
 
   if (options_.enable_sentence) {
-    string current(text);
+    SentenceLane* lane = PrepareSentenceLane(state, candidate_rank,
+                                             segment_start, has_segment_range);
+    std::string_view current = text;
     bool matched = false;
-    for (const auto& loaded : state.stages) {
-      string rewritten;
-      if (loaded.pack->ConvertSentence(current, &rewritten)) {
-        current = std::move(rewritten);
-        matched = true;
+
+    if (lane) {
+      for (size_t i = 0; i < state.stages.size(); ++i) {
+        auto& sentence_state = lane->stages[i];
+        if (state.stages[i].pack->ConvertSentenceIncremental(current,
+                                                             &sentence_state)) {
+          current = sentence_state.output;
+          matched = true;
+        }
+        // A miss is a no-op for this stage. The current text must still reach
+        // later stages in a preset such as s2t -> t2hk.
       }
-      // A miss is a no-op for this stage. The current text must still reach
-      // later stages in a preset such as s2t -> t2hk.
+    } else {
+      string current_storage(text);
+      for (const auto& loaded : state.stages) {
+        string rewritten;
+        if (loaded.pack->ConvertSentence(current_storage, &rewritten)) {
+          current_storage = std::move(rewritten);
+          matched = true;
+        }
+      }
+      if (!matched) {
+        return false;
+      }
+      values->push_back(std::move(current_storage));
+      return true;
     }
+
     if (!matched) {
+      if (lane && lane->RetainedBytes() > kMaxSentenceCacheBytes) {
+        lane->Reset();
+      }
       return false;
     }
-    values->push_back(std::move(current));
+
+    values->emplace_back(current);
+    if (lane && lane->RetainedBytes() > kMaxSentenceCacheBytes) {
+      lane->Reset();
+    }
     return true;
   }
 
@@ -602,7 +694,10 @@ string Rewriter::DerivedComment(const an<Candidate>& candidate) const {
 
 bool Rewriter::Transform(const RuntimeState& state,
                          const an<Candidate>& candidate,
-                         CandidateQueue* result) const {
+                         CandidateQueue* result,
+                         size_t candidate_rank,
+                         size_t segment_start,
+                         bool has_segment_range) const {
   // Apply() already gates the translation on the current option state. Avoid
   // querying Context::get_option() again for every candidate in the hot path.
   if (!candidate || !result || state.stages.empty()) {
@@ -614,7 +709,8 @@ bool Rewriter::Transform(const RuntimeState& state,
   }
 
   vector<string> values;
-  if (!Rewrite(state, candidate->text(), &values)) {
+  if (!Rewrite(state, candidate->text(), &values, candidate_rank, segment_start,
+               has_segment_range)) {
     return false;
   }
 
@@ -656,11 +752,20 @@ an<Translation> Rewriter::Apply(an<Translation> translation,
   const size_t segment_end = segment_end_;
   has_segment_range_ = false;
 
-  if (!translation || !Active()) {
+  if (!translation) {
+    return translation;
+  }
+  if (!Active()) {
+    if (options_.enable_sentence) {
+      ClearSentenceCache();
+    }
     return translation;
   }
   auto state = EnsureState();
   if (!state) {
+    if (options_.enable_sentence) {
+      ClearSentenceCache();
+    }
     return translation;
   }
   if (options_.mode == Mode::kAbbrev) {
@@ -671,7 +776,8 @@ an<Translation> Rewriter::Apply(an<Translation> translation,
     return New<RewriterAbbrevTranslation>(translation, this, std::move(state),
                                           context, segment_start, segment_end);
   }
-  return New<RewriterTranslation>(translation, this, std::move(state));
+  return New<RewriterTranslation>(translation, this, std::move(state),
+                                  segment_start, has_segment_range);
 }
 
 }  // namespace rime

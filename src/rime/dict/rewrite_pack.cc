@@ -44,7 +44,12 @@ constexpr uint32_t kStageRecordSize = 72;
 constexpr uint32_t kHeaderSize = kStageRecordOffset + kStageRecordSize;
 constexpr uint32_t kKeyIndexRecordSize = 8;
 constexpr uint32_t kStageFlagHasPreedit = 1U << 0;
-constexpr uint32_t kKnownStageFlags = kStageFlagHasPreedit;
+constexpr uint32_t kStageFeatureFlagsMask = 0xffU;
+constexpr uint32_t kKnownStageFeatureFlags = kStageFlagHasPreedit;
+
+// Bits above the feature byte were used by an experimental max-key-length
+// optimization. They are ignored on read for compatibility with those packs;
+// newly built stages leave them zero.
 
 constexpr uint32_t kUnicodeScalarLimit = 0x110000;
 constexpr uint32_t kCharPageShift = 8;
@@ -121,6 +126,18 @@ uint32_t DartsUnitOffset(uint32_t unit) {
   return (unit >> 10) << ((unit & (1U << 9)) >> 6);
 }
 
+bool DartsUnitHasLeaf(uint32_t unit) {
+  return ((unit >> 8) & 1U) != 0;
+}
+
+uint32_t DartsUnitValue(uint32_t unit) {
+  return unit & ((1U << 31) - 1);
+}
+
+uint32_t StageFeatureFlags(uint32_t flags) {
+  return flags & kStageFeatureFlagsMask;
+}
+
 bool ValidatePhraseTrieBounds(const char* data, uint64_t size) {
   constexpr uint64_t kDartsBlockUnits = 256;
   constexpr uint64_t kDartsUnitSize = sizeof(uint32_t);
@@ -156,7 +173,7 @@ bool ValidateStageRecord(const StageRecord& record, uint64_t file_size) {
          record.char_page_count != 0 &&
          record.char_page_count <= kCharDirectoryEntries &&
          record.value_pool_size != 0 &&
-         (record.flags & ~kKnownStageFlags) == 0 &&
+         (StageFeatureFlags(record.flags) & ~kKnownStageFeatureFlags) == 0 &&
          record.char_directory_offset >= kHeaderSize &&
          (record.char_directory_offset % alignof(uint16_t)) == 0 &&
          (record.char_pages_offset % alignof(uint32_t)) == 0 &&
@@ -542,62 +559,85 @@ struct StageView {
     return true;
   }
 
-  bool FindLongestPhrase(const char* suffix,
-                         const char* end,
-                         size_t node_pos,
-                         Darts::DoubleArray::result_pair_type* longest) const {
-    if (!suffix || !end || !longest || suffix >= end || phrase_key_count == 0) {
+  struct PhraseProbe {
+    Darts::DoubleArray::result_pair_type longest{};
+    size_t required_prefix = 0;
+    size_t scanned_bytes = 0;
+    size_t consumed_suffix_bytes = 0;
+    size_t node_pos = 0;
+    bool append_sensitive = true;
+    bool stopped_by_mismatch = false;
+  };
+
+  bool ProbePhraseFromNode(
+      const char* suffix,
+      const char* end,
+      size_t node_pos,
+      size_t consumed_suffix_bytes,
+      const Darts::DoubleArray::result_pair_type& prior_longest,
+      PhraseProbe* probe) const {
+    if (!suffix || !end || !probe || suffix > end || phrase_key_count == 0) {
       return false;
     }
 
-    *longest = {};
+    *probe = {};
+    probe->longest = prior_longest;
+    probe->node_pos = node_pos;
+    probe->consumed_suffix_bytes = consumed_suffix_bytes;
+
+    const auto* units = static_cast<const uint32_t*>(phrase_trie.array());
+    if (!units) {
+      return false;
+    }
+
+    size_t id = node_pos;
+    uint32_t unit = units[id];
+    size_t base = id ^ DartsUnitOffset(unit);
     const size_t remaining = static_cast<size_t>(end - suffix);
-    const size_t max_possible_results =
-        std::min(remaining, static_cast<size_t>(phrase_key_count));
-    if (max_possible_results == 0) {
-      return false;
-    }
 
-    constexpr size_t kInlinePrefixResults = 8;
-    std::array<Darts::DoubleArray::result_pair_type, kInlinePrefixResults>
-        inline_results{};
+    for (size_t i = 0; i < remaining; ++i) {
+      const uint32_t label = static_cast<unsigned char>(suffix[i]);
+      const size_t next = base ^ label;
+      const uint32_t next_unit = units[next];
 
-    auto select_longest = [&](const auto* results, size_t count) {
-      for (size_t i = 0; i < count; ++i) {
-        if (results[i].length > longest->length) {
-          *longest = results[i];
+      if (DartsUnitLabel(next_unit) != label) {
+        probe->required_prefix = consumed_suffix_bytes + i + 1;
+        probe->scanned_bytes = i + 1;
+        probe->consumed_suffix_bytes = consumed_suffix_bytes + i;
+        probe->node_pos = id;
+        probe->append_sensitive = false;
+        probe->stopped_by_mismatch = true;
+        return true;
+      }
+
+      id = next;
+      unit = next_unit;
+      base = id ^ DartsUnitOffset(unit);
+      if (DartsUnitHasLeaf(unit)) {
+        const uint32_t value = DartsUnitValue(units[base]);
+        if (value != 0) {
+          probe->longest.value = static_cast<int>(value);
+          probe->longest.length = consumed_suffix_bytes + i + 1;
         }
       }
-    };
-
-    size_t capacity = inline_results.size();
-    size_t match_count = phrase_trie.commonPrefixSearch(
-        suffix, inline_results.data(), capacity, remaining, node_pos);
-    select_longest(inline_results.data(), std::min(match_count, capacity));
-
-    if (match_count < capacity || capacity >= max_possible_results) {
-      return longest->value > 0;
     }
 
-    vector<Darts::DoubleArray::result_pair_type> results;
-    while (capacity < max_possible_results) {
-      size_t next_capacity = capacity * 2;
-      if (match_count > next_capacity) {
-        next_capacity = match_count;
-      }
-      capacity = std::min(next_capacity, max_possible_results);
-      results.resize(capacity);
+    // Input ended while the trie path is still alive. The current longest
+    // terminal is valid for this frame, but a future append may extend it.
+    probe->required_prefix = consumed_suffix_bytes + remaining;
+    probe->scanned_bytes = remaining;
+    probe->consumed_suffix_bytes = consumed_suffix_bytes + remaining;
+    probe->node_pos = id;
+    probe->append_sensitive = true;
+    return true;
+  }
 
-      match_count = phrase_trie.commonPrefixSearch(
-          suffix, results.data(), capacity, remaining, node_pos);
-      *longest = {};
-      select_longest(results.data(), std::min(match_count, capacity));
-
-      if (match_count < capacity || capacity >= max_possible_results) {
-        return longest->value > 0;
-      }
-    }
-    return longest->value > 0;
+  bool ProbeLongestPhrase(const char* suffix,
+                          const char* end,
+                          size_t node_pos,
+                          PhraseProbe* probe) const {
+    const Darts::DoubleArray::result_pair_type empty{};
+    return ProbePhraseFromNode(suffix, end, node_pos, 0, empty, probe);
   }
 
   static bool ReadValue(const char** cursor,
@@ -802,15 +842,16 @@ struct StageView {
 
       if ((dispatch & kDispatchPhraseStarter) != 0 && phrase_key_count != 0) {
         size_t node_pos = 0;
-        Darts::DoubleArray::result_pair_type match{};
+        PhraseProbe probe;
         if (PhraseNode(dispatch_slot, &node_pos) &&
-            FindLongestPhrase(current + char_size, text_end, node_pos,
-                              &match) &&
-            match.length != 0) {
-          const size_t candidate_key_id = static_cast<size_t>(match.value - 1);
+            ProbeLongestPhrase(current + char_size, text_end, node_pos,
+                               &probe) &&
+            probe.longest.length != 0) {
+          const size_t candidate_key_id =
+              static_cast<size_t>(probe.longest.value - 1);
           if (candidate_key_id < key_count) {
             key_id = candidate_key_id;
-            match_size = char_size + match.length;
+            match_size = char_size + probe.longest.length;
           }
         }
       }
@@ -855,6 +896,256 @@ struct StageView {
       }
       pos += char_size;
     }
+    return changed;
+  }
+
+  bool ConvertSentenceIncremental(std::string_view text,
+                                  RewriteSentenceState* state,
+                                  RewriteSentenceMetrics* metrics) const {
+    if (!state) {
+      return false;
+    }
+    if (metrics) {
+      ++metrics->calls;
+      metrics->input_bytes += text.size();
+    }
+
+    if (state->input.size() == text.size() &&
+        (text.empty() ||
+         std::memcmp(state->input.data(), text.data(), text.size()) == 0)) {
+      if (metrics) {
+        ++metrics->identical_input_hits;
+        metrics->reused_input_bytes += text.size();
+        metrics->reused_hit_count += state->hits.size();
+      }
+      return state->changed;
+    }
+
+    const size_t old_input_size = state->input.size();
+    size_t lcp = 0;
+    const size_t common = std::min(old_input_size, text.size());
+    while (lcp < common && state->input[lcp] == text[lcp]) {
+      ++lcp;
+    }
+
+    RewriteSentenceFrontier resume;
+    bool can_continue_phrase = false;
+    if (state->frontier.valid && text.size() > old_input_size &&
+        lcp == old_input_size) {
+      const auto& frontier = state->frontier;
+      const bool frontier_reaches_old_end =
+          frontier.input_start <= old_input_size &&
+          frontier.first_char_size <= old_input_size - frontier.input_start &&
+          frontier.suffix_bytes ==
+              old_input_size - frontier.input_start - frontier.first_char_size;
+      if (frontier_reaches_old_end &&
+          frontier.output_start <= state->output.size() &&
+          frontier.hit_count <= state->hits.size()) {
+        resume = frontier;
+        can_continue_phrase = true;
+      }
+    }
+
+    size_t reuse_count = 0;
+    size_t pos = 0;
+    size_t output_end = 0;
+    size_t dependency_barrier = 0;
+    bool changed = false;
+
+    if (can_continue_phrase) {
+      reuse_count = resume.hit_count;
+      pos = resume.input_start;
+      output_end = resume.output_start;
+      dependency_barrier = resume.dependency_barrier;
+      changed = resume.changed_before;
+    } else {
+      // Reuse only successful matches whose whole decision was proven inside
+      // the unchanged prefix. Unmatched positions never create cache entries.
+      for (size_t i = 0; i < state->hits.size(); ++i) {
+        const auto& hit = state->hits[i];
+        if (hit.input_end > lcp || hit.required_prefix > lcp ||
+            hit.output_end > state->output.size()) {
+          break;
+        }
+        reuse_count = i + 1;
+        pos = hit.input_end;
+        output_end = hit.output_end;
+        dependency_barrier = hit.required_prefix;
+        changed = hit.changed;
+      }
+    }
+
+    state->output.resize(output_end);
+    state->hits.resize(reuse_count);
+    state->frontier.Reset();
+
+    if (metrics) {
+      if (pos != 0) {
+        ++metrics->prefix_reuse_calls;
+        metrics->reused_input_bytes += pos;
+        metrics->reused_hit_count += reuse_count;
+      } else {
+        ++metrics->full_rescan_calls;
+      }
+      metrics->rescanned_input_bytes += text.size() - pos;
+    }
+
+    const char* const text_begin = text.data();
+    const char* const text_end = text_begin + text.size();
+    constexpr size_t kAppendSensitive = std::numeric_limits<size_t>::max();
+
+    while (pos < text.size()) {
+      const char* current = text_begin + pos;
+      size_t char_size = 0;
+      size_t dispatch_slot = kInvalidIndex;
+      const uint32_t dispatch =
+          DispatchAt(current, text_end, &char_size, &dispatch_slot);
+
+      if (dispatch == 0) {
+        const char* scan = current + char_size;
+        while (scan < text_end) {
+          size_t scan_size = 0;
+          if (DispatchAt(scan, text_end, &scan_size) != 0) {
+            break;
+          }
+          scan += scan_size;
+        }
+        const size_t skipped = static_cast<size_t>(scan - current);
+        state->output.append(current, skipped);
+        if (metrics) {
+          metrics->unmatchable_skip_bytes += skipped;
+        }
+        pos += skipped;
+        continue;
+      }
+
+      size_t key_id = kInvalidIndex;
+      size_t match_size = 0;
+
+      if ((dispatch & kDispatchPhraseStarter) != 0 && phrase_key_count != 0) {
+        PhraseProbe probe;
+        bool used_continuation = false;
+
+        if (can_continue_phrase && pos == resume.input_start &&
+            char_size == resume.first_char_size) {
+          Darts::DoubleArray::result_pair_type prior_longest{};
+          prior_longest.value = static_cast<int>(resume.longest_value);
+          prior_longest.length = resume.longest_length;
+          if (!ProbePhraseFromNode(text_begin + old_input_size, text_end,
+                                   resume.node_pos, resume.suffix_bytes,
+                                   prior_longest, &probe)) {
+            state->Reset();
+            return false;
+          }
+          used_continuation = true;
+          can_continue_phrase = false;
+        } else {
+          size_t node_pos = 0;
+          if (!PhraseNode(dispatch_slot, &node_pos) ||
+              !ProbeLongestPhrase(current + char_size, text_end, node_pos,
+                                  &probe)) {
+            state->Reset();
+            return false;
+          }
+        }
+
+        if (metrics) {
+          ++metrics->phrase_probe_count;
+          metrics->phrase_probe_bytes += probe.scanned_bytes;
+          if (used_continuation) {
+            ++metrics->phrase_probe_continuation_count;
+            metrics->phrase_probe_reused_bytes += resume.suffix_bytes;
+          } else {
+            ++metrics->phrase_probe_restart_count;
+          }
+          if (probe.stopped_by_mismatch) {
+            ++metrics->phrase_probe_mismatch_stops;
+          } else {
+            ++metrics->phrase_probe_text_end_stops;
+          }
+        }
+
+        if (probe.append_sensitive) {
+          if (!state->frontier.valid) {
+            state->frontier.valid = true;
+            state->frontier.input_start = pos;
+            state->frontier.output_start = state->output.size();
+            state->frontier.hit_count = state->hits.size();
+            state->frontier.dependency_barrier = dependency_barrier;
+            state->frontier.first_char_size = char_size;
+            state->frontier.suffix_bytes = probe.consumed_suffix_bytes;
+            state->frontier.node_pos = probe.node_pos;
+            state->frontier.longest_value =
+                probe.longest.value > 0
+                    ? static_cast<uint32_t>(probe.longest.value)
+                    : 0;
+            state->frontier.longest_length = probe.longest.length;
+            state->frontier.changed_before = changed;
+          }
+          dependency_barrier = kAppendSensitive;
+        } else if (dependency_barrier != kAppendSensitive) {
+          dependency_barrier = std::max(
+              dependency_barrier, pos + char_size + probe.required_prefix);
+        }
+
+        if (probe.longest.length != 0) {
+          const size_t candidate_key_id =
+              static_cast<size_t>(probe.longest.value - 1);
+          if (candidate_key_id < key_count) {
+            key_id = candidate_key_id;
+            match_size = char_size + probe.longest.length;
+          }
+        }
+      }
+
+      if (key_id == kInvalidIndex) {
+        const uint32_t encoded_key_id = dispatch & kDispatchKeyMask;
+        if (encoded_key_id != 0) {
+          const size_t candidate_key_id =
+              static_cast<size_t>(encoded_key_id - 1);
+          if (candidate_key_id < key_count) {
+            key_id = candidate_key_id;
+            match_size = char_size;
+          }
+        }
+      }
+
+      if (key_id != kInvalidIndex) {
+        std::string_view value;
+        if (GetFirstValue(key_id, &value)) {
+          const bool replacement_changed =
+              value.size() != match_size ||
+              std::memcmp(value.data(), current, match_size) != 0;
+          changed = changed || replacement_changed;
+          if (replacement_changed) {
+            state->output.append(value.data(), value.size());
+          } else {
+            state->output.append(current, match_size);
+          }
+          pos += match_size;
+
+          // Cache successful decisions only after every preceding probe is
+          // stable. An unresolved end-of-input trie path is represented by
+          // |frontier| and blocks later hit caching until it resolves.
+          if (dependency_barrier != kAppendSensitive) {
+            state->hits.push_back(
+                {pos, state->output.size(), dependency_barrier, changed});
+            if (metrics) {
+              ++metrics->written_hit_count;
+            }
+          }
+          continue;
+        }
+      }
+
+      state->output.append(current, char_size);
+      pos += char_size;
+    }
+
+    // Keep the stable source prefix in place and replace only the changed tail.
+    state->input.resize(lcp);
+    state->input.append(text.data() + lcp, text.size() - lcp);
+    state->changed = changed;
     return changed;
   }
 };
@@ -1154,7 +1445,7 @@ bool RewritePack::Open() {
   stage.value_pool_end = stage.value_pool + record.value_pool_size;
   stage.key_count = record.key_count;
   stage.phrase_key_count = record.phrase_key_count;
-  stage.flags = record.flags;
+  stage.flags = StageFeatureFlags(record.flags);
 
   if (record.phrase_key_count != 0) {
     const char* phrase_trie = base + record.phrase_trie_offset;
@@ -1182,6 +1473,13 @@ bool RewritePack::LookupWithPreedit(std::string_view text,
 
 bool RewritePack::ConvertSentence(std::string_view text, string* result) const {
   return result && impl_->stage.ConvertSentence(text, result);
+}
+
+bool RewritePack::ConvertSentenceIncremental(
+    std::string_view text,
+    RewriteSentenceState* state,
+    RewriteSentenceMetrics* metrics) const {
+  return state && impl_->stage.ConvertSentenceIncremental(text, state, metrics);
 }
 
 bool RewritePackBuilder::Build(const path& output_path,

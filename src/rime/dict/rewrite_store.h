@@ -29,6 +29,8 @@ struct RewriteStageId {
   }
 };
 
+// One rewriter section may bind to an ordered sequence of shared stages.
+// Order and duplicates in |stages| are semantic.
 struct RewriteStageBinding {
   string name;
   vector<RewriteStageId> stages;
@@ -66,6 +68,12 @@ class RIME_DLL RewriteStoreWriter {
   bool Open();
   bool BeginWorkspace();
   bool AbortWorkspace();
+
+  // Shared workspace failure propagation: once any schema compilation marks
+  // the deployment failed, CommitWorkspace() must refuse a partial commit.
+  void MarkWorkspaceFailed();
+  bool WorkspaceFailed() const;
+
   bool HasStage(const RewriteStageId& stage_id) const;
   bool AppendStage(const RewriteStageId& stage_id, RewriteStageData stage);
   bool CommitSchema(const string& schema_id,

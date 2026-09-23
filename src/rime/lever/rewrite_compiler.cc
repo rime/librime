@@ -3,11 +3,13 @@
 // Distributed under the BSD License
 //
 // The deployment compiler accepts either native files or a shared preset.
-// A preset expands to independent reusable stages; execution order is not
-// encoded in RewriteStore/RewritePack and remains a runtime concern.
+// A preset expands to independent reusable stages. Stage order (including
+// duplicate stages) is stored in the schema/section binding; stages themselves
+// remain independently reusable and are never synthesized into a combined pack.
 #include <rime/lever/rewrite_compiler.h>
 
 #include <algorithm>
+#include <boost/algorithm/string/predicate.hpp>
 #include <array>
 #include <cstdint>
 #include <filesystem>
@@ -30,13 +32,8 @@ namespace fs = std::filesystem;
 constexpr size_t kMaxSourceLineBytes = 16 * 1024 * 1024;
 constexpr uint64_t kFnvOffsetBasis = 1469598103934665603ULL;
 constexpr uint64_t kFnvPrime = 1099511628211ULL;
-constexpr uint64_t kStageFingerprintContractVersion = 1;
+constexpr uint64_t kStageFingerprintContractVersion = 3;
 constexpr uint64_t kSecondHashSeed = 0x9e3779b97f4a7c15ULL;
-
-bool StartsWith(const string& text, const string& prefix) {
-  return text.size() >= prefix.size() &&
-         std::equal(prefix.begin(), prefix.end(), text.begin());
-}
 
 bool PrepareSourceLine(string* line) {
   if (!line) {
@@ -60,8 +57,6 @@ bool ParseFileLine(std::string_view source, string* key, string* value) {
     return false;
   }
 
-  // The source format is literal key<TAB>value. Only the first real tab is
-  // structural; everything after it belongs to value unchanged.
   const size_t tab = source.find('\t');
   if (tab == std::string_view::npos || tab == 0 || tab + 1 >= source.size()) {
     return false;
@@ -522,7 +517,7 @@ vector<string> FindRewriterSections(Config* config) {
     string section;
     if (component == "rewriter") {
       section = "rewriter";
-    } else if (StartsWith(component, "rewriter@")) {
+    } else if (boost::starts_with(component, "rewriter@")) {
       section = component.substr(sizeof("rewriter@") - 1);
     } else {
       continue;
@@ -588,8 +583,16 @@ RewriteCompiler::RewriteCompiler(const string& schema_id,
     : schema_id_(schema_id), config_(config), deployer_(deployer) {}
 
 bool RewriteCompiler::Compile() {
-  if (!config_ || !deployer_) {
+  auto fail = [&]() {
+    if (deployer_) {
+      RewriteStoreWriter store(deployer_->staging_dir / "rewriter.rwp");
+      store.MarkWorkspaceFailed();
+    }
     return false;
+  };
+
+  if (!config_ || !deployer_) {
+    return fail();
   }
 
   const path schema_id_path(schema_id_);
@@ -600,7 +603,7 @@ bool RewriteCompiler::Compile() {
                << schema_id_
                << "' is invalid; expected a single non-empty schema id "
                   "without path components.";
-    return false;
+    return fail();
   }
 
   std::error_code ec;
@@ -609,23 +612,29 @@ bool RewriteCompiler::Compile() {
     LOG(ERROR) << "cannot create rewrite staging directory '"
                << deployer_->staging_dir << "': " << ec.message()
                << "; check directory permissions and available storage.";
-    return false;
+    return fail();
   }
 
   const path store_path = deployer_->staging_dir / "rewriter.rwp";
   RewriteStoreWriter store(store_path);
   if (!store.Open()) {
+    return fail();
+  }
+  if (store.WorkspaceFailed()) {
     return false;
   }
 
   const vector<string> section_names = FindRewriterSections(config_);
   if (section_names.empty()) {
-    return store.CommitSchema(schema_id_, {});
+    if (!store.CommitSchema(schema_id_, {})) {
+      return fail();
+    }
+    return true;
   }
 
   vector<RewriteSourceBinding> sources;
   if (!ResolveRewriteSources(config_, deployer_, section_names, &sources)) {
-    return false;
+    return fail();
   }
 
   struct CachedStage {
@@ -651,7 +660,7 @@ bool RewriteCompiler::Compile() {
         stage_id = cached->id;
       } else {
         if (!ComputeStageId(source, &stage_id)) {
-          return false;
+          return fail();
         }
         stage_cache.push_back({descriptor, stage_id});
         if (!store.HasStage(stage_id)) {
@@ -660,7 +669,7 @@ bool RewriteCompiler::Compile() {
               !store.AppendStage(stage_id, std::move(stage))) {
             LOG(ERROR) << "failed to compile rewrite stage '" << source.name
                        << "'.";
-            return false;
+            return fail();
           }
         }
       }
@@ -672,7 +681,7 @@ bool RewriteCompiler::Compile() {
   if (!store.CommitSchema(schema_id_, bindings)) {
     LOG(ERROR) << "failed to commit rewrite index for schema '" << schema_id_
                << "'.";
-    return false;
+    return fail();
   }
   return true;
 }

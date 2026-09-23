@@ -5,6 +5,7 @@
 #ifndef RIME_REWRITER_H_
 #define RIME_REWRITER_H_
 
+#include <array>
 #include <atomic>
 #include <memory>
 #include <mutex>
@@ -70,16 +71,58 @@ class Rewriter : public Filter, public TagMatching {
   std::shared_ptr<const RuntimeState> EnsureState();
   bool Rewrite(const RuntimeState& state,
                std::string_view text,
-               vector<string>* values) const;
+               vector<string>* values,
+               size_t candidate_rank,
+               size_t segment_start,
+               bool has_segment_range) const;
   bool RewriteWithPreedit(const RuntimeState& state,
                           std::string_view text,
                           vector<RewriteResult>* values) const;
   bool Transform(const RuntimeState& state,
                  const an<Candidate>& candidate,
-                 CandidateQueue* result) const;
+                 CandidateQueue* result,
+                 size_t candidate_rank,
+                 size_t segment_start,
+                 bool has_segment_range) const;
   const string& CandidateType(const an<Candidate>& candidate) const;
   string DerivedComment(const an<Candidate>& candidate) const;
   string ApplyCommentTemplate(const string& value) const;
+
+  static constexpr size_t kSentenceCacheLanes = 8;
+  static constexpr size_t kMaxSentenceCacheBytes = 64 * 1024;
+
+  struct SentenceLane {
+    bool valid = false;
+    bool has_segment_range = false;
+    size_t segment_start = 0;
+    uint64_t store_generation = 0;
+    vector<RewriteSentenceState> stages;
+
+    void Reset() {
+      valid = false;
+      has_segment_range = false;
+      segment_start = 0;
+      store_generation = 0;
+      for (auto& stage : stages) {
+        stage.Reset();
+      }
+      vector<RewriteSentenceState>().swap(stages);
+    }
+
+    size_t RetainedBytes() const {
+      size_t total = 0;
+      for (const auto& stage : stages) {
+        total += stage.RetainedBytes();
+      }
+      return total;
+    }
+  };
+
+  void ClearSentenceCache();
+  SentenceLane* PrepareSentenceLane(const RuntimeState& state,
+                                    size_t candidate_rank,
+                                    size_t segment_start,
+                                    bool has_segment_range) const;
 
   Options options_;
   string schema_id_;
@@ -87,6 +130,12 @@ class Rewriter : public Filter, public TagMatching {
   std::shared_ptr<const RuntimeState> runtime_state_;
   std::mutex runtime_state_mutex_;
   bool runtime_state_load_attempted_ = false;
+
+  mutable std::array<SentenceLane, kSentenceCacheLanes> sentence_lanes_;
+  connection commit_connection_;
+  connection abort_connection_;
+  connection update_connection_;
+
   size_t segment_start_ = 0;
   size_t segment_end_ = 0;
   bool has_segment_range_ = false;
