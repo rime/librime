@@ -228,6 +228,32 @@ size_t DecodeUtf8Scalar(const char* begin,
   return 0;
 }
 
+size_t EncodeUtf8Scalar(uint32_t code_point, char out[5]) {
+  if (!out || code_point > 0x10ffff ||
+      (code_point >= 0xd800 && code_point <= 0xdfff)) {
+    return 0;
+  }
+
+  size_t size = 0;
+  if (code_point <= 0x7f) {
+    out[size++] = static_cast<char>(code_point);
+  } else if (code_point <= 0x7ff) {
+    out[size++] = static_cast<char>(0xc0 | (code_point >> 6));
+    out[size++] = static_cast<char>(0x80 | (code_point & 0x3f));
+  } else if (code_point <= 0xffff) {
+    out[size++] = static_cast<char>(0xe0 | (code_point >> 12));
+    out[size++] = static_cast<char>(0x80 | ((code_point >> 6) & 0x3f));
+    out[size++] = static_cast<char>(0x80 | (code_point & 0x3f));
+  } else {
+    out[size++] = static_cast<char>(0xf0 | (code_point >> 18));
+    out[size++] = static_cast<char>(0x80 | ((code_point >> 12) & 0x3f));
+    out[size++] = static_cast<char>(0x80 | ((code_point >> 6) & 0x3f));
+    out[size++] = static_cast<char>(0x80 | (code_point & 0x3f));
+  }
+  out[size] = '\0';
+  return size;
+}
+
 bool ValidateUtf8Key(std::string_view key,
                      uint32_t* first_code_point,
                      size_t* first_char_size) {
@@ -408,44 +434,124 @@ struct StageView {
   uint32_t key_count = 0;
   uint32_t phrase_key_count = 0;
   uint32_t flags = 0;
+  vector<uint32_t> phrase_nodes;
 
-  uint32_t Dispatch(uint32_t code_point) const {
+  size_t DispatchSlot(uint32_t code_point) const {
     if (!char_directory || !char_pages || code_point >= kUnicodeScalarLimit) {
-      return 0;
+      return kInvalidIndex;
     }
     const uint16_t page_id = char_directory[code_point >> kCharPageShift];
     if (page_id == 0 || page_id > char_page_count) {
-      return 0;
+      return kInvalidIndex;
     }
-    const size_t page_offset = static_cast<size_t>(page_id - 1) * kCharPageSize;
-    return char_pages[page_offset + (code_point & kCharPageMask)];
+    return static_cast<size_t>(page_id - 1) * kCharPageSize +
+           (code_point & kCharPageMask);
+  }
+
+  uint32_t Dispatch(uint32_t code_point) const {
+    const size_t slot = DispatchSlot(code_point);
+    return slot == kInvalidIndex ? 0 : char_pages[slot];
   }
 
   uint32_t DispatchAt(const char* current,
                       const char* end,
-                      size_t* char_size) const {
+                      size_t* char_size,
+                      size_t* dispatch_slot = nullptr) const {
     if (!char_size) {
       return 0;
     }
+    if (dispatch_slot) {
+      *dispatch_slot = kInvalidIndex;
+    }
+
     uint32_t code_point = 0;
     *char_size = DecodeUtf8Scalar(current, end, &code_point);
     if (*char_size == 0) {
       *char_size = 1;
       return 0;
     }
-    return Dispatch(code_point);
+
+    const size_t slot = DispatchSlot(code_point);
+    if (dispatch_slot) {
+      *dispatch_slot = slot;
+    }
+    return slot == kInvalidIndex ? 0 : char_pages[slot];
   }
 
-  bool FindLongestPhrase(const char* current,
+  bool BuildPhraseNodeCache() {
+    phrase_nodes.clear();
+    if (phrase_key_count == 0) {
+      return true;
+    }
+    if (!char_directory || !char_pages) {
+      return false;
+    }
+
+    phrase_nodes.assign(static_cast<size_t>(char_page_count) * kCharPageSize,
+                        0);
+
+    for (uint32_t high = 0; high < kCharDirectoryEntries; ++high) {
+      const uint16_t page_id = char_directory[high];
+      if (page_id == 0) {
+        continue;
+      }
+      if (page_id > char_page_count) {
+        return false;
+      }
+
+      const size_t page_offset =
+          static_cast<size_t>(page_id - 1) * kCharPageSize;
+      for (uint32_t low = 0; low < kCharPageSize; ++low) {
+        const size_t slot = page_offset + low;
+        if ((char_pages[slot] & kDispatchPhraseStarter) == 0) {
+          continue;
+        }
+
+        const uint32_t code_point = (high << kCharPageShift) | low;
+        char encoded[5] = {};
+        const size_t encoded_size = EncodeUtf8Scalar(code_point, encoded);
+        if (encoded_size == 0) {
+          return false;
+        }
+
+        size_t node_pos = 0;
+        size_t key_pos = 0;
+        phrase_trie.traverse(encoded, node_pos, key_pos);
+        if (key_pos != encoded_size ||
+            node_pos >= std::numeric_limits<uint32_t>::max()) {
+          return false;
+        }
+
+        // Zero means no phrase continuation.
+        phrase_nodes[slot] = static_cast<uint32_t>(node_pos + 1);
+      }
+    }
+    return true;
+  }
+
+  bool PhraseNode(size_t dispatch_slot, size_t* node_pos) const {
+    if (!node_pos || dispatch_slot == kInvalidIndex ||
+        dispatch_slot >= phrase_nodes.size()) {
+      return false;
+    }
+    const uint32_t encoded = phrase_nodes[dispatch_slot];
+    if (encoded == 0) {
+      return false;
+    }
+    *node_pos = static_cast<size_t>(encoded - 1);
+    return true;
+  }
+
+  bool FindLongestPhrase(const char* suffix,
                          const char* end,
+                         size_t node_pos,
                          Darts::DoubleArray::result_pair_type* longest) const {
-    if (!current || !end || !longest || current >= end ||
-        phrase_key_count == 0) {
+    if (!suffix || !end || !longest || suffix >= end || phrase_key_count == 0) {
       return false;
     }
 
     *longest = {};
-    const size_t remaining = static_cast<size_t>(end - current);
+    const size_t remaining = static_cast<size_t>(end - suffix);
     const size_t max_possible_results =
         std::min(remaining, static_cast<size_t>(phrase_key_count));
     if (max_possible_results == 0) {
@@ -466,7 +572,7 @@ struct StageView {
 
     size_t capacity = inline_results.size();
     size_t match_count = phrase_trie.commonPrefixSearch(
-        current, inline_results.data(), capacity, remaining);
+        suffix, inline_results.data(), capacity, remaining, node_pos);
     select_longest(inline_results.data(), std::min(match_count, capacity));
 
     if (match_count < capacity || capacity >= max_possible_results) {
@@ -482,8 +588,8 @@ struct StageView {
       capacity = std::min(next_capacity, max_possible_results);
       results.resize(capacity);
 
-      match_count = phrase_trie.commonPrefixSearch(current, results.data(),
-                                                   capacity, remaining);
+      match_count = phrase_trie.commonPrefixSearch(
+          suffix, results.data(), capacity, remaining, node_pos);
       *longest = {};
       select_longest(results.data(), std::min(match_count, capacity));
 
@@ -670,7 +776,9 @@ struct StageView {
     while (pos < text.size()) {
       const char* current = text_begin + pos;
       size_t char_size = 0;
-      uint32_t dispatch = DispatchAt(current, text_end, &char_size);
+      size_t dispatch_slot = kInvalidIndex;
+      uint32_t dispatch =
+          DispatchAt(current, text_end, &char_size, &dispatch_slot);
 
       if (dispatch == 0) {
         const char* scan = current + char_size;
@@ -693,13 +801,16 @@ struct StageView {
       size_t match_size = 0;
 
       if ((dispatch & kDispatchPhraseStarter) != 0 && phrase_key_count != 0) {
+        size_t node_pos = 0;
         Darts::DoubleArray::result_pair_type match{};
-        if (FindLongestPhrase(current, text_end, &match) &&
-            match.length > char_size) {
+        if (PhraseNode(dispatch_slot, &node_pos) &&
+            FindLongestPhrase(current + char_size, text_end, node_pos,
+                              &match) &&
+            match.length != 0) {
           const size_t candidate_key_id = static_cast<size_t>(match.value - 1);
           if (candidate_key_id < key_count) {
             key_id = candidate_key_id;
-            match_size = match.length;
+            match_size = char_size + match.length;
           }
         }
       }
@@ -1053,6 +1164,9 @@ bool RewritePack::Open() {
     stage.phrase_trie.set_array(
         phrase_trie, static_cast<size_t>(record.phrase_trie_size /
                                          stage.phrase_trie.unit_size()));
+    if (!stage.BuildPhraseNodeCache()) {
+      return false;
+    }
   }
   return true;
 }
