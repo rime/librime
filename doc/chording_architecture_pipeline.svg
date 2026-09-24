@@ -1,0 +1,203 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1020" width="100%" height="100%" style="background:#ffffff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <defs>
+    <marker id="arr-black" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0f172a"/>
+    </marker>
+    <marker id="arr-red" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#dc2626"/>
+    </marker>
+    <marker id="arr-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0284c7"/>
+    </marker>
+  </defs>
+
+  <!-- 頂部標題區 -->
+  <text x="40" y="42" font-size="20" font-weight="bold" fill="#0f172a">【編譯部署與運行流轉】宮保拼音並擊：新舊架構與速記詞典 (combo_pinyin_steno) 支援對比</text>
+  <text x="40" y="66" font-size="12" fill="#475569">右側：舊版 chord_composer（封閉拼音轉譯棧） ｜ 左側：新版 streaming_chord（音韻與速記開放和弦直通 Prism）</text>
+
+  <!-- 中央分水虛線 -->
+  <line x1="550" y1="90" x2="550" y2="980" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="6"/>
+
+  <!-- ========================================================================= -->
+  <!-- 右半部：舊架構 (LEGACY)                                                   -->
+  <!-- ========================================================================= -->
+  <g transform="translate(570, 0)">
+    <!-- 區域大標題 -->
+    <rect x="0" y="90" width="490" height="35" rx="4" fill="#fff1f2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="245" y="113" font-size="14" font-weight="bold" fill="#b91c1c" text-anchor="middle">【舊架構】封閉拼音膠水棧 · 難以擴充速記</text>
+
+    <!-- 1. 舊版部署時 -->
+    <text x="15" y="152" font-size="13" font-weight="bold" fill="#b91c1c">▶ 部署編譯期 (受限於標準拼音詞庫)</text>
+    
+    <rect x="20" y="165" width="200" height="85" rx="4" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2"/>
+    <text x="30" y="185" font-size="11" font-family="monospace" fill="#0f172a" font-weight="bold">luna_pinyin.dict.yaml</text>
+    <text x="30" y="204" font-size="11" fill="#475569">之 → zhi</text>
+    <text x="30" y="220" font-size="11" fill="#475569">中 → zhong</text>
+    <text x="30" y="236" font-size="11" fill="#dc2626">✕ 無法直接加非拼音和弦</text>
+
+    <line x1="120" y1="250" x2="120" y2="280" stroke="#0f172a" stroke-width="1.2" marker-end="url(#arr-black)"/>
+
+    <rect x="20" y="285" width="200" height="35" rx="17" fill="#ffffff" stroke="#0f172a" stroke-width="1.2"/>
+    <text x="120" y="307" font-size="11" font-family="monospace" fill="#0f172a" text-anchor="middle">speller/algebra (追加 ')</text>
+
+    <line x1="120" y1="320" x2="120" y2="350" stroke="#0f172a" stroke-width="1.2" marker-end="url(#arr-black)"/>
+
+    <!-- 舊版 Prism 棱鏡 (純拼音 Key) -->
+    <polygon points="120,355 220,465 20,465" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+    <text x="120" y="420" font-size="12" font-weight="bold" fill="#0f172a" text-anchor="middle">Prism</text>
+    <text x="120" y="437" font-size="10" fill="#64748b" text-anchor="middle">(拼音前綴樹)</text>
+
+    <g font-family="monospace" font-size="11" fill="#b91c1c">
+      <text x="135" y="380">zhi'</text>
+      <text x="145" y="400">zhong'</text>
+      <text x="155" y="420">zhou'</text>
+      <text x="165" y="440">zhui'</text>
+    </g>
+
+    <!-- Table 詞典 -->
+    <rect x="270" y="355" width="190" height="110" rx="4" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2"/>
+    <text x="280" y="377" font-size="11" font-family="monospace" fill="#0f172a" font-weight="bold">table (純拼音音節 ID)</text>
+    <line x1="270" y1="385" x2="460" y2="385" stroke="#cbd5e1"/>
+    <text x="280" y="405" font-size="11" fill="#475569">zhi   | 1. 之 2. 支 ...</text>
+    <text x="280" y="425" font-size="11" fill="#475569">zhong | 1. 中 2. 鐘 ...</text>
+    <text x="280" y="445" font-size="11" fill="#475569">zhou  | 1. 州 2. 周 ...</text>
+
+    <line x1="220" y1="420" x2="265" y2="420" stroke="#0f172a" stroke-width="1" stroke-dasharray="3" marker-end="url(#arr-black)"/>
+
+    <!-- 2. 舊版打字時 -->
+    <line x1="10" y1="485" x2="480" y2="485" stroke="#fecaca" stroke-width="1"/>
+    <text x="15" y="508" font-size="13" font-weight="bold" fill="#b91c1c">▶ 運行打字時 (Runtime 雙重轉譯阻塞)</text>
+
+    <rect x="20" y="525" width="220" height="32" rx="16" fill="#ffffff" stroke="#0f172a" stroke-width="1.2"/>
+    <text x="130" y="546" font-size="11" font-family="monospace" fill="#0f172a" text-anchor="middle">chord_composer (抓擊鍵)</text>
+
+    <line x1="130" y1="557" x2="130" y2="580" stroke="#0f172a" stroke-width="1.2" marker-end="url(#arr-black)"/>
+    <text x="145" y="573" font-size="10" font-family="monospace" fill="#64748b">↓cxuio ↑xcoi↑</text>
+
+    <text x="130" y="600" font-size="12" font-family="monospace" fill="#0f172a" font-weight="bold" text-anchor="middle">[FZURO]   [ZFOR]</text>
+
+    <line x1="130" y1="610" x2="130" y2="635" stroke="#0f172a" stroke-width="1.2" marker-end="url(#arr-black)"/>
+
+    <rect x="20" y="640" width="240" height="35" rx="17" fill="#ffffff" stroke="#b91c1c" stroke-width="1.2"/>
+    <text x="140" y="662" font-size="11" font-family="monospace" fill="#b91c1c" text-anchor="middle">chord_composer/algebra</text>
+
+    <line x1="140" y1="675" x2="140" y2="705" stroke="#dc2626" stroke-width="1.2" marker-end="url(#arr-red)"/>
+    <text x="155" y="695" font-size="11" font-family="monospace" fill="#dc2626" font-weight="bold">轉譯爲拼音 "zhong'" "zhou'"</text>
+
+    <rect x="20" y="710" width="310" height="45" rx="4" fill="#fff1f2" stroke="#dc2626" stroke-width="1.2"/>
+    <text x="30" y="728" font-size="10" font-family="monospace" fill="#b91c1c">send KeyEvent 偽造事件注入下游:</text>
+    <text x="30" y="745" font-size="11" font-family="monospace" fill="#0f172a" font-weight="bold">engine.Speller [alphabet="abc...xyz'"]</text>
+
+    <line x1="175" y1="755" x2="175" y2="785" stroke="#dc2626" stroke-width="1.2" marker-end="url(#arr-red)"/>
+    <text x="175" y="805" font-size="12" font-family="monospace" fill="#b91c1c" font-weight="bold" text-anchor="middle">ctx.input ⇒ zhong'zhou'</text>
+
+    <line x1="280" y1="800" x2="350" y2="800" stroke="#0f172a" stroke-width="1.2" marker-end="url(#arr-black)"/>
+    <rect x="355" y="785" width="115" height="30" rx="4" fill="#ffffff" stroke="#0f172a" stroke-width="1.2"/>
+    <text x="412" y="805" font-size="11" font-family="monospace" fill="#0f172a" text-anchor="middle">translator</text>
+
+    <path d="M 412 785 L 412 475" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="4" marker-end="url(#arr-black)"/>
+    <text x="420" y="630" font-size="10" fill="#64748b">拼音下行搜索</text>
+
+    <!-- 死結警告框 -->
+    <rect x="20" y="835" width="450" height="75" rx="4" fill="#fef2f2" stroke="#f87171"/>
+    <text x="35" y="857" font-size="11" font-weight="bold" fill="#b91c1c">⚠ 舊版死結：爲何無法支援速記和弦？</text>
+    <text x="35" y="877" font-size="11" fill="#7f1d1d">若打出速記碼 SHG (什麼)，因其非合法全拼，algebra 無拼音可譯；</text>
+    <text x="35" y="895" font-size="11" fill="#7f1d1d">Speller 拒收非拼音字母，導致速記碼在半路拋錨，詞典無法自定義。</text>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- 左半部：新架構 (NEW)                                                     -->
+  <!-- ========================================================================= -->
+  <g transform="translate(40, 0)">
+    <!-- 區域大標題 -->
+    <rect x="0" y="90" width="480" height="35" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+    <text x="240" y="113" font-size="14" font-weight="bold" fill="#0284c7" text-anchor="middle">【新架構】開放和弦空間 · 原生支援速記 (steno)</text>
+
+    <!-- 1. 新版部署時 -->
+    <text x="15" y="152" font-size="13" font-weight="bold" fill="#0284c7">▶ 部署編譯期 (音韻 + 速記雙軌詞庫)</text>
+
+    <!-- combo_pinyin_steno.dict.yaml -->
+    <rect x="20" y="165" width="300" height="85" rx="4" fill="#ffffff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="30" y="185" font-size="11" font-family="monospace" fill="#0284c7" font-weight="bold">combo_pinyin_steno.dict.yaml</text>
+    <text x="30" y="204" font-size="11" fill="#475569">中 zhong    → 音韻條目</text>
+    <text x="30" y="222" font-size="11" font-weight="bold" fill="#b45309">什麼 SHG   → 原生速記條目 (自定義和弦)</text>
+    <text x="30" y="238" font-size="11" fill="#475569">州 zhou / 追 zhui ...</text>
+
+    <line x1="160" y1="250" x2="160" y2="280" stroke="#0f172a" stroke-width="1.2" marker-end="url(#arr-black)"/>
+
+    <!-- speller/algebra 統一轉換爲和弦閉包 -->
+    <rect x="20" y="285" width="280" height="35" rx="17" fill="#ffffff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="160" y="307" font-size="11" font-family="monospace" fill="#0284c7" font-weight="bold" text-anchor="middle">speller/algebra (統一重排爲和弦閉包)</text>
+
+    <line x1="160" y1="320" x2="160" y2="350" stroke="#0f172a" stroke-width="1.2" marker-end="url(#arr-black)"/>
+
+    <!-- 新版 Prism 5.0 棱鏡 (和弦 Key 雙數組樹) -->
+    <polygon points="160,355 285,465 35,465" fill="#ffffff" stroke="#16a34a" stroke-width="2"/>
+    <text x="160" y="420" font-size="13" font-weight="bold" fill="#16a34a" text-anchor="middle">Prism 5.0</text>
+    <text x="160" y="437" font-size="10" fill="#16a34a" text-anchor="middle">(原生和弦閉包索引)</text>
+
+    <!-- 和弦閉包 Key 標註 (包含速記) -->
+    <g font-family="monospace" font-size="11" font-weight="bold">
+      <text x="175" y="375" fill="#16a34a">[ZF] → zhi (之)</text>
+      <text x="190" y="398" fill="#16a34a">[ZFURO] → zhong (中)</text>
+      <text x="200" y="420" fill="#b45309">[SHG] → 什麼 (速記直通)</text>
+      <text x="210" y="442" fill="#16a34a">[ZFRO] → zhou (州)</text>
+    </g>
+
+    <!-- 2. 新版打字時 -->
+    <line x1="10" y1="485" x2="470" y2="485" stroke="#bfdbfe" stroke-width="1"/>
+    <text x="15" y="508" font-size="13" font-weight="bold" fill="#0284c7">▶ 運行打字時 (開放和弦流 · 零膠水層)</text>
+
+    <!-- StreamingChordProcessor 容器 -->
+    <rect x="20" y="525" width="440" height="150" rx="6" fill="#ffffff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="35" y="548" font-size="13" font-family="monospace" fill="#0284c7" font-weight="bold">StreamingChordProcessor</text>
+    <text x="310" y="548" font-size="10" font-family="monospace" fill="#64748b">↓cxuio ↑xcoi↑</text>
+
+    <!-- 內部生和弦與規格化重排 (修復座標偏移：右框文字改爲 x=217) -->
+    <g transform="translate(35, 565)">
+      <!-- 音節 1：音韻和弦 (灰色框) -->
+      <rect x="0" y="0" width="185" height="95" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+      <text x="12" y="22" font-size="11" font-family="monospace" fill="#475569">落鍵: FZURO</text>
+      <text x="12" y="42" font-size="11" fill="#0284c7">鍵序規範化 ↓</text>
+      <text x="12" y="64" font-size="12" font-family="monospace" fill="#16a34a" font-weight="bold">[ZFURO]</text>
+      <text x="12" y="84" font-size="11" fill="#15803d">出詞: 中 (zhong)</text>
+
+      <!-- 音節 2：自定義速記和弦 (黃色框) -->
+      <rect x="205" y="0" width="185" height="95" rx="4" fill="#fffbeb" stroke="#fde68a"/>
+      <text x="217" y="22" font-size="11" font-family="monospace" fill="#475569">速記並擊: SHG</text>
+      <text x="217" y="42" font-size="11" fill="#b45309">鍵序規範化 ↓</text>
+      <text x="217" y="64" font-size="12" font-family="monospace" fill="#b45309" font-weight="bold">[SHG]</text>
+      <text x="217" y="84" font-size="11" font-weight="bold" fill="#b45309">直出: 什麼 (速記)</text>
+    </g>
+
+    <!-- 直推 input -->
+    <line x1="240" y1="675" x2="240" y2="705" stroke="#0284c7" stroke-width="2" marker-end="url(#arr-blue)"/>
+    <text x="250" y="695" font-size="11" fill="#0284c7" font-weight="bold">開放集合直推 input</text>
+
+    <rect x="70" y="710" width="340" height="35" rx="4" fill="#eff6ff" stroke="#0284c7" stroke-width="1.2"/>
+    <text x="240" y="733" font-size="13" font-family="monospace" fill="#0284c7" font-weight="bold" text-anchor="middle">ctx.input ⇒ [ZFURO][SHG]</text>
+
+    <!-- 另紙詳解懸念橢圓 -->
+    <g transform="translate(40, 760)">
+      <ellipse cx="200" cy="55" rx="190" ry="46" fill="#fefce8" stroke="#ca8a04" stroke-width="2"/>
+      <text x="200" y="45" font-size="12" font-family="monospace" fill="#ca8a04" font-weight="bold" text-anchor="middle">生和弦 FZURO / SHG ⇒ Translator</text>
+      <text x="200" y="70" font-size="14" font-weight="bold" fill="#b45309" text-anchor="middle">【另紙詳解：步進查詢破單調】</text>
+    </g>
+
+    <!-- 指向 Prism 5.0 的查詞箭頭 -->
+    <path d="M 410 730 L 450 730 L 450 425 L 290 425" fill="none" stroke="#16a34a" stroke-width="2" marker-end="url(#arr-black)"/>
+    <text x="455" y="580" font-size="11" fill="#16a34a" font-weight="bold">直查 Prism</text>
+
+    <!-- 新版開放優勢說明框 -->
+    <rect x="20" y="880" width="440" height="75" rx="4" fill="#f0fdf4" stroke="#86efac"/>
+    <text x="35" y="902" font-size="11" font-weight="bold" fill="#15803d">✨ 新版解放：開放和弦集合 (Open Chord Set)</text>
+    <text x="35" y="922" font-size="11" fill="#14532d">詞典中定義什麼和弦，Prism 就索引什麼和弦；</text>
+    <text x="35" y="940" font-size="11" fill="#14532d">打破 400 拼音壁壘，幾千個自定義速記和弦、縮略碼任意擴充！</text>
+  </g>
+
+  <!-- ======================== 底部總結欄 ======================== -->
+  <g transform="translate(40, 975)">
+    <text x="10" y="0" font-size="11" fill="#475569">💡 <tspan font-weight="bold" fill="#b91c1c">舊版瓶頸：</tspan>封閉全拼轉譯流，和弦被當作「拼音字母的二次代換」，無法自立門戶直通詞典。</text>
+    <text x="10" y="18" font-size="11" fill="#475569">🚀 <tspan font-weight="bold" fill="#0284c7">新版架構：</tspan>以標準和弦閉包爲一等公民，拼音條目與 combo_pinyin_steno 速記碼在 Prism 5.0 內平起平坐，隨心擴充。</text>
+  </g>
+</svg>

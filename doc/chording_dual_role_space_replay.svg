@@ -1,0 +1,247 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1060" width="100%" height="100%" style="background:#ffffff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <defs>
+    <marker id="arr-black" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0f172a"/>
+    </marker>
+    <marker id="arr-red" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#dc2626"/>
+    </marker>
+    <marker id="arr-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#16a34a"/>
+    </marker>
+    <marker id="arr-purple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#6d28d9"/>
+    </marker>
+    <marker id="arr-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0284c7"/>
+    </marker>
+  </defs>
+
+  <!-- 頂部標題區 -->
+  <text x="40" y="42" font-size="20" font-weight="bold" fill="#0f172a">【無抬鍵環境 Emacs】雙功能空格延時判定與兩段獨立翻譯演繹</text>
+  <text x="40" y="66" font-size="12" fill="#475569">展示：前空格超時重發結算前段 (什麼) ｜ 後空格遇 u 解凍爲 A ｜ 兩段獨立音節圖 (DAG) 分流對比</text>
+
+  <!-- ======================== 第一層：物理擊鍵與 Δt 判斷依據時間軸 ======================== -->
+  <rect x="40" y="90" width="1020" height="150" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="55" y="115" font-size="13" font-weight="bold" fill="#0f172a">▶ 物理擊鍵時間軸與閥門判定依據 (StreamingChordProcessor)</text>
+
+  <!-- 基準時間軸 -->
+  <line x1="80" y1="160" x2="1020" y2="160" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arr-black)"/>
+  <text x="1025" y="164" font-size="12" fill="#0f172a" font-weight="bold">時間 t</text>
+
+  <!-- 連續快速落鍵: s d f (正常擊鍵流，無編號) -->
+  <g font-size="11" font-weight="bold" text-anchor="middle">
+    <circle cx="120" cy="160" r="13" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="120" y="145" fill="#0284c7">s ↓</text>
+    <text x="120" y="190" font-family="monospace" fill="#0f172a">S</text>
+
+    <circle cx="170" cy="160" r="13" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="170" y="145" fill="#0284c7">d ↓</text>
+    <text x="170" y="190" font-family="monospace" fill="#0f172a">H</text>
+
+    <circle cx="220" cy="160" r="13" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="220" y="145" fill="#0284c7">f ↓</text>
+    <text x="220" y="190" font-family="monospace" fill="#0f172a">G</text>
+  </g>
+  <rect x="110" y="200" width="120" height="22" rx="3" fill="#eff6ff" stroke="#0284c7"/>
+  <text x="170" y="215" font-size="10" fill="#0284c7" font-weight="bold" text-anchor="middle">快速連續落鍵 (無 ')</text>
+
+  <!-- 閥門 ① 區間: 停頓超時 -->
+  <line x1="240" y1="160" x2="380" y2="160" stroke="#dc2626" stroke-width="2" stroke-dasharray="3"/>
+  <rect x="250" y="130" width="130" height="24" rx="3" fill="#fff1f2" stroke="#fca5a5"/>
+  <text x="315" y="146" font-size="11" fill="#b91c1c" font-weight="bold" text-anchor="middle">① Δt &gt; 120ms (超時)</text>
+  <text x="315" y="178" font-size="9" fill="#b91c1c" text-anchor="middle">宣告上一和弦 SHG 結束</text>
+
+  <!-- 前空格 ␣₁ (硃砂紅) -->
+  <g font-size="11" font-weight="bold" text-anchor="middle">
+    <circle cx="410" cy="160" r="16" fill="#fff1f2" stroke="#dc2626" stroke-width="2"/>
+    <text x="410" y="140" fill="#dc2626">␣₁ ↓ (前空格)</text>
+    <text x="410" y="190" fill="#dc2626">暫存待決</text>
+    <text x="410" y="208" font-size="9" fill="#64748b">浮動提示 [␣]，防誤加</text>
+  </g>
+
+  <!-- 閥門 ② 區間: 超出雙擊窗口 -->
+  <line x1="435" y1="160" x2="610" y2="160" stroke="#dc2626" stroke-width="2" stroke-dasharray="3"/>
+  <rect x="450" y="130" width="155" height="24" rx="3" fill="#fff1f2" stroke="#fca5a5"/>
+  <text x="527" y="146" font-size="11" fill="#b91c1c" font-weight="bold" text-anchor="middle">② Δt &gt; 120ms (非連擊)</text>
+  <text x="527" y="178" font-size="9" fill="#dc2626" font-weight="bold" text-anchor="middle">觸發 ␣₁ 重發上屏選詞！</text>
+
+  <!-- 後空格 ␣₂ (松柏綠) -->
+  <g font-size="11" font-weight="bold" text-anchor="middle">
+    <circle cx="635" cy="160" r="16" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+    <text x="635" y="140" fill="#16a34a">␣₂ ↓ (後空格)</text>
+    <text x="635" y="190" fill="#16a34a">接替暫存</text>
+    <text x="635" y="208" font-size="9" fill="#64748b">等待後續鍵裁決</text>
+  </g>
+
+  <!-- 閥門 ③ 區間: 生理微時差 -->
+  <line x1="660" y1="160" x2="790" y2="160" stroke="#16a34a" stroke-width="2"/>
+  <rect x="675" y="130" width="115" height="24" rx="3" fill="#f0fdf4" stroke="#86efac"/>
+  <text x="732" y="146" font-size="11" fill="#15803d" font-weight="bold" text-anchor="middle">③ Δt ≤ 60ms (並擊)</text>
+  <text x="732" y="178" font-size="9" fill="#15803d" font-weight="bold" text-anchor="middle">確證 ␣₂ 爲韻母 A！</text>
+
+  <!-- 後續字母: u i o -->
+  <g font-size="11" font-weight="bold" text-anchor="middle">
+    <circle cx="815" cy="160" r="13" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="815" y="145" fill="#0284c7">u ↓</text>
+    <text x="815" y="190" font-family="monospace" fill="#0f172a">U</text>
+
+    <circle cx="865" cy="160" r="13" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="865" y="145" fill="#0284c7">i ↓</text>
+    <text x="865" y="190" font-family="monospace" fill="#0f172a">R</text>
+
+    <circle cx="915" cy="160" r="13" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="915" y="145" fill="#0284c7">o ↓</text>
+    <text x="915" y="190" font-family="monospace" fill="#0f172a">O</text>
+  </g>
+  <rect x="800" y="200" width="130" height="22" rx="3" fill="#f0fdf4" stroke="#16a34a"/>
+  <text x="865" y="215" font-size="10" fill="#15803d" font-weight="bold" text-anchor="middle">解凍 A 推入 AURO</text>
+
+  <!-- ======================== 第二層：緩衝區分流與重發截斷 ======================== -->
+  <rect x="40" y="255" width="1020" height="150" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="55" y="280" font-size="14" font-weight="bold" fill="#2563eb">▶ 引擎緩衝區 (context-&gt;input) 與獨立分段流轉</text>
+
+  <!-- 前段輸入流 -->
+  <g transform="translate(60, 305)">
+    <rect x="0" y="0" width="220" height="38" rx="4" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="15" y="24" font-size="13" font-family="monospace" font-weight="bold" fill="#0284c7">input: "SHG"</text>
+    <text x="120" y="24" font-size="11" fill="#475569">速記和弦條目</text>
+    <text x="0" y="55" font-size="10" fill="#64748b">等待選詞確認...</text>
+  </g>
+
+  <!-- 隔離分割線：␣₁ 重發上屏 -->
+  <g transform="translate(325, 290)">
+    <rect x="0" y="0" width="280" height="85" rx="5" fill="#fef2f2" stroke="#dc2626" stroke-width="1.8"/>
+    <text x="140" y="25" font-size="12" font-weight="bold" fill="#b91c1c" text-anchor="middle">【前空格 ␣₁ 重發截斷點】</text>
+    <text x="140" y="45" font-size="11" font-family="monospace" fill="#0f172a" text-anchor="middle">ReplayPendingKey(XK_space)</text>
+    <text x="140" y="65" font-size="12" font-weight="bold" fill="#dc2626" text-anchor="middle">✓ 首選字「什麼」確認上屏！</text>
+    <text x="140" y="78" font-size="9" fill="#7f1d1d" text-anchor="middle">ctx-&gt;Clear()，前段翻譯生命週期完結</text>
+  </g>
+
+  <!-- 箭頭指向後段開闢 -->
+  <line x1="615" y1="332" x2="680" y2="332" stroke="#16a34a" stroke-width="2" marker-end="url(#arr-green)"/>
+  <text x="647" y="322" font-size="10" fill="#16a34a" font-weight="bold" text-anchor="middle">開闢新段</text>
+
+  <!-- 後段輸入流 -->
+  <g transform="translate(695, 305)">
+    <rect x="0" y="0" width="340" height="38" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="15" y="24" font-size="13" font-family="monospace" font-weight="bold" fill="#15803d">input: "AURO" → [UARO]</text>
+    <text x="235" y="24" font-size="11" fill="#475569">步進規格化</text>
+    <text x="0" y="55" font-size="10" fill="#64748b">␣₂ 解凍爲 A 領銜，全新音節獨立演繹</text>
+  </g>
+
+  <!-- ======================== 第三層：兩幅簡化獨立音節圖 (Syllable Graphs) ======================== -->
+  <g transform="translate(40, 425)">
+    <!-- 圖一：前段獨立音節圖 (SHG -> 什麼 / 是個) -->
+    <rect x="0" y="0" width="490" height="380" rx="6" fill="#ffffff" stroke="#b91c1c" stroke-width="1.5"/>
+    <text x="20" y="30" font-size="14" font-weight="bold" fill="#b91c1c">【圖一：前段獨立音節圖】S - H - G</text>
+    <text x="20" y="50" font-size="11" fill="#64748b">獨立生命週期 1 ｜ 結算上屏：什麼 (速記碼)</text>
+
+    <!-- 頂點 0, 1, 2, 3 -->
+    <g font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle" transform="translate(40, 150)">
+      <circle cx="40" cy="0" r="14" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+      <text x="40" y="5" fill="#0f172a">0</text>
+
+      <circle cx="140" cy="0" r="10" fill="#ffffff" stroke="#94a3b8"/>
+      <text x="140" y="4" fill="#94a3b8">1</text>
+      <text x="90" y="18" font-size="13" fill="#64748b">S</text>
+
+      <circle cx="240" cy="0" r="14" fill="#f8fafc" stroke="#0284c7" stroke-width="1.5"/>
+      <text x="240" y="5" fill="#0284c7">2</text>
+      <text x="190" y="18" font-size="13" fill="#64748b">H</text>
+
+      <circle cx="370" cy="0" r="15" fill="#fef2f2" stroke="#dc2626" stroke-width="2"/>
+      <text x="370" y="5" fill="#dc2626">3</text>
+      <text x="305" y="18" font-size="13" fill="#64748b">G</text>
+
+      <!-- 弧線 A1: [0, 2) -> [SH] = shi (是/時) -->
+      <path d="M 45 -12 C 85 -60, 195 -60, 235 -12" fill="none" stroke="#0284c7" stroke-width="1.8" marker-end="url(#arr-blue)"/>
+      <rect x="95" y="-72" width="90" height="20" rx="3" fill="#eff6ff" stroke="#0284c7"/>
+      <text x="140" y="-58" font-size="10" font-family="monospace" fill="#0284c7" text-anchor="middle">[SH] = shi (是)</text>
+
+      <!-- 弧線 A2: [2, 3) -> [G] = ge (個/隔) [嚴格補全] -->
+      <path d="M 245 -12 C 275 -55, 335 -55, 365 -12" fill="none" stroke="#0284c7" stroke-width="1.8" marker-end="url(#arr-blue)"/>
+      <rect x="272" y="-70" width="75" height="20" rx="3" fill="#eff6ff" stroke="#0284c7"/>
+      <text x="309" y="-56" font-size="10" font-family="monospace" fill="#0284c7" text-anchor="middle">[G] = ge (個)</text>
+
+      <!-- 弧線 B: [0, 3) -> [SHG] = 什麼 (速記長條目) -->
+      <path d="M 45 12 C 140 105, 280 105, 365 12" fill="none" stroke="#dc2626" stroke-width="2.2" marker-end="url(#arr-red)"/>
+      <rect x="140" y="70" width="130" height="24" rx="3" fill="#fff1f2" stroke="#dc2626" stroke-width="1.5"/>
+      <text x="205" y="86" font-size="11" font-family="monospace" font-weight="bold" fill="#b91c1c" text-anchor="middle">[SHG] = 什麼 (速記)</text>
+    </g>
+
+    <!-- 終端出字成果 -->
+    <g transform="translate(30, 275)">
+      <rect x="0" y="0" width="430" height="85" rx="4" fill="#fef2f2" stroke="#fca5a5"/>
+      <text x="15" y="22" font-size="12" font-weight="bold" fill="#0f172a">經前空格 ␣₁ 重發結算成果：</text>
+      <text x="15" y="46" font-size="14" font-weight="bold" fill="#b91c1c">上屏確認：1. 什麼</text>
+      <text x="160" y="46" font-size="11" fill="#475569">(候選 2. 是個  3. 時  隨上屏出清)</text>
+      <text x="15" y="68" font-size="9" fill="#64748b">※ 拓撲圖中亦隱含 [S]=si, [HG]=ri (四日) 等切分路徑，交由語言模型裁決，此處略。</text>
+    </g>
+
+    <!-- 圖二：後段獨立音節圖 (AURO -> [UARO]=網/王) -->
+    <rect x="530" y="0" width="490" height="380" rx="6" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="550" y="30" font-size="14" font-weight="bold" fill="#15803d">【圖二：後段獨立音節圖】A - U - R - O</text>
+    <text x="550" y="50" font-size="11" fill="#64748b">獨立生命週期 2 ｜ 步進重排：網 / 王</text>
+
+    <!-- 頂點 0, 1, 2, 3, 4 -->
+    <g font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle" transform="translate(565, 150)">
+      <circle cx="20" cy="0" r="14" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+      <text x="20" y="5" fill="#0f172a">0</text>
+
+      <circle cx="100" cy="0" r="10" fill="#ffffff" stroke="#94a3b8"/>
+      <text x="100" y="4" fill="#94a3b8">1</text>
+      <text x="60" y="18" font-size="13" fill="#15803d">A</text>
+
+      <circle cx="180" cy="0" r="13" fill="#ffffff" stroke="#6d28d9" stroke-width="1.5"/>
+      <text x="180" y="4" fill="#6d28d9">2</text>
+      <text x="140" y="18" font-size="13" fill="#64748b">U</text>
+
+      <circle cx="270" cy="0" r="13" fill="#ffffff" stroke="#6d28d9" stroke-width="1.5"/>
+      <text x="270" y="4" fill="#6d28d9">3</text>
+      <text x="225" y="18" font-size="13" fill="#64748b">R</text>
+
+      <circle cx="390" cy="0" r="15" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+      <text x="390" y="5" fill="#16a34a">4</text>
+      <text x="330" y="18" font-size="13" fill="#64748b">O</text>
+
+      <!-- 步進邊 A: [0, 2) -> AU 重排 [UA] = wa -->
+      <path d="M 25 -10 C 60 -50, 140 -50, 175 -10" fill="none" stroke="#6d28d9" stroke-width="1.5" stroke-dasharray="3" marker-end="url(#arr-purple)"/>
+      <rect x="65" y="-62" width="75" height="18" rx="2" fill="#f5f3ff" stroke="#6d28d9"/>
+      <text x="102" y="-49" font-size="9" font-family="monospace" fill="#6d28d9" text-anchor="middle">[UA]=wa</text>
+
+      <!-- 步進邊 B: [0, 3) -> AUR 重排 [UAR] = wai -->
+      <path d="M 25 -12 C 90 -85, 200 -85, 265 -12" fill="none" stroke="#6d28d9" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#arr-purple)"/>
+      <rect x="110" y="-95" width="85" height="18" rx="2" fill="#f5f3ff" stroke="#6d28d9"/>
+      <text x="152" y="-82" font-size="9" font-family="monospace" fill="#6d28d9" text-anchor="middle">[UAR]=wai</text>
+
+      <!-- 步進邊 C: [0, 4) -> AURO 重排 [UARO] = wang -->
+      <path d="M 25 12 C 130 95, 290 95, 385 12" fill="none" stroke="#16a34a" stroke-width="2.2" marker-end="url(#arr-green)"/>
+      <rect x="140" y="70" width="145" height="24" rx="3" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+      <text x="212" y="86" font-size="11" font-family="monospace" font-weight="bold" fill="#15803d" text-anchor="middle">AURO → [UARO]=wang</text>
+    </g>
+
+    <!-- 終端出字成果 -->
+    <g transform="translate(550, 275)">
+      <rect x="0" y="0" width="450" height="85" rx="4" fill="#f0fdf4" stroke="#86efac"/>
+      <text x="15" y="24" font-size="12" font-weight="bold" fill="#0f172a">步進查詢規格化成果：</text>
+      <text x="15" y="50" font-size="14" font-weight="bold" fill="#15803d">當前候選：1. 網  2. 王  3. 望</text>
+      <text x="235" y="50" font-size="11" fill="#475569">(wang · 規格化命中)</text>
+      <text x="15" y="72" font-size="10" fill="#64748b">不受前段 SHG 任何歷史殘留干擾，全新音節圖獨立成詞。</text>
+    </g>
+  </g>
+
+  <!-- ======================== 底部總結欄 ======================== -->
+  <g transform="translate(40, 825)">
+    <rect x="0" y="0" width="1020" height="195" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="20" y="26" font-size="13" font-weight="bold" fill="#0f172a">【架構精義 · 雙功能空格重發分流核心機制】</text>
+    
+    <text x="20" y="52" font-size="11" fill="#334155"><tspan font-weight="bold" fill="#b91c1c">1. 閥門 ① 爲何不直接出空？</tspan>空格在宮保中身兼「韻母 A」，孤立落鍵必須隔離暫存入 pending_solo_key_ 並回顯待決提示符「␣」，防止下一音節超前落鍵的並擊成分被誤判上屏；</text>
+    
+    <text x="20" y="74" font-size="11" fill="#334155"><tspan font-weight="bold" fill="#b91c1c">2. 閥門 ② 非雙擊超時重發：</tspan>後空格到達時若間隔超時（Δt &gt; 120ms），確證用戶並非快速雙擊（Double Tap），狀態機當場重發前空格，推進前段「什麼」確認上屏，乾淨清空 input；</text>
+
+    <text x="20" y="96" font-size="11" fill="#334155"><tspan font-weight="bold" fill="#15803d">3. 閥門 ③ 微時差解凍爲 A：</tspan>字母 u 緊隨後空格而至（Δt ≤ 60ms），確證後空格是超前觸底的並擊韻母 A，瞬間解凍爲 "A" 領銜開闢全新音節 AURO；</text>
+
+    <text x="20" y="118" font-size="11" fill="#334155"><tspan font-weight="bold" fill="#6d28d9">4. 獨立音節圖兩段切分：</tspan>重發上屏切實將擊鍵流分割爲兩幅獨立的 DAG 音節圖——前段包含 [SHG]=什麼 與 [SH]+[G]=是個 等路徑；後段專注步進演繹「網/王」，彼此互不污染，渾然天成。</text>
+  </g>
+</svg>

@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 930" width="100%" height="100%" style="background:#ffffff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#1e293b"/>
+    </marker>
+    <marker id="arr-red" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#dc2626"/>
+    </marker>
+    <marker id="arr-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0284c7"/>
+    </marker>
+  </defs>
+
+  <!-- 頂部標題區 -->
+  <text x="40" y="45" font-size="20" font-weight="bold" fill="#0f172a">【無抬鍵環境 Emacs】URZF 先右後左擊鍵流與四大時序分支判斷樹</text>
+  <text x="40" y="70" font-size="12" fill="#475569">先右手韻母 (UR) 後左手聲母 (ZF) ｜ 精確演示 Δt(R→Z) 手系逆轉超時注入隔音符 UR'ZF</text>
+
+  <!-- ======================== 主幹：右手前綴步進推流 (0 ~ 30ms) ======================== -->
+  <rect x="40" y="95" width="980" height="135" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="55" y="120" font-size="13" font-weight="bold" fill="#0f172a">【前綴：右手韻母部先觸底】(右食 u ↓ → 右中 i ↓)</text>
+
+  <!-- 0ms u (U) -->
+  <circle cx="140" cy="155" r="15" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="140" y="160" font-size="12" font-weight="bold" fill="#0284c7" text-anchor="middle">u ↓</text>
+  <text x="140" y="190" font-size="11" font-family="monospace" fill="#6d28d9" text-anchor="middle">U → [U]</text>
+  <text x="140" y="210" font-size="12" font-weight="bold" fill="#b45309" text-anchor="middle">1. 無 (wu)</text>
+
+  <line x1="158" y1="155" x2="310" y2="155" stroke="#1e293b" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="235" y="145" font-size="10" fill="#64748b" text-anchor="middle">同手連彈 Δt ≤ 60ms</text>
+
+  <!-- 15ms i (R) -->
+  <circle cx="330" cy="155" r="15" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="330" y="160" font-size="12" font-weight="bold" fill="#0284c7" text-anchor="middle">i ↓</text>
+  <text x="330" y="190" font-size="11" font-family="monospace" fill="#6d28d9" text-anchor="middle">UR → [UR]</text>
+  <text x="330" y="210" font-size="12" font-weight="bold" fill="#b45309" text-anchor="middle">1. 爲 (wei)</text>
+
+  <!-- 核心手系逆轉分流線：向右連接左手聲母 Z -->
+  <line x1="350" y1="155" x2="520" y2="155" stroke="#1e293b" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="435" y="145" font-size="11" fill="#dc2626" font-weight="bold" text-anchor="middle">手系翻轉閥門 R → Z</text>
+
+  <!-- 30ms 決策關鍵點：左手聲母 x (Z) 觸底 -->
+  <circle cx="540" cy="155" r="16" fill="#fef2f2" stroke="#dc2626" stroke-width="2"/>
+  <text x="540" y="160" font-size="12" font-weight="bold" fill="#dc2626" text-anchor="middle">x ↓</text>
+  <text x="540" y="190" font-size="11" font-family="monospace" fill="#dc2626" font-weight="bold" text-anchor="middle">Z (左聲母)</text>
+  <text x="540" y="210" font-size="11" fill="#475569" text-anchor="middle">手系逆轉點</text>
+
+  <!-- 左手食指 c (F) 接續推進 -->
+  <line x1="560" y1="155" x2="670" y2="155" stroke="#1e293b" stroke-width="1.5" marker-end="url(#arr)"/>
+  <circle cx="690" cy="155" r="14" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="690" y="160" font-size="12" font-weight="bold" fill="#0284c7" text-anchor="middle">c ↓</text>
+  <text x="690" y="190" font-size="11" font-family="monospace" fill="#6d28d9" text-anchor="middle">F (左聲母)</text>
+  <text x="690" y="210" font-size="11" fill="#64748b" text-anchor="middle">聲母合閉</text>
+
+  <!-- ======================== 閥門 1：手系逆轉超時判定 (隔斷 vs 融合) ======================== -->
+  <!-- 左側紅線：超時切分 (分支 2) -->
+  <path d="M 530 175 L 530 275 L 260 275 L 260 320" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#arr-red)"/>
+  <rect x="310" y="263" width="180" height="22" rx="3" fill="#fff1f2" stroke="#fca5a5"/>
+  <text x="400" y="278" font-size="11" fill="#b91c1c" font-weight="bold" text-anchor="middle">Δt(R→Z) &gt; 60ms 手系超時</text>
+
+  <!-- 右側綠線：微時差融合 (分支 1 & 後續) -->
+  <path d="M 705 170 L 705 275 L 770 275 L 770 320" fill="none" stroke="#16a34a" stroke-width="2" marker-end="url(#arr)"/>
+  <rect x="715" y="240" width="170" height="22" rx="3" fill="#f0fdf4" stroke="#86efac"/>
+  <text x="800" y="255" font-size="11" fill="#15803d" font-weight="bold" text-anchor="middle">Δt(R→Z) ≤ 60ms 微時差容許</text>
+
+  <!-- ======================== 分支 2 卡片 (左側：手系超時隔斷 UR'ZF) ======================== -->
+  <rect x="40" y="325" width="460" height="230" rx="6" fill="#ffffff" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="55" y="350" font-size="13" font-weight="bold" fill="#b91c1c">【分支 2】手系逆轉超時 · 隔斷注入隔音符「UR'ZF」</text>
+
+  <g transform="translate(60, 370)">
+    <rect x="0" y="0" width="420" height="75" rx="4" fill="#fff1f2" stroke="#fca5a5"/>
+    <text x="15" y="24" font-size="12" font-weight="bold" fill="#0f172a">右手韻母 (UR) 完畢，左手聲母 (ZF) 超時落底：</text>
+    <text x="15" y="46" font-size="12" font-family="monospace" fill="#b91c1c" font-weight="bold">input: UR + ' + ZF → UR'ZF</text>
+    <text x="15" y="66" font-size="13" font-weight="bold" fill="#b45309">輸出：1. 爲之 (wei'zhi) / 微之</text>
+
+    <text x="5" y="105" font-size="11" fill="#334155" font-weight="bold">狀態機判定要義：</text>
+    <text x="5" y="125" font-size="11" fill="#64748b">1. 前一落鍵爲右手韻母 (IsFinal: R)，當前爲左手聲母 (IsInitial: Z)；</text>
+    <text x="5" y="145" font-size="11" fill="#64748b">2. 間隔時間 Δt 超出生理容差 chord_duration_ms (60ms)；</text>
+    <text x="5" y="165" font-size="11" fill="#64748b">3. 確證爲「前字已收尾，新字方啓奏」，自動推入單引號切分分詞。</text>
+  </g>
+
+  <!-- ======================== 分支 1 卡片 (右側：微時差同弦融合) ======================== -->
+  <g transform="translate(540, 325)">
+    <rect x="0" y="0" width="480" height="80" rx="6" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="15" y="25" font-size="13" font-weight="bold" fill="#15803d">【分支 1：基底閉包】URZF 逆序完整融合爲一字</text>
+    <text x="15" y="50" font-size="12" font-family="monospace" fill="#6d28d9">input: URZF → 鍵序規範化重排: [ZFUR]</text>
+    <rect x="330" y="30" width="130" height="32" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="395" y="52" font-size="14" font-weight="bold" fill="#15803d" text-anchor="middle">1. 追 (zhui)</text>
+  </g>
+
+  <!-- ======================== 閥門 2：尾部雙功能空格閥門 ======================== -->
+  <line x1="780" y1="410" x2="780" y2="470" stroke="#1e293b" stroke-width="1.5"/>
+  <circle cx="780" cy="470" r="15" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="780" y="475" font-size="12" font-weight="bold" fill="#0284c7" text-anchor="middle">␣ ↓</text>
+  <text x="805" y="475" font-size="12" font-weight="bold" fill="#0f172a">拇指敲擊空格</text>
+
+  <!-- 分支 3 箭頭 (疾速並擊) -->
+  <path d="M 765 480 L 610 530 L 610 580" fill="none" stroke="#b45309" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="530" y="520" width="160" height="22" rx="3" fill="#fffbeb" stroke="#fde68a"/>
+  <text x="610" y="535" font-size="11" fill="#b45309" font-weight="bold" text-anchor="middle">Δt(F→␣) ≤ 60ms 疾速並擊</text>
+
+  <!-- 分支 4 箭頭 (悠遊單擊) -->
+  <path d="M 795 480 L 920 530 L 920 580" fill="none" stroke="#0284c7" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+  <rect x="840" y="520" width="160" height="22" rx="3" fill="#f0f9ff" stroke="#bae6fd"/>
+  <text x="920" y="535" font-size="11" fill="#0284c7" font-weight="bold" text-anchor="middle">Δt(F→␣) &gt; 60ms 獨立空格</text>
+
+  <!-- ======================== 分支 3 卡片 (空格化爲 A: 拽) ======================== -->
+  <rect x="420" y="585" width="300" height="200" rx="6" fill="#ffffff" stroke="#b45309" stroke-width="1.5"/>
+  <text x="435" y="612" font-size="13" font-weight="bold" fill="#b45309">【分支 3】雙功能鍵 · 轉化爲韻母 A</text>
+
+  <g transform="translate(435, 630)">
+    <text x="0" y="20" font-size="11" fill="#475569">機制：在生理窗口內緊隨聲母落底</text>
+    <text x="0" y="42" font-size="11" font-family="monospace" fill="#6d28d9">input: URZF + A → URZFA</text>
+    <text x="0" y="68" font-size="11" font-family="monospace" fill="#15803d">重排閉包: [ZFUAR] (zhuai)</text>
+
+    <rect x="0" y="85" width="270" height="40" rx="4" fill="#fffbeb" stroke="#b45309" stroke-width="1.5"/>
+    <text x="135" y="110" font-size="16" font-weight="bold" fill="#b45309" text-anchor="middle">1. 拽 (zhuai)</text>
+
+    <text x="0" y="145" font-size="10" fill="#64748b">無需抬鍵，流式追加韻母 A 瞬間擴展成字</text>
+  </g>
+
+  <!-- ======================== 分支 4 卡片 (空格化爲功能操作: 追 上屏) ======================== -->
+  <rect x="740" y="585" width="280" height="200" rx="6" fill="#ffffff" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="755" y="612" font-size="13" font-weight="bold" fill="#0284c7">【分支 4】雙功能鍵 · 暫存待決與選詞</text>
+
+  <g transform="translate(755, 630)">
+    <text x="0" y="20" font-size="11" fill="#475569">機制：超出生理窗口，確證爲單擊空格</text>
+    <text x="0" y="42" font-size="11" fill="#0284c7">進入 pending_solo_key_ 暫存佇列</text>
+    <text x="0" y="68" font-size="11" fill="#475569">預編輯區浮動提示符：<tspan fill="#0284c7" font-weight="bold">[␣]</tspan></text>
+
+    <rect x="0" y="85" width="250" height="40" rx="4" fill="#f0f9ff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="125" y="110" font-size="14" font-weight="bold" fill="#0284c7" text-anchor="middle">結算出詞「追」上屏 / 真空格</text>
+
+    <text x="0" y="145" font-size="10" fill="#64748b">連擊吞次擊，超時或後續鍵推動結算閉環</text>
+  </g>
+
+  <!-- ======================== 底部總結欄 ======================== -->
+  <g transform="translate(40, 805)">
+    <rect x="0" y="0" width="980" height="85" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="20" y="26" font-size="12" font-weight="bold" fill="#0f172a">【架構精義 · URZF 先右後左手系驗證】</text>
+    <text x="20" y="48" font-size="11" fill="#334155">1. 閥門 1 直擊時序本質：UR (右手韻母) 與 ZF (左手聲母) 分界涇渭分明。打得快是同字滑音（追），稍停頓則是詞句自然切分（爲之），完全依賴物理落鍵時間差；</text>
+    <text x="20" y="68" font-size="11" fill="#334155">2. 閥門 2 消除按鍵冗餘：尾部空格在毫秒間自由分流爲「韻母 A（拽）」或「選詞確認（追）」，爲無抬鍵終端賦予全功能閉環體驗。</text>
+  </g>
+</svg>

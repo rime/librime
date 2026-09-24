@@ -1,0 +1,222 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 930" width="100%" height="100%" style="background:#ffffff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#1e293b"/>
+    </marker>
+  </defs>
+
+  <!-- 頂部標題區 -->
+  <text x="40" y="45" font-size="20" font-weight="bold" fill="#0f172a">【擊鍵時序與和弦定界】講義：F-Z-U-R-O 步步成字與新舊組件流轉對比</text>
+  <text x="40" y="70" font-size="12" fill="#475569">白紙黑字講義圖 ｜ 硃紅：落鍵 ｜ 青藍：抬鍵與流式 ｜ 紫棠：琴盤音節 ｜ 琥珀：實時候選 ｜ 松綠：閉包鎖定</text>
+
+  <!-- 時間軸主軸線 -->
+  <line x1="170" y1="105" x2="1000" y2="105" stroke="#1e293b" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="1005" y="109" font-size="12" fill="#0f172a" font-weight="bold">時間 t</text>
+
+  <!-- 垂直時間輔助線 -->
+  <!-- 0ms -->
+  <line x1="190" y1="100" x2="190" y2="890" stroke="#fca5a5" stroke-width="1" stroke-dasharray="3"/>
+  <text x="190" y="95" font-size="11" fill="#b91c1c" font-weight="bold" text-anchor="middle">0ms</text>
+  <!-- 15ms -->
+  <line x1="250" y1="100" x2="250" y2="890" stroke="#fca5a5" stroke-width="1" stroke-dasharray="3"/>
+  <text x="250" y="95" font-size="11" fill="#b91c1c" font-weight="bold" text-anchor="middle">15ms</text>
+  <!-- 30ms -->
+  <line x1="310" y1="100" x2="310" y2="890" stroke="#fca5a5" stroke-width="1" stroke-dasharray="3"/>
+  <text x="310" y="95" font-size="11" fill="#b91c1c" font-weight="bold" text-anchor="middle">30ms</text>
+  <!-- 45ms -->
+  <line x1="370" y1="100" x2="370" y2="890" stroke="#fca5a5" stroke-width="1" stroke-dasharray="3"/>
+  <text x="370" y="95" font-size="11" fill="#b91c1c" font-weight="bold" text-anchor="middle">45ms</text>
+  <!-- 60ms -->
+  <line x1="430" y1="100" x2="430" y2="890" stroke="#86efac" stroke-width="1" stroke-dasharray="3"/>
+  <text x="430" y="95" font-size="11" fill="#15803d" font-weight="bold" text-anchor="middle">60ms</text>
+  <!-- 110ms -->
+  <line x1="530" y1="100" x2="530" y2="890" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3"/>
+  <text x="530" y="95" font-size="11" fill="#64748b" text-anchor="middle">110ms</text>
+  <!-- 130ms -->
+  <line x1="590" y1="100" x2="590" y2="890" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3"/>
+  <text x="590" y="95" font-size="11" fill="#64748b" text-anchor="middle">130ms</text>
+  <!-- 150ms -->
+  <line x1="650" y1="100" x2="650" y2="890" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3"/>
+  <text x="650" y="95" font-size="11" fill="#64748b" text-anchor="middle">150ms</text>
+  <!-- 170ms -->
+  <line x1="710" y1="100" x2="710" y2="890" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3"/>
+  <text x="710" y="95" font-size="11" fill="#64748b" text-anchor="middle">170ms</text>
+  <!-- 190ms (盡釋) -->
+  <line x1="770" y1="100" x2="770" y2="890" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="4"/>
+  <text x="770" y="95" font-size="11" fill="#16a34a" font-weight="bold" text-anchor="middle">190ms (Ø)</text>
+
+  <!-- ======================== 上部：物理與琴盤碼 ======================== -->
+  <text x="40" y="132" font-size="13" font-weight="bold" fill="#b91c1c">物理按鍵</text>
+  <text x="40" y="165" font-size="13" font-weight="bold" fill="#6d28d9">宮保字母</text>
+  <text x="40" y="215" font-size="13" font-weight="bold" fill="#1e293b">實況在鍵集合</text>
+  <text x="40" y="230" font-size="10" fill="#64748b">(物理握持)</text>
+
+  <g text-anchor="middle" font-weight="bold" font-size="12">
+    <!-- 落鍵 (硃紅) -->
+    <text x="190" y="132" fill="#b91c1c">c ↓</text><text x="190" y="165" fill="#6d28d9">F</text>
+    <text x="250" y="132" fill="#b91c1c">x ↓</text><text x="250" y="165" fill="#6d28d9">Z</text>
+    <text x="310" y="132" fill="#b91c1c">u ↓</text><text x="310" y="165" fill="#6d28d9">U</text>
+    <text x="370" y="132" fill="#b91c1c">i ↓</text><text x="370" y="165" fill="#6d28d9">R</text>
+    <text x="430" y="132" fill="#b91c1c">o ↓</text><text x="430" y="165" fill="#6d28d9">O</text>
+    <!-- 抬鍵 (青藍) -->
+    <text x="530" y="132" fill="#0284c7">c ↑</text>
+    <text x="590" y="132" fill="#0284c7">o ↑</text>
+    <text x="650" y="132" fill="#0284c7">x ↑</text>
+    <text x="710" y="132" fill="#0284c7">i ↑</text>
+    <text x="770" y="132" fill="#0284c7">u ↑</text>
+  </g>
+
+  <!-- 實況握持框 (白底黑線徽標) -->
+  <g text-anchor="middle" font-size="11" font-family="monospace">
+    <rect x="175" y="202" width="30" height="22" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="1.2"/>
+    <text x="190" y="217" fill="#0f172a">[F]</text>
+    <rect x="232" y="202" width="36" height="22" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="1.2"/>
+    <text x="250" y="217" fill="#0f172a">[FZ]</text>
+    <rect x="288" y="202" width="44" height="22" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="1.2"/>
+    <text x="310" y="217" fill="#0f172a">[FZU]</text>
+    <rect x="345" y="202" width="50" height="22" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="1.2"/>
+    <text x="370" y="217" fill="#0f172a">[FZUR]</text>
+    <!-- 全握持 -->
+    <rect x="402" y="202" width="58" height="22" rx="3" fill="#f8fafc" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="431" y="217" fill="#16a34a" font-weight="bold">[FZURO]</text>
+    <!-- 釋放階梯 -->
+    <rect x="505" y="202" width="50" height="22" rx="3" fill="#ffffff" stroke="#64748b" stroke-width="1"/>
+    <text x="530" y="217" fill="#475569">[ZURO]</text>
+    <rect x="568" y="202" width="44" height="22" rx="3" fill="#ffffff" stroke="#64748b" stroke-width="1"/>
+    <text x="590" y="217" fill="#475569">[ZUR]</text>
+    <rect x="632" y="202" width="36" height="22" rx="3" fill="#ffffff" stroke="#64748b" stroke-width="1"/>
+    <text x="650" y="217" fill="#475569">[UR]</text>
+    <rect x="695" y="202" width="30" height="22" rx="3" fill="#ffffff" stroke="#64748b" stroke-width="1"/>
+    <text x="710" y="217" fill="#475569">[U]</text>
+    <!-- 盡釋點 -->
+    <circle cx="770" cy="213" r="10" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="770" y="217" fill="#16a34a" font-weight="bold" font-size="11">Ø</text>
+  </g>
+
+  <!-- ======================== 中部：組件 A 經典 chord_composer ======================== -->
+  <rect x="35" y="255" width="980" height="235" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="50" y="280" font-size="14" font-weight="bold" fill="#b91c1c">組件 A：經典 chord_composer（阻塞式時序）</text>
+
+  <text x="50" y="320" font-size="12" fill="#475569">預編輯區浮動提示</text>
+  <text x="50" y="375" font-size="12" fill="#475569">緩衝區 context-&gt;input()</text>
+  <text x="50" y="435" font-size="12" fill="#475569">界面候選列表反饋</text>
+
+  <!-- 光標後生和弦顯示 -->
+  <g font-family="monospace" font-size="11" text-anchor="middle">
+    <rect x="175" y="307" width="30" height="20" rx="2" fill="#ffffff" stroke="#b91c1c"/>
+    <text x="190" y="321" fill="#b91c1c">[F]</text>
+    <line x1="205" y1="317" x2="230" y2="317" stroke="#cbd5e1"/>
+    <rect x="232" y="307" width="36" height="20" rx="2" fill="#ffffff" stroke="#b91c1c"/>
+    <text x="250" y="321" fill="#b91c1c">[FZ]</text>
+    <line x1="268" y1="317" x2="288" y2="317" stroke="#cbd5e1"/>
+    <rect x="290" y="307" width="40" height="20" rx="2" fill="#ffffff" stroke="#b91c1c"/>
+    <text x="310" y="321" fill="#b91c1c">[FZU]</text>
+    <line x1="330" y1="317" x2="348" y2="317" stroke="#cbd5e1"/>
+    <rect x="350" y="307" width="46" height="20" rx="2" fill="#ffffff" stroke="#b91c1c"/>
+    <text x="373" y="321" fill="#b91c1c">[FZUR]</text>
+    <line x1="396" y1="317" x2="408" y2="317" stroke="#cbd5e1"/>
+    <!-- 握持持續至 190ms -->
+    <rect x="410" y="307" width="345" height="20" rx="2" fill="#fff1f2" stroke="#b91c1c" stroke-dasharray="3"/>
+    <text x="580" y="321" fill="#b91c1c">[FZURO]（未閉合時僅在光標後浮動提示，不進入 input 轉換）</text>
+    <!-- 190ms 清空 -->
+    <text x="790" y="321" fill="#16a34a" font-weight="bold">clear() → Ø</text>
+  </g>
+
+  <!-- input 軌道：全程空白，190ms 寫入 zhong' -->
+  <line x1="190" y1="372" x2="760" y2="372" stroke="#dc2626" stroke-width="1.2" stroke-dasharray="4"/>
+  <text x="475" y="367" font-size="11" fill="#dc2626" text-anchor="middle" font-family="monospace">(全程爲空，未推入任何編碼)</text>
+  <rect x="765" y="358" width="80" height="25" rx="3" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="805" y="375" font-size="12" fill="#16a34a" font-weight="bold" font-family="monospace" text-anchor="middle">zhong'</text>
+
+  <!-- 界面反饋軌道 -->
+  <text x="190" y="435" font-size="11" fill="#94a3b8">候選列表全程空白；用戶蒙眼盲打，心流無反饋</text>
+  <rect x="765" y="420" width="140" height="25" rx="3" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="835" y="437" font-size="12" fill="#16a34a" font-weight="bold" text-anchor="middle">抬手出詞: 1. 中</text>
+
+  <!-- ======================== 下部：組件 B 新版 streaming_chord_processor ======================== -->
+  <rect x="35" y="510" width="980" height="385" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="50" y="535" font-size="14" font-weight="bold" fill="#2563eb">組件 B：新版 streaming_chord_processor（流式即時響應 · 步步成字）</text>
+
+  <text x="50" y="575" font-size="12" fill="#475569">緩衝區 context-&gt;input()</text>
+  <text x="50" y="630" font-size="12" fill="#475569">規格化音節</text>
+  <text x="50" y="690" font-size="12" fill="#475569">實時候選字 (Translator)</text>
+  <text x="50" y="765" font-size="12" fill="#475569">抬手閉包與重排運算</text>
+
+  <!-- input 軌道：流式推進 (無多餘雙引號) -->
+  <g font-family="monospace" font-size="11" text-anchor="middle">
+    <rect x="175" y="562" width="30" height="22" rx="3" fill="#eff6ff" stroke="#2563eb"/>
+    <text x="190" y="577" fill="#2563eb" font-weight="bold">F</text>
+    <line x1="205" y1="573" x2="230" y2="573" stroke="#2563eb"/>
+
+    <rect x="232" y="562" width="36" height="22" rx="3" fill="#eff6ff" stroke="#2563eb"/>
+    <text x="250" y="577" fill="#2563eb" font-weight="bold">FZ</text>
+    <line x1="268" y1="573" x2="288" y2="573" stroke="#2563eb"/>
+
+    <rect x="290" y="562" width="42" height="22" rx="3" fill="#eff6ff" stroke="#2563eb"/>
+    <text x="311" y="577" fill="#2563eb" font-weight="bold">FZU</text>
+    <line x1="332" y1="573" x2="348" y2="573" stroke="#2563eb"/>
+
+    <rect x="350" y="562" width="48" height="22" rx="3" fill="#eff6ff" stroke="#2563eb"/>
+    <text x="374" y="577" fill="#2563eb" font-weight="bold">FZUR</text>
+    <line x1="398" y1="573" x2="415" y2="573" stroke="#2563eb"/>
+
+    <!-- 60ms 握持 -->
+    <rect x="415" y="562" width="58" height="22" rx="3" fill="#eff6ff" stroke="#2563eb"/>
+    <text x="444" y="577" fill="#2563eb" font-weight="bold">FZURO</text>
+
+    <!-- 保持至 190ms -->
+    <line x1="474" y1="573" x2="745" y2="573" stroke="#2563eb" stroke-dasharray="3"/>
+    <text x="610" y="569" font-size="10" fill="#64748b">維持生和弦 FZURO，等待完全釋放</text>
+
+    <!-- 190ms 重排閉包 [ZFURO] (帶方括號，無引號) -->
+    <rect x="750" y="560" width="85" height="26" rx="3" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="792" y="577" fill="#16a34a" font-weight="bold" font-size="12">[ZFURO]</text>
+  </g>
+
+  <!-- 規格化音節代碼 (獨立單行，寬裕不重疊) -->
+  <g font-family="monospace" font-size="11" text-anchor="middle" font-weight="bold" fill="#6d28d9">
+    <text x="190" y="630">fu</text>
+    <text x="250" y="630">ZF</text>
+    <text x="310" y="630">ZFU</text>
+    <text x="370" y="630">ZFUR</text>
+    <text x="430" y="630">ZFURO</text>
+    <!-- 190ms 鎖定閉包 -->
+    <text x="792" y="630" fill="#16a34a">[ZFURO]</text>
+  </g>
+
+  <!-- 實時候選字流 (琥珀橙，每一步對應漢字) -->
+  <g text-anchor="middle">
+    <!-- 0ms: 1. 夫 -->
+    <rect x="166" y="675" width="48" height="24" rx="3" fill="#ffffff" stroke="#b45309" stroke-width="1.2"/>
+    <text x="190" y="691" font-size="11" fill="#b45309" font-weight="bold">1. 夫</text>
+
+    <!-- 15ms: 1. 之 -->
+    <rect x="226" y="675" width="48" height="24" rx="3" fill="#ffffff" stroke="#b45309" stroke-width="1.2"/>
+    <text x="250" y="691" font-size="11" fill="#b45309" font-weight="bold">1. 之</text>
+
+    <!-- 30ms: 1. 主 -->
+    <rect x="286" y="675" width="48" height="24" rx="3" fill="#ffffff" stroke="#b45309" stroke-width="1.2"/>
+    <text x="310" y="691" font-size="11" fill="#b45309" font-weight="bold">1. 主</text>
+
+    <!-- 45ms: 1. 追 -->
+    <rect x="346" y="675" width="48" height="24" rx="3" fill="#ffffff" stroke="#b45309" stroke-width="1.2"/>
+    <text x="370" y="691" font-size="11" fill="#b45309" font-weight="bold">1. 追</text>
+
+    <!-- 60ms: 1. 中 -->
+    <rect x="406" y="675" width="48" height="24" rx="3" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="430" y="691" font-size="11" fill="#16a34a" font-weight="bold">1. 中</text>
+
+    <!-- 190ms 鎖定 -->
+    <rect x="740" y="675" width="130" height="24" rx="3" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="805" y="691" font-size="11" fill="#16a34a" font-weight="bold">閉包鎖定: 1. 中</text>
+  </g>
+
+  <!-- 閉包運算說明卡片 -->
+  <g font-size="11" fill="#334155">
+    <rect x="175" y="745" width="755" height="55" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="190" y="767" fill="#2563eb" font-weight="bold">【流式步進 · 步步成字】</text>
+    <text x="330" y="767">每落一指即推入引擎：fu (夫) → ZF (之) → ZFU (主) → ZFUR (追) → ZFURO (中)，滑行零盲打；</text>
+    <text x="190" y="787" fill="#16a34a" font-weight="bold">【全釋閉包鎖真微】</text>
+    <text x="330" y="787">190ms 抬手盡釋 (Ø) 瞬間觸發 CanonicalizeCurrentChord()，以標準閉包 [ZFURO] 原地定界封閉。</text>
+  </g>
+</svg>

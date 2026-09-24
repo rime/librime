@@ -1,0 +1,266 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1060" width="100%" height="100%" style="background:#ffffff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <defs>
+    <marker id="arr-black" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0f172a"/>
+    </marker>
+    <marker id="arr-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0284c7"/>
+    </marker>
+    <marker id="arr-purple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#6d28d9"/>
+    </marker>
+    <marker id="arr-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#16a34a"/>
+    </marker>
+  </defs>
+
+  <!-- 頂部標題區 -->
+  <text x="40" y="42" font-size="20" font-weight="bold" fill="#0f172a">【無抬鍵音節圖與步進重排】Syllabifier (DAG) 拓撲分流與動態重排全景</text>
+  <text x="40" y="66" font-size="12" fill="#475569">展示：AU → [UA]、AUR → [UAR]（主軸上方）與 AURO → [UARO]（主軸下方）步進重排破除前綴單調性</text>
+
+  <!-- ======================== 第一層：物理落鍵與流式緩衝 ======================== -->
+  <rect x="40" y="90" width="1020" height="110" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="55" y="115" font-size="13" font-weight="bold" fill="#0f172a">▶ 物理擊鍵軸與雙功能空格判定 (StreamingChordProcessor)</text>
+
+  <!-- 時間軸 -->
+  <line x1="80" y1="145" x2="1020" y2="145" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arr-black)"/>
+
+  <!-- 落鍵點標記 -->
+  <g font-size="11" font-weight="bold" text-anchor="middle">
+    <!-- s -> S -->
+    <circle cx="120" cy="145" r="12" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="120" y="130" fill="#0284c7">s ↓</text>
+    <text x="120" y="175" font-family="monospace" font-size="14" fill="#0f172a">S</text>
+
+    <!-- d -> H -->
+    <circle cx="210" cy="145" r="12" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="210" y="130" fill="#0284c7">d ↓</text>
+    <text x="210" y="175" font-family="monospace" font-size="14" fill="#0f172a">H</text>
+
+    <!-- f -> G -->
+    <circle cx="300" cy="145" r="12" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="300" y="130" fill="#0284c7">f ↓</text>
+    <text x="300" y="175" font-family="monospace" font-size="14" fill="#0f172a">G</text>
+
+    <!-- ␣ -> A (雙功能空格) -->
+    <circle cx="410" cy="145" r="14" fill="#fffbeb" stroke="#b45309" stroke-width="1.8"/>
+    <text x="410" y="125" fill="#b45309">␣ ↓ (雙功能)</text>
+    <text x="410" y="175" font-family="monospace" font-size="14" fill="#b45309">A</text>
+    <text x="410" y="192" font-size="10" fill="#b45309">微時差判定爲 A</text>
+
+    <!-- u -> U -->
+    <circle cx="530" cy="145" r="12" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="530" y="130" fill="#0284c7">u ↓</text>
+    <text x="530" y="175" font-family="monospace" font-size="14" fill="#0f172a">U</text>
+
+    <!-- i -> R -->
+    <circle cx="630" cy="145" r="12" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="630" y="130" fill="#0284c7">i ↓</text>
+    <text x="630" y="175" font-family="monospace" font-size="14" fill="#0f172a">R</text>
+
+    <!-- o -> O -->
+    <circle cx="730" cy="145" r="12" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="730" y="130" fill="#0284c7">o ↓</text>
+    <text x="730" y="175" font-family="monospace" font-size="14" fill="#0f172a">O</text>
+  </g>
+
+  <!-- ctx.input 輸出 -->
+  <rect x="800" y="125" width="230" height="40" rx="4" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="810" y="142" font-size="10" fill="#0284c7">直推 Context 緩衝區:</text>
+  <text x="810" y="158" font-size="13" font-family="monospace" font-weight="bold" fill="#0f172a">input = "SHGAURO"</text>
+
+  <!-- 下行指引箭頭 -->
+  <line x1="550" y1="205" x2="550" y2="235" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arr-black)"/>
+  <text x="560" y="225" font-size="11" fill="#475569">交由 Translator &amp; Syllabifier</text>
+
+  <!-- ======================== 第二層：Syllabifier 音節圖 (DAG) ======================== -->
+  <rect x="40" y="240" width="1020" height="440" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="55" y="268" font-size="14" font-weight="bold" fill="#2563eb">▶ 音節圖 (Syllable Graph) 拓撲展開與步進重排邊</text>
+  <text x="500" y="268" font-size="11" fill="#64748b">頂點代表切分座標：0(S) 1(H) 2(G) 3(A) 4(U) 5(R) 6(O) 7</text>
+
+  <!-- DAG 拓撲基準節點 (0 到 7) -->
+  <g font-family="monospace" font-size="11" font-weight="bold" text-anchor="middle">
+    <!-- 頂點 0 -->
+    <circle cx="80" cy="450" r="14" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+    <text x="80" y="454" fill="#0f172a">0</text>
+
+    <!-- 頂點 1 -->
+    <circle cx="170" cy="450" r="10" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="170" y="454" fill="#94a3b8">1</text>
+    <text x="125" y="465" font-size="13" fill="#64748b">S</text>
+
+    <!-- 頂點 2 -->
+    <circle cx="260" cy="450" r="14" fill="#f8fafc" stroke="#0284c7" stroke-width="1.8"/>
+    <text x="260" y="454" fill="#0284c7">2</text>
+    <text x="215" y="465" font-size="13" fill="#64748b">H</text>
+
+    <!-- 頂點 3 (重要分流點) -->
+    <circle cx="360" cy="450" r="15" fill="#f5f3ff" stroke="#6d28d9" stroke-width="2"/>
+    <text x="360" y="454" fill="#6d28d9">3</text>
+    <text x="310" y="465" font-size="13" fill="#64748b">G</text>
+
+    <!-- 頂點 4 -->
+    <circle cx="470" cy="450" r="10" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="470" y="454" fill="#94a3b8">4</text>
+    <text x="415" y="465" font-size="13" fill="#b45309">A</text>
+
+    <!-- 頂點 5 -->
+    <circle cx="580" cy="450" r="13" fill="#ffffff" stroke="#6d28d9" stroke-width="1.5"/>
+    <text x="580" y="454" fill="#6d28d9">5</text>
+    <text x="525" y="465" font-size="13" fill="#64748b">U</text>
+
+    <!-- 頂點 6 -->
+    <circle cx="690" cy="450" r="13" fill="#ffffff" stroke="#6d28d9" stroke-width="1.5"/>
+    <text x="690" y="454" fill="#6d28d9">6</text>
+    <text x="635" y="465" font-size="13" fill="#64748b">R</text>
+
+    <!-- 頂點 7 -->
+    <circle cx="820" cy="450" r="15" fill="#f8fafc" stroke="#16a34a" stroke-width="2"/>
+    <text x="820" y="454" fill="#16a34a">7</text>
+    <text x="755" y="465" font-size="13" fill="#64748b">O</text>
+  </g>
+
+  <!-- ======================== 主軸上方弧線 ======================== -->
+  <!-- 路徑 1-A：上方 [0, 2) -> [SH] = shi -->
+  <path d="M 85 438 C 120 360, 220 360, 255 438" fill="none" stroke="#0284c7" stroke-width="1.8" marker-end="url(#arr-blue)"/>
+  <rect x="130" y="340" width="80" height="22" rx="3" fill="#eff6ff" stroke="#0284c7"/>
+  <text x="170" y="355" font-size="11" font-family="monospace" font-weight="bold" fill="#0284c7" text-anchor="middle">[SH] = shi</text>
+
+  <!-- 路徑 1-B：頂層主路徑 [2, 7) -> [GUARO] = guang (y=315) -->
+  <path d="M 265 438 C 420 305, 680 305, 815 438" fill="none" stroke="#0284c7" stroke-width="1.8" marker-end="url(#arr-blue)"/>
+  <rect x="480" y="315" width="135" height="22" rx="3" fill="#eff6ff" stroke="#0284c7"/>
+  <text x="547" y="330" font-size="11" font-family="monospace" font-weight="bold" fill="#0284c7" text-anchor="middle">[GUARO] = guang</text>
+
+  <!-- 步進邊 A（中層）：步長 3 (len=3, [3, 6)) -> AUR 重排爲 [UAR] = wai (y=350) -->
+  <path d="M 370 435 C 440 355, 620 355, 682 435" fill="none" stroke="#6d28d9" stroke-width="1.8" stroke-dasharray="4" marker-end="url(#arr-purple)"/>
+  <rect x="475" y="350" width="125" height="20" rx="3" fill="#f5f3ff" stroke="#6d28d9"/>
+  <text x="537" y="364" font-size="10" font-family="monospace" font-weight="bold" fill="#6d28d9" text-anchor="middle">AUR → [UAR] = wai</text>
+
+  <!-- 步進邊 B（底層）：步長 2 (len=2, [3, 5)) -> AU 重排爲 [UA] = wa (y=390) -->
+  <path d="M 368 440 C 410 395, 530 395, 572 440" fill="none" stroke="#6d28d9" stroke-width="1.8" stroke-dasharray="3" marker-end="url(#arr-purple)"/>
+  <rect x="420" y="390" width="115" height="20" rx="3" fill="#f5f3ff" stroke="#6d28d9"/>
+  <text x="477" y="404" font-size="10" font-family="monospace" font-weight="bold" fill="#6d28d9" text-anchor="middle">AU → [UA] = wa</text>
+
+  <!-- ======================== 主軸下方弧線 ======================== -->
+  <!-- 路徑 2：前半段速記和弦條目 [0, 3) -> 什麼 (紫棠色) -->
+  <path d="M 85 455 C 150 510, 290 510, 355 455" fill="none" stroke="#6d28d9" stroke-width="2" marker-end="url(#arr-purple)"/>
+  <rect x="175" y="495" width="85" height="22" rx="3" fill="#f5f3ff" stroke="#6d28d9"/>
+  <text x="217" y="510" font-size="11" font-family="monospace" font-weight="bold" fill="#6d28d9" text-anchor="middle">[SHG] = 什麼</text>
+
+  <!-- 步進邊 C（主軸下方空白處）：步長 4 (len=4, [3, 7)) -> AURO 重排爲 [UARO] = wang -->
+  <path d="M 366 458 C 460 535, 720 535, 812 458" fill="none" stroke="#6d28d9" stroke-width="2.2" marker-end="url(#arr-purple)"/>
+  <rect x="525" y="515" width="145" height="22" rx="3" fill="#f5f3ff" stroke="#6d28d9" stroke-width="1.5"/>
+  <text x="597" y="530" font-size="11" font-family="monospace" font-weight="bold" fill="#6d28d9" text-anchor="middle">AURO → [UARO] = wang</text>
+
+  <!-- 路徑 3（最底層長弧）：長和弦縮略碼 [0, 7) -> 什麼情況 (松綠色) -->
+  <path d="M 85 464 C 280 625, 620 625, 815 464" fill="none" stroke="#16a34a" stroke-width="2.5" marker-end="url(#arr-green)"/>
+  <rect x="360" y="595" width="230" height="26" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="475" y="612" font-size="12" font-family="monospace" font-weight="bold" fill="#16a34a" text-anchor="middle">[SHGUARO] = 什麼情況 (整句縮略)</text>
+
+  <!-- 右側：步進查詞運算追蹤框 -->
+  <g transform="translate(850, 275)">
+    <rect x="0" y="0" width="195" height="385" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="12" y="24" font-size="12" font-weight="bold" fill="#0f172a">▶ 步進查詞運算追蹤</text>
+    <text x="12" y="42" font-size="10" fill="#64748b">頂點 3 (A) 起步搜尋:</text>
+
+    <!-- 步驟 1: len=1 -->
+    <rect x="10" y="55" width="175" height="42" rx="3" fill="#ffffff" stroke="#e2e8f0"/>
+    <text x="18" y="72" font-size="10" font-family="monospace" fill="#475569">len=1: "A"</text>
+    <text x="18" y="87" font-size="10" fill="#64748b">→ [A] (未獨立成詞)</text>
+
+    <!-- 步驟 2: len=2 命中 wa -->
+    <rect x="10" y="105" width="175" height="52" rx="3" fill="#f5f3ff" stroke="#6d28d9"/>
+    <text x="18" y="122" font-size="10" font-family="monospace" fill="#6d28d9" font-weight="bold">len=2: "AU"</text>
+    <text x="18" y="137" font-size="10" fill="#475569">重排 → <tspan font-family="monospace" font-weight="bold">[UA]</tspan></text>
+    <text x="18" y="150" font-size="10" font-weight="bold" fill="#15803d">✓ 命中: wa (娃/蛙)</text>
+
+    <!-- 步驟 3: len=3 命中 wai -->
+    <rect x="10" y="165" width="175" height="52" rx="3" fill="#f5f3ff" stroke="#6d28d9"/>
+    <text x="18" y="182" font-size="10" font-family="monospace" fill="#6d28d9" font-weight="bold">len=3: "AUR"</text>
+    <text x="18" y="197" font-size="10" fill="#475569">重排 → <tspan font-family="monospace" font-weight="bold">[UAR]</tspan></text>
+    <text x="18" y="210" font-size="10" font-weight="bold" fill="#15803d">✓ 命中: wai (歪/外)</text>
+
+    <!-- 步驟 4: len=4 命中 wang -->
+    <rect x="10" y="225" width="175" height="52" rx="3" fill="#f5f3ff" stroke="#6d28d9" stroke-width="1.5"/>
+    <text x="18" y="242" font-size="10" font-family="monospace" fill="#6d28d9" font-weight="bold">len=4: "AURO"</text>
+    <text x="18" y="257" font-size="10" fill="#475569">重排 → <tspan font-family="monospace" font-weight="bold">[UARO]</tspan></text>
+    <text x="18" y="270" font-size="10" font-weight="bold" fill="#15803d">✓ 命中: wang (王/網)</text>
+
+    <!-- 算法總結備註 -->
+    <text x="10" y="298" font-size="10" fill="#0f172a" font-weight="bold">核心優勢：</text>
+    <text x="10" y="315" font-size="9" fill="#475569">1. 突破前綴單調性約束</text>
+    <text x="10" y="330" font-size="9" fill="#475569">2. max_key_length 限制窗口</text>
+    <text x="10" y="345" font-size="9" fill="#475569">3. string_view 零拷貝查詢</text>
+    <text x="10" y="360" font-size="9" fill="#15803d">4. 任意亂序皆能步步成邊</text>
+  </g>
+
+  <!-- 下行指引箭頭 -->
+  <line x1="550" y1="685" x2="550" y2="715" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arr-black)"/>
+
+  <!-- ======================== 第三層：Dictionary 詞圖與最終候選菜單 ======================== -->
+  <g transform="translate(40, 720)">
+    <!-- 詞圖卡片 -->
+    <rect x="0" y="0" width="560" height="235" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2"/>
+    <text x="20" y="28" font-size="13" font-weight="bold" fill="#0f172a">▶ 詞圖 (Word Graph 語言模型多義演繹)</text>
+
+    <!-- 演繹條塊 1：時光 -->
+    <g transform="translate(25, 45)">
+      <rect x="0" y="0" width="500" height="35" rx="3" fill="#f8fafc" stroke="#0284c7"/>
+      <text x="15" y="22" font-size="11" font-family="monospace" fill="#0284c7" font-weight="bold">[0, 2) shi: 時   +   [2, 7) guang: 光</text>
+      <text x="390" y="22" font-size="13" font-weight="bold" fill="#0284c7">⇒ 時光</text>
+    </g>
+
+    <!-- 演繹條塊 2：什麼 + 網 (展示步進出來的 wang) -->
+    <g transform="translate(25, 90)">
+      <rect x="0" y="0" width="500" height="35" rx="3" fill="#f8fafc" stroke="#6d28d9"/>
+      <text x="15" y="22" font-size="11" font-family="monospace" fill="#6d28d9" font-weight="bold">[0, 3) 速記: 什麼   +   [3, 7) wang: 網/王</text>
+      <text x="390" y="22" font-size="13" font-weight="bold" fill="#6d28d9">⇒ 什麼網</text>
+    </g>
+
+    <!-- 演繹條塊 3：什麼情況 (長縮略碼) -->
+    <g transform="translate(25, 135)">
+      <rect x="0" y="0" width="500" height="35" rx="3" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+      <text x="15" y="22" font-size="11" font-family="monospace" fill="#16a34a" font-weight="bold">[0, 7) 長和弦縮略碼: 什麼情況 (一擊直達)</text>
+      <text x="390" y="22" font-size="14" font-weight="bold" fill="#16a34a">⇒ 什麼情況</text>
+    </g>
+
+    <!-- 演繹條塊 4：步進細碎單字 (蛙/歪) -->
+    <text x="25" y="195" font-size="10" fill="#6d28d9">※ 步進生成的 [3, 5) 娃、[3, 6) 歪 等邊，亦作爲候選成分併入詞圖進行整句打分。</text>
+
+    <!-- 箭頭指向候選欄 -->
+    <line x1="565" y1="110" x2="605" y2="110" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arr-black)"/>
+
+    <!-- 終端候選窗 (ctx.menu) -->
+    <g transform="translate(615, 20)">
+      <rect x="0" y="0" width="405" height="195" rx="6" fill="#1e293b" stroke="#0f172a"/>
+      <!-- 窗口頂部 -->
+      <rect x="0" y="0" width="405" height="28" rx="6" fill="#0f172a"/>
+      <circle cx="15" cy="14" r="4" fill="#ef4444"/>
+      <circle cx="30" cy="14" r="4" fill="#f59e0b"/>
+      <circle cx="45" cy="14" r="4" fill="#10b981"/>
+      <text x="60" y="18" font-size="11" fill="#94a3b8" font-family="monospace">Emacs ctx.menu</text>
+
+      <!-- 候選條目 -->
+      <g font-size="13" font-weight="bold" fill="#ffffff" transform="translate(25, 60)">
+        <text x="0" y="0" fill="#38bdf8">1. 時光</text>
+        <text x="120" y="0" font-size="11" fill="#94a3b8" font-weight="normal">(shi guang · 高頻雙字詞)</text>
+
+        <text x="0" y="35" fill="#4ade80">2. 什麼情況</text>
+        <text x="120" y="35" font-size="11" fill="#94a3b8" font-weight="normal">(七鍵縮略碼一擊直出)</text>
+
+        <text x="0" y="70" fill="#c084fc">3. 什麼網</text>
+        <text x="120" y="70" font-size="11" fill="#94a3b8" font-weight="normal">(速記條目 + 步進 wang)</text>
+
+        <text x="0" y="105" fill="#94a3b8">4. 什麼</text>
+        <text x="120" y="105" font-size="11" fill="#64748b" font-weight="normal">(速記前綴待續...)</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ======================== 底部架構總結註解 ======================== -->
+  <g transform="translate(40, 975)">
+    <rect x="0" y="0" width="1020" height="55" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="15" y="22" font-size="11" fill="#334155"><tspan font-weight="bold" fill="#6d28d9">【步進重排之妙】</tspan>頂點 3 隨着窗口滑動截取 AU、AUR、AURO，原地規格化爲 [UA]=wa、[UAR]=wai、[UARO]=wang，破除了前綴單調性的枷鎖；</text>
+    <text x="15" y="40" font-size="11" fill="#334155"><tspan font-weight="bold" fill="#16a34a">【拓撲全網包容】</tspan>雙拼、速記和弦與七鍵縮略碼在 DAG 圖中各自結網，交由下游語言模型精準定音。</text>
+  </g>
+</svg>
