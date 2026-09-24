@@ -110,7 +110,7 @@ class path : public std::filesystem::path {
   path filename() const { return path(fs_path::filename()); }
   path extension() const { return path(fs_path::extension()); }
   // return UTF-8 encoded std::string
-  std::string string_utf8() const {
+  std::string to_utf8_string() const {
 #if __cplusplus >= 202002L
     const auto u8s = this->u8string();
     return std::string(u8s.begin(), u8s.end());
@@ -119,7 +119,7 @@ class path : public std::filesystem::path {
 #endif
   }
   // return UTF-8 encoded std::string of generic format
-  std::string generic_string_utf8() const {
+  std::string generic_to_utf8_string() const {
 #if __cplusplus >= 202002L
     const auto u8s = this->generic_u8string();
     return std::string(u8s.begin(), u8s.end());
@@ -151,7 +151,7 @@ class path : public std::filesystem::path {
   }
 #ifdef RIME_ENABLE_LOGGING
   friend std::ostream& operator<<(std::ostream& os, const path& p) {
-    return os << p.string_utf8();
+    return os << p.to_utf8_string();
   }
 #endif
 };
