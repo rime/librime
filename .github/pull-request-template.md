@@ -1,24 +1,22 @@
-## Pull request
+## Description
 
-#### Issue tracker
-Fixes will automatically close the related issue
+- Briefly describe *what* has changed.
+- Briefly describe *why* this change is needed, or link to an issue.
+- Briefly describe *how* this change is implemented.
 
-Fixes #
+<!-- For future reference, consider summarizing or linking to relevant
+     discussion in this section. -->
 
-#### Feature
-Describe feature of pull request
+## Checklist
 
-#### Unit test
-- [ ] Done
+- [ ] I have added or updated tests where appropriate.
+- [ ] I have manually tested the changes where appropriate.
+- [ ] I have updated relevant documentation where appropriate.
+- [ ] I have either not used AI tools or carefully reviewed their outputs, and I take full responsibility for the submitted changes and the PR description.
 
-#### Manual test
-- [ ] Done
 
-#### Code Review
-1. Unit and manual test pass
-2. GitHub Action CI pass
-3. At least one contributor reviews and votes
-4. Can be merged clean without conflicts
-5. PR will be merged by rebase upstream base
+## Additional information
 
-#### Additional Info
+<!-- Optional: note compatibility concerns, known limitations,
+     rollout/rollback considerations, or follow-up work.  Remove this
+     section if it is not needed. -->
