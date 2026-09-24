@@ -1,8 +1,6 @@
 #!/bin/bash
 
 dep_packages=(
-    libboost-locale-dev
-    libboost-regex-dev
     libgoogle-glog-dev
     libleveldb-dev
     libmarisa-dev
@@ -13,3 +11,5 @@ dep_packages=(
 
 sudo apt update
 sudo apt install -y ${dep_packages[@]}
+
+./install-boost.sh

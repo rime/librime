@@ -33,6 +33,22 @@ build_boost_macos() {
     done
 }
 
+build_boost_linux() {
+    local boost_toolset=
+    if [[ "${CXX:-}" =~ clang ]]; then
+        boost_toolset=clang
+    elif [[ "${CXX:-}" =~ g\+\+|gcc ]]; then
+        boost_toolset=gcc
+    fi
+    cd "${BOOST_ROOT}"
+    if [[ -n "${boost_toolset}" ]]; then
+        ./bootstrap.sh --with-toolset="${boost_toolset}" --with-libraries="${boost_libs}"
+    else
+        ./bootstrap.sh --with-libraries="${boost_libs}"
+    fi
+    ./b2 -q -a link=shared stage
+}
+
 if [[ $# -eq 0 || " $* " =~ ' --download ' ]]; then
     if [[ ! -f "${BOOST_ROOT}/bootstrap.sh" ]]; then
         download_boost_source
@@ -46,5 +62,7 @@ fi
 if [[ ($# -eq 0 || " $* " =~ ' --build ') && -n "${boost_libs}" ]]; then
     if [[ "$OSTYPE" =~ 'darwin' ]]; then
         build_boost_macos
+    elif [[ "$OSTYPE" =~ 'linux' ]]; then
+        build_boost_linux
     fi
 fi
