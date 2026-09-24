@@ -261,6 +261,6 @@
   <g transform="translate(40, 975)">
     <rect x="0" y="0" width="1020" height="55" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
     <text x="15" y="22" font-size="11" fill="#334155"><tspan font-weight="bold" fill="#6d28d9">【步進重排之妙】</tspan>頂點 3 隨着窗口滑動截取 AU、AUR、AURO，原地規格化爲 [UA]=wa、[UAR]=wai、[UARO]=wang，破除了前綴單調性的枷鎖；</text>
-    <text x="15" y="40" font-size="11" fill="#334155"><tspan font-weight="bold" fill="#16a34a">【拓撲全網包容】</tspan>雙拼、速記和弦與七鍵縮略碼在 DAG 圖中各自結網，交由下游語言模型精準定音。</text>
+    <text x="15" y="40" font-size="11" fill="#334155"><tspan font-weight="bold" fill="#16a34a">【拓撲全網包容】</tspan>拼音、速記和弦與七鍵縮略碼在 DAG 圖中各自結網，交由下游語言模型精準定音。</text>
   </g>
 </svg>

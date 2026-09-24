@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1060" width="100%" height="100%" style="background:#ffffff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1000" width="100%" height="100%" style="background:#ffffff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
   <defs>
     <marker id="arr-black" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 1 L 10 5 L 0 9 z" fill="#0f172a"/>
@@ -57,7 +57,7 @@
     <circle cx="410" cy="160" r="16" fill="#fff1f2" stroke="#dc2626" stroke-width="2"/>
     <text x="410" y="140" fill="#dc2626">␣₁ ↓ (前空格)</text>
     <text x="410" y="190" fill="#dc2626">暫存待決</text>
-    <text x="410" y="208" font-size="9" fill="#64748b">浮動提示 [␣]，防誤加</text>
+    <text x="410" y="208" font-size="9" fill="#64748b">浮動提示 [ ␣ ]，防誤加</text>
   </g>
 
   <!-- 閥門 ② 區間: 超出雙擊窗口 -->
@@ -233,15 +233,13 @@
 
   <!-- ======================== 底部總結欄 ======================== -->
   <g transform="translate(40, 825)">
-    <rect x="0" y="0" width="1020" height="195" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+    <rect x="0" y="0" width="1020" height="120" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
     <text x="20" y="26" font-size="13" font-weight="bold" fill="#0f172a">【架構精義 · 雙功能空格重發分流核心機制】</text>
     
-    <text x="20" y="52" font-size="11" fill="#334155"><tspan font-weight="bold" fill="#b91c1c">1. 閥門 ① 爲何不直接出空？</tspan>空格在宮保中身兼「韻母 A」，孤立落鍵必須隔離暫存入 pending_solo_key_ 並回顯待決提示符「␣」，防止下一音節超前落鍵的並擊成分被誤判上屏；</text>
+    <text x="20" y="52" font-size="11" fill="#334155"><tspan font-weight="bold" fill="#b91c1c">1. 閥門 ① 爲何不直接出空？</tspan>空格在宮保中身兼「韻母 A」，孤立落鍵必須隔離暫存入 pending_solo_key_ 並回顯待決提示符[ ␣ ]，防止下一音節超前落鍵的並擊成分被誤判上屏；</text>
     
     <text x="20" y="74" font-size="11" fill="#334155"><tspan font-weight="bold" fill="#b91c1c">2. 閥門 ② 非雙擊超時重發：</tspan>後空格到達時若間隔超時（Δt &gt; 120ms），確證用戶並非快速雙擊（Double Tap），狀態機當場重發前空格，推進前段「什麼」確認上屏，乾淨清空 input；</text>
 
-    <text x="20" y="96" font-size="11" fill="#334155"><tspan font-weight="bold" fill="#15803d">3. 閥門 ③ 微時差解凍爲 A：</tspan>字母 u 緊隨後空格而至（Δt ≤ 60ms），確證後空格是超前觸底的並擊韻母 A，瞬間解凍爲 "A" 領銜開闢全新音節 AURO；</text>
-
-    <text x="20" y="118" font-size="11" fill="#334155"><tspan font-weight="bold" fill="#6d28d9">4. 獨立音節圖兩段切分：</tspan>重發上屏切實將擊鍵流分割爲兩幅獨立的 DAG 音節圖——前段包含 [SHG]=什麼 與 [SH]+[G]=是個 等路徑；後段專注步進演繹「網/王」，彼此互不污染，渾然天成。</text>
+    <text x="20" y="96" font-size="11" fill="#334155"><tspan font-weight="bold" fill="#15803d">3. 閥門 ③ 微時差解凍爲 A：</tspan>字母 u 緊隨後空格而至（Δt ≤ 60ms），確證後空格是超前觸底的並擊韻母 A，瞬間解凍爲 "A" 領銜開闢全新音節 AURO。</text>
   </g>
 </svg>

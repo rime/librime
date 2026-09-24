@@ -72,7 +72,7 @@
     <text x="130" y="546" font-size="11" font-family="monospace" fill="#0f172a" text-anchor="middle">chord_composer (抓擊鍵)</text>
 
     <line x1="130" y1="557" x2="130" y2="580" stroke="#0f172a" stroke-width="1.2" marker-end="url(#arr-black)"/>
-    <text x="145" y="573" font-size="10" font-family="monospace" fill="#64748b">↓cxuio ↑xcoi↑</text>
+    <text x="145" y="573" font-size="10" font-family="monospace" fill="#64748b">↓cxuio↑ ↓xcoi↑</text>
 
     <text x="130" y="600" font-size="12" font-family="monospace" fill="#0f172a" font-weight="bold" text-anchor="middle">[FZURO]   [ZFOR]</text>
 
@@ -85,8 +85,8 @@
     <text x="155" y="695" font-size="11" font-family="monospace" fill="#dc2626" font-weight="bold">轉譯爲拼音 "zhong'" "zhou'"</text>
 
     <rect x="20" y="710" width="310" height="45" rx="4" fill="#fff1f2" stroke="#dc2626" stroke-width="1.2"/>
-    <text x="30" y="728" font-size="10" font-family="monospace" fill="#b91c1c">send KeyEvent 偽造事件注入下游:</text>
-    <text x="30" y="745" font-size="11" font-family="monospace" fill="#0f172a" font-weight="bold">engine.Speller [alphabet="abc...xyz'"]</text>
+    <text x="30" y="728" font-size="10" font-family="monospace" fill="#b91c1c">send KeyEvent 僞造事件注入下游:</text>
+    <text x="30" y="745" font-size="11" font-family="monospace" fill="#0f172a" font-weight="bold">engine.speller [alphabet="abc...xyz'"]</text>
 
     <line x1="175" y1="755" x2="175" y2="785" stroke="#dc2626" stroke-width="1.2" marker-end="url(#arr-red)"/>
     <text x="175" y="805" font-size="12" font-family="monospace" fill="#b91c1c" font-weight="bold" text-anchor="middle">ctx.input ⇒ zhong'zhou'</text>
@@ -151,7 +151,7 @@
     <!-- StreamingChordProcessor 容器 -->
     <rect x="20" y="525" width="440" height="150" rx="6" fill="#ffffff" stroke="#0284c7" stroke-width="1.5"/>
     <text x="35" y="548" font-size="13" font-family="monospace" fill="#0284c7" font-weight="bold">StreamingChordProcessor</text>
-    <text x="310" y="548" font-size="10" font-family="monospace" fill="#64748b">↓cxuio ↑xcoi↑</text>
+    <text x="310" y="548" font-size="10" font-family="monospace" fill="#64748b">↓cxuio↑ ↓xcoi↑</text>
 
     <!-- 內部生和弦與規格化重排 (修復座標偏移：右框文字改爲 x=217) -->
     <g transform="translate(35, 565)">

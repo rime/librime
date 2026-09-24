@@ -169,46 +169,47 @@
     <text x="610" y="569" font-size="10" fill="#64748b">維持生和弦 FZURO，等待完全釋放</text>
 
     <!-- 190ms 重排閉包 [ZFURO] (帶方括號，無引號) -->
-    <rect x="750" y="560" width="85" height="26" rx="3" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
-    <text x="792" y="577" fill="#16a34a" font-weight="bold" font-size="12">[ZFURO]</text>
+    <rect x="765" y="560" width="85" height="26" rx="3" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="805" y="577" fill="#16a34a" font-weight="bold" font-size="12">[ZFURO]</text>
   </g>
 
   <!-- 規格化音節代碼 (獨立單行，寬裕不重疊) -->
   <g font-family="monospace" font-size="11" text-anchor="middle" font-weight="bold" fill="#6d28d9">
-    <text x="190" y="630">fu</text>
+    <text x="190" y="630">F</text>
     <text x="250" y="630">ZF</text>
-    <text x="310" y="630">ZFU</text>
-    <text x="370" y="630">ZFUR</text>
-    <text x="430" y="630">ZFURO</text>
+    <text x="311" y="630">ZFU</text>
+    <text x="374" y="630">ZFUR</text>
+    <text x="444" y="630">ZFURO</text>
     <!-- 190ms 鎖定閉包 -->
-    <text x="792" y="630" fill="#16a34a">[ZFURO]</text>
+    <text x="805" y="630" font-size="12" fill="#16a34a">[ZFURO]</text>
+    <text x="870" y="650" font-size="11" font-weight="normal" fill="#64748b">鍵序重排，封閉和弦，消除切分歧義</text>
   </g>
 
   <!-- 實時候選字流 (琥珀橙，每一步對應漢字) -->
   <g text-anchor="middle">
     <!-- 0ms: 1. 夫 -->
-    <rect x="166" y="675" width="48" height="24" rx="3" fill="#ffffff" stroke="#b45309" stroke-width="1.2"/>
-    <text x="190" y="691" font-size="11" fill="#b45309" font-weight="bold">1. 夫</text>
+    <rect x="175" y="675" width="48" height="24" rx="3" fill="#ffffff" stroke="#b45309" stroke-width="1.2"/>
+    <text x="198" y="691" font-size="11" fill="#b45309" font-weight="bold">1. 夫</text>
 
     <!-- 15ms: 1. 之 -->
-    <rect x="226" y="675" width="48" height="24" rx="3" fill="#ffffff" stroke="#b45309" stroke-width="1.2"/>
-    <text x="250" y="691" font-size="11" fill="#b45309" font-weight="bold">1. 之</text>
+    <rect x="232" y="675" width="48" height="24" rx="3" fill="#ffffff" stroke="#b45309" stroke-width="1.2"/>
+    <text x="255" y="691" font-size="11" fill="#b45309" font-weight="bold">1. 之</text>
 
     <!-- 30ms: 1. 主 -->
-    <rect x="286" y="675" width="48" height="24" rx="3" fill="#ffffff" stroke="#b45309" stroke-width="1.2"/>
-    <text x="310" y="691" font-size="11" fill="#b45309" font-weight="bold">1. 主</text>
+    <rect x="290" y="675" width="48" height="24" rx="3" fill="#ffffff" stroke="#b45309" stroke-width="1.2"/>
+    <text x="313" y="691" font-size="11" fill="#b45309" font-weight="bold">1. 主</text>
 
     <!-- 45ms: 1. 追 -->
-    <rect x="346" y="675" width="48" height="24" rx="3" fill="#ffffff" stroke="#b45309" stroke-width="1.2"/>
-    <text x="370" y="691" font-size="11" fill="#b45309" font-weight="bold">1. 追</text>
+    <rect x="350" y="675" width="48" height="24" rx="3" fill="#ffffff" stroke="#b45309" stroke-width="1.2"/>
+    <text x="373" y="691" font-size="11" fill="#b45309" font-weight="bold">1. 追</text>
 
     <!-- 60ms: 1. 中 -->
-    <rect x="406" y="675" width="48" height="24" rx="3" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
-    <text x="430" y="691" font-size="11" fill="#16a34a" font-weight="bold">1. 中</text>
+    <rect x="415" y="675" width="48" height="24" rx="3" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="438" y="691" font-size="11" fill="#16a34a" font-weight="bold">1. 中</text>
 
     <!-- 190ms 鎖定 -->
-    <rect x="740" y="675" width="130" height="24" rx="3" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
-    <text x="805" y="691" font-size="11" fill="#16a34a" font-weight="bold">閉包鎖定: 1. 中</text>
+    <rect x="765" y="675" width="140" height="24" rx="3" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="835" y="691" font-size="12" fill="#16a34a" font-weight="bold">鎖定音節: 1. 中</text>
   </g>
 
   <!-- 閉包運算說明卡片 -->

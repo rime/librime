@@ -64,13 +64,13 @@
 
   <!-- ======================== 分支 2 卡片 (左側：手系超時隔斷 UR'ZF) ======================== -->
   <rect x="40" y="325" width="460" height="230" rx="6" fill="#ffffff" stroke="#dc2626" stroke-width="1.5"/>
-  <text x="55" y="350" font-size="13" font-weight="bold" fill="#b91c1c">【分支 2】手系逆轉超時 · 隔斷注入隔音符「UR'ZF」</text>
+  <text x="55" y="350" font-size="13" font-weight="bold" fill="#b91c1c">【分支 2】手系逆轉超時 · 隔斷注入隔音符 UR'ZF</text>
 
   <g transform="translate(60, 370)">
     <rect x="0" y="0" width="420" height="75" rx="4" fill="#fff1f2" stroke="#fca5a5"/>
     <text x="15" y="24" font-size="12" font-weight="bold" fill="#0f172a">右手韻母 (UR) 完畢，左手聲母 (ZF) 超時落底：</text>
     <text x="15" y="46" font-size="12" font-family="monospace" fill="#b91c1c" font-weight="bold">input: UR + ' + ZF → UR'ZF</text>
-    <text x="15" y="66" font-size="13" font-weight="bold" fill="#b45309">輸出：1. 爲之 (wei'zhi) / 微之</text>
+    <text x="15" y="66" font-size="13" font-weight="bold" fill="#b45309">輸出：1. 爲之 2. 位置 (wei'zhi)</text>
 
     <text x="5" y="105" font-size="11" fill="#334155" font-weight="bold">狀態機判定要義：</text>
     <text x="5" y="125" font-size="11" fill="#64748b">1. 前一落鍵爲右手韻母 (IsFinal: R)，當前爲左手聲母 (IsInitial: Z)；</text>
@@ -125,7 +125,7 @@
   <g transform="translate(755, 630)">
     <text x="0" y="20" font-size="11" fill="#475569">機制：超出生理窗口，確證爲單擊空格</text>
     <text x="0" y="42" font-size="11" fill="#0284c7">進入 pending_solo_key_ 暫存佇列</text>
-    <text x="0" y="68" font-size="11" fill="#475569">預編輯區浮動提示符：<tspan fill="#0284c7" font-weight="bold">[␣]</tspan></text>
+    <text x="0" y="68" font-size="11" fill="#475569">預編輯區浮動提示符：<tspan fill="#0284c7" font-weight="bold">[ ␣ ]</tspan></text>
 
     <rect x="0" y="85" width="250" height="40" rx="4" fill="#f0f9ff" stroke="#0284c7" stroke-width="1.5"/>
     <text x="125" y="110" font-size="14" font-weight="bold" fill="#0284c7" text-anchor="middle">結算出詞「追」上屏 / 真空格</text>
