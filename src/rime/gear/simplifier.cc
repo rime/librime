@@ -176,7 +176,7 @@ Simplifier* SimplifierComponent::Create(const Ticket& ticket) {
     return new Simplifier(ticket, opencc);
   }
   path opencc_config_path = path(opencc_config);
-  if (opencc_config_path.extension().u8string() == ".ini") {
+  if (opencc_config_path.extension().to_utf8_string() == ".ini") {
     LOG(ERROR) << "please upgrade opencc_config to an opencc 1.0 config file.";
     return nullptr;
   }
