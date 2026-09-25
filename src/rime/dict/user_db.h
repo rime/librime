@@ -17,7 +17,7 @@ namespace rime {
 using TickCount = uint64_t;
 
 /// Properties of a user db entry value.
-struct UserDbValue {
+struct RIME_DLL UserDbValue {
   int commits = 0;
   double dee = 0.0;
   TickCount tick = 0;
