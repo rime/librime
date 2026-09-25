@@ -14,6 +14,24 @@ path
 echo.
 
 if not defined RIME_ROOT set RIME_ROOT=%CD%
+set BOOST_DATA_FILE=%RIME_ROOT%\boost-data.txt
+if not exist "%BOOST_DATA_FILE%" (
+  if exist "%~dp0boost-data.txt" for %%I in ("%~dp0.") do set RIME_ROOT=%%~fI
+)
+set BOOST_DATA_FILE=%RIME_ROOT%\boost-data.txt
+if not exist "%BOOST_DATA_FILE%" (
+  echo Error: boost-data.txt not found in %RIME_ROOT%.
+  exit /b 1
+)
+if not defined BOOST_ROOT (
+  rem Requires PowerShell to parse boost-data.txt.
+  for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "$data = Get-Content -Raw -Path '%BOOST_DATA_FILE%' ^| ConvertFrom-StringData; if ($data.ContainsKey('version')) { $data.version.Trim() }"`) do if not defined BOOST_VERSION set "BOOST_VERSION=%%I"
+  if not defined BOOST_VERSION (
+    echo Error: missing version in %BOOST_DATA_FILE%.
+    exit /b 1
+  )
+  if defined BOOST_VERSION set BOOST_ROOT=%RIME_ROOT%\deps\boost-%BOOST_VERSION%
+)
 echo RIME_ROOT=%RIME_ROOT%
 echo.
 

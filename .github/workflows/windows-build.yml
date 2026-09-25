@@ -23,8 +23,6 @@ jobs:
           - { compiler: clang, cc: clang, cxx: clang++ }
           - { compiler: msvc, arch: x86, cross_arch: x64_x86 }
     env:
-      boost_version: 1.92.0
-      BOOST_ROOT: ${{ github.workspace }}\deps\boost-1.92.0
       RIME_PLUGINS: ${{ inputs.rime_plugins }}
 
     steps:
@@ -64,6 +62,22 @@ jobs:
           $git_ref_name = git describe --always
           echo "git_ref_name=$git_ref_name" >> $env:GITHUB_ENV
           git submodule > submodule-status
+
+      - name: Set Boost environment
+        run: |
+          $boost_version = Get-Content -Path .\boost-data.txt |
+            ForEach-Object {
+              $parts = $_ -split '=', 2
+              if ($parts.Length -eq 2 -and $parts[0] -eq 'version') {
+                $parts[1].Trim()
+              }
+            } |
+            Select-Object -First 1
+          if (-not $boost_version) {
+            throw 'Missing version= entry in boost-data.txt'
+          }
+          echo "boost_version=$boost_version" >> $env:GITHUB_ENV
+          echo "BOOST_ROOT=${{ github.workspace }}\deps\boost-$boost_version" >> $env:GITHUB_ENV
 
       - name: Install boost
         run: .\install-boost.bat

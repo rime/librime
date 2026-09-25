@@ -1,0 +1,3 @@
+# Check the boost data in https://www.boost.org/releases/latest/
+version=1.92.0
+sha256sum=c4a3b310ddd2472416e091067166b0713be97c63f38c212c484ada022fd296ce

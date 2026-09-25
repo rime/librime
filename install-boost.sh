@@ -1,15 +1,53 @@
 #!/bin/bash
 set -ex
 
-RIME_ROOT="$(cd "$(dirname "$0")"; pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd)"
+if [[ -z "${RIME_ROOT:-}" ]]; then
+    RIME_ROOT="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel 2>/dev/null || true)"
+    if [[ -z "${RIME_ROOT}" ]]; then
+        if [[ -f "${PWD}/boost-data.txt" ]]; then
+            RIME_ROOT="${PWD}"
+        else
+            RIME_ROOT="${SCRIPT_DIR}"
+        fi
+    fi
+fi
+BOOST_VERSION_FILE="${RIME_ROOT}/boost-data.txt"
 
-boost_version="${boost_version=1.92.0}"
+[[ -f "${BOOST_VERSION_FILE}" ]] || {
+    echo "could not find ${BOOST_VERSION_FILE}" >&2
+    exit 1
+}
+
+if [[ -z "${boost_version:-}" || -z "${boost_sha256sum:-}" ]]; then
+    IFS=$'\t' read -r boost_data_version boost_data_sha256sum < <(
+        awk -F= '
+            $1=="version"{sub(/\r$/,"",$2); version=$2}
+            $1=="sha256sum"{sub(/\r$/,"",$2); sha256sum=$2}
+            END{print version "\t" sha256sum}
+        ' "${BOOST_VERSION_FILE}"
+    )
+    boost_version="${boost_version:-${boost_data_version}}"
+    boost_sha256sum="${boost_sha256sum:-${boost_data_sha256sum}}"
+fi
+
+if [[ -z "${boost_version}" ]]; then
+    echo "missing boost version in ${BOOST_VERSION_FILE}" >&2
+    exit 1
+fi
+
+if [[ -z "${boost_sha256sum}" ]]; then
+    echo "missing SHA256 checksum in ${BOOST_VERSION_FILE}" >&2
+    echo "set boost_sha256sum in environment to override" >&2
+    exit 1
+fi
 
 BOOST_ROOT="${BOOST_ROOT=${RIME_ROOT}/deps/boost-${boost_version}}"
+export boost_version BOOST_ROOT
 
 boost_tarball="boost_${boost_version//./_}.tar.gz"
 download_url="https://archives.boost.io/release/${boost_version}/source/${boost_tarball}"
-boost_tarball_sha256sum="c4a3b310ddd2472416e091067166b0713be97c63f38c212c484ada022fd296ce  ${boost_tarball}"
+boost_tarball_sha256sum="${boost_sha256sum}  ${boost_tarball}"
 
 download_boost_source() {
     cd "${RIME_ROOT}/deps"

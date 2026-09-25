@@ -23,8 +23,6 @@ jobs:
             create-distributable: true
             build_variant: universal
     env:
-      boost_version: 1.92.0
-      BOOST_ROOT: ${{ github.workspace }}/deps/boost-1.92.0
       RIME_PLUGINS: ${{ inputs.rime_plugins }}
     steps:
       - name: Checkout last commit
@@ -38,6 +36,16 @@ jobs:
           brew install ninja
           echo "CMAKE_GENERATOR=Ninja"  >> $GITHUB_ENV
           echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV
+
+      - name: Set Boost environment
+        run: |
+          boost_version="$(awk -F= '$1=="version"{sub(/\r$/,"",$2); print $2; exit}' boost-data.txt)"
+          if [[ -z "$boost_version" ]]; then
+            echo "missing version= entry in boost-data.txt" >&2
+            exit 1
+          fi
+          echo "boost_version=$boost_version" >> $GITHUB_ENV
+          echo "BOOST_ROOT=${{ github.workspace }}/deps/boost-$boost_version" >> $GITHUB_ENV
 
       - name: Configure build variant
         if: matrix.build_variant == 'universal'

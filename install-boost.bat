@@ -1,8 +1,28 @@
 setlocal
 
 if not defined RIME_ROOT set RIME_ROOT=%CD%
+set BOOST_DATA_FILE=%RIME_ROOT%\boost-data.txt
+if not exist "%BOOST_DATA_FILE%" (
+  if exist "%~dp0boost-data.txt" for %%I in ("%~dp0.") do set RIME_ROOT=%%~fI
+)
+set BOOST_DATA_FILE=%RIME_ROOT%\boost-data.txt
+if not exist "%BOOST_DATA_FILE%" (
+  echo Error: boost-data.txt not found in %RIME_ROOT%.
+  exit /b 1
+)
 
-if not defined boost_version set boost_version=1.92.0
+for /f "usebackq tokens=1,* delims==" %%A in ("%BOOST_DATA_FILE%") do (
+  if /i "%%A"=="version" if not defined boost_version set "boost_version=%%B"
+  if /i "%%A"=="sha256sum" if not defined boost_sha256sum set "boost_sha256sum=%%B"
+)
+if not defined boost_version (
+  echo Error: missing version in %BOOST_DATA_FILE%.
+  exit /b 1
+)
+if not defined boost_sha256sum (
+  echo Error: missing sha256sum in %BOOST_DATA_FILE%.
+  exit /b 1
+)
 
 if not defined boost_tarball set boost_tarball=boost_%boost_version:.=_%
 
