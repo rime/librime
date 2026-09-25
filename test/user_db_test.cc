@@ -89,3 +89,12 @@ TEST(RimeUserDbTest, Query) {
   }
   db.Close();
 }
+
+TEST(RimeUserDbValueTest, Denormal) {
+  const string denormal_entry = "c=16 d=9.88131e-324 t=1449225";
+  UserDbValue v(denormal_entry);
+  EXPECT_EQ(16, v.commits);
+  EXPECT_EQ(1449225u, v.tick);
+  EXPECT_GE(v.dee, 0.0);
+  EXPECT_FALSE(std::isnan(v.dee));
+}
