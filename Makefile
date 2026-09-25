@@ -3,13 +3,13 @@ RIME_ROOT ?= $(CURDIR)
 RIME_SOURCE_PATH = plugins sample src test tools
 
 OS_NAME = $(shell uname)
-ifeq ($(OS_NAME),Darwin) # for macOS
-prefix ?= $(RIME_ROOT)/dist
-
 ifdef BOOST_ROOT
 CMAKE_BOOST_OPTIONS = -DBoost_NO_BOOST_CMAKE=TRUE \
 	-DBOOST_ROOT="$(BOOST_ROOT)"
 endif
+
+ifeq ($(OS_NAME),Darwin) # for macOS
+prefix ?= $(RIME_ROOT)/dist
 
 # https://cmake.org/cmake/help/latest/variable/CMAKE_OSX_SYSROOT.html
 export SDKROOT ?= $(shell xcrun --sdk macosx --show-sdk-path)
@@ -69,7 +69,8 @@ librime-static:
 	-DCMAKE_INSTALL_PREFIX=$(prefix) \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DBUILD_STATIC=ON \
-	-DBUILD_SHARED_LIBS=OFF
+	-DBUILD_SHARED_LIBS=OFF \
+	$(CMAKE_BOOST_OPTIONS)
 	cmake --build $(build)
 
 release:
@@ -77,7 +78,8 @@ release:
 	-DCMAKE_INSTALL_PREFIX=$(prefix) \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DBUILD_MERGED_PLUGINS=OFF \
-	-DENABLE_EXTERNAL_PLUGINS=ON
+	-DENABLE_EXTERNAL_PLUGINS=ON \
+	$(CMAKE_BOOST_OPTIONS)
 	cmake --build $(build)
 
 merged-plugins:
@@ -85,7 +87,8 @@ merged-plugins:
 	-DCMAKE_INSTALL_PREFIX=$(prefix) \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DBUILD_MERGED_PLUGINS=ON \
-	-DENABLE_EXTERNAL_PLUGINS=OFF
+	-DENABLE_EXTERNAL_PLUGINS=OFF \
+	$(CMAKE_BOOST_OPTIONS)
 	cmake --build $(build)
 
 debug:
@@ -94,7 +97,8 @@ debug:
 	-DCMAKE_BUILD_TYPE=Debug \
 	-DBUILD_MERGED_PLUGINS=OFF \
 	-DALSO_LOG_TO_STDERR=ON \
-	-DENABLE_EXTERNAL_PLUGINS=ON
+	-DENABLE_EXTERNAL_PLUGINS=ON \
+	$(CMAKE_BOOST_OPTIONS)
 	cmake --build $(build)
 
 install:
