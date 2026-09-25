@@ -13,17 +13,11 @@
 extern "C" {
 #endif
 
-typedef struct {
-  char placeholder;
-} RimeCustomSettings;
+typedef struct RimeCustomSettings RimeCustomSettings;
 
-typedef struct {
-  char placeholder;
-} RimeSwitcherSettings;
+typedef struct RimeSwitcherSettings RimeSwitcherSettings;
 
-typedef struct {
-  char placeholder;
-} RimeSchemaInfo;
+typedef struct RimeSchemaInfo RimeSchemaInfo;
 
 typedef struct {
   void* ptr;
