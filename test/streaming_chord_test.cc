@@ -132,8 +132,8 @@ TEST_F(StreamingChordDualRoleTest,
   ASSERT_FALSE(ctx->composition().empty());
   EXPECT_EQ(ctx->composition().back().prompt, "␣");
 
-  // 間隔 130ms (> 120ms chord_timeout_ms_，非連擊)
-  std::this_thread::sleep_for(std::chrono::milliseconds(130));
+  // 間隔 150ms (> 120ms chord_timeout_ms_，穩固超過超時窗口，非連擊)
+  std::this_thread::sleep_for(std::chrono::milliseconds(150));
 
   // 按下空格 2：確證非快速雙擊，空格 1 結算上屏原生空格，空格 2 接替暫存
   EXPECT_TRUE(engine_->ProcessKey(KeyEvent(XK_space, 0)));
@@ -144,8 +144,8 @@ TEST_F(StreamingChordDualRoleTest,
   EXPECT_EQ(ctx->composition().back().prompt, "␣");
   EXPECT_TRUE(ctx->input().empty());
 
-  // 30ms 內 (<= 60ms) 緊接着敲下字母 u
-  std::this_thread::sleep_for(std::chrono::milliseconds(30));
+  // 連續敲下字母 u (Δt < 1ms <= 60ms 並擊窗口，比照測試 3 與 4 避免 CI
+  // 調度超時)
   EXPECT_TRUE(engine_->ProcessKey(KeyEvent(XK_u, 0)));
 
   // 空格 2 成功解凍爲韻母 A，並與 U 組合爲新和弦輸入碼 AU
@@ -166,16 +166,15 @@ TEST_F(StreamingChordDualRoleTest,
   EXPECT_TRUE(engine_->ProcessKey(KeyEvent(XK_s, 0)));
   EXPECT_EQ(ctx->input(), "S");
 
-  // 思考停頓 130ms (> 120ms chord_timeout_ms_)
-  std::this_thread::sleep_for(std::chrono::milliseconds(130));
+  // 思考停頓 150ms (> 120ms chord_timeout_ms_，穩固超過超時窗口)
+  std::this_thread::sleep_for(std::chrono::milliseconds(150));
 
   // 敲下空格（暫存爲待決韻母 A）
   EXPECT_TRUE(engine_->ProcessKey(KeyEvent(XK_space, 0)));
   EXPECT_EQ(ctx->composition().back().prompt, "␣");
   EXPECT_EQ(ctx->input(), "S");
 
-  // 30ms 內 (<= 60ms) 敲下字母 u，觸發空格解凍
-  std::this_thread::sleep_for(std::chrono::milliseconds(30));
+  // 連續敲下字母 u 觸發空格解凍 (Δt < 1ms <= 60ms 並擊窗口)
   EXPECT_TRUE(engine_->ProcessKey(KeyEvent(XK_u, 0)));
 
   // 解凍過程經過 HandleChordKey 檢測到時序超時，必須在 S 與 AU 之間插入隔音符 '
