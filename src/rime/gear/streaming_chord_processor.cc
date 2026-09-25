@@ -290,9 +290,13 @@ void StreamingChordProcessor::ClearPendingPrompt() {
     return;
 
   auto& last_segment = comp.back();
-  if (comp.size() == 1 && last_segment.HasTag("phony")) {
-    // 若只有虛擬切片，徹底清空 context，使 emacs-rime 關閉浮動框
-    ctx->Clear();
+  if (last_segment.HasTag("phony")) {
+    // 移除當初爲承載提示符而臨時墊入的虛擬切片
+    comp.pop_back();
+    // 可能存在未翻譯的並擊碼
+    if (ctx->input().empty()) {
+      ctx->Clear();
+    }
   } else if (last_segment.HasTag("chord_prompt")) {
     // 若是在正常組詞中途暫存，僅抹去提示符文字與標籤
     last_segment.prompt.clear();
@@ -385,32 +389,43 @@ ProcessResult StreamingChordProcessor::ProcessKeyEvent(
   char32_t chord_key = ConvertToChordKey(keycode);
   auto now = std::chrono::steady_clock::now();
 
-  // 2. 處理雙功能鍵 (空格、分號等)
+  // 2. 處理雙功能鍵 (空格, 分號等)
   if (IsDualRoleKey(keycode)) {
     ChordKeyEvent solo_key{keycode, chord_key, now};
 
-    // 情況 A: 前次敲擊的同一個雙功能鍵尚在暫存中 -> 連擊判定
-    if (pending_solo_key_ && pending_solo_key_.keycode == keycode) {
-      // 連擊雙功能鍵: 結算第 1 記, 吞掉當前第 2 記
-      ReplayPendingKey();
-      ResetTracking();
-      return kAccepted;
-    }
-
-    // 若前一個鍵也是雙功能鍵，且在微時差窗口內，二者構成並擊
+    // 若前一個鍵也是雙功能鍵, 且在微時差窗口內, 二者構成並擊
     if (pending_solo_key_) {
       auto delta_t = std::chrono::duration_cast<std::chrono::milliseconds>(
                          now - pending_solo_key_.time)
                          .count();
-      if (delta_t <= chord_duration_ms_) {
-        // 解凍前一個雙功能鍵推入 input
+
+      // 情況 A1: 同鍵快速連擊 (雙擊空格 / 雙擊分號, Δt <= 120ms)
+      if (pending_solo_key_.keycode == keycode &&
+          delta_t <= chord_timeout_ms_) {
+        ReplayPendingKey();
+        ResetTracking();
+        return kAccepted;
+      }
+
+      // 情況 A2: 異鍵微時差並擊 (如 Space + 分號並擊，Δt <= 60ms)
+      if (pending_solo_key_.keycode != keycode &&
+          delta_t <= chord_duration_ms_) {
         ChordKeyEvent saved_key = pending_solo_key_;
         pending_solo_key_ = {};
         ClearPendingPrompt();
-        FlushChordKey(saved_key);
+        HandleChordKey(saved_key);  // 走標準管線, 保障隔音邊界
         // 當前鍵也是並擊成分，緊接着推入
         return HandleChordKey(solo_key);
       }
+
+      // 情況 A3: 超出連擊/並擊窗口（Δt > 120ms 非連擊）
+      // 重發結算前鍵 (如空格 1 上屏前字), 當前鍵 (空格 2)
+      // 接替成爲新的待決暫存鍵
+      ReplayPendingKey();
+      ResetTracking();
+      pending_solo_key_ = solo_key;
+      DisplayPendingPrompt(keycode);
+      return kAccepted;
     }
 
     // 情況 B: 檢驗是否與前序按鍵構成同和弦並擊
@@ -425,9 +440,6 @@ ProcessResult StreamingChordProcessor::ProcessKeyEvent(
     }
 
     // 情況 C: 孤立雙功能鍵落鍵, 暫存等待後續鍵裁決 (支持抬鍵即上屏)
-    if (pending_solo_key_) {
-      ReplayPendingKey();
-    }
     pending_solo_key_ = solo_key;
     DisplayPendingPrompt(keycode);
     return kAccepted;
@@ -442,11 +454,11 @@ ProcessResult StreamingChordProcessor::ProcessKeyEvent(
     bool is_chord_key = IsInitial(chord_key) || IsFinal(chord_key);
 
     if (is_chord_key && delta_t <= chord_duration_ms_) {
-      // 雙功能鍵超前落鍵並擊 (如 ; -> J 打帶調音節, 或 Space -> D 打 da)
+      // 雙功能鍵超前落鍵並擊 (空格 遇後續並擊鍵解凍爲 A)
       ChordKeyEvent saved_key = pending_solo_key_;
       pending_solo_key_ = {};
       ClearPendingPrompt();
-      FlushChordKey(saved_key);
+      HandleChordKey(saved_key);  // 走標準管線, 自動激活超時隔音符檢查
     } else {
       // 超時或按下非並擊鍵: 確證爲獨立單擊, 重發結算
       ReplayPendingKey();
