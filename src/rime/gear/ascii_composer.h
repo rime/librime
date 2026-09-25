@@ -2,6 +2,7 @@
 #define RIME_ASCII_COMPOSER_H_
 
 #include <chrono>
+#include <optional>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/key_event.h>
@@ -58,10 +59,7 @@ class AsciiComposer : public Processor,
   bool inline_keypad_ = false;
   bool toggle_with_caps_ = false;
 
-  bool shift_key_pressed_ = false;
-  bool ctrl_key_pressed_ = false;
-  bool alt_key_pressed_ = false;
-  bool super_key_pressed_ = false;
+  std::optional<int> pending_toggle_key_;
   std::chrono::steady_clock::time_point toggle_expired_;
 
   // 實體按鍵總賬與快照
