@@ -2,7 +2,6 @@
 
 `StreamingChordProcessor` 是專爲連續並擊（串流並擊）設計的按鍵處理器，旨在無縫支援跨平臺環境（具備 KeyUp 的桌面 GUI 與無 KeyUp 的 Emacs/終端），並原生相容聲韻調並擊、多擊單字及雙功能標點。
 
----
 
 ## 1. 核心機制說明
 
@@ -20,7 +19,6 @@
 * **終端與編輯器（emacs-rime，無 KeyUp）**：
   在連續輸入中遇到停頓（`Δ t > chord_timeout_ms`）或手系逆轉（韻母後接聲母）時，狀態機自動向緩衝區推入專屬隔音符號（默認取可見的 `'`），輔助下游語言模型與 Translator 精確進行長句分詞切分。
 
----
 
 ## 2. 自動推導規則（零配置升級）
 
@@ -28,7 +26,6 @@
 1. 該物理鍵在 `key_map` 中存在映射（參與並擊）；
 2. 該鍵屬於非 ASCII 字母的字符（如空格、分號 `;`、單引號 `'`、逗號 `,`、斜線 `/` 等）。
 
----
 
 ## 3. 聲韻調並擊方案配置範例
 
@@ -44,17 +41,47 @@ engine:
     - ascii_composer
     - recognizer
     - streaming_chord_processor  # 替代舊版 chord_composer
+    - key_binder
     - punctuator
     - selector
     - navigator
     - express_editor
+  # 其他組件定義，本文省略
 
 speller:
-  alphabet: "zyxwvutsrqponmlkjihgfedcba; "
-  delimiter: " '"                # 首位爲顯示空格，次位爲輸入切分單引號
+  alphabet: 'SCZHLFGDBKTPIUVANREOXY[]'  # 包含音節定界符——方括號
+  delimiter: " '"                       # 首位爲顯示空格，次位爲輸入切分單引號
+  algebra:
+    # 拼音轉並擊，本文省略
+    __include: /pinyin_to_chord
+    __append:
+      # 聲調轉寫（一聲不標；二聲 X；三聲 XY；四聲 Y）
+      - xform/[15]$//
+      - xform/2$/X/
+      - xform/3$/XY/
+      - xform/4$/Y/
+      # 單音節定界閉包
+      # 和弦輸入由 translator/canonicalize 規格化後統一以閉包形式在棱鏡中檢索，避免抬鍵封閉的長和弦拆分爲兩段短和弦。
+      # 以不帶調拼音爲例，SHUARO (爽) 可切分爲 SH UARO (失望)；和弦封閉後 [SHUARO] 與 [SH] [UARO] 無切分歧義。
+      - xform/^.+$/[$0]/
+
+translator:
+  dictionary: terra_pinyin
+  prism: combo_pinyin_tone
+  enable_completion: false  # 只匹配完整的和弦閉包
+  # 若爲無抬鍵環境，須規格化查詢片段，匹配棱鏡索引碼格式
+  canonicalize:
+    # 按照標準鍵序重排；將聲調鍵 X, Y 重排收納於音節閉包末尾
+    - reorder SCZHLFGDBKTPIUVANREOXY
+    # 和弦閉包用方括號定界
+    - xform/^[A-Z]+$/[$0]/
+  preedit_format:
+    # 將並擊和弦代碼轉寫爲帶調拼音回顯
+    __include: combo_pinyin_rules:/preedit_pinyin
 
 streaming_chord:
-  initial_keys: SCZHLFGDBKTP
+  # 將佈局中的並擊鍵按指法分爲左右半區
+  initial_keys: XSCZHLFGDBKTP
   final_keys: YIUVANREO
   chord_duration_ms: 60          # 同和弦微時差生理容差窗口 (ms)
   chord_timeout_ms: 120          # 異音節切分與組裝超時窗口 (ms)
@@ -65,17 +92,36 @@ streaming_chord:
   # delimiter: "'"
 
   key_map:
+    # 宮保拼音七指禪佈局標準鍵位
     __include: combo_pinyin_rules:/key_map
     # 標點/空格參與並擊，引擎自動推導爲雙功能鍵：
     semicolon: 'Y'               # 並擊時爲調號 Y；單擊時回放輸出實體標點「；」
     space: 'A'                   # 並擊時爲韻母 A；單擊時回放用於選詞或輸出原生空格
 
-  # [可選] 手動顯式覆蓋名單：
-  # 若有特殊的非 ASCII 按鍵（如 Tab）需要具備雙功能屬性，可在此顯式指定
+  # [可選] 雙功能鍵白名單（顯式優先原則）：
+  # 一旦顯式宣告，引擎將完全關閉非字母鍵自動推導，僅對名單內的按鍵生效
   # dual_role_keys:
   #   - semicolon
   #   - space
 
+  # 抬鍵盡釋後，對該音節執行定界閉包規範化
+  canonicalize:
+    # 按照標準鍵序重排；將聲調鍵 X, Y 重排收納於音節閉包末尾
+    - reorder SCZHLFGDBKTPIUVANREOXY
+    # 和弦閉包用方括號定界
+    - xform/^[A-Z]+$/[$0]/
+
+editor:
+  bindings:
+    BackSpace: back_syllable  # 刪除整個音節
+    Return: confirm
+
 punctuator:
+  # 標點符號定義，本文僅展示局部
   half_shape:
     ';': '；'
+
+recognizer:
+  patterns:
+    # 不得引入大寫模式定義，防止截胡大寫並擊碼
+    # uppercase: ''
