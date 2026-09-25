@@ -22,8 +22,7 @@ jobs:
     env:
       CC: ${{ matrix.compiler }}
       CXX: ${{ matrix.cxx_compiler }}
-      boost_version: 1.92.0
-      BOOST_ROOT: ${{ github.workspace }}/deps/boost-1.92.0
+      BOOST_ROOT: ${{ github.workspace }}/deps/boost
       boost_libs: regex
     
     steps:

@@ -41,13 +41,13 @@ bash install-boost.sh
 ```
 
 The make script will download Boost source tarball, extract it to
-`librime/deps/boost-<version>`.
+`librime/deps/boost`.
 
-Set shell variable `BOOST_ROOT` to the path to `boost-<version>` directory prior
+Set shell variable `BOOST_ROOT` to the path to `boost` directory prior
 to building librime.
 
 ``` sh
-export BOOST_ROOT="$(pwd)/deps/boost-1.92.0"
+export BOOST_ROOT="$(pwd)/deps/boost"
 ```
 
 **Option 2:** Install Boost libraries from Homebrew.
