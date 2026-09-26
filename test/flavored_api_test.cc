@@ -25,6 +25,21 @@ TEST(RimeApiStdboolTest, GetContext) {
   ASSERT_TRUE(rime->free_status(&status));
 }
 
+TEST(RimeApiStdboolTest, LastError) {
+  RIME_FLAVORED(RimeApi)* rime = RIME_FLAVORED(rime_get_api)();
+  ASSERT_TRUE(bool(rime));
+
+  ASSERT_TRUE(RIME_API_AVAILABLE(rime, get_last_error));
+
+  ASSERT_TRUE(RIME_API_AVAILABLE(rime, find_module));
+  EXPECT_FALSE(bool(rime->find_module("no_such_module_stdbool")));
+  EXPECT_EQ(RIME_ERROR_MODULE_NOT_FOUND, rime->get_last_error());
+
+  // a successful call clears the recorded error
+  EXPECT_TRUE(bool(rime->find_module("levers_stdbool")));
+  EXPECT_EQ(RIME_ERROR_NONE, rime->get_last_error());
+}
+
 TEST(RimeLeversApiStdboolTest, CustomSettings) {
   RIME_FLAVORED(RimeApi)* rime = RIME_FLAVORED(rime_get_api)();
   RimeModule* module = rime->find_module("levers_stdbool");

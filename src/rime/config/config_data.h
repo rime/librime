@@ -11,6 +11,14 @@
 
 namespace rime {
 
+//! Status of the most recent attempt to load a config file.
+enum ConfigLoadStatus {
+  kConfigNotLoaded,     //!< no config file has been loaded
+  kConfigLoaded,        //!< the config file was loaded successfully
+  kConfigFileNotFound,  //!< the config file does not exist
+  kConfigFileInvalid,   //!< the config file is not a valid YAML document
+};
+
 class ConfigCompiler;
 class ConfigItem;
 
@@ -37,6 +45,7 @@ class ConfigData {
                                  bool read_only = false);
 
   const path& file_path() const { return file_path_; }
+  ConfigLoadStatus load_status() const { return load_status_; }
   bool modified() const { return modified_; }
   void set_modified() { modified_ = true; }
   void set_auto_save(bool auto_save) { auto_save_ = auto_save; }
@@ -45,6 +54,7 @@ class ConfigData {
 
  protected:
   path file_path_;
+  ConfigLoadStatus load_status_ = kConfigNotLoaded;
   bool modified_ = false;
   bool auto_save_ = false;
 };

@@ -263,6 +263,46 @@ typedef struct rime_module_t {
 RIME_API Bool RimeRegisterModule(RimeModule* module);
 RIME_API RimeModule* RimeFindModule(const char* module_name);
 
+/*! Errors
+ *  RimeError is the code of an error that occurred in a Rime API call. The
+ *  client can test the code to choose subsequent behaviors or to customize
+ *  the error message, e.g. to localize it.
+ */
+typedef enum rime_error_t {
+  RIME_ERROR_NONE = 0,  //!< no error occurred
+  //! an argument of the failed call is invalid, e.g. it is NULL or is not
+  //! in the expected range
+  RIME_ERROR_INVALID_ARGUMENT,
+  //! the library has not been initialized, or has been finalized
+  RIME_ERROR_NOT_INITIALIZED,
+  //! the library is in maintenance mode
+  RIME_ERROR_MAINTENANCE_MODE,
+  //! the session used by the failed call does not exist
+  RIME_ERROR_SESSION_NOT_FOUND,
+  //! the schema used by the failed call does not exist
+  RIME_ERROR_SCHEMA_NOT_FOUND,
+  //! the config file used by the failed call does not exist
+  RIME_ERROR_CONFIG_NOT_FOUND,
+  //! the config file used by the failed call cannot be parsed
+  RIME_ERROR_CONFIG_INVALID,
+  //! the module could not be found
+  RIME_ERROR_MODULE_NOT_FOUND,
+  //! the task (e.g. deployment) failed
+  RIME_ERROR_TASK_FAILED,
+  //! internal error, e.g. a resource required by the call is not available
+  RIME_ERROR_INTERNAL,
+} RimeError;
+
+/*! Get the error of the most recent Rime API call that failed on the calling
+ *  thread. A client should check the result of the call it just made, then use
+ *  this function to obtain the error code, and decide the subsequent behavior,
+ *  e.g. how to describe the error to its user.
+ *  A call that succeeds shall clear a previously reported error, while a call
+ *  that cannot fail leaves it untouched.
+ *  \return RIME_ERROR_NONE if no error occurred
+ */
+RIME_API RimeError RimeGetLastError(void);
+
 /*! The API structure
  *  RimeApi is for rime v1.0+
  */
@@ -521,6 +561,9 @@ typedef struct RIME_FLAVORED(rime_api_t) {
                                 RimeCandidatePreview* preview);
   //! free a RimeCandidatePreview filled by get_candidate_preview
   Bool (*free_candidate_preview)(RimeCandidatePreview* preview);
+
+  //! get the error of the most recent failed API call on the calling thread
+  RimeError (*get_last_error)(void);
 } RIME_FLAVORED(RimeApi);
 
 //! API entry

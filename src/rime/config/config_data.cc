@@ -33,6 +33,7 @@ bool ConfigData::Save() {
 bool ConfigData::LoadFromStream(std::istream& stream) {
   if (!stream.good()) {
     LOG(ERROR) << "failed to load config from stream.";
+    load_status_ = kConfigFileInvalid;
     return false;
   }
   try {
@@ -40,8 +41,10 @@ bool ConfigData::LoadFromStream(std::istream& stream) {
     root = ConvertFromYaml(doc, nullptr);
   } catch (YAML::Exception& e) {
     LOG(ERROR) << "Error parsing YAML: " << e.what();
+    load_status_ = kConfigFileInvalid;
     return false;
   }
+  load_status_ = kConfigLoaded;
   return true;
 }
 
@@ -68,6 +71,7 @@ bool ConfigData::LoadFromFile(const path& file_path, ConfigCompiler* compiler) {
   if (!std::filesystem::exists(file_path)) {
     if (!boost::ends_with(file_path.to_utf8_string(), ".custom.yaml"))
       LOG(WARNING) << "nonexistent config file '" << file_path << "'.";
+    load_status_ = kConfigFileNotFound;
     return false;
   }
   LOG(INFO) << "loading config file '" << file_path << "'.";
@@ -76,8 +80,10 @@ bool ConfigData::LoadFromFile(const path& file_path, ConfigCompiler* compiler) {
     root = ConvertFromYaml(doc, compiler);
   } catch (YAML::Exception& e) {
     LOG(ERROR) << "Error parsing YAML \"" << file_path << "\" : " << e.what();
+    load_status_ = kConfigFileInvalid;
     return false;
   }
+  load_status_ = kConfigLoaded;
   return true;
 }
 
