@@ -236,11 +236,11 @@ void StreamingChordProcessor::ReplayPendingKey() {
 
   // 1. 組詞態下：交給 selector 選詞或 punctuator 上屏標點
   if (context->IsComposing() && !context->input().empty()) {
-    engine_->ProcessKey(raw_key);
+    engine_->ProcessSyntheticKey(raw_key);
   } else {
     // 2. 空閒態下：若下游處理器未截獲，只要屬於可列印 ASCII
     // 範圍，直接上屏原生字元
-    if (!engine_->ProcessKey(raw_key)) {
+    if (!engine_->ProcessSyntheticKey(raw_key)) {
       if (keycode >= 0x20 && keycode <= 0x7e) {
         engine_->CommitText(string(1, static_cast<char>(keycode)));
       }
@@ -323,7 +323,7 @@ void StreamingChordProcessor::CanonicalizeCurrentChord() {
     // 發射下游動作（如空格確認上屏）
     if (action.keycode() != 0) {
       is_replaying_ = true;
-      engine_->ProcessKey(action);
+      engine_->ProcessSyntheticKey(action);
       is_replaying_ = false;
     }
   }

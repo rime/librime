@@ -30,12 +30,18 @@ class ConcreteEngine : public Engine {
  public:
   ConcreteEngine();
   virtual ~ConcreteEngine();
-  virtual bool ProcessKey(const KeyEvent& key_event);
+  virtual bool ProcessKey(const KeyEvent& key_event) {
+    return ProcessKey(key_event, /* synthetic= */ false);
+  }
+  virtual bool ProcessSyntheticKey(const KeyEvent& key_event) {
+    return ProcessKey(key_event, /* synthetic= */ true);
+  }
   virtual void ApplySchema(Schema* schema);
   virtual void CommitText(string text);
   virtual void Compose(Context* ctx);
 
  protected:
+  bool ProcessKey(const KeyEvent& key_event, bool synthetic);
   void InitializeComponents();
   void InitializeOptions();
   void CalculateSegmentation(Segmentation* segments);
@@ -97,8 +103,8 @@ ConcreteEngine::~ConcreteEngine() {
   LOG(INFO) << "engine disposed.";
 }
 
-bool ConcreteEngine::ProcessKey(const KeyEvent& key_event) {
-  DLOG(INFO) << "process key: " << key_event;
+bool ConcreteEngine::ProcessKey(const KeyEvent& key_event, bool synthetic) {
+  DLOG(INFO) << "process key: " << key_event << ", synthetic: " << synthetic;
   ProcessResult ret = kNoop;
   for (auto& processor : processors_) {
     ret = processor->ProcessKeyEvent(key_event);
@@ -108,7 +114,10 @@ bool ConcreteEngine::ProcessKey(const KeyEvent& key_event) {
       return true;
   }
   // record unhandled keys, eg. spaces, numbers, bksp's.
-  context_->commit_history().Push(key_event);
+  // skip internal synthetic key events which won't reach the client app.
+  if (!synthetic) {
+    context_->commit_history().Push(key_event);
+  }
   // post-processing
   for (auto& processor : post_processors_) {
     ret = processor->ProcessKeyEvent(key_event);

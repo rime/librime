@@ -224,7 +224,7 @@ void ChordComposer::FinishChord(const Chord& chord) {
   if (key_sequence.Parse(code) && !key_sequence.empty()) {
     sending_chord_ = true;
     for (const KeyEvent& key : key_sequence) {
-      if (!engine_->ProcessKey(key)) {
+      if (!engine_->ProcessSyntheticKey(key)) {
         // direct commit
         engine_->CommitText(string(1, key.keycode()));
         // exclude the character (eg. space) from the raw sequence

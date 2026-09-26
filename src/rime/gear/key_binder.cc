@@ -324,7 +324,7 @@ void KeyBinder::PerformKeyBinding(const KeyBinding& binding) {
   } else {
     redirecting_ = true;
     for (const KeyEvent& key_event : binding.target) {
-      engine_->ProcessKey(key_event);
+      engine_->ProcessSyntheticKey(key_event);
     }
     redirecting_ = false;
   }
