@@ -122,37 +122,43 @@ TEST_F(StreamingChordDualRoleTest, UnmappedKeyBypassesDualRole) {
   EXPECT_TRUE(ctx->composition().empty());
 }
 
-// 6. 測試場景：非連擊雙空格（空格 1 超時重發上屏，空格 2 留存並與 u 熔合爲 AU）
+// 6. 測試分支 A：雙擊空格吞噬次擊，後續起奏新詞絕無幽靈空格殘留
 TEST_F(StreamingChordDualRoleTest,
-       NonDoubleTapSpaceReplaysFirstAndFusesSecondWithChordKey) {
+       DoubleTapSpaceCommitsCandidateAndSwallowsSecondSpace) {
   Context* ctx = engine_->context();
 
-  // 按下空格 1：暫存待決，顯示提示符 ␣
+  // 1. 按下空格 1：暫存待決，顯示提示符 ␣
   EXPECT_TRUE(engine_->ProcessKey(KeyEvent(XK_space, 0)));
   ASSERT_FALSE(ctx->composition().empty());
   EXPECT_EQ(ctx->composition().back().prompt, "␣");
 
-  // 間隔 150ms (> 120ms chord_timeout_ms_，穩固超過超時窗口，非連擊)
+  // 停頓 150ms 後再次按下空格 2：同鍵連擊！結算前鍵空格，當場吞噬次鍵空格
   std::this_thread::sleep_for(std::chrono::milliseconds(150));
-
-  // 按下空格 2：確證非快速雙擊，空格 1 結算上屏原生空格，空格 2 接替暫存
   EXPECT_TRUE(engine_->ProcessKey(KeyEvent(XK_space, 0)));
+
+  // 首記空格被回放上屏原生空格
   ASSERT_FALSE(ctx->commit_history().empty());
   EXPECT_EQ(ctx->commit_history().back().text, " ");
-  // 空格 2 必須維持暫存狀態，絕不能被當作雙擊直接吞噬
-  ASSERT_FALSE(ctx->composition().empty());
-  EXPECT_EQ(ctx->composition().back().prompt, "␣");
-  EXPECT_TRUE(ctx->input().empty());
+  LOG(INFO) << "history[" << ctx->commit_history().size() << "]:";
+  for (auto& record : ctx->commit_history()) {
+    LOG(INFO) << record.type << "<" << record.text << ">";
+  }
+  EXPECT_EQ(ctx->commit_history().size(), 1);
 
-  // 連續敲下字母 u (Δt < 1ms <= 60ms 並擊窗口，比照測試 3 與 4 避免 CI
-  // 調度超時)
-  EXPECT_TRUE(engine_->ProcessKey(KeyEvent(XK_u, 0)));
-
-  // 空格 2 成功解凍爲韻母 A，並與 U 組合爲新和弦輸入碼 AU
-  EXPECT_EQ(ctx->input(), "AU");
-  // 提示標籤清空
+  // 核心斷言：次記空格被乾淨吞噬，狀態機徹底歸零，絕無 pending_solo_key_ 殘留
   EXPECT_TRUE(ctx->composition().empty() ||
               !ctx->composition().back().HasTag("chord_prompt"));
+
+  // 2. 停頓後敲下新詞的聲母 S
+  std::this_thread::sleep_for(std::chrono::milliseconds(150));
+  EXPECT_TRUE(engine_->ProcessKey(KeyEvent(XK_s, 0)));
+
+  // 核心驗證：
+  // (1) 緩衝區純淨接納 "S"
+  EXPECT_EQ(ctx->input(), "S");
+  // (2) 上屏記錄依然只有 1 條，絕沒有在 S 前面洩漏第二個幽靈空格！
+  EXPECT_EQ(ctx->commit_history().size(), 1);
+  EXPECT_EQ(ctx->commit_history().back().text, " ");
 }
 
 // 7.
@@ -174,9 +180,35 @@ TEST_F(StreamingChordDualRoleTest,
   EXPECT_EQ(ctx->composition().back().prompt, "␣");
   EXPECT_EQ(ctx->input(), "S");
 
-  // 連續敲下字母 u 觸發空格解凍 (Δt < 1ms <= 60ms 並擊窗口)
+  // 連續敲下字母 u 觸發空格解凍 (Δt < 1ms <= 60ms，避免 CI 調度抖動)
   EXPECT_TRUE(engine_->ProcessKey(KeyEvent(XK_u, 0)));
 
   // 解凍過程經過 HandleChordKey 檢測到時序超時，必須在 S 與 AU 之間插入隔音符 '
   EXPECT_EQ(ctx->input(), "S'AU");
+}
+
+// 8. 測試待決雙功能鍵遇到 BackSpace 撤銷：抹去提示符，不誤觸發選詞上屏
+TEST_F(StreamingChordDualRoleTest,
+       BackSpaceCancelsPendingSoloKeyWithoutReplaying) {
+  Context* ctx = engine_->context();
+
+  // 1. 敲入聲母 S
+  EXPECT_TRUE(engine_->ProcessKey(KeyEvent(XK_s, 0)));
+  EXPECT_EQ(ctx->input(), "S");
+
+  // 2. 停頓後按下空格：進入暫存待決
+  std::this_thread::sleep_for(std::chrono::milliseconds(150));
+  EXPECT_TRUE(engine_->ProcessKey(KeyEvent(XK_space, 0)));
+  EXPECT_EQ(ctx->composition().back().prompt, "␣");
+
+  // 3. 按下 BackSpace：必須直接撤銷待決空格，絕不能 Replay 上屏
+  EXPECT_TRUE(engine_->ProcessKey(KeyEvent(XK_BackSpace, 0)));
+
+  // 上屏記錄必須爲空
+  EXPECT_TRUE(ctx->commit_history().empty());
+  // 緩衝區依然完好保留 "S"
+  EXPECT_EQ(ctx->input(), "S");
+  // 提示符被乾淨清空
+  EXPECT_TRUE(ctx->composition().empty() ||
+              !ctx->composition().back().HasTag("chord_prompt"));
 }
