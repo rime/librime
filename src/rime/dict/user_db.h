@@ -25,8 +25,8 @@ struct RIME_DLL UserDbValue {
   UserDbValue() = default;
   UserDbValue(const string& value);
 
-  string Pack() const;
-  bool Unpack(const string& value);
+  RIME_DLL string Pack() const;
+  RIME_DLL bool Unpack(const string& value);
 };
 
 /**

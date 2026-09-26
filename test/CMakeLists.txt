@@ -1,4 +1,11 @@
-aux_source_directory(. rime_test_src)
+file(GLOB rime_test_src ${CMAKE_CURRENT_SOURCE_DIR}/*.cc)
+option(BUILD_USER_DICT_BENCHMARK
+  "Build the user dictionary performance benchmark (for cache on/off comparison)"
+  OFF)
+if(NOT BUILD_USER_DICT_BENCHMARK)
+  list(REMOVE_ITEM rime_test_src
+    ${CMAKE_CURRENT_SOURCE_DIR}/user_dictionary_benchmark.cc)
+endif()
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/test)
 add_executable(rime_test ${rime_test_src})
 target_link_libraries(rime_test
