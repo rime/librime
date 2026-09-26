@@ -1,0 +1,216 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1025" width="100%" height="100%" style="background:#ffffff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <defs>
+    <marker id="arr-black" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0f172a"/>
+    </marker>
+    <marker id="arr-red" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#dc2626"/>
+    </marker>
+    <marker id="arr-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#16a34a"/>
+    </marker>
+    <marker id="arr-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0284c7"/>
+    </marker>
+  </defs>
+
+  <!-- 頂部標題區 -->
+  <text x="40" y="42" font-size="20" font-weight="bold" fill="#0f172a">【無抬鍵環境 Emacs】雙功能空格時序裁決全景：字內並擊、雙擊吞噬與字母驅動分流</text>
+  <text x="40" y="66" font-size="12" fill="#475569">經典範例：H ␣ O 並擊出「好」 ｜ 雙擊吞噬結算 ｜ 字母驅動：微時差解凍爲 A (聯誦出「好吧」) vs 超時 Replay 滾動上屏 (好 + 的)</text>
+
+  <!-- ======================== 第一層：物理擊鍵時間軸與決策門閥 ======================== -->
+  <rect x="40" y="85" width="1020" height="235" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="55" y="110" font-size="13" font-weight="bold" fill="#0f172a">▶ 物理擊鍵時間軸與三向裁決門閥 (Decision Fork)</text>
+
+  <!-- 時間軸基準線 -->
+  <line x1="75" y1="195" x2="1020" y2="195" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arr-black)"/>
+  <text x="1025" y="199" font-size="12" fill="#0f172a" font-weight="bold">時間 t</text>
+
+  <!-- 節點 1: H + ␣ + O 三鍵並擊 (形態 1) -->
+  <circle cx="115" cy="195" r="16" fill="#eff6ff" stroke="#0284c7" stroke-width="2"/>
+  <text x="115" y="174" font-size="12" font-weight="bold" fill="#0284c7" text-anchor="middle">H ␣ O ↓</text>
+  <text x="115" y="224" font-size="12" font-family="monospace" font-weight="bold" fill="#0284c7" text-anchor="middle">HAO</text>
+  <text x="115" y="240" font-size="10" fill="#0284c7" text-anchor="middle">形態 1: 字內並擊</text>
+
+  <!-- 門閥 ①: 停頓閉合 -->
+  <rect x="175" y="183" width="95" height="24" rx="3" fill="#fff1f2" stroke="#fca5a5"/>
+  <text x="222" y="199" font-size="10" fill="#b91c1c" font-weight="bold" text-anchor="middle">Δt &gt; 120ms</text>
+  <text x="222" y="220" font-size="9" fill="#b91c1c" text-anchor="middle">閉合，候選「好」</text>
+
+  <!-- 節點 2: 孤立空格落鍵 -->
+  <circle cx="310" cy="195" r="16" fill="#fffbeb" stroke="#b45309" stroke-width="2"/>
+  <text x="310" y="174" font-size="12" font-weight="bold" fill="#b45309" text-anchor="middle">␣₁ ↓ (單空格)</text>
+  <text x="310" y="224" font-size="11" font-weight="bold" fill="#b45309" text-anchor="middle">暫存待決</text>
+  <text x="310" y="240" font-size="10" fill="#64748b" text-anchor="middle">浮動提示「好|␣」</text>
+
+  <!-- 三向分叉起點 -->
+  <!-- 分支 A 路線 (紅線)：同鍵再次落鍵 (雙擊吞噬) -->
+  <path d="M 335 195 Q 385 135 440 135" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arr-red)"/>
+  <circle cx="450" cy="135" r="14" fill="#fef2f2" stroke="#dc2626" stroke-width="1.8"/>
+  <text x="450" y="116" font-size="11" font-weight="bold" fill="#dc2626" text-anchor="middle">␣₂ ↓</text>
+  <rect x="475" y="122" width="310" height="26" rx="3" fill="#fef2f2" stroke="#dc2626"/>
+  <text x="630" y="139" font-size="11" fill="#b91c1c" font-weight="bold" text-anchor="middle">【分支 A】雙擊吞噬：結算「好」，銷毀 ␣₂ (歸零空閒態)</text>
+
+  <!-- 分支 B 路線 (綠線)：字母微時差落鍵 (超前解凍爲 A，聯誦出好吧) -->
+  <path d="M 335 195 L 440 195" fill="none" stroke="#16a34a" stroke-width="2" marker-end="url(#arr-green)"/>
+  <circle cx="450" cy="195" r="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.8"/>
+  <text x="450" y="176" font-size="11" font-weight="bold" fill="#16a34a" text-anchor="middle">B ↓ (Δt ≤ 60ms)</text>
+  <rect x="475" y="182" width="310" height="26" rx="3" fill="#f0fdf4" stroke="#16a34a"/>
+  <text x="630" y="199" font-size="11" fill="#15803d" font-weight="bold" text-anchor="middle">【分支 B】解凍爲 A：前字不上屏，聯誦合體出「好吧」</text>
+
+  <!-- 分支 C 路線 (藍線)：字母超時落鍵 (滾動 Replay 結算) -->
+  <path d="M 335 195 Q 385 255 440 255" fill="none" stroke="#0284c7" stroke-width="1.8" marker-end="url(#arr-blue)"/>
+  <circle cx="450" cy="255" r="14" fill="#eff6ff" stroke="#0284c7" stroke-width="1.8"/>
+  <text x="450" y="236" font-size="11" font-weight="bold" fill="#0284c7" text-anchor="middle">D ↓ (Δt &gt; 60ms)</text>
+  <rect x="475" y="242" width="310" height="26" rx="3" fill="#eff6ff" stroke="#0284c7"/>
+  <text x="630" y="259" font-size="11" fill="#0284c7" font-weight="bold" text-anchor="middle">【分支 C】滾動 Replay：結算「好」，D 獨立開闢「的」</text>
+
+  <!-- 右側卡片：三向分流本質 (座標獨立避讓，無遮擋) -->
+  <rect x="805" y="115" width="190" height="155" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="820" y="140" font-size="12" font-weight="bold" fill="#0f172a">【三向分流本質】</text>
+  <text x="820" y="165" font-size="11" fill="#dc2626" font-weight="bold">● 分支 A：意向收工 · 雙擊吞噬</text>
+  <text x="835" y="180" font-size="10" fill="#64748b">結算前詞，次擊蒸發，零殘留</text>
+  <text x="820" y="205" font-size="11" fill="#15803d" font-weight="bold">● 分支 B：連打滑音 · 解凍成詞</text>
+  <text x="835" y="220" font-size="10" fill="#64748b">空格化韻 A，兩段聯誦出「好吧」</text>
+  <text x="820" y="245" font-size="11" fill="#0284c7" font-weight="bold">● 分支 C：奔流盲打 · 滾動推進</text>
+  <text x="835" y="260" font-size="10" fill="#64748b">後鍵推前鍵上屏，D 開闢「的」</text>
+
+  <!-- ======================== 第二層：狀態機內部流轉細部 (分支 C 滾動示範) ======================== -->
+  <rect x="40" y="335" width="1020" height="305" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="55" y="360" font-size="14" font-weight="bold" fill="#2563eb">▶ 分支 C（字母 D 驅動 Replay 滾動上屏）狀態機內部流轉細部</text>
+
+  <g font-size="12" fill="#475569">
+    <text x="55" y="402" font-weight="bold">軌道 1: pending_solo_key_</text>
+    <text x="55" y="458" font-weight="bold">軌道 2: 預編輯區提示符</text>
+    <text x="55" y="518" font-weight="bold">軌道 3: context-&gt;input()</text>
+    <text x="55" y="588" font-weight="bold">軌道 4: 屏幕候選與上屏流</text>
+  </g>
+
+  <!-- 軌道 1: pending_solo_key_ -->
+  <g font-family="monospace" font-size="11" text-anchor="middle">
+    <rect x="235" y="388" width="70" height="24" rx="3" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="270" y="404" fill="#94a3b8">None</text>
+    <line x1="305" y1="400" x2="340" y2="400" stroke="#94a3b8" marker-end="url(#arr-black)"/>
+
+    <rect x="345" y="386" width="95" height="28" rx="4" fill="#fffbeb" stroke="#b45309" stroke-width="1.5"/>
+    <text x="392" y="404" fill="#b45309" font-weight="bold">{␣, t_space}</text>
+    <line x1="440" y1="400" x2="510" y2="400" stroke="#0284c7" stroke-width="1.8" marker-end="url(#arr-blue)"/>
+
+    <!-- 字母 D 到達且 Δt > 60ms：觸發 Replay 歸零 -->
+    <rect x="515" y="383" width="275" height="34" rx="4" fill="#eff6ff" stroke="#0284c7" stroke-width="1.8"/>
+    <text x="652" y="398" font-size="10" fill="#0284c7" font-weight="bold">D 到達 (Δt &gt; 60ms) 確證非並擊！</text>
+    <text x="652" y="411" font-size="10" fill="#0369a1" font-weight="bold">ReplayPendingKey(␣) 結算「好」→ None</text>
+    <line x1="790" y1="400" x2="845" y2="400" stroke="#cbd5e1" stroke-dasharray="3" marker-end="url(#arr-black)"/>
+
+    <rect x="850" y="388" width="130" height="24" rx="3" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="915" y="404" fill="#64748b">None (接納 D)</text>
+  </g>
+
+  <!-- 軌道 2: 預編輯提示符 -->
+  <g font-family="monospace" font-size="12" text-anchor="middle">
+    <text x="270" y="457" fill="#94a3b8">"" (無提示)</text>
+    <rect x="370" y="440" width="45" height="26" rx="3" fill="#fffbeb" stroke="#b45309" stroke-width="1.5"/>
+    <text x="392" y="457" fill="#b45309" font-weight="bold">␣</text>
+    <line x1="415" y1="453" x2="560" y2="453" stroke="#b45309" stroke-dasharray="3"/>
+
+    <rect x="565" y="442" width="165" height="24" rx="3" fill="#eff6ff" stroke="#0284c7"/>
+    <text x="647" y="458" font-size="11" fill="#0284c7">ClearPendingPrompt()</text>
+    <line x1="730" y1="453" x2="880" y2="453" stroke="#cbd5e1" stroke-dasharray="3"/>
+    <text x="915" y="457" fill="#94a3b8">"" (無提示殘留)</text>
+  </g>
+
+  <!-- 軌道 3: context->input() 緩衝區 -->
+  <g font-family="monospace" font-size="12">
+    <rect x="235" y="504" width="75" height="26" rx="3" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="254" y="521" fill="#0284c7" font-weight="bold">"HAO"</text>
+
+    <line x1="310" y1="517" x2="490" y2="517" stroke="#0284c7" stroke-dasharray="3"/>
+    <text x="380" y="512" font-size="10" fill="#64748b">維持 "HAO" 等待</text>
+
+    <rect x="495" y="504" width="240" height="26" rx="3" fill="#eff6ff" stroke="#0284c7"/>
+    <text x="505" y="521" fill="#0284c7" font-size="11">Replay選詞清空 → 推入 "D"</text>
+    <line x1="735" y1="517" x2="830" y2="517" stroke="#0284c7" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+
+    <rect x="835" y="504" width="140" height="26" rx="3" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="855" y="521" fill="#0284c7" font-weight="bold">input = "D"</text>
+  </g>
+
+  <!-- 軌道 4: 屏幕候選與上屏流 (緊湊對齊，絕不出界) -->
+  <g transform="translate(235, 565)">
+    <rect x="0" y="0" width="125" height="34" rx="4" fill="#eff6ff" stroke="#0284c7"/>
+    <text x="12" y="21" font-size="12" fill="#0284c7" font-weight="bold">候選欄: 1. 好</text>
+
+    <line x1="125" y1="17" x2="175" y2="17" stroke="#0284c7" stroke-width="1.8" marker-end="url(#arr-blue)"/>
+
+    <rect x="180" y="-1" width="230" height="36" rx="4" fill="#eff6ff" stroke="#0284c7" stroke-width="1.8"/>
+    <text x="192" y="16" font-size="12" font-weight="bold" fill="#0369a1">✓ 滾動結算：出字「好」！</text>
+    <text x="192" y="30" font-size="9" fill="#0284c7">(Replay ␣ 觸發 selector 選詞上屏)</text>
+
+    <line x1="410" y1="17" x2="460" y2="17" stroke="#0284c7" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+
+    <rect x="465" y="-1" width="190" height="36" rx="4" fill="#f8fafc" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="477" y="16" font-size="12" font-weight="bold" fill="#0284c7">新候選：1. 的 (de)</text>
+    <text x="477" y="30" font-size="9" fill="#64748b">(D 獨立生碼，開闢新詞)</text>
+  </g>
+
+  <!-- ======================== 第三層：三向門閥決策核心卡片 ======================== -->
+  <g transform="translate(40, 655)">
+    <!-- 卡片 1: 雙擊吞噬結算 -->
+    <rect x="0" y="0" width="320" height="230" rx="6" fill="#ffffff" stroke="#dc2626" stroke-width="1.8"/>
+    <text x="15" y="26" font-size="13" font-weight="bold" fill="#b91c1c">分支 A：雙擊吞噬結算 (␣₁ ␣₂)</text>
+    <rect x="15" y="38" width="170" height="20" rx="3" fill="#fef2f2" stroke="#fca5a5"/>
+    <text x="100" y="52" font-size="10" fill="#b91c1c" font-weight="bold" text-anchor="middle">同鍵連擊 · 意向收工閉環</text>
+
+    <text x="15" y="78" font-size="11" fill="#334155" font-weight="bold">● 心智與操作場景：</text>
+    <text x="15" y="96" font-size="11" fill="#64748b">打完一個詞後想停下來思考，隨手自然雙擊</text>
+    <text x="15" y="112" font-size="11" fill="#64748b">空格，心智意圖 100% 爲確認上屏收尾。</text>
+
+    <text x="15" y="136" font-size="11" fill="#334155" font-weight="bold">● 狀態機決策：</text>
+    <text x="15" y="154" font-size="11" font-weight="bold" fill="#b91c1c">1. ReplayPendingKey(␣₁) 結算上屏「好」；</text>
+    <text x="15" y="170" font-size="11" font-weight="bold" fill="#dc2626">2. 當場吞噬 ␣₂，ResetTracking() 歸零；</text>
+    <text x="15" y="186" font-size="11" fill="#475569">3. 徹底阻斷空閒態洩漏，零幽靈空格。</text>
+  </g>
+
+  <g transform="translate(390, 655)">
+    <!-- 卡片 2: 字母微時差解凍聯誦 -->
+    <rect x="0" y="0" width="320" height="230" rx="6" fill="#ffffff" stroke="#16a34a" stroke-width="1.8"/>
+    <text x="15" y="26" font-size="13" font-weight="bold" fill="#15803d">分支 B：超前解凍聯誦 (␣ + B)</text>
+    <rect x="15" y="38" width="170" height="20" rx="3" fill="#f0fdf4" stroke="#86efac"/>
+    <text x="100" y="52" font-size="10" fill="#15803d" font-weight="bold" text-anchor="middle">微時差並擊 (Δt ≤ 60ms)</text>
+
+    <text x="15" y="78" font-size="11" fill="#334155" font-weight="bold">● 心智與操作場景：</text>
+    <text x="15" y="96" font-size="11" fill="#64748b">並擊「吧」(BA) 時大拇指空格超前觸底，</text>
+    <text x="15" y="112" font-size="11" fill="#64748b">此空格真身爲並擊韻母 A，絕非結算指令！</text>
+
+    <text x="15" y="136" font-size="11" fill="#334155" font-weight="bold">● 狀態機決策：</text>
+    <text x="15" y="154" font-size="11" font-weight="bold" fill="#15803d">1. 抹去提示符，解凍暫存空格爲韻母 A；</text>
+    <text x="15" y="170" font-size="11" font-weight="bold" fill="#15803d">2. 前字不上屏，兩段和弦在緩衝區聯誦；</text>
+    <text x="15" y="186" font-size="11" font-weight="bold" fill="#15803d">3. input: HAO'BA → 輸出詞條「好吧」。</text>
+  </g>
+
+  <g transform="translate(740, 655)">
+    <!-- 卡片 3: 字母驅動 Replay 滾動結算 -->
+    <rect x="0" y="0" width="320" height="230" rx="6" fill="#ffffff" stroke="#0284c7" stroke-width="1.8"/>
+    <text x="15" y="26" font-size="13" font-weight="bold" fill="#0284c7">分支 C：滾動 Replay 結算 (␣ + D)</text>
+    <rect x="15" y="38" width="170" height="20" rx="3" fill="#eff6ff" stroke="#bae6fd"/>
+    <text x="100" y="52" font-size="10" fill="#0284c7" font-weight="bold" text-anchor="middle">超時滾動流 (Δt &gt; 60ms)</text>
+
+    <text x="15" y="78" font-size="11" fill="#334155" font-weight="bold">● 心智與操作場景：</text>
+    <text x="15" y="96" font-size="11" fill="#64748b">奔流盲打時每個詞只敲一下空格，不停頓</text>
+    <text x="15" y="112" font-size="11" fill="#64748b">直接敲下一詞首鍵 D，依賴新字推進前字！</text>
+
+    <text x="15" y="136" font-size="11" fill="#334155" font-weight="bold">● 狀態機決策：</text>
+    <text x="15" y="154" font-size="11" font-weight="bold" fill="#0284c7">1. 鍵碼 D 到達確證非並擊，觸發 Replay；</text>
+    <text x="15" y="170" font-size="11" font-weight="bold" fill="#0369a1">2. 暫存空格選詞上屏「好」，清空緩衝區；</text>
+    <text x="15" y="186" font-size="11" font-weight="bold" fill="#0284c7">3. D 順暢推入，流暢開闢新詞「的 (de)」！</text>
+  </g>
+
+  <!-- ======================== 底部架構總結註解 ======================== -->
+  <g transform="translate(40, 900)">
+    <rect x="0" y="0" width="1020" height="100" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="20" y="24" font-size="12" font-weight="bold" fill="#0f172a">【架構精義 · 雙功能鍵時序閉環的三大支柱】</text>
+    <text x="20" y="46" font-size="11" fill="#334155">1. <tspan font-weight="bold" fill="#dc2626">雙擊吞噬（分支 A）：</tspan>連擊同一雙功能鍵視爲收工指令，首擊結算上屏、次擊物理銷毀，杜絕空閒態洩漏幽靈空格；</text>
+    <text x="20" y="66" font-size="11" fill="#334155">2. <tspan font-weight="bold" fill="#15803d">解凍聯誦（分支 B）：</tspan>微時差內（Δt ≤ 60ms）落鍵確證空格爲韻母 A，前字不上屏，前後和弦合流輸出多音節詞條「好吧」；</text>
+    <text x="20" y="86" font-size="11" fill="#334155">3. <tspan font-weight="bold" fill="#0284c7">滾動 Replay（分支 C）：</tspan>單空格後不停頓敲下新字首鍵 D，利用時差自動將前字推動上屏，達成零停頓奔流連打。</text>
+  </g>
+</svg>
