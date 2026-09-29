@@ -18,10 +18,8 @@
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/setup.h>
-#include <rime/ticket.h>
 #include <rime/algo/fs.h>
 #include <rime/algo/utilities.h>
-#include <rime/dict/dictionary.h>
 #include <rime/lever/compile_unit.h>
 #include <rime/lever/deployment_tasks.h>
 #include <rime/lever/user_dict_manager.h>
@@ -384,29 +382,29 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     // not requiring a dictionary
     return true;
   }
-  Schema schema(schema_id, config.release());
-  the<Dictionary> dict(
-      Dictionary::Require("dictionary")->Create({&schema, "translator"}));
-  if (!dict) {
-    LOG(ERROR) << "Error creating dictionary '" << dict_name << "'.";
-    return false;
-  }
-
   LOG(INFO) << "preparing dictionary '" << dict_name << "'.";
-  const path& user_data_path(deployer->user_data_dir);
   if (!MaybeCreateDirectory(deployer->staging_dir)) {
     return false;
   }
-  the<ResourceResolver> resolver(
-      Service::instance().CreateDeployedResourceResolver(
-          {"compiled_schema", "", ".schema.yaml"}));
-  auto compiled_schema = resolver->ResolvePath(schema_id);
-  if (!CompileDictionary(dict.get(), compiled_schema, verbose_)) {
-    LOG(ERROR) << "dictionary '" << dict_name << "' failed to compile.";
+  CompileUnit unit;
+  switch (BuildDictionaryCompileUnit(schema_id, config.release(), verbose_,
+                                     &unit)) {
+    case CompileUnitResult::kNoDictionary:
+      return true;
+    case CompileUnitResult::kError:
+      return false;
+    case CompileUnitResult::kBuilt:
+      break;
+  }
+  CompileGraph graph;
+  graph.AddUnit(std::move(unit));
+  CompileScheduler scheduler;
+  CompileScheduler::Result result;
+  if (!scheduler.Run(graph, &result)) {
+    LOG(ERROR) << "error in compile graph.";
     return false;
   }
-  LOG(INFO) << "dictionary '" << dict_name << "' is ready.";
-  return true;
+  return result.failure == 0;
 }
 
 ConfigFileUpdate::ConfigFileUpdate(TaskInitializer arg) {
