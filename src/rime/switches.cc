@@ -4,9 +4,9 @@
 
 namespace rime {
 
-inline static int state_value(ConfigItemRef& item, const char* key) {
-  auto value = item[key];
-  return value.IsValue() ? value.ToInt() : -1;
+inline static int reset_value(ConfigItemRef& item) {
+  auto reset = item["reset"];
+  return reset.IsValue() ? reset.ToInt() : -1;
 }
 
 Switches::SwitchOption Switches::FindOptionFromConfigItem(
@@ -18,13 +18,8 @@ Switches::SwitchOption Switches::FindOptionFromConfigItem(
   auto options = item["options"];
   if (name.IsValue()) {
     SwitchOption option{
-        the_switch,
-        kToggleOption,
-        name.ToString(),
-        state_value(item, "reset"),
-        switch_index,
-        0,
-        state_value(item, "default"),
+        the_switch,        kToggleOption, name.ToString(),
+        reset_value(item), switch_index,
     };
     if (callback(option) == kFound)
       return option;
@@ -32,13 +27,8 @@ Switches::SwitchOption Switches::FindOptionFromConfigItem(
     for (size_t option_index = 0; option_index < options.size();
          ++option_index) {
       SwitchOption option{
-          the_switch,
-          kRadioGroup,
-          options[option_index].ToString(),
-          state_value(item, "reset"),
-          switch_index,
-          option_index,
-          state_value(item, "default"),
+          the_switch,        kRadioGroup,  options[option_index].ToString(),
+          reset_value(item), switch_index, option_index,
       };
       if (callback(option) == kFound)
         return option;
@@ -93,7 +83,6 @@ Switches::SwitchOption Switches::Cycle(const SwitchOption& current) {
           current.reset_value,
           current.switch_index,
           next_option_index,
-          current.default_value,
       };
     }
   }
@@ -113,7 +102,6 @@ Switches::SwitchOption Switches::Reset(const SwitchOption& current) {
         current.reset_value,
         current.switch_index,
         default_state,
-        current.default_value,
     };
   }
   return {};
@@ -129,7 +117,6 @@ Switches::SwitchOption Switches::FindRadioGroupOption(
           0,  // unknown
           0,  // unknown
           j,
-          -1,  // unknown
       };
       if (callback(option) == kFound)
         return option;
