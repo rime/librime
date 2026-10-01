@@ -401,19 +401,52 @@ void ConcreteEngine::InitializeComponents() {
 
 void ConcreteEngine::InitializeOptions() {
   LOG(INFO) << "ConcreteEngine::InitializeOptions";
-  // reset custom switches
+  // Priority: saved user.yaml value > reset initial > radio first option.
   Config* config = schema_->config();
   Switches switches(config);
   switches.FindOption([this](Switches::SwitchOption option) {
     LOG(INFO) << "found switch option: " << option.option_name
               << ", reset: " << option.reset_value;
-    if (option.reset_value >= 0) {
-      if (option.type == Switches::kToggleOption) {
+    if (option.type == Switches::kToggleOption) {
+      if (switcher_ && switcher_->HasSavedOption(option.option_name)) {
+        return Switches::kContinue;
+      }
+      if (option.reset_value >= 0) {
         context_->set_option(option.option_name, (option.reset_value != 0));
-      } else if (option.type == Switches::kRadioGroup) {
-        context_->set_option(
-            option.option_name,
-            static_cast<int>(option.option_index) == option.reset_value);
+      }
+      return Switches::kContinue;
+    }
+    if (option.type == Switches::kRadioGroup) {
+      // Handle each radio group once, at the first option.
+      if (option.option_index != 0) {
+        return Switches::kContinue;
+      }
+      bool any_saved = false;
+      bool any_on = false;
+      Switches::FindRadioGroupOption(
+          option.the_switch, [this, &any_saved, &any_on](
+                                 Switches::SwitchOption member) {
+            if (switcher_ && switcher_->HasSavedOption(member.option_name)) {
+              any_saved = true;
+            }
+            if (context_->get_option(member.option_name)) {
+              any_on = true;
+            }
+            return Switches::kContinue;
+          });
+      if (any_saved) {
+        return Switches::kContinue;
+      }
+      if (option.reset_value >= 0) {
+        Switches::FindRadioGroupOption(
+            option.the_switch, [this, &option](Switches::SwitchOption member) {
+              context_->set_option(
+                  member.option_name,
+                  static_cast<int>(member.option_index) == option.reset_value);
+              return Switches::kContinue;
+            });
+      } else if (!any_on) {
+        context_->set_option(option.option_name, true);
       }
     }
     return Switches::kContinue;
