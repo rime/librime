@@ -9,6 +9,7 @@
 #include <rime/context.h>
 #include <rime/deployer.h>
 #include <rime/key_event.h>
+#include <rime/last_error.h>
 #include <rime/menu.h>
 #include <rime/module.h>
 #include <rime/registry.h>
@@ -22,7 +23,68 @@ using namespace rime;
 
 void rime_declare_module_dependencies();
 
+// Error reporting, shared by all flavors of the API. The helpers below record
+// the error of a failed API call on the calling thread; the client retrieves
+// it with RimeApi::get_last_error(). See <rime/last_error.h>.
+
+// Reports why the service is currently unavailable.
+static void rime_report_service_unavailable() {
+  Service& service(Service::instance());
+  SetLastError(service.deployer().IsMaintenanceMode()
+                   ? RIME_ERROR_MAINTENANCE_MODE
+                   : RIME_ERROR_NOT_INITIALIZED);
+}
+
+// Returns the session of `session_id`, reporting an error if it is not found.
+static an<Session> rime_get_session(RimeSessionId session_id) {
+  Service& service(Service::instance());
+  if (service.disabled()) {
+    rime_report_service_unavailable();
+    return nullptr;
+  }
+  an<Session> session = service.GetSession(session_id);
+  if (!session) {
+    SetLastError(RIME_ERROR_SESSION_NOT_FOUND);
+    return nullptr;
+  }
+  ClearLastError();
+  return session;
+}
+
+// Reports the result of loading a config file, clearing a previous error if the
+// file was loaded successfully. Returns true on success.
+static bool rime_check_config_load_status(ConfigLoadStatus status) {
+  switch (status) {
+    case kConfigLoaded:
+      ClearLastError();
+      return true;
+    case kConfigFileNotFound:
+      SetLastError(RIME_ERROR_CONFIG_NOT_FOUND);
+      return false;
+    case kConfigFileInvalid:
+      SetLastError(RIME_ERROR_CONFIG_INVALID);
+      return false;
+    case kConfigNotLoaded:
+      break;
+  }
+  SetLastError(RIME_ERROR_INTERNAL);
+  return false;
+}
+
+// Runs deployment task `task_name`, reporting the error if it failed.
+static bool rime_run_task(Deployer& deployer,
+                          const char* task_name,
+                          TaskInitializer arg = TaskInitializer()) {
+  bool success = deployer.RunTask(task_name, arg);
+  if (success)
+    ClearLastError();
+  else
+    SetLastError(RIME_ERROR_TASK_FAILED);
+  return success;
+}
+
 RIME_DEPRECATED void RimeSetup(RimeTraits* traits) {
+  ClearLastError();
   rime_declare_module_dependencies();
 
   SetupDeployer(traits);
@@ -49,6 +111,7 @@ RIME_DEPRECATED void RimeSetNotificationHandler(RimeNotificationHandler handler,
 }
 
 RIME_DEPRECATED void RimeInitialize(RimeTraits* traits) {
+  ClearLastError();
   SetupDeployer(traits);
   LoadModules(RIME_PROVIDED(traits, modules) ? traits->modules
                                              : kDefaultModules);
@@ -56,6 +119,7 @@ RIME_DEPRECATED void RimeInitialize(RimeTraits* traits) {
 }
 
 RIME_DEPRECATED void RimeFinalize() {
+  ClearLastError();
   Service::instance().deployer().JoinMaintenanceThread();
   Service::instance().StopService();
   Registry::instance().Clear();
@@ -63,10 +127,11 @@ RIME_DEPRECATED void RimeFinalize() {
 }
 
 RIME_DEPRECATED Bool RimeStartMaintenance(Bool full_check) {
+  ClearLastError();
   LoadModules(kDeployerModules);
   Deployer& deployer(Service::instance().deployer());
   deployer.RunTask("clean_old_log_files");
-  if (!deployer.RunTask("installation_update")) {
+  if (!rime_run_task(deployer, "installation_update")) {
     return False;
   }
   if (!full_check) {
@@ -76,7 +141,7 @@ RIME_DEPRECATED Bool RimeStartMaintenance(Bool full_check) {
             deployer.shared_data_dir,
         },
     };
-    if (!deployer.RunTask("detect_modifications", args)) {
+    if (!rime_run_task(deployer, "detect_modifications", args)) {
       return False;
     }
     LOG(INFO) << "changes detected; starting maintenance.";
@@ -98,6 +163,7 @@ RIME_DEPRECATED Bool RimeIsMaintenancing() {
 }
 
 RIME_DEPRECATED void RimeJoinMaintenanceThread() {
+  ClearLastError();
   Deployer& deployer(Service::instance().deployer());
   deployer.JoinMaintenanceThread();
 }
@@ -105,6 +171,7 @@ RIME_DEPRECATED void RimeJoinMaintenanceThread() {
 // deployment
 
 RIME_DEPRECATED void RimeDeployerInitialize(RimeTraits* traits) {
+  ClearLastError();
   SetupDeployer(traits);
   LoadModules(RIME_PROVIDED(traits, modules) ? traits->modules
                                              : kDeployerModules);
@@ -112,50 +179,87 @@ RIME_DEPRECATED void RimeDeployerInitialize(RimeTraits* traits) {
 
 RIME_DEPRECATED Bool RimePrebuildAllSchemas() {
   Deployer& deployer(Service::instance().deployer());
-  return Bool(deployer.RunTask("prebuild_all_schemas"));
+  return Bool(rime_run_task(deployer, "prebuild_all_schemas"));
 }
 
 RIME_DEPRECATED Bool RimeDeployWorkspace() {
   Deployer& deployer(Service::instance().deployer());
-  return Bool(deployer.RunTask("installation_update") &&
-              deployer.RunTask("workspace_update") &&
-              deployer.RunTask("user_dict_upgrade") &&
-              deployer.RunTask("cleanup_trash"));
+  return Bool(rime_run_task(deployer, "installation_update") &&
+              rime_run_task(deployer, "workspace_update") &&
+              rime_run_task(deployer, "user_dict_upgrade") &&
+              rime_run_task(deployer, "cleanup_trash"));
 }
 
 RIME_DEPRECATED Bool RimeDeploySchema(const char* schema_file) {
+  if (!schema_file) {
+    SetLastError(RIME_ERROR_INVALID_ARGUMENT);
+    return False;
+  }
   Deployer& deployer(Service::instance().deployer());
-  return Bool(deployer.RunTask("schema_update", path(schema_file)));
+  return Bool(rime_run_task(deployer, "schema_update", path(schema_file)));
 }
 
 RIME_DEPRECATED Bool RimeDeployConfigFile(const char* file_name,
                                           const char* version_key) {
+  if (!file_name) {
+    SetLastError(RIME_ERROR_INVALID_ARGUMENT);
+    return False;
+  }
+  if (!version_key) {
+    SetLastError(RIME_ERROR_INVALID_ARGUMENT);
+    return False;
+  }
   Deployer& deployer(Service::instance().deployer());
   TaskInitializer args(make_pair<string, string>(file_name, version_key));
-  return Bool(deployer.RunTask("config_file_update", args));
+  return Bool(rime_run_task(deployer, "config_file_update", args));
 }
 
 RIME_DEPRECATED Bool RimeSyncUserData() {
+  ClearLastError();
   Service::instance().CleanupAllSessions();
   Deployer& deployer(Service::instance().deployer());
   deployer.ScheduleTask("installation_update");
   deployer.ScheduleTask("backup_config_files");
   deployer.ScheduleTask("user_dict_sync");
-  return Bool(deployer.StartMaintenance());
+  if (!deployer.StartMaintenance()) {
+    SetLastError(RIME_ERROR_TASK_FAILED);
+    return False;
+  }
+  return True;
 }
 
 // session management
 
 RIME_DEPRECATED RimeSessionId RimeCreateSession() {
-  return Service::instance().CreateSession();
+  ClearLastError();
+  Service& service(Service::instance());
+  RimeSessionId session_id = service.CreateSession();
+  if (!session_id) {
+    if (service.disabled())
+      rime_report_service_unavailable();
+    else
+      SetLastError(RIME_ERROR_INTERNAL);
+    return 0;
+  }
+  return session_id;
 }
 
 RIME_DEPRECATED Bool RimeFindSession(RimeSessionId session_id) {
-  return Bool(session_id && Service::instance().GetSession(session_id));
+  ClearLastError();
+  return rime_get_session(session_id) ? True : False;
 }
 
 RIME_DEPRECATED Bool RimeDestroySession(RimeSessionId session_id) {
-  return Bool(Service::instance().DestroySession(session_id));
+  ClearLastError();
+  Service& service(Service::instance());
+  if (!service.DestroySession(session_id)) {
+    if (service.disabled())
+      rime_report_service_unavailable();
+    else
+      SetLastError(RIME_ERROR_SESSION_NOT_FOUND);
+    return False;
+  }
+  return True;
 }
 
 RIME_DEPRECATED void RimeCleanupStaleSessions() {
@@ -171,21 +275,21 @@ RIME_DEPRECATED void RimeCleanupAllSessions() {
 RIME_DEPRECATED Bool RimeProcessKey(RimeSessionId session_id,
                                     int keycode,
                                     int mask) {
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return False;
   return Bool(session->ProcessKey(KeyEvent(keycode, mask)));
 }
 
 RIME_DEPRECATED Bool RimeCommitComposition(RimeSessionId session_id) {
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return False;
   return Bool(session->CommitComposition());
 }
 
 RIME_DEPRECATED void RimeClearComposition(RimeSessionId session_id) {
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return;
   session->ClearComposition();
@@ -211,7 +315,7 @@ RIME_DEPRECATED Bool RimeGetContext(RimeSessionId session_id,
   if (!context || context->data_size <= 0)
     return False;
   RIME_STRUCT_CLEAR(*context);
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return False;
   Context* ctx = session->context();
@@ -311,7 +415,7 @@ RIME_DEPRECATED Bool RimeGetCommit(RimeSessionId session_id,
   if (!commit)
     return False;
   RIME_STRUCT_CLEAR(*commit);
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return False;
   const string& commit_text(session->commit_text());
@@ -337,7 +441,7 @@ RIME_DEPRECATED Bool RimeGetStatus(RimeSessionId session_id,
   if (!status || status->data_size <= 0)
     return False;
   RIME_STRUCT_CLEAR(*status);
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return False;
   Schema* schema = session->schema();
@@ -375,7 +479,7 @@ RimeCandidateListFromIndex(RimeSessionId session_id,
                            int index) {
   if (!iterator)
     return False;
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return False;
   Context* ctx = session->context();
@@ -423,7 +527,7 @@ RIME_DEPRECATED void RimeCandidateListEnd(RimeCandidateListIterator* iterator) {
 RIME_DEPRECATED void RimeSetOption(RimeSessionId session_id,
                                    const char* option,
                                    Bool value) {
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return;
   Context* ctx = session->context();
@@ -434,7 +538,7 @@ RIME_DEPRECATED void RimeSetOption(RimeSessionId session_id,
 
 RIME_DEPRECATED Bool RimeGetOption(RimeSessionId session_id,
                                    const char* option) {
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return False;
   Context* ctx = session->context();
@@ -446,7 +550,7 @@ RIME_DEPRECATED Bool RimeGetOption(RimeSessionId session_id,
 RIME_DEPRECATED void RimeSetProperty(RimeSessionId session_id,
                                      const char* prop,
                                      const char* value) {
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return;
   Context* ctx = session->context();
@@ -459,7 +563,7 @@ RIME_DEPRECATED Bool RimeGetProperty(RimeSessionId session_id,
                                      const char* prop,
                                      char* value,
                                      size_t buffer_size) {
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return False;
   Context* ctx = session->context();
@@ -473,14 +577,19 @@ RIME_DEPRECATED Bool RimeGetProperty(RimeSessionId session_id,
 }
 
 RIME_DEPRECATED Bool RimeGetSchemaList(RimeSchemaList* output) {
-  if (!output)
+  ClearLastError();
+  if (!output) {
+    SetLastError(RIME_ERROR_INVALID_ARGUMENT);
     return False;
+  }
   output->size = 0;
   output->list = NULL;
   Schema default_schema;
   Config* config = default_schema.config();
-  if (!config)
+  if (!config) {
+    SetLastError(RIME_ERROR_CONFIG_NOT_FOUND);
     return False;
+  }
   an<ConfigList> schema_list = config->GetList("schema_list");
   if (!schema_list || schema_list->size() == 0)
     return False;
@@ -527,7 +636,7 @@ RIME_DEPRECATED void RimeFreeSchemaList(RimeSchemaList* schema_list) {
 RIME_DEPRECATED Bool RimeGetCurrentSchema(RimeSessionId session_id,
                                           char* schema_id,
                                           size_t buffer_size) {
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return False;
   Schema* schema = session->schema();
@@ -539,11 +648,30 @@ RIME_DEPRECATED Bool RimeGetCurrentSchema(RimeSessionId session_id,
 
 RIME_DEPRECATED Bool RimeSelectSchema(RimeSessionId session_id,
                                       const char* schema_id) {
-  if (!schema_id)
+  ClearLastError();
+  if (!schema_id) {
+    SetLastError(RIME_ERROR_INVALID_ARGUMENT);
     return False;
-  an<Session> session(Service::instance().GetSession(session_id));
+  }
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return False;
+  Config::Component* component = Config::Require("schema");
+  if (!component) {
+    SetLastError(RIME_ERROR_INTERNAL);
+    return False;
+  }
+  an<Config> schema_config(component->Create(schema_id));
+  if (!schema_config) {
+    SetLastError(RIME_ERROR_SCHEMA_NOT_FOUND);
+    return False;
+  }
+  if (schema_config->load_status() != kConfigLoaded) {
+    rime_check_config_load_status(schema_config->load_status());
+    if (LastErrorCode() == RIME_ERROR_CONFIG_NOT_FOUND)
+      SetLastError(RIME_ERROR_SCHEMA_NOT_FOUND);
+    return False;
+  }
   session->ApplySchema(new Schema(schema_id));
   return True;
 }
@@ -553,20 +681,44 @@ RIME_DEPRECATED Bool RimeSelectSchema(RimeSessionId session_id,
 static Bool open_config_in_component(const char* config_component,
                                      const char* config_id,
                                      RimeConfig* config) {
-  if (!config_id || !config)
+  if (!config_id) {
+    SetLastError(RIME_ERROR_INVALID_ARGUMENT);
     return False;
+  }
+  if (!config) {
+    SetLastError(RIME_ERROR_INVALID_ARGUMENT);
+    return False;
+  }
+  // A failed open leaves the output in a well-defined closed state, so that a
+  // client that ignores the return value can still close it safely.
+  config->ptr = NULL;
   Config::Component* cc = Config::Require(config_component);
-  if (!cc)
+  if (!cc) {
+    SetLastError(RIME_ERROR_INTERNAL);
     return False;
+  }
   Config* c = cc->Create(config_id);
-  if (!c)
+  if (!c) {
+    SetLastError(RIME_ERROR_INTERNAL);
     return False;
+  }
+  // Do not return an empty config for a config file that does not exist or
+  // cannot be parsed; the client would not have any use for it.
+  if (!rime_check_config_load_status(c->load_status())) {
+    delete c;
+    return False;
+  }
   config->ptr = (void*)c;
   return True;
 }
 
 RIME_DEPRECATED Bool RimeSchemaOpen(const char* schema_id, RimeConfig* config) {
-  return open_config_in_component("schema", schema_id, config);
+  if (open_config_in_component("schema", schema_id, config))
+    return True;
+  // For a schema, a missing file means the schema is not available.
+  if (schema_id && LastErrorCode() == RIME_ERROR_CONFIG_NOT_FOUND)
+    SetLastError(RIME_ERROR_SCHEMA_NOT_FOUND);
+  return False;
 }
 
 RIME_DEPRECATED Bool RimeConfigOpen(const char* config_id, RimeConfig* config) {
@@ -579,11 +731,16 @@ RIME_DEPRECATED Bool RimeUserConfigOpen(const char* config_id,
 }
 
 RIME_DEPRECATED Bool RimeConfigClose(RimeConfig* config) {
-  if (!config || !config->ptr)
+  if (!config) {
+    SetLastError(RIME_ERROR_INVALID_ARGUMENT);
+    return False;
+  }
+  if (!config->ptr)
     return False;
   Config* c = reinterpret_cast<Config*>(config->ptr);
   delete c;
   config->ptr = NULL;
+  ClearLastError();
   return True;
 }
 
@@ -593,6 +750,8 @@ RIME_DEPRECATED Bool RimeConfigGetBool(RimeConfig* config,
   if (!config || !key || !value)
     return False;
   Config* c = reinterpret_cast<Config*>(config->ptr);
+  if (!c)
+    return False;
   bool bool_value = false;
   if (c->GetBool(key, &bool_value)) {
     *value = Bool(bool_value);
@@ -607,6 +766,8 @@ RIME_DEPRECATED Bool RimeConfigGetInt(RimeConfig* config,
   if (!config || !key || !value)
     return False;
   Config* c = reinterpret_cast<Config*>(config->ptr);
+  if (!c)
+    return False;
   return Bool(c->GetInt(key, value));
 }
 
@@ -616,6 +777,8 @@ RIME_DEPRECATED Bool RimeConfigGetDouble(RimeConfig* config,
   if (!config || !key || !value)
     return False;
   Config* c = reinterpret_cast<Config*>(config->ptr);
+  if (!c)
+    return False;
   return Bool(c->GetDouble(key, value));
 }
 
@@ -654,6 +817,8 @@ RIME_DEPRECATED Bool RimeConfigUpdateSignature(RimeConfig* config,
   if (!config || !signer)
     return False;
   Config* c = reinterpret_cast<Config*>(config->ptr);
+  if (!c)
+    return False;
   Deployer& deployer(Service::instance().deployer());
   Signature sig(signer);
   return Bool(sig.Sign(c, &deployer));
@@ -717,6 +882,8 @@ RIME_DEPRECATED Bool RimeConfigBeginMap(RimeConfigIterator* iterator,
 }
 
 RIME_DEPRECATED Bool RimeConfigNext(RimeConfigIterator* iterator) {
+  if (!iterator)
+    return False;
   if (!iterator->list && !iterator->map)
     return False;
   if (iterator->list) {
@@ -767,13 +934,18 @@ RIME_DEPRECATED void RimeConfigEnd(RimeConfigIterator* iterator) {
 
 RIME_DEPRECATED Bool RimeSimulateKeySequence(RimeSessionId session_id,
                                              const char* key_sequence) {
-  LOG(INFO) << "simulate key sequence: " << key_sequence;
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return False;
+  if (!key_sequence) {
+    SetLastError(RIME_ERROR_INVALID_ARGUMENT);
+    return False;
+  }
+  LOG(INFO) << "simulate key sequence: " << key_sequence;
   KeySequence keys;
   if (!keys.Parse(key_sequence)) {
     LOG(ERROR) << "error parsing input: '" << key_sequence << "'";
+    SetLastError(RIME_ERROR_INVALID_ARGUMENT);
     return False;
   }
   for (const KeyEvent& key : keys) {
@@ -783,10 +955,12 @@ RIME_DEPRECATED Bool RimeSimulateKeySequence(RimeSessionId session_id,
 }
 
 RIME_DEPRECATED Bool RimeRunTask(const char* task_name) {
-  if (!task_name)
+  if (!task_name) {
+    SetLastError(RIME_ERROR_INVALID_ARGUMENT);
     return False;
+  }
   Deployer& deployer(Service::instance().deployer());
-  return Bool(deployer.RunTask(task_name));
+  return Bool(rime_run_task(deployer, task_name));
 }
 
 RIME_DEPRECATED const char* RimeGetSharedDataDir() {
@@ -836,15 +1010,21 @@ RIME_DEPRECATED void RimeGetUserDataSyncDir(char* dir, size_t buffer_size) {
 }
 
 RIME_DEPRECATED Bool RimeConfigInit(RimeConfig* config) {
-  if (!config || config->ptr)
+  if (!config) {
+    SetLastError(RIME_ERROR_INVALID_ARGUMENT);
+    return False;
+  }
+  if (config->ptr)
     return False;
   config->ptr = (void*)new Config;
+  ClearLastError();
   return True;
 }
 
 RIME_DEPRECATED Bool RimeConfigLoadString(RimeConfig* config,
                                           const char* yaml) {
   if (!config || !yaml) {
+    SetLastError(RIME_ERROR_INVALID_ARGUMENT);
     return False;
   }
   if (!config->ptr) {
@@ -852,7 +1032,12 @@ RIME_DEPRECATED Bool RimeConfigLoadString(RimeConfig* config,
   }
   Config* c = reinterpret_cast<Config*>(config->ptr);
   std::istringstream iss(yaml);
-  return Bool(c->LoadFromStream(iss));
+  if (!c->LoadFromStream(iss)) {
+    SetLastError(RIME_ERROR_CONFIG_INVALID);
+    return False;
+  }
+  ClearLastError();
+  return True;
 }
 
 RIME_DEPRECATED Bool RimeConfigGetItem(RimeConfig* config,
@@ -974,7 +1159,7 @@ RIME_DEPRECATED size_t RimeConfigListSize(RimeConfig* config, const char* key) {
 static bool do_with_candidate(RimeSessionId session_id,
                               size_t index,
                               bool (Context::*verb)(size_t index)) {
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return false;
   Context* ctx = session->context();
@@ -987,7 +1172,7 @@ static bool do_with_candidate_on_current_page(
     RimeSessionId session_id,
     size_t index,
     bool (Context::*verb)(size_t index)) {
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return false;
   Context* ctx = session->context();
@@ -1005,7 +1190,7 @@ static bool do_with_candidate_on_current_page(
 }
 
 static Bool RimeChangePage(RimeSessionId session_id, Bool backward) {
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return False;
   Context* ctx = session->context();
@@ -1052,7 +1237,7 @@ static Bool RimeGetCandidatePreview(RimeSessionId session_id,
     return False;
   RIME_STRUCT_CLEAR(*preview);
 
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return False;
   Context* ctx = session->context();
@@ -1105,7 +1290,7 @@ RIME_DEPRECATED Bool RimeDeleteCandidateOnCurrentPage(RimeSessionId session_id,
 }
 
 static const char* RimeGetInput(RimeSessionId session_id) {
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return NULL;
   Context* ctx = session->context();
@@ -1115,7 +1300,7 @@ static const char* RimeGetInput(RimeSessionId session_id) {
 }
 
 RIME_DEPRECATED Bool RimeSetInput(RimeSessionId session_id, const char* input) {
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return False;
   Context* ctx = session->context();
@@ -1126,7 +1311,7 @@ RIME_DEPRECATED Bool RimeSetInput(RimeSessionId session_id, const char* input) {
 }
 
 static size_t RimeGetCaretPos(RimeSessionId session_id) {
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return 0;
   Context* ctx = session->context();
@@ -1136,7 +1321,7 @@ static size_t RimeGetCaretPos(RimeSessionId session_id) {
 }
 
 static void RimeSetCaretPos(RimeSessionId session_id, size_t caret_pos) {
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return;
   Context* ctx = session->context();
@@ -1149,7 +1334,7 @@ static RimeStringSlice RimeGetStateLabelAbbreviated(RimeSessionId session_id,
                                                     const char* option_name,
                                                     Bool state,
                                                     Bool abbreviated) {
-  an<Session> session(Service::instance().GetSession(session_id));
+  an<Session> session(rime_get_session(session_id));
   if (!session)
     return {nullptr, 0};
   Config* config = session->schema()->config();
@@ -1279,6 +1464,7 @@ RIME_API RIME_FLAVORED(RimeApi) * RIME_FLAVORED(rime_get_api)() {
     s_api.change_page = &RimeChangePage;
     s_api.get_candidate_preview = &RimeGetCandidatePreview;
     s_api.free_candidate_preview = &RimeFreeCandidatePreview;
+    s_api.get_last_error = &RimeGetLastError;
   }
   return &s_api;
 }

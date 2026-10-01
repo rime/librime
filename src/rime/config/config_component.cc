@@ -23,6 +23,10 @@ Config::~Config() {}
 
 Config::Config(an<ConfigData> data) : ConfigItemRef(data.get()), data_(data) {}
 
+ConfigLoadStatus Config::load_status() const {
+  return data_ ? data_->load_status() : kConfigNotLoaded;
+}
+
 bool Config::Save() {
   return data_->Save();
 }

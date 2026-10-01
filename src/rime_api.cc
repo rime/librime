@@ -61,14 +61,31 @@ void rime_declare_module_dependencies() {
 #endif
 
 RIME_API Bool RimeRegisterModule(RimeModule* module) {
-  if (!module || !module->module_name)
+  if (!module || !module->module_name) {
+    SetLastError(RIME_ERROR_INVALID_ARGUMENT);
     return False;
+  }
   ModuleManager::instance().Register(module->module_name, module);
+  ClearLastError();
   return True;
 }
 
 RIME_API RimeModule* RimeFindModule(const char* module_name) {
-  return ModuleManager::instance().Find(module_name);
+  if (!module_name) {
+    SetLastError(RIME_ERROR_INVALID_ARGUMENT);
+    return NULL;
+  }
+  RimeModule* module = ModuleManager::instance().Find(module_name);
+  if (!module) {
+    SetLastError(RIME_ERROR_MODULE_NOT_FOUND);
+    return NULL;
+  }
+  ClearLastError();
+  return module;
+}
+
+RIME_API RimeError RimeGetLastError(void) {
+  return LastErrorCode();
 }
 
 void RimeGetSharedDataDirSecure(char* dir, size_t buffer_size) {

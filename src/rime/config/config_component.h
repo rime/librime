@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <rime/common.h>
 #include <rime/component.h>
+#include <rime/config/config_data.h>
 #include <rime/config/config_types.h>
 #include <rime/resource.h>
 
@@ -34,6 +35,9 @@ class Config : public Class<Config, const string&>, public ConfigItemRef {
   bool SaveToStream(std::ostream& stream);
   RIME_DLL bool LoadFromFile(const path& file_path);
   RIME_DLL bool SaveToFile(const path& file_path);
+
+  //! Status of loading the config data.
+  RIME_DLL ConfigLoadStatus load_status() const;
 
   // access a tree node of a particular type with "path/to/node"
   RIME_DLL bool IsNull(const string& path);
