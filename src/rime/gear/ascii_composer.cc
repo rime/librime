@@ -78,8 +78,7 @@ static inline char KeypadToChar(int ch) {
 }
 
 void AsciiComposer::ResetModifierState() {
-  shift_key_pressed_ = ctrl_key_pressed_ = alt_key_pressed_ =
-      super_key_pressed_ = false;
+  pending_toggle_key_.reset();
 }
 
 void AsciiComposer::CommitAndReset(const string& text) {
@@ -129,13 +128,9 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
 
   if (key_event.release()) {
     if (is_shift || is_ctrl || is_alt || is_super) {
-      if (shift_key_pressed_ || ctrl_key_pressed_ || alt_key_pressed_ ||
-          super_key_pressed_) {
+      if (pending_toggle_key_) {
         auto now = std::chrono::steady_clock::now();
-        if (((is_shift && shift_key_pressed_) ||
-             (is_ctrl && ctrl_key_pressed_) || (is_alt && alt_key_pressed_) ||
-             (is_super && super_key_pressed_)) &&
-            now < toggle_expired_) {
+        if (*pending_toggle_key_ == ch && now < toggle_expired_) {
           ToggleAsciiModeWithKey(ch);
         }
         ResetModifierState();
@@ -167,18 +162,12 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
     return kAccepted;
   }
   if (is_shift || is_ctrl || is_alt || is_super) {
-    if (!(shift_key_pressed_ || ctrl_key_pressed_ || alt_key_pressed_ ||
-          super_key_pressed_)) {
-      if (is_shift)
-        shift_key_pressed_ = true;
-      else if (is_ctrl)
-        ctrl_key_pressed_ = true;
-      else if (is_alt)
-        alt_key_pressed_ = true;
-      else if (is_super)
-        super_key_pressed_ = true;
+    if (!pending_toggle_key_) {
+      pending_toggle_key_ = ch;
       toggle_expired_ =
           std::chrono::steady_clock::now() + std::chrono::milliseconds(500);
+    } else if (*pending_toggle_key_ != ch) {
+      ResetModifierState();
     }
     return kNoop;
   }
@@ -282,8 +271,7 @@ ProcessResult AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
   int ch = key_event.keycode();
   if (ch == XK_Caps_Lock) {
     if (!key_event.release()) {
-      shift_key_pressed_ = ctrl_key_pressed_ = alt_key_pressed_ =
-          super_key_pressed_ = false;
+      pending_toggle_key_.reset();
       // temporarily disable good-old (uppercase) Caps Lock as mode switch key
       // in case the user switched to ascii mode with other keys, eg. with Shift
       if (good_old_caps_lock_ && !toggle_with_caps_) {
