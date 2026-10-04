@@ -39,7 +39,7 @@ set(rime_optional_deps "")
 if(Gflags_FOUND)
   set(rime_optional_deps ${rime_optional_deps} ${Gflags_LIBRARY})
 endif()
-if(ENABLE_EXTERNAL_PLUGINS)
+if(ENABLE_EXTERNAL_PLUGINS AND NOT WIN32)
   set(rime_optional_deps ${rime_optional_deps} dl)
 endif()
 
