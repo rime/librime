@@ -87,7 +87,11 @@ if(BUILD_SHARED_LIBS)
     VERSION ${rime_version}
     SOVERSION ${rime_soversion}
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
-    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
+    WINDOWS_EXPORT_ALL_SYMBOLS ON)
+  if(MINGW)
+    target_link_libraries(rime "-Wl,--export-all-symbols")
+  endif()
   if(XCODE_VERSION)
     set_target_properties(rime PROPERTIES INSTALL_NAME_DIR "@rpath")
   endif()
