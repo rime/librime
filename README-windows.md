@@ -58,6 +58,17 @@ This creates `build\bin\Release\rime.dll`.
 Build artifacts: the shared library along with API headers and supporting files
 can be found in `dist` directory.
 
+## Build external plugins
+
+External plugins are supported on Windows. Build librime with
+`ENABLE_EXTERNAL_PLUGINS=ON` to load `*.dll` plugins from the `rime-plugins`
+directory next to `rime.dll`:
+
+``` batch
+cmake . -B build -DENABLE_EXTERNAL_PLUGINS=ON -DBUILD_SHARED_LIBS=ON
+cmake --build build --config Release
+```
+
 ## Try it in the console
 
 `librime` comes with a REPL application which can be used to test if the library
