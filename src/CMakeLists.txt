@@ -90,7 +90,10 @@ if(BUILD_SHARED_LIBS)
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
     WINDOWS_EXPORT_ALL_SYMBOLS ON)
   if(MINGW)
-    target_link_libraries(rime "-Wl,--export-all-symbols")
+    # Keep the linker option private to the rime target; propagating it through
+    # target_link_libraries would affect every downstream executable.
+    set_target_properties(rime PROPERTIES
+      LINK_FLAGS "-Wl,--export-all-symbols")
   endif()
   if(XCODE_VERSION)
     set_target_properties(rime PROPERTIES INSTALL_NAME_DIR "@rpath")
