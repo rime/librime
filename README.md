@@ -96,6 +96,7 @@ Community:
   - [pyrime](https://github.com/Freed-Wu/pyrime): frontend for Ptpython
   - [rabbit](https://github.com/amorphobia/rabbit): frontend for Windows
   - [rime.nvim](https://github.com/Freed-Wu/rime.nvim): frontend for Vim
+  - [rime.vim](https://github.com/TSalmon3/rime.vim): frontend for Vim and Neovim
   - [rl_custom_rime](https://github.com/Freed-Wu/rl_custom_rime): frontend for Readline
   - [tmux-rime](https://github.com/Freed-Wu/tmux-rime): frontend for Tmux
   - [zsh-rime](https://github.com/Freed-Wu/zsh-rime): frontend for Zsh
