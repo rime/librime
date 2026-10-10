@@ -158,20 +158,17 @@ TEST_F(ConditionalComponentTest, TranslatorAndFilterFollowOptionChanges) {
 
   engine_->context()->set_input("a");
   ASSERT_EQ(engine_->context()->composition().size(), 1u);
-  EXPECT_EQ(engine_->context()->composition().back().menu->candidate_count(),
-            0u);
+  EXPECT_FALSE(engine_->context()->HasMenu());
   EXPECT_EQ(CountingFilter::calls, 0);
 
   engine_->context()->set_option("option_0", true);
   ASSERT_EQ(engine_->context()->composition().size(), 1u);
-  EXPECT_GT(engine_->context()->composition().back().menu->candidate_count(),
-            0u);
+  EXPECT_TRUE(engine_->context()->HasMenu());
   EXPECT_EQ(CountingFilter::calls, 1);
 
   engine_->context()->set_option("option_0", false);
   ASSERT_EQ(engine_->context()->composition().size(), 1u);
-  EXPECT_EQ(engine_->context()->composition().back().menu->candidate_count(),
-            0u);
+  EXPECT_FALSE(engine_->context()->HasMenu());
   EXPECT_EQ(CountingFilter::calls, 1);
 }
 
