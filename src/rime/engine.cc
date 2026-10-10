@@ -27,21 +27,56 @@
 
 namespace rime {
 
+struct OptionCondition {
+  string option_name;
+  bool expected_value = true;
+  bool actual_value = false;
+};
+
 template <typename T>
 struct ComponentEntry {
   an<T> component;
-  string option;
-  bool expected_value = true;
+  vector<OptionCondition> conditions;
+  bool require_all = true;
   bool enabled = true;
 };
 
 template <typename T>
-inline void UpdateComponentOptions(vector<ComponentEntry<T>>& components,
-                                   Context* ctx,
-                                   const string& option) {
+inline void UpdateComponentEnabled(ComponentEntry<T>& entry) {
+  if (entry.conditions.empty()) {
+    entry.enabled = true;
+    return;
+  }
+  entry.enabled = entry.require_all;
+  for (const auto& condition : entry.conditions) {
+    bool matches = condition.actual_value == condition.expected_value;
+    if (entry.require_all && !matches) {
+      entry.enabled = false;
+      return;
+    }
+    if (!entry.require_all && matches) {
+      entry.enabled = true;
+      return;
+    }
+  }
+  if (!entry.require_all)
+    entry.enabled = false;
+}
+
+template <typename T>
+inline void UpdateComponentConditions(vector<ComponentEntry<T>>& components,
+                                      Context* ctx,
+                                      const string& option_name) {
   for (auto& entry : components) {
-    if (entry.option == option)
-      entry.enabled = ctx->get_option(option) == entry.expected_value;
+    bool changed = false;
+    for (auto& condition : entry.conditions) {
+      if (condition.option_name == option_name) {
+        condition.actual_value = ctx->get_option(option_name);
+        changed = true;
+      }
+    }
+    if (changed)
+      UpdateComponentEnabled(entry);
   }
 }
 
@@ -164,11 +199,11 @@ void ConcreteEngine::OnOptionUpdate(Context* ctx, const string& option) {
   if (!ctx)
     return;
   LOG(INFO) << "updated option: " << option;
-  UpdateComponentOptions(processors_, ctx, option);
-  UpdateComponentOptions(segmentors_, ctx, option);
-  UpdateComponentOptions(translators_, ctx, option);
-  UpdateComponentOptions(filters_, ctx, option);
-  UpdateComponentOptions(post_processors_, ctx, option);
+  UpdateComponentConditions(processors_, ctx, option);
+  UpdateComponentConditions(segmentors_, ctx, option);
+  UpdateComponentConditions(translators_, ctx, option);
+  UpdateComponentConditions(filters_, ctx, option);
+  UpdateComponentConditions(post_processors_, ctx, option);
   // apply new option to active segment
   if (ctx->IsComposing()) {
     ctx->RefreshNonConfirmedComposition();
@@ -340,11 +375,25 @@ void ConcreteEngine::ApplySchema(Schema* schema) {
 }
 
 // Helper template function to create components
+inline bool ParseOptionCondition(const an<ConfigItem>& item,
+                                 OptionCondition* condition) {
+  auto map = As<ConfigMap>(item);
+  if (!map)
+    return false;
+  auto option = map->GetValue("option");
+  auto value = map->GetValue("value");
+  if (!option || option->str().empty() || !value ||
+      !value->GetBool(&condition->expected_value)) {
+    return false;
+  }
+  condition->option_name = option->str();
+  return true;
+}
+
 template <typename T>
-inline bool ReadComponentSpec(const an<ConfigItem>& item,
-                              string* prescription,
-                              string* option,
-                              bool* expected_value) {
+inline bool ParseComponentSpec(const an<ConfigItem>& item,
+                               string* prescription,
+                               ComponentEntry<T>* entry) {
   if (auto value = As<ConfigValue>(item)) {
     *prescription = value->str();
     return true;
@@ -359,19 +408,45 @@ inline bool ReadComponentSpec(const an<ConfigItem>& item,
     return false;
   *prescription = name->str();
 
+  auto condition_node = map->Get("condition");
   auto when = map->GetValue("when");
+  if (condition_node && when)
+    return false;
+  if (condition_node) {
+    auto condition_map = As<ConfigMap>(condition_node);
+    if (!condition_map)
+      return false;
+    auto all = condition_map->Get("all");
+    auto any = condition_map->Get("any");
+    if (static_cast<bool>(all) == static_cast<bool>(any))
+      return false;
+    auto conditions = As<ConfigList>(all ? all : any);
+    if (!conditions || conditions->empty())
+      return false;
+    entry->require_all = static_cast<bool>(all);
+    for (size_t i = 0; i < conditions->size(); ++i) {
+      OptionCondition option_condition;
+      if (!ParseOptionCondition(conditions->GetAt(i), &option_condition))
+        return false;
+      entry->conditions.push_back(option_condition);
+    }
+    return true;
+  }
+
   if (!when || when->str().empty())
     return true;
 
   string condition = when->str();
-  *expected_value = true;
+  OptionCondition option_condition;
+  option_condition.expected_value = true;
   if (!condition.empty() && condition[0] == '!') {
-    *expected_value = false;
+    option_condition.expected_value = false;
     condition.erase(0, 1);
   }
   if (condition.empty())
     return false;
-  *option = condition;
+  option_condition.option_name = condition;
+  entry->conditions.push_back(option_condition);
   return true;
 }
 
@@ -386,10 +461,9 @@ inline void CreateComponentsFromList(
     size_t n = component_list->size();
     for (size_t i = 0; i < n; ++i) {
       string prescription;
-      string option;
-      bool expected_value = true;
-      if (!ReadComponentSpec<T>(component_list->GetAt(i), &prescription,
-                                &option, &expected_value)) {
+      ComponentEntry<T> entry;
+      if (!ParseComponentSpec<T>(component_list->GetAt(i), &prescription,
+                                 &entry)) {
         LOG(ERROR) << "invalid " << component_type << " prescription at index "
                    << i << " in '" << config_key << "'";
         continue;
@@ -421,12 +495,11 @@ inline void CreateComponentsFromList(
         continue;
       }
       an<T> instance(component);
-      ComponentEntry<T> entry;
       entry.component = instance;
-      entry.option = option;
-      entry.expected_value = expected_value;
-      entry.enabled = option.empty() ||
-                      engine->context()->get_option(option) == expected_value;
+      for (auto& condition : entry.conditions)
+        condition.actual_value =
+            engine->context()->get_option(condition.option_name);
+      UpdateComponentEnabled(entry);
       target_collection.push_back(entry);
     }
   }

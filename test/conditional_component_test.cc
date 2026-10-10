@@ -71,6 +71,28 @@ void SetComponentList(Config* config,
   config->SetItem(path, list);
 }
 
+void SetCombinedCondition(Config* config,
+                          const string& path,
+                          const string& operation,
+                          const vector<pair<string, bool>>& conditions) {
+  auto list = New<ConfigList>();
+  auto component = New<ConfigMap>();
+  component->Set("name", New<ConfigValue>("test_counting_processor"));
+
+  auto condition_list = New<ConfigList>();
+  for (const auto& condition_spec : conditions) {
+    auto condition = New<ConfigMap>();
+    condition->Set("option", New<ConfigValue>(condition_spec.first));
+    condition->Set("value", New<ConfigValue>(condition_spec.second));
+    condition_list->Append(condition);
+  }
+  auto condition = New<ConfigMap>();
+  condition->Set(operation, condition_list);
+  component->Set("condition", condition);
+  list->Append(component);
+  config->SetItem(path, list);
+}
+
 class ConditionalComponentTest : public ::testing::Test {
  protected:
   void SetUp() override {
@@ -180,4 +202,50 @@ TEST_F(ConditionalComponentTest, SegmentorCanBeSkippedByOption) {
   engine_->context()->set_option("option_0", false);
   engine_->context()->set_input("a");
   EXPECT_EQ(CountingSegmentor::calls, 1);
+}
+
+TEST_F(ConditionalComponentTest, AllConditionRequiresEveryOption) {
+  SetCombinedCondition(engine_->schema()->config(), "engine/processors", "all",
+                       {{"option_0", true}, {"option_1", false}});
+  engine_->ApplySchema(engine_->schema());
+
+  EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
+  EXPECT_EQ(CountingProcessor::calls, 0);
+
+  engine_->context()->set_option("option_0", true);
+  EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
+  EXPECT_EQ(CountingProcessor::calls, 1);
+
+  engine_->context()->set_option("option_1", true);
+  EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
+  EXPECT_EQ(CountingProcessor::calls, 1);
+
+  engine_->context()->set_option("option_1", false);
+  EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
+  EXPECT_EQ(CountingProcessor::calls, 2);
+}
+
+TEST_F(ConditionalComponentTest, AnyConditionRequiresOneMatchingOption) {
+  SetCombinedCondition(engine_->schema()->config(), "engine/processors", "any",
+                       {{"option_0", true}, {"option_1", true}});
+  engine_->ApplySchema(engine_->schema());
+
+  EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
+  EXPECT_EQ(CountingProcessor::calls, 0);
+
+  engine_->context()->set_option("option_1", true);
+  EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
+  EXPECT_EQ(CountingProcessor::calls, 1);
+
+  engine_->context()->set_option("option_0", true);
+  EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
+  EXPECT_EQ(CountingProcessor::calls, 2);
+
+  engine_->context()->set_option("option_1", false);
+  EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
+  EXPECT_EQ(CountingProcessor::calls, 3);
+
+  engine_->context()->set_option("option_0", false);
+  EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
+  EXPECT_EQ(CountingProcessor::calls, 3);
 }
