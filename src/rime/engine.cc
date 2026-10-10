@@ -9,6 +9,7 @@
 #include <rime/common.h>
 #include <rime/composition.h>
 #include <rime/context.h>
+#include <rime/config/config_types.h>
 #include <rime/engine.h>
 #include <rime/filter.h>
 #include <rime/formatter.h>
@@ -25,6 +26,24 @@
 #include <rime/translator.h>
 
 namespace rime {
+
+template <typename T>
+struct ComponentEntry {
+  an<T> component;
+  string option;
+  bool expected_value = true;
+  bool enabled = true;
+};
+
+template <typename T>
+inline void UpdateComponentOptions(vector<ComponentEntry<T>>& components,
+                                   Context* ctx,
+                                   const string& option) {
+  for (auto& entry : components) {
+    if (entry.option == option)
+      entry.enabled = ctx->get_option(option) == entry.expected_value;
+  }
+}
 
 class ConcreteEngine : public Engine {
  public:
@@ -53,12 +72,12 @@ class ConcreteEngine : public Engine {
   void OnOptionUpdate(Context* ctx, const string& option);
   void OnPropertyUpdate(Context* ctx, const string& property);
 
-  vector<of<Processor>> processors_;
-  vector<of<Segmentor>> segmentors_;
-  vector<of<Translator>> translators_;
-  vector<of<Filter>> filters_;
-  vector<of<Formatter>> formatters_;
-  vector<of<Processor>> post_processors_;
+  vector<ComponentEntry<Processor>> processors_;
+  vector<ComponentEntry<Segmentor>> segmentors_;
+  vector<ComponentEntry<Translator>> translators_;
+  vector<ComponentEntry<Filter>> filters_;
+  vector<an<Formatter>> formatters_;
+  vector<ComponentEntry<Processor>> post_processors_;
   an<Switcher> switcher_;
 };
 
@@ -106,8 +125,10 @@ ConcreteEngine::~ConcreteEngine() {
 bool ConcreteEngine::ProcessKey(const KeyEvent& key_event, bool synthetic) {
   DLOG(INFO) << "process key: " << key_event << ", synthetic: " << synthetic;
   ProcessResult ret = kNoop;
-  for (auto& processor : processors_) {
-    ret = processor->ProcessKeyEvent(key_event);
+  for (auto& entry : processors_) {
+    if (!entry.enabled)
+      continue;
+    ret = entry.component->ProcessKeyEvent(key_event);
     if (ret == kRejected)
       break;
     if (ret == kAccepted)
@@ -119,8 +140,10 @@ bool ConcreteEngine::ProcessKey(const KeyEvent& key_event, bool synthetic) {
     context_->commit_history().Push(key_event);
   }
   // post-processing
-  for (auto& processor : post_processors_) {
-    ret = processor->ProcessKeyEvent(key_event);
+  for (auto& entry : post_processors_) {
+    if (!entry.enabled)
+      continue;
+    ret = entry.component->ProcessKeyEvent(key_event);
     if (ret == kRejected)
       break;
     if (ret == kAccepted)
@@ -141,6 +164,11 @@ void ConcreteEngine::OnOptionUpdate(Context* ctx, const string& option) {
   if (!ctx)
     return;
   LOG(INFO) << "updated option: " << option;
+  UpdateComponentOptions(processors_, ctx, option);
+  UpdateComponentOptions(segmentors_, ctx, option);
+  UpdateComponentOptions(translators_, ctx, option);
+  UpdateComponentOptions(filters_, ctx, option);
+  UpdateComponentOptions(post_processors_, ctx, option);
   // apply new option to active segment
   if (ctx->IsComposing()) {
     ctx->RefreshNonConfirmedComposition();
@@ -187,8 +215,10 @@ void ConcreteEngine::CalculateSegmentation(Segmentation* segments) {
     DLOG(INFO) << "start pos: " << start_pos;
     DLOG(INFO) << "end pos: " << end_pos;
     // recognize a segment by calling the segmentors in turn
-    for (auto& segmentor : segmentors_) {
-      if (!segmentor->Proceed(segments))
+    for (auto& entry : segmentors_) {
+      if (!entry.enabled)
+        continue;
+      if (!entry.component->Proceed(segments))
         break;
     }
     DLOG(INFO) << "segmentation: " << *segments;
@@ -221,19 +251,22 @@ void ConcreteEngine::TranslateSegments(Segmentation* segments) {
     string input = segments->input().substr(segment.start, len);
     DLOG(INFO) << "translating segment: [" << input << "]";
     auto menu = New<Menu>();
-    for (auto& translator : translators_) {
-      auto translation = translator->Query(input, segment);
+    for (auto& entry : translators_) {
+      if (!entry.enabled)
+        continue;
+      auto translation = entry.component->Query(input, segment);
       if (!translation)
         continue;
       if (translation->exhausted()) {
-        DLOG(INFO) << translator->name_space() << " made a futile translation.";
+        DLOG(INFO) << entry.component->name_space()
+                   << " made a futile translation.";
         continue;
       }
       menu->AddTranslation(translation);
     }
-    for (auto& filter : filters_) {
-      if (filter->AppliesToSegment(&segment)) {
-        menu->AddFilter(filter.get());
+    for (auto& entry : filters_) {
+      if (entry.enabled && entry.component->AppliesToSegment(&segment)) {
+        menu->AddFilter(entry.component.get());
       }
     }
     segment.status = Segment::kGuess;
@@ -308,18 +341,60 @@ void ConcreteEngine::ApplySchema(Schema* schema) {
 
 // Helper template function to create components
 template <typename T>
-inline void CreateComponentsFromList(Engine* engine,
-                                     Config* config,
-                                     const string& config_key,
-                                     const string& component_type,
-                                     vector<an<T>>& target_collection) {
+inline bool ReadComponentSpec(const an<ConfigItem>& item,
+                              string* prescription,
+                              string* option,
+                              bool* expected_value) {
+  if (auto value = As<ConfigValue>(item)) {
+    *prescription = value->str();
+    return true;
+  }
+
+  auto map = As<ConfigMap>(item);
+  if (!map)
+    return false;
+
+  auto name = map->GetValue("name");
+  if (!name || name->str().empty())
+    return false;
+  *prescription = name->str();
+
+  auto when = map->GetValue("when");
+  if (!when || when->str().empty())
+    return true;
+
+  string condition = when->str();
+  *expected_value = true;
+  if (!condition.empty() && condition[0] == '!') {
+    *expected_value = false;
+    condition.erase(0, 1);
+  }
+  if (condition.empty())
+    return false;
+  *option = condition;
+  return true;
+}
+
+template <typename T>
+inline void CreateComponentsFromList(
+    Engine* engine,
+    Config* config,
+    const string& config_key,
+    const string& component_type,
+    vector<ComponentEntry<T>>& target_collection) {
   if (auto component_list = config->GetList(config_key)) {
     size_t n = component_list->size();
     for (size_t i = 0; i < n; ++i) {
-      auto prescription = As<ConfigValue>(component_list->GetAt(i));
-      if (!prescription)
+      string prescription;
+      string option;
+      bool expected_value = true;
+      if (!ReadComponentSpec<T>(component_list->GetAt(i), &prescription,
+                                &option, &expected_value)) {
+        LOG(ERROR) << "invalid " << component_type << " prescription at index "
+                   << i << " in '" << config_key << "'";
         continue;
-      Ticket ticket{engine, component_type, prescription->str()};
+      }
+      Ticket ticket{engine, component_type, prescription};
       auto c = T::Require(ticket.klass);
       if (!c) {
         LOG(ERROR) << "error creating " << component_type << ": '"
@@ -334,7 +409,7 @@ inline void CreateComponentsFromList(Engine* engine,
               .count();
       const auto create_cost_ms = create_cost_us / 1000.0;
       LOG(INFO) << "[ComponentTiming] type=" << component_type
-                << " prescription='" << prescription->str() << "'"
+                << " prescription='" << prescription << "'"
                 << " class='" << ticket.klass << "'"
                 << " namespace='" << ticket.name_space << "'"
                 << " cost_us=" << create_cost_us
@@ -346,7 +421,13 @@ inline void CreateComponentsFromList(Engine* engine,
         continue;
       }
       an<T> instance(component);
-      target_collection.push_back(instance);
+      ComponentEntry<T> entry;
+      entry.component = instance;
+      entry.option = option;
+      entry.expected_value = expected_value;
+      entry.enabled = option.empty() ||
+                      engine->context()->get_option(option) == expected_value;
+      target_collection.push_back(entry);
     }
   }
 }
@@ -360,7 +441,9 @@ void ConcreteEngine::InitializeComponents() {
   post_processors_.clear();
 
   if (switcher_) {
-    processors_.push_back(switcher_);
+    ComponentEntry<Processor> entry;
+    entry.component = switcher_;
+    processors_.push_back(entry);
     if (schema_->schema_id() == ".default") {
       if (Schema* schema = switcher_->CreateSchema()) {
         schema_.reset(schema);
@@ -393,7 +476,9 @@ void ConcreteEngine::InitializeComponents() {
   auto c_processor = Processor::Require("shape_processor");
   if (c_processor) {
     an<Processor> p(c_processor->Create(Ticket(this)));
-    post_processors_.push_back(p);
+    ComponentEntry<Processor> entry;
+    entry.component = p;
+    post_processors_.push_back(entry);
   } else {
     LOG(WARNING) << "shape_processor not available.";
   }
