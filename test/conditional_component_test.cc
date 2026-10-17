@@ -249,3 +249,60 @@ TEST_F(ConditionalComponentTest, AnyConditionRequiresOneMatchingOption) {
   EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
   EXPECT_EQ(CountingProcessor::calls, 3);
 }
+
+TEST_F(ConditionalComponentTest, InvalidWhenTypeDoesNotEnableComponent) {
+  auto processors = New<ConfigList>();
+  auto conditional_processor = New<ConfigMap>();
+  conditional_processor->Set("name",
+                             New<ConfigValue>("test_counting_processor"));
+  auto invalid_when = New<ConfigList>();
+  invalid_when->Append(New<ConfigValue>("option_0"));
+  conditional_processor->Set("when", invalid_when);
+  processors->Append(conditional_processor);
+  engine_->schema()->config()->SetItem("engine/processors", processors);
+  engine_->ApplySchema(engine_->schema());
+
+  EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
+  EXPECT_EQ(CountingProcessor::calls, 0);
+
+  engine_->context()->set_option("option_0", true);
+  EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
+  EXPECT_EQ(CountingProcessor::calls, 0);
+}
+
+TEST_F(ConditionalComponentTest, EmptyWhenDoesNotEnableComponent) {
+  auto processors = New<ConfigList>();
+  auto conditional_processor = New<ConfigMap>();
+  conditional_processor->Set("name",
+                             New<ConfigValue>("test_counting_processor"));
+  conditional_processor->Set("when", New<ConfigValue>(""));
+  processors->Append(conditional_processor);
+  engine_->schema()->config()->SetItem("engine/processors", processors);
+  engine_->ApplySchema(engine_->schema());
+
+  EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
+  EXPECT_EQ(CountingProcessor::calls, 0);
+}
+
+TEST_F(ConditionalComponentTest, UnknownConditionKeyDoesNotEnableComponent) {
+  auto processors = New<ConfigList>();
+  auto conditional_processor = New<ConfigMap>();
+  conditional_processor->Set("name",
+                             New<ConfigValue>("test_counting_processor"));
+  auto option_condition = New<ConfigMap>();
+  option_condition->Set("option", New<ConfigValue>("option_0"));
+  option_condition->Set("value", New<ConfigValue>(true));
+  option_condition->Set("vale", New<ConfigValue>(true));
+  auto condition_list = New<ConfigList>();
+  condition_list->Append(option_condition);
+  auto condition = New<ConfigMap>();
+  condition->Set("all", condition_list);
+  conditional_processor->Set("condition", condition);
+  processors->Append(conditional_processor);
+  engine_->schema()->config()->SetItem("engine/processors", processors);
+  engine_->ApplySchema(engine_->schema());
+
+  engine_->context()->set_option("option_0", true);
+  EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
+  EXPECT_EQ(CountingProcessor::calls, 0);
+}

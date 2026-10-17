@@ -375,10 +375,31 @@ void ConcreteEngine::ApplySchema(Schema* schema) {
 }
 
 // Helper template function to create components
+inline bool HasOnlyKeys(ConfigMap* map, const set<string>& allowed_keys) {
+  if (!map)
+    return false;
+  for (auto it = map->begin(); it != map->end(); ++it) {
+    if (allowed_keys.find(it->first) == allowed_keys.end())
+      return false;
+  }
+  return true;
+}
+
+inline bool HasExactKeys(ConfigMap* map, const set<string>& expected_keys) {
+  if (!map)
+    return false;
+  size_t key_count = 0;
+  for (auto it = map->begin(); it != map->end(); ++it)
+    ++key_count;
+  if (key_count != expected_keys.size())
+    return false;
+  return HasOnlyKeys(map, expected_keys);
+}
+
 inline bool ParseOptionCondition(const an<ConfigItem>& item,
                                  OptionCondition* condition) {
   auto map = As<ConfigMap>(item);
-  if (!map)
+  if (!map || !HasExactKeys(map.get(), {"option", "value"}))
     return false;
   auto option = map->GetValue("option");
   auto value = map->GetValue("value");
@@ -400,7 +421,7 @@ inline bool ParseComponentSpec(const an<ConfigItem>& item,
   }
 
   auto map = As<ConfigMap>(item);
-  if (!map)
+  if (!map || !HasOnlyKeys(map.get(), {"name", "when", "condition"}))
     return false;
 
   auto name = map->GetValue("name");
@@ -409,8 +430,11 @@ inline bool ParseComponentSpec(const an<ConfigItem>& item,
   *prescription = name->str();
 
   auto condition_node = map->Get("condition");
-  auto when = map->GetValue("when");
-  if (condition_node && when)
+  auto when_node = map->Get("when");
+  auto when = As<ConfigValue>(when_node);
+  if (when_node && (!when || when->str().empty()))
+    return false;
+  if (condition_node && when_node)
     return false;
   if (condition_node) {
     auto condition_map = As<ConfigMap>(condition_node);
@@ -418,7 +442,8 @@ inline bool ParseComponentSpec(const an<ConfigItem>& item,
       return false;
     auto all = condition_map->Get("all");
     auto any = condition_map->Get("any");
-    if (static_cast<bool>(all) == static_cast<bool>(any))
+    if (static_cast<bool>(all) == static_cast<bool>(any) ||
+        !HasExactKeys(condition_map.get(), {all ? "all" : "any"}))
       return false;
     auto conditions = As<ConfigList>(all ? all : any);
     if (!conditions || conditions->empty())
@@ -433,7 +458,7 @@ inline bool ParseComponentSpec(const an<ConfigItem>& item,
     return true;
   }
 
-  if (!when || when->str().empty())
+  if (!when)
     return true;
 
   string condition = when->str();
@@ -541,7 +566,11 @@ void ConcreteEngine::InitializeComponents() {
   auto c_formatter = Formatter::Require("shape_formatter");
   if (c_formatter) {
     an<Formatter> f(c_formatter->Create(Ticket(this)));
-    formatters_.push_back(f);
+    if (f) {
+      formatters_.push_back(f);
+    } else {
+      LOG(WARNING) << "failed to create shape_formatter.";
+    }
   } else {
     LOG(WARNING) << "shape_formatter not available.";
   }
@@ -549,9 +578,13 @@ void ConcreteEngine::InitializeComponents() {
   auto c_processor = Processor::Require("shape_processor");
   if (c_processor) {
     an<Processor> p(c_processor->Create(Ticket(this)));
-    ComponentEntry<Processor> entry;
-    entry.component = p;
-    post_processors_.push_back(entry);
+    if (p) {
+      ComponentEntry<Processor> entry;
+      entry.component = p;
+      post_processors_.push_back(entry);
+    } else {
+      LOG(WARNING) << "failed to create shape_processor.";
+    }
   } else {
     LOG(WARNING) << "shape_processor not available.";
   }
