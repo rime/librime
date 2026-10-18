@@ -27,56 +27,63 @@
 
 namespace rime {
 
-struct OptionCondition {
+struct Condition {
+  enum Type { kOption, kAllOf, kAnyOf, kNoneOf } type = kOption;
   string option_name;
   bool expected_value = true;
-  bool actual_value = false;
+  vector<Condition> children;
 };
 
 template <typename T>
 struct ComponentEntry {
   an<T> component;
-  vector<OptionCondition> conditions;
-  bool require_all = true;
+  Condition condition;
+  bool has_condition = false;
   bool enabled = true;
 };
 
+inline bool EvaluateCondition(const Condition& condition, Context* ctx) {
+  if (!ctx)
+    return false;
+  switch (condition.type) {
+    case Condition::kOption:
+      return ctx->get_option(condition.option_name) == condition.expected_value;
+    case Condition::kAllOf:
+      for (const auto& child : condition.children) {
+        if (!EvaluateCondition(child, ctx))
+          return false;
+      }
+      return true;
+    case Condition::kAnyOf:
+      for (const auto& child : condition.children) {
+        if (EvaluateCondition(child, ctx))
+          return true;
+      }
+      return false;
+    case Condition::kNoneOf:
+      for (const auto& child : condition.children) {
+        if (EvaluateCondition(child, ctx))
+          return false;
+      }
+      return true;
+  }
+  return false;
+}
+
 template <typename T>
-inline void UpdateComponentEnabled(ComponentEntry<T>& entry) {
-  if (entry.conditions.empty()) {
+inline void UpdateComponentEnabled(ComponentEntry<T>& entry, Context* ctx) {
+  if (!entry.has_condition) {
     entry.enabled = true;
     return;
   }
-  entry.enabled = entry.require_all;
-  for (const auto& condition : entry.conditions) {
-    bool matches = condition.actual_value == condition.expected_value;
-    if (entry.require_all && !matches) {
-      entry.enabled = false;
-      return;
-    }
-    if (!entry.require_all && matches) {
-      entry.enabled = true;
-      return;
-    }
-  }
-  if (!entry.require_all)
-    entry.enabled = false;
+  entry.enabled = EvaluateCondition(entry.condition, ctx);
 }
 
 template <typename T>
 inline void UpdateComponentConditions(vector<ComponentEntry<T>>& components,
-                                      Context* ctx,
-                                      const string& option_name) {
+                                      Context* ctx) {
   for (auto& entry : components) {
-    bool changed = false;
-    for (auto& condition : entry.conditions) {
-      if (condition.option_name == option_name) {
-        condition.actual_value = ctx->get_option(option_name);
-        changed = true;
-      }
-    }
-    if (changed)
-      UpdateComponentEnabled(entry);
+    UpdateComponentEnabled(entry, ctx);
   }
 }
 
@@ -199,11 +206,11 @@ void ConcreteEngine::OnOptionUpdate(Context* ctx, const string& option) {
   if (!ctx)
     return;
   LOG(INFO) << "updated option: " << option;
-  UpdateComponentConditions(processors_, ctx, option);
-  UpdateComponentConditions(segmentors_, ctx, option);
-  UpdateComponentConditions(translators_, ctx, option);
-  UpdateComponentConditions(filters_, ctx, option);
-  UpdateComponentConditions(post_processors_, ctx, option);
+  UpdateComponentConditions(processors_, ctx);
+  UpdateComponentConditions(segmentors_, ctx);
+  UpdateComponentConditions(translators_, ctx);
+  UpdateComponentConditions(filters_, ctx);
+  UpdateComponentConditions(post_processors_, ctx);
   // apply new option to active segment
   if (ctx->IsComposing()) {
     ctx->RefreshNonConfirmedComposition();
@@ -396,18 +403,79 @@ inline bool HasExactKeys(ConfigMap* map, const set<string>& expected_keys) {
   return HasOnlyKeys(map, expected_keys);
 }
 
-inline bool ParseOptionCondition(const an<ConfigItem>& item,
-                                 OptionCondition* condition) {
-  auto map = As<ConfigMap>(item);
-  if (!map || !HasExactKeys(map.get(), {"option", "value"}))
+constexpr int kMaxConditionDepth = 32;
+
+inline bool ParseCondition(const an<ConfigItem>& item,
+                           Condition* condition,
+                           int depth = 0) {
+  if (!condition || depth > kMaxConditionDepth)
     return false;
-  auto option = map->GetValue("option");
-  auto value = map->GetValue("value");
-  if (!option || option->str().empty() || !value ||
-      !value->GetBool(&condition->expected_value)) {
+
+  if (auto value = As<ConfigValue>(item)) {
+    string option = value->str();
+    if (option.empty())
+      return false;
+    condition->type = Condition::kOption;
+    condition->expected_value = true;
+    if (option[0] == '!') {
+      condition->expected_value = false;
+      option.erase(0, 1);
+    }
+    if (option.empty())
+      return false;
+    condition->option_name = option;
+    condition->children.clear();
+    return true;
+  }
+
+  auto map = As<ConfigMap>(item);
+  if (!map)
+    return false;
+
+  // Explicit option conditions are useful when a boolean value is needed.
+  if (map->HasKey("option")) {
+    if (!HasExactKeys(map.get(), {"option", "value"}))
+      return false;
+    auto option = map->GetValue("option");
+    auto value = map->GetValue("value");
+    if (!option || option->str().empty() || !value ||
+        !value->GetBool(&condition->expected_value))
+      return false;
+    condition->type = Condition::kOption;
+    condition->option_name = option->str();
+    condition->children.clear();
+    return true;
+  }
+
+  string operation;
+  Condition::Type type = Condition::kOption;
+  if (map->HasKey("all_of")) {
+    operation = "all_of";
+    type = Condition::kAllOf;
+  } else if (map->HasKey("any_of")) {
+    operation = "any_of";
+    type = Condition::kAnyOf;
+  } else if (map->HasKey("none_of")) {
+    operation = "none_of";
+    type = Condition::kNoneOf;
+  } else {
     return false;
   }
-  condition->option_name = option->str();
+  if (!HasExactKeys(map.get(), {operation}))
+    return false;
+
+  auto list = As<ConfigList>(map->Get(operation));
+  if (!list || list->empty())
+    return false;
+  condition->type = type;
+  condition->option_name.clear();
+  condition->children.clear();
+  for (size_t i = 0; i < list->size(); ++i) {
+    Condition child;
+    if (!ParseCondition(list->GetAt(i), &child, depth + 1))
+      return false;
+    condition->children.push_back(child);
+  }
   return true;
 }
 
@@ -421,7 +489,7 @@ inline bool ParseComponentSpec(const an<ConfigItem>& item,
   }
 
   auto map = As<ConfigMap>(item);
-  if (!map || !HasOnlyKeys(map.get(), {"name", "when", "condition"}))
+  if (!map || !HasOnlyKeys(map.get(), {"name", "when"}))
     return false;
 
   auto name = map->GetValue("name");
@@ -429,49 +497,12 @@ inline bool ParseComponentSpec(const an<ConfigItem>& item,
     return false;
   *prescription = name->str();
 
-  auto condition_node = map->Get("condition");
   auto when_node = map->Get("when");
-  auto when = As<ConfigValue>(when_node);
-  if (when_node && (!when || when->str().empty()))
-    return false;
-  if (condition_node && when_node)
-    return false;
-  if (condition_node) {
-    auto condition_map = As<ConfigMap>(condition_node);
-    if (!condition_map)
-      return false;
-    auto all = condition_map->Get("all");
-    auto any = condition_map->Get("any");
-    if (static_cast<bool>(all) == static_cast<bool>(any) ||
-        !HasExactKeys(condition_map.get(), {all ? "all" : "any"}))
-      return false;
-    auto conditions = As<ConfigList>(all ? all : any);
-    if (!conditions || conditions->empty())
-      return false;
-    entry->require_all = static_cast<bool>(all);
-    for (size_t i = 0; i < conditions->size(); ++i) {
-      OptionCondition option_condition;
-      if (!ParseOptionCondition(conditions->GetAt(i), &option_condition))
-        return false;
-      entry->conditions.push_back(option_condition);
-    }
+  if (!when_node)
     return true;
-  }
-
-  if (!when)
-    return true;
-
-  string condition = when->str();
-  OptionCondition option_condition;
-  option_condition.expected_value = true;
-  if (!condition.empty() && condition[0] == '!') {
-    option_condition.expected_value = false;
-    condition.erase(0, 1);
-  }
-  if (condition.empty())
+  if (!ParseCondition(when_node, &entry->condition))
     return false;
-  option_condition.option_name = condition;
-  entry->conditions.push_back(option_condition);
+  entry->has_condition = true;
   return true;
 }
 
@@ -521,10 +552,7 @@ inline void CreateComponentsFromList(
       }
       an<T> instance(component);
       entry.component = instance;
-      for (auto& condition : entry.conditions)
-        condition.actual_value =
-            engine->context()->get_option(condition.option_name);
-      UpdateComponentEnabled(entry);
+      UpdateComponentEnabled(entry, engine->context());
       target_collection.push_back(entry);
     }
   }

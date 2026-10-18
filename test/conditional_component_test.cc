@@ -88,7 +88,7 @@ void SetCombinedCondition(Config* config,
   }
   auto condition = New<ConfigMap>();
   condition->Set(operation, condition_list);
-  component->Set("condition", condition);
+  component->Set("when", condition);
   list->Append(component);
   config->SetItem(path, list);
 }
@@ -205,8 +205,8 @@ TEST_F(ConditionalComponentTest, SegmentorCanBeSkippedByOption) {
 }
 
 TEST_F(ConditionalComponentTest, AllConditionRequiresEveryOption) {
-  SetCombinedCondition(engine_->schema()->config(), "engine/processors", "all",
-                       {{"option_0", true}, {"option_1", false}});
+  SetCombinedCondition(engine_->schema()->config(), "engine/processors",
+                       "all_of", {{"option_0", true}, {"option_1", false}});
   engine_->ApplySchema(engine_->schema());
 
   EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
@@ -226,8 +226,8 @@ TEST_F(ConditionalComponentTest, AllConditionRequiresEveryOption) {
 }
 
 TEST_F(ConditionalComponentTest, AnyConditionRequiresOneMatchingOption) {
-  SetCombinedCondition(engine_->schema()->config(), "engine/processors", "any",
-                       {{"option_0", true}, {"option_1", true}});
+  SetCombinedCondition(engine_->schema()->config(), "engine/processors",
+                       "any_of", {{"option_0", true}, {"option_1", true}});
   engine_->ApplySchema(engine_->schema());
 
   EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
@@ -248,6 +248,53 @@ TEST_F(ConditionalComponentTest, AnyConditionRequiresOneMatchingOption) {
   engine_->context()->set_option("option_0", false);
   EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
   EXPECT_EQ(CountingProcessor::calls, 3);
+}
+
+TEST_F(ConditionalComponentTest, NestedConditionsAndNoneOfAreSupported) {
+  auto processors = New<ConfigList>();
+  auto component = New<ConfigMap>();
+  component->Set("name", New<ConfigValue>("test_counting_processor"));
+
+  auto all_of = New<ConfigList>();
+  auto option = New<ConfigMap>();
+  option->Set("option", New<ConfigValue>("option_0"));
+  option->Set("value", New<ConfigValue>(true));
+  all_of->Append(option);
+  all_of->Append(New<ConfigValue>("option_1"));
+  auto nested_all = New<ConfigMap>();
+  nested_all->Set("all_of", all_of);
+
+  auto none_of = New<ConfigList>();
+  none_of->Append(New<ConfigValue>("option_2"));
+  auto nested_none = New<ConfigMap>();
+  nested_none->Set("none_of", none_of);
+
+  auto any_of = New<ConfigList>();
+  any_of->Append(nested_all);
+  any_of->Append(nested_none);
+  auto when = New<ConfigMap>();
+  when->Set("any_of", any_of);
+  component->Set("when", when);
+  processors->Append(component);
+  engine_->schema()->config()->SetItem("engine/processors", processors);
+  engine_->ApplySchema(engine_->schema());
+
+  // none_of(option_2) is true initially.
+  EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
+  EXPECT_EQ(CountingProcessor::calls, 1);
+
+  // The first branch becomes true when both options are enabled.
+  engine_->context()->set_option("option_0", true);
+  engine_->context()->set_option("option_1", true);
+  EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
+  EXPECT_EQ(CountingProcessor::calls, 2);
+
+  // Turn off the first branch so that the none_of branch controls the result.
+  engine_->context()->set_option("option_0", false);
+  engine_->context()->set_option("option_1", false);
+  engine_->context()->set_option("option_2", true);
+  EXPECT_FALSE(engine_->ProcessKey(KeyEvent(XK_a, 0)));
+  EXPECT_EQ(CountingProcessor::calls, 2);
 }
 
 TEST_F(ConditionalComponentTest, InvalidWhenTypeDoesNotEnableComponent) {
@@ -296,8 +343,8 @@ TEST_F(ConditionalComponentTest, UnknownConditionKeyDoesNotEnableComponent) {
   auto condition_list = New<ConfigList>();
   condition_list->Append(option_condition);
   auto condition = New<ConfigMap>();
-  condition->Set("all", condition_list);
-  conditional_processor->Set("condition", condition);
+  condition->Set("unknown", condition_list);
+  conditional_processor->Set("when", condition);
   processors->Append(conditional_processor);
   engine_->schema()->config()->SetItem("engine/processors", processors);
   engine_->ApplySchema(engine_->schema());
