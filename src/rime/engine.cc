@@ -119,7 +119,7 @@ class ConcreteEngine : public Engine {
   vector<ComponentEntry<Translator>> translators_;
   vector<ComponentEntry<Filter>> filters_;
   vector<an<Formatter>> formatters_;
-  vector<ComponentEntry<Processor>> post_processors_;
+  vector<of<Processor>> post_processors_;
   an<Switcher> switcher_;
 };
 
@@ -182,10 +182,8 @@ bool ConcreteEngine::ProcessKey(const KeyEvent& key_event, bool synthetic) {
     context_->commit_history().Push(key_event);
   }
   // post-processing
-  for (auto& entry : post_processors_) {
-    if (!entry.enabled)
-      continue;
-    ret = entry.component->ProcessKeyEvent(key_event);
+  for (auto& processor : post_processors_) {
+    ret = processor->ProcessKeyEvent(key_event);
     if (ret == kRejected)
       break;
     if (ret == kAccepted)
@@ -210,7 +208,6 @@ void ConcreteEngine::OnOptionUpdate(Context* ctx, const string& option) {
   UpdateComponentConditions(segmentors_, ctx);
   UpdateComponentConditions(translators_, ctx);
   UpdateComponentConditions(filters_, ctx);
-  UpdateComponentConditions(post_processors_, ctx);
   // apply new option to active segment
   if (ctx->IsComposing()) {
     ctx->RefreshNonConfirmedComposition();
@@ -607,9 +604,7 @@ void ConcreteEngine::InitializeComponents() {
   if (c_processor) {
     an<Processor> p(c_processor->Create(Ticket(this)));
     if (p) {
-      ComponentEntry<Processor> entry;
-      entry.component = p;
-      post_processors_.push_back(entry);
+      post_processors_.push_back(p);
     } else {
       LOG(WARNING) << "failed to create shape_processor.";
     }
