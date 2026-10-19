@@ -118,7 +118,7 @@ class ConcreteEngine : public Engine {
   vector<ComponentEntry<Segmentor>> segmentors_;
   vector<ComponentEntry<Translator>> translators_;
   vector<ComponentEntry<Filter>> filters_;
-  vector<an<Formatter>> formatters_;
+  vector<of<Formatter>> formatters_;
   vector<of<Processor>> post_processors_;
   an<Switcher> switcher_;
 };
