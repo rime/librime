@@ -7,11 +7,12 @@
 #ifndef RIME_CANDIDATE_H_
 #define RIME_CANDIDATE_H_
 
+#include <rime_api.h>
 #include <rime/common.h>
 
 namespace rime {
 
-class Candidate {
+class RIME_DLL Candidate {
  public:
   Candidate() = default;
   Candidate(const string& type, size_t start, size_t end, double quality = 0.)
