@@ -87,14 +87,11 @@ if(BUILD_SHARED_LIBS)
     VERSION ${rime_version}
     SOVERSION ${rime_soversion}
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
-    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
-    WINDOWS_EXPORT_ALL_SYMBOLS ON)
-  if(MINGW)
-    # Keep the linker option private to the rime target; propagating it through
-    # target_link_libraries would affect every downstream executable.
-    set_target_properties(rime PROPERTIES
-      LINK_FLAGS "-Wl,--export-all-symbols")
-  endif()
+    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+  # Intentionally no WINDOWS_EXPORT_ALL_SYMBOLS / --export-all-symbols here:
+  # only the symbols marked RIME_DLL (the plugin ABI, imported by plugin
+  # builds that define RIME_IMPORTS) are exported. Exporting everything would
+  # bloat the DLL, slow down loading and defeat dead code elimination.
   if(XCODE_VERSION)
     set_target_properties(rime PROPERTIES INSTALL_NAME_DIR "@rpath")
   endif()
