@@ -1,3 +1,7 @@
+#include <rime/build_config.h>
+
+#ifndef RIME_ENABLE_LOGGING
+
 #include <gtest/gtest.h>
 
 #include <mutex>
@@ -148,3 +152,5 @@ TEST_F(LoggingFacadeTest, CheckFailureAborts) {
 #endif
 
 }  // namespace
+
+#endif  // RIME_ENABLE_LOGGING

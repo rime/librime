@@ -108,8 +108,6 @@ class CleanupTrash : public DeploymentTask {
   bool Run(Deployer* deployer);
 };
 
-//! Deprecated compatibility task. Log files are owned by the embedder's
-//! RimeLogHandler, so this task no longer removes anything.
 class CleanOldLogFiles : public DeploymentTask {
  public:
   CleanOldLogFiles(TaskInitializer arg = TaskInitializer()) {}

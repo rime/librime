@@ -11,13 +11,12 @@
 #include <sstream>
 #include <rime/common.h>
 #include <rime/module.h>
+#include <rime/setup.h>
 
 using namespace rime;
 
 RIME_DEPRECATED void RimeSetupLogging(const char* app_name) {
-  // Deprecated. Install a RimeLogHandler with RimeApi::set_log_handler
-  // instead.
-  (void)app_name;
+  SetupLogging(app_name);
 }
 
 #if RIME_BUILD_SHARED_LIBS

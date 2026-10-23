@@ -26,6 +26,14 @@ RIME_DEPRECATED void RimeSetup(RimeTraits* traits) {
   rime_declare_module_dependencies();
 
   SetupDeployer(traits);
+  if (RIME_PROVIDED(traits, app_name)) {
+    if (RIME_STRUCT_HAS_MEMBER(*traits, traits->min_log_level) &&
+        RIME_STRUCT_HAS_MEMBER(*traits, traits->log_dir)) {
+      SetupLogging(traits->app_name, traits->min_log_level, traits->log_dir);
+    } else {
+      SetupLogging(traits->app_name);
+    }
+  }
 }
 
 RIME_DEPRECATED void RimeSetNotificationHandler(RimeNotificationHandler handler,

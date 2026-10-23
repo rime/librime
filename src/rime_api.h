@@ -93,19 +93,26 @@ typedef struct rime_traits_t {
   /*!
    * Pass a C-string constant in the format "rime.x"
    * where 'x' is the name of your application.
+   * When built with ENABLE_LOGGING=ON, add prefix "rime." to ensure old log
+   * files are automatically cleaned.
    */
   const char* app_name;
 
   //! A list of modules to load before initializing
   const char** modules;
   // v1.6
-  /*! Ignored. Kept for ABI compatibility.
-   *  Install a RimeLogHandler with RimeApi::set_log_handler to receive
-   *  log records and apply your own filtering.
+  /*! Minimal level of logged messages when built with ENABLE_LOGGING=ON.
+   *  Value is passed to Glog library using FLAGS_minloglevel variable.
+   *  0 = INFO (default), 1 = WARNING, 2 = ERROR, 3 = FATAL
+   *  Ignored when built with ENABLE_LOGGING=OFF; install a RimeLogHandler
+   *  with RimeApi::set_log_handler and filter there instead.
    */
   int min_log_level;
-  /*! Ignored. Kept for ABI compatibility.
-   *  librime does not write log files.
+  /*! Directory of log files when built with ENABLE_LOGGING=ON.
+   *  Value is passed to Glog library using FLAGS_log_dir variable.
+   *  NULL means temporary directory, and "" means only writing to stderr.
+   *  Ignored when built with ENABLE_LOGGING=OFF; librime does not write log
+   *  files in that configuration.
    */
   const char* log_dir;
   //! prebuilt data directory. defaults to ${shared_data_dir}/build
@@ -274,6 +281,10 @@ typedef struct rime_log_record_t {
 
 /*!
  * Called synchronously on the thread that emitted the log record.
+ *
+ * Only used when librime is built with ENABLE_LOGGING=OFF. When built with
+ * ENABLE_LOGGING=ON, google-glog handles logging and this handler is not
+ * called.
  *
  * The handler must be thread-safe and must not emit librime log records
  * recursively. When handler is NULL, logging is disabled.
@@ -561,6 +572,8 @@ typedef struct RIME_FLAVORED(rime_api_t) {
   Bool (*free_candidate_preview)(RimeCandidatePreview* preview);
 
   /*! Install a log handler.
+   *  Only used when librime is built with ENABLE_LOGGING=OFF; with
+   *  ENABLE_LOGGING=ON, google-glog handles logging and this is a no-op.
    *  When handler is NULL, log output is disabled. The handler receives
    *  records for all levels; apply your own filtering in the handler.
    *  See RimeLogHandler for the threading and recursion requirements.

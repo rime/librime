@@ -41,6 +41,7 @@ Build dependencies
   - compiler with C++17 support
   - cmake>=3.12
   - libboost>=1.74
+  - libglog>=0.7 (optional)
   - libleveldb
   - libmarisa
   - libopencc>=1.0.2
@@ -50,6 +51,7 @@ Build dependencies
 Runtime dependencies
 ---
   - libboost
+  - libglog (optional)
   - libleveldb
   - libmarisa
   - libopencc
@@ -57,8 +59,14 @@ Runtime dependencies
 
 Logging
 ---
-librime does not write logs by itself. Log records are delivered to a
-`RimeLogHandler` installed through `RimeApi::set_log_handler`:
+`ENABLE_LOGGING` defaults to `ON`, which keeps librime's existing
+google-glog integration unchanged (`min_log_level`, `log_dir`,
+`RimeSetupLogging()`, and automatic log-file cleanup all behave as before).
+
+Build with `-DENABLE_LOGGING=OFF` to use the handler-based logging facade
+instead. In that configuration librime does not depend on glog and does not
+write log files. Log records are delivered to a `RimeLogHandler` installed
+through `RimeApi::set_log_handler`:
 
 ```c
 static void on_log(void* context, const RimeLogRecord* record) {
@@ -141,6 +149,7 @@ Credits
 We are grateful to the makers of the following open source libraries:
 
   - [Boost C++ Libraries](http://www.boost.org/) (Boost Software License)
+  - [google-glog](https://github.com/google/glog) (The 3-Clause BSD License)
   - [Google Test](https://github.com/google/googletest) (The 3-Clause BSD License)
   - [LevelDB](https://github.com/google/leveldb) (The 3-Clause BSD License)
   - [marisa-trie](https://github.com/s-yata/marisa-trie) (BSD 2-Clause License, LGPL 2.1)

@@ -2,6 +2,10 @@
 // Copyright RIME Developers
 // Distributed under the BSD License
 //
+#include <rime/build_config.h>
+
+#ifndef RIME_ENABLE_LOGGING
+
 #include <gtest/gtest.h>
 
 // Windows headers (wingdi.h) define ERROR as 0. Define it here as well so the
@@ -20,3 +24,5 @@ TEST(LoggingErrorMacroTest, AcceptsWindowsErrorMacro) {
   DLOG_IF(ERROR, false) << "conditional debug error";
   SUCCEED();
 }
+
+#endif  // RIME_ENABLE_LOGGING

@@ -21,8 +21,12 @@ extern "C" {
 RIME_DEPRECATED void RimeSetup(RimeTraits* traits);
 
 /*!
- *  \deprecated This function is a no-op. Install a RimeLogHandler with
- *  RimeApi::set_log_handler instead.
+ *  Pass a C-string constant in the format "rime.x"
+ *  where 'x' is the name of your application.
+ *  Add prefix "rime." to ensure old log files are automatically cleaned.
+ *  \deprecated Use RimeSetup() instead.
+ *  When built with ENABLE_LOGGING=OFF this is a no-op; install a
+ *  RimeLogHandler with RimeApi::set_log_handler instead.
  */
 RIME_DEPRECATED void RimeSetupLogging(const char* app_name);
 

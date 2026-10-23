@@ -1,13 +1,15 @@
 ## Unreleased
 
 ### 主要功能更新 | Major Updates
-- replace google-glog with a handler-based logging facade. Install a
-  `RimeLogHandler` with `RimeApi::set_log_handler`; without a handler librime
-  produces no log output. `ENABLE_LOGGING` and `ALSO_LOG_TO_STDERR` are
-  removed, and `RimeSetupLogging()` is now a deprecated no-op.
+- add an optional handler-based logging facade. `ENABLE_LOGGING` still
+  defaults to `ON` and keeps the existing google-glog behavior unchanged.
+  When built with `ENABLE_LOGGING=OFF`, install a `RimeLogHandler` with
+  `RimeApi::set_log_handler`; without a handler librime produces no log
+  output.
 
 ### 構建 | Build
-- remove the glog submodule and the gflags/glog build dependency.
+- `ENABLE_LOGGING=OFF` builds without the glog submodule or the gflags/glog
+  dependencies. `ENABLE_LOGGING=ON` continues to require them as before.
 
 <a name="1.17.0"></a>
 ## 1.17.0 (2026-06-05)

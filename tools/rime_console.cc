@@ -100,6 +100,7 @@ class RimeConsole {
 int main(int argc, char* argv[]) {
   unsigned int codepage = SetConsoleOutputCodePage();
   // initialize la Rime
+  SetupLogging("rime.console");
   LoadModules(kDefaultModules);
 
   Deployer deployer;

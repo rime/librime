@@ -7,6 +7,12 @@
 
 #include <rime/build_config.h>
 
+#ifdef RIME_ENABLE_LOGGING
+#include <glog/logging.h>
+#else
+#include "logging.h"
+#endif  // RIME_ENABLE_LOGGING
+
 #include <rime_api.h>
 #include <rime/deployer.h>
 #include <rime/module.h>
@@ -72,6 +78,40 @@ RIME_DLL void SetupDeployer(RimeTraits* traits) {
     deployer.staging_dir = path(traits->staging_dir);
   else
     deployer.staging_dir = deployer.user_data_dir / "build";
+}
+
+RIME_DLL void SetupLogging(const char* app_name,
+                           int min_log_level,
+                           const char* log_dir) {
+#ifdef RIME_ENABLE_LOGGING
+  FLAGS_minloglevel = min_log_level;
+#ifdef RIME_ALSO_LOG_TO_STDERR
+  FLAGS_alsologtostderr = true;
+#endif  // RIME_ALSO_LOG_TO_STDERR
+  if (log_dir) {
+    if (log_dir[0] == '\0') {
+      google::LogToStderr();
+    } else {
+      FLAGS_log_dir = log_dir;
+    }
+  }
+  google::SetLogFilenameExtension(".log");
+  google::SetLogSymlink(google::GLOG_INFO, app_name);
+  google::SetLogSymlink(google::GLOG_WARNING, app_name);
+  google::SetLogSymlink(google::GLOG_ERROR, app_name);
+  // Do not allow other users to read/write log files created by current
+  // process.
+  FLAGS_logfile_mode = 0600;
+  if (google::IsGoogleLoggingInitialized()) {
+    LOG(WARNING) << "Glog is already initialized.";
+  } else {
+    google::InitGoogleLogging(app_name);
+  }
+#endif  // RIME_ENABLE_LOGGING
+}
+
+RIME_DLL void SetupLogging(const char* app_name) {
+  SetupLogging(app_name, 0, NULL);
 }
 
 }  // namespace rime

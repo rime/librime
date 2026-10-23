@@ -25,7 +25,11 @@
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 
+#ifdef RIME_ENABLE_LOGGING
+#include <glog/logging.h>
+#else
 #include "logging.h"
+#endif  // RIME_ENABLE_LOGGING
 
 // call a pointer to member function on this
 #define RIME_THIS_CALL(f) (this->*(f))

@@ -3,6 +3,23 @@
 // Distributed under the BSD License
 //
 
+#include <rime/build_config.h>
+
+#ifdef RIME_ENABLE_LOGGING
+
+#include <rime/setup.h>
+
+namespace rime {
+
+RIME_DLL void SetLogHandler(RimeLogHandler /*handler*/,
+                            void* /*context_object*/) {
+  // google-glog owns logging when ENABLE_LOGGING is on.
+}
+
+}  // namespace rime
+
+#else
+
 #include "logging.h"
 
 #include <atomic>
@@ -122,3 +139,5 @@ void write_log(const char* file,
 }  // namespace logging_internal
 
 }  // namespace rime
+
+#endif  // RIME_ENABLE_LOGGING

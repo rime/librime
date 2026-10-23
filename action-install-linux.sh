@@ -1,6 +1,7 @@
 #!/bin/bash
 
 dep_packages=(
+    libgoogle-glog-dev
     libleveldb-dev
     libmarisa-dev
     libyaml-cpp-dev
