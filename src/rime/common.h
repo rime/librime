@@ -25,11 +25,7 @@
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 
-#ifdef RIME_ENABLE_LOGGING
-#include <glog/logging.h>
-#else
-#include "no_logging.h"
-#endif  // RIME_ENABLE_LOGGING
+#include "logging.h"
 
 // call a pointer to member function on this
 #define RIME_THIS_CALL(f) (this->*(f))
@@ -149,11 +145,9 @@ class path : public std::filesystem::path {
   friend path operator/(const fs_path& lhs, const char* rhs) {
     return path(lhs) /= path(rhs);
   }
-#ifdef RIME_ENABLE_LOGGING
   friend std::ostream& operator<<(std::ostream& os, const path& p) {
     return os << p.to_utf8_string();
   }
-#endif
 };
 
 }  // namespace rime

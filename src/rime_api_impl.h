@@ -26,14 +26,6 @@ RIME_DEPRECATED void RimeSetup(RimeTraits* traits) {
   rime_declare_module_dependencies();
 
   SetupDeployer(traits);
-  if (RIME_PROVIDED(traits, app_name)) {
-    if (RIME_STRUCT_HAS_MEMBER(*traits, traits->min_log_level) &&
-        RIME_STRUCT_HAS_MEMBER(*traits, traits->log_dir)) {
-      SetupLogging(traits->app_name, traits->min_log_level, traits->log_dir);
-    } else {
-      SetupLogging(traits->app_name);
-    }
-  }
 }
 
 RIME_DEPRECATED void RimeSetNotificationHandler(RimeNotificationHandler handler,
@@ -46,6 +38,10 @@ RIME_DEPRECATED void RimeSetNotificationHandler(RimeNotificationHandler handler,
   } else {
     Service::instance().ClearNotificationHandler();
   }
+}
+
+static void RimeSetLogHandler(RimeLogHandler handler, void* context_object) {
+  SetLogHandler(handler, context_object);
 }
 
 RIME_DEPRECATED void RimeInitialize(RimeTraits* traits) {
@@ -1279,6 +1275,7 @@ RIME_API RIME_FLAVORED(RimeApi) * RIME_FLAVORED(rime_get_api)() {
     s_api.change_page = &RimeChangePage;
     s_api.get_candidate_preview = &RimeGetCandidatePreview;
     s_api.free_candidate_preview = &RimeFreeCandidatePreview;
+    s_api.set_log_handler = &RimeSetLogHandler;
   }
   return &s_api;
 }

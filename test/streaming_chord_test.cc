@@ -13,7 +13,6 @@ using namespace rime;
 class StreamingChordDualRoleTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    SetupLogging("rime.test");
     engine_.reset(Engine::Create());
 
     auto* schema = engine_->schema();

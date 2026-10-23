@@ -19,10 +19,8 @@ RIME_DLL void LoadModules(const char* module_names[]);
 
 RIME_DLL void SetupDeployer(RimeTraits* traits);
 
-RIME_DLL void SetupLogging(const char* app_name,
-                           int min_log_level,
-                           const char* log_dir);
-RIME_DLL void SetupLogging(const char* app_name);
+//! Install a global log handler. NULL disables log output.
+RIME_DLL void SetLogHandler(RimeLogHandler handler, void* context_object);
 
 }  // namespace rime
 

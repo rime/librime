@@ -78,7 +78,6 @@ static void setup_deployer(Deployer* deployer, int argc, char* argv[]) {
 
 int main(int argc, char* argv[]) {
   unsigned int codepage = SetConsoleOutputCodePage();
-  SetupLogging("rime.tools");
 
   if (argc == 1) {
     std::cout

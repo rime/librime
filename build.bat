@@ -32,7 +32,6 @@ set build_librime=0
 set build_shared=ON
 set build_test=OFF
 set clean=0
-set enable_logging=ON
 
 :parse_cmdline_options
 if "%1" == "" goto end_parsing_cmdline_options
@@ -59,12 +58,6 @@ if "%1" == "release" (
   if not defined build_dir set build_dir=build
   set build_config=Release
 )
-if "%1" == "logging" (
-  set enable_logging=ON
-)
-if "%1" == "nologging" (
-  set enable_logging=OFF
-)
 shift
 goto parse_cmdline_options
 :end_parsing_cmdline_options
@@ -81,7 +74,6 @@ if not defined rime_install_prefix set rime_install_prefix=%RIME_ROOT%\dist
 
 if %clean% == 1 (
  rmdir /s /q %build_dir%
-  rmdir /s /q deps\glog\%build_dir%
   rmdir /s /q deps\googletest\%build_dir%
   rmdir /s /q deps\leveldb\%build_dir%
   rmdir /s /q deps\marisa-trie\%build_dir%
@@ -112,16 +104,6 @@ set deps_cmake_flags=%common_cmake_flags%^
   -DCMAKE_INSTALL_PREFIX:PATH="%deps_install_prefix%"
 
 if %build_deps% == 1 (
-  echo building glog.
-  pushd deps\glog
-  cmake . -B%build_dir% %deps_cmake_flags%^
-  -DBUILD_TESTING:BOOL=OFF^
-  -DWITH_GFLAGS:BOOL=OFF
-  if errorlevel 1 goto error
-  cmake --build %build_dir% --config %build_config% --target install
-  if errorlevel 1 goto error
-  popd
-
   echo building leveldb.
   pushd deps\leveldb
   cmake . -B%build_dir% %deps_cmake_flags%^
@@ -181,7 +163,6 @@ set rime_cmake_flags=%common_cmake_flags%^
  -DBUILD_STATIC=ON^
  -DBUILD_SHARED_LIBS=%build_shared%^
  -DBUILD_TEST=%build_test%^
- -DENABLE_LOGGING=%enable_logging%^
  -DCMAKE_PREFIX_PATH:PATH="%deps_install_prefix%"^
  -DCMAKE_INSTALL_PREFIX:PATH="%rime_install_prefix%"
 

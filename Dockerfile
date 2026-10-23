@@ -11,7 +11,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
   libboost-dev \
   libboost-regex-dev \
   libboost-locale-dev \
-  libgoogle-glog-dev \
   libgtest-dev \
   libyaml-cpp-dev \
   libleveldb-dev \
@@ -31,7 +30,6 @@ RUN bash install-plugins.sh \
 
 RUN cmake -B build -G Ninja \
   -DCMAKE_BUILD_TYPE:STRING=Release \
-  -DENABLE_LOGGING:BOOL=ON \
   -DBUILD_TEST:BOOL=ON \
   -DBUILD_STATIC:BOOL=OFF \
   -DBUILD_SHARED_LIBS:BOOL=ON

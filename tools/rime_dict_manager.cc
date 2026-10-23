@@ -18,7 +18,6 @@ using namespace rime;
 
 int main(int argc, char* argv[]) {
   unsigned int codepage = SetConsoleOutputCodePage();
-  SetupLogging("rime.tools");
 
   string option;
   string arg1, arg2;
