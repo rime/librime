@@ -24,6 +24,11 @@ RIME_DLL void SetupLogging(const char* app_name,
                            const char* log_dir);
 RIME_DLL void SetupLogging(const char* app_name);
 
+//! Install a global log handler. NULL disables log output.
+//! Only effective when librime is built with ENABLE_LOGGING=OFF; with
+//! ENABLE_LOGGING=ON, google-glog handles logging and this is a no-op.
+RIME_DLL void SetLogHandler(RimeLogHandler handler, void* context_object);
+
 }  // namespace rime
 
 #endif  // RIME_SETUP_H_

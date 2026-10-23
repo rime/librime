@@ -93,21 +93,26 @@ typedef struct rime_traits_t {
   /*!
    * Pass a C-string constant in the format "rime.x"
    * where 'x' is the name of your application.
-   * Add prefix "rime." to ensure old log files are automatically cleaned.
+   * When built with ENABLE_LOGGING=ON, add prefix "rime." to ensure old log
+   * files are automatically cleaned.
    */
   const char* app_name;
 
   //! A list of modules to load before initializing
   const char** modules;
   // v1.6
-  /*! Minimal level of logged messages.
+  /*! Minimal level of logged messages when built with ENABLE_LOGGING=ON.
    *  Value is passed to Glog library using FLAGS_minloglevel variable.
    *  0 = INFO (default), 1 = WARNING, 2 = ERROR, 3 = FATAL
+   *  Ignored when built with ENABLE_LOGGING=OFF; install a RimeLogHandler
+   *  with RimeApi::set_log_handler and filter there instead.
    */
   int min_log_level;
-  /*! Directory of log files.
+  /*! Directory of log files when built with ENABLE_LOGGING=ON.
    *  Value is passed to Glog library using FLAGS_log_dir variable.
    *  NULL means temporary directory, and "" means only writing to stderr.
+   *  Ignored when built with ENABLE_LOGGING=OFF; librime does not write log
+   *  files in that configuration.
    */
   const char* log_dir;
   //! prebuilt data directory. defaults to ${shared_data_dir}/build
@@ -242,6 +247,50 @@ typedef void (*RimeNotificationHandler)(void* context_object,
                                         RimeSessionId session_id,
                                         const char* message_type,
                                         const char* message_value);
+
+/*!
+ * Log levels, matching the numeric values historically used by google-glog.
+ */
+typedef enum rime_log_level_t {
+  RIME_LOG_INFO = 0,
+  RIME_LOG_WARNING = 1,
+  RIME_LOG_ERROR = 2,
+  RIME_LOG_FATAL = 3,
+} RimeLogLevel;
+
+/*!
+ * A log record passed to a RimeLogHandler.
+ *
+ * RIME_STRUCT_INIT(RimeLogRecord, record) should be used by the receiver if it
+ * wants to inspect data_size before accessing fields added in later versions.
+ *
+ * The message, file and function pointers are only valid for the duration of
+ * the callback. message is UTF-8 encoded.
+ */
+typedef struct rime_log_record_t {
+  int data_size;
+  //! One of RimeLogLevel.
+  int level;
+  const char* message;
+  const char* file;
+  int line;
+  const char* function;
+  //! An implementation-defined identifier of the emitting thread.
+  uint64_t thread_id;
+} RimeLogRecord;
+
+/*!
+ * Called synchronously on the thread that emitted the log record.
+ *
+ * Only used when librime is built with ENABLE_LOGGING=OFF. When built with
+ * ENABLE_LOGGING=ON, google-glog handles logging and this handler is not
+ * called.
+ *
+ * The handler must be thread-safe and must not emit librime log records
+ * recursively. When handler is NULL, logging is disabled.
+ */
+typedef void (*RimeLogHandler)(void* context_object,
+                               const RimeLogRecord* record);
 
 /*!
  *  Extend the structure to publish custom data/functions in your specific
@@ -521,6 +570,15 @@ typedef struct RIME_FLAVORED(rime_api_t) {
                                 RimeCandidatePreview* preview);
   //! free a RimeCandidatePreview filled by get_candidate_preview
   Bool (*free_candidate_preview)(RimeCandidatePreview* preview);
+
+  /*! Install a log handler.
+   *  Only used when librime is built with ENABLE_LOGGING=OFF; with
+   *  ENABLE_LOGGING=ON, google-glog handles logging and this is a no-op.
+   *  When handler is NULL, log output is disabled. The handler receives
+   *  records for all levels; apply your own filtering in the handler.
+   *  See RimeLogHandler for the threading and recursion requirements.
+   */
+  void (*set_log_handler)(RimeLogHandler handler, void* context_object);
 } RIME_FLAVORED(RimeApi);
 
 //! API entry

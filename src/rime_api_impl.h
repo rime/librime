@@ -48,6 +48,10 @@ RIME_DEPRECATED void RimeSetNotificationHandler(RimeNotificationHandler handler,
   }
 }
 
+static void RimeSetLogHandler(RimeLogHandler handler, void* context_object) {
+  SetLogHandler(handler, context_object);
+}
+
 RIME_DEPRECATED void RimeInitialize(RimeTraits* traits) {
   SetupDeployer(traits);
   LoadModules(RIME_PROVIDED(traits, modules) ? traits->modules
@@ -1279,6 +1283,7 @@ RIME_API RIME_FLAVORED(RimeApi) * RIME_FLAVORED(rime_get_api)() {
     s_api.change_page = &RimeChangePage;
     s_api.get_candidate_preview = &RimeGetCandidatePreview;
     s_api.free_candidate_preview = &RimeFreeCandidatePreview;
+    s_api.set_log_handler = &RimeSetLogHandler;
   }
   return &s_api;
 }

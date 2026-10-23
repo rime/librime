@@ -57,6 +57,31 @@ Runtime dependencies
   - libopencc
   - libyaml-cpp
 
+Logging
+---
+`ENABLE_LOGGING` defaults to `ON`, which keeps librime's existing
+google-glog integration unchanged (`min_log_level`, `log_dir`,
+`RimeSetupLogging()`, and automatic log-file cleanup all behave as before).
+
+Build with `-DENABLE_LOGGING=OFF` to use the handler-based logging facade
+instead. In that configuration librime does not depend on glog and does not
+write log files. Log records are delivered to a `RimeLogHandler` installed
+through `RimeApi::set_log_handler`:
+
+```c
+static void on_log(void* context, const RimeLogRecord* record) {
+  my_log_library_write(record->level, record->message);
+}
+
+RimeApi* api = rime_get_api();
+api->set_log_handler(on_log, my_context);
+```
+
+Without a handler, all non-fatal records are discarded. `FATAL` records from
+`CHECK` failures are written to stderr and abort the process. The handler is
+called synchronously on the logging thread; it must be thread-safe and must
+not log through librime recursively.
+
 Build and install on Linux
 ---
 ```
