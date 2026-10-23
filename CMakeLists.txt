@@ -22,7 +22,7 @@ option(BUILD_DATA "Build data for Rime" OFF)
 option(BUILD_SAMPLE "Build sample Rime plugin" OFF)
 option(BUILD_TEST "Build and run tests" ON)
 option(BUILD_SEPARATE_LIBS "Build separate rime-* libraries" OFF)
-option(ENABLE_LOGGING "Enable logging with google-glog library" ON)
+option(ENABLE_LOGGING "Enable logging with spdlog library" ON)
 option(ALSO_LOG_TO_STDERR "Log to stderr as well as log file" OFF)
 option(ENABLE_ASAN "Enable Address Sanitizer (Unix Only)" OFF)
 option(INSTALL_PRIVATE_HEADERS "Install private headers (usually needed for externally built Rime plugins)" OFF)
@@ -50,8 +50,6 @@ if (ENABLE_ASAN)
 endif()
 
 set(Boost_USE_STATIC_LIBS ${BUILD_STATIC})
-set(Gflags_STATIC ${BUILD_STATIC})
-set(Glog_STATIC ${BUILD_STATIC})
 set(LevelDb_STATIC ${BUILD_STATIC})
 set(Marisa_STATIC ${BUILD_STATIC})
 set(Opencc_STATIC ${BUILD_STATIC})
@@ -74,30 +72,6 @@ if(Boost_FOUND)
 endif()
 
 if(ENABLE_LOGGING)
-
-  find_package(Gflags)
-  if(Gflags_FOUND)
-    include_directories(${Gflags_INCLUDE_PATH})
-  endif()
-
-  find_package(Glog REQUIRED)
-  if(Glog_FOUND)
-    include_directories(${Glog_INCLUDE_PATH})
-    if(WIN32)
-      add_compile_definitions("GLOG_DEPRECATED=__declspec(deprecated)")
-      add_compile_definitions(GLOG_NO_ABBREVIATED_SEVERITIES)
-    else()
-      add_compile_definitions("GLOG_DEPRECATED=__attribute__((deprecated))")
-    endif()
-    if(Glog_STATIC)
-      add_compile_definitions(GLOG_EXPORT=)
-      add_compile_definitions(GLOG_NO_EXPORT=)
-    else()
-      add_compile_definitions("GLOG_EXPORT=__attribute__((visibility(\"default\")))")
-      add_compile_definitions("GLOG_NO_EXPORT=__attribute__((visibility(\"default\")))")
-    endif()
-  endif()
-
   set(RIME_ENABLE_LOGGING 1)
 
   if (ALSO_LOG_TO_STDERR)
@@ -106,6 +80,36 @@ if(ENABLE_LOGGING)
 endif()
 
 find_package(Threads)
+
+if(ENABLE_LOGGING)
+  # Always use the bundled, pinned spdlog so that the library is linked
+  # statically and no new runtime dependency is introduced.
+  if(NOT TARGET spdlog::spdlog)
+    if(NOT EXISTS "${PROJECT_SOURCE_DIR}/deps/spdlog/CMakeLists.txt")
+      message(FATAL_ERROR
+        "Bundled spdlog is required for static linking. "
+        "Initialize it with: git submodule update --init deps/spdlog")
+    endif()
+
+    set(SPDLOG_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+    set(SPDLOG_BUILD_PIC ON CACHE BOOL "" FORCE)
+    set(SPDLOG_BUILD_EXAMPLE OFF CACHE BOOL "" FORCE)
+    set(SPDLOG_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(SPDLOG_INSTALL OFF CACHE BOOL "" FORCE)
+    set(SPDLOG_FMT_EXTERNAL OFF CACHE BOOL "" FORCE)
+
+    # SPDLOG_BUILD_SHARED is not enough when the parent project builds
+    # shared libraries: spdlog also looks at BUILD_SHARED_LIBS.
+    set(_rime_build_shared_libs ${BUILD_SHARED_LIBS})
+    set(BUILD_SHARED_LIBS OFF)
+    add_subdirectory(deps/spdlog EXCLUDE_FROM_ALL)
+    set(BUILD_SHARED_LIBS ${_rime_build_shared_libs})
+  endif()
+
+  if(NOT TARGET spdlog::spdlog)
+    message(FATAL_ERROR "spdlog target not found")
+  endif()
+endif()
 
 if(NOT ENABLE_THREADING)
   add_definitions(-DRIME_NO_THREADING)

@@ -101,12 +101,10 @@ typedef struct rime_traits_t {
   const char** modules;
   // v1.6
   /*! Minimal level of logged messages.
-   *  Value is passed to Glog library using FLAGS_minloglevel variable.
    *  0 = INFO (default), 1 = WARNING, 2 = ERROR, 3 = FATAL
    */
   int min_log_level;
   /*! Directory of log files.
-   *  Value is passed to Glog library using FLAGS_log_dir variable.
    *  NULL means temporary directory, and "" means only writing to stderr.
    */
   const char* log_dir;
