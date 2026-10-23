@@ -135,7 +135,6 @@ jobs:
             git
             base-devel
             mingw-w64-ucrt-x86_64-boost
-            mingw-w64-ucrt-x86_64-glog
             mingw-w64-ucrt-x86_64-gtest
             mingw-w64-ucrt-x86_64-yaml-cpp
             mingw-w64-ucrt-x86_64-leveldb
@@ -151,7 +150,8 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: ${{ inputs.repository }}
-            
+          submodules: true
+
       - name: Configure build environment
         run: |
           echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV
@@ -170,11 +170,8 @@ jobs:
             -DBUILD_SHARED_LIBS:BOOL=ON
           cmake --build build
           cmake --install build
-          # Temporarily disable test for mingw-w64
-          # due to msys2 glog package issue:
-          # https://github.com/msys2/MINGW-packages/issues/25344
-          # cd build && cp ./bin/librime.dll ./test
-          # ctest --output-on-failure
+          cd build && cp ./bin/librime.dll ./test
+          ctest --output-on-failure
 
       - name: Create distributable
         run: |

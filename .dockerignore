@@ -3,7 +3,9 @@
 build*/
 debug/
 dist/
-deps/
+deps/*
+!deps/spdlog/
+!deps/spdlog/**
 plugins/*/
 !plugins/CMakeLists.txt
 !plugins/plugin.cc

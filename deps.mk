@@ -10,7 +10,7 @@ endif
 build ?= build
 prefix ?= $(rime_root)
 
-rime_deps = glog googletest leveldb marisa-trie opencc yaml-cpp
+rime_deps = googletest leveldb marisa-trie opencc yaml-cpp
 
 .PHONY: all clean clean-dist clean-src $(rime_deps)
 
@@ -30,16 +30,6 @@ clean-src:
 	for dep in $(rime_deps); do \
 		rm -r $(src_dir)/$${dep}/$(build) || true; \
 	done
-
-glog:
-	cd $(src_dir)/glog; \
-	cmake . -B$(build) \
-	-DBUILD_SHARED_LIBS:BOOL=OFF \
-	-DBUILD_TESTING:BOOL=OFF \
-	-DWITH_GFLAGS:BOOL=OFF \
-	-DCMAKE_BUILD_TYPE:STRING="Release" \
-	-DCMAKE_INSTALL_PREFIX:PATH="$(prefix)" \
-	&& cmake --build $(build) --target install
 
 googletest:
 	cd $(src_dir)/googletest; \
