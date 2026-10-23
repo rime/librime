@@ -10,5 +10,7 @@ jobs:
     steps:
     - name: Checkout last commit
       uses: actions/checkout@v7
+      with:
+        submodules: true
     - name: Build with plugins
       run: docker build -t librime .
