@@ -34,19 +34,24 @@ build_boost_macos() {
 }
 
 build_boost_linux() {
+    cd "${BOOST_ROOT}"
+
     local boost_toolset=
+    local b2_args=()
     if [[ "${CXX:-}" =~ clang ]]; then
         boost_toolset=clang
+        echo "using clang : : ${CXX} : <triple>none ;" > user-config.jam
+        b2_args+=(--user-config=user-config.jam)
     elif [[ "${CXX:-}" =~ g\+\+|gcc ]]; then
         boost_toolset=gcc
     fi
-    cd "${BOOST_ROOT}"
+
     if [[ -n "${boost_toolset}" ]]; then
         ./bootstrap.sh --with-toolset="${boost_toolset}" --with-libraries="${boost_libs}"
     else
         ./bootstrap.sh --with-libraries="${boost_libs}"
     fi
-    ./b2 -q -a link=shared stage
+    ./b2 "${b2_args[@]}" -q -a link=shared stage
 }
 
 if [[ $# -eq 0 || " $* " =~ ' --download ' ]]; then
