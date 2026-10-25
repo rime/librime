@@ -22,10 +22,6 @@ jobs:
             cxx_compiler: g++
           - compiler: clang
             cxx_compiler: clang++
-        # boost bootstrap failed on arm platform with clang
-        exclude:
-          - os: ubuntu-26.04-arm
-            compiler: clang
     env:
       CC: ${{ matrix.compiler }}
       CXX: ${{ matrix.cxx_compiler }}
