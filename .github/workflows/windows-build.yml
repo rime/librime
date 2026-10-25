@@ -12,16 +12,20 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [windows-latest, windows-11-arm]
         compiler: [msvc, clang]
-        arch: [x64]
+        arch: [x64, arm64]
+        exclude:
+          - { os: windows-latest, arch: arm64 }
+          - { os: windows-11-arm, arch: x64 }
         include:
           - { compiler: msvc, cc: cl, cxx: cl }
           - { compiler: clang, cc: clang, cxx: clang++ }
-          - { compiler: msvc, arch: x86, cross_arch: x64_x86 }
+          - { os: windows-latest, compiler: msvc, arch: x86, cross_arch: x64_x86 }
     env:
       BOOST_ROOT: ${{ github.workspace }}\deps\boost
       RIME_PLUGINS: ${{ inputs.rime_plugins }}
@@ -33,20 +37,8 @@ jobs:
           repository: ${{ inputs.repository }}
           submodules: recursive
 
-      - name: Create env.bat
-        run: |
-          $envfile = ".\env.bat"
-          $envcontent = @"
-            set RIME_ROOT=%CD%
-            set CXX=${{ matrix.cxx }}
-            set CC=${{ matrix.cc }}
-            set CMAKE_GENERATOR=Ninja
-          "@
-          Set-Content -Path $envfile -Value $envcontent
-          cat $envfile
-          
-      - name: Configure MSVC
-        if: ${{ matrix.compiler == 'msvc' }}
+      - name: Configure MSVC toolchain
+        if: ${{ matrix.compiler == 'msvc' || matrix.arch == 'arm64' }}
         uses: TheMrMilchmann/setup-msvc-dev@v4
         with:
           arch: ${{ matrix.cross_arch || matrix.arch }}
@@ -54,9 +46,30 @@ jobs:
       - name: Configure Ninja
         run: pip install ninja
 
-      - name: Configure clang
-        if: ${{ matrix.compiler == 'clang' }}
+      - name: Install clang
+        if: ${{ matrix.compiler == 'clang' && matrix.arch != 'arm64' }}
         run: choco upgrade -y llvm
+
+      - name: Create env.bat
+        shell: pwsh
+        run: |
+          $cc = '${{ matrix.cc }}'
+          $cxx = '${{ matrix.cxx }}'
+          if ('${{ matrix.compiler }}' -eq 'clang' -and '${{ matrix.arch }}' -eq 'arm64') {
+            if (-not $env:llvmArm64) {
+              throw "llvmArm64 is not set; cannot find the native Arm64 LLVM toolchain"
+            }
+            $cc = Join-Path $env:llvmArm64 'clang.exe'
+            $cxx = Join-Path $env:llvmArm64 'clang++.exe'
+          }
+          $envcontent = @"
+            set RIME_ROOT=%CD%
+            set CXX=$cxx
+            set CC=$cc
+            set CMAKE_GENERATOR=Ninja
+          "@
+          Set-Content -Path .\env.bat -Value $envcontent
+          cat .\env.bat
 
       - name: Configure build environment
         run: |
