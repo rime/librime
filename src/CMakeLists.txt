@@ -36,16 +36,12 @@ else()
 endif()
 
 set(rime_optional_deps "")
-if(Gflags_FOUND)
-  set(rime_optional_deps ${rime_optional_deps} ${Gflags_LIBRARY})
-endif()
 if(ENABLE_EXTERNAL_PLUGINS)
   set(rime_optional_deps ${rime_optional_deps} dl)
 endif()
 
 set(rime_core_deps
     ${Boost_LIBRARIES}
-    ${Glog_LIBRARY}
     ${YamlCpp_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     ${rime_optional_deps})
@@ -56,11 +52,6 @@ set(rime_gears_deps
     ${ICU_LIBRARIES}
     ${Opencc_LIBRARY})
 set(rime_levers_deps "")
-
-if(Glog_FOUND AND WIN32)
-  # TODO: in glog v0.7.0, someone at Google forget to add dbghelp.lib to the linker library list.
-  set(rime_core_deps ${rime_core_deps} dbghelp)
-endif()
 
 if(MINGW)
   # fix: bcrypt for boost uuid issue
@@ -81,7 +72,7 @@ endif()
 
 if(BUILD_SHARED_LIBS)
   add_library(rime ${rime_src})
-  target_link_libraries(rime ${rime_deps})
+  target_link_libraries(rime PUBLIC ${rime_deps})
   set_target_properties(rime PROPERTIES
     DEFINE_SYMBOL "RIME_EXPORTS"
     VERSION ${rime_version}
@@ -164,11 +155,16 @@ if(BUILD_SHARED_LIBS)
   endif()
 else()
   add_library(rime-static STATIC ${rime_src})
-  target_link_libraries(rime-static ${rime_deps})
+  target_link_libraries(rime-static PUBLIC ${rime_deps})
   set_target_properties(rime-static PROPERTIES
     OUTPUT_NAME "rime" PREFIX "lib"
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
   install(TARGETS rime-static DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
+endif()
+if(ENABLE_LOGGING)
+  # Keep spdlog out of the public include/link interface.  CMake still
+  # propagates it as a link-only dependency for static builds.
+  target_link_libraries(${rime_library} PRIVATE spdlog::spdlog)
 endif()
 if(DEFINED RIME_SETUP_EXTRA_MODULES)
   target_compile_definitions(${rime_library} PRIVATE

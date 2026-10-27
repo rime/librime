@@ -26,7 +26,7 @@
 #include <boost/unordered_set.hpp>
 
 #ifdef RIME_ENABLE_LOGGING
-#include <glog/logging.h>
+#include "logging.h"
 #else
 #include "no_logging.h"
 #endif  // RIME_ENABLE_LOGGING
