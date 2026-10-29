@@ -15,7 +15,7 @@ namespace rime {
 class Candidate;
 class Menu;
 
-struct Segment {
+struct RIME_DLL Segment {
   enum Status {
     kVoid,
     kGuess,
