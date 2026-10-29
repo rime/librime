@@ -28,7 +28,7 @@
 #ifdef RIME_ENABLE_LOGGING
 #include <glog/logging.h>
 #else
-#include "no_logging.h"
+#include "logging.h"
 #endif  // RIME_ENABLE_LOGGING
 
 // call a pointer to member function on this
@@ -149,11 +149,9 @@ class path : public std::filesystem::path {
   friend path operator/(const fs_path& lhs, const char* rhs) {
     return path(lhs) /= path(rhs);
   }
-#ifdef RIME_ENABLE_LOGGING
   friend std::ostream& operator<<(std::ostream& os, const path& p) {
     return os << p.to_utf8_string();
   }
-#endif
 };
 
 }  // namespace rime
