@@ -247,6 +247,17 @@ bool LevelDb::Open() {
   auto status = db_->Open(file_path(), readonly_);
   loaded_ = status.ok();
 
+  if (!loaded_ && status.IsCorruption()) {
+    // The db may be corrupted by an interrupted write, leaving CURRENT
+    // dangling. Try to salvage the data before giving up.
+    LOG(WARNING) << "db '" << name() << "' is corrupted: " << status.ToString()
+                 << "; trying to recover.";
+    if (Recover()) {
+      status = db_->Open(file_path(), readonly_);
+      loaded_ = status.ok();
+    }
+  }
+
   if (loaded_) {
     string db_name;
     if (!MetaFetch("/db_name", &db_name)) {

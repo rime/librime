@@ -4,6 +4,8 @@
 //
 // 2011-07-03 GONG Chen <chen.sst@gmail.com>
 //
+#include <filesystem>
+#include <fstream>
 #include <gtest/gtest.h>
 #include <rime/algo/syllabifier.h>
 #include <rime/dict/text_db.h>
@@ -97,4 +99,38 @@ TEST(RimeUserDbValueTest, Denormal) {
   EXPECT_EQ(1449225u, v.tick);
   EXPECT_GE(v.dee, 0.0);
   EXPECT_FALSE(std::isnan(v.dee));
+}
+
+TEST(RimeUserDbTest, RecoverFromCorruptedDb) {
+  UserDb::Component* component = UserDb::Require("userdb");
+  ASSERT_TRUE(component);
+  the<Db> db(component->Create("user_db_test"));
+  ASSERT_TRUE(db);
+  // Remove() cannot delete the lost/ directory RepairDB may have left
+  // behind, so remove the whole directory for a deterministic fixture.
+  std::filesystem::remove_all(db->file_path());
+  ASSERT_FALSE(db->Exists());
+  db->Open();
+  ASSERT_TRUE(db->loaded());
+  EXPECT_TRUE(db->Update("abc", "ZYX"));
+  EXPECT_TRUE(db->Update("zyx", "ABC"));
+  EXPECT_TRUE(db->Close());
+
+  // simulate corruption: CURRENT refers to a removed manifest
+  {
+    std::ofstream current((db->file_path() / "CURRENT").string(),
+                          std::ios::binary | std::ios::trunc);
+    current << "MANIFEST-99999999\n";
+  }
+  // the corrupted db is automatically repaired on open
+  EXPECT_TRUE(db->Open());
+  ASSERT_TRUE(db->loaded());
+  string value;
+  EXPECT_TRUE(db->Fetch("abc", &value));
+  EXPECT_EQ("ZYX", value);
+  value.clear();
+  EXPECT_TRUE(db->Fetch("zyx", &value));
+  EXPECT_EQ("ABC", value);
+  db->Close();
+  std::filesystem::remove_all(db->file_path());
 }
