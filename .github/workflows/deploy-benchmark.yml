@@ -1,0 +1,91 @@
+name: Deploy benchmark (Linux, non-upstream)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - '**'
+    paths:
+      - 'src/**'
+      - 'tools/**'
+      - 'include/**'
+      - 'data/**'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'benchmarks/deploy/**'
+      - '.github/workflows/deploy-benchmark.yml'
+      - 'action-install-linux.sh'
+      - 'install-boost.sh'
+      - 'action-versions.sh'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'tools/**'
+      - 'include/**'
+      - 'data/**'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'benchmarks/deploy/**'
+      - '.github/workflows/deploy-benchmark.yml'
+      - 'action-install-linux.sh'
+      - 'install-boost.sh'
+      - 'action-versions.sh'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-benchmark-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      BOOST_ROOT: ${{ github.workspace }}/deps/boost
+      boost_libs: regex
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Linux dependencies
+        run: ./action-install-linux.sh
+
+      - name: Build serial and parallel deployers
+        run: JOBS="$(nproc)" benchmarks/deploy/build.sh build-old build-new
+
+      - name: Benchmark built-in plus simulated Kongmingma
+        run: |
+          set -euo pipefail
+          data="$RUNNER_TEMP/deploy-bench-sim"
+          report="$RUNNER_TEMP/deploy-bench-sim.md"
+          benchmarks/deploy/gen_data.py --out "$data" --overwrite \
+            --schemas 6 --entries 150000 --kongmingma sim \
+            --kongmingma-entries 50000 --kongmingma-big-entries 200000
+          benchmarks/deploy/run_bench.sh --old build-old --new build-new \
+            --data "$data" --modify-dict s1.dict.yaml --rounds 2 \
+            --reuse-cold --fail-on-diff --out "$report"
+          printf '\n## Simulated Kongmingma benchmark\n\n' >> "$GITHUB_STEP_SUMMARY"
+          cat "$report" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Benchmark built-in plus real Kongmingma
+        run: |
+          set -euo pipefail
+          data="$RUNNER_TEMP/deploy-bench-real"
+          report="$RUNNER_TEMP/deploy-bench-real.md"
+          benchmarks/deploy/gen_data.py --out "$data" --overwrite \
+            --schemas 6 --entries 150000 --kongmingma real
+          benchmarks/deploy/run_bench.sh --old build-old --new build-new \
+            --data "$data" --modify-dict s1.dict.yaml --rounds 1 \
+            --reuse-cold --fail-on-diff --out "$report"
+          printf '\n## Real Kongmingma benchmark\n\n' >> "$GITHUB_STEP_SUMMARY"
+          cat "$report" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload benchmark reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-benchmark-reports
+          path: ${{ runner.temp }}/deploy-bench-*.md
+          if-no-files-found: warn
