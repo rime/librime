@@ -6,7 +6,9 @@
 
 #include <algorithm>
 #ifndef RIME_NO_THREADING
-#include <future>
+#include <condition_variable>
+#include <fstream>
+#include <mutex>
 #include <thread>
 #ifdef _WIN32
 #include <windows.h>
@@ -30,6 +32,18 @@
 namespace fs = std::filesystem;
 
 namespace rime {
+
+namespace {
+
+constexpr uint64_t kEstimatedBytesPerSourceByte = 32;
+
+#ifndef RIME_NO_THREADING
+constexpr unsigned kMaxConcurrency = 4;
+constexpr uint64_t kMemoryBudgetDivisor = 8;
+constexpr uint64_t kFallbackMemoryBudget = 512ull * 1024 * 1024;
+#endif  // !RIME_NO_THREADING
+
+}  // namespace
 
 #ifndef RIME_NO_THREADING
 static uint64_t DetectTotalPhysicalMemory() {
@@ -55,7 +69,52 @@ static uint64_t DetectTotalPhysicalMemory() {
 #endif
   return 0;
 }
+
+#if defined(__linux__)
+static uint64_t ReadMemoryLimitFile(const char* file) {
+  std::ifstream fin{path(file)};
+  string value;
+  if (!(fin >> value) || value == "max") {
+    return 0;
+  }
+  try {
+    return std::stoull(value);
+  } catch (...) {
+    return 0;
+  }
+}
+#endif
+
+// Returns the smaller of physical memory and the cgroup memory limit, so that
+// deployments inside a container respect the container's budget.
+static uint64_t DetectMemoryLimit() {
+  uint64_t limit = DetectTotalPhysicalMemory();
+#if defined(__linux__)
+  const char* cgroup_files[] = {
+      "/sys/fs/cgroup/memory.max",
+      "/sys/fs/cgroup/memory/memory.limit_in_bytes",
+  };
+  for (const auto& file : cgroup_files) {
+    uint64_t cgroup_limit = ReadMemoryLimitFile(file);
+    if (cgroup_limit > 0 && (limit == 0 || cgroup_limit < limit)) {
+      limit = cgroup_limit;
+    }
+  }
+#endif
+  return limit;
+}
 #endif  // !RIME_NO_THREADING
+
+CompileUnit::CompileUnit(string id,
+                         uint64_t estimated_memory,
+                         function<bool()> run)
+    : id_(std::move(id)),
+      estimated_memory_(estimated_memory),
+      run_(std::move(run)) {}
+
+void CompileUnit::AddOutput(string output) {
+  outputs_.push_back(std::move(output));
+}
 
 bool CompileDictionary(Dictionary* dict,
                        const path& compiled_schema_path,
@@ -68,7 +127,6 @@ bool CompileDictionary(Dictionary* dict,
 }
 
 uint64_t EstimateCompileMemory(const string& dict_name) {
-  static const uint64_t kEstimatedBytesPerSourceByte = 32;
   the<ResourceResolver> source_resolver(
       Service::instance().CreateResourceResolver({"source_file", "", ""}));
   path dict_file = source_resolver->ResolvePath(dict_name + ".dict.yaml");
@@ -81,10 +139,10 @@ uint64_t EstimateCompileMemory(const string& dict_name) {
 }
 
 CompileUnitResult BuildDictionaryCompileUnit(const string& schema_id,
-                                             Config* schema_config,
+                                             the<Config> schema_config,
                                              bool verbose,
                                              CompileUnit* unit) {
-  Schema schema(schema_id, schema_config);
+  Schema schema(schema_id, schema_config.release());
   string dict_name;
   if (!schema.config()->GetString("translator/dictionary", &dict_name)) {
     return CompileUnitResult::kNoDictionary;
@@ -98,33 +156,36 @@ CompileUnitResult BuildDictionaryCompileUnit(const string& schema_id,
   the<ResourceResolver> compiled_resolver(
       Service::instance().CreateDeployedResourceResolver(
           {"compiled_schema", "", ".schema.yaml"}));
-  CompileUnit new_unit;
-  new_unit.id = schema_id;
-  // output files this unit may write; files shared by two units must not be
-  // written concurrently
-  for (const auto& table : dict->tables()) {
-    new_unit.outputs.push_back(table->file_path().stem().to_utf8_string());
-  }
-  new_unit.outputs.push_back(
-      dict->prism()->file_path().stem().to_utf8_string());
-  new_unit.outputs.push_back(dict->name());  // reverse db
-  new_unit.estimated_memory = EstimateCompileMemory(dict_name);
   path compiled_schema_path = compiled_resolver->ResolvePath(schema_id);
   an<Dictionary> dict_to_compile = std::move(dict);
-  new_unit.run = [dict_to_compile, compiled_schema_path, verbose]() {
-    return CompileDictionary(dict_to_compile.get(), compiled_schema_path,
-                             verbose);
-  };
+  CompileUnit new_unit(schema_id, EstimateCompileMemory(dict_name),
+                       [dict_to_compile, compiled_schema_path, verbose]() {
+                         return CompileDictionary(dict_to_compile.get(),
+                                                  compiled_schema_path,
+                                                  verbose);
+                       });
+  // output files this unit may write; files shared by two units must not be
+  // written concurrently
+  for (const auto& table : dict_to_compile->tables()) {
+    new_unit.AddOutput(table->file_path().stem().to_utf8_string());
+  }
+  new_unit.AddOutput(
+      dict_to_compile->prism()->file_path().stem().to_utf8_string());
+  new_unit.AddOutput(dict_to_compile->name());  // reverse db
   *unit = std::move(new_unit);
   return CompileUnitResult::kBuilt;
 }
 
 bool CompileGraph::AddUnit(CompileUnit unit) {
-  if (unit_index_.find(unit.id) != unit_index_.end()) {
-    LOG(WARNING) << "duplicate compile unit '" << unit.id << "'.";
+  if (unit.id().empty() || !unit.run()) {
+    LOG(ERROR) << "invalid compile unit.";
     return false;
   }
-  unit_index_[unit.id] = units_.size();
+  if (unit_index_.find(unit.id()) != unit_index_.end()) {
+    LOG(WARNING) << "duplicate compile unit '" << unit.id() << "'.";
+    return false;
+  }
+  unit_index_[unit.id()] = units_.size();
   units_.push_back(std::move(unit));
   return true;
 }
@@ -133,28 +194,67 @@ bool CompileGraph::AddDependency(const string& prerequisite,
                                  const string& dependent) {
   auto prerequisite_it = unit_index_.find(prerequisite);
   auto dependent_it = unit_index_.find(dependent);
-  if (prerequisite_it == unit_index_.end() ||
-      dependent_it == unit_index_.end()) {
+  if (prerequisite_it == unit_index_.end()) {
+    LOG(WARNING) << "cannot order unknown compile unit '" << prerequisite
+                 << "'.";
     return false;
   }
+  if (dependent_it == unit_index_.end()) {
+    LOG(WARNING) << "cannot order unknown compile unit '" << dependent << "'.";
+    return false;
+  }
+  // Declaration order wins. This keeps output ordering acyclic and matches the
+  // order in which schemas are listed.
   if (prerequisite_it->second >= dependent_it->second) {
-    return false;
-  }
-  auto& dependencies = units_[dependent_it->second].dependencies;
-  if (std::find(dependencies.begin(), dependencies.end(), prerequisite) !=
-      dependencies.end()) {
     return true;
   }
-  dependencies.push_back(prerequisite);
+  auto& prerequisites = units_[dependent_it->second].prerequisites_;
+  if (std::find(prerequisites.begin(), prerequisites.end(),
+                prerequisite_it->second) != prerequisites.end()) {
+    return true;
+  }
+  prerequisites.push_back(prerequisite_it->second);
   return true;
 }
 
-bool CompileGraph::Build(vector<vector<size_t>>* levels) const {
-  const size_t count = units_.size();
-  levels->clear();
+bool CompileScheduler::RunUnit(const CompileUnit& unit) {
+  LOG(INFO) << "compiling unit '" << unit.id() << "'.";
+  if (!unit.run()) {
+    LOG(ERROR) << "unit '" << unit.id() << "' has no work to run.";
+    return false;
+  }
+  try {
+    if (!unit.run()()) {
+      LOG(ERROR) << "unit '" << unit.id() << "' failed to compile.";
+      return false;
+    }
+  } catch (const std::bad_alloc& ex) {
+    LOG(ERROR) << "unit '" << unit.id() << "' ran out of memory: " << ex.what();
+    return false;
+  } catch (const std::exception& ex) {
+    LOG(ERROR) << "unit '" << unit.id()
+               << "' threw an exception: " << ex.what();
+    return false;
+  } catch (...) {
+    LOG(ERROR) << "unit '" << unit.id() << "' threw an unknown exception.";
+    return false;
+  }
+  LOG(INFO) << "unit '" << unit.id() << "' is ready.";
+  return true;
+}
+
+bool CompileScheduler::Run(const CompileGraph& graph, Result* result) {
+  const size_t count = graph.size();
+  if (count == 0) {
+    return true;
+  }
+
   vector<vector<size_t>> successors(count);
   vector<size_t> indegree(count, 0);
   auto add_edge = [&](size_t from, size_t to) {
+    if (from == to) {
+      return;
+    }
     auto& next = successors[from];
     if (std::find(next.begin(), next.end(), to) != next.end()) {
       return;
@@ -163,17 +263,19 @@ bool CompileGraph::Build(vector<vector<size_t>>* levels) const {
     ++indegree[to];
   };
   for (size_t i = 0; i < count; ++i) {
-    for (const auto& dependency : units_[i].dependencies) {
-      auto it = unit_index_.find(dependency);
-      if (it != unit_index_.end()) {
-        add_edge(it->second, i);
+    for (size_t prerequisite : graph.unit(i).prerequisites()) {
+      if (prerequisite >= count) {
+        LOG(ERROR) << "compile unit '" << graph.unit(i).id()
+                   << "' has an invalid prerequisite.";
+        return false;
       }
+      add_edge(prerequisite, i);
     }
   }
   // units writing the same output file are chained in declaration order
   map<string, size_t> last_writer;
   for (size_t i = 0; i < count; ++i) {
-    for (const auto& output : units_[i].outputs) {
+    for (const auto& output : graph.unit(i).outputs()) {
       auto inserted = last_writer.emplace(output, i);
       if (!inserted.second) {
         add_edge(inserted.first->second, i);
@@ -181,145 +283,175 @@ bool CompileGraph::Build(vector<vector<size_t>>* levels) const {
       }
     }
   }
-  // level(unit) = 1 + max(level(dependencies)); pick the smallest ready unit
-  // so that levels are deterministic
-  vector<size_t> level(count, 0);
-  vector<bool> done(count, false);
-  size_t remaining = count;
-  while (remaining > 0) {
-    size_t next = count;
+
+  // Reject cycles before starting any work, so the scheduler can always make
+  // progress.
+  {
+    vector<size_t> remaining_indegree = indegree;
+    deque<size_t> ready;
     for (size_t i = 0; i < count; ++i) {
-      if (!done[i] && indegree[i] == 0) {
-        next = i;
-        break;
+      if (remaining_indegree[i] == 0) {
+        ready.push_back(i);
       }
     }
-    if (next == count) {
+    size_t visited = 0;
+    while (!ready.empty()) {
+      size_t i = ready.front();
+      ready.pop_front();
+      ++visited;
+      for (size_t successor : successors[i]) {
+        if (--remaining_indegree[successor] == 0) {
+          ready.push_back(successor);
+        }
+      }
+    }
+    if (visited != count) {
       LOG(ERROR) << "dependency cycle in compile graph.";
       return false;
     }
-    done[next] = true;
-    --remaining;
-    if (levels->size() <= level[next]) {
-      levels->resize(level[next] + 1);
-    }
-    (*levels)[level[next]].push_back(next);
-    for (size_t successor : successors[next]) {
-      level[successor] = (std::max)(level[successor], level[next] + 1);
-      --indegree[successor];
-    }
   }
-  for (auto& level_units : *levels) {
-    std::sort(level_units.begin(), level_units.end());
-  }
-  return true;
-}
 
-bool CompileScheduler::RunUnit(const CompileUnit& unit) {
-  LOG(INFO) << "compiling unit '" << unit.id << "'.";
-  try {
-    if (!unit.run || !unit.run()) {
-      LOG(ERROR) << "unit '" << unit.id << "' failed to compile.";
-      return false;
-    }
-  } catch (const std::bad_alloc& ex) {
-    LOG(ERROR) << "unit '" << unit.id << "' ran out of memory: " << ex.what();
-    return false;
-  } catch (const std::exception& ex) {
-    LOG(ERROR) << "unit '" << unit.id << "' threw an exception: " << ex.what();
-    return false;
-  }
-  LOG(INFO) << "unit '" << unit.id << "' is ready.";
-  return true;
-}
-
-bool CompileScheduler::Run(const CompileGraph& graph, Result* result) {
-  vector<vector<size_t>> levels;
-  if (!graph.Build(&levels)) {
-    return false;
-  }
 #ifdef RIME_NO_THREADING
-  for (const auto& level_units : levels) {
-    for (size_t i : level_units) {
-      if (RunUnit(graph.unit(i))) {
-        ++result->success;
-      } else {
-        ++result->failure;
+  deque<size_t> ready;
+  for (size_t i = 0; i < count; ++i) {
+    if (indegree[i] == 0) {
+      ready.push_back(i);
+    }
+  }
+  while (!ready.empty()) {
+    size_t i = ready.front();
+    ready.pop_front();
+    if (RunUnit(graph.unit(i))) {
+      ++result->success;
+    } else {
+      ++result->failure;
+    }
+    for (size_t successor : successors[i]) {
+      if (--indegree[successor] == 0) {
+        ready.push_back(successor);
       }
     }
   }
 #else
-  const unsigned kMaxConcurrency = 4;
-  unsigned concurrency =
+  const unsigned concurrency =
       (std::min)((std::max)(1u, std::thread::hardware_concurrency()),
                  kMaxConcurrency);
-  // limit the memory used by one batch to a fraction of physical memory;
-  // dictionary compilation is memory heavy (entry collector + trie/prism
-  // building), so a conservative estimate per unit is used
-  uint64_t memory_budget = DetectTotalPhysicalMemory() / 8;
+  uint64_t memory_limit = DetectMemoryLimit();
+  uint64_t memory_budget = memory_limit / kMemoryBudgetDivisor;
   if (memory_budget == 0) {
-    memory_budget = (uint64_t)512 * 1024 * 1024;  // fallback 512MB
+    memory_budget = memory_limit == 0 ? kFallbackMemoryBudget : memory_limit;
   }
-  for (const auto& level_units : levels) {
-    if (level_units.empty()) {
+
+  std::mutex mutex;
+  std::condition_variable cv;
+  deque<size_t> tasks;
+  deque<pair<size_t, bool>> completed;
+  bool stop = false;
+  auto worker = [&]() {
+    for (;;) {
+      size_t index;
+      {
+        std::unique_lock<std::mutex> lock(mutex);
+        cv.wait(lock, [&] { return stop || !tasks.empty(); });
+        if (tasks.empty()) {
+          return;
+        }
+        index = tasks.front();
+        tasks.pop_front();
+      }
+      bool ok = RunUnit(graph.unit(index));
+      {
+        std::lock_guard<std::mutex> lock(mutex);
+        completed.emplace_back(index, ok);
+      }
+      cv.notify_all();
+    }
+  };
+  vector<std::thread> workers;
+  workers.reserve((std::min)((size_t)concurrency, count));
+  for (size_t i = 0; i < (std::min)((size_t)concurrency, count); ++i) {
+    workers.emplace_back(worker);
+  }
+
+  deque<size_t> ready;
+  for (size_t i = 0; i < count; ++i) {
+    if (indegree[i] == 0) {
+      ready.push_back(i);
+    }
+  }
+  size_t processed = 0;
+  size_t in_flight = 0;
+  uint64_t in_flight_memory = 0;
+  auto finish_unit = [&](size_t index, bool ok) {
+    if (ok) {
+      ++result->success;
+    } else {
+      ++result->failure;
+    }
+    ++processed;
+    for (size_t successor : successors[index]) {
+      if (--indegree[successor] == 0) {
+        ready.push_back(successor);
+      }
+    }
+  };
+  while (processed < count) {
+    size_t inline_index = count;
+    {
+      std::lock_guard<std::mutex> lock(mutex);
+      const size_t in_flight_before = in_flight;
+      vector<size_t> dispatched;
+      for (auto it = ready.begin();
+           it != ready.end() && in_flight < concurrency;) {
+        uint64_t estimated = graph.unit(*it).estimated_memory();
+        bool fits =
+            in_flight == 0 || in_flight_memory + estimated <= memory_budget;
+        if (!fits) {
+          ++it;
+          continue;
+        }
+        dispatched.push_back(*it);
+        in_flight_memory += estimated;
+        ++in_flight;
+        it = ready.erase(it);
+      }
+      if (in_flight_before == 0 && dispatched.size() == 1 && tasks.empty()) {
+        in_flight_memory -= graph.unit(dispatched.front()).estimated_memory();
+        --in_flight;
+        inline_index = dispatched.front();
+      } else {
+        for (size_t index : dispatched) {
+          tasks.push_back(index);
+        }
+      }
+    }
+    if (inline_index != count) {
+      finish_unit(inline_index, RunUnit(graph.unit(inline_index)));
       continue;
     }
-    vector<size_t> batch_order = level_units;
-    sort(batch_order.begin(), batch_order.end(), [&graph](size_t a, size_t b) {
-      return graph.unit(a).estimated_memory > graph.unit(b).estimated_memory;
-    });
-    if (batch_order.size() > 1) {
-      LOG(INFO) << "compiling " << batch_order.size() << " units in parallel.";
+    cv.notify_all();
+
+    std::pair<size_t, bool> completion;
+    {
+      std::unique_lock<std::mutex> lock(mutex);
+      cv.wait(lock, [&] { return !completed.empty(); });
+      completion = completed.front();
+      completed.pop_front();
+      in_flight_memory -= graph.unit(completion.first).estimated_memory();
+      --in_flight;
     }
-    size_t begin = 0;
-    while (begin < batch_order.size()) {
-      size_t end = begin;
-      uint64_t batch_memory = 0;
-      unsigned batch_count = 0;
-      while (end < batch_order.size() && batch_count < concurrency) {
-        uint64_t estimated = graph.unit(batch_order[end]).estimated_memory;
-        if (batch_memory + estimated > memory_budget) {
-          break;
-        }
-        batch_memory += estimated;
-        ++batch_count;
-        ++end;
-      }
-      if (end == begin) {
-        ++end;  // a single unit larger than the budget: compile alone
-      }
-      if (end - begin == 1) {
-        if (RunUnit(graph.unit(batch_order[begin]))) {
-          ++result->success;
-        } else {
-          ++result->failure;
-        }
-      } else {
-        vector<std::future<bool>> futures;
-        futures.reserve(end - begin);
-        for (size_t k = begin; k < end; ++k) {
-          size_t i = batch_order[k];
-          futures.push_back(std::async(std::launch::async, [&graph, this, i]() {
-            return RunUnit(graph.unit(i));
-          }));
-        }
-        for (auto& future : futures) {
-          try {
-            if (future.get()) {
-              ++result->success;
-            } else {
-              ++result->failure;
-            }
-          } catch (const std::exception& ex) {
-            LOG(ERROR) << "parallel compilation failed: " << ex.what();
-            ++result->failure;
-          }
-        }
-      }
-      begin = end;
-    }
+    finish_unit(completion.first, completion.second);
   }
-#endif
+
+  {
+    std::lock_guard<std::mutex> lock(mutex);
+    stop = true;
+  }
+  cv.notify_all();
+  for (auto& worker_thread : workers) {
+    worker_thread.join();
+  }
+#endif  // RIME_NO_THREADING
   return true;
 }
 

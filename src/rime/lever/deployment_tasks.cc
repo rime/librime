@@ -236,7 +236,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
       return;
     }
     CompileUnit unit;
-    switch (BuildDictionaryCompileUnit(schema_id, schema_config.release(),
+    switch (BuildDictionaryCompileUnit(schema_id, std::move(schema_config),
                                        false, &unit)) {
       case CompileUnitResult::kNoDictionary:
         ++success;  // not requiring a dictionary
@@ -245,7 +245,11 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
         ++failure;
         return;
       case CompileUnitResult::kBuilt:
-        graph.AddUnit(std::move(unit));
+        if (!graph.AddUnit(std::move(unit))) {
+          LOG(ERROR) << "failed to add compile unit for schema '" << schema_id
+                     << "'.";
+          ++failure;
+        }
         return;
     }
   };
@@ -270,7 +274,10 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
         if (!dependency)
           continue;
         process_schema(dependency->str(), true);
-        graph.AddDependency(schema_id, dependency->str());
+        if (!graph.AddDependency(schema_id, dependency->str())) {
+          LOG(INFO) << "dependency '" << dependency->str()
+                    << "' has no compile unit; ordering ignored.";
+        }
       }
     }
   }
@@ -387,7 +394,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     return false;
   }
   CompileUnit unit;
-  switch (BuildDictionaryCompileUnit(schema_id, config.release(), verbose_,
+  switch (BuildDictionaryCompileUnit(schema_id, std::move(config), verbose_,
                                      &unit)) {
     case CompileUnitResult::kNoDictionary:
       return true;
@@ -397,7 +404,11 @@ bool SchemaUpdate::Run(Deployer* deployer) {
       break;
   }
   CompileGraph graph;
-  graph.AddUnit(std::move(unit));
+  if (!graph.AddUnit(std::move(unit))) {
+    LOG(ERROR) << "failed to add compile unit for schema '" << schema_id
+               << "'.";
+    return false;
+  }
   CompileScheduler scheduler;
   CompileScheduler::Result result;
   if (!scheduler.Run(graph, &result)) {
