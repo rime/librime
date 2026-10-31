@@ -138,14 +138,14 @@ uint64_t EstimateCompileMemory(const string& dict_name) {
   return size * kEstimatedBytesPerSourceByte;
 }
 
-CompileUnitResult BuildDictionaryCompileUnit(const string& schema_id,
-                                             the<Config> schema_config,
-                                             bool verbose,
-                                             CompileUnit* unit) {
+CompileUnitResult CreateDictionaryCompileUnit(const string& schema_id,
+                                              the<Config> schema_config,
+                                              bool verbose,
+                                              CompileUnit* unit) {
   Schema schema(schema_id, schema_config.release());
   string dict_name;
   if (!schema.config()->GetString("translator/dictionary", &dict_name)) {
-    return CompileUnitResult::kNoDictionary;
+    return CompileUnitResult::kTrivial;
   }
   the<Dictionary> dict(
       Dictionary::Require("dictionary")->Create({&schema, "translator"}));
@@ -173,7 +173,7 @@ CompileUnitResult BuildDictionaryCompileUnit(const string& schema_id,
       dict_to_compile->prism()->file_path().stem().to_utf8_string());
   new_unit.AddOutput(dict_to_compile->name());  // reverse db
   *unit = std::move(new_unit);
-  return CompileUnitResult::kBuilt;
+  return CompileUnitResult::kCreated;
 }
 
 bool CompileGraph::AddUnit(CompileUnit unit) {
@@ -243,10 +243,11 @@ bool CompileScheduler::RunUnit(const CompileUnit& unit) {
   return true;
 }
 
-bool CompileScheduler::Run(const CompileGraph& graph, Result* result) {
+std::optional<CompileScheduler::Result> CompileScheduler::Run(
+    const CompileGraph& graph) {
   const size_t count = graph.size();
   if (count == 0) {
-    return true;
+    return Result{};
   }
 
   vector<vector<size_t>> successors(count);
@@ -267,7 +268,7 @@ bool CompileScheduler::Run(const CompileGraph& graph, Result* result) {
       if (prerequisite >= count) {
         LOG(ERROR) << "compile unit '" << graph.unit(i).id()
                    << "' has an invalid prerequisite.";
-        return false;
+        return std::nullopt;
       }
       add_edge(prerequisite, i);
     }
@@ -307,10 +308,11 @@ bool CompileScheduler::Run(const CompileGraph& graph, Result* result) {
     }
     if (visited != count) {
       LOG(ERROR) << "dependency cycle in compile graph.";
-      return false;
+      return std::nullopt;
     }
   }
 
+  Result result{};
 #ifdef RIME_NO_THREADING
   deque<size_t> ready;
   for (size_t i = 0; i < count; ++i) {
@@ -322,9 +324,9 @@ bool CompileScheduler::Run(const CompileGraph& graph, Result* result) {
     size_t i = ready.front();
     ready.pop_front();
     if (RunUnit(graph.unit(i))) {
-      ++result->success;
+      ++result.success;
     } else {
-      ++result->failure;
+      ++result.failure;
     }
     for (size_t successor : successors[i]) {
       if (--indegree[successor] == 0) {
@@ -384,9 +386,9 @@ bool CompileScheduler::Run(const CompileGraph& graph, Result* result) {
   uint64_t in_flight_memory = 0;
   auto finish_unit = [&](size_t index, bool ok) {
     if (ok) {
-      ++result->success;
+      ++result.success;
     } else {
-      ++result->failure;
+      ++result.failure;
     }
     ++processed;
     for (size_t successor : successors[index]) {
@@ -452,7 +454,7 @@ bool CompileScheduler::Run(const CompileGraph& graph, Result* result) {
     worker_thread.join();
   }
 #endif  // RIME_NO_THREADING
-  return true;
+  return result;
 }
 
 }  // namespace rime
