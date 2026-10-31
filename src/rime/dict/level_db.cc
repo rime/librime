@@ -6,6 +6,7 @@
 //
 
 #include <leveldb/db.h>
+#include <leveldb/env.h>
 #include <leveldb/write_batch.h>
 #include <rime/common.h>
 #include <rime/service.h>
@@ -217,7 +218,20 @@ bool LevelDb::Restore(const path& snapshot_file) {
 
 bool LevelDb::Recover() {
   LOG(INFO) << "trying to recover db '" << name() << "'.";
+  // RepairDB() does not acquire the database lock itself; hold it so that
+  // no other process can open, modify or repair the db while files are
+  // being rewritten or archived.
+  leveldb::FileLock* lock = nullptr;
+  auto lock_status =
+      leveldb::Env::Default()->LockFile((file_path() / "LOCK").string(), &lock);
+  if (!lock_status.ok()) {
+    LOG(WARNING) << "cannot lock db '" << name()
+                 << "' for repair: " << lock_status.ToString()
+                 << "; skip recovery.";
+    return false;
+  }
   auto status = leveldb::RepairDB(file_path().string(), leveldb::Options());
+  leveldb::Env::Default()->UnlockFile(lock);
   if (status.ok()) {
     LOG(INFO) << "repair finished.";
     return true;
