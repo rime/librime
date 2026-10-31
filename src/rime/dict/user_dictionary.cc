@@ -551,11 +551,10 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
         if (!syllabary_.empty()) {
           // Helper lambda for predictive entries
           auto recruit_pred = [&](const CacheEntry& entry) {
-            RecruitPredictiveEntry(entry, end_pos, state->depth(),
-                                   state->present_tick,
-                                   state->credibility.back(),
-                                   state->quality_len.back(),
-                                   &state->query_result);
+            RecruitPredictiveEntry(
+                entry, end_pos, state->depth(), state->present_tick,
+                state->credibility.back(), state->quality_len.back(),
+                &state->query_result);
           };
 
           // predictive entries from cache (longer codes only)
