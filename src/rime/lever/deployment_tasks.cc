@@ -28,6 +28,8 @@ namespace fs = std::filesystem;
 
 namespace rime {
 
+static bool MaybeCreateDirectory(path dir);
+
 DetectModifications::DetectModifications(TaskInitializer arg) {
   try {
     data_dirs_ = std::any_cast<vector<path>>(arg);
@@ -158,19 +160,6 @@ bool InstallationUpdate::Run(Deployer* deployer) {
   return config.SaveToFile(installation_info);
 }
 
-static bool MaybeCreateDirectory(path dir) {
-  std::error_code ec;
-  if (fs::create_directories(dir, ec)) {
-    return true;
-  }
-
-  if (fs::exists(dir)) {
-    return true;
-  }
-  LOG(ERROR) << "error creating directory '" << dir << "'.";
-  return false;
-}
-
 bool WorkspaceUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating workspace.";
   {
@@ -236,15 +225,15 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
       return;
     }
     CompileUnit unit;
-    switch (BuildDictionaryCompileUnit(schema_id, std::move(schema_config),
-                                       false, &unit)) {
-      case CompileUnitResult::kNoDictionary:
+    switch (CreateDictionaryCompileUnit(schema_id, std::move(schema_config),
+                                        false, &unit)) {
+      case CompileUnitResult::kTrivial:
         ++success;  // not requiring a dictionary
         return;
       case CompileUnitResult::kError:
         ++failure;
         return;
-      case CompileUnitResult::kBuilt:
+      case CompileUnitResult::kCreated:
         if (!graph.AddUnit(std::move(unit))) {
           LOG(ERROR) << "failed to add compile unit for schema '" << schema_id
                      << "'.";
@@ -288,13 +277,13 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     return false;
   }
   CompileScheduler scheduler;
-  CompileScheduler::Result compile_result;
-  if (!scheduler.Run(graph, &compile_result)) {
+  auto compile_result = scheduler.Run(graph);
+  if (!compile_result) {
     LOG(ERROR) << "error in compile graph.";
     return false;
   }
-  success += compile_result.success;
-  failure += compile_result.failure;
+  success += compile_result->success;
+  failure += compile_result->failure;
   LOG(INFO) << "finished updating schemas: " << success << " success, "
             << failure << " failure.";
 
@@ -311,6 +300,18 @@ SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
   } catch (const std::bad_any_cast&) {
     LOG(ERROR) << "SchemaUpdate: invalid arguments.";
   }
+}
+
+static bool MaybeCreateDirectory(path dir) {
+  std::error_code ec;
+  if (fs::create_directories(dir, ec)) {
+    return true;
+  }
+  if (!ec) {
+    return true;
+  }
+  LOG(ERROR) << "error creating directory '" << dir << "'.";
+  return false;
 }
 
 static bool RemoveVersionSuffix(string* version, const string& suffix) {
@@ -394,13 +395,13 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     return false;
   }
   CompileUnit unit;
-  switch (BuildDictionaryCompileUnit(schema_id, std::move(config), verbose_,
-                                     &unit)) {
-    case CompileUnitResult::kNoDictionary:
+  switch (CreateDictionaryCompileUnit(schema_id, std::move(config), verbose_,
+                                      &unit)) {
+    case CompileUnitResult::kTrivial:
       return true;
     case CompileUnitResult::kError:
       return false;
-    case CompileUnitResult::kBuilt:
+    case CompileUnitResult::kCreated:
       break;
   }
   CompileGraph graph;
@@ -410,12 +411,12 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     return false;
   }
   CompileScheduler scheduler;
-  CompileScheduler::Result result;
-  if (!scheduler.Run(graph, &result)) {
+  auto result = scheduler.Run(graph);
+  if (!result) {
     LOG(ERROR) << "error in compile graph.";
     return false;
   }
-  return result.failure == 0;
+  return result->failure == 0;
 }
 
 ConfigFileUpdate::ConfigFileUpdate(TaskInitializer arg) {

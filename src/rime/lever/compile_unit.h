@@ -51,17 +51,17 @@ class RIME_DLL CompileUnit {
 };
 
 enum class CompileUnitResult {
-  kBuilt,         // a compile unit was created
-  kNoDictionary,  // the schema does not require a dictionary
-  kError,         // failed to create the dictionary
+  kCreated,  // a compile unit was created
+  kTrivial,  // the schema does not output anything
+  kError,    // failed to create a compile unit
 };
 
 // Creates a compile unit that compiles the dictionary of the given schema.
 // Takes ownership of |schema_config| in every case.
-CompileUnitResult BuildDictionaryCompileUnit(const string& schema_id,
-                                             the<Config> schema_config,
-                                             bool verbose,
-                                             CompileUnit* unit);
+CompileUnitResult CreateDictionaryCompileUnit(const string& schema_id,
+                                              the<Config> schema_config,
+                                              bool verbose,
+                                              CompileUnit* unit);
 
 // Estimates the peak memory of compiling the named dictionary from the size
 // of its source file.
@@ -104,8 +104,8 @@ class RIME_DLL CompileScheduler {
     int success = 0;
     int failure = 0;
   };
-  // Returns false if the graph contains a cycle; unit failures are counted.
-  bool Run(const CompileGraph& graph, Result* result);
+  // Returns nullopt if the graph contains a cycle; unit failures are counted.
+  std::optional<Result> Run(const CompileGraph& graph);
 
  private:
   bool RunUnit(const CompileUnit& unit);

@@ -22,10 +22,10 @@ static CompileUnit MakeUnit(const string& id,
 TEST(RimeCompileUnitTest, EmptyGraph) {
   CompileGraph graph;
   CompileScheduler scheduler;
-  CompileScheduler::Result result;
-  EXPECT_TRUE(scheduler.Run(graph, &result));
-  EXPECT_EQ(0, result.success);
-  EXPECT_EQ(0, result.failure);
+  auto result = scheduler.Run(graph);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(0, result->success);
+  EXPECT_EQ(0, result->failure);
 }
 
 TEST(RimeCompileUnitTest, RunsInDependencyOrder) {
@@ -47,10 +47,10 @@ TEST(RimeCompileUnitTest, RunsInDependencyOrder) {
   ASSERT_TRUE(graph.AddDependency("first", "third"));
 
   CompileScheduler scheduler;
-  CompileScheduler::Result result;
-  ASSERT_TRUE(scheduler.Run(graph, &result));
-  EXPECT_EQ(3, result.success);
-  EXPECT_EQ(0, result.failure);
+  auto result = scheduler.Run(graph);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(3, result->success);
+  EXPECT_EQ(0, result->failure);
 
   auto pos = [&](const string& id) {
     return std::find(order.begin(), order.end(), id) - order.begin();
@@ -80,10 +80,10 @@ TEST(RimeCompileUnitTest, SerializesUnitsSharingAnOutput) {
   ASSERT_TRUE(graph.AddUnit(std::move(second)));
 
   CompileScheduler scheduler;
-  CompileScheduler::Result result;
-  ASSERT_TRUE(scheduler.Run(graph, &result));
-  EXPECT_EQ(2, result.success);
-  EXPECT_EQ(0, result.failure);
+  auto result = scheduler.Run(graph);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(2, result->success);
+  EXPECT_EQ(0, result->failure);
   EXPECT_FALSE(overlapped);
 }
 
@@ -95,10 +95,10 @@ TEST(RimeCompileUnitTest, DuplicateOutputsOnSameUnitDoNotCreateCycle) {
   ASSERT_TRUE(graph.AddUnit(std::move(unit)));
 
   CompileScheduler scheduler;
-  CompileScheduler::Result result;
-  ASSERT_TRUE(scheduler.Run(graph, &result));
-  EXPECT_EQ(1, result.success);
-  EXPECT_EQ(0, result.failure);
+  auto result = scheduler.Run(graph);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(1, result->success);
+  EXPECT_EQ(0, result->failure);
 }
 
 TEST(RimeCompileUnitTest, SerializedUnitsRunOnCallingThread) {
@@ -116,10 +116,10 @@ TEST(RimeCompileUnitTest, SerializedUnitsRunOnCallingThread) {
   ASSERT_TRUE(graph.AddDependency("first", "second"));
 
   CompileScheduler scheduler;
-  CompileScheduler::Result result;
-  ASSERT_TRUE(scheduler.Run(graph, &result));
-  EXPECT_EQ(2, result.success);
-  EXPECT_EQ(0, result.failure);
+  auto result = scheduler.Run(graph);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(2, result->success);
+  EXPECT_EQ(0, result->failure);
   EXPECT_EQ(2, on_caller);
 }
 
@@ -131,10 +131,10 @@ TEST(RimeCompileUnitTest, FailureDoesNotBlockSuccessors) {
   ASSERT_TRUE(graph.AddDependency("bad", "good"));
 
   CompileScheduler scheduler;
-  CompileScheduler::Result result;
-  ASSERT_TRUE(scheduler.Run(graph, &result));
-  EXPECT_EQ(1, result.success);
-  EXPECT_EQ(1, result.failure);
+  auto result = scheduler.Run(graph);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(1, result->success);
+  EXPECT_EQ(1, result->failure);
   EXPECT_EQ(1, good_runs);
 }
 
@@ -166,8 +166,8 @@ TEST(RimeCompileUnitTest, DeclarationOrderWinsOverContradictingDependency) {
   EXPECT_TRUE(graph.AddDependency("a", "b"));
 
   CompileScheduler scheduler;
-  CompileScheduler::Result result;
-  ASSERT_TRUE(scheduler.Run(graph, &result));
-  EXPECT_EQ(2, result.success);
-  EXPECT_EQ(0, result.failure);
+  auto result = scheduler.Run(graph);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(2, result->success);
+  EXPECT_EQ(0, result->failure);
 }
