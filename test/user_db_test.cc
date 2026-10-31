@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
+#include <leveldb/env.h>
 #include <rime/algo/syllabifier.h>
 #include <rime/dict/text_db.h>
 #include <rime/dict/user_db.h>
@@ -131,6 +132,42 @@ TEST(RimeUserDbTest, RecoverFromCorruptedDb) {
   value.clear();
   EXPECT_TRUE(db->Fetch("zyx", &value));
   EXPECT_EQ("ABC", value);
+  db->Close();
+  std::filesystem::remove_all(db->file_path());
+}
+
+TEST(RimeUserDbTest, SkipRecoveryWhenDbIsLocked) {
+  UserDb::Component* component = UserDb::Require("userdb");
+  ASSERT_TRUE(component);
+  the<Db> db(component->Create("user_db_locked"));
+  ASSERT_TRUE(db);
+  std::filesystem::remove_all(db->file_path());
+  db->Open();
+  ASSERT_TRUE(db->loaded());
+  EXPECT_TRUE(db->Update("abc", "ZYX"));
+  EXPECT_TRUE(db->Close());
+
+  // simulate corruption: CURRENT refers to a removed manifest
+  {
+    std::ofstream current((db->file_path() / "CURRENT").string(),
+                          std::ios::binary | std::ios::trunc);
+    current << "MANIFEST-99999999\n";
+  }
+  // another process holding the db lock blocks the repair
+  leveldb::FileLock* lock = nullptr;
+  auto lock_status = leveldb::Env::Default()->LockFile(
+      (db->file_path() / "LOCK").string(), &lock);
+  ASSERT_TRUE(lock_status.ok());
+  EXPECT_FALSE(db->Open());
+  EXPECT_FALSE(db->loaded());
+  leveldb::Env::Default()->UnlockFile(lock);
+
+  // the lock is released; the next open repairs the db
+  EXPECT_TRUE(db->Open());
+  ASSERT_TRUE(db->loaded());
+  string value;
+  EXPECT_TRUE(db->Fetch("abc", &value));
+  EXPECT_EQ("ZYX", value);
   db->Close();
   std::filesystem::remove_all(db->file_path());
 }
