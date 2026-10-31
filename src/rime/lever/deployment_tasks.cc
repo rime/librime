@@ -18,20 +18,17 @@
 #include <rime/schema.h>
 #include <rime/service.h>
 #include <rime/setup.h>
-#include <rime/ticket.h>
 #include <rime/algo/fs.h>
 #include <rime/algo/utilities.h>
-#include <rime/dict/dictionary.h>
-#include <rime/dict/dict_compiler.h>
+#include <rime/lever/compile_unit.h>
 #include <rime/lever/deployment_tasks.h>
 #include <rime/lever/user_dict_manager.h>
-#ifdef _WIN32
-#include <windows.h>
-#endif
 
 namespace fs = std::filesystem;
 
 namespace rime {
+
+static bool MaybeCreateDirectory(path dir);
 
 DetectModifications::DetectModifications(TaskInitializer arg) {
   try {
@@ -190,20 +187,22 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating schemas.";
   int success = 0;
   int failure = 0;
-  map<string, path> schemas;
+
   the<ResourceResolver> resolver(Service::instance().CreateResourceResolver(
       {"schema_source_file", "", ".schema.yaml"}));
-  auto build_schema = [&](const string& schema_id, bool as_dependency = false) {
-    if (schemas.find(schema_id) != schemas.end())  // already built
+  auto schema_component = Config::Require("schema");
+
+  // Phase 1 (serial): update schema config files and collect compile units.
+  // All accesses to the shared, non-thread-safe component caches happen in
+  // this phase.
+  CompileGraph graph;
+  map<string, path> schemas;
+  auto process_schema = [&](const string& schema_id, bool as_dependency) {
+    if (schemas.find(schema_id) != schemas.end())  // already processed
       return;
     LOG(INFO) << "schema: " << schema_id;
-    path schema_path;
-    if (schemas.find(schema_id) == schemas.end()) {
-      schema_path = resolver->ResolvePath(schema_id);
-      schemas[schema_id] = schema_path;
-    } else {
-      schema_path = schemas[schema_id];
-    }
+    path schema_path = resolver->ResolvePath(schema_id);
+    schemas[schema_id] = schema_path;
     if (schema_path.empty() || !fs::exists(schema_path)) {
       if (as_dependency) {
         LOG(WARNING) << "missing input schema; skipped unsatisfied dependency: "
@@ -214,13 +213,35 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
       }
       return;
     }
-    the<DeploymentTask> t(new SchemaUpdate(schema_path));
-    if (t->Run(deployer))
-      ++success;
-    else
+    the<DeploymentTask> config_file_update(
+        new ConfigFileUpdate(schema_id + ".schema.yaml", "schema/version"));
+    if (!config_file_update->Run(deployer)) {
       ++failure;
+      return;
+    }
+    the<Config> schema_config(schema_component->Create(schema_id));
+    if (!schema_config) {
+      ++failure;
+      return;
+    }
+    CompileUnit unit;
+    switch (CreateDictionaryCompileUnit(schema_id, std::move(schema_config),
+                                        false, &unit)) {
+      case CompileUnitResult::kTrivial:
+        ++success;  // not requiring a dictionary
+        return;
+      case CompileUnitResult::kError:
+        ++failure;
+        return;
+      case CompileUnitResult::kCreated:
+        if (!graph.AddUnit(std::move(unit))) {
+          LOG(ERROR) << "failed to add compile unit for schema '" << schema_id
+                     << "'.";
+          ++failure;
+        }
+        return;
+    }
   };
-  auto schema_component = Config::Require("schema");
   for (auto it = schema_list->begin(); it != schema_list->end(); ++it) {
     auto item = As<ConfigMap>(*it);
     if (!item)
@@ -229,7 +250,10 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     if (!schema_property)
       continue;
     const string& schema_id = schema_property->str();
-    build_schema(schema_id);
+    process_schema(schema_id, false);
+    // the schema's own dictionary is compiled before its direct dependencies,
+    // matching the upstream serial build order (only one level; dependencies
+    // of dependencies are not compiled)
     the<Config> schema_config(schema_component->Create(schema_id));
     if (!schema_config)
       continue;
@@ -238,12 +262,28 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
         auto dependency = As<ConfigValue>(*d);
         if (!dependency)
           continue;
-        const string& dependency_id = dependency->str();
-        bool as_dependency = true;
-        build_schema(dependency_id, as_dependency);
+        process_schema(dependency->str(), true);
+        if (!graph.AddDependency(schema_id, dependency->str())) {
+          LOG(INFO) << "dependency '" << dependency->str()
+                    << "' has no compile unit; ordering ignored.";
+        }
       }
     }
   }
+
+  // Phase 2: execute the constructed graph of compile units; independent
+  // units may be compiled in parallel.
+  if (!MaybeCreateDirectory(deployer->staging_dir)) {
+    return false;
+  }
+  CompileScheduler scheduler;
+  auto compile_result = scheduler.Run(graph);
+  if (!compile_result) {
+    LOG(ERROR) << "error in compile graph.";
+    return false;
+  }
+  success += compile_result->success;
+  failure += compile_result->failure;
   LOG(INFO) << "finished updating schemas: " << success << " success, "
             << failure << " failure.";
 
@@ -267,8 +307,7 @@ static bool MaybeCreateDirectory(path dir) {
   if (fs::create_directories(dir, ec)) {
     return true;
   }
-
-  if (fs::exists(dir)) {
+  if (!ec) {
     return true;
   }
   LOG(ERROR) << "error creating directory '" << dir << "'.";
@@ -351,33 +390,33 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     // not requiring a dictionary
     return true;
   }
-  Schema schema(schema_id, config.release());
-  the<Dictionary> dict(
-      Dictionary::Require("dictionary")->Create({&schema, "translator"}));
-  if (!dict) {
-    LOG(ERROR) << "Error creating dictionary '" << dict_name << "'.";
-    return false;
-  }
-
   LOG(INFO) << "preparing dictionary '" << dict_name << "'.";
-  const path& user_data_path(deployer->user_data_dir);
   if (!MaybeCreateDirectory(deployer->staging_dir)) {
     return false;
   }
-  DictCompiler dict_compiler(dict.get());
-  if (verbose_) {
-    dict_compiler.set_options(DictCompiler::kRebuild | DictCompiler::kDump);
+  CompileUnit unit;
+  switch (CreateDictionaryCompileUnit(schema_id, std::move(config), verbose_,
+                                      &unit)) {
+    case CompileUnitResult::kTrivial:
+      return true;
+    case CompileUnitResult::kError:
+      return false;
+    case CompileUnitResult::kCreated:
+      break;
   }
-  the<ResourceResolver> resolver(
-      Service::instance().CreateDeployedResourceResolver(
-          {"compiled_schema", "", ".schema.yaml"}));
-  auto compiled_schema = resolver->ResolvePath(schema_id);
-  if (!dict_compiler.Compile(compiled_schema)) {
-    LOG(ERROR) << "dictionary '" << dict_name << "' failed to compile.";
+  CompileGraph graph;
+  if (!graph.AddUnit(std::move(unit))) {
+    LOG(ERROR) << "failed to add compile unit for schema '" << schema_id
+               << "'.";
     return false;
   }
-  LOG(INFO) << "dictionary '" << dict_name << "' is ready.";
-  return true;
+  CompileScheduler scheduler;
+  auto result = scheduler.Run(graph);
+  if (!result) {
+    LOG(ERROR) << "error in compile graph.";
+    return false;
+  }
+  return result->failure == 0;
 }
 
 ConfigFileUpdate::ConfigFileUpdate(TaskInitializer arg) {

@@ -1,0 +1,223 @@
+# Rime schema
+# encoding: utf-8
+
+schema:
+  schema_id: kongmingma
+  name: 空明码-并击
+  version: 2022/10/18
+  author:
+    - 空明
+    - zhanghaozhecn(schema编写)
+  description: |
+    空明码，是专门并击编码方案，有大词库(70万)，码长短(平均0.8)，8万高频词重码少(0.09%)的特点。中州韵是一款支持键盘并击的平台件，可以自定义词库编码，并击平台。
+  dependencies:
+
+switches:
+  - name: ascii_mode
+    reset: 0
+    states: [ 中, 英 ]
+  - name: full_shape
+    states: [ 半角, 全角 ]
+  - name: ascii_punct
+    states: [ 。，, ．， ]
+  - name: zh_trad
+    reset: 0
+    states: [ 简,繁 ]
+  - name: emoji_suggestion
+    reset: 0
+    states: ["🈚️", "🈶"]
+
+engine:
+  filters:
+    - simplifier
+    - uniquifier
+  processors:
+    - ascii_composer
+    - recognizer
+    - chord_composer
+    - key_binder
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    - table_translator
+    - "lua_translator@helper" #键入help出帮助菜单
+    - "lua_translator@time_date" #键入date出日期等功能
+    - "lua_translator@date_translator" #键入date出日期等功能
+
+# 简体转繁体
+simplifier:
+  opencc_config: s2t.json
+  option_name: zh_trad
+
+emoji_suggestion: #emoji表情，调用opencc里的文件
+  opencc_config: emoji.json
+  option_name: emoji_suggestion
+  tips: all
+  
+veng:
+  dictionary: english
+  tag: veng
+  prefix: "'"
+  suffix: " "
+  tips: "〔临时英文〕"
+  enable_completion: true
+  enable_encoder: false
+  enable_user_dict: false
+  enable_sentence: false
+  initial_quality: -1
+
+speller:
+  # 无后续编码自动上屏，需配合enable_completion
+  auto_select: true
+
+  # 进入输入区的字符
+  alphabet: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.?!<;:/='`7890`~@*_"
+  algebra:
+
+chord_composer:
+  # 进入并击的按键，按照键盘从左到右的顺序排序
+  alphabet: "qazwsxedcrfvtgbyhnujmik,ol.p;/'7890 "
+  algebra:
+    - xform/(asdf)/0/
+    - xform/(jkl;)/@/
+    - xform/(sdf)/7/
+    - xform/(jkl)/`/
+    - xform/(wer)/8/
+    - xform/(uio)/~/
+    - xform/(xcv)/9/
+    - xform/(nm)/m/
+    - xlit|;,./|FDJG|
+    - xform/^([qwertasdfgzxcvb]+)$/$1=/
+    - xform/^([yuiophjklFnmDJG])/=$1/
+    - xform|([A-Za-z])|$1-|
+    - xform/^([7890]+)$/$1=/
+    - xform/(78)/`/
+    - xform/(89)/~/
+    - xform/(79)/@/
+    - xform/(70)/*/
+    - xform/(90)/_/
+    - xform/(w-g-|h-o-)/W/
+    - xform/(r-g-|h-u-)/*/
+    - xform/(q-g-|h-p-)/Q/
+    - xform/(e-g-|h-i-)/E/
+    - xform/(w-e-f-|j-i-o-)/I/
+    - xform/(s-e-r-|u-i-l-)/U/
+    - xform/(s-e-f-|j-i-l-)/Q/
+    - xform/(w-d-f-|j-k-o-)/_/
+    - xform/(s-d-v-|m-k-l-)/C/
+    - xform/(j-o-|w-f-)/h/
+    - xform/(d-f-|j-k-)/j/
+    - xform/(s-d-|k-l-)/k/
+    - xform/(s-f-|j-l-)/l/
+    - xform/(s-f-|h-l-)/F/
+    - xform/(a-f-|j-F-)/;/
+    - xform/(a-s-|l-F-)/:/
+    - xform/(s-c-|m-l-)/n/
+    - xform/(D-l-)/n/
+    - xform/(c-v-|m-D-)/m/
+    - xform/(x-c-|D-J-)/,/
+    - xform/(a-t-|y-F-)/</
+    - xform/(x-v-|m-J-)/./
+    - xform/(a-g-|h-F-)/!/
+    - xform=(z-v-|m-G-)=/=
+    - xform/(z-x-|J-G-)/?/
+    - xform/(e-f-|j-i-)/y/
+    - xform/(e-r-|u-i-)/u/
+    - xform/(w-e-|i-o-)/i/
+    - xform/(w-r-|u-o-)/o/
+    - xform/(q-r-|u-p-)/p/
+    - xform/(q-v-|m-p-)/Q/
+    - xform/(w-v-|m-o-)/W/
+    - xform/(w-v-|n-o-)/W/
+    - xform/(e-v-|m-i-)/E/
+    - xform/(e-v-|n-i-)/E/
+    - xform/(e-t-|y-i-)/R/
+    - xform/(q-t-|y-p-)/T/
+    - xform/(a-v-|m-F-)/A/
+    - xform/(s-v-|n-l-)/S/
+    - xform/(d-v-|m-k-)/D/
+    - xform/(s-g-|h-l-)/F/
+    - xform/(d-g-|h-k-)/G/
+    - xform/(q-w-|o-p-)/B/
+    - xform/(z-f-|j-G-)/Z/
+    - xform/(x-d-|k-J-)/X/
+    - xform/(a-c-|D-F-)/C/
+    - xform/(c-f-|j-D-)/C/
+    - xform/(z-s-|l-G-)/V/
+    - xform/(w-t-|y-o-)/Y/
+    - xform/(q-f-|j-p-)/P/
+    - xform/(a-w-|o-F-)/O/
+    - xform/(a-r-|u-F-)/H/
+    - xform/(s-r-|u-l-)/L/
+    - xform/(d-r-|u-k-)/K/
+    - xform/(x-f-|j-J-)/J/
+    - xform/(s-e-|i-l-)/N/
+    - xform/(w-d-|k-o-)/M/
+    - xform/[aF]-/a/
+    - xform/[sl]-/s/
+    - xform/[dk]-/d/
+    - xform/[fj]-/f/
+    - xform/[gh]-/g/
+    - xform/[zG]-/z/
+    - xform/[xJ]-/x/
+    - xform/[cD]-/c/
+    - xform/[vm]-/v/
+    - xform/[bn]-/b/
+    - xform/[qp]-/q/
+    - xform/[wo]-/w/
+    - xform/[ei]-/e/
+    - xform/[ru]-/r/
+    - xform/[ty]-/t/
+    - xform/^\S{3,}$//
+  # 并击过程中套用的式样
+  prompt_format:
+    # 加方括号
+    - 'xform/^(.*)$/[$1]/'
+
+translator:
+  dictionary: kongmingma
+  enable_charset_filter: false           # 开启字符集过滤
+  enable_completion: true               # 是否显示编码未输入完整的词条
+  enable_sentence: false               # 句子输入模式
+  enable_user_dict: false               # 是否开启用户词典（用户词典记录动态字词频，用户词）
+  enable_encoder: false
+  preedit_format:
+  # 不显示逐码提示
+  comment_format:
+    - xform/~//
+    #- xform/.*//
+
+key_binder:
+  bindings:
+    - { when: composing, accept: BackSpace, send: Escape }
+    - { when: composing, accept: Return, send: Escape }
+    - { accept: bracketleft, send: Page_Up, when: paging }
+    - { accept: bracketright, send: Page_Down, when: has_menu }
+    - { when: composing, accept: Shift_L, send: 2 }
+    - { when: composing, accept: Shift_R, send: 3 } 
+    - {accept: "Control+Shift+4", toggle: zh_trad, when: always} #繁简开关
+    - {accept: "Control+Shift+dollar", toggle: zh_trad, when: always} #繁简开关
+    - {accept: "Control+Shift+F", toggle: zh_trad, when: always} #繁简开关
+    - {accept: "Control+Shift+G", toggle: emoji_suggestion, when: always} #emoji
+    - {accept: "Control+Shift+K", toggle: single_char, when: always} #单字模式
+
+# 用大写锁定切换中英文
+ascii_composer:
+  good_old_caps_lock: true
+  switch_key:
+    Control_L: clear # noop 无 |clear 字符被清除，转英文输入
+    Control_R: clear # noop 无 |commit_text 输入一段编码字符后汉字上屏，转英文输入
+    Shift_L: noop
+    Shift_R: noop
+    Caps_Lock: clear
+    Eisu_toggle: clear
