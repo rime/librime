@@ -412,26 +412,26 @@ void UserDictionary::RecruitPredictiveEntry(
     double credibility,
     double quality_len,
     hash_map<int, DictEntryList>* result) {
-  RecruitCacheEntry(entry, end_pos, {}, present_tick, credibility, quality_len,
-                    result);
-  auto& entries = (*result)[end_pos];
-  auto& e = entries.back();
-  // convert code string to numeric syllable ids
+  // Build numeric code from entry's string code
   vector<string> syllables = strings::split(std::string(entry.code), " ",
                                             strings::SplitBehavior::SkipToken);
   Code numeric_code;
+  numeric_code.reserve(syllables.size());
   for (const auto& s : syllables) {
     auto found = syllabary_.find(s);
     if (found == syllabary_.end()) {
       LOG(ERROR) << "failed to recruit predictive entry '" << entry.text
                  << "', unrecognized syllable: " << s;
-      entries.pop_back();
       return;
     }
     numeric_code.push_back(found->second);
   }
-  e->code = numeric_code;
-  e->matching_code_size = matching_code_size;
+
+  // Recruit with the numeric code
+  RecruitCacheEntry(entry, end_pos, numeric_code, present_tick, credibility,
+                    quality_len, result);
+  // Set matching_code_size for predictive entries
+  (*result)[end_pos].back()->matching_code_size = matching_code_size;
 }
 
 // CacheLookup replaces DfsLookup when cache is available.
@@ -468,6 +468,13 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
           cache_.begin(), cache_.end(), prefix,
           [](const CacheEntry& e, const string& p) { return e.code < p; });
 
+      // Helper lambda to reduce repeated parameters
+      auto recruit = [&](const CacheEntry& entry) {
+        RecruitCacheEntry(entry, end_pos, state->code, state->present_tick,
+                          state->credibility.back(), state->quality_len.back(),
+                          &state->query_result);
+      };
+
       // collect exact-matching entries (code == prefix)
       hash_set<std::string_view> seen;
       if (!pending_.empty()) {
@@ -481,18 +488,13 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
               overridden = true;
             } else {
               // use updated entry from pending
-              RecruitCacheEntry(
-                  {p.code, p.text, p.dee, p.commits, p.tick}, end_pos,
-                  state->code, state->present_tick, state->credibility.back(),
-                  state->quality_len.back(), &state->query_result);
+              recruit({p.code, p.text, p.dee, p.commits, p.tick});
               seen.insert(p.text);
               overridden = true;
             }
           }
           if (!overridden) {
-            RecruitCacheEntry(*it, end_pos, state->code, state->present_tick,
-                              state->credibility.back(),
-                              state->quality_len.back(), &state->query_result);
+            recruit(*it);
             seen.insert(it->text);
           }
           ++it;
@@ -500,9 +502,7 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
       } else {
         // fast path: no uncommitted writes; cache_ is authoritative
         while (it != cache_.end() && it->code == prefix) {
-          RecruitCacheEntry(*it, end_pos, state->code, state->present_tick,
-                            state->credibility.back(),
-                            state->quality_len.back(), &state->query_result);
+          recruit(*it);
           ++it;
         }
       }
@@ -513,10 +513,7 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
             (p.type == PendingUpdate::kAdd ||
              p.type == PendingUpdate::kUpdate) &&
             seen.find(p.text) == seen.end()) {
-          RecruitCacheEntry({p.code, p.text, p.dee, p.commits, p.tick}, end_pos,
-                            state->code, state->present_tick,
-                            state->credibility.back(),
-                            state->quality_len.back(), &state->query_result);
+          recruit({p.code, p.text, p.dee, p.commits, p.tick});
         }
       }
 
@@ -552,6 +549,15 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
           }
         }
         if (!syllabary_.empty()) {
+          // Helper lambda for predictive entries
+          auto recruit_pred = [&](const CacheEntry& entry) {
+            RecruitPredictiveEntry(entry, end_pos, state->depth(),
+                                   state->present_tick,
+                                   state->credibility.back(),
+                                   state->quality_len.back(),
+                                   &state->query_result);
+          };
+
           // predictive entries from cache (longer codes only)
           auto pred = lower_bound(
               cache_.begin(), cache_.end(), prefix,
@@ -570,20 +576,13 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
                 if (p.type == PendingUpdate::kDelete) {
                   overridden = true;
                 } else {
-                  RecruitPredictiveEntry(
-                      {p.code, p.text, p.dee, p.commits, p.tick}, end_pos,
-                      state->depth(), state->present_tick,
-                      state->credibility.back(), state->quality_len.back(),
-                      &state->query_result);
+                  recruit_pred({p.code, p.text, p.dee, p.commits, p.tick});
                   seen_pred.insert(p.text);
                   overridden = true;
                 }
               }
               if (!overridden) {
-                RecruitPredictiveEntry(
-                    *pred, end_pos, state->depth(), state->present_tick,
-                    state->credibility.back(), state->quality_len.back(),
-                    &state->query_result);
+                recruit_pred(*pred);
                 seen_pred.insert(pred->text);
               }
               ++pred;
@@ -591,10 +590,7 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
           } else {
             // fast path: no uncommitted writes; cache_ is authoritative
             while (pred != cache_.end() && starts_with(pred->code, prefix)) {
-              RecruitPredictiveEntry(
-                  *pred, end_pos, state->depth(), state->present_tick,
-                  state->credibility.back(), state->quality_len.back(),
-                  &state->query_result);
+              recruit_pred(*pred);
               ++pred;
             }
           }
@@ -604,11 +600,7 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
             if (p.code != prefix && starts_with(p.code, prefix) &&
                 seen_pred.find(p.text) == seen_pred.end() &&
                 p.type != PendingUpdate::kDelete) {
-              RecruitPredictiveEntry(
-                  {p.code, p.text, p.dee, p.commits, p.tick}, end_pos,
-                  state->depth(), state->present_tick,
-                  state->credibility.back(), state->quality_len.back(),
-                  &state->query_result);
+              recruit_pred({p.code, p.text, p.dee, p.commits, p.tick});
             }
           }
         }
