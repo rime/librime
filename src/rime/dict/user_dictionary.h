@@ -127,20 +127,32 @@ class UserDictionary : public Class<UserDictionary, const Ticket&> {
     TickCount tick;
   };
 
+  struct CacheState {
+    TickCount tick = 0;
+    time_t transaction_time = 0;
+    bool cache_built = false;
+    TickCount cache_built_tick = 0;
+    std::string cache_blob;
+    vector<CacheEntry> cache;
+    std::unordered_map<string, PendingUpdate> pending;
+  };
+
+  static an<CacheState> GetCacheState(const an<Db>& db);
+
   string name_;
   an<Db> db_;
   an<Table> table_;
   an<Prism> prism_;
   hash_map<string, SyllableId> syllabary_;
   hash_map<SyllableId, string> rev_syllabary_;
-  TickCount tick_ = 0;
-  time_t transaction_time_ = 0;
-
-  bool cache_built_ = false;
-  TickCount cache_built_tick_ = 0;
-  std::string cache_blob_;  // backing storage for CacheEntry code/text views
-  vector<CacheEntry> cache_;
-  std::unordered_map<string, PendingUpdate> pending_;
+  an<CacheState> cache_state_;
+  TickCount& tick_;
+  time_t& transaction_time_;
+  bool& cache_built_;
+  TickCount& cache_built_tick_;
+  std::string& cache_blob_;
+  vector<CacheEntry>& cache_;
+  std::unordered_map<string, PendingUpdate>& pending_;
 
   bool BuildCache();
   void CacheLookup(const SyllableGraph& syll_graph,

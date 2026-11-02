@@ -9,6 +9,7 @@
 #include <rime/algo/syllabifier.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/dict_compiler.h>
+#include <rime/dict/level_db.h>
 #include <rime/dict/prism.h>
 #include <rime/dict/table.h>
 #include <rime/dict/text_db.h>
@@ -18,6 +19,19 @@
 using namespace rime;
 
 using TestDb = UserDbWrapper<TextDb>;
+
+class CountingTestDb : public TestDb {
+ public:
+  using TestDb::TestDb;
+
+  an<DbAccessor> Query(const string& key) override {
+    if (key.empty())
+      ++full_scans;
+    return TestDb::Query(key);
+  }
+
+  int full_scans = 0;
+};
 
 static an<Dictionary> sys_dict;
 
@@ -31,6 +45,109 @@ static void BuildSysDict() {
   DictCompiler dc(sys_dict.get());
   ASSERT_TRUE(dc.Compile(path()));
   ASSERT_TRUE(sys_dict->Load());
+}
+
+static an<DictEntry> FindGraphEntry(UserDictionary* dict,
+                                    const string& input,
+                                    const string& text) {
+  SyllableGraph graph;
+  Syllabifier syllabifier;
+  if (syllabifier.BuildSyllableGraph(input, *sys_dict->prism(), &graph) <= 0)
+    return nullptr;
+  auto result = dict->Lookup(graph, 0);
+  if (!result)
+    return nullptr;
+  for (auto& group : *result) {
+    auto& iter = group.second;
+    while (!iter.exhausted()) {
+      auto entry = iter.Peek();
+      if (entry && entry->text == text)
+        return entry;
+      iter.Next();
+    }
+  }
+  return nullptr;
+}
+
+TEST(UserDictionarySharedCacheTest, SecondInstanceDoesNotRescanDb) {
+#if RIME_USER_DICT_CACHE_ENABLED
+  BuildSysDict();
+  ASSERT_TRUE(sys_dict->loaded());
+  auto db =
+      New<CountingTestDb>(path{"shared_cache_test.txt"}, "shared_cache_test");
+  if (db->Exists())
+    ASSERT_TRUE(db->Remove());
+  ASSERT_TRUE(db->Open());
+  ASSERT_TRUE(db->MetaUpdate("/tick", "100"));
+  {
+    UserDictionary first("shared_cache_test", db);
+    first.Attach(sys_dict->primary_table(), sys_dict->prism());
+    ASSERT_TRUE(first.Load());
+    const int scans = db->full_scans;
+    EXPECT_GT(scans, 0);
+    UserDictionary second("shared_cache_test", db);
+    second.Attach(sys_dict->primary_table(), sys_dict->prism());
+    ASSERT_TRUE(second.Load());
+    EXPECT_EQ(scans, db->full_scans);
+  }
+  ASSERT_TRUE(db->Close());
+  ASSERT_TRUE(db->Remove());
+#else
+  GTEST_SKIP() << "User dictionary cache is disabled";
+#endif
+}
+
+TEST(UserDictionarySharedCacheTest,
+     TransactionUpdatesAndRollbackAcrossInstances) {
+#if RIME_USER_DICT_CACHE_ENABLED
+  BuildSysDict();
+  ASSERT_TRUE(sys_dict->loaded());
+  auto db = New<UserDbWrapper<LevelDb>>(path{"shared_transaction_test.userdb"},
+                                        "shared_transaction_test");
+  if (db->Exists())
+    ASSERT_TRUE(db->Remove());
+  ASSERT_TRUE(db->Open());
+  ASSERT_TRUE(db->MetaUpdate("/tick", "100"));
+  {
+    UserDictionary first("shared_transaction_test", db);
+    UserDictionary second("shared_transaction_test", db);
+    first.Attach(sys_dict->primary_table(), sys_dict->prism());
+    second.Attach(sys_dict->primary_table(), sys_dict->prism());
+    ASSERT_TRUE(first.Load());
+    ASSERT_TRUE(second.Load());
+    DictEntry entry;
+    entry.text = "你好";
+    entry.custom_code = "ni hao";
+
+    ASSERT_TRUE(first.NewTransaction());
+    ASSERT_TRUE(first.UpdateEntry(entry, 1));
+    ASSERT_TRUE(second.UpdateEntry(entry, 1));
+    auto updated = FindGraphEntry(&first, "nihao", entry.text);
+    ASSERT_NE(nullptr, updated);
+    EXPECT_EQ(2, updated->commit_count);
+    EXPECT_NE(nullptr, FindGraphEntry(&first, "nihao", entry.text));
+    EXPECT_NE(nullptr, FindGraphEntry(&second, "nihao", entry.text));
+    ASSERT_TRUE(first.RevertRecentTransaction());
+    EXPECT_EQ(nullptr, FindGraphEntry(&first, "nihao", entry.text));
+    EXPECT_EQ(nullptr, FindGraphEntry(&second, "nihao", entry.text));
+
+    ASSERT_TRUE(first.NewTransaction());
+    ASSERT_TRUE(first.UpdateEntry(entry, 1));
+    ASSERT_TRUE(first.CommitPendingTransaction());
+    ASSERT_NE(nullptr, FindGraphEntry(&second, "nihao", entry.text));
+
+    ASSERT_TRUE(second.NewTransaction());
+    ASSERT_TRUE(second.UpdateEntry(entry, -1));
+    EXPECT_EQ(nullptr, FindGraphEntry(&first, "nihao", entry.text));
+    ASSERT_TRUE(second.RevertRecentTransaction());
+    EXPECT_NE(nullptr, FindGraphEntry(&first, "nihao", entry.text));
+    EXPECT_NE(nullptr, FindGraphEntry(&second, "nihao", entry.text));
+  }
+  ASSERT_TRUE(db->Close());
+  ASSERT_TRUE(db->Remove());
+#else
+  GTEST_SKIP() << "User dictionary cache is disabled";
+#endif
 }
 
 class UserDictionaryTest : public ::testing::Test {
