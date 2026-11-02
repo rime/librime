@@ -181,7 +181,9 @@ bool UserDictionary::Load() {
   }
   if (!(FetchTickCount() || Initialize()))
     return false;
+#if RIME_USER_DICT_CACHE_ENABLED
   BuildCache();
+#endif
   return true;
 }
 
@@ -758,7 +760,9 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry,
     code_str += ' ';
   }
   string key(code_str + '\t' + entry.text);
+#if RIME_USER_DICT_CACHE_ENABLED
   string code_key(code_str);
+#endif
   string value;
   UserDbValue v;
   TickCount previous_tick = tick_;
@@ -770,7 +774,9 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry,
     }
   } else if (!new_entry_prefix.empty()) {
     key.insert(0, new_entry_prefix);
+#if RIME_USER_DICT_CACHE_ENABLED
     code_key = key.substr(0, key.find('\t'));
+#endif
   }
   // Every update changes the stored value, including dee-only updates.
   bool advance_tick = true;
@@ -798,6 +804,7 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry,
     return false;
   }
 
+#if RIME_USER_DICT_CACHE_ENABLED
   // track change in pending_ for cache consistency
   PendingUpdate pu;
   pu.code = code_key;
@@ -820,7 +827,6 @@ bool UserDictionary::UpdateEntry(const DictEntry& entry,
     pending_[pu.code + '\t' + pu.text] = pu;
   }
   // periodically rebuild cache if pending_ grows too large
-#if RIME_USER_DICT_CACHE_ENABLED
   if (pending_.size() > 1000)
     BuildCache();
 #endif
