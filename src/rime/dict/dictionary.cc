@@ -282,17 +282,25 @@ an<DictEntryCollector> Dictionary::Lookup(const SyllableGraph& syllable_graph,
     lookup_table(table.get(), collector.get(), syllable_graph, start_pos,
                  predict_word, initial_credibility);
   }
-  if (collector->empty())
-    return nullptr;
-  // for each group of equal code length, sort it and filter words
-  for (auto& v : *collector) {
-    v.second.Sort();
+  // for each group of equal code length, sort it and filter words.
+  // prune empty iters upfront because it is assumed that each
+  // returned iter is non-empty.
+  auto it = collector->begin();
+  while (it != collector->end()) {
+    it->second.Sort();
     if (blacklist && !blacklist->empty()) {
-      v.second.AddFilter([blacklist](an<DictEntry> entry) {
+      it->second.AddFilter([blacklist](an<DictEntry> entry) {
         return entry && !blacklist->count(entry->text);
       });
+      if (it->second.exhausted()) {
+        it = collector->erase(it);
+        continue;
+      }
     }
+    ++it;
   }
+  if (collector->empty())
+    return nullptr;
   return collector;
 }
 
