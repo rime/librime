@@ -5,6 +5,7 @@
 // 2014-12-04 Chen Gong <chen.sst@gmail.com>
 //
 
+#include <leveldb/cache.h>
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
 #include <rime/common.h>
@@ -15,6 +16,14 @@
 namespace rime {
 
 static const char* kMetaCharacter = "\x01";
+
+static leveldb::Cache* SharedBlockCache() {
+  // The in-memory user dict cache serves most lookups, so LevelDB only backs
+  // point reads/writes and infrequent scans. Share one small block cache across
+  // all user dbs instead of letting each DB allocate its default 8MB cache.
+  static leveldb::Cache* cache = leveldb::NewLRUCache(2 << 20);
+  return cache;
+}
 
 struct LevelDbCursor {
   leveldb::Iterator* iterator = nullptr;
@@ -54,6 +63,10 @@ struct LevelDbWrapper {
   leveldb::Status Open(const path& file_path, bool readonly) {
     leveldb::Options options;
     options.create_if_missing = !readonly;
+    options.block_cache = SharedBlockCache();
+    // user dict writes are small and frequent; a 4MB default memtable is
+    // overkill and would be freed only on flush
+    options.write_buffer_size = 2 << 20;
     return leveldb::DB::Open(options, file_path.string(), &ptr);
   }
 
@@ -217,7 +230,9 @@ bool LevelDb::Restore(const path& snapshot_file) {
 
 bool LevelDb::Recover() {
   LOG(INFO) << "trying to recover db '" << name() << "'.";
-  auto status = leveldb::RepairDB(file_path().string(), leveldb::Options());
+  leveldb::Options options;
+  options.block_cache = SharedBlockCache();
+  auto status = leveldb::RepairDB(file_path().string(), options);
   if (status.ok()) {
     LOG(INFO) << "repair finished.";
     return true;
