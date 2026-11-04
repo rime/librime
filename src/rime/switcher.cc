@@ -38,11 +38,15 @@ Switcher::~Switcher() {
 }
 
 void Switcher::RestoreSavedOptions() {
-  if (user_config_) {
-    for (const string& option_name : save_options_) {
-      bool value = false;
-      if (user_config_->GetBool("var/option/" + option_name, &value)) {
-        engine_->context()->set_option(option_name, value);
+  if (!user_config_ || !engine_)
+    return;
+  if (auto options = user_config_->GetMap("var/option")) {
+    for (auto it = options->begin(); it != options->end(); ++it) {
+      if (auto value = As<ConfigValue>(it->second)) {
+        bool bool_value = false;
+        if (value->GetBool(&bool_value)) {
+          engine_->context()->set_option(it->first, bool_value);
+        }
       }
     }
   }
@@ -211,8 +215,15 @@ void Switcher::SelectNextSchema() {
   command->Apply(this);
 }
 
-bool Switcher::IsAutoSave(const string& option) const {
-  return save_options_.find(option) != save_options_.end();
+bool Switcher::IsAutoSave(const string& /*option*/) const {
+  return true;
+}
+
+bool Switcher::HasSavedOption(const string& option) const {
+  if (!user_config_)
+    return false;
+  bool value = false;
+  return user_config_->GetBool("var/option/" + option, &value);
 }
 
 void Switcher::OnSelect(Context* ctx) {
@@ -277,15 +288,7 @@ void Switcher::LoadSettings() {
       hotkeys_.push_back(KeyEvent(value->str()));
     }
   }
-  if (auto options = config->GetList("switcher/save_options")) {
-    save_options_.clear();
-    for (auto it = options->begin(); it != options->end(); ++it) {
-      auto option_name = As<ConfigValue>(*it);
-      if (!option_name)
-        continue;
-      save_options_.insert(option_name->str());
-    }
-  }
+  // switcher/save_options is deprecated and ignored; all options auto-save.
   config->GetBool("switcher/fold_options", &fold_options_);
   config->GetBool("switcher/fix_schema_list_order", &fix_schema_list_order_);
 }
