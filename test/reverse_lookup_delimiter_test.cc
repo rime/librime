@@ -12,6 +12,7 @@
 #include <rime/dict/dict_compiler.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/prism.h>
+#include <rime/dict/reverse_lookup_dictionary.h>
 #include <rime/dict/table.h>
 #include <fstream>
 #include <string>
@@ -62,6 +63,44 @@ std::string Candidates(const char* keys) {
 }
 
 }  // namespace
+
+#if !defined(_WIN32) || !defined(RIME_IMPORTS)
+TEST(ReverseLookupDictionary, BuildsAndReloadsEntriesAndStems) {
+  auto db = rime::New<rime::ReverseDb>(rime::path{"reverse_builder_test.bin"});
+  db->Remove();
+  rime::Syllabary syllabary{"a", "b", "c"};
+  rime::Vocabulary vocabulary;
+  auto entry = rime::New<rime::ShortDictEntry>();
+  entry->text = "shared";
+  vocabulary[0].entries.push_back(entry);
+  vocabulary[1].entries.push_back(entry);
+  auto other = rime::New<rime::ShortDictEntry>();
+  other->text = "other";
+  vocabulary[1].entries.push_back(other);
+  rime::ReverseLookupTable stems;
+  stems["shared"].insert("z");
+  stems["shared"].insert("a");
+  stems["stem-only"].insert("b");
+
+  ASSERT_TRUE(db->Build(nullptr, syllabary, vocabulary, stems, 123));
+  ASSERT_TRUE(db->Save());
+  ASSERT_TRUE(db->Load());
+  EXPECT_EQ(123u, db->dict_file_checksum());
+  rime::ReverseLookupDictionary dictionary(db);
+  rime::string result;
+  ASSERT_TRUE(dictionary.ReverseLookup("shared", &result));
+  EXPECT_EQ("a b", result);
+  ASSERT_TRUE(dictionary.ReverseLookup("other", &result));
+  EXPECT_EQ("b", result);
+  ASSERT_TRUE(dictionary.LookupStems("shared", &result));
+  EXPECT_EQ("a z", result);
+  ASSERT_TRUE(dictionary.LookupStems("stem-only", &result));
+  EXPECT_EQ("b", result);
+  EXPECT_FALSE(dictionary.ReverseLookup("stem-only", &result));
+  EXPECT_FALSE(dictionary.LookupStems("other", &result));
+  db->Remove();
+}
+#endif
 
 TEST(ReverseLookupTranslator, HonorsSchemaDelimiter) {
   // Compile the shared pinyin fixture (dictionary_test.dict.yaml contains

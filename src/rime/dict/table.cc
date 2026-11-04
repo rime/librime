@@ -253,6 +253,7 @@ bool Table::OnBuildFinish() {
   string_table_builder_->Dump(image, image_size);
   metadata_->string_table = image;
   metadata_->string_table_size = image_size;
+  string_table_builder_.reset();
   return true;
 }
 
