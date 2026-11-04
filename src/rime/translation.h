@@ -38,7 +38,7 @@ class RIME_DLL Translation {
   bool exhausted_ = false;
 };
 
-class UniqueTranslation : public Translation {
+class RIME_DLL UniqueTranslation : public Translation {
  public:
   UniqueTranslation(an<Candidate> candidate) : candidate_(candidate) {
     set_exhausted(!candidate);
@@ -67,7 +67,7 @@ class RIME_DLL FifoTranslation : public Translation {
   size_t cursor_ = 0;
 };
 
-class UnionTranslation : public Translation {
+class RIME_DLL UnionTranslation : public Translation {
  public:
   UnionTranslation();
 
@@ -82,7 +82,7 @@ class UnionTranslation : public Translation {
 
 an<UnionTranslation> operator+(an<Translation> x, an<Translation> y);
 
-class MergedTranslation : public Translation {
+class RIME_DLL MergedTranslation : public Translation {
  public:
   explicit MergedTranslation(const CandidateList& previous_candidates);
 
@@ -101,7 +101,7 @@ class MergedTranslation : public Translation {
   size_t elected_ = 0;
 };
 
-class CacheTranslation : public Translation {
+class RIME_DLL CacheTranslation : public Translation {
  public:
   CacheTranslation(an<Translation> translation);
 
@@ -118,7 +118,7 @@ inline an<Translation> Cached(Args&&... args) {
   return New<CacheTranslation>(New<T>(std::forward<Args>(args)...));
 }
 
-class DistinctTranslation : public CacheTranslation {
+class RIME_DLL DistinctTranslation : public CacheTranslation {
  public:
   DistinctTranslation(an<Translation> translation);
   virtual bool Next();
@@ -129,7 +129,7 @@ class DistinctTranslation : public CacheTranslation {
   set<string> candidate_set_;
 };
 
-class PrefetchTranslation : public Translation {
+class RIME_DLL PrefetchTranslation : public Translation {
  public:
   PrefetchTranslation(an<Translation> translation);
 

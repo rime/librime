@@ -39,7 +39,7 @@ set(rime_optional_deps "")
 if(Gflags_FOUND)
   set(rime_optional_deps ${rime_optional_deps} ${Gflags_LIBRARY})
 endif()
-if(ENABLE_EXTERNAL_PLUGINS)
+if(ENABLE_EXTERNAL_PLUGINS AND NOT WIN32)
   set(rime_optional_deps ${rime_optional_deps} dl)
 endif()
 
@@ -88,6 +88,10 @@ if(BUILD_SHARED_LIBS)
     SOVERSION ${rime_soversion}
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+  # Intentionally no WINDOWS_EXPORT_ALL_SYMBOLS / --export-all-symbols here:
+  # only the symbols marked RIME_DLL (the plugin ABI, imported by plugin
+  # builds that define RIME_IMPORTS) are exported. Exporting everything would
+  # bloat the DLL, slow down loading and defeat dead code elimination.
   if(XCODE_VERSION)
     set_target_properties(rime PROPERTIES INSTALL_NAME_DIR "@rpath")
   endif()

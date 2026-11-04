@@ -58,6 +58,39 @@ This creates `build\bin\Release\rime.dll`.
 Build artifacts: the shared library along with API headers and supporting files
 can be found in `dist` directory.
 
+## Build external plugins
+
+External plugins are supported on Windows. Build librime with
+`ENABLE_EXTERNAL_PLUGINS=ON` to load `*.dll` plugins from the `rime-plugins`
+directory next to `rime.dll`:
+
+``` batch
+cmake . -B build -DENABLE_EXTERNAL_PLUGINS=ON -DBUILD_SHARED_LIBS=ON
+cmake --build build --config Release
+```
+
+### Plugin ABI
+
+Unlike ELF platforms, a Windows DLL does not export its symbols implicitly, so
+a plugin can only use what `rime.dll` explicitly exports. Those symbols are
+marked with `RIME_DLL` in the private headers (`<rime/...>`); plugins should be
+built with `RIME_IMPORTS` defined, like the in-tree plugin targets do, and the
+private headers installed by `-DINSTALL_PRIVATE_HEADERS=ON`.
+
+`rime.dll` is *not* built with `WINDOWS_EXPORT_ALL_SYMBOLS`: exporting every
+symbol would bloat the DLL, slow down loading and get in the way of the
+linker's dead code elimination. When a plugin fails to link with
+
+```
+undefined reference to `rime::SomeClass::SomeMethod(...)'
+```
+
+the fix is to add `RIME_DLL` to that declaration in the header, so the symbol
+joins the plugin ABI, rather than to export everything.
+
+Note that the plugin ABI is the C++ ABI, so a plugin must be built with a
+compatible toolchain, C++ standard library and librime version.
+
 ## Try it in the console
 
 `librime` comes with a REPL application which can be used to test if the library

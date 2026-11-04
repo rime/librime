@@ -11,6 +11,7 @@
 #include <mutex>
 #include <queue>
 #include <any>
+#include <rime_api.h>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/messenger.h>
@@ -60,7 +61,8 @@ class Deployer : public Messenger {
   bool StartWork(bool maintenance_mode = false);
   bool StartMaintenance();
   bool IsWorking();
-  bool IsMaintenanceMode();
+  // Queried by the inline Service::disabled(), which plugins may call.
+  RIME_DLL bool IsMaintenanceMode();
   // the following two methods equally wait until all threads are joined
   void JoinWorkThread();
   void JoinMaintenanceThread();

@@ -17,6 +17,10 @@ if(BUILD_SAMPLE)
   message(STATUS "${sample_library} provides modules: ${sample_modules}")
   add_library(${sample_library} ${sample_src})
   target_link_libraries(${sample_library} ${sample_deps})
+  if(BUILD_SHARED_LIBS)
+    # Import the plugin ABI exported from the shared Rime library.
+    target_compile_definitions(${sample_library} PRIVATE RIME_IMPORTS)
+  endif()
   set_target_properties(${sample_library}
     PROPERTIES
     VERSION ${SAMPLE_VERSION}

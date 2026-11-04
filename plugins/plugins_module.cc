@@ -94,9 +94,32 @@ PluginManager& PluginManager::instance() {
 }  // namespace rime
 
 #ifdef _WIN32
-// TODO: implement this when ready to support DLL plugins on Windows.
-inline static rime::path current_module_path() {
-  return rime::path{};
+#include <windows.h>
+
+inline static rime::path symbol_location(const void* symbol) {
+  HMODULE module = nullptr;
+  // `FROM_ADDRESS` resolves the module by an address inside it, like
+  // `dladdr`; `UNCHANGED_REFCOUNT` keeps the module reference count intact.
+  if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                              GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                          reinterpret_cast<LPCWSTR>(symbol), &module) ||
+      module == nullptr) {
+    return rime::path{};
+  }
+  // `GetModuleFileNameW` truncates when the buffer is too small; grow it
+  // until the full path fits.
+  std::wstring buffer(MAX_PATH, L'\0');
+  DWORD length = 0;
+  while ((length = GetModuleFileNameW(module, buffer.data(),
+                                      static_cast<DWORD>(buffer.size()))) ==
+         buffer.size()) {
+    buffer.resize(buffer.size() * 2);
+  }
+  if (length == 0) {
+    return rime::path{};
+  }
+  buffer.resize(length);
+  return rime::path{fs::path{buffer}};
 }
 #else
 #include <dlfcn.h>
@@ -111,13 +134,13 @@ inline static rime::path symbol_location(const void* symbol) {
     return rime::path{};
   }
 }
+#endif
 
 inline static rime::path current_module_path() {
   void rime_require_module_plugins();
   return symbol_location(
       reinterpret_cast<const void*>(&rime_require_module_plugins));
 }
-#endif
 
 static void rime_plugins_initialize() {
   rime::PluginManager::instance().LoadPlugins(

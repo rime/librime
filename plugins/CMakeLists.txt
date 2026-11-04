@@ -39,12 +39,25 @@ else()
   endforeach(file)
 endif()
 
+if(BUILD_SHARED_LIBS AND NOT BUILD_MERGED_PLUGINS)
+  set(rime_plugin_imports TRUE)
+endif()
+
 foreach(plugin ${plugins})
   unset(plugin_name)
   unset(plugin_objs)
   unset(plugin_deps)
   unset(plugin_modules)
   add_subdirectory(${plugin})
+  if(rime_plugin_imports)
+    # A separately built plugin imports the plugin ABI (the symbols marked
+    # RIME_DLL) from the shared Rime library. Scoped to the plugin's own
+    # directory, where its object libraries are compiled; the objects of this
+    # directory are part of the Rime library itself. Not needed in merged
+    # mode, where plugin objects become part of the Rime library.
+    set_property(DIRECTORY ${plugin} APPEND PROPERTY COMPILE_DEFINITIONS
+      RIME_IMPORTS)
+  endif()
   if(BUILD_MERGED_PLUGINS)
     set(plugins_objs ${plugins_objs} ${plugin_objs})
     list(REMOVE_ITEM plugin_deps ${rime_library})

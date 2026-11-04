@@ -21,7 +21,7 @@ struct Ticket {
   string klass;
 
   Ticket() = default;
-  Ticket(Schema* s, const string& ns);
+  RIME_DLL Ticket(Schema* s, const string& ns);
   // prescription: in the form of "klass" or "klass@alias"
   // where alias, if given, will override default name space
   RIME_DLL Ticket(Engine* e,
