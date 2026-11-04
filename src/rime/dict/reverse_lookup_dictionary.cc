@@ -120,6 +120,7 @@ bool ReverseDb::Build(DictSettings* settings,
     value_trie_builder.Add(value, 0.0, &value_ids[i]);
     ++i;
   }
+  ReverseLookupTable().swap(rev_table);
   key_trie_builder.Build();
   value_trie_builder.Build();
 
