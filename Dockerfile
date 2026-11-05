@@ -11,7 +11,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
   libboost-dev \
   libboost-regex-dev \
   libboost-locale-dev \
-  libgoogle-glog-dev \
   libgtest-dev \
   libyaml-cpp-dev \
   libleveldb-dev \
