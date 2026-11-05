@@ -48,8 +48,8 @@ class Deployer : public Messenger {
   RIME_DLL Deployer();
   RIME_DLL ~Deployer();
 
-  bool RunTask(const string& task_name,
-               TaskInitializer arg = TaskInitializer());
+  RIME_DLL bool RunTask(const string& task_name,
+                        TaskInitializer arg = TaskInitializer());
   bool ScheduleTask(const string& task_name,
                     TaskInitializer arg = TaskInitializer());
   void ScheduleTask(an<DeploymentTask> task);

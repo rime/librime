@@ -93,7 +93,7 @@ bool InstallationUpdate::Run(Deployer* deployer) {
   string last_distro_code_name;
   string last_distro_version;
   string last_rime_version;
-  if (config.LoadFromFile(installation_info)) {
+  if (config.LoadFromFile(installation_info) && config.IsMap("")) {
     if (config.GetString("installation_id", &installation_id)) {
       LOG(INFO) << "installation info exists. installation id: "
                 << installation_id;
@@ -120,6 +120,8 @@ bool InstallationUpdate::Run(Deployer* deployer) {
     if (config.GetString("rime_version", &last_rime_version)) {
       LOG(INFO) << "previous Rime version: " << last_rime_version;
     }
+  } else {
+    deployer->sync_dir = user_data_path / "sync";
   }
   if (!installation_id.empty() &&
       last_distro_code_name == deployer->distribution_code_name &&
@@ -128,6 +130,9 @@ bool InstallationUpdate::Run(Deployer* deployer) {
     return true;
   }
   LOG(INFO) << "creating installation info.";
+  if (!config.IsMap("")) {
+    config = Config();
+  }
   time_t now = time(NULL);
   string time_str(ctime(&now));
   boost::trim(time_str);
@@ -155,6 +160,8 @@ bool InstallationUpdate::Run(Deployer* deployer) {
     config.SetString("distribution_version", deployer->distribution_version);
     LOG(INFO) << "distribution version: " << deployer->distribution_version;
   }
+  config.SetString("sync_dir", deployer->sync_dir.to_utf8_string());
+  config.SetBool("backup_config_files", deployer->backup_config_files);
   config.SetString("rime_version", RIME_VERSION);
   LOG(INFO) << "Rime version: " << RIME_VERSION;
   return config.SaveToFile(installation_info);
