@@ -193,7 +193,11 @@ TEST_F(RimeDictionaryTest, SkipDropsCachedEntry) {
   auto b = fresh.Peek();
   ASSERT_TRUE(a && b);
   EXPECT_EQ(b->text, a->text);
-  EXPECT_EQ(b->code, a->code);
+  // compare spellings; rime::Code::operator== is not exported from rime.dll
+  rime::RawCode code_a, code_b;
+  ASSERT_TRUE(dict_->Decode(a->code, &code_a));
+  ASSERT_TRUE(dict_->Decode(b->code, &code_b));
+  EXPECT_EQ(code_b.ToString(), code_a.ToString());
 }
 
 TEST_F(RimeDictionaryTest, TableLookupWithExclude) {
