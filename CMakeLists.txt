@@ -274,6 +274,20 @@ if(BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS AND rime_plugins_objs)
   set(rime_plugins_library rime-plugins)
 endif()
 
+if(NOT WIN32)
+  add_compile_options(
+    -Wall
+    -Wextra
+    -Wundef
+    -Wnon-virtual-dtor
+    -Woverloaded-virtual
+    -Werror=return-type
+    -Werror=implicit-fallthrough
+    -Werror=format=2
+    -Werror=delete-non-virtual-dtor
+  )
+endif()
+
 add_subdirectory(src)
 
 if(BUILD_SHARED_LIBS)
