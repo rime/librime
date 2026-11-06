@@ -113,7 +113,8 @@ void EntryCollector::Collect(const path& dict_file) {
         !row[stem_column].empty())
       stem_str = row[stem_column];
     // collect entry
-    collection.insert(word);
+    if (preset_vocabulary)
+      collection.insert(word);
     if (!code_str.empty()) {
       CreateEntry(word, code_str, weight_str);
     } else {
@@ -151,6 +152,8 @@ void EntryCollector::Finish() {
         LOG(WARNING) << "Encode failure: '" << phrase << "'.";
       }
     }
+    // Finish collection before releasing preset weights used by CreateEntry().
+    preset_vocabulary.reset();
   }
   decltype(collection)().swap(collection);
   decltype(words)().swap(words);

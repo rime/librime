@@ -37,6 +37,14 @@ class RimeTableTest : public ::testing::Test {
 
 rime::the<rime::Table> RimeTableTest::table_;
 
+#if !defined(_WIN32) || !defined(RIME_IMPORTS)
+class InspectableTable : public rime::Table {
+ public:
+  using Table::Table;
+  bool has_builder() const { return bool(string_table_builder_); }
+};
+#endif
+
 void RimeTableTest::PrepareSampleVocabulary(rime::Syllabary& syll,
                                             rime::Vocabulary& voc) {
   auto d = rime::New<rime::ShortDictEntry>();
@@ -96,6 +104,37 @@ TEST_F(RimeTableTest, IntegrityTest) {
   ASSERT_TRUE(bool(table_));
   ASSERT_TRUE(table_->Load());
 }
+
+#if !defined(_WIN32) || !defined(RIME_IMPORTS)
+TEST_F(RimeTableTest, BuilderReleasedAfterSuccessfulRetry) {
+  InspectableTable table(rime::path{"table_retry_test.bin"});
+  table.Remove();
+  rime::Syllabary syll;
+  rime::Vocabulary voc;
+  PrepareSampleVocabulary(syll, voc);
+
+  auto tail = (*(*voc[1].next_level)[2].next_level)[3].next_level;
+  auto entries = std::move((*tail)[-1].entries);
+  tail->erase(-1);
+  EXPECT_FALSE(table.Build(syll, voc, total_num_entries));
+  EXPECT_TRUE(table.has_builder());
+
+  (*tail)[-1].entries = std::move(entries);
+  table.Remove();
+  ASSERT_TRUE(table.Build(syll, voc, total_num_entries));
+  EXPECT_FALSE(table.has_builder());
+  ASSERT_TRUE(table.Save());
+  ASSERT_TRUE(table.Load());
+  auto result = table.QueryWords(2);
+  ASSERT_EQ(3, result.remaining());
+  EXPECT_EQ("er", table.GetEntryText(*result.entry()));
+  ASSERT_TRUE(result.Next());
+  EXPECT_EQ("liang", table.GetEntryText(*result.entry()));
+  ASSERT_TRUE(result.Next());
+  EXPECT_EQ("lia", table.GetEntryText(*result.entry()));
+  table.Remove();
+}
+#endif
 
 TEST_F(RimeTableTest, SimpleQuery) {
   EXPECT_STREQ("0", table_->GetSyllableById(0).c_str());

@@ -37,7 +37,7 @@ class Config : public Class<Config, const string&>, public ConfigItemRef {
 
   // access a tree node of a particular type with "path/to/node"
   RIME_DLL bool IsNull(const string& path);
-  bool IsValue(const string& path);
+  RIME_DLL bool IsValue(const string& path);
   RIME_DLL bool IsList(const string& path);
   RIME_DLL bool IsMap(const string& path);
   RIME_DLL bool GetBool(const string& path, bool* value);

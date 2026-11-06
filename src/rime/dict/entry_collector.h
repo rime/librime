@@ -47,6 +47,7 @@ class EntryCollector : public PhraseCollector {
   virtual ~EntryCollector();
 
   void Configure(DictSettings* settings);
+  // Collect all tables in one batch; temporary encoding data is released after.
   void Collect(const vector<path>& dict_files);
 
   // export contents of table and prism to text files
