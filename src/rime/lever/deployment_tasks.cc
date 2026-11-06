@@ -204,6 +204,14 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   // this phase.
   CompileGraph graph;
   map<string, path> schemas;
+  vector<string> started_schemas;
+  auto finish = [&](bool result) {
+    // Run plugin work serially, after all dictionary writers have stopped.
+    for (const auto& schema_id : started_schemas) {
+      deployer->after_schema_deploy()(deployer, schema_id);
+    }
+    return result;
+  };
   auto process_schema = [&](const string& schema_id, bool as_dependency) {
     if (schemas.find(schema_id) != schemas.end())  // already processed
       return;
@@ -220,6 +228,8 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
       }
       return;
     }
+    started_schemas.push_back(schema_id);
+    deployer->before_schema_deploy()(deployer, schema_id);
     the<DeploymentTask> config_file_update(
         new ConfigFileUpdate(schema_id + ".schema.yaml", "schema/version"));
     if (!config_file_update->Run(deployer)) {
@@ -281,13 +291,13 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   // Phase 2: execute the constructed graph of compile units; independent
   // units may be compiled in parallel.
   if (!MaybeCreateDirectory(deployer->staging_dir)) {
-    return false;
+    return finish(false);
   }
   CompileScheduler scheduler;
   auto compile_result = scheduler.Run(graph);
   if (!compile_result) {
     LOG(ERROR) << "error in compile graph.";
-    return false;
+    return finish(false);
   }
   success += compile_result->success;
   failure += compile_result->failure;
@@ -298,7 +308,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   // TODO: store as 64-bit number to avoid the year 2038 problem
   user_config->SetInt("var/last_build_time", (int)time(NULL));
 
-  return failure == 0;
+  return finish(failure == 0);
 }
 
 SchemaUpdate::SchemaUpdate(TaskInitializer arg) : verbose_(false) {
@@ -385,29 +395,35 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     return false;
   }
 
+  deployer->before_schema_deploy()(deployer, schema_id);
+  auto finish = [&](bool result) {
+    deployer->after_schema_deploy()(deployer, schema_id);
+    return result;
+  };
+
   the<DeploymentTask> config_file_update(
       new ConfigFileUpdate(schema_id + ".schema.yaml", "schema/version"));
   if (!config_file_update->Run(deployer)) {
-    return false;
+    return finish(false);
   }
   // reload compiled config
   config.reset(Config::Require("schema")->Create(schema_id));
   string dict_name;
   if (!config->GetString("translator/dictionary", &dict_name)) {
     // not requiring a dictionary
-    return true;
+    return finish(true);
   }
   LOG(INFO) << "preparing dictionary '" << dict_name << "'.";
   if (!MaybeCreateDirectory(deployer->staging_dir)) {
-    return false;
+    return finish(false);
   }
   CompileUnit unit;
   switch (CreateDictionaryCompileUnit(schema_id, std::move(config), verbose_,
                                       &unit)) {
     case CompileUnitResult::kTrivial:
-      return true;
+      return finish(true);
     case CompileUnitResult::kError:
-      return false;
+      return finish(false);
     case CompileUnitResult::kCreated:
       break;
   }
@@ -415,15 +431,15 @@ bool SchemaUpdate::Run(Deployer* deployer) {
   if (!graph.AddUnit(std::move(unit))) {
     LOG(ERROR) << "failed to add compile unit for schema '" << schema_id
                << "'.";
-    return false;
+    return finish(false);
   }
   CompileScheduler scheduler;
   auto result = scheduler.Run(graph);
   if (!result) {
     LOG(ERROR) << "error in compile graph.";
-    return false;
+    return finish(false);
   }
-  return result->failure == 0;
+  return finish(result->failure == 0);
 }
 
 ConfigFileUpdate::ConfigFileUpdate(TaskInitializer arg) {
