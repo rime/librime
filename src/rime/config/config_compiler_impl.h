@@ -21,6 +21,8 @@ enum DependencyPriority {
 struct Dependency {
   an<ConfigItemRef> target;
 
+  virtual ~Dependency() = default;
+
   virtual DependencyPriority priority() const = 0;
   bool blocking() const { return priority() > kPendingChild; }
   virtual string repr() const = 0;
