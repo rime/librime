@@ -36,16 +36,20 @@ else()
 endif()
 
 set(rime_optional_deps "")
-if(Gflags_FOUND)
+if(ENABLE_LOGGING AND Gflags_FOUND)
   set(rime_optional_deps ${rime_optional_deps} ${Gflags_LIBRARY})
 endif()
 if(ENABLE_EXTERNAL_PLUGINS)
   set(rime_optional_deps ${rime_optional_deps} dl)
 endif()
 
+if(ENABLE_LOGGING)
+  set(_glog_library ${Glog_LIBRARY})
+endif()
+
 set(rime_core_deps
     ${Boost_LIBRARIES}
-    ${Glog_LIBRARY}
+    ${_glog_library}
     ${YamlCpp_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     ${rime_optional_deps})
@@ -57,7 +61,7 @@ set(rime_gears_deps
     ${Opencc_LIBRARY})
 set(rime_levers_deps "")
 
-if(Glog_FOUND AND WIN32)
+if(ENABLE_LOGGING AND Glog_FOUND AND WIN32)
   # TODO: in glog v0.7.0, someone at Google forget to add dbghelp.lib to the linker library list.
   set(rime_core_deps ${rime_core_deps} dbghelp)
 endif()

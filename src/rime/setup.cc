@@ -10,7 +10,7 @@
 #ifdef RIME_ENABLE_LOGGING
 #include <glog/logging.h>
 #else
-#include "no_logging.h"
+#include "logging.h"
 #endif  // RIME_ENABLE_LOGGING
 
 #include <rime_api.h>

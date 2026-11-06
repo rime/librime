@@ -57,6 +57,60 @@ Runtime dependencies
   - libopencc
   - libyaml-cpp
 
+Logging
+---
+`ENABLE_LOGGING` defaults to `ON`, which keeps librime's existing
+google-glog integration unchanged (`min_log_level`, `log_dir`,
+`RimeSetupLogging()`, and automatic log-file cleanup all behave as before).
+
+Build with `-DENABLE_LOGGING=OFF` to use the handler-based logging facade
+instead. In that configuration librime does not depend on glog and does not
+write log files. Log records are delivered to a `RimeLogHandler` installed
+through `RimeApi::set_log_handler`:
+
+```c
+static void on_log(void* context, const RimeLogRecord* record) {
+  my_log_library_write(record->level, record->message);
+}
+
+RimeApi* api = rime_get_api();
+if (!api->set_log_handler(on_log, my_context)) {
+  /* built with ENABLE_LOGGING=ON: google-glog owns logging */
+}
+```
+
+C++ callers can use `rime::SetLogHandler` with a `std::function` and
+`rime::ClearLogHandler`:
+
+```cpp
+if (!rime::SetLogHandler([&](const RimeLogRecord& record) {
+      my_log_library_write(record.level, record.message);
+    })) {
+  /* built with ENABLE_LOGGING=ON: google-glog owns logging */
+}
+rime::ClearLogHandler();
+```
+
+Both APIs return `true` when the handler was installed or cleared. They
+return `false` when librime was built with `ENABLE_LOGGING=ON`, where
+google-glog owns logging and the handler is never called.
+
+The `ENABLE_LOGGING=OFF` facade intentionally provides only a small subset of
+the glog macros: `LOG`, `LOG_IF`, `DLOG`, `CHECK`, and the debug-only
+`DCHECK`. Other glog macros are not defined in this configuration. The
+default `ENABLE_LOGGING=ON` build continues to expose the complete glog macro
+set.
+
+Without a handler, all non-fatal records are discarded. Log statements
+short-circuit when disabled (no handler for a non-fatal record, or a false
+`LOG_IF` condition), so their streamed arguments are not evaluated. `FATAL`
+records from `CHECK` failures are written to stderr and abort the process. The
+handler is called synchronously on the logging thread; calls are serialized by
+an internal lock, so the handler does not need to synchronize librime callbacks
+itself, but it must not log through librime recursively. Replacing or clearing
+the handler waits for in-flight callbacks to finish, so a captured context can
+be destroyed after it returns.
+
 Build and install on Linux
 ---
 ```
