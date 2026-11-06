@@ -22,7 +22,7 @@ class Projection;
 using SyllableId = int32_t;
 
 struct EdgeProperties : SpellingProperties {
-  EdgeProperties(SpellingProperties sup) : SpellingProperties(sup) {};
+  EdgeProperties(SpellingProperties sup) : SpellingProperties(sup){};
   EdgeProperties() = default;
   // 切分歧義編碼段的起始位置
   set<size_t> ambiguous_source_positions;
