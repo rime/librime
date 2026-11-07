@@ -9,6 +9,9 @@
 
 #ifdef RIME_ENABLE_LOGGING
 #include <glog/logging.h>
+#if __has_include(<glog/version.h>)
+#include <glog/version.h>
+#endif
 #else
 #include "no_logging.h"
 #endif  // RIME_ENABLE_LOGGING
@@ -102,11 +105,18 @@ RIME_DLL void SetupLogging(const char* app_name,
   // Do not allow other users to read/write log files created by current
   // process.
   FLAGS_logfile_mode = 0600;
+#if defined(GLOG_VERSION_MAJOR) && defined(GLOG_VERSION_MINOR) && \
+    (GLOG_VERSION_MAJOR > 0 || GLOG_VERSION_MINOR >= 6)
   if (google::IsGoogleLoggingInitialized()) {
     LOG(WARNING) << "Glog is already initialized.";
   } else {
     google::InitGoogleLogging(app_name);
   }
+#else
+  // glog < 0.6 (e.g. Ubuntu 22.04) lacks google::IsGoogleLoggingInitialized();
+  // re-initializing was harmless there before the guard was introduced.
+  google::InitGoogleLogging(app_name);
+#endif
 #endif  // RIME_ENABLE_LOGGING
 }
 
