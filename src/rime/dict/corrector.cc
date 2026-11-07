@@ -196,7 +196,7 @@ Distance EditDistanceCorrector::RestrictedDistance(const std::string& s1,
   auto len1 = s1.size(), len2 = s2.size();
   vector<size_t> d((len1 + 1) * (len2 + 1));
 
-  auto index = [len1, len2](size_t i, size_t j) { return i * (len2 + 1) + j; };
+  auto index = [len2](size_t i, size_t j) { return i * (len2 + 1) + j; };
 
   d[0] = 0;
   for (size_t i = 1; i <= len1; ++i)

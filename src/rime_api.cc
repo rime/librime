@@ -19,7 +19,7 @@ RIME_DEPRECATED void RimeSetupLogging(const char* app_name) {
   SetupLogging(app_name);
 }
 
-#if RIME_BUILD_SHARED_LIBS
+#ifdef RIME_BUILD_SHARED_LIBS
 void rime_declare_module_dependencies() {}
 #else
 #include <boost/preprocessor/cat.hpp>
