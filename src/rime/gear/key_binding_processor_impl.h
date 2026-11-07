@@ -48,7 +48,7 @@ ProcessResult KeyBindingProcessor<T, N>::ProcessKeyEvent(
 template <class T, int N>
 typename KeyBindingProcessor<T, N>::Keymap&
 KeyBindingProcessor<T, N>::get_keymap(int keymap_selector) {
-  DCHECK_LT(keymap_selector, N);
+  DCHECK(keymap_selector < N);
   return keymaps_[keymap_selector];
 }
 
