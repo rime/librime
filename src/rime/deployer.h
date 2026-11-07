@@ -31,6 +31,23 @@ class DeploymentTask : public Class<DeploymentTask, TaskInitializer> {
 
 class Deployer : public Messenger {
  public:
+  using SchemaDeploymentNotifier =
+      signal<void(Deployer* deployer, const string& schema_id)>;
+
+  // Synchronous notifications on the deployment caller's thread. Before is
+  // emitted once the schema ID/source is known, before updating its config.
+  // After pairs with Before on normal returns, including deployment failures;
+  // it does not guarantee valid artifacts. Workspace After notifications wait
+  // until all dictionary compile units have finished, and follow Before order.
+  // Slots must handle their own errors/exceptions and must not reenter
+  // deployment. Disconnect plugin slots before unloading the plugin.
+  SchemaDeploymentNotifier& before_schema_deploy() {
+    return before_schema_deploy_;
+  }
+  SchemaDeploymentNotifier& after_schema_deploy() {
+    return after_schema_deploy_;
+  }
+
   // read-only access after library initialization {
   path shared_data_dir;
   path user_data_dir;
@@ -68,6 +85,8 @@ class Deployer : public Messenger {
   path user_data_sync_dir() const;
 
  private:
+  SchemaDeploymentNotifier before_schema_deploy_;
+  SchemaDeploymentNotifier after_schema_deploy_;
   std::queue<of<DeploymentTask>> pending_tasks_;
   std::mutex mutex_;
   std::future<void> work_;
