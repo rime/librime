@@ -82,7 +82,7 @@ static bool is_after_number(Context* ctx) {
     return false;
   }
   const CommitRecord& cr = history.back();
-  return ends_with_digit(cr.text) & (cr.type == "thru" || cr.type == "raw");
+  return ends_with_digit(cr.text) && (cr.type == "thru" || cr.type == "raw");
 }
 
 static bool is_after_digit_separator(Context* ctx) {
