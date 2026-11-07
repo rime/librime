@@ -7,7 +7,7 @@ tools and libraries:
 
   - Visual Studio 2022 or LLVM 16
   - [Boost](http://www.boost.org/)>=1.83
-  - [cmake](http://www.cmake.org/)>=3.10
+  - [cmake](http://www.cmake.org/)>=3.25
 
 Boost and cmake versions need to match higher VS version.
 
