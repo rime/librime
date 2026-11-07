@@ -136,6 +136,11 @@ if(LevelDb_FOUND)
     include_directories(${LevelDb_INCLUDE_PATH})
 endif()
 
+# Don't let leveldb's PUBLIC -Werror turn librime warnings into errors.
+if(TARGET leveldb)
+  target_compile_options(leveldb INTERFACE -Wno-error)
+endif()
+
 find_package(Marisa REQUIRED)
 if(Marisa_FOUND)
   include_directories(${Marisa_INCLUDE_PATH})
