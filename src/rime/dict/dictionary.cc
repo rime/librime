@@ -72,31 +72,37 @@ struct Chunk {
 struct QueryResult {
   vector<Chunk> chunks;
   // whether the remaining chunks are organized as a binary heap with the
-  // chunk holding the best entry at the front.
+  // chunk holding the best entry at the front. Set by Sort() and kept by
+  // FindNextEntry(); AddChunk() and Skip() reset it.
   bool is_heap = false;
 };
 
-bool compare_chunk_by_head_element(const Chunk& a, const Chunk& b) {
-  if (!a.entries || a.cursor >= a.size)
-    return false;
-  if (!b.entries || b.cursor >= b.size)
-    return true;
+static int compare_head_entries(const Chunk& a, const Chunk& b) {
+  const bool a_exhausted = !a.entries || a.cursor >= a.size;
+  const bool b_exhausted = !b.entries || b.cursor >= b.size;
+  if (a_exhausted || b_exhausted)
+    return int(a_exhausted) - int(b_exhausted);  // exhausted chunks go last
   if (a.is_exact_match() != b.is_exact_match())
-    return a.is_exact_match() > b.is_exact_match();
-  if (a.remaining_code.length() != b.remaining_code.length())
-    return a.remaining_code.length() < b.remaining_code.length();
-  return a.credibility + a.entries[a.cursor].weight >
-         b.credibility + b.entries[b.cursor].weight;  // by weight desc
+    return a.is_exact_match() ? -1 : 1;
+  const size_t a_remaining = a.remaining_code.length();
+  const size_t b_remaining = b.remaining_code.length();
+  if (a_remaining != b_remaining)
+    return a_remaining < b_remaining ? -1 : 1;
+  // by weight desc
+  const double a_weight = a.credibility + a.entries[a.cursor].weight;
+  const double b_weight = b.credibility + b.entries[b.cursor].weight;
+  if (a_weight > b_weight)
+    return -1;
+  if (a_weight < b_weight)
+    return 1;
+  return 0;
 }
 
 // Heap order: true if chunk a should be visited after chunk b.
 // Chunks with equal head elements are visited in insertion order.
 static bool chunk_visited_later(const Chunk& a, const Chunk& b) {
-  if (compare_chunk_by_head_element(b, a))
-    return true;
-  if (compare_chunk_by_head_element(a, b))
-    return false;
-  return a.order > b.order;
+  const int cmp = compare_head_entries(a, b);
+  return cmp != 0 ? cmp > 0 : a.order > b.order;
 }
 
 struct CodeMatch {
@@ -172,6 +178,8 @@ void DictEntryIterator::AddChunk(dictionary::Chunk&& chunk) {
 }
 
 void DictEntryIterator::Sort() {
+  if (query_result_->is_heap)
+    return;
   auto& chunks = query_result_->chunks;
   // arrange remaining chunks in a heap, with the best match at chunk_index_
   if (chunk_index_ < chunks.size()) {
