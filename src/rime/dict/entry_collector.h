@@ -27,14 +27,14 @@ struct RawDictEntry {
 };
 
 // For the sake of memory usage, don't use word -> { code -> weight } as there
-// may be many words, but may not be many representations for a word.
-// The first representation is stored inline to avoid one heap allocation per
-// word; extra representations are rare.
+// may be many words, but may not be many homographs for a word.
+// The first encoding is stored inline to avoid one heap allocation per word;
+// homographs are rare.
 struct WordEntries {
   bool initialized = false;
   string code;
   double weight = 0.0;
-  vector<pair<string, double>> extra_codes;
+  vector<pair<string, double>> homographs;
 };
 
 #if BOOST_VERSION >= 108100

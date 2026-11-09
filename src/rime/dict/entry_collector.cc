@@ -271,7 +271,7 @@ void EntryCollector::CreateEntryImpl(std::string_view word,
     } else {
       bool duplicate =
           std::string_view(word.code) == code_str ||
-          std::any_of(word.extra_codes.begin(), word.extra_codes.end(),
+          std::any_of(word.homographs.begin(), word.homographs.end(),
                       [&](const auto& p) {
                         return std::string_view(p.first) == code_str;
                       });
@@ -280,7 +280,7 @@ void EntryCollector::CreateEntryImpl(std::string_view word,
                      << code_str << "].";
         return;
       }
-      word.extra_codes.emplace_back(string(code_str), e.weight);
+      word.homographs.emplace_back(string(code_str), e.weight);
     }
   }
   entries.emplace_back(std::move(e));
@@ -299,26 +299,26 @@ bool EntryCollector::TranslateWord(const string& word, vector<string>* result) {
   if (w != words.end()) {
     const auto& word_entries = w->second;
     const double kMinimalWeight = 0.05;  // 5%
-    if (word_entries.extra_codes.empty()) {
+    if (word_entries.homographs.empty()) {
       if (!(word_entries.weight < word_entries.weight * kMinimalWeight))
         result->push_back(word_entries.code);
       return true;
     }
-    struct Representation {
+    struct Encoding {
       std::string_view code;
       double weight;
     };
-    vector<Representation> representations;
-    representations.reserve(1 + word_entries.extra_codes.size());
-    representations.push_back({word_entries.code, word_entries.weight});
+    vector<Encoding> encodings;
+    encodings.reserve(1 + word_entries.homographs.size());
+    encodings.push_back({word_entries.code, word_entries.weight});
     double total_weight = word_entries.weight;
-    for (const auto& extra : word_entries.extra_codes) {
-      representations.push_back({extra.first, extra.second});
+    for (const auto& extra : word_entries.homographs) {
+      encodings.push_back({extra.first, extra.second});
       total_weight += extra.second;
     }
-    std::sort(representations.begin(), representations.end(),
+    std::sort(encodings.begin(), encodings.end(),
               [](const auto& a, const auto& b) { return a.code < b.code; });
-    for (const auto& v : representations) {
+    for (const auto& v : encodings) {
       double min_weight = total_weight * kMinimalWeight;
       if (v.weight < min_weight)
         continue;
