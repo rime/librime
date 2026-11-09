@@ -94,6 +94,14 @@ void EntryCollector::Configure(DictSettings* settings) {
 }
 
 void EntryCollector::Collect(const vector<path>& dict_files) {
+  size_t line_count = 0;
+  for (const path& dict_file : dict_files) {
+    line_count += CountLines(dict_file);
+  }
+  if (line_count) {
+    entries.reserve(entries.size() + line_count);
+    words.reserve(words.size() + line_count);
+  }
   for (const path& dict_file : dict_files) {
     Collect(dict_file);
   }
@@ -116,10 +124,6 @@ void EntryCollector::Collect(const path& dict_file) {
   LOG(INFO) << "collecting entries from " << dict_file;
   current_dict_file = dict_file.to_utf8_string();
   line_number = 0;
-  if (size_t line_count = CountLines(dict_file)) {
-    entries.reserve(entries.size() + line_count);
-    words.reserve(words.size() + line_count);
-  }
   // read table
   std::ifstream fin(dict_file.c_str());
   DictSettings settings;

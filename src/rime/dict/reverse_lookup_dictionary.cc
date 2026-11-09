@@ -148,7 +148,7 @@ bool ReverseDb::Build(DictSettings* settings,
       previous = syllable;
       first = false;
     }
-    key_trie_builder.Add(text, 0.0, &key_ids[i]);
+    key_trie_builder.AddView(text, 0.0, &key_ids[i]);
     value_trie_builder.Add(value, 0.0, &value_ids[i]);
     ++i;
   }

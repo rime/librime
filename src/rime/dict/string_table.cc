@@ -73,12 +73,12 @@ size_t StringTable::BinarySize() const {
 void StringTableBuilder::Add(const string& key,
                              double weight,
                              StringId* reference) {
-  Add(std::string_view(key), weight, reference);
+  AddView(std::string_view(key), weight, reference);
 }
 
-void StringTableBuilder::Add(std::string_view key,
-                             double weight,
-                             StringId* reference) {
+void StringTableBuilder::AddView(std::string_view key,
+                                 double weight,
+                                 StringId* reference) {
   keys_.push_back(key.empty() ? "" : key.data(), key.size(), (float)weight);
   references_.push_back(reference);
 }
