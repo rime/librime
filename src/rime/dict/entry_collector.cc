@@ -117,10 +117,8 @@ void EntryCollector::Collect(const path& dict_file) {
   current_dict_file = dict_file.to_utf8_string();
   line_number = 0;
   if (size_t line_count = CountLines(dict_file)) {
-    constexpr size_t kReserveChunk = 1 << 20;
-    size_t reserve_count = std::min(line_count, kReserveChunk);
-    entries.reserve(entries.size() + reserve_count);
-    words.reserve(words.size() + reserve_count);
+    entries.reserve(entries.size() + line_count);
+    words.reserve(words.size() + line_count);
   }
   // read table
   std::ifstream fin(dict_file.c_str());
