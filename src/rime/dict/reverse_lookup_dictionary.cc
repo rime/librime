@@ -98,15 +98,15 @@ bool ReverseDb::Build(DictSettings* settings,
   // a flat sorted array instead of a nested hash map, saving both time and
   // memory.
   size_t reverse_entry_count = 0;
-  SyllableId syllable_id = 0;
-  for (const auto& syllable : syllabary) {
-    auto it = vocabulary.find(syllable_id++);
+  for (SyllableId syllable_id = 0;
+       syllable_id < static_cast<SyllableId>(syllabary.size()); ++syllable_id) {
+    auto it = vocabulary.find(syllable_id);
     if (it != vocabulary.end())
       reverse_entry_count += it->second.entries.size();
   }
   vector<ReverseEntry> reverse_entries;
   reverse_entries.reserve(reverse_entry_count);
-  syllable_id = 0;
+  SyllableId syllable_id = 0;
   for (const auto& syllable : syllabary) {
     auto it = vocabulary.find(syllable_id++);
     if (it == vocabulary.end())
