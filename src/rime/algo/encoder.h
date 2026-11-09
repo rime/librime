@@ -18,7 +18,8 @@ class RawCode : public vector<string> {
  public:
   RIME_DLL string ToString() const;
   RIME_DLL void FromString(const string& code_str);
-  RIME_DLL void FromStringView(std::string_view code_str);
+  // Internal parsing path; not part of the exported API.
+  void FromStringView(std::string_view code_str);
 };
 
 class PhraseCollector {

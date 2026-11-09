@@ -117,8 +117,10 @@ void EntryCollector::Collect(const path& dict_file) {
   current_dict_file = dict_file.to_utf8_string();
   line_number = 0;
   if (size_t line_count = CountLines(dict_file)) {
-    entries.reserve(entries.size() + line_count);
-    words.reserve(words.size() + line_count);
+    constexpr size_t kReserveChunk = 1 << 20;
+    size_t reserve_count = std::min(line_count, kReserveChunk);
+    entries.reserve(entries.size() + reserve_count);
+    words.reserve(words.size() + reserve_count);
   }
   // read table
   std::ifstream fin(dict_file.c_str());
@@ -298,6 +300,12 @@ bool EntryCollector::TranslateWord(const string& word, vector<string>* result) {
   const auto& w = words.find(word);
   if (w != words.end()) {
     const auto& word_entries = w->second;
+    const double kMinimalWeight = 0.05;  // 5%
+    if (word_entries.extra_codes.empty()) {
+      if (!(word_entries.weight < word_entries.weight * kMinimalWeight))
+        result->push_back(word_entries.code);
+      return true;
+    }
     struct Representation {
       std::string_view code;
       double weight;
@@ -313,7 +321,6 @@ bool EntryCollector::TranslateWord(const string& word, vector<string>* result) {
     std::sort(representations.begin(), representations.end(),
               [](const auto& a, const auto& b) { return a.code < b.code; });
     for (const auto& v : representations) {
-      const double kMinimalWeight = 0.05;  // 5%
       double min_weight = total_weight * kMinimalWeight;
       if (v.weight < min_weight)
         continue;

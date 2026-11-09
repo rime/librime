@@ -79,7 +79,7 @@ void StringTableBuilder::Add(const string& key,
 void StringTableBuilder::Add(std::string_view key,
                              double weight,
                              StringId* reference) {
-  keys_.push_back(key.data(), key.size(), (float)weight);
+  keys_.push_back(key.empty() ? "" : key.data(), key.size(), (float)weight);
   references_.push_back(reference);
 }
 

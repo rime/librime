@@ -82,6 +82,20 @@ TEST_F(RimeEntryCollectorTest, WithoutPresetDoesNotCollectWords) {
   ExpectEntry(collector, "ab", "a b", 30);
 }
 
+TEST_F(RimeEntryCollectorTest, MultipleWordCodesAreSortedAndDeduplicated) {
+  TestEntryCollector collector;
+  collector.CreateEntry("word", "z", "1");
+  collector.CreateEntry("word", "a", "1");
+  collector.CreateEntry("word", "a", "2");
+
+  std::vector<rime::string> codes;
+  ASSERT_TRUE(collector.TranslateWord("word", &codes));
+  ASSERT_EQ(2u, codes.size());
+  EXPECT_EQ("a", codes[0]);
+  EXPECT_EQ("z", codes[1]);
+  EXPECT_EQ(2u, collector.num_entries);
+}
+
 TEST_F(RimeEntryCollectorTest, PresetWeightsDeduplicationAndRelease) {
   auto preset = WriteFile("preset.txt",
                           "a\t100\n"
