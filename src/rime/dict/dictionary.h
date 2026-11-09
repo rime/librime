@@ -27,8 +27,8 @@ class RIME_DLL DictEntryIterator : public DictEntryFilterBinder {
  public:
   DictEntryIterator();
   virtual ~DictEntryIterator() = default;
-  DictEntryIterator(const DictEntryIterator& other) = default;
-  DictEntryIterator& operator=(const DictEntryIterator& other) = default;
+  DictEntryIterator(const DictEntryIterator& other);
+  DictEntryIterator& operator=(const DictEntryIterator& other);
   DictEntryIterator(DictEntryIterator&& other) = default;
   DictEntryIterator& operator=(DictEntryIterator&& other) = default;
 

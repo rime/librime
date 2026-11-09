@@ -64,23 +64,45 @@ struct Chunk {
   bool is_exact_match() const { return matching_code_size == code.size(); }
 
   bool is_predictive_match() const { return matching_code_size < code.size(); }
+
+  // insertion order, used to break ties deterministically
+  size_t order = 0;
 };
 
 struct QueryResult {
   vector<Chunk> chunks;
+  // whether the remaining chunks are organized as a binary heap with the
+  // chunk holding the best entry at the front. Set by Sort() and kept by
+  // FindNextEntry(); AddChunk() and Skip() reset it.
+  bool is_heap = false;
 };
 
-bool compare_chunk_by_head_element(const Chunk& a, const Chunk& b) {
-  if (!a.entries || a.cursor >= a.size)
-    return false;
-  if (!b.entries || b.cursor >= b.size)
-    return true;
+static int compare_head_entries(const Chunk& a, const Chunk& b) {
+  const bool a_exhausted = !a.entries || a.cursor >= a.size;
+  const bool b_exhausted = !b.entries || b.cursor >= b.size;
+  if (a_exhausted || b_exhausted)
+    return int(a_exhausted) - int(b_exhausted);  // exhausted chunks go last
   if (a.is_exact_match() != b.is_exact_match())
-    return a.is_exact_match() > b.is_exact_match();
-  if (a.remaining_code.length() != b.remaining_code.length())
-    return a.remaining_code.length() < b.remaining_code.length();
-  return a.credibility + a.entries[a.cursor].weight >
-         b.credibility + b.entries[b.cursor].weight;  // by weight desc
+    return a.is_exact_match() ? -1 : 1;
+  const size_t a_remaining = a.remaining_code.length();
+  const size_t b_remaining = b.remaining_code.length();
+  if (a_remaining != b_remaining)
+    return a_remaining < b_remaining ? -1 : 1;
+  // by weight desc
+  const double a_weight = a.credibility + a.entries[a.cursor].weight;
+  const double b_weight = b.credibility + b.entries[b.cursor].weight;
+  if (a_weight > b_weight)
+    return -1;
+  if (a_weight < b_weight)
+    return 1;
+  return 0;
+}
+
+// Heap order: true if chunk a should be visited after chunk b.
+// Chunks with equal head elements are visited in insertion order.
+static bool chunk_visited_later(const Chunk& a, const Chunk& b) {
+  const int cmp = compare_head_entries(a, b);
+  return cmp != 0 ? cmp > 0 : a.order > b.order;
 }
 
 struct CodeMatch {
@@ -127,17 +149,44 @@ CodeMatch match_extra_code(const table::Code* extra_code,
 DictEntryIterator::DictEntryIterator()
     : query_result_(New<dictionary::QueryResult>()) {}
 
+// Copies must not share the query result: iterating one copy advances chunk
+// cursors and reorders chunks, which would leave the other copy pointing past
+// the end of a chunk.
+DictEntryIterator::DictEntryIterator(const DictEntryIterator& other)
+    : DictEntryFilterBinder(other),
+      query_result_(other.query_result_
+                        ? New<dictionary::QueryResult>(*other.query_result_)
+                        : New<dictionary::QueryResult>()),
+      chunk_index_(other.chunk_index_),
+      entry_(other.entry_),
+      entry_count_(other.entry_count_) {}
+
+DictEntryIterator& DictEntryIterator::operator=(
+    const DictEntryIterator& other) {
+  if (this != &other) {
+    DictEntryIterator copy(other);
+    *this = std::move(copy);
+  }
+  return *this;
+}
+
 void DictEntryIterator::AddChunk(dictionary::Chunk&& chunk) {
-  query_result_->chunks.push_back(std::move(chunk));
   entry_count_ += chunk.size;
+  chunk.order = query_result_->chunks.size();
+  query_result_->chunks.push_back(std::move(chunk));
+  query_result_->is_heap = false;
 }
 
 void DictEntryIterator::Sort() {
+  if (query_result_->is_heap)
+    return;
   auto& chunks = query_result_->chunks;
-  // partial-sort remaining chunks, move best match to chunk_index_
-  std::partial_sort(chunks.begin() + chunk_index_,
-                    chunks.begin() + chunk_index_ + 1, chunks.end(),
-                    dictionary::compare_chunk_by_head_element);
+  // arrange remaining chunks in a heap, with the best match at chunk_index_
+  if (chunk_index_ < chunks.size()) {
+    std::make_heap(chunks.begin() + chunk_index_, chunks.end(),
+                   dictionary::chunk_visited_later);
+  }
+  query_result_->is_heap = true;
 }
 
 void DictEntryIterator::AddFilter(DictEntryFilter filter) {
@@ -178,16 +227,32 @@ bool DictEntryIterator::FindNextEntry() {
   if (exhausted()) {
     return false;
   }
-  auto& chunk = query_result_->chunks[chunk_index_];
-  if (++chunk.cursor >= chunk.size) {
-    ++chunk_index_;
+  auto& chunks = query_result_->chunks;
+  if (!query_result_->is_heap) {
+    auto& chunk = chunks[chunk_index_];
+    if (++chunk.cursor >= chunk.size) {
+      ++chunk_index_;
+    }
+    if (exhausted()) {
+      return false;
+    }
+    // reorder chunks to move the one with the best entry to head
+    Sort();
+    return true;
   }
-  if (exhausted()) {
-    return false;
+  // Take the head chunk off the heap, advance it, and put it back unless it
+  // has run out of entries. This costs O(log n) per entry instead of
+  // rescanning all remaining chunks, which made iterating through large
+  // completion results quadratic.
+  auto first = chunks.begin() + chunk_index_;
+  std::pop_heap(first, chunks.end(), dictionary::chunk_visited_later);
+  auto& chunk = chunks.back();
+  if (++chunk.cursor < chunk.size) {
+    std::push_heap(first, chunks.end(), dictionary::chunk_visited_later);
+  } else {
+    chunks.pop_back();
   }
-  // reorder chunks to move the one with the best entry to head
-  Sort();
-  return true;
+  return !exhausted();
 }
 
 bool DictEntryIterator::Next() {
@@ -202,6 +267,11 @@ bool DictEntryIterator::Next() {
 
 // Note: does not apply filters
 bool DictEntryIterator::Skip(size_t num_entries) {
+  if (num_entries == 0)
+    return true;
+  // the cached entry and the heap order are invalidated by skipping entries
+  entry_.reset();
+  query_result_->is_heap = false;
   while (num_entries > 0) {
     if (exhausted())
       return false;
