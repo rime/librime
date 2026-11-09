@@ -473,9 +473,9 @@ table::TailIndex* Table::BuildTailIndex(const Code& prefix,
   size_t count = 0;
   for (const auto& src : page.entries) {
     DLOG(INFO) << "count: " << count;
-    DLOG(INFO) << "entry: " << src->text;
+    DLOG(INFO) << "entry: " << src.text;
     auto& dest(index->at[count++]);
-    size_t extra_code_length = src->code.size() - Code::kIndexCodeMaxLength;
+    size_t extra_code_length = src.code.size() - Code::kIndexCodeMaxLength;
     DLOG(INFO) << "extra code length: " << extra_code_length;
     dest.extra_code.size = extra_code_length;
     dest.extra_code.at = Allocate<SyllableId>(extra_code_length);
@@ -483,9 +483,9 @@ table::TailIndex* Table::BuildTailIndex(const Code& prefix,
       LOG(ERROR) << "Error creating code sequence; file size: " << file_size();
       return NULL;
     }
-    std::copy(src->code.begin() + Code::kIndexCodeMaxLength, src->code.end(),
+    std::copy(src.code.begin() + Code::kIndexCodeMaxLength, src.code.end(),
               dest.extra_code.begin());
-    BuildEntry(*src, &dest.entry);
+    BuildEntry(src, &dest.entry);
   }
   return index;
 }
@@ -496,7 +496,7 @@ Array<table::Entry>* Table::BuildEntryArray(const ShortDictEntryList& entries) {
     return NULL;
   }
   for (size_t i = 0; i < entries.size(); ++i) {
-    if (!BuildEntry(*entries[i], &array->at[i])) {
+    if (!BuildEntry(entries[i], &array->at[i])) {
       return NULL;
     }
   }
@@ -515,7 +515,7 @@ bool Table::BuildEntryList(const ShortDictEntryList& src,
   }
   size_t i = 0;
   for (auto d = src.begin(); d != src.end(); ++d, ++i) {
-    if (!BuildEntry(**d, &dest->at[i]))
+    if (!BuildEntry(*d, &dest->at[i]))
       return false;
   }
   return true;

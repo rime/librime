@@ -112,7 +112,7 @@ bool ReverseDb::Build(DictSettings* settings,
     if (it == vocabulary.end())
       continue;
     for (const auto& e : it->second.entries)
-      reverse_entries.push_back({e->text, syllable});
+      reverse_entries.push_back({e.text, syllable});
   }
   std::sort(reverse_entries.begin(), reverse_entries.end(),
             [](const ReverseEntry& a, const ReverseEntry& b) {

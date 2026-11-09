@@ -50,10 +50,10 @@ class RimeEntryCollectorTest : public ::testing::Test {
                    double weight) {
     size_t matches = 0;
     for (const auto& entry : collector.entries) {
-      if (entry->text == text) {
+      if (entry.text == text) {
         ++matches;
-        EXPECT_EQ(code, entry->raw_code.ToString());
-        EXPECT_DOUBLE_EQ(weight, entry->weight);
+        EXPECT_EQ(code, entry.raw_code.ToString());
+        EXPECT_DOUBLE_EQ(weight, entry.weight);
       }
     }
     EXPECT_EQ(1u, matches) << text;

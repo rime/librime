@@ -8,6 +8,7 @@
 #ifndef RIME_ENCODER_H_
 #define RIME_ENCODER_H_
 
+#include <string_view>
 #include <boost/regex.hpp>
 #include <rime_api.h>
 
@@ -17,6 +18,7 @@ class RawCode : public vector<string> {
  public:
   RIME_DLL string ToString() const;
   RIME_DLL void FromString(const string& code_str);
+  RIME_DLL void FromStringView(std::string_view code_str);
 };
 
 class PhraseCollector {

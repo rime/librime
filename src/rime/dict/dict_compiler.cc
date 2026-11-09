@@ -239,26 +239,26 @@ bool DictCompiler::BuildTable(int table_index,
     for (const auto& s : collector.syllabary) {
       syllable_to_id[s] = syllable_id++;
     }
-    for (const auto& r : collector.entries) {
+    for (auto& r : collector.entries) {
       Code code;
-      for (const auto& s : r->raw_code) {
+      for (const auto& s : r.raw_code) {
         code.push_back(syllable_to_id[s]);
       }
       // release memory in time to reduce memory usage
-      RawCode().swap(r->raw_code);
+      RawCode().swap(r.raw_code);
       auto ls = vocabulary.LocateEntries(code);
       if (!ls) {
         LOG(ERROR) << "Error locating entries in vocabulary.";
         continue;
       }
-      auto e = New<ShortDictEntry>();
-      e->code.swap(code);
-      e->text.swap(r->text);
-      e->weight = log(r->weight > 0 ? r->weight : DBL_EPSILON);
-      ls->push_back(e);
+      ShortDictEntry e;
+      e.code.swap(code);
+      e.text.swap(r.text);
+      e.weight = log(r.weight > 0 ? r.weight : DBL_EPSILON);
+      ls->push_back(std::move(e));
     }
     // release memory in time to reduce memory usage
-    vector<of<RawDictEntry>>().swap(collector.entries);
+    decltype(collector.entries)().swap(collector.entries);
     if (settings->sort_order() != "original") {
       vocabulary.SortHomophones();
     }

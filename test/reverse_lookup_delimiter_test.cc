@@ -70,12 +70,12 @@ TEST(ReverseLookupDictionary, BuildsAndReloadsEntriesAndStems) {
   db->Remove();
   rime::Syllabary syllabary{"a", "b", "c"};
   rime::Vocabulary vocabulary;
-  auto entry = rime::New<rime::ShortDictEntry>();
-  entry->text = "shared";
+  rime::ShortDictEntry entry;
+  entry.text = "shared";
   vocabulary[0].entries.push_back(entry);
   vocabulary[1].entries.push_back(entry);
-  auto other = rime::New<rime::ShortDictEntry>();
-  other->text = "other";
+  rime::ShortDictEntry other;
+  other.text = "other";
   vocabulary[1].entries.push_back(other);
   rime::ReverseLookupTable stems;
   stems["shared"].insert("z");

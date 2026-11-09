@@ -69,7 +69,7 @@ struct DictEntry {
   bool operator<(const DictEntry& other) const;
 };
 
-class ShortDictEntryList : public vector<of<ShortDictEntry>> {
+class ShortDictEntryList : public vector<ShortDictEntry> {
  public:
   void Sort();
   void SortRange(size_t start, size_t count);

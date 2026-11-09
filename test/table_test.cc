@@ -47,34 +47,28 @@ class InspectableTable : public rime::Table {
 
 void RimeTableTest::PrepareSampleVocabulary(rime::Syllabary& syll,
                                             rime::Vocabulary& voc) {
-  auto d = rime::New<rime::ShortDictEntry>();
+  rime::ShortDictEntry d;
   syll.insert("0");
   // no entries for '0', however
   syll.insert("1");
-  d->code.push_back(1);
-  d->text = "yi";
-  d->weight = 1.0;
+  d.code.push_back(1);
+  d.text = "yi";
+  d.weight = 1.0;
   voc[1].entries.push_back(d);
-  d = rime::New<rime::ShortDictEntry>(*d);
   syll.insert("2");
-  d->code.back() = 2;
-  d->text = "er";
+  d.code.back() = 2;
+  d.text = "er";
   voc[2].entries.push_back(d);
-  d = rime::New<rime::ShortDictEntry>(*d);
-  d->text = "liang";
+  d.text = "liang";
   voc[2].entries.push_back(d);
-  d = rime::New<rime::ShortDictEntry>(*d);
-  d->text = "lia";
+  d.text = "lia";
   voc[2].entries.push_back(d);
-  d = rime::New<rime::ShortDictEntry>(*d);
   syll.insert("3");
-  d->code.back() = 3;
-  d->text = "san";
+  d.code.back() = 3;
+  d.text = "san";
   voc[3].entries.push_back(d);
-  d = rime::New<rime::ShortDictEntry>(*d);
-  d->text = "sa";
+  d.text = "sa";
   voc[3].entries.push_back(d);
-  d = rime::New<rime::ShortDictEntry>(*d);
   syll.insert("4");
   auto lv2 = rime::New<rime::Vocabulary>();
   voc[1].next_level = lv2;
@@ -82,20 +76,18 @@ void RimeTableTest::PrepareSampleVocabulary(rime::Syllabary& syll,
   (*lv2)[2].next_level = lv3;
   auto lv4 = rime::New<rime::Vocabulary>();
   (*lv3)[3].next_level = lv4;
-  d->code.back() = 1;
-  d->code.push_back(2);
-  d->code.push_back(3);
-  d->text = "yi-er-san";
+  d.code.back() = 1;
+  d.code.push_back(2);
+  d.code.push_back(3);
+  d.text = "yi-er-san";
   (*lv3)[3].entries.push_back(d);
-  d = rime::New<rime::ShortDictEntry>(*d);
-  d->code.push_back(4);
-  d->text = "yi-er-san-si";
+  d.code.push_back(4);
+  d.text = "yi-er-san-si";
   (*lv4)[-1].entries.push_back(d);
-  d = rime::New<rime::ShortDictEntry>(*d);
-  d->code.resize(3);
-  d->code.push_back(2);
-  d->code.push_back(1);
-  d->text = "yi-er-san-er-yi";
+  d.code.resize(3);
+  d.code.push_back(2);
+  d.code.push_back(1);
+  d.text = "yi-er-san-er-yi";
   (*lv4)[-1].entries.push_back(d);
 }
 
