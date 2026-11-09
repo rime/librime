@@ -18,7 +18,8 @@ class RawCode : public vector<string> {
  public:
   RIME_DLL string ToString() const;
   RIME_DLL void FromString(const string& code_str);
-  // Internal parsing path; not part of the exported API.
+  // Internal parsing path; not part of the exported API. The view is consumed
+  // immediately and is not retained.
   void FromStringView(std::string_view code_str);
 };
 

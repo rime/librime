@@ -23,18 +23,18 @@ namespace rime {
 struct RawDictEntry {
   RawCode raw_code;
   string text;
-  double weight;
+  double weight = 0.0;
 };
 
 // For the sake of memory usage, don't use word -> { code -> weight } as there
-// may be many words, but may not be many homographs for a word.
+// may be many words, but may not be many alternative encodings for a word.
 // The first encoding is stored inline to avoid one heap allocation per word;
-// homographs are rare.
+// alternative encodings are rare.
 struct WordEntries {
-  bool initialized = false;
+  bool has_encoding = false;
   string code;
   double weight = 0.0;
-  vector<pair<string, double>> homographs;
+  vector<pair<string, double>> alternative_encodings;
 };
 
 #if BOOST_VERSION >= 108100

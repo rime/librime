@@ -40,7 +40,8 @@ size_t CountLines(const path& dict_file) {
 }
 
 // Splits a tab-separated row into the columns we are interested in without
-// copying the whole line.
+// copying the whole line. The returned views are valid until the input line is
+// modified or destroyed.
 DictRow ParseDictRow(std::string_view line,
                      int text_column,
                      int code_column,
@@ -73,6 +74,12 @@ DictRow ParseDictRow(std::string_view line,
 
 }  // namespace
 
+static bool HasMinimumWeight(double weight, double total_weight) {
+  constexpr double kMinimalWeight = 0.05;  // 5%
+  // Keep the original comparison semantics, including for NaN values.
+  return !(weight < total_weight * kMinimalWeight);
+}
+
 EntryCollector::EntryCollector() {}
 
 EntryCollector::EntryCollector(Syllabary&& fixed_syllabary)
@@ -94,6 +101,7 @@ void EntryCollector::Configure(DictSettings* settings) {
 }
 
 void EntryCollector::Collect(const vector<path>& dict_files) {
+  // Reserve once for all imports to avoid repeated growth and relocation.
   size_t line_count = 0;
   for (const path& dict_file : dict_files) {
     line_count += CountLines(dict_file);
@@ -268,15 +276,15 @@ void EntryCollector::CreateEntryImpl(std::string_view word,
   bool is_word = (e.raw_code.size() == 1);
   if (is_word) {
     auto& word = words[e.text];
-    if (!word.initialized) {
-      word.initialized = true;
+    if (!word.has_encoding) {
+      word.has_encoding = true;
       word.code.assign(code_str);
       word.weight = e.weight;
     } else {
       bool duplicate =
           std::string_view(word.code) == code_str ||
-          std::any_of(word.homographs.begin(), word.homographs.end(),
-                      [&](const auto& p) {
+          std::any_of(word.alternative_encodings.begin(),
+                      word.alternative_encodings.end(), [&](const auto& p) {
                         return std::string_view(p.first) == code_str;
                       });
       if (duplicate) {
@@ -284,7 +292,7 @@ void EntryCollector::CreateEntryImpl(std::string_view word,
                      << code_str << "].";
         return;
       }
-      word.homographs.emplace_back(string(code_str), e.weight);
+      word.alternative_encodings.emplace_back(string(code_str), e.weight);
     }
   }
   entries.emplace_back(std::move(e));
@@ -302,9 +310,8 @@ bool EntryCollector::TranslateWord(const string& word, vector<string>* result) {
   const auto& w = words.find(word);
   if (w != words.end()) {
     const auto& word_entries = w->second;
-    const double kMinimalWeight = 0.05;  // 5%
-    if (word_entries.homographs.empty()) {
-      if (!(word_entries.weight < word_entries.weight * kMinimalWeight))
+    if (word_entries.alternative_encodings.empty()) {
+      if (HasMinimumWeight(word_entries.weight, word_entries.weight))
         result->push_back(word_entries.code);
       return true;
     }
@@ -313,18 +320,17 @@ bool EntryCollector::TranslateWord(const string& word, vector<string>* result) {
       double weight;
     };
     vector<Encoding> encodings;
-    encodings.reserve(1 + word_entries.homographs.size());
+    encodings.reserve(1 + word_entries.alternative_encodings.size());
     encodings.push_back({word_entries.code, word_entries.weight});
     double total_weight = word_entries.weight;
-    for (const auto& extra : word_entries.homographs) {
+    for (const auto& extra : word_entries.alternative_encodings) {
       encodings.push_back({extra.first, extra.second});
       total_weight += extra.second;
     }
     std::sort(encodings.begin(), encodings.end(),
               [](const auto& a, const auto& b) { return a.code < b.code; });
     for (const auto& v : encodings) {
-      double min_weight = total_weight * kMinimalWeight;
-      if (v.weight < min_weight)
+      if (!HasMinimumWeight(v.weight, total_weight))
         continue;
       result->push_back(string(v.code));
     }
