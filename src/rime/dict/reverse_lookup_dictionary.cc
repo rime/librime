@@ -5,9 +5,11 @@
 // 2012-01-05 GONG Chen <chen.sst@gmail.com>
 // 2014-07-06 GONG Chen <chen.sst@gmail.com> redesigned binary file format.
 //
+#include <algorithm>
 #include <cfloat>
 #include <cstdlib>
 #include <sstream>
+#include <string_view>
 #include <boost/algorithm/string.hpp>
 #include <rime/resource.h>
 #include <rime/schema.h>
@@ -87,28 +89,66 @@ bool ReverseDb::Build(DictSettings* settings,
                       const ReverseLookupTable& stems,
                       uint32_t dict_file_checksum) {
   LOG(INFO) << "building reversedb...";
-  ReverseLookupTable rev_table;
-  int syllable_id = 0;
-  for (const string& syllable : syllabary) {
+  struct ReverseEntry {
+    std::string_view text;
+    std::string_view syllable;
+  };
+  // Only single-syllable entries take part in reverse lookup. They live in the
+  // top-level pages of the vocabulary, keyed by syllable id. Collect them into
+  // a flat sorted array instead of a nested hash map, saving both time and
+  // memory.
+  size_t reverse_entry_count = 0;
+  SyllableId syllable_id = 0;
+  for (const auto& syllable : syllabary) {
+    auto it = vocabulary.find(syllable_id++);
+    if (it != vocabulary.end())
+      reverse_entry_count += it->second.entries.size();
+  }
+  vector<ReverseEntry> reverse_entries;
+  reverse_entries.reserve(reverse_entry_count);
+  syllable_id = 0;
+  for (const auto& syllable : syllabary) {
     auto it = vocabulary.find(syllable_id++);
     if (it == vocabulary.end())
       continue;
-    const auto& entries(it->second.entries);
-    for (const auto& e : entries) {
-      rev_table[e->text].insert(syllable);
-    }
+    for (const auto& e : it->second.entries)
+      reverse_entries.push_back({e->text, syllable});
   }
+  std::sort(reverse_entries.begin(), reverse_entries.end(),
+            [](const ReverseEntry& a, const ReverseEntry& b) {
+              if (a.text != b.text)
+                return a.text < b.text;
+              return a.syllable < b.syllable;
+            });
+  size_t num_words = 0;
+  for (size_t j = 0; j < reverse_entries.size(); ++j) {
+    if (j == 0 || reverse_entries[j].text != reverse_entries[j - 1].text)
+      ++num_words;
+  }
+
   StringTableBuilder key_trie_builder;
   StringTableBuilder value_trie_builder;
-  size_t entry_count = rev_table.size() + stems.size();
+  size_t entry_count = num_words + stems.size();
   vector<StringId> key_ids(entry_count);
   vector<StringId> value_ids(entry_count);
-  int i = 0;
-  // save reverse lookup entries
-  for (const auto& v : rev_table) {
-    const string& key(v.first);
-    string value(boost::algorithm::join(v.second, " "));
-    key_trie_builder.Add(key, 0.0, &key_ids[i]);
+  size_t i = 0;
+  string value;
+  for (size_t j = 0; j < reverse_entries.size();) {
+    const std::string_view text = reverse_entries[j].text;
+    value.clear();
+    std::string_view previous;
+    bool first = true;
+    for (; j < reverse_entries.size() && reverse_entries[j].text == text; ++j) {
+      const std::string_view syllable = reverse_entries[j].syllable;
+      if (!first && syllable == previous)
+        continue;
+      if (!first)
+        value.push_back(' ');
+      value.append(syllable.data(), syllable.size());
+      previous = syllable;
+      first = false;
+    }
+    key_trie_builder.Add(text, 0.0, &key_ids[i]);
     value_trie_builder.Add(value, 0.0, &value_ids[i]);
     ++i;
   }
@@ -120,7 +160,7 @@ bool ReverseDb::Build(DictSettings* settings,
     value_trie_builder.Add(value, 0.0, &value_ids[i]);
     ++i;
   }
-  ReverseLookupTable().swap(rev_table);
+  vector<ReverseEntry>().swap(reverse_entries);
   key_trie_builder.Build();
   value_trie_builder.Build();
 
@@ -158,15 +198,15 @@ bool ReverseDb::Build(DictSettings* settings,
     }
   }
 
-  auto entries = Allocate<StringId>(entry_count);
-  if (!entries) {
+  auto index = Allocate<StringId>(entry_count);
+  if (!index) {
     return false;
   }
-  for (size_t i = 0; i < entry_count; ++i) {
-    entries[key_ids[i]] = value_ids[i];
+  for (size_t k = 0; k < entry_count; ++k) {
+    index[key_ids[k]] = value_ids[k];
   }
   metadata_->index.size = entry_count;
-  metadata_->index.at = entries;
+  metadata_->index.at = index;
 
   // save key trie image
   char* key_trie_image = Allocate<char>(key_trie_image_size);

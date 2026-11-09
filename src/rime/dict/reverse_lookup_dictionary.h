@@ -44,6 +44,8 @@ class ReverseDb : public MappedFile {
   bool Load();
   bool Lookup(const string& text, string* result);
 
+  // Builds the reverse lookup table from single-syllable entries in the
+  // vocabulary.
   bool Build(DictSettings* settings,
              const Syllabary& syllabary,
              const Vocabulary& vocabulary,

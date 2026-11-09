@@ -9,6 +9,7 @@
 #define RIME_STRING_TABLE_H_
 
 #include <cstdint>
+#include <string_view>
 #include <utility>
 #include <marisa.h>
 #include <rime_api.h>
@@ -42,6 +43,9 @@ class RIME_DLL StringTable {
 class RIME_DLL StringTableBuilder : public StringTable {
  public:
   void Add(const string& key,
+           double weight = 1.0,
+           StringId* reference = nullptr);
+  void Add(std::string_view key,
            double weight = 1.0,
            StringId* reference = nullptr);
   void Clear();
