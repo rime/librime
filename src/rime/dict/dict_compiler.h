@@ -50,7 +50,7 @@ class DictCompiler {
                   const Syllabary& syllabary);
   bool BuildReverseDb(DictSettings* settings,
                       const Syllabary& syllabary,
-                      const Vocabulary& vocabulary,
+                      CompactDictEntryList& reverse_entries,
                       const ReverseLookupTable& stems,
                       uint32_t dict_file_checksum);
 

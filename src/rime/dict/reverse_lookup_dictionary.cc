@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <cfloat>
 #include <cstdlib>
+#include <cstring>
+#include <limits>
 #include <sstream>
 #include <string_view>
 #include <boost/algorithm/string.hpp>
@@ -88,81 +90,113 @@ bool ReverseDb::Build(DictSettings* settings,
                       const Vocabulary& vocabulary,
                       const ReverseLookupTable& stems,
                       uint32_t dict_file_checksum) {
-  LOG(INFO) << "building reversedb...";
-  struct ReverseEntry {
-    std::string_view text;
-    std::string_view syllable;
-  };
-  // Only single-syllable entries take part in reverse lookup. They live in the
-  // top-level pages of the vocabulary, keyed by syllable id. Collect them into
-  // a flat sorted array instead of a nested hash map, saving both time and
-  // memory.
-  size_t reverse_entry_count = 0;
+  // Compatibility path for callers that still hold a full Vocabulary.
+  ReverseEntryList entries;
   for (SyllableId syllable_id = 0;
        syllable_id < static_cast<SyllableId>(syllabary.size()); ++syllable_id) {
     auto it = vocabulary.find(syllable_id);
-    if (it != vocabulary.end())
-      reverse_entry_count += it->second.entries.size();
-  }
-  vector<ReverseEntry> reverse_entries;
-  reverse_entries.reserve(reverse_entry_count);
-  SyllableId syllable_id = 0;
-  for (const auto& syllable : syllabary) {
-    auto it = vocabulary.find(syllable_id++);
     if (it == vocabulary.end())
       continue;
-    for (const auto& e : it->second.entries)
-      reverse_entries.push_back({e.text, syllable});
+    for (const auto& e : it->second.entries) {
+      if (e.text.size() > (std::numeric_limits<uint32_t>::max)()) {
+        LOG(ERROR) << "dictionary entry text is too long: '" << e.text << "'";
+        return false;
+      }
+      entries.entries.push_back({entries.text.size(),
+                                 static_cast<uint32_t>(e.text.size()),
+                                 syllable_id, e.weight});
+      entries.text.append(e.text);
+    }
   }
-  std::sort(reverse_entries.begin(), reverse_entries.end(),
-            [](const ReverseEntry& a, const ReverseEntry& b) {
-              if (a.text != b.text)
-                return a.text < b.text;
-              return a.syllable < b.syllable;
+  return Build(settings, syllabary, entries, stems, dict_file_checksum);
+}
+
+bool ReverseDb::Build(DictSettings* settings,
+                      const Syllabary& syllabary,
+                      ReverseEntryList& entries,
+                      const ReverseLookupTable& stems,
+                      uint32_t dict_file_checksum) {
+  LOG(INFO) << "building reversedb...";
+  vector<std::string_view> syllables;
+  syllables.reserve(syllabary.size());
+  for (const auto& syllable : syllabary)
+    syllables.push_back(syllable);
+
+  std::sort(entries.entries.begin(), entries.entries.end(),
+            [&](const CompactDictEntry& a, const CompactDictEntry& b) {
+              std::string_view ta = entries.text_of(a);
+              std::string_view tb = entries.text_of(b);
+              if (ta != tb)
+                return ta < tb;
+              return syllables[a.syllable_id] < syllables[b.syllable_id];
             });
   size_t num_words = 0;
-  for (size_t j = 0; j < reverse_entries.size(); ++j) {
-    if (j == 0 || reverse_entries[j].text != reverse_entries[j - 1].text)
+  for (size_t j = 0; j < entries.entries.size(); ++j) {
+    if (j == 0 || entries.text_of(entries.entries[j]) !=
+                      entries.text_of(entries.entries[j - 1]))
       ++num_words;
   }
 
-  StringTableBuilder key_trie_builder;
-  StringTableBuilder value_trie_builder;
-  size_t entry_count = num_words + stems.size();
+  const size_t entry_count = num_words + stems.size();
   vector<StringId> key_ids(entry_count);
   vector<StringId> value_ids(entry_count);
-  size_t i = 0;
-  string value;
-  for (size_t j = 0; j < reverse_entries.size();) {
-    const std::string_view text = reverse_entries[j].text;
-    value.clear();
-    std::string_view previous;
-    bool first = true;
-    for (; j < reverse_entries.size() && reverse_entries[j].text == text; ++j) {
-      const std::string_view syllable = reverse_entries[j].syllable;
-      if (!first && syllable == previous)
-        continue;
-      if (!first)
-        value.push_back(' ');
-      value.append(syllable.data(), syllable.size());
-      previous = syllable;
-      first = false;
+
+  // Build the key trie first and serialize it, then release its working data
+  // before building the value trie. The two tries are never needed in memory
+  // at the same time.
+  StringTableBuilder key_trie_builder;
+  {
+    size_t i = 0;
+    for (size_t j = 0; j < entries.entries.size();) {
+      const std::string_view text = entries.text_of(entries.entries[j]);
+      key_trie_builder.AddView(text, 0.0, &key_ids[i++]);
+      while (j < entries.entries.size() &&
+             entries.text_of(entries.entries[j]) == text)
+        ++j;
     }
-    key_trie_builder.AddView(text, 0.0, &key_ids[i]);
-    value_trie_builder.Add(value, 0.0, &value_ids[i]);
-    ++i;
+    for (const auto& v : stems) {
+      string key(v.first + kStemKeySuffix);
+      key_trie_builder.Add(key, 0.0, &key_ids[i++]);
+    }
   }
-  // save stems
-  for (const auto& v : stems) {
-    string key(v.first + kStemKeySuffix);
-    string value(boost::algorithm::join(v.second, " "));
-    key_trie_builder.Add(key, 0.0, &key_ids[i]);
-    value_trie_builder.Add(value, 0.0, &value_ids[i]);
-    ++i;
-  }
-  vector<ReverseEntry>().swap(reverse_entries);
   key_trie_builder.Build();
+  vector<char> key_trie_image(key_trie_builder.BinarySize());
+  key_trie_builder.Dump(key_trie_image.data(), key_trie_image.size());
+  key_trie_builder.Clear();
+
+  StringTableBuilder value_trie_builder;
+  {
+    string value;
+    size_t i = 0;
+    for (size_t j = 0; j < entries.entries.size();) {
+      const std::string_view text = entries.text_of(entries.entries[j]);
+      value.clear();
+      SyllableId previous = 0;
+      bool first = true;
+      for (; j < entries.entries.size() &&
+             entries.text_of(entries.entries[j]) == text;
+           ++j) {
+        const SyllableId syllable_id = entries.entries[j].syllable_id;
+        if (!first && syllable_id == previous)
+          continue;
+        if (!first)
+          value.push_back(' ');
+        const std::string_view syllable = syllables[syllable_id];
+        value.append(syllable.data(), syllable.size());
+        previous = syllable_id;
+        first = false;
+      }
+      value_trie_builder.Add(value, 0.0, &value_ids[i++]);
+    }
+    for (const auto& v : stems) {
+      string value(boost::algorithm::join(v.second, " "));
+      value_trie_builder.Add(value, 0.0, &value_ids[i++]);
+    }
+  }
   value_trie_builder.Build();
+  vector<char> value_trie_image(value_trie_builder.BinarySize());
+  value_trie_builder.Dump(value_trie_image.data(), value_trie_image.size());
+  value_trie_builder.Clear();
 
   // dict settings required by UniTE
   string dict_settings;
@@ -174,8 +208,8 @@ bool ReverseDb::Build(DictSettings* settings,
 
   // creating reversedb file
   const size_t kReservedSize = 1024;
-  size_t key_trie_image_size = key_trie_builder.BinarySize();
-  size_t value_trie_image_size = value_trie_builder.BinarySize();
+  const size_t key_trie_image_size = key_trie_image.size();
+  const size_t value_trie_image_size = value_trie_image.size();
   size_t estimated_data_size = kReservedSize + dict_settings.length() +
                                entry_count * sizeof(StringId) +
                                key_trie_image_size + value_trie_image_size;
@@ -209,23 +243,23 @@ bool ReverseDb::Build(DictSettings* settings,
   metadata_->index.at = index;
 
   // save key trie image
-  char* key_trie_image = Allocate<char>(key_trie_image_size);
-  if (!key_trie_image) {
+  char* key_trie_ptr = Allocate<char>(key_trie_image_size);
+  if (!key_trie_ptr) {
     LOG(ERROR) << "Error creating key trie image.";
     return false;
   }
-  key_trie_builder.Dump(key_trie_image, key_trie_image_size);
-  metadata_->key_trie = key_trie_image;
+  std::memcpy(key_trie_ptr, key_trie_image.data(), key_trie_image_size);
+  metadata_->key_trie = key_trie_ptr;
   metadata_->key_trie_size = key_trie_image_size;
 
   // save value trie image
-  char* value_trie_image = Allocate<char>(value_trie_image_size);
-  if (!value_trie_image) {
+  char* value_trie_ptr = Allocate<char>(value_trie_image_size);
+  if (!value_trie_ptr) {
     LOG(ERROR) << "Error creating value trie image.";
     return false;
   }
-  value_trie_builder.Dump(value_trie_image, value_trie_image_size);
-  metadata_->value_trie = value_trie_image;
+  std::memcpy(value_trie_ptr, value_trie_image.data(), value_trie_image_size);
+  metadata_->value_trie = value_trie_ptr;
   metadata_->value_trie_size = value_trie_image_size;
 
   // at last, complete the metadata

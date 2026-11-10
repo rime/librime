@@ -9,6 +9,7 @@
 #define RIME_VOCABULARY_H_
 
 #include <stdint.h>
+#include <string_view>
 #include <rime_api.h>
 #include <rime/common.h>
 
@@ -17,6 +18,23 @@ namespace rime {
 using Syllabary = set<string>;
 
 using SyllableId = int32_t;
+
+struct CompactDictEntry {
+  size_t text_offset = 0;
+  uint32_t text_length = 0;
+  SyllableId syllable_id = 0;
+  double weight = 0.0;
+};
+
+struct CompactDictEntryList {
+  string text;
+  vector<CompactDictEntry> entries;
+  vector<size_t> page_offsets;
+
+  std::string_view text_of(const CompactDictEntry& entry) const {
+    return std::string_view(text.data() + entry.text_offset, entry.text_length);
+  }
+};
 
 class Code : public vector<SyllableId> {
  public:
@@ -102,7 +120,7 @@ struct VocabularyPage {
 class Vocabulary : public map<int, VocabularyPage> {
  public:
   ShortDictEntryList* LocateEntries(const Code& code);
-  void SortHomophones();
+  RIME_DLL void SortHomophones();
 };
 
 // word -> { code, ... }

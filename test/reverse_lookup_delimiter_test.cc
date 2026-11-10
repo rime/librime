@@ -100,6 +100,31 @@ TEST(ReverseLookupDictionary, BuildsAndReloadsEntriesAndStems) {
   EXPECT_FALSE(dictionary.LookupStems("other", &result));
   db->Remove();
 }
+
+TEST(ReverseLookupDictionary, BuildsCompactEntriesAndStems) {
+  auto db = rime::New<rime::ReverseDb>(
+      rime::path{"reverse_compact_builder_test.bin"});
+  db->Remove();
+  rime::Syllabary syllabary{"a", "b"};
+  rime::CompactDictEntryList entries;
+  entries.text = "sharedother";
+  entries.entries = {{0, 6, 0, 1.0}, {0, 6, 1, 2.0}, {6, 5, 1, 3.0}};
+  rime::ReverseLookupTable stems;
+  stems["shared"].insert("z");
+
+  ASSERT_TRUE(db->Build(nullptr, syllabary, entries, stems, 456));
+  ASSERT_TRUE(db->Save());
+  ASSERT_TRUE(db->Load());
+  rime::ReverseLookupDictionary dictionary(db);
+  rime::string result;
+  ASSERT_TRUE(dictionary.ReverseLookup("shared", &result));
+  EXPECT_EQ("a b", result);
+  ASSERT_TRUE(dictionary.ReverseLookup("other", &result));
+  EXPECT_EQ("b", result);
+  ASSERT_TRUE(dictionary.LookupStems("shared", &result));
+  EXPECT_EQ("z", result);
+  db->Remove();
+}
 #endif
 
 TEST(ReverseLookupTranslator, HonorsSchemaDelimiter) {

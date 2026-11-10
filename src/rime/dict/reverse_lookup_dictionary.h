@@ -9,6 +9,7 @@
 #define RIME_REVERSE_LOOKUP_DICTIONARY_H_
 
 #include <stdint.h>
+#include <string_view>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/dict/db_pool.h>
@@ -37,6 +38,8 @@ struct Metadata {
 struct Ticket;
 class DictSettings;
 
+using ReverseEntryList = CompactDictEntryList;
+
 class ReverseDb : public MappedFile {
  public:
   explicit ReverseDb(const path& file_path);
@@ -44,8 +47,15 @@ class ReverseDb : public MappedFile {
   bool Load();
   bool Lookup(const string& text, string* result);
 
-  // Builds the reverse lookup table from single-syllable entries in the
-  // vocabulary.
+  // Builds the reverse lookup table from a compact list of single-syllable
+  // entries. The list is consumed in place, so callers may release their
+  // vocabulary as soon as this returns.
+  bool Build(DictSettings* settings,
+             const Syllabary& syllabary,
+             ReverseEntryList& entries,
+             const ReverseLookupTable& stems,
+             uint32_t dict_file_checksum);
+  // Convenience overload for callers that still hold a Vocabulary.
   bool Build(DictSettings* settings,
              const Syllabary& syllabary,
              const Vocabulary& vocabulary,

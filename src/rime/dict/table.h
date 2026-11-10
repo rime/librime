@@ -9,6 +9,7 @@
 #define RIME_TABLE_H_
 
 #include <cstring>
+#include <functional>
 #include <rime/common.h>
 #include <rime/dict/mapped_file.h>
 #include <rime/dict/vocabulary.h>
@@ -183,12 +184,18 @@ class TableQuery {
 class Table : public MappedFile {
  public:
   RIME_DLL Table(const path& file_path);
-  virtual ~Table();
+  RIME_DLL virtual ~Table();
 
   RIME_DLL bool Load();
   RIME_DLL bool Save();
   RIME_DLL bool Build(const Syllabary& syllabary,
-                      const Vocabulary& vocabulary,
+                      Vocabulary& vocabulary,
+                      size_t num_entries,
+                      uint32_t dict_file_checksum = 0,
+                      bool release_vocabulary = false,
+                      const std::function<bool()>& on_index_ready = {});
+  RIME_DLL bool Build(const Syllabary& syllabary,
+                      const CompactDictEntryList& entries,
                       size_t num_entries,
                       uint32_t dict_file_checksum = 0);
 
@@ -206,6 +213,8 @@ class Table : public MappedFile {
 
  private:
   table::Index* BuildIndex(const Vocabulary& vocabulary, size_t num_syllables);
+  table::Index* BuildIndex(const CompactDictEntryList& entries,
+                           size_t num_syllables);
   table::HeadIndex* BuildHeadIndex(const Vocabulary& vocabulary,
                                    size_t num_syllables);
   table::TrunkIndex* BuildTrunkIndex(const Code& prefix,
@@ -217,10 +226,15 @@ class Table : public MappedFile {
                         map<string, int>* index_data);
   Array<table::Entry>* BuildEntryArray(const ShortDictEntryList& entries);
   bool BuildEntryList(const ShortDictEntryList& src, List<table::Entry>* dest);
+  bool BuildEntryList(const CompactDictEntryList& src,
+                      size_t begin,
+                      size_t end,
+                      List<table::Entry>* dest);
   bool BuildEntry(const ShortDictEntry& dict_entry, table::Entry* entry);
 
   string GetString(const table::StringType& x);
   bool AddString(const string& src, table::StringType* dest, double weight);
+  bool AddString(std::string_view src, table::StringType* dest, double weight);
   bool OnBuildStart();
   bool OnBuildFinish();
   bool OnLoad();

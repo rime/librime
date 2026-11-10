@@ -7,6 +7,7 @@
 #ifndef RIME_ENTRY_COLLECTOR_H_
 #define RIME_ENTRY_COLLECTOR_H_
 
+#include <deque>
 #include <queue>
 #include <string_view>
 #include <boost/version.hpp>
@@ -20,9 +21,11 @@
 
 namespace rime {
 
+// The code is stored as the original space-separated string; parsing it into
+// RawCode on demand is cheaper than keeping a vector<string> per entry.
 struct RawDictEntry {
-  RawCode raw_code;
   string text;
+  string code;
   double weight = 0.0;
 };
 
@@ -56,8 +59,10 @@ class EntryCollector : public PhraseCollector {
  public:
   Syllabary syllabary;
   bool build_syllabary = true;
-  vector<RawDictEntry> entries;
+  std::deque<RawDictEntry> entries;
   size_t num_entries = 0;
+  // Upper bound of text bytes in entries, used to reserve reverse lookup data.
+  size_t total_text_bytes = 0;
   ReverseLookupTable stems;
 
  public:
@@ -95,10 +100,18 @@ class EntryCollector : public PhraseCollector {
   void CreateEntryImpl(std::string_view word,
                        std::string_view code_str,
                        std::string_view weight_str);
+  // Drop duplicate single-syllable (word, code) pairs, keeping the first
+  // occurrence and the original entry order.
+  void DeduplicateEntries();
+  // Build the word -> encodings map only when an encoder actually needs it.
+  void EnsureWords();
+  void BuildWords();
 
  private:
   string current_dict_file;
   size_t line_number;
+  bool deduplicated_ = false;
+  bool words_built_ = false;
 };
 
 }  // namespace rime
