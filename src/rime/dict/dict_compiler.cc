@@ -155,8 +155,8 @@ bool DictCompiler::Compile(const path& schema_file) {
     else
       LOG(WARNING) << "couldn't load syllabary from '" << schema_file << "'";
   }
-  if (rebuild_prism &&
-      !BuildPrism(schema_file, dict_file_checksum, schema_file_checksum)) {
+  if (rebuild_prism && !BuildPrism(schema_file, dict_file_checksum,
+                                   schema_file_checksum, syllabary)) {
     return false;
   }
   for (int table_index = 1; table_index < tables_.size(); ++table_index) {
@@ -239,26 +239,26 @@ bool DictCompiler::BuildTable(int table_index,
     for (const auto& s : collector.syllabary) {
       syllable_to_id[s] = syllable_id++;
     }
-    for (const auto& r : collector.entries) {
+    for (auto& r : collector.entries) {
       Code code;
-      for (const auto& s : r->raw_code) {
+      for (const auto& s : r.raw_code) {
         code.push_back(syllable_to_id[s]);
       }
       // release memory in time to reduce memory usage
-      RawCode().swap(r->raw_code);
+      RawCode().swap(r.raw_code);
       auto ls = vocabulary.LocateEntries(code);
       if (!ls) {
         LOG(ERROR) << "Error locating entries in vocabulary.";
         continue;
       }
-      auto e = New<ShortDictEntry>();
-      e->code.swap(code);
-      e->text.swap(r->text);
-      e->weight = log(r->weight > 0 ? r->weight : DBL_EPSILON);
-      ls->push_back(e);
+      ShortDictEntry e;
+      e.code.swap(code);
+      e.text.swap(r.text);
+      e.weight = log(r.weight > 0 ? r.weight : DBL_EPSILON);
+      ls->push_back(std::move(e));
     }
     // release memory in time to reduce memory usage
-    vector<of<RawDictEntry>>().swap(collector.entries);
+    decltype(collector.entries)().swap(collector.entries);
     if (settings->sort_order() != "original") {
       vocabulary.SortHomophones();
     }
@@ -271,21 +271,23 @@ bool DictCompiler::BuildTable(int table_index,
   }
   // build reverse db for the primary table
   if (table_index == 0 &&
-      !BuildReverseDb(settings, collector, vocabulary, dict_file_checksum)) {
+      !BuildReverseDb(settings, collector.syllabary, vocabulary,
+                      collector.stems, dict_file_checksum)) {
     return false;
   }
   return true;
 }
 
 bool DictCompiler::BuildReverseDb(DictSettings* settings,
-                                  const EntryCollector& collector,
+                                  const Syllabary& syllabary,
                                   const Vocabulary& vocabulary,
+                                  const ReverseLookupTable& stems,
                                   uint32_t dict_file_checksum) {
   // build .reverse.bin
   auto target_path = target_resolver_->ResolvePath(dict_name_ + ".reverse.bin");
   ReverseDb reverse_db(target_path);
-  if (!reverse_db.Build(settings, collector.syllabary, vocabulary,
-                        collector.stems, dict_file_checksum) ||
+  if (!reverse_db.Build(settings, syllabary, vocabulary, stems,
+                        dict_file_checksum) ||
       !reverse_db.Save()) {
     LOG(ERROR) << "error building reversedb.";
     return false;
@@ -295,18 +297,25 @@ bool DictCompiler::BuildReverseDb(DictSettings* settings,
 
 bool DictCompiler::BuildPrism(const path& schema_file,
                               uint32_t dict_file_checksum,
-                              uint32_t schema_file_checksum) {
+                              uint32_t schema_file_checksum,
+                              const Syllabary& syllabary) {
   LOG(INFO) << "building prism...";
   auto target_path =
       relocate_target(prism_->file_path(), target_resolver_.get());
   prism_ = New<Prism>(target_path);
 
-  // get syllabary from primary table, which may not be rebuilt
-  Syllabary syllabary;
-  const auto& primary_table = tables_[0];
-  if (!primary_table->Load() || !primary_table->GetSyllabary(&syllabary) ||
-      syllabary.empty())
-    return false;
+  // reuse the in-memory syllabary when available; otherwise load it from the
+  // primary table, which may not have been rebuilt
+  Syllabary loaded_syllabary;
+  const Syllabary* syllables = &syllabary;
+  if (syllables->empty()) {
+    const auto& primary_table = tables_[0];
+    if (!primary_table->Load() ||
+        !primary_table->GetSyllabary(&loaded_syllabary) ||
+        loaded_syllabary.empty())
+      return false;
+    syllables = &loaded_syllabary;
+  }
   // apply spelling algebra and prepare corrections (if enabled)
   Script script;
   if (!schema_file.empty()) {
@@ -318,7 +327,7 @@ bool DictCompiler::BuildPrism(const path& schema_file,
     Projection p;
     auto algebra = config.GetList("speller/algebra");
     if (algebra && p.Load(algebra)) {
-      for (const auto& x : syllabary) {
+      for (const auto& x : *syllables) {
         script.AddSyllable(x);
       }
       if (!p.Apply(&script)) {
@@ -340,7 +349,7 @@ bool DictCompiler::BuildPrism(const path& schema_file,
       if (correction_->Exists()) {
         correction_->Remove();
       }
-      if (!correction_->Build(syllabary, &script,
+      if (!correction_->Build(*syllables, &script,
                          dict_file_checksum, schema_file_checksum) ||
           !correction_->Save()) {
         return false;
@@ -356,7 +365,7 @@ bool DictCompiler::BuildPrism(const path& schema_file,
   // build .prism.bin
   {
     prism_->Remove();
-    if (!prism_->Build(syllabary, script.empty() ? nullptr : &script,
+    if (!prism_->Build(*syllables, script.empty() ? nullptr : &script,
                        dict_file_checksum, schema_file_checksum) ||
         !prism_->Save()) {
       return false;

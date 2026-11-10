@@ -50,10 +50,10 @@ class RimeEntryCollectorTest : public ::testing::Test {
                    double weight) {
     size_t matches = 0;
     for (const auto& entry : collector.entries) {
-      if (entry->text == text) {
+      if (entry.text == text) {
         ++matches;
-        EXPECT_EQ(code, entry->raw_code.ToString());
-        EXPECT_DOUBLE_EQ(weight, entry->weight);
+        EXPECT_EQ(code, entry.raw_code.ToString());
+        EXPECT_DOUBLE_EQ(weight, entry.weight);
       }
     }
     EXPECT_EQ(1u, matches) << text;
@@ -80,6 +80,20 @@ TEST_F(RimeEntryCollectorTest, WithoutPresetDoesNotCollectWords) {
   ExpectEntry(collector, "a", "a", 10);
   ExpectEntry(collector, "b", "b", 20);
   ExpectEntry(collector, "ab", "a b", 30);
+}
+
+TEST_F(RimeEntryCollectorTest, MultipleWordCodesAreSortedAndDeduplicated) {
+  TestEntryCollector collector;
+  collector.CreateEntry("word", "z", "1");
+  collector.CreateEntry("word", "a", "1");
+  collector.CreateEntry("word", "a", "2");
+
+  std::vector<rime::string> codes;
+  ASSERT_TRUE(collector.TranslateWord("word", &codes));
+  ASSERT_EQ(2u, codes.size());
+  EXPECT_EQ("a", codes[0]);
+  EXPECT_EQ("z", codes[1]);
+  EXPECT_EQ(2u, collector.num_entries);
 }
 
 TEST_F(RimeEntryCollectorTest, PresetWeightsDeduplicationAndRelease) {

@@ -9,6 +9,7 @@
 
 #include <rime_api.h>
 #include <rime/common.h>
+#include <rime/dict/vocabulary.h>
 
 namespace rime {
 
@@ -45,10 +46,12 @@ class DictCompiler {
                   uint32_t dict_file_checksum);
   bool BuildPrism(const path& schema_file,
                   uint32_t dict_file_checksum,
-                  uint32_t schema_file_checksum);
+                  uint32_t schema_file_checksum,
+                  const Syllabary& syllabary);
   bool BuildReverseDb(DictSettings* settings,
-                      const EntryCollector& collector,
+                      const Syllabary& syllabary,
                       const Vocabulary& vocabulary,
+                      const ReverseLookupTable& stems,
                       uint32_t dict_file_checksum);
 
   const string& dict_name_;

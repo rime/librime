@@ -94,11 +94,19 @@ inline void sort_range(C& container, size_t start, size_t count) {
 }
 
 void ShortDictEntryList::Sort() {
-  sort(*this);
+  std::stable_sort(
+      begin(), end(),
+      [](const ShortDictEntry& a, const ShortDictEntry& b) { return a < b; });
 }
 
 void ShortDictEntryList::SortRange(size_t start, size_t count) {
-  sort_range(*this, start, count);
+  if (start >= size())
+    return;
+  auto i(begin() + start);
+  auto j(start + count >= size() ? end() : i + count);
+  std::stable_sort(i, j, [](const ShortDictEntry& a, const ShortDictEntry& b) {
+    return a < b;
+  });
 }
 
 void DictEntryList::Sort() {

@@ -20,8 +20,21 @@ string RawCode::ToString() const {
 }
 
 void RawCode::FromString(const string& code_str) {
-  *dynamic_cast<vector<string>*>(this) =
-      strings::split(code_str, " ", strings::SplitBehavior::SkipToken);
+  FromStringView(code_str);
+}
+
+void RawCode::FromStringView(std::string_view code_str) {
+  clear();
+  size_t start = code_str.find_first_not_of(' ');
+  while (start != std::string_view::npos) {
+    size_t end = code_str.find(' ', start);
+    if (end == std::string_view::npos) {
+      emplace_back(code_str.substr(start));
+      break;
+    }
+    emplace_back(code_str.substr(start, end - start));
+    start = code_str.find_first_not_of(' ', end);
+  }
 }
 
 TableEncoder::TableEncoder(PhraseCollector* collector)
