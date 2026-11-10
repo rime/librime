@@ -74,10 +74,10 @@ DictRow ParseDictRow(std::string_view line,
 
 }  // namespace
 
-static bool HasMinimumWeight(double weight, double total_weight) {
-  constexpr double kMinimalWeight = 0.05;  // 5%
+static bool has_significant_weight(double weight, double total_weight) {
+  constexpr double kMinSignificantWeightRatio = 0.05;  // 5%
   // Keep the original comparison semantics, including for NaN values.
-  return !(weight < total_weight * kMinimalWeight);
+  return !(weight < total_weight * kMinSignificantWeightRatio);
 }
 
 EntryCollector::EntryCollector() {}
@@ -311,7 +311,7 @@ bool EntryCollector::TranslateWord(const string& word, vector<string>* result) {
   if (w != words.end()) {
     const auto& word_entries = w->second;
     if (word_entries.alternative_encodings.empty()) {
-      if (HasMinimumWeight(word_entries.weight, word_entries.weight))
+      if (has_significant_weight(word_entries.weight, word_entries.weight))
         result->push_back(word_entries.code);
       return true;
     }
@@ -330,7 +330,7 @@ bool EntryCollector::TranslateWord(const string& word, vector<string>* result) {
     std::sort(encodings.begin(), encodings.end(),
               [](const auto& a, const auto& b) { return a.code < b.code; });
     for (const auto& v : encodings) {
-      if (!HasMinimumWeight(v.weight, total_weight))
+      if (!has_significant_weight(v.weight, total_weight))
         continue;
       result->push_back(string(v.code));
     }
