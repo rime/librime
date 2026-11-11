@@ -11,6 +11,7 @@
 #include <cstring>
 #include <functional>
 #include <rime/common.h>
+#include <rime/dict/compact_entries.h>
 #include <rime/dict/mapped_file.h>
 #include <rime/dict/vocabulary.h>
 #include <rime/dict/string_table.h>

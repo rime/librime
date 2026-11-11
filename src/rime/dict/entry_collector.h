@@ -59,6 +59,8 @@ class EntryCollector : public PhraseCollector {
  public:
   Syllabary syllabary;
   bool build_syllabary = true;
+  // Entries are consumed from the front during table construction. A deque
+  // releases completed blocks, unlike a vector with a moving cursor.
   std::deque<RawDictEntry> entries;
   size_t num_entries = 0;
   // Upper bound of text bytes in entries, used to reserve reverse lookup data.

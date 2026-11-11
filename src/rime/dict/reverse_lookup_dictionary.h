@@ -12,6 +12,7 @@
 #include <string_view>
 #include <rime/common.h>
 #include <rime/component.h>
+#include <rime/dict/compact_entries.h>
 #include <rime/dict/db_pool.h>
 #include <rime/dict/mapped_file.h>
 #include <rime/dict/string_table.h>

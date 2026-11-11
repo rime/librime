@@ -9,6 +9,7 @@
 
 #include <rime_api.h>
 #include <rime/common.h>
+#include <rime/dict/compact_entries.h>
 #include <rime/dict/vocabulary.h>
 
 namespace rime {
