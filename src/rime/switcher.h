@@ -34,7 +34,10 @@ class Switcher : public Processor, public Engine {
   void SetActiveSchema(const string& schema_id);
   Schema* CreateSchema();
   void SelectNextSchema();
+  // Always true: all switcher option changes are persisted to user.yaml.
+  // Kept for API compatibility; switcher/save_options is ignored.
   bool IsAutoSave(const string& option) const;
+  bool HasSavedOption(const string& option) const;
   void RestoreSavedOptions();
 
   void RefreshMenu();
@@ -56,7 +59,6 @@ class Switcher : public Processor, public Engine {
   the<Config> user_config_;
   string caption_;
   vector<KeyEvent> hotkeys_;
-  set<string> save_options_;
   bool fold_options_ = false;
   bool fix_schema_list_order_ = false;
 
