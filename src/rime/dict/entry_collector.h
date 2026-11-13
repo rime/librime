@@ -11,6 +11,10 @@
 #include <queue>
 #include <string_view>
 #include <boost/version.hpp>
+#if defined(_MSC_VER)
+#include <boost/container/deque.hpp>
+#include <boost/container/options.hpp>
+#endif
 #if BOOST_VERSION >= 108100
 #include <boost/unordered/unordered_flat_map.hpp>
 #endif
@@ -52,6 +56,17 @@ using WordMap = WordHashMap<string, WordEntries>;
 // [ (word, weight), ... ]
 using EncodeQueue = std::queue<pair<string, string>>;
 
+#if defined(_MSC_VER)
+template <typename T>
+using EntryBuffer = boost::container::deque<
+    T,
+    void,
+    boost::container::deque_options_t<boost::container::block_bytes<4096>>>;
+#else
+template <typename T>
+using EntryBuffer = std::deque<T>;
+#endif
+
 class PresetVocabulary;
 class DictSettings;
 
@@ -61,7 +76,7 @@ class EntryCollector : public PhraseCollector {
   bool build_syllabary = true;
   // Entries are consumed from the front during table construction. A deque
   // releases completed blocks, unlike a vector with a moving cursor.
-  std::deque<RawDictEntry> entries;
+  EntryBuffer<RawDictEntry> entries;
   size_t num_entries = 0;
   // Upper bound of text bytes in entries, used to reserve reverse lookup data.
   size_t total_text_bytes = 0;
