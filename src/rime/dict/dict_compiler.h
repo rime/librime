@@ -9,6 +9,7 @@
 
 #include <rime_api.h>
 #include <rime/common.h>
+#include <rime/dict/compact_entries.h>
 #include <rime/dict/vocabulary.h>
 
 namespace rime {
@@ -50,7 +51,7 @@ class DictCompiler {
                   const Syllabary& syllabary);
   bool BuildReverseDb(DictSettings* settings,
                       const Syllabary& syllabary,
-                      const Vocabulary& vocabulary,
+                      CompactDictEntryList& reverse_entries,
                       const ReverseLookupTable& stems,
                       uint32_t dict_file_checksum);
 
