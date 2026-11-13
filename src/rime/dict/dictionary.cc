@@ -471,7 +471,7 @@ bool Dictionary::Load() {
     return false;
   }
   // packs are optional
-  for (int i = 1; i < tables_.size(); ++i) {
+  for (size_t i = 1; i < tables_.size(); ++i) {
     const auto& table = tables_[i];
     if (!table->IsOpen() && table->Exists() && table->Load()) {
       LOG(INFO) << "loaded pack: " << packs_[i - 1];

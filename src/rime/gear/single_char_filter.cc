@@ -58,7 +58,7 @@ bool SingleCharFirstTranslation::Rearrange() {
 SingleCharFilter::SingleCharFilter(const Ticket& ticket) : Filter(ticket) {}
 
 an<Translation> SingleCharFilter::Apply(an<Translation> translation,
-                                        CandidateList* candidates) {
+                                        CandidateList*) {
   return New<SingleCharFirstTranslation>(translation);
 }
 

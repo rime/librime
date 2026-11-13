@@ -82,7 +82,7 @@ void Segmentation::Reset(size_t num_segments) {
 }
 
 bool Segmentation::AddSegment(Segment segment) {
-  int start = GetCurrentStartPosition();
+  size_t start = GetCurrentStartPosition();
   if (segment.start != start) {
     // rule one: in one round, we examine only those segs
     // that are left-aligned to a same position

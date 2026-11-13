@@ -9,8 +9,7 @@
 
 namespace rime {
 
-int Translation::Compare(an<Translation> other,
-                         const CandidateList& candidates) {
+int Translation::Compare(an<Translation> other, const CandidateList&) {
   if (!other || other->exhausted())
     return -1;
   if (exhausted())

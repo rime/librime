@@ -263,7 +263,7 @@ void ChordComposer::OnContextUpdate(Context* ctx) {
   }
 }
 
-void ChordComposer::OnUnhandledKey(Context* ctx, const KeyEvent& key) {
+void ChordComposer::OnUnhandledKey(Context*, const KeyEvent& key) {
   // directly committed ascii should not be captured into the raw sequence
   // test case:
   // 3.14{Return} should not commit an extra sequence '14'

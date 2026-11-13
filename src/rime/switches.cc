@@ -69,7 +69,7 @@ Switches::SwitchOption Switches::ByIndex(size_t switch_index) {
   auto item = switches[switch_index];
   return FindOptionFromConfigItem(item, switch_index,
                                   // return the very first found option.
-                                  [](SwitchOption option) { return kFound; });
+                                  [](SwitchOption) { return kFound; });
 }
 
 Switches::SwitchOption Switches::Cycle(const SwitchOption& current) {

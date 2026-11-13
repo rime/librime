@@ -9,7 +9,7 @@ inline unsigned int SetConsoleOutputCodePage(unsigned int codepage = CP_UTF8) {
   return cp;
 }
 #else
-inline unsigned int SetConsoleOutputCodePage(unsigned int codepage = 65001) {
+inline unsigned int SetConsoleOutputCodePage(unsigned int = 65001) {
   return 0;
 }
 #endif /* _WIN32 */

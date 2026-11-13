@@ -175,7 +175,7 @@ bool Editor::CancelComposition(Context* ctx) {
   return true;
 }
 
-ProcessResult Editor::DirectCommit(Context* ctx, int ch) {
+ProcessResult Editor::DirectCommit(Context* ctx, int) {
   ctx->Commit();
   return kRejected;
 }

@@ -493,7 +493,7 @@ void AsciiComposer::OnContextUpdate(Context* ctx) {
   }
 }
 
-void AsciiComposer::OnCommit(Context* ctx) {
+void AsciiComposer::OnCommit(Context*) {
   // 上屏結算時，物理賬本歸零
   raw_keys_.clear();
   cached_input_.clear();

@@ -459,7 +459,7 @@ table::TrunkIndex* Table::BuildTrunkIndex(const Code& prefix,
   return index;
 }
 
-table::TailIndex* Table::BuildTailIndex(const Code& prefix,
+table::TailIndex* Table::BuildTailIndex(const Code&,
                                         const Vocabulary& vocabulary) {
   if (vocabulary.find(-1) == vocabulary.end()) {
     return NULL;
