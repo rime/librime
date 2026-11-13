@@ -530,7 +530,7 @@ inline static size_t consume_trailing_delimiters(size_t pos,
 template <class Iter>
 inline static void collect_entries(DictEntryList& entries,
                                    Iter& iter,
-                                   int max_entries) {
+                                   size_t max_entries) {
   if (entries.size() < max_entries && !iter.exhausted()) {
     entries.push_back(iter.Peek());
     // alters iter if collecting more than 1 entries
@@ -563,7 +563,7 @@ an<Translation> TableTranslator::MakeSentence(const string& input,
             consume_trailing_delimiters(len, active_input, delimiters_);
         size_t end_pos = start_pos + consumed_length;
         auto& homographs = same_start_pos[end_pos];
-        if (homographs.size() >= max_homographs_)
+        if (homographs.size() >= (size_t)max_homographs_)
           continue;
         DLOG(INFO) << "active input: " << active_input << "[0, " << len << ")";
         UserDictEntryIterator uter;
@@ -644,7 +644,7 @@ an<Translation> TableTranslator::MakeSentence(const string& input,
             consume_trailing_delimiters(m.length, active_input, delimiters_);
         size_t end_pos = start_pos + consumed_length;
         auto& homographs = same_start_pos[end_pos];
-        if (homographs.size() >= max_homographs_)
+        if (homographs.size() >= (size_t)max_homographs_)
           continue;
         DictEntryIterator iter;
         dict_->LookupWords(&iter, active_input.substr(0, m.length), false, 0,

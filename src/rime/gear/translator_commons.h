@@ -85,14 +85,8 @@ class Phrase : public Candidate {
     return entry_->matching_code_size != 0 ? entry_->matching_code_size
                                            : entry_->code.size();
   }
-  bool is_exact_match() const {
-    return entry_->matching_code_size == 0 ||
-           entry_->matching_code_size == entry_->code.size();
-  }
-  bool is_predicitve_match() const {
-    return entry_->matching_code_size != 0 &&
-           entry_->matching_code_size < entry_->code.size();
-  }
+  bool is_exact_match() const { return entry_->IsExactMatch(); }
+  bool is_predicitve_match() const { return entry_->IsPredictiveMatch(); }
   Code matching_code() const {
     return entry_->matching_code_size == 0
                ? entry_->code

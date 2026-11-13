@@ -40,7 +40,7 @@ bool UserDbValue::Unpack(const string& value) {
       } else if (k == "d") {
         try {
           dee = (std::min)(10000.0, std::stod(v));
-        } catch (std::out_of_range) {
+        } catch (const std::out_of_range&) {
           dee = 0;
         }
       } else if (k == "t") {
@@ -245,7 +245,7 @@ void UserDbMerger::CloseMerge() {
 
 UserDbImporter::UserDbImporter(Db* db) : db_(db) {}
 
-bool UserDbImporter::MetaPut(const string& key, const string& value) {
+bool UserDbImporter::MetaPut(const string&, const string&) {
   return true;
 }
 

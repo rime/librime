@@ -27,14 +27,14 @@ class DetectModifications : public DeploymentTask {
 // initialize/update installation.yaml
 class RIME_DLL InstallationUpdate : public DeploymentTask {
  public:
-  InstallationUpdate(TaskInitializer arg = TaskInitializer()) {}
+  InstallationUpdate(TaskInitializer = TaskInitializer()) {}
   bool Run(Deployer* deployer);
 };
 
 // update distributed config files and preset schemas
 class RIME_DLL WorkspaceUpdate : public DeploymentTask {
  public:
-  WorkspaceUpdate(TaskInitializer arg = TaskInitializer()) {}
+  WorkspaceUpdate(TaskInitializer = TaskInitializer()) {}
   bool Run(Deployer* deployer);
 
  protected:
@@ -72,45 +72,45 @@ class ConfigFileUpdate : public DeploymentTask {
 // for installer
 class PrebuildAllSchemas : public DeploymentTask {
  public:
-  PrebuildAllSchemas(TaskInitializer arg = TaskInitializer()) {}
+  PrebuildAllSchemas(TaskInitializer = TaskInitializer()) {}
   bool Run(Deployer* deployer);
 };
 
 // create symlinks to prebuilt dictionaries in user directory
 class SymlinkingPrebuiltDictionaries : public DeploymentTask {
  public:
-  SymlinkingPrebuiltDictionaries(TaskInitializer arg = TaskInitializer()) {}
+  SymlinkingPrebuiltDictionaries(TaskInitializer = TaskInitializer()) {}
   bool Run(Deployer* deployer);
 };
 
 // upgrade user dictionaries
 class UserDictUpgrade : public DeploymentTask {
  public:
-  UserDictUpgrade(TaskInitializer arg = TaskInitializer()) {}
+  UserDictUpgrade(TaskInitializer = TaskInitializer()) {}
   bool Run(Deployer* deployer);
 };
 
 class UserDictSync : public DeploymentTask {
  public:
-  UserDictSync(TaskInitializer arg = TaskInitializer()) {}
+  UserDictSync(TaskInitializer = TaskInitializer()) {}
   bool Run(Deployer* deployer);
 };
 
 class BackupConfigFiles : public DeploymentTask {
  public:
-  BackupConfigFiles(TaskInitializer arg = TaskInitializer()) {}
+  BackupConfigFiles(TaskInitializer = TaskInitializer()) {}
   bool Run(Deployer* deployer);
 };
 
 class CleanupTrash : public DeploymentTask {
  public:
-  CleanupTrash(TaskInitializer arg = TaskInitializer()) {}
+  CleanupTrash(TaskInitializer = TaskInitializer()) {}
   bool Run(Deployer* deployer);
 };
 
 class CleanOldLogFiles : public DeploymentTask {
  public:
-  CleanOldLogFiles(TaskInitializer arg = TaskInitializer()) {}
+  CleanOldLogFiles(TaskInitializer = TaskInitializer()) {}
   bool Run(Deployer* deployer);
 };
 

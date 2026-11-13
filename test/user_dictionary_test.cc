@@ -75,8 +75,9 @@ TEST(UserDictionarySharedCacheTest, SecondInstanceDoesNotRescanDb) {
   ASSERT_TRUE(sys_dict->loaded());
   auto db =
       New<CountingTestDb>(path{"shared_cache_test.txt"}, "shared_cache_test");
-  if (db->Exists())
+  if (db->Exists()) {
     ASSERT_TRUE(db->Remove());
+  }
   ASSERT_TRUE(db->Open());
   ASSERT_TRUE(db->MetaUpdate("/tick", "100"));
   {
@@ -104,8 +105,9 @@ TEST(UserDictionarySharedCacheTest,
   ASSERT_TRUE(sys_dict->loaded());
   auto db = New<UserDbWrapper<LevelDb>>(path{"shared_transaction_test.userdb"},
                                         "shared_transaction_test");
-  if (db->Exists())
+  if (db->Exists()) {
     ASSERT_TRUE(db->Remove());
+  }
   ASSERT_TRUE(db->Open());
   ASSERT_TRUE(db->MetaUpdate("/tick", "100"));
   {

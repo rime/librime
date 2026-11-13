@@ -42,7 +42,7 @@ class Encoder {
   Encoder(PhraseCollector* collector) : collector_(collector) {}
   virtual ~Encoder() = default;
 
-  virtual bool LoadSettings(Config* config) { return false; }
+  virtual bool LoadSettings(Config*) { return false; }
 
   virtual bool EncodePhrase(const string& phrase, const string& value) = 0;
 
