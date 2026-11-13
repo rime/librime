@@ -1,3 +1,8 @@
+//
+// Copyright RIME Developers
+// Distributed under the BSD License
+//
+
 #include <gtest/gtest.h>
 #include <rime/config.h>
 #include <rime/context.h>
