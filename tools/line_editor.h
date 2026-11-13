@@ -88,8 +88,10 @@ class LineEditor {
   std::string last_line_render_;
   size_t last_cursor_row_ = 0;
   bool vt_supported_ = false;
+#ifdef _WIN32
   bool win_console_input_ = false;
   bool win_console_output_ = false;
+#endif
 
   bool menu_open_ = false;
   std::vector<LineCompletion> menu_items_;
