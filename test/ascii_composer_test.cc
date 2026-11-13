@@ -19,7 +19,7 @@ class AsciiComposerCapsLockTest : public ::testing::Test {
 
   void TearDown() override { engine_.reset(); }
 
-  void Configure(bool off_is_ascii, bool good_old, bool with_speller = false) {
+  void Configure(bool off_is_ascii, bool good_old, bool with_editing = false) {
     auto* schema = engine_->schema();
     auto* config = schema->config();
     config->SetString("schema/schema_id", "test_ascii_composer");
@@ -28,8 +28,9 @@ class AsciiComposerCapsLockTest : public ::testing::Test {
     config->SetBool("ascii_composer/good_old_caps_lock", good_old);
     auto processors = New<ConfigList>();
     processors->Append(New<ConfigValue>("ascii_composer"));
-    if (with_speller) {
+    if (with_editing) {
       processors->Append(New<ConfigValue>("speller"));
+      processors->Append(New<ConfigValue>("fluid_editor"));
     }
     config->SetItem("engine/processors", processors);
     engine_->ApplySchema(schema);
@@ -90,6 +91,19 @@ TEST_F(AsciiComposerCapsLockTest, LightOnLetterReachesLaterProcessors) {
   EXPECT_TRUE(engine_->ProcessKey(KeyEvent('A', kLockMask)));
   EXPECT_EQ(engine_->context()->input(), "a");
   EXPECT_TRUE(committed_.empty());
+}
+
+TEST_F(AsciiComposerCapsLockTest, LightOnEditingKeysWork) {
+  Configure(true, false, true);
+  EXPECT_TRUE(engine_->ProcessKey(KeyEvent('A', kLockMask)));
+  EXPECT_TRUE(engine_->ProcessKey(KeyEvent('B', kLockMask)));
+  EXPECT_EQ(engine_->context()->input(), "ab");
+  EXPECT_TRUE(engine_->ProcessKey(KeyEvent(XK_BackSpace, kLockMask)));
+  EXPECT_EQ(engine_->context()->input(), "a");
+  EXPECT_TRUE(engine_->ProcessKey(KeyEvent('C', kLockMask)));
+  EXPECT_EQ(engine_->context()->input(), "ac");
+  EXPECT_TRUE(engine_->ProcessKey(KeyEvent(XK_Return, kLockMask)));
+  EXPECT_EQ(committed_, "ac");
 }
 
 TEST_F(AsciiComposerCapsLockTest, LightOnNonLettersAreNotIntercepted) {

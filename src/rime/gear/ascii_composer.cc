@@ -310,6 +310,24 @@ ProcessResult AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
       return kRejected;
     }
   }
+  if (caps_lock_off_is_ascii_ && key_event.caps()) {
+    // Caps Lock on is not ascii mode: undo the effect of Caps Lock on the key
+    // and let the rest of the engine handle it as if Caps Lock were off.
+    int plain = ch;
+    if (isascii(ch) && isalpha(ch)) {
+      plain = islower(ch) ? toupper(ch) : tolower(ch);
+    }
+    if (engine_->ProcessSyntheticKey(
+            KeyEvent(plain, key_event.modifier() & ~kLockMask))) {
+      return kAccepted;
+    }
+    if (plain != ch && !key_event.ctrl() && !key_event.alt() &&
+        !key_event.super()) {
+      engine_->CommitText(string(1, plain));
+      return kAccepted;
+    }
+    return kRejected;
+  }
   if (key_event.caps()) {
     if (!good_old_caps_lock_ && !key_event.release() && !key_event.ctrl() &&
         !key_event.alt() && !key_event.super() && isascii(ch) && isalpha(ch)) {
@@ -318,16 +336,10 @@ ProcessResult AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
         ch = toupper(ch);
       else if (isupper(ch))
         ch = tolower(ch);
-      if (caps_lock_off_is_ascii_ &&
-          engine_->ProcessSyntheticKey(
-              KeyEvent(ch, key_event.modifier() & ~kLockMask))) {
-        // Caps Lock on is not ascii mode: let the letter reach the engine
-        return kAccepted;
-      }
       engine_->CommitText(string(1, ch));
       return kAccepted;
     } else {
-      return caps_lock_off_is_ascii_ ? kNoop : kRejected;
+      return kRejected;
     }
   }
   return kNoop;
