@@ -54,6 +54,7 @@ class AsciiComposer : public Processor,
   AsciiModeSwitchKeyBindings bindings_;
   AsciiModeSwitchStyle caps_lock_switch_style_ = kAsciiModeSwitchNoop;
   bool good_old_caps_lock_ = false;
+  bool caps_lock_off_is_ascii_ = false;
   bool inline_uppercase_ = false;
   bool inline_keypad_ = false;
   bool toggle_with_caps_ = false;

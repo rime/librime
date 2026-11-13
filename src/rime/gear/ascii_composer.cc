@@ -298,13 +298,35 @@ ProcessResult AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
       // turn it on; for Windows it is the opposite:
       // Caps Lock modifier has been set before we process VK_CAPITAL.
       // here we assume IBus' behavior and invert caps with ! operation.
-      SwitchAsciiMode(!key_event.caps(), caps_lock_switch_style_);
+      // With caps_lock_off_is_ascii, the light being on means non-ascii mode,
+      // i.e. the opposite of the default.
+      SwitchAsciiMode(
+          caps_lock_off_is_ascii_ ? key_event.caps() : !key_event.caps(),
+          caps_lock_switch_style_);
       // When good_old_caps_lock is enabled, allow the key event to pass
       // through the input method to toggle the Caps Lock state.
       return good_old_caps_lock_ ? kRejected : kAccepted;
     } else {
       return kRejected;
     }
+  }
+  if (caps_lock_off_is_ascii_ && key_event.caps()) {
+    // Caps Lock on is not ascii mode: undo the effect of Caps Lock on the key
+    // and let the rest of the engine handle it as if Caps Lock were off.
+    int plain = ch;
+    if (isascii(ch) && isalpha(ch)) {
+      plain = islower(ch) ? toupper(ch) : tolower(ch);
+    }
+    if (engine_->ProcessSyntheticKey(
+            KeyEvent(plain, key_event.modifier() & ~kLockMask))) {
+      return kAccepted;
+    }
+    if (plain != ch && !key_event.ctrl() && !key_event.alt() &&
+        !key_event.super()) {
+      engine_->CommitText(string(1, plain));
+      return kAccepted;
+    }
+    return kRejected;
   }
   if (key_event.caps()) {
     if (!good_old_caps_lock_ && !key_event.release() && !key_event.ctrl() &&
@@ -343,6 +365,7 @@ void AsciiComposer::LoadConfig(Schema* schema) {
   bindings_.clear();
   caps_lock_switch_style_ = kAsciiModeSwitchNoop;
   good_old_caps_lock_ = false;
+  caps_lock_off_is_ascii_ = false;
   inline_uppercase_ = false;
   inline_keypad_ = false;
 
@@ -358,6 +381,13 @@ void AsciiComposer::LoadConfig(Schema* schema) {
   };
   get_config_bool_fallback_default("ascii_composer/good_old_caps_lock",
                                    &good_old_caps_lock_);
+  get_config_bool_fallback_default("ascii_composer/caps_lock_off_is_ascii",
+                                   &caps_lock_off_is_ascii_);
+  if (caps_lock_off_is_ascii_ && good_old_caps_lock_) {
+    LOG(WARNING) << "ascii_composer/caps_lock_off_is_ascii is ignored when "
+                    "ascii_composer/good_old_caps_lock is enabled.";
+    caps_lock_off_is_ascii_ = false;
+  }
   get_config_bool_fallback_default("ascii_composer/inline_uppercase",
                                    &inline_uppercase_);
   get_config_bool_fallback_default("ascii_composer/inline_keypad",
