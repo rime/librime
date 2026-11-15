@@ -80,6 +80,8 @@ Community:
   - [Hamster](https://github.com/imfuxiao/Hamster): frontend for iOS
   - [My RIME](https://github.com/LibreService/my_rime): frontend for web
   - [PIME](https://github.com/EasyIME/PIME): frontend for Windows
+  - [Songyan](https://github.com/Suzukaa-a/songyan-android): frontend for Android
+  - [Songyan](https://github.com/Suzukaa-a/songyan-ios): frontend for iOS
   - [Trime](https://github.com/osfans/trime): frontend for Android
   - [XIME](https://github.com/stackia/XIME): frontend for macOS
   - [YuyanIme](https://github.com/gurecn/YuyanIme): frontend for Android
