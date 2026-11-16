@@ -10,7 +10,8 @@ namespace rime {
 
 static an<Candidate> UnpackShadowCandidate(const an<Candidate>& cand) {
   auto shadow = As<ShadowCandidate>(cand);
-  return shadow ? shadow->item() : cand;
+  // (tail-)recursively unpack Shadow (#1275)
+  return shadow ? UnpackShadowCandidate(shadow->item()) : cand;
 }
 
 an<Candidate> Candidate::GetGenuineCandidate(const an<Candidate>& cand) {

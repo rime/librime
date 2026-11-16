@@ -11,7 +11,7 @@
 
 namespace rime {
 
-class Candidate {
+class RIME_DLL Candidate {
  public:
   Candidate() = default;
   Candidate(const string& type, size_t start, size_t end, double quality = 0.)
