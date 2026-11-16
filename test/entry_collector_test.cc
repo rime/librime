@@ -52,7 +52,7 @@ class RimeEntryCollectorTest : public ::testing::Test {
     for (const auto& entry : collector.entries) {
       if (entry.text == text) {
         ++matches;
-        EXPECT_EQ(code, entry.raw_code.ToString());
+        EXPECT_EQ(code, entry.code);
         EXPECT_DOUBLE_EQ(weight, entry.weight);
       }
     }
@@ -94,6 +94,45 @@ TEST_F(RimeEntryCollectorTest, MultipleWordCodesAreSortedAndDeduplicated) {
   EXPECT_EQ("a", codes[0]);
   EXPECT_EQ("z", codes[1]);
   EXPECT_EQ(2u, collector.num_entries);
+  EXPECT_DOUBLE_EQ(1.0, collector.entries[1].weight);
+}
+
+TEST_F(RimeEntryCollectorTest, PreservesDistinctWhitespaceInCodes) {
+  TestEntryCollector collector;
+  collector.CreateEntry("word", " a ", "1");
+  collector.CreateEntry("word", "a", "2");
+
+  std::vector<rime::string> codes;
+  ASSERT_TRUE(collector.TranslateWord("word", &codes));
+  ASSERT_EQ(2u, codes.size());
+  EXPECT_EQ(" a ", codes[0]);
+  EXPECT_EQ("a", codes[1]);
+  EXPECT_EQ(2u, collector.num_entries);
+}
+
+TEST_F(RimeEntryCollectorTest, RuleBasedEncoderBuildsWordsLazily) {
+  auto file = WriteFile("rule_based.dict.yaml",
+                        "---\nname: rule_based\nversion: '1'\n...\n"
+                        "a\tx\t10\n"
+                        "b\ty\t10\n"
+                        "ab\t\t5\n");
+  rime::DictSettings settings;
+  settings["encoder"]["rules"][0]["length_equal"] = 2;
+  settings["encoder"]["rules"][0]["formula"] = "AaBa";
+  TestEntryCollector collector;
+  collector.Configure(&settings);
+  collector.Collect(file);
+  collector.Finish();
+
+  bool found_encoded_entry = false;
+  for (const auto& entry : collector.entries) {
+    if (entry.text == "ab") {
+      found_encoded_entry = true;
+      EXPECT_EQ("xy", entry.code);
+      EXPECT_DOUBLE_EQ(5.0, entry.weight);
+    }
+  }
+  EXPECT_TRUE(found_encoded_entry);
 }
 
 TEST_F(RimeEntryCollectorTest, PresetWeightsDeduplicationAndRelease) {

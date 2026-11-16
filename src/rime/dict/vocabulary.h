@@ -102,7 +102,7 @@ struct VocabularyPage {
 class Vocabulary : public map<int, VocabularyPage> {
  public:
   ShortDictEntryList* LocateEntries(const Code& code);
-  void SortHomophones();
+  RIME_DLL void SortHomophones();
 };
 
 // word -> { code, ... }

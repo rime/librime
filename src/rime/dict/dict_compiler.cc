@@ -5,9 +5,11 @@
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
 #include <filesystem>
+#include <algorithm>
 #include <cfloat>
 #include <cmath>
 #include <fstream>
+#include <limits>
 #include <rime/algo/algebra.h>
 #include <rime/algo/utilities.h>
 #include <rime/dict/corrector.h>
@@ -23,6 +25,17 @@
 #include <rime/service.h>
 
 namespace rime {
+
+namespace {
+
+bool GetCompactTextLength(std::string_view text, uint32_t* length) {
+  if (text.size() > (std::numeric_limits<uint32_t>::max)())
+    return false;
+  *length = static_cast<uint32_t>(text.size());
+  return true;
+}
+
+}  // namespace
 
 DictCompiler::DictCompiler(Dictionary* dictionary)
     : dict_name_(dictionary->name()),
@@ -232,6 +245,17 @@ bool DictCompiler::BuildTable(int table_index,
     collector.Dump(dump_path);
   }
   Vocabulary vocabulary;
+  CompactDictEntryList compact_entries;
+  CompactDictEntryList reverse_entries;
+  bool all_single_syllable = true;
+  for (const auto& r : collector.entries) {
+    RawCode raw_code;
+    raw_code.FromStringView(r.code);
+    if (raw_code.size() != 1) {
+      all_single_syllable = false;
+      break;
+    }
+  }
   // build .table.bin
   {
     map<string, SyllableId> syllable_to_id;
@@ -239,39 +263,108 @@ bool DictCompiler::BuildTable(int table_index,
     for (const auto& s : collector.syllabary) {
       syllable_to_id[s] = syllable_id++;
     }
-    for (auto& r : collector.entries) {
-      Code code;
-      for (const auto& s : r.raw_code) {
-        code.push_back(syllable_to_id[s]);
-      }
-      // release memory in time to reduce memory usage
-      RawCode().swap(r.raw_code);
-      auto ls = vocabulary.LocateEntries(code);
-      if (!ls) {
-        LOG(ERROR) << "Error locating entries in vocabulary.";
-        continue;
-      }
-      ShortDictEntry e;
-      e.code.swap(code);
-      e.text.swap(r.text);
-      e.weight = log(r.weight > 0 ? r.weight : DBL_EPSILON);
-      ls->push_back(std::move(e));
+    if (all_single_syllable) {
+      compact_entries.text.reserve(collector.total_text_bytes);
+      compact_entries.entries.reserve(collector.entries.size());
     }
-    // release memory in time to reduce memory usage
-    decltype(collector.entries)().swap(collector.entries);
-    if (settings->sort_order() != "original") {
-      vocabulary.SortHomophones();
+    // Consume collected entries from the front so the deque can release its
+    // memory while the target representation grows.
+    while (!collector.entries.empty()) {
+      auto& r = collector.entries.front();
+      RawCode raw_code;
+      raw_code.FromStringView(r.code);
+      if (all_single_syllable) {
+        const SyllableId id = syllable_to_id[raw_code.front()];
+        uint32_t text_length = 0;
+        if (!GetCompactTextLength(r.text, &text_length)) {
+          LOG(ERROR) << "dictionary entry text is too long: '" << r.text << "'";
+          return false;
+        }
+        compact_entries.entries.push_back(
+            {compact_entries.text.size(), text_length, id,
+             log(r.weight > 0 ? r.weight : DBL_EPSILON)});
+        compact_entries.text.append(r.text);
+      } else {
+        Code code;
+        for (const auto& s : raw_code)
+          code.push_back(syllable_to_id[s]);
+        auto ls = vocabulary.LocateEntries(code);
+        if (ls) {
+          ShortDictEntry e;
+          e.code.swap(code);
+          e.text.swap(r.text);
+          e.weight = log(r.weight > 0 ? r.weight : DBL_EPSILON);
+          ls->push_back(std::move(e));
+        } else {
+          LOG(ERROR) << "Error locating entries in vocabulary.";
+        }
+      }
+      collector.entries.pop_front();
     }
     table->Remove();
-    if (!table->Build(collector.syllabary, vocabulary, collector.num_entries,
-                      dict_file_checksum) ||
-        !table->Save()) {
-      return false;
+    if (all_single_syllable) {
+      std::stable_sort(
+          compact_entries.entries.begin(), compact_entries.entries.end(),
+          [&](const CompactDictEntry& a, const CompactDictEntry& b) {
+            if (a.syllable_id != b.syllable_id)
+              return a.syllable_id < b.syllable_id;
+            if (settings->sort_order() != "original" && a.weight != b.weight)
+              return a.weight > b.weight;
+            return false;
+          });
+      compact_entries.page_offsets.assign(collector.syllabary.size() + 1, 0);
+      for (const auto& entry : compact_entries.entries)
+        ++compact_entries.page_offsets[entry.syllable_id + 1];
+      for (size_t i = 1; i < compact_entries.page_offsets.size(); ++i)
+        compact_entries.page_offsets[i] += compact_entries.page_offsets[i - 1];
+      if (!table->Build(collector.syllabary, compact_entries,
+                        collector.num_entries, dict_file_checksum) ||
+          !table->Save())
+        return false;
+      if (table_index == 0) {
+        compact_entries.page_offsets.clear();
+        compact_entries.page_offsets.shrink_to_fit();
+        reverse_entries = std::move(compact_entries);
+      } else {
+        compact_entries = CompactDictEntryList{};
+      }
+    } else {
+      if (settings->sort_order() != "original")
+        vocabulary.SortHomophones();
+      const bool build_reverse = table_index == 0;
+      if (build_reverse) {
+        reverse_entries.text.reserve(collector.total_text_bytes);
+        reverse_entries.entries.reserve(collector.num_entries);
+      }
+      if (!table->Build(
+              collector.syllabary, vocabulary, collector.num_entries,
+              dict_file_checksum, /*release_vocabulary=*/true,
+              [&]() {
+                if (build_reverse) {
+                  for (const auto& page : vocabulary) {
+                    for (const auto& e : page.second.entries) {
+                      uint32_t text_length = 0;
+                      if (!GetCompactTextLength(e.text, &text_length)) {
+                        LOG(ERROR) << "dictionary entry text is too long: '"
+                                   << e.text << "'";
+                        return false;
+                      }
+                      reverse_entries.entries.push_back(
+                          {reverse_entries.text.size(), text_length, page.first,
+                           e.weight});
+                      reverse_entries.text.append(e.text);
+                    }
+                  }
+                }
+                return true;
+              }) ||
+          !table->Save())
+        return false;
     }
   }
   // build reverse db for the primary table
   if (table_index == 0 &&
-      !BuildReverseDb(settings, collector.syllabary, vocabulary,
+      !BuildReverseDb(settings, collector.syllabary, reverse_entries,
                       collector.stems, dict_file_checksum)) {
     return false;
   }
@@ -280,13 +373,13 @@ bool DictCompiler::BuildTable(int table_index,
 
 bool DictCompiler::BuildReverseDb(DictSettings* settings,
                                   const Syllabary& syllabary,
-                                  const Vocabulary& vocabulary,
+                                  CompactDictEntryList& reverse_entries,
                                   const ReverseLookupTable& stems,
                                   uint32_t dict_file_checksum) {
   // build .reverse.bin
   auto target_path = target_resolver_->ResolvePath(dict_name_ + ".reverse.bin");
   ReverseDb reverse_db(target_path);
-  if (!reverse_db.Build(settings, syllabary, vocabulary, stems,
+  if (!reverse_db.Build(settings, syllabary, reverse_entries, stems,
                         dict_file_checksum) ||
       !reverse_db.Save()) {
     LOG(ERROR) << "error building reversedb.";
