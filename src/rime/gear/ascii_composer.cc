@@ -280,6 +280,15 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
 
 ProcessResult AsciiComposer::ProcessCapsLock(const KeyEvent& key_event) {
   int ch = key_event.keycode();
+  if (caps_lock_off_is_ascii_ && !caps_state_synced_) {
+    // Until Caps Lock is pressed, ascii_mode does not follow the light, so
+    // sync it once from the first key event. The Caps Lock key itself is left
+    // to the branch below, as its modifier is not the light's current state.
+    caps_state_synced_ = true;
+    if (ch != XK_Caps_Lock) {
+      engine_->context()->set_option("ascii_mode", !key_event.caps());
+    }
+  }
   if (ch == XK_Caps_Lock) {
     if (!key_event.release()) {
       shift_key_pressed_ = ctrl_key_pressed_ = alt_key_pressed_ =

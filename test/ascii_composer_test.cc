@@ -82,6 +82,33 @@ TEST_F(AsciiComposerCapsLockTest, LightOffIsAscii) {
   EXPECT_FALSE(ascii_mode());
 }
 
+TEST_F(AsciiComposerCapsLockTest, LightOffFirstKeyIsAscii) {
+  Configure(true, false);
+  engine_->ProcessKey(KeyEvent('a', 0));
+  EXPECT_TRUE(ascii_mode());
+}
+
+TEST_F(AsciiComposerCapsLockTest, LightOnFirstKeyIsNotAscii) {
+  Configure(true, false);
+  engine_->ProcessKey(KeyEvent('A', kLockMask));
+  EXPECT_FALSE(ascii_mode());
+}
+
+TEST_F(AsciiComposerCapsLockTest, FirstKeySyncHappensOnlyOnce) {
+  Configure(true, false);
+  engine_->ProcessKey(KeyEvent('a', 0));
+  engine_->context()->set_option("ascii_mode", false);
+  engine_->ProcessKey(KeyEvent('a', 0));
+  EXPECT_FALSE(ascii_mode());
+}
+
+TEST_F(AsciiComposerCapsLockTest, CapsLockAsFirstKeyIsNotOverriddenLater) {
+  Configure(true, false);
+  PressCapsLock(false);  // light turns on
+  engine_->ProcessKey(KeyEvent('A', kLockMask));
+  EXPECT_FALSE(ascii_mode());
+}
+
 TEST_F(AsciiComposerCapsLockTest, LightOnLetterCaseIsFlippedBack) {
   Configure(true, false);
   EXPECT_TRUE(engine_->ProcessKey(KeyEvent('A', kLockMask)));
