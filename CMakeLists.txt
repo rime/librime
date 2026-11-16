@@ -252,6 +252,9 @@ if(INSTALL_PRIVATE_HEADERS)
     install(FILES ${rime_private_header_files}
       DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR}/rime/${rime_private_header_files_dir})
   endforeach()
+  # rime/dict/prism.h includes the bundled darts-clone header
+  install(FILES ${PROJECT_SOURCE_DIR}/include/darts.h
+    DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR}/rime/dict)
 endif()
 
 if(BUILD_DATA)
