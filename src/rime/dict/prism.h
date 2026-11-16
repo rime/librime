@@ -10,7 +10,7 @@
 #define RIME_PRISM_H_
 
 #include <string_view>
-#include <darts.h>
+#include "darts.h"
 #include <rime/common.h>
 #include <rime/algo/spelling.h>
 #include <rime/dict/mapped_file.h>
