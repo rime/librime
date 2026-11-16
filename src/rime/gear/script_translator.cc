@@ -125,9 +125,9 @@ class ScriptTranslation : public Translation {
         end_of_input_(end_of_input),
         syllabifier_(
             New<ScriptSyllabifier>(translator, corrector, input, start)),
-        enable_correction_(corrector),
         max_sentences_(max_sentences),
-        sentence_cutoff_threshold_(sentence_cutoff_threshold) {
+        sentence_cutoff_threshold_(sentence_cutoff_threshold),
+        enable_correction_(corrector) {
     set_exhausted(true);
   }
   bool Evaluate(Dictionary* dict, UserDictionary* user_dict);
@@ -360,11 +360,11 @@ Spans ScriptSyllabifier::Syllabify(const Phrase* phrase) {
   Spans result;
   vector<size_t> vertices;
   vertices.push_back(start_);
-  SyllabifyTask task{
-      phrase->code(), syllable_graph_, phrase->end() - start_,
-      [&](SyllabifyTask* task, size_t depth, size_t current_pos,
-          size_t next_pos) { vertices.push_back(start_ + next_pos); },
-      [&](SyllabifyTask* task, size_t depth) { vertices.pop_back(); }};
+  SyllabifyTask task{phrase->code(), syllable_graph_, phrase->end() - start_,
+                     [&](SyllabifyTask*, size_t, size_t, size_t next_pos) {
+                       vertices.push_back(start_ + next_pos);
+                     },
+                     [&](SyllabifyTask*, size_t) { vertices.pop_back(); }};
   if (syllabify_dfs(&task, 0, phrase->start() - start_)) {
     result.set_vertices(std::move(vertices));
   }
@@ -403,7 +403,7 @@ bool ScriptSyllabifier::IsCorrection(const Code& code,
         path_attributes.push_back(false);
       },
       // pop
-      [&](SyllabifyTask* task, size_t depth) { path_attributes.pop_back(); }};
+      [&](SyllabifyTask*, size_t) { path_attributes.pop_back(); }};
 
   if (syllabify_dfs(&task, 0, 0)) {
     for (bool is_correction : path_attributes) {
@@ -418,22 +418,21 @@ string ScriptSyllabifier::GetPreeditString(const Phrase& cand) const {
   const auto& delimiters = translator_->delimiters();
   std::stack<size_t> lengths;
   string output;
-  SyllabifyTask task{cand.matching_code(), syllable_graph_, cand.end() - start_,
-                     [&](SyllabifyTask* task, size_t depth, size_t current_pos,
-                         size_t next_pos) {
-                       size_t len = output.length();
-                       if (depth > 0 && len > 0 &&
-                           delimiters.find(output[len - 1]) == string::npos) {
-                         output += delimiters.at(0);
-                       }
-                       output +=
-                           input_.substr(current_pos, next_pos - current_pos);
-                       lengths.push(len);
-                     },
-                     [&](SyllabifyTask* task, size_t depth) {
-                       output.resize(lengths.top());
-                       lengths.pop();
-                     }};
+  SyllabifyTask task{
+      cand.matching_code(), syllable_graph_, cand.end() - start_,
+      [&](SyllabifyTask*, size_t depth, size_t current_pos, size_t next_pos) {
+        size_t len = output.length();
+        if (depth > 0 && len > 0 &&
+            delimiters.find(output[len - 1]) == string::npos) {
+          output += delimiters.at(0);
+        }
+        output += input_.substr(current_pos, next_pos - current_pos);
+        lengths.push(len);
+      },
+      [&](SyllabifyTask*, size_t) {
+        output.resize(lengths.top());
+        lengths.pop();
+      }};
   if (syllabify_dfs(&task, 0, cand.start() - start_)) {
     return translator_->FormatPreedit(output);
   } else {
@@ -692,7 +691,7 @@ void ScriptTranslation::EnrollEntries(
   if (query_result) {
     for (auto& y : *query_result) {
       DictEntryList& homophones = entries_by_end_pos[y.first];
-      while (homophones.size() < translator_->max_homophones() &&
+      while (homophones.size() < (size_t)translator_->max_homophones() &&
              !y.second.exhausted()) {
         homophones.push_back(y.second.Peek());
         if (!y.second.Next())

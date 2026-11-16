@@ -38,7 +38,7 @@ DetectModifications::DetectModifications(TaskInitializer arg) {
   }
 }
 
-bool DetectModifications::Run(Deployer* deployer) {
+bool DetectModifications::Run(Deployer*) {
   time_t last_modified = 0;
   try {
     for (auto dir : data_dirs_) {
@@ -78,7 +78,6 @@ bool DetectModifications::Run(Deployer* deployer) {
 
 bool InstallationUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating rime installation info.";
-  const path& shared_data_path(deployer->shared_data_dir);
   const path& user_data_path(deployer->user_data_dir);
   if (!fs::exists(user_data_path)) {
     LOG(INFO) << "creating user data dir: " << user_data_path;

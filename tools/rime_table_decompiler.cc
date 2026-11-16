@@ -50,7 +50,7 @@ void access(rime::Table* table,
 void recursion(rime::Table* table,
                rime::TableQuery* query,
                std::ofstream& fout) {
-  for (int i = 0; i < table->metadata()->num_syllables; i++) {
+  for (size_t i = 0; i < table->metadata()->num_syllables; i++) {
     auto accessor = query->Access(i);
     access(table, accessor, fout);
     if (query->Advance(i)) {

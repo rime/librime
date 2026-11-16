@@ -1,4 +1,4 @@
-aux_source_directory(. rime_api_src)
+set(rime_api_src rime_api.cc rime_api_stdbool.cc)
 aux_source_directory(rime rime_base_src)
 aux_source_directory(rime/algo rime_algo_src)
 aux_source_directory(rime/config rime_config_src)

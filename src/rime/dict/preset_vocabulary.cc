@@ -37,9 +37,9 @@ static bool rime_vocabulary_entry_parser(const Tsv& row,
   return true;
 }
 
-static bool rime_vocabulary_entry_formatter(const string& key,
-                                            const string& value,
-                                            Tsv* tsv) {
+static bool rime_vocabulary_entry_formatter(const string&,
+                                            const string&,
+                                            Tsv*) {
   // Tsv& row(*tsv);
   // row.push_back(key);
   // row.push_back(value);

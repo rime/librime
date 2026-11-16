@@ -136,7 +136,7 @@ bool execute_special_command(const char* line, RimeSessionId session_id) {
     return true;
   }
   if (!strcmp(line, "print candidate list")) {
-    RimeCandidateListIterator iterator = {0};
+    RimeCandidateListIterator iterator = {};
     if (rime->candidate_list_begin(session_id, &iterator)) {
       while (rime->candidate_list_next(&iterator)) {
         printf("%d. %s", iterator.index + 1, iterator.candidate.text);
@@ -189,7 +189,7 @@ bool execute_special_command(const char* line, RimeSessionId session_id) {
   return false;
 }
 
-void on_message(void* context_object,
+void on_message(void*,
                 RimeSessionId session_id,
                 const char* message_type,
                 const char* message_value) {
@@ -216,7 +216,7 @@ RimeSessionId ensure_session(RimeApi* rime) {
   return id;
 }
 
-int main(int argc, char* argv[]) {
+int main(int, char*[]) {
   unsigned int codepage = SetConsoleOutputCodePage();
   RimeApi* rime = rime_get_api();
 

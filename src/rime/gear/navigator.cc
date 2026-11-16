@@ -97,7 +97,7 @@ ProcessResult Navigator::ProcessKeyEvent(const KeyEvent& key_event) {
                                               FallbackOptions::All);
 }
 
-void Navigator::OnSelect(Context* ctx) {
+void Navigator::OnSelect(Context*) {
   spans_.Clear();
 }
 

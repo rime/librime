@@ -42,9 +42,9 @@ class Menu {
   bool empty() const;
 
  private:
+  CandidateList candidates_;
   an<MergedTranslation> merged_;
   an<Translation> result_;
-  CandidateList candidates_;
 };
 
 }  // namespace rime

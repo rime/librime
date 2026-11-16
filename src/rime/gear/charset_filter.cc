@@ -99,7 +99,7 @@ CharsetFilter::CharsetFilter(const Ticket& ticket)
     : Filter(ticket), TagMatching(ticket) {}
 
 an<Translation> CharsetFilter::Apply(an<Translation> translation,
-                                     CandidateList* candidates) {
+                                     CandidateList*) {
   bool default_ns = name_space_.empty() || name_space_ == "filter";
   if (default_ns && !engine_->context()->get_option("extended_charset")) {
     return New<CharsetFilterTranslation>(translation);

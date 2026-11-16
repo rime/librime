@@ -20,7 +20,7 @@ bool FallbackSegmentor::Proceed(Segmentation* segmentation) {
     return false;
 
   const string& input(segmentation->input());
-  int k = segmentation->GetCurrentStartPosition();
+  size_t k = segmentation->GetCurrentStartPosition();
   DLOG(INFO) << "current start pos: " << k;
   if (k == input.length())
     return false;

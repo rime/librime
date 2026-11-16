@@ -263,8 +263,7 @@ void SwitchTranslation::LoadSwitches(Switcher* switcher) {
 
 SwitchTranslator::SwitchTranslator(const Ticket& ticket) : Translator(ticket) {}
 
-an<Translation> SwitchTranslator::Query(const string& input,
-                                        const Segment& segment) {
+an<Translation> SwitchTranslator::Query(const string&, const Segment&) {
   auto switcher = dynamic_cast<Switcher*>(engine_);
   if (!switcher) {
     return nullptr;

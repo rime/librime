@@ -299,7 +299,7 @@ CorrectorComponent::CorrectorComponent()
     : resolver_(Service::instance().CreateDeployedResourceResolver(
           {"corrector", "", ".correction.bin"})) {}
 
-Corrector* CorrectorComponent::Create(const Ticket& ticket) noexcept {
+Corrector* CorrectorComponent::Create(const Ticket&) noexcept {
   // Don't use edit distance based correction for now.
 #if 0
   if (!ticket.schema) return nullptr;

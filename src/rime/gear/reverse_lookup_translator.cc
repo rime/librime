@@ -74,7 +74,7 @@ an<Candidate> ReverseLookupTranslation::Peek() {
 }
 
 int ReverseLookupTranslation::Compare(an<Translation> other,
-                                      const CandidateList& candidates) {
+                                      const CandidateList&) {
   if (!other || other->exhausted())
     return -1;
   if (exhausted())

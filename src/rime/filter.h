@@ -28,7 +28,7 @@ class Filter : public Class<Filter, const Ticket&> {
   virtual an<Translation> Apply(an<Translation> translation,
                                 CandidateList* candidates) = 0;
 
-  virtual bool AppliesToSegment(Segment* segment) { return true; }
+  virtual bool AppliesToSegment(Segment*) { return true; }
 
   string name_space() const { return name_space_; }
 

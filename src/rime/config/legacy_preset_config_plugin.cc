@@ -9,9 +9,8 @@
 
 namespace rime {
 
-bool LegacyPresetConfigPlugin::ReviewCompileOutput(
-    ConfigCompiler* compiler,
-    an<ConfigResource> resource) {
+bool LegacyPresetConfigPlugin::ReviewCompileOutput(ConfigCompiler*,
+                                                   an<ConfigResource>) {
   return true;
 }
 

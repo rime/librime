@@ -11,8 +11,7 @@
 
 namespace rime {
 
-bool BuildInfoPlugin::ReviewCompileOutput(ConfigCompiler* compiler,
-                                          an<ConfigResource> resource) {
+bool BuildInfoPlugin::ReviewCompileOutput(ConfigCompiler*, an<ConfigResource>) {
   return true;
 }
 
