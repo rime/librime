@@ -1109,6 +1109,10 @@ bool LineEditor::ComputeCompletionContext(const std::string& line,
     if (space != std::string::npos)
       token_start = space + 1;
   }
+  // Adjacent key expressions need no whitespace: "{Shift_L}{Release+Shi".
+  const size_t brace = line.find_last_of("{}", cursor - 1);
+  if (brace != std::string::npos && line[brace] == '{' && brace >= token_start)
+    token_start = brace;
   if (token_start >= cursor)
     return false;
   const std::string token = line.substr(token_start, cursor - token_start);
@@ -1224,36 +1228,14 @@ void LineEditor::UpdateSuggestion(const std::string& line, size_t cursor) {
   if (cursor != line.size())
     return;
 
-  // Prefer explicit completions over history suggestions. First try a
-  // whole-line prefix match, which supports multi-word commands such as
-  // "select schema " and "print candidate list".
-  if (!completions_.empty() && !line.empty()) {
+  // Use the same completion range for inline suggestions and the menu.
+  CompletionContext ctx;
+  if (ComputeCompletionContext(line, cursor, &ctx)) {
     for (const auto& completion : completions_) {
-      if (completion.text.length() > line.length() &&
-          completion.text.compare(0, line.length(), line) == 0) {
-        suggestion_ = completion.text.substr(line.length());
+      if (completion.text.size() > ctx.prefix.size() &&
+          completion.text.compare(0, ctx.prefix.size(), ctx.prefix) == 0) {
+        suggestion_ = completion.text.substr(ctx.prefix.size());
         return;
-      }
-    }
-  }
-
-  // Then complete the current whitespace-delimited token, so key sequences
-  // such as "{Esc" work.
-  if (!completions_.empty()) {
-    size_t token_start = 0;
-    if (cursor > 0) {
-      const size_t space = line.find_last_of(" \t", cursor - 1);
-      if (space != std::string::npos)
-        token_start = space + 1;
-    }
-    if (token_start < cursor) {
-      const std::string token = line.substr(token_start, cursor - token_start);
-      for (const auto& completion : completions_) {
-        if (completion.text.length() > token.length() &&
-            completion.text.compare(0, token.length(), token) == 0) {
-          suggestion_ = completion.text.substr(token.length());
-          return;
-        }
       }
     }
   }

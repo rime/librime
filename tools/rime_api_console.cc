@@ -156,16 +156,19 @@ const char* const kKeyNames[] = {
 };
 
 const char* const kComboKeys[] = {
-    "grave",      "space",      "Tab",         "Return",       "BackSpace",
-    "Escape",     "Left",       "Right",       "Up",           "Down",
-    "Home",       "End",        "Page_Up",     "Page_Down",    "Delete",
-    "Insert",     "minus",      "equal",       "plus",         "underscore",
-    "parenleft",  "parenright", "bracketleft", "bracketright", "braceleft",
-    "braceright", "less",       "greater",     "colon",        "semicolon",
-    "comma",      "period",     "slash",       "backslash",    "bar",
-    "question",   "exclam",     "quotedbl",    "apostrophe",   "quoteleft",
-    "quoteright", "numbersign", "dollar",      "percent",      "ampersand",
-    "asterisk",   "at",         "asciitilde",  "asciicircum",
+    "Shift_L",      "Shift_R",    "Control_L",  "Control_R",  "Alt_L",
+    "Alt_R",        "Super_L",    "Super_R",    "Meta_L",     "Meta_R",
+    "Hyper_L",      "Hyper_R",    "grave",      "space",      "Tab",
+    "Return",       "BackSpace",  "Escape",     "Left",       "Right",
+    "Up",           "Down",       "Home",       "End",        "Page_Up",
+    "Page_Down",    "Delete",     "Insert",     "minus",      "equal",
+    "plus",         "underscore", "parenleft",  "parenright", "bracketleft",
+    "bracketright", "braceleft",  "braceright", "less",       "greater",
+    "colon",        "semicolon",  "comma",      "period",     "slash",
+    "backslash",    "bar",        "question",   "exclam",     "quotedbl",
+    "apostrophe",   "quoteleft",  "quoteright", "numbersign", "dollar",
+    "percent",      "ampersand",  "asterisk",   "at",         "asciitilde",
+    "asciicircum",
 };
 
 const char* const kModifierOrders[] = {
@@ -173,6 +176,7 @@ const char* const kModifierOrders[] = {
     "Control",
     "Alt",
     "Super",
+    "Release",
     "Shift+Control",
     "Control+Shift",
     "Shift+Alt",
