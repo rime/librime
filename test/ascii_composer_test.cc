@@ -83,9 +83,11 @@ TEST_F(AsciiComposerCapsLockTest, LightOffIsAscii) {
 }
 
 TEST_F(AsciiComposerCapsLockTest, LightOffFirstKeyIsAscii) {
-  Configure(true, false);
-  engine_->ProcessKey(KeyEvent('a', 0));
+  Configure(true, false, true);
+  // the first key already behaves as ascii: it is passed through, not composed
+  EXPECT_FALSE(engine_->ProcessKey(KeyEvent('a', 0)));
   EXPECT_TRUE(ascii_mode());
+  EXPECT_TRUE(engine_->context()->input().empty());
 }
 
 TEST_F(AsciiComposerCapsLockTest, LightOnFirstKeyIsNotAscii) {

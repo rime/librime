@@ -119,7 +119,6 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
 
   int ch = key_event.keycode();
   Context* ctx = engine_->context();
-  bool ascii_mode = ctx->get_option("ascii_mode");
 
   // 1. 修飾鍵釋放與單擊切換判定（Shift / Ctrl / Alt / Super）
   bool is_shift = (ch == XK_Shift_L || ch == XK_Shift_R);
@@ -161,6 +160,8 @@ ProcessResult AsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
   }
 
   // 4. 獨立修飾鍵按下（記錄單擊計時）
+  // CapsLock 處理會依燈的狀態同步 ascii_mode，故在其後讀取
+  bool ascii_mode = ctx->get_option("ascii_mode");
   if (ch == XK_Eisu_toggle) {
     ResetModifierState();
     ToggleAsciiModeWithKey(ch);
