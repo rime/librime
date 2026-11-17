@@ -1,0 +1,11 @@
+[package]
+name = "rime"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Rime input method engine, ported to Rust"
+
+[lib]
+name = "rime"
+path = "src/lib.rs"

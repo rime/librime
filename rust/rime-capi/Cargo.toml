@@ -1,0 +1,15 @@
+[package]
+name = "rime-capi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "C ABI for the Rime input method engine (Rust port)"
+
+[dependencies]
+rime = { path = "../rime" }
+
+[lib]
+name = "rime_capi"
+crate-type = ["cdylib", "staticlib", "rlib"]
+path = "src/lib.rs"

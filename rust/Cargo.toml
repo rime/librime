@@ -1,0 +1,9 @@
+[workspace]
+resolver = "2"
+members = ["rime", "rime-capi"]
+
+[workspace.package]
+version = "1.11.0"
+edition = "2021"
+license = "BSD-3-Clause"
+repository = "https://github.com/rime/librime"
