@@ -43,6 +43,8 @@ void UserDictManager::GetUserDictList(UserDictList* user_dict_list,
     string name = path(it->path().filename()).to_utf8_string();
     if (boost::ends_with(name, component->extension())) {
       boost::erase_last(name, component->extension());
+      if (name == ".temp")  // Reserved for Restore().
+        continue;
       user_dict_list->push_back(name);
     }
   }
