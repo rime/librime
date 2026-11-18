@@ -151,8 +151,7 @@ struct BeamSearch {
   }
 
   static Line& BestLineToUpdate(State& state, const Line& new_line) {
-    const auto& key = new_line.last_word();
-    return state[key];
+    return state[new_line.entry->text];
   }
 
   static const Line& BestLineInState(const State& final_state,
@@ -202,6 +201,8 @@ an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
     const auto& source_state = states[start_pos];
     const auto update = [this, &states, &sv, start_pos, total_length,
                          &preceding_text](const Line& candidate) {
+      const string& context =
+          candidate.empty() ? preceding_text : candidate.context();
       for (const auto& ev : sv.second) {
         size_t end_pos = ev.first;
         if (start_pos == 0 && end_pos == total_length)
@@ -212,8 +213,6 @@ an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
         // extend candidates with dict entries on a valid edge.
         const DictEntryList& entries = ev.second;
         for (const auto& entry : entries) {
-          const string& context =
-              candidate.empty() ? preceding_text : candidate.context();
           double weight = candidate.weight +
                           Grammar::Evaluate(context, entry->text, entry->weight,
                                             is_rear, grammar_.get());
@@ -280,12 +279,18 @@ deque<an<Sentence>> Poet::MakeSentences(const WordGraph& graph,
       auto& target_state = states[end_pos];
 
       for (const auto& source_line : source_state) {
+        const string& context =
+            source_line.empty() ? preceding_text : source_line.context();
         for (const auto& entry : entries) {
-          const string& context =
-              source_line.empty() ? preceding_text : source_line.context();
           double weight = source_line.weight +
                           Grammar::Evaluate(context, entry->text, entry->weight,
                                             is_rear, grammar_.get());
+          // A full beam keeps earlier ties. A line below this cutoff also
+          // cannot improve any duplicate already in the beam.
+          if (!target_state.empty() && target_state.size() == beam_width &&
+              weight <= target_state.back().weight) {
+            continue;
+          }
           size_t new_hash = source_line.text_hash;
           for (char c : entry->text) {
             new_hash = new_hash * 31 + c;
