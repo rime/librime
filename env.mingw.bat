@@ -1,0 +1,13 @@
+rem Customize your build environment and save the modified copy to env.bat
+
+set RIME_ROOT=%CD%
+
+rem REQUIRED: path to Boost source directory
+if not defined BOOST_ROOT set BOOST_ROOT=%RIME_ROOT%\deps\boost-1.88.0
+
+rem architecture, Visual Studio version and platform toolset
+set BJAM_TOOLSET=gcc
+set CMAKE_GENERATOR="Ninja"
+
+rem OPTIONAL: path to additional build tools
+rem set DEVTOOLS_PATH=%ProgramFiles%\Git\cmd;%ProgramFiles%\CMake\bin;C:\Python27;
