@@ -1,14 +1,21 @@
-set(CMAKE_USER_MAKE_RULES_OVERRIDE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/c_flag_overrides.cmake)
-set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_flag_overrides.cmake)
-
 cmake_minimum_required(VERSION 3.25)
-project(rime)
-set(CMAKE_CXX_STANDARD 17)
+
+# Preserve rules supplied by a parent project: librime's MSVC/MinGW runtime
+# settings (notably /MT for static builds) must still be applied alongside them.
+list(APPEND CMAKE_USER_MAKE_RULES_OVERRIDE
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/c_flag_overrides.cmake")
+list(APPEND CMAKE_USER_MAKE_RULES_OVERRIDE_CXX
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_flag_overrides.cmake")
+
+project(rime LANGUAGES C CXX)
 
 set(rime_version 1.18.0)
 set(rime_soversion 1)
+add_compile_definitions(RIME_VERSION="${rime_version}")
 
-add_definitions(-DRIME_VERSION="${rime_version}")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -35,20 +42,73 @@ set(RIME_PLUGINS_DIR "rime-plugins" CACHE STRING "Target directory for externall
 
 if(WIN32)
   set(ext ".exe")
-  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+  add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 endif(WIN32)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${PROJECT_SOURCE_DIR}")
 
-if (ENABLE_ASAN)
-  set(asan_cflags "-fsanitize=address -fno-omit-frame-pointer")
-  set(asan_lflags "-fsanitize=address -lasan")
-  set(CMAKE_C_FLAGS "${asan_cflags} ${CMAKE_C_FLAGS}")
-  set(CMAKE_CXX_FLAGS "${asan_cflags} ${CMAKE_CXX_FLAGS}")
-  set(CMAKE_EXE_LINKER_FLAGS "${asan_lflags} ${CMAKE_EXE_LINKER_FLAGS}")
-  set(CMAKE_SHARED_LINKER_FLAGS "${asan_lflags} ${CMAKE_SHARED_LINKER_FLAGS}")
+add_library(rime-build-options INTERFACE)
+target_compile_features(rime-build-options INTERFACE cxx_std_17)
+
+if(ENABLE_ASAN)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    # ASan needs whole-build instrumentation: plugin object libraries and
+    # bundled dependencies are not linked to rime-build-options, so attach the
+    # flags directory-wide instead of to that interface target.
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    # The compiler driver links the right runtime; no explicit -lasan needed.
+    add_link_options(-fsanitize=address)
+  else()
+    message(WARNING "ENABLE_ASAN is only supported with GCC or Clang; ignoring.")
+  endif()
 endif()
+
+if(MSVC)
+  target_compile_options(rime-build-options INTERFACE
+    /wd4244
+    /wd4996
+    /Zc:__cplusplus
+    $<$<CONFIG:Release>:/Zi>)
+  # https://stackoverflow.com/a/31264946
+  target_link_options(rime-build-options INTERFACE
+    /LARGEADDRESSAWARE
+    $<$<CONFIG:Release>:/DEBUG>
+    $<$<CONFIG:Release>:/OPT:REF>
+    $<$<CONFIG:Release>:/OPT:ICF>)
+elseif(NOT WIN32)
+  target_compile_options(rime-build-options INTERFACE
+    -Wall
+    -Wextra
+    -Wundef
+    -Wnon-virtual-dtor
+    -Woverloaded-virtual
+    -Werror=return-type
+    -Werror=implicit-fallthrough
+    -Werror=format=2
+    -Werror=delete-non-virtual-dtor)
+endif()
+
+function(rime_setup_library target)
+  target_link_libraries(${target} PRIVATE rime-build-options)
+  set_target_properties(${target} PROPERTIES
+    VERSION ${rime_version}
+    SOVERSION ${rime_soversion}
+    LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
+    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+  if(XCODE_VERSION)
+    set_target_properties(${target} PROPERTIES INSTALL_NAME_DIR "@rpath")
+  endif()
+  install(TARGETS ${target}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endfunction()
+
+function(rime_setup_executable target output_dir)
+  target_link_libraries(${target} PRIVATE rime-build-options)
+  set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${output_dir}")
+endfunction()
 
 set(Boost_USE_STATIC_LIBS ${BUILD_STATIC})
 set(LevelDb_STATIC ${BUILD_STATIC})
@@ -61,15 +121,25 @@ if(MSVC)
   set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
+# Prefer BoostConfig; fall back to FindBoost for older installations.
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  find_package(Boost 1.74.0 REQUIRED COMPONENTS regex)
+  find_package(Boost 1.74.0 QUIET CONFIG COMPONENTS regex)
+  if(NOT Boost_FOUND)
+    find_package(Boost 1.74.0 REQUIRED MODULE COMPONENTS regex)
+  endif()
 else()
-  find_package(Boost 1.77.0)
+  find_package(Boost 1.77.0 QUIET CONFIG)
+  if(NOT Boost_FOUND)
+    find_package(Boost 1.77.0 MODULE)
+  endif()
+endif()
+if(Boost_FOUND AND NOT Boost_LIBRARIES AND TARGET Boost::regex)
+  set(Boost_LIBRARIES Boost::regex)
 endif()
 if(Boost_FOUND)
   include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
   link_directories(${Boost_LIBRARY_DIRS})
-  add_definitions(-DBOOST_DLL_USE_STD_FS)
+  add_compile_definitions(BOOST_DLL_USE_STD_FS)
 endif()
 
 if(ENABLE_LOGGING)
@@ -80,7 +150,7 @@ if(ENABLE_LOGGING)
   endif()
 endif()
 
-find_package(Threads)
+find_package(Threads REQUIRED)
 
 if(ENABLE_LOGGING)
   # Always use the bundled, pinned spdlog so that the library is linked
@@ -113,11 +183,11 @@ if(ENABLE_LOGGING)
 endif()
 
 if(NOT ENABLE_THREADING)
-  add_definitions(-DRIME_NO_THREADING)
+  add_compile_definitions(RIME_NO_THREADING)
 endif()
 
 if(NOT ENABLE_TIMESTAMP)
-  add_definitions(-DRIME_NO_TIMESTAMP)
+  add_compile_definitions(RIME_NO_TIMESTAMP)
 endif()
 
 if(BUILD_TEST)
@@ -133,7 +203,7 @@ if(YamlCpp_FOUND)
   include_directories(${YamlCpp_INCLUDE_PATH})
 endif()
 if(YamlCpp_STATIC)
-  add_definitions(-DYAML_CPP_STATIC_DEFINE)
+  add_compile_definitions(YAML_CPP_STATIC_DEFINE)
 endif()
 
 find_package(LevelDb REQUIRED)
@@ -160,7 +230,7 @@ if(TARGET libopencc)
   set_target_properties(libopencc PROPERTIES SYSTEM TRUE)
 endif()
 if(Opencc_STATIC)
-  add_definitions(-DOpencc_BUILT_AS_STATIC)
+  add_compile_definitions(Opencc_BUILT_AS_STATIC)
 endif()
 
 find_path(X11Keysym X11/keysym.h)
@@ -179,30 +249,6 @@ include_directories(${PROJECT_BINARY_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 link_directories(${PROJECT_SOURCE_DIR}/lib)
-
-if(MSVC)
-  # https://stackoverflow.com/a/31264946
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
-  set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
-  add_definitions("/wd4244 /wd4996")
-  add_compile_options("/Zc:__cplusplus")
-
-  # large address aware
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /LARGEADDRESSAWARE")
-endif()
-
-if(UNIX)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-endif()
-
-if (NOT CMAKE_BUILD_PARALLEL_LEVEL)
-  include(ProcessorCount)
-  ProcessorCount(N)
-  if (NOT N EQUAL 0)
-    set(CMAKE_BUILD_PARALLEL_LEVEL ${N})
-  endif()
-endif()
 
 # keep these variables lest some Rime plugin's cmake file is still using them {
 if(NOT DEFINED LIB_INSTALL_DIR)
@@ -235,37 +281,37 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|OpenBSD|DragonFly|GNU|Darwin" OR 
       ${PROJECT_BINARY_DIR}/rime.pc
       @ONLY)
   install(FILES ${PROJECT_BINARY_DIR}/rime.pc
-    DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/pkgconfig)
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 endif()
 
 install(FILES cmake/RimeConfig.cmake
-  DESTINATION ${CMAKE_INSTALL_FULL_DATADIR}/cmake/rime)
+  DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/rime)
 
 file(GLOB rime_public_header_files ${PROJECT_SOURCE_DIR}/src/*.h)
 list(FILTER rime_public_header_files EXCLUDE REGEX .*_impl\.h$)
 install(FILES ${rime_public_header_files}
-  DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR})
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 if(INSTALL_PRIVATE_HEADERS)
   file(GLOB rime_private_header_files
     ${PROJECT_SOURCE_DIR}/src/rime/*.h
     ${PROJECT_BINARY_DIR}/src/rime/*.h)
   install(FILES ${rime_private_header_files}
-    DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR}/rime)
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rime)
   foreach(rime_private_header_files_dir algo config dict gear lever)
     file(GLOB rime_private_header_files
       ${PROJECT_SOURCE_DIR}/src/rime/${rime_private_header_files_dir}/*.h)
     install(FILES ${rime_private_header_files}
-      DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR}/rime/${rime_private_header_files_dir})
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rime/${rime_private_header_files_dir})
   endforeach()
 endif()
 
 if(BUILD_DATA)
   file(GLOB rime_preset_data_files ${PROJECT_SOURCE_DIR}/data/preset/*.yaml)
-  install(FILES ${rime_preset_data_files} DESTINATION ${CMAKE_INSTALL_FULL_DATADIR}/${RIME_DATA_DIR})
+  install(FILES ${rime_preset_data_files} DESTINATION ${CMAKE_INSTALL_DATADIR}/${RIME_DATA_DIR})
 endif()
 
 if(BUILD_SHARED_LIBS)
-  add_definitions(-DRIME_BUILD_SHARED_LIBS)
+  add_compile_definitions(RIME_BUILD_SHARED_LIBS)
   set(rime_library rime)
   if(BUILD_SEPARATE_LIBS)
     set(rime_dict_library rime-dict)
@@ -279,27 +325,14 @@ endif()
 add_subdirectory(plugins)
 message(STATUS "rime_plugins_libs: ${rime_plugins_deps}")
 message(STATUS "rime_plugins_modules: ${rime_plugins_modules}")
-set(list "")
-foreach(mod ${rime_plugins_modules})
-  string(APPEND list "(${mod})")
-endforeach()
-set(RIME_SETUP_EXTRA_MODULES "${list}")
+if(rime_plugins_modules)
+  string(REPLACE ";" ")(" _rime_modules "${rime_plugins_modules}")
+  set(RIME_SETUP_EXTRA_MODULES "(${_rime_modules})")
+else()
+  set(RIME_SETUP_EXTRA_MODULES "")
+endif()
 if(BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS AND rime_plugins_objs)
   set(rime_plugins_library rime-plugins)
-endif()
-
-if(NOT WIN32)
-  add_compile_options(
-    -Wall
-    -Wextra
-    -Wundef
-    -Wnon-virtual-dtor
-    -Woverloaded-virtual
-    -Werror=return-type
-    -Werror=implicit-fallthrough
-    -Werror=format=2
-    -Werror=delete-non-virtual-dtor
-  )
 endif()
 
 add_subdirectory(src)
