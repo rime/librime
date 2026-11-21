@@ -336,6 +336,16 @@ bool EntryCollector::TranslateWord(const string& word, vector<string>* result) {
     }
     return true;
   }
+  if (fallback_lookup_) {
+    auto it = fallback_codes_.find(word);
+    if (it == fallback_codes_.end())
+      it = fallback_codes_.emplace(word, fallback_lookup_(word)).first;
+    if (!it->second.empty()) {
+      boost::split(*result, it->second, boost::is_any_of(" "),
+                   boost::token_compress_on);
+      return !result->empty();
+    }
+  }
   return false;
 }
 

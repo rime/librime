@@ -47,6 +47,8 @@ struct Metadata {
   char alphabet[256];
   // v5.0
   uint32_t max_key_length;
+  // SharedPrism/1.0: canonical syllable IDs across independent tables.
+  List<String> syllabary;
 };
 
 }  // namespace prism
@@ -78,7 +80,8 @@ class Prism : public MappedFile {
   RIME_DLL bool Build(const Syllabary& syllabary,
                       const Script* script = nullptr,
                       uint32_t dict_file_checksum = 0,
-                      uint32_t schema_file_checksum = 0);
+                      uint32_t schema_file_checksum = 0,
+                      bool include_syllabary = false);
 
   RIME_DLL bool HasKey(std::string_view key);
   RIME_DLL bool GetValue(std::string_view key, int* value) const;
@@ -87,6 +90,9 @@ class Prism : public MappedFile {
                              vector<Match>* result,
                              size_t limit);
   SpellingAccessor QuerySpelling(SyllableId spelling_id);
+  RIME_DLL bool has_syllabary() const;
+  bool GetSyllabary(Syllabary* result) const;
+  string GetSyllableById(SyllableId id) const;
 
   RIME_DLL size_t array_size() const;
   RIME_DLL size_t max_key_length() const;

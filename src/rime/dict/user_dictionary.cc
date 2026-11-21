@@ -19,6 +19,7 @@
 #include <rime/algo/syllabifier.h>
 #include <rime/algo/strings.h>
 #include <rime/dict/db.h>
+#include <rime/dict/prism.h>
 #include <rime/dict/table.h>
 #include <rime/dict/user_dictionary.h>
 #include <rime/dict/vocabulary.h>
@@ -310,7 +311,12 @@ void UserDictionary::DfsLookup(const SyllableGraph& syll_graph,
             DLOG(INFO) << "prefix match found for '" << prefix << "'.";
             if (syllabary_.empty()) {
               Syllabary syllabary;
-              if (!table_->GetSyllabary(&syllabary)) {
+              bool loaded = false;
+              if (prism_ && prism_->has_syllabary())
+                loaded = prism_->GetSyllabary(&syllabary);
+              else
+                loaded = table_->GetSyllabary(&syllabary);
+              if (!loaded) {
                 LOG(ERROR) << "failed to get syllabary for user dict: "
                            << name();
                 break;
@@ -576,7 +582,10 @@ void UserDictionary::CacheLookup(const SyllableGraph& syll_graph,
           state->depth() >= state->predict_word_from_depth) {
         if (syllabary_.empty()) {
           Syllabary raw;
-          if (!table_->GetSyllabary(&raw)) {
+          const bool loaded = prism_ && prism_->has_syllabary()
+                                  ? prism_->GetSyllabary(&raw)
+                                  : table_->GetSyllabary(&raw);
+          if (!loaded) {
             LOG(ERROR) << "failed to get syllabary for user dict: " << name();
           } else {
             SyllableId sid = 0;
@@ -968,7 +977,9 @@ bool UserDictionary::TranslateCodeToString(const Code& code, string* result) {
     string spelling = rev_syllabary_.count(syllable_id)
                           ? rev_syllabary_[syllable_id]
                           : (rev_syllabary_[syllable_id] =
-                                 table_->GetSyllableById(syllable_id));
+                                 (prism_ && prism_->has_syllabary()
+                                      ? prism_->GetSyllableById(syllable_id)
+                                      : table_->GetSyllableById(syllable_id)));
     if (spelling.empty()) {
       LOG(ERROR) << "Error translating syllable_id '" << syllable_id << "'.";
       result->clear();

@@ -8,6 +8,7 @@
 #include <cfloat>
 #include <cmath>
 #include <fstream>
+#include <boost/crc.hpp>
 #include <rime/algo/algebra.h>
 #include <rime/algo/utilities.h>
 #include <rime/dict/corrector.h>
@@ -99,14 +100,12 @@ bool DictCompiler::Compile(const path& schema_file) {
   uint32_t schema_file_checksum =
       schema_file.empty() ? 0 : Checksum(schema_file);
   bool rebuild_table = false;
-  bool rebuild_prism = false;
   const auto& primary_table = tables_[0];
   if (primary_table->Exists() && primary_table->Load()) {
     if (build_table_from_source) {
       rebuild_table = primary_table->dict_file_checksum() != dict_file_checksum;
     } else {
       dict_file_checksum = primary_table->dict_file_checksum();
-      LOG(INFO) << "reuse existing table: " << primary_table->file_path();
     }
     primary_table->Close();
   } else if (build_table_from_source) {
@@ -116,13 +115,6 @@ bool DictCompiler::Compile(const path& schema_file) {
                << ".table.bin exists.";
     return false;
   }
-  if (prism_->Exists() && prism_->Load()) {
-    rebuild_prism = prism_->dict_file_checksum() != dict_file_checksum ||
-                    prism_->schema_file_checksum() != schema_file_checksum;
-    prism_->Close();
-  } else {
-    rebuild_prism = true;
-  }
   LOG(INFO) << dict_file << "[" << dict_files.size() << " file(s)]"
             << " (" << dict_file_checksum << ")";
   LOG(INFO) << schema_file << " (" << schema_file_checksum << ")";
@@ -131,17 +123,20 @@ bool DictCompiler::Compile(const path& schema_file) {
         Service::instance().CreateDeployedResourceResolver(
             {"find_reverse_db", "", ".reverse.bin"}));
     ReverseDb reverse_db(resolver->ResolvePath(dict_name_));
-    if (!reverse_db.Exists() || !reverse_db.Load() ||
-        reverse_db.dict_file_checksum() != dict_file_checksum) {
+    if (build_table_from_source &&
+        (!reverse_db.Exists() || !reverse_db.Load() ||
+         reverse_db.dict_file_checksum() != dict_file_checksum))
       rebuild_table = true;
-    }
   }
   if (build_table_from_source && (options_ & kRebuildTable)) {
     rebuild_table = true;
   }
-  if (options_ & kRebuildPrism) {
-    rebuild_prism = true;
-  }
+
+  if (!rebuild_table)
+    LOG(INFO) << "reuse existing table: " << primary_table->file_path();
+
+  // Every table keeps its own syllable ids. Only the shared prism indexes
+  // the union, so editing a pack never requires rebuilding the main table.
   Syllabary syllabary;
   if (rebuild_table) {
     EntryCollector collector;
@@ -149,61 +144,118 @@ bool DictCompiler::Compile(const path& schema_file) {
       return false;
     }
     syllabary = std::move(collector.syllabary);
-  } else if (packs_.size() > 0) {
-    if (primary_table->Load() && primary_table->GetSyllabary(&syllabary))
-      primary_table->Close();
-    else
-      LOG(WARNING) << "couldn't load syllabary from '" << schema_file << "'";
+  } else if (!packs_.empty()) {
+    if (!primary_table->Load())
+      return false;
+    const bool loaded = primary_table->GetSyllabary(&syllabary);
+    primary_table->Close();
+    if (!loaded)
+      return false;
   }
-  if (rebuild_prism && !BuildPrism(schema_file, dict_file_checksum,
-                                   schema_file_checksum, syllabary)) {
-    return false;
+
+  // Automatic encoding of pack phrases can reuse the primary dictionary's
+  // readings without including its vocabulary in the pack.
+  the<ReverseDb> primary_reverse;
+  if (!packs_.empty()) {
+    auto staged = target_resolver_->ResolvePath(dict_name_ + ".reverse.bin");
+    primary_reverse.reset(new ReverseDb(staged));
+    if (!primary_reverse->Load()) {
+      the<ResourceResolver> resolver(
+          Service::instance().CreateDeployedResourceResolver(
+              {"reverse_db", "", ".reverse.bin"}));
+      primary_reverse.reset(new ReverseDb(resolver->ResolvePath(dict_name_)));
+      if (!primary_reverse->Load())
+        primary_reverse.reset();
+    }
   }
-  for (int table_index = 1; table_index < tables_.size(); ++table_index) {
-    const auto& pack_name = packs_[table_index - 1];
-    auto pack_table = tables_[table_index];
-    EntryCollector collector(std::move(syllabary));
-    DictSettings settings;
-    auto dict_file = source_resolver_->ResolvePath(pack_name + ".dict.yaml");
-    if (!std::filesystem::exists(dict_file)) {
-      if (pack_table->Exists())
-        LOG(INFO) << "pack source file '" << dict_file
-                  << "' does not exist, using prebuilt table '"
-                  << pack_table->file_path() << "'";
-      else
-        LOG(ERROR) << "neither pack source file '" << dict_file
-                   << "' nor a prebuilt table exists";
-      continue;
+  auto lookup_primary = [&](const string& word) {
+    string code;
+    if (primary_reverse) {
+      if (!primary_reverse->Lookup(word + "\x1fstem", &code))
+        primary_reverse->Lookup(word, &code);
     }
-    if (!load_dict_settings_from_file(&settings, dict_file)) {
-      LOG(ERROR) << "failed to load settings from '" << dict_file << "'.";
-      continue;
+    return code;
+  };
+
+  for (size_t i = 1; i < tables_.size(); ++i) {
+    const string& pack_name = packs_[i - 1];
+    auto& table = tables_[i];
+    DictSettings pack_settings;
+    auto pack_file = source_resolver_->ResolvePath(pack_name + ".dict.yaml");
+    const bool has_source = std::filesystem::exists(pack_file);
+    vector<path> pack_files;
+    uint32_t pack_checksum = 0;
+    if (has_source) {
+      if (!load_dict_settings_from_file(&pack_settings, pack_file) ||
+          !get_dict_files_from_settings(&pack_files, pack_settings,
+                                        source_resolver_.get()))
+        return false;
+      // Keep pack caches independent of the primary dictionary checksum.
+      // Bump the format marker to invalidate caches using the old seed.
+      boost::crc_32_type format_crc;
+      const char kIndependentPackFormat[] = "independent-pack-codes-v2";
+      format_crc.process_bytes(kIndependentPackFormat,
+                               sizeof(kIndependentPackFormat));
+      const auto seed = format_crc.checksum();
+      pack_checksum =
+          compute_dict_file_checksum(seed, pack_files, pack_settings);
     }
-    vector<path> dict_files;
-    if (!get_dict_files_from_settings(&dict_files, settings,
-                                      source_resolver_.get())) {
-      continue;
-    }
-    uint32_t pack_file_checksum =
-        compute_dict_file_checksum(dict_file_checksum, dict_files, settings);
-    bool rebuild_pack = true;
-    if (pack_table->Exists() && pack_table->Load()) {
-      rebuild_pack = pack_table->dict_file_checksum() != pack_file_checksum;
+    const bool pack_loaded = table->Exists() && table->Load();
+    const bool rebuild_pack =
+        has_source &&
+        (!pack_loaded || table->dict_file_checksum() != pack_checksum ||
+         (options_ & kRebuildTable));
+    if (pack_loaded)
+      table->Close();
+    if (!has_source) {
+      if (!pack_loaded) {
+        LOG(WARNING) << "skipping unavailable pack '" << pack_name << "'.";
+        continue;
+      }
+      LOG(INFO) << "pack source file '" << pack_file
+                << "' does not exist, using prebuilt table '"
+                << table->file_path() << "'";
     }
     if (rebuild_pack) {
       LOG(INFO) << "rebuilding pack '" << pack_name << "'";
-      if (!BuildTable(table_index, collector, &settings, dict_files,
-                      pack_file_checksum)) {
-        LOG(ERROR) << "failed to build pack: " << pack_name;
-      }
+      // Do not restrict the pack to the primary table's syllabary.
+      EntryCollector collector;
+      if (primary_reverse)
+        collector.SetFallbackLookup(lookup_primary);
+      if (!BuildTable(static_cast<int>(i), collector, &pack_settings,
+                      pack_files, pack_checksum))
+        return false;
+      syllabary.insert(collector.syllabary.begin(), collector.syllabary.end());
     } else {
       LOG(INFO) << "pack '" << pack_name << "' reuses up-to-date table '"
-                << pack_table->file_path() << "'";
+                << table->file_path() << "'";
+      if (!table->Load() || !table->GetSyllabary(&syllabary))
+        return false;
+      table->Close();
     }
-    syllabary = std::move(collector.syllabary);
-    pack_table->Close();
   }
-  // done!
+
+  // Preserve v5 and its original checksum when there are no packs.
+  // With packs, weights alone do not invalidate the shared code index.
+  uint32_t prism_checksum = dict_file_checksum;
+  if (!packs_.empty()) {
+    boost::crc_32_type checksum;
+    for (const auto& code : syllabary)
+      checksum.process_bytes(code.c_str(), code.size() + 1);
+    prism_checksum = checksum.checksum();
+  }
+  bool rebuild_prism = true;
+  if (prism_->Exists() && prism_->Load()) {
+    rebuild_prism = prism_->dict_file_checksum() != prism_checksum ||
+                    prism_->schema_file_checksum() != schema_file_checksum ||
+                    (!packs_.empty() && !prism_->has_syllabary()) ||
+                    (packs_.empty() && prism_->has_syllabary());
+    prism_->Close();
+  }
+  if ((rebuild_prism || (options_ & kRebuildPrism)) &&
+      !BuildPrism(schema_file, prism_checksum, schema_file_checksum, syllabary,
+                  !packs_.empty()))
+    return false;
   return true;
 }
 
@@ -298,7 +350,8 @@ bool DictCompiler::BuildReverseDb(DictSettings* settings,
 bool DictCompiler::BuildPrism(const path& schema_file,
                               uint32_t dict_file_checksum,
                               uint32_t schema_file_checksum,
-                              const Syllabary& syllabary) {
+                              const Syllabary& syllabary,
+                              bool include_syllabary) {
   LOG(INFO) << "building prism...";
   auto target_path =
       relocate_target(prism_->file_path(), target_resolver_.get());
@@ -366,7 +419,8 @@ bool DictCompiler::BuildPrism(const path& schema_file,
   {
     prism_->Remove();
     if (!prism_->Build(*syllables, script.empty() ? nullptr : &script,
-                       dict_file_checksum, schema_file_checksum) ||
+                       dict_file_checksum, schema_file_checksum,
+                       include_syllabary) ||
         !prism_->Save()) {
       return false;
     }

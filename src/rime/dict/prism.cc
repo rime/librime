@@ -30,6 +30,9 @@ const int32_t kSpellingTypeMask = ~kTypeIsCorrectionMask;
 }  // namespace
 
 const char kPrismFormat[] = "Rime::Prism/5.0";
+// A distinct on-disk magic prevents older engines from treating shared
+// syllable IDs as primary-table IDs.
+const char kSharedPrismFormat[] = "Rime::SharedPrism/1.0";
 const double kPrismFormatVersion = 5.0;
 
 const char kPrismFormatPrefix[] = "Rime::Prism/";
@@ -99,12 +102,18 @@ bool Prism::Load() {
     Close();
     return false;
   }
-  if (strncmp(metadata_->format, kPrismFormatPrefix, kPrismFormatPrefixLen)) {
+  const auto* format = metadata_->format;
+  const bool shared =
+      strncmp(format, kSharedPrismFormat, sizeof(kSharedPrismFormat)) == 0;
+  if (!shared && strncmp(format, kPrismFormatPrefix, kPrismFormatPrefixLen)) {
     LOG(ERROR) << "invalid metadata.";
     Close();
     return false;
   }
-  format_ = atof(&metadata_->format[kPrismFormatPrefixLen]);
+  // SharedPrism has its own format version; keep format_ as the legacy
+  // Prism API version instead of inventing a synthetic 6.0.
+  format_ = shared ? kPrismFormatVersion
+                   : atof(&metadata_->format[kPrismFormatPrefixLen]);
 
   // 版本檢查: 強制重構舊版本
   if (format_ < kPrismFormatVersion - DBL_EPSILON) {
@@ -142,7 +151,8 @@ bool Prism::Save() {
 bool Prism::Build(const Syllabary& syllabary,
                   const Script* script,
                   uint32_t dict_file_checksum,
-                  uint32_t schema_file_checksum) {
+                  uint32_t schema_file_checksum,
+                  bool include_syllabary) {
   // building double-array trie
   size_t num_syllables = syllabary.size();
   size_t num_spellings = script ? script->size() : syllabary.size();
@@ -174,7 +184,14 @@ bool Prism::Build(const Syllabary& syllabary,
       num_spellings * 12 +
       map_size * (4 + sizeof(prism::SpellingDescriptor) + kDescriptorExtraSize);
   const size_t kReservedSize = 1024;
-  if (!Create(image_size + estimated_map_size + kReservedSize)) {
+  size_t syllabary_bytes = 0;
+  if (include_syllabary) {
+    syllabary_bytes = syllabary.size() * sizeof(String);
+    for (const auto& s : syllabary)
+      syllabary_bytes += s.size() + 1;
+  }
+  if (!Create(image_size + estimated_map_size + syllabary_bytes +
+              kReservedSize)) {
     LOG(ERROR) << "Error creating prism file '" << file_path() << "'.";
     return false;
   }
@@ -190,6 +207,33 @@ bool Prism::Build(const Syllabary& syllabary,
   metadata->num_spellings = num_spellings;
   metadata->max_key_length = max_key_length;
   metadata_ = metadata;
+  if (include_syllabary) {
+    // Allocate all storage before setting relative pointers. CopyString()
+    // could remap the file and invalidate previously obtained addresses.
+    auto codes = Allocate<String>(syllabary.size());
+    if (!codes)
+      return false;
+    metadata = Find<prism::Metadata>(0);
+    metadata_ = metadata;
+    metadata->syllabary.at = codes;
+    metadata->syllabary.size = syllabary.size();
+    size_t bytes = 0;
+    for (const auto& name : syllabary)
+      bytes += name.size() + 1;
+    char* storage = Allocate<char>(bytes);
+    if (!storage)
+      return false;
+    metadata = Find<prism::Metadata>(0);
+    metadata_ = metadata;
+    codes = metadata->syllabary.at.get();
+    char* cursor = storage;
+    size_t index = 0;
+    for (const auto& name : syllabary) {
+      std::memcpy(cursor, name.c_str(), name.size() + 1);
+      codes[index++].data = cursor;
+      cursor += name.size() + 1;
+    }
+  }
   // alphabet
   {
     set<char> alphabet;
@@ -208,6 +252,9 @@ bool Prism::Build(const Syllabary& syllabary,
     LOG(ERROR) << "Error creating double-array image.";
     return false;
   }
+  // Allocate() may remap the file.
+  metadata = Find<prism::Metadata>(0);
+  metadata_ = metadata;
   std::memcpy(array, trie_->array(), image_size);
   metadata->double_array = array;
   metadata->double_array_size = array_size;
@@ -215,49 +262,86 @@ bool Prism::Build(const Syllabary& syllabary,
   if (script) {
     map<string, SyllableId> syllable_to_id;
     SyllableId syll_id = 0;
-    for (auto it = syllabary.begin(); it != syllabary.end(); ++it) {
-      syllable_to_id[*it] = syll_id++;
-    }
+    for (const auto& syllable : syllabary)
+      syllable_to_id[syllable] = syll_id++;
     auto spelling_map = CreateArray<prism::SpellingMapItem>(num_spellings);
     if (!spelling_map) {
       LOG(ERROR) << "Error creating spelling map.";
       return false;
     }
-    auto i = script->begin();
-    auto item = spelling_map->begin();
-    for (; i != script->end(); ++i, ++item) {
-      size_t list_size = i->second.size();
-      item->size = list_size;
-      item->at = Allocate<prism::SpellingDescriptor>(list_size);
-      if (!item->at) {
+    metadata = Find<prism::Metadata>(0);
+    metadata_ = metadata;
+    metadata->spelling_map = spelling_map;
+    size_t index = 0;
+    for (const auto& spelling : *script) {
+      const auto& alternatives = spelling.second;
+      auto* item = &metadata->spelling_map->at[index];
+      item->size = alternatives.size();
+      auto* descriptors =
+          Allocate<prism::SpellingDescriptor>(alternatives.size());
+      if (!descriptors) {
         LOG(ERROR) << "Error creating spelling descriptors.";
         return false;
       }
-      auto j = i->second.begin();
-      auto desc = item->begin();
-      for (; j != i->second.end(); ++j, ++desc) {
-        desc->syllable_id = syllable_to_id[j->str];
-        // 打包寫入 type + is_correction
-        int32_t packed_type = static_cast<int32_t>(j->properties.type);
-        if (j->properties.is_correction) {
+      metadata = Find<prism::Metadata>(0);
+      metadata_ = metadata;
+      item = &metadata->spelling_map->at[index];
+      item->at = descriptors;
+      size_t desc_index = 0;
+      for (const auto& alternative : alternatives) {
+        auto* desc = &item->at[desc_index];
+        desc->syllable_id = syllable_to_id[alternative.str];
+        const auto property_type = alternative.properties.type;
+        int32_t packed_type = static_cast<int32_t>(property_type);
+        if (alternative.properties.is_correction)
           packed_type |= kTypeIsCorrectionMask;
-        }
         desc->type = packed_type;
-        desc->credibility = j->properties.credibility;
-        if (!j->properties.tips.empty() &&
-            !CopyString(j->properties.tips, &desc->tips)) {
-          LOG(ERROR) << "Error creating spelling properties.";
-          return false;
+        desc->credibility = alternative.properties.credibility;
+        if (!alternative.properties.tips.empty()) {
+          const string& tips = alternative.properties.tips;
+          char* storage = Allocate<char>(tips.size() + 1);
+          if (!storage) {
+            LOG(ERROR) << "Error creating spelling properties.";
+            return false;
+          }
+          std::memcpy(storage, tips.c_str(), tips.size() + 1);
+          metadata = Find<prism::Metadata>(0);
+          metadata_ = metadata;
+          item = &metadata->spelling_map->at[index];
+          item->at[desc_index].tips.data = storage;
         }
+        ++desc_index;
       }
+      ++index;
     }
-    metadata->spelling_map = spelling_map;
-    spelling_map_ = spelling_map;
+    spelling_map_ = metadata->spelling_map.get();
   }
   // at last, complete the metadata
-  std::strncpy(metadata->format, kPrismFormat,
+  std::strncpy(metadata->format,
+               include_syllabary ? kSharedPrismFormat : kPrismFormat,
                prism::Metadata::kFormatMaxLength);
   return true;
+}
+
+bool Prism::has_syllabary() const {
+  return IsOpen() && metadata_ &&
+         strncmp(metadata_->format, kSharedPrismFormat,
+                 sizeof(kSharedPrismFormat)) == 0;
+}
+
+bool Prism::GetSyllabary(Syllabary* result) const {
+  if (!result || !IsOpen() || !has_syllabary())
+    return false;
+  for (const auto& s : metadata_->syllabary)
+    result->insert(s.c_str());
+  return true;
+}
+
+string Prism::GetSyllableById(SyllableId id) const {
+  if (!IsOpen() || !has_syllabary() || id < 0 ||
+      static_cast<size_t>(id) >= metadata_->syllabary.size)
+    return {};
+  return metadata_->syllabary.at[id].c_str();
 }
 
 bool Prism::HasKey(std::string_view key) {

@@ -47,7 +47,8 @@ class DictCompiler {
   bool BuildPrism(const path& schema_file,
                   uint32_t dict_file_checksum,
                   uint32_t schema_file_checksum,
-                  const Syllabary& syllabary);
+                  const Syllabary& syllabary,
+                  bool include_syllabary);
   bool BuildReverseDb(DictSettings* settings,
                       const Syllabary& syllabary,
                       const Vocabulary& vocabulary,
