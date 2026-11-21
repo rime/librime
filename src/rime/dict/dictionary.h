@@ -34,6 +34,7 @@ class RIME_DLL DictEntryIterator : public DictEntryFilterBinder {
 
   void AddChunk(dictionary::Chunk&& chunk);
   void Sort();
+  void EnableInitialSorting();
   void AddFilter(DictEntryFilter filter) override;
   an<DictEntry> Peek();
   bool Next();
