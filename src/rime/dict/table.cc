@@ -150,6 +150,8 @@ static table::TrunkIndexNode* find_node(table::TrunkIndexNode* first,
 }
 
 bool TableQuery::Walk(SyllableId syllable_id) {
+  if (code_map_)
+    syllable_id = code_map_->Local(syllable_id);
   if (level_ == 0) {
     if (!lv1_index_ || syllable_id < 0 ||
         syllable_id >= static_cast<SyllableId>(lv1_index_->size))
@@ -192,12 +194,15 @@ TableAccessor TableQuery::Access(SyllableId syllable_id,
                                  double quality_len) const {
   credibility += credibility_sum();
   quality_len += quality_len_sum();
+  const SyllableId global_id = syllable_id;
+  if (code_map_ && level_ < Code::kIndexCodeMaxLength)
+    syllable_id = code_map_->Local(syllable_id);
   if (level_ == 0) {
     if (!lv1_index_ || syllable_id < 0 ||
         syllable_id >= static_cast<SyllableId>(lv1_index_->size))
       return TableAccessor();
     auto node = &lv1_index_->at[syllable_id];
-    return TableAccessor(add_syllable(index_code_, syllable_id), &node->entries,
+    return TableAccessor(add_syllable(index_code_, global_id), &node->entries,
                          credibility, quality_len);
   } else if (level_ == 1 || level_ == 2) {
     auto index = (level_ == 1) ? lv2_index_ : lv3_index_;
@@ -206,7 +211,7 @@ TableAccessor TableQuery::Access(SyllableId syllable_id,
     auto node = find_node(index->begin(), index->end(), syllable_id);
     if (node == index->end())
       return TableAccessor();
-    return TableAccessor(add_syllable(index_code_, syllable_id), &node->entries,
+    return TableAccessor(add_syllable(index_code_, global_id), &node->entries,
                          credibility, quality_len);
   } else if (level_ == 3) {
     if (!lv4_index_)
@@ -250,6 +255,15 @@ bool Table::OnBuildFinish() {
     LOG(ERROR) << "Error creating string table image.";
     return false;
   }
+  // Allocate() can grow and remap the file, invalidating pointers cached
+  // during index construction. Resolve them again from the new mapping.
+  metadata_ = Find<table::Metadata>(0);
+  if (!metadata_)
+    return false;
+  syllabary_ = metadata_->syllabary.get();
+  index_ = metadata_->index.get();
+  if (!syllabary_ || !index_)
+    return false;
   string_table_builder_->Dump(image, image_size);
   metadata_->string_table = image;
   metadata_->string_table_size = image_size;
@@ -549,7 +563,12 @@ string Table::GetSyllableById(SyllableId syllable_id) {
 }
 
 TableAccessor Table::QueryWords(SyllableId syllable_id) {
-  TableQuery query(index_);
+  return QueryWords(syllable_id, nullptr);
+}
+
+TableAccessor Table::QueryWords(SyllableId syllable_id,
+                                const SyllableIdMap* map) {
+  TableQuery query(index_, map);
   return query.Access(syllable_id);
 }
 
@@ -572,11 +591,18 @@ const double kPenaltyForAmbiguousSyllable = -2.995732274;
 bool Table::Query(const SyllableGraph& syll_graph,
                   size_t start_pos,
                   TableQueryResult* result) {
+  return Query(syll_graph, start_pos, result, nullptr);
+}
+
+bool Table::Query(const SyllableGraph& syll_graph,
+                  size_t start_pos,
+                  TableQueryResult* result,
+                  const SyllableIdMap* map) {
   if (!result || !index_ || start_pos >= syll_graph.interpreted_length)
     return false;
   result->clear();
   std::queue<pair<size_t, TableQuery>> q;
-  TableQuery initial_state(index_);
+  TableQuery initial_state(index_, map);
   q.push({start_pos, initial_state});
   while (!q.empty()) {
     size_t current_pos = q.front().first;

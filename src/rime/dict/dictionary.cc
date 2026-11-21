@@ -112,6 +112,7 @@ struct CodeMatch {
 };
 
 CodeMatch match_extra_code(const table::Code* extra_code,
+                           const SyllableIdMap* code_map,
                            size_t depth,
                            const SyllableGraph& syll_graph,
                            size_t current_pos,
@@ -129,13 +130,16 @@ CodeMatch match_extra_code(const table::Code* extra_code,
   if (index == syll_graph.indices.end())
     return kFailed;
   SyllableId current_syll_id = extra_code->at[depth];
+  if (code_map)
+    current_syll_id = code_map->Global(current_syll_id);
   auto spellings = index->second.find(current_syll_id);
   if (spellings == index->second.end())
     return kFailed;
   CodeMatch best_match = kFailed;
   for (const SpellingProperties* props : spellings->second) {
-    CodeMatch match = match_extra_code(extra_code, depth + 1, syll_graph,
-                                       props->end_pos, predict_word);
+    CodeMatch match =
+        match_extra_code(extra_code, code_map, depth + 1, syll_graph,
+                         props->end_pos, predict_word);
     if (!match.success)
       continue;
     if (match.end_pos > best_match.end_pos)
@@ -310,9 +314,10 @@ static void lookup_table(Table* table,
                          const SyllableGraph& syllable_graph,
                          size_t start_pos,
                          bool predict_word,
-                         double initial_credibility) {
+                         double initial_credibility,
+                         const SyllableIdMap* code_map) {
   TableQueryResult result;
-  if (!table->Query(syllable_graph, start_pos, &result)) {
+  if (!table->Query(syllable_graph, start_pos, &result, code_map)) {
     return;
   }
   // copy result
@@ -323,13 +328,21 @@ static void lookup_table(Table* table,
       double q = a.quality_len();
       if (a.extra_code()) {
         do {
+          // Long phrase tails use the table's local syllable ids.
+          // Compare them using the prism's canonical id namespace.
           dictionary::CodeMatch match = dictionary::match_extra_code(
-              a.extra_code(), 0, syllable_graph, end_pos, predict_word);
+              a.extra_code(), code_map, 0, syllable_graph, end_pos,
+              predict_word);
           if (!match.success)
             continue;
           size_t matching_code_size = a.index_code().size() + match.depth;
+          Code code = a.code();
+          if (code_map) {
+            for (size_t i = a.index_code().size(); i < code.size(); ++i)
+              code[i] = code_map->Global(code[i]);
+          }
           (*collector)[match.end_pos].AddChunk(
-              {table, a.code(), a.entry(), matching_code_size, cr, q});
+              {table, code, a.entry(), matching_code_size, cr, q});
         } while (a.Next());
       } else {
         (*collector)[end_pos].AddChunk({table, a, cr, q});
@@ -346,11 +359,12 @@ an<DictEntryCollector> Dictionary::Lookup(const SyllableGraph& syllable_graph,
   if (!loaded())
     return nullptr;
   auto collector = New<DictEntryCollector>();
-  for (const auto& table : tables_) {
+  for (size_t i = 0; i < tables_.size(); ++i) {
+    const auto& table = tables_[i];
     if (!table->IsOpen())
       continue;
     lookup_table(table.get(), collector.get(), syllable_graph, start_pos,
-                 predict_word, initial_credibility);
+                 predict_word, initial_credibility, &code_maps_[i]);
   }
   // for each group of equal code length, sort it and filter words.
   // prune empty iters upfront because it is assumed that each
@@ -403,14 +417,17 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
         continue;
       string remaining_code;
       if (match.length > code_length) {
-        string syllable = primary_table()->GetSyllableById(syllable_id);
+        string syllable = prism_->has_syllabary()
+                              ? prism_->GetSyllableById(syllable_id)
+                              : primary_table()->GetSyllableById(syllable_id);
         if (syllable.length() > code_length)
           remaining_code = syllable.substr(code_length);
       }
-      for (const auto& table : tables_) {
+      for (size_t i = 0; i < tables_.size(); ++i) {
+        const auto& table = tables_[i];
         if (!table->IsOpen())
           continue;
-        TableAccessor a = table->QueryWords(syllable_id);
+        TableAccessor a = table->QueryWords(syllable_id, &code_maps_[i]);
         if (!a.exhausted()) {
           DLOG(INFO) << "remaining code: " << remaining_code;
           result->AddChunk({table.get(), a, remaining_code});
@@ -431,7 +448,8 @@ bool Dictionary::Decode(const Code& code, vector<string>* result) {
     return false;
   result->clear();
   for (SyllableId c : code) {
-    string s = primary_table()->GetSyllableById(c);
+    string s = prism_->has_syllabary() ? prism_->GetSyllableById(c)
+                                       : primary_table()->GetSyllableById(c);
     if (s.empty())
       return false;
     result->push_back(s);
@@ -455,6 +473,7 @@ bool Dictionary::Remove() {
 }
 
 bool Dictionary::Load() {
+  code_maps_valid_ = false;
   LOG(INFO) << "loading dictionary '" << name_ << "'.";
   if (tables_.empty()) {
     LOG(ERROR) << "Cannot load dictionary '" << name_
@@ -470,18 +489,60 @@ bool Dictionary::Load() {
     LOG(ERROR) << "Error loading prism for dictionary '" << name_ << "'.";
     return false;
   }
-  // packs are optional
-  for (int i = 1; i < tables_.size(); ++i) {
+  // Preserve the legacy pack behavior when loading a v5 prism.
+  for (size_t i = 1; i < tables_.size(); ++i) {
     const auto& table = tables_[i];
     if (!table->IsOpen() && table->Exists() && table->Load()) {
       LOG(INFO) << "loaded pack: " << packs_[i - 1];
     }
   }
+  code_maps_.clear();
+  code_maps_.resize(tables_.size());
+  if (!prism_->has_syllabary()) {
+    code_maps_valid_ = true;
+    return true;
+  }
+
+  Syllabary canonical;
+  if (!prism_->GetSyllabary(&canonical))
+    return false;
+  hash_map<string, SyllableId> ids;
+  SyllableId next = 0;
+  for (const auto& name : canonical)
+    ids[name] = next++;
+  for (size_t i = 0; i < tables_.size(); ++i) {
+    if (!tables_[i]->IsOpen()) {
+      // Packs have always been optional at runtime. The prism may still
+      // contain syllables from a temporarily unavailable pack.
+      LOG(WARNING) << "skipping unavailable pack '" << packs_[i - 1] << "'.";
+      continue;
+    }
+    Syllabary local;
+    if (!tables_[i]->GetSyllabary(&local))
+      return false;
+    if (local == canonical)
+      continue;
+    auto& mapping = code_maps_[i];
+    mapping.to_local.assign(canonical.size(), -1);
+    mapping.to_global.reserve(local.size());
+    SyllableId id = 0;
+    for (const auto& syllable : local) {
+      auto found = ids.find(syllable);
+      if (found == ids.end())
+        return false;
+      mapping.to_global.push_back(found->second);
+      mapping.to_local[found->second] = id++;
+    }
+  }
+  // Missing optional packs may leave unused syllables in the prism.
+  // Every loaded table was already checked against the canonical ids above.
+  code_maps_valid_ = true;
   return true;
 }
 
 bool Dictionary::loaded() const {
-  return !tables_.empty() && tables_[0]->IsOpen() && prism_ && prism_->IsOpen();
+  return code_maps_valid_ && !tables_.empty() && tables_[0]->IsOpen() &&
+         prism_ && prism_->IsOpen();
 }
 
 // DictionaryComponent members

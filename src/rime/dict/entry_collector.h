@@ -76,6 +76,9 @@ class EntryCollector : public PhraseCollector {
                    const string& code_str,
                    const string& weight_str);
   bool TranslateWord(const string& word, vector<string>* code);
+  void SetFallbackLookup(function<string(const string&)> lookup) {
+    fallback_lookup_ = std::move(lookup);
+  }
 
  protected:
   void LoadPresetVocabulary(DictSettings* settings);
@@ -90,6 +93,8 @@ class EntryCollector : public PhraseCollector {
   EncodeQueue encode_queue;
   set<string /* word */> collection;
   WordMap words;
+  function<string(const string&)> fallback_lookup_;
+  hash_map<string, string> fallback_codes_;
 
  private:
   void CreateEntryImpl(std::string_view word,

@@ -93,6 +93,26 @@ struct Metadata {
 
 }  // namespace table
 
+// A prism uses the union of all syllables; each table keeps local ids.
+struct SyllableIdMap {
+  vector<SyllableId> to_local;
+  vector<SyllableId> to_global;
+  SyllableId Local(SyllableId id) const {
+    if (to_local.empty())
+      return id;
+    if (id < 0 || static_cast<size_t>(id) >= to_local.size())
+      return -1;
+    return to_local[id];
+  }
+  SyllableId Global(SyllableId id) const {
+    if (to_global.empty())
+      return id;
+    if (id < 0 || static_cast<size_t>(id) >= to_global.size())
+      return -1;
+    return to_global[id];
+  }
+};
+
 class TableAccessor {
  public:
   TableAccessor() = default;
@@ -136,7 +156,10 @@ struct SyllableGraph;
 
 class TableQuery {
  public:
-  TableQuery(table::Index* index) : lv1_index_(index) { Reset(); }
+  TableQuery(table::Index* index, const SyllableIdMap* map = nullptr)
+      : code_map_(map), lv1_index_(index) {
+    Reset();
+  }
 
   TableAccessor Access(SyllableId syllable_id,
                        double credibility = 0.0,
@@ -174,6 +197,7 @@ class TableQuery {
  private:
   bool Walk(SyllableId syllable_id);
 
+  const SyllableIdMap* code_map_ = nullptr;
   table::HeadIndex* lv1_index_ = nullptr;
   table::TrunkIndex* lv2_index_ = nullptr;
   table::TrunkIndex* lv3_index_ = nullptr;
@@ -195,10 +219,15 @@ class Table : public MappedFile {
   bool GetSyllabary(Syllabary* syllabary);
   RIME_DLL string GetSyllableById(int syllable_id);
   RIME_DLL TableAccessor QueryWords(int syllable_id);
+  RIME_DLL TableAccessor QueryWords(int syllable_id, const SyllableIdMap* map);
   RIME_DLL TableAccessor QueryPhrases(const Code& code);
   RIME_DLL bool Query(const SyllableGraph& syll_graph,
                       size_t start_pos,
                       TableQueryResult* result);
+  RIME_DLL bool Query(const SyllableGraph& syll_graph,
+                      size_t start_pos,
+                      TableQueryResult* result,
+                      const SyllableIdMap* map);
   RIME_DLL string GetEntryText(const table::Entry& entry);
 
   uint32_t dict_file_checksum() const;

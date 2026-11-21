@@ -101,6 +101,8 @@ class Dictionary : public Class<Dictionary, const Ticket&> {
   vector<string> packs_;
   vector<of<Table>> tables_;
   an<Prism> prism_;
+  vector<SyllableIdMap> code_maps_;
+  bool code_maps_valid_ = false;
 };
 
 class ResourceResolver;
