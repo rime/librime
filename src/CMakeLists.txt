@@ -1,12 +1,17 @@
-set(rime_api_src rime_api.cc rime_api_stdbool.cc)
-aux_source_directory(rime rime_base_src)
-aux_source_directory(rime/algo rime_algo_src)
-aux_source_directory(rime/config rime_config_src)
-aux_source_directory(rime/dict rime_dict_src)
-aux_source_directory(rime/gear rime_gears_src)
-aux_source_directory(rime/lever rime_levers_src)
+# rime_api_impl.cc is included by rime_api.cc and rime_api_stdbool.cc.
+set(rime_api_src
+  rime_api.cc
+  rime_api_stdbool.cc)
+
+file(GLOB rime_base_src CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/rime/*.cc")
+file(GLOB rime_algo_src CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/rime/algo/*.cc")
+file(GLOB rime_config_src CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/rime/config/*.cc")
+file(GLOB rime_dict_src CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/rime/dict/*.cc")
+file(GLOB rime_gears_src CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/rime/gear/*.cc")
+file(GLOB rime_levers_src CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/rime/lever/*.cc")
+
 if(rime_plugins_library)
-  aux_source_directory(../plugins rime_plugins_src)
+  set(rime_plugins_src ../plugins/plugin.cc ../plugins/plugins_module.cc)
 endif()
 
 set(rime_core_module_src
@@ -16,7 +21,7 @@ set(rime_core_module_src
 
 # add rc info for windows MSVC build
 if(WIN32)
-  include(${CMAKE_SOURCE_DIR}/cmake/AddRCInfo.cmake)
+  include(${PROJECT_SOURCE_DIR}/cmake/AddRCInfo.cmake)
 endif()
 
 set(rime_dict_module_src
@@ -27,36 +32,36 @@ if(BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS)
   set(rime_src ${rime_core_module_src})
 else()
   set(rime_src
-      ${rime_core_module_src}
-      ${rime_dict_module_src}
-      ${rime_gears_src}
-      ${rime_levers_src}
-      ${rime_plugins_src}
-      ${rime_plugins_objs})
+    ${rime_core_module_src}
+    ${rime_dict_module_src}
+    ${rime_gears_src}
+    ${rime_levers_src}
+    ${rime_plugins_src}
+    ${rime_plugins_objs})
 endif()
 
 set(rime_optional_deps "")
 if(ENABLE_EXTERNAL_PLUGINS)
-  set(rime_optional_deps ${rime_optional_deps} dl)
+  list(APPEND rime_optional_deps dl)
 endif()
 
 set(rime_core_deps
-    ${Boost_LIBRARIES}
-    ${YamlCpp_LIBRARY}
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${rime_optional_deps})
+  ${Boost_LIBRARIES}
+  ${YamlCpp_LIBRARY}
+  Threads::Threads
+  ${rime_optional_deps})
 set(rime_dict_deps
-    ${LevelDb_LIBRARY}
-    ${Marisa_LIBRARY})
+  ${LevelDb_LIBRARY}
+  ${Marisa_LIBRARY})
 set(rime_gears_deps
-    ${ICU_LIBRARIES}
-    ${Opencc_LIBRARY})
+  ${ICU_LIBRARIES}
+  ${Opencc_LIBRARY})
 set(rime_levers_deps "")
 
 if(MINGW)
   # fix: bcrypt for boost uuid issue
   # https://github.com/boostorg/uuid/issues/68
-  set(rime_core_deps ${rime_core_deps} wsock32 ws2_32 bcrypt)
+  list(APPEND rime_core_deps wsock32 ws2_32 bcrypt)
 endif()
 
 if(BUILD_SEPARATE_LIBS)
@@ -73,94 +78,46 @@ endif()
 if(BUILD_SHARED_LIBS)
   add_library(rime ${rime_src})
   target_link_libraries(rime PUBLIC ${rime_deps})
-  set_target_properties(rime PROPERTIES
-    DEFINE_SYMBOL "RIME_EXPORTS"
-    VERSION ${rime_version}
-    SOVERSION ${rime_soversion}
-    LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
-    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-  if(XCODE_VERSION)
-    set_target_properties(rime PROPERTIES INSTALL_NAME_DIR "@rpath")
-  endif()
-  install(TARGETS rime DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
+  set_target_properties(rime PROPERTIES DEFINE_SYMBOL "RIME_EXPORTS")
+  rime_setup_library(rime)
   if(MSVC)
     install(FILES $<TARGET_PDB_FILE:rime>
-      DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
+      DESTINATION ${CMAKE_INSTALL_LIBDIR}
       OPTIONAL)
   endif()
+
   if(BUILD_SEPARATE_LIBS)
     add_library(rime-dict ${rime_dict_module_src})
-    target_link_libraries(rime-dict
-      ${rime_dict_deps}
-      ${rime_library})
-    set_target_properties(rime-dict PROPERTIES
-      VERSION ${rime_version}
-      SOVERSION ${rime_soversion}
-      LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
-      RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-    if(XCODE_VERSION)
-      set_target_properties(rime-dict PROPERTIES INSTALL_NAME_DIR "@rpath")
-    endif()
-    install(TARGETS rime-dict DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
+    target_link_libraries(rime-dict PUBLIC ${rime_dict_deps} ${rime_library})
+    rime_setup_library(rime-dict)
 
     add_library(rime-gears ${rime_gears_src})
-    target_link_libraries(rime-gears
-      ${rime_gears_deps}
-      ${rime_library}
-      ${rime_dict_library})
-    set_target_properties(rime-gears PROPERTIES
-      VERSION ${rime_version}
-      SOVERSION ${rime_soversion}
-      LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
-      RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-    if(XCODE_VERSION)
-      set_target_properties(rime-gears PROPERTIES INSTALL_NAME_DIR "@rpath")
-    endif()
-    install(TARGETS rime-gears DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
+    target_link_libraries(rime-gears PUBLIC ${rime_gears_deps} ${rime_library} ${rime_dict_library})
+    rime_setup_library(rime-gears)
 
     add_library(rime-levers ${rime_levers_src})
-    target_link_libraries(rime-levers
-      ${rime_levers_deps}
-      ${rime_library}
-      ${rime_dict_library})
-    set_target_properties(rime-levers PROPERTIES
-      VERSION ${rime_version}
-      SOVERSION ${rime_soversion}
-      LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
-      RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-    if(XCODE_VERSION)
-      set_target_properties(rime-levers PROPERTIES INSTALL_NAME_DIR "@rpath")
-    endif()
-    install(TARGETS rime-levers DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
+    target_link_libraries(rime-levers PUBLIC ${rime_levers_deps} ${rime_library} ${rime_dict_library})
+    rime_setup_library(rime-levers)
 
     if(rime_plugins_library)
-      add_library(rime-plugins
-        ${rime_plugins_src}
-        ${rime_plugins_objs})
+      add_library(rime-plugins ${rime_plugins_src} ${rime_plugins_objs})
       target_link_libraries(rime-plugins
-        ${rime_plugins_deps}
+        PUBLIC ${rime_plugins_deps}
         ${rime_library}
         ${rime_dict_library}
         ${rime_gears_library})
-      set_target_properties(rime-plugins PROPERTIES
-        VERSION ${rime_version}
-        SOVERSION ${rime_soversion}
-        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
-        RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-      if(XCODE_VERSION)
-        set_target_properties(rime-plugins PROPERTIES INSTALL_NAME_DIR "@rpath")
-      endif()
-      install(TARGETS rime-plugins DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
+      rime_setup_library(rime-plugins)
     endif()
   endif()
 else()
   add_library(rime-static STATIC ${rime_src})
-  target_link_libraries(rime-static PUBLIC ${rime_deps})
+  target_link_libraries(rime-static PUBLIC ${rime_deps} PRIVATE rime-build-options)
   set_target_properties(rime-static PROPERTIES
     OUTPUT_NAME "rime" PREFIX "lib"
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-  install(TARGETS rime-static DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
+  install(TARGETS rime-static ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
+
 if(ENABLE_LOGGING)
   # Keep spdlog out of the public include/link interface.  CMake still
   # propagates it as a link-only dependency for static builds.
