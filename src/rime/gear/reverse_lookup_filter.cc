@@ -8,8 +8,10 @@
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/translation.h>
+#include <rime/dict/dictionary.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 #include <rime/gear/reverse_lookup_filter.h>
+#include <rime/gear/reverse_lookup_weight.h>
 #include <rime/gear/translator_commons.h>
 
 namespace rime {
@@ -50,6 +52,14 @@ void ReverseLookupFilter::Initialize() {
     if (rev_dict_ && !rev_dict_->Load()) {
       rev_dict_.reset();
     }
+    if (rev_dict_) {
+      // Read weights from the same deployed dictionary as the reverse DB.
+      if (auto dict_component = Dictionary::Require("dictionary")) {
+        weight_dict_.reset(dict_component->Create(ticket));
+        if (weight_dict_ && !weight_dict_->Load())
+          weight_dict_.reset();
+      }
+    }
   }
   if (Config* config = engine_->schema()->config()) {
     config->GetBool(name_space_ + "/overwrite_comment", &overwrite_comment_);
@@ -77,6 +87,7 @@ void ReverseLookupFilter::Process(const an<Candidate>& cand) {
     return;
   string codes;
   if (rev_dict_->ReverseLookup(phrase->text(), &codes)) {
+    SortReverseLookupCodesByWeight(phrase->text(), &codes, weight_dict_.get());
     comment_formatter_.Apply(&codes);
     if (!codes.empty()) {
       if (overwrite_comment_ || cand->comment().empty()) {

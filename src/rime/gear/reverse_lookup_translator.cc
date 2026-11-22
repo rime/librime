@@ -15,6 +15,7 @@
 #include <rime/dict/dictionary.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 #include <rime/gear/reverse_lookup_translator.h>
+#include <rime/gear/reverse_lookup_weight.h>
 #include <rime/gear/translator_commons.h>
 #include <rime/gear/table_translator.h>
 
@@ -27,6 +28,7 @@ namespace rime {
 class ReverseLookupTranslation : public TableTranslation {
  public:
   ReverseLookupTranslation(ReverseLookupDictionary* dict,
+                           Dictionary* weight_dict,
                            TranslatorOptions* options,
                            const string& input,
                            size_t start,
@@ -42,6 +44,7 @@ class ReverseLookupTranslation : public TableTranslation {
                          preedit,
                          std::move(iter)),
         dict_(dict),
+        weight_dict_(weight_dict),
         options_(options),
         quality_(quality) {}
   virtual an<Candidate> Peek();
@@ -49,6 +52,7 @@ class ReverseLookupTranslation : public TableTranslation {
 
  protected:
   ReverseLookupDictionary* dict_;
+  Dictionary* weight_dict_;
   TranslatorOptions* options_;
   bool quality_;
 };
@@ -59,7 +63,9 @@ an<Candidate> ReverseLookupTranslation::Peek() {
   const auto& entry(iter_.Peek());
   string tips;
   if (dict_) {
-    dict_->ReverseLookup(entry->text, &tips);
+    if (dict_->ReverseLookup(entry->text, &tips)) {
+      SortReverseLookupCodesByWeight(entry->text, &tips, weight_dict_);
+    }
     if (options_) {
       options_->comment_formatter().Apply(&tips);
     }
@@ -137,6 +143,12 @@ void ReverseLookupTranslator::Initialize() {
   rev_dict_.reset(rev_component->Create(rev_ticket));
   if (rev_dict_) {
     rev_dict_->Load();
+    // Use target dictionary weights, not the reverse-query source dictionary.
+    if (auto dict_component = Dictionary::Require("dictionary")) {
+      rev_weight_dict_.reset(dict_component->Create(rev_ticket));
+      if (rev_weight_dict_ && !rev_weight_dict_->Load())
+        rev_weight_dict_.reset();
+    }
   }
 }
 
@@ -193,9 +205,9 @@ an<Translation> ReverseLookupTranslator::Query(const string& input,
     }
   }
   if (!iter.exhausted()) {
-    return Cached<ReverseLookupTranslation>(rev_dict_.get(), options_.get(),
-                                            code, segment.start, segment.end,
-                                            preedit, std::move(iter), quality);
+    return Cached<ReverseLookupTranslation>(
+        rev_dict_.get(), rev_weight_dict_.get(), options_.get(), code,
+        segment.start, segment.end, preedit, std::move(iter), quality);
   }
   return nullptr;
 }
