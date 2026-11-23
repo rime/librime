@@ -121,6 +121,14 @@ bool ReverseDb::Build(DictSettings* settings,
   syllables.reserve(syllabary.size());
   for (const auto& syllable : syllabary)
     syllables.push_back(syllable);
+  for (const auto& entry : entries.entries) {
+    if (entry.syllable_id < 0 ||
+        entry.syllable_id >= static_cast<SyllableId>(syllables.size())) {
+      LOG(ERROR) << "invalid syllable id in reverse lookup entry: "
+                 << entry.syllable_id;
+      return false;
+    }
+  }
 
   std::sort(entries.entries.begin(), entries.entries.end(),
             [&](const CompactDictEntry& a, const CompactDictEntry& b) {

@@ -58,16 +58,6 @@ DictRow ParseDictRow(std::string_view line,
   return row;
 }
 
-// A code is single-syllable when it has exactly one non-empty token.
-bool IsSingleSyllable(std::string_view code) {
-  size_t start = code.find_first_not_of(' ');
-  if (start == std::string_view::npos)
-    return false;
-  size_t end = code.find(' ', start);
-  return end == std::string_view::npos ||
-         code.find_first_not_of(' ', end) == std::string_view::npos;
-}
-
 }  // namespace
 
 static bool has_significant_weight(double weight, double total_weight) {
@@ -204,6 +194,10 @@ void EntryCollector::Finish() {
     // Finish collection before releasing preset weights used by CreateEntry().
     preset_vocabulary.reset();
   }
+  // Encoding may add entries. Normally duplicates are caught through the word
+  // map, but re-run deduplication as a safety net for collectors that never
+  // called TranslateWord().
+  DeduplicateEntries();
   decltype(collection)().swap(collection);
   decltype(words)().swap(words);
   LOG(INFO) << "Pass 3: total " << num_entries << " entries collected.";
@@ -264,25 +258,11 @@ void EntryCollector::CreateEntryImpl(std::string_view word,
   }
   // Keep an already-built word map up to date; entries added while encoding
   // preset phrases must remain visible to subsequent TranslateWord() calls.
-  if (words_built_ && raw_code.size() == 1) {
-    auto& word = words[e.text];
-    if (!word.has_encoding) {
-      word.has_encoding = true;
-      word.code = e.code;
-      word.weight = e.weight;
-    } else {
-      bool duplicate =
-          e.code == word.code ||
-          std::any_of(word.alternative_encodings.begin(),
-                      word.alternative_encodings.end(),
-                      [&](const auto& p) { return p.first == e.code; });
-      if (duplicate) {
-        LOG(WARNING) << "duplicate word definition '" << e.text << "': ["
-                     << e.code << "].";
-        return;
-      }
-      word.alternative_encodings.emplace_back(e.code, e.weight);
-    }
+  if (words_built_ && raw_code.size() == 1 &&
+      !AddWordEncoding(&words[e.text], e.code, e.weight)) {
+    LOG(WARNING) << "duplicate word definition '" << e.text << "': [" << e.code
+                 << "].";
+    return;
   }
   total_text_bytes += e.text.size();
   entries.emplace_back(std::move(e));
@@ -297,7 +277,7 @@ void EntryCollector::DeduplicateEntries() {
   vector<size_t> indices;
   indices.reserve(entries.size());
   for (size_t i = 0; i < entries.size(); ++i) {
-    if (IsSingleSyllable(entries[i].code))
+    if (IsSingleSyllableCode(entries[i].code))
       indices.push_back(i);
   }
   if (indices.size() > 1) {
@@ -341,31 +321,36 @@ void EntryCollector::EnsureWords() {
   if (words_built_)
     return;
   DeduplicateEntries();
-  words.clear();
   BuildWords();
   words_built_ = true;
+}
+
+bool EntryCollector::AddWordEncoding(WordEntries* word,
+                                     const string& code,
+                                     double weight) {
+  if (!word->has_encoding) {
+    word->has_encoding = true;
+    word->code = code;
+    word->weight = weight;
+    return true;
+  }
+  const bool duplicate =
+      code == word->code ||
+      std::any_of(word->alternative_encodings.begin(),
+                  word->alternative_encodings.end(),
+                  [&](const auto& p) { return p.first == code; });
+  if (duplicate)
+    return false;
+  word->alternative_encodings.emplace_back(code, weight);
+  return true;
 }
 
 void EntryCollector::BuildWords() {
   words.reserve(entries.size());
   for (const auto& e : entries) {
-    if (!IsSingleSyllable(e.code))
+    if (!IsSingleSyllableCode(e.code))
       continue;
-    auto& word = words[e.text];
-    if (!word.has_encoding) {
-      word.has_encoding = true;
-      word.code = e.code;
-      word.weight = e.weight;
-    } else {
-      bool duplicate =
-          e.code == word.code ||
-          std::any_of(word.alternative_encodings.begin(),
-                      word.alternative_encodings.end(),
-                      [&](const auto& p) { return p.first == e.code; });
-      if (duplicate)
-        continue;
-      word.alternative_encodings.emplace_back(e.code, e.weight);
-    }
+    AddWordEncoding(&words[e.text], e.code, e.weight);
   }
 }
 

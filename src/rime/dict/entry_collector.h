@@ -57,6 +57,9 @@ using WordMap = WordHashMap<string, WordEntries>;
 using EncodeQueue = std::queue<pair<string, string>>;
 
 #if defined(_MSC_VER)
+// MSVC's std::deque uses small blocks, which wastes memory for large
+// collections of entries. Use larger blocks there while keeping the standard
+// container elsewhere.
 template <typename T>
 using EntryBuffer = boost::container::deque<
     T,
@@ -120,6 +123,8 @@ class EntryCollector : public PhraseCollector {
   // Drop duplicate single-syllable (word, code) pairs, keeping the first
   // occurrence and the original entry order.
   void DeduplicateEntries();
+  // Add an encoding to a word; returns false when it is already recorded.
+  bool AddWordEncoding(WordEntries* word, const string& code, double weight);
   // Build the word -> encodings map only when an encoder actually needs it.
   void EnsureWords();
   void BuildWords();

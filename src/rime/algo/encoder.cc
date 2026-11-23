@@ -37,6 +37,22 @@ void RawCode::FromStringView(std::string_view code_str) {
   }
 }
 
+bool GetSingleSyllable(std::string_view code, std::string_view* syllable) {
+  size_t start = code.find_first_not_of(' ');
+  if (start == std::string_view::npos)
+    return false;
+  size_t end = code.find(' ', start);
+  if (end != std::string_view::npos &&
+      code.find_first_not_of(' ', end) != std::string_view::npos)
+    return false;
+  if (syllable) {
+    *syllable = code.substr(start, end == std::string_view::npos
+                                       ? std::string_view::npos
+                                       : end - start);
+  }
+  return true;
+}
+
 TableEncoder::TableEncoder(PhraseCollector* collector)
     : Encoder(collector), loaded_(false), max_phrase_length_(0) {}
 

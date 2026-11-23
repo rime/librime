@@ -20,6 +20,25 @@ class TestEntryCollector : public rime::EntryCollector {
 
   size_t collection_size() const { return collection.size(); }
   bool has_preset() const { return bool(preset_vocabulary); }
+  void SetEncoder(rime::the<rime::Encoder> value) {
+    encoder = std::move(value);
+  }
+};
+
+// Encodes every phrase to a fixed single-syllable code without consulting the
+// word map, simulating an encoder that never calls TranslateWord().
+class FixedCodeEncoder : public rime::Encoder {
+ public:
+  explicit FixedCodeEncoder(rime::PhraseCollector* collector)
+      : rime::Encoder(collector) {}
+
+  bool LoadSettings(rime::Config* /*config*/) override { return true; }
+
+  bool EncodePhrase(const rime::string& phrase,
+                    const rime::string& value) override {
+    collector_->CreateEntry(phrase, "a", value);
+    return true;
+  }
 };
 
 class RimeEntryCollectorTest : public ::testing::Test {
@@ -133,6 +152,23 @@ TEST_F(RimeEntryCollectorTest, RuleBasedEncoderBuildsWordsLazily) {
     }
   }
   EXPECT_TRUE(found_encoded_entry);
+}
+
+TEST_F(RimeEntryCollectorTest, DeduplicatesEntriesAddedDuringEncoding) {
+  auto file = WriteFile("duplicate_encoded.dict.yaml",
+                        "---\nname: duplicate_encoded\nversion: '1'\n...\n"
+                        "word\ta\t1\n"
+                        "word\t\t2\n");
+  rime::DictSettings settings;
+  TestEntryCollector collector;
+  collector.Configure(&settings);
+  collector.SetEncoder(
+      rime::the<rime::Encoder>(new FixedCodeEncoder(&collector)));
+  collector.Collect(file);
+  EXPECT_EQ(1u, collector.entries.size());
+  collector.Finish();
+  EXPECT_EQ(1u, collector.num_entries);
+  ExpectEntry(collector, "word", "a", 1.0);
 }
 
 TEST_F(RimeEntryCollectorTest, PresetWeightsDeduplicationAndRelease) {

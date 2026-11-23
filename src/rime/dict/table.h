@@ -194,7 +194,7 @@ class Table : public MappedFile {
                       size_t num_entries,
                       uint32_t dict_file_checksum = 0,
                       bool release_vocabulary = false,
-                      const std::function<bool()>& on_index_ready = {});
+                      const std::function<bool()>& on_vocabulary_indexed = {});
   RIME_DLL bool Build(const Syllabary& syllabary,
                       const CompactDictEntryList& entries,
                       size_t num_entries,
@@ -213,6 +213,11 @@ class Table : public MappedFile {
   table::Metadata* metadata() const { return metadata_; }
 
  private:
+  // Common file/metadata/syllabary setup shared by both Build() overloads.
+  bool BeginBuild(const Syllabary& syllabary,
+                  size_t num_entries,
+                  uint32_t dict_file_checksum);
+  bool FinishBuild();
   table::Index* BuildIndex(const Vocabulary& vocabulary, size_t num_syllables);
   table::Index* BuildIndex(const CompactDictEntryList& entries,
                            size_t num_syllables);

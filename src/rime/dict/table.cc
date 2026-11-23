@@ -335,15 +335,12 @@ uint32_t Table::dict_file_checksum() const {
   return metadata_ ? metadata_->dict_file_checksum : 0;
 }
 
-bool Table::Build(const Syllabary& syllabary,
-                  Vocabulary& vocabulary,
-                  size_t num_entries,
-                  uint32_t dict_file_checksum,
-                  bool release_vocabulary,
-                  const std::function<bool()>& on_index_ready) {
+bool Table::BeginBuild(const Syllabary& syllabary,
+                       size_t num_entries,
+                       uint32_t dict_file_checksum) {
   const size_t kReservedSize = 4096;
-  size_t num_syllables = syllabary.size();
-  size_t estimated_file_size =
+  const size_t num_syllables = syllabary.size();
+  const size_t estimated_file_size =
       kReservedSize + 32 * num_syllables + 64 * num_entries;
   LOG(INFO) << "building table.";
   LOG(INFO) << "num syllables: " << num_syllables;
@@ -363,23 +360,41 @@ bool Table::Build(const Syllabary& syllabary,
   metadata_->dict_file_checksum = dict_file_checksum;
   metadata_->num_syllables = num_syllables;
   metadata_->num_entries = num_entries;
-
-  if (!OnBuildStart()) {
+  if (!OnBuildStart())
     return false;
-  }
 
   LOG(INFO) << "creating syllabary.";
   syllabary_ = CreateArray<table::StringType>(num_syllables);
   if (!syllabary_) {
     LOG(ERROR) << "Error creating syllabary.";
     return false;
-  } else {
-    size_t i = 0;
-    for (const string& syllable : syllabary) {
-      AddString(syllable, &syllabary_->at[i++], 0.0);
-    }
   }
+  size_t syllable_id = 0;
+  for (const string& syllable : syllabary)
+    AddString(syllable, &syllabary_->at[syllable_id++], 0.0);
   metadata_->syllabary = syllabary_;
+  return true;
+}
+
+bool Table::FinishBuild() {
+  if (!OnBuildFinish())
+    return false;
+
+  // at last, complete the metadata
+  std::strncpy(metadata_->format, kTableFormatLatest,
+               table::Metadata::kFormatMaxLength);
+  return true;
+}
+
+bool Table::Build(const Syllabary& syllabary,
+                  Vocabulary& vocabulary,
+                  size_t num_entries,
+                  uint32_t dict_file_checksum,
+                  bool release_vocabulary,
+                  const std::function<bool()>& on_vocabulary_indexed) {
+  const size_t num_syllables = syllabary.size();
+  if (!BeginBuild(syllabary, num_entries, dict_file_checksum))
+    return false;
 
   LOG(INFO) << "creating table index.";
   index_ = BuildIndex(vocabulary, num_syllables);
@@ -391,71 +406,31 @@ bool Table::Build(const Syllabary& syllabary,
 
   // The index keeps only syllable ids, so callers may extract data that still
   // needs the vocabulary and then release it before building the string table.
-  if (on_index_ready && !on_index_ready()) {
+  if (on_vocabulary_indexed && !on_vocabulary_indexed())
     return false;
-  }
-  if (release_vocabulary) {
+  if (release_vocabulary)
     vocabulary.clear();
-  }
 
-  if (!OnBuildFinish()) {
-    return false;
-  }
-
-  // at last, complete the metadata
-  std::strncpy(metadata_->format, kTableFormatLatest,
-               table::Metadata::kFormatMaxLength);
-  return true;
+  return FinishBuild();
 }
 
 bool Table::Build(const Syllabary& syllabary,
                   const CompactDictEntryList& entries,
                   size_t num_entries,
                   uint32_t dict_file_checksum) {
-  const size_t kReservedSize = 4096;
   const size_t num_syllables = syllabary.size();
-  const size_t estimated_file_size =
-      kReservedSize + 32 * num_syllables + 64 * num_entries;
-  LOG(INFO) << "building table.";
-  LOG(INFO) << "num syllables: " << num_syllables;
-  LOG(INFO) << "num entries: " << num_entries;
-  LOG(INFO) << "estimated file size: " << estimated_file_size;
-  if (!Create(estimated_file_size)) {
-    LOG(ERROR) << "Error creating table file '" << file_path() << "'.";
-    return false;
-  }
-
-  metadata_ = Allocate<table::Metadata>();
-  if (!metadata_) {
-    LOG(ERROR) << "Error creating metadata in file '" << file_path() << "'.";
-    return false;
-  }
-  metadata_->dict_file_checksum = dict_file_checksum;
-  metadata_->num_syllables = num_syllables;
-  metadata_->num_entries = num_entries;
-  if (!OnBuildStart())
+  if (!BeginBuild(syllabary, num_entries, dict_file_checksum))
     return false;
 
-  syllabary_ = CreateArray<table::StringType>(num_syllables);
-  if (!syllabary_)
-    return false;
-  size_t syllable_id = 0;
-  for (const string& syllable : syllabary)
-    AddString(syllable, &syllabary_->at[syllable_id++], 0.0);
-  metadata_->syllabary = syllabary_;
-
+  LOG(INFO) << "creating table index.";
   index_ = BuildIndex(entries, num_syllables);
   if (!index_) {
     LOG(ERROR) << "Error creating table index.";
     return false;
   }
   metadata_->index = index_;
-  if (!OnBuildFinish())
-    return false;
 
-  std::strncpy(metadata_->format, kTableFormatLatest,
-               table::Metadata::kFormatMaxLength);
-  return true;
+  return FinishBuild();
 }
 
 table::Index* Table::BuildIndex(const Vocabulary& vocabulary,
