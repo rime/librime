@@ -56,7 +56,7 @@ std::string MakeStatusHeader(RimeApi* rime, RimeSessionId session_id) {
 
 void AppendSchemaCompletions(RimeApi* rime,
                              std::vector<LineCompletion>* completions) {
-  RimeSchemaList list = {0};
+  RimeSchemaList list = {};
   if (!rime->get_schema_list(&list))
     return;
   for (size_t i = 0; i < list.size; ++i) {
@@ -90,7 +90,7 @@ void AppendOptionCompletions(RimeApi* rime,
   if (!rime->schema_open(schema_id, &config))
     return;
 
-  RimeConfigIterator iterator = {0};
+  RimeConfigIterator iterator = {};
   if (rime->config_begin_list(&iterator, &config, "switches")) {
     while (rime->config_next(&iterator)) {
       std::string item_path = iterator.path ? iterator.path : "";
@@ -100,7 +100,7 @@ void AppendOptionCompletions(RimeApi* rime,
         AddOptionCompletion(name, completions);
         continue;
       }
-      RimeConfigIterator option_iterator = {0};
+      RimeConfigIterator option_iterator = {};
       if (rime->config_begin_list(&option_iterator, &config,
                                   (item_path + "/options").c_str())) {
         while (rime->config_next(&option_iterator)) {
