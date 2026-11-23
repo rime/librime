@@ -148,7 +148,7 @@ void Memory::OnDeleteEntry(Context* ctx) {
   }
 }
 
-void Memory::OnUnhandledKey(Context* ctx, const KeyEvent& key) {
+void Memory::OnUnhandledKey(Context*, const KeyEvent& key) {
   if (!user_dict_ || user_dict_->readonly())
     return;
   if ((key.modifier() & ~kShiftMask) == 0) {

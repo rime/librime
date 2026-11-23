@@ -240,7 +240,7 @@ static int rime_levers_import_user_dict(const char* dict_name,
 }
 
 static RimeCustomApi* RIME_FLAVORED(rime_levers_get_api)() {
-  static RIME_FLAVORED(RimeLeversApi) s_api = {0};
+  static RIME_FLAVORED(RimeLeversApi) s_api = {};
   if (!s_api.data_size) {
     RIME_STRUCT_INIT(RIME_FLAVORED(RimeLeversApi), s_api);
     s_api.custom_settings_init = rime_levers_custom_settings_init;

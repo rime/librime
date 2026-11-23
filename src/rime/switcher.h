@@ -68,6 +68,7 @@ class Switcher : public Processor, public Engine {
 class SwitcherCommand {
  public:
   SwitcherCommand(const string& keyword) : keyword_(keyword) {}
+  virtual ~SwitcherCommand() = default;
   virtual void Apply(Switcher* switcher) = 0;
   const string& keyword() const { return keyword_; }
 

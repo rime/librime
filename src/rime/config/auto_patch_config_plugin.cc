@@ -35,8 +35,8 @@ bool AutoPatchConfigPlugin::ReviewCompileOutput(ConfigCompiler* compiler,
   return true;
 }
 
-bool AutoPatchConfigPlugin::ReviewLinkOutput(ConfigCompiler* compiler,
-                                             an<ConfigResource> resource) {
+bool AutoPatchConfigPlugin::ReviewLinkOutput(ConfigCompiler*,
+                                             an<ConfigResource>) {
   return true;
 }
 

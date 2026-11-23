@@ -128,8 +128,7 @@ void SchemaListTranslation::LoadSchemaList(Switcher* switcher) {
 SchemaListTranslator::SchemaListTranslator(const Ticket& ticket)
     : Translator(ticket) {}
 
-an<Translation> SchemaListTranslator::Query(const string& input,
-                                            const Segment& segment) {
+an<Translation> SchemaListTranslator::Query(const string&, const Segment&) {
   auto switcher = dynamic_cast<Switcher*>(engine_);
   if (!switcher) {
     return nullptr;

@@ -8,7 +8,11 @@
 
 // do not export librime 0.9 API in this build variant
 #undef RIME_DEPRECATED
+#ifdef __cplusplus
+#define RIME_DEPRECATED [[maybe_unused]] static
+#else
 #define RIME_DEPRECATED static
+#endif
 
 #undef Bool
 #define Bool bool

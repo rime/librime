@@ -159,7 +159,7 @@ bool DictCompiler::Compile(const path& schema_file) {
                                    schema_file_checksum, syllabary)) {
     return false;
   }
-  for (int table_index = 1; table_index < tables_.size(); ++table_index) {
+  for (size_t table_index = 1; table_index < tables_.size(); ++table_index) {
     const auto& pack_name = packs_[table_index - 1];
     auto pack_table = tables_[table_index];
     EntryCollector collector(std::move(syllabary));

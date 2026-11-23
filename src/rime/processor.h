@@ -27,9 +27,7 @@ class Processor : public Class<Processor, const Ticket&> {
       : engine_(ticket.engine), name_space_(ticket.name_space) {}
   virtual ~Processor() = default;
 
-  virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event) {
-    return kNoop;
-  }
+  virtual ProcessResult ProcessKeyEvent(const KeyEvent&) { return kNoop; }
 
   string name_space() const { return name_space_; }
 
