@@ -8,23 +8,134 @@
 #include <stdlib.h>
 #include <string.h>
 #include <rime_api.h>
+#include <string>
+#include <vector>
 #include "codepage.h"
+#include "completion_catalog.h"
 #include "line_editor.h"
 
+namespace {
+
+std::string FormatStatusHeader(const RimeStatus& status) {
+  std::string header = "schema: ";
+  header += status.schema_id ? status.schema_id : "?";
+  header += " / ";
+  header += status.schema_name ? status.schema_name : "?";
+  header += "  [";
+
+  bool first = true;
+  const auto add_flag = [&](const char* name, Bool enabled) {
+    if (!enabled)
+      return;
+    if (!first)
+      header += ' ';
+    header += name;
+    first = false;
+  };
+  add_flag("disabled", status.is_disabled);
+  add_flag("composing", status.is_composing);
+  add_flag("ascii_mode", status.is_ascii_mode);
+  add_flag("full_shape", status.is_full_shape);
+  add_flag("simplified", status.is_simplified);
+  if (first)
+    header += "ready";
+  header += ']';
+  return header;
+}
+
+std::string MakeStatusHeader(RimeApi* rime, RimeSessionId session_id) {
+  if (!session_id)
+    return std::string();
+  RIME_STRUCT(RimeStatus, status);
+  if (!rime->get_status(session_id, &status))
+    return std::string();
+  std::string header = FormatStatusHeader(status);
+  rime->free_status(&status);
+  return header;
+}
+
+void AppendSchemaCompletions(RimeApi* rime,
+                             std::vector<LineCompletion>* completions) {
+  RimeSchemaList list = {0};
+  if (!rime->get_schema_list(&list))
+    return;
+  for (size_t i = 0; i < list.size; ++i) {
+    const RimeSchemaListItem& schema = list.list[i];
+    if (!schema.schema_id)
+      continue;
+    LineCompletion item;
+    item.text = std::string("select schema ") + schema.schema_id;
+    item.display = schema.schema_id;
+    item.detail = schema.name ? schema.name : "";
+    item.kind = "schema";
+    completions->push_back(item);
+  }
+  rime->free_schema_list(&list);
+}
+
+void AddOptionCompletion(const std::string& option,
+                         std::vector<LineCompletion>* completions) {
+  LineCompletion item;
+  item.text = "set option " + option;
+  item.display = option;
+  item.detail = "schema option";
+  item.kind = "option";
+  completions->push_back(item);
+}
+
+void AppendOptionCompletions(RimeApi* rime,
+                             const char* schema_id,
+                             std::vector<LineCompletion>* completions) {
+  RimeConfig config = {0};
+  if (!rime->schema_open(schema_id, &config))
+    return;
+
+  RimeConfigIterator iterator = {0};
+  if (rime->config_begin_list(&iterator, &config, "switches")) {
+    while (rime->config_next(&iterator)) {
+      std::string item_path = iterator.path ? iterator.path : "";
+      const char* name =
+          rime->config_get_cstring(&config, (item_path + "/name").c_str());
+      if (name) {
+        AddOptionCompletion(name, completions);
+        continue;
+      }
+      RimeConfigIterator option_iterator = {0};
+      if (rime->config_begin_list(&option_iterator, &config,
+                                  (item_path + "/options").c_str())) {
+        while (rime->config_next(&option_iterator)) {
+          const char* option =
+              rime->config_get_cstring(&config, option_iterator.path);
+          if (option)
+            AddOptionCompletion(option, completions);
+        }
+        rime->config_end(&option_iterator);
+      }
+    }
+    rime->config_end(&iterator);
+  }
+  rime->config_close(&config);
+}
+
+std::vector<LineCompletion> BuildCompletions(RimeApi* rime,
+                                             RimeSessionId session_id) {
+  static const CompletionCatalog catalog;
+  std::vector<LineCompletion> completions = catalog.items();
+  AppendSchemaCompletions(rime, &completions);
+  RIME_STRUCT(RimeStatus, status);
+  if (rime->get_status(session_id, &status)) {
+    if (status.schema_id)
+      AppendOptionCompletions(rime, status.schema_id, &completions);
+    rime->free_status(&status);
+  }
+  return completions;
+}
+
+}  // namespace
+
 void print_status(RimeStatus* status) {
-  printf("schema: %s / %s\n", status->schema_id, status->schema_name);
-  printf("status: ");
-  if (status->is_disabled)
-    printf("disabled ");
-  if (status->is_composing)
-    printf("composing ");
-  if (status->is_ascii_mode)
-    printf("ascii ");
-  if (status->is_full_shape)
-    printf("full_shape ");
-  if (status->is_simplified)
-    printf("simplified ");
-  printf("\n");
+  std::string header = FormatStatusHeader(*status);
+  printf("%s\n", header.c_str());
 }
 
 void print_composition(RimeComposition* composition) {
@@ -238,14 +349,18 @@ reload:
   const int kMaxLength = 99;
   LineEditor editor(kMaxLength);
   std::string line;
-  while (editor.ReadLine(&line)) {
-    if (line.empty())
-      line = "\r";
+  while (true) {
     if (!rime->find_session(session_id) &&
         !(session_id = ensure_session(rime))) {
       SetConsoleOutputCodePage(codepage);
       return 1;
     }
+    editor.SetCompletions(BuildCompletions(rime, session_id));
+    std::string header = MakeStatusHeader(rime, session_id);
+    if (!editor.ReadLine("> ", &line, nullptr, nullptr, header.c_str()))
+      break;
+    if (line.empty())
+      line = "\r";
     if (!strcmp(line.c_str(), "exit"))
       break;
     else if (!strcmp(line.c_str(), "reload")) {
