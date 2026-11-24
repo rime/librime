@@ -38,7 +38,6 @@ jobs:
           submodules: recursive
 
       - name: Configure MSVC toolchain
-        if: ${{ matrix.compiler == 'msvc' || matrix.arch == 'arm64' }}
         uses: TheMrMilchmann/setup-msvc-dev@v4
         with:
           arch: ${{ matrix.cross_arch || matrix.arch }}
@@ -46,21 +45,18 @@ jobs:
       - name: Configure Ninja
         run: pip install ninja
 
-      - name: Install clang
-        if: ${{ matrix.compiler == 'clang' && matrix.arch != 'arm64' }}
-        run: choco upgrade -y llvm
-
       - name: Create env.bat
         shell: pwsh
         run: |
           $cc = '${{ matrix.cc }}'
           $cxx = '${{ matrix.cxx }}'
-          if ('${{ matrix.compiler }}' -eq 'clang' -and '${{ matrix.arch }}' -eq 'arm64') {
-            if (-not $env:llvmArm64) {
-              throw "llvmArm64 is not set; cannot find the native Arm64 LLVM toolchain"
+          if ('${{ matrix.compiler }}' -eq 'clang') {
+            $llvmDir = if ('${{ matrix.arch }}' -eq 'arm64') { $env:llvmArm64 } else { $env:llvmX64 }
+            if (-not $llvmDir) {
+              throw "Visual Studio bundled LLVM toolchain is not set"
             }
-            $cc = Join-Path $env:llvmArm64 'clang.exe'
-            $cxx = Join-Path $env:llvmArm64 'clang++.exe'
+            $cc = Join-Path $llvmDir 'clang.exe'
+            $cxx = Join-Path $llvmDir 'clang++.exe'
           }
           $envcontent = @"
             set RIME_ROOT=%CD%
