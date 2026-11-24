@@ -236,6 +236,13 @@ bool Table::AddString(const string& src,
   return true;
 }
 
+bool Table::AddString(std::string_view src,
+                      table::StringType* dest,
+                      double weight) {
+  string_table_builder_->AddView(src, weight, &dest->str_id());
+  return true;
+}
+
 bool Table::OnBuildStart() {
   string_table_builder_.reset(new StringTableBuilder);
   return true;
@@ -328,13 +335,12 @@ uint32_t Table::dict_file_checksum() const {
   return metadata_ ? metadata_->dict_file_checksum : 0;
 }
 
-bool Table::Build(const Syllabary& syllabary,
-                  const Vocabulary& vocabulary,
-                  size_t num_entries,
-                  uint32_t dict_file_checksum) {
+bool Table::BeginBuild(const Syllabary& syllabary,
+                       size_t num_entries,
+                       uint32_t dict_file_checksum) {
   const size_t kReservedSize = 4096;
-  size_t num_syllables = syllabary.size();
-  size_t estimated_file_size =
+  const size_t num_syllables = syllabary.size();
+  const size_t estimated_file_size =
       kReservedSize + 32 * num_syllables + 64 * num_entries;
   LOG(INFO) << "building table.";
   LOG(INFO) << "num syllables: " << num_syllables;
@@ -354,23 +360,41 @@ bool Table::Build(const Syllabary& syllabary,
   metadata_->dict_file_checksum = dict_file_checksum;
   metadata_->num_syllables = num_syllables;
   metadata_->num_entries = num_entries;
-
-  if (!OnBuildStart()) {
+  if (!OnBuildStart())
     return false;
-  }
 
   LOG(INFO) << "creating syllabary.";
   syllabary_ = CreateArray<table::StringType>(num_syllables);
   if (!syllabary_) {
     LOG(ERROR) << "Error creating syllabary.";
     return false;
-  } else {
-    size_t i = 0;
-    for (const string& syllable : syllabary) {
-      AddString(syllable, &syllabary_->at[i++], 0.0);
-    }
   }
+  size_t syllable_id = 0;
+  for (const string& syllable : syllabary)
+    AddString(syllable, &syllabary_->at[syllable_id++], 0.0);
   metadata_->syllabary = syllabary_;
+  return true;
+}
+
+bool Table::FinishBuild() {
+  if (!OnBuildFinish())
+    return false;
+
+  // at last, complete the metadata
+  std::strncpy(metadata_->format, kTableFormatLatest,
+               table::Metadata::kFormatMaxLength);
+  return true;
+}
+
+bool Table::Build(const Syllabary& syllabary,
+                  Vocabulary& vocabulary,
+                  size_t num_entries,
+                  uint32_t dict_file_checksum,
+                  bool release_vocabulary,
+                  const std::function<bool()>& on_vocabulary_indexed) {
+  const size_t num_syllables = syllabary.size();
+  if (!BeginBuild(syllabary, num_entries, dict_file_checksum))
+    return false;
 
   LOG(INFO) << "creating table index.";
   index_ = BuildIndex(vocabulary, num_syllables);
@@ -380,20 +404,53 @@ bool Table::Build(const Syllabary& syllabary,
   }
   metadata_->index = index_;
 
-  if (!OnBuildFinish()) {
+  // The index keeps only syllable ids, so callers may extract data that still
+  // needs the vocabulary and then release it before building the string table.
+  if (on_vocabulary_indexed && !on_vocabulary_indexed())
+    return false;
+  if (release_vocabulary)
+    vocabulary.clear();
+
+  return FinishBuild();
+}
+
+bool Table::Build(const Syllabary& syllabary,
+                  const CompactDictEntryList& entries,
+                  size_t num_entries,
+                  uint32_t dict_file_checksum) {
+  const size_t num_syllables = syllabary.size();
+  if (!BeginBuild(syllabary, num_entries, dict_file_checksum))
+    return false;
+
+  LOG(INFO) << "creating table index.";
+  index_ = BuildIndex(entries, num_syllables);
+  if (!index_) {
+    LOG(ERROR) << "Error creating table index.";
     return false;
   }
+  metadata_->index = index_;
 
-  // at last, complete the metadata
-  std::strncpy(metadata_->format, kTableFormatLatest,
-               table::Metadata::kFormatMaxLength);
-  return true;
+  return FinishBuild();
 }
 
 table::Index* Table::BuildIndex(const Vocabulary& vocabulary,
                                 size_t num_syllables) {
   return reinterpret_cast<table::Index*>(
       BuildHeadIndex(vocabulary, num_syllables));
+}
+
+table::Index* Table::BuildIndex(const CompactDictEntryList& entries,
+                                size_t num_syllables) {
+  auto index = CreateArray<table::HeadIndexNode>(num_syllables);
+  if (!index || entries.page_offsets.size() != num_syllables + 1)
+    return NULL;
+  for (size_t syllable_id = 0; syllable_id < num_syllables; ++syllable_id) {
+    auto& node(index->at[syllable_id]);
+    if (!BuildEntryList(entries, entries.page_offsets[syllable_id],
+                        entries.page_offsets[syllable_id + 1], &node.entries))
+      return NULL;
+  }
+  return reinterpret_cast<table::Index*>(index);
 }
 
 table::HeadIndex* Table::BuildHeadIndex(const Vocabulary& vocabulary,
@@ -517,6 +574,31 @@ bool Table::BuildEntryList(const ShortDictEntryList& src,
   for (auto d = src.begin(); d != src.end(); ++d, ++i) {
     if (!BuildEntry(*d, &dest->at[i]))
       return false;
+  }
+  return true;
+}
+
+bool Table::BuildEntryList(const CompactDictEntryList& src,
+                           size_t begin,
+                           size_t end,
+                           List<table::Entry>* dest) {
+  if (!dest || begin > end || end > src.entries.size())
+    return false;
+  dest->size = end - begin;
+  if (begin == end) {
+    dest->at = nullptr;
+    return true;
+  }
+  dest->at = Allocate<table::Entry>(dest->size);
+  if (!dest->at) {
+    LOG(ERROR) << "Error creating table entries; file size: " << file_size();
+    return false;
+  }
+  for (size_t i = begin; i < end; ++i) {
+    const auto& entry = src.entries[i];
+    if (!AddString(src.text_of(entry), &dest->at[i - begin].text, entry.weight))
+      return false;
+    dest->at[i - begin].weight = static_cast<table::Weight>(entry.weight);
   }
   return true;
 }

@@ -5,9 +5,11 @@
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
 #include <filesystem>
+#include <algorithm>
 #include <cfloat>
 #include <cmath>
 #include <fstream>
+#include <limits>
 #include <rime/algo/algebra.h>
 #include <rime/algo/utilities.h>
 #include <rime/dict/corrector.h>
@@ -23,6 +25,203 @@
 #include <rime/service.h>
 
 namespace rime {
+
+namespace {
+
+bool GetCompactTextLength(std::string_view text, uint32_t* length) {
+  if (text.size() > (std::numeric_limits<uint32_t>::max)())
+    return false;
+  *length = static_cast<uint32_t>(text.size());
+  return true;
+}
+
+bool DetectAllSingleSyllable(const EntryCollector& collector) {
+  for (const auto& entry : collector.entries) {
+    if (!IsSingleSyllableCode(entry.code))
+      return false;
+  }
+  return true;
+}
+
+void BuildSyllableIdMap(const Syllabary& syllabary,
+                        map<string, SyllableId>* syllable_to_id) {
+  SyllableId syllable_id = 0;
+  for (const auto& syllable : syllabary) {
+    (*syllable_to_id)[syllable] = syllable_id++;
+  }
+}
+
+bool GetSyllableId(const map<string, SyllableId>& syllable_to_id,
+                   const string& syllable,
+                   SyllableId* id) {
+  auto it = syllable_to_id.find(syllable);
+  if (it == syllable_to_id.end()) {
+    LOG(ERROR) << "invalid syllable in dictionary entry: " << syllable;
+    return false;
+  }
+  *id = it->second;
+  return true;
+}
+
+bool FillCompactEntries(EntryCollector& collector,
+                        const map<string, SyllableId>& syllable_to_id,
+                        CompactDictEntryList* compact) {
+  compact->text.reserve(collector.total_text_bytes);
+  compact->entries.reserve(collector.entries.size());
+  // Consume collected entries from the front so the deque can release its
+  // memory while the target representation grows.
+  while (!collector.entries.empty()) {
+    auto& entry = collector.entries.front();
+    std::string_view syllable;
+    if (!GetSingleSyllable(entry.code, &syllable)) {
+      LOG(ERROR) << "unexpected multi-syllable code in compact build: '"
+                 << entry.code << "'";
+      return false;
+    }
+    uint32_t text_length = 0;
+    if (!GetCompactTextLength(entry.text, &text_length)) {
+      LOG(ERROR) << "dictionary entry text is too long: '" << entry.text << "'";
+      return false;
+    }
+    SyllableId syllable_id = 0;
+    if (!GetSyllableId(syllable_to_id, std::string(syllable), &syllable_id))
+      return false;
+    compact->entries.push_back(
+        {compact->text.size(), text_length, syllable_id,
+         log(entry.weight > 0 ? entry.weight : DBL_EPSILON)});
+    compact->text.append(entry.text);
+    collector.entries.pop_front();
+  }
+  return true;
+}
+
+bool FillVocabularyEntries(EntryCollector& collector,
+                           const map<string, SyllableId>& syllable_to_id,
+                           Vocabulary* vocabulary) {
+  // Consume collected entries from the front so the deque can release its
+  // memory while the vocabulary grows.
+  while (!collector.entries.empty()) {
+    auto& entry = collector.entries.front();
+    RawCode raw_code;
+    raw_code.FromStringView(entry.code);
+    Code code;
+    for (const auto& syllable : raw_code) {
+      SyllableId syllable_id = 0;
+      if (!GetSyllableId(syllable_to_id, syllable, &syllable_id))
+        return false;
+      code.push_back(syllable_id);
+    }
+    auto entries = vocabulary->LocateEntries(code);
+    if (entries) {
+      ShortDictEntry e;
+      e.code.swap(code);
+      e.text.swap(entry.text);
+      e.weight = log(entry.weight > 0 ? entry.weight : DBL_EPSILON);
+      entries->push_back(std::move(e));
+    } else {
+      LOG(ERROR) << "Error locating entries in vocabulary.";
+    }
+    collector.entries.pop_front();
+  }
+  return true;
+}
+
+void SortCompactEntries(DictSettings* settings,
+                        size_t num_syllables,
+                        CompactDictEntryList* compact) {
+  std::stable_sort(
+      compact->entries.begin(), compact->entries.end(),
+      [&](const CompactDictEntry& a, const CompactDictEntry& b) {
+        if (a.syllable_id != b.syllable_id)
+          return a.syllable_id < b.syllable_id;
+        if (settings->sort_order() != "original" && a.weight != b.weight)
+          return a.weight > b.weight;
+        return false;
+      });
+  compact->page_offsets.assign(num_syllables + 1, 0);
+  for (const auto& entry : compact->entries)
+    ++compact->page_offsets[entry.syllable_id + 1];
+  for (size_t i = 1; i < compact->page_offsets.size(); ++i)
+    compact->page_offsets[i] += compact->page_offsets[i - 1];
+}
+
+bool ExtractReverseEntries(const Vocabulary& vocabulary,
+                           CompactDictEntryList* reverse_entries) {
+  for (const auto& page : vocabulary) {
+    for (const auto& entry : page.second.entries) {
+      uint32_t text_length = 0;
+      if (!GetCompactTextLength(entry.text, &text_length)) {
+        LOG(ERROR) << "dictionary entry text is too long: '" << entry.text
+                   << "'";
+        return false;
+      }
+      reverse_entries->entries.push_back({reverse_entries->text.size(),
+                                          text_length, page.first,
+                                          entry.weight});
+      reverse_entries->text.append(entry.text);
+    }
+  }
+  return true;
+}
+
+bool BuildCompactTable(Table* table,
+                       EntryCollector& collector,
+                       DictSettings* settings,
+                       uint32_t dict_file_checksum,
+                       bool build_reverse,
+                       CompactDictEntryList* reverse_entries) {
+  map<string, SyllableId> syllable_to_id;
+  BuildSyllableIdMap(collector.syllabary, &syllable_to_id);
+  CompactDictEntryList compact_entries;
+  if (!FillCompactEntries(collector, syllable_to_id, &compact_entries))
+    return false;
+  SortCompactEntries(settings, collector.syllabary.size(), &compact_entries);
+  table->Remove();
+  if (!table->Build(collector.syllabary, compact_entries, collector.num_entries,
+                    dict_file_checksum) ||
+      !table->Save()) {
+    return false;
+  }
+  if (build_reverse) {
+    // The reverse db does not need page offsets; drop them before moving the
+    // remaining data over.
+    compact_entries.page_offsets.clear();
+    compact_entries.page_offsets.shrink_to_fit();
+    *reverse_entries = std::move(compact_entries);
+  }
+  return true;
+}
+
+bool BuildVocabularyTable(Table* table,
+                          EntryCollector& collector,
+                          DictSettings* settings,
+                          uint32_t dict_file_checksum,
+                          bool build_reverse,
+                          CompactDictEntryList* reverse_entries) {
+  map<string, SyllableId> syllable_to_id;
+  BuildSyllableIdMap(collector.syllabary, &syllable_to_id);
+  Vocabulary vocabulary;
+  if (!FillVocabularyEntries(collector, syllable_to_id, &vocabulary))
+    return false;
+  if (settings->sort_order() != "original")
+    vocabulary.SortHomophones();
+  if (build_reverse) {
+    // Multi-syllable dictionaries still copy reverse data; the compact path
+    // above is the primary memory optimization.
+    reverse_entries->text.reserve(collector.total_text_bytes);
+    reverse_entries->entries.reserve(collector.num_entries);
+  }
+  table->Remove();
+  const bool built =
+      table->Build(collector.syllabary, vocabulary, collector.num_entries,
+                   dict_file_checksum, /*release_vocabulary=*/true, [&]() {
+                     return !build_reverse ||
+                            ExtractReverseEntries(vocabulary, reverse_entries);
+                   });
+  return built && table->Save();
+}
+
+}  // namespace
 
 DictCompiler::DictCompiler(Dictionary* dictionary)
     : dict_name_(dictionary->name()),
@@ -231,47 +430,22 @@ bool DictCompiler::BuildTable(int table_index,
     dump_path.replace_extension(".txt");
     collector.Dump(dump_path);
   }
-  Vocabulary vocabulary;
-  // build .table.bin
-  {
-    map<string, SyllableId> syllable_to_id;
-    SyllableId syllable_id = 0;
-    for (const auto& s : collector.syllabary) {
-      syllable_to_id[s] = syllable_id++;
-    }
-    for (auto& r : collector.entries) {
-      Code code;
-      for (const auto& s : r.raw_code) {
-        code.push_back(syllable_to_id[s]);
-      }
-      // release memory in time to reduce memory usage
-      RawCode().swap(r.raw_code);
-      auto ls = vocabulary.LocateEntries(code);
-      if (!ls) {
-        LOG(ERROR) << "Error locating entries in vocabulary.";
-        continue;
-      }
-      ShortDictEntry e;
-      e.code.swap(code);
-      e.text.swap(r.text);
-      e.weight = log(r.weight > 0 ? r.weight : DBL_EPSILON);
-      ls->push_back(std::move(e));
-    }
-    // release memory in time to reduce memory usage
-    decltype(collector.entries)().swap(collector.entries);
-    if (settings->sort_order() != "original") {
-      vocabulary.SortHomophones();
-    }
-    table->Remove();
-    if (!table->Build(collector.syllabary, vocabulary, collector.num_entries,
-                      dict_file_checksum) ||
-        !table->Save()) {
-      return false;
-    }
-  }
+
+  const bool primary_table = (table_index == 0);
+  CompactDictEntryList reverse_entries;
+  const bool built =
+      DetectAllSingleSyllable(collector)
+          ? BuildCompactTable(table.get(), collector, settings,
+                              dict_file_checksum, primary_table,
+                              &reverse_entries)
+          : BuildVocabularyTable(table.get(), collector, settings,
+                                 dict_file_checksum, primary_table,
+                                 &reverse_entries);
+  if (!built)
+    return false;
   // build reverse db for the primary table
-  if (table_index == 0 &&
-      !BuildReverseDb(settings, collector.syllabary, vocabulary,
+  if (primary_table &&
+      !BuildReverseDb(settings, collector.syllabary, reverse_entries,
                       collector.stems, dict_file_checksum)) {
     return false;
   }
@@ -280,13 +454,13 @@ bool DictCompiler::BuildTable(int table_index,
 
 bool DictCompiler::BuildReverseDb(DictSettings* settings,
                                   const Syllabary& syllabary,
-                                  const Vocabulary& vocabulary,
+                                  CompactDictEntryList& reverse_entries,
                                   const ReverseLookupTable& stems,
                                   uint32_t dict_file_checksum) {
   // build .reverse.bin
   auto target_path = target_resolver_->ResolvePath(dict_name_ + ".reverse.bin");
   ReverseDb reverse_db(target_path);
-  if (!reverse_db.Build(settings, syllabary, vocabulary, stems,
+  if (!reverse_db.Build(settings, syllabary, reverse_entries, stems,
                         dict_file_checksum) ||
       !reverse_db.Save()) {
     LOG(ERROR) << "error building reversedb.";

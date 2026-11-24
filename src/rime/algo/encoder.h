@@ -23,6 +23,16 @@ class RawCode : public vector<string> {
   void FromStringView(std::string_view code_str);
 };
 
+// Returns true if `code` consists of exactly one non-empty space-separated
+// token, storing it in `*syllable` when non-null. Returns false otherwise and
+// leaves `*syllable` unchanged. Mirrors RawCode::FromStringView()'s
+// tokenization without allocating.
+bool GetSingleSyllable(std::string_view code, std::string_view* syllable);
+
+inline bool IsSingleSyllableCode(std::string_view code) {
+  return GetSingleSyllable(code, nullptr);
+}
+
 class PhraseCollector {
  public:
   PhraseCollector() = default;

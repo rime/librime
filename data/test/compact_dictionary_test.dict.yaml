@@ -1,0 +1,9 @@
+# Minimal all-single-syllable dictionary for compact table compilation.
+---
+name: compact_dictionary_test
+version: "1"
+sort: original
+...
+one	a	10
+two	a	5
+three	b	2

@@ -5,6 +5,8 @@
 // 2011-07-03 GONG Chen <chen.sst@gmail.com>
 //
 #include <gtest/gtest.h>
+#include <fstream>
+#include <iterator>
 #include <rime/algo/syllabifier.h>
 #include <rime/dict/table.h>
 
@@ -44,6 +46,60 @@ class InspectableTable : public rime::Table {
   bool has_builder() const { return bool(string_table_builder_); }
 };
 #endif
+
+TEST(TableBuilder, CompactSingleSyllableOutputMatchesVocabulary) {
+  auto compare_outputs = [](bool sort_by_weight, const char* suffix) {
+    const rime::path vocabulary_path{std::string("table_vocabulary_") + suffix +
+                                     ".bin"};
+    const rime::path compact_path{std::string("table_compact_") + suffix +
+                                  ".bin"};
+    rime::Table vocabulary_table(vocabulary_path);
+    rime::Table compact_table(compact_path);
+    vocabulary_table.Remove();
+    compact_table.Remove();
+
+    rime::Syllabary syllabary{"a", "b", "c"};
+    rime::Vocabulary vocabulary;
+    rime::Code a_code;
+    a_code.push_back(0);
+    rime::Code b_code;
+    b_code.push_back(1);
+    vocabulary[0].entries.push_back({"first", a_code, 1.0});
+    vocabulary[0].entries.push_back({"second", a_code, 2.0});
+    vocabulary[1].entries.push_back({"third", b_code, 3.0});
+
+    rime::CompactDictEntryList compact;
+    compact.text = "firstsecondthird";
+    compact.entries = {{0, 5, 0, 1.0}, {5, 6, 0, 2.0}, {11, 5, 1, 3.0}};
+    compact.page_offsets = {0, 2, 3, 3};
+    if (sort_by_weight) {
+      vocabulary.SortHomophones();
+      std::swap(compact.entries[0], compact.entries[1]);
+    }
+
+    EXPECT_TRUE(vocabulary_table.Build(syllabary, vocabulary, 3, 17));
+    EXPECT_TRUE(compact_table.Build(syllabary, compact, 3, 17));
+    EXPECT_TRUE(vocabulary_table.Save());
+    EXPECT_TRUE(compact_table.Save());
+    vocabulary_table.Close();
+    compact_table.Close();
+
+    std::ifstream vocabulary_file(vocabulary_path.c_str(), std::ios::binary);
+    std::ifstream compact_file(compact_path.c_str(), std::ios::binary);
+    std::vector<char> vocabulary_bytes(
+        (std::istreambuf_iterator<char>(vocabulary_file)),
+        std::istreambuf_iterator<char>());
+    std::vector<char> compact_bytes(
+        (std::istreambuf_iterator<char>(compact_file)),
+        std::istreambuf_iterator<char>());
+    EXPECT_EQ(vocabulary_bytes, compact_bytes);
+
+    vocabulary_table.Remove();
+    compact_table.Remove();
+  };
+  compare_outputs(false, "original");
+  compare_outputs(true, "sorted");
+}
 
 void RimeTableTest::PrepareSampleVocabulary(rime::Syllabary& syll,
                                             rime::Vocabulary& voc) {

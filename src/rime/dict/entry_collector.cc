@@ -5,7 +5,6 @@
 // 2011-11-27 GONG Chen <chen.sst@gmail.com>
 //
 #include <algorithm>
-#include <array>
 #include <fstream>
 #include <utility>
 #include <boost/algorithm/string.hpp>
@@ -25,19 +24,6 @@ struct DictRow {
   std::string_view stem;
   int num_columns = 0;
 };
-
-size_t CountLines(const path& dict_file) {
-  std::ifstream fin(dict_file.c_str(), std::ios::binary);
-  if (!fin)
-    return 0;
-  std::array<char, 1 << 16> buffer;
-  size_t count = 0;
-  while (fin.read(buffer.data(), buffer.size()) || fin.gcount()) {
-    count += static_cast<size_t>(
-        std::count(buffer.data(), buffer.data() + fin.gcount(), '\n'));
-  }
-  return count;
-}
 
 // Splits a tab-separated row into the columns we are interested in without
 // copying the whole line. The returned views are valid until the input line is
@@ -101,15 +87,6 @@ void EntryCollector::Configure(DictSettings* settings) {
 }
 
 void EntryCollector::Collect(const vector<path>& dict_files) {
-  // Reserve once for all imports to avoid repeated growth and relocation.
-  size_t line_count = 0;
-  for (const path& dict_file : dict_files) {
-    line_count += CountLines(dict_file);
-  }
-  if (line_count) {
-    entries.reserve(entries.size() + line_count);
-    words.reserve(words.size() + line_count);
-  }
   for (const path& dict_file : dict_files) {
     Collect(dict_file);
   }
@@ -194,6 +171,7 @@ void EntryCollector::Collect(const path& dict_file) {
 }
 
 void EntryCollector::Finish() {
+  DeduplicateEntries();
   while (!encode_queue.empty()) {
     const auto& phrase(encode_queue.front().first);
     const auto& weight_str(encode_queue.front().second);
@@ -216,6 +194,10 @@ void EntryCollector::Finish() {
     // Finish collection before releasing preset weights used by CreateEntry().
     preset_vocabulary.reset();
   }
+  // Encoding may add entries. Normally duplicates are caught through the word
+  // map, but re-run deduplication as a safety net for collectors that never
+  // called TranslateWord().
+  DeduplicateEntries();
   decltype(collection)().swap(collection);
   decltype(words)().swap(words);
   LOG(INFO) << "Pass 3: total " << num_entries << " entries collected.";
@@ -230,9 +212,11 @@ void EntryCollector::CreateEntry(const string& word,
 void EntryCollector::CreateEntryImpl(std::string_view word,
                                      std::string_view code_str,
                                      std::string_view weight_str) {
+  RawCode raw_code;
+  raw_code.FromStringView(code_str);
   RawDictEntry e;
-  e.raw_code.FromStringView(code_str);
   e.text.assign(word);
+  e.code.assign(code_str);
   e.weight = 0.0;
   bool scaled = !weight_str.empty() && weight_str.back() == '%';
   if ((weight_str.empty() || scaled) && preset_vocabulary) {
@@ -261,7 +245,7 @@ void EntryCollector::CreateEntryImpl(std::string_view word,
     }
   }
   // learn new syllables, or check if syllables are in the fixed syllabary.
-  for (const string& s : e.raw_code) {
+  for (const string& s : raw_code) {
     if (syllabary.find(s) == syllabary.end()) {
       if (build_syllabary) {
         syllabary.insert(s);
@@ -272,31 +256,114 @@ void EntryCollector::CreateEntryImpl(std::string_view word,
       }
     }
   }
-  // learn new word
-  bool is_word = (e.raw_code.size() == 1);
-  if (is_word) {
-    auto& word = words[e.text];
-    if (!word.has_encoding) {
-      word.has_encoding = true;
-      word.code.assign(code_str);
-      word.weight = e.weight;
-    } else {
-      bool duplicate =
-          std::string_view(word.code) == code_str ||
-          std::any_of(word.alternative_encodings.begin(),
-                      word.alternative_encodings.end(), [&](const auto& p) {
-                        return std::string_view(p.first) == code_str;
-                      });
-      if (duplicate) {
-        LOG(WARNING) << "duplicate word definition '" << e.text << "': ["
-                     << code_str << "].";
-        return;
-      }
-      word.alternative_encodings.emplace_back(string(code_str), e.weight);
-    }
+  // Keep an already-built word map up to date; entries added while encoding
+  // preset phrases must remain visible to subsequent TranslateWord() calls.
+  if (words_built_ && raw_code.size() == 1 &&
+      !AddWordEncoding(&words[e.text], e.code, e.weight)) {
+    LOG(WARNING) << "duplicate word definition '" << e.text << "': [" << e.code
+                 << "].";
+    return;
   }
+  total_text_bytes += e.text.size();
   entries.emplace_back(std::move(e));
   ++num_entries;
+  deduplicated_ = false;
+}
+
+void EntryCollector::DeduplicateEntries() {
+  if (deduplicated_)
+    return;
+  deduplicated_ = true;
+
+  // Sort single-syllable entry indices by key. The original index breaks ties,
+  // so the first occurrence of each (text, code) pair stays first.
+  vector<size_t> single_syllable_indices;
+  single_syllable_indices.reserve(entries.size());
+  for (size_t i = 0; i < entries.size(); ++i) {
+    if (IsSingleSyllableCode(entries[i].code))
+      single_syllable_indices.push_back(i);
+  }
+
+  if (single_syllable_indices.size() > 1) {
+    std::sort(single_syllable_indices.begin(), single_syllable_indices.end(),
+              [&](size_t a, size_t b) {
+                const auto& ea = entries[a];
+                const auto& eb = entries[b];
+                if (ea.text != eb.text)
+                  return ea.text < eb.text;
+                if (ea.code != eb.code)
+                  return ea.code < eb.code;
+                return a < b;
+              });
+
+    // Equal keys are adjacent after sorting; mark every occurrence after the
+    // first one for removal.
+    vector<char> is_duplicate(entries.size(), 0);
+    size_t duplicate_count = 0;
+    for (size_t i = 1; i < single_syllable_indices.size(); ++i) {
+      const size_t previous_index = single_syllable_indices[i - 1];
+      const size_t current_index = single_syllable_indices[i];
+      const auto& previous = entries[previous_index];
+      const auto& current = entries[current_index];
+      if (previous.text == current.text && previous.code == current.code) {
+        is_duplicate[current_index] = 1;
+        ++duplicate_count;
+        LOG(WARNING) << "duplicate word definition '" << current.text << "': ["
+                     << current.code << "].";
+      }
+    }
+
+    // Compact in original order to preserve ordering of all remaining entries.
+    if (duplicate_count != 0) {
+      size_t write_index = 0;
+      for (size_t read_index = 0; read_index < entries.size(); ++read_index) {
+        if (is_duplicate[read_index])
+          continue;
+        if (write_index != read_index)
+          entries[write_index] = std::move(entries[read_index]);
+        ++write_index;
+      }
+      entries.resize(write_index);
+    }
+  }
+  num_entries = entries.size();
+}
+
+void EntryCollector::EnsureWords() {
+  if (words_built_)
+    return;
+  DeduplicateEntries();
+  BuildWords();
+  words_built_ = true;
+}
+
+bool EntryCollector::AddWordEncoding(WordEntries* word,
+                                     const string& code,
+                                     double weight) {
+  if (!word->has_encoding) {
+    word->has_encoding = true;
+    word->code = code;
+    word->weight = weight;
+    return true;
+  }
+  const bool duplicate =
+      code == word->code ||
+      std::any_of(word->alternative_encodings.begin(),
+                  word->alternative_encodings.end(),
+                  [&](const auto& p) { return p.first == code; });
+  if (duplicate)
+    return false;
+  word->alternative_encodings.emplace_back(code, weight);
+  return true;
+}
+
+void EntryCollector::BuildWords() {
+  words.reserve(entries.size());
+  for (const auto& e : entries) {
+    if (!IsSingleSyllableCode(e.code))
+      continue;
+    AddWordEncoding(&words[e.text], e.code, e.weight);
+  }
 }
 
 bool EntryCollector::TranslateWord(const string& word, vector<string>* result) {
@@ -307,6 +374,7 @@ bool EntryCollector::TranslateWord(const string& word, vector<string>* result) {
     }
     return true;
   }
+  EnsureWords();
   const auto& w = words.find(word);
   if (w != words.end()) {
     const auto& word_entries = w->second;
@@ -347,7 +415,9 @@ void EntryCollector::Dump(const path& file_path) const {
   }
   out << std::endl;
   for (const auto& e : entries) {
-    out << e.text << '\t' << e.raw_code.ToString() << '\t' << e.weight
+    RawCode raw_code;
+    raw_code.FromStringView(e.code);
+    out << e.text << '\t' << raw_code.ToString() << '\t' << e.weight
         << std::endl;
   }
   out.close();
