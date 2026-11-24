@@ -14,6 +14,7 @@
 
 namespace rime {
 
+class Dictionary;
 class ReverseLookupDictionary;
 
 class ReverseLookupFilter : public Filter, TagMatching {
@@ -32,6 +33,7 @@ class ReverseLookupFilter : public Filter, TagMatching {
 
   bool initialized_ = false;
   the<ReverseLookupDictionary> rev_dict_;
+  the<Dictionary> weight_dict_;
   // settings
   bool overwrite_comment_ = false;
   bool append_comment_ = false;

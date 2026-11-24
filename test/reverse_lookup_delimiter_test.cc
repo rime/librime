@@ -14,6 +14,7 @@
 #include <rime/dict/prism.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 #include <rime/dict/table.h>
+#include <rime/gear/reverse_lookup_weight.h>
 #include <fstream>
 #include <string>
 
@@ -99,6 +100,46 @@ TEST(ReverseLookupDictionary, BuildsAndReloadsEntriesAndStems) {
   EXPECT_FALSE(dictionary.ReverseLookup("stem-only", &result));
   EXPECT_FALSE(dictionary.LookupStems("other", &result));
   db->Remove();
+}
+
+TEST(ReverseLookupDictionary, OrdersExistingReadingsByTableWeight) {
+  // Only build a small in-memory fixture for the test. Production sorting
+  // reads existing .table.bin and .reverse.bin without rebuilding either.
+  auto table = rime::New<rime::Table>(
+      rime::path{"reverse_lookup_weight_test.table.bin"});
+  table->Remove();
+  rime::Syllabary syllables{"ji", "qi", "xi"};
+  rime::Vocabulary vocabulary;
+  rime::Code ji_code;
+  ji_code.push_back(0);
+  rime::Code qi_code;
+  qi_code.push_back(1);
+  vocabulary[0].entries.emplace_back("骑", ji_code, 1.0);
+  // An unrelated homophone with a larger weight must not affect "骑".
+  vocabulary[1].entries.emplace_back("其", qi_code, 200.0);
+  vocabulary[1].entries.emplace_back("骑", qi_code, 100.0);
+  ASSERT_TRUE(table->Build(syllables, vocabulary, 3));
+  ASSERT_TRUE(table->Save());
+  ASSERT_TRUE(table->Load());
+
+  auto dictionary = rime::New<rime::Dictionary>(
+      "reverse_lookup_weight_test", rime::vector<rime::string>{},
+      rime::vector<rime::of<rime::Table>>{table}, rime::an<rime::Prism>{});
+
+  rime::string codes = "ji qi";
+  rime::SortReverseLookupCodesByWeight("骑", &codes, dictionary.get());
+  EXPECT_EQ("qi ji", codes);
+
+  codes = "ji xi qi";
+  rime::SortReverseLookupCodesByWeight("骑", &codes, dictionary.get());
+  EXPECT_EQ("qi ji xi", codes);  // unknown reading stays last
+
+  codes = "ji qi";
+  rime::SortReverseLookupCodesByWeight("不存在", &codes, dictionary.get());
+  EXPECT_EQ("ji qi", codes);  // no weight found: unchanged
+
+  table->Close();
+  table->Remove();
 }
 #endif
 

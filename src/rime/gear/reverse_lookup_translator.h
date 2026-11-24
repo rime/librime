@@ -30,6 +30,7 @@ class ReverseLookupTranslator : public Translator {
   bool initialized_ = false;
   the<Dictionary> dict_;
   the<ReverseLookupDictionary> rev_dict_;
+  the<Dictionary> rev_weight_dict_;
   the<TranslatorOptions> options_;
   string prefix_;
   string suffix_;
