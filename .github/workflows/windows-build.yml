@@ -48,7 +48,7 @@ jobs:
 
       - name: Install clang
         if: ${{ matrix.compiler == 'clang' && matrix.arch != 'arm64' }}
-        run: choco upgrade -y llvm
+        run: choco upgrade -y llvm --version=22.1.8 --allow-downgrade
 
       - name: Create env.bat
         shell: pwsh
@@ -61,6 +61,13 @@ jobs:
             }
             $cc = Join-Path $env:llvmArm64 'clang.exe'
             $cxx = Join-Path $env:llvmArm64 'clang++.exe'
+          } elseif ('${{ matrix.compiler }}' -eq 'clang') {
+            $cc = Join-Path $env:ProgramFiles 'LLVM\bin\clang.exe'
+            $cxx = Join-Path $env:ProgramFiles 'LLVM\bin\clang++.exe'
+            $clangVersion = (& $cxx --version | Select-Object -First 1)
+            if ($clangVersion -notmatch 'version 22\.1\.8') {
+              throw "Expected Clang 22.1.8, got: $clangVersion"
+            }
           }
           $envcontent = @"
             set RIME_ROOT=%CD%
@@ -89,7 +96,7 @@ jobs:
             include
             lib
             share
-          key: ${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.arch }}-${{ hashFiles('submodule-status') }}
+          key: ${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.compiler == 'clang' && matrix.arch != 'arm64' && 'llvm-22.1.8' || 'default' }}-${{ matrix.arch }}-${{ hashFiles('submodule-status') }}
 
       - name: Build dependencies
         if: steps.cache-deps.outputs.cache-hit != 'true'
