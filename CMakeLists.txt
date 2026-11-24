@@ -35,6 +35,7 @@ set(RIME_PLUGINS_DIR "rime-plugins" CACHE STRING "Target directory for externall
 
 if(WIN32)
   set(ext ".exe")
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif(WIN32)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
