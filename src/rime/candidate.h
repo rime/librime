@@ -8,6 +8,7 @@
 #define RIME_CANDIDATE_H_
 
 #include <rime/common.h>
+#include <rime_api.h>
 
 namespace rime {
 
