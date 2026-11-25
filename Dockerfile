@@ -1,4 +1,4 @@
-FROM debian:12.15-slim
+FROM debian:13-slim
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
   && apt-get install -y --no-install-recommends \
@@ -9,7 +9,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
   ninja-build \
   pkg-config \
   libboost-dev \
-  libboost-regex-dev \
   libboost-locale-dev \
   libgtest-dev \
   libyaml-cpp-dev \
