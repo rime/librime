@@ -8,10 +8,7 @@
 #include <fstream>
 #include <utility>
 #include <boost/algorithm/string.hpp>
-#include <boost/version.hpp>
-#if BOOST_VERSION >= 108100
 #include <boost/unordered/unordered_flat_set.hpp>
-#endif
 #include <rime/algo/strings.h>
 #include <rime/dict/dict_settings.h>
 #include <rime/dict/entry_collector.h>
@@ -74,11 +71,7 @@ struct EntryKey {
   }
 };
 
-#if BOOST_VERSION >= 108100
 using SeenSyllableSet = boost::unordered_flat_set<EntryKey>;
-#else
-using SeenSyllableSet = hash_set<EntryKey>;
-#endif
 
 }  // namespace
 

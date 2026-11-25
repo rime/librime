@@ -10,8 +10,6 @@
 #include <rime/schema.h>
 #include <rime/service.h>
 
-using namespace std::placeholders;
-
 namespace rime {
 
 Session::Session() {

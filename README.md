@@ -40,7 +40,7 @@ Build dependencies
 ---
   - compiler with C++17 support
   - cmake>=3.25
-  - libboost>=1.74
+  - libboost>=1.83
   - libleveldb
   - libmarisa
   - libopencc>=1.0.2

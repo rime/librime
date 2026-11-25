@@ -10,14 +10,11 @@
 #include <deque>
 #include <queue>
 #include <string_view>
-#include <boost/version.hpp>
 #if defined(_MSC_VER)
 #include <boost/container/deque.hpp>
 #include <boost/container/options.hpp>
 #endif
-#if BOOST_VERSION >= 108100
 #include <boost/unordered/unordered_flat_map.hpp>
-#endif
 #include <rime/common.h>
 #include <rime/algo/encoder.h>
 #include <rime/dict/dictionary.h>
@@ -44,13 +41,8 @@ struct WordEntries {
   vector<pair<string, double>> alternative_encodings;
 };
 
-#if BOOST_VERSION >= 108100
 template <class K, class V>
 using WordHashMap = boost::unordered_flat_map<K, V>;
-#else
-template <class K, class V>
-using WordHashMap = hash_map<K, V>;
-#endif
 
 using WordMap = WordHashMap<string, WordEntries>;
 // [ (word, weight), ... ]
