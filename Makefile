@@ -36,13 +36,12 @@ ifndef NOPARALLEL
 endif
 
 debug install-debug uninstall-debug test-debug: build ?= debug
-no_logging: build ?= no_logging
 build ?= build
 
 .PHONY: all deps clean \
-librime librime-static \
+librime librime-static merged-plugins no-logging \
 release debug test install uninstall \
-install-debug uninstall-debug no_logging
+install-debug uninstall-debug
 
 all: release
 
@@ -92,7 +91,7 @@ merged-plugins:
 	$(CMAKE_BOOST_OPTIONS)
 	cmake --build $(build)
 
-no_logging:
+no-logging:
 	cmake . -B$(build) \
 	-DCMAKE_INSTALL_PREFIX=$(prefix) \
 	-DCMAKE_BUILD_TYPE=Release \
