@@ -8,6 +8,10 @@
 #include <fstream>
 #include <utility>
 #include <boost/algorithm/string.hpp>
+#include <boost/version.hpp>
+#if BOOST_VERSION >= 108100
+#include <boost/unordered/unordered_flat_set.hpp>
+#endif
 #include <rime/algo/strings.h>
 #include <rime/dict/dict_settings.h>
 #include <rime/dict/entry_collector.h>
@@ -57,6 +61,24 @@ DictRow ParseDictRow(std::string_view line,
   row.num_columns = column;
   return row;
 }
+
+struct EntryKey {
+  const RawDictEntry* entry;
+
+  bool operator==(const EntryKey& other) const {
+    return entry->text == other.entry->text && entry->code == other.entry->code;
+  }
+
+  friend size_t hash_value(const EntryKey& key) {
+    return boost::hash_value(std::tie(key.entry->text, key.entry->code));
+  }
+};
+
+#if BOOST_VERSION >= 108100
+using SeenSyllableSet = boost::unordered_flat_set<EntryKey>;
+#else
+using SeenSyllableSet = hash_set<EntryKey>;
+#endif
 
 }  // namespace
 
@@ -275,57 +297,37 @@ void EntryCollector::DeduplicateEntries() {
     return;
   deduplicated_ = true;
 
-  // Sort single-syllable entry indices by key. The original index breaks ties,
-  // so the first occurrence of each (text, code) pair stays first.
-  vector<size_t> single_syllable_indices;
-  single_syllable_indices.reserve(entries.size());
+  SeenSyllableSet seen;
+  std::vector<char> is_duplicate(entries.size(), 0);
+  size_t num_duplicates = 0;
+
   for (size_t i = 0; i < entries.size(); ++i) {
-    if (IsSingleSyllableCode(entries[i].code))
-      single_syllable_indices.push_back(i);
-  }
-
-  if (single_syllable_indices.size() > 1) {
-    std::sort(single_syllable_indices.begin(), single_syllable_indices.end(),
-              [&](size_t a, size_t b) {
-                const auto& ea = entries[a];
-                const auto& eb = entries[b];
-                if (ea.text != eb.text)
-                  return ea.text < eb.text;
-                if (ea.code != eb.code)
-                  return ea.code < eb.code;
-                return a < b;
-              });
-
-    // Equal keys are adjacent after sorting; mark every occurrence after the
-    // first one for removal.
-    vector<char> is_duplicate(entries.size(), 0);
-    size_t duplicate_count = 0;
-    for (size_t i = 1; i < single_syllable_indices.size(); ++i) {
-      const size_t previous_index = single_syllable_indices[i - 1];
-      const size_t current_index = single_syllable_indices[i];
-      const auto& previous = entries[previous_index];
-      const auto& current = entries[current_index];
-      if (previous.text == current.text && previous.code == current.code) {
-        is_duplicate[current_index] = 1;
-        ++duplicate_count;
-        LOG(WARNING) << "duplicate word definition '" << current.text << "': ["
-                     << current.code << "].";
-      }
+    const auto& entry = entries[i];
+    if (!IsSingleSyllableCode(entry.code)) {
+      continue;
     }
-
-    // Compact in original order to preserve ordering of all remaining entries.
-    if (duplicate_count != 0) {
-      size_t write_index = 0;
-      for (size_t read_index = 0; read_index < entries.size(); ++read_index) {
-        if (is_duplicate[read_index])
-          continue;
-        if (write_index != read_index)
-          entries[write_index] = std::move(entries[read_index]);
-        ++write_index;
-      }
-      entries.resize(write_index);
+    if (!seen.insert(EntryKey{&entry}).second) {
+      is_duplicate[i] = 1;
+      ++num_duplicates;
+      LOG(WARNING) << "duplicate word definition '" << entry.text << "': ["
+                   << entry.code << "].";
     }
   }
+
+  if (num_duplicates > 0) {
+    auto write = entries.begin();
+    auto read = entries.begin();
+    for (size_t i = 0; i < entries.size(); ++i, ++read) {
+      if (!is_duplicate[i]) {
+        if (write != read) {
+          *write = std::move(*read);
+        }
+        ++write;
+      }
+    }
+    entries.erase(write, entries.end());
+  }
+
   num_entries = entries.size();
 }
 
