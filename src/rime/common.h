@@ -8,6 +8,7 @@
 #define RIME_COMMON_H_
 
 #include <rime/build_config.h>
+#include <rime_api.h>
 
 #include <filesystem>
 #include <functional>

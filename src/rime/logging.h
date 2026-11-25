@@ -5,8 +5,6 @@
 #ifndef RIME_LOGGING_H_
 #define RIME_LOGGING_H_
 
-#include <rime_api.h>
-
 #include <atomic>
 #include <cctype>
 #include <cstring>
