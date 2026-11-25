@@ -7,6 +7,7 @@
 #ifndef RIME_CONTEXT_H_
 #define RIME_CONTEXT_H_
 
+#include <optional>
 #include <rime/common.h>
 #include <rime/commit_history.h>
 #include <rime/composition.h>
@@ -29,6 +30,11 @@ class RIME_DLL Context {
   ~Context() = default;
 
   bool Commit();
+  // Commits `text` in place of the composition's commit text: listeners of
+  // commit_notifier get `text` from GetCommitText() and see the composition
+  // as it is, so callers should leave in it only what is to be memorized.
+  // Returns false if `text` is empty and nothing is being composed.
+  bool CommitText(const string& text);
   string GetCommitText() const;
   string GetScriptText() const;
   Preedit GetPreedit() const;
@@ -115,6 +121,9 @@ class RIME_DLL Context {
   OptionUpdateNotifier option_update_notifier_;
   PropertyUpdateNotifier property_update_notifier_;
   KeyEventNotifier unhandled_key_notifier_;
+
+  // set by CommitText() while notifying the commit
+  std::optional<string> commit_text_;
 };
 
 }  // namespace rime

@@ -25,9 +25,21 @@ bool Context::Commit() {
   return true;
 }
 
+bool Context::CommitText(const string& text) {
+  if (text.empty() && !IsComposing())
+    return false;
+  commit_text_ = text;
+  commit_notifier_(this);
+  commit_text_.reset();
+  Clear();
+  return true;
+}
+
 string Context::GetCommitText() const {
   if (get_option("dumb"))
     return string();
+  if (commit_text_)
+    return *commit_text_;
   return composition_.GetCommitText();
 }
 
