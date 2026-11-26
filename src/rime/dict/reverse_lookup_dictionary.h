@@ -43,26 +43,26 @@ using ReverseEntryList = CompactDictEntryList;
 
 class ReverseDb : public MappedFile {
  public:
-  explicit ReverseDb(const path& file_path);
+  RIME_DLL explicit ReverseDb(const path& file_path);
 
-  bool Load();
-  bool Lookup(const string& text, string* result);
+  RIME_DLL bool Load();
+  RIME_DLL bool Lookup(const string& text, string* result);
 
   // Builds the reverse lookup table from a compact list of single-syllable
   // entries. The list is consumed in place, so callers may release their
   // vocabulary as soon as this returns.
-  bool Build(DictSettings* settings,
-             const Syllabary& syllabary,
-             ReverseEntryList& entries,
-             const ReverseLookupTable& stems,
-             uint32_t dict_file_checksum);
+  RIME_DLL bool Build(DictSettings* settings,
+                      const Syllabary& syllabary,
+                      ReverseEntryList& entries,
+                      const ReverseLookupTable& stems,
+                      uint32_t dict_file_checksum);
   // Convenience overload for callers that still hold a Vocabulary.
-  bool Build(DictSettings* settings,
-             const Syllabary& syllabary,
-             const Vocabulary& vocabulary,
-             const ReverseLookupTable& stems,
-             uint32_t dict_file_checksum);
-  bool Save();
+  RIME_DLL bool Build(DictSettings* settings,
+                      const Syllabary& syllabary,
+                      const Vocabulary& vocabulary,
+                      const ReverseLookupTable& stems,
+                      uint32_t dict_file_checksum);
+  RIME_DLL bool Save();
 
   uint32_t dict_file_checksum() const;
   reverse::Metadata* metadata() const { return metadata_; }
