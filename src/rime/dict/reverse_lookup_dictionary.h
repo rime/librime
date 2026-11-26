@@ -66,6 +66,10 @@ class ReverseDb : public MappedFile {
 
   uint32_t dict_file_checksum() const;
   reverse::Metadata* metadata() const { return metadata_; }
+  bool IsStringTableAligned() const {
+    return !metadata_ || (StringTable::IsAligned(metadata_->key_trie.get()) &&
+                          StringTable::IsAligned(metadata_->value_trie.get()));
+  }
 
  private:
   reverse::Metadata* metadata_ = nullptr;

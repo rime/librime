@@ -251,7 +251,8 @@ bool ReverseDb::Build(DictSettings* settings,
   metadata_->index.at = index;
 
   // save key trie image
-  char* key_trie_ptr = Allocate<char>(key_trie_image_size);
+  char* key_trie_ptr =
+      AllocateAlignedBytes(key_trie_image_size, StringTable::kImageAlignment);
   if (!key_trie_ptr) {
     LOG(ERROR) << "Error creating key trie image.";
     return false;
@@ -261,7 +262,8 @@ bool ReverseDb::Build(DictSettings* settings,
   metadata_->key_trie_size = key_trie_image_size;
 
   // save value trie image
-  char* value_trie_ptr = Allocate<char>(value_trie_image_size);
+  char* value_trie_ptr =
+      AllocateAlignedBytes(value_trie_image_size, StringTable::kImageAlignment);
   if (!value_trie_ptr) {
     LOG(ERROR) << "Error creating value trie image.";
     return false;

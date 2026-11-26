@@ -23,6 +23,13 @@ const StringId kInvalidStringId = (StringId)(-1);
 
 class RIME_DLL StringTable {
  public:
+  // MARISA's mapped format stores 64-bit values, including on 32-bit hosts.
+  static constexpr size_t kImageAlignment = 8;
+
+  static bool IsAligned(const char* ptr) {
+    return (reinterpret_cast<std::uintptr_t>(ptr) % kImageAlignment) == 0;
+  }
+
   StringTable() = default;
   virtual ~StringTable() = default;
   StringTable(const char* ptr, size_t size);

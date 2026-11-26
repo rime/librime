@@ -96,6 +96,8 @@ class RIME_DLL MappedFile {
   template <class T>
   T* Allocate(size_t count = 1);
 
+  char* AllocateAlignedBytes(size_t num_bytes, size_t alignment);
+
   template <class T>
   Array<T>* CreateArray(size_t array_size);
 
@@ -133,22 +135,31 @@ class RIME_DLL MappedFile {
 
 template <class T>
 T* MappedFile::Allocate(size_t count) {
-  if (!IsOpen())
+  return reinterpret_cast<T*>(
+      AllocateAlignedBytes(sizeof(T) * count, alignof(T)));
+}
+
+inline char* MappedFile::AllocateAlignedBytes(size_t num_bytes,
+                                              size_t alignment) {
+  if (!IsOpen() || alignment == 0 || (alignment & (alignment - 1)) != 0)
     return NULL;
 
-  size_t used_space = RIME_ALIGNED(size_, T);
-  size_t required_space = sizeof(T) * count;
-  size_t file_size = capacity();
-  if (used_space + required_space > file_size) {
+  const size_t prev_size = size_;
+  const size_t offset = (prev_size + alignment - 1) & ~(alignment - 1);
+  const size_t new_size = offset + num_bytes;
+  if (new_size > capacity()) {
     // not enough space; grow the file
-    size_t new_size = (std::max)(used_space + required_space, file_size * 2);
-    if (!Resize(new_size) || !OpenReadWrite())
+    const size_t new_capacity = (std::max)(new_size, capacity() * 2);
+    if (!Resize(new_capacity) || !OpenReadWrite())
       return NULL;
   }
-  T* ptr = reinterpret_cast<T*>(address() + used_space);
-  std::memset((void*)ptr, 0, required_space);
-  size_ = used_space + required_space;
-  return ptr;
+  char* base = address();
+  if (new_size > prev_size) {
+    // zero-fill padding and allocated bytes
+    std::memset(base + prev_size, 0, new_size - prev_size);
+  }
+  size_ = new_size;
+  return base + offset;
 }
 
 template <class T>
@@ -160,8 +171,9 @@ T* MappedFile::Find(size_t offset) {
 
 template <class T>
 Array<T>* MappedFile::CreateArray(size_t array_size) {
-  size_t num_bytes = sizeof(Array<T>) + sizeof(T) * (array_size - 1);
-  Array<T>* ret = reinterpret_cast<Array<T>*>(Allocate<char>(num_bytes));
+  const size_t num_bytes = sizeof(Array<T>) + sizeof(T) * (array_size - 1);
+  Array<T>* ret = reinterpret_cast<Array<T>*>(
+      AllocateAlignedBytes(num_bytes, alignof(Array<T>)));
   if (!ret)
     return NULL;
   ret->size = array_size;

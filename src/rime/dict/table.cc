@@ -252,7 +252,7 @@ bool Table::OnBuildFinish() {
   string_table_builder_->Build();
   // saving string table image
   size_t image_size = string_table_builder_->BinarySize();
-  char* image = Allocate<char>(image_size);
+  char* image = AllocateAlignedBytes(image_size, StringTable::kImageAlignment);
   if (!image) {
     LOG(ERROR) << "Error creating string table image.";
     return false;

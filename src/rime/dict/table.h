@@ -211,6 +211,9 @@ class Table : public MappedFile {
 
   uint32_t dict_file_checksum() const;
   table::Metadata* metadata() const { return metadata_; }
+  bool IsStringTableAligned() const {
+    return !metadata_ || StringTable::IsAligned(metadata_->string_table.get());
+  }
 
  private:
   // Common file/metadata/syllabary setup shared by both Build() overloads.

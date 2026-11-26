@@ -302,7 +302,9 @@ bool DictCompiler::Compile(const path& schema_file) {
   const auto& primary_table = tables_[0];
   if (primary_table->Exists() && primary_table->Load()) {
     if (build_table_from_source) {
-      rebuild_table = primary_table->dict_file_checksum() != dict_file_checksum;
+      rebuild_table =
+          primary_table->dict_file_checksum() != dict_file_checksum ||
+          !primary_table->IsStringTableAligned();
     } else {
       dict_file_checksum = primary_table->dict_file_checksum();
       LOG(INFO) << "reuse existing table: " << primary_table->file_path();
@@ -331,7 +333,8 @@ bool DictCompiler::Compile(const path& schema_file) {
             {"find_reverse_db", "", ".reverse.bin"}));
     ReverseDb reverse_db(resolver->ResolvePath(dict_name_));
     if (!reverse_db.Exists() || !reverse_db.Load() ||
-        reverse_db.dict_file_checksum() != dict_file_checksum) {
+        reverse_db.dict_file_checksum() != dict_file_checksum ||
+        (build_table_from_source && !reverse_db.IsStringTableAligned())) {
       rebuild_table = true;
     }
   }
@@ -387,7 +390,8 @@ bool DictCompiler::Compile(const path& schema_file) {
         compute_dict_file_checksum(dict_file_checksum, dict_files, settings);
     bool rebuild_pack = true;
     if (pack_table->Exists() && pack_table->Load()) {
-      rebuild_pack = pack_table->dict_file_checksum() != pack_file_checksum;
+      rebuild_pack = pack_table->dict_file_checksum() != pack_file_checksum ||
+                     !pack_table->IsStringTableAligned();
     }
     if (rebuild_pack) {
       LOG(INFO) << "rebuilding pack '" << pack_name << "'";
