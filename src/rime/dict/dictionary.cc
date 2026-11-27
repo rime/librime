@@ -418,6 +418,9 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
       }
     }
   }
+  if (!predictive) {
+    result->Sort();
+  }
   if (blacklist && !blacklist->empty()) {
     result->AddFilter([blacklist](an<DictEntry> entry) {
       return entry && !blacklist->count(entry->text);
