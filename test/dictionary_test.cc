@@ -59,11 +59,11 @@ TEST_F(RimeDictionaryTest, PredictiveLookup) {
   rime::DictEntryIterator it;
   dict_->LookupWords(&it, "z", true);
   ASSERT_FALSE(it.exhausted());
-  EXPECT_EQ("\xe5\x92\x8b", it.Peek()->text);  // 咋
+  EXPECT_EQ("\xe5\x88\x99", it.Peek()->text);  // 则
   ASSERT_EQ(1, it.Peek()->code.size());
   rime::RawCode raw_code;
   ASSERT_TRUE(dict_->Decode(it.Peek()->code, &raw_code));
-  EXPECT_EQ("za", raw_code.ToString());
+  EXPECT_EQ("ze", raw_code.ToString());
 }
 
 TEST_F(RimeDictionaryTest, ScriptLookup) {
@@ -133,8 +133,8 @@ static void ExpectBestFirst(rime::Dictionary* dict,
     ASSERT_TRUE(dict->Decode(e->code, &raw_code));
     EXPECT_TRUE(seen.emplace(e->text, raw_code.ToString()).second)
         << "duplicate entry " << e->text;
-    // the first entry is taken from the first matching key, unsorted.
-    if (n > 1) {
+    // The first entry is ranked as well; compare every adjacent pair.
+    if (n > 0) {
       if (prev->remaining_code_length == e->remaining_code_length) {
         EXPECT_GE(prev->weight, e->weight) << prev->text << " " << e->text;
       } else {

@@ -4,6 +4,7 @@
 //
 // 2011-07-05 GONG Chen <chen.sst@gmail.com>
 //
+#include <algorithm>
 #include <filesystem>
 #include <rime/algo/syllabifier.h>
 #include <rime/common.h>
@@ -75,6 +76,7 @@ struct QueryResult {
   // chunk holding the best entry at the front. Set by Sort() and kept by
   // FindNextEntry(); AddChunk() and Skip() reset it.
   bool is_heap = false;
+  bool sort_on_peek = false;  // enabled for predictive lookup
 };
 
 static int compare_head_entries(const Chunk& a, const Chunk& b) {
@@ -177,6 +179,10 @@ void DictEntryIterator::AddChunk(dictionary::Chunk&& chunk) {
   query_result_->is_heap = false;
 }
 
+void DictEntryIterator::EnableInitialSorting() {
+  query_result_->sort_on_peek = true;
+}
+
 void DictEntryIterator::Sort() {
   if (query_result_->is_heap)
     return;
@@ -201,6 +207,9 @@ void DictEntryIterator::AddFilter(DictEntryFilter filter) {
 
 an<DictEntry> DictEntryIterator::Peek() {
   if (!entry_ && !exhausted()) {
+    // Only predictive lookups rank their first candidate on demand.
+    if (query_result_->sort_on_peek && !query_result_->is_heap)
+      Sort();
     // get next entry from current chunk
     const auto& chunk = query_result_->chunks[chunk_index_];
     const auto& e = chunk.entries[chunk.cursor];
@@ -269,8 +278,16 @@ bool DictEntryIterator::Next() {
 bool DictEntryIterator::Skip(size_t num_entries) {
   if (num_entries == 0)
     return true;
-  // the cached entry and the heap order are invalidated by skipping entries
+  // Skipping is defined in insertion order. Restore that order if a prior
+  // Peek() has already built the ranking heap.
   entry_.reset();
+  if (query_result_->is_heap) {
+    auto& chunks = query_result_->chunks;
+    std::sort(chunks.begin() + chunk_index_, chunks.end(),
+              [](const dictionary::Chunk& a, const dictionary::Chunk& b) {
+                return a.order < b.order;
+              });
+  }
   query_result_->is_heap = false;
   while (num_entries > 0) {
     if (exhausted())
@@ -418,6 +435,9 @@ size_t Dictionary::LookupWords(DictEntryIterator* result,
       }
     }
   }
+  // Delay ranking until Peek(); lazy completion may call Skip() first.
+  if (predictive)
+    result->EnableInitialSorting();
   if (blacklist && !blacklist->empty()) {
     result->AddFilter([blacklist](an<DictEntry> entry) {
       return entry && !blacklist->count(entry->text);
