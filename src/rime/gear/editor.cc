@@ -97,16 +97,20 @@ bool Editor::ToggleSelection(Context* ctx) {
 bool Editor::CommitComment(Context* ctx) {
   if (auto cand = ctx->GetSelectedCandidate()) {
     if (!cand->comment().empty()) {
-      engine_->sink()(cand->comment());
+      string comment = cand->comment();
+      // only the comment is committed; leave nothing to be memorized.
       ctx->Clear();
+      ctx->CommitText(comment);
     }
   }
   return true;
 }
 
 bool Editor::CommitScriptText(Context* ctx) {
-  engine_->sink()(ctx->GetScriptText());
-  ctx->Clear();
+  string text = ctx->GetScriptText();
+  // like commit_raw_input, memorize only the selected segments.
+  ctx->ClearNonConfirmedComposition();
+  ctx->CommitText(text);
   return true;
 }
 
